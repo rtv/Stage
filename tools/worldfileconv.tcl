@@ -91,6 +91,12 @@ while {![eof $fd]} {
         set y [lindex $line $j]
         if {$y == ""} {set y 0.0}
         set devices($i,params,size) "\[$x $y\]"
+      } elseif {![string compare [lindex $line $j] "radius"]} {
+        incr j
+        set radius [lindex $line $j]
+        if {$radius == ""} {set radius 0.0}
+        set diameter [expr 2 * $radius]
+        set devices($i,params,size) "\[$diameter $diameter\]"
       } else {
         set name [lindex $line $j]
         incr j
