@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/broadcastdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -24,7 +24,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_RTK_TRACE 1
+#define RTK_ENABLE_TRACE 1
 
 #include <stage.h>
 #include "world.hh"
@@ -43,9 +43,35 @@ CBroadcastDevice::CBroadcastDevice(CWorld *world, CObject *parent, CPlayerRobot 
                         BROADCAST_COMMAND_BUFFER_SIZE,
                         BROADCAST_CONFIG_BUFFER_SIZE)
 {
-    m_last_packet = 0;
     m_last_update = 0;
     m_update_interval = 0.050;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Startup routine
+//
+bool CBroadcastDevice::Startup(RtkCfgFile *cfg)
+{
+    if (!CPlayerDevice::Startup(cfg))
+        return false;
+
+    // Register ourself as a broadcast device with the world
+    //
+    m_world->AddBroadcastDevice(this);
+    
+    return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Shutdown routine
+//
+void CBroadcastDevice::Shutdown()
+{
+    // Unregister ourself as a broadcast device
+    //
+    m_world->RemoveBroadcastDevice(this);
 }
 
 
@@ -63,34 +89,39 @@ void CBroadcastDevice::Update()
         return;
     m_last_update = m_world->GetTime();
     
-    // See if there is any data to broadcast
+    // See if there is any data to send
     //
-    size_t send_len = GetCommand(&m_cmd, sizeof(m_cmd));
-    if (send_len > 0)
-        m_world->PutBroadcast((uint8_t*) &m_cmd, send_len);
+    m_cmd_len = GetCommand(&m_cmd, sizeof(m_cmd));
+    if (m_cmd_len > 0)
+    {
+        // Send message to all registered broadcast devices
+        //
+        for (int i = 0; true; i++)
+        {
+            CBroadcastDevice *device = m_world->GetBroadcastDevice(i);
+            if (device == NULL)
+                break;
 
-    // See if there is any data to read
+            // Check for overflow
+            //
+            if (device->m_data_len + m_cmd_len + 2 > sizeof(m_data))
+            {
+                printf("Warning: broadcast packet overrun; packets have been discarded\n");
+                break;
+            }
+                
+            memcpy(device->m_data.buffer + device->m_data_len, &m_cmd, m_cmd_len);
+            device->m_data_len += m_cmd_len;
+        }
+    }
+
+    // Send back all data that has accumulated
     //
-    size_t recv_len = m_world->GetBroadcast(&m_last_packet, (uint8_t*) &m_data, sizeof(m_data));
-    if (recv_len > 0)
-        PutData(&m_data, sizeof(m_data));
+    PutData(&m_data, m_data_len + 2);
+    memset(&m_data, 0, sizeof(m_data));
+    m_data_len = 0;
 }
 
-
-
-#ifdef INCLUDE_RTK
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI update messages
-//
-void CBroadcastDevice::OnUiUpdate(RtkUiDrawData *pData)
-{
-    // Draw our children
-    //
-    CObject::OnUiUpdate(pData);
-}
-
-#endif
 
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/broadcastdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -34,7 +34,15 @@ class CBroadcastDevice : public CPlayerDevice
     // Default constructor
     //
     public: CBroadcastDevice(CWorld *world, CObject *parent, CPlayerRobot *robot);
-    
+
+    // Startup routine
+    //
+    public: virtual bool Startup(RtkCfgFile *cfg);
+
+    // Shutdown routine
+    //
+    public: virtual void Shutdown();
+
     // Update the device
     //
     public: virtual void Update();
@@ -43,23 +51,13 @@ class CBroadcastDevice : public CPlayerDevice
     //
     private: double m_last_update;
     private: double m_update_interval;
-    
-    // Index of last broadcast packet
-    //
-    private: int m_last_packet;
 
     // Buffers for storing data
     //
-    private: player_broadcast_data_t m_data;
+    private: size_t m_cmd_len;
     private: player_broadcast_cmd_t m_cmd;
- 
-#ifdef INCLUDE_RTK
-    
-    // Process GUI update messages
-    //
-    public: virtual void OnUiUpdate(RtkUiDrawData *pData);
-    
-#endif    
+    private: size_t m_data_len;
+    private: player_broadcast_data_t m_data;   
 };
 
 #endif

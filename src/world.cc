@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.14 $
+//  $Revision: 1.4.2.15 $
 //
 // Usage:
 //  (empty)
@@ -394,76 +394,50 @@ void CWorld::SetRectangle(double px, double py, double pth,
 //
 void CWorld::InitBroadcast()
 {
-    m_broadcast_first = 0;
-    m_broadcast_last = -1;
-    m_broadcast_size = RTK_ARRAYSIZE(m_broadcast_data);
-
-    memset(m_broadcast_len, 0, sizeof(m_broadcast_len));
-    memset(m_broadcast_data, 0, sizeof(m_broadcast_data));
+    m_broadcast_count = 0;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Add a packet to the broadcast queue
+// Add a broadcast device to the list
 //
-void CWorld::PutBroadcast(uint8_t *buffer, size_t bufflen)
+void CWorld::AddBroadcastDevice(CBroadcastDevice *device)
 {
-    int index = m_broadcast_last++;
-
-    // Make this a circular queue -- things at the front get overwritten
-    //
-    if (m_broadcast_last - m_broadcast_first + 1 > m_broadcast_size)
-        m_broadcast_first++;
-    ASSERT(m_broadcast_last - m_broadcast_first + 1 <= m_broadcast_size);
-    
-    uint8_t *packet = m_broadcast_data[index % m_broadcast_size];
-    size_t *packetlen = &m_broadcast_len[index % m_broadcast_size];
-    
-    // Check for buffer overflow
-    //
-    *packetlen = bufflen;
-    if (*packetlen > RTK_ARRAYSIZE(m_broadcast_data[0]))
+    if (m_broadcast_count >= ARRAYSIZE(m_broadcast))
     {
-        *packetlen = RTK_ARRAYSIZE(m_broadcast_data[0]);
-        RTK_TRACE0("warning : data buffer too large; data has been truncated");
+        printf("warning -- no room in broadcast device list\n");
+        return;
     }
-   
-    // Copy the data
-    //
-    memcpy(packet, buffer, *packetlen);
+    m_broadcast[m_broadcast_count++] = device;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Remove a broadcast device from the list
+//
+void CWorld::RemoveBroadcastDevice(CBroadcastDevice *device)
+{
+    for (int i = 0; i < m_broadcast_count; i++)
+    {
+        if (m_broadcast[i] == device)
+        {
+            memmove(m_broadcast + i,
+                    m_broadcast + i + 1,
+                    (m_broadcast_count - i - 1) * sizeof(m_broadcast[0]));
+            return;
+        }
+    }
+    printf("warning -- broadcast device not found\n");
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Get a packet from the broadcast queue
+// Get a broadcast device from the list
 //
-size_t CWorld::GetBroadcast(int *index, uint8_t *buffer, size_t bufflen)
+CBroadcastDevice* CWorld::GetBroadcastDevice(int i)
 {
-    if (*index < m_broadcast_first)
-        *index = m_broadcast_first;
-    if (*index > m_broadcast_last)
-        *index = m_broadcast_last;
-
-    // See if there is anything in the queue
-    //
-    if (m_broadcast_last - m_broadcast_first + 1 == 0)
-        return 0;
-
-    uint8_t *packet = m_broadcast_data[(*index) % m_broadcast_size];
-    size_t packetlen = m_broadcast_len[(*index) % m_broadcast_size];
-
-    // Check for buffer overflow
-    //
-    if (packetlen > bufflen)
-    {
-        packetlen = bufflen;
-        RTK_TRACE0("warning : data buffer too small; data has been truncated");
-    }
-
-    // Copy the data
-    //
-    memcpy(buffer, packet, packetlen);
-    return packetlen;
+    if (i < 0 || i >= ARRAYSIZE(m_broadcast))
+        return NULL;
+    return m_broadcast[i];
 }
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.10 $
+//  $Revision: 1.1.2.11 $
 //
 // Usage:
 //  (empty)
@@ -39,6 +39,7 @@
 //
 class CWorldWin;
 class CObject;
+class CBroadcastDevice;
 
 
 // Enumerated type describing the layers in the world rep
@@ -113,23 +114,26 @@ class CWorld : public CObject
     ///////////////////////////////////////////////////////////////////////////
     // Broadcast device functions
 
-    // Initialise the broadcast queue
+    // Initialise the broadcast device list
     //
     public: void InitBroadcast();
 
-    // Add a packet to the broadcast queue
+    // Add a broadcast device to the list
     //
-    public: void PutBroadcast(uint8_t *buffer, size_t bufflen);
+    public: void AddBroadcastDevice(CBroadcastDevice *device);
 
-    // Get a packet from the broadcast queue
+    // Remove a broadcast device from the list
     //
-    public: size_t GetBroadcast(int *index, uint8_t *buffer, size_t bufflen);
+    public: void RemoveBroadcastDevice(CBroadcastDevice *device);
 
-    // The broadcast queue
+    // Get a broadcast device from the list
     //
-    private: int m_broadcast_first, m_broadcast_last, m_broadcast_size;
-    private: size_t m_broadcast_len[128];
-    private: uint8_t m_broadcast_data[128][4096];
+    public: CBroadcastDevice* GetBroadcastDevice(int i);
+
+    // Private list of devices
+    //
+    private: int m_broadcast_count;
+    private: CBroadcastDevice *m_broadcast[256];
     
     //
     ///////////////////////////////////////////////////////////////////////////

@@ -1,7 +1,7 @@
 #*************************************************************************
 # src/Makefile - makes the sources
 # RTV
-# $Id: Makefile,v 1.9.2.14 2001-02-07 01:07:47 ahoward Exp $
+# $Id: Makefile,v 1.9.2.15 2001-02-08 22:54:42 ahoward Exp $
 # ************************************************************************/
 
 .SUFFIXES: .cc .o
@@ -21,24 +21,6 @@ OBS = world.o image.o \
 		laserbeacon.o visionbeacon.o
 WIN_OBS = main.o win.o server.o
 LIBS = -L/usr/X11R6/lib -lX11 -lm -lpthread
-
-clean:
-	rm -f *.o *~ posreader stage
-
-all: stage rtk-stage posreader
-
-#stage:  $(OBS) $(WIN_OBS)
-#	g++ $(LIBS) $(OBS) $(WIN_OBS) -o stage
-
-dep:
-	$(MAKEDEP) -I../include -Y -s "# DO NOT DELETE.  FOLLOWING IS FROM MAKEDEPEND" *.cc 2>/dev/null
-
-
-posreader: posreader.cc
-	g++ $(CFLAGS) -o posreader posreader.cc 
-
-.cc.o: 
-	g++ $(CFLAGS) -c $<
 
 
 ##############################################################################
@@ -61,14 +43,22 @@ RTK_LINKFLAGS = -L$(PLAYER_LIB) -lplayerclient \
 				-L$(RTK_LIB) -lrtk \
 				-lm -lstdc++ -lpthread `gtk-config --libs gtk gthread`
 
-%.o : %.cc
-	g++ ${RTK_CCFLAGS} -c $< -o $@
-
-stage:  $(RTK_OBJS) 
-	g++ $(RTK_OBJS) $(RTK_LINKFLAGS) -o rtk-stage
-
 rtk-stage:  $(RTK_OBJS) 
 	g++ $(RTK_OBJS) $(RTK_LINKFLAGS) -o rtk-stage
+
+clean:
+	rm -f *.o *~ rtk-stage
+
+all: rtk-stage
+
+dep:
+	$(MAKEDEP) -I../include -Y -s "# DO NOT DELETE.  FOLLOWING IS FROM MAKEDEPEND" *.cc 2>/dev/null
+
+.cc.o: 
+	g++ $(CFLAGS) -c $<
+
+%.o : %.cc
+	g++ ${RTK_CCFLAGS} -c $< -o $@
 
 
 # DO NOT DELETE.  FOLLOWING IS FROM MAKEDEPEND
