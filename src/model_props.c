@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.8 $
+//  $Revision: 1.9 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -481,9 +481,19 @@ int model_set_lines( model_t* mod, stg_line_t* lines, size_t lines_count )
   stg_normalize_lines( lines, lines_count );
   stg_scale_lines( lines, lines_count, geom->size.x, geom->size.y );
   stg_translate_lines( lines, lines_count, -geom->size.x/2.0, -geom->size.y/2.0 );
-  
+
   size_t len = sizeof(stg_line_t)*lines_count;
-  assert( mod->lines = realloc( mod->lines,len) );
+
+  if( len > 0 )
+    {
+      mod->lines = realloc( mod->lines,len);
+      assert( mod->lines );
+    }
+  else
+    {
+      if( mod->lines ) free( mod->lines ); mod->lines = NULL;
+    }
+  
   mod->lines_count = lines_count;
   memcpy( mod->lines, lines, len );
 

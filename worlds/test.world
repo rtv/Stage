@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.10 2004-08-31 04:35:46 rtv Exp $
+# CVS: $Id: test.world,v 1.11 2004-09-02 04:15:10 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution 0.02 
@@ -44,6 +44,7 @@ laserpioneer
     ### TODO - problem parsing this line?
    # blob.channels [ "red" "green" "blue" "cyan" "yellow" "magenta" ] 
   )	
+
 )
 
 #laser
@@ -64,6 +65,8 @@ model(
   gui.nose 1
   
   fiducial_id 22
+
+  laser.return 2
 
   velocity [0 0 10]
 )
