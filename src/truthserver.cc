@@ -534,7 +534,7 @@ void CWorld::ListenForPoseConnections( void )
     }
   
   // if the socket had a request
-  if( readable && (m_pose_listen.revents | POLLIN ) ) 
+  if( readable && (m_pose_listen.revents & POLLIN ) ) 
     {
       // set up a socket for this connection
       struct sockaddr_in cliaddr;  
