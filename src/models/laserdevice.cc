@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.7 2002-12-10 00:34:53 rtv Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.8 2003-01-09 19:31:08 inspectorg Exp $
  */
 
 #define DEBUG
@@ -102,8 +102,12 @@ bool CLaserDevice::Load(CWorldFile *worldfile, int section)
   // Read laser settings
   this->min_res = worldfile->ReadAngle(section, "min_res", this->min_res);
   this->max_range = worldfile->ReadLength(section, "max_range", this->max_range);
-  this->scan_rate = worldfile->ReadFloat(section, "scan_rate", this->scan_rate);
-  
+
+  this->default_scan_rate = worldfile->ReadFloat(section, "scan_rate", this->default_scan_rate);
+  this->default_scan_min = worldfile->ReadAngle(section, "scan_min", this->default_scan_min);
+  this->default_scan_max = worldfile->ReadAngle(section, "scan_max", this->default_scan_max);
+  this->default_scan_res = worldfile->ReadAngle(section, "scan_res", this->default_scan_res);
+    
   return true;
 }
 
@@ -148,11 +152,13 @@ void CLaserDevice::Update( double sim_time )
     else
     {
       // reset configuration to default.
+      /* REMOVE
       this->scan_res = DTOR(DEFAULT_RES);
       this->scan_min = DTOR(DEFAULT_MIN);
       this->scan_max = DTOR(DEFAULT_MAX);
       this->scan_count = 361;
       this->intensity = false;
+      */
 	
       // and indicate that the data is no longer available
       //Lock();
@@ -320,18 +326,18 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
       // The latter is useful if you want to stack beacons
       // on the laser or the laser on somethine else.
       if (ent == this || this->IsDescendent(ent) || 
-	  (ent != m_world->root && ent->IsDescendent(this)))
+          (ent != m_world->root && ent->IsDescendent(this)))
         continue;
 
       // Construct a list of entities that have a fiducial value
       if( ent->fiducial_return != FiducialNone )
-        {
-	  this->visible_beacons.push_front( (int)ent );
+      {
+        this->visible_beacons.push_front( (int)ent );
 	 
-	  // remove duplicates
-	  this->visible_beacons.sort();
-	  this->visible_beacons.unique();
-	}
+        // remove duplicates
+        this->visible_beacons.sort();
+        this->visible_beacons.unique();
+      }
 
       // Stop looking when we see something
       if(ent->laser_return != LaserTransparent) 
