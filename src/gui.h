@@ -91,8 +91,9 @@ typedef struct _gui_window
   rtk_fig_t* matrix;
   rtk_fig_t* poses;
 
-  gboolean show_matrix;
-  
+  gboolean show_matrix;  
+  gboolean fill_polygons;
+
   gboolean movie_exporting;
   int movie_speed;
   int movie_count;

@@ -78,7 +78,8 @@ model_t* model_create(  world_t* world,
   mod->laser_return = LaserVisible;
   mod->obstacle_return = TRUE;
   mod->fiducial_return = FiducialNone;
-
+  mod->blob_return = TRUE;
+  
   // sensible defaults
   mod->stall = FALSE;
 
@@ -115,6 +116,8 @@ model_t* model_create(  world_t* world,
   mod->energy_data.range = mod->energy_config.probe_range;
 
   mod->color = stg_lookup_color( "red" );
+
+  mod->polypoints = NULL;
 
   // define a unit rectangle from 4 lines
   stg_line_t lines[4];
@@ -195,7 +198,7 @@ int model_is_descendent( model_t* mod, model_t* testmod )
 {
   if( mod == testmod )
     return TRUE;
-  
+
   int ch;
   for(ch=0; ch < mod->children->len; ch++ )
     {
@@ -206,6 +209,21 @@ int model_is_descendent( model_t* mod, model_t* testmod )
   
   // neither mod nor a child of mod matches testmod
   return FALSE;
+}
+
+// returns 1 if mod1 and mod2 are in the same tree
+int model_is_related( model_t* mod1, model_t* mod2 )
+{
+  if( mod1 == mod2 )
+    return TRUE;
+
+  // find the top-level model above mod1;
+  model_t* t = mod1;
+  while( t->parent )
+    t = t->parent;
+
+  // now seek mod2 below t
+  return model_is_descendent( t, mod2 );
 }
 
 rtk_fig_t* model_prop_fig_create( model_t* mod, 

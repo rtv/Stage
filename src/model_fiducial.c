@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.15 $
+//  $Revision: 1.16 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -141,13 +141,12 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
 			   hispose.x, hispose.y, 
 			   him->world->matrix, PointToPoint );
   
-  // iterate until we hit something 
+  // iterate until we hit something
   model_t* hitmod;
   while( (hitmod = itl_next( itl )) ) 
     {
       if( hitmod != mfb->mod &&  //&& model_obstacle_get(hitmod) ) 
-	!model_is_descendent(mfb->mod,hitmod) && 
-	!model_is_antecedent(mfb->mod,hitmod) )
+	!model_is_related(mfb->mod,hitmod) )
 	break;
     }
   

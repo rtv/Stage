@@ -51,10 +51,14 @@ typedef struct _model
 
   stg_line_t* lines; // this buffer is lines_count * sizeof(stg_line_t) big
   int lines_count; // the number of lines
+  double* polypoints; // if the lines can be converted into a polygon,
+		      // the polygon points are stored here, there are
+		      // lines_count polypoints
 
   // basic model properties
   stg_laser_return_t laser_return;
-  stg_bool_t obstacle_return;
+  stg_bool_t obstacle_return; 
+  stg_bool_t blob_return; // visible in blobfinder?
   stg_fiducial_return_t fiducial_return;
   stg_pose_t pose;
   stg_velocity_t velocity;

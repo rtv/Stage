@@ -98,7 +98,7 @@ gui_window_t* gui_window_create( world_t* world, int xdim, int ydim )
   //rtk_fig_line( win->grid, 0, 0, 0, height );
 
   win->show_matrix = FALSE;
-
+  win->fill_polygons = FALSE;
   win->movie_exporting = FALSE;
   win->movie_count = 0;
   win->movie_speed = STG_DEFAULT_MOVIE_SPEED;

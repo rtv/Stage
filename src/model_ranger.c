@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.21 $
+//  $Revision: 1.22 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -217,7 +217,8 @@ void ranger_render_config( model_t* mod )
       // sensor pose
       rtk_fig_rectangle( fig, 
 			 rngr->pose.x, rngr->pose.y, rngr->pose.a,
-			 rngr->size.x, rngr->size.y, 0 ); 
+			 rngr->size.x, rngr->size.y, 
+			 mod->world->win->fill_polygons ); 
       
       // TODO - FIX THIS
 

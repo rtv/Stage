@@ -15,6 +15,7 @@ enum {
   STG_MITEM_FILE_MOVIE_STOP,
   STG_MITEM_VIEW_MATRIX,
   STG_MITEM_VIEW_GRID,
+  STG_MITEM_VIEW_POLYGONS,
   STG_MITEM_VIEW_DEBUG,
   STG_MITEM_VIEW_OBJECT,
   STG_MITEM_VIEW_DATA_NEIGHBORS,
@@ -216,6 +217,14 @@ void gui_menu_layer( rtk_menuitem_t *item )
   // invalidate the whole canvas - how?
 }
 
+void gui_menu_polygons( rtk_menuitem_t *item )
+{
+  gui_window_t* win = (gui_window_t*)item->menu->canvas->userdata;
+  win->fill_polygons = !win->fill_polygons;
+
+  //PRINT_WARN1( "TOGGLE FILL POLYGONS - state now %d", win->fill_polygons );
+}
+
 void gui_menu_matrix( rtk_menuitem_t *item )
 {
   PRINT_DEBUG1( "menu selected %s.",
@@ -330,6 +339,8 @@ void gui_window_menus_create( gui_window_t* win )
     rtk_menu_create_sub(win->menus[STG_MENU_VIEW], "Configuration");
 
   // create the rest of the VIEW menu items
+  win->mitems[STG_MITEM_VIEW_POLYGONS] = 
+    rtk_menuitem_create(win->menus[STG_MENU_VIEW], "Fill polygons", 1);
   win->mitems[STG_MITEM_VIEW_GRID] = 
     rtk_menuitem_create(win->menus[STG_MENU_VIEW], "Grid", 1);
   win->mitems[STG_MITEM_VIEW_MATRIX] = 
@@ -414,6 +425,9 @@ void gui_window_menus_create( gui_window_t* win )
 
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_GRID], 
 			     gui_menu_layer );
+
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_POLYGONS], 
+			     gui_menu_polygons );
   
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_DEBUG], 
 			     gui_menu_debug );
@@ -459,6 +473,7 @@ void gui_window_menus_create( gui_window_t* win )
   // menu items to get the callback called for non-checked state
 
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_GRID], 1);
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_POLYGONS], 0);
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_DEBUG], 1);
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_DEBUG], 0);
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_OBJECT], 1);

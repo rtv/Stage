@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.8 2004-08-30 04:00:44 rtv Exp $
+# CVS: $Id: test.world,v 1.9 2004-08-30 05:58:58 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution 0.02 
@@ -37,12 +37,11 @@ laserpioneer
 (
   name "myrobot"
   pose [1 4 0]
-  nose 1 
-  color "green"
+  gui.nose 1 
 
   blobfinder(
     ### TODO - problem parsing this line?
-    #blob.channels[ "red" "green" "blue" "cyan" "yellow" "magenta" ] 
+    blob.channels [ "red" "green" "blue" "cyan" "yellow" "magenta" ] 
   )	
 )
 
@@ -59,11 +58,11 @@ model(
   name "sub" 
   size [2 1]
   pose [2.0 6.0 0.0] 
-  color "green"  
+  color "red"  
   bitmap "bitmaps/submarine.png"
   gui.nose 1
   
- fiducial_id 22
+  fiducial_id 22
 
- velocity [0 0 10]
+  velocity [0 0 10]
 )

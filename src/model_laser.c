@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.36 $
+//  $Revision: 1.37 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -107,9 +107,7 @@ int laser_update( model_t* mod )
 	  //  mod->id, mod, hitmod->id, hitmod );
 	  
 	  // Ignore myself, my children, and my ancestors.
-	  if( hitmod == mod || 
-	      model_is_descendent(mod,hitmod) || 
-	      model_is_antecedent(mod,hitmod) )
+	  if( hitmod == mod || model_is_related(mod,hitmod) )
 	    continue;
 	  
 	  // Stop looking when we see something
@@ -207,8 +205,8 @@ void laser_render_data(  model_t* mod, void* data, size_t len )
   rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_COLOR) );
   // hmm, what's the right cast to get rid of the compiler warning
   // for the points argument?
-  rtk_fig_polygon( fig, 0,0,0, cfg->samples+1, points, LASER_FILLED );      
-  
+  rtk_fig_polygon( fig, 0,0,0, cfg->samples+1, points, 	
+		   mod->world->win->fill_polygons );   
   
   rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_BRIGHT_COLOR) );
   

@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.12 2004-08-30 02:49:57 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.13 2004-08-30 05:58:57 rtv Exp $
  */
 
 #include <math.h>
@@ -223,23 +223,21 @@ int blobfinder_update( model_t* mod )
       
       while( (ent = itl_next( itl ) ))
 	{
-	  //printf( "ent %p (%s), vision_return %d\n",
-	  //  ent, ent->token, ent->color );
-	  
 	  // Ignore itself, its ancestors and its descendents
-	  if( ent == mod || 
-	      model_is_descendent( ent, mod ) || 
-	      model_is_descendent( mod, ent ) ) 	      
+	  if( ent == mod )
+	    continue;
+	  
+	  // Ignore transparent things
+	  if( !ent->blob_return )
+	    continue;
+	  
+	  if(  model_is_related( mod, ent ) )
 	    {
 	      PRINT_DEBUG2( "blob \"%s\" ignoring \"%s\" as a relative",
 			    mod->token, ent->token );
 	      continue;
 	    }
 	  
-	  // Ignore transparent things
-	  //if( !ent->vision_return )
-	  //  continue;
-
 	  range = itl->range; // it's this far away
 	  
 	  // get the color of the entity

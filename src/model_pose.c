@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.22 $
+//  $Revision: 1.23 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -72,14 +72,12 @@ model_t* model_test_collision_at_pose( model_t* mod,
       itl_t* itl = itl_create( p1.x, p1.y, p2.x, p2.y, 
 			       mod->world->matrix, 
 			       PointToPoint );
-      
-
       model_t* hitmod;
       while( (hitmod = itl_next( itl )) ) 
 	{
 	  if( hitmod != mod && 
 	      model_get_obstaclereturn(hitmod) && 
-	      !model_is_descendent(mod,hitmod) )
+	      !model_is_related(mod,hitmod) )
 	    {
 	      if( hitx || hity ) // if the caller needs to know hit points
 		{

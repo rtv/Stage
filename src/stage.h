@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.82 2004-08-30 04:00:44 rtv Exp $
+ * CVS: $Id: stage.h,v 1.83 2004-08-30 05:58:57 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -97,6 +97,7 @@ typedef enum
     STG_PROP_VELOCITY, 
     STG_PROP_LASERRETURN,
     STG_PROP_OBSTACLERETURN,
+    STG_PROP_BLOBRETURN,
     STG_PROP_VISIONRETURN,
     STG_PROP_RANGERRETURN, 
     STG_PROP_FIDUCIALRETURN,
@@ -687,6 +688,7 @@ typedef struct
 #define STG_DEFAULT_OBSTACLERETURN TRUE
 #define STG_DEFAULT_LASERRETURN LaserVisible
 #define STG_DEFAULT_RANGERRETURN TRUE
+#define STG_DEFAULT_BLOBRETURN TRUE
 #define STG_DEFAULT_COLOR (0xFF0000) // red
 
 // GUI

@@ -17,26 +17,38 @@ void model_render_lines( model_t* mod )
 
   stg_geom_t* geom = model_get_geom(mod);
 
-  double localx = geom->pose.x;
-  double localy = geom->pose.y;
-  double locala = geom->pose.a;
-  
-  double cosla = cos(locala);
-  double sinla = sin(locala);
-  
-  // draw lines too
-  int l;
-  for( l=0; l<count; l++ )
-    {
-      stg_line_t* line = &lines[l];
+  // if we compressed the lines into a polygon, draw the polygon
+  if( mod->polypoints )
+    rtk_fig_polygon( fig, 
+		     geom->pose.x, 
+		     geom->pose.y, 
+		     geom->pose.a, 
+		     count, 
+		     mod->polypoints, 
+		     mod->world->win->fill_polygons ); 
+  else // otherwise we draw the lines individually
+    { 
+      double localx = geom->pose.x;
+      double localy = geom->pose.y;
+      double locala = geom->pose.a;
       
-      double x1 = localx + line->x1 * cosla - line->y1 * sinla;
-      double y1 = localy + line->x1 * sinla + line->y1 * cosla;
-      double x2 = localx + line->x2 * cosla - line->y2 * sinla;
-      double y2 = localy + line->x2 * sinla + line->y2 * cosla;
+      double cosla = cos(locala);
+      double sinla = sin(locala);
       
-      rtk_fig_line( fig, x1,y1, x2,y2 );
+      int l;
+      for( l=0; l<count; l++ )
+	{
+	  stg_line_t* line = &lines[l];
+	  
+	  double x1 = localx + line->x1 * cosla - line->y1 * sinla;
+	  double y1 = localy + line->x1 * sinla + line->y1 * cosla;
+	  double x2 = localx + line->x2 * cosla - line->y2 * sinla;
+	  double y2 = localy + line->x2 * sinla + line->y2 * cosla;
+	  
+	  rtk_fig_line( fig, x1,y1, x2,y2 );
+	}
     }
+
 }
 
 void gui_render_geom( model_t* mod )

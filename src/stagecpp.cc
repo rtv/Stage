@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.49 2004-08-30 04:00:44 rtv Exp $
+// $Id: stagecpp.cc,v 1.50 2004-08-30 05:58:57 rtv Exp $
 
 #include "stage.h"
 #include "worldfile.hh"
@@ -60,6 +60,13 @@ void configure_model( stg_model_t* mod, int section )
     stg_model_prop_with_data(mod, STG_PROP_LASERRETURN, 
 			     &laservis, sizeof(laservis) );
       
+  // blob visibility
+  int blobvis = 
+    wf.ReadInt(section, "blob.return", STG_DEFAULT_BLOBRETURN );      
+  if( blobvis != STG_DEFAULT_BLOBRETURN )
+    stg_model_prop_with_data(mod, STG_PROP_BLOBRETURN, 
+			     &blobvis, sizeof(blobvis) );
+      
   // ranger visibility
   stg_bool_t rangervis = 
     wf.ReadInt( section, "ranger.return", STG_DEFAULT_RANGERRETURN );
@@ -89,11 +96,13 @@ void configure_model( stg_model_t* mod, int section )
     {
       stg_rotrect_t* rects = NULL;
       int num_rects = 0;
-
+      
+#ifdef DEBUG
       char buf[MAXPATHLEN];
       char* path = getcwd( buf, MAXPATHLEN );
-      PRINT_WARN2( "in %s attempting to load %s",
-		   path, bitmapfile );
+      PRINT_DEBUG2( "in %s attempting to load %s",
+		    path, bitmapfile );
+#endif
 
       if( stg_load_image( bitmapfile, &rects, &num_rects ) )
 	exit( -1 );

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -196,6 +196,10 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
       *data = (void*)&mod->obstacle_return;
       *len = sizeof(mod->obstacle_return);
       break;      
+    case STG_PROP_BLOBRETURN: 
+      *data = (void*)&mod->blob_return;
+      *len = sizeof(mod->blob_return);
+      break;      
       
       // TODO -  more props here
       // etc
@@ -376,6 +380,17 @@ int model_set_obstaclereturn( model_t* mod, stg_bool_t val )
   return 0;
 }
 
+stg_bool_t model_get_blobreturn( model_t* mod   )
+{
+  return mod->blob_return;
+}
+
+int model_set_blobreturn( model_t* mod, stg_bool_t val )
+{
+  mod->blob_return = val;
+  return 0;
+}
+
 stg_pose_t* model_get_pose( model_t* model )
 {
   return &model->pose;
@@ -472,6 +487,44 @@ int model_set_lines( model_t* mod, stg_line_t* lines, size_t lines_count )
   mod->lines_count = lines_count;
   memcpy( mod->lines, lines, len );
 
+  if( mod->polypoints )
+    { 
+      free( mod->polypoints ); 
+      mod->polypoints = NULL; 
+    }
+
+  if( mod->lines_count > 1 )
+    {
+      // attempt to make a polygon from the lines
+      int is_polygon = 1;
+      
+      // a valid polygon has lines that join
+      int p;
+      for( p=1; p<mod->lines_count; p++ )
+	{
+	  if( mod->lines[p].x1 != mod->lines[p-1].x2 ||
+	      mod->lines[p].y1 != mod->lines[p-1].y2 )
+	    {
+	      is_polygon = 0;
+	      break;
+	    }
+	}
+      
+      if( is_polygon )
+	{
+	  mod->polypoints = malloc( sizeof(double) * 2 * mod->lines_count );
+	  
+	  for( p=0; p<mod->lines_count; p++ )
+	  {
+	    mod->polypoints[2*p  ] = mod->lines[p].x1;
+	    mod->polypoints[2*p+1] = mod->lines[p].y1;
+	  }
+
+	  PRINT_WARN2( "model %s has a valid polygon of %d points",
+		       mod->token, mod->lines_count );
+	}  
+    }
+    
   // redraw my image 
   model_map( mod, 1 );
 

@@ -48,6 +48,7 @@ const char* stg_property_string( stg_id_t id )
     case STG_PROP_VELOCITY: return "velocity"; break;
     case STG_PROP_VISIONRETURN: return "vision_return"; break;
     case STG_PROP_FIDUCIALRETURN: return "fiducial_id";break;
+    case STG_PROP_BLOBRETURN: return "blob_return";break;
 
       //case STG_PROP_BLINKENLIGHT: return "blinkenlight";break;
       //case STG_PROP_BLOBCONFIG: return "blobconfig";break;
