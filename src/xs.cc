@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.6 2001-08-14 00:09:37 gerkey Exp $
+ * $Id: xs.cc,v 1.7 2001-08-14 00:19:55 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -79,8 +79,8 @@ char* default_pan = "0x0";
 queue<stage_truth_t> incoming_queue;
 queue<stage_truth_t> outgoing_queue;
 
-pthread_mutex_t incoming_mutex;
-pthread_mutex_t outgoing_mutex;
+//pthread_mutex_t incoming_mutex;
+//pthread_mutex_t outgoing_mutex;
 
 // an associative array, indexed by player ID (neat!)
 //typedef map< CPlayerID, truth_t > TruthMap;
@@ -102,8 +102,8 @@ void CatchSigPipe( int signo )
 
 void ExitFunc( void )
 {
-  pthread_mutex_destroy( &incoming_mutex );
-  pthread_mutex_destroy( &outgoing_mutex );
+  //  pthread_mutex_destroy( &incoming_mutex );
+  // pthread_mutex_destroy( &outgoing_mutex );
 }
 
 /* supply the desription string for a given device code */
@@ -222,7 +222,7 @@ static void* TruthReader( void*)
   //fflush( stdout );
 
   /* create default mutex type (NULL) which is fast */
-  pthread_mutex_init( &incoming_mutex, NULL );
+  //pthread_mutex_init( &incoming_mutex, NULL );
 
   pthread_detach(pthread_self());
 
@@ -250,9 +250,9 @@ static void* TruthReader( void*)
       //printf( "RECV: " );
       //PrintStageTruth( truth );
      
-      pthread_mutex_lock( &incoming_mutex );
+      //pthread_mutex_lock( &incoming_mutex );
       incoming_queue.push( truth );
-      pthread_mutex_unlock( &incoming_mutex );
+      //pthread_mutex_unlock( &incoming_mutex );
     }
 
     /* shouldn't ever get here, but just to be tidy */
@@ -271,7 +271,7 @@ static void* TruthWriter( void* )
   //fflush( stdout );
   
   /* create default mutex type (NULL) which is fast */
-  pthread_mutex_init( &outgoing_mutex, NULL );
+  //pthread_mutex_init( &outgoing_mutex, NULL );
 
   pthread_detach(pthread_self());
 
@@ -283,7 +283,7 @@ static void* TruthWriter( void* )
   while( 1 )
     {
       // very cautiously mutex the queue
-      pthread_mutex_lock( &outgoing_mutex );
+      //pthread_mutex_lock( &outgoing_mutex );
       
       while( !outgoing_queue.empty() )
 	{
@@ -304,7 +304,7 @@ static void* TruthWriter( void* )
 	  
 	}
       
-      pthread_mutex_unlock( &outgoing_mutex );	  
+      //pthread_mutex_unlock( &outgoing_mutex );	  
       
       usleep( 10000 );
     }
@@ -654,7 +654,7 @@ int main(int argc, char **argv)
   atexit( ExitFunc );
 
   // parse out the required port and host 
-  parse_args(argc,argv); 
+  //parse_args(argc,argv); 
 
   if((entp = gethostbyname( stage_host )) == NULL)
     {
@@ -701,7 +701,7 @@ int main(int argc, char **argv)
 
 void CXGui::HandleIncomingQueue( void )
 {
-  pthread_mutex_lock( &incoming_mutex );
+  //pthread_mutex_lock( &incoming_mutex );
 
   while( !incoming_queue.empty() )
     {
@@ -760,7 +760,7 @@ void CXGui::HandleIncomingQueue( void )
       //puts( "" );
     }
 
-  pthread_mutex_unlock( &incoming_mutex );
+  //pthread_mutex_unlock( &incoming_mutex );
 }
 
 CXGui::CXGui( int argc, char** argv, environment_t* anenv )
@@ -778,7 +778,7 @@ CXGui::CXGui( int argc, char** argv, environment_t* anenv )
   sprintf( window_title,  "%s v.%s", titleStr, versionStr );
 
 
-//    //LoadVars( initFile ); // read the window parameters from the initfile
+//  LoadVars( initFile ); // read the window parameters from the initfile
 
 //    // init X globals 
     display = XOpenDisplay( (char*)NULL );
@@ -977,9 +977,9 @@ void CXGui::MoveObject( truth_t* exp, double x, double y, double th )
   output.rotdy = (uint16_t)(exp->rotdy * 1000.0);
 
   // and queue it up for the server thread to write out
-  pthread_mutex_lock( &outgoing_mutex );
+  //pthread_mutex_lock( &outgoing_mutex );
   outgoing_queue.push( output );
-  pthread_mutex_unlock( &outgoing_mutex );
+  //pthread_mutex_unlock( &outgoing_mutex );
 
   dragging->x = x;
   dragging->y = y;
@@ -1638,9 +1638,9 @@ void CXGui::HandleKeyPressEvent( XEvent& reportEvent )
       output.x = (uint32_t) 1;
       
       // and queue it up for the server thread to write out
-      pthread_mutex_lock( &outgoing_mutex );
+      //pthread_mutex_lock( &outgoing_mutex );
       outgoing_queue.push( output );
-      pthread_mutex_unlock( &outgoing_mutex );
+      //pthread_mutex_unlock( &outgoing_mutex );
     }
 
   if( key == XK_l || key == XK_L )
