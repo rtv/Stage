@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xs.hh,v 1.1 2001-08-09 02:06:29 vaughan Exp $
+ * $Id: xs.hh,v 1.2 2001-08-10 20:48:38 vaughan Exp $
  ************************************************************************/
 
 #ifndef _WIN_H
@@ -135,7 +135,8 @@ public:
   void RenderGenericObject( truth_t* exp );
 
   void RenderLaserTurret( truth_t* exp, bool extended  );
-  void RenderPioneer( truth_t* exp, bool extended  );
+  void RenderRectRobot( truth_t* exp, bool extended  );
+  void RenderRoundRobot( truth_t* exp, bool extended  );
   void RenderUSCPioneer( truth_t* exp, bool extended  );
   void RenderPTZ( truth_t* exp, bool extended  );
   void RenderBox( truth_t* exp, bool extended  );
@@ -149,6 +150,9 @@ public:
   void RenderVisionBeacon( truth_t* exp, bool extended  );
   void RenderTruth( truth_t* exp, bool extended  );
   void RenderOccupancy( truth_t* exp, bool extended );
+  void RenderGripper( truth_t* exp, bool extended );
+  void RenderGps( truth_t* exp, bool extended );
+  void RenderPuck( truth_t* exp, bool extended );
   void RenderOccupancyGrid( void );
   truth_t* NearestEntity( double x, double y );
 
@@ -175,6 +179,13 @@ public:
   void HandleMotionEvent( XEvent& reportEvent );
 
   void SelectColor( truth_t* exp, unsigned long def );
+
+  void SetupZoom( char* );
+  void SetupPan( char* );
+  void SetupGeometry( char* );
+  void SetupChannels( char* );
+
+  Colormap default_cmap;
 };
 
 

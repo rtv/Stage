@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: README.xs,v 1.1 2001-08-10 19:16:15 vaughan Exp $
+# $Id: README.xs,v 1.2 2001-08-10 20:48:38 vaughan Exp $
 ############################################################################
 
 xs is an X GUI for stage that replaces the old xstage. It runs as an
@@ -32,8 +32,17 @@ xs understands the following X resources:
 
 xs.geometry: 600x600
 xs.channels: red green blue yellow magenta cyan
-xs.zoom: 100
-xs.pan: 10x10
+xs.zoom: 1.0
+xs.pan: 0x0 
+
+- geometry is in standard X resource format.
+
+- channels defines the colors that xs will draw for ACTS channels,
+from 0, specified in color names from the X database.
+ 
+- zoom is a floating point scaling factor.
+
+- pan is x by y and is a percentage of the maximum possible pan.
 
 You may want to copy these into your ~/.Xdefaults file.
 

@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.1 2001-08-09 08:00:13 vaughan Exp $
+ * $Id: xs.cc,v 1.2 2001-08-10 20:48:38 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -9,9 +9,6 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
-
-//extern char **environ;
-
 
 #include <netdb.h>
 #include <unistd.h>
@@ -59,7 +56,7 @@ const char* titleStr = "X Player/Stage Interface";
 //#define LABELS
 //typedef void (*callback_t)(truth_t*);
 
-#define USAGE  "USAGE: xpsi [-h <host>] [-tp <port>] [-ep <port>]\n\t-h <host>: connect to Stage on this host (default `localhost')\n\t-tp <port>: connect to Stage's Truth server on this TCP port (default `6001')\n\t-ep <port>: connect to Stage's Environment server on this TCP port (default `6001')" 
+#define USAGE  "\nUSAGE: xs [-h <host>] [-tp <port>] [-ep <port>]\n\t[-geometry <geometry string>] [-zoom <factor>]\n\t[-pan <X\%xY\%>] [-channels <\"color0 .... colorN\">]\nDESCRIPTIONS:\n-h <host>: connect to Stage on this host (default `localhost')\n-tp <port>: connect to Stage's Truth server on this TCP port (default `6001')\n-ep <port>: connect to Stage's Environment server on this TCP port (default `6001')\n-geometry <string>*: standard X geometry specification\n-zoom <factor>*: floating point zoom multiplier\n-pan <X\%xY\%>*: pan initial view X percent of maximum by Y percent of maximum\n-channels <string>*: specify the colors drawn for each ACTS channel; e.g. \"red green blue\"\n(* this option can be set in your ~/.Xdefaults file - see README.xs)\n"
 
 char stage_host[256] = "localhost";
 int truth_port = 6001;
@@ -72,6 +69,12 @@ char* geometry = 0;
 char* channels = 0;
 char* zoom = 0;
 char* pan = 0;
+
+// provide some sensible defaults for the parameters/resources
+char* default_channels = "red green blue magenta yellow cyan";
+char* default_geometry = "400x400";
+char* default_zoom = "0";
+char* default_pan = "0x0";
 
 queue<stage_truth_t> incoming_queue;
 queue<stage_truth_t> outgoing_queue;
@@ -123,6 +126,7 @@ char* CXGui::PlayerNameOf( const player_id_t& ent )
       case PLAYER_BROADCAST_CODE: return "Broadcast"; 
       case PLAYER_SPEECH_CODE: return "Speech"; 
       case PLAYER_TRUTH_CODE: return "Truth"; 
+      case PLAYER_GPS_CODE: return "GPS"; 
       }	 
     return "Unknown"; 
   } 
@@ -135,6 +139,7 @@ char* CXGui::StageNameOf( const truth_t& truth )
       case PlayerType: return "Player"; 
       case MiscType: return "Misc"; 
       case RectRobotType: return "RectRobot"; 
+      case RoundRobotType: return "RoundRobot"; 
       case SonarType: return "Sonar"; 
       case LaserTurretType: return "Laser"; 
       case VisionType: return "Vision"; 
@@ -143,11 +148,14 @@ char* CXGui::StageNameOf( const truth_t& truth )
       case LaserBeaconType: return "LaserBcn"; 
       case LBDType: return "LBD"; 
       case VisionBeaconType: return "VisionBcn"; 
-	//case GripperType: return "Gripper"; 
-	//case AudioType: return "Audio"; 
+      case GripperType: return "Gripper"; 
+      case AudioType: return "Audio"; 
       case BroadcastType: return "Bcast"; 
-	//case SpeechType: return "Speech"; 
-	//case TruthType: return "Truth"; 
+      case SpeechType: return "Speech"; 
+      case TruthType: return "Truth"; 
+      case GpsType: return "GPS"; 
+      case PuckType: return "Puck"; 
+      case OccupancyType: return "Occupancy"; 
       }	 
     return "Unknown"; 
   } 
@@ -449,7 +457,73 @@ bool DownloadEnvironment( environment_t* env )
 
 ///////////////////////////////////////////////////////////////////
 
+void  CXGui::SetupZoom( char* zm )
+{
+  assert( zm );
+  double factor = strtod( zm, 0 );
 
+  iwidth = (int)(factor * env->width); // STARTWIDTH
+  iheight = (int)(factor * env->height); // STARTHEIGHT
+  CalcPPM();
+  
+#ifdef VERBOSE
+  printf( "Zoom factor: %.2f (ppm = %.2f)\n", factor, ppm );
+#endif
+
+}
+
+void CXGui::SetupPan( char* pn )
+{
+  int xpc, ypc;
+
+  // format is integer percentage
+  sscanf( pn, "%dx%d", &xpc, &ypc );
+
+  panx = ((iwidth - width) * xpc) / 100;
+  pany = ((iheight - height) * ypc ) / 100;
+
+#ifdef VERBOSE
+  printf( "Pan: %d x %d\n", panx, pany );
+#endif
+}
+
+void  CXGui::SetupGeometry( char* geom )
+{    
+  unsigned int uw, uh;
+  XParseGeometry( geom, &x, &y, &uw, &uh ); 
+  
+  width = uw;
+  height = uh;
+
+#ifdef VERBOSE
+  printf( "Geometry: %d,%d %dx%d\n", x, y, width, height );
+#endif
+}
+
+void  CXGui::SetupChannels( char* channels )
+{
+  assert( channels );
+
+  XColor a, b;
+  int c = 0;
+  char* token = strtok( channels, " \t" );
+  while( token )
+    {
+      if( !XAllocNamedColor( display, default_cmap, token, &a, &b ) )
+	{
+	  printf( "Warning: color name %s not recognized for channel %d\n",
+		  token, c );
+	}
+      
+#ifdef VERBOSE
+      printf( "ACTS channel %d: \"%s\" (%d,%d,%d)\n",
+	      c, token, a.red, a.green, a.blue );
+#endif
+      channel_colors[c++] = a.pixel;
+      
+      token = strtok( NULL, " \t" );
+    }
+}
 
 /* easy little command line argument parser */
 void parse_args(int argc, char** argv)
@@ -459,22 +533,63 @@ void parse_args(int argc, char** argv)
   i=1;
   while(i<argc)
   {
-    /* if(!strcmp(argv[i],"-geometry"))
-    {
-      if(++i<argc)
-	{ 
-	  geometry = new char[256];
-	  strncpy( geometry,argv[i], 256);
-	  printf( "[%s]", geometry );
-	}
-      else
+    if(!strcmp(argv[i],"-geometry"))
       {
-	printf( "\n%s\n", USAGE );
-        exit(1);
+	if(++i<argc)
+	  { 
+	    geometry = new char[ strlen( argv[i] ) ];
+	    strncpy( geometry,argv[i], strlen( argv[i] ) );
+	    printf( "[geometry: %s]", geometry );
+	  }
+	else
+	  {
+	    printf( "\n%s\n", USAGE );
+	    exit(1);
+	  }
       }
-    }
-    */
-    if(!strcmp(argv[i],"-h"))
+    else if(!strcmp(argv[i],"-zoom"))
+      {
+	if(++i<argc)
+	  { 
+	    zoom = new char[ strlen( argv[i] ) ];
+	    strncpy( zoom,argv[i], strlen( argv[i] ) );
+	    printf( "[zoom: %s]", zoom );
+	  }
+	else
+	  {
+	    printf( "\n%s\n", USAGE );
+	    exit(1);
+	  }
+      }
+    else if(!strcmp(argv[i],"-pan"))
+      {
+	if(++i<argc)
+	  { 
+	    pan = new char[ strlen( argv[i] ) ];
+	    strncpy( pan,argv[i], strlen( argv[i] ) );
+	    printf( "[pan: %s]", pan );
+	  }
+	else
+	  {
+	    printf( "\n%s\n", USAGE );
+	    exit(1);
+	  }
+      }
+    else if(!strcmp(argv[i],"-channels"))
+      {
+	if(++i<argc)
+	  { 
+	    channels = new char[ strlen( argv[i] ) ];
+	    strncpy( channels,argv[i], strlen( argv[i] ) );
+	    printf( "[channels: %s]", channels );
+	  }
+	else
+	  {
+	    printf( "\n%s\n", USAGE );
+	    exit(1);
+	  }
+      }
+    else if(!strcmp(argv[i],"-h"))
     {
       if(++i<argc)
 	{ 
@@ -668,7 +783,7 @@ CXGui::CXGui( int argc, char** argv, environment_t* anenv )
 
     assert( display );
 
-    Colormap default_cmap = DefaultColormap( display, screen ); 
+    default_cmap = DefaultColormap( display, screen ); 
 
     XColor col, rcol;
     XAllocNamedColor( display, default_cmap, "red", &col, &rcol ); 
@@ -688,67 +803,27 @@ CXGui::CXGui( int argc, char** argv, environment_t* anenv )
     white = WhitePixel( display, screen );
    
     XTextProperty windowName;
+        
+    
+    // load the X resources here
+    
+    if( !geometry ) geometry = XGetDefault( display, argv[0], "geometry" ); 
+    if( !geometry ) geometry = default_geometry;
+    SetupGeometry( geometry );
+    
+    if( !channels ) channels = XGetDefault( display, argv[0], "channels" );
+    if( !channels ) channels = default_channels;
+    SetupChannels( channels );
+    
+    if( !zoom ) zoom = XGetDefault( display, argv[0], "zoom" );
+    if( !zoom ) zoom= default_zoom;
+    SetupZoom( zoom );
+    
+    if( !pan ) pan = XGetDefault( display, argv[0], "pan" );
+    if( !pan ) pan= default_pan;
+    SetupPan( pan ); // must setupzoom first!
+    
 
-    // provide some sensible defaults for the window parameters
-    x = y = 0; 
-    
-    width = iwidth = env->width; // STARTWIDTH
-    height = iheight = env->height; // STARTHEIGHT
-    
-    if( width > 700 ) width = 700;
-    if( height > 600 ) height = 600;
-
-  // load the X resources here
-    
-    if( !geometry )
-      geometry = XGetDefault( display, argv[0], "geometry" ); 
-    
-    unsigned int uw, uh;
-    XParseGeometry( geometry, &x, &y, &uw, &uh ); 
-
-    width = uw;
-    height = uh;
-
-    // allocate the named colors here
-    //if( !channels )
-      if( (channels = XGetDefault( display, argv[0], "channels" )) )
-	{
-	  XColor a, b;
-	  int c = 0;
-	  char* token = strtok( channels, " \t" );
-	  while( token )
-	    {
-	      if( !XAllocNamedColor( display, default_cmap, token, &a, &b ) )
-		  {
-		    printf( "Warning: color name %s not recognized for channel %d\n",
-			    token, c );
-		  }
-	      
-#ifdef VERBOSE
-	      printf( "ACTS channel %d: \"%s\" (%d,%d,%d)\n",
-		      c, token, a.red, a.green, a.blue );
-#endif
-	      channel_colors[c++] = a.pixel;
-	      
-	      token = strtok( NULL, " \t" );
-	    }
-	}
-    
-    if( !zoom )
-      zoom = XGetDefault( display, argv[0], "zoom" );
-    // TODO - parse the zoom resource string here
-    
-    
-    panx = pany = 0;
-    
-    if( !pan )
-      pan = XGetDefault( display, argv[0], "pan" );
-    // TODO - parse the pan resource string here
-
-    //printf( "Resources: %s %s %s %s %s\n", 
-    //          argv[0], geometry, channels, zoom, pan );
-  
-    CalcPPM();
 
     win = XCreateSimpleWindow( display, 
   			     RootWindow( display, screen ), 

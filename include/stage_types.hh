@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/stage_types.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -86,10 +86,10 @@ GripperType,
 GpsType,
 PuckType,
 BroadcastType,
-//AudioType,
-//SpeechType,
-//TruthType,
-//OccupancyType
+AudioType,
+SpeechType,
+TruthType,
+OccupancyType
 };
 
 #endif

@@ -30,7 +30,8 @@ void CXGui::RenderObject( truth_t &truth )
     switch( truth.stage_type )
       {
       case NullType: break; // do nothing 
-      case RectRobotType: RenderPioneer( &truth, extended ); break; 
+      case RectRobotType: RenderRectRobot( &truth, extended ); break; 
+      case RoundRobotType: RenderRoundRobot( &truth, extended ); break; 
       case LaserTurretType: RenderLaserTurret( &truth, extended ); break;
 	//case PLAYER_BEACON_CODE: RenderLaserBeacon( &truth, extended ); break;
       case BoxType: RenderBox( &truth, extended ); break;
@@ -43,6 +44,9 @@ void CXGui::RenderObject( truth_t &truth )
       case PtzType: RenderPTZ( &truth, extended ); break;  
       case VisionBeaconType: RenderVisionBeacon( &truth, extended ); break;  
       case BroadcastType: RenderBroadcast( &truth, extended ); break;  
+      case GripperType: RenderGripper( &truth, extended ); break;  
+      case GpsType: RenderGps( &truth, extended ); break;  
+      case PuckType: RenderPuck( &truth, extended ); break;  
 	
 	// deprecated
 	//case PLAYER_TRUTH_CODE: RenderTruth(&truth,extended); break;  
@@ -227,7 +231,7 @@ void CXGui::RenderMisc( truth_t* exp, bool extended )
 }
 
 
-void CXGui::RenderPioneer( truth_t* exp, bool extended )
+void CXGui::RenderRectRobot( truth_t* exp, bool extended )
  { 
    SelectColor( exp,red );
    
@@ -259,6 +263,21 @@ void CXGui::RenderLaserBeacon( truth_t* exp, bool extended )
   DrawNoseBox( exp->x, exp->y, exp->w/2.0, exp->h/2.0, exp->th );
 }
 
+void CXGui::RenderGripper( truth_t* exp, bool extended )
+{ 
+  SelectColor( exp,white );  
+  DrawNoseBox( exp->x, exp->y, exp->w/2.0, exp->h/2.0, exp->th );
+}
+
+void CXGui::RenderRoundRobot( truth_t* exp, bool extended )
+{ 
+  SelectColor( exp,red );
+  DrawCircle( exp->x, exp->y, exp->w/2.0 );
+
+  DrawNose( exp->x, exp->y, exp->w/2.0, exp->th - 0.6 );
+  DrawNose( exp->x, exp->y, exp->w/2.0, exp->th + 0.6 );
+}
+
 void CXGui::RenderVisionBeacon( truth_t* exp, bool extended )
 { 
   SelectColor( exp,yellow );
@@ -270,6 +289,19 @@ void CXGui::RenderBroadcast( truth_t* exp, bool extended )
   SelectColor( exp,green );
   DrawCircle( exp->x, exp->y, exp->w/2.0 );
 }
+
+void CXGui::RenderPuck( truth_t* exp, bool extended )
+{ 
+  SelectColor( exp,green );
+  DrawCircle( exp->x, exp->y, exp->w/2.0 );
+}
+
+void CXGui::RenderGps( truth_t* exp, bool extended )
+{ 
+  SelectColor( exp,white );
+  DrawCircle( exp->x, exp->y, exp->w/2.0 );
+}
+
 
 void CXGui::RenderBox( truth_t* exp, bool extended )
 { 

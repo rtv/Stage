@@ -19,6 +19,7 @@ create vision_beacon pose 2.0 2.5 0.0 channel 0
 create vision_beacon pose 3.0 2.5 0.0 channel 1
 create vision_beacon pose 4.0 2.5 0.0 channel 2 
 
+
 # vision devices MUST be children of cameras
 create ptz_device pose 2.0 2.0 0.0 port 6666
 {
@@ -47,7 +48,7 @@ create position_device pose 1.0 3.0 0.0 port 6665
   } 
 }
 
-create position_device pose 1.0 2.0 0.0 size 0.5 0.2
+create position_device shape circle hpose 1.0 2.0 0.0 size 0.5 0.2
 create position_device pose 1.0 1.0 0.0
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -66,12 +66,12 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
   
   m_interval = 0.01; // update this device VERY frequently
   
-    // assume robot is 20kg
-    m_mass = 20.0;
-
-    // Set the default shape
-    m_shape = rectangle;
-    
+  // assume robot is 20kg
+  m_mass = 20.0;
+  
+  // Set the default shape
+  m_shape = rectangle;
+  
 #ifdef INCLUDE_RTK
     m_mouse_radius = 0.400;
     m_draggable = true;
@@ -306,8 +306,15 @@ void CPositionDevice::SetShape(pioneer_shape_t shape)
 {
   m_shape = shape;
    
-  if(shape == circle)
-    m_size_y = m_size_x;
+  switch( m_shape )
+    {
+    case circle:  
+      m_stage_type = RoundRobotType;
+      m_size_y = m_size_x;
+      break;
+    case rectangle:
+      m_stage_type = RectRobotType;
+    }
 }
 
 
