@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.2.2.5.2.1 2003-12-05 02:08:28 gerkey Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.2.2.5.2.2 2004-05-31 23:36:33 gerkey Exp $
  */
 
 //#define DEBUG
@@ -264,7 +264,7 @@ void CPositionDevice::UpdateConfig()
 	    // set my odometry to the values in the packet
         this->odo_px =  M_32(setOdom->x);
         this->odo_py =  M_32(setOdom->y);
-        this->odo_pth = Rad_16(setOdom->theta);
+        this->odo_pth = Rad_32(setOdom->theta);
 	    printf( "DEBUG: set pose to %f, %f x %f.\n", this->odo_px, this->odo_py, this->odo_pth);
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
         break;
