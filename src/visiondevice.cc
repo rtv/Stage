@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.16 $
+//  $Revision: 1.17 $
 //
 // Usage:
 //  (empty)
@@ -25,6 +25,7 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include <math.h>
+//#include <iostream.h>
 #include "world.hh"
 #include "visiondevice.hh"
 #include "ptzdevice.hh"
@@ -65,32 +66,17 @@ CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent,
   
   cameraImageWidth = 160;
   cameraImageHeight = 120;
-  
+
   m_scan_width = 160;
-  
+
   m_pan = 0;
   m_tilt = 0;
   m_zoom = DTOR(60);
-  
+
   m_max_range = 8.0;
-  
+
   numBlobs = 0;
   memset( blobs, 0, MAXBLOBS * sizeof( ColorBlob ) );
-  
-
-    cameraImageWidth = 160;
-    cameraImageHeight = 120;
-    
-    m_scan_width = 160;
-    
-    m_pan = 0;
-    m_tilt = 0;
-    m_zoom = DTOR(60);
-
-    m_max_range = 8.0;
-
-    numBlobs = 0;
-    memset( blobs, 0, MAXBLOBS * sizeof( ColorBlob ) );
 
 #ifdef INCLUDE_RTK
   m_hit_count = 0;
@@ -186,7 +172,8 @@ void CVisionDevice::UpdateScan()
 
     for (int s = 0; s < m_scan_width; s++)
     {
-      //int channel = 0;
+      bzero(&col,sizeof(col));
+
       double range = m_max_range;
       
       // Compute parameters of scan line
@@ -210,7 +197,7 @@ void CVisionDevice::UpdateScan()
 		
 	      {  
 		//printf( "i see %p (%s)\n", 
-		//ent, m_world->StringType( ent->m_stage_type ) );
+                        //ent, m_world->StringType( ent->m_stage_type ) );
 		
 		range = lit.GetRange(); // it's this far away
 		//channel = ent->channel_return; // it's this color
@@ -236,6 +223,7 @@ void CVisionDevice::UpdateScan()
 	      channel[c].green == col.green &&
 	      channel[c].blue == col.blue  )
 	    {
+              //printf("m_scan_channel[%d] = %d\n", s, c+1);
 	      m_scan_channel[s] = c + 1; // channel 0 is no-blob
 	      m_scan_range[s] = range;
 	      break;
@@ -265,7 +253,6 @@ void CVisionDevice::UpdateScan()
 size_t CVisionDevice::UpdateACTS()
 {
     // now the colors and ranges are filled in - time to do blob detection
-
     float yRadsPerPixel = m_zoom / cameraImageHeight;
     
     int blobleft = 0, blobright = 0;
@@ -273,7 +260,6 @@ size_t CVisionDevice::UpdateACTS()
     int blobtop = 0, blobbottom = 0;
       
     numBlobs = 0;
-      
     // scan through the samples looking for color blobs
     for( int s=0; s < m_scan_width; s++ )
 	{
@@ -305,10 +291,10 @@ size_t CVisionDevice::UpdateACTS()
             
 	    // useful debug - keep
             //cout << "Robot " << this
-	    // << " sees " << (int)blobcol-1
-	    // << " start: " << blobleft
-	    // << " end: " << blobright
-	    // << endl << endl;
+                    //<< " sees " << (int)blobcol-1
+                    //<< " start: " << blobleft
+                    //<< " end: " << blobright
+                    //<< endl << endl;
 	         
             // fill in an arrau entry for this blob
             //
@@ -388,13 +374,13 @@ size_t CVisionDevice::UpdateACTS()
 	    }
 	  
         // useful debug
-        //  cout << "blob "
-        //    << " area: " <<  blobs[b].area
-        //    << " left: " <<  blobs[b].left
-        //    << " right: " <<  blobs[b].right
-        //    << " top: " <<  blobs[b].top
-        //    << " bottom: " <<  blobs[b].bottom
-        //    << endl;
+        //cout << "blob "
+                //<< " area: " <<  blobs[b].area
+                //<< " left: " <<  blobs[b].left
+                //<< " right: " <<  blobs[b].right
+                //<< " top: " <<  blobs[b].top
+                //<< " bottom: " <<  blobs[b].bottom
+                //<< endl;
 	  
         actsBuf[ index + 4 ] = blobs[b].x;
         actsBuf[ index + 5 ] = blobs[b].y;

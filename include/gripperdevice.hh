@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/gripperdevice.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -41,6 +41,12 @@
 
 class CGripperDevice : public CEntity
 {
+    // Hackety hack hack...
+    //  this number, if greater than 0, restricts the color of puck
+    //  that the gripper will pick up.  you can set it with the auxillary
+    //  argument in the gripper command.  shh; it's a secret.
+    private: char m_puck_channel;
+
     // Default constructor
     //
     public: CGripperDevice(CWorld *world, CEntity *parent ); 

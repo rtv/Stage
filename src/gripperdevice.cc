@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.12 $
+//  $Revision: 1.13 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -26,6 +26,8 @@
 CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
   : CEntity(world, parent )
 {
+  m_puck_channel = -1;
+
   m_data_len    = sizeof( player_gripper_data_t ); 
   m_command_len = sizeof( player_gripper_cmd_t ); 
   m_config_len  = 0;
@@ -200,6 +202,12 @@ void CGripperDevice::Update( double sim_time )
           PRINT_MSG1("CGripperDevice::Update(): unknown gripper "
                       "command: %d\n", cmd.cmd);
       }
+
+      // Hackety hack hack...
+      //  this number, if greater than 0, restricts the color of puck
+      //  that the gripper will pick up.   give -1 to go unrestricted.
+      if(cmd.arg)
+        m_puck_channel = (char)cmd.arg-1;
 
       // This basically assumes instantaneous changes
       //
@@ -425,9 +433,11 @@ void CGripperDevice::PickupObject()
       closest_puck = NULL;
   }
   
-  //if(closest_puck && closest_dist<m_gripper_range)
-  //if(closest_puck && (m_inner_break_beam || m_outer_break_beam))
-  if(closest_puck)
+  if(closest_puck && 
+     ((m_puck_channel < 0) || 
+      ((closest_puck->m_color.red == m_world->channel[m_puck_channel].red) &&
+       (closest_puck->m_color.green == m_world->channel[m_puck_channel].green) &&
+       (closest_puck->m_color.blue == m_world->channel[m_puck_channel].blue))))
   {
     // pickup the puck
     closest_puck->m_parent_object = this;
