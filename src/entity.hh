@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.5 2002-09-25 02:55:55 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.6 2002-09-25 20:46:58 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -358,6 +358,8 @@ public:
   GnomeCanvasItem* g_body; // inside g_group - contains our body figures if any
   bool click_subscribed;
   
+  // true if we are selected and should display our status
+  bool watched;
   virtual void GuiStartup( void );
   virtual void GuiSelect( void );
   virtual void GuiUnselect( void );

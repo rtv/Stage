@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.7 2002-09-25 02:55:55 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.8 2002-09-25 20:46:58 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -105,8 +105,9 @@ class CWorld
    public: uint32_t m_step_num; // the number of cycles executed, from 0
 
   // when to shutdown (in seconds)
-  private: int m_stoptime;
-  
+private: int m_stoptime;
+public: int GetStopTime( void ){ return m_stoptime; };
+
   // Enable flag -- world only updates while this is set
   protected: bool m_enable;
   
@@ -379,7 +380,7 @@ public:
   static void GuiAboutBox(GtkWidget *widget, gpointer data);
   static void GuiSubscribeToAll(GtkWidget *widget, gpointer data);
   static void GuiSubscribeInvert(GtkWidget *widget, gpointer data);
-           
+  static gboolean GuiProgressTimeout( gpointer data );
 #endif
 
 };

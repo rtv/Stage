@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.122 2002-09-25 02:55:55 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.123 2002-09-25 20:46:58 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -283,7 +283,7 @@ bool CWorld::ParseCmdLine(int argc, char **argv)
       if(!strcmp(argv[a], "-t"))
 	{
 	  m_stoptime = atoi(argv[++a]);
-	  printf("setting time to: %d\n",m_stoptime);
+	  printf("[Stop time: %d]",m_stoptime);
 	}
 
       // ENABLE RTP - sensor data is sent in rtp format

@@ -21,11 +21,14 @@
  * Desc: Gnome GUI header
  * Author: Richard Vaughan
  * Date: 20 September 2002
- * CVS info: $Id: gnomegui.hh,v 1.2 2002-09-25 02:55:55 rtv Exp $
+ * CVS info: $Id: gnomegui.hh,v 1.3 2002-09-25 20:46:58 rtv Exp $
  */
+
+#ifndef GNOMEGUI_HH
+#define GNOMEHUI_HH
 
 // macro to compose a 4-byte red/green/blue/alpha color from
 // a normal 3-byte color and a 1-byte alpha value
 #define RGBA(C,A) (C<<8)+A
 
-
+#endif

@@ -21,7 +21,7 @@
  * Desc: Gnome GUI world components (all methods begin with 'Gui')
  * Author: Richard Vaughan
  * Date: 7 Dec 2000
- * CVS info: $Id: gnomegui.cc,v 1.5 2002-09-25 02:55:55 rtv Exp $
+ * CVS info: $Id: gnomegui.cc,v 1.6 2002-09-25 20:46:58 rtv Exp $
  */
 
 
@@ -41,11 +41,82 @@
 //#define VERBOSE
 
 #include "world.hh"
-#include "menus.hh"
 #include "gnomegui.hh"
 #include "playerdevice.hh"
 
 const double select_range = 0.6;
+
+void StageQuit( void ); // declare quit func
+
+
+// GUI CONSTANTS /////////////////////////////////////////////////////////////////////////////
+
+const char* stage_name = "Stage";
+const char* stage_authors[] = {"Richard Vaughan <vaughan@hrl.com>", 
+			       "Andrew Howard <ahoward@usc.edu>", 
+			       "Brian Gerkey <gerkey@usc.edu>", 
+			       "",
+			       "Supported by:",
+			       "\tDARPA",
+			       "\tThe University of Southern California",
+			       "\tHRL Laboratories LLC", 
+			       NULL };
+
+const char* stage_copyright = "Copyright Player/Stage Project, 2000-2002";
+const char** stage_documenters = NULL;
+const char* stage_translators = NULL;
+const char* stage_comments = 
+"A robot device simulator\n\nhttp://playerstage.sourceforge.net\n\n\"\"All the World's a stage,\nand all the men and women merely players\"\n (Shakespeare - As You Like It) ";
+
+GdkPixbuf* stage_logo_pixbuf = NULL;
+
+
+// MENU DEFINITIONS ////////////////////////////////////////////////////////////////////////////
+
+// calback functions
+#define new_app_cb NULL
+#define open_cd NULL
+#define save_as_cb NULL
+//#define close_cb NULL
+#define exit_cb StageQuit
+#define open_cb NULL
+#define about_cb CWorld::GuiAboutBox
+
+// menus
+static GnomeUIInfo file_menu[] = {
+  GNOMEUIINFO_MENU_NEW_ITEM(N_("_New Window"),
+                            N_("Create a new text viewer window"), 
+                            new_app_cb, NULL),
+  GNOMEUIINFO_MENU_OPEN_ITEM(open_cb,NULL),
+  GNOMEUIINFO_MENU_SAVE_AS_ITEM(save_as_cb,NULL),
+  GNOMEUIINFO_SEPARATOR,
+  //  GNOMEUIINFO_MENU_CLOSE_ITEM(close_cb,NULL),
+  GNOMEUIINFO_MENU_EXIT_ITEM(exit_cb,NULL),
+  GNOMEUIINFO_END
+};
+
+static GnomeUIInfo help_menu [] = {                     
+  /* load the helpfiles for this application if available */              
+  GNOMEUIINFO_HELP("Stage"),                
+  /* the standard about item */           
+  GNOMEUIINFO_MENU_ABOUT_ITEM(about_cb,NULL),          
+  GNOMEUIINFO_END         
+};                      
+
+static GnomeUIInfo view_menu [] = {                     
+  /* load the helpfiles for this application if available */              
+  GNOMEUIINFO_HELP("Stage"),                
+  /* the standard about item */           
+  GNOMEUIINFO_MENU_ABOUT_ITEM(about_cb,NULL),          
+  GNOMEUIINFO_END         
+};                      
+
+static GnomeUIInfo main_menu[] = {
+  GNOMEUIINFO_MENU_FILE_TREE(file_menu),
+  GNOMEUIINFO_MENU_HELP_TREE(help_menu),
+  GNOMEUIINFO_END
+};
+
 
 // CWORLD ////////////////////////////////////////////////////////////////////////////////
 
@@ -82,17 +153,22 @@ void CWorld::GuiStartup( void )
   // create the app
   this->g_app = GNOME_APP(gnome_app_new( "stage", "Stage" ));
 
-  // bind quit function
-  gtk_signal_connect( GTK_OBJECT(g_app), "delete_event",
-		      GTK_SIGNAL_FUNC(gtk_main_quit), NULL );
+  gtk_window_set_policy(GTK_WINDOW(g_app), FALSE, TRUE, FALSE);
+  gtk_window_set_default_size(GTK_WINDOW(g_app), 500, 500);
+
+
+  // create a top-level window
+  //GtkWidget frame = gtk_frame_new(NULL);
 
   // add menus  
   gnome_app_create_menus( this->g_app, main_menu );
   
   // setup appbar
-  this->g_appbar = GNOME_APPBAR(gnome_appbar_new(FALSE, TRUE, GNOME_PREFERENCES_USER));
+  this->g_appbar = GNOME_APPBAR(gnome_appbar_new(TRUE, TRUE, GNOME_PREFERENCES_USER));
   assert( g_appbar );
   gnome_appbar_set_default(  this->g_appbar, "No selection" );
+  gtk_progress_bar_set_text( gnome_appbar_get_progress( this->g_appbar ), "time" );
+  
   gnome_app_set_statusbar(GNOME_APP(this->g_app), GTK_WIDGET(this->g_appbar));
   
   // add menu hints to appbar
@@ -116,17 +192,19 @@ void CWorld::GuiStartup( void )
                                  GTK_POLICY_AUTOMATIC,
                                  GTK_POLICY_AUTOMATIC);
   
-  GtkWidget*  hruler = gtk_hruler_new();
-  GtkWidget*  vruler = gtk_vruler_new();
+  //GtkWidget*  hruler = gtk_hruler_new();
+  //GtkWidget*  vruler = gtk_vruler_new();
 
   gtk_container_add(GTK_CONTAINER(sw), GTK_WIDGET(this->g_canvas));
   //gtk_container_add(GTK_CONTAINER(sw), hruler );
   //gtk_container_add(GTK_CONTAINER(sw), vruler );
 
-  // set the widget size
-  // TODO
-  //gtk_window_set_default_size(GTK_WINDOW(sw), 300, 300);
-
+  // bind quit function to the top-level window
+  gtk_signal_connect(GTK_OBJECT(g_app),
+                     "delete_event",
+                     GTK_SIGNAL_FUNC(StageQuit),
+                     NULL);
+  
   // set the app's main window to be the scrolled window
   gnome_app_set_contents( GNOME_APP(g_app), sw );
   
@@ -150,6 +228,10 @@ void CWorld::GuiStartup( void )
 		     (GtkSignalFunc) CWorld::GuiEvent,
 		     this );
   
+  // start a callback to display the simultion time in the status bar
+  /* Add a timer callback to update the value of the progress bar */
+  gtk_timeout_add (100, CWorld::GuiProgressTimeout, this );
+
   gtk_widget_show_all(GTK_WIDGET(g_app));
 }
 
@@ -158,7 +240,27 @@ enum MotionMode
   Nothing = 0, Dragging, Spinning, Zooming
 };
 
+/* Update the value of the progress bar so that we get
+ * some movement */
+gboolean CWorld::GuiProgressTimeout( gpointer data )
+{
+  CWorld* world = (CWorld*)data;
 
+  // set the text to be the current time
+  char seconds_buf[128];
+  snprintf( seconds_buf, 128, "%.2f", world->GetTime() );
+  gtk_progress_bar_set_text( gnome_appbar_get_progress(world->g_appbar), seconds_buf );
+
+  
+  // if stage is counting down to a stop time, show the fraction of time used up
+  if( world->m_stoptime )
+    gtk_progress_bar_set_fraction( gnome_appbar_get_progress(world->g_appbar), 
+				     world->GetTime() / world->GetStopTime() );
+  
+  /* As this is a timeout function, return TRUE so that it
+   * continues to get called */
+  return TRUE;
+} 
 
 gint CWorld::GuiEvent(GnomeCanvasItem *item, GdkEvent *event, gpointer data)
 {
@@ -298,7 +400,7 @@ gint CWorld::GuiEvent(GnomeCanvasItem *item, GdkEvent *event, gpointer data)
       break;
       
     case GDK_MOTION_NOTIFY: // perform a drag, spin or zoom
-      printf( "MOTION mode %d\n", mode );
+      //printf( "MOTION mode %d\n", mode );
       
       switch( mode )
 	{
@@ -587,8 +689,10 @@ void CEntity::GuiWatch( void )
 
    gnome_canvas_item_lower( (GnomeCanvasItem*)watch_rect, 99 );
    
-   this->GuiStatus();
-   
+   this->watched = true;
+
+   gnome_appbar_push(  this->m_world->g_appbar, "Watch" );
+   this->GuiStatus();   
 }
 
 void CEntity::GuiUnwatch( void )
@@ -598,6 +702,8 @@ void CEntity::GuiUnwatch( void )
       gtk_object_destroy(GTK_OBJECT(watch_rect));
       watch_rect = NULL;
     }
+
+   this->watched = false;
       
   // remove my status from the appbar
    assert( this->m_world->g_appbar );
@@ -656,7 +762,9 @@ void CEntity::GuiSelect( void )
 
    gnome_canvas_item_lower( (GnomeCanvasItem*)select_rect, 99 );
    
-   //gnome_appbar_push(  this->m_world->g_appbar, "Select" );
+   this->watched = true;
+
+   gnome_appbar_push(  this->m_world->g_appbar, "Select" );
    this->GuiStatus();
    
 }
@@ -669,6 +777,8 @@ void CEntity::GuiUnselect( void )
       select_rect = NULL;
     }
       
+   this->watched = false;
+
   // remove my status from the appbar
   assert( this->m_world->g_appbar );
   gnome_appbar_pop(  this->m_world->g_appbar );  
@@ -685,12 +795,14 @@ void CEntity::GuiStatus( void )
   // check for overflow
   assert( -1 != 
 	  snprintf( buf, buflen, 
-		   "Type: %d pose: X: %.2f Y: %.2f TH: %.2f",
-		   this->stage_type, x, y, th ) );
+		   "Pose(%.2f,%.2f,%.2f) Stage(%d:%d)",
+		   x, y, th, 
+		    this->stage_id,
+		    this->stage_type ) );
 	  
   
   assert( this->m_world->g_appbar );
-  gnome_appbar_push(  this->m_world->g_appbar, buf );  
+  gnome_appbar_set_status(  this->m_world->g_appbar, buf );  
 }
 
 void CPlayerEntity::GuiStatus( void )
@@ -704,17 +816,19 @@ void CPlayerEntity::GuiStatus( void )
   // check for overflow
   assert( -1 !=
 	  snprintf( buf, buflen, 
-		    "Stage type: %d  Player type: %d port: %d index: %d pose: X: %.2f Y: %.2f TH: %.2f",
-		   this->stage_type, 
-		   this->m_player.code, 
-		   this->m_player.port, 
-		   this->m_player.index, 
-		   x, 
-		   y, 
-		   th ) );
+		    "Pose(%.2f,%.2f,%.2f) Player(%d:%d:%d) Stage(%d:%d)",
+		    x, 
+		    y, 
+		    th,
+		    this->m_player.port, 
+		    this->m_player.code, 
+		    this->m_player.index, 
+		    this->stage_id,
+		    this->stage_type
+		    ) );
   
   assert( this->m_world->g_appbar );
-  gnome_appbar_push(  this->m_world->g_appbar, buf );  
+  gnome_appbar_set_status( this->m_world->g_appbar, buf );  
 }
 
 
@@ -737,6 +851,10 @@ void CEntity::GuiMove( void )
   
   // rotate the group about the origin
   gnome_canvas_item_affine_absolute( GNOME_CANVAS_ITEM(g_group), rotate);
+
+  // if this item is watched we update the status bar
+  if( this->watched )
+    this->GuiStatus();
 }
 
 #endif
