@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gpsdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.2 $
+//  $Author: gerkey $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -44,7 +44,7 @@ void CGpsDevice::Update( double sim_time )
 {
     ASSERT(m_world != NULL);
     
-    if( Subscribed() < 1)
+    if(!Subscribed())
       return;
     
     if( sim_time - m_last_update < m_interval )

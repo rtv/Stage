@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -31,6 +31,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <iostream.h>
+#include <values.h>  // for MAXFLOAT
 
 #include "entity.hh"
 #include "world.hh"
@@ -70,7 +71,7 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
     strcpy(m_color_desc, "black");
 
     m_interval = 0.1; // update interval in seconds 
-    m_last_update = 0; // initialized 
+    m_last_update = -MAXFLOAT; // initialized 
 
     m_info_len    = sizeof( player_stage_info_t ); // same size for all types
     m_data_len    = 0; // type specific - set in subclasses
@@ -597,7 +598,7 @@ int CEntity::Subscribed()
   // returns > 0 if we have subs or dependents or we've been poked
   // and cancels the poke flag
   //return(  subscribed || m_dependent_attached || truth_poked-- ); 
-  bool retval = subscribed || truth_poked;
+  int retval = subscribed || truth_poked;
   if(truth_poked)
     truth_poked = !truth_poked;
   return(retval);
@@ -779,7 +780,7 @@ bool CEntity::MouseMove(RtkUiMouseData *pData)
     {
         SetGlobalPose(mx, my, mth);
         // also poke the truth so the underlying representation changes
-        truth_poked = true;
+        truth_poked = 1;
     }
 
     return (m_mouse_ready);

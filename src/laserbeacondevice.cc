@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.8 $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -122,12 +122,12 @@ void CLBDDevice::Update( double sim_time )
   ASSERT(m_world != NULL );
   ASSERT(m_laser != NULL );
 
-  if( Subscribed() < 1)
+  if(!Subscribed())
     return;
   
   // if its time to recalculate gripper state
   //
-  if( sim_time - m_last_update <= m_interval )
+  if( sim_time - m_last_update < m_interval )
     return;
 
   m_last_update = sim_time;
@@ -263,8 +263,14 @@ void CLBDDevice::OnUiUpdate(RtkUiDrawData *event)
     event->begin_section("global", "laser_beacon");
     
     if (event->draw_layer("data", true))
-        if ( Subscribed() > 0 )
-            DrawData(event);
+    {
+      if(Subscribed())
+      {
+        DrawData(event);
+        // call Update(), because we may have stolen the truth_poked
+        Update(m_world->GetTime());
+      }
+    }
     
     event->end_section();
 }

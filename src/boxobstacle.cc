@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.5 $
+//  $Author: gerkey $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -120,28 +120,28 @@ bool CBoxObstacle::Save(int &argc, char **argv)
 void CBoxObstacle::Update( double simtime )
 {
   //cout << "UPDATE BOX" << endl;
-  if( Subscribed() > 0 ) // i.e. our truth has been poked
-    {
-      ASSERT(m_world);
-      
-      // Undraw our old representation
-      //
-      m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-			    m_size_x, m_size_y, layer_obstacle, 0);
-      m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-			    m_size_x, m_size_y, layer_laser, 0);
-      
-      // Update our global pose
-      //
-      GetGlobalPose(m_map_px, m_map_py, m_map_pth);
-      
-      // Draw our new representation
-      //
-      m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-			    m_size_x, m_size_y, layer_obstacle, 1);
-      m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+  if(Subscribed()) // i.e. our truth has been poked
+  {
+    ASSERT(m_world);
+
+    // Undraw our old representation
+    //
+    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+                          m_size_x, m_size_y, layer_obstacle, 0);
+    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+                          m_size_x, m_size_y, layer_laser, 0);
+
+    // Update our global pose
+    //
+    GetGlobalPose(m_map_px, m_map_py, m_map_pth);
+
+    // Draw our new representation
+    //
+    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+                          m_size_x, m_size_y, layer_obstacle, 1);
+    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
                           m_size_x, m_size_y, layer_laser, 1);
-    }
+  }
 }
 
 #ifdef INCLUDE_RTK

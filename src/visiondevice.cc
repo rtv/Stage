@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.11 $
+//  $Author: gerkey $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -105,7 +105,7 @@ void CVisionDevice::Update( double sim_time )
     
     // Dont update anything if we are not subscribed
     //
-  if( Subscribed() < 1 )
+  if(!Subscribed())
     return;
   
   ASSERT(m_world != NULL);
@@ -444,13 +444,20 @@ void CVisionDevice::OnUiUpdate(RtkUiDrawData *data)
     //
     data->begin_section("global", "vision");
 
+    int sub = Subscribed();
     if (data->draw_layer("fov", true))
-        if (Subscribed() > 0)
-            DrawFOV(data);
+    {
+      if(sub)
+        DrawFOV(data);
+    }
     
     if (data->draw_layer("scan", true))
-        if (Subscribed() > 0 )
-            DrawScan(data);
+    {
+      if(sub)
+        DrawScan(data);
+    }
+    if(sub)
+      Update(m_world->GetTime());
     
     data->end_section();
 }

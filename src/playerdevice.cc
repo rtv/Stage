@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.14 $
+//  $Author: gerkey $
+//  $Revision: 1.15 $
 //
 // Usage:
 //  (empty)
@@ -172,9 +172,11 @@ bool CPlayerDevice::StartupPlayer(int port)
 
             // we assume Player is in the current path
             if( execlp( "player", "player",
-                        "-port", portBuf, 
-			"-stage", m_world->PlayerIOFilename(), 
-			(char*) 0) < 0 )
+                  "-port", portBuf, 
+		  "-stage", m_world->PlayerIOFilename(), 
+                  (strlen(m_world->m_auth_key)) ? "-key" : NULL,
+                  (strlen(m_world->m_auth_key)) ? m_world->m_auth_key : NULL,
+                  NULL) < 0 )
             {
                 cerr << "execlp failed: make sure Player can be found"
                     " in the current path."

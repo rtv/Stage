@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/truthdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.1 $
+//  $Author: gerkey $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -55,7 +55,7 @@ void CTruthDevice::Update( double sim_time )
   CEntity::Update( sim_time );
 #endif
 
-  if( Subscribed() < 1 ) return; // noone is listening :(
+  if(!Subscribed()) return; // noone is listening :(
 
   player_generic_truth_t truth;  
   int updatedAnEntity = false;

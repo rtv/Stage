@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.12 $
+//  $Author: gerkey $
+//  $Revision: 1.13 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -125,10 +125,6 @@ void CPuck::Update( double sim_time )
 {
     static bool undrawn = false;
 
-    // no subscriptions for pucks!
-    //if( Subscribed() < 1)
-    //return;
-    
     ASSERT(m_world != NULL);
   
     // if its time to recalculate state

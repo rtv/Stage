@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.3 $
+//  $Author: gerkey $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -141,11 +141,11 @@ void CPositionDevice::Update( double sim_time )
     // If the device is not subscribed,
     // reset to default settings.
     //
-  if( Subscribed() < 1)
-    {
-      m_odo_px = m_odo_py = m_odo_pth = 0;
-      return;
-    }
+  if(!Subscribed())
+  {
+    m_odo_px = m_odo_py = m_odo_pth = 0;
+    return;
+  }
   
     ASSERT(m_world != NULL);
   

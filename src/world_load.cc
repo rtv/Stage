@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.8 $
+//  $Author: gerkey $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -171,30 +171,35 @@ bool CWorld::Load(const char *filename)
          else if (argc == 4 && strcmp(argv[0], "set") == 0 && strcmp(argv[2], "=") == 0)
         {
             if (strcmp(argv[1], "environment_file") == 0)
-                {
-		  strcpy(m_env_file, argv[3]);
+            {
+              strcpy(m_env_file, argv[3]);
 
-		  printf( "[%s LOADING]", m_env_file );
-		  fflush( stdout );
-		  
-		  // Initialise the world grids
-		  if( !InitGrids(m_env_file) )
-		    printf( "Stage warning: "
-			    "error loading environment bitmap %s\n", 
-			    m_env_file );
+              printf( "[%s LOADING]", m_env_file );
+              fflush( stdout );
 
-		  printf( "\b\b\b\b\b\b\b\b\b" ); // erase load indicator
-		  printf( "         " ); // erase load indicator
-		  printf( "\b\b\b\b\b\b\b\b\b]" ); // erase load indicator
-		  fflush( stdout );
-		}
+              // Initialise the world grids
+              if( !InitGrids(m_env_file) )
+                printf( "Stage warning: "
+                        "error loading environment bitmap %s\n", 
+                        m_env_file );
+
+              printf( "\b\b\b\b\b\b\b\b\b" ); // erase load indicator
+              printf( "         " ); // erase load indicator
+              printf( "\b\b\b\b\b\b\b\b\b]" ); // erase load indicator
+              fflush( stdout );
+            }
+            else if (strcmp(argv[1], "auth_key") == 0)
+            {
+              strncpy(m_auth_key, argv[3],sizeof(m_auth_key));
+              m_auth_key[sizeof(m_auth_key)-1] = '\0';
+            }
             else if (strcmp(argv[1], "pixels_per_meter") == 0)
-                ppm = atof(argv[3]);
+              ppm = atof(argv[3]);
             else if (strcmp(argv[1], "laser_res") == 0)
-                m_laser_res = DTOR(atof(argv[3]));
+              m_laser_res = DTOR(atof(argv[3]));
             else
-                printf("line %d : variable %s is not defined\n",
-                       (int) linecount, (char*) argv[1]);  
+              printf("line %d : variable %s is not defined\n",
+                     (int) linecount, (char*) argv[1]);  
         }
 
         // Parse "enable" command

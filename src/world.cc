@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.20 $
+//  $Author: gerkey $
+//  $Revision: 1.21 $
 //
 // Usage:
 //  (empty)
@@ -92,6 +92,9 @@ CWorld::CWorld()
 
     // the current truth is unpublished
     m_truth_is_current = false;
+
+    // start with no key
+    bzero(m_auth_key,sizeof(m_auth_key));
 }
 
 

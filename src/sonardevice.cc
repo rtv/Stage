@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.8 $
+//  $Author: gerkey $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -64,10 +64,8 @@ void CSonarDevice::Update( double sim_time )
 #endif
 
   // dump out if noone is subscribed
-  if( Subscribed() < 1 )
-    {
-      return;
-    }
+  if(!Subscribed())
+    return;
 
   // Check to see if it is time to update
   //  - if not, return right away.
@@ -166,8 +164,14 @@ void CSonarDevice::OnUiUpdate(RtkUiDrawData *pData)
     pData->begin_section("global", "sonar");
     
     if (pData->draw_layer("scan", true))
-        if ( Subscribed() > 0 )
-            DrawScan(pData);
+    {
+      if(Subscribed())
+      {
+        DrawScan(pData);
+        // call Update(), because we may have stolen the truth_poked
+        Update(m_world->GetTime());
+      }
+    }
     
     pData->end_section();
 }

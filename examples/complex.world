@@ -4,6 +4,8 @@ set environment_file = cave.pnm
 set pixels_per_meter =  100
 set laser_res = 1
 
+#set auth_key = foobar
+
 # these servers enable clients (e.g. xpsi) access to Stage's internal models
 enable truth_server
 enable environment_server

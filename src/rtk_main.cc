@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtk_main.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -54,7 +54,6 @@ bool parse_cmdline(int argc, char **argv)
     return true;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////
 // Program entry
 //
@@ -65,12 +64,12 @@ int main(int argc, char **argv)
     // Parse the command line
     //
     if (!parse_cmdline(argc, argv))
-        return 1;
+      return 1;
     
     // Create the application
     //
     RtkUiApp *app = new RtkUiApp(&argc, &argv);
-
+    
     // Split the application into left and right panes
     //
     RtkUiPane *left_pane, *right_pane;
@@ -113,7 +112,7 @@ int main(int argc, char **argv)
       world->Shutdown();
       return 0;
     }
-
+    
     // Do message loop
     //   
     app->main();

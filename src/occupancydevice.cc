@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: &
-//  $Author: vaughan $
-//  $Revision: 1.1 $
+//  $Author: gerkey $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -126,7 +126,8 @@ void COccupancyDevice::Update( double sim_time )
   CEntity::Update( sim_time ); // inherit debug output
 #endif
 
-  if( Subscribed() < 1 ) return;
+  if(!Subscribed() < 1) 
+    return;
 
   // if the interval is set to -1, we're no longer updating this device
   if( m_interval == -1 ) return;

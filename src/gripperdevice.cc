@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.7 $
+//  $Revision: 1.8 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -127,7 +127,7 @@ void CGripperDevice::Update( double sim_time )
 {
   ASSERT(m_world != NULL);
 
-  if( Subscribed() < 1)
+  if(!Subscribed())
     return;
   
   

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.10 $
+//  $Author: gerkey $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -45,12 +45,10 @@ CWorld *world = 0;
 ///////////////////////////////////////////////////////////////////////////
 // Handle quit signals
 //
-void sig_quit(int)
+void sig_quit(int signum)
 {
-    quit = true;
+  quit = true;
 }
-
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Parse the command line
@@ -115,7 +113,7 @@ int main(int argc, char **argv)
     // Wait for a signal
     //
     while (!quit)
-        pause();
+      pause();
 
     // Stop the world
     //

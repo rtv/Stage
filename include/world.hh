@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.12 $
+//  $Author: gerkey $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  (empty)
@@ -322,6 +322,10 @@ public: bool m_truth_is_current;
     // Name of environment bitmap
     //
     private: char m_env_file[256];
+
+    // Authentication key
+    //
+    public: char m_auth_key[PLAYER_KEYLEN];
 
     // Object list
     //

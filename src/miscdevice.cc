@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/miscdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.3 $
+//  $Author: gerkey $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -54,7 +54,8 @@ void CMiscDevice::Update( double sim_time )
 {
   CEntity::Update( sim_time ); // inherit debug output
 
-  if( Subscribed() < 1 ) return;
+  if(!Subscribed()) 
+    return;
    
   // Check to see if it is time to update
   //  - if not, return right away.

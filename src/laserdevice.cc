@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.21 $
+//  $Author: gerkey $
+//  $Revision: 1.22 $
 //
 // Usage:
 //  (empty)
@@ -131,7 +131,7 @@ void CLaserDevice::Update( double sim_time )
 
     // Dont update anything if we are not subscribed
     //
-    if( Subscribed() > 0 )
+    if(Subscribed())
     {
         // Check to see if the configuration has changed
         //
@@ -406,8 +406,14 @@ void CLaserDevice::OnUiUpdate(RtkUiDrawData *event)
         DrawTurret(event);
 
     if (event->draw_layer("data", true))
-        if (Subscribed() > 0 )
-	  DrawScan(event);
+    {
+      if(Subscribed())
+      {
+        DrawScan(event);
+        // call Update(), because we may have stolen the truth_poked
+        Update(m_world->GetTime());
+      }
+    }
     
     event->end_section();
 }

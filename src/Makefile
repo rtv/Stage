@@ -65,14 +65,3 @@ dep:
 
 ##############################################################################
 # Dependancies (make dep)
-
-truthlog.o: ../include/truthserver.hh
-truthlog.o: /usr/local/player-1.0a/include/messages.h
-truthlog.o: /usr/local/player-1.0a/include/playercommon.h
-truthlog.o: ../include/stage_types.hh
-xs.o: ../include/stage_types.hh ../include/truthserver.hh
-xs.o: /usr/local/player-1.0a/include/messages.h
-xs.o: /usr/local/player-1.0a/include/playercommon.h ../include/xs.hh
-render.o: ../include/stage_types.hh ../include/truthserver.hh
-render.o: /usr/local/player-1.0a/include/messages.h
-render.o: /usr/local/player-1.0a/include/playercommon.h ../include/xs.hh

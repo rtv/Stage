@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.8 $
+//  $Author: gerkey $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -88,7 +88,7 @@ void CPtzDevice::Update( double sim_time )
 
     // Dont update anything if we are not subscribed
     //
-    if( Subscribed() < 1 )
+    if(!Subscribed())
     {
       // reset the camera to (0,0,0) to better simulate the physical camera
       m_pan = 0;
