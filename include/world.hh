@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.27 $
+//  $Revision: 1.1.2.28 $
 //
 // Usage:
 //  (empty)
@@ -71,13 +71,19 @@ class CWorld
     //
     public: virtual ~CWorld();
 
+    // Name of the file the world was loaded from
+    //
+    private: char m_filename[256];
+
     // Load the world
     //
     public: bool Load(const char *filename);
+    public: bool Load( void ){ return( Load( m_filename ) ); };
     
     // Save the world
     //
     public: bool Save(const char *filename);
+    public: bool Save( void ){ return( Save( m_filename ) ); };
     
     // Initialise the world
     //
@@ -228,10 +234,6 @@ class CWorld
     //
     private: double m_update_ratio;
     private: double m_update_rate;
-
-    // Name of the file the world was loaded from
-    //
-    private: char m_filename[256];
     
     // Name of environment bitmap
     //

@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xgui.hh,v 1.1.2.5 2001-05-30 22:10:33 vaughan Exp $
+ * $Id: xgui.hh,v 1.1.2.6 2001-06-01 21:10:31 vaughan Exp $
  ************************************************************************/
 
 #ifndef WIN_H
@@ -57,7 +57,7 @@ public:
   // data
   CWorld* world;
   ExportData* dragging;
-  //CEntity* near;
+  ExportData* near;
 
   // methods  
 
