@@ -215,8 +215,13 @@ int CStageIO::ReadProperties( int con, int fd, int num )
     //    prop.property, prop.id, prop.len, data );
       
     // set the property
-    GetEntity( prop.id )->
-      SetProperty( con, prop.property, (void*)data, prop.len );
+    CEntity* ent = NULL;
+
+    printf( "looking up entity number %d\n", prop.id );
+
+    assert( ent = GetEntity( prop.id ) );
+  
+    //ent->SetProperty( con, prop.property, (void*)data, prop.len );
   }
   
   return 0;
@@ -246,12 +251,13 @@ int CStageIO::ReadEntities( int fd, int num )
 	PRINT_DEBUG3( "attempting to create entity %d:%d:%d\n",
 		      ent.id, ent.parent, ent.type );
 	
-	CEntity* obj = 0;
+	//CEntity* obj = 0;
 	if( ent.parent == -1 )
-	  assert( obj = lib->CreateEntity( ent.type, this, 0 ) );
+	  //assert( root = lib->CreateEntity( ent.type, this, 0 ) );
+	  puts( "read root - no ent created" );
 	else
-	  assert( obj = lib->CreateEntity( ent.type, this,
-				      GetEntity(ent.parent)));
+	  assert( lib->CreateEntity( ent.type, this,
+				     GetEntity(ent.parent)));
       }
     else
       PRINT_WARN1( "entity type %d out of range\n", ent.type );
@@ -264,6 +270,8 @@ int CStageIO::ReadEntities( int fd, int num )
 
 int CStageIO::ReadBackground( int fd )
 {
+  PRINT_DEBUG( "" );
+
   stage_background_t w;
   
   int res = ReadPacket( fd, (char*)&w, sizeof(w) );
@@ -309,10 +317,14 @@ int CStageIO::ReadBackground( int fd )
 
 int CStageIO::WriteBackground( int fd )
 {
-  CBitmap* fix = (CBitmap*)this->root;
+  PRINT_DEBUG( "" );
+
+  CBitmap* fix = dynamic_cast<CBitmap*>(this->root);
   
   assert( fix );
-  assert( fix->image );
+  //assert( fix->image );
+  
+  assert( fix->bitmap_rects.size() > 0 );
   
   // announce that a matrix is on its way
   WriteHeader( fd, BackgroundPacket, 0);
@@ -322,7 +334,7 @@ int CStageIO::WriteBackground( int fd )
   b.sizex = fix->image->get_width();
   b.sizey = fix->image->get_height();
   b.scale = fix->scale;
-  //b.pixel_count = this->wall->image->count_pixels();
+  //b.pixel_count = this->root->image->count_pixels();
 
   printf( "Downloading background (%p)\n", &b ); 
   
@@ -409,7 +421,7 @@ int CStageIO::WriteEntities( int fd )
       if(  ent->m_parent_entity )
 	sent.parent = ent->m_parent_entity->stage_id; // valid parent
       else
-	sent.parent = -1; // no parent
+	sent.parent = -1; // no parent - it's root
       
       WriteEntity( fd, &sent );
     }
@@ -484,8 +496,7 @@ void CStageIO::Write( void )
 		      
               if( datalen == 0 )
               {
-                PRINT_DEBUG1( "READ EMPTY PROPERTY %d\n",
-		            p );
+                PRINT_DEBUG1( "READ EMPTY PROPERTY %d\n", p );
               }
               else
               {
@@ -610,7 +621,7 @@ void CStageIO::HandleCommand( int con, cmd_t cmd )
 
     case SAVEc: // someone has asked us to save the world file
       PRINT_DEBUG( "SAVEc" );
-      SaveFile(NULL); 
+      Save(); 
       break;
 
     default: printf( "Stage Warning: "

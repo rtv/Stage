@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.7 2002-10-07 06:45:59 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.8 2002-10-25 22:48:09 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -57,7 +57,7 @@ class CWorldFile;
 // these properties can be set with the SetProperty() method
 enum EntityProperty
 {
-  PropParent, 
+  PropParent = 1, 
   PropSizeX, 
   PropSizeY, 
   PropPoseX, 

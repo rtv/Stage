@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.4 2002-10-07 06:45:59 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.5 2002-10-25 22:48:09 rtv Exp $
  */
 
 
@@ -89,6 +89,18 @@ void GuiWorldUpdate( CWorld* world )
   while( gtk_events_pending () )
     gtk_main_iteration();      
 }
+
+
+void GuiLoad( CWorld* world )
+{
+  world->RtkLoad( world->worldfile );
+}
+
+void GuiSave( CWorld* world )
+{
+  world->RtkSave( world->worldfile );
+}
+
 
 // ENTITY HOOKS ///////////////////////////
 void GuiEntityStartup( CEntity* ent )
@@ -168,6 +180,8 @@ bool CWorld::ShowDeviceBody( StageType devtype )
 // TODO: fix this for client/server operation.
 bool CWorld::RtkLoad(CWorldFile *worldfile)
 {
+  PRINT_DEBUG( "**********************************" );
+
   int sx, sy;
   double scale = 0.01;
   double dx, dy;
@@ -452,7 +466,7 @@ void CWorld::RtkMenuHandling()
 
   // Save the world file
   if (rtk_menuitem_isactivated(this->save_menuitem))
-    SaveFile(NULL);
+    Save();
 
   // Handle export menu item
   // TODO - fold in XS's postscript and pnm export here or in rtk2

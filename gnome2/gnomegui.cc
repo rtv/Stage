@@ -21,7 +21,7 @@
  * Desc: Gnome GUI 
  * Author: Richard Vaughan
  * Date: 7 Dec 2000
- * CVS info: $Id: gnomegui.cc,v 1.2 2002-10-15 22:13:02 rtv Exp $
+ * CVS info: $Id: gnomegui.cc,v 1.3 2002-10-25 22:48:09 rtv Exp $
  */
 
 
@@ -42,12 +42,14 @@
 #include "world.hh"
 #include "gnomegui.hh"
 #include "playerdevice.hh"
+#include "bitmap.hh"
+#include "worldfile.hh"
 #include <gnome.h>
 
 // include the logo XPM
 #include "stage.xpm"
 
-#include "bitmap.hh"
+
 
 void StageQuit( void ); // declare quit func
 
@@ -90,6 +92,16 @@ void GuiEntityShutdown( CEntity* ent )
   /* do nothing */ 
 }
 
+void GuiLoad( CWorld* world )
+{ 
+  /* do nothing */ 
+}
+
+void GuiSave( CWorld* world )
+{ 
+  /* do nothing */ 
+}
+
 void GuiEntityUpdate( CEntity* ent )
 {
   GnomeCheckSub( ent ); // check to see if we're still subscribed
@@ -120,7 +132,7 @@ const char* stage_translators = NULL;
 const char* stage_comments = 
 "A robot device simulator\n\nhttp://playerstage.sourceforge.net\n\n\"\"All the World's a stage,\nand all the men and women merely players\"\n (Shakespeare - As You Like It) ";
 
-// GUI GLOBALS ////////////////////////////////////////////////////////////////////////////////
+// GUI GLOBALS ////////////////////////////////////////////////////////////////////////////
 
 CEntity* g_watched = NULL; // the user-selected entity
 bool  g_click_respond = false; // controls whether the g_watched entity responds to mouse events
@@ -135,7 +147,7 @@ GtkMenuBar* g_menubar; // menu bar
 GnomeAppBar* g_appbar; // status bar
 GtkToolbar* g_tbar; // toolbar
 
-// MENU DEFINITIONS ////////////////////////////////////////////////////////////////////////////
+// MENU DEFINITIONS ///////////////////////////////////////////////////////////////////////
 
 // calback functions
 #define new_app_cb NULL
@@ -1071,6 +1083,16 @@ void GnomeStatus( CEntity* ent )
 void GnomeEntityPropertyChange( CEntity* ent, EntityProperty prop )
 {
   //PRINT_DEBUG( "" );
+  assert( ent );
+  assert( prop > 0 );
+  assert( prop < ENTITY_LAST_PROPERTY );
+
+ // if the GUI is not up and running, do nothing
+  if( !g_canvas ) 
+    return; 
+
+  if( !ent->gui_data )
+    return;
 
   switch( prop )
     {
@@ -1124,6 +1146,9 @@ void GnomeEntityMove( CEntity* ent )
   // if the GUI is not up and running, do nothing
   if( !g_canvas ) 
     return; 
+
+  if( !ent->gui_data )
+    return;
   
   assert( GetOrigin( ent ) );
   assert( GetGroup( ent ) );

@@ -46,8 +46,13 @@ void ClientCatchSigPipe( int signo )
 CStageClient::CStageClient( int argc, char** argv, Library* lib )
   : CStageIO( argc, argv, lib )
 {
+  PRINT_DEBUG( "*************************************************************" );
+
   // start paused 
   m_enable = false;
+
+  // we don't have a file if we're a client - we download instead
+  worldfile = NULL;
 
   // parse out the hostname - that's all we need just here
   // (the parent stageio object gets the port)
@@ -79,6 +84,8 @@ CStageClient::CStageClient( int argc, char** argv, Library* lib )
 
   }
 
+  enable_gui = true;
+
   // reassuring console output
   printf( "[Connecting to %s:%d]", m_remotehost, m_port );
   puts( "" );
@@ -86,6 +93,20 @@ CStageClient::CStageClient( int argc, char** argv, Library* lib )
   // clients don't use a device directory - nullify the string
   m_device_dir[0] = 0;
 
+
+}
+
+
+CStageClient::~CStageClient( void )
+{
+  // do nothing
+}
+
+
+
+bool CStageClient::Load( void )
+{
+  PRINT_DEBUG( "*************************************************************" );
 
   // connect to the remote server and download the world data
 
@@ -156,52 +177,52 @@ CStageClient::CStageClient( int argc, char** argv, Library* lib )
   while( m_downloading )
     Read();
 
-  // now we have parameters for some other objects
-  //assert( matrix = new CMatrix( 500, 500, 10) );
-
   // Test to see if the required things were created...
   // TODO: MORE CHECKS HERE
-  assert( matrix ); // make sure a matrix was created in Read();
-  //assert( wall );
-  
-  // now we have the world parameters, we can configure things
-  
-#ifdef INCLUDE_RTK2
-  RtkLoad(NULL); // uses default values for now
-#endif
-  
-  //this->wall->Startup(); // renders the image into the matrix
-  
-  // Startup all the objects
-  // Devices will create and initialize their device files
+  assert( this->matrix ); // make sure a matrix was created in Read();
+  assert( this->root );
 
-  assert( root );
-  
-  if( !root->Startup() )
-    {
-      PRINT_ERR("object startup failed");
-      quit = true;
-      return;// false;
-    }
-
-  // now we've set everything up, we request updates as the world changes 
-  // (we MUST have downloaded and started everything before subscribing)
-  WriteCommand( SUBSCRIBEc );
-} 
+  // inherit
+  return CWorld::Load();
+}  
 
 
-
-CStageClient::~CStageClient( void )
-{
-  // do nothing
-}
-
-
-// Save the world file
-bool CStageClient::SaveFile( char* filename )
+bool CStageClient::Save( void )
 {
   // send a message to the server to save the world file.
   WriteCommand( SAVEc );
-  return false;
+
+  return CWorld::Save();
 }
+
+bool CStageClient::Startup( void )
+{
+  PRINT_DEBUG( "*************************************************************" );
+
+  assert( root );
+
+  bool res = CWorld::Startup();
+
+  // now we've set everything up, we request updates as the world changes 
+  // (we MUST have downloaded and started everything before subscribing)
+  if( res ) WriteCommand( SUBSCRIBEc );
+
+  return res;
+} 
+
+bool CStageClient::Shutdown( void )
+{
+  PRINT_DEBUG( "" );
+
+  bool res = CWorld::Shutdown();
+
+  // now we've set everything up, we request updates as the world changes 
+  // (we MUST have downloaded and started everything before subscribing)
+  //if( res ) WriteCommand( SUBSCRIBEc );
+
+  // TODO - say goodbye to server nicely
+
+  return res;
+} 
+
 

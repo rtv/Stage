@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.54 2002-10-07 06:45:59 rtv Exp $
+ * CVS: $Id: main.cc,v 1.55 2002-10-25 22:48:09 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -122,7 +122,6 @@ int main(int argc, char **argv)
   world = NULL;
   
   // CStageServer and CStageClient are subclasses of CStageIO and CWorld
-  // constructing them does most of the startup work.
   // check the command line for the '-c' option that makes this a client
   for( int a=1; a<argc; a++ )
   {
@@ -144,6 +143,16 @@ int main(int argc, char **argv)
     exit( 0 );
   }
 
+  // load the world model.
+  //
+  //  a server loads this from a world file; a client downloads it
+  // from a server
+
+  if( !world->Load() )
+  {
+    puts("Stage: failed to load world. Quitting.");
+    StageQuit();
+  }
 
   // startup is (externally) identical for client and server, but they
   // do slightly different things inside.

@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.128 2002-10-15 22:27:54 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.129 2002-10-25 22:48:09 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -57,6 +57,7 @@
 #include "playerdevice.hh"
 #include "library.hh"
 #include "gui.hh"
+#include "bitmap.hh"
 
 bool usage = false;
 
@@ -94,6 +95,9 @@ CEntity* CWorld::root = NULL;
 // Default constructor
 CWorld::CWorld( int argc, char** argv, Library* lib )
 {
+  // store the params locally
+  this->argc = argc;
+  this->argv = argv;
   this->lib = lib;
 
   // seed the random number generator
@@ -106,6 +110,9 @@ CWorld::CWorld( int argc, char** argv, Library* lib )
 
   // matrix is created by a StageIO object
   this->matrix = NULL;
+
+  // if we are a server, this gets set in the server's constructor
+  this->worldfile = NULL;
 
   // stop time of zero means run forever
   m_stoptime = 0;
@@ -181,16 +188,18 @@ CWorld::CWorld( int argc, char** argv, Library* lib )
   // start with no key
   bzero(m_auth_key,sizeof(m_auth_key));
  
-  // give the command line a chance to override the default values
-  // we just set
-  if( !ParseCmdLine( argc, argv )) 
-    {
-      quit = true;
-      return;
-    }
 
   assert(lib);
   //lib->Print();
+
+
+  // Construct a fixed obstacle representing the boundary of the 
+  // the environment - this the root for all other entities
+  assert( root = (CEntity*)new CBitmap(this, NULL) );
+
+  // give the GUI a go at the command line too
+  if( enable_gui )  GuiInit( argc, argv ); 
+ 
 }
 
 
@@ -312,7 +321,16 @@ bool CWorld::Startup()
 {  
   PRINT_DEBUG( "** STARTUP **" );
   
+  // give the command line a chance to override the default values
+  // we just set
+  if( !ParseCmdLine( this->argc, this->argv )) 
+    {
+      quit = true;
+      return false;
+    }
+  
   // we must have at least one entity to play with!
+  // they should have been created by server or client before here
   if( this->entity_count < 1 )
     {
       puts( "\nStage: No entities defined in world file. Nothing to simulate!" );
@@ -335,6 +353,20 @@ bool CWorld::Startup()
   //root->Print( "" );
 #endif
 
+  // use the generic hook to start the GUI
+  if( this->enable_gui ) GuiWorldStartup( this );
+
+
+  // Startup all the entities. they will create and initialize their
+  // device files and Gui stuff
+  if( !root->Startup() )
+    {
+      PRINT_ERR("Root Entity startup failed" );
+      quit = true;
+      return false;
+    }
+
+
   PRINT_DEBUG( "** STARTUP DONE **" );
   return true;
 }
@@ -342,7 +374,7 @@ bool CWorld::Startup()
 
 ///////////////////////////////////////////////////////////////////////////
 // Shutdown routine 
-void CWorld::Shutdown()
+bool CWorld::Shutdown()
 {
   PRINT_DEBUG( "world shutting down" );
   
@@ -351,7 +383,9 @@ void CWorld::Shutdown()
   
   // Shutdown all the entities
   // Devices will unlink their device files
-  root->Shutdown(); 
+  root->Shutdown();
+
+  return true;
 }
 
 
@@ -660,6 +694,24 @@ void CWorld::ConsoleOutput( double freq,
   
 }
 
+bool CWorld::Load( void )
+{
+  ///////////////////////////////////////////////////////////////////////
+  // LOAD THE CONFIGURATION FOR THE GUI 
+  // we call this *after* the world has loaded, so we can configure the menus
+  // correctly
+
+  if(this->enable_gui ) GuiLoad( this );
+  
+  return true; // success
+}
+
+bool CWorld::Save( )
+{
+  if( this->enable_gui ) GuiSave( this );
+
+  return true; // success
+}
 
 void CWorld::LogOutput( double freq,
 			unsigned int bytes_in, unsigned int bytes_out, 

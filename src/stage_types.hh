@@ -21,7 +21,7 @@
  * Desc: Shared types, constants, etc
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: stage_types.hh,v 1.3 2002-09-25 02:55:55 rtv Exp $
+ * CVS: $Id: stage_types.hh,v 1.4 2002-10-25 22:48:09 rtv Exp $
  */
 
 #ifndef STAGE_TYPES_HH
@@ -61,6 +61,8 @@ const int MAX_POSE_CONNECTIONS = 100;
 
 // the max size of an entity's worldfile token
 const int STAGE_MAX_TOKEN_LEN = 128;
+
+const int WORLD_FILENAME_MAXLEN = 512;
 
 ///////////////////////////////////////////////////////////////////////////
 // Global variables

@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.42 2002-10-15 22:13:03 rtv Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.43 2002-10-25 22:48:09 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -48,7 +48,7 @@
 #include <iomanip>
 #include <iostream>
 
-//#define DEBUG
+#define DEBUG
 //#define VERBOSE
 //#undef DEBUG
 //#undef VERBOSE
@@ -56,6 +56,7 @@
 #include "playerdevice.hh"
 #include "world.hh"
 #include "worldfile.hh"
+#include "gui.hh"
 
 #include "library.hh"
 
@@ -608,6 +609,8 @@ bool CPlayerEntity::Unlock( void )
 int CPlayerEntity::SetProperty( int con, EntityProperty property, 
 			  void* value, size_t len )
 {
+  PRINT_DEBUG( "" );
+
   assert( value );
   assert( len > 0 );
   assert( (int)len < MAX_PROPERTY_DATA_LEN );
@@ -667,7 +670,9 @@ int CPlayerEntity::SetProperty( int con, EntityProperty property,
 
 
 int CPlayerEntity::GetProperty( EntityProperty property, void* value )
-{
+{ 
+  PRINT_DEBUG1( "finding property %d", property );
+
   assert( value );
 
   // indicate no data - this should be overridden below
@@ -691,9 +696,11 @@ int CPlayerEntity::GetProperty( EntityProperty property, void* value )
     case PropCommand:
       retval = GetCommand( value, m_command_len );
       break;
+
     case PropData:
       retval = GetData( value, m_data_len );
       break;
+
     case PropConfig:
     { 
       Lock();
@@ -703,7 +710,8 @@ int CPlayerEntity::GetProperty( EntityProperty property, void* value )
       Unlock();
     }
     break;
-    case PropReply:
+    
+  case PropReply:
     { 
       Lock();
       size_t len = m_reply_len * sizeof(playerqueue_elt_t);

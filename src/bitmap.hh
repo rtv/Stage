@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/bitmap.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -67,12 +67,6 @@ class CBitmap : public CEntity
   void RtkStartup();
   void BuildQuadTree( uint8_t color, int x1, int y1, int x2, int y2 );
 #endif
-
-  
-  //#ifdef USE_GNOME2
-  //public: 
-  //virtual void GuiStartup ();
-  //#endif
 
 };
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/bitmap.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.8 $
+//  $Revision: 1.9 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -16,6 +16,8 @@
 #include "image.hh"
 #include "world.hh"
 #include "bitmap.hh"
+
+#define DEBUG
 
 // register this device type with the Library
 CEntity fixedobstacle_bootstrap( "bitmap", 
@@ -58,6 +60,8 @@ CBitmap::CBitmap(CWorld *world, CEntity *parent)
 // Load the entity from the worldfile
 bool CBitmap::Load(CWorldFile *worldfile, int section)
 {
+  PRINT_DEBUG2( "Loading from %p, %d\n", worldfile, section );
+
   if (!CEntity::Load(worldfile, section))
     return false;
 
@@ -100,7 +104,8 @@ bool CBitmap::Load(CWorldFile *worldfile, int section)
 
   // Create and load the image here (we need to know its size)
   // Try to guess the file type from the extension.
-  this->image = new Nimage;
+  assert( this->image = new Nimage );
+
   int len = strlen(this->filename);
   if (strcmp(&(this->filename[len - 4]), ".fig") == 0)
   {

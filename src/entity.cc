@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.88 2002-10-07 06:45:59 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.89 2002-10-25 22:48:09 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -46,7 +46,7 @@
 #include <iostream>
 
 
-//#define DEBUG
+#define DEBUG
 //#define VERBOSE
 //#undef DEBUG
 //#undef VERBOSE
@@ -56,6 +56,7 @@
 #include "raytrace.hh"
 #include "world.hh"
 #include "worldfile.hh"
+#include "gui.hh"
 
 
 #ifdef INCLUDE_RTK2
@@ -903,9 +904,12 @@ int CEntity::SetProperty( int con, EntityProperty property,
 
   if( refresh_figure )
     {
-#ifdef INCLUDE_RTK2    
-      RtkShutdown();
-      RtkStartup();
+#ifdef INCLUDE_RTK2 
+      if( this->fig )
+	{
+	  RtkShutdown();
+	  RtkStartup();
+	}
 #endif
     }
   
@@ -924,13 +928,15 @@ int CEntity::SetProperty( int con, EntityProperty property,
   // update the GUI with the new property
   if( m_world->enable_gui )
     GuiEntityPropertyChange( this, property );
-
+  
   return 0;
 }
 
 
 int CEntity::GetProperty( EntityProperty property, void* value )
 {
+  PRINT_DEBUG1( "finding property %d", property );
+
   assert( value );
 
   // indicate no data - this should be overridden below

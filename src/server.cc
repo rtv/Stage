@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.35 2002-10-15 22:13:03 rtv Exp $
+ * CVS info: $Id: server.cc,v 1.36 2002-10-25 22:48:09 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -57,14 +57,14 @@
 #include <iomanip>
 
 //using namespace std;
-//#define DEBUG
+#define DEBUG
 //#define VERBOSE
 
 #include "server.hh"
-#include "bitmap.hh"
+#include "boxobstacle.hh"
 #include "playerdevice.hh"
-#include "library.hh"
-extern Library* lib;
+//#include "library.hh"
+//extern Library* lib;
 
 extern long int g_bytes_output;
 extern long int g_bytes_input;
@@ -92,111 +92,10 @@ CStageServer::CStageServer( int argc, char** argv, Library* lib )
 
   m_clock = NULL;  
 
-  // Construct a fixed obstacle representing the boundary of the 
-  // the environment - this the root for all other entities
-  assert( root = (CEntity*)new CBitmap(this, NULL) );
+  // create the object that loads and parses the file
+  assert( worldfile = new CWorldFile() );
   
-  ///////////////////////////////////////////////////////////////////////
-  // Set and load the worldfile, creating entitys as we go
-  if( !LoadFile(  argv[argc-1] ) )
-  {
-    quit = true;
-    return;
-  }
-
-
-  // give the GUI a go at the command line too
-  if( enable_gui ) GuiInit( argc, argv );
-
-    
-#ifdef INCLUDE_RTK2
-  ///////////////////////////////////////////////////////////////////////
-  // LOAD THE CONFIGURATION FOR THE GUI 
-  // do this *after* the world has loaded, so we can configure the menus
-  // correctly
-  if(this->enable_gui && !RtkLoad(&this->worldfile))
-  {
-    PRINT_ERR( "Failed to load worldfile" );
-    quit = true;
-    return;
-  }
-#endif
-
-  // See if there was anything we didnt understand in the world file
-  this->worldfile.WarnUnused();
-
-  /////////////////////////////////////////////////////////////////////////
-  // COMMAND LINE PARSING - may override world file options
-  if( !ParseCmdLine( argc, argv ) )
-  {
-    PRINT_ERR( "Failed to parse command line" );
-    quit = true;
-    return;
-  }
-  
-  ///////////////////////////////////////////////////////////////////////////
-  // Create the device directory, clock and lock devices 
-
-  if( !CreateDeviceDirectory() )
-  {
-    PRINT_ERR( "Failed to create device directory" );
-    quit = true;
-    return;
-  }
-
-  if( !CreateClockDevice() )
-  {
-    PRINT_ERR( "Failed to create clock device" );
-    quit = true;
-    return;
-  }
-  
-  if( !CreateLockFile() )
-  {
-    PRINT_ERR( "Failed to create lock file" );
-    quit = true;
-    return;
-  }
-  
-  ///////////////////////////////////////////////////////////////////////
-  // STARTUP
-  
-    // use the generic hook to start the GUI
-  if( this->enable_gui ) GuiWorldStartup( this );
-  
-  // Startup all the entities
-  // Devices will create and initialize their device files
-  
-  if( !root->Startup() )
-    {
-      PRINT_ERR("Root Entity startup failed" );
-      quit = true;
-      return;
-    }
-  
-  //////////////////////////////////////////////////////////////////////
-  // SET UP THE SERVER TO ACCEPT INCOMING CONNECTIONS
-  if( !SetupConnectionServer() )
-  {
-    quit = true;
-    return;
-  }
-
-  // just to be reassuring, print the host details
-  printf( "[Server %s:%d]",  m_hostname, m_port );
-
-  ////////////////////////////////////////////////////////////////////
-  // STARTUP PLAYER
-
-  puts( "" ); // end the startup line, flush stdout before starting player
-  if( m_run_player && !StartupPlayer() )
-  {
-    PRINT_ERR("Player startup failed");
-    quit = true;
-    return;
-  }
-  
-  m_enable = true;  
+  printf( "WORLDFILE: %s\n", argv[argc-1]  );
 }
 
 CStageServer::~CStageServer( void )
@@ -204,20 +103,16 @@ CStageServer::~CStageServer( void )
   // do nothing
 }
 
-
-//////////////////////////////////////////////////////////////////////
-// Load the world file and create all of the relevant entities.
-bool CStageServer::LoadFile( char* filename )
+  
+// get the world description out of the world file
+bool CStageServer::Load( void )
 {
-  assert( filename );
-  assert( root );
-
   //////////////////////////////////////////////////////////////////////
   // FIGURE OUT THE WORLD FILE NAME
   
   this->worldfilename[0] = 0;
   // find the world file name (it's the last argument)
-  strcpy( this->worldfilename, filename );
+  strcpy( this->worldfilename, argv[argc-1] );
   // make sure something happened there...
   assert(  this->worldfilename[0] != 0 );
 
@@ -254,31 +149,31 @@ bool CStageServer::LoadFile( char* filename )
   // NOW LOAD THE WORLD FILE, CREATING THE ENTITIES AS WE GO
   
   // Load and parse the world file
-  if (!this->worldfile.Load(worldfilename))
+  if (!this->worldfile->Load(worldfilename))
     return false;
-  
+
   // set the top-level matrix resolution
-  this->ppm = 1.0 / this->worldfile.ReadLength( 0, "resolution", 1.0 / this->ppm );
+  this->ppm = 1.0 / this->worldfile->ReadLength( 0, "resolution", 1.0 / this->ppm );
   
   // Get the authorization key to pass to player
-  const char *authkey = this->worldfile.ReadString(0, "auth_key", "");
+  const char *authkey = this->worldfile->ReadString(0, "auth_key", "");
   strncpy(m_auth_key, authkey, sizeof(m_auth_key));
   m_auth_key[sizeof(m_auth_key)-1] = '\0';
   
   // Get the real update interval
-  m_real_timestep = this->worldfile.ReadFloat(0, "real_timestep", 
+  m_real_timestep = this->worldfile->ReadFloat(0, "real_timestep", 
 					      m_real_timestep);
 
   // Get the simulated update interval
-  m_sim_timestep = this->worldfile.ReadFloat(0, "sim_timestep", m_sim_timestep);
+  m_sim_timestep = this->worldfile->ReadFloat(0, "sim_timestep", m_sim_timestep);
   
   // Iterate through sections and create entities as needs be
-  for (int section = 1; section < this->worldfile.GetEntityCount(); section++)
+  for (int section = 1; section < this->worldfile->GetEntityCount(); section++)
   {
     // Find out what type of entity this is,
     // and what line it came from.
-    const char *type = this->worldfile.GetEntityType(section);
-    int line = this->worldfile.ReadInt(section, "line", -1);
+    const char *type = this->worldfile->GetEntityType(section);
+    int line = this->worldfile->ReadInt(section, "line", -1);
 
     // Ignore some types, since we already have dealt will deal with them
     if (strcmp(type, "gui") == 0)
@@ -292,7 +187,7 @@ bool CStageServer::LoadFile( char* filename )
       char candidate_hostname[ HOSTNAME_SIZE ];
 
       strncpy( candidate_hostname, 
-               worldfile.ReadString( section, "hostname", 0 ),
+               worldfile->ReadString( section, "hostname", 0 ),
                HOSTNAME_SIZE );
 	
       // if we found a name
@@ -337,7 +232,7 @@ bool CStageServer::LoadFile( char* filename )
     // otherwise it's a device so we handle those...
 
     // Find the parent entity
-    CEntity *parent = root->FindSectionEntity( this->worldfile.GetEntityParent(section) );
+    CEntity *parent = root->FindSectionEntity( this->worldfile->GetEntityParent(section) );
     
     // Work out whether or not its a local device if any if this
     // device's host IPs match this computer's IP, it's local
@@ -367,7 +262,7 @@ bool CStageServer::LoadFile( char* filename )
       entity->worldfile_section = section;
  
       // Let the entity load itself
-      if (!entity->Load(&this->worldfile, section))
+      if (!entity->Load(this->worldfile, section))
       {
         PRINT_ERR1( "Failed to load entity %d from world file", 
                     GetEntityCount() ); 
@@ -382,8 +277,8 @@ bool CStageServer::LoadFile( char* filename )
   endhostent();
 
   // see if the world size is specified explicitly
-  double global_maxx = worldfile.ReadTupleLength(0, "size", 0, 0.0 );
-  double global_maxy = worldfile.ReadTupleLength(0, "size", 1, 0.0 );
+  double global_maxx = worldfile->ReadTupleLength(0, "size", 0, 0.0 );
+  double global_maxy = worldfile->ReadTupleLength(0, "size", 1, 0.0 );
 
   // find the maximum dimensions of all objects and grow the
   // world size if anything starts out of bounds
@@ -418,39 +313,36 @@ bool CStageServer::LoadFile( char* filename )
   root->Print( "" );
 #endif
 
+  // inherit
+  CWorld::Load();
+
   return true;
 }
 
 
 //////////////////////////////////////////////////////////////////////
 // Save the world file
-bool CStageServer::SaveFile( char* filename )
+bool CStageServer::Save( void )
 {
   // Store the new name of the world file (for Save As).
-  if (filename != NULL)
-  {
-    this->worldfilename[0] = 0;
-    strcpy(this->worldfilename, filename);
-    assert(this->worldfilename[0] != 0);
-  }
+  //if (filename != NULL)
+  //{
+  //this->worldfilename[0] = 0;
+  //strcpy(this->worldfilename, filename);
+  //assert(this->worldfilename[0] != 0);
+  // }
   
   PRINT_MSG1("saving world to [%s]", this->worldfilename);
   
   // Let each entity save itself
-  if (!root->Save(&this->worldfile, root->worldfile_section))
+  if (!root->Save(this->worldfile, root->worldfile_section))
     return false;
   
-#ifdef INCLUDE_RTK2
-  // Let the gui save itself
-  if (!RtkSave(&this->worldfile))
-    return false;
-#endif
-
   // Save everything
-  if (!this->worldfile.Save(this->worldfilename))
+  if (!this->worldfile->Save(this->worldfilename))
     return false;
 
-  return false;
+  return CWorld::Save();
 }
 
 
@@ -538,6 +430,68 @@ bool CStageServer::ParseCmdLine( int argc, char** argv )
       printf( "[Fast]" );
     }
   }
+
+  return true;
+}
+
+
+// do all the special server startup, then call the parent's Startup()
+bool CStageServer::Startup( void )
+{ 
+     
+  ///////////////////////////////////////////////////////////////////////////
+  // Create the device directory, clock and lock devices 
+
+  if( !CreateDeviceDirectory() )
+  {
+    PRINT_ERR( "Failed to create device directory" );
+    quit = true;
+    return false;
+  }
+
+  if( !CreateClockDevice() )
+  {
+    PRINT_ERR( "Failed to create clock device" );
+    quit = true;
+    return  false;
+  }
+  
+  if( !CreateLockFile() )
+  {
+    PRINT_ERR( "Failed to create lock file" );
+    quit = true;
+    return  false;
+  }
+  
+  //////////////////////////////////////////////////////////////////////
+  // SET UP THE SERVER TO ACCEPT INCOMING CONNECTIONS
+  if( !SetupConnectionServer() )
+  {
+    quit = true;
+    return false;
+  }
+
+  // just to be reassuring, print the host details
+  printf( "[Server %s:%d]",  m_hostname, m_port );
+
+  ////////////////////////////////////////////////////////////////////
+  // STARTUP PLAYER
+
+  puts( "" ); // end the startup line, flush stdout before starting player
+  if( m_run_player && !StartupPlayer() )
+  {
+    PRINT_ERR("Player startup failed");
+    quit = true;
+    return false;
+  }
+  
+  m_enable = true;  
+
+  // inherit parent's method
+  CWorld::Startup();
+
+  // See if there was anything we didnt understand in the world file
+  this->worldfile->WarnUnused();
 
   return true;
 }
@@ -717,11 +671,9 @@ void CStageServer::ListenForConnections( void )
 }
 
 
-void CStageServer::Shutdown()
+bool CStageServer::Shutdown()
 {
   PRINT_DEBUG( "server shutting down" );
-
-  CStageIO::Shutdown();
 
   ShutdownPlayer();
 
@@ -735,6 +687,7 @@ void CStageServer::Shutdown()
                 m_device_dir,
                 strerror(errno));
 
+  return CWorld::Shutdown();
 }
 
 //////////////////////////////////////////////////////////////////////////

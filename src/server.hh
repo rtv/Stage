@@ -5,7 +5,7 @@
 // Class provides a network server for Stage internals
 // used by external GUIs (XS) and distributed Stage modules
 //
-// $Id: server.hh,v 1.5 2002-10-15 22:27:54 rtv Exp $
+// $Id: server.hh,v 1.6 2002-10-25 22:48:09 rtv Exp $
 
 #ifndef _SERVER_H
 #define _SERVER_H
@@ -22,7 +22,7 @@
 #include "stage_types.hh"
 #include "worldfile.hh"
 #include "world.hh"
-
+#include "library.hh"
 
 typedef	struct sockaddr SA; // useful abbreviation
 
@@ -111,7 +111,7 @@ private:
 public:
   // simple constructor
   CStageIO( int argc, char** argv, Library* lib );
-  ~CStageIO( void );
+  virtual ~CStageIO( void );
 
   // THIS IS THE EXTERNAL INTERFACE TO THE WORLD, SHARED BY ALL WORLD
   // DESCENDANTS
@@ -148,19 +148,19 @@ protected:
   
   // sets the dirty flag on all entities
   public: void DirtyEntities( void )
-    { root->SetDirty( 1 ); }
+    { CWorld::root->SetDirty( 1 ); }
 
   // unsets the dirty flag on all entities
   public: void CleanEntities( void )
-    { root->SetDirty( 0 ); }
+    { CWorld::root->SetDirty( 0 ); }
 
   // dirty all entities for a particular connection
   public: void DirtyEntities( int con )
-    { root->SetDirty( con, 1 ); }
+    { CWorld::root->SetDirty( con, 1 ); }
 
   // clan all entities for a particulat connection
   public: void CleanEntities( int con )
-    { root->SetDirty( con, 0 ); }
+    { CWorld::root->SetDirty( con, 0 ); }
 
   // called when a connection's fd looks bad - closes the
   // fd and tidies up the connection arrays
@@ -206,7 +206,7 @@ class CStageServer : public CStageIO
 {
   public:
   CStageServer( int argc, char** argv, Library* lib );
-  ~CStageServer( void );
+  virtual ~CStageServer( void );
   
   // THIS IS THE EXTERNAL INTERFACE TO THE WORLD, SHARED BY ALL WORLD
   // DESCENDANTS
@@ -215,24 +215,28 @@ class CStageServer : public CStageIO
   // check to seee what player has done, then inherits parent's Write()
   virtual void Write( void );
   //virtual void Update( void );
-  virtual void Shutdown( void );
+  //virtual bool Startup( void );
+  //virtual void Shutdown( void );
 
   
   ////////////////////////////////////////////////////////////////////
   // CONFIGURATION FILE 
-  private: char worldfilename[512];
+  private: char worldfilename[WORLD_FILENAME_MAXLEN];
   
-  // Object encapsulating world description file
-  private: CWorldFile worldfile;
-
   // parse and set configs from the argument list
   private: bool ParseCmdLine( int argc, char** argv );
 
   // Load the world file
-  private: bool LoadFile( char* filename );
+  private: virtual bool Load( void );
 
   // Save the world file
-  private: virtual bool SaveFile( char* filename );
+  private: virtual bool Save( void );
+
+  // Initialise the world
+  public: virtual bool Startup();
+  
+  // Shutdown the world
+  public: virtual bool Shutdown();
   
   ///////////////////////////////////////////////////////////////////
   // SERVER STUFF
@@ -319,9 +323,19 @@ public:
   //virtual void Update( void );
   //virtual void Shutdown( void );
 
-  // Save the world file
-  protected: virtual bool SaveFile( char* filename );
+  // Initialise the world
+  public: virtual bool Startup();
+  
+  // Shutdown the world
+  public: virtual bool Shutdown();
 
+
+   // download the world from the server
+  public: virtual bool Load( void );
+
+  // ask the server to save the world
+  public: virtual bool Save( void );
+ 
 private:
     
   int WriteCommand( cmd_t cmd )

@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.11 2002-10-15 22:27:54 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.12 2002-10-25 22:48:09 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -46,8 +46,6 @@
 
 #include "rtp.h"
 //#include "library.hh"
-
-#include "gui.hh"
 
 class Library;
 
@@ -74,6 +72,10 @@ class CWorld
   public: Library* lib;
   public: inline Library* GetLibrary( void ){ return lib; }
 
+  // we store the app command line
+  int argc;
+  char** argv;
+
   // the main world-model data structure
   public: CMatrix *matrix;
   
@@ -88,6 +90,12 @@ class CWorld
   // for the world.
   // The resolution is specified in pixels-per-meter.
   public: double ppm;
+
+
+  // Object encapsulating world description file (null if there is no file)
+  public: CWorldFile* worldfile;
+
+  // access func
 
   // timing
   //bool m_realtime_mode;
@@ -216,11 +224,12 @@ public: int GetStopTime( void ){ return m_stoptime; };
 
   public: bool ParseCmdLine( int argv, char** argv );
 
-  // Save the world file.  This is pure virtual since the actual
-  // saving is implemented in the CServer or CClient subclasses.
-  protected: virtual bool SaveFile( char* filename ) = 0;
+  // Save the world file (or ask the server to save it)
+  public: virtual bool Save( void );
 
-  
+  // Load the world file (or download it from a server)
+  public: virtual bool Load( void );
+
   //////////////////////////////////////////////////////////////////////
   // main methods
   
@@ -228,7 +237,7 @@ public: int GetStopTime( void ){ return m_stoptime; };
   public: virtual bool Startup();
   
   // Shutdown the world
-  public: virtual void Shutdown();
+  public: virtual bool Shutdown();
   
   // Update everything
   public: virtual void Update();
@@ -266,6 +275,7 @@ public: int GetStopTime( void ){ return m_stoptime; };
   public: CEntity* CreateEntity(const char *type_str, CEntity *parent );
   public: CEntity* CreateEntity( StageType type, CEntity *parent );
   
+
   /////////////////////////////////////////////////////////////////////////////
   // access methods
   
@@ -290,10 +300,10 @@ public: int GetStopTime( void ){ return m_stoptime; };
   // RTK STUFF ----------------------------------------------------------------
 #ifdef INCLUDE_RTK2
   // Initialise the GUI
-  protected: bool RtkLoad(CWorldFile *worldfile);
+  public: bool RtkLoad(CWorldFile *worldfile);
   
   // Save the GUI
-  protected: bool RtkSave(CWorldFile *worldfile);
+  public: bool RtkSave(CWorldFile *worldfile);
   
   // Start the GUI
   public: bool RtkStartup();
