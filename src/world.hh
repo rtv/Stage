@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.4 2002-09-07 02:05:25 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.5 2002-09-11 18:57:20 gerkey Exp $
  */
 
 #ifndef WORLD_HH
@@ -212,7 +212,7 @@ class CWorld
   protected: bool m_external_sync_required;
 
   // if true we  run the gui - a command line switch
-  private: bool enable_gui;
+  public: bool enable_gui;
   // if true  we log output to to file - a command line switch
   public: bool m_log_output;
   // if true we log output ot the console - a command line switch

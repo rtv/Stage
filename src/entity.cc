@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.81 2002-09-07 02:05:23 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.82 2002-09-11 18:57:20 gerkey Exp $
  */
 
 #include <math.h>
@@ -415,7 +415,8 @@ void CEntity::Shutdown()
 
 #ifdef INCLUDE_RTK2
   // Clean up the figure we created
-  rtk_fig_destroy(this->fig);
+  if(m_world->enable_gui)
+    rtk_fig_destroy(this->fig);
 #endif
 
   return;

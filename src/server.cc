@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.29 2002-09-07 02:05:25 rtv Exp $
+ * CVS info: $Id: server.cc,v 1.30 2002-09-11 18:57:20 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -108,7 +108,7 @@ CStageServer::CStageServer( int argc, char** argv, Library* lib )
   // LOAD THE CONFIGURATION FOR THE GUI 
   // do this *after* the world has loaded, so we can configure the menus
   // correctly
-  if (!RtkLoad(&this->worldfile))
+  if(this->enable_gui && !RtkLoad(&this->worldfile))
   {
     PRINT_ERR( "Failed to load worldfile" );
     quit = true;

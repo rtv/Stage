@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.119 2002-09-07 02:05:25 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.120 2002-09-11 18:57:20 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -306,6 +306,18 @@ bool CWorld::ParseCmdLine(int argc, char **argv)
       //  a++;
       //}
     }
+
+#ifdef INCLUDE_RTK2
+  // Initialise rtk if we are using it
+  if(this->enable_gui)
+    rtk_init(&argc, &argv);
+#endif
+
+#ifdef RTVG
+  // Initialise rtk if we are using it
+  if(this->enable_gui)
+    gnome_init( "Stage", (char*)VERSION,  argc, argv);
+#endif
     
   return true;
 }

@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.52 2002-09-07 02:05:24 rtv Exp $
+ * CVS: $Id: main.cc,v 1.53 2002-09-11 18:57:20 gerkey Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -120,18 +120,6 @@ int main(int argc, char **argv)
   fflush( stdout );
  
   world = NULL;
-  
-#ifdef INCLUDE_RTK2
-  // Initialise rtk if we are using it
-  rtk_init(&argc, &argv);
-#endif
-
-#ifdef RTVG
-  // Initialise rtk if we are using it
-  gnome_init( "Stage", (char*)VERSION,  argc, argv);
-#endif
-
-
   
   // CStageServer and CStageClient are subclasses of CStageIO and CWorld
   // constructing them does most of the startup work.
