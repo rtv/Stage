@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.58 2002-11-11 04:46:06 inspectorg Exp $
+ * CVS: $Id: main.cc,v 1.59 2002-11-15 03:07:47 jazzfunk Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -74,6 +74,7 @@ void PrintUsage( void )
 {
   printf("\nUsage: stage [options] <worldfile>\n"
 	 "Options: <argument> [default]\n"
+	 " -h\t\tPrint this message\n" 
 	 " -g\t\tDo not start the X11 GUI\n"
 	 " -n \t\tDo not start Player\n"
 	 " -o\t\tEnable console status output\n"
@@ -133,10 +134,17 @@ int main(int argc, char **argv)
   
   // CStageServer and CStageClient are subclasses of CStageIO and CWorld
   // check the command line for the '-c' option that makes this a client
+  // also check if they want to see usage options
   for( int a=1; a<argc; a++ )
   {
     PRINT_DEBUG2( "argv[%d] = %s\n", a, argv[a] );
       
+    if (strcmp(argv[a], "-h") == 0 || 
+	strcmp(argv[a], "--help") == 0) {
+      PrintUsage();
+      exit(0);
+    }
+
     if( strcmp( argv[a], "-c" ) == 0 ||  strcmp( argv[a], "-cl" ) == 0)
       assert( world = new CStageClient( argc, argv, &model_library ) );
   }
