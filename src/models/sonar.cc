@@ -21,13 +21,14 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonar.cc,v 1.1.2.5 2003-02-13 00:41:30 rtv Exp $
+ * CVS info: $Id: sonar.cc,v 1.1.2.6 2003-02-23 08:01:37 rtv Exp $
  */
 
 #include <assert.h>
 #include <math.h>
 #include "sonar.hh"
 #include "raytrace.hh"
+#include "sio.h"
 
 // constructor
 CSonarModel::CSonarModel( int id, char* token, char* color, CEntity *parent )
@@ -117,44 +118,86 @@ int CSonarModel::Update()
   PRINT_WARN1( "sonar exporting data at %.4f seconds", CEntity::simtime );
   
   // this is the right way to export data, so everyone else finds out about it
-  SetProperty( -1, STG_PROP_ENTITY_DATA, 
-	       (char*)ranges, sonar_count * sizeof(ranges[0]) );
+  Property( -1, STG_PROP_ENTITY_DATA, 
+	    (char*)ranges, sonar_count * sizeof(ranges[0]), NULL );
   
   return 0;
 }
 
-
-///////////////////////////////////////////////////////////////////////////
-// Process configuration requests.
-int CSonarModel::SetConfig( char* data, size_t len )
+int CSonarModel::Property( int con, stage_prop_id_t property, 
+			   void* value, size_t len, stage_buffer_t* reply )
 {
-  assert( data );
-  //assert( len == sizeof(stage_sonar_config_t) );
+  PRINT_DEBUG3( "setting prop %s (%d bytes) for sonar ent %d",
+		SIOPropString(property), (int)len, stage_id );
   
-  //player_sonar_geom_t geom;
-  
-  // TODO
-  /*
-  switch (data[0])
+  switch( property )
     {
-    case PLAYER_SONAR_POWER_REQ:
-      // we got a sonar power config
-      // set the new power status
-      this->power_on = ((player_sonar_power_config_t*)data)->value;
-      PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
+    case STG_PROP_SONAR_POWER:
+      if( value ) // set our power state
+	{
+	  PRINT_WARN( "setting sonar power" );
+	  assert(len == sizeof(bool) );
+	  this->power_on = (bool*)value;
+	}
+      if( reply ) // reply with the current power state
+	{
+	  SIOBufferProperty( reply, this->stage_id, STG_PROP_SONAR_POWER,
+			     &this->power_on, sizeof(this->power_on), 
+			     STG_ISREPLY );
+	}
       break;
       
-    case PLAYER_SONAR_GET_GEOM_REQ:
-      // Return the sonar geometry
-      SonarGeomPack( &geom, this->sonar_count, this->sonars );
-      PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &geom, sizeof(geom));
+    case STG_PROP_SONAR_GEOM:
+      if( value ) // set the poses of our transducers 
+	{
+	  PRINT_WARN( "set sonar geometry not implemented" );
+	}
+      if( reply ) // reply with our array of sonar poses
+	{
+	  SIOBufferProperty( reply, this->stage_id, STG_PROP_SONAR_GEOM,
+			     &this->sonars,
+			     sonar_count * 3 * sizeof(sonars[0][0]), 
+			     STG_ISREPLY );
+	}
       break;
       
-    default:
-      PRINT_WARN1("invalid sonar configuration request [%c]", buffer[0]);
-      PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
+    default: 
       break;
     }
-  */
+  
+  
+  // inherit the 
+  CEntity::Property( con, property, value, len, reply );
+  
   return 0; // success
+}
+
+int SonarTest( int connection )
+{
+  stage_model_t sonar;
+  sonar.parent_id = 0; // should be the root object
+  strncpy( sonar.token, "test_sonar", STG_TOKEN_MAX );
+  //assert( CreateModels( connection,  &sonar ) == 0 );
+
+
+
+  // define some properties
+  stage_buffer_t* props = SIOCreateBuffer();
+  assert(props);
+  
+  bool power = false;
+  //SIOBufferProperty( props, box.id, STG_PROP_ENTITY_SUBSCRIBE,
+  //	     subs, 1*sizeof(subs[0]) );
+  
+  
+  // turn power off
+  SIOBufferProperty( props, sonar.id, STG_PROP_SONAR_POWER,
+		     &power, sizeof(power), STG_NOREPLY );
+  
+  // turn power on
+  power = true;
+  SIOBufferProperty( props, sonar.id, STG_PROP_SONAR_POWER,
+		     &power, sizeof(power), STG_NOREPLY );
+  
+
 }

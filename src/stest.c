@@ -1,6 +1,6 @@
 
 /*
-  $Id: stest.c,v 1.1.2.19 2003-02-15 21:15:01 rtv Exp $
+  $Id: stest.c,v 1.1.2.20 2003-02-23 08:01:37 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -130,7 +130,7 @@ int HandleLostConnection( int connection )
   return 0;
 }
 
-int HandleModel( int connection, char* data, size_t len )
+int HandleModel( int connection, void* data, size_t len )
 {
   assert( len == sizeof(stage_model_t) );
   stage_model_t* model = (stage_model_t*)data;
@@ -144,7 +144,7 @@ int HandleModel( int connection, char* data, size_t len )
   return 0; //success
 }
 
-int HandleProperty( int connection, char* data, size_t len )
+int HandleProperty( int connection, void* data, size_t len )
 { 
   assert( len >= sizeof(stage_property_t) );
   stage_property_t* prop = (stage_property_t*)data;
@@ -154,7 +154,7 @@ int HandleProperty( int connection, char* data, size_t len )
   return 0; //success
 }
 
-int HandleCommand( int connection, char* data, size_t len )
+int HandleCommand( int connection, void* data, size_t len )
 {  
   assert( len == sizeof(stage_cmd_t) );
   stage_cmd_t* cmd = (stage_cmd_t*)data;
@@ -176,7 +176,7 @@ void Resize( int con, int id, double x, double y )
   sz.x = x;
   sz.y = y;
   SIOBufferProperty( bp, id, STG_PROP_ENTITY_SIZE, 
-		     (char*)&sz, sizeof(sz) );
+		     (char*)&sz, sizeof(sz), 0 );
     
   SIOWriteMessage( con, timestamp,
 		   STG_HDR_PROPS, bp->data, bp->len );
@@ -192,7 +192,7 @@ void SetResolution( int con, int id, double ppm )
   
   // set the spatial resolution of the simulator in pixels-per-meter
   SIOBufferProperty( bp, id, STG_PROP_ENTITY_PPM, 
-		     (char*)&ppm, sizeof(ppm) );
+		     (char*)&ppm, sizeof(ppm), 0);
   
   SIOWriteMessage( con, timestamp,
 		   STG_HDR_PROPS, bp->data, bp->len );
@@ -211,7 +211,7 @@ void SetVelocity( int con, int id, double vx, double vy, double va )
   assert(bp);
 
   SIOBufferProperty( bp, id, STG_PROP_ENTITY_VELOCITY, 
-		     (char*)&vel, sizeof(vel) );
+		     (char*)&vel, sizeof(vel), 0 );
 
   SIOWriteMessage( con, timestamp,
 		   STG_HDR_PROPS, bp->data, bp->len );
@@ -243,7 +243,46 @@ int CreateModel( int connection, stage_model_t* model )
   return 0; // success
 }
 
-int main( int argc, char** argv )
+// sends a buffer full of properties and places any replies in the
+// recv buffer (if non-null)
+int SIOPropertyUpdate( int con, 
+		       stage_buffer_t* send, stage_buffer_t* recv = NULL )
+{
+  if( send == NULL )
+    { 
+      PRINT_ERR( "send buffer is null" );
+      return -1;
+    }
+  
+  // send the properties
+  assert( SIOWriteMessage( connection, timestamp,
+			   STG_HDR_PROPS, props->data, props->len )
+	  == 0 );
+  
+  // the next thing to arrive should be our reply
+  stage_header_t hdr;
+  size_t hdrbytes = SIOReadPacket( con, &hdr, sizeof(hdr) ); 
+  assert( hdr.type == STG_HDR_PROPS );
+  
+  // make room for the incoming properties and read them
+  char* buf = calloc(hdr.len,1);
+  size_t databytes = SIOReadPacket( con, buf, hdr.len );
+  assert( databytes == hdr.len );
+  
+  // if the caller is interested in the relies, copy the data we
+  // read into the receive buffer
+  if( recv ) SIOBufferPacket( recv, buf, hdr.len );
+  
+  free( buf );
+
+  return 0; // success
+}
+
+
+
+
+
+  int main( int argc, char** argv )
 {
   printf("\n** Test program for Stage  v%s **\n", (char*) VERSION);
 
@@ -313,48 +352,53 @@ int main( int argc, char** argv )
       stage_buffer_t* props = SIOCreateBuffer();
       assert(props);
       
-      stage_pose_t pose;
       
       // pose the bitmap
+      stage_pose_t pose;
       SIOPackPose( &pose, 4.0, 6.0, 0.0 );      
       SIOBufferProperty( props, bitmap.id, STG_PROP_ENTITY_POSE, 
-			 (char*)&pose, sizeof(pose) );
+			 (char*)&pose, sizeof(pose),0 );
       
       // size the bitmap
       stage_size_t size;
       size.x = 2.0;
       size.y = 2.0;
       SIOBufferProperty( props, bitmap.id, STG_PROP_ENTITY_SIZE,
-			 (char*)&size, sizeof(size) );
+			 (char*)&size, sizeof(size),0 );
       
-
       // pose the box
       SIOPackPose( &pose, 2.0, 1.0, 1.0 );      
       SIOBufferProperty( props, box.id, STG_PROP_ENTITY_POSE, 
-      	 (char*)&pose, sizeof(pose) );
+      	 (char*)&pose, sizeof(pose),0 );
 
-      // subscribe to the sonar's data, pose, size and rects.
-      int subs[4];
-      subs[0] = STG_PROP_ENTITY_DATA;
-      subs[1] = STG_PROP_ENTITY_POSE;
-      subs[2] = STG_PROP_ENTITY_SIZE;
-      subs[3] = STG_PROP_ENTITY_RECTS;
+      // subscribe to the box's pose, size and rects.
+      int subs[1];
+      //subs[0] = STG_PROP_ENTITY_DATA;
+      subs[0] = STG_PROP_ENTITY_POSE;
+      //subs[2] = STG_PROP_ENTITY_SIZE;
+      //subs[3] = STG_PROP_ENTITY_RECTS;
+      
+      SIOBufferProperty( props, box.id, STG_PROP_ENTITY_SUBSCRIBE,
+			 subs, 1*sizeof(subs[0]),0 );
+      
+
+      subs[0] =  STG_PROP_ENTITY_DATA;
       
       SIOBufferProperty( props, sonar.id, STG_PROP_ENTITY_SUBSCRIBE,
-			 (char*)subs, 4*sizeof(subs[0]) );
-     
+			 subs, 1*sizeof(subs[0]),0 );
       
+
       int num_rects;
       stage_rotrect_t* rects = RectsFromPnm( &num_rects, "worlds/cave.pnm" );
       printf( "attempting to buffer %d rects\n", num_rects );
 
       // send the rectangles to root
       SIOBufferProperty( props, root.id, STG_PROP_ENTITY_RECTS, 
-			 (char*)rects, num_rects * sizeof(rects[0]) );
+			 (char*)rects, num_rects * sizeof(rects[0]),0 );
 
       //rects = RectsFromPnm( &num_rects, "worlds/smiley.ppm" );
       //SIOBufferProperty( props, bitmap.id, STG_PROP_ENTITY_RECTS, 
-      //	 (char*)rects, num_rects * sizeof(rects[0]) );
+      //	 (char*)rects, num_rects * sizeof(rects[0]),0 );
       
       TEST( "Sending properties" );
       result = SIOWriteMessage( connection, timestamp,
@@ -370,7 +414,7 @@ int main( int argc, char** argv )
       double x = 0;
       double  y = 0;
       double z = 0;
-      while( c < 1000 )
+      while( c < 1000000 )
 	{
 	  printf( " cycle %d\r", c++ );
 	  
@@ -381,6 +425,7 @@ int main( int argc, char** argv )
 	 
 	  //SetVelocity( connection, box.id, 3.0 * sin(x), 2.0 * cos(x+=0.1), 2.0 );
 
+	  /*
 	  if( c == 75 )
 	    {
 	      stage_gui_config_t gui;
@@ -397,7 +442,8 @@ int main( int argc, char** argv )
 	      //result = SIOWriteMessage( connection, timestamp, 
 	      //STG_HDR_GUI, (char*)&gui, sizeof(gui) ) ;
 	    }
-	  
+	  */
+
 	  SIOServiceConnections( &HandleLostConnection,
 				 &HandleCommand,
 				 &HandleModel, 

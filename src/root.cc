@@ -21,7 +21,7 @@
  * Desc: A root device model - replaces the CWorld class
  * Author: Richard Vaughan
  * Date: 31 Jan 2003
- * CVS info: $Id: root.cc,v 1.1.2.5 2003-02-07 05:30:34 rtv Exp $
+ * CVS info: $Id: root.cc,v 1.1.2.6 2003-02-23 08:01:37 rtv Exp $
  */
 
 
@@ -33,17 +33,14 @@
 
 #define DEBUG
 
-#define RTK2 // GET RID OF THIS!
-
 // constructor
-CRootDevice::CRootDevice( LibraryItem* libit )
-  : CEntity( libit, 0, NULL )    
+CRootDevice::CRootDevice( )
+  : CEntity( 0, "root", "red", NULL )    
 {
   PRINT_DEBUG( "Creating root model" );
   
   CEntity::root = this; // phear me!
   
-  shape = ShapeRect; // world boundary is rectangular
   size_x = 10.0; // a 10m world by default
   size_y = 10.0;
   ppm = 10; // default 10cm resolution passed into matrix (DEBUG)
@@ -66,14 +63,11 @@ CRootDevice::CRootDevice( LibraryItem* libit )
   // make the matrix 1 pixel wider than the world
   assert( matrix = new CMatrix( size_x, size_y, ppm, 1) );
   
-#ifdef RTK2
-  grid_enable = true;
-#endif
 
 }
 
 int CRootDevice::SetProperty( int con, stage_prop_id_t property, 
-			      void* value, size_t len )
+			      void* value, size_t len, stage_buffer_t reply )
 {
   PRINT_DEBUG3( "setting prop %d (%d bytes) for ROOT ent %p",
 		property, len, this );
@@ -105,6 +99,10 @@ int CRootDevice::SetProperty( int con, stage_prop_id_t property,
       matrix->Resize( size_x, size_y, ppm );      
       this->MapFamily();
       break;
+
+    case STG_PROP_ROOT_GUI:
+      
+
 
     default: 
       break;

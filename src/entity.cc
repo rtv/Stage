@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.20 2003-02-16 04:49:20 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.21 2003-02-23 08:01:34 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -50,7 +50,7 @@
 
 #include <iostream>
 
-#include "sio.h" // for SIOPropString()
+#include "sio.h" 
 #include "entity.hh"
 #include "raytrace.hh"
 #include "gui.hh"
@@ -108,7 +108,6 @@ CEntity::CEntity( int id, char* token, char* color, CEntity* parent )
  
   // zero our IO buffer headers
   memset( &buffer_data, 0, sizeof(buffer_data) );
-  memset( &buffer_cfg, 0, sizeof(buffer_data) );
   memset( &buffer_cmd, 0, sizeof(buffer_data) );
 
   // initialize our shapes 
@@ -557,7 +556,7 @@ void CEntity::GlobalToLocal(double &px, double &py, double &pth)
 // Set the entitys pose in the parent cs
 void CEntity::SetPose(double px, double py, double pth)
 {
-  // if the new position is different, call SetProperty to make the change.
+  // if the new position is different, call Property to make the change.
   // the -1 indicates that this change is dirty on all connections
  
   // only change the pose if these are different to the current pose
@@ -568,7 +567,7 @@ void CEntity::SetPose(double px, double py, double pth)
       pose.y = py;
       pose.a = pth;
       
-      SetProperty( -1, STG_PROP_ENTITY_POSE, (char*)&pose, sizeof(pose) ); 
+      Property( -1, STG_PROP_ENTITY_POSE, (char*)&pose, sizeof(pose), NULL ); 
     }
 }
 
@@ -847,325 +846,7 @@ void CEntity::SetRects( stage_rotrect_t* rects, int num )
     }
 }
 
-int CEntity::SetProperty( int con, stage_prop_id_t property, 
-			  char* value, size_t len )
-{
-  PRINT_DEBUG3( "setting prop %s (%d bytes) for ent %d",
-		SIOPropString(property), (int)len, stage_id );
 
-  assert( value );
-  
-  switch( property )
-    {
-    case STG_PROP_ENTITY_PPM:
-      PRINT_WARN( "setting PPM" );
-      assert(len == sizeof(double) );
-      
-      if( CEntity::matrix )
-	{
-	  double ppm = *((double*)value);
-	  CEntity::matrix->Resize( size_x, size_y, ppm );      
-	  this->MapFamily();
-	}
-      else
-	PRINT_WARN( "trying to set ppm for non-existent matrix" );
-      break;
-
-    case STG_PROP_ENTITY_VOLTAGE:
-      PRINT_WARN( "setting voltage" );
-      assert(len == sizeof(double) );
-      this->volts = *((double*)value);
-      break;
-      
-    case STG_PROP_ENTITY_PARENT:
-      // TODO - fix this
-      // get a pointer to the (*value)'th entity - that's our new parent
-      //this->m_parent_entity = m_world->GetEntity( *(int*)value );     
-      PRINT_WARN( "STG_PROP_ENTITY_PARENT not implemented" );
-      break;
-
-    case STG_PROP_ENTITY_POSE:
-      {
-	assert( len == sizeof(stage_pose_t) );
-
-	UnMap();
-
-	stage_pose_t* pose = (stage_pose_t*)value;      
-	local_px = pose->x;
-	local_py = pose->y;
-	local_pth = pose->a;
-
-	Map();
-
-      }
-      break;
-
-    case STG_PROP_ENTITY_VELOCITY:
-      {
-	assert( len == sizeof(stage_velocity_t) );
-	stage_velocity_t* vel = (stage_velocity_t*)value;      
-	vx = vel->x;
-	vy = vel->y;
-	vth = vel->a;
-      }
-      break;
-      
-    case STG_PROP_ENTITY_SIZE:
-      {
-	assert( len == sizeof(stage_size_t) );
-
-	UnMap();
-
-	stage_size_t* sz = (stage_size_t*)value;
-	size_x = sz->x;
-	size_y = sz->y;
-
-	if( this == CEntity::root )
-	  {
-	    PRINT_WARN( "setting size of ROOT" );
-	    
-	    // shift root so the origin is in the bottom left corner
-	    origin_x = size_x/2.0;
-	    origin_y = size_y/2.0;
-	    
-	    // resize the matrix
-	    CEntity::matrix->Resize( size_x, size_y, CEntity::matrix->ppm );      
-	    MapFamily(); // matrix re-render everything
-	  }
-	else
-	  Map();
-      }
-      break;
-      
-    case STG_PROP_ENTITY_ORIGIN:
-      {
-	assert( len == sizeof(stage_size_t) );
-	
-	UnMapFamily();
-	
-	stage_size_t* og = (stage_size_t*)value;
-	origin_x = og->x;
-	origin_y = og->y; 
-	
-	MapFamily();
-      }
-      break;
-    
-    case STG_PROP_ENTITY_RECTS:
-      {
-	this->SetRects( (stage_rotrect_t*)value, 
-			len/sizeof(stage_rotrect_t) );
-	//RenderRects( true );
-      }
-      break;
-
-    case STG_PROP_ENTITY_SUBSCRIBE:
-      // *value is an array of integer property codes that request
-      // subscriptions on this channel
-      PRINT_DEBUG2( "received SUBSCRIBE for %d properties on %d",
-		    (int)(len/sizeof(int)), con );
-      this->Subscribe( con, (stage_prop_id_t*)value, len/sizeof(int) );
-      break;
-      
-    case STG_PROP_ENTITY_UNSUBSCRIBE:
-      // *value is an array of integer property codes that request
-      // subscriptions on this channel
-      PRINT_DEBUG2( "received UNSUBSCRIBE for %d properties on %d",
-		    (int)(len/sizeof(int)), con );
-      
-      this->Unsubscribe( con, (stage_prop_id_t*)value, len/sizeof(int) );
-      break;
-
-    case STG_PROP_ENTITY_NAME:
-      assert( len <= STG_TOKEN_MAX );
-      strncpy( name, (char*)value, STG_TOKEN_MAX );
-      break;
-      
-    case STG_PROP_ENTITY_COLOR:
-      assert( len == sizeof(StageColor) );
-      memcpy( &color, (StageColor*)value, sizeof(color) );
-      break;
-            
-    case STG_PROP_ENTITY_LASERRETURN:
-      assert( len == sizeof(LaserReturn) );
-      memcpy( &laser_return, (LaserReturn*)value, sizeof(laser_return) );
-      break;
-
-    case STG_PROP_ENTITY_IDARRETURN:
-      assert( len == sizeof(IDARReturn) );
-      memcpy( &idar_return, (IDARReturn*)value, sizeof(idar_return) );
-      break;
-
-    case STG_PROP_ENTITY_SONARRETURN:
-      assert( len == sizeof(bool) );
-      memcpy( &sonar_return, (bool*)value, sizeof(sonar_return) );
-      break;
-
-    case STG_PROP_ENTITY_OBSTACLERETURN:
-      assert( len == sizeof(bool) );
-      memcpy( &obstacle_return, (bool*)value, sizeof(obstacle_return) );
-      break;
-
-    case STG_PROP_ENTITY_VISIONRETURN:
-      assert( len == sizeof(bool) );
-      memcpy( &vision_return, (bool*)value, sizeof(vision_return));
-      break;
-
-    case STG_PROP_ENTITY_PUCKRETURN:
-      assert( len == sizeof(bool) );
-      memcpy( &puck_return, (bool*)value, sizeof(puck_return) );
-      break;
-
-
-      // DISPATCH COMMANDS TO DEVICES
-    case STG_PROP_ENTITY_COMMAND:
-      this->BufferPacket( &buffer_cmd, value, len );
-      this->SetCommand( value, len ); // virtual function is overridden in subclasses
-      break;
-      
-    case STG_PROP_ENTITY_CONFIG:
-      this->BufferPacket( &buffer_cfg, value, len );
-      this->SetConfig( value, len ); // virtual function is overriden in subclasses
-      break;
-      
-    case STG_PROP_ENTITY_DATA:
-      this->BufferPacket( &buffer_data, value, len );
-      this->SetData( value, len ); // virtual function is overriden in subclasses
-      break;
-      
-    default:
-      //printf( "Stage Warning: attempting to set unknown property %d\n", 
-      //      property );
-      break;
-  }
-  
-  // indicate that the property is dirty on all _but_ the connection
-  // it came from - that way it gets propogated onto to other clients
-  // and everyone stays in sync. (assuming no recursive connections...)
-  
-  this->SetDirty( property, 1 ); // dirty on all cons
-  
-  if( con != -1 ) // unless this was a local change 
-    this->SetDirty( con, property, 0 ); // clean on this con
-
-  
-  // update the GUI with the new property
-  //if( enable_gui )
-  GuiEntityPropertyChange( this, property );
-  
-  return 0;
-}
-
-
-size_t CEntity::GetProperty( stage_prop_id_t property, void* value  )
-{
-  //PRINT_DEBUG1( "finding property %d", property );
-  //printf( "finding property %d", property );
-
-  assert( value );
-
-  // indicate no data - this should be overridden below
-  int retval = 0;
-  
-  switch( property )
-    {
-    case STG_PROP_ENTITY_PARENT:
-      // TODO - fix
-      // find the parent's position in the world's entity array
-      // if parent pointer is null or otherwise invalid, index is -1 
-      //{ int parent_index = m_world->GetEntityIndex( m_parent_entity );
-      
-      { 
-	int parent_index = -1;
-	
-	if( m_parent_entity )
-	  parent_index = m_parent_entity->stage_id ;
-	
-	memcpy( value, &parent_index, sizeof(parent_index) );
-	retval = sizeof(parent_index); 
-      }
-      break;
-      
-    case STG_PROP_ENTITY_SIZE:
-      {
-	stage_size_t sz;
-	sz.x = size_x;
-	sz.y = size_y;
-	
-	memcpy( value, &sz, sizeof(sz) );
-	retval = sizeof(sz);
-      }
-      break;
-      
-    case STG_PROP_ENTITY_POSE:
-      {
-	stage_pose_t pose;
-	pose.x = local_px;
-	pose.y = local_py;
-	pose.a = local_pth;
-	
-	memcpy( value, &pose, sizeof(pose) );
-	retval = sizeof(pose);
-      }
-
-    case STG_PROP_ENTITY_ORIGIN:
-      memcpy( value, &origin_x, sizeof(origin_x) );
-      retval = sizeof(origin_x);
-      break;
-
-    case STG_PROP_ENTITY_NAME:
-      strcpy( (char*)value, name );
-      retval = strlen(name);
-      break;
-
-    case STG_PROP_ENTITY_COLOR:
-      memcpy( value, &color, sizeof(color) );
-      retval = sizeof(color);
-      break;
-
-    case STG_PROP_ENTITY_LASERRETURN:
-      memcpy( value, &laser_return, sizeof(laser_return) );
-      retval = sizeof(laser_return);
-      break;
-
-    case STG_PROP_ENTITY_SONARRETURN:
-      memcpy( value, &sonar_return, sizeof(sonar_return) );
-      retval = sizeof(sonar_return);
-      break;
-
-    case STG_PROP_ENTITY_IDARRETURN:
-      memcpy( value, &idar_return, sizeof(idar_return) );
-      retval = sizeof(idar_return);
-      break;
-
-    case STG_PROP_ENTITY_OBSTACLERETURN:
-      memcpy( value, &obstacle_return, sizeof(obstacle_return) );
-      retval = sizeof(obstacle_return);
-      break;
-
-    case STG_PROP_ENTITY_VISIONRETURN:
-      memcpy( value, &vision_return, sizeof(vision_return) );
-      retval = sizeof(vision_return);
-      break;
-
-    case STG_PROP_ENTITY_PUCKRETURN:
-      memcpy( value, &puck_return, sizeof(puck_return) );
-      retval = sizeof(puck_return);
-      break;
-
-    case STG_PROP_ENTITY_DATA:
-      memcpy( value, buffer_data.data, buffer_data.len );
-      retval = buffer_data.len;
-      break;
-
-    default:
-      PRINT_WARN2( "attempting to get unknown property %p from model %d\n", 
-		   SIOPropString, this->stage_id );
-      break;
-  }
-
-  return retval;
-}
 
 // write the entity tree onto the console
 void CEntity::Print( int fd, char* prefix )
@@ -1242,45 +923,10 @@ void CEntity::RenderRects( bool render )
   
 }
 
-
-int CEntity::BufferPacket( stage_buffer_t* buf, char* data, size_t len )
-{
-  PRINT_DEBUG2( "pushing %d bytes into stage_buffer_t at %p",
-		(int)len, buf );
-
-  // if the buffer is too small
-  if( len > buf->len )
-    //if( len != buf->len ) // alternative: if buf is not exactly the right size
-    {
-      // make it the right size
-      buf->data = (char*)realloc( buf->data, len );
-      buf->len = len;
-    }
-
-  // copy the data into our buffer
-  memcpy( buf->data, data, len );
-  return 0;
-}
-
-
 int CEntity::SetCommand( char* data, size_t len )
 {
   PRINT_WARN2( "ent %d received %d bytes of command, but does nothing", 
 	       this->stage_id, (int)len );   
-  return 0;
-}
-
-int CEntity::SetConfig( char* data, size_t len )
-{
-  PRINT_WARN2( "ent %d received %d bytes of config, but does nothing with it", 
-	       this->stage_id, (int)len );   
-  return 0;
-}
-
-int CEntity::SetData( char* data, size_t len )
-{
-  PRINT_WARN2( "ent %d received %d bytes of data", 
-	       this->stage_id, (int)len ); 
   return 0;
 }
 
@@ -1291,10 +937,10 @@ int CEntity::GetCommand( char* data, size_t* len )
   return 0;
 }
 
-int CEntity::GetConfig( char* data, size_t* len )
+int CEntity::SetData( char* data, size_t len )
 {
-  memcpy( data, &(buffer_cfg.data), buffer_cfg.len );
-  *len = buffer_cfg.len;
+  PRINT_WARN2( "ent %d received %d bytes of data", 
+	       this->stage_id, (int)len ); 
   return 0;
 }
 

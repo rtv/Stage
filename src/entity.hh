@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15.2.17 2003-02-15 21:15:01 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.18 2003-02-23 08:01:35 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -90,7 +90,6 @@ public: stage_id_t stage_id;
 protected:
   stage_buffer_t buffer_data;
   stage_buffer_t buffer_cmd;
-  stage_buffer_t buffer_cfg;
 
 public: 
   // Initialise entity  
@@ -109,23 +108,18 @@ public:
   virtual int Sync();
   
 protected: 
-  virtual int SetCommand( char* data, size_t len ); // receive command
-  virtual int SetConfig( char* data, size_t len ); // receive config
   virtual int SetData( char* data, size_t len ); // receive data
-  virtual int GetCommand( char* data, size_t* len ); // get command data
-  virtual int GetConfig( char* data, size_t* len ); // get config data
   virtual int GetData( char* data, size_t* len ); // get data data
+  virtual int SetCommand( char* data, size_t len ); // receive command
+  virtual int GetCommand( char* data, size_t* len ); // get command data
   // END ---------------------------------------------------------
   
   // Get/set properties
-public: int SetProperty( int con,
-			 stage_prop_id_t property, 
-			 char* value, size_t len );
+public: int Property( int con,
+		      stage_prop_id_t property, 
+		      void* value, size_t len, 
+		      stage_buffer_t* reply );
   
-  //public: virtual size_t GetPropertySize( stage_prop_id_t property );
-  // get the size of the data and a pointer to it - we'll copy it externally
-public: virtual size_t GetProperty( stage_prop_id_t property, void* value );
-
 protected:
   stage_rotrect_t* rects;
   int rect_count;
@@ -294,8 +288,6 @@ public: void FamilyUnsubscribe();
  
   // move using these velocities times the timestep
   protected: int Move( double vx, double vy, double va, double timestep );
-
-private: int BufferPacket( stage_buffer_t* buf, char* data, size_t len );
 
   ///////////////////////////////////////////////////////////////////////
   // DISTRIBUTED STAGE STUFF

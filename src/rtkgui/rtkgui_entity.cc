@@ -186,6 +186,7 @@ void CEntity::RtkUpdate()
   //else // we need to show and update this figure
   {
     rtk_fig_show( this->fig, true );  }
+  PRINT_WARN1( "RTK update for ent %d done", this->stage_id );  
 }
 
 
@@ -280,6 +281,7 @@ void CSonarModel::RtkUpdate()
 	    }
 	}
     }
+  
   //else 
   //if( this->scan_fig ) rtk_fig_clear( this->scan_fig ); 
 }

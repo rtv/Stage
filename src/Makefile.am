@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.29.4.16 2003-02-14 03:36:32 rtv Exp $
+# $Id: Makefile.am,v 1.29.4.17 2003-02-23 08:01:33 rtv Exp $
 
 SUBDIRS = sio rtkgui models
 # gnome2
@@ -30,6 +30,7 @@ stage_SOURCES = \
 	main.cc \
 	matrix.cc \
 	matrix.hh \
+	property.cc \
 	raytrace.cc \
 	raytrace.hh \
 	raytrace.hh \

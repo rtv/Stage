@@ -13,14 +13,14 @@
 //  CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/idardevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.2.6.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef IDARDEVICE_HH
-#define IDARDEVICE_HH
+#ifndef IDAR_HH
+#define IDAR_HH
 
-#include "playerdevice.hh"
+#include "entity.hh"
 
 typedef struct 
 {
@@ -46,16 +46,15 @@ private:
 
 public: 
   
-  CIdarDevice( LibraryItem *libit, CWorld *world, CEntity *parent );
-  //~CIdarDevice( void );
+  CIdarDevice(int id, char* token, char* color, CEntity *parent);
 
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-public: static CIdarDevice* Creator(  LibraryItem *libit, CWorld *world, CEntity *parent )
-  { return( new CIdarDevice( libit, world, parent ) ); }
-
+public: static CIdarDevice* Creator( int id, char* token, char* color, CEntity *parent )
+  { return( new CIdarDevice(  id, token, color, parent ); }
+  
   // Startup routine
   public: virtual bool Startup();
 

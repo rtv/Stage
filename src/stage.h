@@ -34,32 +34,34 @@
    // all properties have unique id numbers and must be listed here
    // please stick to the syntax STG_PROP_<model>_<property>
    typedef enum
-   {
-     STG_PROP_ENTITY_PARENT,
-     STG_PROP_ENTITY_POSE,
-     STG_PROP_ENTITY_VELOCITY,
-     STG_PROP_ENTITY_SIZE,
-     STG_PROP_ENTITY_ORIGIN,
-     STG_PROP_ENTITY_NAME,
-     STG_PROP_ENTITY_COLOR,
-     STG_PROP_ENTITY_SUBSCRIBE,
-     STG_PROP_ENTITY_UNSUBSCRIBE,     
-     STG_PROP_ENTITY_VOLTAGE,
-     STG_PROP_ENTITY_LASERRETURN,
-     STG_PROP_ENTITY_SONARRETURN,
-     STG_PROP_ENTITY_IDARRETURN,
-     STG_PROP_ENTITY_OBSTACLERETURN,
-     STG_PROP_ENTITY_VISIONRETURN,
-     STG_PROP_ENTITY_PUCKRETURN,
-     STG_PROP_ENTITY_PLAYERID,
-     STG_PROP_ENTITY_PPM,
-     STG_PROP_ENTITY_RECTS,
-     STG_PROP_ENTITY_CIRCLES,
-     STG_PROP_ENTITY_COMMAND,
-     STG_PROP_ENTITY_DATA,
-     STG_PROP_ENTITY_CONFIG,
-     STG_PROPERTY_COUNT // THIS MUST BE THE LAST ENTRY
-   } stage_prop_id_t;
+     {
+       STG_PROP_ENTITY_PARENT, // see properties.cc
+       STG_PROP_ENTITY_POSE,
+       STG_PROP_ENTITY_VELOCITY,
+       STG_PROP_ENTITY_SIZE,
+       STG_PROP_ENTITY_ORIGIN,
+       STG_PROP_ENTITY_NAME,
+       STG_PROP_ENTITY_COLOR,
+       STG_PROP_ENTITY_SUBSCRIBE,
+       STG_PROP_ENTITY_UNSUBSCRIBE,     
+       STG_PROP_ENTITY_VOLTAGE,
+       STG_PROP_ENTITY_LASERRETURN,
+       STG_PROP_ENTITY_SONARRETURN,
+       STG_PROP_ENTITY_IDARRETURN,
+       STG_PROP_ENTITY_OBSTACLERETURN,
+       STG_PROP_ENTITY_VISIONRETURN,
+       STG_PROP_ENTITY_PUCKRETURN,
+       STG_PROP_ENTITY_PLAYERID,
+       STG_PROP_ENTITY_PPM,
+       STG_PROP_ENTITY_RECTS,
+       STG_PROP_ENTITY_CIRCLES,
+       STG_PROP_ENTITY_COMMAND,
+       STG_PROP_ENTITY_DATA,
+       STG_PROP_SONAR_RANGEBOUNDS, // see models/sonar.hh
+       STG_PROP_SONAR_GEOM,
+       STG_PROP_SONAR_POWER,
+       STG_PROPERTY_COUNT // THIS MUST BE THE LAST ENTRY
+     } stage_prop_id_t;
    
    
 // PROPERTY DEFINITIONS ///////////////////////////////////////////////
@@ -90,6 +92,13 @@ enum GripperReturn
 // any integer value other than this is a valid fiducial ID
 // TODO - fix this up
 #define FiducialNone 0
+
+typedef enum
+  {
+    STG_NOREPLY = 0,
+    STG_WANTREPLY,
+    STG_ISREPLY
+  } stage_reply_mode_t;
 
 // image types ////////////////////////////////////////////////////////
 
@@ -179,6 +188,7 @@ typedef struct
 {
   int id; // identify the entity
   stage_prop_id_t property; // identify the property
+  stage_reply_mode_t reply; // if non-zero, Stage replies with the current property data
   size_t len; // the property uses this much data (to follow)
 } __attribute ((packed)) stage_property_t;
 

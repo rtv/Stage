@@ -32,9 +32,9 @@
 #include <unistd.h>
 #include <assert.h>
 
-#undef DEBUG 
+//#undef DEBUG 
 #undef VERBOSE
-//#define DEBUG
+#define DEBUG
 
 #include "replace.h"
 #include "sio.h"
@@ -100,7 +100,9 @@ const char* SIOPropString( stage_prop_id_t id )
     case STG_PROP_ENTITY_CIRCLES: return "STG_PROP_ENTITY_CIRCLES"; break;
     case STG_PROP_ENTITY_COMMAND: return "STG_PROP_ENTITY_COMMAND"; break;
     case STG_PROP_ENTITY_DATA: return "STG_PROP_ENTITY_DATA"; break;
-    case STG_PROP_ENTITY_CONFIG: return "STG_PROP_ENTITY_CONFIG"; break;
+    case STG_PROP_SONAR_RANGEBOUNDS: return "STG_PROP_SONAR_RANGEBOUNDS";break;
+    case STG_PROP_SONAR_POWER: return "STG_PROP_SONAR_POWER"; break;
+    case STG_PROP_SONAR_GEOM: return "STG_PROP_SONAR_GEOM"; break;
     default:
       break;
     }
@@ -158,7 +160,7 @@ void SIODebugBuffer( stage_buffer_t* buf )
 
 
 
-size_t SIOBufferPacket( stage_buffer_t* buf, char* data, size_t len )
+size_t SIOBufferPacket( stage_buffer_t* buf, void* data, size_t len )
 {
   // make space for the new packet (this could be more efficient if
   // we grew the buffer in large chunks less frequently, but this
@@ -177,7 +179,7 @@ size_t SIOBufferPacket( stage_buffer_t* buf, char* data, size_t len )
 }
 
 
-size_t SIOWritePacket( int con, char* data, size_t len )
+size_t SIOWritePacket( int con, void* data, size_t len )
 {
   size_t writecnt = 0;
   int thiswritecnt;
@@ -212,7 +214,7 @@ size_t SIOWriteBuffer( int con, stage_buffer_t* buf )
 }
 
 
-size_t SIOReadPacket( int con, char* buf, size_t len )
+size_t SIOReadPacket( int con, void* buf, size_t len )
 {
   //printf( "attempting to read a packet of max %d bytes\n", len );
 
@@ -262,7 +264,7 @@ const char* SIOHdrString( stage_header_type_t type )
 
 /// COMPOUND FUNCTIONS
 int SIOWriteMessage( int con, double simtime, stage_header_type_t type,  
-		     char* data, size_t len )
+		     void* data, size_t len )
 {
   //PRINT_DEBUG3( "con %d: type: %s bytes: %d", con, SIOHdrString(type), len );
 
@@ -276,7 +278,7 @@ int SIOWriteMessage( int con, double simtime, stage_header_type_t type,
   assert( outbuf );
   
   // buffer the header, then the data
-  SIOBufferPacket( outbuf, (char*)&hdr, sizeof(hdr) );
+  SIOBufferPacket( outbuf, &hdr, sizeof(hdr) );
   SIOBufferPacket( outbuf, data, len );
   
   if( con == -1 ) // if ALL CONNECTIONS was requested
@@ -330,6 +332,8 @@ int SIOReadData( int con,
       return -1; // fail
     }
  
+  stage_buffer_t* replies = SIOCreateBuffer();
+
   // handle each packet as an individual request
   char* record;
   for( record = buf; record < buf + datalen; record += recordlen )
@@ -338,10 +342,17 @@ int SIOReadData( int con,
       
       // CALL THE CALLBACK WITH THIS SINGLE config
       if( callback )
-	(*callback)( con, record, recordlen );
+	(*callback)( con, record, recordlen, replies );
     }
   
   free( buf );
+  
+  // send the replies
+  assert( SIOWriteMessage( con, 0.0,
+			   STG_HDR_PROPS, replies->data, replies->len )
+	  == 0 );
+  
+
   return 0;
 }
 
@@ -367,6 +378,10 @@ int SIOReadProperties( int con, size_t len, stg_data_callback_t callback )
       return -1; // fail
     }
   
+
+  // create a buffer for replies
+  stage_buffer_t* replies = SIOCreateBuffer();
+
   // the first property header is at the start of the buffer
   char* prop_header = prop_buf;
   
@@ -379,17 +394,26 @@ int SIOReadProperties( int con, size_t len, stg_data_callback_t callback )
       //PRINT_DEBUG2( "Read property id %d len %d\n", prop->id, prop->len );
       
       // CALL THE CALLBACK WITH THIS SINGLE PROPERTY
-      // TODO - put the correct connection number in here!
-      // should use connection num,bers instead of fds everywhere
       if( callback )
-	(*callback)( con, (char*)prop,  sizeof(stage_property_t)+prop->len );
+	(*callback)( con, (char*)prop,  sizeof(stage_property_t)+prop->len,
+		     replies );
 
       // move the pointer past this record in the buffer
       prop_header += sizeof(stage_property_t) + prop->len;
     }
+
+  
+  // send the replies
+  assert( SIOWriteMessage( con, 0.0,
+			   STG_HDR_PROPS, replies->data, replies->len )
+	  == 0 );
+  
+  SIOFreeBuffer( replies );
   
   // free the memory
   free( prop_buf );
+
+
   return 0; // success
 }
 
@@ -399,6 +423,8 @@ int SIOReadProperties( int con, size_t len, stg_data_callback_t callback )
 int SIOInitClient( int argc, char** argv )
 {
   int con = 0; // the connection number
+
+  sio_connection_count = 0;
 
   int a;
   // parse out the hostname - that's all we need just here
@@ -538,7 +564,7 @@ int SIOServiceConnections(   stg_connection_callback_t lostconnection_callback,
 		  int hdrbytes;
 		  stage_header_t hdr;
 		  
-		  hdrbytes = SIOReadPacket( t, (char*)&hdr, sizeof(hdr) ); 
+		  hdrbytes = SIOReadPacket( t, &hdr, sizeof(hdr) ); 
 		  
 		  if( hdrbytes < (int)sizeof(hdr) )
 		    {
@@ -579,7 +605,7 @@ int SIOServiceConnections(   stg_connection_callback_t lostconnection_callback,
 			  case STG_HDR_CMD:
 			    //PRINT_DEBUG1( "STG_HDR_CMD on %d", t );
 			    if( cmd_callback )
-			      (*cmd_callback)( t, (char*)&(hdr.len), 1 );
+			      (*cmd_callback)( t, &(hdr.len), 1, NULL );
 			    break;			  
 			    
 			  case STG_HDR_CONTINUE: 
@@ -669,7 +695,7 @@ int SIOParseCmdLine( int argc, char** argv )
 int SIOInitServer( int argc, char** argv )
 { 
   //PRINT_DEBUG( "Start" );
-
+  sio_connection_count = 0;
   //////////////////////////////////////////////////////////////////////
   // FIGURE OUT THE DEFAULT FULL HOST NAME & ADDRESS
   
@@ -814,7 +840,7 @@ int SIOAcceptConnections( void )
 int SIOBufferProperty( stage_buffer_t* bundle,
 		       int id,
 		       stage_prop_id_t type,
-		       char* data, size_t len )
+		       void* data, size_t len, stage_reply_mode_t mode )
 {
   assert( bundle );
   
@@ -823,11 +849,12 @@ int SIOBufferProperty( stage_buffer_t* bundle,
   prop.id = id;
   prop.property = type;
   prop.len = len;
+  prop.reply = mode;
 
   printf( "buffering %d byte header + %d bytes data\n", sizeof(prop), len );
 
   // buffer the header for this property
-  SIOBufferPacket( bundle, (char*)&prop, sizeof(prop) );
+  SIOBufferPacket( bundle, &prop, sizeof(prop) );
   // buffer the property data after the header
   SIOBufferPacket( bundle, data, len );
     

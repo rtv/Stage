@@ -21,12 +21,15 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.1.2.11 2003-02-16 04:49:20 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.1.2.12 2003-02-23 08:01:38 rtv Exp $
  */
 
-//
-// all this GUI stuff should be unravelled from the CWorld class eventually - rtv
-//
+#if HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+// this should go when I get the autoconf set up properly
+#ifdef INCLUDE_RTK2
 
 #undef DEBUG
 #undef VERBOSE
@@ -150,7 +153,8 @@ int RtkGuiCreateApp( void )
 {
   app = rtk_app_create();
   canvas = rtk_canvas_create(app);
-      
+  
+  /*    
   // Add some menu items
   file_menu = rtk_menu_create(canvas, "File");
   save_menuitem = rtk_menuitem_create(file_menu, "Save", 0);
@@ -191,7 +195,7 @@ int RtkGuiCreateApp( void )
   action_menu = rtk_menu_create(canvas, "Action");
   subscribedonly_item = rtk_menuitem_create(action_menu, 
 					    "Subscribe to all", 1);
-  
+  */
    
   /* BROKEN
   //zero the view menus
@@ -255,8 +259,8 @@ int RtkGuiLoad( stage_gui_config_t* cfg )
   rtk_canvas_origin( canvas, ox, oy);
   
   // check the menu items appropriately
-  rtk_menuitem_check(grid_item, cfg->showgrid);
-  rtk_menuitem_check(subscribedonly_item, cfg->showsubscribedonly);
+  //rtk_menuitem_check(grid_item, cfg->showgrid);
+  //rtk_menuitem_check(subscribedonly_item, cfg->showsubscribedonly);
  
   rtk_canvas_render( canvas );
 
@@ -345,7 +349,7 @@ int RtkGuiUpdate( void )
     }
 
   // Process menus
-  RtkMenuHandling();      
+  //RtkMenuHandling();      
   
   // Render the canvas
   rtk_canvas_render( canvas);
@@ -451,7 +455,7 @@ int RtkGuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
     case STG_PROP_ENTITY_PLAYERID:
     case STG_PROP_ENTITY_RECTS:
     case STG_PROP_ENTITY_CIRCLES:
-    case STG_PROP_ENTITY_CONFIG:
+    case STG_PROP_ENTITY_VELOCITY:
       RtkGuiEntityShutdown( ent ); 
       RtkGuiEntityStartup( ent );
       break;
@@ -463,13 +467,12 @@ int RtkGuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
       break;
       
       // these are ignored for now
-    case STG_PROP_ENTITY_VELOCITY:
     case STG_PROP_ENTITY_COMMAND:
       //PRINT_DEBUG1( "gui does nothing for prop %s", SIOPropString(prop) ); 
       break;
 
     default:
-      PRINT_WARN1( "property change %s unhandled by rtkgui", SIOPropString(prop) ); 
+      //PRINT_WARN1( "property change %s unhandled by rtkgui", SIOPropString(prop) ); 
       break;
     } 
   
@@ -548,7 +551,7 @@ bool ShowDeviceBody( int devtype )
 void RtkMenuHandling()
 {
   char filename[128];
-    
+  
   // See if we need to quit the program
   if (rtk_menuitem_isactivated(exit_menuitem))
     ::quit = 1;
@@ -597,6 +600,7 @@ void RtkMenuHandling()
     rtk_canvas_export_image(canvas, filename, RTK_IMAGE_FORMAT_PPM);
   }
 
+
   // Update movie menu
   RtkUpdateMovieMenu();
   
@@ -614,8 +618,8 @@ void RtkMenuHandling()
     if( matrix_fig ) UnrenderMatrix();
   
   // enable/disable subscriptions to show sensor data
-  static bool lasttime = rtk_menuitem_ischecked(subscribedonly_item);
-  bool thistime = rtk_menuitem_ischecked(subscribedonly_item);
+  //static bool lasttime = rtk_menuitem_ischecked(subscribedonly_item);
+  //bool thistime = rtk_menuitem_ischecked(subscribedonly_item);
 
   // for now i check if the menu item changed
   /*
@@ -678,5 +682,5 @@ void RtkUpdateMovieMenu()
   return;
 }
 
-
+#endif
 

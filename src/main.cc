@@ -23,7 +23,7 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan, Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.29 2003-02-15 21:15:01 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.30 2003-02-23 08:01:36 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -115,8 +115,9 @@ Library model_library( library_items );
 
 #include "rtkgui/rtkgui.hh"
 
-const int gui_count = 1; // must match the number of entries in the array
 
+#ifdef INCLUDE_RTK2
+const int gui_count = 1; // must match the number of entries in the array
 stage_gui_library_item_t gui_library[] = {
   { "rtk", // install callback functions for the RTK2-based GUI 
     RtkGuiInit, RtkGuiLoad, RtkGuiUpdate, 
@@ -124,6 +125,10 @@ stage_gui_library_item_t gui_library[] = {
     RtkGuiEntityPropertyChange
   }
 };
+#else
+const int gui_count = 0; // must match the number of entries in the array
+stage_gui_library_item_t gui_library[] = {};
+#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // Global vars
@@ -228,7 +233,8 @@ int HandleLostConnection( int connection )
   return 0; // success
 }
 
-int HandleModel(  int connection, char* data, size_t len )
+int HandleModel(  int connection, void* data, size_t len, 
+		  stage_buffer_t* replies )
 {
   assert( len == sizeof(stage_model_t) );
   stage_model_t* model = (stage_model_t*)data;
@@ -252,7 +258,8 @@ int HandleModel(  int connection, char* data, size_t len )
   return 0; // success
 }
 
-int HandleProperty( int connection,  char* data, size_t len )
+int HandleProperty( int connection,  void* data, size_t len,
+		    stage_buffer_t* replies )
 {
   PRINT_DEBUG3( "Received %d byte property request "
 		"(of which header is %d bytes ) on connection %d", 
@@ -273,16 +280,18 @@ int HandleProperty( int connection,  char* data, size_t len )
   else
     {
       // pass the property data to the entity to absorb
-      ent->SetProperty( connection, // the connection number 
-			prop->property, // the property id
-			data+sizeof(stage_property_t), // the raw data
-			prop->len ); // the length of the raw data      
+      ent->Property( connection, // the connection number 
+		     prop->property, // the property id
+		     ((char*)data)+sizeof(stage_property_t), // the raw data
+		     prop->len, // the length of the raw data      
+		     replies ); // a buffer to store replies in
     }
 
   return 0; //success
 }
 
-int HandleCommand(  int connection, char* data, size_t len )
+int HandleCommand(  int connection, void* data, size_t len, 
+		    stage_buffer_t* replies )
 {
   assert( len == sizeof(stage_cmd_t) );
   stage_cmd_t* cmd = (stage_cmd_t*)data;
@@ -306,7 +315,8 @@ int HandleCommand(  int connection, char* data, size_t len )
   return 0; //success
 }
 
-int HandleGui( int connection, char* data, size_t len )
+int HandleGui( int connection, void* data, size_t len ,
+	       stage_buffer_t* replies )
 {
   assert( len == sizeof(stage_gui_config_t) );
   stage_gui_config_t* cfg  = (stage_gui_config_t*)data;
@@ -445,11 +455,10 @@ int PublishDirty()
 		    PRINT_WARN3( "ent: %d con: %d prop: %s needs exported",
 				 ent, con, SIOPropString(propid) );
 		    
-		    size_t len = entp->GetProperty( propid, propdata );
-		    
-		    SIOBufferProperty( dirty, ent, propid, propdata, len );
-		    
-		    // clean (con,prop,value)
+		    // add the dirty property to the dirty buffer
+		    assert( entp->Property( con, propid, NULL, 0, dirty ) 
+			    != -1 );
+
 		    entp->subscriptions[con][propid].dirty = 0;
 		    dirty_prop_count++;
 		  }
@@ -562,6 +571,9 @@ int main(int argc, char **argv)
   
   //int c = 0;
   
+  // create the root object
+  //RootEntity(
+
   // the main loop
   while( !quit ) 
     {

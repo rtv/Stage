@@ -9,15 +9,21 @@ if WITH_RTK
 RTKCPPFLAGS = -I@RTK_DIR@/include `gtk-config --cflags`
 endif
 
-AM_CPPFLAGS = 	-Wall -I$(top_builddir)/src  -I$(top_builddir)/replace $(RTKCPPFLAGS)
+AM_CPPFLAGS = 	-Wall -I$(top_builddir)/src  -I$(top_builddir)/replace -I$(top_builddir)/src/sio $(RTKCPPFLAGS)
 
 noinst_LIBRARIES = libmodels.a 
 
 libmodels_a_SOURCES = \
-	puck.cc \
-	puck.hh \
-	sonar.cc \
-	sonar.hh
+puck.cc \
+puck.hh \
+sonar.cc \
+sonar.hh 
+
+
+#\
+#idar.cc \
+#idar.hh	
+
 
 #	positiondevice.cc \
 #	positiondevice.hh

@@ -1,3 +1,8 @@
+#if HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
+#ifdef INCLUDE_RTK2
 
 class CEntity;
 
@@ -23,3 +28,5 @@ typedef struct
   int movemask;
   int type; // the model type
 } rtk_entity_t;
+
+#endif

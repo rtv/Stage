@@ -5,9 +5,11 @@
  extern "C" {
 #endif 
 
+
 #include "stage.h"
-   
-   typedef int (*stg_data_callback_t)(int, char* data, size_t len );
+     
+   typedef int (*stg_data_callback_t)(int, void* data, size_t len, 
+				      stage_buffer_t* replies );
    typedef int (*stg_connection_callback_t)(int);
    
    void* malloc_debug( size_t );
@@ -63,7 +65,7 @@
 
    // this adds a header, so it needs a timestamp
    int SIOWriteMessage( int con, double simtime, stage_header_type_t type,
-			char* data, size_t len );
+			void* data, size_t len );
    
    // buffers a command for sending later. adds a header, so needs a timestamp
    int SIOBufferCommand( stage_buffer_t* buf, double simtime, stage_cmd_t cmd );
@@ -71,7 +73,8 @@
    int SIOBufferProperty( stage_buffer_t* bundle,
 			  int id, 
 			  stage_prop_id_t type,
-			  char* data, size_t len );
+			  void* data, size_t len,
+			  stage_reply_mode_t reply );
    
    stage_buffer_t* SIOCreateBuffer( void );
    void SIOFreeBuffer( stage_buffer_t* bundle );
@@ -80,9 +83,9 @@
    void SIODebugBuffer( stage_buffer_t* buf );
    void SIODestroyConnection( int con );
 
-   size_t SIOWritePacket( int con, char* data, size_t len );
-   size_t SIOBufferPacket( stage_buffer_t* buf, char* data, size_t len );
-   size_t SIOReadPacket( int con, char* data, size_t len );
+   size_t SIOWritePacket( int con, void* data, size_t len );
+   size_t SIOBufferPacket( stage_buffer_t* buf, void* data, size_t len );
+   size_t SIOReadPacket( int con, void* data, size_t len );
       
 
 #ifdef __cplusplus
