@@ -1,0 +1,31 @@
+
+/**
+@page foo Introduction to the Stage library (libstage)
+
+The Stage libray provides code for simulating a population of
+robots. It is designed to be used by robotics researchers for building
+custom simulations, and as the simulation engine for the Stage Plugin.
+
+*/
+
+/**
+@page foo Introduction to the Stage Plugin (libstageplugin)
+
+The Stage Plugin is a module for the Player robot server that provides
+simulated robot hardware. 
+
+*/
+
+/**
+@page player Working with Player
+
+Player is handy
+
+*/
+
+/**
+@page extending Extending Stage with new models
+
+TODO: Instructions on extending Stage with new models
+
+*/
