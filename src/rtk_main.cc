@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtk_main.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.8 $
+//  $Author: ahoward $
+//  $Revision: 1.8.2.1 $
 //
 // Usage:
 //  (empty)
@@ -41,6 +41,7 @@ CWorld *world = 0;
 // this is a double that gets set on SIGUSR1; if "-time <sec>" was given
 // on the cmdline, this starts the clock running 
 double g_clockstarttime = -1;
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Parse the command line
@@ -128,13 +129,12 @@ int main(int argc, char **argv)
     // any options set will produce console output for reassurance
     if (!world->ParseCmdline(argc, argv))
       return 0;
-
     
     // Open and start agents
     //
     if (!app->open_agents())
         exit(1);
-    
+
     // Start the world
     //
     if (!world->Startup())

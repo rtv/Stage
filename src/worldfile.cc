@@ -5,7 +5,7 @@
 // Date: 15 Nov 2001
 // Desc: A property handling class
 //
-// $Id: worldfile.cc,v 1.2.2.1 2001-11-21 01:38:12 ahoward Exp $
+// $Id: worldfile.cc,v 1.2.2.2 2001-11-27 18:40:51 ahoward Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -167,11 +167,11 @@ bool CWorldFile::Save(const char *filename)
     filename = this->filename;
 
   // Open file
-  FILE *file = fopen("testx.world", "w+");
+  FILE *file = fopen(filename, "w+");
   if (!file)
   {
     PRINT_ERR2("unable to open world file %s : %s",
-               this->filename, strerror(errno));
+               filename, strerror(errno));
     return false;
   }
 
@@ -195,13 +195,23 @@ bool CWorldFile::Save(const char *filename)
       // Do nothing
     }
 
-    // Begin/end
-    else if (strcmp(pitem->name, "begin") == 0 ||
-             strcmp(pitem->name, "end") == 0)
+    // Begin
+    else if (strcmp(pitem->name, "begin") == 0)
     {
+      assert(pitem->value_count == 1);
       fprintf(file, "%*s", (psection->indent - 1) * 2, "");
+      fprintf(file, "%s ", pitem->name);
+      fprintf(file, "%s", pitem->values[0]);
     }
 
+    // End
+    else if (strcmp(pitem->name, "end") == 0)
+    {
+      assert(pitem->value_count == 0);
+      fprintf(file, "%*s", (psection->indent - 1) * 2, "");
+      fprintf(file, "%s ", pitem->name);
+    }
+    
     // Add key-value-pairs
     else
     {

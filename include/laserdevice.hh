@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.19.2.1 $
+//  $Revision: 1.19.2.2 $
 
 //
 // Usage:
@@ -52,8 +52,8 @@ class CLaserDevice : public CEntity
   // Generate scan data
   private: bool GenerateScanData(player_laser_data_t *data);
 
-  // Laser update rate in samples/sec
-  private: double update_rate;
+  // Laser scan rate in samples/sec
+  private: double scan_rate;
 
   // Minimum resolution in degrees
   private: double min_res;

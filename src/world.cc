@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.68.2.1 $
+//  $Revision: 1.68.2.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -964,7 +964,7 @@ void CWorld::OnUiButton(CWorld *world, RtkUiButtonData* data)
     world->m_enable = !world->m_enable;
 
   if (data->push_button("save"))
-    world->Save(world->m_filename);
+    world->Save(NULL);
     
   data->end_section();
 }

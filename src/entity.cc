@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.29.2.1 2001-11-21 01:38:10 ahoward Exp $
+//  $Id: entity.cc,v 1.29.2.2 2001-11-27 18:40:51 ahoward Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -150,8 +150,16 @@ bool CEntity::Load(CWorldFile *worldfile, int section)
                                            this->sonar_return);
   this->vision_return = worldfile->ReadBool(section, "vision",
                                             this->vision_return);
-  //this->laser_return = worldfile->ReadBool(section, "laser",
-  //                                         this->laser_return);
+
+  if (worldfile->ReadBool(section, "laser", this->laser_return != LaserNothing))
+  {
+      if (worldfile->ReadBool(section, "laser_bright", this->laser_return >= LaserBright1))
+          this->laser_return = LaserBright1;
+      else
+          this->laser_return = LaserSomething;
+  }
+  else
+      this->laser_return = LaserNothing;
   
   // Read the player port
   // Default to the parent's port

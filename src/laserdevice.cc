@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.39.2.1 $
+//  $Revision: 1.39.2.2 $
 //
 // Usage:
 //  (empty)
@@ -57,7 +57,7 @@ CLaserDevice::CLaserDevice(CWorld *world,
   this->obstacle_return = 0;
   
   // Default laser simulation settings
-  this->update_rate = 360 / 0.200; // 5Hz
+  this->scan_rate = 360 / 0.200; // 5Hz
   this->min_res = 0.25;
   this->max_range = 8.0;
 
@@ -92,6 +92,10 @@ bool CLaserDevice::Load(CWorldFile *worldfile, int section)
   this->min_res = worldfile->ReadAngle(0, "laser_min_res", this->min_res);
   this->min_res = worldfile->ReadAngle(section, "min_res", this->min_res);
 
+  // Laser scan rate (samples/sec)
+  this->scan_rate = worldfile->ReadFloat(0, "laser_scan_rate", this->scan_rate);
+  this->scan_rate = worldfile->ReadFloat(section, "scan_rate", this->scan_rate);
+  
   return true;
 }
 
@@ -130,8 +134,7 @@ void CLaserDevice::Update( double sim_time )
   // UPDATE OUR SENSOR DATA
 
   // Check to see if it's time to update the laser scan
-  //
-  double interval = this->scan_count / this->update_rate;
+  double interval = this->scan_count / this->scan_rate;
   if( sim_time - m_last_update > interval )
   {
     m_last_update = sim_time;
