@@ -24,7 +24,7 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.18 2003-04-07 19:12:24 rtv Exp $
+ * CVS info: $Id: library.cc,v 1.19 2003-06-04 00:22:30 gsibley Exp $
  */
 
 //#define DEBUG
@@ -43,7 +43,6 @@
 #include "models/foofinderdevice.hh"
 #include "models/fiducialfinderdevice.hh"
 #include "models/laserdevice.hh"
-#include "models/motedevice.hh"
 #include "models/positiondevice.hh"
 #include "models/powerdevice.hh"
 #include "models/ptzdevice.hh"
@@ -74,7 +73,6 @@ libitem_t library_items[] = {
   { "foofinder", "purple", (CFP)CFooFinder::Creator},
   //  { "lbd", "gray", (CFP)CFiducialFinder::Creator},
   //{ "fiducialfinder", "gray", (CFP)CFiducialFinder::Creator},
-  { "mote", "orange", (CFP)CMoteDevice::Creator},
   { "power", "wheat", (CFP)CPowerDevice::Creator},
   { "ptz", "magenta", (CFP)CPtzDevice::Creator},
   { "puck", "green", (CFP)CPuck::Creator},

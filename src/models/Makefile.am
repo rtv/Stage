@@ -36,8 +36,6 @@ libstgmodels_a_SOURCES = \
                    image.hh \
                    laserdevice.cc \
                    laserdevice.hh \
-                   motedevice.cc \
-                   motedevice.hh \
                    positiondevice.cc \
                    positiondevice.hh \
                    powerdevice.cc \
