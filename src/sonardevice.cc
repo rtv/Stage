@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.9.2.5 $
+//  $Revision: 1.9.2.6 $
 //
 // Usage:
 //  (empty)
@@ -80,14 +80,17 @@ void CSonarDevice::Update( double sim_time )
   m_hit_count = 0;
 #endif
   
-  // Get configs
+  // Get configs  
   uint16_t cmd;
-  if( GetConfig( &cmd, sizeof(cmd) ) == PLAYER_SONAR_POWER_REQ )
+  if( GetConfig( &cmd, sizeof(cmd) ) !=  0 )
     {
-      // we got a sonar power toggle - i just ignore them.
-      puts( "sonar power toggled" );
+      // we got a config
+      if ( cmd == PLAYER_SONAR_POWER_REQ )
+	// we got a sonar power toggle - i just ignore them.
+	puts( "sonar power toggled" );
     }
   
+
   // Check bounds
   //
   ASSERT((size_t) m_sonar_count <= sizeof(m_data.ranges) 
