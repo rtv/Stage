@@ -3,7 +3,7 @@
 #       showing how to include some pre-defined objects
 # Author: Andrew Howard, Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.13 2003-01-09 02:54:08 rtv Exp $
+# CVS: $Id: everything.world,v 1.14 2003-01-09 02:54:38 rtv Exp $
 
 include "usc_pioneer.inc"
 include "beacons.inc"
@@ -62,9 +62,7 @@ usc_pioneer_bumper( color "blue" name "robot3"
 
 amigobot( color "red" name "amigo1" port 6670 pose [11.774 4.104 -135.514] )
 amigobot( color "red" name "amigo2" port 6671 pose [11.514 4.754 -121.652] )
-amigobot( color "red" name "amigo3" port 6672 pose [12.476 3.974 -126.121] 
-fiducial_id 42 laser_return "bright"
-)
+amigobot( color "red" name "amigo3" port 6672 pose [12.476 3.974 -126.121] )
 
 # generate some laser beacons
 laserbeacon( pose [6.420 3.600 -143.139] fiducial_id 5 )
