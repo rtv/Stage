@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.26 $
+//  $Author: gsibley $
+//  $Revision: 1.27 $
 //
 // Usage:
 //  (empty)
@@ -62,9 +62,9 @@
 ///////////////////////////////////////////////////////////////////////////
 // Macros
 //
-//#define DEBUG
-#undef DEBUG
-#undef VERBOSE
+#define DEBUG
+//#undef DEBUG
+//#undef VERBOSE
 
 
 ///////////////////////////////////////////////////////////////////////////

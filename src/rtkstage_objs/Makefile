@@ -24,7 +24,7 @@ OBJS =  main.o world.o worldfile.o truthserver.o envserver.o image.o \
 	ptzdevice.o boxobstacle.o \
 	laserbeacon.o laserbeacondevice.o visiondevice.o visionbeacon.o \
 	puck.o broadcastdevice.o gpsdevice.o gripperdevice.o \
-	matrix.o raytrace.o
+	matrix.o raytrace.o mote.o
 
 # choose one of these that suits your build (debug/profile/production)
 

@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.44 2002-02-27 22:27:27 rtv Exp $
+//  $Id: entity.cc,v 1.45 2002-03-08 03:26:15 gsibley Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -682,11 +682,13 @@ size_t CEntity::PutData( void* data, size_t len )
 {
   Lock();
   
-  //PRINT_DEBUG3( "S: Entity::PutData() (%d,%d,%d) at %p\n", 
-  //  m_info_io->player_id.port, 
-  //  m_info_io->player_id.type, 
-  //  m_info_io->player_id.index, data);
- 
+
+  printf( "S: Entity::PutData() (%d,%d,%d) at %p\n", 
+	  m_info_io->player_id.port, 
+	  m_info_io->player_id.type, 
+	  m_info_io->player_id.index, data);
+
+
   // the data mustn't be too big!
   //if( len <= m_info_io->data_len )
 

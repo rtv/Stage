@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.78 2002-02-20 08:44:22 rtv Exp $
+# $Id: Makefile,v 1.79 2002-03-08 03:26:15 gsibley Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -41,7 +41,7 @@ SRCS = world.cc worldfile.cc truthserver.cc envserver.cc image.cc \
 	ptzdevice.cc boxobstacle.cc \
 	laserbeacon.cc laserbeacondevice.cc visiondevice.cc visionbeacon.cc \
 	puck.cc gpsdevice.cc gripperdevice.cc main.cc \
-	matrix.cc raytrace.cc
+	matrix.cc raytrace.cc motedevice.cc
 
 # stage and rtkstage objects are compiled from the same sources, but rtkstage
 # defines a couple of macros to enable some optional code
@@ -70,16 +70,16 @@ stage: ${STG_OBS}
 
 # RTKSTAGE ##################################################################
 
-rtkstage: LINKFLAGS += -L$(RTK_LIB) -lrtk `gtk-config --libs gtk gthread`
+rtkstage: LINKFLAGS += -L../$(RTK_LIB) -lrtk `gtk-config --libs gtk gthread`
 rtkstage: ${RTK_OBS} rtk
 	$(LINKER) $(RTK_OBS) $(LINKFLAGS) -o $@ 
 
-%_rtk.o : CCFLAGS += -DINCLUDE_RTK2 -I$(RTK_INC) `gtk-config --cflags`
+%_rtk.o : CCFLAGS += -DINCLUDE_RTK2 -I../$(RTK_INC) `gtk-config --cflags`
 %_rtk.o : %.cc
 	${CC} ${CCFLAGS} -c $< -o $@
 
 rtk:
-	cd $(RTK_DIR) && ${MAKE}
+	cd ../$(RTK_DIR) && ${MAKE}
 
 # HRLSTAGE ################################################################
 # hrlstage links in some HRL proprietary devices - I'm

@@ -1,9 +1,9 @@
-##############################################################################
+############################################################################
 #
 # stage/Makefile.common - build and installation configurations
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile.common,v 1.39 2002-03-04 20:53:46 rtv Exp $
+# $Id: Makefile.common,v 1.40 2002-03-08 03:26:15 gsibley Exp $
 #
 # Notes: All user-configurable paths and build options should be specified 
 #        here. This file is included by Makefile and src/Makefile. 

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.18 $
+//  $Author: gsibley $
+//  $Revision: 1.19 $
 //
 // Usage:
 //  (empty)
@@ -44,6 +44,7 @@
 #include "broadcastdevice.hh"
 #include "gripperdevice.hh"
 #include "gpsdevice.hh"
+#include "motedevice.hh"
 
 #ifdef HRL_HEADERS
 #include "irdevice.hh"
@@ -56,7 +57,10 @@
 // Create an object given a type
 //
 CEntity* CWorld::CreateObject(const char *type, CEntity *parent )
-{
+{ 
+  if (strcmp(type, "mote_device") == 0)
+    return new CMoteDevice(this, parent );
+
   if (strcmp(type, "obstacle") == 0 )
     return new CFixedObstacle(this, parent);
 

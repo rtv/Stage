@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/stage_types.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.18 $
+//  $Author: gsibley $
+//  $Revision: 1.19 $
 //
 // Usage:
 //  (empty)
@@ -156,7 +156,8 @@ enum StageType
   OccupancyType,
   IDARType, // HRL's Infrared Data And Ranging turret
   DescartesType, // HRL's customized Descartes robot platform
-  OmniPositionType
+  OmniPositionType,
+  MoteType
 };
 
 
