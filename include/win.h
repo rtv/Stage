@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: win.h,v 1.3 2000-12-04 02:11:31 vaughan Exp $
+ * $Id: win.h,v 1.4 2000-12-08 09:08:11 vaughan Exp $
  ************************************************************************/
 
 #ifndef WIN_H
@@ -58,12 +58,13 @@ public:
   
   void PrintCoords( void );
   
-  void Draw( void );
-  void DrawRobotIfMoved( CRobot* r );
-  void DrawRobot( CRobot* r );
-
-  void DrawRobotsInRect( int xx, int yy, int ww, int hh );
+  void DrawBackground( void );
+  //void DrawRobotIfMoved( CRobot* r );
+  
+  //void DrawRobotsInRect( int xx, int yy, int ww, int hh );
   void DrawRobots( void );
+  void RefreshRobots( void );
+  
   void DrawWalls( void );
   void BlackBackground( void );
   void BlackBackgroundInRect(int xx, int yy, int ww, int hh  );
@@ -78,6 +79,7 @@ public:
   void DrawPoints( XPoint* pts, int numPts );
   //void DrawPolygon( XPoint* pts, int numPts );
 
+  void PanPoints( XPoint* pts, int numPts );
   void SetDrawMode( int mode );
 };
 

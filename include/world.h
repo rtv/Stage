@@ -1,7 +1,7 @@
 /*************************************************************************
  * world.h - most of the header action is here 
  * RTV
- * $Id: world.h,v 1.3 2000-12-01 03:13:32 ahoward Exp $
+ * $Id: world.h,v 1.4 2000-12-08 09:08:11 vaughan Exp $
  ************************************************************************/
 
 #ifndef WORLD_H
@@ -64,13 +64,13 @@ public:
   char bgFile[64];
 
   CRobot* bots;
-  float pioneerWidth, pioneerLength;
-  float localizationNoise;
-  float sonarNoise;
+  double pioneerWidth, pioneerLength;
+  double localizationNoise;
+  double sonarNoise;
 
-  float maxAngularError; // percent error on turning odometry
+  double maxAngularError; // percent error on turning odometry
 
-  float ppm;
+  double ppm;
 
   int* hits;
   int population;
@@ -93,7 +93,7 @@ public:
   void DumpOdometry( void );
   void GetUpdate( void );  
 
-  CRobot* NearestRobot( float x, float y );
+  CRobot* NearestRobot( double x, double y );
 
 };
 

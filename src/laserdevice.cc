@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.12 $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  (empty)
@@ -24,7 +24,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 1
+#define ENABLE_TRACE 0
 
 #include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
 #include "world.h"
@@ -50,11 +50,12 @@ CLaserDevice::CLaserDevice(CRobot* rr, void *buffer, size_t data_len,
     m_max_range = 8.0; // meters - this could be dynamic one day
                      // but this matches the default laser setup.
 
-    sampleIncrement = 2; // specify the degree of under-sampling
+    sampleIncrement = 3; // specify the degree of under-sampling
                      // the ray tracing will only compute every sampleIncrement
                      // sample for speed-up versus lost resolution. 
-                     // must be > 0. I reckon 2 is a good default - RTV
-    
+                     // must be > 0. I reckon 3 is a good default - RTV
+                     // if you need the best possible quality, set this to 1. 
+
     undrawRequired = false;
 }
 
@@ -244,13 +245,13 @@ bool CLaserDevice::GUIDraw()
   if( !IsSubscribed() || !m_robot->showDeviceDetail ) return true;
 
   // replicate the first point at the end in order to draw a closed polygon
-  hitPts[LASERSAMPLES].x = hitPts[0].x;
-  hitPts[LASERSAMPLES].y = hitPts[0].y;
+  hitPts[m_samples].x = hitPts[0].x;
+  hitPts[m_samples].y = hitPts[0].y;
 
   m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
-  m_world->win->DrawLines( hitPts, LASERSAMPLES+1 );
+  m_world->win->DrawLines( hitPts, m_samples+1 );
     
-  memcpy( oldHitPts, hitPts, sizeof( XPoint ) * (LASERSAMPLES+1) );
+  memcpy( oldHitPts, hitPts, sizeof( XPoint ) * (m_samples+1) );
   
   undrawRequired = true;
 
@@ -262,7 +263,7 @@ bool CLaserDevice::GUIUnDraw()
   if( undrawRequired )
   {
     m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
-    m_world->win->DrawLines( oldHitPts, LASERSAMPLES+1 );
+    m_world->win->DrawLines( oldHitPts, m_samples+1 );
 
     undrawRequired = false;
   }   

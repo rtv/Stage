@@ -1,7 +1,7 @@
 /*************************************************************************
  * robot.cc - most of the action is here
  * RTV
- * $Id: robot.cc,v 1.13 2000-12-04 05:19:44 vaughan Exp $
+ * $Id: robot.cc,v 1.14 2000-12-08 09:08:11 vaughan Exp $
  ************************************************************************/
 
 #include <errno.h>
@@ -61,8 +61,8 @@ const int numPts = SONARSAMPLES;
 
 
 CRobot::CRobot( CWorld* ww, int col, 
-		float w, float l,
-		float startx, float starty, float starta )
+		double w, double l,
+		double startx, double starty, double starta )
 {
   world = ww;
 
@@ -84,13 +84,14 @@ CRobot::CRobot( CWorld* ww, int col,
   size_t areaSize = TOTAL_SHARED_MEMORY_BUFFER_SIZE;
 
   // make a unique temporary file for shared mem
-  strcpy( tmpName, "playerIO.XXXXXX" );
+  strcpy( tmpName, "/tmp/playerIO.XXXXXX" );
   int tfd = mkstemp( tmpName );
 
   // make the file the right size
   if( ftruncate( tfd, areaSize ) < 0 )
     {
-      perror( "Failed to set file size" );
+      perror( "Couldn't create memory-mapped I/O file in /tmp."
+	      "Check permissions." );
       exit( -1 );
     }
 
@@ -170,7 +171,10 @@ CRobot::~CRobot( void )
   // GPB
 
   // delete the playerIO.xxxxxx file
-  remove( tmpName );
+  int res = remove( tmpName );
+
+  if( res != 0 ) // remove failed!
+    perror( tmpName );
 }
 
 // Start all the devices
@@ -309,6 +313,14 @@ void CRobot::GUIUnDraw()
   for (int i = 0; i < m_device_count; i++) m_device[i]->GUIUnDraw();
 }  
 
+
+void CRobot::ResetPosition( double xx, double yy, double aa )
+{
+  // reset my position and all odometry estimates
+  xorigin = oldx = x = xx * world->ppm;
+  yorigin = oldy = y = yy * world->ppm;
+  aorigin = olda = a = aa;
+}
 
 
 

@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.2 2000-12-01 22:07:54 vaughan Exp $
+ * $Id: image.cc,v 1.3 2000-12-08 09:08:11 vaughan Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -66,8 +66,6 @@ Nimage::Nimage(int w,int h)
   
   width = w; height = h;
   data 	= new unsigned char[width*height];
-
-  cout << "unsigned char: " << sizeof( unsigned char ) << endl;
 
 #ifdef DEBUG
   cout << '@' << data << endl;

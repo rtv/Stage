@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -52,7 +52,7 @@ CVisionDevice::CVisionDevice(CRobot *robot, CPtzDevice *ptz_device,
     // some working buffers for Update()
     // we'll allocate them just the once here.
     colors = new unsigned char[ cameraImageWidth ];
-    ranges = new float[ cameraImageWidth ];
+    ranges = new double[ cameraImageWidth ];
 
     numBlobs = 0;
     memset( blobs, 0, MAXBLOBS * sizeof( ColorBlob ) );
@@ -104,12 +104,12 @@ bool CVisionDevice::Update()
     m_ptz_device->GetPTZ(pan, tilt, zoom);
     
     // ray trace the 1d color / range image
-    float startAngle = (m_robot->a + pan) - (zoom / 2.0);
-    float xRadsPerPixel = zoom / cameraImageWidth;
-    float yRadsPerPixel = zoom / cameraImageHeight;
+    double startAngle = (m_robot->a + pan) - (zoom / 2.0);
+    double xRadsPerPixel = zoom / cameraImageWidth;
+    double yRadsPerPixel = zoom / cameraImageHeight;
     unsigned char pixel = 0;
 
-    float xx, yy;
+    double xx, yy;
 
     int maxRange = (int)(8.0 * m_world->ppm); // 8m times pixels-per-meter
     int rng = 0;
@@ -117,7 +117,7 @@ bool CVisionDevice::Update()
     // do the ray trace for each pixel across the 1D image
     for( int s=0; s < cameraImageWidth; s++)
 	{
-        float dist, dx, dy, angle;
+        double dist, dx, dy, angle;
 	  
         angle = startAngle + ( s * xRadsPerPixel );
 	  

@@ -1,7 +1,7 @@
 #*************************************************************************
 # src/Makefile - makes the sources
 # RTV
-# $Id: Makefile,v 1.10 2000-12-06 02:31:51 vaughan Exp $
+# $Id: Makefile,v 1.11 2000-12-08 09:08:11 vaughan Exp $
 # ************************************************************************/
 
 .SUFFIXES: .cc .o
@@ -9,7 +9,7 @@
 
 MAKEDEP = makedepend
 
-CFLAGS = -I../include -I$(PLAYERSRC)/include -I/usr/lib/g++-include -I/usr/X11R6/include -O2 -g
+CFLAGS = -I../include -I$(PLAYERSRC)/include -I/usr/lib/g++-include -I/usr/X11R6/include -O3 -g
 
 OBS = main.o robot.o world.o win.o image.o server.o \
 	device.o playerdevice.o pioneermobiledevice.o laserdevice.o \

@@ -1,4 +1,4 @@
-// $Id: pioneermobiledevice.cc,v 1.9 2000-12-04 18:04:01 ahoward Exp $
+// $Id: pioneermobiledevice.cc,v 1.10 2000-12-08 09:08:11 vaughan Exp $
 
 //#define ENABLE_TRACE 1
 
@@ -80,18 +80,18 @@ int CPioneerMobileDevice::Move()
       &&  (speed != 0.0 || turnRate != 0.0) )
     {
       // record speeds now - they can be altered in another thread
-      float nowSpeed = speed;
-      float nowTurn = turnRate;
-      float nowTimeStep = m_world->timeStep;
+      double nowSpeed = speed;
+      double nowTurn = turnRate;
+      double nowTimeStep = m_world->timeStep;
 
       // find the new position for the robot
-      float tx = m_robot->x 
+      double tx = m_robot->x 
 	+ nowSpeed * m_world->ppm * cos( m_robot->a ) * nowTimeStep;
       
-      float ty = m_robot->y 
+      double ty = m_robot->y 
 	+ nowSpeed * m_world->ppm * sin( m_robot->a ) * nowTimeStep;
       
-      float ta = m_robot->a + (nowTurn * nowTimeStep);
+      double ta = m_robot->a + (nowTurn * nowTimeStep);
       
       ta = fmod( ta + TWOPI, TWOPI );  // normalize angle
       
@@ -131,7 +131,7 @@ int CPioneerMobileDevice::Move()
 	      // could make this a +/- error, instead of a pure bias
 	      // though i think the pioneer generally underestimates its turn
 	      // due to wheel slippage
-	      float error = 1.0 + ( drand48()* m_world->maxAngularError );
+	      double error = 1.0 + ( drand48()* m_world->maxAngularError );
 	      aodom += nowTurn * nowTimeStep * error;
 	    }
 	  else
@@ -172,7 +172,7 @@ void CPioneerMobileDevice::ComposeData()
     double pth = TWOPI - fmod(aodom + TWOPI, TWOPI);
     
     // normalized compass heading
-    float comHeading = fmod( m_robot->a + M_PI/2.0 + TWOPI, TWOPI ); 
+    double comHeading = fmod( m_robot->a + M_PI/2.0 + TWOPI, TWOPI ); 
   
     // Construct the data packet
     // Basically just changes byte orders and some units
@@ -220,15 +220,15 @@ void CPioneerMobileDevice::StoreRect( void )
   oldCentery = centery;
 }
 
-void CPioneerMobileDevice::CalculateRect( float x, float y, float a )
+void CPioneerMobileDevice::CalculateRect( double x, double y, double a )
 {
   // fill an array of Points with the corners of the robots new position
-  float cosa = cos( a );
-  float sina = sin( a );
-  float cxcosa = halfLength * cosa;
-  float cycosa = halfWidth  * cosa;
-  float cxsina = halfLength * sina;
-  float cysina = halfWidth  * sina;
+  double cosa = cos( a );
+  double sina = sin( a );
+  double cxcosa = halfLength * cosa;
+  double cycosa = halfWidth  * cosa;
+  double cxsina = halfLength * sina;
+  double cysina = halfWidth  * sina;
 
   rect.toplx = (int)(x + (-cxcosa + cysina));
   rect.toply = (int)(y + (-cxsina - cycosa));
@@ -245,8 +245,8 @@ void CPioneerMobileDevice::CalculateRect( float x, float y, float a )
 
 void CPioneerMobileDevice::ParseCommandBuffer()
 {
-    float fv = (float) (short) ntohs(m_command.vr);
-    float fw = (float) (short) ntohs(m_command.vth);
+    double fv = (double) (short) ntohs(m_command.vr);
+    double fw = (double) (short) ntohs(m_command.vth);
     
     // set speeds unless we're being dragged
     if( m_world->win->dragging != m_robot )

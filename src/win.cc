@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.cc - all the graphics and X management
  * RTV
- * $Id: win.cc,v 1.7 2000-12-06 02:29:13 vaughan Exp $
+ * $Id: win.cc,v 1.8 2000-12-08 09:08:11 vaughan Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -32,7 +32,7 @@ const int laserSamples = LASERSAMPLES;
 
 const float maxAngularError =  -0.1; // percent error on turning odometry
 
-extern int drawMode;
+//extern int drawMode;
 
 unsigned int RGB( int r, int g, int b );
 
@@ -100,7 +100,7 @@ CWorldWin::CWorldWin( CWorld* wworld, char* initFile )
   iwidth = world->width;
   iheight = world->height;
   dragging = 0;
-  drawMode = false;
+  //drawMode = false;
   showSensors = false;
 
   XSizeHints sz;
@@ -208,7 +208,7 @@ void CWorldWin::DragRobot( void )
 }
 
 
-void CWorldWin::Draw( void ) 
+void CWorldWin::DrawBackground( void ) 
 { 
   BlackBackground();
   DrawWalls();
@@ -279,12 +279,17 @@ void CWorldWin::HandleEvent( void )
 	break;
 
       case Expose:
-	if( reportEvent.xexpose.count == 0 )
+	if( reportEvent.xexpose.count == 0 ) // on the last pending expose...
 	{
 	  ScanBackground();
 	  
-	  BlackBackground();	  
-	  DrawWalls();
+	  DrawBackground(); // black backround and draw walls
+	  DrawRobots();
+	  drawnRobots = true;
+
+	  // we could just redraw the exposed rectangle...
+	  // but we'd have to keep track of it through
+	  // multiple expose events. very boring...
 
 	  //BlackBackgroundInRect( reportEvent.xexpose.x, 
 	  // reportEvent.xexpose.y,
@@ -299,16 +304,7 @@ void CWorldWin::HandleEvent( void )
 	  //DrawRobotsInRect( reportEvent.xexpose.x, 
 	  //	  reportEvent.xexpose.y,
 	  //	  reportEvent.xexpose.width, 
-	  //	  reportEvent.xexpose.height );
-	  
-	  // draw robots in XOR mode
-	  SetDrawMode( GXxor );
-	  
-	  for( CRobot* r = world->bots; r; r = r->next )  r->GUIDraw();
-	  
-	  SetDrawMode( GXcopy );
-	  
-	  drawnRobots = true;
+	  //	  reportEvent.xexpose.height ); 
 	}
 	break;
 
@@ -351,11 +347,8 @@ void CWorldWin::HandleEvent( void )
 					+ pany ); 
 
 		  near->ToggleSensorDisplay();
-		}
-#ifdef DEBUG	      
-	      else
-		{ 
 
+#ifdef DEBUG	      
 		  // this can be taken out at release
 		  //useful debug stuff!
 		  // dump the raw image onto the screen
@@ -372,18 +365,11 @@ void CWorldWin::HandleEvent( void )
 
 		  getchar();
 		  
-		  Draw();
-
-		  // draw robots in XOR mode
-		  SetDrawMode( GXxor );
-		  
-		  for( CRobot* r = world->bots; r; r = r->next )  r->GUIDraw();
-		  
-		  SetDrawMode( GXcopy );
-		  
+		  DrawBackground();
+		  DrawRobots();
 		  drawnRobots = true;
-		}
 #endif
+	    }
 	      break;
 	    case Button3: 
 	      if( dragging )
@@ -392,21 +378,14 @@ void CWorldWin::HandleEvent( void )
 		  dragging->a = fmod( dragging->a + TWOPI, TWOPI ); // normalize
 		}
 	      else
-		{
+		{ // we're centering on robot[0] - redraw everything
 		  panx = (int)(world->bots[0].x - width/2.0);
 		  pany = (int)(world->bots[0].y - height/2.0);
 		  
 		  BoundsCheck();		  
 		  ScanBackground();
-		  Draw();
-		  
-		  // draw robots in XOR mode
-		  SetDrawMode( GXxor );
-		  
-		  for( CRobot* r = world->bots; r; r = r->next )  r->GUIDraw();
-		  
-		  SetDrawMode( GXcopy );
-		  
+		  DrawBackground();		
+		  DrawRobots();
 		  drawnRobots = true;
 		}
 	      break;
@@ -432,18 +411,12 @@ void CWorldWin::HandleEvent( void )
 
 	BoundsCheck();
 
+	// if the window has been panned, refresh everything
 	if( panx != oldPanx || pany != oldPany )
 	  {
 	    ScanBackground();
-	    Draw();
-
-	    // draw robots in XOR mode
-	    SetDrawMode( GXxor );
-
-	    for( CRobot* r = world->bots; r; r = r->next )  r->GUIDraw();
-
-	    SetDrawMode( GXcopy );
-	    
+	    DrawBackground();
+	    DrawRobots();
 	    drawnRobots = true;
 	    
 	  }
@@ -453,22 +426,19 @@ void CWorldWin::HandleEvent( void )
   // if we haven't already refreshed the robots on screen, do it
   if( !drawnRobots )
     {
-      // draw robots in XOR mode
-      SetDrawMode( GXxor );
-      
       // we've handled the X events; now we'll handle dragging modes
       if( dragging ) DragRobot();
       
-      DrawRobots();
+      RefreshRobots();
       //DrawRobotIfMoved( r );
-      
-      SetDrawMode( GXcopy ); // reset drawing mode
+     
     }
 
   // try to sync the display to avoid flicker
   XSync( display, false );
 
 }
+
 
 void CWorldWin::ScanBackground( void )
 {
@@ -521,6 +491,15 @@ void CWorldWin::SetDrawMode( int mode )
   XSetFunction( display, gc, mode );
 }
 
+void CWorldWin::PanPoints( XPoint* pts, int numPts )
+{
+  for( int c=0; c<numPts; c++ )
+    {
+      pts[c].x -= panx;
+      pts[c].y -= pany;
+    }
+}  
+
 void CWorldWin::DrawLines( XPoint* pts, int numPts )
 {
   
@@ -531,13 +510,8 @@ void CWorldWin::DrawLines( XPoint* pts, int numPts )
   else
     {
       // shift the points to allow for panning
-      XPoint* panPts = new XPoint[ numPts ];
-      
-      for( int c=0; c<numPts; c++ )
-	{
-	  panPts[c].x = pts[c].x - panx;
-	  panPts[c].y = pts[c].y - pany;
-	}
+      XPoint* panPts = new XPoint[ numPts ];      
+      PanPoints( panPts, numPts );
       
       // and draw the shifted points
       XDrawLines( display, win, gc, panPts, numPts, CoordModeOrigin );
@@ -558,13 +532,7 @@ void CWorldWin::DrawPoints( XPoint* pts, int numPts )
     {
       // shift the points to allow for panning
       XPoint* panPts = new XPoint[ numPts ];
-      
-      for( int c=0; c<numPts; c++ )
-	{
-	  panPts[c].x = pts[c].x - panx;
-	  panPts[c].y = pts[c].y - pany;
-	}
-      
+      PanPoints( panPts, numPts );      
       // and draw the shifted points
       XDrawPoints( display, win, gc, panPts, numPts, CoordModeOrigin );
 
@@ -622,33 +590,42 @@ void CWorldWin::DrawWallsInRect( int xx, int yy, int ww, int hh )
       XDrawPoint( display, win, gc,  backgroundPts[p].x, backgroundPts[p].y );
 }
 
-void CWorldWin::DrawRobotsInRect( int xx, int yy, int ww, int hh )
-{
+//void CWorldWin::DrawRobotsInRect( int xx, int yy, int ww, int hh )
+//{
   // do bounds checking here sometime - no big deal
-  for( CRobot* r = world->bots; r; r = r->next )
-    {
-      DrawRobot( r );
-    }
-}
-
-void CWorldWin::DrawRobot( CRobot* r )
-{
-  r->GUIUnDraw();
-  r->GUIDraw();
-}
+  //for( CRobot* r = world->bots; r; r = r->next )
+  // {
+//    DrawRobots();
+      //}
+//}
 
 void CWorldWin::DrawRobots( void )
 {
-  for( CRobot* r = world->bots; r; r = r->next )
-    {
-      DrawRobot( r );
-    }
+  SetDrawMode( GXxor );
+  
+  for( CRobot* r = world->bots; r; r = r->next ) 
+    r->GUIDraw();
+  
+  SetDrawMode( GXcopy );
 }
 
-void CWorldWin::DrawRobotIfMoved( CRobot* r )
+void CWorldWin::RefreshRobots( void )
 {
-  if( r->HasMoved() ) DrawRobot( r );
+  SetDrawMode( GXxor );
+
+  for( CRobot* r = world->bots; r; r = r->next ) 
+    {
+      r->GUIUnDraw();
+      r->GUIDraw();
+    }
+
+  SetDrawMode( GXcopy );
 }
+
+//void CWorldWin::RefreshRobotIfMoved( CRobot* r )
+//{
+  //if( r->HasMoved() ) RefreshRobot( r );
+//}
 
 unsigned long CWorldWin::RobotDrawColor( CRobot* r )
 { 
@@ -678,37 +655,6 @@ void CWorldWin::DrawInRobotColor( CRobot* r )
 }
 
 
-//  void CWorldWin::DrawSonar( CRobot* r )
-//  {
-//    XSetFunction( display, gc, GXxor );
-//    XSetForeground( display, gc, white );
- 
-//    XDrawPoints( display, win, gc, r->oldHitPts, numPts, CoordModeOrigin   ); 
-//    XDrawPoints( display, win, gc, r->hitPts, numPts, CoordModeOrigin ); 
-  
-//    memcpy( r->oldHitPts, r->hitPts, numPts * sizeof( XPoint ) );
-  
-//    XSetFunction( display, gc, GXcopy );
-  
-//    r->redrawSonar = false;  
-//  }
-
-//  void CWorldWin::DrawLaser( CRobot* r )
-//  {
-//    XSetFunction( display, gc, GXxor );
-//    XSetForeground( display, gc, white );
-  
-//    XDrawPoints( display,win,gc, r->loldHitPts, laserSamples/2,CoordModeOrigin);
-//    XDrawPoints( display,win,gc, r->lhitPts, laserSamples/2, CoordModeOrigin); 
-
-//    memcpy( r->loldHitPts, r->lhitPts, laserSamples/2 * sizeof( XPoint ) );
-  
-//    XSetFunction( display, gc, GXcopy );
-  
-//    r->redrawLaser = false;
-//  }
-
-
 void CWorldWin::MoveSize( void )
 {
   XMoveResizeWindow( display, win, x,y, width, height );
@@ -721,6 +667,7 @@ istream& operator>>(istream& s, CWorldWin& w )
 
   return s;
 }
+
 
 
 

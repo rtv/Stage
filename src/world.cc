@@ -1,7 +1,7 @@
 /*************************************************************************
  * world.cc - top level class that contains and updates robots
  * RTV
- * $Id: world.cc,v 1.6 2000-12-07 05:47:33 vaughan Exp $
+ * $Id: world.cc,v 1.7 2000-12-08 09:08:11 vaughan Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -160,6 +160,8 @@ CWorld::CWorld( char* initFile )
       currentPopulation++;
 
    }
+  
+  in.close(); // finished with the position file
 
   refreshBackground = true;
   
@@ -223,13 +225,21 @@ CWorld::~CWorld()
     //
     // ahoward
 
-  // yeah the robots should get nixed, but ah, the beauty of Linux's 
-  // kernel garbage collection. this code would crash windows after a 
-  // few hundred runs but here we're OK - RTV.
-
+  // this should be everything! - RTV
+  
+  // kill all the robots
+  CRobot* doomed = bots;
+  
+  while( doomed )
+    {
+      CRobot* next = doomed->next;
+      delete doomed;
+      doomed = next;
+    }
+  
   delete m_laser_img;
-  //delete bimg;
-  //delete img;
+  delete bimg;
+  delete img;
 }
 
 
@@ -296,7 +306,7 @@ void CWorld::Update( void )
       timeThen = timeNow;
       
 #ifdef DISPLAYFREQ
-      smoothedTimestep = (smoothedTimestep * 0.8) + ( 0.2 * timeStep );
+      smoothedTimestep = (smoothedTimestep * 0.9) + ( 0.1 * timeStep );
       
       printf( "\r%.4f   ", smoothedTimestep );
       fflush( stdout );
@@ -323,10 +333,10 @@ void CWorld::Update( void )
 }
   
     
-CRobot* CWorld::NearestRobot( float x, float y )
+CRobot* CWorld::NearestRobot( double x, double y )
 {
   CRobot* nearest;
-  float dist, far = 999999.9;
+  double dist, far = 999999.9;
   
   for( CRobot* r = bots; r; r = r->next )
   {
@@ -360,7 +370,7 @@ void CWorld::Draw( void )
   refreshBackground = 0;
 }
 
-float diff( float a, float b )
+double diff( double a, double b )
 {
   if( a > b ) return a-b;
   return b-a;

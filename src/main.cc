@@ -1,7 +1,7 @@
 /*************************************************************************
  * main.cc   
  * RTV
- * $Id: main.cc,v 1.4 2000-12-07 06:30:43 vaughan Exp $
+ * $Id: main.cc,v 1.5 2000-12-08 09:08:11 vaughan Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -58,7 +58,7 @@ void HandleCommandLine( int argc, char** argv )
 
 int main( int argc, char** argv )
 {
-  cout << "** Stage v" << VERSION << " ** " << flush;
+  cout << "** Stage  v" << VERSION << " ** " << flush;
 
   // the last argument specifies the initfile. is the file readable? 
   char* initFile = argv[argc-1];

@@ -1,7 +1,7 @@
 #
 # Makefile - the top level Makefile to build Stage
 # RTV
-# $Id: Makefile,v 1.4 2000-12-06 02:31:51 vaughan Exp $
+# $Id: Makefile,v 1.5 2000-12-08 09:08:11 vaughan Exp $
 # 
 
 # the directory of the player source
@@ -17,19 +17,13 @@ clean:
 	rm -f *~ *.bak; cd bin; rm -f stage core; cd ../src; make clean; cd ../include; make clean; cd ../examples/; make clean
 
 install: stage
-	mkdir -p $(INSTALL)/bin
-	install -m 755 bin/* $(INSTALL)/bin
-
-
-
-
-
-
-
-
-
-
-
-# DO NOT DELETE
-
+	mkdir -p -m 755 $(INSTALL)			
+	install -m 644 README.stage $(INSTALL)	
+	mkdir -p -m 755 $(INSTALL)/bin	
+	install -m 755 bin/stage $(INSTALL)/bin
+	install -m 755 bin/sif $(INSTALL)/bin
+	mkdir -p -m 755 $(INSTALL)/examples
+	install -m 644 examples/*.world $(INSTALL)/examples
+	install -m 644 examples/*.pnm $(INSTALL)/examples
+	install -m 644 examples/*.pos $(INSTALL)/examples
 

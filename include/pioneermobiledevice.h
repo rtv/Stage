@@ -1,4 +1,4 @@
-/* 	$Id: pioneermobiledevice.h,v 1.5 2000-12-04 05:19:44 vaughan Exp $	 */
+/* 	$Id: pioneermobiledevice.h,v 1.6 2000-12-08 09:08:11 vaughan Exp $	 */
 // this device implements a differential-steer mobility base for the robot
 
 #ifndef PIONEERMOBILEDEVICE_H
@@ -34,7 +34,7 @@ class CPioneerMobileDevice : public CPlayerDevice
   void Stop( void );
   void HitObstacle( void );  
   
-  void CalculateRect( float x, float y, float a );
+  void CalculateRect( double x, double y, double a );
   void CalculateRect( void )
     { CalculateRect( m_robot->x, m_robot->y, m_robot->a ); };
   void StoreRect( void );

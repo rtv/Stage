@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visiondevice.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -69,7 +69,7 @@ class CVisionDevice : public CPlayerDevice
 
   // working buffers for the update function
     private: unsigned char* colors;
-    private: float* ranges;
+    private: double* ranges;
 };
 
 #endif

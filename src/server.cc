@@ -1,7 +1,7 @@
 /*************************************************************************
  * server.cc - implements the position & GUI servers, plus signal handling
  * RTV
- * $Id: server.cc,v 1.2 2000-12-01 00:20:52 vaughan Exp $
+ * $Id: server.cc,v 1.3 2000-12-08 09:08:11 vaughan Exp $
  ************************************************************************/
 
 // YUK this file is all in C and implements the PositionServer and GuiServer
@@ -113,18 +113,13 @@ void CatchSigInt( int signo )
 #ifdef VERBOSE
   cout << "** SIGINT! **" << endl;
 #endif
-  // BPG
-  //  collect the bot pointers before deleting them
-  CRobot* tmpbots[256];
-  tmpbots[0] = world->bots;
-  for(int i=1; i < world->population; i++)
-    tmpbots[i] = tmpbots[i-1]->next;
-  // now delete them
-  for(int i=0; i< world->population; i++)
-    delete tmpbots[i];
-  cout << "Arena Quitting" << endl;
+
+  // shutdown stuff moved to destructors - RTV
+
+  delete world;
+
+  cout << "Stage quitting." << endl;
   exit(0);
-  // GPB
 }
 
 
@@ -220,7 +215,25 @@ static void * RunGUI( void * )
 		    world->SavePos();
 		  
 		  else if( strcmp( &buf[1], "loadpos" ) == 0 )
-		    {}//world->LoadPos();
+		    {
+		      ifstream in( world->posFile );
+		      
+		      for( CRobot* r = world->bots; r; r=r->next )
+			{
+			  double xpos, ypos, theta;
+			  
+			  in >> xpos >> ypos >> theta;
+			  
+#ifdef DEBUG
+			  cout << "read: " <<  xpos << ' ' << ypos 
+			       << ' ' << theta << endl;
+#endif
+			  
+			  r->ResetPosition( xpos, ypos, theta );
+			}
+  
+		      in.close(); // finished with the position file 
+		    }
 		}
 	    }
 	}
@@ -229,7 +242,6 @@ static void * RunGUI( void * )
       bar = 0;
     } 
 }
-
 
 static void * PositionWriter( void* connfd )
 {
