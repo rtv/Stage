@@ -1,4 +1,4 @@
-worldsdir = $(prefix)/worlds
+worldsdir = $(prefix)/share/stage/worlds
 
 worlds_DATA = everything.world			\
 	      hospital100.world			\
