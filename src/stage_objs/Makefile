@@ -15,7 +15,7 @@ OBJS =  world.o world_load.o truthserver.o envserver.o image.o \
 	positiondevice.o omnipositiondevice.o laserdevice.o sonardevice.o miscdevice.o \
 	ptzdevice.o boxobstacle.o \
 	laserbeacon.o laserbeacondevice.o visiondevice.o visionbeacon.o \
-	broadcastdevice.o puck.o gpsdevice.o gripperdevice.o main.o \
+	puck.o broadcastdevice.o gpsdevice.o gripperdevice.o main.o \
 	matrix.o raytrace.o irdevice.o
 
 # choose one of these that suits your build (debug/profile/production)
@@ -64,5 +64,3 @@ clean_dep:
 	${CC} ${CCFLAGS} -c $< -o $@
 
 # Dependancies (make dep)
-
-

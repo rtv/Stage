@@ -43,6 +43,7 @@ create position_device pose 0.77 2.38 0 color red port 6665 index 0 obstacle tru
      # vision devices MUST be children of cameras
      create vision_device pose 0.00 0.00 0 color red port 6665 index 0 obstacle false sonar false laser false 
   } 
+  create broadcast_device pose 0 0 0
 }
 
 

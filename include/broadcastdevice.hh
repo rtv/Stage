@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/broadcastdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -42,16 +42,6 @@ class CBroadcastDevice : public CEntity
 
     // Update the device
     public: virtual void Update( double sim_time );
-
-    // Send a message
-    private: void SendMsg(uint8_t *msg, uint16_t len);
-
-    // Receive a message
-    private: void RecvMsg(uint8_t *msg, uint16_t len);
-    
-    // Buffers for storing data
-    private: player_broadcast_cmd_t cmd;
-    private: player_broadcast_data_t data;   
 };
 
 #endif
