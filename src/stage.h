@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.31 2004-04-26 04:37:49 rtv Exp $
+ * CVS: $Id: stage.h,v 1.32 2004-04-26 07:06:26 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -501,6 +501,8 @@ void stg_property_print_cb( gpointer key, gpointer value, gpointer user );
 // read a message from the fd
 stg_msg_t* stg_read_msg( int fd );
 
+
+
 // attempt to read a packet from [fd]. returns the number of bytes
 // read, or -1 on error (and errno is set as per read(2)).
 ssize_t stg_fd_packet_read( int fd, void* buf, size_t len );
@@ -533,7 +535,6 @@ void stg_err( char* err );
 // returns a human readable desciption of the message type
 const char* stg_message_string( stg_msg_type_t id );
 
-
 typedef struct
 {
   stg_id_t world;
@@ -545,13 +546,6 @@ void stg_target_error( stg_target_t* tgt, char* errstr );
 void stg_target_debug( stg_target_t* tgt, char* errstr );
 void stg_target_warn( stg_target_t* tgt, char* errstr );
 void stg_target_message( stg_target_t* tgt, char* errstr );
-
-int stg_prop_set( stg_property_t* prop );
-
-void stg_key_free( gpointer key );
-
-void stg_property_destroy( gpointer prop );
-
 
 // TOKEN -----------------------------------------------------------------------
 // token stuff for parsing worldfiles
@@ -626,6 +620,8 @@ typedef struct
  
   stg_id_t next_id;
   
+  double stagetime;
+
   GHashTable* worlds_id_server; // contains stg_world_ts indexed by server-side id
   GHashTable* worlds_id; // contains stg_world_ts indexed by client-side id
   GHashTable* worlds_name; // the worlds indexed by namex
@@ -645,13 +641,15 @@ int stg_client_load( stg_client_t* client, char* worldfilename );
 // connect to a Stage server at [host]:[port]. If [host] and [port]
 // are not specified, client uses it's current values, which have
 // sensible defaults.  returns zero on success, else an error code.
-int stg_client_connect( stg_client_t* client, char* host, int port );
+int stg_client_connect( stg_client_t* client, const char* host, const int port );
 
 // ask a connected Stage server to create simulations of all our objects
 void stg_client_push( stg_client_t* client );
 
 // read a message from the server
 stg_msg_t* stg_client_read( stg_client_t* cli );
+
+void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg );
 
 // remove all our objects from from the server
 void stg_client_pull( stg_client_t* client );
@@ -716,6 +714,7 @@ int stg_model_pull( stg_model_t* model );
 void stg_model_attach_prop( stg_model_t* mod, stg_property_t* prop );
 void stg_model_prop_with_data( stg_model_t* mod, 
 			      stg_id_t type, void* data, size_t len );
+stg_property_t* stg_model_get_prop( stg_model_t* mod, stg_id_t propid );
 
 int stg_model_subscribe( stg_model_t* mod, int prop, double interval );
 int stg_model_unsubscribe( stg_model_t* mod, int prop );

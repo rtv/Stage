@@ -1,4 +1,5 @@
 #include "connection.h"
+#include "subscription.h"
 
 void stg_connection_print( connection_t* cli )
 {

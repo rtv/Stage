@@ -174,7 +174,7 @@ void world_print( world_t* world )
 	  world->token,
 	  g_hash_table_size( world->models ) );
   
-   g_hash_table_foreach( world->models, model_print, NULL );
+   g_hash_table_foreach( world->models, model_print_cb, NULL );
 }
 
 void world_print_cb( gpointer key, gpointer value, gpointer user )

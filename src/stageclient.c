@@ -17,6 +17,15 @@ void stg_world_destroy_cb( gpointer key, gpointer value, gpointer user );
 void stg_catch_pipe( int signo );
 
 
+// types used only in this file
+typedef struct
+{
+  stg_client_t* client;
+  stg_id_t world_id_server;
+  stg_id_t model_id_server;
+} stg_prop_target_t;
+
+
 stg_client_t* stg_client_create( void )
 {
   stg_client_t* client = calloc( sizeof(stg_client_t), 1 ); 
@@ -47,7 +56,7 @@ void stg_client_destroy( stg_client_t* cli )
   free(cli);
 }
 
-int stg_client_connect( stg_client_t* client, char* host, int port )
+int stg_client_connect( stg_client_t* client, const char* host, const int port )
 {
   PRINT_DEBUG( "client connecting" );
 
@@ -61,7 +70,7 @@ int stg_client_connect( stg_client_t* client, char* host, int port )
   if( port ) 
     client->port = port;
   
-  PRINT_MSG2( "connecting to server %s:%d\n", host, port );
+  PRINT_DEBUG2( "connecting to server %s:%d", host, port );
   
   // get the IP of our host
   struct hostent* info = gethostbyname(  host );
@@ -110,10 +119,10 @@ int stg_client_connect( stg_client_t* client, char* host, int port )
   if( connect( client->pfd.fd, 
                (struct sockaddr*)&servaddr, sizeof( servaddr) ) == -1 )
     {
+      perror( "attempting to connect to Stage." );
       PRINT_ERR2( "Connection failed on %s:%d",
-		  info->h_addr_list[0], port ); 
+		  host, port ); 
       PRINT_ERR( "Did you forget to start Stage?");
-      perror( "" );
       fflush( stdout );
     return NULL;
     }
@@ -151,7 +160,7 @@ int stg_client_connect( stg_client_t* client, char* host, int port )
     PRINT_DEBUG1( "received good reply from server (%d)", greeting.code );
   
   // announce the connection on the console
-  PRINT_MSG4( "Connected to \"%s\" (version %d.%d.%d)",
+  PRINT_DEBUG4( "Connected to \"%s\" (version %d.%d.%d)",
 	      reply.id_string, reply.vmajor, reply.vminor, reply.vmicro );
   
 
@@ -384,6 +393,12 @@ void stg_model_prop_with_data( stg_model_t* mod,
   stg_model_attach_prop( mod, prop );
 }   
 
+stg_property_t* stg_model_get_prop( stg_model_t* mod, stg_id_t propid )
+{
+  return g_hash_table_lookup( mod->props, &propid );
+}
+  
+
 stg_msg_t* stg_client_read( stg_client_t* cli )
 {
   //PRINT_DEBUG( "Checking for data on Stage connection" );
@@ -568,44 +583,17 @@ void stg_model_print_cb( gpointer key, gpointer value, gpointer user )
 }
 
 
-typedef struct
-{
-  stg_client_t* client;
-  stg_id_t world_id_server;
-  stg_id_t model_id_server;
-} stg_prop_target_t;
-
 void stg_prop_push( stg_property_t* prop, stg_prop_target_t* pt )
 {
   PRINT_DEBUG4( "  pushing prop %d:%d:%d(%s)\n",
 		pt->world_id_server, pt->model_id_server,
 		prop->id, stg_property_string(prop->id) );
   
-  void* data;
-  size_t len;
-  //int color;
-  switch( prop->id )
-    {
-      //case STG_PROP_COLOR: // convert the color string to an int
-      //color = stg_lookup_color( prop->data );
-      //data = &color;
-      //len = sizeof(color);
-      //break;	  
-      
-    default: // use the raw data we loaded
-      {
-	data = prop->data;
-	len = prop->len;	    
-      }
-      break;
-    }
-  
-  if( data && len > 0 )
-    stg_client_property_set(  pt->client,
-			      pt->world_id_server,
-			      pt->model_id_server,
-			      prop->id, 
-			      data, len  );
+  stg_client_property_set(  pt->client,
+			    pt->world_id_server,
+			    pt->model_id_server,
+			    prop->id, 
+			    prop->data, prop->len  );
 }
 
 void stg_prop_push_cb( gpointer key, gpointer value, gpointer user )
@@ -716,22 +704,120 @@ void stg_model_attach_child( stg_model_t* parent, stg_model_t* child )
 }
 
 
-void stg_world_addmodel( stg_world_t* world, stg_model_t* model )
+
+void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 {
-  // add the model to its world
-  g_hash_table_replace( world->models_id, &model->id_client, model );
-  g_hash_table_replace( world->models_id_server, &model->id_server, model );
-  g_hash_table_replace( world->models_name, model->token->token, model );
+  //PRINT_DEBUG2( "handling message type %d len %d", 
+  //	msg->type,(int)msg->len );
+  
+  switch( msg->type )
+    {
+    case STG_MSG_WORLD_SAVE:
+      PRINT_WARN( "SAVE" );
+      
+      break;
+
+    case STG_MSG_CLIENT_PROPERTY: 
+      {
+	stg_prop_t* prop = (stg_prop_t*)msg->payload;
+
+#if 1
+	printf( "[%.3f] received property %d:%d:%d(%s) %d/%d bytes\n",
+		prop->timestamp,
+		prop->world, 
+		prop->model, 
+		prop->prop,
+		stg_property_string(prop->prop),
+		(int)prop->datalen,
+		(int)msg->payload_len );
+#endif	
+
+	cli->stagetime = prop->timestamp;
+	printf( "[%.3f] ", cli->stagetime );
+	
+	// stash the data in the client-side model tree
+	PRINT_DEBUG2( "looking up client-side model for %d:%d",
+		      prop->world, prop->model );
+	
+	stg_model_t* mod = stg_client_get_model_serverside( cli, prop->world, prop->model );
+	
+	if( mod == NULL )
+	  {
+	    PRINT_WARN2( "no such model %d:%d found in the client",
+			 prop->world, prop->model );
+	  }
+	else
+	  { 
+	    PRINT_DEBUG4( "stashing prop %d(%s) bytes %d in model \"%s\"",
+			  prop->prop, stg_property_string(prop->prop),
+			  (int)prop->datalen, mod->token->token );
+
+	    stg_model_prop_with_data( mod, prop->prop, prop->data, prop->datalen );
+	  }	    
+	
+
+	// human-readable output for some of the data
+	switch( prop->prop )
+	  {
+	  case STG_PROP_POSE:
+	    {
+	      stg_pose_t* pose = (stg_pose_t*)prop->data;
+	      
+	      printf( "pose: %.3f %.3f %.3f\n",
+		      pose->x, pose->y, pose->a );
+	    }
+	    break;
+
+	  case STG_PROP_RANGERCONFIG:
+	    {
+	      stg_ranger_config_t* cfgs = (stg_ranger_config_t*)prop->data;
+	      int cfg_count = prop->datalen / sizeof(stg_ranger_config_t);	   
+	      printf( "received configs for %d rangers (", cfg_count );
+
+	      int r;
+	      for( r=0; r<cfg_count; r++ )
+		printf( "(%.2f,%.2f,%.2f) ", 
+			cfgs[r].pose.x, cfgs[r].pose.y, cfgs[r].pose.a );
+	      
+	      printf( ")\n" );
+	    }
+	    break;
+	    
+	  case STG_PROP_RANGERDATA:
+	    {
+	      stg_ranger_sample_t* rngs = (stg_ranger_sample_t*)prop->data;
+	      int rng_count = prop->datalen / sizeof(stg_ranger_sample_t);	   
+	      printf( "received data for %d rangers (", rng_count );
+
+	      int r;
+	      for( r=0; r<rng_count; r++ )
+		printf( "%.2f ", rngs[r] );
+	      
+	      printf( ")\n" );
+	    }
+	    break;
+	    
+	  case STG_PROP_LASERDATA:
+	    {
+	      stg_laser_sample_t* samples = (stg_laser_sample_t*)prop->data;
+	      int ls_count = prop->datalen / sizeof(stg_laser_sample_t);
+	      
+	      printf( "received %d laser samples\n", ls_count );
+	    }
+	    
+	  case STG_PROP_TIME:
+	    puts( "<time>" );
+	    break;
+
+	  default:
+	    PRINT_WARN2( "property type %d(%s) unhandled",
+			 prop->prop, stg_property_string(prop->prop ) ); 
+	  }
+      }
+      break;
+  
+    default:
+      PRINT_WARN1( "message type %d unhandled", msg->type ); 
+      break;
+    }
 }
-
-// add the world to the client
-void stg_client_addworld( stg_client_t* cli, stg_world_t* world )
-{
-  g_hash_table_replace( cli->worlds_id, &world->id_client, world );
-  g_hash_table_replace( cli->worlds_id_server, &world->id_server, world );
-  g_hash_table_replace( cli->worlds_name, world->token->token, world );
-}
-
-
-
-

@@ -124,7 +124,7 @@ void pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )
 
 void model_global_pose( model_t* mod, stg_pose_t* pose )
 { 
-  stg_pose_t glob;
+  //stg_pose_t glob;
   
   //if( mod->parent )
   //model_global_pose( mod->parent, &glob );
@@ -454,8 +454,8 @@ int model_set_prop( model_t* mod,
       g_array_append_vals( mod->ranger_config, data, len/sizeof(stg_ranger_config_t) );
 
       PRINT_WARN2( "configured %d (%d) rangers", 
-		   len/sizeof(stg_ranger_config_t),
-		   mod->ranger_config->len );
+		   (int)(len/sizeof(stg_ranger_config_t)),
+		   (int)mod->ranger_config->len );
       break;
 
     default:

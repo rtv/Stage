@@ -115,6 +115,10 @@ void gui_model_nose( model_t* model );
 void gui_model_rangers( model_t* mod );
 void gui_model_rangers_data( model_t* mod );
 
+
+void gui_model_laser_data( model_t* mod );
+void gui_model_laser( model_t* mod );
+
 //void gui_model_size( model_t* mod, stg_size_t* size );
 //void gui_model_velocity( model_t* mod, stg_velocity_t* vel );
 

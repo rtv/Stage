@@ -3,6 +3,8 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include "stage.h"
 
+// pb_* functions are only used inside this file
+
 guchar* pb_get_pixel( GdkPixbuf* pb, int x, int y )
 {
   guchar* pixels = gdk_pixbuf_get_pixels(pb);
@@ -42,12 +44,12 @@ void pb_zero_rect( GdkPixbuf* pb, int x, int y, int width, int height )
 gboolean pb_pixel_is_set( GdkPixbuf* pb, int x, int y )
 {
   guchar* pixel = pb_get_pixel( pb,x,y );
-  int channels = gdk_pixbuf_get_n_channels(pb);
+  //int channels = gdk_pixbuf_get_n_channels(pb);
 
-  int i;
+  //int i;
   //for( i=0; i<channels; i++ )
   //if( pixel[i] ) return TRUE;
-  if( pixel[0] ) return TRUE;
+  if( pixel[0] ) return TRUE; // just use the red channel for now
 
   return FALSE;
 }
