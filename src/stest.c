@@ -1,6 +1,6 @@
 
 /*
-  $Id: stest.c,v 1.1.2.14 2003-02-12 01:10:56 rtv Exp $
+  $Id: stest.c,v 1.1.2.15 2003-02-12 03:02:34 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -59,8 +59,8 @@ int HandleProperty( int connection, char* data, size_t len )
   assert( len >= sizeof(stage_property_t) );
   stage_property_t* prop = (stage_property_t*)data;
   
-  //printf( "Received %d bytes  property (%d,%s,%d) on connection %d\n",
-  //  (int)len, prop->id, SIOPropString(prop->property), (int)prop->len, connection );
+  printf( "Received %d bytes property (%d,%s,%d) on connection %d\n",
+	  (int)len, prop->id, SIOPropString(prop->property), (int)prop->len, connection );
   return 0; //success
 }
 

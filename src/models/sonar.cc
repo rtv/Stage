@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonar.cc,v 1.1.2.3 2003-02-10 01:02:03 rtv Exp $
+ * CVS info: $Id: sonar.cc,v 1.1.2.4 2003-02-12 03:02:34 rtv Exp $
  */
 
 #include <assert.h>
@@ -37,6 +37,8 @@ CSonarModel::CSonarModel( int id, char* token, char* color, CEntity *parent )
   this->max_range = 5.0;
 
   this->power_on = true;
+
+  this->m_interval = 0.1; // 10Hz update
 
   // Initialise the sonar poses to default values
   this->sonar_count = SONARSAMPLES;
@@ -68,6 +70,9 @@ int CSonarModel::Update()
     return 0;
 
   //PRINT_WARN( "subscribed" );
+  
+  //PRINT_WARN3( "time now %.4f time since last update %.4f interval %.4f",
+  //       CEntity::simtime,  CEntity::simtime - m_last_update, m_interval );
 
   // Check to see if it is time to update
   //  - if not, return right away.

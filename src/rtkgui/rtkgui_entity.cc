@@ -291,5 +291,7 @@ void CSonarModel::RtkUpdate()
 	    }
 	}
     }
+  //else 
+  //if( this->scan_fig ) rtk_fig_clear( this->scan_fig ); 
 }
 

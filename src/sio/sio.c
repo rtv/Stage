@@ -551,6 +551,9 @@ int SIOServiceConnections(   stg_connection_callback_t lostconnection_callback,
 		      //PRINT_DEBUG2( "con %d header reports %d bytes follow",
 		      //	    t, hdr.len );
 			
+		      //PRINT_DEBUG2( "con %d time %.4f header received",
+		      //	    t, (double)hdr.sec + (double)(hdr.usec) / MILLION );
+
 			switch( hdr.type )
 			  {
 			  case STG_HDR_GUI: // a gui config packet is coming in 

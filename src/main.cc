@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.24 2003-02-12 01:57:42 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.25 2003-02-12 03:02:34 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -187,6 +187,31 @@ void sig_quit(int signum)
   PRINT_DEBUG1( "SIGNAL %d", signum );
   //quit = 1;
   StageQuit();
+}
+
+double TimevalSeconds( struct timeval *tv )
+{
+  return( (double)(tv->tv_sec) + (double)(tv->tv_usec) / (double)MILLION );
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Get the real time
+// Returns time in sec since the first call of this function
+double GetRealTime()
+{
+  static double start_time;
+  static bool init = true;
+  struct timeval tv;
+ 
+  if( init )
+    {
+      gettimeofday( &tv, NULL );
+      start_time = TimevalSeconds( &tv );
+      init = false;
+    }
+  
+  gettimeofday( &tv, NULL );
+  return( TimevalSeconds( &tv ) - start_time );
 }
 
 int HandleLostConnection( int connection )
@@ -439,10 +464,7 @@ int PublishDirty()
   return 0; // success
 }
 
-double TimevalSeconds( struct timeval *tv )
-{
-  return( (double)(tv->tv_sec) + (double)(tv->tv_usec) / (double)MILLION );
-}
+
 
 double TimespecSeconds( struct timespec *ts )
 {
@@ -459,54 +481,30 @@ void PackTimespec( struct timespec *ts, double seconds )
 
 int WaitForWallClock()
 {
-  static struct timeval start_time;
-  static struct timeval last_time;
-  
-  static bool init = true;  
-  static double desired_interval = 0.1; // seconds
+  static double desired_interval = 0.01; // seconds
   static double min_sleep_time = 0.0;
+  static double avg_interval = 0.01;
+
   struct timespec ts;
   
-  // first time here, we set the start time
-  if( init )
-    {
-      gettimeofday( &start_time, NULL );
-      
-      int numsleeps = 100;
-      ts.tv_sec = 0;
-      ts.tv_nsec = 1;
-      for( int i=0; i<numsleeps; i++ )
-	nanosleep( &ts, NULL );
-      
-      gettimeofday( &last_time, NULL );
-      
-      min_sleep_time = 0.5 * 
-	((TimevalSeconds(&last_time)-TimevalSeconds(&start_time))
-	 /(double)numsleeps);
-      
-      PRINT_DEBUG2( "%d nanosleeps took %.6f", 
-		   numsleeps, TimevalSeconds(&last_time)-TimevalSeconds(&start_time));
-      
-      PRINT_DEBUG1( "minimum sleep time = %.6f", 
-		   min_sleep_time );
-      init = false;
-    }
+  static double last_time = 0.0;
   
-  struct timeval this_time;
-  gettimeofday( &this_time, NULL );
+  double timenow = GetRealTime();
+  double interval = timenow - last_time;
+  last_time += interval;
   
-  double interval = TimevalSeconds(&this_time) - TimevalSeconds( &last_time );
-  memcpy( &last_time, &this_time, sizeof(last_time) );
+  
+  avg_interval = 0.9 * avg_interval + 0.1 * interval;
+  
+  double freq = 1.0 / avg_interval;
+  
+  //PRINT_DEBUG4( "time %.4f freq %.2f interval %.4f avg %.4f"aa,  
+  //       GetRealTime(), freq, interval, avg_interval );
+
+  PRINT_MSG2( "time %.4f freq %.2fHz", timenow, freq );
   
   // if we have spare time, go to sleep
-  double spare_time = desired_interval - interval;
-  
-  //printf( " interval: %.6f spare: %.6f\n", 
-  //  interval, spare_time );
- 
-  //printf( " used %d/%d ms\n", 
-  //  (int)(interval * 1000.0),   
-  //  (int)(desired_interval * 1000.0) );
+  double spare_time = desired_interval - avg_interval;
   
   if( spare_time > min_sleep_time )
     {
