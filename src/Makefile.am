@@ -2,42 +2,25 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.64 2004-09-22 20:47:21 rtv Exp $
+# $Id: Makefile.am,v 1.65 2004-09-22 21:04:32 rtv Exp $
 
 #SUBDIRS = models
 
 #stage_DEPENDENCIES = libstage.a $(top_srcdir)/replace/libreplace.a 
 
+# install these headers
+include_HEADERS = stage.h 
+
 AM_CFLAGS = -Wall -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GTK_CFLAGS@
 AM_CPPFLAGS = -Wall -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GTK_CFLAGS@
 
-
-bin_PROGRAMS = stest
-
-# install these headers
-include_HEADERS = stage.h 
-#  world.h model.h matrix.h server.h connection.h gui.h
-
-#
-# stage program
-#
-#stage_SOURCES = \
-#	connection.c \
-#	connection.h \
-#	main.c \
-#	server.c \
-#	server.h \
-#	subscription.c \
-#	subscription.h 
-
 lib_LTLIBRARIES = libstage.la libstageplugin.la 
 
-# the stage library contains almost everything you need to build a
-# robot simulation, including a graphics library and and worldfile parser
+# the stage library contains everything you need to build a robot
+# simulation, including a graphics library and and worldfile parser
 #
 libstage_la_SOURCES = \
 	bitmap.c \
-        colors.h \
 	gui.c \
 	gui.h \
 	gui_menus.c \
@@ -47,35 +30,32 @@ libstage_la_SOURCES = \
 	model.c \
 	model.h \
 	model_blobfinder.c \
+	model_energy.c \
+	model_fiducial.c \
 	model_laser.c \
 	model_pose.c \
 	model_position.c \
 	model_props.c \
+	model_ranger.c \
 	model_test.c \
 	raytrace.c \
 	raytrace.h \
-	stagecpp.cc \
 	stage.c \
 	stage.h \
+	stagecpp.cc \
 	token.c \
 	world.c \
 	world.h \
-        rtk.c \
-        rtk_canvas.c \
-        rtk_canvas_movie.c \
-        rtk_fig.c \
-        rtk_region.c \
-        rtk.h \
-        rtk_menu.c \
-        rtkprivate.h \
-        rtk_table.c \
 	worldfile.cc \
 	worldfile.hh \
-	model_energy.c \
-	model_fiducial.c \
-	model_ranger.c 
-
-
+        colors.h \
+        rtk.c \
+        rtk.h \
+        rtk_canvas.c \
+        rtk_fig.c \
+        rtk_menu.c \
+        rtk_region.c \
+        rtkprivate.h 
 
 libstage_la_LDFLAGS = -export-dynamic -version-info 0:0:0 
 
@@ -93,7 +73,9 @@ libstageplugin_la_DEPENDENCIES = libstage.la
 libstageplugin_la_LDFLAGS = -module -export-dynamic -version-info 0:0:0 
 libstageplugin_la_LIBADD = @GTK_LIBS@ -lstage
 
-#
+
+bin_PROGRAMS = stest
+
 # test program	
 #	
 stest_SOURCES = stest.c

@@ -22,7 +22,7 @@
  * Desc: Rtk canvas functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.1 2004-09-16 06:54:27 rtv Exp $
+ * CVS: $Id: rtk_canvas.c,v 1.2 2004-09-22 21:04:32 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -191,8 +191,8 @@ void rtk_canvas_destroy(rtk_canvas_t *canvas)
   int count;
 
   // Finish any movies
-  if (canvas->movie_context)
-    rtk_canvas_movie_stop(canvas);
+  //if (canvas->movie_context)
+  //rtk_canvas_movie_stop(canvas);
   
   // Get rid of any figures we still have
   count = 0;
