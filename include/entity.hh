@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.40 $
+//  $Author: inspectorg $
+//  $Revision: 1.41 $
 //
 // Usage:
 //  (empty)
@@ -309,13 +309,13 @@ protected: bool CEntity::Unlock( void );
 
 #ifdef INCLUDE_RTK2
   // Initialise the rtk gui
-  private: void RtkStartup();
+  protected: virtual void RtkStartup();
 
   // Finalise the rtk gui
-  private: void RtkShutdown();
+  protected: virtual void RtkShutdown();
 
   // Update the rtk gui
-  private: void RtkUpdate();
+  protected: virtual void RtkUpdate();
 
   // Get a string describing the Stage type of the entity
   private: const char *RtkGetStageType();

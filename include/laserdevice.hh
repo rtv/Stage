@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
 //  $Author: inspectorg $
-//  $Revision: 1.20 $
+//  $Revision: 1.21 $
 
 //
 // Usage:
@@ -70,7 +70,26 @@ class CLaserDevice : public CEntity
 
   // List of beacons detected in last scan
   public: LaserBeaconList m_visible_beacons;
-    
+
+#ifdef INCLUDE_RTK2
+
+  // Initialise the rtk gui
+  protected: virtual void RtkStartup();
+
+  // Finalise the rtk gui
+  protected: virtual void RtkShutdown();
+
+  // Update the rtk gui
+  protected: virtual void RtkUpdate();
+  
+  // For drawing the laser scan
+  private: rtk_fig_t *scan_fig;
+
+  // Laser scan outline
+  private: int hit_count;
+  private: double hit[512][2];
+#endif
+  
 #ifdef INCLUDE_RTK
     
   // Process GUI update messages

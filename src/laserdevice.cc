@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.44 $
+//  $Revision: 1.45 $
 //
 // Usage:
 //  (empty)
@@ -79,7 +79,8 @@ CLaserDevice::CLaserDevice(CWorld *world,
   this->size_x = 0.155;
   this->size_y = 0.155;
   
-#ifdef INCLUDE_RTK
+#ifdef INCLUDE_RTK2
+  this->scan_fig = NULL;
   this->hit_count = 0;
 #endif
 
@@ -230,9 +231,8 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
   // We will interpolate <skip> out of <skip+1> readings.
   int skip = (int) (this->min_res / this->scan_res - 0.5);
 
-#ifdef INCLUDE_RTK
+#ifdef INCLUDE_RTK2
   // Initialise gui data
-  //
   this->hit_count = 0;
 #endif
 
@@ -300,7 +300,7 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
     for (int i = 0; i < skip && s < this->scan_count; i++)
       data->ranges[s++] = htons(v);
 	
-#ifdef INCLUDE_RTK
+#ifdef INCLUDE_RTK2
     // Update the gui data
     // Show laser just a bit short of objects
     this->hit[this->hit_count][0] = ox + (range - 0.1) * cos(pth);
@@ -316,76 +316,44 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 }
 
 
-#ifdef INCLUDE_RTK
+#ifdef INCLUDE_RTK2
 
 ///////////////////////////////////////////////////////////////////////////
-// Process GUI update messages
-//
-void CLaserDevice::OnUiUpdate(RtkUiDrawData *data)
+// Initialise the rtk gui
+void CLaserDevice::RtkStartup()
 {
-  CEntity::OnUiUpdate(data);
-
-  data->begin_section("global", "laser");
-
-  if (data->draw_layer("", true))
-      DrawTurret(data);
-
-  if (data->draw_layer("outline", false, 49))
-  {
-    if(Subscribed())
-      DrawScan(data, 0);
-  } 
-
-  if (data->draw_layer("coverage", false, 49))
-  {
-    if(Subscribed())
-      DrawScan(data, 1);
-  }
-
-  data->end_section();
+  CEntity::RtkStartup();
+  
+  // Create a figure representing this object
+  this->scan_fig = rtk_fig_create(m_world->canvas, NULL, 49);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Process GUI mouse messages
-//
-void CLaserDevice::OnUiMouse(RtkUiMouseData *data)
+// Finalise the rtk gui
+void CLaserDevice::RtkShutdown()
 {
-    CEntity::OnUiMouse(data);
-}
+  // Clean up the figure we created
+  rtk_fig_destroy(this->scan_fig);
+
+  CEntity::RtkShutdown();
+} 
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Draw the laser turret
-//
-void CLaserDevice::DrawTurret(RtkUiDrawData *data)
+// Update the rtk gui
+void CLaserDevice::RtkUpdate()
 {
-    data->set_color(RTK_RGB(m_color.red, m_color.green, m_color.blue));
-
-    // Turret dimensions
-    double dx = m_size_x;
-    double dy = m_size_y;
-
-    // Get global pose
-    double gx, gy, gth;
-    GetGlobalPose(gx, gy, gth);
-    
-    // Draw the outline of the turret
-    data->ex_rectangle(gx, gy, gth, dx, dy); 
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Draw the laser scan
-//
-void CLaserDevice::DrawScan(RtkUiDrawData *data, int style)
-{
-  data->set_color(RTK_RGB(m_color.red, m_color.green, m_color.blue));
+  CEntity::RtkUpdate();
   
   // Get global pose
   double gx, gy, gth;
   GetGlobalPose(gx, gy, gth);
 
+  int style = 1;
+
+  rtk_fig_clear(this->scan_fig);
+  
   // Draw the scan outline
   if (style == 0)
   {
@@ -397,11 +365,11 @@ void CLaserDevice::DrawScan(RtkUiDrawData *data, int style)
     {
       double px = this->hit[i][0];
       double py = this->hit[i][1];
-      data->line(qx, qy, px, py);
+      rtk_fig_line(this->scan_fig, qx, qy, px, py);
       qx = px;
       qy = py;
     }
-    data->line(qx, qy, gx, gy);
+    rtk_fig_line(this->scan_fig, qx, qy, gx, gy);
   }
 
   // Draw the dense scan coverage
@@ -411,7 +379,7 @@ void CLaserDevice::DrawScan(RtkUiDrawData *data, int style)
     {
       double px = this->hit[i][0];
       double py = this->hit[i][1];
-      data->line(gx, gy, px, py);
+      rtk_fig_line(this->scan_fig, gx, gy, px, py);
     }
   }
 }
