@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.52 2002-06-10 04:57:48 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.52.4.1 2002-07-08 02:36:48 rtv Exp $
  */
 
 #ifndef ENTITY_HH
@@ -382,7 +382,7 @@ class CEntity
   public: virtual void RtkUpdate();
 
   // Default figure handle
-  protected: rtk_fig_t *fig, *fig_label;
+  public: rtk_fig_t *fig, *fig_label;
 
   // Default movement mask
   protected: int movemask;

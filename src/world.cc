@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.106 2002-06-11 06:58:17 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.106.4.1 2002-07-08 02:36:48 rtv Exp $
  */
 
 //#undef DEBUG
@@ -59,6 +59,12 @@ int g_timer_expired = 0;
 
 #include "world.hh"
 #include "fixedobstacle.hh"
+
+// declare rtk's periodic handler routine
+// we call this ourselves to avoid using a seperate RTK thread
+extern "C" {
+int rtk_app_on_timer(rtk_app_t *app);
+}
 
 // allocate chunks of 32 pointers for entity storage
 const int OBJECT_ALLOC_SIZE = 32;
@@ -774,7 +780,7 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   double ox, oy;
   double gridx, gridy;
   double minor, major;
-  bool showgrid;
+  bool showgrid, subscribedonly;
   
   if (worldfile != NULL)
   {
@@ -817,6 +823,9 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
     
     gridx = ceil(gridx / major) * major;
     gridy = ceil(gridy / major) * major;
+
+    // toggle display of subscribed or all device data
+    subscribedonly = worldfile->ReadInt(section, "subscribe", false);
   }
   else
   {
@@ -853,9 +862,11 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
 
     gridx = ceil(gridx / major) * major;
     gridy = ceil(gridy / major) * major;
+
+    subscribedonly = false;
   }
   
-  this->app = rtk_app_create();
+ this->app = rtk_app_create();
   rtk_app_refresh_rate(this->app, 10);
   
   this->canvas = rtk_canvas_create(this->app);
@@ -873,14 +884,29 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   // Create the view menu
   this->view_menu = rtk_menu_create(this->canvas, "View");
 
-  // create the grid menu item
+  // create the view menu items and set their initial checked state
   this->grid_item = rtk_menuitem_create(this->view_menu, "Grid", 1);
-
-  // Set the initial view menu state
   rtk_menuitem_check(this->grid_item, showgrid);
 
+  this->walls_item = rtk_menuitem_create(this->view_menu, "Walls", 1);
+  rtk_menuitem_check(this->walls_item, 1);
+
+  // create the action menu
+  this->action_menu = rtk_menu_create(this->canvas, "Action");
+  this->subscribedonly_item = rtk_menuitem_create(this->action_menu, 
+					      "Subscribe to all", 1);
+  rtk_menuitem_check(this->subscribedonly_item, subscribedonly);
+
+  
+
+  // Set the initial view menu states
+
   // Create the view/device sub menu
-  this->device_data_menu = rtk_menu_create_sub(this->view_menu, "Device data");
+  this->data_menu = rtk_menu_create_sub(this->view_menu, "Data");
+
+  // Create the view/data sub menu
+  this->device_menu = rtk_menu_create_sub(this->view_menu, "Object");
+
 
   // create a menu item for each device
   // start with all sensor visualizations enabled - might re-think
@@ -889,6 +915,7 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
 
   //zero the array of device menu item ptrs
   memset( &device_menu_items, 0, NUMBER_OF_STAGE_TYPES*sizeof(rtk_menuitem_t*));
+  memset( &data_menu_items, 0, NUMBER_OF_STAGE_TYPES*sizeof(rtk_menuitem_t*));
   
   // create a view/device menu entry for each type of player-enabled device
   // we are using
@@ -897,13 +924,24 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
     CEntity* ent = GetEntity(d);
 
     // if it's a player device and we haven't got an item already
-    if( ent->m_player.code && !this->device_menu_items[ ent->stage_type ] ) 
+    if( ent->m_player.code && !this->data_menu_items[ ent->stage_type ] ) 
     {
-      assert( this->device_menu_items[ ent->stage_type ] =  
-              rtk_menuitem_create(this->device_data_menu, 
+      // add a data menu item 
+      assert( this->data_menu_items[ ent->stage_type ] =  
+              rtk_menuitem_create(this->data_menu, 
                                   StringFromType( ent->stage_type), 1) );  
+      
+      rtk_menuitem_check(this->data_menu_items[ ent->stage_type ], 1);
+    }
 
-      rtk_menuitem_check(this->device_menu_items[ ent->stage_type ], 1);
+    if( !this->device_menu_items[ ent->stage_type ] ) 
+      {
+	// add a device menu item 
+	assert( this->device_menu_items[ ent->stage_type ] =  
+		rtk_menuitem_create(this->device_menu, 
+				    StringFromType( ent->stage_type), 1) );  
+	
+	rtk_menuitem_check(this->device_menu_items[ ent->stage_type ], 1);
     }
   }
 
@@ -964,7 +1002,24 @@ bool CWorld::RtkStartup()
 {
   PRINT_DEBUG( "** STARTUP GUI **" );
 
-  rtk_app_start(this->app);
+  // run rtk in this thread - don't start it's own thread
+  
+  // don't call this
+  //rtk_app_start(this->app);
+
+  // but do the startup here
+  rtk_canvas_t *canvas;
+  rtk_table_t *table;
+  
+  // Display everything
+  for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
+    gtk_widget_show_all(canvas->frame);
+  for (table = app->table; table != NULL; table = table->next)
+    gtk_widget_show_all(table->frame);
+
+  // instead of going into gtk_main() here, we'll call gtk_main_iteration();
+  // every time around the loop
+
   return true;
 }
 
@@ -972,13 +1027,29 @@ bool CWorld::RtkStartup()
 // Stop the GUI
 void CWorld::RtkShutdown()
 {
-  rtk_app_stop(this->app);
+  //rtk_app_stop(this->app);
 }
 
 
 // Update the GUI
 void CWorld::RtkUpdate()
 {
+  //////////////////////////////////////////////////////////
+  // try this instead of using a seperate thread for rtk
+  // it'll mean the GUI might be laggy during high processing load
+  // but it gives us a single thread - great for profiling
+  // - in practice it seems to work pretty well, so I'm for 
+  // keeping it this way. rtv.
+  
+  // emulate gtk's main loop
+  while (gtk_events_pending())
+    gtk_main_iteration();
+
+  // call rtk's periodic update
+  rtk_app_on_timer( this->app );
+
+  ///////////////////////////////////////////////////////////
+
   // See if we need to quit the program
   if (rtk_menuitem_isactivated(this->exit_menuitem))
     ::quit = 1;
@@ -1006,6 +1077,36 @@ void CWorld::RtkUpdate()
   else
     rtk_fig_show(this->fig_grid, 0);
 
+  // Show or hide the walls
+  if( this->wall && this->wall->fig )
+    {
+      if( rtk_menuitem_ischecked(this->walls_item) )
+	rtk_fig_show(this->wall->fig, 1);
+      else
+	rtk_fig_show(this->wall->fig, 0);
+    }
+
+  // enable/disable subscriptions to show sensor data
+  static bool lasttime = rtk_menuitem_ischecked(this->subscribedonly_item);
+  bool thistime = rtk_menuitem_ischecked(this->subscribedonly_item);
+
+  // if the menu item changed
+  if( thistime != lasttime )
+    {
+      if( thistime )  // change the subscription counts of any player-capable ent
+	{
+	  for (int i = 0; i < m_entity_count; i++)
+	    if( m_entity[i]->m_player.port > 0 ) m_entity[i]->Subscribe();
+	}
+      else
+	{
+	  for (int i = 0; i < m_entity_count; i++)
+	    if( m_entity[i]->m_player.port > 0 ) m_entity[i]->Unsubscribe();
+	}
+      // remember this state
+      lasttime = thistime;
+    }
+      
 }
 #endif
 

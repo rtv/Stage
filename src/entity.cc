@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.68 2002-06-11 03:31:18 inspectorg Exp $
+ * CVS info: $Id: entity.cc,v 1.68.4.1 2002-07-08 02:36:48 rtv Exp $
  */
 
 #include <math.h>
@@ -1459,7 +1459,16 @@ void CEntity::RtkShutdown()
 ///////////////////////////////////////////////////////////////////////////
 // Update the rtk gui
 void CEntity::RtkUpdate()
-{
+{ 
+  // if we're not looking at this device, hide it 
+  if( !m_world->ShowDeviceBody( this->stage_type) )
+    {
+      rtk_fig_show(this->fig, false);
+    }
+  else
+    {     
+      rtk_fig_show( this->fig, true );
+
   // We need to handle mouse dragging by the user.
   // We can only move top-level entitys.
   // Do the test here, since some entitys (eg pucks) may
@@ -1490,6 +1499,7 @@ void CEntity::RtkUpdate()
     rtk_fig_show(this->fig_label, true);
   else
     rtk_fig_show(this->fig_label, false);    
+    }
 }
 
 #endif

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.15 $
+//  $Author: rtv $
+//  $Revision: 1.15.4.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -120,12 +120,8 @@ bool CFixedObstacle::Load(CWorldFile *worldfile, int section)
   return true;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////
 // Initialise object
-// Create a new wall object from the pnm file
-// If we cant find it under the given name,
-// we look for a zipped version.
 bool CFixedObstacle::Startup()
 {
   if (!CEntity::Startup())
@@ -138,48 +134,95 @@ bool CFixedObstacle::Startup()
   this->GetGlobalPose(ox, oy, oth);
   double sx = this->scale;
   double sy = this->scale;
-  for (int y = 0; y < this->image->height; y++)
-  {
-    for (int x = 0; x < this->image->width; x++)
-    {
-      if (this->image->get_pixel(x, y) == 0)
-        continue;
-      double lx = x * sx;
-      double ly = (this->image->height - y) * sy;
-      double px = ox + lx * cos(oth) - ly * sin(oth);
-      double py = oy + lx * sin(oth) + ly * cos(oth);
-      if (px < this->crop_ax || px > this->crop_bx)
-        continue;
-      if (py < this->crop_ay || py > this->crop_by)
-        continue;
-      m_world->SetRectangle(px, py, oth, sx, sy, this, true);
-    }
-  }
 
+  // Draw the image into the matrix (and GUI if compiled in) 
+
+  // RTV - this box-drawing algorithm compresses hospital.world from
+  // 104,000+ pixels to 5,757 rectangles. it's not perfect but pretty
+  // darn good with bitmaps featuring lots of horizontal and vertical
+  // lines - such as most worlds. Also combined matrix & gui
+  // rendering loops.  hospital.pnm.gz now loads more than twice as
+  // fast and redraws waaaaaay faster. yay!
+
+  // use this to count the number of rectangles drawn
+  // we optionally print it out below
+  // long int rects = 0;
+  
 #ifdef INCLUDE_RTK2
-  // Draw the image into the GUI
+  
   rtk_fig_clear(this->fig);
   rtk_fig_layer(this->fig, -48);
-  rtk_fig_color_rgb32(this->fig, this->color);
-  for (int y = 0; y < this->image->height; y++)
-  {
-    for (int x = 0; x < this->image->width; x++)
-    {
-      if (this->image->get_pixel(x, y) == 0)
-        continue;
-      double px = x * sx;
-      double py = (this->image->height - y) * sy;
-      if (px < this->crop_ax || px > this->crop_bx)
-        continue;
-      if (py < this->crop_ay || py > this->crop_by)
-        continue;
-      rtk_fig_rectangle(this->fig, px, py, oth, sx, sy, true);
-    }
-  }
+  rtk_fig_color_rgb32(this->fig, this->color );
+  
 #endif
+  
+  // use this to count the number of rectangles drawn
+  // we optionally print it out below
+  long int rects = 0;
+  
+  for (int y = 0; y < this->image->height; y++)
+    {
+      for (int x = 0; x < this->image->width; x++)
+	{
+	  if (this->image->get_pixel(x, y) == 0)
+	    continue;
+	 
+ 	  // a rectangle starts from this point
+	  int startx = x;
+	  int starty = this->image->height - y;
+	  int height = this->image->height; // assume full height for starters
+	  
+	  // grow the width - scan along the line until we hit an empty pixel
+	  for( ;  this->image->get_pixel( x, y ) > 0; x++ )
+	    {
+	      // handle horizontal cropping
+	      double ppx = x * sx; 
+	      if (ppx < this->crop_ax || ppx > this->crop_bx)
+		continue;
+	      
+	      // look down to see how large a rectangle below we can make
+	      int yy  = y;
+	      while( (this->image->get_pixel( x, yy ) > 0 ) 
+		     && (yy < this->image->height) )
+		{ 
+		  // handle vertical cropping
+		  double ppy = (this->image->height - yy) * sy;
+		  if (ppy < this->crop_ay || ppy > this->crop_by)
+		    continue;
+		  
+		  yy++; 
+		} 
+	      
+	      // now yy is the depth of a line of non-zero pixels
+	      // downward we store the smallest depth - that'll be the
+	      // height of the rectangle
+	      if( yy-y < height ) height = yy-y; // shrink the height to fit
+	    } 
+
+	  int width = x - startx;
+
+	  // delete the pixels we have used in this rect
+	  this->image->fast_fill_rect( startx, y, width, height, 0 );
+
+	  double px = (startx + (width/2.0) + 0.5 ) * sx;
+	  double py = (starty - (height/2.0) - 0.5 ) * sy;
+	  double pw = width * sx;
+	  double ph = height * sy;
+
+	  // create a matrix rectangle
+	  m_world->SetRectangle( px, py, oth, pw, ph, this, true);
+
+#ifdef INCLUDE_RTK2
+	  // create a figure  rectangle 
+	  rtk_fig_rectangle(this->fig, px, py, oth, pw, ph, true ); 
+#endif
+			    
+	  rects++;
+	}
+    }  
+  printf( "rects = %ld\n", rects );
 
   // new: don't delete the image so we can download it to clients - rtv
-
   return true;
 }
 

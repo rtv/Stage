@@ -11,7 +11,7 @@
 //  Modified by ahoward 24 May 2001 to make top bit 'sticky'.
 //  Once set, this bit can only be reset by 'clear'.
 //
-// $Id: image.hh,v 1.3 2002-06-04 06:35:07 rtv Exp $
+// $Id: image.hh,v 1.3.4.1 2002-07-08 02:36:48 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -83,6 +83,13 @@ public:
       if( data[p] ) count++;
     
     return count;
+  }
+
+  // sets the specified region to the color using a fast memset
+  inline void fast_fill_rect( int x, int y, int w, int h, int col )
+  {
+    for( int a = y; a < y + h; a++ )
+      memset( data + (a * width + x), col, w );
   }
 
 	void	copy_from(Nimage* img);
