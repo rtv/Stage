@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.4 2001-08-11 01:50:15 vaughan Exp $
+ * $Id: xs.cc,v 1.5 2001-08-13 21:05:34 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -406,6 +406,7 @@ bool DownloadEnvironment( environment_t* env )
 	  return false;
 	}
       
+      //printf( "read %d bytes\n", 
       recv += r;
     }
   
