@@ -86,16 +86,6 @@ int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count
   int img_width = gdk_pixbuf_get_width(pb);
   int img_height = gdk_pixbuf_get_height(pb);
   
-  // flip the image so we're using conventional coordinates rather
-  // than graphics coords (this is slower but easier than changing the
-  // algorithm below to process the image bottom-to-top)
-
-  
-  //int row;
-  //for(row = 0; row < img_height/2; row++ )
-    
-
-  
   int y, x;
   for(y = 0; y < img_height; y++)
     {
@@ -161,5 +151,18 @@ int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count
   // free the image data
   gdk_pixbuf_unref( pb );
 
+  // now y-invert all the rectangles because we're using conventional
+  // rather than graphics coordinates. this is much faster than
+  // inverting the original image.
+  int r;
+  for( r=0; r< *rect_count; r++ )
+    {
+      stg_rotrect_t *rect = &(*rects)[r]; 
+      rect->y = img_height - rect->y;
+      rect->h = -rect->h;
+    }
+  
+
   return 0; // ok
 }
+

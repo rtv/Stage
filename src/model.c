@@ -185,21 +185,10 @@ void model_map( stg_model_t* mod, gboolean render )
       
       stg_matrix_line( mod->world->matrix, p1.x, p1.y, p2.x, p2.y, mod, render );
     }
-
-  // optionally, add a bounding rectangle
-  if( mod->boundary )
-    {
-      stg_pose_t pz;
-      memcpy( &pz, &mod->pose, sizeof(pz) );
-      model_local_to_global( mod, &pz );
-
-      stg_matrix_rectangle( mod->world->matrix,
-			    pz.x, pz.y, pz.a,
-			    mod->size.x, mod->size.y, mod, render );
-    }
 }
   
-  /* UPDATE */
+
+/* UPDATE */
   
 void model_update_velocity( stg_model_t* model )
 {  
@@ -375,6 +364,12 @@ int model_set_prop( stg_model_t* mod,
 	{
 	  model_map( mod, 0 );
 	  memcpy( &mod->size, data, len );
+	  
+	  // force the body lines to fit inside this new rectangle
+	  stg_normalize_lines( mod->lines->data, mod->lines->len );
+	  stg_scale_lines( mod->lines->data, mod->lines->len, mod->size.x, mod->size.y );
+	  stg_translate_lines( mod->lines->data, mod->lines->len,
+			       -mod->size.x/2.0, -mod->size.y/2.0 );
 	  model_map( mod, 1 );
 	}
       else PRINT_WARN2( "ignoring bad size data (%d/%d bytes)", 
@@ -402,22 +397,10 @@ int model_set_prop( stg_model_t* mod,
 	  g_array_set_size( mod->lines, 0 );
 	  g_array_append_vals( mod->lines, data, len / sizeof(stg_line_t) );
 	  // todo - normalize the lines into the model's size rectangle
+	  // todo - if boundary is set we add a unit rectangle
 	  model_map( mod, 1 );
 	}
       break;
-
-      /* case STG_PROP_RECTS:
-      if( len > 0 )
-	{
-	  model_map( mod, 0 );
-	  mod->rects = realloc( mod->rects, len );
-	  memcpy( mod->rects, data, len );
-	  mod->rect_count = len / sizeof(stg_rotrect_t);
-	  stg_normalize_rects( mod->rects, mod->rect_count );
-	  model_map( mod, 1 );
-	}
-      break;
-      */
 
     case STG_PROP_PARENT:
       if( len == sizeof(stg_id_t) )

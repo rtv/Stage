@@ -1,26 +1,11 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: simple.world,v 1.18 2004-04-22 07:03:21 rtv Exp $
+# CVS: $Id: simple.world,v 1.19 2004-04-23 05:03:53 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 #
 
 include "pioneer.inc"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -59,7 +44,7 @@ bitmap "worlds/cave.png"
   (
     name "budgie"	
     size [2.0 1.0] 
-    pose [8.171 1.928 -7006.291]
+    pose [8.090 8.917 -13934.370]
     velocity [0 0 -20]
     nose 1
 
@@ -67,7 +52,7 @@ bitmap "worlds/cave.png"
     color "blue"
   )
 
-pioneer2dx( name "r0" size [ 0.6 0.4 ] pose [6.697 0.871 17.343] )
+pioneer2dx( name "r0" size [ 0.6 0.4 ] pose [5.702 0.815 -50.498] )
 pioneer2dx( name "r1" size [ 0.6 0.4 ] pose [1.449 3.189 -20.084] )
 pioneer2dx( name "r2" size [ 0.6 0.4 ] pose [1.449 3.189 -20.084] )
 pioneer2dx( name "r3" size [ 0.6 0.4 ] pose [1.449 3.189 -20.084] )

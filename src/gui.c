@@ -107,14 +107,10 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   double width = world->size.x;
   double height = world->size.y;
 
-  win->grid = gui_grid_create( win->canvas, win->bg, 
-			       width/2.0, height/2.0, 0.0,
-			       width, height, major, minor );
-  
   // draw the axis origin lines
-  rtk_fig_color_rgb32( win->grid, stg_lookup_color(STG_GRID_AXIS_COLOR) );  
-  rtk_fig_line( win->grid, 0, 0, width, 0 );
-  rtk_fig_line( win->grid, 0, 0, 0, height );
+  //rtk_fig_color_rgb32( win->grid, stg_lookup_color(STG_GRID_AXIS_COLOR) );  
+  //rtk_fig_line( win->grid, 0, 0, width, 0 );
+  //rtk_fig_line( win->grid, 0, 0, 0, height );
 
   win->show_grid = TRUE;
   win->show_matrix = FALSE;
@@ -148,7 +144,6 @@ void gui_window_destroy( gui_window_t* win )
 
   rtk_canvas_destroy( win->canvas );
   rtk_fig_destroy( win->bg );
-  rtk_fig_destroy( win->grid );
   rtk_fig_destroy( win->poses );
 }
 
@@ -343,6 +338,19 @@ void gui_model_parent( stg_model_t* model )
   
 }
 
+void gui_model_grid( stg_model_t* model )
+{  
+  gui_window_t* win = g_hash_table_lookup( wins, &model->world->id );
+  gui_model_t* gmod = gui_model_figs(model);
+  
+  if( gmod->grid )
+    rtk_fig_destroy( gmod->grid );
+  
+  gmod->grid = gui_grid_create( win->canvas, gmod->top, 
+				0, 0, 0, 
+				model->size.x, model->size.y, 1.0, 0 );
+}
+  
 void gui_model_create( stg_model_t* model )
 {
   PRINT_DEBUG( "gui model create" );
@@ -365,7 +373,8 @@ void gui_model_create( stg_model_t* model )
   gmod->ranger_data = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_DATA);
   gmod->laser = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_SENSOR );
   gmod->laser_data = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_DATA);
-
+  gmod->grid = NULL;
+  
   gmod->top->userdata = model;
   rtk_fig_movemask( gmod->top, model->movemask );
   rtk_fig_add_mouse_handler( gmod->top, gui_model_mouse );
@@ -412,6 +421,9 @@ void gui_model_render( stg_model_t* model )
   
   if( win->show_laser ) 
     gui_model_laser( model );
+
+  //if( win->show_grid )
+  gui_model_grid( model );
 }
 
 void gui_model_destroy( stg_model_t* model )
@@ -420,6 +432,19 @@ void gui_model_destroy( stg_model_t* model )
   
   gui_window_t* win = g_hash_table_lookup( wins, &model->world->id );
   
+  
+  /*
+  gui_model_t* gmod = gui_model_figs( model );
+
+  if( gmod->grid )        rtk_fig_destroy(  gmod->grid );
+  if( gmod->laser_data )  rtk_fig_destroy(  gmod->laser_data );
+  if( gmod->laser )       rtk_fig_destroy(  gmod->laser );
+  if( gmod->ranger_data ) rtk_fig_destroy(  gmod->ranger_data );
+  if( gmod->rangers )     rtk_fig_destroy(  gmod->rangers );
+  if( gmod->geom )        rtk_fig_destroy(  gmod->geom );
+  if( gmod->top )         rtk_fig_destroy(  gmod->top );
+  */
+
   g_hash_table_remove( win->guimods, &model->id );
 }
 

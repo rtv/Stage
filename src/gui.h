@@ -50,6 +50,7 @@ typedef struct
   rtk_fig_t* geom;
   rtk_fig_t* laser;
   rtk_fig_t* laser_data;
+  rtk_fig_t* grid;
 } gui_model_t;
 
 typedef struct
@@ -62,7 +63,7 @@ typedef struct
   GHashTable* guimods;
 
   rtk_fig_t* bg; // background
-  rtk_fig_t* grid; 
+  //rtk_fig_t* grid; 
   rtk_fig_t* matrix;
   rtk_fig_t* poses;
 

@@ -292,11 +292,11 @@ int main( int argc, char* argv[] )
   sz.y = worldfile->ReadTupleLength(0, "size", 1, 10.0 );
   sc_model_prop_with_data( root, STG_PROP_SIZE, &sz, sizeof(sz) );
 
-  stg_pose_t origin;
-  origin.x = sz.x/2.0;
-  origin.y = sz.y/2.0;
-  origin.a = 0.0;
-  sc_model_prop_with_data( root, STG_PROP_ORIGIN, &origin, sizeof(origin) );
+  stg_pose_t pose;
+  pose.x = sz.x/2.0;
+  pose.y = sz.y/2.0;
+  pose.a = 0.0;
+  sc_model_prop_with_data( root, STG_PROP_POSE, &pose, sizeof(pose) );
 
   stg_movemask_t mm = 0;
   sc_model_prop_with_data( root, STG_PROP_MOVEMASK, &mm, sizeof(mm) ); 
@@ -305,9 +305,6 @@ int main( int argc, char* argv[] )
   stg_color_t color = stg_lookup_color( colorstr );
   sc_model_prop_with_data( root, STG_PROP_COLOR, &color,sizeof(color));
   
-  stg_bool_t boundary;
-  boundary = worldfile->ReadInt(0, "boundary", 1 );
-  sc_model_prop_with_data(root, STG_PROP_BOUNDARY, &boundary,sizeof(boundary));
   
   const char* bitmapfile = worldfile->ReadString(0, "bitmap", NULL );
   if( bitmapfile )
@@ -328,6 +325,10 @@ int main( int argc, char* argv[] )
       
       free( lines );
     }
+
+  stg_bool_t boundary;
+  boundary = worldfile->ReadInt(0, "boundary", 1 );
+  sc_model_prop_with_data(root, STG_PROP_BOUNDARY, &boundary,sizeof(boundary));
  
 
   // Iterate through sections and create client-side models
