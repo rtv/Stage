@@ -2,7 +2,7 @@
 # Desc: Device definitions for Activemedia robots.
 # Author: Andrew Howard, Richard Vaughan
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.15 2004-12-09 01:34:44 rtv Exp $
+# CVS: $Id: pioneer.inc,v 1.16 2005-02-11 07:40:23 rtv Exp $
 
 
 # The Pioneer2DX sonar array
@@ -100,6 +100,11 @@ define pioneer2dx position
   # use the sonar array defined above
   p2dx_sonar()  
 ) 
+
+define pioneer2dx_battery pioneer2dx
+(
+  energy( pose [-0.14 0 0] capacity 10000 range 1.0  give 100 take 100 )
+)
 
 # The AmigoBot sonar array
 define amigo_sonar ranger

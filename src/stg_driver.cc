@@ -24,7 +24,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: stg_driver.cc,v 1.25 2005-02-08 23:41:38 rtv Exp $
+ * CVS: $Id: stg_driver.cc,v 1.26 2005-02-11 07:40:22 rtv Exp $
  */
 
 // DOCUMENTATION ---------------------------------------------------------------------
@@ -234,6 +234,7 @@ public: virtual int PutConfig(player_device_id_t id, void *client,
   private: void RefreshDataSonar( device_record_t* device );
   private: void RefreshDataFiducial( device_record_t* device );
   private: void RefreshDataSimulation( device_record_t* device );
+  private: void RefreshDataEnergy( device_record_t* device );
 
   // one method for each type of config we accept
   private: void HandleConfigSimulation( player_device_id_t id, void* client, 
@@ -248,6 +249,8 @@ public: virtual int PutConfig(player_device_id_t id, void *client,
   private: void HandleConfigSonar( device_record_t* device, void* client, 
 				   void* buffer, size_t len );
   private: void HandleConfigFiducial( device_record_t* device, void* client, 
+				      void* buffer, size_t len );
+  private: void HandleConfigEnergy( device_record_t* device, void* client, 
 				      void* buffer, size_t len );
 
   private: void InitSimulation( ConfigFile* cf, int section );
@@ -422,6 +425,12 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	case PLAYER_SONAR_CODE:
 	  mod_type = STG_MODEL_RANGER;
 	  device->data_len = sizeof(player_sonar_data_t);
+	  device->cmd_len = 0;
+	  break;
+
+	case PLAYER_ENERGY_CODE:
+	  mod_type = STG_MODEL_ENERGY;
+	  device->data_len = sizeof(player_energy_data_t);
 	  device->cmd_len = 0;
 	  break;
 	  
@@ -721,10 +730,6 @@ int StgDriver::PutConfig(player_device_id_t id, void *client,
       if( drec ) 
 	switch( drec->id.code )
 	  {
-	    //	  case PLAYER_SIMULATION_CODE:
-	    //this->HandleConfigSimulation( drec, client, src, len );
-	    //break;
-	    
 	  case PLAYER_LASER_CODE:
 	    this->HandleConfigLaser( drec, client, src, len  );
 	    break;
@@ -740,8 +745,13 @@ int StgDriver::PutConfig(player_device_id_t id, void *client,
 	  case PLAYER_BLOBFINDER_CODE:
 	    this->HandleConfigFiducial( drec, client, src, len  );
 	    break;
+
 	  case PLAYER_SONAR_CODE:
 	    this->HandleConfigSonar( drec, client, src, len  );
+	    break;
+
+	  case PLAYER_ENERGY_CODE:
+	    this->HandleConfigEnergy( drec, client, src, len  );
 	    break;
 	    
 	  default:
@@ -765,59 +775,6 @@ int StgDriver::PutConfig(player_device_id_t id, void *client,
   return(0);
 }
 
-
-// void StgDriver::CheckConfig()
-// {  
-
-//   void *client;
-//   unsigned char buffer[PLAYER_MAX_REQREP_SIZE];
-  
-//   for( int i=0; i<(int)this->devices->len; i++ )
-//     {  
-      
-//       device_record_t* device = (device_record_t*)g_ptr_array_index( this->devices, i );
-      
-//       size_t len = 0;
-//       while( (len = this->GetConfig( device->id, &client, &buffer, sizeof(buffer), NULL)) > 0 )
-// 	{
-	  
-// 	  switch( device->id.code )
-// 	    {
-// 	    case PLAYER_SIMULATION_CODE:
-// 	      this->HandleConfigSimulation( device, client, buffer, len );
-// 	      break;
-	      
-// 	    case PLAYER_LASER_CODE:
-// 	      this->HandleConfigLaser( device, client, buffer, len  );
-// 	      break;
-	      
-// 	    case PLAYER_POSITION_CODE:
-// 	      this->HandleConfigPosition( device, client, buffer, len  );
-// 	      break;
-	      
-// 	    case PLAYER_FIDUCIAL_CODE:
-// 	      this->HandleConfigFiducial( device, client, buffer, len  );
-// 	      break;
-	      
-// 	    case PLAYER_BLOBFINDER_CODE:
-// 	      this->HandleConfigFiducial( device, client, buffer, len  );
-// 	      break;
-// 	    case PLAYER_SONAR_CODE:
-// 	      this->HandleConfigSonar( device, client, buffer, len  );
-// 	      break;
-	      
-// 	    default:
-// 	      printf( "Stage driver error: unknown player device code (%d)\n",
-// 		      device->id.code );	     	      
-	      
-// 	      // we don't recognize this interface at all, but we'll send
-// 	      // a NACK as a minimum reply
-// 	      if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
-// 		DRIVER_ERROR("PutReply() failed");	  
-// 	    }      
-// 	}      
-//     }
-// }
 
 void StgDriver::HandleConfigSimulation( player_device_id_t id, 
 					void* client, 
@@ -1302,7 +1259,7 @@ void StgDriver::HandleConfigSonar( device_record_t* device, void* client, void* 
 	
     default:
       {
-	PRINT_WARN1( "stg_sonar doesn't support config id %d\n", buf[0] );
+	PRINT_WARN1( "stage sonar model doesn't support config id %d\n", buf[0] );
 	if (PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
 	  DRIVER_ERROR("PutReply() failed");
 	break;
@@ -1311,6 +1268,26 @@ void StgDriver::HandleConfigSonar( device_record_t* device, void* client, void* 
     }
 }
 
+void StgDriver::HandleConfigEnergy( device_record_t* device, 
+				    void* client, 
+				    void* src, 
+				    size_t len )
+{
+  printf("got energy request\n");
+  
+ // switch on the config type (first byte)
+  uint8_t* buf = (uint8_t*)src;
+  switch( buf[0] )
+    {  
+    default:
+      {
+	PRINT_WARN1( "stage energy model doesn't support config id %d\n", buf[0] );
+	if (PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
+	  DRIVER_ERROR("PutReply() failed");
+	break;
+      }      
+    }
+}
 
 void StgDriver::CheckCommands()
 {  
@@ -1433,6 +1410,10 @@ void StgDriver::RefreshDataDevice( device_record_t* device )
     case PLAYER_SONAR_CODE:
       this->RefreshDataSonar( device );
       break;
+
+    case PLAYER_ENERGY_CODE:
+      this->RefreshDataEnergy( device );
+      break;
       
     default:
       printf( "Stage driver error: unknown player device code (%d)\n",
@@ -1545,6 +1526,24 @@ void StgDriver::RefreshDataSonar( device_record_t* device )
 }
 
 
+void StgDriver::RefreshDataEnergy( device_record_t* device )
+{
+  stg_energy_data_t data;
+  size_t datalen = stg_model_get_data( device->mod, &data, sizeof(data) );
+
+  if( datalen == sizeof(data) )
+    {
+      // translate stage data to player data packet
+      player_energy_data_t pen;
+      pen.mjoules = htonl( (int32_t)(data.stored * 1000.0));
+      pen.mwatts  = htonl( (int32_t)(data.output * 1000.0));
+      pen.charging = (uint8_t)( data.charging );      
+      this->PutData( device->id, &pen, sizeof(pen), NULL); 
+    }
+  else
+    PRINT_ERR2( "energy device returned wrong size data (%d/%d)", 
+		datalen, sizeof(data));
+}
 
 
 void StgDriver::RefreshDataFiducial( device_record_t* device )

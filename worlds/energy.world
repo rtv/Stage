@@ -1,6 +1,6 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.33 2005-02-11 07:40:23 rtv Exp $
+# CVS: $Id: energy.world,v 1.1 2005-02-11 07:40:23 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
@@ -28,9 +28,18 @@ map
 )
 
 # create a robot
-pioneer2dx
+pioneer2dx_battery
 (
   name "robot"
   pose [2 1 0]
   laser()
+)
+
+energy
+(
+  pose [ 3 3 0 ]
+  size [ 0.5 0.5 ]
+  give 200
+  take 0
+  capacity -1 # infinite
 )

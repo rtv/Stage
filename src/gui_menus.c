@@ -67,17 +67,19 @@ static GtkItemFactoryEntry menu_table[] = {
   { "/View/Grid", "<CTRL>G",   gui_menu_layer_cb, STG_LAYER_GRID, "<CheckItem>" },
   { "/View/sep0",     NULL,      NULL, 0, "<Separator>" },
   { "/View/Data",       NULL,   NULL, 0, "<Title>" },
-  { "/View/Laser data",      NULL,   gui_menu_view_data, STG_MODEL_LASER,    "<CheckItem>" },
-  { "/View/Ranger data",     NULL,   gui_menu_view_data, STG_MODEL_RANGER,   "<CheckItem>" },
   { "/View/Blobfinder data", NULL,   gui_menu_view_data, STG_MODEL_BLOB,     "<CheckItem>" },
+  { "/View/Energy data",   NULL,   gui_menu_view_data, STG_MODEL_ENERGY, "<CheckItem>" },
   { "/View/Fiducial data",   NULL,   gui_menu_view_data, STG_MODEL_FIDUCIAL, "<CheckItem>" },
+  { "/View/Laser data",      NULL,   gui_menu_view_data, STG_MODEL_LASER,    "<CheckItem>" },
   { "/View/Position data",   NULL,   gui_menu_view_data, STG_MODEL_POSITION, "<CheckItem>" },
+  { "/View/Ranger data",     NULL,   gui_menu_view_data, STG_MODEL_RANGER,   "<CheckItem>" },
   { "/View/sep1",       NULL,   NULL, 0, "<Separator>" },
   { "/View/Config",          NULL,    NULL, 0, "<Title>" },
+  { "/View/Blobfinder config",     NULL,   gui_menu_view_cfg, STG_MODEL_BLOB,     "<CheckItem>" },
+  { "/View/Energy config", NULL,   gui_menu_view_cfg, STG_MODEL_ENERGY, "<CheckItem>" },
+  { "/View/Fiducial config", NULL,   gui_menu_view_cfg, STG_MODEL_FIDUCIAL, "<CheckItem>" },
   { "/View/Laser config",    NULL,   gui_menu_view_cfg, STG_MODEL_LASER,    "<CheckItem>" },
   { "/View/Ranger config",   NULL,   gui_menu_view_cfg, STG_MODEL_RANGER ,  "<CheckItem>" },  
-  { "/View/Blobfinder config",     NULL,   gui_menu_view_cfg, STG_MODEL_BLOB,     "<CheckItem>" },
-  { "/View/Fiducial config", NULL,   gui_menu_view_cfg, STG_MODEL_FIDUCIAL, "<CheckItem>" },
 
   { "/View/sep2",     NULL,      NULL, 0, "<Separator>" },
   { "/View/Debug", NULL, NULL, 1, "<Branch>" },
@@ -89,8 +91,10 @@ static GtkItemFactoryEntry menu_table[] = {
   { "/Clock/Pause", NULL, gui_menu_clock_pause_cb, 1, "<CheckItem>" }
 };
 
-static const int menu_table_count = 46;
+// SET THIS TO THE NUMBER OF MENU ITEMS IN THE ARRAY ABOVE
+static const int menu_table_count = 48;
 
+// USE THIS WHEN WE FIX ON A RECENT GTK VERSION 
 /* void gui_menu_file_about( void ) */
 /* { */
 /*   //gtk_show_about_dialog( NULL, NULL ); */
@@ -103,10 +107,11 @@ static const int menu_table_count = 46;
 /* } */
 
 
+// TO-DOUBLE-DO - remove
 // TODO - move this somewhere sensible - so far it's only used here
-#define STG_DATA_MAX 32767
-#define STG_CFG_MAX 32767
-#define STG_CMD_MAX 32767
+//#define STG_DATA_MAX 32767
+//#define STG_CFG_MAX 32767
+//#define STG_CMD_MAX 32767
 
 
 void gui_model_render_data_cb( gpointer key, gpointer value, gpointer user )
@@ -382,6 +387,10 @@ void gui_window_menus_create( gui_window_t* win )
   gtk_check_menu_item_set_active( mitem, TRUE );
   mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Blobfinder data"));
   gtk_check_menu_item_set_active( mitem, TRUE );
+  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Energy data"));
+  gtk_check_menu_item_set_active( mitem, FALSE );
+  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Position data"));
+  gtk_check_menu_item_set_active( mitem, FALSE );
 
   // View/Config
   mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Laser config"));
@@ -391,6 +400,8 @@ void gui_window_menus_create( gui_window_t* win )
   mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Fiducial config"));
   gtk_check_menu_item_set_active( mitem, FALSE );
   mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Blobfinder config"));
+  gtk_check_menu_item_set_active( mitem, FALSE );
+  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Energy config"));
   gtk_check_menu_item_set_active( mitem, FALSE );
   
   gtk_box_pack_start(GTK_BOX(win->canvas->layout), 

@@ -214,15 +214,9 @@ extern "C" {
     func_data_notify_t data_notify;
     void* data_notify_arg;
     
-    // todo - add energy model
-    // stg_joules_t energy_consumed;
-    // stg_energy_config_t energy_config;   // these are a little strange
-    // stg_energy_data_t energy_data;
-    // double friction; // units? our model doesn't have a direct physical value
-
-    //stg_energy_consume_t* e_consume;
-    //stg_energy_store_t* e_buffer;
-
+    // the device is consuming this much energy
+    stg_watts_t watts;
+    
     char extend[0]; // this must be the last field!
 
   };

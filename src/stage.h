@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.123 2005-02-11 04:21:29 rtv Exp $
+ * CVS: $Id: stage.h,v 1.124 2005-02-11 07:40:22 rtv Exp $
  */
 
 
@@ -149,8 +149,11 @@ extern "C" {
     /** maximum storage capacity */
     stg_joules_t capacity;
 
-    /** estimate of current energy use */
-    stg_watts_t use;
+    /** estimate of current energy output */
+    stg_watts_t input;
+
+    /** estimate of current energy input */
+    stg_watts_t output;
 
     /** TRUE iff the device is receiving energy from a charger */
     stg_bool_t charging;
