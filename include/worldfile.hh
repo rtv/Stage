@@ -21,20 +21,25 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.hh,v 1.10 2002-06-07 01:53:34 inspectorg Exp $
+ * CVS info: $Id: worldfile.hh,v 1.11 2002-06-07 23:53:05 inspectorg Exp $
  */
 
 #ifndef WORLDFILE_HH
 #define WORLDFILE_HH
 
 
-/* Class for loading/saving world file
- *  This class encapsulates hides the syntax of the world file
- *  and provides an 'section.item = value' style interface.
- *  Global settings go in section 0; every other section
- *  refers to a specific object.  Parent/child relationships
- *  are encapsulated in the form of section/subsection.
- */
+// Class for loading/saving world file.  This class hides the syntax
+// of the world file and provides an 'section.item = value' style
+// interface.  Global settings go in section 0; every other section
+// refers to a specific entity.  Parent/child relationships are
+// encoded in the form of section/subsection relationships.
+//
+// This class also provides an interface to a parameters database for
+// accessing such things as the geometry of different types of robots
+// and sensors.  This interface is completely orthogonal to the world
+// file interface, and is included in this class only as a convenience
+// (i.e. I cant be bothered changing all the entities to read from
+// stuff from another class).
 class CWorldFile
 {
   // Standard constructors/destructors
@@ -132,6 +137,9 @@ class CWorldFile
   public: void WriteTupleAngle(int section, const char *name,
                                int index, double value);
 
+
+  ////////////////////////////////////////////////////////////////////////////
+  // Private methods used to load stuff from the world file
   
   // Load tokens from a file.
   private: bool LoadTokens(FILE *file);
@@ -171,6 +179,9 @@ class CWorldFile
 
   // Parse a line
   private: bool ParseTokens();
+
+  // Parse a macro definition
+  private: bool ParseTokenMacro(int section, int *index, int *line);
 
   // Parse an word (could be a section or an item) from the token list.
   private: bool ParseTokenWord(int section, int *index, int *line);

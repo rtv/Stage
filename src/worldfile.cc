@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.11 2002-06-07 17:29:45 inspectorg Exp $
+ * CVS info: $Id: worldfile.cc,v 1.12 2002-06-07 23:53:06 inspectorg Exp $
  */
 
 #include <assert.h>
@@ -365,7 +365,7 @@ bool CWorldFile::LoadTokenWord(FILE *file, int *line)
       AddToken(TokenWord, token);
       return true;
     }
-    else if (isalpha(ch) || isdigit(ch) || strchr("_", ch))
+    else if (isalpha(ch) || isdigit(ch) || strchr("_[]", ch))
     {
       token[len++] = ch;
     }
@@ -614,8 +614,17 @@ bool CWorldFile::ParseTokens()
     switch (token->type)
     {
       case TokenWord:
-        if (!ParseTokenWord(0, &i, &line))
-          return false;
+        if (strcmp(token->value, "define") == 0)
+        {
+          if (!ParseTokenMacro(0, &i, &line))
+            return false;
+        }
+        else
+        {
+          if (!ParseTokenWord(0, &i, &line))
+            return false;
+        }
+        break;
       case TokenComment:
         break;
       case TokenSpace:
@@ -661,6 +670,24 @@ bool CWorldFile::ParseTokenWord(int section, int *index, int *line)
       default:
         PARSE_ERR("syntax error 2", *line);
         return false;
+    }
+  }
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Parse a macro definition
+bool CWorldFile::ParseTokenMacro(int section, int *index, int *line)
+{
+  int i;
+  CToken *token;
+
+  for (i = *index + 1; i < this->token_count; i++)
+  {
+    token = this->tokens + i;
+
+    switch (token->type)
+    {
     }
   }
 }
@@ -817,7 +844,7 @@ int CWorldFile::AddSection(int parent, const char *name)
   this->sections[section].parent = parent;
   this->sections[section].name = name;
   this->section_count++;
-
+  
   return section;
 }
 

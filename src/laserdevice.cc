@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.52 2002-06-07 17:29:45 inspectorg Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.53 2002-06-07 23:53:05 inspectorg Exp $
  */
 
 #define DEBUG
@@ -109,7 +109,6 @@ bool CLaserDevice::Load(CWorldFile *worldfile, int section)
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the laser data
-//
 void CLaserDevice::Update( double sim_time )
 {
   CEntity::Update( sim_time );
@@ -164,6 +163,7 @@ void CLaserDevice::Update( double sim_time )
     }
   }
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Check to see if the configuration has changed
