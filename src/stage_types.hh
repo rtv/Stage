@@ -21,7 +21,7 @@
  * Desc: Shared types, constants, etc
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: stage_types.hh,v 1.4 2002-10-25 22:48:09 rtv Exp $
+ * CVS: $Id: stage_types.hh,v 1.5 2002-10-26 00:52:38 rtv Exp $
  */
 
 #ifndef STAGE_TYPES_HH
@@ -117,6 +117,7 @@ enum StageType
   MoteType,
   BpsType,
   IDARTurretType,
+  PowerType,
   NUMBER_OF_STAGE_TYPES // THIS MUST BE LAST - put yours before this.
 };
 

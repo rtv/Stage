@@ -22,7 +22,7 @@
  * devices here.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 8 Jun 2002
- * CVS info: $Id: colors.hh,v 1.4 2002-09-26 01:22:16 rtv Exp $
+ * CVS info: $Id: colors.hh,v 1.5 2002-10-26 00:52:38 rtv Exp $
  */
 
 #ifndef _STAGECOLORS_H
@@ -58,6 +58,7 @@
 #define WALL_COLOR "black"
 #define IDAR_COLOR "DarkRed"
 #define DESCARTES_COLOR "DarkBlue"
+#define POWER_COLOR "orange"
 
 // Look up the color in a database.  (i.e. transform color name to
 // color value).  If the color is not found in the database, a bright

@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.hh,v 1.4 2002-10-10 02:45:25 gerkey Exp $
+ * CVS info: $Id: sonardevice.hh,v 1.5 2002-10-26 00:52:38 rtv Exp $
  */
 
 #ifndef SONARDEVICE_HH
@@ -69,7 +69,8 @@ public: static CSonarDevice* Creator( CWorld *world, CEntity *parent )
   // Array holding the sonar poses
   public: int sonar_count;
   public: double sonars[SONARSAMPLES][3];
-    
+  
+  public: bool power_on;
 
   // Structure holding the sonar data
   private: player_sonar_data_t data;

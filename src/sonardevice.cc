@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.38 2002-10-10 02:45:25 gerkey Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.39 2002-10-26 00:52:38 rtv Exp $
  */
 
 #include <math.h>
@@ -52,6 +52,8 @@ CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent )
 
   this->min_range = 0.20;
   this->max_range = 5.0;
+
+  this->power_on = true;
 
   // Initialise the sonar poses to default values
   this->sonar_count = SONARSAMPLES;
@@ -93,6 +95,9 @@ bool CSonarDevice::Load(CWorldFile *worldfile, int section)
   this->min_range = worldfile->ReadLength(section, "min_range", this->min_range);
   this->max_range = worldfile->ReadLength(section, "max_range", this->max_range);
   
+  // power on or off? (TODO - have this setting saved)
+  this->power_on = worldfile->ReadBool(section, "power_on", this->power_on );
+
   // Load the geometry of the sonar ring
   scount = worldfile->ReadInt(section, "scount", 0);
   if (scount > 0)
@@ -132,37 +137,39 @@ void CSonarDevice::Update( double sim_time )
   // Check bounds
   assert((size_t) this->sonar_count <= ARRAYSIZE(this->data.ranges));
   
-  // Do each sonar
-  for (int s = 0; s < this->sonar_count; s++)
-  {
-    // Compute parameters of scan line
-    double ox = this->sonars[s][0];
-    double oy = this->sonars[s][1];
-    double oth = this->sonars[s][2];
-    LocalToGlobal(ox, oy, oth);
 
-    double range = this->max_range;
-      
-    CLineIterator lit( ox, oy, oth, this->max_range, 
-                       m_world->ppm, m_world->matrix, PointToBearingRange );
-    CEntity* ent;
-      
-    while( (ent = lit.GetNextEntity()) )
-    {
-      if( ent != this && ent != m_parent_entity && ent->sonar_return ) 
+  if( this->power_on )
+    // Do each sonar
+    for (int s = 0; s < this->sonar_count; s++)
       {
-        range = lit.GetRange();
-        break;
+	// Compute parameters of scan line
+	double ox = this->sonars[s][0];
+	double oy = this->sonars[s][1];
+	double oth = this->sonars[s][2];
+	LocalToGlobal(ox, oy, oth);
+	
+	double range = this->max_range;
+	
+	CLineIterator lit( ox, oy, oth, this->max_range, 
+			   m_world->ppm, m_world->matrix, PointToBearingRange );
+	CEntity* ent;
+	
+	while( (ent = lit.GetNextEntity()) )
+	  {
+	    if( ent != this && ent != m_parent_entity && ent->sonar_return ) 
+	      {
+		range = lit.GetRange();
+		break;
+	      }
+	  }
+	
+	uint16_t v = (uint16_t)(1000.0 * range);
+	
+	// Store range in mm in network byte order
+	this->data.range_count = htons(this->sonar_count);
+	this->data.ranges[s] = htons(v);
       }
-    }
-      
-    uint16_t v = (uint16_t)(1000.0 * range);
-      
-    // Store range in mm in network byte order
-    this->data.range_count = htons(this->sonar_count);
-    this->data.ranges[s] = htons(v);
-  }
-  
+
   PutData( &this->data, sizeof(this->data) );
 
   return;
@@ -177,6 +184,7 @@ void CSonarDevice::UpdateConfig()
   void* client;
   char buffer[PLAYER_MAX_REQREP_SIZE];
   player_sonar_geom_t geom;
+  //player_sonar_power_config_t power;
 
   while (true)
   {
@@ -187,7 +195,9 @@ void CSonarDevice::UpdateConfig()
     switch (buffer[0])
     {
       case PLAYER_SONAR_POWER_REQ:
-        // we got a sonar power toggle - i just ignore them.
+        // we got a sonar power config
+	// set the new power status
+	this->power_on = ((player_sonar_power_config_t*)buffer)->value;
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
         break;
 

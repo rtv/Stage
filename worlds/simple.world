@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: simple.world,v 1.8 2002-09-26 02:24:39 rtv Exp $
+# CVS: $Id: simple.world,v 1.9 2002-10-26 00:52:38 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 #
@@ -32,6 +32,6 @@ position
  port 6665 
  pose [1.0 1.0 20]
 
- laser( port 6665 )
+ laser()
 ) 
 

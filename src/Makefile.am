@@ -68,6 +68,8 @@ stage_SOURCES = \
 		playerdevice.hh			\
 		positiondevice.cc		\
 		positiondevice.hh		\
+		powerdevice.cc			\
+		powerdevice.hh			\
 		ptzdevice.cc			\
 		ptzdevice.hh			\
 		puck.cc				\

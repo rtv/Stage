@@ -2,7 +2,7 @@
 # Desc: Device definitions for Activemedia Pioneer robots.
 # Author: Andrew Howard
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.3 2002-10-25 20:14:44 gerkey Exp $
+# CVS: $Id: pioneer.inc,v 1.4 2002-10-26 00:52:38 rtv Exp $
 
 # The Pioneer2DX sonar array
 define p2dx_sonar sonar
@@ -34,6 +34,7 @@ define pioneer2dx position
   size [.440 .330]
   offset [-0.04 0.0]
   p2dx_sonar()
+  power()
 )
 
 # The AmigoBot sonar array
@@ -56,4 +57,5 @@ define amigobot position
   # what should the offset be?
   #offset [0.0 0.0]
   amigo_sonar()
+  power()
 )
