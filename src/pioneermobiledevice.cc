@@ -1,4 +1,4 @@
-// $Id: pioneermobiledevice.cc,v 1.4 2000-12-01 22:09:54 vaughan Exp $	
+// $Id: pioneermobiledevice.cc,v 1.5 2000-12-02 03:25:58 vaughan Exp $	
 #include <math.h>
 
 #include "world.h"
@@ -205,7 +205,7 @@ bool CPioneerMobileDevice::MapDraw()
   // calculate my new rectangle
   CalculateRect( m_robot->x, m_robot->y, m_robot->a );
 
-  m_world->img->draw_rect( oldRect, m_robot->color );
+  m_world->img->draw_rect( rect, m_robot->color );
 
   StoreRect();
   return 1;

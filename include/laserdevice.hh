@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.7 $
+//  $Author: vaughan $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -27,6 +27,7 @@
 #ifndef LASERDEVICE_HH
 #define LASERDEVICE_HH
 
+#include <X11/Xlib.h> // for XPoint structure
 
 #include "playerdevice.hh"
 
@@ -65,6 +66,14 @@ class CLaserDevice : public CPlayerDevice
     // Array holding the laser data
     //
     private: UINT16 m_data[512];
+    
+    // draw myself on the window
+    virtual bool GUIDraw();
+    virtual bool GUIUnDraw();
+    
+    // storage for the GUI rendering
+     private: XPoint hitPts[ LASERSAMPLES ];
+     private: XPoint oldHitPts[ LASERSAMPLES ];
 };
 
 #endif

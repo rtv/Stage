@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.8 $
+//  $Author: vaughan $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -171,6 +171,13 @@ bool CLaserDevice::Update()
         // Swap the bytes while we're at it
         //
         m_data[s] = htons(v);
+
+	// store the hit points if we need to draw them on the GUI
+	  //if( GUIrender )
+	   {
+	     hitPts[s].x = (int)pixelx;
+	     hitPts[s].y = (int)pixely;
+	   }
     }
     
     // Copy the laser data to the data buffer
@@ -206,7 +213,29 @@ bool CLaserDevice::CheckConfig()
     return true;
 }
 
+bool CLaserDevice::GUIDraw()
+{ 
+  // dump out if noone is subscribed
+  if( !IsSubscribed() ) return true;
 
+  m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
+  m_world->win->DrawLines( hitPts, LASERSAMPLES );
+
+  memcpy( oldHitPts, hitPts, sizeof( XPoint ) * LASERSAMPLES );
+
+  return true; 
+};  
+
+bool CLaserDevice::GUIUnDraw()
+{ 
+// dump out if noone is subscribed
+  if( !IsSubscribed() ) return true;
+
+  m_world->win->SetForeground( 0 );
+  m_world->win->DrawLines( oldHitPts, LASERSAMPLES );
+  
+  return true; 
+};
 
 
 

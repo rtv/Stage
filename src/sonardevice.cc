@@ -1,4 +1,4 @@
-// $Id: sonardevice.cc,v 1.2 2000-12-01 03:13:32 ahoward Exp $
+// $Id: sonardevice.cc,v 1.3 2000-12-02 03:25:58 vaughan Exp $
 #include <math.h>
 
 #include "world.h"
@@ -24,15 +24,25 @@ CSonarDevice::CSonarDevice( CRobot* rr,
 }
 
 bool CSonarDevice::GUIDraw()
-{ 
-  //cout << "draw sonar" << endl;
+{  
+  // dump out if noone is subscribed
+  if( !IsSubscribed() ) return true;
+  
+  m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
+  m_world->win->DrawLines( hitPts, SONARSAMPLES );
+
+  memcpy( oldHitPts, hitPts, sizeof( XPoint ) * SONARSAMPLES );
 
   return true; 
 };  
 
 bool CSonarDevice::GUIUnDraw()
 { 
-  //cout << "undraw sonar" << endl;
+  // dump out if noone is subscribed
+  if( !IsSubscribed() ) return true;
+
+  m_world->win->SetForeground( 0 );
+  m_world->win->DrawLines( oldHitPts, SONARSAMPLES );
   
   return true; 
 };
@@ -41,6 +51,9 @@ bool CSonarDevice::GUIUnDraw()
 bool CSonarDevice::Update() 
 {
   Nimage* img = m_robot->world->img;
+
+  // dump out if noone is subscribed
+  if( !IsSubscribed() ) return true;
 
   // if its time to recalculate vision
   if( m_robot->world->timeNow - lastUpdate > updateInterval )
@@ -177,13 +190,12 @@ bool CSonarDevice::Update()
 	  // and switched to network byte order
 	  sonar[s] = htons((UINT16) ( (rng / ppm) * 1000.0 ));
 
-	  //if( world->win && world->win->showSensors )
-	  // {
-	  //  hitPts[s].x = (short)( (xx - world->win->panx)  );
-	  //  hitPts[s].y = (short)( (yy - world->win->pany)  );
-	      //hitPts[s].x = (short)( (xx - win->panx) * win->xscale );
-	  //hitPts[s].y = (short)( (yy - win->pany) * win->yscale );
-	  //   }
+	  // store the hit points if we need to draw them on the GUI
+	  //if( GUIrender )
+	   {
+	     hitPts[s].x = (int)xx;
+	     hitPts[s].y = (int)yy;
+	   }
 	}
 
       PutData( sonar, sizeof( unsigned short ) * SONARSAMPLES );
@@ -192,26 +204,3 @@ bool CSonarDevice::Update()
     }
   return false;
 }
-
-
-//  void CRobot::PublishSonar( void )
-//  {
-//    world->LockShmem();
-
-//    unsigned short ss;
-
-//    for( int c=0; c<SONARSAMPLES; c++ )
-//      {
-//        ss =  (unsigned short)( sonar[c] * 1000.0 );
-//        //playerIO[ c*2 + SONAR_DATA_START ]
-//        //= htons((unsigned short) (sonar[c] * 1000.0) );
-
-//        *((unsigned short*)(playerIO + c*2 + SONAR_DATA_START)) = htons(ss);
-//      }
-
-//    world->UnlockShmem();
-//  }
-
-
-
-

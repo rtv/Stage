@@ -2,7 +2,7 @@
  * robot.h - CRobot defintion - most of the action is here
             
  * RTV
- * $Id: robot.h,v 1.6 2000-12-01 02:50:36 vaughan Exp $
+ * $Id: robot.h,v 1.7 2000-12-02 03:25:58 vaughan Exp $
  ************************************************************************/
 
 #include "offsets.h" // for the ACTS size defines
@@ -21,6 +21,7 @@
 #define SONARSAMPLES 16
 
 #define MAXBLOBS 100 // PDOMA!
+#define MAXDEVICES 32
 
 
 // Forward declare some of the class we will use
@@ -48,57 +49,22 @@ public:
 	  float startx, float starty, float starta );
   ~CRobot( void );
   
-  CWorld* world;
-  
-  float x, y, a, oldx, oldy, olda;  
+  CWorld* world; 
+  CRobot* next; // for linked list implementation
 
-  unsigned char color;
-  unsigned char channel;
+  // position, position at t-1, and position origin variables
+  float x, y, a, oldx, oldy, olda, xorigin, yorigin, aorigin;
 
-  float xorigin, yorigin, aorigin;
+  unsigned char color; // unique ID and value drawn into world bitmap
+  unsigned char channel; // the apparent color of this robot in ACTS
 
-  int fd;
-
-  caddr_t playerIO;
-  char tmpName[16];
-
-  ofstream* log;
-
-  //float sonar[SONARSAMPLES]; 
-  //float laser[LASERSAMPLES]; 
-
-  //double lastLaser, lastSonar, lastVision, lastPtz;
-  double lastSonar, lastVision, lastPtz;
-
-  double cameraAngleMax, cameraAngleMin, cameraFOV;
-  double cameraPanMin, cameraPanMax, cameraPan;
-  int cameraImageWidth, cameraImageHeight;
-
-  int numBlobs;
-  ColorBlob blobs[MAXBLOBS];
-
-  unsigned char actsBuf[ACTS_TOTAL_MAX_SIZE];
-
-  int redrawSonar;
-  int redrawLaser;
-  int leaveTrails;
-
-  int leaveTrail;
-
-  //XPoint hitPts[SONARSAMPLES];
-  //XPoint oldHitPts[SONARSAMPLES];
-
-  XPoint lhitPts[LASERSAMPLES];
-  XPoint loldHitPts[LASERSAMPLES];
-
-  CRobot* next;
-
-  double lastCommand; // remember the time of the last command
+  caddr_t playerIO; // ptr to shared memory for player I/O
+  char tmpName[16]; // name of shared memory device in filesystem
 
   // Device list
   //
   int m_device_count;
-  CDevice *m_device[32];
+  CDevice *m_device[ MAXDEVICES ]; 
 
   // Start all the devices
   //
@@ -107,32 +73,23 @@ public:
   // Shutdown the devices
   //
   bool Shutdown();
-  
-  void DumpSonar( void );
-  void DumpOdometry( void );
-  void LogPosition( void );
-
+ 
+  // render robot in the shared world representation
   void MapUnDraw( void );
+  // erase robot from the shared world representation
   void MapDraw( void );
 
+  // render robot in the GUI
   void GUIUnDraw( void );
+  // erase robot from the GUI
   void GUIDraw( void );
 
   bool HasMoved( void );
 
+  // Update robot and all its devices
+  //
   void Update();
-  //int UpdateSonar( Nimage* img ); 
-  //int UpdateLaser( Nimage* img ); 
-  //int UpdateVision( Nimage* img ); 
 
-
-  //void PublishVision( void );
-  //void PublishLaser( void );
-  //void PublishSonar( void );
-  //void PublishPosition( void );
-  //void GetPositionCommands( void );
-
-  int UpdateAndPublishPtz( void );
 };
 
 #endif

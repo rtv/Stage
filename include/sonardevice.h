@@ -1,14 +1,13 @@
 // sonardevice.h - RTV
-// $Id: sonardevice.h,v 1.2 2000-12-01 03:13:32 ahoward Exp $
+// $Id: sonardevice.h,v 1.3 2000-12-02 03:25:58 vaughan Exp $
 
 #ifndef SONARDEVICE_HH
 #define SONARDEVICE_HH
 
 #include "playerdevice.hh"
 #include "robot.h"
+#include <X11/Xlib.h> // for XPoint
 
-// forward decl.
-//class CWorld;
 
 class CSonarDevice : public CPlayerDevice
 {
@@ -38,7 +37,14 @@ class CSonarDevice : public CPlayerDevice
     //
     private: unsigned short sonar[SONARSAMPLES];
     
-    // private: CWorld* world;
+
+    // store the sonar hit points if we want to render them in the
+    // GUI window
+    private: XPoint hitPts[ SONARSAMPLES ];
+    private: XPoint oldHitPts[ SONARSAMPLES ];
+    
+    // is GUI drawing enabled for this device?
+    //private: bool GUIrender; 
 
 };
 

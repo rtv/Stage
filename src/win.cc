@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.cc - all the graphics and X management
  * RTV
- * $Id: win.cc,v 1.3 2000-12-01 00:20:52 vaughan Exp $
+ * $Id: win.cc,v 1.4 2000-12-02 03:25:58 vaughan Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -468,14 +468,28 @@ void CWorldWin::DrawWalls( void )
 
 void CWorldWin::DrawLines( XPoint* pts, int numPts )
 {
-  // shift the points to allow for panning
-  if( panx > 0 ) for( int c=0; c<numPts; c++ )
-    pts[c].x -= panx;
   
-  if( pany > 0 ) for( int c=0; c<numPts; c++ )
-    pts[c].y -= pany;
-  
-  XDrawLines( display, win, gc, pts, numPts, CoordModeOrigin );
+  // if the window isn't panned
+  if( panx == 0 && pany == 0 ) 
+    // draw the points as-is
+    XDrawLines( display, win, gc, pts, numPts, CoordModeOrigin );
+  else
+    {
+      // shift the points to allow for panning
+      XPoint* panPts = new XPoint[ numPts ];
+      
+      for( int c=0; c<numPts; c++ )
+	{
+	  panPts[c].x = pts[c].x - panx;
+	  panPts[c].y = pts[c].y - pany;
+	}
+      
+      // and draw the shifted points
+      XDrawLines( display, win, gc, panPts, numPts, CoordModeOrigin );
+
+      delete [] panPts;
+    }
+
 }
 
 void CWorldWin::DrawWallsInRect( int xx, int yy, int ww, int hh )

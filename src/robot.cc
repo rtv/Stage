@@ -1,7 +1,7 @@
 /*************************************************************************
  * robot.cc - most of the action is here
  * RTV
- * $Id: robot.cc,v 1.10 2000-12-02 01:29:57 ahoward Exp $
+ * $Id: robot.cc,v 1.11 2000-12-02 03:25:58 vaughan Exp $
  ************************************************************************/
 
 #include <errno.h>
@@ -74,16 +74,9 @@ CRobot::CRobot( CWorld* ww, int col,
   yorigin = oldy = y = starty * world->ppm;
   aorigin = olda = a = starta;
 
-  // this stuff will get packed into devices soon
-  // from here...
   channel = 0; // vision system color channel - default 0
 
-  redrawSonar = false;
-  redrawLaser = false;
-  leaveTrail = false;
-
-  // ...to here
-
+ 
   // -- create the memory map for IPC with Player --------------------------
 
 // amount of memory to reserve per robot for Player IO
@@ -284,8 +277,6 @@ void CRobot::Update()
     //
     for (int i = 0; i < m_device_count; i++)
     {
-        // update subscribed devices, 
-        // *** remove ?? ahoward if (world->win && world->win->dragging == this) )
         m_device[i]->Update();
     }
 }
@@ -293,7 +284,7 @@ void CRobot::Update()
 bool CRobot::HasMoved( void )
 {
     // *** WARNING -- I lost something in the merge here -- ahoward
-    return false;
+  return true; // this is a safe default for now - RTV
 }
 
 void CRobot::MapUnDraw()
@@ -316,6 +307,8 @@ void CRobot::GUIUnDraw()
 {
   for (int i = 0; i < m_device_count; i++) m_device[i]->GUIUnDraw();
 }  
+
+
 
 
 
