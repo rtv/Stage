@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.8 $
+//  $Revision: 1.9 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -58,6 +58,11 @@ bool CPuck::Load(int argc, char **argv)
         else if (strcmp(argv[i], "friction") == 0 && i + 1 < argc)
         {
             m_friction = atof(argv[i + 1]);
+            i += 2;
+        }
+        else if (strcmp(argv[i], "radius") == 0 && i + 1 < argc)
+        {
+            exp.width = exp.height = 2*atof(argv[i + 1]);
             i += 2;
         }
         else
@@ -193,9 +198,33 @@ CEntity* CPuck::InCollisionWithMovableObject(double px, double py, double pth)
     if(object == this)
       continue;
 
-    // only match pucks and robots
-    if((object->exp.objectType != pioneer_o) && 
-       (object->exp.objectType != puck_o))
+    // first match robots
+    if(object->exp.objectType != pioneer_o)
+      continue;
+
+    // get the object's position
+    double qx, qy, qth;
+    object->GetGlobalPose(qx,qy,qth);
+    
+    // find distance to its center
+    double dist = sqrt((px-qx)*(px-qx)+(py-qy)*(py-qy));
+
+    // are we colliding?
+    if(dist < ((object->exp.width/2.0) + (exp.width/2.0)))
+    {
+      return(object);
+    }
+  }
+  for(int i =0; i < m_world->GetObjectCount(); i++)
+  {
+    CEntity* object = m_world->GetObject(i);
+    
+    // ignore ourselves
+    if(object == this)
+      continue;
+
+    // now match pucks
+    if(object->exp.objectType != puck_o)
       continue;
 
     // get the object's position
