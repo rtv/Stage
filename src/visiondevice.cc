@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.15 $
+//  $Revision: 1.4.2.16 $
 //
 // Usage:
 //  (empty)
@@ -131,7 +131,7 @@ void CVisionDevice::UpdateScan()
 
     // Compute starting angle
     //
-    oth = oth + m_pan - m_zoom / 2;
+    oth = oth + m_pan + m_zoom / 2;
 
     // Compute fov, range, etc
     //
@@ -154,6 +154,7 @@ void CVisionDevice::UpdateScan()
     ASSERT((size_t) m_scan_width <= sizeof(m_scan_channel) / sizeof(m_scan_channel[0]));
 
     // Do each scan
+    // Note that the scan is taken *clockwise*
     //
     for (int s = 0; s < m_scan_width; s++)
     {
@@ -161,7 +162,7 @@ void CVisionDevice::UpdateScan()
         //
         double px = ox;
         double py = oy;
-        double pth = oth + s * dth;
+        double pth = oth - s * dth;
 
         // Compute the step for simple ray-tracing
         //
