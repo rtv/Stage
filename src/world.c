@@ -216,70 +216,12 @@ model_t* world_model_create( world_t* world,
 
 int world_model_destroy( world_t* world, stg_id_t model )
 {
-  puts( "model destroy" );
-  
-  stg_target_t tgt;
-  tgt.world = world->id;
-  tgt.model = model;
-  
-  // TODO - took this out when expanding libstage
-  //server_remove_subs_of_model( world->server, &tgt );
-
   // delete the model
   g_hash_table_remove( world->models, &model );
-
+  
   return 0; // ok
 }
 
-
-void world_handle_msg( world_t* world, int fd, stg_msg_t* msg )
-{
-  assert( world );
-  assert( msg );
-
-  static int nextid = 0;
-
-  switch( msg->type )
-    {
-    case STG_MSG_WORLD_MODELCREATE:
-      {   
-	stg_createmodel_t* cm = (stg_createmodel_t*)msg->payload;
-
-	model_t* mod = world_model_create( world, nextid++, cm->parent, cm->type, cm->token );
-	stg_id_t mid = mod->id;
-	
-	//printf( "writing reply (model id %d, %d bytes) on fd %d\n", 
-	//mid, sizeof(mid), fd );
-
-	stg_fd_msg_write( fd,STG_MSG_CLIENT_REPLY,  &mid, sizeof(mid) );
-      }
-      break;
-      
-    case STG_MSG_WORLD_MODELDESTROY:
-      world_model_destroy( world, *(stg_id_t*)msg->payload );
-      break;
-      
-      
-    case STG_MSG_WORLD_PAUSE:
-      PRINT_DEBUG1( "world %d pausing", world->id );
-      world->paused = TRUE;
-      break;
-
-    case STG_MSG_WORLD_RESUME:
-      PRINT_DEBUG1( "world %d resuming", world->id );
-      world->paused = FALSE;
-      break;
-
-    case STG_MSG_WORLD_RESTART:
-      PRINT_WARN( "restart not yet implemented" );
-      break;
-	
-    default:
-      PRINT_WARN1( "Ignoring unrecognized world message subtype %d.",
-		   msg->type & STG_MSG_MASK_MINOR );
-      break;
-    }
-}
 
 void world_print( world_t* world )
 {

@@ -19,8 +19,6 @@
 
 int _stg_quit = FALSE;
 
-// -----------------------------------------------------------------------
-
 // returns a human readable desciption of the property type [id]
 const char* stg_property_string( stg_id_t id )
 {
@@ -37,7 +35,6 @@ const char* stg_property_string( stg_id_t id )
     case STG_PROP_LASERRETURN: return "laser_return"; break;
     case STG_PROP_LINES: return "lines"; break;
     case STG_PROP_MASS: return "mass";break;
-    case STG_PROP_NAME: return "name"; break;
     case STG_PROP_OBSTACLERETURN: return "obstacle_return";break;
     case STG_PROP_PARENT: return "parent"; break;
     case STG_PROP_PLAYERID: return "player_id"; break;
@@ -83,91 +80,12 @@ const char* stg_model_type_string( stg_model_type_t type )
   return "<unknown type>";
 }
 
-const char* stg_event_string( stg_event_t event )
-{
-  switch( event )
-    {
-    case STG_EVENT_STARTUP: return "startup";
-    case STG_EVENT_SHUTDOWN: return "shutdown";
-    case STG_EVENT_UPDATE: return "update";
-    case STG_EVENT_SERVICE: return "service";
-    case STG_EVENT_GET: return "get";
-    case STG_EVENT_SET: return "set";
-    default: 
-      break;
-    }
-  
-  return "<unknown event>"; 
-}
-
-
 void stg_err( char* err )
 {
   printf( "Stage error: %s\n", err );
   _stg_quit = TRUE;
 }
 
-
-void stg_buffer_append( GByteArray* buf, void* bytes, size_t len )
-{
-  g_byte_array_append( buf, (guint8*)bytes, len );
-
-  //printf( "appended buffer %p now %d bytes\n", buf, (int)buf->len );
-}
-
-void stg_buffer_prepend( GByteArray* buf, void* bytes, size_t len )
-{
-  g_byte_array_prepend( buf, (guint8*)bytes, len );
-
-  //printf( "prepended buffer %p now %d bytes\n", buf, (int)buf->len );
-}
-
-
-void stg_buffer_append_msg( GByteArray* buf, stg_msg_t* msg )
-{
-  stg_buffer_append( buf,
-		     (guint8*)msg, 
-		     sizeof(stg_msg_t) + msg->payload_len );
-}
-
-void stg_buffer_clear( GByteArray* buf )
-{
-  g_byte_array_set_size( buf, 0 );
-}
-
-// compose a human readable string desrcribing property [prop]
-char* stg_property_sprint( char* str, stg_property_t* prop )
-{
-  sprintf( str, 
-	   " %d(%s) at %p len %d\n",
-	   prop->id, 
-	   stg_property_string(prop->id), 
-	   prop->data,
-	   (int)prop->len );
-  
-  return str;
-}
-
-
-// print a human-readable property on [fp], an open file pointer
-// (eg. stdout, stderr).
-void stg_property_fprint( FILE* fp, stg_property_t* prop )
-{
-  char str[1000];
-  stg_property_sprint( str, prop );
-  fprintf( fp, "%s", str );
-}
-
-// print a human-readable property on stdout
-void stg_property_print( stg_property_t* prop )
-{
-  stg_property_fprint( stdout, prop );
-}
-
-void stg_property_print_cb( gpointer key, gpointer value, gpointer user )
-{
-  stg_property_print( (stg_property_t*)value );
-}
 
 void stg_print_geom( stg_geom_t* geom )
 {
@@ -188,127 +106,6 @@ void stg_print_laser_config( stg_laser_config_t* slc )
 	  slc->samples );
 }
 
-void stg_print_target( stg_target_t* tgt )
-{
-  printf( "target (%d.%d.%d(%s)\n",
-	  tgt->world, tgt->model, tgt->prop, stg_property_string(tgt->prop) );
-}
-
-// write a single message out, putting a package header on it
-int stg_fd_msg_write( int fd, 
-		      stg_msg_type_t type, 
-		      void* data, size_t datalen )
-{
-  stg_msg_t* msg = stg_msg_create( type, data, datalen );
-  assert( msg );
-
-  GByteArray* buf = g_byte_array_new();
-  stg_buffer_append_msg( buf, msg );
-  
-  // prepend a package header
-  stg_package_t pkg;
-  pkg.key = STG_PACKAGE_KEY;
-  pkg.payload_len = buf->len;
-  
-  // a real-time timestamp for performance measurements
-  struct timeval tv;
-  gettimeofday( &tv, NULL );
-  memcpy( &pkg.timestamp, &tv, sizeof(pkg.timestamp ) );
-
-  stg_buffer_prepend( buf, &pkg, sizeof(pkg) );
-  
-  int retval = 
-    stg_fd_packet_write( fd, buf->data, buf->len );
-  
-  stg_msg_destroy( msg );
-  g_byte_array_free( buf, TRUE );
-
-  return retval;
-}
-
-
-// operations on file descriptors ----------------------------------------
-
-// internal low-level functions. user code should probably use one of
-// the interafce functions instead.
-
-// attempt to read a packet from [fd]. returns the number of bytes
-// read, or -1 on error (and errno is set as per read(2)).
-ssize_t stg_fd_packet_read( int fd, void* buf, size_t len )
-{
-  //PRINT_DEBUG1( "attempting to read a packet of max %d bytes", len );
-  
-  assert( fd > 0 );
-  assert( buf ); // data destination must be good
-  
-  size_t recv = 0;
-  while( recv < len )
-    {
-      //PRINT_DEBUG3( "reading %d bytes from fd %d into %p", 
-      //	    len - recv, fd,  ((char*)buf)+recv );
-
-      /* read will block until it has some bytes to return */
-      size_t r = 0;
-      if( (r = read( fd, ((char*)buf)+recv,  len - recv )) < 0 )
-	{
-	  if( errno != EINTR )
-	    {
-	      PRINT_ERR1( "ReadPacket: read returned %d", (int)r );
-	      perror( "system reports" );
-	      return -1;
-	    }
-	}
-      else if( r == 0 ) // EOF
-	break; 
-      else
-	recv += r;
-    }      
-  
-  //PRINT_DEBUG2( "read %d/%d bytes", recv, len );
-  
-  return recv; // the number of bytes read
-}
-// attempt to write a packet on [fd]. returns the number of bytes
-// written, or -1 on error (and errno is set as per write(2)).
-ssize_t stg_fd_packet_write( int fd, void* data, size_t len )
-{
-  size_t writecnt = 0;
-  ssize_t thiswritecnt;
-  
-  //PRINT_DEBUG3( "writing packet on fd %d - %p %d bytes", 
-  //	fd, data, len );
-  
-  
-  while(writecnt < len )
-  {
-    thiswritecnt = write( fd, ((char*)data)+writecnt, len-writecnt);
-      
-    // check for error on write
-    if( thiswritecnt == -1 )
-      return -1; // fail
-      
-    writecnt += thiswritecnt;
-  }
-  
-  //PRINT_DEBUG2( "wrote %d/%d packet bytes", writecnt, len );
-  
-  return len; //success
-}
-
-
-// generate a hash value for an arbitrary buffer.
-// I just add all the bytes together. overflow doesn't matter. 
-int stg_checksum( void* buf, size_t len )
-{
-  int c=0;
-  int total=0;
-  
-  for( c=0; c<len; c++ )
-    total += (int)*((char*)buf)+len;
-  
-  return total;
-}
-
 stg_msec_t stg_timenow( void )
 {
   struct timeval tv;
@@ -323,103 +120,6 @@ stg_msec_t stg_timenow( void )
     starttime = timenow;
   
   return( timenow - starttime );
-}
-
-
-void stg_target_error( stg_target_t* tgt, char* errstr )
-{
-  PRINT_ERR5( "%s %d:%d:%d(%s)",
-	      errstr,
-	       tgt->world,
-	       tgt->model,
-	       tgt->prop,
-	       stg_property_string(tgt->prop) );
-}
-
-void stg_target_debug( stg_target_t* tgt, char* errstr )
-{
-  PRINT_DEBUG5( "%s %d:%d:%d(%s)",
-	      errstr,
-	       tgt->world,
-	       tgt->model,
-	       tgt->prop,
-	       stg_property_string(tgt->prop) );
-}
-
-void stg_target_warn( stg_target_t* tgt, char* errstr )
-{
-  PRINT_WARN5( "%s %d:%d:%d(%s)",
-	       errstr,
-	       tgt->world,
-	       tgt->model,
-	       tgt->prop,
-	       stg_property_string(tgt->prop) );
-}
-
-void stg_target_message( stg_target_t* tgt, char* errstr )
-{
-  PRINT_MSG5( "%s %d:%d:%d(%s)",
-	      errstr,
-	      tgt->world,
-	      tgt->model,
-	      tgt->prop,
-	      stg_property_string(tgt->prop) );
-}
-
-
-stg_prop_t* stg_prop_create( stg_msec_t timestamp, 
-			     stg_id_t world_id, 
-			     stg_id_t model_id, 
-			     stg_id_t prop_id,
-			     void* data, 
-			     size_t data_len )
-{
-  size_t prop_len = sizeof(stg_prop_t) + data_len;
-  stg_prop_t* prop =calloc(prop_len,1);
-  
-  prop->timestamp = timestamp;
-  prop->world = world_id;
-  prop->model = model_id;
-  prop->prop =  prop_id;
-  prop->datalen = data_len;
-  memcpy( prop->data, data, data_len );
-  return prop;
-}
-
-void stg_prop_destroy( stg_prop_t* prop )
-{
-  if( prop ) free( prop );
-}
-
-// create a new message of [type] containing [datalen] bytes of [data]
-stg_msg_t* stg_msg_create( stg_msg_type_t type, void* data, size_t datalen )
-{
-  size_t msglen = sizeof(stg_msg_t) + datalen;
-  stg_msg_t* msg = calloc( msglen,1  );
-  
-  msg->type = type;
-  msg->payload_len = datalen;
-  memcpy( msg->payload, data, datalen );
-  
-  return msg;
-}
-  
-void stg_msg_destroy( stg_msg_t* msg )
-{
-  free( msg );
-}
-
-// append [data] to [msg]
-stg_msg_t* stg_msg_append( stg_msg_t* msg, void* data, size_t len )
-{
-  // grow the header to fit the new data
-  msg = realloc( msg, sizeof(stg_msg_t) + msg->payload_len + len );
-  // copy the data to the end of the header
-  memcpy( msg->payload + msg->payload_len, data, len );
-  // store the new data length
-  msg->payload_len += len;
-
-  return msg;
 }
 
 

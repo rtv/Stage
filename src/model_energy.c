@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.8 $
+//  $Revision: 1.9 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -142,7 +142,7 @@ int model_energy_data_service( model_t* mod )
   stg_energy_data_t nrg;
   memcpy(&nrg,data,sizeof(nrg));
 
-  model_set_prop( mod, STG_PROP_ENERGYDATA, &nrg, sizeof(nrg) );
+  //model_set_prop( mod, STG_PROP_ENERGYDATA, &nrg, sizeof(nrg) );
 
   return 0; // ok
 }
@@ -152,20 +152,22 @@ void model_energy_data_render( model_t* mod )
 {
   PRINT_DEBUG( "energy data render" );
 
-  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_ENERGYDATA];  
   
-  if( fig  )
-    rtk_fig_clear(fig);
+  if( mod->gui.data  )
+    rtk_fig_clear(mod->gui.data);
   else // create the figure, store it in the model and keep a local pointer
     {
-      fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_ENERGYDATA,
-				   mod->gui.top, STG_LAYER_ENERGYDATA );
-      rtk_fig_color_rgb32(fig, stg_lookup_color(STG_ENERGY_COLOR) );
+      mod->gui.data = rtk_fig_create( mod->world->win->canvas, 
+				      mod->gui.top, STG_LAYER_ENERGYDATA );
+      
+      rtk_fig_color_rgb32(mod->gui.data, stg_lookup_color(STG_ENERGY_COLOR) );
     }
+  
+  rtk_fig_t* fig = mod->gui.data;  
   
   // if this model has a energy subscription
   // and some data, we'll draw the data
-  if(  mod->subs[STG_PROP_ENERGYDATA] )
+  if(  mod->subs )
     {
       // place the visualization a little away from the device
       //stg_pose_t pose;
@@ -217,17 +219,17 @@ void model_energy_config_render( model_t* mod )
 { 
   PRINT_DEBUG( "energy config render" );
   
-  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_ENERGYCONFIG];  
   
-  if( fig  )
-    rtk_fig_clear(fig);
+  if( mod->gui.cfg  )
+    rtk_fig_clear(mod->gui.cfg);
   else // create the figure, store it in the model and keep a local pointer
     {
-      fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_ENERGYCONFIG,
+      mod->gui.cfg = rtk_fig_create( mod->world->win->canvas, 
 				   mod->gui.top, STG_LAYER_ENERGYCONFIG );
-      rtk_fig_color_rgb32( fig, stg_lookup_color( STG_ENERGY_CFG_COLOR ));
+
+      rtk_fig_color_rgb32( mod->gui.cfg, stg_lookup_color( STG_ENERGY_CFG_COLOR ));
     }
-  
+
   stg_energy_config_t* cfg = model_get_energy_config(mod);
   
   if( cfg && cfg->give_rate > 0 )
@@ -237,7 +239,7 @@ void model_energy_config_render( model_t* mod )
       
       //rtk_fig_ellipse( fig,0,0,0, 2.0*radius, 2.0*radius, 0 );
 
-      rtk_fig_arrow( fig, 0,0,0, cfg->probe_range, 0.10 );
+      rtk_fig_arrow( mod->gui.cfg, 0,0,0, cfg->probe_range, 0.10 );
     }
 }
 

@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.14 2004-09-16 06:54:27 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.15 2004-09-18 00:10:12 rtv Exp $
  */
 
 #include <math.h>
@@ -363,13 +363,16 @@ void blobfinder_render_data( model_t* mod )
 { 
   PRINT_DEBUG( "blobfinder render" );  
 
-  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_DATA];  
+ 
   
-  if( fig  )
-    rtk_fig_clear(fig);
+  if( mod->gui.data  )
+    rtk_fig_clear(mod->gui.data);
   else // create the figure, store it in the model and keep a local pointer
-    fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_DATA,
-				 NULL, STG_LAYER_BLOBDATA );
+    mod->gui.data = rtk_fig_create(  mod->world->win->canvas, 
+				     mod->gui.top, 
+				     STG_LAYER_BLOBDATA );
+  
+  rtk_fig_t* fig = mod->gui.data;  
   
   // place the visualization a little away from the device
   stg_pose_t pose;
@@ -438,13 +441,14 @@ void blobfinder_render_config( model_t* mod )
 { 
   PRINT_DEBUG( "blobfinder render config" );  
   
-  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_CONFIG];  
   
-  if( fig  )
-    rtk_fig_clear(fig);
+  if( mod->gui.cfg  )
+    rtk_fig_clear(mod->gui.cfg);
   else // create the figure, store it in the model and keep a local pointer
-    fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_CONFIG,
-				 mod->gui.top, STG_LAYER_BLOBCONFIG );
+    mod->gui.cfg = rtk_fig_create( mod->world->win->canvas,
+				   mod->gui.top, STG_LAYER_BLOBCONFIG );
+  
+  rtk_fig_t* fig = mod->gui.cfg;  
   
   
   rtk_fig_color_rgb32( fig, stg_lookup_color( STG_BLOB_CFG_COLOR ));

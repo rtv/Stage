@@ -67,9 +67,12 @@ world_t* stg_world_create( stg_id_t id,
 			   int real_interval,
 			   double ppm );
    
+   world_t* world_create_from_file( char* worldfile_path );
+
+
 void world_destroy( world_t* world );
 int world_update( world_t* world );
-void world_handle_msg( world_t* world, int fd, stg_msg_t* msg );
+   //void world_handle_msg( world_t* world, int fd, stg_msg_t* msg );
 void world_print( world_t* world );
 
 

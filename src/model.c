@@ -234,19 +234,19 @@ int model_is_related( model_t* mod1, model_t* mod2 )
   return model_is_descendent( t, mod2 );
 }
 
-rtk_fig_t* model_prop_fig_create( model_t* mod, 
-				  rtk_fig_t* array[],
-				  stg_id_t propid, 
-				  rtk_fig_t* parent,
-				  int layer )
-{
-  rtk_fig_t* fig =  rtk_fig_create( mod->world->win->canvas, 
-				    parent, 
-				    layer ); 
-  array[propid] = fig;
+/* rtk_fig_t* model_prop_fig_create( model_t* mod,  */
+/* 				  rtk_fig_t* array[], */
+/* 				  stg_id_t propid,  */
+/* 				  rtk_fig_t* parent, */
+/* 				  int layer ) */
+/* { */
+/*   rtk_fig_t* fig =  rtk_fig_create( mod->world->win->canvas,  */
+/* 				    parent,  */
+/* 				    layer );  */
+/*   array[propid] = fig; */
   
-  return fig;
-}
+/*   return fig; */
+/* } */
 
 
 void model_global_pose( model_t* mod, stg_pose_t* gpose )
@@ -354,9 +354,9 @@ int model_update( model_t* mod )
   mod->interval_elapsed = 0;
 
   // if this type of model has an update function, call it.
-  if( mod->world->library[ mod->type ].update && mod->subs[STG_PROP_DATA] > 0 )
+  if( mod->world->library[ mod->type ].update )
     mod->world->library[ mod->type ].update(mod);
-
+  
   // now move the model if it has any velocity
   model_update_pose( mod );
 
@@ -403,107 +403,46 @@ int model_shutdown( model_t* mod )
   return 0;
 }
 
-void model_subscribe( model_t* mod, stg_id_t pid )
+/*void model_subscribe( model_t* mod, stg_id_t pid )
 {
   mod->subs[pid]++;
   
   // if this is the first sub, call startup & render if there is one
   if( mod->subs[pid] == 1 )
     model_startup(mod);
+}*/
+
+void model_subscribe( model_t* mod )
+{
+  mod->subs++;
+  
+  // if this is the first sub, call startup & render if there is one
+  if( mod->subs == 1 )
+    model_startup(mod);
 }
 
-void model_unsubscribe( model_t* mod, stg_id_t pid )
+void model_unsubscribe( model_t* mod )
 {
-  mod->subs[pid]--;
+  mod->subs--;
   
-  // if that was the last sub, call shutdown 
-  if( mod->subs[pid] < 1 )
+  // if this is the first sub, call startup & render if there is one
+  if( mod->subs < 1 )
     model_shutdown(mod);
+}
+
+/* void model_unsubscribe( model_t* mod, stg_id_t pid ) */
+/* { */
+/*   mod->subs[pid]--; */
   
-  if( mod->subs[pid] < 0 )
-    PRINT_ERR1( "subscription count has gone below zero (%d). weird.",
-		mod->subs[pid] );
-}
+/*   // if that was the last sub, call shutdown  */
+/*   if( mod->subs[pid] < 1 ) */
+/*     model_shutdown(mod); */
+  
+/*   if( mod->subs[pid] < 0 ) */
+/*     PRINT_ERR1( "subscription count has gone below zero (%d). weird.", */
+/* 		mod->subs[pid] ); */
+/* } */
 
-void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
-{
-  assert( model );
-  assert( msg );
-
-  switch( msg->type )
-    {
-    case STG_MSG_MODEL_DELTA:
-      // deltas don't need a reply
-      {
-	stg_prop_t* mp = (stg_prop_t*)msg->payload;
-	
-	PRINT_DEBUG4( "setting %d.%s.%s with %d bytes",
-		      model->world->id,
-		      model->token,
-		      stg_property_string( mp->prop ),
-		      (int)mp->datalen );
-	
-	model_set_prop( model, mp->prop, mp->data, mp->datalen ); 
-      }
-      break;
-
-      // everything else needs a reply
-    case STG_MSG_MODEL_PROPGET:
-      {
-	PRINT_DEBUG( "RECEIVED A PROPGET REQUEST" );
-	
-	stg_target_t* tgt = (stg_target_t*)msg->payload;
-	
-	// reply with the requested property
-	void* data = NULL;
-	size_t len = 0;	
-	model_get_prop( model, tgt->prop, &data, &len );	
-	stg_fd_msg_write( fd, STG_MSG_CLIENT_REPLY, data, len );
-      }
-      break;
-
-      // TODO
-    case STG_MSG_MODEL_PROPSET:
-      PRINT_WARN( "STG_MSG_MODEL_PROPSET" );
-      {
-	stg_prop_t* mp = (stg_prop_t*)msg->payload;
-	
-	PRINT_DEBUG4( "set property %d.%d.%s with %d bytes",
-		      mp->world,
-		      mp->model,
-		      stg_property_string( mp->prop ),
-		      (int)mp->datalen );
-	
-	model_set_prop( model, mp->prop, mp->data, mp->datalen ); 	
-	
-	PRINT_DEBUG( "SENDING A REPLY" );	 	   
-	int ack = STG_ACK;
-	stg_fd_msg_write( fd, STG_MSG_CLIENT_REPLY, &ack, sizeof(ack) );
-      }
-      break;
-      
-    case STG_MSG_MODEL_PROPGETSET:
-      PRINT_WARN( "STG_MSG_MODEL_PROPGETSET not yet implemented" );
-      break;
-      
-    case STG_MSG_MODEL_PROPSETGET:
-      PRINT_WARN( "STG_MSG_MODEL_PROPSETGET not yet implemented" );
-      break;
-      
-    default:
-
-      PRINT_WARN1( "received an unknown message of %d bytes", msg->payload_len );
-      
-      // if this type of model has a message function, call it.
-      if(model->world->library[ model->type ].handle_message )
-	{
-	  if(model->world->library[ model->type ].handle_message(model,fd,msg) )
-	    PRINT_WARN1( "Ignoring unrecognized model message type %d.",
-			 msg->type & STG_MSG_MASK_MINOR );
-	}
-      break;
-    }
-}
   
 void pose_invert( stg_pose_t* pose )
 {

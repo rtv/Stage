@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -219,14 +219,6 @@ int position_shutdown( model_t* mod )
 }
 
 
-int position_handle_message(model_t* mod, int fd, stg_msg_t* msg)
-{
-  PRINT_WARN( "POSITION RECEIVED MESSAGE!" );
-  
-  return 0; // message handled ok
-}
-
-
 int register_position( lib_entry_t* lib )
 { 
   assert(lib);
@@ -235,7 +227,6 @@ int register_position( lib_entry_t* lib )
   lib[STG_MODEL_POSITION].update = position_update;
   lib[STG_MODEL_POSITION].shutdown = position_shutdown;
   lib[STG_MODEL_POSITION].startup = position_startup;
-  lib[STG_MODEL_POSITION].handle_message = position_handle_message;
-
+  
   return 0; //ok
 } 

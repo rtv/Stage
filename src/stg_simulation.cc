@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_simulation.cc,v 1.1 2004-09-16 06:54:28 rtv Exp $
+ * $Id: stg_simulation.cc,v 1.2 2004-09-18 00:10:14 rtv Exp $
  */
 
 #include "stg_driver.h"
@@ -25,6 +25,8 @@ extern PlayerTime* GlobalTime;
 
 extern int global_argc;
 extern char** global_argv;
+
+#define STG_DEFAULT_WORLDFILE "default.world"
 
 // for stage world
 #include "world.h"
@@ -71,12 +73,6 @@ StgSimulation::StgSimulation( ConfigFile* cf, int section )
 
   this->world = NULL;
 
-  const int stage_port = 
-    config->ReadInt(section, "port", STG_DEFAULT_SERVER_PORT);
-  
-  const char* stage_host = 
-    config->ReadString(section, "host", STG_DEFAULT_SERVER_HOST);
-  
   // load a worldfile
   char worldfile_name[MAXPATHLEN];
   const char* wfn = 
@@ -123,7 +119,7 @@ StgSimulation::StgSimulation( ConfigFile* cf, int section )
   fflush(stdout);
   Stage1p4::world = NULL;
 
-  this->world = stg_client_worldfile_load( worldfile_name );
+  this->world = world_create_from_file( worldfile_name );
   assert(this->world);
   printf( " done.\n" );
    

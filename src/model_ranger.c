@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.25 $
+//  $Revision: 1.26 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -170,26 +170,24 @@ void ranger_render_config( model_t* mod )
   
   stg_geom_t* geom = model_get_geom(mod);
   
-  rtk_fig_t* fig = mod->gui.propgeom[STG_PROP_CONFIG];  
   
-  if( fig  )
-    rtk_fig_clear(fig);
+  //if(  mod->gui.geom  )
+  //rtk_fig_clear( mod->gui.geom);
+  //else // create the figure, store it in the model and keep a local pointer
+  // mod->gui.geom = model_prop_fig_create( mod, mod->gui.propgeom, STG_PROP_CONFIG,
+  //			 mod->gui.top, STG_LAYER_RANGERGEOM );
+  
+
+  if( mod->gui.cfg  )
+    rtk_fig_clear(mod->gui.cfg);
   else // create the figure, store it in the model and keep a local pointer
-    fig = model_prop_fig_create( mod, mod->gui.propgeom, STG_PROP_CONFIG,
-				 mod->gui.top, STG_LAYER_RANGERGEOM );
-  
-  rtk_fig_color_rgb32( fig, stg_lookup_color(STG_RANGER_GEOM_COLOR) );  
-  rtk_fig_origin( fig, geom->pose.x, geom->pose.y, geom->pose.a );  
-  
-  rtk_fig_t* cfgfig = mod->gui.propdata[STG_PROP_CONFIG];  
-  if( cfgfig  )
-    rtk_fig_clear(cfgfig);
-  else // create the figure, store it in the model and keep a local pointer
-    cfgfig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_CONFIG,
+    mod->gui.cfg = rtk_fig_create( mod->world->win->canvas,
 				 mod->gui.top, STG_LAYER_RANGERCONFIG );
 
-  rtk_fig_color_rgb32( cfgfig, stg_lookup_color(STG_RANGER_CONFIG_COLOR) );  
-  rtk_fig_origin( cfgfig, geom->pose.x, geom->pose.y, geom->pose.a );  
+  rtk_fig_t* fig = mod->gui.cfg; 
+
+  rtk_fig_color_rgb32( fig, stg_lookup_color(STG_RANGER_CONFIG_COLOR) );  
+  rtk_fig_origin( fig, geom->pose.x, geom->pose.y, geom->pose.a );  
   
   //stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_RANGERCONFIG );
   size_t len = 0;
@@ -231,10 +229,10 @@ void ranger_render_config( model_t* mod )
       double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + da );
       double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + da );
       
-      rtk_fig_line( cfgfig, rngr->pose.x, rngr->pose.y, x1, y1 );
-      rtk_fig_line( cfgfig, rngr->pose.x, rngr->pose.y, x2, y2 );	
+      rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x1, y1 );
+      rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x2, y2 );	
       
-      rtk_fig_ellipse_arc( cfgfig, rngr->pose.x, rngr->pose.y, rngr->pose.a,
+      rtk_fig_ellipse_arc( fig, rngr->pose.x, rngr->pose.y, rngr->pose.a,
 			   2.0*cfg->bounds_range.max,
 			   2.0*cfg->bounds_range.max, 
 			   -da, da );
@@ -243,14 +241,15 @@ void ranger_render_config( model_t* mod )
 
 void ranger_render_data( model_t* mod )
 { 
-  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_DATA];  
   
-  if( fig  )
-    rtk_fig_clear(fig);
+  if( mod->gui.data  )
+    rtk_fig_clear(mod->gui.data);
   else // create the figure, store it in the model and keep a local pointer
-    fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_DATA,
+    mod->gui.data = rtk_fig_create( mod->world->win->canvas, 
 				 mod->gui.top, STG_LAYER_RANGERDATA );
   
+  rtk_fig_t* fig = mod->gui.data;
+
   size_t len = 0;
   stg_ranger_config_t* cfg = 
     (stg_ranger_config_t*)model_get_config(mod,&len);  

@@ -8,16 +8,16 @@
 #include "world.h"
 #include "rtk.h"
 
+#define STG_PROP_COUNT 30
+
 typedef struct
 {
   rtk_fig_t* top;
   rtk_fig_t* geom;
   rtk_fig_t* grid;
-  
-  // a hash table would use less space , but this is fast and easy
-  rtk_fig_t* propdata[ STG_PROP_COUNT ];
-  rtk_fig_t* propgeom[ STG_PROP_COUNT ];
-  
+  rtk_fig_t* data;
+  rtk_fig_t* cmd;
+  rtk_fig_t* cfg;
 } gui_model_t;
 
 typedef struct _model
@@ -36,10 +36,11 @@ typedef struct _model
   int child_type_count[ STG_MODEL_COUNT ];
 
   // the number of subscriptions to each property
-  int subs[STG_PROP_COUNT]; 
+  //int subs[STG_PROP_COUNT]; 
+  int subs;
   
   // the time that each property was last calculated
-  stg_msec_t update_times[STG_PROP_COUNT];
+  //stg_msec_t update_times[STG_PROP_COUNT];
   
   gui_model_t gui; // all the gui stuff
 
@@ -82,10 +83,12 @@ typedef struct _model
 model_t* model_create(  world_t* world, model_t* parent, stg_id_t id, stg_model_type_t type, char* token );
 void model_destroy( model_t* mod );
 void model_destroy_cb( gpointer mod );
-void model_handle_msg( model_t* model, int fd, stg_msg_t* msg );
+//void model_handle_msg( model_t* model, int fd, stg_msg_t* msg );
 void model_global_pose( model_t* mod, stg_pose_t* pose );
-void model_subscribe( model_t* mod, stg_id_t pid );
-void model_unsubscribe( model_t* mod, stg_id_t pid );
+//void model_subscribe( model_t* mod, stg_id_t pid );
+//void model_unsubscribe( model_t* mod, stg_id_t pid );
+void model_subscribe( model_t* mod );
+void model_unsubscribe( model_t* mod );
 
 // this calls one of the set property functions, according to the propid value
 int model_set_prop( model_t* mod, stg_id_t propid, void* data, size_t len );

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.41 $
+//  $Revision: 1.42 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -170,13 +170,15 @@ int laser_update( model_t* mod )
 
 void laser_render_data(  model_t* mod )
 {
-  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_DATA];  
   
-  if( fig  )
-    rtk_fig_clear(fig);
+  if( mod->gui.data  )
+    rtk_fig_clear(mod->gui.data);
   else // create the figure, store it in the model and keep a local pointer
-    fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_DATA,
-				 NULL, STG_LAYER_LASERDATA );
+    mod->gui.data = rtk_fig_create( mod->world->win->canvas,
+				    NULL, STG_LAYER_LASERDATA );
+  
+  rtk_fig_t* fig = mod->gui.data;
+
   
   stg_pose_t pose;
   model_global_pose( mod, &pose );
@@ -252,13 +254,15 @@ void laser_render_config( model_t* mod )
     }
 
 
-  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_CONFIG];  
   
-  if( fig  )
-    rtk_fig_clear(fig);
+  if( mod->gui.cfg  )
+    rtk_fig_clear(mod->gui.cfg);
   else // create the figure, store it in the model and keep a local pointer
-    fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_CONFIG,
-				 mod->gui.top, STG_LAYER_LASERCONFIG );
+    mod->gui.cfg = rtk_fig_create( mod->world->win->canvas, 
+				   mod->gui.top, STG_LAYER_LASERCONFIG );
+  
+  rtk_fig_t* fig = mod->gui.cfg;
+
   
   // draw the FOV and range lines
   rtk_fig_color_rgb32( fig, stg_lookup_color( STG_LASER_CFG_COLOR ));
@@ -315,9 +319,7 @@ int laser_set_config( model_t* mod, void* cfg, size_t len )
 int laser_shutdown( model_t* mod )
 {
   // clear the figure
-  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_DATA];  
-  
-  if( fig  ) rtk_fig_clear(fig);
+  if( mod->gui.data  ) rtk_fig_clear(mod->gui.data);
   
   return 0; // ok
 }

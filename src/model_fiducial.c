@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.17 $
+//  $Revision: 1.18 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -228,13 +228,14 @@ void fiducial_render_data( model_t* mod )
 
   char text[32];
 
-  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_DATA];  
   
-  if( fig  )
-    rtk_fig_clear(fig);
+  if(  mod->gui.data  )
+    rtk_fig_clear( mod->gui.data);
   else // create the figure, store it in the model and keep a local pointer
-    fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_DATA,
-				 mod->gui.top, STG_LAYER_NEIGHBORDATA );
+    mod->gui.data = rtk_fig_create( mod->world->win->canvas,
+				    mod->gui.top, STG_LAYER_NEIGHBORDATA );
+  
+  rtk_fig_t* fig = mod->gui.data;
   
   rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_COLOR ) );
   
@@ -272,13 +273,14 @@ void fiducial_render_data( model_t* mod )
 
 void fiducial_render_config( model_t* mod )
 { 
-  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_CONFIG];  
   
-  if( fig  )
-    rtk_fig_clear(fig);
+  if( mod->gui.cfg  )
+    rtk_fig_clear(mod->gui.cfg);
   else // create the figure, store it in the model and keep a local pointer
-    fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_CONFIG,
+    mod->gui.cfg = rtk_fig_create( mod->world->win->canvas,
 				 mod->gui.top, STG_LAYER_NEIGHBORCONFIG );
+
+  rtk_fig_t* fig = mod->gui.cfg;  
   
   rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_CFG_COLOR ));
   

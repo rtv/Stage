@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.62 2004-09-16 06:57:36 rtv Exp $
+# $Id: Makefile.am,v 1.63 2004-09-18 00:10:12 rtv Exp $
 
 #SUBDIRS = models
 
@@ -47,13 +47,10 @@ libstage_la_SOURCES = \
 	model.c \
 	model.h \
 	model_blobfinder.c \
-	model_energy.c \
-	model_fiducial.c \
 	model_laser.c \
 	model_pose.c \
 	model_position.c \
 	model_props.c \
-	model_ranger.c \
 	model_render.c \
 	model_test.c \
 	raytrace.c \
@@ -61,7 +58,6 @@ libstage_la_SOURCES = \
 	stagecpp.cc \
 	stage.c \
 	stage.h \
-	stageclient.c \
 	token.c \
 	world.c \
 	world.h \
@@ -75,7 +71,12 @@ libstage_la_SOURCES = \
         rtkprivate.h \
         rtk_table.c \
 	worldfile.cc \
-	worldfile.hh
+	worldfile.hh \
+	model_energy.c \
+	model_fiducial.c \
+	model_ranger.c 
+
+
 
 libstage_la_LDFLAGS = -export-dynamic -version-info 0:0:0 
 

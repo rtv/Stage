@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.53 2004-09-16 06:57:36 rtv Exp $
+// $Id: stagecpp.cc,v 1.54 2004-09-18 00:10:13 rtv Exp $
 
 //#define DEBUG
 
@@ -223,7 +223,7 @@ void configure_laser( model_t* mod, int section )
 */
 /** @} */
 
-void configure_fiducial( stg_model_t* mod, int section )
+void configure_fiducial( model_t* mod, int section )
 {
   stg_fiducial_config_t fcfg;
   fcfg.min_range = 
@@ -238,9 +238,8 @@ void configure_fiducial( stg_model_t* mod, int section )
   fcfg.max_range_id = 
     wf.ReadLength(section, "fiducial.range_max_id", 
 		  STG_DEFAULT_FIDUCIAL_RANGEMAXID );
-  
-  stg_model_prop_with_data( mod, STG_PROP_CONFIG, &fcfg, sizeof(fcfg));
-  
+
+  model_set_config( mod, &fcfg, sizeof(fcfg));
 }
 
 /** @addtogroup worldfile */
@@ -250,7 +249,7 @@ void configure_fiducial( stg_model_t* mod, int section )
 */
 /** @} */
 
-void configure_blobfinder( stg_model_t* mod, int section )
+void configure_blobfinder( model_t* mod, int section )
 {
   stg_blobfinder_config_t bcfg;
   memset( &bcfg, 0, sizeof(bcfg) );
@@ -280,8 +279,7 @@ void configure_blobfinder( stg_model_t* mod, int section )
 					   "blob.channels", 
 					   ch, "red" )); 
   
-  stg_model_prop_with_data( mod, STG_PROP_CONFIG, 
-			    &bcfg,sizeof(bcfg));  
+  model_set_config( mod, &bcfg, sizeof(bcfg));
 }
 
 /** @addtogroup worldfile */
@@ -296,7 +294,7 @@ void configure_blobfinder( stg_model_t* mod, int section )
 
 
 
-void configure_ranger( stg_model_t* mod, int section )
+void configure_ranger( model_t* mod, int section )
 {
   // Load the geometry of a ranger array
   int scount = wf.ReadInt( section, "ranger.count", 0);
@@ -328,9 +326,9 @@ void configure_ranger( stg_model_t* mod, int section )
 	}
       
       PRINT_DEBUG1( "loaded %d ranger configs", scount );	  
-      stg_model_prop_with_data( mod, STG_PROP_CONFIG,
-				configs, scount * sizeof(stg_ranger_config_t) );
-      
+
+      model_set_config( mod, configs, scount * sizeof(stg_ranger_config_t) );
+
       free( configs );
     }
 }
@@ -343,7 +341,7 @@ void configure_ranger( stg_model_t* mod, int section )
 /** @} */
 
 
-void configure_position( stg_model_t* mod, int section )
+void configure_position( model_t* mod, int section )
 {
   stg_position_cfg_t cfg;
   memset(&cfg,0,sizeof(cfg));
@@ -361,65 +359,41 @@ void configure_position( stg_model_t* mod, int section )
       cfg.steer_mode = STG_POSITION_STEER_DIFFERENTIAL;
     }
   
-  stg_model_prop_with_data( mod, STG_PROP_CONFIG, &cfg, sizeof(cfg));
+  //stg_model_prop_with_data( mod, STG_PROP_CONFIG, &cfg, sizeof(cfg));
+
+  model_set_config( mod, &cfg, sizeof(cfg) ); 
 }
 
 
 
-void stg_model_save( stg_model_t* model, CWorldFile* worldfile )
+void stg_model_save( model_t* model, CWorldFile* worldfile )
 {
-  stg_pose_t pose;
-  if( stg_model_prop_get( model, STG_PROP_POSE, &pose,sizeof(pose)))
-    PRINT_ERR( "error requesting STG_PROP_POSE" );
+  stg_pose_t* pose = model_get_pose(model);
   
   // right noe we only save poses
-  worldfile->WriteTupleLength( model->section, "pose", 0, pose.x);
-  worldfile->WriteTupleLength( model->section, "pose", 1, pose.y);
-  worldfile->WriteTupleAngle( model->section, "pose", 2, pose.a);
+  worldfile->WriteTupleLength( model->id, "pose", 0, pose->x);
+  worldfile->WriteTupleLength( model->id, "pose", 1, pose->y);
+  worldfile->WriteTupleAngle( model->id, "pose", 2, pose->a);
 }
 
 void stg_model_save_cb( gpointer key, gpointer data, gpointer user )
 {
-  stg_model_save( (stg_model_t*)data, (CWorldFile*)user );
+  stg_model_save( (model_t*)data, (CWorldFile*)user );
 }
 
-void stg_world_save( stg_world_t* world, CWorldFile* wfp )
+void stg_world_save( world_t* world, CWorldFile* wfp )
 {
   // ask every model to save itself
-  g_hash_table_foreach( world->models_id, stg_model_save_cb, wfp );
+  g_hash_table_foreach( world->models, stg_model_save_cb, wfp );
 }
 
 
-void stg_world_save_cb( gpointer key, gpointer data, gpointer user )
-{
-  stg_world_save( (stg_world_t*)data, (CWorldFile*)user );
-}
 
-
-void stg_client_save( stg_client_t* cli, stg_id_t world_id )
-{
-  if( cli->callback_save )(*cli->callback_save)();
-
-  PRINT_MSG1( "Stage client: saving worldfile \"%s\"\n", wf.filename );
-
-  // ask every model in the client to save itself
-  g_hash_table_foreach( cli->worlds_id_server, stg_world_save_cb, &wf );
-
-  wf.Save(NULL);
-}  
-  
-void stg_client_load( stg_client_t* cli, stg_id_t world_id )
-{
-  if( cli->callback_load )(*cli->callback_load)();
-  
-  PRINT_WARN( "LOAD NOT YET IMPLEMENTED" );
-  //wf.Load();
-}  
 
 // create a world containing a passel of Stage models based on the
 // worldfile
 
-world_t* stg_client_worldfile_load( char* worldfile_path )
+world_t* world_create_from_file( char* worldfile_path )
 {
   wf.Load( worldfile_path );
   

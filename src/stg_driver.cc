@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_driver.cc,v 1.1 2004-09-16 06:54:28 rtv Exp $
+ * $Id: stg_driver.cc,v 1.2 2004-09-18 00:10:14 rtv Exp $
  */
 
 // STAGE-1.4 DRIVER CLASS ///////////////////////////////
@@ -116,24 +116,14 @@ Stage1p4::~Stage1p4()
 int Stage1p4::Setup()
 { 
   PRINT_DEBUG( "SETUP" );
-
-  //if( this->model )
-  //stg_model_subscribe( this->model, STG_PROP_DATA, 100 ); // 100ms  - fix this
-  
-  model_subscribe( this->model, STG_PROP_DATA );
-
+  model_subscribe( this->model );
   return 0;
 };
 
 int Stage1p4::Shutdown()
 { 
   PRINT_DEBUG( "SHUTDOWN" );
-
-  //if( this->model )
-  //stg_model_unsubscribe( model, STG_PROP_DATA );
-
-  model_unsubscribe( this->model, STG_PROP_DATA );
-
+  model_unsubscribe( this->model );
   return 0;
 };
 

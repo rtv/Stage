@@ -125,7 +125,7 @@ void gui_model_destroy( model_t* model );
 
 void gui_model_render( model_t* model );
 
-void gui_model_update( model_t* mod, stg_prop_type_t prop );
+   //void gui_model_update( model_t* mod, stg_prop_type_t prop );
 
 void gui_model_nose( model_t* model );
 void gui_model_pose( model_t* mod );
