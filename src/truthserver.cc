@@ -100,55 +100,46 @@ static void* TruthReader( void* arg )
   while( 1 )
     {	      
       /* read will block until it has some bytes to return */
-      r = read( connfd, &truth, sizeof(truth) );
-      
-      //#ifdef DEBUG
-      //printf( "Stage: TruthReader read (%d,%d/%d)\n", 
-      //      *connfd, r, sizeof(truth) );    
-      //      fflush( stdout );
-      //#endif
 
-      if( r > 0 )
+      r = 0;
+
+      // read until we have a whole truth packet
+      while( r < (int)sizeof(truth ) )
 	{
-	  //#ifdef DEBUG
-	  //printf( "Recv: " );
-	  //PrintTruth( truth );
-	  //#endif
-	  if( r < (int)sizeof( truth ) )
-	    printf( "Stage: warning short byte count (%d/%d) reading truth\n",
-		    r, sizeof(truth) );
-
-	  PrintTruth( truth );
-	  
-	  // if we don't want an echo
-	  if( !truth.echo_request )
-	    // store it in the comparison database
-	    // to fool the writer thread into thinking we'cve sent this one before
+	  int v=0;
+	  // read bytes from the socket, quitting if read returns no bytes
+	  if( (v = read( connfd, ((char*)&truth) + r, sizeof(truth) - r )) < 1 )
 	    {
-	      truth.echo_request = false;
-	      memcpy( &(con->database[ truth.stage_id ]), &truth, sizeof( truth ) );
+	      //#ifdef VERBOSE
+	      puts( "Stage: TruthReader thread exit." );
+	      //#endif	  
+	      close( connfd );
+	      connfd = 0; // forces the writer to quit
+	      pthread_exit( 0 );
 	    }
-	  // we can't just impose the truth here as we're not
-	  // in sync with the main simulator thread, so:
-	  // copy the incoming truth into the update queue.
-	  // the main thread will import the truth on the next update cycle
-	  // the queue ought to be thread-safe (!)
-	  world->input_queue.push( truth );
+	  r+=v;
 	}
-      else
+      
+      assert( r == sizeof( truth ) );
+      
+      PrintTruth( truth );
+      
+      // if we don't want an echo
+      if( !truth.echo_request )
+	// store it in the comparison database
+	// to fool the writer thread into thinking we'cve sent this one before
 	{
-#ifdef VERBOSE
-	  puts( "Stage: TruthReader thread exit." );
-#endif	  
-	  close( connfd );
-	  connfd = 0; // forces the writer to quit
-	  pthread_exit( 0 );
+	  truth.echo_request = false;
+	  memcpy( &(con->database[ truth.stage_id ]), &truth, sizeof( truth ) );
 	}
+      // we can't just impose the truth here as we're not
+      // in sync with the main simulator thread, so:
+      // copy the incoming truth into the update queue.
+      // the main thread will import the truth on the next update cycle
+      // the queue ought to be thread-safe (!)
+      world->input_queue.push( truth );
     }
 }
-
-
-
 
 
 static void * TruthWriter( void* arg )
