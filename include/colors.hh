@@ -1,6 +1,6 @@
 //-------------------------------------------------------------------------------------
 // colors.hh - define the default colors for all devices here
-// $Id: colors.hh,v 1.2 2001-09-20 18:29:22 vaughan Exp $
+// $Id: colors.hh,v 1.3 2001-09-26 02:35:46 gerkey Exp $
 //
 
 #ifndef _STAGECOLORS_H
@@ -9,7 +9,7 @@
 #define GRIPPER_COLOR "gray"
 #define POSITION_COLOR "red"
 #define LASER_COLOR  "blue"
-#define SONAR_COLOR  "light blue"
+#define SONAR_COLOR  "blue3"
 #define PTZ_COLOR  "magenta"
 #define PUCK_COLOR  "green"
 #define BOX_COLOR  "yellow"
