@@ -387,12 +387,12 @@ stg_model_t* stg_model_create( stg_world_t* world,
 
 void* stg_model_get_prop( stg_model_t* mod, char* name )
 {
-  return g_datalist_get_data( mod->props, name );
+  return g_datalist_get_data( (gpointer)mod->props, name );
 }
 
 void stg_model_set_prop( stg_model_t* mod, char* name, void* data )
 {
-  return g_datalist_set_data( mod->props, name, data );
+  return g_datalist_set_data( (gpointer)mod->props, name, data );
 }
 
 /// free the memory allocated for a model

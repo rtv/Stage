@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.43 2005-01-03 04:28:22 rtv Exp $
+# CVS: $Id: test.world,v 1.44 2005-01-03 06:09:32 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -19,6 +19,7 @@ include "pioneer.inc"
 
 
 
+
 # defines 'map' object used for floorplans
 include "map.inc"
 
@@ -26,9 +27,10 @@ include "map.inc"
 
 
 
+
 window( 
-  size [ 1137.000 923.000 ] 
-  center [0.289 -6.219] 
+  size [ 1127.000 514.000 ] 
+  center [0.289 0.051] 
   scale 0.033 
 
   show_grid 0

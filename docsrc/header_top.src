@@ -2,7 +2,7 @@
    "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
-<!-- $Id: header_top.src,v 1.8 2004-12-30 07:08:00 rtv Exp $ -->
+<!-- $Id: header_top.src,v 1.9 2005-01-03 06:09:32 rtv Exp $ -->
 
 <HEAD>
 
@@ -120,13 +120,15 @@ div.stage { font-size:120% }
 <li class=menu><a href="index.html">Introduction</a><br>
 <li class=menu><a href="release.html">Release</a><br>
 <li class=menu><a href="install.html">Installation</a><br>
-<li class=menu><a href="worlds.html">Worlds</a><br>
-<li class=menu><a href="window.html">Window</a><br>
 <!-- <li class=menu><a href="refs.html">References</a><br>-->
 <li class=menu><a href="credits.html">Credits</a><br>
 <li class=menu><a href="faq.html">FAQ</a><br>
 <li class=menu><a href="help.html">Help</a><br>
+<hr>
 
 <!-- the lists of plugins and models come next -->
 
+<li class=menu><a href="group__world.html">World</a><br>
+<li class=menu><a href="group__window.html">Window</a><br>
+<li class=menu><a href="group__basic.html">Model</a><br>
 

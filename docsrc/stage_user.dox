@@ -391,7 +391,7 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT = help.txt ../src ../src/stg_driver.cc ../src/gui.c
+INPUT = help.txt ../src ../src/stg_driver.cc
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 
@@ -401,7 +401,7 @@ INPUT = help.txt ../src ../src/stg_driver.cc ../src/gui.c
 # *.h++ *.idl *.odl *.cs *.php *.php3 *.inc
 
 # read the docs from each model file
-FILE_PATTERNS          = model*.c
+FILE_PATTERNS          = *.c
 
 #FILE_PATTERNS          = *.cc *.c *.h
 

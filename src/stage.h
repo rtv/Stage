@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.120 2005-01-03 05:42:02 rtv Exp $
+ * CVS: $Id: stage.h,v 1.121 2005-01-03 06:09:32 rtv Exp $
  */
 
 
@@ -481,6 +481,9 @@ extern "C" {
 
   /** save the state of the model to the current world file */
   void stg_model_save( stg_model_t* mod );
+
+  /** get a human-readable string for the model's type */
+  const char* stg_model_type_string( stg_model_type_t type );
 
   // SET properties - use these to set props, don't set them directly
 
