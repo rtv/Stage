@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.12 $
+//  $Revision: 1.4.2.13 $
 //
 // Usage:
 //  (empty)
@@ -428,10 +428,9 @@ void CVisionDevice::DrawFOV(RtkUiDrawData *pData)
     double by = gy + m_max_range * sin(gth + m_pan + m_zoom / 2);
 
     pData->set_color(COLOR_FOV);
-    pData->move_to(gx, gy);
-    pData->line_to(ax, ay);
-    pData->line_to(bx, by);
-    pData->line_to(gx, gy);    
+    pData->line(gx, gy, ax, ay);
+    pData->line(ax, ay, bx, by);
+    pData->line(bx, by, gx, gy);
 }
 
 
@@ -453,7 +452,8 @@ void CVisionDevice::DrawScan(RtkUiDrawData *pData)
         // *** HACK -- how to we get colors from channels?
         //
         int color = RTK_RGB(128, 128, 128);
-        pData->set_pixel(m_hit[i][0], m_hit[i][1], color);
+        pData->set_color(color);
+        pData->point(m_hit[i][0], m_hit[i][1]);
     }
 }
 

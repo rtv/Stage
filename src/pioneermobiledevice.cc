@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.15 $
+//  $Revision: 1.9.2.16 $
 //
 // Usage:
 //  (empty)
@@ -377,6 +377,9 @@ void CPioneerMobileDevice::DrawChassis(RtkUiDrawData *pData)
     
     // Draw the direction indicator
     //
+    pData->ex_arrow(gx, gy, gx + dx / 2 * cos(gth), gy + dx / 2 * sin(gth), 0, 0.10);
+
+    /* *** REMOVE
     for (int i = 0; i < 3; i++)
     {
         double px = dx / 2 * cos(DTOR(i * 45 - 45));
@@ -395,6 +398,7 @@ void CPioneerMobileDevice::DrawChassis(RtkUiDrawData *pData)
         else
             pData->line_to(px, py);
     }
+    */
 }
 
 #endif

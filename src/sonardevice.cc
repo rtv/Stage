@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.5.2.14 $
+//  $Revision: 1.5.2.15 $
 //
 // Usage:
 //  (empty)
@@ -185,10 +185,7 @@ void CSonarDevice::DrawScan(RtkUiDrawData *pData)
     // Draw rays coming out of each sonar
     //
     for (int s = 0; s < m_sonar_count; s++)
-    {
-        pData->move_to(m_hit[s][0][0], m_hit[s][0][1]);
-        pData->line_to(m_hit[s][1][0], m_hit[s][1][1]);
-    }
+        pData->line(m_hit[s][0][0], m_hit[s][0][1], m_hit[s][1][0], m_hit[s][1][1]);
 }
 
 #endif

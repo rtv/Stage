@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.22 $
+//  $Revision: 1.4.2.23 $
 //
 // Usage:
 //  (empty)
@@ -875,6 +875,8 @@ void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
         default:
             return;
     }
+
+    data->set_color(RTK_RGB(0, 0, 255));
     
     // Loop through the image and draw points individually.
     // Yeah, it's slow, but only happens for debugging
@@ -887,7 +889,7 @@ void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
             {
                 double px = (double) x / ppm;
                 double py = (double) (height - y) / ppm;
-                data->set_pixel(px, py, RGB(0, 0, 255));
+                data->point(px, py);
             }
         }
     }

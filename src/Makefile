@@ -83,6 +83,9 @@ boxobstacle.o: ../include/world.hh ../include/playerrobot.hh
 boxobstacle.o: ../include/object.hh ../include/stage_types.hh
 boxobstacle.o: ../include/image.h ../include/tokenize.hh
 boxobstacle.o: ../include/boxobstacle.hh
+broadcastdevice.o: /usr/local/player1.1beta/include/stage.h
+broadcastdevice.o: /usr/local/player1.1beta/include/messages.h
+broadcastdevice.o: /usr/local/player1.1beta/include/playercommon.h
 broadcastdevice.o: ../include/world.hh ../include/playerrobot.hh
 broadcastdevice.o: ../include/object.hh ../include/stage_types.hh
 broadcastdevice.o: ../include/image.h ../include/broadcastdevice.hh
@@ -92,17 +95,26 @@ laserbeacon.o: ../include/world.hh ../include/playerrobot.hh
 laserbeacon.o: ../include/object.hh ../include/stage_types.hh
 laserbeacon.o: ../include/image.h ../include/tokenize.hh
 laserbeacon.o: ../include/laserbeacon.hh
+laserbeacondevice.o: /usr/local/player1.1beta/include/stage.h
+laserbeacondevice.o: /usr/local/player1.1beta/include/messages.h
+laserbeacondevice.o: /usr/local/player1.1beta/include/playercommon.h
 laserbeacondevice.o: ../include/world.hh ../include/playerrobot.hh
 laserbeacondevice.o: ../include/object.hh ../include/stage_types.hh
 laserbeacondevice.o: ../include/image.h ../include/laserdevice.hh
 laserbeacondevice.o: ../include/playerdevice.hh
 laserbeacondevice.o: ../include/laserbeacondevice.hh
+laserdevice.o: /usr/local/player1.1beta/include/stage.h
+laserdevice.o: /usr/local/player1.1beta/include/messages.h
+laserdevice.o: /usr/local/player1.1beta/include/playercommon.h
 laserdevice.o: ../include/world.hh ../include/playerrobot.hh
 laserdevice.o: ../include/object.hh ../include/stage_types.hh
 laserdevice.o: ../include/image.h ../include/laserdevice.hh
 laserdevice.o: ../include/playerdevice.hh
 main.o: ../VERSION ../include/world.hh ../include/playerrobot.hh
 main.o: ../include/object.hh ../include/stage_types.hh ../include/image.h
+miscdevice.o: /usr/local/player1.1beta/include/stage.h
+miscdevice.o: /usr/local/player1.1beta/include/messages.h
+miscdevice.o: /usr/local/player1.1beta/include/playercommon.h
 miscdevice.o: ../include/world.hh ../include/playerrobot.hh
 miscdevice.o: ../include/object.hh ../include/stage_types.hh
 miscdevice.o: ../include/image.h ../include/miscdevice.hh
@@ -115,10 +127,19 @@ objectfactory.o: ../include/usc_pioneer.hh
 pioneermobiledevice.o: ../include/world.hh ../include/playerrobot.hh
 pioneermobiledevice.o: ../include/object.hh ../include/stage_types.hh
 pioneermobiledevice.o: ../include/image.h ../include/pioneermobiledevice.hh
+pioneermobiledevice.o: /usr/local/player1.1beta/include/stage.h
+pioneermobiledevice.o: /usr/local/player1.1beta/include/messages.h
+pioneermobiledevice.o: /usr/local/player1.1beta/include/playercommon.h
 pioneermobiledevice.o: ../include/playerdevice.hh
 playerdevice.o: ../include/world.hh ../include/playerrobot.hh
 playerdevice.o: ../include/object.hh ../include/stage_types.hh
 playerdevice.o: ../include/image.h ../include/playerdevice.hh
+playerdevice.o: /usr/local/player1.1beta/include/stage.h
+playerdevice.o: /usr/local/player1.1beta/include/messages.h
+playerdevice.o: /usr/local/player1.1beta/include/playercommon.h
+playerrobot.o: /usr/local/player1.1beta/include/stage.h
+playerrobot.o: /usr/local/player1.1beta/include/messages.h
+playerrobot.o: /usr/local/player1.1beta/include/playercommon.h
 playerrobot.o: ../include/world.hh ../include/playerrobot.hh
 playerrobot.o: ../include/object.hh ../include/stage_types.hh
 playerrobot.o: ../include/image.h
@@ -127,6 +148,9 @@ ptzdevice.o: ../include/world.hh ../include/playerrobot.hh
 ptzdevice.o: ../include/object.hh ../include/stage_types.hh
 ptzdevice.o: ../include/image.h ../include/ptzdevice.hh
 ptzdevice.o: ../include/playerdevice.hh
+ptzdevice.o: /usr/local/player1.1beta/include/stage.h
+ptzdevice.o: /usr/local/player1.1beta/include/messages.h
+ptzdevice.o: /usr/local/player1.1beta/include/playercommon.h
 rtk_main.o: ../VERSION ../include/world.hh ../include/playerrobot.hh
 rtk_main.o: ../include/object.hh ../include/stage_types.hh ../include/image.h
 server.o: ../include/world.hh ../include/playerrobot.hh ../include/object.hh
@@ -135,11 +159,17 @@ sonardevice.o: ../include/world.hh ../include/playerrobot.hh
 sonardevice.o: ../include/object.hh ../include/stage_types.hh
 sonardevice.o: ../include/image.h ../include/sonardevice.hh
 sonardevice.o: ../include/playerdevice.hh
+sonardevice.o: /usr/local/player1.1beta/include/stage.h
+sonardevice.o: /usr/local/player1.1beta/include/messages.h
+sonardevice.o: /usr/local/player1.1beta/include/playercommon.h
 tokenize.o: ../include/tokenize.hh
 usc_pioneer.o: ../include/world.hh ../include/playerrobot.hh
 usc_pioneer.o: ../include/object.hh ../include/stage_types.hh
 usc_pioneer.o: ../include/image.h ../include/tokenize.hh
 usc_pioneer.o: ../include/usc_pioneer.hh ../include/pioneermobiledevice.hh
+usc_pioneer.o: /usr/local/player1.1beta/include/stage.h
+usc_pioneer.o: /usr/local/player1.1beta/include/messages.h
+usc_pioneer.o: /usr/local/player1.1beta/include/playercommon.h
 usc_pioneer.o: ../include/playerdevice.hh ../include/miscdevice.hh
 usc_pioneer.o: ../include/sonardevice.hh ../include/laserdevice.hh
 visionbeacon.o: ../include/world.hh ../include/playerrobot.hh
@@ -148,9 +178,16 @@ visionbeacon.o: ../include/image.h ../include/visionbeacon.hh
 visiondevice.o: ../include/world.hh ../include/playerrobot.hh
 visiondevice.o: ../include/object.hh ../include/stage_types.hh
 visiondevice.o: ../include/image.h ../include/visiondevice.hh
-visiondevice.o: ../include/playerdevice.hh ../include/ptzdevice.hh
+visiondevice.o: ../include/playerdevice.hh
+visiondevice.o: /usr/local/player1.1beta/include/stage.h
+visiondevice.o: /usr/local/player1.1beta/include/messages.h
+visiondevice.o: /usr/local/player1.1beta/include/playercommon.h
+visiondevice.o: ../include/ptzdevice.hh
 win.o: ../include/win.h ../include/world.hh ../include/playerrobot.hh
 win.o: ../include/object.hh ../include/stage_types.hh ../include/image.h
-world.o: ../include/tokenize.hh ../include/world.hh ../include/playerrobot.hh
-world.o: ../include/object.hh ../include/stage_types.hh ../include/image.h
+world.o: ../include/tokenize.hh /usr/local/player1.1beta/include/stage.h
+world.o: /usr/local/player1.1beta/include/messages.h
+world.o: /usr/local/player1.1beta/include/playercommon.h ../include/world.hh
+world.o: ../include/playerrobot.hh ../include/object.hh
+world.o: ../include/stage_types.hh ../include/image.h
 world.o: ../include/objectfactory.hh

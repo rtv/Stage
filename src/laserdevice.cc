@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11.2.17 $
+//  $Revision: 1.11.2.18 $
 //
 // Usage:
 //  (empty)
@@ -351,10 +351,19 @@ void CLaserDevice::DrawScan(RtkUiDrawData *event)
     double gx, gy, gth;
     GetGlobalPose(gx, gy, gth);
 
-    event->move_to(gx, gy);
+    double qx, qy;
+    qx = gx;
+    qy = gy;
+    
     for (int i = 0; i < m_hit_count; i++)
-        event->line_to(m_hit[i][0], m_hit[i][1]);
-    event->line_to(gx, gy);
+    {
+        double px = m_hit[i][0];
+        double py = m_hit[i][1];
+        event->line(qx, qy, px, py);
+        qx = px;
+        qy = py;
+    }
+    event->line(qx, qy, gx, gy);
 }
 
 #endif
