@@ -102,7 +102,7 @@ model
 - bitmap [filename:string}
   - alternative way to set the model's line_count and lines. The file must be a bitmap recognized by libgtkpixbuf (most popular formats are supported). The file is opened and parsed into a set of lines. Unless the bitmap_resolution option is used, the lines are scaled to fit inside the rectangle defined by the model's current size.
 - bitmap_resolution [meters:float]
-  - alternative way to set the model's size. Used with the bitmap option, this sets the model's size according to the size of the bitmap file, by multiplying the width and height of the bitmap, measured in pixels, by this scaling factor. 
+ - (TODO: fix this - it messes up the object placement a little) alternative way to set the model's size. Used with the bitmap option, this sets the model's size according to the size of the bitmap file, by multiplying the width and height of the bitmap, measured in pixels, by this scaling factor. 
 - gui_nose [bool]
   - if 1, draw a nose on the model showing its heading (positive X axis)
 - gui_grid [bool]

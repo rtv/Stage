@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.24 2005-03-11 21:56:58 rtv Exp $
+# CVS: $Id: everything.world,v 1.25 2005-03-11 23:53:11 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -15,23 +15,19 @@ interval_real 100 # real-time milliseconds per update step
 # defines Pioneer-like robots
 include "pioneer.inc"
 
+
 # defines 'map' object used for floorplans
 include "map.inc"
 
-window( size [ 830.000 556.000 ] center [-8.109 2.708] scale 0.014 )
+
+window( size [ 830.000 556.000 ] center [-9.210 3.086] scale 0.013 )
 
 map(
-  #size [15.5 11.4]
-  #bitmap "bitmaps/autolab.png"
-  #bitmap "bitmaps/sal2.png"
-  #bitmap "bitmaps/cave.png"
+
   bitmap "bitmaps/hospital_section.png"
+  #bitmap_resolution 0.03
 
-  bitmap_resolution 0.03
-  #boundary 0
-
-  ranger_return 1
-  obstacle_return 1
+  size [36 18]
 )
 
 
@@ -61,56 +57,56 @@ define laserpioneer pioneer2dx
 laserpioneer
 (
   name "p0"
-  pose [-10.302 2.039 -348.743]
+  pose [-11.163 2.596 -348.743]
 )
 
 laserpioneer
 (
   color "red"
   name "p1"
-  pose [-5.353 2.515 -162.098]
+  pose [-5.834 2.971 -162.098]
 )
 
 laserpioneer
 (
   color "blue"
   name "p2"
-  pose [-5.325 2.025 -194.220]
+  pose [-6.009 2.481 -194.220]
 )
 
 laserpioneer
 (
   color "green"
   name "p3"
-  pose [-5.707 1.599 -199.781]
+  pose [-6.492 2.156 -199.781]
 )
 
 laserpioneer
 (
   color "cyan"
   name "p4"
-  pose [-6.795 3.223 -458.929]
+  pose [-7.542 3.831 -458.929]
 )
 
 laserpioneer
 (
   color "yellow"
   name "p5"
-  pose [-6.247 3.130 -110.414]
+  pose [-6.759 3.634 -110.414]
 )
 
 laserpioneer
 (
   color "magenta"
   name "p6"
-  pose [-5.599 2.883 -135.449]
+  pose [-6.232 3.440 -135.449]
 )
 
 # a silly object to look at
 position( 	
   name "invader" 
   size [0.3 0.3]
-  pose [-15.551 -0.066 0.000] 
+  pose [-16.954 -0.172 0.000] 
   color "red"  
   # loads a bitmap for the model's body
   bitmap "bitmaps/space_invader.png"
@@ -122,7 +118,7 @@ position(
 position( 	
   name "ghost" 
   size [0.3 0.3 ]
-  pose [-12.978 -2.980 0.000] 
+  pose [-14.344 -4.354 0.000] 
   color "blue"  
   # loads a bitmap for the model's body
   bitmap "bitmaps/ghost.png"
