@@ -60,5 +60,6 @@ int stg_target_set_data( server_t* server,
 			 void* data, 
 			 size_t len );
 
+int server_package_parse( server_t* server, int fd, stg_package_t* pkg );
 
 #endif

@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.42 2004-05-29 00:17:14 rtv Exp $
+ * CVS: $Id: stage.h,v 1.43 2004-05-30 06:41:17 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -42,6 +42,7 @@
 #include <sys/time.h>
 #include <assert.h>
 #include <pthread.h>
+#include <semaphore.h>
 
 #include <glib.h> // we use GLib's data structures extensively
 
@@ -150,29 +151,24 @@ typedef uint16_t stg_msg_type_t;
 //#define STG_MSG_WORLD_REQUEST           (STG_MSG_MODEL | 10)
 //#define STG_MSG_WORLD_REPLY             (STG_MSG_MODEL | 11)
 
-#define STG_MSG_MODEL_DELTA             (STG_MSG_MODEL | 1)
-#define STG_MSG_MODEL_SAVE              (STG_MSG_MODEL | 2)
-#define STG_MSG_MODEL_LOAD              (STG_MSG_MODEL | 3)
-#define STG_MSG_MODEL_REQUEST           (STG_MSG_MODEL | 4)
-#define STG_MSG_MODEL_REPLY             (STG_MSG_MODEL | 5)
-#define STG_MSG_MODEL_ACK               (STG_MSG_MODEL | 6)
-#define STG_MSG_MODEL_SUBSCRIBE         (STG_MSG_MODEL | 7)
-#define STG_MSG_MODEL_UNSUBSCRIBE       (STG_MSG_MODEL | 8)
+#define STG_MSG_MODEL_DELTA             (STG_MSG_MODEL | 1) // set a property, no reply
+#define STG_MSG_MODEL_SAVE              (STG_MSG_MODEL | 2) // ACK/NACK reply
+#define STG_MSG_MODEL_LOAD              (STG_MSG_MODEL | 3) // ACK/NACK reply
+#define STG_MSG_MODEL_PROPSET           (STG_MSG_MODEL | 4) // set a property, ACK/NACK reply
+#define STG_MSG_MODEL_PROPGET           (STG_MSG_MODEL | 5) // get a property
+#define STG_MSG_MODEL_PROPGETSET        (STG_MSG_MODEL | 6) // set a prop, get the old state
+#define STG_MSG_MODEL_PROPSETGET        (STG_MSG_MODEL | 7) // set a prop, get the new state
+#define STG_MSG_MODEL_SUBSCRIBE         (STG_MSG_MODEL | 8) // no reply
+#define STG_MSG_MODEL_UNSUBSCRIBE       (STG_MSG_MODEL | 9) // no reply
 
-#define STG_MSG_CLIENT_WORLDCREATEREPLY (STG_MSG_CLIENT | 1)
-#define STG_MSG_CLIENT_MODELCREATEREPLY (STG_MSG_CLIENT | 2)
-#define STG_MSG_CLIENT_PROPERTY         (STG_MSG_CLIENT | 3)
-#define STG_MSG_CLIENT_CLOCK            (STG_MSG_CLIENT | 4)
-#define STG_MSG_CLIENT_CYCLEEND         (STG_MSG_CLIENT | 5)
+#define STG_MSG_CLIENT_DELTA            (STG_MSG_CLIENT | 1)
+#define STG_MSG_CLIENT_REPLY            (STG_MSG_CLIENT | 2)
+#define STG_MSG_CLIENT_CLOCK            (STG_MSG_CLIENT | 3)
 
-// this is sent in a request to specify the kind of reply required
-typedef enum 
-{
-  STG_RESPONSE_NONE = 0,
-  STG_RESPONSE_ACK,
-  STG_RESPONSE_REPLY
-} stg_response_t;
+   //#define STG_MSG_CLIENT_CYCLEEND         (STG_MSG_CLIENT | 5)
 
+#define STG_ACK  1
+#define STG_NACK 0
 
 // Basic self-describing measurement types. All packets with real
 // measurements are specified in these terms so changing types here
@@ -204,9 +200,6 @@ typedef struct
 {
   stg_msg_type_t type;
   size_t payload_len;
-  stg_msec_t timestamp;
-  stg_response_t response; // desired response: one of
-			  // STG_RESPONSE_NONE/ _ACK /_REPLY
   char payload[0]; // named access to the end of the struct
 } stg_msg_t;
 
@@ -269,7 +262,7 @@ typedef struct
   
 
 
-stg_msg_t* stg_msg_create( stg_msg_type_t type, int response, void* data, size_t len );
+stg_msg_t* stg_msg_create( stg_msg_type_t type, void* data, size_t len );
 stg_msg_t* stg_msg_append( stg_msg_t* msg, void* data, size_t len );
 void stg_msg_destroy( stg_msg_t* msg );
 
@@ -572,7 +565,10 @@ ssize_t stg_fd_packet_write( int fd, void* buf, size_t len );
 stg_msg_t* stg_fd_msg_read( int fd );
 
 // write a message out	  
-int stg_fd_msg_write( int fd, stg_msg_t* msg );
+//int stg_fd_msg_write( int fd, stg_msg_t* msg );
+int stg_fd_msg_write( int fd, 
+		      stg_msg_type_t type, 
+		      void* data, size_t datalen );
 
 // if stage wants to quit, this will return non-zero
 int stg_quit_test( void );
@@ -682,25 +678,34 @@ typedef struct
   GHashTable* worlds_id_server; // contains stg_world_ts indexed by server-side id
   GHashTable* worlds_id; // contains stg_world_ts indexed by client-side id
   GHashTable* worlds_name; // the worlds indexed by namex
+  
+  // mutex and condition variable used to signal that a reply has been
+  // recieved to a previous request
+  pthread_mutex_t models_mutex;
+  pthread_mutex_t reply_mutex;
+  //sem_t reply_sem;
+  pthread_cond_t reply_cond;
+  int reply_ready;
+  
 
-  //pthread_mutex_t reply_mutex;
-  //pthread_t* thread;
+  pthread_t* thread;
+
+  GByteArray* reply;
 
 } stg_client_t;
 
 #define STG_PACKAGE_KEY 12345
 
-typedef enum
-  {
-    STG_PKG_REQUEST=0,
-    STG_PKG_REPLY,
-    STG_PKG_DELTA
-  } stg_pkg_type_t;
+//typedef enum
+// {
+//  STG_PKG_REQUEST=0,
+//  STG_PKG_REPLY,
+//  STG_PKG_DELTA
+// } stg_pkg_type_t;
 
 typedef struct
 {
-  int key; // must be STG_PACKAGE_KEY
-  stg_pkg_type_t type;
+  int key; // must be STG_PACKAGE_KEY - a version-dependent constant value
   struct timeval timestamp; // real-time timestamp for performance
 			    // measurements
   size_t payload_len;
@@ -710,7 +715,9 @@ typedef struct
 // read a package: a complete set of Stage deltas. If no package is
 // available, return NULL. If an error occurred, return NULL and set
 // err > 0
-stg_package_t* stg_client_read_package( stg_client_t* cli, int* err );
+stg_package_t* stg_client_read_package( stg_client_t* cli, 
+					int sleep, // poll()'s sleep ms
+					int* err );
 
 // break the package into individual messages and handle them
 int stg_client_package_parse( stg_client_t* cli, stg_package_t* pkg );
@@ -736,10 +743,6 @@ void stg_client_push( stg_client_t* client );
 
 // read a message from the server
 stg_msg_t* stg_client_read( stg_client_t* cli );
-
-// read messages from the server, calling stg_client_handle_message()
-// for each, until we get one of the indicated type.
-stg_msg_t* stg_client_read_until( stg_client_t* cli, stg_msg_type_t mtype );
 
 void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg );
 

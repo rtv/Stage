@@ -4,15 +4,16 @@
 #include <assert.h>
 #include <math.h>
 
-//#define DEBUG
+#undef DEBUG
 
+#include "config.h"
 #include "rtk.h"
 #include "gui.h"
 
 // models that have fewer rectangles than this get matrix rendered when dragged
 #define STG_LINE_THRESHOLD 40
 
-#define LASER_FILLED 0
+#define LASER_FILLED 1
 
 // single static application visible to all funcs in this file
 static rtk_app_t *app = NULL; 
@@ -20,8 +21,6 @@ static rtk_app_t *app = NULL;
 // table of world-to-window mappings
 static GHashTable* wins;
 
-#include "config.h"
-#include "gui.h"
 
 void gui_startup( int* argc, char** argv[] )
 {
@@ -375,7 +374,9 @@ void gui_model_grid( model_t* model )
 {  
   gui_window_t* win = g_hash_table_lookup( wins, &model->world->id );
   gui_model_t* gmod = gui_model_figs(model);
-  
+
+  assert( gmod );
+
   if( gmod->grid )
     rtk_fig_destroy( gmod->grid );
   
@@ -775,10 +776,6 @@ void gui_model_update( model_t* mod, stg_prop_type_t prop )
       gui_model_pose( mod );
       break;
 
-      //case STG_PROP_RECTS:
-      //gui_model_rects( mod );
-      //break;
-      
     case STG_PROP_LINES:
       gui_model_lines( mod );
       break;

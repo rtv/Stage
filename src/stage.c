@@ -170,10 +170,44 @@ void stg_print_target( stg_target_t* tgt )
 
 
 // write a message out	  
-int stg_fd_msg_write( int fd, stg_msg_t* msg )
+//int stg_fd_msg_write( int fd, stg_msg_t* msg )
+//{
+// return( stg_fd_packet_write( fd, msg, sizeof(stg_msg_t) + msg->payload_len ) );
+//}
+
+int stg_fd_msg_write( int fd, 
+		      stg_msg_type_t type, 
+		      void* data, size_t datalen )
 {
-  return( stg_fd_packet_write( fd, msg, sizeof(stg_msg_t) + msg->payload_len ) );
+  stg_msg_t* msg = stg_msg_create( type, data, datalen );
+  assert( msg );
+
+  GByteArray* buf = g_byte_array_new();
+  stg_buffer_append_msg( buf, msg );
+
+
+  // prepend a package header
+  stg_package_t pkg;
+  pkg.key = STG_PACKAGE_KEY;
+  pkg.payload_len = buf->len;
+  
+  // a real-time timestamp for performance measurements
+  struct timeval tv;
+  gettimeofday( &tv, NULL );
+  memcpy( &pkg.timestamp, &tv, sizeof(pkg.timestamp ) );
+
+  stg_buffer_prepend( buf, &pkg, sizeof(pkg) );
+  
+  int retval = 
+    stg_fd_packet_write( fd, buf->data, buf->len );
+  
+  stg_msg_destroy( msg );
+  g_byte_array_free( buf, TRUE );
+
+  return retval;
 }
+
+
 
 
 // operations on file descriptors ----------------------------------------
@@ -390,16 +424,15 @@ void prop_destroy( stg_property_t* prop )
 }
 
 // create a new message of [type] containing [datalen] bytes of [data]
-stg_msg_t* stg_msg_create( stg_msg_type_t type, int response, void* data, size_t datalen )
+stg_msg_t* stg_msg_create( stg_msg_type_t type, void* data, size_t datalen )
 {
   size_t msglen = sizeof(stg_msg_t) + datalen;
   stg_msg_t* msg = calloc( msglen,1  );
   
   msg->type = type;
-  msg->response = (uint8_t)response;
   msg->payload_len = datalen;
   memcpy( msg->payload, data, datalen );
- 
+  
   return msg;
 }
   

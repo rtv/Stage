@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <pthread.h>
 
 //#define DEBUG
 
@@ -42,16 +43,97 @@ stg_client_t* stg_client_create( void )
   
   // init the pollfd
   memset( &client->pfd, 0, sizeof(client->pfd) );
+  
+  pthread_mutex_init( &client->models_mutex, NULL );
+  pthread_mutex_init( &client->reply_mutex, NULL );
+  pthread_cond_init( &client->reply_cond, NULL );
+  client->reply_ready = FALSE;
 
-  //pthread_mutex_int( &client->reply_mutex, NULL );
+  client->reply = g_byte_array_new();
 
-  //pthread_create( 
+  // the thread isn;t kicked off until connect is called.
 
   return client;
 }
 
-void stg_client_thread( void )
+
+void stg_mutex_error( int err )
 {
+  switch( err )
+    {
+    case EINVAL: PRINT_ERR( "invalid mutex" ); break;
+    case EFAULT: PRINT_ERR( "invalid mutex pointer" ); break;
+    case EDEADLK: PRINT_ERR( "mutex deadlock" ); break;
+    default:
+      PRINT_ERR1( "unknown mutex error %d", err );
+    }
+  exit( -1 ); // a mutex error is bad. we surrender
+}
+
+void stg_mutex_lock( pthread_mutex_t* mutex )
+{
+  int retval;
+  if( (retval = pthread_mutex_lock( mutex )) )
+    stg_mutex_error( retval );
+}
+
+void stg_mutex_unlock( pthread_mutex_t* mutex )
+{
+  int retval;
+  if( (retval = pthread_mutex_unlock( mutex )) )
+    stg_mutex_error( retval );
+}
+
+void stg_client_thread( void* data )
+{ 
+  PRINT_WARN( "StageClient thread kicks off" );
+  
+  stg_client_t* client = (stg_client_t*)data;
+
+  int err=0;
+    
+  while( 1 )
+    { 
+      // test if we are supposed to cancel
+      pthread_testcancel();
+      
+      // read a package - asking poll() to sleep briefly
+      stg_package_t* pkg = 
+	stg_client_read_package( client, 1,  &err );
+      
+      if( pkg )
+	{
+	  //printf( "player: stage package key:%d timestamp:%d.%d len:%d\n",
+	  //  pkg->key, 
+	  //  pkg->timestamp.tv_sec, 
+	  //  pkg->timestamp.tv_usec,
+	  //  pkg->payload_len );
+	  
+	  //struct timeval tv;
+	  //gettimeofday( &tv, NULL );
+	  //printf( "arrival time %d.%d\n",
+	  //  tv.tv_sec, tv.tv_usec );
+	  
+	  //double sent = pkg->timestamp.tv_sec + 
+	  //(double)(pkg->timestamp.tv_usec)/1e6; 
+	  
+	  //double recvd = tv.tv_sec + 
+	  //(double)(tv.tv_usec)/1e6; 
+	  
+	  //printf( "transport time: %.4f\n", recvd - sent );
+	  
+	  // unpack the package and absorb its deltas
+	  
+	  stg_client_package_parse( client, pkg );	  
+	}
+      else if( err > 0 )
+	{
+	  PRINT_ERR1( "Fatal error: failed to read a Stage package "
+		      "(code %d). Quitting\n",
+		      err );      
+	  exit( -1 );
+	}
+    }
 }
 
 void stg_client_destroy( stg_client_t* cli )
@@ -62,6 +144,9 @@ void stg_client_destroy( stg_client_t* cli )
   if( cli->worlds_id ) g_hash_table_destroy( cli->worlds_id );
   if( cli->worlds_name ) g_hash_table_destroy( cli->worlds_name );
   if( cli->pfd.fd > 0 ) close( cli->pfd.fd );
+
+  g_byte_array_free( cli->reply, TRUE );
+
   free(cli);
 }
 
@@ -173,6 +258,9 @@ int stg_client_connect( stg_client_t* client, const char* host, const int port )
 	      reply.id_string, reply.vmajor, reply.vminor, reply.vmicro );
   
 
+  // kick off the client thread
+  assert( pthread_create( &client->thread, NULL, &stg_client_thread, client) == 0 );
+    
   return 0; //OK
 }
 
@@ -230,20 +318,12 @@ stg_model_t* stg_client_get_model_serverside( stg_client_t* cli, stg_id_t wid, s
 }
 
 
+
 int stg_client_write_msg( stg_client_t* cli, 
 			  stg_msg_type_t type, 
-			  int response, 
 			  void* data, size_t datalen )
 {
-  stg_msg_t* msg = stg_msg_create( type, response, data, datalen );
-  assert( msg );
-  
-  int retval = 
-    stg_fd_packet_write( cli->pfd.fd, msg, sizeof(stg_msg_t) + msg->payload_len );
-  
-  stg_msg_destroy( msg );
-
-  return retval;
+  return stg_fd_msg_write(  cli->pfd.fd, type, data, datalen );  
 }
 
 
@@ -261,7 +341,6 @@ int stg_model_subscribe( stg_model_t* mod, int prop, stg_msec_t interval )
   
   stg_client_write_msg( mod->world->client, 
 			STG_MSG_SERVER_SUBSCRIBE, 
-			STG_RESPONSE_NONE,
 			&sub, sizeof(sub) );
   
   return 0;
@@ -281,7 +360,6 @@ int stg_model_unsubscribe( stg_model_t* mod, int prop )
   
   stg_client_write_msg( mod->world->client, 
 			STG_MSG_SERVER_UNSUBSCRIBE, 
-			STG_RESPONSE_NONE, 
 			&sub, sizeof(sub) );
   
   return 0;
@@ -395,7 +473,6 @@ void stg_world_resume( stg_world_t* world )
   stg_id_t world_id = world->id_server;
   stg_client_write_msg( world->client, 
 			STG_MSG_WORLD_RESUME,
-			STG_RESPONSE_NONE, 
 			&world_id, sizeof(world_id) );
 }
 
@@ -404,7 +481,6 @@ void stg_world_pause( stg_world_t* world )
   stg_id_t world_id = world->id_server;
   stg_client_write_msg( world->client, 
 			STG_MSG_WORLD_PAUSE,
-			STG_RESPONSE_NONE, 
 			&world_id, sizeof(world_id) );
 }
 
@@ -432,30 +508,71 @@ stg_property_t* stg_model_get_prop_cached( stg_model_t* mod, stg_id_t propid )
   return g_hash_table_lookup( mod->props, &propid );
 }
 
-// send the request [req] of length [req_len] bytes. Wait for a reply
-int stg_model_request_reply( stg_model_t* mod, 
-			     void* req, size_t req_len,
-			     void** rep, size_t* rep_len )
+// same as stg_client_request_reply(), but with fixed length reply data
+int stg_client_request_reply_fixed( stg_client_t* client, 
+				    int request_type, 
+				    void* req_data, size_t req_len,
+				    void* reply_data, size_t reply_len )
 {
-  stg_target_t tgt;
-  tgt.world = mod->world->id_server;
-  tgt.model = mod->id_server;
-  tgt.prop = STG_PROP_LASERCONFIG;
+  //printf( "sending a %d byte request\n", (int)req_len );
   
+  stg_client_write_msg( client, request_type, req_data, req_len );
+  
+  //puts( "waiting for reply" );
+  
+  stg_mutex_lock( &client->reply_mutex );
+  
+  while( !client->reply_ready )
+    pthread_cond_wait( &client->reply_cond, &client->reply_mutex );
 
-  PRINT_DEBUG1( "sending a %d byte request\n", (int)req_len );
+  //puts( "waiting is over!" );
   
-  stg_client_write_msg( mod->world->client, 
-			STG_MSG_MODEL_REQUEST,
-			STG_RESPONSE_REPLY, 
-			//		req, req_len );
-			&tgt, sizeof(tgt) );
+  if( client->reply->len != reply_len )
+    {
+      PRINT_ERR2( "reply is unexpected size (%d/%d bytes)",
+		  client->reply->len, reply_len );
+      return 1; // fail
+    }
   
-  PRINT_DEBUG( "waiting for reply" );
+  memcpy( reply_data, client->reply->data, reply_len );
   
-  stg_msg_t* reply = stg_client_read_until( mod->world->client, STG_MSG_MODEL_REPLY );
+  client->reply_ready = FALSE; // consume the reply
+
+  stg_mutex_unlock( &client->reply_mutex );
+
+  return 0; // success
+}
+
+
+int stg_client_request_reply( stg_client_t* client, 
+			      int request_type, 
+			      void* req_data, size_t req_len,
+			      void** reply_data, size_t* reply_len )
+{
+  //printf( "sending a %d byte request\n", (int)req_len );
   
-  printf( "received a %d byte reply\n", (int)reply->payload_len );
+  stg_client_write_msg( client, request_type, req_data, req_len );
+  
+  //puts( "waiting for reply" );
+  
+  stg_mutex_lock( &client->reply_mutex );
+  
+  while( !client->reply_ready )
+    pthread_cond_wait( &client->reply_cond, &client->reply_mutex );
+
+  //puts( "waiting is over!" );
+  
+  // copy the reply data from the client into a buffer, returned to
+  // our caller (caller must free the buffer)
+  *reply_data = malloc( client->reply->len );
+  memcpy( *reply_data, client->reply->data, client->reply->len );
+  *reply_len = client->reply->len;
+  
+  client->reply_ready = FALSE; // consume the reply
+
+  stg_mutex_unlock( &client->reply_mutex );
+  
+  //printf( "received a %d byte reply\n", (int)*reply_len );
   
   return 0; // OK
 }
@@ -473,7 +590,6 @@ int stg_model_prop_set( stg_model_t* mod, stg_id_t prop, void* data, size_t len 
   
   int retval = stg_client_write_msg( mod->world->client, 
 				     STG_MSG_MODEL_DELTA, 
-				     STG_RESPONSE_NONE, 
 				     mp, mplen );
   free( mp );
   return retval;
@@ -492,69 +608,19 @@ int stg_model_prop_set_ack( stg_model_t* mod, stg_id_t prop, void* data, size_t 
   
   PRINT_DEBUG3( "setting prop %d:%d:%d\n", mp->world, mp->model, mp->prop );
   
-  int retval = stg_client_write_msg( mod->world->client, 
-				     STG_MSG_MODEL_DELTA,
-				     STG_RESPONSE_ACK,  
-				     mp, mplen );
+  int ack;
+  stg_client_request_reply_fixed( mod->world->client,
+				  STG_MSG_MODEL_PROPSET,
+				  mp, mplen,
+				  &ack, sizeof(ack) );  
   
-  free( mp );
-
-  PRINT_DEBUG( "waiting for reply" );
+  if( ack != STG_ACK ) 
+    {
+      PRINT_ERR( "property set failed" );
+      return 1; // error
+    }
   
-  stg_msg_t* reply = stg_client_read_until( mod->world->client, STG_MSG_MODEL_ACK );
-  
-  printf( "received a %d byte reply\n", (int)reply->payload_len );
-  
-  if( reply == NULL )
-    return -1; // error no-reply
-  
-  if( reply->payload_len != 0 )
-    return -2; // error too-much-data
-
-  free( reply );
-  return 0; // OK
-}
-
-
-int stg_model_prop_set_reply( stg_model_t* mod, stg_id_t prop, 
-			      void* data, size_t len,
-			      void* reply_data, size_t reply_data_len )
-{
-  size_t mplen = len + sizeof(stg_prop_t);
-  stg_prop_t* mp = calloc( mplen, 1);
-  
-  mp->world = mod->world->id_server;
-  mp->model = mod->id_server;
-  mp->prop = prop;
-  mp->datalen = len;
-  memcpy( mp->data, data, len );
-  
-  PRINT_DEBUG3( "setting prop %d:%d:%d\n", mp->world, mp->model, mp->prop );
-  
-  int retval = stg_client_write_msg( mod->world->client, 
-				     STG_MSG_MODEL_DELTA,
-				     STG_RESPONSE_REPLY,  
-				     mp, mplen );
-  
-  free( mp );
-
-  PRINT_DEBUG( "waiting for reply" );
-  
-  stg_msg_t* reply = stg_client_read_until( mod->world->client, STG_MSG_MODEL_REPLY );
-  
-  printf( "received a %d byte reply\n", (int)reply->payload_len );
-  
-  if( reply == NULL )
-    return -1; // error no-reply
-  
-  if( reply->payload_len != reply_data_len )
-    return -2; // error non-enough-data
-  
-  // copy the reply data into the caller's buffer
-  memcpy( reply_data, reply->payload, reply_data_len );
-  free( reply );
-
-  return 0; // OK
+  return 0; // ok
 }
 
 
@@ -567,31 +633,15 @@ int stg_model_prop_get( stg_model_t* mod, stg_id_t propid, void* data, size_t le
   
   PRINT_DEBUG3( "requesting prop %d:%d:%d\n", tgt.world, tgt.model, tgt.prop );
   
-  stg_client_write_msg( mod->world->client, 
-			STG_MSG_MODEL_REQUEST,
-			STG_RESPONSE_REPLY,  			
-			&tgt, sizeof(tgt) );
-  
-  PRINT_DEBUG( "waiting for reply" );
-  
-  stg_msg_t* reply = stg_client_read_until( mod->world->client, STG_MSG_MODEL_REPLY );
-  
-  printf( "received a %d byte reply\n", (int)reply->payload_len );
-  
-  if( reply == NULL )
-    return -1; // error no-reply
-  
-  if( reply->payload_len != len )
-    return -2; // error non-enough-data
-
-  // copy the reply data into the caller's buffer
-  memcpy( data, reply->payload, len );
-  free( reply );
-
+  stg_client_request_reply_fixed( mod->world->client,
+				  STG_MSG_MODEL_PROPGET,
+				  &tgt, sizeof(tgt),
+				  data, len );  
+  PRINT_DEBUG( "done" );
   return 0; // OK
 }
 
-int stg_model_prop_get_var( stg_model_t* mod, stg_id_t propid, 
+int stg_model_prop_get_var( stg_model_t* mod, stg_id_t propid,
 			    void** data, size_t* len )
 {
   stg_target_t tgt;
@@ -601,26 +651,18 @@ int stg_model_prop_get_var( stg_model_t* mod, stg_id_t propid,
   
   PRINT_DEBUG3( "requesting prop %d:%d:%d\n", tgt.world, tgt.model, tgt.prop );
   
-  stg_client_write_msg( mod->world->client, 
-			STG_MSG_MODEL_REQUEST,
-			STG_RESPONSE_REPLY,
-			&tgt, sizeof(tgt) );
-  
-  PRINT_DEBUG( "waiting for reply" );
-  
-  stg_msg_t* reply = stg_client_read_until( mod->world->client, STG_MSG_MODEL_REPLY );
-  
-  PRINT_DEBUG1( "received a %d byte reply\n", reply->payload_len );
-  
-  *data = realloc( *data, reply->payload_len );
-  *len = reply->payload_len;
-  memcpy( *data, reply->payload, *len );
-  free( reply );
+  stg_client_request_reply( mod->world->client,
+			    STG_MSG_MODEL_PROPGET,
+			    &tgt, sizeof(tgt),
+			    data, len );  
 
+  PRINT_DEBUG( "done" );
   return 0; // OK
 }
 
-stg_package_t* stg_client_read_package( stg_client_t* cli, int* err )
+stg_package_t* stg_client_read_package( stg_client_t* cli, 
+					int sleep, 
+					int* err )
 {
   //PRINT_DEBUG( "Checking for data on Stage connection" );
   
@@ -636,7 +678,7 @@ stg_package_t* stg_client_read_package( stg_client_t* cli, int* err )
     } 
   
   // poll - don't sleep (very important!)
-  if( poll( &cli->pfd,1,0 ) && (cli->pfd.revents & POLLIN) )
+  if( poll( &cli->pfd,1,sleep) && (cli->pfd.revents & POLLIN) )
     {
       //PRINT_DEBUG( "pollin on Stage connection" );
       
@@ -710,72 +752,6 @@ int stg_client_package_parse( stg_client_t* cli, stg_package_t* pkg )
 }
 
 
-stg_msg_t* stg_client_read_until( stg_client_t* cli, stg_msg_type_t mtype )
-{
-  stg_msg_t* msg = NULL;
-  
-  int spin = 0;
-  const char* spinner = "|/-\\"; // the last slash is escaped
-
-  printf( "  " );
-
-  while(1)
-    {
-      spin %= 4; // limit spin to 0-3
-      printf( "\b\b%c ", spinner[spin++] );
-      fflush(stdout);
-      
-      if( msg )
-	stg_msg_destroy( msg );
-      
-      if( (msg = stg_client_read( cli )) )
-	{
-	  stg_client_handle_message( cli, msg );
-	  
-	  if( msg->type == mtype ) 
-	    break;
-	}
-      //else
-      //usleep( 10000 ); // wait for a short time before polling again
-    }
-  
-  return msg;
-}
-
-
-stg_msg_t* stg_client_read( stg_client_t* cli )
-{
-  //PRINT_DEBUG( "Checking for data on Stage connection" );
-  
-  if( cli->pfd.fd < 1 )
-    {
-      PRINT_WARN( "not connected" );
-      return NULL; 
-    } 
-  
-  if( poll( &cli->pfd,1,1 ) && (cli->pfd.revents & POLLIN) )
-    {
-      //PRINT_DEBUG( "pollin on Stage connection" );
-      
-      stg_msg_t* msg = stg_read_msg( cli->pfd.fd );
-      
-      if( msg == NULL )
-	{
-	  PRINT_ERR( "failed read on Stage connection. Quitting." );
-	  exit( 0 );
-	}
-      else
-	{
-	  //PRINT_WARN( "message received" );
-
-	  return msg;
-	}   
-    }
-
-  return NULL; // ok
-}
-
-
 int stg_client_property_set( stg_client_t* cli, stg_id_t world, stg_id_t model, 
 			     stg_id_t prop, void* data, size_t len )
 {
@@ -790,7 +766,6 @@ int stg_client_property_set( stg_client_t* cli, stg_id_t world, stg_id_t model,
   
   int retval = stg_client_write_msg( cli, 
 				     STG_MSG_MODEL_DELTA, 
-				     STG_RESPONSE_NONE,
 				     mp, mplen );
   
   free( mp );
@@ -808,25 +783,18 @@ stg_id_t stg_client_model_new(  stg_client_t* cli,
   strncpy( mod.token, token, STG_TOKEN_MAX );
   
   //printf( "creating model %s in world %d\n",  mod.token, mod.world );
+  
+  stg_id_t mid; // the server replies with the server-side id of the new model
 
-  stg_client_write_msg( cli, 
-			STG_MSG_WORLD_MODELCREATE, 
-			STG_RESPONSE_REPLY,
-			&mod, sizeof(mod) );
+  assert( stg_client_request_reply_fixed( cli, 
+					  STG_MSG_WORLD_MODELCREATE, 
+					  &mod, sizeof(mod),
+					  &mid, sizeof(mid) ) 
+	  == 0 );
   
-  // read a reply - it contains the model's id
-  stg_msg_t* reply = stg_client_read_until( cli,  STG_MSG_CLIENT_MODELCREATEREPLY );
-  
-  putchar( "." ); fflush(stdout);
-  
-  assert( reply->payload_len == sizeof( stg_id_t ) );
-  
-  stg_id_t mid = *((stg_id_t*)reply->payload);
-
+    
   //printf( " received server-side model id %d\n", mid );
-
-  stg_msg_destroy( reply );
-
+    
   return mid;
 }
 
@@ -847,7 +815,6 @@ int stg_model_pull(  stg_model_t* mod )
   
   stg_client_write_msg( mod->world->client, 
 			STG_MSG_WORLD_MODELDESTROY, 
-			STG_RESPONSE_NONE,  
 			&doomed, sizeof(doomed) );
   return 0;
 }
@@ -872,25 +839,17 @@ stg_id_t stg_client_world_new(  stg_client_t* cli, char* token,
   printf( "pushing world \"%s\" (sim: %lu real: %lu ppm: %d) ", 
 	  wmsg.token, wmsg.interval_sim, wmsg.interval_real, wmsg.ppm );
   fflush(stdout);
-
-  stg_client_write_msg( cli, 
-			STG_MSG_SERVER_WORLDCREATE,
-			STG_RESPONSE_REPLY,
-			&wmsg, sizeof(wmsg) );
   
-  // read a reply - it contains the world's id
+  stg_id_t wid;
   
-  stg_msg_t* reply = stg_client_read_until( cli,  STG_MSG_CLIENT_WORLDCREATEREPLY );
+  assert( stg_client_request_reply_fixed( cli,
+					  STG_MSG_SERVER_WORLDCREATE,
+					  &wmsg, sizeof(wmsg),
+					  &wid, sizeof(wid) ) == 0 );
   
   puts( " done." );
-
-  assert( reply->payload_len == sizeof( stg_id_t ) );
   
-  stg_id_t wid = *((stg_id_t*)reply->payload);
-
-  //printf( " received server-side world id %d\n", wid );
-
-  stg_msg_destroy( reply );
+  printf( " received server-side world id %d\n", wid );
 
   return wid;
 }
@@ -905,7 +864,6 @@ int stg_world_pull( stg_world_t* world )
   
   stg_client_write_msg( world->client, 
 			STG_MSG_SERVER_WORLDDESTROY, 
-			STG_RESPONSE_NONE,
 			&world->id_server, sizeof(world->id_server) );
   return 0;
 }
@@ -1084,35 +1042,36 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
   switch( msg->type )
     {
     case STG_MSG_WORLD_SAVE:
-      PRINT_WARN( "SAVE" );
+      PRINT_WARN( "Stage told me to SAVE a world, but it's not yet implemented." );      
+      break;
+
+    case STG_MSG_WORLD_LOAD:
+      PRINT_WARN( "Stage told me to LOAD a world, but it's not yet implemented." );      
+      break;
+
+    case STG_MSG_CLIENT_REPLY:
+      PRINT_DEBUG( "MSG CLIENT REPLY" );
+     
+      stg_mutex_lock( &cli->reply_mutex );
       
-      break;
+      //printf( "reply msg len %d\n", msg->payload_len ); 
+      //printf( "reply msg value %d\n", *(int*)msg->payload );
 
-    case STG_MSG_CLIENT_CYCLEEND:
-      PRINT_DEBUG( "** CYCLE END **" );
-      break;
+      // stash the reply data
+      g_byte_array_set_size( cli->reply, 0 );
+      g_byte_array_append( cli->reply, msg->payload, msg->payload_len );
+      
+      //printf( "reply buf len %d\n", cli->reply->len );
+      //printf( "reply buf value %d\n", *(int*)cli->reply->data );
+      
+      cli->reply_ready = TRUE;
 
-    case STG_MSG_CLIENT_WORLDCREATEREPLY:
-      PRINT_DEBUG( "msg: WORLDCREATEREPLY" );
-      break;
+      pthread_cond_signal( &cli->reply_cond );
 
-    case STG_MSG_CLIENT_MODELCREATEREPLY:
-      PRINT_DEBUG( "msg: MODELCREATEREPLY" );
+      stg_mutex_unlock( &cli->reply_mutex );
       break;
-
-    case STG_MSG_MODEL_REQUEST:
-      PRINT_DEBUG( "msg: MODEL REQUEST" );
-      break;
-
-    case STG_MSG_MODEL_REPLY:
-      PRINT_DEBUG( "msg: MODEL REPLY" );
-      break;
-
-    case STG_MSG_MODEL_ACK:
-      PRINT_DEBUG( "msg: MODEL ACK" );
-      break;
-
-    case STG_MSG_CLIENT_PROPERTY: 
+      
+    case STG_MSG_CLIENT_DELTA: 
       {
 	stg_prop_t* prop = (stg_prop_t*)msg->payload;
 
@@ -1122,7 +1081,7 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 	
 	printf( "[stage: %lu] ", cli->stagetime );
 
-#if 1
+#if 0
 	printf( "[prop: %lu] received property %d:%d:%d(%s) %d/%d bytes",
 		prop->timestamp,
 		prop->world, 
@@ -1160,9 +1119,11 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 	    //PRINT_DEBUG4( "stashing prop %d(%s) bytes %d in model \"%s\"",
 	    //	  prop->prop, stg_property_string(prop->prop),
 	    //	  (int)prop->datalen, mod->token->token );
-	    
+
+	    stg_mutex_lock( &cli->models_mutex );
 	    stg_model_prop_with_data( mod, prop->prop, 
 				      prop->data, prop->datalen );
+	    stg_mutex_unlock( &cli->models_mutex );
 	  }
 
 #ifdef DEBUG	

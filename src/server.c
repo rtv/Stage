@@ -11,7 +11,7 @@
 
 #include <glib.h>
 
-#define DEBUG
+//#define DEBUG
 
 #include "server.h"
 #include "world.h"
@@ -268,36 +268,58 @@ int server_poll( server_t* server )
 		    //PRINT_DEBUG1( "pollin on client fd %d", fd );
 		    
 		    int fd = pfds[i].fd;
-		    stg_msg_t* msg = stg_read_msg( fd );
-
-		    // this code reads a packetful of messages at once
-		    // to reduce overhead. Might use this one day...
-/* 		    stg_pkt_t* pkt = stg_read_pkt( fd ); */
 		    
-/* 		    if( pkt ) */
-/* 		      {			 */
-/* 			char* startp = pkt->payload;  */
-/* 			char* endp = pkt->payload + pkt->len;  */
-			
-/* 			while( startp < endp ) */
-/* 			  { */
-/* 			    stg_msg_t* msg = (stg_msg_t*)startp; */
-			    
-/* 			    server_msg_dispatch( server, pfds[i].fd, msg );  */
-			    
-/* 			    startp += sizeof(stg_msg_t) + msg->payload_len; */
-/* 			  } */
-
-/* 			free( pkt ); */
-/* 		      }  */
-
-
-		    if( msg )
+		    stg_package_t* pkg = calloc( sizeof(stg_package_t), 1 );
+		    
+		    ssize_t res = 
+		      stg_fd_packet_read( fd, pkg, sizeof(stg_package_t) );
+		    
+		    if( res != sizeof(stg_package_t) )
 		      {
-			server_msg_dispatch( server, pfds[i].fd, msg );
-			stg_msg_destroy( msg );
+			PRINT_ERR2( "failed to read package header (%d/%d bytes)\n",
+				    res, (int)sizeof(stg_package_t) );
+			free( pkg );
+			return 1; // error
 		      }
-		    else // no valid message
+		    
+		    PRINT_DEBUG4( "package key:%d timestamp:%d.%d len:%d\n",
+				  pkg->key, 
+				  pkg->timestamp.tv_sec, 
+				  pkg->timestamp.tv_usec, 
+				  (int)(pkg->payload_len) );
+		    
+		    if( pkg->key != STG_PACKAGE_KEY )
+		      {
+			PRINT_ERR2( "package has incorrect key (%d not %d)\n",
+				    pkg->key, STG_PACKAGE_KEY );
+			free( pkg );
+			return 2; //error
+		      }
+
+		    // read the body of the package
+		    size_t total_size = sizeof(stg_package_t) + pkg->payload_len;
+		    pkg = realloc( pkg, total_size );
+		    
+		    res = stg_fd_packet_read( fd, 
+					      pkg->payload, 
+					      pkg->payload_len );
+		    
+		    if( res != pkg->payload_len )
+		      {
+			PRINT_ERR2( "failed to read package payload (%d/%d bytes)\n",
+				    res,(int)pkg->payload_len );
+			free( pkg );
+			return 3; //error
+		      }
+		    
+
+		    
+		    if( pkg )
+		      {
+			server_package_parse( server, fd, pkg );
+			free( pkg );
+		      }
+		    else // no valid package
 		      {
 			PRINT_DEBUG1( "read failure on fd %d. Shutting it down",
 				      fd );
@@ -328,6 +350,27 @@ int server_poll( server_t* server )
     }
   
   return 0; //ok
+}
+
+
+// break the package into individual messages and handle them
+int server_package_parse( server_t* server, int fd, stg_package_t* pkg )
+{
+  assert( server );
+  assert( pkg );
+  
+  stg_msg_t* msg = (stg_msg_t*)pkg->payload;
+  
+  while( (char*)msg < (pkg->payload + pkg->payload_len) )
+    {
+      // eat this message
+      server_msg_dispatch( server, fd, msg );
+      
+      // jump to the next message in the buffer
+      (char*)msg += sizeof(stg_msg_t) + msg->payload_len;
+    }
+
+  return 0; // ok
 }
 
 
@@ -507,11 +550,10 @@ void server_handle_msg( server_t* server, int fd, stg_msg_t* msg )
 	// add this world to this client's list of owned worlds
 	stg_connection_world_own( con, wid );
 	
-	stg_msg_t* reply = stg_msg_create( STG_MSG_CLIENT_WORLDCREATEREPLY, 
-					   STG_RESPONSE_NONE,
-					   &wid, sizeof(wid) );
-	stg_fd_msg_write( fd, reply );
-	stg_msg_destroy( reply );
+	printf( "replying with world id %d (%d bytes)\n",
+		wid, sizeof(wid) );
+	
+	stg_fd_msg_write( fd, STG_MSG_CLIENT_REPLY, &wid, sizeof(wid) );
       }
       break;
       
@@ -726,7 +768,7 @@ int server_msg_dispatch( server_t* server, int fd, stg_msg_t* msg )
       {
 	stg_target_t* tgt = (stg_target_t*)msg->payload;	
 
-	//PRINT_DEBUG2( "looking up model %d:%d", tgt->world, tgt->model ); 
+	PRINT_DEBUG2( "looking up model %d:%d", tgt->world, tgt->model ); 
 
 	model_t* model = server_get_model( server, 
 					       tgt->world,

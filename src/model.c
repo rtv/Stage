@@ -522,6 +522,7 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
   switch( msg->type )
     {
     case STG_MSG_MODEL_DELTA:
+      // deltas don't need a reply
       {
 	stg_prop_t* mp = (stg_prop_t*)msg->payload;
 	
@@ -533,58 +534,12 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
 		      (int)mp->datalen );
 	
 	model_set_prop( model, mp->prop, mp->data, mp->datalen ); 
-
-	stg_msg_t* reply = NULL;
-	switch( msg->response )
-	  {
-	  case STG_RESPONSE_NONE:
-	    reply = NULL;
-	    break;
-	    
-	  case STG_RESPONSE_ACK:
-	    reply = stg_msg_create( STG_MSG_MODEL_ACK, 
-				    STG_RESPONSE_NONE,
-				    NULL, 0 );
-	    break;
-	    
-	  case STG_RESPONSE_REPLY:
-	    {
-	      void* reply_data = NULL;
-	      size_t reply_data_len = 0;
-	      
-	      if( model_get_prop( model, mp->prop, &reply_data, &reply_data_len ) )      
-		PRINT_WARN2( "failed to find a reply for property %d(%s)",
-			     mp->prop, stg_property_string(mp->prop) );
-	      else
-		{
-		  stg_print_laser_config( reply_data );
-
-		  reply = stg_msg_create( STG_MSG_MODEL_REPLY, 
-					  STG_RESPONSE_NONE,
-					  reply_data, reply_data_len );
-		  free( reply_data );
-		}
-	    }
-	    break;
-	    
-	  default:
-	    PRINT_WARN1( "ignoring unrecognized response type %d", msg->response );
-	    reply = NULL;
-	    break;
-	  }
-
-	if( reply )
-	  {
-	    stg_fd_msg_write( fd, reply );
-	    free( reply );
-	  }
-
       }
       break;
 
-    case STG_MSG_MODEL_REQUEST:
+    case STG_MSG_MODEL_PROPGET:
       {
-	PRINT_DEBUG( "RECEIVED A REQUEST" );
+	PRINT_DEBUG( "RECEIVED A PROPGET REQUEST" );
 
 	stg_target_t* tgt = (stg_target_t*)msg->payload;
 
@@ -598,11 +553,7 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
 	  {
 	    PRINT_DEBUG( "SENDING A REPLY" );
 	    
-	    stg_msg_t* reply = stg_msg_create( STG_MSG_MODEL_REPLY, 
-					       STG_RESPONSE_NONE,
-					       data, len );
-	    stg_fd_msg_write( fd, reply );
-	    free( reply );
+	    stg_fd_msg_write( fd, STG_MSG_CLIENT_REPLY, data, len );
 	  }
       }
       break;
