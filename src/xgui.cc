@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.cc - all the graphics and X management
  * RTV
- * $Id: xgui.cc,v 1.1.2.1 2001-05-21 23:26:22 vaughan Exp $
+ * $Id: xgui.cc,v 1.1.2.2 2001-05-21 23:34:17 vaughan Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -855,9 +855,9 @@ void CXGui::HighlightObject( CObject* obj )
       SetDrawMode( GXxor );
 
       // undraw the last one
-      //if( lastObj != 0 ) 
+      if( lastObj != 0 ) 
 	DrawCircle( x, y, 0.6 );
-
+      
       obj->GetGlobalPose( x,y,th );
 
       DrawCircle( x,y, 0.6 );
