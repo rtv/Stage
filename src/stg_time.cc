@@ -22,11 +22,11 @@
 // Desc: Stage (simulator) time
 // Author: Richard Vaughan
 // Date: 7 May 2003
-// CVS: $Id: stg_time.cc,v 1.4 2005-02-28 22:40:00 gerkey Exp $
+// CVS: $Id: stg_time.cc,v 1.5 2005-02-28 22:41:38 gerkey Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define DEBUG
+//#define DEBUG
 
 #include "stage_internal.h"
 #include "stg_time.h"
