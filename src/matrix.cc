@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.3 2001-09-04 23:01:13 vaughan Exp $
+ * $Id: matrix.cc,v 1.4 2001-09-08 01:48:44 vaughan Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -126,9 +126,9 @@ void CMatrix::draw_circle(int x,int y,int r, CEntity* ent )
 void CMatrix::draw_rect( const Rect& t, CEntity* ent )
 {
   draw_line( t.toplx, t.toply, t.toprx, t.topry, ent );
-  draw_line( t.toprx, t.topry, t.botlx, t.botly, ent );
-  draw_line( t.botlx, t.botly, t.botrx, t.botry, ent );
-  draw_line( t.botrx, t.botry, t.toplx, t.toply, ent );
+  draw_line( t.toprx, t.topry, t.botrx, t.botry, ent );
+  draw_line( t.botrx, t.botry, t.botlx, t.botly, ent );
+  draw_line( t.botlx, t.botly, t.toplx, t.toply, ent );
 }
 
 
@@ -204,6 +204,8 @@ void CMatrix::draw_line(int x1,int y1,int x2,int y2, CEntity* ent)
     {
       delta = 2 * delta_x - delta_y;
       incE = 2 * delta_x;
+      incNE = 2 * (delta_x - delta_y);
+      
       while (y < y2) 
   	{
   	  if (delta <= 0)

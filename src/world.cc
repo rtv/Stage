@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.28 $
+//  $Author: vaughan $
+//  $Revision: 1.29 $
 //
 // Usage:
 //  (empty)
@@ -645,7 +645,6 @@ void CWorld::SetRectangle(double px, double py, double pth,
                           double dx, double dy, CEntity* ent )
 {
     Rect rect;
-    double tx, ty;
 
     dx /= 2.0;
     dy /= 2.0;
@@ -655,27 +654,18 @@ void CWorld::SetRectangle(double px, double py, double pth,
     double sx = dx * sin(pth);
     double sy = dy * sin(pth);
     
-    // This could be faster
-    //
-    tx = px + cx - sy;
-    ty = py + sx + cy;
-    rect.toplx = (int) (tx * ppm);
-    rect.toply = (int) (ty * ppm);
+    rect.toplx = (int) ((px + cx - sy) * ppm);
+    rect.toply = (int) ((py + sx + cy) * ppm);
 
-    tx = px - cx - sy;
-    ty = py - sx + cy;
-    rect.toprx = (int) (tx * ppm);
-    rect.topry = (int) (ty * ppm);
+    rect.toprx = (int) ((px + cx + sy) * ppm);
+    rect.topry = (int) ((py + sx - cy) * ppm);
 
-    tx = px - cx + sy;
-    ty = py - sx - cy;
-    rect.botlx = (int) (tx * ppm);
-    rect.botly = (int) (ty * ppm);
+    rect.botlx = (int) ((px - cx - sy) * ppm);
+    rect.botly = (int) ((py - sx + cy) * ppm);
 
-    tx = px + cx + sy;
-    ty = py + sx - cy;
-    rect.botrx = (int) (tx * ppm);
-    rect.botry = (int) (ty * ppm);
+    rect.botrx = (int) ((px - cx + sy) * ppm);
+    rect.botry = (int) ((py - sx - cy) * ppm);
+
     
     matrix->draw_rect( rect, ent );
 }
