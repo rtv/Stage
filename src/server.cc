@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.43 2002-11-11 03:09:46 rtv Exp $
+ * CVS info: $Id: server.cc,v 1.44 2002-11-12 06:22:19 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -36,7 +36,6 @@
 #include <math.h>
 #include <netdb.h>
 #include <netinet/in.h>
-//#include <pthread.h>
 #include <pwd.h>
 #include <signal.h>
 #include <stdio.h>

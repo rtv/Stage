@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.137 2002-11-11 03:09:46 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.138 2002-11-12 06:22:19 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -85,10 +85,12 @@ CWorld::CWorld( int argc, char** argv, Library* lib )
   this->argv = argv;
   this->lib = lib;
 
+  // I've taken this out, cause no random numbers are being generated and
+  // srand48() isn't available everywhere - BPG
+  /*
   // seed the random number generator
-#if HAVE_SRAND48
   srand48( time(NULL) );
-#endif
+  */
 
   // Initialise configuration variables
   this->ppm = 20;
