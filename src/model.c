@@ -53,19 +53,13 @@ model_t* model_create(  world_t* world,
   // ancestors' names and its worldfile token
   //model_create_name( mod );
 
-  PRINT_DEBUG3( "creating model %d:%d(%s)", 
-		world->id, mod->id, mod->token );
+  PRINT_DEBUG4( "creating model %d.%d(%s) type %s", 
+		mod->world->id, mod->id, 
+		mod->token, stg_model_type_string(mod->type) );
   
-  if( parent) 
-    { 
-      // add this model to it's parent's list of children
-      g_ptr_array_add( parent->children, mod );       
-      // count this type of model in its parent
-      //parent->child_type_count[ type ]++;
-    }
-  //else
-  //world->child_type_count[ type ]++;
-
+  // add this model to its parent's list of children (if any)
+  if( parent) g_ptr_array_add( parent->children, mod );       
+  
   // having installed the paremt, it's safe to creat the GUI components
   gui_model_create( mod );
 
@@ -152,7 +146,9 @@ model_t* model_create(  world_t* world,
   if( derived[ mod->type ].init )
     derived[ mod->type ].init(mod);
   
-  PRINT_DEBUG2( "finished creating model %d type %d.", mod->id, mod->type );
+  PRINT_DEBUG4( "finished model %d.%d(%s) type %s", 
+		mod->world->id, mod->id, 
+		mod->token, stg_model_type_string(mod->type) );
   
   return mod;
 }
@@ -229,9 +225,6 @@ rtk_fig_t* model_prop_fig_create( model_t* mod,
 
 void model_global_pose( model_t* mod, stg_pose_t* gpose )
 { 
-  // start from zero
-  //memset( pose, 0, sizeof(stg_pose_t));
-  
   stg_pose_t parent_pose;
   memset( &parent_pose, 0, sizeof(parent_pose));
   
@@ -418,10 +411,9 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
       {
 	stg_prop_t* mp = (stg_prop_t*)msg->payload;
 	
-	PRINT_WARN4( "set property %s:%s:%s) with %d bytes",
-		      model->world->token,
+	PRINT_DEBUG4( "setting %d.%s.%s with %d bytes",
+		      model->world->id,
 		      model->token,
-		     //mp->prop,
 		      stg_property_string( mp->prop ),
 		      (int)mp->datalen );
 	
@@ -450,12 +442,11 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
       {
 	stg_prop_t* mp = (stg_prop_t*)msg->payload;
 	
-	PRINT_WARN5( "set property %d:%d:%d(%s) with %d bytes",
-		     mp->world,
-		     mp->model,
-		     mp->prop,
-		     stg_property_string( mp->prop ),
-		     (int)mp->datalen );
+	PRINT_DEBUG4( "set property %d.%d.%s with %d bytes",
+		      mp->world,
+		      mp->model,
+		      stg_property_string( mp->prop ),
+		      (int)mp->datalen );
 	
 	model_set_prop( model, mp->prop, mp->data, mp->datalen ); 	
 	

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.21 $
+//  $Revision: 1.22 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -18,6 +18,7 @@
 #include "raytrace.h"
 #include "model.h"
 
+extern rtk_fig_t* fig_debug;
 
 ///////////////////////////////////////////////////////////////////////////
 // Check to see if the given pose will yield a collision with obstacles.
@@ -40,6 +41,8 @@ model_t* model_test_collision_at_pose( model_t* mod,
   // no body? no collision
   if( count < 1 )
     return NULL;
+
+  //if( fig_debug ) rtk_fig_clear( fig_debug );
 
   int l;
   for( l=0; l<count; l++ )
@@ -69,6 +72,8 @@ model_t* model_test_collision_at_pose( model_t* mod,
       itl_t* itl = itl_create( p1.x, p1.y, p2.x, p2.y, 
 			       mod->world->matrix, 
 			       PointToPoint );
+      
+
       model_t* hitmod;
       while( (hitmod = itl_next( itl )) ) 
 	{

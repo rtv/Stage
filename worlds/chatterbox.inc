@@ -1,7 +1,7 @@
 # Define a model based on the Autonomy Lab Chatterbox robot
 #
 # Author: Richard T Vaughan (rtv) 
-# $Id: chatterbox.inc,v 1.2 2004-07-24 00:39:51 rtv Exp $
+# $Id: chatterbox.inc,v 1.1 2004-08-30 02:49:57 rtv Exp $
 
 define chatterbox model
 (

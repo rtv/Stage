@@ -61,13 +61,16 @@ int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count
   GError* err = NULL;
   GdkPixbuf* pb = gdk_pixbuf_new_from_file( filename, &err );
 
-  if( pb == NULL )
+  if( err )
     {
-      // TODO - use the GError properly here
-      PRINT_ERR1( "error loading image file \"%s\"", filename );
+      fprintf( stderr, "\nError loading bitmap: %s\n", err->message );
       return 1; // error
     }
-
+  
+  // this should be ok as no error was reported
+  assert( pb );
+  
+  
 #ifdef DEBUG
   printf( "image \"%s\" channels:%d bits:%d alpha:%d "
 	  "width:%d height:%d rowstride:%d pixels:%p\n",

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.13 $
+//  $Revision: 1.14 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -26,15 +26,32 @@ void fiducial_init( model_t* mod )
 {
   PRINT_DEBUG( "fiducial init" );
 
+  // fiducialfinders don't have a body in the sim
+  //model_set_lines( mod, NULL, 0 );
+  
+  // same body size as a laser by default
+  stg_geom_t geom;
+  memset( &geom, 0, sizeof(geom));
+  geom.size.x = STG_DEFAULT_LASER_SIZEX;
+  geom.size.y = STG_DEFAULT_LASER_SIZEY;
+  model_set_geom( mod, &geom );  
+  
+  stg_color_t color = stg_lookup_color( "magenta" );
+  model_set_color( mod, &color );
+
+  mod->obstacle_return = 0;
+  mod->laser_return = LaserTransparent;
+  
+  // start with no data
   model_set_data( mod, NULL, 0 );
 
-  stg_fiducial_config_t newfc; // init a basic config
-  newfc.min_range = STG_DEFAULT_FIDUCIAL_RANGEMIN;
-  newfc.max_range_anon = STG_DEFAULT_FIDUCIAL_RANGEMAXANON;
-  newfc.max_range_id = STG_DEFAULT_FIDUCIAL_RANGEMAXID;
-  newfc.fov = STG_DEFAULT_FIDUCIAL_FOV;
-  
-  model_set_config( mod, &newfc, sizeof(newfc) );
+  // default parameters
+  stg_fiducial_config_t cfg; 
+  cfg.min_range = STG_DEFAULT_FIDUCIAL_RANGEMIN;
+  cfg.max_range_anon = STG_DEFAULT_FIDUCIAL_RANGEMAXANON;
+  cfg.max_range_id = STG_DEFAULT_FIDUCIAL_RANGEMAXID;
+  cfg.fov = STG_DEFAULT_FIDUCIAL_FOV;  
+  model_set_config( mod, &cfg, sizeof(cfg) );
 }
 
 int fiducial_set_data( model_t* mod, void* data, size_t len )

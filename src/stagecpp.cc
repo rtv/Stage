@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.47 2004-08-30 00:19:55 rtv Exp $
+// $Id: stagecpp.cc,v 1.48 2004-08-30 02:49:57 rtv Exp $
 
 #include "stage.h"
 #include "worldfile.hh"
@@ -89,7 +89,14 @@ void configure_model( stg_model_t* mod, int section )
     {
       stg_rotrect_t* rects = NULL;
       int num_rects = 0;
-      stg_load_image( bitmapfile, &rects, &num_rects );
+
+      char buf[MAXPATHLEN];
+      char* path = getcwd( buf, MAXPATHLEN );
+      PRINT_WARN2( "in %s attempting to load %s",
+		   path, bitmapfile );
+
+      if( stg_load_image( bitmapfile, &rects, &num_rects ) )
+	exit( -1 );
 	  
       // convert rects to an array of lines
       int num_lines = 4 * num_rects;

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.19 $
+//  $Revision: 1.20 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -27,6 +27,9 @@ int ranger_set_config( model_t* mod, void* config, size_t len );
 
 void ranger_init( model_t* mod )
 {
+  // a ranger has no body 
+  model_set_lines( mod, NULL, 0 ); 
+
   // set up sensible defaults
   stg_ranger_config_t cfg[16];
   size_t cfglen = 16*sizeof(cfg[0]);

@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.11 2004-08-30 00:19:54 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.12 2004-08-30 02:49:57 rtv Exp $
  */
 
 #include <math.h>
@@ -78,8 +78,15 @@ void blobfinder_init( model_t* mod )
   geom.size.y = 0.01; //STG_DEFAULT_LASER_SIZEY;
   model_set_geom( mod, &geom );
 
-  stg_color_t col = stg_lookup_color("magenta");
-  model_set_color( mod, &col );
+  // a blobfinder has no body
+  model_set_lines( mod, NULL, 0 );
+
+  // nothing can see a blobfinder
+  //mod->obstacle_return = 0;
+  //mod->laser_return = LaserTransparent;
+  //mod->fiducial_return = FiducialNone;
+  //stg_color_t col = stg_lookup_color("magenta");
+  //model_set_color( mod, &col );
 
   stg_blobfinder_config_t cfg;
   memset(&cfg,0,sizeof(cfg));

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.35 $
+//  $Revision: 1.36 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -47,7 +47,7 @@ void laser_init( model_t* mod )
   lconf.fov         = STG_DEFAULT_LASER_FOV;
   lconf.samples     = STG_DEFAULT_LASER_SAMPLES;
   
-  stg_color_t col =stg_lookup_color( "red" ); 
+  stg_color_t col =stg_lookup_color( STG_LASER_GEOM_COLOR ); 
   model_set_color( mod, &col );
 
   model_set_config( mod, &lconf, sizeof(lconf) );

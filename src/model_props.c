@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -177,9 +177,9 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
 		   mod->id, mod->token, pid, stg_property_string(pid)); 
     }
   
-  if( *len == 0 )
-    PRINT_WARN3( "no data available for model %d property %d(%s)",
-		 mod->id, pid, stg_property_string(pid) );
+  //if( *len == 0 )
+    //PRINT_WARN3( "no data available for model %d property %d(%s)",
+    //	 mod->id, pid, stg_property_string(pid) );
 
   if( pid != STG_PROP_TIME )
     PRINT_DEBUG1( "got a %d byte property", (int)*len);
@@ -528,11 +528,7 @@ stg_fiducial_return_t* model_get_fiducialreturn( model_t* mod )
 
 int model_set_fiducialreturn( model_t* mod, stg_fiducial_return_t* val )     
 {
-  PRINT_WARN1( "fid value set %d", *val );
-
   memcpy( &mod->fiducial_return, val, sizeof(mod->fiducial_return) );
-
-  PRINT_WARN1( "fid value stored %d", mod->fiducial_return );
   return 0;
 }
 
