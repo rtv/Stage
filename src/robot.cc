@@ -1,7 +1,7 @@
 /*************************************************************************
  * robot.cc - most of the action is here
  * RTV
- * $Id: robot.cc,v 1.11 2000-12-02 03:25:58 vaughan Exp $
+ * $Id: robot.cc,v 1.12 2000-12-02 03:54:53 ahoward Exp $
  ************************************************************************/
 
 #include <errno.h>
@@ -186,10 +186,10 @@ bool CRobot::Startup()
     m_device[m_device_count++] = new CPioneerMobileDevice( this, 
 				world->pioneerWidth, 
 				world->pioneerLength,
-				playerIO + P2OS_DATA_START,
-				P2OS_DATA_BUFFER_SIZE,
-				P2OS_COMMAND_BUFFER_SIZE,
-				P2OS_CONFIG_BUFFER_SIZE);
+				playerIO + SPOSITION_DATA_START,
+				SPOSITION_DATA_BUFFER_SIZE,
+				SPOSITION_COMMAND_BUFFER_SIZE,
+				SPOSITION_CONFIG_BUFFER_SIZE);
 
     // Sonar device
     //

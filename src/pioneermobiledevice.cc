@@ -1,4 +1,4 @@
-// $Id: pioneermobiledevice.cc,v 1.5 2000-12-02 03:25:58 vaughan Exp $	
+// $Id: pioneermobiledevice.cc,v 1.6 2000-12-02 03:54:53 ahoward Exp $	
 #include <math.h>
 
 #include "world.h"
@@ -17,12 +17,6 @@ CPioneerMobileDevice::CPioneerMobileDevice( CRobot* rr,
 					    size_t config_len)
         : CPlayerDevice(rr, buffer, data_len, command_len, config_len)
 {
-  m_robot = rr;
-  m_world = m_robot->world;
-
-  ASSERT(m_robot != NULL);
-  ASSERT(m_world != NULL);
-  
   m_update_interval = 0.01; // update me very fast indeed
 
   width = wwidth;
@@ -49,25 +43,25 @@ CPioneerMobileDevice::CPioneerMobileDevice( CRobot* rr,
 //
 bool CPioneerMobileDevice::Update()
 {
-  //TRACE0("updating CPioneerMobileDevice");
- 
-  // generic device call  
-  if( GetCommand( commands, P2OS_COMMAND_BUFFER_SIZE ) 
-      == P2OS_COMMAND_BUFFER_SIZE )
+    //TRACE0("updating CPioneerMobileDevice");
+    
+    // Get the latest command
+    //
+    if( GetCommand( &m_command, sizeof(m_command)) == sizeof(m_command))
     {
-      ParseCommandBuffer();    // find out what to do    
+        ParseCommandBuffer();    // find out what to do    
     }
   
-  MapUnDraw(); // erase myself
+    MapUnDraw(); // erase myself
    
-  Move();      // do things
+    Move();      // do things
     
-  MapDraw();   // draw myself 
+    MapDraw();   // draw myself 
 
-  ComposeData();     // report the new state of things
-  PutData( data, P2OS_DATA_BUFFER_SIZE  );     // generic device call
+    ComposeData();     // report the new state of things
+    PutData( &m_data, sizeof(m_data)  );     // generic device call
 
-  return true;
+    return true;
 }
 
 
@@ -157,40 +151,37 @@ void CPioneerMobileDevice::ComposeData()
   // this will put the data into P2OS packet format to be shipped
   // to Player
 
-  unsigned char* deviceData = data;
-  
-  double rtod = 180.0/M_PI;
- 
-  // position device
-  *((int*)(deviceData + 0)) =
-    htonl((int)((m_world->timeNow - m_world->timeBegan) * 1000.0));
-  
-  *((int*)(deviceData + 4)) = 
-    htonl((int)((m_robot->x - m_robot->xorigin)/ m_world->ppm * 1000.0));
-  
-  *((int*)(deviceData + 8)) = 
-    htonl((int)((m_robot->y - m_robot->yorigin)/ m_world->ppm * 1000.0));
+    // *** BROKEN -- this is all over the place.  It needs fixing. ahoward
+    
+    // Compute odometric pose
+    //
+    double px = xodom / m_world->ppm;
+    double py = yodom / m_world->ppm;
+    double pth = aodom;
+    
+    // normalized odo heading
+    float odoHeading = fmod(pth + TWOPI, TWOPI );
+    
+    // normalized compass heading
+    float comHeading = fmod( m_robot->a + M_PI/2.0 + TWOPI, TWOPI ); 
 
-  // normalized odometry heading
-  float odoHeading = fmod( m_robot->aorigin - m_robot->a + TWOPI, TWOPI ); 
-  *((unsigned short*)(deviceData + 12)) =
-    htons((unsigned short)(odoHeading * rtod ));
+    // Construct the data packet
+    // Basically just changes byte orders and some units
+    //
+    m_data.time = htonl((int)((m_world->timeNow - m_world->timeBegan) * 1000.0));
+    // *** This is incorrect -- it needs to take angles into account.  ahoward
+    //m_data.px =  htonl((int)((m_robot->x - m_robot->xorigin)/ m_world->ppm * 1000.0));
+    //m_data.py = htonl((int)((m_robot->y - m_robot->yorigin)/ m_world->ppm * 1000.0));
+    //m_data.pth = htons((unsigned short) RTOD(odoHeading));
+    m_data.px = htonl((int) px);
+    m_data.py = htonl((int) py);
+    m_data.pth = htons((unsigned short) RTOD(pth));
 
-  // speeds
-  *((unsigned short*)(deviceData + 14))
-    = htons((unsigned short)speed);
-
-  *((unsigned short*)(deviceData + 16))
-    = htons((unsigned short)(turnRate * rtod ));
-
-  // normalized compass heading
-  float comHeading = fmod( m_robot->a + M_PI/2.0 + TWOPI, TWOPI ); 
-  
-  *((unsigned short*)(deviceData + 18))
-    = htons((unsigned short)( comHeading * rtod ));
-
-  // stall - currently shows if the robot is being dragged by the user
-  *(unsigned char*)(deviceData + 20) = stall;
+    m_data.vr = htons((unsigned short) (speed * 1000.0));
+    // *** HACK -- Why do I need to negate this? ahoward
+    m_data.vth = htons((short) RTOD(-turnRate));  
+    m_data.compass = htons((unsigned short)(RTOD(comHeading)));
+    m_data.stall = stall;
 }
 
 bool CPioneerMobileDevice::MapUnDraw()
@@ -248,22 +239,14 @@ void CPioneerMobileDevice::CalculateRect( float x, float y, float a )
 
 void CPioneerMobileDevice::ParseCommandBuffer()
 {
-  // this will parse the P2OS command buffer to find out what to do
-
-  //printf( "cmds: %d   ---    $s \n" , commands, commands );
-
-  // read the command buffer and set the robot's speeds
-  short v = *(short*)( commands );
-  short w = *(short*)( commands + 2 );
-
-  float fv = (float)(short)ntohs(v);//1000.0 * (float)ntohs(v);
-  float fw = (float)(short)ntohs(w);//M_PI/180) * (float)ntohs(w);
-
-  // set speeds unless we're being dragged
-  if( m_world->win->dragging != m_robot )
+    float fv = (float) (short) ntohs(m_command.vr);
+    float fw = (float) (short) ntohs(m_command.vth);
+    
+    // set speeds unless we're being dragged
+    if( m_world->win->dragging != m_robot )
     {
-      speed = 0.001 * fv;
-      turnRate = -(M_PI/180.0) * fw;
+        speed = 0.001 * fv;
+        turnRate = -(M_PI/180.0) * fw;
     }
   
   //cout << "DONE PARSE" << endl;
@@ -303,6 +286,11 @@ bool CPioneerMobileDevice::GUIDraw()
 
   return true;
 }
+
+
+
+
+
 
 
 

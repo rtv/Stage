@@ -1,13 +1,14 @@
-/* 	$Id: pioneermobiledevice.h,v 1.3 2000-12-01 03:13:32 ahoward Exp $	 */
+/* 	$Id: pioneermobiledevice.h,v 1.4 2000-12-02 03:54:53 ahoward Exp $	 */
 // this device implements a differential-steer mobility base for the robot
 
 #ifndef PIONEERMOBILEDEVICE_H
 #define PIONEERMOBILEDEVICE_H
 
+#include "offsets.h"
 #include "playerdevice.hh"
-#include "robot.h"
-#include "world.h"
 #include "win.h"
+
+
 
 class CPioneerMobileDevice : public CPlayerDevice
 {
@@ -51,13 +52,12 @@ class CPioneerMobileDevice : public CPlayerDevice
   void ParseCommandBuffer();
 
  private:
-  BYTE commands[ P2OS_COMMAND_BUFFER_SIZE ];
-  BYTE data[ P2OS_DATA_BUFFER_SIZE ]; 
-
+  //*** remove. ahoward BYTE commands[ POSITION_COMMAND_BUFFER_SIZE ];
+  //BYTE data[ PDATA_BUFFER_SIZE ];
+  PlayerPositionCommand m_command;
+  PlayerPositionData m_data;
+ 
   double m_update_interval, m_last_update;
-
-  CRobot* m_robot;
-  CWorld* m_world;
 };
 
 #endif
