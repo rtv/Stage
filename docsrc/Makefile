@@ -1,6 +1,6 @@
 #
 #
-# $Id: Makefile,v 1.1.8.1 2003-12-06 22:09:00 gerkey Exp $
+# $Id: Makefile,v 1.1.8.2 2003-12-06 22:56:06 gerkey Exp $
 #
 # generic LaTeX makefile
 #
@@ -22,7 +22,9 @@ $(NAME).dvi: $(NAME).tex
 
 html:
 	rm -rf html_docs
-	latex2html -split 0 -nonavigation -html_version 3.2,table,math -show_section_numbers -mkdir -dir html_docs $(NAME).tex
+	latex2html -split 4 -toc_depth 3 -html_version 3.2,table,math -show_section_numbers -mkdir -dir html_docs $(NAME).tex
+
+#latex2html -split 0 -nonavigation -html_version 3.2,table,math -show_section_numbers -mkdir -dir html_docs $(NAME).tex
 
 ps: $(NAME).ps
 
