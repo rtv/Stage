@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.6.4.5.2.2 2004-02-06 19:32:08 gerkey Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.6.4.5.2.3 2004-02-26 16:26:56 gerkey Exp $
  */
 
 #define DEBUG
@@ -131,7 +131,8 @@ void CLaserDevice::Update( double sim_time )
 
   //if( sim_time - m_last_update >= interval )
   // add a little wiggle room, to deal with round-off
-  if(fabs(diff - interval) < 1e-6)
+  //if(fabs(diff - interval) < 1e-6)
+  if((diff - interval) > -1e-6)
   {
     m_last_update = sim_time;
 

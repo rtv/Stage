@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.28.2.9.2.1 2003-12-05 03:10:25 gerkey Exp $
+dnl $Id: configure.in,v 1.28.2.9.2.2 2004-02-26 16:26:56 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -70,84 +70,47 @@ dnl **********************************************************************
 dnl Begin GUI configuration
 dnl **********************************************************************
 
-dnl This macro does all the checking for RTK, taking into account --prefix
-dnl and --with-rtk.  Please don't change this macro, unless you also change 
-dnl the version in player/m4.d/drivertests.m4.
-AC_DEFUN([RTK_CHECK],[
-dnl where's RTK?
-AC_ARG_WITH(rtk, [  --with-rtk=dir          Location of RTK],
-RTK_DIR=$with_rtk,
-RTK_DIR=$prefix)
+AC_CHECK_PROG(have_pkg_config,pkg-config,yes,no)
 
-dnl RTK2 uses libjpeg to export images.
-AC_CHECK_HEADER(jpeglib.h,
-  AC_DEFINE(HAVE_JPEGLIB_H,1,[include jpeg support])
-  LIBJPEG="-ljpeg",,)
-AC_SUBST(LIBJPEG)
+if test "x$have_pkg_config" = "xyes"; then
 
-AC_CHECK_PROG([have_gtk], [gtk-config], [yes], [no])
-if test "x$have_gtk" = "xyes"; then
-  if test "x$RTK_DIR" = "xNONE"; then
-    AC_CHECK_LIB(rtk,rtk_init,
-      AC_CHECK_LIB(rtk,LIBRTK_VERSION_2_2,
-        with_rtk=yes,
-        AC_MSG_WARN([Your librtk installation is too old (< 2.2).])
-        AC_MSG_WARN([Either download a newer version of librtk])
-        AC_MSG_WARN([or pass --without-rtk to configure.])
-        AC_MSG_ERROR([RTK is too old]),
-        [$LIBJPEG `gtk-config --libs gtk gthread`]),
-      with_rtk=no,
-      [$LIBJPEG `gtk-config --libs gtk gthread`])
-    RTK_CPPFLAGS="`gtk-config --cflags`"
-    RTK_LDADD="-lrtk $LIBJPEG `gtk-config --libs gtk gthread`"
-  elif test ! "x$RTK_DIR" = "xno"; then
-    AC_CHECK_LIB(rtk,rtk_init,
-      AC_CHECK_LIB(rtk,LIBRTK_VERSION_2_2,
-        with_rtk=yes
-        RTK_CPPFLAGS="-I$RTK_DIR/include `gtk-config --cflags`"
-        RTK_LDADD="-L$RTK_DIR/lib -lrtk $LIBJPEG `gtk-config --libs gtk gthread`",
-        AC_MSG_WARN([Your librtk installation is too old (< 2.2).])
-        AC_MSG_WARN([Either download a newer version of librtk])
-        AC_MSG_WARN([or pass --without-rtk to configure.])
-        AC_MSG_ERROR([RTK is too old]),
-        [-L$RTK_DIR/lib $LIBJPEG `gtk-config --libs gtk gthread`]),
-      with_rtk=no,
-      [-L$RTK_DIR/lib $LIBJPEG `gtk-config --libs gtk gthread`])
+  dnl pkg-config is available, so we use it	
+  dnl add prefix to the pkg-config path in case RTK or Stage was
+  dnl installed there and the user didn't add it manually 
+  export PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$PKG_CONFIG_PATH
+  AC_MSG_RESULT([pkg-config searching for librtk2.pc in $PKG_CONFIG_PATH]) 
+  
+  PKG_CHECK_MODULES(RTK, librtk2 >= 2.2,
+    with_rtk=yes
+    AC_DEFINE(INCLUDE_RTK2,1,[building optional RTK GUI components]),
+    with_rtk=no
+    AC_MSG_WARN([no suitable RTK was found])
+  )
+  
+  dnl Based on which GUI we're using (assuming there are ever more than one),
+  dnl set some variables that will used during the build.
+  if test "x$with_rtk" = "xyes"; then
+    with_gui=yes
+    AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
+    GUI_LIB=librtkstage.a
+    GUI_LIBPATH=rtkstage/$GUI_LIB
+    GUI_LDADD=$RTK_LIBS
+    GUI_CPPFLAGS=$RTK_CFLAGS
+  else
+    with_gui=no
   fi
+  AC_SUBST(GUI_LIB)
+  AC_SUBST(GUI_LIBPATH)
+  AC_SUBST(GUI_LDADD)
+  AC_SUBST(GUI_CPPFLAGS)
 else
+  AC_MSG_WARN([You should really install pkg-config])
+  AC_MSG_WARN([Can't locate RTK without pkg-config.  No GUI will be built])
+  with_gui=no
   with_rtk=no
 fi
-if test "x$with_rtk" = "xno"; then
-  AC_MSG_WARN([***************************************************])
-  AC_MSG_WARN([Couldn't find RTK so I won't build RTK-based GUIs])
-  AC_MSG_WARN([Maybe you should download and install RTK?])
-  AC_MSG_WARN([If you have RTK installed, try --with-rtk=path])
-  AC_MSG_WARN([***************************************************])
-fi
+
 AM_CONDITIONAL(WITH_RTK, test x$with_rtk = xyes)
-AC_SUBST(RTK_CPPFLAGS)
-AC_SUBST(RTK_LDADD)
-])
-
-dnl invoke above macro
-RTK_CHECK
-
-dnl Based on which GUI we're using (assuming there are ever more than one),
-dnl set some variables that will used during the build.
-if test "x$with_rtk" = "xyes"; then
-  with_gui=yes
-  AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
-  GUI_LIB=librtkstage.a
-  GUI_LIBPATH=rtkstage/$GUI_LIB
-  GUI_LDADD=$RTK_LDADD
-  GUI_CPPFLAGS=$RTK_CPPFLAGS
-else
-  with_gui=no
-fi
-AC_SUBST(GUI_LIB)
-AC_SUBST(GUI_LIBPATH)
-AC_SUBST(GUI_LDADD)
-AC_SUBST(GUI_CPPFLAGS)
 
 dnl **********************************************************************
 dnl End GUI configuration
