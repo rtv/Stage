@@ -472,7 +472,7 @@ int stg_model_prop_set( stg_model_t* mod, stg_id_t prop, void* data, size_t len 
   memcpy( mp->data, data, len );
   
   int retval = stg_client_write_msg( mod->world->client, 
-				     STG_MSG_MODEL_PROPERTY, 
+				     STG_MSG_MODEL_DELTA, 
 				     STG_RESPONSE_NONE, 
 				     mp, mplen );
   free( mp );
@@ -493,7 +493,7 @@ int stg_model_prop_set_ack( stg_model_t* mod, stg_id_t prop, void* data, size_t 
   PRINT_DEBUG3( "setting prop %d:%d:%d\n", mp->world, mp->model, mp->prop );
   
   int retval = stg_client_write_msg( mod->world->client, 
-				     STG_MSG_MODEL_PROPERTY,
+				     STG_MSG_MODEL_DELTA,
 				     STG_RESPONSE_ACK,  
 				     mp, mplen );
   
@@ -532,7 +532,7 @@ int stg_model_prop_set_reply( stg_model_t* mod, stg_id_t prop,
   PRINT_DEBUG3( "setting prop %d:%d:%d\n", mp->world, mp->model, mp->prop );
   
   int retval = stg_client_write_msg( mod->world->client, 
-				     STG_MSG_MODEL_PROPERTY,
+				     STG_MSG_MODEL_DELTA,
 				     STG_RESPONSE_REPLY,  
 				     mp, mplen );
   
@@ -627,7 +627,7 @@ stg_msg_t* stg_client_read_until( stg_client_t* cli, stg_msg_type_t mtype )
   
   while(1)
     {
-      //putchar( '*' ); fflush(stdout);
+      putchar( '*' ); fflush(stdout);
       
       if( msg )
 	stg_msg_destroy( msg );
@@ -639,8 +639,8 @@ stg_msg_t* stg_client_read_until( stg_client_t* cli, stg_msg_type_t mtype )
 	  if( msg->type == mtype ) 
 	    break;
 	}
-      else
-	usleep( 10000 ); // wait for a short time before polling again
+      //else
+      //usleep( 10000 ); // wait for a short time before polling again
     }
   
   return msg;
@@ -657,7 +657,7 @@ stg_msg_t* stg_client_read( stg_client_t* cli )
       return NULL; 
     } 
   
-  if( poll( &cli->pfd,1,0 ) && (cli->pfd.revents & POLLIN) )
+  if( poll( &cli->pfd,1,1 ) && (cli->pfd.revents & POLLIN) )
     {
       //PRINT_DEBUG( "pollin on Stage connection" );
       
@@ -693,7 +693,7 @@ int stg_client_property_set( stg_client_t* cli, stg_id_t world, stg_id_t model,
   memcpy( mp->data, data, len );
   
   int retval = stg_client_write_msg( cli, 
-				     STG_MSG_MODEL_PROPERTY, 
+				     STG_MSG_MODEL_DELTA, 
 				     STG_RESPONSE_NONE,
 				     mp, mplen );
   

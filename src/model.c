@@ -521,7 +521,7 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
 
   switch( msg->type )
     {
-    case STG_MSG_MODEL_PROPERTY:
+    case STG_MSG_MODEL_DELTA:
       {
 	stg_prop_t* mp = (stg_prop_t*)msg->payload;
 	

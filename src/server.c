@@ -212,7 +212,7 @@ int server_accept_connection( server_t* server )
   printf( "Accepted connection from %s\n",
 	  "<todo>" );
 
-  connection_t* con = stg_connection_create();
+  connection_t* con = stg_connection_create( server );
   con->fd = connfd;
   con->host = strdup( "<hostname>" );
   con->port = 9000;
@@ -498,6 +498,15 @@ void server_handle_msg( server_t* server, int fd, stg_msg_t* msg )
 	
 	stg_id_t wid = server_world_create( server,
 					    (stg_createworld_t*)msg->payload );
+
+	// look up the client that created this world
+	connection_t* con = (connection_t*)g_hash_table_lookup( server->clients,
+								&fd );
+	assert(con);
+	
+	// add this world to this client's list of owned worlds
+	stg_connection_world_own( con, wid );
+	
 	stg_msg_t* reply = stg_msg_create( STG_MSG_CLIENT_WORLDCREATEREPLY, 
 					   STG_RESPONSE_NONE,
 					   &wid, sizeof(wid) );

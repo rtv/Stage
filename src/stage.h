@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.38 2004-05-25 01:28:25 rtv Exp $
+ * CVS: $Id: stage.h,v 1.39 2004-05-25 02:33:59 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -150,7 +150,7 @@ typedef uint16_t stg_msg_type_t;
 //#define STG_MSG_WORLD_REQUEST           (STG_MSG_MODEL | 10)
 //#define STG_MSG_WORLD_REPLY             (STG_MSG_MODEL | 11)
 
-#define STG_MSG_MODEL_PROPERTY          (STG_MSG_MODEL | 1)
+#define STG_MSG_MODEL_DELTA             (STG_MSG_MODEL | 1)
 #define STG_MSG_MODEL_SAVE              (STG_MSG_MODEL | 2)
 #define STG_MSG_MODEL_LOAD              (STG_MSG_MODEL | 3)
 #define STG_MSG_MODEL_REQUEST           (STG_MSG_MODEL | 4)
@@ -173,20 +173,6 @@ typedef enum
   STG_RESPONSE_REPLY
 } stg_response_t;
 
-   // TESTING
-#define ACK     0
-#define NACK    1
-#define REQUEST 2
-#define REPLY   3
-
-#define CREATE
-#define DESTROY
-#define SAVE
-#define LOAD
-#define PAUSE
-#define RESUME
-#define INTERVAL
-
 
 // Basic self-describing measurement types. All packets with real
 // measurements are specified in these terms so changing types here
@@ -201,6 +187,8 @@ typedef double stg_seconds_t;
 #define NTOH_M(m) ntohl(m)
 #define HTON_RAD(r) htonl(r) // byte ordering for RADIANS
 #define NTOH_RAD(r) ntohl(r)
+#define HTON_SEC(s) htonl(s) // byte ordering for SECONDS
+#define NTOH_SEC(s) ntohl(s)
 #define HTON_SEC(s) htonl(s) // byte ordering for SECONDS
 #define NTOH_SEC(s) ntohl(s)
 

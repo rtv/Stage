@@ -2,6 +2,7 @@
 #define _CONNECTION_H
 
 #include "stage.h"
+#include "server.h"
 
 typedef struct
 {
@@ -12,8 +13,14 @@ typedef struct
 	  // array of struct pollfds
   
   GPtrArray* subs; // array of subscriptions made by this client
-
-
+  
+  GArray* worlds_owned; // list of ids of the worlds owned by this
+  // client, so we can destroy them if this client disconnects. TODO -
+  // implement a message that removes a world from this list to create
+  // persistent worlds.
+  
+  server_t* server; // the server that created this connection
+  
   // etc.
   void* userdata; // hook for random data
 } connection_t;
@@ -22,7 +29,9 @@ typedef struct
 
 void stg_connection_print( connection_t* cli );
 void stg_connection_print_cb( gpointer key, gpointer value, gpointer user );
-connection_t* stg_connection_create( void );
+connection_t* stg_connection_create( server_t* server );
+
+void stg_connection_world_own( connection_t* con, stg_id_t wid );
 
 // close the connection and free the memory allocated
 void stg_connection_destroy( connection_t* con );

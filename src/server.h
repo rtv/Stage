@@ -21,11 +21,13 @@ typedef struct
   GArray* pfds; // array of struct pollfds. zeroth pollfd is for the
 		// server. the rest are for connected clients
   
-  GHashTable* clients; // table of stg_connection_ts indexed by their
+  GHashTable* clients; // table of connection_ts indexed by their
 		       // file descriptor. each fd matches one in the
 		       // pollfd array.
 
-  //int running;
+  // maps a world id on to the client that owns it. if the client dies
+  //GHashTable* client_world_map;
+  
 
 } server_t;
 
