@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerserver.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.3 $
+//  $Author: gerkey $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -325,7 +325,7 @@ bool CPlayerServer::LockShmem( void )
   int retval = semop( semid, ops, 1 );
   if (retval != 0)
   {
-      printf("lock failed return value = %d\n", (int) retval);
+      perror("CPlayerServer::LockShmem(): semop() failed:");
       return false;
   }
   return true;
@@ -345,7 +345,7 @@ void CPlayerServer::UnlockShmem( void )
 
   int retval = semop( semid, ops, 1 );
   if (retval != 0)
-      printf("unlock failed return value = %d\n", (int) retval);
+    perror("CPlayerServer::UnlockShmem(): semop() failed:");
 }
 
 #ifdef INCLUDE_RTK

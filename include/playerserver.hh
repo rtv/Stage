@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerserver.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.3 $
+//  $Author: gerkey $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -96,7 +96,7 @@ class CPlayerServer : public CEntity
     // Stuff needed to interface with player
     //
     private: caddr_t playerIO; // ptr to shared memory for player I/O
-    private: char tmpName[16]; // name of shared memory device in filesystem
+    private: char tmpName[256]; // name of shared memory device in filesystem
     private: int semKey, semid; // semaphore access for shared mem locking
 
     // PID of player process spawned by this object
