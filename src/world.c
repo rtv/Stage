@@ -181,32 +181,11 @@ stg_model_t* stg_world_get_model( stg_world_t* world, stg_id_t mid )
   return( world ? g_hash_table_lookup( (gpointer)world->models, &mid ) : NULL );
 }
 
-
-// add a model entry to the server & install its default properties
-//stg_model_t* world_model_create( stg_world_t* world, stg_createstg_model_t* cm )
-
-stg_model_t* stg_world_model_create( stg_world_t* world, 
-				     stg_id_t id, 
-				     stg_id_t parent_id, 
-				     stg_model_type_t type, 
-				     stg_lib_entry_t* lib,
-				     char* token )
+void stg_world_add_model( stg_world_t* world, 
+			  stg_model_t* mod  )
 {
-  stg_model_t* parent = g_hash_table_lookup( world->models, &parent_id );
-  
-  if( parent_id && !parent )
-    PRINT_WARN1( "model create requested with parent id %d, but parent not found", 
-		 parent_id );
-  
-  PRINT_DEBUG4( "creating model %d:%d (%s) parent %d", world->id, id, token, parent_id  );
-  
-  
-  stg_model_t* mod = stg_model_create( world, parent, id, type, lib, token ); 
-  
   g_hash_table_replace( world->models, &mod->id, mod );
   g_hash_table_replace( world->models_by_name, mod->token, mod );
-
-  return mod; // the new model
 }
 
 int stg_world_model_destroy( stg_world_t* world, stg_id_t model )

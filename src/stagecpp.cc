@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.66 2004-11-21 02:55:03 rtv Exp $
+// $Id: stagecpp.cc,v 1.67 2004-11-21 10:53:03 rtv Exp $
 
 //#define DEBUG
 
@@ -22,9 +22,13 @@
 
 static CWorldFile wf;
 
-extern stg_lib_entry_t model_entry, laser_entry, position_entry, ranger_entry, blobfinder_entry, fiducial_entry;
 
-/** @defgroup model_window GUI Window
+stg_model_t* stg_blobfinder_create( stg_world_t* world,	stg_model_t* parent, stg_id_t id,  char* token ); 
+stg_model_t* stg_laser_create( stg_world_t* world, stg_model_t* parent, stg_id_t id, char* token );
+stg_model_t* stg_fiducial_create( stg_world_t* world,  stg_model_t* parent,  stg_id_t id, char* token )
+stg_model_t* stg_position_create( stg_world_t* world,  stg_model_t* parent,  stg_id_t id, char* token )
+  
+  /** @defgroup model_window GUI Window
 
 <h2>Worldfile Properties</h2>
 
@@ -866,16 +870,23 @@ stg_world_t* stg_world_create_from_file( char* worldfile_path )
 			section, parent_section );
 	  
 	  stg_model_t* mod = NULL;
+	  stg_model_t* parent_mod = stg_world_get_model( world, parent_section );
 	  
 	  // load type-specific configs from this section
 	  switch( type )
 	    {
 	    case STG_MODEL_BASIC:
-	      mod = stg_world_model_create( world, section, parent_section, type, &model_entry, namestr );
+	      mod = stg_model_create( world, parent_mod, section, STG_MODEL_BASIC, namestr );
 	      configure_model( mod, section );	  
-	      configure_laser( mod, section );
 	      break;
-
+	      
+	    case STG_MODEL_BLOB:
+	      mod = stg_blobfinder_create( world, parent_mod, section, namestr );
+	      configure_model( mod, section );	  
+	      configure_blobfinder( mod, section );
+	      break;
+	      
+	      /*
 	    case STG_MODEL_LASER:
 	      mod = stg_world_model_create( world, section, parent_section, type, &laser_entry, namestr );
 	      configure_model( mod, section );	  
@@ -886,12 +897,6 @@ stg_world_t* stg_world_create_from_file( char* worldfile_path )
 	      mod = stg_world_model_create( world, section, parent_section, type, &ranger_entry, namestr );
 	      configure_model( mod, section );	  
 	      configure_ranger( mod, section );
-	      break;
-	      
-	    case STG_MODEL_BLOB:
-	      mod = stg_world_model_create( world, section, parent_section, type, &blobfinder_entry, namestr );
-	      configure_model( mod, section );	  
-	      configure_blobfinder( mod, section );
 	      break;
 	      
 	    case STG_MODEL_FIDUCIAL:
@@ -905,10 +910,14 @@ stg_world_t* stg_world_create_from_file( char* worldfile_path )
 	      configure_model( mod, section );	  
 	      configure_position( mod, section );
 	      break;
-	      
+	      */
+
 	    default:
 	      PRINT_DEBUG1( "don't know how to configure type %d", type );
 	    }
+	  
+	  // add the new model to the world
+	  stg_world_add_model( world, mod );
 	}
     }
   return world;

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.36 $
+//  $Revision: 1.37 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -21,15 +21,31 @@ The ranger model simulates an array of sonar or infra-red (IR) range sensors.
 
 //#define DEBUG
 
+
 #include "stage.h"
 #include "gui.h"
 
 extern rtk_fig_t* fig_debug_rays;
 
-void ranger_init( stg_model_t* mod )
-{
-  // set up sensible defaults
+void ranger_render_cfg( stg_model_t* mod, void* data, size_t len );
+void ranger_render_data( stg_model_t* mod, void* data, size_t len ) ;
+int ranger_update( stg_model_t* mod );
+int ranger_shutdown( stg_model_t* mod );
 
+stg_model_t* stg_ranger_create( stg_world_t* world, 
+				stg_model_t* parent, 
+				stg_id_t id, 
+				char* token )
+{
+  stg_model_t* mod = stg_model_create( world, parent, id, STG_MODEL_RANGER, token );
+  
+  // override the default methods
+  mod->f_shutdown = ranger_shutdown;
+  mod->f_update = ranger_update;
+  mod->f_render_data = ranger_render_data;
+  mod->f_render_cfg = ranger_render_cfg;
+
+  // set up sensible defaults
   stg_geom_t geom;
   geom.size.x = 0.05;
   geom.size.y = 0.05;
@@ -67,6 +83,8 @@ void ranger_init( stg_model_t* mod )
     }
   
   stg_model_set_config( mod, cfg, cfglen );
+
+  return mod;
 }
 
 int ranger_shutdown( stg_model_t* mod )
@@ -152,7 +170,7 @@ int ranger_update( stg_model_t* mod )
   return 0;
 }
 
-void ranger_render_config( stg_model_t* mod, void* data, size_t len )
+void ranger_render_cfg( stg_model_t* mod, void* data, size_t len )
 {
   //PRINT_DEBUG( "drawing rangers" );
   
@@ -280,19 +298,3 @@ void ranger_render_data( stg_model_t* mod, void* data, size_t len )
     }
 }
 
-
-stg_lib_entry_t ranger_entry = { 
-  ranger_init,     // init
-  NULL,            // startup
-  ranger_shutdown, // shutdown
-  ranger_update,   // update
-  NULL,            // set data
-  NULL,              // get data
-  NULL,              // set command
-  NULL,              // get command
-  NULL,              // set config
-  NULL,               // get config
-  ranger_render_data, // render data
-  NULL,              // render cmd
-  ranger_render_config  // render cfg
-};

@@ -374,6 +374,7 @@ void gui_window_menus_create( gui_window_t* win )
   //gtk_check_menu_item_set_active( mitem, FALSE );
   
   //gtk_container_add( win->canvas->layout, menu_bar );
+
   gtk_box_pack_start(GTK_BOX(win->canvas->layout), 
 		     win->canvas->menu_bar, FALSE, FALSE, 0);
 }

@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.32 2004-11-21 02:55:04 rtv Exp $
+# CVS: $Id: test.world,v 1.33 2004-11-21 10:53:03 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -10,14 +10,10 @@ resolution     0.02
 #resolution_low  1.0
 
 interval_sim 100  # milliseconds per update step
-interval_real 100 # real-time milliseconds per update step
+interval_real 30 # real-time milliseconds per update step
 
 # defines Pioneer-like robots
 include "pioneer.inc"
-
-
-
-
 
 
 
@@ -26,13 +22,9 @@ include "map.inc"
 
 
 
-
-
-
-
 # window_size doesn't work, thanks to broken rtk_canvas_size()
 #
-window( size [ 820.000 574.000 ] center [-8.372 1.019] scale 0.022 )
+window( size [ 824.000 595.000 ] center [-8.049 1.161] scale 0.021 )
 
 map(
   #size [15.5 11.4]
@@ -42,7 +34,7 @@ map(
   bitmap "bitmaps/hospital_section.png"
 
   bitmap_resolution 0.03
-  boundary 1
+  boundary 0
 )
 
 
@@ -71,21 +63,21 @@ define laserpioneer pioneer2dx
 laserpioneer
 (
   name "p0"
-  pose [-9.831 2.137 292.509]
+  pose [-12.320 2.233 -333.684]
 )
 
 laserpioneer
 (
   color "green"
   name "p1"
-  pose [-8.982 5.070 -96.335]
+  pose [-5.127 2.584 -162.098]
 )
 
 laserpioneer
 (
   color "blue"
   name "p2"
-  pose [-11.045 5.013 -76.542]
+  pose [-4.717 1.938 -194.220]
 )
 
 

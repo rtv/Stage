@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.25 2004-11-21 02:55:03 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.26 2004-11-21 10:53:02 rtv Exp $
  */
 
 /** 
@@ -50,20 +50,23 @@ void blobfinder_init( stg_model_t* mod );
 int blobfinder_startup( stg_model_t* mod );
 int blobfinder_shutdown( stg_model_t* mod );
 int blobfinder_update( stg_model_t* mod );
+void blobfinder_render_cfg( stg_model_t* mod, void* data, size_t len );
+void blobfinder_render_data( stg_model_t* mod, void* data, size_t len );
 
-// utility - we get the config quite a lot, so use this
-stg_blobfinder_config_t* blobfinder_get_config( stg_model_t* mod )
+stg_model_t* stg_blobfinder_create( stg_world_t* world, 
+				    stg_model_t* parent, 
+				    stg_id_t id, 
+				    char* token )
 {
-  size_t len = 0;
-  stg_blobfinder_config_t* cfg = 
-    (stg_blobfinder_config_t*)stg_model_get_config(mod,&len);
-  assert( cfg );
-  assert( len == sizeof( stg_blobfinder_config_t ));
-  return cfg;
-}
+  stg_model_t* mod = stg_model_create( world, parent, id, STG_MODEL_BLOB, token );
+  
+  // override the default methods
+  mod->f_startup = blobfinder_startup;
+  mod->f_shutdown = blobfinder_shutdown;
+  mod->f_update = blobfinder_update;
+  mod->f_render_data = blobfinder_render_data;
+  mod->f_render_cfg = blobfinder_render_cfg;
 
-void blobfinder_init( stg_model_t* mod )
-{
   // sensible blobfinder defaults
   stg_geom_t geom;
   geom.pose.x = 0; //STG_DEFAULT_LASER_POSEX;
@@ -72,17 +75,17 @@ void blobfinder_init( stg_model_t* mod )
   geom.size.x = 0.01; //STG_DEFAULT_LASER_SIZEX;
   geom.size.y = 0.01; //STG_DEFAULT_LASER_SIZEY;
   stg_model_set_geom( mod, &geom );
-
+  
   // a blobfinder has no body
   //stg_model_set_lines( mod, NULL, 0 );
-
+  
   // nothing can see a blobfinder
   //mod->obstacle_return = 0;
   //mod->laser_return = LaserTransparent;
   //mod->fiducial_return = FiducialNone;
   //stg_color_t col = stg_lookup_color("magenta");
   //stg_model_set_color( mod, &col );
-
+  
   stg_blobfinder_config_t cfg;
   memset(&cfg,0,sizeof(cfg));
   
@@ -92,7 +95,7 @@ void blobfinder_init( stg_model_t* mod )
   cfg.pan = STG_DEFAULT_BLOB_PAN;
   cfg.tilt =STG_DEFAULT_BLOB_TILT;
   cfg.zoom = STG_DEFAULT_BLOB_ZOOM;
- 
+  
   cfg.channel_count = 6; //STG_DEFAULT_BLOB_CHANNELCOUNT;
   cfg.channels[0] = stg_lookup_color( "red" );
   cfg.channels[1] = stg_lookup_color( "green" );
@@ -104,10 +107,25 @@ void blobfinder_init( stg_model_t* mod )
   //int c;
   //for( c=0; c<6; c++ )
   //PRINT_WARN2( "init channel %d has val %X", c, cfg.channels[c] );
-
+  
   stg_model_set_config( mod, &cfg,sizeof(cfg) );
   stg_model_set_data( mod, NULL, 0 );
+
+  return mod;
 }
+
+
+// utility - we get the config quite a lot, so use this
+stg_blobfinder_config_t* blobfinder_get_cfg( stg_model_t* mod )
+{
+  size_t len = 0;
+  stg_blobfinder_config_t* cfg = 
+    (stg_blobfinder_config_t*)stg_model_get_config(mod,&len);
+  assert( cfg );
+  assert( len == sizeof( stg_blobfinder_config_t ));
+  return cfg;
+}
+
 
 
 int blobfinder_startup( stg_model_t* mod )
@@ -420,7 +438,7 @@ void blobfinder_render_data( stg_model_t* mod, void* data, size_t len )
     }
 }
 
-void blobfinder_render_config( stg_model_t* mod, void* data, size_t len )
+void blobfinder_render_cfg( stg_model_t* mod, void* data, size_t len )
 { 
   PRINT_DEBUG( "blobfinder render config" );  
   
@@ -458,21 +476,4 @@ void blobfinder_render_config( stg_model_t* mod, void* data, size_t len )
 		       2.0*cfg->range_max, 
 		       mina, maxa );      
 }
-
-
-stg_lib_entry_t blobfinder_entry = { 
-  blobfinder_init,     // init
-  blobfinder_startup,  // startup
-  blobfinder_shutdown, // shutdown
-  blobfinder_update,   // update
-  NULL,                // set data
-  NULL,              // get data
-  NULL,              // set command
-  NULL,              // get command
-  NULL,            // set config
-  NULL,              // get config
-  blobfinder_render_data,
-  NULL,
-  blobfinder_render_config
-};
 

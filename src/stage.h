@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.107 2004-11-21 02:55:03 rtv Exp $
+ * CVS: $Id: stage.h,v 1.108 2004-11-21 10:53:02 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -559,7 +559,8 @@ extern "C" {
     uint8_t render_cfg_flag[STG_MODEL_COUNT];
     uint8_t render_cmd_flag[STG_MODEL_COUNT];
 
-    
+    GtkWidget* gc;
+
   } gui_window_t;
 
   typedef struct 
@@ -591,7 +592,7 @@ extern "C" {
   } stg_matrix_coord_t;
 
 
-  typedef void(*func_init_t)(struct _stg_model*);
+  //typedef void(*func_init_t)(struct _stg_model*);
   typedef int(*func_update_t)(struct _stg_model*);
   typedef int(*func_startup_t)(struct _stg_model*);
   typedef int(*func_shutdown_t)(struct _stg_model*);
@@ -608,23 +609,6 @@ extern "C" {
 
   typedef void*(*func_render_t)(struct _stg_model*,void*,size_t);
 
-  // used to create special-purpose models
-  typedef struct
-  {
-    func_init_t init;
-    func_startup_t startup;
-    func_shutdown_t shutdown;
-    func_update_t update;
-    func_set_data_t set_data;
-    func_get_data_t get_data;
-    func_set_command_t set_command;
-    func_get_command_t get_command;
-    func_set_config_t set_config;
-    func_get_config_t get_config;
-    func_render_t render_data;
-    func_render_t render_cmd;
-    func_render_t render_cfg;
-  } stg_lib_entry_t;
 
   /// defines a simulated world
   typedef struct _stg_world
@@ -662,8 +646,6 @@ extern "C" {
    
     gboolean destroy;
 
-    //stg_lib_entry_t** library;
-
     gui_window_t* win; // the gui window associated with this world
    
     ///  a hooks for the user to store things in the world
@@ -681,7 +663,6 @@ extern "C" {
     stg_world_t* world; // pointer to the world in which this model exists
     char* token; // automatically-generated unique ID string
     int type; // what kind of a model am I?
-    stg_lib_entry_t* lib; // these are the pointers to my specialized functions
 
     struct _stg_model *parent; // the model that owns this one, possibly NULL
 
@@ -701,7 +682,7 @@ extern "C" {
     void* data_notify_arg;
 
     gui_model_t gui; // all the gui stuff
-
+    
     // todo - add this as a property?
     stg_joules_t energy_consumed;
 
@@ -732,10 +713,26 @@ extern "C" {
     stg_guifeatures_t guifeatures;
     stg_energy_config_t energy_config;   // these are a little strange
     stg_energy_data_t energy_data;
-
     double friction; // units? our model doesn't have a direct physical value
-  } stg_model_t;  
 
+    // type-dependent functions for this model
+    //func_init_t f_init;
+    func_startup_t f_startup;
+    func_shutdown_t f_shutdown;
+    func_update_t f_update;
+    func_set_data_t f_set_data;
+    func_get_data_t f_get_data;
+    func_set_command_t f_set_command;
+    func_get_command_t f_get_command;
+    func_set_config_t f_set_config;
+    func_get_config_t f_get_config;
+    func_render_t f_render_data;
+    func_render_t f_render_cmd;
+    func_render_t f_render_cfg;
+
+  } stg_model_t;  
+  
+ 
 typedef enum 
   { PointToPoint=0, PointToBearingRange } 
 itl_mode_t;
@@ -786,6 +783,7 @@ stg_model_t* itl_first_matching( itl_t* itl,
   void gui_world_destroy( stg_world_t* world );
   void stg_world_save( stg_world_t* world );
   int gui_world_update( stg_world_t* world );
+  void stg_world_add_model( stg_world_t* world, stg_model_t* mod  );
 
   void gui_model_create( stg_model_t* model );
   void gui_model_destroy( stg_model_t* model );
@@ -879,13 +877,6 @@ stg_model_t* itl_first_matching( itl_t* itl,
   int stg_world_update( stg_world_t* world, int sleepflag );
   void stg_world_print( stg_world_t* world );
 
-  /// create a new model  
-  stg_model_t*  stg_world_model_create( stg_world_t* world, 
-					stg_id_t id, 
-					stg_id_t parent_id, 
-					stg_model_type_t type, 
-					stg_lib_entry_t* lib,
-					char* token );
 
   /// get a model pointer from its ID
   stg_model_t* stg_world_get_model( stg_world_t* world, stg_id_t mid );
@@ -903,7 +894,6 @@ stg_model_t* itl_first_matching( itl_t* itl,
 				  stg_model_t* parent, 
 				  stg_id_t id, 
 				  stg_model_type_t type,
-				  stg_lib_entry_t* lib, 
 				  char* token );
 
   /// destroy a model, freeing its memory
@@ -989,18 +979,26 @@ stg_model_t* itl_first_matching( itl_t* itl,
   stg_fiducial_return_t*  stg_model_get_fiducialreturn( stg_model_t* mod );
   stg_friction_t*        stg_model_get_friction( stg_model_t* mod );
 
-  // special
+  // wrappers for polymorphic functions
   int stg_model_set_command( stg_model_t* mod, void* cmd, size_t len );
   int stg_model_set_data( stg_model_t* mod, void* data, size_t len );
   int stg_model_set_config( stg_model_t* mod, void* cmd, size_t len );
-
-  int _set_data( stg_model_t* mod, void* data, size_t len );
-  int _set_cmd( stg_model_t* mod, void* cmd, size_t len );
-  int _set_cfg( stg_model_t* mod, void* cfg, size_t len );
-
   void* stg_model_get_command( stg_model_t* mod, size_t* len );
   void* stg_model_get_data( stg_model_t* mod, size_t* len );
   void* stg_model_get_config( stg_model_t* mod, size_t* len );
+  
+  // generic versions that can be overridden
+  void* _model_get_data( stg_model_t* mod, size_t* len );
+  void* _model_get_cmd( stg_model_t* mod, size_t* len );
+  void* _model_get_cfg( stg_model_t* mod, size_t* len );
+  int _model_set_data( stg_model_t* mod, void* data, size_t len );
+  int _model_set_cmd( stg_model_t* mod, void* cmd, size_t len );
+  int _model_set_cfg( stg_model_t* mod, void* cfg, size_t len );
+  int _model_update( stg_model_t* mod );
+  //int _model_init( stg_model_t* mod );
+  int _model_startup( stg_model_t* mod );
+  int _model_shutdown( stg_model_t* mod );
+  
 
   /** convert a global pose into the model's local coordinate system */
   void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose );

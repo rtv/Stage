@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.54 $
+//  $Revision: 1.55 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -17,7 +17,6 @@
 The laser model simulates a scanning laser rangefinder
 
 */
-
 
 #include <sys/time.h>
 #include <math.h>
@@ -31,9 +30,24 @@ extern rtk_fig_t* fig_debug_rays;
 #define TIMING 0
 #define LASER_FILLED 1
 
-  
-void laser_init( stg_model_t* mod )
+int laser_update( stg_model_t* mod );
+int laser_shutdown( stg_model_t* mod );
+void laser_render_data(  stg_model_t* mod, void* data, size_t len );
+void laser_render_cfg( stg_model_t* mod, void* data, size_t len);
+
+stg_model_t* stg_laser_create( stg_world_t* world, 
+			       stg_model_t* parent, 
+			       stg_id_t id, 
+			       char* token )
 {
+  stg_model_t* mod = stg_model_create( world, parent, id, STG_MODEL_LASER, token );
+  
+  // override the default methods
+  mod->f_shutdown = laser_shutdown;
+  mod->f_update = laser_update;
+  mod->f_render_data = laser_render_data;
+  mod->f_render_cfg = laser_render_cfg;
+
   // sensible laser defaults
   stg_geom_t geom;
   geom.pose.x = STG_DEFAULT_LASER_POSEX;
@@ -56,7 +70,11 @@ void laser_init( stg_model_t* mod )
   stg_model_set_color( mod, &col );
 
   stg_model_set_config( mod, &lconf, sizeof(lconf) );
+
+  return mod;
 }
+
+
 
 int laser_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 {
@@ -319,19 +337,3 @@ int laser_shutdown( stg_model_t* mod )
 
   return 0; // ok
 }
-
-stg_lib_entry_t laser_entry = { 
-  laser_init,        // init
-  NULL,              // startup
-  laser_shutdown,    // shutdown
-  laser_update,      // update
-  NULL,              // set data
-  NULL,              // get data
-  NULL,              // set command
-  NULL,              // get command
-  NULL,              // set config
-  NULL,              // get config
-  laser_render_data, // render data
-  NULL,              // render cmd
-  laser_render_cfg   // render cfg
-};

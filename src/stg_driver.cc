@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_driver.cc,v 1.9 2004-09-30 02:26:38 rtv Exp $
+ * $Id: stg_driver.cc,v 1.10 2004-11-21 10:53:03 rtv Exp $
  */
 
 // STAGE-1.4 DRIVER CLASS ///////////////////////////////
@@ -144,13 +144,12 @@ void StgBlobfinder_Register(DriverTable *table);
 void StgFiducial_Register(DriverTable *table);
 //void StgBlinkenlight_Register(DriverTable *table);
 
-
 extern "C" {
-
+  
   int player_driver_init(DriverTable* table)
   {
     printf( "Stage plugin: \"%s\"\n", stg_get_version_string() );
-
+    
     StgSimulation_Register(table);
     StgLaser_Register(table);
     StgFiducial_Register(table);

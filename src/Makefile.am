@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.79 2004-11-20 04:57:19 rtv Exp $
+# $Id: Makefile.am,v 1.80 2004-11-21 10:53:02 rtv Exp $
 
 # install these headers
 include_HEADERS = stage.h 
@@ -10,7 +10,7 @@ include_HEADERS = stage.h
 AM_CFLAGS = -Wall -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GTK_CFLAGS@
 AM_CPPFLAGS = -Wall -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GTK_CFLAGS@
 
-lib_LTLIBRARIES = libstage.la 
+lib_LTLIBRARIES = libstage.la
 
 # The stage library contains everything you need to build a robot
 # simulation, including graphics and a worldfile parser. It also
@@ -30,12 +30,19 @@ libstage_la_SOURCES = \
 	model_pose.c \
 	model_position.c \
 	model_props.c \
-	model_ranger.c \
-	model_test.c \
+	model_ranger.c 
 	raytrace.c \
 	stage.c \
 	stage.h \
 	stagecpp.cc \
+	stg_blobfinder.cc \
+	stg_fiducial.cc \
+	stg_laser.cc \
+	stg_position.cc \
+	stg_simulation.cc \
+	stg_sonar.cc \
+	stg_time.cc \
+	stg_time.h \
 	token.c \
 	world.c \
 	worldfile.cc \
@@ -47,16 +54,9 @@ libstage_la_SOURCES = \
         rtk_region.c \
         rtkprivate.h \
         stg_driver.cc \
-        stg_driver.h \
-	stg_time.cc \
-	stg_time.h \
-	stg_simulation.cc \
-	stg_laser.cc \
-	stg_fiducial.cc \
-	stg_position.cc \
-	stg_sonar.cc \
-	stg_blobfinder.cc
+        stg_driver.h 
 
-libstage_la_LDFLAGS = -export-dynamic -version-info 0:0:0
-libstage_la_LIBADD = @GTK_LIBS@ 
+libstage_la_LDFLAGS = -export-dynamic -version-info 0:0:0 
+libstage_la_LIBADD = @GTK_LIBS@
+
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.24 $
+//  $Revision: 1.25 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -16,6 +16,7 @@
 
 
 #include "stage.h"
+
 
 int model_size_error( stg_model_t* mod, stg_id_t pid, 
 		      size_t actual, size_t correct )
@@ -34,7 +35,25 @@ int model_size_error( stg_model_t* mod, stg_id_t pid,
 // these set and get the generic buffers for derived types
 //
 
-int _set_data( stg_model_t* mod, void* data, size_t len )
+void* _model_get_data( stg_model_t* mod, size_t* len )
+{
+  *len = mod->data_len; 
+  return mod->data;
+}
+
+void* _model_get_cmd( stg_model_t* mod, size_t* len )
+{
+  *len = mod->cmd_len; 
+  return mod->cmd;
+}
+
+void* _model_get_cfg( stg_model_t* mod, size_t* len )
+{
+  *len = mod->cfg_len; 
+  return mod->cfg;
+}
+
+int _model_set_data( stg_model_t* mod, void* data, size_t len )
 {
   mod->data = realloc( mod->data, len );
   memcpy( mod->data, data, len );    
@@ -50,9 +69,9 @@ int _set_data( stg_model_t* mod, void* data, size_t len )
   
   // if a rendering callback was registered, and the gui wants to
   // render this type of data, call it
-  if( mod->lib->render_data && 
+  if( mod->f_render_data && 
       mod->world->win->render_data_flag[mod->type] )
-    (*mod->lib->render_data)(mod,data,len);
+    (*mod->f_render_data)(mod,data,len);
   else
     {
       // remove any graphics that linger
@@ -69,18 +88,34 @@ int _set_data( stg_model_t* mod, void* data, size_t len )
   return 0; //ok
 }
 
-int _set_cmd( stg_model_t* mod, void* cmd, size_t len )
+int _model_set_cmd( stg_model_t* mod, void* cmd, size_t len )
 {
   mod->cmd = realloc( mod->cmd, len );
   memcpy( mod->cmd, cmd, len );    
   mod->cmd_len = len;
   
+  // if a rendering callback was registered, and the gui wants to
+  // render this type of command, call it
+  if( mod->f_render_cmd && 
+      mod->world->win->render_cmd_flag[mod->type] )
+    (*mod->f_render_cmd)(mod,cmd,len);
+  else
+    {
+      // remove any graphics that linger
+      if( mod->gui.cmd )
+	rtk_fig_clear( mod->gui.cmd );
+      
+      if( mod->gui.cmd_bg )
+	rtk_fig_clear( mod->gui.cmd_bg );
+    }
+  
+
   PRINT_DEBUG3( "model %d(%s) put command of %d bytes",
 		mod->id, mod->token, (int)mod->cmd_len);
   return 0; //ok
 }
 
-int _set_cfg( stg_model_t* mod, void* cfg, size_t len )
+int _model_set_cfg( stg_model_t* mod, void* cfg, size_t len )
 {
   mod->cfg = realloc( mod->cfg, len );
   memcpy( mod->cfg, cfg, len );    
@@ -88,9 +123,9 @@ int _set_cfg( stg_model_t* mod, void* cfg, size_t len )
   
   // if a rendering callback was registered, and the gui wants to
   // render this type of cfg, call it
-  if( mod->lib->render_cfg && 
+  if( mod->f_render_cfg && 
       mod->world->win->render_cfg_flag[mod->type] )
-    (*mod->lib->render_cfg)(mod,cfg,len);
+    (*mod->f_render_cfg)(mod,cfg,len);
   else
     {
       // remove any graphics that linger
@@ -106,112 +141,86 @@ int _set_cfg( stg_model_t* mod, void* cfg, size_t len )
   return 0; //ok
 }
 
+int _model_update( stg_model_t* mod )
+{
+  mod->interval_elapsed = 0;
+  
+  // now move the model if it has any velocity
+  if( (mod->velocity.x || mod->velocity.y || mod->velocity.a ) )
+    stg_model_update_pose( mod );
+
+  return 0; //ok
+}
+
+int _model_startup( stg_model_t* mod )
+{
+  puts( "default startup proc" );
+}
+
+int _model_shutdown( stg_model_t* mod )
+{
+  puts( "default shutdown proc" );
+}
+
+/* These functions are wrappers that implement the polymorphic hooks
+   for derived model types
+*/
+
 int stg_model_set_data( stg_model_t* mod, void* data, size_t len )
 {
-  // if this type of model has a set_data function, call it.
-  if( mod->lib->set_data )
-    {
-      mod->lib->set_data(mod, data, len);
-      PRINT_DEBUG1( "used special set_data returned %d bytes", (int)len );
-    }
-  else
-    _set_data( mod, data, len );
-  
-  return 0; //ok
+  assert( mod->f_set_data );
+  return mod->f_set_data(mod, data, len);
 }
 
 int stg_model_set_command( stg_model_t* mod, void* cmd, size_t len )
 {
-  // if this type of model has a putcommand function, call it.
-  if( mod->lib->set_command )
-    {
-      mod->lib->set_command(mod, cmd, len);
-      PRINT_DEBUG1( "used special set_command, put %d bytes", (int)len );
-    }
-  else
-    _set_cmd( mod, cmd, len );    
-
-  return 0; //ok
+  assert( mod->f_set_command );  
+  return mod->f_set_command(mod, cmd, len); 
 }
 
 int stg_model_set_config( stg_model_t* mod, void* config, size_t len )
 {
-  // if this type of model has a putconfig function, call it.
-  if( mod->lib->set_config )
-    {
-      mod->lib->set_config(mod, config, len);
-      PRINT_DEBUG1( "used special putconfig returned %d bytes", (int)len );
-    }
-  else
-    _set_cfg( mod, config, len );
-  
-  return 0; //ok
+  assert( mod->f_set_config );
+  return mod->f_set_config(mod, config, len);
 }
-
 
 void* stg_model_get_data( stg_model_t* mod, size_t* len )
 {
-  void* data = NULL; 
-
-  // if this type of model has a getdata function, call it.
-  if( mod->lib->get_data )
-    {
-      data = mod->lib->get_data(mod, len);
-      PRINT_DEBUG1( "used special get_data, returned %d bytes", (int)*len );
-    }
-  else
-    { // we do a generic data copy
-      data = mod->data;
-      *len = mod->data_len; 
-      PRINT_DEBUG3( "model %d(%s) generic get_data, returned %d bytes", 
-		   mod->id, mod->token, (int)*len );
-    }
-
-  return data;
+  assert( mod->f_get_data );
+  return mod->f_get_data( mod, len );
 }
-
 
 void* stg_model_get_command( stg_model_t* mod, size_t* len )
 {
-  void* command = NULL;
-  
-  // if this type of model has a getcommand function, call it.
-  if( mod->lib->get_command )
-    {
-      command = mod->lib->get_command(mod, len);
-      PRINT_DEBUG1( "used special get_command, returned %d bytes", (int)*len );
-    }
-  else
-    { // we do a generic command copy
-      command = mod->cmd;
-      *len = mod->cmd_len; 
-      PRINT_DEBUG1( "used generic get_command, returned %d bytes", (int)*len );
-    }
-
-  return command; 
+  assert( mod->f_get_command );
+  return mod->f_get_command( mod, len );
 }
-
 
 void* stg_model_get_config( stg_model_t* mod, size_t* len )
 {
-  void* config = NULL;
-  
-  // if this type of model has an getconfig function, call it.
-  if( mod->lib->get_config )
-    {
-      config = mod->lib->get_config(mod, len);
-      PRINT_DEBUG1( "used special get_config returned %d bytes", (int)*len );
-    }
-  else
-    { // we do a generic data copy
-      config = mod->cfg;
-      *len = mod->cfg_len; 
-      PRINT_DEBUG3( "model %d(%s) generic get_config, returned %d bytes", 
-		   mod->id, mod->token, (int)*len );
-    }
-
-  return config; 
+  assert( mod->f_get_config );
+  return mod->f_get_config( mod, len );
 }
+
+int stg_model_update( stg_model_t* mod )
+{
+  assert( mod->f_update );
+  return mod->f_update(mod);
+}
+
+int stg_model_startup( stg_model_t* mod )
+{
+  assert(mod->f_startup );
+  return mod->f_startup(mod);
+}
+
+int stg_model_shutdown( stg_model_t* mod )
+{
+  assert(mod->f_shutdown );
+  return mod->f_shutdown(mod);
+}
+
+
 
 //------------------------------------------------------------------------
 // basic model properties
@@ -282,7 +291,7 @@ int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
       stg_model_map_with_children( mod, 1 );
       
       // move the rtk figure to match
-      gui_render_pose( mod );
+      gui_render_pose( mod );      
     }
   
   return 0; // OK
@@ -366,51 +375,11 @@ int stg_model_set_polygons( stg_model_t* mod, stg_polygon_t* polys, size_t poly_
   
   // append the new polys
   g_array_append_vals( mod->polygons, polys, poly_count );
-  
+    
   stg_model_render_polygons( mod );
 
   stg_model_map( mod, 1 ); // map the model into the matrix with the new polys
 } 
-
-/* int stg_model_set_lines( stg_model_t* mod, stg_line_t* lines, size_t lines_count ) */
-/* { */
-/*   assert(mod); */
-/*   if( lines_count > 0 ) assert( lines ); */
-/* // background (used e.g for laser scan fill) */
-/*   PRINT_DEBUG3( "model %d(%s) received %d lines",  */
-/* 		mod->id, mod->token, (int)lines_count ); */
-  
-/*   stg_model_map( mod, 0 ); */
-  
-/*   stg_geom_t* geom = stg_model_get_geom(mod);  */
-  
-/*   // fit the rectangle inside the model's size */
-/*   stg_normalize_lines( lines, lines_count ); */
-/*   stg_scale_lines( lines, lines_count, geom->size.x, geom->size.y ); */
-/*   stg_translate_lines( lines, lines_count, -geom->size.x/2.0, -geom->size.y/2.0 ); */
-
-/*   size_t len = sizeof(stg_line_t)*lines_count; */
-
-/*   if( len > 0 ) */
-/*     { */
-/*       mod->lines = realloc( mod->lines,len); */
-/*       assert( mod->lines ); */
-/*     } */
-/*   else */
-/*     { */
-/*       if( mod->lines ) free( mod->lines ); mod->lines = NULL; */
-/*     } */
-  
-/*   mod->lines_count = lines_count; */
-/*   memcpy( mod->lines, lines, len ); */
-
-/*   // redraw my image  */
-/*   stg_model_map( mod, 1 ); */
-
-/*   stg_model_render_lines( mod ); */
- 
-/*   return 0; // OK */
-/* } */
 
 int stg_model_set_laserreturn( stg_model_t* mod, stg_laser_return_t* val )
 {

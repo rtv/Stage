@@ -20,9 +20,8 @@
 
 /*
  * Desc: Rtk canvas functions
- * Author: Andrew Howard
- * Contributors: Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.6 2004-11-20 04:57:20 rtv Exp $
+ * Author: Andrew Howard, Richard Vaughan
+ * CVS: $Id: rtk_canvas.c,v 1.7 2004-11-21 10:53:02 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -36,9 +35,6 @@
 #include <string.h>
 #include <math.h>
 #include <gdk/gdkkeysyms.h>
-
-//#include <gdk-pixbuf-xlib/gdk-pixbuf-xlib.h>
-
 
 #if HAVE_JPEGLIB_H
 #include <jpeglib.h>
@@ -119,23 +115,52 @@ rtk_canvas_t *rtk_canvas_create(rtk_app_t *app)
   canvas->frame = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   canvas->layout = gtk_vbox_new(FALSE, 0);
 
+  //GtkAdjustment* hadj =  gtk_adjustment_new( 0, 0, 100, 1, 0, 10 );
+  //GtkAdjustment* vadj =  gtk_adjustment_new( 0, 0, 100, 1, 0, 10 );
+  
+  //GtkWidget* scrolled_win = gtk_scrolled_window_new ( hadj, vadj );
+  //GtkWidget* scrolled_win = gtk_scrolled_window_new ( NULL, NULL );
+  //gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_win),
+  //			  GTK_POLICY_ALWAYS,
+  //			  GTK_POLICY_ALWAYS);
+  
+  //gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW(scrolled_win),
+  //			       GTK_SHADOW_IN);
+  
+  
   // Create gtk drawing area
   canvas->canvas = gtk_drawing_area_new();
   gtk_drawing_area_size(GTK_DRAWING_AREA(canvas->canvas), 100, 100);
-
-  // Create menu bar
-  //canvas->menu_bar = gtk_menu_bar_new();
-
+  
   canvas->status_bar = GTK_STATUSBAR(gtk_statusbar_new());
   gtk_statusbar_set_has_resize_grip( canvas->status_bar, FALSE );
 
   // Put it all together
   gtk_container_add(GTK_CONTAINER(canvas->frame), canvas->layout);
-  //gtk_box_pack_end(GTK_BOX(canvas->layout), canvas->menu_bar, FALSE, FALSE, 0);
   gtk_box_pack_end(GTK_BOX(canvas->layout), 
 		   GTK_WIDGET(canvas->status_bar), FALSE, TRUE, 0);
+
   gtk_box_pack_end(GTK_BOX(canvas->layout), canvas->canvas, TRUE, TRUE, 0);
 
+
+  //gtk_box_pack_end(GTK_BOX(canvas->layout), scrolled_win, TRUE, TRUE, 0);
+
+  //gtk_scrolled_window_add_with_viewport( scrolled_win, canvas->canvas );
+  
+
+
+  //gtk_scrolled_window_get_hadjustment(scrolled_win);
+  
+
+
+  //gtk_signal_connect (GTK_OBJECT(hadj),
+  //	      "value_changed",
+  //	      GTK_SIGNAL_FUNC(h_scrollbar_cb), canvas  );
+  
+  //gtk_signal_connect (GTK_OBJECT(vadj),
+  //	      "value_changed",
+  //	      GTK_SIGNAL_FUNC(v_scrollbar_cb), canvas );
+  
   canvas->bg_pixmap = NULL;
   canvas->fg_pixmap = NULL;
   canvas->gc = NULL;
@@ -192,10 +217,6 @@ void rtk_canvas_destroy(rtk_canvas_t *canvas)
 {
   int count;
 
-  // Finish any movies
-  //if (canvas->movie_context)
-  //rtk_canvas_movie_stop(canvas);
-  
   // Get rid of any figures we still have
   count = 0;
   while (canvas->fig)
@@ -225,38 +246,6 @@ void rtk_canvas_destroy(rtk_canvas_t *canvas)
 
   return;
 }
-
-
-// Lock the canvas
-// This implements recursive mutexes using TLD
-void rtk_canvas_lock(rtk_canvas_t *canvas)
-{
-  /* REMOVE
-  int count;
-
-  count = (int) pthread_getspecific(canvas->key);
-  if (count == 0)
-    pthread_mutex_lock(&canvas->mutex);
-  count++;
-  pthread_setspecific(canvas->key, (void*) count);
-  */
-}
-
-
-// Unlock the canvas
-void rtk_canvas_unlock(rtk_canvas_t *canvas)
-{
-  /*REMOVE
-  int count;
-
-  count = (int) pthread_getspecific(canvas->key);
-  count--;
-  pthread_setspecific(canvas->key, (void*) count);
-  if (count == 0)
-    pthread_mutex_unlock(&canvas->mutex);
-*/
-}
-
 
 // See if the canvas has been closed
 int rtk_canvas_isclosed(rtk_canvas_t *canvas)
@@ -357,8 +346,6 @@ void rtk_canvas_movemask(rtk_canvas_t *canvas, int mask)
 // Set the default font for text strokes
 void rtk_canvas_font(rtk_canvas_t *canvas, const char *fontname)
 {
-  rtk_canvas_lock(canvas);
-
   if (canvas->font)
   {
     gdk_font_unref(canvas->font);
@@ -377,8 +364,6 @@ void rtk_canvas_font(rtk_canvas_t *canvas, const char *fontname)
 
   // Text extents will have changed, so recalc everything.
   rtk_canvas_calc(canvas);
-
-  rtk_canvas_unlock(canvas);
 }
 
 
@@ -464,8 +449,6 @@ void rtk_canvas_calc(rtk_canvas_t *canvas)
 {
   rtk_fig_t *fig;
   
-  rtk_canvas_lock(canvas);
-
   // The whole window is dirty
   canvas->bg_dirty = TRUE;
   canvas->fg_dirty = TRUE;
@@ -476,8 +459,7 @@ void rtk_canvas_calc(rtk_canvas_t *canvas)
   // Update all the figures
   for (fig = canvas->fig; fig != NULL; fig = fig->sibling_next)
     rtk_fig_calc(fig);
-  
-  rtk_canvas_unlock(canvas);
+ 
   return;
 }
 
@@ -502,8 +484,6 @@ void rtk_canvas_render(rtk_canvas_t *canvas)
     canvas->calc_deferred = 0;
   }
   
-  rtk_canvas_lock(canvas);
-
   // Set the canvas color
   gdk_color_alloc(canvas->colormap, &canvas->bgcolor);
   gdk_gc_set_foreground(canvas->gc, &canvas->bgcolor);
@@ -585,8 +565,6 @@ void rtk_canvas_render(rtk_canvas_t *canvas)
   rtk_region_set_empty(canvas->fg_dirty_region);
 
   gdk_colormap_free_colors(canvas->colormap, &canvas->bgcolor, 1);
-  
-  rtk_canvas_unlock(canvas);
 }
 
 
@@ -641,8 +619,6 @@ int rtk_canvas_export_xfig(rtk_canvas_t *canvas, char *filename)
     return -1;
   }
 
-  rtk_canvas_lock(canvas);
-    
   // Write header info
   fprintf(canvas->file, "#FIG 3.2\n");
   fprintf(canvas->file, "Portrait\nCenter\nInches\nLetter\n100.00\nSingle\n");
@@ -664,8 +640,6 @@ int rtk_canvas_export_xfig(rtk_canvas_t *canvas, char *filename)
   fclose(canvas->file);
   canvas->file = NULL;
     
-  rtk_canvas_unlock(canvas);
-
   return 0;
 }
 
@@ -922,8 +896,6 @@ void rtk_on_configure(GtkWidget *widget, GdkEventConfigure *event, rtk_canvas_t 
 {
   GdkColor color;
   
-  rtk_canvas_lock(canvas);
-  
   canvas->sizex = event->width;
   canvas->sizey = event->height;
 
@@ -943,32 +915,26 @@ void rtk_on_configure(GtkWidget *widget, GdkEventConfigure *event, rtk_canvas_t 
                                      canvas->sizex, canvas->sizey, -1);
 
   // Make sure we redraw with a white background
-  gdk_color_white(canvas->colormap, &color);
-  gdk_gc_set_foreground(canvas->gc, &color);
+  //gdk_color_white(canvas->colormap, &color);
+  //gdk_gc_set_foreground(canvas->gc, &color);
 
   // Clear pixmaps
-  gdk_draw_rectangle(canvas->bg_pixmap, canvas->gc, TRUE,
-                     0, 0, canvas->sizex, canvas->sizey);
-  gdk_draw_rectangle(canvas->fg_pixmap, canvas->gc, TRUE,
-                     0, 0, canvas->sizex, canvas->sizey);
+  //gdk_draw_rectangle(canvas->bg_pixmap, canvas->gc, TRUE,
+  //                 0, 0, canvas->sizex, canvas->sizey);
+  //gdk_draw_rectangle(canvas->fg_pixmap, canvas->gc, TRUE,
+  //                 0, 0, canvas->sizex, canvas->sizey);
     
   // Re-calculate all the figures since the coord transform has
   // changed.
   canvas->calc_deferred++;
 
-  rtk_canvas_unlock(canvas);
 }
 
 
 // Process expose events
 void rtk_on_expose(GtkWidget *widget, GdkEventExpose *event, rtk_canvas_t *canvas)
 {
-  if (canvas->fg_pixmap)
-  {
-    // Copy foreground pixmap to screen
-    gdk_draw_pixmap(canvas->canvas->window, canvas->gc, canvas->fg_pixmap,
-                    0, 0, 0, 0, canvas->sizex, canvas->sizey);
-  }
+  // do nothing
 }
 
 

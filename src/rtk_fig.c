@@ -22,7 +22,7 @@
  * Desc: Rtk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.4 2004-11-21 02:55:03 rtv Exp $
+ * CVS: $Id: rtk_fig.c,v 1.5 2004-11-21 10:53:02 rtv Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
@@ -140,7 +140,6 @@ rtk_fig_t *rtk_fig_create(rtk_canvas_t *canvas, rtk_fig_t *parent, int layer )
   fig->dc_xfig_color = 0;
   fig->dc_linewidth = 1;
 
-  rtk_canvas_lock(canvas);
 
   // If the figure is parentless, add it to the list of canvas
   // figures.  Otherwise, if the figure has a parent, at it to the
@@ -178,8 +177,6 @@ rtk_fig_t *rtk_fig_create(rtk_canvas_t *canvas, rtk_fig_t *parent, int layer )
   // Determine global coords for fig
   rtk_fig_calc(fig);
   
-  rtk_canvas_unlock(canvas);
-
   return fig;
 }
 
@@ -197,7 +194,6 @@ void rtk_fig_destroy(rtk_fig_t *fig)
 {
   //printf( "destroying fig %p\n", fig );
   
-  rtk_canvas_lock(fig->canvas);
 
   // remove any glib sources that might access this figure (such as
   // a blink timer) - rtv
@@ -218,9 +214,7 @@ void rtk_fig_destroy(rtk_fig_t *fig)
   // Remove from the layer list.
   RTK_LIST_REMOVEX(fig->canvas->layer_fig, layer, fig);
 
-  rtk_canvas_unlock(fig->canvas);
-
-  // Free the strokes
+    // Free the strokes
   rtk_fig_clear(fig);
   free(fig->strokes);
   
@@ -264,8 +258,6 @@ void rtk_fig_clear(rtk_fig_t *fig)
   int i;
   rtk_stroke_t *stroke;
 
-  rtk_fig_lock(fig);
-
   // Add the old region to the canvas dirty region.
   rtk_fig_dirty(fig);
 
@@ -280,23 +272,7 @@ void rtk_fig_clear(rtk_fig_t *fig)
 
   // Reset the figure region
   rtk_region_set_empty(fig->region);
-
-  rtk_fig_unlock(fig);
 }
-
-// Lock the figure. i.e. get exclusive access.
-void rtk_fig_lock(rtk_fig_t *fig)
-{
-   rtk_canvas_lock(fig->canvas);
-}
-
-
-// Unlock the figure. i.e. release exclusive access.
-void rtk_fig_unlock(rtk_fig_t *fig)
-{
-  rtk_canvas_unlock(fig->canvas);
-}  
-
 
 // Show or hide the figure
 void rtk_fig_show(rtk_fig_t *fig, int show)
@@ -337,8 +313,6 @@ int rtk_fig_mouse_selected(rtk_fig_t *fig)
 // Coords are relative to parent
 void rtk_fig_origin(rtk_fig_t *fig, double ox, double oy, double oa)
 {    
-  rtk_fig_lock(fig);
-
   if (fig->ox != ox || fig->oy != oy || fig->oa != oa)
   {
     // Set coords relative to parent
@@ -351,8 +325,6 @@ void rtk_fig_origin(rtk_fig_t *fig, double ox, double oy, double oa)
     // Determine global coords for fig
     rtk_fig_calc(fig);
   }
-
-  rtk_fig_unlock(fig);    
 }
 
 
@@ -360,8 +332,6 @@ void rtk_fig_origin(rtk_fig_t *fig, double ox, double oy, double oa)
 // Coords are global
 void rtk_fig_origin_global(rtk_fig_t *fig, double ox, double oy, double oa)
 {    
-  rtk_fig_lock(fig);
-
   if (fig->parent)
   {
     // Set coords relative to parent
@@ -385,10 +355,7 @@ void rtk_fig_origin_global(rtk_fig_t *fig, double ox, double oy, double oa)
   }
 
   // Determine global coords for fig
-  rtk_fig_calc(fig);
-
-  rtk_fig_unlock(fig);
-  
+  rtk_fig_calc(fig);  
   return;
 }
 
@@ -405,8 +372,6 @@ void rtk_fig_get_origin(rtk_fig_t *fig, double *ox, double *oy, double *oa)
 // Change the scale of a figure
 void rtk_fig_scale(rtk_fig_t *fig, double scale)
 {
-  rtk_fig_lock(fig);
-
   // Set scale
   fig->sy = scale * fig->sy / fig->sx;
   fig->sx = scale;
@@ -414,8 +379,6 @@ void rtk_fig_scale(rtk_fig_t *fig, double scale)
   // Recompute global coords
   // (for child figures in particular)
   rtk_fig_calc(fig);
-
-  rtk_fig_unlock(fig); 
 }
 
 
@@ -551,8 +514,6 @@ void rtk_fig_render(rtk_fig_t *fig)
   if (!fig->show)
     return;
 
-  rtk_fig_lock(fig);
-
   drawable = (fig->layer < 0 ? fig->canvas->bg_pixmap : fig->canvas->fg_pixmap);
   gc = fig->canvas->gc;
   colormap = fig->canvas->colormap;
@@ -605,7 +566,7 @@ void rtk_fig_render(rtk_fig_t *fig)
   if (rtk_fig_mouse_over(fig) || rtk_fig_mouse_selected(fig))
     rtk_fig_render_selection(fig);
     
-  rtk_fig_unlock(fig);
+
   return;
 }
 
@@ -663,16 +624,12 @@ void rtk_fig_render_xfig(rtk_fig_t *fig)
   int i;
   rtk_stroke_t *stroke;
 
-  rtk_fig_lock(fig);
-
   for (i = 0; i < fig->stroke_count; i++)
   {
     stroke = fig->strokes[i];
     if (stroke->xfigfn)
       (*stroke->xfigfn)(fig, stroke);
   }
-
-  rtk_fig_unlock(fig);
 }
 
 
@@ -977,8 +934,6 @@ void rtk_fig_point_alloc(rtk_fig_t *fig, double ox, double oy)
 {
   rtk_point_stroke_t *data;
 
-  rtk_fig_lock(fig);
-
   data = calloc(1, sizeof(rtk_point_stroke_t));
   rtk_fig_stroke_add(fig, (rtk_stroke_t*) data);
   data->stroke.freefn = (rtk_stroke_fn_t) rtk_fig_point_free;
@@ -992,8 +947,6 @@ void rtk_fig_point_alloc(rtk_fig_t *fig, double ox, double oy)
 
   // This will make sure the new stroke gets drawn
   rtk_fig_dirty(fig);
-
-  rtk_fig_unlock(fig);
 
   return;
 }
@@ -1059,8 +1012,6 @@ void rtk_fig_polygon_alloc(rtk_fig_t *fig,
   rtk_polygon_stroke_t *data;
   int i;
 
-  rtk_fig_lock(fig);
-
   data = calloc(1, sizeof(rtk_polygon_stroke_t));
   rtk_fig_stroke_add(fig, (rtk_stroke_t*) data);
   data->stroke.freefn = (rtk_stroke_fn_t) rtk_fig_polygon_free;
@@ -1086,8 +1037,6 @@ void rtk_fig_polygon_alloc(rtk_fig_t *fig,
   // This will make sure the new stroke gets drawn  
   rtk_fig_dirty(fig);
     
-  rtk_fig_unlock(fig);
-
   return;
 }
 
@@ -1247,8 +1196,6 @@ void rtk_fig_text_alloc(rtk_fig_t *fig, double ox, double oy, double oa, const c
 {
   rtk_text_stroke_t *data;
 
-  rtk_fig_lock(fig);
-
   data = calloc(1, sizeof(rtk_text_stroke_t));
   rtk_fig_stroke_add(fig, (rtk_stroke_t*) data);
   data->stroke.freefn = (rtk_stroke_fn_t) rtk_fig_text_free;
@@ -1267,7 +1214,6 @@ void rtk_fig_text_alloc(rtk_fig_t *fig, double ox, double oy, double oa, const c
   // This will make sure the new stroke gets drawn
   rtk_fig_dirty(fig);
     
-  rtk_fig_unlock(fig);
   return;
 }
 
@@ -1395,8 +1341,6 @@ void rtk_fig_image_alloc(rtk_fig_t *fig, double ox, double oy, double oa,
   int bytes;
   rtk_image_stroke_t *data;
 
-  rtk_fig_lock(fig);
-
   data = calloc(1, sizeof(rtk_image_stroke_t));
   rtk_fig_stroke_add(fig, (rtk_stroke_t*) data);
   data->stroke.freefn = (rtk_stroke_fn_t) rtk_fig_image_free;
@@ -1432,7 +1376,6 @@ void rtk_fig_image_alloc(rtk_fig_t *fig, double ox, double oy, double oa,
   // This will make sure the new stroke gets drawn
   rtk_fig_dirty(fig);
     
-  rtk_fig_unlock(fig);
   return;
 }
 

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.25 $
+//  $Revision: 1.26 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -26,13 +26,23 @@ The fiducialfinder model simulates a fiducial-detecting device.
 
 extern rtk_fig_t* fig_debug_rays;
 
+int fiducial_shutdown( stg_model_t* mod );
+int fiducial_update( stg_model_t* mod );
+void fiducial_render_cfg( stg_model_t* mod, void* data, size_t len );
+void fiducial_render_data( stg_model_t* mod, void* data, size_t len );
 
-void fiducial_init( stg_model_t* mod )
+stg_model_t* stg_fiducial_create( stg_world_t* world, 
+				  stg_model_t* parent, 
+				  stg_id_t id, 
+				  char* token )
 {
-  PRINT_DEBUG( "fiducial init" );
-
-  // fiducialfinders don't have a body in the sim
-  //stg_model_set_lines( mod, NULL, 0 );
+  stg_model_t* mod = stg_model_create( world, parent, id, STG_MODEL_FIDUCIAL, token );
+  
+  // override the default methods
+  mod->f_shutdown = fiducial_shutdown;
+  mod->f_update = fiducial_update;
+  mod->f_render_data = fiducial_render_data;
+  mod->f_render_cfg = fiducial_render_cfg;
   
   // a fraction smaller than a laser by default
   stg_geom_t geom;
@@ -43,7 +53,7 @@ void fiducial_init( stg_model_t* mod )
   
   stg_color_t color = stg_lookup_color( "magenta" );
   stg_model_set_color( mod, &color );
-
+  
   mod->obstacle_return = 0;
   mod->laser_return = LaserTransparent;
   
@@ -57,6 +67,8 @@ void fiducial_init( stg_model_t* mod )
   cfg.max_range_id = STG_DEFAULT_FIDUCIAL_RANGEMAXID;
   cfg.fov = STG_DEFAULT_FIDUCIAL_FOV;  
   stg_model_set_config( mod, &cfg, sizeof(cfg) );
+
+  return mod;
 }
 
 int fiducial_shutdown( stg_model_t* mod )
@@ -247,7 +259,7 @@ void fiducial_render_data( stg_model_t* mod, void* data, size_t len )
     }  
 }
 
-void fiducial_render_config( stg_model_t* mod, void* data,  size_t len )
+void fiducial_render_cfg( stg_model_t* mod, void* data,  size_t len )
 { 
   
   if( mod->gui.cfg  )
@@ -290,18 +302,3 @@ void fiducial_render_config( stg_model_t* mod, void* data,  size_t len )
   	       mina, maxa );      
 }
 
-stg_lib_entry_t fiducial_entry = { 
-  fiducial_init,     // init
-  NULL,              // startup
-  fiducial_shutdown, // shutdown
-  fiducial_update,   // update
-  NULL,               // set data
-  NULL,              // get data
-  NULL,              // set command
-  NULL,              // get command
-  NULL,               // set config
-  NULL,               // get config
-  fiducial_render_data,
-  NULL,
-  fiducial_render_config
-};

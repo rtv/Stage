@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.58 2004-10-11 05:54:49 rtv Exp $
+dnl $Id: configure.in,v 1.59 2004-11-21 10:53:02 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -86,9 +86,14 @@ dnl AC_MSG_WARN([no suitable RTK was found. ])
 dnl )
 
 PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.0,
-AC_DEFINE(INCLUDE_GTK,1,[building GUI]),
+AC_DEFINE(INCLUDE_GTK,1,[building GTK components]),
 AC_MSG_WARN([no suitable GTK was found. ])
 )
+
+dnl PKG_CHECK_MODULES(GNOMECANVAS, libgnomecanvas-2.0 >= 2.0,
+dnl AC_DEFINE(INCLUDE_GNOMECANVAS,1,[building GNOMECANVAS components]),
+dnl AC_MSG_WARN([no suitable GNOMECANVAS was found. ])
+dnl )
 
 dnl we need Player 1.5 or higher
 PKG_CHECK_MODULES( PLAYER, player >= 1.5,

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.14 $
+//  $Revision: 1.15 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -29,13 +29,24 @@ of two modes; either <i>differential</i> like a Pioneer robot, or
 #include "gui.h"
 
 //extern rtk_fig_t* fig_debug_rays;
-  
-void position_init( stg_model_t* mod )
-{
-  PRINT_DEBUG( "position startup" );
-  
-  // sensible position defaults
 
+int position_startup( stg_model_t* mod );
+int position_shutdown( stg_model_t* mod );
+int position_update( stg_model_t* mod );
+
+stg_model_t* stg_position_create( stg_world_t* world, 
+				  stg_model_t* parent, 
+				  stg_id_t id, 
+				  char* token )
+{
+  stg_model_t* mod = stg_model_create( world, parent, id, STG_MODEL_POSITION, token );
+  
+  // override the default methods
+  mod->f_startup = position_startup;
+  mod->f_shutdown = position_shutdown;
+  mod->f_update = position_update;
+
+  // sensible position defaults
   stg_velocity_t vel;
   memset( &vel, 0, sizeof(vel));
   stg_model_set_velocity( mod, &vel );
@@ -59,6 +70,8 @@ void position_init( stg_model_t* mod )
   memset( &data, 0, sizeof(data) );
 
   stg_model_set_data( mod, &data, sizeof(data) );
+
+  return mod;
 }
 
 int position_update( stg_model_t* mod )
@@ -256,16 +269,3 @@ int position_shutdown( stg_model_t* mod )
   return 0; // ok
 }
 
-
-stg_lib_entry_t position_entry = { 
-  position_init,     // init
-  position_startup,  // startup
-  position_shutdown, // shutdown
-  position_update,   // update
-  NULL,              // set data
-  NULL,              // get data
-  NULL,              // set command
-  NULL,              // get command
-  NULL,              // set config
-  NULL               // get config
-};

@@ -20,9 +20,9 @@
 
 /*
  * Desc: Combined Rtk functions
- * Author: Andrew Howard
- * Contributors: Richard Vaughan
- * CVS: $Id: rtk.h,v 1.3 2004-11-08 06:28:17 rtv Exp $
+ * Author: Andrew Howard, Richard Vaughan
+
+ * CVS: $Id: rtk.h,v 1.4 2004-11-21 10:53:02 rtv Exp $
  */
 
 #ifndef RTK_H
@@ -145,7 +145,6 @@ typedef struct _rtk_canvas_t
   GtkWidget *frame;
   GtkWidget *layout;
   GtkWidget *canvas;
-
   // GDK stuff
   GdkPixmap *bg_pixmap, *fg_pixmap;
   GdkGC *gc;
@@ -238,12 +237,6 @@ rtk_canvas_t *rtk_canvas_create(rtk_app_t *app);
 
 // Destroy the canvas
 void rtk_canvas_destroy(rtk_canvas_t *canvas);
-
-// Lock the canvas i.e. get exclusive access.
-void rtk_canvas_lock(rtk_canvas_t *canvas);
-
-// Unlock the canvas
-void rtk_canvas_unlock(rtk_canvas_t *canvas);
 
 // See if the canvas has been closed
 int rtk_canvas_isclosed(rtk_canvas_t *canvas);
@@ -447,10 +440,6 @@ void rtk_fig_add_mouse_handler(rtk_fig_t *fig, rtk_mouse_fn_t callback);
 
 // Unset the mouse event callback function.
 void rtk_fig_remove_mouse_handler(rtk_fig_t *fig, rtk_mouse_fn_t callback);
-
-// Figure synchronization.
-void rtk_fig_lock(rtk_fig_t *fig);
-void rtk_fig_unlock(rtk_fig_t *fig);
 
 // Clear all existing strokes from a figure.
 void rtk_fig_clear(rtk_fig_t *fig);

@@ -78,7 +78,6 @@ stg_model_t* stg_model_create( stg_world_t* world,
 			       stg_model_t* parent,
 			       stg_id_t id, 
 			       stg_model_type_t type,
-			       stg_lib_entry_t* lib,       
 			       char* token )
 {  
   stg_model_t* mod = calloc( sizeof(stg_model_t),1 );
@@ -88,7 +87,6 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->world = world;
   mod->parent = parent; 
   mod->type = type;
-  mod->lib = lib;
   mod->token = strdup(token); // this will be immediately replaced by
 			      // model_create_name  
   // create a default name for the model that's derived from its
@@ -184,10 +182,20 @@ stg_model_t* stg_model_create( stg_world_t* world,
   memset( &mod->odom, 0, sizeof(mod->odom));
   
   mod->friction = 0.0;
-
-  // if model has an init function, call it.
-  if( mod->lib->init )
-    mod->lib->init(mod);
+  
+  // install the default functions
+   mod->f_startup = _model_startup;
+  mod->f_shutdown = _model_shutdown;
+  mod->f_update = _model_update;
+  mod->f_set_data = _model_set_data;
+  mod->f_get_data =  _model_get_data;
+  mod->f_set_command = _model_set_cmd;
+  mod->f_get_command = _model_get_cmd;
+  mod->f_set_config = _model_set_cfg;
+  mod->f_get_config = _model_get_cfg;
+  mod->f_render_data = NULL;
+  mod->f_render_cmd = NULL;
+  mod->f_render_cfg = NULL;
   
   PRINT_DEBUG4( "finished model %d.%d(%s) type %s", 
 		mod->world->id, mod->id, 
@@ -332,9 +340,7 @@ void stg_model_local_to_global( stg_model_t* mod, stg_pose_t* pose )
 {  
   stg_pose_t origin;   
   stg_model_global_pose( mod, &origin );
-  //stg_pose_sum( &origin, &origin, &mod->geom.pose );
   stg_pose_sum( pose, &origin, pose );
-  //  memcpy( 
 }
 
 
@@ -379,49 +385,11 @@ void stg_model_map( stg_model_t* mod, gboolean render )
   else
     PRINT_ERR1( "expecting %d polygons but have no data", (int)count );
 }
-  
-int stg_model_update( stg_model_t* mod )
-{
-  //PRINT_DEBUG2( "updating model %d:%s", mod->id, mod->token );
-  
-  mod->interval_elapsed = 0;
 
-  // if this type of model has an update function, call it.
-  if( mod->lib->update )
-    mod->lib->update(mod);
-  
-  // now move the model if it has any velocity
-  if( (mod->velocity.x || mod->velocity.y || mod->velocity.a ) )
-    stg_model_update_pose( mod );
-  
-  return 0;
-}
 
 void model_update_cb( gpointer key, gpointer value, gpointer user )
 {
   stg_model_update( (stg_model_t*)value );
-}
-
-int stg_model_startup( stg_model_t* mod )
-{
-  PRINT_DEBUG1( "default startup method mod %d", mod->id );
-  
-  // if this type of model has a startup function, call it.
-  if(mod->lib->startup )
-   return mod->lib->startup(mod);
-  
-  return 0;
-}
-
-int stg_model_shutdown( stg_model_t* mod )
-{
-  PRINT_DEBUG1( "default shutdown method mod %d", mod->id );
-  
-  // if this type of model has a shutdown function, call it.
-  if(mod->lib->shutdown )
-    return mod->lib->shutdown(mod);
-  
-  return 0;
 }
 
 void stg_model_subscribe( stg_model_t* mod )
@@ -460,18 +428,3 @@ void model_print_cb( gpointer key, gpointer value, gpointer user )
 }
 
 
-stg_lib_entry_t model_entry = { 
-  NULL,  // init
-  NULL,  // startup
-  NULL,  // shutdown
-  NULL,  // update
-  NULL,  // set data
-  NULL,  // get data
-  NULL,  // set command
-  NULL,  // get command
-  NULL,  // set config
-  NULL,  // get config
-  NULL,  // render data
-  NULL,  // render cmd
-  NULL   // render cfg
-};
