@@ -7,18 +7,18 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.29 $
+//  $Revision: 1.30 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 #include <math.h>
 
-//#define DEBUG
+#define DEBUG
 
 #include "stage.h"
 #include "gui.h"
 
-extern rtk_fig_t* fig_debug;
+extern rtk_fig_t* fig_debug; 
 
 int lines_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 {
@@ -104,7 +104,8 @@ stg_model_t* stg_model_test_collision_at_pose( stg_model_t* mod,
 
 int stg_model_update_pose( stg_model_t* model )
 { 
-  PRINT_DEBUG1( "pose update model %d", model->id );
+  PRINT_DEBUG4( "pose update model %d (vel %.2f, %.2f %.2f)", 
+		model->id, model->velocity.x, model->velocity.y, model->velocity.a );
  
   stg_velocity_t* vel = stg_model_get_velocity(model);  
 
@@ -117,6 +118,9 @@ int stg_model_update_pose( stg_model_t* model )
 
   stg_energy_data_t* en = stg_model_get_energy_data( model );
 
+  // see if we get any velocity from impacts
+  stg_model_impact( model );
+
   //if( en->joules > 0 && (vel->x || vel->y || vel->a ) )
   if( (vel->x || vel->y || vel->a ) )
     {
@@ -128,14 +132,65 @@ int stg_model_update_pose( stg_model_t* model )
       pose.x += vel->x * interval;
       pose.y += vel->y * interval;
       pose.a += vel->a * interval;
+      
+      double hitx=0, hity=0;
+      stg_model_t* hitthing = 
+	stg_model_test_collision_at_pose( model, &pose, &hitx, &hity );
+      
+      
 
-      if( stg_model_test_collision_at_pose( model, &pose, NULL, NULL ) )
+      if( hitthing )
 	{
 	  PRINT_DEBUG( "HIT something!" );
 
 	  model->stall = 1;
-	  // now set the new pose handling matrix & gui redrawing 
-	  //model_set_pose( model, &oldpose );
+
+	  if( 0 )
+	    {
+	      puts( "hitting" );
+	      // Get the velocity of the thing we hit
+	      //stg_velocity_t* vel = stg_model_get_velocity( hitthing );
+	      double impact_vel = hypot( vel->x, vel->y );
+	      
+	      // TODO - use relative mass and velocity properly
+
+	      // and mass
+	      //stg_kg_t* mass = stg_model_get_mass( hitthing );
+	     
+	      // find the position of both objects	      
+	      //stg_pose_t p;
+	      //memset(&p,0,sizeof(p));
+	      //stg_model_global_pose( model, &p );
+
+	      stg_pose_t o;
+	      memset(&o,0,sizeof(o));
+	      stg_model_global_pose( hitthing, &o );
+
+	      // Compute bearing FROM impacted ent
+	      // Align ourselves so we are facing away from this point
+	      double pth = atan2( o.y-pose.y, o.x-pose.x );
+	      
+	      if( impact_vel )
+		{
+		  double vr =  fabs(impact_vel);
+
+		  stg_velocity_t given;
+		  given.x = vr * cos(pth);
+		  given.y = vr * sin(pth);
+		  given.a = 0.0;
+		  
+		  // get some velocity from the impact
+		  //hitthing->velocity.x = vr * cos(pth);
+		  //hitthing->velocity.y = vr * sin(pth);		  
+
+		  printf( "gave %.2f %.2f vel\n",
+			  given.x, given.y );
+
+		  stg_model_set_velocity( hitthing, &given );
+		}
+	      
+	    }
+	  
 	}
       else	  
 	{
@@ -160,3 +215,7 @@ int stg_model_update_pose( stg_model_t* model )
   return 0; // ok
 }
 
+void stg_model_impact(  stg_model_t* model )
+{
+
+}
