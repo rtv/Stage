@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.47 2002-02-20 08:44:22 rtv Exp $
+ * $Id: xs.cc,v 1.48 2002-02-27 22:27:27 rtv Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -37,6 +37,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 
 #include <queue> // STL containers
 #include <map>
@@ -202,7 +203,7 @@ void PrintStageTruth( stage_truth_t &truth )
 {
   printf( "ID: [%d:%d] (%s:%4d,%d,%d)\tpose: [%d,%d,%d]\tsize: [%d,%d]\t color: [%d,%d,%d]\t echo: %d\n", 
 	  truth.stage_id, truth.parent_id,
-	  truth.hostname,
+	  inet_ntoa( truth.hostaddr ),
 	  truth.id.port, 
 	  truth.id.type, 
 	  truth.id.index,
@@ -219,7 +220,7 @@ void CXGui::PrintMetricTruth( int stage_id, xstruth_t &truth )
   printf( "[%d:%d] %s\t(%s:%4d,%d,%d)\t[%.2f,%.2f,%.2f]\t[%.2f,%.2f]\n",
 	  stage_id, truth.parent_id,
 	  StageNameOf( truth ),
-	  truth.hostname,
+	  inet_ntoa( truth.hostaddr ),
 	  truth.id.port, 
 	  truth.id.type, 
 	  truth.id.index,
@@ -235,7 +236,7 @@ void CXGui::PrintMetricTruthVerbose( int stage_id, xstruth_t &truth )
 	  "\tpose: [%.2f,%.2f,%.2f]\tsize: [%.2f,%.2f]\t\tColor: [%d,%d,%d]\n", 
 	  stage_id, truth.parent_id,
 	  StageNameOf( truth ),
-	  truth.hostname,
+	  inet_ntoa( truth.hostaddr ),
 	  truth.id.port,
 	  PlayerNameOf( truth.id ), 
 	  truth.id.index,
@@ -365,63 +366,65 @@ static void* TruthWriter( void* )
  
   while( 1 )
     {
-      usleep( 50000 ); // chill for a little while
-
-      stage_pose_t *next_entry = 
-	(stage_pose_t*)( sendbuf+sizeof(stage_header_t) );
-      
-      uint32_t pose_count = 0;
-      
-      // copy all the poses on the output queue into a buffer
-      while( !outgoing_queue.empty() && pose_count < 100 )
+      if( outgoing_queue.empty() )
+	usleep( 50000 ); // chill for a little while
+      else
 	{
-	  bool duplicate = false;
+	  stage_pose_t *next_entry = 
+	    (stage_pose_t*)( sendbuf+sizeof(stage_header_t) );
 	  
-	  stage_pose_t pose = outgoing_queue.front();
-	  outgoing_queue.pop();
+	  uint32_t pose_count = 0;
 	  
-	  // please send this truth back to us for redisplay
-	  pose.echo_request = true;
-	
-	  // if we've already queued up a move request for this
-	  // object
-	  for( int g=0; g<(int)pose_count; g++ )
+	  // copy all the poses on the output queue into a buffer
+	  while( !outgoing_queue.empty() && pose_count < 100 )
 	    {
-	      stage_pose_t* ps = (stage_pose_t*)
-		(sendbuf+sizeof(stage_header_t)+(g*sizeof(stage_pose_t)));
+	      bool duplicate = false;
 	      
-	      if( ps->stage_id == pose.stage_id )
+	      stage_pose_t pose = outgoing_queue.front();
+	      outgoing_queue.pop();
+	      
+	      // please send this truth back to us for redisplay
+	      pose.echo_request = true;
+	      
+	      // if we've already queued up a move request for this
+	      // object
+	      for( int g=0; g<(int)pose_count; g++ )
 		{
-		  // change the existing request instead of adding a new one
-		  duplicate = true;
-		  memcpy( ps, &pose, sizeof(pose) );
+		  stage_pose_t* ps = (stage_pose_t*)
+		    (sendbuf+sizeof(stage_header_t)+(g*sizeof(stage_pose_t)));
+		  
+		  if( ps->stage_id == pose.stage_id )
+		    {
+		      // change the existing request instead of adding a new one
+		      duplicate = true;
+		      memcpy( ps, &pose, sizeof(pose) );
+		    }
+		}
+	      
+	      // if we didn't find an existing request, add a new request
+	      if( !duplicate )
+		{
+		  memcpy( next_entry, &pose, sizeof(pose) );
+		  
+		  pose_count++;
+		  next_entry++;
 		}
 	    }
 	  
-	  // if we didn't find an existing request, add a new request
-	  if( !duplicate )
-	    {
-	      memcpy( next_entry, &pose, sizeof(pose) );
+	  // now send the data we've buffered
+	  if( pose_count > 0 )
+	    {      
+	      stage_header_t hdr;
 	      
-	      pose_count++;
-	      next_entry++;
-	    }
-	}
-      
-      // now send the data we've buffered
-      if( pose_count > 0 )
-	{      
-	  stage_header_t hdr;
-	  
-	  hdr.type = PosePacket;
-	  hdr.data = pose_count;
-	  
-	  //printf( "[HDR (%d:%u)]", hdr.type, hdr.data );
-	  //printf( "[PLD %d]", pose_count );
-	  
-	  // copy in the header
-	  memcpy( sendbuf, &hdr, sizeof(hdr) );
-	  
+	      hdr.type = PosePacket;
+	      hdr.data = pose_count;
+	      
+	      //printf( "[HDR (%d:%u)]", hdr.type, hdr.data );
+	      //printf( "[PLD %d]", pose_count );
+	      
+	      // copy in the header
+	      memcpy( sendbuf, &hdr, sizeof(hdr) );
+	      
 	  size_t writecnt = 0;
 	  int thiswritecnt;
 	  
@@ -439,6 +442,7 @@ static void* TruthWriter( void* )
 	      assert(thiswritecnt >= 0);
 	      
 	      writecnt += (size_t)thiswritecnt;
+	    }
 	    }
 	}
     }
@@ -986,7 +990,7 @@ void CXGui::ImportTruth( stage_truth_t &struth )
   int stage_id = truth.stage_id = struth.stage_id; // this is the map key
   truth.parent_id = struth.parent_id;
 
-  strncpy( truth.hostname, struth.hostname, HOSTNAME_SIZE );
+  truth.hostaddr = struth.hostaddr;
   
   truth.stage_type = struth.stage_type;
   
@@ -1141,9 +1145,8 @@ void CXGui::Startup(int argc, char** argv )
   black = BlackPixel( display, screen );
   white = WhitePixel( display, screen );
   
-  XTextProperty windowName;
-  
-  
+  XStringListToTextProperty( &window_title, 1, &windowName);
+    
   if( !DownloadEnvironment() )
     {
       puts( "\nFailed to download Stage's environment. Exiting" );
@@ -1164,17 +1167,19 @@ void CXGui::Startup(int argc, char** argv )
   if( !pan ) pan= default_pan;
   SetupPan( pan ); // must setupzoom first!
   
-  
+
   
   win = XCreateSimpleWindow( display, 
   			     RootWindow( display, screen ), 
   			     x, y, width, height, 4, 
   			     black, white );
+
+  //infowin = XCreateSimpleWindow( display, win, 0, 0, 300, 20, 0, 0, blue );
+
   
   XSelectInput(display, win, ExposureMask | StructureNotifyMask | 
   	       ButtonPressMask | ButtonReleaseMask | KeyPressMask );
   
-  XStringListToTextProperty( &window_title, 1, &windowName);
   
   XSizeHints sz;
   
@@ -1192,7 +1197,7 @@ void CXGui::Startup(int argc, char** argv )
     BoundsCheck();
 
     XMapWindow(display, win);
-  
+    
     // where did the WM put us?
     XWindowAttributes attrib;
     XGetWindowAttributes( display, win, &attrib );
@@ -1342,12 +1347,11 @@ void CXGui::HandleXEvent()
   bool expose = false;
 
   while( XCheckWindowEvent( display, win,
-  			    StructureNotifyMask 
-  			    | ButtonPressMask | ButtonReleaseMask 
-  			    | ExposureMask | KeyPressMask 
-  			    | PointerMotionHintMask, 
-  			    &reportEvent ) )
-    
+			   StructureNotifyMask 
+			   | ButtonPressMask | ButtonReleaseMask 
+			   | ExposureMask | KeyPressMask 
+			   | PointerMotionHintMask, 
+			   &reportEvent ) )
     switch( reportEvent.type ) // there was an event waiting, so handle it...
       {
       case ConfigureNotify:  // window resized or modified
@@ -1374,9 +1378,9 @@ void CXGui::HandleXEvent()
 	
       case KeyPress: // guess what
 	HandleKeyPressEvent( reportEvent );
-  	break;
+  	break;    
       }
-
+  
   if( expose )
     HandleExposeEvent( reportEvent );
   
@@ -1410,8 +1414,8 @@ void CXGui::DrawString( double x, double y, char* str, int len )
   		   (ULI)( (iheight-pany)-((int)( y*ppm ))),
   		   str, len );
     }
-  else
-    cout << "Warning: XGUI::DrawString was passed a null pointer" << endl;
+  //else
+  //cout << "Warning: XGUI::DrawString was passed a null pointer" << endl;
 }
 
 void CXGui::DrawLines( DPoint* dpts, int numPts )
@@ -1653,9 +1657,9 @@ void CXGui::HighlightObject( xstruth_t* exp,  bool undraw )
   SetForeground( white );
   SetDrawMode( GXxor );
   
-  int infox = 5;
-  int infoy = 15;
-  
+  //int infox = 5;
+  //int infoy = 15;
+    
   // undraw the last stuff if there was any
   if( x != -1000.0 && y != -1000.0 && undraw )
     {
@@ -1665,9 +1669,9 @@ void CXGui::HighlightObject( xstruth_t* exp,  bool undraw )
       XSetLineAttributes( display, gc, 0, LineSolid, CapRound, JoinRound );
       DrawLines( heading_stick_pts, 2 );
 
-      if( info[0] ) 	  
-	XDrawString( display,win,gc,
-		     infox, infoy, info, strlen(info) );
+      //if( info[0] ) 	  
+      //XDrawString( display,infowin,gc,
+      //	     infox, infoy, info, strlen(info) );
     }
   
   if( exp ) // if this is a valid object
@@ -1694,25 +1698,45 @@ void CXGui::HighlightObject( xstruth_t* exp,  bool undraw )
       
       XSetLineAttributes( display, gc, 0, LineSolid, CapRound, JoinRound );
       DrawLines( heading_stick_pts, 2 );
-   
 
-      sprintf( info, "[%d:%d] %s (%.2f,%.2f,%d)",
-	       exp->stage_id, exp->parent_id,
-	       StageNameOf(*exp),
+      char stageid[64];
+      char pose[64];
+      
+      // format the stage ID
+      sprintf( stageid, "%d:%s",
+	       exp->stage_id, StageNameOf(*exp) ); //exp->parent_idc);
+      
+      // format the pose
+      sprintf( pose, "(%.2f,%.2f,%d)", 
 	       exp->x, exp->y, (int)RTOD( exp->th ) );
 
       if( exp->id.port ) // ie. it's a player device
-	{ // append the player id 
-	  char buf[256];
-	  strncpy( buf, info, sizeof(buf) );
+	{ 	         
+	  char playerid[64];
+	  sprintf( playerid, "[%s:%d,%s,%d]",
+		   inet_ntoa(exp->hostaddr), exp->id.port, 
+		   PlayerNameOf(exp->id), exp->id.index );
 	  
-	  sprintf( info, "%s(%s:%d,%s,%d)",
-		   buf,
-		   exp->hostname, exp->id.port, PlayerNameOf(exp->id), exp->id.index );
+	  sprintf( info, " %s %s %s", stageid, playerid, pose );
 	}
+      else
+	sprintf( info, " %s %s", stageid, pose );
+      
+      //XDrawString( display,infowin,gc,
+      //	   infox, infoy, info, strlen( info ) );
 
-      XDrawString( display,win,gc,
-		   infox, infoy, info, strlen( info ) );
+      // set the window title to tell us about the object
+      char* title = new char[256];
+      strncpy( title, info, 255 );
+
+      XTextProperty windowName;
+      XStringListToTextProperty( &title, 1, &windowName);
+
+      XSetWMProperties(display, win, &windowName, (XTextProperty*)NULL, 
+		       (char**)NULL, 0, 
+		       (XSizeHints*)NULL, (XWMHints*)NULL, (XClassHint*)NULL );
+
+
     }
   
   // reset the GC
@@ -1830,7 +1854,6 @@ void CXGui::Zoom( double ratio, int centerx, int centery )
 
 void CXGui::StartDragging( XEvent& reportEvent )
 {
-
   // create an invisible mouse pointer
    Pixmap blank;
    XColor dummy;
@@ -1869,6 +1892,10 @@ void CXGui::StartDragging( XEvent& reportEvent )
   //dragging->id.port, dragging->id.type, dragging->id.index );
   //fflush( stdout );
 
+  // show the info window
+  //XMapWindow(display, infowin);
+
+
   HighlightObject( dragging, false );
 }
 
@@ -1881,6 +1908,14 @@ void CXGui::StopDragging( XEvent& reportEvent )
   dragging = NULL; // we test the value elsewhere
   
   HighlightObject( NULL, true ); // erases the highlighting
+
+  // reset the window title
+  XSetWMProperties(display, win, &windowName, (XTextProperty*)NULL, 
+  		   (char**)NULL, 0, 
+  		   (XSizeHints*)0, (XWMHints*)NULL, (XClassHint*)NULL );
+
+  // hide the info window
+  //XUnmapWindow(display, infowin);
 } 
 
 void CXGui::StartScrolling( XEvent& reportEvent )
@@ -2194,20 +2229,35 @@ void CXGui::HandleConfigureEvent( XEvent &reportEvent )
 
 void CXGui::HandleMotionEvent( XEvent &reportEvent )
 {
+  static int lastxpixel = 0, lastypixel = 0;
+
   if( dragging )
     {
       int xpixel = (reportEvent.xmotion.x+panx);
       int ypixel = ((iheight-pany)-reportEvent.xmotion.y);
 
-      if( xpixel > iwidth  ) xpixel = iwidth;
-      if( ypixel < 0 ) ypixel = 0;
+      //if we moved..
+      if( xpixel != lastxpixel || ypixel != lastypixel )
+	{ 
+	  if( xpixel > iwidth  ) xpixel = iwidth;
+	  if( ypixel < 0 ) ypixel = 0;
+	  
+	  double xpos = xpixel / ppm;
+	  double ypos = ypixel / ppm; 
+	  
+	  MoveObject( dragging, xpos, ypos, dragging->th );
+	  
+	  // move the info window to follow the cursor
+	  //XMoveWindow( display, infowin, 
+	  //	   reportEvent.xmotion.x+20, 
+	  //	   reportEvent.xmotion.y+20 );
+	  
+	  HighlightObject( dragging, true );
 
-      double xpos = xpixel / ppm;
-      double ypos = ypixel / ppm; 
-      
-      MoveObject( dragging, xpos, ypos, dragging->th );
-      
-      HighlightObject( dragging, true );
+	  // record the position for next time
+	  lastxpixel = xpixel;
+	  lastypixel = ypixel;
+	}
     }
   else if( scrolling )
     {
@@ -2297,7 +2347,22 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
   // try to connect to it
   if( ent->id.port )
     {
-      PlayerClient* cli = playerClients.GetClient( ent->hostname, ent->id.port );
+      // find the name of this host
+      char* dotted = inet_ntoa( ent->hostaddr );
+
+      puts( dotted );
+      
+      struct hostent* info = 
+	gethostbyaddr( dotted, strlen(dotted), AF_INET );
+      
+      PlayerClient* cli = 0; 
+
+      if( info )
+	cli = playerClients.GetClient(info->h_name,ent->id.port);
+      else
+	cli = playerClients.GetClient( "localhost", ent->id.port);
+	
+	//herror( "failed looking up player host name" );
 
       // if we're connected already 
       if( cli ) 
@@ -2329,9 +2394,15 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
       else
 	{ 
 	  // create a new client and add any supported proxies
-	  if( !(cli = new PlayerClient( ent->hostname, ent->id.port ) ))
+
+	  char* host;
+	  info ? host = info->h_name : host = "localhost"; 
+	  //info ? host = info->h_name : host = "rover"; 
+	  
+	  if( !(cli = new PlayerClient( host, ent->id.port )))
 	  {
-	    printf( "_new_ failed on PlayerClient. Bailing\n" );
+	    printf( "failed _new_ PlayerClient with name %s port %d.\n",
+		    info->h_name, ent->id.port );
 	    exit( -1 );
 	  }
 	      
@@ -2340,7 +2411,7 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 	  if( !cli->Connected() )
 	    { 
 	      printf( "XS: Failed to connect to a Player on %s:%d\n",
-		      ent->hostname, ent->id.port );
+		      inet_ntoa(ent->hostaddr), ent->id.port );
 	      fflush( 0 );
 	      
 	      delete cli;
@@ -2367,7 +2438,7 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 	      
 	      // match port and hostname
 	      if( sibling.id.port == ent->id.port && 
-		  (strcmp( sibling.hostname, ent->hostname ) == 0) ) 
+		  (sibling.hostaddr.s_addr == ent->hostaddr.s_addr) ) 
 		{
 		  //printf( "XS: finding proxy for %s (%d:%d:%d)\n", 
 		  //  ent->hostname, sibling.id.port, 

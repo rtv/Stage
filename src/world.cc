@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.84 $
+//  $Revision: 1.85 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -35,6 +35,7 @@
 #include <pwd.h>
 #include <stdio.h>
 #include <libgen.h>  // for dirname/#define DEBUG
+#include <netdb.h>
 
 bool usage = false;
 void PrintUsage(); // defined in main.cc
@@ -51,13 +52,10 @@ int g_timer_expired = 0;
 // thread entry function, defined in envserver.cc
 void* EnvServer( void* );
 
-#define SEMKEY 2000
-
 // allocate chunks of 32 pointers for entity storage
 const int OBJECT_ALLOC_SIZE = 32;
 
 #define WATCH_RATES
-
 
 // this is the root filename for stage devices
 // this is appended with the user name and instance number
@@ -72,10 +70,8 @@ void TimerHandler( int val )
   //printf( "\ng_timer_expired: %d\n", g_timer_expired );
 }  
 
-
 // Main.cc calls constructor, then Load(), then Startup(),
 // Main(), then Shutdown()
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
@@ -140,6 +136,25 @@ CWorld::CWorld()
   if( (first_dot = strchr(m_hostname_short,'.') ))
     *first_dot = '\0';
     
+  // if we're not running on localhost, print the hostname
+  if( strcmp( m_hostname_short, "localhost" ) != 0 )
+    printf( "[@%s]", m_hostname_short );
+  
+  // get the IP of our host
+  struct hostent* info = gethostbyname( m_hostname );
+  
+  // make sure this looks like a regular internet address
+  assert( info->h_length == 4 );
+  assert( info->h_addrtype == AF_INET );
+  
+  // copy the address out
+  memcpy( &m_hostaddr.s_addr, info->h_addr_list[0], 4 ); 
+
+  //printf( "\nRUNNING ON HOSTNAME %s NAME %s IP %s\n", 
+  //  m_hostname,
+  //  info->h_name, 
+  //  inet_ntoa( m_hostaddr ) );
+  
   //printf( "\nCWorld::m_hostname: %s, m_hostname_short %s\n", 
   //    m_hostname, m_hostname_short );
 
@@ -343,6 +358,25 @@ bool CWorld::Load(const char *filename)
   char current_hostname[ HOSTNAME_SIZE ];
   strncpy( current_hostname, m_hostname, HOSTNAME_SIZE );
   
+  // maintain a connection to the nameserver - speeds up lookups
+  sethostent( true );
+
+  struct hostent* info = gethostbyname( current_hostname );
+  struct in_addr current_hostaddr;
+
+  // make sure this looks like a regular internet address
+  assert( info->h_length == 4 );
+  assert( info->h_addrtype == AF_INET );
+  
+  // copy the address out
+  memcpy( &current_hostaddr.s_addr, info->h_addr_list[0], 4 ); 
+
+  //printf( "\nHOSTNAME %s NAME %s LEN %d IP %s\n", 
+  //  current_hostname,
+  //  info->h_name, 
+  //  info->h_length, 
+  //  inet_ntoa( current_hostaddr ) );
+  
   // Load and parse the world file
   if (!this->worldfile.Load(filename))
     return false;
@@ -401,13 +435,49 @@ bool CWorld::Load(const char *filename)
     // a simple way to do this. - RTV
     if( strcmp(type, "host") == 0 )
       {
-	// if a hostname is correctly defined we use that, otherwise we default
-	// to the current hostname
-	strncpy( current_hostname, 
-		 worldfile.ReadString( section, 
-				       "hostname", 
-				       current_hostname ),
+	char candidate_hostname[ HOSTNAME_SIZE ];
+
+	strncpy( candidate_hostname, 
+		 worldfile.ReadString( section, "hostname", 0 ),
 		 HOSTNAME_SIZE );
+	
+	// if we found a name
+	if( strlen(candidate_hostname) > 0  )
+	  {
+	    struct hostent* cinfo = 0;
+	    
+	    //printf( "CHECKING HOSTNAME %s\n", candidate_hostname );
+
+	    //lookup this host's IP address:
+	    if( (cinfo = gethostbyname( candidate_hostname ) ) ) 
+	      {
+
+		// make sure this looks like a regular internet address
+		assert( cinfo->h_length == 4 );
+		assert( cinfo->h_addrtype == AF_INET );
+		
+		// looks good - we'll use this host from now on
+		strncpy( current_hostname, candidate_hostname, HOSTNAME_SIZE );
+
+		// copy the address out
+		memcpy( &current_hostaddr.s_addr, cinfo->h_addr_list[0], 4 ); 
+		
+		//printf( "LOADING HOSTNAME %s NAME %s LEN %d IP %s\n", 
+		//current_hostname,
+		//cinfo->h_name, 
+		//cinfo->h_length, 
+		//inet_ntoa( current_hostaddr ) );
+	      }
+	    else // failed lookup - stick with the last host
+	      {
+		printf( "Can't resolve hostname \"%s\" in world file."
+			" Sticking with \"%s\".\n", 
+			candidate_hostname, current_hostname );
+      	      }
+	  }
+	else
+	  puts( "No hostname specified. Ignoring." );
+
 	continue;
       }
     // otherwise it's a device so we handle those...
@@ -422,23 +492,27 @@ bool CWorld::Load(const char *filename)
         parent = object;
     }
 
+    // Work out whether or not its a local device
+    // if this's device's host IP matches this computer's IP, it's local
+    bool local = m_hostaddr.s_addr == current_hostaddr.s_addr;
+
     // Create the object
-    CEntity *object = CreateObject(type, parent);
+    CEntity *object = CreateObject(type, parent );
+
     if (object != NULL)
     {      
+      // these pokes should really be in the objects, but it's a loooooot
+      // of editing to change each constructor...
+
       // Store which section it came from (so we know where to
       // save it to later).
       object->worldfile_section = section;
 
-      // Work out whether or not its a local object
-      // if the object has this host's name,
-      // set the local flag to show that this computer must
-      // update the object
-      strncpy( object->m_hostname, current_hostname, HOSTNAME_SIZE );
-      if(CheckHostname(object->m_hostname))
-	object->m_local = true;
-      else
-        object->m_local = false;
+      // store the IP of the computer responsible for updating this
+      memcpy( &object->m_hostaddr, &current_hostaddr,sizeof(current_hostaddr));
+      
+      // if true, this instance of stage will update this entity
+      object->m_local = local;
       
       //printf( "ent: %p host: %s local: %d\n",
       //      object, object->m_hostname, object->m_local );
@@ -459,6 +533,9 @@ bool CWorld::Load(const char *filename)
   if (!LoadGUI(&this->worldfile))
     return false;
 #endif
+
+  // disconnect from the nameserver
+  endhostent();
 
   // See if there was anything we didnt understand in the world file
   this->worldfile.WarnUnused();
@@ -613,8 +690,7 @@ bool CWorld::StartupPlayer( void )
   // count the number of Players on this host
   int player_count = 0;
   for (int i = 0; i < m_object_count; i++)
-    if(m_object[i]->m_stage_type == PlayerType && 
-       CheckHostname(m_object[i]->m_hostname))
+    if(m_object[i]->m_stage_type == PlayerType && m_object[i]->m_local ) 
       player_count++;
   
   // if there is at least 1 player device, we start a copy of Player
@@ -642,7 +718,7 @@ bool CWorld::StartupPlayer( void )
     // release controlling tty so Player doesn't get signals
     setpgrp();
 
-    // we assume Player is in the current path
+    // Player must be in the current path
     if( execlp( "player", "player",
                 //"-ports", portBuf, 
                 "-stage", DeviceDirectory(), 

@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.43 2002-02-20 08:44:22 rtv Exp $
+//  $Id: entity.cc,v 1.44 2002-02-27 22:27:27 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -41,7 +41,7 @@
 CEntity::CEntity(CWorld *world, CEntity *parent_object )
 {
   PRINT_DEBUG( "CEntity::CEntity()" );
-
+  
   m_lock = NULL;
 
   m_world = world; 
@@ -83,10 +83,6 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
 
   // Set the initial mapped pose to a dummy value
   this->map_px = this->map_py = this->map_pth = 0;
-
-  // by default this instance of stage will update this entity
-  // this may be changed in the config file [see CEntity::Load()]
-  m_local = true;
   
   m_dependent_attached = false;
 
@@ -94,9 +90,6 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
   m_player_port = -1;
   m_player_type = 0;
     
-  // the default mananger of this entity is this computer
-  strcpy( m_hostname, "localhost" );
-
   // all truth connections should send this truth
   memset( &m_dirty, true, sizeof(bool) * MAX_POSE_CONNECTIONS );
   m_last_pixel_x = m_last_pixel_y = m_last_degree = 0;
@@ -859,9 +852,7 @@ void CEntity::ComposeTruth( stage_truth_t* truth, int index )
   else
     truth->parent_id = -1;
 
-  assert( m_hostname );
-
-  strncpy( truth->hostname, m_hostname, HOSTNAME_SIZE );
+  memcpy( &truth->hostaddr, &m_hostaddr, sizeof(truth->hostaddr) );
 
   truth->id.port = m_player_port;
   truth->id.type = m_player_type;

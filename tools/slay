@@ -1,0 +1,20 @@
+
+#/bin/bash
+
+HOSTS=node6:node4:node3:node0
+PROGS="stage player xs"
+
+# set the separator
+IFS=:
+
+# use $1 for options to killall (-9 for example)
+
+for HOST in $HOSTS
+do
+    echo $HOST
+#	ssh $HOST -uname -a
+
+    # kill the programs
+    ssh $HOST /usr/bin/killall $1 $PROGS
+
+done

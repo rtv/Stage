@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.43 $
+//  $Revision: 1.44 $
 //
 // Usage:
 //  (empty)
@@ -116,6 +116,9 @@ class CWorld
   // the hostname of this computer
   public: char m_hostname[ HOSTNAME_SIZE ];
   public: char m_hostname_short[ HOSTNAME_SIZE ];  // same thing, w/out domain
+
+  // the IP address of this computer
+public: struct in_addr m_hostaddr;
 
   // pose server stuff ---------------------------------------------
   private:
@@ -342,7 +345,7 @@ public: stage_clock_t* m_clock; // a timeval and a semaphore lock
   
   public: CEntity* GetEntityByID( int port, int type, int index );
   
-  private: CEntity* CreateObject(const char *type, CEntity *parent);
+private: CEntity* CreateObject(const char *type, CEntity *parent );
 
   /////////////////////////////////////////////////////////////////////////////
   // access methods

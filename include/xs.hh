@@ -1,15 +1,22 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xs.hh,v 1.18 2002-02-09 03:37:47 rtv Exp $
+ * $Id: xs.hh,v 1.19 2002-02-27 22:27:27 rtv Exp $
  ************************************************************************/
 
 #ifndef _WIN_H
 #define _WIN_H
 
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/Xos.h>
+
 #include <string.h>
 #include <iostream.h>
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include <messages.h> // player data types
 #include <playermulticlient.h>
@@ -37,7 +44,8 @@ typedef struct
   StageType stage_type;
   StageColor color;
   unsigned long pixel_color;
-  char hostname[ HOSTNAME_SIZE ];
+  //char hostname[ HOSTNAME_SIZE ];
+  struct in_addr hostaddr;
   player_id_t id;
   player_id_t parent;
   double x, y, th, w, h; // pose and extents
@@ -110,9 +118,11 @@ public:
   int num_proxies;
 
   environment_t* env;
-  Window win;
+  Window win, infowin;
   GC gc, bgc, wgc;
   
+  XTextProperty windowName; // we store the standard window title here
+
   Display* display;
   int screen;
 

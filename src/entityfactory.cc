@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.17 $
+//  $Revision: 1.18 $
 //
 // Usage:
 //  (empty)
@@ -55,7 +55,7 @@
 /////////////////////////////////////////////////////////////////////////
 // Create an object given a type
 //
-CEntity* CWorld::CreateObject(const char *type, CEntity *parent)
+CEntity* CWorld::CreateObject(const char *type, CEntity *parent )
 {
   if (strcmp(type, "obstacle") == 0 )
     return new CFixedObstacle(this, parent);

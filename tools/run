@@ -1,0 +1,4 @@
+#!/bin/bash
+
+export PATH=~/:$PATH
+stage -xs $1

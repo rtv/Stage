@@ -1,0 +1,29 @@
+
+#/bin/bash
+
+HOSTS="node6:node4:node3:node0"
+# grab the files from the command line
+FILES=$1
+
+# add more standard files
+#FILES=~/PS/player/src/player:bin/stage:examples/simple.world
+#FILES=~/PS/player/src/player:bin/stage:examples/simple.world
+#FILES=examples/simple.world:$FILES
+#FILES=examples/cave.pnm.gz:$FILES
+#FILES=bin/xs:$FILES
+
+# set the separator
+IFS=:
+
+for HOST in $HOSTS
+do
+    echo $HOST
+#	ssh $HOST -uname -a
+
+    # copy the files
+    for FILE in $FILES
+    do
+	echo $FILE
+	scp $FILE $HOST:
+    done
+done

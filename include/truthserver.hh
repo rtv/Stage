@@ -6,6 +6,10 @@
 #include "stage_types.hh"
 #include <sys/poll.h>
 
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 const int DEFAULT_POSE_PORT = 6601;
 const int DEFAULT_ENV_PORT = 6602;
 
@@ -52,14 +56,9 @@ typedef struct
   int stage_id, parent_id;
   StageType stage_type;
   //StageShape stage_shape; // TODO
-
-  char hostname[ HOSTNAME_SIZE ];
-  
-  player_id_t id;
-  
-  // stage will echo these truths if this is true
-  bool echo_request; 
-
+  struct in_addr hostaddr; // the IP of the host - just 32 bits
+  player_id_t id;  
+  bool echo_request;   // stage will echo these truths if this is true
   uint32_t x, y; // mm, mm
   uint16_t w, h; // mm, mm  
   int16_t th; // degrees
@@ -70,14 +69,6 @@ typedef struct
 
 // COMMANDS can be sent to Stage over the truth channel
 enum cmd_t { SAVEc = 1, LOADc, PAUSEc };
-
-
-//#ifndef XPoint // if we're not inclduing the X header
-// borrow an X type for compatibility
-//typedef struct {
-///   short x, y;
-//} XPoint;
-//#endif // _XLIB_H
 
 #endif // _TRUTHSERVER_H
 

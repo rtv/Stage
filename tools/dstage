@@ -1,0 +1,13 @@
+
+HOSTS=node0:node6:node4:node3
+
+IFS=:
+
+# $1 is the world file
+
+for HOST in $HOSTS
+do
+    ssh $HOST ~/run $1 &
+done
+
+stage $1

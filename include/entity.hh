@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.36 $
+//  $Revision: 1.37 $
 //
 // Usage:
 //  (empty)
@@ -54,7 +54,7 @@ class CEntity
 {
   // Minimal constructor
   // Requires a pointer to the parent and a pointer to the world.
-  public: CEntity(CWorld *world, CEntity *parent_object);
+public: CEntity(CWorld *world, CEntity *parent_object );
 
   // Destructor
   public: virtual ~CEntity();
@@ -245,7 +245,11 @@ private: sem_t* m_lock;
   public: int m_player_type; // one of the device types from messages.h
 
   // this is the name of the computer responsible for updating this object
-  public: char m_hostname[ HOSTNAME_SIZE ];
+  //public: char m_hostname[ HOSTNAME_SIZE ];
+  
+  // the IP address of the host that manages this object
+  // replaces the hostname above 'cos it's smaller and faster in comparisons
+public: struct in_addr m_hostaddr;
 
   // flag is true iff this entity is updated by this host
   public: bool m_local; 
