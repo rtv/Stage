@@ -23,7 +23,7 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan
  * Date: 3 July 2003
- * CVS: $Id: main.cc,v 1.76 2003-10-13 16:52:51 rtv Exp $
+ * CVS: $Id: main.cc,v 1.77 2003-10-14 00:56:02 rtv Exp $
  */
 
 
@@ -31,7 +31,7 @@
 #include <signal.h>
 #include <netinet/in.h>
 
-#define DEBUG
+//#define DEBUG
 
 //#include "stage.h"
 #include "world.hh"

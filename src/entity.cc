@@ -21,13 +21,13 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.122 2003-10-13 08:37:00 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.123 2003-10-14 00:56:00 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
 #endif
 
-#define DEBUG
+//#define DEBUG
 //#define VERBOSE
 //#undef DEBUG
 //#undef VERBOSE
