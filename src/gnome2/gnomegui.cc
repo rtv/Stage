@@ -21,7 +21,7 @@
  * Desc: Gnome GUI 
  * Author: Richard Vaughan
  * Date: 20 Sept 2002
- * CVS info: $Id: gnomegui.cc,v 1.4 2002-11-11 09:21:22 rtv Exp $
+ * CVS info: $Id: gnomegui.cc,v 1.5 2003-01-10 03:45:38 rtv Exp $
  */
 
 
@@ -1099,8 +1099,8 @@ void GnomeEntityPropertyChange( CEntity* ent, EntityProperty prop )
       GnomeEntityMove( ent ); // move the gui figure
       break;
       
-    case PropData: // HACK ALERT
-      if( RTTI_ISTYPE( CPlayerEntity*, ent ) ) GnomeEntityRenderData( (CPlayerEntity*)ent );
+    case PropData: 
+      GnomeEntityRenderData( (CPlayerEntity*)ent );
       break;
       
     case PropPlayerSubscriptions:
@@ -1131,6 +1131,10 @@ void GnomeEntityRenderData( CPlayerEntity* ent )
 
     case PLAYER_SONAR_CODE:
       GnomeEntityRenderDataSonar( (CSonarDevice*)ent );
+      break;
+
+    case PLAYER_BLOBFINDER_CODE:
+      GnomeEntityRenderDataBlobfinder( (CVisionDevice*)ent );
       break;
 
     default:

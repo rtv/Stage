@@ -21,7 +21,7 @@
  * Desc: GNOME2 visualization code for each device
  * Author: Richard Vaughan
  * Date: 26 Oct 2002
- * CVS info: $Id: gnomedevices.cc,v 1.3 2002-11-07 00:02:27 rtv Exp $
+ * CVS info: $Id: gnomedevices.cc,v 1.4 2003-01-10 03:45:38 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -199,4 +199,92 @@ void GnomeEntityRenderDataSonar( CSonarDevice* ent )
    //memcpy( &last_data, data, len );
 }
 
+void GnomeEntityRenderDataBlobfinder( CVisionDevice* ent )
+{  
+  uint8_t transparency = 200; 
+
+  player_blobfinder_data_t data;
+  
+  // attempt to get the right size chunk of data from the mmapped buffer
+  if( ent->GetData( &data, sizeof(data) ) != sizeof(data) )
+    {
+      puts( "got wrong data size" );
+      return;
+    }
+ 
+  // kill any previous data rendering
+  if( GetData(ent) ) 
+    gtk_object_destroy(GTK_OBJECT(GetData(ent)));
+  
+  // construct a group under the entity to contain a screen and color
+  // blobs
+  SetData( ent, gnome_canvas_item_new( GetOrigin(ent),
+				       gnome_canvas_group_get_type(),
+				       "x", -1.0,
+				       "y", -0.5, NULL));
+     
+  double scale = 0.007; // shrink from pixels to meters for display
+  
+  short width = ntohs(data.width);
+  short height = ntohs(data.height);
+  double mwidth = width * scale;
+  double mheight = height * scale;
+  
+  double offsetx = -mwidth/2.0;//-1.5;
+  double offsety = -mheight/2.0;//-1.5;
+
+  // draw a white TV screen 
+  gnome_canvas_item_new (  GNOME_CANVAS_GROUP(GetData(ent)), 
+			  gnome_canvas_rect_get_type(),
+			  "x1", offsetx,
+			  "y1", offsety,
+			  "x2", offsetx + mwidth,
+			  "y2", offsety + mheight,
+			   //"fill_color", "white",
+			   //"outline_color", "black",
+			   "fill_color_rgba", 0xFFFFFF00 + transparency ,
+			  "outline_color_rgba", 0x0 + transparency,
+			  "width_pixels", 1,
+			  NULL );
+
+  
+  // The vision figure is attached to the entity, but we dont want
+  // it to rotate.  Fix the rotation here.
+  double gx, gy, gth, rotate[6];
+  ent->GetGlobalPose(gx, gy, gth);
+  art_affine_rotate( rotate, RTOD(-gth) );
+  gnome_canvas_item_affine_relative( GNOME_CANVAS_ITEM(GetData(ent)), rotate);
+
+  // for each color channel
+  for( int c=0; c<PLAYER_BLOBFINDER_MAX_CHANNELS;c++)
+    {
+      short numblobs = ntohs(data.header[c].num);
+      short index = ntohs(data.header[c].index);	    
+  
+      // draw a color blob 
+      for( int b=0; b<numblobs; b++ )
+	{
+	  uint32_t color = RGBA(ntohl(data.blobs[index+b].color),transparency); 
+	  
+	  short top =  ntohs(data.blobs[index+b].top);
+	  short bot =  ntohs(data.blobs[index+b].bottom);
+	  short left =  ntohs(data.blobs[index+b].left);
+	  short right =  ntohs(data.blobs[index+b].right);
+	  
+	  double mtop = top * scale;
+	  double mbot = bot * scale;
+	  double mleft = left * scale;
+	  double mright = right * scale;
+	  
+	  gnome_canvas_item_new (  GNOME_CANVAS_GROUP(GetData(ent)), 
+				   gnome_canvas_rect_get_type(),
+				   "x1", offsetx + mleft,
+				   "y1", offsety + mtop,
+				   "x2", offsetx + mright,
+				   "y2", offsety + mbot,
+				   "fill_color_rgba", color,
+				   NULL );
+	}
+    }
+}
 #endif

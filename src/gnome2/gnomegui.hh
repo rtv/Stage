@@ -21,7 +21,7 @@
  * Desc: Gnome GUI header
  * Author: Richard Vaughan
  * Date: 20 September 2002
- * CVS info: $Id: gnomegui.hh,v 1.2 2002-11-01 19:12:32 rtv Exp $
+ * CVS info: $Id: gnomegui.hh,v 1.3 2003-01-10 03:45:38 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -46,6 +46,7 @@
 // need the device types for the render function args
 #include "laserdevice.hh"
 #include "sonardevice.hh"
+#include "visiondevice.hh"
 
 // handy macros ////////////////////////////////////////////////////////
 
@@ -134,6 +135,7 @@ void GnomeCheckSub( CEntity* ent );
 // device data renderers
 void GnomeEntityRenderDataLaser( CLaserDevice* ent );
 void GnomeEntityRenderDataSonar( CSonarDevice* ent );
+void GnomeEntityRenderDataBlobfinder( CVisionDevice* ent );
 
 #endif // GNOMEGUI_HH
 #endif // USE_GNOME2
