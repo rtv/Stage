@@ -47,7 +47,8 @@ static GtkItemFactoryEntry menu_table[] = {
   { "/File/Export/JPEG", NULL,  gui_menu_file_export_format, 1, "<RadioItem>" },
   { "/File/Export/PNG", NULL, gui_menu_file_export_format,  2, "/File/Export/JPEG" },
   { "/File/Export/PPM", NULL, gui_menu_file_export_format,  3, "/File/Export/JPEG" },
-  { "/File/Export/PNM", NULL, gui_menu_file_export_format, 4, "/File/Export/JPEG" },
+  // PNM doesn't seem to work
+  //  { "/File/Export/PNM", NULL, gui_menu_file_export_format, 4, "/File/Export/JPEG" },
   { "/File/sep1",     NULL,      NULL, 0, "<Separator>" },
   { "/File/_Quit",    "<CTRL>Q", gui_menu_file_exit_cb, 0, "<StockItem>", GTK_STOCK_QUIT },
   { "/_View",         NULL,      NULL, 0, "<Branch>" },
@@ -73,7 +74,7 @@ static GtkItemFactoryEntry menu_table[] = {
   { "/Clock/Pause", NULL, gui_menu_clock_pause_cb, 1, "<CheckItem>" }
 };
 
-static const int menu_table_count = 44;
+static const int menu_table_count = 43;
 
 /* void gui_menu_file_about( void ) */
 /* { */
@@ -135,15 +136,26 @@ void export_window( gui_window_t* win  ) //rtk_canvas_t* canvas, int series )
 
   win->frame_index++;
 
+  char* suffix;
+  switch( win->frame_format )
+    {
+    case RTK_IMAGE_FORMAT_JPEG: suffix = "jpg"; break;
+    case RTK_IMAGE_FORMAT_PNM: suffix = "pnm"; break;
+    case RTK_IMAGE_FORMAT_PNG: suffix = "png"; break;
+    case RTK_IMAGE_FORMAT_PPM: suffix = "ppm"; break;
+    default:
+      suffix = ".jpg";
+    }
+
   if( win->frame_series > 0 )
-    snprintf(filename, sizeof(filename), "stage-%03d-%04d.jpg",
-	     win->frame_series, win->frame_index);
+    snprintf(filename, sizeof(filename), "stage-%03d-%04d.%s",
+	     win->frame_series, win->frame_index, suffix);
   else
-    snprintf(filename, sizeof(filename), "stage-%03d.jpg", win->frame_index);
+    snprintf(filename, sizeof(filename), "stage-%03d.%s", win->frame_index, suffix);
 
   printf("Stage: saving [%s]\n", filename);
   
-  rtk_canvas_export_image( win->canvas, filename, RTK_IMAGE_FORMAT_JPEG);
+  rtk_canvas_export_image( win->canvas, filename, win->frame_format );
 }
 
 void gui_menu_file_export_frame_cb( gpointer data, 
