@@ -2,9 +2,6 @@
 #ifndef _LIBRARY_HH
 #define _LIBRARY_HH
 
-#include <map>
-//#include <string>
-
 #include "stage_types.hh"
 #include "stage_types.hh"
 
