@@ -7,8 +7,13 @@ extern rtk_fig_t* fig_debug;
 void model_ranger_init( model_t* mod )
 {
   mod->ranger_return = LaserVisible;
-  mod->ranger_data = g_array_new( FALSE, TRUE, sizeof(stg_ranger_sample_t));
-  mod->ranger_config = g_array_new( FALSE, TRUE, sizeof(stg_ranger_config_t) );
+  
+  // start with no rangers 
+  model_set_prop_generic( mod, STG_PROP_RANGERCONFIG,
+			  NULL, 0 );
+  
+  //mod->ranger_data = g_array_new( FALSE, TRUE, sizeof(stg_ranger_sample_t));
+  //mod->ranger_config = g_array_new( FALSE, TRUE, sizeof(stg_ranger_config_t) );
 }
 
 
@@ -16,43 +21,52 @@ void model_update_rangers( model_t* mod )
 {   
   //PRINT_DEBUG1( "[%.3f] updating rangers", mod->world->sim_time );
   
-  assert( mod->ranger_config );
-  assert( mod->ranger_data );
+  //assert( mod->ranger_config );
+  //assert( mod->ranger_data );
   
-  int rcount = mod->ranger_config->len;
+  stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_RANGERCONFIG );
+  
+  if( prop == NULL ) // no rangers to update!
+    return;
+  //else
+  
+  stg_ranger_config_t* cfg = (stg_ranger_config_t*)prop->data;
+  assert( cfg );
+
+  int rcount = prop->len / sizeof( stg_ranger_config_t );
   
   if( rcount < 1 )
     return;
-
+  
   //PRINT_WARN1( "wierd! %d rangers", rcount);
   
-  // set the data array to the right number of samples
-  g_array_set_size( mod->ranger_data, rcount );
+  stg_ranger_sample_t* ranges = (stg_ranger_sample_t*)
+    calloc( sizeof(stg_ranger_sample_t), rcount );
   
   if( fig_debug ) rtk_fig_clear( fig_debug );
 
   int t;
   for( t=0; t<rcount; t++ )
     {
-      stg_ranger_config_t* cfg = &g_array_index( mod->ranger_config, 
-					   stg_ranger_config_t, t );
+      //stg_ranger_config_t* cfg = &g_array_index( mod->ranger_config, 
+      //				   stg_ranger_config_t, t );
       
-      g_assert( cfg );
+      //g_assert( cfg );
       
       // get the sensor's pose in global coords
       stg_pose_t pz;
-      memcpy( &pz, &cfg->pose, sizeof(pz) ); 
+      memcpy( &pz, &cfg[t].pose, sizeof(pz) ); 
       model_local_to_global( mod, &pz );
       
       // todo - use bounds_range.min
 
       itl_t* itl = itl_create( pz.x, pz.y, pz.a, 
-			       cfg->bounds_range.max, 
+			       cfg[t].bounds_range.max, 
 			       mod->world->matrix, 
 			       PointToBearingRange );
       
       model_t * hitmod;
-      double range = cfg->bounds_range.max;
+      double range = cfg[t].bounds_range.max;
       
       while( (hitmod = itl_next( itl )) ) 
 	{
@@ -74,14 +88,14 @@ void model_update_rangers( model_t* mod )
 	    }	
 	}
       
-      if( range < cfg->bounds_range.min )
-	range = cfg->bounds_range.min;
+      if( range < cfg[t].bounds_range.min )
+	range = cfg[t].bounds_range.min;
       
-      stg_ranger_sample_t* sample 
-	= &g_array_index( mod->ranger_data, stg_ranger_sample_t, t );
-      
-      sample->range = range;
-      //sample->error = TODO;
+      ranges[t].range = range;
+      //ranges[t].error = TODO;
     }
+  
+  model_set_prop_generic( mod, STG_PROP_RANGERDATA,
+			  ranges, sizeof(stg_ranger_sample_t) * rcount );
+  
 }
-

@@ -21,7 +21,7 @@ typedef struct _model
   stg_velocity_t velocity;
   
   GArray* lines; // array of point-pairs specifying lines in our body
-  // GArray* arcs; // todo?
+  // GArray* arcs; // TODO?
 
   // GUI features
   gboolean nose;
@@ -32,22 +32,21 @@ typedef struct _model
   
   stg_energy_t energy;
 
-  GArray* ranger_config; // sonars, IRs, etc.
-  GArray* ranger_data;
-  int ranger_return;
- 
-  stg_geom_t laser_geom;
-  stg_laser_config_t laser_config;
-  GArray* laser_data;
-  int laser_return;
+  //GArray* ranger_config; // sonars, IRs, etc.
+  //Array* ranger_data; 
+  //stg_geom_t laser_geom;
+  //stg_laser_config_t laser_config;
+  //GArray* laser_data;
 
+  int ranger_return;
+  int laser_return;
   int fiducial_return;
   int obstacle_return;
 
   gboolean subs[STG_PROP_COUNT]; // flags used to control updates
   
-  stg_blobfinder_config_t blob_cfg;
-  GArray* blobs;
+  //stg_blobfinder_config_t blob_cfg;
+  //GArray* blobs;
   
   stg_bool_t boundary;
   
@@ -73,6 +72,7 @@ int model_get_prop( model_t* model, stg_id_t propid,
 
 void model_set_prop_generic( model_t* mod, stg_id_t propid, void* data, size_t len );
 stg_property_t* model_get_prop_generic( model_t* mod, stg_id_t propid );
+void* model_get_prop_data_generic( model_t* mod, stg_id_t propid );
 
 int model_update_prop( model_t* mod, stg_id_t propid );
 void model_update_rangers( model_t* mod );

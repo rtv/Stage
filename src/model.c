@@ -10,6 +10,18 @@
 #define DEBUG
 //#undef DEBUG
 
+
+void prop_free( stg_property_t* prop )
+{
+  if( prop )
+    {
+      if( prop->data ) 
+	free( prop->data );
+      free( prop );
+    }
+}
+
+
 model_t* model_create(  world_t* world, 
 			stg_id_t id, 
 			char* token )
@@ -28,7 +40,7 @@ model_t* model_create(  world_t* world,
   mod->energy.move_cost = 1000; // one joule per move (quite high!)
   
   // models store data in here, indexed by property id
-  mod->props = g_hash_table_new( g_int_hash, g_int_equal );
+  mod->props = g_hash_table_new_full( g_int_hash, g_int_equal, NULL, prop_free );
   
   mod->size.x = 0.4;
   mod->size.y = 0.4;
@@ -88,9 +100,9 @@ void model_destroy( model_t* mod )
   gui_model_destroy( mod );
   
   if( mod->token ) free( mod->token );
-  if( mod->ranger_config ) g_array_free( mod->ranger_config, TRUE );
-  if( mod->ranger_data ) g_array_free( mod->ranger_data, TRUE );
-  if( mod->laser_data ) g_array_free( mod->laser_data, TRUE );
+  //if( mod->ranger_config ) g_array_free( mod->ranger_config, TRUE );
+  //if( mod->ranger_data ) g_array_free( mod->ranger_data, TRUE );
+  //if( mod->laser_data ) g_array_free( mod->laser_data, TRUE );
 
   free( mod );
 }
@@ -226,7 +238,7 @@ int model_update_prop( model_t* mod, stg_id_t propid )
       gui_model_laser_data( mod );
       break;
       
-    case STG_PROP_BLOBS:
+    case STG_PROP_BLOBDATA:
       model_blobfinder_update( mod );
       gui_model_blobfinder_data( mod );
       break;
@@ -320,78 +332,76 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
       *data = &mod->movemask;
       *len = sizeof(mod->movemask);
       break;
-    case STG_PROP_RANGERCONFIG:
-      *data = mod->ranger_config->data;
-      *len = mod->ranger_config->len * sizeof(stg_ranger_config_t);
-      break;
-    case STG_PROP_RANGERDATA:
-      *data = mod->ranger_data->data;
-      *len = mod->ranger_data->len * sizeof(stg_ranger_sample_t);
-      break;
-    case STG_PROP_LASERDATA:
-      {
-	// laser data packet starts with its config
-	*len = sizeof(stg_laser_config_t);
-	*data = calloc( *len, 1 );
-	memcpy( *data, &mod->laser_config,*len);
+      //case STG_PROP_RANGERCONFIG:
+      //*data = mod->ranger_config->data;
+      //*len = mod->ranger_config->len * sizeof(stg_ranger_config_t);
+      //break;
+      //case STG_PROP_RANGERDATA:
+      //*data = mod->ranger_data->data;
+      //*len = mod->ranger_data->len * sizeof(stg_ranger_sample_t);
+      //break;
 
-	// and continues with the data
-	if( mod->laser_data )
-	  {
-	    size_t ranges_len = mod->laser_data->len * sizeof(stg_laser_sample_t);
-	    *len += ranges_len;
-	    *data = realloc( *data, *len );
-	    memcpy( *data + sizeof(stg_laser_config_t), mod->laser_data->data, ranges_len );
-	  }
-      }
-      break;
+  /*   case STG_PROP_LASERDATA: */
+/*       { */
+/* 	// laser data packet starts with its config */
+/* 	*len = sizeof(stg_laser_config_t); */
+/* 	*data = calloc( *len, 1 ); */
+	
+/* 	stg_laser_config_t* lcfg = (stg_laser_config_t*) */
+/* 	  model_get_prop_data_generic( mod, STG_PROP_LASERCONFIG ); */
+/* 	memcpy( *data, lcfg, *len); */
 
-    case STG_PROP_LASERCONFIG:
-      *data = &mod->laser_config;
-      *len = sizeof(stg_laser_config_t);
-      break;
+/* 	// and continues with the data */
+/* 	if( mod->laser_data ) */
+/* 	  { */
+/* 	    size_t ranges_len = mod->laser_data->len * sizeof(stg_laser_sample_t); */
+/* 	    *len += ranges_len; */
+/* 	    *data = realloc( *data, *len ); */
+/* 	    memcpy( *data + sizeof(stg_laser_config_t), mod->laser_data->data, ranges_len ); */
+/* 	  } */
+/*       } */
+/*       break;*/
+
+ /*    case STG_PROP_BLOBS: // the data is already in an array */
+/*       *data = mod->blobs->data; */
+/*       *len = mod->blobs->len * sizeof(stg_blobfinder_blob_t); */
+/*       break; */
+
+/*     case STG_PROP_LASERGEOM: */
+/*       *data = &mod->laser_geom; */
+/*       *len = sizeof(stg_geom_t); */
+/*       break; */
+/*     case STG_PROP_LASERCONFIG: */
+/*       *data = &mod->laser_config; */
+/*       *len = sizeof(stg_laser_config_t); */
+/*       break; */
       
-    case STG_PROP_BLOBS: // the data is already in an array
-      *data = mod->blobs->data;
-      *len = mod->blobs->len * sizeof(stg_blobfinder_blob_t);
-      break;
-
-    case STG_PROP_LASERGEOM:
-      *data = &mod->laser_geom;
-      *len = sizeof(stg_geom_t);
-      break;
       
-    case STG_PROP_FIDUCIALDATA:
+    default:
       {
-	stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_FIDUCIALDATA );
+	stg_property_t* prop = model_get_prop_generic( mod, pid);
 	if( prop )
 	  {
+	    PRINT_DEBUG3( "data found for model %d property %d(%s)",
+			  mod->id, pid, stg_property_string(pid) );
+	    
 	    *data = prop->data;
 	    *len = prop->len;
 	  }
 	else
 	  {
+	    PRINT_WARN3( "no data available for model %d property %d(%s)",
+			 mod->id, pid, stg_property_string(pid) );
 	    *data = NULL;
 	    *len = 0;
 	  }
       }
       break;
-      
-    default:
-      // todo - add random props to a model
-      // g_hash_table_lookup( model->props, &pid );
-      
-      PRINT_WARN2( "request for unknown property %d(%s)",
-		   pid, stg_property_string(pid) );
-      *data = NULL;
-      *len = 0;
-      
-      return 1; //error
-      break;
     }
 
   return 0; //ok
 }
+
 
 void model_set_prop_generic( model_t* mod, stg_id_t propid, void* data, size_t len )
 {
@@ -402,7 +412,8 @@ void model_set_prop_generic( model_t* mod, stg_id_t propid, void* data, size_t l
   stg_property_t* prop = calloc( sizeof(stg_property_t), 1 );
   assert(prop);
   prop->id = propid;
-  prop->data = data;
+  prop->data = calloc( len, 1 );
+  memcpy( prop->data, data, len );
   prop->len = len;
   
   //printf( "setting %p %d:%d(%s) with %d bytes\n", 
@@ -411,10 +422,11 @@ void model_set_prop_generic( model_t* mod, stg_id_t propid, void* data, size_t l
   g_hash_table_replace( mod->props, &prop->id, prop );
 }
 
+
 stg_property_t* model_get_prop_generic( model_t* mod, stg_id_t propid )
 {
   //printf( "getting %p %d:%d(%s)\n", 
-  //  mod->props, mod->id, propid, stg_property_string(propid) );
+  //mod->props, mod->id, propid, stg_property_string(propid) );
   
   stg_property_t* prop = 
     (stg_property_t*)g_hash_table_lookup( mod->props, &propid );
@@ -423,10 +435,27 @@ stg_property_t* model_get_prop_generic( model_t* mod, stg_id_t propid )
   //printf( "found %d bytes\n", (int)prop->len );
   //else
   //puts( "not found" );  
-
+  
   return prop;
 }
 
+// if there is data for this property, return just a pointer to the
+// data, else NULL. This is only useful if we know how large the data
+// should be (or can find out somehow)
+void* model_get_prop_data_generic( model_t* mod, stg_id_t propid )
+{
+  stg_property_t* prop = model_get_prop_generic( mod, propid );
+  
+  if( prop == NULL )
+    {
+      PRINT_WARN3( "attempted to get data for a property that was "
+		   "never created (model %p property %d(%s)",
+		   mod, propid, stg_property_string( propid ) );
+      return NULL;
+    }
+  // else  
+  return prop->data;
+}
 
 int model_set_prop( model_t* mod, 
 		     stg_id_t propid, 
@@ -555,38 +584,10 @@ int model_set_prop( model_t* mod,
 			(int)len, (int)sizeof(stg_bool_t) );
       break;
       
-    case STG_PROP_LASERCONFIG:
-      if( len == sizeof(stg_laser_config_t) )
-	memcpy( &mod->laser_config, data, sizeof(stg_laser_config_t) );
-      else PRINT_WARN2( "ignoring bad laser config data (%d/%d bytes)", 
-			(int)len, (int)sizeof(stg_laser_config_t) );
-      break;
       
-    case STG_PROP_LASERGEOM:
-      if( len == sizeof(stg_geom_t) )
-	memcpy( &mod->laser_geom, data, sizeof(stg_geom_t) );
-      else PRINT_WARN2( "ignoring bad laser geometry data (%d/%d bytes)", 
-			(int)len, (int)sizeof(stg_geom_t) );
-      break;
-      
-    case STG_PROP_RANGERCONFIG:
-      g_array_set_size( mod->ranger_config, 0 );
-      g_array_append_vals( mod->ranger_config, data, len/sizeof(stg_ranger_config_t) );
-      break;
-
-    case STG_PROP_BLOBS:
-      g_array_set_size( mod->blobs, 0 );
-      g_array_append_vals( mod->blobs, data, len/sizeof(stg_blobfinder_blob_t) );
-      break;
-
-      
-
     default:
-      // TODO - accept random prop types and stash data in hash table
-      PRINT_WARN2( "ignoring unknown property type %d(%s)",
-		   propid, stg_property_string(propid) );
-
-      return 1; //error
+      // accept random prop types and stash data in hash table
+      model_set_prop_generic( mod, propid, data, len );            
       break;
     }
   
@@ -642,7 +643,23 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
 
       // TODO
     case STG_MSG_MODEL_PROPSET:
-      PRINT_WARN( "STG_MSG_MODEL_PROPSET not yet implemented" );
+      PRINT_WARN( "STG_MSG_MODEL_PROPSET" );
+      {
+	stg_prop_t* mp = (stg_prop_t*)msg->payload;
+	
+	PRINT_WARN5( "set property %d:%d:%d(%s) with %d bytes",
+		     mp->world,
+		     mp->model,
+		     mp->prop,
+		     stg_property_string( mp->prop ),
+		     (int)mp->datalen );
+	
+	model_set_prop( model, mp->prop, mp->data, mp->datalen ); 	
+	
+	PRINT_DEBUG( "SENDING A REPLY" );	 	   
+	int ack = STG_ACK;
+	stg_fd_msg_write( fd, STG_MSG_CLIENT_REPLY, &ack, sizeof(ack) );
+      }
       break;
       
     case STG_MSG_MODEL_PROPGETSET:

@@ -657,8 +657,12 @@ int stg_model_prop_set( stg_model_t* mod, stg_id_t prop, void* data, size_t len 
   stg_client_request_reply_fixed( mod->world->client,
 				  STG_MSG_MODEL_PROPSET,
 				  mp, mplen,
-				  &ack, sizeof(ack) );  
-  return ack;
+				  &ack, sizeof(ack) ); 
+  
+  if( ack == STG_ACK )
+    return 0; // OK
+  // else
+  return 1; // error
 }
 
 
@@ -1122,9 +1126,10 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 	if( prop->timestamp > cli->stagetime )	  
 	  cli->stagetime = prop->timestamp;
 	
-	printf( "[stage: %lu]  ", cli->stagetime );
 
 #if 0
+	printf( "[stage: %lu]  ", cli->stagetime );
+
 	printf( "[prop: %lu] received property %d:%d:%d(%s) %d/%d bytes\n",
 		prop->timestamp,
 		prop->world, 

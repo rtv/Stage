@@ -135,6 +135,8 @@ gui_window_t* gui_window_create( world_t* world, int xdim, int ydim )
   win->show_rects = TRUE;
   win->show_laser = TRUE;
   win->show_laserdata = TRUE;
+  win->show_blobdata = TRUE;
+  win->show_fiducialdata = TRUE;
 
   win->movie_exporting = FALSE;
   win->movie_count = 0;
@@ -480,6 +482,9 @@ void gui_model_render( model_t* model )
   gui_model_laser( model );
   gui_model_laser_data( model );
   gui_model_grid( model );
+  gui_model_blobfinder_data( model );
+  gui_model_fiducial_data( model );
+
 }
 
 void gui_model_destroy( model_t* model )
@@ -523,13 +528,27 @@ void gui_model_rangers( model_t* mod )
   rtk_fig_origin( fig, mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );  
   rtk_fig_clear( fig ); 
   
+
+  stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_RANGERCONFIG );
+  
+  if( prop == NULL ) // no rangers to update!
+    return;
+  //else
+  
+  stg_ranger_config_t* cfg = (stg_ranger_config_t*)prop->data;
+  assert( cfg );
+
+  int rcount = prop->len / sizeof( stg_ranger_config_t );
+  
+  if( rcount < 1 )
+    return;
+
+
   // add rects showing ranger positions
   int s;
-  for( s=0; s<(int)mod->ranger_config->len; s++ )
+  for( s=0; s<rcount; s++ )
     {
-      stg_ranger_config_t* rngr 
-	= &g_array_index( mod->ranger_config, stg_ranger_config_t, s );
-      
+      stg_ranger_config_t* rngr = &cfg[s];
       //printf( "drawing a ranger rect (%.2f,%.2f,%.2f)[%.2f %.2f]\n",
       //  rngr->pose.x, rngr->pose.y, rngr->pose.a,
       //  rngr->size.x, rngr->size.y );
@@ -538,16 +557,16 @@ void gui_model_rangers( model_t* mod )
 			 rngr->pose.x, rngr->pose.y, rngr->pose.a,
 			 rngr->size.x, rngr->size.y, 0 ); 
       
-	// show the FOV too
-	double sidelen = rngr->size.x/2.0;
-	
-	double x1= rngr->pose.x + sidelen*cos(rngr->pose.a - rngr->fov/2.0 );
-	double y1= rngr->pose.y + sidelen*sin(rngr->pose.a - rngr->fov/2.0 );
-	double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + rngr->fov/2.0 );
-	double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + rngr->fov/2.0 );
-	
-	rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x1, y1 );
-	rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x2, y2 );	
+      // show the FOV too
+      double sidelen = rngr->size.x/2.0;
+      
+      double x1= rngr->pose.x + sidelen*cos(rngr->pose.a - rngr->fov/2.0 );
+      double y1= rngr->pose.y + sidelen*sin(rngr->pose.a - rngr->fov/2.0 );
+      double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + rngr->fov/2.0 );
+      double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + rngr->fov/2.0 );
+      
+      rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x1, y1 );
+      rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x2, y2 );	
     }
 }
 
@@ -556,29 +575,37 @@ void gui_model_rangers_data( model_t* mod )
   gui_window_t* win = g_hash_table_lookup( wins, &mod->world->id );  
   
   rtk_fig_t* fig = gui_model_figs(mod)->ranger_data;  
-  if( fig ) rtk_fig_clear( fig );       
+  if( fig ) rtk_fig_clear( fig );   
   
-  if( win->show_rangerdata && mod->subs[STG_PROP_RANGERDATA] && mod->ranger_data )
+  if( win->show_rangerdata && mod->subs[STG_PROP_RANGERDATA] )
     {
-      rtk_fig_color_rgb32(fig, stg_lookup_color(STG_RANGER_COLOR) );
-      rtk_fig_origin( fig, 
-		      mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );
       
-      // draw the range  beams
-      int s;
-      for( s=0; s< mod->ranger_config->len; s++ )
+      stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_RANGERCONFIG );
+      
+      if( prop == NULL ) // no rangers to update!
+	return;
+      
+      stg_ranger_config_t* cfg = (stg_ranger_config_t*)prop->data;  
+      int rcount = prop->len / sizeof( stg_ranger_config_t );
+      
+      stg_ranger_sample_t* samples = (stg_ranger_sample_t*)
+	model_get_prop_data_generic( mod, STG_PROP_RANGERDATA );
+      
+      if( rcount > 0 && cfg && samples )
 	{
-	  stg_ranger_config_t* rngr 
-	    = &g_array_index( mod->ranger_config, stg_ranger_config_t, s );
-	  
-	  if( mod->ranger_data->len > 0 )
+	  rtk_fig_color_rgb32(fig, stg_lookup_color(STG_RANGER_COLOR) );
+	  rtk_fig_origin( fig, 
+			  mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );	  
+	  // draw the range  beams
+	  int s;
+	  for( s=0; s<rcount; s++ )
 	    {
-	      stg_ranger_sample_t* sample 
-		= &g_array_index(mod->ranger_data, stg_ranger_sample_t, s );
-	      
-	      if( sample )
-		rtk_fig_arrow( fig, rngr->pose.x, rngr->pose.y, rngr->pose.a, 
-			       sample->range, 0.02 );
+	      if( samples[s].range > 0.0 )
+		{
+		  stg_ranger_config_t* rngr = &cfg[s];
+		  
+		  rtk_fig_arrow( fig, rngr->pose.x, rngr->pose.y, rngr->pose.a, 			       samples[s].range, 0.02 );
+		}
 	    }
 	}
     }
@@ -586,21 +613,23 @@ void gui_model_rangers_data( model_t* mod )
 
 void gui_model_laser( model_t* mod )
 {
+  stg_geom_t* lgeom = (stg_geom_t*)
+    model_get_prop_data_generic( mod, STG_PROP_LASERGEOM );
+  
   // only draw the laser gadget if it has a non-zero size
-  if( mod->laser_geom.size.x || mod->laser_geom.size.y )
-    {
-      
+  if( lgeom->size.x || lgeom->size.y )
+    {      
       rtk_fig_t* fig = gui_model_figs(mod)->laser;  
       
       rtk_fig_clear(fig);
       rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_TRANSDUCER_COLOR) );
       rtk_fig_origin( fig, mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );   
       rtk_fig_rectangle( fig, 
-			 mod->laser_geom.pose.x, 
-			 mod->laser_geom.pose.y, 
-			 mod->laser_geom.pose.a,
-			 mod->laser_geom.size.x,
-			 mod->laser_geom.size.y, 0 );
+			 lgeom->pose.x, 
+			 lgeom->pose.y, 
+			 lgeom->pose.a,
+			 lgeom->size.x,
+			 lgeom->size.y, 0 );
     }
 }  
 
@@ -609,70 +638,88 @@ void gui_model_blobfinder_data( model_t* mod )
   gui_window_t* win = g_hash_table_lookup( wins, &mod->world->id );  
   rtk_fig_t* fig = gui_model_figs(mod)->blob_data;  
   rtk_fig_clear(fig);
-  
-  // The vision figure is attached to the entity, but we dont want
-  // it to rotate.  Fix the rotation here.
-  //double gx, gy, gth;
-  //double nx, ny, nth;
-  //GetGlobalPose(gx, gy, gth);
-  //rtk_fig_get_origin(this->vision_fig, &nx, &ny, &nth);
-  //rtk_fig_origin(this->vision_fig, nx, ny, -gth);
 
-  // place the visualization a little away from the device
-  stg_pose_t pose;
-  pose.x = pose.y = pose.a = 0.0;
-  
-  model_local_to_global( mod, &pose );
-  
-  pose.x += 1.0;
-  pose.y += 1.0;
-  pose.a = 0.0;
-  rtk_fig_origin( fig, pose.x, pose.y, pose.a );
-
-  double scale = 0.007; // shrink from pixels to meters for display
-  
-  short width = mod->blob_cfg.scan_width;
-  short height = mod->blob_cfg.scan_height;
-  double mwidth = width * scale;
-  double mheight = height * scale;
-  
-  // the view outline rectangle
-  rtk_fig_color_rgb32(fig, 0xFFFFFF);
-  rtk_fig_rectangle(fig, 0.0, 0.0, 0.0, mwidth,  mheight, 1 ); 
-  rtk_fig_color_rgb32(fig, 0x000000);
-  rtk_fig_rectangle(fig, 0.0, 0.0, 0.0, mwidth,  mheight, 0); 
-  
-  //stg_blobfinder_config_t* cfg = &mod->blob_cfg;
-
-  int c;
-  for( c=0; c<mod->blobs->len; c++)
+  if( win->show_blobdata && mod->subs[STG_PROP_BLOBDATA] )
     {
-      stg_blobfinder_blob_t* blob = 
-	&g_array_index( mod->blobs, stg_blobfinder_blob_t, c );
 
-      // set the color from the blob data
-      rtk_fig_color_rgb32( fig, blob->color ); 
+      // The vision figure is attached to the entity, but we dont want
+      // it to rotate.  Fix the rotation here.
+      //double gx, gy, gth;
+      //double nx, ny, nth;
+      //GetGlobalPose(gx, gy, gth);
+      //rtk_fig_get_origin(this->vision_fig, &nx, &ny, &nth);
+      //rtk_fig_origin(this->vision_fig, nx, ny, -gth);
+
+      // place the visualization a little away from the device
+      stg_pose_t pose;
+      pose.x = pose.y = pose.a = 0.0;
+  
+      model_local_to_global( mod, &pose );
+  
+      pose.x += 1.0;
+      pose.y += 1.0;
+      pose.a = 0.0;
+      rtk_fig_origin( fig, pose.x, pose.y, pose.a );
+
+      double scale = 0.007; // shrink from pixels to meters for display
+  
+      stg_blobfinder_config_t* cfg = (stg_blobfinder_config_t*) 
+	model_get_prop_data_generic( mod, STG_PROP_BLOBCONFIG );
+      assert(cfg);
+  
+      stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_BLOBDATA );
+  
+      if( prop == NULL )
+	return; // no data to render yet
+  
+      stg_blobfinder_blob_t* blobs = (stg_blobfinder_blob_t*)prop->data;
+      if( blobs == NULL )
+	return; // no data to render yet
+  
+      int num_blobs = prop->len / sizeof(stg_blobfinder_blob_t);
+      if( num_blobs < 1 )
+	return; // no data to render yet
+  
+      short width = cfg->scan_width;
+      short height = cfg->scan_height;
+      double mwidth = width * scale;
+      double mheight = height * scale;
+  
+      // the view outline rectangle
+      rtk_fig_color_rgb32(fig, 0xFFFFFF);
+      rtk_fig_rectangle(fig, 0.0, 0.0, 0.0, mwidth,  mheight, 1 ); 
+      rtk_fig_color_rgb32(fig, 0x000000);
+      rtk_fig_rectangle(fig, 0.0, 0.0, 0.0, mwidth,  mheight, 0); 
+  
+      int c;
+      for( c=0; c<num_blobs; c++)
+	{
+	  stg_blobfinder_blob_t* blob = &blobs[c];
       
-      short top =   blob->top;
-      short bot =   blob->bottom;
-      short left =   blob->left;
-      short right =   blob->right;
+	  // set the color from the blob data
+	  rtk_fig_color_rgb32( fig, blob->color ); 
       
-      double mtop = top * scale;
-      double mbot = bot * scale;
-      double mleft = left * scale;
-      double mright = right * scale;
-	    
-      // get the range in meters
-      //double range = (double)ntohs(data.blobs[index+b].range) / 1000.0; 
+	  short top =   blob->top;
+	  short bot =   blob->bottom;
+	  short left =   blob->left;
+	  short right =   blob->right;
       
-      rtk_fig_rectangle(fig, 
-			-mwidth/2.0 + (mleft+mright)/2.0, 
-			-mheight/2.0 +  (mtop+mbot)/2.0,
-			0.0, 
-			mright-mleft, 
-			mbot-mtop, 
-			1 );
+	  double mtop = top * scale;
+	  double mbot = bot * scale;
+	  double mleft = left * scale;
+	  double mright = right * scale;
+      
+	  // get the range in meters
+	  //double range = (double)ntohs(data.blobs[index+b].range) / 1000.0; 
+      
+	  rtk_fig_rectangle(fig, 
+			    -mwidth/2.0 + (mleft+mright)/2.0, 
+			    -mheight/2.0 +  (mtop+mbot)/2.0,
+			    0.0, 
+			    mright-mleft, 
+			    mbot-mtop, 
+			    1 );
+	}
     }
 }
 
@@ -687,12 +734,18 @@ void gui_model_laser_data( model_t* mod )
   
   // if we're drawing laser data and this model has a laser subscription
   // and some data, we'll draw the data
-  if( win->show_laserdata && mod->subs[STG_PROP_LASERDATA] && mod->laser_data )
+  if( win->show_laserdata && mod->subs[STG_PROP_LASERDATA] )
     {
       rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_COLOR) );
       rtk_fig_origin( fig, mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );  
-      stg_laser_config_t* cfg = &mod->laser_config;
-      stg_geom_t* geom = &mod->laser_geom;
+      stg_laser_config_t* cfg = (stg_laser_config_t*)
+	model_get_prop_data_generic( mod, STG_PROP_LASERCONFIG );
+      
+      stg_geom_t* geom = (stg_geom_t*)
+	model_get_prop_data_generic( mod, STG_PROP_LASERGEOM );
+      
+      stg_laser_sample_t* samples = (stg_laser_sample_t*)
+	model_get_prop_data_generic( mod, STG_PROP_LASERDATA );
       
       double sample_incr = cfg->fov / cfg->samples;
       double bearing = geom->pose.a - cfg->fov/2.0;
@@ -703,14 +756,11 @@ void gui_model_laser_data( model_t* mod )
       int s;
       for( s=0; s<cfg->samples; s++ )
 	{
-	  sample = &g_array_index( mod->laser_data, stg_laser_sample_t, s );
-	  
 	  // useful debug
 	  //rtk_fig_arrow( fig, 0, 0, bearing, (sample->range/1000.0), 0.01 );
 	  
-	  points[1+s].x = (sample->range/1000.0) * cos(bearing);
-	  points[1+s].y = (sample->range/1000.0) * sin(bearing);
-	  
+	  points[1+s].x = (samples[s].range/1000.0) * cos(bearing);
+	  points[1+s].y = (samples[s].range/1000.0) * sin(bearing);
 	  bearing += sample_incr;
 	}
 
@@ -725,44 +775,54 @@ void gui_model_laser_data( model_t* mod )
 
 void gui_model_fiducial_data( model_t* mod )
 { 
-  static char text[128];
+  char text[32];
 
   gui_window_t* win = g_hash_table_lookup( wins, &mod->world->id );  
   
   rtk_fig_t* fig = gui_model_figs(mod)->fiducial_data;  
   if( fig ) rtk_fig_clear( fig ); 
   
-  stg_pose_t pose;
-  model_global_pose( mod, &pose );  
-  rtk_fig_origin( fig, pose.x, pose.y, pose.a ); 
-
-  stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_FIDUCIALDATA );
-  
-  if( prop )
-    {
-      int bcount = prop->len / sizeof(stg_fiducial_t);
+  if( win->show_fiducialdata && mod->subs[STG_PROP_FIDUCIALDATA] )
+    {      
+      rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_COLOR ) );
       
-      stg_fiducial_t* fids = (stg_fiducial_t*)prop->data;
-
-      int b;
-      for( b=0; b < bcount; b++ )
+      stg_pose_t pose;
+      model_global_pose( mod, &pose );  
+      rtk_fig_origin( fig, pose.x, pose.y, pose.a ); 
+      
+      stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_FIDUCIALDATA );
+      
+      if( prop )
 	{
-	  double pa = fids[b].bearing;
-	  double px = fids[b].range * cos(pa); 
-	  double py = fids[b].range * sin(pa);
+	  int bcount = prop->len / sizeof(stg_fiducial_t);
 	  
-	  rtk_fig_line( fig, 0, 0, px, py );	
+	  stg_fiducial_t* fids = (stg_fiducial_t*)prop->data;
 	  
-	  // TODO: use the configuration info to determine beacon size
-	  // for now we use these canned values
-	  double wx = 0.05;
-	  double wy = 0.40;
-	  
-	  rtk_fig_rectangle(fig, px, py, pa, wx, wy, 0);
-	  rtk_fig_arrow(fig, px, py, pa, wy, 0.10);
-	  snprintf(text, sizeof(text), "  %d", fids[b].id);
-	  rtk_fig_text(fig, px, py, pa, text);
-	}  
+	  int b;
+	  for( b=0; b < bcount; b++ )
+	    {
+	      double pa = fids[b].bearing;
+	      double px = fids[b].range * cos(pa); 
+	      double py = fids[b].range * sin(pa);
+	      
+	      rtk_fig_line( fig, 0, 0, px, py );	
+	      
+	      // TODO: use the configuration info to determine beacon size
+	      // for now we use these canned values
+	      double wx = fids[b].geom.x;
+	      double wy = fids[b].geom.y;
+	      double wa = fids[b].geom.a;
+	      
+	      rtk_fig_rectangle(fig, px, py, wa, wx, wy, 0);
+	      rtk_fig_arrow(fig, px, py, wa, wy, 0.10);
+	      
+	      if( fids[b].id > 0 )
+		{
+		  snprintf(text, sizeof(text), "  %d", fids[b].id);
+		  rtk_fig_text(fig, px, py, pa, text);
+		}
+	    }  
+	}
     }
 }
 

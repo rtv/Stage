@@ -8,18 +8,32 @@ extern rtk_fig_t* fig_debug;
 #define TIMING 0
 
 void model_laser_init( model_t* mod )
-{
+{     
   // configure the laser to sensible defaults
-  mod->laser_geom.pose.x = 0;
-  mod->laser_geom.pose.y = 0;
-  mod->laser_geom.pose.a = 0;
-  mod->laser_geom.size.x = 0.0; // invisibly small (so it's not rendered) by default
-  mod->laser_geom.size.y = 0.0;
   
-  mod->laser_config.range_min= 0.0;
-  mod->laser_config.range_max = 8.0;
-  mod->laser_config.samples = 180;
-  mod->laser_config.fov = M_PI;
+  stg_geom_t lgeom;
+  lgeom.pose.x = 0;
+  lgeom.pose.y = 0;
+  lgeom.pose.a = 0;
+  lgeom.size.x = 0.0; // invisibly small (so it's not rendered) by default
+  lgeom.size.y = 0.0;
+  
+  model_set_prop_generic( mod, STG_PROP_LASERGEOM, 
+			  &lgeom, sizeof(lgeom) );
+  
+  stg_laser_config_t lcfg;
+  lcfg.range_min= 0.0;
+  lcfg.range_max = 8.0;
+  lcfg.samples = 180;
+  lcfg.fov = M_PI;
+  
+  model_set_prop_generic( mod, STG_PROP_LASERCONFIG, 
+			  &lcfg, sizeof(lcfg) );
+  
+  // start off with a full set of zeroed data
+  stg_laser_sample_t* scan = calloc( sizeof(stg_laser_sample_t), lcfg.samples );
+  model_set_prop_generic( mod, STG_PROP_LASERDATA, 
+			  scan, sizeof(stg_laser_sample_t) * lcfg.samples );
   
   mod->laser_return = LaserVisible;
 }
@@ -29,16 +43,12 @@ void model_update_laser( model_t* mod )
 {   
   PRINT_DEBUG1( "[%lu] updating lasers", mod->world->sim_time );
   
-  stg_laser_config_t* cfg = &mod->laser_config;
-  stg_geom_t* geom = &mod->laser_geom;
+  stg_laser_config_t* cfg = (stg_laser_config_t*)
+    model_get_prop_data_generic( mod, STG_PROP_LASERCONFIG ); 
   
-  // we only allocate data space the first time we need it
-  if( mod->laser_data == NULL )
-    mod->laser_data = g_array_new( FALSE, TRUE, sizeof(stg_laser_sample_t) );
-  
-  // set the laser data array to the right length
-  g_array_set_size( mod->laser_data, cfg->samples );
-  
+  stg_geom_t* geom = (stg_geom_t*)
+    model_get_prop_data_generic( mod, STG_PROP_LASERGEOM ); 
+
   // get the sensor's pose in global coords
   stg_pose_t pz;
   memcpy( &pz, &geom->pose, sizeof(pz) ); 
@@ -55,6 +65,10 @@ void model_update_laser( model_t* mod )
       
   if( fig_debug ) rtk_fig_clear( fig_debug );
 
+  // make a scan buffer
+  stg_laser_sample_t* scan = 
+    calloc( sizeof(stg_laser_sample_t), cfg->samples );
+  
   int t;
   for( t=0; t<cfg->samples; t++ )
     {
@@ -92,17 +106,21 @@ void model_update_laser( model_t* mod )
       if( range < cfg->range_min )
 	range = cfg->range_min;
             
-      stg_laser_sample_t* sample = 
-	&g_array_index( mod->laser_data, stg_laser_sample_t, t );
- 
       // record the range in mm
-      sample->range = (uint32_t)( range * 1000.0 );
-      sample->reflectance = 1;
+      scan[t].range = (uint32_t)( range * 1000.0 );
+      scan[t].reflectance = 1;
 
 
       //printf( "%d ", sample->range );
     }
   
+
+  // store the data
+  model_set_prop_generic( mod, STG_PROP_LASERDATA, 
+			  scan, sizeof(stg_laser_sample_t) * cfg->samples );
+
+  free( scan );
+
 #if TIMING
   gettimeofday( &tv2, NULL );
   printf( " laser data update time %.6f\n",

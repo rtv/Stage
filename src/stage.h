@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.52 2004-06-12 02:44:03 rtv Exp $
+ * CVS: $Id: stage.h,v 1.53 2004-06-13 02:37:18 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -110,7 +110,8 @@ typedef enum
     STG_PROP_RANGERCONFIG,
     STG_PROP_FIDUCIALCONFIG,
     STG_PROP_FIDUCIALDATA,
-    STG_PROP_BLOBS,
+    STG_PROP_BLOBCONFIG,
+    STG_PROP_BLOBDATA,
     STG_PROP_LASERDATA,
     STG_PROP_LASERCONFIG,
     STG_PROP_LASERGEOM,
@@ -510,6 +511,14 @@ typedef struct
   stg_meters_t range_min;
   int samples;
 } stg_laser_config_t;
+
+
+//typedef struct
+///{
+// stg_laser_config_t cfg;
+//stg_laser_sample_t samples[0]; // there follows cfg->samples structures
+//} stg_laser_data_t;
+
 
 // print human-readable version of the struct
 void stg_print_laser_config( stg_laser_config_t* slc );

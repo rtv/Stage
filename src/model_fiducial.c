@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -24,8 +24,8 @@ void model_fiducial_init( model_t* mod )
 {
   stg_fiducial_config_t* fid = calloc( sizeof(stg_fiducial_config_t), 1 );
   memset( fid, 0, sizeof(stg_fiducial_config_t) );
-  fid->max_range_anon = 4.0;
-  fid->max_range_id = 1.5;
+  fid->max_range_anon = 8.0;
+  fid->max_range_id = 4.0;
   
   // a sensible default fiducial return value is the model's id
   mod->fiducial_return = mod->id;
@@ -95,14 +95,15 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
       // if it was him, we can see him
       if( hitmod == him )
 	{
+	  // record where we saw him and what he looked like
 	  stg_fiducial_t fid;      
 	  fid.range = range;
 	  fid.bearing = NORMALIZE(M_PI + atan2( dy, dx ) - mfb->pose.a);
-	  fid.id = him->id;
+	  fid.id = range < mfb->cfg->max_range_id ? him->id : 0;
 	  fid.geom.x = him->size.x;
 	  fid.geom.y = him->size.y;
 	  fid.geom.a = NORMALIZE(him->pose.a - mfb->pose.a);
-	  
+	  	  
 	  g_array_append_val( mfb->fiducials, fid );
 	}
     }
@@ -120,16 +121,12 @@ void model_fiducial_update( model_t* mod )
 			  NULL, 0 );
   
   if( fig_debug ) rtk_fig_clear( fig_debug );
-
-  stg_property_t* prop = 
-    model_get_prop_generic( mod, STG_PROP_FIDUCIALCONFIG ); 
-  
-  assert( prop );
-  assert( prop->len == sizeof(stg_fiducial_config_t) );
   
   model_fiducial_buffer_t mfb;
+  memset( &mfb, 0, sizeof(mfb) );
+  
   mfb.mod = mod;
-  mfb.cfg = (stg_fiducial_config_t*)prop->data;
+  mfb.cfg = model_get_prop_data_generic( mod,STG_PROP_FIDUCIALCONFIG ); 
   mfb.fiducials = g_array_new( FALSE, TRUE, sizeof(stg_fiducial_t) );
   model_global_pose( mod, &mfb.pose );
     

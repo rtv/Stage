@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.2 2004-06-12 02:44:02 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.3 2004-06-13 02:37:18 rtv Exp $
  */
 
 #include <math.h>
@@ -37,38 +37,50 @@ extern rtk_fig_t* fig_debug;
 
 void model_blobfinder_init( model_t* mod )
 {
-  stg_blobfinder_config_t* cfg = &mod->blob_cfg;
+  stg_blobfinder_config_t cfg;
+  memset( &cfg, 0, sizeof(stg_blobfinder_config_t) );
   
-  memset( cfg, 0, sizeof(stg_blobfinder_config_t) );
-  
-  cfg->scan_width  = 160; // pixels
-  cfg->scan_height = 120;
-  cfg->range_max = 8.0; // meters
+  cfg.scan_width  = 160; // pixels
+  cfg.scan_height = 120;
+  cfg.range_max = 8.0; // meters
 
-  cfg->pan = 0; // radians
-  cfg->tilt = 0;
-  cfg->zoom = DTOR( 60 ); // field of view
+  cfg.pan = 0; // radians
+  cfg.tilt = 0;
+  cfg.zoom = DTOR( 60 ); // field of view
   
   // reasonable channel defaults
-  cfg->channel_count = 6;
-  cfg->channels[0] = stg_lookup_color( "red" );
-  cfg->channels[1] = stg_lookup_color( "green" );
-  cfg->channels[2] = stg_lookup_color( "blue" );
-  cfg->channels[3] = stg_lookup_color( "yellow" );
-  cfg->channels[4] = stg_lookup_color( "cyan" );
-  cfg->channels[5] = stg_lookup_color( "magenta" );
-
-  mod->blobs = g_array_new( FALSE, TRUE, sizeof(stg_blobfinder_blob_t));
+  cfg.channel_count = 6;
+  cfg.channels[0] = stg_lookup_color( "red" );
+  cfg.channels[1] = stg_lookup_color( "green" );
+  cfg.channels[2] = stg_lookup_color( "blue" );
+  cfg.channels[3] = stg_lookup_color( "yellow" );
+  cfg.channels[4] = stg_lookup_color( "cyan" );
+  cfg.channels[5] = stg_lookup_color( "magenta" );
+  
+  model_set_prop_generic( mod, STG_PROP_BLOBCONFIG, 
+			  &cfg, sizeof(cfg) );
 }
 
-void model_blobfinder_update( model_t* mod )
+void model_blobfinder_startup( model_t* mod )
 {
-  PRINT_DEBUG1( "[%lu] updating lasers", mod->world->sim_time );
+  PRINT_WARN( "blobfinder startup" );
+
+}
+
+void model_blobfinder_shutdown( model_t* mod )
+{
+  PRINT_WARN( "blobfinder shutdown" );  
+}
+
+
+void model_blobfinder_update( model_t* mod )
+{  
+  stg_blobfinder_config_t* cfg = (stg_blobfinder_config_t*)
+    model_get_prop_data_generic( mod, STG_PROP_BLOBCONFIG );
   
+  assert( cfg );
+
   // Generate the scan-line image
-  
-  stg_blobfinder_config_t* cfg = &mod->blob_cfg;
-  //stg_blobfinder_blob_t* blobs = mod->blobs;
 
   // Get the camera's global pose
   // TODO: have the pose configurable
@@ -184,8 +196,7 @@ void model_blobfinder_update( model_t* mod )
   unsigned char blobcol = 0;
   int blobtop = 0, blobbottom = 0;
   
-  // get rid of old blobs
-  g_array_set_size( mod->blobs, 0 );
+  GArray* blobs = g_array_new( FALSE, TRUE, sizeof(stg_blobfinder_blob_t) );
   
   printf( "scanning for blobs\n" );
   
@@ -253,8 +264,13 @@ void model_blobfinder_update( model_t* mod )
 	  //  mod, blob.color, blob.xpos, blob.ypos );
 	  
 	  // add the blob to our stash
-	  g_array_append_val( mod->blobs, blob );
+	  g_array_append_val( blobs, blob );
 	}
     }
+
+  model_set_prop_generic( mod, STG_PROP_BLOBDATA,
+			  blobs->data, blobs->len * sizeof(stg_blobfinder_blob_t) );
+  
+  g_array_free( blobs, TRUE );
 }
 

@@ -26,7 +26,7 @@
 #define STG_LASER_TRANSDUCER_COLOR "blue"
 #define STG_LASER_COLOR "light blue"
 #define STG_WALL_COLOR "dark blue"
-#define STG_FIDUCIAL_COLOR "goldenrod2"
+#define STG_FIDUCIAL_COLOR "lime green"
 #define STG_RANGER_COLOR "gray90" 
 #define STG_RANGER_TRANSDUCER_COLOR "orange"
 #define STG_DEBUG_COLOR "green"
@@ -87,6 +87,8 @@ typedef struct
   gboolean show_geom;
   gboolean show_laser;
   gboolean show_laserdata;
+  gboolean show_fiducialdata;
+  gboolean show_blobdata;
 
   gboolean movie_exporting;
   int movie_speed;
