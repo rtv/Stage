@@ -21,7 +21,7 @@
  * Desc: a container for models 
  * Author: Richard Vaughan
  * Date: 24 July 2003
- * CVS info: $Id: world.hh,v 1.29 2003-09-05 20:58:45 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.30 2003-09-20 22:13:43 rtv Exp $
  */
 
 #ifndef _WORLD_HH
@@ -49,6 +49,9 @@ typedef struct stg_world
   GNode* node;  
   GString *name, *token;  
   CMatrix* matrix;
+  double time; // simulation time in seconds
+  double interval; // interval between clock updates in seconds
+  guint clock_tag;
   double width, height;
   double ppm; // the resolution of the world model in pixels per meter
   double simtime; // the simulation time in seconds
@@ -65,7 +68,7 @@ stg_world_t* stg_world_create( stg_client_data_t* client,
 int stg_world_destroy( stg_world_t* world );
 CMatrix* stg_world_create_matrix( stg_world_t* world );
 void stg_world_destroy_matrix( stg_world_t* world );
-
+gboolean stg_world_clock_tick( void* data );
 
 #ifdef DEBUG
 #define WORLD_DEBUG(W,S) printf("[%d %s %p] "S" (%s %s)\n",W->id,W->name->str,W,__FILE__,__FUNCTION__);

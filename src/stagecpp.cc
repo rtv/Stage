@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.17 2003-09-18 01:16:45 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.18 2003-09-20 22:13:42 rtv Exp $
  */
 
 #include <assert.h>
@@ -1981,6 +1981,15 @@ int CWorldFile::Upload( stg_client_t* cli,
 			      &border, sizeof(border) ) < 0 )  
 	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 	
+	token = "interval";
+	stg_interval_ms_t ival = 
+	  (stg_interval_ms_t)(1000.0 * this->ReadFloat( section, token, 0.1 ));
+	
+	if( stg_set_property( cli, anid, STG_PROP_INTERVAL,
+			      &ival, sizeof(ival) ) < 0 )  
+	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
+	
+
 	// read any ranger details
 	
 	// Load the configuration of each ranger

@@ -21,7 +21,7 @@
  * Desc: Simulated robot with various sensors
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.29 2003-09-05 20:58:45 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.30 2003-09-20 22:13:42 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -275,8 +275,11 @@ protected: stg_pose_t pose_map;
   protected: stg_velocity_t velocity;
 
   
-  // how often to update this device, in seconds
-  protected: double interval; 
+  // how often to update this device, in milliseconds
+public: stg_interval_ms_t interval; 
+  void SetInterval( stg_interval_ms_t* interval );
+
+public: double last_update;
 
   // print a tree of info about this entity on the fd
   public: void Print( int fd, char* prefix );
@@ -284,7 +287,7 @@ protected: stg_pose_t pose_map;
   // move using these velocities times the timestep
 protected: 
   //virtual int Move( double vx, double vy, double va, double timestep );
-  virtual int Move( stg_velocity_t* vel, double timestep );
+  virtual int Move( stg_velocity_t* vel, stg_interval_ms_t timestep );
 
 public:  bool OcclusionTest(CEntity* ent );
 

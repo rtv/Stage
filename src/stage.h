@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@hrl.com 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.17 2003-09-18 01:16:45 rtv Exp $
+ * CVS: $Id: stage.h,v 1.18 2003-09-20 22:13:42 rtv Exp $
  */
 
 #ifdef __cplusplus
@@ -79,6 +79,7 @@ typedef struct timeval stg_timeval_t;
      {
        STG_PROP_CREATE_MODEL=1, 
        STG_PROP_DESTROY_MODEL,
+       STG_PROP_TIME,
        STG_PROP_CIRCLES,
        STG_PROP_COLOR,
        STG_PROP_COMMAND,
@@ -96,6 +97,7 @@ typedef struct timeval stg_timeval_t;
        STG_PROP_PPM,
        STG_PROP_PUCKRETURN,
        STG_PROP_RANGEBOUNDS, 
+       STG_PROP_INTERVAL,
        STG_PROP_RECTS,
        STG_PROP_SIZE,
        STG_PROP_SONARRETURN,
@@ -153,7 +155,6 @@ typedef struct
 {
   double x, y;
 } stg_size_t;
-
 
 // Color type
 typedef uint32_t stg_color_t;

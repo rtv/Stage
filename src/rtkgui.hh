@@ -50,8 +50,12 @@ enum {
   STG_MITEM_FILE_SAVE,
   STG_MITEM_FILE_LOAD,
   STG_MITEM_FILE_QUIT,
-  STG_MITEM_FILE_STILLS__JPG,
-  STG_MITEM_FILE_STILLS_PPM,
+  STG_MITEM_FILE_IMAGE_JPG,
+  STG_MITEM_FILE_IMAGE_PPM,
+  STG_MITEM_FILE_MOVIE_1,
+  STG_MITEM_FILE_MOVIE_2,
+  STG_MITEM_FILE_MOVIE_5,
+  STG_MITEM_FILE_MOVIE_10,
   STG_MITEM_VIEW_MATRIX,
   STG_MITEM_VIEW_GRID,
   STG_MITEM_VIEW_OBJECT_BODY,
@@ -73,8 +77,8 @@ enum {
 
 enum {
   STG_MENU_FILE,
-  STG_MENU_FILE_STILLS,
-  STG_MENU_FILE_MOVIES,
+  STG_MENU_FILE_IMAGE,
+  STG_MENU_FILE_MOVIE,
   STG_MENU_VIEW,
   STG_MENU_VIEW_REFRESH,
   STG_MENU_VIEW_OBJECT,
@@ -101,18 +105,13 @@ typedef struct
   // Export stills info
   int stills_series;
   int stills_count;
-  
-  // The movie menu  
-  rtk_menu_t *movie_menu;
-  int movie_option_count;
-  stg_gui_movie_option_t movie_options[10];
-  
+  int stills_exporting;
+
   // Export movie info
   int movie_count;
+  int movies_exporting;
+  //guint movie_tag;
   
-  // Number of exported images
-  int export_count;
-
   // a list of figures that should be cleared soon
   GList* countdowns;
 

@@ -23,7 +23,7 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan
  * Date: 3 July 2003
- * CVS: $Id: main.cc,v 1.72 2003-09-09 21:44:39 rtv Exp $
+ * CVS: $Id: main.cc,v 1.73 2003-09-20 22:13:42 rtv Exp $
  */
 
 
@@ -250,7 +250,6 @@ gboolean StgClientRead( GIOChannel* channel,
 		reply->id = ent->id; 
 	      }
 	      break;
-	      
 	      
 	    default: // all other props we need to look up an existing object
 	      {	    

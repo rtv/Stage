@@ -21,7 +21,7 @@
  * Desc: A world device model - replaces the CWorld class
  * Author: Richard Vaughan
  * Date: 31 Jan 2003
- * CVS info: $Id: world.cc,v 1.147 2003-09-09 21:44:39 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.148 2003-09-20 22:13:42 rtv Exp $
  */
 
 
@@ -78,16 +78,55 @@ stg_world_t* stg_world_create( stg_client_data_t* client,
   // console output
   PRINT_MSG1( "Created world \"%s\".", world->name->str ); 
 
+  world->interval = 0.1; 
+  world->clock_tag = g_timeout_add( (int)(world->interval * 1000.0), 
+				    stg_world_clock_tick, world );
+  
   return world;
+}
+
+
+
+void stg_update_entity( GNode* node, void* data )
+{
+  // recursively update the children of this node
+  g_node_children_foreach( node, G_TRAVERSE_ALL,
+			   stg_update_entity, data );
+  
+  // update this node
+  CEntity* ent = (CEntity*)node->data;
+  stg_world_t* world = (stg_world_t*)data;
+
+  if( (world->time - ent->last_update) > (double)ent->interval / 1000.0 )
+    ent->Update();
+}
+
+
+gboolean stg_world_clock_tick( void* data )
+{
+  
+  stg_world_t* world = (stg_world_t*)data;
+  world->time += world->interval;
+  //printf( " time: %.3f   \n", world->time );
+
+  // update my entities 
+  g_node_children_foreach( world->node, G_TRAVERSE_ALL,
+			   stg_update_entity, world );
+  
+  //usleep( 5000 );
+
+  return TRUE; // keep calling me
 }
 
 int stg_world_destroy( stg_world_t* world )
 {
   WORLD_DEBUG( world, "world destruction" );
-  
-  WORLD_DEBUG( world, "world shutdown");
-  
-  // recursibelyshutdown all the entities in the world
+
+  // stop the clock
+  if( world->clock_tag )
+    g_source_remove( world->clock_tag );
+
+  // recursively shutdown all the entities in the world
   while( stg_world_first_child(world) )
     delete stg_world_first_child(world);
   

@@ -26,7 +26,7 @@
  * Author: Richard Vaughan vaughan@hrl.com 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.c,v 1.18 2003-09-18 01:16:45 rtv Exp $
+ * CVS: $Id: stage.c,v 1.19 2003-09-20 22:13:42 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -99,6 +99,8 @@ const char* stg_property_string( stg_prop_id_t id )
     case STG_PROP_LOS_MSG_CONSUME: return "STG_PROP_LOS_MSG_CONSUME";break;
     case STG_PROP_MOUSE_MODE: return "STG_PROP_MOUSE_MODE";break;
     case STG_PROP_MATRIX_RENDER: return "STG_PROP_MATRIX_RENDER";break;
+    case STG_PROP_INTERVAL: return "STG_PROP_INTERVAL";break;
+    case STG_PROP_TIME: return "STG_PROP_TIME";break;
 	
       // todo
       //case STG_PROP_POSITION_ODOM: return "STG_PROP_POSITION_ODOM"; break;
@@ -147,10 +149,6 @@ stg_property_t* stg_property_create( void )
   assert( prop );
   
   //PRINT_WARN1( "created property at %p", prop );
-
-  // todo - insert the actual time in here
-  prop->timestamp = 100.0;
-
   return prop;
 }
 

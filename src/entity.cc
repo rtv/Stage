@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.120 2003-09-18 01:16:45 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.121 2003-09-20 22:13:42 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -165,6 +165,7 @@ CEntity::CEntity( stg_entity_create_t* init, stg_id_t id )
   this->bounds_neighbor.min = 0.00;
   this->bounds_neighbor.max = 1.5 ;
   
+  this->last_update = 0.0;
   
   // TODO? = inherit our parent's color by default?
   if( strlen( init->color ) > 0 )
@@ -228,7 +229,6 @@ CEntity::CEntity( stg_entity_create_t* init, stg_id_t id )
   
   this->mouseable = true;
   this->draw_nose = true;
-  this->interval = 0.01; // default update interval in seconds 
   this->border = false;
 
   // STG_PROP_RANGEBOUNDS
@@ -265,21 +265,32 @@ CEntity::CEntity( stg_entity_create_t* init, stg_id_t id )
   Map(); // render in matrix
 
   /* the LAST THING WE DO is to request callbacks into this object */
-  
-  // todo - real time vs. non-real time
-  this->update_tag = 0;
-  if( this->interval > 0 )
-    {
-      guint ms_interval = (guint)(this->interval * 1000.0);
-      this->update_tag = g_timeout_add(ms_interval,CEntity::stg_update_signal, this);
-      //printf( "ADD ent %p update tag %d\n", this, this->update_tag );
-    } 
-
-  // don't put anything here!
-  
+ 
+  this->interval = 100; // default update interval in ms
+  //this->SetProperty( STG_PROP_INTERVAL, 
+  //	     &this->interval, sizeof(this->interval));
+ 
   ENT_DEBUG( "entity startup complete" );
 }
 
+void CEntity::SetInterval( stg_interval_ms_t* interval )
+{
+  this->interval = *interval;
+  
+  // cancel the previous timer callback 
+  //if( this->update_tag > 0 ) g_source_remove( this->update_tag );
+  
+  this->update_tag = 0;
+
+  if( this->interval > 0 )
+    {
+      //this->update_tag = g_timeout_add(this->interval,
+      //			       CEntity::stg_update_signal, this);
+      
+      PRINT_DEBUG2( "update interval %d (tag %d)\n", 
+		    this->interval, this->update_tag );
+    } 
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Destructor
@@ -409,7 +420,7 @@ void CEntity::GetBoundingBox( double &xmin, double &ymin,
 }
 
 
-int CEntity::Move( stg_velocity_t* vel, double step )
+int CEntity::Move( stg_velocity_t* vel, stg_interval_ms_t step_ms )
 {
   //ENT_DEBUG("");
     
@@ -419,6 +430,8 @@ int CEntity::Move( stg_velocity_t* vel, double step )
   if( vel->x == 0 && vel->y == 0 && vel->a == 0 )
     return 0;
   
+  double step = (double)step_ms / 1000.0;
+
   // Compute movement deltas
   // This is a zero-th order approximation
   double cosa = cos(this->pose_local.a);
@@ -454,9 +467,12 @@ gboolean CEntity::Update()
 {
   // PRINT_DEBUG2("update called for %d:%s", this->id, this->name->str );
   //PRINT_DEBUG3( "vx %.2f vy %.2f vth %.2f", vx, vy, vth);
-
-  Move( &this->velocity, this->interval );
   
+  if( this->velocity.x || this->velocity.y || this->velocity.a )
+    Move( &this->velocity, this->interval );
+
+  this->last_update = stg_world(this)->time;
+
   return TRUE;
 }
 
@@ -676,6 +692,11 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
       this->Map();
       break;
       
+    case STG_PROP_INTERVAL:
+      g_assert( (len == sizeof(stg_interval_ms_t)));
+      this->SetInterval( (stg_interval_ms_t*)data );
+      break;
+
     case STG_PROP_POSE:
       g_assert( (len == sizeof(stg_pose_t)) );	
       this->SetPose( (stg_pose_t*)data );
@@ -799,10 +820,16 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
   stg_property_t* prop = stg_property_create();
   prop->id = this->id;
   prop->property = ptype;
-  prop->timestamp = 100.0;
+  prop->timestamp = stg_world(this)->time;
   
+  PRINT_DEBUG1( "prop stamp: %.3f", prop->timestamp );
+
   switch( ptype )
     { 
+    case STG_PROP_TIME: // no data - caller just wants the timestamp
+      printf( "STG_PROP_TIME stamped %.3f\n", prop->timestamp );
+      break;
+
     case STG_PROP_MATRIX_RENDER:
       prop = stg_property_attach_data( prop, 
 				       &this->matrix_render, 

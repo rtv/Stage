@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.25 2003-09-18 01:16:45 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.26 2003-09-20 22:13:42 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -80,7 +80,7 @@ extern int global_num_clients;
 #define STG_LAYER_BODY 50
 #define STG_LAYER_DATA 60
 #define STG_LAYER_LIGHT 70
-#define STG_LAYER_SENSOR 61
+#define STG_LAYER_SENSOR 48
 #define STG_LAYER_GRID 45
 #define STG_LAYER_USER 99
 
@@ -146,6 +146,40 @@ void stg_gui_menuitem_show_layer( rtk_menuitem_t *item )
   rtk_canvas_layer_show( item->menu->canvas, (int)item->userdata, 
 			 rtk_menuitem_ischecked(item) );
 }
+
+/*
+gboolean stg_gui_movie_frame_callback( gpointer data )
+{
+  rtk_canvas_movie_frame( (rtk_canvas_t*)data );
+}
+*/
+
+// toggle movie exports
+void stg_gui_handle_movie( rtk_menuitem_t *item )
+{
+  int speed = (int)item->userdata;
+  stg_gui_window_t* win = (stg_gui_window_t*)item->menu->canvas->userdata;
+  
+  if( win->movies_exporting ) 
+    {
+      rtk_canvas_movie_stop(win->canvas);
+      win->movies_exporting = 0;
+      //g_source_remove(win->movie_tag);
+    }
+  else
+    {
+      win->movies_exporting = 1;
+      char filename[256];
+      snprintf(filename, sizeof(filename), "stage-%03d-sp%02d.mpg",
+	       win->movie_count++, speed );
+      
+      rtk_canvas_movie_start( win->canvas, filename, 10, speed );
+
+      //win->movie_tag = 
+      //g_timeout_add( 100, stg_gui_movie_frame_callback, win->canvas );
+    }
+}
+
 
 // send a USR2 signal to the client process that created this menuitem
 void stg_gui_save( rtk_menuitem_t *item )
@@ -248,10 +282,35 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
   win->menus[STG_MENU_VIEW] = rtk_menu_create(win->canvas, "View");
 
   // create the FILE sub-menus
-  //win->menus[STG_MENU_FILE_STILLS] = 
-  //rtk_menu_create_sub(win->menus[STG_MENU_FILE], "Export stills");
-  //win->menus[STG_MENU_FILE_MOVIES] = 
-  //rtk_menu_create_sub(win->menus[STG_MENU_FILE], "Export movies");
+  win->menus[STG_MENU_FILE_IMAGE] = 
+  rtk_menu_create_sub(win->menus[STG_MENU_FILE], "Export image");
+  win->menus[STG_MENU_FILE_MOVIE] = 
+  rtk_menu_create_sub(win->menus[STG_MENU_FILE], "Export movie");
+
+  // create the FILE/STILLS menu items 
+  win->mitems[STG_MITEM_FILE_IMAGE_JPG] = 
+    rtk_menuitem_create(win->menus[STG_MENU_FILE_IMAGE], "JPEG format", 1);
+  win->mitems[STG_MITEM_FILE_IMAGE_PPM] = 
+    rtk_menuitem_create(win->menus[STG_MENU_FILE_IMAGE], "PPM format", 1);
+
+  // init the stills data
+  win->stills_series = 0;
+  win->stills_count = 0;
+  
+  // create the FILE/MOVIE menu items
+  win->mitems[STG_MITEM_FILE_MOVIE_1] = 
+    rtk_menuitem_create(win->menus[STG_MENU_FILE_MOVIE], "Speed x1", 1);
+  win->mitems[STG_MITEM_FILE_MOVIE_2] = 
+    rtk_menuitem_create(win->menus[STG_MENU_FILE_MOVIE], "Speed x2", 1);
+  win->mitems[STG_MITEM_FILE_MOVIE_5] = 
+    rtk_menuitem_create(win->menus[STG_MENU_FILE_MOVIE], "Speed x5", 1);
+  win->mitems[STG_MITEM_FILE_MOVIE_10] = 
+    rtk_menuitem_create(win->menus[STG_MENU_FILE_MOVIE], "Speed x10", 1);
+
+  // init the movie data
+  //this->movie_option_count = 4;
+  win->movie_count = 0;
+
 
   // create the VIEW sub-menus
   win->menus[STG_MENU_VIEW_OBJECT] = 
@@ -308,25 +367,6 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
   win->mitems[STG_MITEM_VIEW_REFRESH_1000] 
     = rtk_menuitem_create(win->menus[STG_MENU_VIEW_REFRESH], "1000 ms", 1);
 
-  
-  /*
-  win->stills_jpeg_menuitem = rtk_menuitem_create(win->stills_menu, "JPEG format", 1);
-  win->stills_ppm_menuitem = rtk_menuitem_create(win->stills_menu, "PPM format", 1);
-  win->stills_series = 0;
-  win->stills_count = 0;
-  
-  win->movie_options[0].menuitem = rtk_menuitem_create(win->movie_menu, "Speed x1", 1);
-  win->movie_options[0].speed = 1;
-  win->movie_options[1].menuitem = rtk_menuitem_create(win->movie_menu, "Speed x2", 1);
-  win->movie_options[1].speed = 2;
-  win->movie_options[2].menuitem = rtk_menuitem_create(win->movie_menu, "Speed x5", 1);
-  win->movie_options[2].speed = 5;
-  win->movie_options[3].menuitem = rtk_menuitem_create(win->movie_menu, "Speed x10", 1);
-  win->movie_options[3].speed = 10;
-  win->movie_option_count = 4;
-  */
-
-
   // every menu item gets a pointer to this window for use in callbacks
   for( int i=0; i<STG_MITEM_COUNT; i++ )
     if( win->mitems[i] ) win->mitems[i]->userdata =  (void*)win;
@@ -348,7 +388,21 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
   win->mitems[STG_MITEM_VIEW_REFRESH_500]->userdata = (void*)500;
   win->mitems[STG_MITEM_VIEW_REFRESH_1000]->userdata = (void*)1000;
   
-  // add the callbacks
+  win->mitems[STG_MITEM_FILE_MOVIE_1]->userdata = (void*)1;
+  win->mitems[STG_MITEM_FILE_MOVIE_2]->userdata = (void*)2;
+  win->mitems[STG_MITEM_FILE_MOVIE_5]->userdata = (void*)5;
+  win->mitems[STG_MITEM_FILE_MOVIE_10]->userdata = (void*)10;
+
+  // add the callbacks 
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_MOVIE_1], 
+			     stg_gui_handle_movie );
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_MOVIE_2], 
+			     stg_gui_handle_movie );
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_MOVIE_5], 
+			     stg_gui_handle_movie );
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_MOVIE_10], 
+			     stg_gui_handle_movie );
+ 
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_SAVE], stg_gui_save );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_QUIT], stg_gui_exit );
 			     
@@ -462,6 +516,8 @@ gboolean stg_gui_window_callback( gpointer data )
   // redraw anything that needs it
   rtk_canvas_render( win->canvas );
 
+  if( win->movies_exporting ) rtk_canvas_movie_frame( win->canvas );
+  
   // put a description of the selected model in the status bar
   static rtk_fig_t* fig = NULL;
   if( win->canvas->mouse_over_fig != fig ) //if the mouseover fig has changed
@@ -928,7 +984,7 @@ void stg_gui_neighbor_render( CEntity* ent, GArray* neighbors )
       //rtk_fig_arrow( cd->fig, px, py, pa, wy, 0.10);
       
       snprintf(text, 64, "  %d", nbor->id );
-      rtk_fig_text( cd->fig, px, py, pa, text);
+      //rtk_fig_text( cd->fig, px, py, pa, text);
     }
 
   // reset the timer on our countdown
@@ -1058,7 +1114,10 @@ void stg_gui_rangers_render( CEntity* ent )
 }
 
 int stg_gui_los_msg_send( CEntity* ent, stg_los_msg_t* msg )
-{
+{ 
+  if( !rtk_menuitem_ischecked( ent->guimod->win->mitems[STG_MITEM_VIEW_DATA_NEIGHBORS] ) )
+    return 0;
+ 
   rtk_canvas_t* canvas =  ent->guimod->fig[0]->canvas;
   rtk_fig_t* fig = 
     rtk_fig_create( canvas, ent->guimod->fig[0], STG_LAYER_DATA );
@@ -1083,7 +1142,10 @@ int stg_gui_los_msg_send( CEntity* ent, stg_los_msg_t* msg )
 
 int stg_gui_los_msg_recv( CEntity* receiver, CEntity* sender, 
 			  stg_los_msg_t* msg )
-{
+{ 
+  if( !rtk_menuitem_ischecked( receiver->guimod->win->mitems[STG_MITEM_VIEW_DATA_NEIGHBORS] ) )
+    return 0;
+  
   rtk_canvas_t* canvas =  sender->guimod->fig[0]->canvas;
   rtk_fig_t* fig = rtk_fig_create( canvas, NULL, STG_LAYER_DATA );
 
@@ -1099,7 +1161,7 @@ int stg_gui_los_msg_recv( CEntity* receiver, CEntity* sender,
   char* buf = (char*)calloc(msg->len+1, 1 );
   memcpy( buf, &msg->bytes, msg->len );
   
-  rtk_fig_text( fig, pr.x, pr.y,0, buf );
+  //rtk_fig_text( fig, pr.x, pr.y,0, buf );
   rtk_canvas_flash( canvas, fig, 8, 1 );
 
   free( buf );
@@ -1170,7 +1232,9 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
     case STG_PROP_LOS_MSG:
     case STG_PROP_LOS_MSG_CONSUME:
     case STG_PROP_NAME:
+    case STG_PROP_INTERVAL:
     case STG_PROP_MATRIX_RENDER:
+    case STG_PROP_TIME:
       break;
 
       // these aren't yet exposed to the outside
