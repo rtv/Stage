@@ -21,7 +21,7 @@
 /*
  * Desc: Rtk canvas functions
  * Author: Andrew Howard, Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.10 2004-12-02 18:51:10 rtv Exp $
+ * CVS: $Id: rtk_canvas.c,v 1.11 2005-03-09 22:13:49 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -182,12 +182,12 @@ rtk_canvas_t *rtk_canvas_create(rtk_app_t *app)
                      GTK_SIGNAL_FUNC(rtk_on_motion), canvas);
   gtk_signal_connect(GTK_OBJECT(canvas->canvas), "button_release_event", 
                      GTK_SIGNAL_FUNC(rtk_on_release), canvas);
-  gtk_signal_connect(GTK_OBJECT(canvas->frame), "key-press-event", 
-                     GTK_SIGNAL_FUNC(rtk_on_key_press), canvas);
+  //gtk_signal_connect(GTK_OBJECT(canvas->frame), "key-press-event", 
+  //                 GTK_SIGNAL_FUNC(rtk_on_key_press), canvas);
 
   // Set the event mask
-  gtk_widget_set_events(canvas->frame,
-                        GDK_KEY_PRESS_MASK);
+  //gtk_widget_set_events(canvas->frame,
+  //                    GDK_KEY_PRESS_MASK);
   gtk_widget_set_events(canvas->canvas,
                         GDK_EXPOSURE_MASK |
                         GDK_BUTTON_PRESS_MASK |
