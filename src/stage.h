@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.94 2004-09-27 20:02:41 rtv Exp $
+ * CVS: $Id: stage.h,v 1.95 2004-09-28 00:58:36 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -524,6 +524,12 @@ extern "C" {
     double bigppm;
     GHashTable* bigtable;
     
+    long array_width, array_height, array_origin_x, array_origin_y;
+    // faster than hash tables but take up more space
+    GPtrArray* array;
+    GPtrArray* medarray;
+    GPtrArray* bigarray;
+
     // todo - record a timestamp for matrix mods so devices can see if
     //the matrix has changed since they last peeked into it
     // stg_msec_t last_mod_time;

@@ -199,14 +199,46 @@ void gui_world_matrix( stg_world_t* world, gui_window_t* win )
   gui_mf_t mf;
   mf.fig = win->matrix;
 
-  mf.ppm = world->matrix->ppm;
-  g_hash_table_foreach( world->matrix->table, render_matrix_cell_cb, &mf );
+
+  if( world->matrix->table )
+    {
+      mf.ppm = world->matrix->ppm;
+      g_hash_table_foreach( world->matrix->table, render_matrix_cell_cb, &mf );
+    }
   
-  mf.ppm = world->matrix->medppm;
-  g_hash_table_foreach( world->matrix->medtable, render_matrix_cell_cb, &mf );
+  if( world->matrix->table ) 
+    {
+      mf.ppm = world->matrix->medppm;
+      g_hash_table_foreach( world->matrix->medtable, render_matrix_cell_cb, &mf );
+    }
   
-  mf.ppm = world->matrix->bigppm;
-  g_hash_table_foreach( world->matrix->bigtable, render_matrix_cell_cb, &mf );
+  if( world->matrix->bigtable ) 
+    {
+      mf.ppm = world->matrix->bigppm;
+      g_hash_table_foreach( world->matrix->bigtable, render_matrix_cell_cb, &mf );
+    }
+  
+  stg_matrix_t* matrix = world->matrix;
+  if( matrix->array )
+    {
+      int i;
+      for( i=0; i<matrix->array_width*matrix->array_height; i++ )
+	{
+	  GPtrArray* a = g_ptr_array_index( matrix->array, i );
+
+	  assert(a);
+
+	  if( a->len )
+	    {
+	      stg_matrix_coord_t  coord;
+	      coord.x = i % matrix->array_width;
+	      coord.y = i / matrix->array_width;
+	      mf.ppm = matrix->ppm;
+	      render_matrix_cell( &mf, &coord );
+	    }
+	    
+	}
+    }
 }
 
 void gui_pose( rtk_fig_t* fig, stg_model_t* mod )

@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.18 2004-09-27 20:02:42 rtv Exp $
+# CVS: $Id: test.world,v 1.19 2004-09-28 00:58:36 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -18,8 +18,10 @@ include "pioneer.inc"
 
 
 
+
  # defines 'map' object used for floorplans
 include "map.inc"
+
 
 
 
@@ -28,13 +30,13 @@ include "map.inc"
 #
 gui( window_size [ 531.000 364.000 ] window_center [0.240 -0.315] window_scale 0.054 )
 
-map(
+#map(
   #size [15.5 11.4]
   #bitmap "bitmaps/autolab.png"
 
-  bitmap "bitmaps/sal2.png"
-  bitmap_resolution 0.03
-)
+ # bitmap "bitmaps/sal2.png"
+  #bitmap_resolution 0.03
+#)
 
 
 define sicklaser laser
@@ -61,31 +63,31 @@ define laserpioneer pioneer2dx
 laserpioneer
 (
   name "p0"
-  pose [1.860 -3.362 0.000]
+  pose [4.114 -1.194 124.400]
 )
 
 laserpioneer
 (
   name "p1"
-  pose [-2.320 -3.497 0.000]
+  pose [4.117 1.897 92.000]
 )
 
 laserpioneer
 (
   name "p2"
-  pose [0.647 -3.777 0.000]
+  pose [3.039 -1.136 -143.443]
 )
 
 laserpioneer
 (
   name "p3"
-  pose [2.810 -3.718 0.000]
+  pose [4.228 -1.212 119.600]
 )
 
 laserpioneer
 (
   name "p4"
-  pose [-1.000 -3.660 0.000]
+  pose [-1.630 -1.063 -387.369]
 )
 
 
@@ -93,7 +95,7 @@ laserpioneer
 position( 	
   name "sub" 
   size [2 1]
-  pose [-2.000 0.000 0.000] 
+  pose [-3.232 1.776 -147.535] 
   color "red"  
 
   # loads a bitmap and converts it to lines
