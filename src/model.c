@@ -60,8 +60,11 @@ stg_model_t* model_create(  stg_world_t* world,
   mod->parent = NULL;
   
   
+  mod->ranger_return = LaserVisible;
+  mod->ranger_data = g_array_new( FALSE, TRUE, sizeof(stg_ranger_sample_t));
   mod->ranger_config = g_array_new( FALSE, TRUE, sizeof(stg_ranger_config_t) );
-  
+
+  /*  
   stg_ranger_config_t rng;
   
   int RNGCOUNT = 16;
@@ -81,10 +84,8 @@ stg_model_t* model_create(  stg_world_t* world,
       
       g_array_append_val( mod->ranger_config, rng );
     }
+  */
 
-  mod->ranger_return = LaserVisible;
-  mod->ranger_data = g_array_new( FALSE, TRUE, sizeof(stg_ranger_sample_t));
-  
   memset( &mod->laser_config, 0, sizeof(mod->laser_config) );
 
   mod->laser_config.range_min= 0.0;
@@ -398,6 +399,10 @@ int model_set_prop( stg_model_t* mod,
 	memcpy( &mod->color, data, len );
       else PRINT_WARN2( "ignoring bad color data (%d/%d bytes)", 
 		       (int)len, (int)sizeof(mod->color) );
+
+      PRINT_WARN1( "color is now %X", mod->color );
+      PRINT_WARN1( "data was %X", data );
+      PRINT_WARN1( "data was %X", *(stg_color_t*)data );
       break;
       
     case STG_PROP_MOVEMASK:
@@ -452,6 +457,15 @@ int model_set_prop( stg_model_t* mod,
 			(int)len, (int)sizeof(stg_laser_config_t) );
       break;
       
+    case STG_PROP_RANGERCONFIG:
+      g_array_set_size( mod->ranger_config, 0 );
+      g_array_append_vals( mod->ranger_config, data, len/sizeof(stg_ranger_config_t) );
+
+      PRINT_WARN2( "configured %d (%d) rangers", 
+		   len/sizeof(stg_ranger_config_t),
+		   mod->ranger_config->len );
+      break;
+
     default:
       // TODO - accept random prop types and stash data in hash table
       PRINT_WARN2( "ignoring unknown property type %d(%s)",

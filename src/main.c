@@ -37,7 +37,7 @@ void catch_signal( int signum )
       stg_quit_request();
       break;
       
-    case SIGPIPE:
+    case SIGPIPE: // TODO - handle SIGPIPE properly?
       puts( "\nBroken pipe signal." ); fflush(stdout);
       break;
 
@@ -48,9 +48,9 @@ void catch_signal( int signum )
 }
 
 
-
 void catch_exit( void )
 {
+  // write a goodbye message on exit
   puts( BYEWORLD );
 }
 

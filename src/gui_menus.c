@@ -319,58 +319,13 @@ void gui_window_create_menus( gui_window_t* win )
   win->mitems[STG_MITEM_VIEW_DATA_BLOBFINDER] 
     = rtk_menuitem_create(win->menus[STG_MENU_VIEW_DATA], "Blobfinder", 1);
   
-  // create the VIEW/REFRESH menu items
-  /*
-    win->mitems[STG_MITEM_VIEW_REFRESH_25] 
-    = rtk_menuitem_create(win->menus[STG_MENU_VIEW_REFRESH], "25 ms", 1);
-  win->mitems[STG_MITEM_VIEW_REFRESH_50] 
-    = rtk_menuitem_create(win->menus[STG_MENU_VIEW_REFRESH], "50 ms", 1);
-  win->mitems[STG_MITEM_VIEW_REFRESH_100] 
-    = rtk_menuitem_create(win->menus[STG_MENU_VIEW_REFRESH], "100 ms", 1);
-  win->mitems[STG_MITEM_VIEW_REFRESH_200] 
-    = rtk_menuitem_create(win->menus[STG_MENU_VIEW_REFRESH], "200 ms", 1);
-  win->mitems[STG_MITEM_VIEW_REFRESH_500] 
-    = rtk_menuitem_create(win->menus[STG_MENU_VIEW_REFRESH], "500 ms", 1);
-  win->mitems[STG_MITEM_VIEW_REFRESH_1000] 
-    = rtk_menuitem_create(win->menus[STG_MENU_VIEW_REFRESH], "1000 ms", 1);
-
-  win->mitems[STG_MITEM_VIEW_REFRESH_25]->userdata = (void*)25;
-  win->mitems[STG_MITEM_VIEW_REFRESH_50]->userdata = (void*)50;
-  win->mitems[STG_MITEM_VIEW_REFRESH_100]->userdata = (void*)100;
-  win->mitems[STG_MITEM_VIEW_REFRESH_200]->userdata = (void*)200;
-  win->mitems[STG_MITEM_VIEW_REFRESH_500]->userdata = (void*)500;
-  win->mitems[STG_MITEM_VIEW_REFRESH_1000]->userdata = (void*)1000;
-  
-  // refresh rate items
-  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_REFRESH_25], 
-			     gui_menu_interval_callback );
-  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_REFRESH_50], 
-			     gui_menu_interval_callback );
-  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_REFRESH_100], 
-			     gui_menu_interval_callback );
-  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_REFRESH_200], 
-			     gui_menu_interval_callback );
-  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_REFRESH_500], 
-			     gui_menu_interval_callback );
-  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_REFRESH_1000], 
-			     gui_menu_interval_callback );
-
-  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_REFRESH_100], 1);
-  */
-
-
-  // add the userdata for callbacks that need it
-  //win->mitems[STG_MITEM_FILE_SAVE]->userdata = (void*)world->client;
-
   win->mitems[STG_MITEM_VIEW_OBJECT_BODY]->userdata = (void*)STG_LAYER_BODY;
   win->mitems[STG_MITEM_VIEW_OBJECT_SENSOR]->userdata =(void*)STG_LAYER_SENSOR;
   win->mitems[STG_MITEM_VIEW_OBJECT_LIGHT]->userdata = (void*)STG_LAYER_LIGHT;
   win->mitems[STG_MITEM_VIEW_OBJECT_USER]->userdata = (void*)STG_LAYER_USER;
   win->mitems[STG_MITEM_VIEW_GRID]->userdata = (void*)STG_LAYER_GRID;
   
-  // add the callbacks 
-  
-  
+  // add the callbacks   
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_MOVIE_START], 
 			     gui_menu_movie_start );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_MOVIE_STOP], 

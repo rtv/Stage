@@ -237,7 +237,7 @@ stg_msg_t* stg_read_msg( int fd )
 }
 
 // return true if two properties have the same identifiers, else false
-gboolean stg_equal( gconstpointer gp1, gconstpointer gp2 )
+/*gboolean stg_equal( gconstpointer gp1, gconstpointer gp2 )
 {
   assert( gp1 );
   assert( gp2 );
@@ -252,12 +252,7 @@ gboolean stg_equal( gconstpointer gp1, gconstpointer gp2 )
   
   return FALSE;
 }
-
-
-
-
-
-
+*/
 
 stg_time_t stg_timenow( void )
 {
@@ -364,7 +359,6 @@ stg_msg_t* stg_msg_append( stg_msg_t* msg, void* data, size_t len )
 }
 
 
-
 // if stage wants to quit, this will return non-zero
 int stg_quit_test( void )
 {
@@ -380,10 +374,6 @@ void stg_quit_cancel( void )
 {
   _stg_quit = 0;
 }
-
-
-
-
 
 // Look up the color in a database.  (i.e. transform color name to
 // color value).  If the color is not found in the database, a bright

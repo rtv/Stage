@@ -23,3 +23,5 @@ install-data-hook:
 uninstall-local:
 	rm -f $(DOCINST)/*
 
+clean-local:
+	rm -f config.cache

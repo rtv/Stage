@@ -580,10 +580,6 @@ void gui_model_rects( stg_model_t* mod )
       //printf( "[%d - %.2f %.2f %.2f    %.2f %.2f] ",
       //      r, src->x, src->y, src->a, src->w, src->h );
 
-      //x = ((src->x + src->w/2.0) * mod->size.x) 
-      //- mod->size.x/2.0 + mod->local_pose.x;
-      //y = ((src->y + src->h/2.0) * mod->size.y) 
-      //	- mod->size.y/2.0 + mod->local_pose.y;
       x = ((src->x + src->w/2.0) * mod->size.x) 
 	- mod->size.x/2.0;
       y = ((src->y + src->h/2.0) * mod->size.y) 

@@ -10,7 +10,6 @@
 #include <signal.h>
 #include <time.h>
 
-#include "worldfile.hh"
 
 #include <glib.h>
 
@@ -19,6 +18,7 @@
 #include "replace.h"
 #include "stageclient.h"
 #include "bitmap.h"
+#include "worldfile.hh"
 
 double world_time = 0.0;
 
@@ -298,8 +298,8 @@ int main( int argc, char* argv[] )
 
   stg_movemask_t mm = 0;
   sc_model_prop_with_data( root, STG_PROP_MOVEMASK, &mm, sizeof(mm) ); 
-
-  const char* colorstr = worldfile->ReadString(0, "color", "black" );
+  
+  const char* colorstr = worldfile->ReadString(root, "color", "black" );
   stg_color_t color = stg_lookup_color( colorstr );
   sc_model_prop_with_data( root, STG_PROP_COLOR, &color,sizeof(color));
   
@@ -348,9 +348,13 @@ int main( int argc, char* argv[] )
       sc_model_prop_with_data( mod, STG_PROP_BOUNDARY, &boundary,sizeof(boundary));
       
       const char* colorstr = worldfile->ReadString( section, "color", "red" );
-      stg_color_t color = stg_lookup_color( colorstr );
-      sc_model_prop_with_data( mod, STG_PROP_COLOR, &color,sizeof(color));
-      
+      if( colorstr )
+	{
+	  stg_color_t color = stg_lookup_color( colorstr );
+	  PRINT_DEBUG2( "stage color %s = %X", colorstr, color );
+	  sc_model_prop_with_data( mod, STG_PROP_COLOR, &color,sizeof(color));
+	}
+
       const char* bitmapfile = worldfile->ReadString( section, "bitmap", NULL );
       if( bitmapfile )
 	{
@@ -361,6 +365,43 @@ int main( int argc, char* argv[] )
 	  sc_model_prop_with_data( mod, STG_PROP_RECTS, 
 				   rects, num_rects * sizeof(stg_rotrect_t ));
 	}
+
+      // Load the geometry of a ranger array
+      int scount = worldfile->ReadInt( section, "scount", 0);
+      if (scount > 0)
+	{
+	  char key[256];
+	  stg_ranger_config_t* configs = calloc( sizeof(stg_ranger_config_t), scount );
+	  int i;
+	  for(i = 0; i < scount; i++)
+	    {
+	      snprintf(key, sizeof(key), "spose[%d]", i);
+	      configs[i].pose.x = worldfile->ReadTupleLength(section, key, 0, 0);
+	      configs[i].pose.y = worldfile->ReadTupleLength(section, key, 1, 0);
+	      configs[i].pose.a = worldfile->ReadTupleAngle(section, key, 2, 0);
+
+	      snprintf(key, sizeof(key), "ssize[%d]", i);
+	      configs[i].size.x = worldfile->ReadTupleLength(section, key, 0, 0.01);
+	      configs[i].size.y = worldfile->ReadTupleLength(section, key, 1, 0.05);
+
+	      snprintf(key, sizeof(key), "sbounds[%d]", i);
+	      configs[i].bounds_range.min = 
+		worldfile->ReadTupleLength(section, key, 0, 0);
+	      configs[i].bounds_range.max = 
+		worldfile->ReadTupleLength(section, key, 1, 5.0);
+
+	      snprintf(key, sizeof(key), "sfov[%d]", i);
+	      configs[i].fov = worldfile->ReadAngle(section, key, 30 );
+	    }
+	  
+	  PRINT_WARN1( "loaded %d ranger configs", scount );	  
+	  sc_model_prop_with_data( mod, STG_PROP_RANGERCONFIG,
+				   configs, scount * sizeof(stg_ranger_config_t) );
+
+	  free( configs );
+	}
+      
+      
     }
   
   printf( "building client-side models done.\n" );
@@ -373,9 +414,10 @@ int main( int argc, char* argv[] )
   sc_push( client );
   puts( "uploading done" );
   
-  sc_model_t* mod = sc_get_model( client, "Player world", "budgie" );
+  sc_model_t* mod = sc_get_model( client, "Player world", "sonar" );
   if( mod )
     {
+      sc_model_subscribe( client, mod, STG_PROP_RANGERDATA, 0.1 );
       sc_model_subscribe( client, mod, STG_PROP_LASERDATA, 0.2 );
       sc_model_subscribe( client, mod, STG_PROP_POSE, 1.0 );
     }

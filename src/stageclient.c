@@ -531,6 +531,12 @@ void sc_world_push( sc_t* cli, sc_world_t* world )
   g_hash_table_foreach( world->models_id, sc_model_push_cb, cli );
 }
 
+void sc_world_push_cb( gpointer key, gpointer value, gpointer user )
+{
+  sc_world_push( (sc_t*)user, (sc_world_t*)value );
+}
+
+
 typedef struct
 {
   sc_t* client;
@@ -546,14 +552,14 @@ void prop_push( stg_property_t* prop, sc_prop_target_t* pt )
   
   void* data;
   size_t len;
-  int color;
+  //int color;
   switch( prop->id )
     {
-    case STG_PROP_COLOR: // convert the color string to an int
-      color = stg_lookup_color( prop->data );
-      data = &color;
-      len = sizeof(color);
-      break;	  
+      //case STG_PROP_COLOR: // convert the color string to an int
+      //color = stg_lookup_color( prop->data );
+      //data = &color;
+      //len = sizeof(color);
+      //break;	  
       
     default: // use the raw data we loaded
       {
@@ -602,6 +608,10 @@ void sc_model_push( sc_t* cli, sc_model_t* mod )
   g_hash_table_foreach( mod->props, prop_push_cb, &pt );
 }
   
+void sc_model_push_cb( gpointer key, gpointer value, gpointer user )
+{
+  sc_model_push( (sc_t*)user, (sc_model_t*)value );
+}
  
 // write the whole model table to the server
 void sc_push( sc_t* cli )
@@ -662,13 +672,5 @@ void sc_addworld( sc_t* cli, sc_world_t* world )
 }
 
 
-void sc_world_push_cb( gpointer key, gpointer value, gpointer user )
-{
-  sc_world_push( (sc_t*)user, (sc_world_t*)value );
-}
 
-void sc_model_push_cb( gpointer key, gpointer value, gpointer user )
-{
-  sc_model_push( (sc_t*)user, (sc_model_t*)value );
-}
 

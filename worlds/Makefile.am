@@ -13,13 +13,14 @@ worlds_DATA = everything.world			\
               usc_pioneer.inc			\
               cave.pnm.gz			\
               hospital.pnm.gz			\
-              hospital_section.pnm.gz		\
+              hospital_section.png		\
               rink.pnm.gz			\
               sal2.pnm.gz			\
               table.pnm.gz			\
 	      mcl.world				\
 	      mcl.pnm.gz			\
-	      mcl_map.pnm.gz
+	      mcl_map.pnm.gz                    \
+              submarine.png
 
 EXTRA_DIST =  everything.world			\
               hospital100.world			\
@@ -34,10 +35,11 @@ EXTRA_DIST =  everything.world			\
               usc_pioneer.inc			\
               cave.pnm.gz			\
               hospital.pnm.gz			\
-              hospital_section.pnm.gz		\
+              hospital_section.png		\
               rink.pnm.gz			\
               sal2.pnm.gz			\
               table.pnm.gz			\
 	      mcl.world				\
 	      mcl.pnm.gz			\
-	      mcl_map.pnm.gz
+	      mcl_map.pnm.gz                    \
+              submarine.png

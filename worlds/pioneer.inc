@@ -2,7 +2,7 @@
 # Desc: Device definitions for Activemedia Pioneer robots.
 # Author: Andrew Howard
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.5 2002-11-01 19:12:33 rtv Exp $
+# CVS: $Id: pioneer.inc,v 1.6 2004-04-17 01:56:46 rtv Exp $
 
 # The Pioneer2DX sonar array
 define p2dx_sonar sonar
@@ -24,6 +24,30 @@ define p2dx_sonar sonar
   spose[13] [ -0.190 0.080 150 ]
   spose[14] [ -0.155 0.115 130 ]
   spose[15] [ -0.115 0.130 90 ]
+)
+
+# The Pioneer2DX sonar array (new format)
+define p2dx_sonar_new sonar
+(
+  scount 16
+  spose[0] [ 0.115 0.130 90 ]
+  spose[1] [ 0.155 0.115 50 ]
+  spose[2] [ 0.190 0.080 30 ]
+  spose[3] [ 0.210 0.025 10 ]
+  spose[4] [ 0.210 -0.025 -10 ]
+  spose[5] [ 0.190 -0.080 -30 ]
+  spose[6] [ 0.155 -0.115 -50 ]
+  spose[7] [ 0.115 -0.130 -90 ]
+  spose[8] [ -0.115 -0.130 -90 ]
+  spose[9] [ -0.155 -0.115 -130 ]
+  spose[10] [ -0.190 -0.080 -150 ]
+  spose[11] [ -0.210 -0.025 -170 ]
+  spose[12] [ -0.210 0.025 170 ]
+  spose[13] [ -0.190 0.080 150 ]
+  spose[14] [ -0.155 0.115 130 ]
+  spose[15] [ -0.115 0.130 90 ]
+
+  #ssize[0] [0 0.3]
 )
 
 # the pioneer's center of rotation is offset from its 

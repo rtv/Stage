@@ -11,7 +11,9 @@ void model_update_rangers( stg_model_t* mod )
   int rcount = mod->ranger_config->len;
   
   if( rcount < 1 )
-    PRINT_WARN1( "wierd! %d rangers", rcount);
+    return;
+
+  //PRINT_WARN1( "wierd! %d rangers", rcount);
   
   // set the data array to the right number of samples
   g_array_set_size( mod->ranger_data, rcount );
