@@ -1,0 +1,16 @@
+-- TODO --
+
+gripper 
+pucks
+energy
+docs
+fix API
+review stage.h, stageclient, etc.
+
+release schedule?
+
+
+-- DONE --
+Bus error on exit
+quit menu item
+close window behavior
