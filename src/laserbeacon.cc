@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.7 $
+//  $Revision: 1.1.2.8 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -157,9 +157,9 @@ void CLaserBeacon::OnUiUpdate(RtkUiDrawData *pData)
 {
     CObject::OnUiUpdate(pData);
 
-    pData->begin_section("global", "laserbeacons");
+    pData->begin_section("global", "");
     
-    if (pData->draw_layer("", true))
+    if (pData->draw_layer("laser_beacon", true))
     {
         double r = 0.05;
         double ox, oy, oth;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.13 $
+//  $Revision: 1.9.2.14 $
 //
 // Usage:
 //  (empty)
@@ -335,7 +335,7 @@ void CPioneerMobileDevice::OnUiUpdate(RtkUiDrawData *pData)
     
     // Draw ourself
     //
-    pData->begin_section("global", "chassis");
+    pData->begin_section("global", "");
     
     if (pData->draw_layer("chassis", true))
         DrawChassis(pData);

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11.2.14 $
+//  $Revision: 1.11.2.15 $
 //
 // Usage:
 //  (empty)
@@ -312,7 +312,7 @@ void CLaserDevice::OnUiUpdate(RtkUiDrawData *pData)
     //
     pData->begin_section("global", "laser");
     
-    if (pData->draw_layer("turret", true))
+    if (pData->draw_layer("", true))
         DrawTurret(pData);
     if (pData->draw_layer("scan", true))
         if (IsSubscribed() && m_robot->ShowSensors())

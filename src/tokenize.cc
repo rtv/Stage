@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/tokenize.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -51,11 +51,13 @@ int Tokenize(char *buffer, int bufflen, char **argv, int maxargs)
             argc++;
     }
 
+    /*
     // Debugging -- dump the tokens
     //
     for (int i = 0; i < argc; i++)
         printf("[%s]", (char*) argv[i]);
     printf("\n");
+    */
     
     return argc;
 }

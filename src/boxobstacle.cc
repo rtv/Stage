@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.6 $
+//  $Revision: 1.1.2.7 $
 //
 // Usage:
 //  (empty)
@@ -156,9 +156,9 @@ void CBoxObstacle::OnUiUpdate(RtkUiDrawData *pData)
 {
     CObject::OnUiUpdate(pData);
 
-    pData->begin_section("global", "BoxObstacles");
+    pData->begin_section("global", "");
     
-    if (pData->draw_layer("", TRUE))
+    if (pData->draw_layer("box_obstacle", true))
     {
         double ox, oy, oth;
         GetGlobalPose(ox, oy, oth);

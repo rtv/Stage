@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/object.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.12 $
+//  $Revision: 1.1.2.13 $
 //
 // Usage:
 //  (empty)
@@ -229,7 +229,7 @@ void CObject::OnUiProperty(RtkUiPropertyData* pData)
 //
 void CObject::OnUiUpdate(RtkUiDrawData *pData)
 {
-    pData->begin_section("global", "object");
+    pData->begin_section("global", "");
 
     // Draw a marker to show we are being dragged
     //
