@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.8.2.2 $
+//  $Revision: 1.8.2.3 $
 //
 // Usage:
 //  (empty)
@@ -128,8 +128,6 @@ class CEntity
   // flag is set when a dependent device is  attached to this device
     public: bool m_dependent_attached;
 
-public: int truth_poked;
-
     // Line in the world description file
     //
     public: int m_line;
@@ -166,6 +164,10 @@ public: int truth_poked;
     //
     public: double m_size_x, m_size_y;
     public: double m_offset_x, m_offset_y; // offset center of rotation
+
+    // The last mapped pose
+    //
+    protected: double m_map_px, m_map_py, m_map_pth;
 
     // Object color description (for display)(and maybe vision sensors later?)
     //

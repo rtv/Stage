@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.7.2.2 $
+//  $Revision: 1.7.2.3 $
 //
 // Usage:
 //  (empty)
@@ -124,12 +124,10 @@ void CBoxObstacle::Update( double simtime )
 {
   ASSERT(m_world);
   
-    // See if its time to recalculate beacons
+  // See if its time to recalculate boxes
   //
-  if( simtime - m_last_update < m_interval )
-    return;
-  
-  m_last_update = simtime;
+  //if( simtime - m_last_update < m_interval )
+  //return;
     
   double x, y, th;
   GetGlobalPose( x,y,th );
@@ -137,6 +135,8 @@ void CBoxObstacle::Update( double simtime )
   // if we've moved 
   if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
     {
+      m_last_update = simtime;
+      
       // Undraw our old representation
       m_world->matrix->SetMode( mode_unset );
       m_world->SetRectangle( m_map_px, m_map_py, m_map_pth,

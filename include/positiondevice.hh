@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/positiondevice.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.3 $
+//  $Revision: 1.3.2.1 $
 //
 // Usage:
 //  (empty)
@@ -89,10 +89,6 @@ public: void SetShape( pioneer_shape_t );
     // Odometric pose
     //
     private: double m_odo_px, m_odo_py, m_odo_pth;
-
-    // Last map pose (for unmapping)
-    //
-    private: double m_map_px, m_map_py, m_map_pth;
 
     public: unsigned char stall;
     public: int Move();

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.21.2.2 $
+//  $Revision: 1.21.2.3 $
 //
 // Usage:
 //  (empty)
@@ -511,10 +511,6 @@ void CWorld::Update()
 	ent->SetGlobalPose( truth.x/1000.0, truth.y/1000.0, 
 			    DTOR(truth.th) );
 	
-	ent->truth_poked = 1;
-
-	//ent->Map( true );
-
 	// the parent may have been changed - NYI
 	//ent->parent->port = truth.parent.port;
 	//ent->parent.type = truth.parent.type;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.5.2.2 $
+//  $Revision: 1.5.2.3 $
 //
 // Usage:
 //  (empty)
@@ -147,40 +147,51 @@ bool CPositionDevice::Save(int &argc, char **argv)
 //
 void CPositionDevice::Update( double sim_time )
 {
-    // If the device is not subscribed,
-    // reset to default settings.
-    //
-  if(!Subscribed())
-  {
-    m_odo_px = m_odo_py = m_odo_pth = 0;
-    return;
-  }
+  ASSERT(m_world != NULL);
   
-    ASSERT(m_world != NULL);
   
-    // if its time to recalculate state
-    //
-    if( sim_time - m_last_update <  m_interval )
-      return;
-    
-    m_last_update = sim_time;
-
-    // Get the latest command
-    //
-    if( GetCommand( &m_command, sizeof(m_command)) == sizeof(m_command))
+  // if its time to recalculate state
+  //
+  if( sim_time - m_last_update >  m_interval )
     {
-        ParseCommandBuffer();    // find out what to do    
+      m_last_update = sim_time;
+      
+      if( Subscribed() > 0 )
+	{  
+	  // Get the latest command
+	  //
+	  if( GetCommand( &m_command, sizeof(m_command)) == sizeof(m_command))
+	    {
+	      ParseCommandBuffer();    // find out what to do    
+	    }
+	  
+	  Move();      // do things
+	  
+	  ComposeData();     // report the new state of things
+	  PutData( &m_data, sizeof(m_data)  );     // generic device call
+	}
+      else  
+	{
+	  // the device is not subscribed,
+	  // reset to default settings.
+	  m_odo_px = m_odo_py = m_odo_pth = 0;
+	}
     }
- 
-    Map(false); // erase myself
-   
-    Move();      // do things
-    
-    Map(true);   // draw myself 
-
-    ComposeData();     // report the new state of things
-    PutData( &m_data, sizeof(m_data)  );     // generic device call
-
+  
+  double x, y, th;
+  GetGlobalPose( x,y,th );
+  
+  // if we've moved 
+  if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
+    {
+      Map(false); // erase myself
+      
+      m_map_px = x; // update the render positions
+      m_map_py = y;
+      m_map_pth = th;
+      
+      Map(true);   // draw myself 
+    }      
 }
 
 
@@ -333,7 +344,6 @@ void CPositionDevice::Map(bool render )
 {
     if (!render)
     {
-     
       m_world->matrix->SetMode( mode_unset );
       
       if(GetShape() == rectangle)
@@ -349,16 +359,10 @@ void CPositionDevice::Map(bool render )
           double sx = m_size_x;
           double sy = m_size_y;
 	  
-          //m_world->SetRectangle(qx, qy, pa, sx, sy, layer_obstacle, 0);
-          //m_world->SetRectangle(qx, qy, pa, sx, sy, layer_puck, 0); 
 	  m_world->SetRectangle( qx, qy, pa, sx, sy, this );
         }
       else if(GetShape() == circle)
-        {
-          //m_world->SetCircle(m_map_px,m_map_py,m_size_x/2.0,layer_obstacle,0);
-          //m_world->SetCircle(m_map_px,m_map_py,m_size_x/2.0,layer_puck,0);
-	  m_world->SetCircle( m_map_px, m_map_py, m_size_x/2.0, this );
-        }
+	m_world->SetCircle( m_map_px, m_map_py, m_size_x/2.0, this );
       else
 	PRINT_MSG("CPositionDevice::Map(): unknown shape!");
     }
@@ -376,16 +380,11 @@ void CPositionDevice::Map(bool render )
 	    double qy = py + m_offset_x * sin(pa);
 	    double sx = m_size_x;
 	    double sy = m_size_y;
-	    //m_world->SetRectangle(qx, qy, pa, sx, sy, layer_obstacle, 1);
-	    //m_world->SetRectangle(qx, qy, pa, sx, sy, layer_puck, 1);
-	  m_world->SetRectangle( qx, qy, pa, sx, sy, this );
+
+	    m_world->SetRectangle( qx, qy, pa, sx, sy, this );
 	  }
 	else if(GetShape() == circle)
-	  {
-	    //m_world->SetCircle(px,py,m_size_x/2.0,layer_obstacle,1);
-	    //m_world->SetCircle(px,py,m_size_x/2.0,layer_puck,1);
-	    m_world->SetCircle( px, py, m_size_x/2.0, this );
-	  }
+	  m_world->SetCircle( px, py, m_size_x/2.0, this );
 	else
 	  PRINT_MSG("CPositionDevice::Map(): unknown shape!");
 	

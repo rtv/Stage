@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.9 $
+//  $Author: vaughan $
+//  $Revision: 1.9.2.1 $
 //
 // Usage:
 //  (empty)
@@ -84,11 +84,19 @@ void CPtzDevice::Update( double sim_time )
 #ifdef DEBUG
   CEntity::Update( sim_time ); // inherit debug output
 #endif
-
-
-    // Dont update anything if we are not subscribed
-    //
-    if(!Subscribed())
+  
+  ASSERT(m_world != NULL);
+  
+  
+  // if its time to recalculate ptz
+  //
+  if( sim_time - m_last_update < m_interval )  return;
+    
+  m_last_update = sim_time;
+  
+  // Dont update anything if we are not subscribed
+  //
+  if(!Subscribed())
     {
       // reset the camera to (0,0,0) to better simulate the physical camera
       m_pan = 0;
@@ -96,65 +104,57 @@ void CPtzDevice::Update( double sim_time )
       m_zoom = 0;
       return;
     }
-
-    //RTK_TRACE0("is subscribed");
-    
-    ASSERT(m_world != NULL);
-    
-    // if its time to recalculate ptz
-    //
-    if( sim_time - m_last_update < m_interval )  return;
-    
-    m_last_update = sim_time;
-    
-    // Get the command string
-    //
-    player_ptz_cmd_t cmd;
-    int len = GetCommand(&cmd, sizeof(cmd));
-    if (len > 0 && len != sizeof(cmd))
+  
+  // we're subscribed, so do the update
+  
+  // Get the command string
+  //
+  player_ptz_cmd_t cmd;
+  int len = GetCommand(&cmd, sizeof(cmd));
+  if (len > 0 && len != sizeof(cmd))
     {
-        PRINT_MSG("command buffer has incorrect length -- ignored");
-        return;
+      PRINT_MSG("command buffer has incorrect length -- ignored");
+      return;
     }
-
-    // Parse the command string (if there is one)
-    //
-    if (len > 0)
+  
+  // Parse the command string (if there is one)
+  //
+  if (len > 0)
     {
-        double pan = (short) ntohs(cmd.pan);
-        double tilt = (short) ntohs(cmd.tilt);
-        double zoom = (unsigned short) ntohs(cmd.zoom);
-
-        // Threshold
-        //
-        pan = min(pan, m_pan_max);
-        pan = max(pan, m_pan_min);
-
-        tilt = min(tilt, m_tilt_max);
-        tilt = max(tilt, m_tilt_min);
-
-        zoom = min(zoom, m_zoom_max);
-        zoom = max(zoom, m_zoom_min);
-        
-        // Set the current values
-        // This basically assumes instantaneous changes
-        // We could add a velocity in here later. ahoward
-        //
-        m_pan = pan;
-        m_tilt = tilt;
-        m_zoom = zoom;
+      double pan = (short) ntohs(cmd.pan);
+      double tilt = (short) ntohs(cmd.tilt);
+      double zoom = (unsigned short) ntohs(cmd.zoom);
+      
+      // Threshold
+      //
+      pan = min(pan, m_pan_max);
+      pan = max(pan, m_pan_min);
+      
+      tilt = min(tilt, m_tilt_max);
+      tilt = max(tilt, m_tilt_min);
+      
+      zoom = min(zoom, m_zoom_max);
+      zoom = max(zoom, m_zoom_min);
+      
+      // Set the current values
+      // This basically assumes instantaneous changes
+      // We could add a velocity in here later. ahoward
+      //
+      m_pan = pan;
+      m_tilt = tilt;
+      m_zoom = zoom;
     }
-
-    // Construct the return data buffer
-    //
-    player_ptz_data_t data;
-    data.pan = htons((short) m_pan);
-    data.tilt = htons((short) m_tilt);
-    data.zoom = htons((unsigned short) m_zoom);
-
-    // Pass back the data
-    //
-    PutData(&data, sizeof(data));
+  
+  // Construct the return data buffer
+  //
+  player_ptz_data_t data;
+  data.pan = htons((short) m_pan);
+  data.tilt = htons((short) m_tilt);
+  data.zoom = htons((unsigned short) m_zoom);
+  
+  // Pass back the data
+  //
+  PutData(&data, sizeof(data));
 }
 
 

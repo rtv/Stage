@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visionbeacon.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.6 $
+//  $Revision: 1.6.2.1 $
 //
 // Usage:
 //  (empty)
@@ -50,15 +50,7 @@ class CVisionBeacon : public CEntity
     // Beacon radius
     //
     private: double m_radius;
-
-    // Layers to render to
-    //
-    private: bool m_render_obstacle, m_render_laser;
     
-    // Current pose
-    //
-    private: double m_map_px, m_map_py, m_map_pth;
-
 #ifdef INCLUDE_RTK
     
     // Process GUI update messages

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.6.2.2 $
+//  $Revision: 1.6.2.3 $
 //
 // Usage:
 //  (empty)
@@ -69,9 +69,14 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
     m_player_port = 0;
     m_player_type = 0;
        
+    // init all the sizes
     m_lx = m_ly = m_lth = 0;
     m_size_x = 0; m_size_y = 0;
     m_offset_x = m_offset_y = 0;
+
+    // Set the initial map pose
+    //
+    m_map_px = m_map_py = m_map_pth = 0;
 
     strcpy(m_color_desc, "black");
 
@@ -87,8 +92,6 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
     m_data_io     = NULL; 
     m_command_io  = NULL;
     m_config_io   = NULL;
-
-    truth_poked = 1;
 
 #ifdef INCLUDE_RTK
     m_draggable = false; 
@@ -603,10 +606,11 @@ int CEntity::Subscribed()
   // returns > 0 if we have subs or dependents or we've been poked
   // and cancels the poke flag
   //return(  subscribed || m_dependent_attached || truth_poked-- ); 
-  int retval = subscribed || truth_poked;
-  if(truth_poked)
-    truth_poked = !truth_poked;
-  return(retval);
+  //int retval = subscribed || truth_poked;
+  //if(truth_poked)
+  //truth_poked = !truth_poked;
+  
+  return( subscribed );
 }
 
 void CEntity::ComposeTruth( stage_truth_t* truth )

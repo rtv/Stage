@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.23.2.2 $
+//  $Revision: 1.23.2.3 $
 //
 // Usage:
 //  (empty)
@@ -32,6 +32,7 @@
 
 #define DEBUG
 #undef VERBOSE
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
@@ -73,15 +74,12 @@ CLaserDevice::CLaserDevice(CWorld *world,
   
   // Dimensions of laser
   //
-  m_map_dx = 0.155;
-  m_map_dy = 0.155;
-
-  m_size_x = m_map_dx;
-  m_size_y = m_map_dy;
+  m_size_x = 0.155;
+  m_size_y = 0.155;
   
 #ifdef INCLUDE_RTK
   m_draggable = true; 
-  m_mouse_radius = sqrt(m_map_dx * m_map_dx + m_map_dy * m_map_dy);
+  m_mouse_radius = sqrt(m_size_x * m_size_x + m_size_y * m_size_y);
   m_hit_count = 0;
 #endif
 
@@ -131,29 +129,45 @@ void CLaserDevice::Update( double sim_time )
 
     ASSERT(m_world != NULL);
     
-    
+    // UPDATE OUR RENDERING
+
     double x, y, th;
     GetGlobalPose( x,y,th );
     
     // if we've moved 
     if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
       {
-
-	    // Check to see if it is time to update the laser scan
-	    //
-	    if( sim_time - m_last_update >= m_interval )
-	      {
-		m_last_update = sim_time;
-
 	// Undraw ourselves from the world
 	//
-	if (!m_transparent)
-	  Map(false);
+	if (!m_transparent) // should replace m_transparent with laser_return
+	  {
+	    m_world->matrix->mode = mode_unset;
+	    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
+				   m_size_x, m_size_y, this );
+	  }
 	
 	m_map_px = x; // update our render position
 	m_map_py = y;
 	m_map_pth = th;
-		
+	
+	// Redraw outselves in the world
+	//
+	if (!m_transparent )
+	  {
+	    m_world->matrix->mode = mode_set;
+	    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
+				   m_size_x, m_size_y, this );
+	  }
+      }
+    
+    // UPDATE OUR SENSOR DATA
+
+    // Check to see if it's time to update the laser scan
+    //
+    if( sim_time - m_last_update > m_interval )
+      {
+	m_last_update = sim_time;
+	
 	if( Subscribed() )
 	  {
 	    // Check to see if the configuration has changed
@@ -165,7 +179,6 @@ void CLaserDevice::Update( double sim_time )
 	    GenerateScanData( &scan_data );
 	    PutData( &scan_data, sizeof( scan_data) );
 	  }
-      }
 	else
 	  {
 	    // If not subscribed,
@@ -177,11 +190,6 @@ void CLaserDevice::Update( double sim_time )
 	    m_scan_count = 361;
 	    m_intensity = false;
 	  }
-	
-	// Redraw outselves in the world
-	//
-	if (!m_transparent )
-	  Map(true);
       }
 }
 
@@ -269,6 +277,9 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
     m_hit_count = 0;
 #endif
 
+    // initialise our beacon detecting array
+    m_visible_beacons.clear(); 
+
 
     // Set the header part of the data packet
     //
@@ -296,7 +307,7 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 	//printf( "Ray: %d angle: %.2f\n", s, RTOD(pth) );
 
 	// MOVED THIS BACK TO MAINLY INTEGER MATH, DID PIXEL/M SCALING
-	// OUTSIDE THE LOOP AND ELIMINATED A FUNCTION CALL 
+	// OUTSIDE THE LOOP AND ELIMINATED A FUNCTION CALL (yay!)
 	// - RTV 8/20/01
 
 	// hops along each axis
@@ -316,14 +327,25 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 	  CEntity **ent = m_world->matrix->get_cell( (int)cellx, (int)celly );
 	  if( !ent[0] ) ent = m_world->matrix->get_cell( (int)cellx+1, (int)celly );
 	  
-	  uint8_t cell = 0;
-	  // see if any of the entities intercept the laser beam
+	  uint8_t retval = 0;
+	  // see if any of the entities (other than this one) intercept the laser beam
 	  // and store the first non-negative laser_return value
 	  int s=0;
-	  while( ent[s] ) if( (cell = ent[s++]->laser_return) ) break;
-	  
-	  if (cell != 0) // we hit something that reflects laser beams!
-	    break; // quit tracing this ray
+	  while( ent[s] ) // scan the pointer list
+	    {
+	      if( ent[s]->m_stage_type == LaserBeaconType )// we see a beacon		  
+		{
+		  CEntityPointer lbp;
+		  lbp.ptr = ent[s];
+		  m_visible_beacons.push_back( lbp ); // add it to the list
+		}
+
+	      if( ent[s] != this ) retval = ent[s]->laser_return;
+	      if( retval > 0 ) break; // stop scanning the pointer list	      
+	      s++;
+	    }
+
+	  if( retval > 0 ) break; // end the ray trace
         }
 	
 	//cout << s << ' ' << range << endl;
@@ -354,47 +376,13 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
         m_hit_count++;
 #endif
       }
+
+    // remove all duplicates from the beacon list
+    m_visible_beacons.unique(); 
+
     return true;
 }
 
-
-///////////////////////////////////////////////////////////////////////////
-// Draw ourselves into the world rep
-//
-void CLaserDevice::Map(bool render)
-{
-    double dx = m_map_dx;
-    double dy = m_map_dy;
-    
-    if (!render)
-    {
-        // Remove ourself from the map
-        //
-        double px = m_map_px;
-        double py = m_map_py;
-        double pth = m_map_pth;
-        m_world->SetRectangle(px, py, pth, dx, dy, layer_laser, 0);
- 
-	//if( m_channel != -1 )
-	//m_world->SetRectangle(px, py, pth, dx, dy, layer_vision, 0);
-    }
-    else
-    {
-        // Add ourself to the map
-        //
-        double px, py, pth;
-        GetGlobalPose(px, py, pth);
-        
-	m_world->SetRectangle(px, py, pth, dx, dy, layer_laser, 1);
-	
-	//if( m_channel != -1 ) 
-	//m_world->SetRectangle(px, py, pth, dx, dy, layer_vision, 1);
-        
-	m_map_px = px;
-        m_map_py = py;
-        m_map_pth = pth;
-    }
-}
 
 #ifdef INCLUDE_RTK
 
@@ -448,8 +436,8 @@ void CLaserDevice::DrawTurret(RtkUiDrawData *event)
 
     // Turret dimensions
     //
-    double dx = m_map_dx;
-    double dy = m_map_dy;
+    double dx = m_size_x;
+    double dy = m_size_y;
 
     // Get global pose
     //

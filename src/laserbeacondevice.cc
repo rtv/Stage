@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.10 $
+//  $Revision: 1.10.2.1 $
 //
 // Usage:
 //  (empty)
@@ -132,14 +132,16 @@ void CLBDDevice::Update( double sim_time )
 
   m_last_update = sim_time;
 
-    
     // Get the laser range data
     //
     uint32_t time_sec=0, time_usec=0;
     player_laser_data_t laser;
     if (m_laser->GetData(&laser, sizeof(laser) ) == 0)
-        return;
-    
+      {
+	puts( "Stage warning: LBD device found no laser data" );
+	return;
+      }
+
     expBeacon.beaconCount = 0; // initialise the count in the export structure
 
 
@@ -179,10 +181,19 @@ void CLBDDevice::Update( double sim_time )
     {
         // Get the position of the laser beacon (global coords)
         //
-        int id;
-        double px, py, pth;
-        if (!m_world->GetLaserBeacon(i, &id, &px, &py, &pth))
-            break;
+      //int id;
+      // double px, py, pth;
+      //if (!m_world->GetLaserBeacon(i, &id, &px, &py, &pth))
+      //    break;
+
+	// ray trace to find laser beacons
+
+      if( !m_laser->beacons[i] ) break; // no more beacons
+      
+      int id;
+      double px, py, pth;
+      
+      m_laser->beacons[i]->GetGlobalPose( px, py, pth );
 
 	//printf( "beacon at: %.2f %.2f %.2f\n", px, py, pth );
 	//fflush( stdout );
@@ -200,8 +211,10 @@ void CLBDDevice::Update( double sim_time )
         int bi = (int) ((b - scan_min) / scan_res);
         if (bi < 0 || bi >= laser.range_count)
             continue;
-        if (r > (laser.ranges[bi] & 0x1FFF) / 1000.0 + tolerance)
-            continue;
+
+	// RTV - temporarily disabled the intensity checking
+        //if (r > (laser.ranges[bi] & 0x1FFF) / 1000.0 + tolerance)
+	//  continue;
 
         // Now see if it is within detection range
         //

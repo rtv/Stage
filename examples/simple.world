@@ -16,7 +16,7 @@ create position_device pose 1.0 3.0 0.0 port 6665
   create laser_device  pose 0.08 0.0 0.0 port 6665
   {
 	create lbd_device port 6665	
-  }
+  } 
 }
 
 create position_device pose 4.0 3.0 0.0 

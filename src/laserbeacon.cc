@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.9.2.1 $
+//  $Revision: 1.9.2.2 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -60,12 +60,6 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CEntity *parent)
     //
     m_transparent = false;
     
-    // Set the initial map pose
-    //
-    m_map_px = m_map_py = m_map_pth = 0;
-
-    // beacons aren;t rendered in the laser grid, 
-    // so these sizes are really just for external viewers
     m_size_x = 0.05; // very thin!   
     m_size_y = 0.3;     
 }
@@ -147,12 +141,10 @@ void CLaserBeacon::Update( double sim_time )
 {
     ASSERT(m_world != NULL);
 
-    // See if its time to recalculate beacons
+    // See if its time to update beacons
     //
-    if( sim_time - m_last_update < m_interval )
-      return;
-    
-    m_last_update = sim_time;
+    //if( sim_time - m_last_update < m_interval )
+    //return;
     
     
     double x, y, th;
@@ -161,14 +153,15 @@ void CLaserBeacon::Update( double sim_time )
     // if we've moved 
     if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
       {
+	m_last_update = sim_time;
+	
 	// Undraw our old representation
 	//
 	if (!m_transparent)
 	  {
 	    m_world->matrix->mode = mode_unset;
-	    m_world->matrix->set_cell( (int)(m_map_px * m_world->ppm),
-				       (int)(m_map_py * m_world->ppm), 
-				       this ); 
+	    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
+				   m_size_x, m_size_y, this );
 	  }
 	
 	m_map_px = x;
@@ -180,10 +173,10 @@ void CLaserBeacon::Update( double sim_time )
 	if (!m_transparent)
 	  {
 	    m_world->matrix->mode = mode_set;
-	    m_world->matrix->set_cell( (int)(m_map_px * m_world->ppm),
-				       (int)(m_map_py * m_world->ppm), 
-				       this ); 
+	    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
+				   m_size_x, m_size_y, this );
 	  }
+	// CHOP THIS!
 	m_world->SetLaserBeacon(m_index, m_map_px, m_map_py, m_map_pth);
       }
 }
