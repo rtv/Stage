@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.13 2002-11-11 02:25:54 inspectorg Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.14 2002-11-11 03:09:46 rtv Exp $
  */
 
 
@@ -37,7 +37,7 @@
 
 //#undef DEBUG
 //#undef VERBOSE
-#define DEBUG 
+//#define DEBUG 
 //#define VERBOSE
 
 #include <errno.h>
@@ -267,8 +267,8 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   else
     PRINT_DEBUG( "NO WORLDFILE - USING DEFAULT GUI PARAMS" );
   
-  printf( "sx %d sy %d dx %.2f dy %.2f ox %.2f oy %.2f scale %.2f\n",
-	  sx, sy, dx, dy, ox, oy, scale );
+  //printf( "sx %d sy %d dx %.2f dy %.2f ox %.2f oy %.2f scale %.2f\n",
+  //  sx, sy, dx, dy, ox, oy, scale );
 
   gridx = ceil(gridx / major) * major;
   gridy = ceil(gridy / major) * major;
@@ -405,7 +405,6 @@ bool CWorld::RtkStartup()
   // Initialise rtk
   rtk_app_main_init(this->app);
 
-  puts( "** RTKSTARTUP **" );
   // this rtkstarts all entities
   root->RtkStartup();
     

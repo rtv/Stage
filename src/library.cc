@@ -24,7 +24,7 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.6 2002-11-09 02:32:34 rtv Exp $
+ * CVS info: $Id: library.cc,v 1.7 2002-11-11 03:09:46 rtv Exp $
  */
 
 #include "library.hh"
@@ -89,7 +89,7 @@ libitem_t library_items[] = {
 // statically allocate a libray filled with the entries above
 Library model_library( library_items );
 
-#define DEBUG
+//#define DEBUG
 
 // LibraryItem //////////////////////////////////////////////////////////////
 
@@ -121,7 +121,7 @@ LibraryItem* LibraryItem::FindLibraryItemFromToken( char* token )
   if( next ) return next->FindLibraryItemFromToken( token );
   
   // fail! token not found here or later in the list
-  printf( "failed to token %s in library\n", token );
+  PRINT_WARN1( "Failed to find token %s in library\n", token );
   return NULL;
 }
 
@@ -133,7 +133,7 @@ CreatorFunctionPtr LibraryItem::FindCreatorFromToken( char* token )
   if( next ) return next->FindCreatorFromToken( token );
   
   // fail! token not found here or later in the list
-  printf( "failed to find creator of token %s in library\n", token );
+  PRINT_WARN1( "failed to find creator of token %s in library\n", token );
   return NULL;
 }
 
@@ -145,7 +145,7 @@ int LibraryItem::FindTypeNumFromToken( char* token )
   if( next ) return next->FindTypeNumFromToken( token );
   
   // fail! token not found here or later in the list
-  printf( "failed to find type_num of token %s in library\n", token );
+  PRINT_WARN1( "failed to find type_num of token %s in library\n", token );
   return -1;
 }
 
@@ -157,7 +157,7 @@ const char* LibraryItem::FindTokenFromCreator( CreatorFunctionPtr cfp )
   if( next ) return next->FindTokenFromCreator( cfp );
   
   // fail! token not found here or later in the list
-  printf( "failed to find token of creator %p in library\n", cfp );
+  PRINT_WARN1( "failed to find token of creator %p in library\n", cfp );
   return NULL;
 }
 
@@ -171,7 +171,6 @@ Library::Library( void )
 // constructor from null-terminated array
 Library::Library( const libitem_t item_array[] )
 {
-  printf( "Building libray from array\n" );
   //PRINT_DEBUG( "Building libray from array\n" );
 
   int type=1;
@@ -179,7 +178,6 @@ Library::Library( const libitem_t item_array[] )
        item->token; 
        item++ )
     {
-      printf( "%s %d %p\n", item->token, type, item->fp );
       //PRINT_DEBUG3( "%s %d %p\n", item->token, item->type, item->fp );
       this->AddDevice( (char*)item->token, item->colorstr, item->fp );
       type++;
@@ -225,7 +223,7 @@ CEntity* Library::CreateEntity( char* token, CWorld* world_ptr, CEntity* parent_
   
 const char* Library::TokenFromCreator( CreatorFunctionPtr cfp )
 { 
-  printf( "token from creator %p\n", cfp );
+  //printf( "token from creator %p\n", cfp );
 
   assert( liblist );
   assert( cfp );
@@ -242,7 +240,7 @@ int Library::TypeNumFromToken( char* token )
 
 LibraryItem* Library::LibraryItemFromToken( char* token )
 { 
-  printf( "library item from token %s\n", token );
+  //printf( "library item from token %s\n", token );
 
   assert( liblist );
   return( liblist->FindLibraryItemFromToken( token ) ); 
@@ -252,7 +250,7 @@ LibraryItem* Library::LibraryItemFromToken( char* token )
 
 void Library::Print( void )
 {
-  printf("\n[Library contents:");
+  //printf("\n[Library contents:");
   
   for( LibraryItem* it = liblist; it; it = it->next )
     printf( "\n\t%s:%p:%d", it->token, it->creator_func, it->type_num );

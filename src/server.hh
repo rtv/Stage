@@ -5,7 +5,7 @@
 // Class provides a network server for Stage internals
 // used by external GUIs (XS) and distributed Stage modules
 //
-// $Id: server.hh,v 1.8 2002-11-09 02:32:34 rtv Exp $
+// $Id: server.hh,v 1.9 2002-11-11 03:09:46 rtv Exp $
 
 #ifndef _SERVER_H
 #define _SERVER_H
@@ -247,6 +247,7 @@ class CStageServer : public CStageIO
   bool SetupConnectionServer( void );
   void ListenForConnections( void );
 
+  bool start_disabled;
   double Pause();
   void StartTimer(double interval);
 

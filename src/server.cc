@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.42 2002-11-09 02:32:34 rtv Exp $
+ * CVS info: $Id: server.cc,v 1.43 2002-11-11 03:09:46 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -113,6 +113,9 @@ CStageServer::CStageServer( int argc, char** argv, Library* lib )
   // stop time of zero means run forever
   m_stoptime = 0;
   
+  // this can be set true with a cmdline switch
+  this->start_disabled = false;
+
   // create the object that loads and parses the file
   assert( worldfile = new CWorldFile() );
   if(!ParseCmdLine(argc, argv))
@@ -120,7 +123,7 @@ CStageServer::CStageServer( int argc, char** argv, Library* lib )
     quit = true;
     return;
   }
-  printf( "WORLDFILE: %s\n", argv[argc-1]  );
+  //printf( "WORLDFILE: %s\n", argv[argc-1]  );
 }
 
 CStageServer::~CStageServer( void )
@@ -461,8 +464,15 @@ bool CStageServer::ParseCmdLine( int argc, char** argv )
 	m_stoptime = atoi(argv[++a]);
 	printf("[Stop time: %d]",m_stoptime);
       }
+    
+    // START WITH CLOCK STOPPED
+    if( strcmp( argv[a], "-s" ) == 0 )
+      {
+	this->start_disabled = true;
+	printf( "[Clock stopped (start with SIGUSR1)]" );
+      }
   }
-
+  
   return true;
 }
 
@@ -497,15 +507,17 @@ bool CStageServer::Startup( void )
   
   //////////////////////////////////////////////////////////////////////
   // SET UP THE SERVER TO ACCEPT INCOMING CONNECTIONS
-  if( !SetupConnectionServer() )
+  /*
+    if( !SetupConnectionServer() )
   {
     quit = true;
     return false;
   }
 
   // just to be reassuring, print the host details
-  printf( "[Server %s:%d]",  m_hostname, m_port );
-  
+  printf( "[Server %s:%d]",  m_hostname, m_port );  
+  */
+
   // inherit parent's method
   CWorld::Startup();
 
@@ -515,7 +527,7 @@ bool CStageServer::Startup( void )
   ////////////////////////////////////////////////////////////////////
   // STARTUP PLAYER
 
-  puts( "" ); // end the startup line, flush stdout before starting player
+  //puts( "" ); // end the startup line, flush stdout before starting player
   if( m_run_player && !StartupPlayer() )
   {
     PRINT_ERR("Player startup failed");
@@ -525,9 +537,10 @@ bool CStageServer::Startup( void )
   
   if( m_real_timestep > 0.0 ) // if we're in real-time mode
     this->StartTimer( m_real_timestep ); // start the real-time interrupts going
-  
-  m_enable = true;  
 
+  if( !start_disabled )
+    m_enable = true;  
+  
   return true;
 }
 
@@ -611,16 +624,15 @@ void CStageServer::Update(void)
   this->Read();
 
   // if the sim isn't running, we pause briefly and return
-  //  if( !m_enable )
+  //if( !m_enable )
   //{
   //  usleep( 100000 );
   //  return;
-  //}
+  // }
 
   // is it time to stop?
   if(m_stoptime && m_sim_time >= m_stoptime)
     {   
-      //system("kill `cat stage.pid`");
       quit = true;
       return;
     }
@@ -633,28 +645,21 @@ void CStageServer::Update(void)
   // we increment the clock and do the time-based updates
   if( g_timer_events > 0 || m_real_timestep == 0 )
     {          
-      PRINT_DEBUG( "time to update entities and GUI" );
-      
       CWorld::Update();
       
       if( g_timer_events > 0 )
 	g_timer_events--; // we've handled this timer event
       
-      // increase the time step counter
-      m_step_num++; 
-
       Write(); // write any changes back out to clients
+      Output(); // perform console and log output
     }
   
-  Output(); // perform console and log output
   
   // if there's nothing pending and we're not in fast mode, we let go
   // of the processor (on linux gives us around a 10ms cycle time)
   if( g_timer_events < 1 && m_real_timestep > 0.0 ) 
     usleep( 0 );
 
-  
-  
   // dump the contents of the matrix to a file for debugging
   //world->matrix->dump();
   //getchar();	

@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.21 2002-11-11 02:25:54 inspectorg Exp $
+ * CVS info: $Id: world.hh,v 1.22 2002-11-11 03:09:46 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -105,7 +105,7 @@ public: uint32_t m_step_num; // the number of cycles executed, from 0
   
 
   // Enable flag -- world only updates while this is set
-  protected: bool m_enable;
+  public: bool m_enable;
   
   // the hostname of this computer
   public: char m_hostname[ HOSTNAME_SIZE ];

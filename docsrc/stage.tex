@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.3 2002-11-09 01:52:11 rtv Exp $
+% CVS: $Id: stage.tex,v 1.4 2002-11-11 03:09:45 rtv Exp $
 
 \documentclass[11pt,twoside]{report}
 
@@ -398,6 +398,13 @@ tools can be found on the website.
     zero seconds (-u 0.0).  
     \end{xarg}
 
+    \begin{xarg}{-s} Stopped - Stage will start up with the clock stopped.
+      You can start and stop the clock by sending Stage a SIGUSR1 signal
+      (\verb'killall -s USR1 stage' should do the trick; this command is
+      provided as the script <stage\_root>/tools/pause.).
+    \end{xarg}
+
+
 %% RTV - ommitting client/server stuff for 1.3
 %%     \begin{xarg}{-c <hostname>}Client mode - run Stage as a client to
 %%     a Stage server on <hostname>. See below for discussion of Stage
@@ -410,10 +417,11 @@ tools can be found on the website.
 %%     Set the port number for the Stage server to accept connections. Default is 6601.
 %%     \end{xarg}
 
-    \begin{xarg}{-l <logfile>} Enables logging of timing and
-    throughput measurements into <logfile>. The file has a header that
-    records information about the run, and explains the format.
-    \end{xarg}
+%%    \begin{xarg}{-l <logfile>} Enables logging of timing and
+%%   throughput measurements into <logfile>.<incrementing counter>. The
+%%  file has a header that records information about the run, and
+%%    explains the format.
+%%    \end{xarg}
 
 \section{Controlling the robots}
 
@@ -428,6 +436,15 @@ tool for testing and debugging your controller code.
 
 Client libraries in other languages including Java and Python are also
 available. Check the website for the latest resources.
+
+\section{Starting and Stopping the clock}
+
+Stage's internal clock can be started and stopped by sending Stage a
+SIGUSR1, for example with the command:
+\begin{verbatim}
+killall -s USR1 stage
+\end{verbatim}.
+The script \verb'<stage_root>/tools/pause' executes this command.
 
 %% \section{Stage Server and Clients}
 %% Internally, Stage consists of an environment and a collection of

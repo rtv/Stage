@@ -3,7 +3,7 @@
 #       showing how to include some pre-defined objects
 # Author: Andrew Howard, Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.11 2002-11-01 19:12:32 rtv Exp $
+# CVS: $Id: everything.world,v 1.12 2002-11-11 03:09:46 rtv Exp $
 
 include "usc_pioneer.inc"
 include "beacons.inc"
@@ -32,7 +32,7 @@ gui
 )
 
 #
-# define a large colored cylinder object 
+# define a large colored cylinder object
 #
 define visionbeacon box 
 (
@@ -65,8 +65,8 @@ amigobot( color "red" name "amigo2" port 6671 pose [11.514 4.754 -121.652] )
 amigobot( color "red" name "amigo3" port 6672 pose [12.476 3.974 -126.121] )
 
 # generate some laser beacons
-laserbeacon( pose [6.420 3.600 -143.139] id 5 )
-laserbeacon( pose [3.040 4.260 -88.274] id 7 )
+laserbeacon( pose [6.420 3.600 -143.139] fiducial_id 5 )
+laserbeacon( pose [3.040 4.260 -88.274] fiducial_id 7 )
 
 # generate some of the large cylinders we defined above
 visionbeacon( pose [3.679 1.813 0.000] color "cyan" )

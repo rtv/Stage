@@ -1,0 +1,5 @@
+#
+# this command pauses/unpauses the Stage simulation
+# RTV 20021110
+
+killall -s USR1 stage

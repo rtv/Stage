@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.95 2002-11-11 02:25:54 inspectorg Exp $
+ * CVS info: $Id: entity.cc,v 1.96 2002-11-11 03:09:46 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -904,8 +904,8 @@ int CEntity::SetProperty( int con, EntityProperty property,
   
   if( move_figure )
     {
-      printf( "-- moving figure to %.2f %.2f %.2f\n",
-	      local_px, local_py, local_pth );
+      //printf( "-- moving figure to %.2f %.2f %.2f\n",
+      //      local_px, local_py, local_pth );
 
 #ifdef INCLUDE_RTK2    
       if( this->fig )
@@ -928,7 +928,7 @@ int CEntity::SetProperty( int con, EntityProperty property,
 int CEntity::GetProperty( EntityProperty property, void* value )
 {
   //PRINT_DEBUG1( "finding property %d", property );
-  printf( "finding property %d", property );
+  //printf( "finding property %d", property );
 
   assert( value );
 

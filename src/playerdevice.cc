@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.47 2002-11-11 02:25:54 inspectorg Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.48 2002-11-11 03:09:46 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -44,11 +44,10 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 
-//#include <sstream>
 #include <iomanip>
 #include <iostream>
 
-#define DEBUG
+//#define DEBUG
 //#define VERBOSE
 //#undef DEBUG
 //#undef VERBOSE
@@ -677,9 +676,6 @@ int CPlayerEntity::GetProperty( EntityProperty property, void* value )
 { 
   PRINT_DEBUG3( "finding property %d for entity (%d %s)", 
                 property, this->stage_id, this->lib_entry->token );
-
-  printf( "finding property %d for entity (%d %s)\n", 
-          property, this->stage_id, this->lib_entry->token );
 
   assert( value );
 

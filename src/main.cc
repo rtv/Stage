@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.56 2002-10-27 21:55:37 rtv Exp $
+ * CVS: $Id: main.cc,v 1.57 2002-11-11 03:09:46 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -54,6 +54,19 @@ bool quit = false;
 // This really should be static
 static CWorld *world = NULL;
 
+bool paused = false;
+
+// SIGUSR1 toggles pause
+void CatchSigUsr1( int signo )
+{
+  if( world )
+    {
+      world->m_enable = !world->m_enable;
+      world->m_enable ? puts( "\nCLOCK STARTED" ) : puts( "\nCLOCK STOPPED" );
+    }
+  else
+    puts( "PAUSE FAILED - NO WORLD" );
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Print the usage string
@@ -61,9 +74,6 @@ void PrintUsage( void )
 {
   printf("\nUsage: stage [options] <worldfile>\n"
 	 "Options: <argument> [default]\n"
-	 " -p <portnum>\tSet the server port [6601]\n"
-	 " -c <hostname>\tRun as a client to a Stage server on hostname\n"
-	 " -cl\t\tRun as a client to a Stage server on localhost\n"
 	 " -g\t\tDo not start the X11 GUI\n"
 	 " -n \t\tDo not start Player\n"
 	 " -o\t\tEnable console status output\n"
@@ -71,15 +81,17 @@ void PrintUsage( void )
 	 " -u <float>\tSet the desired real time per cycle [0.1 sec].\n"
 	 " -f \t\tRun as fast as possible; don't try to match real time\n"
 	 " -r <IP:port>\tSend sensor data to this address in RTP format\n"
+	 "\nSwitches for experimental/undocumented features:\n"
+	 " -p <portnum>\tSet the server port [6601]\n"
+	 " -c <hostname>\tRun as a client to a Stage server on hostname\n"
+	 " -cl\t\tRun as a client to a Stage server on localhost\n"
 	 " -l <filename>\tLog some timing and throughput statistics into <filename>.<incremental suffix>\n"
-	 //" -r <IP:port>\tSend sensor data to this address in RTP format\n"
-	 //#ifdef HRL_HEADERS
-	 //" -i\t\tSend IDAR messages to XS (hrlstage only)\n"
-	 //#endif
-	 "Command-line options override any configuration file equivalents.\n"
-	 "\n"
-	 "Richard Vaughan, Andrew Howard, Brian Gerkey and contributors 2000-2002\n"
-	 "Released under the GNU General Public License.\n"
+	 "\nCommand-line options override any configuration file equivalents.\n"
+	 "See the Stage manual for details.\n"
+	 "\nPart of the Player/Stage Project [http://playerstage.sourceforge.net].\n"
+	 "Copyright 2000-2002 Richard Vaughan, Andrew Howard, Brian Gerkey and contributors\n"
+	 "Released under the GNU General Public License"
+	 " [http://www.gnu.org/copyleft/gpl.html].\n"
 	 "\n"
 	 );
 }
@@ -169,6 +181,9 @@ int main(int argc, char **argv)
   signal(SIGQUIT, sig_quit );
   signal(SIGTERM, sig_quit );
   signal(SIGHUP, sig_quit );
+
+  // catch clock start/stop commands
+  signal(SIGUSR1, CatchSigUsr1 );
   
   // the main loop
     

@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.136 2002-11-09 02:32:34 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.137 2002-11-11 03:09:46 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -117,8 +117,7 @@ CWorld::CWorld( int argc, char** argv, Library* lib )
   // if real_timestep is zero, we run as fast as possible
   m_real_timestep = 0.1; //seconds
   m_sim_timestep = 0.1; //seconds; - 10Hz default rate 
-  //m_real_timestep = 0.1; //seconds
-  //m_sim_timestep = 0.1; //seconds; - 10Hz default rate 
+
   m_step_num = 0;
 
   // start paused
@@ -222,7 +221,7 @@ bool CWorld::ParseCmdLine(int argc, char **argv)
 	{
 	  m_log_output = true;
 	  strncpy( m_log_filename, argv[a+1], 255 );
-	  printf( "[Logfile %s]", m_log_filename );
+	  printf( "[Logfile %s (undocumented/experimental)]", m_log_filename );
 	
 	  //store the command line for logging later
 	  memset( m_cmdline, 0, sizeof(m_cmdline) );
@@ -245,7 +244,7 @@ bool CWorld::ParseCmdLine(int argc, char **argv)
 	  this->enable_gui = false;
 	  printf( "[No GUI]" );
 	}
-    
+          
       // SET GOAL REAL CYCLE TIME
       // Stage will attempt to update at this speed
       if( strcmp( argv[a], "-u" ) == 0 )
@@ -356,13 +355,16 @@ void CWorld::Update(void)
   //root->Sync(); 
       
   // set the current time and update the entities managed by this host
-  root->Update(this->SetClock( m_real_timestep, m_step_num ));
+  if( this->m_enable )
+    {
+      root->Update(this->SetClock( m_sim_timestep, m_step_num ));
+      
+      // increase the time step counter
+      m_step_num++;    
+    }
   
   // all the entities are done, now let's draw the graphics
   if( this->enable_gui )  GuiWorldUpdate( this );
-
-  // increase the time step counter
-  m_step_num++;    
 }
 
 
@@ -546,12 +548,16 @@ void CWorld::ConsoleOutput( double freq,
 			    unsigned int bytes_in, unsigned int bytes_out,
 			    double avg_data)
 {
-  printf( " Time: %8.1f - %7.1fHz - [%4u/%4u] %8.2f b/sec\r", 
-  //printf( "\n Time: %8.1f - %7.1fHz - [%4u/%4u] %8.2f b/sec\n", 
+  char lineend = '\r';
+  //char lineend = '\n';
+
+  printf( " Step: %u Time: %8.1f - %7.1fHz - [%4u/%4u] %8.2f b/sec%c", 
+	  m_step_num,
 	  m_sim_time, 
           freq,
 	  bytes_in, bytes_out, 
-          avg_data );
+          avg_data,
+	  lineend );
   
   fflush( stdout );
   
@@ -589,7 +595,7 @@ void CWorld::LogOutput( double freq,
   
   char line[512];
   sprintf( line,
-           "%u\t\t%.3f\t%u\t%u\t%u\t%u\n", 
+           "%u\t\t%.3f\t\t%u\t%u\t%u\t%u\n", 
            m_step_num, m_sim_time, // step and time
            //loop_duration, // real cycle time in ms
            //sleep_duration, // real sleep time in ms
@@ -632,7 +638,8 @@ void CWorld::LogOutputHeader( void )
            //"# Bitmap:\t%s\n"
            "# Timestep(ms):\t%d\n"
            "# Entities:\t%d of %d\n#\n"
-           "#STEP\t\tSIMTIME(s)\tINTERVAL(s)\tSLEEP(s)\tRATIO\t"
+           "#STEP\t\tSIMTIME(s)"
+	   //"\tINTERVAL(s)\tSLEEP(s)\tRATIO\t"
            "\tINPUT\tOUTPUT\tITOTAL\tOTOTAL\n",
            m_cmdline, 
            tmstr, 
