@@ -23,5 +23,3 @@ if test "x$with_rtk" = "xyes"; then
 fi
 
 AM_CONDITIONAL(WITH_RTK_GUI, test x$with_rtk = xyes)])
-
-
