@@ -21,12 +21,13 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.2.2.2 2002-12-04 03:45:34 rtv Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.2.2.3 2003-03-08 18:32:20 gerkey Exp $
  */
 
 //#define DEBUG
 
 #include <math.h>
+#include "player.h"
 #include "world.hh"
 #include "positiondevice.hh"
 
@@ -204,6 +205,7 @@ void CPositionDevice::UpdateConfig()
   void *client;
   char buffer[PLAYER_MAX_REQREP_SIZE];
   player_position_geom_t geom;
+  player_position_set_odom_req_t* setOdom;
 
   while (true)
   {
@@ -239,11 +241,28 @@ void CPositionDevice::UpdateConfig()
         break;
 	
       case PLAYER_POSITION_SET_ODOM_REQ:
-	// set my odometry estimate to the values in the packet
-	// CONFIG NOT IMPLEMENTED
-	puts( "Warning: cpositiondevice set odometry request not implemented");
-	PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
-	break;
+        
+        if(len != sizeof(player_position_set_odom_req_t)) {
+            fprintf(stderr, "ERROR: SET_ODOM request had the wrong size data buffer. (was %d, should be %d.)\n", len, sizeof(player_position_set_odom_req_t));
+            PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
+            break;
+        }
+
+        setOdom = (player_position_set_odom_req_t *) buffer;
+
+        if(setOdom->subtype != PLAYER_POSITION_SET_ODOM_REQ) {
+            fprintf(stderr, "ERROR: SET_ODOM request had the wrong subtype. (was %d, should be %d.)\n", setOdom->subtype, PLAYER_POSITION_SET_ODOM_REQ);
+            break;
+        }
+
+//        printf("DEBUG: request is for set pose %d, %d, %d.\n", ntohl(setOdom->x), ntohl(setOdom->y), ntohs(setOdom->theta));
+	    // set my odometry to the values in the packet
+        this->odo_px =  ntohl(setOdom->x) / 1000;   // convert mm to m.
+        this->odo_py =  ntohl(setOdom->y) / 1000;
+        this->odo_pth = ntohs(setOdom->theta);
+	    printf( "DEBUG: set pose to %f, %f x %f.\n", this->odo_px, this->odo_py, this->odo_pth);
+        PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
+        break;
 	
       case PLAYER_POSITION_GET_GEOM_REQ:
         // Return the robot geometry

@@ -23,7 +23,7 @@
  * Author: Reed Hedges <reed@zerohour.net> (UMass/Amherst), based on code by  
  *          Andrew Howard
  * Date: Feb 2003
- * CVS info: $Id: mcomdevice.hh,v 1.1 2003-03-08 08:41:20 gerkey Exp $
+ * CVS info: $Id: mcomdevice.hh,v 1.1.2.1 2003-03-08 18:32:20 gerkey Exp $
  */
 
 #ifndef MCOMDEVICE_STAGE_HH
