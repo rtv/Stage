@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.9.2.4 $
+//  $Revision: 1.9.2.5 $
 //
 // Usage:
 //  (empty)
@@ -38,8 +38,8 @@ CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent )
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_sonar_data_t );
-  m_command_len = 0;//sizeof( player_sonar_cmd_t );
-  m_config_len  = 0;//sizeof( player_sonar_config_t );
+  m_command_len = //sizeof( player_sonar_cmd_t );
+    m_config_len  = sizeof( PLAYER_SONAR_POWER_REQ );
   
   m_player_type = PLAYER_SONAR_CODE; // from player's messages.h
   m_stage_type = SonarType;
@@ -79,6 +79,14 @@ void CSonarDevice::Update( double sim_time )
 #ifdef INCLUDE_RTK
   m_hit_count = 0;
 #endif
+  
+  // Get configs
+  uint16_t cmd;
+  if( GetConfig( &cmd, sizeof(cmd) ) == PLAYER_SONAR_POWER_REQ )
+    {
+      // we got a sonar power toggle - i just ignore them.
+      puts( "sonar power toggled" );
+    }
   
   // Check bounds
   //
