@@ -81,6 +81,8 @@ extern "C" {
   gui_window_t* gui_world_create( stg_world_t* world );
   void gui_world_destroy( stg_world_t* world );
   void stg_world_save( stg_world_t* world );
+  void stg_world_reload( stg_world_t* world );
+
   int gui_world_update( stg_world_t* world );
   void stg_world_add_model( stg_world_t* world, stg_model_t* mod  );
 

@@ -24,7 +24,7 @@
  *          Douglas S. Blank <dblank@brynmawr.edu>
  *
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.32 2005-02-15 20:01:14 gerkey Exp $
+ * CVS info: $Id: worldfile.cc,v 1.33 2005-03-10 00:41:11 rtv Exp $
  */
 
 #include <assert.h>
@@ -140,18 +140,22 @@ bool CWorldFile::Load(const char *filename)
 {
   // Shouldnt call load more than once,
   // so this should be null.
-  assert(this->filename == NULL);
-  this->filename = strdup(filename);
+  
+  if(this->filename == NULL)
+    {
+      this->filename = strdup(filename);
+    }
 
+  
   // Open the file
   //FILE *file = fopen(this->filename, "r");
   FILE *file = FileOpen(this->filename, "r");
   if (!file)
-  {
-    PRINT_ERR2("unable to open world file %s : %s",
-               this->filename, strerror(errno));
-    return false;
-  }
+    {
+      PRINT_ERR2("unable to open world file %s : %s",
+		 this->filename, strerror(errno));
+      return false;
+    }
 
   ClearTokens();
   

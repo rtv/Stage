@@ -1,13 +1,17 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.42 2005-03-09 22:13:49 rtv Exp $
+# CVS: $Id: simple.world,v 1.43 2005-03-10 00:41:12 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
 
 
+
+
 # defines 'map' object used for floorplans
 include "map.inc"
+
+
 
 
 # set the size of a pixel in meters
@@ -18,7 +22,7 @@ window
 ( 
   size [ 662.000 654.000 ] 
   center [0.221 -0.005] 
-  scale 0.025 
+  scale 0.027 
 )
 
 # load an environment bitmap
@@ -34,7 +38,7 @@ map
 pioneer2dx
 (
   name "robot"
-  pose [0.000 2.500 0.000]
+  pose [0 -1.5 180]
   laser()
 )
 
@@ -42,6 +46,6 @@ pioneer2dx
 pioneer2dx
 (
   name "robotb"
-  pose [ 0.000 -1.500 -180.000]
+  pose [ 0 3 0]
   laser()
 )

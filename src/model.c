@@ -1232,6 +1232,13 @@ int stg_model_update_pose( stg_model_t* mod )
 }
 
 
+/*
+void stg_model_reload( stg_model_t* mod )
+{
+  stg_model_load( mod );
+}
+*/
+
 void stg_model_load( stg_model_t* mod )
 {
   stg_pose_t pose;

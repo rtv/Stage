@@ -24,6 +24,7 @@ void gui_menu_debug_cb( gpointer data, guint action, GtkWidget* mitem );
 void gui_menu_file_export_frame_cb( gpointer data, guint action, GtkWidget* mitem );
 void gui_menu_file_export_sequence_cb( gpointer data, guint action, GtkWidget* mitem );
 void gui_menu_file_save_cb( gpointer data, guint action, GtkWidget* mitem );
+void gui_menu_file_load_cb( gpointer data, guint action, GtkWidget* mitem );
 void gui_menu_file_exit_cb( void );
 void gui_menu_layer_cb( gpointer data, guint action, GtkWidget* mitem );
 void gui_menu_clock_pause_cb( gpointer data, guint action, GtkWidget* mitem );
@@ -40,6 +41,7 @@ static GtkItemFactoryEntry menu_table[] = {
   { "/File/tear1",    NULL,      NULL, 0, "<Tearoff>" },
   //  { "/File/About", NULL,  gui_menu_file_about, 0, "<Item>" },
   { "/File/_Save", "<CTRL>S", gui_menu_file_save_cb,  1, "<Item>", GTK_STOCK_SAVE },
+  { "/File/_Reset", "<CTRL>R", gui_menu_file_load_cb,  1, "<Item>", GTK_STOCK_OPEN },
   { "/File/Export", NULL,   NULL, 1, "<Branch>" },
   { "/File/Export/Single frame", "<CTRL>J", gui_menu_file_export_frame_cb, 1, "<Item>" },
   { "/File/Export/Sequence of frames", "<CTRL>K",  gui_menu_file_export_sequence_cb, 1, "<CheckItem>" },
@@ -92,7 +94,7 @@ static GtkItemFactoryEntry menu_table[] = {
 };
 
 // SET THIS TO THE NUMBER OF MENU ITEMS IN THE ARRAY ABOVE
-static const int menu_table_count = 48;
+static const int menu_table_count = 49;
 
 // USE THIS WHEN WE FIX ON A RECENT GTK VERSION 
 /* void gui_menu_file_about( void ) */
@@ -188,6 +190,15 @@ void gui_menu_file_save_cb( gpointer data,
   stg_world_t* world = ((gui_window_t*)data)->world;
   printf( "Saving world \"%s\"\n",  world->token );
   stg_world_save( world );
+}
+
+void gui_menu_file_load_cb( gpointer data, 
+			    guint action, 
+			    GtkWidget* mitem )
+{
+  stg_world_t* world = ((gui_window_t*)data)->world;
+  printf( "Resetting to saved state \"%s\"\n",  world->token );
+  stg_world_reload( world );
 }
 
 void gui_menu_clock_pause_cb( gpointer data, 

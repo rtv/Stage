@@ -432,6 +432,11 @@ void stg_model_save_cb( gpointer key, gpointer data, gpointer user )
   stg_model_save( (stg_model_t*)data );
 }
 
+void stg_model_reload_cb( gpointer key, gpointer data, gpointer user )
+{
+  stg_model_load( (stg_model_t*)data );
+}
+
 void stg_world_save( stg_world_t* world )
 {
   // ask every model to save itself
@@ -442,7 +447,12 @@ void stg_world_save( stg_world_t* world )
   wf_save();
 }
 
+// reload the current worldfile
+void stg_world_reload( stg_world_t* world )
+{
+  // can't reload the file yet - need to hack on the worldfile class. 
+  //wf_load( NULL ); 
 
-
-
-
+  // ask every model to save itself
+  g_hash_table_foreach( world->models, stg_model_reload_cb, NULL );
+}
