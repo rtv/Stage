@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  (empty)
@@ -48,9 +48,9 @@ CBoxObstacle::CBoxObstacle(CWorld *world, CObject *parent)
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the object from an argument list
 //
-bool CBoxObstacle::Init(int argc, char **argv)
+bool CBoxObstacle::init(int argc, char **argv)
 {
-    if (!CObject::Init(argc, argv))
+    if (!CObject::init(argc, argv))
         return false;
 
     for (int arg = 0; arg < argc; )
@@ -131,17 +131,17 @@ void CBoxObstacle::OnUiUpdate(RtkUiDrawData *pData)
 {
     CObject::OnUiUpdate(pData);
 
-    pData->BeginSection("global", "BoxObstacles");
+    pData->begin_section("global", "BoxObstacles");
     
-    if (pData->DrawLayer("", TRUE))
+    if (pData->draw_layer("", TRUE))
     {
         double ox, oy, oth;
         GetGlobalPose(ox, oy, oth);
-        pData->SetColor(RTK_RGB(128, 128, 255));
-        pData->ExRectangle(ox, oy, oth, m_size_x, m_size_y);
+        pData->set_color(RTK_RGB(128, 128, 255));
+        pData->ex_rectangle(ox, oy, oth, m_size_x, m_size_y);
     }
 
-    pData->EndSection();
+    pData->end_section();
 }
 
 

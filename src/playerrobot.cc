@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerrobot.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.8 $
+//  $Revision: 1.1.2.9 $
 //
 // Usage:
 //  (empty)
@@ -273,7 +273,7 @@ bool CPlayerRobot::CreateShmemLock()
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Lock the shared mem
+// lock the shared mem
 // Returns a pointer to the memory
 //
 bool CPlayerRobot::LockShmem( void )
@@ -295,7 +295,7 @@ bool CPlayerRobot::LockShmem( void )
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Unlock the shared mem
+// unlock the shared mem
 //
 void CPlayerRobot::UnlockShmem( void )
 {
@@ -328,17 +328,17 @@ void CPlayerRobot::OnUiMouse(RtkUiMouseData *pData)
 {
     CObject::OnUiMouse(pData);
 
-    pData->BeginSection("global", "object");
+    pData->begin_section("global", "object");
     
     // Default process for any "move" modes
     //
-    if (pData->UseMouseMode("move"))
+    if (pData->use_mouse_mode("move"))
     {
         if (IsMouseReady())
         {
             // Toggle sensor state on middle button
             //
-            if (pData->IsButtonDown() && pData->WhichButton() == 2)
+            if (pData->is_button_down() && pData->which_button() == 2)
             {
                 m_show_sensors = !m_show_sensors;
                 RTK_TRACE1("sensors %d", (int) m_show_sensors);
@@ -346,7 +346,7 @@ void CPlayerRobot::OnUiMouse(RtkUiMouseData *pData)
         }
     }
 
-    pData->EndSection();
+    pData->end_section();
 }
 
 #endif

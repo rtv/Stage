@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/usc_pioneer.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -74,9 +74,9 @@ CUscPioneer::~CUscPioneer()
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the object from an argument list
 //
-bool CUscPioneer::Init(int argc, char **argv)
+bool CUscPioneer::init(int argc, char **argv)
 {
-    if (!CObject::Init(argc, argv))
+    if (!CObject::init(argc, argv))
         return false;
 
     // Set some defaults

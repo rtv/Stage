@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.5 $
+//  $Revision: 1.2.2.6 $
 //
 // Usage:
 //  (empty)
@@ -79,9 +79,9 @@ void CLaserBeaconDevice::Update()
     
     // Check to see if it is time to update the laser
     //
-    if (m_world->GetTime() - m_last_update <= m_update_interval)
+    if (m_world->get_time() - m_last_update <= m_update_interval)
         return;
-    m_last_update = m_world->GetTime();
+    m_last_update = m_world->get_time();
     
     // Get the pose of the detector in the global cs
     //
@@ -199,29 +199,29 @@ void CLaserBeaconDevice::OnUiUpdate(RtkUiDrawData *pData)
     
     // Draw ourself
     //
-    pData->BeginSection("global", "beacons");
+    pData->begin_section("global", "beacons");
   
-    if (pData->DrawLayer("beacons", true))
+    if (pData->draw_layer("beacons", true))
     {
         if (IsSubscribed() && m_robot->ShowSensors())
         {
-            pData->SetColor(RTK_RGB(192, 192, 255));
+            pData->set_color(RTK_RGB(192, 192, 255));
             
             for (int i = 0; i < m_hit_count; i++)
             {
                 double d = 0.25;
                 double ox = m_hit[i][0];
                 double oy = m_hit[i][1];
-                pData->Ellipse(ox - d, oy - d, ox + d, oy + d);
+                pData->ellipse(ox - d, oy - d, ox + d, oy + d);
 
                 char id[32];
                 sprintf(id, "%03d", (int) m_id[i]);
-                pData->DrawText(ox + d, oy + d, id);
+                pData->draw_text(ox + d, oy + d, id);
             }
         }
     }
     
-    pData->EndSection();
+    pData->end_section();
 }
 
 #endif

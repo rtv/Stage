@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/rtksimagent.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -27,7 +27,7 @@
 
 
 #include "rtk-agent.hh"
-#include "rtk-ui.hh"
+#include "rtk_ui.hh"
 
 // We need a pointer to the world
 //

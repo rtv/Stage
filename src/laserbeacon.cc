@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -48,9 +48,9 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CObject *parent)
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the object from an argument list
 //
-bool CLaserBeacon::Init(int argc, char **argv)
+bool CLaserBeacon::init(int argc, char **argv)
 {
-    if (!CObject::Init(argc, argv))
+    if (!CObject::init(argc, argv))
         return false;
 
     for (int arg = 0; arg < argc; )
@@ -133,18 +133,18 @@ void CLaserBeacon::OnUiUpdate(RtkUiDrawData *pData)
 {
     CObject::OnUiUpdate(pData);
 
-    pData->BeginSection("global", "laserbeacons");
+    pData->begin_section("global", "laserbeacons");
     
-    if (pData->DrawLayer("", true))
+    if (pData->draw_layer("", true))
     {
         double r = 0.05;
         double ox, oy, oth;
         GetGlobalPose(ox, oy, oth);
-        pData->SetColor(RTK_RGB(0, 0, 255));
-        pData->Rectangle(ox - r, oy - r, ox + r, oy + r);
+        pData->set_color(RTK_RGB(0, 0, 255));
+        pData->rectangle(ox - r, oy - r, ox + r, oy + r);
     }
 
-    pData->EndSection();
+    pData->end_section();
 }
 
 

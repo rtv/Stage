@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtkmain.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  (empty)
@@ -25,7 +25,7 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include "world.hh"
-#include "rtk-ui.hh"
+#include "rtk_ui.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -77,18 +77,18 @@ int main(int argc, char** argv)
     // Split the application into left and right panes
     //
     RtkUiPane *left_pane, *right_pane;
-    app->GetRootPane()->SplitHorz(&left_pane, &right_pane); 
+    app->get_root_pane()->split_horz(&left_pane, &right_pane); 
 
     // Split the right pane into top and bottom panes
     //
     RtkUiPane *top_pane, *bot_pane;
-    right_pane->SplitVert(&top_pane, &bot_pane);
+    right_pane->split_vert(&top_pane, &bot_pane);
 
     // Craete some views
     //
-    app->AddAgent(new RtkUiScrollView(left_pane, "global"));
-    app->AddAgent(new RtkUiPropertyView(top_pane, "default"));
-    app->AddAgent(new RtkUiButtonView(bot_pane, "default"));
+    app->add_agent(new RtkUiScrollView(left_pane, "global"));
+    app->add_agent(new RtkUiScrollView(top_pane, "default"));
+    app->add_agent(new RtkUiButtonView(bot_pane, "default"));
 
     // Create the world
     //
@@ -96,7 +96,7 @@ int main(int argc, char** argv)
 
     // Initialise the RTK interface
     //
-    world->InitRtk(RtkAgent::GetDefaultRouter());
+    world->InitRtk(RtkAgent::get_default_router());
 
     // Load the world
     //
@@ -104,7 +104,7 @@ int main(int argc, char** argv)
     
     // Open and start agents
     //
-    if (!app->OpenAgents())
+    if (!app->open_agents())
         exit(1);
     
     // Start the world
@@ -113,7 +113,7 @@ int main(int argc, char** argv)
 
     // Do message loop
     //   
-    app->Main();
+    app->main();
 
     // Stop the world
     //
@@ -121,7 +121,7 @@ int main(int argc, char** argv)
 
     // Shut everything down
     //
-    app->CloseAgents();
+    app->close_agents();
 
     // Destroy the world
     //

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerrobot.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.6 $
 //
 // Usage:
 //  (empty)
@@ -70,7 +70,7 @@ class CPlayerRobot : public CObject
     //
     public: void* GetShmem() {return playerIO;};
     
-    // Lock the shared mem area
+    // lock the shared mem area
     //
     public: bool LockShmem( void );
 

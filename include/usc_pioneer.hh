@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/usc_pioneer.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -53,7 +53,7 @@ class CUscPioneer : public CObject
 
     // Initialise the object from an argument list
     //
-    public: virtual bool Init(int argc, char **argv);
+    public: virtual bool init(int argc, char **argv);
 
     // Save the object to a file
     //

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.9 $
+//  $Revision: 1.4.2.10 $
 //
 // Usage:
 //  (empty)
@@ -94,9 +94,9 @@ void CVisionDevice::Update()
 
     // See if its time to recalculate vision
     //
-    if( m_world->GetTime() - m_last_update < m_update_interval )
+    if( m_world->get_time() - m_last_update < m_update_interval )
         return;
-    m_last_update = m_world->GetTime();
+    m_last_update = m_world->get_time();
     RTK_TRACE0("generating new data");
 
     // Generate the scan-line image
@@ -385,17 +385,17 @@ void CVisionDevice::OnUiUpdate(RtkUiDrawData *pData)
     
     // Draw ourself
     //
-    pData->BeginSection("global", "vision");
+    pData->begin_section("global", "vision");
 
-    if (pData->DrawLayer("fov", true))
+    if (pData->draw_layer("fov", true))
         if (IsSubscribed() && m_robot->ShowSensors())
             DrawFOV(pData);
     
-    if (pData->DrawLayer("scan", true))
+    if (pData->draw_layer("scan", true))
         if (IsSubscribed() && m_robot->ShowSensors())
             DrawScan(pData);
     
-    pData->EndSection();
+    pData->end_section();
 }
 
 
@@ -426,11 +426,11 @@ void CVisionDevice::DrawFOV(RtkUiDrawData *pData)
     double bx = gx + m_max_range * cos(gth + m_pan + m_zoom / 2);
     double by = gy + m_max_range * sin(gth + m_pan + m_zoom / 2);
 
-    pData->SetColor(COLOR_FOV);
-    pData->MoveTo(gx, gy);
-    pData->LineTo(ax, ay);
-    pData->LineTo(bx, by);
-    pData->LineTo(gx, gy);    
+    pData->set_color(COLOR_FOV);
+    pData->move_to(gx, gy);
+    pData->line_to(ax, ay);
+    pData->line_to(bx, by);
+    pData->line_to(gx, gy);    
 }
 
 
@@ -452,7 +452,7 @@ void CVisionDevice::DrawScan(RtkUiDrawData *pData)
         // *** HACK -- how to we get colors from channels?
         //
         int color = RTK_RGB(128, 128, 128);
-        pData->SetPixel(m_hit[i][0], m_hit[i][1], color);
+        pData->set_pixel(m_hit[i][0], m_hit[i][1], color);
     }
 }
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtksimagent.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.7 $
+//  $Revision: 1.1.2.8 $
 //
 // Usage:
 //  (empty)
@@ -58,11 +58,11 @@ bool RtkSimAgent::Open(RtkCfgFile* pCfgFile)
 
     // Initialise messages
     //
-    UiForceUpdateSource::Init(m_pMsgRouter);
-    UiDrawSink::Init(m_pMsgRouter);
-    UiMouseSink::Init(m_pMsgRouter);
-    UiPropertySink::Init(m_pMsgRouter);
-    UiButtonSink::Init(m_pMsgRouter);
+    UiForceUpdateSource::init(m_msg_router);
+    UiDrawSink::init(m_msg_router);
+    UiMouseSink::init(m_msg_router);
+    UiPropertySink::init(m_msg_router);
+    UiButtonSink::init(m_msg_router);
 
     return TRUE;
 }
@@ -91,7 +91,7 @@ bool RtkSimAgent::Start()
 {
 	// Start the module thread
 	//
-	StartThread(-10);
+	start_thread(-10);
 	return TRUE;
 }
 
@@ -103,7 +103,7 @@ bool RtkSimAgent::Stop()
 {	
 	// Stop the module thread
 	//
-	StopThread();
+	stop_thread();
 	return TRUE;
 }
 
@@ -115,17 +115,17 @@ void RtkSimAgent::Main()
 { 
     // Update the GUI now.
     //
-    SendUiForceUpdate(NULL);
+    send_ui_force_update(NULL);
     
-    while (!Quit())
+    while (!quit())
     {
         // Update at 10Hz
         //
-        Sleep(100);
+        sleep(100);
         
         // Update the GUI now
         //
-        SendUiForceUpdate(NULL);
+        send_ui_force_update(NULL);
     }
 
 }
@@ -148,9 +148,9 @@ void RtkSimAgent::OnUiMouse(RtkUiMouseData* pData)
     // Create a mouse mode.
     // Note that we dont actually use it here
     //
-    pData->BeginSection("global", "object");
-    pData->MouseMode("move");
-    pData->EndSection();
+    pData->begin_section("global", "object");
+    pData->mouse_mode("move");
+    pData->end_section();
         
     // Pass on the mouse mode to objects in the world
     //
@@ -163,9 +163,9 @@ void RtkSimAgent::OnUiMouse(RtkUiMouseData* pData)
 //
 void RtkSimAgent::OnUiProperty(RtkUiPropertyData* pData)
 {
-    pData->BeginSection("default", "world");
+    pData->begin_section("default", "world");
     m_pWorld->OnUiProperty(pData);
-    pData->EndSection();
+    pData->end_section();
 }
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/broadcastdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -86,9 +86,9 @@ void CBroadcastDevice::Update()
     
     // Check to see if it is time to update the laser
     //
-    if (m_world->GetTime() - m_last_update <= m_update_interval)
+    if (m_world->get_time() - m_last_update <= m_update_interval)
         return;
-    m_last_update = m_world->GetTime();
+    m_last_update = m_world->get_time();
     
     // See if there is any data to send
     //

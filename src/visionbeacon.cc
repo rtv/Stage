@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.6 $
 //
 // Usage:
 //  (empty)
@@ -55,12 +55,12 @@ bool CVisionBeacon::StartUp()
     if (!CObject::Startup(cfg))
         return false;
 
-    cfg->BeginSection(m_id);
+    cfg->begin_section(m_id);
 
     m_channel = cfg->ReadInt("channel", 0, "");
     m_radius = cfg->ReadDouble("radius", 0.20, "");
     
-    cfg->EndSection();
+    cfg->end_section();
 
     // *** HACK
     // Assign arbitrary colors to channels
@@ -118,15 +118,15 @@ void CVisionBeacon::OnUiUpdate(RtkUiDrawData *pData)
 {
     CObject::OnUiUpdate(pData);
 
-    pData->BeginSection("global", "VisionBeacons");
+    pData->begin_section("global", "VisionBeacons");
     
-    if (pData->DrawLayer("", TRUE))
+    if (pData->draw_layer("", TRUE))
     {
-        pData->SetColor(m_color);
-        pData->ExRectangle(m_map_px, m_map_py, m_map_pth, 2 * m_radius, 2 * m_radius);
+        pData->set_color(m_color);
+        pData->ex_rectangle(m_map_px, m_map_py, m_map_pth, 2 * m_radius, 2 * m_radius);
     }
 
-    pData->EndSection();
+    pData->end_section();
 }
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.5.2.11 $
+//  $Revision: 1.5.2.12 $
 //
 // Usage:
 //  (empty)
@@ -71,9 +71,9 @@ void CSonarDevice::Update()
         return;
 
     // if its time to recalculate vision
-    if( m_world->GetTime() - lastUpdate <= updateInterval )
+    if( m_world->get_time() - lastUpdate <= updateInterval )
         return;
-    lastUpdate = m_world->GetTime();
+    lastUpdate = m_world->get_time();
 
     // Initialise gui data
     //
@@ -193,13 +193,13 @@ void CSonarDevice::OnUiUpdate(RtkUiDrawData *pData)
     
     // Draw ourself
     //
-    pData->BeginSection("global", "sonar");
+    pData->begin_section("global", "sonar");
     
-    if (pData->DrawLayer("scan", true))
+    if (pData->draw_layer("scan", true))
         if (IsSubscribed() && m_robot->ShowSensors())
             DrawScan(pData);
     
-    pData->EndSection();
+    pData->end_section();
 }
 
 
@@ -219,14 +219,14 @@ void CSonarDevice::DrawScan(RtkUiDrawData *pData)
 {
     #define SCAN_COLOR RTK_RGB(0, 255, 255)
     
-    pData->SetColor(SCAN_COLOR);
+    pData->set_color(SCAN_COLOR);
 
     // Draw rays coming out of each sonar
     //
     for (int s = 0; s < m_sonar_count; s++)
     {
-        pData->MoveTo(m_hit[s][0][0], m_hit[s][0][1]);
-        pData->LineTo(m_hit[s][1][0], m_hit[s][1][1]);
+        pData->move_to(m_hit[s][0][0], m_hit[s][0][1]);
+        pData->line_to(m_hit[s][1][0], m_hit[s][1][1]);
     }
 }
 

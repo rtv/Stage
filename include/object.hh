@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/object.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.8 $
+//  $Revision: 1.1.2.9 $
 //
 // Usage:
 //  (empty)
@@ -29,14 +29,8 @@
 #define OBJECT_HH
 
 #ifdef INCLUDE_RTK
-#include "rtk-ui.hh"
+#include "rtk_ui.hh"
 #endif
-
-#include "rtk-types.hh"
-
-// We need run-time type info
-//
-#include <typeinfo>
 
 // Forward declare the world class
 //
@@ -56,7 +50,7 @@ class CObject
 
     // Initialise the object from an argument list
     //
-    public: virtual bool Init(int argc, char **argv);
+    public: virtual bool init(int argc, char **argv);
 
     // Save the object to a file
     //

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11.2.12 $
+//  $Revision: 1.11.2.13 $
 //
 // Usage:
 //  (empty)
@@ -80,12 +80,12 @@ bool CLaserDevice::StartUp()
     if (!CPlayerDevice::Startup(cfg))
         return false;
     
-    cfg->BeginSection(m_id);
+    cfg->begin_section(m_id);
 
     m_sample_density = cfg->ReadInt("sample_density", 1,
                                     "(int) Density of samples 1 = full, 2 = half, etc");
     
-    cfg->EndSection();
+    cfg->end_section();
     */
     return true;
 }
@@ -156,9 +156,9 @@ bool CLaserDevice::UpdateScanData()
 {
     // Check to see if it is time to update the laser
     //
-    if (m_world->GetTime() - m_last_update <= m_update_interval)
+    if (m_world->get_time() - m_last_update <= m_update_interval)
         return false;
-    m_last_update = m_world->GetTime();
+    m_last_update = m_world->get_time();
 
     // Get the pose of the laser in the global cs
     //
@@ -337,15 +337,15 @@ void CLaserDevice::OnUiUpdate(RtkUiDrawData *pData)
     
     // Draw ourself
     //
-    pData->BeginSection("global", "laser");
+    pData->begin_section("global", "laser");
     
-    if (pData->DrawLayer("turret", true))
+    if (pData->draw_layer("turret", true))
         DrawTurret(pData);
-    if (pData->DrawLayer("scan", true))
+    if (pData->draw_layer("scan", true))
         if (IsSubscribed() && m_robot->ShowSensors())
             DrawScan(pData);
     
-    pData->EndSection();
+    pData->end_section();
 }
 
 
@@ -365,7 +365,7 @@ void CLaserDevice::DrawTurret(RtkUiDrawData *pData)
 {
     #define TURRET_COLOR RTK_RGB(0, 0, 255)
     
-    pData->SetColor(TURRET_COLOR);
+    pData->set_color(TURRET_COLOR);
 
     // Turret dimensions
     //
@@ -379,7 +379,7 @@ void CLaserDevice::DrawTurret(RtkUiDrawData *pData)
     
     // Draw the outline of the turret
     //
-    pData->ExRectangle(gx, gy, gth, dx, dy); 
+    pData->ex_rectangle(gx, gy, gth, dx, dy); 
 }
 
 
@@ -390,17 +390,17 @@ void CLaserDevice::DrawScan(RtkUiDrawData *pData)
 {
     #define SCAN_COLOR RTK_RGB(0, 0, 255)
     
-    pData->SetColor(SCAN_COLOR);
+    pData->set_color(SCAN_COLOR);
 
     // Get global pose
     //
     double gx, gy, gth;
     GetGlobalPose(gx, gy, gth);
 
-    pData->MoveTo(gx, gy);
+    pData->move_to(gx, gy);
     for (int i = 0; i < m_hit_count; i++)
-        pData->LineTo(m_hit[i][0], m_hit[i][1]);
-    pData->LineTo(gx, gy);
+        pData->line_to(m_hit[i][0], m_hit[i][1]);
+    pData->line_to(gx, gy);
 }
 
 #endif

@@ -1,7 +1,7 @@
 #*************************************************************************
 # src/Makefile - makes the sources
 # RTV
-# $Id: Makefile,v 1.9.2.16 2001-03-07 01:57:43 ahoward Exp $
+# $Id: Makefile,v 1.9.2.17 2001-03-13 00:18:22 ahoward Exp $
 # ************************************************************************/
 
 .SUFFIXES: .cc .o
@@ -27,8 +27,7 @@ LIBS = -L/usr/X11R6/lib -lX11 -lm -lpthread
 # Use these targets to build with RTK
 
 PLAYER_SRC = /usr/local/player
-#RTK_SRC = /usr/local/rtk
-RTK_SRC = ../../rtk
+RTK_SRC = /usr/local/rtk
 
 PLAYER_INC = $(PLAYER_SRC)/include
 RTK_INC = $(RTK_SRC)/include
@@ -44,8 +43,8 @@ RTK_LINKFLAGS = -L$(PLAYER_LIB) -lplayerclient \
 				-L$(RTK_LIB) -lrtk \
 				-lm -lstdc++ -lpthread `gtk-config --libs gtk gthread`
 
-rtk-stage:  $(RTK_OBJS) 
-	g++ $(RTK_OBJS) $(RTK_LINKFLAGS) -o rtk-stage
+rtk_stage:  $(RTK_OBJS) 
+	g++ $(RTK_OBJS) $(RTK_LINKFLAGS) -o rtk_stage
 
 clean:
 	rm -f *.o *~ rtk-stage
@@ -65,79 +64,67 @@ dep:
 # DO NOT DELETE.  FOLLOWING IS FROM MAKEDEPEND
 
 boxobstacle.o: ../include/world.hh ../include/playerrobot.hh
-boxobstacle.o: ../include/object.hh ../include/rtk-types.hh
-boxobstacle.o: ../include/image.h ../include/boxobstacle.hh
+boxobstacle.o: ../include/object.hh ../include/image.h
+boxobstacle.o: ../include/boxobstacle.hh
 broadcastdevice.o: ../include/world.hh ../include/playerrobot.hh
-broadcastdevice.o: ../include/object.hh ../include/rtk-types.hh
-broadcastdevice.o: ../include/image.h ../include/broadcastdevice.hh
-broadcastdevice.o: ../include/playerdevice.hh
+broadcastdevice.o: ../include/object.hh ../include/image.h
+broadcastdevice.o: ../include/broadcastdevice.hh ../include/playerdevice.hh
 image.o: ../include/image.h
 laserbeacon.o: ../include/world.hh ../include/playerrobot.hh
-laserbeacon.o: ../include/object.hh ../include/rtk-types.hh
-laserbeacon.o: ../include/image.h ../include/laserbeacon.hh
+laserbeacon.o: ../include/object.hh ../include/image.h
+laserbeacon.o: ../include/laserbeacon.hh
 laserbeacondevice.o: ../include/world.hh ../include/playerrobot.hh
-laserbeacondevice.o: ../include/object.hh ../include/rtk-types.hh
-laserbeacondevice.o: ../include/image.h ../include/laserdevice.hh
-laserbeacondevice.o: ../include/playerdevice.hh
+laserbeacondevice.o: ../include/object.hh ../include/image.h
+laserbeacondevice.o: ../include/laserdevice.hh ../include/playerdevice.hh
 laserbeacondevice.o: ../include/laserbeacondevice.hh
 laserdevice.o: ../include/world.hh ../include/playerrobot.hh
-laserdevice.o: ../include/object.hh ../include/rtk-types.hh
-laserdevice.o: ../include/image.h ../include/laserdevice.hh
-laserdevice.o: ../include/playerdevice.hh
+laserdevice.o: ../include/object.hh ../include/image.h
+laserdevice.o: ../include/laserdevice.hh ../include/playerdevice.hh
 main.o: ../include/world.hh ../include/playerrobot.hh ../include/object.hh
-main.o: ../include/rtk-types.hh ../include/image.h ../include/win.h
+main.o: ../include/image.h ../include/win.h
 miscdevice.o: ../include/world.hh ../include/playerrobot.hh
-miscdevice.o: ../include/object.hh ../include/rtk-types.hh ../include/image.h
+miscdevice.o: ../include/object.hh ../include/image.h
 miscdevice.o: ../include/miscdevice.hh ../include/playerdevice.hh
-object.o: ../include/object.hh ../include/rtk-types.hh
-object.o: ../include/objectfactory.hh
+object.o: ../include/object.hh ../include/objectfactory.hh
 objectfactory.o: ../include/objectfactory.hh ../include/boxobstacle.hh
-objectfactory.o: ../include/object.hh ../include/rtk-types.hh
-objectfactory.o: ../include/laserbeacon.hh ../include/visionbeacon.hh
-objectfactory.o: ../include/usc_pioneer.hh ../include/playerrobot.hh
-objectfactory.o: ../include/pioneermobiledevice.hh ../include/playerdevice.hh
-objectfactory.o: ../include/miscdevice.hh ../include/sonardevice.hh
-objectfactory.o: ../include/laserdevice.hh ../include/ptzdevice.hh
-objectfactory.o: ../include/visiondevice.hh ../include/laserbeacondevice.hh
-objectfactory.o: ../include/broadcastdevice.hh
+objectfactory.o: ../include/object.hh ../include/laserbeacon.hh
+objectfactory.o: ../include/visionbeacon.hh ../include/usc_pioneer.hh
 pioneermobiledevice.o: ../include/world.hh ../include/playerrobot.hh
-pioneermobiledevice.o: ../include/object.hh ../include/rtk-types.hh
-pioneermobiledevice.o: ../include/image.h ../include/pioneermobiledevice.hh
+pioneermobiledevice.o: ../include/object.hh ../include/image.h
+pioneermobiledevice.o: ../include/pioneermobiledevice.hh
 pioneermobiledevice.o: ../include/playerdevice.hh
 playerdevice.o: ../include/world.hh ../include/playerrobot.hh
-playerdevice.o: ../include/object.hh ../include/rtk-types.hh
-playerdevice.o: ../include/image.h ../include/playerdevice.hh
+playerdevice.o: ../include/object.hh ../include/image.h
+playerdevice.o: ../include/playerdevice.hh
 playerrobot.o: ../include/world.hh ../include/playerrobot.hh
-playerrobot.o: ../include/object.hh ../include/rtk-types.hh
-playerrobot.o: ../include/image.h
+playerrobot.o: ../include/object.hh ../include/image.h
 posreader.o: ../include/ports.h
 ptzdevice.o: ../include/world.hh ../include/playerrobot.hh
-ptzdevice.o: ../include/object.hh ../include/rtk-types.hh ../include/image.h
-ptzdevice.o: ../include/ptzdevice.hh ../include/playerdevice.hh
+ptzdevice.o: ../include/object.hh ../include/image.h ../include/ptzdevice.hh
+ptzdevice.o: ../include/playerdevice.hh
 rtkmain.o: ../include/world.hh ../include/playerrobot.hh ../include/object.hh
-rtkmain.o: ../include/rtk-types.hh ../include/image.h
+rtkmain.o: ../include/image.h
 rtksimagent.o: ../include/world.hh ../include/playerrobot.hh
-rtksimagent.o: ../include/object.hh ../include/rtk-types.hh
-rtksimagent.o: ../include/image.h ../include/rtksimagent.hh
+rtksimagent.o: ../include/object.hh ../include/image.h
+rtksimagent.o: ../include/rtksimagent.hh
 server.o: ../include/world.hh ../include/playerrobot.hh ../include/object.hh
-server.o: ../include/rtk-types.hh ../include/image.h ../include/ports.h
+server.o: ../include/image.h ../include/ports.h
 sonardevice.o: ../include/world.hh ../include/playerrobot.hh
-sonardevice.o: ../include/object.hh ../include/rtk-types.hh
-sonardevice.o: ../include/image.h ../include/sonardevice.hh
-sonardevice.o: ../include/playerdevice.hh
+sonardevice.o: ../include/object.hh ../include/image.h
+sonardevice.o: ../include/sonardevice.hh ../include/playerdevice.hh
 usc_pioneer.o: ../include/world.hh ../include/playerrobot.hh
-usc_pioneer.o: ../include/object.hh ../include/rtk-types.hh
-usc_pioneer.o: ../include/image.h ../include/usc_pioneer.hh
-usc_pioneer.o: ../include/pioneermobiledevice.hh ../include/playerdevice.hh
+usc_pioneer.o: ../include/object.hh ../include/image.h
+usc_pioneer.o: ../include/usc_pioneer.hh ../include/pioneermobiledevice.hh
+usc_pioneer.o: ../include/playerdevice.hh ../include/miscdevice.hh
+usc_pioneer.o: ../include/sonardevice.hh ../include/laserdevice.hh
 visionbeacon.o: ../include/world.hh ../include/playerrobot.hh
-visionbeacon.o: ../include/object.hh ../include/rtk-types.hh
-visionbeacon.o: ../include/image.h ../include/visionbeacon.hh
+visionbeacon.o: ../include/object.hh ../include/image.h
+visionbeacon.o: ../include/visionbeacon.hh
 visiondevice.o: ../include/world.hh ../include/playerrobot.hh
-visiondevice.o: ../include/object.hh ../include/rtk-types.hh
-visiondevice.o: ../include/image.h ../include/visiondevice.hh
-visiondevice.o: ../include/playerdevice.hh ../include/ptzdevice.hh
+visiondevice.o: ../include/object.hh ../include/image.h
+visiondevice.o: ../include/visiondevice.hh ../include/playerdevice.hh
+visiondevice.o: ../include/ptzdevice.hh
 win.o: ../include/win.h ../include/world.hh ../include/playerrobot.hh
-win.o: ../include/object.hh ../include/rtk-types.hh ../include/image.h
+win.o: ../include/object.hh ../include/image.h
 world.o: ../include/world.hh ../include/playerrobot.hh ../include/object.hh
-world.o: ../include/rtk-types.hh ../include/image.h
-world.o: ../include/objectfactory.hh
+world.o: ../include/image.h ../include/objectfactory.hh

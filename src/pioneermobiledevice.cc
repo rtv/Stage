@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.10 $
+//  $Revision: 1.9.2.11 $
 //
 // Usage:
 //  (empty)
@@ -104,7 +104,7 @@ int CPioneerMobileDevice::Move()
     // simplifies a lot of things in other places.
     //     ahoward
     
-    double step_time = m_world->GetTime() - m_last_time;
+    double step_time = m_world->get_time() - m_last_time;
     m_last_time += step_time;
 
     // Get the current robot pose
@@ -271,7 +271,7 @@ void CPioneerMobileDevice::ComposeData()
     // Construct the data packet
     // Basically just changes byte orders and some units
     //
-    // *** REMOVE m_data.time = htonl((int)((m_world->GetTime())*1000.0));
+    // *** REMOVE m_data.time = htonl((int)((m_world->get_time())*1000.0));
     m_data.xpos = htonl((int) px);
     m_data.ypos = htonl((int) py);
     m_data.theta = htons((unsigned short) pth);
@@ -407,12 +407,12 @@ void CPioneerMobileDevice::OnUiUpdate(RtkUiDrawData *pData)
     
     // Draw ourself
     //
-    pData->BeginSection("global", "chassis");
+    pData->begin_section("global", "chassis");
     
-    if (pData->DrawLayer("chassis", true))
+    if (pData->draw_layer("chassis", true))
         DrawChassis(pData);
     
-    pData->EndSection();
+    pData->end_section();
 }
 
 
@@ -432,7 +432,7 @@ void CPioneerMobileDevice::DrawChassis(RtkUiDrawData *pData)
 {
     #define ROBOT_COLOR RTK_RGB(255, 0, 192)
     
-    pData->SetColor(ROBOT_COLOR);
+    pData->set_color(ROBOT_COLOR);
 
     // Robot dimensions
     //
@@ -446,7 +446,7 @@ void CPioneerMobileDevice::DrawChassis(RtkUiDrawData *pData)
     
     // Draw the outline of the robot
     //
-    pData->ExRectangle(gx, gy, gth, dx, dy); 
+    pData->ex_rectangle(gx, gy, gth, dx, dy); 
     
     // Draw the direction indicator
     //
@@ -464,9 +464,9 @@ void CPioneerMobileDevice::DrawChassis(RtkUiDrawData *pData)
         LocalToGlobal(px, py, pth);
         
         if (i == 0)
-            pData->MoveTo(px, py);
+            pData->move_to(px, py);
         else
-            pData->LineTo(px, py);
+            pData->line_to(px, py);
     }
 }
 

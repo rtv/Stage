@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/object.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.9 $
+//  $Revision: 1.1.2.10 $
 //
 // Usage:
 //  (empty)
@@ -68,7 +68,7 @@ CObject::~CObject()
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the object from an argument list
 //
-bool CObject::Init(int argc, char **argv)
+bool CObject::init(int argc, char **argv)
 {
     return true;
 }
@@ -233,29 +233,29 @@ void CObject::OnUiProperty(RtkUiPropertyData* pData)
 //
 void CObject::OnUiUpdate(RtkUiDrawData *pData)
 {
-    pData->BeginSection("global", "object");
+    pData->begin_section("global", "object");
 
     // Draw a marker to show we are being dragged
     //
-    if (pData->DrawLayer("focus", true))
+    if (pData->draw_layer("focus", true))
     {
         if (m_mouse_ready && m_draggable)
         {
             if (m_mouse_ready)
-                pData->SetColor(RTK_RGB(128, 128, 255));
+                pData->set_color(RTK_RGB(128, 128, 255));
             if (m_dragging)
-                pData->SetColor(RTK_RGB(0, 0, 255));
+                pData->set_color(RTK_RGB(0, 0, 255));
             
             double ox, oy, oth;
             GetGlobalPose(ox, oy, oth);
             
-            pData->Ellipse(ox - m_mouse_radius, oy - m_mouse_radius,
+            pData->ellipse(ox - m_mouse_radius, oy - m_mouse_radius,
                            ox + m_mouse_radius, oy + m_mouse_radius);
-            pData->DrawText(ox + m_mouse_radius, oy + m_mouse_radius, m_id);
+            pData->draw_text(ox + m_mouse_radius, oy + m_mouse_radius, m_id);
         }
     }
 
-    pData->EndSection();
+    pData->end_section();
 }
 
 
@@ -264,15 +264,15 @@ void CObject::OnUiUpdate(RtkUiDrawData *pData)
 //
 void CObject::OnUiMouse(RtkUiMouseData *pData)
 {
-    pData->BeginSection("global", "move");
+    pData->begin_section("global", "move");
 
-    if (pData->UseMouseMode("object"))
+    if (pData->use_mouse_mode("object"))
     {
         if (MouseMove(pData))
-            pData->ResetButton();
+            pData->reset_button();
     }
     
-    pData->EndSection();
+    pData->end_section();
 }
 
 
@@ -289,7 +289,7 @@ bool CObject::MouseMove(RtkUiMouseData *pData)
     // Get the mouse position
     //
     double mx, my;
-    pData->GetPoint(mx, my);
+    pData->get_point(mx, my);
     double mth = pth;
     
     double dx = mx - px;
@@ -304,22 +304,22 @@ bool CObject::MouseMove(RtkUiMouseData *pData)
     //
     if (m_mouse_ready && m_draggable)
     {
-        if (pData->IsButtonDown())
+        if (pData->is_button_down())
         {
             // Drag on left
             //
-            if (pData->WhichButton() == 1)
+            if (pData->which_button() == 1)
                 m_dragging = true;
             
             // Rotate on right
             //
-            else if (pData->WhichButton() == 3)
+            else if (pData->which_button() == 3)
             {
                 m_dragging = true;
                 mth += M_PI / 8;
             }
         }
-        else if (pData->IsButtonUp())
+        else if (pData->is_button_up())
             m_dragging = false;
     }   
     

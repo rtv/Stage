@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.12 $
+//  $Revision: 1.1.2.13 $
 //
 // Usage:
 //  (empty)
@@ -33,7 +33,7 @@
 #include "image.h"
 
 #if INCLUDE_RTK
-#include "rtk-ui.hh"
+#include "rtk_ui.hh"
 #endif
 
 // forward declaration
@@ -100,7 +100,7 @@ class CWorld
     // Get the simulation time
     // Returns time in sec since simulation started
     //
-    public: double GetTime();
+    public: double get_time();
 
     // Get the real time
     // Returns time in sec since simulation started
@@ -239,7 +239,7 @@ class CWorld
 
     // Draw the laser layer
     //
-    private: void DrawLayer(RtkUiDrawData *data, EWorldLayer layer);
+    private: void draw_layer(RtkUiDrawData *data, EWorldLayer layer);
 
     // Move an object using the mouse
     //

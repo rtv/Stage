@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.16 $
+//  $Revision: 1.4.2.17 $
 //
 // Usage:
 //  (empty)
@@ -194,7 +194,7 @@ bool CWorld::LoadObject(int argc, char **argv, CObject *parent)
         
         // Let the object initialise itself
         //
-        object->Init(argc - 2, argv + 2);
+        object->init(argc - 2, argv + 2);
 
         // Add to list of objects
         //
@@ -297,10 +297,10 @@ bool CWorld::Startup()
     // Initialise the message router
     //
     #ifdef INCLUDE_RTK
-    m_router->AddSink(RTK_UI_DRAW, (void (*) (void*, void*)) &OnUiDraw, this);
-    m_router->AddSink(RTK_UI_MOUSE, (void (*) (void*, void*)) &OnUiMouse, this);
-    m_router->AddSink(RTK_UI_PROPERTY, (void (*) (void*, void*)) &OnUiProperty, this);
-    m_router->AddSink(RTK_UI_BUTTON, (void (*) (void*, void*)) &OnUiButton, this);
+    m_router->add_sink(RTK_UI_DRAW, (void (*) (void*, void*)) &OnUiDraw, this);
+    m_router->add_sink(RTK_UI_MOUSE, (void (*) (void*, void*)) &OnUiMouse, this);
+    m_router->add_sink(RTK_UI_PROPERTY, (void (*) (void*, void*)) &OnUiProperty, this);
+    m_router->add_sink(RTK_UI_BUTTON, (void (*) (void*, void*)) &OnUiButton, this);
     #endif
 
     // Start all the objects
@@ -383,7 +383,7 @@ void* CWorld::Main(CWorld *world)
         #ifdef INCLUDE_RTK
         if (world->GetRealTime() - ui_time > 0.050)
         {
-            world->m_router->SendMessage(RTK_UI_FORCE_UPDATE, NULL);
+            world->m_router->send_message(RTK_UI_FORCE_UPDATE, NULL);
             ui_time = world->GetRealTime();
         }
         #endif
@@ -441,7 +441,7 @@ void CWorld::Update()
 // Get the sim time
 // Returns time in sec since simulation started
 //
-double CWorld::GetTime()
+double CWorld::get_time()
 {
     return m_sim_time;
 }
@@ -695,23 +695,23 @@ void CWorld::OnUiDraw(CWorld *world, RtkUiDrawData *data)
 {
     // Draw the background
     //
-    if (data->DrawBack("global"))
+    if (data->draw_back("global"))
         world->DrawBackground(data);
 
     // Draw grid layers (for debugging)
     //
-    data->BeginSection("global", "debugging");
+    data->begin_section("global", "debugging");
 
-    if (data->DrawLayer("obstacle", false))
-        world->DrawLayer(data, layer_obstacle);
+    if (data->draw_layer("obstacle", false))
+        world->draw_layer(data, layer_obstacle);
         
-    if (data->DrawLayer("laser", false))
-        world->DrawLayer(data, layer_laser);
+    if (data->draw_layer("laser", false))
+        world->draw_layer(data, layer_laser);
 
-    if (data->DrawLayer("vision", false))
-        world->DrawLayer(data, layer_vision);
+    if (data->draw_layer("vision", false))
+        world->draw_layer(data, layer_vision);
     
-    data->EndSection();
+    data->end_section();
 
     // Draw the children
     //
@@ -725,13 +725,13 @@ void CWorld::OnUiDraw(CWorld *world, RtkUiDrawData *data)
 //
 void CWorld::OnUiMouse(CWorld *world, RtkUiMouseData *data)
 {
-    data->BeginSection("global", "move");
+    data->begin_section("global", "move");
 
     // Create a mouse mode (used by objects)
     //
-    data->MouseMode("object");
+    data->mouse_mode("object");
     
-    data->EndSection();
+    data->end_section();
 
     // Update the children
     //
@@ -747,21 +747,21 @@ void CWorld::OnUiProperty(CWorld *world, RtkUiPropertyData* data)
 {
     RtkString value;
 
-    data->BeginSection("default", "world");
+    data->begin_section("default", "world");
     
-    RtkFormat1(value, "%7.3f", (double) world->GetTime());
-    data->AddItemText("Simulation time (s)", CSTR(value), "");
+    RtkFormat1(value, "%7.3f", (double) world->get_time());
+    data->add_item_text("Simulation time (s)", CSTR(value), "");
     
     RtkFormat1(value, "%7.3f", (double) world->GetRealTime());
-    data->AddItemText("Real time (s)", CSTR(value), "");
+    data->add_item_text("Real time (s)", CSTR(value), "");
 
     RtkFormat1(value, "%7.3f", (double) world->m_update_ratio);
-    data->AddItemText("Sim/real time", CSTR(value), ""); 
+    data->add_item_text("Sim/real time", CSTR(value), ""); 
     
     RtkFormat1(value, "%7.3f", (double) world->m_update_rate);
-    data->AddItemText("Update rate (Hz)", CSTR(value), "");
+    data->add_item_text("Update rate (Hz)", CSTR(value), "");
 
-    data->EndSection();
+    data->end_section();
 
     // Update the children
     //
@@ -775,12 +775,12 @@ void CWorld::OnUiProperty(CWorld *world, RtkUiPropertyData* data)
 //
 void CWorld::OnUiButton(CWorld *world, RtkUiButtonData* data)
 {
-    data->BeginSection("default", "world");
+    data->begin_section("default", "world");
 
-    if (data->PushButton("save"))
+    if (data->push_button("save"))
         world->Save("temp.world"); // ***
     
-    data->EndSection();
+    data->end_section();
 }
 
 
@@ -791,7 +791,7 @@ void CWorld::DrawBackground(RtkUiDrawData *data)
 {
     RTK_TRACE0("drawing background");
 
-    data->SetColor(RGB(0, 0, 0));
+    data->set_color(RGB(0, 0, 0));
     
     // Loop through the image and draw points individually.
     // Yeah, it's slow, but only happens once.
@@ -805,7 +805,7 @@ void CWorld::DrawBackground(RtkUiDrawData *data)
                 double px = (double) x / ppm;
                 double py = (double) (height - y) / ppm;
                 double s = 1.0 / ppm;
-                data->Rectangle(px, py, px + s, py + s);
+                data->rectangle(px, py, px + s, py + s);
             }
         }
     }
@@ -815,7 +815,7 @@ void CWorld::DrawBackground(RtkUiDrawData *data)
 ///////////////////////////////////////////////////////////////////////////
 // Draw the laser layer
 //
-void CWorld::DrawLayer(RtkUiDrawData *data, EWorldLayer layer)
+void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
 {
     Nimage *img = NULL;
 
@@ -844,7 +844,7 @@ void CWorld::DrawLayer(RtkUiDrawData *data, EWorldLayer layer)
             {
                 double px = (double) x / ppm;
                 double py = (double) (height - y) / ppm;
-                data->SetPixel(px, py, RGB(0, 0, 255));
+                data->set_pixel(px, py, RGB(0, 0, 255));
             }
         }
     }
