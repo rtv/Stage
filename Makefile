@@ -8,7 +8,7 @@
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
 #  $Author: ahoward $
-#  $Revision: 1.8 $
+#  $Revision: 1.9 $
 #
 ###########################################################################
 
@@ -55,26 +55,19 @@ clean:
 # Install section
 
 INSTALL_BIN = $(INSTALL_DIR)/bin
-INSTALL_ETC = /usr/local/etc/rtk
 INSTALL_BIN_FILES = bin/stage bin/rtkstage bin/xstage
+INSTALL_EXAMPLES = $(INSTALL_DIR)/examples
+INSTALL_ETC = /usr/local/etc/rtk
 INSTALL_ETC_FILES = etc/rtkstage.cfg
 
 install:
 	mkdir -p $(INSTALL_DIR)/bin
 	install -m 755 $(INSTALL_BIN_FILES) $(INSTALL_BIN)
+	mkdir -p $(INSTALL_EXAMPLES)
+	install -m 644 examples/*.world $(INSTALL_EXAMPLES)
+	install -m 644 examples/*.pnm.gz $(INSTALL_EXAMPLES)
 	mkdir -p $(INSTALL_ETC)
 	install -m 755 $(INSTALL_ETC_FILES) $(INSTALL_ETC)
-
-#install: stage
-#	mkdir -p -m 755 $(INSTALL)			
-#	install -m 644 README.stage $(INSTALL)	
-#	mkdir -p -m 755 $(INSTALL)/bin	
-#	install -m 755 bin/stage $(INSTALL)/bin
-#	install -m 755 bin/sif $(INSTALL)/bin
-#	mkdir -p -m 755 $(INSTALL)/examples
-#	install -m 644 examples/*.world $(INSTALL)/examples
-#	install -m 644 examples/*.pnm $(INSTALL)/examples
-#	install -m 644 examples/*.pos $(INSTALL)/examples
 
 
 ###########################################################################
