@@ -22,7 +22,7 @@
 // Desc: Stage (simulator) time
 // Author: Richard Vaughan
 // Date: 7 May 2003
-// CVS: $Id: stg_time.cc,v 1.1 2004-09-16 06:54:28 rtv Exp $
+// CVS: $Id: stg_time.cc,v 1.2 2004-09-22 20:47:22 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -34,7 +34,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor
-StgTime::StgTime( world_t* world )
+StgTime::StgTime( stg_world_t* world )
 {
   this->world = world;
   return;

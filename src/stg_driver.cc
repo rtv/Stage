@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_driver.cc,v 1.2 2004-09-18 00:10:14 rtv Exp $
+ * $Id: stg_driver.cc,v 1.3 2004-09-22 20:47:22 rtv Exp $
  */
 
 // STAGE-1.4 DRIVER CLASS ///////////////////////////////
@@ -42,18 +42,13 @@
 #include <math.h>
 #include <unistd.h>
 
-#include "stage.h"
-//#include "stageclient.h"
 #include "stg_time.h"
-
-// TODO - fold this into stage.h
-#include "world.h"
 #include "stg_driver.h"
 
 // init static vars
 ConfigFile* Stage1p4::config = NULL;
 //stg_client_t* Stage1p4::stage_client = NULL;
-world_t* Stage1p4::world = NULL;
+stg_world_t* Stage1p4::world = NULL;
 
 //char* Stage1p4::world_name;
 
@@ -97,7 +92,7 @@ Stage1p4::Stage1p4( ConfigFile* cf, int section, int interface, uint8_t access,
       
       this->model = 
 	//stg_world_model_name_lookup( Stage1p4::world, model_name );
-	world_model_name_lookup( this->world, model_name );
+	stg_world_model_name_lookup( this->world, model_name );
 
       if( this->model  == NULL )
 	{
@@ -116,14 +111,14 @@ Stage1p4::~Stage1p4()
 int Stage1p4::Setup()
 { 
   PRINT_DEBUG( "SETUP" );
-  model_subscribe( this->model );
+  stg_model_subscribe( this->model );
   return 0;
 };
 
 int Stage1p4::Shutdown()
 { 
   PRINT_DEBUG( "SHUTDOWN" );
-  model_unsubscribe( this->model );
+  stg_model_unsubscribe( this->model );
   return 0;
 };
 

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.26 $
+//  $Revision: 1.27 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -16,19 +16,17 @@
 //#define DEBUG
 
 #include "stage.h"
-#include "raytrace.h"
-#include "gui.h"
 extern rtk_fig_t* fig_debug;
 
-void ranger_render_config( model_t* mod );
-void ranger_render_data( model_t* mod );
-int ranger_set_data( model_t* mod, void* data, size_t len );
-int ranger_set_config( model_t* mod, void* config, size_t len );
+void ranger_render_config( stg_model_t* mod );
+void ranger_render_data( stg_model_t* mod );
+int ranger_set_data( stg_model_t* mod, void* data, size_t len );
+int ranger_set_config( stg_model_t* mod, void* config, size_t len );
 
-void ranger_init( model_t* mod )
+void ranger_init( stg_model_t* mod )
 {
   // a ranger has no body 
-  model_set_lines( mod, NULL, 0 ); 
+  stg_model_set_lines( mod, NULL, 0 ); 
 
   // set up sensible defaults
   stg_ranger_config_t cfg[16];
@@ -60,7 +58,7 @@ void ranger_init( model_t* mod )
   //ranger_set_data( mod, data, datalen );
 }
 
-int ranger_set_data( model_t* mod, void* data, size_t len )
+int ranger_set_data( stg_model_t* mod, void* data, size_t len )
 {  
   // store the data
   _set_data( mod, data, len );
@@ -71,7 +69,7 @@ int ranger_set_data( model_t* mod, void* data, size_t len )
   return 0; //OK
 }
 
-int ranger_set_config( model_t* mod, void* config, size_t len )
+int ranger_set_config( stg_model_t* mod, void* config, size_t len )
 {  
   // store the config
   _set_cfg( mod, config, len );
@@ -83,7 +81,7 @@ int ranger_set_config( model_t* mod, void* config, size_t len )
 }
 
 
-int ranger_shutdown( model_t* mod )
+int ranger_shutdown( stg_model_t* mod )
 {   
   // clear the data - this will unrender it too.
   ranger_set_data( mod, NULL, 0 );
@@ -91,13 +89,13 @@ int ranger_shutdown( model_t* mod )
   return 0;
 }
 
-int ranger_update( model_t* mod )
+int ranger_update( stg_model_t* mod )
 {   
   PRINT_DEBUG1( "[%.3f] updating rangers", mod->world->sim_time );
   
   size_t len = 0;
   stg_ranger_config_t* cfg = 
-    (stg_ranger_config_t*)model_get_config(mod,&len);
+    (stg_ranger_config_t*)stg_model_get_config(mod,&len);
 
   if( len < sizeof(stg_ranger_config_t) )
     return 0; // nothing to see here
@@ -115,7 +113,7 @@ int ranger_update( model_t* mod )
       // get the sensor's pose in global coords
       stg_pose_t pz;
       memcpy( &pz, &cfg[t].pose, sizeof(pz) ); 
-      model_local_to_global( mod, &pz );
+      stg_model_local_to_global( mod, &pz );
       
       // todo - use bounds_range.min
 
@@ -124,7 +122,7 @@ int ranger_update( model_t* mod )
 			       mod->world->matrix, 
 			       PointToBearingRange );
       
-      model_t * hitmod;
+      stg_model_t * hitmod;
       double range = cfg[t].bounds_range.max;
       
       while( (hitmod = itl_next( itl )) ) 
@@ -136,7 +134,7 @@ int ranger_update( model_t* mod )
 	  // things that we are attached to (except root) The latter
 	  // is useful if you want to stack beacons on the laser or
 	  // the laser on somethine else.
-	  if (hitmod == mod || model_is_descendent(hitmod,mod) ) 
+	  if (hitmod == mod || stg_model_is_related(hitmod,mod) ) 
 	    continue;
 	  
 	  // Stop looking when we see an obstacle
@@ -158,17 +156,14 @@ int ranger_update( model_t* mod )
   
   ranger_set_data( mod, ranges, sizeof(stg_ranger_sample_t) * rcount );
 
-  //model_set_prop( mod, STG_PROP_RANGERDATA,
-  //	  ranges, sizeof(stg_ranger_sample_t) * rcount );
-
   return 0;
 }
 
-void ranger_render_config( model_t* mod )
+void ranger_render_config( stg_model_t* mod )
 {
   //PRINT_DEBUG( "drawing rangers" );
   
-  stg_geom_t* geom = model_get_geom(mod);
+  stg_geom_t* geom = stg_model_get_geom(mod);
   
   
   //if(  mod->gui.geom  )
@@ -189,9 +184,9 @@ void ranger_render_config( model_t* mod )
   rtk_fig_color_rgb32( fig, stg_lookup_color(STG_RANGER_CONFIG_COLOR) );  
   rtk_fig_origin( fig, geom->pose.x, geom->pose.y, geom->pose.a );  
   
-  //stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_RANGERCONFIG );
+  //stg_property_t* prop = stg_model_get_prop_generic( mod, STG_PROP_RANGERCONFIG );
   size_t len = 0;
-  stg_ranger_config_t* cfg = (stg_ranger_config_t*)model_get_config(mod,&len);
+  stg_ranger_config_t* cfg = (stg_ranger_config_t*)stg_model_get_config(mod,&len);
 
   if( len < sizeof(stg_ranger_config_t) )
     return ; // nothing to render
@@ -239,7 +234,7 @@ void ranger_render_config( model_t* mod )
     }
 }
 
-void ranger_render_data( model_t* mod )
+void ranger_render_data( stg_model_t* mod )
 { 
   
   if( mod->gui.data  )
@@ -252,7 +247,7 @@ void ranger_render_data( model_t* mod )
 
   size_t len = 0;
   stg_ranger_config_t* cfg = 
-    (stg_ranger_config_t*)model_get_config(mod,&len);  
+    (stg_ranger_config_t*)stg_model_get_config(mod,&len);  
   
   if( len < sizeof(stg_ranger_config_t) )
     return;
@@ -261,7 +256,7 @@ void ranger_render_data( model_t* mod )
   
   len = 0;
   stg_ranger_sample_t* samples = 
-    (stg_ranger_sample_t*)model_get_data(mod, &len );
+    (stg_ranger_sample_t*)stg_model_get_data(mod, &len );
   
   if( len != (rcount * sizeof(stg_ranger_sample_t) ))
     {
@@ -275,7 +270,7 @@ void ranger_render_data( model_t* mod )
   // should be ok by now!
   if( rcount > 0 && cfg && samples )
     {
-      stg_geom_t *geom = model_get_geom(mod);
+      stg_geom_t *geom = stg_model_get_geom(mod);
       
       rtk_fig_color_rgb32(fig, stg_lookup_color(STG_RANGER_COLOR) );
       rtk_fig_origin( fig, geom->pose.x, geom->pose.y, geom->pose.a );	  

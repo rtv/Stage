@@ -22,7 +22,7 @@
 // Desc: Stage (simulator) time
 // Author: Richard Vaughan
 // Date: 7 May 2003
-// CVS: $Id: stg_time.h,v 1.1 2004-09-16 06:54:28 rtv Exp $
+// CVS: $Id: stg_time.h,v 1.2 2004-09-22 20:47:22 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -30,12 +30,12 @@
 #define STG_TIME_H
 
 #include "player/playertime.h"
-#include "world.h"
+#include "stage.h"
 
 class StgTime : public PlayerTime
 {
   // Constructor
- public: StgTime( world_t* world );
+ public: StgTime( stg_world_t* world );
  
  // Destructor
  public: virtual ~StgTime();
@@ -46,7 +46,7 @@ class StgTime : public PlayerTime
  private:
  //stg_client_t* client;
 
- world_t* world;
+ stg_world_t* world;
 };
 
 #endif

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -16,12 +16,10 @@
 
 //#define DEBUG
 
-#include "model.h"
-#include "gui.h"
+#include "stage.h"
 extern rtk_fig_t* fig_debug;
-
   
-void position_init( model_t* mod )
+void position_init( stg_model_t* mod )
 {
   PRINT_DEBUG( "position startup" );
   
@@ -34,22 +32,22 @@ void position_init( model_t* mod )
   cmd.mode = STG_POSITION_CONTROL_VELOCITY; // vel control mode
   cmd.x = cmd.y = cmd.a = 0; // no speeds to start
   
-  model_set_command( mod, &cmd, sizeof(cmd));
+  stg_model_set_command( mod, &cmd, sizeof(cmd));
   
   // set up a position-specific config structure
   stg_position_cfg_t cfg;
   memset(&cfg,0,sizeof(cfg));
   cfg.steer_mode =  STG_POSITION_STEER_DIFFERENTIAL;
   
-  model_set_config( mod, &cfg, sizeof(cfg) );
+  stg_model_set_config( mod, &cfg, sizeof(cfg) );
 
   stg_position_data_t data;
   memset( &data, 0, sizeof(data) );
 
-  model_set_data( mod, &data, sizeof(data) );
+  stg_model_set_data( mod, &data, sizeof(data) );
 }
 
-int position_update( model_t* mod )
+int position_update( stg_model_t* mod )
 {   
   PRINT_DEBUG1( "[%lu] position update", mod->world->sim_time );
 
@@ -184,7 +182,7 @@ int position_update( model_t* mod )
       PRINT_ERR1( "unhandled position command mode %d", cmd->mode );
     }
 
-  model_set_velocity( mod, &vel );
+  stg_model_set_velocity( mod, &vel );
   
   
   double interval = (double)mod->world->sim_interval / 1000.0;
@@ -197,18 +195,18 @@ int position_update( model_t* mod )
   data.stall = mod->stall;
 
   // publish the data
-  model_set_data( mod, &data, sizeof(data));
+  stg_model_set_data( mod, &data, sizeof(data));
   
   return 0; //ok
 }
 
-int position_startup( model_t* mod )
+int position_startup( stg_model_t* mod )
 {
   PRINT_DEBUG( "position startup" );
   return 0; // ok
 }
 
-int position_shutdown( model_t* mod )
+int position_shutdown( stg_model_t* mod )
 {
   PRINT_DEBUG( "position shutdown" );
   

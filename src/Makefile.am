@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.63 2004-09-18 00:10:12 rtv Exp $
+# $Id: Makefile.am,v 1.64 2004-09-22 20:47:21 rtv Exp $
 
 #SUBDIRS = models
 
@@ -51,7 +51,6 @@ libstage_la_SOURCES = \
 	model_pose.c \
 	model_position.c \
 	model_props.c \
-	model_render.c \
 	model_test.c \
 	raytrace.c \
 	raytrace.h \

@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.7 2004-06-15 07:15:13 rtv Exp $
+ * $Id: matrix.c,v 1.8 2004-09-22 20:47:21 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -8,7 +8,7 @@
 #include <math.h>
 #include <string.h> // for memcpy(3)
 
-#include "matrix.h"
+#include "stage.h"
 
 
 //#define DEBUG

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_laser.cc,v 1.1 2004-09-16 06:54:28 rtv Exp $
+ * $Id: stg_laser.cc,v 1.2 2004-09-22 20:47:22 rtv Exp $
  */
 
 #define PLAYER_ENABLE_TRACE 1
@@ -93,7 +93,7 @@ size_t StgLaser::GetData(player_device_id_t id,
 {
   size_t dlen=0;
   stg_laser_sample_t* samples = 
-    (stg_laser_sample_t*)model_get_data( this->model, &dlen );
+    (stg_laser_sample_t*)stg_model_get_data( this->model, &dlen );
   
   int sample_count = dlen / sizeof( stg_laser_sample_t );
   
@@ -102,7 +102,7 @@ size_t StgLaser::GetData(player_device_id_t id,
 
   size_t clen=0;
   stg_laser_config_t* cfg = 
-    (stg_laser_config_t*)model_get_config( this->model, &clen );
+    (stg_laser_config_t*)stg_model_get_config( this->model, &clen );
   
   assert(clen == sizeof(stg_laser_config_t));
   
@@ -186,7 +186,7 @@ int StgLaser::PutConfig(player_device_id_t device, void* client,
 	    //else
 	    //PLAYER_TRACE0( "set laser config OK" );
 	    
-	    model_set_config( this->model, &slc_request, sizeof(slc_request));
+	    stg_model_set_config( this->model, &slc_request, sizeof(slc_request));
 	    
 	    if(PutReply(client, PLAYER_MSGTYPE_RESP_ACK, plc, len, NULL) != 0)
 	      PLAYER_ERROR("PutReply() failed for PLAYER_LASER_SET_CONFIG");
@@ -207,7 +207,7 @@ int StgLaser::PutConfig(player_device_id_t device, void* client,
 	  {
 	    size_t clen=0;
 	    stg_laser_config_t* slc =
-	      (stg_laser_config_t*)model_get_config( this->model, &clen);
+	      (stg_laser_config_t*)stg_model_get_config( this->model, &clen);
 	    
 	    assert( slc );
 	    assert( clen == sizeof(stg_laser_config_t));
@@ -250,7 +250,7 @@ int StgLaser::PutConfig(player_device_id_t device, void* client,
 	PLAYER_TRACE0( "requesting laser geom" );
 	
 	stg_geom_t geom;
-	memcpy( &geom, model_get_geom( this->model ), sizeof(stg_geom_t));
+	memcpy( &geom, stg_model_get_geom( this->model ), sizeof(stg_geom_t));
 	
 	PRINT_DEBUG5( "received laser geom: %.2f %.2f %.2f -  %.2f %.2f",
 		      geom.pose.x, 

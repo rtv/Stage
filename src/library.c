@@ -1,5 +1,5 @@
 
-#include "model.h"
+#include "stage.h"
 
 // declare your registration function here
 

@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.54 2004-09-18 00:10:13 rtv Exp $
+// $Id: stagecpp.cc,v 1.55 2004-09-22 20:47:21 rtv Exp $
 
 //#define DEBUG
 
@@ -23,13 +23,10 @@ This is the worldfile description. It goes here!
 #include "stage.h"
 #include "worldfile.hh"
 
-// temporary
-#include "world.h"
-#include "model.h"
 
 static CWorldFile wf;
 
-void configure_model( model_t* mod, int section )
+void configure_model( stg_model_t* mod, int section )
 {
   stg_pose_t pose;
   pose.x = wf.ReadTupleLength(section, "pose", 0, STG_DEFAULT_POSEX );
@@ -38,7 +35,7 @@ void configure_model( model_t* mod, int section )
   
   //if( pose.x || pose.y || pose.a )
   //stg_model_prop_with_data( mod, STG_PROP_POSE, &pose, sizeof(pose) );
-  model_set_pose( mod, &pose );
+  stg_model_set_pose( mod, &pose );
 
   
   /** Load the geometry */
@@ -56,31 +53,31 @@ void configure_model( model_t* mod, int section )
 //       geom.size.y != STG_DEFAULT_GEOM_SIZEY )
 //     stg_model_prop_with_data( mod, STG_PROP_GEOM, &geom, sizeof(geom) );
 
-  model_set_geom( mod, &geom );
+  stg_model_set_geom( mod, &geom );
 
       
   stg_bool_t obstacle;
   obstacle = wf.ReadInt( section, "obstacle_return", STG_DEFAULT_OBSTACLERETURN );    
-  model_set_obstaclereturn( mod, &obstacle );
+  stg_model_set_obstaclereturn( mod, &obstacle );
   
   stg_guifeatures_t gf;
   gf.boundary = wf.ReadInt(section, "gui.boundary", STG_DEFAULT_GUI_BOUNDARY );
   gf.nose = wf.ReadInt(section, "gui.nose", STG_DEFAULT_GUI_NOSE );
   gf.grid = wf.ReadInt(section, "gui.grid", STG_DEFAULT_GUI_GRID );
   gf.movemask = wf.ReadInt(section, "gui.movemask", STG_DEFAULT_GUI_MOVEMASK );
-  model_set_guifeatures( mod, &gf );
+  stg_model_set_guifeatures( mod, &gf );
   
   // laser visibility
   int laservis = 
     wf.ReadInt(section, "laser_return", STG_DEFAULT_LASERRETURN );      
-  model_set_laserreturn( mod, (stg_laser_return_t*)&laservis );
+  stg_model_set_laserreturn( mod, (stg_laser_return_t*)&laservis );
   
   // blob visibility
   //int blobvis = 
   //wf.ReadInt(section, "blob_return", STG_DEFAULT_BLOBRETURN );      
  
   // TODO
-  //model_set_blobreturn( mod, &blobvis );
+  //stg_model_set_blobreturn( mod, &blobvis );
   
   // ranger visibility
   stg_bool_t rangervis = 
@@ -91,7 +88,7 @@ void configure_model( model_t* mod, int section )
 
   // fiducial visibility
   int fid_return = wf.ReadInt( section, "fiducial_id", FiducialNone );  
-  model_set_fiducialreturn( mod, &fid_return );
+  stg_model_set_fiducialreturn( mod, &fid_return );
 
   const char* colorstr = wf.ReadString( section, "color", NULL );
   if( colorstr )
@@ -102,7 +99,7 @@ void configure_model( model_t* mod, int section )
       //if( color != STG_DEFAULT_COLOR )
       //stg_model_prop_with_data( mod, STG_PROP_COLOR, &color,sizeof(color));
 
-      model_set_color( mod, &color );
+      stg_model_set_color( mod, &color );
     }
 
   const char* bitmapfile = wf.ReadString( section, "bitmap", NULL );
@@ -128,7 +125,7 @@ void configure_model( model_t* mod, int section )
       stg_scale_lines( lines, num_lines, geom.size.x, geom.size.y );
       stg_translate_lines( lines, num_lines, -geom.size.x/2.0, -geom.size.y/2.0 );
 	
-      model_set_lines( mod, lines, num_lines );
+      stg_model_set_lines( mod, lines, num_lines );
       //stg_model_prop_with_data( mod, STG_PROP_LINES, 
       //			lines, num_lines * sizeof(stg_line_t ));
 	  	  
@@ -159,7 +156,7 @@ void configure_model( model_t* mod, int section )
 	  
       //stg_model_prop_with_data( mod, STG_PROP_LINES,
       //			lines, linecount * sizeof(stg_line_t) );
-      model_set_lines( mod, lines, linecount );
+      stg_model_set_lines( mod, lines, linecount );
       free( lines );
     }
       
@@ -167,7 +164,7 @@ void configure_model( model_t* mod, int section )
   vel.x = wf.ReadTupleLength(section, "velocity", 0, 0 );
   vel.y = wf.ReadTupleLength(section, "velocity", 1, 0 );
   vel.a = wf.ReadTupleAngle(section, "velocity", 2, 0 );      
-  model_set_velocity( mod, &vel );
+  stg_model_set_velocity( mod, &vel );
     
   stg_energy_config_t ecfg;
   ecfg.capacity 
@@ -178,11 +175,11 @@ void configure_model( model_t* mod, int section )
     = wf.ReadFloat(section, "energy_return", STG_DEFAULT_ENERGY_GIVERATE );
   ecfg.trickle_rate 
     = wf.ReadFloat(section, "energy.trickle", STG_DEFAULT_ENERGY_TRICKLERATE );
-  model_set_energy_config( mod, &ecfg );
+  stg_model_set_energy_config( mod, &ecfg );
 
   stg_kg_t mass;
   mass = wf.ReadFloat(section, "mass", STG_DEFAULT_MASS );
-  model_set_mass( mod, &mass );
+  stg_model_set_mass( mod, &mass );
 }
 
 /** @addtogroup worldfile */
@@ -196,7 +193,7 @@ void configure_model( model_t* mod, int section )
 /** @} */
 
 
-void configure_laser( model_t* mod, int section )
+void configure_laser( stg_model_t* mod, int section )
 {
   stg_laser_config_t lconf;
   memset( &lconf, 0, sizeof(lconf) );
@@ -210,7 +207,7 @@ void configure_laser( model_t* mod, int section )
   lconf.fov = 
     wf.ReadAngle(section, "laser.fov", STG_DEFAULT_LASER_FOV);
 
-  model_set_config( mod, &lconf, sizeof(lconf));
+  stg_model_set_config( mod, &lconf, sizeof(lconf));
 }
 
 /** @addtogroup worldfile */
@@ -223,7 +220,7 @@ void configure_laser( model_t* mod, int section )
 */
 /** @} */
 
-void configure_fiducial( model_t* mod, int section )
+void configure_fiducial( stg_model_t* mod, int section )
 {
   stg_fiducial_config_t fcfg;
   fcfg.min_range = 
@@ -239,7 +236,7 @@ void configure_fiducial( model_t* mod, int section )
     wf.ReadLength(section, "fiducial.range_max_id", 
 		  STG_DEFAULT_FIDUCIAL_RANGEMAXID );
 
-  model_set_config( mod, &fcfg, sizeof(fcfg));
+  stg_model_set_config( mod, &fcfg, sizeof(fcfg));
 }
 
 /** @addtogroup worldfile */
@@ -249,7 +246,7 @@ void configure_fiducial( model_t* mod, int section )
 */
 /** @} */
 
-void configure_blobfinder( model_t* mod, int section )
+void configure_blobfinder( stg_model_t* mod, int section )
 {
   stg_blobfinder_config_t bcfg;
   memset( &bcfg, 0, sizeof(bcfg) );
@@ -279,7 +276,7 @@ void configure_blobfinder( model_t* mod, int section )
 					   "blob.channels", 
 					   ch, "red" )); 
   
-  model_set_config( mod, &bcfg, sizeof(bcfg));
+  stg_model_set_config( mod, &bcfg, sizeof(bcfg));
 }
 
 /** @addtogroup worldfile */
@@ -294,7 +291,7 @@ void configure_blobfinder( model_t* mod, int section )
 
 
 
-void configure_ranger( model_t* mod, int section )
+void configure_ranger( stg_model_t* mod, int section )
 {
   // Load the geometry of a ranger array
   int scount = wf.ReadInt( section, "ranger.count", 0);
@@ -327,7 +324,7 @@ void configure_ranger( model_t* mod, int section )
       
       PRINT_DEBUG1( "loaded %d ranger configs", scount );	  
 
-      model_set_config( mod, configs, scount * sizeof(stg_ranger_config_t) );
+      stg_model_set_config( mod, configs, scount * sizeof(stg_ranger_config_t) );
 
       free( configs );
     }
@@ -341,7 +338,7 @@ void configure_ranger( model_t* mod, int section )
 /** @} */
 
 
-void configure_position( model_t* mod, int section )
+void configure_position( stg_model_t* mod, int section )
 {
   stg_position_cfg_t cfg;
   memset(&cfg,0,sizeof(cfg));
@@ -361,14 +358,14 @@ void configure_position( model_t* mod, int section )
   
   //stg_model_prop_with_data( mod, STG_PROP_CONFIG, &cfg, sizeof(cfg));
 
-  model_set_config( mod, &cfg, sizeof(cfg) ); 
+  stg_model_set_config( mod, &cfg, sizeof(cfg) ); 
 }
 
 
 
-void stg_model_save( model_t* model, CWorldFile* worldfile )
+void stg_model_save( stg_model_t* model, CWorldFile* worldfile )
 {
-  stg_pose_t* pose = model_get_pose(model);
+  stg_pose_t* pose = stg_model_get_pose(model);
   
   // right noe we only save poses
   worldfile->WriteTupleLength( model->id, "pose", 0, pose->x);
@@ -378,10 +375,10 @@ void stg_model_save( model_t* model, CWorldFile* worldfile )
 
 void stg_model_save_cb( gpointer key, gpointer data, gpointer user )
 {
-  stg_model_save( (model_t*)data, (CWorldFile*)user );
+  stg_model_save( (stg_model_t*)data, (CWorldFile*)user );
 }
 
-void stg_world_save( world_t* world, CWorldFile* wfp )
+void stg_world_save( stg_world_t* world, CWorldFile* wfp )
 {
   // ask every model to save itself
   g_hash_table_foreach( world->models, stg_model_save_cb, wfp );
@@ -393,7 +390,7 @@ void stg_world_save( world_t* world, CWorldFile* wfp )
 // create a world containing a passel of Stage models based on the
 // worldfile
 
-world_t* world_create_from_file( char* worldfile_path )
+stg_world_t* stg_world_create_from_file( char* worldfile_path )
 {
   wf.Load( worldfile_path );
   
@@ -416,7 +413,7 @@ world_t* world_create_from_file( char* worldfile_path )
   //      interval_sim, interval_real );
   
   // create a single world
-  world_t* world = 
+  stg_world_t* world = 
     stg_world_create( 0, 
 		      world_name, 
 		      interval_sim, 
@@ -436,9 +433,9 @@ world_t* world_create_from_file( char* worldfile_path )
       PRINT_DEBUG2( "section %d parent section %d\n", 
 		    section, parent_section );
       
-      model_t* parent = NULL;
+      stg_model_t* parent = NULL;
       
-      parent = (model_t*)
+      parent = (stg_model_t*)
 	g_hash_table_lookup( world->models, &parent_section );
       
       // select model type based on the worldfile token
@@ -493,9 +490,9 @@ world_t* world_create_from_file( char* worldfile_path )
       PRINT_DEBUG2( "creating model from section %d parent section %d",
 		    section, parent_section );
 
-      model_t* mod = 
+      stg_model_t* mod = 
 	//stg_world_createmodel( world, parent, section, type, namestr );
-	world_model_create( world, section, parent_section, type, namestr );
+	stg_world_model_create( world, section, parent_section, type, namestr );
       
       // load all the generic specs from this section.
       configure_model( mod, section );

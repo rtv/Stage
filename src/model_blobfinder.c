@@ -21,40 +21,38 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.15 2004-09-18 00:10:12 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.16 2004-09-22 20:47:21 rtv Exp $
  */
 
 #include <math.h>
 
 //#define DEBUG
 
-#include "model.h"
-#include "raytrace.h"
+#include "stage.h"
 
-#include "gui.h"
 extern rtk_fig_t* fig_debug;
 
-void blobfinder_init( model_t* mod );
-int blobfinder_set_config( model_t* mod, void* config, size_t len );
-int blobfinder_set_data( model_t* mod, void* data, size_t len );
-int blobfinder_startup( model_t* mod );
-int blobfinder_shutdown( model_t* mod );
-void blobfinder_render_data( model_t* mod );
-void blobfinder_render_config( model_t* mod );
-int blobfinder_update( model_t* mod );
+void blobfinder_init( stg_model_t* mod );
+int blobfinder_set_config( stg_model_t* mod, void* config, size_t len );
+int blobfinder_set_data( stg_model_t* mod, void* data, size_t len );
+int blobfinder_startup( stg_model_t* mod );
+int blobfinder_shutdown( stg_model_t* mod );
+void blobfinder_render_data( stg_model_t* mod );
+void blobfinder_render_config( stg_model_t* mod );
+int blobfinder_update( stg_model_t* mod );
 
 // utility - we get the config quite a lot, so use this
-stg_blobfinder_config_t* blobfinder_get_config( model_t* mod )
+stg_blobfinder_config_t* blobfinder_get_config( stg_model_t* mod )
 {
   size_t len = 0;
   stg_blobfinder_config_t* cfg = 
-    (stg_blobfinder_config_t*)model_get_config(mod,&len);
+    (stg_blobfinder_config_t*)stg_model_get_config(mod,&len);
   assert( cfg );
   assert( len == sizeof( stg_blobfinder_config_t ));
   return cfg;
 }
 
-void blobfinder_init( model_t* mod )
+void blobfinder_init( stg_model_t* mod )
 {
   // sensible blobfinder defaults
   stg_geom_t geom;
@@ -63,17 +61,17 @@ void blobfinder_init( model_t* mod )
   geom.pose.a = 0; //STG_DEFAULT_LASER_POSEA;
   geom.size.x = 0.01; //STG_DEFAULT_LASER_SIZEX;
   geom.size.y = 0.01; //STG_DEFAULT_LASER_SIZEY;
-  model_set_geom( mod, &geom );
+  stg_model_set_geom( mod, &geom );
 
   // a blobfinder has no body
-  model_set_lines( mod, NULL, 0 );
+  stg_model_set_lines( mod, NULL, 0 );
 
   // nothing can see a blobfinder
   //mod->obstacle_return = 0;
   //mod->laser_return = LaserTransparent;
   //mod->fiducial_return = FiducialNone;
   //stg_color_t col = stg_lookup_color("magenta");
-  //model_set_color( mod, &col );
+  //stg_model_set_color( mod, &col );
 
   stg_blobfinder_config_t cfg;
   memset(&cfg,0,sizeof(cfg));
@@ -102,7 +100,7 @@ void blobfinder_init( model_t* mod )
   blobfinder_set_data( mod, NULL, 0 );
 }
 
-int blobfinder_set_data( model_t* mod, void* data, size_t len )
+int blobfinder_set_data( stg_model_t* mod, void* data, size_t len )
 {  
   // store the data
   _set_data( mod, data, len );
@@ -113,7 +111,7 @@ int blobfinder_set_data( model_t* mod, void* data, size_t len )
   return 0; //OK
 }
  
-int blobfinder_set_config( model_t* mod, void* config, size_t len )
+int blobfinder_set_config( stg_model_t* mod, void* config, size_t len )
 {  
   // store the config
   _set_cfg( mod, config, len );
@@ -125,14 +123,14 @@ int blobfinder_set_config( model_t* mod, void* config, size_t len )
 }
 
 
-int blobfinder_startup( model_t* mod )
+int blobfinder_startup( stg_model_t* mod )
 {
   PRINT_DEBUG( "blobfinder startup" );  
   
   return 0;
 }
 
-int blobfinder_shutdown( model_t* mod )
+int blobfinder_shutdown( stg_model_t* mod )
 {
   PRINT_DEBUG( "blobfinder shutdown" );  
   
@@ -142,7 +140,7 @@ int blobfinder_shutdown( model_t* mod )
 }
 
 
-int blobfinder_update( model_t* mod )
+int blobfinder_update( stg_model_t* mod )
 {
   PRINT_DEBUG( "blobfinder update" );  
   
@@ -153,7 +151,7 @@ int blobfinder_update( model_t* mod )
   
   // Get the camera's global pose
   stg_pose_t pose;  
-  model_global_pose( mod, &pose );
+  stg_model_global_pose( mod, &pose );
   
   double ox = pose.x;
   double oy = pose.y;
@@ -205,7 +203,7 @@ int blobfinder_update( model_t* mod )
 				mod->world->matrix, 
 				PointToBearingRange );
       
-      model_t* ent;
+      stg_model_t* ent;
       double range = cfg->range_max;
       
       while( (ent = itl_next( itl ) ))
@@ -218,7 +216,7 @@ int blobfinder_update( model_t* mod )
 	  if( !ent->blob_return )
 	    continue;
 	  
-	  if(  model_is_related( mod, ent ) )
+	  if(  stg_model_is_related( mod, ent ) )
 	    {
 	      PRINT_DEBUG2( "blob \"%s\" ignoring \"%s\" as a relative",
 			    mod->token, ent->token );
@@ -228,7 +226,7 @@ int blobfinder_update( model_t* mod )
 	  range = itl->range; // it's this far away
 	  
 	  // get the color of the entity
-	  stg_color_t hiscol = model_get_color(ent);
+	  stg_color_t hiscol = stg_model_get_color(ent);
 	  memcpy( &col, &hiscol, sizeof( stg_color_t ) );
 	  
 	  break;
@@ -359,7 +357,7 @@ int blobfinder_update( model_t* mod )
 }
 
 
-void blobfinder_render_data( model_t* mod )
+void blobfinder_render_data( stg_model_t* mod )
 { 
   PRINT_DEBUG( "blobfinder render" );  
 
@@ -376,7 +374,7 @@ void blobfinder_render_data( model_t* mod )
   
   // place the visualization a little away from the device
   stg_pose_t pose;
-  model_global_pose( mod, &pose );
+  stg_model_global_pose( mod, &pose );
   
   pose.x -= 1.0;
   pose.y += 1.0;
@@ -388,7 +386,7 @@ void blobfinder_render_data( model_t* mod )
   stg_blobfinder_config_t* cfg = blobfinder_get_config( mod );
   
   size_t len = 0;
-  stg_blobfinder_blob_t* blobs =  model_get_data(mod,&len);
+  stg_blobfinder_blob_t* blobs =  stg_model_get_data(mod,&len);
   
   if( len < sizeof(stg_blobfinder_blob_t) )
     return; // no data to render
@@ -437,7 +435,7 @@ void blobfinder_render_data( model_t* mod )
     }
 }
 
-void blobfinder_render_config( model_t* mod )
+void blobfinder_render_config( stg_model_t* mod )
 { 
   PRINT_DEBUG( "blobfinder render config" );  
   
@@ -456,7 +454,7 @@ void blobfinder_render_config( model_t* mod )
   stg_blobfinder_config_t* cfg = blobfinder_get_config(mod);
   
   // Get the camera's global pose
-  stg_pose_t* pose = model_get_pose( mod );
+  stg_pose_t* pose = stg_model_get_pose( mod );
   
   double ox = pose->x;
   double oy = pose->y;

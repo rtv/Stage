@@ -1,8 +1,8 @@
 
-#include "model.h"
+#include "stage.h"
 
 
-void test_init( model_t* mod )
+void test_init( stg_model_t* mod )
 {
   PRINT_WARN2( "TEST_INIT model %d %s", mod->id, mod->token );
   // todo - return 0; //ok
@@ -11,19 +11,19 @@ void test_init( model_t* mod )
   mod->data = realloc( mod->data, 256 );
 }
 
-int test_startup( model_t* mod )
+int test_startup( stg_model_t* mod )
 {
   PRINT_WARN2( "TEST_STARTUP model %d %s", mod->id, mod->token );
   return 0; //ok
 }
 
-int test_shutdown( model_t* mod )
+int test_shutdown( stg_model_t* mod )
 {
   PRINT_WARN2( "TEST_SHUTDOWN model %d %s", mod->id, mod->token );
   return 0; //ok
 }
 
-int test_update( model_t* mod )
+int test_update( stg_model_t* mod )
 {
   static int count = 0;
 
@@ -34,7 +34,7 @@ int test_update( model_t* mod )
   return 0; //ok
 }
 
-int test_getdata( model_t* mod, void** data, size_t* len )
+int test_getdata( stg_model_t* mod, void** data, size_t* len )
 {
   PRINT_WARN2( "TEST_GETDATA model %d %s", mod->id, mod->token );
 
@@ -46,7 +46,7 @@ int test_getdata( model_t* mod, void** data, size_t* len )
   return 0; //ok
 }
 
-int test_putcommand( model_t* mod, void* data, size_t len )
+int test_putcommand( stg_model_t* mod, void* data, size_t len )
 {
   PRINT_WARN2( "TEST_PUTCOMMAND model %d %s", mod->id, mod->token );
 

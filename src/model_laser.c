@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.42 $
+//  $Revision: 1.43 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -30,17 +30,13 @@ some properties here
 //#define DEBUG
 
 #include "stage.h"
-#include "raytrace.h"
-
-
-#include "gui.h"
 extern rtk_fig_t* fig_debug;
 
 #define TIMING 0
 #define LASER_FILLED 1
 
   
-void laser_init( model_t* mod )
+void laser_init( stg_model_t* mod )
 {
   // sensible laser defaults
   stg_geom_t geom;
@@ -49,7 +45,7 @@ void laser_init( model_t* mod )
   geom.pose.a = STG_DEFAULT_LASER_POSEA;
   geom.size.x = STG_DEFAULT_LASER_SIZEX;
   geom.size.y = STG_DEFAULT_LASER_SIZEY;
-  model_set_geom( mod, &geom );
+  stg_model_set_geom( mod, &geom );
 
   // set up a laser-specific config structure
   stg_laser_config_t lconf;
@@ -61,13 +57,13 @@ void laser_init( model_t* mod )
   lconf.samples     = STG_DEFAULT_LASER_SAMPLES;
   
   stg_color_t col =stg_lookup_color( STG_LASER_GEOM_COLOR ); 
-  model_set_color( mod, &col );
+  stg_model_set_color( mod, &col );
 
-  model_set_config( mod, &lconf, sizeof(lconf) );
+  stg_model_set_config( mod, &lconf, sizeof(lconf) );
 }
 
 
-int laser_update( model_t* mod )
+int laser_update( stg_model_t* mod )
 {   
   PRINT_DEBUG1( "[%lu] laser update", mod->world->sim_time );
   
@@ -78,7 +74,7 @@ int laser_update( model_t* mod )
   // get the sensor's pose in global coords
   stg_pose_t pz;
   memcpy( &pz, &geom->pose, sizeof(pz) ); 
-  model_local_to_global( mod, &pz );
+  stg_model_local_to_global( mod, &pz );
 
   PRINT_DEBUG3( "laser origin %.2f %.2f %.2f", pz.x, pz.y, pz.a );
 
@@ -110,7 +106,7 @@ int laser_update( model_t* mod )
       
       bearing += sample_incr;
       
-      model_t* hitmod;
+      stg_model_t* hitmod;
       double range = cfg->range_max;
       //stg_laser_return_t hisreturn = LaserVisible;
       
@@ -120,7 +116,7 @@ int laser_update( model_t* mod )
 	  //  mod->id, mod, hitmod->id, hitmod );
 	  
 	  // Ignore myself, my children, and my ancestors.
-	  if( hitmod == mod || model_is_related(mod,hitmod) )
+	  if( hitmod == mod || stg_model_is_related(mod,hitmod) )
 	    continue;
 	  
 	  // Stop looking when we see something
@@ -150,7 +146,7 @@ int laser_update( model_t* mod )
   
   
   // new style
-  model_set_data( mod, scan, sizeof(stg_laser_sample_t) * cfg->samples );
+  stg_model_set_data( mod, scan, sizeof(stg_laser_sample_t) * cfg->samples );
   
   free( scan );
 
@@ -168,7 +164,7 @@ int laser_update( model_t* mod )
 }
 
 
-void laser_render_data(  model_t* mod )
+void laser_render_data(  stg_model_t* mod )
 {
   
   if( mod->gui.data  )
@@ -181,7 +177,7 @@ void laser_render_data(  model_t* mod )
 
   
   stg_pose_t pose;
-  model_global_pose( mod, &pose );
+  stg_model_global_pose( mod, &pose );
 
   rtk_fig_origin( fig, pose.x, pose.y, pose.a );  
 
@@ -193,7 +189,7 @@ void laser_render_data(  model_t* mod )
   stg_laser_config_t* cfg = mod->cfg;
 
   size_t len;
-  stg_laser_sample_t* samples = (stg_laser_sample_t*)model_get_data( mod, &len );
+  stg_laser_sample_t* samples = (stg_laser_sample_t*)stg_model_get_data( mod, &len );
   
   if( samples == NULL || len < sizeof(stg_laser_sample_t) )
     {
@@ -239,13 +235,13 @@ void laser_render_data(  model_t* mod )
   free( points );
 }
 
-void laser_render_config( model_t* mod )
+void laser_render_config( stg_model_t* mod )
 { 
   PRINT_DEBUG( "laser config render" );
   
   // get the config and make sure it's the right size
   size_t len=0;
-  stg_laser_config_t* cfg = (stg_laser_config_t*)model_get_config( mod, &len );
+  stg_laser_config_t* cfg = (stg_laser_config_t*)stg_model_get_config( mod, &len );
   if( len != sizeof(stg_laser_config_t) )
     {
       PRINT_WARN2( "laser config is wrong size (%d/%d bytes). Not rendering",
@@ -294,7 +290,7 @@ void laser_render_config( model_t* mod )
 		       mina, maxa );      
 }
 
-int laser_set_data( model_t* mod, void* data, size_t len )
+int laser_set_data( stg_model_t* mod, void* data, size_t len )
 {
   PRINT_DEBUG( "laser putdata" );
   
@@ -305,7 +301,7 @@ int laser_set_data( model_t* mod, void* data, size_t len )
   laser_render_data( mod );
 }
 
-int laser_set_config( model_t* mod, void* cfg, size_t len )
+int laser_set_config( stg_model_t* mod, void* cfg, size_t len )
 {
   PRINT_DEBUG( "laser putconfig" );
   
@@ -316,7 +312,7 @@ int laser_set_config( model_t* mod, void* cfg, size_t len )
   laser_render_config( mod );
 }
 
-int laser_shutdown( model_t* mod )
+int laser_shutdown( stg_model_t* mod )
 {
   // clear the figure
   if( mod->gui.data  ) rtk_fig_clear(mod->gui.data);

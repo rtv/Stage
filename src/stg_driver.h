@@ -32,7 +32,6 @@
 
 
 #include "stage.h"
-#include "model.h" // TODO move into stage.h
 
 class Stage1p4 : public Driver
 {
@@ -48,19 +47,9 @@ class Stage1p4 : public Driver
 
   static ConfigFile* config;
 
-  //static char worldfile_name[MAXPATHLEN]; // filename
+  /// all player devices share the same Stage world
+  static stg_world_t* world;
 
-  // all player devices share the same Stage client and world (for now)
-  //static stg_client_t* stage_client;
-
-  static world_t* world;
-
-  
-  model_t* model; // points inside the shared stg_client_t to our
-  // individual model data
-  
-  // the property we automatically subscribe to on Setup();
-  //stg_id_t subscribe_prop;
-
-  //GList* subscribe_list;
+  /// points inside the shared world to our individual model data
+  stg_model_t* model; 
 };

@@ -1,9 +1,8 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "raytrace.h"
+#include "stage.h"
 
-#include "rtk.h"
 extern rtk_fig_t* fig_debug;
 
 void itl_destroy( itl_t* itl )
@@ -157,13 +156,13 @@ void PrintArray( GPtrArray* arr )
       printf( "model array %p len %d\n", arr, arr->len );
       int i;
       for( i=0; i<arr->len; i++ )
-	printf( " (model %s)", ((model_t*)g_ptr_array_index( arr, i ))->token );
+	printf( " (model %s)", ((stg_model_t*)g_ptr_array_index( arr, i ))->token );
     }
   else
     printf( "null array\n" );
 }
 
-model_t* itl_next( itl_t* itl )
+stg_model_t* itl_next( itl_t* itl )
 {
   // if we have no models or we've reached the end of the model array
   if( !(itl->models &&  itl->index > itl->models->len) )

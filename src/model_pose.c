@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.24 $
+//  $Revision: 1.25 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -15,8 +15,7 @@
 
 //#define DEBUG
 
-#include "raytrace.h"
-#include "model.h"
+#include "stage.h"
 
 extern rtk_fig_t* fig_debug;
 
@@ -26,9 +25,9 @@ extern rtk_fig_t* fig_debug;
 // the location of the hit in hitx,hity (if non-null)
 // Returns NULL if not collisions.
 // This function is useful for writing position devices.
-model_t* model_test_collision_at_pose( model_t* mod, 
-				       stg_pose_t* pose, 
-				       double* hitx, double* hity )
+stg_model_t* stg_model_test_collision_at_pose( stg_model_t* mod, 
+					   stg_pose_t* pose, 
+					   double* hitx, double* hity )
 {
   //return NULL;
   
@@ -36,7 +35,7 @@ model_t* model_test_collision_at_pose( model_t* mod,
   // will just be a single rect, grippers 3 rects, etc. not too bad.
   
   size_t count=0;
-  stg_line_t* lines = model_get_lines(mod, &count);
+  stg_line_t* lines = stg_model_get_lines(mod, &count);
 
   // no body? no collision
   if( count < 1 )
@@ -72,12 +71,12 @@ model_t* model_test_collision_at_pose( model_t* mod,
       itl_t* itl = itl_create( p1.x, p1.y, p2.x, p2.y, 
 			       mod->world->matrix, 
 			       PointToPoint );
-      model_t* hitmod;
+      stg_model_t* hitmod;
       while( (hitmod = itl_next( itl )) ) 
 	{
 	  if( hitmod != mod && 
-	      model_get_obstaclereturn(hitmod) && 
-	      !model_is_related(mod,hitmod) )
+	      stg_model_get_obstaclereturn(hitmod) && 
+	      !stg_model_is_related(mod,hitmod) )
 	    {
 	      if( hitx || hity ) // if the caller needs to know hit points
 		{
@@ -96,20 +95,20 @@ model_t* model_test_collision_at_pose( model_t* mod,
 
 
 
-int model_update_pose( model_t* model )
+int stg_model_update_pose( stg_model_t* model )
 { 
   PRINT_DEBUG1( "pose update model %d", model->id );
  
-  stg_velocity_t* vel = model_get_velocity(model);  
+  stg_velocity_t* vel = stg_model_get_velocity(model);  
 
 
   stg_pose_t pose;
-  memcpy( &pose, model_get_pose( model ), sizeof(pose));
+  memcpy( &pose, stg_model_get_pose( model ), sizeof(pose));
   
   stg_pose_t oldpose;
   memcpy( &oldpose, &pose, sizeof(pose));
 
-  stg_energy_data_t* en = model_get_energy_data( model );
+  stg_energy_data_t* en = stg_model_get_energy_data( model );
 
   //if( en->joules > 0 && (vel->x || vel->y || vel->a ) )
   if( (vel->x || vel->y || vel->a ) )
@@ -123,7 +122,7 @@ int model_update_pose( model_t* model )
       pose.y += vel->y * interval;
       pose.a += vel->a * interval;
 
-      if( model_test_collision_at_pose( model, &pose, NULL, NULL ) )
+      if( stg_model_test_collision_at_pose( model, &pose, NULL, NULL ) )
 	{
 	  PRINT_DEBUG( "HIT something!" );
 
@@ -136,12 +135,12 @@ int model_update_pose( model_t* model )
 	  model->stall = 0;
 
 	  // now set the new pose handling matrix & gui redrawing 
-	  model_set_pose( model, &pose );
+	  stg_model_set_pose( model, &pose );
 	  
 	  // ignore acceleration in energy model for now, we just pay
 	  // something to move.	
-	  stg_kg_t mass = *model_get_mass( model );
-	  model_energy_consume( model, STG_ENERGY_COST_MOTIONKG * mass ); 
+	  stg_kg_t mass = *stg_model_get_mass( model );
+	  stg_model_energy_consume( model, STG_ENERGY_COST_MOTIONKG * mass ); 
 
 	  // record the movement in odometry
 	  model->odom.x += vel->x * interval;

@@ -5,10 +5,10 @@
 //#undef DEBUG
 
 #include "stage.h"
-#include "gui.h"
-#include "raytrace.h"
+//#include "gui.h"
+//#include "raytrace.h"
 
-int model_create_name( model_t* mod )
+int stg_model_create_name( stg_model_t* mod )
 {
   assert( mod );
   assert( mod->token );
@@ -37,13 +37,13 @@ int model_create_name( model_t* mod )
   return 0; //ok
 }
 
-model_t* model_create(  world_t* world, 
-			model_t* parent,
+stg_model_t* stg_model_create( stg_world_t* world, 
+			stg_model_t* parent,
 			stg_id_t id, 
 			stg_model_type_t type,
 			char* token )
 {  
-  model_t* mod = calloc( sizeof(model_t),1 );
+  stg_model_t* mod = calloc( sizeof(stg_model_t),1 );
 
   mod->id = id;
 
@@ -103,7 +103,7 @@ model_t* model_create(  world_t* world,
   gf.nose =  STG_DEFAULT_GUI_NOSE;
   gf.grid = STG_DEFAULT_GUI_GRID;
   gf.movemask = STG_DEFAULT_GUI_MOVEMASK;  
-  model_set_guifeatures( mod, &gf );
+  stg_model_set_guifeatures( mod, &gf );
 
   // zero velocity
   memset( &mod->velocity, 0, sizeof(mod->velocity) );
@@ -148,7 +148,7 @@ model_t* model_create(  world_t* world,
   
   // this normalizes the lines to fit inside our geometry rectangle
   // and also causes a redraw
-  model_set_lines( mod, lines, 4 );
+  stg_model_set_lines( mod, lines, 4 );
 		
   // initialize odometry
   memset( &mod->odom, 0, sizeof(mod->odom));
@@ -164,7 +164,7 @@ model_t* model_create(  world_t* world,
   return mod;
 }
 
-void model_destroy( model_t* mod )
+void stg_model_destroy( stg_model_t* mod )
 {
   assert( mod );
   
@@ -184,10 +184,10 @@ void model_destroy( model_t* mod )
 
 void model_destroy_cb( gpointer mod )
 {
-  model_destroy( (model_t*)mod );
+  stg_model_destroy( (stg_model_t*)mod );
 }
 
-int model_is_antecedent( model_t* mod, model_t* testmod )
+int stg_model_is_antecedent( stg_model_t* mod, stg_model_t* testmod )
 {
   if( mod == NULL )
     return FALSE;
@@ -195,14 +195,14 @@ int model_is_antecedent( model_t* mod, model_t* testmod )
   if( mod == testmod )
     return TRUE;
   
-  if( model_is_antecedent( mod->parent, testmod ))
+  if( stg_model_is_antecedent( mod->parent, testmod ))
     return TRUE;
   
   // neither mod nor a child of mod matches testmod
   return FALSE;
 }
 
-int model_is_descendent( model_t* mod, model_t* testmod )
+int stg_model_is_descendent( stg_model_t* mod, stg_model_t* testmod )
 {
   if( mod == testmod )
     return TRUE;
@@ -210,8 +210,8 @@ int model_is_descendent( model_t* mod, model_t* testmod )
   int ch;
   for(ch=0; ch < mod->children->len; ch++ )
     {
-      model_t* child = g_ptr_array_index( mod->children, ch );
-      if( model_is_descendent( child, testmod ))
+      stg_model_t* child = g_ptr_array_index( mod->children, ch );
+      if( stg_model_is_descendent( child, testmod ))
 	return TRUE;
     }
   
@@ -220,21 +220,21 @@ int model_is_descendent( model_t* mod, model_t* testmod )
 }
 
 // returns 1 if mod1 and mod2 are in the same tree
-int model_is_related( model_t* mod1, model_t* mod2 )
+int stg_model_is_related( stg_model_t* mod1, stg_model_t* mod2 )
 {
   if( mod1 == mod2 )
     return TRUE;
 
   // find the top-level model above mod1;
-  model_t* t = mod1;
+  stg_model_t* t = mod1;
   while( t->parent )
     t = t->parent;
 
   // now seek mod2 below t
-  return model_is_descendent( t, mod2 );
+  return stg_model_is_descendent( t, mod2 );
 }
 
-/* rtk_fig_t* model_prop_fig_create( model_t* mod,  */
+/* rtk_fig_t* model_prop_fig_create( stg_model_t* mod,  */
 /* 				  rtk_fig_t* array[], */
 /* 				  stg_id_t propid,  */
 /* 				  rtk_fig_t* parent, */
@@ -249,14 +249,14 @@ int model_is_related( model_t* mod1, model_t* mod2 )
 /* } */
 
 
-void model_global_pose( model_t* mod, stg_pose_t* gpose )
+void  stg_model_global_pose( stg_model_t* mod, stg_pose_t* gpose )
 { 
   stg_pose_t parent_pose;
   memset( &parent_pose, 0, sizeof(parent_pose));
   
   // find my parent's pose
   if( mod->parent )
-    model_global_pose( mod->parent, &parent_pose );
+    stg_model_global_pose( mod->parent, &parent_pose );
 
   // Compute our pose in the global cs
   gpose->x = parent_pose.x + mod->pose.x * cos(parent_pose.a) - mod->pose.y * sin(parent_pose.a);
@@ -265,21 +265,21 @@ void model_global_pose( model_t* mod, stg_pose_t* gpose )
 }
 
 // should one day do all this with affine transforms for neatness
-void model_local_to_global( model_t* mod, stg_pose_t* pose )
+void stg_model_local_to_global( stg_model_t* mod, stg_pose_t* pose )
 {  
   stg_pose_t origin;   
   //stg_pose_sum( &origin, &mod->pose, &mod->origin );
-  model_global_pose( mod, &origin );
+  stg_model_global_pose( mod, &origin );
   
-  stg_geom_t* geom = model_get_geom(mod); 
+  stg_geom_t* geom = stg_model_get_geom(mod); 
 
   stg_pose_sum( &origin, &origin, &geom->pose );
   stg_pose_sum( pose, &origin, pose );
 }
 
-void model_global_rect( model_t* mod, stg_rotrect_t* glob, stg_rotrect_t* loc )
+void stg_model_global_rect( stg_model_t* mod, stg_rotrect_t* glob, stg_rotrect_t* loc )
 {
-  stg_geom_t* geom = model_get_geom(mod); 
+  stg_geom_t* geom = stg_model_get_geom(mod); 
 
   double w = geom->size.x;
   double h = geom->size.y;
@@ -292,29 +292,29 @@ void model_global_rect( model_t* mod, stg_rotrect_t* glob, stg_rotrect_t* loc )
   glob->size.y = loc->size.y * h;
   
   // now transform into local coords
-  model_local_to_global( mod, (stg_pose_t*)glob );
+  stg_model_local_to_global( mod, (stg_pose_t*)glob );
 }
 
 
-void model_map_with_children(  model_t* mod, gboolean render )
+void stg_model_map_with_children(  stg_model_t* mod, gboolean render )
 {
   // call this function for all the model's children
   int ch;
   for( ch=0; ch<mod->children->len; ch++ )
-    model_map_with_children( (model_t*)g_ptr_array_index(mod->children, ch), 
+    stg_model_map_with_children( (stg_model_t*)g_ptr_array_index(mod->children, ch), 
 			     render);  
   // now map the model
-  model_map( mod, render );
+  stg_model_map( mod, render );
 }
 
 // if render is true, render the model into the matrix, else unrender
 // the model
-void model_map( model_t* mod, gboolean render )
+void stg_model_map( stg_model_t* mod, gboolean render )
 {
   assert( mod );
   
   size_t count=0;
-  stg_line_t* lines = model_get_lines(mod, &count);
+  stg_line_t* lines = stg_model_get_lines(mod, &count);
   
   if( count == 0 ) 
     return;
@@ -340,14 +340,14 @@ void model_map( model_t* mod, gboolean render )
       p2.y = line->y2;
       p2.a = 0;
       
-      model_local_to_global( mod, &p1 );
-      model_local_to_global( mod, &p2 );
+      stg_model_local_to_global( mod, &p1 );
+      stg_model_local_to_global( mod, &p2 );
       
       stg_matrix_line( mod->world->matrix, p1.x, p1.y, p2.x, p2.y, mod, render );
     }
 }
   
-int model_update( model_t* mod )
+int stg_model_update( stg_model_t* mod )
 {
   //PRINT_DEBUG2( "updating model %d:%s", mod->id, mod->token );
   
@@ -358,18 +358,18 @@ int model_update( model_t* mod )
     mod->world->library[ mod->type ].update(mod);
   
   // now move the model if it has any velocity
-  model_update_pose( mod );
+  stg_model_update_pose( mod );
 
   return 0;
 }
 
 void model_update_cb( gpointer key, gpointer value, gpointer user )
 {
-  model_update( (model_t*)value );
+  stg_model_update( (stg_model_t*)value );
 }
 
 /*
-int model_service( model_t* mod )
+int model_service( stg_model_t* mod )
 {
   PRINT_DEBUG1( "default service method mod %d", mod->id );
 
@@ -381,7 +381,7 @@ int model_service( model_t* mod )
 }
 */
 
-int model_startup( model_t* mod )
+int stg_model_startup( stg_model_t* mod )
 {
   PRINT_DEBUG1( "default startup method mod %d", mod->id );
   
@@ -392,7 +392,7 @@ int model_startup( model_t* mod )
   return 0;
 }
 
-int model_shutdown( model_t* mod )
+int stg_model_shutdown( stg_model_t* mod )
 {
   PRINT_DEBUG1( "default shutdown method mod %d", mod->id );
   
@@ -403,47 +403,24 @@ int model_shutdown( model_t* mod )
   return 0;
 }
 
-/*void model_subscribe( model_t* mod, stg_id_t pid )
-{
-  mod->subs[pid]++;
-  
-  // if this is the first sub, call startup & render if there is one
-  if( mod->subs[pid] == 1 )
-    model_startup(mod);
-}*/
-
-void model_subscribe( model_t* mod )
+void stg_model_subscribe( stg_model_t* mod )
 {
   mod->subs++;
   
   // if this is the first sub, call startup & render if there is one
   if( mod->subs == 1 )
-    model_startup(mod);
+    stg_model_startup(mod);
 }
 
-void model_unsubscribe( model_t* mod )
+void stg_model_unsubscribe( stg_model_t* mod )
 {
   mod->subs--;
   
   // if this is the first sub, call startup & render if there is one
   if( mod->subs < 1 )
-    model_shutdown(mod);
+    stg_model_shutdown(mod);
 }
 
-/* void model_unsubscribe( model_t* mod, stg_id_t pid ) */
-/* { */
-/*   mod->subs[pid]--; */
-  
-/*   // if that was the last sub, call shutdown  */
-/*   if( mod->subs[pid] < 1 ) */
-/*     model_shutdown(mod); */
-  
-/*   if( mod->subs[pid] < 0 ) */
-/*     PRINT_ERR1( "subscription count has gone below zero (%d). weird.", */
-/* 		mod->subs[pid] ); */
-/* } */
-
-  
 void pose_invert( stg_pose_t* pose )
 {
   pose->x = -pose->x;
@@ -451,13 +428,13 @@ void pose_invert( stg_pose_t* pose )
   pose->a = pose->a;
 }
 
-void model_print( model_t* mod )
+void stg_model_print( stg_model_t* mod )
 {
   printf( "   model %d:%d:%s\n", mod->world->id, mod->id, mod->token );
 }
 
 void model_print_cb( gpointer key, gpointer value, gpointer user )
 {
-  model_print( (model_t*)value );
+  stg_model_print( (stg_model_t*)value );
 }
 

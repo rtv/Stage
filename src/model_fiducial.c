@@ -7,43 +7,41 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.18 $
+//  $Revision: 1.19 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 //#define DEBUG
 
 #include <math.h>
-#include "model.h"
-#include "raytrace.h"
-#include "gui.h"
+#include "stage.h"
 extern rtk_fig_t* fig_debug;
 
-void fiducial_render_config( model_t* mod );
-void fiducial_render_data( model_t* mod );
+void fiducial_render_config( stg_model_t* mod );
+void fiducial_render_data( stg_model_t* mod );
 
-void fiducial_init( model_t* mod )
+void fiducial_init( stg_model_t* mod )
 {
   PRINT_DEBUG( "fiducial init" );
 
   // fiducialfinders don't have a body in the sim
-  //model_set_lines( mod, NULL, 0 );
+  //stg_model_set_lines( mod, NULL, 0 );
   
   // a fraction smaller than a laser by default
   stg_geom_t geom;
   memset( &geom, 0, sizeof(geom));
   geom.size.x = STG_DEFAULT_LASER_SIZEX * 0.9;
   geom.size.y = STG_DEFAULT_LASER_SIZEY * 0.9;
-  model_set_geom( mod, &geom );  
+  stg_model_set_geom( mod, &geom );  
   
   stg_color_t color = stg_lookup_color( "magenta" );
-  model_set_color( mod, &color );
+  stg_model_set_color( mod, &color );
 
   mod->obstacle_return = 0;
   mod->laser_return = LaserTransparent;
   
   // start with no data
-  model_set_data( mod, NULL, 0 );
+  stg_model_set_data( mod, NULL, 0 );
 
   // default parameters
   stg_fiducial_config_t cfg; 
@@ -51,10 +49,10 @@ void fiducial_init( model_t* mod )
   cfg.max_range_anon = STG_DEFAULT_FIDUCIAL_RANGEMAXANON;
   cfg.max_range_id = STG_DEFAULT_FIDUCIAL_RANGEMAXID;
   cfg.fov = STG_DEFAULT_FIDUCIAL_FOV;  
-  model_set_config( mod, &cfg, sizeof(cfg) );
+  stg_model_set_config( mod, &cfg, sizeof(cfg) );
 }
 
-int fiducial_set_data( model_t* mod, void* data, size_t len )
+int fiducial_set_data( stg_model_t* mod, void* data, size_t len )
 {  
   PRINT_DEBUG( "fiducial set data" );
 
@@ -70,7 +68,7 @@ int fiducial_set_data( model_t* mod, void* data, size_t len )
   return 0; //OK
 }
 
-int fiducial_set_config( model_t* mod, void* config, size_t len )
+int fiducial_set_config( stg_model_t* mod, void* config, size_t len )
 {  
   PRINT_DEBUG( "fiducial set config" );
   
@@ -83,16 +81,16 @@ int fiducial_set_config( model_t* mod, void* config, size_t len )
   return 0; //OK
 }
  
-int fiducial_shutdown( model_t* mod )
+int fiducial_shutdown( stg_model_t* mod )
 {
   // this will undrender the data
-  model_set_data( mod, NULL, 0 );
+  stg_model_set_data( mod, NULL, 0 );
 }
 
 
 typedef struct 
 {
-  model_t* mod;
+  stg_model_t* mod;
   stg_pose_t pose;
   stg_fiducial_config_t* cfg;
   GArray* fiducials;
@@ -101,7 +99,7 @@ typedef struct
 void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user )
 {
   model_fiducial_buffer_t* mfb = (model_fiducial_buffer_t*)user;
-  model_t* him = (model_t*)value;
+  stg_model_t* him = (stg_model_t*)value;
   
   //PRINT_DEBUG2( "checking model %s - he has fiducial value %d",
   //	him->token, him->fiducial_return );
@@ -112,7 +110,7 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
     return; 
 
   stg_pose_t hispose;
-  model_global_pose( him, &hispose );
+  stg_model_global_pose( him, &hispose );
   
   double dx = hispose.x - mfb->pose.x;
   double dy = hispose.y - mfb->pose.y;
@@ -142,11 +140,11 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
 			   him->world->matrix, PointToPoint );
   
   // iterate until we hit something
-  model_t* hitmod;
+  stg_model_t* hitmod;
   while( (hitmod = itl_next( itl )) ) 
     {
       if( hitmod != mfb->mod &&  //&& model_obstacle_get(hitmod) ) 
-	!model_is_related(mfb->mod,hitmod) )
+	!stg_model_is_related(mfb->mod,hitmod) )
 	break;
     }
   
@@ -162,7 +160,7 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
   // if it was him, we can see him
   if( hitmod == him )
     {
-      stg_geom_t* hisgeom = model_get_geom(him);
+      stg_geom_t* hisgeom = stg_model_get_geom(him);
 
       // record where we saw him and what he looked like
       stg_fiducial_t fid;      
@@ -188,7 +186,7 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
 ///////////////////////////////////////////////////////////////////////////
 // Update the beacon data
 //
-int fiducial_update( model_t* mod )
+int fiducial_update( stg_model_t* mod )
 {
   PRINT_DEBUG( "fiducial update" );
 
@@ -200,18 +198,18 @@ int fiducial_update( model_t* mod )
   mfb.mod = mod;
   
   size_t len;
-  mfb.cfg = model_get_config( mod, &len );
+  mfb.cfg = stg_model_get_config( mod, &len );
   assert(len==sizeof(stg_fiducial_config_t));
 
   mfb.fiducials = g_array_new( FALSE, TRUE, sizeof(stg_fiducial_t) );
-  model_global_pose( mod, &mfb.pose );
+  stg_model_global_pose( mod, &mfb.pose );
   
   // for all the objects in the world
   g_hash_table_foreach( mod->world->models, model_fiducial_check_neighbor, &mfb );
 
   //PRINT_DEBUG2( "model %s saw %d fiducials", mod->token, mfb.fiducials->len );
 
-  model_set_data( mod, 
+  stg_model_set_data( mod, 
 		  mfb.fiducials->data, 
 		  mfb.fiducials->len * sizeof(stg_fiducial_t) );
   
@@ -222,7 +220,7 @@ int fiducial_update( model_t* mod )
 
 
 
-void fiducial_render_data( model_t* mod )
+void fiducial_render_data( stg_model_t* mod )
 { 
   //PRINT_WARN( "fiducial render" );
 
@@ -240,7 +238,7 @@ void fiducial_render_data( model_t* mod )
   rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_COLOR ) );
   
   size_t len;
-  stg_fiducial_t* fids = model_get_data(mod, &len);
+  stg_fiducial_t* fids = stg_model_get_data(mod, &len);
   
   int bcount = len / sizeof(stg_fiducial_t);
   
@@ -271,7 +269,7 @@ void fiducial_render_data( model_t* mod )
     }  
 }
 
-void fiducial_render_config( model_t* mod )
+void fiducial_render_config( stg_model_t* mod )
 { 
   
   if( mod->gui.cfg  )
@@ -285,7 +283,7 @@ void fiducial_render_config( model_t* mod )
   rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_CFG_COLOR ));
   
   size_t len;
-  stg_fiducial_config_t* cfg = model_get_config(mod,&len);
+  stg_fiducial_config_t* cfg = stg_model_get_config(mod,&len);
   
   assert( len == sizeof(stg_fiducial_config_t) );
   assert( cfg );

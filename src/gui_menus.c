@@ -1,7 +1,7 @@
 //#define DEBUG
 
-#include "gui.h"
-#include "stdlib.h"
+#include <stdlib.h>
+#include "stage.h"
 
 extern rtk_fig_t* fig_debug;
 
@@ -57,8 +57,8 @@ void gui_menu_save( rtk_menuitem_t *item )
 {
   PRINT_DEBUG( "Save menu item" );
 
-  world_t* world = (world_t*)item->userdata;
-  stg_id_t wid = world->id;
+  //world_t* world = (world_t*)item->userdata;
+  //stg_id_t wid = world->id;
   
   // TODO
   // tell the client to save the world with this server-side id
@@ -70,8 +70,8 @@ void gui_menu_exit( rtk_menuitem_t *item )
   //quit = TRUE;
   PRINT_DEBUG( "Exit menu item" );
 
-  world_t* world = (world_t*)item->userdata;
-  stg_id_t wid = world->id;
+  //world_t* world = (world_t*)item->userdata;
+  //stg_id_t wid = world->id;
   
   // TODO
   // tell the client to save the world with this server-side id
@@ -219,20 +219,20 @@ void gui_menu_layer( rtk_menuitem_t *item )
   // invalidate the whole canvas - how?
 }
 
-void model_refresh( model_t* mod )
+void model_refresh( stg_model_t* mod )
 {
   // re-set the current data, config & lines to force redraws
   size_t len = 0;
-  void* p = model_get_data( mod, &len );  
-  model_set_data( mod, p, len );
-  p = model_get_config( mod, &len );
-  model_set_config( mod, p, len );  
-  model_set_lines( mod, mod->lines, mod->lines_count );
+  void* p = stg_model_get_data( mod, &len );  
+  stg_model_set_data( mod, p, len );
+  p = stg_model_get_config( mod, &len );
+  stg_model_set_config( mod, p, len );  
+  stg_model_set_lines( mod, mod->lines, mod->lines_count );
 }
 
 void refresh_cb( gpointer key, gpointer value, gpointer user )
 {
-  model_refresh( (model_t*)value );
+  model_refresh( (stg_model_t*)value );
 }
 
 void gui_menu_polygons( rtk_menuitem_t *item )
