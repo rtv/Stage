@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.11 $
+//  $Revision: 1.4.2.12 $
 //
 // Usage:
 //  (empty)
@@ -94,9 +94,9 @@ void CVisionDevice::Update()
 
     // See if its time to recalculate vision
     //
-    if( m_world->get_time() - m_last_update < m_update_interval )
+    if( m_world->GetTime() - m_last_update < m_update_interval )
         return;
-    m_last_update = m_world->get_time();
+    m_last_update = m_world->GetTime();
 
     //RTK_TRACE0("generating new data");
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.21 $
+//  $Revision: 1.4.2.22 $
 //
 // Usage:
 //  (empty)
@@ -447,7 +447,7 @@ void CWorld::Update()
     double simtimestep = timestep;
     if (timestep > m_max_timestep)
     {
-        PRINT_MSG2("warning: max timestep exceeded (%f > %f)\n",
+        PRINT_MSG2("warning: max timestep exceeded (%f > %f)",
                    (double) simtimestep, (double) m_max_timestep);
         simtimestep = m_max_timestep;
     }
@@ -481,7 +481,7 @@ void CWorld::Update()
 // Get the sim time
 // Returns time in sec since simulation started
 //
-double CWorld::get_time()
+double CWorld::GetTime()
 {
     return m_sim_time;
 }
@@ -789,7 +789,7 @@ void CWorld::OnUiProperty(CWorld *world, RtkUiPropertyData* data)
 
     data->begin_section("default", "world");
     
-    RtkFormat1(value, "%7.3f", (double) world->get_time());
+    RtkFormat1(value, "%7.3f", (double) world->GetTime());
     data->add_item_text("Simulation time (s)", CSTR(value), "");
     
     RtkFormat1(value, "%7.3f", (double) world->GetRealTime());

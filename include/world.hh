@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.16 $
+//  $Revision: 1.1.2.17 $
 //
 // Usage:
 //  (empty)
@@ -106,7 +106,7 @@ class CWorld
     // Get the simulation time
     // Returns time in sec since simulation started
     //
-    public: double get_time();
+    public: double GetTime();
 
     // Get the real time
     // Returns time in sec since simulation started

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.14 $
+//  $Revision: 1.9.2.15 $
 //
 // Usage:
 //  (empty)
@@ -100,7 +100,7 @@ int CPioneerMobileDevice::Move()
     // simplifies a lot of things in other places.
     //     ahoward
     
-    double step_time = m_world->get_time() - m_last_time;
+    double step_time = m_world->GetTime() - m_last_time;
     m_last_time += step_time;
 
     // Get the current robot pose
@@ -267,7 +267,6 @@ void CPioneerMobileDevice::ComposeData()
     // Construct the data packet
     // Basically just changes byte orders and some units
     //
-    // *** REMOVE m_data.time = htonl((int)((m_world->get_time())*1000.0));
     m_data.xpos = htonl((int) px);
     m_data.ypos = htonl((int) py);
     m_data.theta = htons((unsigned short) pth);

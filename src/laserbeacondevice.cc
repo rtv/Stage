@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.7 $
+//  $Revision: 1.2.2.8 $
 //
 // Usage:
 //  (empty)
@@ -79,9 +79,9 @@ void CLaserBeaconDevice::Update()
     
     // Check to see if it is time to update the laser
     //
-    if (m_world->get_time() - m_last_update <= m_update_interval)
+    if (m_world->GetTime() - m_last_update <= m_update_interval)
         return;
-    m_last_update = m_world->get_time();
+    m_last_update = m_world->GetTime();
     
     // Get the pose of the detector in the global cs
     //

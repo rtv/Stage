@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/stage_types.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -55,8 +55,8 @@
 
 // Message macros
 //
-#define PRINT_MSG(m) printf("stage msg : %s : "m"\n", __FUNCTION__)
-#define PRINT_MSG1(m, a) printf("stage msg : %s : "m"\n", __FUNCTION__, a)
-#define PRINT_MSG2(m, a, b) printf("stage msg : %s : "m"\n", __FUNCTION__, a, b)
+#define PRINT_MSG(m) printf("stage msg : %s : "m"\n", __FILE__)
+#define PRINT_MSG1(m, a) printf("stage msg : %s : "m"\n", __FILE__, a)
+#define PRINT_MSG2(m, a, b) printf("stage msg : %s : "m"\n", __FILE__, a, b)
 
 #endif
