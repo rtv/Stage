@@ -536,10 +536,8 @@ void gui_model_laser_data( stg_model_t* mod )
       stg_laser_sample_t* sample = NULL;
       
       double* points = calloc( 1 + sizeof(double) * 2 * cfg->samples, 1 );
+      //points[0] = points[1] = 0.0;  // this is implied by the calloc
       
-      points[0] = 0.0;
-      points[1] = 0.0;
-     
       int s;
       for( s=0; s<cfg->samples; s++ )
 	{
@@ -555,6 +553,8 @@ void gui_model_laser_data( stg_model_t* mod )
 	}
 
       rtk_fig_polygon( fig, 0,0,0, cfg->samples+1, points, 0 );      
+
+      free( points );
     }
 }
 
