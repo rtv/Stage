@@ -1,10 +1,10 @@
-/* 	$Id: pioneermobiledevice.h,v 1.6 2000-12-08 09:08:11 vaughan Exp $	 */
+/* 	$Id: pioneermobiledevice.h,v 1.7 2001-01-13 02:45:54 gerkey Exp $	 */
 // this device implements a differential-steer mobility base for the robot
 
 #ifndef PIONEERMOBILEDEVICE_H
 #define PIONEERMOBILEDEVICE_H
 
-#include "offsets.h"
+#include "stage.h"
 #include "playerdevice.hh"
 #include "win.h"
 
@@ -55,8 +55,8 @@ class CPioneerMobileDevice : public CPlayerDevice
 
   //*** remove. ahoward BYTE commands[ POSITION_COMMAND_BUFFER_SIZE ];
   //BYTE data[ PDATA_BUFFER_SIZE ];
-  PlayerPositionCommand m_command;
-  PlayerPositionData m_data;
+  player_position_cmd_t m_command;
+  player_position_data_t m_data;
 
   double m_update_interval, m_last_update;
 };

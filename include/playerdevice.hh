@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Author: gerkey $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -82,7 +82,7 @@ class CPlayerDevice : public CDevice
 
     // Pointer to shared info buffers
     //
-    private: PlayerStageInfo *m_info;
+    private: player_stage_info_t *m_info;
     private: size_t m_info_len;
 
     // Pointer to shared data buffers

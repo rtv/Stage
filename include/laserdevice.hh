@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.10 $
+//  $Author: gerkey $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -67,7 +67,7 @@ class CLaserDevice : public CPlayerDevice
 
     // Array holding the laser data
     //
-    private: UINT16 m_data[512];
+    private: uint16_t m_data[512];
     
     // draw myself on the window
     virtual bool GUIDraw();
