@@ -62,8 +62,8 @@ const char* stg_property_string( stg_prop_id_t id )
     case STG_PROP_RANGERS: return "STG_PROP_RANGERS";break;
     case STG_PROP_LASER_DATA: return "STG_PROP_LASER_DATA";break;
     case STG_PROP_BLINKENLIGHT: return "STG_PROP_BLINKENLIGHT";break;
- 
     case STG_PROP_NOSE: return "STG_PROP_NOSE";break;
+    case STG_PROP_BORDER: return "STG_PROP_BORDER";break;
     case STG_PROP_LOS_MSG: return "STG_PROP_LOS_MSG";break;
     case STG_PROP_MOUSE_MODE: return "STG_PROP_MOUSE_MODE";break;
 	
@@ -819,6 +819,36 @@ int stg_model_get_nose( stg_client_t* cli, stg_id_t id,
     return -1;
  
   memcpy( val, reply->data, sizeof(stg_nose_t) );
+  stg_property_free( reply );
+  return 0;
+}
+
+int stg_model_set_border( stg_client_t* cli, stg_id_t id, 
+			 stg_border_t *val)
+{
+  stg_property_t* reply = stg_send_property( cli, id, 
+					     STG_PROP_NOSE,
+					     STG_SETGET,
+					     val,sizeof(stg_border_t));
+  if( reply == NULL )
+    return -1;
+ 
+  memcpy( val, reply->data, sizeof(stg_border_t) );
+  stg_property_free( reply );
+  return 0;
+}
+
+int stg_model_get_border( stg_client_t* cli, stg_id_t id, 
+			  stg_border_t *val)
+{
+  stg_property_t* reply = stg_send_property( cli, id, 
+					     STG_PROP_NOSE,
+					     STG_GET,
+					     NULL, 0 );
+  if( reply == NULL )
+    return -1;
+  
+  memcpy( val, reply->data, sizeof(stg_border_t) );
   stg_property_free( reply );
   return 0;
 }

@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.6 2003-08-25 23:26:32 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.7 2003-08-26 02:26:42 rtv Exp $
  */
 
 #include <assert.h>
@@ -1675,6 +1675,89 @@ void CWorldFile::WriteTupleAngle(int entity, const char *name,
   WriteTupleString(entity, name, index, default_str);
 }
 
+// given raw bitmap data, compress the non-zero pixels into an array
+// of rectangles. caller must free the array
+int stg_pam_to_rects( struct pam *inpam, tuple **data, 
+		      stg_rotrect_t** rects, int* rect_count )
+{
+  // RTV - this box-drawing algorithm compresses hospital.pnm from
+  // 104,000+ pixels to 5,757 rectangles. it's not perfect but pretty
+  // darn good with bitmaps featuring lots of horizontal and vertical
+  // lines. Building floorplans compress very nicely.
+  
+  *rect_count = 0;
+  *rects = NULL;
+
+  for (int y = 0; y < inpam->height; y++)
+    {
+      for (int x = 0; x < inpam->width; x++)
+	{
+	  if( data[y][x][0] == 0)
+	    continue;
+	  
+	  // a rectangle starts from this point
+	  int startx = x;
+	  int starty = inpam->height - y;
+	  //int starty = y;
+	  int height = inpam->height; // assume full height for starters
+	  
+	  printf( "startx at %d %d\n", startx, starty );
+
+	  // grow the width - scan along the line until we hit an empty pixel
+	  for( ; x < inpam->width && data[y][x][0] > 0; x++ )
+	    {
+	      // handle horizontal cropping
+	      //double ppx = x * sx; 
+	      //if (ppx < this->crop_ax || ppx > this->crop_bx)
+	      //continue;
+	      
+	      // look down to see how large a rectangle below we can make
+	      int yy  = y;
+	      while( (data[yy][x][0] > 0 ) && (yy < inpam->height-1) )
+		{ 
+		  // handle vertical cropping
+		  //double ppy = (this->image->height - yy) * sy;
+		  //if (ppy < this->crop_ay || ppy > this->crop_by)
+		  //continue;
+		  
+		  yy++; 
+		} 	      
+	      // now yy is the depth of a line of non-zero pixels
+	      // downward we store the smallest depth - that'll be the
+	      // height of the rectangle
+	      if( yy-y < height ) height = yy-y; // shrink the height to fit
+	    } 
+	  
+	  printf( "end width at %d %d. height %d\n", x, y, height  );
+		  
+
+	  // delete the pixels we have used in this rect
+	  for( int a = y; a < y + height; a++ )
+	    for( int b = startx; b < x; b++ )
+	      memset( data[a][b], 0, sizeof(tuple) );
+	  
+	  // add this rectangle to the array
+	  (*rect_count)++;
+	  *rects = (stg_rotrect_t*)
+	    realloc( *rects, *rect_count * sizeof(stg_rotrect_t) );
+	  
+	  stg_rotrect_t *latest = &(*rects)[(*rect_count)-1];
+	  latest->x = startx;
+	  latest->y = starty;
+	  latest->a = 0.0;
+	  latest->w = x - startx;
+	  latest->h = -height;
+
+	  printf( "rect %d (%.2f %.2f %.2f %.2f %.2f\n", 
+		  *rect_count, 
+		  latest->x, latest->y, latest->a, latest->w, latest->h ); 
+
+	}
+    }
+
+  return 0; // ok
+}
+
 //
 // Create a world in the Stage server based on the current data.
 int CWorldFile::Upload( stg_client_t* cli, 
@@ -1784,8 +1867,16 @@ int CWorldFile::Upload( stg_client_t* cli,
 	stg_model_set_light( cli, anid, &li );
 	
 	stg_mouse_mode_t mouse;
-	mouse = this->ReadInt( section, "mouseable", 1 );
+	mouse = this->ReadBool( section, "mouseable", true );
 	stg_model_set_mouse_mode( cli, anid, &mouse );
+
+	stg_nose_t nose;
+	nose = (stg_nose_t)this->ReadBool( section, "nose", true );
+	stg_model_set_nose( cli, anid, &nose );
+	
+	stg_border_t border;
+	border = this->ReadBool( section, "border", true );
+	stg_model_set_border( cli, anid, &border );
 
 	// read any ranger details
 	
@@ -1833,10 +1924,7 @@ int CWorldFile::Upload( stg_client_t* cli,
 	    free(rangers);
 	  }
 
-
-	stg_nose_t nose;
-	nose = (stg_nose_t)this->ReadBool( section, "nose", true );
-	stg_model_set_nose( cli, anid, &nose );
+	PRINT_DEBUG("Checking for bitmap file" );
 
 	const char* bitmapfile = this->ReadString(section,"bitmap", "" );
 	if( strcmp( bitmapfile, "" ) != 0 )
@@ -1851,14 +1939,32 @@ int CWorldFile::Upload( stg_client_t* cli,
 	      }
 	    
 	    struct pam inpam;
-	    pnm_readpaminit(bitmap, &inpam, sizeof(inpam)); 
+	    //pnm_readpaminit(bitmap, &inpam, sizeof(inpam)); 
 	
-	    printf( "read image %dx%dx%d",
+	    tuple **data = pnm_readpam(bitmap, &inpam, sizeof(inpam));
+
+	    printf( "read image \"%s\"%dx%dx%d\n",
+		    bitmapfile,    
 		    inpam.width, 
 		    inpam.height, 
 		    inpam.depth );
+
+	    stg_rotrect_t* rects;
+	    int rect_count;
+
+	    int res = stg_pam_to_rects( &inpam, data, &rects, &rect_count );
+
+	    printf( "Found %d rects\n", rect_count );
+
+	    stg_model_set_rects( cli, anid, rects, rect_count );
+
 	    // convert the bitmap to rects and poke them into the model
 	    // TODO - insert this code
+	    
+	    // free the bitmap 
+	    for( int i=0; i<inpam.height; i++ )
+	      pnm_freepamrow( data[i] );
+	    
 	  }
       }
   }

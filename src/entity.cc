@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.107 2003-08-25 23:26:32 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.108 2003-08-26 02:26:42 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -742,6 +742,11 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
       this->mouseable = *(stg_mouse_mode_t*)data;
       break;      
 
+    case STG_PROP_BORDER:
+      g_assert( (len == sizeof(bool)) );	
+      this->border = *(bool*)data;
+      break;      
+
     case STG_PROP_NEIGHBORBOUNDS:
       g_assert( (len == sizeof(stg_bounds_t)) );	
       memcpy( &this->bounds_neighbor, (stg_bounds_t*)data, sizeof(stg_bounds_t));
@@ -855,6 +860,11 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
     case STG_PROP_NOSE:
       prop = stg_property_attach_data( prop, &this->draw_nose, 
 				       sizeof(this->draw_nose));
+      break;
+
+    case STG_PROP_BORDER:
+      prop = stg_property_attach_data( prop, &this->border, 
+				       sizeof(this->border));
       break;
 
     case STG_PROP_LASERRETURN:
@@ -1307,9 +1317,18 @@ void CEntity::SetRects( stg_rotrect_t* new_rects, int new_rect_count  )
   this->rect_array = g_array_append_vals( this->rect_array,
 					  new_rects, new_rect_count );
    
-  //ENT_DEBUG1( "set %d rects", this->rect_array->len );
+  ENT_DEBUG1( "set %d rects", this->rect_array->len );
   
-  // if this is root, add a unit rectangle outline
+  /*  for( size_t r=0; r < this->rect_array->len; r++ )
+     {
+      stg_rotrect_t* rect = &g_array_index( this->rect_array,stg_rotrect_t, r);
+      
+      printf( "rect %d (%.2f %.2f %.2f %.2f %.2f\n", 
+	      r, rect->x, rect->y, rect->a, rect->w, rect->h ); 
+    }
+  */
+
+  // if we asked for a border, add a unit rectangle outline
   /*
     if( 0 )//this->this->parent == NULL )
     {

@@ -21,7 +21,7 @@
  * Desc: Simulated robot with various sensors
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.20 2003-08-25 21:06:41 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.21 2003-08-26 02:26:42 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -302,6 +302,9 @@ public:  bool OcclusionTest(CEntity* ent );
   // STG_PROP_ENTITY_RANGEBOUNDS - limits of sensor range in meters 
   double min_range, max_range;
   
+  // if set, we have a bounding box around us
+  bool border;
+
   // user-configurable GUI settings
   bool mouseable;
   bool draw_nose;

@@ -80,6 +80,7 @@
        STG_PROP_NOSE,
        STG_PROP_LOS_MSG,
        STG_PROP_MOUSE_MODE,
+       STG_PROP_BORDER,
        STG_PROP_CREATE_WORLD,
        STG_PROP_DESTROY_WORLD,
        STG_PROP_WORLD_SIZE,
@@ -474,6 +475,13 @@ int stg_model_set_nose( stg_client_t* cli, stg_id_t id,
 			 stg_nose_t *val);
 int stg_model_get_nose( stg_client_t* cli, stg_id_t id, 
 			 stg_nose_t *val);
+
+typedef int stg_border_t;
+
+int stg_model_set_border( stg_client_t* cli, stg_id_t id, 
+			  stg_border_t *val);
+int stg_model_get_border( stg_client_t* cli, stg_id_t id, 
+			  stg_border_t *val);
 
 void stg_los_msg_print( stg_los_msg_t* msg );
 
