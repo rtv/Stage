@@ -46,50 +46,50 @@
    // please stick to the syntax STG_PROP_<model>_<property>
    typedef enum
      {
-       STG_PROP_ENTITY_CREATE=1, 
-       STG_PROP_ENTITY_DESTROY,
-       STG_PROP_ENTITY_CIRCLES,
-       STG_PROP_ENTITY_COLOR,
-       STG_PROP_ENTITY_COMMAND,
-       STG_PROP_ENTITY_DATA,
-       STG_PROP_ENTITY_GEOM,
-       STG_PROP_ENTITY_IDARRETURN,
-       STG_PROP_ENTITY_LASERRETURN,
-       STG_PROP_ENTITY_NAME,
-       STG_PROP_ENTITY_OBSTACLERETURN,
-       STG_PROP_ENTITY_ORIGIN,
-       STG_PROP_ENTITY_PARENT, 
-       STG_PROP_ENTITY_PLAYERID,
-       STG_PROP_ENTITY_POSE,
-       STG_PROP_ENTITY_POWER,
-       STG_PROP_ENTITY_PPM,
-       STG_PROP_ENTITY_PUCKRETURN,
-       STG_PROP_ENTITY_RANGEBOUNDS, 
-       STG_PROP_ENTITY_RECTS,
-       STG_PROP_ENTITY_SIZE,
-       STG_PROP_ENTITY_SONARRETURN,
-       STG_PROP_ENTITY_VELOCITY,
-       STG_PROP_ENTITY_VISIONRETURN,
-       STG_PROP_ENTITY_VOLTAGE,
-       STG_PROP_ENTITY_RANGERS,
-       STG_PROP_ENTITY_LASER_DATA,
-       STG_PROP_ENTITY_NEIGHBORS,
-       STG_PROP_ENTITY_NEIGHBORRETURN,
-       STG_PROP_ENTITY_NEIGHBORBOUNDS,
-       STG_PROP_ENTITY_BLINKENLIGHT,
-       STG_PROP_ENTITY_NOSE,
-       STG_PROP_ENTITY_LOS_MSG,
-       STG_PROP_IDAR_RX, // see idar.cc
-       STG_PROP_IDAR_TX,
-       STG_PROP_IDAR_TXRX,
-       STG_PROP_WORLD_CREATE,
-       STG_PROP_WORLD_DESTROY,
+       STG_PROP_CREATE_MODEL=1, 
+       STG_PROP_DESTROY_MODEL,
+       STG_PROP_CIRCLES,
+       STG_PROP_COLOR,
+       STG_PROP_COMMAND,
+       STG_PROP_DATA,
+       STG_PROP_GEOM,
+       STG_PROP_IDARRETURN,
+       STG_PROP_LASERRETURN,
+       STG_PROP_NAME,
+       STG_PROP_OBSTACLERETURN,
+       STG_PROP_ORIGIN,
+       STG_PROP_PARENT, 
+       STG_PROP_PLAYERID,
+       STG_PROP_POSE,
+       STG_PROP_POWER,
+       STG_PROP_PPM,
+       STG_PROP_PUCKRETURN,
+       STG_PROP_RANGEBOUNDS, 
+       STG_PROP_RECTS,
+       STG_PROP_SIZE,
+       STG_PROP_SONARRETURN,
+       STG_PROP_VELOCITY,
+       STG_PROP_VISIONRETURN,
+       STG_PROP_VOLTAGE,
+       STG_PROP_RANGERS,
+       STG_PROP_LASER_DATA,
+       STG_PROP_NEIGHBORS,
+       STG_PROP_NEIGHBORRETURN,
+       STG_PROP_NEIGHBORBOUNDS,
+       STG_PROP_BLINKENLIGHT,
+       STG_PROP_NOSE,
+       STG_PROP_LOS_MSG,
+       STG_PROP_MOUSE_MODE,
+       STG_PROP_CREATE_WORLD,
+       STG_PROP_DESTROY_WORLD,
        STG_PROP_WORLD_SIZE,
        STG_PROP_WORLD_GUI, 
-       STG_PROP_POSITION_ORIGIN, // see position.cc
-       STG_PROP_POSITION_ODOM,
-       STG_PROP_POSITION_MODE,
-       STG_PROP_POSITION_STEER,
+       // remove?
+       //STG_PROP_POSITION_ORIGIN, // see position.cc
+       //STG_PROP_POSITION_ODOM,
+       //STG_PROP_POSITION_MODE,
+       //STG_PROP_POSITION_STEER,
+
        STG_PROPERTY_COUNT // THIS MUST BE THE LAST ENTRY
      } stg_prop_id_t;
   
@@ -482,6 +482,15 @@ int stg_model_send_los_msg(  stg_client_t* cli, stg_id_t id,
 
 int stg_model_exchange_los_msg(  stg_client_t* cli, stg_id_t id, 
 			     stg_los_msg_t *msg );
+
+
+typedef int stg_mouse_mode_t;
+
+int stg_model_set_mouse_mode( stg_client_t* cli, stg_id_t id, 
+			      stg_mouse_mode_t *mouse );
+
+int stg_model_get_mouse_mode( stg_client_t* cli, stg_id_t id, 
+			      stg_mouse_mode_t *mouse );
 
 //int stg_model_get_rects(  stg_client_t* cli, stg_id_t id, 
 //		  stg_rotrect_array_t* rects );

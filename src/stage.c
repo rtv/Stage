@@ -29,49 +29,52 @@ const char* stg_property_string( stg_prop_id_t id )
 {
   switch( id )
     {
-    case STG_PROP_ENTITY_CREATE: return "STG_PROP_ENTITY_CREATE"; break;
-    case STG_PROP_ENTITY_DESTROY: return "STG_PROP_ENTITY_DESTROY"; break;
-    case STG_PROP_ENTITY_CIRCLES: return "STG_PROP_ENTITY_CIRCLES"; break;
-    case STG_PROP_ENTITY_COLOR: return "STG_PROP_ENTITY_COLOR"; break;
-    case STG_PROP_ENTITY_COMMAND: return "STG_PROP_ENTITY_COMMAND"; break;
-    case STG_PROP_ENTITY_DATA: return "STG_PROP_ENTITY_DATA"; break;
-    case STG_PROP_ENTITY_GEOM: return "STG_PROP_ENTITY_GEOM"; break;
-    case STG_PROP_ENTITY_IDARRETURN: return "STG_PROP_ENTITY_IDARRETURN"; break;
-    case STG_PROP_ENTITY_LASERRETURN: return "STG_PROP_ENTITY_LASERRETURN"; break;
-    case STG_PROP_ENTITY_NAME: return "STG_PROP_ENTITY_NAME"; break;
-    case STG_PROP_ENTITY_OBSTACLERETURN: return "STG_PROP_ENTITY_OBSTACLERETURN";break;
-    case STG_PROP_ENTITY_ORIGIN: return "STG_PROP_ENTITY_ORIGIN"; break;
-    case STG_PROP_ENTITY_PARENT: return "STG_PROP_ENTITY_PARENT"; break;
-    case STG_PROP_ENTITY_PLAYERID: return "STG_PROP_ENTITY_PLAYERID"; break;
-    case STG_PROP_ENTITY_POSE: return "STG_PROP_ENTITY_POSE"; break;
-    case STG_PROP_ENTITY_POWER: return "STG_PROP_SONAR_POWER"; break;
-    case STG_PROP_ENTITY_PPM: return "STG_PROP_ENTITY_PPM"; break;
-    case STG_PROP_ENTITY_PUCKRETURN: return "STG_PROP_ENTITY_PUCKETURN"; break;
-    case STG_PROP_ENTITY_RANGEBOUNDS: return "STG_PROP_ENTITY_RANGEBOUNDS";break;
-    case STG_PROP_ENTITY_RECTS: return "STG_PROP_ENTITY_RECTS"; break;
-    case STG_PROP_ENTITY_SIZE: return "STG_PROP_ENTITY_SIZE"; break;
-    case STG_PROP_ENTITY_SONARRETURN: return "STG_PROP_ENTITY_SONARRETURN"; break;
-    case STG_PROP_ENTITY_NEIGHBORRETURN: return "STG_PROP_ENTITY_NEIGHBORRETURN"; break;
-    case STG_PROP_ENTITY_NEIGHBORBOUNDS: return "STG_PROP_ENTITY_NEIGHBORBOUNDS"; break;
-    case STG_PROP_ENTITY_NEIGHBORS: return "STG_PROP_ENTITY_NEIGHBORS"; break;
-    case STG_PROP_ENTITY_VELOCITY: return "STG_PROP_ENTITY_VELOCITY"; break;
-    case STG_PROP_ENTITY_VISIONRETURN: return "STG_PROP_ENTITY_VISIONRETURN"; break;
-    case STG_PROP_ENTITY_VOLTAGE: return "STG_PROP_ENTITY_VOLTAGE"; break;
-    case STG_PROP_ENTITY_RANGERS: return "STG_PROP_ENTITY_RANGERS";break;
-    case STG_PROP_ENTITY_LASER_DATA: return "STG_PROP_ENTITY_LASER_DATA";break;
-    case STG_PROP_ENTITY_BLINKENLIGHT: return "STG_PROP_ENTITY_BLINKENLIGHT";break;
+    case STG_PROP_CREATE_WORLD: return "STG_PROP_CREATE_WORLD"; break;
+    case STG_PROP_DESTROY_WORLD: return "STG_PROP_DESTROY_WORLD"; break;
+    case STG_PROP_CREATE_MODEL: return "STG_PROP_CREATE_MODEL"; break;
+    case STG_PROP_DESTROY_MODEL: return "STG_PROP_DESTROY_MODEL"; break;
+    case STG_PROP_CIRCLES: return "STG_PROP_CIRCLES"; break;
+    case STG_PROP_COLOR: return "STG_PROP_COLOR"; break;
+    case STG_PROP_COMMAND: return "STG_PROP_COMMAND"; break;
+    case STG_PROP_DATA: return "STG_PROP_DATA"; break;
+    case STG_PROP_GEOM: return "STG_PROP_GEOM"; break;
+    case STG_PROP_IDARRETURN: return "STG_PROP_IDARRETURN"; break;
+    case STG_PROP_LASERRETURN: return "STG_PROP_LASERRETURN"; break;
+    case STG_PROP_NAME: return "STG_PROP_NAME"; break;
+    case STG_PROP_OBSTACLERETURN: return "STG_PROP_OBSTACLERETURN";break;
+    case STG_PROP_ORIGIN: return "STG_PROP_ORIGIN"; break;
+    case STG_PROP_PARENT: return "STG_PROP_PARENT"; break;
+    case STG_PROP_PLAYERID: return "STG_PROP_PLAYERID"; break;
+    case STG_PROP_POSE: return "STG_PROP_POSE"; break;
+    case STG_PROP_POWER: return "STG_PROP_SONAR_POWER"; break;
+    case STG_PROP_PPM: return "STG_PROP_PPM"; break;
+    case STG_PROP_PUCKRETURN: return "STG_PROP_PUCKETURN"; break;
+    case STG_PROP_RANGEBOUNDS: return "STG_PROP_RANGEBOUNDS";break;
+    case STG_PROP_RECTS: return "STG_PROP_RECTS"; break;
+    case STG_PROP_SIZE: return "STG_PROP_SIZE"; break;
+    case STG_PROP_SONARRETURN: return "STG_PROP_SONARRETURN"; break;
+    case STG_PROP_NEIGHBORRETURN: return "STG_PROP_NEIGHBORRETURN"; break;
+    case STG_PROP_NEIGHBORBOUNDS: return "STG_PROP_NEIGHBORBOUNDS"; break;
+    case STG_PROP_NEIGHBORS: return "STG_PROP_NEIGHBORS"; break;
+    case STG_PROP_VELOCITY: return "STG_PROP_VELOCITY"; break;
+    case STG_PROP_VISIONRETURN: return "STG_PROP_VISIONRETURN"; break;
+    case STG_PROP_VOLTAGE: return "STG_PROP_VOLTAGE"; break;
+    case STG_PROP_RANGERS: return "STG_PROP_RANGERS";break;
+    case STG_PROP_LASER_DATA: return "STG_PROP_LASER_DATA";break;
+    case STG_PROP_BLINKENLIGHT: return "STG_PROP_BLINKENLIGHT";break;
  
-    case STG_PROP_ENTITY_NOSE: return "STG_PROP_ENTITY_NOSE";break;
-    case   STG_PROP_ENTITY_LOS_MSG: return "STG_PROP_ENTITY_LOS_MSG";break;
+    case STG_PROP_NOSE: return "STG_PROP_NOSE";break;
+    case STG_PROP_LOS_MSG: return "STG_PROP_LOS_MSG";break;
+    case STG_PROP_MOUSE_MODE: return "STG_PROP_MOUSE_MODE";break;
 	
       // remove these
-    case STG_PROP_IDAR_RX: return "STG_PROP_IDAR_RX"; break;
-    case STG_PROP_IDAR_TX: return "STG_PROP_IDAR_TX"; break;
-    case STG_PROP_IDAR_TXRX: return "STG_PROP_IDAR_TXRX"; break;
-    case STG_PROP_POSITION_ORIGIN: return "STG_PROP_POSITION_ORIGIN"; break;
-    case STG_PROP_POSITION_ODOM: return "STG_PROP_POSITION_ODOM"; break;
-    case STG_PROP_POSITION_MODE: return "STG_PROP_POSITION_MODE"; break;
-    case STG_PROP_POSITION_STEER: return "STG_PROP_POSITION_STEER"; break;
+      //case STG_PROP_IDAR_RX: return "STG_PROP_IDAR_RX"; break;
+      //case STG_PROP_IDAR_TX: return "STG_PROP_IDAR_TX"; break;
+      //case STG_PROP_IDAR_TXRX: return "STG_PROP_IDAR_TXRX"; break;
+      //case STG_PROP_POSITION_ORIGIN: return "STG_PROP_POSITION_ORIGIN"; break;
+      //case STG_PROP_POSITION_ODOM: return "STG_PROP_POSITION_ODOM"; break;
+      //case STG_PROP_POSITION_MODE: return "STG_PROP_POSITION_MODE"; break;
+      //case STG_PROP_POSITION_STEER: return "STG_PROP_POSITION_STEER"; break;
 
     default:
       break;
@@ -451,7 +454,7 @@ stg_property_t* stg_send_property( stg_client_t* cli,
 stg_id_t stg_model_create( stg_client_t* cli, stg_entity_create_t* ent )
 {
   stg_property_t* reply = stg_send_property( cli, -1, 
-					     STG_PROP_ENTITY_CREATE, 
+					     STG_PROP_CREATE_MODEL, 
 					     STG_SETGET,
 					     ent, sizeof(stg_entity_create_t) );
   if( reply == NULL )
@@ -466,7 +469,7 @@ stg_id_t stg_model_create( stg_client_t* cli, stg_entity_create_t* ent )
 int stg_model_destroy( stg_client_t* cli, stg_id_t id )
 {
   stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_ENTITY_DESTROY, 
+					     STG_PROP_DESTROY_MODEL, 
 					     STG_SETGET,
 					     NULL, 0 );
   if( reply == NULL )
@@ -481,7 +484,7 @@ int stg_model_destroy( stg_client_t* cli, stg_id_t id )
 int stg_model_set_size( stg_client_t* cli, stg_id_t id, stg_size_t* sz )
 {
   stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_ENTITY_SIZE, 
+					     STG_PROP_SIZE, 
 					     STG_SETGET,
 					     sz, sizeof(stg_size_t) );
   if( reply == NULL )
@@ -496,7 +499,7 @@ int stg_model_set_size( stg_client_t* cli, stg_id_t id, stg_size_t* sz )
 int stg_model_get_size( stg_client_t* cli, stg_id_t id, stg_size_t* sz )
 {
   stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_ENTITY_SIZE, 
+					     STG_PROP_SIZE, 
 					     STG_GET,
 					     NULL, 0 );
   if( reply == NULL )
@@ -511,7 +514,7 @@ int stg_model_get_size( stg_client_t* cli, stg_id_t id, stg_size_t* sz )
 int stg_model_set_velocity( stg_client_t* cli, stg_id_t id, stg_velocity_t* sz )
 {
   stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_ENTITY_VELOCITY, 
+					     STG_PROP_VELOCITY, 
 					     STG_SETGET,
 					     sz, sizeof(stg_velocity_t) );
   if( reply == NULL )
@@ -526,7 +529,7 @@ int stg_model_set_velocity( stg_client_t* cli, stg_id_t id, stg_velocity_t* sz )
 int stg_model_get_velocity( stg_client_t* cli, stg_id_t id, stg_velocity_t* sz )
 {
   stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_ENTITY_VELOCITY, 
+					     STG_PROP_VELOCITY, 
 					     STG_GET,
 					     NULL, 0 );
   if( reply == NULL )
@@ -541,7 +544,7 @@ int stg_model_get_velocity( stg_client_t* cli, stg_id_t id, stg_velocity_t* sz )
 int stg_model_set_pose( stg_client_t* cli, stg_id_t id, stg_pose_t* sz )
 {
   stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_ENTITY_POSE, 
+					     STG_PROP_POSE, 
 					     STG_SETGET,
 					     sz, sizeof(stg_pose_t) );
   if( reply == NULL )
@@ -556,7 +559,7 @@ int stg_model_set_pose( stg_client_t* cli, stg_id_t id, stg_pose_t* sz )
 int stg_model_get_pose( stg_client_t* cli, stg_id_t id, stg_pose_t* sz )
 {
   stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_ENTITY_POSE, 
+					     STG_PROP_POSE, 
 					     STG_GET,
 					     NULL, 0 );
   
@@ -572,7 +575,7 @@ int stg_model_get_pose( stg_client_t* cli, stg_id_t id, stg_pose_t* sz )
 int stg_model_set_origin( stg_client_t* cli, stg_id_t id, stg_pose_t* org )
 {
   stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_ENTITY_ORIGIN, 
+					     STG_PROP_ORIGIN, 
 					     STG_SETGET,
 					     org, sizeof(stg_pose_t) );
   
@@ -588,7 +591,7 @@ int stg_model_set_origin( stg_client_t* cli, stg_id_t id, stg_pose_t* org )
 int stg_model_get_origin( stg_client_t* cli, stg_id_t id, stg_pose_t* org )
 {
   stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_ENTITY_ORIGIN, 
+					     STG_PROP_ORIGIN, 
 					     STG_GET,
 					     NULL, 0 );
   
@@ -605,7 +608,7 @@ int stg_model_set_rects(  stg_client_t* cli, stg_id_t id,
 			  stg_rotrect_t* rects, int count )
 {
   stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_ENTITY_RECTS, 
+					     STG_PROP_RECTS, 
 					     STG_SETGET,
 					     rects, 
 					     count*sizeof(stg_rotrect_t) );
@@ -627,7 +630,7 @@ int stg_model_set_rangers( stg_client_t* cli, stg_id_t id,
 			       stg_ranger_t* trans, int count )
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_ENTITY_RANGERS, 
+					     STG_PROP_RANGERS, 
 					     STG_SETGET,
 					     trans, 
 					     count *
@@ -644,7 +647,7 @@ int stg_model_get_rangers( stg_client_t* cli, stg_id_t id,
 			       stg_ranger_t** trans, int* count )
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_ENTITY_RANGERS, 
+					     STG_PROP_RANGERS, 
 					     STG_GET,
 					     NULL, 0 ); 
   
@@ -663,7 +666,7 @@ int stg_model_set_neighbor_return( stg_client_t* cli, stg_id_t id,
 				   stg_neighbor_return_t *val )
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_ENTITY_NEIGHBORRETURN, 
+					     STG_PROP_NEIGHBORRETURN, 
 					     STG_SETGET,
 					     val, sizeof(int) ); 
   if( reply == NULL )
@@ -678,7 +681,7 @@ int stg_model_get_neighbor_return( stg_client_t* cli, stg_id_t id,
 				   stg_neighbor_return_t *val )
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_ENTITY_NEIGHBORRETURN, 
+					     STG_PROP_NEIGHBORRETURN, 
 					     STG_GET,
 					     NULL, 0 ); 
   if( reply == NULL )
@@ -687,6 +690,36 @@ int stg_model_get_neighbor_return( stg_client_t* cli, stg_id_t id,
   memcpy( val, reply->data, sizeof(int) );
   stg_property_free( reply );
   return 0;   
+}
+
+int stg_model_set_mouse_mode( stg_client_t* cli, stg_id_t id, 
+			      stg_mouse_mode_t *mouse )
+{
+  stg_property_t* reply = stg_send_property( cli, id, 
+					     STG_PROP_MOUSE_MODE, 
+					     STG_SETGET,
+					     mouse, sizeof(stg_mouse_mode_t)); 
+  if( reply == NULL )
+    return -1;
+  
+  memcpy( mouse, reply->data, sizeof(stg_mouse_mode_t) );
+  stg_property_free( reply );
+  return 0;
+}
+
+int stg_model_get_mouse_mode( stg_client_t* cli, stg_id_t id, 
+			      stg_mouse_mode_t *mouse )
+{
+  stg_property_t* reply = stg_send_property( cli, id, 
+					     STG_PROP_MOUSE_MODE, 
+					     STG_GET,
+					     NULL, 0 ); 
+  if( reply == NULL )
+    return -1;
+  
+  memcpy( mouse, reply->data, sizeof(stg_mouse_mode_t) );
+  stg_property_free( reply );
+  return 0;
 }
 
 void stg_los_msg_print( stg_los_msg_t* msg )
@@ -700,7 +733,7 @@ int stg_model_send_los_msg(  stg_client_t* cli, stg_id_t id,
 			     stg_los_msg_t *msg )
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_ENTITY_LOS_MSG,
+					     STG_PROP_LOS_MSG,
 					     STG_SETGET,
 					     msg,sizeof(stg_los_msg_t));
   
@@ -716,7 +749,7 @@ int stg_model_exchange_los_msg(  stg_client_t* cli, stg_id_t id,
 				 stg_los_msg_t *msg )
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_ENTITY_LOS_MSG,
+					     STG_PROP_LOS_MSG,
 					     STG_SETGET,
 					     msg,sizeof(stg_los_msg_t));
   
@@ -733,7 +766,7 @@ int stg_model_set_light( stg_client_t* cli, stg_id_t id,
 			 stg_interval_ms_t *val)
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_ENTITY_BLINKENLIGHT,
+					     STG_PROP_BLINKENLIGHT,
 					     STG_SETGET,
 					     val,sizeof(stg_interval_ms_t));
   
@@ -749,7 +782,7 @@ int stg_model_get_light( stg_client_t* cli, stg_id_t id,
 			 stg_interval_ms_t *val)
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_ENTITY_BLINKENLIGHT,
+					     STG_PROP_BLINKENLIGHT,
 					     STG_GET,
 					     NULL, 0 );
   if( reply == NULL )
@@ -764,7 +797,7 @@ int stg_model_set_nose( stg_client_t* cli, stg_id_t id,
 			 stg_nose_t *val)
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_ENTITY_NOSE,
+					     STG_PROP_NOSE,
 					     STG_SETGET,
 					     val,sizeof(stg_nose_t));
   if( reply == NULL )
@@ -779,7 +812,7 @@ int stg_model_get_nose( stg_client_t* cli, stg_id_t id,
 			 stg_nose_t *val)
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_ENTITY_NOSE,
+					     STG_PROP_NOSE,
 					     STG_GET,
 					     NULL, 0 );
   if( reply == NULL )
@@ -794,7 +827,7 @@ int stg_model_set_laser_return( stg_client_t* cli, stg_id_t id,
 				stg_laser_return_t *val)
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_ENTITY_LASERRETURN, 
+					     STG_PROP_LASERRETURN, 
 					     STG_SETGET,
 					     val, sizeof(stg_laser_return_t) ); 
   if( reply == NULL )
@@ -809,7 +842,7 @@ int stg_model_set_laser_data( stg_client_t* cli, stg_id_t id,
 			      stg_laser_data_t* data )
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_ENTITY_LASER_DATA, 
+					     STG_PROP_LASER_DATA, 
 					     STG_GET,
 					     data, sizeof(stg_laser_data_t) ); 
   if( reply == NULL )
@@ -824,7 +857,7 @@ int stg_model_get_laser_data( stg_client_t* cli, stg_id_t id,
 			      stg_laser_data_t* data )
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_ENTITY_LASER_DATA, 
+					     STG_PROP_LASER_DATA, 
 					     STG_GET,
 					     NULL, 0 ); 
   if( reply == NULL )
@@ -839,7 +872,7 @@ int stg_model_set_neighbor_bounds( stg_client_t* cli, stg_id_t id,
 				   stg_bounds_t* data )
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_ENTITY_NEIGHBORBOUNDS, 
+					     STG_PROP_NEIGHBORBOUNDS, 
 					     STG_SETGET,
 					     data, sizeof(stg_bounds_t) ); 
   if( reply == NULL )
@@ -854,7 +887,7 @@ int stg_model_get_neighbor_bounds( stg_client_t* cli, stg_id_t id,
 				   stg_bounds_t* data )
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_ENTITY_NEIGHBORBOUNDS, 
+					     STG_PROP_NEIGHBORBOUNDS, 
 					     STG_GET,
 					     NULL, 0 ); 
   if( reply == NULL )
@@ -870,7 +903,7 @@ int stg_model_get_neighbors( stg_client_t* cli, stg_id_t id,
 			     stg_neighbor_t** neighbors, int *neighbor_count )
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_ENTITY_NEIGHBORS, 
+					     STG_PROP_NEIGHBORS, 
 					     STG_GET,
 					     NULL, 0 ); 
   
@@ -888,7 +921,7 @@ int stg_model_get_neighbors( stg_client_t* cli, stg_id_t id,
 stg_id_t stg_world_create( stg_client_t* cli, stg_world_create_t* world )
 {
   stg_property_t* reply = stg_send_property( cli, -1,
-					     STG_PROP_WORLD_CREATE, 
+					     STG_PROP_CREATE_WORLD, 
 					     STG_SETGET,
 					     world, sizeof(stg_world_create_t) );  
   if( reply == NULL )

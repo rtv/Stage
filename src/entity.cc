@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.106 2003-08-25 21:06:41 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.107 2003-08-25 23:26:32 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -191,7 +191,7 @@ CEntity::CEntity( stg_entity_create_t* init )
   // default no-voltage.
   this->volts = -1;    
 
-  // STG_PROP_ENTITY_POWER
+  // STG_PROP_POWER
   this->power_on = 1;
 
   // Set the default geometry
@@ -221,7 +221,7 @@ CEntity::CEntity( stg_entity_create_t* init )
   this->draw_nose = true;
   this->interval = 0.01; // update interval in seconds 
   
-  // STG_PROP_ENTITY_RANGEBOUNDS
+  // STG_PROP_RANGEBOUNDS
   this->min_range = 0.5;
   this->max_range = 5.0;
 
@@ -480,7 +480,7 @@ int CEntity::Move( stg_velocity_t* vel, double step )
       this->stall = true;
     }
   else
-    SetProperty( STG_PROP_ENTITY_POSE, &newpose, sizeof(newpose) );  
+    SetProperty( STG_PROP_POSE, &newpose, sizeof(newpose) );  
   
   return 0; // success
 }
@@ -596,7 +596,7 @@ CEntity *CEntity::TestCollision( double* hitx, double* hity )
     }
 
   int r;
-  for( r=0; r<this->rect_array->len; r++ )
+  for( r=0; r<(int)this->rect_array->len; r++ )
     {
       // find the global coords of this rectangle
       GetGlobalRect( &glob, 
@@ -697,72 +697,78 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
 
   switch( ptype )
     {      
-    case STG_PROP_ENTITY_POSE:
+    case STG_PROP_POSE:
       g_assert( (len == sizeof(stg_pose_t)) );	
       this->SetPose( (stg_pose_t*)data );
       break;
       
-    case STG_PROP_ENTITY_SIZE:
+    case STG_PROP_SIZE:
       g_assert( (len == sizeof(stg_size_t)) );	
       this->SetSize(  (stg_size_t*)data );
       break;
       
-    case STG_PROP_ENTITY_ORIGIN:
+    case STG_PROP_ORIGIN:
       g_assert( (len == sizeof(stg_pose_t)) );	
       this->SetOrigin(  (stg_pose_t*)data );
       break;
 
-    case STG_PROP_ENTITY_VELOCITY:
+    case STG_PROP_VELOCITY:
       g_assert( (len == sizeof(stg_velocity_t)) );
       this->SetVelocity( (stg_velocity_t*)data );
       break;
       
-    case STG_PROP_ENTITY_NEIGHBORRETURN:
+    case STG_PROP_NEIGHBORRETURN:
       g_assert( (len == sizeof(int)) );	
       this->neighbor_return = *(int*)data;
       break;
       
-    case STG_PROP_ENTITY_LASERRETURN:
+    case STG_PROP_LASERRETURN:
       g_assert( (len == sizeof(stg_laser_return_t)) );	
       this->laser_return = *(stg_laser_return_t*)data;
       break;
 
-    case STG_PROP_ENTITY_BLINKENLIGHT:
+    case STG_PROP_BLINKENLIGHT:
       g_assert( (len == sizeof(stg_interval_ms_t)) );	
       this->blinkenlight = *(stg_interval_ms_t*)data;
       break;      
 
-    case STG_PROP_ENTITY_NOSE:
+    case STG_PROP_NOSE:
       g_assert( (len == sizeof(stg_nose_t)) );	
       this->draw_nose = *(stg_nose_t*)data;
       break;      
+      
+    case STG_PROP_MOUSE_MODE:
+      g_assert( (len == sizeof(stg_mouse_mode_t)) );	
+      this->mouseable = *(stg_mouse_mode_t*)data;
+      break;      
 
-    case STG_PROP_ENTITY_NEIGHBORBOUNDS:
+    case STG_PROP_NEIGHBORBOUNDS:
       g_assert( (len == sizeof(stg_bounds_t)) );	
       memcpy( &this->bounds_neighbor, (stg_bounds_t*)data, sizeof(stg_bounds_t));
       break;
       
-    case STG_PROP_ENTITY_LOS_MSG:
+    case STG_PROP_LOS_MSG:
       g_assert( (len == sizeof(stg_los_msg_t)) );	
       this->SendLosMessage( (stg_los_msg_t*)data );
       break;
 
-    case STG_PROP_ENTITY_RANGERS:
+    case STG_PROP_RANGERS:
       {
 	if( this->rangers ) g_array_free( this->rangers, TRUE );
 	
 	// we infer the number of rangers from the data size
 	int tcount = len / sizeof(stg_ranger_t);
 	
-	for( int t=0; t<tcount; t++ )
+	/*for( int t=0; t<tcount; t++ )
 	  {
-	    stg_ranger_t* rgr = ((stg_ranger_t*)data) + t;
-	    
-	    //printf( "setting ranger %d (%.2f,%.2f,%.2f)[%.2f %.2f]\n",
-	    //    t, 
-	    //    rgr->pose.x, rgr->pose.y, rgr->pose.a,
-	    //    rgr->size.x, rgr->size.y );
-	  }
+	  stg_ranger_t* rgr = ((stg_ranger_t*)data) + t;
+	  
+	  printf( "setting ranger %d (%.2f,%.2f,%.2f)[%.2f %.2f]\n",
+	  t, 
+	  rgr->pose.x, rgr->pose.y, rgr->pose.a,
+	  rgr->size.x, rgr->size.y );
+	  } 
+	*/
 
 	this->rangers = g_array_sized_new( FALSE, TRUE, 
 					   sizeof(stg_ranger_t), 
@@ -773,7 +779,7 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
       }
       break;
 
-    case STG_PROP_ENTITY_RECTS:
+    case STG_PROP_RECTS:
       {
 	// we infer the number of rects from the data size
 	int rect_count = len / sizeof(stg_rotrect_t);
@@ -807,61 +813,66 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
   
   switch( ptype )
     {
-    case STG_PROP_ENTITY_POSE:
+    case STG_PROP_POSE:
       stg_pose_t pose;
       this->GetGlobalPose(&pose);
       prop = stg_property_attach_data( prop, &pose, sizeof(pose) );
       break;
       
-    case STG_PROP_ENTITY_SIZE:
+    case STG_PROP_SIZE:
       prop = stg_property_attach_data( prop, &this->size, sizeof(this->size) );
       break;
       
-    case STG_PROP_ENTITY_ORIGIN:
+    case STG_PROP_ORIGIN:
       prop = stg_property_attach_data( prop, &this->pose_origin, sizeof(this->pose_origin) );
       break;
 
-    case STG_PROP_ENTITY_VELOCITY:
+    case STG_PROP_VELOCITY:
       prop = stg_property_attach_data( prop, &this->velocity, sizeof(this->velocity));
       break;
 
-    case STG_PROP_ENTITY_LASER_DATA:
+    case STG_PROP_LASER_DATA:
       this->UpdateLaserData( &this->laser_data );
       prop = stg_property_attach_data( prop, 
 				       &this->laser_data,
 				       sizeof(stg_laser_data_t) );
       break;
       
-    case STG_PROP_ENTITY_NEIGHBORRETURN:
+    case STG_PROP_NEIGHBORRETURN:
       prop = stg_property_attach_data( prop, &this->neighbor_return, 
 				       sizeof(this->neighbor_return));
       break;
 
-    case STG_PROP_ENTITY_NEIGHBORBOUNDS:
+    case STG_PROP_NEIGHBORBOUNDS:
       prop = stg_property_attach_data( prop, &this->bounds_neighbor, 
 				       sizeof(this->bounds_neighbor));
 
-    case STG_PROP_ENTITY_BLINKENLIGHT:
+    case STG_PROP_BLINKENLIGHT:
       prop = stg_property_attach_data( prop, &this->blinkenlight, 
 				       sizeof(this->blinkenlight));
       break;
 
-    case STG_PROP_ENTITY_NOSE:
+    case STG_PROP_NOSE:
       prop = stg_property_attach_data( prop, &this->draw_nose, 
 				       sizeof(this->draw_nose));
       break;
 
-    case STG_PROP_ENTITY_LASERRETURN:
+    case STG_PROP_LASERRETURN:
       prop = stg_property_attach_data( prop, &this->laser_return, 
 				       sizeof(this->laser_return));
       break;
       
-    case STG_PROP_ENTITY_LOS_MSG:
+    case STG_PROP_LOS_MSG:
       prop = stg_property_attach_data( prop, &this->last_received_msg,
 				       sizeof(this->last_received_msg));
       break;
+ 
+    case STG_PROP_MOUSE_MODE:
+      prop = stg_property_attach_data( prop, &this->mouseable,
+				       sizeof(this->mouseable));
+      break;
       
-    case STG_PROP_ENTITY_NEIGHBORS:
+    case STG_PROP_NEIGHBORS:
       {
 	GArray* array = NULL;
 	this->GetNeighbors( &array );
@@ -873,7 +884,7 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
       }
       break;
       
-    case STG_PROP_ENTITY_RANGERS:
+    case STG_PROP_RANGERS:
       if( this->rangers ) 
 	{
 	  this->UpdateRangers();
@@ -888,7 +899,7 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
 		    " no rangers" ); 
       break;
       
-    case STG_PROP_ENTITY_RECTS:
+    case STG_PROP_RECTS:
       if( this->rect_array != NULL )
 	prop = stg_property_attach_data( prop, 
 					 this->rect_array->data, 
@@ -1129,7 +1140,7 @@ void CEntity::SetPose( stg_pose_t* pose )
 // Set the entity's origin in the parent cs
 void CEntity::SetOrigin( stg_pose_t* pose )
 {
-  //ENT_DEBUG3( "setting origin to [%.2f %.2f %.2f]", pose->x, pose->y, pose->a );
+  ENT_DEBUG3( "setting origin to [%.2f %.2f %.2f]", pose->x, pose->y, pose->a );
   
   // if the new position is different, call SetProperty to make the change.
   if( memcmp( &this->pose_origin, pose, sizeof( stg_pose_t)) != 0 )
@@ -1142,7 +1153,11 @@ void CEntity::SetOrigin( stg_pose_t* pose )
 
 void CEntity::SetSize( stg_size_t* sz )
 {
-  //ENT_DEBUG2( "setting size to %.2f %.2f", sz->x, sz->y );
+  // if a dimension is < 0, set it to be as large as the whole world
+  if( sz->x < 0 ) sz->x = stg_world(this)->width;
+  if( sz->y < 0 ) sz->y = stg_world(this)->height;
+
+  ENT_DEBUG2( "setting size to %.2f %.2f", sz->x, sz->y );
   
   // if the new position is different, call SetProperty to make the change.
   if( memcmp( &this->size, sz, sizeof(stg_size_t)) != 0 )
@@ -1373,7 +1388,7 @@ void CEntity::RenderRects( bool render )
   if( this->rect_array )
     {
       int r;
-      for( r=0; r<this->rect_array->len; r++ )
+      for( r=0; r<(int)this->rect_array->len; r++ )
 	{
 	  GetGlobalRect( &glob, 
 			 &g_array_index(this->rect_array, stg_rotrect_t, r) );

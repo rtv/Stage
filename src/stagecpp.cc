@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.5 2003-08-25 00:57:19 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.6 2003-08-25 23:26:32 rtv Exp $
  */
 
 #include <assert.h>
@@ -1769,15 +1769,23 @@ int CWorldFile::Upload( stg_client_t* cli,
 	pose.a = this->ReadTupleFloat( section, "pose", 2, 0.0 );
 	stg_model_set_pose( cli, anid, &pose );
 	
+	stg_pose_t origin;
+	origin.x = this->ReadTupleFloat( section, "origin", 0, 0.0 );
+	origin.y = this->ReadTupleFloat( section, "origin", 1, 0.0 );
+	origin.a = this->ReadTupleFloat( section, "origin", 2, 0.0 );
+	stg_model_set_origin( cli, anid, &origin );
+
 	stg_neighbor_return_t nret;
 	nret = this->ReadInt( section, "neighbor", 0 );
 	stg_model_set_neighbor_return( cli, anid, &nret );
 	
 	stg_interval_ms_t li;
 	li = this->ReadInt( section, "light_interval", STG_LIGHT_OFF );
-
-	PRINT_DEBUG1( "LIGHT %d", li );
 	stg_model_set_light( cli, anid, &li );
+	
+	stg_mouse_mode_t mouse;
+	mouse = this->ReadInt( section, "mouseable", 1 );
+	stg_model_set_mouse_mode( cli, anid, &mouse );
 
 	// read any ranger details
 	

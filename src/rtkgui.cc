@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.10 2003-08-25 21:06:41 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.11 2003-08-25 23:26:32 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -662,7 +662,7 @@ void RtkOnMouse(rtk_fig_t *fig, int event, int mode)
     case RTK_EVENT_MOTION:
       // move the object to follow the mouse
       rtk_fig_get_origin(fig, &pose.x, &pose.y, &pose.a );
-      entity->SetProperty( STG_PROP_ENTITY_POSE, &pose, sizeof(pose) );
+      entity->SetProperty( STG_PROP_POSE, &pose, sizeof(pose) );
       
       // display the pose
       snprintf(txt, sizeof(txt), "Selection: %d:%s (%s) pose: [%.2f,%.2f,%.2f]",  
@@ -678,7 +678,7 @@ void RtkOnMouse(rtk_fig_t *fig, int event, int mode)
     case RTK_EVENT_RELEASE:
       // move the entity to its final position
       rtk_fig_get_origin(fig, &pose.x, &pose.y, &pose.a );
-      entity->SetProperty( STG_PROP_ENTITY_POSE, &pose, sizeof(pose) );
+      entity->SetProperty( STG_PROP_POSE, &pose, sizeof(pose) );
 
       // take the pose message from the status bar
       cid = gtk_statusbar_get_context_id( mod->win->statusbar, "on_mouse" );
@@ -894,7 +894,7 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
   switch( prop )
     {
       // these require just moving the figure
-    case STG_PROP_ENTITY_POSE:
+    case STG_PROP_POSE:
       {
 	stg_pose_t pose;
 	ent->GetPose( &pose );
@@ -915,44 +915,34 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
 
       // these all need us to totally redraw the object 
       // (for now - this could be optimized quite a bit)
-    case STG_PROP_ENTITY_ORIGIN:
-    case STG_PROP_ENTITY_SIZE:
-    case STG_PROP_ENTITY_PARENT:
-    case STG_PROP_ENTITY_NAME:
-    case STG_PROP_ENTITY_COLOR:
-    case STG_PROP_ENTITY_RECTS:
-    case STG_PROP_ENTITY_CIRCLES:
-    case STG_PROP_ENTITY_RANGERS:
-    case STG_PROP_ENTITY_NOSE:
-    case STG_PROP_ENTITY_BLINKENLIGHT:
+    case STG_PROP_ORIGIN:
+    case STG_PROP_SIZE:
+    case STG_PROP_PARENT:
+    case STG_PROP_NAME:
+    case STG_PROP_COLOR:
+    case STG_PROP_RECTS:
+    case STG_PROP_CIRCLES:
+    case STG_PROP_RANGERS:
+    case STG_PROP_NOSE:
+    case STG_PROP_BLINKENLIGHT:
+    case STG_PROP_MOUSE_MODE:
+      
       stg_gui_model_destroy( ent->guimod );
       ent->guimod = stg_gui_model_create( ent );
       break;
 
-      /*
-    case STG_PROP_IDAR_RX:
-      //PRINT_ERR1( "rtk IDAR_RX for idar %d", ent->name );
-      ((CIdarModel*)ent)->RtkShowReceived();
-      break;
-      
-    case STG_PROP_IDAR_TX:
-      //PRINT_ERR1( "rtk IDAR_TX for idar %d", ent->name );
-      ((CIdarModel*)ent)->RtkShowSent();
-      break;
-      */
-
       // do nothing for these things
-    case STG_PROP_ENTITY_LASERRETURN:
-    case STG_PROP_ENTITY_SONARRETURN:
-    case STG_PROP_ENTITY_IDARRETURN:
-    case STG_PROP_ENTITY_OBSTACLERETURN:
-    case STG_PROP_ENTITY_VISIONRETURN:
-    case STG_PROP_ENTITY_PUCKRETURN:
-    case STG_PROP_ENTITY_PLAYERID:
-    case STG_PROP_ENTITY_VELOCITY:
-    case STG_PROP_ENTITY_NEIGHBORBOUNDS:
-    case STG_PROP_ENTITY_NEIGHBORRETURN:
-    case STG_PROP_ENTITY_LOS_MSG:
+    case STG_PROP_LASERRETURN:
+    case STG_PROP_SONARRETURN:
+    case STG_PROP_IDARRETURN:
+    case STG_PROP_OBSTACLERETURN:
+    case STG_PROP_VISIONRETURN:
+    case STG_PROP_PUCKRETURN:
+    case STG_PROP_PLAYERID:
+    case STG_PROP_VELOCITY:
+    case STG_PROP_NEIGHBORBOUNDS:
+    case STG_PROP_NEIGHBORRETURN:
+    case STG_PROP_LOS_MSG:
       break;
 
     default:

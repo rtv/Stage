@@ -23,7 +23,7 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan
  * Date: 3 July 2003
- * CVS: $Id: main.cc,v 1.64 2003-08-23 01:33:04 rtv Exp $
+ * CVS: $Id: main.cc,v 1.65 2003-08-25 23:26:32 rtv Exp $
  */
 
 
@@ -160,7 +160,7 @@ gboolean StgClientRead( GIOChannel* channel,
 	  
 	  switch( prop->property )
 	    {
-	    case STG_PROP_WORLD_CREATE:
+	    case STG_PROP_CREATE_WORLD:
 	      {
 		// check that we have the right size data
 		g_assert( (prop->len == sizeof(stg_world_create_t)) );
@@ -195,7 +195,7 @@ gboolean StgClientRead( GIOChannel* channel,
 	      }
 	      break;
 	      
-	    case STG_PROP_ENTITY_CREATE:
+	    case STG_PROP_CREATE_MODEL:
 	      {
 		// check that we have the right size data
 		g_assert( (prop->len == sizeof(stg_entity_create_t)) );
@@ -241,7 +241,7 @@ gboolean StgClientRead( GIOChannel* channel,
 		else 
 		  switch( prop->property )		    
 		    {
-		    case STG_PROP_WORLD_DESTROY: 
+		    case STG_PROP_DESTROY_WORLD: 
 		      // delete the object, invalidate the id and
 		      // reply with the original request
 		      //delete (CWorld*)node->data;
@@ -250,7 +250,7 @@ gboolean StgClientRead( GIOChannel* channel,
 		      reply = prop;
 		      break;
 		      
-		    case STG_PROP_ENTITY_DESTROY:
+		    case STG_PROP_DESTROY_MODEL:
 		      delete (CEntity*)node->data;
 		      prop->id = -1; 
 		      reply = prop;
