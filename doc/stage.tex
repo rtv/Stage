@@ -1,3 +1,9 @@
+
+% Desc: Stage user manual
+% Author: Richard Vaughan, Andrew Howard
+% Date: 10 Jun 2002
+% CVS: $Id: stage.tex,v 1.7 2002-06-11 00:14:40 inspectorg Exp $
+
 \documentclass[11pt]{report}
 
 % this one apparently fixes the < and > chars
@@ -453,7 +459,11 @@ values can be either numbers (\verb'6665'), strings (indicated by
 double quotes \verb'"robot1"') or tuples (indicated by brackets
 \verb'[1 1 0]').
 
-The above example can be re-written in a more concise form as follows:
+\section{Defining new entity types}
+
+The \verb'define' statement can be used to define new types of entities.
+For example, the world file from the previous section can be re-written
+in a more concise form as follows:
 \begin{quote}
 \begin{verbatim}
 # This world file creates two robots with lasers.
@@ -467,8 +477,8 @@ myrobot ( name "robot1" port 6665 pose [1 1 0] )
 myrobot ( name "robot2" port 6666 pose [2 1 0] )
 \end{verbatim}
 \end{quote}
-This example illustrates the use of the \verb'define newentity oldentity (...)'
-construct do define new entity types.  For example, the line:
+New entities are defined using \verb'define newentity oldentity (...)'.
+For example, the line:
 \begin{quote}
 \begin{verbatim}
 define myrobot position ( player() laser() )
@@ -485,24 +495,141 @@ myrobot ( name "robot1" port 6665 pose [1 1 0] )
 This entry creates a position device named \verb'robot1' that has
 both \verb'player' and \verb'laser' devices attached.
 
+\section{Using include files}
+
+The \verb'include' statement can be used to include entity definitions
+into a world file.  For example, the world file from the previous section
+can be divided into an include file called \verb'myrobots.inc':
+\begin{quote}
+\begin{verbatim}
+# This is an include file.
+# It uses the 'define' construct to define a new type of entity.
+
+define myrobot position ( player() laser() )
+\end{verbatim}
+\end{quote}
+and a world file called \verb'myworld.world':
+\begin{quote}
+\begin{verbatim}
+# This world file creates two robots with lasers.
+# It uses the 'include' statement to include the robot definitions.
+
+include "myrobots.inc"
+
+environment ( file "cave.pnm" scale 0.03 )
+
+myrobot ( name "robot1" port 6665 pose [1 1 0] )
+myrobot ( name "robot2" port 6666 pose [2 1 0] )
+\end{verbatim}
+\end{quote}
+The definitions are included using the \verb'include "filename"'
+statement.
+
+\section{Units}
+
+The default units for length and angles are meters and degrees
+respectively.  Units may be changed using the following global
+properties:
+\begin{table}[h]
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+\verb'unit_length' & \verb'["m", "cm", "mm"]' & Set the unit length to meters, centimeters
+or millimeters. \\
+\verb'unit_angle' & \verb'["degrees", "radians"]' & Set the unit angle to degrees or radians.\\
+\hline
+\end{tabularx}
+\end{table}
+
+\noindent The following example uses millimeters rather than meters
+for the unit length unit:
+\begin{quote}
+\begin{verbatim}
+# This world file creates two robots with lasers.
+# It uses the 'include' statement to include the robot definitions.
+
+unit_length "mm"
+
+include "myrobots.inc"
+
+environment ( file "cave.pnm" scale 30 )
+
+myrobot ( name "robot1" port 6665 pose [1000 1000 0] )
+myrobot ( name "robot2" port 6666 pose [2000 1000 0] )
+\end{verbatim}
+\end{quote}
+Be warned that the length specfication applies to the include files as well,
+so choose a unit length early and stick to it.
+
+
+\section{Examples}
+
 See the {\tt examples} directory in the Stage distribution for more
 world file examples.
 
 
-\section{Entity Summary}
+\chapter{Entity Reference}
 
-\noindent
-\begin{tabularx}{\columnwidth}{lX}
+This chapter describes all of the {\em primitive} entity types
+supported by Stage.  All entity types defined in the world file are
+ultimately composed of one or more primitive types.
+
+
+\section{Properties and the type heirarchy}
+
+Each entity type has zero or more {\em properties} associated with it;
+these properties specify characteristics such as an object's shape or
+a sensor's range.  Entity types are organized into a heriarchy, with
+sub-types inheriting properties from their parent type.  Thus, for
+example, all passive objects (boxes, pucks, beacons and so on) are
+derived from a generic \verb'entity' type.  Similary, all controllable
+objects (sensors and actuators) are derived from a generic
+\verb'device' type, which is in turn derived from the generic
+\verb'entity' type.
+
+Note that both the \verb'entity' and \verb'device' types are {\em
+abstract} (to borrow some C++ parlance) since they cannot be
+instantiated directly.
+
+\section{Entity Summary}
+\label{sec.ref.objects}
+
+The following table lists all of the passive entity types supported by
+Stage.  See Section \ref{sec.ref.devices} for a list of supported {\em
+devices}.
+
+\begin{table}[h]
+\begin{tabularx}{\columnwidth}{llX}
 \hline 
-\verb'environment' & \\
-\verb'box' & \\
-\verb'puck' & \\
-\verb'laserbeacon' & \\
+Type & Parent type & Description \\
+\hline 
+
+\verb'environment' & None & Describes the fixed environment (extent,
+obstacles, etc). \\
+
+\verb'entity' & None & A generic entity, which has shape, exent and
+color. \\
+
+\verb'box' & \verb'entity' & A fixed obstacle (can be moved by the
+user but not the robot). \\
+
+\verb'puck' & \verb'entity' & A movable object (can be moved by both
+the user and the robot).\\
+
+\verb'laserbeacon' & \verb'entity' & A retro-reflective laser barcode;
+for use with \verb'lbd' device.\\
+
 \hline
 \end{tabularx}
+\end{table}
+
+
+\section{Device Summary}
+\label{sec.ref.devices}
 
 \noindent
-\begin{tabularx}{\columnwidth}{lX}
+\begin{tabularx}{\columnwidth}{llX}
+\hline 
+Type & Parent type & Description \\
 \hline
 \verb'broadcast' & \\
 \verb'gps' & \\ 
@@ -512,6 +639,7 @@ world file examples.
 \verb'misc' & \\
 \verb'player' & \\
 \verb'position' & \\
+\verb'player' & \\
 \verb'ptz' & \\
 \verb'sonar' & \\
 \verb'truth' & \\
@@ -522,4 +650,5 @@ world file examples.
 
 \chapter*{Acknowledgements}
 Player/Stage development is funded by DARPA under the Mobile Autonomous Robot Software
+
 \end{document}
