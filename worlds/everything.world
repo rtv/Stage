@@ -1,6 +1,6 @@
 
 # Desc: Stage demo with lots of models. Works with everything.cfg.
-# CVS: $Id: everything.world,v 1.22 2004-12-09 01:34:44 rtv Exp $
+# CVS: $Id: everything.world,v 1.23 2005-03-01 19:34:34 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -29,6 +29,9 @@ map(
 
   bitmap_resolution 0.03
   #boundary 0
+
+  ranger_return 0
+  obstacle_return 1
 )
 
 

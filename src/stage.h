@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.128 2005-02-28 08:06:44 rtv Exp $
+ * CVS: $Id: stage.h,v 1.129 2005-03-01 19:34:33 rtv Exp $
  */
 
 
@@ -112,7 +112,8 @@ extern "C" {
   typedef int stg_obstacle_return_t;
   typedef int stg_blob_return_t;
   typedef int stg_fiducial_return_t;
-  
+  typedef int stg_ranger_return_t;
+
   /** specify a rectangular size 
    */
   typedef struct 

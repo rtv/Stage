@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.45 $
+//  $Revision: 1.46 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -219,7 +219,7 @@ int ranger_shutdown( stg_model_t* mod )
 int ranger_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 {
   // Ignore myself, my children, and my ancestors.
-  return( !stg_model_is_related(mod,hitmod) && hitmod->obstacle_return );
+  return( !stg_model_is_related(mod,hitmod) && hitmod->ranger_return );
 }	
 
 

@@ -121,7 +121,8 @@ model
   - if 0, this model is not detected by laser sensors. if 1, the model shows up in a laser sensor with normal (0) reflectance. If 2, it shows up with high (1) reflectance.
 - fiducial_return [fiducial_id:int]
   - if non-zero, this model is detected by fiducialfinder sensors. The value is used as the fiducial ID.
-
+- ranger_return [bool]
+   - iff 1, this model can be detected by a ranger.
 */
 
 /*
@@ -297,6 +298,7 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->laser_return = LaserVisible;
   mod->obstacle_return = TRUE;
   mod->fiducial_return = FiducialNone;
+  mod->ranger_return = TRUE;
   
   // sensible defaults
   mod->stall = FALSE;
@@ -812,6 +814,13 @@ void stg_model_get_laserreturn( stg_model_t* mod, stg_laser_return_t* dest )
   memcpy( dest, &mod->laser_return, sizeof(mod->laser_return));
 }
 
+void stg_model_get_rangerreturn( stg_model_t* mod, stg_ranger_return_t* dest )
+{
+  assert(mod);
+  assert(dest);
+  memcpy( dest, &mod->ranger_return, sizeof(mod->ranger_return));
+}
+
 void stg_model_get_fiducialreturn( stg_model_t* mod,stg_fiducial_return_t* dest )
 {
   assert(mod);
@@ -948,6 +957,12 @@ int stg_model_set_polygons( stg_model_t* mod, stg_polygon_t* polys, size_t poly_
 int stg_model_set_laserreturn( stg_model_t* mod, stg_laser_return_t* val )
 {
   memcpy( &mod->laser_return, val, sizeof(mod->laser_return));
+  return 0;
+}
+
+int stg_model_set_rangerreturn( stg_model_t* mod, stg_ranger_return_t* val )
+{
+  memcpy( &mod->ranger_return, val, sizeof(mod->ranger_return));
   return 0;
 }
 
@@ -1232,9 +1247,13 @@ void stg_model_load( stg_model_t* mod )
   geom.size.y = wf_read_tuple_length(mod->id, "size", 1, mod->geom.size.y );
   stg_model_set_geom( mod, &geom );
   
-  stg_bool_t obstacle;
-  obstacle = wf_read_int( mod->id, "obstacle_return", mod->obstacle_return );    
+  stg_obstacle_return_t obstacle = 
+    wf_read_int( mod->id, "obstacle_return", mod->obstacle_return );
   stg_model_set_obstaclereturn( mod, &obstacle );
+  
+  stg_ranger_return_t ranger = 
+    wf_read_int( mod->id, "ranger_return", mod->ranger_return );
+  stg_model_set_rangerreturn( mod, &ranger );
   
   stg_guifeatures_t gf;
   gf.boundary = wf_read_int(mod->id, "gui_boundary", mod->guifeatures.boundary );

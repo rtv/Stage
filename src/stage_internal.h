@@ -183,6 +183,8 @@ extern "C" {
     stg_laser_return_t laser_return; // value returned to a laser sensor
     stg_obstacle_return_t obstacle_return; // if non-zero, we are included in obstacle detection
     stg_fiducial_return_t fiducial_return; // value returned to a fiducial finder
+    stg_ranger_return_t ranger_return;
+    
     stg_pose_t pose; // current pose in parent's CS
     stg_velocity_t velocity; // current velocity
     stg_bool_t stall; // true IFF we hit an obstacle
