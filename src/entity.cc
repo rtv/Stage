@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.42 2002-02-09 03:37:47 rtv Exp $
+//  $Id: entity.cc,v 1.43 2002-02-20 08:44:22 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -83,6 +83,10 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
 
   // Set the initial mapped pose to a dummy value
   this->map_px = this->map_py = this->map_pth = 0;
+
+  // by default this instance of stage will update this entity
+  // this may be changed in the config file [see CEntity::Load()]
+  m_local = true;
   
   m_dependent_attached = false;
 

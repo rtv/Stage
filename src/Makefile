@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.77 2002-02-09 03:37:47 rtv Exp $
+# $Id: Makefile,v 1.78 2002-02-20 08:44:22 rtv Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -47,7 +47,8 @@ SRCS = world.cc worldfile.cc truthserver.cc envserver.cc image.cc \
 # defines a couple of macros to enable some optional code
 #
 # stage objects have a _stg.o suffix
-# rtkstage objects have a _rtkstage.o suffix
+# rtkstage objects have a _rtk.o suffix
+# hrlstage objects have a mysterious _hrl.o suffix
 STG_OBS = ${SRCS:.cc=_stg.o}
 RTK_OBS = ${SRCS:.cc=_rtk.o}
 HRL_OBS = ${SRCS:.cc=_hrl.o}
@@ -103,7 +104,7 @@ xs : xs.cc render.cc
 manager: manager.cc 
 	$(CC) -I../include -Wall -I$(PLAYER_INC) -lstdc++ manager.cc -o manager
 
-# truthlog doesn't compile... BPG
+# truthlog doesn't compile... BPG 'cos it's broken... RTV
 truthlog: truthlog.cc 
 	$(CC) -I../include -I$(PLAYER_INC) -lstdc++ truthlog.cc -o truthlog
 

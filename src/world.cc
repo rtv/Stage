@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.83 $
+//  $Revision: 1.84 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -341,7 +341,7 @@ bool CWorld::Load(const char *filename)
 
   // the default hostname is this host's name
   char current_hostname[ HOSTNAME_SIZE ];
-  strcpy( current_hostname, m_hostname );
+  strncpy( current_hostname, m_hostname, HOSTNAME_SIZE );
   
   // Load and parse the world file
   if (!this->worldfile.Load(filename))
@@ -396,6 +396,22 @@ bool CWorld::Load(const char *filename)
     if (strcmp(type, "rtk") == 0)
       continue;
     
+    // if this section defines the current host, we load it here
+    // this breaks the context-free-ness of the syntax, but it's 
+    // a simple way to do this. - RTV
+    if( strcmp(type, "host") == 0 )
+      {
+	// if a hostname is correctly defined we use that, otherwise we default
+	// to the current hostname
+	strncpy( current_hostname, 
+		 worldfile.ReadString( section, 
+				       "hostname", 
+				       current_hostname ),
+		 HOSTNAME_SIZE );
+	continue;
+      }
+    // otherwise it's a device so we handle those...
+
     // Find the parent object
     CEntity *parent = NULL;
     int psection = this->worldfile.GetSectionParent(section);
@@ -418,12 +434,14 @@ bool CWorld::Load(const char *filename)
       // if the object has this host's name,
       // set the local flag to show that this computer must
       // update the object
-      // NEEDS FIXING AH
       strncpy( object->m_hostname, current_hostname, HOSTNAME_SIZE );
       if(CheckHostname(object->m_hostname))
-        object->m_local = true;
+	object->m_local = true;
       else
         object->m_local = false;
+      
+      //printf( "ent: %p host: %s local: %d\n",
+      //      object, object->m_hostname, object->m_local );
       
       // Let the object load itself
       if (!object->Load(&this->worldfile, section))

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.32 $
+//  $Revision: 1.33 $
 //
 // Usage:
 //  (empty)
@@ -76,7 +76,7 @@ void PrintUsage( void )
 // Clean up and quit
 void StageQuit( void )
 {  
-  puts( "\nStage shutdown... " );
+  puts( "\n** Stage quitting **" );
 
   // Stop the world
   world->Shutdown();
@@ -91,7 +91,7 @@ void StageQuit( void )
 // Handle quit signals
 void sig_quit(int signum)
 {
-  printf( "SIGNAL %d\n", signum );
+  //printf( "SIGNAL %d\n", signum );
   quit = true;
 }
 

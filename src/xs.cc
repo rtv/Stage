@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.46 2002-02-09 03:37:47 rtv Exp $
+ * $Id: xs.cc,v 1.47 2002-02-20 08:44:22 rtv Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -107,6 +107,8 @@ void ExitFunc( void )
 {
   //  pthread_mutex_destroy( &incoming_mutex );
   // pthread_mutex_destroy( &outgoing_mutex );
+
+  puts( "** XS quitting **" );
 }
 
 /* supply the desription string for a given device code */
@@ -833,7 +835,10 @@ int main(int argc, char **argv)
 
   win->Startup( argc, argv);
 
+
+#ifdef HRL_DEVICES
   win->SetupMessageServer();
+#endif
 
   if( !ConnectToTruth() )
   {
@@ -848,9 +853,9 @@ int main(int argc, char **argv)
     win->HandleXEvent();
     win->HandleIncomingQueue();
 
-    //#ifdef HRL_HEADERS
+#ifdef HRL_DEVICES
     win->HandleIDARMessages();
-    //#endif
+#endif
 
     // snooze to avoid hogging the processor
     usleep( 50000 ); // 0.05 seconds 
@@ -858,7 +863,8 @@ int main(int argc, char **argv)
 }
 
 
-//#ifdef HRL_HEADERS
+#ifdef HRL_DEVICES
+
 int hrlfd = 0;
 
 struct sockaddr_in hrlserv, client;
@@ -910,6 +916,9 @@ void CXGui::HandleIDARMessages( void )
       idar_count++;
     }
 
+  if( idar_count == MAXMSGS-1 )
+    puts( "XS warning: unable to drain IDAR  message queue." ); 
+  
   DrawIDARMessages();
 }
 
@@ -961,7 +970,7 @@ bool CXGui::ReceiveMessage( DPoint& from, DPoint& to, unsigned long& col )
   return true;
 }
 
-//#endif
+#endif
 
 //#define LABELS
 
@@ -1296,9 +1305,6 @@ void CXGui::DrawBackground( void )
     XDrawPoints( display,win,gc,
 		 env->pixels_scaled, env->num_pixels, 
 		 CoordModeOrigin);
-
-  // draw a scale grid over the world
-  //SetForeground(  );
 }
 
 void CXGui::BoundsCheck( void )
@@ -1333,6 +1339,8 @@ void CXGui::HandleXEvent()
 {    
   XEvent reportEvent;
   
+  bool expose = false;
+
   while( XCheckWindowEvent( display, win,
   			    StructureNotifyMask 
   			    | ButtonPressMask | ButtonReleaseMask 
@@ -1343,11 +1351,14 @@ void CXGui::HandleXEvent()
     switch( reportEvent.type ) // there was an event waiting, so handle it...
       {
       case ConfigureNotify:  // window resized or modified
-	HandleConfigureEvent( reportEvent ); 
+	HandleConfigureEvent( reportEvent );
+	expose = true;
 	break;
 	
+	// we can get a LOT of exposes, so we just handle it once
+	// this technique saves at least an order of magnitude of redraws!
       case Expose: // window area exposed - needs redrawn
-	HandleExposeEvent( reportEvent );
+	expose = true;
   	break;
 	
       case MotionNotify: // mouse pointer moved
@@ -1365,6 +1376,9 @@ void CXGui::HandleXEvent()
 	HandleKeyPressEvent( reportEvent );
   	break;
       }
+
+  if( expose )
+    HandleExposeEvent( reportEvent );
   
   // try to sync the display to avoid flicker
   //XSync( display, false );
@@ -1521,7 +1535,9 @@ void CXGui::RefreshObjects( void )
   
   HighlightObject( dragging, false );
 
+#ifdef HRL_DEVICES
   DrawIDARMessages();
+#endif
 
   SetDrawMode( GXcopy );
 }
@@ -2141,11 +2157,14 @@ void CXGui::HandleKeyPressEvent( XEvent& reportEvent )
 
 void CXGui::HandleExposeEvent( XEvent &reportEvent )
 {  
-  //printf( "EXPOSE %d\n", reportEvent.xexpose.count  );
+  //static long int calls = 0;
+  //printf( "EXPOSE %d (%ld)\n", reportEvent.xexpose.count, ++calls  );
+
+  // some window managers will generate a zillion expose events, so we
+  // will limit the frequency that exposes are handled.
 
   if( reportEvent.xexpose.count == 0 ) // on the last pending expose...
     {
-      CalcPPM();
       DrawBackground(); // black backround and draw walls
       RefreshObjects();
     }
@@ -2157,30 +2176,20 @@ void CXGui::HandleConfigureEvent( XEvent &reportEvent )
   y = reportEvent.xconfigure.y;
   width = reportEvent.xconfigure.width;
   height = reportEvent.xconfigure.height;
-
-//    bool scaled = false;
-//    // if the viewport is now larger than the image, we scale the image to fit
-//    if( width > iwidth )
-//      {
-//        iwidth =  reportEvent.xconfigure.width;
-//        scaled = true;
-//      }
-
-//    if( height > iheight )
-//     {
-//       iheight =  reportEvent.xconfigure.height;
-//       scaled = true;
-//     }
-
-//    BoundsCheck();
   
-//    if( scaled )
-//      {
-//        CalcPPM();
-      
-//        DrawBackground(); // black backround and draw walls
-//        RefreshObjects(); 
-//      } 
+  //bool scaled = false;
+
+    // find which dimension has the biggest error and expand it to fit
+  //int xerr = iwidth - width;
+  //int yerr = iheight - height;
+
+    //if( xerr > yerr )
+    //iwidth = width;
+    //else
+    //iheight = height;
+
+    BoundsCheck();
+    CalcPPM();
 }
 
 void CXGui::HandleMotionEvent( XEvent &reportEvent )

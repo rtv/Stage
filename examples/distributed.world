@@ -1,89 +1,57 @@
-# distributed stage example - starts 1 robot on each of several hosts
 
-set environment_file = simple.pnm
-set pixels_per_meter =  100
+# Desc: distributed stage example - starts 2 robots on each of 2 hosts
+# CVS: $Id: distributed.world,v 1.7 2002-02-20 08:44:21 rtv Exp $
 
-set host = fnord
+# YOU MUST RUN STAGE WITH THIS WORLDFILE ON EACH OF THE NAMED HOSTS
+# AND AT LEAST ONE MANAGER
 
-create position_device pose 3.47 2.03 144 port 6665
-{
-  create player_device 
-  create sonar_device 
-  create laser_device pose 0.08 0.00 0 
-  {
-     create lbd_device range 1.5
+begin environment
+  file cave.pnm 
+  scale 0.03
+  resolution 0.03 
+end 
 
-     create ptz_device 
-     {
-        create vision_device 
-     } 
-  }
-}
+begin host
+  hostname deckard
+end
 
-set host = rover
+begin position_device
+  port 6665
+  pose (1.0 1.0 0.0)
+  begin player_device 
+  end
+  begin sonar_device
+  end
+end 
 
-create position_device pose 3.47 2.03 144 port 6665
-{
-  create player_device 
-  create sonar_device 
-  create laser_device pose 0.08 0.00 0 
-  {
-     create lbd_device range 1.5
+begin position_device
+  port 6666
+  pose (2.0 1.0 0.0)
+  begin player_device 
+  end
+  begin sonar_device
+  end
+end 
 
-     create ptz_device 
-     {
-        create vision_device 
-     } 
-  }
-}
+begin host
+  hostname orac
+end
 
-set host = sal218
+begin position_device
+  port 6665
+  pose (3.0 1.0 0.0)
+  begin player_device 
+  end
+  begin sonar_device
+  end
+end 
 
-create position_device pose 3.47 2.03 144 port 6665
-{
-  create player_device 
-  create sonar_device 
-  create laser_device pose 0.08 0.00 0 
-  {
-     create lbd_device range 1.5
+begin position_device
+  port 6666
+  pose (4.0 1.0 0.0)
+  begin player_device 
+  end
+  begin sonar_device
+  end
+end 
 
-     create ptz_device 
-     {
-        create vision_device 
-     } 
-  }
-}
-
-set host = eye
-
-create position_device pose 3.47 2.03 144 port 6665
-{
-  create player_device 
-  create sonar_device 
-  create laser_device pose 0.08 0.00 0 
-  {
-     create lbd_device range 1.5
-
-     create ptz_device 
-     {
-        create vision_device 
-     } 
-  }
-}
-
-set host = orac
-
-create position_device pose 3.47 2.03 144 port 6665
-{
-  create player_device 
-  create sonar_device 
-  create laser_device pose 0.08 0.00 0 
-  {
-     create lbd_device range 1.5
-
-     create ptz_device 
-     {
-        create vision_device 
-     } 
-  }
-}

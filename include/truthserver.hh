@@ -51,6 +51,7 @@ typedef struct
 {
   int stage_id, parent_id;
   StageType stage_type;
+  //StageShape stage_shape; // TODO
 
   char hostname[ HOSTNAME_SIZE ];
   
@@ -59,7 +60,6 @@ typedef struct
   // stage will echo these truths if this is true
   bool echo_request; 
 
-  //int16_t channel; // ACTS color channel (-1 = no channel)
   uint32_t x, y; // mm, mm
   uint16_t w, h; // mm, mm  
   int16_t th; // degrees
