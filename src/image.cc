@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.13 2002-01-24 21:46:50 gerkey Exp $
+ * $Id: image.cc,v 1.14 2002-01-25 23:10:52 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -190,13 +190,16 @@ bool Nimage::load_pnm(const char* fname)
 
   ifstream source( fname );
 
+  if( !source ) // open failed!
+    return false;
+
   source >> magicNumber;
 
   if( strcmp(magicNumber, "P5" ) != 0 )
     {
       printf("image file is of incorrect type:"
 	     " should be pnm, binary, monochrome (magic number P5)\n");
-      return false;
+      return false; 
     }
   
   // ignore the end of this line and the following comment-line

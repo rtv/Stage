@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.16 $
+//  $Author: rtv $
+//  $Revision: 1.17 $
 //
 // Usage:
 //  (empty)
@@ -413,53 +413,6 @@ void CPositionDevice::Map(bool render )
   }
   else if (this->shape == ShapeCircle)
     m_world->SetCircle( m_map_px, m_map_py, m_size_x/2.0, this, render );
-
-  /* REMOVE
-  if (!render)
-  {
-    m_world->matrix->SetMode( mode_unset );
-      
-    if(this->shape == ShapeRect)
-    {
-      // Remove ourself from the obstacle map
-      double px = m_map_px;
-      double py = m_map_py;
-      double pa = m_map_pth;
-	  
-      double qx = px + m_offset_x * cos(pa);
-      double qy = py + m_offset_x * sin(pa);
-      double sx = m_size_x;
-      double sy = m_size_y;
-	  
-      m_world->SetRectangle( qx, qy, pa, sx, sy, this );
-    }
-    else if(this->shape == ShapeCircle)
-      m_world->SetCircle( m_map_px, m_map_py, m_size_x/2.0, this );
-    else
-      PRINT_MSG("CPositionDevice::Map(): unknown shape!");
-  }
-  else
-  {
-    m_world->matrix->SetMode( mode_set );
-  
-    // Add ourself to the obstacle map
-    double px, py, pa;
-    GetGlobalPose(px, py, pa);
-    if(this->shape == ShapeRect)
-	  {
-	    double qx = px + m_offset_x * cos(pa);
-	    double qy = py + m_offset_x * sin(pa);
-	    double sx = m_size_x;
-	    double sy = m_size_y;
-
-	    m_world->SetRectangle( qx, qy, pa, sx, sy, this );
-	  }
-    else if (this->shape == ShapeCircle)
-      m_world->SetCircle( px, py, m_size_x/2.0, this );
-    else
-      PRINT_MSG("CPositionDevice::Map(): unknown shape!");
-	}
-  */
 }
 
 #ifdef INCLUDE_RTK

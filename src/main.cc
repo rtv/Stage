@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.28 $
+//  $Revision: 1.29 $
 //
 // Usage:
 //  (empty)
@@ -31,7 +31,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define PIDFILENAME "stage.pid"
+//#define PIDFILENAME "stage.pid"
 
 ///////////////////////////////////////////////////////////////////////////
 // Local vars
@@ -77,8 +77,8 @@ void StageQuit( void )
   // Destroy the world
   delete world;
 
-  unlink(PIDFILENAME);
-  puts( "...done." );
+  //  unlink(PIDFILENAME);
+  //puts( "...done." );
 
   exit( 0 );
 }
@@ -101,12 +101,12 @@ int main(int argc, char **argv)
   printf("\n** Stage  v%s ** ", (char*) VERSION);
   
   // record our pid in the filesystem 
-  FILE* pidfile;
-  if((pidfile = fopen(PIDFILENAME, "w+")))
-  {
-    fprintf(pidfile,"%d\n", getpid());
-    fclose(pidfile);
-  }
+  //  FILE* pidfile;
+  //if((pidfile = fopen(PIDFILENAME, "w+")))
+  // {
+  //fprintf(pidfile,"%d\n", getpid());
+  //fclose(pidfile);
+  //}
 
   // Create the world
   //

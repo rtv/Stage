@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.42 $
+//  $Author: rtv $
+//  $Revision: 1.43 $
 //
 // Usage:
 //  (empty)
@@ -34,6 +34,10 @@
 #include "laserdevice.hh"
 #include "raytrace.hh"
 
+#define DEFAULT_RES 0.5
+#define DEFAULT_MIN -90
+#define DEFAULT_MAX +90
+
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
@@ -57,13 +61,13 @@ CLaserDevice::CLaserDevice(CWorld *world,
   
   // Default laser simulation settings
   this->scan_rate = 360 / 0.200; // 5Hz
-  this->min_res = 0.25;
+  this->min_res =  DTOR(0.25);
   this->max_range = 8.0;
 
   // Current laser data configuration
-  this->scan_res = DTOR(0.50);
-  this->scan_min = DTOR(-90);
-  this->scan_max = DTOR(+90);
+  this->scan_res = DTOR(DEFAULT_RES);
+  this->scan_min = DTOR(DEFAULT_MIN);
+  this->scan_max = DTOR(DEFAULT_MAX);
   this->scan_count = 361;
   this->intensity = false;
 
@@ -91,7 +95,7 @@ bool CLaserDevice::Load(CWorldFile *worldfile, int section)
   this->min_res = worldfile->ReadAngle(0, "laser_min_res", this->min_res);
   this->min_res = worldfile->ReadAngle(section, "min_res", this->min_res);
 
-  // Maximum laser resolution
+  // Maximum laser range
   this->max_range = worldfile->ReadLength(0, "laser_max_range", this->max_range);
   this->max_range = worldfile->ReadLength(section, "max_range", this->max_range);
   
@@ -155,9 +159,9 @@ void CLaserDevice::Update( double sim_time )
     {
       // If not subscribed,
       // reset configuration to default.
-      this->scan_res = DTOR(0.50);
-      this->scan_min = DTOR(-90);
-      this->scan_max = DTOR(+90);
+      this->scan_res = DTOR(DEFAULT_RES);
+      this->scan_min = DTOR(DEFAULT_MIN);
+      this->scan_max = DTOR(DEFAULT_MAX);
       this->scan_count = 361;
       this->intensity = false;
 

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.73 $
+//  $Author: rtv $
+//  $Revision: 1.74 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -612,7 +612,7 @@ bool CWorld::StartupPlayer( void )
                 (strlen(m_auth_key)) ? m_auth_key : NULL,
                 NULL) < 0 )
     {
-      PRINT_ERR1("error executing stage [%s]\n"
+      PRINT_ERR1("error executing player: [%s]\n"
                  "Make sure player is in your path.", strerror(errno));
       if(!kill(getppid(),SIGINT))
       {

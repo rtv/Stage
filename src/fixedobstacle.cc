@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.4 $
+//  $Author: rtv $
+//  $Revision: 1.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -116,7 +116,7 @@ bool CFixedObstacle::Load(CWorldFile *worldfile, int section)
     this->scale = 1 / m_world->ppm;
   }
 
-  // Creaet and load the image here (we need to know its size)
+  // Create and load the image here (we need to know its size)
   // Try to guess the file type from the extension.
   this->image = new Nimage;
   int len = strlen(this->filename);
@@ -145,7 +145,10 @@ bool CFixedObstacle::Load(CWorldFile *worldfile, int section)
   // Compute the object size based on the image
   m_size_x = this->scale * this->image->width;
   m_size_y = this->scale * this->image->height;
-  
+
+  // draw a border around the image
+  this->image->draw_box(0,0,this->image->width-1, this->image->height-1, 255 );
+
   return true;
 }
 
