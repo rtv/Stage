@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.1.2.7 2003-02-09 00:32:17 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.1.2.8 2003-02-09 22:51:50 rtv Exp $
  */
 
 //
@@ -394,18 +394,23 @@ int RtkGuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
     case STG_PROP_ENTITY_PLAYERID:
     case STG_PROP_ENTITY_RECTS:
     case STG_PROP_ENTITY_CIRCLES:
+    case STG_PROP_ENTITY_CONFIG:
       RtkGuiEntityShutdown( ent ); 
       RtkGuiEntityStartup( ent );
       break;
 
-      // these are ignored for now
-    case STG_PROP_ENTITY_COMMAND:
+      // 
     case STG_PROP_ENTITY_DATA:
-    case STG_PROP_ENTITY_CONFIG:
-      //PRINT_DEBUG1( "gui redraw command/data for %d", prop ); 
-      ent->RtkUpdate();
+      //PRINT_DEBUG1( "gui redraws data", prop ); 
+      ent->RtkUpdate(); // should be something like RtkDrawEntityData( ent );
       break;
       
+      // these are ignored for now
+    case STG_PROP_ENTITY_VELOCITY:
+    case STG_PROP_ENTITY_COMMAND:
+      //PRINT_DEBUG1( "gui does nothing for prop %s", SIOPropString(prop) ); 
+      break;
+
     default:
       PRINT_WARN1( "property change %s unhandled by rtkgui", SIOPropString(prop) ); 
       break;

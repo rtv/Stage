@@ -246,7 +246,7 @@ const char* SIOHdrString( stage_header_type_t type )
   switch( type )
     {
     case STG_HDR_CONTINUE: return "STG_HDR_CONTINUE";
-    case STG_HDR_MODELS: return "STG_HDR_MODELS";
+    case STG_HDR_MODEL: return "STG_HDR_MODEL";
     case STG_HDR_PROPS: return "STG_HDR_PROPS";
     case STG_HDR_CMD: return "STG_HDR_CMD";
     case STG_HDR_GUI: return "STG_HDR_GUI";
@@ -550,8 +550,8 @@ int SIOServiceConnections(   stg_connection_callback_t lostconnection_callback,
 					 gui_callback );
 			    break;
 			    
-			  case STG_HDR_MODELS:
-			    //PRINT_DEBUG1( "STG_HDR_MODELS on %d", t );
+			  case STG_HDR_MODEL:
+			    PRINT_DEBUG1( "STG_HDR_MODEL on %d", t );
 			    SIOReadData( t, hdr.len, 
 					 sizeof(stage_model_t), 
 					 model_callback );

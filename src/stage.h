@@ -121,7 +121,8 @@ typedef int stage_id_t;
 // the server reads a header to discover which type of data follows...
 typedef enum { 
   STG_HDR_CONTINUE,  // marks the end of a  transaction
-  STG_HDR_MODELS, // requests for new models follow
+  STG_HDR_MODEL, // a request for a new model follows
+  STG_HDR_MODEL_ACK, // len contains an identifier for a just-created model
   STG_HDR_PROPS, // model property settings follow
   STG_HDR_CMD, // a command to the server (save, load, pause, quit, etc)
   STG_HDR_GUI // a GUI configuration packet follows
@@ -187,10 +188,12 @@ typedef struct
 } __attribute ((packed)) stage_property_t;
 
 // a client that receives this packet should create a new entity
+// and return a single int identifier
 typedef struct
 {
-  int id;
+  int id; // an id of -1 requests the creation of a new model
   int parent_id;
+  int key; // clients can use this to identify their request/reply pairs
   char token[ STG_TOKEN_MAX ]; // a string from the library to
  // identify the type of model
 } stage_model_t;

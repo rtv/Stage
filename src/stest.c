@@ -1,6 +1,6 @@
 
 /*
-  $Id: stest.c,v 1.1.2.10 2003-02-09 00:32:16 rtv Exp $
+  $Id: stest.c,v 1.1.2.11 2003-02-09 22:51:50 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -31,6 +31,9 @@
 		      
 const double timestamp = 0.0;
 
+int pending_key = 0;
+int pending_id = -1;
+
 int HandleLostConnection( int connection )
 {
   PRINT_ERR1( "lost connection on %d", connection );
@@ -43,6 +46,11 @@ int HandleModel( int connection, char* data, size_t len )
   stage_model_t* model = (stage_model_t*)data;
   
   printf( "Received %d bytes model packet on connection %d", (int)len, connection );
+
+  // if we see the key we've been waiting for, the model request is confirmed
+  if( model->key == pending_key )
+    pending_id = model->id; // find out what id we were given
+  
   return 0; //success
 }
 
@@ -121,6 +129,29 @@ void SetVelocity( int con, int id, double vx, double vy, double va )
   SIOFreeBuffer( bp );
 }
 
+// requests creation of a model. fills in the model.id record with the correct
+// id returned from stage. returns -1 on failure, 0 on success
+int CreateModel( int connection, stage_model_t* model )
+{
+  // set up the request packet and local state variables for getting the reply
+  model->id = pending_id = -1; // CREATE a model
+  model->key = pending_key = rand(); //(some random integer number)
+  
+  SIOWriteMessage( connection, timestamp, STG_HDR_MODEL, 
+		   (char*)model, sizeof(stage_model_t) );
+  
+  // loop on read until we hear that our model was created
+  while( pending_id == -1 )
+    SIOServiceConnections( &HandleLostConnection,
+			   &HandleCommand,
+			   &HandleModel, 
+			   NULL, NULL );
+  
+  // now we know the id Stage gave this model
+  model->id = pending_id;
+  
+  return 0; // success
+}
 
 int main( int argc, char** argv )
 {
@@ -160,30 +191,26 @@ int main( int argc, char** argv )
       
       EVAL(result);
       
-      const int ROOT = 0, BOX = 1, BITMAP = 2, SONAR=3;
-      
       // define some models we want to create
-      stage_model_t models[4];
-      models[0].id = ROOT;
-      models[0].parent_id = -1; // only the root can have no parent
-      strncpy( models[0].token, "box", STG_TOKEN_MAX );
+      stage_model_t root;
+      root.parent_id = -1; // only the root can have no parent
+      strncpy( root.token, "box", STG_TOKEN_MAX );
+      assert( CreateModel( connection,  &root ) == 0 );
       
-      models[1].id = BOX;
-      models[1].parent_id = ROOT; // root
-      strncpy( models[1].token, "box", STG_TOKEN_MAX );
+      stage_model_t box;
+      box.parent_id = root.id;
+      strncpy( box.token, "box", STG_TOKEN_MAX );
+      assert( CreateModel( connection,  &box ) == 0 );
       
-      models[2].id = BITMAP;
-      models[2].parent_id = ROOT; // root
-      strncpy( models[2].token, "box", STG_TOKEN_MAX );
-      
-      models[3].id = SONAR;
-      models[3].parent_id = BOX;
-      strncpy( models[3].token, "sonar", STG_TOKEN_MAX );
-      
-      TEST( "Sending models" );
-      result = SIOWriteMessage( connection, timestamp, STG_HDR_MODELS, 
-				(char*)&models, 4*sizeof(stage_model_t) );
-      EVAL(result);
+      stage_model_t bitmap;
+      bitmap.parent_id = root.id;
+      strncpy( bitmap.token, "box", STG_TOKEN_MAX );
+      assert( CreateModel( connection,  &bitmap ) == 0 );
+
+      stage_model_t sonar;
+      sonar.parent_id = box.id;
+      strncpy( sonar.token, "box", STG_TOKEN_MAX );
+      assert( CreateModel( connection,  &sonar ) == 0 );
       
       // define some properties
       stage_buffer_t* props = SIOCreateBuffer();
@@ -192,12 +219,12 @@ int main( int argc, char** argv )
       // pose the bitmap
       stage_pose_t pose;
       SIOPackPose( &pose, 4.0, 6.0, 0.0 );      
-      SIOBufferProperty( props, BITMAP, STG_PROP_ENTITY_POSE, 
+      SIOBufferProperty( props, bitmap.id, STG_PROP_ENTITY_POSE, 
       	 (char*)&pose, sizeof(pose) );
       
       // pose the box
       SIOPackPose( &pose, 2.0, 1.0, 1.0 );      
-      SIOBufferProperty( props, BOX, STG_PROP_ENTITY_POSE, 
+      SIOBufferProperty( props, box.id, STG_PROP_ENTITY_POSE, 
       	 (char*)&pose, sizeof(pose) );
 
       
@@ -208,7 +235,7 @@ int main( int argc, char** argv )
       subs[2] = STG_PROP_ENTITY_SIZE;
       subs[3] = STG_PROP_ENTITY_RECTS;
       
-      SIOBufferProperty( props, SONAR, STG_PROP_ENTITY_SUBSCRIBE,
+      SIOBufferProperty( props, sonar.id, STG_PROP_ENTITY_SUBSCRIBE,
 			 (char*)subs, 4*sizeof(subs[0]) );
 
       // push some rectangles into the bitmap
@@ -223,7 +250,7 @@ int main( int argc, char** argv )
 	  rects[r].h = 0.1;
 	}
       
-      SIOBufferProperty( props, BITMAP, STG_PROP_ENTITY_RECTS, 
+      SIOBufferProperty( props, bitmap.id, STG_PROP_ENTITY_RECTS, 
       		 (char*)&rects, 10*sizeof(rects[0]) );
       
       TEST( "Sending properties" );
@@ -239,30 +266,30 @@ int main( int argc, char** argv )
       double x = 0;
       double  y = 0;
       double z = 0;
-      while( 1 )
+      while( c < 10 )
 	{
 	  printf( "cycle %d\n", c++ );
 	  
 	  SIOWriteMessage( connection, timestamp, STG_HDR_CONTINUE, NULL, 0 );
 	  
-	  //Resize( connection, BITMAP,  
-	  //  0.5 + 3.0 * fabs(sin(x)),  0.5 + 3.0 * fabs(cos(x+=0.05)) );
+	  Resize( connection, bitmap.id,  
+	    0.5 + 3.0 * fabs(sin(x)),  0.5 + 3.0 * fabs(cos(x+=0.05)) );
 	  
-	  //SetVelocity( connection, BOX, 3.0 * sin(x), 2.0 * cos(x+=0.1), 2.0 );
+	  SetVelocity( connection, box.id, 3.0 * sin(x), 2.0 * cos(x+=0.1), 2.0 );
 	  
-	  if( 0 )//c % 10 == 0 )
+	  if( c % 100 == 0 )
 	    {
 	      
-	      //Resize( connection, ROOT, 
-	      //      5.0 + 5.0 * fabs(sin(z)), 
-	      //      5.0 + 5.0 * fabs(cos(z)) );
+	      Resize( connection, root.id, 
+	            5.0 + 5.0 * fabs(sin(z)), 
+	            5.0 + 5.0 * fabs(cos(z)) );
 	      
-	      //SetResolution( connection, ROOT, 3.0 + fmod( z*10, 10) );
+	      SetResolution( connection, root.id, 3.0 + fmod( z*10, 10) );
 	      
 	      z += 0.1;
 	    }
 	  
-	  /*if( c == 75 )
+	  if( c == 75 )
 	    {
 	    stage_gui_config_t gui;
 	    strcpy( gui.token, "rtk" );
@@ -277,7 +304,7 @@ int main( int argc, char** argv )
 	    
 	    result = SIOWriteMessage( connection, timestamp, 
 	    STG_HDR_GUI, (char*)&gui, sizeof(gui) ) ;
-	    }*/
+	    }
 	   
 	  SIOServiceConnections( &HandleLostConnection,
 				 &HandleCommand,

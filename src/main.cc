@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.15 2003-02-09 21:39:57 gerkey Exp $
+ * CVS: $Id: main.cc,v 1.61.2.16 2003-02-09 22:51:49 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -200,6 +200,13 @@ int HandleModel(  int connection, char* data, size_t len )
   stage_model_t* model = (stage_model_t*)data;
   
   PRINT_DEBUG1( "Received model on connection %d", connection );
+
+  static int model_id = 0;
+
+  // set the id of this model to the next available value and increment
+  // the value.
+  model->id = model_id++;
+  
   PRINT_DEBUG4( "creating model %p  - %d %s %d",
 		model, model->id, model->token, model->parent_id );
   
@@ -210,6 +217,13 @@ int HandleModel(  int connection, char* data, size_t len )
       return -1;
     }
   
+  // return the model packet to the client with the id filled in.
+  SIOWriteMessage( connection, CEntity::simtime, 
+		   STG_HDR_MODEL, 
+		   (char*)model, sizeof(stage_model_t) );
+
+  SIOWriteMessage( connection, CEntity::simtime, STG_HDR_CONTINUE, NULL, 0 );
+
   return 0; // success
 }
 
