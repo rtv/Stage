@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visionbeacon.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -50,6 +50,10 @@ class CVisionBeacon : public CEntity
     // Beacon radius
     //
     private: double m_radius;
+
+    // Layers to render to
+    //
+    private: bool m_render_obstacle, m_render_laser;
     
     // Beacon channel (corresponds to ACTS channel)
     //

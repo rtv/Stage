@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacondevice.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.4 $
+//  $Author: ahoward $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -71,7 +71,10 @@ class CLaserBeaconDevice : public CPlayerDevice
     // Process GUI update messages
     //
     public: virtual void OnUiUpdate(RtkUiDrawData *pData);
-    private: void DrawData(RtkUiDrawData *event);
+
+    // Draw the beacon data
+    //
+    public: void DrawData(RtkUiDrawData *event);
 
 #endif
 

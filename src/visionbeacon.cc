@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -36,6 +36,9 @@ CVisionBeacon::CVisionBeacon(CWorld *world, CEntity *parent)
 {
     m_channel = 0;
     m_radius = 0;
+
+    m_render_obstacle = true;
+    m_render_laser = true;
     
     // Set the initial map pose
     //
@@ -63,14 +66,31 @@ bool CVisionBeacon::Load(int argc, char **argv)
         
         // Extract channel
         //
-        if (strcmp(argv[i], "channel") == 0 && i + 1 < argc)
+        else if (strcmp(argv[i], "channel") == 0 && i + 1 < argc)
         {
             m_channel = atoi(argv[i + 1]) + 1;
             i += 2;
         }
-  
+
+        // See which layers to render
+        //
+        else if (strcmp(argv[i], "norender") == 0 && i + 1 < argc)
+        {
+            if (strcmp(argv[i + 1], "obstacle") == 0)
+                m_render_obstacle = false;
+            else if (strcmp(argv[i + 1], "laser") == 0)
+                m_render_laser = false;
+            else
+                PLAYER_MSG2("unrecognized token [%s %s]", argv[i], argv[i + 1]);
+            i += 2;
+        }
+
+        // Syntax error
         else
-            i++;
+        {
+            PLAYER_MSG1("unrecognized token [%s]", argv[i]);
+            i += 1;
+        }
     }
 
 #ifdef INCLUDE_RTK
@@ -102,7 +122,19 @@ bool CVisionBeacon::Save(int &argc, char **argv)
     snprintf(z, sizeof(z), "%d", (int) m_channel - 1);
     argv[argc++] = strdup("channel");
     argv[argc++] = strdup(z);
-    
+
+    // Save render settings
+    //
+    if (!m_render_obstacle)
+    {
+        argv[argc++] = strdup("norender");
+        argv[argc++] = strdup("obstacle");
+    }
+    if (!m_render_laser)
+    {
+        argv[argc++] = strdup("norender");
+        argv[argc++] = strdup("laser");
+    }
     return true;
 }
 
@@ -116,10 +148,16 @@ void CVisionBeacon::Update()
 
     // Undraw our old representation
     //
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                       2 * m_radius, 2 * m_radius, layer_obstacle, 0);
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+    if (m_render_obstacle)
+    {
+        m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+                              2 * m_radius, 2 * m_radius, layer_obstacle, 0);
+    }
+    if (m_render_laser)
+    {
+        m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
                        2 * m_radius, 2 * m_radius, layer_laser, 0);
+    }
     m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
                        2 * m_radius, 2 * m_radius, layer_vision, 0);
     
@@ -129,10 +167,16 @@ void CVisionBeacon::Update()
     
     // Draw our new representation
     //
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                          2 * m_radius, 2 * m_radius, layer_obstacle, 1);
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                          2 * m_radius, 2 * m_radius, layer_laser, 1);
+    if (m_render_obstacle)
+    {
+        m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+                              2 * m_radius, 2 * m_radius, layer_obstacle, 1);
+    }
+    if (m_render_laser)
+    {
+        m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+                              2 * m_radius, 2 * m_radius, layer_laser, 1);
+    }
     m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
                           2 * m_radius, 2 * m_radius, layer_vision, m_channel);
 }

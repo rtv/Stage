@@ -16,3 +16,5 @@ create usc_pioneer pose 7.00 3.40 0 name atom port 6666
 
 create player_server pose 0.00 0.00 0 color black port 6667 
 create laser_device pose 10.61 3.13 0 color black port 6667 
+
+create vision_beacon pose 9.90 12.60 0 color black radius 0.10 channel 1 norender laser
