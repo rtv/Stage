@@ -1,9 +1,11 @@
 \documentclass[11pt]{report}
+
 % this one apparently fixes the < and > chars
 \usepackage[T1]{fontenc}
 \usepackage{subfigure}
 \usepackage{times}
 \usepackage{tabularx}
+
 % why did we need this?
 %\usepackage{verbatim}
 % make all captions small and slanted
@@ -17,7 +19,7 @@
 % A nice environment for displaying command line args (AH)
 \newenvironment{xarg}[1]{\noindent{\tt #1}\\\hspace*{2em}\begin{minipage}[t]{5in}}{\end{minipage}\vspace*{1em}}
 
-\def\VERSION {1.0 (Bleeding)}
+\def\VERSION {1.2}
 
 \begin{document}
 \setcounter{page}{0}
@@ -50,8 +52,8 @@ Los Angeles, USA\\
 
 \centerline{\today}
 
-%\tableofcontents
-%\newpage
+\tableofcontents
+\newpage
 %\listoffigures
 %\newpage
 %\listoftables
@@ -356,19 +358,147 @@ Los Angeles, USA\\
     %\end{xarg}
 
 \chapter{The World File}
-  
-  \section{Organization}
 
-  \section{General Options}
+The world file is used to describe the particular set of robots,
+sensors and objects to be simulated by Stage.  Stage reads the world
+file on start-up and creates entities as indicated in the file.  Stage
+may also write updated pose information into the world file when the
+user selects the {\bf File:Save} menu option.
 
-  \section{Device Summary}
+\section{Basic Syntax}
 
-  \section{Device Details}
+A simple world file might look like this:
+\begin{quote}
+\begin{verbatim}
+# This world file creates two robots with lasers.
 
-\appendix
+environment 
+( 
+  file "cave.pnm" 
+  scale 0.03 
+)
 
-\chapter{Advanced world file options : M4}
+position 
+( 
+  name "robot1" port 6665 pose [1 1 0] 
+  player ()
+  laser ()
+)
 
-  Put M4 stuff in here.
+position 
+( 
+  name "robot2" port 6666 pose [2 1 0] 
+  player ()
+  laser ()
+)
+\end{verbatim}
+\end{quote}
+This example shows the basic syntactic features of the 
+world file format: comments, entities and properties.
+%
+Comments are indicated by the \verb'#' symbol; they may be placed
+anywhere in the file and continue to the end of the line.  For
+example:
+\begin{quote}
+\begin{verbatim}
+# This world file creates two robots with lasers.
+\end{verbatim}
+\end{quote}
+%
+Entities are indicated using \verb'type ( ... )' entries; each such
+entry instantiates an entity of type \verb'type'.  For example:
+\begin{quote}
+\begin{verbatim}
+position ( ... )
+\end{verbatim}
+\end{quote}
+creates a single position device (a bare-bones mobile robot).  Entities may
+be nested to indicate that one entity is a ``child'' of another; thus:
+\begin{quote}
+\begin{verbatim}
+position ( player () laser() )
+\end{verbatim}
+\end{quote}
+creates a single position device with a Player server and laser attached to
+it.  Think of child entities as physically sitting on their parent.
+%
+Entities have properties, indicated using \verb'name value' pairs:
+\begin{quote}
+\begin{verbatim}
+position ( name "robot1" port 6665 pose [1 1 0] ... )
+\end{verbatim}
+\end{quote}
+This entry creates a position device named ``robot1'' attached to port
+6665, with initial position $(1, 1)$ and orientation of $0$.  Property
+values can be either numbers (\verb'6665'), strings (indicated by
+double quotes \verb'"robot1"') or tuples (indicated by brackets
+\verb'[1 1 0]').
+
+The above example can be re-written in a more concise form as follows:
+\begin{quote}
+\begin{verbatim}
+# This world file creates two robots with lasers.
+# It uses the 'define' construct to define a new type of entity.
+
+environment ( file "cave.pnm" scale 0.03 )
+
+define myrobot position ( player() laser() )
+
+myrobot ( name "robot1" port 6665 pose [1 1 0] )
+myrobot ( name "robot2" port 6666 pose [2 1 0] )
+\end{verbatim}
+\end{quote}
+This example illustrates the use of the \verb'define newentity oldentity (...)'
+construct do define new entity types.  For example, the line:
+\begin{quote}
+\begin{verbatim}
+define myrobot position ( player() laser() )
+\end{verbatim}
+\end{quote}
+defines a new \verb'myrobot' entity type composed of the
+primitive \verb'position', \verb'player' and \verb'laser' entities.
+This entity may be instantiated using the standard syntax:
+\begin{quote}
+\begin{verbatim}
+myrobot ( name "robot1" port 6665 pose [1 1 0] )
+\end{verbatim}
+\end{quote}
+This entry creates a position device named \verb'robot1' that has
+both \verb'player' and \verb'laser' devices attached.
+
+See the {\tt examples} directory in the Stage distribution for more
+world file examples.
+
+
+\section{Entity Summary}
+
+\noindent
+\begin{tabularx}{\columnwidth}{lX}
+\hline 
+\verb'environment' & \\
+\verb'box' & \\
+\verb'puck' & \\
+\verb'laserbeacon' & \\
+\hline
+\end{tabularx}
+
+\noindent
+\begin{tabularx}{\columnwidth}{lX}
+\hline
+\verb'broadcast' & \\
+\verb'gps' & \\ 
+\verb'gripper' & \\
+\verb'laser' & \\
+\verb'lbd' & \\
+\verb'misc' & \\
+\verb'player' & \\
+\verb'position' & \\
+\verb'ptz' & \\
+\verb'sonar' & \\
+\verb'truth' & \\
+\verb'vision' & \\
+\hline
+\end{tabularx}
+
 
 \end{document}
