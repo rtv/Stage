@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.45 $
+//  $Revision: 1.46 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -149,11 +149,9 @@ int laser_update( stg_model_t* mod )
       //printf( "%d ", sample->range );
     }
   
-  
   // new style
   stg_model_set_data( mod, scan, sizeof(stg_laser_sample_t) * cfg->samples );
-  
-  //free( scan );
+
 
 #if TIMING
   gettimeofday( &tv2, NULL );

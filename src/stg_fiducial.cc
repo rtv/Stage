@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_fiducial.cc,v 1.2 2004-09-25 02:15:00 rtv Exp $
+ * $Id: stg_fiducial.cc,v 1.3 2004-09-26 02:00:45 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -36,11 +36,8 @@ class StgFiducial:public Stage1p4
 public:
   StgFiducial( ConfigFile* cf, int section );
 
-  /// Read data from the driver; @a id specifies the interface to be read.
-  virtual size_t GetData(player_device_id_t id,
-			 void* dest, size_t len,
-			 struct timeval* timestamp);
- 
+  static void PublishData( void* ptr );
+
   /// override PutConfig to Write configuration request to driver.
   virtual int PutConfig(player_device_id_t id, void *client, 
 			void* src, size_t len,
@@ -52,11 +49,14 @@ StgFiducial::StgFiducial( ConfigFile* cf, int section )
 	     sizeof(player_fiducial_data_t), 0, 1, 1 )
 {
   PLAYER_TRACE1( "constructing StgFiducial with interface %s", interface );
+  
+  this->model->data_notify = StgFiducial::PublishData;
+  this->model->data_notify_arg = this;
 }
 
 Driver* StgFiducial_Init( ConfigFile* cf, int section)
 {
-    return((Driver*)(new StgFiducial( cf, section)));
+  return((Driver*)(new StgFiducial( cf, section)));
 }
 
 
@@ -65,22 +65,18 @@ void StgFiducial_Register(DriverTable* table)
   table->AddDriver("stg_fiducial",  StgFiducial_Init);
 }
 
-// override GetData to get data from Stage on demand, rather than the
-// standard model of the source filling a buffer periodically
-size_t StgFiducial::GetData(player_device_id_t id,
-			    void* dest, size_t len,
-			    struct timeval* timestamp )
+void StgFiducial::PublishData( void* ptr )
 {
-  PLAYER_TRACE2(" STG_FIDUCIAL GETDATA section %d -> model %d",
-		model->section, model->id_client );
-  
-  //stg_property_t* prop = stg_model_get_prop_cached( model, STG_PROP_DATA);
+  StgFiducial* sf = (StgFiducial*)ptr;
 
+  PLAYER_TRACE2(" STG_FIDUCIAL GETDATA section %d -> model %d",
+		sf->model->section, sf->model->id_client );
+  
   player_fiducial_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
   
   size_t datalen=0;
-  stg_fiducial_t *fids = (stg_fiducial_t*)stg_model_get_data(this->model,&datalen);
+  stg_fiducial_t *fids = (stg_fiducial_t*)stg_model_get_data(sf->model,&datalen);
 
   if( fids && datalen>0 )
     {
@@ -110,10 +106,7 @@ size_t StgFiducial::GetData(player_device_id_t id,
     }
   
   // publish this data
-  Driver::PutData(id,&pdata, sizeof(pdata),NULL); // time gets filled in
-  
-  // now inherit the standard data-getting behavior 
-  return Driver::GetData(id,dest,len,timestamp);
+  sf->PutData( &pdata, sizeof(pdata),NULL); // time gets filled in
 }
 
 int StgFiducial::PutConfig(player_device_id_t id, void *client, 

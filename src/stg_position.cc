@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_position.cc,v 1.2 2004-09-25 02:15:00 rtv Exp $
+ * $Id: stg_position.cc,v 1.3 2004-09-26 02:00:45 rtv Exp $
  */
 
 #define DEBUG
@@ -30,11 +30,8 @@ class StgPosition:public Stage1p4
 public:
   StgPosition( ConfigFile* cf, int section );
   
-  // override GetData
-  virtual size_t GetData(player_device_id_t id,
-			 void* dest, size_t len,
-			 struct timeval* timestamp);
-  
+  static void PublishData( void* ptr );
+
   /// override PutCommand
   virtual void PutCommand(player_device_id_t id,
 			  void* src, size_t len,
@@ -55,6 +52,9 @@ StgPosition::StgPosition( ConfigFile* cf, int section )
 	      sizeof(player_position_data_t), sizeof(player_position_cmd_t), 1, 1 )
 {
   PLAYER_MSG0( "STG_POSITION CONSTRUCTOR" );
+
+  this->model->data_notify = StgPosition::PublishData;
+  this->model->data_notify_arg = this;
 }
 
 Driver* StgPosition_Init( ConfigFile* cf, int section)
@@ -68,13 +68,17 @@ void StgPosition_Register(DriverTable* table)
   table->AddDriver("stg_position",  StgPosition_Init);
 }
 
-size_t StgPosition::GetData( player_device_id_t id,
-			     void* dest, size_t len,
-			     struct timeval* timestamp)
+// this is called in the simulation thread to stick our data into
+// Player
+void StgPosition::PublishData( void* ptr )
 {
+  //puts( "publishing position data" );
+
+  StgPosition* pos = (StgPosition*)ptr;
+
   size_t datalen=0;
   stg_position_data_t* data = (stg_position_data_t*)
-    stg_model_get_data( this->model, &datalen );
+    stg_model_get_data( pos->model, &datalen );
   
   if( data && datalen == sizeof(stg_position_data_t) )      
     {      
@@ -97,11 +101,8 @@ size_t StgPosition::GetData( player_device_id_t id,
       //printf( "getdata called at %lu ms\n", stage_client->stagetime );
       
       // publish this data
-      Driver::PutData( &position_data, sizeof(position_data), NULL); 
+      pos->PutData( &position_data, sizeof(position_data), NULL); 
     }
-  
-  // now inherit the standard data-getting behavior 
-  return Driver::GetData( id,dest,len,timestamp);
 }
   
 

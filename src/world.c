@@ -147,6 +147,8 @@ int stg_world_update( stg_world_t* world, int sleepflag )
       fflush(stdout);
 #endif
       
+      world->real_interval_measured = real_interval;
+      
       g_hash_table_foreach( world->models, model_update_cb, world );
       
       
@@ -156,8 +158,12 @@ int stg_world_update( stg_world_t* world, int sleepflag )
       
     }
   else
-    if( sleepflag ) usleep( 10000 ); // sleep a little
-  
+    if( sleepflag )
+      {
+	//puts( "sleeping" );
+	usleep( 10000 ); // sleep a little
+      }
+
   return _stg_quit; // may have been set TRUE by the GUI or someone else
 }
 

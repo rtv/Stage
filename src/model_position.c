@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.7 $
+//  $Revision: 1.8 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -24,8 +24,11 @@ void position_init( stg_model_t* mod )
   PRINT_DEBUG( "position startup" );
   
   // sensible position defaults
-  // TODO
-  
+
+  stg_velocity_t vel;
+  memset( &vel, 0, sizeof(vel));
+  stg_model_set_velocity( mod, &vel );
+
   // init the command structure
   stg_position_cmd_t cmd;
   memset( &cmd, 0, sizeof(cmd));
@@ -50,6 +53,10 @@ void position_init( stg_model_t* mod )
 int position_update( stg_model_t* mod )
 {   
   PRINT_DEBUG1( "[%lu] position update", mod->world->sim_time );
+
+  // no driving if noone is subscribed
+  if( mod->subs < 1 )
+    return 0;
 
   assert( mod->cfg ); // position_init should have filled these
   assert( mod->cmd );
@@ -192,7 +199,7 @@ int position_update( stg_model_t* mod )
   PRINT_DEBUG4( "model %s velocity (%.2f %.2f %.2f)",
 		mod->token, 
 		mod->velocity.x, 
-		mod->velocity.y, 
+		mod->velocity.y,
 		mod->velocity.a );
 
   double interval = (double)mod->world->sim_interval / 1000.0;
@@ -220,8 +227,13 @@ int position_shutdown( stg_model_t* mod )
 {
   PRINT_DEBUG( "position shutdown" );
   
-  // re-initialize the device - safety feature!
-  position_init(mod);
+  // safety feature!
+  //position_init(mod);
+
+  stg_velocity_t vel;
+  memset( &vel, 0, sizeof(vel));
+  stg_model_set_velocity( mod, &vel );
+
 
   return 0; // ok
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_sonar.cc,v 1.2 2004-09-25 02:15:00 rtv Exp $
+ * $Id: stg_sonar.cc,v 1.3 2004-09-26 02:00:45 rtv Exp $
  */
 
 #define PLAYER_ENABLE_TRACE 0
@@ -31,12 +31,9 @@ class StgSonar:public Stage1p4
 {
 public:
   StgSonar( ConfigFile* cf, int section );
- 
-  /// Read data from the driver; @a id specifies the interface to be read.
-  virtual size_t GetData(player_device_id_t id,
-			 void* dest, size_t len,
-			 struct timeval* timestamp);
- 
+
+  static void PublishData( void* ptr );
+
   /// override PutConfig to Write configuration request to driver.
   virtual int PutConfig(player_device_id_t id, void *client, 
 			void* src, size_t len,
@@ -54,6 +51,9 @@ StgSonar::StgSonar( ConfigFile* cf, int section )
   PLAYER_TRACE1( "constructing StgSonar with interface %s", interface );
   
   power_on = 1; // enabled by default
+
+ this->model->data_notify = StgSonar::PublishData;
+ this->model->data_notify_arg = this;
 }
 
 Driver* StgSonar_Init( ConfigFile* cf, int section)
@@ -67,15 +67,15 @@ void StgSonar_Register(DriverTable* table)
   table->AddDriver("stg_sonar",  StgSonar_Init);
 }
 
-// override GetData to get data from Stage on demand, rather than the
-// standard model of the source filling a buffer periodically
-size_t StgSonar::GetData(player_device_id_t id,
-			 void* dest, size_t len,
-			 struct timeval* timestamp )
-{  
+void StgSonar::PublishData( void* ptr )
+{
+  //puts( "sonar publish data" );
+
+  StgSonar* son = (StgSonar*)ptr;
+
   size_t datalen;
   stg_ranger_sample_t *rangers = (stg_ranger_sample_t*)
-    stg_model_get_data( this->model, &datalen );
+    stg_model_get_data( son->model, &datalen );
   
   if( rangers && datalen > 0 )
     {
@@ -91,7 +91,7 @@ size_t StgSonar::GetData(player_device_id_t id,
       player_sonar_data_t sonar;
       memset( &sonar, 0, sizeof(sonar) );
       
-      if( power_on ) // set with a sonar config
+      if( son->power_on ) // set with a sonar config
 	{
 	  sonar.range_count = htons((uint16_t)rcount);
 	  
@@ -99,11 +99,8 @@ size_t StgSonar::GetData(player_device_id_t id,
 	    sonar.ranges[i] = htons((uint16_t)(1000.0*rangers[i].range));
 	}
       
-      Driver::PutData( id, &sonar, sizeof(sonar), NULL); // time gets filled in
+      son->PutData( &sonar, sizeof(sonar), NULL); // time gets filled in
     }
-  
-  // now inherit the standard data-getting behavior 
-  return Driver::GetData(id,dest,len,timestamp);
 }
 
 

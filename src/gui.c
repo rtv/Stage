@@ -230,14 +230,17 @@ int gui_world_update( stg_world_t* world )
 
   if( win->show_matrix ) gui_world_matrix( world, win );
   
-  char clock[128];
-  snprintf( clock, 255, "Time: %lu:%lu:%2lu:%2lu.%3lu",
+  char clock[256];
+  snprintf( clock, 255, "Time: %lu:%lu:%2lu:%2lu.%3lu\t(sim:%3d real:%3d ratio:%2.2f)",
 	    world->sim_time / (24*3600000), // days
 	    world->sim_time / 3600000, // hours
 	    (world->sim_time % 3600000) / 60000, // minutes
 	    (world->sim_time % 60000) / 1000, // seconds
-	    world->sim_time % 1000 ); // milliseconds
-  
+	    world->sim_time % 1000, // milliseconds
+	    world->sim_interval,
+	    world->real_interval_measured,
+	    (double)world->sim_interval / (double)world->real_interval_measured );
+
   //gtk_label_set_text( win->timelabel, clock );
   
   if( win->selection_active )

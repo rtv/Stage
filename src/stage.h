@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.91 2004-09-25 23:21:27 rtv Exp $
+ * CVS: $Id: stage.h,v 1.92 2004-09-26 02:00:44 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -652,6 +652,11 @@ extern "C" {
 			      // set this to zero for 'as fast as possible'
 
     stg_msec_t wall_last_update; // the wall-clock time of the last update
+
+    // the wallclock-time interval elapsed between the last two
+    // updates - compare this with sim_interval to see the ratio of
+    // sim to real time.
+    stg_msec_t real_interval_measured;
 
     double ppm; // the resolution of the world model in pixels per meter
 

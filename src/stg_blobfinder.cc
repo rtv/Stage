@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_blobfinder.cc,v 1.2 2004-09-25 02:15:00 rtv Exp $
+ * $Id: stg_blobfinder.cc,v 1.3 2004-09-26 02:00:45 rtv Exp $
  */
 
 #define PLAYER_ENABLE_TRACE 0
@@ -31,12 +31,9 @@ class StgBlobfinder:public Stage1p4
 {
 public:
   StgBlobfinder( ConfigFile* cf, int section );
-
-   /// Read data from the driver; @a id specifies the interface to be read.
-  virtual size_t GetData(player_device_id_t id,
-			 void* dest, size_t len,
-			 struct timeval* timestamp);
- 
+  
+  static void PublishData( void* ptr );
+  
   /// override PutConfig to Write configuration request to driver.
   virtual int PutConfig(player_device_id_t id, void *client, 
 			void* src, size_t len,
@@ -50,7 +47,10 @@ StgBlobfinder::StgBlobfinder( ConfigFile* cf, int section )
   : Stage1p4( cf, section, PLAYER_BLOBFINDER_CODE, PLAYER_READ_MODE,
 	      sizeof(player_blobfinder_data_t), 0, 1, 1 )
 {
-  PLAYER_TRACE0( "constructing StgBlobfinder" );
+  PLAYER_TRACE0( "constructing StgBlobfinder" ); 
+  
+  this->model->data_notify = StgBlobfinder::PublishData;
+  this->model->data_notify_arg = this;
 }
 
 Driver* StgBlobfinder_Init( ConfigFile* cf, int section)
@@ -64,16 +64,13 @@ void StgBlobfinder_Register(DriverTable* table)
   table->AddDriver("stg_blobfinder",  StgBlobfinder_Init);
 }
 
-// override GetData to get data from Stage on demand, rather than the
-// standard model of the source filling a buffer periodically
-size_t StgBlobfinder::GetData(player_device_id_t id,
-			      void* dest, size_t len,
-			      struct timeval* timestamp )
-{  
+void StgBlobfinder::PublishData( void* ptr )
+{
+  StgBlobfinder* bf = (StgBlobfinder*)ptr;
   
   size_t datalen = 0;
   stg_blobfinder_blob_t *blobs = (stg_blobfinder_blob_t*)
-    stg_model_get_data( this->model, &datalen );
+    stg_model_get_data( bf->model, &datalen );
  
   if( blobs )
     {
@@ -172,18 +169,15 @@ size_t StgBlobfinder::GetData(player_device_id_t id,
       // get the configuration
       size_t cfglen=0;
       stg_blobfinder_config_t* cfg = (stg_blobfinder_config_t*)
-	stg_model_get_config( this->model, &cfglen );
+	stg_model_get_config( bf->model, &cfglen );
       assert( cfglen == sizeof(stg_blobfinder_config_t) );
       
       // and set the image width * height
       bfd.width = htons((uint16_t)cfg->scan_width);
       bfd.height = htons((uint16_t)cfg->scan_height);
       
-      Driver::PutData( id, &bfd, sizeof(bfd), NULL); // time gets filled in
+      bf->PutData( &bfd, sizeof(bfd), NULL); // time gets filled in
     }
-  
-  // now inherit the standard data-getting behavior 
-  return Driver::GetData(id,dest,len,timestamp);
 }
 
 

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.28 $
+//  $Revision: 1.29 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -60,6 +60,8 @@ void ranger_init( stg_model_t* mod )
 
 int ranger_set_data( stg_model_t* mod, void* data, size_t len )
 {  
+  PRINT_DEBUG1( "ranger set data (%d bytes)", len );
+
   // store the data
   _set_data( mod, data, len );
   
@@ -82,7 +84,9 @@ int ranger_set_config( stg_model_t* mod, void* config, size_t len )
 
 
 int ranger_shutdown( stg_model_t* mod )
-{   
+{
+  PRINT_DEBUG( "ranger shutdown" );
+
   // clear the data - this will unrender it too.
   ranger_set_data( mod, NULL, 0 );
 
@@ -90,11 +94,11 @@ int ranger_shutdown( stg_model_t* mod )
 }
 
 int ranger_update( stg_model_t* mod )
-{   
-  PRINT_DEBUG1( "[%.3f] updating rangers", mod->world->sim_time );
-  
+{     
   if( mod->subs < 1 )
     return 0;
+
+  //PRINT_DEBUG1( "[%d] updating rangers", mod->world->sim_time );
 
   size_t len = 0;
   stg_ranger_config_t* cfg = 
@@ -239,6 +243,8 @@ void ranger_render_config( stg_model_t* mod )
 
 void ranger_render_data( stg_model_t* mod )
 { 
+  PRINT_DEBUG( "ranger render data" );
+
   
   if( mod->gui.data  )
     rtk_fig_clear(mod->gui.data);
