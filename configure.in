@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.17 2002-10-28 05:48:16 gerkey Exp $
+dnl $Id: configure.in,v 1.18 2002-10-30 01:56:57 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -39,7 +39,7 @@ AC_CHECK_HEADERS(stdint.h sys/types.h strings.h values.h)
 dnl RTK2 uses libjpeg to export images.
 AC_CHECK_HEADER(jpeglib.h,
   AC_DEFINE(HAVE_JPEGLIB_H,1,[include jpeg support])
-  LIBJPEG="-ljpeg" define(JPEGLIB,[-ljpeg]),,)
+  LIBJPEG="-ljpeg",,)
 AC_SUBST(LIBJPEG)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
@@ -74,7 +74,7 @@ else
     AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
     GUI_DIR=rtkstage
     GUI_LIB=librtkstage.a
-    GUI_LINK="-L../rtk2 -Lrtkstage -lrtkstage -lrtk JPEGLIB `gtk-config --libs gtk gthread`"
+    GUI_LINK="-L../rtk2 -Lrtkstage -lrtkstage -lrtk $LIBJPEG `gtk-config --libs gtk gthread`"
   fi
 fi
 
