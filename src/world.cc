@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.104 2002-06-11 06:48:15 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.105 2002-06-11 06:50:23 rtv Exp $
  */
 
 //#undef DEBUG
@@ -282,15 +282,6 @@ bool CWorld::ParseCmdLine(int argc, char **argv)
       printf( "[Quiet]" );
     }
       
-
-    // change the server port 
-    //else if( strcmp( argv[a], "-p" ) == 0 )
-    //{
-    //  m_pose_port = atoi(argv[a+1]);
-    //  printf( "[Port %d]", m_pose_port );
-    //  a++;
-    //}
-
     // SWITCH ON SYNCHRONIZED (distributed) MODE
     // if this option is given, Stage will only run when connected
     // to an external synchronous pose connection
@@ -664,9 +655,9 @@ void CWorld::Output( double loop_duration, double sleep_duration )
     bytes = 0;
   }
 
-  //ConsoleOutput( freq, loop_duration, sleep_duration, 
-  //             avg_loop_duration, avg_sleep_duration,
-  //             bytes_in, bytes_out, bandw );
+  ConsoleOutput( freq, loop_duration, sleep_duration, 
+               avg_loop_duration, avg_sleep_duration,
+               bytes_in, bytes_out, bandw );
 
   
   if( m_log_output ) 
