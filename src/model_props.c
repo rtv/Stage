@@ -8,13 +8,12 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.23 $
+//  $Revision: 1.24 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 //#define DEBUG
 
-#define SHOW_GEOM 0
 
 #include "stage.h"
 
@@ -308,6 +307,8 @@ int stg_model_set_global_pose( stg_model_t* mod, stg_pose_t* gpose )
 
   //printf( "setting global pose %.2f %.2f %.2f = local pose %.2f %.2f %.2f\n",
   //      gpose->x, gpose->y, gpose->a, lpose.x, lpose.y, lpose.a );
+
+  return 0; //ok
 }
 
 
@@ -318,127 +319,98 @@ stg_geom_t* stg_model_get_geom( stg_model_t* mod )
 
 int stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom )
 { 
-  if( memcmp( &mod->geom, geom, sizeof(stg_geom_t) ))
-    {
-      // unrender from the matrix
-      stg_model_map( mod, 0 );
-      
-      // store the geom
-      memcpy( &mod->geom, geom, sizeof(mod->geom) );
-      
-      size_t count=0;
-      stg_line_t* lines = stg_model_get_lines( mod, &count );
-      
-      // force the body lines to fit inside this new rectangle
-      stg_normalize_lines( lines, count );
-      stg_scale_lines(  lines, count, geom->size.x, geom->size.y );
-      stg_translate_lines( lines, count, -geom->size.x/2.0, -geom->size.y/2.0 );
-      
-      // set the new lines (this will cause redraw)
-      stg_model_set_lines( mod, lines, count );
-
-      // we may need to re-render our nose
-      gui_model_features(mod);
-
-#if SHOW_GEOM
-      gui_render_geom_local( mod );
-#endif
-     // background (used e.g for laser scan fill)
-      // re-render int the matrix
-      stg_model_map( mod, 1 );
-    }
+  // unrender from the matrix
+  stg_model_map( mod, 0 );
+  
+  // store the geom
+  memcpy( &mod->geom, geom, sizeof(mod->geom) );
+  
+  // we probably need to scale and re-render our polygons
+  stg_normalize_polygons( mod->polygons->data, mod->polygons->len, 
+			  mod->geom.size.x, mod->geom.size.y );
+  
+  stg_model_render_polygons( mod );
+  
+  // we may need to re-render our nose
+  gui_model_features(mod);
+  
+  // re-render int the matrix
+  stg_model_map( mod, 1 );
 
   return 0;
 }
 
-stg_line_t* stg_model_get_lines( stg_model_t* mod, size_t* lines_count )
+
+stg_polygon_t* stg_model_get_polygons( stg_model_t* mod, size_t* poly_count )
 {
-  
-  *lines_count = mod->lines_count;
-  return mod->lines;
+  *poly_count = mod->polygons->len;
+  return (stg_polygon_t*)mod->polygons->data;
 }
 
-
-int stg_model_set_lines( stg_model_t* mod, stg_line_t* lines, size_t lines_count )
+int stg_model_set_polygons( stg_model_t* mod, stg_polygon_t* polys, size_t poly_count )
 {
   assert(mod);
-  if( lines_count > 0 ) assert( lines );
-// background (used e.g for laser scan fill)
-  PRINT_DEBUG3( "model %d(%s) received %d lines", 
-		mod->id, mod->token, (int)lines_count );
+  if( poly_count > 0 ) assert( polys );
   
-  stg_model_map( mod, 0 );
+  // background (used e.g for laser scan fill)
+  PRINT_DEBUG3( "model %d(%s) received %d polygons", 
+		mod->id, mod->token, (int)poly_count );
+
+  // normalize the polygons to fit exactly in the model's body rectangle
+  stg_normalize_polygons( polys, poly_count, mod->geom.size.x, mod->geom.size.y );
   
-  stg_geom_t* geom = stg_model_get_geom(mod); 
+  stg_model_map( mod, 0 ); // unmap the model from the matrix
   
-  // fit the rectangle inside the model's size
-  stg_normalize_lines( lines, lines_count );
-  stg_scale_lines( lines, lines_count, geom->size.x, geom->size.y );
-  stg_translate_lines( lines, lines_count, -geom->size.x/2.0, -geom->size.y/2.0 );
-
-  size_t len = sizeof(stg_line_t)*lines_count;
-
-  if( len > 0 )
-    {
-      mod->lines = realloc( mod->lines,len);
-      assert( mod->lines );
-    }
-  else
-    {
-      if( mod->lines ) free( mod->lines ); mod->lines = NULL;
-    }
+  // remove the old polygons
+  g_array_set_size( mod->polygons, 0 );
   
-  mod->lines_count = lines_count;
-  memcpy( mod->lines, lines, len );
+  // append the new polys
+  g_array_append_vals( mod->polygons, polys, poly_count );
+  
+  stg_model_render_polygons( mod );
 
-  if( mod->polypoints )
-    { 
-      free( mod->polypoints ); 
-      mod->polypoints = NULL; 
-    }
+  stg_model_map( mod, 1 ); // map the model into the matrix with the new polys
+} 
 
-  if( mod->lines_count > 1 )
-    {
-      // TODO - make multiple polygons from sets of lines
-      // or extend models to have polygons AND lines
+/* int stg_model_set_lines( stg_model_t* mod, stg_line_t* lines, size_t lines_count ) */
+/* { */
+/*   assert(mod); */
+/*   if( lines_count > 0 ) assert( lines ); */
+/* // background (used e.g for laser scan fill) */
+/*   PRINT_DEBUG3( "model %d(%s) received %d lines",  */
+/* 		mod->id, mod->token, (int)lines_count ); */
+  
+/*   stg_model_map( mod, 0 ); */
+  
+/*   stg_geom_t* geom = stg_model_get_geom(mod);  */
+  
+/*   // fit the rectangle inside the model's size */
+/*   stg_normalize_lines( lines, lines_count ); */
+/*   stg_scale_lines( lines, lines_count, geom->size.x, geom->size.y ); */
+/*   stg_translate_lines( lines, lines_count, -geom->size.x/2.0, -geom->size.y/2.0 ); */
 
-      // attempt to make a polygon from the lines
-      int is_polygon = 1;
-      
-      // a valid polygon has lines that join
-      int p;
-      for( p=1; p<mod->lines_count; p++ )
-	{
-	  if( mod->lines[p].x1 != mod->lines[p-1].x2 ||
-	      mod->lines[p].y1 != mod->lines[p-1].y2 )
-	    {
-	      is_polygon = 0;
-	      break;
-	    }
-	}
-      
-      if( is_polygon )
-	{
-	  mod->polypoints = malloc( sizeof(double) * 2 * mod->lines_count );
-	  
-	  for( p=0; p<mod->lines_count; p++ )
-	  {
-	    mod->polypoints[2*p  ] = mod->lines[p].x1;
-	    mod->polypoints[2*p+1] = mod->lines[p].y1;
-	  }
+/*   size_t len = sizeof(stg_line_t)*lines_count; */
 
-	  //PRINT_WARN2( "model %s has a valid polygon of %d points",
-	  //       mod->token, mod->lines_count );
-	}  
-    }
-    
-  // redraw my image 
-  stg_model_map( mod, 1 );
+/*   if( len > 0 ) */
+/*     { */
+/*       mod->lines = realloc( mod->lines,len); */
+/*       assert( mod->lines ); */
+/*     } */
+/*   else */
+/*     { */
+/*       if( mod->lines ) free( mod->lines ); mod->lines = NULL; */
+/*     } */
+  
+/*   mod->lines_count = lines_count; */
+/*   memcpy( mod->lines, lines, len ); */
 
-  model_render_lines( mod );
+/*   // redraw my image  */
+/*   stg_model_map( mod, 1 ); */
+
+/*   stg_model_render_lines( mod ); */
  
-  return 0; // OK
-}
+/*   return 0; // OK */
+/* } */
 
 int stg_model_set_laserreturn( stg_model_t* mod, stg_laser_return_t* val )
 {
@@ -470,7 +442,7 @@ int stg_model_set_color( stg_model_t* mod, stg_color_t* col )
   memcpy( &mod->color, col, sizeof(mod->color) );
 
   // redraw my image
-  model_render_lines(mod);
+  stg_model_render_polygons( mod );
 
   return 0; // OK
 }

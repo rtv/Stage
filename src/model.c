@@ -163,34 +163,22 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->energy_data.range = mod->energy_config.probe_range;
 
   mod->color = stg_lookup_color( "red" );
+  
+  mod->polygons = g_array_new( FALSE, FALSE, sizeof(stg_polygon_t) );
+  
+  stg_point_t pts[4];
+  pts[0].x = 0;
+  pts[0].y = 0;
+  pts[1].x = 1;
+  pts[1].y = 0;
+  pts[2].x = 1;
+  pts[2].y = 1;
+  pts[3].x = 0;
+  pts[3].y = 1;
 
-  mod->polypoints = NULL;
-
-  // define a unit rectangle from 4 lines
-  stg_line_t lines[4];
-  lines[0].x1 = 0; 
-  lines[0].y1 = 0;
-  lines[0].x2 = 1; 
-  lines[0].y2 = 0;
-  
-  lines[1].x1 = 1; 
-  lines[1].y1 = 0;
-  lines[1].x2 = 1; 
-  lines[1].y2 = 1;
-  
-  lines[2].x1 = 1; 
-  lines[2].y1 = 1;
-  lines[2].x2 = 0; 
-  lines[2].y2 = 1;
-  
-  lines[3].x1 = 0; 
-  lines[3].y1 = 1;
-  lines[3].x2 = 0; 
-  lines[3].y2 = 0;
-  
-  // this normalizes the lines to fit inside our geometry rectangle
-  // and also causes a redraw
-  stg_model_set_lines( mod, lines, 4 );
+  stg_polygon_t* poly = stg_polygon_create();
+  stg_polygon_set_points( poly, pts, 4 );
+  stg_model_set_polygons( mod, poly, 1 );
 		
   // initialize odometry
   memset( &mod->odom, 0, sizeof(mod->odom));
@@ -217,12 +205,14 @@ void stg_model_destroy( stg_model_t* mod )
 
   if( mod->parent && mod->parent->children ) g_ptr_array_remove( mod->parent->children, mod );
   if( mod->children ) g_ptr_array_free( mod->children, FALSE );
-  if( mod->lines ) free( mod->lines );
   if( mod->data ) free( mod->data );
   if( mod->cmd ) free( mod->cmd );
   if( mod->cfg ) free( mod->cfg );
   if( mod->token ) free( mod->token );
 
+  if( mod->polygons->data ) 
+    stg_polygons_destroy( mod->polygons->data, mod->polygons->len ); 
+  
   free( mod );
 }
 
@@ -347,24 +337,6 @@ void stg_model_local_to_global( stg_model_t* mod, stg_pose_t* pose )
   //  memcpy( 
 }
 
-/* /// convert a local rotrect into global coords */
-/* void stg_model_global_rect( stg_model_t* mod, stg_rotrect_t* glob, stg_rotrect_t* loc ) */
-/* { */
-/*   stg_geom_t* geom = stg_model_get_geom(mod);  */
-
-/*   double w = geom->size.x; */
-/*   double h = geom->size.y; */
-
-/*   // scale first */
-/*   glob->pose.x = ((loc->pose.x + loc->size.x/2.0) * w) - w/2.0; */
-/*   glob->pose.y = ((loc->pose.y + loc->size.y/2.0) * h) - h/2.0; */
-/*   glob->pose.a = loc->pose.a; */
-/*   glob->size.x = loc->size.x * w; */
-/*   glob->size.y = loc->size.y * h; */
-  
-/*   // now transform into local coords */
-/*   stg_model_local_to_global( mod, (stg_pose_t*)glob ); */
-/* } */
 
 /// recursively map a model and all it's descendents
 void stg_model_map_with_children(  stg_model_t* mod, gboolean render )
@@ -385,38 +357,27 @@ void stg_model_map( stg_model_t* mod, gboolean render )
   assert( mod );
   
   size_t count=0;
-  stg_line_t* lines = stg_model_get_lines(mod, &count);
+  stg_polygon_t* polys = stg_model_get_polygons(mod, &count);
   
   if( count == 0 ) 
     return;
   
-  if( lines == NULL )
+  if( polys )
     {
-      PRINT_ERR1( "expecting %d lines but have no data", (int)count );
-      return;
+      // get model's global pose
+      stg_pose_t org;
+      memcpy( &org, &mod->geom.pose, sizeof(org));
+      stg_model_local_to_global( mod, &org );
+      
+      //stg_model_global_pose( mod, &org );
+      
+      stg_matrix_polygons( mod->world->matrix, 
+			   org.x, org.y, org.a,
+			   polys, count, 
+			   mod, render );  
     }
-  
-  // todo - speed this up by processing all points in a single function call
-  int l;
-  for( l=0; l<count; l++ )
-    {
-      stg_line_t* line = &lines[l];
-      
-      stg_pose_t p1, p2;
-      p1.x = line->x1 + mod->geom.pose.x;
-      p1.y = line->y1 + mod->geom.pose.y;
-      p1.y = line->y1;
-      p1.a = mod->geom.pose.a;
-      
-      p2.x = line->x2 + mod->geom.pose.x;
-      p2.y = line->y2 + mod->geom.pose.y;
-      p2.a = mod->geom.pose.a;
-      
-      stg_model_local_to_global( mod, &p1 );
-      stg_model_local_to_global( mod, &p2 );
-      
-      stg_matrix_line( mod->world->matrix, p1.x, p1.y, p2.x, p2.y, mod, render );
-    }
+  else
+    PRINT_ERR1( "expecting %d polygons but have no data", (int)count );
 }
   
 int stg_model_update( stg_model_t* mod )

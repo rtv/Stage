@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.35 $
+//  $Revision: 1.36 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -28,14 +28,23 @@ extern rtk_fig_t* fig_debug_rays;
 
 void ranger_init( stg_model_t* mod )
 {
-  // a ranger has no body 
-  stg_model_set_lines( mod, NULL, 0 ); 
-
   // set up sensible defaults
+
+  stg_geom_t geom;
+  geom.size.x = 0.05;
+  geom.size.y = 0.05;
+  geom.pose.x = 0;
+  geom.pose.y = 0;
+  geom.pose.a = 0;
+  stg_model_set_geom( mod, &geom );
+  
+  stg_color_t col = stg_lookup_color( STG_RANGER_CONFIG_COLOR ); 
+  stg_model_set_color( mod, &col );
+
   stg_ranger_config_t cfg[16];
   size_t cfglen = 16*sizeof(cfg[0]);
   memset( cfg, 0, cfglen);
-
+  
   stg_ranger_sample_t data[16];
   size_t datalen = 16*sizeof(data[0]);
   memset( data, 0, datalen);

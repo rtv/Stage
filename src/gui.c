@@ -18,7 +18,7 @@ Code for the Stage user interface window.
 #include "gui.h"
 
 // models that have fewer rectangles than this get matrix rendered when dragged
-#define STG_LINE_THRESHOLD 40
+#define STG_POLY_THRESHOLD 10
 #define LASER_FILLED 1
 #define BOUNDINGBOX 0
 
@@ -390,7 +390,7 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
       //if( !gtk_events_pending() )
 	
       // only update simple objects on drag
-      if( mod->lines_count < STG_LINE_THRESHOLD )
+      if( mod->polygons->len < STG_POLY_THRESHOLD )
 	stg_model_set_pose( mod, &pose );
       
       // display the pose
@@ -478,10 +478,13 @@ void gui_model_features( stg_model_t* mod )
       stg_geom_t* geom = stg_model_get_geom(mod);
       
       // draw a line from the center to the front of the model
-      rtk_fig_line( fig, 
-		    geom->pose.x, 
-		    geom->pose.y, 
-		    geom->size.x/2, 0 );
+      //rtk_fig_line( fig, 
+      //	    0,0,
+      //	    //geom->pose.x, 
+      //	    //geom->pose.y, 
+      //	    geom->size.x/2.0, 0 );
+      
+      rtk_fig_arrow( fig, 0,0,0, geom->size.x/2.0, 0.05 );
     }
 
   rtk_fig_movemask( gui_model_figs(mod)->top, gf->movemask);  
@@ -527,12 +530,12 @@ void gui_model_features( stg_model_t* mod )
 }
 
 
-void model_render_lines( stg_model_t* mod )
+void stg_model_render_lines( stg_model_t* mod )
 {
   rtk_fig_t* fig = gui_model_figs(mod)->top;
   
   rtk_fig_clear( fig );
-
+  
   // don't draw objects with no size 
   if( mod->geom.size.x == 0 && mod->geom.size.y == 0 )
     return;
@@ -542,21 +545,12 @@ void model_render_lines( stg_model_t* mod )
   size_t count=0;
   stg_line_t* lines = stg_model_get_lines(mod,&count);
 
-  PRINT_DEBUG1( "rendering %d lines", (int)count );
-
-  stg_geom_t* geom = stg_model_get_geom(mod);
-
-  // if we compressed the lines into a polygon, draw the polygon
-  if( mod->polypoints )
-    rtk_fig_polygon( fig, 
-		     geom->pose.x, 
-		     geom->pose.y, 
-		     geom->pose.a, 
-		     count, 
-		     mod->polypoints, 
-		     mod->world->win->fill_polygons ); 
-  else // otherwise we draw the lines individually
-    { 
+  if( lines )
+    {
+      PRINT_DEBUG1( "rendering %d lines", (int)count );
+      
+      stg_geom_t* geom = stg_model_get_geom(mod);
+      
       double localx = geom->pose.x;
       double localy = geom->pose.y;
       double locala = geom->pose.a;
@@ -566,23 +560,52 @@ void model_render_lines( stg_model_t* mod )
       
       int l;
       for( l=0; l<count; l++ )
-	{
-	  stg_line_t* line = &lines[l];
-	  
-	  double x1 = localx + line->x1 * cosla - line->y1 * sinla;
-	  double y1 = localy + line->x1 * sinla + line->y1 * cosla;
-	  double x2 = localx + line->x2 * cosla - line->y2 * sinla;
-	  double y2 = localy + line->x2 * sinla + line->y2 * cosla;
-	  
-	  rtk_fig_line( fig, x1,y1, x2,y2 );
-	}
+	  {
+	    stg_line_t* line = &lines[l];
+	    
+	    double x1 = localx + line->x1 * cosla - line->y1 * sinla;
+	    double y1 = localy + line->x1 * sinla + line->y1 * cosla;
+	    double x2 = localx + line->x2 * cosla - line->y2 * sinla;
+	    double y2 = localy + line->x2 * sinla + line->y2 * cosla;
+	    
+	    rtk_fig_line( fig, x1,y1, x2,y2 );
+	  }
     }
-
 }
 
+void stg_model_render_polygons( stg_model_t* mod )
+{
+  rtk_fig_t* fig = gui_model_figs(mod)->top;
+  
+  rtk_fig_clear( fig );
 
-//rtk_fig_t *global_geom_fig = NULL;
+  // don't draw objects with no size 
+  //if( mod->geom.size.x == 0 && mod->geom.size.y == 0 )
+  //return;
+  
+  rtk_fig_color_rgb32( fig, stg_model_get_color(mod) );
 
+  size_t count=0;
+  stg_polygon_t* polys = stg_model_get_polygons(mod,&count);
+
+  if( polys )
+    {
+      PRINT_DEBUG1( "rendering %d polygons", (int)count );
+      
+      stg_geom_t* geom = stg_model_get_geom(mod);
+      
+      int p;
+      for( p=0; p<count; p++ )
+	rtk_fig_polygon( fig,
+			 geom->pose.x,
+			   geom->pose.y,
+			 geom->pose.a,
+			 polys[p].points->len,
+			 polys[p].points->data,
+			 mod->world->win->fill_polygons );
+    }
+}
+  
 /// render a model's global pose vector
 void gui_model_render_geom_global( stg_model_t* mod, rtk_fig_t* fig )
 {

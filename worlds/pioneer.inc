@@ -2,7 +2,7 @@
 # Desc: Device definitions for Activemedia robots.
 # Author: Andrew Howard, Richard Vaughan
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.12 2004-09-27 00:58:01 rtv Exp $
+# CVS: $Id: pioneer.inc,v 1.13 2004-11-21 02:55:04 rtv Exp $
 
 
 # The Pioneer2DX sonar array
@@ -81,15 +81,28 @@ define pioneer2dx position
   mass 15.0 
 	
   # these lines draw the approximate shape of a Pioneer
-  lines 8
-  line[0] [0.23 0.05 0.15 0.15]
-  line[1] [0.15 0.15 -0.15 0.15]
-  line[2] [-0.15 0.15 -0.23 0.05]
-  line[3] [-0.23 0.05 -0.23 -0.05]
-  line[4] [-0.23 -0.05 -0.15 -0.15]
-  line[5] [-0.15 -0.15 0.15 -0.15]
-  line[6] [0.15 -0.15 0.23 -0.05]
-  line[7] [0.23 -0.05 0.23 0.05] 
+  #lines 8
+  #line[0] [0.23 0.05 0.15 0.15]
+  #line[1] [0.15 0.15 -0.15 0.15]
+  #line[2] [-0.15 0.15 -0.23 0.05]
+  #line[3] [-0.23 0.05 -0.23 -0.05]
+  #line[4] [-0.23 -0.05 -0.15 -0.15]
+  #line[5] [-0.15 -0.15 0.15 -0.15]
+  #line[6] [0.15 -0.15 0.23 -0.05]
+  #line[7] [0.23 -0.05 0.23 0.05] 
+
+  # this polygon approximates the shape of a pioneer
+  polygons 1
+  polygon[0].points 8
+  polygon[0].point[0] [  0.23  0.05 ]
+  polygon[0].point[1] [  0.15  0.15 ]
+  polygon[0].point[2] [ -0.15  0.15 ]
+  polygon[0].point[3] [ -0.23  0.05 ]
+  polygon[0].point[4] [ -0.23 -0.05 ]
+  polygon[0].point[5] [ -0.15 -0.15 ]
+  polygon[0].point[6] [  0.15 -0.15 ]
+  polygon[0].point[7] [  0.23 -0.05 ]
+  polygon[0].filled 1
 
   # differential steering model
   drive "diff"

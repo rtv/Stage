@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.31 2004-11-20 04:57:20 rtv Exp $
+# CVS: $Id: test.world,v 1.32 2004-11-21 02:55:04 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -19,6 +19,8 @@ include "pioneer.inc"
 
 
 
+
+
 # defines 'map' object used for floorplans
 include "map.inc"
 
@@ -26,15 +28,18 @@ include "map.inc"
 
 
 
+
+
 # window_size doesn't work, thanks to broken rtk_canvas_size()
 #
-window( size [ 534.000 476.000 ] center [-0.246 0.531] scale 0.018 )
+window( size [ 820.000 574.000 ] center [-8.372 1.019] scale 0.022 )
 
 map(
   #size [15.5 11.4]
   #bitmap "bitmaps/autolab.png"
   #bitmap "bitmaps/sal2.png"
-  bitmap "bitmaps/cave.png"
+  #bitmap "bitmaps/cave.png"
+  bitmap "bitmaps/hospital_section.png"
 
   bitmap_resolution 0.03
   boundary 1
@@ -56,7 +61,7 @@ define sicklaser laser
 #
 define laserpioneer pioneer2dx
 (
-  #sicklaser(  fiducialfinder( color "green" obstacle 0 ) )
+  sicklaser(  fiducialfinder( color "green" obstacle 0 ) )
   blobfinder()
 
   fiducial_id 42
@@ -66,64 +71,33 @@ define laserpioneer pioneer2dx
 laserpioneer
 (
   name "p0"
-  pose [-0.688 0.740 130.299]
-)
-
-laserpioneer
-(
-  name "p1"
-  pose [-0.962 1.403 292.509]
+  pose [-9.831 2.137 292.509]
 )
 
 laserpioneer
 (
   color "green"
-  name "p2"
-  pose [-2.024 0.535 -51.322]
+  name "p1"
+  pose [-8.982 5.070 -96.335]
 )
 
 laserpioneer
 (
   color "blue"
-  name "p3"
-  pose [-2.634 1.248 119.600]
+  name "p2"
+  pose [-11.045 5.013 -76.542]
 )
 
-laserpioneer
-(
-  name "p4"
-  pose [-1.530 0.912 -387.369]
-)
-
-
-define yellowlaser laser
-(
-  size [0.2 0.2] 
-  origin [ 0.5 0 0 ]
-  color "yellow"
-)
 
 # a silly object to look at
-position( 	
-  name "sub" 
-  size [2 1]
-  pose [2.682 0.448 0] 
-  color "red"  
-
-  # loads a bitmap and converts it to lines
-  #bitmap "bitmaps/submarine.png"
-  gui_nose 1
-
-  #position( name "boo" color "purple" size [0.2 0.2] pose [0.2 0 45] )
-  
-  fiducial_id 22
-
-  return 2
-
-  #velocity [0 0 10]
-
-  yellowlaser( pose [ 2 1 0 ] yellowlaser( pose [ 1 2 90 ]  yellowlaser( pose [ 1 1 0 ] ) ) )
-
-  laser_return 2
-  drive "omni"
-)
+#position( 	
+#  name "sub" 
+#  size [2 1]
+#  pose [-6.343 2.200 0.000] 
+#  color "red"  
+#  # loads a bitmap for the model's body
+#  bitmap "bitmaps/submarine.png"
+#  fiducial_id 22
+#  velocity [0 0 10]
+#  laser_return 2
+#)

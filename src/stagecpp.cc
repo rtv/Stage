@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.65 2004-10-11 22:34:08 rtv Exp $
+// $Id: stagecpp.cc,v 1.66 2004-11-21 02:55:03 rtv Exp $
 
 //#define DEBUG
 
@@ -292,46 +292,60 @@ void configure_model( stg_model_t* mod, int section )
 	  stg_model_set_geom( mod, &geom );	  
 	}
 	  
-      // convert rects to an array of lines
-      int num_lines = 4 * num_rects;
-      stg_line_t* lines = stg_rects_to_lines( rects, num_rects );
-      stg_normalize_lines( lines, num_lines );
-      stg_scale_lines( lines, num_lines, geom.size.x, geom.size.y );
-      stg_translate_lines( lines, num_lines, -geom.size.x/2.0, -geom.size.y/2.0 );
-	
-      stg_model_set_lines( mod, lines, num_lines );
-      //stg_model_prop_with_data( mod, STG_PROP_LINES, 
-      //			lines, num_lines * sizeof(stg_line_t ));
-	  	  
-      free( lines );
-	  
-    }
+      // convert rects to an array of lines and upload the lines
+      //int num_lines = 4 * num_rects;
+      //stg_line_t* lines = stg_rects_to_lines( rects, num_rects );
+      //stg_normalize_lines( lines, num_lines );
+      //stg_scale_lines( lines, num_lines, geom.size.x, geom.size.y );
+      //stg_translate_lines( lines, num_lines, -geom.size.x/2.0, -geom.size.y/2.0 );     
+      //stg_model_set_lines( mod, lines, num_lines );
       
-  int linecount = wf.ReadInt( section, "lines", 0 );
-  if( linecount > 0 )
-    {
-      char key[256];
-      stg_line_t* lines = (stg_line_t*)calloc( sizeof(stg_line_t), linecount );
-      int l;
-      for(l=0; l<linecount; l++ )
-	{
-	  snprintf(key, sizeof(key), "line[%d]", l);
+      // convert rects to an array of polygons and upload the polygons
+      stg_polygon_t* polys = stg_rects_to_polygons( rects, num_rects );
+      //stg_normalize_polygons( polys, num_rects, geom.size.x, geom.size.y );
+      stg_model_set_polygons( mod, polys, num_rects );
 
-	  lines[l].x1 = wf.ReadTupleLength(section, key, 0, 0);
-	  lines[l].y1 = wf.ReadTupleLength(section, key, 1, 0);
-	  lines[l].x2 = wf.ReadTupleLength(section, key, 2, 0);
-	  lines[l].y2 = wf.ReadTupleLength(section, key, 3, 0);	      
-	}
-  
-      // printf( "NOTE: loaded line %d/%d (%.2f,%.2f - %.2f,%.2f)\n",
-      //      l, linecount, 
-      //      lines[l].x1, lines[l].y1, 
-      //      lines[l].x2, lines[l].y2 ); 
-	  
-      stg_model_set_lines( mod, lines, linecount );
-      free( lines );
+     
+      //free( lines );
     }
       
+  int polycount = wf.ReadInt( section, "polygons", 0 );
+  if( polycount > 0 )
+    {
+      //printf( "expecting %d polygons\n", polycount );
+      
+      char key[256];
+      stg_polygon_t* polys = stg_polygons_create( polycount );
+      int l;
+      for(l=0; l<polycount; l++ )
+	{	  	  
+	  snprintf(key, sizeof(key), "polygon[%d].points", l);
+	  int pointcount = wf.ReadInt(section,key,0);
+	  
+	  //printf( "expecting %d points in polygon %d\n",
+	  //  pointcount, l );
+	  
+	  int p;
+	  for( p=0; p<pointcount; p++ )
+	    {
+	      snprintf(key, sizeof(key), "polygon[%d].point[%d]", l, p );
+	      
+	      stg_point_t pt;	      
+	      pt.x = wf.ReadTupleLength(section, key, 0, 0);
+	      pt.y = wf.ReadTupleLength(section, key, 1, 0);
+
+	      //printf( "key %s x: %.2f y: %.2f\n",
+	      //      key, pt.x, pt.y );
+	      
+	      // append the point to the polygon
+	      stg_polygon_append_points( &polys[l], &pt, 1 );
+	    }
+	}
+      
+      stg_model_set_polygons( mod, polys, polycount );
+    }
+
+
   stg_velocity_t vel;
   vel.x = wf.ReadTupleLength(section, "velocity", 0, 0 );
   vel.y = wf.ReadTupleLength(section, "velocity", 1, 0 );

@@ -39,50 +39,50 @@ const char* stg_get_version_string( void )
 }
 
 
-// returns a human readable desciption of the property type [id]
-const char* stg_property_string( stg_id_t id )
-{
-  switch( id )
-    {
-    case STG_PROP_COLOR: return "color"; break;
-    case STG_PROP_COMMAND: return "command"; break;
-    case STG_PROP_CONFIG: return "config"; break;
-    case STG_PROP_DATA: return "data"; break;
-    case STG_PROP_ENERGYCONFIG: return "energyconfig"; break; 
-    case STG_PROP_ENERGYDATA: return "energydata"; break;
-    case STG_PROP_GEOM: return "geom"; break;
-    case STG_PROP_GUIFEATURES: return "guifeatures"; break;
-    case STG_PROP_LASERRETURN: return "laser_return"; break;
-    case STG_PROP_LINES: return "lines"; break;
-    case STG_PROP_MASS: return "mass";break;
-    case STG_PROP_OBSTACLERETURN: return "obstacle_return";break;
-    case STG_PROP_PARENT: return "parent"; break;
-    case STG_PROP_PLAYERID: return "player_id"; break;
-    case STG_PROP_POSE: return "pose"; break;
-    case STG_PROP_PUCKRETURN: return "puck_return"; break;
-    case STG_PROP_RANGERRETURN: return "ranger_return"; break;
-    case STG_PROP_TIME: return "time"; break;
-    case STG_PROP_VELOCITY: return "velocity"; break;
-    case STG_PROP_VISIONRETURN: return "vision_return"; break;
-    case STG_PROP_FIDUCIALRETURN: return "fiducial_id";break;
-    case STG_PROP_BLOBRETURN: return "blob_return";break;
+/* // returns a human readable desciption of the property type [id] */
+/* const char* stg_property_string( stg_id_t id ) */
+/* { */
+/*   switch( id ) */
+/*     { */
+/*     case STG_PROP_COLOR: return "color"; break; */
+/*     case STG_PROP_COMMAND: return "command"; break; */
+/*     case STG_PROP_CONFIG: return "config"; break; */
+/*     case STG_PROP_DATA: return "data"; break; */
+/*     case STG_PROP_ENERGYCONFIG: return "energyconfig"; break;  */
+/*     case STG_PROP_ENERGYDATA: return "energydata"; break; */
+/*     case STG_PROP_GEOM: return "geom"; break; */
+/*     case STG_PROP_GUIFEATURES: return "guifeatures"; break; */
+/*     case STG_PROP_LASERRETURN: return "laser_return"; break; */
+/*     case STG_PROP_LINES: return "lines"; break; */
+/*     case STG_PROP_MASS: return "mass";break; */
+/*     case STG_PROP_OBSTACLERETURN: return "obstacle_return";break; */
+/*     case STG_PROP_PARENT: return "parent"; break; */
+/*     case STG_PROP_PLAYERID: return "player_id"; break; */
+/*     case STG_PROP_POSE: return "pose"; break; */
+/*     case STG_PROP_PUCKRETURN: return "puck_return"; break; */
+/*     case STG_PROP_RANGERRETURN: return "ranger_return"; break; */
+/*     case STG_PROP_TIME: return "time"; break; */
+/*     case STG_PROP_VELOCITY: return "velocity"; break; */
+/*     case STG_PROP_VISIONRETURN: return "vision_return"; break; */
+/*     case STG_PROP_FIDUCIALRETURN: return "fiducial_id";break; */
+/*     case STG_PROP_BLOBRETURN: return "blob_return";break; */
 
-      //case STG_PROP_BLINKENLIGHT: return "blinkenlight";break;
-      //case STG_PROP_BLOBCONFIG: return "blobconfig";break;
-      //case STG_PROP_BLOBDATA: return "blobdata";break;
-      //case STG_PROP_FIDUCIALCONFIG: return "fiducialconfig";break;
-      //case STG_PROP_FIDUCIALDATA: return "fiducialdata";break;
-      //case STG_PROP_LASERCONFIG: return "laserconfig";break;
-      //case STG_PROP_LASERDATA: return "laserdata";break;
-      //case STG_PROP_MATRIXRENDER: return "matrix_render";break;
-      //case STG_PROP_POWER: return "sonar_power"; break;
-      //case STG_PROP_RANGERCONFIG: return "rangerconfig";break;
-      //case STG_PROP_RANGERDATA: return "rangerdata";break;
-    default:
-      break;
-    }
-  return "<unknown property>";
-}
+/*       //case STG_PROP_BLINKENLIGHT: return "blinkenlight";break; */
+/*       //case STG_PROP_BLOBCONFIG: return "blobconfig";break; */
+/*       //case STG_PROP_BLOBDATA: return "blobdata";break; */
+/*       //case STG_PROP_FIDUCIALCONFIG: return "fiducialconfig";break; */
+/*       //case STG_PROP_FIDUCIALDATA: return "fiducialdata";break; */
+/*       //case STG_PROP_LASERCONFIG: return "laserconfig";break; */
+/*       //case STG_PROP_LASERDATA: return "laserdata";break; */
+/*       //case STG_PROP_MATRIXRENDER: return "matrix_render";break; */
+/*       //case STG_PROP_POWER: return "sonar_power"; break; */
+/*       //case STG_PROP_RANGERCONFIG: return "rangerconfig";break; */
+/*       //case STG_PROP_RANGERDATA: return "rangerdata";break; */
+/*     default: */
+/*       break; */
+/*     } */
+/*   return "<unknown property>"; */
+/* } */
 
 const char* stg_model_type_string( stg_model_type_t type )
 {
@@ -217,6 +217,52 @@ stg_color_t stg_lookup_color(const char *name)
   fclose(file);
   return 0xFF0000;
 }
+
+//////////////////////////////////////////////////////////////////////////
+// scale an array of polygons so they fit in a rectangle of size
+// [width] by [height], with the origin in the center of the rectangle
+void stg_normalize_polygons( stg_polygon_t* polys, int num, 
+			     double width, double height )
+{
+  // assuming the rectangles fit in a square +/- one billion units
+  double minx, miny, maxx, maxy;
+  minx = miny = BILLION;
+  maxx = maxy = -BILLION;
+  
+  int l;
+  for( l=0; l<num; l++ ) // examine all the polygons
+    {
+      // examine all the points in the polygon
+      int p;
+      for( p=0; p<polys[l].points->len; p++ )
+	{
+	  stg_point_t* pt = &g_array_index( polys[l].points, stg_point_t, p);
+	  if( pt->x < minx ) minx = pt->x;
+	  if( pt->y < miny ) miny = pt->y;
+	  if( pt->x > maxx ) maxx = pt->x;
+	  if( pt->y > maxy ) maxy = pt->y;	  
+	}      
+    }
+  
+  // now normalize all lengths so that the lines all fit inside
+  // the specified rectangle
+  double scalex = (maxx - minx);
+  double scaley = (maxy - miny);
+  
+  for( l=0; l<num; l++ ) // scale each polygon
+    { 
+      // scale all the points in the polygon
+      int p;
+      for( p=0; p<polys[l].points->len; p++ )
+	{
+	  stg_point_t* pt = &g_array_index( polys[l].points, stg_point_t, p);
+	  
+	  pt->x = ((pt->x - minx) / scalex * width) - width/2.0;
+	  pt->y = ((pt->y - miny) / scaley * height) - height/2.0;
+	}
+    }
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 // scale an array of rectangles so they fit in a unit square
@@ -357,6 +403,31 @@ stg_line_t* stg_rects_to_lines( stg_rotrect_t* rects, int num_rects )
     }
   
   return lines;
+}
+
+/// converts an array of rectangles into an array of polygons
+stg_polygon_t* stg_rects_to_polygons( stg_rotrect_t* rects, size_t count )
+{
+  stg_polygon_t* polys = stg_polygons_create( count );
+  stg_point_t pts[4];
+  
+  size_t r;
+  for( r=0; r<count; r++ )
+    {  
+      pts[0].x = rects[r].pose.x;
+      pts[0].y = rects[r].pose.y;
+      pts[1].x = rects[r].pose.x + rects[r].size.x;
+      pts[1].y = rects[r].pose.y;
+      pts[2].x = rects[r].pose.x + rects[r].size.x;
+      pts[2].y = rects[r].pose.y + rects[r].size.y;
+      pts[3].x = rects[r].pose.x;
+      pts[3].y = rects[r].pose.y + rects[r].size.y;
+      
+      // copy these points in the polygon
+      stg_polygon_set_points( &polys[r], pts, 4 );
+    }
+  
+  return polys;
 }
 
 

@@ -22,7 +22,7 @@
  * Desc: Rtk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.3 2004-09-28 05:28:43 rtv Exp $
+ * CVS: $Id: rtk_fig.c,v 1.4 2004-11-21 02:55:03 rtv Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
@@ -857,11 +857,17 @@ void rtk_fig_polygon(rtk_fig_t *fig, double ox, double oy, double oa,
 
   npoints = malloc(point_count * sizeof(rtk_point_t));
   
+  //printf( "created a polygon of %d points: ", point_count );
+
   for (i = 0; i < point_count; i++)
   {
     npoints[i].x = points[i][0];
     npoints[i].y = points[i][1];
+
+    //printf( "(%.2f,%.2f) ", npoints[i].x, npoints[i].y );
   }
+
+  //puts("");
 
   rtk_fig_polygon_alloc(fig, ox, oy, oa, 1, filled, point_count, npoints);
   free(npoints);

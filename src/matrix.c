@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.10 2004-09-27 00:58:01 rtv Exp $
+ * $Id: matrix.c,v 1.11 2004-11-21 02:55:03 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -290,6 +290,48 @@ void stg_matrix_lines( stg_matrix_t* matrix,
 		     lines[l].x1, lines[l].y1, 
 		     lines[l].x2, lines[l].y2, 
 		     object, add );
+}
+
+/// render a polygon into [matrix] with origin [x,y,a]
+void stg_matrix_polygon( stg_matrix_t* matrix,
+			 double x, double y, double a,
+			 stg_polygon_t* poly,
+			 void* object, int add )
+{
+  // need at leats three points for a meaningful polygon
+  if( poly->points->len > 2 )
+    {
+      int count = poly->points->len;
+      int p;
+      for( p=0; p<count; p++ ) // for
+	{
+	  stg_point_t* pt1 = &g_array_index( poly->points, stg_point_t, p );	  
+	  stg_point_t* pt2 = &g_array_index( poly->points, stg_point_t, (p+1) % count);
+	  
+	  double gx1 = x + pt1->x * cos(a) - pt1->y * sin(a);
+	  double gy1 = y + pt1->x * sin(a) + pt1->y * cos(a); 
+	  
+	  double gx2 = x + pt2->x * cos(a) - pt2->y * sin(a);
+	  double gy2 = y + pt2->x * sin(a) + pt2->y * cos(a); 
+	  
+	  stg_matrix_line( matrix, 
+			   gx1, gy1, gx2, gy2,
+			   object, add );
+	}
+    }
+  else
+    PRINT_WARN( "attempted to matrix render a polygon with less than 3 points" ); 
+}     
+
+/// render an array of [num_polys] polygons
+void stg_matrix_polygons( stg_matrix_t* matrix,
+			  double x, double y, double a,
+			  stg_polygon_t* polys, int num_polys,
+			  void* object, int add )
+{
+  int p;
+  for( p=0; p<num_polys; p++ )
+    stg_matrix_polygon( matrix, x,y,a, &polys[p], object, add );
 }
 
 void stg_matrix_rectangle( stg_matrix_t* matrix, 

@@ -19,7 +19,6 @@ enum {
 //const int STG_MOVIE_SPEED_COUNT = 7; // must match the static array length
 
 // declare callbacks for menu items
-void gui_menu_matrix_cb( gpointer data, guint action, GtkWidget* mitem );
 void gui_menu_polygons_cb( gpointer data, guint action, GtkWidget* mitem );
 void gui_menu_debug_cb( gpointer data, guint action, GtkWidget* mitem );
 void gui_menu_file_export_frame_cb( gpointer data, guint action, GtkWidget* mitem );
@@ -76,12 +75,12 @@ static GtkItemFactoryEntry menu_table[] = {
   { "/View/Config/Fiducial", NULL,   gui_menu_view_cfg, STG_MODEL_FIDUCIAL, "<CheckItem>" },
 
   { "/View/sep1",     NULL,      NULL, 0, "<Separator>" },
-  { "/View/Matrix", "<CTRL>M",   gui_menu_matrix_cb, 1, "<CheckItem>" },
   { "/View/Fill polygons", "<CTRL>P", gui_menu_polygons_cb, 1, "<CheckItem>" },
   { "/View/Grid", "<CTRL>G",   gui_menu_layer_cb, STG_LAYER_GRID, "<CheckItem>" },
   { "/View/Debug", NULL, NULL, 1, "<Branch>" },
   { "/View/Debug/Raytrace", NULL, gui_menu_debug_cb, 1, "<CheckItem>" },
   { "/View/Debug/Geometry", NULL, gui_menu_debug_cb, 2, "<CheckItem>" },
+  { "/View/Debug/Matrix", "<CTRL>M",   gui_menu_debug_cb, 3, "<CheckItem>" },
   { "/_Clock",         NULL,      NULL, 0, "<Branch>" },
   { "/Clock/tear1",    NULL,      NULL, 0, "<Tearoff>" },
   { "/Clock/Pause", NULL, gui_menu_clock_pause_cb, 1, "<CheckItem>" }
@@ -259,13 +258,17 @@ void gui_menu_layer_cb( gpointer data,
 
 void model_refresh( stg_model_t* mod )
 {
-  // re-set the current data, config & lines to force redraws
+  // re-set the current data, config & geom to force redraws
   size_t len = 0;
   void* p = stg_model_get_data( mod, &len );  
   stg_model_set_data( mod, p, len );
   p = stg_model_get_config( mod, &len );
   stg_model_set_config( mod, p, len );  
-  stg_model_set_lines( mod, mod->lines, mod->lines_count );
+  p = stg_model_get_geom( mod );
+  stg_model_set_geom( mod, p );
+  
+  //stg_model_set_lines( mod, mod->lines, mod->lines_count );
+  // stg_model_set_polygons( mod, mod->lines, mod->lines_count );
 }
 
 
@@ -277,13 +280,6 @@ void gui_menu_polygons_cb( gpointer data, guint action, GtkWidget* mitem )
   g_hash_table_foreach( win->world->models, refresh_cb, NULL ); 
 }
   
-void gui_menu_matrix_cb( gpointer data, guint action, GtkWidget* mitem )
-{
-  gui_window_t* win = (gui_window_t*)data;
-  win->show_matrix = GTK_CHECK_MENU_ITEM(mitem)->active;
-  if( win->matrix ) rtk_fig_clear( win->matrix );
-}
-
 void gui_menu_debug_cb( gpointer data, guint action, GtkWidget* mitem )
 {
   gui_window_t* win = (gui_window_t*)data;
@@ -314,6 +310,14 @@ void gui_menu_debug_cb( gpointer data, guint action, GtkWidget* mitem )
 	  fig_debug_geom = NULL;
 	}
       break;
+
+    case 3: // matrix
+      win->show_matrix = GTK_CHECK_MENU_ITEM(mitem)->active;
+      if( win->matrix ) rtk_fig_clear( win->matrix );     
+      break;
+      
+    default:
+      PRINT_WARN1( "unknown debug menu item %d", action );
     }
 }
 

@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.106 2004-11-20 04:57:20 rtv Exp $
+ * CVS: $Id: stage.h,v 1.107 2004-11-21 02:55:03 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -141,37 +141,9 @@ extern "C" {
     stg_size_t size;
   } stg_geom_t;
 
- typedef enum
-    {
-      STG_PROP_TIME, // double - time since startup in seconds
-      STG_PROP_MASS,
-      STG_PROP_COLOR,
-      STG_PROP_GEOM, 
-      STG_PROP_PARENT, 
-      STG_PROP_PLAYERID,
-      STG_PROP_POSE,
-      STG_PROP_ENERGYCONFIG,
-      STG_PROP_ENERGYDATA,
-      STG_PROP_PUCKRETURN,
-      STG_PROP_LINES,
-      STG_PROP_VELOCITY, 
-      STG_PROP_LASERRETURN,
-      STG_PROP_OBSTACLERETURN,
-      STG_PROP_BLOBRETURN,
-      STG_PROP_VISIONRETURN,
-      STG_PROP_RANGERRETURN, 
-      STG_PROP_FIDUCIALRETURN,
-      STG_PROP_GUIFEATURES,
-      STG_PROP_DATA, 
-      STG_PROP_CONFIG, 
-      STG_PROP_COMMAND,
-      STG_PROP_COUNT // this must be the last entry (it's not a real
-      // property - it just counts 'em).
-    } stg_prop_type_t;
 
   // returns a string that describes a property type from the enum above
   const char* stg_property_string( stg_id_t id );
-
 
   void stg_print_geom( stg_geom_t* geom );
 
@@ -341,6 +313,58 @@ extern "C" {
     stg_meters_t x, y;
   } stg_point_t;
 
+  /// create an array of [count] points. Caller must free the space.
+  stg_point_t* stg_points_create( size_t count );
+
+  /// create a single point structure. Caller must free the space.
+  stg_point_t* stg_point_create( void );
+
+  /// frees a point array
+  void stg_points_destroy( stg_point_t* pts );
+
+  /// frees a single point
+  void stg_point_destroy( stg_point_t* pt );
+
+  typedef struct
+  {
+    /// pointer to an array of points
+    GArray* points;
+
+    /// if TRUE, this polygon is drawn filled
+    stg_bool_t filled; 
+
+    /// render color of this polygon - TODO  - implement color rendering
+    stg_color_t color;
+  } stg_polygon_t; 
+
+  
+  /// return an array of [count] polygons. Caller must free() the space.
+  stg_polygon_t* stg_polygons_create( int count );
+  
+  /// destroy an array of [count] polygons
+  void stg_polygons_destroy( stg_polygon_t* p, size_t count );
+  
+  /// return a single polygon structure. Caller  must free() the space.
+  stg_polygon_t* stg_polygon_create( void );
+  
+  /// destroy a single polygon
+  void stg_polygon_destroy( stg_polygon_t* p );
+  
+  /// Copies [count] points from [pts] into polygon [poly], allocating
+  /// memory if mecessary. Any previous points in [poly] are
+  /// overwritten.
+  void stg_polygon_set_points( stg_polygon_t* poly, stg_point_t* pts, size_t count );			       
+  /// Appends [count] points from [pts] into polygon [poly],
+  /// allocating memory if mecessary.
+  void stg_polygon_append_points( stg_polygon_t* poly, stg_point_t* pts, size_t count );			       
+
+  stg_polygon_t* stg_rects_to_polygons( stg_rotrect_t* rects, size_t count );
+  
+  /// scale the array of [num] polygons so that all its points fit
+  /// exactly in a rectagle of pwidth] by [height] units
+  void stg_normalize_polygons( stg_polygon_t* polys, int num, 
+			       double width, double height );
+ 
   // MOVEMASK ---------------------------------------------------------
    
   typedef int stg_movemask_t;
@@ -667,13 +691,9 @@ extern "C" {
     // automatically generate names for them
     int child_type_count[ STG_MODEL_COUNT ];
 
-    // the number of subscriptions to each property
-    //int subs[STG_PROP_COUNT]; 
+    // the number of subscriptions to this model
     int subs;
   
-    // the time that each property was last calculated
-    //stg_msec_t update_times[STG_PROP_COUNT];
-
     /// if set, this callback is run when we do model_put_data() -
     /// it's used by the player plugin to notify Player that data is
     /// ready.
@@ -693,13 +713,11 @@ extern "C" {
     // the generic buffers used by specialized model types
     void *data, *cmd, *cfg;
     size_t data_len, cmd_len, cfg_len;
-
-    stg_line_t* lines; // this buffer is lines_count * sizeof(stg_line_t) big
-    int lines_count; // the number of lines
-    double* polypoints; // if the lines can be converted into a polygon,
-    // the polygon points are stored here, there are
-    // lines_count polypoints
-
+    
+    // an array of polygons that make up the model's body. Possibly
+    // zero elements.
+    GArray* polygons;
+    
     // basic model properties
     stg_laser_return_t laser_return;
     stg_bool_t obstacle_return; 
@@ -775,7 +793,8 @@ stg_model_t* itl_first_matching( itl_t* itl,
   void gui_model_nose( stg_model_t* model );
   void gui_model_pose( stg_model_t* mod );
   void gui_model_geom( stg_model_t* model );
-  void gui_model_lines( stg_model_t* model );
+  //void gui_model_lines( stg_model_t* model );
+  void gui_model_polygons( stg_model_t* model );
   void gui_model_rangers( stg_model_t* mod );
   void gui_model_rangers_data( stg_model_t* mod );
   void gui_model_features( stg_model_t* mod );
@@ -828,8 +847,22 @@ stg_model_t* itl_first_matching( itl_t* itl,
   void stg_matrix_lines( stg_matrix_t* matrix, 
 			 stg_line_t* lines, int num_lines,
 			 void* object, int add );
+  
+  /// render a polygon into the matrix
+  void stg_matrix_polygon( stg_matrix_t* matrix,
+			   double x, double y, double a,
+			   stg_polygon_t* poly,
+			   void* object, int add );
+  
+  /// render an array of polygons into the matrix
+  void stg_matrix_polygons( stg_matrix_t* matrix,
+			    double x, double y, double a,
+			    stg_polygon_t* polys, int num_polys,
+			    void* object, int add );
+  
+  
   /**@}*/
-
+  
   /** @addtogroup stg_world */
   /** @{ */
 
@@ -926,8 +959,8 @@ stg_model_t* itl_first_matching( itl_t* itl,
   /** set a model's energy data*/
   int stg_model_set_energy_data( stg_model_t* mod, stg_energy_data_t* gf );
 
-  /** set a model's line array*/
-  int stg_model_set_lines( stg_model_t* mod, stg_line_t* lines, size_t lines_count );
+  /** set a model's polygon array*/
+  int stg_model_set_polygons( stg_model_t* mod, stg_polygon_t* polys, size_t poly_count );
 
   /** set a model's obstacle return value */
   int stg_model_set_obstaclereturn( stg_model_t* mod, stg_bool_t* ret );
@@ -948,7 +981,6 @@ stg_model_t* itl_first_matching( itl_t* itl,
   stg_pose_t*            stg_model_get_pose( stg_model_t* mod );
   stg_pose_t*            stg_model_get_odom( stg_model_t* mod );
   stg_kg_t*              stg_model_get_mass( stg_model_t* mod );
-  stg_line_t*            stg_model_get_lines( stg_model_t* mod, size_t* count );
   stg_guifeatures_t*     stg_model_get_guifeaturess( stg_model_t* mod );
   stg_energy_data_t*     stg_model_get_energy_data( stg_model_t* mod );
   stg_energy_config_t*   stg_model_get_energy_config( stg_model_t* mod );
@@ -981,7 +1013,7 @@ stg_model_t* itl_first_matching( itl_t* itl,
   void model_print_cb( gpointer key, gpointer value, gpointer user );
   void stg_model_local_to_global( stg_model_t* mod, stg_pose_t* pose );
   void stg_model_energy_consume( stg_model_t* mod, stg_watts_t rate );
-  void stg_model_lines_render( stg_model_t* mod );
+  //void stg_model_lines_render( stg_model_t* mod );
   void stg_model_map( stg_model_t* mod, gboolean render );
   void stg_model_map_with_children( stg_model_t* mod, gboolean render );
 
@@ -997,9 +1029,10 @@ stg_model_t* itl_first_matching( itl_t* itl,
   /// returns 1 if mod1 and mod2 are in the same tree
   int stg_model_is_related( stg_model_t* mod1, stg_model_t* mod2 );
 
-  void stg_model_render_lines( stg_model_t* mod );
+
   void stg_model_render_geom( stg_model_t* mod );
   void stg_model_render_pose( stg_model_t* mod );
+  void stg_model_render_polygons( stg_model_t* mod );
 
   /**@}*/
 
@@ -1029,7 +1062,7 @@ stg_model_t* itl_first_matching( itl_t* itl,
 
   // GUI
 #define STG_DEFAULT_GUI_MOVEMASK (STG_MOVE_TRANS | STG_MOVE_ROT)
-#define STG_DEFAULT_GUI_NOSE TRUE
+#define STG_DEFAULT_GUI_NOSE FALSE
 #define STG_DEFAULT_GUI_GRID FALSE
 #define STG_DEFAULT_GUI_BOUNDARY FALSE
 
@@ -1074,12 +1107,6 @@ stg_model_t* itl_first_matching( itl_t* itl,
   // normalizes the set [rects] of [num] rectangles, so that they fit
   // exactly in a unit square.
   void stg_normalize_rects( stg_rotrect_t* rects, int num );
-
-  // returns an array of 4 * num_rects stg_line_t's
-  stg_line_t* stg_rects_to_lines( stg_rotrect_t* rects, int num_rects );
-  void stg_normalize_lines( stg_line_t* lines, int num );
-  void stg_scale_lines( stg_line_t* lines, int num, double xscale, double yscale );
-  void stg_translate_lines( stg_line_t* lines, int num, double xtrans, double ytrans );
 
   // returns the real (wall-clock) time in seconds
   stg_msec_t stg_timenow( void );
