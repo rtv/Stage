@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/fiducialfinderdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.2.4.2.2.2 $
+//  $Revision: 1.2.4.2.2.3 $
 //
 // Usage: detects objects that were laser bright and had non-zero
 // ficucial_return
@@ -248,48 +248,57 @@ void CFiducialFinder::Update( double sim_time )
 
     // Record beacons
     //
-    if( beacon.count >=  ARRAYSIZE(beacon.fiducials) )
+    if(beacon.count >=  ARRAYSIZE(beacon.fiducials))
+    {
+      static bool print_warning = true;
+
+      if( print_warning )
       {
-	static bool print_warning = true;
+        PRINT_WARN3( "FiducialFinder sees more beacons than will "
+                     "fit in the player_fiducial_data_t structure "
+                     "(%d beacons, space for %d records). The first "
+                     "%d beacons will be returned, the rest ignored.\n"
+                     "If you need to see more beacons, you can change "
+                     "the size of the beacons array "
+                     "(see player/server/player.h). Be wanred that "
+                     "This will break "
+                     "compatibility with P/S code compiled against "
+                     "the standard player.h. \n\nThis message will "
+                     "only appear once.", 
+                     beacon.count, 
+                     ARRAYSIZE(beacon.fiducials), 
+                     ARRAYSIZE(beacon.fiducials) );
 
-	if( print_warning )
-	  {
-	    PRINT_WARN3( "FiducialFinder sees more beacons than will "
-			 "fit in the player_fiducial_data_t structure "
-			 "(%d beacons, space for %d records). The first "
-			 "%d beacons will be returned, the rest ignored.\n"
-			 "If you need to see more beacons, you can change "
-			 "the size of the beacons array "
-			 "(see player/server/player.h). Be wanred that "
-			 "This will break "
-			 "compatibility with P/S code compiled against "
-			 "the standard player.h. \n\nThis message will "
-			 "only appear once.", 
-			 beacon.count, 
-			 ARRAYSIZE(beacon.fiducials), 
-			 ARRAYSIZE(beacon.fiducials) );
-
-	    print_warning = false;
-	  }
-	beacon.count = ARRAYSIZE(beacon.fiducials);
+        print_warning = false;
       }
+      beacon.count = ARRAYSIZE(beacon.fiducials);
+    }
     
-    beacon.fiducials[beacon.count].id = id;
-    beacon.fiducials[beacon.count].pos[0] = (int) (r * 1000);
-    beacon.fiducials[beacon.count].pos[1] = (int) RTOD(b);
-    beacon.fiducials[beacon.count].pos[2] = (int) RTOD(o);
+    beacon.fiducials[beacon.count].id = htons(id);
+
+    // pos is (x,y,z) in mm
+    beacon.fiducials[beacon.count].pos[0] = htonl((int)rint(r*cos(b)*1e3));
+    beacon.fiducials[beacon.count].pos[1] = htonl((int)rint(r*sin(b)*1e3));
+    beacon.fiducials[beacon.count].pos[2] = 0;
+
+    // rot is (r,p,y) in mrad
+    beacon.fiducials[beacon.count].rot[0] = 0;
+    beacon.fiducials[beacon.count].rot[1] = 0;
+    beacon.fiducials[beacon.count].rot[2] = htonl((int)rint(o * 1e3));
+
+    // we don't do uncertainty
+    beacon.fiducials[beacon.count].upos[0] = 0;
+    beacon.fiducials[beacon.count].upos[1] = 0;
+    beacon.fiducials[beacon.count].upos[2] = 0;
+
+    // we don't do uncertainty
+    beacon.fiducials[beacon.count].urot[0] = 0;
+    beacon.fiducials[beacon.count].urot[1] = 0;
+    beacon.fiducials[beacon.count].urot[2] = 0;
+
     beacon.count++;
   }
 
-  // Get the byte ordering correct
-  //
-  for (int i = 0; i < beacon.count; i++)
-  {
-    beacon.fiducials[i].id = htons(beacon.fiducials[i].id);
-    beacon.fiducials[i].pos[0] = htons(beacon.fiducials[i].pos[0]);
-    beacon.fiducials[i].pos[1] = htons(beacon.fiducials[i].pos[1]);
-    beacon.fiducials[i].pos[2] = htons(beacon.fiducials[i].pos[2]);
-  }
   beacon.count = htons(beacon.count);
     
   // Write beacon buffer to shared mem
