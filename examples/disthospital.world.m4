@@ -24,5 +24,5 @@ set pixels_per_meter = 12
 
 define(`baseport', `40000')
 
-forloop(`i',0,299,`simplerobot(14,14,0,eval(i+baseport))')
+forloop(`i',0,199,`simplerobot(14,14,0,eval(i+baseport))')
 
