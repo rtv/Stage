@@ -1,6 +1,6 @@
 #
 #
-# $Id: Makefile,v 1.1 2002-10-28 02:35:38 rtv Exp $
+# $Id: Makefile,v 1.1.8.1 2003-12-06 22:09:00 gerkey Exp $
 #
 # generic LaTeX makefile
 #
@@ -18,7 +18,7 @@ all: dvi ps pdf
 dvi: $(NAME).dvi
 
 $(NAME).dvi: $(NAME).tex
-	$(LATEX) $< && $(LATEX) $<
+	$(LATEX) $< && $(BIBTEX) $(NAME) && $(LATEX) $< && $(LATEX) $<
 
 html:
 	rm -rf html_docs

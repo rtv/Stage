@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.5.2.2 2003-04-17 23:40:09 rtv Exp $
+% CVS: $Id: stage.tex,v 1.5.2.2.2.1 2003-12-06 22:09:00 gerkey Exp $
 
 \documentclass[11pt,twoside]{report}
 
@@ -26,7 +26,7 @@
 % A nice environment for displaying command line args (AH)
 \newenvironment{xarg}[1]{\noindent{\tt #1}\\\hspace*{2em}\begin{minipage}[t]{5in}}{\end{minipage}\vspace*{1em}}
 
-\def\VERSION {1.3.1}
+\def\VERSION {1.3.3}
 \def\HOMEPAGE {{\tt http://playerstage.sourceforge.net}}
 \def\SFPAGE {{\tt http://sourceforge.net/projects/playerstage/}}
 
@@ -45,22 +45,27 @@
    &
    \hspace{5cm}
    &
-   \begin{tabular}{r}
-     {\bf USC Robotics Laboratory}\\
-     University of Southern California\\
-     Los Angeles, California, USA\\
-     \vspace*{2em}\\
-     {\bf Information Sciences Laboratory}\\
-     HRL Laboratories\\
-     Malibu, California, USA\\
-   \end{tabular}
+  \begin{tabular}{r}
+    {\bf Autonomy Laboratory}\\
+    Simon Frazer University\\
+    Vancouver, British Columbia, Canada\\
+    \vspace*{2em}\\
+    {\bf Robotics Research Laboratory}\\
+    University of Southern California\\
+    Los Angeles, California, USA\\
+    \vspace*{2em}\\
+    {\bf Robotics Laboratory}\\
+    Stanford University\\
+    Stanford, California, USA\\
+  \end{tabular}
  \end{tabular}
 
 
-  \vspace{5cm}  
+  \vspace{3cm}  
   \centerline{ \Huge{Stage}}
   \vspace{0.5cm}
   \centerline{\large{Version \VERSION\ User Manual}}
+  \centerline{\large{(compatible with Player 1.4rc2)}}
   \vspace{2cm}
   \centerline{\large Richard T.~Vaughan \\ Andrew Howard \\ Brian P.~Gerkey}
   \vspace{1cm}
@@ -214,38 +219,34 @@
         redundant. Don't worry; things are better now.
 
 \section{Citations}
-If you find Player and Stage useful in your work, we would greatly
-appreciate your mentioning that fact in papers that you publish.  A
-paper of our own on Player has been presented in a respected
-peer-reviewed conference; this paper is the definitive reference when
-citing Player \cite{GerkeyVaughan01a}:
-\begin{quote}
+If you find Stage and Player useful in your work, we would greatly appreciate
+your mentioning that fact in papers that you publish.  We have presented
+papers on Player in peer-reviewed conferences; the following papers are
+the definitive references when citing Stage and Player:
+\cite{VaughanGerkeyHoward03a,GerkeyVaughan01a,GerkeyVaughanHoward03}:
+\begin{itemize}
+\item Richard~T. Vaughan, Brian~P. Gerkey, and Andrew Howard.
+\newblock On device abstractions for portable, reusable robot code.
+\newblock In {\em Proc. of the IEEE/RSJ Intl. Conf. on Intelligent Robots and
+  Systems (IROS)}, pages 2121--2427, Las Vegas, Nevada, October 2003.
+\item
+Brian~P. Gerkey, Richard~T. Vaughan, and Andrew Howard.
+\newblock {The Player/Stage Project: Tools for Multi-Robot and Distributed
+  Sensor Systems}.
+\newblock In {\em Proc. of the Intl. Conf. on Advanced Robotics (ICAR)}, pages
+  317--323, Coimbra, Portugal, July 2003.
+\item
 Brian~P. Gerkey, Richard~T. Vaughan, Kasper St\o{}y, Andrew Howard,
 Maja~J Matari\'c and Gaurav~S Sukhatme.
 \newblock {Most Valuable Player: A Robot Device Server for Distributed
   Control}.
 \newblock In {\em Proc. of the IEEE/RSJ Intl. Conf. on Intelligent Robots and
   Systems (IROS)}, pages 1226--1231, Wailea, Hawaii, October 2001.
-\end{quote}
-
-At the time of writing, there is no peer-reviewed article about Stage,
-but there is a USC technical report, available at:
-
-\begin{quote}
-Richard T.~Vaughan. "Stage: A Multiple Robot Simulator". Technical Report IRIS-00-394, Institute for Robotics and Intelligent Systems, School of Engineering, University of Southern California, 2000.
-\end{quote}
-
-These papers (and any new ones) are available at: 
-
-\begin{verbatim}
-   http://playerstage.sourceforge.net/pubs.html
-\end{verbatim}
-
+\end{itemize}
 If you have space (and are feeling generous), you can also insert a footnote
 similar to the following:
 \begin{quote}
-Player and Stage were developed jointly at the USC Robotics Research
-Lab and HRL Labs and are freely available under the GNU General Public
+Stage and Player are freely available under the GNU General Public
 License from http://playerstage.sourceforge.net.
 \end{quote}
 By including such acknowledgements, you do more than feed our egos and
@@ -1099,8 +1100,7 @@ number, device index, etc). \\
 one another through Stage/Player; messages sent to the broadcast
 device will be received by all other broadcast devices.\\
 
-\verb'gps' & \verb'device' & GPS receiver; currently just returns the
-true pose of the GPS device.\\
+\verb'gps' & \verb'device' & GPS receiver; {\em disabled}\\
 
 \verb'gripper' & \verb'device' & 1-DOF gripper (open/close).\\
 
@@ -1217,7 +1217,7 @@ Name & Value\\
 
 
 \newpage
-\subsection{The {\tt gps} device}
+\subsection{The {\tt gps} device ({\em disabled})}
 
 \subsubsection*{Parent}
 {\tt device}
@@ -1226,8 +1226,8 @@ Name & Value\\
 {\tt gps}
 
 \subsubsection*{Description}
-The {\tt gps} device simulates a GPS receiver; currently it returns
-the true pose of the GPS device, in the world coordinate system.
+{\em The {\tt gps} is temporarily disabled, pending implementation of a
+proper GPS model, or at least one that returns GPS-style coordinates.}
 
 \subsubsection*{Properties}
 \begin{tabularx}{\columnwidth}{llX}
