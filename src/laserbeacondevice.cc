@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.1 $
+//  $Author: vaughan $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -95,6 +95,8 @@ bool CLaserBeaconDevice::Update()
     //
     m_px = px;
     m_py = py;
+
+    return true; // added to prevent warning - RTV
 }
 
 

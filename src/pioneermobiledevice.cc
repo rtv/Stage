@@ -1,4 +1,4 @@
-// $Id: pioneermobiledevice.cc,v 1.7 2000-12-04 02:11:31 vaughan Exp $	
+// $Id: pioneermobiledevice.cc,v 1.8 2000-12-04 05:19:44 vaughan Exp $	
 #include <math.h>
 
 #include "world.h"
@@ -119,11 +119,15 @@ int CPioneerMobileDevice::Move()
 	  m_robot->a = ta;
 	  
 	  //update the robot's odometry estimate
-	  xodom +=  nowSpeed * m_world->ppm * cos( aodom ) * nowTimeStep;
-	  yodom +=  nowSpeed * m_world->ppm * sin( aodom ) * nowTimeStep;
+	  // don't have to scale into pixel coords, 'cos these are in meters
+	  xodom +=  nowSpeed * cos( aodom ) * nowTimeStep;
+	  yodom +=  nowSpeed * sin( aodom ) * nowTimeStep;
 	  
 	  if( m_world->maxAngularError != 0.0 ) //then introduce some error
 	    {
+	      // could make this a +/- error, instead of a pure bias
+	      // though i think the pioneer generally underestimates its turn
+	      // due to wheel slippage
 	      float error = 1.0 + ( drand48()* m_world->maxAngularError );
 	      aodom += nowTurn * nowTimeStep * error;
 	    }
@@ -150,35 +154,36 @@ void CPioneerMobileDevice::ComposeData()
 {
   // this will put the data into P2OS packet format to be shipped
   // to Player
+  
+  // *** BROKEN -- this is all over the place.  It needs fixing. ahoward
+ 
+  // fixed it. there was a scaling error updating the x,y odometry in Update().
+  // the odometry model was kind of deliberately disabled - the code 
+  // wasn't "wrong". talk to me! - RTV
 
-    // *** BROKEN -- this is all over the place.  It needs fixing. ahoward
+  // Compute odometric pose
+  //
+  double px = xodom * 1000.0;// output in mm
+  double py = yodom * 1000.0;// output in mm
+  double pth = aodom;
+  
+  // normalized odo heading
+  float odoHeading = fmod(pth + TWOPI, TWOPI );
     
-    // Compute odometric pose
-    //
-    double px = xodom / m_world->ppm;
-    double py = yodom / m_world->ppm;
-    double pth = aodom;
-    
-    // normalized odo heading
-    float odoHeading = fmod(pth + TWOPI, TWOPI );
-    
-    // normalized compass heading
-    float comHeading = fmod( m_robot->a + M_PI/2.0 + TWOPI, TWOPI ); 
-
+  // normalized compass heading
+  float comHeading = fmod( m_robot->a + M_PI/2.0 + TWOPI, TWOPI ); 
+  
     // Construct the data packet
     // Basically just changes byte orders and some units
     //
-    m_data.time = htonl((int)((m_world->timeNow - m_world->timeBegan) * 1000.0));
-    // *** This is incorrect -- it needs to take angles into account.  ahoward
-    //m_data.px =  htonl((int)((m_robot->x - m_robot->xorigin)/ m_world->ppm * 1000.0));
-    //m_data.py = htonl((int)((m_robot->y - m_robot->yorigin)/ m_world->ppm * 1000.0));
-    //m_data.pth = htons((unsigned short) RTOD(odoHeading));
+    m_data.time = htonl((int)((m_world->timeNow - m_world->timeBegan)*1000.0));
     m_data.px = htonl((int) px);
     m_data.py = htonl((int) py);
     m_data.pth = htons((unsigned short) RTOD(pth));
 
     m_data.vr = htons((unsigned short) (speed * 1000.0));
-    // *** HACK -- Why do I need to negate this? ahoward
+    // *** HACK -- Why do I need to negate this? ahoward 
+    // because of the reversed y-axis on the screen - RTV
     m_data.vth = htons((short) RTOD(-turnRate));  
     m_data.compass = htons((unsigned short)(RTOD(comHeading)));
     m_data.stall = stall;

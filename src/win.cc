@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.cc - all the graphics and X management
  * RTV
- * $Id: win.cc,v 1.5 2000-12-04 02:11:31 vaughan Exp $
+ * $Id: win.cc,v 1.6 2000-12-04 05:19:44 vaughan Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -339,6 +339,16 @@ void CWorldWin::HandleEvent( void )
 		  dragging->a -= M_PI/10.0;
 		  dragging->a = fmod( dragging->a + TWOPI, TWOPI ); // normalize
 		}
+	      else
+		{
+		  CRobot* near = 
+		    world->NearestRobot((float)reportEvent.xbutton.x / xscale 
+					+ panx, 
+					(float)reportEvent.xbutton.y / yscale 
+					+ pany ); 
+
+		  near->ToggleSensorDisplay();
+		}
 #ifdef DEBUG	      
 	      else
 		{ 
@@ -451,6 +461,10 @@ void CWorldWin::HandleEvent( void )
       
       SetDrawMode( GXcopy ); // reset drawing mode
     }
+
+  // try to sync the display to avoid flicker
+  XSync( display, false );
+
 }
 
 void CWorldWin::ScanBackground( void )

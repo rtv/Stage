@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/ptzdevice.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.1 $
+//  $Author: vaughan $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -63,6 +63,15 @@ class CPtzDevice : public CPlayerDevice
     // Current camera settings
     //
     private: double m_pan, m_tilt, m_zoom;
+
+public: 
+  bool GUIDraw( void );
+  bool GUIUnDraw( void );
+  
+  bool undrawRequired;
+  XPoint drawPts[4];
+  XPoint unDrawPts[4];
+
 };
 
 #endif

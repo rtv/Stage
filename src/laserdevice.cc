@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.10 $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -217,8 +217,8 @@ bool CLaserDevice::CheckConfig()
 
 bool CLaserDevice::GUIDraw()
 { 
-  // dump out if noone is subscribed
-  if( !IsSubscribed() ) return true;
+  // dump out if noone is subscribed or the device
+  if( !IsSubscribed() || !m_robot->showDeviceDetail ) return true;
 
   // replicate the first point at the end in order to draw a closed polygon
   hitPts[LASERSAMPLES].x = hitPts[0].x;

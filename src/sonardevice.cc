@@ -1,4 +1,4 @@
-// $Id: sonardevice.cc,v 1.4 2000-12-04 02:11:31 vaughan Exp $
+// $Id: sonardevice.cc,v 1.5 2000-12-04 05:19:44 vaughan Exp $
 #include <math.h>
 
 #include "world.h"
@@ -28,7 +28,7 @@ CSonarDevice::CSonarDevice( CRobot* rr,
 bool CSonarDevice::GUIDraw()
 {  
   // dump out if noone is subscribed
-  if( !IsSubscribed() ) return true;
+  if( !IsSubscribed() || !m_robot->showDeviceDetail ) return true;
   
   // copy first to last hit point to draw a closed polygon
   hitPts[SONARSAMPLES].x = hitPts[0].x;

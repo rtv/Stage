@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.3 $
+//  $Author: vaughan $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -156,8 +156,9 @@ bool CVisionDevice::Update()
 	      
             // loop until we hit the end of the blob
             // there has to be a gap of >1 pixel to end a blob
-            //while( colors[s] == blobcol || colors[s+1] == blobcol ) s++;
-            while( colors[s] == blobcol ) s++;
+	    // this avoids getting lots of crappy little blobs
+            while( colors[s] == blobcol || colors[s+1] == blobcol ) s++;
+            //while( colors[s] == blobcol ) s++;
 	      
             blobright = s-1;
             double robotHeight = 0.6; // meters
@@ -169,13 +170,13 @@ bool CVisionDevice::Update()
             blobbottom = cameraImageHeight/2 -(int)(endyangle/yRadsPerPixel);
             int yCenterOfBlob = blobtop +  ((blobbottom - blobtop )/2);
 	      
+	    // useful debug - keep
             //cout << "Robot " << (int)color-1
             //   << " sees " << (int)blobcol-1
             //   << " start: " << blobleft
             //   << " end: " << blobright
             //   << endl << endl;
-	      
-	      
+	         
             // fill in an arrau entry for this blob
             //
             blobs[numBlobs].channel = blobcol-1;
@@ -189,7 +190,6 @@ bool CVisionDevice::Update()
 	      
             // set the blob color - look up the robot with this
             // bitmap color and translate that to a visible channel no.
-	      
             for( CRobot* r = m_world->bots; r; r = r->next )
             {
                 if( r->color == blobcol )
@@ -207,8 +207,7 @@ bool CVisionDevice::Update()
       
     int buflen = ACTS_HEADER_SIZE + numBlobs * ACTS_BLOB_SIZE;
     memset( actsBuf, 0, buflen );
-      
-      
+            
     // now we have the blobs we have to pack them into ACTS format (yawn...)
     
     // ACTS has blobs sorted by channel (color), and by area within channel, 
@@ -232,14 +231,7 @@ bool CVisionDevice::Update()
                     // in the wrong order
                     ||( (blobs[b].channel == blobs[b+1].channel) 
                         && blobs[b].area < blobs[b+1].area ) )
-                {
-		      
-                    /*    cout << "switching " << b
-                          << "(channel " << (int)(blobs[b].channel)
-                          << ") and " << b+1 << "(channel "
-                          << (int)(blobs[b+1].channel) << endl;
-                    */
-		      
+                {		      
                     //switch the blobs
                     memcpy( &tmp, &(blobs[b]), sizeof( ColorBlob ) );
                     memcpy( &(blobs[b]), &(blobs[b+1]), sizeof( ColorBlob ) );
@@ -262,15 +254,12 @@ bool CVisionDevice::Update()
 	{
         // I'm not sure the ACTS-area is really just the area of the
         // bounding box, or if it is in fact the pixel count of the
-        // actual blob. Here it's not!
+        // actual blob. Here it's just the rectangular area.
 	  
         // RTV - blobs[b].area is already set above
-
-        //blobs[b].area = ((int)blobs[b].right - blobs[b].left) *
-        //(blobs[b].bottom - blobs[b].top);
-	  
         int blob_area = blobs[b].area;
 	  
+	// encode the area in ACTS's 3 bytes, 6-bits-per-byte
         for (int tt=3; tt>=0; --tt) 
 	    {  
             actsBuf[ index + tt] = (blob_area & 63);

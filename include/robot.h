@@ -2,7 +2,7 @@
  * robot.h - CRobot defintion - most of the action is here
             
  * RTV
- * $Id: robot.h,v 1.7 2000-12-02 03:25:58 vaughan Exp $
+ * $Id: robot.h,v 1.8 2000-12-04 05:19:44 vaughan Exp $
  ************************************************************************/
 
 #include "offsets.h" // for the ACTS size defines
@@ -84,6 +84,13 @@ public:
   // erase robot from the GUI
   void GUIDraw( void );
 
+  bool showDeviceDetail;
+
+  void ToggleSensorDisplay( void )
+    {
+      showDeviceDetail = !showDeviceDetail;
+    }
+
   bool HasMoved( void );
 
   // Update robot and all its devices
@@ -93,3 +100,16 @@ public:
 };
 
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+

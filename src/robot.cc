@@ -1,7 +1,7 @@
 /*************************************************************************
  * robot.cc - most of the action is here
  * RTV
- * $Id: robot.cc,v 1.12 2000-12-02 03:54:53 ahoward Exp $
+ * $Id: robot.cc,v 1.13 2000-12-04 05:19:44 vaughan Exp $
  ************************************************************************/
 
 #include <errno.h>
@@ -75,7 +75,8 @@ CRobot::CRobot( CWorld* ww, int col,
   aorigin = olda = a = starta;
 
   channel = 0; // vision system color channel - default 0
-
+  
+  showDeviceDetail = false; // bool controls GUI display of device data/status
  
   // -- create the memory map for IPC with Player --------------------------
 

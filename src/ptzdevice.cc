@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.1 $
+//  $Author: vaughan $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -45,9 +45,12 @@ CPtzDevice::CPtzDevice(CRobot *robot,
 
     // *** WARNING -- I just made these numbers up. ahoward
     //
-    m_pan_min = -90;
-    m_pan_max = +90;
+    
+    // these are the right numbers for our PTZ - RTV
+    m_pan_min = -100;
+    m_pan_max = +100;
 
+    // and it's probably just as well to disable tilt for the moment. - RTV
     m_tilt_max = 0;
     m_tilt_min = 0;
 
@@ -60,11 +63,13 @@ CPtzDevice::CPtzDevice(CRobot *robot,
     m_fov_max = DTOR(12);
 
     m_pan = m_tilt = m_zoom = 0;
+
+    undrawRequired = 0;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Update the laser data
+// Update the device data
 //
 bool CPtzDevice::Update()
 {
@@ -156,6 +161,56 @@ void CPtzDevice::GetPTZ(double &pan, double &tilt, double &zoom)
         (m_fov_max - m_fov_min) / (m_zoom_max - m_zoom_min);
 };
 
+
+
+
+bool CPtzDevice::GUIDraw( void )
+{
+  // dump out if noone is subscribed
+  if( !IsSubscribed() || !m_robot->showDeviceDetail ) return true;
+ 
+  double len = 0.8 * m_robot->world->ppm;
+ 
+  // hard-coded view angle for now - need to calculate a real fov
+  // in this device and have the ACTS device use it from here in future - RTV
+  double startAngle =  m_robot->a + DTOR( m_pan ) - DTOR( 20.0 );
+  double stopAngle  =  startAngle + DTOR( 40.0 );
+
+    drawPts[0].x = drawPts[3].x = (short)m_robot->x;
+    drawPts[0].y = drawPts[3].y = (short)m_robot->y;
+  
+    drawPts[1].x = (short)(m_robot->x + len * cos( startAngle ));  
+    drawPts[1].y = (short)(m_robot->y + len * sin( startAngle ));  
+
+    drawPts[2].x = (short)(m_robot->x + len * cos( stopAngle ));  
+    drawPts[2].y = (short)(m_robot->y + len * sin( stopAngle ));  
+
+    m_world->win->SetForeground( m_world->win->magenta );
+    //m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot )  );
+    m_world->win->DrawLines( drawPts, 4 );
+    
+    undrawRequired = true;
+    
+    memcpy( unDrawPts, drawPts, sizeof( XPoint ) * 4 );
+    
+    return true; 
+};  
+
+
+bool CPtzDevice::GUIUnDraw()
+{ 
+  // dump out if noone is subscribed
+  if( undrawRequired )
+    {
+      m_world->win->SetForeground( m_world->win->magenta );
+      //m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
+      m_world->win->DrawLines( unDrawPts, 4 );
+      
+      undrawRequired = false;
+    }
+      
+  return true; 
+};
 
 
 
