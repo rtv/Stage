@@ -1,4 +1,4 @@
-//#define DEBUG
+#define DEBUG
 
 #include <stdlib.h>
 #include "stage.h"
@@ -6,6 +6,12 @@
 
 extern rtk_fig_t* fig_debug;
 extern int _stg_quit;
+
+enum {
+  STG_LASER_DATA,
+  STG_LASER_CMD,
+  STG_LASER_CFG
+};
 
 // movies can be saved at these multiples of real time
 //const int STG_MOVIE_SPEEDS[] = {1, 2, 5, 10, 20, 50, 100};
@@ -24,6 +30,10 @@ void gui_menu_clock_pause_cb( gpointer data, guint action, GtkWidget* mitem );
 //void gui_menu_file_about( void );
 void gui_menu_file_export_interval( gpointer data, guint action, GtkWidget* mitem );
 void gui_menu_file_export_format( gpointer data, guint action, GtkWidget* mitem );
+void gui_menu_view_data( gpointer data, guint action, GtkWidget* mitem );
+void gui_menu_view_cfg( gpointer data, guint action, GtkWidget* mitem );
+void gui_menu_view_cmd( gpointer data, guint action, GtkWidget* mitem );
+
 
 static GtkItemFactoryEntry menu_table[] = {
   { "/_File",         NULL,      NULL, 0, "<Branch>" },
@@ -53,16 +63,16 @@ static GtkItemFactoryEntry menu_table[] = {
   { "/File/_Quit",    "<CTRL>Q", gui_menu_file_exit_cb, 0, "<StockItem>", GTK_STOCK_QUIT },
   { "/_View",         NULL,      NULL, 0, "<Branch>" },
   { "/View/tear1",    NULL,      NULL, 0, "<Tearoff>" },
-  { "/View/Data", NULL,   NULL, 1, "<Branch>" },
-  { "/View/Data/Laser", NULL,   gui_menu_layer_cb, STG_LAYER_LASERDATA, "<CheckItem>" },
-  { "/View/Data/Ranger", NULL,   gui_menu_layer_cb, STG_LAYER_RANGERDATA, "<CheckItem>" },
-  { "/View/Data/Blob", NULL,   gui_menu_layer_cb, STG_LAYER_BLOBDATA,  "<CheckItem>" },
-  { "/View/Data/Fiducial", NULL,   gui_menu_layer_cb, STG_LAYER_NEIGHBORDATA, "<CheckItem>" },
-  { "/View/Config", NULL,   NULL, 1, "<Branch>" },
-  { "/View/Config/Laser", NULL,   gui_menu_layer_cb, STG_LAYER_LASERCONFIG, "<CheckItem>" },
-  { "/View/Config/Ranger", NULL,   gui_menu_layer_cb, STG_LAYER_RANGERCONFIG , "<CheckItem>" },  
-  { "/View/Config/Blob", NULL,   gui_menu_layer_cb, STG_LAYER_BLOBCONFIG,  "<CheckItem>" },
-  { "/View/Config/Fiducial", NULL,   gui_menu_layer_cb, STG_LAYER_NEIGHBORCONFIG,  "<CheckItem>" },
+  { "/View/Data",            NULL,   NULL, 1, "<Branch>" },
+  { "/View/Data/Laser",      NULL,   gui_menu_view_data, STG_MODEL_LASER,    "<CheckItem>" },
+  { "/View/Data/Ranger",     NULL,   gui_menu_view_data, STG_MODEL_RANGER,   "<CheckItem>" },
+  { "/View/Data/Blob",       NULL,   gui_menu_view_data, STG_MODEL_BLOB,     "<CheckItem>" },
+  { "/View/Data/Fiducial",   NULL,   gui_menu_view_data, STG_MODEL_FIDUCIAL, "<CheckItem>" },
+  { "/View/Config",          NULL,    NULL, 1, "<Branch>" },
+  { "/View/Config/Laser",    NULL,   gui_menu_view_cfg, STG_MODEL_LASER,    "<CheckItem>" },
+  { "/View/Config/Ranger",   NULL,   gui_menu_view_cfg, STG_MODEL_RANGER ,  "<CheckItem>" },  
+  { "/View/Config/Blob",     NULL,   gui_menu_view_cfg, STG_MODEL_BLOB,     "<CheckItem>" },
+  { "/View/Config/Fiducial", NULL,   gui_menu_view_cfg, STG_MODEL_FIDUCIAL, "<CheckItem>" },
 
   { "/View/sep1",     NULL,      NULL, 0, "<Separator>" },
   { "/View/Matrix", "<CTRL>M",   gui_menu_matrix_cb, 1, "<CheckItem>" },
@@ -86,6 +96,25 @@ static const int menu_table_count = 43;
 /*   gtk_window_set_resizable( about, FALSE ); */
 /*   gtk_dialog_run( about ); */
 /* } */
+
+void gui_menu_view_data( gpointer data, guint action, GtkWidget* mitem )
+{
+  ((gui_window_t*)data)->render_data_flag[action] = 
+    GTK_CHECK_MENU_ITEM(mitem)->active;
+}
+
+void gui_menu_view_cfg( gpointer data, guint action, GtkWidget* mitem )
+{
+  ((gui_window_t*)data)->render_cfg_flag[action] = 
+    GTK_CHECK_MENU_ITEM(mitem)->active;
+}
+
+void gui_menu_view_cmd( gpointer data, guint action, GtkWidget* mitem )
+{
+  ((gui_window_t*)data)->render_cmd_flag[action] = 
+    GTK_CHECK_MENU_ITEM(mitem)->active;
+}
+
 
 void gui_menu_file_export_interval( gpointer data, guint action, GtkWidget* mitem )
 {
@@ -201,6 +230,7 @@ void gui_menu_file_export_sequence_cb( gpointer data,
       g_source_remove(win->frame_callback_tag); 
     }
 }
+
 
 void gui_menu_layer_cb( gpointer data, 
 			guint action, 

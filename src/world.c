@@ -28,8 +28,6 @@ stg_world_t* stg_world_create( stg_id_t id,
   
   stg_world_t* world = calloc( sizeof(stg_world_t),1 );
   
-  //world->library = global_library; //stg_library_create();
-  //assert(world->library);
   world->id = id;
   world->token = strdup( token );
   world->models = g_hash_table_new_full( g_int_hash, g_int_equal,

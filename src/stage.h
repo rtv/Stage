@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.102 2004-11-08 06:28:17 rtv Exp $
+ * CVS: $Id: stage.h,v 1.103 2004-11-08 20:34:23 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -347,6 +347,10 @@ extern "C" {
 
   typedef struct
   {
+    uint8_t show_data;
+    uint8_t show_cfg;
+    uint8_t show_cmd;
+
     uint8_t nose;
     uint8_t grid;
     uint8_t boundary;
@@ -524,6 +528,11 @@ extern "C" {
   
     struct _stg_model* selection_active;
   
+    uint8_t render_data_flag[STG_MODEL_COUNT];
+    uint8_t render_cfg_flag[STG_MODEL_COUNT];
+    uint8_t render_cmd_flag[STG_MODEL_COUNT];
+
+    
   } gui_window_t;
 
   typedef struct 
@@ -568,7 +577,9 @@ extern "C" {
   typedef void*(*func_get_data_t)(struct _stg_model*,size_t*);
   typedef void*(*func_get_config_t)(struct _stg_model*,size_t*);
 
-  typedef void(*func_data_notify_t)( void* );
+  typedef void*(*func_data_notify_t)( void* );
+
+  typedef void*(*func_render_t)(struct _stg_model_t*,void*,size_t);
 
   // used to create special-purpose models
   typedef struct
@@ -583,6 +594,9 @@ extern "C" {
     func_get_command_t get_command;
     func_set_config_t set_config;
     func_get_config_t get_config;
+    func_render_t render_data;
+    func_render_t render_cmd;
+    func_render_t render_cfg;
   } stg_lib_entry_t;
 
   /// defines a simulated world

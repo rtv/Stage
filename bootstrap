@@ -9,5 +9,3 @@ libtoolize --force
 autoheader
 automake --gnu --add-missing
 autoconf
-# do configure step by hand to match Player
-# ./configure "$@"

@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.28 2004-11-08 06:28:17 rtv Exp $
+# CVS: $Id: test.world,v 1.29 2004-11-08 20:34:23 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -34,8 +34,10 @@ map(
   #size [15.5 11.4]
   #bitmap "bitmaps/autolab.png"
 
-  bitmap "bitmaps/sal2.png"
+  #bitmap "bitmaps/sal2.png"
+  bitmap "bitmaps/cave.png"
   bitmap_resolution 0.03
+  boundary 1
 )
 
 

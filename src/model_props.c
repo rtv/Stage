@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.20 $
+//  $Revision: 1.21 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -49,6 +49,12 @@ int _set_data( stg_model_t* mod, void* data, size_t len )
       (*mod->data_notify)(mod->data_notify_arg);
     }
   
+  // if a rendering callback was registered, and the gui wants to
+  // render this type of data, call it
+  if( mod->lib->render_data && 
+      mod->world->win->render_data_flag[mod->type] )
+    (*mod->lib->render_data)(mod,data,len);
+
   PRINT_DEBUG3( "model %d(%s) put data of %d bytes",
 		mod->id, mod->token, (int)mod->data_len);
   return 0; //ok

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.51 $
+//  $Revision: 1.52 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -162,7 +162,7 @@ int laser_update( stg_model_t* mod )
 }
 
 
-void laser_render_data(  stg_model_t* mod )
+void laser_render_data(  stg_model_t* mod, void* data, size_t len )
 {
   
   if( mod->gui.data  )
@@ -189,7 +189,7 @@ void laser_render_data(  stg_model_t* mod )
   stg_laser_config_t* cfg = mod->cfg;
 
   size_t len;
-  stg_laser_sample_t* samples = (stg_laser_sample_t*)stg_model_get_data( mod, &len );
+  stg_laser_sample_t* samples = (stg_laser_sample_t*)data;//stg_model_get_data( mod, &len );
   
   if( samples == NULL || len < sizeof(stg_laser_sample_t) )
     {
@@ -218,35 +218,39 @@ void laser_render_data(  stg_model_t* mod )
   // for the points argument?
 
   
-  if( mod->world->win->fill_polygons )
+  //if( mod->gui.show_data )
     {
-      if( mod->gui.bg == NULL )
+      if( mod->world->win->fill_polygons )
 	{
-	  mod->gui.bg = rtk_fig_create( mod->world->win->canvas,
-					fig, STG_LAYER_BACKGROUND );      
-	  rtk_fig_color_rgb32( mod->gui.bg, 
-			       stg_lookup_color( STG_LASER_FILL_COLOR ));
+	  if( mod->gui.bg == NULL )
+	    {
+	      mod->gui.bg = rtk_fig_create( mod->world->win->canvas,
+					    fig, STG_LAYER_BACKGROUND );      
+	      rtk_fig_color_rgb32( mod->gui.bg, 
+				   stg_lookup_color( STG_LASER_FILL_COLOR ));
+	    }
+	  rtk_fig_polygon( mod->gui.bg, 0,0,0, cfg->samples+1, points,TRUE );   
 	}
-      rtk_fig_polygon( mod->gui.bg, 0,0,0, cfg->samples+1, points,TRUE );   
+      
+      rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_COLOR) );
+      rtk_fig_polygon( fig, 0,0,0, cfg->samples+1, points, FALSE ); 	
+      
+      
+      rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_BRIGHT_COLOR) );
+      
+      // loop through again, drawing bright boxes on top of the polygon
+      for( s=0; s<cfg->samples; s++ )
+	{
+	  // if this hit point is bright, we draw a little box
+	  if( samples[s].reflectance > 0 )
+	    rtk_fig_rectangle( fig, 
+			       points[1+s].x, points[1+s].y, 0,
+			       0.04, 0.04, 1 );
+	}
+      
+      free( points );
     }
 
-  rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_COLOR) );
-  rtk_fig_polygon( fig, 0,0,0, cfg->samples+1, points, FALSE ); 	
-    
-
-  rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_BRIGHT_COLOR) );
-  
-  // loop through again, drawing bright boxes on top of the polygon
-  for( s=0; s<cfg->samples; s++ )
-    {
-      // if this hit point is bright, we draw a little box
-      if( samples[s].reflectance > 0 )
-	rtk_fig_rectangle( fig, 
-			   points[1+s].x, points[1+s].y, 0,
-			   0.04, 0.04, 1 );
-    }
- 
-  free( points );
 }
 
 void laser_render_config( stg_model_t* mod )
@@ -311,8 +315,9 @@ int laser_set_data( stg_model_t* mod, void* data, size_t len )
   // put the data in the normal way
   _set_data( mod, data, len );
   
-    // and render it
-  laser_render_data( mod );
+  // and render it
+  //laser_render_data( mod );
+  //gui_render_data( mod );
 }
 
 int laser_set_config( stg_model_t* mod, void* cfg, size_t len )
@@ -345,5 +350,8 @@ stg_lib_entry_t laser_entry = {
   NULL,              // set command
   NULL,              // get command
   laser_set_config,  // set config
-  NULL               // get config
+  NULL,              // get config
+  laser_render_data, // render data
+  NULL,              // render cmd
+  NULL               // render cfg
 };

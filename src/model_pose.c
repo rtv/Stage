@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.33 $
+//  $Revision: 1.34 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -53,7 +53,7 @@ stg_model_t* stg_model_test_collision_at_pose( stg_model_t* mod,
   if( count < 1 )
     return NULL;
 
-  //if( fig_debug ) rtk_fig_clear( fig_debug );
+  if( fig_debug ) rtk_fig_clear( fig_debug );
 
   int l;
   for( l=0; l<count; l++ )

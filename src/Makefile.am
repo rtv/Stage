@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.75 2004-11-03 09:28:52 rtv Exp $
+# $Id: Makefile.am,v 1.76 2004-11-08 20:34:22 rtv Exp $
 
 # we don't need these right now, but I'll keep this commented out just
 # in case.  
@@ -64,11 +64,3 @@ libstage_la_SOURCES = \
 libstage_la_LDFLAGS = -export-dynamic -version-info 0:0:0
 libstage_la_LIBADD = @GTK_LIBS@ 
 
-
-bin_PROGRAMS = stest
-
-# test program	
-#	
-stest_SOURCES = stest.c
-stest_LDFLAGS =
-stest_LDADD =  @GTK_LIBS@ -L.libs -lstage

@@ -135,6 +135,9 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->geom.size.y = STG_DEFAULT_GEOM_SIZEY;
   
   stg_guifeatures_t gf;
+  gf.show_data = 1;
+  gf.show_cmd = 0;
+  gf.show_cfg = 0;
   gf.boundary =  STG_DEFAULT_GUI_BOUNDARY;
   gf.nose =  STG_DEFAULT_GUI_NOSE;
   gf.grid = STG_DEFAULT_GUI_GRID;
@@ -493,5 +496,8 @@ stg_lib_entry_t model_entry = {
   NULL,  // set command
   NULL,  // get command
   NULL,  // set config
-  NULL   // get config
+  NULL,  // get config
+  NULL,  // render data
+  NULL,  // render cmd
+  NULL   // render cfg
 };
