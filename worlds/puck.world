@@ -2,7 +2,7 @@
 # Four vision-based puck-foraging robots 
 # Works nicely with Player's examples/c++/forage 
 #
-# $Id: puck.world,v 1.5 2002-11-11 04:46:06 inspectorg Exp $
+# $Id: puck.world,v 1.6 2002-11-11 08:30:20 rtv Exp $
 #
 
 #resolution 0.025
@@ -27,7 +27,7 @@ define redpuck puck ( color "red" friction 0.035  )
 define forager position
 (
   size [0.4 0.4] 
-  shape "rectangle" 
+  shape "circle" 
   gps()
   gripper( consume "true" pose [0.16 0 0])
   sonar()

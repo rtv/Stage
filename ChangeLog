@@ -1,3 +1,18 @@
+2002-11-11 00:22  rtv
+
+	* tools/run: removed tool/run - out of date
+
+2002-11-11 00:21  rtv
+
+	* ChangeLog, INSTALL, README, docsrc/stage.tex, src/models/box.cc,
+	src/models/bumperdevice.cc, src/models/fiducialfinderdevice.cc,
+	src/models/idarturretdevice.cc, src/models/laserdevice.cc,
+	src/models/sonardevice.cc, src/models/visiondevice.cc,
+	tools/Makefile.am, tools/dstage, tools/killdist.tcl, tools/push,
+	tools/slay, tools/startdist.tcl, worlds/Makefile.am: fixed device
+	rendering to not complain about empty data buffers on first draw.
+	removed cruft from tools dir.
+
 2002-11-10 20:46  inspectorg
 
 	* src/main.cc, src/playerdevice.cc, src/worldfile.cc,
