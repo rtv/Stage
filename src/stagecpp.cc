@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.10 2003-08-27 02:07:06 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.11 2003-08-28 00:14:21 rtv Exp $
  */
 
 #include <assert.h>
@@ -1763,6 +1763,46 @@ int stg_pam_to_rects( struct pam *inpam, tuple **data,
   return 0; // ok
 }
 
+// returns the number of times we've seen this string, building a
+// database of strings as it goes.
+int stg_instances_of_string( char* token )
+{
+  // we maintain an array of all the tokens we have seen;
+  static stg_token_counter_t* tokens = NULL;
+  static int num_tokens = 0;
+  
+  int t=0;
+  if( num_tokens > 0 ) 
+    for( t=0; t<num_tokens; t++ )
+      // if we've seen this token before
+      if( strcmp( tokens[t].token, token ) == 0 )
+	{
+	  tokens[t].count++;
+	  
+	  printf( "this is instance %d of token %s\n", 
+		  tokens[t].count, tokens[t].token );
+	  break;
+	}
+  
+  if( t == num_tokens ) // if we didn't find this token
+    {
+      printf( "adding new token \"%s\"\n", token );
+      
+      tokens = (stg_token_counter_t*)
+	realloc( tokens, sizeof(stg_token_counter_t) * (num_tokens+1) );
+      
+      strncpy( tokens[num_tokens].token, token, STG_AUTONAME_MAX );      
+      tokens[num_tokens].count = 0;
+      
+      printf( "this is the ZEROTH instance of token %s\n", 
+	      tokens[num_tokens].token );
+      num_tokens++;
+    }
+  
+  return  tokens[t].count;
+}
+
+
 //
 // Create a world in the Stage server based on the current data.
 int CWorldFile::Upload( stg_client_t* cli, 
@@ -1788,58 +1828,17 @@ int CWorldFile::Upload( stg_client_t* cli,
       created_models[m].stage_id = root;
       strncpy( created_models[m].name, "root", STG_TOKEN_MAX );
     }
-  
-
-  typedef struct 
-  {
-    const char* type;
-    int count;
-  } stg_type_counter_t;
-  
-  // we maintain an array of all the types of model we have seen;
-
-  stg_type_counter_t* types = NULL;
-  int num_types = 0;
-  
+      
   // Iterate through sections and create entities as required
   for (int section = 1; section < this->GetEntityCount(); section++)
     {
-      int t=0;
-      if( num_types > 0 ) 
-	for( t=0; t<num_types; t++ )
-	// if we've seen this type before
-	  if( strcmp( types[t].type, GetEntityType(section) ) == 0 )
-	    {
-	      types[t].count++;
-	      
-	      printf( "this is instance %d of type %s\n", 
-		      types[t].count, types[t].type );
-	      
-	      break;
-	    }
-      
-      if( t == num_types ) // if we didn't find this type
-	{
-	  printf( "adding new type \"%s\"\n", GetEntityType(section) );
-	  
-	  types = (stg_type_counter_t*)
-	    realloc( types, sizeof(stg_type_counter_t) * (num_types+1) );
-	  
-	  types[num_types].type = GetEntityType(section);
-	  types[num_types].count = 0;
-	  
-	  printf( "this is the ZEROTH instance of type %s\n", 
-		  types[num_types].type );
-	  num_types++;
-	}
-
       if( strcmp( "gui", this->GetEntityType(section) ) == 0 )
 	{
 	  PRINT_WARN( "gui section not implemented" );
 	}
       else
 	{
-	  const int line = this->ReadInt(section, "line", -1);
+	  //const int line = this->ReadInt(section, "line", -1);
 	  
 	  stg_id_t parent = created_models[this->GetEntityParent(section)].stage_id;
 	  
@@ -1847,12 +1846,32 @@ int CWorldFile::Upload( stg_client_t* cli,
 	  
 	  stg_entity_create_t child;
 	  
-	  // the model's name is composed from it's token and it's
-	  // instance number
-	  snprintf( child.name, STG_TOKEN_MAX,
-		    "%s%d", types[t].type, types[t].count );
+	  // the model's name is composed from it's parents' name,
+	  // it's type 
+	  char* parent_name = created_models[this->GetEntityParent(section)].name;
+	  
+	  // we don't need the "root" part
+	  if( strcmp(parent_name,"root") == 0 )
+	    snprintf( child.name, STG_TOKEN_MAX, "%s", GetEntityType(section) );
+	  else
+	    snprintf( child.name, STG_TOKEN_MAX, "%s:%s", 
+		      parent_name,
+		      GetEntityType(section) );
+	  
+	  printf( "type name \"%s\"\n", child.name );
 
-	  // the "name" keyword can be used to override the automatic name
+	  // then we add an instance number onto the end, by counting
+	  // how many times this name has appeared.
+	  int instance = stg_instances_of_string( child.name );
+	  
+	  char instance_str[64];
+	  snprintf( instance_str, 64, "%d", instance );
+	  strncat( child.name, instance_str, STG_TOKEN_MAX );
+
+	  printf( "type name with instance \"%s\"\n", child.name );
+
+	  // alternatively, the "name" keyword can be used to override
+	  // the automatic name
 	  strncpy(child.name, this->ReadString(section,"name", 
 					       child.name ), 
 		  STG_TOKEN_MAX);	
@@ -1993,9 +2012,9 @@ int CWorldFile::Upload( stg_client_t* cli,
 
 	    stg_rotrect_t* rects;
 	    int rect_count;
-
-	    int res = stg_pam_to_rects( &inpam, data, &rects, &rect_count );
-
+	    
+	    assert( stg_pam_to_rects( &inpam, data, &rects, &rect_count ) == 0 );
+	    
 	    printf( "Found %d rects\n", rect_count );
 
 	    stg_model_set_rects( cli, anid, rects, rect_count );

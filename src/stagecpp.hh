@@ -23,13 +23,21 @@
  * the basic C library, but right now we only have a C++ implementation.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.hh,v 1.4 2003-08-27 02:07:06 rtv Exp $
+ * CVS info: $Id: stagecpp.hh,v 1.5 2003-08-28 00:14:21 rtv Exp $
  */
 
 #ifndef STAGECPP_HH
 #define STAGECPP_HH
 
 #include <stage.h>
+
+#define STG_AUTONAME_MAX 100
+
+typedef struct 
+{
+  char token[STG_AUTONAME_MAX];
+  int count;
+} stg_token_counter_t;
 
 // Class for loading/saving world file.  This class hides the syntax
 // of the world file and provides an 'entity.property = value' style

@@ -21,7 +21,7 @@
  * Desc: a container for models 
  * Author: Richard Vaughan
  * Date: 24 July 2003
- * CVS info: $Id: world.hh,v 1.25 2003-08-27 02:07:06 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.26 2003-08-28 00:14:21 rtv Exp $
  */
 
 #ifndef _WORLD_HH
@@ -57,10 +57,10 @@ CMatrix* stg_world_create_matrix( stg_world_t* world );
 void stg_world_destroy_matrix( stg_world_t* world );
 
 #ifdef DEBUG
-#define WORLD_DEBUG(W,S) printf("[%d:%s %p] "S" (%s %s)\n",W->id,W->name->str,W,__FILE__,__FUNCTION__);
-#define WORLD_DEBUG1(W,S,A) printf("[%d:%s %p] "S" (%s %s)\n",W->id,W->name->str,W,A,__FILE__,__FUNCTION__);
-#define WORLD_DEBUG2(W,S,A,B) printf("[%d:%s %p] "S" (%s %s)\n",W->id,W->name->str,W,A,B,__FILE__,__FUNCTION__);
-#define WORLD_DEBUG3(W,S,A,B,C) printf("[%d:%s %p] "S" (%s %s)\n",W->id,W->name->str,W,A,B,C,__FILE__,__FUNCTION__);
+#define WORLD_DEBUG(W,S) printf("[%d %s %p] "S" (%s %s)\n",W->id,W->name->str,W,__FILE__,__FUNCTION__);
+#define WORLD_DEBUG1(W,S,A) printf("[%d %s %p] "S" (%s %s)\n",W->id,W->name->str,W,A,__FILE__,__FUNCTION__);
+#define WORLD_DEBUG2(W,S,A,B) printf("[%d %s %p] "S" (%s %s)\n",W->id,W->name->str,W,A,B,__FILE__,__FUNCTION__);
+#define WORLD_DEBUG3(W,S,A,B,C) printf("[%d %s %p] "S" (%s %s)\n",W->id,W->name->str,W,A,B,C,__FILE__,__FUNCTION__);
 #else
 #define WORLD_DEBUG(W,S)
 #define WORLD_DEBUG1(W,S,A)

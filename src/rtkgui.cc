@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.14 2003-08-27 03:04:56 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.15 2003-08-28 00:14:21 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -683,8 +683,8 @@ void RtkOnMouse(rtk_fig_t *fig, int event, int mode)
       entity->SetProperty( STG_PROP_POSE, &pose, sizeof(pose) );
       
       // display the pose
-      snprintf(txt, sizeof(txt), "Selection: %d:%s pose: [%.2f,%.2f,%.2f]",  
-	       entity->id, entity->name->str,
+      snprintf(txt, sizeof(txt), "Selection: \"%s\" (%d) pose: [%.2f,%.2f,%.2f]",  
+	       entity->name->str, entity->id, 
 	       pose.x,pose.y,pose.a  );
 
       cid = gtk_statusbar_get_context_id( mod->win->statusbar, "on_mouse" );
