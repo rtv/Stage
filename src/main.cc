@@ -21,8 +21,12 @@
  * Desc: Program Entry point
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.49 2002-07-23 16:07:57 rtv Exp $
+ * CVS: $Id: main.cc,v 1.50 2002-08-21 01:30:50 gerkey Exp $
  */
+
+#if HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #include <unistd.h>
 #include <signal.h>

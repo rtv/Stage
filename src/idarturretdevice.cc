@@ -21,9 +21,8 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/idarturretdevice.cc,v $
 * $Author: gerkey $
-* $Revision: 1.4 $
+* $Revision: 1.5 $
 ******************************************************************************/
-
 
 #include <math.h>
 #include <sys/types.h>

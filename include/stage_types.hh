@@ -21,11 +21,15 @@
  * Desc: Shared types, constants, etc
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: stage_types.hh,v 1.28 2002-07-23 16:07:55 rtv Exp $
+ * CVS: $Id: stage_types.hh,v 1.29 2002-08-21 01:30:49 gerkey Exp $
  */
 
 #ifndef STAGE_TYPES_HH
 #define STAGE_TYPES_HH
+
+#if HAVE_CONFIG_H
+#  include <config.h>
+#endif
 
 #include <stddef.h>
 #include <assert.h>

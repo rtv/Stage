@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.18 2002-07-09 03:31:56 rtv Exp $
+ * $Id: image.cc,v 1.19 2002-08-21 01:30:50 gerkey Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -13,12 +13,14 @@
 
 using namespace std;
 
-#if INCLUDE_ZLIB
+#include "stage_types.hh"
+#include "image.hh"
+
+//#if INCLUDE_ZLIB
+#ifdef HAVE_LIBZ
 #include <zlib.h>
 #endif
 
-#include "stage_types.hh"
-#include "image.hh"
 
 //#define DEBUG
 
@@ -236,7 +238,8 @@ bool Nimage::load_pnm(const char* fname)
 // Load a gzipped pnm file
 bool Nimage::load_pnm_gz(const char* fname)
 {
-#ifndef INCLUDE_ZLIB
+//#ifndef INCLUDE_ZLIB
+#ifndef HAVE_LIBZ
   printf("opening %s\n", fname);
   printf("gzipped files not supported\n");
   return false;
