@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visionbeacon.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -46,6 +46,10 @@ class CVisionBeacon : public CObject
     // Beacon radius
     //
     private: double m_radius;
+
+    // Color for display
+    //
+    private: COLORREF m_color;
     
     // Beacon channel (corresponds to ACTS channel)
     //

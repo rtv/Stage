@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.4 $
+//  $Revision: 1.4.2.5 $
 //
 // Usage:
 //  (empty)
@@ -24,7 +24,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 1
+#define ENABLE_TRACE 0
 
 #include <math.h>
 #include "world.hh"
@@ -44,6 +44,9 @@ CVisionDevice::CVisionDevice(CWorld *world, CObject *parent, CPlayerRobot* robot
                         ACTS_COMMAND_BUFFER_SIZE,
                         ACTS_CONFIG_BUFFER_SIZE)
 {
+    // ACTS must be associated with a physical camera
+    //
+    ASSERT(ptz_device != NULL);
     m_ptz_device = ptz_device;
         
     m_update_interval = 0.1;
@@ -57,6 +60,8 @@ CVisionDevice::CVisionDevice(CWorld *world, CObject *parent, CPlayerRobot* robot
     m_pan = 0;
     m_tilt = 0;
     m_zoom = DTOR(60);
+
+    m_max_range = 8.0;
 
     numBlobs = 0;
     memset( blobs, 0, MAXBLOBS * sizeof( ColorBlob ) );
@@ -74,11 +79,14 @@ void CVisionDevice::Update()
 {
     //TRACE0("updating vision data");
     
+    // Update children
+    //
+    CPlayerDevice::Update();
+
     // Dont update anything if we are not subscribed
     //
     if (!IsSubscribed())
         return;
-    //TRACE0("device has been subscribed");
     
     ASSERT(m_robot != NULL);
     ASSERT(m_world != NULL);
@@ -128,14 +136,12 @@ void CVisionDevice::UpdateScan()
 
     // Compute starting angle
     //
-    oth = oth - m_zoom / 2;
-    
-    // *** HACK -- max range set to arbitrary value
+    oth = oth + m_pan - m_zoom / 2;
+
     // Compute fov, range, etc
     //
     double dth = M_PI / m_scan_width;
     double dr = 1.0 / m_world->ppm;
-    double max_range = 8.0;
 
     // Initialise gui data
     //
@@ -168,7 +174,7 @@ void CVisionDevice::UpdateScan()
         // Look along scan line for beacons
         // Could make this an int again for a slight speed-up.
         //
-        for (range = 0; range < max_range; range += dr)
+        for (range = 0; range < m_max_range; range += dr)
         {
             // Look in the laser layer for obstacles
             //
@@ -385,7 +391,10 @@ void CVisionDevice::OnUiUpdate(RtkUiDrawData *pData)
     //
     pData->BeginSection("global", "vision");
 
-    if (pData->DrawLayer("scan", true))
+    if (pData->DrawLayer("fov", true) && IsSubscribed())
+        DrawFOV(pData);
+    
+    if (pData->DrawLayer("scan", true) && IsSubscribed())
         DrawScan(pData);
     
     pData->EndSection();
@@ -402,10 +411,28 @@ void CVisionDevice::OnUiMouse(RtkUiMouseData *pData)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Draw the laser turret
+// Draw the field of view
 //
-void CVisionDevice::DrawTurret(RtkUiDrawData *pData)
+void CVisionDevice::DrawFOV(RtkUiDrawData *pData)
 {
+    #define COLOR_FOV RGB(0, 192, 0)
+    
+    // Get global pose
+    //
+    double gx, gy, gth;
+    GetGlobalPose(gx, gy, gth);
+    
+    double ax = gx + m_max_range * cos(gth + m_pan - m_zoom / 2);
+    double ay = gy + m_max_range * sin(gth + m_pan - m_zoom / 2);
+
+    double bx = gx + m_max_range * cos(gth + m_pan + m_zoom / 2);
+    double by = gy + m_max_range * sin(gth + m_pan + m_zoom / 2);
+
+    pData->SetColor(COLOR_FOV);
+    pData->MoveTo(gx, gy);
+    pData->LineTo(ax, ay);
+    pData->LineTo(bx, by);
+    pData->LineTo(gx, gy);    
 }
 
 

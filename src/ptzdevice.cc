@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.4 $
+//  $Revision: 1.4.2.5 $
 //
 // Usage:
 //  (empty)
@@ -35,16 +35,15 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CPtzDevice::CPtzDevice(CPlayerRobot *robot,
-                       void *buffer, size_t data_len, 
-                       size_t command_len, size_t config_len)
-        : CPlayerDevice(robot, buffer, data_len, command_len, config_len)
+CPtzDevice::CPtzDevice(CWorld *world, CObject *parent, CPlayerRobot* robot,
+                       void *buffer, size_t buffer_len)
+        : CPlayerDevice(world, parent, robot, buffer, buffer_len,
+                        PTZ_DATA_BUFFER_SIZE,
+                        PTZ_COMMAND_BUFFER_SIZE,
+                        PTZ_CONFIG_BUFFER_SIZE)
 {   
     m_update_interval = 0.1;
     m_last_update = 0;
-
-    // *** WARNING -- I just made these numbers up. ahoward
-    //
     
     // these pans are the right numbers for our PTZ - RTV
     m_pan_min = -100;
@@ -61,7 +60,8 @@ CPtzDevice::CPtzDevice(CPlayerRobot *robot,
     //
     // should look in the Sony manual to get these numbers right,
     // but they'll change with the lens, and we have 2 lenses
-    // eventually all this stuff'll come from config files 
+    // eventually all this stuff'll come from config files
+    //
     m_fov_min = DTOR(100);
     m_fov_max = DTOR(10);
 
@@ -79,6 +79,10 @@ CPtzDevice::CPtzDevice(CPlayerRobot *robot,
 void CPtzDevice::Update()
 {
     //TRACE0("updating");
+
+    // Update children
+    //
+    CPlayerDevice::Update();
 
     // Dont update anything if we are not subscribed
     //
@@ -216,6 +220,26 @@ bool CPtzDevice::GUIUnDraw()
       
   return true; 
 };
+
+#else
+
+///////////////////////////////////////////////////////////////////////////
+// Process GUI update messages
+//
+void CPtzDevice::OnUiUpdate(RtkUiDrawData *pData)
+{
+    CObject::OnUiUpdate(pData);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Process GUI mouse messages
+//
+void CPtzDevice::OnUiMouse(RtkUiMouseData *pData)
+{
+    CObject::OnUiMouse(pData);
+}
+
 
 #endif
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11.2.5 $
+//  $Revision: 1.11.2.6 $
 //
 // Usage:
 //  (empty)
@@ -205,14 +205,6 @@ bool CLaserDevice::UpdateScanData()
             py += dy;
         }
 
-        // Update the gui data
-        //
-        #ifdef INCLUDE_RTK
-            m_hit[m_hit_count][0] = px;
-            m_hit[m_hit_count][1] = py;
-            m_hit_count++;
-        #endif
-
         // set laser value, scaled to current ppm
         // and converted to mm
         //
@@ -227,6 +219,14 @@ bool CLaserDevice::UpdateScanData()
         // Swap the bytes while we're at it
         //
         m_data[s] = htons(v);
+
+        // Update the gui data
+        //
+        #ifdef INCLUDE_RTK
+            m_hit[m_hit_count][0] = px;
+            m_hit[m_hit_count][1] = py;
+            m_hit_count++;
+        #endif
     }
     return true;
 }
@@ -311,9 +311,9 @@ void CLaserDevice::OnUiUpdate(RtkUiDrawData *pData)
     //
     pData->BeginSection("global", "laser");
     
-    if (pData->DrawLayer("turret", true))
+    if (pData->DrawLayer("turret", true) && IsSubscribed())
         DrawTurret(pData);
-    if (pData->DrawLayer("scan", true))
+    if (pData->DrawLayer("scan", true) && IsSubscribed())
         DrawScan(pData);
     
     pData->EndSection();

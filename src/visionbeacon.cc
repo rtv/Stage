@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -35,7 +35,8 @@
 //
 CVisionBeacon::CVisionBeacon(CWorld *world, CObject *parent)
         : CObject(world, parent)
-{    
+{
+    m_color = 0;
     m_channel = 0;
     m_radius = 0;
     
@@ -60,6 +61,12 @@ bool CVisionBeacon::Startup(RtkCfgFile *cfg)
     
     cfg->EndSection();
 
+    // *** HACK
+    // Assign arbitrary colors to channels
+    //
+    int c = 255 * m_channel / 32;
+    m_color = RTK_RGB(c, 255 - c, 255 - c);
+
     #ifdef INCLUDE_RTK
         m_drag_radius = 0.20;
     #endif
@@ -79,6 +86,8 @@ void CVisionBeacon::Update()
     // Undraw our old representation
     //
     m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+                       2 * m_radius, 2 * m_radius, layer_obstacle, 0);
+    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
                        2 * m_radius, 2 * m_radius, layer_laser, 0);
     m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
                        2 * m_radius, 2 * m_radius, layer_vision, 0);
@@ -89,6 +98,8 @@ void CVisionBeacon::Update()
     
     // Draw our new representation
     //
+    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+                          2 * m_radius, 2 * m_radius, layer_obstacle, 1);
     m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
                           2 * m_radius, 2 * m_radius, layer_laser, 1);
     m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
@@ -109,7 +120,7 @@ void CVisionBeacon::OnUiUpdate(RtkUiDrawData *pData)
     
     if (pData->DrawLayer("", TRUE))
     {
-        pData->SetColor(m_channel);
+        pData->SetColor(m_color);
         pData->ExRectangle(m_map_px, m_map_py, m_map_pth, 2 * m_radius, 2 * m_radius);
     }
 

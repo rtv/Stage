@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visiondevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.3 $
+//  $Revision: 1.4.2.4 $
 //
 // Usage:
 //  (empty)
@@ -74,10 +74,11 @@ class CVisionDevice : public CPlayerDevice
     // Current pan/tilt/zoom settings (all angles)
     //
     private: double m_pan, m_tilt, m_zoom;
-    
+
     // Camera properties
     //
     private: int cameraImageWidth, cameraImageHeight;
+    private: double m_max_range;
 
     // Current scan-line data
     //
@@ -100,11 +101,11 @@ class CVisionDevice : public CPlayerDevice
     //
     public: virtual void OnUiMouse(RtkUiMouseData *pData);
 
-    // Draw the laser turret
+    // Draw the field of view
     //
-    private: void DrawTurret(RtkUiDrawData *pData);
-
-    // Draw the laser scan
+    private: void DrawFOV(RtkUiDrawData *pData);
+    
+    // Draw the image scan-line
     //
     private: void DrawScan(RtkUiDrawData *pData);
 

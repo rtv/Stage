@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtksimagent.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -134,7 +134,7 @@ void RtkSimAgent::Main()
     {
         // Update the world
         //
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 3; i++)
         {
             // *** HACK -- sleep time?
             //

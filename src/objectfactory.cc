@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/objectfactory.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -33,7 +33,9 @@
 #include "playerrobot.hh"
 #include "pioneermobiledevice.hh"
 #include "laserdevice.hh"
+#include "ptzdevice.hh"
 #include "visiondevice.hh"
+#include "sonardevice.hh"
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -89,69 +91,41 @@ CObject* CreateObject(const char *type, CWorld *world, CObject *parent)
                                 LASER_TOTAL_BUFFER_SIZE);
     }
 
+    // Create sonar device
+    //
+    if (strcmp(type, "sonar") == 0)
+    {
+        FIND_PLAYER_ROBOT();
+        return new CSonarDevice(world, parent, robot,
+                                robot->playerIO + SSONAR_DATA_START,
+                                SSONAR_TOTAL_BUFFER_SIZE);
+    }
+
+    // Create ptz camera device
+    //
+    if (strcmp(type, "ptzcamera") == 0)
+    {
+        FIND_PLAYER_ROBOT();
+        return new CPtzDevice(world, parent, robot,
+                                robot->playerIO + PTZ_DATA_START,
+                                PTZ_TOTAL_BUFFER_SIZE);
+    }
+    
     // Create vision device
     //
     if (strcmp(type, "vision") == 0)
     {
         FIND_PLAYER_ROBOT();
-        return new CVisionDevice(world, parent, robot, NULL,
+        CPtzDevice *ptz = (CPtzDevice*) parent->FindAncestor(typeid(CPtzDevice));
+        if (ptz == NULL)
+        {
+            MSG("vision device requires ptz camera as ancestor; ignoring");
+            return NULL;
+        }
+        return new CVisionDevice(world, parent, robot, ptz,
                                 robot->playerIO + ACTS_DATA_START,
                                 ACTS_TOTAL_BUFFER_SIZE);
     }
     
     return NULL;
 }
-
-
-    /* *** REMOVE ahoward
-    m_device_count = 0;
-
-    // Create pioneer device    
-    //
-    ASSERT_INDEX(m_device_count, m_device);
-    m_device[m_device_count++] = new CPioneerMobileDevice( this, 
-				world->pioneerWidth, 
-				world->pioneerLength,
-				playerIO + SPOSITION_DATA_START,
-				SPOSITION_DATA_BUFFER_SIZE,
-				SPOSITION_COMMAND_BUFFER_SIZE,
-				SPOSITION_CONFIG_BUFFER_SIZE);
-
-    // Sonar device
-    //
-    m_device[m_device_count++] = new CSonarDevice( this,
-                                                   playerIO + SSONAR_DATA_START,
-                                                   SSONAR_DATA_BUFFER_SIZE,
-                                                   SSONAR_COMMAND_BUFFER_SIZE,
-                                                   SSONAR_CONFIG_BUFFER_SIZE);
-    
-    // Create laser device
-    //
-    ASSERT_INDEX(m_device_count, m_device);
-    m_device[m_device_count++] = new CLaserDevice(this, playerIO + LASER_DATA_START,
-                                                  LASER_DATA_BUFFER_SIZE,
-                                                  LASER_COMMAND_BUFFER_SIZE,
-                                                  LASER_CONFIG_BUFFER_SIZE);
-
-    // Create ptz device
-    //
-    CPtzDevice *ptz_device = new CPtzDevice(this, playerIO + PTZ_DATA_START,
-                                            PTZ_DATA_BUFFER_SIZE,
-                                            PTZ_COMMAND_BUFFER_SIZE,
-                                            PTZ_CONFIG_BUFFER_SIZE);
-    ASSERT_INDEX(m_device_count, m_device);
-    m_device[m_device_count++] = ptz_device;
-
-    // Create vision device
-    // **** HACK -- pass a pointer to the ptz device so we can determine
-    // the vision parameters.
-    // A better way to do this would be to generalize the concept of a coordinate
-    // frame, so that the PTZ device defines a new cs for the camera.
-    //
-    ASSERT_INDEX(m_device_count, m_device);
-    m_device[m_device_count++] = new CVisionDevice(this, ptz_device,
-                                                   playerIO + ACTS_DATA_START,
-                                                   ACTS_DATA_BUFFER_SIZE,
-                                                   ACTS_COMMAND_BUFFER_SIZE,
-                                                   ACTS_CONFIG_BUFFER_SIZE);
-    */

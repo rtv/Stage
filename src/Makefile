@@ -1,7 +1,7 @@
 #*************************************************************************
 # src/Makefile - makes the sources
 # RTV
-# $Id: Makefile,v 1.9.2.5 2000-12-07 00:30:00 ahoward Exp $
+# $Id: Makefile,v 1.9.2.6 2000-12-07 05:22:20 ahoward Exp $
 # ************************************************************************/
 
 .SUFFIXES: .cc .o
@@ -88,7 +88,8 @@ objectfactory.o: ../include/object.hh ../include/rtk-types.hh
 objectfactory.o: ../include/visionbeacon.hh ../include/playerrobot.hh
 objectfactory.o: ../include/pioneermobiledevice.hh ../include/playerdevice.hh
 objectfactory.o: ../include/win.h ../include/world.hh ../include/image.h
-objectfactory.o: ../include/laserdevice.hh
+objectfactory.o: ../include/laserdevice.hh ../include/ptzdevice.hh
+objectfactory.o: ../include/visiondevice.hh
 pioneermobiledevice.o: ../include/world.hh ../include/playerrobot.hh
 pioneermobiledevice.o: ../include/object.hh ../include/rtk-types.hh
 pioneermobiledevice.o: ../include/image.h ../include/win.h
@@ -101,7 +102,6 @@ playerdevice.o: ../include/playerdevice.hh
 playerrobot.o: ../include/world.hh ../include/playerrobot.hh
 playerrobot.o: ../include/object.hh ../include/rtk-types.hh
 playerrobot.o: ../include/image.h ../include/win.h
-posreader.o: ../include/ports.h
 ptzdevice.o: ../include/world.hh ../include/playerrobot.hh
 ptzdevice.o: ../include/object.hh ../include/rtk-types.hh ../include/image.h
 ptzdevice.o: ../include/win.h ../include/ptzdevice.hh
@@ -114,11 +114,9 @@ rtksimagent.o: ../include/playerrobot.hh ../include/object.hh
 rtksimagent.o: ../include/rtk-types.hh ../include/image.h ../include/win.h
 server.o: ../include/world.hh ../include/playerrobot.hh ../include/object.hh
 server.o: ../include/rtk-types.hh ../include/image.h ../include/win.h
-server.o: ../include/ports.h
 sonardevice.o: ../include/world.hh ../include/playerrobot.hh
 sonardevice.o: ../include/object.hh ../include/rtk-types.hh
-sonardevice.o: ../include/image.h ../include/win.h ../include/sonardevice.h
-sonardevice.o: ../include/playerdevice.hh
+sonardevice.o: ../include/image.h ../include/win.h
 visionbeacon.o: ../include/world.hh ../include/playerrobot.hh
 visionbeacon.o: ../include/object.hh ../include/rtk-types.hh
 visionbeacon.o: ../include/image.h ../include/win.h
