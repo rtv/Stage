@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.60 2002-11-19 21:14:38 jazzfunk Exp $
+ * CVS: $Id: main.cc,v 1.61 2003-01-10 03:58:51 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -81,7 +81,6 @@ void PrintUsage( void )
 	 " -v <float>\tSet the simulated time increment per cycle [0.1sec].\n"
 	 " -u <float>\tSet the desired real time per cycle [0.1 sec].\n"
 	 " -f \t\tRun as fast as possible; don't try to match real time\n"
-	 " -r <IP:port>\tSend sensor data to this address in RTP format\n"
 	 " -s\t\tStart stage with the clock stopped (send SIGUSR1 to toggle clock)\n"
 	 "\nSwitches for experimental/undocumented features:\n"
 	 " -p <portnum>\tSet the server port [6601]\n"
@@ -91,7 +90,7 @@ void PrintUsage( void )
 	 "\nCommand-line options override any configuration file equivalents.\n"
 	 "See the Stage manual for details.\n"
 	 "\nPart of the Player/Stage Project [http://playerstage.sourceforge.net].\n"
-	 "Copyright 2000-2002 Richard Vaughan, Andrew Howard, Brian Gerkey and contributors\n"
+	 "Copyright 2000-2003 Richard Vaughan, Andrew Howard, Brian Gerkey and contributors\n"
 	 "Released under the GNU General Public License"
 	 " [http://www.gnu.org/copyleft/gpl.html].\n"
 	 "\n"
@@ -199,13 +198,10 @@ int main(int argc, char **argv)
   // catch clock start/stop commands
   signal(SIGUSR1, CatchSigUsr1 );
   
-  // the main loop
-    
+  // the main loop  
   // update the simulation - stop when the quit flag is raised
   while( !quit ) world->Update(); 
   
-  //gtk_main();
-
   // clean up and exit
   StageQuit();
 }
