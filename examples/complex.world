@@ -35,7 +35,7 @@ create position_device pose 1.0 3.0 0.0 port 6665
   create player_device size 0.05 0.05 pose -0.1 0.0 0.0 port 6665
   create sonar_device  port 6665
   create misc_device port 6665
-  create gripper_device pose 0.15 0 0 qport 6665
+  create gripper_device pose 0.15 0 0 port 6665
 
   create laser_device  pose 0.08 0.0 0.0 port 6665
   {
