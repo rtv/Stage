@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.1 2002-10-27 21:46:13 rtv Exp $
+ * $Id: image.cc,v 1.1.4.1 2003-01-02 22:36:34 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -208,10 +208,13 @@ bool Nimage::load_pnm(const char* fname)
     return false; 
   }
   
-  // ignore the end of this line and the following comment-line
-  source.ignore( 1024, '\n' );
+  // ignore the end of this line
   source.ignore( 1024, '\n' );
   
+  // ignore comment lines
+  while( source.peek() == '#' )
+    source.ignore( 1024, '\n' );  
+
   // get the width, height and white value  
   source >> width >> height >> whiteNum;
 
@@ -247,7 +250,7 @@ bool Nimage::load_pnm_gz(const char* fname)
     
   char line[1024];
   char magicNumber[10];
-  char comment[256];
+  //  char comment[256];
   int whiteNum; 
 
 #ifdef DEBUG
@@ -266,6 +269,10 @@ bool Nimage::load_pnm_gz(const char* fname)
   // parser - still the format definition for PNMs is strict, so we're
   // almost certainly OK. - rtv
 
+  // (some weeks later) ok, so some programs don't insert a comment line into
+  // pnm files, so I'm detecting comment lines now.
+  // should change this to use libpnm in the near future - rtv
+
   // Read and check the magic number
   //
   gzgets(file, magicNumber, sizeof(magicNumber));
@@ -276,8 +283,12 @@ bool Nimage::load_pnm_gz(const char* fname)
     return false;
   }
   
-  gzgets(file, comment, sizeof(comment));
-  gzgets(file, line, sizeof(line));
+  //gzgets(file, comment, sizeof(comment));
+  
+  do{
+    gzgets(file, line, sizeof(line)); 
+  } while( line[0] == '#' );
+      
   sscanf(line, "%d %d", &width, &height );
 
   gzgets(file, line, sizeof(line));
