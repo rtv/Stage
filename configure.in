@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.35.4.5 2003-02-06 06:09:23 rtv Exp $
+dnl $Id: configure.in,v 1.35.4.6 2003-02-12 01:57:42 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -126,15 +126,15 @@ AM_CONDITIONAL(WITH_GUI, test x$with_gui = xyes)
 
 
 dnl where's player?
-AC_ARG_WITH(player, [   --with-player=dir      Location of Player (installation or source)],
-PLAYER_DIR=$with_player,
-PLAYER_DIR="${HOME}/player-PS_VERSION")
-if test ! -f $PLAYER_DIR/include/player.h; then
-  if test ! -f $PLAYER_DIR/server/player.h; then
-    AC_MSG_ERROR("Could not find player.h.  Player is required to build Stage.")
-  fi
-fi
-AC_SUBST(PLAYER_DIR)
+dnl AC_ARG_WITH(player, [   --with-player=dir      Location of Player (installation or source)],
+dnl PLAYER_DIR=$with_player,
+dnl PLAYER_DIR="${HOME}/player-PS_VERSION")
+dnl if test ! -f $PLAYER_DIR/include/player.h; then
+dnl  if test ! -f $PLAYER_DIR/server/player.h; then
+dnl    AC_MSG_ERROR("Could not find player.h.  Player is required to build Stage.")
+dnl  fi
+dnl fi
+dnl AC_SUBST(PLAYER_DIR)
 
 dnl where's the X11-style color database?
 AC_CHECK_FILE([/usr/X11R6/lib/X11/rgb.txt],
