@@ -19,7 +19,6 @@ typedef struct _model
   stg_size_t size;
   stg_color_t color;
   stg_velocity_t velocity;
-
   
   GArray* lines; // array of point-pairs specifying lines in our body
   // GArray* arcs; // todo?

@@ -64,7 +64,7 @@ int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count
   if( pb == NULL )
     {
       // TODO - use the GError properly here
-      PRINT_ERR( "error loading world bitmap" );
+      PRINT_ERR1( "error loading image file \"%s\"", filename );
       return 1; // error
     }
 

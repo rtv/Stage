@@ -122,7 +122,7 @@ int main( int argc, char* argv[] )
 
       server_update_worlds( server );
 
-      if( server->running )
+      //if( server->running )
 	{
 	  server_update_subs( server );
 	  //server_update_finish( server );

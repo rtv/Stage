@@ -685,10 +685,10 @@ void server_print( server_t* server )
 
 int server_msg_dispatch( server_t* server, int fd, stg_msg_t* msg )
 {
-  PRINT_DEBUG3( "handling message type %d.%d len %d", 
-		msg->type >> 8,
-		msg->type & STG_MSG_MASK_MINOR,
-		(int)msg->payload_len );
+  //PRINT_DEBUG3( "handling message type %d.%d len %d", 
+  //	msg->type >> 8,
+  //	msg->type & STG_MSG_MASK_MINOR,
+  //	(int)msg->payload_len );
   
   switch( msg->type & STG_MSG_MASK_MAJOR )
     {
@@ -714,7 +714,7 @@ int server_msg_dispatch( server_t* server, int fd, stg_msg_t* msg )
       {
 	stg_target_t* tgt = (stg_target_t*)msg->payload;	
 
-	PRINT_DEBUG2( "looking up model %d:%d", tgt->world, tgt->model ); 
+	//PRINT_DEBUG2( "looking up model %d:%d", tgt->world, tgt->model ); 
 
 	model_t* model = server_get_model( server, 
 					       tgt->world,

@@ -61,9 +61,15 @@ void model_update_laser( model_t* mod )
             
       stg_laser_sample_t* sample = 
 	&g_array_index( mod->laser_data, stg_laser_sample_t, t );
-      
+ 
       // record the range in mm
       sample->range = (uint32_t)( range * 1000.0 );
       sample->reflectance = 1;
+
+
+      //printf( "%d ", sample->range );
     }
+
+  puts("");
+  puts("");
 }

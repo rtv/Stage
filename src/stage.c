@@ -314,10 +314,10 @@ stg_property_t* prop_create( stg_id_t id, void* data, size_t len )
   memcpy( prop->data, data, len );
   prop->len = len;
   
-#ifdef DEBUG
-  printf( "debug: created a prop: " );
-  stg_property_print( prop );
-#endif
+  //#ifdef DEBUG
+  // printf( "debug: created a prop: " );
+  //stg_property_print( prop );
+  //#endif
 
   return prop;
 }

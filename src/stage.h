@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.33 2004-04-28 06:10:55 rtv Exp $
+ * CVS: $Id: stage.h,v 1.34 2004-05-09 06:40:49 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -41,6 +41,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <assert.h>
+#include <pthread.h>
 
 #include <glib.h> // we use GLib's data structures extensively
 
@@ -147,10 +148,14 @@ typedef uint16_t stg_msg_type_t;
 #define STG_MSG_WORLD_MODELDESTROY      (STG_MSG_WORLD | 7)
 #define STG_MSG_WORLD_INTERVALSIM       (STG_MSG_WORLD | 8)
 #define STG_MSG_WORLD_INTERVALREAL      (STG_MSG_WORLD | 9)
+//#define STG_MSG_WORLD_REQUEST           (STG_MSG_MODEL | 10)
+//#define STG_MSG_WORLD_REPLY             (STG_MSG_MODEL | 11)
 
 #define STG_MSG_MODEL_PROPERTY          (STG_MSG_MODEL | 1)
 #define STG_MSG_MODEL_SAVE              (STG_MSG_MODEL | 2)
 #define STG_MSG_MODEL_LOAD              (STG_MSG_MODEL | 3)
+#define STG_MSG_MODEL_REQUEST           (STG_MSG_MODEL | 4)
+#define STG_MSG_MODEL_REPLY             (STG_MSG_MODEL | 5)
     
 #define STG_MSG_CLIENT_WORLDCREATEREPLY (STG_MSG_CLIENT | 1)
 #define STG_MSG_CLIENT_MODELCREATEREPLY (STG_MSG_CLIENT | 2)
@@ -614,6 +619,7 @@ int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count
 
 #define STG_DEFAULT_WORLDFILE "default.world"
 
+
 typedef struct
 {
   char* host;
@@ -627,6 +633,10 @@ typedef struct
   GHashTable* worlds_id_server; // contains stg_world_ts indexed by server-side id
   GHashTable* worlds_id; // contains stg_world_ts indexed by client-side id
   GHashTable* worlds_name; // the worlds indexed by namex
+
+  //pthread_mutex_t reply_mutex;
+  //pthread_t* thread;
+
 } stg_client_t;
 
 // Stage Client functions. Most client programs will call all of these
@@ -650,6 +660,10 @@ void stg_client_push( stg_client_t* client );
 
 // read a message from the server
 stg_msg_t* stg_client_read( stg_client_t* cli );
+
+// read messages from the server, calling stg_client_handle_message()
+// for each, until we get one of the indicated type.
+stg_msg_t* stg_client_read_until( stg_client_t* cli, stg_msg_type_t mtype );
 
 void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg );
 
@@ -717,10 +731,14 @@ void stg_model_attach_prop( stg_model_t* mod, stg_property_t* prop );
 void stg_model_prop_with_data( stg_model_t* mod, 
 			      stg_id_t type, void* data, size_t len );
 stg_property_t* stg_model_get_prop( stg_model_t* mod, stg_id_t propid );
+stg_property_t* stg_model_get_prop_remote( stg_model_t* mod, stg_id_t propid );
+
 
 int stg_model_subscribe( stg_model_t* mod, int prop, double interval );
 int stg_model_unsubscribe( stg_model_t* mod, int prop );
 
+int stg_model_request_reply( stg_model_t* mod, void* req, size_t req_len,
+			     void** rep, size_t* rep_len );
 
 void stg_world_push( stg_world_t* model );
 void stg_model_push( stg_model_t* model );

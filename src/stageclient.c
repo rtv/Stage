@@ -17,6 +17,7 @@ void stg_world_destroy_cb( gpointer key, gpointer value, gpointer user );
 void stg_catch_pipe( int signo );
 
 
+
 // types used only in this file
 typedef struct
 {
@@ -41,8 +42,16 @@ stg_client_t* stg_client_create( void )
   
   // init the pollfd
   memset( &client->pfd, 0, sizeof(client->pfd) );
-  
+
+  //pthread_mutex_int( &client->reply_mutex, NULL );
+
+  //pthread_create( 
+
   return client;
+}
+
+void stg_client_thread( void )
+{
 }
 
 void stg_client_destroy( stg_client_t* cli )
@@ -399,6 +408,85 @@ stg_property_t* stg_model_get_prop( stg_model_t* mod, stg_id_t propid )
 }
   
 
+
+
+
+// send the request [req] of length [req_len] bytes. Wait for a reply
+int stg_model_request_reply( stg_model_t* mod, 
+			     void* req, size_t req_len,
+			     void** rep, size_t* rep_len )
+{
+  stg_target_t tgt;
+  tgt.world = mod->world->id_server;
+  tgt.model = mod->id_server;
+  tgt.prop = STG_PROP_LASERCONFIG;
+  
+
+  PRINT_DEBUG1( "sending a %d byte request\n", req_len );
+  
+  stg_client_write_msg( mod->world->client, STG_MSG_MODEL_REQUEST,
+			//		req, req_len );
+			&tgt, sizeof(tgt) );
+  
+  PRINT_DEBUG( "waiting for reply" );
+  
+  stg_msg_t* reply = stg_client_read_until( mod->world->client, STG_MSG_MODEL_REPLY );
+  
+  printf( "received a %d byte reply\n", reply->payload_len );
+  
+  return 0; // OK
+}
+
+stg_property_t* stg_model_get_prop_remote( stg_model_t* mod, stg_id_t propid )
+{
+  stg_target_t tgt;
+  tgt.world = mod->world->id_server;
+  tgt.model = mod->id_server;
+  tgt.prop = propid;
+  
+  PRINT_DEBUG3( "requesting prop %d:%d:%d\n", tgt.world, tgt.model, tgt.prop );
+  
+  stg_client_write_msg( mod->world->client, 
+			STG_MSG_MODEL_REQUEST,
+			&tgt, sizeof(tgt) );
+  
+  PRINT_DEBUG( "waiting for reply" );
+  
+  stg_msg_t* reply = stg_client_read_until( mod->world->client, STG_MSG_MODEL_REPLY );
+  
+  printf( "received a %d byte reply\n", reply->payload_len );
+  
+  stg_property_t* prop = prop_create( propid, &reply->payload, reply->payload_len );
+  
+  return prop; 
+}
+
+stg_msg_t* stg_client_read_until( stg_client_t* cli, stg_msg_type_t mtype )
+{
+  stg_msg_t* msg = NULL;
+  
+  while(1)
+    {
+      putchar( '*' ); fflush(stdout);
+      
+      if( msg )
+	stg_msg_destroy( msg );
+      
+      if( (msg = stg_client_read( cli )) )
+	{
+	  stg_client_handle_message( cli, msg );
+	  
+	  if( msg->type == mtype ) 
+	    break;
+	}
+      else
+	usleep( 1000 ); // wait for a short time before polling again
+    }
+  
+  return msg;
+}
+
+
 stg_msg_t* stg_client_read( stg_client_t* cli )
 {
   //PRINT_DEBUG( "Checking for data on Stage connection" );
@@ -409,7 +497,7 @@ stg_msg_t* stg_client_read( stg_client_t* cli )
       return NULL; 
     } 
   
-  if( poll( &cli->pfd,1,1 ) && (cli->pfd.revents & POLLIN) )
+  if( poll( &cli->pfd,1,0 ) && (cli->pfd.revents & POLLIN) )
     {
       //PRINT_DEBUG( "pollin on Stage connection" );
       
@@ -466,14 +554,10 @@ stg_id_t stg_client_model_new(  stg_client_t* cli,
   stg_client_write_msg( cli, STG_MSG_WORLD_MODELCREATE, &mod, sizeof(mod) );
   
   // read a reply - it contains the model's id
-  stg_msg_t* reply = NULL;  
+  stg_msg_t* reply = stg_client_read_until( cli,  STG_MSG_CLIENT_MODELCREATEREPLY );
   
-  while( (reply = stg_client_read( cli )) == NULL )
-    {
-      putchar( '.' ); fflush(stdout);
-    }
+  puts( "!" );
   
-  assert( reply->type == STG_MSG_CLIENT_MODELCREATEREPLY );
   assert( reply->payload_len == sizeof( stg_id_t ) );
   
   stg_id_t mid = *((stg_id_t*)reply->payload);
@@ -527,16 +611,10 @@ stg_id_t stg_client_world_new(  stg_client_t* cli, char* token,
   
   // read a reply - it contains the world's id
   
-  stg_msg_t* reply = NULL;  
+  stg_msg_t* reply = stg_client_read_until( cli,  STG_MSG_CLIENT_WORLDCREATEREPLY );
   
-  while( (reply = stg_client_read( cli )) == NULL )
-    //&& 
-    // reply->type != STG_MSG_CLIENT_WORLDCREATEREPLY )
-    {
-      putchar( '.' ); fflush(stdout);
-    }
-  
-  assert( reply->type == STG_MSG_CLIENT_WORLDCREATEREPLY );
+  puts( "!" );
+
   assert( reply->payload_len == sizeof( stg_id_t ) );
   
   stg_id_t wid = *((stg_id_t*)reply->payload);
@@ -727,6 +805,9 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
   //PRINT_DEBUG2( "handling message type %d len %d", 
   //	msg->type,(int)msg->len );
   
+  if( msg == NULL ) 
+    return;
+  
   switch( msg->type )
     {
     case STG_MSG_WORLD_SAVE:
@@ -736,6 +817,22 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 
     case STG_MSG_CLIENT_CYCLEEND:
       puts( "** CYCLE END **" );
+      break;
+
+    case STG_MSG_CLIENT_WORLDCREATEREPLY:
+      puts( "msg: WORLDCREATEREPLY" );
+      break;
+
+    case STG_MSG_CLIENT_MODELCREATEREPLY:
+      puts( "msg: MODELCREATEREPLY" );
+      break;
+
+    case STG_MSG_MODEL_REQUEST:
+      puts( "msg: MODEL REQUEST" );
+      break;
+
+    case STG_MSG_MODEL_REPLY:
+      puts( "msg: MODEL REPLY" );
       break;
 
     case STG_MSG_CLIENT_PROPERTY: 
@@ -756,9 +853,16 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 	cli->stagetime = prop->timestamp;
 	printf( "[%.3f] ", cli->stagetime );
 	
+	// don't bother stashing a time
+	if( prop->prop == STG_PROP_TIME )
+	  {
+	    //puts( "TIME ONLY" );
+	    break;
+	  }
+
 	// stash the data in the client-side model tree
-	PRINT_DEBUG2( "looking up client-side model for %d:%d",
-		      prop->world, prop->model );
+	//PRINT_DEBUG2( "looking up client-side model for %d:%d",
+	//      prop->world, prop->model );
 	
 	stg_model_t* mod = stg_client_get_model_serverside( cli, prop->world, prop->model );
 	
@@ -769,9 +873,9 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 	  }
 	else
 	  { 
-	    PRINT_DEBUG4( "stashing prop %d(%s) bytes %d in model \"%s\"",
-			  prop->prop, stg_property_string(prop->prop),
-			  (int)prop->datalen, mod->token->token );
+	    //PRINT_DEBUG4( "stashing prop %d(%s) bytes %d in model \"%s\"",
+	    //	  prop->prop, stg_property_string(prop->prop),
+	    //	  (int)prop->datalen, mod->token->token );
 
 	    stg_model_prop_with_data( mod, prop->prop, prop->data, prop->datalen );
 	  }	    
@@ -819,12 +923,14 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 	    break;
 	    
 	  case STG_PROP_LASERDATA:
-	    {
-	      stg_laser_sample_t* samples = (stg_laser_sample_t*)prop->data;
-	      int ls_count = prop->datalen / sizeof(stg_laser_sample_t);
-	      
-	      printf( "received %d laser samples\n", ls_count );
-	    }
+	    break;
+	    /* 	    { */
+	    /* 	      stg */
+	    /* 	      stg_laser_sample_t* samples = (stg_laser_sample_t*)prop->data; */
+	    /* 	      int ls_count = prop->datalen / sizeof(stg_laser_sample_t); */
+	    
+	    /* 	      printf( "received %d laser samples\n", ls_count ); */
+	    /* 	    } */
 	    
 	  case STG_PROP_TIME:
 	    cli->stagetime = prop->timestamp;

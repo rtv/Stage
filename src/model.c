@@ -1,6 +1,6 @@
 
 
-#define DEBUG
+//#define DEBUG
 
 #include <assert.h>
 #include <math.h>
@@ -306,17 +306,23 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
       *len = mod->ranger_data->len * sizeof(stg_ranger_sample_t);
       break;
     case STG_PROP_LASERDATA:
-      if( mod->laser_data )
-	{
-	  *data = mod->laser_data->data;
-	  *len = mod->laser_data->len * sizeof(stg_laser_sample_t);
-	}
-      else // we haven't got any laser data
-	{
-	  *data = NULL;
-	  *len = 0;
-	}
+      {
+	// laser data packet starts with its config
+	*len = sizeof(stg_laser_config_t);
+	*data = calloc( *len, 1 );
+	memcpy( *data, &mod->laser_config,*len);
+
+	// and continues with the data
+	if( mod->laser_data )
+	  {
+	    size_t ranges_len = mod->laser_data->len * sizeof(stg_laser_sample_t);
+	    *len += ranges_len;
+	    *data = realloc( *data, *len );
+	    memcpy( *data + sizeof(stg_laser_config_t), mod->laser_data->data, ranges_len );
+	  }
+      }
       break;
+
     case STG_PROP_LASERCONFIG:
       *data = &mod->laser_config;
       *len = sizeof(stg_laser_config_t);
@@ -507,6 +513,43 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
 		      (int)mp->datalen );
 	
 	model_set_prop( model, mp->prop, mp->data, mp->datalen ); 
+      }
+      break;
+
+    case STG_MSG_MODEL_REQUEST:
+      {
+	PRINT_WARN( "RECEIVED A REQUEST" );
+
+	stg_target_t* tgt = (stg_target_t*)msg->payload;
+
+	void* data;
+	size_t len;
+	
+	if( model_get_prop( model, tgt->prop, &data, &len ) )      
+	  PRINT_WARN2( "failed to service request for property %d(%s)",
+		       tgt->prop, stg_property_string(tgt->prop) );
+	else
+	  {
+	    size_t mplen = sizeof(stg_prop_t) + len;
+	    stg_prop_t* mp = calloc( mplen,1  );
+	    
+	    mp->timestamp = model->world->sim_time;
+	    mp->world = model->world->id;
+	    mp->model = model->id;
+	    mp->prop = tgt->prop;
+	    mp->datalen = len;
+	    memcpy( mp->data, data, len );
+	    
+	    //printf( "timestamping prop %d(%s) at %.3f seconds\n",
+	    //      mp->prop, stg_property_string(mp->prop), mp->timestamp );
+	    
+	    PRINT_WARN( "SENDING A REPLY" );
+
+	    stg_msg_t* reply = stg_msg_create( STG_MSG_MODEL_REPLY, mp, mplen );
+	    stg_fd_msg_write( fd, reply );
+	    
+	    free( mp );
+	  }
       }
       break;
 
