@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/descartesdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -101,34 +101,6 @@ void CDescartesDevice::Update( double sim_time )
 
       if( Subscribed() > 0 )
 	{
-	  void *client;
-	  player_descartes_config_t cfg;
-	  
-	  // Get config
-	  int res = GetConfig( &client, &cfg, sizeof(cfg));
-	  
-	  switch( res )
-	    {   
-	    case -1: // error
-	      PRINT_ERR( "get config failed" );
-	      PutReply(client, PLAYER_MSGTYPE_RESP_NACK ); // not happy
-	      break;
-	      
-	    case 0:
-	      // nothing available - nothing to do
-	      break;
-	      
-	    case sizeof(cfg): // a good-sized config message!
-	      ParseConfig(&cfg);    // find out what to do    
-	      PutReply(client, PLAYER_MSGTYPE_RESP_ACK ); // say thankyou
-	      break;
-	    
-	    default:
-	      PRINT_ERR( "wierd result" );
-	      PutReply(client, PLAYER_MSGTYPE_RESP_NACK ); // not happy
-	      break;
-	    }
-
 	  Servo(); // set speed and turnrate to achieve requested
 	  // speed and heading
 	  
@@ -150,6 +122,39 @@ void CDescartesDevice::Update( double sim_time )
   GetGlobalPose( x,y,th );
   ReMap( x, y, th );
 }
+///////////////////////////////////////////////////////////////////////////
+// Update the position of the robot base
+//
+void CDescartesDevice::Sync( void )
+{
+  void *client;
+  player_descartes_config_t cfg;
+  
+  // Get config
+  int res = GetConfig( &client, &cfg, sizeof(cfg));
+  
+  switch( res )
+    {   
+    case -1: // error
+      PRINT_ERR( "get config failed" );
+      PutReply(client, PLAYER_MSGTYPE_RESP_NACK ); // not happy
+      break;
+      
+    case 0:
+      // nothing available - nothing to do
+      break;
+      
+    case sizeof(cfg): // a good-sized config message!
+      ParseConfig(&cfg);    // find out what to do    
+      PutReply(client, PLAYER_MSGTYPE_RESP_ACK ); // say thankyou
+      break;
+      
+    default:
+      PRINT_ERR( "wierd result" );
+      PutReply(client, PLAYER_MSGTYPE_RESP_NACK ); // not happy
+      break;
+    }
+}  
 
 // we override positiondevice's in collision method to detect which bumper
 // was hit
@@ -278,8 +283,8 @@ void CDescartesDevice::Servo()
   // turn quickly on the spot to approx the right heading
   if( fabs(heading_error) > M_PI/10.0 )
     {
-      //turnrate = 0.3 * M_PI;
-      turnrate = 1.0 * M_PI;
+      turnrate = 0.5 * M_PI;
+      //turnrate = 1.0 * M_PI;
        // turn right if the goal heading is that way
       if( heading_error < 0 ) turnrate *= -1.0;
     }

@@ -9,7 +9,7 @@
 //  CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/idarturretdevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -30,8 +30,11 @@ public:
  
   virtual void Sync( void ); 
   virtual void Update( double sim_time );  
+  virtual void RenderMessages( player_idarturret_reply_t* rep );
 
 #ifdef INCLUDE_RTK2
+
+  rtk_fig_t* data_fig;
   // Initialise the rtk gui
   protected: virtual void RtkStartup();
 

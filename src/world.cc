@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.112 2002-07-23 16:07:57 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.113 2002-07-29 15:59:24 rtv Exp $
  */
 
 #undef DEBUG
@@ -662,9 +662,6 @@ void CWorld::Output()
       freq = (double)updates / interval;
       updates = 0;    
     }
-
-  double ratio = 0.0;
-  double avg_ratio = 0.0;
   
   if( m_console_output )
     ConsoleOutput( freq, bytes_in, bytes_out, bandw );
@@ -1053,10 +1050,8 @@ void CWorld::RtkUpdate()
       rtk_canvas_render(canvas, FALSE, NULL);
   }
   
-  struct timeval tv;
-
+  //struct timeval tv;
   //gettimeofday( &tv, NULL );
-
   //double start = tv.tv_sec + tv.tv_usec / 1000000.0;
 
   // allow gtk to do some work

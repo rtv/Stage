@@ -21,7 +21,7 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/irdevice.cc,v $
 * $Author: rtv $
-* $Revision: 1.9 $
+* $Revision: 1.10 $
 ******************************************************************************/
 
 
@@ -43,7 +43,9 @@
 // control display of player index in device body
 //#define RENDER_INDEX
 
-#define IDAR_FOV        M_PI/7.0
+//#define SHOW_MSGS
+
+#define IDAR_FOV        M_PI/4.0
 #define IDAR_SCANLINES        5
 #define IDAR_MAX_RANGE       1.0
 
@@ -97,6 +99,7 @@ CIDARDevice::CIDARDevice(CWorld *world, CEntity *parent )
   m_angle_per_scanline = m_angle_per_sensor / m_num_scanlines;
 }
 
+
 void CIDARDevice::Sync( void )
 {
   void *client;
@@ -140,6 +143,13 @@ void CIDARDevice::Sync( void )
 	  // don't clear the current mesg
 	  break;
 	  
+	  // two in one for efficiency!
+	case IDAR_TRANSMIT_RECEIVE:
+	  TransmitMessage( &(cfg.tx) );
+	  PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &recv, sizeof(recv));
+	  ClearMessage(); // wipe the buffer
+	  break;
+
 	default:
 	  printf( "STAGE warning: unknown idar config instruction %d\n",
 		  cfg.instruction );
@@ -170,7 +180,7 @@ void CIDARDevice::Update( double sim_time )
     {
 #ifdef INCLUDE_RTK2
       // unrender the message 
-      rtk_fig_clear(this->rays_fig);
+      //rtk_fig_clear(this->rays_fig);
 #endif     
       return; 
     }
@@ -262,7 +272,7 @@ void CIDARDevice::TransmitMessage( idartx_t* transmit )
 	      //     ent->m_player.index );
 
 #ifdef INCLUDE_RTK2
-	      rtk_fig_arrow(this->rays_fig, 0,0, scanline_bearing-oth, range, 0.03);
+	      //rtk_fig_arrow(this->rays_fig, 0,0, scanline_bearing-oth, range, 0.03);
 #endif     
 	      uint8_t intensity;
 		    
@@ -297,7 +307,7 @@ void CIDARDevice::TransmitMessage( idartx_t* transmit )
 		    ReceiveMessage( (CEntity*)this, 
 				    transmit->mesg,
 				    transmit->len,
-				    intensity,
+				    intensity, 
 				    true );
 		  break;
 			
@@ -310,16 +320,9 @@ void CIDARDevice::TransmitMessage( idartx_t* transmit )
 	    }
 	}
 #ifdef INCLUDE_RTK2
-      rtk_fig_arrow(this->rays_fig, 0,0, scanline_bearing-oth, range, 0.03);
-#endif     // !!
-      // record the range this ray reached in mm
-      //m_data.rx[s].ranges[scanline] = (uint16_t)(range*1000.0);
-      //printf( "\n range: %.2f %d\n", 
-      //      range, (int)(range*1000.0) );
-	    
+      //rtk_fig_arrow(this->rays_fig, 0,0, scanline_bearing-oth, range, 0.03);
+#endif    
     }
-      
-  //  }
 }
 
 
@@ -332,21 +335,10 @@ bool CIDARDevice::ReceiveMessage( CEntity* sender,
 
   //printf( "mesg recv - sensor: %d  len: %d  intensity: %d  refl: %d\n",
   //  sensor, len, intensity, reflection );
-  
-  // dump out if noone is subscribed
+
   //if(!Subscribed())
   //return false;
-
-
-  //PRINT_DEBUG( "SUBSCRIBED" );
-
-  // get the current accumulated message buffer from the published location
-  // it may have been cleared by a reading process since we last looked at it
-  //assert( GetData( &m_data, m_data_len );
   
-  //printf( "new int: %d len: %d \t\t current: int: %d len: %d\n",
-  //  intensity, len, recv.intensity, recv.len );
-
   // we only accept this message if it's the most intense thing we've seen
   if( intensity > recv.intensity )
     {
@@ -364,8 +356,7 @@ bool CIDARDevice::ReceiveMessage( CEntity* sender,
       recv.timestamp_usec = m_world->m_sim_timeval.tv_usec;
 
 #ifdef INCLUDE_RTK2
-      // render the message we received
-      rtk_fig_clear(this->data_fig);
+#ifdef SHOW_MSGS
       
       // room for the message in hex text
       char message[ 3 * IDARBUFLEN + 6];
@@ -380,6 +371,7 @@ bool CIDARDevice::ReceiveMessage( CEntity* sender,
   
       
       rtk_fig_text(this->data_fig, 0,0,0, message);
+#endif
 #endif
       
       return true;
@@ -522,7 +514,7 @@ void CIDARDevice::RtkStartup()
   // render our index number
   char buf[16];
   sprintf( buf,"%d", m_player.index );
-  rtk_fig_text(this->fig, 0, 0, 0, buf );
+  rtk_fig_text(this->fig, 2.0 * size_x, 0, 0, buf );
 #endif
 
 }

@@ -13,7 +13,7 @@
 //  CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/irdevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -64,8 +64,7 @@ public:
   
   virtual bool ReceiveMessage( CEntity* sender,
 			       unsigned char* mesg, int len, 
-			       uint8_t intensity,
-			       bool reflection );
+			       uint8_t intensity, bool reflection );
   
   virtual uint8_t LookupIntensity( uint8_t transmit_intensity, 
 				   double transmit_range, 

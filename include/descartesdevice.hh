@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/descartesdevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -39,6 +39,9 @@ class CDescartesDevice : public CPositionDevice
  //
  public: void Servo( void );
  
+
+  virtual void Sync( void );
+  
 // Update the device
  //
  public: virtual void Update( double sim_time );

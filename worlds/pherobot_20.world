@@ -1,0 +1,50 @@
+
+# Desc: world defines a descartes base with 8 idars	
+# CVS: $Id: pherobot_20.world,v 1.1 2002-07-29 15:59:24 rtv Exp $
+
+
+
+environment
+(
+  #file "simple.pnm.gz"
+  #file "cave.pnm.gz"
+  file "hospital_section.pnm.gz"
+  #file "blank.pnm"
+  scale 0.02
+) 
+
+gui
+(
+  size [1027.000 847.000]
+  origin [4.127 3.558]
+  scale 0.009
+  grid [0.2 1]
+  showgrid 1
+)
+
+
+define pherobot descartes
+(
+  idarturret()
+)
+
+pherobot( pose [ 3.453 4.910 0.000 ] port 6665 )
+pherobot( pose [ 3.313 4.753 0.000 ] port 6666 )
+pherobot( pose [ 4.345 4.749 0.000 ] port 6667 )
+pherobot( pose [ 4.413 5.530 0.000 ] port 6668 )
+pherobot( pose [ 4.228 4.918 0.000 ] port 6669 )
+pherobot( pose [ 3.354 5.483 0.000 ] port 6670 )
+pherobot( pose [ 3.534 4.645 0.000 ] port 6671 )
+pherobot( pose [ 4.550 5.086 0.000 ] port 6672 )
+pherobot( pose [ 4.295 5.156 0.000 ] port 6673 )
+pherobot( pose [ 4.165 4.670 0.000 ] port 6674 )
+pherobot( pose [ 4.461 5.254 0.000 ] port 6675 )
+pherobot( pose [ 3.593 5.115 0.000 ] port 6676 )
+pherobot( pose [ 4.189 5.358 0.000 ] port 6677 )
+pherobot( pose [ 4.515 5.414 0.000 ] port 6678 )
+pherobot( pose [ 4.141 5.524 0.000 ] port 6679 )
+pherobot( pose [ 3.616 4.832 0.000 ] port 6680 )
+pherobot( pose [ 3.273 5.070 0.000 ] port 6681 )
+pherobot( pose [ 4.485 4.934 0.000 ] port 6682 )
+pherobot( pose [ 3.410 5.214 0.000 ] port 6683 )
+pherobot( pose [ 3.571 5.456 0.000 ] port 6684 )
