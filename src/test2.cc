@@ -322,8 +322,9 @@ int main( int argc, char* argv[] )
   // Iterate through sections and create client-side models
   for (int section = 1; section < worldfile->GetEntityCount(); section++)
     {
-      const char *namestr = worldfile->GetEntityType(section);
-      stg_token_t* token = stg_token_create( (char*)namestr, STG_T_NUM, 99 );
+      //const char *namestr = worldfile->GetEntityType(section);
+      char *namestr = worldfile->ReadString(section, "name", "<anon>" );
+      stg_token_t* token = stg_token_create( namestr, STG_T_NUM, 99 );
       sc_model_t* mod = sc_model_create( world, NULL, token );
       mod->section = section;
       sc_world_addmodel( world, mod );
@@ -414,7 +415,7 @@ int main( int argc, char* argv[] )
   sc_push( client );
   puts( "uploading done" );
   
-  sc_model_t* mod = sc_get_model( client, "Player world", "sonar" );
+  sc_model_t* mod = sc_get_model( client, "Player world", "gareth" );
   if( mod )
     {
       sc_model_subscribe( client, mod, STG_PROP_RANGERDATA, 0.1 );
@@ -424,7 +425,7 @@ int main( int argc, char* argv[] )
   else
     PRINT_ERR( "no such model" );
 
-  mod = sc_get_model( client, "Player world", "pioneer" );
+  mod = sc_get_model( client, "Player world", "budgie" );
   if( mod )
     {
       sc_model_subscribe( client, mod, STG_PROP_RANGERDATA, 0.1 );
@@ -501,136 +502,7 @@ int main( int argc, char* argv[] )
 /*   *\/ */
 
 
-/*   // configure and subscribe in a separate loop so the incoming data doesn't confuse  */
-/*   // the stg_X_new calls above */
-/*   for( w=0; w<num_worlds; w++ ) */
-/*     { */
-/*       // configure the zeroth model as a wall */
-/*       stg_property_set( client, world_ids[w], model_ids[w][0], */
-/* 			STG_PROP_RECTS, rects, rect_count * sizeof(stg_rotrect_t) ); */
-      
-/*       stg_bool_t boundary = 1;       */
-/*       stg_property_set( client, world_ids[w], model_ids[w][0],  */
-/* 			STG_PROP_BOUNDARY, &boundary, sizeof(boundary) ); */
 
-/*       stg_color_t col = 0; */
-/*       stg_property_set( client, world_ids[w], model_ids[w][0],  */
-/* 			STG_PROP_COLOR, &col, sizeof(col) ); */
-
-/*       stg_size_t size; */
-/*       size.x = 20.0; */
-/*       size.y = 20.0; */
-      
-/*       stg_property_set( client, world_ids[w], model_ids[w][0],  */
-/* 			STG_PROP_SIZE, &size, sizeof(size) ); */
-      
-/*       stg_pose_t pose; */
-/*       pose.x = size.x / 2.0; */
-/*       pose.y = size.y / 2.0; */
-/*       pose.a = 0.0; */
-
-/*       stg_property_set( client, world_ids[w], model_ids[w][0],  */
-/* 			STG_PROP_POSE, &pose, sizeof(pose) ); */
-
-
-/*       int movemask = 0; */
-/*       stg_property_set( client, world_ids[w], model_ids[w][0],  */
-/* 			STG_PROP_MOVEMASK, &movemask, sizeof(movemask) ); */
-      
-/*       //stg_pose_t origin; // shift the origin to the bottom left corner */
-/*       //origin.x = size.x / 2.0; */
-/*       //origin.y = size.y / 2.0; */
-/*       //origin.a = 0.0; */
-/*       //stg_property_set( client, world_ids[w], model_ids[w][0],  */
-/*       //		STG_PROP_ORIGIN, &origin, sizeof(origin) ); */
-
-      
-/*       // configure the 1th model as a sub */
-/*       //stg_property_set( client, world_ids[w], model_ids[w][1], */
-/*       //		STG_PROP_RECTS, sub_rects,  */
-/*       //	sub_rect_count * sizeof(stg_rotrect_t) ); */
-      
-/*       col = 0xFF0000; */
-/*       stg_property_set( client, world_ids[w], model_ids[w][1],  */
-/* 			STG_PROP_COLOR, &col, sizeof(col) ); */
-
-/*       stg_pose_t origin; */
-/*       origin.x = -0.3; */
-/*       origin.y = 0.15; */
-/*       origin.a = 1.0; */
-
-/*       stg_property_set( client, world_ids[w], model_ids[w][1],  */
-/* 			STG_PROP_ORIGIN, &origin, sizeof(origin) ); */
-
-/*       size.x = 1.0; */
-/*       size.y = 0.5; */
-/*       stg_property_set( client, world_ids[w], model_ids[w][1],  */
-/* 			STG_PROP_SIZE, &size, sizeof(size) ); */
-      
-/*       int t; */
-/*       for( t=2; t<num_models; t++ ) */
-/* 	{ */
-/* 	  stg_id_t* parent = &model_ids[w][1]; */
-	  
-/* 	  stg_property_set( client, world_ids[w], model_ids[w][t],  */
-/* 			    STG_PROP_PARENT, parent, sizeof(stg_id_t) ); */
-
-/* 	  stg_velocity_t vel; */
-/* 	  vel.x = 0.0; */
-/* 	  vel.y = 0.0; */
-/* 	  vel.a = drand48() * 6.28 - 3.14; */
-	  
-/* 	  stg_property_set( client, world_ids[w], model_ids[w][t],  */
-/* 	  	    STG_PROP_VELOCITY, &vel, sizeof(vel) ); */
-	  
-/* 	  stg_pose_t pose; */
-/* 	  pose.x = drand48() * 5.0; */
-/* 	  pose.y = drand48() * 5.0; */
-/* 	  pose.a = drand48() * M_PI; */
-	  
-/* 	  stg_property_set( client, world_ids[w], model_ids[w][t],  */
-/* 			    STG_PROP_POSE, &pose, sizeof(pose) ); */
-	  
-/* 	  stg_size_t size; */
-/* 	  //size.x = 0.1 + drand48() / 2.0; */
-/* 	  //size.y = 0.1 + drand48() / 2.0; */
-	  
-/* 	  //stg_property_set( client, world_ids[w], model_ids[w][t],  */
-/* 	  //	    STG_PROP_SIZE, &size, sizeof(size) ); */
-	  
-/* 	  stg_color_t col = random(); */
-/* 	  stg_property_set( client, world_ids[w], model_ids[w][t],  */
-/* 			    STG_PROP_COLOR, &col, sizeof(col) ); */
-	  	  
-
-/* 	  stg_bool_t nose = TRUE; */
-/* 	  stg_property_set( client, world_ids[w], model_ids[w][t],  */
-/* 			    STG_PROP_NOSE, &nose, sizeof(nose) ); */
-	  
-/* 	  stg_property_subscribe( client, world_ids[w], model_ids[w][t],  */
-/* 				  STG_PROP_RANGERDATA, 0.1 ); */
-
-/* 	}  */
-/*     } */
-  
-/*   free( rects ); */
-/*   rects = NULL; */
-/*   rect_count = 0; */
-  
-/*   // this will bring us a timestamp as frequently as possible */
-/*   stg_property_subscribe( client, world_ids[0], model_ids[0][0],  */
-/* 			  STG_PROP_TIME, 0.0 ); */
-
-
-/*   stg_property_subscribe( client, world_ids[0], model_ids[0][1],  */
-/* 			  STG_PROP_LASERDATA, 0.1 ); */
-  
-
-  
-/*  //stg_property_subscribe( client, world_ids[0], model_ids[0][0],  */
-/*   //		  STG_PROP_POSE, 0.1 ); */
-
-  
   while( !stg_quit_test() )
     {
       //putchar( '.' );
