@@ -24,7 +24,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: stg_driver.cc,v 1.27 2005-02-13 07:37:43 rtv Exp $
+ * CVS: $Id: stg_driver.cc,v 1.28 2005-02-17 19:12:03 rtv Exp $
  */
 
 // DOCUMENTATION ---------------------------------------------------------------------
@@ -195,66 +195,72 @@ typedef struct
 class StgDriver : public Driver
 {
   // Constructor; need that
-  public: StgDriver(ConfigFile* cf, int section);
+public: StgDriver(ConfigFile* cf, int section);
   
   // Destructor
-  public: ~StgDriver(void);
-
+public: ~StgDriver(void);
+  
   // Must implement the following methods.
-  public: int Setup();
-  public: int Shutdown();
-
-
+public: int Setup();
+public: int Shutdown();
+  
+  
   // override the Driver method to grab configs inside the server thread
 public: virtual int PutConfig(player_device_id_t id, void *client, 
 			      void* src, size_t len,
 			      struct timeval* timestamp);
   
   // Main function for device thread.
-  private: virtual void Main();
-  private: virtual void Update();
-
-  //private: void CheckConfig();
-  private: void CheckCommands();
-  private: void RefreshData();
-
-  // used as a callback when a model has new data
-  public: static void RefreshDataCallback( void* user );
-
-  protected: void RefreshDataDevice( device_record_t* device );
-
-  // one method for each type of command we receive
-  private: void HandleCommandPosition( device_record_t* device, void* buffer, size_t len );
-  private: void HandleCommandSimulation( device_record_t* device, void* buffer, size_t len );
+private: virtual void Main();
+private: virtual void Update();
   
-  // one method for each type of data we export. 
-  private: void RefreshDataPosition( device_record_t* device );
-  private: void RefreshDataLaser( device_record_t* device );  
-  private: void RefreshDataBlobfinder( device_record_t* device );
-  private: void RefreshDataSonar( device_record_t* device );
-  private: void RefreshDataFiducial( device_record_t* device );
-  private: void RefreshDataSimulation( device_record_t* device );
-  private: void RefreshDataEnergy( device_record_t* device );
-
-  // one method for each type of config we accept
-  private: void HandleConfigSimulation( player_device_id_t id, void* client, 
-					void* buffer, size_t len);
-
-  private: void HandleConfigBlobfinder( device_record_t* device, void* client, 
-					void* buffer, size_t len);
-  private: void HandleConfigPosition( device_record_t* device, void* client, 
-				      void* buffer, size_t len );
-  private: void HandleConfigLaser( device_record_t* device, void* client, 
-				   void* buffer, size_t len );
-  private: void HandleConfigSonar( device_record_t* device, void* client, 
-				   void* buffer, size_t len );
-  private: void HandleConfigFiducial( device_record_t* device, void* client, 
-				      void* buffer, size_t len );
-  private: void HandleConfigEnergy( device_record_t* device, void* client, 
-				      void* buffer, size_t len );
-
-  private: void InitSimulation( ConfigFile* cf, int section );
-
+  //private: void CheckConfig();
+private: void CheckCommands();
+private: void RefreshData();
+  
+  // used as a callback when a model has new data
+public: static void RefreshDataCallback( void* user );
+  
+protected: void RefreshDataDevice( device_record_t* device );
+  
+private:  
+  // SIMULATION INTERFACE
+  void InitSimulation( ConfigFile* cf, int section );
+  void HandleCommandSimulation( device_record_t* device, void* buffer, size_t len );
+  
+  // POSITION INTERFACE
+  void HandleCommandPosition( device_record_t* device, void* buffer, size_t len );
+  void RefreshDataPosition( device_record_t* device );
+  void HandleConfigPosition( device_record_t* device, void* client, void* buffer, size_t len );
+  
+  // SONAR INTERFACE
+  void RefreshDataSonar( device_record_t* device );
+  void HandleConfigSonar( device_record_t* device, void* client, void* buffer, size_t len );
+  
+  // ENERGY INTERFACE
+  void RefreshDataEnergy( device_record_t* device );
+  void HandleConfigEnergy( device_record_t* device, void* client, void* buffer, size_t len );
+  
+  // SIMULATION INTERFACE
+  void RefreshDataSimulation( device_record_t* device );
+  void HandleConfigSimulation( player_device_id_t id, void* client, void* buffer, size_t len);
+  
+  // BLOBFINDER INTERFACE
+  void RefreshDataBlobfinder( device_record_t* device );
+  void HandleConfigBlobfinder( device_record_t* device, void* client, void* buffer, size_t len);
+  
+  // LASER INTERFACE
+  void HandleConfigLaser( device_record_t* device, void* client, void* buffer, size_t len );
+  void RefreshDataLaser( device_record_t* device );  
+  
+  // FIDUCIAL INTERFACE
+  void RefreshDataFiducial( device_record_t* device );
+  void HandleConfigFiducial( device_record_t* device, void* client, void* buffer, size_t len );
+    
+  // MAP INTERFACE - TODO
+  void RefreshDataMap( device_record_t* device );
+  void HandleConfigMap( device_record_t* device, void* client, void* buffer, size_t len);
+  
   /// an array of pointers to device_record_t structs
   private: GPtrArray* devices;
 
@@ -437,6 +443,12 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
 	case PLAYER_BLOBFINDER_CODE:
 	  mod_type = STG_MODEL_BLOB;
 	  device->data_len = sizeof(player_blobfinder_data_t);
+	  device->cmd_len = 0;
+	  break;
+	  
+	case PLAYER_MAP_CODE:
+	  mod_type = STG_MODEL_BASIC; 
+	  device->data_len = 0; // no cmds or data for maps
 	  device->cmd_len = 0;
 	  break;
 	  
@@ -753,6 +765,10 @@ int StgDriver::PutConfig(player_device_id_t id, void *client,
 	  case PLAYER_ENERGY_CODE:
 	    this->HandleConfigEnergy( drec, client, src, len  );
 	    break;
+
+	  case PLAYER_MAP_CODE:
+	    this->HandleConfigMap( drec, client, src, len  );
+	    break;
 	    
 	  default:
 	    printf( "Stage driver error: unknown player device code (%d)\n",
@@ -837,6 +853,16 @@ void StgDriver::HandleConfigBlobfinder( device_record_t* device, void* client, v
   if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
     DRIVER_ERROR("PutReply() failed");  
 }
+
+void StgDriver::HandleConfigMap( device_record_t* device, void* client, void* buffer, size_t len )
+{
+  printf("got map request\n");
+  
+  if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
+    DRIVER_ERROR("PutReply() failed");  
+}
+
+
 
 void StgDriver::HandleConfigPosition( device_record_t* device, void* client, void* buffer, size_t len  )
 {
@@ -1414,6 +1440,10 @@ void StgDriver::RefreshDataDevice( device_record_t* device )
     case PLAYER_ENERGY_CODE:
       this->RefreshDataEnergy( device );
       break;
+
+    case PLAYER_MAP_CODE:
+      this->RefreshDataMap( device );
+      break;
       
     default:
       printf( "Stage driver error: unknown player device code (%d)\n",
@@ -1525,6 +1555,12 @@ void StgDriver::RefreshDataSonar( device_record_t* device )
     }
 }
 
+
+void StgDriver::RefreshDataMap( device_record_t* device )
+{
+  PRINT_WARN( "someone subscribed to the map interface, but we don't generate any data" );
+  this->PutData( device->id, NULL, 0, NULL); 
+}
 
 void StgDriver::RefreshDataEnergy( device_record_t* device )
 {
