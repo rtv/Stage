@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.14 $
+//  $Revision: 1.15 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -98,8 +98,6 @@ bool CPuck::Save(int &argc, char **argv)
     snprintf(z, sizeof(z), "%0.2f", (double) m_size_x/2.0);
     argv[argc++] = strdup("radius");
     argv[argc++] = strdup(z);
-
-    //puts( "PUCK SAVE!" );
 
     return true;
 }

@@ -60,9 +60,6 @@ void CXGui::RenderObject( truth_t &truth )
 	//case PLAYER_TRUTH_CODE: RenderTruth(&truth,extended); break;  
 	//case PLAYER_OCCUPANCY_CODE: RenderOccupancy(&truth,extended); break; 
 
-    //HeadingStick( &truth );
-
-
     SetDrawMode( GXcopy );
     
   }
@@ -85,7 +82,6 @@ void CXGui::HeadingStick( truth_t* exp )
 
   DrawLines( d, 2 );
 }
-
 
 
 void CXGui::RenderObjectLabel( truth_t* exp, char* str, int len )

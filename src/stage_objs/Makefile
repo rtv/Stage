@@ -20,9 +20,9 @@ OBJS =  world.o world_load.o truthserver.o envserver.o image.o \
 # choose one of these that suits your build (debug/profile/production)
 
 # production
-CCFLAGS = -O3 
+#CCFLAGS = -O3 
 # debug
-#CCFLAGS = -g3 
+CCFLAGS = -g3 
 # debug + profile
 #CCFLAGS = -pg -g3 
 
