@@ -1,12 +1,16 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: simple.world,v 1.27 2004-12-03 05:26:21 rtv Exp $
+# CVS: $Id: simple.world,v 1.28 2005-01-31 06:41:22 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
 
+
+
 # defines 'map' object used for floorplans
 include "map.inc"
+
+
 
 # set the size of a pixel in meters
 resolution 0.02
@@ -26,6 +30,6 @@ map
 pioneer2dx
 (
   name "robot"
-  pose [-3.494 -1.478 47.400]
+  pose [0.006 0.022 -366.232]
   laser()
 )

@@ -71,6 +71,7 @@ static GtkItemFactoryEntry menu_table[] = {
   { "/View/Ranger data",     NULL,   gui_menu_view_data, STG_MODEL_RANGER,   "<CheckItem>" },
   { "/View/Blobfinder data", NULL,   gui_menu_view_data, STG_MODEL_BLOB,     "<CheckItem>" },
   { "/View/Fiducial data",   NULL,   gui_menu_view_data, STG_MODEL_FIDUCIAL, "<CheckItem>" },
+  { "/View/Position data",   NULL,   gui_menu_view_data, STG_MODEL_POSITION, "<CheckItem>" },
   { "/View/sep1",       NULL,   NULL, 0, "<Separator>" },
   { "/View/Config",          NULL,    NULL, 0, "<Title>" },
   { "/View/Laser config",    NULL,   gui_menu_view_cfg, STG_MODEL_LASER,    "<CheckItem>" },
@@ -88,7 +89,7 @@ static GtkItemFactoryEntry menu_table[] = {
   { "/Clock/Pause", NULL, gui_menu_clock_pause_cb, 1, "<CheckItem>" }
 };
 
-static const int menu_table_count = 45;
+static const int menu_table_count = 46;
 
 /* void gui_menu_file_about( void ) */
 /* { */

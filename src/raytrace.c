@@ -209,17 +209,36 @@ void PrintArray( GPtrArray* arr )
     printf( "null array\n" );
 }
 
-stg_model_t* itl_next( itl_t* itl )
-{
-  // if we have no models or we've reached the end of the model array
-  if( !(itl->models &&  itl->index > itl->models->len) )
-    {
-      // get a new array of pointers
-      itl_raytrace( itl ); 
-    }
+/* stg_model_t* itl_next( itl_t* itl ) */
+/* { */
+/*   // if we have no models or we've reached the end of the model array */
+/*   if( !(itl->models &&  itl->index > itl->models->len) ) */
+/*     { */
+/*       // get a new array of pointers */
+/*       itl_raytrace( itl );  */
+/*     } */
 
-  return( (itl->models && itl->models->len > 0 )? g_ptr_array_index( itl->models, itl->index++ ) : NULL ); 
-}
+/*   //  return( (itl->models && itl->models->len > 0 ) ?  */
+/*   //  g_ptr_array_index( itl->models, itl->index++ ) : NULL );  */
+
+/*   if( itl->models == NULL ) */
+/*     return NULL; */
+
+/*   if( itl->models->len < 1 ) */
+/*     return NULL; */
+  
+/*   // make sure the index is in range */
+/*   assert( itl->index <= itl->models->len ); */
+
+/*   stg_model_t *ret = g_ptr_array_index( itl->models, itl->index++ ); */
+			
+/*   printf( "ret model name %s\n", ret->token ); */
+
+/*   return ret; */
+
+/*   //  return( (itl->models && itl->models->len > 0 ) ?  */
+/*   //  g_ptr_array_index( itl->models, itl->index++ ) : NULL );  */
+/* } */
 
 
 void itl_raytrace( itl_t* itl )

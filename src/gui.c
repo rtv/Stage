@@ -162,6 +162,7 @@ void gui_load( gui_window_t* win, int section )
   win->render_cfg_flag[STG_MODEL_FIDUCIAL] = wf_read_int(section, "fiducial_config", 0 );  
   win->render_data_flag[STG_MODEL_BLOB] = wf_read_int(section, "blobfinder_data", 1 );
   win->render_cfg_flag[STG_MODEL_BLOB] = wf_read_int(section, "blobfinder_config", 0 );
+  win->render_data_flag[STG_MODEL_POSITION] = wf_read_int(section, "position_data", 0 );
 }
 
 void gui_save( gui_window_t* win )
@@ -189,6 +190,7 @@ void gui_save( gui_window_t* win )
   wf_write_int(win->wf_section, "fiducial_config", win->render_cfg_flag[STG_MODEL_FIDUCIAL]);
   wf_write_int(win->wf_section, "blobfinder_data", win->render_data_flag[STG_MODEL_BLOB]);
   wf_write_int(win->wf_section, "blobfinder_config", win->render_cfg_flag[STG_MODEL_BLOB]);
+  wf_write_int(win->wf_section, "position_data", win->render_data_flag[STG_MODEL_POSITION]);
 }
 
 void gui_startup( int* argc, char** argv[] )
@@ -270,6 +272,9 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
       win->render_cmd_flag[f] = FALSE;
       win->render_cfg_flag[f] = FALSE;
     }
+
+  // except position
+  win->render_data_flag[STG_MODEL_POSITION] = FALSE;
 
   return win;
 }

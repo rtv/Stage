@@ -442,6 +442,8 @@ int stg_model_is_descendent( stg_model_t* mod, stg_model_t* testmod )
   if( mod == testmod )
     return TRUE;
 
+  assert( mod->children );
+
   int ch;
   for(ch=0; ch < mod->children->len; ch++ )
     {

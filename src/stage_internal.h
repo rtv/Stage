@@ -456,7 +456,9 @@ extern "C" {
   
   void itl_destroy( itl_t* itl );
   void itl_raytrace( itl_t* itl );
-  stg_model_t* itl_next( itl_t* itl );
+
+  // deprecated - remove
+  //stg_model_t* itl_next( itl_t* itl );
   
   stg_model_t* itl_first_matching( itl_t* itl, 
 				   stg_itl_test_func_t func, 

@@ -29,9 +29,6 @@
 #define STG_MATRIX_COLOR "dark green"
 
   // model color defaults
-#define STG_GENERIC_COLOR "black"
-#define STG_POSITION_COLOR "red"
-
 #define STG_FIDUCIAL_COLOR "lime green"
 #define STG_FIDUCIAL_CFG_COLOR "green"
 
@@ -53,6 +50,10 @@
 #define STG_LAYER_LASERGEOM 32
 #define STG_LAYER_LASERDATA 31
 #define STG_LAYER_LASERCONFIG 32
+
+#define STG_LAYER_POSITIONGEOM 45
+#define STG_LAYER_POSITIONDATA 47
+#define STG_LAYER_POSITIONCONFIG 46
 
 #define STG_LASER_COLOR "steel blue"
 #define STG_LASER_FILL_COLOR "light blue"

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.44 $
+//  $Revision: 1.45 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -179,10 +179,11 @@ stg_model_t* stg_ranger_create( stg_world_t* world,
   size_t cfglen = 16*sizeof(cfg[0]);
   memset( cfg, 0, cfglen);
   
-  stg_ranger_sample_t data[16];
-  size_t datalen = 16*sizeof(data[0]);
-  memset( data, 0, datalen);
-  
+  //stg_ranger_sample_t data[16];
+  //size_t datalen = 16*sizeof(data[0]);
+  //memset( data, 0, datalen);
+  stg_model_set_data( mod, NULL, 0 );
+
   double offset = MIN(mod->geom.size.x, mod->geom.size.y) / 2.0;
   int c;
   for( c=0; c<16; c++ )
@@ -214,6 +215,13 @@ int ranger_shutdown( stg_model_t* mod )
 
   return 0;
 }
+
+int ranger_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
+{
+  // Ignore myself, my children, and my ancestors.
+  return( !stg_model_is_related(mod,hitmod) && hitmod->obstacle_return );
+}	
+
 
 int ranger_update( stg_model_t* mod )
 {     
@@ -253,28 +261,20 @@ int ranger_update( stg_model_t* mod )
       stg_model_t * hitmod;
       double range = cfg[t].bounds_range.max;
       
-      while( (hitmod = itl_next( itl )) ) 
+      hitmod = itl_first_matching( itl, ranger_raytrace_match, mod );
+      
+      if( hitmod )
 	{
 	  //printf( "model %d %p   hit model %d %p\n",
 	  //  mod->id, mod, hitmod->id, hitmod );
 	  
-	  // Ignore myself, things which are attached to me, and
-	  // things that we are attached to (except root) The latter
-	  // is useful if you want to stack beacons on the laser or
-	  // the laser on somethine else.
-	  if (hitmod == mod || stg_model_is_related(hitmod,mod) ) 
-	    continue;
+	  range = itl->range;
 	  
-	  // Stop looking when we see an obstacle
-	  if( hitmod->obstacle_return ) 
-	    {
-	      range = itl->range;
-	      break;
-	    }	
+	  // low-threshold the range
+	  if( range < cfg[t].bounds_range.min )
+	    range = cfg[t].bounds_range.min;	
 	}
       
-      if( range < cfg[t].bounds_range.min )
-	range = cfg[t].bounds_range.min;
       
       ranges[t].range = range;
       //ranges[t].error = TODO;
@@ -354,6 +354,9 @@ void ranger_render_data( stg_model_t* mod)
 { 
   PRINT_DEBUG( "ranger render data" );
     
+  if( mod->subs )
+    {
+
   if( mod->gui.data  )
     rtk_fig_clear(mod->gui.data);
   else // create the figure, store it in the model and keep a local pointer
@@ -396,6 +399,7 @@ void ranger_render_data( stg_model_t* mod)
 			     rngr->pose.x, rngr->pose.y, rngr->pose.a, 			       samples[s].range, 0.02 );
 	    }
 	}
+    }
     }
 }
 

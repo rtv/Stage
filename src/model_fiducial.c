@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.33 $
+//  $Revision: 1.34 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -134,6 +134,14 @@ typedef struct
   GArray* fiducials;
 } model_fiducial_buffer_t;
 
+
+int fiducial_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
+{
+  // Ignore myself, my children, and my ancestors.
+  return( !stg_model_is_related(mod,hitmod) );
+}	
+
+
 void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user )
 {
   model_fiducial_buffer_t* mfb = (model_fiducial_buffer_t*)user;
@@ -177,14 +185,7 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
 			   hispose.x, hispose.y, 
 			   him->world->matrix, PointToPoint );
   
-  // iterate until we hit something
-  stg_model_t* hitmod;
-  while( (hitmod = itl_next( itl )) ) 
-    {
-      if( hitmod != mfb->mod &&  //&& model_obstacle_get(hitmod) ) 
-	!stg_model_is_related(mfb->mod,hitmod) )
-	break;
-    }
+  stg_model_t* hitmod = itl_first_matching( itl, fiducial_raytrace_match, mfb->mod );
   
   itl_destroy( itl );
 

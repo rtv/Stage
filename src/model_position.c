@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.22 $
+//  $Revision: 1.23 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -19,6 +19,9 @@
 
 #include "stage_internal.h"
 #include "gui.h"
+
+// move into header
+void stg_model_position_odom_reset( stg_model_t* mod );
 
 //extern rtk_fig_t* fig_debug_rays;
 
@@ -81,6 +84,7 @@ void position_load( stg_model_t* mod )
 int position_startup( stg_model_t* mod );
 int position_shutdown( stg_model_t* mod );
 int position_update( stg_model_t* mod );
+void position_render_data(  stg_model_t* mod );
 
 stg_model_t* stg_position_create( stg_world_t* world, 
 				  stg_model_t* parent, 
@@ -104,6 +108,7 @@ stg_model_t* stg_position_create( stg_world_t* world,
   mod->f_shutdown = position_shutdown;
   mod->f_update = position_update;
   mod->f_load = position_load;
+  mod->f_render_data = position_render_data;
 
   // sensible position defaults
   stg_velocity_t vel;
@@ -182,8 +187,6 @@ int position_update( stg_model_t* mod )
 	      {
 	      case STG_POSITION_STEER_DIFFERENTIAL:
 		// differential-steering model, like a Pioneer
-		//vel.x = (cmd.x * cos(mod->pose.a) - cmd.y * sin(mod->pose.a));
-		//vel.y = (cmd.x * sin(mod->pose.a) + cmd.y * cos(mod->pose.a));
 		vel.x = cmd.x;
 		vel.y = 0;
 		vel.a = cmd.a;
@@ -306,6 +309,8 @@ int position_update( stg_model_t* mod )
       //double interval = (double)mod->world->sim_interval / 1000.0;
       
       // set the data here
+
+      // we export the ODOMETRY as pose data, not the real pose
       stg_position_data_t data;
       memcpy( &data.pose, &pos->odom, sizeof(stg_pose_t));  
       memcpy( &data.velocity, &mod->velocity, sizeof(stg_velocity_t));
@@ -322,25 +327,18 @@ int position_update( stg_model_t* mod )
     }
   
 
-  // store our postion before moving
-  stg_pose_t before;
-  stg_model_get_pose( mod, &before );
-
   // now  inherit the normal update - this does the actual moving
   _model_update( mod );
-
-  // record the movement as odometry
-  stg_pose_t after;
-  stg_model_get_pose( mod, &after );
   
-  double dx = after.x - before.x;;
-  double dy = after.y - before.y;
-  double da = after.a - before.a;
+  double dx = mod->pose.x - pos->odom_origin.x;
+  double dy = mod->pose.y - pos->odom_origin.y;
+  double da = mod->pose.a - pos->odom_origin.a;
+  double costh = cos(pos->odom_origin.a);
+  double sinth = sin(pos->odom_origin.a);
   
-  pos->odom.x -= dx * cos(pos->odom_origin.a) - dy * sin(pos->odom_origin.a);
-  pos->odom.y -= dx * sin(pos->odom_origin.a) + dy * cos(pos->odom_origin.a);
-  pos->odom.a += da;
-  pos->odom.a = NORMALIZE(pos->odom.a);
+  pos->odom.x = dx * costh + dy * sinth;
+  pos->odom.y = dy * costh - dx * sinth;
+  pos->odom.a = NORMALIZE(da);
   
   return 0; //ok
 }
@@ -350,8 +348,10 @@ int position_startup( stg_model_t* mod )
   PRINT_DEBUG( "position startup" );
 
   // set the starting pose as my initial odom position
-  stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
-  stg_model_get_pose( mod, &pos->odom_origin );
+  //stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
+  //stg_model_get_pose( mod, &pos->odom_origin );
+
+  stg_model_position_odom_reset( mod );
 
   return 0; // ok
 }
@@ -367,15 +367,81 @@ int position_shutdown( stg_model_t* mod )
   memset( &vel, 0, sizeof(vel));
   stg_model_set_velocity( mod, &vel );
 
-
+  if( mod->gui.data  )
+    rtk_fig_clear(mod->gui.data);
+  
   return 0; // ok
+}
+
+// set the current pose to be the origin of the odometry coordinate system
+void stg_model_position_odom_reset( stg_model_t* mod )
+{
+  stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
+  
+  // the odom origin is the current pose
+  memcpy( &pos->odom_origin, &mod->pose, sizeof(stg_pose_t));
+  
+  // so the odom measurement is zero
+  memset( &pos->odom, 0, sizeof(pos->odom));
+}
+
+
+// Set the origin of the odometric coordinate system in world coords
+void stg_model_position_set_odom_origin( stg_model_t* mod, stg_pose_t* org )
+{
+  // get the type-sepecific extension we added to the end of the model
+  stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
+  memcpy( &pos->odom_origin, org, sizeof(stg_pose_t));
 }
 
 void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom )
 {
   // get the type-sepecific extension we added to the end of the model
   stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
-  memcpy( &pos->odom, odom, sizeof(stg_pose_t));
+
+  // copy the odom pose straight in
+  //memcpy( &pos->odom, odom, sizeof(stg_pose_t));
+
+  printf( "Stage warning: setting odometric pose is not yet implemented\n" );
+
+  // TODO
+ 
+  // calculate what the origin of this coord system must be
+  //memcpy( &pos->odom_org, org, sizeof(stg_pose_t));
 }
 
 
+void position_render_data(  stg_model_t* mod )
+{
+  const double line = 0.3;
+  const double head = 0.1;
+
+  if( mod->gui.data  )
+    rtk_fig_clear(mod->gui.data);
+  else 
+    {
+      mod->gui.data = rtk_fig_create( mod->world->win->canvas,
+				      NULL, STG_LAYER_POSITIONDATA );
+      
+      rtk_fig_color_rgb32( mod->gui.data, 0x9999FF ); // pale blue
+    }
+  
+  if( mod->subs )
+    {
+      stg_model_position_t *pos =  (stg_model_position_t*)mod->extend;
+      
+      rtk_fig_origin( mod->gui.data,  pos->odom_origin.x, pos->odom_origin.y, pos->odom_origin.a );
+            
+      rtk_fig_rectangle(  mod->gui.data, 0,0,0, 0.06, 0.06, 0 );
+      
+      rtk_fig_line( mod->gui.data, 0,0, 0, pos->odom.y );
+      rtk_fig_line( mod->gui.data, 0,pos->odom.y, pos->odom.x, pos->odom.y );
+      
+      char buf[256];
+      snprintf( buf, 255, "x: %.3f\ny: %.3f\na: %.3f", pos->odom.x, pos->odom.y, pos->odom.a  );
+      rtk_fig_text( mod->gui.data, pos->odom.x + 0.4, pos->odom.y + 0.2, 0, buf );
+      
+      //rtk_fig_line( mod->gui.data, 0,0, pos->odom.x, pos->odom.y );
+      rtk_fig_arrow( mod->gui.data, pos->odom.x, pos->odom.y, pos->odom.a, line, head );
+    }
+}
