@@ -23,7 +23,7 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan
  * Date: 3 July 2003
- * CVS: $Id: main.cc,v 1.61.2.37 2003-08-19 00:57:19 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.38 2003-08-19 01:08:00 rtv Exp $
  */
 
 
@@ -77,9 +77,6 @@ void StgPrintTree( GNode* treenode, gpointer _prefix )
 gboolean StgPropertyWrite( GIOChannel* channel, stg_property_t* prop )
 {
   gboolean failed = FALSE;
-
-  guint propsize = sizeof(stg_property_t) + prop->len;
-  PRINT_DEBUG1( "writing a property of %d bytes", propsize );
 
   ssize_t result = 
     stg_property_write_fd( g_io_channel_unix_get_fd(channel), prop );
@@ -204,10 +201,11 @@ gboolean StgClientRead( GIOChannel* channel,
 		// check that we have the right size data
 		g_assert( (prop->len == sizeof(stg_entity_create_t)) );
 		
+#ifdef DEBUG
 		stg_entity_create_t* create = (stg_entity_create_t*)prop->data;
 		PRINT_DEBUG3( "creating model name \"%s\" token \"%s\ parent %d",
 			      create->name, create->token, create->parent_id );
-		
+#endif
 		// create a new entity
 		CEntity* ent = NULL;	    
 		g_assert((ent = new CEntity((stg_entity_create_t*)prop->data)));
