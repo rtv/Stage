@@ -21,7 +21,7 @@
  * Desc: Gnome GUI world components (all methods begin with 'Gui')
  * Author: Richard Vaughan
  * Date: 7 Dec 2000
- * CVS info: $Id: gnomegui.cc,v 1.11 2002-10-02 22:10:43 rtv Exp $
+ * CVS info: $Id: gnomegui.cc,v 1.12 2002-10-05 18:59:52 rtv Exp $
  */
 
 
@@ -43,6 +43,7 @@
 #include "world.hh"
 #include "gnomegui.hh"
 #include "playerdevice.hh"
+#include <gnome.h>
 
 // include the logo XPM
 #include "stage.xpm"
@@ -120,10 +121,16 @@ static GnomeUIInfo main_menu[] = {
 
 
 static GnomeUIInfo toolbar [] = {
-	GNOMEUIINFO_ITEM_STOCK("Run", "Run the simulation",
-			      NULL, GNOME_STOCK_PIXMAP_FORWARD),
-	GNOMEUIINFO_ITEM_STOCK("Stop", "Stop the simulation",
+  //GNOMEUIINFO_ITEM_STOCK("Run", "Run the simulation",
+  //		      NULL, GNOME_STOCK_PIXMAP_FORWARD),
+	GNOMEUIINFO_ITEM_STOCK("Stop", "Pause the simulation",
 			      NULL, GNOME_STOCK_PIXMAP_STOP),
+	//	GNOMEUIINFO_ITEM_STOCK("Zoom In", "Zoom In",
+	//	      NULL, GNOME_STOCK_ZOOM_IN),
+	//GNOMEUIINFO_ITEM_STOCK("Zoom Out", "Zoom Out",
+	//	      NULL, GNOME_STOCK_ZOOM_OUT),
+	//GNOMEUIINFO_ITEM_STOCK("Zoom 1:1", "Zoom 1;1",
+	//	      NULL, GNOME_STOCK_ZOOM_100),
 	GNOMEUIINFO_END
 };
 
@@ -161,6 +168,8 @@ void CWorld::GuiSubscribeToAll(GtkWidget *widget, gpointer data)
   sub ? CWorld::root->FamilySubscribe() : CWorld::root->FamilyUnsubscribe();
 }
 
+GtkProgressBar* pbar = NULL;
+
 void CWorld::GuiStartup( void )
 { 
   // Allow rgb image handling
@@ -176,12 +185,65 @@ void CWorld::GuiStartup( void )
   gnome_app_create_menus( this->g_app, main_menu );
   
   // setup appbar
-  this->g_appbar = GNOME_APPBAR(gnome_appbar_new(TRUE, TRUE, GNOME_PREFERENCES_USER));
+  this->g_appbar = GNOME_APPBAR(gnome_appbar_new(FALSE, TRUE, GNOME_PREFERENCES_USER));
   assert( g_appbar );
   gnome_appbar_set_default(  this->g_appbar, "No selection" );
-  gtk_progress_bar_set_text( gnome_appbar_get_progress( this->g_appbar ), "time" );
   gnome_app_set_statusbar(GNOME_APP(this->g_app), GTK_WIDGET(this->g_appbar));
-  gnome_app_create_toolbar(GNOME_APP(this->g_app), toolbar);
+ 
+  // pbar = gnome_appbar_get_progress( g_appbar );
+ 
+/* to make it nice we'll put the toolbar into the handle box, 
+   * so that it can be detached from the main window */
+  //handlebox = gtk_handle_box_new ();
+  //gtk_box_pack_start (,
+  //                      handlebox, FALSE, FALSE, 5);
+
+  // make a toolbar and fill it from the static structure
+  GtkToolbar* tbar = GTK_TOOLBAR(gtk_toolbar_new());
+  gnome_app_fill_toolbar( tbar, toolbar, NULL );
+
+  //GtkWidget* tbar = gtk_toolbar_new();
+  //gtk_toolbar_set_orientation (GTK_TOOLBAR (tbar), 
+  //		       GTK_ORIENTATION_HORIZONTAL);
+  // gtk_toolbar_set_style (GTK_TOOLBAR (tbar), GTK_TOOLBAR_BOTH);
+  //  gtk_container_set_border_width (GTK_CONTAINER (tbar), 5);
+  //  gtk_toolbar_set_space_size (GTK_TOOLBAR (tbar), 5);
+//gtk_container_add (GTK_CONTAINER (handlebox), tbar);
+
+  
+  GtkWidget* pbar2 = gtk_progress_bar_new();
+  gtk_progress_bar_set_text( GTK_PROGRESS_BAR(pbar2), "time" );
+
+  //GtkWidget* play = 
+    //gtk_toggle_button_new_with_label( "play" );
+    //gtk_check_button_new_with_label( "Run" ); 
+  //gtk_button_new_from_stock(GNOME_STOCK_PIXMAP_STOP);
+  GtkWidget* scaler = gtk_hscale_new_with_range( 0, 100, 5 );
+  
+  // grow the zoom bar a little
+  gtk_widget_set_size_request( scaler, 120, 30 );
+    
+  //gtk_toolbar_append_widget (GTK_TOOLBAR(tbar), play, "zoom", "zoom");
+  gtk_toolbar_append_widget (GTK_TOOLBAR(tbar), pbar2, "zoom", "zoom");
+  gtk_toolbar_append_widget (GTK_TOOLBAR(tbar), scaler, "zoom", "zoom");
+  
+  //gtk_widget_show (play);
+  gtk_widget_show (pbar2);
+  gtk_widget_show (scaler);
+
+  pbar = GTK_PROGRESS_BAR(pbar2);
+
+  gnome_app_set_toolbar(GNOME_APP(this->g_app), GTK_TOOLBAR(tbar));
+ 
+  //gnome_app_set_toolbar(GNOME_APP(this->g_app), tbar);
+  
+  //gnome_app_add_toolbar( GNOME_APP( this->g_app), GTK_TOOLBAR(tbar), "foo", 
+  //		  BONOBO_DOCK_ITEM_BEH_NORMAL, BONOBO_DOCK_BOTTOM, 0, 0, 0 );
+
+//gnome_app_add_docked( GNOME_APP( this->g_app), GTK_WIDGET(pbar), "foo", 
+  //		  BONOBO_DOCK_ITEM_BEH_NORMAL, BONOBO_DOCK_BOTTOM, 0, 0, 0 );
+
+  //gtk_container_add (GTK_CONTAINER(g_appbar), GTK_WIDGET(tbar) );
 
   // add menu hints to appbar
   //gnome_app_install_menu_hints(GNOME_APP(this->g_app), main_menumenubar);
@@ -200,7 +262,7 @@ void CWorld::GuiStartup( void )
 
   // set the starting size - just a quick hack for starters
   int initwidth = this->matrix->get_width() + 40;
-  int initheight = this->matrix->get_height() + 70;
+  int initheight = this->matrix->get_height() + 100;
 
   // sensible bounds check
   if( initwidth > gdk_screen_width() ) initwidth = gdk_screen_width();
@@ -277,13 +339,12 @@ gboolean CWorld::GuiProgressTimeout( gpointer data )
   // set the text to be the current time
   char seconds_buf[128];
   snprintf( seconds_buf, 128, "%.2f", world->GetTime() );
-  gtk_progress_bar_set_text( gnome_appbar_get_progress(world->g_appbar), seconds_buf );
+  gtk_progress_bar_set_text( pbar, seconds_buf );
 
   
   // if stage is counting down to a stop time, show the fraction of time used up
   if( world->m_stoptime )
-    gtk_progress_bar_set_fraction( gnome_appbar_get_progress(world->g_appbar), 
-				     world->GetTime() / world->GetStopTime() );
+    gtk_progress_bar_set_fraction( pbar, world->GetTime() / world->GetStopTime() );
   
   /* As this is a timeout function, return TRUE so that it
    * continues to get called */
