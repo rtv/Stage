@@ -346,6 +346,7 @@ stg_model_t* stg_model_create( stg_world_t* world,
   stg_polygon_t* poly = stg_polygon_create();
   stg_polygon_set_points( poly, pts, 4 );
   stg_model_set_polygons( mod, poly, 1 );
+  free(poly);
   
   // init the arbitrary datalist structure
   g_datalist_init( &mod->props);
@@ -1320,6 +1321,7 @@ void stg_model_load( stg_model_t* mod )
 	  char *tmp = strdup(wf_get_filename());
 	  snprintf( full, PATH_MAX,
 		    "%s/%s",  dirname(tmp), bitmapfile );
+          free(tmp);
 	}
       
 #ifdef DEBUG
@@ -1346,6 +1348,11 @@ void stg_model_load( stg_model_t* mod )
       // convert rects to an array of polygons and upload the polygons
       stg_polygon_t* polys = stg_rects_to_polygons( rects, num_rects );
       stg_model_set_polygons( mod, polys, num_rects );     
+
+      // free rects, which was realloc()ed in stg_load_image
+      free(rects);
+      // free polys, since stg_model_set_polygons copied its contents
+      free(polys);
     }
       
   int polycount = wf_read_int( mod->id, "polygons", 0 );
