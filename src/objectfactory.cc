@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/objectfactory.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -24,7 +24,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-
+#include "objectfactory.hh"
 #include "robot.h"
 #include "laserbeaconobject.hh"
 
@@ -41,5 +41,4 @@ CObject* CreateObject(const char *type, CWorld *world, CObject *parent)
         return new CLaserBeaconObject(world, parent);
     return NULL;
 }
-
 

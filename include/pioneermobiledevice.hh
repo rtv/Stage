@@ -1,4 +1,4 @@
-/* 	$Id: pioneermobiledevice.hh,v 1.1.2.1 2000-12-05 23:17:34 ahoward Exp $	 */
+/* 	$Id: pioneermobiledevice.hh,v 1.1.2.2 2000-12-06 05:13:42 ahoward Exp $	 */
 // this device implements a differential-steer mobility base for the robot
 
 #ifndef PIONEERMOBILEDEVICE_H
@@ -62,15 +62,6 @@ class CPioneerMobileDevice : public CPlayerDevice
 
   int Move();
   
-    //*** REMOVE virtual bool MapDraw( void );
-    //*** REMOVE virtual bool MapUnDraw( void );
-
-  XPoint undrawPts[7];
-  virtual bool GUIDraw( void );
-  virtual bool GUIUnDraw( void );
-  
-
-
  private:
 
   PlayerPositionCommand m_command;
@@ -80,19 +71,25 @@ class CPioneerMobileDevice : public CPlayerDevice
 
   // RTK interface
   //
-#ifdef INCLUDE_RTK
+#ifndef INCLUDE_RTK
     
-  // Process GUI update messages
-  //
-  public: virtual void OnUiUpdate(RtkUiDrawData *pData);
+  XPoint undrawPts[7];
+  virtual bool GUIDraw( void );
+  virtual bool GUIUnDraw( void );
 
-  // Process GUI mouse messages
-  //
-  public: virtual void OnUiMouse(RtkUiMouseData *pData);
+#else
+    
+    // Process GUI update messages
+    //
+    public: virtual void OnUiUpdate(RtkUiDrawData *pData);
 
-  // Draw the pioneer chassis
-  //
-  public: void DrawChassis(RtkUiDrawData *pData);
+    // Process GUI mouse messages
+    //
+    public: virtual void OnUiMouse(RtkUiMouseData *pData);
+
+    // Draw the pioneer chassis
+    //
+    public: void DrawChassis(RtkUiDrawData *pData);
   
 #endif
 };

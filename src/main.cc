@@ -1,7 +1,7 @@
 /*************************************************************************
  * main.cc   
  * RTV
- * $Id: main.cc,v 1.2.2.2 2000-12-06 03:57:22 ahoward Exp $
+ * $Id: main.cc,v 1.2.2.3 2000-12-06 05:13:42 ahoward Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -121,7 +121,7 @@ int main( int argc, char** argv )
 
   // Start the objects
   //
-  world->Startup();
+  world->Startup(RtkCfgFile *cfg);
   
   // -- Main loop -------------------------------------------------------
   // Stage will perform a whole world update each time round this loop.

@@ -1,7 +1,7 @@
 #*************************************************************************
 # src/Makefile - makes the sources
 # RTV
-# $Id: Makefile,v 1.9.2.2 2000-12-06 03:57:22 ahoward Exp $
+# $Id: Makefile,v 1.9.2.3 2000-12-06 05:13:42 ahoward Exp $
 # ************************************************************************/
 
 .SUFFIXES: .cc .o
@@ -11,10 +11,11 @@ MAKEDEP = makedepend
 
 CFLAGS = -I../include -I$(PLAYERSRC)/include -I/usr/lib/g++-include -I/usr/X11R6/include -O2 -g
 
-OBS = main.o robot.o world.o win.o image.o server.o \
+OBS = main.o robot.o world.o image.o \
 	device.o playerdevice.o pioneermobiledevice.o laserdevice.o \
 	visiondevice.o ptzdevice.o sonardevice.o \
 	object.o objectfactory.o laserbeaconobject.o
+WIN_OBS = win.o server.o
 LIBS = -L/usr/X11R6/lib -lX11 -lm -lpthread
 
 clean:
@@ -22,8 +23,8 @@ clean:
 
 all: stage posreader
 
-stage:  $(OBS) 
-	g++ $(LIBS) $(OBS) -o stage
+stage:  $(OBS) $(WIN_OBS)
+	g++ $(LIBS) $(OBS) $(WIN_OBS) -o stage
 
 dep:
 	$(MAKEDEP) -I../include -Y -s "# DO NOT DELETE.  FOLLOWING IS FROM MAKEDEPEND" *.cc 2>/dev/null

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.1 $
+//  $Revision: 1.9.2.2 $
 //
 // Usage:
 //  (empty)
@@ -85,15 +85,19 @@ class CLaserDevice : public CPlayerDevice
     // The laser's last mapped pose
     //
     private: double m_map_px, m_map_py, m_map_pth;
+
+#ifndef INCLUDE_RTK
     
     // draw myself on the window
-    virtual bool GUIDraw();
-    virtual bool GUIUnDraw();
+    public: virtual bool GUIDraw();
+    public: virtual bool GUIUnDraw();
     
     // storage for the GUI rendering
-     private: XPoint hitPts[ LASERSAMPLES + 1 ];
-     private: XPoint oldHitPts[ LASERSAMPLES + 1];
-     private: int undrawRequired;
+    private: XPoint hitPts[ LASERSAMPLES + 1 ];
+    private: XPoint oldHitPts[ LASERSAMPLES + 1];
+    private: int undrawRequired;
+    
+#endif    
 };
 
 #endif

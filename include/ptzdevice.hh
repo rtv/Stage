@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/ptzdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.1 $
+//  $Revision: 1.2.2.2 $
 //
 // Usage:
 //  (empty)
@@ -64,6 +64,8 @@ class CPtzDevice : public CPlayerDevice
     //
     private: double m_pan, m_tilt, m_zoom;
 
+#ifndef INCLUDE_RTK
+    
 public: 
   bool GUIDraw( void );
   bool GUIUnDraw( void );
@@ -71,6 +73,8 @@ public:
   bool undrawRequired;
   XPoint drawPts[4];
   XPoint unDrawPts[4];
+
+#endif
 
 };
 

@@ -2,7 +2,7 @@
  * robot.h - CRobot defintion - most of the action is here
             
  * RTV
- * $Id: robot.h,v 1.8.2.2 2000-12-06 03:57:16 ahoward Exp $
+ * $Id: robot.h,v 1.8.2.3 2000-12-06 05:13:42 ahoward Exp $
  ************************************************************************/
 
 #include "offsets.h" // for the ACTS size defines
@@ -13,17 +13,6 @@
 #ifndef ROBOT_H
 #define ROBOT_H
 
-/* *** remove ahoward
-//#define PIONEER1
-//#define SONARSAMPLES 7
-
-//#define PIONEER2
-
-
-
-
-*/
-
 // For CObject
 //
 #include "object.hh"
@@ -33,9 +22,6 @@
 class CDevice;
 class CWorld;
 
-// Maximum number of devices
-//
-#define MAXDEVICES 32
 
 class CRobot : public CObject
 {
@@ -59,37 +45,13 @@ public:
   caddr_t playerIO; // ptr to shared memory for player I/O
   char tmpName[16]; // name of shared memory device in filesystem
 
-  // Device list
-  //
-  int m_device_count;
-  CDevice *m_device[ MAXDEVICES ]; 
- 
-  // render robot in the shared world representation
-  void MapUnDraw( void );
-  // erase robot from the shared world representation
-  void MapDraw( void );
-
-  // render robot in the GUI
-  void GUIUnDraw( void );
-  // erase robot from the GUI
-  void GUIDraw( void );
-
-  bool showDeviceDetail;
-
-  void ToggleSensorDisplay( void )
-    {
-      showDeviceDetail = !showDeviceDetail;
-    }
-
-  bool HasMoved( void );
-
   // Update robot and all its devices
   //
   public: virtual void Update();
 
   // Start all the devices
   //
-  public: virtual bool Startup();
+  public: virtual bool Startup(RtkCfgFile *cfg);
 
   // Shutdown the devices
   //
@@ -97,7 +59,7 @@ public:
 
   // Start player
   //
-  private: bool StartupPlayer();
+  private: bool StartupPlayer(int port);
 
   // Stop player
   //

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/object.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -53,7 +53,7 @@ class CObject
 
     // Startup routine -- creates objects in the world
     //
-    public: virtual bool Startup();
+    public: virtual bool Startup(RtkCfgFile *cfg);
 
     // Shutdown routine -- deletes objects in the world
     //
@@ -65,7 +65,7 @@ class CObject
 
     // Create the objects by reading them from a file
     //
-    private: bool CreateObjects();
+    private: bool CreateObjects(RtkCfgFile *cfg);
 
     // Add a child object
     //

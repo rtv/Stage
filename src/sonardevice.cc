@@ -1,4 +1,4 @@
-// $Id: sonardevice.cc,v 1.5.2.2 2000-12-06 03:57:22 ahoward Exp $
+// $Id: sonardevice.cc,v 1.5.2.3 2000-12-06 05:13:42 ahoward Exp $
 #include <math.h>
 
 #include "world.hh"
@@ -22,41 +22,10 @@ CSonarDevice::CSonarDevice( CRobot* rr,
   // zero the data
    memset( sonar, 0, sizeof( unsigned short ) * SONARSAMPLES );
 
+    #ifndef INCLUDE_RTK 
     undrawRequired = false;
+    #endif
 }
-
-bool CSonarDevice::GUIDraw()
-{  
-  // dump out if noone is subscribed
-  if( !IsSubscribed() || !m_robot->showDeviceDetail ) return true;
-  
-  // copy first to last hit point to draw a closed polygon
-  hitPts[SONARSAMPLES].x = hitPts[0].x;
-  hitPts[SONARSAMPLES].y = hitPts[0].y;
-
-  m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
-  m_world->win->DrawLines( hitPts, SONARSAMPLES+1 );
-
-  memcpy( oldHitPts, hitPts, sizeof( XPoint ) * (SONARSAMPLES+1) );
-
-  undrawRequired = true;
-
-  return true; 
-};  
-
-bool CSonarDevice::GUIUnDraw()
-{ 
-  // dump out if noone is subscribed
-  if( undrawRequired )
-    {
-      m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
-      m_world->win->DrawLines( oldHitPts, SONARSAMPLES+1 );
-      
-      undrawRequired = false;
-    }
-      
-  return true; 
-};
 
 
 void CSonarDevice::Update() 
@@ -201,14 +170,54 @@ void CSonarDevice::Update()
 	  // and switched to network byte order
 	  sonar[s] = htons((UINT16) ( (rng / ppm) * 1000.0 ));
 
+      #ifndef INCLUDE_RTK
 	  // store the hit points if we need to draw them on the GUI
 	  //if( GUIrender )
 	   {
 	     hitPts[s].x = (int)xx;
 	     hitPts[s].y = (int)yy;
 	   }
+       #endif
 	}
 
       PutData( sonar, sizeof( unsigned short ) * SONARSAMPLES );
     }
 }
+
+
+#ifndef INCLUDE_RTK
+
+bool CSonarDevice::GUIDraw()
+{  
+  // dump out if noone is subscribed
+  if( !IsSubscribed() || !m_robot->showDeviceDetail ) return true;
+  
+  // copy first to last hit point to draw a closed polygon
+  hitPts[SONARSAMPLES].x = hitPts[0].x;
+  hitPts[SONARSAMPLES].y = hitPts[0].y;
+
+  m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
+  m_world->win->DrawLines( hitPts, SONARSAMPLES+1 );
+
+  memcpy( oldHitPts, hitPts, sizeof( XPoint ) * (SONARSAMPLES+1) );
+
+  undrawRequired = true;
+
+  return true; 
+};  
+
+bool CSonarDevice::GUIUnDraw()
+{ 
+  // dump out if noone is subscribed
+  if( undrawRequired )
+    {
+      m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
+      m_world->win->DrawLines( oldHitPts, SONARSAMPLES+1 );
+      
+      undrawRequired = false;
+    }
+      
+  return true; 
+};
+
+#endif

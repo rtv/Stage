@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -33,14 +33,14 @@
 
 // For base class
 //
-#include "device.hh"
+#include "object.hh"
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Base class for all player devices
 //
-class CPlayerDevice : public CDevice
-{
+class CPlayerDevice : public CObject
+{    
     // Minimal constructor
     // This is an abstract class and *cannot* be instantiated directly
     // buffer points to a single buffer containing the data, command and configuration buffers.
@@ -50,7 +50,7 @@ class CPlayerDevice : public CDevice
         
     // Initialise the device
     //
-    public: virtual bool Startup();
+    public: virtual bool Startup(RtkCfgFile *cfg);
 
     // Close the device
     //
@@ -74,6 +74,10 @@ class CPlayerDevice : public CDevice
     // Returns the number of bytes copied
     //
     protected: size_t GetConfig(void *data, size_t len);
+
+    // Pointer to player robot
+    //
+    protected: CRobot *m_robot;
 
     // Pointer to shared info buffers
     //

@@ -1,7 +1,7 @@
 /*************************************************************************
  * world.h - most of the header action is here 
  * RTV
- * $Id: world.hh,v 1.1.2.1 2000-12-06 03:57:16 ahoward Exp $
+ * $Id: world.hh,v 1.1.2.2 2000-12-06 05:13:42 ahoward Exp $
  ************************************************************************/
 
 #ifndef WORLD_HH
@@ -55,8 +55,6 @@ public:
   CWorld( char* initFile );
   virtual ~CWorld();
 
-  CWorldWin* win;
-
   int semKey, semid; // semaphore access for shared mem locking
 
   int LockShmem( void ); // protect shared mem areas
@@ -89,15 +87,12 @@ public:
 
   double timeStep, timeNow, timeThen, timeBegan;
 
-  double sonarInterval, laserInterval, visionInterval, ptzInterval; // seconds
 
   // methods
   int LoadVars( char* initFile);
-  void Draw( void );
   void SavePos( void );
   //void LoadPos( void );
 
-  void UpdateSonar( int b );
   void DumpSonar( void );
   void DumpOdometry( void );
   void GetUpdate( void );  
@@ -109,7 +104,7 @@ public:
 
     // Startup routine -- creates objects in the world
     //
-    public: virtual bool Startup();
+    public: virtual bool Startup(RtkCfgFile *cfg);
 
     // Shutdown routine -- deletes objects in the world
     //
@@ -141,7 +136,12 @@ public:
     //
     private: Nimage *m_laser_img;
 
-#ifdef INCLUDE_RTK
+#ifndef INCLUDE_RTK
+
+    void Draw( void );
+    public: CWorldWin* win;
+    
+#else INCLUDE_RTK
 
     // Process GUI update messages
     //

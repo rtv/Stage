@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/object.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -26,12 +26,7 @@
 
 #include <math.h>
 #include "object.hh"
-
-// *** HACK -- move this to a header
-// Create an object given a type
-//
-CObject* CreateObject(const char *type, CWorld *world, CObject *parent);
-
+#include "objectfactory.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -69,17 +64,28 @@ CObject::~CObject()
 ///////////////////////////////////////////////////////////////////////////
 // Startup routine -- creates objects in the world
 //
-bool CObject::Startup()
+bool CObject::Startup(RtkCfgFile *cfg)
 {
+    cfg->BeginSection(m_id);
+   
+    // Read in our own pose
+    //   
+    double px = cfg->ReadDouble("px", 0, "");
+    double py = cfg->ReadDouble("py", 0, "");
+    double pth = cfg->ReadDouble("pth", 0, "");
+    SetPose(px, py, pth);
+
+    cfg->EndSection();
+    
     // Create child objects
     //
-    CreateObjects();
+    CreateObjects(cfg);
     
     // Start each of the children we have just created
     //
     for (int i = 0; i < m_child_count; i++)
     {
-        if (!m_child[i]->Startup())
+        if (!m_child[i]->Startup(cfg))
             return false;
     }
     return true;
@@ -109,31 +115,8 @@ void CObject::Update()
 ///////////////////////////////////////////////////////////////////////////
 // Create the objects by reading them from a file
 //
-bool CObject::CreateObjects()
-{
-    // *** HACK
-    char *filename = "cave.cfg";
-
-    // Open the configuration file
-    //
-    RtkCfgFile cfg_file;
-    if (!cfg_file.Open(filename))
-    {
-        ERROR("Could not open config file");
-        return false;
-    }
-
-    cfg_file.BeginSection(m_id);
-
-    // Read in our own pose
-    //   
-    double px = cfg_file.ReadDouble("px", 0, "");
-    double py = cfg_file.ReadDouble("py", 0, "");
-    double pth = cfg_file.ReadDouble("pth", 0, "");
-    SetPose(px, py, pth);
-
-    cfg_file.EndSection();
-
+bool CObject::CreateObjects(RtkCfgFile *cfg)
+{ 
     // Read in the objects from the configuration file
     //
     for (int i = 0; i < ARRAYSIZE(m_child); i++)
@@ -142,13 +125,13 @@ bool CObject::CreateObjects()
 
         // Get the id of the i'th child
         //
-        RtkString id = cfg_file.ReadString(m_id, CSTR(key), "", "");
+        RtkString id = cfg->ReadString(m_id, CSTR(key), "", "");
         if (id == "")
             continue;
 
         // Get its type
         //
-        RtkString type = cfg_file.ReadString(CSTR(id), "type", "", "");
+        RtkString type = cfg->ReadString(CSTR(id), "type", "", "");
         
         // Create the object
         //
@@ -166,8 +149,6 @@ bool CObject::CreateObjects()
         //
         AddChild(object);
     }
-
-    cfg_file.Close();
     
     return true;
 }

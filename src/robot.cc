@@ -1,7 +1,7 @@
 /*************************************************************************
  * robot.cc - most of the action is here
  * RTV
- * $Id: robot.cc,v 1.13.2.2 2000-12-06 03:57:22 ahoward Exp $
+ * $Id: robot.cc,v 1.13.2.3 2000-12-06 05:13:42 ahoward Exp $
  ************************************************************************/
 
 #include <errno.h>
@@ -65,13 +65,6 @@ const int numPts = SONARSAMPLES;
 CRobot::CRobot(CWorld *world, CObject *parent)
         : CObject(world, parent)
 {
-    // Initial default pose
-    //
-    SetPose(1.0, 1.0, 0);
- 
-    // Initialise the device list
-    //
-    m_device_count = 0;
 }
 
 CRobot::~CRobot( void )
@@ -82,14 +75,22 @@ CRobot::~CRobot( void )
 ///////////////////////////////////////////////////////////////////////////
 // Start all the devices
 //
-bool CRobot::Startup()
+bool CRobot::Startup(RtkCfgFile *cfg)
 {
     TRACE0("starting devices");
-
+    
+    cfg->BeginSection(m_id);
+    
+    // Get the port for this robot
+    //
+    int port = cfg->ReadInt("port", 6666, "");
+    
+    cfg->EndSection();
+    
     // Startup player
     // This will generate the memory map, so it must be done first
     //
-    if (!StartupPlayer())
+    if (!StartupPlayer(port))
         return false;
     
     // Create pioneer device    
@@ -111,7 +112,7 @@ bool CRobot::Startup()
                               
     // Start any child objects
     //
-    CObject::Startup();
+    CObject::Startup(cfg);
    
     /* *** REMOVE ahoward
     m_device_count = 0;
@@ -169,7 +170,7 @@ bool CRobot::Startup()
     //
     for (int i = 0; i < m_device_count; i++)
     {
-        if (!m_device[i]->Startup() )
+        if (!m_device[i]->Startup(RtkCfgFile *cfg) )
         {
             perror("CRobot::Startup: failed to open device; device unavailable");
             m_device[i] = NULL;
@@ -195,14 +196,6 @@ void CRobot::Shutdown()
     // Shutdown child objects
     //
     CObject::Shutdown();
-    
-    for (int i = 0; i < m_device_count; i++)
-    {
-        if (!m_device[i])
-            continue;
-        m_device[i]->Shutdown();
-        delete m_device[i];
-    }
 }
 
 
@@ -212,20 +205,13 @@ void CRobot::Shutdown()
 void CRobot::Update()
 {
     CObject::Update();
-    
-    // Update all devices
-    //
-    for (int i = 0; i < m_device_count; i++)
-    {
-        m_device[i]->Update();
-    }
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Start player instance
 //
-bool CRobot::StartupPlayer()
+bool CRobot::StartupPlayer(int port)
 {
     TRACE0("starting player");
     
@@ -276,7 +262,7 @@ bool CRobot::StartupPlayer()
         {
             // create player port number for command line
             char portBuf[32];
-            sprintf( portBuf, "%d", (int) (PLAYER_BASE_PORT + color -1) );
+            sprintf( portBuf, "%d", (int) port );
 
             // BPG
             // release controlling tty so Player doesn't get signals
@@ -317,34 +303,6 @@ void CRobot::ShutdownPlayer()
     // delete the playerIO.xxxxxx file
     remove( tmpName );
 }
-
-
-bool CRobot::HasMoved( void )
-{
-    // *** WARNING -- I lost something in the merge here -- ahoward
-  return true; // this is a safe default for now - RTV
-}
-
-void CRobot::MapUnDraw()
-{
-  for (int i = 0; i < m_device_count; i++) m_device[i]->MapUnDraw();
-}  
-
-
-void CRobot::MapDraw()
-{
-  for (int i = 0; i < m_device_count; i++) m_device[i]->MapDraw();
-}  
-
-void CRobot::GUIDraw()
-{
-  for (int i = 0; i < m_device_count; i++) m_device[i]->GUIDraw();
-}  
-
-void CRobot::GUIUnDraw()
-{
-  for (int i = 0; i < m_device_count; i++) m_device[i]->GUIUnDraw();
-}  
 
 
 #ifdef INCLUDE_RTK

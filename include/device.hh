@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/device.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.7.2.1 $
+//  $Revision: 1.7.2.2 $
 //
 // Usage:
 //  (empty)
@@ -55,7 +55,7 @@ class CDevice : public CObject
     /* *** REMOVE ahoward
     // Initialise the device
     //
-    public: virtual bool Startup();
+    public: virtual bool Startup(RtkCfgFile *cfg);
 
     // Close the device
     //

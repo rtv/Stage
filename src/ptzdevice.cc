@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.2 $
+//  $Revision: 1.4.2.3 $
 //
 // Usage:
 //  (empty)
@@ -67,7 +67,9 @@ CPtzDevice::CPtzDevice(CRobot *robot,
 
     m_pan = m_tilt = m_zoom = 0;
 
+    #ifndef INCLUDE_RTK
     undrawRequired = 0;
+    #endif
 }
 
 
@@ -163,7 +165,7 @@ void CPtzDevice::GetPTZ(double &pan, double &tilt, double &zoom)
 };
 
 
-
+#ifndef INCLUDE_RTK
 
 bool CPtzDevice::GUIDraw( void )
 {
@@ -215,8 +217,7 @@ bool CPtzDevice::GUIUnDraw()
   return true; 
 };
 
-
-
+#endif
 
 
 

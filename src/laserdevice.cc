@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11.2.2 $
+//  $Revision: 1.11.2.3 $
 //
 // Usage:
 //  (empty)
@@ -63,7 +63,9 @@ CLaserDevice::CLaserDevice(CRobot* robot, void *buffer, size_t data_len,
     m_map_dx = 0.20;
     m_map_dy = 0.20;
 
+    #ifndef INCLUDE_RTK 
     undrawRequired = false;
+    #endif
 }
 
 
@@ -178,13 +180,19 @@ bool CLaserDevice::UpdateScanData()
         // Look along scan line for obstacles
         // Could make this an int again for a slight speed-up.
         //
+        int intensity = 0;
         double range;
         for (range = 0; range < max_range; range += dr)
         {
             // Look in the laser layer for obstacles
             //
-            if (m_world->GetCell(px, py, layer_laser) != 0)
+            BYTE cell = m_world->GetCell(px, py, layer_laser);
+            if (cell != 0)
+            {
+                if (cell > 1)
+                    intensity = 1;
                 break;
+            }
             px += dx;
             py += dy;
         }
@@ -196,10 +204,8 @@ bool CLaserDevice::UpdateScanData()
 
         // Add in the intensity values in the top 3 bits
         //
-        /* *** TESTING
         if (m_intensity)
             v = v | (((UINT16) intensity) << 13);
-        */
         
         // Set the range
         // Swap the bytes while we're at it
@@ -241,6 +247,8 @@ void CLaserDevice::Map(bool render)
 }
 
 
+#ifndef INCLUDE_RTK
+
 bool CLaserDevice::GUIDraw()
 { 
   // dump out if noone is subscribed or the device
@@ -272,7 +280,7 @@ bool CLaserDevice::GUIUnDraw()
   return true; 
 };
 
-
+#endif
 
 
 

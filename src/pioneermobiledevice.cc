@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.2 $
+//  $Revision: 1.9.2.3 $
 //
 // Usage:
 //  (empty)
@@ -38,14 +38,14 @@ const double TWOPI = 6.283185307;
 ///////////////////////////////////////////////////////////////////////////
 // Constructor
 //
-CPioneerMobileDevice::CPioneerMobileDevice( CRobot* rr, 
+CPioneerMobileDevice::CPioneerMobileDevice( CRobot* robot, 
 					    double wwidth, double llength,
 					    void *buffer, 
 					    size_t data_len, 
 					    size_t command_len, 
 					    size_t config_len)
-        : CPlayerDevice(rr, buffer, data_len, command_len, config_len)
-{
+        : CPlayerDevice(robot, buffer, data_len, command_len, config_len)
+{    
     // Default pose
     //
     SetPose(0.0, 0.0, 0);
@@ -335,6 +335,7 @@ void CPioneerMobileDevice::CalculateRect( float x, float y, float a )
   centery = (int)y;
 }
 
+#ifndef INCLUDE_RTK
 
 bool CPioneerMobileDevice::GUIUnDraw()
 {
@@ -372,7 +373,7 @@ bool CPioneerMobileDevice::GUIDraw()
   return true;
 }
 
-#ifdef INCLUDE_RTK
+#else
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
@@ -411,7 +412,9 @@ void CPioneerMobileDevice::DrawChassis(RtkUiDrawData *pData)
     #define ROBOT_COLOR RGB(255, 0, 192)
     
     pData->SetColor(ROBOT_COLOR);
-    
+
+    // Draw the outline of the robot
+    //
     for (int i = 0; i < 5; i++)
     {
         double px = (double) length / m_world->ppm / 2 * cos(DTOR(i * 90 + 45));
@@ -423,7 +426,28 @@ void CPioneerMobileDevice::DrawChassis(RtkUiDrawData *pData)
             pData->MoveTo(px, py);
         else
             pData->LineTo(px, py);
-    }           
+    }
+
+    // Draw the direction indicator
+    //
+    for (int i = 0; i < 3; i++)
+    {
+        double px = (double) length / m_world->ppm / 2 * cos(DTOR(i * 45 - 45));
+        double py = (double) width / m_world->ppm / 2 * sin(DTOR(i * 45 - 45));
+        double pth = 0;
+
+        // This is ugly, but it works
+        //
+        if (i == 1)
+            px = py = 0;
+        
+        LocalToGlobal(px, py, pth);
+        
+        if (i == 0)
+            pData->MoveTo(px, py);
+        else
+            pData->LineTo(px, py);
+    }
 }
 
 #endif

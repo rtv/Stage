@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeaconobject.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -65,8 +65,9 @@ void CLaserBeaconObject::Update()
     GetGlobalPose(m_gx, m_gy, m_gth);
     
     // Draw our new representation
+    // Values > 1 are interpreted as intensities
     //
-    m_world->SetCell(m_gx, m_gy, layer_laser, 1);
+    m_world->SetCell(m_gx, m_gy, layer_laser, 2);
 }
 
 

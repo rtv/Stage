@@ -1,7 +1,7 @@
 /*************************************************************************
  * world.cc - top level class that contains and updates robots
  * RTV
- * $Id: world.cc,v 1.4.2.2 2000-12-06 03:57:22 ahoward Exp $
+ * $Id: world.cc,v 1.4.2.3 2000-12-06 05:13:42 ahoward Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -43,8 +43,7 @@ CWorld::CWorld( char* initFile)
         : CObject(this, NULL)
 {
   bots = NULL;
-  win = NULL;
-  
+
   //#ifdef VERBOSE
   cout << "[" << initFile << "]" << flush;
   //#endif
@@ -80,11 +79,6 @@ CWorld::CWorld( char* initFile)
 
   // seed the random number generator
   srand48( time(NULL) );
-
-  sonarInterval = 0.1;// seconds
-  laserInterval = 0.2; // seconds
-  visionInterval = 1.0; // seconds
-  ptzInterval = 0.5; //seconds
 
   // create a new background image from the pnm file
   bimg = new Nimage( bgFile );
@@ -203,8 +197,10 @@ CWorld::CWorld( char* initFile)
 
   // ----------------------------------------------------------------------
 
+  #ifndef INCLUDE_RTK
   refreshBackground = true;
   Draw(); // this will draw everything properly before we start up
+  #endif
 
   // start the internal clock
   struct timeval tv;
@@ -229,7 +225,7 @@ CWorld::~CWorld()
 ///////////////////////////////////////////////////////////////////////////
 // Startup routine -- creates objects in the world
 //
-bool CWorld::Startup()
+bool CWorld::Startup(RtkCfgFile *cfg)
 {
     TRACE0("Creating objects");
 
@@ -244,7 +240,7 @@ bool CWorld::Startup()
 
     // Call the objects startup function
     //
-    if (!CObject::Startup())
+    if (!CObject::Startup(cfg))
         return false;
 
     return true;
@@ -268,8 +264,9 @@ void CWorld::Shutdown()
 void CWorld::Update()
 {
   // update is called every approx. 25ms from main using a timer
-
-  if( win ) win->HandleEvent();
+    #ifndef INCLUDE_RTK
+        if( win ) win->HandleEvent();
+    #endif
 
   if( !paused )
     {
@@ -296,7 +293,9 @@ void CWorld::Update()
       //
       CObject::Update();
 
+      #ifndef INCLUDE_RTK
       if( refreshBackground ) Draw();
+      #endif
       
       if( !runDown ) runStart = timeNow;
       else if( (quitTime > 0) && (timeNow > (runStart + quitTime) ) )
@@ -478,43 +477,12 @@ int CWorld::UnlockShmem( void )
   return true;
 }
 
-
-  
-
-CRobot* CWorld::NearestRobot( float x, float y )
-{
-  CRobot* nearest;
-  float dist, far = 999999.9;
-  
-  for( CRobot* r = bots; r; r = r->next )
-  {
-    dist = hypot( r->x -  x, r->y -  y );
-    
-    if( dist < far ) 
-      {
-	nearest = r;
-	far = dist;
-      }
-  }
-  
-  return nearest;
-}
-
 void CWorld::SavePos( void )
 {
   ofstream out( posFile );
 
   for( CRobot* r = bots; r; r = r->next )
     out <<  r->x/ppm <<  '\t' << r->y/ppm << '\t' << r->a << endl;
-}
-
-void CWorld::Draw( void )
-{
-  memcpy( img->data, bimg->data, width*height*sizeof(char) );
-
-  for( CRobot* r = bots; r; r = r->next ) r->MapDraw();
-
-  refreshBackground = 0;
 }
 
 float diff( float a, float b )
@@ -606,7 +574,29 @@ int CWorld::LoadVars( char* filename )
 }
 
 
-#ifdef INCLUDE_RTK
+#ifndef INCLUDE_RTK
+
+
+CRobot* CWorld::NearestRobot( float x, float y )
+{
+  CRobot* nearest;
+  float dist, far = 999999.9;
+  
+  for( CRobot* r = bots; r; r = r->next )
+  {
+    dist = hypot( r->x -  x, r->y -  y );
+    
+    if( dist < far ) 
+      {
+	nearest = r;
+	far = dist;
+      }
+  }
+  
+  return nearest;
+}
+
+#else
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages

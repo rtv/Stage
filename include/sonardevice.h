@@ -1,5 +1,5 @@
 // sonardevice.h - RTV
-// $Id: sonardevice.h,v 1.4.2.1 2000-12-05 23:17:34 ahoward Exp $
+// $Id: sonardevice.h,v 1.4.2.2 2000-12-06 05:13:42 ahoward Exp $
 
 #ifndef SONARDEVICE_HH
 #define SONARDEVICE_HH
@@ -20,10 +20,6 @@ class CSonarDevice : public CPlayerDevice
     // Update the device
     //
     public: virtual void Update();
-
-    // draw myself on the window
-    virtual bool GUIDraw();
-    virtual bool GUIUnDraw();
     
     // Sonar timing settings
     //
@@ -38,7 +34,12 @@ class CSonarDevice : public CPlayerDevice
     //
     private: unsigned short sonar[SONARSAMPLES];
     
+#ifndef INCLUDE_RTK
 
+    // draw myself on the window
+    virtual bool GUIDraw();
+    virtual bool GUIUnDraw();
+    
     // store the sonar hit points if we want to render them in the
     // GUI window
     private: XPoint hitPts[ SONARSAMPLES+1 ];
@@ -46,8 +47,9 @@ class CSonarDevice : public CPlayerDevice
     private: int undrawRequired;
     
     // is GUI drawing enabled for this device?
-    //private: bool GUIrender; 
+    //private: bool GUIrender;
 
+#endif    
 };
 
 #endif

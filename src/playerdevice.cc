@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.2 $
+//  $Revision: 1.2.2.3 $
 //
 // Usage:
 //  (empty)
@@ -31,9 +31,12 @@
 ///////////////////////////////////////////////////////////////////////////
 // Minimal constructor
 //
-CPlayerDevice::CPlayerDevice(CRobot *robot, void *buffer, size_t data_len, size_t command_len, size_t config_len)
-        : CDevice(robot)
+CPlayerDevice::CPlayerDevice(CRobot *robot, void *buffer,
+                             size_t data_len, size_t command_len, size_t config_len)
+        : CObject(robot->m_world, robot)
 {
+    m_robot = robot;
+    
     m_info_buffer = (BYTE*) buffer;
     m_info_len = INFO_BUFFER_SIZE;
     
@@ -54,9 +57,9 @@ CPlayerDevice::CPlayerDevice(CRobot *robot, void *buffer, size_t data_len, size_
 ///////////////////////////////////////////////////////////////////////////
 // Default startup -- doesnt do much
 //
-bool CPlayerDevice::Startup()
+bool CPlayerDevice::Startup(RtkCfgFile *cfg)
 {
-    if (!CDevice::Startup())
+    if (!CObject::Startup(cfg))
         return false;   
     return true;
 }
@@ -67,7 +70,7 @@ bool CPlayerDevice::Startup()
 //
 void CPlayerDevice::Shutdown()
 {
-    CDevice::Shutdown();
+    CObject::Shutdown();
 }
 
 
