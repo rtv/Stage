@@ -34,7 +34,7 @@ position
 
 )
 
-movable_object ( friction 0.035 pose [2.72334957055 2.72334957055 0] visible "laserbright1" size [0.4 0.4] )
+puck ( pose [2.72334957055 2.72334957055 0] size [0.4 0.4] )
 
 position
 (
