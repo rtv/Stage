@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.57 2002-06-04 22:36:28 rtv Exp $
+//  $Id: entity.cc,v 1.58 2002-06-04 23:15:38 gerkey Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -226,7 +226,7 @@ bool CEntity::Startup( void )
 #endif
 
   // if this is not a player device, we're done. bail right here
-  if( m_player.type == 0 )
+  if( m_player.code == 0 )
     return true;
 
   // otherwise, we set up a mmapped file in the tmp filesystem to share
@@ -237,7 +237,7 @@ bool CEntity::Startup( void )
   size_t mem = SharedMemorySize();
    
   snprintf( m_device_filename, sizeof(m_device_filename), "%s/%d.%d.%d", 
-	    m_world->m_device_dir, m_player.port, m_player.type, m_player.index );
+	    m_world->m_device_dir, m_player.port, m_player.code, m_player.index );
   
     PRINT_DEBUG1("creating device %s", m_device_filename);
 
@@ -333,7 +333,7 @@ bool CEntity::Startup( void )
   
   m_info_io->player_id.port = m_player.port;
   m_info_io->player_id.index = m_player.index;
-  m_info_io->player_id.type = m_player.type;
+  m_info_io->player_id.code = m_player.code;
   m_info_io->subscribed = 0;
 
   // we keep a seperate copy of the subs counter.
@@ -349,7 +349,7 @@ bool CEntity::Startup( void )
   	  "\t\ttotal: %d\tinfo: %d\tdata: %d (%d)\tcommand: %d (%d)\tconfig: %d (%d)\n ",
   	  this,
   	  m_info_io->player_id.port,
-  	  m_info_io->player_id.type,
+  	  m_info_io->player_id.code,
   	  m_info_io->player_id.index,
   	  m_info_io,
   	  m_info_len + m_data_len + m_command_len + m_config_len,
@@ -379,7 +379,7 @@ void CEntity::Shutdown()
 #endif
 
   // if this is not a player device, we bail right here
-  if( m_player.type == 0 )
+  if( m_player.code == 0 )
     return;
 
   if( m_device_filename[0] )
@@ -901,10 +901,11 @@ size_t CEntity::PutCommand( void* data, size_t len )
 size_t CEntity::GetConfig(void** client, void* config, size_t len )
 {
   int size;
+  player_device_id_t id;
 
   Lock();
 
-  if((size = m_reqqueue->Pop(client, (unsigned char*)config, len)) < 0)
+  if((size = m_reqqueue->Pop(&id, client, (unsigned char*)config, len)) < 0)
   {
     Unlock();
     return(0);
@@ -930,10 +931,16 @@ size_t CEntity::PutReply(void* client, unsigned short type,
   }
 
   Lock();
-  m_repqueue->Push(client, type, &curr, (unsigned char*)reply, len);
+  m_repqueue->Push(NULL, client, type, &curr, (unsigned char*)reply, len);
   Unlock();
   return(0);
 }
+
+size_t 
+CEntity::PutReply(void* client, unsigned short type)
+{
+  return(PutReply(client, type, NULL, NULL, 0));
+} 
 
 ///////////////////////////////////////////////////////////////////////////
 // See if the PlayerDevice is subscribed
@@ -951,7 +958,6 @@ int CEntity::Subscribed()
   
   return( subscribed );
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 // lock the shared mem
@@ -1135,7 +1141,7 @@ int CEntity::SetProperty( int con, EntityProperty property,
       memcpy( &puck_return, (bool*)value, sizeof(puck_return) );
       break;
     case PropPlayerId:
-      memcpy( &m_player, (player_id_t*)value, sizeof(m_player) );
+      memcpy( &m_player, (player_device_id_t*)value, sizeof(m_player) );
       break;
       
       // these properties manipulate the player IO buffers

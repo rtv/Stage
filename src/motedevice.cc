@@ -26,7 +26,7 @@ CMoteDevice::CMoteDevice(CWorld *world, CEntity *parent )
   m_config_len  = 1;
   m_reply_len  = 1;
   
-  m_player.type = PLAYER_MOTE_CODE;
+  m_player.code = PLAYER_MOTE_CODE;
   m_stage_type = MoteType;
 
 
@@ -90,7 +90,7 @@ void CMoteDevice::Update( double sim_time )
   if(GetConfig(&client, &config, sizeof(config)) > 0)
   {
     m_strength = config.strength;
-    PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, NULL, 0);
+    PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
   }
   
   // Get messege

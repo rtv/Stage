@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.17 $
+//  $Author: gerkey $
+//  $Revision: 1.18 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -38,7 +38,7 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
   this->size_x = 0.08;
   this->size_y = 0.20;
 
-  m_player.type = PLAYER_GRIPPER_CODE;
+  m_player.code = PLAYER_GRIPPER_CODE;
   m_stage_type = GripperType;
 
   m_interval = 0.1; 

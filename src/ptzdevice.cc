@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.16 $
+//  $Author: gerkey $
+//  $Revision: 1.17 $
 //
 // Usage:
 //  (empty)
@@ -43,7 +43,7 @@ CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent )
   m_config_len  = 0;
   m_reply_len  = 0;
  
-  m_player.type = PLAYER_PTZ_CODE;
+  m_player.code = PLAYER_PTZ_CODE;
   m_stage_type = PtzType;
 
   m_interval = 0.1;

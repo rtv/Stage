@@ -63,7 +63,7 @@ typedef struct
   StageType stage_type;
   //StageShape stage_shape; // TODO
   struct in_addr hostaddr; // the IP of the host - just 32 bits
-  player_id_t id;  
+  player_device_id_t id;  
   bool echo_request;   // stage will echo these truths if this is true
   uint32_t x, y; // mm, mm
   uint16_t w, h; // mm, mm  

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.23 $
+//  $Author: gerkey $
+//  $Revision: 1.24 $
 //
 // Usage:
 //  (empty)
@@ -43,7 +43,7 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
   m_config_len = 1; 
   m_reply_len = 1; 
   
-  m_player.type = PLAYER_POSITION_CODE; // from player's messages.h
+  m_player.code = PLAYER_POSITION_CODE; // from player's messages.h
   m_stage_type = RectRobotType;
 
   SetColor(POSITION_COLOR);
@@ -114,7 +114,7 @@ void CPositionDevice::Update( double sim_time )
             // (default)
 	    printf( "MOTOR POWER: %d\n", cfg.value ); 
 	    // CONFIG NOT IMPLEMENTED
-            PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, NULL, 0);
+            PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
             break;
 
           case PLAYER_POSITION_VELOCITY_CONTROL_REQ:
@@ -123,20 +123,20 @@ void CPositionDevice::Update( double sim_time )
             //   1 = separate translational and rotational control
 	    printf( "CONTROL MODE: %d\n", cfg.value ); 
 	    // CONFIG NOT IMPLEMENTED
-            PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, NULL, 0);
+            PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
             break;
 
           case PLAYER_POSITION_RESET_ODOM_REQ:
             // reset position to 0,0,0: ignore value
 	    puts( "RESET ODOMETRY"); 
             m_odo_px = m_odo_py = m_odo_pth = 0.0;
-            PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, NULL, 0);
+            PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
             break;
 
           default:
             printf("Position device got unknown config request \"%c\"\n",
                    cfg.request);
-            PutReply(client, PLAYER_MSGTYPE_RESP_NACK, NULL, NULL, 0);
+            PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
             break;
         }
       }

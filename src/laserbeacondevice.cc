@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.28 $
+//  $Author: gerkey $
+//  $Revision: 1.29 $
 //
 // Usage:
 //  (empty)
@@ -44,13 +44,13 @@ CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
   m_config_len  = 1;
   m_reply_len  = 1;
 
-  m_player.type = PLAYER_LASERBEACON_CODE;
+  m_player.code = PLAYER_LASERBEACON_CODE;
   m_stage_type = LBDType;
   SetColor(LBD_COLOR);
   
   // the parent MUST be a laser device
   ASSERT( parent );
-  ASSERT( parent->m_player_type == PLAYER_LASER_CODE );
+  ASSERT( parent->m_player.code == PLAYER_LASER_CODE );
   
   this->laser = parent; 
   //this->laser->m_dependent_attached = true;
@@ -159,7 +159,7 @@ void CLBDDevice::Update( double sim_time )
       m_bit_size = ntohs(cfg.bit_size);
       m_one_thresh = ntohs(cfg.one_thresh);
       m_zero_thresh = ntohs(cfg.zero_thresh);
-      PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, NULL, 0);
+      PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
     }
     else if (cfg.subtype == PLAYER_LASERBEACON_GET_CONFIG)
     {
@@ -172,7 +172,7 @@ void CLBDDevice::Update( double sim_time )
     else
     {
       // unknown config request
-      PutReply(client, PLAYER_MSGTYPE_RESP_NACK, NULL, NULL, 0);
+      PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
     }
   }
 

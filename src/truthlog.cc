@@ -30,7 +30,7 @@ void PrintStageTruth( stage_truth_t &truth, double seconds )
 	  seconds,
 	  truth.stage_id,
 	  truth.id.port, 
-	  truth.id.type, 
+	  truth.id.code, 
 	  truth.id.index,
 	  truth.x, truth.y, truth.th );
   

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.49 $
+//  $Author: gerkey $
+//  $Revision: 1.50 $
 //
 // Usage:
 //  (empty)
@@ -51,7 +51,7 @@ CLaserDevice::CLaserDevice(CWorld *world,
   m_config_len  = 1;
   m_reply_len  = 1;
   
-  m_player.type = PLAYER_LASER_CODE; // from player's messages.h
+  m_player.code = PLAYER_LASER_CODE; // from player's messages.h
   m_stage_type = LaserTurretType;
 
   SetColor(LASER_COLOR);
@@ -192,7 +192,7 @@ bool CLaserDevice::CheckConfig()
         if (abs(config.min_angle) > 5000 || abs(config.max_angle) > 5000)
         {
           PRINT_MSG("warning: invalid laser configuration request");
-          PutReply(client, PLAYER_MSGTYPE_RESP_NACK, NULL, NULL, 0);
+          PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
         }
         else
         {
@@ -201,7 +201,7 @@ bool CLaserDevice::CheckConfig()
           this->scan_max = DTOR((double) config.max_angle / 100.0);
           this->scan_count = (int) ((this->scan_max - this->scan_min) / this->scan_res) + 1;
           this->intensity = config.intensity;
-          PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, NULL, 0);
+          PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
         }
       }
       else if (config.resolution == 50 || config.resolution == 100)
@@ -209,7 +209,7 @@ bool CLaserDevice::CheckConfig()
         if (abs(config.min_angle) > 9000 || abs(config.max_angle) > 9000)
         {
           PRINT_MSG("warning: invalid laser configuration request");
-          PutReply(client, PLAYER_MSGTYPE_RESP_NACK, NULL, NULL, 0);
+          PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
         }
         else
         {
@@ -218,13 +218,13 @@ bool CLaserDevice::CheckConfig()
           this->scan_max = DTOR((double) config.max_angle / 100.0);
           this->scan_count = (int) ((this->scan_max - this->scan_min) / this->scan_res) + 1;
           this->intensity = config.intensity;
-          PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, NULL, 0);
+          PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
         }
       }
       else
       {
         PRINT_MSG("warning: invalid laser configuration request");
-        PutReply(client, PLAYER_MSGTYPE_RESP_NACK, NULL, NULL, 0);
+        PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
       }
       break;
     }
@@ -243,7 +243,7 @@ bool CLaserDevice::CheckConfig()
     {
       // Ignore invalid request subtypes
       PRINT_MSG("invalid laser configuration request");
-      PutReply(client, PLAYER_MSGTYPE_RESP_NACK, NULL, NULL, 0);
+      PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
       return false;
     }
   }

@@ -7,9 +7,9 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/broadcastdevice.cc,v $
-//  $Author: rtv $
+//  $Author: gerkey $
 
-//  $Revision: 1.10 $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -44,7 +44,7 @@ CBroadcastDevice::CBroadcastDevice(CWorld *world, CEntity *parent )
   m_config_len  = 0;
   m_reply_len  = 0;
 
-  m_player.type = PLAYER_BROADCAST_CODE;
+  m_player.code = PLAYER_BROADCAST_CODE;
   m_stage_type= BroadcastType;
 }
 

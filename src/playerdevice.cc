@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.28 $
+//  $Author: gerkey $
+//  $Revision: 1.29 $
 //
 // Usage:
 //  (empty)
@@ -71,7 +71,7 @@ CPlayerDevice::CPlayerDevice(CWorld *world, CEntity *parent )
   m_command_len = 0; //PLAYER_COMMAND_SIZE;
   m_config_len  = 0; //PLAYER_CONFIG_SIZE;
      
-  m_player.type = PLAYER_PLAYER_CODE; // from player's messages.h
+  m_player.code = PLAYER_PLAYER_CODE; // from player's messages.h
   m_stage_type = PlayerType;
 
   SetColor(PLAYER_COLOR);

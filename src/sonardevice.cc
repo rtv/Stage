@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.20 $
+//  $Author: gerkey $
+//  $Revision: 1.21 $
 //
 // Usage:
 //  (empty)
@@ -40,7 +40,7 @@ CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent )
   m_config_len  = 1;
   m_reply_len  = 1;
   
-  m_player.type = PLAYER_SONAR_CODE; // from player's messages.h
+  m_player.code = PLAYER_SONAR_CODE; // from player's messages.h
   m_stage_type = SonarType;
   
   SetColor(SONAR_COLOR);
@@ -87,12 +87,12 @@ void CSonarDevice::Update( double sim_time )
     {
       // we got a sonar power toggle - i just ignore them.
       puts( "sonar power toggled" );
-      PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, NULL, 0);
+      PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
     }
     else
     {
       // don't recognize this request
-      PutReply(client, PLAYER_MSGTYPE_RESP_NACK, NULL, NULL, 0);
+      PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
     }
   }
   

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.45 $
+//  $Author: gerkey $
+//  $Revision: 1.46 $
 //
 // Usage:
 //  (empty)
@@ -285,7 +285,7 @@ public: void SetDirty( int con, EntityProperty prop, char v );
   //public: int m_player_port; // N
   //public: int m_player_index; // M
   //public: int m_player_type; // one of the device types from messages.h
-public: player_id_t m_player;
+public: player_device_id_t m_player;
 
   // basic external IO functions
 
@@ -328,6 +328,10 @@ public: player_id_t m_player;
   // Returns 0 on success, non-zero on error.
   protected: size_t PutReply(void* client, unsigned short type,
                              struct timeval* ts, void* reply, size_t len);
+  // A short form for zero-length replies.
+  // Returns 0 on success, non-zero on error.
+  protected: size_t PutReply(void* client, unsigned short type);
+
 
   // See if the device is subscribed
   // returns the number of current subscriptions
