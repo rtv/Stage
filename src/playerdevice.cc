@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.15 $
+//  $Revision: 1.16 $
 //
 // Usage:
 //  (empty)
@@ -101,7 +101,7 @@ bool CPlayerDevice::SetupIOPointers( char* io )
   
     // Startup player
    //
-  if (!StartupPlayer( m_player_port )) return false;
+  //if (!StartupPlayer( m_player_port )) return false;
   
   return true;
 }
@@ -135,6 +135,9 @@ void CPlayerDevice::Update( double sim_time )
 //
 bool CPlayerDevice::StartupPlayer(int port)
 {
+  if(port < 0)
+    port = m_player_port;
+
 #ifdef DEBUG
   cout << "StartupPlayer()" << endl;
 #endif

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.10 $
+//  $Author: gerkey $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -55,7 +55,8 @@ class CPlayerDevice : public CEntity
     
     // Start player
     //
-    private: bool StartupPlayer(int port);
+    // made this public so it can be called from world.cc - BPG
+    public: bool StartupPlayer(int port);
 
     // Stop player
     //

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.21 $
+//  $Revision: 1.22 $
 //
 // Usage:
 //  (empty)
@@ -39,6 +39,9 @@
 
 //#include <stage.h>
 #include "world.hh"
+// for the definition of CPlayerDevice, used to treat them specially
+// below
+#include "playerdevice.hh" 
 
 #define SEMKEY 2000
 
@@ -255,17 +258,40 @@ bool CWorld::Startup()
 
     int entityOffset = 0;
 
+    // keep a list of player devices, and start them AFTER all the IO pointers
+    // are setup.
+    // (bigger than strictly necessary, but who cares)
+    CPlayerDevice** tmpplayers = new CPlayerDevice*[m_object_count];  
+    bzero(tmpplayers,m_object_count*sizeof(CPlayerDevice*));
+    int currplayer = 0;
     for (int i = 0; i < m_object_count; i++)
+    {
+      if (!m_object[i]->SetupIOPointers( playerIO + entityOffset ) )
       {
-        if (!m_object[i]->SetupIOPointers( playerIO + entityOffset ) )
-	  {
-	    cout << "Object " << (int)(m_object[i]) 
-		 << " failed SetupIOPointers()" << endl;
-	    return false;
-	  }
-	
-	entityOffset += m_object[i]->SharedMemorySize();
+        cout << "Object " << (int)(m_object[i]) 
+                << " failed SetupIOPointers()" << endl;
+        return false;
       }
+      if(m_object[i]->m_stage_type == PlayerType)
+      {
+        tmpplayers[currplayer] = (CPlayerDevice*)m_object[i];
+        currplayer++;
+      }
+
+      entityOffset += m_object[i]->SharedMemorySize();
+    }
+
+    for(currplayer=0;tmpplayers[currplayer];currplayer++)
+    {
+      // -1 makes it use its internal m_player_port
+      if(!(tmpplayers[currplayer]->StartupPlayer(-1)))
+      {
+        cout << "PlayerDevice " << (int)(tmpplayers[currplayer]) 
+                << " failed StartupPlayer()" << endl;
+        return false;
+      }
+    }
+    delete tmpplayers;
     
     // Start the world thread
     //
