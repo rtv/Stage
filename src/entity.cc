@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.109 2003-08-26 04:57:27 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.110 2003-08-26 19:20:57 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -776,12 +776,17 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
 	  } 
 	*/
 
+	/*
+	// gtk+-2.0
 	this->rangers = g_array_sized_new( FALSE, TRUE, 
-					   sizeof(stg_ranger_t), 
-					   tcount );
+	sizeof(stg_ranger_t), tcount );
+	*/
 	
-	this->rangers = g_array_append_vals( this->rangers,
-					     data, tcount );
+	// gtk+1.2 or 2.0
+	this->rangers = g_array_new( FALSE, TRUE, 
+				       sizeof(stg_ranger_t));
+	
+	this->rangers = g_array_append_vals( this->rangers, data, tcount );
       }
       break;
 
@@ -1040,9 +1045,11 @@ void CEntity::GetNeighbors( GArray** neighbor_array )
   //PRINT_DEBUG( "searching for neighbors" );
 
   // create the array, pre-allocating some space for speed
-  *neighbor_array = g_array_sized_new( FALSE, TRUE, 
-				       sizeof(stg_neighbor_t), 
-				       10 ); 
+  //*neighbor_array = g_array_sized_new( FALSE, TRUE, 
+  //			       sizeof(stg_neighbor_t), 
+  //			       10 ); 
+  *neighbor_array = g_array_new( FALSE, TRUE, 
+				 sizeof(stg_neighbor_t) );
   
   // Search through the global device list looking for devices that
   // have a non-zero neighbor-return
@@ -1309,9 +1316,11 @@ void CEntity::SetRects( stg_rotrect_t* new_rects, int new_rect_count  )
       this->rect_array = NULL;
     } 
   
-  this->rect_array = g_array_sized_new( FALSE, TRUE, 
-					sizeof(stg_rotrect_t), 
-					new_rect_count );
+  //this->rect_array = g_array_sized_new( FALSE, TRUE, 
+  //				sizeof(stg_rotrect_t), 
+  //				new_rect_count );
+  this->rect_array = g_array_new( FALSE, TRUE, 
+				  sizeof(stg_rotrect_t) );
   
   g_assert( this->rect_array );
 
