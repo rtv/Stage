@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/beacondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -51,7 +51,13 @@ CBeaconDevice::CBeaconDevice(CWorld *world, CObject *parent,
     //
     m_update_interval = 0.2;
     m_last_update = 0;
-    m_max_range = 1.5;
+
+    // Set detection ranges
+    // Beacons can be detected a large distance,
+    // but can only be uniquely identified close up
+    //
+    m_max_anon_range = 4.0;
+    m_max_id_range = 1.5;
 
     #ifdef INCLUDE_RTK
 
@@ -121,7 +127,7 @@ void CBeaconDevice::Update()
 
         // Ignore beacons that are too far away
         //
-        if (range > m_max_range)
+        if (range > m_max_anon_range)
             continue;
 
         // See if there is an id in the beacon layer
@@ -129,6 +135,11 @@ void CBeaconDevice::Update()
         int id = m_world->GetCell(px, py, layer_beacon);
         if (id == 0)
             continue;
+
+        // Make beacon anonymous if it is far
+        //
+        if (range > m_max_id_range)
+            id = 0;
 
         // Check for data buffer overrun
         //
