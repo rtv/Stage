@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.34 2001-09-28 18:22:50 vaughan Exp $
+ * $Id: xs.cc,v 1.35 2001-09-28 18:29:43 gerkey Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -581,12 +581,16 @@ bool CXGui::DownloadObjects( int sockfd, int num_objects )
 	    recv += r;
 	}
       
+#ifdef DEBUG
       PrintStageTruth( truth );
+#endif
 
       if( truth.echo_request )
 	{
 	  printf( "\nXS: warning - received an echo request in this truth: " );
+#ifdef DEBUG
 	  PrintStageTruth( truth );
+#endif
 	}
       
       ImportTruth( truth );
@@ -864,7 +868,9 @@ void CXGui::RenderFamily( xstruth_t &truth )
   for( it = truth_map.begin(); it != truth_map.end(); it++ )
     if( it->second.parent_id == truth.stage_id )
       {
+#ifdef DEBUG
 	puts( "RECURSE" );
+#endif
 	// recurse to render the child 
 	RenderFamily( it->second );
       }
@@ -885,7 +891,9 @@ void CXGui::HandleIncomingQueue( void )
       //printf( "POSE ID %d MATCHES: ", pose.stage_id );
       //PrintMetricTruth( pose.stage_id, truth );
 
+#ifdef DEBUG
       puts( "undraw" );
+#endif
       RenderFamily( truth ); // undraw it
       
       // update it
@@ -893,13 +901,17 @@ void CXGui::HandleIncomingQueue( void )
       truth.y = pose.y / 1000.0;
       truth.th = DTOR(pose.th);
 
+#ifdef DEBUG
       puts( "\nredraw" );
+#endif
 
       RenderFamily( truth ); // redraw it
 
       XFlush( display );// reduces flicker
 
+#ifdef DEBUG
       puts( "" );
+#endif
 
       truth_map[ pose.stage_id ] = truth; // update the database with it
     }
