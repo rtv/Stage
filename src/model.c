@@ -1,3 +1,10 @@
+/**
+@defgroup stg_model 
+
+Implements a model - the basic object of Stage simulation
+
+*/
+
 #include <assert.h>
 #include <math.h>
 

@@ -20,7 +20,15 @@
  *
 */
 
+
 // STAGE-1.4 DRIVER CLASS  /////////////////////////////////
+
+/*! \file stg_driver.h 
+
+  This header file contains the class Stage1p4, derived from Player's
+  Device class, and extended by Stage Plugin's various drivers.
+*/
+
 
 #include <pthread.h>
 

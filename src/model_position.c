@@ -7,9 +7,18 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.10 $
+//  $Revision: 1.11 $
 //
 ///////////////////////////////////////////////////////////////////////////
+
+/** 
+@defgroup model_position Position model
+ 
+The position model simulates a mobile robot base. It can drive in one
+of two modes; either <i>differential</i> like a Pioneer robot, or
+<i>omnidirectional</i>.
+
+*/
 
 #include <sys/time.h>
 #include <math.h>

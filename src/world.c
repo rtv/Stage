@@ -1,3 +1,9 @@
+/**
+@defgroup stg_world 
+
+Implements a world - a collection of models and a matrix.
+
+*/
 
 #include <stdlib.h>
 #include <assert.h>

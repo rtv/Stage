@@ -1,27 +1,85 @@
 
 /**
-@page foo Introduction to the Stage library (libstage)
+@page libstageplugin Introduction to Stage (libstageplugin)
 
-The Stage libray provides code for simulating a population of
-robots. It is designed to be used by robotics researchers for building
-custom simulations, and as the simulation engine for the Stage Plugin.
+Stage is a plugin driver for the Player robot server. It provides a
+population of mobile robots, sensors and environmental objects in a
+two-dimensional world. Stage is designed with multi-agent systems in
+mind, so it provides fairly simple, computationally cheap models of
+lots of devices rather than attempting to emulate any device with
+great fidelity. This design is intended to be useful compromise
+between conventional high-fidelity robot simulations, the minimal
+simulations described by Jakobi\cite{jakobi:radical}, and the
+grid-world simulations common in artificial life
+research\cite{wilson:animat}. We intend Stage to be just realistic
+enough to enable users to move controllers between Stage robots and
+real robots, while still being fast enough to simulate large
+populations. We also intend Stage to be comprehensible to
+undergraduate students, yet sophisticated enough for professional
+reseachers.
+
+Access to the robots and sensors simulated in Stage is provided by
+Player. Users write robot controllers and sensor algorithms as
+`clients' to the Player `server'. Typically, clients cannot tell the
+difference between the real robot devices and their simulated Stage
+equivalents (unless they try very hard). We have found that robot
+controllers developed as Player clients controlling Stage robots will
+work with little or no modification with the real robots and vice
+versa. With a little care, the same binary program can often control
+Stage or real robots without even being recompiled. Thus the
+Player/Stage system allows rapid prototyping of controllers destined
+for real robots. Stage can also be very useful by simulating
+populations of realistic robot devices you don't happen to own.
+  
+Player also contains several useful 'virtual devices'; including some
+sensor pre-processing or sensor-integration algorithms. These were
+tricky to use with previous versions of Stage, but this release makes
+it simple to take full advantage of Player.
+
+Stage provides several sensor and actuator models, including sonar or
+infrared rangers, scanning laser rangefinder, color-blob tracking,
+fiducial tracking and mobile robot bases with odometry. {\bf Note:
+Some models from previous versions may not yet be available in this
+release, but we're working on them. Let us know which ones you need.}
+
+
 
 */
 
 /**
-@page foo Introduction to the Stage Plugin (libstageplugin)
+@page libstage The Stage Library (libstage)
 
-The Stage Plugin is a module for the Player robot server that provides
-simulated robot hardware. 
+The Stage Library (libstage) provides a code library for simulating a
+population of robots. It is designed to be used by robotics
+researchers for building custom simulations, and as the simulation
+engine for Stage, the plugin driver for Player.
+
+Libstage is modular and fairly simple to use. The following code is
+enough to get a complete
+
+@verbatim
+#include "stage.h"
+
+int main( int argc, char* argv[] )
+{ 
+  // initialize libstage
+  stg_init( argc, argv );
+
+  stg_world_t* world = stg_world_create_from_file( argv[1] );
+  
+  while( (stg_world_update( world,TRUE )==0) )
+    {}
+  
+  stg_world_destroy( world );
+  
+  exit( 0 );
+}
+@endverbatim
+
+TODO: Describe the basic use of the Stage Library
 
 */
 
-/**
-@page player Working with Player
-
-Player is handy
-
-*/
 
 /**
 @page extending Extending Stage with new models

@@ -3,11 +3,15 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.61 2004-10-01 02:03:58 rtv Exp $
+// $Id: stagecpp.cc,v 1.62 2004-10-02 01:37:27 rtv Exp $
 
 //#define DEBUG
 
-/** @defgroup worldfile WorldFile Properties */
+
+/** @defgroup worldfile WorldFile Properties 
+ * some world file text
+ */
+
 
 // TODO - get this from a system header?
 #define MAXPATHLEN 256
@@ -20,12 +24,12 @@ static CWorldFile wf;
 
 extern stg_lib_entry_t model_entry, laser_entry, position_entry, ranger_entry, blobfinder_entry, fiducial_entry;
 
-/** @addtogroup worldfile */
-/** @{ */
-/** @defgroup worldfilewindow Window
+/** @addtogroup gui
 
-@par Summary and default values
-@verbatim
+<h2>Worldfile Properties</h2>
+
+  @par Summary and default values
+  @verbatim
 window
 (
   # gui properties
@@ -46,8 +50,8 @@ window
   - location of the center of the window in world coordinates (meters)
 - scale
   - ratio of world to pixel coordinates (window zoom)
+
 */
-/** @} */
 
 void configure_gui( gui_window_t* win, int section )
 {
@@ -92,9 +96,9 @@ void save_gui( gui_window_t* win )
 }
 
 
-/** @addtogroup worldfile */
-/** @{ */
-/** @defgroup worldfilemodel Model (basic object)
+/** @addtogroup model
+
+<h2>Worldfile properties</h2>
 
 @par Summary and default values
 @verbatim
@@ -105,38 +109,78 @@ model
   origin [0 0 0]
   velocity [0 0 0]
 
-  color "red"
+  color "red" # body colorx
 
-  # how do I show up in sensors?
+  # determine how the model appears in various sensors
   obstacle_return 1
   laser_return 1
   ranger_return 1
   blobfinder_return 1
   fiducial_return 1
 
+  # GUI properties
+  gui_nose 0
+  gui_grid 0
+  gui_boundary 0
+  gui_movemask ?
+
   # body shape
   line_count 4
-  line[0][? ? ? ?]
-  line[1][? ? ? ?]
-  line[2][? ? ? ?]
-  line[3][? ? ? ?]
-  line[4][? ? ? ?]
+  line[0][0 0 1 0]
+  line[1][1 0 1 1]
+  line[2][1 1 0 1]
+  line[3][0 1 0 0]
 
- # GUI properties
- gui_nose 0
- gui_grid 0
- gui_boundary 0
- gui_movemask ?
-
- bitmap ""
- bitmap_resolution 0
+  bitmap ""
+  bitmap_resolution 0
 )
 @endverbatim
 
 @par Properties
+- pose [float float float]
+  - [x_position y_position heading_angle]
+  - specify the pose of the model in its parent's coordinate system
+- size [float float]
+  - [x_size y_size]
+  - specify the size of the model
+- origin [float float float]
+  - [x_position y_position heading_angle]
+  - specify the position of the object's center, relative to its pose
+- velocity [float float float]
+  - [x_speed y_speed rotation_speed]
+  - specify the initial velocity of the model. Not that if the model hits an obstacle, its velocity will be set to zero.
+- color string
+  - specify the color of the object using a color name from the X11 database (rgb.txt)
+- line_count int
+  - specify the number of lines that make up the model's body
+- line[index] [float float float float]
+  - [x1 y1 x2 y2]
+  - creates a line from (x1,y1) to (x2,y2). A set of line_count lines defines the robot's body for the purposes of collision detection and rendering in the GUI window.
+- bitmap string
+  - filename
+  - alternative way to set the model's line_count and lines. The file must be a bitmap recognized by libgtkpixbuf (most popular formats are supported). The file is opened and parsed into a set of lines. Unless the bitmap_resolution option is used, the lines are scaled to fit inside the rectangle defined by the model's current size.
+- bitmap_resolution float
+  - alternative way to set the model's size. Used with the bitmap option, this sets the model's size according to the size of the bitmap file, by multiplying the width and height of the bitmap, measured in pixels, by this scaling factor. 
+- gui_nose bool
+  - if 1, draw a nose on the model showing its heading (positive X axis)
+- gui_grid bool
+  - if 1, draw a scaling grid over the model
+- gui_movemask bool
+  - define how the model can be moved by the mouse in the GUI window
+- gui_boundary bool
+  - if 1, draw a bounding box around the model, indicating its size
+- obstacle_return bool
+  - if 1, this model can collide with other models that have this property set
+- blob_return bool
+  - if 1, this model can be detected in the blob_finder (depending on its color)
+- ranger_return bool
+  - if 1, this model can be detected by ranger sensors
+- laser_return int
+  - if 0, this model is not detected by laser sensors. if 1, the model shows up in a laser sensor with normal (0) reflectance. If 2, it shows up with high (1) reflectance.
+- fiducial_return int
+  - if non-zero, this model is detected by fiducialfinder sensors. The value is used as the fiducial ID.
 
 */
-/** @} */
 
 void configure_model( stg_model_t* mod, int section )
 {
@@ -188,7 +232,7 @@ void configure_model( stg_model_t* mod, int section )
   //odel_set_ra
 
   // fiducial visibility
-  int fid_return = wf.ReadInt( section, "fiducial_id", FiducialNone );  
+  int fid_return = wf.ReadInt( section, "fiducial_return", FiducialNone );  
   stg_model_set_fiducialreturn( mod, &fid_return );
 
   const char* colorstr = wf.ReadString( section, "color", NULL );
@@ -296,9 +340,9 @@ void configure_model( stg_model_t* mod, int section )
   stg_model_set_mass( mod, &mass );
 }
 
-/** @addtogroup worldfile */
-/** @{ */
-/** @defgroup worldfilelaser Laser
+/** @addtogroup model_laser 
+
+<h2>Worldfile properties</h2>
 
 @par Summary and default values
 @verbatim
@@ -325,8 +369,8 @@ laser
   - the maximum range reported by the scanner, in meters. The scanner will not detect objects beyond this range.
 - fov float
   - the angular field of view of the scanner, in degrees. 
+
 */
-/** @} */
 
 void configure_laser( stg_model_t* mod, int section )
 {
@@ -345,9 +389,9 @@ void configure_laser( stg_model_t* mod, int section )
   stg_model_set_config( mod, &lconf, sizeof(lconf));
 }
 
-/** @addtogroup worldfile */
-/** @{ */
-/** @defgroup worldfilefiducial FiducialFinder
+/** @addtogroup model_fiducial
+
+<h2>Worldfile properties</h2>
 
 @par Summary and default values
 @verbatim
@@ -375,7 +419,6 @@ fiducialfinder
   - the angular field of view of the scanner, in degrees. 
 
 */
-/** @} */
 
 void configure_fiducial( stg_model_t* mod, int section )
 {
@@ -396,9 +439,10 @@ void configure_fiducial( stg_model_t* mod, int section )
   stg_model_set_config( mod, &fcfg, sizeof(fcfg));
 }
 
-/** @addtogroup worldfile */
-/** @{ */
-/** @defgroup worldfileblobfinder BlobFinder
+/** @addtogroup model_blobfinder 
+
+<h2>Worldfile properties</h2>
+
 @par Summary and default values
 @verbatim
 blobfinder
@@ -430,8 +474,8 @@ blobfinder
    - control the panning, tilt and zoom angle (fov) of the blobfinder. Tilt angle currently has no effect.
 - range_max float
    - maximum range of the sensor in meters.
+
 */
-/** @} */
 
 void configure_blobfinder( stg_model_t* mod, int section )
 {
@@ -466,9 +510,9 @@ void configure_blobfinder( stg_model_t* mod, int section )
   stg_model_set_config( mod, &bcfg, sizeof(bcfg));
 }
 
-/** @addtogroup worldfile */
-/** @{ */
-/** @defgroup worldfileranger Ranger
+/** @addtogroup model_ranger
+
+<h2>Worldfile properties</h2>
 
 @par Summary and default values
 @verbatim
@@ -520,8 +564,8 @@ The ranger model allows configuration of the pose, size and view parameters of e
    - minimum range and maximum range in meters, field of view angle in degrees. Currently fov has no effect on the sensor model, other than being shown in the confgiuration graphic for the ranger device.
 - sview[\<transducer index\>] [float float float]
   - per-transducer version of the sview property. Overrides the common setting.
+
 */
-/** @} */
 
 
 
@@ -583,9 +627,10 @@ void configure_ranger( stg_model_t* mod, int section )
     }
 }
 
-/** @addtogroup worldfile */
-/** @{ */
-/** @defgroup worldfileposition Position
+/** @addtogroup model_position
+
+<h2>Worldfile properties</h2>
+
 @par Summary and default values
 @verbatim
 position
@@ -600,8 +645,8 @@ position
 @par Properties
 - drive "diff" or "omni"
   - select differential-steer mode (like a Pioneer) or omnidirectional mode.
+
 */
-/** @} */
 
 
 void configure_position( stg_model_t* mod, int section )

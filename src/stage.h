@@ -28,8 +28,15 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.97 2004-10-01 02:03:49 rtv Exp $
+ * CVS: $Id: stage.h,v 1.98 2004-10-02 01:37:27 rtv Exp $
  */
+
+/*! \file stage.h 
+  \brief Stage library header file
+
+  This is the header file that contains the external interface for the
+  Stage library
+*/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -349,7 +356,7 @@ extern "C" {
 
   // LASER  ------------------------------------------------------------
 
-  /** @addtogroup model_laser */
+  /** @addtogroup stg_laser */
   /** @{ */ 
 
   /// laser return value
@@ -618,8 +625,9 @@ extern "C" {
 
   } stg_world_t;
 
-
-  /// structure that describes a model
+  /** @addtogroup stg_model
+      structure that describes a model
+  */
   typedef struct _stg_model
   {
     stg_id_t id; // used as hash table key
@@ -726,7 +734,8 @@ stg_model_t* itl_next( itl_t* itl );
 stg_model_t* itl_first_matching( itl_t* itl, 
 				stg_itl_test_func_t func, 
 				stg_model_t* finder );
-
+  /** @addtogroup stg_gui */
+  /** @{ */
   void gui_startup( int* argc, char** argv[] ); 
   void gui_poll( void );
   void gui_shutdown( void );
@@ -734,6 +743,7 @@ stg_model_t* itl_first_matching( itl_t* itl,
   void gui_world_destroy( stg_world_t* world );
   void stg_world_save( stg_world_t* world );
   int gui_world_update( stg_world_t* world );
+
   void gui_model_create( stg_model_t* model );
   void gui_model_destroy( stg_model_t* model );
   void gui_model_render( stg_model_t* model );
@@ -751,8 +761,10 @@ stg_model_t* itl_first_matching( itl_t* itl,
   void gui_window_menus_destroy( gui_window_t* win );
   void gui_model_mouse(rtk_fig_t *fig, int event, int mode);
   void gui_model_display_pose( stg_model_t* mod, char* verb );
+  /**@}*/
 
-
+  /** @addtogroup stg_matrix */
+  /** @{ */
 
   stg_matrix_t* stg_matrix_create( double ppm, double medppm, double bigppm );
 
@@ -791,9 +803,11 @@ stg_model_t* itl_first_matching( itl_t* itl,
   void stg_matrix_lines( stg_matrix_t* matrix, 
 			 stg_line_t* lines, int num_lines,
 			 void* object, int add );
+  /**@}*/
 
+  /** @addtogroup stg_world */
+  /** @{ */
 
-  
   stg_world_t* stg_world_create( stg_id_t id, 
 				 char* token, 
 				 int sim_interval, 
@@ -821,9 +835,12 @@ stg_model_t* itl_first_matching( itl_t* itl,
   /// get a model pointer from its name
   stg_model_t* stg_world_model_name_lookup( stg_world_t* world, const char* name );
 
-  // functions on stg_model_t structs
-  //
+  /**@}*/
 
+  /** @addtogroup stg_model */
+  /** @{ */
+
+  /// create a new model
   stg_model_t* stg_model_create(  stg_world_t* world,
 				  stg_model_t* parent, 
 				  stg_id_t id, 
@@ -831,6 +848,7 @@ stg_model_t* itl_first_matching( itl_t* itl,
 				  stg_lib_entry_t* lib, 
 				  char* token );
 
+  /// destroy a model, freeing its memory
   void stg_model_destroy( stg_model_t* mod );
   void model_destroy_cb( gpointer mod );
   void stg_model_global_pose( stg_model_t* mod, stg_pose_t* pose );
@@ -913,11 +931,8 @@ stg_model_t* itl_first_matching( itl_t* itl,
   void stg_model_render_geom( stg_model_t* mod );
   void stg_model_render_pose( stg_model_t* mod );
 
+  /**@}*/
 
-  //lib_entry_t* stg_library_create( void );
-  //void stg_library_destroy( lib_entry_t* lib );
-  /** These are the model's property types */
- 
 
   // SOME DEFAULT VALUES FOR PROPERTIES -----------------------------------
 
