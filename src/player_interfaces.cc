@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_interfaces.cc,v 1.4 2005-03-09 18:16:38 gerkey Exp $
+ * CVS: $Id: player_interfaces.cc,v 1.5 2005-03-11 20:12:09 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -155,73 +155,59 @@ void BlobfinderData( device_record_t* device, void* data, size_t len )
 {
   stg_blobfinder_blob_t* blobs = (stg_blobfinder_blob_t*)data;
   
-  if( len == 0 )
+  size_t bcount = len / sizeof(stg_blobfinder_blob_t);
+  
+  // limit the number of samples to Player's maximum
+  if( bcount > PLAYER_BLOBFINDER_MAX_BLOBS )
+    bcount = PLAYER_BLOBFINDER_MAX_BLOBS;      
+  
+  player_blobfinder_data_t bfd;
+  memset( &bfd, 0, sizeof(bfd) );
+  
+  // get the configuration
+  stg_blobfinder_config_t cfg;      
+  assert( stg_model_get_config( device->mod, &cfg, sizeof(cfg) ) == sizeof(cfg) );
+  
+  // and set the image width * height
+  bfd.width = htons((uint16_t)cfg.scan_width);
+  bfd.height = htons((uint16_t)cfg.scan_height);
+  bfd.blob_count = htons((uint16_t)bcount);
+  
+  // now run through the blobs, packing them into the player buffer
+  // counting the number of blobs in each channel and making entries
+  // in the acts header 
+  unsigned int b;
+  for( b=0; b<bcount; b++ )
     {
-      device->driver->PutData( device->id, NULL, 0, NULL);
+      // I'm not sure the ACTS-area is really just the area of the
+      // bounding box, or if it is in fact the pixel count of the
+      // actual blob. Here it's just the rectangular area.
+      
+      // useful debug - leave in
+      /*
+	cout << "blob "
+	<< " channel: " <<  (int)blobs[b].channel
+	<< " area: " <<  blobs[b].area
+	<< " left: " <<  blobs[b].left
+	<< " right: " <<  blobs[b].right
+	<< " top: " <<  blobs[b].top
+	<< " bottom: " <<  blobs[b].bottom
+	<< endl;
+      */
+      
+      bfd.blobs[b].x      = htons((uint16_t)blobs[b].xpos);
+      bfd.blobs[b].y      = htons((uint16_t)blobs[b].ypos);
+      bfd.blobs[b].left   = htons((uint16_t)blobs[b].left);
+      bfd.blobs[b].right  = htons((uint16_t)blobs[b].right);
+      bfd.blobs[b].top    = htons((uint16_t)blobs[b].top);
+      bfd.blobs[b].bottom = htons((uint16_t)blobs[b].bottom);
+      
+      bfd.blobs[b].color = htonl(blobs[b].color);
+      bfd.blobs[b].area  = htonl(blobs[b].area);          
     }
-  else
-    {
-      size_t bcount = len / sizeof(stg_blobfinder_blob_t);
-      
-      // limit the number of samples to Player's maximum
-      if( bcount > PLAYER_BLOBFINDER_MAX_BLOBS )
-	bcount = PLAYER_BLOBFINDER_MAX_BLOBS;      
-     
-      player_blobfinder_data_t bfd;
-      memset( &bfd, 0, sizeof(bfd) );
-      
-      // get the configuration
-      stg_blobfinder_config_t cfg;      
-      assert( stg_model_get_config( device->mod, &cfg, sizeof(cfg) ) == sizeof(cfg) );
-      
-      // and set the image width * height
-      bfd.width = htons((uint16_t)cfg.scan_width);
-      bfd.height = htons((uint16_t)cfg.scan_height);
-      bfd.blob_count = htons((uint16_t)bcount);
-
-      // now run through the blobs, packing them into the player buffer
-      // counting the number of blobs in each channel and making entries
-      // in the acts header 
-      unsigned int b;
-      for( b=0; b<bcount; b++ )
-	{
-	  // I'm not sure the ACTS-area is really just the area of the
-	  // bounding box, or if it is in fact the pixel count of the
-	  // actual blob. Here it's just the rectangular area.
-	  
-	  // useful debug - leave in
-	  /*
-	    cout << "blob "
-	    << " channel: " <<  (int)blobs[b].channel
-	    << " area: " <<  blobs[b].area
-	    << " left: " <<  blobs[b].left
-	    << " right: " <<  blobs[b].right
-	    << " top: " <<  blobs[b].top
-	    << " bottom: " <<  blobs[b].bottom
-	    << endl;
-	  */
-	  
-	  bfd.blobs[b].x      = htons((uint16_t)blobs[b].xpos);
-	  bfd.blobs[b].y      = htons((uint16_t)blobs[b].ypos);
-	  bfd.blobs[b].left   = htons((uint16_t)blobs[b].left);
-	  bfd.blobs[b].right  = htons((uint16_t)blobs[b].right);
-	  bfd.blobs[b].top    = htons((uint16_t)blobs[b].top);
-	  bfd.blobs[b].bottom = htons((uint16_t)blobs[b].bottom);
-	  
-	  bfd.blobs[b].color = htonl(blobs[b].color);
-	  bfd.blobs[b].area  = htonl(blobs[b].area);
-	  
-
-	}
-
-      //if( bf->ready )
-	{
-	  size_t size = sizeof(bfd) - sizeof(bfd.blobs) + bcount * sizeof(bfd.blobs[0]);
-	  
-	  //PRINT_WARN1( "blobfinder putting %d bytes of data", size );
-	  device->driver->PutData( device->id, &bfd, size, NULL);
-	}
-    }
+  
+  size_t size = sizeof(bfd) - sizeof(bfd.blobs) + bcount * sizeof(bfd.blobs[0]);   
+  device->driver->PutData( device->id, &bfd, size, NULL);
 }
 
 void BlobfinderConfig( device_record_t* device, void* client, void* buffer, size_t len )
