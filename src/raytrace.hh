@@ -1,6 +1,24 @@
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 // ==================================================================
 // Filename:	raytrace.hh
-// $Id: raytrace.hh,v 1.1 2002-08-23 00:19:39 rtv Exp $
+// $Id: raytrace.hh,v 1.2 2002-11-01 19:12:30 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -111,15 +129,17 @@ private:
   //void PrintArray( CEntity** ent ); 
 };
 
-// scans the circumference of a circle
-class CCircleIterator
+// scans an arc of a circle
+class CArcIterator
 {
- private:
+protected:
   double m_radius;
   double m_px, m_py;
   double m_center_x, m_center_y;
   double m_angle;
   double m_dangle;
+
+  double m_max_angle;
 
   int m_index;
 
@@ -128,11 +148,11 @@ class CCircleIterator
   CMatrix* m_matrix;
 
  public:
-  CCircleIterator( double x, double y, double r, 
+  CArcIterator( double x, double y, double th,  double scan_r, double scan_th,
 		   double ppm, CMatrix* matrix );
   
   
-  inline CEntity** CircleTrace( double &remaining_angle );
+  inline CEntity** ArcTrace( double &remaining_angle );
   
   CEntity* GetNextEntity( void );
 
@@ -156,6 +176,15 @@ class CCircleIterator
 
   
 };
+
+// a circle iterator is an arc iterator with a hard-coded 2*PI max_angle 
+class CCircleIterator : public CArcIterator
+{
+public: 
+  CCircleIterator( double x, double y, double r, 
+		   double ppm, CMatrix* matrix );
+};
+
 
 class CRectangleIterator
 {
@@ -217,5 +246,5 @@ public:
   }
 };
 
-#endif // _ITERATORS_H
+#endif // RAYTRACE_HH
 

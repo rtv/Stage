@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/bpsdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -33,8 +33,8 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CBpsDevice::CBpsDevice(CWorld *world, CEntity *parent )
-  : CPlayerEntity(world, parent )
+CBpsDevice::CBpsDevice(LibraryItem* libit,CWorld *world, CEntity *parent )
+  : CPlayerEntity(libit,world, parent )
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_bps_data_t ); 
@@ -43,7 +43,6 @@ CBpsDevice::CBpsDevice(CWorld *world, CEntity *parent )
   m_reply_len  = 1;
  
   m_player.code = PLAYER_BPS_CODE;
-  this->stage_type = BpsType;
 }
 
 
@@ -55,7 +54,6 @@ bool CBpsDevice::Startup()
   if (!CPlayerEntity::Startup())
     return false;
 
-  SetDriverName("bps");
   return true;
 }
 

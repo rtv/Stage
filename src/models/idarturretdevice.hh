@@ -9,7 +9,7 @@
 //  CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/idarturretdevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -26,14 +26,14 @@ private:
  
 public: 
   
-  CIdarTurretDevice(CWorld *world, CEntity *parent );
+  CIdarTurretDevice( LibraryItem *libit, CWorld *world, CEntity *parent );
  
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-public: static CIdarTurretDevice* Creator( CWorld *world, CEntity *parent )
-  { return( new CIdarTurretDevice( world, parent ) ); }
+public: static CIdarTurretDevice* Creator( LibraryItem *libit,  CWorld *world, CEntity *parent )
+  { return( new CIdarTurretDevice( libit, world, parent ) ); }
 
   virtual void Sync( void ); 
   virtual void Update( double sim_time );  

@@ -24,8 +24,8 @@ libstgmodels_a_SOURCES = \
                    box.hh \
                    broadcastdevice.cc \
                    broadcastdevice.hh \
-                   descartesdevice.cc \
-                   descartesdevice.hh \
+                   bumperdevice.cc \
+                   bumperdevice.hh \
                    gpsdevice.cc \
                    gpsdevice.hh \
                    gripperdevice.cc \
@@ -36,10 +36,8 @@ libstgmodels_a_SOURCES = \
                    idarturretdevice.hh \
                    image.cc \
                    image.hh \
-                   laserbeacon.cc \
                    laserbeacondevice.cc \
                    laserbeacondevice.hh \
-                   laserbeacon.hh \
                    laserdevice.cc \
                    laserdevice.hh \
                    motedevice.cc \
@@ -58,14 +56,9 @@ libstgmodels_a_SOURCES = \
                    sonardevice.hh \
                    truthdevice.cc \
                    truthdevice.hh \
-                   visionbeacon.cc \
-                   visionbeacon.hh \
                    visiondevice.cc \
                    visiondevice.hh
 
 # currently broken
 # bpsdevice.cc 
-
-# deprecated - remove
-# miscdevice.cc 
 

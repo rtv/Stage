@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/bitmap.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -21,13 +21,10 @@
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
-CBitmap::CBitmap(CWorld *world, CEntity *parent)
-    : CEntity(world, parent)
+CBitmap::CBitmap(LibraryItem* libit, CWorld *world, CEntity *parent)
+    : CEntity(libit, world, parent)
 {
-  this->stage_type = BitmapType;
-  this->color = ::LookupColor(WALL_COLOR);
-
-  vision_return = true;
+  vision_return = false;
   laser_return = LaserVisible;
   sonar_return = true;
   obstacle_return = true;

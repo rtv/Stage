@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.44 2002-10-27 23:32:36 rtv Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.45 2002-11-01 19:12:29 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -79,8 +79,8 @@ void CEntity::staticUnselect( void* ent )
 ///////////////////////////////////////////////////////////////////////////
 // Minimal constructor
 // Requires a pointer to the parent and a pointer to the world.
-CPlayerEntity::CPlayerEntity(CWorld *world, CEntity *parent_entity )
-  : CEntity( world, parent_entity )
+CPlayerEntity::CPlayerEntity(LibraryItem *libit, CWorld *world, CEntity *parent_entity )
+  : CEntity( libit, world, parent_entity )
 {
   //PRINT_DEBUG( "CEntity::CEntity()" );
   this->lock_byte = world->GetEntityCount();
@@ -155,7 +155,7 @@ bool CPlayerEntity::Load(CWorldFile *worldfile, int section)
 
   if( m_player.port == 0 )
     printf( "\nWarning: Player device (%s:%d:%d) has zero port. Missing 'port' property in world file?\n",
-	    m_world->GetLibrary()->TokenFromType( this->stage_type), m_player.port, m_player.index );
+	    this->lib_entry->token, m_player.port, m_player.index );
 
   return true;
 }
@@ -292,6 +292,10 @@ bool CPlayerEntity::Startup( void )
   // try  an unlock
   assert( Unlock() );
   
+  // store our driver name in the player IO structure.
+  // use the worldfile token as the driver name to avoid possible confusion
+  this->SetDriverName( (char*)this->lib_entry->token );
+
   return true;
 }
 
@@ -404,8 +408,8 @@ size_t CPlayerEntity::PutIOData( void* dest, size_t dest_len,
 ////////////////////////////////////////////////////////////////////////////
 // Write to the driver name segment of the IO buffer
 //
-// every player device should invoke this method early, like in the
-// constructor.
+// this is called at the end of CPlayerEntity::Startup() with the
+// worldfile token for this device.
 void 
 CPlayerEntity::SetDriverName( char* name )
 {
@@ -737,7 +741,7 @@ void CPlayerEntity::GetStatusString( char* buf, int buflen )
   // check for overflow
   assert( -1 !=
 	  snprintf( buf, buflen, 
-		    "Pose(%.2f,%.2f,%.2f) Player(%d:%d:%d) Stage(%d:%d)",
+		    "Pose(%.2f,%.2f,%.2f) Player(%d:%d:%d) Stage(%d:%d(%s))",
 		    x, 
 		    y, 
 		    th,
@@ -745,7 +749,8 @@ void CPlayerEntity::GetStatusString( char* buf, int buflen )
 		    this->m_player.code, 
 		    this->m_player.index, 
 		    this->stage_id,
-		    this->stage_type
+		    this->lib_entry->type_num,
+		    this->lib_entry->token
 		    ) );
  
 }
@@ -767,7 +772,7 @@ void CPlayerEntity::RtkStartup()
   label[0] = 0;
   snprintf(tmp, sizeof(tmp), "%s %s", 
 	   this->name,
-	   this->m_world->lib->TokenFromType( this->stage_type ) );
+	   this->lib_entry->token );
   strncat(label, tmp, sizeof(label));
   if (m_player.port > 0)
   {

@@ -19,26 +19,25 @@
  */
 /*
  * Desc: The library knows how to create devices. All device models
- * must register a worldfile token, type number and a creator function
+ * must register a worldfile token and a creator function
  * (usually a static wrapper for a constructor) with the library. Just
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.4 2002-10-31 07:48:35 gerkey Exp $
+ * CVS info: $Id: library.cc,v 1.5 2002-11-01 19:12:29 rtv Exp $
  */
 
 #include "library.hh"
 
 #include "models/bitmap.hh"
 #include "models/box.hh"
+#include "models/bumperdevice.hh"
 #include "models/broadcastdevice.hh"
-#include "models/descartesdevice.hh"
 #include "models/gpsdevice.hh"
 #include "models/gripperdevice.hh"
 #include "models/idardevice.hh"
 #include "models/idarturretdevice.hh"
 #include "models/laserbeacondevice.hh"
-#include "models/laserbeacon.hh"
 #include "models/laserdevice.hh"
 #include "models/motedevice.hh"
 #include "models/omnipositiondevice.hh"
@@ -48,38 +47,40 @@
 #include "models/puck.hh"
 #include "models/sonardevice.hh"
 #include "models/truthdevice.hh"
-#include "models/visionbeacon.hh"
 #include "models/visiondevice.hh"
+//#include "models/bpsdevice.hh"
+//#include "models/descartesdevice.hh"
 
 typedef CreatorFunctionPtr CFP;
 
 // this array defines the models that are available to Stage. New
 // devices must be added here.
 
+// TODO - eliminate the StageType number and use either the position in this array, or the address of the creator function to ID the type.
+
 libitem_t library_items[] = { 
-  { "bitmap", BitmapType, (CFP)CBitmap::Creator},
-  { "box", BoxType, (CFP)CBox::Creator},
-  { "descartes", DescartesType, (CFP)CDescartesDevice::Creator},
-  { "gps", GpsType, (CFP)CGpsDevice::Creator},
-  { "gripper", GripperType, (CFP)CGripperDevice::Creator},
-  { "idar", IdarType, (CFP)CIdarDevice::Creator},
-  { "idarturret", IdarTurretType, (CFP)CIdarTurretDevice::Creator},
-  { "laser", LaserTurretType,(CFP)CLaserDevice::Creator},
-  { "laserbeacon",LaserBeaconType, (CFP)CLaserBeacon::Creator},
-  { "lbd", LbdType, (CFP)CLBDDevice::Creator},
-  { "mote", MoteType, (CFP)CMoteDevice::Creator},
-  { "omniposition", OmniPositionType, (CFP)COmniPositionDevice::Creator},
-  { "position", PositionType, (CFP)CPositionDevice::Creator},
-  { "power", PowerType, (CFP)CPowerDevice::Creator},
-  { "ptz", PtzType, (CFP)CPtzDevice::Creator},
-  { "puck", PuckType, (CFP)CPuck::Creator},
-  { "sonar", SonarType, (CFP)CSonarDevice::Creator},
-  { "truth", TruthType, (CFP)CTruthDevice::Creator},
-  { "vision", VisionType, (CFP)CVisionDevice::Creator},
-  { "broadcast", BroadcastType, (CFP)CBroadcastDevice::Creator},
-  // { "visionbeacon", VisionBeaconType, (CFP)CVisionBeacon::Creator},
+  { "bitmap", "black", (CFP)CBitmap::Creator},
+  { "laser", "blue", (CFP)CLaserDevice::Creator},
+  { "position", "red", (CFP)CPositionDevice::Creator},
+  { "sonar", "green", (CFP)CSonarDevice::Creator},
+  { "box", "yellow", (CFP)CBox::Creator},
+  { "gps", "gray", (CFP)CGpsDevice::Creator},
+  { "gripper", "blue", (CFP)CGripperDevice::Creator},
+  { "idar", "DarkRed", (CFP)CIdarDevice::Creator},
+  { "idarturret", "DarkRed", (CFP)CIdarTurretDevice::Creator},
+  { "lbd", "gray", (CFP)CLBDDevice::Creator},
+  { "mote", "orange", (CFP)CMoteDevice::Creator},
+  { "omniposition", "red", (CFP)COmniPositionDevice::Creator},
+  { "power", "wheat", (CFP)CPowerDevice::Creator},
+  { "ptz", "magenta", (CFP)CPtzDevice::Creator},
+  { "puck", "green", (CFP)CPuck::Creator},
+  { "truth", "purple", (CFP)CTruthDevice::Creator},
+  { "vision", "gray", (CFP)CVisionDevice::Creator},
+  { "broadcast", "brown", (CFP)CBroadcastDevice::Creator},
+  { "bumper", "LightBlue", (CFP)CBumperDevice::Creator},
   // { "bps", BpsType, (CFP)CBpsDevice::Creator},
-  {NULL, NUMBER_OF_STAGE_TYPES, NULL } // marks the end of the array
+  //{ "descartes", "DarkBlue", (CFP)CDescartesDevice::Creator},
+  {NULL, NULL, NULL } // marks the end of the array
 };  
 
 
@@ -90,33 +91,37 @@ Library model_library( library_items );
 
 // LibraryItem //////////////////////////////////////////////////////////////
 
-LibraryItem::LibraryItem( char* token, StageType type, 
+int LibraryItem::type_count = 0;
+
+LibraryItem::LibraryItem( const char* token, 
+			  const char* colorname, 
 			  CreatorFunctionPtr creator_func )
 {
   assert( token );
-  assert( creator_func );
-  assert( type > 0 );
-  assert( type < NUMBER_OF_STAGE_TYPES );
   assert( strlen(token) > 0 );
+  assert( colorname ); 
+  assert( creator_func );
   
-  strncpy( this->token, token, STAGE_MAX_TOKEN_LEN );
+  this->token = token;
+  this->color = ::LookupColor( colorname ); // convert to StageColor (RGB)
   this->creator_func = creator_func;
-  this->type  = type;
+  this->type_num = LibraryItem::type_count++;
   this->prev = this->next = NULL;
 }
 
-CreatorFunctionPtr LibraryItem::FindCreatorFromType( StageType type )
+
+LibraryItem* LibraryItem::FindLibraryItemFromToken( char* token )
 {
-  if( type == this->type ) return this->creator_func;
+  if( token == this->token ) return this; // same pointer!
+  if( strcmp( token, this->token) == 0 ) return this; // same string!
   
   // try the next item in the list
-  if( next ) return next->FindCreatorFromType( type );
+  if( next ) return next->FindLibraryItemFromToken( token );
   
-  // fail! type not found here or later in the list
-  printf( "failed to find creator of type %d in library\n", type );
+  // fail! token not found here or later in the list
+  printf( "failed to token %s in library\n", token );
   return NULL;
 }
-
 
 CreatorFunctionPtr LibraryItem::FindCreatorFromToken( char* token )
 {
@@ -130,27 +135,27 @@ CreatorFunctionPtr LibraryItem::FindCreatorFromToken( char* token )
   return NULL;
 }
 
-StageType LibraryItem::FindTypeFromToken( char* token )
+int LibraryItem::FindTypeNumFromToken( char* token )
 {
-  if(  strcmp( token, this->token) == 0 ) return this->type;
+  if( strcmp( token, this->token) == 0 ) return this->type_num;
   
   // try the next item in the list
-  if( next ) return next->FindTypeFromToken( token );
+  if( next ) return next->FindTypeNumFromToken( token );
   
   // fail! token not found here or later in the list
-  printf( "failed to find type of token %s in library\n", token );
-  return NullType;
+  printf( "failed to find type_num of token %s in library\n", token );
+  return -1;
 }
 
-char* LibraryItem::FindTokenFromType( StageType type )
+const char* LibraryItem::FindTokenFromCreator( CreatorFunctionPtr cfp )
 {
-  if( type == this->type ) return this->token;
+  if( cfp == this->creator_func ) return this->token;
   
   // try the next item in the list
-  if( next ) return next->FindTokenFromType( type );
+  if( next ) return next->FindTokenFromCreator( cfp );
   
-  // fail! type not found here or later in the list
-  printf( "failed to find token of type %d in library\n", type );
+  // fail! token not found here or later in the list
+  printf( "failed to find token of creator %p in library\n", cfp );
   return NULL;
 }
 
@@ -167,22 +172,23 @@ Library::Library( const libitem_t item_array[] )
   printf( "Building libray from array\n" );
   //PRINT_DEBUG( "Building libray from array\n" );
 
+  int type=1;
   for( libitem_t* item = (libitem_t*)&(item_array[0]);
        item->token; 
        item++ )
     {
-      printf( "%s %d %p\n", item->token, item->type, item->fp );
+      printf( "%s %d %p\n", item->token, type, item->fp );
       //PRINT_DEBUG3( "%s %d %p\n", item->token, item->type, item->fp );
-      this->AddDeviceType( (char*)item->token, item->type, (void*)item->fp );
+      this->AddDevice( (char*)item->token, item->colorstr, item->fp );
+      type++;
     }
 }
 
 
 // add a device type to the library
-void Library::AddDeviceType( char* token, StageType type, void* creator )
+void Library::AddDevice( const char* token, const char* colorstr, CreatorFunctionPtr creator )
 {
-  LibraryItem* item = new LibraryItem( token, type, 
-				       (CreatorFunctionPtr)creator );
+  LibraryItem* item = new LibraryItem( token, colorstr, creator );
 
   // check to make sure that this item isn't already there
   //if( liblist && liblist->FindCreatorFromType( type ) != NULL )
@@ -204,64 +210,50 @@ CEntity* Library::CreateEntity( char* token, CWorld* world_ptr, CEntity* parent_
   assert( world_ptr );
   // parent may be a null ptr
   
-  // look up the creator fucntion
-  CreatorFunctionPtr cfp = liblist->FindCreatorFromToken( token );
-  assert( cfp );
-  
-  return( CreateEntity( cfp,
-			world_ptr, 
-			parent_ptr ) );
+  // look up this token in the library
+  LibraryItem* libit = liblist->FindLibraryItemFromToken( token );
+
+  assert( libit );
+  assert( libit->creator_func );
+
+  // create an entity through the creator callback fucntion  
+  return (*libit->creator_func)( libit, world_ptr, parent_ptr ); 
 } 
   
-// create an instance of an entity given a StageType number
-CEntity* Library::CreateEntity( StageType type, CWorld* world_ptr, CEntity* parent_ptr )
-{
-  assert( type > 0 );
-  assert( type < NUMBER_OF_STAGE_TYPES );
-  assert( world_ptr );
-  // parent may be a null ptr
   
-  // look up the creator fucntion
-  CreatorFunctionPtr cfp = liblist->FindCreatorFromType( type );
+const char* Library::TokenFromCreator( CreatorFunctionPtr cfp )
+{ 
+  printf( "token from creator %p\n", cfp );
+
+  assert( liblist );
   assert( cfp );
-  
-  return( CreateEntity( cfp,
-			world_ptr, 
-			parent_ptr ) );
-}
-  
-// create an instance of an entity given a pointer to a named constructor
-CEntity* Library::CreateEntity( CreatorFunctionPtr cfp, CWorld* world_ptr, CEntity* parent_ptr )
-{
-  if( cfp == NULL )
-    return NULL; // failed to create an entity
-  else
-    return (*cfp)( world_ptr, parent_ptr ); // create an entity through this callback  
-} 
-  
-const char* Library::TokenFromType( StageType t )
-{ 
-  printf( "token from type %d\n", t );
-
-  assert( liblist );
-  assert( t > 0 );
-  assert( t < NUMBER_OF_STAGE_TYPES );
-  return( liblist->FindTokenFromType( t ) ); 
+  return( liblist->FindTokenFromCreator( cfp ) ); 
 }
 
-const StageType Library::TypeFromToken( char* token )
+int Library::TypeNumFromToken( char* token )
 { 
+  printf( "type_num from token %s\n", token );
+
   assert( liblist );
-  assert( token );
-  return( liblist->FindTypeFromToken( token ) ); 
+  return( liblist->FindTypeNumFromToken( token ) ); 
 }
+
+LibraryItem* Library::LibraryItemFromToken( char* token )
+{ 
+  printf( "library item from token %s\n", token );
+
+  assert( liblist );
+  return( liblist->FindLibraryItemFromToken( token ) ); 
+}
+
+
 
 void Library::Print( void )
 {
   printf("\n[Library contents:");
   
   for( LibraryItem* it = liblist; it; it = it->next )
-    printf( "\n\t%d:%s", it->type, it->token );
+    printf( "\n\t%s:%p:%d", it->token, it->creator_func, it->type_num );
   
   puts( "]" );
 }

@@ -21,7 +21,7 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/idardevice.cc,v $
 * $Author: rtv $
-* $Revision: 1.1 $
+* $Revision: 1.2 $
 ******************************************************************************/
 
 
@@ -59,11 +59,9 @@
 
 
 // constructor 
-CIdarDevice::CIdarDevice(CWorld *world, CEntity *parent )
-  : CPlayerEntity(world, parent )
+CIdarDevice::CIdarDevice(LibraryItem* libit, CWorld *world, CEntity *parent )
+  : CPlayerEntity(libit, world, parent )
 {
-  stage_type = IdarType;
-
   // we're invisible except to other IDARs
   laser_return = LaserTransparent;
   sonar_return = false;
@@ -79,8 +77,6 @@ CIdarDevice::CIdarDevice(CWorld *world, CEntity *parent )
 
   m_player.code = PLAYER_IDAR_CODE; // from player's messages.h
     
-  this->color = ::LookupColor(IDAR_COLOR);
-
   m_max_range = IDAR_MAX_RANGE;
     
   size_x = 0.03; // this is the actual physical size of the HRL device
@@ -109,7 +105,6 @@ bool CIdarDevice::Startup()
   if (!CPlayerEntity::Startup())
     return false;
 
-  SetDriverName("hrl_idar");
   return true;
 }
 
@@ -260,9 +255,9 @@ void CIdarDevice::TransmitMessage( idartx_t* transmit )
       // get the next thing in our beam, until the beam is blocked
       while( (ent = lit.GetNextEntity() ) ) 
 	{
-	  //printf( "HIT %p type %d idar_return %d (i am %p,%d,%d)\n",
-	  //ent, ent->m_stage_type, ent->idar_return,
-	  //(CEntity*)this, m_stage_type, idar_return );
+	  //printf( "HIT %p type %s idar_return %d (i am %p,%d,%d)\n",
+	  //ent, ent->token, ent->idar_return,
+	  //(CEntity*)this, token, idar_return );
 		
 	  //printf( "IDARReceive == %d\n", IDARReceive );
 
@@ -289,8 +284,8 @@ void CIdarDevice::TransmitMessage( idartx_t* transmit )
 		{
 		case IDARReceive: // it's a receiver
 		  // attempt to poke this message into his receiver
-		  //printf( "TRANSMIT to %p type %d idar_return %d\n",
-				//ent, ent->m_stage_type, ent->idar_return );
+		  //printf( "TRANSMIT to %p type %s idar_return %d\n",
+				//ent, ent->token, ent->idar_return );
 			
 			
 		  //PRINT_DEBUG1( "POKING A MESSAGE INTO %p", ent );
@@ -308,8 +303,8 @@ void CIdarDevice::TransmitMessage( idartx_t* transmit )
 		  //break;
 		  
 		case IDARReflect: // it's a reflector (ie. an obstacle)
-		  //printf( "REFLECT from %p type %d idar_return %d\n",
-		  //	ent, ent->stage_type, ent->idar_return );
+		  //printf( "REFLECT from %p type %s idar_return %d\n",
+		  //	ent, ent->token, ent->idar_return );
 			
 		  // try poking this message into my own receiver
 		  if( (intensity = LookupIntensity(0,range,true)) > 0 )
@@ -584,7 +579,7 @@ void CIdarDevice::RtkUpdate()
   //GetGlobalPose(gx, gy, gth);
   //rtk_fig_origin(this->data_fig, gx, gy, gth );
 
-  //  if( m_world->ShowDeviceData( this->stage_type) )
+  //  if( m_world->ShowDeviceData( this->type_num) )
   //{
   //  rtk_fig_show( this->data_fig, true );
   //  rtk_fig_show( this->rays_fig, true );

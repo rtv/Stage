@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/ptzdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -33,8 +33,8 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent )
-  : CPlayerEntity(world, parent )
+CPtzDevice::CPtzDevice(LibraryItem* libit,CWorld *world, CEntity *parent )
+  : CPlayerEntity(libit,world, parent )
 {   
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_ptz_data_t ); 
@@ -43,9 +43,7 @@ CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent )
   m_reply_len  = 0;
  
   m_player.code = PLAYER_PTZ_CODE;
-  this->stage_type = PtzType;
-  this->color = ::LookupColor(PTZ_COLOR);
-  
+
   m_interval = 0.1;
   m_last_update = 0;
 
@@ -76,7 +74,6 @@ bool CPtzDevice::Startup()
   if (!CPlayerEntity::Startup())
     return false;
 
-  SetDriverName("sonyevid30");
   return true;
 }
 
@@ -264,7 +261,7 @@ void CPtzDevice::RtkUpdate()
   player_ptz_data_t data;
 
   // if a client is subscribed to this device
-  if( Subscribed() > 0 && m_world->ShowDeviceData( this->stage_type) )
+  if( Subscribed() > 0 && m_world->ShowDeviceData( this->lib_entry->type_num) )
   {
     // attempt to get the right size chunk of data from the mmapped buffer
     if( GetData( &data, sizeof(data) ) == sizeof(data) )

@@ -22,7 +22,7 @@
  *       the work is done by Player).
  * Author: Andrew Howard
  * Date: 5 Dec 2000
- * CVS info: $Id: broadcastdevice.hh,v 1.1 2002-10-27 21:46:13 rtv Exp $
+ * CVS info: $Id: broadcastdevice.hh,v 1.2 2002-11-01 19:12:32 rtv Exp $
  */
 
 #ifndef BROADCASTDEVICE_HH
@@ -33,14 +33,14 @@
 class CBroadcastDevice : public CPlayerEntity
 {
   // Default constructor
-  public: CBroadcastDevice(CWorld *world, CEntity *parent);
+  public: CBroadcastDevice( LibraryItem *libit, CWorld *world, CEntity *parent);
     
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-public: static CBroadcastDevice* Creator( CWorld *world, CEntity *parent )
-  { return( new CBroadcastDevice( world, parent ) ); }
+public: static CBroadcastDevice* Creator(  LibraryItem *libit, CWorld *world, CEntity *parent )
+  { return( new CBroadcastDevice( libit, world, parent ) ); }
 };
 
 #endif

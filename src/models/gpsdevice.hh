@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/gpsdevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -21,15 +21,15 @@ class CGpsDevice : public CPlayerEntity
 {
     // Default constructor
     //
-    public: CGpsDevice(CWorld *world, CEntity *parent );
+    public: CGpsDevice( LibraryItem *libit, CWorld *world, CEntity *parent );
     
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-public: static CGpsDevice* Creator( CWorld *world, CEntity *parent )
+public: static CGpsDevice* Creator(  LibraryItem *libit, CWorld *world, CEntity *parent )
   {
-    return( new CGpsDevice( world, parent ) );
+    return( new CGpsDevice( libit, world, parent ) );
   }
     
     // Startup routine

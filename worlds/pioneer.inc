@@ -2,7 +2,7 @@
 # Desc: Device definitions for Activemedia Pioneer robots.
 # Author: Andrew Howard
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.4 2002-10-26 00:52:38 rtv Exp $
+# CVS: $Id: pioneer.inc,v 1.5 2002-11-01 19:12:33 rtv Exp $
 
 # The Pioneer2DX sonar array
 define p2dx_sonar sonar
@@ -35,6 +35,26 @@ define pioneer2dx position
   offset [-0.04 0.0]
   p2dx_sonar()
   power()
+)
+
+# define 10 straight bumpers around the edge of the robot
+#
+# (these angles are correct for p2dx but the offsets are approximate - RTV)
+# bpose format: [x y th length radius] (zero radius gives a straight line)
+#
+define pioneer2dxbumper bumper
+( 
+  bcount 10
+  bpose[0] [  0.17 -0.22  -52  0.105 0.0 ]
+  bpose[1] [  0.24 -0.12  -19  0.105 0.0 ]
+  bpose[2] [  0.26  0.00    0  0.105 0.0 ]
+  bpose[3] [  0.24  0.12   19  0.105 0.0 ]
+  bpose[4] [  0.17  0.22   52  0.105 0.0 ]
+  bpose[5] [ -0.25  0.22  128  0.105 0.0 ]
+  bpose[6] [ -0.32  0.12  161  0.105 0.0 ]
+  bpose[7] [ -0.34  0.00  180  0.105 0.0 ]
+  bpose[8] [ -0.32 -0.12  199  0.105 0.0 ]
+  bpose[9] [ -0.25 -0.22  232  0.105 0.0 ]
 )
 
 # The AmigoBot sonar array

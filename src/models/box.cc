@@ -21,7 +21,7 @@
  * Desc: Simulates a simple box 
  * Author: Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: box.cc,v 1.1 2002-10-27 21:46:13 rtv Exp $
+ * CVS info: $Id: box.cc,v 1.2 2002-11-01 19:12:32 rtv Exp $
  */
 
 #include "world.hh"
@@ -29,14 +29,13 @@
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
-CBox::CBox(CWorld *world, CEntity *parent)
-        : CEntity(world, parent)
+CBox::CBox(LibraryItem* libit, CWorld *world, CEntity *parent)
+        : CEntity(libit, world, parent)
 {
-  this->stage_type = BoxType;
   if(parent)
     this->color = parent->color;
   else
-    this->color = ::LookupColor(BOX_COLOR);
+    this->color = libit->color;
 
   this->shape = ShapeRect;
   this->size_x = 1.0;

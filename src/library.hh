@@ -29,17 +29,26 @@ class CEntity;
 class LibraryItem
 {
 public:
-  LibraryItem( char* token, StageType type, CreatorFunctionPtr creator_func );
+  LibraryItem( const char* token, const char* colorstr, CreatorFunctionPtr creator_func );
   
-  CreatorFunctionPtr FindCreatorFromType( StageType type );
   CreatorFunctionPtr FindCreatorFromToken( char* token );
-  StageType FindTypeFromToken( char* token );
-  char* FindTokenFromType( StageType type );
-  
-  char token[STAGE_MAX_TOKEN_LEN];
+  int  FindTypeNumFromToken( char* token );
+  const char* FindTokenFromCreator( CreatorFunctionPtr cfp );
+  LibraryItem* FindLibraryItemFromToken( char* token );
+
+  const char* token;//[STAGE_TOKEN_MAX];
   CreatorFunctionPtr creator_func;
-  StageType type;
+  int type_num; // each library entry has a unique type number
   
+  StageColor color;
+
+  //char* SetToken( char* token )
+  //{ return( strncpy( token, this->token, STAGE_TOKEN_MAX ) ); }
+  
+  // this is used to set the type number in the constructor, where it
+  // is incremented in each use.
+  static int type_count;
+
   // list-enabling pointers for use with STAGE_LIST_X macros
   LibraryItem *prev, *next;
 };
@@ -56,22 +65,18 @@ public:
   Library( void );
   Library( const libitem_t items[] );
   
-  void AddDeviceType( char* token, StageType type, void* creator );
+  void AddDevice( const char* token, const char* colorstr, CreatorFunctionPtr creator );
 
   // create an instance of an entity given a worldfile token
   CEntity* CreateEntity( char* token, CWorld* world_ptr, CEntity* parent_ptr );
   
-  // create an instance of an entity given a type number
-  CEntity* CreateEntity( StageType type, CWorld* world_ptr, CEntity* parent_ptr );
-  
   // create an instance of an entity given a pointer to a named constructor
-  CEntity* CreateEntity( CreatorFunctionPtr cfp, CWorld* world_ptr, CEntity* parent_ptr );
+  //CEntity* CreateEntity( CreatorFunctionPtr cfp, CWorld* world_ptr, CEntity* parent_ptr );
   
-  // get a worldfile token from a type and vice versa
-  const char* TokenFromType( StageType t );
-  const StageType TypeFromToken( char* token );
-  
+  const char* TokenFromCreator( CreatorFunctionPtr cfp );
 
+  int TypeNumFromToken( char* token );
+  LibraryItem* LibraryItemFromToken( char* token );
   void Print();
 };
 

@@ -246,23 +246,16 @@ int CStageIO::ReadEntities( int fd, int num )
   {
     ReadEntity( fd, &ent );
      
-    if( ent.type > 0 && ent.type < NUMBER_OF_STAGE_TYPES )
-      {
-	PRINT_DEBUG3( "attempting to create entity %d:%d:%d\n",
-		      ent.id, ent.parent, ent.type );
-	
-	//CEntity* obj = 0;
-	if( ent.parent == -1 )
-	  //assert( root = lib->CreateEntity( ent.type, this, 0 ) );
-	  puts( "read root - no ent created" );
-	else
-	  assert( lib->CreateEntity( ent.type, this,
-				     GetEntity(ent.parent)));
-      }
+    PRINT_DEBUG3( "attempting to create entity %d:%d:%s\n",
+		  ent.id, ent.parent, ent.token );
+    
+    //CEntity* obj = 0;
+    if( ent.parent == -1 )
+      //assert( root = lib->CreateEntity( ent.type, this, 0 ) );
+      puts( "read root - no ent created" );
     else
-      PRINT_WARN1( "entity type %d out of range\n", ent.type );
-      
-      
+      assert( lib->CreateEntity( ent.token, this,
+				 GetEntity(ent.parent)));
   }
   
   return 0;
@@ -399,8 +392,8 @@ int CStageIO::WriteEntity( int fd, stage_entity_t* ent )
 {
   assert( ent );
   
-  printf( "Downloading entity %d.%d.%d\n", 
-	  ent->id, ent->parent, ent->type ); 
+  printf( "Downloading entity %d.%d.%s\n", 
+	  ent->id, ent->parent, ent->token ); 
   
   int res = WritePacket( fd, (char*)ent, sizeof(stage_entity_t) );
   
@@ -419,7 +412,7 @@ int CStageIO::WriteEntities( int fd )
     {
       CEntity* ent = this->entities[c];
       
-      sent.type = ent->stage_type;      
+      strncpy( sent.token, ent->lib_entry->token, STAGE_TOKEN_MAX );      
       sent.id = ent->stage_id;
       
       if(  ent->m_parent_entity )

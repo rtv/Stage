@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.133 2002-10-31 01:38:55 gerkey Exp $
+ * CVS info: $Id: world.cc,v 1.134 2002-11-01 19:12:31 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -194,7 +194,7 @@ CWorld::CWorld( int argc, char** argv, Library* lib )
 
   // Construct a fixed obstacle representing the boundary of the 
   // the environment - this the root for all other entities
-  assert( root = (CEntity*)new CBitmap(this, NULL) );
+  assert( root = (CEntity*)new CBitmap( lib->LibraryItemFromToken( "bitmap" ), this, NULL) );
   
   // give the command line a chance to override the default values
   // we just set
@@ -788,8 +788,8 @@ CEntity* CWorld::GetNearestChildWithinRange( double x, double y, double range,
       
       d = hypot( py - y, px - x );
       
-      //printf( "Entity type %d is %.2fm away at  %.2f,%.2f\n", 
-      //      ent->stage_type, d, px, py );
+      //printf( "Entity type %s is %.2fm away at  %.2f,%.2f\n", 
+      //      ent->GetToken(), d, px, py );
       
       if( d < range )
 	{
@@ -799,7 +799,7 @@ CEntity* CWorld::GetNearestChildWithinRange( double x, double y, double range,
     }
   
   //if( nearest )
-  //printf ( "Nearest is type %d\n", nearest->stage_type );
+  //printf ( "Nearest is type %s\n", nearest->GetToken() );
   //else
   //puts( "no entity within range" );
 
@@ -822,8 +822,8 @@ CEntity* CWorld::GetNearestEntityWithinRange( double x, double y, double range )
       
       d = hypot( py - y, px - x );
       
-      printf( "Entity type %d is %.2fm away at  %.2f,%.2f\n", 
-	      ent->stage_type, d, px, py );
+      //printf( "Entity type %s is %.2fm away at  %.2f,%.2f\n", 
+      //      ent->token, d, px, py );
       
       if( d < range )
 	{
@@ -833,7 +833,7 @@ CEntity* CWorld::GetNearestEntityWithinRange( double x, double y, double range )
     }
   
   if( nearest )
-    printf ( "Nearest is type %d\n", nearest->stage_type );
+    printf ( "Nearest is %s\n", nearest->lib_entry->token );
   else
     puts( "no entity within range" );
   

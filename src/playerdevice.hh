@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: playerdevice.hh,v 1.9 2002-10-27 21:55:37 rtv Exp $
+ * CVS info: $Id: playerdevice.hh,v 1.10 2002-11-01 19:12:29 rtv Exp $
  */
 
 #ifndef PLAYERENTITY_HH
@@ -50,7 +50,9 @@ class CPlayerEntity : public CEntity
 {
   // Minimal constructor
   // Requires a pointer to the parent and a pointer to the world.
-  public: CPlayerEntity(CWorld *world, CEntity *parent_entity );
+public: CPlayerEntity( LibraryItem *libit, 
+		       CWorld *world, 
+		       CEntity *parent_entity );
 
   // Destructor
   public: virtual ~CPlayerEntity();

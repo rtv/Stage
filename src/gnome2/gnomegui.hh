@@ -21,7 +21,7 @@
  * Desc: Gnome GUI header
  * Author: Richard Vaughan
  * Date: 20 September 2002
- * CVS info: $Id: gnomegui.hh,v 1.1 2002-10-27 21:30:33 rtv Exp $
+ * CVS info: $Id: gnomegui.hh,v 1.2 2002-11-01 19:12:32 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -38,6 +38,7 @@
 
 #include "world.hh"
 #include "entity.hh"
+#include "playerdevice.hh"
 #include "stage_types.hh"
 
 #include <gnome.h>
@@ -122,7 +123,7 @@ void GnomeSelect( CEntity* ent );
 void GnomeUnselect( CEntity* ent );
 void GnomeStatus( CEntity* ent );
 void GnomeEntityPropertyChange( CEntity* ent, EntityProperty prop );
-void GnomeEntityRenderData( CEntity* ent );
+void GnomeEntityRenderData( CPlayerEntity* ent );
 void GnomeEntityMove( CEntity* ent );
 void GnomeSubscribeToAll(GtkWidget *widget, gpointer data);
 

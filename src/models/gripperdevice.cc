@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/gripperdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -29,8 +29,8 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
-  : CPlayerEntity(world, parent )
+CGripperDevice::CGripperDevice( LibraryItem* libit, CWorld *world, CEntity *parent )
+  : CPlayerEntity(libit, world, parent )
 {
   m_data_len    = sizeof( player_gripper_data_t ); 
   m_command_len = sizeof( player_gripper_cmd_t ); 
@@ -47,8 +47,6 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
   this->m_paddle_height = this->size_y / 5.0;
 
   m_player.code = PLAYER_GRIPPER_CODE;
-  this->stage_type = GripperType;
-  this->color = ::LookupColor(GRIPPER_COLOR);
 
   m_interval = 0.1; 
 
@@ -88,7 +86,6 @@ bool CGripperDevice::Startup()
   if (!CPlayerEntity::Startup())
     return false;
 
-  SetDriverName("p2os_gripper");
   return true;
 }
 
@@ -270,7 +267,8 @@ CEntity* CGripperDevice::BreakBeam( int beam )
   while( (ent = lit.GetNextEntity()) )
   {
     // grippers only perceive pucks right now.
-    if( ent->stage_type == PuckType )
+    //if( ent->stage_type == PuckType )
+    if( ent->gripper_return == GripperEnabled )
       return ent;
   }
 
@@ -490,7 +488,7 @@ void CGripperDevice::RtkUpdate()
   // if a client is subscribed to this device, then draw break beams
   if(this->m_paddles_open && 
      Subscribed() > 0 && 
-     m_world->ShowDeviceData(this->stage_type) )
+     m_world->ShowDeviceData(this->lib_entry->type_num) )
   {
     rtk_fig_origin(this->inner_beam_fig, gx, gy, gth );
     rtk_fig_origin(this->outer_beam_fig, gx, gy, gth );

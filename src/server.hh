@@ -5,7 +5,7 @@
 // Class provides a network server for Stage internals
 // used by external GUIs (XS) and distributed Stage modules
 //
-// $Id: server.hh,v 1.6 2002-10-25 22:48:09 rtv Exp $
+// $Id: server.hh,v 1.7 2002-11-01 19:12:30 rtv Exp $
 
 #ifndef _SERVER_H
 #define _SERVER_H
@@ -69,7 +69,8 @@ typedef struct
 {
   int32_t id;
   int32_t parent;
-  StageType type;
+  //StageType type;
+  char token[ STAGE_TOKEN_MAX ];
 } __attribute ((packed)) stage_entity_t;
 
 // a client that receives this packet should create a matrix
@@ -221,7 +222,7 @@ class CStageServer : public CStageIO
   
   ////////////////////////////////////////////////////////////////////
   // CONFIGURATION FILE 
-  private: char worldfilename[WORLD_FILENAME_MAXLEN];
+  private: char worldfilename[STAGE_WORLD_FILENAME_MAX];
   
   // parse and set configs from the argument list
   private: bool ParseCmdLine( int argc, char** argv );

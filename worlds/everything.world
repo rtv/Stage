@@ -3,9 +3,10 @@
 #       showing how to include some pre-defined objects
 # Author: Andrew Howard, Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.10 2002-10-26 00:52:38 rtv Exp $
+# CVS: $Id: everything.world,v 1.11 2002-11-01 19:12:32 rtv Exp $
 
 include "usc_pioneer.inc"
+include "beacons.inc"
 
 resolution 0.03
 
@@ -50,10 +51,14 @@ define red_puck puck( color "red" )
 define green_puck puck( color "green" )
 define blue_puck puck( color "blue" )
 
-# generate some robots
+# generate some pioneer robots in USC configuario
 usc_pioneer(color "red" name "robot1" port 6665 pose [3.195 1.237 40 ])
-usc_pioneer(color "green" name "robot2" port 6666 pose [3.753 7.901 -2.915 ])
-usc_pioneer(color "blue" name "robot3" port 6667 pose [7.950 1.381 89.451])
+
+usc_pioneer_gripper( color "green" name "robot2" 
+                     port 6666 pose [3.753 7.901 -2.915 ])
+
+usc_pioneer_bumper( color "blue" name "robot3" 
+                    port 6667 pose [7.950 1.381 89.451] )
 
 amigobot( color "red" name "amigo1" port 6670 pose [11.774 4.104 -135.514] )
 amigobot( color "red" name "amigo2" port 6671 pose [11.514 4.754 -121.652] )

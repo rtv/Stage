@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/omnipositiondevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -33,14 +33,14 @@
 class COmniPositionDevice : public CPlayerEntity
 {
   // Minimal constructor
-  public: COmniPositionDevice(CWorld *world, CEntity *parent);
+  public: COmniPositionDevice( LibraryItem *libit, CWorld *world, CEntity *parent);
     
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-public: static COmniPositionDevice* Creator( CWorld *world, CEntity *parent )
-  { return( new COmniPositionDevice( world, parent ) ); }
+public: static COmniPositionDevice* Creator(  LibraryItem *libit, CWorld *world, CEntity *parent )
+  { return( new COmniPositionDevice( libit, world, parent ) ); }
 
   // Startup routine
   public: virtual bool Startup();

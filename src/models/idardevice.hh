@@ -13,7 +13,7 @@
 //  CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/idardevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -46,15 +46,15 @@ private:
 
 public: 
   
-  CIdarDevice(CWorld *world, CEntity *parent );
+  CIdarDevice( LibraryItem *libit, CWorld *world, CEntity *parent );
   //~CIdarDevice( void );
 
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-public: static CIdarDevice* Creator( CWorld *world, CEntity *parent )
-  { return( new CIdarDevice( world, parent ) ); }
+public: static CIdarDevice* Creator(  LibraryItem *libit, CWorld *world, CEntity *parent )
+  { return( new CIdarDevice( libit, world, parent ) ); }
 
   // Startup routine
   public: virtual bool Startup();

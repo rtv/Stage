@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/omnipositiondevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -33,8 +33,8 @@
 
 ///////////////////////////////////////////////////////////////////////////
 // Constructor
-COmniPositionDevice::COmniPositionDevice(CWorld *world, CEntity *parent)
-  : CPlayerEntity( world, parent )
+COmniPositionDevice::COmniPositionDevice(LibraryItem* libit,CWorld *world, CEntity *parent)
+  : CPlayerEntity( libit,world, parent )
 {    
   // set the Player IO sizes correctly for this type of Entity
   m_data_len = sizeof( player_position_data_t );
@@ -43,7 +43,6 @@ COmniPositionDevice::COmniPositionDevice(CWorld *world, CEntity *parent)
   m_reply_len = 0;
   
   m_player.code = PLAYER_POSITION_CODE;
-  this->stage_type = OmniPositionType;
 
   // set up our sensor response
   this->laser_return = LaserTransparent;
@@ -74,7 +73,6 @@ bool COmniPositionDevice::Startup()
   if (!CPlayerEntity::Startup())
     return false;
 
-  SetDriverName("usc_omnibot");
   return true;
 }
 

@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.1 2002-10-27 21:46:13 rtv Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.2 2002-11-01 19:12:32 rtv Exp $
  */
 
 //#define DEBUG
@@ -33,8 +33,9 @@
 
 ///////////////////////////////////////////////////////////////////////////
 // Constructor
-CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent)
-  : CPlayerEntity( world, parent )
+CPositionDevice::CPositionDevice(  LibraryItem *libit, 
+				   CWorld *world, CEntity *parent)
+  : CPlayerEntity( libit, world, parent )
 {    
   // set the Player IO sizes correctly for this type of Entity
   m_data_len = sizeof( player_position_data_t );
@@ -43,8 +44,6 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent)
   m_reply_len = 1; 
   
   m_player.code = PLAYER_POSITION_CODE;
-  this->stage_type = PositionType;
-  this->color = ::LookupColor(POSITION_COLOR);
 
   // set up our sensor response
   laser_return = LaserTransparent;
@@ -52,6 +51,7 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent)
   obstacle_return = true;
   puck_return = true;
   idar_return = IDARTransparent;
+  vision_return = true;
 
   this->com_vr = this->com_vth = 0;
   this->odo_px = this->odo_py = this->odo_pth = 0;
@@ -85,7 +85,6 @@ bool CPositionDevice::Startup()
   if (!CPlayerEntity::Startup())
     return false;
 
-  SetDriverName("p2os_position");
   return true;
 }
 

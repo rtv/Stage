@@ -18,10 +18,10 @@
  *
  */
 /*
- * Desc: Base class for every moveable entity.
+ * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.91 2002-10-27 23:32:36 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.92 2002-11-01 19:12:29 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -73,14 +73,20 @@ void CEntity::staticSetGlobalPose( void* ent, double x, double y, double th )
 ///////////////////////////////////////////////////////////////////////////
 // main constructor
 // Requires a pointer to the parent and a pointer to the world.
-CEntity::CEntity(CWorld *world, CEntity *parent_entity )
+CEntity::CEntity(LibraryItem* libit, CWorld *world, CEntity *parent_entity )
 {
   assert( world );
   
-  m_world = world; 
-  m_parent_entity = parent_entity;
-  m_default_entity = this;
+  this->m_world = world; 
+  this->m_parent_entity = parent_entity;
+  this->m_default_entity = this;
   
+  // store the library's entry for this type
+  this->lib_entry = libit;
+
+  // get the default color
+  this->color = lib_entry->color;
+
   // attach to my parent
   if( m_parent_entity )
     m_parent_entity->AddChild( this );
@@ -92,9 +98,6 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
 
   // init the child list data
   this->child_list = this->prev = this->next = NULL;
-
-  // Set our default type (will be reset by subclass).
-  this->stage_type = NullType;
 
   // Set our default name
   this->name[0] = 0;
@@ -113,9 +116,6 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
   this->size_x = this->size_y = 0;
   this->origin_x = this->origin_y = 0;
 
-  // Set the default color
-  this->color = 0xFF0000;
-
   // set the default worldfile section to be 0 (top-level)
   this->worldfile_section = 0;
 
@@ -129,6 +129,8 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
   vision_return = false;
   laser_return = LaserTransparent;
   idar_return = IDARTransparent;
+  visible_id = 0; // no id 
+  gripper_return = GripperDisabled;
 
   // Set the initial mapped pose to a dummy value
   this->map_px = this->map_py = this->map_pth = 0;
@@ -313,9 +315,9 @@ bool CEntity::Load(CWorldFile *worldfile, int section)
     rvalue = "invisible";
   rvalue = worldfile->ReadString(section, "obstacle_return", rvalue);
   if (strcmp(rvalue, "visible") == 0)
-    this->obstacle_return = 1;
+    this->obstacle_return = true;
   else
-    this->obstacle_return = 0;
+    this->obstacle_return = false;
 
   // Sonar return values
   if (this->sonar_return)
@@ -324,9 +326,9 @@ bool CEntity::Load(CWorldFile *worldfile, int section)
     rvalue = "invisible";
   rvalue = worldfile->ReadString(section, "sonar_return", rvalue);
   if (strcmp(rvalue, "visible") == 0)
-    this->sonar_return = 1;
+    this->sonar_return = true;
   else
-    this->sonar_return = 0;
+    this->sonar_return = false;
 
   // Vision return values
   if (this->vision_return)
@@ -335,9 +337,27 @@ bool CEntity::Load(CWorldFile *worldfile, int section)
     rvalue = "invisible";
   rvalue = worldfile->ReadString(section, "vision_return", rvalue);
   if (strcmp(rvalue, "visible") == 0)
-    this->vision_return = 1;
+    this->vision_return = true;
   else
-    this->vision_return = 0;
+    this->vision_return = false;
+
+  // Gripper return values
+  if (this->gripper_return)
+    rvalue = "visible";
+  else
+    rvalue = "invisible";
+  rvalue = worldfile->ReadString(section, "gripper_return", rvalue);
+  if (strcmp(rvalue, "visible") == 0)
+    this->gripper_return = GripperEnabled;
+  else
+    this->gripper_return = GripperDisabled;
+
+  // Read the beacon id
+  this->visible_id = worldfile->ReadInt(section, "id", this->visible_id );
+
+  // Use the beacon id as a name if there is no name set
+  if ( strlen(this->name) == 0 && this->visible_id != 0 )
+    snprintf( this->name, 64, "id %d", this->visible_id);
   
   // Laser return values
   if (this->laser_return == LaserBright)
@@ -389,7 +409,7 @@ bool CEntity::Save(CWorldFile *worldfile, int section)
 bool CEntity::Startup( void )
 {
   //PRINT_DEBUG2("STARTUP %s %s", 
-  //       this->m_world->lib->TokenFromType( this->stage_type ),
+  //       this->token,
   //       m_parent_entity ? "" : "- ROOT" );
   
   // use the generic hook
@@ -1033,11 +1053,12 @@ void CEntity::Print( char* prefix )
   this->GetGlobalPose( ox, oy, oth );
 
   printf( "%s type: %s global: [%.2f,%.2f,%.2f]"
-	  " local: [%.2f,%.2f,%.2f] )", 
+	  " local: [%.2f,%.2f,%.2f] vision_return %d )", 
 	  prefix,
-	  m_world->lib->TokenFromType( this->stage_type ),
+	  this->lib_entry->token,
 	  ox, oy, oth,
-	  local_px, local_py, local_pth );
+	  local_px, local_py, local_pth,
+	  this->vision_return );
 	  
   if( this->m_parent_entity == NULL )
     puts( " - ROOT" );
@@ -1102,10 +1123,11 @@ void CEntity::GetStatusString( char* buf, int buflen )
   // check for overflow
   assert( -1 != 
 	  snprintf( buf, buflen, 
-		    "Pose(%.2f,%.2f,%.2f) Stage(%d:%d)",
+		    "Pose(%.2f,%.2f,%.2f) Stage(%d:%d(%s))",
 		    x, y, th, 
 		    this->stage_id,
-		    this->stage_type ) );
+		    this->lib_entry->type_num,
+		    this->lib_entry->token ) );
 }  
 
 #ifdef INCLUDE_RTK2
@@ -1114,8 +1136,10 @@ void CEntity::GetStatusString( char* buf, int buflen )
 // Initialise the rtk gui
 void CEntity::RtkStartup()
 {
+  assert( m_world );
+
   PRINT_DEBUG2("RTK STARTUP %s %s",
-	       this->m_world->lib->TokenFromType( this->stage_type ),
+	       this->lib_entry->token,
 	       m_parent_entity ? "" : " - ROOT" );
 
   // Create a figure representing this entity
@@ -1123,7 +1147,9 @@ void CEntity::RtkStartup()
     this->fig = rtk_fig_create(m_world->canvas, NULL, 50);
   else
     this->fig = rtk_fig_create(m_world->canvas, m_parent_entity->fig, 50);
-  
+
+  assert( this->fig );
+
   this->fig->thing = (void*)this;
   this->fig->origin_callback = staticSetGlobalPose;
   this->fig->select_callback = NULL;
@@ -1192,7 +1218,7 @@ void CEntity::RtkStartup()
       
       label[0] = 0;
       snprintf(tmp, sizeof(tmp), "%s %s", 
-	       this->name, this->m_world->lib->TokenFromType( this->stage_type ) );
+	       this->name, this->lib_entry->token );
       strncat(label, tmp, sizeof(label));
       
       rtk_fig_color_rgb32(this->fig, this->color);
@@ -1236,7 +1262,7 @@ void CEntity::RtkUpdate()
   // do this  
 
   // if we're not looking at this device, hide it 
-  if( !m_world->ShowDeviceBody( this->stage_type) )
+  if( !m_world->ShowDeviceBody( this->lib_entry->type_num ) )
   {
     rtk_fig_show(this->fig, false);
   }

@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.10 2002-10-31 01:38:54 gerkey Exp $
+ * CVS info: $Id: entity.hh,v 1.11 2002-11-01 19:12:29 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -41,9 +41,10 @@
 #include "stage.h"
 #include "stage_types.hh"
 #include "colors.hh"
-//#include "rtp.h"
+#include "library.hh"
 
 #include <netdb.h>
+#include <string.h> // for strncpy(3)
 #include <sys/types.h>
 #include <netinet/in.h>
 
@@ -58,47 +59,13 @@
 class CWorld;
 class CWorldFile;
 
-// these properties can be set with the SetProperty() method
-enum EntityProperty
-{
-  PropParent = 1, 
-  PropSizeX, 
-  PropSizeY, 
-  PropPoseX, 
-  PropPoseY, 
-  PropPoseTh, 
-  PropOriginX, 
-  PropOriginY, 
-  PropName,
-  PropPlayerId,
-  PropPlayerSubscriptions,
-  PropColor, 
-  PropShape, 
-  PropLaserReturn,
-  PropSonarReturn,
-  PropIdarReturn, 
-  PropObstacleReturn, 
-  PropVisionReturn, 
-  PropPuckReturn,
-  PropCommand,
-  PropData,
-  PropConfig,
-  PropReply,
-  ENTITY_LAST_PROPERTY // this must be the final property - we use it
- // as a count of the number of properties.
-};
-
-// (currently) static memory allocation for getting and setting properties
-//const int MAX_NUM_PROPERTIES = 30;
-const int MAX_PROPERTY_DATA_LEN = 20000;
-
 ///////////////////////////////////////////////////////////////////////////
 // The basic moveable object class
 class CEntity
 {
-  // Minimal constructor
-  // Requires a pointer to the parent and a pointer to the world.
-  public: CEntity(CWorld *world, CEntity *parent_entity );
+  // Minimal constructor Requires a pointer to the library entry for
+  // this type, a pointer to the world, and a parent
+  public: CEntity( LibraryItem* libit, CWorld *world, CEntity *parent_entity );
   
   // a linked list of other entities attached to this one
 public: CEntity* child_list;
@@ -236,9 +203,16 @@ public: virtual void FamilyUnsubscribe();
   // return a pointer to this or a child if it matches the worldfile section
   CEntity* FindSectionEntity( int section );
     
-  // Type of this entity
-  public: StageType stage_type; 
 
+  // the worldfile token that caused this entity to be created
+  // it is set in the constructor (which is called by the library) 
+  //protected: char token[STAGE_TOKEN_MAX]; 
+
+  // this is the library's entry for this device, which contains the
+  // object's type number, worldfile token, etc.  this can also be
+  // used as a type identifier, as it is unique for each library entry
+  LibraryItem* lib_entry; 
+  
   // Our shape and geometry
   public: StageShape shape;
   public: double origin_x, origin_y;
@@ -254,7 +228,7 @@ public: virtual void FamilyUnsubscribe();
   protected: double mass;
   
   // Sensor return values
-  // Set these to true to have this entity 'seen' by
+  // Set these appropriately to have this entity 'seen' by
   // the relevant sensor.
   public: bool obstacle_return;
   public: bool puck_return;
@@ -262,6 +236,10 @@ public: virtual void FamilyUnsubscribe();
   public: bool vision_return;
   public: LaserReturn laser_return;
   public: IDARReturn idar_return;
+  public: GripperReturn gripper_return;
+  // read by some devices, eg. laser beacon detector if not -1.
+  public: int visible_id; 
+
 
   // the full path name of this device in the filesystem
   //public: char device_filename[256]; 
@@ -290,6 +268,10 @@ public: virtual void FamilyUnsubscribe();
   protected: double m_interval; 
   protected: double m_last_update;
 
+
+  ///////////////////////////////////////////////////////////////////////
+  // DISTRIBUTED STAGE STUFF
+
   //public: stage_truth_t truth, old_truth;
   public: char m_dirty[ MAX_POSE_CONNECTIONS ][ ENTITY_LAST_PROPERTY ];
 
@@ -307,9 +289,6 @@ public: virtual void FamilyUnsubscribe();
   // recursive function that ORs an ent's dirty array with those of
   // all it's ancestors 
   public: void InheritDirtyFromParent( int con_count );
-
-  ///////////////////////////////////////////////////////////////////////
-  // DISTRIBUTED STAGE STUFF
 
   // the IP address of the host that manages this entity
   // replaced the hostname 'cos it's smaller and faster in comparisons

@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.15 2002-11-01 03:04:32 inspectorg Exp $
+ * CVS info: $Id: world.hh,v 1.16 2002-11-01 19:12:31 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -269,7 +269,7 @@ public: int GetStopTime( void ){ return m_stoptime; };
 
   // entities can be created by type number or by string description
   public: CEntity* CreateEntity(const char *type_str, CEntity *parent );
-  public: CEntity* CreateEntity( StageType type, CEntity *parent );
+  //public: CEntity* CreateEntity( int StageType type, CEntity *parent );
   
 
   /////////////////////////////////////////////////////////////////////////////
@@ -351,7 +351,7 @@ public: int GetStopTime( void ){ return m_stoptime; };
   typedef struct 
   {
     rtk_menu_t *menu;
-    rtk_menuitem_t *items[ NUMBER_OF_STAGE_TYPES ];
+    rtk_menuitem_t *items[ 1000 ]; // TODO - get rid of this fixed size buffer
   } stage_menu_t;
   
   // The view/device menu
@@ -365,8 +365,11 @@ public: int GetStopTime( void ){ return m_stoptime; };
   public: void AddToDeviceMenu( CEntity* ent, int check );
   
   // devices check this to see if they should display their data
-  public: bool ShowDeviceData( StageType devtype );
-  public: bool ShowDeviceBody( StageType devtype );
+  public: bool ShowDeviceData( int devtype );
+  public: bool ShowDeviceBody( int devtype );
+
+  // Number of exported images
+  private: int export_count;
 #endif
 
   //public: void GuiStartup( void );

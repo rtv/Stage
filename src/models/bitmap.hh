@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/bitmap.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -29,15 +29,16 @@ typedef struct
 class CBitmap : public CEntity
 {
   // Default constructor
-  public: CBitmap(CWorld *world, CEntity *parent);
+  public: CBitmap( LibraryItem *libit, CWorld *world, CEntity *parent);
 
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-  public: static CBitmap* Creator( CWorld *world, CEntity *parent )
+  public: static CBitmap* Creator( LibraryItem *libit, 
+				   CWorld *world, CEntity *parent )
   {
-    return( new CBitmap( world, parent ) );
+    return( new CBitmap( libit, world, parent ) );
   }
 
   // Load the entity from the worldfile

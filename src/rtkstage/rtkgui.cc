@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.4 2002-11-01 03:04:32 inspectorg Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.5 2002-11-01 19:12:32 rtv Exp $
  */
 
 
@@ -135,15 +135,12 @@ void CWorld::AddToMenu( stage_menu_t* menu, CEntity* ent, int check )
   assert( ent );
 
   // if there's no menu item for this type yet
-  if( menu->items[ ent->stage_type ] == NULL )
+  if( menu->items[ ent->lib_entry->type_num ] == NULL )
     // create a new menu item
-    assert( menu->items[ ent->stage_type ] =  
-	    rtk_menuitem_create( menu->menu, 
-				 this->lib->
-				 TokenFromType(ent->stage_type),1));
+    assert( menu->items[ ent->lib_entry->type_num ] =  
+	    rtk_menuitem_create( menu->menu, ent->lib_entry->token, 1 ));
   
-  
-  rtk_menuitem_check( menu->items[ ent->stage_type ], check );
+  rtk_menuitem_check( menu->items[ ent->lib_entry->type_num ], check );
 }
 
 void CWorld::AddToDataMenu(  CEntity* ent, int check )
@@ -159,7 +156,7 @@ void CWorld::AddToDeviceMenu(  CEntity* ent, int check )
 }
 
   // devices check this to see if they should display their data
-bool CWorld::ShowDeviceData( StageType devtype )
+bool CWorld::ShowDeviceData( int devtype )
 { 
   rtk_menuitem_t* menu_item = data_menu.items[ devtype ];
   
@@ -169,7 +166,7 @@ bool CWorld::ShowDeviceData( StageType devtype )
     return true;
 }
 
-bool CWorld::ShowDeviceBody( StageType devtype )
+bool CWorld::ShowDeviceBody( int devtype )
 {
   rtk_menuitem_t* menu_item = device_menu.items[ devtype ];
   
@@ -384,11 +381,24 @@ bool CWorld::RtkSave(CWorldFile *worldfile)
 // Start the GUI
 bool CWorld::RtkStartup()
 {
+  PRINT_DEBUG( "** STARTUP GUI **" );
+
+  // these must exist already
+  assert( this->app );
+  assert( this->app->canvas );
+  
   // Initialise rtk
   rtk_app_main_init(this->app);
   
   // this rtkstarts all entities
   root->RtkStartup();
+  
+  // Display everything
+  for( rtk_canvas_t *canvas=app->canvas; canvas!=NULL; canvas=canvas->next)
+    gtk_widget_show_all(canvas->frame);
+  
+  for (rtk_table_t *table = app->table; table != NULL; table = table->next)
+    gtk_widget_show_all(table->frame);
   
   return true;
 }
@@ -397,6 +407,8 @@ bool CWorld::RtkStartup()
 // Stop the GUI
 void CWorld::RtkShutdown()
 {
+  assert( this->app );
+
   // Finalize rtk
   rtk_app_main_term(this->app);
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/ptzdevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -35,14 +35,14 @@ class CPtzDevice : public CPlayerEntity
 {
     // Default constructor
     //
-    public: CPtzDevice(CWorld *world, CEntity *parent );
+    public: CPtzDevice( LibraryItem *libit, CWorld *world, CEntity *parent );
   
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-public: static CPtzDevice* Creator( CWorld *world, CEntity *parent )
-  { return( new CPtzDevice( world, parent ) ); }
+public: static CPtzDevice* Creator(  LibraryItem *libit, CWorld *world, CEntity *parent )
+  { return( new CPtzDevice( libit, world, parent ) ); }
   
   // Startup routine
   public: virtual bool Startup();

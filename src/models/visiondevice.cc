@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.cc,v 1.1 2002-10-27 21:46:13 rtv Exp $
+ * CVS info: $Id: visiondevice.cc,v 1.2 2002-11-01 19:12:32 rtv Exp $
  */
 
 #include <math.h>
@@ -33,10 +33,12 @@
 #include "ptzdevice.hh"
 #include "raytrace.hh"
 
+#define DEBUG
+
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
-CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent)
-        : CPlayerEntity( world, parent )
+CVisionDevice::CVisionDevice(LibraryItem* libit,CWorld *world, CPtzDevice *parent)
+        : CPlayerEntity( libit, world, parent )
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_blobfinder_data_t ); 
@@ -45,14 +47,12 @@ CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent)
   m_reply_len  = 0;
  
   m_player.code = PLAYER_BLOBFINDER_CODE;
-  this->stage_type = VisionType;
-  this->color = ::LookupColor(VISION_COLOR);
-  
+
   m_interval = 0.1; // 10Hz - the real cam is around this
 
   // If the parent is a ptz device we will use it, otherwise
   // we will operate as a naked vision device.
-  if (parent->stage_type == PtzType)
+  if (parent->m_player.code == PLAYER_PTZ_CODE )
     m_ptz_device = parent;
   else
     m_ptz_device = NULL;
@@ -95,7 +95,6 @@ bool CVisionDevice::Startup()
   if (!CPlayerEntity::Startup())
     return false;
 
-  SetDriverName("acts");
   return true;
 }
 
@@ -187,14 +186,12 @@ void CVisionDevice::UpdateScan()
   // Note that the scan is taken *clockwise*
   // i'm scanning this as half-resolution for a significant speed-up
 
-#ifdef DEBUG
-  printf("1?\n");
-#endif
-  
   StageColor col;
   
   for (int s = 0; s < m_scan_width; s++)
   {
+    //printf( "scan %d of %d\n", s, m_scan_width );
+
     // indicate no valid color found (MSB normally unused in 32bit RGB value)
     col = 0xFF000000; 
       
@@ -202,7 +199,7 @@ void CVisionDevice::UpdateScan()
     double px = ox;
     double py = oy;
     double pth = oth - s * dth;
-      
+   
     CLineIterator lit( px, py, pth, m_max_range, 
                        m_world->ppm, m_world->matrix, PointToBearingRange );
       
@@ -211,14 +208,19 @@ void CVisionDevice::UpdateScan()
       
     while( (ent = lit.GetNextEntity()) ) 
     {
-      // Ignore ourself, our ancestors and our descendents
+      //printf( "ent %p (%s), vision_return %d\n",
+      //ent, ent->lib_entry->token, ent->vision_return );
+
+      //ent->Print( "" );
+
+      // Ignore itself, its ancestors and its descendents
       if( ent == this || this->IsDescendent(ent) || ent->IsDescendent(this))
-        continue;
-	  
+	  continue;
+     
       // Ignore transparent things
-      if (!ent->vision_return)
-        continue;
-	  
+      if( !ent->vision_return )
+	  continue;
+
       range = lit.GetRange(); // it's this far away
 
       // get the color of the entity
@@ -256,6 +258,8 @@ void CVisionDevice::UpdateScan()
 // Generate ACTS data from scan-line image
 size_t CVisionDevice::UpdateACTS( player_blobfinder_data_t* data )
 {
+  PRINT_DEBUG( "entered" );
+
   assert( data );
 
   // now the colors and ranges are filled in - time to do blob detection
@@ -480,7 +484,7 @@ void CVisionDevice::RtkUpdate()
   player_blobfinder_data_t data;
 
   // if a client is subscribed to this device
-  if( Subscribed() > 0 && m_world->ShowDeviceData( this->stage_type) )
+  if( Subscribed() > 0 && m_world->ShowDeviceData( this->lib_entry->type_num) )
   {
     // attempt to get the right size chunk of data from the mmapped buffer
     if( GetData( &data, sizeof(data) ) == sizeof(data) )

@@ -1,6 +1,6 @@
 
 # Automake config to build the rtkstage gui library Makefile
-# $Id: Makefile.am,v 1.5 2002-10-31 07:48:35 gerkey Exp $
+# $Id: Makefile.am,v 1.6 2002-11-01 19:12:32 rtv Exp $
 
 if HAVE_GTK
 if WITH_RTK_GUI
@@ -12,3 +12,5 @@ AM_CPPFLAGS = 	-I$(top_srcdir)/src -I$(top_srcdir)/src/models -I@PLAYER_DIR@/inc
 
 
 librtkstage_a_SOURCES = rtkgui.cc
+
+librtkstage_a_DEPENDENCIES = $(top_srcdir)/rtk2/librtk.a

@@ -22,7 +22,7 @@
  *       the work is done by Player).
  * Author: Andrew Howard
  * Date: 5 Dec 2000
- * CVS info: $Id: broadcastdevice.cc,v 1.1 2002-10-27 21:46:13 rtv Exp $
+ * CVS info: $Id: broadcastdevice.cc,v 1.2 2002-11-01 19:12:32 rtv Exp $
  */
 
 #include <stage.h>
@@ -31,8 +31,8 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CBroadcastDevice::CBroadcastDevice(CWorld *world, CEntity *parent)
-    : CPlayerEntity(world, parent )
+CBroadcastDevice::CBroadcastDevice(LibraryItem* libit,CWorld *world, CEntity *parent)
+    : CPlayerEntity(libit,world, parent )
 {
   // Set the Player IO sizes.  We need to have both request and reply
   // queues, but dont use data or command buffers.  I've arbitrarily
@@ -44,5 +44,4 @@ CBroadcastDevice::CBroadcastDevice(CWorld *world, CEntity *parent)
   m_reply_len = 10;
 
   m_player.code = PLAYER_COMMS_CODE;
-  this->stage_type = BroadcastType;
 }

@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.1 2002-10-27 21:46:13 rtv Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.2 2002-11-01 19:12:32 rtv Exp $
  */
 
 #include <math.h>
@@ -32,8 +32,8 @@
 #include "world.hh"
 
 // constructor
-CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent )
-  : CPlayerEntity(world, parent )    
+CSonarDevice::CSonarDevice( LibraryItem* libit, CWorld *world, CEntity *parent )
+  : CPlayerEntity( libit, world, parent )    
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_sonar_data_t );
@@ -42,8 +42,6 @@ CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent )
   m_reply_len  = 1;
   
   m_player.code = PLAYER_SONAR_CODE; // from player's messages.h
-  this->stage_type = SonarType;
-  this->color = ::LookupColor(SONAR_COLOR);
 
   this->min_range = 0.20;
   this->max_range = 5.0;
@@ -71,7 +69,6 @@ bool CSonarDevice::Startup()
   if (!CPlayerEntity::Startup())
     return false;
 
-  SetDriverName("p2os_sonar");
   return true;
 }
 
@@ -274,7 +271,7 @@ void CSonarDevice::RtkUpdate()
   // the buffer instead of storing hit points in ::Update() - RTV
   player_sonar_data_t data;
   
-  if( Subscribed() > 0 && m_world->ShowDeviceData( this->stage_type) )
+  if( Subscribed() > 0 && m_world->ShowDeviceData( this->lib_entry->type_num) )
   {
     size_t res = GetData( &data, sizeof(data));
 

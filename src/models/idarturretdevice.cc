@@ -21,7 +21,7 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/idarturretdevice.cc,v $
 * $Author: rtv $
-* $Revision: 1.1 $
+* $Revision: 1.2 $
 ******************************************************************************/
 
 #include <math.h>
@@ -38,10 +38,9 @@
 //#undef DEBUG
 
 // constructor 
-CIdarTurretDevice::CIdarTurretDevice(CWorld *world, CEntity *parent )
-  : CPlayerEntity(world, parent )
+CIdarTurretDevice::CIdarTurretDevice(LibraryItem* libit,CWorld *world, CEntity *parent )
+  : CPlayerEntity(libit,world, parent )
 {
-  stage_type = IdarTurretType;
   m_player.code = PLAYER_IDARTURRET_CODE; // from player's messages.h
 
   // we're invisible 
@@ -56,9 +55,6 @@ CIdarTurretDevice::CIdarTurretDevice(CWorld *world, CEntity *parent )
   m_config_len  = 1;
   m_reply_len  = 1;
   
-    
-  this->color = ::LookupColor(IDAR_COLOR);
-
   size_x = 0.08; // this is the actual physical size of the HRL device
   size_y = 0.08; // but can be changed in the world file to suit
 
@@ -77,7 +73,7 @@ CIdarTurretDevice::CIdarTurretDevice(CWorld *world, CEntity *parent )
   // we don't call CEntity::Load() for our children - we'll configure them here
   for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
     {
-      idars[i] = new CIdarDevice( world, this );       // create
+      idars[i] = new CIdarDevice( libit, world, this );       // create
 
       // set the player
       idars[i]->m_player.index = i;

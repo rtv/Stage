@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/puck.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -19,16 +19,16 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CPuck::CPuck(CWorld *world, CEntity *parent)
-        : CEntity(world, parent)
+CPuck::CPuck(LibraryItem* libit,CWorld *world, CEntity *parent)
+        : CEntity(libit,world, parent)
 {
-  this->stage_type = PuckType;
-  this->color = ::LookupColor(PUCK_COLOR);
-
   this->vision_return = true;
   this->vision_return_held = false;
   this->vision_return_notheld = true;
-
+  this->gripper_return = GripperEnabled;
+  this->obstacle_return = false; // we don't stop robots
+  this->puck_return = true; // yes! we interact with pucks!
+ 
   // Set default shape and geometry
   this->shape = ShapeCircle;
   this->size_x = 0.08;
@@ -36,8 +36,6 @@ CPuck::CPuck(CWorld *world, CEntity *parent)
 
   m_interval = 0.01; // update very fast!
 
-  obstacle_return = false; // we don't stop robots
-  puck_return = true; // yes! we interact with pucks!
   
   m_friction = 0.05;
 
@@ -84,16 +82,18 @@ void CPuck::Update( double sim_time )
 
   CEntity::Update(sim_time);
 
+  assert( m_parent_entity ); // everyone has a parent these days
+
   // have we been picked up?  then make ourselves transparent so the vision
   // doesn't see us in the gripper. otherwise make ourselves visible.
-  if(m_parent_entity)
+  if(m_parent_entity != m_world->root ) // root is the top-level entity
     this->vision_return = this->vision_return_held;
-  else if(!m_parent_entity)
+  else
     this->vision_return = this->vision_return_notheld;
 
   // if its time to recalculate state and we're on the ground
   //
-  if( (sim_time - m_last_update > m_interval) && (!m_parent_entity) )
+  if( (sim_time - m_last_update > m_interval) && (m_parent_entity == m_world->root) )
   {	
     m_last_update = sim_time;
 	
@@ -114,7 +114,7 @@ void CPuck::Move()
   double step_time = m_world->m_sim_timestep;
 
   // don't move if we've been picked up
-  if(m_parent_entity) return;
+  if(m_parent_entity != m_world->root ) return;
     
   // Get the current puck pose
   double px, py, pth;

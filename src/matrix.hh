@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.hh,v 1.3 2002-10-27 21:55:37 rtv Exp $
+// $Id: matrix.hh,v 1.4 2002-11-01 19:12:29 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -61,7 +61,7 @@ class CMatrix
     }
   
   // is there an object of this type here?
-  inline bool is_type( int x, int y, StageType type )
+  inline bool is_type( int x, int y, int type )
     { 
       //if( i<0 || i > width*height ) return 0;
     
@@ -69,7 +69,7 @@ class CMatrix
     
       while( *cell )
       {
-        if( (*cell)->stage_type == type ) return true;
+        if( (*cell)->lib_entry->type_num == type ) return true;
         cell++;
       }
     

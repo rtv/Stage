@@ -5,7 +5,7 @@
 # 
 # (PLAYER_DIR)/examples/c++/startmany.tcl pherobot 100
 #
-# CVS: $Id: pherobot.world,v 1.10 2002-08-24 04:58:58 rtv Exp $
+# CVS: $Id: pherobot.world,v 1.11 2002-11-01 19:12:32 rtv Exp $
 
 
 resolution 0.02
@@ -27,10 +27,28 @@ gui
 )
 
 
-define pherobot descartes( idarturret() )
-#define pherobot  descartes( idar() )
+define pherobot position
+( 
+ shape "circle"
+ size [0.12 0.12]
+ 
+ idarturret() 
 
-pherobot( pose [ 1.307 6.320 0.000 ] port 6665 )
+ # 2 almost semi-circular bumpers, left and right, overlapping
+ # slightly in front with a dead spot behind
+ #	
+ # bumper pose format is [x y th length radius]
+ # if radius is zero then the bumper is a straight line
+ #	
+ bumper
+ ( 
+   bcount 2 
+   bpose[0] [ 0.0   0.01 -80 0.22 0.08 ]
+   bpose[1] [ 0.0  -0.01 +80 0.22 0.08 ]
+ ) 
+)
+
+pherobot( pose [ 6.001 4.792 90.643 ] port 6665 )
 pherobot( pose [ 1.428 7.711 0.000 ] port 6666 )
 pherobot( pose [ 0.979 8.131 0.000 ] port 6667 )
 pherobot( pose [ 1.636 5.783 0.000 ] port 6668 )

@@ -21,14 +21,14 @@ void UpdateAdjList(CMoteDevice* n, CMoteDevice* x);
 class CMoteDevice : public CPlayerEntity
 {
     // Default constructor
-    public: CMoteDevice(CWorld *world, CEntity *parent );
+    public: CMoteDevice( LibraryItem *libit, CWorld *world, CEntity *parent );
  
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-public: static CMoteDevice* Creator( CWorld *world, CEntity *parent )
-  { return( new CMoteDevice( world, parent ) ); }
+public: static CMoteDevice* Creator(  LibraryItem *libit, CWorld *world, CEntity *parent )
+  { return( new CMoteDevice( libit, world, parent ) ); }
 
   // Startup routine
   public: virtual bool Startup();

@@ -22,7 +22,7 @@
  * devices here.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 8 Jun 2002
- * CVS info: $Id: colors.hh,v 1.5 2002-10-26 00:52:38 rtv Exp $
+ * CVS info: $Id: colors.hh,v 1.6 2002-11-01 19:12:29 rtv Exp $
  */
 
 #ifndef _STAGECOLORS_H
@@ -41,6 +41,8 @@
 #define GRID_MINOR_COLOR "gray95"
 #define MATRIX_COLOR "dark green"
 #define BACKGROUND_COLOR "ivory"
+
+/*
 #define GRIPPER_COLOR "blue"
 #define POSITION_COLOR "dark red"
 #define LASER_COLOR  "blue"
@@ -59,6 +61,7 @@
 #define IDAR_COLOR "DarkRed"
 #define DESCARTES_COLOR "DarkBlue"
 #define POWER_COLOR "orange"
+*/
 
 // Look up the color in a database.  (i.e. transform color name to
 // color value).  If the color is not found in the database, a bright

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/gpsdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -20,8 +20,8 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CGpsDevice::CGpsDevice(CWorld *world, CEntity *parent )
-  : CPlayerEntity(world, parent )
+CGpsDevice::CGpsDevice(LibraryItem* libit, CWorld *world, CEntity *parent )
+  : CPlayerEntity(libit, world, parent )
 {
   m_data_len    = sizeof( player_gps_data_t ); 
   m_command_len = 0;
@@ -29,9 +29,7 @@ CGpsDevice::CGpsDevice(CWorld *world, CEntity *parent )
   m_reply_len  = 0;
 
   m_player.code = PLAYER_GPS_CODE;
-  this->stage_type = GpsType;
-  this->color = ::LookupColor(GPS_COLOR);
-  
+
   m_interval = 0.05; 
 }
 
@@ -43,7 +41,6 @@ bool CGpsDevice::Startup()
   if (!CPlayerEntity::Startup())
     return false;
 
-  SetDriverName("gps");
   return true;
 }
 

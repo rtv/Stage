@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.hh,v 1.1 2002-10-27 21:46:13 rtv Exp $
+ * CVS info: $Id: visiondevice.hh,v 1.2 2002-11-01 19:12:32 rtv Exp $
  */
 
 #ifndef VISIONDEVICE_HH
@@ -47,14 +47,14 @@ typedef struct
 class CVisionDevice : public CPlayerEntity
 {
   // Default constructor
-  public: CVisionDevice(CWorld *world, CPtzDevice *parent);
+  public: CVisionDevice( LibraryItem *libit, CWorld *world, CPtzDevice *parent);
 
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-public: static CVisionDevice* Creator( CWorld *world, CEntity *parent )
-  { return( new CVisionDevice( world, (CPtzDevice*)parent ) ); }
+public: static CVisionDevice* Creator(  LibraryItem *libit, CWorld *world, CEntity *parent )
+  { return( new CVisionDevice( libit, world, (CPtzDevice*)parent ) ); }
 
     // Startup routine
     public: virtual bool Startup();

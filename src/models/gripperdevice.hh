@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/gripperdevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -43,14 +43,14 @@ class CGripperDevice : public CPlayerEntity
 {
   // Default constructor
   //
-  public: CGripperDevice(CWorld *world, CEntity *parent ); 
+  public: CGripperDevice( LibraryItem *libit, CWorld *world, CEntity *parent ); 
 
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-public: static CGripperDevice* Creator( CWorld *world, CEntity *parent )
-  { return( new CGripperDevice( world, parent ) ); }
+public: static CGripperDevice* Creator(  LibraryItem *libit, CWorld *world, CEntity *parent )
+  { return( new CGripperDevice( libit, world, parent ) ); }
 
   // Startup routine
   public: virtual bool Startup();

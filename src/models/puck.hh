@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/puck.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -32,14 +32,14 @@
 class CPuck : public CEntity
 {
   // Default constructor
-  public: CPuck(CWorld *world, CEntity *parent);
+  public: CPuck( LibraryItem *libit, CWorld *world, CEntity *parent);
 
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-public: static CPuck* Creator( CWorld *world, CEntity *parent )
-  { return( new CPuck( world, parent ) ); }
+public: static CPuck* Creator(  LibraryItem *libit, CWorld *world, CEntity *parent )
+  { return( new CPuck( libit, world, parent ) ); }
 
   // Load the entity from the worldfile
   public: virtual bool Load(CWorldFile *worldfile, int section);

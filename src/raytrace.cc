@@ -1,11 +1,30 @@
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 // ==================================================================
 // Filename:	raytrace.cc
-// $Id: raytrace.cc,v 1.9 2002-07-09 03:31:56 rtv Exp $
+// $Id: raytrace.cc,v 1.10 2002-11-01 19:12:30 rtv Exp $
 // RTV
 // ==================================================================
 
 #include "raytrace.hh"
 
+extern CWorld* world;
 
 CEntity* g_nullp = 0;
 
@@ -134,7 +153,7 @@ inline CEntity** CLineIterator::RayTrace( double &px, double &py, double pth,
   
   //if( ent && ent[0] )
   //printf( "Hit %p (%d) at %.2f,%.2f with %.2f to go\n", 
-  //    ent[0], ent[0]->m_stage_type, px, py, remaining_range );
+  //    ent[0], ent[0]->type_num, px, py, remaining_range );
   //else
   //printf( "hit nothing. remaining range = %.2f\n", remaining_range );
   // fflush( stdout );
@@ -320,16 +339,26 @@ CEntity* CRectangleIterator::GetNextEntity( void )
 }
 
 
+// a circle iterator is an arc iterator with a 2PI scan range
 CCircleIterator::CCircleIterator( double x, double y, double r, 
 				  double ppm, CMatrix* matrix )
+  : CArcIterator( x, y, 0, r, M_PI*2.0, ppm, matrix )
+{
+}
+
+CArcIterator::CArcIterator( double x, double y, double th,
+			    double scan_r, double scan_th, 
+			      double ppm, CMatrix* matrix )
 {   
   m_matrix = matrix;
   m_ppm = ppm;       
 
-  m_radius = r * m_ppm;
   m_center_x = x * m_ppm;
   m_center_y = y * m_ppm;
-  m_angle = 0;
+  m_angle = th - scan_th/2.0;
+
+  m_radius = scan_r * m_ppm;
+  m_max_angle = m_angle + scan_th; // this is the angle length of the scan in radians
 
   m_ent = 0;
   m_index = 0;
@@ -346,9 +375,9 @@ CCircleIterator::CCircleIterator( double x, double y, double r,
 };
 
 
-CEntity* CCircleIterator::GetNextEntity( void )
+CEntity* CArcIterator::GetNextEntity( void )
 {
-  if( m_angle >= 2.0 * M_PI ) return 0; // done!
+  if( m_angle >= m_max_angle ) return 0; // done!
   
   //printf( "current ptr: %p index: %d\n", m_ent[m_index], index );
 
@@ -356,7 +385,7 @@ CEntity* CCircleIterator::GetNextEntity( void )
   {
     //printf( "before %d,%d\n", (int)m_x, (int)m_y );
     // get a new array of pointers
-    m_ent = CircleTrace( m_angle );
+    m_ent = ArcTrace( m_angle );
     //PrintArray( m_ent );
     //printf( "after %d,%d\n", (int)m_x, (int)m_y );
     m_index = 0; // back to the start of the array
@@ -372,11 +401,11 @@ CEntity* CCircleIterator::GetNextEntity( void )
 }
 
 
-CEntity** CCircleIterator::CircleTrace( double &remaining_angle )
+CEntity** CArcIterator::ArcTrace( double &remaining_angle )
 {
   CEntity** ent = 0;
    
-  while( remaining_angle < (M_PI * 2.0) )
+  while( remaining_angle < m_max_angle )
   { 
     m_px = m_center_x + m_radius * cos( remaining_angle );
     m_py = m_center_y + m_radius * sin( remaining_angle );
@@ -414,7 +443,7 @@ CEntity** CCircleIterator::CircleTrace( double &remaining_angle )
   return ent; // we hit these entities
 }
 
-void CCircleIterator::PrintArray( CEntity** ent )
+void CArcIterator::PrintArray( CEntity** ent )
 {
   printf( "Array: " );
   

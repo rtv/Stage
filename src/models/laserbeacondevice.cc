@@ -7,11 +7,11 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/laserbeacondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.2 $
+//  $Author: rtv $
+//  $Revision: 1.3 $
 //
-// Usage:
-//  (empty)
+// Usage: detects objects that were laser bright and had non-zero
+// visible_id in a laser scan
 //
 // Theory of operation:
 //  (empty)
@@ -35,8 +35,8 @@
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
-CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
-  : CPlayerEntity(world, parent )
+CLBDDevice::CLBDDevice(LibraryItem* libit,CWorld *world, CLaserDevice *parent )
+  : CPlayerEntity(libit,world, parent )
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_fiducial_data_t );
@@ -45,8 +45,6 @@ CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
   m_reply_len  = 1;
 
   m_player.code = PLAYER_FIDUCIAL_CODE;
-  this->stage_type = LbdType;
-  this->color = ::LookupColor(LBD_COLOR);
   
   // the parent MUST be a laser device
   ASSERT( parent );
@@ -101,7 +99,6 @@ bool CLBDDevice::Startup()
   if (!CPlayerEntity::Startup())
     return false;
 
-  SetDriverName("laserbarcode");
   return true;
 }
 
@@ -243,8 +240,8 @@ void CLBDDevice::Update( double sim_time )
   for( LaserBeaconList::iterator it = this->laser->visible_beacons.begin();
        it != this->laser->visible_beacons.end(); it++ )
   {
-    CLaserBeacon *nbeacon = (CLaserBeacon*) *it;        
-    int id = nbeacon->id;
+    CEntity *nbeacon = (CEntity*)*it;        
+    int id = nbeacon->visible_id;
     double px, py, pth;   
     nbeacon->GetGlobalPose( px, py, pth );
 
@@ -344,7 +341,7 @@ void CLBDDevice::RtkUpdate()
   rtk_fig_clear(this->beacon_fig);
   
   // if a client is subscribed to this device
-  if( Subscribed() > 0 && m_world->ShowDeviceData( this->stage_type) )
+  if( Subscribed() > 0 && m_world->ShowDeviceData( this->lib_entry->type_num ) )
   {
     player_fiducial_data_t data;
     

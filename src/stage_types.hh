@@ -21,7 +21,7 @@
  * Desc: Shared types, constants, etc
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: stage_types.hh,v 1.6 2002-10-27 21:55:37 rtv Exp $
+ * CVS: $Id: stage_types.hh,v 1.7 2002-11-01 19:12:30 rtv Exp $
  */
 
 #ifndef STAGE_TYPES_HH
@@ -60,9 +60,9 @@ const int MAX_POSE_CONNECTIONS = 100;
 #define IOFILENAME "/tmp/stageIO"
 
 // the max size of an entity's worldfile token
-const int STAGE_MAX_TOKEN_LEN = 128;
+const size_t STAGE_TOKEN_MAX = 48;
 
-const int WORLD_FILENAME_MAXLEN = 512;
+const size_t STAGE_WORLD_FILENAME_MAX = 512;
 
 ///////////////////////////////////////////////////////////////////////////
 // Global variables
@@ -84,53 +84,55 @@ typedef int stage_id_t;
 // Color type
 typedef uint32_t StageColor;
 
-// definition of stage object type codes
-// similar to player types, but not exactly, as different robots
-// can appear to stage as identical position devices, for example.
-// YOU MUST ADD YOUR NEW DEVICE HERE
-enum StageType
+/* StageType is deprecated and has been removed */
+
+// these properties can be set with the SetProperty() method
+enum EntityProperty
 {
-  NullType = 0,
-  BitmapType,
-  PlayerType, 
-  MiscType, 
-  PositionType,
-  SonarType,
-  LaserTurretType,
-  VisionType,
-  PtzType,
-  BoxType,
-  LaserBeaconType,
-  LbdType, // Laser Beacon Detector
-  VisionBeaconType,
-  GripperType, 
-  GpsType,
-  PuckType,
-  BroadcastType,
-  AudioType,
-  SpeechType,
-  TruthType,
-  OccupancyType,
-  IdarType, // HRL's Infrared Data And Ranging turret
-  DescartesType, // HRL's customized Descartes robot platform
-  OmniPositionType,
-  MoteType,
-  BpsType,
-  IdarTurretType,
-  PowerType,
-  NUMBER_OF_STAGE_TYPES // THIS MUST BE LAST - put yours before this.
+  PropParent = 1, 
+  PropSizeX, 
+  PropSizeY, 
+  PropPoseX, 
+  PropPoseY, 
+  PropPoseTh, 
+  PropOriginX, 
+  PropOriginY, 
+  PropName,
+  PropPlayerId,
+  PropPlayerSubscriptions,
+  PropColor, 
+  PropShape, 
+  PropLaserReturn,
+  PropSonarReturn,
+  PropIdarReturn, 
+  PropObstacleReturn, 
+  PropVisionReturn, 
+  PropPuckReturn,
+  PropCommand,
+  PropData,
+  PropConfig,
+  PropReply,
+  ENTITY_LAST_PROPERTY // this must be the final property - we use it
+ // as a count of the number of properties.
 };
+
+// (currently) static memory allocation for getting and setting properties
+//const int MAX_NUM_PROPERTIES = 30;
+const int MAX_PROPERTY_DATA_LEN = 20000;
+
 
 class CEntity;
 class CWorld;
+class LibraryItem;
 // pointer to a function that returns a new  entity
 // given a world and a parent
-typedef CEntity*(*CreatorFunctionPtr)( CWorld* world, CEntity* parent );
+typedef CEntity*(*CreatorFunctionPtr)( LibraryItem *libit, CWorld *world, CEntity *parent );
 
 typedef struct libitem
 {
   const char* token;
-  StageType type;
+  //StageType type;
+  const char* colorstr;
   CreatorFunctionPtr fp;
 } libitem_t;
 
@@ -159,6 +161,13 @@ enum IDARReturn
   IDARTransparent=0,
   IDARReflect,
   IDARReceive
+};
+
+// Possible Gripper return values
+enum GripperReturn
+{
+  GripperDisabled = 0,
+  GripperEnabled
 };
 
 // image types ////////////////////////////////////////////////////////

@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.1 2002-10-27 21:46:13 rtv Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.2 2002-11-01 19:12:32 rtv Exp $
  */
 
 #define DEBUG
@@ -40,8 +40,8 @@
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
-CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent )
-    : CPlayerEntity(world, parent )
+CLaserDevice::CLaserDevice(LibraryItem* libit, CWorld *world, CEntity *parent )
+    : CPlayerEntity(libit, world, parent )
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_laser_data_t );
@@ -50,8 +50,6 @@ CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent )
   m_reply_len  = 1;
   
   m_player.code = PLAYER_LASER_CODE; // from player's messages.h
-  this->stage_type = LaserTurretType;
-  this->color = ::LookupColor(LASER_COLOR);
   
   // Default visibility settings
   this->laser_return = LaserVisible;
@@ -90,7 +88,6 @@ bool CLaserDevice::Startup()
   if (!CPlayerEntity::Startup())
     return false;
 
-  SetDriverName("sicklms200");
   return true;
 }
 
@@ -326,8 +323,9 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 	  (ent != m_world->root && ent->IsDescendent(this)))
         continue;
 
-      // Construct a list of beacons we have seen
-      if( ent->stage_type == LaserBeaconType )
+      // Construct a list of entiities that are laser reflectors with
+      // visible ids
+      if( ent->visible_id != 0 )
         this->visible_beacons.push_front( (int)ent );
 
       // Stop looking when we see something
@@ -412,7 +410,7 @@ void CLaserDevice::RtkUpdate()
   //gth -= M_PI / 2.0;
   
   // if a client is subscribed to this device
-  if( Subscribed() > 0 && m_world->ShowDeviceData( this->stage_type) )
+  if( Subscribed() > 0 && m_world->ShowDeviceData( this->lib_entry->type_num) )
   {
     player_laser_data_t data;
     

@@ -25,8 +25,8 @@ MotePtrList m_mote_list;
 // Default constructor
 //
 
-CMoteDevice::CMoteDevice(CWorld *world, CEntity *parent )
-  : CPlayerEntity(world, parent)
+CMoteDevice::CMoteDevice(LibraryItem* libit,CWorld *world, CEntity *parent )
+  : CPlayerEntity(libit,world, parent)
 {
   m_data_len    = MAX_MOTE_Q_LEN * sizeof( player_mote_data_t );
   m_command_len = sizeof( player_mote_data_t );
@@ -34,7 +34,6 @@ CMoteDevice::CMoteDevice(CWorld *world, CEntity *parent )
   m_reply_len  = 1;
   
   m_player.code = PLAYER_MOTE_CODE;
-  this->stage_type = MoteType;
 
   m_interval = 0.01;
   m_graph_update_interval = 0.2;
@@ -67,7 +66,6 @@ bool CMoteDevice::Startup()
   if (!CPlayerEntity::Startup())
     return false;
 
-  SetDriverName("usc_mote");
   return true;
 }
 

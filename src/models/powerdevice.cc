@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: powerdevice.cc,v 1.1 2002-10-27 21:46:13 rtv Exp $
+ * CVS info: $Id: powerdevice.cc,v 1.2 2002-11-01 19:12:32 rtv Exp $
  */
 
 #include <math.h>
@@ -31,8 +31,8 @@
 #include "world.hh"
 
 // constructor
-CPowerDevice::CPowerDevice(CWorld *world, CEntity *parent )
-  : CPlayerEntity(world, parent )    
+CPowerDevice::CPowerDevice(LibraryItem* libit,CWorld *world, CEntity *parent )
+  : CPlayerEntity(libit,world, parent )    
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_power_data_t );
@@ -41,10 +41,8 @@ CPowerDevice::CPowerDevice(CWorld *world, CEntity *parent )
   m_reply_len  = 1;
   
   m_player.code = PLAYER_POWER_CODE; // from player's messages.h
-  this->stage_type = PowerType;
-  this->color = ::LookupColor(POWER_COLOR);
 
-  this->charge = 1000;  
+  this->charge = 120; // volts/10  
 
   // once per second is fine for battery charge
   this->m_interval = 1.0; 
@@ -58,7 +56,6 @@ bool CPowerDevice::Startup()
   if (!CPlayerEntity::Startup())
     return false;
 
-  SetDriverName("power");
   return true;
 }
 

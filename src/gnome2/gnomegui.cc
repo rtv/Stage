@@ -21,7 +21,7 @@
  * Desc: Gnome GUI 
  * Author: Richard Vaughan
  * Date: 20 Sept 2002
- * CVS info: $Id: gnomegui.cc,v 1.2 2002-10-27 21:37:59 rtv Exp $
+ * CVS info: $Id: gnomegui.cc,v 1.3 2002-11-01 19:12:31 rtv Exp $
  */
 
 
@@ -44,6 +44,7 @@
 #include "playerdevice.hh"
 #include "bitmap.hh"
 #include "worldfile.hh"
+//#include "library.hh"
 #include <gnome.h>
 
 // include the logo XPM
@@ -701,100 +702,97 @@ void GnomeEntityStartup( CEntity* entity )
     }
   else // we're not root
     {
-      switch( entity->stage_type )
+      if( RTTI_ISTYPE( CBitmap*, entity) ) // if it's a bitmap      
 	{
-	case BitmapType: // it's a bitmap
-	  {
-	    PRINT_DEBUG( "making a bitmap gui thing" );
-
-	    GnomeCanvasPoints *gcp = gnome_canvas_points_new(5);
-	    
-	    PRINT_DEBUG1( "rects: %d\n", ((CBitmap*)entity)->bitmap_rects.size() );
-
-	    // add the figure we pre-computed in CBitmap::Startup()  
-	    for(
-		std::vector<bitmap_rectangle_t>::iterator it = ((CBitmap*)entity)->bitmap_rects.begin();
-		it != ((CBitmap*)entity)->bitmap_rects.end();
-		it++ )  
-	      {
-		// find the rectangle bounding box, as these are
-		// originally specced in center,offset style
-		gcp->coords[0] = it->x - it->w/2.0;
-		gcp->coords[1] = it->y - it->h/2.0;
-		gcp->coords[2] = gcp->coords[0] + it->w;
-		gcp->coords[3] = gcp->coords[1];
-		gcp->coords[4] = gcp->coords[2];
-		gcp->coords[5] = gcp->coords[1] + it->h;
-		gcp->coords[6] = gcp->coords[0];
-		gcp->coords[7] = gcp->coords[5];
-		gcp->coords[8] = gcp->coords[0];
-		gcp->coords[9] = gcp->coords[1];
-		
-		
-		// add the rectangle   
-		/*
-		  // use rectangle in aa mode
-		  gnome_canvas_item_new (g_group,
-		  gnome_canvas_rect_get_type(),
-		  "x1", x,
-		  "y1", y,
-		  "x2", a,
-		  "y2", b,
-		  // alpha blending is slow...
-		  //"fill_color_rgba", (color << 8)+128,
-		  //"fill_color_rgba", (color << 8)+255,
-		  "fill_color", "black",
-		  "outline_color", NULL,
-		  "width_pixels", 1,
-		  NULL );            
-		*/
-		
-		// use lines in X mode
-		gnome_canvas_item_new ( GetGroup(entity),
-					gnome_canvas_line_get_type(),
-					"points", gcp,
-					"fill_color_rgba", (entity->color<<8)+255,
-					"width_pixels", 1,//0.001,
-					NULL );
-	      }
-	    
-	    gnome_canvas_points_free(gcp);	    
-	  }
-	  break;
+	  PRINT_DEBUG( "making a bitmap gui thing" );
 	  
-	default:  // most things are just rectangles or ellipses
-	  {
-	    GtkType shape = 0;
-	    
-	    // choose a shape
-	    switch( entity->shape )
-	      {
-	      case ShapeRect:
-		shape = gnome_canvas_rect_get_type();
-		break;
-	      case ShapeCircle: 
-		shape = gnome_canvas_ellipse_get_type();
-		break;
-	      case ShapeNone: // draw nothin'.
-		shape = 0;
-		break;
-	      }      
-	    
-	    if( shape != 0 )
-	      SetBody( entity, 
-		       gnome_canvas_item_new ( GetGroup(entity), 
-					       shape,
-					       "x1", - entity->size_x/2.0,
-					       "y1", - entity->size_y/2.0,
-					       "x2", + entity->size_x/2.0,
-					       "y2", + entity->size_y/2.0,
-					       "fill_color_rgba", RGBA(entity->color,255),
-					       "outline_color_rgba", RGBA(entity->color,255),
-					       "width_pixels", 1,
-					       NULL ) 
-		       );
+	  GnomeCanvasPoints *gcp = gnome_canvas_points_new(5);
 	  
-
+	  PRINT_DEBUG1( "rects: %d\n", ((CBitmap*)entity)->bitmap_rects.size() );
+	  
+	  // add the figure we pre-computed in CBitmap::Startup()  
+	  for(
+	      std::vector<bitmap_rectangle_t>::iterator it = ((CBitmap*)entity)->bitmap_rects.begin();
+	      it != ((CBitmap*)entity)->bitmap_rects.end();
+	      it++ )  
+	    {
+	      // find the rectangle bounding box, as these are
+	      // originally specced in center,offset style
+	      gcp->coords[0] = it->x - it->w/2.0;
+	      gcp->coords[1] = it->y - it->h/2.0;
+	      gcp->coords[2] = gcp->coords[0] + it->w;
+	      gcp->coords[3] = gcp->coords[1];
+	      gcp->coords[4] = gcp->coords[2];
+	      gcp->coords[5] = gcp->coords[1] + it->h;
+	      gcp->coords[6] = gcp->coords[0];
+	      gcp->coords[7] = gcp->coords[5];
+	      gcp->coords[8] = gcp->coords[0];
+	      gcp->coords[9] = gcp->coords[1];
+	      
+	      
+	      // add the rectangle   
+	      /*
+		// use rectangle in aa mode
+		gnome_canvas_item_new (g_group,
+		gnome_canvas_rect_get_type(),
+		"x1", x,
+		"y1", y,
+		"x2", a,
+		"y2", b,
+		// alpha blending is slow...
+		//"fill_color_rgba", (color << 8)+128,
+		//"fill_color_rgba", (color << 8)+255,
+		"fill_color", "black",
+		"outline_color", NULL,
+		"width_pixels", 1,
+		NULL );            
+	      */
+	      
+	      // use lines in X mode
+	      gnome_canvas_item_new ( GetGroup(entity),
+				      gnome_canvas_line_get_type(),
+				      "points", gcp,
+				      "fill_color_rgba", 
+				      (entity->color<<8)+255,
+				      "width_pixels", 1,//0.001,
+				      NULL );
+	    }
+	  
+	  gnome_canvas_points_free(gcp);	    
+	}  
+      else  // most things are just rectangles or ellipses
+	{
+	  GtkType shape = 0;
+	  
+	  // choose a shape
+	  switch( entity->shape )
+	    {
+	    case ShapeRect:
+	      shape = gnome_canvas_rect_get_type();
+	      break;
+	    case ShapeCircle: 
+	      shape = gnome_canvas_ellipse_get_type();
+	      break;
+	    case ShapeNone: // draw nothin'.
+	      shape = 0;
+	      break;
+	    }      
+	  
+	  if( shape != 0 )
+	    SetBody( entity, 
+		     gnome_canvas_item_new ( GetGroup(entity), 
+					     shape,
+					     "x1", - entity->size_x/2.0,
+					     "y1", - entity->size_y/2.0,
+					     "x2", + entity->size_x/2.0,
+					     "y2", + entity->size_y/2.0,
+					     "fill_color_rgba", RGBA(entity->color,255),
+					     "outline_color_rgba", RGBA(entity->color,255),
+					     "width_pixels", 1,
+					     NULL ) 
+		     );
+	  
+	  
 	  // register an event if this is a lop level thingie
 	  // so we can be selected when the mouse enters us
 	  // attach a callback for events to the root group in the canvas
@@ -802,8 +800,6 @@ void GnomeEntityStartup( CEntity* entity )
 	  if( entity->m_parent_entity == entity->m_world->root )
 	    gtk_signal_connect(GTK_OBJECT( GetBody(entity) ), "event",
 			       (GtkSignalFunc) GnomeEventBody, entity );  
-	  }
-	  break;
 	}
     }
   
@@ -989,7 +985,7 @@ void GnomeSelect( CEntity* ent )
 
   g_watched = ent;
   
-  //printf( "select: %d \n", ent->stage_type ); 
+  //printf( "select: %s \n", ent->token ); 
   
   double border = 0.7;
   double noselen = 0.2;
@@ -1102,8 +1098,8 @@ void GnomeEntityPropertyChange( CEntity* ent, EntityProperty prop )
       GnomeEntityMove( ent ); // move the gui figure
       break;
       
-    case PropData:
-      GnomeEntityRenderData( ent );
+    case PropData: // HACK ALERT
+      if( RTTI_ISTYPE( CPlayerEntity*, ent ) ) GnomeEntityRenderData( (CPlayerEntity*)ent );
       break;
       
     case PropPlayerSubscriptions:
@@ -1121,17 +1117,18 @@ void GnomeEntityPropertyChange( CEntity* ent, EntityProperty prop )
     }
 }
   
-void GnomeEntityRenderData( CEntity* ent )
+void GnomeEntityRenderData( CPlayerEntity* ent )
 {
   //PRINT_DEBUG( "" );
 
-  switch( ent->stage_type )
+  // render data by player interface
+  switch( ent->m_player.code )
     {
-    case LaserTurretType:
+    case PLAYER_LASER_CODE:
       GnomeEntityRenderDataLaser(  (CLaserDevice*)ent );
       break;
 
-    case SonarType:
+    case PLAYER_SONAR_CODE:
       GnomeEntityRenderDataSonar( (CSonarDevice*)ent );
       break;
 
