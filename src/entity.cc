@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.98 2002-12-05 04:01:09 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.99 2003-01-09 16:41:23 inspectorg Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -536,8 +536,8 @@ CEntity *CEntity::TestCollision(double px, double py, double pth)
       CEntity* ent;
       while( (ent = rit.GetNextEntity()) )
       {
-        if( ent != this && ent->obstacle_return )
-	    return ent;
+        if( ent != this && !IsDescendent(ent) && ent->obstacle_return )
+          return ent;
       }
       return NULL;
     }
@@ -548,13 +548,13 @@ CEntity *CEntity::TestCollision(double px, double py, double pth)
       CEntity* ent;
       while( (ent = rit.GetNextEntity()) )
       {
-        if( ent != this && ent->obstacle_return )
-	    return ent;
+        if( ent != this && !IsDescendent(ent)  && ent->obstacle_return )
+          return ent;
       }
       return NULL;
     }
-  case ShapeNone:
-    break;
+    case ShapeNone:
+      break;
   }
   return NULL;
 }
