@@ -64,9 +64,9 @@ gui_window_t* gui_window_create( world_t* world, int xdim, int ydim )
   gtk_box_pack_start(GTK_BOX(hbox), 
 		     GTK_WIDGET(win->statusbar), FALSE, TRUE, 0);
   
-  win->timelabel = GTK_LABEL(gtk_label_new("0:00:00"));
-  gtk_box_pack_end(GTK_BOX(hbox), 
-		   GTK_WIDGET(win->timelabel), FALSE, FALSE, 0);
+  //win->timelabel = GTK_LABEL(gtk_label_new("0:00:00"));
+  //gtk_box_pack_end(GTK_BOX(hbox), 
+  //	   GTK_WIDGET(win->timelabel), FALSE, FALSE, 0);
 
   gtk_box_pack_start(GTK_BOX(win->canvas->layout), 
 		     GTK_WIDGET(hbox), FALSE, TRUE, 0);
@@ -109,6 +109,8 @@ gui_window_t* gui_window_create( world_t* world, int xdim, int ydim )
   rtk_canvas_scale( win->canvas, 1.1*width/xdim, 1.1*width/xdim );
   rtk_canvas_origin( win->canvas, width/2.0, height/2.0 );
 
+  win->selection_active = NULL;
+  
   gui_window_menus_create( win );
 
   return win;
@@ -224,14 +226,24 @@ void gui_world_update( world_t* world )
     {
       if( win->show_matrix ) gui_world_matrix( world, win );
       
-      char clock[256];
-      snprintf( clock, 255, "%lu:%2lu:%2lu.%3lu\n",
+      char clock[128];
+      snprintf( clock, 255, "Time: %lu:%lu:%2lu:%2lu.%3lu",
+		world->sim_time / (24*3600000), // days
 		world->sim_time / 3600000, // hours
 		(world->sim_time % 3600000) / 60000, // minutes
 		(world->sim_time % 60000) / 1000, // seconds
 		world->sim_time % 1000 ); // milliseconds
       
-      gtk_label_set_text( win->timelabel, clock );
+      //gtk_label_set_text( win->timelabel, clock );
+      
+      if( win->selection_active )
+	gui_model_display_pose( win->selection_active, "Selection:" );
+      else      
+	{	  
+	  guint cid = gtk_statusbar_get_context_id( win->statusbar, "on_mouse" );
+	  gtk_statusbar_pop( win->statusbar, cid ); 
+	  gtk_statusbar_push( win->statusbar, cid, clock ); 
+	}
       
       rtk_canvas_render( win->canvas );      
     }
@@ -254,13 +266,29 @@ const char* gui_model_describe(  model_t* mod )
   
   stg_pose_t* pose = model_get_pose( mod );
 
-  snprintf(txt, sizeof(txt), "\"%s\" (%d:%d) pose: [%.2f,%.2f,%.2f]",  
-	   mod->token, mod->world->id, mod->id,  
+  snprintf(txt, sizeof(txt), "%s \"%s\" (%d:%d) pose: [%.2f,%.2f,%.2f]",  
+	   stg_model_type_string(mod->type), 
+	   mod->token, 
+	   mod->world->id, 
+	   mod->id,  
 	   pose->x, pose->y, pose->a  );
   
   return txt;
 }
 
+
+void gui_model_display_pose( model_t* mod, char* verb )
+{
+  char txt[256];
+  gui_window_t* win = mod->world->win;
+
+  // display the pose
+  snprintf(txt, sizeof(txt), "%s %s", verb, gui_model_describe(mod)); 
+  guint cid = gtk_statusbar_get_context_id( win->statusbar, "on_mouse" );
+  gtk_statusbar_pop( win->statusbar, cid ); 
+  gtk_statusbar_push( win->statusbar, cid, txt ); 
+  //printf( "STATUSBAR: %s\n", txt );
+}
 
 // Process mouse events 
 void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
@@ -273,9 +301,8 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
   gui_window_t* win = mod->world->win;
   assert(win);
 
-  guint cid; // statusbar context id
-  char txt[256];
-    
+  guint cid=0;
+  
   static stg_velocity_t capture_vel;
   stg_pose_t pose;  
   stg_velocity_t zero_vel;
@@ -283,11 +310,22 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
 
   switch (event)
     {
+    case RTK_EVENT_MOUSE_OVER:
+      win->selection_active = mod;      
+      break;
+
+    case RTK_EVENT_MOUSE_NOT_OVER:
+      win->selection_active = NULL;      
+      
+      // get rid of the selection info
+      cid = gtk_statusbar_get_context_id( win->statusbar, "on_mouse" );
+      gtk_statusbar_pop( win->statusbar, cid ); 
+      break;
+      
     case RTK_EVENT_PRESS:
       // store the velocity at which we grabbed the model
       memcpy( &capture_vel, model_get_velocity(mod), sizeof(capture_vel) );
       model_set_velocity( mod, &zero_vel );
-
       // DELIBERATE NO-BREAK      
 
     case RTK_EVENT_MOTION:       
@@ -302,11 +340,7 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
 	model_set_pose( mod, &pose );
       
       // display the pose
-      snprintf(txt, sizeof(txt), "Dragging: %s", gui_model_describe(mod)); 
-      cid = gtk_statusbar_get_context_id( win->statusbar, "on_mouse" );
-      gtk_statusbar_pop( win->statusbar, cid ); 
-      gtk_statusbar_push( win->statusbar, cid, txt ); 
-      //printf( "STATUSBAR: %s\n", txt );
+      //gui_model_display_pose( mod, "Dragging:" );
       break;
       
     case RTK_EVENT_RELEASE:
@@ -316,10 +350,6 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
       
       // and restore the velocity at which we grabbed it
       model_set_velocity( mod, &capture_vel );
-
-      // take the pose message from the status bar
-      cid = gtk_statusbar_get_context_id( win->statusbar, "on_mouse" );
-      gtk_statusbar_pop( win->statusbar, cid ); 
       break;      
       
     default:
@@ -329,10 +359,6 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
   return;
 }
 
-void gui_model_parent( model_t* model )
-{
-  
-}
 
 void gui_model_create( model_t* model )
 {

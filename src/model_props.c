@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -510,6 +510,10 @@ int model_set_guifeatures( model_t* mod, stg_guifeatures_t* gf )
 {
   memcpy( &mod->guifeatures, gf, sizeof(mod->guifeatures));
   
+  // override the movemask flags - only top-level objects are moveable
+  if( mod->parent )
+    mod->guifeatures.movemask = 0;
+
   // redraw the fancy features
   gui_model_features( mod );
 

@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <math.h>
 
-//#define DEBUG
+#define DEBUG
 //#undef DEBUG
 
 #include "stage.h"
@@ -66,6 +66,9 @@ model_t* model_create(  world_t* world,
   //else
   //world->child_type_count[ type ]++;
 
+  // having installed the paremt, it's safe to creat the GUI components
+  gui_model_create( mod );
+
   // create this model's empty list of children
   mod->children = g_ptr_array_new();
 
@@ -94,51 +97,16 @@ model_t* model_create(  world_t* world,
   mod->geom.pose.a = STG_DEFAULT_GEOM_POSEA;
   mod->geom.size.x = STG_DEFAULT_GEOM_SIZEX;
   mod->geom.size.y = STG_DEFAULT_GEOM_SIZEY;
-
-  mod->guifeatures.boundary =  STG_DEFAULT_BOUNDARY;
-  mod->guifeatures.nose =  STG_DEFAULT_NOSE;
-  mod->guifeatures.grid = STG_DEFAULT_GRID;
   
-  // by default, only top-level objects are draggable
-  if( mod->parent )
-    mod->guifeatures.movemask = 0;
-  else
-    mod->guifeatures.movemask = STG_DEFAULT_MOVEMASK;
+  stg_guifeatures_t gf;
+  gf.boundary =  STG_DEFAULT_GUI_BOUNDARY;
+  gf.nose =  STG_DEFAULT_GUI_NOSE;
+  gf.grid = STG_DEFAULT_GUI_GRID;
+  gf.movemask = STG_DEFAULT_GUI_MOVEMASK;  
+  model_set_guifeatures( mod, &gf );
 
   // zero velocity
   memset( &mod->velocity, 0, sizeof(mod->velocity) );
-  
-  // define a unit rectangle from 4 lines
-  stg_line_t alines[4];
-  alines[0].x1 = 0; 
-  alines[0].y1 = 0;
-  alines[0].x2 = 1; 
-  alines[0].y2 = 0;
-  
-  alines[1].x1 = 1; 
-  alines[1].y1 = 0;
-  alines[1].x2 = 1; 
-  alines[1].y2 = 1;
-  
-  alines[2].x1 = 1; 
-  alines[2].y1 = 1;
-  alines[2].x2 = 0; 
-  alines[2].y2 = 1;
-  
-  alines[3].x1 = 0; 
-  alines[3].y1 = 1;
-  alines[3].x2 = 0; 
-  alines[3].y2 = 0;
-  
-  // fit the rectangle inside the model's size
-  stg_normalize_lines( alines, 4 );
-  stg_scale_lines( alines, 4, mod->geom.size.x, mod->geom.size.y );
-  stg_translate_lines( alines, 4, -mod->geom.size.x/2.0, -mod->geom.size.y/2.0 );  
-  
-  mod->lines_count = 4;
-  size_t lines_len = mod->lines_count * sizeof(stg_line_t);
-  assert( mod->lines = malloc( lines_len ) );
-  memcpy( mod->lines, alines, lines_len );
   
   memset(&mod->energy_config,0,sizeof(mod->energy_config));
   mod->energy_config.capacity = STG_DEFAULT_ENERGY_CAPACITY;
@@ -152,16 +120,39 @@ model_t* model_create(  world_t* world,
   mod->energy_data.charging = FALSE;
   mod->energy_data.range = mod->energy_config.probe_range;
 
-
   mod->color = stg_lookup_color( "red" );
 
-  gui_model_create( mod );
-
+  // define a unit rectangle from 4 lines
+  stg_line_t lines[4];
+  lines[0].x1 = 0; 
+  lines[0].y1 = 0;
+  lines[0].x2 = 1; 
+  lines[0].y2 = 0;
+  
+  lines[1].x1 = 1; 
+  lines[1].y1 = 0;
+  lines[1].x2 = 1; 
+  lines[1].y2 = 1;
+  
+  lines[2].x1 = 1; 
+  lines[2].y1 = 1;
+  lines[2].x2 = 0; 
+  lines[2].y2 = 1;
+  
+  lines[3].x1 = 0; 
+  lines[3].y1 = 1;
+  lines[3].x2 = 0; 
+  lines[3].y2 = 0;
+  
+  // this normalizes the lines to fit inside our geometry rectangle
+  // and also causes a redraw
+  model_set_lines( mod, lines, 4 );
+		   
   // if this type of model has an init function, call it.
   if( derived[ mod->type ].init )
     derived[ mod->type ].init(mod);
-
-  PRINT_DEBUG2( "created model %d type %d.", mod->id, mod->type );
+  
+  PRINT_DEBUG2( "finished creating model %d type %d.", mod->id, mod->type );
   
   return mod;
 }

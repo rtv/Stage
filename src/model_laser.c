@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.34 $
+//  $Revision: 1.35 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -30,11 +30,13 @@ extern rtk_fig_t* fig_debug;
 void laser_init( model_t* mod )
 {
   // sensible laser defaults
-  mod->geom.pose.x = STG_DEFAULT_LASER_POSEX;
-  mod->geom.pose.y = STG_DEFAULT_LASER_POSEY;
-  mod->geom.pose.a = STG_DEFAULT_LASER_POSEA;
-  mod->geom.size.x = STG_DEFAULT_LASER_SIZEX;
-  mod->geom.size.y = STG_DEFAULT_LASER_SIZEY;
+  stg_geom_t geom;
+  geom.pose.x = STG_DEFAULT_LASER_POSEX;
+  geom.pose.y = STG_DEFAULT_LASER_POSEY;
+  geom.pose.a = STG_DEFAULT_LASER_POSEA;
+  geom.size.x = STG_DEFAULT_LASER_SIZEX;
+  geom.size.y = STG_DEFAULT_LASER_SIZEY;
+  model_set_geom( mod, &geom );
 
   // set up a laser-specific config structure
   stg_laser_config_t lconf;
@@ -45,7 +47,7 @@ void laser_init( model_t* mod )
   lconf.fov         = STG_DEFAULT_LASER_FOV;
   lconf.samples     = STG_DEFAULT_LASER_SAMPLES;
   
-  stg_color_t col =stg_lookup_color( "blue" ); 
+  stg_color_t col =stg_lookup_color( "red" ); 
   model_set_color( mod, &col );
 
   model_set_config( mod, &lconf, sizeof(lconf) );

@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.79 2004-08-29 01:11:58 rtv Exp $
+ * CVS: $Id: stage.h,v 1.80 2004-08-30 00:19:55 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -594,12 +594,12 @@ void stg_print_laser_config( stg_laser_config_t* slc );
 
 // BlobFinder ------------------------------------------------------------
 
-#define STG_BLOBFINDER_CHANNELS_MAX 16
+#define STG_BLOB_CHANNELS_MAX 16
 
 typedef struct
 {
   int channel_count; // 0 to STG_BLOBFINDER_CHANNELS_MAX
-  stg_color_t channels[STG_BLOBFINDER_CHANNELS_MAX];
+  stg_color_t channels[STG_BLOB_CHANNELS_MAX];
   int scan_width;
   int scan_height;
   stg_meters_t range_max;
@@ -676,22 +676,24 @@ typedef struct
 
 // basic model
 #define STG_DEFAULT_MASS 10.0  // kg
-#define STG_DEFAULT_POSEX 0.0
+#define STG_DEFAULT_POSEX 0.0  // start at the origin by default
 #define STG_DEFAULT_POSEY 0.0
 #define STG_DEFAULT_POSEA 0.0
-#define STG_DEFAULT_GEOM_POSEX 0.0
+#define STG_DEFAULT_GEOM_POSEX 0.0 // no origin offset by default
 #define STG_DEFAULT_GEOM_POSEY 0.0
 #define STG_DEFAULT_GEOM_POSEA 0.0
-#define STG_DEFAULT_GEOM_SIZEX 0.15
-#define STG_DEFAULT_GEOM_SIZEY 0.15
+#define STG_DEFAULT_GEOM_SIZEX 1.0 // 1m square by default
+#define STG_DEFAULT_GEOM_SIZEY 1.0
 #define STG_DEFAULT_OBSTACLERETURN TRUE
 #define STG_DEFAULT_LASERRETURN LaserVisible
 #define STG_DEFAULT_RANGERRETURN TRUE
-#define STG_DEFAULT_COLOR (0xFF0000)
-#define STG_DEFAULT_MOVEMASK (STG_MOVE_TRANS | STG_MOVE_ROT)
-#define STG_DEFAULT_NOSE TRUE
-#define STG_DEFAULT_GRID FALSE
-#define STG_DEFAULT_BOUNDARY FALSE
+#define STG_DEFAULT_COLOR (0xFF0000) // red
+
+// GUI
+#define STG_DEFAULT_GUI_MOVEMASK (STG_MOVE_TRANS | STG_MOVE_ROT)
+#define STG_DEFAULT_GUI_NOSE TRUE
+#define STG_DEFAULT_GUI_GRID FALSE
+#define STG_DEFAULT_GUI_BOUNDARY FALSE
 
 // energy
 #define STG_DEFAULT_ENERGY_CAPACITY 1000.0
@@ -758,6 +760,12 @@ void stg_property_free( gpointer prop );
 
 // returns a human readable desciption of the property type [id]
 const char* stg_property_string( stg_id_t id );
+
+// returns a human-readable description of an event
+const char* stg_event_string( stg_event_t event );
+
+// returns a human-readable description of a model type
+const char* stg_model_type_string( stg_model_type_t type );
 
 // compose a human readable string describing property [prop]
 char* stg_property_sprint( char* str, stg_property_t* prop );

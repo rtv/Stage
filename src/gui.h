@@ -106,6 +106,8 @@ typedef struct _gui_window
   rtk_menuitem_t** mitems_mspeed;
   int mitems_mspeed_count;
   
+  model_t* selection_active;
+  
 } gui_window_t;
 
 

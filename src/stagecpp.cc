@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.46 2004-08-27 23:59:09 rtv Exp $
+// $Id: stagecpp.cc,v 1.47 2004-08-30 00:19:55 rtv Exp $
 
 #include "stage.h"
 #include "worldfile.hh"
@@ -42,17 +42,17 @@ void configure_model( stg_model_t* mod, int section )
 			      &obstacle, sizeof(obstacle) );
       
   stg_guifeatures_t gf;
-  gf.boundary = wf.ReadInt(section, "gui.boundary", STG_DEFAULT_BOUNDARY );
-  gf.nose = wf.ReadInt(section, "gui.nose", STG_DEFAULT_NOSE );
-  gf.grid = wf.ReadInt(section, "gui.grid", STG_DEFAULT_GRID );
-  gf.movemask = wf.ReadInt(section, "gui.movemask", STG_DEFAULT_MOVEMASK );
-      
-  // if( gf.boundary != STG_DEFAULT_BOUNDARY ||
-  //  gf.nose != STG_DEFAULT_NOSE ||
-  //  gf.grid != STG_DEFAULT_GRID ||
-  //  gf.movemask != STG_DEFAULT_MOVEMASK ) 	
-  stg_model_prop_with_data(mod, STG_PROP_GUIFEATURES, &gf, sizeof(gf));
-            	  
+  gf.boundary = wf.ReadInt(section, "gui.boundary", STG_DEFAULT_GUI_BOUNDARY );
+  gf.nose = wf.ReadInt(section, "gui.nose", STG_DEFAULT_GUI_NOSE );
+  gf.grid = wf.ReadInt(section, "gui.grid", STG_DEFAULT_GUI_GRID );
+  gf.movemask = wf.ReadInt(section, "gui.movemask", STG_DEFAULT_GUI_MOVEMASK );
+  
+  if( gf.boundary != STG_DEFAULT_GUI_BOUNDARY ||
+      gf.nose != STG_DEFAULT_GUI_NOSE ||
+      gf.grid != STG_DEFAULT_GUI_GRID ||
+      gf.movemask != STG_DEFAULT_GUI_MOVEMASK ) 	
+    stg_model_prop_with_data(mod, STG_PROP_GUIFEATURES, &gf, sizeof(gf));
+  
   // laser visibility
   int laservis = 
     wf.ReadInt(section, "laser.return", STG_DEFAULT_LASERRETURN );      
@@ -218,8 +218,8 @@ void configure_blobfinder( stg_model_t* mod, int section )
   bcfg.zoom =  
     wf.ReadTupleAngle(section, "blob.ptz", 2, STG_DEFAULT_BLOB_ZOOM );
   
-  if( bcfg.channel_count > STG_BLOBFINDER_CHANNELS_MAX )
-    bcfg.channel_count = STG_BLOBFINDER_CHANNELS_MAX;
+  if( bcfg.channel_count > STG_BLOB_CHANNELS_MAX )
+    bcfg.channel_count = STG_BLOB_CHANNELS_MAX;
   
   for( int ch = 0; ch<bcfg.channel_count; ch++ )
     bcfg.channels[ch] = 

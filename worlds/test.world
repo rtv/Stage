@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.5 2004-08-29 01:11:58 rtv Exp $
+# CVS: $Id: test.world,v 1.6 2004-08-30 00:19:55 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution 0.02 
@@ -28,18 +28,25 @@ define laserpioneer pioneer2dx
     laser.samples 180
 
     fiducialfinder()
+
   )
 )
 
-laserpioneer
+position #laserpioneer
 (
   name "myrobot"
   pose [1 4 0]
+ 
+  #ranger()
 
-  ranger()
+  blobfinder( 
+
+    ### TODO - problem parsing this line?
+    #blob.channels[ "red" "green" "blue" "cyan" "yellow" "magenta" ] 
+  )	
 )
 
-fiducialfinder( name "foof" )
+fiducialfinder( pose [ 2 2 0 ]  name "foof" )
 
 
 laser
@@ -47,6 +54,7 @@ laser
   name "scanner"
   pose [11 11 -120]
   velocity [0 0 60]
+  color "red"
 )
 
 # a silly object to look at

@@ -63,9 +63,24 @@ const char* stg_property_string( stg_id_t id )
     default:
       break;
     }
-  return "<unknown>";
+  return "<unknown property>";
 }
 
+const char* stg_model_type_string( stg_model_type_t type )
+{
+  switch( type )
+    {
+    case STG_MODEL_BASIC: return "model";
+    case STG_MODEL_LASER: return "laser";
+    case STG_MODEL_POSITION: return "position";
+    case STG_MODEL_BLOB: return "blobfinder";
+    case STG_MODEL_FIDUCIAL: return "fiducial";
+    case STG_MODEL_RANGER: return "ranger";
+    case STG_MODEL_TEST: return "test";
+    default:
+    }  
+  return "<unknown type>";
+}
 
 const char* stg_event_string( stg_event_t event )
 {
@@ -80,8 +95,8 @@ const char* stg_event_string( stg_event_t event )
     default: 
       break;
     }
-
-  return "<unknown>"; 
+  
+  return "<unknown event>"; 
 }
 
 
