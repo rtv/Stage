@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -39,6 +39,10 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CEntity *parent)
 {
     m_beacon_id = 0;
     m_index = -1;
+
+    // Set this flag to make the beacon transparent to lasesr
+    //
+    m_transparent = false;
     
     // Set the initial map pose
     //
@@ -69,6 +73,11 @@ bool CLaserBeacon::Load(int argc, char **argv)
             m_beacon_id = atoi(argv[i + 1]);
             i += 2;
         }
+        else if (strcmp(argv[i], "transparent") == 0)
+        {
+            m_transparent = true;
+            i += 1;
+        }
         else
             i++;
     }
@@ -96,6 +105,9 @@ bool CLaserBeacon::Save(int &argc, char **argv)
     snprintf(id, sizeof(id), "%d", (int) m_beacon_id);
     argv[argc++] = strdup("id");
     argv[argc++] = strdup(id);
+
+    if (m_transparent)
+        argv[argc++] = strdup("transparent");
     
     return true;
 }
@@ -122,7 +134,8 @@ void CLaserBeacon::Update()
 
     // Undraw our old representation
     //
-    m_world->SetCell(m_map_px, m_map_py, layer_laser, 0);
+    if (!m_transparent)
+        m_world->SetCell(m_map_px, m_map_py, layer_laser, 0);
 
     // Update our global pose
     //
@@ -130,7 +143,8 @@ void CLaserBeacon::Update()
     
     // Draw our new representation
     //
-    m_world->SetCell(m_map_px, m_map_py, layer_laser, 2);
+    if (!m_transparent)
+        m_world->SetCell(m_map_px, m_map_py, layer_laser, 2);
     m_world->SetLaserBeacon(m_index, m_map_px, m_map_py, m_map_pth);
 }
 

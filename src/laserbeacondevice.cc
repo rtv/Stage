@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -43,7 +43,13 @@ CLaserBeaconDevice::CLaserBeaconDevice(CWorld *world, CEntity *parent,
                         LASERBEACON_COMMAND_BUFFER_SIZE,
                         LASERBEACON_CONFIG_BUFFER_SIZE)
 {
-    m_laser = laser;
+    if (laser == NULL)
+    {
+        // *** Should check the type here
+        m_laser = (CLaserDevice*) parent;
+    }
+    else
+        m_laser = laser;
     
     m_time_sec = 0;
     m_time_usec = 0;
@@ -62,6 +68,47 @@ CLaserBeaconDevice::CLaserBeaconDevice(CWorld *world, CEntity *parent,
     exp.data = (char*)&expBeacon;
     expBeacon.beaconCount = 0;
     strcpy( exp.label, "Laser Beacon Detector" );
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+// Load the object from an argument list
+//
+bool CLaserBeaconDevice::Load(int argc, char **argv)
+{  
+    if (!CPlayerDevice::Load(argc, argv))
+        return false;
+
+    for (int i = 0; i < argc;)
+    {
+        if (strcmp(argv[i], "range") == 0 && i + 1 < argc)
+        {
+            m_max_id_range = atof(argv[i + 1]);
+            m_max_anon_range = 2 * m_max_id_range;
+            i += 2;
+        }
+        else
+            i++;
+    }
+    return true;
+} 
+
+
+///////////////////////////////////////////////////////////////////////////
+// Save the object
+//
+bool CLaserBeaconDevice::Save(int &argc, char **argv)
+{
+    if (!CPlayerDevice::Save(argc, argv))
+        return false;
+
+    char range[32];
+    snprintf(range, sizeof(range), "%.2f", (double) m_max_id_range); 
+    argv[argc++] = strdup("range");
+    argv[argc++] = strdup(range);
+    
+    return true;
 }
 
 
@@ -110,7 +157,7 @@ void CLaserBeaconDevice::Update()
 
     // Amount of tolerance to allow in range readings
     //
-    double tolerance = 0.10;
+    double tolerance = 3.0 / m_world->ppm; //*** 0.10;
 
     // Reset the beacon data structure
     //
@@ -142,7 +189,7 @@ void CLaserBeaconDevice::Update()
         int bi = (int) ((b - scan_min) / scan_res);
         if (bi < 0 || bi >= laser.range_count)
             continue;
-        if (r > laser.ranges[bi] / 1000.0 + tolerance)
+        if (r > (laser.ranges[bi] & 0x1FFF) / 1000.0 + tolerance)
             continue;
 
         // Now see if it is within detection range

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.12 $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  (empty)
@@ -35,6 +35,14 @@ class CLaserDevice : public CPlayerDevice
     //
     public: CLaserDevice(CWorld *world, CEntity *parent, CPlayerServer* server);
 
+    // Load the object from an argument list
+    //
+    public: virtual bool Load(int argc, char **argv);
+
+    // Save the object to an argument list
+    //
+    public: virtual bool Save(int &argc, char **argv);
+
     // Update the device
     //
     public: virtual void Update();
@@ -59,6 +67,10 @@ class CLaserDevice : public CPlayerDevice
     // Maximum range of sample in meters
     //
     private: double m_max_range;
+
+    // Set this flag to make the laser transparent to other lasers
+    //
+    private: bool m_transparent;
     
     // Laser configuration parameters
     //

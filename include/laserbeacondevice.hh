@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacondevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -40,6 +40,14 @@ class CLaserBeaconDevice : public CPlayerDevice
     //
     public: CLaserBeaconDevice(CWorld *world, CEntity *parent,
                                CPlayerServer *server, CLaserDevice *laser);
+
+    // Load the object from an argument list
+    //
+    public: virtual bool Load(int argc, char **argv);
+
+    // Save the object to an argument list
+    //
+    public: virtual bool Save(int &argc, char **argv);
     
     // Update the device
     //
@@ -57,7 +65,7 @@ class CLaserBeaconDevice : public CPlayerDevice
     //
     private: double m_max_anon_range;
     private: double m_max_id_range;
- 
+    
 #ifdef INCLUDE_RTK
     
     // Process GUI update messages

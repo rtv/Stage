@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -32,6 +32,7 @@
 #include "usc_pioneer.hh"
 #include "pioneermobiledevice.hh"
 #include "laserdevice.hh"
+#include "laserbeacondevice.hh"
 #include "playerserver.hh"
 
 /////////////////////////////////////////////////////////////////////////
@@ -68,6 +69,11 @@ CEntity* CreateObject(const char *type, CWorld *world, CEntity *parent)
     //
     if (strcmp(type, "laser_device") == 0)
         return new CLaserDevice(world, parent, NULL);
+
+    // Create a laser
+    //
+    if (strcmp(type, "laser_beacon_device") == 0)
+        return new CLaserBeaconDevice(world, parent, NULL, NULL);
 
     return NULL;
 }

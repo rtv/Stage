@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacon.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -55,6 +55,10 @@ class CLaserBeacon : public CEntity
     //
     private: int m_beacon_id;
 
+    // Set this flag to make the beacon transparent to lasers
+    //
+    private: bool m_transparent;
+    
     // Beacon index in the world rep
     //
     private: int m_index;

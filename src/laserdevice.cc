@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.17 $
+//  $Revision: 1.18 $
 //
 // Usage:
 //  (empty)
@@ -52,6 +52,10 @@ CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent, CPlayerServer* server
   m_intensity = false;
   
   m_max_range = 8.0;
+
+  // Set this flag to make the laser transparent to other lasers
+  //
+  m_transparent = false;
   
   // Dimensions of laser
   //
@@ -75,6 +79,42 @@ CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent, CPlayerServer* server
 #endif
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Load the object from an argument list
+//
+bool CLaserDevice::Load(int argc, char **argv)
+{
+    if (!CPlayerDevice::Load(argc, argv))
+        return false;
+
+    for (int i = 0; i < argc;)
+    {
+        if (strcmp(argv[i], "transparent") == 0)
+        {
+            m_transparent = true;
+            i += 1;
+        }
+        else
+            i++;
+    }
+    return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Save the object
+//
+bool CLaserDevice::Save(int &argc, char **argv)
+{
+    if (!CPlayerDevice::Save(argc, argv))
+        return false;
+
+    if (m_transparent)
+        argv[argc++] = strdup("transparent");
+    
+    return true;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the laser data
@@ -86,7 +126,8 @@ void CLaserDevice::Update()
     
     // Undraw ourselves from the world
     //
-    Map(false);
+    if (!m_transparent)
+        Map(false);
 
     //expLaser.hitCount = 0;
 
@@ -110,8 +151,7 @@ void CLaserDevice::Update()
             player_laser_data_t data;
             GenerateScanData(&data);
             PutData(&data, sizeof(data));
-
-	    //exporting = true; // ready to send data to a GUI 
+            //exporting = true; // ready to send data to a GUI 
         }
     }
     else
@@ -125,13 +165,14 @@ void CLaserDevice::Update()
         m_scan_count = 361;
         m_intensity = false;
 	
-	// have to invalidate the exported scan data
-	memset( &expLaser, 0, expLaser.hitCount * sizeof( DPoint ) );
+        // have to invalidate the exported scan data
+        memset( &expLaser, 0, expLaser.hitCount * sizeof( DPoint ) );
       }
 
     // Redraw outselves in the world
     //
-    Map(true);
+    if (!m_transparent)
+        Map(true);
 }
 
 
@@ -166,10 +207,14 @@ bool CLaserDevice::CheckConfig()
     }
     else if (config.resolution == 50 || config.resolution == 100)
     {
-        config.min_angle = max(config.min_angle, -9000);
-        config.min_angle = min(config.min_angle, +9000);
-        config.max_angle = max(config.max_angle, -9000);
-        config.max_angle = min(config.max_angle, +9000);
+        // *** REMOVE ahoward
+        //config.min_angle = max(config.min_angle, -9000);
+        //config.min_angle = min(config.min_angle, +9000);
+        //config.max_angle = max(config.max_angle, -9000);
+        //config.max_angle = min(config.max_angle, +9000);
+
+        if (abs(config.min_angle) > 9000 || abs(config.max_angle) > 9000)
+            PRINT_MSG("warning: invalid laser configuration request");
         
         m_scan_res = DTOR((double) config.resolution / 100.0);
         m_scan_min = DTOR((double) config.min_angle / 100.0);
@@ -180,7 +225,7 @@ bool CLaserDevice::CheckConfig()
     {
         // Ignore invalid configurations
         //  
-        PLAYER_MSG0("invalid laser configuration request");
+        PRINT_MSG("invalid laser configuration request");
         return false;
     }
         
