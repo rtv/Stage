@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.13 2003-08-27 02:07:05 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.14 2003-08-27 03:04:56 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -891,7 +891,7 @@ int stg_gui_los_msg_recv( CEntity* receiver, CEntity* sender,
   memcpy( buf, &msg->bytes, msg->len );
   
   rtk_fig_text( fig, pr.x, pr.y,0, buf );
-  rtk_canvas_flash( canvas, fig, 4, 1 );
+  rtk_canvas_flash( canvas, fig, 8, 1 );
 
   free( buf );
   return 0; //ok
