@@ -1,7 +1,7 @@
 /*************************************************************************
  * server.cc - implements the position & GUI servers, plus signal handling
  * RTV
- * $Id: server.cc,v 1.2.2.2 2000-12-06 21:48:32 ahoward Exp $
+ * $Id: server.cc,v 1.2.2.3 2001-05-30 02:21:27 vaughan Exp $
  ************************************************************************/
 
 // YUK this file is all in C and implements the PositionServer and GuiServer
@@ -176,7 +176,7 @@ static void * RunGUI( void * )
       
       unsigned int k = sizeof(foo);   
   
-      //cout << "Waiting for connecyion" << endl;
+      //cout << "Waiting for connection" << endl;
       // the thread will block on accept until a connect request is pending
       bar = accept( ifsock, (struct sockaddr*)&foo, &k );
       

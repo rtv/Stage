@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.9.2.25 $
+//  $Revision: 1.9.2.26 $
 //
 // Usage:
 //  (empty)
@@ -69,6 +69,7 @@ CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CEntity *parent, CPlay
     exp.objectType = pioneer_o;
     exp.width = m_size_x;
     exp.height = m_size_y;
+    strcpy( exp.label, "Pioneer" );
 #endif
 }
 

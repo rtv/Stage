@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.11.2.28 $
+//  $Author: vaughan $
+//  $Revision: 1.11.2.29 $
 //
 // Usage:
 //  (empty)
@@ -63,6 +63,7 @@ CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent, CPlayerServer* server
   exporting = true; 
   exp.objectId = this; // used both as ptr and as a unique ID
   exp.objectType = laserturret_o;
+  strcpy( exp.label, "SICK LMS" );
   exp.data = (char*)&expLaser;
 #endif
   

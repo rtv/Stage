@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xgui.hh,v 1.1.2.3 2001-05-25 04:26:52 vaughan Exp $
+ * $Id: xgui.hh,v 1.1.2.4 2001-05-30 02:21:26 vaughan Exp $
  ************************************************************************/
 
 #ifndef WIN_H
@@ -17,6 +17,7 @@
 class CWorld;
 class CEntity;
 
+#define LABELSIZE 32
 #define SONARSAMPLES PLAYER_NUM_SONAR_SAMPLES 
 #define LASERSAMPLES PLAYER_NUM_LASER_SAMPLES 
 
@@ -76,6 +77,7 @@ typedef struct
   double x, y, th;
   double width, height;
   char* data;
+  char label[LABELSIZE];
 } ExportData;
 
 typedef struct
@@ -123,9 +125,9 @@ public:
 
   // an array of pointers to ExportData objects
   ExportData** database;
-
   int numObjects;
 
+  unsigned int requestPointerMoveEvents;
   unsigned long red, green, blue, yellow, magenta, cyan, white, black; 
   int grey;
 
@@ -137,13 +139,15 @@ public:
 
   XEvent reportEvent;
 
-  double xscale, yscale;
+  //double xscale, yscale;
   double dimx, dimy;
 
- // data
+  double ppm; // scale between world and X coordinates
+  
+  // data
   CWorld* world;
-  CEntity* dragging;
-  CEntity* near;
+  ExportData* dragging;
+  //CEntity* near;
 
   // methods  
 
@@ -157,7 +161,7 @@ public:
   int LoadVars( char* initFile );
   void HandleEvent( void );
   void Update( void );
-  void MoveObject( CEntity* obj, double x, double y, double theta );
+  void MoveObject( ExportData* exp, double x, double y, double theta );
   
   void PrintCoords( void );
   
@@ -171,8 +175,6 @@ public:
   void ScanBackground( void );
 
   void MoveSize(void);
-  //void DrawInRobotColor( CRobot* r );
-  //unsigned long  RobotDrawColor( CRobot* r );
   void SetForeground( unsigned long color );
   void DrawLines( DPoint* pts, int numPts );
   void DrawPoints( DPoint* pts, int numPts );
@@ -202,9 +204,10 @@ public:
   void GetRect( double x, double y, double dx, double dy, 
 	       double rotateAngle, DPoint* pts );
 
-  void HighlightObject( CEntity* obj );
+  void HighlightObject( ExportData* obj, bool undraw );
 
   ExportData* GetLastMatchingExport( ExportData* exp );
+  ExportData*  NearestObject( double x, double y );
   void RenderObject( ExportData* exp, bool extended );
   void ImportExportData( ExportData* exp );
   size_t DataSize( ExportData* exp );

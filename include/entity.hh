@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Author: vaughan $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -138,7 +138,6 @@ class CEntity
     // struct that holds data for external GUI rendering
     //
     protected: ExportData exp;
-  //protected: ExportData oldexp;
    
     // compose and return the export data structure
     //

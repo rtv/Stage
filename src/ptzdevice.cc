@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.4.2.18 $
+//  $Revision: 1.4.2.19 $
 //
 // Usage:
 //  (empty)
@@ -71,6 +71,7 @@ CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent, CPlayerServer* server)
     exporting = true;
     exp.objectType = ptz_o;
     exp.data = (char*)&expPtz;
+    strcpy( exp.label, "PTZ Camera" );
 #endif
 }
 

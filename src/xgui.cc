@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xgui.cc,v 1.1.2.5 2001-05-25 05:17:41 vaughan Exp $
+ * $Id: xgui.cc,v 1.1.2.6 2001-05-30 02:21:27 vaughan Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -36,17 +36,10 @@
 XPoint* backgroundPts;
 int backgroundPtsCount;
 
-//const double TWOPI = 6.283185307;
-//const int sonarSamples = SONARSAMPLES;
-//const int laserSamples = LASERSAMPLES;
+//int exposed = false;
 
-const float maxAngularError =  -0.1; // percent error on turning odometry
-
-//extern int drawMode;
-
+// forward declaration
 unsigned int RGB( int r, int g, int b );
-
-int coords = false;
 
 CXGui::CXGui( CWorld* wworld )//,  char* initFile )
 {
@@ -55,9 +48,10 @@ CXGui::CXGui( CWorld* wworld )//,  char* initFile )
 #endif
 
   world = wworld;
+  ppm = world->ppm; // scale between world and X coordinates
 
   database = new ExportData*[ MAX_OBJECTS ];
-
+ 
   numObjects = 0;
 
   char* title = "Stage";
@@ -65,7 +59,7 @@ CXGui::CXGui( CWorld* wworld )//,  char* initFile )
   grey = 0x00FFFFFF;
 
   // provide some sensible defaults for the window parameters
-  xscale = yscale = 1.0;
+  //xscale = yscale = 1.0;
   width = 600;
   height = 400;
   panx = pany = x = y = 0;
@@ -105,16 +99,16 @@ CXGui::CXGui( CWorld* wworld )//,  char* initFile )
 			     RootWindow( display, screen ), 
 			     x, y, width, height, 4, 
 			     black, white );
-   
+  
   XSelectInput(display, win, ExposureMask | StructureNotifyMask | 
-	       ButtonPressMask | ButtonReleaseMask | KeyPressMask | PointerMotionMask );
- 
+	       ButtonPressMask | ButtonReleaseMask | KeyPressMask );
+  
   XStringListToTextProperty( &title, 1, &windowName);
 
   iwidth = world->GetBackgroundImage()->width;
     iheight = world->GetBackgroundImage()->height;
-  dragging = near = 0;
-  //drawMode = false;
+
+  dragging = 0;
   showSensors = false;
 
   XSizeHints sz;
@@ -130,8 +124,6 @@ CXGui::CXGui( CWorld* wworld )//,  char* initFile )
 		   &sz, (XWMHints*)NULL, (XClassHint*)NULL );
   
   gc = XCreateGC(display, win, (ULI)0, NULL );
-
-  //const unsigned long int mask = 0xFFFFFFFF;
   
 #ifdef DEBUG
   cout << "Screen Depth: " << DefaultDepth( display, screen ) 
@@ -209,7 +201,7 @@ int CXGui::LoadVars( char* filename )
 }
 
 
-void CXGui::MoveObject( CEntity* obj, double x, double y, double theta )
+void CXGui::MoveObject( ExportData* exp, double x, double y, double theta )
 {    
   ImportData imp;
   
@@ -218,7 +210,7 @@ void CXGui::MoveObject( CEntity* obj, double x, double y, double theta )
   imp.th = theta;
   
   // update the object through its pointer
-  obj->ImportExportData( &imp );
+  (CEntity*)(exp->objectId)->ImportExportData( &imp );
 }
 
 
@@ -255,8 +247,8 @@ void CXGui::BoundsCheck( void )
   float xminScale = (float)width / (float)(world->GetBackgroundImage()->width);
   float yminScale = (float)height / (float)(world->GetBackgroundImage()->height);
   
-  if( xscale < xminScale ) xscale = xminScale;
-  if( yscale < yminScale ) yscale = yminScale;
+  //if( xscale < xminScale ) xscale = xminScale;
+  //if( yscale < yminScale ) yscale = yminScale;
 }
 
 
@@ -267,13 +259,12 @@ void CXGui::HandleEvent( void )
   
   // used for inverting Y between world and X coordinates
   int imgHeight= world->GetBackgroundImage()->height;
-  double wppm = world->ppm; // scale between world and X coordinates
   
   while( XCheckWindowEvent( display, win,
 			    StructureNotifyMask 
 			    | ButtonPressMask | ButtonReleaseMask 
 			    | ExposureMask | KeyPressMask 
-			    |  PointerMotionHintMask, 
+			    | PointerMotionHintMask, 
 			    &reportEvent ) )
   
     switch( reportEvent.type ) // there was an event waiting, so handle it...
@@ -304,41 +295,19 @@ void CXGui::HandleEvent( void )
 	break;
 
       case MotionNotify:	
-	//cout << "motion" << endl;
-	if( dragging )// DragObject();
+	if( dragging )
 	  {
-	    double dummy, theta;
-	    dragging->GetGlobalPose( dummy, dummy, theta );
-
 	    MoveObject( dragging, 
-			reportEvent.xmotion.x / wppm + panx,
-			(imgHeight-reportEvent.xmotion.y) / wppm - panx,
-			theta );
-
-	    //HighlightObject( dragging );
-	  }
-	else // highlight the nearest object? dunno if i want this,
-	  {  // but this is the place to do it.
-	    double x2, y2, dummy;
-
-	    double x1 = reportEvent.xbutton.x / wppm + panx;
-	    double y1 = (imgHeight - reportEvent.xbutton.y) / wppm + pany;
-
-	    near = world->NearestObject( x1, y1 ); 
+			(reportEvent.xmotion.x + panx ) / ppm,
+			((imgHeight-reportEvent.xmotion.y) - pany ) / ppm,
+			dragging->th );
 	    
-	    near->GetGlobalPose( x2, y2, dummy );
-
-	    // if the object is close, highlight it
-	    if( hypot( x1-x2, y1-y2 ) > 1.0 ) near = 0; 
-	      HighlightObject( near ); 
-	      //else // it's not close enough - don't grab it
-	      //{
-	      //near = 0;
+	    HighlightObject( dragging, true );
 	  }
 	break;
 	
       case ButtonRelease:
-	if( near ) HighlightObject( near );
+	//if( near ) HighlightObject( near );
 	break;
 	
       case ButtonPress: 
@@ -347,43 +316,57 @@ void CXGui::HandleEvent( void )
 	    case Button1: 
 	      if( dragging  ) 
   		{ // stopped dragging
+
   		  dragging = NULL;
-		
-		  // undraw the object to erase it and i
-  		  //redraw the walls
-  		  //world->Draw();
+		  HighlightObject( NULL, true ); // erases the highlighting
+	
+		  // disable the pointer motion events
+		  XSelectInput(display, win, 
+			       ExposureMask | StructureNotifyMask | 
+			       ButtonPressMask | ButtonReleaseMask | 
+			       KeyPressMask );
   		} 
-  	      else if( near )
+  	      else 
   		{  // find nearest robot and drag it
+		  dragging = 
+		    NearestObject((reportEvent.xmotion.x+panx )/ppm,
+				  ((imgHeight-reportEvent.xmotion.y)
+				   -pany)/ppm );
+		  
 		  // but only if it is moveable - ie. it is 
-		  // a parentless object
-		  if( near->m_parent_object == 0 )
-		    {
-		      dragging = near;
-		      //world->NearestObject(reportEvent.xbutton.x 
-		      //		 / wppm + panx, 
-		      //		 (imgHeight-reportEvent.xbutton.y)
-		      //		 / wppm + pany ); 
-		      
-		      double dummy, theta;
-		      dragging->GetGlobalPose( dummy, dummy, theta );
-		      
-		      MoveObject( dragging, 
-				  reportEvent.xbutton.x / wppm + panx,
-				  (imgHeight-reportEvent.xbutton.y)/wppm-panx,
-				  theta );
-		    }
+		  // a parentless object		
+		  CEntity* ent = (CEntity*)dragging->objectId;
+		  while( ent->m_parent_object )
+		    ent = ent->m_parent_object;
+
+		  dragging = 0;
+		  
+		  // get the export structure for this entity
+		  for( int o=0; o<numObjects; o++ )
+		    if( database[o]->objectId == ent )
+		      {
+			dragging = database[o];
+			break;
+		      }
+ 		
+		  if( !dragging ) 
+		    cout << "Warning! dragging ptr: parent not found!" << endl;
+		  else
+		      HighlightObject( dragging, true );
+
+		  // enable generation of pointer motion events
+		  XSelectInput(display, win, 
+			       ExposureMask | StructureNotifyMask | 
+			       ButtonPressMask | ButtonReleaseMask | 
+			       KeyPressMask | PointerMotionMask );
 		}	      
 	      break;
 	      
 	    case Button2: 
 	      if( dragging )
 		{	  
-		  double x, y, theta;
-		  dragging->GetGlobalPose( x, y, theta );
-		  
-		  MoveObject( dragging, 
-			      x, y, theta + M_PI/10.0 );
+		  MoveObject( dragging, dragging->x, dragging->y, 
+			      dragging->th + M_PI/10.0 );
 		}	 
 //  		  near->ToggleSensorDisplay();
 
@@ -413,11 +396,8 @@ void CXGui::HandleEvent( void )
 	    case Button3: 
 	      if( dragging )
 		{	  
-		  double x, y, theta;
-		  dragging->GetGlobalPose( x, y, theta );
-		  
-		  MoveObject( dragging, 
-			      x, y, theta - M_PI/10.0 );
+		  MoveObject( dragging, dragging->x, dragging->y, 
+			      dragging->th - M_PI/10.0 );
 		}	      
 	      else
 		{ // we're centering on robot[0] - redraw everything
@@ -460,6 +440,7 @@ void CXGui::HandleEvent( void )
 	    DrawBackground();
 	    RefreshObjects();
 	  }
+
 	break;
       }
 
@@ -545,8 +526,8 @@ void CXGui::DrawString( double x, double y, char* str, int len )
       int imgHeight= world->GetBackgroundImage()->height;
       
       XDrawString( display,win,gc, 
-		   (ULI)(x * world->ppm - panx),
-		   (ULI)( (imgHeight-pany) - ((int)( y*world->ppm ))),
+		   (ULI)(x * ppm - panx),
+		   (ULI)( (imgHeight-pany) - ((int)( y*ppm ))),
 		   str, len );
     }
   else
@@ -563,8 +544,8 @@ void CXGui::DrawLines( DPoint* dpts, int numPts )
   // scale, pan and quantize the points
   for( int l=0; l<numPts; l++ )
     {
-      xpts[l].x = ((int)( dpts[l].x * world->ppm )) - panx;
-      xpts[l].y = (imgHeight-pany) - ((int)( dpts[l].y * world->ppm ));
+      xpts[l].x = ((int)( dpts[l].x * ppm )) - panx;
+      xpts[l].y = (imgHeight-pany) - ((int)( dpts[l].y * ppm ));
     }
   
   // and draw them
@@ -586,8 +567,8 @@ void CXGui::DrawPoints( DPoint* dpts, int numPts )
   // scale, pan and quantize the points
   for( int l=0; l<numPts; l++ )
     {
-      xpts[l].x = ((int)( dpts[l].x * world->ppm )) - panx;
-      xpts[l].y = (imgHeight-pany) - ((int)( dpts[l].y * world->ppm ));
+      xpts[l].x = ((int)( dpts[l].x * ppm )) - panx;
+      xpts[l].y = (imgHeight-pany) - ((int)( dpts[l].y * ppm ));
     }
  
   // and draw them
@@ -601,9 +582,9 @@ void CXGui::DrawCircle( double x, double y, double r )
   int imgHeight= world->GetBackgroundImage()->height;
 
   XDrawArc( display, win, gc, 
-	    (ULI)((x-r) * world->ppm -panx), 
-	    (ULI)((imgHeight-pany)-((y+r) * world->ppm)), 
-	    (ULI)(2.0*r*world->ppm), (ULI)(2.0*r*world->ppm), 0, 23040 );
+	    (ULI)((x-r) * ppm -panx), 
+	    (ULI)((imgHeight-pany)-((y+r) * ppm)), 
+	    (ULI)(2.0*r*ppm), (ULI)(2.0*r*ppm), 0, 23040 );
 }
 
 void CXGui::DrawWallsInRect( int xx, int yy, int ww, int hh )
@@ -626,6 +607,8 @@ void CXGui::RefreshObjects( void )
   for( int o=0; o<numObjects; o++ )     
     RenderObject( database[o], true );
   
+  HighlightObject( dragging, false );
+
   SetDrawMode( GXcopy );
 }
 
@@ -737,7 +720,6 @@ void CXGui::ImportExportData( ExportData* exp )
   
   SetDrawMode( GXxor );
 
-
   if( lastExp ) // we've drawn this before
     {	  
       bool renderExtended = true;
@@ -756,10 +738,6 @@ void CXGui::ImportExportData( ExportData* exp )
 	specificChanged = true;
       else
 	// we don't need to render the type-specific data
-	// so we'll temporarily disable the data pointer.
-	// the rendering functions will test for a valid data ptr
-	// before interpreting it 
-	//lastExp->data = 0;
 	renderExtended = false;
       
       if( genericChanged || specificChanged )
@@ -771,6 +749,7 @@ void CXGui::ImportExportData( ExportData* exp )
 	  if( genericChanged )  CopyGenericExportData( lastExp, exp );	  
 	  
 	  RenderObject( lastExp, renderExtended ); // draw
+	  if( lastExp == dragging ) HighlightObject( dragging, true );
 	}
     }
   else // we haven't seen this before - add it to the database
@@ -827,7 +806,7 @@ void CXGui::ImportExportData( ExportData* exp )
       // do the new drawing
       RenderObject( exp, true ); // draw new image
     }
-  
+
   SetDrawMode( GXcopy );
 }
 
@@ -901,6 +880,7 @@ void CXGui::RenderLaserTurret( ExportData* exp, bool extended )
 
   if( extended && exp->data )
     {
+      SetForeground( RGB(70,70,70) );
       ExportLaserData* ld = (ExportLaserData*) exp->data;
       DrawPolygon( ld->hitPts, ld->hitCount );
     }
@@ -991,7 +971,7 @@ void CXGui::RenderSonar( ExportData* exp, bool extended )
   if( extended && exp->data )
     {
       ExportSonarData* p = (ExportSonarData*)exp->data;
-      SetForeground( RGB(0,255,255) );
+      SetForeground( RGB(70,70,70) );
       DrawPolygon( p->hitPts, p->hitCount );
     }
 }
@@ -1073,8 +1053,7 @@ void CXGui::RenderBox( ExportData* exp, bool extended )
 { 
 #ifdef LABELS
   RenderObjectLabel( exp, "Box", 3 );
-#endif
-  
+#endif  
   SetForeground( RGB(200,200,200) );
 
   DPoint pts[4];
@@ -1119,43 +1098,44 @@ void CXGui::GetRect( double x, double y, double dx, double dy,
   pts[2].y = y + (+cxsina + cycosa);
 }
 
-void CXGui::HighlightObject( CEntity* obj )
+void CXGui::HighlightObject( ExportData* exp, bool undraw )
 {
-
-  //  RenderObject( obj );
-
-	  //static CEntity* lastObj;
-
-
-//    //if( obj != lastObj )//|| lastObj == 0 )
-//        // undraw the last one
-//    if( lastObj != 0  && obj ) 
-//      {
-//        SetForeground( white );
-//        XSetLineAttributes( display, gc, 0, LineOnOffDash, CapRound, JoinRound );
-//        SetDrawMode( GXxor );
-
-//        DrawCircle( x, y, 0.6 );
-      
-//        obj->GetGlobalPose( x,y,th );
-//        DrawCircle( x,y, 0.6 );
-      
-//        SetDrawMode( GXcopy );
-//        XSetLineAttributes( display, gc, 0, LineSolid, CapRound, JoinRound );
-//      }
-//  //    else if( lastObj )
-//  //      {
-//  //        SetForeground( white );
-//  //        XSetLineAttributes( display, gc, 0, LineOnOffDash, CapRound, JoinRound );
-//  //        SetDrawMode( GXxor );
-//  //        lastObj->GetGlobalPose( x,y,th );
-//  //        DrawCircle( x, y, 0.6 );
-//  //        SetDrawMode( GXcopy );
-//  //        XSetLineAttributes( display, gc, 0, LineSolid, CapRound, JoinRound );
-//  //     }
+  static double x = -1000.0, y = -1000.0, r = -1000.0, th = -1000.0;
+  static char label[LABELSIZE];
   
-//    lastObj = obj;
-//    //  lx = x; ly = y; lth = th;
+  // setup the GC 
+  XSetLineAttributes( display, gc, 0, LineOnOffDash, CapRound, JoinRound );
+  SetForeground( white );
+  SetDrawMode( GXxor );
+  
+  // undraw the last stuff if there was any
+  if( x != -1000.0 && y != -1000.0 && undraw )
+    {
+      //exposed = false;
+      DrawCircle( x, y, r );
+      if( label ) DrawString( x + 0.8, y, label, strlen( label ) );
+    }
+  if( exp ) // if this is a valid object
+    {
+      x = exp->x;
+      y = exp->y;
+      r = 0.5;
+      th = exp->th;
+    
+      DrawCircle( x,y, r ); // and highlight it
+
+      if( exp->label )
+      	{
+	  strcpy( label, exp->label );
+	  DrawString( x + 0.8, y, label, strlen( label ) );
+      	}
+    }
+  else
+    x = y = th = -1000.0; //reset the bouding box
+  
+  // reset the GC
+  SetDrawMode( GXcopy );
+  XSetLineAttributes( display, gc, 0, LineSolid, CapRound, JoinRound );
 }
 
 bool CXGui::GetObjectType( ExportData* exp, char* buf, size_t maxlen )
@@ -1222,4 +1202,25 @@ void CXGui::CopySpecificExportData( ExportData* dest, ExportData* src )
 {
   memcpy( dest->data, src->data, DataSize( src ) ); 
 }
+
+
+ExportData* CXGui::NearestObject( double x, double y )
+{ 
+  double dist, nearDist = 9999999.9;
+  ExportData* nearest = 0;
+
+  for( int o=0; o<numObjects; o++ )
+    {
+      dist = hypot( x - database[o]->x, y - database[o]->y );
+
+      if( dist < nearDist ) 
+	{
+	  nearDist = dist;
+	  nearest = database[o];
+	}
+    }
+  return nearest; // didn't find it
+}
+
+  
 

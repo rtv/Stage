@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/usc_pioneer.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.17 $
+//  $Revision: 1.1.2.18 $
 //
 // Usage:
 //  (empty)
@@ -74,6 +74,7 @@ CUscPioneer::CUscPioneer(CWorld *world, CEntity *parent)
     exp.objectType = uscpioneer_o;
     exp.width = 0.99; //m
     exp.height = 0.99; //m   
+    strcpy( exp.label, "USC Pioneer" );
 #endif
 
     m_ptz->SetPose(0.09, 0, 0);
