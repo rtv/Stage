@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.60 2002-06-11 03:31:18 inspectorg Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.61 2002-06-11 08:35:47 inspectorg Exp $
  */
 
 #define DEBUG
@@ -421,29 +421,29 @@ void CLaserDevice::RtkUpdate()
 
       double bearing = min_ang_rad;
       for( int i=0; i < (int)samples; i++ )
-	{
-	  // get range, converting from mm to m
-	  unsigned short range_mm = ntohs(data.ranges[i]) & 0x1FFF;
-	  double range_m = (double)range_mm / 1000.0;
+      {
+        // get range, converting from mm to m
+        unsigned short range_mm = ntohs(data.ranges[i]) & 0x1FFF;
+        double range_m = (double)range_mm / 1000.0;
 	  
-	  bearing += incr;
+        bearing += incr;
 
-	  double px = range_m * cos(bearing);
-	  double py = range_m * sin(bearing);
+        double px = range_m * cos(bearing);
+        double py = range_m * sin(bearing);
 	  
-	  //rtk_fig_line(this->scan_fig, 0.0, 0.0, px, py);
+        //rtk_fig_line(this->scan_fig, 0.0, 0.0, px, py);
 	  
-	  rtk_fig_line( this->scan_fig, lx, ly, px, py );
-	  lx = px;
-	  ly = py;
+        rtk_fig_line( this->scan_fig, lx, ly, px, py );
+        lx = px;
+        ly = py;
 	  
-	  // add little boxes at high intensities (like in playerv)
-	  if(  (unsigned char)(ntohs(data.ranges[i]) >> 13) > 0 )
-	    rtk_fig_rectangle(this->scan_fig, px, py, 0, 0.05, 0.05, 1);
+        // add little boxes at high intensities (like in playerv)
+        if(  (unsigned char)(ntohs(data.ranges[i]) >> 13) > 0 )
+          rtk_fig_rectangle(this->scan_fig, px, py, 0, 0.05, 0.05, 1);
 	  
-	}
+      }
 
-        rtk_fig_line( this->scan_fig, 0.0, 0.0, lx, ly );
+      rtk_fig_line( this->scan_fig, 0.0, 0.0, lx, ly );
 	
     }
     //else
