@@ -109,7 +109,7 @@ stg_client_t* stg_client_create( void )
     
 /* } */
 
-int stg_client_read( stg_client_t* client, int sleeptime )
+int stg_client_read( stg_client_t* client, int sleeptime )//, struct timeval* tv )
 {
   int err;
   
@@ -125,20 +125,25 @@ int stg_client_read( stg_client_t* client, int sleeptime )
 		    pkg->timestamp.tv_usec,
 		    (int)pkg->payload_len );
 	  
+      // record the time if desired
+      //if( tv )
+      //memcpy( tv, &pkg->timestamp, sizeof(struct timeval) );
+	
       // some timing stuff for performance testing
 
-      //struct timeval tv;
-      //gettimeofday( &tv, NULL );
-      //printf( "arrival time %d.%d\n",
-      //  tv.tv_sec, tv.tv_usec );
+#if 0
+      struct timeval tv;
+      gettimeofday( &tv, NULL );
+      printf( "arrival time %d.%d\n",
+        tv.tv_sec, tv.tv_usec );
 	  
-      //double sent = pkg->timestamp.tv_sec + 
-      //(double)(pkg->timestamp.tv_usec)/1e6; 
+      double sent = pkg->timestamp.tv_sec + 
+      (double)(pkg->timestamp.tv_usec)/1e6; 
 	  
-      //double recvd = tv.tv_sec + 
-      //(double)(tv.tv_usec)/1e6; 
-	  
-      //printf( "transport time: %.4f\n", recvd - sent );
+      double recvd = tv.tv_sec + (double)(tv.tv_usec)/1e6; 
+      
+      printf( "transport time: %.4f\n", recvd - sent );
+#endif
 	  
       // unpack the package and absorb its deltas	  
       stg_client_package_parse( client, pkg );	  
@@ -243,7 +248,7 @@ int stg_client_connect( stg_client_t* client, const char* host, const int port )
   char buf[100];
   buf[0] = 0;
   read( client->pfd.fd, buf, 100 );
-  printf( "[Stage says: \"%s\"]", buf ); fflush(stdout);
+  printf( "[\"%s\"]", buf ); fflush(stdout);
  
   // send the greeting
   stg_greeting_t greeting;
@@ -624,6 +629,24 @@ int stg_client_request_reply( stg_client_t* client,
   
   return 0; // OK
 }
+
+int stg_model_message( stg_model_t* mod, void* data, size_t len )
+{
+  size_t mplen = len + sizeof(stg_prop_t);
+  stg_prop_t* mp = calloc( mplen, 1);
+  
+  mp->world = mod->world->id_server;
+  mp->model = mod->id_server;
+  mp->prop = 0;
+  mp->datalen = len;
+  memcpy( mp->data, data, len );
+  
+  return stg_client_write_msg ( mod->world->client, 
+				STG_MSG_MODEL_MESSAGE,
+				mp, mplen );
+}
+
+
 
 int stg_model_prop_delta( stg_model_t* mod, stg_id_t prop, void* data, size_t len )
 {

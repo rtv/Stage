@@ -144,7 +144,10 @@ model_t* model_create(  world_t* world,
   // this normalizes the lines to fit inside our geometry rectangle
   // and also causes a redraw
   model_set_lines( mod, lines, 4 );
-		   
+		
+  // initialize odometry
+  memset( &mod->odom, 0, sizeof(mod->odom));
+
   // if this type of model has an init function, call it.
   if( derived[ mod->type ].init )
     derived[ mod->type ].init(mod);
@@ -483,8 +486,13 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
       break;
       
     default:
-      PRINT_WARN1( "Ignoring unrecognized model message type %d.",
-		   msg->type & STG_MSG_MASK_MINOR );
+      // if this type of model has a message function, call it.
+      if( derived[ model->type ].handle_message )
+	{
+	  if( derived[ model->type ].handle_message(model,fd,msg) )
+	    PRINT_WARN1( "Ignoring unrecognized model message type %d.",
+			 msg->type & STG_MSG_MASK_MINOR );
+	}
       break;
     }
 }

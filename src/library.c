@@ -79,3 +79,8 @@ void register_get_config( stg_model_type_t type, func_get_config_t func )
   derived[type].get_config = func;
 }
 
+void register_handle_message( stg_model_type_t type, func_handle_message_t func )
+{
+  derived[type].handle_message = func;
+}
+

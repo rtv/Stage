@@ -45,6 +45,8 @@ typedef struct _model
   stg_msec_t interval; // time between updates in ms
   stg_msec_t interval_elapsed; // time since last update in ms
 
+  stg_pose_t odom;
+
   // the generic buffers used by specialized model types
   void *data, *cmd, *cfg;
   size_t data_len, cmd_len, cfg_len;
@@ -85,6 +87,8 @@ typedef void*(*func_get_command_t)(model_t*,size_t*);
 typedef void*(*func_get_data_t)(model_t*,size_t*);
 typedef void*(*func_get_config_t)(model_t*,size_t*);
 
+typedef int(*func_handle_message_t)(model_t*, int fd, stg_msg_t* msg);
+
 //typedef int(*func_set_t)(model_t*,void*,size_t);
 //typedef void*(*func_get_t)(model_t*,size_t*);
 //typedef int(*func_service_t)(model_t*);
@@ -103,6 +107,8 @@ typedef struct
   func_get_command_t get_command;
   func_set_config_t set_config;
   func_get_config_t get_config;
+
+  func_handle_message_t handle_message;
 
   //func_service_t service;
   //func_get_t get;
@@ -198,6 +204,7 @@ void register_get_data( stg_model_type_t type, func_get_data_t func );
 void register_get_command( stg_model_type_t type, func_get_command_t func );
 void register_get_config( stg_model_type_t type, func_get_config_t func );
 
+void register_handle_message( stg_model_type_t type, func_handle_message_t func );
 
 void model_map( model_t* mod, gboolean render );
 void model_map_with_children( model_t* mod, gboolean render );

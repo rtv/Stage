@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.23 $
+//  $Revision: 1.24 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -119,14 +119,9 @@ int model_update_pose( model_t* model )
       double interval = (double)model->world->sim_interval / 1000.0;
       
       // global mode
-      //pose.x += vel->x * interval;
-      //pose.y += vel->y * interval;
-      //pose.a += vel->a * interval;
-      
-      // differential-steering model
-      pose.x += interval * (vel->x * cos(pose.a) - vel->y * sin(pose.a));
-      pose.y += interval * (vel->x * sin(pose.a) + vel->y * cos(pose.a));
-      pose.a += interval * vel->a;
+      pose.x += vel->x * interval;
+      pose.y += vel->y * interval;
+      pose.a += vel->a * interval;
 
       if( model_test_collision_at_pose( model, &pose, NULL, NULL ) )
 	{
@@ -147,6 +142,12 @@ int model_update_pose( model_t* model )
 	  // something to move.	
 	  stg_kg_t mass = *model_get_mass( model );
 	  model_energy_consume( model, STG_ENERGY_COST_MOTIONKG * mass ); 
+
+	  // record the movement in odometry
+	  model->odom.x += vel->x * interval;
+	  model->odom.y += vel->y * interval;
+	  model->odom.a += vel->a * interval;
+	  model->odom.a = NORMALIZE( model->odom.a );
 	}      
     }
   

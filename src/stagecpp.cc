@@ -3,9 +3,20 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.51 2004-09-04 00:53:12 rtv Exp $
+// $Id: stagecpp.cc,v 1.52 2004-09-09 22:23:35 rtv Exp $
 
 //#define DEBUG
+
+/** @defgroup worldfile WorldFile tags */
+/** @{ 
+
+This is the worldfile description. It goes here! 
+
+@} */
+
+/** @addtogroup worldfile */
+/** foo bar bash bang bat */
+
 
 #include "stage.h"
 #include "worldfile.hh"
@@ -23,6 +34,7 @@ void configure_model( stg_model_t* mod, int section )
   if( pose.x || pose.y || pose.a )
     stg_model_prop_with_data( mod, STG_PROP_POSE, &pose, sizeof(pose) );
       
+  /** Load the geometry */
   stg_geom_t geom;
   geom.pose.x = wf.ReadTupleLength(section, "origin", 0, STG_DEFAULT_GEOM_POSEX );
   geom.pose.y = wf.ReadTupleLength(section, "origin", 1, STG_DEFAULT_GEOM_POSEY);
@@ -178,6 +190,17 @@ void configure_model( stg_model_t* mod, int section )
     stg_model_prop_with_data( mod, STG_PROP_MASS, &mass, sizeof(mass) );  
 }
 
+/** @addtogroup worldfile */
+/** @{ */
+/** @defgroup worldfilelaser Laser model properties
+ - laser.samples
+ - laser.range_min
+ - laser.range_max
+ - laser.fov
+*/
+/** @} */
+
+
 void configure_laser( stg_model_t* mod, int section )
 {
   stg_laser_config_t lconf;
@@ -194,6 +217,16 @@ void configure_laser( stg_model_t* mod, int section )
   
   stg_model_prop_with_data( mod, STG_PROP_CONFIG, &lconf,sizeof(lconf));
 }
+
+/** @addtogroup worldfile */
+/** @{ */
+/** @defgroup worldfilefiducial Fiducial model properties
+ - fiducial.range_min
+ - fiducial.range_max_anon
+ - fiducial.range_max_id
+ - fiducial.fov
+*/
+/** @} */
 
 void configure_fiducial( stg_model_t* mod, int section )
 {
@@ -214,6 +247,13 @@ void configure_fiducial( stg_model_t* mod, int section )
   stg_model_prop_with_data( mod, STG_PROP_CONFIG, &fcfg, sizeof(fcfg));
   
 }
+
+/** @addtogroup worldfile */
+/** @{ */
+/** @defgroup worldfileblobfinder Blobfinder model properties
+ - 
+*/
+/** @} */
 
 void configure_blobfinder( stg_model_t* mod, int section )
 {
@@ -248,6 +288,18 @@ void configure_blobfinder( stg_model_t* mod, int section )
   stg_model_prop_with_data( mod, STG_PROP_CONFIG, 
 			    &bcfg,sizeof(bcfg));  
 }
+
+/** @addtogroup worldfile */
+/** @{ */
+/** @defgroup worldfileranger Ranger model properties
+ - ranger.count int (number of transducers)
+ - ranger.pose[\<transducer number\>] [x y theta]
+ - ranger.size[\<transducer number\>] [x y]
+ - ranger.view[\<transducer number\>] [range_min range_max fov]
+*/
+/** @} */
+
+
 
 void configure_ranger( stg_model_t* mod, int section )
 {
@@ -288,11 +340,33 @@ void configure_ranger( stg_model_t* mod, int section )
     }
 }
 
+/** @addtogroup worldfile */
+/** @{ */
+/** @defgroup worldfileposition Position model properties
+ - none
+*/
+/** @} */
 
 
 void configure_position( stg_model_t* mod, int section )
 {
-  PRINT_WARN( "POSITION CONFIG NOT IMPLEMENTED" );
+  stg_position_cfg_t cfg;
+  memset(&cfg,0,sizeof(cfg));
+  
+  const char* mode_str =  wf.ReadString( section, "drive", "diff" );
+  
+  if( strcmp( mode_str, "diff" ) == 0 )
+    cfg.steer_mode = STG_POSITION_STEER_DIFFERENTIAL;
+  else if( strcmp( mode_str, "omni" ) == 0 )
+    cfg.steer_mode = STG_POSITION_STEER_INDEPENDENT;
+  else
+    {
+      PRINT_ERR1( "invalid position drive mode specified: \"%s\" - should be one of: \"diff\", \"omni\". Using \"diff\" as default.", mode_str );
+      
+      cfg.steer_mode = STG_POSITION_STEER_DIFFERENTIAL;
+    }
+  
+  stg_model_prop_with_data( mod, STG_PROP_CONFIG, &cfg, sizeof(cfg));
 }
 
 

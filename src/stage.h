@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.84 2004-09-04 00:53:12 rtv Exp $
+ * CVS: $Id: stage.h,v 1.85 2004-09-09 22:23:34 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -79,6 +79,15 @@
 // every packet sent between Stage and client has a header that
 // specifies the type of message to follow. The comment shows the
 // payload that follows each type of message.
+
+/** @defgroup libstage libstage interfaces
+
+See @ref libstage_usage for information on using libstage.
+
+*/
+
+
+/** These are the model's property types */
 
 typedef enum
   {
@@ -182,6 +191,7 @@ typedef uint16_t stg_msg_type_t;
 #define STG_MSG_MODEL_SUBSCRIBE         (STG_MSG_MODEL | 6) // no reply
 #define STG_MSG_MODEL_UNSUBSCRIBE       (STG_MSG_MODEL | 7) // no reply
 
+#define STG_MSG_MODEL_MESSAGE           (STG_MSG_MODEL | 8) // no reply
 //#define STG_MSG_MODEL_CMD               (STG_MSG_MODEL | 8) // set command
 //#define STG_MSG_MODEL_DATA              (STG_MSG_MODEL | 9) // get data
 
@@ -387,6 +397,8 @@ typedef struct
 typedef struct
 {
   stg_position_steer_mode_t steer_mode;
+  //stg_bool_t motor_disable; // if non-zero, the motors are disabled
+  //stg_pose_t odometry
 } stg_position_cfg_t;
 
 typedef stg_pose_t stg_velocity_t;
@@ -563,32 +575,40 @@ typedef struct
 
 // LASER  ------------------------------------------------------------
 
-// Possible laser return values
+/** @addtogroup model_laser */
+/** @{ */ 
+
+/// laser return value
 typedef enum 
   {
-    LaserTransparent = 0,
-    LaserVisible, // 1
-    LaserBright, // 2
+    LaserTransparent, ///<not detected by laser model 
+    LaserVisible, ///< detected by laser with a reflected intensity of 0 
+    LaserBright  ////< detected by laser with a reflected intensity of 1 
   } stg_laser_return_t;
 
 
+/// the default value
 #define STG_DEFAULT_LASERRETURN LaserVisible
 
+///laser data structure
 typedef struct
 {
-  uint32_t range; // mm
-  char reflectance; 
+  uint32_t range; ///< range to laser hit in mm
+  char reflectance; ///< intensity of the reflection 0-4
 } stg_laser_sample_t;
 
+/// laser configuration structure
 typedef struct
 {
   //stg_geom_t geom;
-  stg_radians_t fov;
-  stg_meters_t range_max;
-  stg_meters_t range_min;
-  int samples;
+  stg_radians_t fov; ///< field of view 
+  stg_meters_t range_max; ///< the maximum range
+  stg_meters_t range_min; ///< the miniimum range
+  int samples; ///< the number of range measurements (and thus the size
+	       ///< of the array of stg_laser_sample_t's returned)
 } stg_laser_config_t;
 
+/** @} */
 
 // print human-readable version of the struct
 void stg_print_laser_config( stg_laser_config_t* slc );
@@ -1095,6 +1115,8 @@ int stg_model_prop_get( stg_model_t* mod, stg_id_t propid, void* data, size_t le
 int stg_model_prop_get_var( stg_model_t* mod, stg_id_t propid, void** data, size_t* len);
 
 int stg_model_prop_delta( stg_model_t* mod, stg_id_t prop, void* data, size_t len );
+// send a packet to a model with the STG_MSG_TYPE_T of STG_MSG_MODEL_MESSAGE
+int stg_model_message( stg_model_t* mod, void* data, size_t len );
 
 // set property [propid] with [len] bytes at [data]
 int stg_model_prop_set( stg_model_t* mod, stg_id_t propid, void* data, size_t len);
