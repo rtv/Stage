@@ -76,9 +76,12 @@ dep:
 	$(MAKEDEP) -Y -- $(CCFLAGS) -- -s "# Dependancies (make dep)" ../*.cc 2>/dev/null
 	$(RM) -f Makefile.bak
 
+clean_dep:
+	$(MAKEDEP) -s "# Dependancies (make dep)" 
+	$(RM) -f Makefile.bak
+
 %.o : ../%.cc
 	$(CC) $(CCFLAGS) -c $< -o $@
 
 ##############################################################################
 # Dependancies (make dep)
-

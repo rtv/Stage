@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.8 $
+//  $Author: gerkey $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -136,9 +136,9 @@ bool CEntity::Load(int argc, char **argv)
         //
         else if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
         {
-            double px = atof(argv[i + 1]);
-            double py = atof(argv[i + 2]);
-            double pa = DTOR(atof(argv[i + 3]));
+            double px = atof(argv[i + 1]) * m_world->unit_multiplier;
+            double py = atof(argv[i + 2]) * m_world->unit_multiplier;
+            double pa = atof(argv[i + 3]) * m_world->angle_multiplier;
             SetPose(px, py, pa);
             i += 4;
         }

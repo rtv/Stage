@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.11 $
+//  $Author: gerkey $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -30,7 +30,6 @@
 #include "truthserver.hh"
 
 #undef DEBUG
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Tokenize a string (naked utility function)
@@ -184,6 +183,7 @@ bool CWorld::Load(const char *filename)
             {
               strcpy(m_env_file, argv[3]);
             }
+            // the authorization key; it is passed on to Player
             else if (strcmp(argv[1], "auth_key") == 0)
             {
               strncpy(m_auth_key, argv[3],sizeof(m_auth_key));
@@ -193,6 +193,41 @@ bool CWorld::Load(const char *filename)
               m_laser_res = DTOR(atof(argv[3]));
             else if (strcmp(argv[1], "vision_res") == 0)
               m_vision_res = DTOR(atof(argv[3]));
+            // get the unit specifier
+            else if (strcmp(argv[1], "units") == 0)
+            {
+              // case-insensitive
+              if(!strcasecmp(argv[3],"m"))
+                unit_multiplier = 1.0;
+              else if(!strcasecmp(argv[3],"dm"))
+                unit_multiplier = 0.1;
+              else if(!strcasecmp(argv[3],"cm"))
+                unit_multiplier = 0.01;
+              else if(!strcasecmp(argv[3],"mm"))
+                unit_multiplier = 0.001;
+              else
+              {
+                printf("line %d : unknown unit specifier \"%s\". "
+                       "defaulting to meters\n",
+                     (int) linecount, (char*) argv[3]);  
+                unit_multiplier = 1.0;
+              }
+            }
+            else if (strcmp(argv[1], "angles") == 0)
+            {
+              // case-insensitive
+              if(!strcasecmp(argv[3],"degrees"))
+                angle_multiplier = M_PI/180.0;
+              else if(!strcasecmp(argv[3],"radians"))
+                angle_multiplier = 1.0;
+              else
+              {
+                printf("line %d : unknown angle specifier \"%s\". "
+                       "defaulting to degrees\n",
+                     (int) linecount, (char*) argv[3]);  
+                angle_multiplier = M_PI/180.0;
+              }
+            }
             else
               printf("line %d : variable %s is not defined\n",
                      (int) linecount, (char*) argv[1]);  
@@ -205,6 +240,9 @@ bool CWorld::Load(const char *filename)
         {
             if( strcmp( argv[1], "truth_server" ) == 0 )
             {
+                // see if we should run on a non-standard port
+                if(argc >= 4 && !strcmp(argv[2],"port"))
+                  global_truth_port = atoi(argv[3]);
                 // kick off the truth server thread
                 pthread_t tid_dummy;
                 pthread_create(&tid_dummy, NULL, &TruthServer, (void *)NULL );  
@@ -214,6 +252,9 @@ bool CWorld::Load(const char *filename)
             }
             else if( strcmp( argv[1], "environment_server" ) == 0 )
             {
+                // see if we should run on a non-standard port
+                if(argc >= 4 && !strcmp(argv[2],"port"))
+                  global_environment_port = atoi(argv[3]);
                 // kick off the environment server thread
                 pthread_t tid_dummy;
                 pthread_create(&tid_dummy, NULL, &EnvServer, (void *)NULL );  

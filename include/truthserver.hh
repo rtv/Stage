@@ -8,6 +8,9 @@
 const int TRUTH_SERVER_PORT = 6001;
 const int ENVIRONMENT_SERVER_PORT = 6002;
 
+// these can be modified in world_load.cc...
+extern int global_truth_port;
+extern int global_environment_port;
 
 void* TruthServer( void* ); // defined in truthserver.cc
 void* EnvServer( void* ); // defined in envserver.cc

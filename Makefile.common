@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.common,v 1.10 2001-09-05 00:15:48 vaughan Exp $ 
+# $Id: Makefile.common,v 1.11 2001-09-06 18:26:01 gerkey Exp $ 
 #
 
 # INSTALL PLAYER BEFORE BUILDING STAGE!
@@ -31,7 +31,8 @@ PLAYERVERSION = $(VERSION)
 # make -e PLAYER_BASE=~/playerstage/player
 
 PLAYER_BASE = /usr/local/player
-PLAYER_DIR = $(PLAYER_BASE)-$(PLAYERVERSION)
+#PLAYER_DIR = $(PLAYER_BASE)-$(PLAYERVERSION)
+PLAYER_DIR = $(HOME)/code/player
 
 
 ##############################################################################

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.16 $
+//  $Author: gerkey $
+//  $Revision: 1.17 $
 //
 // Usage:
 //  (empty)
@@ -115,6 +115,13 @@ public: double m_vision_res; // NYI
     
   // *** HACK -- this should be made private.  ahoward
 public: float ppm;
+
+  // these are set in CWorld::Load() by the 
+  //    "set units = {m|dm|cm|mm}"
+  //    "set angles = {degrees|radians}" 
+  // commands, and are referened in CEntity::Load() to set poses accordingly.
+public: float unit_multiplier;
+public: float angle_multiplier;
   
   // Scale of fig-based world file
     private: double scale;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.26 $
+//  $Revision: 1.27 $
 //
 // Usage:
 //  (empty)
@@ -101,6 +101,8 @@ CWorld::CWorld()
     this->ppm = 20;
     this->scale = 100;
     m_laser_res = 0;
+    unit_multiplier = 1.0;  // default to meters
+    angle_multiplier = M_PI/180.0;  // default to degrees
     
     memset( m_env_file, 0, sizeof(m_env_file));
 

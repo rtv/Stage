@@ -7,8 +7,8 @@
 #
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
-#  $Author: ahoward $
-#  $Revision: 1.18 $
+#  $Author: gerkey $
+#  $Revision: 1.19 $
 #
 ###########################################################################
 
@@ -36,12 +36,15 @@ rtkstage:
 dep:
 	cd src &&  make dep
 
-clean:
+clean: clean_dep
 	rm -f *~
-	cd src && make clean 
+	cd src && make clean
 	cd include &&  make clean
 	cd bin && rm -f stage rtkstage xs core
 	cd examples && rm -f core
+
+clean_dep:
+	cd src && make clean_dep
 
 
 ###########################################################################
