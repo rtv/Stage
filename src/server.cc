@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.43.4.2 2004-10-07 16:47:42 gerkey Exp $
+ * CVS info: $Id: server.cc,v 1.43.4.3 2004-11-11 19:46:26 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -73,6 +73,8 @@ const int LISTENQ = 128;
 //const long int MILLION = 1000000L;
 
 int g_timer_events = 0;
+
+void PrintUsage(); // defined in main.cc
 
 // dummy timer signal func
 void TimerHandler( int val )
@@ -137,6 +139,13 @@ bool CStageServer::Load( void )
 {
   //////////////////////////////////////////////////////////////////////
   // FIGURE OUT THE WORLD FILE NAME
+
+  // Must have at least two args
+  if(argc < 2)
+  {
+    PrintUsage();
+    exit(-1);
+  }
   
   this->worldfilename[0] = 0;
   // find the world file name (it's the last argument)
@@ -466,6 +475,11 @@ bool CStageServer::ParseCmdLine( int argc, char** argv )
     // set the stop time
     if(!strcmp(argv[a], "-t"))
       {
+        if((a+1) >= (argc-1))
+        {
+          PrintUsage();
+          exit(0);
+        }
 	m_stoptime = atoi(argv[++a]);
 	printf("[Stop time: %d]",m_stoptime);
       }

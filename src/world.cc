@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.137.2.1 2002-12-10 00:28:18 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.137.2.1.2.1 2004-11-11 19:46:26 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -206,7 +206,8 @@ CWorld::~CWorld()
 // Parse the command line
 bool CWorld::ParseCmdLine(int argc, char **argv)
 {
-  for( int a=1; a<argc; a++ )
+  // the last arg is the config file, so don't parse it here
+  for( int a=1; a<(argc-1); a++ )
     {   
       // USAGE
       if( (strcmp( argv[a], "-?" ) == 0) || 
@@ -219,6 +220,11 @@ bool CWorld::ParseCmdLine(int argc, char **argv)
       // LOGGING
       if( strcmp( argv[a], "-l" ) == 0 )
 	{
+          if((a+1) >= (argc-1))
+          {
+            PrintUsage();
+            exit(-1);
+          }
 	  m_log_output = true;
 	  strncpy( m_log_filename, argv[a+1], 255 );
 	  printf( "[Logfile %s (undocumented/experimental)]", m_log_filename );
@@ -249,6 +255,11 @@ bool CWorld::ParseCmdLine(int argc, char **argv)
       // Stage will attempt to update at this speed
       if( strcmp( argv[a], "-u" ) == 0 )
 	{
+          if((a+1) >= (argc-1))
+          {
+            PrintUsage();
+            exit(-1);
+          }
 	  m_real_timestep = atof(argv[a+1]);
 	  printf( "[Real time per cycle %f sec]", m_real_timestep );
 	  a++;
@@ -258,6 +269,11 @@ bool CWorld::ParseCmdLine(int argc, char **argv)
       // one cycle simulates this much time
       else if( strcmp( argv[a], "-v" ) == 0 )
 	{
+          if((a+1) >= (argc-1))
+          {
+            PrintUsage();
+            exit(-1);
+          }
 	  m_sim_timestep = atof(argv[a+1]);
 	  printf( "[Simulated time per cycle %f sec]", m_sim_timestep );
 	  a++;
