@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/fiducialfinderdevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -78,8 +78,6 @@ public: static CFiducialFinder* Creator(  LibraryItem *libit, CWorld *world, CEn
   private: double max_range_anon;
   private: double max_range_id;
     
-  private:  ExportLaserBeaconDetectorData expBeacon; 
-
   // place to keep the fake lbd parameters that we'll pass back to clients
   // who ask for them
   private: char m_bit_count;
