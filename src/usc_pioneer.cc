@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/usc_pioneer.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.1.2.12 $
+//  $Author: ahoward $
+//  $Revision: 1.1.2.13 $
 //
 // Usage:
 //  (empty)
@@ -54,18 +54,17 @@ CUscPioneer::CUscPioneer(CWorld *world, CObject *parent)
     // Make the pioneer base the default parent of any would be children
     //
     m_default_object = m_pioneer;
-    
-    // Add everything into a list of anonymous objects
+
+    // Add all these objects to the world
     //
-    m_child_count = 0;
-    m_child[m_child_count++] = m_player;
-    m_child[m_child_count++] = m_pioneer;
-    m_child[m_child_count++] = m_misc;
-    m_child[m_child_count++] = m_sonar;    
-    m_child[m_child_count++] = m_laser;
-    m_child[m_child_count++] = m_laser_beacon;
-    m_child[m_child_count++] = m_ptz;
-    m_child[m_child_count++] = m_vision;
+    world->AddObject(m_player);
+    world->AddObject(m_pioneer);
+    world->AddObject(m_misc);
+    world->AddObject(m_sonar);
+    world->AddObject(m_laser);
+    world->AddObject(m_laser_beacon);
+    world->AddObject(m_ptz);
+    world->AddObject(m_vision);
 
     // Set the default pose of some key devices
     //
@@ -86,8 +85,6 @@ CUscPioneer::CUscPioneer(CWorld *world, CObject *parent)
 //
 CUscPioneer::~CUscPioneer()
 {
-    for (int i = m_child_count - 1; i >= 0; i--)
-        delete m_child[i];
 }
 
 
@@ -187,10 +184,6 @@ bool CUscPioneer::Startup()
 {
     if (!CObject::Startup())
         return false;
-
-    for (int i = 0; i < m_child_count; i++)
-        m_child[i]->Startup();
-    
     return true;
 }
 
@@ -200,9 +193,6 @@ bool CUscPioneer::Startup()
 //
 void CUscPioneer::Shutdown()
 {
-    for (int i = m_child_count - 1; i >= 0; i--)
-        m_child[i]->Shutdown();
-    
     CObject::Shutdown();
 }
 
@@ -212,9 +202,6 @@ void CUscPioneer::Shutdown()
 //
 void CUscPioneer::Update()
 {
-    for (int i = 0; i < m_child_count; i++)
-        m_child[i]->Update();    
-
     CObject::Update();
 }
 
@@ -226,9 +213,6 @@ void CUscPioneer::Update()
 //
 void CUscPioneer::OnUiUpdate(RtkUiDrawData *data)
 {
-    for (int i = 0; i < m_child_count; i++)
-        m_child[i]->OnUiUpdate(data);  
-  
     CObject::OnUiUpdate(data);
 }
 
@@ -238,9 +222,6 @@ void CUscPioneer::OnUiUpdate(RtkUiDrawData *data)
 //
 void CUscPioneer::OnUiMouse(RtkUiMouseData *data)
 {
-    for (int i = 0; i < m_child_count; i++)
-        m_child[i]->OnUiMouse(data);  
-    
     CObject::OnUiMouse(data);
 }
 
@@ -250,9 +231,6 @@ void CUscPioneer::OnUiMouse(RtkUiMouseData *data)
 //
 void CUscPioneer::OnUiProperty(RtkUiPropertyData *data)
 {
-    for (int i = 0; i < m_child_count; i++)
-        m_child[i]->OnUiProperty(data);  
-    
     CObject::OnUiProperty(data);
 }
 

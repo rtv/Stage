@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -153,13 +153,6 @@ bool CWorld::Load(const char *filename)
                 
                 // Let the object load itself
                 //
-                /*
-                if (!object->Load(line, sizeof(line)))
-                {
-                    fclose(file);
-                    return false;
-                }
-                */
                 if (!object->Load(argc, argv))
                 {
                     fclose(file);
@@ -168,7 +161,7 @@ bool CWorld::Load(const char *filename)
 
                 // Add to list of objects
                 //
-                m_object[m_object_count++] = object;
+                AddObject(object);
             }
             else
                 printf("line %d : object type %s is not defined\n",

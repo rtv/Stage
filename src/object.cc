@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/object.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.1.2.18 $
+//  $Author: ahoward $
+//  $Revision: 1.1.2.19 $
 //
 // Usage:
 //  (empty)
@@ -41,7 +41,7 @@ CObject::CObject(CWorld *world, CObject *parent_object)
     m_parent_object = parent_object;
     m_default_object = this;
 
-    m_line = 0;
+    m_line = -1;
     m_type[0] = 0;
     m_id[0] = 0;
     

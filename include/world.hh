@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.1.2.20 $
+//  $Author: ahoward $
+//  $Revision: 1.1.2.21 $
 //
 // Usage:
 //  (empty)
@@ -102,6 +102,10 @@ class CWorld
     // Update everything
     //
     private: void Update();
+
+    // Add an object to the world
+    //
+    public: void AddObject(CObject *object);
 
     // Return the object nearest a given position
     //

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/object.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.1.2.16 $
+//  $Author: ahoward $
+//  $Revision: 1.1.2.17 $
 //
 // Usage:
 //  (empty)
@@ -132,8 +132,6 @@ class CObject
     // Object pose in local cs (ie relative to parent)
     //
     private: double m_lx, m_ly, m_lth;
-<<<<<<< object.hh
-
 
 #ifdef INCLUDE_XGUI
 
