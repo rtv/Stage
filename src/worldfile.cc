@@ -24,7 +24,7 @@
  *          Douglas S. Blank <dblank@brynmawr.edu>
  *
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.29 2004-04-05 03:01:05 rtv Exp $
+ * CVS info: $Id: worldfile.cc,v 1.30 2004-09-27 20:02:42 rtv Exp $
  */
 
 #include <assert.h>
@@ -1472,6 +1472,15 @@ void CWorldFile::WriteInt(int entity, const char *name, int value)
 {
   char default_str[64];
   snprintf(default_str, sizeof(default_str), "%d", value);
+  WriteString(entity, name, default_str);
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Write a float
+void CWorldFile::WriteFloat(int entity, const char *name, double value)
+{
+  char default_str[64];
+  snprintf(default_str, sizeof(default_str), "%.3f", value);
   WriteString(entity, name, default_str);
 }
 

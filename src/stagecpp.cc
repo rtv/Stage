@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.58 2004-09-27 01:20:05 rtv Exp $
+// $Id: stagecpp.cc,v 1.59 2004-09-27 20:02:41 rtv Exp $
 
 //#define DEBUG
 
@@ -28,6 +28,9 @@ static CWorldFile wf;
 
 void configure_gui( gui_window_t* win, int section )
 {
+  // remember the section for saving later
+  win->wf_section = section;
+
   int window_width = 
     (int)wf.ReadTupleFloat(section, "window_size", 0, STG_DEFAULT_WINDOW_WIDTH);
   int window_height = 
@@ -42,6 +45,24 @@ void configure_gui( gui_window_t* win, int section )
   
   PRINT_WARN2( "window center (%.2f,%.2f)", window_center_x, window_center_y );
 
+  double window_scale = 
+    wf.ReadFloat(section, "window_scale", 1.0 );
+
+  // ask the canvas to comply
+  rtk_canvas_size( win->canvas, window_width, window_height );
+  rtk_canvas_scale( win->canvas, window_scale, window_scale );
+  rtk_canvas_origin( win->canvas, window_center_x, window_center_y );
+}
+
+void save_gui( gui_window_t* win )
+{
+  wf.WriteTupleFloat( win->wf_section, "window_size", 0, win->canvas->sizex);
+  wf.WriteTupleFloat( win->wf_section, "window_size", 1, win->canvas->sizey );
+
+  wf.WriteTupleFloat( win->wf_section, "window_center", 0, win->canvas->ox );
+  wf.WriteTupleFloat( win->wf_section, "window_center", 1, win->canvas->oy );
+
+  wf.WriteFloat( win->wf_section, "window_scale", win->canvas->sx );
 }
 
 void configure_model( stg_model_t* mod, int section )
@@ -407,6 +428,8 @@ void stg_world_save( stg_world_t* world, CWorldFile* wfp )
   // ask every model to save itself
   g_hash_table_foreach( world->models, stg_model_save_cb, wfp );
 
+  save_gui( world->win );
+
   wfp->Save( NULL );
 }
 
@@ -415,6 +438,9 @@ void stg_world_save( stg_world_t* world )
   // ask every model to save itself
   g_hash_table_foreach( world->models, stg_model_save_cb, &wf );
 
+  // ask the gui to save itself
+  save_gui( world->win );
+  
   wf.Save( NULL );
 }
 

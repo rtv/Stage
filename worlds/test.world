@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.17 2004-09-27 01:20:05 rtv Exp $
+# CVS: $Id: test.world,v 1.18 2004-09-27 20:02:42 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -15,10 +15,18 @@ interval_real 10 # real-time milliseconds per update step
   # defines Pioneer-like robots
 include "pioneer.inc"
 
+
+
+
  # defines 'map' object used for floorplans
 include "map.inc"
 
-gui( window_size [ 200 200 ] window_center [5 5] )
+
+
+
+# window_size doesn't work, thanks to broken rtk_canvas_size()
+#
+gui( window_size [ 531.000 364.000 ] window_center [0.240 -0.315] window_scale 0.054 )
 
 map(
   #size [15.5 11.4]

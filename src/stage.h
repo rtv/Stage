@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.93 2004-09-27 00:58:01 rtv Exp $
+ * CVS: $Id: stage.h,v 1.94 2004-09-27 20:02:41 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -486,6 +486,8 @@ extern "C" {
     // rtk doesn't support status bars, so we'll use gtk directly
     GtkStatusbar* statusbar;
     GtkLabel* timelabel;
+
+    int wf_section; // worldfile section for load/save
 
     rtk_fig_t* bg; // background
     rtk_fig_t* matrix;
