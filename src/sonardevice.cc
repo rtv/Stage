@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.9.2.1 $
+//  $Revision: 1.9.2.2 $
 //
 // Usage:
 //  (empty)
@@ -97,34 +97,21 @@ void CSonarDevice::Update( double sim_time )
       double oy = m_sonar[s][1];
       double oth = m_sonar[s][2];
       LocalToGlobal(ox, oy, oth);
-      
-      double max_range = m_max_range * m_world->ppm;
-      double remaining_range = max_range;
 
-      while( remaining_range > 0 )
-	{
-	  CEntity** ent = m_world->RayTrace( ox, oy, oth, remaining_range );
-
-	  if( ent == 0 ) // if we hit nothing
-	    break; // we're done with this ray
-	
-	  // we hit something!
-	  int retval = 0;
-	  int s = 0;
-	  while( ent[s] ) // scan the entity array
-	    {
-	      if( (ent[s] != this) && (ent[s] != m_parent_object) ) 
-		retval = ent[s]->sonar_return;
-	      
-	      if( retval > 0 ) break; // stop scanning the array   
-	      s++;
-	    }
-	  
-	  if( retval > 0 ) break;
-	}
+      double range = m_max_range;
       
-      uint16_t v = (uint16_t)
-	(1000.0 * ((double)(max_range-remaining_range)/m_world->ppm));
+      CLineIterator lit( ox, oy, oth, m_max_range, 
+			 m_world->ppm, m_world->matrix, PointToBearingRange );
+      CEntity* ent;
+      
+      while( (ent = lit.GetNextEntity()) ) 
+	if( ent != this && ent != m_parent_object && ent->sonar_return ) 
+	  {
+	    lit.GetRange( range );
+	    break;
+	  }	
+      
+      uint16_t v = (uint16_t)(1000.0 * range);
       
       // Store range in mm in network byte order
       //

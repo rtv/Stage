@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.14.2.4 $
+//  $Revision: 1.14.2.5 $
 //
 // Usage:
 //  (empty)
@@ -36,12 +36,16 @@
 #include <sys/sem.h>
 #include <sys/ipc.h>
 #include <queue> // standard template library container
+#include <slist>
+
 #include "image.h"
 #include "entity.hh"
 #include "truthserver.hh"
 #include "playercommon.h"
 
 #include "matrix.h"
+
+
 
 #define DEBUG
 
@@ -180,8 +184,8 @@ public: CEntity** GetEntityAtCell( int, int );
 
     // Get a rectangle in the world grid
     //
-    public: CEntity** GetRectangle(double px, double py, double pth,
-                                 double dx, double dy );
+  //public: EntityPtrList GetRectangle(double px, double py, double pth,
+  //                             double dx, double dy );
 
     // Set a rectangle in the world grid
     //

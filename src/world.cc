@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.21.2.5 $
+//  $Revision: 1.21.2.6 $
 //
 // Usage:
 //  (empty)
@@ -42,7 +42,7 @@
 
 #define SEMKEY 2000
 
-#define WATCH_RATES
+//#define WATCH_RATES
 //#define DEBUG 
 //#define VERBOSE
 #undef DEBUG 
@@ -435,15 +435,6 @@ void CWorld::Update()
     //
     m_update_rate = (1 - a) * m_update_rate + a * (1 / timestep);
 
-//      if((GetRealTime() - last_output_time) >= 1.0)
-//      {
-//        printf("Sim time:%8.3fs Real time:%8.3fs Sim/Real:%8.3f Update:%8.3fHz\r",
-//               m_sim_time, GetRealTime(), m_update_ratio, m_update_rate);
-//        last_output_time = GetRealTime();
-//        fflush(stdout);
-//      }
-
-
     static int period = 0;
     if( (++period %= 20)  == 0 )
       {
@@ -821,50 +812,6 @@ uint8_t CWorld::GetRectangle(double px, double py, double pth,
         case layer_puck:
             return m_puck_img->rect_detect(rect);
     }
-    return 0;
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Get a rectangle in the world grid
-//
-CEntity** CWorld::GetRectangle(double px, double py, double pth,
-                             double dx, double dy )
-{
-    Rect rect;
-    double tx, ty;
-
-    dx /= 2;
-    dy /= 2;
-
-    double cx = dx * cos(pth);
-    double cy = dy * cos(pth);
-    double sx = dx * sin(pth);
-    double sy = dy * sin(pth);
-    
-    // This could be faster
-    //
-    tx = px + cx - sy;
-    ty = py + sx + cy;
-    rect.toplx = (int) (tx * ppm);
-    rect.toply = (int) (ty * ppm);
-
-    tx = px - cx - sy;
-    ty = py - sx + cy;
-    rect.toprx = (int) (tx * ppm);
-    rect.topry = (int) (ty * ppm);
-
-    tx = px - cx + sy;
-    ty = py - sx - cy;
-    rect.botlx = (int) (tx * ppm);
-    rect.botly = (int) (ty * ppm);
-
-    tx = px + cx + sy;
-    ty = py + sx - cy;
-    rect.botrx = (int) (tx * ppm);
-    rect.botry = (int) (ty * ppm);
-    
-    return matrix->rect_detect( rect );
-
     return 0;
 }
 
@@ -1445,56 +1392,6 @@ void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
 #endif // INCLUDE_RTK
 
 
-
-
-CEntity** CWorld::RayTrace( double &px, double &py, double pth, 
-			    double &remaining_range )
-{
-  int range = 0;
-  
-  //printf( "Ray from %.2f,%.2f angle: %.2f remaining_range %.2f\n", 
-  //  px, py, RTOD(pth), remaining_range );
-  
-  // hops along each axis
-  double cospth = cos( pth );
-  double sinpth = sin( pth );
-  
-  // start at the scan origin (pixel coords for speed)
-  double cellx = px * ppm;
-  double celly = py * ppm;
-  
-  CEntity** ent = 0;
-
-  // Look along scan line for obstacles
-  for( range = 0; range < remaining_range; range++ )
-    {
-      cellx += cospth;
-      celly += sinpth;
-      
-      // skip this ray if we're out of bounds
-      if( cellx < 0 || cellx >= matrix->width ) break;
-      if( celly < 0 || celly >= matrix->height ) break;
-
-      ent = matrix->get_cell( (int)cellx,(int)celly );
-      if( !ent[0] ) ent = matrix->get_cell( (int)cellx+1,(int)celly );
-      
-      if( ent[0] ) break;// we hit something!
-    }
-
-  px = cellx / ppm; // we got to here
-  py = celly / ppm; //
-  remaining_range -= range; // we have this much left to go
-  
-  //if( ent && ent[0] )
-  //printf( "hit %p (%s) at %.2f,%.2f with %.2f to go\n", 
-  //ent[0], StringType( ent[0]->m_stage_type ), 
-  //  px, py, remaining_range );
-  //else
-  //printf( "hit nothing. remaining range = %.2f\n", remaining_range );
-  //fflush( stdout );
-  
-  return ent; // we hit these entities
-}
   
 char* CWorld::StringType( StageType t )
 {

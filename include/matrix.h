@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.h,v 1.2.2.2 2001-08-21 01:40:55 vaughan Exp $
+// $Id: matrix.h,v 1.2.2.3 2001-08-23 02:59:42 vaughan Exp $
 // RTV
 // ==================================================================
 
@@ -17,6 +17,8 @@
 
 
 enum MatrixMode { mode_set, mode_unset };
+
+
 
 
 class CMatrix
@@ -46,17 +48,18 @@ public:
 	inline	int	get_height(void)	{return height;}
 	inline	int	get_size(void)		{return width*height;}
 
+	// MUST BE IN-BOUNDS!
 	// get a pixel color by its x,y coordinate
 	inline CEntity** get_cell(int x, int y)
 	  { 
-	    if (x<0 || x>=width || y<0 || y>=height) return 0;
+	    //if (x<0 || x>=width || y<0 || y>=height) return 0;
 	    return data[x+(y*width)]; 
 	  }
 	
 	// get a pixel color by its position in the array
 	inline CEntity** get_cell( int i)
 	  { 
-	    if( i<0 || i > width*height ) return 0;
+	    //if( i<0 || i > width*height ) return 0;
 	    return data[i]; 
 	  }
 
@@ -87,6 +90,47 @@ public:
 	~CMatrix(void);
 };
 
+enum LineIteratorMode { PointToPoint=0, PointToBearingRange };
+
+class CLineIterator
+{
+ private:
+  double m_x, m_y;
+  
+  double m_remaining_range;
+  double m_max_range;
+  double m_angle;
+  
+  CEntity** m_ent;
+  int m_index;
+
+  double m_ppm;
+  CMatrix* m_matrix;
+
+ public:
+  CLineIterator( double x, double y, double th, double range, 
+		 double ppm, CMatrix* matrix, LineIteratorMode pmode );
+  
+  CEntity* GetNextEntity( void );
+
+  inline void GetPos( double& x, double& y )
+    {
+      x = m_x / m_ppm;
+      y = m_y / m_ppm;
+    };
+  
+  inline void GetRange( double& r )
+    {
+      r = (m_max_range - m_remaining_range) / m_ppm;
+    };
+
+  inline CEntity** RayTrace( double &px, double &py, double pth, 
+			     double &remaining_range );
+
+
+  void PrintArray( CEntity** ent );
+  
+};
 
 
 #endif

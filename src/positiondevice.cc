@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.5.2.4 $
+//  $Revision: 1.5.2.5 $
 //
 // Usage:
 //  (empty)
@@ -156,7 +156,7 @@ void CPositionDevice::Update( double sim_time )
     {
       m_last_update = sim_time;
       
-      if( Subscribed() > 0 )
+      if( 1 )//Subscribed() > 0 )
 	{  
 	  // Get the latest command
 	  //
@@ -297,39 +297,106 @@ void CPositionDevice::ComposeData()
 ///////////////////////////////////////////////////////////////////////////
 // Check to see if the given pose will yield a collision
 //
+
+
 bool CPositionDevice::InCollision(double px, double py, double pth)
 {
-  CEntity** ent = 0;
-   
+  // case circle:
+  //  ents = m_world->GetRectangle(px, py, pth, m_size_x, m_size_x );  // CIRCLE! 
+  //  break;
+
   switch( GetShape() )
     {
     case rectangle:
-      double qx = px + m_offset_x * cos(pth);
-      double qy = py + m_offset_x * sin(pth);
-      double sx = m_size_x;
-      double sy = m_size_y;
-      
-      ent = m_world->GetRectangle(qx, qy, pth, sx, sy  );
+      {
+	double qx = px + m_offset_x * cos(pth);
+	double qy = py + m_offset_x * sin(pth);
+	double sx = m_size_x;
+	double sy = m_size_y;
+	
+	//ents = m_world->GetRectangle(qx, qy, pth, sx, sy  );
+      }
       break;
 
-    case circle:
-      ent = m_world->GetRectangle(px, py, pth, m_size_x, m_size_x );  // CIRCLE! 
-      break;
       
     default:  
       PRINT_MSG("CPositionDevice::InCollision(): unknown shape!");       
     }
   
-  if( ent && ent[0] ) // we hit something
-    {
-      // look in the list of things we hit
-      int s=0;
-      while( ent[s] )if( ent[s++]->obstacle_layer > 0 ) // it's an obstacle!
-	return true;
-    } 
- 
+  // calculate the corners of our body
+
+  double corners[4][2];
+
+  double cx = (m_size_x/2.0) * cos(pth);
+  double cy = (m_size_y/2.0) * cos(pth);
+  double sx = (m_size_x/2.0) * sin(pth);
+  double sy = (m_size_y/2.0) * sin(pth);
+  
+  corners[0][0] = px + cx - sy;
+  corners[0][1] = py + sx + cy;
+    
+  corners[1][0] = px - cx - sy;
+  corners[1][1] = py - sx + cy;
+    
+  corners[2][0] = px - cx + sy;
+  corners[2][1] = py - sx - cy;
+   
+  corners[3][0] = px + cx + sy;
+  corners[3][1] = py + sx - cy;
+  
+  // now ray-trace along each edge to see if we've hit anything
+
+
+    CEntity* ent = 0;
+    
+    CLineIterator lit0( corners[0][0], corners[0][1], 
+			corners[1][0], corners[1][1],
+			m_world->ppm, m_world->matrix, PointToPoint );
+    
+    while( (ent = lit0.GetNextEntity()) ) 
+      if( ent != this && ent->obstacle_return )
+	{
+	  //double x,y,r;
+	  //lit.GetPos( x, y );
+	  //lit.GetRange( r );
+	  
+	  //printf( "ent: %p (%s) at %.2f,%.2f - %.2fm\n", 
+	  //  ent, m_world->StringType( ent->m_stage_type ),
+	  //  x, y, r );
+	  
+	  return true;
+	}
+    
+    
+    //CLineIterator lit1( corners[1][0], corners[1][1], pth - M_PI/2.0, m_size_y, 
+    //	m_world->ppm, m_world->matrix, PointToPoint );
+    
+//while( (ent = lit1.GetNextEntity()) ) 
+//    if( ent != this && ent->obstacle_return )
+//return true;
+
+    //CLineIterator lit2( corners[2][0], corners[2][1], pth, m_size_x, 
+    //		m_world->ppm, m_world->matrix, PointToPoint );
+    
+    //while( (ent = lit2.GetNextEntity()) ) 
+    //if( ent != this && ent->obstacle_return )
+    //return true;
+
+    //CLineIterator lit3( corners[3][0], corners[3][1], pth + M_PI/2.0, m_size_y, 
+    //		m_world->ppm, m_world->matrix, PointToPoint );
+    
+    //while( (ent = lit3.GetNextEntity()) ) 
+    //if( ent != this && ent->obstacle_return )
+    //return true;
+    
+    
+
+
+
   return false;
 }
+
+
 
 void CPositionDevice::SetShape(pioneer_shape_t shape)
 {

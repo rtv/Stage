@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.common,v 1.5 2001-08-15 23:20:02 vaughan Exp $ 
+# $Id: Makefile.common,v 1.5.2.1 2001-08-23 02:59:42 vaughan Exp $ 
 #
 
 # INSTALL PLAYER BEFORE BUILDING STAGE!
@@ -28,7 +28,7 @@ PLAYERVERSION = $(VERSION)
 # this is good if you have a symlink to your current version:
 # PLAYER_DIR = /usr/local/player
 
-PLAYER_DIR = /usr/local/player-$(PLAYERVERSION)
+PLAYER_DIR = $(HOME)/work/player
 
 ##############################################################################
 # INSTALLATION OPTIONS

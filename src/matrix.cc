@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.2.2.2 2001-08-21 01:40:56 vaughan Exp $
+ * $Id: matrix.cc,v 1.2.2.3 2001-08-23 02:59:43 vaughan Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -236,6 +236,7 @@ void CMatrix::draw_line(int x1,int y1,int x2,int y2, CEntity* ent)
 
 CEntity** CMatrix::rect_detect( const Rect& r)
 {
+
   CEntity** hit;
   
   if( (hit = line_detect( r.toplx, r.toply, r.toprx, r.topry)) > 0 ) 
@@ -441,3 +442,147 @@ inline void CMatrix::unset_cell(int x, int y, CEntity* ent )
   //printf( "after " );
   //PrintCell( cell );  
 }
+
+
+
+CLineIterator::CLineIterator( double x, double y, double th, double range, 
+			      double ppm, CMatrix* matrix, LineIteratorMode pmode )
+{   
+  m_matrix = matrix;
+  m_ppm = ppm;       
+  
+  m_x = x * m_ppm;
+  m_y = y * m_ppm;
+
+  m_ent = 0;
+  m_index = 0;
+
+  switch( pmode )
+    {
+    case PointToBearingRange:
+      m_angle = th;
+      m_max_range = m_remaining_range = range * m_ppm;
+      break;
+    case PointToPoint:
+      m_angle = atan2( y-range, x-th );
+      m_max_range = m_remaining_range = hypot( x-th, y-range );
+      break;
+    default:
+      puts( "Stage Warning: unknown LineIterator mode" );
+    }
+};
+
+
+CEntity* CLineIterator::GetNextEntity( void )
+{
+  //PrintArray( m_ent );
+
+  if( m_remaining_range == 0 ) return 0;
+
+  //printf( "current ptr: %p index: %d\n", m_ent[m_index], index );
+
+  if( !(m_ent && m_ent[m_index]) ) // if the ent array is null or empty
+    {
+      //printf( "before %d,%d\n", (int)m_x, (int)m_y );
+      // get a new array of pointers
+      m_ent = RayTrace( m_x, m_y, m_angle, m_remaining_range );
+      //PrintArray( m_ent );
+      //printf( "after %d,%d\n", (int)m_x, (int)m_y );
+      m_index = 0; // back to the start of the array
+    }
+  
+  assert( m_ent != 0 ); // should be a valid array, even if empty
+ 
+  //PrintArray( m_ent );
+  //printf( "returning %p (index: %d)\n",  m_ent[m_index], m_index );
+
+  return m_ent[m_index++]; // return the next CEntity* (it may be null)
+}
+
+inline CEntity** CLineIterator::RayTrace( double &px, double &py, double pth, 
+				   double &remaining_range )
+{
+  int range = 0;
+  
+  //printf( "Ray from %.2f,%.2f angle: %.2f remaining_range %.2f\n", 
+  //  px, py, RTOD(pth), remaining_range );
+  
+  // hops along each axis
+  double cospth = cos( pth );
+  double sinpth = sin( pth );
+  
+  CEntity** ent = 0;
+  
+  // Look along scan line for obstacles
+  for( range = 0; range < remaining_range; range++ )
+    {
+      px += cospth;
+      py += sinpth;
+      
+      // stop this ray if we're out of bounds
+      if( px < 0 ) 
+	{ 
+	  px = 0; 
+	  remaining_range = 0.0;
+	}
+      if( px >= m_matrix->width ) 
+	{ 
+	  px = m_matrix->width; 
+	  remaining_range = 0.0;
+	}
+      if( py < 0 ) 
+	{ 
+	  py = 0; 
+	  remaining_range = 0.0;
+	}
+      if( py >= m_matrix->height ) 
+	{ 
+	  py = m_matrix->height; 
+	  remaining_range = 0.0;
+	}
+      
+      //printf( "looking in %d,%d\n", (int)px, (int)py );
+      
+      ent = m_matrix->get_cell( (int)px,(int)py );
+      if( !ent[0] ) ent = m_matrix->get_cell( (int)px+1,(int)py );
+      
+	  if( ent[0] ) break;// we hit something!
+    }
+  
+  remaining_range -= (double)range; // we have this much left to go
+  
+  //if( ent && ent[0] )
+  //printf( "Hit %p at %.2f,%.2f with %.2f to go\n", 
+  //    ent[0], px, py, remaining_range );
+  //else
+  //printf( "hit nothing. remaining range = %.2f\n", remaining_range );
+  // fflush( stdout );
+  
+  return ent; // we hit these entities
+}; 
+
+void CLineIterator::PrintArray( CEntity** ent )
+{
+  printf( "Array: " );
+  
+  if( !ent ) 
+    {
+      printf( "(null)\n" ); 
+      return;
+    }
+  
+  //puts( "foo" );
+
+  printf( "[ " );
+  int p = 0;
+  while( ent[p] ) printf( "%p ", (ent[p++]) );
+  
+  printf( " ]\n" );
+  
+  //fflush( stdout );
+}
+
+
+
+
+

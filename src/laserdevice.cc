@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.23.2.4 $
+//  $Revision: 1.23.2.5 $
 //
 // Usage:
 //  (empty)
@@ -258,12 +258,7 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
     //
     double x, y, th;
     GetGlobalPose(x, y, th);
-
-    // Compute laser fov, range, etc
-    //
-    //double dr = 1.0 / m_world->ppm;
-    double max_range = m_max_range * m_world->ppm;
-
+  
     // See how many scan readings to interpolate.
     // To save time generating laser scans, we can
     // generate a scan with lower resolution and interpolate
@@ -280,7 +275,6 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 
     // initialise our beacon detecting array
     m_visible_beacons.clear(); 
-
 
     // Set the header part of the data packet
     //
@@ -300,56 +294,33 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 	double ox = x;
 	double oy = y;
 	double oth = th;
-
-	int intensity = 0;
-	//int range = 0;
 	
 	double bearing = s * m_scan_res + m_scan_min;
 	
 	// Compute parameters of scan line
 	double pth = oth + bearing;
 	
-	double remaining_range = max_range;
+	double range = m_max_range;
 
-	// loop until we reach max_range, or we hit something interesting
-	while( remaining_range > 0 )
+	CLineIterator lit( ox, oy, pth, m_max_range, 
+			   m_world->ppm, m_world->matrix, PointToBearingRange );
+	
+	CEntity* ent;
+
+	while( (ent = lit.GetNextEntity()) ) 
 	  {
-	    CEntity** ent = m_world->RayTrace( ox, oy, pth, remaining_range );
-	   
-	    if( ent == 0 ) // if we hit nothing
-	      break; // we're done with this ray
+	    if( ent->m_stage_type == LaserBeaconType )
+	      m_visible_beacons.push_front( (int)ent );
 
-	    //printf( "laser hit %p (%s laser_return: %d) at %.2f,%.2f\n", 
-	    //    ent[0], m_world->StringType( ent[0]->m_stage_type ),
-	    //    ent[0]->laser_return, ox, oy );
-	    
-	    // see if any of the entities (other than this one)
-	    // intercept the laser beam and store the first
-	    // non-negative laser_return value
-	    uint8_t retval = 0;
-	    int s=0;
-	    while( ent[s] ) // scan the pointer array
-	      {
-		if( ent[s]->m_stage_type == LaserBeaconType ) // a beacon!
-  		  m_visible_beacons.push_front( (int)(ent[s]) ); 
-		
-		if( ent[s] != this ) retval = ent[s]->laser_return;
-		if( retval > 0 ) break; // stop scanning the pointer list	      
-		s++;
-	      }
-	    
-	    if( retval > 0 ) break; // end the ray trace 
+	    if( ent != this && ent->laser_return ) 
+	    {
+	      lit.GetRange( range );
+	      break;
+	    }	
 	  }
-	//cout << s << ' ' << range << endl;
 
-        // set laser value in mm
-        //
-        uint16_t v = (uint16_t) 
-	  (1000.0 * ((double)(max_range-remaining_range)/m_world->ppm));
+	uint16_t v = (uint16_t)(1000.0 * range);
 
-        // Add in the intensity values in the top 3 bits
-        //
-        //if (m_intensity)
 	//  v = v | (((uint16_t) intensity) << 13);
         
         // Set the range
