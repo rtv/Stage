@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.38 $
+//  $Author: gerkey $
+//  $Revision: 1.39 $
 //
 // Usage:
 //  (empty)
@@ -320,6 +320,8 @@ bool CWorld::Startup()
   // each is passed a pointer to the start of its space in shared memory
   int entityOffset = 0;
   
+  int first_player_idx = -1;
+  int player_count = 0;
   int i;
   for (i = 0; i < m_object_count; i++)
   {
@@ -330,26 +332,57 @@ bool CWorld::Startup()
       return false;
     }
     entityOffset += m_object[i]->SharedMemorySize();
+
+    // this lets us know that we should start the one Player and go through
+    // the next loop to give a port list...
+    if(m_object[i]->m_stage_type == PlayerType)
+    {
+      player_count++;
+      if(first_player_idx < 0)
+         first_player_idx = i;
+    }
   }
-  
-  // start all the players - they will immediately block on the shared memory
   
   // startup any player devices - hacky!
   // we need to have fixed up all the shared memory and pointers before these go
-  for(i = 0; i < m_object_count; i++)
-    if(m_object[i]->m_stage_type == PlayerType)
-      {
-	if(!((CPlayerDevice*)m_object[i])->StartupPlayer(-1) )
-	  {
-	    cout << "PlayerDevice " << (int)(m_object[i]) 
-		 << " failed StartupPlayer()" << endl;
-	    return false;
-	  }
-      }
-  
-  // release the lock and the players will start reading
-  //UnlockShmem();
+  if(player_count)
+  {
+    int pipe_out_fd;
+    FILE* pipe_out;
 
+    if((pipe_out_fd = ((CPlayerDevice*)m_object[first_player_idx])->
+                                     StartupPlayer(player_count)) == -1)
+    {
+      cout << "PlayerDevice failed StartupPlayer()" << endl;
+      return false;
+    }
+
+    // make it a stream
+    if(!(pipe_out = fdopen(pipe_out_fd,"w")))
+    {
+      perror("CWorld::Startup(): fdopen() failed");
+      return false;
+    }
+
+    // now pipe everbody's port into player
+    for(i = 0; i < m_object_count; i++)
+    {
+      if(m_object[i]->m_stage_type == PlayerType)
+      {
+        fprintf(pipe_out,"%d\n", m_object[i]->m_player_port);
+        fflush(pipe_out);
+      }
+    }
+
+    /*
+    if(!fclose(pipe_out))
+    {
+      perror("CWorld::Startup(): fclose() failed");
+      return false;
+    }
+    */
+  }
+  
   // Start the world thread
   //
   if (!StartThread())  

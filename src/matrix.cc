@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.6 2001-09-22 23:42:16 vaughan Exp $
+ * $Id: matrix.cc,v 1.7 2001-09-23 07:44:51 gerkey Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -32,8 +32,8 @@ void CMatrix::PrintCell( int cell )
 // construct from width / height 
 CMatrix::CMatrix(int w,int h)
 {
-  //initial_buf_size = BUFFER_ALLOC_SIZE;
-  initial_buf_size = 0;
+  initial_buf_size = BUFFER_ALLOC_SIZE;
+  //initial_buf_size = 0;
 
   mode = mode_set;
 
@@ -263,6 +263,7 @@ inline void CMatrix::set_cell(int x, int y, CEntity* ent )
       // set the new buffer size
       int oldlen = available_slots[cell];
       int newlen = oldlen + BUFFER_ALLOC_SIZE;
+      //printf("resizing old:%d\tnew:%d\n", oldlen,newlen);
       
       // make the new buffer - has one spare null pointer to mark the end
       CEntity** longer = new CEntity*[ newlen + 1 ];

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.11 $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -56,7 +56,9 @@ class CPlayerDevice : public CEntity
     // Start player
     //
     // made this public so it can be called from world.cc - BPG
-    public: bool StartupPlayer(int port);
+    // changed this from returning bool to returning int, because now
+    // it returs the fd that is piped into the child player - BPG
+    public: int StartupPlayer(int count);
 
     // Stop player
     //

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.20 $
+//  $Author: gerkey $
+//  $Revision: 1.21 $
 //
 // Usage:
 //  (empty)
@@ -81,6 +81,8 @@ CPlayerDevice::CPlayerDevice(CWorld *world, CEntity *parent )
   m_size_y = 0.12;
 
   m_interval = 1.0;
+
+  player_pid = 0;
 }
 
 
@@ -134,75 +136,104 @@ void CPlayerDevice::Update( double sim_time )
 ///////////////////////////////////////////////////////////////////////////
 // Start player instance
 //
-bool CPlayerDevice::StartupPlayer(int port)
+int CPlayerDevice::StartupPlayer(int count)
 {
+  int fds[2];
+  fds[0] = fds[1] = -1;
+ 
+  // hmmm.....should probably move this into world.cc somewhere...
   // don't start up if we're not managed by this host; succeed but do nowt
   if( strcmp( m_hostname, m_world->m_hostname ) != 0 ) return true;
 
+  /*
   if(port < 0)
     port = m_player_port;
+   */
 
 #ifdef DEBUG
   cout << "StartupPlayer()" << endl;
 #endif
 
 #ifndef NO_PLAYER_SPAWN
-    // ----------------------------------------------------------------------
-    // fork off a player process to handle robot I/O
-  if( (player_pid = fork()) < 0 )
-    {
-        cerr << "fork error creating robots" << flush;
-        return false;
+  
+  // we'll pipe the list of ports to Player; create the pipe here
+  if(pipe(fds) == -1)
+  {
+    perror("CPlayerDevice::StartupPlayer(): pipe() failed");
+    return(-1);
+  }
 
-	// RTV - dunno what this does, so casually chopped it out :)
-	//
-      // don't use system time; use simulated time.
-      //timeval curr;
-      //gettimeofday(&curr, NULL);
-	//m_info->data_timestamp_sec = (uint32_t)floor(m_world->GetTime());
-	//m_info->data_timestamp_usec = 
-	//    (uint32_t)rint((m_world->GetTime()-
-	//                    m_info->data_timestamp_sec)*1000000.0);
+  // ----------------------------------------------------------------------
+  // fork off a player process to handle robot I/O
+  if( (player_pid = fork()) < 0 )
+  {
+    cerr << "fork error creating robots" << flush;
+    return(-1);
+
+    // RTV - dunno what this does, so casually chopped it out :)
+    //
+    // don't use system time; use simulated time.
+    //timeval curr;
+    //gettimeofday(&curr, NULL);
+    //m_info->data_timestamp_sec = (uint32_t)floor(m_world->GetTime());
+    //m_info->data_timestamp_usec = 
+    //    (uint32_t)rint((m_world->GetTime()-
+    //                    m_info->data_timestamp_sec)*1000000.0);
+  }
+  else
+  {
+    if( player_pid == 0 ) // new child process
+    {
+      // pass in the number or ports (they will come in on the pipe)
+      char portBuf[32];
+      sprintf( portBuf, "%d", (int) count );
+
+      // BPG
+      // release controlling tty so Player doesn't get signals
+      setpgrp();
+      // GPB
+
+      // redirect our standard in
+      if(dup2(fds[0],0) == -1)
+      {
+        perror("CPlayerDevice::StartupPlayer(): dup2() failed");
+        kill(getppid(),SIGINT);
+        exit(-1);
+      }
+
+
+      // we assume Player is in the current path
+      if( execlp( "player", "player",
+                  "-port", portBuf, 
+                  "-stage", m_world->PlayerIOFilename(), 
+                  (strlen(m_world->m_auth_key)) ? "-key" : NULL,
+                  (strlen(m_world->m_auth_key)) ? m_world->m_auth_key : NULL,
+                  NULL) < 0 )
+      {
+        cerr << "execlp failed: make sure Player can be found"
+                " in the current path."
+                << endl;
+        if(!kill(getppid(),SIGINT))
+          perror("shit! even kill() errored");
+        exit(-1);
+      }
     }
     else
     {
-        if( player_pid == 0 ) // new child process
-        {
-            // create player port number for command line
-            char portBuf[32];
-            sprintf( portBuf, "%d", (int) port );
-
-            // BPG
-            // release controlling tty so Player doesn't get signals
-            setpgrp();
-            // GPB
-
-            // we assume Player is in the current path
-              if( execlp( "player", "player",
-                    "-port", portBuf, 
-  		  "-stage", m_world->PlayerIOFilename(), 
-                    (strlen(m_world->m_auth_key)) ? "-key" : NULL,
-                    (strlen(m_world->m_auth_key)) ? m_world->m_auth_key : NULL,
-                    NULL) < 0 )
-              {
-                  cerr << "execlp failed: make sure Player can be found"
-                      " in the current path."
-                       << endl;
-                  return false;
-              }
-        }
 #ifdef DEBUG
-        else
-	  printf("forked player with pid: %d\n", player_pid);
+      printf("forked player with pid: %d\n", player_pid);
 #endif
-
     }
+
+  }
+
+
 #endif
 
 #ifdef DEBUG
   cout << "StartupPlayer() done" << endl;
 #endif
-    return true;
+    return(fds[1]);
 }
 
 
@@ -211,12 +242,24 @@ bool CPlayerDevice::StartupPlayer(int port)
 //
 void CPlayerDevice::ShutdownPlayer()
 {
-    // BPG
-    if(kill(player_pid,SIGINT))
+  int wait_retval;
+  // BPG
+  if(player_pid)
+  {
+    if(kill(player_pid,SIGTERM))
         perror("CPlayerDevice::~CPlayerDevice(): kill() failed sending SIGINT to Player");
-    if(waitpid(player_pid,NULL,0) == -1)
+    if((wait_retval = waitpid(player_pid,NULL,0)) == -1)
         perror("CPlayerDevice::~CPlayerDevice(): waitpid() returned an error");
+    /*
+    else if(!wait_retval)
+    {
+      fputs("Warning: killing Player by force\n",stderr);
+      if(kill(player_pid,SIGKILL))
+        perror("CPlayerDevice::~CPlayerDevice(): kill() failed sending SIGKILL to Player");
+    }
+    */
     // GPB
+  }
 
 }
 

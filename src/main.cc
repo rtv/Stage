@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.13 $
+//  $Author: gerkey $
+//  $Revision: 1.14 $
 //
 // Usage:
 //  (empty)
@@ -134,6 +134,10 @@ int main(int argc, char **argv)
     if (!world->Startup())
     {
         printf("aborting\n");
+        // SUPER-HACK! the truthserver and envserver threads are not
+        // dying on their own and i can't be bothered to find out why.
+        // this is linux specific...  BPG
+        pthread_kill_other_threads_np();
         world->Shutdown();
         return 1;
     }
