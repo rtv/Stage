@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_driver.cc,v 1.2 2005-02-26 08:39:46 rtv Exp $
+ * CVS: $Id: player_driver.cc,v 1.3 2005-02-26 08:50:47 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -648,39 +648,6 @@ void StgDriver::Main()
     // test if we are supposed to cancel
     pthread_testcancel();
 
-    // Check for commands
-    uint8_t cmd[ PLAYER_MAX_MESSAGE_SIZE ];
-    
-    printf( "i have %d devices to inspect\n",
-	    (int)this->devices->len );
-    
-    for( int i=0; i<(int)this->devices->len; i++ )
-      {
-	device_record_t* device = (device_record_t*)g_ptr_array_index( this->devices, i );
-	
-	printf( "checking command for %d:%d:%d\n",
-		device->id.port, 
-		device->id.code, 
-		device->id.index );
-
-	if( device->cmd_len > 0 )
-	  {    
-	    // copy the command from Player
-	    size_t cmd_len = 
-	      this->GetCommand( device->id, cmd, device->cmd_len, NULL);
-	    
-	    printf( "command for %d:%d:%d is %d bytes\n",
-		    device->id.port, 
-		    device->id.code, 
-		    device->id.index, 
-		    (int)cmd_len );
-	    
-	    if( cmd_len && device && device->command_callback )
-	      (*device->command_callback)( device, cmd, cmd_len );	  
-	  }
-      }
-        
-    // update the world
     if( stg_world_update( StgDriver::world, TRUE ) )
       exit( 0 );
 
@@ -754,7 +721,39 @@ void StgDriver::Update(void)
 {
   puts( "stgdriver update" );
 
+  // Check for commands
+  uint8_t cmd[ PLAYER_MAX_MESSAGE_SIZE ];
   
+  printf( "driver %p has %d devices to inspect\n",
+	  this, (int)this->devices->len );
+  
+  for( int i=0; i<(int)this->devices->len; i++ )
+    {
+      device_record_t* device = (device_record_t*)g_ptr_array_index( this->devices, i );
+      
+      printf( "checking command for %d:%d:%d\n",
+	      device->id.port, 
+	      device->id.code, 
+	      device->id.index );
+      
+      if( device->cmd_len > 0 )
+	{    
+	  // copy the command from Player
+	  size_t cmd_len = 
+	    this->GetCommand( device->id, cmd, device->cmd_len, NULL);
+	  
+	  printf( "command for %d:%d:%d is %d bytes\n",
+		  device->id.port, 
+		  device->id.code, 
+		  device->id.index, 
+		  (int)cmd_len );
+	    
+	  if( cmd_len && device && device->command_callback )
+	    (*device->command_callback)( device, cmd, cmd_len );	  
+	}
+    }
+  
+  // update the world
   return;
 }
 
