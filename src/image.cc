@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.10 2002-01-13 07:54:50 rtv Exp $
+ * $Id: image.cc,v 1.11 2002-01-14 01:46:19 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -189,16 +189,14 @@ bool Nimage::load_pnm(const char* fname)
 
   source >> magicNumber;
 
-  cout << magicNumber;
-
-  if (strcmp(magicNumber, "P5") != 0)
+  if( strcmp(magicNumber, "P5" ) != 0 )
     {
       printf("image file is of incorrect type:"
 	     " should be pnm, binary, monochrome (magic number P5)\n");
       return false;
     }
   
-  // ignore the end of this line and the next whole line - it's a comment
+  // ignore the end of this line and the following comment-line
   source.ignore( 1024, '\n' );
   source.ignore( 1024, '\n' );
   
@@ -208,9 +206,6 @@ bool Nimage::load_pnm(const char* fname)
   // skip to the end of the line again
   source.ignore( 1024, '\n' );
 
-  //cout << endl << width << " " << height << endl;
-  //cout << whiteNum << endl;
-
   int numPixels = width * height;
 
   // make space for the pixels
@@ -218,8 +213,6 @@ bool Nimage::load_pnm(const char* fname)
   data = new unsigned char[ numPixels ];
   
   source.read( data, numPixels );
-
-  cout << "READ: " << source.gcount() << endl;
 
   // check that we read the right amount of data
   assert( source.gcount() == numPixels );

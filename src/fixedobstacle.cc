@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.1 $
+//  $Author: rtv $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -70,6 +70,11 @@ bool CFixedObstacle::Load(CWorldFile *worldfile, int section)
     PRINT_ERR("empty filename");
     return false;
   }
+
+  // TODO
+  // if the image filename is not a full path
+  // prepend the path of the world file - have to make sure the world file
+  // path is handled properly first - rtv
 
   // Get the scale of the image;
   // i.e. the width/length of each pixel in m.
