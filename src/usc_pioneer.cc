@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/usc_pioneer.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  (empty)
@@ -25,6 +25,7 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include "world.hh"
+#include "tokenize.hh"
 #include "usc_pioneer.hh"
 #include "playerrobot.hh"
 #include "pioneermobiledevice.hh"
@@ -73,8 +74,13 @@ CUscPioneer::~CUscPioneer()
 ///////////////////////////////////////////////////////////////////////////
 // Load the object
 //
-bool CUscPioneer::Load(int argc, char **argv)
+bool CUscPioneer::Load(char *buffer, int bufflen)
 {
+    // Tokenize the buffer
+    //
+    char *argv[64];
+    int argc = Tokenize(buffer, bufflen, argv, ARRAYSIZE(argv)); 
+    
     // Set some defaults
     //
     strcpy(m_id, "jane_doe");
@@ -83,9 +89,14 @@ bool CUscPioneer::Load(int argc, char **argv)
     //
     for (int i = 0; i < argc;)
     {
+        // Ignore create token
+        //
+        if (strcmp(argv[i], "create") == 0 && i + 1 < argc)
+            i += 2;
+        
         // Extract pose
         //
-        if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
+        else if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
         {
             double px = atof(argv[i + 1]);
             double py = atof(argv[i + 2]);
@@ -124,6 +135,23 @@ bool CUscPioneer::Load(int argc, char **argv)
 
 
 ///////////////////////////////////////////////////////////////////////////
+// Save the object to a buffer
+//
+bool CUscPioneer::Save(char *buffer, int bufflen)
+{
+    double px, py, pth;
+    m_pioneer->GetPose(px, py, pth);
+    
+    snprintf(buffer, bufflen,
+             "create usc_pioneer pose %.2f %.2f %.2f "
+             "name %s port %d\n",
+             (double) px, (double) py, (double) RTOD(pth),
+             (char*) m_id, (int) m_player->m_port);
+    
+    return true;
+}
+
+///////////////////////////////////////////////////////////////////////////
 // Default startup -- doesnt do much
 //
 bool CUscPioneer::Startup()
@@ -160,6 +188,7 @@ void CUscPioneer::Update()
 
     CObject::Update();
 }
+
 
 #ifdef INCLUDE_RTK
 

@@ -19,7 +19,7 @@ INSTALL_ETC = $(INSTALL_DIR)/etc
 # Objects common to all targets
 #
 OBJS = world.o image.o \
-		object.o objectfactory.o \
+		object.o objectfactory.o tokenize.o \
 		playerrobot.o playerdevice.o \
 		pioneermobiledevice.o laserdevice.o \
 		visiondevice.o ptzdevice.o sonardevice.o \
@@ -85,7 +85,7 @@ install:
 # Dependancies (make dep)
 
 boxobstacle.o: ../include/world.hh ../include/playerrobot.hh
-boxobstacle.o: ../include/object.hh ../include/image.h
+boxobstacle.o: ../include/object.hh ../include/image.h ../include/tokenize.hh
 boxobstacle.o: ../include/boxobstacle.hh
 broadcastdevice.o: /usr/local/player/include/stage.h
 broadcastdevice.o: /usr/local/player/include/messages.h
@@ -95,7 +95,7 @@ broadcastdevice.o: ../include/object.hh ../include/image.h
 broadcastdevice.o: ../include/broadcastdevice.hh ../include/playerdevice.hh
 image.o: ../include/image.h
 laserbeacon.o: ../include/world.hh ../include/playerrobot.hh
-laserbeacon.o: ../include/object.hh ../include/image.h
+laserbeacon.o: ../include/object.hh ../include/image.h ../include/tokenize.hh
 laserbeacon.o: ../include/laserbeacon.hh
 laserbeacondevice.o: /usr/local/player/include/stage.h
 laserbeacondevice.o: /usr/local/player/include/messages.h
@@ -110,15 +110,15 @@ laserdevice.o: /usr/local/player/include/playercommon.h ../include/world.hh
 laserdevice.o: ../include/playerrobot.hh ../include/object.hh
 laserdevice.o: ../include/image.h ../include/laserdevice.hh
 laserdevice.o: ../include/playerdevice.hh
-main.o: ../include/world.hh ../include/playerrobot.hh ../include/object.hh
-main.o: ../include/image.h
+main.o: ../VERSION ../include/world.hh ../include/playerrobot.hh
+main.o: ../include/object.hh ../include/image.h
 miscdevice.o: /usr/local/player/include/stage.h
 miscdevice.o: /usr/local/player/include/messages.h
 miscdevice.o: /usr/local/player/include/playercommon.h ../include/world.hh
 miscdevice.o: ../include/playerrobot.hh ../include/object.hh
 miscdevice.o: ../include/image.h ../include/miscdevice.hh
 miscdevice.o: ../include/playerdevice.hh
-object.o: ../include/object.hh ../include/objectfactory.hh
+object.o: ../include/object.hh
 objectfactory.o: ../include/objectfactory.hh ../include/boxobstacle.hh
 objectfactory.o: ../include/object.hh ../include/laserbeacon.hh
 objectfactory.o: ../include/visionbeacon.hh ../include/usc_pioneer.hh
@@ -145,6 +145,8 @@ ptzdevice.o: ../include/object.hh ../include/image.h ../include/ptzdevice.hh
 ptzdevice.o: ../include/playerdevice.hh /usr/local/player/include/stage.h
 ptzdevice.o: /usr/local/player/include/messages.h
 ptzdevice.o: /usr/local/player/include/playercommon.h
+rtk_main.o: ../VERSION ../include/world.hh ../include/playerrobot.hh
+rtk_main.o: ../include/object.hh ../include/image.h
 server.o: ../include/world.hh ../include/playerrobot.hh ../include/object.hh
 server.o: ../include/image.h ../include/ports.h
 sonardevice.o: ../include/world.hh ../include/playerrobot.hh
@@ -153,8 +155,9 @@ sonardevice.o: ../include/sonardevice.hh ../include/playerdevice.hh
 sonardevice.o: /usr/local/player/include/stage.h
 sonardevice.o: /usr/local/player/include/messages.h
 sonardevice.o: /usr/local/player/include/playercommon.h
+tokenize.o: ../include/tokenize.hh
 usc_pioneer.o: ../include/world.hh ../include/playerrobot.hh
-usc_pioneer.o: ../include/object.hh ../include/image.h
+usc_pioneer.o: ../include/object.hh ../include/image.h ../include/tokenize.hh
 usc_pioneer.o: ../include/usc_pioneer.hh ../include/pioneermobiledevice.hh
 usc_pioneer.o: /usr/local/player/include/stage.h
 usc_pioneer.o: /usr/local/player/include/messages.h
@@ -173,7 +176,7 @@ visiondevice.o: /usr/local/player/include/playercommon.h
 visiondevice.o: ../include/ptzdevice.hh
 win.o: ../include/win.h ../include/world.hh ../include/playerrobot.hh
 win.o: ../include/object.hh ../include/image.h
-world.o: /usr/local/player/include/stage.h
+world.o: ../include/tokenize.hh /usr/local/player/include/stage.h
 world.o: /usr/local/player/include/messages.h
 world.o: /usr/local/player/include/playercommon.h ../include/world.hh
 world.o: ../include/playerrobot.hh ../include/object.hh ../include/image.h

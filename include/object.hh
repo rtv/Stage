@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/object.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.11 $
+//  $Revision: 1.1.2.12 $
 //
 // Usage:
 //  (empty)
@@ -80,11 +80,11 @@ class CObject
 
     // Load the object from a token list
     //
-    public: virtual bool Load(int argc, char **argv);
+    public: virtual bool Load(char *buffer, int bufflen);
 
-    // Save the object to a token list
+    // Save the object to a buffer
     //
-    public: virtual bool Save(int argc, char **argv);
+    public: virtual bool Save(char *buffer, int bufflen);
 
     // Initialise object
     //
@@ -122,6 +122,10 @@ class CObject
     //
     public: void GetGlobalPose(double &px, double &py, double &pth);
 
+    // Line in the world description file
+    //
+    public: int m_line;
+
     // Type of this object
     //
     public: char m_type[64];
@@ -130,15 +134,6 @@ class CObject
     //
     public: char m_id[64];
 
-    // Number of parents this object has
-    //
-    public: int m_depth;
-
-    // Argument list used for loading/saving
-    //
-    public: int m_argc;
-    public: char *m_argv[64];
-    
     // Pointer to world
     //
     public: CWorld *m_world;

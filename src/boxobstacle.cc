@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.6 $
 //
 // Usage:
 //  (empty)
@@ -27,6 +27,7 @@
 #define ENABLE_RTK_TRACE 1
 
 #include "world.hh"
+#include "tokenize.hh"
 #include "boxobstacle.hh"
 
 
@@ -48,16 +49,23 @@ CBoxObstacle::CBoxObstacle(CWorld *world, CObject *parent)
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the object from an argument list
 //
-bool CBoxObstacle::Load(int argc, char **argv)
+bool CBoxObstacle::Load(char *buffer, int bufflen)
 {
-    if (!CObject::Load(argc, argv))
-        return false;
+    // Tokenize the buffer
+    //
+    char *argv[64];
+    int argc = Tokenize(buffer, bufflen, argv, ARRAYSIZE(argv)); 
 
     for (int i = 0; i < argc; )
     {
+        // Ignore create token
+        //
+        if (strcmp(argv[i], "create") == 0 && i + 1 < argc)
+            i += 2;
+        
         // Extact box pose
         //
-        if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
+        else if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
         {
             double px = atof(argv[i + 1]);
             double py = atof(argv[i + 2]);
@@ -89,6 +97,23 @@ bool CBoxObstacle::Load(int argc, char **argv)
         m_draggable = (m_parent_object == NULL);
     #endif
         
+    return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Save the object to a buffer
+//
+bool CBoxObstacle::Save(char *buffer, int bufflen)
+{
+    double px, py, pth;
+    GetPose(px, py, pth);
+    
+    snprintf(buffer, bufflen,
+             "create box_obstacle pose %.2f %.2f %.2f size %.2f %.2f\n",
+             (double) px, (double) py, (double) RTOD(pth),
+             (double) m_size_x, (double) m_size_y);
+    
     return true;
 }
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.19 $
+//  $Revision: 1.4.2.20 $
 //
 // Usage:
 //  (empty)
@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <signal.h>
+#include "tokenize.hh"
 #include "stage.h"
 #include "world.hh"
 #include "objectfactory.hh"
@@ -40,6 +41,10 @@ CWorld::CWorld()
     // seed the random number generator
     srand48( time(NULL) );
 
+    // Initialise world filename
+    //
+    m_filename[0] = 0;
+    
     // Initialise grids
     //
     m_bimg = NULL;
@@ -79,6 +84,10 @@ CWorld::~CWorld()
 //
 bool CWorld::Load(const char *filename)
 {
+    // Keep this file name: we will need it again when we save.
+    //
+    strcpy(m_filename, filename);
+    
     // Open the file for reading
     //
     FILE *file = fopen(filename, "r");
@@ -88,7 +97,7 @@ bool CWorld::Load(const char *filename)
         return false;
     }
 
-    int count = 0;
+    int linecount = 0;
     CObject *parent_object = NULL;
     
     while (true)
@@ -98,29 +107,14 @@ bool CWorld::Load(const char *filename)
         char line[1024];
         if (fgets(line, sizeof(line), file) == NULL)
             break;
-        count++;
+        linecount++;
 
-        // Parse the line into tokens
-        // Tokens are delimited by spaces
+        // Make a copy of the line an tokenize it
         //
-        int argc = 0;
-        char *argv[400];
-        char *token = line;
-        while (true)
-        {
-            ASSERT(argc < ARRAYSIZE(argv));
-            argv[argc] = strsep(&token, " \t\n");
-            if (token == NULL)
-                break;
-            if (argv[argc][0] != 0)
-                argc++;
-        }
-
-        // Debugging -- dump the tokens
-        //
-        for (int i = 0; i < argc; i++)
-            printf("[%s]", (char*) argv[i]);
-        printf("\n");
+        char tokens[1024];
+        strcpy(tokens, line);
+        char *argv[32];
+        int argc = Tokenize(tokens, sizeof(tokens), argv, ARRAYSIZE(argv));
 
         // Skip blank lines
         //
@@ -139,7 +133,7 @@ bool CWorld::Load(const char *filename)
             if (m_object_count > 0)
                 parent_object = m_object[m_object_count - 1]->m_default_object;
             else
-                printf("line %d : misplaced '{'\n", (int) count + 1);
+                printf("line %d : misplaced '{'\n", (int) linecount);
         }
 
         // Look for close block tokens
@@ -149,7 +143,7 @@ bool CWorld::Load(const char *filename)
             if (parent_object != NULL)
                 parent_object = parent_object->m_parent_object;
             else
-                printf("line %d : extra '}'\n", (int) count + 1);
+                printf("line %d : extra '}'\n", (int) linecount);
         }
 
         // Parse "set" command
@@ -163,7 +157,7 @@ bool CWorld::Load(const char *filename)
                 ppm = atof(argv[3]);
             else
                 printf("line %d : variable %s is not defined\n",
-                       (int) count + 1, (char*) argv[1]);  
+                       (int) linecount, (char*) argv[1]);  
         }
 
         // Parse "create" command
@@ -178,27 +172,12 @@ bool CWorld::Load(const char *filename)
             {
                 // Set some properties we will need later
                 //
+                object->m_line = linecount;
                 strcpy(object->m_type, argv[1]);
-                object->m_depth = 0;
-                if (object->m_parent_object != NULL)
-                    object->m_depth = object->m_parent_object->m_depth + 1;
-
-                /*
-                // Copy the argument list used to create the object
-                // We will use this again when saving.
-                // *** WARNING -- possible buffer overrun
-                //
-                object->m_argc = argc;
-                for (int i = 0; i < argc; i++)
-                {
-                    object->m_argv[i] = new char[64];
-                    strcpy(object->m_argv[i], argv[i]);
-                }
-                */
                 
                 // Let the object load itself
                 //
-                if (!object->Load(argc - 2, argv + 2))
+                if (!object->Load(line, sizeof(line)))
                 {
                     fclose(file);
                     return false;
@@ -210,7 +189,7 @@ bool CWorld::Load(const char *filename)
             }
             else
                 printf("line %d : object type %s is not defined\n",
-                       (int) count + 1, (char*) argv[1]);
+                       (int) linecount, (char*) argv[1]);
         }
     }
     
@@ -224,72 +203,64 @@ bool CWorld::Load(const char *filename)
 //
 bool CWorld::Save(const char *filename)
 {
-    return false;
-    
-    /* This is completely BOGUS
-    // Open the file for writing
+    // Generate a temporary file name
     //
-    FILE *file = fopen(filename, "r+");
+    char tempname[64];
+    strcpy(tempname, m_filename);
+    strcat(tempname, ".tmp");
+    
+    // Open the original file for reading
+    //
+    FILE *file = fopen(m_filename, "r");
     if (file == NULL)
     {
-        printf("unable to find file %s; ignoring\n", (char*) filename);
+        printf("unable to find file %s; aborting save\n", (char*) filename);
         return false;
     }
 
-    int depth = 0;
-    for (int i = 0; i < m_object_count; i++)
-    {
-        CObject *object = m_object[i];
-
-        // Put in start/end block tokens
-        //
-        while (object->m_depth > depth)
-        {
-            fprintf(file, "{\n");
-            depth++;
-        }
-        while (object->m_depth < depth)
-        {
-            fprintf(file, "}\n");
-            depth--;
-        }
-
-        // Let object overwrite tokens to save
-        //
-        if (!object->Save(object->m_argc, object->m_argv))
-        {
-            fclose(file);
-            return false;
-        }
-        
-        // Write tokens to file
-        //
-        for (int j = 0; j < depth; j++)
-            fputs("    ", file);
-        for (int j = 0; j < object->m_argc; j++)
-        {
-            fputs(object->m_argv[j], file);
-            fputs(" ", file);
-        }
-        fputs("\n", file);
-
-        // Now delete the tokens
-        //
-        for (int j = 0; j < object->m_argc; j++)
-            delete object->m_argv[j];
-    }
-
-    // Close any trailing blocks
+    // Open the temp file for writing
     //
-    while (depth > 0)
+    FILE *tempfile = fopen(tempname, "w+");
+    if (file == NULL)
     {
-        fprintf(file, "}\n");
-        depth--;
+        printf("unable to create file %s; aborting save\n", (char*) tempname);
+        return false;
     }
-   
+
+    // Do a line-by-line copy of the original file to the temp file
+    //
+    int linecount = 0;
+    while (true)
+    {
+        // Get a line from the orginal file
+        //
+        char line[1024];
+        if (fgets(line, sizeof(line), file) == NULL)
+            break;
+        linecount++;
+
+        // See if this line corresponds to an object;
+        // if it does, let the object modify it.
+        //
+        for (int i = 0; i < m_object_count; i++)
+        {
+            CObject *object = m_object[i];
+            if (object->m_line == linecount)
+                object->Save(line, sizeof(line));
+        }
+
+        // Write the line to the temp file
+        //
+        fputs(line, tempfile);
+    }
+
     fclose(file);
+    fclose(tempfile);
+
+    // Now rename the temp file to the desired value
+    //
+    rename(tempname, filename);
     return true;
-    */
 }
 
 
@@ -444,8 +415,8 @@ void* CWorld::Main(CWorld *world)
         #ifdef INCLUDE_RTK
         if (world->GetRealTime() - ui_time > 0.050)
         {
-            world->m_router->send_message(RTK_UI_FORCE_UPDATE, NULL);
             ui_time = world->GetRealTime();
+            world->m_router->send_message(RTK_UI_FORCE_UPDATE, NULL);
         }
         #endif
     }
@@ -839,7 +810,7 @@ void CWorld::OnUiButton(CWorld *world, RtkUiButtonData* data)
     data->begin_section("default", "world");
 
     if (data->push_button("save"))
-        world->Save("temp.world"); // ***
+        world->Save(world->m_filename);
     
     data->end_section();
 }

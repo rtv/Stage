@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacon.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.6 $
 //
 // Usage:
 //  (empty)
@@ -37,8 +37,12 @@ class CLaserBeacon : public CObject
 
     // Load the object
     //
-    public: virtual bool Load(int argc, char **argv);
-    
+    public: virtual bool Load(char *buffer, int bufflen);
+
+    // Save the object to a buffer
+    //
+    public: virtual bool Save(char *buffer, int bufflen);
+
     // Startup routine
     //
     public: virtual bool Startup();

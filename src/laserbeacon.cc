@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.6 $
+//  $Revision: 1.1.2.7 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -28,6 +28,7 @@
 #define ENABLE_RTK_TRACE 1
 
 #include "world.hh"
+#include "tokenize.hh"
 #include "laserbeacon.hh"
 
 
@@ -48,16 +49,23 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CObject *parent)
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the object from an argument list
 //
-bool CLaserBeacon::Load(int argc, char **argv)
+bool CLaserBeacon::Load(char *buffer, int bufflen)
 {
-    if (!CObject::Load(argc, argv))
-        return false;
+    // Tokenize the buffer
+    //
+    char *argv[64];
+    int argc = Tokenize(buffer, bufflen, argv, ARRAYSIZE(argv)); 
 
     for (int i = 0; i < argc; )
     {
+        // Ignore create token
+        //
+        if (strcmp(argv[i], "create") == 0 && i + 1 < argc)
+            i += 2;
+        
         // Extact beacon pose
         //
-        if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
+        else if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
         {
             double px = atof(argv[i + 1]);
             double py = atof(argv[i + 2]);
@@ -88,6 +96,22 @@ bool CLaserBeacon::Load(int argc, char **argv)
         m_draggable = (m_parent_object == NULL);
     #endif
         
+    return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Save the object to a buffer
+//
+bool CLaserBeacon::Save(char *buffer, int bufflen)
+{
+    double px, py, pth;
+    GetPose(px, py, pth);
+    
+    snprintf(buffer, bufflen,
+             "create laser_beacon pose %.2f %.2f %.2f id %d\n",
+             (double) px, (double) py, (double) RTOD(pth), (int) m_beacon_id);
+    
     return true;
 }
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.14 $
+//  $Revision: 1.1.2.15 $
 //
 // Usage:
 //  (empty)
@@ -178,6 +178,10 @@ class CWorld
     private: double m_update_ratio;
     private: double m_update_rate;
 
+    // Name of the file the world was loaded from
+    //
+    private: char m_filename[256];
+    
     // Name of environment bitmap
     //
     private: char m_env_file[256];

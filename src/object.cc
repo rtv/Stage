@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/object.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.11 $
+//  $Revision: 1.1.2.12 $
 //
 // Usage:
 //  (empty)
@@ -24,14 +24,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_RTK_TRACE 1
-
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <math.h>
 #include "object.hh"
-#include "objectfactory.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -44,9 +38,9 @@ CObject::CObject(CWorld *world, CObject *parent_object)
     m_parent_object = parent_object;
     m_default_object = this;
 
+    m_line = 0;
     m_type[0] = 0;
     m_id[0] = 0;
-    m_depth = 0;
     
     m_lx = m_ly = m_lth = 0;
 
@@ -70,61 +64,17 @@ CObject::~CObject()
 ///////////////////////////////////////////////////////////////////////////
 // Load the object from a token list
 //
-bool CObject::Load(int argc, char **argv)
+bool CObject::Load(char *buffer, int bufflen)
 {
-    // Read the object pose
-    //
-    for (int i = 0; i < argc;)
-    {
-        if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
-        {
-            double px = atof(argv[i + 1]);
-            double py = atof(argv[i + 2]);
-            double pth = DTOR(atof(argv[i + 3]));
-            SetPose(px, py, pth);
-            i += 4;
-        }
-        else
-            i += 1;
-    }
     return true;
 }    
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Save the object to a token list
+// Save the object to a buffer
 //
-bool CObject::Save(int argc, char **argv)
+bool CObject::Save(char *buffer, int bufflen)
 {
-    for (int i = 0; i < argc;)
-    {
-        // Save the pose
-        //
-        if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
-        {
-            double px, py, pth;
-            GetPose(px, py, pth);
-            snprintf(argv[i + 1], strlen(argv[i + 1]) + 1, "%.2f", (double) px);
-            snprintf(argv[i + 2], strlen(argv[i + 2]) + 1, "%.2f", (double) py);
-            snprintf(argv[i + 3], strlen(argv[i + 3]) + 1, "%.2f", (double) pth);
-            i += 4;
-        }
-        else
-            i += 1;
-    }
-
-    /*
-    char tmp[64];
-
-    // Save the object pose
-    //
-    double px, py, pth;
-    GetPose(px, py, pth);
-    snprintf(tmp, sizeof(tmp), "pose %.2f %.2f %.2f", px, py, pth);
-    ASSERT(*argc < max_argc);
-    argv[(*argc)++] = strdup(tmp);
-    */
-
     return true;
 }
 

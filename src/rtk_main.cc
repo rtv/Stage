@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtk_main.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -84,7 +84,7 @@ int main(int argc, char **argv)
     // Craete some views
     //
     app->add_agent(new RtkUiScrollView(left_pane, "global"));
-    app->add_agent(new RtkUiScrollView(top_pane, "default"));
+    app->add_agent(new RtkUiPropertyView(top_pane, "default"));
     app->add_agent(new RtkUiButtonView(bot_pane, "default"));
 
     // Create the world
