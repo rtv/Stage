@@ -21,7 +21,7 @@
  * Desc: a container for models 
  * Author: Richard Vaughan
  * Date: 24 July 2003
- * CVS info: $Id: world.hh,v 1.33 2003-10-16 02:05:14 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.34 2003-10-16 02:21:52 rtv Exp $
  */
 
 #ifndef _WORLD_HH
@@ -34,7 +34,6 @@ class CMatrix;
 
 typedef struct
 {
-  pid_t pid;
   guint source_in;
   guint source_hup;
   GIOChannel *channel;

@@ -26,7 +26,7 @@
  * Author: Richard Vaughan vaughan@hrl.com 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.c,v 1.22 2003-10-16 02:05:14 rtv Exp $
+ * CVS: $Id: stage.c,v 1.23 2003-10-16 02:21:52 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -421,7 +421,6 @@ stg_client_t* stg_client_create( char* host, int port, stg_tos_t tos )
   // send the greeting
   stg_greeting_t greeting;
   greeting.code = STG_SERVER_GREETING;
-  greeting.pid = getpid();
   
   int r;
   if( (r = write( cli->pollfd.fd, &greeting, sizeof(greeting) )) < 1 )

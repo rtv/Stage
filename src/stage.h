@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@hrl.com 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.22 2003-10-16 02:05:14 rtv Exp $
+ * CVS: $Id: stage.h,v 1.23 2003-10-16 02:21:52 rtv Exp $
  */
 
 #ifdef __cplusplus
@@ -146,7 +146,6 @@ typedef int stg_id_t;
 typedef struct
 {
   int code;
-  pid_t pid;
 } stg_greeting_t;
 
 

@@ -23,7 +23,7 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan
  * Date: 3 July 2003
- * CVS: $Id: main.cc,v 1.78 2003-10-16 02:05:14 rtv Exp $
+ * CVS: $Id: main.cc,v 1.79 2003-10-16 02:21:52 rtv Exp $
  */
 
 /* NOTES this file is only C++ because it must create CEntity
@@ -104,16 +104,15 @@ gboolean StgPropertyWrite( GIOChannel* channel, stg_property_t* prop )
   return( !failed );
 }
 
-stg_client_data_t* stg_sub_client_create( pid_t pid, GIOChannel* channel )
+stg_client_data_t* stg_sub_client_create( GIOChannel* channel )
 {
-  // store the client's PID to we can send it signals 
+
   stg_client_data_t* cli = 
     (stg_client_data_t*)calloc(1,sizeof(stg_client_data_t) );
   
   g_assert( cli );
   
   // set up this client
-  cli->pid = pid;
   cli->channel = channel;  
   cli->source_in  = g_io_add_watch( channel, G_IO_IN, StgSubClientRead, cli );
   cli->source_hup = g_io_add_watch( channel, G_IO_HUP, StgClientHup, cli );
@@ -506,7 +505,7 @@ gboolean StgClientAcceptConnection( GIOChannel* channel, GHashTable* table )
      {
      case STG_TOS_SUBSCRIPTION:
        PRINT_MSG( "Subscription connection requested" );
-       g_assert( stg_sub_client_create( greet.pid, client ) );
+       g_assert( stg_sub_client_create( client ) );
        break;
      default:
        PRINT_ERR1( "unknown connection type (%d) requested", 
@@ -517,7 +516,6 @@ gboolean StgClientAcceptConnection( GIOChannel* channel, GHashTable* table )
 
   // write the reply
   reply.code = STG_CLIENT_GREETING;
-  reply.pid = getpid(); // reply with my PID in case that's useful
 
   g_io_channel_write_chars( client, 
 			    (char*)&reply, (gssize)sizeof(reply),
