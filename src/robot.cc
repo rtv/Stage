@@ -1,7 +1,7 @@
 /*************************************************************************
  * robot.cc - most of the action is here
  * RTV
- * $Id: robot.cc,v 1.13.2.1 2000-12-05 23:17:34 ahoward Exp $
+ * $Id: robot.cc,v 1.13.2.2 2000-12-06 03:57:22 ahoward Exp $
  ************************************************************************/
 
 #include <errno.h>
@@ -33,7 +33,7 @@
 
 #define ENABLE_TRACE 1
 
-#include "world.h"
+#include "world.hh"
 #include "win.h"
 #include "ports.h"
 
@@ -62,32 +62,16 @@ unsigned char f = 0xFF;
 const int numPts = SONARSAMPLES;
 
 
-CRobot::CRobot( CWorld* ww, int col, 
-		float w, float l,
-		float startx, float starty, float starta )
-        : CObject(ww, NULL)
+CRobot::CRobot(CWorld *world, CObject *parent)
+        : CObject(world, parent)
 {
-  world = ww;
-
-    // Initial pose
+    // Initial default pose
     //
-    SetPose(startx, starty, starta);
-  
-  //id = iid;
-  color = col;
-  next  = NULL;
-  
-  xorigin = oldx = x = startx * world->ppm;
-  yorigin = oldy = y = starty * world->ppm;
-  aorigin = olda = a = starta;
-
-  channel = 0; // vision system color channel - default 0
-  
-  showDeviceDetail = false; // bool controls GUI display of device data/status
+    SetPose(1.0, 1.0, 0);
  
-  // Initialise the device list
-  //
-  m_device_count = 0;
+    // Initialise the device list
+    //
+    m_device_count = 0;
 }
 
 CRobot::~CRobot( void )
@@ -107,12 +91,12 @@ bool CRobot::Startup()
     //
     if (!StartupPlayer())
         return false;
-
+    
     // Create pioneer device    
     //
     AddChild(new CPioneerMobileDevice(this, 
-                                      world->pioneerWidth, 
-                                      world->pioneerLength,
+                                      m_world->pioneerWidth, 
+                                      m_world->pioneerLength,
                                       playerIO + SPOSITION_DATA_START,
                                       SPOSITION_DATA_BUFFER_SIZE,
                                       SPOSITION_COMMAND_BUFFER_SIZE,
@@ -124,7 +108,7 @@ bool CRobot::Startup()
                               LASER_DATA_BUFFER_SIZE,
                               LASER_COMMAND_BUFFER_SIZE,
                               LASER_CONFIG_BUFFER_SIZE));
-
+                              
     // Start any child objects
     //
     CObject::Startup();

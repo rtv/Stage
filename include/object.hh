@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/object.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -63,6 +63,10 @@ class CObject
     //
     public: virtual void Update();
 
+    // Create the objects by reading them from a file
+    //
+    private: bool CreateObjects();
+
     // Add a child object
     //
     public: void AddChild(CObject *child);
@@ -91,9 +95,14 @@ class CObject
     //
     private: void SetGlobalDirty();
 
-    // Pointer to world
+    // Id of this object
     //
-    protected: CWorld *m_world;
+    public: char m_id[64];
+
+    // Pointer to world
+    // *** HACK -- get rid of the device class, then make this protected
+    //
+    public: CWorld *m_world;
     
     // Pointer to parent object
     //

@@ -1,7 +1,7 @@
-// $Id: sonardevice.cc,v 1.5.2.1 2000-12-05 23:17:34 ahoward Exp $
+// $Id: sonardevice.cc,v 1.5.2.2 2000-12-06 03:57:22 ahoward Exp $
 #include <math.h>
 
-#include "world.h"
+#include "world.hh"
 #include "robot.h"
 #include "sonardevice.h"
 
@@ -61,17 +61,17 @@ bool CSonarDevice::GUIUnDraw()
 
 void CSonarDevice::Update() 
 {
-  Nimage* img = m_robot->world->img;
+  Nimage* img = m_robot->m_world->img;
 
   // dump out if noone is subscribed
   if( !IsSubscribed() ) return;
 
   // if its time to recalculate vision
-  if( m_robot->world->timeNow - lastUpdate > updateInterval )
+  if( m_robot->m_world->timeNow - lastUpdate > updateInterval )
     {
-      lastUpdate = m_robot->world->timeNow;
+      lastUpdate = m_robot->m_world->timeNow;
       
-      float ppm = m_robot->world->ppm;
+      float ppm = m_robot->m_world->ppm;
       
       float tangle; 
       // is the angle from the robot's nose to the transducer itself

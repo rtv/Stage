@@ -1,11 +1,11 @@
 /*************************************************************************
  * world.h - most of the header action is here 
  * RTV
- * $Id: world.h,v 1.3.2.1 2000-12-05 23:17:34 ahoward Exp $
+ * $Id: world.hh,v 1.1.2.1 2000-12-06 03:57:16 ahoward Exp $
  ************************************************************************/
 
-#ifndef WORLD_H
-#define WORLD_H
+#ifndef WORLD_HH
+#define WORLD_HH
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -49,7 +49,7 @@ enum EWorldLayer
 int InitNetworking( void );
 
 
-class CWorld
+class CWorld : public CObject
 {
 public:
   CWorld( char* initFile );
@@ -65,11 +65,6 @@ public:
   // data
   Nimage* bimg; // background image 
   Nimage* img; //foreground img;
-
-  // Laser image
-  // Store laser intensity data (beacons)
-  //
-  Nimage *m_laser_img;
 
   int width, height, depth; 
   int paused;
@@ -98,7 +93,6 @@ public:
 
   // methods
   int LoadVars( char* initFile);
-  void Update( void );
   void Draw( void );
   void SavePos( void );
   //void LoadPos( void );
@@ -110,53 +104,60 @@ public:
 
   CRobot* NearestRobot( float x, float y );
 
-  ///////////////////////////////////////////////////////
-  // Added new stuff here -- ahoward
+    ///////////////////////////////////////////////////////
+    // Added new stuff here -- ahoward
 
-  // Startup routine -- creates objects in the world
-  //
-  public: bool Startup();
+    // Startup routine -- creates objects in the world
+    //
+    public: virtual bool Startup();
 
-  // Shutdown routine -- deletes objects in the world
-  //
-  public: void Shutdown();
+    // Shutdown routine -- deletes objects in the world
+    //
+    public: virtual void Shutdown();
 
-  // A list of all the objects in the world
-  //
-  private: int m_object_count;
-  private: CObject *m_object[256];
-
-  // Get a cell from the world grid
-  //
-  public: BYTE GetCell(double px, double py, EWorldLayer layer);
-
-  // Set a cell in the world grid
-  //
-  public: void SetCell(double px, double py, EWorldLayer layer, BYTE value);
-
-  // Set a rectangle in the world grid
-  //
-  public: void SetRectangle(double px, double py, double pth,
-                            double dx, double dy, EWorldLayer layer, BYTE value);
+    // Update everything
+    //
+    public: virtual void Update();
+    
+    // Initialise the world grids
+    //
+    private: bool StartupGrids();
   
+    // Get a cell from the world grid
+    //
+    public: BYTE GetCell(double px, double py, EWorldLayer layer);
+
+    // Set a cell in the world grid
+    //
+    public: void SetCell(double px, double py, EWorldLayer layer, BYTE value);
+
+    // Set a rectangle in the world grid
+    //
+    public: void SetRectangle(double px, double py, double pth,
+                              double dx, double dy, EWorldLayer layer, BYTE value);
+
+    // Laser image
+    // Store laser data (obstacles and beacons
+    //
+    private: Nimage *m_laser_img;
 
 #ifdef INCLUDE_RTK
 
-  // Process GUI update messages
-  //
-  public: virtual void OnUiUpdate(RtkUiDrawData *pData);
+    // Process GUI update messages
+    //
+    public: virtual void OnUiUpdate(RtkUiDrawData *pData);
 
-  // Process GUI mouse messages
-  //
-  public: virtual void OnUiMouse(RtkUiMouseData *pData);
+    // Process GUI mouse messages
+    //
+    public: virtual void OnUiMouse(RtkUiMouseData *pData);
 
-  // Draw the background; i.e. things that dont move
-  //
-  private: void DrawBackground(RtkUiDrawData *pData);
+    // Draw the background; i.e. things that dont move
+    //
+    private: void DrawBackground(RtkUiDrawData *pData);
 
-  // Draw the laser layer
-  //
-  private: void DrawLayer(RtkUiDrawData *pData, EWorldLayer layer);
+    // Draw the laser layer
+    //
+    private: void DrawLayer(RtkUiDrawData *pData, EWorldLayer layer);
   
 #endif
 };

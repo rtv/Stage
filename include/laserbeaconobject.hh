@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeaconobject.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -34,7 +34,7 @@ class CLaserBeaconObject : public CObject
     // Default constructor
     // Requires the position of the beacon relative to the parent object
     //
-    public: CLaserBeaconObject(CWorld *world, CObject *parent, double dx, double dy);
+    public: CLaserBeaconObject(CWorld *world, CObject *parent);
     
     // Update the device
     //

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/object.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -26,6 +26,11 @@
 
 #include <math.h>
 #include "object.hh"
+
+// *** HACK -- move this to a header
+// Create an object given a type
+//
+CObject* CreateObject(const char *type, CWorld *world, CObject *parent);
 
 
 
@@ -66,6 +71,12 @@ CObject::~CObject()
 //
 bool CObject::Startup()
 {
+    // Create child objects
+    //
+    CreateObjects();
+    
+    // Start each of the children we have just created
+    //
     for (int i = 0; i < m_child_count; i++)
     {
         if (!m_child[i]->Startup())
@@ -92,6 +103,73 @@ void CObject::Update()
 {
     for (int i = 0; i < m_child_count; i++)
         m_child[i]->Update();
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Create the objects by reading them from a file
+//
+bool CObject::CreateObjects()
+{
+    // *** HACK
+    char *filename = "cave.cfg";
+
+    // Open the configuration file
+    //
+    RtkCfgFile cfg_file;
+    if (!cfg_file.Open(filename))
+    {
+        ERROR("Could not open config file");
+        return false;
+    }
+
+    cfg_file.BeginSection(m_id);
+
+    // Read in our own pose
+    //   
+    double px = cfg_file.ReadDouble("px", 0, "");
+    double py = cfg_file.ReadDouble("py", 0, "");
+    double pth = cfg_file.ReadDouble("pth", 0, "");
+    SetPose(px, py, pth);
+
+    cfg_file.EndSection();
+
+    // Read in the objects from the configuration file
+    //
+    for (int i = 0; i < ARRAYSIZE(m_child); i++)
+    {
+        RtkString key; RtkFormat1(key, "child[%d]", (int) i);
+
+        // Get the id of the i'th child
+        //
+        RtkString id = cfg_file.ReadString(m_id, CSTR(key), "", "");
+        if (id == "")
+            continue;
+
+        // Get its type
+        //
+        RtkString type = cfg_file.ReadString(CSTR(id), "type", "", "");
+        
+        // Create the object
+        //
+        MSG2("making object %s of type %s", CSTR(id), CSTR(type));
+        CObject *object = ::CreateObject(CSTR(type), m_world, this);
+        if (object == NULL)
+            continue;
+
+        // *** WARNING -- no overflow check!
+        // Set the object's id
+        //
+        strcpy(object->m_id, CSTR(id));
+
+        // Add into the object list
+        //
+        AddChild(object);
+    }
+
+    cfg_file.Close();
+    
+    return true;
 }
 
 
@@ -244,7 +322,7 @@ void CObject::OnUiMouse(RtkUiMouseData *pData)
     // Default process for any "move" modes
     // If we are a top-level object, 
     //
-    if (pData->UseMouseMode("move") && m_parent == NULL)
+    if (pData->UseMouseMode("move") && m_parent == (CObject*) m_world)
     {
         // *** WARNING -- mouse should be made consistent with draw
         //

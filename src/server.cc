@@ -1,7 +1,7 @@
 /*************************************************************************
  * server.cc - implements the position & GUI servers, plus signal handling
  * RTV
- * $Id: server.cc,v 1.2 2000-12-01 00:20:52 vaughan Exp $
+ * $Id: server.cc,v 1.2.2.1 2000-12-06 03:57:22 ahoward Exp $
  ************************************************************************/
 
 // YUK this file is all in C and implements the PositionServer and GuiServer
@@ -32,7 +32,7 @@
 //#define DEBUG
 //#define VERBOSE
 
-#include "world.h"
+#include "world.hh"
 #include "ports.h"
 
 #define	SA	struct sockaddr

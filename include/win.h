@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: win.h,v 1.3 2000-12-04 02:11:31 vaughan Exp $
+ * $Id: win.h,v 1.3.2.1 2000-12-06 03:57:16 ahoward Exp $
  ************************************************************************/
 
 #ifndef WIN_H
@@ -9,7 +9,7 @@
 
 #include <X11/Xlib.h>
 
-#include "world.h"
+#include "world.hh"
 
 class CWorldWin
 {

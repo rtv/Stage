@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.1 $
+//  $Revision: 1.4.2.2 $
 //
 // Usage:
 //  (empty)
@@ -27,7 +27,7 @@
 #define ENABLE_TRACE 0
 
 #include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
-#include "world.h"
+#include "world.hh"
 #include "robot.h"
 #include "visiondevice.hh"
 #include "ptzdevice.hh"
@@ -73,10 +73,7 @@ void CVisionDevice::Update()
     // Get pointers to the various bitmaps
     //
     Nimage *img = m_world->img;
-    Nimage *laser_img = m_world->m_laser_img;
-
     ASSERT(img != NULL);
-    ASSERT(laser_img != NULL);
 
     // See if its time to recalculate vision
     //

@@ -2,7 +2,7 @@
  * robot.h - CRobot defintion - most of the action is here
             
  * RTV
- * $Id: robot.h,v 1.8.2.1 2000-12-05 23:17:34 ahoward Exp $
+ * $Id: robot.h,v 1.8.2.2 2000-12-06 03:57:16 ahoward Exp $
  ************************************************************************/
 
 #include "offsets.h" // for the ACTS size defines
@@ -44,11 +44,10 @@ class CRobot : public CObject
   // GPB
 
 public:
-  CRobot( CWorld* ww, int iid, float w, float l, 
-	  float startx, float starty, float starta );
+  CRobot( CWorld* world, CObject *parent);
   ~CRobot( void );
   
-  CWorld* world; 
+  // *** REMOVE CWorld* world; 
   CRobot* next; // for linked list implementation
 
   // position, position at t-1, and position origin variables

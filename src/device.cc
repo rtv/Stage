@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/device.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.5.2.1 $
+//  $Revision: 1.5.2.2 $
 //
 // Usage:
 //  (empty)
@@ -24,7 +24,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#include "world.h"
+#include "world.hh"
 #include "device.hh"
 
 
@@ -32,7 +32,7 @@
 // Minimal constructor
 //
 CDevice::CDevice(CRobot* robot)
-        : CObject(robot->world, robot)
+        : CObject(robot->m_world, robot)
 {
     m_robot = robot;
     // *** remove m_world = m_robot->world;

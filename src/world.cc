@@ -1,7 +1,7 @@
 /*************************************************************************
  * world.cc - top level class that contains and updates robots
  * RTV
- * $Id: world.cc,v 1.4.2.1 2000-12-05 23:17:34 ahoward Exp $
+ * $Id: world.cc,v 1.4.2.2 2000-12-06 03:57:22 ahoward Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -19,11 +19,9 @@
 
 #define ENABLE_TRACE 1
 
-#include "world.h"
+#include "world.hh"
 #include "win.h"
 #include "offsets.h"
-
-#include "laserbeaconobject.hh"
 
 //#undef DEBUG
 //#define DEBUG
@@ -41,7 +39,8 @@ double runStart;
 
 extern double quitTime;
 
-CWorld::CWorld( char* initFile ) 
+CWorld::CWorld( char* initFile)
+        : CObject(this, NULL)
 {
   bots = NULL;
   win = NULL;
@@ -101,17 +100,8 @@ CWorld::CWorld( char* initFile )
   img = new Nimage( bimg );
 
   // Extra data layers
-  // Ultimately, these should go into a startup routine,
-  // or else get created by the devices themselves when they
-  // are subscribed.  This would save some memory.
-  // ahoward
   //
-  m_laser_img = new Nimage(width, height);
-  m_laser_img->clear(0);
-
-  // Reset object counter, just in case
-  //
-  m_object_count = 0;
+  m_laser_img = NULL;
 
   refreshBackground = false;
 
@@ -242,34 +232,21 @@ CWorld::~CWorld()
 bool CWorld::Startup()
 {
     TRACE0("Creating objects");
-    
-    m_object_count = 0;
 
-    // *** HACK -- should read from configuration file
-    m_object[m_object_count++] = new CRobot( this, 1,
-                                             pioneerWidth, 
-                                             pioneerLength,
-                                             1.0, 2.0, 0);
-
-    // *** HACK -- should read from configuration file
-    m_object[m_object_count++] = new CRobot( this, 2,
-                                             pioneerWidth, 
-                                             pioneerLength,
-                                             2.0, 2.0, 0);
+    // *** WARNING -- no overflow check
+    // Set our id
+    //
+    strcpy(m_id, "world");
     
-    // *** HACK -- should read from configuration file
-    m_object[m_object_count++] = new CLaserBeaconObject(this, NULL, 1.0, 1.0);
+    // Initialise the world grids
+    //
+    StartupGrids();
 
     // Call the objects startup function
     //
-    for (int i = 0; i < m_object_count; i++)
-    {
-        if (!m_object[i]->Startup())
-        {
-            puts("Startup failed; exiting");
-            return false;
-        }
-    }
+    if (!CObject::Startup())
+        return false;
+
     return true;
 }
 
@@ -281,16 +258,81 @@ void CWorld::Shutdown()
 {
     TRACE0("Closing objects");
         
-    // Call the objects shutdown function
-    //
-    for (int i = 0; i < m_object_count; i++)
-        m_object[i]->Shutdown();
+    CObject::Shutdown();
+}
 
-    // Delete objects
+
+///////////////////////////////////////////////////////////////////////////
+// Update the world
+//
+void CWorld::Update()
+{
+  // update is called every approx. 25ms from main using a timer
+
+  if( win ) win->HandleEvent();
+
+  if( !paused )
+    {
+      struct timeval tv;
+      
+      gettimeofday( &tv, NULL );
+      timeNow = tv.tv_sec + (tv.tv_usec/MILLION);
+      
+      timeStep = (timeNow - timeThen); // real time
+      //timeStep = 0.01; // step time;   
+      //cout << timeStep << endl;
+      timeThen = timeNow;
+      
+      // use a simple cludge to fix stutters caused by machine load or I/O
+      if( timeStep > 0.1 ) 
+	{
+#ifdef DEBUG 
+	  cout << "MAX TIMESTEP EXCEEDED" << endl;
+#endif
+	  timeStep = 0.1;
+	}
+
+      // Update child objects
+      //
+      CObject::Update();
+
+      if( refreshBackground ) Draw();
+      
+      if( !runDown ) runStart = timeNow;
+      else if( (quitTime > 0) && (timeNow > (runStart + quitTime) ) )
+	exit( 0 );
+    }
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise the world grids
+//
+bool CWorld::StartupGrids()
+{
+    TRACE0("initialising grids");
+    
+    // Extra data layers
+    // Ultimately, these should go into a startup routine,
+    // or else get created by the devices themselves when they
+    // are subscribed.  This would save some memory.
+    // ahoward
     //
-    for (int i = 0; i < m_object_count; i++)
-        delete m_object[i];
-    m_object_count = 0;
+    m_laser_img = new Nimage(width, height);
+    m_laser_img->clear(0);
+    
+    // Copy fixed obstacles into laser rep
+    //
+    for (int y = 0; y < img->height; y++)
+    {
+        for (int x = 0; x < img->width; x++)
+        {
+            if (img->get_pixel(x, y) != 0)
+                m_laser_img->set_pixel(x, y, 1);
+        }
+    }
+                
+    return true;
 }
 
 
@@ -436,52 +478,9 @@ int CWorld::UnlockShmem( void )
   return true;
 }
 
-void CWorld::Update( void )
-{
-  // update is called every approx. 25ms from main using a timer
 
-  if( win ) win->HandleEvent();
-
-  if( !paused )
-    {
-      struct timeval tv;
-      
-      gettimeofday( &tv, NULL );
-      timeNow = tv.tv_sec + (tv.tv_usec/MILLION);
-      
-      timeStep = (timeNow - timeThen); // real time
-      //timeStep = 0.01; // step time;   
-      //cout << timeStep << endl;
-      timeThen = timeNow;
-      
-      // use a simple cludge to fix stutters caused by machine load or I/O
-      if( timeStep > 0.1 ) 
-	{
-#ifdef DEBUG 
-	  cout << "MAX TIMESTEP EXCEEDED" << endl;
-#endif
-	  timeStep = 0.1;
-	}
-
-      // Update objects
-      //
-      for (int i = 0; i < m_object_count; i++)
-          m_object[i]->Update();
-
-      /*** remove. ahoward
-      // move the robots
-      for( CRobot* b = bots; b; b = b->next ) b->Update();
-      */
-
-      if( refreshBackground ) Draw();
-      
-      if( !runDown ) runStart = timeNow;
-      else if( (quitTime > 0) && (timeNow > (runStart + quitTime) ) )
-	exit( 0 );
-    }
-}
   
-    
+
 CRobot* CWorld::NearestRobot( float x, float y )
 {
   CRobot* nearest;
@@ -499,8 +498,7 @@ CRobot* CWorld::NearestRobot( float x, float y )
   }
   
   return nearest;
-}	  
-
+}
 
 void CWorld::SavePos( void )
 {
@@ -634,8 +632,7 @@ void CWorld::OnUiUpdate(RtkUiDrawData *pData)
 
     // Get children to process message
     //
-    for (int i = 0; i < m_object_count; i++)
-        m_object[i]->OnUiUpdate(pData);
+    CObject::OnUiUpdate(pData);
 }
 
 
@@ -646,8 +643,7 @@ void CWorld::OnUiMouse(RtkUiMouseData *pData)
 {
     // Get children to process message
     //
-    for (int i = 0; i < m_object_count; i++)
-        m_object[i]->OnUiMouse(pData);
+    CObject::OnUiMouse(pData);
 }
 
 

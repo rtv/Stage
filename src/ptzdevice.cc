@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.1 $
+//  $Revision: 1.4.2.2 $
 //
 // Usage:
 //  (empty)
@@ -27,7 +27,7 @@
 //#define ENABLE_TRACE 1
 
 #include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
-#include "world.h"
+#include "world.hh"
 #include "robot.h"
 #include "ptzdevice.hh"
 
@@ -171,7 +171,7 @@ bool CPtzDevice::GUIDraw( void )
   if( !IsSubscribed() || !m_robot->showDeviceDetail ) return true;
  
   // height of the cone - hard coded number is in meters
-  double len = 1.0 * m_robot->world->ppm;
+  double len = 1.0 * m_robot->m_world->ppm;
    
   double p, t, z;
   GetPTZ( p, t, z );

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.1 $
+//  $Revision: 1.9.2.2 $
 //
 // Usage:
 //  (empty)
@@ -28,7 +28,7 @@
 
 #include <math.h>
 
-#include "world.h"
+#include "world.hh"
 #include "robot.h"
 #include "pioneermobiledevice.hh"
 

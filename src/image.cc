@@ -2,14 +2,14 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.2 2000-12-01 22:07:54 vaughan Exp $
+ * $Id: image.cc,v 1.2.2.1 2000-12-06 03:57:22 ahoward Exp $
  ************************************************************************/
 
 #include <math.h>
 #include <iostream.h>
 
 #include "image.h"
-#include "world.h"
+#include "world.hh"
 
 extern CWorld* world;
 
