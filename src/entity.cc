@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.36 2002-01-30 03:33:43 inspectorg Exp $
+//  $Id: entity.cc,v 1.37 2002-01-31 02:43:27 inspectorg Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -179,12 +179,12 @@ bool CEntity::Load(CWorldFile *worldfile, int section)
     if (m_parent_object)
       m_player_port = m_parent_object->m_player_port;
     else
-    {
-      m_player_port = 0; //PLAYER_PORTNUM;
-      PRINT_WARN1("no port number specified; using default value %d",
-                  m_player_port);
-    }
+      m_player_port = 0;
   }
+
+  // Read the device index
+  m_player_index = worldfile->ReadInt(section, "index", 0);
+  
   return true;
 }
 
@@ -228,9 +228,7 @@ bool CEntity::Startup( void )
   PRINT_DEBUG1("shared memory alloc: %d", mem);
   
   snprintf( m_device_filename, sizeof(m_device_filename), "%s/%d.%d.%d", 
-            m_world->m_device_dir, m_player_port, m_player_type,
-            // m_world->StringType( m_stage_type),
-            m_player_index );
+            m_world->m_device_dir, m_player_port, m_player_type, m_player_index );
   PRINT_DEBUG1("creating device %s", m_device_filename);
 
   int tfd = open( m_device_filename, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR );

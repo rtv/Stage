@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.78 $
+//  $Revision: 1.79 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -37,14 +37,11 @@ extern long g_bytes_input, g_bytes_output;
 
 int g_timer_expired = 0;
 
-#define DEBUG 
-#define VERBOSE
+//#define DEBUG 
+//#define VERBOSE
 
-//#include <stage.h>
 #include "world.hh"
-// for the definition of CPlayerDevice, used to treat them specially
-// below
-#include "playerdevice.hh" 
+#include "playerdevice.hh" // for the definition of CPlayerDevice, used to treat them specially
 #include "truthserver.hh"
 #include "fixedobstacle.hh"
 
@@ -762,7 +759,7 @@ void CWorld::StartTimer( double interval )
   //install signal handler for timing
   if( signal( SIGALRM, &TimerHandler ) == SIG_ERR )
   {
-    cout << "Failed to install signal handler" << endl;
+    PRINT_ERR("failed to install signal handler");
     exit( -1 );
   }
 
@@ -776,7 +773,7 @@ void CWorld::StartTimer( double interval )
   
   if( setitimer( ITIMER_REAL, &tick, 0 ) == -1 )
   {
-    cout << "failed to set timer" << endl;;
+    PRINT_ERR("failed to set timer");
     exit( -1 );
   }
 }
@@ -1009,7 +1006,7 @@ bool CWorld::LockShmem( void )
   int retval = semop( semid, ops, 1 );
   if (retval != 0)
   {
-      printf("lock failed return value = %d\n", (int) retval);
+      PRINT_ERR1("lock failed return value = %d\n", (int) retval);
       return false;
   }
   return true;
@@ -1020,35 +1017,35 @@ bool CWorld::LockShmem( void )
 //
 bool CWorld::CreateShmemLock()
 {
-    semKey = SEMKEY;
+  semKey = SEMKEY;
 
-    union semun
-    {
-        int val;
-        struct semid_ds *buf;
-        ushort *array;
-    } argument;
+  union semun
+  {
+    int val;
+    struct semid_ds *buf;
+    ushort *array;
+  } argument;
 
-    argument.val = 0; // initial semaphore value
-    semid = semget( semKey, 1, 0666 | IPC_CREAT );
+  argument.val = 0; // initial semaphore value
+  semid = semget( semKey, 1, 0666 | IPC_CREAT );
 
-    if( semid < 0 ) // semget failed
-    {
-        printf( "Stage: Unable to create semaphore\n" );
-        return false;
-    }
-    if( semctl( semid, 0, SETVAL, argument ) < 0 )
-    {
-        printf( "Stage: Failed to set semaphore value\n" );
-        return false;
-    }
+  if( semid < 0 ) // semget failed
+  {
+    PRINT_ERR( "unable to create semaphore\n" );
+    return false;
+  }
+  if( semctl( semid, 0, SETVAL, argument ) < 0 )
+  {
+    PRINT_ERR( "failed to set semaphore value\n" );
+    return false;
+  }
 
 #ifdef DEBUG
-    printf( "Stage: Create semaphore: semkey=%d semid=%d\n", semKey, semid );
+  printf( "Stage: Create semaphore: semkey=%d semid=%d\n", semKey, semid );
     
 #endif
 
-    return true;
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1352,7 +1349,7 @@ int CWorld::ColorFromString( StageColor* color, const char* colorString )
     //cout << "Read entry: " << line << endl;
 
     if( db.get( c ) && c != '\n' )
-      cout << "Warning: line too long in color database file" << endl;
+      PRINT_WARN("line too long in color database file");
       
     if( line[0] == '!' || line[0] == '#' || line[0] == '%' ) 
       continue; // it's a macro or comment line - ignore the line
