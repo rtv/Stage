@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.10 $
+//  $Revision: 1.4.2.11 $
 //
 // Usage:
 //  (empty)
@@ -448,11 +448,11 @@ void CWorld::DrawBackground(RtkUiDrawData *pData)
     // Loop through the image and draw points individually.
     // Yeah, it's slow, but only happens once.
     //
-    for (int y = 0; y < m_img->height; y++)
+    for (int y = 0; y < m_bimg->height; y++)
     {
-        for (int x = 0; x < m_img->width; x++)
+        for (int x = 0; x < m_bimg->width; x++)
         {
-            if (m_img->get_pixel(x, y) != 0)
+            if (m_bimg->get_pixel(x, y) != 0)
             {
                 double px = (double) x / ppm;
                 double py = (double) (height - y) / ppm;

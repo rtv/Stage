@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.4 $
+//  $Revision: 1.9.2.5 $
 //
 // Usage:
 //  (empty)
@@ -40,6 +40,10 @@ class CLaserDevice : public CPlayerDevice
     // Default constructor
     //
     public: CLaserDevice(CWorld *world, CObject *parent, CPlayerRobot* robot);
+
+    // Initialise the device
+    //
+    public: virtual bool Startup(RtkCfgFile *cfg);
     
     // Update the device
     //
@@ -71,6 +75,7 @@ class CLaserDevice : public CPlayerDevice
     private: int m_min_segment;
     private: int m_max_segment;
     private: int m_samples;
+    private: int m_sample_density;
     private: bool m_intensity;
 
     // Array holding the laser data

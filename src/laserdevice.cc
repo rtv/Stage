@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11.2.9 $
+//  $Revision: 1.11.2.10 $
 //
 // Usage:
 //  (empty)
@@ -54,8 +54,8 @@ CLaserDevice::CLaserDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
     m_intensity = false;
   
     m_samples = 361;
-    m_max_range = 8.0; // meters - this could be dynamic one day
-                     // but this matches the default laser setup.
+    m_sample_density = 2;
+    m_max_range = 8.0;
 
     // Dimensions of laser
     // *** HACK I just made these up ahoward
@@ -68,6 +68,25 @@ CLaserDevice::CLaserDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
     #else
         m_hit_count = 0;
     #endif
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise the device
+//
+bool CLaserDevice::Startup(RtkCfgFile *cfg)
+{
+    if (!CPlayerDevice::Startup(cfg))
+        return false;
+    
+    cfg->BeginSection(m_id);
+
+    m_sample_density = cfg->ReadInt("sample_density", 1,
+                                    "(int) Density of samples 1 = full, 2 = half, etc");
+    
+    cfg->EndSection();
+
+    return true;
 }
 
 
@@ -164,45 +183,59 @@ bool CLaserDevice::UpdateScanData()
 
     // Do each scan
     //
-    for (int s = 0; s < m_samples; s++)
+    for (int s = 0; s < m_samples; s += m_sample_density)
     {
+        int intensity = 0;
+        double range = 0;
+
         // Allow for partial scans
         //
         if (s < m_min_segment || s > m_max_segment)
         {
-            m_data[s] = 0;
-            continue;
+            range = 0;
+            intensity = 0;
         }
-
-        // Compute parameters of scan line
+        
+        // Get the range and intensity
         //
-        double px = ox;
-        double py = oy;
-        double pth = oth + s * dth;
-
-        // Compute the step for simple ray-tracing
-        //
-        double dx = dr * cos(pth);
-        double dy = dr * sin(pth);
-
-        // Look along scan line for obstacles
-        // Could make this an int again for a slight speed-up.
-        //
-        int intensity = 0;
-        double range;
-        for (range = 0; range < max_range; range += dr)
+        else
         {
-            // Look in the laser layer for obstacles
+            // Compute parameters of scan line
             //
-            BYTE cell = m_world->GetCell(px, py, layer_laser);
-            if (cell != 0)
+            double px = ox;
+            double py = oy;
+            double pth = oth + s * dth;
+
+            // Compute the step for simple ray-tracing
+            //
+            double dx = dr * cos(pth);
+            double dy = dr * sin(pth);
+
+            // Look along scan line for obstacles
+            // Could make this an int again for a slight speed-up.
+            //
+            for (range = 0; range < max_range; range += dr)
             {
-                if (cell > 1)
-                    intensity = 1;                
-                break;
+                // Look in the laser layer for obstacles
+                //
+                BYTE cell = m_world->GetCell(px, py, layer_laser);
+                if (cell != 0)
+                {
+                    if (cell > 1)
+                        intensity = 1;                
+                    break;
+                }
+                px += dx;
+                py += dy;
             }
-            px += dx;
-            py += dy;
+            
+            // Update the gui data
+            //
+            #ifdef INCLUDE_RTK
+                m_hit[m_hit_count][0] = px;
+                m_hit[m_hit_count][1] = py;
+                m_hit_count++;
+            #endif
         }
 
         // set laser value, scaled to current ppm
@@ -216,17 +249,11 @@ bool CLaserDevice::UpdateScanData()
             v = v | (((UINT16) intensity) << 13);
         
         // Set the range
-        // Swap the bytes while we're at it
+        // Swap the bytes while we're at it,
+        // and allow for sparse sampling.
         //
-        m_data[s] = htons(v);
-
-        // Update the gui data
-        //
-        #ifdef INCLUDE_RTK
-            m_hit[m_hit_count][0] = px;
-            m_hit[m_hit_count][1] = py;
-            m_hit_count++;
-        #endif
+        for (int i = s; i < s + m_sample_density && i < ARRAYSIZE(m_data); i++)
+            m_data[i] = htons(v);
     }
     return true;
 }
