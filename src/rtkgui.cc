@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.2 2002-09-16 23:44:34 gerkey Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.3 2002-09-22 18:33:55 inspectorg Exp $
  */
 
 
@@ -406,13 +406,13 @@ void CWorld::RtkMenuHandling()
   // Handle export menu item
   // TODO - fold in XS's postscript and pnm export here or in rtk2
   if (rtk_menuitem_isactivated(this->export_menuitem))
-    {
-      char filename[128];
-      snprintf(filename, sizeof(filename), 
-	       "rtkstage-%04d.fig", this->export_count++);
-      PRINT_MSG1("exporting canvas to [%s]", filename);
-      rtk_canvas_export(this->canvas, filename);
-    }
+  {
+    char filename[128];
+    snprintf(filename, sizeof(filename), 
+             "rtkstage-%04d.fig", this->export_count++);
+    PRINT_MSG1("exporting canvas to [%s]", filename);
+    rtk_canvas_export_ppm(this->canvas, filename);
+  }
 
   // Show or hide the grid
   if (rtk_menuitem_ischecked(this->grid_item))
@@ -431,14 +431,14 @@ void CWorld::RtkMenuHandling()
 
   // for now i check if the menu item changed
   if( thistime != lasttime )
-    {
-      if( thistime )  // change the subscription counts of any player-capable ent
-	  root->FamilySubscribe();
-      else
-	root->FamilyUnsubscribe();
-      // remember this state
-      lasttime = thistime;
-    }
+  {
+    if( thistime )  // change the subscription counts of any player-capable ent
+      root->FamilySubscribe();
+    else
+      root->FamilyUnsubscribe();
+    // remember this state
+    lasttime = thistime;
+  }
       
   
 }
