@@ -24,6 +24,24 @@
 
 #define STAGE_IP "127.0.0.1"
 
+void PrintStageTruth( stage_truth_t &truth, double seconds )
+{
+  printf( "Time: %.3f ID: %d (%4d,%d,%d)\tPID:(%4d,%d,%d)\tpose: [%d,%d,%d]\tsize: [%d,%d]\n", 
+	  seconds,
+	  truth.stage_id,
+	  truth.id.port, 
+	  truth.id.type, 
+	  truth.id.index,
+	  truth.parent.port, 
+	  truth.parent.type, 
+	  truth.parent.index,
+	  truth.x, truth.y, truth.th,
+	  truth.w, truth.h );
+  
+  fflush( stdout );
+}
+
+
 int main(int argc, char **argv)
 {
   /* client vars */
@@ -78,6 +96,11 @@ int main(int argc, char **argv)
   
   stage_truth_t truth;
 
+  struct timeval start_tv, tv;
+  gettimeofday( &start_tv, 0 );
+  
+  double seconds;
+
   while( 1 )
     {	      
       /* read will block until it has some bytes to return */
@@ -85,16 +108,12 @@ int main(int argc, char **argv)
       
       if( r > 0 )
 	{
-	  printf( "Truth: "
-		  "(%d,%d,%d) parent (%d,%d,%d) [%d,%d,%d]\n", 
-		  truth.id.port, 
-		  truth.id.type, 
-		  truth.id.index,
-		  truth.parent.port, 
-		  truth.parent.type, 
-		  truth.parent.index,
-		  truth.x, truth.y, truth.th );
+	  gettimeofday( &tv, 0 );
 
+	  seconds = tv.tv_sec - start_tv.tv_sec;
+	  seconds += (tv.tv_usec - start_tv.tv_usec) / 1000000.0;
+
+	  PrintStageTruth( truth, seconds );
 	  fflush( stdout );
 	}
       else
