@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.23 $
+//  $Revision: 1.24 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -100,9 +100,6 @@ stg_model_t* stg_position_create( stg_world_t* world,
 						token,
 						sizeof(stg_model_position_t) );  
 
-  // get the type-sepecific extension we added to the end of the model
-  // stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
-  
   // override the default methods
   mod->f_startup = position_startup;
   mod->f_shutdown = position_shutdown;
@@ -134,6 +131,8 @@ stg_model_t* stg_position_create( stg_world_t* world,
    memset( &data, 0, sizeof(data) );
 
   stg_model_set_data( mod, &data, sizeof(data) );
+  
+  // (type-sepecific extension data is already zeroed)
 
   return mod;
 }
@@ -143,16 +142,11 @@ int position_update( stg_model_t* mod )
   // get the type-sepecific extension we added to the end of the model
   stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
   
-  //stg_model_position_t pp;
-  //stg_model_position_t* pos = &pp;
 
   PRINT_DEBUG1( "[%lu] position update", mod->world->sim_time );
 
   if( mod->subs )   // no driving if noone is subscribed
     {      
-      // prevent anyone changing this model while we work
-      // pthread_mutex_lock( mod->mutex );
-
       assert( mod->cfg ); // position_init should have filled these
       assert( mod->cmd );
       
@@ -322,14 +316,16 @@ int position_update( stg_model_t* mod )
       
       // publish the data
       stg_model_set_data( mod, &data, sizeof(data));    
-
-      //pthread_mutex_unlock( mod->mutex );
     }
   
 
   // now  inherit the normal update - this does the actual moving
   _model_update( mod );
   
+  //printf( "updating odom from origin (%.2f,%.2f,%.2f)\n",
+  //  pos->odom_origin.x, pos->odom_origin.y, pos->odom_origin.a );
+
+  // calculate new odometric pose
   double dx = mod->pose.x - pos->odom_origin.x;
   double dy = mod->pose.y - pos->odom_origin.y;
   double da = mod->pose.a - pos->odom_origin.a;
@@ -351,7 +347,7 @@ int position_startup( stg_model_t* mod )
   //stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
   //stg_model_get_pose( mod, &pos->odom_origin );
 
-  stg_model_position_odom_reset( mod );
+  //stg_model_position_odom_reset( mod );
 
   return 0; // ok
 }
@@ -373,26 +369,31 @@ int position_shutdown( stg_model_t* mod )
   return 0; // ok
 }
 
-// set the current pose to be the origin of the odometry coordinate system
-void stg_model_position_odom_reset( stg_model_t* mod )
-{
-  stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
-  
-  // the odom origin is the current pose
-  memcpy( &pos->odom_origin, &mod->pose, sizeof(stg_pose_t));
-  
-  // so the odom measurement is zero
-  memset( &pos->odom, 0, sizeof(pos->odom));
-}
-
-
 // Set the origin of the odometric coordinate system in world coords
 void stg_model_position_set_odom_origin( stg_model_t* mod, stg_pose_t* org )
 {
   // get the type-sepecific extension we added to the end of the model
   stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
   memcpy( &pos->odom_origin, org, sizeof(stg_pose_t));
+  
+  //printf( "Stage warning: the odom origin was set to (%.2f,%.2f,%.2f)\n",
+  //  pos->odom_origin.x, pos->odom_origin.y, pos->odom_origin.a );
 }
+
+// set the current pose to be the origin of the odometry coordinate system
+void stg_model_position_odom_reset( stg_model_t* mod )
+{
+  //printf( "Stage warning: odom was reset (zeroed)\n" );
+
+  // set the current odom measurement to zero
+  stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
+  memset( &pos->odom, 0, sizeof(pos->odom));
+  
+  // and set the odom origin is the current pose
+  stg_model_position_set_odom_origin( mod, &mod->pose );
+}
+
+
 
 void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom )
 {
@@ -400,14 +401,32 @@ void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom )
   stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
 
   // copy the odom pose straight in
-  //memcpy( &pos->odom, odom, sizeof(stg_pose_t));
-
-  printf( "Stage warning: setting odometric pose is not yet implemented\n" );
-
+  memcpy( &pos->odom, odom, sizeof(stg_pose_t));
+  
+  
+  if( odom->a != 0.0 )
+    printf( "\nStage warning: setting odometric pose with non-zero angle"
+	    " is not yet implemented. Odmetry wierdness may ensue." );
+  
   // TODO
- 
+  
   // calculate what the origin of this coord system must be
-  //memcpy( &pos->odom_org, org, sizeof(stg_pose_t));
+  
+  stg_pose_t o;
+  
+  double dx = mod->pose.x - odom->x;
+  double dy = mod->pose.y - odom->y;
+  double da = mod->pose.a - odom->a;
+  double cosa = cos(da);
+  double sina = sin(da);
+
+  // TODO: can't quite get my head around this today - will fix
+  // sometime.
+  o.x = dx;// * cosa + dy * sina;
+  o.y = dy;// * cosa - dx * sina;
+  o.a = NORMALIZE( da );
+  
+  stg_model_position_set_odom_origin( mod, &o );  
 }
 
 
