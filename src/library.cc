@@ -24,10 +24,11 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.13.4.8 2003-02-10 01:02:02 rtv Exp $
+ * CVS info: $Id: library.cc,v 1.13.4.9 2003-02-10 01:08:32 gerkey Exp $
  */
 
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 #include "library.hh"
 #include "entity.hh"

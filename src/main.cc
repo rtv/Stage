@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.18 2003-02-10 01:02:53 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.19 2003-02-10 01:08:32 gerkey Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -35,6 +35,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
+#include <sys/time.h>
 #include <unistd.h> /* for exit(2) */
 
 #include "sio.h"
