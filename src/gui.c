@@ -246,10 +246,15 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 
   win->bg = rtk_fig_create( win->canvas, NULL, STG_LAYER_GRID );
   
-  // draw a grid
+  // draw a mark for the origin
   rtk_fig_color_rgb32( win->bg, stg_lookup_color(STG_GRID_MAJOR_COLOR) );    
-  rtk_fig_grid( win->bg, 0,0, 100.0, 100.0, 1.0 );
+  double mark_sz = 0.4;
+  rtk_fig_ellipse( win->bg, 0,0,0, mark_sz/3, mark_sz/3, 0 );
+  rtk_fig_arrow( win->bg, -mark_sz/2, 0, 0, mark_sz, mark_sz/4 );
+  rtk_fig_arrow( win->bg, 0, -mark_sz/2, M_PI/2, mark_sz, mark_sz/4 );
+  //rtk_fig_grid( win->bg, 0,0, 100.0, 100.0, 1.0 );
   
+
   win->show_geom = TRUE;
   win->show_matrix = FALSE;
   win->fill_polygons = TRUE;

@@ -22,7 +22,7 @@
  * Desc: Rtk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.6 2005-02-28 08:06:44 rtv Exp $
+ * CVS: $Id: rtk_fig.c,v 1.7 2005-02-28 23:10:47 rtv Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
@@ -866,27 +866,50 @@ void rtk_fig_grid(rtk_fig_t *fig, double ox, double oy,
 {
   int i, nx, ny;
 
-  nx = (int) ceil(dx / sp);
-  ny = (int) ceil(dy / sp);
+  nx = (int) ceil((dx/2.0) / sp);
+  ny = (int) ceil((dy/2.0) / sp);
+
+  if( nx == 0 ) nx = 1.0;
+  if( ny == 0 ) ny = 1.0;
+
+
+  // draw the bounding box first
+  rtk_fig_rectangle( fig, ox,oy,0, dx, dy, 0 );
 
   char str[64];
 
-  for (i = 0; i < nx + 1; i++)
+  for (i = -nx+1; i < nx; i++)
   {
-    rtk_fig_line(fig, ox - dx/2 + i * sp, oy - dy/2,
-                 ox - dx/2 + i * sp, oy - dy/2 + ny * sp);
+    //rtk_fig_line(fig, ox - dx/2 + i * sp, oy - dy/2,
+    //           ox - dx/2 + i * sp, oy - dy/2 + ny * sp);
+
+    rtk_fig_line( fig, 
+		  ox + i * sp, 
+		  oy - dy/2,
+                  ox + i * sp,
+		  oy + dy/2 );
+
+    //rtk_fig_line( fig, 
+    //	  ox - i * sp, 
+    //	  oy - dy/2,
+    //            ox - i * sp,
+    //	  oy + dy/2 );
+
     
-    snprintf( str, 64, "%d", (int)(i-dx/2) );
-    rtk_fig_text( fig, -0.2 + (ox-dx/2+i * sp), -0.2 , 0, str );
+    snprintf( str, 64, "%d", (int)i );
+    rtk_fig_text( fig, -0.2 + (ox + i * sp), -0.2 , 0, str );
   }
 
-  for (i = 0; i < ny + 1; i++)
+  for (i = -ny+1; i < ny; i++)
     {
-      rtk_fig_line(fig, ox - dx/2, oy - dy/2 + i * sp,
-		   ox - dx/2 + nx * sp, oy - dy/2 + i * sp);
-
-      snprintf( str, 64, "%d", (int)(i-dy/2) );
-      rtk_fig_text( fig, -0.2, -0.2 + (oy - dy/2 + i * sp) , 0, str );
+      rtk_fig_line( fig, 
+		    ox - dx/2, 
+		    oy + i * sp,
+		    ox + dx/2,
+		    oy + i * sp );
+      
+      snprintf( str, 64, "%d", (int)i );
+      rtk_fig_text( fig, -0.2, -0.2 + (oy + i * sp) , 0, str );
     }
   
   // draw the axis origin lines
