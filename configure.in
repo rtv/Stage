@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.35.4.7 2003-02-14 03:36:32 rtv Exp $
+dnl $Id: configure.in,v 1.35.4.8 2003-03-25 02:12:37 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -26,7 +26,7 @@ dnl Define this so that we can refer to it twice below
 dnl PS_VERSION is the major.minor version that is common for Player and
 dnl Stage. All revisions with this major.minor version must be forwards 
 dnl and backwards compatible. This number is used for the install directories.
-define(PS_VERSION,1.4)
+define(PS_VERSION,2.0)
 
 dnl STAGE_VERSION is major.minor.revision - unique to this release and 
 dnl independent of Player's revision number - 'dev' should be appended for 
@@ -38,7 +38,7 @@ dnl PACKAGE and VERSION will be so defined in <config.h>.
 AM_INIT_AUTOMAKE(stage,STAGE_VERSION)
 
 dnl Change default installation prefix from /usr/local to user's home
-AC_PREFIX_DEFAULT(${HOME}/stage-PS_VERSION)
+dnl AC_PREFIX_DEFAULT(${HOME}/PS-PS_VERSION)
 
 dnl Checks for programs.
 AC_PROG_CC

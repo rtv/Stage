@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.29.4.18 2003-02-24 04:47:11 rtv Exp $
+# $Id: Makefile.am,v 1.29.4.19 2003-03-25 02:12:37 rtv Exp $
 
 SUBDIRS = sio rtkgui models
 # gnome2
@@ -40,6 +40,10 @@ stage_SOURCES = \
 
 stage_LDFLAGS = 
 stage_LDADD = @GUI_LINK@ -lm -Lmodels -lmodels -Lsio -lsio -L$(top_builddir)/replace -lreplace 
+
+# install these headers
+include_HEADERS = stage.h
+
 
 # build Stage's test program - a simple client
 #	

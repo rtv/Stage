@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.25 2003-02-27 02:10:08 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.26 2003-03-25 02:12:37 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -336,6 +336,9 @@ int CEntity::Move( double vx, double vy, double va, double step )
 {
   //fprintf( stderr, "%.2f %.2f %.2f   %.2f %.2f %.2f\n", 
   //   px -1, py -1, pa, odo_px, odo_py, odo_pa );
+  
+  if( vx == 0 && vy ==0 && va == 0 )
+    return 0;
   
   // Compute movement deltas
   // This is a zero-th order approximation
@@ -779,7 +782,7 @@ void CEntity::SetRects( stage_rotrect_t* rects, int num )
       this->NormalizeRects( this->rects, this->rect_count );      
       
       // if this is root, add a unit rectangle outline
-      if( this->m_parent_entity == NULL )
+      if( 0 )//this->m_parent_entity == NULL )
 	{
 	  // make space for all the rects plus 1
 	  stage_rotrect_t* extraone = new stage_rotrect_t[num+1];

@@ -161,7 +161,10 @@ int CEntity::RtkStartup()
       w = src->w * this->size_x;
       h = src->h * this->size_y;
       
-      rtk_fig_rectangle(this->fig, x,y,a,w,h, 0 ); 
+      //if( this->m_parent_entity == NULL )
+      //rtk_fig_rectangle(this->fig, x,y,a,w,h, 1 ); 
+      //else
+	rtk_fig_rectangle(this->fig, x,y,a,w,h, 0 ); 
     }
 
   // add rects showing transducer positions
@@ -466,13 +469,13 @@ void CIdarModel::RtkShutdown()
 void CIdarModel::RtkShowReceived( void )
 {
   for( int s=0; s < this->transducer_count; s++ )
-    rtk_canvas_flash( canvas, this->incoming_figs[s], 30 );
+    rtk_canvas_flash( canvas, this->incoming_figs[s], 30, 0 );
 }
 
 void CIdarModel::RtkShowSent( void )
 {
   for( int s=0; s < this->transducer_count; s++ )
-    rtk_canvas_flash( canvas, this->outgoing_figs[s], 30 );
+    rtk_canvas_flash( canvas, this->outgoing_figs[s], 30, 0 );
 }
 
 

@@ -1,6 +1,6 @@
 
 /*
-  $Id: stest.c,v 1.1.2.24 2003-02-27 02:10:17 rtv Exp $
+  $Id: stest.c,v 1.1.2.25 2003-03-25 02:12:37 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -315,8 +315,18 @@ void SetVelocity( int con, int id, double vx, double vy, double va )
       stage_buffer_t* props = SIOCreateBuffer();
       assert(props);
 
+
+      // size root
+      double sz[2];
+      sz[0] = 30;
+      sz[1] = 15;
+      SIOBufferProperty( props, 0, STG_PROP_ENTITY_SIZE, 
+			 sz, 2 * sizeof(sz[0]), STG_NOREPLY );
+      
       int num_rects;
       stage_rotrect_t* rects = RectsFromPnm( &num_rects, "worlds/cave.pnm" );
+      //stage_rotrect_t* rects = RectsFromPnm( &num_rects, "worldf.pgm" );
+
       
       // send the rectangles to root
       SIOBufferProperty( props, 0, STG_PROP_ENTITY_RECTS, 
