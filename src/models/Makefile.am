@@ -15,12 +15,13 @@ noinst_LIBRARIES = libmodels.a
 
 libmodels_a_SOURCES = \
 	box.cc \
-	box.hh 
+	box.hh \
+	bitmap.cc \
+	bitmap.hh
+
 
 #	positiondevice.cc \
 #	positiondevice.hh
-#                  bitmap.cc \
-#                   bitmap.hh \
 #                   broadcastdevice.cc \
 #                   broadcastdevice.hh \
 #                   bumperdevice.cc \

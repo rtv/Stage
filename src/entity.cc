@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.6 2003-02-05 03:59:49 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.7 2003-02-06 03:36:48 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -44,7 +44,7 @@
 #include <iostream>
 
 //#define DEBUG
-//#define VERBOSE
+#define VERBOSE
 //#undef DEBUG
 //#undef VERBOSE
 //#define RENDER_INITIAL_BOUNDING_BOXES
@@ -79,7 +79,7 @@ CEntity::CEntity( LibraryItem* libit, int id, CEntity* parent )
   if( m_parent_entity )
     m_parent_entity->AddChild( this );
   else
-    PRINT_DEBUG1( "ROOT ENTITY %p\n", this );
+    PRINT_DEBUG1( "ROOT ENTITY %p", this );
   
   this->stage_id = id;
   this->lib_entry = libit; // from here we can find our file token and type number
@@ -139,6 +139,11 @@ CEntity::CEntity( LibraryItem* libit, int id, CEntity* parent )
   // Default figures for drawing the entity.
   this->fig = NULL;
   this->fig_label = NULL;
+  this->fig_grid = NULL;
+  
+  grid_major = 1.0;
+  grid_minor = 0.2;
+  grid_enable = true;
 
   // By default, we can both translate and rotate the entity.
   this->movemask = RTK_MOVE_TRANS | RTK_MOVE_ROT;
@@ -632,15 +637,19 @@ int CEntity::SetProperty( int con, stage_prop_id_t property,
 
     case STG_PROP_ENTITY_POSE:
       {
+	assert( len == sizeof(stage_pose_t) );
 	stage_pose_t* pose = (stage_pose_t*)value;      
 	local_px = pose->x;
 	local_py = pose->y;
 	local_pth = pose->a;
+
+	//PRINT_DEBUG3( "NEW POSE: %.2f %.2f %.2f", local_px, local_py, local_pth );
       }
       break;
       
     case STG_PROP_ENTITY_SIZE:
       {
+	assert( len == sizeof(stage_size_t) );
 	stage_size_t* sz = (stage_size_t*)value;
 	size_x = sz->x;
 	size_y = sz->y;
@@ -649,12 +658,18 @@ int CEntity::SetProperty( int con, stage_prop_id_t property,
       
     case STG_PROP_ENTITY_ORIGIN:
       {
+	assert( len == sizeof(stage_size_t) );
 	stage_size_t* sz = (stage_size_t*)value;
 	origin_x = sz->x;
 	size_y = sz->y; 
       }
       break;
-      
+    
+    case STG_PROP_ENTITY_PPM:
+      assert(len == sizeof(ppm) );
+      memcpy( &CEntity::ppm, value, sizeof(ppm) );
+      break;
+
     case STG_PROP_ENTITY_NAME:
       strncpy( name, (char*)value, STG_TOKEN_MAX );
       break;
@@ -706,9 +721,10 @@ int CEntity::SetProperty( int con, stage_prop_id_t property,
   if( con != -1 ) // unless this was a local change 
     this->SetDirty( con, property, 0 ); // clean on this con
 
+  
   // update the GUI with the new property
   //if( enable_gui )
-  //GuiEntityPropertyChange( this, property );
+  GuiEntityPropertyChange( this, property );
   
   return 0;
 }
@@ -925,8 +941,13 @@ void CEntity::RtkStartup()
   // Set the color
   rtk_fig_color_rgb32(this->fig, this->color);
 
-  // put the figure's origin at the entity's position
-  rtk_fig_origin( this->fig, local_px, local_py, local_pth );
+  if( m_parent_entity == NULL )
+    // the root device is drawn from the corner, not the center
+    rtk_fig_origin( this->fig, local_px, local_py, local_pth );
+  else
+    // put the figure's origin at the entity's position
+    rtk_fig_origin( this->fig, local_px, local_py, local_pth );
+
 
 
 #ifdef RENDER_INITIAL_BOUNDING_BOXES
@@ -948,7 +969,7 @@ void CEntity::RtkStartup()
    
   // draw the shape using the center of rotation offsets
   switch (this->shape)
-  {
+    {
     case ShapeRect:
       rtk_fig_rectangle(this->fig, 
                         this->origin_x, this->origin_y, 0, 
@@ -960,17 +981,21 @@ void CEntity::RtkStartup()
                       this->size_x, this->size_y, false);
       break;
     case ShapeNone: // no shape
+      // TODO - remove for no shaped things
+      //rtk_fig_rectangle(this->fig, 
+      //		this->origin_x, this->origin_y, 0, 
+      //		this->size_x, this->size_y, false);
       break;
-  }
+    }
   
 
   // everything except the root object has a label
-  if( m_parent_entity )
-  {
+  //if( m_parent_entity )
+  //{
     // Create the label
     // By default, the label is not shown
     this->fig_label = rtk_fig_create( canvas, this->fig, 51);
-    rtk_fig_show(this->fig_label, false);    
+    rtk_fig_show(this->fig_label, true); // TODO - re-hide the label    
     rtk_fig_movemask(this->fig_label, 0);
       
     char label[1024];
@@ -994,10 +1019,32 @@ void CEntity::RtkStartup()
       rtk_fig_movemask(this->fig, 0);
     else
       rtk_fig_movemask(this->fig, this->movemask);  
-  }
 
+    //}
+
+ 
+  if( this->grid_enable )
+    {
+      this->fig_grid = rtk_fig_create(canvas, this->fig, -49);
+      if ( this->grid_minor > 0)
+	{
+	  rtk_fig_color( this->fig_grid, 0.9, 0.9, 0.9);
+	  rtk_fig_grid( this->fig_grid, this->origin_x, this->origin_y, 
+			this->size_x, this->size_y, grid_minor);
+	}
+      if ( this->grid_major > 0)
+	{
+	  rtk_fig_color( this->fig_grid, 0.75, 0.75, 0.75);
+	  rtk_fig_grid( this->fig_grid, this->origin_x, this->origin_y, 
+			this->size_x, this->size_y, grid_major);
+	}
+      rtk_fig_show( this->fig_grid, 1);
+    }
+  else
+    this->fig_grid = NULL;
+  
   // do our children after we're set
-  CHILDLOOP( child ) child->RtkStartup();
+  //CHILDLOOP( child ) child->RtkStartup();
   PRINT_DEBUG( "RTK STARTUP DONE" );
 }
 
@@ -1007,9 +1054,19 @@ void CEntity::RtkStartup()
 // Finalise the rtk gui
 void CEntity::RtkShutdown()
 {
+  PRINT_DEBUG1( "RTK SHUTDOWN %d", this->stage_id );
+  
+  // do our children first
+  //CHILDLOOP( child ) GuiShutdown (child->RtkStartup();
+
   // Clean up the figure we created
-  rtk_fig_destroy(this->fig);
-  rtk_fig_destroy(this->fig_label);
+  if( this->fig ) rtk_fig_destroy(this->fig);
+  if( this->fig_label ) rtk_fig_destroy(this->fig_label);
+  if( this->fig_grid ) rtk_fig_destroy( this->fig_grid );
+
+  this->fig = NULL;
+  this->fig_label = NULL;
+  this->fig_grid = NULL;
 } 
 
 
@@ -1017,7 +1074,8 @@ void CEntity::RtkShutdown()
 // Update the rtk gui
 void CEntity::RtkUpdate()
 {
-  CHILDLOOP( child ) child->RtkUpdate();
+  PRINT_WARN1( "RTK update for ent %d", this->stage_id );
+  //CHILDLOOP( child ) child->RtkUpdate();
 
   // TODO this is nasty and inefficient - figure out a better way to
   // do this  

@@ -4,8 +4,11 @@
 #ifdef __cplusplus
  extern "C" {
 #endif 
-   
-#include <stdint.h> // for the integer types (uint32_t, etc)
+
+   // for now I'm specifying packets in the native types. I may change
+   // this in the future for cross-platform networks, but right now I 
+   // want to keep things simple until everything works.
+   //#include <stdint.h> // for the integer types (uint32_t, etc)
    
 #if HAVE_CONFIG_H
 #include <config.h>
@@ -53,6 +56,8 @@
      STG_PROP_ENTITY_DATA,
      STG_PROP_ENTITY_CONFIG,
      STG_PROP_ENTITY_REPLY, 
+     STG_PROP_ENTITY_PPM,
+     STG_PROP_BITMAP_RECTS,
      STG_PROPERTY_COUNT // THIS MUST BE THE LAST ENTRY
    } stage_prop_id_t;
 
@@ -108,6 +113,11 @@ typedef struct
   int toplx, toply, toprx, topry, botlx, botly, botrx, botry;
 } stage_rect_t;
 
+typedef struct
+{
+  double x, y, a, w, h;
+} stage_rotrect_t; // rotated rectangle
+
 // a unique id for each entity equal to its position in the world's array
 typedef int stage_id_t;
 
@@ -141,10 +151,10 @@ typedef struct
 typedef struct
 {
   stage_header_type_t type; // see enum above
-  uint32_t sec; // at this many seconds
-  uint32_t usec; // plus this many microseconds
+  unsigned int sec; // at this many seconds
+  unsigned int usec; // plus this many microseconds
 
-  uint32_t len; // this many bytes of data follow (for CMDs this is
+  size_t len; // this many bytes of data follow (for CMDs this is
  // actually the command number instead)
 } __attribute ((packed)) stage_header_t;
 
@@ -168,35 +178,19 @@ typedef struct
 // using the entity's ::SetProperty() method
 typedef struct
 {
-  uint16_t id; // identify the entity
+  int id; // identify the entity
   stage_prop_id_t property; // identify the property
-  uint16_t len; // the property uses this much data (to follow)
+  size_t len; // the property uses this much data (to follow)
 } __attribute ((packed)) stage_property_t;
 
 // a client that receives this packet should create a new entity
 typedef struct
 {
-  int32_t id;
-  int32_t parent_id;
+  int id;
+  int parent_id;
   char token[ STG_TOKEN_MAX ]; // a string from the library to
  // identify the type of model
-} __attribute ((packed)) stage_model_t;
-
-// a client that receives this packet should create a matrix
-typedef struct
-{
-  int32_t sizex;
-  int32_t sizey;
-} __attribute ((packed)) stage_matrix_t;
-
-//TODO - this is out of date now
-typedef struct
-{
-  int32_t sizex;
-  int32_t sizey;
-  double scale;
-} __attribute ((packed)) stage_background_t;
-
+} stage_model_t;
 
 // used for specifying 3 axis positions
 typedef struct
@@ -253,46 +247,47 @@ typedef struct
 #define ASSERT(m) assert(m)
 
 // Error macros
-#define PRINT_ERR(m)         printf("\n\033[41mstage error\033[0m : %s : "m"\n", \
-                                    __FILE__)
-#define PRINT_ERR1(m, a)     printf("\n\033[41mstage error\033[0m : %s : "m"\n", \
-                                    __FILE__, a)
-#define PRINT_ERR2(m, a, b)  printf("\n\033[41mstage error\033[0m : %s : "m"\n", \
-                                    __FILE__, a, b)
+#define PRINT_ERR(m) printf( "\033[41merr\033[0m: "m" (%s %s)\n", __FILE__, __FUNCTION__)
+#define PRINT_ERR1(m,a) printf( "\033[41merr\033[0m: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
+#define PRINT_ERR2(m,a,b) printf( "\033[41merr\033[0m: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
+#define PRINT_ERR3(m,a,b,c) printf( "\033[41merr\033[0m: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
+#define PRINT_ERR4(m,a,b,c,d) printf( "\033[41merr\033[0m: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
 
 // Warning macros
-#define PRINT_WARN(m)         printf("\n\033[44mstage warning\033[0m : %s %s "m"\n", \
-                                     __FILE__, __FUNCTION__)
-#define PRINT_WARN1(m, a)     printf("\n\033[44mstage warning\033[0m : %s %s "m"\n", \
-                                     __FILE__, __FUNCTION__, a)
-#define PRINT_WARN2(m, a, b)  printf("\n\033[44mstage warning\033[0m : %s %s "m"\n", \
-                                     __FILE__, __FUNCTION__, a, b)
-#define PRINT_WARN3(m, a, b, c) printf("\n\033[44mstage warning\033[0m : %s %s "m"\n", \
-                                     __FILE__, __FUNCTION__, a, b, c)
+#define PRINT_WARN(m) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", __FILE__, __FUNCTION__)
+#define PRINT_WARN1(m,a) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
+#define PRINT_WARN2(m,a,b) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
+#define PRINT_WARN3(m,a,b,c) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
+#define PRINT_WARN4(m,a,b,c,d) printf( "\033[44mwarn\033[0m: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
 
 // Message macros
-#define PRINT_MSG(m) printf("stage msg : %s :\n  "m"\n", __FILE__)
-#define PRINT_MSG1(m, a) printf("stage msg : %s :\n  "m"\n", __FILE__, a)
-#define PRINT_MSG2(m, a, b) printf("stage msg : %s :\n  "m"\n", __FILE__, a, b)
+#ifdef DEBUG
+#define PRINT_MSG(m) printf( "stage: "m" (%s %s)\n", __FILE__, __FUNCTION__)
+#define PRINT_MSG1(m,a) printf( "stage: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
+#define PRINT_MSG2(m,a,b) printf( "stage: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
+#define PRINT_MSG3(m,a,b,c) printf( "stage: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
+#define PRINT_MSG4(m,a,b,c,d) printf( "stage: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
+#else
+#define PRINT_MSG(m) printf( "stage: "m"\n" )
+#define PRINT_MSG1(m,a) printf( "stage: "m"\n")
+#define PRINT_MSG2(m,a,b) printf( "stage: "m" \n" )
+#define PRINT_MSG3(m,a,b,c) printf( "stage: "m" \n" )
+#define PRINT_MSG4(m,a,b,c,d) printf( "stage: "m" \n" )
+#endif
 
 // DEBUG macros
 #ifdef DEBUG
-#define PRINT_DEBUG(m)         printf("\r\033[42mstage debug\033[0m : %s %s\n  "m"\n", \
-                                     __FILE__, __FUNCTION__)
-#define PRINT_DEBUG1(m, a)     printf("\r\033[42mstage debug\033[0m : %s %s\n  "m"\n", \
-                                     __FILE__, __FUNCTION__, a)
-#define PRINT_DEBUG2(m, a, b)  printf("\r\033[42mstage debug\033[0m : %s %s\n  "m"\n", \
-                                     __FILE__, __FUNCTION__, a, b)
-#define PRINT_DEBUG3(m, a, b, c) printf("\r\033[42mstage debug\033[0m : %s %s\n  "m"\n", \
-                                     __FILE__, __FUNCTION__, a, b, c)
-#define PRINT_DEBUG4(m, a, b, c, d) printf("\r\033[42mstage debug\033[0m : %s %s\n  "m"\n", \
-                                     __FILE__, __FUNCTION__, a, b, c, d)
+#define PRINT_DEBUG(m) printf( "debug: "m" (%s %s)\n", __FILE__, __FUNCTION__)
+#define PRINT_DEBUG1(m,a) printf( "debug: "m" (%s %s)\n", a, __FILE__, __FUNCTION__)    
+#define PRINT_DEBUG2(m,a,b) printf( "debug: "m" (%s %s)\n", a, b, __FILE__, __FUNCTION__) 
+#define PRINT_DEBUG3(m,a,b,c) printf( "debug: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
+#define PRINT_DEBUG4(m,a,b,c,d) printf( "debug: "m" (%s %s)\n", a, b, c, __FILE__, __FUNCTION__)
 #else
 #define PRINT_DEBUG(m)
-#define PRINT_DEBUG1(m, a)
-#define PRINT_DEBUG2(m, a, b)
-#define PRINT_DEBUG3(m, a, b, c)
-#define PRINT_DEBUG4(m, a, b, c, d)
+#define PRINT_DEBUG1(m,a)
+#define PRINT_DEBUG2(m,a,b)
+#define PRINT_DEBUG3(m,a,b,c)
+#define PRINT_DEBUG4(m,a,b,c,d)
 #endif
 
 // these are lifted from ahoward's rtk2 library code

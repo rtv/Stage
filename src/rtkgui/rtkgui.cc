@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.1.2.1 2003-02-05 04:03:21 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.1.2.2 2003-02-06 03:36:48 rtv Exp $
  */
 
 //
@@ -64,19 +64,19 @@
 #include "rtk.h"
 #include "library.hh"
 #include "entity.hh"
+#include "matrix.hh"
 
 // Basic GUI elements
 rtk_canvas_t *canvas = NULL; // the canvas
 rtk_app_t *app = NULL; // the RTK/GTK application
+
+rtk_fig_t* matrix_fig = NULL;
 
 // Timing info for the gui.
 // [rtk_update_rate] is the update rate (Hz).
 // [rtk_update_time] is the last time the gui was update (simulation time).
 double rtk_update_rate;
 double rtk_update_time;
-
-// Figure for the grid
-rtk_fig_t *fig_grid = NULL;
 
 // The file menu
 rtk_menu_t *file_menu= NULL;;
@@ -236,12 +236,6 @@ int RtkGuiLoad( stage_gui_config_t* cfg )
   double scale = 1/cfg->ppm;
   double dx, dy;
   double ox, oy;
-  double gridx, gridy;
-  double minor, major;
-
-  // Grid spacing
-  minor = 0.2;
-  major = 1.0;
 
   // Size in meters
   dx = width * scale;
@@ -262,25 +256,8 @@ int RtkGuiLoad( stage_gui_config_t* cfg )
   rtk_canvas_scale( canvas, scale, scale);
   rtk_canvas_origin( canvas, ox, oy);
   
-  // if there's a grid already, zap it
-  if( fig_grid ) rtk_fig_destroy( fig_grid );
-  // Create a new grid
-  fig_grid = rtk_fig_create(canvas, NULL, -49);
-  if (minor > 0)
-    {
-      rtk_fig_color(fig_grid, 0.9, 0.9, 0.9);
-      rtk_fig_grid(fig_grid, gridx/2, gridy/2, gridx, gridy, minor);
-    }
-  if (major > 0)
-    {
-      rtk_fig_color(fig_grid, 0.75, 0.75, 0.75);
-      rtk_fig_grid(fig_grid, gridx/2, gridy/2, gridx, gridy, major);
-    }
-
   // check the menu items appropriately
   rtk_menuitem_check(grid_item, cfg->showgrid);
-  rtk_fig_show(fig_grid, cfg->showgrid);
-
   rtk_menuitem_check(subscribedonly_item, cfg->showsubscribedonly);
  
   // Start the gui; dont run in a separate thread and dont let it do
@@ -329,7 +306,9 @@ int RtkGuiUpdate( void )
 
 // have to wrap the polymorphic call as this is a callback
 int RtkGuiEntityStartup( CEntity* ent )
-{
+{ 
+  PRINT_WARN1( "gui startup for ent %d", ent->stage_id );
+  
   // explot the polymorphism here
   assert(ent);
   ent->RtkStartup();
@@ -338,16 +317,48 @@ int RtkGuiEntityStartup( CEntity* ent )
 // have to wrap the polymorphic call as this is a callback
 int RtkGuiEntityShutdown( CEntity* ent )
 {
+  PRINT_WARN1( "gui shutdown for ent %d", ent->stage_id );
+
   // explot the polymorphism here
   assert(ent);
   ent->RtkShutdown();
 }
 
+void UnrenderMatrix()
+{
+  if( matrix_fig )
+    {
+      rtk_fig_destroy( matrix_fig );
+      matrix_fig = NULL;
+    }
+}
+
+void RenderMatrix( )
+{
+  // Create a figure representing this object
+  if( matrix_fig )
+    UnrenderMatrix();
+  
+  matrix_fig = rtk_fig_create( canvas, NULL, 60);
+  
+  // Set the default color 
+  rtk_fig_color_rgb32( matrix_fig, ::LookupColor(MATRIX_COLOR) );
+  
+  double pixel_size = 1.0 / CEntity::ppm;
+  
+  // render every pixel as an unfilled rectangle
+  for( int y=0; y<CEntity::matrix->get_height(); y++ )
+    for( int x=0; x<CEntity::matrix->get_width(); x++ )
+      if( *(CEntity::matrix->get_cell( x, y )) )
+	rtk_fig_rectangle( matrix_fig, x*pixel_size, y*pixel_size, 0, pixel_size, pixel_size, 0 );
+}
+
+
 
 int RtkGuiEntityUpdate( CEntity* ent )
 {
   assert(ent);
-  ent->RtkUpdate(); 
+  ent->RtkUpdate();
 }
 
 // this functionality was previously in CEntity::SetProperty - this is
@@ -355,7 +366,7 @@ int RtkGuiEntityUpdate( CEntity* ent )
 // class so it's sitting out here as a regular function. - rtv
 int RtkGuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
 {
-  PRINT_WARN2( "setting prop %d on ent %p", prop, ent );
+  PRINT_DEBUG2( "setting prop %d on ent %d", prop, ent->stage_id );
 
   assert(ent);
   assert( prop < STG_PROPERTY_COUNT );
@@ -371,17 +382,48 @@ int RtkGuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
       // these require just moving the figure
     case STG_PROP_ENTITY_POSE:
       ent->GetPose( px, py, pa );
-      PRINT_WARN3( "moving figure to %.2f %.2f %.2f", px,py,pa );
+      PRINT_DEBUG3( "moving figure to %.2f %.2f %.2f", px,py,pa );
       rtk_fig_origin(ent->fig, px, py, pa );
       break;
 
+      // these all need us to totally redraw the object
+    case STG_PROP_ENTITY_PARENT:
+    case STG_PROP_ENTITY_SIZE:
+    case STG_PROP_ENTITY_ORIGIN:
+    case STG_PROP_ENTITY_NAME:
+    case STG_PROP_ENTITY_COLOR:
+    case STG_PROP_ENTITY_SHAPE:
+    case STG_PROP_ENTITY_LASERRETURN:
+    case STG_PROP_ENTITY_SONARRETURN:
+    case STG_PROP_ENTITY_IDARRETURN:
+    case STG_PROP_ENTITY_OBSTACLERETURN:
+    case STG_PROP_ENTITY_VISIONRETURN:
+    case STG_PROP_ENTITY_PUCKRETURN:
+    case STG_PROP_ENTITY_PLAYERID:
+    case STG_PROP_BITMAP_RECTS:
+      RtkGuiEntityShutdown( ent ); 
+      RtkGuiEntityStartup( ent );
+      break;
+
+      // these are ignored for now
+    case STG_PROP_ENTITY_COMMAND:
+    case STG_PROP_ENTITY_DATA:
+    case STG_PROP_ENTITY_CONFIG:
+    case STG_PROP_ENTITY_REPLY:   
+      PRINT_DEBUG1( "gui redraw command/data for %d", prop ); 
+      break;
+      
     default:
+      PRINT_WARN1( "property change %d unhandled by rtkgui", prop ); 
       break;
     } 
-
+  
   return 0;
 }
  
+
+
+
 #if 0
 
 // END OF INTERFACE FUNCTIONS //////////////////////////////////////////
@@ -570,10 +612,10 @@ void RtkMenuHandling()
   this->RtkUpdateMovieMenu();
   
   // Show or hide the grid
-  if (rtk_menuitem_ischecked(this->grid_item))
-    rtk_fig_show(this->fig_grid, 1);
-  else
-    rtk_fig_show(this->fig_grid, 0);
+  //if (rtk_menuitem_ischecked(this->grid_item))
+  //rtk_fig_show( CEntity::rootthis->fig_grid, 1);
+  //else
+  //rtk_fig_show(this->fig_grid, 0);
 
   // clear any matrix rendering, then redraw if the emnu item is checked
   this->matrix->unrender();

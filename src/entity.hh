@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15.2.7 2003-02-05 03:59:49 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.8 2003-02-06 03:36:48 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -64,7 +64,7 @@ protected:  void AddChild( CEntity* child );
 
 
   // everyone shares these vars 
-protected:
+public:
   static double ppm; 
   static CMatrix* matrix;
   static bool enable_gui;
@@ -303,7 +303,10 @@ public: void SetDirty( int con, stage_prop_id_t prop, char v );
   protected: static void StaticRtkOnMouse(rtk_fig_t *fig, int event, int mode);
   
   // Default figure handle
-  public: rtk_fig_t *fig, *fig_label;
+  public: rtk_fig_t *fig, *fig_label, *fig_grid;
+  
+  bool grid_enable;
+  double grid_major, grid_minor;
 
   // Default movement mask
   protected: int movemask;

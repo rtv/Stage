@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.15.6.2 2003-02-05 03:59:49 rtv Exp $
+ * $Id: matrix.cc,v 1.15.6.3 2003-02-06 03:36:48 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -129,38 +129,6 @@ void CMatrix::dump( void )
   puts( "DUMPED" );
 }
 
-#if 0
-#ifdef INCLUDE_RTK2
-// useful debug function allows plotting the world externally
-void CMatrix::render( CWorld* world )
-{
- // Create a figure representing this object
-  this->fig = rtk_fig_create(world->canvas, NULL, 60);
-
-  // Set the color to black
-  rtk_fig_color_rgb32(this->fig, ::LookupColor(MATRIX_COLOR) );
-
-  double pixel_size = 1.0 / world->ppm;
-
-  // render every pixel as an unfilled rectangle
-  for( int y=0; y<height; y++ )
-    for( int x=0; x<width; x++ )
-      if( *(get_cell( x, y )) )
-	rtk_fig_rectangle( fig, x*pixel_size, y*pixel_size, 0, pixel_size, pixel_size, 0 );
-}
-
-// useful debug function allows plotting the world externally
-void CMatrix::unrender()
-{
-  if( this->fig )
-    {
-      rtk_fig_destroy( this->fig );
-      this->fig = NULL;
-    }
-}
-
-#endif
-#endif
 
 // Draw a rectangle
 void CMatrix::draw_rect( const stage_rect_t& t, CEntity* ent, bool add)

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/bitmap.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.2.6.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -29,44 +29,31 @@ typedef struct
 class CBitmap : public CEntity
 {
   // Default constructor
-  public: CBitmap( LibraryItem *libit, CWorld *world, CEntity *parent);
+  public: CBitmap( LibraryItem *libit, int id, CEntity *parent);
 
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
   public: static CBitmap* Creator( LibraryItem *libit, 
-				   CWorld *world, CEntity *parent )
+				   int id, CEntity *parent )
   {
-    return( new CBitmap( libit, world, parent ) );
+    return( new CBitmap( libit, id, parent ) );
   }
 
-  // Load the entity from the worldfile
-  public: virtual bool Load(CWorldFile *worldfile, int section);
-
-  // Initialise object
-  public: virtual bool Startup( void ); 
+private:
+  stage_rotrect_t* rects;
+  int rect_count;
+  double rects_max_x, rects_max_y; // the upper bounds on rectangle positions
   
-  // Finalize object
-  public: virtual void Shutdown();
+  void RenderRects( void );
 
-  // Name of file containg image
-  private: const char *filename;
-
-  // Scale of the image (m/pixel)
-  public: double scale;
-
-  // Crop region (m)
-  private: double crop_ax, crop_ay, crop_bx, crop_by;
-
-  // The image representing the environment
-  public: Nimage *image;
-
-  std::vector<bitmap_rectangle_t> bitmap_rects;
-
+public:
+  virtual int SetProperty( int con, stage_prop_id_t property, 
+			   void* value, size_t len );
+  
 #ifdef INCLUDE_RTK2  
   void RtkStartup();
-  void BuildQuadTree( uint8_t color, int x1, int y1, int x2, int y2 );
 #endif
 
 };

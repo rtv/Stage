@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.8 2003-02-05 03:59:49 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.9 2003-02-06 03:36:48 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -41,8 +41,8 @@
 #include "root.hh"
 
 #include "models/box.hh"
-/*
 #include "models/bitmap.hh"
+/*
 #include "models/bumperdevice.hh"
 #include "models/broadcastdevice.hh"
 #include "models/gpsdevice.hh"
@@ -71,8 +71,8 @@
 libitem_t library_items[] = { 
   { "root", "black", (CFP)CRootDevice::Creator},
   { "box", "blue", (CFP)CBox::Creator},
-  /*
   { "bitmap", "black", (CFP)CBitmap::Creator},
+  /*
   { "laser", "blue", (CFP)CLaserDevice::Creator},
   { "position", "red", (CFP)CPositionDevice::Creator},
   { "sonar", "green", (CFP)CSonarDevice::Creator},
@@ -196,9 +196,8 @@ int HandleModel(  int connection, char* data, size_t len )
   stage_model_t* model = (stage_model_t*)data;
   
   PRINT_DEBUG1( "Received model on connection %d", connection );
-  
-  printf( "\ncreating model %p  - %d %s %d\n",
-	  model, model->id, model->token, model->parent_id );
+  PRINT_DEBUG4( "creating model %p  - %d %s %d",
+		model, model->id, model->token, model->parent_id );
   
   // create an entity. return success on getting a valid pointer
   if( model_library.CreateEntity( model ) == NULL )
@@ -215,18 +214,22 @@ int HandleProperty( int connection,  char* data, size_t len )
   assert( len >= sizeof(stage_property_t) );
   stage_property_t* prop = (stage_property_t*)data;
   
-  PRINT_DEBUG1( "Received property on connection %d", connection );
+  PRINT_DEBUG2( "Received property %d on connection %d", 
+		prop->property, connection );
 
   // get a pointer to the object with this id
   CEntity* ent = model_library.GetEntPtr( prop->id );
-  
-  // pass the property data to the entity to absorb
-  ent->SetProperty( connection, // the connection number 
-		    prop->property, // the property id
-		    ((char*)prop)+sizeof(prop), // the raw data
-		    prop->len ); // the length of the raw data
 
-  GuiEntityPropertyChange( ent, prop->property );
+  if( !ent )
+    PRINT_WARN1( "Received property for non-existant model %d", prop->id );
+  else
+    {
+      // pass the property data to the entity to absorb
+      ent->SetProperty( connection, // the connection number 
+			prop->property, // the property id
+			data+sizeof(stage_property_t), // the raw data
+			prop->len ); // the length of the raw data      
+    }
 
   return 0; //success
 }
@@ -288,7 +291,7 @@ int GuiInit( int argc, char** argv )
   int g;
   for( g=0; g<gui_count; g++ )
     {
-      printf( "GuiInit on GUI %d\n", g );
+      PRINT_DEBUG1( "init of gui %d", g );
       if( (*gui_library[g].init_func)(argc, argv) == -1 )
 	{
 	  PRINT_WARN1( "Gui initialization failed on GUI %d\n", g );
@@ -306,13 +309,19 @@ int GuiEntityStartup( CEntity* ent )
   int g;
   for( g=0; g<gui_count; g++ )
     {
-      printf( "GUIEntityStartup for ent %d on GUI %d\n", ent->stage_id, g );
+      PRINT_DEBUG2( "gui startup for ent %d on GUI %d", ent->stage_id, g );
       
       if( (*gui_library[g].createmodel_func)(ent) == -1 )
 	{
 	  PRINT_WARN1( "Gui create model failed on GUI %d\n", g );
 	  return -1;
 	}
+      
+      // start the children too!
+      CEntity* ch;
+      for( ch = ent->child_list; ch; ch = ch->next )
+	if( GuiEntityStartup( ch ) == -1 )
+	  return -1;
     }
   return 0;
 }
@@ -340,8 +349,8 @@ int GuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
   int g;
   for( g=0; g<gui_count; g++ )
     {
-      printf( "GUIEntityPropertyChange for ent %d on GUI %d prop %d\n", 
-	      ent->stage_id, g, prop );
+      PRINT_DEBUG3( "gui prop change for ent %d on GUI %d prop %d", 
+		    ent->stage_id, g, prop );
       
       if( (*gui_library[g].tweakmodel_func)(ent, prop) == -1 )
 	{
@@ -359,13 +368,19 @@ int GuiEntityShutdown( CEntity* ent )
   int g;
   for( g=0; g<gui_count; g++ )
     {
-      printf( "GUIEntityShutdown for ent %d on GUI %d\n", ent->stage_id, g );
+      PRINT_DEBUG2( "gui shutdown for ent %d on GUI %d", ent->stage_id, g );
 
       if( (*gui_library[g].destroymodel_func)(ent) == -1 )
 	{
 	  PRINT_WARN1( "Gui destroy model failed on GUI %d\n", g );
 	  return -1;
 	}
+      
+      // shutdown the children too!
+      CEntity* ch;
+      for( ch = ent->child_list; ch; ch = ch->next )
+	if( GuiEntityShutdown( ch ) == -1 )
+	  return -1;
     }
 
   return 0;
@@ -384,7 +399,8 @@ int main(int argc, char **argv)
 
   if( SIOInitServer( argc, argv ) == -1 )
     {
-      printf( "\n Server failed to initialize. Quitting." );
+      puts( "" );
+      PRINT_ERR( "Server failed to initialize. Quitting." );
       quit = 1;
     }
   
@@ -402,7 +418,7 @@ int main(int argc, char **argv)
   // catch clock start/stop commands
   //signal(SIGUSR1, CatchSigUsr1 );
   
-  int c = 0;
+  //int c = 0;
   // the main loop  
   // update the simulation - stop when the quit flag is raised
   while( !quit ) 
@@ -449,7 +465,7 @@ int main(int argc, char **argv)
 
       if( GuiUpdate() == -1 ) break;
       
-      usleep( 1000 ); // just stop the powerbook getting hot :)
+      usleep( 100000 ); // just stop the powerbook getting hot :)
     }
   
   // clean up and exit
