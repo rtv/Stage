@@ -4,7 +4,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 
-#define DEBUG
+//#define DEBUG
 
 #include "stage.h"
 
@@ -270,9 +270,9 @@ int stg_model_subscribe( stg_model_t* mod, int prop, double interval )
 
 int stg_model_unsubscribe( stg_model_t* mod, int prop )
 {
-  assert( mod );
-  assert( mod->world );
-  assert( mod->world->client );
+  //assert( mod );
+  //assert( mod->world );
+  //assert( mod->world->client );
 
   stg_unsub_t sub;
   sub.world = mod->world->id_server;

@@ -272,6 +272,18 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
       *data = &mod->size;
       *len = sizeof(mod->size);
       break;
+
+      /*    case STG_PROP_GEOM:
+      mod->geom.x = mod->pose.x;
+      mod->geom.y = mod->pose.y;
+      mod->geom.a = mod->pose.a;
+      mod->geom.w = mod->size.x;
+      mod->geom.h = mod->size.y;
+      *data = &mod->geom;
+      *len = sizeof(mod->geom);
+      break	
+      */
+
     case STG_PROP_VELOCITY:
       *data = &mod->velocity;
       *len = sizeof(mod->velocity);
