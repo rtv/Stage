@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visiondevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.2 $
+//  $Revision: 1.4.2.3 $
 //
 // Usage:
 //  (empty)
@@ -48,13 +48,20 @@ class CVisionDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CVisionDevice(CPlayerRobot *robot, CPtzDevice *ptz_device,
-                          void *buffer, size_t data_len,
-                          size_t command_len, size_t config_len);
+    public: CVisionDevice(CWorld *world, CObject *parent, CPlayerRobot* robot,
+                           CPtzDevice *ptz_device, void *buffer, size_t buffer_len);
     
     // Update the device
     //
     public: virtual void Update();
+
+    // Generate the scan-line image
+    //
+    private: void UpdateScan();
+
+    // Generate ACTS data from scan-line image
+    //
+    private: size_t UpdateACTS();
 
     // Timing properties
     //
@@ -64,15 +71,49 @@ class CVisionDevice : public CPlayerDevice
     //
     private: CPtzDevice *m_ptz_device;
 
+    // Current pan/tilt/zoom settings (all angles)
+    //
+    private: double m_pan, m_tilt, m_zoom;
+    
     // Camera properties
     //
     private: int cameraImageWidth, cameraImageHeight;
+
+    // Current scan-line data
+    //
+    private: int m_scan_width;
+    private: int m_scan_channel[256];
+    private: double m_scan_range[256];
 
     // Detected blob data
     //
     private: int numBlobs;
     private: ColorBlob blobs[MAXBLOBS];
     private: unsigned char actsBuf[ACTS_TOTAL_MAX_SIZE];
+
+#ifdef INCLUDE_RTK
+    // Process GUI update messages
+    //
+    public: virtual void OnUiUpdate(RtkUiDrawData *pData);
+
+    // Process GUI mouse messages
+    //
+    public: virtual void OnUiMouse(RtkUiMouseData *pData);
+
+    // Draw the laser turret
+    //
+    private: void DrawTurret(RtkUiDrawData *pData);
+
+    // Draw the laser scan
+    //
+    private: void DrawScan(RtkUiDrawData *pData);
+
+    // Laser scan outline
+    //
+    private: int m_hit_count;
+    private: double m_hit[256][3];
+    
+#endif  
 };
 
 #endif

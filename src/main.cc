@@ -1,7 +1,7 @@
 /*************************************************************************
  * main.cc   
  * RTV
- * $Id: main.cc,v 1.2.2.4 2000-12-06 21:48:32 ahoward Exp $
+ * $Id: main.cc,v 1.2.2.5 2000-12-07 00:30:00 ahoward Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -83,7 +83,7 @@ int main( int argc, char** argv )
     init.close();
   
   // create the world first - later inits dereference `world'
-  world = new CWorld( initFile ); 
+  world = new CWorld; 
   
   // read command line args - these may override the initfile
   HandleCommandLine( argc, argv );
@@ -122,7 +122,7 @@ int main( int argc, char** argv )
 
   // Start the objects
   //
-  world->Startup(RtkCfgFile *cfg);
+  world->Startup(NULL);
   
   // -- Main loop -------------------------------------------------------
   // Stage will perform a whole world update each time round this loop.

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeaconobject.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -28,7 +28,6 @@
 
 #include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
 #include "world.hh"
-#include "playerrobot.hh"
 #include "laserbeaconobject.hh"
 
 
@@ -41,6 +40,10 @@ CLaserBeaconObject::CLaserBeaconObject(CWorld *world, CObject *parent)
     // Set the initial map pose
     //
     m_gx = m_gy = m_gth = 0;
+
+    #ifdef INCLUDE_RTK
+        m_drag_radius = 0.20;
+    #endif
 }
 
 

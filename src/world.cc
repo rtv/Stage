@@ -1,7 +1,7 @@
 /*************************************************************************
  * world.cc - top level class that contains and updates robots
  * RTV
- * $Id: world.cc,v 1.4.2.4 2000-12-06 21:48:32 ahoward Exp $
+ * $Id: world.cc,v 1.4.2.5 2000-12-07 00:30:00 ahoward Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -40,138 +40,38 @@ double runStart;
 
 extern double quitTime;
 
-CWorld::CWorld( char* initFile)
+CWorld::CWorld()
         : CObject(this, NULL)
 {
-  bots = NULL;
+    bots = NULL;
 
-  //#ifdef VERBOSE
-  cout << "[" << initFile << "]" << flush;
-  //#endif
-
-  // initialize the filenames
-  bgFile[0] = 0;
-  posFile[0] = 0;
-
-  //zc = 0; //zonecount
+    // initialize the filenames
+    bgFile[0] = 0;
+    posFile[0] = 0;
   
-  paused = false;
+    paused = false;
   
-  // load the parameters from the initfile, including the position
-  // and environment bitmap files.
-  LoadVars( initFile); 
+    // seed the random number generator
+    srand48( time(NULL) );
 
-  // report the files we're using
-  cout << "[" << bgFile << "][" << posFile << "]" << endl;
+    // Initialise grids
+    //
+    bimg = NULL;
+    img = NULL;
+    m_laser_img = NULL;
+    m_vision_img = NULL;
 
-  if( population > 254 )
-    {
-      puts( "more than 254 robots requested. no can do. exiting." );
-      exit( -1 ); // *** Exiting from a constructor is a BAD THING.  ahoward
-    }
+    bots = NULL;
 
-  //scale pioneer size to fit world - user specifies it in metres
-  pioneerWidth *= ppm;
-  pioneerLength *= ppm;
+    // start the internal clock
+    struct timeval tv;
+    gettimeofday( &tv, NULL );
+    timeNow = timeBegan = tv.tv_sec + (tv.tv_usec/MILLION);
 
-  localizationNoise = 0.0;
-  sonarNoise = 0.0;
-  maxAngularError =  0.0; // percent error on turning odometry
-
-  // seed the random number generator
-  srand48( time(NULL) );
-
-  // create a new background image from the pnm file
-  bimg = new Nimage( bgFile );
-  //cout << "ok." << endl;
-
-  width = bimg->width;
-  height = bimg->height;
-
-  // draw an outline around the background image
-  bimg->draw_box( 0,0,width-1,height-1, 0xFF );
-  
-  // create a new forground image copied from the background
-  img = new Nimage( bimg );
-
-  // Extra data layers
-  //
-  m_laser_img = NULL;
-
-  refreshBackground = false;
-
-
-#ifdef DEBUG
-  cout << "ok." << endl;
-#endif
-
-  int currentPopulation = 0;
-  bots = NULL;
-
-  // create the robots
-#ifdef DEBUG
-  cout << "Creating " << population << " robots... " << flush;
-#endif
-
-  CPlayerRobot* lastRobot = NULL;
-
-#ifdef VERBOSE
-  cout << "Making the robots... " << flush;
-#endif
-
-#ifdef VERBOSE
-  cout << "Loading " << posFile << "... " << flush;
-#endif
-
-  ifstream in( posFile );
-
-  /* *** REMOVE ahoward
-  while( currentPopulation < population )
-    {
-      double xpos, ypos, theta;
-      
-      in >> xpos >> ypos >> theta;
-      
-#ifdef DEBUG
-      cout << "read: " <<  xpos << ' ' << ypos << ' ' << theta << endl;
-#endif
-
-
-
-      CPlayerRobot* baby = (CPlayerRobot*)new CPlayerRobot( this, 
-					  currentPopulation + 1,
-					  pioneerWidth, 
-					  pioneerLength,
-					  xpos, ypos, theta );
-
-      baby->channel = channels[currentPopulation];
-
-      if( lastRobot ) lastRobot->next = baby;
-      else bots = baby;      
-      lastRobot = baby;
-
-      // we're the parent and have spawned a Player...
-      currentPopulation++;
-   }
-  */
-
-  refreshBackground = true;
-  
-#ifdef VERBOSE
-  cout << "done." << endl;
-#endif
-
-  // ----------------------------------------------------------------------
-
-  #ifndef INCLUDE_RTK
-  refreshBackground = true;
-  Draw(); // this will draw everything properly before we start up
-  #endif
-
-  // start the internal clock
-  struct timeval tv;
-  gettimeofday( &tv, NULL );
-  timeNow = timeBegan = tv.tv_sec + (tv.tv_usec/MILLION);
+    #ifndef INCLUDE_RTK
+        refreshBackground = true;
+        Draw(); // this will draw everything properly before we start up
+    #endif
 }
 
 
@@ -184,7 +84,14 @@ CWorld::~CWorld()
     //
     // ahoward
 
-    delete m_laser_img;
+    if (bimg)
+        delete bimg;
+    if (img)
+        delete img;
+    if (m_laser_img)
+        delete m_laser_img;
+    if (m_vision_img)
+        delete m_vision_img;
 }
 
 
@@ -199,10 +106,24 @@ bool CWorld::Startup(RtkCfgFile *cfg)
     // Set our id
     //
     strcpy(m_id, "world");
+
+    // Load useful settings from config file
+    //
+    cfg->BeginSection("world");
+
+    ppm = cfg->ReadInt("pixels_per_meter", 25, "");
+    strcpy(bgFile, CSTR(cfg->ReadString("environment_file", "", "")));
+    strcpy(posFile, CSTR(cfg->ReadString("position_file", "", "")));
+    
+    cfg->EndSection();
+
+    // report the files we're using
+    cout << "[" << bgFile << "][" << posFile << "]" << endl;
     
     // Initialise the world grids
     //
-    StartupGrids();
+    if (!StartupGrids())
+        return false;
 
     // Call the objects startup function
     //
@@ -276,12 +197,21 @@ void CWorld::Update()
 bool CWorld::StartupGrids()
 {
     TRACE0("initialising grids");
+
+    // create a new background image from the pnm file
+    bimg = new Nimage( bgFile );
+    //cout << "ok." << endl;
+
+    width = bimg->width;
+    height = bimg->height;
+
+    // draw an outline around the background image
+    bimg->draw_box( 0,0,width-1,height-1, 0xFF );
+  
+    // create a new forground image copied from the background
+    img = new Nimage( bimg );
     
-    // Extra data layers
-    // Ultimately, these should go into a startup routine,
-    // or else get created by the devices themselves when they
-    // are subscribed.  This would save some memory.
-    // ahoward
+    // Clear laser image
     //
     m_laser_img = new Nimage(width, height);
     m_laser_img->clear(0);
@@ -296,6 +226,11 @@ bool CWorld::StartupGrids()
                 m_laser_img->set_pixel(x, y, 1);
         }
     }
+
+    // Clear vision image
+    //
+    m_vision_img = new Nimage(width, height);
+    m_vision_img->clear(0);
                 
     return true;
 }
@@ -319,6 +254,8 @@ BYTE CWorld::GetCell(double px, double py, EWorldLayer layer)
             return img->get_pixel(ix, iy);
         case layer_laser:
             return m_laser_img->get_pixel(ix, iy);
+        case layer_vision:
+            return m_vision_img->get_pixel(ix, iy);
     }
     return 0;
 }
@@ -343,6 +280,9 @@ void CWorld::SetCell(double px, double py, EWorldLayer layer, BYTE value)
             break;
         case layer_laser:
             m_laser_img->set_pixel(ix, iy, value);
+            break;
+        case layer_vision:
+            m_vision_img->set_pixel(ix, iy, value);
             break;
     }
 }
@@ -397,8 +337,15 @@ void CWorld::SetRectangle(double px, double py, double pth,
         case layer_laser:
             m_laser_img->draw_rect(rect, value);
             break;
+        case layer_vision:
+            m_vision_img->draw_rect(rect, value);
+            break;
     }
 }
+
+
+
+#ifndef INCLUDE_RTK
 
 void CWorld::SavePos( void )
 {
@@ -417,92 +364,6 @@ float diff( float a, float b )
   if( a > b ) return a-b;
   return b-a;
 }
-
-int CWorld::LoadVars( char* filename )
-{
-#ifdef DEBUG
-  cout << "\nLoading world parameters from " << filename << "... " << flush;
-#endif
-  
-  ifstream init( filename );
-  char buffer[255];
-  char c;
-
-  if( !init ) return -1;
-
-  char token[50];
-  char value[200];
-  
-  while( !init.eof() )
-    {
-      init.get( buffer, 255, '\n' );
-      init.get( c );
-    
-      sscanf( buffer, "%s = %s", token, value );
-      
-#ifdef DEBUG      
-      printf( "token: %s value: %s.\n", token, value );
-      fflush( stdout );
-#endif
-      
-      if( token[0] == '#' ) // its a comment; ignore it
-	{}
-      else if ( strcmp( token, "robots" ) == 0 )
-	population = strtol( value, NULL, 10 );
-      else if ( strcmp( token, "robot_width" ) == 0 )
-	pioneerWidth = strtod( value, NULL );  
-      else if ( strcmp( token, "robot_length" ) == 0 )
-	pioneerLength = strtod( value, NULL );  
-      else if ( strcmp( token, "pixels_per_meter" ) == 0 )
-	ppm = strtod( value, NULL );  
-      else if ( strcmp( token, "environment_file" ) == 0 )
-	sscanf( value, "%s", bgFile );  
-      else if ( strcmp( token, "position_file" ) == 0 )
-	sscanf( value, "%s", posFile );  
-      //else if ( strcmp( token, "sonar_noise_variance" ) == 0 )
-      //sonarNoise = strtod( value, NULL );  
-      //else if ( strcmp( token, "localization_noise_variance" ) == 0 )
-      //localizationNoise = strtod( value, NULL );  
-      else if ( strcmp( token, "robot_colors" ) == 0 )
-	{
-	  //printf( "Colors: %s\n", value );
-	  
-	  // point into th line buffer after the equals sign
-	  char* tokstr = strstr( buffer, "=" ) + 1;
-	  
-	  char* tok = strtok( tokstr, " \t" );
-	  
-	  int n = -1;
-	  for( int c=0; tok; c++ )
-	    {
-	      n = (int)strtol( tok, NULL, 0 );
-	      
-	      if( c > 254 ) 
-		{
-		  puts( "bounds error loading color table" );
-		  exit( -1 );
-		}
-
-	      channels[c] = n;
-	      //printf( "color: %d   tok: %s\n", n, tok );
-	      
-	      tok =  strtok( NULL, " \t" );
-	    }
-	}
-      else if ( strcmp( token, "quit_time" ) == 0 )
-	quitTime = strtod( value, NULL );  
-    }
-
-#ifdef DEBUG
-  cout << "ok." << endl;
-#endif
-
-  return 1;
-}
-
-
-#ifndef INCLUDE_RTK
-
 
 CPlayerRobot* CWorld::NearestRobot( float x, float y )
 {
@@ -544,6 +405,9 @@ void CWorld::OnUiUpdate(RtkUiDrawData *pData)
         
     if (pData->DrawLayer("laser", false))
         DrawLayer(pData, layer_laser);
+
+    if (pData->DrawLayer("vision", false))
+        DrawLayer(pData, layer_vision);
     
     pData->EndSection();
 

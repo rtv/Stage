@@ -1,7 +1,7 @@
 /*************************************************************************
  * world.h - most of the header action is here 
  * RTV
- * $Id: world.hh,v 1.1.2.3 2000-12-06 21:48:32 ahoward Exp $
+ * $Id: world.hh,v 1.1.2.4 2000-12-07 00:30:00 ahoward Exp $
  ************************************************************************/
 
 #ifndef WORLD_HH
@@ -42,7 +42,8 @@ class CObject;
 enum EWorldLayer
 {
     layer_obstacle = 0,
-    layer_laser = 1
+    layer_laser = 1,
+    layer_vision = 2
 };
 
 
@@ -52,14 +53,7 @@ int InitNetworking( void );
 
 class CWorld : public CObject
 {
-public:
-  CWorld( char* initFile );
-  virtual ~CWorld();
-
-  // data
-  Nimage* bimg; // background image 
-  Nimage* img; //foreground img;
-
+    public:
   int width, height, depth; 
   int paused;
 
@@ -68,18 +62,19 @@ public:
   char bgFile[64];
 
   CPlayerRobot* bots;
-  float pioneerWidth, pioneerLength;
-  float localizationNoise;
-  float sonarNoise;
 
-  float maxAngularError; // percent error on turning odometry
+    /* *** REMOVE ahoward
+       float pioneerWidth, pioneerLength;
+       float localizationNoise;
+       float sonarNoise;
 
-  float ppm;
+       float maxAngularError; // percent error on turning odometry
+    */
+
+    float ppm;
 
   int* hits;
   int population;
-
-  int refreshBackground;
 
   double timeStep, timeNow, timeThen, timeBegan;
 
@@ -98,6 +93,14 @@ public:
     ///////////////////////////////////////////////////////
     // Added new stuff here -- ahoward
 
+    // Default constructor
+    //
+    public: CWorld();
+
+    // Destructor
+    //
+    public: virtual ~CWorld();
+    
     // Startup routine -- creates objects in the world
     //
     public: virtual bool Startup(RtkCfgFile *cfg);
@@ -127,17 +130,30 @@ public:
     public: void SetRectangle(double px, double py, double pth,
                               double dx, double dy, EWorldLayer layer, BYTE value);
 
+    // *** HACK -- make private
+    // Obstacle data
+    //
+    public: Nimage* bimg; // background image 
+    public: Nimage* img; //foreground img;
+
     // Laser image
     // Store laser data (obstacles and beacons
     //
     private: Nimage *m_laser_img;
 
+    // Vision image
+    // Stores vision data
+    //
+    private: Nimage *m_vision_img;
+
 #ifndef INCLUDE_RTK
 
+  public:
     void Draw( void );
-    public: CWorldWin* win;
+    CWorldWin* win; 
+    int refreshBackground;
     
-#else INCLUDE_RTK
+#else
 
     // Process GUI update messages
     //

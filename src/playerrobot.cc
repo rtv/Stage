@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerrobot.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -23,6 +23,8 @@
 //  (empty)
 //
 ///////////////////////////////////////////////////////////////////////////
+
+#define ENABLE_TRACE 1
 
 #include <errno.h>
 #include <fcntl.h>
@@ -43,53 +45,35 @@
 #include <fcntl.h>
 #include <iomanip.h>
 #include <sys/mman.h>
-
 #include <signal.h>
 #include <sys/wait.h>
-
 #include <sys/ipc.h>
 #include <sys/sem.h>
 
-#include <offsets.h> // from Player's include directory
-
-#define ENABLE_TRACE 1
-
+#include <offsets.h>
 #include "world.hh"
-#include "win.h"
-#include "ports.h"
 
-// Active (player) devices
+
+///////////////////////////////////////////////////////////////////////////
+// Macros
 //
-#include "pioneermobiledevice.hh"
-#include "sonardevice.h"
-#include "laserdevice.hh"
-#include "visiondevice.hh"
-#include "ptzdevice.hh"
-
-// Passive devices
-//
-#include "laserbeacondevice.hh"
-
-
 #define SEMKEY 2000;
 
-extern int errno;
-
-const double TWOPI = 6.283185307;
-
-//extern CWorld* world;
-extern CWorldWin* win;
-
-unsigned char f = 0xFF;
-
-const int numPts = SONARSAMPLES;
+// *** REMOVE extern int errno;
 
 
+///////////////////////////////////////////////////////////////////////////
+// Default constructor
+//
 CPlayerRobot::CPlayerRobot(CWorld *world, CObject *parent)
         : CObject(world, parent)
 {
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+// Destructor
+//
 CPlayerRobot::~CPlayerRobot( void )
 {
 }
@@ -120,96 +104,10 @@ bool CPlayerRobot::Startup(RtkCfgFile *cfg)
     //
     if (!StartupPlayer(port))
         return false;
-
-    /* *** REMOVE
-    // Create pioneer device    
-    //
-    AddChild(new CPioneerMobileDevice(this, 
-                                      m_world->pioneerWidth, 
-                                      m_world->pioneerLength,
-                                      playerIO + SPOSITION_DATA_START,
-                                      SPOSITION_DATA_BUFFER_SIZE,
-                                      SPOSITION_COMMAND_BUFFER_SIZE,
-                                      SPOSITION_CONFIG_BUFFER_SIZE));
-    */
-                                      
-    /* *** REMOVE ahoward
-    // Create laser device
-    //
-    AddChild(new CLaserDevice(m_world, this, this,
-                              playerIO + LASER_DATA_START,
-                              LASER_TOTAL_BUFFER_SIZE));
-    */
                               
     // Start any child objects
     //
-    CObject::Startup(cfg);
-   
-    /* *** REMOVE ahoward
-    m_device_count = 0;
-
-    // Create pioneer device    
-    //
-    ASSERT_INDEX(m_device_count, m_device);
-    m_device[m_device_count++] = new CPioneerMobileDevice( this, 
-				world->pioneerWidth, 
-				world->pioneerLength,
-				playerIO + SPOSITION_DATA_START,
-				SPOSITION_DATA_BUFFER_SIZE,
-				SPOSITION_COMMAND_BUFFER_SIZE,
-				SPOSITION_CONFIG_BUFFER_SIZE);
-
-    // Sonar device
-    //
-    m_device[m_device_count++] = new CSonarDevice( this,
-                                                   playerIO + SSONAR_DATA_START,
-                                                   SSONAR_DATA_BUFFER_SIZE,
-                                                   SSONAR_COMMAND_BUFFER_SIZE,
-                                                   SSONAR_CONFIG_BUFFER_SIZE);
-    
-    // Create laser device
-    //
-    ASSERT_INDEX(m_device_count, m_device);
-    m_device[m_device_count++] = new CLaserDevice(this, playerIO + LASER_DATA_START,
-                                                  LASER_DATA_BUFFER_SIZE,
-                                                  LASER_COMMAND_BUFFER_SIZE,
-                                                  LASER_CONFIG_BUFFER_SIZE);
-
-    // Create ptz device
-    //
-    CPtzDevice *ptz_device = new CPtzDevice(this, playerIO + PTZ_DATA_START,
-                                            PTZ_DATA_BUFFER_SIZE,
-                                            PTZ_COMMAND_BUFFER_SIZE,
-                                            PTZ_CONFIG_BUFFER_SIZE);
-    ASSERT_INDEX(m_device_count, m_device);
-    m_device[m_device_count++] = ptz_device;
-
-    // Create vision device
-    // **** HACK -- pass a pointer to the ptz device so we can determine
-    // the vision parameters.
-    // A better way to do this would be to generalize the concept of a coordinate
-    // frame, so that the PTZ device defines a new cs for the camera.
-    //
-    ASSERT_INDEX(m_device_count, m_device);
-    m_device[m_device_count++] = new CVisionDevice(this, ptz_device,
-                                                   playerIO + ACTS_DATA_START,
-                                                   ACTS_DATA_BUFFER_SIZE,
-                                                   ACTS_COMMAND_BUFFER_SIZE,
-                                                   ACTS_CONFIG_BUFFER_SIZE);
-
-    // Start all the devices
-    //
-    for (int i = 0; i < m_device_count; i++)
-    {
-        if (!m_device[i]->Startup(RtkCfgFile *cfg) )
-        {
-            perror("CPlayerRobot::Startup: failed to open device; device unavailable");
-            m_device[i] = NULL;
-        }
-    }
-    */
-    
-    return true;
+    return CObject::Startup(cfg);
 }
 
 

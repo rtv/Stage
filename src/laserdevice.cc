@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11.2.4 $
+//  $Revision: 1.11.2.5 $
 //
 // Usage:
 //  (empty)
@@ -26,6 +26,7 @@
 
 #define ENABLE_TRACE 1
 
+#include <offsets.h>
 #include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
 #include "world.hh"
 #include "playerrobot.hh"

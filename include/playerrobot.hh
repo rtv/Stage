@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerrobot.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -23,11 +23,6 @@
 //  (empty)
 //
 ///////////////////////////////////////////////////////////////////////////
-
-#include "offsets.h" // for the ACTS size defines
-#include "image.h"
-
-#include <X11/Xlib.h> // for XPoint
 
 #ifndef ROBOT_H
 #define ROBOT_H
@@ -78,8 +73,6 @@ class CPlayerRobot : public CObject
     // Unlokc the shared mem area
     //
     public: bool UnlockShmem( void );
-    
-    public: CPlayerRobot* next; // for linked list implementation
 
     // position, position at t-1, and position origin variables
     // *** REMOVE ahoward private: float x, y, a, oldx, oldy, olda, xorigin, yorigin, aorigin;
@@ -88,6 +81,7 @@ class CPlayerRobot : public CObject
     public: unsigned char color; // unique ID and value drawn into world bitmap
     public: unsigned char channel; // the apparent color of this robot in ACTS
 
+    // *** HACK -- playerIO should be private
     // Stuff needed to interface with player
     //
     public: caddr_t playerIO; // ptr to shared memory for player I/O

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.3 $
+//  $Revision: 1.4.2.4 $
 //
 // Usage:
 //  (empty)
@@ -24,9 +24,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 0
+#define ENABLE_TRACE 1
 
-#include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
+#include <math.h>
 #include "world.hh"
 #include "playerrobot.hh"
 #include "visiondevice.hh"
@@ -36,10 +36,13 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CVisionDevice::CVisionDevice(CPlayerRobot *robot, CPtzDevice *ptz_device,
-                             void *buffer, size_t data_len,
-                             size_t command_len, size_t config_len)
-        : CPlayerDevice(robot, buffer, data_len, command_len, config_len)
+CVisionDevice::CVisionDevice(CWorld *world, CObject *parent, CPlayerRobot* robot,
+                             CPtzDevice *ptz_device, void *buffer, size_t buffer_len)
+        : CPlayerDevice(world, parent,
+                        robot, buffer, buffer_len,
+                        ACTS_DATA_BUFFER_SIZE,
+                        ACTS_COMMAND_BUFFER_SIZE,
+                        ACTS_CONFIG_BUFFER_SIZE)
 {
     m_ptz_device = ptz_device;
         
@@ -49,8 +52,18 @@ CVisionDevice::CVisionDevice(CPlayerRobot *robot, CPtzDevice *ptz_device,
     cameraImageWidth = 160 / 2;
     cameraImageHeight = 120 / 2;
 
+    m_scan_width = 160;
+
+    m_pan = 0;
+    m_tilt = 0;
+    m_zoom = DTOR(60);
+
     numBlobs = 0;
     memset( blobs, 0, MAXBLOBS * sizeof( ColorBlob ) );
+
+    #ifdef INCLUDE_RTK
+        m_hit_count = 0;
+    #endif
 }
 
 
@@ -81,66 +94,120 @@ void CVisionDevice::Update()
         return;
     m_last_update = m_world->timeNow;
     TRACE0("generating new data");
-           
-    unsigned char* colors = new unsigned char[ cameraImageWidth ];
-    float* ranges = new float[ cameraImageWidth ];
 
+    // Generate the scan-line image
+    //
+    UpdateScan();
+
+    // Generate ACTS data
+    //
+    size_t len = UpdateACTS();
+
+    // Copy data to the output buffer
+    // no need to byteswap - this is single-byte data
+    //
+    if (len > 0)
+        PutData(actsBuf, len);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Generate the scan-line image
+//
+void CVisionDevice::UpdateScan()
+{
     // Get the camera's global pose
     //
-    double gx, gy, gth;
-    GetGlobalPose(gx, gy, gth);
+    double ox, oy, oth;
+    GetGlobalPose(ox, oy, oth);
 
     // Get the ptz settings
     //
-    double pan, tilt, zoom;
-    ASSERT(m_ptz_device != NULL);
-    m_ptz_device->GetPTZ(pan, tilt, zoom);
+    if (m_ptz_device != NULL)
+        m_ptz_device->GetPTZ(m_pan, m_tilt, m_zoom);
+
+    // Compute starting angle
+    //
+    oth = oth - m_zoom / 2;
     
-    // ray trace the 1d color / range image
-    float startAngle = (gth + pan) - (zoom / 2.0);
-    float xRadsPerPixel = zoom / cameraImageWidth;
-    float yRadsPerPixel = zoom / cameraImageHeight;
-    unsigned char pixel = 0;
+    // *** HACK -- max range set to arbitrary value
+    // Compute fov, range, etc
+    //
+    double dth = M_PI / m_scan_width;
+    double dr = 1.0 / m_world->ppm;
+    double max_range = 8.0;
 
-    float xx, yy;
+    // Initialise gui data
+    //
+    #ifdef INCLUDE_RTK
+        m_hit_count = 0;
+    #endif
 
-    int maxRange = (int)(10.0 * m_world->ppm); // 8m times pixels-per-meter
-    int rng = 0;
+    // Make sure the data buffer is big enough
+    //
+    ASSERT(m_scan_width <= ARRAYSIZE(m_scan_channel));
 
-    // do the ray trace for each pixel across the 1D image
-    for( int s=0; s < cameraImageWidth; s++)
-	{
-        double dx, dy, angle;
-	  
-        angle = startAngle + ( s * xRadsPerPixel );
-	  
-        dx = cos( angle );
-        dy = sin( angle );
-	  
-        xx = gx;
-        yy = gy;
-        rng = 0;
-	  
-        pixel = img->get_pixel( (int)xx, (int)yy );
+    // Do each scan
+    //
+    for (int s = 0; s < m_scan_width; s++)
+    {
+        // Compute parameters of scan line
+        //
+        double px = ox;
+        double py = oy;
+        double pth = oth + s * dth;
 
-        // no need for bounds checking - get_pixel() does that internally
-        while( rng < maxRange && ( pixel == 0 || pixel == m_robot->color ) )
-	    {
-            xx+=dx;
-            yy+=dy;
-            rng++;
-	      
-            pixel = img->get_pixel( (int)xx, (int)yy );
-	    }
-	  
-        // set color value
-        colors[s] = pixel;
-        // set range value, scaled to current ppm
-        ranges[s] = rng / m_world->ppm;
-	}
-      
+        // Compute the step for simple ray-tracing
+        //
+        double dx = dr * cos(pth);
+        double dy = dr * sin(pth);
+
+        double range;
+        int color = 0;
+        
+        // Look along scan line for beacons
+        // Could make this an int again for a slight speed-up.
+        //
+        for (range = 0; range < max_range; range += dr)
+        {
+            // Look in the laser layer for obstacles
+            //
+            BYTE cell = m_world->GetCell(px, py, layer_vision);
+            if (cell != 0)
+            {
+                color = cell;
+                break;
+            }
+            px += dx;
+            py += dy;
+        }
+
+        // Set the channel
+        //
+        m_scan_channel[s] = color;
+        m_scan_range[s] = range;
+        
+        // Update the gui data
+        //
+        #ifdef INCLUDE_RTK
+            m_hit[m_hit_count][0] = px;
+            m_hit[m_hit_count][1] = py;
+            m_hit[m_hit_count][2] = color;
+            m_hit_count++;
+        #endif
+    }   
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Generate ACTS data from scan-line image
+//
+size_t CVisionDevice::UpdateACTS()
+{
     // now the colors and ranges are filled in - time to do blob detection
-      
+
+    float yRadsPerPixel = m_zoom / cameraImageHeight;
+    
     int blobleft = 0, blobright = 0;
     unsigned char blobcol = 0;
     int blobtop = 0, blobbottom = 0;
@@ -148,23 +215,23 @@ void CVisionDevice::Update()
     numBlobs = 0;
       
     // scan through the samples looking for color blobs
-    for( int s=0; s < cameraImageWidth; s++ )
+    for( int s=0; s < m_scan_width; s++ )
 	{
-        if( colors[s] != 0 && colors[s] < ACTS_NUM_CHANNELS && colors[s] != m_robot->color )
+        if( m_scan_channel[s] != 0 && m_scan_channel[s] < ACTS_NUM_CHANNELS)
 	    {
             blobleft = s;
-            blobcol = colors[s];
+            blobcol = m_scan_channel[s];
 	      
             // loop until we hit the end of the blob
             // there has to be a gap of >1 pixel to end a blob
 	    // this avoids getting lots of crappy little blobs
-            while( colors[s] == blobcol || colors[s+1] == blobcol ) s++;
-            //while( colors[s] == blobcol ) s++;
+            while( m_scan_channel[s] == blobcol || m_scan_channel[s+1] == blobcol ) s++;
+            //while( m_scan[s] == blobcol ) s++;
 	      
             blobright = s-1;
             double robotHeight = 0.6; // meters
             int xCenterOfBlob = blobleft + ((blobright - blobleft )/2);
-            double rangeToBlobCenter = ranges[ xCenterOfBlob ];
+            double rangeToBlobCenter = m_scan_range[ xCenterOfBlob ];
             double startyangle = atan2( robotHeight/2.0, rangeToBlobCenter );
             double endyangle = -startyangle;
             blobtop = cameraImageHeight/2 - (int)(startyangle/yRadsPerPixel);
@@ -188,19 +255,6 @@ void CVisionDevice::Update()
             blobs[numBlobs].right = blobright * 2;
             blobs[numBlobs].bottom = blobbottom * 2;
             blobs[numBlobs].area = (blobtop - blobbottom) * (blobleft-blobright) * 4;
-
-            // set the blob color - look up the robot with this
-            // bitmap color and translate that to a visible channel no.
-            for( CPlayerRobot* r = m_world->bots; r; r = r->next )
-            {
-                if( r->color == blobcol )
-                {
-                    //cout << (int)(r->color) << " "
-                    // << (int)(r->channel) << endl;
-                    blobs[numBlobs].channel = r->channel;
-                    break;
-                }
-            }
 	      
             numBlobs++;
 	    }
@@ -269,14 +323,13 @@ void CVisionDevice::Update()
 	    }
 	  
         // useful debug
-        /*  cout << "blob "
-            << " area: " <<  blobs[b].area
-            << " left: " <<  blobs[b].left
-            << " right: " <<  blobs[b].right
-            << " top: " <<  blobs[b].top
-            << " bottom: " <<  blobs[b].bottom
-            << endl;
-        */
+        //  cout << "blob "
+        //    << " area: " <<  blobs[b].area
+        //    << " left: " <<  blobs[b].left
+        //    << " right: " <<  blobs[b].right
+        //    << " top: " <<  blobs[b].top
+        //    << " bottom: " <<  blobs[b].bottom
+        //    << endl;
 	  
         actsBuf[ index + 4 ] = blobs[b].x;
         actsBuf[ index + 5 ] = blobs[b].y;
@@ -307,22 +360,77 @@ void CVisionDevice::Update()
 	  //cout << (int)actsBuf[c] << ' ';  
 	  actsBuf[c]++;
 	}
-    
+
     // finally, we're done.
     //cout << endl;
 
     TRACE1("Found %d blobs", (int) numBlobs);
-    
-    // Copy data to the output buffer
-    // no need to byteswap - this is single-byte data
-    //
-    PutData(actsBuf, buflen);
+
+    return buflen;
 }
 
 
+#ifdef INCLUDE_RTK
+
+///////////////////////////////////////////////////////////////////////////
+// Process GUI update messages
+//
+void CVisionDevice::OnUiUpdate(RtkUiDrawData *pData)
+{
+    // Draw our children
+    //
+    CObject::OnUiUpdate(pData);
+    
+    // Draw ourself
+    //
+    pData->BeginSection("global", "vision");
+
+    if (pData->DrawLayer("scan", true))
+        DrawScan(pData);
+    
+    pData->EndSection();
+}
 
 
+///////////////////////////////////////////////////////////////////////////
+// Process GUI mouse messages
+//
+void CVisionDevice::OnUiMouse(RtkUiMouseData *pData)
+{
+    CObject::OnUiMouse(pData);
+}
 
 
+///////////////////////////////////////////////////////////////////////////
+// Draw the laser turret
+//
+void CVisionDevice::DrawTurret(RtkUiDrawData *pData)
+{
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Draw the laser scan
+//
+void CVisionDevice::DrawScan(RtkUiDrawData *pData)
+{    
+    // Get global pose
+    //
+    double gx, gy, gth;
+    GetGlobalPose(gx, gy, gth);
+
+    for (int i = 0; i < m_hit_count; i++)
+    {
+        int channel = (int) m_hit[i][2];
+        if (channel == 0)
+            continue;
+        // *** HACK -- how to we get colors from channels?
+        //
+        int color = RTK_RGB(128, 128, 128);
+        pData->SetPixel(m_hit[i][0], m_hit[i][1], color);
+    }
+}
+
+#endif
 
 

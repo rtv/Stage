@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  (empty)
@@ -34,6 +34,10 @@
 // For base class
 //
 #include "object.hh"
+
+// For all the lengths
+//
+#include <offsets.h>
 
 
 ////////////////////////////////////////////////////////////////////////////////
