@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.49 2002-03-04 20:53:47 rtv Exp $
+ * $Id: xs.cc,v 1.50 2002-03-12 02:53:09 rtv Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -2351,23 +2351,9 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
   // try to connect to it
   if( ent->id.port )
     {
-      struct hostent* info = 
-	gethostbyaddr( &ent->hostaddr, 4, AF_INET );
-      
       PlayerClient* cli = 0; 
 
-      if( info )
-	{
-	  //printf( "XS: looking up host %s\n", info->h_name );
-	  cli = playerClients.GetClient(info->h_name,ent->id.port);
-	}
-      else
-	{
-	  printf( "XS: warning - failed to find hostname for %s\n",
-		  inet_ntoa( ent->hostaddr ) );
-	  
-	  cli = playerClients.GetClient( "localhost", ent->id.port);
-	}
+      cli = playerClients.GetClient( &ent->hostaddr, ent->id.port);
 
       // if we're connected already 
       if( cli ) 
@@ -2399,15 +2385,10 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
       else
 	{ 
 	  // create a new client and add any supported proxies
-
-	  char* host;
-	  info ? host = info->h_name : host = "localhost"; 
-	  //info ? host = info->h_name : host = "rover"; 
-	  
-	  if( !(cli = new PlayerClient( host, ent->id.port )))
+	  if( !(cli = new PlayerClient( &ent->hostaddr, ent->id.port )))
 	  {
-	    printf( "failed _new_ PlayerClient with name %s port %d.\n",
-		    info->h_name, ent->id.port );
+	    printf( "failed _new_ PlayerClient on %s:%d.\n",
+		    inet_ntoa(ent->hostaddr), ent->id.port );
 	    exit( -1 );
 	  }
 	      
@@ -2428,10 +2409,6 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 
 	  // put the server into request/reply mode
 	  //cli->SetDataMode( 1 );
-	  
-	  // if successful, attach this client to the multiclient
-	  //printf( "\nXS: Starting Player client on %s:%d\n", ent->hostname, ent->id.port );
-	  //fflush( 0 );
 	  
 	  xstruth_t sibling;
 	  int previous_num_proxies = num_proxies;

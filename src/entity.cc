@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.46 2002-03-10 03:16:38 gsibley Exp $
+//  $Id: entity.cc,v 1.47 2002-03-12 02:53:09 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -713,8 +713,15 @@ size_t CEntity::PutData( void* data, size_t len )
             len, m_info_io->data_len  );
     fflush( stdout );
   }
-  
+ 
   Unlock();
+
+  // if we want to announce this data to the world
+  //if( m_rtp_announce )
+  //m_world->RTPAnnounce( data, len, 
+  //		  m_world->m_sim_timeval.tv_sec,
+  //		  m_world->m_sim_timeval.tv_usec );
+ 
   
   return len;
 }

@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////
 //
 // File: entity.hh
-// Author: Andrew Howard
+// Author: Andrew Howard, Richard Vaughan
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.37 $
+//  $Revision: 1.38 $
 //
 // Usage:
 //  (empty)
