@@ -24,7 +24,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: stg_driver.cc,v 1.24 2005-02-08 06:50:01 rtv Exp $
+ * CVS: $Id: stg_driver.cc,v 1.25 2005-02-08 23:41:38 rtv Exp $
  */
 
 // DOCUMENTATION ---------------------------------------------------------------------
@@ -823,19 +823,22 @@ void StgDriver::HandleConfigSimulation( player_device_id_t id,
 					void* client, 
 					void* buffer, size_t len )
 {
-  //printf("got simulation request\n");
+  printf("got simulation request\n");
 
   // switch on the config type (first byte)
   uint8_t* buf = (uint8_t*)buffer;
   switch( buf[0] )
     {  
+
+// if Player has defined this config, implement it
+#ifdef PLAYER_SIMULATION_SET_POSE2D
     case PLAYER_SIMULATION_SET_POSE2D:
       {
 	player_simulation_pose2d_req_t* req = (player_simulation_pose2d_req_t*)buffer;
 	
 	stg_pose_t pose;
-	pose.x = ntohl(req->x) / 1000.0;
-	pose.y = ntohl(req->y) / 1000.0;
+	pose.x = (int32_t)ntohl(req->x) / 1000.0;
+	pose.y = (int32_t)ntohl(req->y) / 1000.0;
 	pose.a = DTOR( ntohl(req->a) );
 
 	printf( "Stage: received request to move object \"%s\" to (%.2f,%.2f,%.2f)\n",
@@ -860,8 +863,10 @@ void StgDriver::HandleConfigSimulation( player_device_id_t id,
 	  }
       }      
       break;
+#endif
       
     default:      
+      PRINT_WARN1( "Stage simulation doesn't implement config code %d.", buf[0] );
       if (this->PutReply( id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
 	DRIVER_ERROR("PutReply() failed");  
       break;
