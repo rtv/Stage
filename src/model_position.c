@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.25 $
+//  $Revision: 1.26 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -358,10 +358,18 @@ int position_shutdown( stg_model_t* mod )
   
   // safety feature!
   //position_init(mod);
+  
+  stg_position_cmd_t cmd;
+  memset( &cmd, 0, sizeof(cmd) ); 
+  stg_model_set_command( mod, &cmd, sizeof(cmd));
+   
 
   stg_velocity_t vel;
   memset( &vel, 0, sizeof(vel));
   stg_model_set_velocity( mod, &vel );
+
+
+
 
   if( mod->gui.data  )
     rtk_fig_clear(mod->gui.data);
