@@ -14,80 +14,59 @@ stg_model_t* model_create(  stg_world_t* world,
 			    char* token )
 {
   PRINT_DEBUG3( "creating model %d:%d (%s)", world->id, id, token  );
-  
+
+  // calloc zeros the whole structure
   stg_model_t* mod = calloc( sizeof(stg_model_t),1 );
 
   mod->id = id;
   mod->token = strdup(token);
   mod->world = world;
   
-  // initially zero subscriptions
-  memset( mod->subs, 0, STG_PROP_COUNT * sizeof(mod->subs[0]) );
-
   //mod->props = g_hash_table_new( g_int_hash, g_int_equal );
   
-  mod->pose.x = 0.0;
-  mod->pose.y = 0.0;
-  mod->pose.a = 0.0;  
-  
-  mod->size.x = 0.5;
-  mod->size.y = 0.5;
+  mod->size.x = 0.4;
+  mod->size.y = 0.4;
   
   mod->color = stg_lookup_color( "red" );
   
-  mod->velocity.x = 0.0;
-  mod->velocity.y = 0.0;
-  mod->velocity.a = 0.0;  
-  
-  mod->local_pose.x = 0;
-  mod->local_pose.y = 0;
-  mod->local_pose.a = 0;
+  // define a unit rectangle from 4 lines
+  stg_line_t lines[4];
+  lines[0].x1 = 0; 
+  lines[0].y1 = 0;
+  lines[0].x2 = 1; 
+  lines[0].y2 = 0;
 
-  mod->rects = calloc( sizeof(stg_rotrect_t), 1 );
-  mod->rect_count = 1;
+  lines[1].x1 = 1; 
+  lines[1].y1 = 0;
+  lines[1].x2 = 1; 
+  lines[1].y2 = 1;
+
+  lines[2].x1 = 1; 
+  lines[2].y1 = 1;
+  lines[2].x2 = 0; 
+  lines[2].y2 = 1;
+
+  lines[3].x1 = 0; 
+  lines[3].y1 = 1;
+  lines[3].x2 = 0; 
+  lines[3].y2 = 0;
   
-  mod->boundary = 0;
+  // fit the rectangle inside the model's size
+  stg_normalize_lines( lines, 4 );
+  stg_scale_lines( lines, 4, mod->size.x, mod->size.y );
+  stg_translate_lines( lines, 4, -mod->size.x/2.0, -mod->size.y/2.0 );
   
-  mod->rects[0].x = 0;
-  mod->rects[0].y = 0;
-  mod->rects[0].a = 0;
-  mod->rects[0].w = 1.0;
-  mod->rects[0].h = 1.0;
+  // stash the lines
+  mod->lines = g_array_new( FALSE, TRUE, sizeof(stg_line_t) );  
+  g_array_append_vals(  mod->lines, lines, 4 );
   
   mod->movemask = STG_MOVE_TRANS | STG_MOVE_ROT;
-  mod->nose = FALSE;
-  
-  mod->parent = NULL;
-  
   
   mod->ranger_return = LaserVisible;
   mod->ranger_data = g_array_new( FALSE, TRUE, sizeof(stg_ranger_sample_t));
   mod->ranger_config = g_array_new( FALSE, TRUE, sizeof(stg_ranger_config_t) );
 
-  /*  
-  stg_ranger_config_t rng;
-  
-  int RNGCOUNT = 16;
-  int r;
-  for( r=0; r<RNGCOUNT; r++ )
-    {
-      memset( &rng, 0, sizeof(rng) );
-      
-      rng.fov = M_PI / RNGCOUNT;
-      rng.size.x = 0.02;
-      rng.size.y = 0.02;
-      rng.bounds_range.min = 0.0;
-      rng.bounds_range.max = 5.0;
-      rng.pose.a = r * 2.0 * M_PI/RNGCOUNT;
-      rng.pose.x = mod->size.x/2.0 * cos(rng.pose.a);
-      rng.pose.y = mod->size.y/2.0 * sin(rng.pose.a);
-      
-      g_array_append_val( mod->ranger_config, rng );
-    }
-  */
-
-  memset( &mod->laser_config, 0, sizeof(mod->laser_config) );
-
+  // configure the laser to sensible defaults
   mod->laser_config.range_min= 0.0;
   mod->laser_config.range_max = 8.0;
   mod->laser_config.samples = 180;
@@ -97,9 +76,7 @@ stg_model_t* model_create(  stg_world_t* world,
   mod->laser_config.pose.a = 0;
   mod->laser_config.size.x = 0.15;
   mod->laser_config.size.y = 0.15;
-  
-  mod->laser_data = g_array_new( FALSE, TRUE, sizeof(stg_laser_sample_t) );
-				 
+  				 
   mod->laser_return = LaserVisible;
 
   gui_model_create( mod );
@@ -189,19 +166,25 @@ void model_global_rect( stg_model_t* mod, stg_rotrect_t* glob, stg_rotrect_t* lo
 
 void model_map( stg_model_t* mod, gboolean render )
 {
-  int r;
-  for( r=0; r<mod->rect_count; r++ )
+  int l;
+  for( l=0; l<mod->lines->len; l++ )
     {
-      stg_rotrect_t* rr = &mod->rects[r];
+      stg_line_t* line = &g_array_index( mod->lines, stg_line_t, l );
+
+      stg_pose_t p1, p2;
+      p1.x = line->x1;
+      p1.y = line->y1;
+      p1.a = 0;
+
+      p2.x = line->x2;
+      p2.y = line->y2;
+      p2.a = 0;
       
-      // convert the rectangle into global coordinates;
-      stg_rotrect_t grr;
-      model_global_rect( mod, &grr, rr );
-     
-      stg_matrix_rectangle( mod->world->matrix, 
-			    grr.x, grr.y, grr.a, grr.w, grr.h,
-			    mod, render );
-    }      
+      model_local_to_global( mod, &p1 );
+      model_local_to_global( mod, &p2 );
+      
+      stg_matrix_line( mod->world->matrix, p1.x, p1.y, p2.x, p2.y, mod, render );
+    }
 
   // optionally, add a bounding rectangle
   if( mod->boundary )
@@ -297,10 +280,6 @@ int model_get_prop( stg_model_t* mod, stg_id_t pid, void** data, size_t* len )
       *data = &mod->color;
       *len = sizeof(mod->color);
       break;
-    case STG_PROP_RECTS:
-      *data = mod->rects;
-      *len = mod->rect_count * sizeof(stg_rotrect_t);
-      break;
     case STG_PROP_NOSE:
       *data = &mod->nose;
       *len = sizeof(mod->nose);
@@ -318,8 +297,16 @@ int model_get_prop( stg_model_t* mod, stg_id_t pid, void** data, size_t* len )
       *len = mod->ranger_data->len * sizeof(stg_ranger_sample_t);
       break;
     case STG_PROP_LASERDATA:
-      *data = mod->laser_data->data;
-      *len = mod->laser_data->len * sizeof(stg_laser_sample_t);
+      if( mod->laser_data )
+	{
+	  *data = mod->laser_data->data;
+	  *len = mod->laser_data->len * sizeof(stg_laser_sample_t);
+	}
+      else // we haven't got any laser data
+	{
+	  *data = NULL;
+	  *len = 0;
+	}
       break;
     case STG_PROP_LASERCONFIG:
       *data = &mod->laser_config;
@@ -399,10 +386,6 @@ int model_set_prop( stg_model_t* mod,
 	memcpy( &mod->color, data, len );
       else PRINT_WARN2( "ignoring bad color data (%d/%d bytes)", 
 		       (int)len, (int)sizeof(mod->color) );
-
-      PRINT_WARN1( "color is now %X", mod->color );
-      PRINT_WARN1( "data was %X", data );
-      PRINT_WARN1( "data was %X", *(stg_color_t*)data );
       break;
       
     case STG_PROP_MOVEMASK:
@@ -412,7 +395,18 @@ int model_set_prop( stg_model_t* mod,
 		       (int)len, (int)sizeof(mod->movemask) );
       break;
       
-    case STG_PROP_RECTS:
+    case STG_PROP_LINES:
+      if( len > 0 )
+	{
+	  model_map( mod, 0 );
+	  g_array_set_size( mod->lines, 0 );
+	  g_array_append_vals( mod->lines, data, len / sizeof(stg_line_t) );
+	  // todo - normalize the lines into the model's size rectangle
+	  model_map( mod, 1 );
+	}
+      break;
+
+      /* case STG_PROP_RECTS:
       if( len > 0 )
 	{
 	  model_map( mod, 0 );
@@ -423,6 +417,7 @@ int model_set_prop( stg_model_t* mod,
 	  model_map( mod, 1 );
 	}
       break;
+      */
 
     case STG_PROP_PARENT:
       if( len == sizeof(stg_id_t) )

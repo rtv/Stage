@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.26 2004-04-05 03:00:26 rtv Exp $
+ * CVS: $Id: stage.h,v 1.27 2004-04-22 07:03:20 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -94,6 +94,7 @@ typedef enum
     STG_PROP_RANGEBOUNDS, 
     STG_PROP_INTERVAL,
     STG_PROP_RECTS,
+    STG_PROP_LINES,
     STG_PROP_SIZE,
     STG_PROP_VELOCITY, 
     STG_PROP_LASERRETURN,
@@ -394,6 +395,12 @@ typedef struct
   double x, y, a, w, h;
 } stg_rotrect_t; // rotated rectangle
 
+// specify a line from (x1,y1) to (x2,y2), all in meters
+typedef struct
+{
+  double x1, y1, x2, y2;
+} stg_line_t;
+
 typedef struct
 {
   int toplx, toply, toprx, topry, botlx, botly, botrx, botry;
@@ -462,6 +469,12 @@ typedef struct
 // normalizes the set [rects] of [num] rectangles, so that they fit
 // exactly in a unit square.
 void stg_normalize_rects( stg_rotrect_t* rects, int num );
+
+// returns an array of 4 * num_rects stg_line_t's
+stg_line_t* stg_rects_to_lines( stg_rotrect_t* rects, int num_rects );
+void stg_normalize_lines( stg_line_t* lines, int num );
+void stg_scale_lines( stg_line_t* lines, int num, double xscale, double yscale );
+void stg_translate_lines( stg_line_t* lines, int num, double xtrans, double ytrans );
 
 // returns the real (wall-clock) time in seconds
 stg_time_t stg_timenow( void );

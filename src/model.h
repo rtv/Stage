@@ -20,9 +20,10 @@ typedef struct _stg_model
   stg_color_t color;
   stg_velocity_t velocity;
 
-  stg_rotrect_t* rects;
-  int rect_count;
   
+  GArray* lines; // array of point-pairs specifying lines in our body
+  // GArray* arcs; // todo?
+
   // GUI features
   gboolean nose;
   stg_movemask_t movemask;

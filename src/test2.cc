@@ -272,10 +272,12 @@ int main( int argc, char* argv[] )
   
   // create a client
   sc_t* client = sc_create();  
+  
+  char* world_name = worldfile->ReadString(0, "name", "Player world" );
 
   // create a single world
   sc_world_t* world = 
-    sc_world_create( stg_token_create( "Player world", STG_T_NUM, 99 ) );
+    sc_world_create( stg_token_create( world_name, STG_T_NUM, 99 ) );
   
   sc_addworld( client, world );
   
@@ -314,21 +316,33 @@ int main( int argc, char* argv[] )
       int num_rects = 0;
       stg_load_image( bitmapfile, &rects, &num_rects );
       
-      sc_model_prop_with_data( root, STG_PROP_RECTS, 
-			       rects, num_rects * sizeof(stg_rotrect_t ));
+      // convert rects to an array of lines
+      int num_lines = 4 * num_rects;
+      stg_line_t* lines = stg_rects_to_lines( rects, num_rects );
+      stg_normalize_lines( lines, num_lines );
+      stg_scale_lines( lines, num_lines, sz.x, sz.y );
+      stg_translate_lines( lines, num_lines, -sz.x/2.0, -sz.y/2.0 );
+      
+      sc_model_prop_with_data( root, STG_PROP_LINES, 
+			       lines, num_lines * sizeof(stg_line_t ));
+      
+      free( lines );
     }
  
 
   // Iterate through sections and create client-side models
   for (int section = 1; section < worldfile->GetEntityCount(); section++)
     {
-      //const char *namestr = worldfile->GetEntityType(section);
-      char *namestr = worldfile->ReadString(section, "name", "<anon>" );
+      // a model has the macro name that defined it as it's name
+      // unlesss a name is explicitly defined.  TODO - count instances
+      // of macro names so we can autogenerate unique names
+      const char *default_namestr = worldfile->GetEntityType(section);      
+      char *namestr = worldfile->ReadString(section, "name", default_namestr );
       stg_token_t* token = stg_token_create( namestr, STG_T_NUM, 99 );
       sc_model_t* mod = sc_model_create( world, NULL, token );
       mod->section = section;
       sc_world_addmodel( world, mod );
-      
+
       stg_pose_t pose;
       pose.x = worldfile->ReadTupleLength(section, "pose", 0, 0);
       pose.y = worldfile->ReadTupleLength(section, "pose", 1, 0);
@@ -363,8 +377,18 @@ int main( int argc, char* argv[] )
 	  int num_rects = 0;
 	  stg_load_image( bitmapfile, &rects, &num_rects );
 	  
-	  sc_model_prop_with_data( mod, STG_PROP_RECTS, 
-				   rects, num_rects * sizeof(stg_rotrect_t ));
+	  // convert rects to an array of lines
+	  int num_lines = 4 * num_rects;
+	  stg_line_t* lines = stg_rects_to_lines( rects, num_rects );
+	  stg_normalize_lines( lines, num_lines );
+	  stg_scale_lines( lines, num_lines, sz.x, sz.y );
+	  stg_translate_lines( lines, num_lines, -sz.x/2.0, -sz.y/2.0 );
+	  
+	  sc_model_prop_with_data( mod, STG_PROP_LINES, 
+				   lines, num_lines * sizeof(stg_line_t ));
+	  	  
+	  free( lines );
+	  
 	}
 
       // Load the geometry of a ranger array
@@ -403,6 +427,40 @@ int main( int argc, char* argv[] )
 	}
       
       
+      int linecount = worldfile->ReadInt( section, "line_count", 0 );
+      if( linecount > 0 )
+	{
+	  char key[256];
+	  stg_line_t* lines = (stg_line_t*)calloc( sizeof(stg_line_t), linecount );
+	  int l;
+	  for(l=0; l<linecount; l++ )
+	    {
+	      snprintf(key, sizeof(key), "line[%d]", l);
+
+	      lines[l].x1 = worldfile->ReadTupleLength(section, key, 0, 0);
+	      lines[l].y1 = worldfile->ReadTupleLength(section, key, 1, 0);
+	      lines[l].x2 = worldfile->ReadTupleLength(section, key, 2, 0);
+	      lines[l].y2 = worldfile->ReadTupleLength(section, key, 3, 0);	      
+	    }
+	  
+	  printf( "NOTE: loaded line %d/%d (%.2f,%.2f - %.2f,%.2f)\n",
+		  l, linecount, 
+		  lines[l].x1, lines[l].y1, 
+		  lines[l].x2, lines[l].y2 ); 
+	  
+	  sc_model_prop_with_data( mod, STG_PROP_LINES,
+				   lines, linecount * sizeof(stg_line_t) );
+	  
+	  free( lines );
+	}
+
+      stg_velocity_t vel;
+      vel.x = worldfile->ReadTupleLength(section, "velocity", 0, 0);
+      vel.y = worldfile->ReadTupleLength(section, "velocit", 1, 0);
+      vel.a = worldfile->ReadTupleAngle(section, "velocity", 2, 0);      
+      sc_model_prop_with_data( mod, STG_PROP_VELOCITY, &vel, sizeof(vel) );
+
+
     }
   
   printf( "building client-side models done.\n" );
@@ -415,7 +473,7 @@ int main( int argc, char* argv[] )
   sc_push( client );
   puts( "uploading done" );
   
-  sc_model_t* mod = sc_get_model( client, "Player world", "gareth" );
+  sc_model_t* mod = sc_get_model( client, world_name, "r0" );
   if( mod )
     {
       sc_model_subscribe( client, mod, STG_PROP_RANGERDATA, 0.1 );

@@ -7,6 +7,10 @@ void model_update_laser( stg_model_t* mod )
   
   stg_laser_config_t* cfg = &mod->laser_config;
   
+  // we only allocate data space the first time we need it
+  if( mod->laser_data == NULL )
+    mod->laser_data = g_array_new( FALSE, TRUE, sizeof(stg_laser_sample_t) );
+  
   // set the laser data array to the right length
   g_array_set_size( mod->laser_data, cfg->samples );
   

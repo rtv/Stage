@@ -43,7 +43,8 @@ const char* stg_property_string( stg_id_t id )
     case STG_PROP_PPM: return "ppm"; break;
     case STG_PROP_PUCKRETURN: return "puck_return"; break;
     case STG_PROP_RANGEBOUNDS: return "rangebounds";break;
-    case STG_PROP_RECTS: return "rects"; break;
+    case STG_PROP_RECTS: return "rects"; break; 
+    case STG_PROP_LINES: return "lines"; break;
     case STG_PROP_SIZE: return "size"; break;
     case STG_PROP_SONARRETURN: return "sonar_return"; break;
     case STG_PROP_NEIGHBORRETURN: return "neighbor_return"; break;
@@ -435,6 +436,67 @@ stg_color_t stg_lookup_color(const char *name)
 
 //////////////////////////////////////////////////////////////////////////
 // scale an array of rectangles so they fit in a unit square
+void stg_normalize_lines( stg_line_t* lines, int num )
+{
+  // assuming the rectangles fit in a square +/- one billion units
+  double minx, miny, maxx, maxy;
+  minx = miny = BILLION;
+  maxx = maxy = -BILLION;
+  
+  int l;
+  for( l=0; l<num; l++ )
+    {
+      // find the bounding rectangle
+      if( lines[l].x1 < minx ) minx = lines[l].x1;
+      if( lines[l].y1 < miny ) miny = lines[l].y1;      
+      if( lines[l].x1 > maxx ) maxx = lines[l].x1;      
+      if( lines[l].y1 > maxy ) maxy = lines[l].y1;
+      if( lines[l].x2 < minx ) minx = lines[l].x2;
+      if( lines[l].y2 < miny ) miny = lines[l].y2;      
+      if( lines[l].x2 > maxx ) maxx = lines[l].x2;      
+      if( lines[l].y2 > maxy ) maxy = lines[l].y2;
+    }
+  
+  // now normalize all lengths so that the lines all fit inside
+  // rectangle from 0,0 to 1,1
+  double scalex = maxx - minx;
+  double scaley = maxy - miny;
+
+  for( l=0; l<num; l++ )
+    { 
+      lines[l].x1 = (lines[l].x1 - minx) / scalex;
+      lines[l].y1 = (lines[l].y1 - miny) / scaley;
+      lines[l].x2 = (lines[l].x2 - minx) / scalex;
+      lines[l].y2 = (lines[l].y2 - miny) / scaley;
+    }
+}
+
+void stg_scale_lines( stg_line_t* lines, int num, double xscale, double yscale )
+{
+  int l;
+  for( l=0; l<num; l++ )
+    {
+      lines[l].x1 *= xscale;
+      lines[l].y1 *= yscale;
+      lines[l].x2 *= xscale;
+      lines[l].y2 *= yscale;
+    }
+}
+
+void stg_translate_lines( stg_line_t* lines, int num, double xtrans, double ytrans )
+{
+  int l;
+  for( l=0; l<num; l++ )
+    {
+      lines[l].x1 += xtrans;
+      lines[l].y1 += ytrans;
+      lines[l].x2 += xtrans;
+      lines[l].y2 += ytrans;
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////
+// scale an array of rectangles so they fit in a unit square
 void stg_normalize_rects( stg_rotrect_t* rects, int num )
 {
   // assuming the rectangles fit in a square +/- one billion units
@@ -477,4 +539,39 @@ void stg_normalize_rects( stg_rotrect_t* rects, int num )
       rects[r].w = rects[r].w / scalex;
       rects[r].h = rects[r].h / scaley;
     }
+}	
+
+// returns an array of 4 * num_rects stg_line_t's
+stg_line_t* stg_rects_to_lines( stg_rotrect_t* rects, int num_rects )
+{
+  // convert rects to an array of lines
+  int num_lines = 4 * num_rects;
+  stg_line_t* lines = (stg_line_t*)calloc( sizeof(stg_line_t), num_lines );
+  
+  int r;
+  for( r=0; r<num_rects; r++ )
+    {
+      lines[4*r].x1 = rects[r].x;
+      lines[4*r].y1 = rects[r].y;
+      lines[4*r].x2 = rects[r].x + rects[r].w;
+      lines[4*r].y2 = rects[r].y;
+      
+      lines[4*r+1].x1 = rects[r].x + rects[r].w;;
+      lines[4*r+1].y1 = rects[r].y;
+      lines[4*r+1].x2 = rects[r].x + rects[r].w;
+      lines[4*r+1].y2 = rects[r].y + rects[r].h;
+      
+      lines[4*r+2].x1 = rects[r].x + rects[r].w;;
+      lines[4*r+2].y1 = rects[r].y + rects[r].h;;
+      lines[4*r+2].x2 = rects[r].x;
+      lines[4*r+2].y2 = rects[r].y + rects[r].h;
+      
+      lines[4*r+3].x1 = rects[r].x;
+      lines[4*r+3].y1 = rects[r].y + rects[r].h;
+      lines[4*r+3].x2 = rects[r].x;
+      lines[4*r+3].y2 = rects[r].y;
+    }
+  
+  return lines;
 }
+

@@ -108,7 +108,8 @@ void gui_model_update( stg_model_t* mod, stg_prop_type_t prop );
 
 void gui_model_nose( stg_model_t* model );
 void gui_model_pose( stg_model_t* mod );
-void gui_model_rects( stg_model_t* model );
+//void gui_model_rects( stg_model_t* model );
+void gui_model_lines( stg_model_t* model );
 void gui_model_nose( stg_model_t* model );
 void gui_model_rangers( stg_model_t* mod );
 void gui_model_rangers_data( stg_model_t* mod );

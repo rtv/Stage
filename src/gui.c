@@ -10,7 +10,7 @@
 #include "gui.h"
 
 // models that have fewer rectangles than this get matrix rendered when dragged
-#define STG_RECT_THRESHOLD 10
+#define STG_LINE_THRESHOLD 40
 
 // single static application visible to all funcs in this file
 static rtk_app_t *app = NULL; 
@@ -120,7 +120,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   win->show_matrix = FALSE;
   win->show_rangers = TRUE;
   win->show_rangerdata = FALSE;
-  win->show_geom = TRUE;
+  win->show_geom = FALSE;
   win->show_rects = TRUE;
   win->show_laser = TRUE;
   win->show_laserdata = TRUE;
@@ -306,7 +306,7 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
       // TODO - if there are more motion events pending, do nothing.
       //if( !gtk_events_pending() )
 	
-      if( mod->rect_count < STG_RECT_THRESHOLD )
+      if( mod->lines->len < STG_LINE_THRESHOLD )
 	model_set_prop( mod, STG_PROP_POSE, &pose, sizeof(pose) );
       
       // display the pose
@@ -399,8 +399,8 @@ void gui_model_render( stg_model_t* model )
   gui_window_t* win = g_hash_table_lookup( wins, &model->world->id );  
 
   if( win->show_rects )
-    gui_model_rects( model );
-  
+    gui_model_lines( model );
+
   if( win->show_nose && model->nose )
     gui_model_nose( model );
   
@@ -554,7 +554,7 @@ void gui_model_laser_data( stg_model_t* mod )
     }
 }
 
-void gui_model_rects( stg_model_t* mod )
+void gui_model_lines( stg_model_t* mod )
 {
   rtk_fig_t* fig = gui_model_figs(mod)->top;
   
@@ -562,7 +562,7 @@ void gui_model_rects( stg_model_t* mod )
 
   rtk_fig_color_rgb32( fig, mod->color );
 
-  PRINT_DEBUG1( "rendering %d rectangles", mod->rect_count );
+  PRINT_DEBUG1( "rendering %d lines", mod->lines->len );
 
   double localx = mod->local_pose.x;
   double localy = mod->local_pose.y;
@@ -571,34 +571,22 @@ void gui_model_rects( stg_model_t* mod )
   double cosla = cos(locala);
   double sinla = sin(locala);
   
-  int r;
-  for( r=0; r<mod->rect_count; r++ )
+  // draw lines too
+  int l;
+  for( l=0; l<mod->lines->len; l++ )
     {
-      stg_rotrect_t* src = &mod->rects[r];
-      double x,y,a,w,h;
+      stg_line_t* line = &g_array_index( mod->lines, stg_line_t, l );
       
-      //printf( "[%d - %.2f %.2f %.2f    %.2f %.2f] ",
-      //      r, src->x, src->y, src->a, src->w, src->h );
-
-      x = ((src->x + src->w/2.0) * mod->size.x) 
-	- mod->size.x/2.0;
-      y = ((src->y + src->h/2.0) * mod->size.y) 
-	- mod->size.y/2.0;
-      a = src->a;
-      w = src->w * mod->size.x;
-      h = src->h * mod->size.y;
-
-
-      double rx = localx + x * cosla - y * sinla;
-      double ry = localy + x * sinla + y * cosla;
-      double ra = a + locala;
-
-      //printf( "(%d - %.2f %.2f %.2f    %.2f %.2f) ",
-      //      r, x, y, a, w, h );
+      double x1 = localx + line->x1 * cosla - line->y1 * sinla;
+      double y1 = localy + line->x1 * sinla + line->y1 * cosla;
+      double x2 = localx + line->x2 * cosla - line->y2 * sinla;
+      double y2 = localy + line->x2 * sinla + line->y2 * cosla;
       
-      rtk_fig_rectangle( fig, rx,ry,ra,w,h, 1 ); 
+      rtk_fig_line( fig, x1,y1, x2,y2 );
     }
 }
+
+
 
 void gui_model_geom( stg_model_t* mod )
 {
@@ -707,10 +695,14 @@ void gui_model_update( stg_model_t* mod, stg_prop_type_t prop )
       gui_model_pose( mod );
       break;
 
-    case STG_PROP_RECTS:
-      gui_model_rects( mod );
-      break;
+      //case STG_PROP_RECTS:
+      //gui_model_rects( mod );
+      //break;
       
+    case STG_PROP_LINES:
+      gui_model_lines( mod );
+      break;
+
     case STG_PROP_PARENT: 
       gui_model_parent( mod );
       break;
