@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.21 2003-02-10 02:16:41 gerkey Exp $
+ * CVS: $Id: main.cc,v 1.61.2.22 2003-02-12 01:10:54 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -439,47 +439,112 @@ int PublishDirty()
   return 0; // success
 }
 
+double TimevalSeconds( struct timeval *tv )
+{
+  return( (double)(tv->tv_sec) + (double)(tv->tv_usec) / (double)MILLION );
+}
+
+double TimespecSeconds( struct timespec *ts )
+{
+  return( (double)(ts->tv_sec) + (double)(ts->tv_nsec) / (double)BILLION);
+}
+
+// estimate our minimum sleep time
+double CalibrateTimer( void )
+{
+  struct timespec ts;
+  ts.tv_sec = 0;
+  ts.tv_nsec = 1; // ask to sleep for 1 nanosecond(!)
+  
+  struct timespec goal;
+  goal.tv_sec = 0;
+  goal.tv_nsec = 10000000; // 0.01 sec
+  
+  struct timeval start, end;
+  
+  double min_sleep_time;
+
+  for( int x=0; x<1000; x++ )
+    {
+      gettimeofday( &start, NULL );
+
+      for( int i=0; i<20; i++ )
+	nanosleep( &ts, NULL );
+      
+      gettimeofday( &end, NULL );
+      
+      min_sleep_time = (TimevalSeconds( &end ) - TimevalSeconds(&start))/20;
+      
+      PRINT_WARN1( "START TIME %.6f", 
+		   TimevalSeconds( &start) );
+      
+      PRINT_WARN1( "100 nanosleeps took %.6f", 
+		   TimevalSeconds( &end ) - TimevalSeconds(&start) );
+      
+      PRINT_WARN1( "minimum sleep time = %.4f", 
+		   min_sleep_time );
+    }
+}
+
+
 int WaitForWallClock()
 {
-  struct timeval start_time;
-  struct timeval last_time;
+  CalibrateTimer();
 
-  static bool init = true;
+  static struct timeval start_time;
+  static struct timeval last_time;
+
+  static bool init = true;  
+  static double desired_interval = 0.1; // seconds
+  static double min_sleep_time = 0.0;
   
   // first time here, we set the start time
   if( init )
     {
+      // estimate our minimum sleep time
+      struct timespec ts;
+      ts.tv_sec = 0;
+      ts.tv_nsec = 1; // ask to sleep for 1 nanosecond(!)
       gettimeofday( &start_time, NULL );
-      memcpy( &last_time, &start_time, sizeof(last_time) );
+      nanosleep( &ts, NULL );
+      gettimeofday( &last_time, NULL );
+      
+      min_sleep_time = 
+	TimevalSeconds( &last_time ) - TimevalSeconds(&start_time);
+      
+      PRINT_WARN2( "START TIME %.6f. nanosleep took %.6f", 
+		   TimevalSeconds( &start_time), min_sleep_time );
+      
       init = false;
     }
   
-  double desired_interval = 0.1; // seconds
-
   struct timeval this_time;
   gettimeofday( &this_time, NULL );
   
-  double interval = (double)(this_time.tv_sec - last_time.tv_sec) 
-    + (double)(this_time.tv_usec - last_time.tv_usec ) / MILLION;
-  
+  double interval = TimevalSeconds(&this_time) - TimevalSeconds( &last_time );
   memcpy( &last_time, &this_time, sizeof(last_time) );
   
   // if we have spare time, go to sleep
   double spare_time = desired_interval - interval;
   
-  if( spare_time > 0.01 )
+  printf( " interval: %.6f spare: %.6f\n", 
+	  interval, spare_time );
+ 
+  printf( " used %d/%d ms\n", 
+	  (int)(interval * 1000.0),   
+	  (int)(desired_interval * 1000.0) );
+  
+  // move the sleep time closer to the amount of spare time we measured
+  //if( sleep_time > spare_time )
+  //sleep_time 
+
+  if( spare_time > min_sleep_time )
     {
       struct timespec ts;
       ts.tv_sec = (time_t)spare_time;
       ts.tv_nsec = (long)(fmod( spare_time, 1.0 ) * BILLION );
       
-      //printf( " interval: %.6f spare: %.6f (%d sec %ld nsec)\n", 
-      //  interval, spare_time, ts.tv_sec, ts.tv_nsec );
-      
-      printf( " used %d/%d ms\n", 
-	      (int)(interval * 1000.0),   
-	      (int)(desired_interval * 1000.0) );
-      
+      printf( "sleeping for %.6f seconds\n", TimespecSeconds( &ts ) );
       
       nanosleep( &ts, NULL ); // just stop the powerbook getting hot :)
     }
