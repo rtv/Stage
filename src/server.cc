@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.30 2002-09-11 18:57:20 gerkey Exp $
+ * CVS info: $Id: server.cc,v 1.31 2002-09-16 23:44:34 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -548,7 +548,7 @@ bool CStageServer::StartupPlayer( void )
   if (this->player_pid == 0)
   {
     // release controlling tty so Player doesn't get signals
-     setpgrp();
+    setpgid(0,0);
 
     // call player like this:
     // player -stage <device directory>
@@ -628,8 +628,13 @@ void CStageServer::ListenForConnections( void )
     // set up a socket for this connection
     struct sockaddr_in cliaddr;  
     bzero(&cliaddr, sizeof(cliaddr));
-    socklen_t clilen = sizeof(cliaddr);
-      
+#if HAVE_STDINT_H && HAVE_POLL
+    socklen_t clilen;
+#else
+    int clilen;
+#endif
+
+    clilen  = sizeof(cliaddr);
     int connfd = 0;
       
     connfd = accept( m_pose_listen.fd, (SA *) &cliaddr, &clilen);
@@ -856,12 +861,16 @@ bool CStageServer::CreateClockDevice( void )
   m_clock = (stage_clock_t*)map;
   
   // init the clock's semaphore
+  // TODO - change to record locking; that's what Player's using,
+  //        so the time is *not* actually protected right now - BPG
+/*
   if( sem_init( &m_clock->lock, 0, 1 ) < 0 )
   {
     PRINT_ERR1( "Failed to initialize record locking semaphore:%s", 
                 strerror(errno) );
     return false;
   }
+*/
   
   close( tfd ); // can close fd once mapped
   

@@ -101,6 +101,6 @@ stage_SOURCES = \
              #miscdevice.hh
 
 
-stage_LDADD = -lm -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -lplayerqueue $(RTKLDADD) $(RTVGLDADD)
+stage_LDADD = -lm -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -lplayerqueue $(RTKLDADD) $(RTVGLDADD) @LIBOBJS@ 
 
 stage_LDFLAGS =  $(RTKLDFLAGS) $(RTVGLDFLAGS)

@@ -21,8 +21,11 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.82 2002-09-11 18:57:20 gerkey Exp $
+ * CVS info: $Id: entity.cc,v 1.83 2002-09-16 23:44:34 gerkey Exp $
  */
+#if HAVE_CONFIG_H
+  #include <config.h>
+#endif
 
 #include <math.h>
 #include <string.h>
@@ -30,7 +33,9 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <values.h>  // for MAXFLOAT
+#if HAVE_VALUES_H
+  #include <values.h>  // for MAXFLOAT
+#endif
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <fcntl.h>

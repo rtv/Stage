@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtp.h,v $
-//  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Author: gerkey $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -27,6 +27,16 @@
 #ifndef RTP_H
 #define RTP_H
 
+#if HAVE_CONFIG_H
+  #include <config.h>
+#endif
+
+#if HAVE_STDINT_H
+  #include <stdint.h>
+#endif
+
+#include <sys/types.h>
+#include <netinet/in.h>
 #include <time.h>
 #include <stdlib.h>
 #include <sys/types.h>

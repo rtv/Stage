@@ -21,13 +21,12 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.22 2002-07-17 00:21:44 rtv Exp $
+ * CVS info: $Id: worldfile.cc,v 1.23 2002-09-16 23:44:34 gerkey Exp $
  */
 
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
-#include <libgen.h> // for dirname(3)
 #include <limits.h> // for PATH_MAX
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,6 +35,7 @@
 
 //#define DEBUG
 
+#include "replace.h" // for dirname(3)
 #include "stage_types.hh"
 #include "colors.hh"
 #include "worldfile.hh"

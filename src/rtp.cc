@@ -54,7 +54,9 @@ CRTPPlayer::CRTPPlayer( char* address )
   // use the other constructor
   //::CRTPPlayer( ip.s_addr, port );
   // seed the random number generator
+#if HAVE_SRAND48
   srand48( time(NULL) );
+#endif
 
       // set up the header
       hdr.version = 2;
@@ -65,7 +67,9 @@ CRTPPlayer::CRTPPlayer( char* address )
       hdr.pt = 0; // zero type
       hdr.seq = 0; // first in the sequence
       hdr.ts = 0; // zero timesstamp
+#if HAVE_LRAND48
       hdr.ssrc = lrand48(); // choose a random source ID
+#endif
 
       // set up the socket
       sockfd = socket( AF_INET, SOCK_DGRAM, 0 );
@@ -85,7 +89,9 @@ CRTPPlayer::CRTPPlayer( char* address )
 CRTPPlayer::CRTPPlayer( uint32_t ip, uint16_t port )
 {
   // seed the random number generator
+#if HAVE_SRAND48
   srand48( time(NULL) );
+#endif
 
       // set up the header
       hdr.version = 2;
@@ -96,7 +102,9 @@ CRTPPlayer::CRTPPlayer( uint32_t ip, uint16_t port )
       hdr.pt = 0; // zero type
       hdr.seq = 0; // first in the sequence
       hdr.ts = 0; // zero timesstamp
+#if HAVE_LRAND48
       hdr.ssrc = lrand48(); // choose a random source ID
+#endif
 
       // set up the socket
       sockfd = socket( AF_INET, SOCK_DGRAM, 0 );

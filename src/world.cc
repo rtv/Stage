@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.120 2002-09-11 18:57:20 gerkey Exp $
+ * CVS info: $Id: world.cc,v 1.121 2002-09-16 23:44:34 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -48,7 +48,6 @@
 #include <fcntl.h>
 #include <pwd.h>
 #include <stdio.h>
-#include <libgen.h>  // for dirname
 #include <netdb.h>
 
 #include <fstream>
@@ -97,7 +96,9 @@ CWorld::CWorld( int argc, char** argv, Library* lib )
   this->lib = lib;
 
   // seed the random number generator
+#if HAVE_SRAND48
   srand48( time(NULL) );
+#endif
 
   // Initialise configuration variables
   this->ppm = 20;
@@ -460,9 +461,12 @@ void CWorld::Update(void)
 	  if( m_clock ) // if we're managing a clock
 	    {
 	      // TODO - move this into the server?
-	      sem_wait( &m_clock->lock );
+
+              // TODO - change to record locking; that's what Player's using,
+              //        so the time is *not* actually protected right now - BPG
+	      //sem_wait( &m_clock->lock );
 	      m_clock->time = m_sim_timeval;
-	      sem_post( &m_clock->lock );
+	      //sem_post( &m_clock->lock );
 	    }
 	  
 	  // update the entities managed by this host at this time 
@@ -740,7 +744,7 @@ void CWorld::LogOutputHeader( void )
   // count the locally managed entities
   int m=0;
       
-  char* tmstr = ctime( &t.tv_sec);
+  char* tmstr = ctime((const time_t*)&t.tv_sec);
   tmstr[ strlen(tmstr)-1 ] = 0; // delete the newline
       
   char line[512];

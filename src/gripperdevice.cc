@@ -7,15 +7,20 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.27 $
+//  $Author: gerkey $
+//  $Revision: 1.28 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 //#define ENABLE_RTK_TRACE 1
+#if HAVE_CONFIG_H
+  #include <config.h>
+#endif
 
 #include <math.h>
-#include <values.h>
+#if HAVE_VALUES_H
+  #include <values.h>
+#endif
 #include "world.hh"
 #include "gripperdevice.hh"
 #include "raytrace.hh"

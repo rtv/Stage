@@ -21,20 +21,22 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.5 2002-09-11 18:57:20 gerkey Exp $
+ * CVS info: $Id: world.hh,v 1.6 2002-09-16 23:44:34 gerkey Exp $
  */
 
 #ifndef WORLD_HH
 #define WORLD_HH
 
+// NOTE: include <sys/types.h> FIRST, as it may have an effect on other headers
+#include <sys/types.h> 
 #include <stddef.h>
 #include <netinet/in.h>
 //#include <pthread.h>
-#include <sys/sem.h>
-#include <sys/ipc.h>
-#include <sys/poll.h>
+//#include <sys/sem.h>
+//#include <sys/ipc.h>
 #include <limits.h>
 
+#include "replace.h" // for poll(2)
 #include "player.h" //from player
 #include "image.hh"
 #include "entity.hh"

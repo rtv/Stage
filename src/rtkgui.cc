@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.1 2002-09-07 02:05:25 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.2 2002-09-16 23:44:34 gerkey Exp $
  */
 
 
@@ -53,7 +53,6 @@
 #include <fcntl.h>
 #include <pwd.h>
 #include <stdio.h>
-#include <libgen.h>  // for dirname
 #include <netdb.h>
 
 #include <fstream>
