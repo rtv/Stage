@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.33 $
+//  $Revision: 1.4.2.34 $
 //
 // Usage:
 //  (empty)
@@ -388,7 +388,7 @@ bool CWorld::InitGrids(const char *env_file)
         for (int x = 0; x < m_img->width; x++)
         {
             if (m_img->get_pixel(x, y) != 0)
-                m_laser_img->set_pixel(x, y, 1);
+                m_laser_img->set_pixel(x, y, 0xFF);
         }
     }
 

@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.2.2.5 2001-05-15 05:00:50 ahoward Exp $
+ * $Id: image.cc,v 1.2.2.6 2001-05-25 01:13:54 ahoward Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -81,80 +81,6 @@ Nimage::Nimage(int w,int h)
   cout << '@' << data << endl;
 #endif
 }
-
-/* *** REMOVE
-// construct from pnm file 
-Nimage::Nimage( const char* fname )
-{
-#ifdef DEBUG
-  cout << "Image: " << width << 'x' << height << flush;
-#endif
-
-  int n, m;
-
-  //FILE *stream = fopen( fname, "r");
-
-#ifdef VERBOSE
-  cout << "loading " << fname << flush;
-#endif
-
-  data = NULL;
-  
-  ifstream image( fname );
-
-  char magicNumber[10];
-  char comment[256];
-
-  int whiteNum;
-  char terminator;
-
-  if( image.fail() ) cout << "image bad!" << endl;
-
-  if( strstr( fname, ".pnm" ) )
-    {
-      image >> magicNumber;
-      image.get( terminator );
-      image.get( comment, 255, '\n');
-      image.get( terminator );
-      image >> width >> height >> whiteNum;
-    }
-  else if( strstr( fname, ".pgm" ) )
-    {
-      image >> magicNumber;
-      image.get( terminator );
-      image >> width >> height >> whiteNum;
-    }
-
-#ifdef DEBUG
-  cout << "magic: " << magicNumber << "\ncomment: " << comment 
-       << "\nwidth: " << width << " height: " << height 
-       << " white: " << whiteNum << endl; 
-#endif
-
-
-  //float colorScale = 
-
-  data = new unsigned char[ width * height ];
-  
-   unsigned char a;
-   
-   for( n=0; n<height; n++ )
-     for( m=0; m<width; m++ )
-       {
-	 image.get( a );
-	 set_pixel( m,n, a );
-	 //aset_pixel( m,n, width, height, RGB(a,a,a) );
-       }
-   
-  image.close();
-
-#ifdef DEBUG
-  cout << '@' << data << endl;
-#endif
-  //cout << "constructed NImage" << endl;
-}
-*/
-
 
 // construct from width / height with existing data
 Nimage::Nimage(unsigned char* array, int w,int h)
@@ -700,20 +626,6 @@ void Nimage::save_image_as_ppm(char *fname, char *cmap)
 
   fflush(f_out_ptr); fclose(f_out_ptr);
 }
-
-/*char* Nimage::color_name( int col )
-{
-  switch( col )
-    {
-    case red: return "red";
-    case blue: return "blue";
-    case yellow: return "yellow";
-    case green: return "green";
-    case magenta: return "magenta";
-    case white: return "white";
-    case cyan: return "cyan";
-    }
-}*/
 
 
 
