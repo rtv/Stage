@@ -1,14 +1,12 @@
 ####################################################################################
 # TODO 
-# $Id: TODO,v 1.15 2001-10-08 03:55:38 vaughan Exp $
+# $Id: TODO,v 1.16 2001-10-24 19:16:17 vaughan Exp $
 ####################################################################################
 
 ## IN PROGRESS #####################################################################
 
 ## URGENT ##########################################################################
 
- - stage documentation
- - xs documentation
  - change laser beacon detection ranges based on laser resolution
  - remove blocking read from playermulticlient so XS doesn't block
  - fix logging truth client demo to new truth style
@@ -22,6 +20,12 @@
      the path to the world file
 
 ## FIXED/DONE ######################################################################
+
+RTV 10/24/01
+ - better xs window behavior
+ - added HRL IDAR devices (in-progress)
+ - xs zooms and rotates grabbed objects with mouse wheel
+ - xs scrolls window when right mouse button pressed
 
 RTV 10/7/01
  - added fast mode (-fast) and external sync mode (-s) for large and/or 
