@@ -1,6 +1,6 @@
 
 /*
-  $Id: stest.c,v 1.1.2.6 2003-02-06 03:55:54 rtv Exp $
+  $Id: stest.c,v 1.1.2.7 2003-02-06 06:09:23 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
-#include "stageio.h"
+#include "sio.h"
 
 #define TEST(msg) (1 ? printf(  "TEST: " msg " ... "), fflush(stdout) : 0)
 #define TEST1(msg, a) (1 ? printf( "TEST: " msg " ... ", a), fflush(stdout) : 0)

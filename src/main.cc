@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.9 2003-02-06 03:36:48 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.10 2003-02-06 06:09:23 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -36,7 +36,7 @@
 #include <stdio.h>
 #include <unistd.h> /* for exit(2) */
 
-#include "stageio.h"
+#include "sio.h"
 #include "entity.hh"
 #include "root.hh"
 
