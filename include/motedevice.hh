@@ -11,7 +11,9 @@
 #define RSSI(a) (this->m_strength * (1 / (Distance(a, this) * Distance(a, this))))
 
 // RTV - this def was missing from my file - is this a reasonable value?
-#define MAX_MOTE_Q_LEN 20
+// BPG - i have no idea, but it's now defined as 10 in
+// player/include/messages.h, so i've commented out this one
+//#define MAX_MOTE_Q_LEN 20
 
 class CMoteDevice;
 
