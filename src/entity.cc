@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.83 2002-09-16 23:44:34 gerkey Exp $
+ * CVS info: $Id: entity.cc,v 1.84 2002-09-21 08:14:20 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -914,7 +914,8 @@ int CEntity::SetProperty( int con, EntityProperty property,
       if( this->g_group ) // rotate the group about the origin
 	gnome_canvas_item_affine_absolute( GNOME_CANVAS_ITEM(g_group), rotate);
 
-      this->GuiStatus();
+      if( this->m_world->g_appbar )
+	this->GuiStatus();
     }
 #endif
 

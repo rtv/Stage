@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.hh,v 1.2 2002-09-07 02:05:24 rtv Exp $
+ * CVS info: $Id: laserdevice.hh,v 1.3 2002-09-21 08:14:20 rtv Exp $
  */
 
 #ifndef LASERDEVICE_HH
@@ -99,6 +99,12 @@ public: static CLaserDevice* Creator( CWorld *world, CEntity *parent )
 
 #endif
   
+#ifdef RTVG
+  // cache the data between updates in this buffer. we compare the
+  // range readings to see if we need to re-render the range polygon
+  player_laser_data_t last_data;
+#endif
+
 };
 
 #endif

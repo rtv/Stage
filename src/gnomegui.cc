@@ -18,10 +18,10 @@
  *
  */
 /*
- * Desc: Gnome GUI world components for CWorld and CEntity
- * Author: Richard Vaughan, Andrew Howard
+ * Desc: Gnome GUI world components (all methods begin with 'Gui')
+ * Author: Richard Vaughan
  * Date: 7 Dec 2000
- * CVS info: $Id: gnomegui.cc,v 1.2 2002-09-20 00:39:22 rtv Exp $
+ * CVS info: $Id: gnomegui.cc,v 1.3 2002-09-21 08:14:20 rtv Exp $
  */
 
 
@@ -42,6 +42,10 @@
 
 #include "world.hh"
 #include "menus.hh"
+#include "gnomegui.hh"
+#include "playerdevice.hh"
+
+const double select_range = 0.6;
 
 // CWORLD ////////////////////////////////////////////////////////////////////////////////
 
@@ -87,6 +91,7 @@ void CWorld::GuiStartup( void )
   
   // setup appbar
   this->g_appbar = GNOME_APPBAR(gnome_appbar_new(FALSE, TRUE, GNOME_PREFERENCES_USER));
+  assert( g_appbar );
   gnome_appbar_set_default(  this->g_appbar, "No selection" );
   gnome_app_set_statusbar(GNOME_APP(this->g_app), GTK_WIDGET(this->g_appbar));
   
@@ -165,6 +170,9 @@ gint CWorld::GuiEvent(GnomeCanvasItem *item, GdkEvent *event, gpointer data)
  
   static MotionMode mode = Nothing;
   
+  static double drag_offset_x;
+  static double drag_offset_y;
+
   static double spin_start_th;
   static double spin_start_x;
   static double zoom = 1.0;
@@ -190,19 +198,38 @@ gint CWorld::GuiEvent(GnomeCanvasItem *item, GdkEvent *event, gpointer data)
     {
     case GDK_BUTTON_PRESS: // begin a drag, spin or zoom
       {
-	//puts( "BUTTON" );
-	
-	if( selected ) // if something was selected, unselect it
-	  { 
-	    selected->GuiUnselect();
-	    selected = NULL;
+	if( event->button.button == 1 || event->button.button == 3 )
+	  {
+	    CEntity* nearby = world->GetNearestChildWithinRange( item_x, item_y, select_range, world->root );
+	    // selected may be null if we clicked too far from anything
+	    //selected = world->GetNearestChildWithinRange( item_x, item_y, 
+	    //					  1.0, world->root );
+	    
+	    if( selected && nearby == NULL ) // clicked away from everything - cancel selection
+	      {
+		selected->GuiUnselect();
+		selected->GuiUnwatch();
+		selected = NULL;
+	      }
+	    else if( selected &&  nearby == selected ) // we clicked on the same thing again - do nothing
+	      {
+		selected->GuiUnwatch();
+		selected->GuiUnselect();
+		selected->GuiSelect();
+	      }
+	    else if( !selected && nearby ) // no previous selection, select nearby
+	      { 
+		selected = nearby;
+		selected->GuiSelect();
+	      }
+	    else if( selected && nearby ) // previous selection, now select nearby
+	      {
+		selected->GuiUnselect();
+		selected->GuiUnwatch();
+		selected = nearby;
+		selected->GuiSelect();
+	      }		 
 	  }
-	
-	// selected may be null if we clicked too far from anything
-	selected = world->GetNearestChildWithinRange( item_x, item_y, 
-						      1.0, world->root );
-	if( selected ) // if something was selected, unselect it
-	  selected->GuiSelect();	
 	
 	switch(event->button.button) 
 	  {
@@ -212,6 +239,14 @@ gint CWorld::GuiEvent(GnomeCanvasItem *item, GdkEvent *event, gpointer data)
 		//puts( "START DRAG" );
 		cursor = gdk_cursor_new(GDK_FLEUR);
 		mode = Dragging;
+		
+		double dummy;
+		selected->GetPose( drag_offset_x, drag_offset_y, dummy );
+		
+		// subtract the cursor position to get the offsets
+		drag_offset_x -= item_x;
+		drag_offset_y -= item_y;
+
 	      }
 	    break;
 	    
@@ -263,7 +298,7 @@ gint CWorld::GuiEvent(GnomeCanvasItem *item, GdkEvent *event, gpointer data)
       break;
       
     case GDK_MOTION_NOTIFY: // perform a drag, spin or zoom
-      //printf( "MOTION mode %d\n", mode );
+      printf( "MOTION mode %d\n", mode );
       
       switch( mode )
 	{
@@ -276,8 +311,11 @@ gint CWorld::GuiEvent(GnomeCanvasItem *item, GdkEvent *event, gpointer data)
 	    {		  
 	      //puts( "DRAGGING" );
 	      // move the entity
-	      selected->SetProperty( -1, PropPoseX, &item_x, sizeof(item_x) );
-	      selected->SetProperty( -1, PropPoseY, &item_y, sizeof(item_y) );
+	      double newpos_x = item_x + drag_offset_x;
+	      double newpos_y = item_y + drag_offset_y;
+
+	      selected->SetProperty( -1, PropPoseX, &newpos_x, sizeof(item_x) );
+	      selected->SetProperty( -1, PropPoseY, &newpos_y, sizeof(item_y) );
 	    }
 	  break;
 	  
@@ -316,6 +354,35 @@ gint CWorld::GuiEvent(GnomeCanvasItem *item, GdkEvent *event, gpointer data)
       break;
       
     case GDK_BUTTON_RELEASE: // end a drag, spin or zoom
+
+      switch(event->button.button) 
+	{
+	case 1: // handle selection and dragging
+	case 3:
+
+	  if( selected )
+	    {
+	      selected->GuiUnselect();
+	      selected->GuiWatch();
+	      //selected = NULL;
+	    }
+	  break;
+	  
+	case 2: 
+	    break;
+	  
+	case 4:
+	  //puts( "ZOOM IN" );
+	  break;
+	  
+	case 5:
+	  //puts( "ZOOM OUT" );
+	  break;
+	  
+	default:
+	  break;
+	}
+      
       if( mode != Nothing )
 	{
 	  //puts( "RELEASE" );
@@ -334,9 +401,11 @@ gint CWorld::GuiEvent(GnomeCanvasItem *item, GdkEvent *event, gpointer data)
 	  selected->click_subscribed = !selected->click_subscribed; // invert 
 	}
     case GDK_ENTER_NOTIFY:
+      puts( "enter" );
       break;
       
     case GDK_LEAVE_NOTIFY:
+      puts( "leave" );
       break;
 
     default:
@@ -377,70 +446,33 @@ void CEntity::GuiStartup( void )
   art_affine_rotate( affine, RTOD(local_pth) );
   gnome_canvas_item_affine_relative( GNOME_CANVAS_ITEM(g_group), affine );
   
-  GnomeCanvasPoints *points1;
+  GtkType shape = 0;
 
-  // draw a shape
+  // choose a shape
   switch( this->shape )
     {
     case ShapeRect:
-      //case ShapeNone:
-      /*
-      points1 = gnome_canvas_points_new(5);
-      points1->coords[0] =  - size_x/2.0;
-      points1->coords[1] =  - size_y/2.0;
-      points1->coords[2] =  + size_x/2.0;
-      points1->coords[3] =  - size_y/2.0;
-      points1->coords[4] =  + size_x/2.0;
-      points1->coords[5] =  + size_y/2.0;
-      points1->coords[6] =  - size_x/2.0;
-      points1->coords[7] =  + size_y/2.0;
-      points1->coords[8] =  points1->coords[0]; 
-      points1->coords[9] =  points1->coords[1]; 
-
-            this->g_body =  gnome_canvas_item_new(g_group,
-					   GNOME_TYPE_CANVAS_LINE,
-					   "points", points1,
-					   "fill_color_rgba", (this->color << 8)+255,
-					   "width_pixels", 1,
-					   NULL);
-      */
-      this->g_body = 
-	gnome_canvas_item_new (g_group,
-			       gnome_canvas_rect_get_type(),
-			       "x1", - size_x/2.0,
-			       "y1", - size_y/2.0,
-			       "x2", + size_x/2.0,
-			       "y2", + size_y/2.0,
-			       "fill_color_rgba", (this->color<<8)+128,
-			       "outline_color_rgba", (this->color<<8)+255,
-			       "width_pixels", 1,
-			       NULL );
+      shape = gnome_canvas_rect_get_type();
       break;
-
-
-
+    case ShapeCircle: 
+      shape = gnome_canvas_ellipse_get_type();
       break;
-    case ShapeCircle: // TODO - implement circle
-      this->g_body = 
-	gnome_canvas_item_new (g_group,
-			       // TODO - REPLACE THIS WITH ELLIPSE
-			       ////gnome_canvas_rect_get_type(),
-			       // ELLIPSE DOESN'T HANDLE ROTATION
-			       gnome_canvas_ellipse_get_type(),
-			       "x1", - size_x/2.0,
-			       "y1", - size_y/2.0,
-			       "x2", + size_x/2.0,
-			       "y2", + size_y/2.0,
-			       "fill_color_rgba", (this->color<<8)+128,
-			       "outline_color_rgba", (this->color<<8)+255,
-			       "width_pixels", 1,
-			       NULL );
-      break;
-   
     case ShapeNone: // draw nothin'.
+      shape = 0;
       break;
     }      
-
+  
+  if( shape != 0 )
+    this->g_body =  gnome_canvas_item_new (g_group, shape,
+					   "x1", - size_x/2.0,
+					   "y1", - size_y/2.0,
+					   "x2", + size_x/2.0,
+					   "y2", + size_y/2.0,
+					   "fill_color_rgba", RGBA(this->color,255),
+					   "outline_color_rgba", RGBA(this->color,255),
+					   "width_pixels", 1,
+					   NULL );
+  
   if( m_parent_entity == NULL ) // we're root
     {
       // draw a rectangle around the root entity as a background for the world
@@ -451,13 +483,13 @@ void CEntity::GuiStartup( void )
 			       "y1", 0.0,
 			       "x2", m_world->matrix->width / m_world->ppm,
 			       "y2", m_world->matrix->width / m_world->ppm,
-			       "fill_color_rgba", (::LookupColor(BACKGROUND_COLOR)<< 8)+255,
+			       "fill_color_rgba", RGBA(::LookupColor(BACKGROUND_COLOR),255),
 			       "outline_color", "black",
 			       "width_pixels", 1,
 			       NULL );
 
-      this->GuiRenderGrid( 0.2, ::LookupColor(GRID_MINOR_COLOR) );
-      this->GuiRenderGrid( 1.0, ::LookupColor(GRID_MAJOR_COLOR) );
+      //this->GuiRenderGrid( 0.2, ::LookupColor(GRID_MINOR_COLOR) );
+      //this->GuiRenderGrid( 1.0, ::LookupColor(GRID_MAJOR_COLOR) );
     }
 	
   
@@ -484,7 +516,7 @@ void CEntity::GuiRenderGrid( double spacing, StageColor color )
       
       gnome_canvas_item_new (g_group, gnome_canvas_line_get_type(),
 			     "points", gcp,
-			     "fill_color_rgba", (color<<8) + 255,
+			     "fill_color_rgba", RGBA(color,255),
 			     "width_pixels", 1,
 			     NULL );
     }
@@ -498,57 +530,194 @@ void CEntity::GuiRenderGrid( double spacing, StageColor color )
       
       gnome_canvas_item_new (g_group, gnome_canvas_line_get_type(),
 			     "points", gcp,
-			     "fill_color_rgba", (color<<8) + 255,
+			     "fill_color_rgba", RGBA(color,255),
 			     "width_pixels", 1,
 			     NULL );
     }
 }
 
+
+GnomeCanvasGroup* watch_rect = NULL;
+
+
+void CEntity::GuiWatch( void )
+{
+  printf( "watch: %d \n", this->stage_type ); 
+
+   double border = select_range/2.0;
+   double noselen = 0.2;
+   double nosewid = 0.1;
+   
+   watch_rect = 
+     (GnomeCanvasGroup*)gnome_canvas_item_new( this->g_group,
+					       gnome_canvas_group_get_type(),
+					       "x", 0,
+					       "y", 0,
+					       NULL);
+
+   // a yellow ellipse
+   gnome_canvas_item_new( watch_rect,
+			  gnome_canvas_ellipse_get_type(),
+			  "x1", -(this->size_x/2.0 + border),
+			  "y1", -(this->size_y/2.0 + border),
+			  "x2", +(this->size_x/2.0 + border),
+			  "y2", +(this->size_x/2.0 + border),
+			  "fill_color_rgba", RGBA(RGB(255,255,0),64),
+			  "outline_color_rgba", RGBA(0,128),
+			  "width_pixels", 1,
+			  NULL );
+
+   // a heading indicator triangle
+   GnomeCanvasPoints *pts = gnome_canvas_points_new(3);
+   
+   pts->coords[0] =  +(this->size_x/2.0 + border) - noselen/2.0;
+   pts->coords[1] =  -nosewid;
+   pts->coords[2] = pts->coords[0];
+   pts->coords[3] = +nosewid;
+   pts->coords[4] =  +(this->size_x/2.0 + border) + noselen/2.0;
+   pts->coords[5] =  0;
+   
+   gnome_canvas_item_new( watch_rect,
+			  gnome_canvas_polygon_get_type(),
+			  "points", pts,
+			  "fill_color_rgba", RGBA(RGB(255,255,0),64),
+			  "outline_color_rgba", RGBA(0,128),
+			  "width_pixels", 1,
+			  NULL );
+
+   gnome_canvas_item_lower( (GnomeCanvasItem*)watch_rect, 99 );
+   
+   //gnome_appbar_push(  this->m_world->g_appbar, "Select" );
+   this->GuiStatus();
+   
+}
+
+void CEntity::GuiUnwatch( void )
+{
+  if( watch_rect )
+    {
+      gtk_object_destroy(GTK_OBJECT(watch_rect));
+      watch_rect = NULL;
+    }
+      
+  // remove my status from the appbar
+   assert( this->m_world->g_appbar );
+   gnome_appbar_pop(  this->m_world->g_appbar );  
+}
+
+GnomeCanvasGroup* select_rect = NULL;
+
+
 void CEntity::GuiSelect( void )
 {
   printf( "select: %d \n", this->stage_type ); 
 
-  // make our outline glow yellow (if we have a body figure)
-  if( this->g_body )
-    gnome_canvas_item_set( this->g_body,
-			   //"outline_color_rgba", 0xFFFF00BB,
-			   "fill_color_rgba", 0xFFFF00FF,
-			   "width_pixels", 3,
-			   NULL );
+   double border = select_range;
+   double noselen = 0.2;
+   double nosewid = 0.1;
+   
+   select_rect = 
+     (GnomeCanvasGroup*)gnome_canvas_item_new( this->g_group,
+					       gnome_canvas_group_get_type(),
+					       "x", 0,
+					       "y", 0,
+					       NULL);
 
-  gnome_appbar_push(  this->m_world->g_appbar, "Select" );
-  this->GuiStatus();
+   // a yellow ellipse
+   gnome_canvas_item_new( select_rect,
+			  gnome_canvas_ellipse_get_type(),
+			  "x1", -(this->size_x/2.0 + border),
+			  "y1", -(this->size_y/2.0 + border),
+			  "x2", +(this->size_x/2.0 + border),
+			  "y2", +(this->size_x/2.0 + border),
+			  "fill_color_rgba", RGBA(RGB(255,255,0),64),
+			  "outline_color", "black",
+			  "width_pixels", 1,
+			  NULL );
 
+   // a heading indicator triangle
+   GnomeCanvasPoints *pts = gnome_canvas_points_new(3);
+   
+   pts->coords[0] =  +(this->size_x/2.0 + border) - noselen/2.0;
+   pts->coords[1] =  -nosewid;
+   pts->coords[2] = pts->coords[0];
+   pts->coords[3] = +nosewid;
+   pts->coords[4] =  +(this->size_x/2.0 + border) + noselen/2.0;
+   pts->coords[5] =  0;
+   
+   gnome_canvas_item_new( select_rect,
+			  gnome_canvas_polygon_get_type(),
+			  "points", pts,
+			  "fill_color_rgba", RGBA(RGB(255,255,0),255),
+			  "outline_color", "black",
+			  "width_pixels", 1,
+			  NULL );
+
+
+
+   gnome_canvas_item_lower( (GnomeCanvasItem*)select_rect, 99 );
+   
+   //gnome_appbar_push(  this->m_world->g_appbar, "Select" );
+   this->GuiStatus();
+   
 }
 
 void CEntity::GuiUnselect( void )
 {
-  // put the outline back to normal (if we have a body figure)
-  if( this->g_body )
-    gnome_canvas_item_set( this->g_body,
-			   //"outline_color_rgba", (this->color << 8)+255,
-			   "fill_color_rgba", (this->color << 8)+255,
-			   "width_pixels", 1,
-			   NULL );
-  
+  if( select_rect )
+    {
+      gtk_object_destroy(GTK_OBJECT(select_rect));
+      select_rect = NULL;
+    }
+      
   // remove my status from the appbar
+  assert( this->m_world->g_appbar );
   gnome_appbar_pop(  this->m_world->g_appbar );  
 }
 
 void CEntity::GuiStatus( void )
 {
   // describe my status on the appbar
-  char buf[64];
+  const char buflen = 256;
+  char buf[buflen];
   double x, y, th;
   this->GetGlobalPose( x, y, th );
 
-  sprintf( buf, "Type: %d pose: X: %.2f Y: %.2f TH: %.2f",
-	   this->stage_type, x, y, th );
-	   
+  // check for overflow
+  assert( -1 != 
+	  sprintf( buf, buflen, 
+		   "Type: %d pose: X: %.2f Y: %.2f TH: %.2f",
+		   this->stage_type, x, y, th ) );
+	  
   
-  //gnome_appbar_set_status(  this->m_world->g_appbar, buf );  
-
+  assert( this->m_world->g_appbar );
+  gnome_appbar_push(  this->m_world->g_appbar, buf );  
 }
+
+void CPlayerEntity::GuiStatus( void )
+{
+  // describe my status on the appbar
+  const char buflen = 256;
+  char buf[buflen];
+  double x, y, th;
+  this->GetGlobalPose( x, y, th );
+  
+  // check for overflow
+  assert( -1 !=
+	  snprintf( buf, buflen, 
+		    "Stage type: %d  Player type: %d port: %d index: %d pose: X: %.2f Y: %.2f TH: %.2f",
+		   this->stage_type, 
+		   this->m_player.code, 
+		   this->m_player.port, 
+		   this->m_player.index, 
+		   x, 
+		   y, 
+		   th ) );
+  
+  assert( this->m_world->g_appbar );
+  gnome_appbar_push(  this->m_world->g_appbar, buf );  
+}
+
 
                       
 #endif

@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.3 2002-09-07 02:05:23 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.4 2002-09-21 08:14:20 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -360,6 +360,8 @@ public:
   virtual void GuiStartup( void );
   virtual void GuiSelect( void );
   virtual void GuiUnselect( void );
+  virtual void GuiWatch( void );
+  virtual void GuiUnwatch( void );
   virtual void GuiStatus( void );
 
   virtual void GuiRenderGrid( double spacing, StageColor color );
