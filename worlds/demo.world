@@ -1,0 +1,87 @@
+
+include "pioneer.inc"
+
+include "chatterbox.inc"
+
+
+size [18 18]
+bitmap "bitmaps/autolab.png"
+
+resolution 0.02  # meters per pixel
+
+interval_sim 100  # milliseconds per update step
+interval_real 100 # real-time milliseconds per update step
+
+
+define bigrobot pioneer2dx
+(
+  # add a laser scanner	
+  # laser view vector - format: [ minrange maxrange fov ]
+  laser.view [ 0.0 5.0 180.0 ]
+  laser.pose [ 0 0 0 ]
+  laser.size [ 0.15 0.15 ]
+  laser.samples 180
+	
+  # fiducialfinder view vector - format [ minrange maxrange fov ]
+  fiducial.view [ 0.0 5.0 180.0 ]  
+  fiducial.id_limit 4.0
+
+  # blobfinder configuration 
+  # blob view vector - format [minrange maxrange fov]	
+  blob.view [ 0 7.0 60 ]	
+  blob.count 6
+  blob.screen [ 80 60 ]
+  blob.channels [ "red" "green" "blue" "cyan" "yellow" "magenta" ]	
+
+  #energy configuration
+  energy.capacity 3000.0
+  energy.range 1.0
+  energy.return 0 # we don't give charge
+)
+
+
+bigrobot( name "r0" pose [2.899 10.896 7105.296] color "blue" )
+bigrobot( name "r1" pose [1.946 7.494 71.951] color "green")
+bigrobot( name "r2" pose [2.611 6.565 88.701] color "magenta" )
+bigrobot( name "r3" pose [0.981 7.855 -77.823] color "cyan" )
+
+
+define bluechatterbox chatterbox
+(
+  color "blue"
+)
+
+define redchatterbox chatterbox
+(
+  color "red"
+)
+
+bluechatterbox( name "bch0" pose [16.680 5.644 0.000] )
+bluechatterbox( name "bch1" pose [13.998 4.682 -171.141] )
+bluechatterbox( name "bch2" pose [14.915 5.715 -159.523] )
+bluechatterbox( name "bch3" pose [14.784 6.621 -28.297] )
+bluechatterbox( name "bch4" pose [13.313 4.827 -108.654] )
+
+redchatterbox( name "rch0" pose [15.878 5.292 0.000] )
+redchatterbox( name "rch1" pose [13.206 5.311 0.000] )
+redchatterbox( name "rch2" pose [14.791 5.058 -53.892] )
+redchatterbox( name "rch3" pose [13.888 5.766 -28.297] )
+redchatterbox( name "rch4" pose [16.219 6.424 -54.883] )
+
+
+define charger model
+(
+  size [ 1 1 ]
+
+ color "green"
+ energy.capacity -1.0  # infinite
+ energy.return 30.0 # will transfer 30 Joules per second (Watts)
+ energy.range 0.0
+
+ gui.nose 0
+ obstacle.return 0
+ fiducial.return 1
+)
+
+charger( pose [ 19.772 14.950 0.000 ] )
+charger( pose [ 56.073 18.693 0.000 ] )
