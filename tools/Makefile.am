@@ -1,4 +1,4 @@
-toolsdir = $(prefix)/tools
+toolsdir = $(prefix)/bin
 
 tools_PROGRAMS = autoplace
 
