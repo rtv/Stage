@@ -4,17 +4,27 @@ define(`forager',`
 #   The following code was expanded from the macro call:
 #       $0($*)
 
-create position_device radius 0.2 pose $1 $2 $3 port $4 shape circle
-{
-  create player_device pose -0.13 0 0 size 0.05 0.05 port $4
-  create sonar_device port $4
-  create ptz_device port $4
-  {
-    create vision_device port $4
-  }
-  create gripper_device pose 0.16 0 0 consume true port $4
-  create gps_device pose 0 0 0 port $4
-}
+begin position_device
+  pose ($1 $2 $3)
+  port $4
+  shape circle
+  begin player_device 
+    pose (-0.13 0 0)
+  end
+  begin sonar_device
+  end
+  begin ptz_device
+    begin vision_device
+    end
+  end
+  begin gripper_device
+    pose (0.16 0 0) 
+    consume true
+  end
+  begin gps_device
+    pose (0 0 0)
+  end
+end
 ')
 
 #  args are (<x>,<y>,<th>,<port>)
@@ -23,11 +33,15 @@ define(`simplerobot',`
 #   The following code was expanded from the macro call:
 #        $0($*)
 
-create position_device pose $1 $2 $3 port $4 shape circle
-{
-  create player_device port $4
-  create sonar_device port $4
-}
+begin position_device 
+  pose ($1 $2 $3)
+  port $4 
+  shape circle
+  begin player_device
+  end
+  begin sonar_device
+  end
+end
 ')
 
 #  args are (<x>,<y>,<th>,<port>,<shape>,<color>)
@@ -36,11 +50,16 @@ define(`laserrobot',`
 #   The following code was expanded from the macro call:
 #        $0($*)
 
-create position_device pose $1 $2 $3 port $4 shape $5 color $6
-{
-  create player_device color $6
-  create laser_device color $6
-}
+begin position_device 
+  pose ($1 $2 $3)
+  port $4 
+  shape $5
+  color $6
+  begin player_device
+  end
+  begin laser_device
+  end
+end
 ')
 
 

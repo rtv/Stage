@@ -1,5 +1,4 @@
-# $Id: utils.m4,v 1.1 2001-08-16 22:39:39 gerkey Exp $
-#
+# $Id: utils.m4,v 1.2 2002-01-29 00:43:25 gerkey Exp $
 # some useful m4 utilities 
 
 # this is a simple for loop. use it like:
