@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.46 $
+//  $Author: inspectorg $
+//  $Revision: 1.47 $
 //
 // Usage:
 //  (empty)
@@ -452,6 +452,7 @@ private: CEntity* CreateObject(const char *type, CEntity *parent );
   private: rtk_fig_t *fig_grid;
   
   // Some menu items
+  private: rtk_menu_t *file_menu;
   private: rtk_menuitem_t *save_menuitem;
   private: rtk_menuitem_t *export_menuitem;
 
