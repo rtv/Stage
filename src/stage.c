@@ -118,6 +118,9 @@ stg_property_t* stg_property_create( void )
   
   //PRINT_WARN1( "created property at %p", prop );
 
+  // todo - fix this
+  prop->timestamp = 100.0;
+
   return prop;
 }
 
@@ -450,6 +453,51 @@ stg_property_t* stg_send_property( stg_client_t* cli,
   stg_property_write( cli, prop );
   return( stg_property_read( cli ) );  
 }  
+
+// set a property of the model with the given id. 
+// returns 0 on success, else -1.
+int stg_set_property( stg_client_t* cli,
+		      int id, 
+		      stg_prop_id_t type,
+		      void* data, 
+		      size_t len )
+{
+  stg_property_t* reply = 
+    stg_send_property( cli, id, type, STG_SET, data, len );
+  
+  if( reply == NULL )
+    return -1;
+ 
+  stg_property_free( reply );
+  return 0; //ok
+}
+
+// gets the requested data from the server, allocating memory for the packet.
+// caller must free() the data
+// returns 0 on success, else -1.
+int stg_get_property( stg_client_t* cli,
+		      int id, 
+		      stg_prop_id_t type,
+		      void **data, 
+		      size_t *len )
+{
+  stg_property_t* reply = 
+    stg_send_property( cli, id, type, STG_GET, NULL, 0 );
+  
+  if( reply == NULL ) // fail
+    {
+      *data = NULL;
+      *len = 0;
+      return -1;
+    }
+
+  // success
+  *data = reply->data;
+  *len = reply->len;
+  return 0;
+}
+
+
 
 stg_id_t stg_model_create( stg_client_t* cli, stg_entity_create_t* ent )
 {

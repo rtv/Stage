@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.13 2003-08-28 20:38:23 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.14 2003-08-30 02:00:38 rtv Exp $
  */
 
 #include <assert.h>
@@ -1896,53 +1896,88 @@ int CWorldFile::Upload( stg_client_t* cli,
 	
 	PRINT_DEBUG1( "created model %d", anid );
 	
-	stg_matrix_render_t mr;
-	mr = this->ReadBool( section, "matrix_render", true );
-	stg_model_set_matrix_render( cli, anid, &mr );
+	char* token = NULL;
 
+	token = "matrix_render";
+	stg_matrix_render_t mr = this->ReadBool( section, token, true );
+	if( stg_set_property( cli, anid, STG_PROP_MATRIX_RENDER,
+			      &mr, sizeof(mr) ) < 0 )  
+	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
+	
+	token = "size";
 	stg_size_t sz;
-	sz.x = this->ReadTupleFloat( section, "size", 0, 0.5 );
-	sz.y = this->ReadTupleFloat( section, "size", 1, 0.5 );
-	stg_model_set_size( cli, anid, &sz );
+	sz.x = this->ReadTupleFloat( section, token, 0, 0.5 );
+	sz.y = this->ReadTupleFloat( section, token, 1, 0.5 );
+	if( stg_set_property( cli, anid, STG_PROP_SIZE,
+			      &sz, sizeof(sz) ) < 0 )  
+	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 	
+	token = "velocity";
 	stg_velocity_t vel;
-	vel.x = this->ReadTupleFloat( section, "velocity", 0, 0.0 );
-	vel.y = this->ReadTupleFloat( section, "velocity", 1, 0.0 );
-	vel.a = this->ReadTupleFloat( section, "velocity", 2, 0.0 );
-	stg_model_set_velocity( cli, anid, &vel );
+	vel.x = this->ReadTupleFloat( section, token, 0, 0.0 );
+	vel.y = this->ReadTupleFloat( section, token, 1, 0.0 );
+	vel.a = this->ReadTupleFloat( section, token, 2, 0.0 );
+	if( stg_set_property( cli, anid, STG_PROP_VELOCITY,
+			      &vel, sizeof(vel) ) < 0 )  
+	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 	
+	token = "pose";
 	stg_pose_t pose;
-	pose.x = this->ReadTupleFloat( section, "pose", 0, 0.0 );
-	pose.y = this->ReadTupleFloat( section, "pose", 1, 0.0 );
-	pose.a = this->ReadTupleFloat( section, "pose", 2, 0.0 );
-	stg_model_set_pose( cli, anid, &pose );
+	pose.x = this->ReadTupleFloat( section, token, 0, 0.0 );
+	pose.y = this->ReadTupleFloat( section, token, 1, 0.0 );
+	pose.a = this->ReadTupleFloat( section, token, 2, 0.0 );
+	if( stg_set_property( cli, anid, STG_PROP_POSE,
+			      &pose, sizeof(pose) ) < 0 )  
+	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 	
+	token = "origin";
 	stg_pose_t origin;
-	origin.x = this->ReadTupleFloat( section, "origin", 0, 0.0 );
-	origin.y = this->ReadTupleFloat( section, "origin", 1, 0.0 );
-	origin.a = this->ReadTupleFloat( section, "origin", 2, 0.0 );
-	stg_model_set_origin( cli, anid, &origin );
+	origin.x = this->ReadTupleFloat( section, token, 0, 0.0 );
+	origin.y = this->ReadTupleFloat( section, token, 1, 0.0 );
+	origin.a = this->ReadTupleFloat( section, token, 2, 0.0 );
+	if( stg_set_property( cli, anid, STG_PROP_ORIGIN,
+			      &origin, sizeof(origin) ) < 0 )  
+	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 
-	stg_neighbor_return_t nret;
-	nret = this->ReadInt( section, "neighbor", 0 );
-	stg_model_set_neighbor_return( cli, anid, &nret );
-	
+	token = "neighbor";
+	stg_neighbor_return_t nret = this->ReadInt( section, token, 0 );
+	if( stg_set_property( cli, anid, STG_PROP_NEIGHBORRETURN,
+			      &nret, sizeof(nret) ) < 0 )  
+	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
+
+	token = "neighbor_bounds";
+	stg_bounds_t nbounds;
+	nbounds.min = this->ReadTupleFloat(section, token, 0,0.0);
+	nbounds.max = this->ReadTupleFloat(section, token, 1,5.0);
+	if( stg_set_property( cli, anid, STG_PROP_NEIGHBORBOUNDS,
+			      &nbounds, sizeof(nbounds) ) < 0 )  
+	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
+
+	token = "light_interval";
 	stg_interval_ms_t li;
-	li = this->ReadInt( section, "light_interval", STG_LIGHT_OFF );
-	stg_model_set_light( cli, anid, &li );
-	
-	stg_mouse_mode_t mouse;
-	mouse = this->ReadBool( section, "mouseable", true );
-	stg_model_set_mouse_mode( cli, anid, &mouse );
+	li = this->ReadInt( section, token, STG_LIGHT_OFF );
+	if( stg_set_property( cli, anid, STG_PROP_BLINKENLIGHT,
+			      &li, sizeof(li) ) < 0 )  
+	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 
-	stg_nose_t nose;
-	nose = (stg_nose_t)this->ReadBool( section, "nose", true );
-	stg_model_set_nose( cli, anid, &nose );
+	token = "mouseable";
+	stg_mouse_mode_t mouse = this->ReadBool( section, token, true );
+	if( stg_set_property( cli, anid, STG_PROP_MOUSE_MODE,
+			      &mouse, sizeof(mouse) ) < 0 )  
+	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 	
-	stg_border_t border;
-	border = this->ReadBool( section, "border", false );
-	stg_model_set_border( cli, anid, &border );
-
+	token = "nose";
+	stg_nose_t nose = this->ReadBool( section, token, true );
+	if( stg_set_property( cli, anid, STG_PROP_NOSE,
+			      &nose, sizeof(nose) ) < 0 )  
+	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
+	
+	token = "border";
+	stg_border_t border = this->ReadBool( section, token, false );
+	if( stg_set_property( cli, anid, STG_PROP_BORDER,
+			      &border, sizeof(border) ) < 0 )  
+	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
+	
 	// read any ranger details
 	
 	// Load the configuration of each ranger
@@ -1987,13 +2022,19 @@ int CWorldFile::Upload( stg_client_t* cli,
 			r->size.x, r->size.y );
 	      }
 #endif
-	    stg_model_set_rangers( cli, anid, rangers, rcount );
+	    if( stg_set_property( cli, anid, STG_PROP_RANGERS,
+				  &rangers, rcount * sizeof(stg_ranger_t) ) 
+		< 0 )  
+	      PRINT_ERR2( "attempt to set %s[%s] failed", 
+			  child.name, "ranger array" );
+
 	    free(rangers);
 	  }
 
 	PRINT_DEBUG("Checking for bitmap file" );
 
-	const char* bitmapfile = this->ReadString(section,"bitmap", "" );
+	token = "bitmap";
+	const char* bitmapfile = this->ReadString(section, token, "" );
 	if( strcmp( bitmapfile, "" ) != 0 )
 	  {
 	    PRINT_DEBUG1("Loading bitmap file \"%s\"", bitmapfile );
@@ -2024,8 +2065,13 @@ int CWorldFile::Upload( stg_client_t* cli,
 #ifdef VERBOSE	    
 	    PRINT_DEBUG1f( "Found %d rects", rect_count );
 #endif
-	    stg_model_set_rects( cli, anid, rects, rect_count );
-
+	    //stg_model_set_rects( cli, anid, rects, rect_count );
+	    
+	    if( stg_set_property( cli, anid, STG_PROP_RECTS,
+				  rects, rect_count * sizeof(stg_rotrect_t) ) 
+		< 0 )  
+	      PRINT_ERR2( "attempt to set %s[%s] failed", 
+			  child.name, token );
 	    // convert the bitmap to rects and poke them into the model
 	    // TODO - insert this code
 	    
@@ -2048,8 +2094,10 @@ int CWorldFile::Upload( stg_client_t* cli,
 int CWorldFile::DownloadAndSave( stg_client_t* cli, 
 				 stg_name_id_t* models, int model_count )
 {
-  puts( "WARNING: DOWNLOAD AND SAVE NOT FULLY IMPLEMENTED. ONLY POSES ARE SAVED." );
+  PRINT_WARN( "SAVE NOT FULLY IMPLEMENTED. ONLY POSES ARE SAVED." );
   
+  char *token = NULL;
+
   // Iterate through sections, downloading the data for each entity
   for (int section = 1; section < this->GetEntityCount(); section++)
     {
@@ -2067,15 +2115,31 @@ int CWorldFile::DownloadAndSave( stg_client_t* cli,
 			  anid, name, section );
 #endif
 	  
-	  stg_pose_t pose;
-	  stg_model_get_pose( cli, anid, &pose );
-	  this->WriteTupleFloat( section, "pose", 0, pose.x );
-	  this->WriteTupleFloat( section, "pose", 1, pose.y );
-	  this->WriteTupleFloat( section, "pose", 2, pose.a );
+	  token = "pose";
+	  stg_pose_t *pose;
+	  size_t len;
+	  if( stg_get_property( cli, anid, STG_PROP_POSE, (void**)&pose, &len )
+	      < 0 )
+	    PRINT_ERR1( "failed to get pose for model %d", anid );
+	  else
+	    {
+	      if( len == sizeof(stg_pose_t) )
+		{
+		  this->WriteTupleFloat( section, token, 0, pose->x );
+		  this->WriteTupleFloat( section, token, 1, pose->y );
+		  this->WriteTupleFloat( section, token, 2, pose->a );
+		}
+	      else
+		PRINT_ERR3( "get pose of model %d returned wrong size"
+			    " (%d/%d bytes)", 
+			    anid, len, sizeof(stg_pose_t) );
+
+	      free( pose );
+	    }	    
 	  
 	}
     }
-
+  
   // TODO - back up old world file, emacs-like
 
   this->Save( NULL ); // save in default filename

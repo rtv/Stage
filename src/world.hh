@@ -21,7 +21,7 @@
  * Desc: a container for models 
  * Author: Richard Vaughan
  * Date: 24 July 2003
- * CVS info: $Id: world.hh,v 1.26 2003-08-28 00:14:21 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.27 2003-08-30 02:00:39 rtv Exp $
  */
 
 #ifndef _WORLD_HH
@@ -32,6 +32,16 @@
 #include "rtkgui.hh"
 class CMatrix;
 
+typedef struct
+{
+  pid_t pid;
+  guint source_in;
+  guint source_hup;
+  GIOChannel *channel;
+  GList *worlds; // list of the worlds created by this client
+} stg_client_data_t;
+
+
 typedef struct stg_world
 {
   int id;
@@ -39,16 +49,19 @@ typedef struct stg_world
   GNode* node;  
   GString *name, *token;  
   CMatrix* matrix;
-  GIOChannel* channel;
   double width, height;
   double ppm; // the resolution of the world model in pixels per meter
   double simtime; // the simulation time in seconds
   //double timestep; // the duration of one update in seconds
   stg_gui_window_t* win;   // each world has a GUI window of it's own
+  stg_client_data_t* client; // the client that created this world
 } stg_world_t;
 
 
-stg_world_t* stg_world_create( GIOChannel* channel, stg_world_create_t* rc );
+stg_world_t* stg_world_create( stg_client_data_t* client,
+			       stg_id_t id, 
+			       stg_world_create_t* rc );
+
 int stg_world_destroy( stg_world_t* world );
 int stg_world_startup( stg_world_t* world );
 int stg_world_shutdown( stg_world_t* world );

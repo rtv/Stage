@@ -21,7 +21,7 @@
  * Desc: Simulated robot with various sensors
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.25 2003-08-28 17:48:24 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.26 2003-08-30 02:00:37 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -55,9 +55,9 @@ class CEntity
 {
 
 public: 
-  CEntity(  stg_entity_create_t* init );
-
-  int id;
+  CEntity( stg_entity_create_t* init, stg_id_t id );
+  
+  stg_id_t id;
   bool running;
   GNode* node;  
   GString *name, *token;

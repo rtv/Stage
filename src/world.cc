@@ -21,7 +21,7 @@
  * Desc: A world device model - replaces the CWorld class
  * Author: Richard Vaughan
  * Date: 31 Jan 2003
- * CVS info: $Id: world.cc,v 1.143 2003-08-28 20:38:23 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.144 2003-08-30 02:00:38 rtv Exp $
  */
 
 
@@ -29,43 +29,38 @@
 #include <stdio.h>
 #include <assert.h>
 
-//#define DEBUG
+#define DEBUG
 
 #include "stage.h"
 #include "world.hh"
 #include "matrix.hh"
 
-extern GHashTable* global_hash_table;
-extern int global_next_available_id;
-
-stg_world_t* stg_world_create( GIOChannel* channel, stg_world_create_t* rc )
+stg_world_t* stg_world_create( stg_client_data_t* client, 
+			       stg_id_t id,
+			       stg_world_create_t* rc ) 
 {
   stg_world_t* world = (stg_world_t*)calloc( sizeof(stg_world_t), 1 );
   assert( world );
 
+  // add this world to the client's list
+  client->worlds = g_list_append( client->worlds, world ); 
+  
   // must set the id, name and token before using the BASE_DEBUG macro
-  world->id = global_next_available_id++; // a unique id for this object
+  world->id = id; // a unique id for this object
   world->name = g_string_new( rc->name );
   WORLD_DEBUG( world, "construction" );
-
+  
+  
+  world->client = client; // this client created this world
   world->width = rc->width;
   world->height = rc->height;
   world->ppm = 1.0/rc->resolution;
-
-  world->channel = channel;
-
   world->node = NULL; // we attach a model tree here
-  world->running = FALSE;
-  
-  world->win = NULL;
+  world->running = FALSE;  
+  world->win = NULL; // gui data is attached here
   
   // create a root node that will contain my model tree
   world->node = g_node_new( world );
-
-  // add my node to the hash table with my id as the key (this ID
-  // should not already exist)
-  g_assert( g_hash_table_lookup( global_hash_table, &world->id ) == NULL ); 
-  g_hash_table_insert( global_hash_table, &world->id, world->node );  
   
   WORLD_DEBUG( world, "world construction complete" );
 
@@ -78,16 +73,18 @@ stg_world_t* stg_world_create( GIOChannel* channel, stg_world_create_t* rc )
 int stg_world_destroy( stg_world_t* world )
 {
   WORLD_DEBUG( world, "world destruction" );
- 
-  // must shut everything down before destroying the matrix
-  // as children will try to undrender themselves
+  
+  // this destroys all children and the matrix
   if( world->running ) stg_world_shutdown( world );
-  //  if( world->matrix ) delete matrix;
+  
+  // remove the world from the client that created it
+  world->client->worlds = g_list_remove( world->client->worlds, world ); 
 
   WORLD_DEBUG( world, "world destruction complete" );
 
   PRINT_MSG1( "Destroyed world \"%s\".", world->name->str );
 
+  free(world);
   return 0; //ok
 }
 

@@ -426,71 +426,34 @@ stg_property_t* stg_send_property( stg_client_t* cli,
 				   stg_prop_action_t action,
 				   void* data, 
 				   size_t len );
+
+// set a property of the model with the given id. 
+// returns 0 on success, else -1.
+int stg_set_property( stg_client_t* cli,
+		      int id, 
+		      stg_prop_id_t type,
+		      void* data, 
+		      size_t len );
+
+// gets the requested data from the server, allocating memory for the packet.
+// caller must free() the data
+// returns 0 on success, else -1.
+int stg_get_property( stg_client_t* cli,
+		      int id, 
+		      stg_prop_id_t type,
+		      void **data, 
+		      size_t *len );
+
 stg_id_t stg_model_create( stg_client_t* cli, stg_entity_create_t* ent );
 int stg_model_destroy( stg_client_t* cli, stg_id_t id );
 stg_id_t stg_world_create( stg_client_t* cli, stg_world_create_t* world );
 
-int stg_model_set_neighbor_return( stg_client_t* cli, stg_id_t id, 
-				    stg_neighbor_return_t *val );
-int stg_model_get_neighbor_return( stg_client_t* cli, stg_id_t id, 
-				    stg_neighbor_return_t *val );
-
-int stg_model_set_laser_return(stg_client_t* cli, stg_id_t id, 
-			       stg_laser_return_t *val);
 
 // SET/GET PROPERTIES
-int stg_model_set_size( stg_client_t* cli, stg_id_t id, stg_size_t* sz );
-int stg_model_get_size( stg_client_t* cli, stg_id_t id, stg_size_t* sz );
-
-int stg_model_set_velocity(stg_client_t* cli, stg_id_t id, stg_velocity_t* sz);
-int stg_model_get_velocity(stg_client_t* cli, stg_id_t id, stg_velocity_t* sz);
-
-int stg_model_set_pose( stg_client_t* cli, stg_id_t id, stg_pose_t* sz);
-int stg_model_get_pose( stg_client_t* cli, stg_id_t id, stg_pose_t* sz );
-
-int stg_model_set_origin( stg_client_t* cli, stg_id_t id, stg_pose_t* org );
-int stg_model_get_origin( stg_client_t* cli, stg_id_t id, stg_pose_t* org );
-
-int stg_model_set_neighbor_bounds( stg_client_t* cli, stg_id_t id, 
-				   stg_bounds_t* data );
-int stg_model_get_neighbor_bounds( stg_client_t* cli, stg_id_t id, 
-				   stg_bounds_t* data );
-
-int stg_model_set_rects(  stg_client_t* cli, stg_id_t id, 
-			  stg_rotrect_t* rects, int count );
-
-int stg_model_set_rangers( stg_client_t* cli, stg_id_t id, 
-			       stg_ranger_t* trans, int count );
-int stg_model_get_rangers( stg_client_t* cli, stg_id_t id, 
-			       stg_ranger_t** trans, int* count );
-
-int stg_model_set_laser_data( stg_client_t* cli, stg_id_t id, 
-			      stg_laser_data_t* data );
-
-int stg_model_get_laser_data( stg_client_t* cli, stg_id_t id, 
-			      stg_laser_data_t* data );
-
-int stg_model_get_neighbors( stg_client_t* cli, stg_id_t id, 
-			     stg_neighbor_t** neighbors, int *neighbor_count );
-
-int stg_model_set_light( stg_client_t* cli, stg_id_t id, 
-			 stg_interval_ms_t *val);
-int stg_model_get_light( stg_client_t* cli, stg_id_t id, 
-			 stg_interval_ms_t *val);
-
 typedef int stg_nose_t;
-
-int stg_model_set_nose( stg_client_t* cli, stg_id_t id, 
-			 stg_nose_t *val);
-int stg_model_get_nose( stg_client_t* cli, stg_id_t id, 
-			 stg_nose_t *val);
-
 typedef int stg_border_t;
-
-int stg_model_set_border( stg_client_t* cli, stg_id_t id, 
-			  stg_border_t *val);
-int stg_model_get_border( stg_client_t* cli, stg_id_t id, 
-			  stg_border_t *val);
+typedef int stg_mouse_mode_t;
+typedef int stg_matrix_render_t;
 
 void stg_los_msg_print( stg_los_msg_t* msg );
 
@@ -499,23 +462,6 @@ int stg_model_send_los_msg(  stg_client_t* cli, stg_id_t id,
 
 int stg_model_exchange_los_msg(  stg_client_t* cli, stg_id_t id, 
 			     stg_los_msg_t *msg );
-
-
-typedef int stg_mouse_mode_t;
-
-int stg_model_set_mouse_mode( stg_client_t* cli, stg_id_t id, 
-			      stg_mouse_mode_t *mouse );
-
-int stg_model_get_mouse_mode( stg_client_t* cli, stg_id_t id, 
-			      stg_mouse_mode_t *mouse );
-
-typedef int stg_matrix_render_t;
-int stg_model_set_matrix_render( stg_client_t* cli, stg_id_t id, 
-				 stg_matrix_render_t *mrender );
-
-int stg_model_get_matrix_render( stg_client_t* cli, stg_id_t id, 
-				 stg_matrix_render_t *mrender );
-
 
 //int stg_model_get_rects(  stg_client_t* cli, stg_id_t id, 
 //		  stg_rotrect_array_t* rects );

@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.18 2003-08-28 20:38:23 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.19 2003-08-30 02:00:37 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -60,7 +60,8 @@
 #include "colors.h"
 
 extern int quit;
-extern GArray* global_client_pids;
+extern GHashTable* global_client_table;
+extern int global_num_clients;
 
 // defaults
 
@@ -98,6 +99,7 @@ static rtk_app_t *app = NULL;
 
 
 void RtkOnMouse(rtk_fig_t *fig, int event, int mode);
+void StgClientDestroy( stg_client_data_t* cli ); // from main.cc
 
 
 
@@ -177,19 +179,26 @@ void stg_gui_menu_toggle_data( rtk_menuitem_t *item )
   enable_data = rtk_menuitem_ischecked(item);
 }
 
-// send a USR2 signal to all clients
+// send a USR2 signal to the client process that created this menuitem
 void stg_gui_save( rtk_menuitem_t *item )
 {
-  for( int p=0; p<(int)global_client_pids->len; p++ )
-    kill( g_array_index( global_client_pids, pid_t, p ), SIGUSR2 );
+  stg_client_data_t* client = (stg_client_data_t*)item->userdata;
+  if( client ) kill( client->pid, SIGUSR2 );
 }
 
 void stg_gui_exit( rtk_menuitem_t *item )
 {
   //quit = TRUE;
   puts( "Exit menu item. Destroying world" );
+  
+  stg_world_t* world = (stg_world_t*)item->userdata;
+  stg_client_data_t* client = world->client; 
 
-  stg_world_destroy( (stg_world_t*)item->userdata );
+  stg_world_destroy( world );
+
+  // if the client has no worlds left, shut it down
+  //if( g_list_length( client->worlds ) < 1 )
+  //StgClientDestroy( client );
 }
 
 void stg_gui_menu_interval_callback( rtk_menuitem_t *item )
@@ -239,8 +248,9 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
   // Add some menu items 
   win->file_menu = rtk_menu_create(win->canvas, "File");
   win->save_menuitem = rtk_menuitem_create(win->file_menu, "Save", 0);
+  win->save_menuitem->userdata = (void*)world->client;
   rtk_menuitem_set_callback( win->save_menuitem, stg_gui_save );
-
+  
   win->exit_menuitem = rtk_menuitem_create(win->file_menu, "Exit", 0);
   win->exit_menuitem->userdata = (void*)world;
   rtk_menuitem_set_callback( win->exit_menuitem, stg_gui_exit );

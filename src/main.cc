@@ -23,14 +23,14 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan
  * Date: 3 July 2003
- * CVS: $Id: main.cc,v 1.67 2003-08-28 20:38:23 rtv Exp $
+ * CVS: $Id: main.cc,v 1.68 2003-08-30 02:00:37 rtv Exp $
  */
 
 
 #include <stdlib.h>
 #include <signal.h>
 
-//#define DEBUG
+#define DEBUG
 
 //#include "stage.h"
 #include "world.hh"
@@ -43,14 +43,20 @@
 int quit = 0; // set true by the GUI when it wants to quit 
 
 // globals
-GHashTable* global_hash_table = g_hash_table_new(g_int_hash, g_int_equal);
+GHashTable* global_model_table = g_hash_table_new(g_int_hash, g_int_equal);
 int global_next_available_id = 1;
+int global_num_clients = 0; // might be interesting to know?
 
-// contains the PIDs of all connected clients
-GArray* global_client_pids = g_array_new( FALSE, TRUE, sizeof(pid_t) );
+// forward declare
+gboolean StgClientRead( GIOChannel* channel, 
+			GIOCondition condition, 
+			gpointer data );
 
+gboolean StgClientHup( GIOChannel* channel, 
+			GIOCondition condition, 
+			gpointer data );
 
-// prints the object tree on stdout
+  // prints the object tree on stdout
 void StgPrintTree( GNode* treenode, gpointer _prefix )
 {
   GString* prefix = (GString*)_prefix;
@@ -99,54 +105,77 @@ gboolean StgPropertyWrite( GIOChannel* channel, stg_property_t* prop )
   return( !failed );
 }
 
+stg_client_data_t* stg_client_create( pid_t pid, GIOChannel* channel )
+{
+  // store the client's PID to we can send it signals 
+  stg_client_data_t* cli = 
+    (stg_client_data_t*)calloc(1,sizeof(stg_client_data_t) );
+  
+  g_assert( cli );
+  
+  // set up this client
+  cli->pid = pid;
+  cli->channel = channel;  
+  cli->source_in  = g_io_add_watch( channel, G_IO_IN, StgClientRead, cli );
+  cli->source_hup = g_io_add_watch( channel, G_IO_HUP, StgClientHup, cli );
+  
+  global_num_clients++; 
+  
+  return cli;
+}
+
+void stg_client_destroy( stg_client_data_t* cli )
+{
+  // cancel watches we installed on this channel
+  if( cli->source_in  ) g_source_remove( cli->source_in );
+  if( cli->source_hup ) g_source_remove( cli->source_hup );
+  
+  // and kill it
+  g_io_channel_shutdown( cli->channel, TRUE, NULL ); // zap this connection 
+  g_io_channel_unref( cli->channel );
+  
+  // destroy any worlds that were created by this client
+  while( cli->worlds )
+    {
+      PRINT_DEBUG1( "destroying world %p", cli->worlds->data);
+      stg_world_destroy( (stg_world_t*)cli->worlds->data );
+    }
+  
+  PRINT_DEBUG( "finished destroying worlds" );
+
+  // zap client
+  //kill( cli->pid, SIGINT );
+
+  free( cli );
+  
+  // one client fewer
+  global_num_clients--;
+}
+
 
 gboolean StgClientRead( GIOChannel* channel, 
 		     GIOCondition condition, 
-		     gpointer table )
+		     gpointer data )
 {
   PRINT_DEBUG( "client read" );
   g_assert(channel);
-  g_assert(table);
+  g_assert(data);
   
-  // store associations between channels and worlds
-  static GHashTable* channel_world_map = g_hash_table_new(NULL,NULL);
+  // the data tells us which client number this is
+  stg_client_data_t *cli = (stg_client_data_t*)data;
   
   stg_property_t* prop = 
     stg_property_read_fd( g_io_channel_unix_get_fd(channel) );
-  
+
   if( prop == NULL )
     {
       PRINT_MSG1( "Failed to read from client (fd %d). Shutting it down.",  
 		  g_io_channel_unix_get_fd(channel) );
       
-      g_io_channel_shutdown( channel, TRUE, NULL ); // zap this connection 
-      g_io_channel_unref( channel );
-      
-      PRINT_DEBUG1( "Destroying worlds associated with channel %p",
-		    channel );
-      
-      // find the list of worlds created on this channel
-      GList* doomed_list = 
-	(GList*)g_hash_table_lookup( channel_world_map, channel );
-      
-      if( doomed_list )
-	{
-	  // delete all the worlds in the list
-	  for( GList* lel = doomed_list; lel; lel = g_list_next(lel) )
-	    {
-	      PRINT_DEBUG2( "destroying world %p (node %p)", lel->data, lel);
-	      //delete (CWorld*)lel->data;
-	      stg_world_destroy( (stg_world_t*)lel->data );
-
-	    }
-	  
-	  g_list_free( doomed_list );
-	}
-      
-      // remove the channel from the static map
-      g_hash_table_remove( channel_world_map, channel );
-      
-      return FALSE; // cancel this callback
+      stg_client_destroy( cli );      
+      return FALSE; // cancel this callback (just in case - we
+		    // probably cancelled it already in
+		    // StgClientDestroy() ).
     }
   else
     {
@@ -158,9 +187,9 @@ gboolean StgClientRead( GIOChannel* channel,
 	}
       else
 	{
+	  // a property gets created below and returned to the client
 	  stg_property_t* reply = NULL;
-	  // indicates whether we need to free the reply's memory
-	  bool free_reply = FALSE; 
+
 	  
 	  switch( prop->property )
 	    {
@@ -170,32 +199,27 @@ gboolean StgClientRead( GIOChannel* channel,
 		g_assert( (prop->len == sizeof(stg_world_create_t)) );
 		
 		// create a world object
-		//CWorld* aworld = NULL;
-		//g_assert( (aworld = new CWorld( channel, (stg_world_create_t*)prop->data)));
-		//aworld->Startup();
-		
 		stg_world_t* aworld = 
-		  stg_world_create( channel, (stg_world_create_t*)prop->data );
+		  stg_world_create( cli, 
+				    global_next_available_id++,
+				    (stg_world_create_t*)prop->data );
 		g_assert( aworld );
+		
+		// add the new world to the hash table with its id as
+		// the key (this ID should not already exist)
+		g_assert( g_hash_table_lookup(global_model_table, &aworld->id)
+			  == NULL ); 
+		g_hash_table_insert(global_model_table, &aworld->id, 
+				    aworld->node );  
+
 		stg_world_startup( aworld );
 
-		prop->id = aworld->id; // fill in the id of the created object
-
-		// and reply with the completed request
-		reply = prop;
-		
-		PRINT_DEBUG2( "Associating world %p with channel %p",
+		PRINT_DEBUG2( "Created world %p on channel %p",
 			      aworld, channel );
 		
-		// find the list of worlds created on this channel (possibly NULL)
-		GList* world_list = 
-		  (GList*)g_hash_table_lookup( channel_world_map, channel );
-		
-		// add the new world to the list
-		world_list = g_list_append( world_list, aworld );
-		
-		// stash the new list in the hash table
-		g_hash_table_insert( channel_world_map, channel, world_list );
+		// reply with the id of the world
+		reply = stg_property_create();
+		reply->id = aworld->id; 		
 	      }
 	      break;
 	      
@@ -206,17 +230,26 @@ gboolean StgClientRead( GIOChannel* channel,
 		
 #ifdef DEBUG
 		stg_entity_create_t* create = (stg_entity_create_t*)prop->data;
-		PRINT_DEBUG3( "creating model name \"%s\" token \"%s\ parent %d",
+		PRINT_DEBUG3( "creating model name \"%s\" token \"%s\" parent %d",
 			      create->name, create->token, create->parent_id );
 #endif
 		// create a new entity
 		CEntity* ent = NULL;	    
-		g_assert((ent = new CEntity((stg_entity_create_t*)prop->data)));
-		ent->Startup();
+		g_assert((ent = new CEntity((stg_entity_create_t*)prop->data,
+					    global_next_available_id++ )));
+
+		// add the new model to the world's hash table with
+		// its id as the key (this ID should not already
+		// exist)
+		g_assert( g_hash_table_lookup( global_model_table, &ent->id ) 
+			  == NULL ); 
+		g_hash_table_insert( global_model_table, &ent->id, ent->node );
 		
-		prop->id = ent->id; // fill in the id of the created entity
-		// and reply with the completed request
-		reply = prop;		
+		ent->Startup();
+
+		// reply with the id of the entity
+		reply = stg_property_create();
+		reply->id = ent->id; 
 	      }
 	      break;
 	      
@@ -224,40 +257,34 @@ gboolean StgClientRead( GIOChannel* channel,
 	    default: // all other props we need to look up an existing object
 	      {	    
 		GNode* node = 
-		  (GNode*)g_hash_table_lookup( global_hash_table, &prop->id );
+		  (GNode*)g_hash_table_lookup( global_model_table, &prop->id );
 		
 		if( node == NULL )
 		  {
-		    PRINT_WARN1( "Failed to handle message for unknown model"
-				 " id (%d).", prop->id );
+		    PRINT_WARN2( "Ignoring unknown model (%d %s).",
+				 prop->id, 
+				 stg_property_string(prop->property) );
 		    
-		    // if a reply was required, we send the original
-		    // request back with an id of -1 to indicate failure
-		    if( prop->action == STG_SETGET || 
-			prop->action == STG_GETSET || 
-			prop->action == STG_GET )
-		      {
-			PRINT_WARN( "Replying with invalid model id" );
-			prop->id = -1;
-			reply = prop;
-		      }
+		    reply = stg_property_create();
+		    reply->id = -1; // indicate failed request
 		  }
 		else 
 		  switch( prop->property )		    
 		    {
 		    case STG_PROP_DESTROY_WORLD: 
-		      // delete the object, invalidate the id and
-		      // reply with the original request
-		      //delete (CWorld*)node->data;
-		      stg_world_destroy( (stg_world_t*)node->data );
-		      prop->id = -1; 
-		      reply = prop;
+		      {
+			stg_world_t* world = (stg_world_t*)node->data;	      
+			g_hash_table_remove( global_model_table, &world->id );
+			stg_world_destroy( world );			
+		      }
 		      break;
 		      
 		    case STG_PROP_DESTROY_MODEL:
-		      delete (CEntity*)node->data;
-		      prop->id = -1; 
-		      reply = prop;
+		      {
+			CEntity* ent = (CEntity*)node->data;
+			g_hash_table_remove( global_model_table, &ent->id );
+			delete ent;
+		      }
 		      break;
 		      
 		    default: // it must be a model. 
@@ -267,29 +294,30 @@ gboolean StgClientRead( GIOChannel* channel,
 			switch( prop->action )
 			  {
 			  case STG_SET:
-
 			    ent->SetProperty( prop->property,
 					      prop->data, prop->len );
+			    reply = stg_property_create();
+			    reply->id = ent->id; // indicate success 
 			    break;
 			  case STG_GET:
 			    reply = ent->GetProperty( prop->property );
-			    free_reply = TRUE;
 			    break;
 			  case STG_SETGET:
 			    ent->SetProperty( prop->property, 
 					      prop->data, prop->len );
 			    reply = ent->GetProperty( prop->property );
-			    free_reply = TRUE;
 			    break;
 			  case STG_GETSET:
 			    reply = ent->GetProperty( prop->property );
-			    free_reply = TRUE;
 			    ent->SetProperty( prop->property, 
 					      prop->data, prop->len );
 			    break;
 			    
 			  default: PRINT_WARN1( "unknown prop action (%d)",
 						prop->action );
+			 
+			    reply = stg_property_create();
+			    reply->id = -1;  // indicate failed request
 			    break;
 			  }
 		      }
@@ -298,12 +326,10 @@ gboolean StgClientRead( GIOChannel* channel,
 	      }
 	    }
 	  
-	  if( reply )
-	    {
-	      // write reply, freeing memory if allocated
-	      StgPropertyWrite( channel, reply );  
-	      if( free_reply ) stg_property_free( reply );
-	    }      
+	  // write reply
+	  g_assert(reply);
+	  StgPropertyWrite( channel, reply );  
+	  stg_property_free( reply );      
 	}
     }
   
@@ -369,8 +395,6 @@ gboolean StgClientAcceptConnection( GIOChannel* channel, GHashTable* table )
       return FALSE; // fail
     }
   
-  // store the client's PID to we can send it signals 
-  global_client_pids = g_array_append_val( global_client_pids, greet.pid );
   
   // write the reply
   reply.code = STG_CLIENT_GREETING;
@@ -382,11 +406,9 @@ gboolean StgClientAcceptConnection( GIOChannel* channel, GHashTable* table )
   
   g_assert( bytes_written == sizeof(reply) );
   g_io_channel_flush( client, NULL );
-  
-  // request data from this channel
-  g_io_add_watch( client, G_IO_IN, StgClientRead, table );
-  g_io_add_watch( client, G_IO_HUP, StgClientHup, table );
-  
+
+  stg_client_data_t* cli = stg_client_create( greet.pid, client );
+
   return TRUE; // success
 }      
 
@@ -491,7 +513,7 @@ int main( int argc, char** argv )
   g_assert( channel );
   
   // watch for these events on the well-known-port
-  g_io_add_watch(channel, G_IO_IN, StgServiceWellKnownPort, global_hash_table);
+  g_io_add_watch(channel, G_IO_IN, StgServiceWellKnownPort, global_model_table);
   
   GMainLoop* mainloop = g_main_loop_new( NULL, TRUE );
   g_main_loop_run( mainloop );

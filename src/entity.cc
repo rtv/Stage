@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.114 2003-08-28 20:38:23 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.115 2003-08-30 02:00:35 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -54,7 +54,7 @@
 
 #include "stage.h"
 
-extern GHashTable* global_hash_table;
+extern GHashTable* global_model_table;
 extern int global_next_available_id;
 
 // static method
@@ -114,22 +114,33 @@ CEntity* stg_ent_parent( CEntity* ent )
 
 void StgPrintTree( GNode* node, gpointer _prefix = NULL );
 
+/* todo ?
+typedef struct
+{
+  //stg_prop_id_t type;
+  //const char* name;
+  void* data;
+  size_t len;
+} stg_property_entry_t;
+*/
+
+
 ///////////////////////////////////////////////////////////////////////////
 // main constructor
-CEntity::CEntity( stg_entity_create_t* init )
+CEntity::CEntity( stg_entity_create_t* init, stg_id_t id )
 {
   // must set the name and token before using the ENT_DEBUG macro
   g_assert( init );
-  this->id = global_next_available_id++; // a unique id for this object
+  this->id = id; // a unique id for this object
   this->name = g_string_new( init->name );
   
   ENT_DEBUG1( "entity construction - parent id: %d", init->parent_id );
   
   this->running = FALSE;
-  
+
   // look up the parent id to find my parent's tree node
   GNode* parent_node = NULL;
-  g_assert( (parent_node = (GNode*)g_hash_table_lookup( global_hash_table, 
+  g_assert( (parent_node = (GNode*)g_hash_table_lookup( global_model_table, 
 							&init->parent_id )));
   
   // add myself to the object tree
@@ -139,16 +150,9 @@ CEntity::CEntity( stg_entity_create_t* init )
   // inspect the stg_world_t object at the root of the tree I just attached to. 
   stg_world_t* world = stg_world( this );
   g_assert( world );
-  //ENT_DEBUG2( "is in world %d:%s", world->id, world->name->str );
+  ENT_DEBUG2( "is in world %d:%s", world->id, world->name->str );
 #endif
-  
-  // add my node to the world's hash table with my id as the key
-  // (this ID should not already exist)
-  g_assert( g_hash_table_lookup( global_hash_table, &this->id ) == NULL ); 
-  g_hash_table_insert( global_hash_table, &this->id, this->node );
-  
-  rangers = NULL;
-  
+    
   // set up reasonble laser defaults
   this->laser_data.angle_min = -M_PI/2.0;
   this->laser_data.angle_max =  M_PI/2.0;
@@ -212,6 +216,9 @@ CEntity::CEntity( stg_entity_create_t* init )
   gripper_return = GripperDisabled;
   neighbor_return = 0;
 
+  // a null array of range sensors
+  this->rangers = NULL;
+  
   // no visible light
   this->blinkenlight = 0;
 
@@ -219,7 +226,7 @@ CEntity::CEntity( stg_entity_create_t* init )
   
   this->mouseable = true;
   this->draw_nose = true;
-  this->interval = 0.01; // update interval in seconds 
+  this->interval = 0.01; // default update interval in seconds 
   this->border = false;
 
   // STG_PROP_RANGEBOUNDS
@@ -232,7 +239,7 @@ CEntity::CEntity( stg_entity_create_t* init )
   if( parent ) ENT_DEBUG2( "has parent %d:%s",  parent->id, parent->name->str );
 #endif  
 
-  // zero the pointer to our gui data
+  // gui data will be attached here
   this->guimod = NULL;
 
   ENT_DEBUG("entity construction complete");
@@ -261,8 +268,6 @@ CEntity::~CEntity()
   // detatch myself from my parent
   g_node_unlink( this->node );
   g_node_destroy( this->node );
-  // remove myself from the database
-  g_hash_table_remove( global_hash_table, &this->id );
   
   ENT_DEBUG("entity destruction complete");
   // actually, we still have to free up the strings that the previous
@@ -373,6 +378,8 @@ int CEntity::Startup( void )
       guint ms_interval = (guint)(this->interval * 1000.0);
       update_tag = g_timeout_add(ms_interval,CEntity::stg_update_signal, this);
     } 
+
+  // don't put anything here!
   
   ENT_DEBUG( "entity startup complete" );
   return 0;
@@ -939,7 +946,7 @@ CEntity* StgEntityFromId( stg_id_t id )
 {
   // get the entity with this id from the global hash table   
   GNode* node = 
-    (GNode*)g_hash_table_lookup( global_hash_table, &id );
+    (GNode*)g_hash_table_lookup( global_model_table, &id );
   
   if( node == NULL ) return NULL;
 
