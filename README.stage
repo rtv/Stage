@@ -1,18 +1,18 @@
 ****************************************************************************
-* README.stage  - Richard Vaughan - 28 Nov 2000  - Stage-0.7.2        
+* README.stage  - Richard Vaughan - 4 Dec 2000  - Stage-0.8        
 *                                                                          
-* $Id: README.stage,v 1.1.1.1 2000-11-29 00:16:28 ahoward Exp $    
+* $Id: README.stage,v 1.2 2000-12-04 18:46:27 vaughan Exp $    
 ****************************************************************************
 
 ** NOTE **
 ** STAGE IS THE NEW NAME FOR ARENA **
 ** PLAYER IS THE NEW NAME FOR GOLEM **
 
-** THIS VERSION REQUIRES >= Player-0.7.4a but I recommend you always
+** THIS VERSION REQUIRES >= Player-0.8 but I recommend you always
 use the most up-to-date Player unless its distribution warns you of
 Stage interface problems.
 
-throughout the text <version> refers to the current Stage version 0.7.2
+throughout the text <version> refers to the current Stage version 0.8
 
 -- What is Stage? ---------------------------------------------------------
 
@@ -72,6 +72,23 @@ Requires: Player [available at http://fnord.usc.edu/player/]
 
 -- New features -------------------------------------------------------------
 
+3 Nov 2000:
+	robot position now returned in local coordinates. simple odometry error
+	model implemented.
+
+	clicking the middle button near a robot in the GUI enables 
+	device-specific displays; ie. if you are subscribed to a device that
+	implements a GUI display, it will draw some useful output on your
+	window. Currently the sonar, laser and PTZ devices implement this 
+	feature. Try it out.
+
+	Window graphics have been tweaked.
+
+	Stage's internal architecture has been significantly changed since
+	the previous release. A cleaner, modular layout makes it easier to 
+	add devices, and easier to manage I/O with Player. Player has 
+	corresponding mods too.
+
 28 Nov 2000:
 	renamed Arena to Stage and updated references to Golem to Player.
 	why? because Arena and Golem are incredibly over-used names for
@@ -103,7 +120,9 @@ Requires: Player [available at http://fnord.usc.edu/player/]
 
 -- Recent bug fixes ---------------------------------------------------------
 
-
+3 Dec 2000:
+	fixed bug that caused laser devices to interact poorly with robot 
+	bodies.
 
 15 Nov 2000: 
 	color blobs now sorted and report area correctly 
@@ -123,8 +142,8 @@ Requires: Player [available at http://fnord.usc.edu/player/]
 
 -- Known bugs, symptoms & fixes ---------------------------------------------
 
-bug in Player - sonar returns garbage if requested before position
-device ie. "pasr" works ok, but "srpa" gives garbled sonar readings.
+none - mail bug reports (include Stage's output messages) to 
+vaughan@robotics.usc.edu.
 
 -- To do --------------------------------------------------------------------
 
