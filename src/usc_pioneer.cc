@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/usc_pioneer.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.7 $
+//  $Revision: 1.1.2.8 $
 //
 // Usage:
 //  (empty)
@@ -25,7 +25,6 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include "world.hh"
-#include "tokenize.hh"
 #include "usc_pioneer.hh"
 #include "playerrobot.hh"
 #include "pioneermobiledevice.hh"

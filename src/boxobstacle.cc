@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.8 $
+//  $Revision: 1.1.2.9 $
 //
 // Usage:
 //  (empty)
@@ -27,7 +27,6 @@
 #define ENABLE_RTK_TRACE 1
 
 #include "world.hh"
-#include "tokenize.hh"
 #include "boxobstacle.hh"
 
 

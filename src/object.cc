@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/object.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.14 $
+//  $Revision: 1.1.2.15 $
 //
 // Usage:
 //  (empty)
@@ -27,6 +27,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "object.hh"
 
 
