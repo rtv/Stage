@@ -1,0 +1,11 @@
+#!/bin/bash
+
+echo "Starting Stage..."
+stage -o -f pherobot_50.world &
+sleep 15
+
+
+echo "Starting Clients..."
+./many pherobot 6665 6714
+
+echo "done".

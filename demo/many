@@ -1,0 +1,8 @@
+#!/bin/bash
+
+let port=$2
+
+while [ $port -le $3 ]; do
+	./$1 -h localhost -p $port &
+	let port=port+1
+done
