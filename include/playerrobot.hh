@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 //
 // File: playerplayerrobot.hhh
 // Author: Richard Vaughan, Andrew Howard
@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerrobot.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.11 $
+//  $Revision: 1.1.2.12 $
 //
 // Usage:
 //  (empty)
@@ -107,11 +107,6 @@ class CPlayerRobot : public CEntity
 
 #endif
 
-#ifdef INCLUDE_XGUI
-    // draw/undraw in X gui
-    //
-    public: virtual ExportData* ImportExportData( ImportData* imp );
-#endif
 };
 
 #endif

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/usc_pioneer.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.12 $
+//  $Revision: 1.1.2.13 $
 //
 // Usage:
 //  (empty)
@@ -86,11 +86,6 @@ class CUscPioneer : public CEntity
     private: CPtzDevice *m_ptz;
     private: CVisionDevice *m_vision;
 
-#ifdef INCLUDE_XGUI
-    // compose and return the export data structure
-    // USC Pioneer has to export the position of its pioneermobile base
-    public: virtual ExportData* ImportExportData( ImportData* imp ); 
-#endif
 
 #ifdef INCLUDE_RTK
     

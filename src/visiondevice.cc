@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.4.2.19 $
+//  $Revision: 1.4.2.20 $
 //
 // Usage:
 //  (empty)
@@ -68,10 +68,7 @@ CVisionDevice::CVisionDevice(CWorld *world, CEntity *parent, CPlayerServer* serv
     m_hit_count = 0;
 #endif
 
-#ifdef INCLUDE_XGUI
     exp.objectType = vision_o;
-#endif  
-
 }
 
 

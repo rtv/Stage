@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xgui.cc,v 1.1.2.6 2001-05-30 02:21:27 vaughan Exp $
+ * $Id: xgui.cc,v 1.1.2.7 2001-05-30 22:10:36 vaughan Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -36,6 +36,8 @@
 XPoint* backgroundPts;
 int backgroundPtsCount;
 
+bool renderSensorData = false;
+
 //int exposed = false;
 
 // forward declaration
@@ -57,12 +59,6 @@ CXGui::CXGui( CWorld* wworld )//,  char* initFile )
   char* title = "Stage";
 
   grey = 0x00FFFFFF;
-
-  // provide some sensible defaults for the window parameters
-  //xscale = yscale = 1.0;
-  width = 600;
-  height = 400;
-  panx = pany = x = y = 0;
 
   //LoadVars( initFile ); // read the window parameters from the initfile
 
@@ -95,6 +91,20 @@ CXGui::CXGui( CWorld* wworld )//,  char* initFile )
   cout << "Window coords: " << x << '+' << y << ':' << width << 'x' << height;
 #endif
 
+  iwidth = world->GetBackgroundImage()->width;
+  iheight = world->GetBackgroundImage()->height;
+  // provide some sensible defaults for the window parameters
+  //xscale = yscale = 1.0;
+  width = iwidth;
+  height = iheight;
+ 
+  // limit opening size to something reasonable
+  if( height > 600 ) height = 600;
+  if( width > 900 ) width = 900;
+
+  panx = 0;
+  pany = height; // pan to have the origin in the bottom left
+
   win = XCreateSimpleWindow( display, 
 			     RootWindow( display, screen ), 
 			     x, y, width, height, 4, 
@@ -105,8 +115,6 @@ CXGui::CXGui( CWorld* wworld )//,  char* initFile )
   
   XStringListToTextProperty( &title, 1, &windowName);
 
-  iwidth = world->GetBackgroundImage()->width;
-    iheight = world->GetBackgroundImage()->height;
 
   dragging = 0;
   showSensors = false;
@@ -125,6 +133,10 @@ CXGui::CXGui( CWorld* wworld )//,  char* initFile )
   
   gc = XCreateGC(display, win, (ULI)0, NULL );
   
+
+  BoundsCheck();
+
+
 #ifdef DEBUG
   cout << "Screen Depth: " << DefaultDepth( display, screen ) 
        << " Visual: " << DefaultVisual( display, screen ) << endl;
@@ -233,7 +245,8 @@ void CXGui::PrintCoords( void )
   
   cout << "Mouse: " << xpos << ',' << ypos << endl;;
 }
-//int firstDrag;
+
+
 
 void CXGui::BoundsCheck( void )
 {
@@ -242,13 +255,6 @@ void CXGui::BoundsCheck( void )
   
   if( pany < 0 ) pany = 0;
   if( pany > ( iheight - height ) ) pany =  iheight - height;
-  
-  //hide for a bit
-  float xminScale = (float)width / (float)(world->GetBackgroundImage()->width);
-  float yminScale = (float)height / (float)(world->GetBackgroundImage()->height);
-  
-  //if( xscale < xminScale ) xscale = xminScale;
-  //if( yscale < yminScale ) yscale = yminScale;
 }
 
 
@@ -367,9 +373,20 @@ void CXGui::HandleEvent( void )
 		{	  
 		  MoveObject( dragging, dragging->x, dragging->y, 
 			      dragging->th + M_PI/10.0 );
-		}	 
-//  		  near->ToggleSensorDisplay();
+		}
+	      else
+		{
+		  //  CEntity* ent = 
+//  		    world->NearestObject((reportEvent.xmotion.x+panx )/ppm,
+//  					 ((imgHeight-reportEvent.xmotion.y)
+//  					  -pany)/ppm );
+		  
+//  		  ent->ToggleGuiExport();
 
+		  RefreshObjects();
+		  renderSensorData = !renderSensorData;
+		  RefreshObjects();
+		}  
 #ifdef DEBUG	      
 		  // this can be taken out at release
 		  //useful debug stuff!
@@ -605,7 +622,7 @@ void CXGui::RefreshObjects( void )
   SetDrawMode( GXxor );
  
   for( int o=0; o<numObjects; o++ )     
-    RenderObject( database[o], true );
+    RenderObject( database[o], renderSensorData );
   
   HighlightObject( dragging, false );
 
@@ -722,7 +739,7 @@ void CXGui::ImportExportData( ExportData* exp )
 
   if( lastExp ) // we've drawn this before
     {	  
-      bool renderExtended = true;
+      bool renderExtended = renderSensorData;
       bool genericChanged = false;
       bool specificChanged = false;
       
@@ -730,8 +747,7 @@ void CXGui::ImportExportData( ExportData* exp )
       // i.e. the object has moved or changed type
       if( IsDiffGenericExportData( lastExp, exp ) )
 	genericChanged = true;
-      
- 
+       
       // see if the type-specific data has changed
       // i.e. the sensor data has been updated
       if( IsDiffSpecificExportData( lastExp, exp ) )
@@ -769,30 +785,25 @@ void CXGui::ImportExportData( ExportData* exp )
 	{
 	case laserturret_o: 
 	  database[numObjects]->data = (char*)new ExportLaserData();
-	  memcpy( database[numObjects]->data, exp->data, 
-		  sizeof( ExportLaserData ) );
+	  CopySpecificExportData( database[numObjects], exp );
 	  break;
 	case misc_o:	
 	  database[numObjects]->data = (char*)new player_misc_data_t();
-	  memcpy( database[numObjects]->data, exp->data, 
-		  sizeof( player_misc_data_t ) );
+	  CopySpecificExportData( database[numObjects], exp );
 	  break;
 	case sonar_o: 	
 	  database[numObjects]->data = (char*)new ExportSonarData();
-	  memcpy( database[numObjects]->data, exp->data, 
-		  sizeof( ExportSonarData ) );
+	  CopySpecificExportData( database[numObjects], exp );
 	  break;
 	case laserbeacondetector_o: 
 	  database[numObjects]->data = 
 	    (char*)new ExportLaserBeaconDetectorData();
-	  memcpy( database[numObjects]->data, exp->data, 
-		  sizeof( ExportLaserBeaconDetectorData ) );
+	  CopySpecificExportData( database[numObjects], exp );
 	  break;
 	case vision_o: break;
 	case ptz_o: 	 
 	  database[numObjects]->data = (char*)new ExportPtzData();
-	  memcpy( database[numObjects]->data, exp->data, 
-		  sizeof( ExportPtzData ) );
+	  CopySpecificExportData( database[numObjects], exp );
 	  break;  
 	case uscpioneer_o: break;
 	case pioneer_o: break;
@@ -905,15 +916,18 @@ void CXGui::RenderLaserBeaconDetector( ExportData* exp, bool extended )
       if( p->beaconCount > 0 ) for( int b=0; b < p->beaconCount; b ++ )
 	{
 	  GetRect( p->beacons[ b ].x, p->beacons[ b ].y, 
-		   0.2, 0.25, p->beacons[ b ].th, pts );
+		   (4.0/ppm), 0.12 + (2.0/ppm), p->beacons[ b ].th, pts );
 	  
 	  // don't close the rectangle 
 	  // so the open box visually indicates heading of the beacon
 	  DrawLines( pts, 4 ); 
 	  
+	  //DrawLines( &(pts[1]), 2 ); 
+
 	  // render the beacon id as text
 	  sprintf( buf, "%d", p->beacons[ b ].id );
-	  DrawString( p->beacons[ b ].x + 0.3, p->beacons[ b ].y + 0.3, 
+	  DrawString( p->beacons[ b ].x + 0.2 + (5.0/ppm), 
+		      p->beacons[ b ].y - (4.0/ppm), 
 		      buf, strlen( buf ) );
 	}
     }
@@ -1088,32 +1102,40 @@ void CXGui::GetRect( double x, double y, double dx, double dy,
   double cxsina = dx * sina;
   double cysina = dy * sina;
   
-  pts[0].x = x + (-cxcosa + cysina);
-  pts[0].y = y + (-cxsina - cycosa);
-  pts[1].x = x + (+cxcosa + cysina);
-  pts[1].y = y + (+cxsina - cycosa);
-  pts[3].x = x + (-cxcosa - cysina);
-  pts[3].y = y + (-cxsina + cycosa);
-  pts[2].x = x + (+cxcosa - cysina);
-  pts[2].y = y + (+cxsina + cycosa);
+  pts[2].x = x + (-cxcosa + cysina);
+  pts[2].y = y + (-cxsina - cycosa);
+  pts[3].x = x + (+cxcosa + cysina);
+  pts[3].y = y + (+cxsina - cycosa);
+  pts[1].x = x + (-cxcosa - cysina);
+  pts[1].y = y + (-cxsina + cycosa);
+  pts[0].x = x + (+cxcosa - cysina);
+  pts[0].y = y + (+cxsina + cycosa);
 }
 
 void CXGui::HighlightObject( ExportData* exp, bool undraw )
 {
   static double x = -1000.0, y = -1000.0, r = -1000.0, th = -1000.0;
   static char label[LABELSIZE];
+  static char info[50];
   
   // setup the GC 
   XSetLineAttributes( display, gc, 0, LineOnOffDash, CapRound, JoinRound );
   SetForeground( white );
   SetDrawMode( GXxor );
   
+  double xoffset = 0.5 + ( 5.0 / ppm );
+  double yoffset = 0.0 / ppm;
+  double yincrement = -12.0 / ppm;
+
   // undraw the last stuff if there was any
   if( x != -1000.0 && y != -1000.0 && undraw )
     {
-      //exposed = false;
       DrawCircle( x, y, r );
-      if( label ) DrawString( x + 0.8, y, label, strlen( label ) );
+      if( label ) 
+	DrawString( x + xoffset, y + yoffset, label, strlen( label ) );
+      if( info[0] ) 	  
+	DrawString( x + xoffset, y + (yoffset + yincrement), info, strlen( info ) );
+
     }
   if( exp ) // if this is a valid object
     {
@@ -1127,8 +1149,16 @@ void CXGui::HighlightObject( ExportData* exp, bool undraw )
       if( exp->label )
       	{
 	  strcpy( label, exp->label );
-	  DrawString( x + 0.8, y, label, strlen( label ) );
+	  DrawString( x + xoffset, y + yoffset, label, strlen( label ) );
       	}
+
+      if( renderSensorData )
+	{
+	  sprintf( info, "(%.2f, %.2f, %.2f)", exp->x, exp->y, exp->th );
+	  DrawString( x + xoffset, y + (yoffset + yincrement), info, strlen( info ) );
+	}
+      else
+	info[0] = 0; //null string
     }
   else
     x = y = th = -1000.0; //reset the bouding box
@@ -1181,10 +1211,21 @@ bool CXGui::IsDiffGenericExportData( ExportData* exp1, ExportData* exp2 )
 
 bool CXGui::IsDiffSpecificExportData( ExportData* exp1, ExportData* exp2 )
 {
-  if( memcmp( exp1->data, exp2->data, DataSize( exp2 ) ) != 0) 
+  if( exp1 == exp2 ) // same data! 
+    {
+      cout << "same ptr!" << endl;
+      return false; 
+    }
+  if( exp1 == 0 || exp2 == 0 ) // invalid pointer!
+    {
+      cout << "invalid ptr!" << endl;
       return true;
+    }
+
+  if( memcmp( exp1->data, exp2->data, DataSize( exp2 ) ) != 0) 
+    return true; // different data!
   // else
-  return false;
+  return false; // same data!
 }
 
 void CXGui::CopyGenericExportData( ExportData* dest, ExportData* src )
@@ -1200,7 +1241,15 @@ void CXGui::CopyGenericExportData( ExportData* dest, ExportData* src )
 
 void CXGui::CopySpecificExportData( ExportData* dest, ExportData* src )
 {
-  memcpy( dest->data, src->data, DataSize( src ) ); 
+  if( src && dest ) // if the src and dest are good
+    {
+      if( src->data ) // if there is data 
+	memcpy( dest->data, src->data, DataSize( src ) ); // copy the data
+      else
+	bzero( dest->data, DataSize( src ) ); // zero the destination data
+    }
+  else
+    cout << "warning: attempt to import data passed null pointer" << endl;
 }
 
 
@@ -1223,4 +1272,5 @@ ExportData* CXGui::NearestObject( double x, double y )
 }
 
   
+
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.9.2.26 $
+//  $Revision: 1.9.2.27 $
 //
 // Usage:
 //  (empty)
@@ -65,12 +65,10 @@ CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CEntity *parent, CPlay
     m_draggable = true;
 #endif
 
-#ifdef INCLUDE_XGUI
     exp.objectType = pioneer_o;
     exp.width = m_size_x;
     exp.height = m_size_y;
     strcpy( exp.label, "Pioneer" );
-#endif
 }
 
 
@@ -338,29 +336,3 @@ void CPioneerMobileDevice::DrawChassis(RtkUiDrawData *data)
 }
 
 #endif
-
-#ifdef INCLUDE_XGUI
-
-////////////////////////////////////////////////////////////////////////////
-// compose and return the export data structure for external rendering
-// return null if we're not exporting data right now.
-ExportData* CPioneerMobileDevice::ImportExportData( ImportData* imp )
-{
-  //CEntity::ImportExportData( imp );
- if( imp ) // if there is some imported data
-   SetGlobalPose( imp->x, imp->y, imp->th ); // move to the suggested place
-
-  if( !exporting ) return 0;
-
-    // fill in the exp structure
-  GetGlobalPose( exp.x, exp.y, exp.th );
-
-  // m_size_x appears to be zero here!
-  //exp.width = m_size_x;
-  //exp.height = m_size_y;
-
-  return &exp;
-}
-
-#endif
-

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.5.2.19 $
+//  $Revision: 1.5.2.20 $
 //
 // Usage:
 //  (empty)
@@ -55,13 +55,11 @@ CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent, CPlayerServer *server
     // zero the data
     memset( m_range, 0, sizeof(m_range) );
 
-#ifdef INCLUDE_XGUI
     exp.objectType = sonar_o; 
     exporting = true;
     exp.objectId = this; // used both as ptr and as a unique ID
     exp.data = (char*)&expSonar;
     expSonar.hitCount = 0;
-#endif
 }
 
 
@@ -73,10 +71,8 @@ void CSonarDevice::Update()
     // dump out if noone is subscribed
     if(!IsSubscribed())
       {
-#ifdef INCLUDE_XGUI
 	// have to invalidate the exported scan data so it gets undrawn
 	memset( &expSonar, 0, expSonar.hitCount * sizeof( DPoint ) );
-#endif
         return;
       }
 
@@ -85,9 +81,7 @@ void CSonarDevice::Update()
         return;
     lastUpdate = m_world->GetTime();
 
-#ifdef INCLUDE_XGUI
     expSonar.hitCount = 0;
-#endif
 
     // Initialise gui data
     //
@@ -155,14 +149,9 @@ void CSonarDevice::Update()
             m_hit_count++;
         #endif
 
-#ifdef INCLUDE_XGUI
-	    //cout << " S: " << expSonar.hitCount << flush;
 	expSonar.hitPts[expSonar.hitCount].x = px;// * m_world->ppm;
 	expSonar.hitPts[expSonar.hitCount].y = py;// * m_world->ppm;
 	expSonar.hitCount++;
-#endif
-
-
     }
 	
     PutData(m_range, sizeof( unsigned short ) * SONARSAMPLES );
@@ -334,29 +323,4 @@ void CSonarDevice::GetSonarPose(int s, double &px, double &py, double &pth)
       py = -yy;
       pth = -angle;
 }
-
-#ifdef INCLUDE_XGUI
-
-////////////////////////////////////////////////////////////////////////////
-// compose and return the export data structure for external rendering
-// return null if we're not exporting data right now.
-ExportData* CSonarDevice::ImportExportData( ImportData* imp )
-{
-  if( imp ) // if there is some imported data
-    SetGlobalPose( imp->x, imp->y, imp->th ); // move to the suggested place
-  
-  if( !exporting ) return 0;
-  
-  // fill in the exp structure
-  // exp.type, exp.id are set in the constructor
-  GetGlobalPose( exp.x, exp.y, exp.th );
-
-  // expSonar has been filled in Update() when we updated the sonar scan
-  //exp.data = (char*)&expSonar; // did this in constructor
-  
-  return &exp;
-}
-
-#endif
-
 

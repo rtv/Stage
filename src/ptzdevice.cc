@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.4.2.19 $
+//  $Revision: 1.4.2.20 $
 //
 // Usage:
 //  (empty)
@@ -67,12 +67,10 @@ CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent, CPlayerServer* server)
 
     m_pan = m_tilt = m_zoom = 0;
 
-#ifdef INCLUDE_XGUI
     exporting = true;
     exp.objectType = ptz_o;
     exp.data = (char*)&expPtz;
     strcpy( exp.label, "PTZ Camera" );
-#endif
 }
 
 
@@ -135,9 +133,9 @@ void CPtzDevice::Update()
         // This basically assumes instantaneous changes
         // We could add a velocity in here later. ahoward
         //
-        m_pan = pan;
-        m_tilt = tilt;
-        m_zoom = zoom;
+        expPtz.pan = m_pan = pan;
+        expPtz.tilt = m_tilt = tilt;
+        expPtz.zoom = m_zoom = zoom;
     }
 
     // Construct the return data buffer
@@ -186,35 +184,6 @@ void CPtzDevice::OnUiMouse(RtkUiMouseData *pData)
     CEntity::OnUiMouse(pData);
 }
 
-
-#endif
-
-#ifdef INCLUDE_XGUI
-////////////////////////////////////////////////////////////////////////////
-// compose and return the export data structure for external rendering
-// return null if we're not exporting data right now.
-ExportData* CPtzDevice::ImportExportData( ImportData* imp )
-{
-  //CObject::ImportExportData( imp );
- if( imp ) // if there is some imported data
-    SetGlobalPose( imp->x, imp->y, imp->th ); // move to the suggested place
-  
-  if( !exporting ) return 0;
-
-  // fill in the exp structure
-  // exp.type, exp.id are set in the constructor
-  GetGlobalPose( exp.x, exp.y, exp.th );
-  
-  //exp.width = m_size_x;
-  //exp.height = m_size_y;
-
-  //exp.data = (char*)&expPtz;
-  expPtz.pan = m_pan;
-  expPtz.tilt = m_tilt;
-  expPtz.zoom = m_zoom;
- 
-  return &exp;
-}
 
 #endif
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/pioneermobiledevice.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.12 $
+//  $Revision: 1.1.2.13 $
 //
 // Usage:
 //  (empty)
@@ -85,10 +85,6 @@ class CPioneerMobileDevice : public CPlayerDevice
     public: unsigned char stall;
     public: int Move();
 
-#ifdef INCLUDE_XGUI
-    public: virtual ExportData* ImportExportData( ImportData* imp ); 
-#endif
-  
 #ifdef INCLUDE_RTK
 
     // Process GUI update messages

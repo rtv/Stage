@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/miscdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -41,12 +41,11 @@ CMiscDevice::CMiscDevice(CWorld *world, CEntity *parent, CPlayerServer *server)
                         MISC_CONFIG_BUFFER_SIZE)
 {
 
-#ifdef INCLUDE_XGUI
+
   exp.objectType = misc_o;
   exp.objectId = this;
-  exp.data = (char*)&expMisc;  
-#endif
-
+  exp.data = (char*)&m_data;  
+  strcpy( exp.label, "Pioneer Misc" );
 }
 
 
@@ -61,38 +60,9 @@ void CMiscDevice::Update()
     m_data.frontbumpers = 0;
     m_data.rearbumpers = 0;
     m_data.voltage = 120;
-    
+   
     PutData(&m_data, sizeof(m_data));
 }
-
-#ifdef INCLUDE_XGUI
-////////////////////////////////////////////////////////////////////////////
-// compose and return the export data structure for external rendering
-// return null if we're not exporting data right now.
-ExportData* CMiscDevice::ImportExportData( ImportData* imp )
-{
-  //CObject::ImportExportData( imp );
- if( imp ) // if there is some imported data
-    SetGlobalPose( imp->x, imp->y, imp->th ); // move to the suggested place
-  
-  if( !exporting ) return 0;
-
-  // fill in the exp structure
-  // exp.type, exp.id are set in the constructor
-  GetGlobalPose( exp.x, exp.y, exp.th );
-  
-  //exp.width = m_size_x;
-  //exp.height = m_size_y;
-
-   expMisc.frontbumpers = 0;
-   expMisc.rearbumpers = 0;
-   expMisc.voltage = 120;
-
-  return &exp;
-}
-
-#endif
-
 
 
 

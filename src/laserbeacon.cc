@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.16 $
+//  $Revision: 1.1.2.17 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -44,12 +44,10 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CEntity *parent)
     //
     m_map_px = m_map_py = m_map_pth = 0;
 
-#ifdef INCLUDE_XGUI
     exp.objectType = laserbeacon_o;
-    exp.width = 0.1;
-    exp.height = 0.3;
+    exp.width = 0.02;
+    exp.height = 0.25;
     strcpy( exp.label, "Beacon" );
-#endif
 }
 
 

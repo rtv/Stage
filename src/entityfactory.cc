@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Author: vaughan $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -52,9 +52,19 @@ CEntity* CreateObject(const char *type, CWorld *world, CEntity *parent)
     if (strcmp(type, "vision_beacon") == 0)
         return new CVisionBeacon(world, parent);
 
-    // Create a USC pioneer robot
+    // Create a USC pioneer robot (a pioneer loaded with gadgets)
     //
     if (strcmp(type, "usc_pioneer") == 0)
+        return new CUscPioneer(world, parent);
+
+    // Create a pioneer robot
+    //
+    if (strcmp(type, "pioneer") == 0)
+        return new CUscPioneer(world, parent);
+
+    // Create a laser ranger with a Player
+    //
+    if (strcmp(type, "laser_ranger") == 0)
         return new CUscPioneer(world, parent);
 
     return NULL;

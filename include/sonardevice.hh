@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/sonardevice.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.6 $
 //
 // Usage:
 //  (empty)
@@ -64,12 +64,7 @@ class CSonarDevice : public CPlayerDevice
     //
     private: unsigned short m_range[SONARSAMPLES];
 
-#ifdef INCLUDE_XGUI
-    // draw/undraw in X gui
-    //
-public: virtual ExportData* ImportExportData( ImportData* imp );
-private: ExportSonarData expSonar; 
-#endif
+    private: ExportSonarData expSonar; 
 
 #ifdef INCLUDE_RTK
     

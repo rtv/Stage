@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.16 $
+//  $Revision: 1.1.2.17 $
 //
 // Usage:
 //  (empty)
@@ -43,12 +43,12 @@ CBoxObstacle::CBoxObstacle(CWorld *world, CEntity *parent)
     //
     m_map_px = m_map_py = m_map_pth = 0;
 
-#ifdef INCLUDE_XGUI
+    // GUI export setup
     exporting = true;
     exp.objectType = box_o;
     exp.width = m_size_x;
     exp.height = m_size_y;
-#endif
+    strcpy( exp.label, "Box" );
 }
 
 
@@ -66,8 +66,8 @@ bool CBoxObstacle::Load(int argc, char **argv)
         //
         if (strcmp(argv[i], "size") == 0 && i + 2 < argc)
         {
-            m_size_x = atof(argv[i + 1]);
-            m_size_y = atof(argv[i + 2]);
+            exp.width = m_size_x = atof(argv[i + 1]);
+            exp.height = m_size_y = atof(argv[i + 2]);
             i += 3;
         }
         else
@@ -136,29 +136,6 @@ void CBoxObstacle::Update()
 
 }
 
-
-#ifdef INCLUDE_XGUI
-
-////////////////////////////////////////////////////////////////////////////
-// compose and return the export data structure for external rendering
-// return null if we're not exporting data right now.
-ExportData* CBoxObstacle::ImportExportData( const ImportData* imp  )
-{
-  if( imp ) // if there is some imported data
-    SetGlobalPose( imp->x, imp->y, imp->th ); // move to the suggested place
-  
-  if( !exporting ) return 0;
-  
-  // fill in the exp structure  
-  GetGlobalPose( exp.x, exp.y, exp.th );
-  exp.width = m_size_x;
-  exp.height = m_size_y;
-  strcpy( exp.label, "Box" );
-  return &exp;
-}
-
-#endif
-
 #ifdef INCLUDE_RTK
 
 ///////////////////////////////////////////////////////////////////////////
@@ -191,6 +168,7 @@ void CBoxObstacle::OnUiMouse(RtkUiMouseData *pData)
 }
 
 #endif
+
 
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -56,13 +56,10 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object)
     m_color = RTK_RGB(0, 0, 0);
 #endif
 
-#ifdef INCLUDE_XGUI
     exporting = true;
     exp.objectId = this; // used both as ptr and as a unique ID
     exp.objectType = 0; 
-    //exp.dataSize = 0;
     exp.data = 0; // NULL char*
-#endif
 }
 
 
@@ -280,8 +277,6 @@ void CEntity::GetGlobalPose(double &px, double &py, double &pth)
     pth = oth + m_lth;
 }
 
-#ifdef INCLUDE_XGUI
-
 ////////////////////////////////////////////////////////////////////////////
 // import changes to this object - typically called by a GUI
 // then compose and return the export data structure for external rendering
@@ -299,8 +294,6 @@ ExportData* CEntity::ImportExportData( const ImportData* inp )
 
   return &exp;
 }
-
-#endif
 
 #ifdef INCLUDE_RTK
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/miscdevice.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -42,14 +42,6 @@ class CMiscDevice : public CPlayerDevice
     // Buffers for storing data
     //
     private: player_misc_data_t m_data;    
-
-#ifdef INCLUDE_XGUI
-    // draw/undraw in X gui
-    //
-    public: virtual ExportData* ImportExportData( ImportData* imp );
-    private: player_misc_data_t expMisc; 
-#endif
-
 };
 
 #endif

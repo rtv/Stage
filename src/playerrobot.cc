@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerrobot.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.14 $
+//  $Revision: 1.1.2.15 $
 //
 // Usage:
 //  (empty)
@@ -69,6 +69,10 @@ CPlayerRobot::CPlayerRobot(CWorld *world, CEntity *parent)
 {
     m_port = 6665;
     playerIO = NULL;
+
+    exp.objectType = player_o;
+    exp.data = (char*)0;
+    strcpy( exp.label, "Player Robot" );
 }
 
 
@@ -98,10 +102,6 @@ bool CPlayerRobot::Startup()
     //
     if (!StartupPlayer(m_port))
         return false;
-
-#ifdef INCLUDE_XGUI
-    exp.objectType = player_o;
-#endif
 
     return true;
 }
@@ -315,27 +315,6 @@ void CPlayerRobot::OnUiUpdate(RtkUiDrawData *pData)
 void CPlayerRobot::OnUiMouse(RtkUiMouseData *pData)
 {
  CEntity::OnUiMouse(pData);;
-}
-
-#endif
-
-#ifdef INCLUDE_XGUI
-
-////////////////////////////////////////////////////////////////////////////
-// compose and return the export data structure for external rendering
-// return null if we're not exporting data right now.
-ExportData* CPlayerRobot::ImportExportData( ImportData* imp )
-{
-  CObject::ImportExportData( imp );
-
-  if( !exporting ) return 0;
-
-  // fill in the exp structure
- // fill in the exp structure  
-  //exp.width = m_size_x;
-  //exp.height = m_size_y;
-
-  return &exp;
 }
 
 #endif

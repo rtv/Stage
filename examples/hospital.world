@@ -1,6 +1,6 @@
 
 set environment_file = hospital.pnm
-set pixels_per_meter =  20
+set pixels_per_meter =  14
 
 create box_obstacle pose 11.56 7.34 46 color green size 1.00 0.50 
 create box_obstacle pose 8.32 6.97 296 color green size 2.00 0.50 

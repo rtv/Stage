@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/boxobstacle.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.10 $
+//  $Revision: 1.1.2.11 $
 //
 // Usage:
 //  (empty)
@@ -55,11 +55,6 @@ class CBoxObstacle : public CEntity
     //
     private: double m_map_px, m_map_py, m_map_pth;
 
-#ifdef INCLUDE_XGUI
-    // compose and return the export data structure
-    //
-    virtual ExportData* ImportExportData( const ImportData* imp );
-#endif
 
 #ifdef INCLUDE_RTK
     

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -29,6 +29,7 @@
 #define ENTITY_HH
 
 #include "stage_types.hh"
+#include "guiexport.hh"
 
 #ifdef INCLUDE_XGUI
 #include "xgui.hh"
@@ -133,8 +134,6 @@ class CEntity
     //
     private: double m_lx, m_ly, m_lth;
 
-#ifdef INCLUDE_XGUI
-
     // struct that holds data for external GUI rendering
     //
     protected: ExportData exp;
@@ -144,15 +143,12 @@ class CEntity
     public: virtual ExportData* ImportExportData( const ImportData* imp ); 
   //public: virtual void ImportData( ImportData* data ); 
 
-    // return the last export data structure
-    //
-    //public: ExportData* GetLastExportData( void ){ return oldexp; }; 
-
     // enable/disable export subscription
     protected: bool exporting;
-    public: void Subscribe( void ){ exporting = true; };
-    public: void UnSubscribe( void ){ exporting = false; };
-#endif
+    public: void EnableGuiExport( void ){ exporting = true; };
+    public: void DisableGuiExport( void ){ exporting = false; };
+    public: void ToggleGuiExport( void ){ exporting = !exporting; };
+
     // Object color description (for display)
     //
     private: char m_color_desc[128];

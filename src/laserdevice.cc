@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.11.2.29 $
+//  $Revision: 1.11.2.30 $
 //
 // Usage:
 //  (empty)
@@ -29,7 +29,6 @@
 #include <math.h>
 #include "world.hh"
 #include "laserdevice.hh"
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
@@ -59,13 +58,12 @@ CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent, CPlayerServer* server
   m_map_dx = 0.155;
   m_map_dy = 0.155;
   
-#ifdef INCLUDE_XGUI    
+  // GUI export setup
   exporting = true; 
   exp.objectId = this; // used both as ptr and as a unique ID
   exp.objectType = laserturret_o;
   strcpy( exp.label, "SICK LMS" );
   exp.data = (char*)&expLaser;
-#endif
   
 #ifdef INCLUDE_RTK 
   m_hit_count = 0;
@@ -122,10 +120,8 @@ void CLaserDevice::Update()
         m_scan_count = 361;
         m_intensity = false;
 	
-#ifdef INCLUDE_XGUI
-	// have to invalidate the exported scan data so it gets undrawn
+	// have to invalidate the exported scan data
 	memset( &expLaser, 0, expLaser.hitCount * sizeof( DPoint ) );
-#endif
       }
 
     // Redraw outselves in the world
@@ -196,9 +192,8 @@ bool CLaserDevice::CheckConfig()
 bool CLaserDevice::GenerateScanData(player_laser_data_t *data)
 {    
 
-#ifdef INCLUDE_XGUI
     expLaser.hitCount = 0;
-#endif
+
     // Get the pose of the laser in the global cs
     //
     double ox, oy, oth;
@@ -304,12 +299,9 @@ bool CLaserDevice::GenerateScanData(player_laser_data_t *data)
         m_hit_count++;
 #endif
 
-#ifdef INCLUDE_XGUI
 	expLaser.hitPts[expLaser.hitCount].x = px;// * m_world->ppm;
 	expLaser.hitPts[expLaser.hitCount].y = py;// * m_world->ppm;
 	expLaser.hitCount++;
-#endif
-
     }    
     return true;
 }
@@ -344,29 +336,6 @@ void CLaserDevice::Map(bool render)
         m_map_pth = pth;
     }
 }
-
-#ifdef INCLUDE_XGUI
-
-////////////////////////////////////////////////////////////////////////////
-// compose and return the export data structure for external rendering
-// return null if we're not exporting data right now.
-ExportData* CLaserDevice::ImportExportData( ImportData* imp )
-{
- if( imp ) // if there is some imported data
-      SetGlobalPose( imp->x, imp->y, imp->th ); // move to the suggested place
-
-  if( !exporting ) return 0;
-
-  // fill in the exp structure
-  // exp.type, exp.id are set in the constructor
-  GetGlobalPose( exp.x, exp.y, exp.th );
-
-  // expLaser has been filled in Update() when we updated the laser scan
-
-  return &exp;
-}
-
-#endif
 
 #ifdef INCLUDE_RTK
 

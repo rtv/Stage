@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.26 $
+//  $Revision: 1.1.2.27 $
 //
 // Usage:
 //  (empty)
@@ -324,6 +324,8 @@ public:
   Nimage* GetForegroundImage( void ){ return m_obs_img; };
   Nimage* GetLaserImage( void ){ return m_laser_img; };
   Nimage* GetVisionImage( void ){ return m_vision_img; };
+  double GetWidth( void ){ return width; };
+  double GetHeight( void ){ return height; };
 #endif
 
 };

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/usc_pioneer.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.18 $
+//  $Revision: 1.1.2.19 $
 //
 // Usage:
 //  (empty)
@@ -70,12 +70,10 @@ CUscPioneer::CUscPioneer(CWorld *world, CEntity *parent)
     //
     m_laser->SetPose(0.09, 0, 0);
     
-#ifdef INCLUDE_XGUI
     exp.objectType = uscpioneer_o;
-    exp.width = 0.99; //m
-    exp.height = 0.99; //m   
+    exp.width = 1.0; //m
+    exp.height = 1.0; //m   
     strcpy( exp.label, "USC Pioneer" );
-#endif
 
     m_ptz->SetPose(0.09, 0, 0);
 }
@@ -233,31 +231,6 @@ void CUscPioneer::OnUiMouse(RtkUiMouseData *data)
 void CUscPioneer::OnUiProperty(RtkUiPropertyData *data)
 {
     CEntity::OnUiProperty(data);
-}
-
-#endif
-
-#ifdef INCLUDE_XGUI
-
-////////////////////////////////////////////////////////////////////////////
-// compose and return the export data structure for external rendering
-// return null if we're not exporting data right now.
-ExportData* CUscPioneer::ImportExportData( ImportData* imp )
-{ 
-
-  if( imp ) // if there is some imported data
-   SetGlobalPose( imp->x, imp->y, imp->th ); // move to the suggested place
-
-  if( !exporting ) return 0;
-
-  // fill in the exp structure
-  GetGlobalPose( exp.x, exp.y, exp.th );
-
-  // fill in the exp structure  
-  //exp.width = m_size_x;
-  //exp.height = m_size_y;
-
-  return &exp;
 }
 
 #endif
