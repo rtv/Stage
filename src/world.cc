@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.74 $
+//  $Revision: 1.75 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -131,7 +131,7 @@ CWorld::CWorld()
 
   if( gethostname( m_hostname, sizeof(m_hostname)) == -1)
   {
-    perror( "XS: couldn't get hostname. Quitting." );
+    perror( "Stage: couldn't get hostname. Quitting." );
     exit( -1 );
   }
   /* now strip off domain */

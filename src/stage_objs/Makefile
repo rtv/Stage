@@ -8,18 +8,19 @@ include ../../Makefile.common
 ##############################################################################
 # Build section
 
-# Objects common to all targets
+# Stage object files
 #
-OBJS =  world.o worldfile.o truthserver.o envserver.o image.o \
-	entity.o entityfactory.o playerdevice.o fixedobstacle.o \
-	positiondevice.o omnipositiondevice.o laserdevice.o sonardevice.o \
-	miscdevice.o broadcastdevice.o \
-	ptzdevice.o boxobstacle.o \
-	laserbeacon.o laserbeacondevice.o visiondevice.o visionbeacon.o \
-	puck.o gpsdevice.o gripperdevice.o main.o \
-	matrix.o raytrace.o 
+#OBJS =  world.o worldfile.o truthserver.o envserver.o image.o \
+	#entity.o entityfactory.o playerdevice.o fixedobstacle.o \
+	#positiondevice.o omnipositiondevice.o laserdevice.o sonardevice.o \
+	#miscdevice.o broadcastdevice.o \
+	#ptzdevice.o boxobstacle.o \
+	#laserbeacon.o laserbeacondevice.o visiondevice.o visionbeacon.o \
+	#puck.o gpsdevice.o gripperdevice.o main.o \
+	#matrix.o raytrace.o 
 #irdevice.o descartesdevice.o
 
+OBS = ${SRCS:.cc=.o}
 
 # choose one of these that suits your build (debug/profile/production)
 
@@ -41,7 +42,7 @@ CCFLAGS += -DVERSION=\"$(VERSION)\" -DCOLOR_DATABASE=\"$(COLOR_DATABASE)\"
 # profile link
 LINKFLAGS = -pg -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
 
-#.SUFFIXES: .cc .o
+.SUFFIXES: .cc .o
 
 ##############################################################################
 # Targets
@@ -50,8 +51,11 @@ all: stage
 
 # Target stage with no GUI
 #
-stage : $(OBJS)
-	$(LINKER) $(LINKFLAGS) -o $@ $(OBJS)  
+#stage : $(OBJS)
+#	$(LINKER) $(LINKFLAGS) -o $@ $(OBJS)  
+
+stage : $(OBS)
+	$(LINKER) $(LINKFLAGS) -o $@ $(OBS) 
 
 clean:
 	rm -f *.o *~ core stage

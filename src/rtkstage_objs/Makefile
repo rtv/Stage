@@ -19,7 +19,8 @@ RTK_LIB = $(RTK_DIR) #/lib
 # Objects
 OBJS =  main.o world.o worldfile.o truthserver.o envserver.o image.o \
 	entity.o entityfactory.o playerdevice.o fixedobstacle.o \
-	positiondevice.o omnipositiondevice.o laserdevice.o sonardevice.o miscdevice.o \
+	positiondevice.o omnipositiondevice.o laserdevice.o sonardevice.o \
+	 miscdevice.o \
 	ptzdevice.o boxobstacle.o \
 	laserbeacon.o laserbeacondevice.o visiondevice.o visionbeacon.o \
 	puck.o broadcastdevice.o gpsdevice.o gripperdevice.o \

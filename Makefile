@@ -7,57 +7,92 @@
 #
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
-#  $Author: inspectorg $
-#  $Revision: 1.26 $
+#  $Author: rtv $
+#  $Revision: 1.27 $
 #
-###########################################################################
+#
+# CONFIGURATION NOTES:
+# Most user-level configs can be done here; also check src/Makefile for
+# compiler options and library paths if you have trouble compiling
 
-include Makefile.common
+############################################################################
+# VERSION CONFIGURATION - you probably don't need to change this
+############################################################################
+include VERSION
 
+#############################################################################
+# PLAYER CONFIGURATION (required) 
+#############################################################################
+#
 # INSTALL PLAYER BEFORE BUILDING STAGE OR RTKSTAGE!
+#
+# Set the absolute path of your Player installation or source tree here.
+# These defaults are usually OK, but you may need to change them if
+# you customized your player installation
+
+# define which version of Player you will use to build from
+# this is very often the same as stage's version number:
+PLAYER_VERSION = $(VERSION)
+PLAYER_DIR = $(HOME)/player-$(PLAYER_VERSION)
 
 ##############################################################################
-# Top level targets
+# INSTALL CONFIGURATION (optional)
+##############################################################################
 
-# truthlog doesn't compile... BPG
-#all: stage xs rtkstage truthlog manager
-all: stage rtkstage xs manager
+# Stage will be installed under the directory INSTALL_BASE-VERSION.
+# Change INSTALL_BASE if you want to install somewhere else.
+# You can also specify the INSTALL_BASE from the make command line, eg:
+# make install -e INSTALL_BASE=~/playerstage/stage
 
-stage: 
-	cd src && make stage && cp stage_objs/stage ../bin/
+INSTALL_BASE = $(HOME)/stage
+INSTALL_DIR = $(INSTALL_BASE)-$(VERSION)
 
-xs: 
-	cd src && make xs && cp xs ../bin/
+# Rtk configuration files will be installed here
+INSTALL_ETC = /usr/local/etc/rtk
 
-truthlog: 
-	cd src && make truthlog
+SRC_DIST_NAME = Stage-$(VERSION)-src
+SRC_DIST_BLEEDING_NAME = Stage-Bleeding-src
+BIN_DIST_NAME = Stage-$(VERSION)-i386
 
-rtkstage:
-	cd src && make rtkstage && cp rtkstage_objs/rtkstage ../bin/
+INSTALL_BIN = $(INSTALL_DIR)/bin
+INSTALL_BIN_FILES = bin/stage bin/xs bin/rtkstage bin/manager
+INSTALL_EXAMPLES = $(INSTALL_DIR)/examples
 
-manager: 
-	cd src && make manager && cp manager ../bin/
+## END OF CONFIG - you shouldn't  need to change anything beyond here #######
+## there are more compiler options, etc, in  src/Makefile
+
+##############################################################################
+# Build section
+#
+
+all:	stage rtkstage xs manager
+
+stage: 	
+	cd src && ${MAKE} all PLAYER_DIR=$(PLAYER_DIR) && cp stage ../bin
+
+rtkstage: 	
+	cd src && ${MAKE} rtkstage PLAYER_DIR=$(PLAYER_DIR) \
+	&& cp rtkstage ../bin
+
+xs: 	
+	cd src && ${MAKE} xs PLAYER_DIR=$(PLAYER_DIR) && cp xs ../bin
+
+manager: 	
+	cd src && ${MAKE} manager PLAYER_DIR=$(PLAYER_DIR) && cp manager ../bin
 
 dep:
-	cd src &&  make dep
+	cd src && ${MAKE} dep
 
 clean: clean_dep
 	rm -f *~
 	cd src && make clean
 	cd include &&  make clean
-	cd bin && rm -f stage rtkstage xs core
+	cd bin && rm -f stage rtkstage xs manager core
 	cd examples && rm -f core
 
 clean_dep:
 	cd src && make clean_dep
 
-
-###########################################################################
-# Install section
-
-INSTALL_BIN = $(INSTALL_DIR)/bin
-INSTALL_BIN_FILES = bin/stage bin/xs bin/rtkstage bin/manager
-INSTALL_EXAMPLES = $(INSTALL_DIR)/examples
 
 install:
 	mkdir -p $(INSTALL_EXAMPLES)
@@ -102,4 +137,9 @@ bin_dist:
 	cp -R . /tmp/$(BIN_DIST_NAME)
 	tar -C /tmp -cvzf $(BIN_DIST_NAME).tgz $(BIN_DIST_FILES)
 	rm -Rf /tmp/$(BIN_DIST_NAME)
+
+
+
+
+
 
