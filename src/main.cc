@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.5 2003-02-03 07:10:37 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.6 2003-02-03 07:19:54 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -236,7 +236,7 @@ int main(int argc, char **argv)
   // update the simulation - stop when the quit flag is raised
   while( !quit ) 
     {
-      printf( "cycle %d\n", c++ );
+      //printf( "cycle %d\n", c++ );
 
       // set up new clients
       if( SIOAcceptConnections() == -1 ) break;
@@ -255,7 +255,7 @@ int main(int argc, char **argv)
       // write out any changed, subscribed properties
       if( SIOReportResults( CEntity::simtime, NULL, 0 ) == -1 ) break;
 
-      sleep( 1 ); // just stop the powerbook getting hot :)
+      //sleep( 1 ); // just stop the powerbook getting hot :)
     }
   
   // clean up and exit
