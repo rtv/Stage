@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.22 2002-10-31 07:48:35 gerkey Exp $
+dnl $Id: configure.in,v 1.23 2002-11-01 19:46:10 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -23,6 +23,9 @@ AC_PROG_MAKE_SET
 dnl Generate a configuration header called <config.h> and put all the C
 dnl preprocessor defines in there
 AM_CONFIG_HEADER(config.h)
+
+dnl run RTK's configure as well
+AC_CONFIG_SUBDIRS(rtk2)
 
 dnl Define this so that we can refer to it twice below
 define(STAGE_VERSION,1.3)
@@ -120,6 +123,6 @@ AC_OUTPUT(Makefile
           src/gnome2/Makefile 
 	  src/rtkstage/Makefile
           worlds/Makefile 
-          tools/Makefile
-          rtk2/Makefile 
-          rtk2/test/Makefile )
+          tools/Makefile)
+          #rtk2/Makefile 
+          #rtk2/test/Makefile )
