@@ -34,7 +34,9 @@ LINKFLAGS += $(OLDLIBS)
 ##############################################################################
 # Targets
 
-all: stage rtkstage xs truthlog 
+# truthlog doesn't compile... BPG
+#all: stage rtkstage xs truthlog 
+all: stage rtkstage xs 
 
 stage:
 	cd stage_objs && make stage

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.15 $
+//  $Author: gerkey $
+//  $Revision: 1.16 $
 //
 // Usage:
 //  (empty)
@@ -244,6 +244,8 @@ void CVisionDevice::UpdateScan()
         // Update the gui data
         //
 #ifdef INCLUDE_RTK
+        /* this doesn't compile right now... BPG */
+#if 0
         if (m_scan_channel > 0)
         {
             m_hit[m_hit_count][0] = px;
@@ -251,6 +253,7 @@ void CVisionDevice::UpdateScan()
             m_hit[m_hit_count][2] = m_scan_channel;
             m_hit_count++;
         }
+#endif
 #endif
     }   
 }
