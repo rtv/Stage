@@ -744,12 +744,18 @@ int stg_model_update( stg_model_t* mod )
 
 int stg_model_startup( stg_model_t* mod )
 {
+  if( mod->f_startup == NULL )
+    PRINT_ERR1( "model %s has no startup function registered", mod->token ); 
+
   assert(mod->f_startup );
   return mod->f_startup(mod);
 }
 
 int stg_model_shutdown( stg_model_t* mod )
 {
+  if( mod->f_shutdown == NULL )
+    PRINT_ERR1( "model %s has no shutdown function registered", mod->token ); 
+
   assert(mod->f_shutdown );
   return mod->f_shutdown(mod);
 }

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.20 $
+//  $Revision: 1.21 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -25,8 +25,10 @@ extern stg_rtk_fig_t* fig_debug;
 #define TIMING 0
 #define ENERGY_FILLED 1
 
-void  energy_render_config( stg_model_t* mod );
-void  energy_render_data( stg_model_t* mod );
+void energy_render_config( stg_model_t* mod );
+void energy_render_data( stg_model_t* mod );
+int energy_startup( stg_model_t* mod );
+int energy_shutdown( stg_model_t* mod );
 int energy_update( stg_model_t* mod );
 void energy_load( stg_model_t* mod );
 
@@ -64,7 +66,8 @@ stg_model_t* stg_energy_create( stg_world_t* world,
   stg_model_set_prop( mod, "inputwatts", d );
   
   // override the default methods
-  //mod->f_shutdown = energy_shutdown;
+  mod->f_startup = energy_startup;
+  mod->f_shutdown = energy_shutdown;
   mod->f_update = energy_update;
   mod->f_render_data = energy_render_data;
   mod->f_render_cfg = energy_render_config;
@@ -72,7 +75,7 @@ stg_model_t* stg_energy_create( stg_world_t* world,
 
   // batteries aren't obstacles or sensible to range sensors
   mod->obstacle_return = FALSE;
-  //mod->ranger_return = FALSE; // there is no ranger return! why?
+  mod->ranger_return = FALSE;
   mod->laser_return = LaserTransparent;
   mod->fiducial_return = STG_ENERGY_FIDUCIAL_DEFAULT;
 
@@ -113,6 +116,16 @@ stg_model_t* stg_energy_create( stg_world_t* world,
   stg_model_set_color( mod, &col );
 
   return mod;
+}
+
+int energy_startup( stg_model_t* mod )
+{
+  return 0; // ok
+}
+
+int energy_shutdown( stg_model_t* mod )
+{
+  return 0; // ok
 }
 
 // add sink to source's list of power connections

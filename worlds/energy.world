@@ -1,13 +1,15 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: energy.world,v 1.3 2005-02-28 08:06:45 rtv Exp $
+# CVS: $Id: energy.world,v 1.4 2005-04-04 22:51:03 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
 
 
+
 # defines 'map' object used for floorplans
 include "map.inc"
+
 
 
 # set the size of a pixel in meters
@@ -17,8 +19,8 @@ resolution 0.02
 window
 ( 
   size [ 662.000 654.000 ] 
-  center [2.347 1.877] 
-  scale 0.008 
+  center [3.626 4.046] 
+  scale 0.012 
 )
 
 # load an environment bitmap
@@ -32,8 +34,8 @@ map
 # create a robot
 pioneer2dx_battery
 (
-  name "robot"
-  pose [1.975 3.000 0.000]
+  name "robot1"
+  pose [2.340 4.371 82.800]
   laser()
   fiducialfinder()
 )
@@ -41,7 +43,7 @@ pioneer2dx_battery
 pioneer2dx_battery
 (
   name "robot2"
-  pose [4.000 1.000 180.000]
+  pose [5.504 2.992 108.776]
   laser( )
   fiducialfinder()
 )
