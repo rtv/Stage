@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.69 2002-07-04 01:06:02 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.70 2002-07-05 23:32:02 rtv Exp $
  */
 
 #include <math.h>
@@ -103,7 +103,7 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
 
   // Set the initial mapped pose to a dummy value
   this->map_px = this->map_py = this->map_pth = 0;
-  
+
   m_dependent_attached = false;
 
   // by default, we are not a player device
@@ -139,6 +139,8 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
   // Default figures for drawing the entity.
   this->fig = NULL;
   this->fig_label = NULL;
+
+  this->guix = this->guiy = this->guia = 0.0;
 
   // By default, we can both translate and rotate the entity.
   this->movemask = RTK_MOVE_TRANS | RTK_MOVE_ROT;
@@ -1424,7 +1426,7 @@ void CEntity::RtkStartup()
   double qy = this->origin_y;
   double sx = this->size_x;
   double sy = this->size_y;
-  
+
   switch (this->shape)
   {
   case ShapeRect:
@@ -1488,18 +1490,35 @@ void CEntity::RtkUpdate()
   // Make sure the entity and the figure have the same pose.
   // Either update the pose of the entity in the world,
   // or update the pose of the figure in the GUI.
-  if (rtk_fig_mouse_selected(this->fig))
-  {
-    double gx, gy, gth;
-    rtk_fig_get_origin(this->fig, &gx, &gy, &gth);
-    SetGlobalPose(gx, gy, gth);
-  }
-  else
-  {
-    double gx, gy, gth;
-    GetGlobalPose(gx, gy, gth);
-    rtk_fig_origin(this->fig, gx, gy, gth);
-  }
+  
+  // we'll test the GUI first, because user moves take precedence over
+  // simulation moves
+
+  double gx, gy, gth;
+  rtk_fig_get_origin(this->fig, &gx, &gy, &gth);
+  
+  // if the GUI has moved the figure, we move the entity to match
+  if( gx != this->guix || gy != this->guiy || gth != this->guia )
+    {
+      this->guix = gx;
+      this->guiy = gy;
+      this->guia = gth;
+      
+      SetGlobalPose(gx, gy, gth);
+    }
+  else // if we've moved the entity, move the figure to match
+    { 
+      GetGlobalPose(gx, gy, gth);
+      
+      if( gx != this->guix || gy != this->guiy || gth != this->guia )
+	{
+	  this->guix = gx;
+	  this->guiy = gy;
+	  this->guia = gth;
+	  
+	  rtk_fig_origin(this->fig, gx, gy, gth);
+	}
+    }
 
   // Show the figure's label if it is selected
   if (rtk_fig_mouse_over(this->fig))

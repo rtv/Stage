@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.107 2002-07-04 01:06:02 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.108 2002-07-05 23:32:02 rtv Exp $
  */
 
 //#undef DEBUG
@@ -462,10 +462,11 @@ void CWorld::Update(void)
         m_entity[i]->Update( m_sim_time ); // update the device model
         
 #ifdef INCLUDE_RTK2
-      // update the GUI, whether we manage this device or not
+      // update the object's GUI repn., whether we manage this device or not
       if (this->enable_gui)
         m_entity[i]->RtkUpdate();
 #endif
+
     };
 #ifdef INCLUDE_RTK2
     if (this->enable_gui)
@@ -819,7 +820,7 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
     showgrid = worldfile->ReadInt(section, "showgrid", true);
     
     // toggle display of subscribed or all device data
-    subscribedonly = worldfile->ReadInt(section, "showsubscribedonly", true);
+    subscribedonly = worldfile->ReadInt(section, "showsubscribed", true);
 
     gridx = ceil(gridx / major) * major;
     gridy = ceil(gridy / major) * major;
@@ -896,7 +897,7 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   rtk_menuitem_check(this->grid_item, subscribedonly);
 
   // Create the view/device sub menu
-  this->device_data_menu = rtk_menu_create_sub(this->view_menu, "Device data");
+  this->device_data_menu = rtk_menu_create_sub(this->view_menu, "Display data");
 
   // create a menu item for each device
   // start with all sensor visualizations enabled - might re-think

@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.52 2002-06-10 04:57:48 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.53 2002-07-05 23:32:01 rtv Exp $
  */
 
 #ifndef ENTITY_HH
@@ -386,6 +386,11 @@ class CEntity
 
   // Default movement mask
   protected: int movemask;
+
+  // we store the last know GUI pose in here so we can find out if the
+  // GUI has moved the object. kinda inefficient, but it saves
+  // tweaking rtk2 for the moment.
+  protected: double guix, guiy, guia;
 #endif
 };
 

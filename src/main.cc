@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.45 2002-07-04 01:06:02 rtv Exp $
+ * CVS: $Id: main.cc,v 1.46 2002-07-05 23:32:02 rtv Exp $
  */
 
 #include <unistd.h>
@@ -165,9 +165,7 @@ int main(int argc, char **argv)
   {
     world->Update(); // update the simulation
     
-    pause();
-    //sleep( 10 );
-    //usleep( 500000 );
+    pause(); // waits for timer or other signal to be received
   }
 
   // clean up and exit
