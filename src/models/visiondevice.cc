@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.cc,v 1.3 2002-11-11 08:21:40 rtv Exp $
+ * CVS info: $Id: visiondevice.cc,v 1.3.8.1 2004-10-07 16:47:43 gerkey Exp $
  */
 
 #include <math.h>
@@ -68,19 +68,8 @@ CVisionDevice::CVisionDevice(LibraryItem* libit,CWorld *world, CPtzDevice *paren
 
   m_max_range = 8.0;
 
-  // Set the default channel-color mapping for ACTS.  Let's start with
-  // a reasonable set of color channels these get overwritten when
-  // specifiedby the worldfile.
-  this->channels[0] = ::LookupColor( "red" );
-  this->channels[1] = ::LookupColor( "green" );
-  this->channels[2] = ::LookupColor( "blue" );
-  this->channels[3] = ::LookupColor( "yellow" );
-  this->channels[4] = ::LookupColor( "cyan" );
-  this->channels[5] = ::LookupColor( "magenta" );
-  this->channel_count = 6;
-
   numBlobs = 0;
-  memset( blobs, 0, MAXBLOBS * sizeof( ColorBlob ) );
+  memset( blobs, 0, PLAYER_BLOBFINDER_MAX_BLOBS * sizeof( player_blobfinder_blob_t ) );
 
 #ifdef INCLUDE_RTK2
   vision_fig = NULL;
@@ -105,21 +94,6 @@ bool CVisionDevice::Load(CWorldFile *worldfile, int section)
   if (!CPlayerEntity::Load(worldfile, section))
     return false;
 
-  // Read the vision channel/color mapping
-  for (int i = 0; true; i++)
-  {
-    const char *color = worldfile->ReadTupleString(section, "channels", i, NULL);
-
-    if( color ) // if the string looks ok
-    {
-      //printf( "[%d:%s]", i, color );
-      this->channels[i] = ::LookupColor(color);
-      this->channel_count = i + 1;
-    }
-    else
-      break;
-  }
-  
   return true;
 }
 
@@ -177,7 +151,7 @@ void CVisionDevice::UpdateScan()
   double dth = m_zoom / m_scan_width;
 
   // Make sure the data buffer is big enough
-  ASSERT((size_t)m_scan_width<=sizeof(m_scan_channel)/sizeof(m_scan_channel[0]));
+  ASSERT((size_t)m_scan_width<=sizeof(m_scan_color)/sizeof(m_scan_color[0]));
 
   // TODO
   //int skip = (int) (m_world->m_vision_res / m_scan_res - 0.5);
@@ -190,7 +164,9 @@ void CVisionDevice::UpdateScan()
   
   for (int s = 0; s < m_scan_width; s++)
   {
-    //printf( "scan %d of %d\n", s, m_scan_width );
+    // initialize the reading 
+    m_scan_color[s] = 0; 
+    m_scan_range[s] = -1; // range < 0 is no-blob
 
     // indicate no valid color found (MSB normally unused in 32bit RGB value)
     col = 0xFF000000; 
@@ -208,11 +184,6 @@ void CVisionDevice::UpdateScan()
       
     while( (ent = lit.GetNextEntity()) ) 
     {
-      //printf( "ent %p (%s), vision_return %d\n",
-      //ent, ent->lib_entry->token, ent->vision_return );
-
-      //ent->Print( "" );
-
       // Ignore itself, its ancestors and its descendents
       if( ent == this || this->IsDescendent(ent) || ent->IsDescendent(this))
 	  continue;
@@ -220,6 +191,10 @@ void CVisionDevice::UpdateScan()
       // Ignore transparent things
       if( !ent->vision_return )
 	  continue;
+
+      // Also ignore walls
+      if(!strcmp(ent->lib_entry->token,"bitmap"))
+        continue;
 
       range = lit.GetRange(); // it's this far away
 
@@ -229,26 +204,11 @@ void CVisionDevice::UpdateScan()
       break;
     }
 	
-    // initialize the reading 
-    m_scan_channel[s] = 0; // channel 0 is no-blob
-    m_scan_range[s] = 0;
-
     // if we found a color on this ray
     if( !(col & 0xFF000000) ) 
     {
-      // look up this color in the color/channel mapping array
-      for( int c=0; c < this->channel_count; c++ )
-      {
-        if( this->channels[c] == col)
-        {
-          //printf("color %d is channel %d\n", col, c);
-          //printf("m_scan_channel[%d] = %d\n", s, c+1);
-
-          m_scan_channel[s] = c + 1; // channel 0 is no-blob
-          m_scan_range[s] = range;
-          break;
-        }
-      }
+      m_scan_color[s] = col;
+      m_scan_range[s] = range;
     }
   }
 }
@@ -266,32 +226,31 @@ size_t CVisionDevice::UpdateACTS( player_blobfinder_data_t* data )
   float yRadsPerPixel = m_zoom / cameraImageHeight;
 
   int blobleft = 0, blobright = 0;
-  unsigned char blobcol = 0;
+  StageColor blobcol = 0;
   int blobtop = 0, blobbottom = 0;
 
   numBlobs = 0;
   // scan through the samples looking for color blobs
   for( int s=0; s < m_scan_width; s++ )
   {
-    if( m_scan_channel[s] != 0 && m_scan_channel[s] < 
-        PLAYER_BLOBFINDER_MAX_CHANNELS)
+    if( m_scan_range[s] >= 0 )
     {
       blobleft = s;
-      blobcol = m_scan_channel[s];
+      blobcol = m_scan_color[s];
 
       // loop until we hit the end of the blob
       // there has to be a gap of >1 pixel to end a blob
       // this avoids getting lots of crappy little blobs
-      while( m_scan_channel[s] == blobcol || m_scan_channel[s+1] == blobcol ) 
+      while( m_scan_color[s] == blobcol || m_scan_color[s+1] == blobcol ) 
         s++;
 
       blobright = s-1;
       double robotHeight = 0.6; // meters
       int xCenterOfBlob = blobleft + ((blobright - blobleft )/2);
       double rangeToBlobCenter = m_scan_range[ xCenterOfBlob ];
-      if(!rangeToBlobCenter)
+      if(rangeToBlobCenter < 0)
       {
-        // if the range to the "center" is zero, then use the range
+        // if the range to the "center" is < 0, then use the range
         // to the start.  this can happen, for example, when two 1-pixel
         // blobs that are 1 pixel apart are grouped into a single blob in 
         // whose "center" there is really no blob at all
@@ -304,24 +263,26 @@ size_t CVisionDevice::UpdateACTS( player_blobfinder_data_t* data )
       int yCenterOfBlob = blobtop +  ((blobbottom - blobtop )/2);
 
       if (blobtop < 0)
+      {
+        printf("blobtop was: %u\n", blobtop);
         blobtop = 0;
+      }
       if (blobbottom > cameraImageHeight - 1)
+      {
+        printf("blobbottom was: %u\n", blobbottom);
         blobbottom = cameraImageHeight - 1;
+      }
 
       // useful debug - keep
       /*
-        cout << "Robot " << this
-        << " sees " << (int)blobcol-1
-        << " start: " << blobleft
-        << " end: " << blobright
-        << " top: " << blobtop
-        << " bottom: " << blobbottom
-        << endl << endl;
-        */
+      printf("Robot %p sees %u blobcol l: %u r: %u t: %u b: %u range: %f\n",
+             this, blobcol, blobleft, blobright, blobtop, blobbottom,rangeToBlobCenter);
+             */
 
       // fill in an arrau entry for this blob
       //
-      blobs[numBlobs].channel = blobcol-1;
+      blobs[numBlobs].id = numBlobs;
+      blobs[numBlobs].color = (uint32_t)blobcol;
       blobs[numBlobs].x = xCenterOfBlob;
       blobs[numBlobs].y = yCenterOfBlob;
       blobs[numBlobs].left = blobleft;
@@ -335,51 +296,12 @@ size_t CVisionDevice::UpdateACTS( player_blobfinder_data_t* data )
     }
   }
 
-  // now we have the blobs we have to pack them into ACTS format (yawn...)
-
-  // ACTS has blobs sorted by channel (color), and by area within channel, 
-  // so we'll bubble sort the
-  // blobs - this could be more efficient, so might fix later.
-  if( numBlobs > 1 )
-  {
-    //cout << "Sorting " << numBlobs << " blobs." << endl;
-    int change = true;
-    ColorBlob tmp;
-
-    while( change )
-    {
-      change = false;
-
-      for( int b=0; b<numBlobs-1; b++ )
-      {
-        // if the channels are in the wrong order
-        if( (blobs[b].channel > blobs[b+1].channel)
-            // or they are the same channel but the areas are 
-            // in the wrong order
-            ||( (blobs[b].channel == blobs[b+1].channel) 
-                && blobs[b].area < blobs[b+1].area ) )
-        {		      
-          //switch the blobs
-          memcpy( &tmp, &(blobs[b]), sizeof( ColorBlob ) );
-          memcpy( &(blobs[b]), &(blobs[b+1]), sizeof( ColorBlob ) );
-          memcpy( &(blobs[b+1]), &tmp, sizeof( ColorBlob ) );
-
-          change = true;
-        }
-      }
-    }
-  }
-
-  // now run through the blobs, packing them into the ACTS buffer
-  // counting the number of blobs in each channel and making entries
-  // in the acts header
-
+  // now pack them into the Player packet
+  data->width = htons((uint16_t)this->cameraImageWidth);
+  data->height = htons((uint16_t)this->cameraImageHeight);
+  data->blob_count = htons(numBlobs);
   for( int b=0; b<numBlobs; b++ )
   {
-    // I'm not sure the ACTS-area is really just the area of the
-    // bounding box, or if it is in fact the pixel count of the
-    // actual blob. Here it's just the rectangular area.
-
     // useful debug - leave in
     /*
       cout << "blob "
@@ -392,12 +314,8 @@ size_t CVisionDevice::UpdateACTS( player_blobfinder_data_t* data )
       << endl;
     */
 
-    // RTV - blobs[b].area is already set above - just byteswap
     data->blobs[b].area = htonl(blobs[b].area);
-
-    // look up the color for this channel
-    data->blobs[b].color = htonl( this->channels[ blobs[b].channel ] );
-
+    data->blobs[b].color = htonl(blobs[b].color);
     data->blobs[b].x = htons(blobs[b].x);
     data->blobs[b].y = htons(blobs[b].y);
     data->blobs[b].left = htons(blobs[b].left);
@@ -405,28 +323,7 @@ size_t CVisionDevice::UpdateACTS( player_blobfinder_data_t* data )
     data->blobs[b].top = htons(blobs[b].top);
     data->blobs[b].bottom = htons(blobs[b].bottom);
     data->blobs[b].range = htons(blobs[b].range);
-
-    // increment the count for this channel
-    data->header[blobs[b].channel].num++;
   }
-
-
-  // now we finish the header by setting the blob indexes and byte
-  // swapping the counts.
-  int pos = 0;
-  for( int ch=0; ch<PLAYER_BLOBFINDER_MAX_CHANNELS; ch++ )
-  {
-    data->header[ch].index = htons(pos);
-    pos += data->header[ch].num;
-
-    // byte swap the blob count for each channel
-    PRINT_DEBUG2( "channel: %d blobs: %d\n", ch,  data->header[ch].num ); 
-    data->header[ch].num = htons(data->header[ch].num);
-  }
-
-  // and set the image width * height
-  data->width = htons((uint16_t)cameraImageWidth);
-  data->height = htons((uint16_t)cameraImageHeight);
 
   return sizeof(player_blobfinder_data_t);
 }
@@ -502,46 +399,41 @@ void CVisionDevice::RtkUpdate()
       rtk_fig_color_rgb32(this->vision_fig, 0x000000);
       rtk_fig_rectangle(this->vision_fig, 0.0, 0.0, 0.0, mwidth,  mheight, 0); 
 
-      for( int c=0; c<PLAYER_BLOBFINDER_MAX_CHANNELS;c++)
+      short numblobs = ntohs(data.blob_count);
+      for(int b=0; b<numblobs; b++ )
       {
-        short numblobs = ntohs(data.header[c].num);
-        short index = ntohs(data.header[c].index);	    
-	    
-        for( int b=0; b<numblobs; b++ )
-	      {
-          // set the color from the blob data
-          rtk_fig_color_rgb32( this->vision_fig, 
-                               ntohl(data.blobs[index+b].color) ); 
+        // set the color from the blob data
+        rtk_fig_color_rgb32( this->vision_fig, 
+                             ntohl(data.blobs[b].color) ); 
 
-          //short x =  ntohs(data.blobs[index+b].x);
-          //short y =  ntohs(data.blobs[index+b].y);
-          short top =  ntohs(data.blobs[index+b].top);
-          short bot =  ntohs(data.blobs[index+b].bottom);
-          short left =  ntohs(data.blobs[index+b].left);
-          short right =  ntohs(data.blobs[index+b].right);
-		
-          //double mx = x * scale;
-          //double my = y * scale;
-          double mtop = top * scale;
-          double mbot = bot * scale;
-          double mleft = left * scale;
-          double mright = right * scale;
-	    
-	  // get the range in meters
-	  //double range = (double)ntohs(data.blobs[index+b].range) / 1000.0; 
-	  
-          rtk_fig_rectangle(this->vision_fig, 
-                            -mwidth/2.0 + (mleft+mright)/2.0, 
-                            -mheight/2.0 +  (mtop+mbot)/2.0,
-                            0.0, 
-                            mright-mleft, 
-                            mbot-mtop, 
-                            1 );
+        //short x =  ntohs(data.blobs[index+b].x);
+        //short y =  ntohs(data.blobs[index+b].y);
+        short top =  ntohs(data.blobs[b].top);
+        short bot =  ntohs(data.blobs[b].bottom);
+        short left =  ntohs(data.blobs[b].left);
+        short right =  ntohs(data.blobs[b].right);
 
-	  //rtk_fig_line( this->vision_fig,
-	  //	0,0,0, 
+        //double mx = x * scale;
+        //double my = y * scale;
+        double mtop = top * scale;
+        double mbot = bot * scale;
+        double mleft = left * scale;
+        double mright = right * scale;
 
-	      }
+        // get the range in meters
+        //double range = (double)ntohs(data.blobs[index+b].range) / 1000.0; 
+
+        rtk_fig_rectangle(this->vision_fig, 
+                          -mwidth/2.0 + (mleft+mright)/2.0, 
+                          -mheight/2.0 +  (mtop+mbot)/2.0,
+                          0.0, 
+                          mright-mleft, 
+                          mbot-mtop, 
+                          1 );
+
+        //rtk_fig_line( this->vision_fig,
+        //	0,0,0, 
+
       }
     }
     //else

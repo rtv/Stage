@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.hh,v 1.2 2002-11-01 19:12:32 rtv Exp $
+ * CVS info: $Id: visiondevice.hh,v 1.2.8.1 2004-10-07 16:47:43 gerkey Exp $
  */
 
 #ifndef VISIONDEVICE_HH
@@ -31,18 +31,6 @@
 
 // Forward declaration for ptz device
 class CPtzDevice;
-
-#define MAXBLOBS 100 // PDOMA!
-
-typedef struct
-{
-  unsigned char channel;
-  int area;
-  int x, y;
-  int left, top, right, bottom;
-  int range; //mm
-} ColorBlob;
-
 
 class CVisionDevice : public CPlayerEntity
 {
@@ -79,8 +67,8 @@ public: static CVisionDevice* Creator(  LibraryItem *libit, CWorld *world, CEnti
   private: double m_pan, m_tilt, m_zoom;
 
   // channel to color map array
-  private: int channel_count;
-  private: StageColor channels[PLAYER_BLOBFINDER_MAX_CHANNELS];
+  //private: int channel_count;
+  //private: StageColor channels[PLAYER_BLOBFINDER_MAX_CHANNELS];
   
   // Camera properties
   private: int cameraImageWidth, cameraImageHeight;
@@ -88,12 +76,13 @@ public: static CVisionDevice* Creator(  LibraryItem *libit, CWorld *world, CEnti
 
   // Current scan-line data
   private: int m_scan_width;
-  private: int m_scan_channel[256];
+  //private: int m_scan_channel[256];
+  private: StageColor m_scan_color[256];
   private: double m_scan_range[256];
 
   // Detected blob data
   private: int numBlobs;
-  private: ColorBlob blobs[MAXBLOBS];
+  private: player_blobfinder_blob_t blobs[PLAYER_BLOBFINDER_MAX_BLOBS];
 
   //private: player_vision_data_t actsBuf;
 

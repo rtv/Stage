@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.43.4.1 2003-12-05 16:56:25 gerkey Exp $
+ * CVS info: $Id: server.cc,v 1.43.4.2 2004-10-07 16:47:42 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -604,7 +604,8 @@ void CStageServer::ShutdownPlayer()
 
   if(this->player_pid)
   {
-    if(kill(this->player_pid,SIGTERM))
+    //if(kill(this->player_pid,SIGTERM))
+    if(kill(this->player_pid,SIGINT))
       PRINT_ERR1("error killing player: [%s]", strerror(errno));
     if((wait_retval = waitpid(this->player_pid,NULL,0)) == -1)
       PRINT_ERR1("waitpid failed: [%s]", strerror(errno));
