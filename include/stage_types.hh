@@ -21,7 +21,7 @@
  * Desc: Shared types, constants, etc
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: stage_types.hh,v 1.26 2002-06-09 06:31:15 rtv Exp $
+ * CVS: $Id: stage_types.hh,v 1.27 2002-06-11 03:31:18 inspectorg Exp $
  */
 
 #ifndef STAGE_TYPES_HH
@@ -184,11 +184,8 @@ enum StageType
 enum LaserReturn
 {
   LaserTransparent = 0,
-  LaserReflect, 
-  LaserBright1,
-  LaserBright2,
-  LaserBright3,
-  LaserBright4
+  LaserVisible, 
+  LaserBright,
 };
 
 

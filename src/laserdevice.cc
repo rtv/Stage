@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.59 2002-06-11 01:30:15 gerkey Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.60 2002-06-11 03:31:18 inspectorg Exp $
  */
 
 #define DEBUG
@@ -54,7 +54,7 @@ CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent )
   this->color = ::LookupColor(LASER_COLOR);
   
   // Default visibility settings
-  this->laser_return = LaserReflect;
+  this->laser_return = LaserVisible;
   this->sonar_return = 0;
   this->obstacle_return = 0;
   
@@ -326,7 +326,7 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 	
     // Construct the return value for the laser
     uint16_t v = (uint16_t)(1000.0 * range);
-    if( ent && ent->laser_return >= LaserBright1 )
+    if( ent && ent->laser_return >= LaserBright )
       v = v | (((uint16_t)1) << 13); 
 
     // Set the range

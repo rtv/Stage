@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.67 2002-06-11 01:54:08 inspectorg Exp $
+ * CVS info: $Id: entity.cc,v 1.68 2002-06-11 03:31:18 inspectorg Exp $
  */
 
 #include <math.h>
@@ -183,22 +183,54 @@ bool CEntity::Load(CWorldFile *worldfile, int section)
 
   // Read the entity color
   this->color = worldfile->ReadColor(section, "color", this->color);
-  
-  // Read the sensor flags
-  this->obstacle_return = worldfile->ReadInt(section, "obstacle",
-                                             this->obstacle_return);
-  this->sonar_return = worldfile->ReadInt(section, "sonar",
-                                          this->sonar_return);
-  this->vision_return = worldfile->ReadInt(section, "vision",
-                                           this->vision_return);
 
-  if (worldfile->ReadInt(section, "laser", this->laser_return != LaserTransparent))
-  {
-    if (worldfile->ReadInt(section, "laser_bright", this->laser_return >= LaserBright1))
-      this->laser_return = LaserBright1;
-    else
-      this->laser_return = LaserReflect;
-  }
+  const char *rvalue;
+  
+  // Obstacle return values
+  if (this->obstacle_return)
+    rvalue = "visible";
+  else
+    rvalue = "invisible";
+  rvalue = worldfile->ReadString(section, "obstacle_return", rvalue);
+  if (strcmp(rvalue, "visible") == 0)
+    this->obstacle_return = 1;
+  else
+    this->obstacle_return = 0;
+
+  // Sonar return values
+  if (this->sonar_return)
+    rvalue = "visible";
+  else
+    rvalue = "invisible";
+  rvalue = worldfile->ReadString(section, "sonar_return", rvalue);
+  if (strcmp(rvalue, "visible") == 0)
+    this->sonar_return = 1;
+  else
+    this->sonar_return = 0;
+
+  // Vision return values
+  if (this->vision_return)
+    rvalue = "visible";
+  else
+    rvalue = "invisible";
+  rvalue = worldfile->ReadString(section, "vision_return", rvalue);
+  if (strcmp(rvalue, "visible") == 0)
+    this->vision_return = 1;
+  else
+    this->vision_return = 0;
+  
+  // Laser return values
+  if (this->laser_return == LaserBright)
+    rvalue = "bright";
+  else if (this->laser_return == LaserVisible)
+    rvalue = "visible";
+  else
+    rvalue = "invisible";
+  rvalue = worldfile->ReadString(section, "laser_return", rvalue);
+  if (strcmp(rvalue, "bright") == 0)
+    this->laser_return = LaserBright;
+  else if (strcmp(rvalue, "visible") == 0)
+    this->laser_return = LaserVisible;
   else
     this->laser_return = LaserTransparent;
   

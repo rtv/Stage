@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.8 2002-06-11 02:53:55 rtv Exp $
+% CVS: $Id: stage.tex,v 1.9 2002-06-11 03:31:18 inspectorg Exp $
 
 \documentclass[11pt]{report}
 
@@ -543,6 +543,8 @@ properties:
 \begin{table}[h]
 \begin{tabularx}{\columnwidth}{llX}
 \hline
+Name & Values & Description \\
+\hline
 \verb'unit_length' & \verb'["m", "cm", "mm"]' & Set the unit length to meters, centimeters
 or millimeters. \\
 \verb'unit_angle' & \verb'["degrees", "radians"]' & Set the unit angle to degrees or radians.\\
@@ -600,7 +602,7 @@ Note that both the \verb'entity' and \verb'device' types are {\em
 abstract} (to borrow some C++ parlance) since they cannot be
 instantiated directly.
 
-\section{Entity Summary}
+\section{Entities}
 \label{sec.ref.objects}
 
 The following table lists all of the passive entity types supported by
@@ -619,6 +621,8 @@ obstacles, etc). \\
 \verb'entity' & None & A generic entity, which has shape, exent and
 color. \\
 
+\hline
+
 \verb'box' & \verb'entity' & A fixed obstacle (can be moved by the
 user but not the robot). \\
 
@@ -633,29 +637,93 @@ for use with \verb'lbd' device.\\
 \end{table}
 
 
+\subsection{The {\tt entity} type}
+
+Most types in Stage are ultimately derived from the generic
+\verb'entity' type.  While this type and cannot be instantiated
+directly, its descendents share most of its properties.  The follow
+properties are supported.
+
+\begin{table}[h]
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+
+\verb'name' & \verb'"name"' & A descriptive name for this entity; used
+by the GUI.\\
+
+\verb'pose' & \verb'[x y a]' & Initialse pose (position and
+orientation).\\
+
+\verb'shape' & \verb'"rect"' or \verb'"circle"' & Entity shape; entities
+can be either rectangular or circular.\\
+
+\verb'size' & \verb'[sizex sizey]' & Entity dimensions.\\
+
+\verb'color' & \verb'"color"' & Descriptive color (e.g. \verb'"red"' or
+\verb'"blue"'); only colors listed in the X11 color database should be used
+(look for \verb'rgb.txt' in your X installation).\\
+
+\hline
+\end{tabularx}
+\end{table}
+
+
+
+
 \section{Device Summary}
 \label{sec.ref.devices}
 
-\noindent
+Most of the devices described in this section are simulated versions
+of the real devices supported by Player; see the Player User Manual
+for details on these devices.
+
+\begin{table}[h]
 \begin{tabularx}{\columnwidth}{llX}
 \hline 
 Type & Parent type & Description \\
 \hline
-\verb'broadcast' & \\
-\verb'gps' & \\ 
-\verb'gripper' & \\
-\verb'laser' & \\
-\verb'lbd' & \\
-\verb'misc' & \\
-\verb'player' & \\
-\verb'position' & \\
-\verb'player' & \\
-\verb'ptz' & \\
-\verb'sonar' & \\
-\verb'truth' & \\
-\verb'vision' & \\
+
+\verb'device' & \verb'entity' & A generic device type (has a port
+number, device index, etc). \\
+
+\hline
+
+\verb'broadcast' & \verb'device' & Allows clients to communicate with
+one another through Stage/Player; messages sent to the broadcast
+device will be received by all other broadcast devices.\\
+
+\verb'gps' & \verb'device' & GPS receiver; currently just returns the
+true pose of the GPS device.\\
+
+\verb'gripper' & \verb'device' & 1-DOF gripper (open/close).\\
+
+\verb'laser' & \verb'device' & Scanning laser range finder.\\
+
+\verb'lbd' & \verb'device' & Laser beacon detector.\\
+
+\verb'position' & \verb'device' & A bare-bones differential-drive
+mobile robot with odometry.\\
+
+\verb'ptz' & \verb'device' & Pan-tilt-zoom camera. \\
+
+\verb'sonar' & \verb'device' & Sonar range-finder array.\\
+
+\verb'truth' & \verb'device' & Thee truth device can be used to get
+and set the pose of entities in the simulator; setting the pose of a
+truth device will `teleport' the device's parent to a new location.\\
+
+\verb'vision' & \verb'device' & Vision-based color blob detector.\\
+
 \hline
 \end{tabularx}
+\end{table}
+
+
+
+
+
 
 
 \chapter*{Acknowledgements}

@@ -2,7 +2,7 @@
 # Desc: Test world file containing examples of everything.
 # Author: Andrew Howard, Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.17 2002-06-11 01:54:07 inspectorg Exp $
+# CVS: $Id: everything.world,v 1.18 2002-06-11 03:31:18 inspectorg Exp $
 
 environment
 (
@@ -24,7 +24,6 @@ gui
 position
 (
   name "robot1" port 6665 pose [4.481 1.559 0]
-  player () 
   truth ()
   sonar ()
   broadcast ()
@@ -41,8 +40,8 @@ position
 
 position
 (
-  name "robot2" port 6666 pose [1.000 2.880 0.000]
-  player () 
+  name "robot2" port 6666 pose [5.278 3.221 0.000]
+  laser_return "bright"
   truth ()
   sonar ()
   broadcast ()

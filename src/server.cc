@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.17 2002-06-11 01:30:15 gerkey Exp $
+ * CVS info: $Id: server.cc,v 1.18 2002-06-11 03:31:18 inspectorg Exp $
  */
 
 #include <arpa/inet.h>
@@ -527,7 +527,8 @@ bool CStageServer::StartupPlayer( void )
 
   // startup any player devices - no longer hacky! - RTV
   // we need to have fixed up all the shared memory and pointers already
-  
+
+  /* REMOVE? Dont think we need this anymore.
   // count the number of Players on this host
   int player_count = 0;
   for (int i = 0; i < GetEntityCount(); i++)
@@ -540,6 +541,7 @@ bool CStageServer::StartupPlayer( void )
   // running.
   if (player_count == 0)
     return true;
+  */
 
   // ----------------------------------------------------------------------
   // fork off a player process to handle robot I/O

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.22 $
+//  $Revision: 1.23 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -49,7 +49,7 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CEntity *parent)
     
   // This object is visible to lasers
   // and is reflective
-  this->laser_return = LaserBright1;
+  this->laser_return = LaserBright;
 }
 
 

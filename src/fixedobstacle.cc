@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.14 $
+//  $Revision: 1.15 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -33,7 +33,7 @@ CFixedObstacle::CFixedObstacle(CWorld *world, CEntity *parent)
   this->color = ::LookupColor(WALL_COLOR);
 
   vision_return = true;
-  laser_return = LaserReflect;
+  laser_return = LaserVisible;
   sonar_return = true;
   obstacle_return = true;
   puck_return = false; // we trade velocities with pucks

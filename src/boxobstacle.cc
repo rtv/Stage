@@ -21,7 +21,7 @@
  * Desc: Simulates a simple box obstacle
  * Author: Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: boxobstacle.cc,v 1.20 2002-06-10 17:14:29 inspectorg Exp $
+ * CVS info: $Id: boxobstacle.cc,v 1.21 2002-06-11 03:31:18 inspectorg Exp $
  */
 
 #include "world.hh"
@@ -41,7 +41,7 @@ CBoxObstacle::CBoxObstacle(CWorld *world, CEntity *parent)
   this->size_y = 1.0;
   
   vision_return = true; 
-  laser_return = LaserReflect;
+  laser_return = LaserVisible;
   sonar_return = true;
   obstacle_return = true;
 }
