@@ -676,3 +676,57 @@ void gui_world_geom( stg_world_t* world )
       g_hash_table_foreach( world->models, gui_model_render_geom_cb, NULL ); 
     }
 }
+
+void gui_model_render_data( stg_model_t* mod )
+{
+  // if a rendering callback was registered, and the gui wants to
+  // render this type of data, call it
+  if( mod->f_render_data && 
+      mod->world->win->render_data_flag[mod->type] )
+    (*mod->f_render_data)(mod);
+  else
+    {
+      // remove any graphics that linger
+      if( mod->gui.data )
+	rtk_fig_clear( mod->gui.data );
+      
+      if( mod->gui.data_bg )
+	rtk_fig_clear( mod->gui.data_bg );
+    }
+} 
+
+void gui_model_render_command( stg_model_t* mod )
+{
+  // if a rendering callback was registered, and the gui wants to
+  // render this type of command, call it
+  if( mod->f_render_cmd && 
+      mod->world->win->render_cmd_flag[mod->type] )
+    (*mod->f_render_cmd)(mod);
+  else
+    {
+      // remove any graphics that linger
+      if( mod->gui.cmd )
+	rtk_fig_clear( mod->gui.cmd );
+      
+      if( mod->gui.cmd_bg )
+	rtk_fig_clear( mod->gui.cmd_bg );
+    }
+}
+
+void gui_model_render_config( stg_model_t* mod )
+{
+  // if a rendering callback was registered, and the gui wants to
+  // render this type of cfg, call it
+  if( mod->f_render_cfg && 
+      mod->world->win->render_cfg_flag[mod->type] )
+    (*mod->f_render_cfg)(mod);
+  else
+    {
+      // remove any graphics that linger
+      if( mod->gui.cfg )
+	rtk_fig_clear( mod->gui.cfg );
+      
+      if( mod->gui.cfg_bg )
+	rtk_fig_clear( mod->gui.cfg_bg );
+    } 
+}

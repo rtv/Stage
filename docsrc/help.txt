@@ -1,6 +1,6 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: help.txt,v 1.6 2004-12-30 07:08:00 rtv Exp $
+ * $Id: help.txt,v 1.7 2005-01-02 08:07:33 rtv Exp $
 */
 
 /**
@@ -58,7 +58,7 @@ release (e.g. gripper & puck), but we're working on them. Let us know which ones
 
 <hr>
 <small>
-Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: help.txt,v 1.6 2004-12-30 07:08:00 rtv Exp $
+Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: help.txt,v 1.7 2005-01-02 08:07:33 rtv Exp $
 </small>
 
 */
@@ -201,6 +201,16 @@ should check the Player instructions just in case.
 
 /**
 @page release Release Notes
+
+<h2>Version 1.6.1</h2>
+
+This is a bug-fix release that replaces 1.6.0. 
+
+- Fixes several GUI bugs, including the [View/Fill Polygons] menu item.
+
+- Some code clean-up and thread-safety fixes
+
+<h2>Version 1.6.0</h2>
 
 This release of Stage is the first after a major rewrite. There are
 bound to be bugs and teething troubles, but the <a

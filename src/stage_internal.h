@@ -165,24 +165,22 @@ extern "C" {
   /// render the geometry of all models
   void gui_world_geom( stg_world_t* world );
 
+  gui_model_t* gui_model_figs( stg_model_t* model );
+
   void gui_model_create( stg_model_t* model );
   void gui_model_destroy( stg_model_t* model );
-  void gui_model_render( stg_model_t* model );
-  void gui_model_nose( stg_model_t* model );
-  void gui_model_move( stg_model_t* mod );
-  void gui_model_geom( stg_model_t* model );
-  //void gui_model_lines( stg_model_t* model );
-  void gui_model_polygons( stg_model_t* model );
-  void gui_model_rangers( stg_model_t* mod );
-  void gui_model_rangers_data( stg_model_t* mod );
+  void gui_model_display_pose( stg_model_t* mod, char* verb );
   void gui_model_features( stg_model_t* mod );
-  void gui_model_laser_data( stg_model_t* mod );
-  void gui_model_laser( stg_model_t* mod );
-  gui_model_t* gui_model_figs( stg_model_t* model );
+  void gui_model_geom( stg_model_t* model );
+  void gui_model_mouse(rtk_fig_t *fig, int event, int mode);
+  void gui_model_move( stg_model_t* mod );
+  void gui_model_nose( stg_model_t* model );
+  void gui_model_polygons( stg_model_t* model );
+  void gui_model_render_command( stg_model_t* mod );
+  void gui_model_render_config( stg_model_t* mod );
+  void gui_model_render_data( stg_model_t* mod );
   void gui_window_menus_create( gui_window_t* win );
   void gui_window_menus_destroy( gui_window_t* win );
-  void gui_model_mouse(rtk_fig_t *fig, int event, int mode);
-  void gui_model_display_pose( stg_model_t* mod, char* verb );
 
   /**@}*/
 
