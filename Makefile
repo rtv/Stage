@@ -7,8 +7,8 @@
 #
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
-#  $Author: rtv $
-#  $Revision: 1.35 $
+#  $Author: gsibley $
+#  $Revision: 1.36 $
 #
 # Note: All normal user configurations are in Makefile.common - you
 # probably don't need to change this file
@@ -22,7 +22,7 @@ include Makefile.common
 # Build section
 #
 
-all:	stage rtkstage xs manager trapdoor
+all:	stage rtkstage xs manager
 
 stage: 	
 	cd src && ${MAKE} stage 
