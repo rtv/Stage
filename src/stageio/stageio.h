@@ -7,10 +7,15 @@
 
 #include "stage.h"
    
-   typedef int (*command_callback_t)(stage_cmd_t*);
-   typedef int (*model_callback_t)(stage_model_t*);
-   typedef int (*property_callback_t)(stage_property_t* );
+   typedef int (*command_callback_t)(int, stage_cmd_t*);
+   typedef int (*model_callback_t)(int, stage_model_t*);
+   typedef int (*property_callback_t)(int, stage_property_t* );
    
+   void* malloc_debug( size_t );
+   void* realloc_debug( void*,  size_t );
+   void free_debug( void* );
+
+
    /* EXTERNAL FUNCTIONS - clients should use these */
    
    /* SERVER-ONLY FUNCTIONS */   
@@ -55,22 +60,23 @@
    int SIOWriteCommand( int fd, double simtime, stage_cmd_t cmd );
 
    // buffers a command for sending later. adds a header, so needs a timestamp
-   int SIOBufferCommand( double simtime, stage_cmd_t cmd );
+   int SIOBufferCommand( stage_buffer_t* buf, double simtime, stage_cmd_t cmd );
 
-
+   int SIOBufferProperty( stage_buffer_t* bundle,
+			  int id, 
+			  stage_prop_id_t type,
+			  char* data, size_t len );
    
-   /* INTERNAL FUNCTIONS - not intented for clients to call directly */
+   stage_buffer_t* SIOCreateBuffer( void );
+   void SIOFreeBuffer( stage_buffer_t* bundle );
 
+   /* INTERNAL FUNCTIONS - not intented for clients to call directly */
+   void SIODebugBuffer( stage_buffer_t* buf );
    void SIODestroyConnection( int con );
 
    size_t SIOWritePacket( int fd, char* data, size_t len );
-   size_t SIOWriteHeader( int fd, stage_header_t* hdr );
-   
-   stage_buffer_t* SIOBufferPacket( char* buf, size_t len );
-   stage_buffer_t* SIOBufferHeader( stage_header_t* hdr );
-   
-   size_t SIOReadPacket( int fd, char* buf, size_t len );
-   size_t SIOReadHeader( int fd, stage_header_t* hdr  );
+   size_t SIOBufferPacket( stage_buffer_t* buf, char* data, size_t len );
+   size_t SIOReadPacket( int fd, char* data, size_t len );
       
 
 #ifdef __cplusplus

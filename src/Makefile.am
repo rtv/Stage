@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.29.4.7 2003-02-03 18:47:23 rtv Exp $
+# $Id: Makefile.am,v 1.29.4.8 2003-02-04 03:35:37 rtv Exp $
 
 
 #SUBDIRS = models rtkstage gnome2
@@ -41,14 +41,16 @@ stage_SOURCES = \
 	raytrace.hh
 
 stage_LDFLAGS = 
-stage_LDADD = @GUI_LINK@ -lm -Lstageio -lstageio -L$(top_builddir)/replace -lreplace
+stage_LDADD = @GUI_LINK@ -lm -Lstageio -lstageio -L$(top_builddir)/replace -lreplace 
+#stage_LDADD = @GUI_LINK@ -lm -Lstageio -lstageio -L$(top_builddir)/replace -lreplace -ldmalloc 
 
 
 # build Stage's test program - a simple client
 #	
 stest_DEPENDENCIES = stageio/libstageio.a $(top_srcdir)/replace/libreplace.a
 stest_SOURCES = stest.c 
-stest_LDADD = -Lstageio -lstageio -L$(top_builddir)/replace -lreplace
+stest_LDADD = -Lstageio -lstageio -L$(top_builddir)/replace -lreplace 
+#stest_LDADD = -Lstageio -lstageio -L$(top_builddir)/replace -lreplace -ldmalloc 
 
 #stage_LDADD = 	-lm -Lmodels -lstgmodels -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -L@PLAYER_DIR@/client_libs/libplayerpacket -lplayerqueue -lplayerpacket @GUI_LINK@ -L$(top_builddir)/replace -lreplace
 

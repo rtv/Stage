@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.4 2003-02-03 07:10:36 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.5 2003-02-04 03:35:38 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -483,14 +483,16 @@ void CEntity::SetPose(double px, double py, double pth)
   // if the new position is different, call SetProperty to make the change.
   // the -1 indicates that this change is dirty on all connections
   
-  if( this->local_px != px ) 
-    SetProperty( -1, PropPoseX, &px, sizeof(px) );
-  
-  if( this->local_py != py ) 
-    SetProperty( -1, PropPoseY, &py, sizeof(py) );
-  
-  if( this->local_pth != pth ) 
-    SetProperty( -1, PropPoseTh, &pth, sizeof(pth) );  
+  // only change the pose if these are different to the current pose
+  if( this->local_px != px || this->local_py != py || this->local_pth != pth )
+    {
+      stage_pose_t pose;
+      pose.x = px;
+      pose.y = py;
+      pose.a = pth;
+      
+      SetProperty( -1, STG_PROP_ENTITY_POSE, &pose, sizeof(pose) ); 
+    }
 }
 
 
@@ -577,17 +579,17 @@ bool CEntity::IsDescendent(CEntity *entity)
 
 void CEntity::SetDirty( int con, char v )
 {
-  for( int i=0; i< ENTITY_LAST_PROPERTY; i++ )
-    SetDirty( con, (EntityProperty)i, v );
+  for( int i=0; i< STG_PROPERTY_COUNT; i++ )
+    SetDirty( con, (stage_prop_id_t)i, v );
 }
 
-void CEntity::SetDirty( EntityProperty prop, char v )
+void CEntity::SetDirty( stage_prop_id_t prop, char v )
 {
   for( int i=0; i< STG_MAX_CONNECTIONS; i++ )
     SetDirty( i, prop, v );
 };
 
-void CEntity::SetDirty( int con, EntityProperty prop, char v )
+void CEntity::SetDirty( int con, stage_prop_id_t prop, char v )
 {
   m_dirty[con][prop] = v;
 };
@@ -595,7 +597,7 @@ void CEntity::SetDirty( int con, EntityProperty prop, char v )
 void CEntity::SetDirty( char v )
 {
   memset( m_dirty, v, 
-	  sizeof(char) * STG_MAX_CONNECTIONS * ENTITY_LAST_PROPERTY );
+	  sizeof(char) * STG_MAX_CONNECTIONS * STG_PROPERTY_COUNT );
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -606,67 +608,80 @@ void CEntity::SetParent(CEntity* new_parent)
 };
 
 
-int CEntity::SetProperty( int con, EntityProperty property, 
+int CEntity::SetProperty( int con, stage_prop_id_t property, 
 			  void* value, size_t len )
 {
   assert( value );
   assert( len > 0 );
   assert( (int)len < MAX_PROPERTY_DATA_LEN );
-
+  
   switch( property )
-  {
-    case PropParent:
+    {
+    case STG_PROP_ENTITY_PARENT:
       // TODO - fix this
       // get a pointer to the (*value)'th entity - that's our new parent
       //this->m_parent_entity = m_world->GetEntity( *(int*)value );     
+      PRINT_WARN( "STG_PROP_ENTITY_PARENT not implemented" );
       break;
-    case PropSizeX:
-      memcpy( &size_x, (double*)value, sizeof(size_x) );
+
+    case STG_PROP_ENTITY_POSE:
+      {
+	stage_pose_t* pose = (stage_pose_t*)value;      
+	local_px = pose->x;
+	local_py = pose->y;
+	local_pth = pose->a;
+      }
       break;
-    case PropSizeY:
-      memcpy( &size_y, (double*)value, sizeof(size_y) );
+      
+    case STG_PROP_ENTITY_SIZE:
+      {
+	stage_size_t* sz = (stage_size_t*)value;
+	size_x = sz->x;
+	size_y = sz->y;
+      }
       break;
-    case PropPoseX:
-      memcpy( &local_px, (double*)value, sizeof(local_px) );
+      
+    case STG_PROP_ENTITY_ORIGIN:
+      {
+	stage_size_t* sz = (stage_size_t*)value;
+	origin_x = sz->x;
+	size_y = sz->y; 
+      }
       break;
-    case PropPoseY:
-      memcpy( &local_py, (double*)value, sizeof(local_py) );
+      
+    case STG_PROP_ENTITY_NAME:
+      strncpy( name, (char*)value, STG_TOKEN_MAX );
       break;
-    case PropPoseTh:
-      // normalize theta
-      local_pth = atan2( sin(*(double*)value), cos(*(double*)value));
-      break;
-    case PropOriginX:
-      memcpy( &origin_x, (double*)value, sizeof(origin_x) );
-      break;
-    case PropOriginY:
-      memcpy( &origin_y, (double*)value, sizeof(origin_y) );
-      break;
-    case PropName:
-      strcpy( name, (char*)value );
-      break;
-    case PropColor:
+      
+    case STG_PROP_ENTITY_COLOR:
       memcpy( &color, (StageColor*)value, sizeof(color) );
       break;
-    case PropShape:
+      
+    case STG_PROP_ENTITY_SHAPE:
       memcpy( &shape, (StageShape*)value, sizeof(shape) );
       break;
-    case PropLaserReturn:
+      
+    case STG_PROP_ENTITY_LASERRETURN:
       memcpy( &laser_return, (LaserReturn*)value, sizeof(laser_return) );
       break;
-    case PropIdarReturn:
+
+    case STG_PROP_ENTITY_IDARRETURN:
       memcpy( &idar_return, (IDARReturn*)value, sizeof(idar_return) );
       break;
-    case PropSonarReturn:
+
+    case STG_PROP_ENTITY_SONARRETURN:
       memcpy( &sonar_return, (bool*)value, sizeof(sonar_return) );
       break;
-    case PropObstacleReturn:
+
+    case STG_PROP_ENTITY_OBSTACLERETURN:
       memcpy( &obstacle_return, (bool*)value, sizeof(obstacle_return) );
       break;
-    case PropVisionReturn:
+
+    case STG_PROP_ENTITY_VISIONRETURN:
       memcpy( &vision_return, (bool*)value, sizeof(vision_return));
       break;
-    case PropPuckReturn:
+
+    case STG_PROP_ENTITY_PUCKRETURN:
       memcpy( &puck_return, (bool*)value, sizeof(puck_return) );
       break;
 
@@ -693,7 +708,7 @@ int CEntity::SetProperty( int con, EntityProperty property,
 }
 
 
-int CEntity::GetProperty( EntityProperty property, void* value )
+int CEntity::GetProperty( stage_prop_id_t property, void* value )
 {
   //PRINT_DEBUG1( "finding property %d", property );
   //printf( "finding property %d", property );
@@ -702,87 +717,94 @@ int CEntity::GetProperty( EntityProperty property, void* value )
 
   // indicate no data - this should be overridden below
   int retval = 0;
-
+  
   switch( property )
-  {
-    case PropParent:
+    {
+    case STG_PROP_ENTITY_PARENT:
       // TODO - fix
       // find the parent's position in the world's entity array
       // if parent pointer is null or otherwise invalid, index is -1 
       //{ int parent_index = m_world->GetEntityIndex( m_parent_entity );
-
+      
       { 
 	int parent_index = -1;
-
+	
 	if( m_parent_entity )
 	  parent_index = m_parent_entity->stage_id ;
 	
 	memcpy( value, &parent_index, sizeof(parent_index) );
 	retval = sizeof(parent_index); 
       }
-    break;
-    case PropSizeX:
-      memcpy( value, &size_x, sizeof(size_x) );
-      retval = sizeof(size_x);
       break;
-    case PropSizeY:
-      memcpy( value, &size_y, sizeof(size_y) );
-      retval = sizeof(size_y);
+      
+    case STG_PROP_ENTITY_SIZE:
+      {
+	stage_size_t sz;
+	sz.x = size_x;
+	sz.y = size_y;
+	
+	memcpy( value, &sz, sizeof(sz) );
+	retval = sizeof(sz);
+      }
       break;
-    case PropPoseX:
-      memcpy( value, &local_px, sizeof(local_px) );
-      retval = sizeof(local_px);
-      break;
-    case PropPoseY:
-      memcpy( value, &local_py, sizeof(local_py) );
-      retval = sizeof(local_py);
-      break;
-    case PropPoseTh:
-      memcpy( value, &local_pth, sizeof(local_pth) );
-      retval = sizeof(local_pth);
-      break;
-    case PropOriginX:
+      
+    case STG_PROP_ENTITY_POSE:
+      {
+	stage_pose_t pose;
+	pose.x = local_px;
+	pose.y = local_py;
+	pose.a = local_pth;
+	
+	memcpy( value, &pose, sizeof(pose) );
+	retval = sizeof(pose);
+      }
+
+    case STG_PROP_ENTITY_ORIGIN:
       memcpy( value, &origin_x, sizeof(origin_x) );
       retval = sizeof(origin_x);
       break;
-      break;
-    case PropOriginY:
-      memcpy( value, &origin_y, sizeof(origin_y) );
-      retval = sizeof(origin_y);
-      break;
-    case PropName:
+
+    case STG_PROP_ENTITY_NAME:
       strcpy( (char*)value, name );
       retval = strlen(name);
       break;
-    case PropColor:
+
+    case STG_PROP_ENTITY_COLOR:
       memcpy( value, &color, sizeof(color) );
       retval = sizeof(color);
       break;
-    case PropShape:
+
+    case STG_PROP_ENTITY_SHAPE:
       memcpy( value, &shape, sizeof(shape) );
       retval = sizeof(shape);
       break;
-    case PropLaserReturn:
+
+    case STG_PROP_ENTITY_LASERRETURN:
       memcpy( value, &laser_return, sizeof(laser_return) );
       retval = sizeof(laser_return);
       break;
-    case PropSonarReturn:
+
+    case STG_PROP_ENTITY_SONARRETURN:
       memcpy( value, &sonar_return, sizeof(sonar_return) );
       retval = sizeof(sonar_return);
       break;
-    case PropIdarReturn:
+
+    case STG_PROP_ENTITY_IDARRETURN:
       memcpy( value, &idar_return, sizeof(idar_return) );
       retval = sizeof(idar_return);
       break;
-    case PropObstacleReturn:
+
+    case STG_PROP_ENTITY_OBSTACLERETURN:
       memcpy( value, &obstacle_return, sizeof(obstacle_return) );
       retval = sizeof(obstacle_return);
       break;
-    case PropVisionReturn:
+
+    case STG_PROP_ENTITY_VISIONRETURN:
       memcpy( value, &vision_return, sizeof(vision_return) );
       retval = sizeof(vision_return);
       break;
-    case PropPuckReturn:
+
+    case STG_PROP_ENTITY_PUCKRETURN:
       memcpy( value, &puck_return, sizeof(puck_return) );
       retval = sizeof(puck_return);
       break;

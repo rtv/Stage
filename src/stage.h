@@ -4,78 +4,58 @@
 #ifdef __cplusplus
  extern "C" {
 #endif 
-
+   
 #include <stdint.h> // for the integer types (uint32_t, etc)
-
+   
 #if HAVE_CONFIG_H
-  #include <config.h>
+#include <config.h>
 #endif
 #if HAVE_STRINGS_H
   #include <strings.h>
 #endif
-
+   
 #include <unistd.h>
-
+   
 #define DEBUG
-
-// global stage configs
+   
+   // global stage configs
 #define STG_TOKEN_MAX 64
 #define STG_LISTENQ  128
 #define STG_DEFAULT_SERVER_PORT 6601  // move to configure.in?
 #define STG_HOSTNAME_MAX  128
 #define STG_MAX_CONNECTIONS 128
    
-// (currently) static memory allocation for getting and setting properties
-//const int MAX_NUM_PROPERTIES = 30;
+   // (currently) static memory allocation for getting and setting properties
+   //const int MAX_NUM_PROPERTIES = 30;
 #define MAX_PROPERTY_DATA_LEN  20000
    
 #define ENTITY_FIRST_PROPERTY 1
    
-enum EntityProperty
-{
-  PropParent = ENTITY_FIRST_PROPERTY, 
-  PropSizeX, 
-  PropSizeY, 
-  PropPoseX, 
-  PropPoseY, 
-  PropPoseTh, 
-  PropOriginX, 
-  PropOriginY, 
-  PropName,
-  PropColor, 
-  PropShape, 
-  PropLaserReturn,
-  PropSonarReturn,
-  PropIdarReturn, 
-  PropObstacleReturn, 
-  PropVisionReturn, 
-  PropPuckReturn,
-  PropPlayerId,
-  PropPlayerSubscriptions,
-  PropCommand,
-  PropData,
-  PropConfig,
-  PropReply,
-  ENTITY_LAST_PROPERTY // this must be the final property - we use it
- // as a count of the number of properties.
-};
+   // all properties have unique id numbers and must be listed here
+   // please stick to the syntax STG_PROP_<model>_<property>
+   typedef enum
+   {
+     STG_PROP_ENTITY_PARENT,
+     STG_PROP_ENTITY_POSE,
+     STG_PROP_ENTITY_SIZE,
+     STG_PROP_ENTITY_ORIGIN,
+     STG_PROP_ENTITY_NAME,
+     STG_PROP_ENTITY_COLOR,
+     STG_PROP_ENTITY_SHAPE,
+     STG_PROP_ENTITY_LASERRETURN,
+     STG_PROP_ENTITY_SONARRETURN,
+     STG_PROP_ENTITY_IDARRETURN,
+     STG_PROP_ENTITY_OBSTACLERETURN,
+     STG_PROP_ENTITY_VISIONRETURN,
+     STG_PROP_ENTITY_PUCKRETURN,
+     STG_PROP_ENTITY_PLAYERID,
+     STG_PROP_ENTITY_COMMAND,
+     STG_PROP_ENTITY_DATA,
+     STG_PROP_ENTITY_CONFIG,
+     STG_PROP_ENTITY_REPLY, 
+     STG_PROPERTY_COUNT // THIS MUST BE THE LAST ENTRY
+   } stage_prop_id_t;
 
-/*
- 
-  const int PROP_GENERIC = 1 << 16;
-  const int PROP_LASER = 2 << 16;
-  const int PROP_SONAR = 3 << 16;
-  const int PROP_ = 1 << 16;
-  const int PROP_LASER = 1 << 16;
-  const int PROP_LASER = 1 << 16;
-
-
-  PropLaserFov = PROP_LASER & 1
-  PropLaserRes = PROP_LASER & 2
-
-
-
- */
 
 // PROPERTY DEFINITIONS ///////////////////////////////////////////////
 
@@ -177,7 +157,7 @@ typedef struct
 typedef struct
 {
   uint16_t id; // identify the entity
-  //EntityProperty property; // identify the property
+  stage_prop_id_t property; // identify the property
   uint16_t len; // the property uses this much data (to follow)
 } __attribute ((packed)) stage_property_t;
 
@@ -206,18 +186,17 @@ typedef struct
 } __attribute ((packed)) stage_background_t;
 
 
-// pose changes are so common that we have a special message for them,
-// rather than setting the [x,y,th] properties seperately. i've taken
-// out the parent_id field for compactness - you must set that
-// property directly - it doesn't happen too often anyway
+// used for specifying 3 axis positions
 typedef struct
 {
-  int16_t stage_id;
-  // i changed the x and y to signed ints so that XS can handle negative
-  // local coords -BPG
-  int32_t x, y; // mm, mm 
-  int16_t th; // degrees
-} __attribute ((packed)) stage_pose_t;
+  double x, y, a;
+} stage_pose_t;
+
+// used for rectangular sizes
+typedef struct 
+{
+  double x, y;
+} stage_size_t;
 
 ///////////////////////////////////////////////////////////////////////////
 // Some useful macros

@@ -21,7 +21,7 @@
  * Desc: dummy GUI hooks, when no GUI is linked in
  * Author: Brian Gerkey
  * Date: 30 Oct 2002
- * CVS info: $Id: nogui.cc,v 1.1.6.1 2003-02-01 02:14:30 rtv Exp $
+ * CVS info: $Id: nogui.cc,v 1.1.6.2 2003-02-04 03:35:38 rtv Exp $
  */
 
 
@@ -36,6 +36,6 @@ void GuiSave( CEntity* ent ) {}
 void GuiEntityStartup( CEntity* ent ) {}
 void GuiEntityShutdown( CEntity* ent ) {}
 void GuiEntityUpdate( CEntity* ent ) {}
-void GuiEntityPropertyChange( CEntity* ent, EntityProperty prop ) {}
+void GuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop ) {}
 
 #endif

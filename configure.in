@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.35.4.2 2003-02-03 07:19:54 rtv Exp $
+dnl $Id: configure.in,v 1.35.4.3 2003-02-04 03:35:37 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -158,6 +158,5 @@ AC_OUTPUT(Makefile
           src/gnome2/Makefile 
 	  src/rtkstage/Makefile
 	  src/stageio/Makefile
-	  src/test/Makefile
           worlds/Makefile 
           tools/Makefile)

@@ -21,7 +21,7 @@
  * Desc: GUI interface definitions.
  * Author: Richard Vaughan
  * Date: 6 Oct 2002
- * CVS info: $Id: gui.hh,v 1.4.2.1 2003-02-01 02:14:30 rtv Exp $
+ * CVS info: $Id: gui.hh,v 1.4.2.2 2003-02-04 03:35:38 rtv Exp $
  */
 
 // GUI hooks - the Stage GUI implements these functions called by Stage
@@ -55,7 +55,7 @@ void GuiEntityShutdown( CEntity* ent );
 void GuiEntityUpdate( CEntity* ent );
 
 // called from CEntity::SetProperty()
-void GuiEntityPropertyChange( CEntity* ent, EntityProperty prop );
+void GuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop );
 
 #endif //STAGE_GUI_HH
 

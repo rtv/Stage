@@ -21,7 +21,7 @@
  * Desc: Simulates a root ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: root.hh,v 1.1.2.1 2003-02-01 02:17:53 rtv Exp $
+ * CVS info: $Id: root.hh,v 1.1.2.2 2003-02-04 03:35:38 rtv Exp $
  */
 
 #ifndef ROOTDEVICE_HH
@@ -29,6 +29,7 @@
 
 #include "entity.hh"
 #include "library.hh"
+
 
 class CRootDevice : public CEntity
 {

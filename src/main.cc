@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.6 2003-02-03 07:19:54 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.7 2003-02-04 03:35:38 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -157,8 +157,8 @@ void PrintUsage( void )
 // Clean up and quit
 void StageQuit( void )
 {  
-  puts( "\n** Stage quitting **" );
- 
+  // reset the color of the console text and say 'bye.
+  puts( "\n\033[00m** Stage quitting **" );
   exit( 0 );
 }
 
@@ -170,20 +170,34 @@ void sig_quit(int signum)
   quit = 1;
 }
 
-int HandleModel( stage_model_t* model )
+int HandleModel(  int connection, stage_model_t* model )
 {
+  PRINT_DEBUG1( "Received model on connection %d", connection );
+
   // create an entity. return success on getting a valid pointer
   return( model_library.CreateEntity( model ) ? 0 : -1);
 }
 
-int HandleProperty( stage_property_t* prop )
+int HandleProperty( int connection, stage_property_t* prop )
 {
+  PRINT_DEBUG1( "Received property on connection %d", connection );
+
+  // get a pointer to the object with this id
+  CEntity* ent = model_library.GetEntPtr( prop->id );
+  
+  // pass the property data to the entity to absorb
+  ent->SetProperty( connection, // the connection number 
+		    prop->property, // the property id
+		    ((char*)prop)+sizeof(prop), // the raw data
+		    prop->len ); // the length of the raw data
 
   return 0; //success
 }
 
-int HandleCommand( stage_cmd_t* cmd )
+int HandleCommand(  int connection, stage_cmd_t* cmd )
 {
+  PRINT_DEBUG2( "Received command %d on connection %d", *cmd, connection );
+
   switch( *cmd ) // 
     {
     case STG_CMD_SAVE:
@@ -251,11 +265,17 @@ int main(int argc, char **argv)
       
       // update the simulation model
       if( CEntity::root ) CEntity::root->Update( CEntity::simtime+=0.1 );
+     
+      stage_property_t* props = NULL;
+      size_t props_len = 0;
+      //props = CEntity::root->GetChangedProperties()
       
-      // write out any changed, subscribed properties
-      if( SIOReportResults( CEntity::simtime, NULL, 0 ) == -1 ) break;
-
-      //sleep( 1 ); // just stop the powerbook getting hot :)
+      // pass the changed props to the server, which distributes them
+      // on the appropriate connections
+      if( SIOReportResults( CEntity::simtime, (char*)props, props_len) == -1 ) 
+	break;
+      
+      sleep( 1 ); // just stop the powerbook getting hot :)
     }
   
   // clean up and exit

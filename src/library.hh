@@ -72,14 +72,18 @@ private:
   // a list of [type,token,creator] mappings
   LibraryItem* liblist;
   
+  // TODO - make this length adaptive
+  // an array of pointers to entities
+  // used to map id (array index) to an entity
+  CEntity* entPtrs[ 10000 ];
+
 public:
   // constructor
   Library( void );
   Library( const libitem_t items[] );
   
-  // TODO - make this length adaptive
-  CEntity* entPtrs[ 10000 ];
   void StoreEntPtr( int id, CEntity* ent );
+  CEntity* GetEntPtr( int id ){ return( entPtrs[id] ); };
 
   void AddDevice( const char* token, const char* colorstr, CreatorFunctionPtr creator );
   

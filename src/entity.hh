@@ -21,41 +21,24 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15.2.5 2003-02-03 18:47:24 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.6 2003-02-04 03:35:38 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
 #define _ENTITY_HH
 
-#if HAVE_CONFIG_H
-  #include <config.h>
-#endif
-#include <sys/types.h>
-#if HAVE_STDINT_H
-  #include <stdint.h>
-#endif
-
-
 #include "stage.h"
 #include "colors.hh"
+#include "library.hh"
 
-#include <netdb.h>
-#include <string.h> // for strncpy(3)
-#include <sys/types.h>
-#include <netinet/in.h>
+#include <netinet/in.h> // for struct in_addr
 
 #ifdef INCLUDE_RTK2
 #include "rtk.h"
 #endif
 
-
-#include "library.hh"
-extern Library* lib;
-
 // Forward declare
 class CMatrix;
-
-
 
 ///////////////////////////////////////////////////////////////////////////
 // The basic moveable object class
@@ -86,6 +69,7 @@ protected:
 
 public: 
   static double simtime; // the simulation time in seconds
+  static double timestep; // the duration of one update in seconds
 
 public:
   static CEntity* root; // global reference to the base object
@@ -106,10 +90,12 @@ public: stage_id_t stage_id;
 
   // Get/set properties
   public: virtual int SetProperty( int con,
-                                   EntityProperty property, void* value, size_t len );
-  public: virtual int GetProperty( EntityProperty property, void* value );
+                                   stage_prop_id_t property, 
+				   void* value, size_t len );
   
-
+public: virtual int GetProperty( stage_prop_id_t property, void* value );
+  
+  
   // Update the entity's device-specific representation
   // this is called every time the simulation clock increments
   public: virtual void Update( double sim_time );
@@ -271,15 +257,14 @@ public: virtual void FamilyUnsubscribe();
 
   ///////////////////////////////////////////////////////////////////////
   // DISTRIBUTED STAGE STUFF
-
-  //public: stage_truth_t truth, old_truth;
-  public: char m_dirty[ STG_MAX_CONNECTIONS ][ ENTITY_LAST_PROPERTY ];
-
+  
+  public: char m_dirty[ STG_MAX_CONNECTIONS ][ STG_PROPERTY_COUNT ];
+ 
   // set the dirty flag for each property for each connection
-  public: void SetDirty( char v);
-  public: void SetDirty( EntityProperty prop, char v );
-  public: void SetDirty( int con, char v );
-  public: void SetDirty( int con, EntityProperty prop, char v );
+public: void SetDirty( char v);
+public: void SetDirty( stage_prop_id_t prop, char v );
+public: void SetDirty( int con, char v );
+public: void SetDirty( int con, stage_prop_id_t prop, char v );
   
   // these store the last pose we sent out from the pose server
   // to be tested when setting the dirty flag to see if we really
