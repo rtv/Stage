@@ -1,6 +1,14 @@
 #include "stage.h"
 #include "raytrace.h"
 
+void model_ranger_init( model_t* mod )
+{
+  mod->ranger_return = LaserVisible;
+  mod->ranger_data = g_array_new( FALSE, TRUE, sizeof(stg_ranger_sample_t));
+  mod->ranger_config = g_array_new( FALSE, TRUE, sizeof(stg_ranger_config_t) );
+}
+
+
 void model_update_rangers( model_t* mod )
 {   
   //PRINT_DEBUG1( "[%.3f] updating rangers", mod->world->sim_time );

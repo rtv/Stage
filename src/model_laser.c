@@ -7,6 +7,24 @@ extern rtk_fig_t* fig_debug;
 
 #define TIMING 0
 
+void model_laser_init( model_t* mod )
+{
+  // configure the laser to sensible defaults
+  mod->laser_geom.pose.x = 0;
+  mod->laser_geom.pose.y = 0;
+  mod->laser_geom.pose.a = 0;
+  mod->laser_geom.size.x = 0.0; // invisibly small (so it's not rendered) by default
+  mod->laser_geom.size.y = 0.0;
+  
+  mod->laser_config.range_min= 0.0;
+  mod->laser_config.range_max = 8.0;
+  mod->laser_config.samples = 180;
+  mod->laser_config.fov = M_PI;
+  
+  mod->laser_return = LaserVisible;
+}
+
+
 void model_update_laser( model_t* mod )
 {   
   PRINT_DEBUG1( "[%lu] updating lasers", mod->world->sim_time );

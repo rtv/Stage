@@ -43,6 +43,9 @@ typedef struct _model
 
   gboolean subs[STG_PROP_COUNT]; // flags used to control updates
   
+  stg_blobfinder_config_t blob_cfg;
+  GArray* blobs;
+  
   stg_bool_t boundary;
   
   // store the time that each property was last calculated
@@ -84,5 +87,8 @@ void model_print( model_t* mod );
 void model_print_cb( gpointer key, gpointer value, gpointer user );
 
 void model_local_to_global( model_t* mod, stg_pose_t* pose );
+
+void model_blobfinder_init( model_t* mod );
+void model_blobfinder_update( model_t* mod );
 
 #endif

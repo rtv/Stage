@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.39 2004-06-02 01:03:12 rtv Exp $
+# $Id: Makefile.am,v 1.40 2004-06-09 22:15:29 rtv Exp $
 
 stage_DEPENDENCIES = libstage.a $(top_srcdir)/replace/libreplace.a
 
@@ -34,6 +34,7 @@ stage_SOURCES = \
 	model_laser.c \
 	model_pose.c \
 	model_ranger.c \
+	model_blobfinder.c \
 	raytrace.c \
 	raytrace.h \
 	server.c \

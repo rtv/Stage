@@ -165,22 +165,13 @@ void PrintArray( GPtrArray* arr )
 
 model_t* itl_next( itl_t* itl )
 {
-  //printf( "current ptr: %p index: %d\n", itl->ent[itl->index], index );
-  
-  //if( itl->models )
-  //PrintArray(itl->models);
-
   // if we have no models or we've reached the end of the model array
   if( !(itl->models &&  itl->index > itl->models->len) )
     {
       // get a new array of pointers
       itl_raytrace( itl ); 
     }
-  
-  //PrintArray( itl->ent );
-  //printf( "returning %p (index: %d) at: %d %d rng: %d\n",  
-  //  itl->ent[itl->index], itl->index, (int)itl->x, (int)itl->y, (int)itl->remaining_range );
-  
+
   return( (itl->models && itl->models->len > 0 )? g_ptr_array_index( itl->models, itl->index++ ) : NULL ); 
 }
 

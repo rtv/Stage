@@ -67,23 +67,10 @@ model_t* model_create(  world_t* world,
   
   mod->movemask = STG_MOVE_TRANS | STG_MOVE_ROT;
   
-  mod->ranger_return = LaserVisible;
-  mod->ranger_data = g_array_new( FALSE, TRUE, sizeof(stg_ranger_sample_t));
-  mod->ranger_config = g_array_new( FALSE, TRUE, sizeof(stg_ranger_config_t) );
-
-  // configure the laser to sensible defaults
-  mod->laser_geom.pose.x = 0;
-  mod->laser_geom.pose.y = 0;
-  mod->laser_geom.pose.a = 0;
-  mod->laser_geom.size.x = 0.0; // invisibly small (so it's not rendered) by default
-  mod->laser_geom.size.y = 0.0;
-  
-  mod->laser_config.range_min= 0.0;
-  mod->laser_config.range_max = 8.0;
-  mod->laser_config.samples = 180;
-  mod->laser_config.fov = M_PI;
-  
-  mod->laser_return = LaserVisible;
+  // call inits for individual model
+  model_ranger_init( mod );
+  model_laser_init( mod );
+  model_blobfinder_init( mod );
 
   gui_model_create( mod );
 
@@ -234,6 +221,11 @@ int model_update_prop( model_t* mod, stg_id_t propid )
       model_update_laser( mod );
       gui_model_laser_data( mod );
       break;
+      
+    case STG_PROP_BLOBS:
+      model_blobfinder_update( mod );
+      gui_model_blobfinder_data( mod );
+      break;
 
     default:
       //PRINT_DEBUG1( "no update function for property type %s", 
@@ -350,6 +342,11 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
       *len = sizeof(stg_laser_config_t);
       break;
       
+    case STG_PROP_BLOBS: // the data is already in an array
+      *data = mod->blobs->data;
+      *len = mod->blobs->len * sizeof(stg_blobfinder_blob_t);
+      break;
+
     case STG_PROP_LASERGEOM:
       *data = &mod->laser_geom;
       *len = sizeof(stg_geom_t);
@@ -516,6 +513,13 @@ int model_set_prop( model_t* mod,
       g_array_set_size( mod->ranger_config, 0 );
       g_array_append_vals( mod->ranger_config, data, len/sizeof(stg_ranger_config_t) );
       break;
+
+    case STG_PROP_BLOBS:
+      g_array_set_size( mod->blobs, 0 );
+      g_array_append_vals( mod->blobs, data, len/sizeof(stg_blobfinder_blob_t) );
+      break;
+
+      
 
     default:
       // TODO - accept random prop types and stash data in hash table

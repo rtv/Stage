@@ -119,9 +119,6 @@ gui_window_t* gui_window_create( world_t* world, int xdim, int ydim )
   
   win->bg = rtk_fig_create( win->canvas, NULL, 0 );
   
-  // a figure for debugging
-  //fig_debug = rtk_fig_create( win->canvas, NULL, STG_LAYER_DEBUG );
-
   double width = 10;//world->size.x;
   double height = 10;//world->size.y;
 
@@ -241,6 +238,9 @@ void gui_world_matrix( world_t* world, gui_window_t* win )
       mf.ppm = world->matrix->ppm;
       g_hash_table_foreach( world->matrix->table, render_matrix_cell_cb, &mf );
       
+      mf.ppm = world->matrix->medppm;
+      g_hash_table_foreach( world->matrix->table, render_matrix_cell_cb, &mf );
+
       mf.ppm = world->matrix->bigppm;
       g_hash_table_foreach( world->matrix->bigtable, render_matrix_cell_cb, &mf );
     }
@@ -431,6 +431,9 @@ void gui_model_create( model_t* model )
 #else
   gmod->laser_data = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_DATA);
 #endif
+
+  gmod->blob_data = rtk_fig_create( win->canvas, parent_fig, STG_LAYER_DATA);
+  
   gmod->grid = NULL;
   
   gmod->top->userdata = model;
@@ -599,6 +602,78 @@ void gui_model_laser( model_t* mod )
 			 mod->laser_geom.size.y, 0 );
     }
 }  
+
+void gui_model_blobfinder_data( model_t* mod )
+{ 
+  gui_window_t* win = g_hash_table_lookup( wins, &mod->world->id );  
+  rtk_fig_t* fig = gui_model_figs(mod)->blob_data;  
+  rtk_fig_clear(fig);
+  
+  // The vision figure is attached to the entity, but we dont want
+  // it to rotate.  Fix the rotation here.
+  //double gx, gy, gth;
+  //double nx, ny, nth;
+  //GetGlobalPose(gx, gy, gth);
+  //rtk_fig_get_origin(this->vision_fig, &nx, &ny, &nth);
+  //rtk_fig_origin(this->vision_fig, nx, ny, -gth);
+
+  // place the visualization a little away from the device
+  stg_pose_t pose;
+  pose.x = pose.y = pose.a = 0.0;
+  
+  model_local_to_global( mod, &pose );
+  
+  pose.x += 1.0;
+  pose.y += 1.0;
+  pose.a = 0.0;
+  rtk_fig_origin( fig, pose.x, pose.y, pose.a );
+
+  double scale = 0.007; // shrink from pixels to meters for display
+  
+  short width = mod->blob_cfg.scan_width;
+  short height = mod->blob_cfg.scan_height;
+  double mwidth = width * scale;
+  double mheight = height * scale;
+  
+  // the view outline rectangle
+  rtk_fig_color_rgb32(fig, 0xFFFFFF);
+  rtk_fig_rectangle(fig, 0.0, 0.0, 0.0, mwidth,  mheight, 1 ); 
+  rtk_fig_color_rgb32(fig, 0x000000);
+  rtk_fig_rectangle(fig, 0.0, 0.0, 0.0, mwidth,  mheight, 0); 
+  
+  int c;
+  for( c=0; c<mod->blobs->len; c++)
+    {
+      stg_blobfinder_blob_t* blob = 
+	&g_array_index( mod->blobs, stg_blobfinder_blob_t, c );
+
+      // set the color from the blob data
+      rtk_fig_color_rgb32( fig, blob->color); 
+      
+      short top =   blob->top;
+      short bot =   blob->bottom;
+      short left =   blob->left;
+      short right =   blob->right;
+      
+      double mtop = top * scale;
+      double mbot = bot * scale;
+      double mleft = left * scale;
+      double mright = right * scale;
+	    
+      // get the range in meters
+      //double range = (double)ntohs(data.blobs[index+b].range) / 1000.0; 
+      
+      rtk_fig_rectangle(fig, 
+			-mwidth/2.0 + (mleft+mright)/2.0, 
+			-mheight/2.0 +  (mtop+mbot)/2.0,
+			0.0, 
+			mright-mleft, 
+			mbot-mtop, 
+			1 );
+    }
+}
+
+
 
 void gui_model_laser_data( model_t* mod )
 {

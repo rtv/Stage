@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.48 2004-06-09 02:32:09 rtv Exp $
+ * CVS: $Id: stage.h,v 1.49 2004-06-09 22:15:29 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -108,6 +108,7 @@ typedef enum
     STG_PROP_VOLTAGE,
     STG_PROP_RANGERDATA,
     STG_PROP_RANGERCONFIG,
+    STG_PROP_BLOBS,
     STG_PROP_LASERDATA,
     STG_PROP_LASERCONFIG,
     STG_PROP_LASERGEOM,
@@ -510,6 +511,30 @@ typedef struct
 
 // print human-readable version of the struct
 void stg_print_laser_config( stg_laser_config_t* slc );
+
+// BlobFinder ------------------------------------------------------------
+
+#define STG_BLOBFINDER_CHANNELS_MAX 16
+
+typedef struct
+{
+  int channel_count; // 0 to STG_BLOBFINDER_CHANNELS_MAX
+  stg_color_t channels[STG_BLOBFINDER_CHANNELS_MAX];
+  int scan_width;
+  int scan_height;
+  stg_meters_t range_max;
+  stg_radians_t pan, tilt, zoom;
+} stg_blobfinder_config_t;
+
+typedef struct
+{
+  stg_color_t color;
+  int xpos, ypos;   // all values are in pixels
+  //int width, height;
+  int left, top, right, bottom;
+  int area;
+  stg_meters_t range;
+} stg_blobfinder_blob_t;
 
 
 // end property typedefs -------------------------------------------------

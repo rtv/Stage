@@ -57,6 +57,7 @@ typedef struct
   rtk_fig_t* geom;
   rtk_fig_t* laser;
   rtk_fig_t* laser_data;
+  rtk_fig_t* blob_data;
   rtk_fig_t* grid;
 } gui_model_t;
 

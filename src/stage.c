@@ -67,6 +67,7 @@ const char* stg_property_string( stg_id_t id )
     case STG_PROP_MOVEMASK: return "movemask";break;
     case STG_PROP_MATRIXRENDER: return "matrix_render";break;
     case STG_PROP_INTERVAL: return "interval";break;
+    case STG_PROP_BLOBS: return "blobs";break;
 
     default:
       break;
