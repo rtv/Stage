@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.20 2002-06-11 01:30:16 gerkey Exp $
+ * CVS info: $Id: worldfile.cc,v 1.21 2002-06-11 08:34:26 inspectorg Exp $
  */
 
 #include <assert.h>
@@ -424,10 +424,23 @@ bool CWorldFile::LoadTokenInclude(FILE *file, int *line, int include)
 
   // Now do some manipulation.  If its a relative path,
   // we append the path of the world file.
-  
   if (filename[0] == '/' || filename[0] == '~')
   {
     fullpath = strdup(filename);
+  }
+  else if (this->filename[0] == '/' || this->filename[0] == '~')
+  {
+    // Note that dirname() modifies the contents, so
+    // we need to make a copy of the filename.
+    // There's no bounds-checking, but what the heck.
+    char *tmp = strdup(this->filename);
+    fullpath = (char*) malloc(PATH_MAX);
+    memset(fullpath, 0, PATH_MAX);
+    strcat( fullpath, dirname(tmp));
+    strcat( fullpath, "/" ); 
+    strcat( fullpath, filename );
+    assert(strlen(fullpath) + 1 < PATH_MAX);
+    free(tmp);
   }
   else
   {
@@ -1499,21 +1512,39 @@ const char *CWorldFile::ReadFilename(int entity, const char *name, const char *v
   if( filename[0] == '/' || filename[0] == '~' )
     return filename;
 
-  // Prepend the path
-  // Note that dirname() modifies the contents, so
-  // we need to make a copy of the filename.
-  // There's no bounds-checking, but what the heck.
-  char *tmp = strdup(this->filename);
-  char *fullpath = (char*) malloc(PATH_MAX);
-  getcwd(fullpath, PATH_MAX);
-  strcat( fullpath, "/" ); 
-  strcat( fullpath, dirname(tmp));
-  strcat( fullpath, "/" ); 
-  strcat( fullpath, filename );
-  assert(strlen(fullpath) + 1 < PATH_MAX);
-  free(tmp);
+  else if (this->filename[0] == '/' || this->filename[0] == '~')
+  {
+    // Note that dirname() modifies the contents, so
+    // we need to make a copy of the filename.
+    // There's no bounds-checking, but what the heck.
+    char *tmp = strdup(this->filename);
+    char *fullpath = (char*) malloc(PATH_MAX);
+    memset(fullpath, 0, PATH_MAX);
+    strcat( fullpath, dirname(tmp));
+    strcat( fullpath, "/" ); 
+    strcat( fullpath, filename );
+    assert(strlen(fullpath) + 1 < PATH_MAX);
+    free(tmp);
+    return fullpath;
+  }
+  else
+  {
+    // Prepend the path
+    // Note that dirname() modifies the contents, so
+    // we need to make a copy of the filename.
+    // There's no bounds-checking, but what the heck.
+    char *tmp = strdup(this->filename);
+    char *fullpath = (char*) malloc(PATH_MAX);
+    getcwd(fullpath, PATH_MAX);
+    strcat( fullpath, "/" ); 
+    strcat( fullpath, dirname(tmp));
+    strcat( fullpath, "/" ); 
+    strcat( fullpath, filename );
+    assert(strlen(fullpath) + 1 < PATH_MAX);
+    free(tmp);
 
-  return fullpath;
+    return fullpath;
+  }
 }
 
 
