@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.6.4.5.2.1 2003-12-05 02:08:28 gerkey Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.6.4.5.2.2 2004-02-06 19:32:08 gerkey Exp $
  */
 
 #define DEBUG
@@ -57,7 +57,7 @@ CLaserDevice::CLaserDevice(LibraryItem* libit, CWorld *world, CEntity *parent )
   this->obstacle_return = 0;
   
   // Default laser simulation settings
-  this->scan_rate = 360 / 0.200; // 5Hz
+  this->scan_rate = 361 / 0.200; // 5Hz
   this->min_res =  DTOR(0.25);
   this->max_range = 8.0;
 
@@ -127,11 +127,14 @@ void CLaserDevice::Update( double sim_time )
 
   // Check to see if it's time to update the laser scan
   double interval = this->scan_count / this->scan_rate;
+  double diff = sim_time - m_last_update;
 
-  if( sim_time - m_last_update > interval )
+  //if( sim_time - m_last_update >= interval )
+  // add a little wiggle room, to deal with round-off
+  if(fabs(diff - interval) < 1e-6)
   {
     m_last_update = sim_time;
-	
+
     if( Subscribed() > 0 )
     {
       // Check to see if the configuration has changed
