@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.28.2.9.2.5 2004-11-12 21:51:26 gerkey Exp $
+dnl $Id: configure.in,v 1.28.2.9.2.6 2004-11-12 23:47:52 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -63,44 +63,39 @@ dnl Begin GUI configuration
 dnl **********************************************************************
 
 AC_CHECK_PROG(have_pkg_config,pkg-config,yes,no)
-
-if test "x$have_pkg_config" = "xyes"; then
-
-  dnl pkg-config is available, so we use it	
-  dnl add prefix to the pkg-config path in case RTK or Stage was
-  dnl installed there and the user didn't add it manually 
-  export PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$PKG_CONFIG_PATH
-  AC_MSG_RESULT([pkg-config searching for librtk2.pc in $PKG_CONFIG_PATH]) 
-  
-  PKG_CHECK_MODULES(RTK, librtk2 >= 2.2,
-    with_rtk=yes
-    AC_DEFINE(INCLUDE_RTK2,1,[building optional RTK GUI components]),
-    with_rtk=no
-    AC_MSG_WARN([no suitable RTK was found])
-  )
-  
-  dnl Based on which GUI we're using (assuming there are ever more than one),
-  dnl set some variables that will used during the build.
-  if test "x$with_rtk" = "xyes"; then
-    with_gui=yes
-    AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
-    GUI_LIB=librtkstage.a
-    GUI_LIBPATH=rtkstage/$GUI_LIB
-    GUI_LDADD=$RTK_LIBS
-    GUI_CPPFLAGS=$RTK_CFLAGS
-  else
-    with_gui=no
-  fi
-  AC_SUBST(GUI_LIB)
-  AC_SUBST(GUI_LIBPATH)
-  AC_SUBST(GUI_LDADD)
-  AC_SUBST(GUI_CPPFLAGS)
-else
+if test "x$have_pkg_config" = "xno"; then
   AC_MSG_WARN([You should really install pkg-config])
-  AC_MSG_WARN([Can't locate RTK without pkg-config.  No GUI will be built])
-  with_gui=no
-  with_rtk=no
+  AC_MSG_ERROR([Can't locate Player without pkg-config.])
 fi
+
+dnl add prefix to the pkg-config path in case RTK or Stage was
+dnl installed there and the user didn't add it manually 
+export PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$PKG_CONFIG_PATH
+
+AC_MSG_RESULT([pkg-config searching for librtk2.pc in $PKG_CONFIG_PATH]) 
+PKG_CHECK_MODULES(RTK, librtk2 >= 2.2,
+  with_rtk=yes
+  AC_DEFINE(INCLUDE_RTK2,1,[building optional RTK GUI components]),
+  with_rtk=no
+  AC_MSG_WARN([no suitable RTK was found])
+)
+
+dnl Based on which GUI we're using (assuming there are ever more than one),
+dnl set some variables that will used during the build.
+if test "x$with_rtk" = "xyes"; then
+  with_gui=yes
+  AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
+  GUI_LIB=librtkstage.a
+  GUI_LIBPATH=rtkstage/$GUI_LIB
+  GUI_LDADD=$RTK_LIBS
+  GUI_CPPFLAGS=$RTK_CFLAGS
+else
+  with_gui=no
+fi
+AC_SUBST(GUI_LIB)
+AC_SUBST(GUI_LIBPATH)
+AC_SUBST(GUI_LDADD)
+AC_SUBST(GUI_CPPFLAGS)
 
 AM_CONDITIONAL(WITH_RTK, test x$with_rtk = xyes)
 
@@ -112,45 +107,11 @@ dnl **********************************************************************
 dnl Begin Player configuration
 dnl **********************************************************************
 
-AC_DEFUN([PLAYER_CHECK],[
-dnl where's player?
-AC_ARG_WITH(player, [   --with-player=dir      Location of Player (installation or source)],
-PLAYER_DIR=$with_player,
-PLAYER_DIR=$prefix)
+AC_MSG_RESULT([pkg-config searching for librtk2.pc in $PKG_CONFIG_PATH]) 
+PKG_CHECK_MODULES(PLAYER, player >= 1.6,,
+  AC_MSG_ERROR([Player is *required* to build Stage])
+)
 
-if test "x$PLAYER_DIR" = "xNONE"; then
-  AC_CHECK_HEADER(player.h,
-                  with_player=yes
-                  PLAYER_CPPFLAGS=""
-                  PLAYER_LDADD="-lplayerpacket -lplayerqueue -lplayerclient",
-                  with_player=no)
-else
-  AC_MSG_CHECKING(for $PLAYER_DIR/include/player.h)
-  if test -f $PLAYER_DIR/include/player.h; then
-    AC_MSG_RESULT(yes)
-    PLAYER_CPPFLAGS="-I$PLAYER_DIR/include"
-    PLAYER_LDADD="-L$PLAYER_DIR/lib -lplayerqueue -lplayerpacket -lplayerclient"
-  elif test -f $PLAYER_DIR/server/player.h; then
-    AC_MSG_RESULT(yes)
-    PLAYER_CPPFLAGS="-I$PLAYER_DIR/server -I$PLAYER_DIR/server/drivers/stage -I$PLAYER_DIR/client_libs/libplayerpacket -I$PLAYER_DIR/client_libs/c -I$PLAYER_DIR/client_libs/c++"
-    PLAYER_LDADD="-L$PLAYER_DIR/server -lplayerqueue -L$PLAYER_DIR/client_libs/libplayerpacket -lplayerpacket -L$PLAYER_DIR/client_libs/c++ -lplayerclient"
-  else
-    with_player=no
-  fi
-fi
-
-if test "x$with_player" = "xno"; then
-  AC_MSG_RESULT([Could not find player.h.  Player is required to build Stage.])
-  AC_MSG_RESULT([You can specify a path to Player like this:])
-  AC_MSG_RESULT([    ./configure --with-player=<Player prefix dir>])
-  AC_MSG_ERROR([Configuration aborted. Fix the Player path.])
-fi
-
-AC_SUBST(PLAYER_CPPFLAGS)
-AC_SUBST(PLAYER_LDADD)
-])
-
-PLAYER_CHECK
 
 dnl **********************************************************************
 dnl End Player configuration
@@ -189,16 +150,16 @@ AC_MSG_RESULT([  C   compiler: $CC $CFLAGS])
 AC_MSG_RESULT([  C++ compiler: $CXX $CXXFLAGS])
 AC_MSG_RESULT([])
 AC_MSG_RESULT([Stage will build against Player using:])
-AC_MSG_RESULT([  CPPFLAGS: $PLAYER_CPPFLAGS])
-AC_MSG_RESULT([  LDFLAGS: $PLAYER_LDADD])
+AC_MSG_RESULT([  CFLAGS: $PLAYER_CFLAGS])
+AC_MSG_RESULT([  LIBS: $PLAYER_LIBS])
 AC_MSG_RESULT([])
 if test "x$with_gui" = "xno"; then
   AC_MSG_RESULT([Stage will NOT build any GUI.])
   AC_MSG_RESULT([])	
 else
   AC_MSG_RESULT([Stage will build a GUI using:])
-  AC_MSG_RESULT([  CPPFLAGS: $GUI_CPPFLAGS])
-  AC_MSG_RESULT([  LDFLAGS: $GUI_LDADD])
+  AC_MSG_RESULT([  CFLAGS: $GUI_CPPFLAGS])
+  AC_MSG_RESULT([  LIBS $GUI_LDADD])
   AC_MSG_RESULT([])
 fi
 AC_MSG_RESULT([Stage will be installed in:])

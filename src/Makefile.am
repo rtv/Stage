@@ -2,14 +2,14 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.25.2.4 2003-05-25 01:13:04 gerkey Exp $
+# $Id: Makefile.am,v 1.25.2.4.2.1 2004-11-12 23:47:52 gerkey Exp $
 
 
 SUBDIRS = models rtkstage
 
 stage_DEPENDENCIES = models/libstgmodels.a @GUI_LIBPATH@
 
-AM_CPPFLAGS = 	-Wall @PLAYER_CPPFLAGS@ $(GUI_CPPFLAGS)
+AM_CPPFLAGS = 	-Wall @PLAYER_CFLAGS@ $(GUI_CPPFLAGS)
 
 bin_PROGRAMS = stage
 
@@ -41,5 +41,5 @@ stage_SOURCES = \
          worldfile.hh \
          world.hh
 
-stage_LDADD = 	-lm -Lmodels -lstgmodels @PLAYER_LDADD@ @GUI_LIBPATH@ @GUI_LDADD@
+stage_LDADD = 	-lm -Lmodels -lstgmodels @PLAYER_LIBS@ @GUI_LIBPATH@ @GUI_LDADD@
 

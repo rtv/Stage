@@ -5,7 +5,7 @@
 # $Id
 #
 
-AM_CPPFLAGS = 	-Wall -I$(top_builddir)/src  -I$(top_builddir)/replace @PLAYER_CPPFLAGS@ $(GUI_CPPFLAGS)
+AM_CPPFLAGS = 	-Wall -I$(top_srcdir)/src  -I$(top_srcdir)/replace @PLAYER_CFLAGS@ $(GUI_CPPFLAGS)
 
 noinst_LIBRARIES = libstgmodels.a 
 
