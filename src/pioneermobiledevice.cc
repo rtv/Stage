@@ -1,4 +1,4 @@
-// $Id: pioneermobiledevice.cc,v 1.12 2001-02-02 00:01:50 gerkey Exp $
+// $Id: pioneermobiledevice.cc,v 1.13 2001-02-06 01:27:06 gerkey Exp $
 
 //#define ENABLE_TRACE 1
 
@@ -178,8 +178,8 @@ void CPioneerMobileDevice::ComposeData()
     // Basically just changes byte orders and some units
     //
     //m_data.time = htonl((int)((m_world->timeNow - m_world->timeBegan)*1000.0));
-    m_data.x = htonl((int) px);
-    m_data.y = htonl((int) py);
+    m_data.xpos = htonl((int) px);
+    m_data.ypos = htonl((int) py);
     m_data.theta = htons((unsigned short) RTOD(pth));
 
     m_data.speed = htons((unsigned short) (speed * 1000.0));
@@ -187,7 +187,7 @@ void CPioneerMobileDevice::ComposeData()
     // because of the reversed y-axis on the screen - RTV
     m_data.turnrate = htons((short) RTOD(-turnRate));  
     m_data.compass = htons((unsigned short)(RTOD(comHeading)));
-    m_data.stall = stall;
+    m_data.stalls = stall;
 }
 
 bool CPioneerMobileDevice::MapUnDraw()

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -26,6 +26,8 @@
 
 #include "world.h"
 #include "playerdevice.hh"
+#include <sys/time.h>
+#include <unistd.h>
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -96,8 +98,10 @@ bool CPlayerDevice::IsSubscribed()
 ///////////////////////////////////////////////////////////////////////////
 // Write to the data buffer
 //
-size_t CPlayerDevice::PutData(void *data, size_t len)
+size_t CPlayerDevice::PutData(void *data, size_t len, uint64_t timestamp)
 {
+    struct timeval curr;
+    gettimeofday(&curr,NULL);
     //if (len > m_data_len)
     //    MSG2("data len (%d) > buffer len (%d)", (int) len, (int) m_data_len);
     //ASSERT(len <= m_data_len);
@@ -116,6 +120,16 @@ size_t CPlayerDevice::PutData(void *data, size_t len)
     // Set data flag to indicate data is available
     //
     m_info->data_len = len;
+
+    if(!timestamp)
+      m_info->data_timestamp = 
+              htonll((uint64_t)((((uint64_t)curr.tv_sec) * 1000000) + 
+                                      (uint64_t)curr.tv_usec));
+    else
+      m_info->data_timestamp = htonll(timestamp);
+    //
+    //printf("CPlayerDevice::PutData: set timestamp to: %Lu\n",
+                    //ntohll(m_info->data_timestamp));
     
     m_world->UnlockShmem();
     return len;

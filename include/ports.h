@@ -1,7 +1,7 @@
 /*************************************************************************
  * ports.h - is this even used?
  * RTV
- * $Id: ports.h,v 1.1.1.1 2000-11-29 00:16:53 ahoward Exp $
+ * $Id: ports.h,v 1.2 2001-02-06 01:27:07 gerkey Exp $
  ************************************************************************/
 
 #ifndef PORTS_H
@@ -14,9 +14,6 @@ const long int visionGUIInPort = 50030;
 const long int visionGUIOutPort = 50040;
 
 const long int robotServerPort = 50050;
-
-
-const long int PLAYER_BASE_PORT = 6665;
 
 #define POSITION_REQUEST_PORT 50102
 #define COMMS_REQUEST_PORT 50103

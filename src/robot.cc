@@ -1,7 +1,7 @@
 /*************************************************************************
  * robot.cc - most of the action is here
  * RTV
- * $Id: robot.cc,v 1.15 2001-01-13 02:47:02 gerkey Exp $
+ * $Id: robot.cc,v 1.16 2001-02-06 01:27:06 gerkey Exp $
  ************************************************************************/
 
 #include <errno.h>
@@ -128,7 +128,7 @@ CRobot::CRobot( CWorld* ww, int col,
       {
  // create player port number for command line
  char portBuf[32];
- sprintf( portBuf, "%d", PLAYER_BASE_PORT + col -1 );
+ sprintf( portBuf, "%d", PLAYER_PORTNUM + col -1 );
 
         // BPG
         // release controlling tty so Player doesn't get signals

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -67,8 +67,14 @@ class CPlayerDevice : public CDevice
     
     // Write to the data buffer
     // Returns the number of bytes copied
+    // timestamp should be the time the data was created/sensed. if timestamp
+    //   is 0, then current time is used
     //
-    protected: size_t PutData(void *data, size_t len);
+    protected: size_t PutData(void *data, size_t len, uint64_t timestamp);
+
+    // shorcut for not specifying timestamp
+    protected: size_t PutData(void *data, size_t len) 
+               { return(PutData(data, len, 0)); }
 
     // Read from the command buffer
     // Returns the number of bytes copied

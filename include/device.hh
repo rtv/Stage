@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/device.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.8 $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -26,11 +26,6 @@
 
 #ifndef DEVICE_HH
 #define DEVICE_HH
-
-// For type sizes and message macros
-//
-//#include "rtk-types.hh"
-
 
 // Forward declare the world and robot classes
 //
