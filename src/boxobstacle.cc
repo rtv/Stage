@@ -21,7 +21,7 @@
  * Desc: Simulates a simple box obstacle
  * Author: Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: boxobstacle.cc,v 1.24 2002-10-16 20:50:09 gerkey Exp $
+ * CVS info: $Id: boxobstacle.cc,v 1.25 2002-10-16 20:54:20 gerkey Exp $
  */
 
 #include "world.hh"
@@ -38,8 +38,10 @@ CBoxObstacle::CBoxObstacle(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {
   this->stage_type = BoxType;
-  //this->color = ::LookupColor(BOX_COLOR);
-  this->color = parent->color;
+  if(parent)
+    this->color = parent->color;
+  else
+    this->color = ::LookupColor(BOX_COLOR);
 
   this->shape = ShapeRect;
   this->size_x = 1.0;
