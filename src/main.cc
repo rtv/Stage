@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -75,7 +75,7 @@ bool parse_cmdline(int argc, char **argv)
 //
 int main(int argc, char **argv)
 {
-    printf("** stage %s **\n", (char*) VERSION);
+    printf("** Stage v%s **\n", (char*) VERSION);
 
     // Parse the command line
     //
@@ -93,12 +93,17 @@ int main(int argc, char **argv)
     
     // Start the world
     //
-    world->Startup();
+    if (!world->Startup())
+    {
+        printf("aborting\n");
+        return 1;
+    }
 
     // Register callback for quit (^C,^\) events
     //
     signal(SIGINT, sig_quit);
     signal(SIGQUIT, sig_quit);
+    signal(SIGHUP, sig_quit);
     
     // Wait for a signal
     //
