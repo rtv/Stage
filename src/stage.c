@@ -7,7 +7,7 @@
   #include <config.h>
 #endif
 
-#define DEBUG
+//#define DEBUG
 #include "stage.h"
 
 
@@ -53,20 +53,24 @@ const char* stg_property_string( stg_prop_id_t id )
     case STG_PROP_ENTITY_SONARRETURN: return "STG_PROP_ENTITY_SONARRETURN"; break;
     case STG_PROP_ENTITY_NEIGHBORRETURN: return "STG_PROP_ENTITY_NEIGHBORRETURN"; break;
     case STG_PROP_ENTITY_NEIGHBORBOUNDS: return "STG_PROP_ENTITY_NEIGHBORBOUNDS"; break;
+    case STG_PROP_ENTITY_NEIGHBORS: return "STG_PROP_ENTITY_NEIGHBORS"; break;
     case STG_PROP_ENTITY_SUBSCRIPTION: return "STG_PROP_ENTITY_SUBSCRIPTION"; break;
     case STG_PROP_ENTITY_VELOCITY: return "STG_PROP_ENTITY_VELOCITY"; break;
     case STG_PROP_ENTITY_VISIONRETURN: return "STG_PROP_ENTITY_VISIONRETURN"; break;
     case STG_PROP_ENTITY_VOLTAGE: return "STG_PROP_ENTITY_VOLTAGE"; break;
+    case STG_PROP_ENTITY_TRANSDUCERS: return "STG_PROP_ENTITY_TRANSDUCERS";break;
+    case STG_PROP_ENTITY_LASER_DATA: return "STG_PROP_ENTITY_LASER_DATA";break;
+    case STG_PROP_ENTITY_BLINKENLIGHT: return "STG_PROP_ENTITY_BLINKENLIGHT";break;
+    case STG_PROP_ENTITY_NOSE: return "STG_PROP_ENTITY_NOSE";break;
+
+      // remove these
     case STG_PROP_IDAR_RX: return "STG_PROP_IDAR_RX"; break;
     case STG_PROP_IDAR_TX: return "STG_PROP_IDAR_TX"; break;
     case STG_PROP_IDAR_TXRX: return "STG_PROP_IDAR_TXRX"; break;
-
     case STG_PROP_POSITION_ORIGIN: return "STG_PROP_POSITION_ORIGIN"; break;
     case STG_PROP_POSITION_ODOM: return "STG_PROP_POSITION_ODOM"; break;
     case STG_PROP_POSITION_MODE: return "STG_PROP_POSITION_MODE"; break;
     case STG_PROP_POSITION_STEER: return "STG_PROP_POSITION_STEER"; break;
-    case STG_PROP_ENTITY_TRANSDUCERS: return "STG_PROP_ENTITY_TRANSDUCERS";break;
-    case STG_PROP_ENTITY_LASER_DATA: return "STG_PROP_ENTITY_LASER_DATA";break;
 
     default:
       break;
@@ -624,6 +628,58 @@ int stg_model_set_neighbor_return( stg_client_t* cli, stg_id_t id,
 					     val, sizeof(int) ); 
   
   memcpy( val, reply->data, sizeof(int) );
+  stg_property_free( reply );
+  return 0;
+}
+
+int stg_model_set_light( stg_client_t* cli, stg_id_t id, 
+			 stg_blinkenlight_t *val)
+{
+  stg_property_t* reply = stg_send_property( cli, id, 
+					     STG_PROP_ENTITY_BLINKENLIGHT,
+					     STG_SETGET,
+					     val,sizeof(stg_blinkenlight_t));
+ 
+  memcpy( val, reply->data, sizeof(stg_blinkenlight_t) );
+  stg_property_free( reply );
+  return 0;
+}
+
+int stg_model_get_light( stg_client_t* cli, stg_id_t id, 
+			 stg_blinkenlight_t *val)
+{
+  stg_property_t* reply = stg_send_property( cli, id, 
+					     STG_PROP_ENTITY_BLINKENLIGHT,
+					     STG_GET,
+					     NULL, 0 );
+ 
+  memcpy( val, reply->data, sizeof(stg_blinkenlight_t) );
+  stg_property_free( reply );
+  return 0;
+}
+
+int stg_model_set_nose( stg_client_t* cli, stg_id_t id, 
+			 stg_nose_t *val)
+{
+  stg_property_t* reply = stg_send_property( cli, id, 
+					     STG_PROP_ENTITY_NOSE,
+					     STG_SETGET,
+					     val,sizeof(stg_nose_t));
+ 
+  memcpy( val, reply->data, sizeof(stg_nose_t) );
+  stg_property_free( reply );
+  return 0;
+}
+
+int stg_model_get_nose( stg_client_t* cli, stg_id_t id, 
+			 stg_nose_t *val)
+{
+  stg_property_t* reply = stg_send_property( cli, id, 
+					     STG_PROP_ENTITY_NOSE,
+					     STG_GET,
+					     NULL, 0 );
+ 
+  memcpy( val, reply->data, sizeof(stg_nose_t) );
   stg_property_free( reply );
   return 0;
 }

@@ -80,6 +80,8 @@
        STG_PROP_ENTITY_NEIGHBORS,
        STG_PROP_ENTITY_NEIGHBORRETURN,
        STG_PROP_ENTITY_NEIGHBORBOUNDS,
+       STG_PROP_ENTITY_BLINKENLIGHT,
+       STG_PROP_ENTITY_NOSE,
        STG_PROP_IDAR_RX, // see idar.cc
        STG_PROP_IDAR_TX,
        STG_PROP_IDAR_TXRX,
@@ -132,6 +134,18 @@ typedef enum
     IDARReflect,
     IDARReceive
   } stg_idar_return_t;
+
+// Possible blinkenlight values
+typedef enum
+  {
+    LightNone = 0,
+    LightOff,
+    LightOn,
+    LightBlinkSlow,
+    LightBlinkMedium,
+    LightBlinkFast,
+    LightFlashOnce
+  } stg_blinkenlight_t;
 
 // Possible Gripper return values
 typedef enum 
@@ -387,6 +401,12 @@ typedef struct {
   struct pollfd pollfd;
 } stg_client_t;
 
+typedef struct
+{
+  stg_id_t stage_id;
+  char name[STG_TOKEN_MAX];
+} stg_name_id_t;  
+
 //////////////////////////////////////////////////////////////////////////
 /*
  * FUNCTION DEFINITIONS
@@ -472,6 +492,18 @@ int stg_model_get_laser_data( stg_client_t* cli, stg_id_t id,
 
 int stg_model_get_neighbors( stg_client_t* cli, stg_id_t id, 
 			     stg_neighbor_t** neighbors, int *neighbor_count );
+
+int stg_model_set_light( stg_client_t* cli, stg_id_t id, 
+			 stg_blinkenlight_t *val);
+int stg_model_get_light( stg_client_t* cli, stg_id_t id, 
+			 stg_blinkenlight_t *val);
+
+typedef int stg_nose_t;
+
+int stg_model_set_nose( stg_client_t* cli, stg_id_t id, 
+			 stg_nose_t *val);
+int stg_model_get_nose( stg_client_t* cli, stg_id_t id, 
+			 stg_nose_t *val);
 
 //int stg_model_get_rects(  stg_client_t* cli, stg_id_t id, 
 //		  stg_rotrect_array_t* rects );

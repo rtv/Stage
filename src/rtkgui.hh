@@ -10,7 +10,7 @@
 #include <rtk.h>
 
 class CEntity;
-class CWorld;
+struct stg_world;
 
 typedef struct 
 {
@@ -65,10 +65,11 @@ typedef struct
   rtk_menu_t *view_menu;
   rtk_menuitem_t *grid_item;
   rtk_menuitem_t *walls_item;
-  rtk_menuitem_t *matrix_item;
+  rtk_menuitem_t *matrix_item; 
   rtk_menuitem_t *objects_item;
   rtk_menuitem_t *data_item;
-  
+  rtk_menuitem_t *lights_item;
+
   // The action menu
   rtk_menu_t* action_menu;
   rtk_menuitem_t* subscribedonly_item;
@@ -89,7 +90,7 @@ typedef struct
 
   guint source_tag;
   
-  CWorld* world;
+  struct stg_world* world;
 
 } stg_gui_window_t;
 
@@ -108,7 +109,7 @@ typedef struct
   bool grid_enable;
   double grid_major, grid_minor;
   
-  rtk_fig_t *fig, *fig_rects, *fig_grid, *fig_user, *fig_trans;   
+  rtk_fig_t *fig, *fig_rects, *fig_grid, *fig_user, *fig_trans, *fig_light;   
 
   int movemask;
   
@@ -119,9 +120,9 @@ typedef struct
 int stg_gui_init( int* argc, char*** argv );
 
 // WINDOWS
-stg_gui_window_t* stg_gui_window_create( CWorld* world, int width, int height);
+stg_gui_window_t* stg_gui_window_create( struct stg_world* world, int width, int height);
 void stg_gui_window_destroy( stg_gui_window_t* win );
-int stg_gui_window_update( CWorld* world, stg_prop_id_t prop );
+int stg_gui_window_update( struct stg_world* world, stg_prop_id_t prop );
 
 gboolean stg_gui_window_callback( gpointer win );
 

@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.6.2.2 2003-08-09 01:54:29 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.6.2.3 2003-08-19 00:57:19 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -79,9 +79,11 @@ extern int quit;
 #define STG_LAYER_BACKGROUND 40
 #define STG_LAYER_BODY 50
 #define STG_LAYER_DATA 60
+#define STG_LAYER_LIGHTS 70
 
 bool enable_matrix = FALSE;
 bool enable_data = TRUE;
+bool enable_lights = TRUE;
 //bool enable_bodies = 
 
 // single static application visible to all funcs in this file
@@ -135,6 +137,13 @@ void stg_gui_menu_fig_toggle_show( rtk_menuitem_t *item )
   rtk_fig_show( (rtk_fig_t*)item->userdata, item->checked );
 }
 
+// inverts the show state of a figure - often used as a callback
+gboolean stg_gui_fig_toggle_show( void* fig )
+{
+  rtk_fig_show( (rtk_fig_t*)fig, !((rtk_fig_t*)fig)->show );
+  return TRUE;
+}
+
 // shows or hides all the figure bodies in a window
 void stg_gui_menu_toggle_bodies( rtk_menuitem_t *item )
 {
@@ -151,6 +160,25 @@ void stg_gui_menu_toggle_bodies( rtk_menuitem_t *item )
     }
 }
 
+// shows or hides all the lights in a window
+void stg_gui_menu_toggle_lights( rtk_menuitem_t *item )
+{
+  // prevents the blinkenlight_callback re-showing these figures
+  enable_lights = !enable_lights; 
+
+  stg_gui_window_t* win = (stg_gui_window_t*)item->userdata;
+  
+  // run through the list of figs, hiding those in the body layer
+  rtk_canvas_t* canvas = win->canvas;
+  rtk_fig_t* fig;
+  
+  for (fig = canvas->layer_fig; fig != NULL; fig = fig->layer_next)
+    {
+      if( fig->layer == STG_LAYER_LIGHTS )
+	rtk_fig_show( fig, !fig->show );
+    }
+}
+
 // shows or hides all the figure bodies in a window
 void stg_gui_menu_toggle_data( rtk_menuitem_t *item )
 {
@@ -159,7 +187,7 @@ void stg_gui_menu_toggle_data( rtk_menuitem_t *item )
 
 
 // build a simulation window
-stg_gui_window_t* stg_gui_window_create( CWorld* world, int width, int height )
+stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int height )
 {
   stg_gui_window_t* win = (stg_gui_window_t*)calloc( 1, sizeof(stg_gui_window_t) );
  
@@ -231,7 +259,12 @@ stg_gui_window_t* stg_gui_window_create( CWorld* world, int width, int height )
   rtk_menuitem_check(win->data_item, 1);
   rtk_menuitem_set_callback( win->data_item, stg_gui_menu_toggle_data );
  
-  
+  // lights item
+  win->lights_item = rtk_menuitem_create(win->view_menu, "Lights", 1);  
+  win->lights_item->userdata = (void*)win;
+  rtk_menuitem_check(win->lights_item, 1);
+  // the callback shows/hides all light figs in the window
+  rtk_menuitem_set_callback( win->lights_item, stg_gui_menu_toggle_lights );
 
   // create the action menu
   /*
@@ -308,7 +341,7 @@ gboolean stg_gui_window_callback( gpointer data )
   return TRUE;
 }
 
-int stg_gui_window_update( CWorld* world, stg_prop_id_t prop )
+int stg_gui_window_update( stg_world_t* world, stg_prop_id_t prop )
 {
   PRINT_WARN( "" );  
   return 0;
@@ -339,8 +372,8 @@ rtk_fig_t* stg_gui_grid_create( rtk_canvas_t* canvas, rtk_fig_t* parent,
 {
   rtk_fig_t* grid = NULL;
 
-  assert( (grid = rtk_fig_create_ex( canvas, parent, 
-				     STG_LAYER_BACKGROUND, NULL )) );
+  assert( (grid = rtk_fig_create( canvas, parent, 
+				     STG_LAYER_BACKGROUND )) );
   
   if( minor > 0)
     {
@@ -399,8 +432,16 @@ stg_gui_model_t* stg_gui_model_create(  CEntity* ent )
   mod->grid_minor = 0.2;
   
   // Create a figure representing this entity
-  mod->fig = rtk_fig_create_ex( mod->win->canvas, parent_fig, 
-				STG_LAYER_BODY, ent);
+  // rtk head
+  //mod->fig = rtk_fig_create_ex( mod->win->canvas, parent_fig, 
+  //			STG_LAYER_BODY, ent);
+  
+  // rtk 2.2
+  mod->fig = rtk_fig_create( mod->win->canvas, parent_fig, 
+			      STG_LAYER_BODY );
+  mod->fig->userdata = (void*)ent;
+  // end rtk 2.2
+
   assert( mod->fig );
   
   // put the figure's origin at the entity's position
@@ -426,7 +467,10 @@ stg_gui_model_t* stg_gui_model_create(  CEntity* ent )
   xmax = ymax = 0.0;
   ent->GetBoundingBox( xmin, ymin, xmax, ymax );
   
-  rtk_fig_t* boundaries = rtk_fig_create_ex( mod->win->canvas, NULL, 99, ent);
+  //rtk_fig_t* boundaries = rtk_fig_create_ex( mod->win->canvas, NULL, 99, ent);
+  rtk_fig_t* boundaries = rtk_fig_create( mod->win->canvas, NULL, 99 );
+  boundaries->userdata = (void*)ent;
+
   double width = xmax - xmin;
   double height = ymax - ymin;
   double xcenter = xmin + width/2.0;
@@ -504,12 +548,15 @@ void stg_gui_model_destroy( stg_gui_model_t* mod )
 {
   if( mod->fig_rects ) rtk_fig_destroy( mod->fig_rects );
   if( mod->fig_user ) rtk_fig_destroy( mod->fig_user );
+  if( mod->fig_light ) rtk_fig_destroy( mod->fig_light );
   if( mod->fig ) rtk_fig_destroy( mod->fig );
 }
 
 rtk_fig_t* stg_gui_label_create( rtk_canvas_t* canvas, CEntity* ent )
 {
-  rtk_fig_t* label = rtk_fig_create_ex( canvas, NULL, 51, ent);
+  //rtk_fig_t* label = rtk_fig_create_ex( canvas, NULL, 51, ent);
+  rtk_fig_t* label = rtk_fig_create( canvas, NULL, 51 );
+  label->userdata = (void*)ent;
   rtk_fig_show(label, 1); 
   rtk_fig_movemask(label, 0);
       
@@ -703,7 +750,7 @@ void stg_gui_transducers_render( CEntity* ent )
    
    model->fig_trans = rtk_fig_create( canvas, NULL, STG_LAYER_DATA );
    
-   for( int t=0; t < ent->transducers->len; t++ )
+   for( int t=0; t < (int)ent->transducers->len; t++ )
      {
        stg_transducer_t* tran = &g_array_index( ent->transducers, 
 						stg_transducer_t, t );
@@ -728,6 +775,55 @@ void stg_gui_transducers_render( CEntity* ent )
      }
 
    //   rtk_canvas_render( canvas );
+}
+
+void stg_gui_model_blinkenlight( stg_gui_model_t* mod )
+{
+  if( mod->fig_light )
+    {
+      rtk_fig_destroy( mod->fig_light );
+      mod->fig_light = NULL;
+    }
+  
+  // nothing to see here
+  if( mod->ent->blinkenlight == LightNone )
+    return;
+  
+  mod->fig_light = rtk_fig_create(mod->win->canvas, 
+				  mod->fig, STG_LAYER_LIGHTS);
+  
+  rtk_fig_color_rgb32( mod->fig_light, mod->ent->color ); 
+  
+  rtk_fig_ellipse( mod->fig_light, 0,0,0, 
+		   mod->ent->size.x,  
+		   mod->ent->size.y, 0 );
+  
+  switch( mod->ent->blinkenlight )
+    {
+    case LightNone: // we've already handled this, but this case
+		    // prevents a compiler warning.
+      break;
+      
+    case LightOff:
+      break;
+      
+    case LightBlinkMedium:      
+      PRINT_WARN1( "calling rtk_fig_blink for ent %d", mod->ent->id );
+      rtk_fig_blink( mod->fig_light, 400 );
+
+      //deliberate no-break!
+      
+    case LightOn: // fill in the outline ellipse with a slightly
+		  // smaller solid one
+      rtk_fig_ellipse( mod->fig_light, 0,0,0, 
+		       mod->ent->size.x * 0.85,  
+		       mod->ent->size.y * 0.85, 1 );
+      break;
+      
+    default:
+      PRINT_WARN1( "rtkgui: blinkenlight value (%d) not handled by gui", 
+		   mod->ent->blinkenlight );
+    }
 }
 
 int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
@@ -763,7 +859,8 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
       }
       break;
 
-      // these all need us to totally redraw the object
+      // these all need us to totally redraw the object 
+      // (for now - this could be optimized quite a bit)
     case STG_PROP_ENTITY_ORIGIN:
     case STG_PROP_ENTITY_SIZE:
     case STG_PROP_ENTITY_PARENT:
@@ -772,16 +869,14 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
     case STG_PROP_ENTITY_RECTS:
     case STG_PROP_ENTITY_CIRCLES:
     case STG_PROP_ENTITY_TRANSDUCERS:
+    case STG_PROP_ENTITY_NOSE:
       stg_gui_model_destroy( ent->guimod );
       ent->guimod = stg_gui_model_create( ent );
       break;
 
-      // 
-    case STG_PROP_ENTITY_DATA:
-    case STG_PROP_ENTITY_COMMAND:
-      //PRINT_DEBUG1( "gui redraws data", prop ); 
-      //ent->RtkUpdate(); 
-      break;      
+    case STG_PROP_ENTITY_BLINKENLIGHT:
+      stg_gui_model_blinkenlight( ent->guimod );
+      break;
 
       /*
     case STG_PROP_IDAR_RX:

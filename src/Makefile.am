@@ -2,17 +2,17 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.29.4.22 2003-08-09 01:25:20 rtv Exp $
+# $Id: Makefile.am,v 1.29.4.23 2003-08-19 00:57:19 rtv Exp $
 
 stage_DEPENDENCIES = libstage.a $(top_srcdir)/replace/libreplace.a
 
 AM_CPPFLAGS = -Wall -I$(top_builddir)/replace @RTK_CFLAGS@
 
-lib_LIBRARIES = libstage.a libstageworldfile.a 
+lib_LIBRARIES = libstage.a libstagecpp.a 
 bin_PROGRAMS = stage
 
 # install these headers
-include_HEADERS = stage.h
+include_HEADERS = stage.h stagecpp.hh
 
 #
 # stage
@@ -32,9 +32,12 @@ stage_SOURCES = \
 	main.cc 
 
 stage_LDFLAGS =
-stage_LDADD =  @RTK_LIBS@ -L. -lstage 
+stage_LDADD =  @RTK_LIBS@  @LIBJPEG@ -L. -lstage 
 #-lefence
 
 # these libraries are useful for clients such as Player's stage1p4 driver
+# you should use either the C libray OR the C++ library
+# the C library has all the Stage server IO stuff
 libstage_a_SOURCES = stage.h stage.c
-libstageworldfile_a_SOURCES = worldfile.cc worldfile.hh stage.h
+# the C++ library has the same, plus some extra stuff for handling worldfiles  
+libstagecpp_a_SOURCES = stage.h stage.c stagecpp.cc stagecpp.hh

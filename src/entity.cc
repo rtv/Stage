@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.30 2003-08-09 01:54:28 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.31 2003-08-19 00:57:19 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -81,7 +81,7 @@ CEntity* stg_ent_first_child( CEntity* ent )
   return((child_node && child_node->data)?(CEntity*)child_node->data:NULL);
 }
 
-CEntity* stg_world_first_child( CWorld* world )
+CEntity* stg_world_first_child( stg_world_t* world )
 {
   g_assert( world->node );   
   g_assert( world->node->data );   
@@ -89,12 +89,12 @@ CEntity* stg_world_first_child( CWorld* world )
   return((child_node && child_node->data )?(CEntity*)child_node->data:NULL);
 }
 
-// the root node of the tree is a CWorld
-CWorld* stg_world( CEntity* ent )
+// the root node of the tree is a stg_world_t
+stg_world_t* stg_world( CEntity* ent )
 {
   g_assert( ent->node );   
   g_assert( ent->node->data );   
-  return( (CWorld*)g_node_get_root( ent->node )->data );
+  return( (stg_world_t*)g_node_get_root( ent->node )->data );
 }
 
 CEntity* stg_ent_parent( CEntity* ent )
@@ -136,8 +136,8 @@ CEntity::CEntity( stg_entity_create_t* init )
   g_assert( (this->node = g_node_append_data( parent_node, this )));      
   
 #ifdef DEBUG
-  // inspect the CWorld object at the root of the tree I just attached to. 
-  CWorld* world = stg_world( this );
+  // inspect the stg_world_t object at the root of the tree I just attached to. 
+  stg_world_t* world = stg_world( this );
   g_assert( world );
   BASE_DEBUG2( "is in world %d:%s", world->id, world->name->str );
 #endif
@@ -210,6 +210,9 @@ CEntity::CEntity( stg_entity_create_t* init )
   gripper_return = GripperDisabled;
   neighbor_return = false;
 
+  // no visible light
+  this->blinkenlight = LightNone;
+
   //m_dependent_attached = false;
   
   this->mouseable = true;
@@ -281,10 +284,10 @@ CEntity::~CEntity()
   if( token ) g_string_free( token, TRUE );
 }
 
-// returns the CWorld object at the bottom of my node tree
-CWorld* CEntity::GetWorld()
+// returns the stg_world_t object at the bottom of my node tree
+stg_world_t* CEntity::GetWorld()
 {
-  return((CWorld*)g_node_get_root(this->node)->data);
+  return((stg_world_t*)g_node_get_root(this->node)->data);
 }
 
 // returns the CMatrix object we are rendering into
@@ -311,7 +314,7 @@ void CEntity::InitWall( void )
   this->neighbor_return = false;
 
   // be the world size by default
-  CWorld* world = (CWorld*)g_node_get_root(this->node)->data;
+  stg_world_t* world = (stg_world_t*)g_node_get_root(this->node)->data;
   this->size.x = world->width;
   this->size.y = world->height;
   this->pose_origin.x = world->width/2.0;
@@ -606,7 +609,7 @@ void CEntity::UnMap()
 // Remap ourself if we have moved
 void CEntity::ReMap( stg_pose_t* pose )
 {
-  CWorld* world = this->GetWorld();
+  stg_world_t* world = this->GetWorld();
   
   // if we have moved less than 1 pixel, do nothing
   if (fabs(pose->x - this->pose_map.x) < 1.0 / world->ppm &&
@@ -797,6 +800,16 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
       this->laser_return = *(stg_laser_return_t*)data;
       break;
 
+    case STG_PROP_ENTITY_BLINKENLIGHT:
+      g_assert( (len == sizeof(stg_blinkenlight_t)) );	
+      this->blinkenlight = *(stg_blinkenlight_t*)data;
+      break;      
+
+    case STG_PROP_ENTITY_NOSE:
+      g_assert( (len == sizeof(stg_nose_t)) );	
+      this->draw_nose = *(stg_nose_t*)data;
+      break;      
+
     case STG_PROP_ENTITY_NEIGHBORBOUNDS:
       g_assert( (len == sizeof(stg_bounds_t)) );	
       memcpy( &this->bounds_neighbor, (stg_bounds_t*)data, sizeof(stg_bounds_t));
@@ -886,6 +899,16 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
     case STG_PROP_ENTITY_NEIGHBORBOUNDS:
       prop = stg_property_attach_data( prop, &this->bounds_neighbor, 
 				       sizeof(this->bounds_neighbor));
+
+    case STG_PROP_ENTITY_BLINKENLIGHT:
+      prop = stg_property_attach_data( prop, &this->blinkenlight, 
+				       sizeof(this->blinkenlight));
+      break;
+
+    case STG_PROP_ENTITY_NOSE:
+      prop = stg_property_attach_data( prop, &this->draw_nose, 
+				       sizeof(this->draw_nose));
+      break;
 
     case STG_PROP_ENTITY_LASERRETURN:
       prop = stg_property_attach_data( prop, &this->laser_return, 

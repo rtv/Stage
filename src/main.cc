@@ -23,7 +23,7 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan
  * Date: 3 July 2003
- * CVS: $Id: main.cc,v 1.61.2.36 2003-08-09 01:25:20 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.37 2003-08-19 00:57:19 rtv Exp $
  */
 
 
@@ -37,22 +37,14 @@
 #include "entity.hh"
 #include "rtkgui.hh" // for rtk_init()
 
-
-
 #define HELLOWORLD "** Stage "VERSION" **"
+#define BYEWORLD "Stage finished"
 
 int quit = 0; // set true by the GUI when it wants to quit 
-
-static GSList* worlds = NULL; 
 
 // globals
 GHashTable* global_hash_table = g_hash_table_new(g_int_hash, g_int_equal);
 int global_next_available_id = 1;
-
-// MODEL CREATION FUNCTIONS ////////////////////////////////////////////
-CEntity* CreatePosition( stg_entity_create_t* spec );
-CEntity* CreateWall( stg_entity_create_t* spec );
-//////////////////////////////////////////////////////////////////////
 
 // prints the object tree on stdout
 void StgPrintTree( GNode* treenode, gpointer _prefix )
@@ -87,14 +79,10 @@ gboolean StgPropertyWrite( GIOChannel* channel, stg_property_t* prop )
   gboolean failed = FALSE;
 
   guint propsize = sizeof(stg_property_t) + prop->len;
-  gsize sz = 0;
-
   PRINT_DEBUG1( "writing a property of %d bytes", propsize );
 
-  stg_property_write_fd( g_io_channel_unix_get_fd(channel), prop );
-
-  ssize_t result = 0;
-  //g_io_channel_write_chars( channel, (gchar*)prop, propsize, &sz, NULL );
+  ssize_t result = 
+    stg_property_write_fd( g_io_channel_unix_get_fd(channel), prop );
   
   if( result < 0 )
     {
@@ -111,11 +99,6 @@ gboolean StgPropertyWrite( GIOChannel* channel, stg_property_t* prop )
   return( !failed );
 }
 
-void StgPropertyFree( stg_property_t* prop )
-{
-  stg_property_free( prop );
-}
-
 
 gboolean StgClientRead( GIOChannel* channel, 
 		     GIOCondition condition, 
@@ -128,7 +111,6 @@ gboolean StgClientRead( GIOChannel* channel,
   // store associations between channels and worlds
   static GHashTable* channel_world_map = g_hash_table_new(NULL,NULL);
   
-  //stg_property_t* prop = StgPropertyRead( channel );
   stg_property_t* prop = 
     stg_property_read_fd( g_io_channel_unix_get_fd(channel) );
   
@@ -153,7 +135,9 @@ gboolean StgClientRead( GIOChannel* channel,
 	  for( GList* lel = doomed_list; lel; lel = g_list_next(lel) )
 	    {
 	      PRINT_DEBUG2( "destroying world %p (node %p)", lel->data, lel);
-	      delete (CWorld*)lel->data;
+	      //delete (CWorld*)lel->data;
+	      stg_world_destroy( (stg_world_t*)lel->data );
+
 	    }
 	  
 	  g_list_free( doomed_list );
@@ -185,11 +169,16 @@ gboolean StgClientRead( GIOChannel* channel,
 		// check that we have the right size data
 		g_assert( (prop->len == sizeof(stg_world_create_t)) );
 		
-		CWorld* aworld = NULL;
 		// create a world object
-		g_assert( (aworld = new CWorld( channel, (stg_world_create_t*)prop->data)));
-		aworld->Startup();
+		//CWorld* aworld = NULL;
+		//g_assert( (aworld = new CWorld( channel, (stg_world_create_t*)prop->data)));
+		//aworld->Startup();
 		
+		stg_world_t* aworld = 
+		  stg_world_create( channel, (stg_world_create_t*)prop->data );
+		g_assert( aworld );
+		stg_world_startup( aworld );
+
 		prop->id = aworld->id; // fill in the id of the created object
 
 		// and reply with the completed request
@@ -255,10 +244,17 @@ gboolean StgClientRead( GIOChannel* channel,
 		else 
 		  switch( prop->property )		    
 		    {
-		    case STG_PROP_WORLD_DESTROY: // deliberate 2-case switch
+		    case STG_PROP_WORLD_DESTROY: 
+		      // delete the object, invalidate the id and
+		      // reply with the original request
+		      //delete (CWorld*)node->data;
+		      stg_world_destroy( (stg_world_t*)node->data );
+		      prop->id = -1; 
+		      reply = prop;
+		      break;
+		      
 		    case STG_PROP_ENTITY_DESTROY:
-		      delete (CWorld*)node->data;
-		      // invalidate the id and reply with the original request
+		      delete (CEntity*)node->data;
 		      prop->id = -1; 
 		      reply = prop;
 		      break;
@@ -270,6 +266,7 @@ gboolean StgClientRead( GIOChannel* channel,
 			switch( prop->action )
 			  {
 			  case STG_SET:
+
 			    ent->SetProperty( prop->property,
 					      prop->data, prop->len );
 			    break;
@@ -290,7 +287,7 @@ gboolean StgClientRead( GIOChannel* channel,
 					      prop->data, prop->len );
 			    break;
 			    
-			  default: PRINT_WARN1( "unrecognized prop action (%d)",
+			  default: PRINT_WARN1( "unknown prop action (%d)",
 						prop->action );
 			    break;
 			  }
@@ -302,9 +299,9 @@ gboolean StgClientRead( GIOChannel* channel,
 	  
 	  if( reply )
 	    {
-	      // write reply
+	      // write reply, freeing memory if allocated
 	      StgPropertyWrite( channel, reply );  
-	      if( free_reply ) StgPropertyFree( reply );
+	      if( free_reply ) stg_property_free( reply );
 	    }      
 	}
     }
@@ -449,20 +446,27 @@ GIOChannel* StgServerCreate( void )
 
 void catch_interrupt(int signum)
 {
-  puts( "received SIGINT. Exiting." );
+  puts( "Interrupt signal." );
   exit(0);
 }
 
 void catch_quit(int signum)
 {
-  puts( "received SIGQUIT. Exiting." );
+  puts( "Quit signal." );
   exit(0);
+}
+
+void catch_exit( void )
+{
+  puts( BYEWORLD );
 }
 
 int main( int argc, char** argv )
 {
   puts( HELLOWORLD );
-
+  
+  atexit( catch_exit );
+  
  if( signal( SIGINT, catch_interrupt ) == SIG_ERR )
     {
       PRINT_ERR( "error setting interrupt signal catcher" );
@@ -477,15 +481,14 @@ int main( int argc, char** argv )
  
   stg_gui_init( &argc, &argv );
   
-  GMainLoop* mainloop = g_main_loop_new( NULL, TRUE );
-  
   // create a socket bound to Stage's well-known-port
   GIOChannel* channel = StgServerCreate();
   g_assert( channel );
   
   // watch for these events on the well-known-port
-  g_io_add_watch( channel, G_IO_IN, StgServiceWellKnownPort, global_hash_table );
+  g_io_add_watch(channel, G_IO_IN, StgServiceWellKnownPort, global_hash_table);
   
+  GMainLoop* mainloop = g_main_loop_new( NULL, TRUE );
   g_main_loop_run( mainloop );
 
   exit(0);
