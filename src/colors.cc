@@ -21,13 +21,14 @@
  * Desc: Some useful color routines
  * Author: Andrew Howard, Richard Vaughan
  * Date: 8 Jun 2002
- * CVS info: $Id: colors.cc,v 1.2 2002-06-10 05:00:10 gerkey Exp $
+ * CVS info: $Id: colors.cc,v 1.2.10.1 2003-02-01 02:14:29 rtv Exp $
  */
 
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
-#include "stage_types.hh"
+
+#include "stage.h"
 #include "colors.hh"
 
 ///////////////////////////////////////////////////////////////////////////

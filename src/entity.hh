@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15.2.1 2003-01-31 22:35:15 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.2 2003-02-01 02:14:30 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -37,9 +37,7 @@
 
 
 #include "stage.h"
-#include "stage_types.hh"
 #include "colors.hh"
-#include "library.hh"
 
 #include <netdb.h>
 #include <string.h> // for strncpy(3)
@@ -50,12 +48,14 @@
 #include "rtk.h"
 #endif
 
-//#include "library.hh"
-//extern Library* lib;
 
-// Forward declare the world class
-//class CWorld;
-//class CWorldFile;
+#include "library.hh"
+extern Library* lib;
+
+// Forward declare
+class CMatrix;
+
+
 
 ///////////////////////////////////////////////////////////////////////////
 // The basic moveable object class
@@ -63,21 +63,13 @@ class CEntity
 {
   // Minimal constructor Requires a pointer to the library entry for
   // this type, a pointer to the world, and a parent
-public: CEntity( int id, int parent_id );
-  
-  // a static named constructor - a pointer to this function is given
-  // to the Library object and paired with a string.  When the string
-  // is seen in the worldfile, this function is called to create an
-  // instance of this entity
+public: CEntity(  LibraryItem *libit, int id, CEntity* parent );
 
-  // entities can now be instatiated without deriving a subclass so
-  // can be used as obstacles, fiducials etc by configuration from the
-  // world file
-public: static CEntity* Creator( LibraryItem *libit,  CWorld *world, CEntity *parent )
+public: static CEntity* Creator( LibraryItem *libit, int id, CEntity* parent )
   {
-    return( new CEntity( libit, world, parent ) );
+    return( new CEntity( libit, id, parent ) );
   };
-  
+
   // a linked list of other entities attached to this one
 public: CEntity* child_list;
 public: CEntity* prev;
@@ -90,6 +82,9 @@ protected:  void AddChild( CEntity* child );
   static CMatrix* matrix;
   static bool enable_gui;
 
+public:
+  static CEntity* root; // global reference to the base object
+
   // this is unique for each object, and is equal to its position in
   // the world's child list
 public: stage_id_t stage_id;
@@ -98,12 +93,6 @@ public: stage_id_t stage_id;
   // Destructor
   public: virtual ~CEntity();
 
-  // Load the entity from the worldfile
-  public: virtual bool Load(CWorldFile *worldfile, int section);
-  
-  // Save the entity to the worldfile
-  public: virtual bool Save(CWorldFile *worldfile, int section);
-  
   // Initialise entity
   public: virtual bool Startup( void ); 
   
@@ -195,17 +184,9 @@ public: virtual void Unsubscribe();
 public: virtual void FamilySubscribe();
 public: virtual void FamilyUnsubscribe();
 
-  // Pointer to world
-  public: CWorld *m_world;
-    
   // Pointer to parent entity
   // i.e. the entity this entity is attached to.
   public: CEntity *m_parent_entity;
-
-  // Pointer the default entity
-  // i.e. the entity that would-be children of this entity should attach to.
-  // This will usually be the entity itself.
-  private: CEntity *m_default_entity;
 
   // change the parent
   public: void SetParent( CEntity* parent );
@@ -287,7 +268,7 @@ public: virtual void FamilyUnsubscribe();
   // DISTRIBUTED STAGE STUFF
 
   //public: stage_truth_t truth, old_truth;
-  public: char m_dirty[ MAX_POSE_CONNECTIONS ][ ENTITY_LAST_PROPERTY ];
+  public: char m_dirty[ STG_MAX_CONNECTIONS ][ ENTITY_LAST_PROPERTY ];
 
   // set the dirty flag for each property for each connection
   public: void SetDirty( char v);

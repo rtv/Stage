@@ -1,3 +1,9 @@
+#ifndef _STAGEIO_H
+#define _STAGEIO_H
+
+#ifdef __cplusplus
+ extern "C" {
+#endif 
 
 #include "stage.h"
 
@@ -18,3 +24,9 @@ int CreateModels( int fd, stage_model_t* ent, int count );
 
 // returns a file descriptor connected to the Stage server
 int InitStageClient( int argc, char** argv );
+
+#ifdef __cplusplus
+ }
+#endif 
+
+#endif

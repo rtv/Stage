@@ -21,51 +21,43 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.1 2003-01-31 01:39:32 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.2 2003-02-01 02:14:30 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
 #  include <config.h>
 #endif
 
-#include <unistd.h>
+#include <stdlib.h>
+#include <assert.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <netdb.h> // for gethostbyname(3)
+#include <stdio.h>
+#include <unistd.h> /* for exit(2) */
 
 #include "server.h"
-//#include "library.hh"
-
-// defined in library.cc
-//extern Library model_library; 
-
-//#define DEBUG
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Global vars
 
 // Quit signal
-bool quit = false;
-
-// Pointer to the one-and-only instance of the world
-// This really should be static
-static CWorld *world = NULL;
-
-bool paused = false;
+int quit = 0;
+int paused = 0;
 
 // SIGUSR1 toggles pause
 void CatchSigUsr1( int signo )
 {
-  if( world )
+  /*
+    if( world )
     {
-      world->m_enable = !world->m_enable;
-      world->m_enable ? puts( "\nCLOCK STARTED" ) : puts( "\nCLOCK STOPPED" );
+    world->m_enable = !world->m_enable;
+    world->m_enable ? puts( "\nCLOCK STARTED" ) : puts( "\nCLOCK STOPPED" );
     }
-  else
-    puts( "PAUSE FAILED - NO WORLD" );
+    else */
+  
+  puts( "PAUSE FAILED - NO WORLD" );
+ 
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -102,12 +94,7 @@ void PrintUsage( void )
 void StageQuit( void )
 {  
   puts( "\n** Stage quitting **" );
-  
-  if( world )  
-  {
-    world->Shutdown();  // Stop the world
-    delete world;       // Destroy the world
-  }
+ 
   exit( 0 );
 }
 
@@ -115,8 +102,8 @@ void StageQuit( void )
 // Handle quit signals
 void sig_quit(int signum)
 {
-  PRINT_DEBUG1( "SIGNAL %d\n", signum );
-  quit = true;
+  //PRINT_DEBUG1( "SIGNAL %d\n", signum );
+  quit = 1;
 }
 
 
@@ -130,8 +117,12 @@ int main(int argc, char **argv)
 
   fflush( stdout );
 
-  assert( InitServer( argc, argv ) );
-
+  if( InitServer( argc, argv ) == -1 )
+    {
+      printf( "\n Server failed to initialize. Quitting." );
+      quit = 1;
+    }
+  
   puts( "" ); // end the startup output line
   
   // Register callback for quit (^C,^\) events
@@ -150,13 +141,13 @@ int main(int argc, char **argv)
     {
       
       // set up new clients
-      server->AcceptConnections();
+      if( AcceptConnections() == -1 ) break;
       
       // receive commands, property changes and subscriptions from
       // each client. will block until something is read.  if the
       // server receives 'update' commands from all clients, it'll
       // update the world
-      //server->ReadFromClients();
+      if( ServiceConnections() == -1 ) break;
 
       // write out any changed, subscribed properties
       //server->WriteToClients();
@@ -164,6 +155,8 @@ int main(int argc, char **argv)
   
   // clean up and exit
   StageQuit();
+
+  return 0; 
 }
 
 

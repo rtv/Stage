@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.15 2002-09-07 02:05:24 rtv Exp $
+ * $Id: matrix.cc,v 1.15.6.1 2003-02-01 02:14:30 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -12,7 +12,7 @@
 //#endif
 
 #include "matrix.hh"
-#include "world.hh"
+#include "library.hh"
 
 const int BUFFER_ALLOC_SIZE = 1;
 
@@ -62,6 +62,48 @@ CMatrix::~CMatrix(void)
     delete [] available_slots;
   if( used_slots )
     delete [] used_slots;
+}
+
+
+
+// get a pixel color by its x,y coordinate
+CEntity** CMatrix::get_cell(int x, int y)
+{ 
+  //if (x<0 || x>=width || y<0 || y>=height) 
+  //{
+  //fputs("Stage: WARNING: CEntity::get_cell(int,int) out-of-bounds\n",
+  //stderr);
+  //return 0;
+  //}
+  
+  return data[x+(y*width)]; 
+}
+
+// get a pixel color by its position in the array
+CEntity** CMatrix::get_cell( int i)
+{ 
+  if( i<0 || i > width*height ) 
+    {
+      fputs("Stage: WARNING: CEntity::get_cell(int) out-of-bounds\n",stderr);
+      return 0;
+    }
+  return data[i]; 
+}
+
+// is there an object of this type here?
+inline bool CMatrix::is_type( int x, int y, int type )
+{ 
+  //if( i<0 || i > width*height ) return 0;
+  
+  CEntity** cell = data[x+(y*width)];
+  
+  while( *cell )
+    {
+      if( (*cell)->lib_entry->type_num == type ) return true;
+      cell++;
+    }
+    
+  return false;
 }
 
 
@@ -124,7 +166,7 @@ void CMatrix::unrender()
 #endif
 
 // Draw a rectangle
-void CMatrix::draw_rect( const Rect& t, CEntity* ent, bool add)
+void CMatrix::draw_rect( const stage_rect_t& t, CEntity* ent, bool add)
 {
   draw_line( t.toplx, t.toply, t.toprx, t.topry, ent, add);
   draw_line( t.toprx, t.topry, t.botrx, t.botry, ent, add);
@@ -397,5 +439,56 @@ void CMatrix::CheckCell( int cell )
   }
   if (data[cell][used_slots[cell]] != NULL)
     printf("sanity check failed : no end marker\n");
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Set a rectangle in the world grid
+void CMatrix::SetRectangle(double px, double py, double pth,
+			   double dx, double dy, 
+			   CEntity* ent, double ppm, bool add)
+{
+  stage_rect_t rect;
+
+  dx /= 2.0;
+  dy /= 2.0;
+
+  double cx = dx * cos(pth);
+  double cy = dy * cos(pth);
+  double sx = dx * sin(pth);
+  double sy = dy * sin(pth);
+    
+  rect.toplx = (int) ((px + cx - sy) * ppm);
+  rect.toply = (int) ((py + sx + cy) * ppm);
+
+  rect.toprx = (int) ((px + cx + sy) * ppm);
+  rect.topry = (int) ((py + sx - cy) * ppm);
+
+  rect.botlx = (int) ((px - cx - sy) * ppm);
+  rect.botly = (int) ((py - sx + cy) * ppm);
+
+  rect.botrx = (int) ((px - cx + sy) * ppm);
+  rect.botry = (int) ((py - sx - cy) * ppm);
+    
+  //printf( "draw_rect %d,%d %d,%d %d,%d %d,%d\n",
+  //  rect.toplx, rect.toply,
+  //  rect.toprx, rect.topry,
+  //  rect.botlx, rect.botly,
+  //  rect.botrx, rect.botry );
+
+  draw_rect( rect, ent, add );
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Set a circle in the world grid
+void CMatrix::SetCircle(double px, double py, double pr, 
+			CEntity* ent, double ppm, bool add )
+{
+  // Convert from world to image coords
+  int x = (int) (px * ppm);
+  int y = (int) (py * ppm);
+  int r = (int) (pr * ppm);
+    
+  draw_circle( x,y,r,ent, add);
 }
 

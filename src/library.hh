@@ -5,24 +5,37 @@
 #include <map>
 //#include <string>
 
-#include "stage_types.hh"
-#include "stage_types.hh"
+#include "stage.h"
+#include "colors.hh"
 
-class CWorld;
 class CEntity;
+class LibraryItem;
+
+// pointer to a function that returns a new  entity
+typedef CEntity*(*CreatorFunctionPtr)( LibraryItem *libit, 
+				       int id, 
+				       CEntity *parent );
+
+typedef struct libitem
+{
+  const char* token;
+  //StageType type;
+  const char* colorstr;
+  CreatorFunctionPtr fp;
+} libitem_t;
 
 
 // ADDING A DEVICE TO THE LIBRARY
 //
 // Each entity class should declare a static function that returns a
-// pointer to a new instance of that entity, given a world and a
-// parent.
+// pointer to a new instance of that entity, given a unique int id and and a
+// pointer to a parent.
 //
 // here is an example function definition from positiondevice.hh:
 //
-///  public: static CPositionDevice* Creator( CWorld *world, CEntity *parent )
+///  public: static CPositionDevice* Creator( int id, CEntity *parent )
 //   {
-//      return( new CPositionDevice( world, parent ) );
+//      return( new CPositionDevice( id, parent ) );
 //   }
 //
 
@@ -42,9 +55,6 @@ public:
   
   StageColor color;
 
-  //char* SetToken( char* token )
-  //{ return( strncpy( token, this->token, STAGE_TOKEN_MAX ) ); }
-  
   // this is used to set the type number in the constructor, where it
   // is incremented in each use.
   static int type_count;
@@ -68,10 +78,7 @@ public:
   void AddDevice( const char* token, const char* colorstr, CreatorFunctionPtr creator );
 
   // create an instance of an entity given a worldfile token
-  CEntity* CreateEntity( char* token, CWorld* world_ptr, CEntity* parent_ptr );
-  
-  // create an instance of an entity given a pointer to a named constructor
-  //CEntity* CreateEntity( CreatorFunctionPtr cfp, CWorld* world_ptr, CEntity* parent_ptr );
+  CEntity* CreateEntity( char* token, int id, CEntity* parent_ptr );
   
   const char* TokenFromCreator( CreatorFunctionPtr cfp );
 
@@ -80,5 +87,5 @@ public:
   void Print();
 };
 
-
+ 
 #endif

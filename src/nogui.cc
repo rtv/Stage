@@ -21,22 +21,18 @@
  * Desc: dummy GUI hooks, when no GUI is linked in
  * Author: Brian Gerkey
  * Date: 30 Oct 2002
- * CVS info: $Id: nogui.cc,v 1.1 2002-10-31 01:35:59 gerkey Exp $
+ * CVS info: $Id: nogui.cc,v 1.1.6.1 2003-02-01 02:14:30 rtv Exp $
  */
 
 
-#include "world.hh"
 #include "entity.hh"
 #include "gui.hh"
 
 #if !USE_GNOME2 && !INCLUDE_RTK2
 
 void GuiInit( int argc, char** argv ) {}
-void GuiWorldStartup( CWorld* world ) {}
-void GuiWorldShutdown( CWorld* world ) {}
-void GuiLoad( CWorld* world ) {}
-void GuiSave( CWorld* world ) {}
-void GuiWorldUpdate( CWorld* world ) {}
+void GuiLoad( CEntity* ent ) {}
+void GuiSave( CEntity* ent ) {}
 void GuiEntityStartup( CEntity* ent ) {}
 void GuiEntityShutdown( CEntity* ent ) {}
 void GuiEntityUpdate( CEntity* ent ) {}

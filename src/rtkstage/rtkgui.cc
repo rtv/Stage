@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.15 2003-01-10 03:46:23 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.15.2.1 2003-02-01 02:14:30 rtv Exp $
  */
 
 //
@@ -79,39 +79,10 @@ void GuiInit( int argc, char** argv )
 }
 
 
-void GuiWorldStartup( CWorld* world )
-{ 
-  world->RtkStartup();
-  return;
-}
-
-
-void GuiWorldShutdown( CWorld* world )
-{ 
-  world->RtkShutdown();
-  return;
-}
-
-
-void GuiWorldUpdate( CWorld* world )
+void GuiUpdate( void )
 {  
-  world->RtkUpdate();
-  return;
+  RtkUpdate();
 }
-
-
-void GuiLoad( CWorld* world )
-{
-  world->RtkLoad( world->worldfile );
-  return;
-}
-
-
-void GuiSave( CWorld* world )
-{
-  world->RtkSave( world->worldfile );
-}
-
 
 // ENTITY HOOKS ///////////////////////////
 void GuiEntityStartup( CEntity* ent )
@@ -136,7 +107,7 @@ void GuiEntityPropertyChange( CEntity* ent, EntityProperty prop )
  
 ////////////////////////////////////////////
 
-void CWorld::AddToMenu( stage_menu_t* menu, CEntity* ent, int check )
+void AddToMenu( stage_menu_t* menu, CEntity* ent, int check )
 {
   /* BROKEN
   assert( menu );
@@ -153,7 +124,7 @@ void CWorld::AddToMenu( stage_menu_t* menu, CEntity* ent, int check )
 }
 
 
-void CWorld::AddToDataMenu(  CEntity* ent, int check )
+void AddToDataMenu(  CEntity* ent, int check )
 {
   /* BROKEN
   assert( ent );
@@ -161,7 +132,7 @@ void CWorld::AddToDataMenu(  CEntity* ent, int check )
   */
 }
 
-void CWorld::AddToDeviceMenu(  CEntity* ent, int check )
+void AddToDeviceMenu(  CEntity* ent, int check )
 {
   /* BROKEN
   assert( ent );
@@ -170,7 +141,7 @@ void CWorld::AddToDeviceMenu(  CEntity* ent, int check )
 }
 
 // devices check this to see if they should display their data
-bool CWorld::ShowDeviceData( int devtype )
+bool ShowDeviceData( int devtype )
 {
   return rtk_menuitem_ischecked(this->data_item);
   
@@ -184,7 +155,7 @@ bool CWorld::ShowDeviceData( int devtype )
   */
 }
 
-bool CWorld::ShowDeviceBody( int devtype )
+bool ShowDeviceBody( int devtype )
 {
   return rtk_menuitem_ischecked(this->objects_item);
 
@@ -201,7 +172,7 @@ bool CWorld::ShowDeviceBody( int devtype )
 
 // Initialise the GUI
 // TODO: fix this for client/server operation.
-bool CWorld::RtkLoad(CWorldFile *worldfile)
+bool RtkLoad(CWorldFile *worldfile)
 {
   int sx, sy;
   double scale = 0.01;
@@ -368,7 +339,7 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
 }
 
 // Save the GUI
-bool CWorld::RtkSave(CWorldFile *worldfile)
+bool RtkSave(CWorldFile *worldfile)
 {
   int section = worldfile->LookupEntity("gui");
   if (section < 0)
@@ -403,7 +374,7 @@ bool CWorld::RtkSave(CWorldFile *worldfile)
 
 
 // Start the GUI
-bool CWorld::RtkStartup()
+bool RtkStartup()
 {
   // these must exist already
   assert( this->app );
@@ -420,7 +391,7 @@ bool CWorld::RtkStartup()
 
 
 // Stop the GUI
-void CWorld::RtkShutdown()
+void RtkShutdown()
 {
   assert( this->app );
 
@@ -432,7 +403,7 @@ void CWorld::RtkShutdown()
 
 
 // Update the GUI
-void CWorld::RtkUpdate()
+void RtkUpdate()
 {
   //PRINT_DEBUG( "updating gui" );
 
@@ -459,7 +430,7 @@ void CWorld::RtkUpdate()
 
 
 // Update the GUI
-void CWorld::RtkMenuHandling()
+void RtkMenuHandling()
 {
   char filename[128];
     
@@ -546,7 +517,7 @@ void CWorld::RtkMenuHandling()
 
 // Handle the movie sub-menu.
 // This is still yucky.
-void CWorld::RtkUpdateMovieMenu()
+void RtkUpdateMovieMenu()
 {
   int i, j;
   char filename[128];

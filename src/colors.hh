@@ -22,50 +22,26 @@
  * devices here.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 8 Jun 2002
- * CVS info: $Id: colors.hh,v 1.6 2002-11-01 19:12:29 rtv Exp $
+ * CVS info: $Id: colors.hh,v 1.6.6.1 2003-02-01 02:14:29 rtv Exp $
  */
 
 #ifndef _STAGECOLORS_H
 #define _STAGECOLORS_H 
 
-//#include <stdint.h>
-#include "stage_types.hh"
-
-// RTV - moved the typedef to stage_types.hh in an attempt to avoid recompiling
-// everything if you change this file - there's still a dependency though...
+#include <stdint.h>
 
 // Color type
-//typedef uint32_t StageColor;
-
-#define GRID_MAJOR_COLOR "gray85"
-#define GRID_MINOR_COLOR "gray95"
-#define MATRIX_COLOR "dark green"
-#define BACKGROUND_COLOR "ivory"
-
-/*
-#define GRIPPER_COLOR "blue"
-#define POSITION_COLOR "dark red"
-#define LASER_COLOR  "blue"
-#define SONAR_COLOR  "green"
-#define PTZ_COLOR  "magenta"
-#define PUCK_COLOR  "green"
-#define BOX_COLOR  "yellow"
-#define LBD_COLOR  "green"
-#define MISC_COLOR  "gray"
-#define GPS_COLOR  "gray"
-#define VISION_COLOR  "gray"
-#define PLAYER_COLOR  "black"
-#define LASERBEACON_COLOR  "cyan"
-#define VISIONBEACON_COLOR  "red"
-#define WALL_COLOR "black"
-#define IDAR_COLOR "DarkRed"
-#define DESCARTES_COLOR "DarkBlue"
-#define POWER_COLOR "orange"
-*/
+typedef uint32_t StageColor;
 
 // Look up the color in a database.  (i.e. transform color name to
 // color value).  If the color is not found in the database, a bright
 // red color will be returned instead.
 StageColor LookupColor(const char *name);
+
+// GUI color prefs 
+#define GRID_MAJOR_COLOR "gray85"
+#define GRID_MINOR_COLOR "gray95"
+#define MATRIX_COLOR "dark green"
+#define BACKGROUND_COLOR "ivory"
 
 #endif

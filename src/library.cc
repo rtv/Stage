@@ -24,11 +24,15 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.13 2002-12-05 04:01:10 rtv Exp $
+ * CVS info: $Id: library.cc,v 1.13.4.1 2003-02-01 02:14:30 rtv Exp $
  */
 
 #include "library.hh"
+#include "entity.hh"
+#include "cwrapper.h"
 
+#include "root.hh"
+/*
 #include "models/bitmap.hh"
 #include "models/box.hh"
 #include "models/bumperdevice.hh"
@@ -49,6 +53,7 @@
 #include "models/visiondevice.hh"
 #include "models/regularmcldevice.hh"
 //#include "models/bpsdevice.hh"
+*/
 
 typedef CreatorFunctionPtr CFP;
 
@@ -56,6 +61,8 @@ typedef CreatorFunctionPtr CFP;
 // devices must be added here.
 
 libitem_t library_items[] = { 
+  { "root", "black", (CFP)CRootDevice::Creator},
+  /*
   { "bitmap", "black", (CFP)CBitmap::Creator},
   { "laser", "blue", (CFP)CLaserDevice::Creator},
   { "position", "red", (CFP)CPositionDevice::Creator},
@@ -78,6 +85,8 @@ libitem_t library_items[] = {
   { "bumper", "LightBlue", (CFP)CBumperDevice::Creator},
   { "regularmcl", "blue", (CFP)CRegularMCLDevice::Creator},
   // { "bps", BpsType, (CFP)CBpsDevice::Creator},
+  */
+
   {NULL, NULL, NULL } // marks the end of the array
 };  
 
@@ -200,20 +209,29 @@ void Library::AddDevice( const char* token, const char* colorstr, CreatorFunctio
 
 
 // create an instance of an entity given a worldfile token
-CEntity* Library::CreateEntity( char* token, CWorld* world_ptr, CEntity* parent_ptr )
+CEntity* Library::CreateEntity( char* token, int id, CEntity* parent_ptr )
 {
   assert( token );
-  assert( world_ptr );
-  // parent may be a null ptr
   
   // look up this token in the library
   LibraryItem* libit = liblist->FindLibraryItemFromToken( token );
 
-  assert( libit );
-  assert( libit->creator_func );
-
-  // create an entity through the creator callback fucntion  
-  return (*libit->creator_func)( libit, world_ptr, parent_ptr ); 
+  CEntity* ent;
+  
+  if( libit )
+    {
+      assert( libit->creator_func );
+      // create an entity through the creator callback fucntion  
+      ent = (*libit->creator_func)( libit, id, parent_ptr ); 
+    }
+  else
+    {
+      PRINT_WARN1( "Client requested model '%s' is not in the library",
+		   token );
+      ent = NULL;
+    }
+  
+  return ent; // NULL if failed
 } 
   
   
@@ -252,6 +270,29 @@ void Library::Print( void )
     printf( "\n\t%s:%p:%d", it->token, it->creator_func, it->type_num );
   
   puts( "]" );
+}
+
+// C wrapper 
+int CreateEntityFromLibrary( char* token, int id, int parent_id )
+{
+  // TODO - lookup the parent here
+  CEntity* ent = model_library.CreateEntity( token, id, NULL );
+
+  if( ent ) return 0; //success
+  
+  return -1; // fail
+}
+
+
+int Startup()
+{
+  return( CEntity::root->Startup() ?  0 :  -1 );
+}
+
+int Update( double simtime )
+{
+  CEntity::root->Update( simtime );
+  return 0;
 }
 
 

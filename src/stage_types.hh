@@ -21,7 +21,7 @@
  * Desc: Shared types, constants, etc
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: stage_types.hh,v 1.11.4.1 2003-01-31 01:39:33 rtv Exp $
+ * CVS: $Id: stage_types.hh,v 1.11.4.2 2003-02-01 02:14:30 rtv Exp $
  */
 
 #ifndef STAGE_TYPES_HH
@@ -41,13 +41,6 @@
 
 // ENTITY TYPE DEFINITIONS /////////////////////////////////////////////////////////
 
-// a unique id for each entity equal to its position in the world's array
-typedef int stage_id_t;
-
-// Color type
-typedef uint32_t StageColor;
-
-/* StageType is deprecated and has been removed */
 
 // these properties can be set with the SetProperty() method
 

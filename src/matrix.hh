@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.hh,v 1.4.6.1 2003-01-31 01:39:32 rtv Exp $
+// $Id: matrix.hh,v 1.4.6.2 2003-02-01 02:14:30 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -37,53 +37,21 @@ class CMatrix
   // MUST BE IN-BOUNDS!
 
   // get a pixel color by its x,y coordinate
-  inline CEntity** get_cell(int x, int y)
-    { 
-      //if (x<0 || x>=width || y<0 || y>=height) 
-      //{
-      //fputs("Stage: WARNING: CEntity::get_cell(int,int) out-of-bounds\n",
-      //stderr);
-      //return 0;
-      //}
-      
-      return data[x+(y*width)]; 
-    }
-  
-  // get a pixel color by its position in the array
-  inline CEntity** get_cell( int i)
-    { 
-      if( i<0 || i > width*height ) 
-      {
-        fputs("Stage: WARNING: CEntity::get_cell(int) out-of-bounds\n",stderr);
-        return 0;
-      }
-      return data[i]; 
-    }
-  
-  // is there an object of this type here?
-  inline bool is_type( int x, int y, int type )
-    { 
-      //if( i<0 || i > width*height ) return 0;
-    
-      CEntity** cell = data[x+(y*width)];
-    
-      while( *cell )
-      {
-        if( (*cell)->lib_entry->type_num == type ) return true;
-        cell++;
-      }
-    
-      return false;
-    }
-  
+  CEntity** get_cell(int x, int y);
 
-  inline void set_cell(int x, int y, CEntity* ent );
-  inline void unset_cell(int x, int y, CEntity* ent );
+  // get a pixel color by its position in the array
+  CEntity** get_cell( int i);
+
+  // is there an object of this type here?
+  bool is_type( int x, int y, int type );
+
+  void set_cell(int x, int y, CEntity* ent );
+  void unset_cell(int x, int y, CEntity* ent );
   
   void	copy_from(CMatrix* img);
 
   void	draw_line(int x1, int y1, int x2, int y2, CEntity* ent, bool add);
-  void	draw_rect( const Rect& t, CEntity* ent, bool add );
+  void	draw_rect( const stage_rect_t& t, CEntity* ent, bool add );
   void	draw_circle(int x, int y, int r, CEntity* ent, bool add);
   
   void	clear( void );
@@ -99,6 +67,15 @@ class CMatrix
 
   void PrintCell( int cell );
   void CheckCell( int cell );
+
+  // these have been moved from CWorld - they draw shapes measured in
+  // meters about a center point
+  void SetRectangle(double px, double py, double pth,
+		    double dx, double dy, 
+		    CEntity* ent, double ppm, bool add);
+
+  void SetCircle(double px, double py, double pr, 
+		 CEntity* ent, double ppm, bool add );
   
 };
 

@@ -21,7 +21,7 @@
  * Desc: Gnome GUI 
  * Author: Richard Vaughan
  * Date: 20 Sept 2002
- * CVS info: $Id: gnomegui.cc,v 1.5 2003-01-10 03:45:38 rtv Exp $
+ * CVS info: $Id: gnomegui.cc,v 1.5.2.1 2003-02-01 02:14:30 rtv Exp $
  */
 
 
@@ -40,9 +40,7 @@
 //#define VERBOSE
 
 #include "server.hh"
-#include "world.hh"
 #include "gnomegui.hh"
-#include "playerdevice.hh"
 #include "bitmap.hh"
 #include "worldfile.hh"
 //#include "library.hh"
@@ -63,20 +61,7 @@ void GuiInit( int argc, char** argv )
   GnomeInit( argc, argv );
 }
 
-//void GuiEnterMainLoop( 
-
-// WORLD HOOKS /////////////////////////////
-void GuiWorldStartup( CWorld* world )
-{ 
-  GnomeWorldStartup( world );
-}
-
-void GuiWorldShutdown( CWorld* world )
-{ 
-  /* do nothing */ 
-}
-
-void GuiWorldUpdate( CWorld* world )
+void GuiUpdate( void )
 { 
   // allow gtk to do some work
   while( gtk_events_pending () )
@@ -94,12 +79,12 @@ void GuiEntityShutdown( CEntity* ent )
   /* do nothing */ 
 }
 
-void GuiLoad( CWorld* world )
+void GuiLoad( CEntity* ent )
 { 
   /* do nothing */ 
 }
 
-void GuiSave( CWorld* world )
+void GuiSave( CEntity* ent )
 { 
   /* do nothing */ 
 }
@@ -366,7 +351,7 @@ void GnomeWorldStartup( CWorld* world  )
   //GtkWidget* spinner_label = gtk_label_new( "  PPM " );
   GtkWidget* spinner = gtk_spin_button_new_with_range  ( 1, 1000, 1 );
 
-  gtk_spin_button_set_value( GTK_SPIN_BUTTON(spinner), world->ppm );
+  gtk_spin_button_set_value( GTK_SPIN_BUTTON(spinner), CEntity::ppm );
 
   //gtk_toolbar_append_widget (GTK_TOOLBAR(tbar), play, "zoom", "zoom");
   gtk_toolbar_append_widget( GTK_TOOLBAR(g_tbar), GTK_WIDGET(g_pbar), "zoom", "zoom");
@@ -381,8 +366,8 @@ void GnomeWorldStartup( CWorld* world  )
   //gtk_widget_show (scaler);
    
   // set the starting size - just a quick hack for starters
-  int initwidth = world->matrix->get_width() + 40;
-  int initheight = world->matrix->get_height() + 100;
+  int initwidth = CEntity::matrix->get_width() + 40;
+  int initheight = CEntity::matrix->get_height() + 100;
 
   // sensible bounds check
   if( initwidth > gdk_screen_width() ) initwidth = gdk_screen_width();
@@ -393,16 +378,12 @@ void GnomeWorldStartup( CWorld* world  )
   // connect a signal handler for button events
     
   // set scaling and scroll viewport
-  gnome_canvas_set_pixels_per_unit( g_canvas, world->ppm );
+  gnome_canvas_set_pixels_per_unit( g_canvas, CEntity::ppm );
   gnome_canvas_set_scroll_region( g_canvas, 
 				  0, 0,
-				  world->matrix->width / world->ppm,
-				  world->matrix->height / world->ppm );
+				  CEntity::matrix->width / CEntity::ppm,
+				  CEntity::>matrix->height / CEntity::ppm );
 
-  // NO - entity gui startup happens in the CEntity::Startup
-  // this creates the GUI elements in the entity tree
-  //world->root->GuiStartup();
- 
   // flip the coordinate system, so that y increases upwards
   //GnomeCanvasGroup *root = gnome_canvas_root(GNOME_CANVAS(canvas)); 
   //double flip[6] = { 1, 0, 0, -1, 0, 0 }; 
@@ -411,16 +392,16 @@ void GnomeWorldStartup( CWorld* world  )
   
   // attach a callback to the zoom widget
   gtk_signal_connect(GTK_OBJECT(spinner), "value-changed",
-		     (GtkSignalFunc) GnomeZoomCallback, world );
+		     (GtkSignalFunc) GnomeZoomCallback, NULL );
   
   // attach a callback for events to the root group in the canvas
   gtk_signal_connect(GTK_OBJECT(gnome_canvas_root(g_canvas)), "event",
-		     (GtkSignalFunc) GnomeEventCanvas, world );
+		     (GtkSignalFunc) GnomeEventCanvas, NULL );
 
 
   // start a callback to display the simultion time in the status bar
   /* Add a timer callback to update the value of the progress bar */
-  gtk_timeout_add (100, GnomeProgressTimeout, world );
+  gtk_timeout_add (100, GnomeProgressTimeout, NULL );
 
   // check every now and again for dead subscription
   //gtk_timeout_add (1000, CWorld::GuiProgressTimeout, this );
@@ -433,24 +414,22 @@ void GnomeZoomCallback( GtkSpinButton *spinner, gpointer world )
 {
   assert( spinner );
   double ppm = gtk_spin_button_get_value( spinner );     
-  gnome_canvas_set_pixels_per_unit( g_canvas, ppm );//((CWorld*)world)->ppm );
+  gnome_canvas_set_pixels_per_unit( g_canvas, CEntity::ppm );
 }
 
 
 /* Update the clock in the progress bar, and check for dead subscriptions */
 gboolean GnomeProgressTimeout( gpointer data )
 {
-  CWorld* world = (CWorld*)data;
-
   // set the text to be the current time
   char seconds_buf[128];
-  snprintf( seconds_buf, 128, "%.2f", world->GetTime() );
+  snprintf( seconds_buf, 128, "%.2f", CEntity::simtime );
   gtk_progress_bar_set_text( g_pbar, seconds_buf );
 
   
   // if stage is counting down to a stop time, show the fraction of time used up
-  if( ((CStageServer*)world)->GetStopTime() )
-    gtk_progress_bar_set_fraction( g_pbar, world->GetTime() / ((CStageServer*)world)->GetStopTime() );
+  if( CEntity::stoptime )
+    gtk_progress_bar_set_fraction( g_pbar, CEntity::simtime / CEntity::stoptime );
   
     /* As this is a timeout function, return TRUE so that it
    * continues to get called */
@@ -465,7 +444,7 @@ gint GnomeEventCanvas(GnomeCanvasItem *item, GdkEvent *event, gpointer data)
   assert( data );
 
   GdkCursor *cursor = NULL; // change cursor to indicate context
-  CWorld* world = (CWorld*)data; // cast the data ptr for convenience
+  //CWorld* world = (CWorld*)data; // cast the data ptr for convenience
  
   static MotionMode mode = Nothing;
   
@@ -485,7 +464,7 @@ gint GnomeEventCanvas(GnomeCanvasItem *item, GdkEvent *event, gpointer data)
   item_y = event->button.y;
 
 
-  gnome_canvas_item_w2i(GNOME_CANVAS_ITEM( GetOrigin(world->root)), 
+  gnome_canvas_item_w2i(GNOME_CANVAS_ITEM( GetOrigin( CEntity::root)), 
 			&item_x, &item_y);
   
   gnome_canvas_world_to_window( g_canvas, event->button.x, event->button.y,
@@ -645,7 +624,7 @@ void GnomeEntityStartup( CEntity* entity )
   else
     {
       // sanity check - only root should have no parent 
-      assert( entity == entity->m_world->root );
+      assert( entity == CEntity::root );
       assert( parent_group = gnome_canvas_root( g_canvas ) );
     }
 
@@ -686,8 +665,8 @@ void GnomeEntityStartup( CEntity* entity )
 				       gnome_canvas_rect_get_type(),
 				       "x1", 0.0,
 				       "y1", 0.0,
-				       "x2", entity->m_world->matrix->width / entity->m_world->ppm,
-				       "y2", entity->m_world->matrix->width / entity->m_world->ppm,
+				       "x2", CEntity::matrix->width/CEntity::ppm,
+				       "y2", CEntity::matrix->width/CEntity::ppm,
 				       "fill_color_rgba", RGBA(::LookupColor(BACKGROUND_COLOR),255),
 				       "outline_color", "black",
 				       "width_pixels", 1,
@@ -698,8 +677,8 @@ void GnomeEntityStartup( CEntity* entity )
 			 (GtkSignalFunc) GnomeEventRoot, entity );
     
       
-      GnomeRenderGrid( entity->m_world, 0.2, ::LookupColor(GRID_MINOR_COLOR) );
-      GnomeRenderGrid( entity->m_world, 1.0, ::LookupColor(GRID_MAJOR_COLOR) );
+      GnomeRenderGrid( CEntity::root, 0.2, ::LookupColor(GRID_MINOR_COLOR) );
+      GnomeRenderGrid( CEntity::root, 1.0, ::LookupColor(GRID_MAJOR_COLOR) );
     }
   else // we're not root
     {
@@ -798,7 +777,7 @@ void GnomeEntityStartup( CEntity* entity )
 	  // so we can be selected when the mouse enters us
 	  // attach a callback for events to the root group in the canvas
 	  
-	  if( entity->m_parent_entity == entity->m_world->root )
+	  if( entity->m_parent_entity == CEntity::root )
 	    gtk_signal_connect(GTK_OBJECT( GetBody(entity) ), "event",
 			       (GtkSignalFunc) GnomeEventBody, entity );  
 	}
@@ -816,7 +795,7 @@ gint GnomeEventRoot(GnomeCanvasItem *item, GdkEvent *event, gpointer data)
   CEntity* entity = (CEntity*)data; // cast the data ptr for convenience
 
   // we should be the root object
-  assert( entity == entity->m_world->root );
+  assert( entity == CEntity::root );
  
   switch (event->type) 
     {
@@ -898,13 +877,13 @@ gint GnomeEventSelection(GnomeCanvasItem *item, GdkEvent *event, gpointer data)
   return FALSE;
 }
 
-void GnomeRenderGrid( CWorld* world, double spacing, StageColor color )
+void GnomeRenderGrid( double spacing, StageColor color )
 {
   // add a m/5 grid
   GnomeCanvasPoints *gcp = gnome_canvas_points_new(2);
   
-  double width = world->matrix->width / world->ppm;
-  double height = world->matrix->height/ world->ppm;
+  double width = CEntity::matrix->width / CEntity::ppm;
+  double height = CEntity::matrix->height/ CEntity::ppm;
 
   for( double xx = 0.0; xx < width; xx+=spacing )
     {
@@ -913,7 +892,7 @@ void GnomeRenderGrid( CWorld* world, double spacing, StageColor color )
       gcp->coords[2] = xx;
       gcp->coords[3] = height;
       
-      gnome_canvas_item_new ( GetGroup(world->root), 
+      gnome_canvas_item_new ( GetGroup(CEntity::root), 
 			      gnome_canvas_line_get_type(),
 			      "points", gcp,
 			      "fill_color_rgba", RGBA(color,255),
@@ -921,14 +900,14 @@ void GnomeRenderGrid( CWorld* world, double spacing, StageColor color )
 			      NULL );
     }
   
-  for( double yy = 0.0; yy < world->matrix->height / world->ppm; yy+=spacing )
+  for( double yy = 0.0; yy < CEntity::matrix->height / CEntity::ppm; yy+=spacing )
     {
       gcp->coords[0] = 0;
       gcp->coords[1] = yy;
       gcp->coords[2] = width;
       gcp->coords[3] = yy;
       
-      gnome_canvas_item_new( GetGroup( world->root), 
+      gnome_canvas_item_new( GetGroup( CEntity::root), 
 			     gnome_canvas_line_get_type(),
 			     "points", gcp,
 			     "fill_color_rgba", RGBA(color,255),
@@ -1047,7 +1026,7 @@ void GnomeUnselect( CEntity* ent )
   if( ent->m_parent_entity == NULL ) // i'm root! no selection
     return;
   
-  if( ent->m_parent_entity != ent-> m_world->root )
+  if( ent->m_parent_entity != CEntity::root )
     {
       GnomeUnselect( ent->m_parent_entity );
       return;
@@ -1201,7 +1180,7 @@ void GnomeSubscribeToAll(GtkWidget *widget, gpointer data)
   // recursively subscribe/unsubscribe to everything
   static bool sub = false;
   sub = !sub; // invert sub
-  sub ? CWorld::root->FamilySubscribe() : CWorld::root->FamilyUnsubscribe();
+  sub ? CEntity::root->FamilySubscribe() : CEntity::root->FamilyUnsubscribe();
 }
 
 

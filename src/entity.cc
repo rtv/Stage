@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.1 2003-01-31 22:35:14 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.2 2003-02-01 02:14:29 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -51,8 +51,6 @@
 
 #include "entity.hh"
 #include "raytrace.hh"
-#include "world.hh"
-#include "worldfile.hh"
 #include "gui.hh"
 #include "library.hh"
 
@@ -62,32 +60,26 @@
 double CEntity::ppm = 100;
 CMatrix* CEntity::matrix = NULL;
 bool CEntity::enable_gui = true;
+CEntity* CEntity::root = NULL;
 
 ///////////////////////////////////////////////////////////////////////////
 // main constructor
 // Requires a pointer to the parent and a pointer to the world.
-CEntity::CEntity(LibraryItem* libit, CWorld *world, CEntity *parent_entity )
+CEntity::CEntity( LibraryItem* libit, int id, CEntity* parent )
 {
-  assert( world );
-  
-  this->m_world = world; 
-  this->m_parent_entity = parent_entity;
-  this->m_default_entity = this;
-  
-  // store the library's entry for this type
-  this->lib_entry = libit;
+  this->m_parent_entity = parent;
 
   // get the default color
-  this->color = lib_entry->color;
+  this->color = LookupColor( "red" );
 
   // attach to my parent
-  if( m_parent_entity )
-    m_parent_entity->AddChild( this );
-  else
-    PRINT_DEBUG1( "ROOT ENTITY %p\n", this );
+  //if( m_parent_entity )
+  // m_parent_entity->AddChild( this );
+  //else
+  //PRINT_DEBUG1( "ROOT ENTITY %p\n", this );
   
   // register with the world to receive our unique id
-  this->stage_id = 0;//m_world->RegisterEntity( this );
+  this->stage_id = id;//0;//m_world->RegisterEntity( this );
 
   // init the child list data
   this->child_list = this->prev = this->next = NULL;
@@ -109,10 +101,8 @@ CEntity::CEntity(LibraryItem* libit, CWorld *world, CEntity *parent_entity )
   this->size_x = this->size_y = 0;
   this->origin_x = this->origin_y = 0;
 
-  // set the default worldfile section to be 0 (top-level)
-  this->worldfile_section = 0;
 
-  m_local = false; 
+  m_local = true; 
   
   // by default, entities don't show up in any sensors
   // these must be enabled explicitly in each subclass
@@ -235,191 +225,20 @@ void CEntity::Sync()
 };
 
 
-// return a pointer to this or a child if it matches the worldfile section
-CEntity* CEntity::FindSectionEntity( int section )
-{
-  //PRINT_DEBUG2( "find section %d. my section %d\n", 
-  //	section, this->worldfile_section );
-
-  CEntity* found = NULL;
-  
-  if( section == this->worldfile_section )
-    found  = this;
-  
-  //int f=0;
-  // otherwise, recursively check our children
-  if( found == NULL ) CHILDLOOP( ch )
-    {
-      //printf( "looking in child %d\n", f++ ); 
-      found = ch->FindSectionEntity( section ); 
-      if( found ) break;
-    }
-  
-  //printf( "found %s\n", found ? "true" : "false" );
-  
-  return found;
-  
-}
-
-
-
-///////////////////////////////////////////////////////////////////////////
-// Load the entity from the world file
-bool CEntity::Load(CWorldFile *worldfile, int section)
-{
-  // Read the name
-  strcpy( this->name, worldfile->ReadString(section, "name", "") );
-      
-  // Read the pose
-  this->init_px = worldfile->ReadTupleLength(section, "pose", 0, 0);
-  this->init_py = worldfile->ReadTupleLength(section, "pose", 1, 0);
-  this->init_pth = worldfile->ReadTupleAngle(section, "pose", 2, 0);
-  SetPose(this->init_px, this->init_py, this->init_pth);
-
-  // Read the shape
-  const char *shape_desc = worldfile->ReadString(section, "shape", NULL);
-  if (shape_desc)
-  {
-    if (strcmp(shape_desc, "rect") == 0)
-      this->shape = ShapeRect;
-    else if (strcmp(shape_desc, "circle") == 0)
-      this->shape = ShapeCircle;
-    else
-      PRINT_WARN1("invalid shape desc [%s]; using default", shape_desc);
-  }
-
-  // Read the size
-  this->size_x = worldfile->ReadTupleLength(section, "size", 0, this->size_x);
-  this->size_y = worldfile->ReadTupleLength(section, "size", 1, this->size_y);
-
-  // Read the origin offsets (for moving center of rotation)
-  this->origin_x = worldfile->ReadTupleLength(section, "offset", 0, this->origin_x);
-  this->origin_y = worldfile->ReadTupleLength(section, "offset", 1, this->origin_y);
-
-  // Read the entity color
-  this->color = worldfile->ReadColor(section, "color", this->color);
-
-  // read the desired update interval
-  this->m_interval = 
-    worldfile->ReadFloat( section, "interval", this->m_interval );
- 
-  const char *rvalue;
-  
-  // Obstacle return values
-  if (this->obstacle_return)
-    rvalue = "visible";
-  else
-    rvalue = "invisible";
-  rvalue = worldfile->ReadString(section, "obstacle_return", rvalue);
-  if (strcmp(rvalue, "visible") == 0)
-    this->obstacle_return = true;
-  else
-    this->obstacle_return = false;
-
-  // Sonar return values
-  if (this->sonar_return)
-    rvalue = "visible";
-  else
-    rvalue = "invisible";
-  rvalue = worldfile->ReadString(section, "sonar_return", rvalue);
-  if (strcmp(rvalue, "visible") == 0)
-    this->sonar_return = true;
-  else
-    this->sonar_return = false;
-
-  // Vision return values
-  if (this->vision_return)
-    rvalue = "visible";
-  else
-    rvalue = "invisible";
-  rvalue = worldfile->ReadString(section, "vision_return", rvalue);
-  if (strcmp(rvalue, "visible") == 0)
-    this->vision_return = true;
-  else
-    this->vision_return = false;
-
-  // Gripper return values
-  if (this->gripper_return)
-    rvalue = "visible";
-  else
-    rvalue = "invisible";
-  rvalue = worldfile->ReadString(section, "gripper_return", rvalue);
-  if (strcmp(rvalue, "visible") == 0)
-    this->gripper_return = GripperEnabled;
-  else
-    this->gripper_return = GripperDisabled;
-
-  // Read the beacon id
-  this->fiducial_return \
-    = worldfile->ReadInt(section, "fiducial_id", this->fiducial_return );
-
-  // Use the beacon id as a name if there is no name set
-  if ( strlen(this->name) == 0 && this->fiducial_return != FiducialNone )
-    snprintf( this->name, 64, "id %d", this->fiducial_return );
-  
-  // Laser return values
-  if (this->laser_return == LaserBright)
-    rvalue = "bright";
-  else if (this->laser_return == LaserVisible)
-    rvalue = "visible";
-  else
-    rvalue = "invisible";
-  rvalue = worldfile->ReadString(section, "laser_return", rvalue);
-  if (strcmp(rvalue, "bright") == 0)
-    this->laser_return = LaserBright;
-  else if (strcmp(rvalue, "visible") == 0)
-    this->laser_return = LaserVisible;
-  else
-    this->laser_return = LaserTransparent;
-    
-  return true;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Save the entity to the world file
-bool CEntity::Save(CWorldFile *worldfile, int section)
-{
-  // Write the pose (but only if it has changed)
-  double px, py, pth;
-  GetPose(px, py, pth);
-
-  //printf( "pose: %.2f %.2f %.2f   init:  %.2f %.2f %.2f\n",
-  //  px, py, pth, init_px, init_py, init_pth );
-
-  // TODO - save out any other changed properties
-
-  if (px != this->init_px || py != this->init_py || pth != this->init_pth)
-  {
-    worldfile->WriteTupleLength(section, "pose", 0, px);
-    worldfile->WriteTupleLength(section, "pose", 1, py);
-    worldfile->WriteTupleAngle(section, "pose", 2, pth);
-  }
-
-  CHILDLOOP( ch ) ch->Save( worldfile, ch->worldfile_section );
-  
-  return true;
-}
-
-
 ///////////////////////////////////////////////////////////////////////////
 // Startup routine
 // A virtual function that lets entities do some initialization after
 // everything has been loaded.
 bool CEntity::Startup( void )
 {
-  PRINT_DEBUG2("ENTITY STARTUP %s %s", 
-         this->lib_entry->token,
-         m_parent_entity ? "" : "- ROOT" );
-  
   // use the generic hook
-  if( m_world->enable_gui )
+  if( enable_gui ) 
     GuiEntityStartup( this );
   
-
- CHILDLOOP( ch )
+  
+  CHILDLOOP( ch )
     ch->Startup();
-
+  
   return true;
 }
 
@@ -433,7 +252,7 @@ void CEntity::Shutdown()
   // recursively shutdown our children
   CHILDLOOP( ch ) ch->Shutdown();
 
-  if( m_world->enable_gui )
+  if( enable_gui )
     GuiEntityShutdown( this );
   
   return;
@@ -489,8 +308,8 @@ void CEntity::UnMap()
 void CEntity::ReMap(double px, double py, double pth)
 {
   // if we haven't moved, do nothing
-  if (fabs(px - this->map_px) < 1 / m_world->ppm &&
-      fabs(py - this->map_py) < 1 / m_world->ppm &&
+  if (fabs(px - this->map_px) < 1 / ppm &&
+      fabs(py - this->map_py) < 1 / ppm &&
       pth == this->map_pth)
     return;
   
@@ -507,11 +326,11 @@ void CEntity::MapEx(double px, double py, double pth, bool render)
   switch (this->shape)
     {
     case ShapeRect:
-      m_world->SetRectangle(px, py, pth, 
-			    this->size_x, this->size_y, this, render);
+      matrix->SetRectangle(px, py, pth, 
+			   this->size_x, this->size_y, this, ppm, render);
       break;
     case ShapeCircle:
-      m_world->SetCircle(px, py, this->size_x / 2, this, render);
+      matrix->SetCircle(px, py, this->size_x / 2, this, ppm, render);
       break;
     case ShapeNone:
       break;
@@ -537,7 +356,7 @@ CEntity *CEntity::TestCollision(double px, double py, double pth)
   {
     case ShapeRect:
     {
-      CRectangleIterator rit( qx, qy, qth, sx, sy, m_world->ppm, m_world->matrix );
+      CRectangleIterator rit( qx, qy, qth, sx, sy, ppm, matrix );
 
       CEntity* ent;
       while( (ent = rit.GetNextEntity()) )
@@ -549,7 +368,7 @@ CEntity *CEntity::TestCollision(double px, double py, double pth)
     }
     case ShapeCircle:
     {
-      CCircleIterator rit( px, py, sx / 2, m_world->ppm, m_world->matrix );
+      CCircleIterator rit( px, py, sx / 2, ppm, matrix );
 
       CEntity* ent;
       while( (ent = rit.GetNextEntity()) )
@@ -581,7 +400,7 @@ CEntity *CEntity::TestCollision(double px, double py, double pth,
   {
     case ShapeRect:
     {
-      CRectangleIterator rit( qx, qy, qth, sx, sy, m_world->ppm, m_world->matrix );
+      CRectangleIterator rit( qx, qy, qth, sx, sy, ppm, matrix );
 
       CEntity* ent;
       while( (ent = rit.GetNextEntity()) )
@@ -596,7 +415,7 @@ CEntity *CEntity::TestCollision(double px, double py, double pth,
     }
     case ShapeCircle:
     {
-      CCircleIterator rit( px, py, sx / 2, m_world->ppm, m_world->matrix );
+      CCircleIterator rit( px, py, sx / 2, ppm, matrix );
 
       CEntity* ent;
       while( (ent = rit.GetNextEntity()) )
@@ -763,7 +582,7 @@ void CEntity::SetDirty( int con, char v )
 
 void CEntity::SetDirty( EntityProperty prop, char v )
 {
-  for( int i=0; i<MAX_POSE_CONNECTIONS; i++ )
+  for( int i=0; i< STG_MAX_CONNECTIONS; i++ )
     SetDirty( i, prop, v );
 };
 
@@ -775,7 +594,7 @@ void CEntity::SetDirty( int con, EntityProperty prop, char v )
 void CEntity::SetDirty( char v )
 {
   memset( m_dirty, v, 
-	  sizeof(char) * MAX_POSE_CONNECTIONS * ENTITY_LAST_PROPERTY );
+	  sizeof(char) * STG_MAX_CONNECTIONS * ENTITY_LAST_PROPERTY );
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -866,7 +685,7 @@ int CEntity::SetProperty( int con, EntityProperty property,
     this->SetDirty( con, property, 0 ); // clean on this con
 
   // update the GUI with the new property
-  if( m_world->enable_gui )
+  if( enable_gui )
     GuiEntityPropertyChange( this, property );
   
   return 0;
@@ -1065,17 +884,11 @@ void CEntity::GetStatusString( char* buf, int buflen )
 // Initialise the rtk gui
 void CEntity::RtkStartup()
 {
-  assert( m_world );
-
-  PRINT_DEBUG2("RTK STARTUP %s %s",
-               this->lib_entry->token,
-               m_parent_entity ? "" : " - ROOT" );
-
   // Create a figure representing this entity
   if( m_parent_entity == NULL )
-    this->fig = rtk_fig_create(m_world->canvas, NULL, 50);
+    this->fig = rtk_fig_create( canvas, NULL, 50);
   else
-    this->fig = rtk_fig_create(m_world->canvas, m_parent_entity->fig, 50);
+    this->fig = rtk_fig_create( canvas, m_parent_entity->fig, 50);
 
   assert( this->fig );
 

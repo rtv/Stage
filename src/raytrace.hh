@@ -18,7 +18,7 @@
  */
 // ==================================================================
 // Filename:	raytrace.hh
-// $Id: raytrace.hh,v 1.2 2002-11-01 19:12:30 rtv Exp $
+// $Id: raytrace.hh,v 1.2.6.1 2003-02-01 02:14:30 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -28,7 +28,6 @@
 
 #include <math.h>
 #include "matrix.hh"
-#include "world.hh"
 
 enum LineIteratorMode { PointToPoint=0, PointToBearingRange };
 

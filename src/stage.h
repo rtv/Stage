@@ -1,6 +1,10 @@
 #ifndef STAGE_H
 #define STAGE_H
 
+#ifdef __cplusplus
+ extern "C" {
+#endif 
+
 #include <stdint.h> // for the integer types (uint32_t, etc)
 
 #if HAVE_CONFIG_H
@@ -12,10 +16,120 @@
 
 #include <unistd.h>
 
+#define DEBUG
+
 // global stage configs
 #define STAGE_TOKEN_MAX 64
 #define STG_DEFAULT_SERVER_PORT 6601  // move to configure.in?
 #define STG_HOSTNAME_MAX  128
+#define STG_LISTENQ  128
+#define STG_MAX_CONNECTIONS 128
+
+// (currently) static memory allocation for getting and setting properties
+//const int MAX_NUM_PROPERTIES = 30;
+#define MAX_PROPERTY_DATA_LEN  20000
+
+#define ENTITY_FIRST_PROPERTY 1
+
+enum EntityProperty
+{
+  PropParent = ENTITY_FIRST_PROPERTY, 
+  PropSizeX, 
+  PropSizeY, 
+  PropPoseX, 
+  PropPoseY, 
+  PropPoseTh, 
+  PropOriginX, 
+  PropOriginY, 
+  PropName,
+  PropColor, 
+  PropShape, 
+  PropLaserReturn,
+  PropSonarReturn,
+  PropIdarReturn, 
+  PropObstacleReturn, 
+  PropVisionReturn, 
+  PropPuckReturn,
+  PropPlayerId,
+  PropPlayerSubscriptions,
+  PropCommand,
+  PropData,
+  PropConfig,
+  PropReply,
+  ENTITY_LAST_PROPERTY // this must be the final property - we use it
+ // as a count of the number of properties.
+};
+
+/*
+ 
+  const int PROP_GENERIC = 1 << 16;
+  const int PROP_LASER = 2 << 16;
+  const int PROP_SONAR = 3 << 16;
+  const int PROP_ = 1 << 16;
+  const int PROP_LASER = 1 << 16;
+  const int PROP_LASER = 1 << 16;
+
+
+  PropLaserFov = PROP_LASER & 1
+  PropLaserRes = PROP_LASER & 2
+
+
+
+ */
+
+// PROPERTY DEFINITIONS ///////////////////////////////////////////////
+
+// Shapes for entities
+enum StageShape
+{
+  ShapeNone = 0,
+  ShapeCircle,
+  ShapeRect
+};
+
+// Possible laser return values
+enum LaserReturn
+{
+  LaserTransparent = 0,
+  LaserVisible, 
+  LaserBright,
+};
+
+// Possible IDAR return values
+enum IDARReturn
+{
+  IDARTransparent=0,
+  IDARReflect,
+  IDARReceive
+};
+
+// Possible Gripper return values
+enum GripperReturn
+{
+  GripperDisabled = 0,
+  GripperEnabled
+};
+
+// any integer value other than this is a valid fiducial ID
+// TODO - fix this up
+#define FiducialNone 0
+
+// image types ////////////////////////////////////////////////////////
+
+unsigned int RGB( int r, int g, int b );
+
+typedef struct 
+{
+  int x, y;
+} stage_point_t;
+
+typedef struct
+{
+  int toplx, toply, toprx, topry, botlx, botly, botrx, botry;
+} stage_rect_t;
+
+// a unique id for each entity equal to its position in the world's array
+typedef int stage_id_t;
 
 // the server reads a header to discover which type of data follows...
 typedef enum { StageModelPackets, 
@@ -93,8 +207,6 @@ typedef struct
   int32_t x, y; // mm, mm 
   int16_t th; // degrees
 } __attribute ((packed)) stage_pose_t;
-
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Some useful macros
@@ -199,5 +311,9 @@ if (item->next)\
     item->next->prev = item->prev;\
 if (item == head)\
     head = item->next;
+
+#ifdef __cplusplus
+  }
+#endif 
 
 #endif

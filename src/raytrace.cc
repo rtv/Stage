@@ -18,13 +18,11 @@
  */
 // ==================================================================
 // Filename:	raytrace.cc
-// $Id: raytrace.cc,v 1.10 2002-11-01 19:12:30 rtv Exp $
+// $Id: raytrace.cc,v 1.10.6.1 2003-02-01 02:14:30 rtv Exp $
 // RTV
 // ==================================================================
 
 #include "raytrace.hh"
-
-extern CWorld* world;
 
 CEntity* g_nullp = 0;
 

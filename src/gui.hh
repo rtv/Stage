@@ -21,7 +21,7 @@
  * Desc: GUI interface definitions.
  * Author: Richard Vaughan
  * Date: 6 Oct 2002
- * CVS info: $Id: gui.hh,v 1.4 2003-01-10 03:46:30 rtv Exp $
+ * CVS info: $Id: gui.hh,v 1.4.2.1 2003-02-01 02:14:30 rtv Exp $
  */
 
 // GUI hooks - the Stage GUI implements these functions called by Stage
@@ -36,22 +36,14 @@
 // called from  CStageServer::CStageServer()
 void GuiInit( int argc, char** argv );
 
-// TODO - GuiLoad, GuiSave.
-
-// called from CStageServer::CStageServer()
-void GuiWorldStartup( CWorld* world );
-
-// called from CWorld::Shutdown()
-void GuiWorldShutdown( CWorld* world );
+// called from  CStageServer::CStageServer()
+void GuiUpdate( void );
 
 // called from CWorld::Load()
-void GuiLoad( CWorld* world );
+void GuiLoad( CEntity* ent );
 
 // called from CWorld::Save();
-void GuiSave( CWorld* world );
-
-// called from CWorld::Update()
-void GuiWorldUpdate( CWorld* world );
+void GuiSave( CEntity* ent );
 
 // called from CEntity::Startup()
 void GuiEntityStartup( CEntity* ent );

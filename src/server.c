@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.c,v 1.1.2.2 2003-01-31 22:35:15 rtv Exp $
+ * CVS info: $Id: server.c,v 1.1.2.3 2003-02-01 02:14:30 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -54,11 +54,9 @@
 
 #include "stageio.h"
 #include "server.h"
+#include "cwrapper.h"
 
 typedef	struct sockaddr SA; // useful abbreviation
-#define STG_LISTENQ  128
-#define STG_MAX_CONNECTIONS 128
-
  
 #define DEBUG
 //#define VERBOSE
@@ -300,7 +298,7 @@ void DestroyConnection( int con )
 int HandleModel( int fd, int num )
 {
   size_t bytes_expected = num * sizeof(stage_model_t);
-  stage_model_t* models = malloc(bytes_expected);
+  stage_model_t* models =  (stage_model_t*)malloc(bytes_expected);
   
   size_t bytes_read;
   if( (bytes_read = ReadModels( fd, models, num )) != bytes_expected )
@@ -313,8 +311,17 @@ int HandleModel( int fd, int num )
   
   int m;
   for( m=0; m<num; m++ )
+  {
     printf( "Creating model %d %s parent %d\n",
 	    models[m].id, models[m].token, models[m].parent );
+    
+    if( CreateEntityFromLibrary( models[m].token, models[m].id, 0 ) == -1 )
+      printf( "enitity create failed!\n" );
+
+  }
+
+  Startup();
+  Update( 0.1 );
 
   return 0;
 }

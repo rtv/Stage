@@ -282,7 +282,7 @@ int InitStageClient( int argc, char** argv )
       if( a == argc-1 )
 	{
 	  StageClientPrintUsage();
-	  -1;
+	  return -1;
 	}
      
       // the next argument is the hostname
@@ -325,7 +325,7 @@ int InitStageClient( int argc, char** argv )
     {
       printf( "Error opening network socket\n" );
       fflush( stdout );
-      return FAIL;
+      return -1;
     }
   
   /* setup our server address (type, IP address and port) */

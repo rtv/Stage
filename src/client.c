@@ -22,13 +22,13 @@ int main( int argc, char** argv )
       stage_model_t ent[5];
 
       int m;
-      for( m=0; m<5; m++)
+      for( m=0; m<1; m++)
 	{
 	  ent[m].id = m;
 	  ent[m].parent = 0;
-	  strcpy( ent[m].token, "position" );
+	  strcpy( ent[m].token, "root" );
 	}
-
-      printf( "result %d\n", CreateModels( stage_fd, ent, 5 ) );
+      
+      printf( "result %d\n", CreateModels( stage_fd, ent, 1 ) );
   }
 }
