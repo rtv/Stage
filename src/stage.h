@@ -18,9 +18,7 @@
 #endif
    
 #include <unistd.h>
-   
-#define DEBUG
-   
+      
    // global stage configs
 #define STG_TOKEN_MAX 64
 #define STG_LISTENQ  128
@@ -30,11 +28,8 @@
    
 #define STG_SONAR_MAX_SAMPLES 32
 
-   // (currently) static memory allocation for getting and setting properties
-   //const int MAX_NUM_PROPERTIES = 30;
-#define STG_PROPERTY_DATA_MAX  20000
-   
-#define ENTITY_FIRST_PROPERTY 1
+   //#define STG_PROPERTY_DATA_MAX  200000
+   //#define ENTITY_FIRST_PROPERTY 1
    
    // all properties have unique id numbers and must be listed here
    // please stick to the syntax STG_PROP_<model>_<property>

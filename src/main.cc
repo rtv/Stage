@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.26 2003-02-12 08:48:48 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.27 2003-02-13 02:26:07 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -210,6 +210,7 @@ double GetRealTime()
       gettimeofday( &tv, NULL );
       start_time = TimevalSeconds( &tv );
       init = false;
+      PRINT_DEBUG1( "start time %.4f", start_time );
     }
   
   gettimeofday( &tv, NULL );
@@ -351,7 +352,7 @@ int GuiEntityStartup( CEntity* ent )
       
       if( (*gui_library[g].createmodel_func)(ent) == -1 )
 	{
-	  PRINT_WARN1( "Gui create model failed on GUI %d\n", g );
+	  PRINT_WARN1( "Gui create model failed on GUI %d", g );
 	  return -1;
 	}
       
@@ -373,7 +374,7 @@ int GuiUpdate( void )
       
        if( (*gui_library[g].update_func)() == -1 )
 	{
-	  PRINT_WARN1( "Gui update failed on GUI %d\n", g );
+	  PRINT_WARN1( "Gui update failed on GUI %d", g );
 	  return -1;
 	}
     }
@@ -392,7 +393,7 @@ int GuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
       
       if( (*gui_library[g].tweakmodel_func)(ent, prop) == -1 )
 	{
-	  PRINT_WARN1( "Gui property change failed on GUI %d\n", g );
+	  PRINT_WARN1( "Gui property change failed on GUI %d", g );
 	  return -1;
 	}
     }
@@ -410,7 +411,7 @@ int GuiEntityShutdown( CEntity* ent )
 
       if( (*gui_library[g].destroymodel_func)(ent) == -1 )
 	{
-	  PRINT_WARN1( "Gui destroy model failed on GUI %d\n", g );
+	  PRINT_WARN1( "Gui destroy model failed on GUI %d", g );
 	  return -1;
 	}      
     }
@@ -420,6 +421,9 @@ int GuiEntityShutdown( CEntity* ent )
 
 int PublishDirty()
 {
+  // TODO = fix this!
+  char* propdata = (char*)new char[100000];
+  
   for( int con=0; con < SIOGetConnectionCount(); con++ )
     {
       stage_buffer_t *dirty = SIOCreateBuffer();
@@ -439,9 +443,6 @@ int PublishDirty()
 		    PRINT_WARN3( "ent: %d con: %d prop: %s needs exported",
 				 ent, con, SIOPropString(propid) );
 		    
-		    // make space for the dirty property
-		    char propdata[ STG_PROPERTY_DATA_MAX ];
-		    // fetch it out of the entity
 		    size_t len = entp->GetProperty( propid, propdata );
 		    
 		    SIOBufferProperty( dirty, ent, propid, propdata, len );
@@ -455,7 +456,7 @@ int PublishDirty()
       
       if( dirty_prop_count > 0 )
 	{
-	  PRINT_WARN2( "writing %d dirty properties on con %d", dirty_prop_count, 0 );
+	  PRINT_WARN2( "writing %d dirty properties on con %d", dirty_prop_count, con );
 	  SIOWriteMessage( con, CEntity::simtime, 
 			   STG_HDR_PROPS, dirty->data, dirty->len );
 	}
@@ -463,6 +464,8 @@ int PublishDirty()
       SIOFreeBuffer( dirty );
    }
   
+  delete[] propdata;
+		    
   return 0; // success
 }
 
@@ -492,15 +495,18 @@ int WaitForWallClock()
   
   double timenow = GetRealTime();
   double interval = timenow - last_time;
-  last_time += interval;
   
+  last_time += interval;
   
   avg_interval = 0.9 * avg_interval + 0.1 * interval;
   
   double freq = 1.0 / avg_interval;
   
-  PRINT_DEBUG4( "time %.4f freq %.2f interval %.4f avg %.4f",  
-         GetRealTime(), freq, interval, avg_interval );
+  double outputtime =  GetRealTime();
+  //PRINT_DEBUG4( "time %.4f freq %.2f interval %.4f avg %.4f", 
+  //	outputtime, freq, interval, avg_interval );
+  //printf( "time %.4f freq %.2f interval %.4f avg %.4f\n", 
+  //	outputtime, freq, interval, avg_interval );
 
   PRINT_MSG2( "time %.4f freq %.2fHz", timenow, freq );
   

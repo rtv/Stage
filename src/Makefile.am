@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.29.4.14 2003-02-07 07:47:00 rtv Exp $
+# $Id: Makefile.am,v 1.29.4.15 2003-02-13 02:26:07 rtv Exp $
 
 
 #SUBDIRS = models rtkstage gnome2
@@ -47,7 +47,7 @@ stage_LDADD = @GUI_LINK@ -lm -Lmodels -lmodels -Lsio -lsio -L$(top_builddir)/rep
 #	
 stest_DEPENDENCIES = sio/libsio.a $(top_srcdir)/replace/libreplace.a
 stest_SOURCES = stest.c 
-stest_LDADD = -lm -Lsio -lsio -L$(top_builddir)/replace -lreplace 
+stest_LDADD = -lpnm -lm -Lsio -lsio -L$(top_builddir)/replace -lreplace 
 
 #stage_LDADD = 	-lm -Lmodels -lmodels -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -L@PLAYER_DIR@/client_libs/libplayerpacket -lplayerqueue -lplayerpacket @GUI_LINK@ -L$(top_builddir)/replace -lreplace
 

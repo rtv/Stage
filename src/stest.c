@@ -1,6 +1,6 @@
 
 /*
-  $Id: stest.c,v 1.1.2.16 2003-02-13 00:14:47 rtv Exp $
+  $Id: stest.c,v 1.1.2.17 2003-02-13 02:26:07 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -21,6 +21,8 @@
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
+#include <pnm.h> // libpnm functions
+
 #include "sio.h"
 
 #define TEST(msg) (1 ? printf(  "TEST: " msg " ... "), fflush(stdout) : 0)
@@ -33,6 +35,111 @@ const double timestamp = 0.0;
 
 int pending_key = 0;
 int pending_id = -1;
+
+// load the pnm file and compress it into rectangles
+// the caller must free the memory
+stage_rotrect_t*  RectsFromPnm( int *num_rects, char* filename )
+{
+  FILE* pnmfile = fopen( filename, "r" );
+  
+  if( pnmfile == NULL )
+    perror( "failed to open pnm file" );
+  
+  //int num_rects;
+  stage_rotrect_t* rects;
+  assert( rects = malloc( 10000 * sizeof(stage_rotrect_t) ) );
+  *num_rects = 0;
+
+  int cols, rows, format;
+  xelval maxval;
+  
+  xel** pixels = 
+    pnm_readpnm( pnmfile, &cols, &rows, &maxval, &format );
+  
+  printf( "read pnm %s cols %d rows %d maxval %d format %d\n",
+	  filename, cols, rows, maxval, format );
+  
+  // RTV - this box-drawing algorithm compresses hospital.world from
+  // 104,000+ pixels to 5,757 rectangles. it's not perfect but pretty
+  // darn good with bitmaps featuring lots of horizontal and vertical
+  // lines - such as most worlds. Also combined matrix & gui
+  // rendering loops.  hospital.pnm.gz now loads more than twice as
+  // fast and redraws waaaaaay faster. yay!
+  
+
+  int x,y;
+  for (y = 0; y < rows; y++)
+  {
+    for (x = 0; x < cols; x++)
+      {	
+	if (PNM_GET1( pixels[x][y]) == 0)
+	  continue;
+	
+      // a rectangle starts from this point
+      int startx = x;
+      int starty = rows - y;
+      int height = rows; // assume full height for starters
+	  
+      // grow the width - scan along the line until we hit an empty pixel
+      for( ;  x < cols && PNM_GET1( pixels[x][y] ) > 0; x++ )
+	    {
+	      // handle horizontal cropping
+	      //double ppx = x * sx; 
+	      //if (ppx < this->crop_ax || ppx > this->crop_bx)
+	      //continue;
+	      
+	      // look down to see how large a rectangle below we can make
+	      int yy  = y;
+	      while( (PNM_GET1( pixels[x][yy] ) > 0 ) 
+               && (yy < rows) )
+		{ 
+		  // handle vertical cropping
+		  //double ppy = (this->image->height - yy) * sy;
+		  //if (ppy < this->crop_ay || ppy > this->crop_by)
+		  //continue;
+		  
+		  yy++; 
+		} 	      
+	      // now yy is the depth of a line of non-zero pixels
+	      // downward we store the smallest depth - that'll be the
+	      // height of the rectangle
+	      if( yy-y < height ) height = yy-y; // shrink the height to fit
+	    } 
+      
+      int width = x - startx;
+	  
+      // delete the pixels we have used in this rect
+      // this->image->fast_fill_rect( startx, y, width, height, 0 );
+      int rmx, rmy;
+      //for( rmx = startx; rmx < width; rmx++ )
+      //for( rmy = y; rmx < height; rmy++ )
+      //  {
+      //    pixels[rmx][rmy].r = 0;
+      //    pixels[rmx][rmy].g = 0;
+      //    pixels[rmx][rmy].b = 0;
+      //  }	    
+
+      double px = ((startx + (width/2.0) + 0.5 ));
+      double py = ((starty - (height/2.0) - 0.5 ));
+      //double pth = 0;
+      double pw = width;
+      double ph = height;
+	  
+      // store the rectangles for drawing into the GUI later
+      rects[*num_rects].x = px;
+      rects[*num_rects].y = py;
+      rects[*num_rects].a = 0;
+      rects[*num_rects].w = pw;
+      rects[*num_rects].h = ph;
+      (*num_rects)++;
+    }
+  }
+
+  printf( "rects found: %d\n", *num_rects );
+
+  return rects;
+}
+
 
 int HandleLostConnection( int connection )
 {
@@ -157,7 +264,14 @@ int main( int argc, char** argv )
 {
   printf("\n** Test program for Stage  v%s **\n", (char*) VERSION);
 
+
+  
+  // init libpnm
+  pnm_init( &argc, argv );
+
+
   TEST( "Connecting to Stage" );
+  
 
   int connection = SIOInitClient( argc, argv);
 
@@ -222,6 +336,14 @@ int main( int argc, char** argv )
       SIOBufferProperty( props, bitmap.id, STG_PROP_ENTITY_POSE, 
       	 (char*)&pose, sizeof(pose) );
       
+      // size the bitmap
+      stage_size_t size;
+      size.x = 5.0;
+      size.y = 5.0;
+      SIOBufferProperty( props, bitmap.id, STG_PROP_ENTITY_SIZE,
+      	 (char*)&size, sizeof(size) );
+
+
       // pose the box
       SIOPackPose( &pose, 2.0, 1.0, 1.0 );      
       SIOBufferProperty( props, box.id, STG_PROP_ENTITY_POSE, 
@@ -236,21 +358,31 @@ int main( int argc, char** argv )
       
       SIOBufferProperty( props, sonar.id, STG_PROP_ENTITY_SUBSCRIBE,
 			 (char*)subs, 4*sizeof(subs[0]) );
+      
 
       // push some rectangles into the bitmap
-      stage_rotrect_t rects[10];
-      int r;
-      for( r=0; r<10; r++ )
-	{
-	  rects[r].x = r/10.0;
-	  rects[r].y = r/20.0;
-	  rects[r].a = 0;
-	  rects[r].w = 0.1;
-	  rects[r].h = 0.1;
-	}
+      //stage_rotrect_t rects[10];
+      //int r;
+      //for( r=0; r<10; r++ )
+      //{
+      //  rects[r].x = r/10.0;
+      ///  rects[r].y = r/20.0;
+      // rects[r].a = 0;
+      //  rects[r].w = 0.1;
+      //  rects[r].h = 0.1;
+      //}
       
-      SIOBufferProperty( props, bitmap.id, STG_PROP_ENTITY_RECTS, 
-      		 (char*)&rects, 10*sizeof(rects[0]) );
+      int num_rects;
+      stage_rotrect_t* rects = RectsFromPnm( &num_rects, "worlds/sal2.pnm.gz" );
+      printf( "attempting to buffer %d rects\n", num_rects );
+
+      // send the rectangles to root
+      SIOBufferProperty( props, root.id, STG_PROP_ENTITY_RECTS, 
+			 (char*)rects, num_rects * sizeof(rects[0]) );
+
+      // send the same ones to the box! crazy!
+      SIOBufferProperty( props, box.id, STG_PROP_ENTITY_RECTS, 
+			 (char*)rects, num_rects * sizeof(rects[0]) );
       
       TEST( "Sending properties" );
       result = SIOWriteMessage( connection, timestamp,

@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15.2.15 2003-02-13 00:41:30 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.16 2003-02-13 02:26:07 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -122,9 +122,10 @@ public: int SetProperty( int con,
 			 stage_prop_id_t property, 
 			 char* value, size_t len );
   
-public: virtual int GetProperty( stage_prop_id_t property, void* value );
+  //public: virtual size_t GetPropertySize( stage_prop_id_t property );
+  // get the size of the data and a pointer to it - we'll copy it externally
+public: virtual size_t GetProperty( stage_prop_id_t property, void* value );
 
-  
 protected:
   stage_rotrect_t* rects;
   int rect_count;

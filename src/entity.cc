@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.16 2003-02-13 00:41:30 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.17 2003-02-13 02:26:07 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -781,6 +781,9 @@ void CEntity::SetRects( stage_rotrect_t* rects, int num )
 			      &this->rects_max_x, &this->rects_max_y );
 
       RenderRects( true );
+
+      PRINT_WARN2( "created %d rects for entity %d", this->rect_count,
+		   this->stage_id );
     }
   else
     { // no rects 
@@ -798,8 +801,6 @@ int CEntity::SetProperty( int con, stage_prop_id_t property,
 		SIOPropString(property), (int)len, stage_id );
 
   assert( value );
-  //assert( len > 0 );
-  assert( len < (size_t)STG_PROPERTY_DATA_MAX );
   
   switch( property )
     {
@@ -1003,7 +1004,7 @@ int CEntity::SetProperty( int con, stage_prop_id_t property,
 }
 
 
-int CEntity::GetProperty( stage_prop_id_t property, void* value  )
+size_t CEntity::GetProperty( stage_prop_id_t property, void* value  )
 {
   //PRINT_DEBUG1( "finding property %d", property );
   //printf( "finding property %d", property );
