@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.46 2004-06-01 23:11:25 rtv Exp $
+ * CVS: $Id: stage.h,v 1.47 2004-06-02 01:03:12 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -696,72 +696,6 @@ typedef struct
 
 } stg_client_t;
 
-#define STG_PACKAGE_KEY 12345
-
-typedef struct
-{
-  int key; // must be STG_PACKAGE_KEY - a version-dependent constant value
-  struct timeval timestamp; // real-time timestamp for performance
-			    // measurements
-  size_t payload_len;
-  char payload[0]; // named access to the end of the struct
-} stg_package_t;
-
-
-// Stage Client functions. Most client programs will call all of these
-// in this order.
-
-
-// create a Stage Client.
-stg_client_t* stg_client_create( void );
-
-// read a package: a complete set of Stage deltas. If no package is
-// available, return NULL. If an error occurred, return NULL and set
-// err > 0
-stg_package_t* stg_client_read_package( stg_client_t* cli, 
-					int sleep, // poll()'s sleep ms
-					int* err );
-
-// break the package into individual messages and handle them
-int stg_client_package_parse( stg_client_t* cli, stg_package_t* pkg );
-
-//void stg_client_thread( void* data );
-//int stg_client_thread_start( stg_client_t* cli );
-
-//int stg_client_write_msg( stg_client_t* cli, 
-//		  stg_msg_type_t type, 
-//		  void* data, size_t datalen );
-
-// read and parse a package from the server
-int stg_client_read( stg_client_t* cli, int sleeptime );
-
-
-// load a worldfile into the client
-// returns zero on success, else an error code.
-int stg_client_load( stg_client_t* client, char* worldfilename );
-
-// connect to a Stage server at [host]:[port]. If [host] and [port]
-// are not specified, client uses it's current values, which have
-// sensible defaults.  returns zero on success, else an error code.
-int stg_client_connect( stg_client_t* client, const char* host, const int port );
-
-// ask a connected Stage server to create simulations of all our objects
-void stg_client_push( stg_client_t* client );
-
-
-void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg );
-
-// remove all our objects from from the server
-void stg_client_pull( stg_client_t* client );
-
-void stg_client_install_save( stg_client_t* cli, stg_client_callback_t cb );
-void stg_client_install_load( stg_client_t* cli, stg_client_callback_t cb );
-
-
-// destroy a Stage client
-void stg_client_destroy( stg_client_t* client );
-
-
 typedef struct
 {
   stg_client_t* client; // the client that created this world
@@ -796,6 +730,81 @@ typedef struct _stg_model
   
 } stg_model_t;
 
+#define STG_PACKAGE_KEY 12345
+
+typedef struct
+{
+  int key; // must be STG_PACKAGE_KEY - a version-dependent constant value
+  struct timeval timestamp; // real-time timestamp for performance
+			    // measurements
+  size_t payload_len;
+  char payload[0]; // named access to the end of the struct
+} stg_package_t;
+
+
+// Stage Client functions. Most client programs will call all of these
+// in this order.
+
+
+// create a Stage Client.
+stg_client_t* stg_client_create( void );
+
+
+// THESE ARE IMPLEMENTED IN STAGECPP.CC
+// because they use the C++ worldfile class (for now)
+stg_world_t* stg_client_worldfile_load( stg_client_t* client, 
+					char* worldfile_path );
+void stg_client_save( stg_client_t* cli );
+void stg_client_load( stg_client_t* cli );
+// END THESE
+
+// read a package: a complete set of Stage deltas. If no package is
+// available, return NULL. If an error occurred, return NULL and set
+// err > 0
+stg_package_t* stg_client_read_package( stg_client_t* cli, 
+					int sleep, // poll()'s sleep ms
+					int* err );
+
+// break the package into individual messages and handle them
+int stg_client_package_parse( stg_client_t* cli, stg_package_t* pkg );
+
+//void stg_client_thread( void* data );
+//int stg_client_thread_start( stg_client_t* cli );
+
+//int stg_client_write_msg( stg_client_t* cli, 
+//		  stg_msg_type_t type, 
+//		  void* data, size_t datalen );
+
+// read and parse a package from the server
+int stg_client_read( stg_client_t* cli, int sleeptime );
+
+
+// load a worldfile into the client
+// returns zero on success, else an error code.
+//int stg_client_load( stg_client_t* client, char* worldfilename );
+
+// connect to a Stage server at [host]:[port]. If [host] and [port]
+// are not specified, client uses it's current values, which have
+// sensible defaults.  returns zero on success, else an error code.
+int stg_client_connect( stg_client_t* client, const char* host, const int port );
+
+// ask a connected Stage server to create simulations of all our objects
+void stg_client_push( stg_client_t* client );
+
+
+void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg );
+
+// remove all our objects from from the server
+void stg_client_pull( stg_client_t* client );
+
+void stg_client_install_save( stg_client_t* cli, stg_client_callback_t cb );
+void stg_client_install_load( stg_client_t* cli, stg_client_callback_t cb );
+
+
+// destroy a Stage client
+void stg_client_destroy( stg_client_t* client );
+
+
 // add a new world to a client, based on a token
 stg_world_t* stg_client_createworld( stg_client_t* client, 
 				     int section,
@@ -810,6 +819,8 @@ int stg_world_pull( stg_world_t* world );
 void stg_world_resume( stg_world_t* world );
 void stg_world_pause( stg_world_t* world );
 
+stg_model_t* stg_world_model_name_lookup( stg_world_t* world, 
+					  char* modelname );
 
 // add a new model to a world, based on a parent, section and token
 stg_model_t* stg_world_createmodel( stg_world_t* world, 

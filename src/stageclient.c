@@ -413,11 +413,15 @@ stg_world_t* stg_client_createworld( stg_client_t* client,
 
   // server id is useless right now.
   //g_hash_table_replace( cli->worlds_id_server, &world->id_server, world );
-
+  
   return w;
 } 
 
-
+stg_model_t* stg_world_model_name_lookup( stg_world_t* world, 
+					  char* modelname )
+{
+  return( (stg_model_t*)g_hash_table_lookup( world->models_name, modelname ));
+}
 
 stg_model_t* stg_world_createmodel( stg_world_t* world, 
 				    stg_model_t* parent, 
@@ -1074,11 +1078,11 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
   switch( msg->type )
     {
     case STG_MSG_CLIENT_SAVE:
-      if( cli->callback_save )(*cli->callback_save)();
+      stg_client_save(cli);
       break;
       
     case STG_MSG_CLIENT_LOAD:
-      if( cli->callback_load )(*cli->callback_load)();
+      stg_client_load(cli);
       break;
 
     case STG_MSG_CLIENT_REPLY:

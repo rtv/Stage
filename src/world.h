@@ -56,4 +56,4 @@ stg_property_t* stg_world_property_get(world_t* world, stg_prop_type_t type);
 // set a property of a world
 void stg_world_property_set( world_t* world, stg_property_t* prop );
 
-#endif _WORLD_H
+#endif // _WORLD_H

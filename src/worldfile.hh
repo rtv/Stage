@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.hh,v 1.4 2004-04-05 03:01:06 rtv Exp $
+ * CVS info: $Id: worldfile.hh,v 1.5 2004-06-02 01:03:12 rtv Exp $
  */
 
 #ifndef WORLDFILE_HH
@@ -336,7 +336,7 @@ protected: FILE* FileOpen(const char *filename, const char* method);
   private: CProperty *properties;
 
   // Name of the file we loaded
-  private: char *filename;
+  public: char *filename;
 
   // Conversion units
   private: double unit_length;

@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.38 2004-05-26 08:18:39 rtv Exp $
+# $Id: Makefile.am,v 1.39 2004-06-02 01:03:12 rtv Exp $
 
 stage_DEPENDENCIES = libstage.a $(top_srcdir)/replace/libreplace.a
 
@@ -59,4 +59,4 @@ stage_LDADD =  -L. @RTK_LIBS@
 # libstage.a
 # this library is useful for clients such as Player's stage1p4 driver
 #
-libstage_a_SOURCES = stage.h stage.c stageclient.c bitmap.c token.c  
+libstage_a_SOURCES = stage.h stage.c stageclient.c bitmap.c token.c  worldfile.cc worldfile.hh stagecpp.cc
