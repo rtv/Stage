@@ -1,6 +1,6 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: help.txt,v 1.4 2004-12-30 04:39:24 rtv Exp $
+ * $Id: help.txt,v 1.5 2004-12-30 05:04:59 rtv Exp $
 */
 
 /**
@@ -58,7 +58,7 @@ release, but we're working on them. Let us know which ones you need.
 
 <hr>
 <small>
-Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: help.txt,v 1.4 2004-12-30 04:39:24 rtv Exp $
+Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: help.txt,v 1.5 2004-12-30 05:04:59 rtv Exp $
 </small>
 
 */
@@ -136,7 +136,7 @@ to return to your normal user ID afterwards. <br>
 
 <h2>Customized installations</h2>
 
-<p>Stage follows the standard GUN autotools conventions for build and
+<p>Stage follows the standard GNU autotools conventions for build and
 install options. To see a list of all the available configuration
 options, do this:
 
@@ -217,7 +217,6 @@ data.
 versions.
 
 </ol>
-
 
 */
 
