@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.common,v 1.14 2001-09-21 02:04:39 vaughan Exp $ 
+# $Id: Makefile.common,v 1.15 2001-09-26 02:37:43 gerkey Exp $ 
 #
 
 # INSTALL PLAYER BEFORE BUILDING STAGE!
@@ -67,14 +67,39 @@ BIN_DIST_NAME = Stage-$(VERSION)-i386
 ZLIB_FLAGS = -DINCLUDE_ZLIB
 ZLIB_LIBS = -lz
 
+#######################################
+# Compiler selection
+#
+#   normally, you'll use the standard 'g++' and 'gcc' compilers. 
+#
+#   however, if you're running a glibc-2.2-based system (e.g., RedHat 7.x), 
+#   and you want to run the resultant binaries on a glibc-2.1-based system
+#   (e.g., RedHat 6.x), then use the 'i386-glibc21-linux-g++' and
+#   'i386-glibc21-linux-gcc' compilers. note that you must have installed 
+#   the compatibility compiler and library packages (they are included with 
+#   the RedHat 7.x distro):
+#     compat-libs-6.2-3
+#     compat-glibc-6.2-2.1.3.2
+#     compat-egcs-c++-6.2-1.1.2.14
+#     compat-libstdc++-6.2-2.9.0.14
+#     compat-egcs-6.2-1.1.2.14
+CPP = g++
+#CPP = i386-glibc21-linux-g++
+#CC = i386-glibc21-linux-g++
+# need this in order to link properly with X
+#OLDLIBS = -L/usr/i386-glibc21-linux/lib
+
+#CC = gcc
+#CC = i386-glibc21-linux-gcc
+
 ####################### DO NOT CHANGE BELOW HERE #############################
 PLAYER_INC = $(PLAYER_DIR)/include
 PLAYER_LIB = $(PLAYER_DIR)/lib
 
 # Standard tools
 #
-CC = g++
-LINKER = g++
+#CC = g++
+LINKER = $(CC)
 MAKEDEP = makedepend
 CP = cp
 RM = rm
