@@ -21,7 +21,7 @@
  * Desc: A device for getting the true pose of things.
  * Author: Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: truthdevice.cc,v 1.2 2002-11-01 19:12:32 rtv Exp $
+ * CVS info: $Id: truthdevice.cc,v 1.2.4.1 2003-05-09 00:16:46 rtv Exp $
  */
 
 #include "world.hh"
@@ -75,19 +75,26 @@ void CTruthDevice::UpdateConfig()
   if ((len = GetConfig(&client, &config, sizeof(config))) > 0)
   {
     switch (config.subtype)
-    {
+      {
       case PLAYER_TRUTH_GET_POSE:
-
+	
         GetGlobalPose(px, py, pa);
         config.px = htonl((int)(px*1000.0));
         config.py = htonl((int)(py*1000.0));
         config.pa = htonl((int)(NORMALIZE(pa)*180/M_PI));
-
+	
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &config, sizeof(config));
         break;
 
-      case PLAYER_TRUTH_SET_POSE:
 
+      case PLAYER_TRUTH_SET_POSE_ON_ROOT:	
+      case PLAYER_TRUTH_SET_POSE:
+	
+	// if it's to be put on root, reparent this model
+	if( config.subtype == PLAYER_TRUTH_SET_POSE_ON_ROOT )
+	  m_parent_entity->SetParent( m_world->root );
+
+	// in either case, we move the model's pose
         if (len < (int)sizeof(config))
         {
           PRINT_WARN2("unexpected packet len (%d < %d)", len, sizeof(config));
