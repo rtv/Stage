@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.14 $
+//  $Author: vaughan $
+//  $Revision: 1.15 $
 //
 // Usage:
 //  (empty)
@@ -47,11 +47,15 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
   
   m_stage_type = RectRobotType;
 
+  strcpy( m_color_desc, POSITION_COLOR );
+
+
   // set up our sensor response
-  laser_return = LaserNothing;
+  laser_return = LaserTransparent;
   sonar_return = true;
   obstacle_return = true;
   puck_return = true;
+  idar_return = IDARTransparent;
 
   //  m_com_vr = 0.0;
   //m_com_vth = 0;

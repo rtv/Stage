@@ -1,6 +1,6 @@
 // ==================================================================
 // Filename:	raytrace.hh
-// $Id: raytrace.hh,v 1.2 2001-09-04 23:01:13 vaughan Exp $
+// $Id: raytrace.hh,v 1.3 2001-12-20 03:11:46 vaughan Exp $
 // RTV
 // ==================================================================
 
@@ -10,10 +10,14 @@
 
 #include <math.h>
 #include "matrix.hh"
-#include "entity.hh"
+#include "world.hh"
 
 enum LineIteratorMode { PointToPoint=0, PointToBearingRange };
 
+// these classes do not inherit from each other, but they have similar
+// interfaces and use each other extensively
+
+// scans the points along a line
 class CLineIterator
 {
  private:
@@ -54,6 +58,55 @@ class CLineIterator
   
 };
 
+// scans the AREA of a triangle
+class CTriangleAreaIterator
+{
+private:
+  double m_x, m_y;
+  
+  double m_bearing;
+  double m_range_so_far;
+  double m_max_range;
+  double m_angle;
+  double m_skip;
+  
+
+  double m_li_angle;
+
+  double m_ppm;
+
+  CMatrix* m_matrix;
+
+  CLineIterator* li; // we use LineIterators to do the work
+
+ public:
+
+  // an isoceles triangle is specified from it's point, by the bearing
+  // and length of it's left side, and by the angle between the equal
+  // sides. the triangle is scanned from point to base in increasingly
+  // long lines perpendicular to the base. skip give the distance
+  // increment between scan lines.
+  CTriangleAreaIterator( double x, double y, 
+			 double bearing, double range, double angle,
+			 double skip,
+			 double ppm, CMatrix* matrix );
+  
+  ~CTriangleAreaIterator();
+
+  CEntity* GetNextEntity( void );
+
+//    inline void GetPos( double& x, double& y )
+//      {
+//        x = m_x / m_ppm;
+//        y = m_y / m_ppm;
+//      };
+  
+  double GetRange( void );
+
+  //void PrintArray( CEntity** ent ); 
+};
+
+// scans the circumference of a circle
 class CCircleIterator
 {
  private:
@@ -114,9 +167,41 @@ class CRectangleIterator
 
   ~CRectangleIterator( void );
  
-  CEntity* GetNextEntity( void );  
+  CEntity* GetNextEntity( void );   
+  
+  void GetPos( double& x, double& y );
 };
 
+
+// given a pointer to an array of entity pointers, this iterator will
+// return one entity* at a time. when it runs out of entities, it
+// returns null.
+
+class CDatabaseIterator
+{
+
+private:
+  CEntity** database;
+  int index;
+  int len;
+
+public:
+  CDatabaseIterator( CEntity** database, int len )
+  {
+    this->database = database;
+    this->len = len;
+
+    index = 0;
+  };
+
+  CEntity* GetNextEntity( void )
+  {
+    if( index < len )
+      return database[index++];
+    else
+      return (CEntity*)0;
+  }
+};
 
 #endif // _ITERATORS_H
 

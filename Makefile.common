@@ -1,11 +1,14 @@
 #
-# $Id: Makefile.common,v 1.28 2001-11-04 18:35:01 gerkey Exp $ 
+# $Id: Makefile.common,v 1.29 2001-12-20 03:11:46 vaughan Exp $ 
 #
 
 # INSTALL PLAYER BEFORE BUILDING STAGE!
 
 ##############################################################################
 # CONFIGURATION
+
+#HRL = /home/vaughan/LINPHERO/pr_c++/com/hrl/pr
+#HRL_HEADERS = -I$(HRL)/pherobot -I$(HRL)/abstractrobot
 
 ##############################################################################
 # VERSIONS
@@ -31,10 +34,10 @@ PLAYERVERSION = $(VERSION)
 # You can also specify the PLAYER_BASE from the make command line, eg:
 # make -e PLAYER_BASE=~/playerstage/player
 
-PLAYER_BASE = /usr/local/player
-PLAYER_DIR = $(PLAYER_BASE)-$(PLAYERVERSION)
-#PLAYER_BASE = $(HOME)/PS/player
-#PLAYER_DIR = $(PLAYER_BASE)
+#PLAYER_BASE = /usr/local/player
+#PLAYER_DIR = $(PLAYER_BASE)-$(PLAYERVERSION)
+PLAYER_BASE = $(HOME)/PS/player
+PLAYER_DIR = $(PLAYER_BASE)
 
 ##############################################################################
 # Color datbase configuration (required)

@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.42 2001-10-24 19:12:51 vaughan Exp $
+ * $Id: xs.cc,v 1.43 2001-12-20 03:11:47 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -123,6 +123,8 @@ char* CXGui::PlayerNameOf( const player_id_t& ent )
       case PLAYER_SPEECH_CODE: return "Speech"; 
       case PLAYER_TRUTH_CODE: return "Truth"; 
       case PLAYER_GPS_CODE: return "GPS"; 
+      case PLAYER_IDAR_CODE: return "IDAR"; 
+      case PLAYER_DESCARTES_CODE: return "Descartes"; 
       }	 
     return "Unknown"; 
   } 
@@ -153,6 +155,8 @@ char* CXGui::StageNameOf( const xstruth_t& truth )
       case PuckType: return "Puck"; 
       case OccupancyType: return "Occupancy"; 
       case WallType: return "Wall";
+      case IDARType: return "IDAR"; 
+      case DescartesType: return "Descartes"; 
       }	 
     return "Unknown"; 
   } 
@@ -583,7 +587,7 @@ bool CXGui::DownloadEnvironment( void )
   // invert the y axis!
   for( int c=0; c<env->num_pixels; c++ )
     env->pixels[c].y = env->height - env->pixels[c].y;
-
+  
   // make some space for the scaled pixels
   // they get filled in when calling ScaleBackground()
   env->pixels_scaled = new XPoint[ env->num_pixels ];
@@ -928,7 +932,7 @@ void CXGui::HandleIncomingQueue( void )
       xstruth_t truth = truth_map[ pose.stage_id ]; 
 
       RenderFamily( truth ); // undraw it
-      
+        
       // update it
       truth.x = pose.x / 1000.0;
       truth.y = pose.y / 1000.0;
@@ -938,9 +942,9 @@ void CXGui::HandleIncomingQueue( void )
       truth_map[ pose.stage_id ] = truth; // update the database with it
 
       RenderFamily( truth ); // redraw it
-
-      XFlush( display );// reduces flicker
     }
+
+ XSync( display, false );// reduces flicker
 }
 
 
@@ -1002,7 +1006,7 @@ void CXGui::Startup(int argc, char** argv )
   magenta = col.pixel;
   XAllocNamedColor( display, default_cmap, "yellow", &col, &rcol ); 
   yellow = col.pixel;
-  XAllocNamedColor( display, default_cmap, "dark grey", &col, &rcol ); 
+  XAllocNamedColor( display, default_cmap, "grey30", &col, &rcol ); 
   grey = col.pixel;
   
   black = BlackPixel( display, screen );
@@ -1092,7 +1096,7 @@ void CXGui::Startup(int argc, char** argv )
 	 << width << 'x' << height << " ok." << endl;
 #endif
 
-
+    enableIDAR = true;
     enableLaser = true;
     enableSonar = true;
     enableGps = true;
@@ -1251,17 +1255,16 @@ void CXGui::SetDrawMode( int mode )
   XSetFunction( display, gc, mode );
 }
 
- void CXGui::DrawPolygon( DPoint* pts, int numPts )
-   {
-     DPoint end[2];
-     
-     memcpy( &(end[0]), &(pts[0]), sizeof( DPoint ) );
-     memcpy( &(end[1]), &(pts[numPts-1]), sizeof( DPoint ) );
-     
-     DrawLines( pts, numPts ); // draw the lines
-     DrawLines( end, 2 ); // close the end
-   }
- 
+void CXGui::DrawPolygon( DPoint* pts, int numPts )
+{
+  DPoint end[2];
+  
+  memcpy( &(end[0]), &(pts[0]), sizeof( DPoint ) );
+  memcpy( &(end[1]), &(pts[numPts-1]), sizeof( DPoint ) );
+  
+  DrawLines( pts, numPts ); // draw the lines
+  DrawLines( end, 2 ); // close the end
+}
  
 void CXGui::DrawString( double x, double y, char* str, int len )
 { 
@@ -1618,17 +1621,72 @@ void CXGui::HandleCursorKeys( KeySym &key )
 
 void CXGui::Zoom( double ratio )
 {
-  iwidth = (int)( iwidth * ratio );
-  iheight = (int)( iheight * ratio );
-  
-  //if( iwidth < width ) width = iwidth;
-  //if( iheight < height ) height = iheight;
-  //Size();
+  if( (iwidth * ratio) > 40 )// sanity check
 
-  CalcPPM();
-  
-  DrawBackground(); // black backround and draw walls
-  RefreshObjects(); 
+    {
+      iwidth = (int)( iwidth * ratio );
+      iheight = (int)( iheight * ratio );
+      
+      // scale the panning
+      panx = (int)( panx * ratio );
+      pany = (int)( pany * ratio );
+      
+      //printf( "width %d  height %d   iwidth %d  iheight %d\n",
+      //      width, height, iwidth, iheight );
+
+      BoundsCheck();
+      
+      CalcPPM();
+      
+      DrawBackground(); // black backround and draw walls
+      RefreshObjects(); 
+    }
+}
+
+
+void CXGui::Zoom( double ratio, int centerx, int centery )
+{
+  if( (iwidth * ratio) > 40 )// sanity check
+
+    {
+      iwidth = (int)( iwidth * ratio );
+      iheight = (int)( iheight * ratio );
+      
+      // scale the panning
+      panx = (int)( panx * ratio );
+      pany = (int)( pany * ratio );
+      
+      // shift the image
+      panx -= centerx;
+
+      //printf( "width %d  height %d   iwidth %d  iheight %d\n",
+      //      width, height, iwidth, iheight );
+
+
+//        bool size_change = false;
+      
+//        if( iwidth < width )
+//  	{
+//  	  width = iwidth;
+//  	  size_change = true;
+//  	}
+
+//        if( iheight < height )
+//  	{
+//  	  height = iheight;
+//  	  size_change = true;
+//  	}
+
+      
+//        if( size_change ) Size();
+
+      BoundsCheck();
+      
+      CalcPPM();
+      
+      DrawBackground(); // black backround and draw walls
+      RefreshObjects(); 
+    }
 }
 
 void CXGui::StartDragging( XEvent& reportEvent )
@@ -1758,8 +1816,9 @@ void CXGui::HandleButtonPressEvent( XEvent& reportEvent )
 		      NORMALIZE(dragging->th - M_PI/10.0) );
 	}	
       else
-	Zoom( 1.2 );
-
+	{
+	  Zoom( 1.2, reportEvent.xbutton.x, reportEvent.xbutton.y );
+	}
       break;
     case Button5: //cout << "BUTTON 5" << endl;
       if( dragging )
@@ -1768,7 +1827,9 @@ void CXGui::HandleButtonPressEvent( XEvent& reportEvent )
 		      NORMALIZE(dragging->th + M_PI/10.0) );
 	}	  
       else
-	Zoom( 0.8 );
+	{
+	  Zoom( 0.8, reportEvent.xbutton.x, reportEvent.xbutton.y );
+	}      
       break;
       
 
@@ -1968,16 +2029,36 @@ void CXGui::HandleExposeEvent( XEvent &reportEvent )
 }
 
 void CXGui::HandleConfigureEvent( XEvent &reportEvent )
-{  
-  //if( width != reportEvent.xconfigure.width ||
-  //  height != reportEvent.xconfigure.height )
-  //{
+{    
   x = reportEvent.xconfigure.x;
   y = reportEvent.xconfigure.y;
   width = reportEvent.xconfigure.width;
   height = reportEvent.xconfigure.height;
-} 
 
+//    bool scaled = false;
+//    // if the viewport is now larger than the image, we scale the image to fit
+//    if( width > iwidth )
+//      {
+//        iwidth =  reportEvent.xconfigure.width;
+//        scaled = true;
+//      }
+
+//    if( height > iheight )
+//     {
+//       iheight =  reportEvent.xconfigure.height;
+//       scaled = true;
+//     }
+
+//    BoundsCheck();
+  
+//    if( scaled )
+//      {
+//        CalcPPM();
+      
+//        DrawBackground(); // black backround and draw walls
+//        RefreshObjects(); 
+//      } 
+}
 
 void CXGui::HandleMotionEvent( XEvent &reportEvent )
 {
@@ -2044,7 +2125,7 @@ void CXGui::HandlePlayers( void )
 {
   if( num_proxies ) // if we're connected to any players
     {
-      playerClients.Read();
+      playerClients.ReadLatest( 10 );
       
       for( int p=0; p<num_proxies; p++ )
 	if( playerProxies[p]->client->fresh )	 	  
@@ -2068,6 +2149,11 @@ void CXGui::HandlePlayers( void )
 	    case PLAYER_LASERBEACON_CODE: 
   	      ((CGraphicLaserBeaconProxy*)(playerProxies[p]))->Render();
 	      break;
+#ifdef HRL_DEVICES
+	    case PLAYER_IDAR_CODE: 
+  	      ((CGraphicIDARProxy*)(playerProxies[p]))->Render();
+	      break;
+#endif
 	    }
     }
 }
@@ -2136,8 +2222,8 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 	  //cli->SetDataMode( 1 );
 	  
 	  // if successful, attach this client to the multiclient
-	  printf( "\nXS: Starting Player client on %s:%d\n", ent->hostname, ent->id.port );
-	  fflush( 0 );
+	  //printf( "\nXS: Starting Player client on %s:%d\n", ent->hostname, ent->id.port );
+	  //fflush( 0 );
 	  
 	  xstruth_t sibling;
 	  int previous_num_proxies = num_proxies;
@@ -2157,6 +2243,19 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 		    
 		  switch( sibling.id.type )
 		    {
+#ifdef HRL_DEVICES
+		    case PLAYER_IDAR_CODE: 
+		      if( enableIDAR )
+			{
+			  CGraphicIDARProxy* gip = 
+			    new CGraphicIDARProxy(this,sibling.stage_id,
+						  cli,sibling.id.index,'r' );
+			  
+			  graphicProxies[num_proxies] = gip;
+			  playerProxies[num_proxies++] = gip;
+			}
+		      break;
+#endif
 		    case PLAYER_LASER_CODE: 
 		      if( enableLaser )
 			{

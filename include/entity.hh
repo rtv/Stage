@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.26 $
+//  $Author: vaughan $
+//  $Revision: 1.27 $
 //
 // Usage:
 //  (empty)
@@ -44,8 +44,10 @@
 //
 class CWorld;
 
-enum LaserReturn { LaserNothing=0, LaserSomething, 
+enum LaserReturn { LaserTransparent=0, LaserReflect, 
 		   LaserBright1, LaserBright2, LaserBright3, LaserBright4 };
+
+enum IDARReturn { IDARTransparent=0, IDARReflect, IDARReceive };
 
 ///////////////////////////////////////////////////////////////////////////
 // The basic object class
@@ -61,13 +63,17 @@ class CEntity
     StageType m_stage_type; // distinct from the player types found in messages.h
 
     // Sensor return values
-  bool idar_return;
   bool obstacle_return;
   bool sonar_return;  
   bool puck_return;
+  int idar_return;
   int laser_return;
   int channel_return; // -1 is transparent, 0 is opaque, 1 is ACTS Ch.0, etc.
- 
+
+
+  // the full path name of this device in the filesystem
+  char m_device_filename[256]; 
+
     // Destructor
     //
     public: virtual ~CEntity();
@@ -151,7 +157,7 @@ class CEntity
 
     // Pointer to world
     //
-    public: CWorld *m_world;
+    public: static CWorld *m_world;
     
     // Pointer to parent object
     // i.e. the object this object is attached to.
@@ -231,6 +237,8 @@ public: char m_hostname[ HOSTNAME_SIZE ];
 public: bool m_local; 
 
     public: int SharedMemorySize( void );
+
+public: bool CreateDevice();
 
     // Write to the data buffer
     // Returns the number of bytes copied

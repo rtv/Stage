@@ -5,11 +5,16 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.29 2001-11-07 22:50:33 ahoward Exp $
+//  $Id: entity.cc,v 1.30 2001-12-20 03:11:47 vaughan Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
-
-#include <math.h>
+#include <sys/types.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <math.h> 
+#include <unistd.h>
+#include <sys/mman.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,6 +33,10 @@
 // entities use this port until the config file
 // changes global_player_port
 int global_current_player_port = PLAYER_PORTNUM;
+
+// init static member
+CWorld* CEntity::m_world = 0;
+  
 
 ///////////////////////////////////////////////////////////////////////////
 // Minimal constructor
@@ -51,11 +60,12 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
 
     // by default, entities don't show up in any sensors
     // these must be enabled explicitly in each subclass
-    laser_return = LaserNothing;
+    laser_return = LaserTransparent;
     sonar_return = false;
     obstacle_return = false;
     puck_return = false;
     channel_return = -1; // transparent
+    idar_return = IDARReflect;
 
     m_dependent_attached = false;
 
@@ -114,6 +124,8 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
 //
 CEntity::~CEntity()
 {
+  // remove our name in the filesystem
+  unlink( m_device_filename );
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -174,9 +186,9 @@ bool CEntity::Load(int argc, char **argv)
         else if (strcmp(argv[i], "laser") == 0 && i + 1 < argc)
 	  {
             if (strcmp(argv[i + 1], "true") == 0)
-	      laser_return = LaserSomething;
+	      laser_return = LaserReflect;
             else if (strcmp(argv[i + 1], "false") == 0)
-	      laser_return = LaserNothing;
+	      laser_return = LaserTransparent;
             else if (strcmp(argv[i + 1], "bright1") == 0)
 	      laser_return = LaserBright1;
             else if (strcmp(argv[i + 1], "bright2") == 0)
@@ -320,9 +332,9 @@ bool CEntity::Save(int &argc, char **argv)
     argv[argc++] = strdup("laser");    
     switch( laser_return )
       {
-      case LaserNothing: 
+      case LaserTransparent: 
 	argv[argc++] = strdup("false"); break;
-      case LaserSomething: 
+      case LaserReflect: 
 	argv[argc++] = strdup("true"); break;
       case LaserBright1: 
 	argv[argc++] = strdup("bright1"); break;
@@ -330,8 +342,6 @@ bool CEntity::Save(int &argc, char **argv)
 	argv[argc++] = strdup("bright2"); break;
       case LaserBright3: 
 	argv[argc++] = strdup("bright3"); break;
-      case LaserBright4: 
-	argv[argc++] = strdup("bright4"); break;
       }
 	
     return true;
@@ -922,3 +932,74 @@ bool CEntity::MouseMove(RtkUiMouseData *pData)
 }
 
 #endif
+
+
+/////////////////////////////////////////////////////////////////////////
+// -- create the memory map for IPC with Player 
+//
+bool CEntity::CreateDevice( void )
+{
+  // if this is not a player device, we bail right here
+  if( m_player_type == 0 )
+    return true;
+
+  // otherwise, we set up a mmapped file in the tmp filesystem to share
+  // data with player
+
+  size_t mem = SharedMemorySize();
+  
+#ifdef DEBUG
+  cout << "Shared memory allocation: " << mem 
+       << " (" << mem << ")" << endl;
+#endif
+  
+  sprintf( m_device_filename, "%s/%d.%d.%d", 
+	  m_world->m_device_dir,
+	   m_player_port,
+	   m_player_type,
+	   // m_world->StringType( m_stage_type), 
+	   m_player_index );
+
+#ifdef DEBUG
+  printf( "Stage: creating device %s\n", m_device_filename );
+#endif
+
+  int tfd = open( m_device_filename, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR );
+   
+    
+  // make the file the right size
+  if( ftruncate( tfd, mem ) < 0 )
+    {
+      perror( "Failed to set file size" );
+      return false;
+    }
+  
+  caddr_t playerIO = (caddr_t)mmap( NULL, mem, PROT_READ | PROT_WRITE, 
+				    MAP_SHARED, tfd, (off_t) 0);
+  
+  if (playerIO == MAP_FAILED )
+    {
+      perror( "Failed to map memory" );
+      return false;
+    }
+  
+  close( tfd ); // can close fd once mapped
+  
+  // Initialise entire space
+  //
+  memset(playerIO, 0, mem);
+  
+#ifdef DEBUG
+  cout << "Successfully mapped shared memory." << endl;  
+#endif  
+
+
+  // Setup IO for all the objects - MUST DO THIS AFTER MAPPING SHARING MEMORY
+  // each is passed a pointer to the start of its space in shared memory
+  int entityOffset = 0;
+  
+  if( !SetupIOPointers( playerIO + entityOffset  ) )
+    puts( "Stage warning: failed to setup entity IO pointers." );
+     
+  return true;
+}

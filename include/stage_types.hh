@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/stage_types.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.13 $
+//  $Revision: 1.14 $
 //
 // Usage:
 //  (empty)
@@ -108,7 +108,8 @@ AudioType,
 SpeechType,
 TruthType,
 OccupancyType,
-IDARType // HRL's Infrared Data And Ranging turret
+IDARType, // HRL's Infrared Data And Ranging turret
+DescartesType // HRL's customized Descarte robot platform
 };
 
 #endif

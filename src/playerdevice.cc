@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.23 $
+//  $Revision: 1.24 $
 //
 // Usage:
 //  (empty)
@@ -17,8 +17,14 @@
 //  (empty)
 //
 // Known bugs:
-//  - All robots are creating a semaphore with the same key.  This doesnt
-//    appear to be a problem, but should be investigates. ahoward
+// - All robots are creating a semaphore with the same
+//   key.  This doesnt appear to be a problem, but should be
+//   investigates. ahoward 
+// = semaphores are a limited system-wide
+//   resource; we use only one so we can scale. this might have theoretically
+//   slowed us down a bit but in practice Stage is seen to take almost
+//   100% CPU when given it's reigns so it isn't a problem. you can delete
+//   this 'known bug' if you like :) . RTV.
 //
 // Possible enhancements:
 //  (empty)
@@ -60,7 +66,12 @@
 #undef DEBUG
 #undef VERBOSE
 
+// if this is defined, player is not spawned automatically
+// so you can start it yourself externally (in gdb, etc).
 //#define NO_PLAYER_SPAWN
+
+// static init
+pid_t CPlayerDevice::player_pid = 0;
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
@@ -102,10 +113,6 @@ bool CPlayerDevice::SetupIOPointers( char* io )
   if( !CEntity::SetupIOPointers( io ) )
     return false;
   
-    // Startup player
-   //
-  //if (!StartupPlayer( m_player_port )) return false;
-  
   return true;
 }
 
@@ -136,24 +143,16 @@ void CPlayerDevice::Update( double sim_time )
 ///////////////////////////////////////////////////////////////////////////
 // Start player instance
 //
+// simplified this a whole lot when we moved to the /dev model. phew. RTV
+//
 int CPlayerDevice::StartupPlayer(int count)
 {
-  int fds[2];
-  fds[0] = fds[1] = -1;
- 
 #ifdef DEBUG
   cout << "StartupPlayer()" << endl;
 #endif
 
 #ifndef NO_PLAYER_SPAWN
   
-  // we'll pipe the list of ports to Player; create the pipe here
-  if(pipe(fds) == -1)
-  {
-    perror("CPlayerDevice::StartupPlayer(): pipe() failed");
-    return(-1);
-  }
-
   // ----------------------------------------------------------------------
   // fork off a player process to handle robot I/O
   if( (player_pid = fork()) < 0 )
@@ -165,7 +164,7 @@ int CPlayerDevice::StartupPlayer(int count)
   {
     if( player_pid == 0 ) // new child process
     {
-      // pass in the number or ports (they will come in on the pipe)
+      // pass in the number of ports player should find in the IO directory
       char portBuf[32];
       sprintf( portBuf, "%d", (int) count );
 
@@ -174,18 +173,10 @@ int CPlayerDevice::StartupPlayer(int count)
       setpgrp();
       // GPB
 
-      // redirect our standard in
-      if(dup2(fds[0],0) == -1)
-      {
-        perror("CPlayerDevice::StartupPlayer(): dup2() failed");
-        kill(getppid(),SIGINT);
-        exit(-1);
-      }
-
       // we assume Player is in the current path
       if( execlp( "player", "player",
-                  "-ports", portBuf, 
-                  "-stage", m_world->PlayerIOFilename(), 
+                  //"-ports", portBuf, 
+                  "-stage", m_world->DeviceDirectory(), 
                   (strlen(m_world->m_auth_key)) ? "-key" : NULL,
                   (strlen(m_world->m_auth_key)) ? m_world->m_auth_key : NULL,
                   NULL) < 0 )
@@ -213,7 +204,7 @@ int CPlayerDevice::StartupPlayer(int count)
 #ifdef DEBUG
   cout << "StartupPlayer() done" << endl;
 #endif
-    return(fds[1]);
+    return(0);
 }
 
 
@@ -239,6 +230,8 @@ void CPlayerDevice::ShutdownPlayer()
     }
     */
     // GPB
+
+    player_pid = 0; // nullify to prevet this being called again
   }
 
 }

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.25 $
+//  $Author: vaughan $
+//  $Revision: 1.26 $
 //
 // Usage:
 //  (empty)
@@ -31,7 +31,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-
 #define PIDFILENAME "stage.pid"
 
 ///////////////////////////////////////////////////////////////////////////
@@ -45,31 +44,8 @@ char *world_file;
 //
 bool quit = false;
 
-//if this is true, exit() displays usage hints
-extern bool usage; // defined in world_load.cc 
-
-
-
 CWorld *world = 0;
 
-// HACK!
-// this is a double that gets set on SIGUSR1; if "-time <sec>" was given
-// on the cmdline, this starts the clock running 
-double g_clockstarttime = -1;
-void sig_usr1(int signum)
-{
-  g_clockstarttime = world->GetTime();
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Handle quit signals
-//
-void sig_quit(int signum)
-{
-  unlink(PIDFILENAME);
-  
-  quit = true;
-}
 
 void PrintUsage( void )
 {
@@ -90,21 +66,38 @@ void PrintUsage( void )
 	 );
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+// Clean up and quit
+//
 void StageQuit( void )
 {  
-  if( world )
-    { 
-      puts( "\nStage shutdown... " );
-      world->Shutdown();
-      delete world;
-      puts( "...done." );
-    }
+  puts( "\nStage shutdown... " );
   
-  if( usage )
-    PrintUsage();
+  // Stop the world
+  //
+  world->Shutdown();
+  
+  // Destroy the world
+  //
+  delete world;
+
+  unlink(PIDFILENAME);
+   
+  puts( "...done." );
+
+  exit( 0 );
 }
 
-
+///////////////////////////////////////////////////////////////////////////
+// Handle quit signals
+//
+void sig_quit(int signum)
+{
+  printf( "SIGNAL %d\n", signum );
+  
+  quit = true;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -126,20 +119,7 @@ int main(int argc, char **argv)
   // Create the world
   //
   world = new CWorld();
-    
-  // check to see if the world file exists
-  int fd = open( argv[argc-1], O_RDONLY );
-  if( fd < 1 )
-    {
-      perror( "Stage: failed to open configuration file" );
-      PrintUsage();
-      exit( -1 );
-    }
   
-  close( fd );
-
-  printf( "argv[argc-1]: %s\n", argv[ argc-1 ] );
-
   // Load the world - the filename is the last argument
   // this may produce more startup output
   if (!world->Load( argv[ argc-1 ] ))
@@ -166,33 +146,20 @@ int main(int argc, char **argv)
       printf("Stage: failed startup\n");
       StageQuit();
     }
-  
+
   // Register callback for quit (^C,^\) events
-  //
-  signal(SIGINT, sig_quit);
-  signal(SIGQUIT, sig_quit);
-  signal(SIGTERM, sig_quit);
-  signal(SIGHUP, sig_quit);
-
-  signal(SIGUSR1, sig_usr1);
+  // - sig_quit function raises the quit flag 
+  signal(SIGINT, sig_quit );
+  signal(SIGQUIT, sig_quit );
+  signal(SIGTERM, sig_quit );
+  signal(SIGHUP, sig_quit );
+    
+  // the main loop - it'll be interrupted by a signal
+  while( !quit )
+    world->Main();
   
-  // register callback for any call of exit(3) 
-  if( atexit( StageQuit ) == -1 )
-    {
-      printf("Stage: failed to register exit callback\n");
-      StageQuit();
-    }
-  
-  // Wait for a signal
-  //
-  while (!quit)
-    pause();
-  
-  // exit will call the StageQuit callback function
-  exit( 1 );
+  // clean up and exit
+  StageQuit();
 }
-
-
-
 
 

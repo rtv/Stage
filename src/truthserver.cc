@@ -29,8 +29,10 @@
 
 #include "world.hh"
 #include "truthserver.hh"
+
 //extern bool g_log_continue;
 extern CWorld* world;
+
 
 long int g_bytes_output = 0;
 long int g_bytes_input = 0;
@@ -131,7 +133,7 @@ void CWorld::ReadPosePacket( uint32_t num_poses, int con )
   size_t packet_len = sizeof(stage_pose_t) * num_poses;
   
   //printf( "Stage: expecting to read %u poses (%u bytes)\n",
-  //  num_poses, packet_len );
+  //num_poses, packet_len );
   
   // read until we have a all the poses
   int r = 0;
@@ -485,6 +487,7 @@ void CWorld::PoseWrite( void )
  
 void CWorld::SetupPoseServer( void )
 {
+
   m_pose_listen.fd = socket(AF_INET, SOCK_STREAM, 0);
   m_pose_listen.events = POLLIN; // notify me when a connection request happens
 

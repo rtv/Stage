@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.12 $
+//  $Author: vaughan $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  (empty)
@@ -54,12 +54,14 @@ class CPlayerDevice : public CEntity
     public: virtual void Update( double sim_time );
     
     // Start player
-    //
-    // made this public so it can be called from world.cc - BPG
-    // changed this from returning bool to returning int, because now
-    // it returs the fd that is piped into the child player - BPG
-    public: int StartupPlayer(int count);
 
+  // RTV - changed this to be static 'cos we only call it the once
+  // for all playerdevices. we no longer pipe port numbers to player,
+  // as player is smart enough to figure them out from the devices
+  // themselves
+
+public: static int StartupPlayer(int count);
+  
     // Stop player
     //
     private: void ShutdownPlayer();
@@ -71,7 +73,7 @@ class CPlayerDevice : public CEntity
 
   // PID of player process spawned by this object
     //
-    private: pid_t player_pid;
+    private: static pid_t player_pid;
 
 #ifdef INCLUDE_RTK
     

@@ -12,11 +12,14 @@ include ../../Makefile.common
 #
 OBJS =  world.o world_load.o truthserver.o envserver.o image.o \
 	entity.o entityfactory.o playerdevice.o \
-	positiondevice.o omnipositiondevice.o laserdevice.o sonardevice.o miscdevice.o \
+	positiondevice.o omnipositiondevice.o laserdevice.o sonardevice.o \
+	miscdevice.o \
 	ptzdevice.o boxobstacle.o \
 	laserbeacon.o laserbeacondevice.o visiondevice.o visionbeacon.o \
-	puck.o broadcastdevice.o gpsdevice.o gripperdevice.o main.o \
-	matrix.o raytrace.o irdevice.o
+	broadcastdevice.o puck.o gpsdevice.o gripperdevice.o main.o \
+	matrix.o raytrace.o 
+	#irdevice.o descartesdevice.o
+
 
 # choose one of these that suits your build (debug/profile/production)
 
@@ -29,13 +32,14 @@ CCFLAGS = -g3
 
 # Compile flags 
 #
-CCFLAGS += -Wall -DREENTRANT -I../../include -I$(PLAYER_INC) $(ZLIB_FLAGS) 
+CCFLAGS += -Wall -DREENTRANT $(ZLIB_FLAGS) 
+CCFLAGS += -I../../include -I$(PLAYER_INC) $(HRL_HEADERS) 
 CCFLAGS += -DVERSION=\"$(VERSION)\" -DCOLOR_DATABASE=\"$(COLOR_DATABASE)\"
 
 # production/debug link
-LINKFLAGS = -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
+#LINKFLAGS = -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
 # profile link
-#LINKFLAGS = -pg -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
+LINKFLAGS = -pg -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
 
 #.SUFFIXES: .cc .o
 
@@ -64,5 +68,3 @@ clean_dep:
 	${CC} ${CCFLAGS} -c $< -o $@
 
 # Dependancies (make dep)
-
-

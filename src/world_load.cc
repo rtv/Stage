@@ -5,7 +5,7 @@
 // Date: 14 May 2001
 // Desc: Load/save routines & command line processing for the world 
 //
-// $Id: world_load.cc,v 1.28 2001-10-24 19:12:51 vaughan Exp $
+// $Id: world_load.cc,v 1.29 2001-12-20 03:11:47 vaughan Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -13,7 +13,10 @@
 #include "world.hh"
 #include "entityfactory.hh"
 #include "truthserver.hh"
-#include <libgen.h>  // for dirname/#define DEBUG
+#include <libgen.h>  // for dirname(3)
+
+#undef DEBUG
+//#define DEBUG
 
 extern char *world_file;
 bool usage = false;
@@ -47,7 +50,7 @@ static int Tokenize(char *buffer, int bufflen, char **argv, int maxargs)
 //
 bool CWorld::Load(const char *filename)
 {
-  printf( "[World %s]", filename ); fflush( stdout );
+  printf( "[%s]", filename ); fflush( stdout );
    
     char m_current_hostname[ HOSTNAME_SIZE ];
 
@@ -510,7 +513,6 @@ bool CWorld::Save(const char *filename)
     return true;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////
 // Parse the command line
 //
@@ -632,5 +634,9 @@ bool CWorld::ParseCmdline(int argc, char **argv)
     
   return true;
 }
+
+
+
+
 
 

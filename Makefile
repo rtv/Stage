@@ -7,8 +7,8 @@
 #
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
-#  $Author: gerkey $
-#  $Revision: 1.23 $
+#  $Author: vaughan $
+#  $Revision: 1.24 $
 #
 ###########################################################################
 
@@ -21,7 +21,7 @@ include Makefile.common
 
 # truthlog doesn't compile... BPG
 #all: stage xs rtkstage truthlog manager
-all: stage xs rtkstage manager
+all: stage xs manager
 
 stage: 
 	cd src && make stage && cp stage_objs/stage ../bin/

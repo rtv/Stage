@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.14 $
+//  $Author: vaughan $
+//  $Revision: 1.15 $
 //
 // Usage:
 //  (empty)
@@ -43,7 +43,11 @@
 #include "broadcastdevice.hh"
 #include "gripperdevice.hh"
 #include "gpsdevice.hh"
+
+#ifdef HRL_DEVICES
 #include "irdevice.hh"
+#include "descartesdevice.hh"
+#endif
 
 //#include "truthdevice.hh"
 //#include "occupancydevice.hh"
@@ -108,9 +112,14 @@ CEntity* CWorld::CreateObject(const char *type, CEntity *parent)
     
     if (strcmp(type, "broadcast_device") == 0)
       return new CBroadcastDevice(this, parent);
-    
+  
+#ifdef HRL_DEVICES  
     if (strcmp(type, "idar_device") == 0)
       return new CIDARDevice(this, parent);
+
+    if (strcmp(type, "descartes_device") == 0)
+      return new CDescartesDevice(this, parent);
+#endif
 
     // these devices are probably abandonded, replaced by
     // truth and env servers

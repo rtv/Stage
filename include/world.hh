@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.35 $
+//  $Author: vaughan $
+//  $Revision: 1.36 $
 //
 // Usage:
 //  (empty)
@@ -262,8 +262,8 @@ public: bool StartThread();
   // Stop world thread
 public: void StopThread();
   
-  // Thread entry point for the world
-public: static void* Main(void *arg);
+  // main update loop
+public: void Main( void );
 
   // Update everything
 private: void Update();
@@ -322,12 +322,14 @@ private: CBroadcastDevice *m_broadcast[256];
   ////////////////////////////////////////////////////////////////
   // shared memory management for interfacing with Player
 
-private: char tmpName[ 512 ]; // path of mmap node in filesystem
-public: char* PlayerIOFilename( void ){ return tmpName; };
+public: char m_device_dir[ 512 ]; //device  directory name 
+
+private: char clockName[ 512 ]; // path of mmap node in filesystem
+public: char* ClockFilename( void ){ return clockName; };
+public: char* DeviceDirectory( void ){ return m_device_dir; };
   
-private: caddr_t playerIO;  
-private: bool InitSharedMemoryIO( void );
-  // points to a slot at the end of the io buffer where we'll set the time
+private: bool CreateClockDevice( void );
+  // export the time in this buffer
 public: struct timeval* m_time_io;
   
 private: key_t semKey;
@@ -344,7 +346,7 @@ public: char* CWorld::StringType( StageType t );
 private: bool CreateShmemLock();
 
   // Get a pointer to shared mem area
-public: void* GetShmem() {return playerIO;};
+  //public: void* GetShmem() {return playerIO;};
     
   // lock the shared mem area
 public: bool LockShmem( void );

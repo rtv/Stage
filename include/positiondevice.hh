@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/positiondevice.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -55,11 +55,11 @@ class CPositionDevice : public CEntity
 
     // Check to see if the given pose will yield a collision
     //
-    private: bool InCollision(double px, double py, double pth);
+    private: virtual bool InCollision(double px, double py, double pth);
 
     // Render the object in the world rep
     //
-    private: virtual void Map(bool render);
+    protected: virtual void Map(bool render);
 
     // Load the object from an argument list
     //
@@ -73,7 +73,7 @@ class CPositionDevice : public CEntity
     //
     private: double m_last_time;
 
-private: pioneer_shape_t m_shape;
+protected: pioneer_shape_t m_shape;
 public: pioneer_shape_t GetShape( void ){ return m_shape; };
 public: void SetShape( pioneer_shape_t );
 
@@ -88,9 +88,9 @@ public: void SetShape( pioneer_shape_t );
 
     // Odometric pose
     //
-    private: double m_odo_px, m_odo_py, m_odo_pth;
+    protected: double m_odo_px, m_odo_py, m_odo_pth;
 
-    public: unsigned char stall;
+    protected: unsigned char stall;
     public: int Move();
 
 #ifdef INCLUDE_RTK

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/omnipositiondevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.1 $
+//  $Author: vaughan $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -47,7 +47,7 @@ COmniPositionDevice::COmniPositionDevice(CWorld *world, CEntity *parent)
     m_player_type = PLAYER_POSITION_CODE; // from player's messages.h
   
     // set up our sensor response
-    this->laser_return = LaserNothing;
+    this->laser_return = LaserTransparent;
     this->sonar_return = true;
     this->obstacle_return = true;
     this->puck_return = true;

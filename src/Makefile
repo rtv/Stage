@@ -11,9 +11,9 @@ include ../Makefile.common
 # choose one of these that suits your build (debug/profile/production)
 
 # production
-CCFLAGS = -O2 
+#CCFLAGS = -O2 
 # debug
-#CCFLAGS = -g3 
+CCFLAGS = -g3 
 # debug + profile
 #CCFLAGS = -pg -g3 
 
@@ -36,7 +36,7 @@ LINKFLAGS += $(OLDLIBS)
 
 # truthlog doesn't compile... BPG
 #all: stage rtkstage xs truthlog 
-all: stage rtkstage xs 
+all: stage xs manager 
 
 stage:
 	cd stage_objs && make stage
@@ -48,8 +48,9 @@ rtkstage:
 #
 
 xs :CCFLAGS += -I/usr/X11R6/include 
-xs: LINKFLAGS += -L/usr/X11R6/lib -lX11 -L$(PLAYER_LIB) \
-                  -L$(PLAYER_DIR)/client_libs/c++ -lplayerclient
+xs: LINKFLAGS += -L/usr/X11R6/lib -lX11 \
+		-L$(PLAYER_DIR)/client_libs/c++ \
+		 -lplayerclient
 xs : xs.cc render.cc
 	$(CC) xs.cc render.cc $(CCFLAGS) $(LINKFLAGS) -o xs
 
@@ -80,5 +81,3 @@ clean_dep:
 	${CC} ${CCFLAGS} -c $< -o $@
 
 # Dependancies (make dep)
-
-

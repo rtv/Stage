@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.39 $
+//  $Author: vaughan $
+//  $Revision: 1.40 $
 //
 // Usage:
 //  (empty)
@@ -270,11 +270,12 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
         double bearing = s * m_scan_res + m_scan_min;
         double pth = oth + bearing;
         CLineIterator lit( ox, oy, pth, m_max_range, 
-                           m_world->ppm, m_world->matrix, PointToBearingRange );
+                           m_world->ppm, m_world->matrix, 
+			   PointToBearingRange );
 	
         CEntity* ent;
         double range = m_max_range;
-        int intensity = LaserNothing;
+        int intensity = LaserTransparent;
 	
         while( (ent = lit.GetNextEntity()) ) 
         {
@@ -298,6 +299,7 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 	
         // Construct the return value for the laser
         uint16_t v = (uint16_t)(1000.0 * range);
+
         if( ent )
         {
             switch( ent->laser_return )

@@ -1,6 +1,6 @@
 // ==================================================================
 // Filename:	raytrace.cc
-// $Id: raytrace.cc,v 1.3 2001-09-28 21:55:42 gerkey Exp $
+// $Id: raytrace.cc,v 1.4 2001-12-20 03:11:47 vaughan Exp $
 // RTV
 // ==================================================================
 
@@ -163,6 +163,93 @@ void CLineIterator::PrintArray( CEntity** ent )
   //fflush( stdout );
 }
 
+// an isoceles triangle is specified from it's point, by the bearing
+// and length of it's left side, and by the angle between the equal
+// sides. the triangle is scanned from point to base in increasingly
+// long lines perpendicular to the base. skip give the distance
+// increment between scan lines.
+CTriangleAreaIterator::
+CTriangleAreaIterator( double x, double y, 
+		       double bearing, double range, double angle,
+		       double skip,
+		       double ppm, CMatrix* matrix )
+{
+  //printf( "new CTriangleAreaIterator( %.2f, %.2f, %.2f, %.2f, %.2f )\n",
+  //  x, y, bearing, range, angle, skip ); 
+  
+  m_matrix = matrix;
+  m_ppm = ppm;       
+  
+  m_x = x;
+  m_y = y;
+  m_angle = angle;
+
+  m_bearing = bearing;
+
+  m_skip = skip;
+  m_max_range = range;
+  m_range_so_far = 0; 
+
+
+  // the angle of the lines to iterate over is 
+  // perpendicular to the center line of the triangle.
+  m_li_angle = (m_bearing -angle/2.0) - M_PI_2;
+
+  li = 0; // initially null line iterator
+
+  assert( m_skip > 0 );
+}
+
+CTriangleAreaIterator::~CTriangleAreaIterator( void )
+{
+  if( li ) delete li;
+}
+
+CEntity* CTriangleAreaIterator::GetNextEntity( void )
+{
+  CEntity* ent;
+
+  while( m_range_so_far < m_max_range )
+    {
+      // if there's an iterator and it's still working, use it.
+      if( li && (ent = li->GetNextEntity()))
+	return ent;
+      
+      // otherwise we need to create a new iterator
+      // after deleting the old one of course
+      if( li ) delete li; 
+      
+      //printf( "x: %.2f y: %.2f + skip: %.2f = ", m_x, m_y, m_skip );
+
+      // move from the current position down the left edge of the triangle
+      m_x += m_skip * cos(m_bearing);
+      m_y += m_skip * sin(m_bearing);
+
+      //printf( "x: %.2f y: %.2f ", m_x, m_y );
+      
+      m_range_so_far += m_skip;
+      
+      //printf( "range so far: %.2f\n", m_range_so_far );
+    
+      // figure the length of the scan line
+      double li_len = m_range_so_far * sin( m_angle );
+      
+      //printf( "new CLineIterator( %.2f, %.2f, %.2f, %.2f )\n",
+      //      m_x, m_y, m_li_angle, li_len ); 
+      
+
+      li = new CLineIterator( m_x, m_y, m_li_angle, li_len, 
+			      m_ppm, m_matrix, PointToBearingRange );
+    }
+  return 0;
+}
+
+double CTriangleAreaIterator::GetRange( void )
+{
+  // find the height of the triangle so far
+  return( m_range_so_far * cos( m_angle/2.0 ) );
+}
+
 
 CRectangleIterator::CRectangleIterator( double x, double y, double th,
 					double w, double h,  
@@ -217,11 +304,28 @@ CEntity* CRectangleIterator::GetNextEntity( void )
   CEntity* ent = 0;
   
   for( int i=0; i<4; i++ )
-    if( (ent = lits[i]->GetNextEntity() ) != 0 )
-      break;
+    if( (ent = lits[i]->GetNextEntity() ) == 0 )
+      {
+	delete lits[i]; // don't need that line any more
+	lits[i] = 0; // mark it as deleted
+      }
+    else
+      break; // we'll take this entity
   
   return ent;
 }
+
+void CRectangleIterator::GetPos( double& x, double& y )
+{
+  for( int i=0; i<4; i++ )
+    if( lits[i] != 0 ) // find the current line iterator
+      {
+	lits[i]->GetPos( x, y );
+	break;
+      }
+}
+
+
 
 CCircleIterator::CCircleIterator( double x, double y, double r, 
 				  double ppm, CMatrix* matrix )
