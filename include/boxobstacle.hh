@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/boxobstacle.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.1.2.6 $
+//  $Author: vaughan $
+//  $Revision: 1.1.2.7 $
 //
 // Usage:
 //  (empty)
@@ -54,6 +54,12 @@ class CBoxObstacle : public CObject
     // Current pose
     //
     private: double m_map_px, m_map_py, m_map_pth;
+
+#ifdef INCLUDE_XGUI
+    // compose and return the export data structure
+    //
+    ExportData* GetExportData( void );
+#endif
 
 #ifdef INCLUDE_RTK
     

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.1.2.19 $
+//  $Author: vaughan $
+//  $Revision: 1.1.2.20 $
 //
 // Usage:
 //  (empty)
@@ -38,9 +38,13 @@
 #include "rtk_ui.hh"
 #endif
 
+#if INCLUDE_XGUI
+#include "xgui.hh"
+#endif
+
 // forward declaration
 //
-class CWorldWin;
+class CXGui;
 class CObject;
 class CBroadcastDevice;
 
@@ -98,6 +102,10 @@ class CWorld
     // Update everything
     //
     private: void Update();
+
+    // Return the object nearest a given position
+    //
+    public: CObject* NearestObject( double x, double y );
 
     //////////////////////////////////////////////////////////////////////////
     // Time functions
@@ -289,6 +297,16 @@ class CWorld
     private: RtkMsgRouter *m_router;
   
 #endif
+
+#ifdef INCLUDE_XGUI
+public:
+  CXGui* win;
+  Nimage* GetBackgroundImage( void ){ return m_bimg; };
+  Nimage* GetForegroundImage( void ){ return m_img; };
+  Nimage* GetLaserImage( void ){ return m_laser_img; };
+  Nimage* GetVisionImage( void ){ return m_vision_img; };
+#endif
+
 };
 
 #endif

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/object.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.1.2.15 $
+//  $Author: vaughan $
+//  $Revision: 1.1.2.16 $
 //
 // Usage:
 //  (empty)
@@ -29,6 +29,10 @@
 #define OBJECT_HH
 
 #include "stage_types.hh"
+
+#ifdef INCLUDE_XGUI
+#include "xgui.hh"
+#endif
 
 #ifdef INCLUDE_RTK
 #include "rtk_ui.hh"
@@ -128,7 +132,30 @@ class CObject
     // Object pose in local cs (ie relative to parent)
     //
     private: double m_lx, m_ly, m_lth;
+<<<<<<< object.hh
 
+
+#ifdef INCLUDE_XGUI
+
+    // struct that holds data for external GUI rendering
+    //
+    protected: ExportData exp;
+  //protected: ExportData oldexp;
+   
+    // compose and return the export data structure
+    //
+    public: virtual ExportData* ImportExportData( const ImportData* imp ); 
+  //public: virtual void ImportData( ImportData* data ); 
+
+    // return the last export data structure
+    //
+    //public: ExportData* GetLastExportData( void ){ return oldexp; }; 
+
+    // enable/disable export subscription
+    protected: bool exporting;
+    public: void Subscribe( void ){ exporting = true; };
+    public: void UnSubscribe( void ){ exporting = false; };
+#endif
     // Object color description (for display)
     //
     private: char m_color_desc[128];

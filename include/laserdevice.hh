@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.9.2.11 $
+//  $Author: vaughan $
+//  $Revision: 1.9.2.12 $
 //
 // Usage:
 //  (empty)
@@ -28,7 +28,6 @@
 #define LASERDEVICE_HH
 
 #include "playerdevice.hh"
-
 
 class CLaserDevice : public CPlayerDevice
 {
@@ -76,6 +75,16 @@ class CLaserDevice : public CPlayerDevice
     // The laser's last mapped pose
     //
     private: double m_map_px, m_map_py, m_map_pth;
+
+#ifdef INCLUDE_XGUI
+    // draw/undraw in X gui
+    //
+    public: ExportData* GetExportData( void );
+
+  // storage for the laser hit points
+    private: DPoint hitPts[512];
+    private: int hitCount;
+#endif
 
 #ifdef INCLUDE_RTK
     
