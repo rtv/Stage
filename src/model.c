@@ -74,8 +74,10 @@ stg_model_t* model_create(  stg_world_t* world,
   mod->laser_config.pose.x = 0;
   mod->laser_config.pose.y = 0;
   mod->laser_config.pose.a = 0;
-  mod->laser_config.size.x = 0.15;
-  mod->laser_config.size.y = 0.15;
+  //mod->laser_config.size.x = 0.15;
+  //mod->laser_config.size.y = 0.15;
+  mod->laser_config.size.x = 0.0; // invisibly small (so it's not rendered) by default
+  mod->laser_config.size.y = 0.0;
   				 
   mod->laser_return = LaserVisible;
 

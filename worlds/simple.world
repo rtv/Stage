@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: simple.world,v 1.20 2004-04-23 06:58:53 rtv Exp $
+# CVS: $Id: simple.world,v 1.21 2004-04-23 07:21:08 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 #
@@ -9,28 +9,17 @@ include "pioneer.inc"
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 #size [120 45]
 #bitmap "worlds/hospital.png"
 
-size [20 20]
-bitmap "worlds/autolab.png"
+#size [20 20]
+#bitmap "worlds/autolab.png"
 
 
-#size [10 10]
+size [10 10]
 
 # load a bitmapped environment from a file
-#bitmap "worlds/cave.png" 
+bitmap "worlds/cave.png" 
 
 
   # GUI settings
@@ -55,7 +44,7 @@ bitmap "worlds/autolab.png"
   (
     name "budgie"	
     size [2.0 1.0] 
-    pose [6.249 2.245 -22183.695]
+    pose [6.539 2.908 -23815.273]
     velocity [0 0 -20]
     nose 1
 
@@ -63,7 +52,7 @@ bitmap "worlds/autolab.png"
     color "blue"
   )
 
-pioneer2dx( name "r0" pose [8.478 6.238 242.408] velocity [ 0.2 0.02 5 ] )
+pioneer2dx( name "r0" pose [2.628 2.955 129.500] velocity [ 0.2 0.02 5 ] )
 pioneer2dx( name "r1" pose [1.449 3.189 -20.084] )
 #pioneer2dx( name "r2" pose [1.449 3.189 -20.084] )
 #pioneer2dx( name "r3" pose [1.449 3.189 -20.084] )
@@ -75,4 +64,4 @@ pioneer2dx( name "r1" pose [1.449 3.189 -20.084] )
 #pioneer2dx( name "r9" pose [1.449 3.189 -20.084] )
 
 
-#model( name "foo" pose [1.000 1.000 0.000] )
+model( name "foo" pose [1.000 1.000 0.000] )
