@@ -21,7 +21,7 @@
  * Desc: Gnome GUI world components (all methods begin with 'Gui')
  * Author: Richard Vaughan
  * Date: 7 Dec 2000
- * CVS info: $Id: gnomegui.cc,v 1.8 2002-09-26 02:24:39 rtv Exp $
+ * CVS info: $Id: gnomegui.cc,v 1.9 2002-09-26 07:10:23 rtv Exp $
  */
 
 
@@ -43,6 +43,9 @@
 #include "world.hh"
 #include "gnomegui.hh"
 #include "playerdevice.hh"
+
+// include the logo XPM
+#include "stage.xpm"
 
 const double select_range = 0.6;
 
@@ -67,8 +70,6 @@ const char** stage_documenters = NULL;
 const char* stage_translators = NULL;
 const char* stage_comments = 
 "A robot device simulator\n\nhttp://playerstage.sourceforge.net\n\n\"\"All the World's a stage,\nand all the men and women merely players\"\n (Shakespeare - As You Like It) ";
-
-GdkPixbuf* stage_logo_pixbuf = NULL;
 
 
 // MENU DEFINITIONS ////////////////////////////////////////////////////////////////////////////
@@ -134,6 +135,13 @@ static GnomeUIInfo toolbar [] = {
 
 void CWorld::GuiAboutBox(GtkWidget *widget, gpointer data)                   
 {                       
+  GdkPixbuf* logo = NULL;
+
+  assert( logo = gdk_pixbuf_new_from_xpm_data( (const char**)stage_xpm ) );
+  
+  //gdk_pixbuf_new_from_file( "/home/vaughan/PS/stage/stage.jpg", NULL );
+  //assert( logo );
+
   GtkWidget* box = gnome_about_new( stage_name,                
 				    VERSION,
 				    stage_copyright,
@@ -141,7 +149,7 @@ void CWorld::GuiAboutBox(GtkWidget *widget, gpointer data)
 				    stage_authors,
 				    stage_documenters,
 				    stage_translators,
-				    stage_logo_pixbuf );
+				    logo );
   gtk_widget_show(box);           
 } 
 
@@ -173,8 +181,6 @@ void CWorld::GuiStartup( void )
   gnome_appbar_set_default(  this->g_appbar, "No selection" );
   gtk_progress_bar_set_text( gnome_appbar_get_progress( this->g_appbar ), "time" );
   gnome_app_set_statusbar(GNOME_APP(this->g_app), GTK_WIDGET(this->g_appbar));
-  
-  
   gnome_app_create_toolbar(GNOME_APP(this->g_app), toolbar);
 
   // add menu hints to appbar
@@ -818,7 +824,6 @@ void CEntity::GuiStatus( void )
 		   x, y, th, 
 		    this->stage_id,
 		    this->stage_type ) );
-	  
   
   assert( this->m_world->g_appbar );
   gnome_appbar_set_status(  this->m_world->g_appbar, buf );  
