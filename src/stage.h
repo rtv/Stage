@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.37 2004-05-24 04:18:53 rtv Exp $
+ * CVS: $Id: stage.h,v 1.38 2004-05-25 01:28:25 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -166,9 +166,12 @@ typedef uint16_t stg_msg_type_t;
 #define STG_MSG_CLIENT_CYCLEEND         (STG_MSG_CLIENT | 5)
 
 // this is sent in a request to specify the kind of reply required
-#define STG_RESPONSE_NONE 0
-#define STG_RESPONSE_ACK 1
-#define STG_RESPONSE_REPLY 2
+typedef enum 
+{
+  STG_RESPONSE_NONE = 0,
+  STG_RESPONSE_ACK,
+  STG_RESPONSE_REPLY
+} stg_response_t;
 
    // TESTING
 #define ACK     0
@@ -184,14 +187,27 @@ typedef uint16_t stg_msg_type_t;
 #define RESUME
 #define INTERVAL
 
-typedef double stg_time_t;
 
-
+// Basic self-describing measurement types. All packets with real
+// measurements are specified in these terms so changing types here
+// should work throughout the code If you change these, be sure to
+// change the byte-ordering macros below accordingly.
 typedef int stg_id_t;
+typedef double stg_meters_t;
+typedef double stg_radians_t;
+typedef double stg_seconds_t;
+ 
+#define HTON_M(m) htonl(m)   // byte ordering for METERS
+#define NTOH_M(m) ntohl(m)
+#define HTON_RAD(r) htonl(r) // byte ordering for RADIANS
+#define NTOH_RAD(r) ntohl(r)
+#define HTON_SEC(s) htonl(s) // byte ordering for SECONDS
+#define NTOH_SEC(s) ntohl(s)
+
 
 typedef struct 
 {
-  double x, y;
+  stg_meters_t x, y;
 } stg_size_t;
    
 // each message in a packet starts with a standard message
@@ -200,8 +216,8 @@ typedef struct
 {
   stg_msg_type_t type;
   size_t payload_len;
-  double timestamp;
-  int response; // desired response: one of
+  stg_seconds_t timestamp;
+  stg_response_t response; // desired response: one of
 			  // STG_RESPONSE_NONE/ _ACK /_REPLY
   char payload[0]; // named access to the end of the struct
 } stg_msg_t;
@@ -211,7 +227,7 @@ typedef struct
   stg_id_t world;
   stg_id_t model;
   stg_id_t prop;
-  double timestamp; // the time at which this property was filled
+  stg_seconds_t timestamp; // the time at which this property was filled
   size_t datalen; // data size
   char data[]; // the data follows
 } stg_prop_t;
@@ -219,7 +235,7 @@ typedef struct
 typedef struct
 {
   stg_id_t world;
-  double simtime;
+  stg_seconds_t simtime;
 } stg_clock_t;
 
 typedef struct
@@ -227,7 +243,7 @@ typedef struct
   stg_id_t world;
   stg_id_t model;
   stg_id_t prop;
-  stg_time_t interval; // requested time between updates in seconds
+  stg_seconds_t interval; // requested time between updates in seconds
 } stg_sub_t;
 
 typedef struct
@@ -252,8 +268,8 @@ typedef struct
 typedef struct
 {
   char token[ STG_TOKEN_MAX ];
-  stg_time_t interval_sim;
-  stg_time_t interval_real;
+  stg_seconds_t interval_sim;
+  stg_seconds_t interval_real;
   int ppm;
   //stg_size_t size;
 } stg_createworld_t;
@@ -313,7 +329,7 @@ stg_color_t stg_lookup_color(const char *name);
 // used for specifying 3 axis positions
 typedef struct
 {
-  double x, y, a;
+  stg_meters_t x, y, a;
 } stg_pose_t;
 
 typedef struct
@@ -343,12 +359,12 @@ typedef stg_pose_t stg_velocity_t;
 #define STG_LIGHT_ON UINT_MAX
 #define STG_LIGHT_OFF 0
 
-typedef int stg_interval_ms_t;
+//typedef int stg_interval_ms_t;
 
 typedef struct
 {
   int enable;
-  stg_interval_ms_t period_ms;
+  stg_seconds_t period;
 } stg_blinkenlight_t;
 
 // GRIPPER ------------------------------------------------------------
@@ -386,9 +402,9 @@ void stg_los_msg_print( stg_los_msg_t* msg );
 typedef struct
 {
   stg_id_t id;
-  double range;
-  double bearing;
-  double orientation;
+  stg_meters_t range;
+  stg_radians_t bearing;
+  stg_radians_t orientation;
   stg_size_t size;
 } stg_neighbor_t;
 
@@ -396,8 +412,7 @@ typedef struct
 
 typedef struct
 {
-  double min;
-  double max;
+  stg_meters_t min, max;
 } stg_bounds_t;
 
 typedef struct
@@ -405,12 +420,12 @@ typedef struct
   stg_pose_t pose;
   stg_size_t size;
   stg_bounds_t bounds_range;
-  double fov;
+  stg_radians_t fov;
 } stg_ranger_config_t;
 
 typedef struct
 {
-  double range;
+  stg_meters_t range;
   //double error;
 } stg_ranger_sample_t;
 
@@ -419,18 +434,20 @@ typedef struct
 typedef struct
 {
   //int toplx, toply, toprx, topry, botlx, botly, botrx, botry;
-  double x, y, w, h;
+  stg_meters_t x, y, w, h;
 } stg_rect_t;
 
 typedef struct
 {
-  double x, y, a, w, h;
+  stg_meters_t x, y;
+  stg_radians_t a;
+  stg_meters_t w, h;
 } stg_rotrect_t; // rotated rectangle
 
 // specify a line from (x1,y1) to (x2,y2), all in meters
 typedef struct
 {
-  double x1, y1, x2, y2;
+  stg_meters_t x1, y1, x2, y2;
 } stg_line_t;
 
 typedef struct
@@ -440,7 +457,7 @@ typedef struct
 
 typedef struct
 {
-  double x, y;
+  stg_meters_t x, y;
 } stg_point_t;
 
 // MOVEMASK ---------------------------------------------------------
@@ -486,9 +503,9 @@ typedef struct
 
 typedef struct
 {
-  double fov;
-  double range_max;
-  double range_min;
+  stg_radians_t fov;
+  stg_meters_t range_max;
+  stg_meters_t range_min;
   int samples;
 } stg_laser_config_t;
 
@@ -515,7 +532,7 @@ void stg_scale_lines( stg_line_t* lines, int num, double xscale, double yscale )
 void stg_translate_lines( stg_line_t* lines, int num, double xtrans, double ytrans );
 
 // returns the real (wall-clock) time in seconds
-stg_time_t stg_timenow( void );
+stg_seconds_t stg_timenow( void );
 
 // operations on properties -------------------------------------------------
 
@@ -722,8 +739,8 @@ typedef struct
   stg_id_t id_server; // server-side id
   stg_token_t* token;  
   double ppm;
-  double interval_sim;
-  double interval_real;
+  stg_seconds_t interval_sim;
+  stg_seconds_t interval_real;
   
   int section; // worldfile index
   
@@ -889,7 +906,6 @@ stg_model_t* stg_client_get_model_serverside( stg_client_t* cli, stg_id_t wid, s
   #define NORMALIZE(z) atan2(sin(z), cos(z))
 #endif
 
-#define ASSERT(m) assert(m)
 
 // Error macros
 #define PRINT_ERR(m) printf( "\033[41merr\033[0m: "m" (%s %s)\n", __FILE__, __FUNCTION__)

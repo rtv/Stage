@@ -65,7 +65,7 @@ void world_update( world_t* world )
     return;
 
   //{
-      stg_time_t timenow = stg_timenow();
+      stg_seconds_t timenow = stg_timenow();
       
       //PRINT_DEBUG5( "timenow %.4f last update %.4f interval %.4f diff %.4f sim_time %.4f", 
       //	timenow, world->wall_last_update, world->wall_interval,  

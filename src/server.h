@@ -12,7 +12,7 @@ typedef struct
   int port;
   
   //struct timeval start_time;
-  stg_time_t start_time;
+  stg_seconds_t start_time;
 
   int quit; // set this to exit the server cleanly
 

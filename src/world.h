@@ -17,12 +17,12 @@ typedef struct _world
 
    server_t* server;
 
-   stg_time_t sim_time; // the current time in this world
-   stg_time_t sim_interval; // this much simulated time elapses each step.
+   stg_seconds_t sim_time; // the current time in this world
+   stg_seconds_t sim_interval; // this much simulated time elapses each step.
    
    double wall_interval; // real-time interval between updates -
 			      // set this to zero for 'as fast as possible'
-   stg_time_t wall_last_update; // the wall-clock time of the last update
+   stg_seconds_t wall_last_update; // the wall-clock time of the last update
 
    double ppm; // the resolution of the world model in pixels per meter
 

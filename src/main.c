@@ -89,6 +89,9 @@ int install_signal_catchers( void )
 
 int main( int argc, char* argv[] )
 {
+  printf( "double %u float %u int %d\n",
+	  sizeof(double), sizeof(float), sizeof(int) );
+
   printf( "%s ", STARTMESSAGE ); fflush(stdout);
 
   int server_port = STG_DEFAULT_SERVER_PORT;

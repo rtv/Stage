@@ -280,11 +280,11 @@ stg_msg_t* stg_read_msg( int fd )
 }
 */
 
-stg_time_t stg_timenow( void )
+stg_seconds_t stg_timenow( void )
 {
   struct timeval tv;
   gettimeofday( &tv, NULL );
-  return( (stg_time_t)((double)tv.tv_sec + ((double)tv.tv_usec / 1e6 )) );
+  return( (stg_seconds_t)((double)tv.tv_sec + ((double)tv.tv_usec / 1e6 )) );
 }
 
 
