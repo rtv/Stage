@@ -169,7 +169,7 @@ int main(int argc, char **argv)
 		  
 		  // foward the packet to the other servers 
 		  for(int j=0; j<stages; j++)
-		    if( j != i ) 
+		    if( j != i || truth.echo_request ) 
 		      v = write( servers[j].fd, &truth, sizeof(truth) );
 		}
 	      else
