@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xs.hh,v 1.10 2001-09-23 03:39:51 vaughan Exp $
+ * $Id: xs.hh,v 1.11 2001-09-26 02:53:00 vaughan Exp $
  ************************************************************************/
 
 #ifndef _WIN_H
@@ -130,7 +130,7 @@ public:
     return (((r << 8) | g) << 8) | b;
   };
 
-  bool PoseFromId( int port, int device, int index, 
+  bool PoseFromId( char* host, int port, int device, int index, 
 		   double& x, double& y, double& th, unsigned long& col );
     
   void HandlePlayers( void );
