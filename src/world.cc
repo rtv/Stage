@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.4.2.39 $
+//  $Revision: 1.4.2.40 $
 //
 // Usage:
 //  (empty)
@@ -28,6 +28,7 @@
 #include <sys/time.h>
 #include <signal.h>
 #include <math.h>
+#include <iostream.h>
 #include "stage.h"
 #include "world.hh"
 
