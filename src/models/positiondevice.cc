@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.2 2002-11-01 19:12:32 rtv Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.2.2.1 2002-12-04 03:30:08 rtv Exp $
  */
 
 //#define DEBUG
@@ -29,6 +29,28 @@
 #include <math.h>
 #include "world.hh"
 #include "positiondevice.hh"
+
+// MACROS for packing Player buffers (borrowed from libplayerpacket)
+
+// convert meters to Player mm in NBO in various sizes
+#define MM_32(A)  (htonl((int32_t)(A * 1000.0)))
+#define MM_16(A)  (htons((int16_t)(A * 1000.0)))
+#define MM_U16(A) (htons((uint16_t)(A * 1000.0)))
+
+// convert mm of various sizes in NBO to local meters
+#define M_32(A)  ((int)ntohl((int32_t)A) / 1000.0)
+#define M_16(A)  ((int)ntohs((int16_t)A) / 1000.0)
+#define M_U16(A) ((unsigned short)ntohs((uint16_t)A) / 1000.0)
+
+// convert local radians to Player degrees in various sizes
+#define Deg_32(A) (htonl((int32_t)(RTOD(A))))
+#define Deg_16(A) (htons((int16_t)(RTOD(A))))
+#define Deg_U16(A) (htons((uint16_t)(RTOD(A))))
+
+// convert Player degrees in various sizes to local radians
+#define Rad_32(A) (DTOR((int)ntohl((int32_t)A)))
+#define Rad_16(A) (DTOR((short)ntohs((int16_t)A)))
+#define Rad_U16(A) (DTOR((unsigned short)ntohs((uint16_t)A)))
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -188,32 +210,41 @@ void CPositionDevice::UpdateConfig()
     len = GetConfig(&client, buffer, sizeof(buffer));
     if (len <= 0)
       break;
-
+    
     switch (buffer[0])
-    {
+      {
       case PLAYER_POSITION_MOTOR_POWER_REQ:
         // motor state change request 
         // 1 = enable motors
         // 0 = disable motors
         // (default)
         // CONFIG NOT IMPLEMENTED
+	puts( "Warning: positiondevice motor power request not implemented");
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
         break;
-
+	
       case PLAYER_POSITION_VELOCITY_MODE_REQ:
         // velocity control mode:
         //   0 = direct wheel velocity control (default)
         //   1 = separate translational and rotational control
         // CONFIG NOT IMPLEMENTED
+	puts( "Warning: positiondevice velocity mode request not implemented");
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
         break;
-
+	
       case PLAYER_POSITION_RESET_ODOM_REQ:
-        // reset position to 0,0,0: ignore value
+	// reset position to 0,0,0: ignore value
         this->odo_px = this->odo_py = this->odo_pth = 0.0;
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
         break;
-
+	
+      case PLAYER_POSITION_SET_ODOM_REQ:
+	// set my odometry estimate to the values in the packet
+	// CONFIG NOT IMPLEMENTED
+	puts( "Warning: cpositiondevice set odometry request not implemented");
+	PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
+	break;
+	
       case PLAYER_POSITION_GET_GEOM_REQ:
         // Return the robot geometry
         geom.pose[0] = htons((short) (this->origin_x * 1000));
@@ -223,12 +254,12 @@ void CPositionDevice::UpdateConfig()
         geom.size[1] = htons((short) (this->size_y * 1000));
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &geom, sizeof(geom));
         break;
-
+	
       default:
         PRINT_WARN1("got unknown config request \"%c\"\n", buffer[0]);
         PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
         break;
-    }
+      }
   }
 }
 
@@ -239,14 +270,18 @@ void CPositionDevice::UpdateCommand()
 {
   if (GetCommand(&this->cmd, sizeof(this->cmd)) == sizeof(this->cmd))
   {
-    double fv = (int) ntohl(this->cmd.xspeed);
-    double fw = (int) ntohl(this->cmd.yawspeed);
+    // this device only uses x and theta velocities and ignores
+    // everything else
+    this->com_vr = M_32(this->cmd.xspeed);
+    this->com_vth = Rad_32(this->cmd.yawspeed);
+    //this->com_vth = (int)ntohl(this->cmd.yawspeed);
+    
+    printf( "vr %.2f vth %.2f\n", com_vr, com_vth );
 
-    // Store commanded speed
-    // Linear is in m/s
-    // Angular is in radians/sec
-    this->com_vr = fv / 1000;
-    this->com_vth = DTOR(fw);
+    // normalize yaw +-PI
+    //this->com_vth = atan2(sin(this->com_vth), cos(this->com_vth));
+
+    //printf( "vr %.2f vth %.2f * \n", com_vr, com_vth );
 
     // Set our x,y,th velocity components so that other entities (like pucks)
     // can get at them.
@@ -258,32 +293,20 @@ void CPositionDevice::UpdateCommand()
 ///////////////////////////////////////////////////////////////////////////
 // Compose data to send back to client
 void CPositionDevice::UpdateData()
-{
-  // Compute odometric pose
-  // Convert mm and degrees (0 - 360)
-  double px = this->odo_px * 1000.0;
-  double py = this->odo_py * 1000.0;
-  double pth = RTOD(fmod(this->odo_pth + TWOPI, TWOPI));
-
-  // Get actual global pose
-  double gx, gy, gth;
-  GetGlobalPose(gx, gy, gth);
-    
-  // normalized compass heading
-  double compass = NORMALIZE(gth);
-  if (compass < 0)
-    compass += TWOPI;
-  
+{ 
+  // normalize yaw 0-2PI
+ 
   // Construct the data packet
   // Basically just changes byte orders and some units
-  this->data.xpos = htonl((int) px);
-  this->data.ypos = htonl((int) py);
-  this->data.yaw = htons((unsigned short) pth);
+  this->data.xpos = MM_32(this->odo_px);
+  this->data.ypos = MM_32(this->odo_py);
+  this->data.yaw = Deg_32( fmod( this->odo_pth + TWOPI, TWOPI ) );
 
-  this->data.xspeed = htons((unsigned short) (this->com_vr * 1000.0));
-  this->data.yawspeed = htons((short) RTOD(this->com_vth));  
-  //this->data.compass = htons((unsigned short)(RTOD(compass)));
-  this->data.stall = this->stall;
+  this->data.xspeed = MM_32(this->com_vr);
+  this->data.yspeed = MM_32(0); // this device can't move sideways
+  this->data.yawspeed = Deg_32( fmod( this->com_vth + TWOPI, TWOPI) );  
+  
+  this->data.stall =  (uint8_t)(this->stall ? 1 : 0 );  
 
   PutData(&this->data, sizeof(this->data));     
 }
@@ -299,10 +322,10 @@ void CPositionDevice::RtkStartup()
   CPlayerEntity::RtkStartup();
   
   // add a 'nose line' indicating forward to the entity's normal
-  // rectangle or circle. draw from the center of rotation to the front.
+  // rectangle or circle. draw from the center to the front.
   rtk_fig_line( this->fig, 
-		this->origin_x, this->origin_y, 
-		this->size_x/2.0, this->origin_y );
+		0, 0, 
+		this->size_x/2.0 + this->origin_x, this->origin_y );
 }
 
 
