@@ -41,7 +41,7 @@ int test_getdata( model_t* mod, void** data, size_t* len )
   *data = mod->data;
   *len = mod->data_len;
 
-  printf( "data is %s\n", *data );
+  //printf( "data is %s\n", *data );
 
   return 0; //ok
 }

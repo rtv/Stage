@@ -97,16 +97,8 @@ int subscription_update( subscription_t* sub )
       void* data = NULL;
       size_t len = 0;
       
-      // test new stuff
-      // model_getdata( mod, &data, &len );
-      
-
       switch( sub->target.prop )
 	{
-	case STG_PROP_DATA: 
-	  assert( model_getdata( mod, &data, &len ) == 0 );
-	  break;
-	    
 	default:
 	  if( model_get_prop( mod, sub->target.prop, &data, &len ) )      
 	    PRINT_WARN2( "failed to service subscription for property %d(%s)",

@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <math.h>
 
-//#define DEBUG
+#define DEBUG
 //#undef DEBUG
 
 #include "stage.h"
@@ -48,9 +48,6 @@ model_t* model_create(  world_t* world,
   mod->parent = NULL;//parent; // TODO - fix parent stuff from here
 		     //onwards - mainly geometry for matrix rendering
 
-  // models store data in here, indexed by property id
-  mod->props = g_hash_table_new_full( g_int_hash, g_int_equal, NULL, prop_free_cb );
-  
   mod->type = type;
 
   mod->data = NULL;
@@ -110,10 +107,12 @@ model_t* model_create(  world_t* world,
   stg_normalize_lines( alines, 4 );
   stg_scale_lines( alines, 4, mod->geom.size.x, mod->geom.size.y );
   stg_translate_lines( alines, 4, -mod->geom.size.x/2.0, -mod->geom.size.y/2.0 );  
-
+  
   mod->lines_count = 4;
-  assert( mod->lines = malloc( mod->lines_count * sizeof(stg_line_t)) );
-
+  size_t lines_len = mod->lines_count * sizeof(stg_line_t);
+  assert( mod->lines = malloc( lines_len ) );
+  memcpy( mod->lines, alines, lines_len );
+  
   memset(&mod->energy_config,0,sizeof(mod->energy_config));
   mod->energy_config.capacity = STG_DEFAULT_ENERGY_CAPACITY;
   mod->energy_config.give_rate = STG_DEFAULT_ENERGY_GIVERATE;
@@ -145,9 +144,6 @@ void model_destroy( model_t* mod )
   gui_model_destroy( mod );
   
   if( mod->token ) free( mod->token );
-
-  if(mod->props) g_hash_table_destroy( mod->props );
-
   free( mod );
 }
 
@@ -157,21 +153,6 @@ void model_destroy_cb( gpointer mod )
   model_destroy( (model_t*)mod );
 }
 
-
-// sets [result] to the pose of [p2] in [p1]'s coordinate system
-void pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )
-{
-  double cosa = cos(p1->a);
-  double sina = sin(p1->a);
-  
-  double tx = p1->x + p2->x * cosa - p2->y * sina;
-  double ty = p1->y + p2->x * sina + p2->y * cosa;
-  double ta = p1->a + p2->a;
-  
-  result->x = tx;
-  result->y = ty;
-  result->a = ta;
-}
 
 rtk_fig_t* model_prop_fig_create( model_t* mod, 
 				  rtk_fig_t* array[],
@@ -202,7 +183,7 @@ void model_global_pose( model_t* mod, stg_pose_t* pose )
 
   //memset( &origin, 0, sizeof(origin) );
     
-  //pose_sum( pose, &glob, &mod->pose );
+  //stg_pose_sum( pose, &glob, &mod->pose );
 
   stg_pose_t* mypose = model_get_pose( mod );
   
@@ -214,13 +195,13 @@ void model_global_pose( model_t* mod, stg_pose_t* pose )
 void model_local_to_global( model_t* mod, stg_pose_t* pose )
 {  
   stg_pose_t origin;  
-  //pose_sum( &origin, &mod->pose, &mod->origin );
+  //stg_pose_sum( &origin, &mod->pose, &mod->origin );
   model_global_pose( mod, &origin );
   
   stg_geom_t* geom = model_get_geom(mod); 
 
-  pose_sum( &origin, &origin, &geom->pose );
-  pose_sum( pose, &origin, pose );
+  stg_pose_sum( &origin, &origin, &geom->pose );
+  stg_pose_sum( pose, &origin, pose );
 }
 
 void model_global_rect( model_t* mod, stg_rotrect_t* glob, stg_rotrect_t* loc )
@@ -375,38 +356,91 @@ void model_unsubscribe( model_t* mod, stg_id_t pid )
 int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
 {
   PRINT_DEBUG1( "default get method mod %d", mod->id );
-
-  stg_property_t* prop = NULL;
-  if( prop )
+  
+  switch( pid )
     {
-      PRINT_DEBUG3( "data found for model %d property %d(%s)",
-		    mod->id, pid, stg_property_string(pid) );
+    case STG_PROP_TIME:
+      *data = (void*)&mod->world->sim_time;
+      *len = sizeof(mod->world->sim_time);
+      break;
+    case STG_PROP_DATA: 
+      assert( model_get_data( mod, data, len ) == 0 );
+      break;
+    case STG_PROP_COMMAND: 
+      assert( model_get_command( mod, data, len ) == 0 );
+      break;
+    case STG_PROP_CONFIG: 
+      assert( model_get_config( mod, data, len ) == 0 );
+      break;
       
-      *data = prop->data;
-      *len = prop->len;
+    default:
+      PRINT_WARN4( "model %d(%s) unhandled property get %d(%s)",
+		   mod->id, mod->token, pid, stg_property_string(pid)); 
     }
-  else
-    {
-      PRINT_WARN3( "no data available for model %d property %d(%s)",
-		   mod->id, pid, stg_property_string(pid) );
-      *data = NULL;
-      *len = 0;
-    }
-
-  return 0; //ok
+  
+  if( *len == 0 )
+    PRINT_WARN3( "no data available for model %d property %d(%s)",
+		 mod->id, pid, stg_property_string(pid) );
+  
+  return 0; // ok
 }
+
 
 // TODO
 //stg_ms_t* model_get_time( model_t* mod )
 //{
 //return & 
 
-
+// ------------------------------------------------------------------
+// GET/SET funcs that don't require their own file
 
 void model_set_laserreturn( model_t* mod, stg_laser_return_t* val )
 {
   memcpy( &mod->laser_return, val, sizeof(mod->laser_return) );
 }
+
+
+stg_velocity_t* model_get_velocity( model_t* mod )
+{
+  return &mod->velocity;
+}
+
+int model_set_velocity( model_t* mod, stg_velocity_t* vel )
+{
+  memcpy( &mod->velocity, vel, sizeof(mod->velocity) );
+  return 0;
+}
+
+
+stg_color_t model_get_color( model_t* mod )
+{
+  return mod->color;
+}
+
+
+int model_set_color( model_t* mod, stg_color_t* col )
+{
+  memcpy( &mod->color, col, sizeof(mod->color) );
+
+  // redraw my image
+  model_lines_render(mod);
+
+  return 0; // OK
+}
+
+stg_kg_t* model_get_mass( model_t* mod )
+{
+  return &mod->mass;
+}
+
+int model_set_mass( model_t* mod, stg_kg_t* mass )
+{
+  memcpy( &mod->mass, mass, sizeof(mod->mass) );
+  return 0;
+}
+
+
+//------------------------------------------------------------------
 
 int model_size_error( model_t* mod, stg_id_t pid, 
 		      size_t actual, size_t correct )
@@ -423,6 +457,11 @@ int model_size_error( model_t* mod, stg_id_t pid,
 
 int model_set_prop( model_t* mod, stg_id_t propid, void* data, size_t len )
 {
+  assert( mod );
+
+  if( data == NULL )
+    assert( len == 0 );
+  
   switch( propid )
     {
     case STG_PROP_POSE:  
@@ -492,13 +531,6 @@ int model_set_prop( model_t* mod, stg_id_t propid, void* data, size_t len )
 }
 
 
-int model_remove_prop_generic( model_t* mod, stg_id_t propid )
-{
-  g_hash_table_remove( mod->props, &propid );
-  
-  return 0; // OK
-}
-
 
 void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
 {
@@ -523,41 +555,6 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
       }
       break;
 
-/*     case STG_MSG_MODEL_CMD: */
-/*       // commands don't need a reply */
-/*       { */
-/* 	stg_prop_t* mp = (stg_prop_t*)msg->payload; */
-	
-/* 	PRINT_DEBUG4( "command %d:%d type %d with %d bytes", */
-/* 		      mp->world, */
-/* 		      mp->model, */
-/* 		      model->type, */
-/* 		      (int)mp->datalen ); */
-	
-/* 	model_putcommand( model, mp->data, mp->datalen );  */
-/*       } */
-/*       break; */
-
-/*     case STG_MSG_MODEL_DATA: */
-/*       { */
-/* 	stg_prop_t* mp = (stg_prop_t*)msg->payload; */
-	
-/* 	PRINT_DEBUG3( "getdata request %d:%d type %d ", */
-/* 		      mp->world, */
-/* 		      mp->model, */
-/* 		      model->type ); */
-
-/* 	void* data; */
-/* 	size_t len; */
-
-/* 	if( model_getdata( model, &data, &len ) ) */
-/* 	  PRINT_WARN2( "failed to service request for data %d:%d", */
-/* 		       mp->world, mp->model ); */
-/* 	else */
-/* 	  stg_fd_msg_write( fd, STG_MSG_CLIENT_REPLY, data, len );	 */
-/*       } */
-/*       break; */
-
       // everything else needs a reply
     case STG_MSG_MODEL_PROPGET:
       {
@@ -565,30 +562,29 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
 	
 	stg_target_t* tgt = (stg_target_t*)msg->payload;
 	
-	void* data;
-	size_t len;
+	void* data = NULL;
+	size_t len = 0;
 	
-	switch( tgt->prop )
-	  {
-	  case STG_PROP_DATA: 
-	    assert( model_getdata( model, &data, &len ) == 0 );
-	    break;
-	  case STG_PROP_COMMAND: 
-	    assert( model_getcommand( model, &data, &len ) == 0 );
-	    break;
-	  case STG_PROP_CONFIG: 
-	    assert( model_getconfig( model, &data, &len ) == 0 );
-	    break;
-	    
-	  default:
-	    // reply with the requested property
-	    if( model_get_prop( model, tgt->prop, &data, &len ) )      
-	      PRINT_WARN2( "failed to service request for property %d(%s)",
-			   tgt->prop, stg_property_string(tgt->prop) );
-	  }
+	// reply with the requested property
+	model_get_prop( model, tgt->prop, &data, &len );
+	
+	size_t mplen = sizeof(stg_prop_t) + len;
+	stg_prop_t* mp = calloc( mplen,1);
+	
+	mp->timestamp = model->world->sim_time;
+	mp->world = model->world->id;
+	mp->model = model->id;
+	mp->prop =  tgt->prop;
+	mp->datalen = len;
+	memcpy( mp->data, data, len );
 	
 	PRINT_DEBUG( "SENDING A REPLY" );	 	    
-	stg_fd_msg_write( fd, STG_MSG_CLIENT_REPLY, data, len );
+	stg_fd_msg_write( fd, 
+			  STG_MSG_CLIENT_REPLY, 
+			  mp, 
+			  sizeof(stg_prop_t) + mp->datalen );
+
+	free(mp);
       }
       break;
 

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_guifeatures.c,v $
 //  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -15,6 +15,9 @@
 
 #include "model.h"
 #include "gui.h"
+
+void gui_model_features( model_t* mod );
+
 
 stg_guifeatures_t* model_get_guifeatures( model_t* mod )
 {

@@ -36,7 +36,7 @@ typedef struct _model
   // the time that each property was last calculated
   stg_msec_t update_times[STG_PROP_COUNT];
   
-  GHashTable* props; // table of stg_property_t's indexed by property id
+  //GHashTable* props; // table of stg_property_t's indexed by property id
   
   gui_model_t gui; // all the gui stuff - this should be a property too!
 
@@ -122,12 +122,7 @@ void model_destroy( model_t* mod );
 void model_destroy_cb( gpointer mod );
 void model_handle_msg( model_t* model, int fd, stg_msg_t* msg );
 
-int model_getdata( model_t* mod, void** data, size_t* len );
-int model_putdata( model_t* mod, void* data, size_t len );
-int model_getcommand( model_t* mod, void** cmd, size_t* len );
-int model_putcommand( model_t* mod, void* cmd, size_t len );
-int model_getconfig( model_t* mod, void** cmd, size_t* len );
-int model_putconfig( model_t* mod, void* cmd, size_t len );
+
 
 void model_global_pose( model_t* mod, stg_pose_t* pose );
 
@@ -136,6 +131,7 @@ void model_unsubscribe( model_t* mod, stg_id_t pid );
 
 // this calls one of the set property functions, according to the propid value
 int model_set_prop( model_t* mod, stg_id_t propid, void* data, size_t len );
+int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len );
 
 // SET properties - use these to set props, don't set them directly
 int model_set_pose( model_t* mod, stg_pose_t* pose );
@@ -147,17 +143,28 @@ int model_set_mass( model_t* mod, stg_kg_t* mass );
 int model_set_guifeatures( model_t* mod, stg_guifeatures_t* gf );
 int model_set_energy_config( model_t* mod, stg_energy_config_t* gf );
 int model_set_energy_data( model_t* mod, stg_energy_data_t* gf );
+int model_set_lines( model_t* mod, stg_line_t* lines, size_t lines_count );
+
+// special
+int model_set_command( model_t* mod, void* cmd, size_t len );
+int model_set_data( model_t* mod, void* data, size_t len );
+int model_set_config( model_t* mod, void* cmd, size_t len );
 
 // GET properties - use these to get props - don't get them directly
-stg_velocity_t* model_get_velocity( model_t* mod );
-stg_geom_t* model_get_geom( model_t* mod );
-stg_color_t model_get_color( model_t* mod );
-stg_pose_t* model_get_pose( model_t* mod );
-stg_kg_t* model_get_mass( model_t* mod );
-stg_line_t* model_get_lines( model_t* mod, size_t* count );
-stg_guifeatures_t* model_get_guifeaturess( model_t* mod );
-stg_energy_data_t* model_energy_data_get( model_t* mod );
-stg_energy_config_t* model_energy_config_get( model_t* mod );
+stg_velocity_t*      model_get_velocity( model_t* mod );
+stg_geom_t*          model_get_geom( model_t* mod );
+stg_color_t          model_get_color( model_t* mod );
+stg_pose_t*          model_get_pose( model_t* mod );
+stg_kg_t*            model_get_mass( model_t* mod );
+stg_line_t*          model_get_lines( model_t* mod, size_t* count );
+stg_guifeatures_t*   model_get_guifeaturess( model_t* mod );
+stg_energy_data_t*   model_get_energy_data( model_t* mod );
+stg_energy_config_t* model_get_energy_config( model_t* mod );
+
+// special
+int model_get_command( model_t* mod, void** cmd, size_t* len );
+int model_get_data( model_t* mod, void** data, size_t* len );
+int model_get_config( model_t* mod, void** cmd, size_t* len );
 
 
 int model_update( model_t* model );
@@ -186,7 +193,7 @@ void register_startup( stg_model_type_t type, func_startup_t func );
 void register_shutdown( stg_model_type_t type, func_shutdown_t func );
 void register_update( stg_model_type_t type, func_update_t func );
 void register_service( stg_model_type_t type, func_service_t func );
-void register_set( stg_model_type_t type, func_set_t func );
+void register_putdata( stg_model_type_t type, func_set_t func );
 void register_get( stg_model_type_t type, func_get_t func );
 
 /*int model_register_type( stg_model_type_t type, 

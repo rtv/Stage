@@ -520,7 +520,7 @@ void stg_model_attach_prop( stg_model_t* mod, stg_property_t* prop )
 }
 
 
-stg_property_t* prop_create( stg_id_t id, void* data, size_t len )
+stg_property_t* stg_property_create( stg_id_t id, void* data, size_t len )
 {
   stg_property_t* prop = calloc( sizeof(stg_property_t), 1 );
   
@@ -537,7 +537,7 @@ stg_property_t* prop_create( stg_id_t id, void* data, size_t len )
   return prop;
 }
 
-void prop_destroy( stg_property_t* prop )
+void stg_property_destroy( stg_property_t* prop )
 {
   free( prop->data );
   free( prop );
@@ -547,7 +547,7 @@ void prop_destroy( stg_property_t* prop )
 void stg_model_prop_with_data( stg_model_t* mod, 
 			      stg_id_t type, void* data, size_t len )
 {
-  stg_property_t* prop = prop_create( type, data, len );
+  stg_property_t* prop = stg_property_create( type, data, len );
   stg_model_attach_prop( mod, prop );
 }   
 

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_mass.c,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -15,13 +15,3 @@
 
 #include "model.h"
 
-stg_kg_t* model_get_mass( model_t* mod )
-{
-  return &mod->mass;
-}
-
-int model_set_mass( model_t* mod, stg_kg_t* mass )
-{
-  memcpy( &mod->mass, mass, sizeof(mod->mass) );
-  return 0;
-}

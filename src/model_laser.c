@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.26 $
+//  $Revision: 1.27 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -45,7 +45,7 @@ void laser_init( model_t* mod )
   lconf.fov         = STG_DEFAULT_LASER_FOV;
   lconf.samples     = STG_DEFAULT_LASER_SAMPLES;
   
-  model_putconfig( mod, &lconf, sizeof(lconf) );
+  model_set_config( mod, &lconf, sizeof(lconf) );
 }
 
 
@@ -90,7 +90,7 @@ int laser_update( model_t* mod )
       
       model_t* hitmod;
       double range = cfg->range_max;
-      stg_laser_return_t hisreturn = LaserVisible;
+      //stg_laser_return_t hisreturn = LaserVisible;
       
       while( (hitmod = itl_next( itl )) ) 
 	{
@@ -130,7 +130,7 @@ int laser_update( model_t* mod )
   
   
   // new style
-  model_putdata( mod, scan, sizeof(stg_laser_sample_t) * cfg->samples );
+  model_set_data( mod, scan, sizeof(stg_laser_sample_t) * cfg->samples );
   
   free( scan );
 

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.14 $
+//  $Revision: 1.15 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -93,8 +93,8 @@ model_t* model_test_collision_at_pose( model_t* mod,
       stg_pose_t p2;
 
       // shift the line points into the global coordinate system
-      pose_sum( &p1, pose, &pp1 );
-      pose_sum( &p2, pose, &pp2 );
+      stg_pose_sum( &p1, pose, &pp1 );
+      stg_pose_sum( &p2, pose, &pp2 );
 
       //model_local_to_global( mod, &p1 );
       //model_local_to_global( mod, &p2 );

@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.51 2004-08-25 00:59:55 rtv Exp $
+# $Id: Makefile.am,v 1.52 2004-08-25 15:58:01 rtv Exp $
 
 stage_DEPENDENCIES = libstage.a $(top_srcdir)/replace/libreplace.a
 
@@ -35,11 +35,8 @@ stage_SOURCES = \
 	model2.c \
 	model.h \
 	model_geom.c \
-	model_mass.c \
 	model_lines.c \
 	model_guifeatures.c \
-	model_color.c \
-	model_velocity.c \
 	model_pose.c \
 	model_laser.c \
 	model_energy.c \
@@ -55,11 +52,14 @@ stage_SOURCES = \
 	world.c \
 	world.h
 
-#	matrix.c \
+#	matrix.c 
 #	matrix.h 
-#	model_blobfinder.c \
-#	model_fiducial.c \
+#	model_blobfinder.c 
+#	model_fiducial.c 
+#	model_color.c 
 #	model_ranger.c 
+#	model_velocity.c 
+#	model_mass.c 
 
 
 stage_LDFLAGS =

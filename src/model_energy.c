@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -26,6 +26,9 @@ extern rtk_fig_t* fig_debug;
 
 #define TIMING 0
 #define ENERGY_FILLED 1
+
+void  model_energy_config_render( mod );
+void  model_energy_data_render( mod );
 
 stg_energy_config_t* model_get_energy_config( model_t* mod )
 {

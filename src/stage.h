@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.70 2004-08-25 00:59:55 rtv Exp $
+ * CVS: $Id: stage.h,v 1.71 2004-08-25 15:58:01 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -323,8 +323,8 @@ typedef struct
   size_t len;
 } stg_property_t;
 
-stg_property_t* prop_create( stg_id_t id, void* data, size_t len );
-void prop_destroy( stg_property_t* prop );
+stg_property_t* stg_property_create( stg_id_t id, void* data, size_t len );
+void stg_property_destroy( stg_property_t* prop );
 
 
 // this packet is exchanged as a handshake when connecting to Stage
@@ -1099,6 +1099,8 @@ stg_model_t* stg_client_get_model_serverside( stg_client_t* cli, stg_id_t wid, s
 // copies src_len bytes from src to dest, realloc'ing enough space at
 // dest. Sets dest_len to be the new size of the data at dest.
 void stg_copybuf( void** dest, size_t* dest_len, void* src, size_t src_len );
+
+void stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 );
 
 // Some useful macros
 

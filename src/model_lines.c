@@ -7,11 +7,11 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_lines.c,v $
 //  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
-//#define DEBUG
+#define DEBUG
 
 #include "model.h"
 #include "gui.h"
@@ -28,8 +28,12 @@ stg_line_t* model_get_lines( model_t* mod, size_t* lines_count )
 
 int model_set_lines( model_t* mod, stg_line_t* lines, size_t lines_count )
 {
-  PRINT_DEBUG1( "received %d lines\n", lines_count );
+  assert(mod);
+  if( lines_count > 0 ) assert( lines );
 
+  PRINT_DEBUG3( "model %d(%s) received %d lines\n", 
+		mod->id, mod->token, (int)lines_count );
+  
   model_map( mod, 0 );
   
   stg_geom_t* geom = model_get_geom(mod); 
@@ -38,10 +42,12 @@ int model_set_lines( model_t* mod, stg_line_t* lines, size_t lines_count )
   stg_normalize_lines( lines, lines_count );
   stg_scale_lines( lines, lines_count, geom->size.x, geom->size.y );
   stg_translate_lines( lines, lines_count, -geom->size.x/2.0, -geom->size.y/2.0 );
-    
-  assert( mod->lines = realloc( mod->lines, sizeof(stg_line_t)*lines_count) );
-  mod->lines_count = lines_count;
   
+  size_t len = sizeof(stg_line_t)*lines_count;
+  assert( mod->lines = realloc( mod->lines,len) );
+  mod->lines_count = lines_count;
+  memcpy( mod->lines, lines, len );
+
   // redraw my image 
   model_map( mod, 1 );
 
@@ -61,7 +67,7 @@ void model_lines_render( model_t* mod )
   size_t count=0;
   stg_line_t* lines = model_get_lines(mod,&count);
 
-  PRINT_DEBUG1( "rendering %d lines", count );
+  PRINT_DEBUG1( "rendering %d lines", (int)count );
 
   stg_geom_t* geom = model_get_geom(mod);
 

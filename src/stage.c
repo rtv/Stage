@@ -9,7 +9,7 @@
 #include <netinet/in.h>
 #include <assert.h>
 #include <unistd.h>
-
+#include <math.h>
 #include <glib.h>
 
 #define DEBUG
@@ -604,3 +604,18 @@ void stg_copybuf( void** dest, size_t* dest_len, void* src, size_t src_len )
   memcpy( *dest, src, src_len );    
   *dest_len = src_len;
 } 
+
+// sets [result] to the pose of [p2] in [p1]'s coordinate system
+void stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )
+{
+  double cosa = cos(p1->a);
+  double sina = sin(p1->a);
+  
+  double tx = p1->x + p2->x * cosa - p2->y * sina;
+  double ty = p1->y + p2->x * sina + p2->y * cosa;
+  double ta = p1->a + p2->a;
+  
+  result->x = tx;
+  result->y = ty;
+  result->a = ta;
+}

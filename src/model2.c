@@ -12,7 +12,7 @@ extern lib_entry_t derived[];
 
 
 
-int model_getdata( model_t* mod, void** data, size_t* len )
+int model_get_data( model_t* mod, void** data, size_t* len )
 {
   // if this type of model has a getdata function, call it.
   if( derived[ mod->type ].getdata )
@@ -30,7 +30,7 @@ int model_getdata( model_t* mod, void** data, size_t* len )
   return 0; //ok
 }
 
-int model_putdata( model_t* mod, void* data, size_t len )
+int model_set_data( model_t* mod, void* data, size_t len )
 {
   // if this type of model has a putdata function, call it.
   if( derived[ mod->type ].putdata )
@@ -48,7 +48,7 @@ int model_putdata( model_t* mod, void* data, size_t len )
   return 0; //ok
 }
 
-int model_putcommand( model_t* mod, void* cmd, size_t len )
+int model_set_command( model_t* mod, void* cmd, size_t len )
 {
   // if this type of model has a putcommand function, call it.
   if( derived[ mod->type ].putcommand )
@@ -64,7 +64,7 @@ int model_putcommand( model_t* mod, void* cmd, size_t len )
   return 0; //ok
 }
 
-int model_getcommand( model_t* mod, void** command, size_t* len )
+int model_get_command( model_t* mod, void** command, size_t* len )
 {
   // if this type of model has a getcommand function, call it.
   if( derived[ mod->type ].getcommand )
@@ -81,7 +81,7 @@ int model_getcommand( model_t* mod, void** command, size_t* len )
   return 0; //ok
 }
 
-int model_putconfig( model_t* mod, void* config, size_t len )
+int model_set_config( model_t* mod, void* config, size_t len )
 {
   // if this type of model has a putconfig function, call it.
   if( derived[ mod->type ].putconfig )
@@ -100,7 +100,7 @@ int model_putconfig( model_t* mod, void* config, size_t len )
 }
 
 
-int model_getconfig( model_t* mod, void** config, size_t* len )
+int model_get_config( model_t* mod, void** config, size_t* len )
 {
   // if this type of model has an getconfig function, call it.
   if( derived[ mod->type ].getconfig )
