@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.39 2002-09-26 01:22:17 rtv Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.40 2002-10-07 06:45:59 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -119,16 +119,11 @@ void CPlayerEntity::Update( double sim_time )
 {
   //PRINT_DEBUG1( "subs: %d\n", this->subscribed );
 
-  // if we have any gui data graphics
-  if( this->g_data ) 
-    {
-      // make sure we still have a subscription
-      if( !this->Subscribed() )
-	{
-	  gtk_object_destroy( GTK_OBJECT(this->g_data) );
-	  this->g_data = NULL;
-	}
-    }
+  //int subs = this->Subscribed();
+
+  // if our subscription state has changed, generate an property change event
+  //if( this->last_sub != subs )
+  // this->SetProperty( 
   
   CEntity::Update( sim_time );
 }
@@ -431,11 +426,16 @@ size_t CPlayerEntity::PutData( void* data, size_t len )
   
   // copy the data into the mmapped data buffer.
   // also set the timestamp and available fields for the data
-  return PutIOData( (void*)m_data_io, m_data_len,
-		    data, len,
-		    &m_info_io->data_timestamp_sec,
-		    &m_info_io->data_timestamp_usec,
-		    &m_info_io->data_avail );
+  size_t retval = PutIOData( (void*)m_data_io, m_data_len,
+			     data, len,
+			     &m_info_io->data_timestamp_sec,
+			     &m_info_io->data_timestamp_usec,
+			     &m_info_io->data_avail );
+  
+  // give the GUI a chance to display this data
+  GuiEntityPropertyChange( this, PropData );
+
+  return retval;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -526,6 +526,8 @@ int CPlayerEntity::Subscribed()
       Unlock();
     }
   
+  //printf( "SUBS: %d\n", subscribed );
+
 
   return( subscribed );
 }
@@ -575,7 +577,8 @@ void CPlayerEntity::Unsubscribe()
   //puts( "PUNSUB" );
   
   Lock();
-  m_info_io->subscribed--;
+  if( m_info_io->subscribed > 0 )
+    m_info_io->subscribed--;
   Unlock();
 
   CEntity::Unsubscribe();
@@ -783,6 +786,26 @@ int CPlayerEntity::GetProperty( EntityProperty property, void* value )
   return retval;
 }
 
+void CPlayerEntity::GetStatusString( char* buf, int buflen )
+{
+  double x, y, th;
+  this->GetGlobalPose( x, y, th );
+  
+  // check for overflow
+  assert( -1 !=
+	  snprintf( buf, buflen, 
+		    "Pose(%.2f,%.2f,%.2f) Player(%d:%d:%d) Stage(%d:%d)",
+		    x, 
+		    y, 
+		    th,
+		    this->m_player.port, 
+		    this->m_player.code, 
+		    this->m_player.index, 
+		    this->stage_id,
+		    this->stage_type
+		    ) );
+ 
+}
 
 #ifdef INCLUDE_RTK2
 

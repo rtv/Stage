@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.124 2002-09-26 07:22:38 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.125 2002-10-07 06:45:59 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -56,6 +56,7 @@
 #include "world.hh"
 #include "playerdevice.hh"
 #include "library.hh"
+#include "gui.hh"
 
 bool usage = false;
 
@@ -169,11 +170,6 @@ CWorld::CWorld( int argc, char** argv, Library* lib )
   
   // Run the gui by default
   this->enable_gui = true;
-
-#ifdef USE_GNOME2
-  g_canvas = NULL;
-  g_app = NULL;
-#endif
 
   // default color database file
   strcpy( m_color_database_filename, COLOR_DATABASE );
@@ -308,17 +304,6 @@ bool CWorld::ParseCmdLine(int argc, char **argv)
       //}
     }
 
-#ifdef INCLUDE_RTK2
-  // Initialise rtk if we are using it
-  if(this->enable_gui)
-    rtk_init(&argc, &argv);
-#endif
-
-#ifdef USE_GNOME2
-  // Initialise rtk if we are using it
-  if(this->enable_gui)
-    gnome_init( "Stage", (char*)VERSION,  argc, argv);
-#endif
     
   return true;
 }
@@ -345,14 +330,14 @@ bool CWorld::Startup()
   // Initialise the rate counter
   m_update_ratio = 1;
   m_update_rate = 0;
-
-#ifdef INCLUDE_RTK2 // Start the GUI
-  if (this->enable_gui) RtkStartup();
-#endif
+    
+  //#ifdef INCLUDE_RTK2 // Start the GUI
+  //if (this->enable_gui) RtkStartup();
+  //#endif
   
-#ifdef USE_GNOME2
-  if( this->enable_gui ) GuiStartup();
-#endif
+  //#ifdef USE_GNOME2
+  //if( this->enable_gui ) GuiStartup();
+  //#endif
 
   if( m_real_timestep > 0.0 ) // if we're in real-time mode
     StartTimer( m_real_timestep ); // start the real-time interrupts going
@@ -371,12 +356,15 @@ bool CWorld::Startup()
 void CWorld::Shutdown()
 {
   PRINT_DEBUG( "world shutting down" );
-
-#ifdef INCLUDE_RTK2
+  
+  // use the generic hook
+  if( this->enable_gui ) GuiWorldShutdown( this );
+  
+  //#ifdef INCLUDE_RTK2
   // Stop the GUI
-  if (this->enable_gui)
-    RtkShutdown();
-#endif
+  //if (this->enable_gui)
+  //RtkShutdown();
+  //#endif
 
   // Shutdown all the entities
   // Devices will unlink their device files
@@ -472,10 +460,10 @@ void CWorld::Update(void)
 	  // update the entities managed by this host at this time 
 	  root->Update( m_sim_time );	  
 	  
-#ifdef INCLUDE_RTK2   
+	  //#ifdef INCLUDE_RTK2   
 	  // also update the gui at this rate
-	  if (this->enable_gui) RtkUpdate();
-#endif	      
+	  //if (this->enable_gui) RtkUpdate();
+	  //#endif	      
 	  
 
 	  if( g_timer_events > 0 )
@@ -485,12 +473,9 @@ void CWorld::Update(void)
 	  m_step_num++; 
 	}
       
-#ifdef USE_GNOME2
-      // allow gtk to do some work
-      while( gtk_events_pending () )
-	gtk_main_iteration();      
-#endif
-
+      if( this->enable_gui )
+	GuiWorldUpdate( this );
+      
       Output(); // perform console and log output
       
       // if there's nothing pending and we're not in fast mode, we let go

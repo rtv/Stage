@@ -292,9 +292,7 @@ int CStageIO::ReadBackground( int fd )
     {
       // create an image from the data
       assert( ((CBitmap*)this->root)->image = 
-	      new Nimage( pixels, w.sizex, w.sizey ) );      
-      
-      // wall->Startup is called at the end of the constructor
+	      new Nimage( pixels, w.sizex, w.sizey ) );            
     }
     else
     {

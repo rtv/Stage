@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/bitmap.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -69,10 +69,10 @@ class CBitmap : public CEntity
 #endif
 
   
-#ifdef USE_GNOME2
-public: 
-  virtual void GuiStartup ();
-#endif
+  //#ifdef USE_GNOME2
+  //public: 
+  //virtual void GuiStartup ();
+  //#endif
 
 };
 

@@ -8,9 +8,20 @@ RTKLDADD    =
 RTKLDFLAGS  =
 endif
 
+if WITH_GNOME2
+# locate the gnome2 headers and library
+GNOMEINCLUDE = -I$(top_srcdir)/gnome2
+GNOMELDADD = -L$(top_builddir)/gnome2 -lgnomestage 
+GNOMELDFLAGS = `pkg-config --libs libgnomecanvas-2.0 libgnomeui-2.0`
+else
+GNOMEINCLUDE = 
+GNOMELDADD = 
+GNOMELDFLAGS = 
+endif
+
 # GNOME2_ macros are set in configure.in using PKG_CHECK and AC_SUBST - rtv
 
-AM_CPPFLAGS = -Wall -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/server/drivers/stage $(RTKCPPFLAGS) $(GNOME2_CFLAGS)
+AM_CPPFLAGS = -Wall -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/server/drivers/stage $(RTKCPPFLAGS) $(GNOMEINCLUDE)
 
 bin_PROGRAMS = stage
 
@@ -28,7 +39,6 @@ stage_SOURCES = \
 		descartesdevice.hh		\
 		entity.cc			\
 		entity.hh			\
-                gnomegui.cc                     \
 		gpsdevice.cc			\
 		gpsdevice.hh			\
 		gripperdevice.cc		\
@@ -82,13 +92,20 @@ stage_SOURCES = \
 		world.cc			\
 		world.hh			\
 		worldfile.cc			\
-		worldfile.hh 
+		worldfile.hh                    
                 #bpsdevice.cc
                 #entityfactory.cc 
              #bpsdevice.hh
              #miscdevice.hh
 
 
-stage_LDADD = -lm -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -lplayerqueue $(RTKLDADD) @LIBOBJS@ 
+stage_LDADD = -lm -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -lplayerqueue $(RTKLDADD) $(GNOMELDADD) @LIBOBJS@ 
 
-stage_LDFLAGS =  $(RTKLDFLAGS) $(GNOME2_LIBS)
+stage_LDFLAGS =  $(RTKLDFLAGS) $(GNOMELDFLAGS)
+
+
+
+
+
+
+

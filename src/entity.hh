@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.6 2002-09-25 20:46:58 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.7 2002-10-07 06:45:59 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -45,11 +45,6 @@
 
 #ifdef INCLUDE_RTK2
 #include "rtk.h"
-#endif
-
-#ifdef USE_GNOME2
-#include <gnome.h>
-#include "gnomegui.hh"
 #endif
 
 #include "library.hh"
@@ -177,6 +172,9 @@ public: virtual void Sync();
   protected: virtual CEntity *TestCollision(double px, double py, double pth, 
                                             double &hitx, double &hity );
 
+  // writes a description of this device into the buffer
+public: virtual void GetStatusString( char* buf, int buflen );
+  
   // Convert local to global coords
   public: void LocalToGlobal(double &px, double &py, double &pth);
 
@@ -213,7 +211,8 @@ public: void GetBoundingBox( double &xmin, double &ymin,
   public: bool IsDescendent(CEntity *entity);
 
   // subscribe to / unsubscribe from the device
-  // these don't do anything by default, but are overridden by CPlayerEntity
+  // these don't do anything by default, but are overridden by CPlayerEntity  
+public: virtual int Subscribed();
 public: virtual void Subscribe();
 public: virtual void Unsubscribe();
   
@@ -349,26 +348,21 @@ public: virtual void FamilyUnsubscribe();
   static void staticSelect( void* ent );
   static void staticUnselect( void* ent );
 #endif
-
-#ifdef USE_GNOME2
-public: 
-  GnomeCanvasGroup* g_origin; // sets our location on the canvas
-  GnomeCanvasGroup* g_group; // inside g_origin - contains our body figure g_fig
-  GnomeCanvasItem* g_data; // inside g_group - contains our data figures if any
-  GnomeCanvasItem* g_body; // inside g_group - contains our body figures if any
-  bool click_subscribed;
   
-  // true if we are selected and should display our status
-  bool watched;
-  virtual void GuiStartup( void );
-  virtual void GuiSelect( void );
-  virtual void GuiUnselect( void );
-  virtual void GuiWatch( void );
-  virtual void GuiUnwatch( void );
-  virtual void GuiStatus( void );
-  virtual void GuiMove( void );
-  virtual void GuiRenderGrid( double spacing, StageColor color );
-#endif
+  // calls the GUI hook to startup this object, then recusively calls
+  // the children's GuiStartup()
+public: virtual void GuiStartup( void );
+
+
+  //#ifdef ENTITY_GUI_DATA_TYPE
+  // allow the GUI to attach some data to an object if it needs to.
+  // the GUI library's header file defines this macro to control this
+  // member's type. if the macro isn't set then there is no valud GUI
+  // and this member doesn't exist. value is NULLed in the constuctor.
+  //public: ENTITY_GUI_DATA_TYPE *gui_data; 
+  //#endif
+public: void *gui_data; 
+
 };
 
 

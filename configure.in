@@ -48,26 +48,22 @@ AC_CHECK_FUNCS(inet_aton srand48 lrand48)
 #AC_TYPE_SIGNAL
 #AC_CHECK_FUNCS(getcwd gethostname gettimeofday mkdir rmdir select socket strcspn strdup strerror)
 
-dnl should we include the GNOME2 GUI?
-AC_ARG_WITH(gnome2,    [   --with-gnome2         Compile in the experimental GNOME2 GUI],,with_gnome2=no)
+dnl if the GNOME2 GUI was requested, we use that
+AC_ARG_WITH(gnome2,    [   --with-gnome2         Compile in the experimental GNOME2 GUI instead of RTK2],,with_gnome2=no)
 if test "x$with_gnome2" = "xyes"; then
   AC_DEFINE(USE_GNOME2,1,[include the GNOME2 GUI])
-  dnl - check for presence of GNOME2 libs and get their dependencies
-  dnl - use the new pkg-config system
-  dnl - (provides PKG_CHECK_MODULES defined in aclocal/pkg.am)
-  PKG_CHECK_MODULES(GNOME2, libgnomeui-2.0 libgnomecanvas-2.0)
-  dnl - define the GNOME2 build macros used in src/Makefile.am
-  AC_SUBST(GNOME2_CFLAGS)
-  AC_SUBST(GNOME2_LIBS)
+else
+  dnl otherwise we use the RTK GUI unless it is explicitly refused
+  AC_ARG_WITH(gui,    [   --without-gui         Don't compile in a GUI],,with_gui=yes)
+  if test "x$with_gui" = "xyes"; then
+    AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
+  fi
 fi
-AM_CONDITIONAL(WITH_GNOME2, test x$with_gnome2 = xyes)
 
-dnl should we include the RTK GUI?
-AC_ARG_WITH(gui,    [   --without-gui         Don't include the GUI],,with_gui=yes)
-if test "x$with_gui" = "xyes"; then
-  AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
-fi
+# set vars depending on the GUI tests
+AM_CONDITIONAL(WITH_GNOME2, test x$with_gnome2 = xyes)
 AM_CONDITIONAL(WITH_GUI, test x$with_gui = xyes)
+
 
 dnl where's player?
 AC_ARG_WITH(player, [   --with-player=dir      Location of Player (installation or source)],
@@ -88,6 +84,7 @@ AC_DEFINE_UNQUOTED(COLOR_DATABASE,$CDB,[the X11-style color database])
 AC_OUTPUT(Makefile 
           src/Makefile 
           rtk2/Makefile 
-          rtk2/test/Makefile 
+          rtk2/test/Makefile
+          gnome2/Makefile 
           worlds/Makefile 
           tools/Makefile)

@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.53 2002-09-11 18:57:20 gerkey Exp $
+ * CVS: $Id: main.cc,v 1.54 2002-10-07 06:45:59 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -143,6 +143,7 @@ int main(int argc, char **argv)
     puts( "Stage: failed to create a world. Quitting." );
     exit( 0 );
   }
+
 
   // startup is (externally) identical for client and server, but they
   // do slightly different things inside.

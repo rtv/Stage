@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: playerdevice.hh,v 1.6 2002-09-25 02:55:55 rtv Exp $
+ * CVS info: $Id: playerdevice.hh,v 1.7 2002-10-07 06:45:59 rtv Exp $
  */
 
 #ifndef PLAYERENTITY_HH
@@ -74,6 +74,8 @@ class CPlayerEntity : public CEntity
   
 public: virtual void Update( double sim_time );
 
+  // writes a description of this device into the buffer
+public: virtual void GetStatusString( char* buf, int buflen );
 
   ///////////////////////////////////////////////////////////////////////
   // RTP stuff
@@ -139,9 +141,7 @@ public: virtual void Update( double sim_time );
   // See if the device is subscribed
   // returns the number of current subscriptions
   //private int player_subs;
-
-  // this gets called a LOT, so we inline it.
-   public: int Subscribed();
+   public: virtual int Subscribed();
 
   // subscribe to / unsubscribe from the device
   // these are used when one device (e.g., lbd) depends on another (e.g.,
@@ -197,11 +197,6 @@ public: virtual void FamilyUnsubscribe();
   protected: virtual void RtkStartup();
 #endif
 
-#ifdef USE_GNOME2
-protected: 
-  virtual void GuiStatus( void );
-#endif
-  
 };
 
 #endif

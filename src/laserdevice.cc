@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.71 2002-09-26 01:22:16 rtv Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.72 2002-10-07 06:45:59 rtv Exp $
  */
 
 #define DEBUG
@@ -159,94 +159,6 @@ void CLaserDevice::Update( double sim_time )
       this->visible_beacons.clear();
     }
   }
-}
-
-size_t CLaserDevice::PutData( void* vdata, size_t len )
-{  
-  // export the data right away
-  size_t retval = CPlayerEntity::PutData( vdata, len );
-
-  player_laser_data_t* data = (player_laser_data_t*)vdata;
-
-  // maybe  render the new data in a GUI
-  
-#ifdef USE_GNOME2
-  assert( data );
-  assert( len > 0 );
-  
-  // we render the data as a colored polygon, if the range data is
-  // different from last time. note that we look at the ranges
-  // themselves, not just the timestamp, as we can get the same scans
-  // over and over...
-  if( memcmp( &data->ranges, &last_data.ranges, 
-	      ntohs(data->range_count) * sizeof(data->ranges[0])
-	      ) != 0 )
-    {
-      // convert the range data to a set of cartesian points
-      short min_ang_deg = ntohs(data->min_angle);
-      short max_ang_deg = ntohs(data->max_angle);
-      unsigned short samples = ntohs(data->range_count); 
-      
-      GnomeCanvasPoints* points = gnome_canvas_points_new(samples+2);
-      
-      double min_ang_rad = DTOR( (double)min_ang_deg ) / 100.0;
-      double max_ang_rad = DTOR( (double)max_ang_deg ) / 100.0;
-      
-      double incr = (double)(max_ang_rad - min_ang_rad) / (double)samples;
-      
-      // set the start and end points of the scan as the origin;
-      memset( points->coords, 0, sizeof(points->coords[0]) * 2 * (samples+2) ); 
-      
-      double bearing = min_ang_rad;
-      for( int i=0; i < (int)samples; i++ )
-	{
-	  // get range, converting from mm to m
-	  unsigned short range_mm = ntohs(data->ranges[i]) & 0x1FFF;
-	  double range_m = (double)range_mm / 1000.0;
-	  
-	  bearing += incr;
-	  
-	  double px = range_m * cos(bearing);
-	  double py = range_m * sin(bearing);
-	  
-	  points->coords[2*i+2] = px;
-	  points->coords[2*i+3] = py;
-	  
-	  // TODO
-	  // add little boxes at high intensities (like in playerv)
-	  //if(  (unsigned char)(ntohs(data.ranges[i]) >> 13) > 0 )
-	  //{ rtk_fig_rectangle(this->scan_fig, px, py, 0, 0.05, 0.05, 1);
-	  //rtk_fig_line( this->scan_fig, 0,0,px, py );
-	  //      }
-	}
-      
-      // kill any previous data rendering
-      if( g_data ) 
-	{
-	  gtk_object_destroy(GTK_OBJECT(g_data));
-	  g_data = NULL;
-	}
-      
-      // construct a polygon matching the lasersweep
-      assert( g_data = 
-	      gnome_canvas_item_new ( g_group,
-				      gnome_canvas_polygon_get_type(),
-				      "points", points,
-				      "fill_color_rgba", RGBA(this->color,16),
-				      "outline_color", NULL, 
-				      // TODO - optional laser scan outline
-				      //"outline_color_rgba", RGBA(this->color,255),
-				      //"width_pixels", 1,
-				      NULL ) );
-      gnome_canvas_points_free(points);
-    }
-  
-  // store the old data for next time
-  memcpy( &last_data, data, sizeof(player_laser_data_t) );
-  
-#endif
-
-  return( retval );
 }
 
 

@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.3 2002-09-22 18:33:55 inspectorg Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.4 2002-10-07 06:45:59 rtv Exp $
  */
 
 
@@ -61,6 +61,57 @@
 #include "world.hh"
 #include "playerdevice.hh"
 #include "library.hh"
+
+// TODO - unwrap RTK code from around the place and have it work
+// through the GUI hooks
+
+// WORLD HOOKS /////////////////////////////
+void GuiInit( int argc, char** argv )
+{ 
+  rtk_init(&argc, &argv);
+}
+
+void GuiWorldStartup( CWorld* world )
+{ 
+  world->RtkStartup();
+}
+
+void GuiWorldShutdown( CWorld* world )
+{ 
+  /* do nothing */ 
+}
+
+void GuiWorldUpdate( CWorld* world )
+{ 
+  world->RtkUpdate();
+
+  // allow gtk to do some work
+  while( gtk_events_pending () )
+    gtk_main_iteration();      
+}
+
+// ENTITY HOOKS ///////////////////////////
+void GuiEntityStartup( CEntity* ent )
+{ 
+  /* do nothing */  
+}
+
+void GuiEntityShutdown( CEntity* ent )
+{ 
+  /* do nothing */ 
+}
+
+void GuiEntityUpdate( CEntity* ent )
+{
+  /* do nothing */ 
+}
+
+void GuiEntityPropertyChange( CEntity* ent, EntityProperty prop )
+{ 
+  /* do nothing */ 
+}
+
+////////////////////////////////////////////
 
 void CWorld::AddToMenu( stage_menu_t* menu, CEntity* ent, int check )
 {

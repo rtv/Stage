@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/bitmap.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.7 $
+//  $Revision: 1.8 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -139,6 +139,84 @@ bool CBitmap::Load(CWorldFile *worldfile, int section)
   // draw a border around the image
   //this->image->draw_box(0,0,this->image->width-1, this->image->height-1, 255 );
  
+  // scan the image into a vector of rectangle descriptions
+  double sx = this->scale;
+  double sy = this->scale;
+
+  // Draw the image into the matrix (and GUI if compiled in) 
+
+  // RTV - this box-drawing algorithm compresses hospital.world from
+  // 104,000+ pixels to 5,757 rectangles. it's not perfect but pretty
+  // darn good with bitmaps featuring lots of horizontal and vertical
+  // lines - such as most worlds. Also combined matrix & gui
+  // rendering loops.  hospital.pnm.gz now loads more than twice as
+  // fast and redraws waaaaaay faster. yay!
+  
+  for (int y = 0; y < this->image->height; y++)
+    {
+      for (int x = 0; x < this->image->width; x++)
+	{
+	  //m_world->Ticker();
+
+	  if (this->image->get_pixel(x, y) == 0)
+	    continue;
+	  
+	  // a rectangle starts from this point
+	  int startx = x;
+	  int starty = this->image->height - y;
+	  int height = this->image->height; // assume full height for starters
+	  
+	  // grow the width - scan along the line until we hit an empty pixel
+	  for( ;  this->image->get_pixel( x, y ) > 0; x++ )
+	    {
+	      // handle horizontal cropping
+	      double ppx = x * sx; 
+	      if (ppx < this->crop_ax || ppx > this->crop_bx)
+		continue;
+	      
+	      // look down to see how large a rectangle below we can make
+	      int yy  = y;
+	      while( (this->image->get_pixel( x, yy ) > 0 ) 
+		     && (yy < this->image->height) )
+		{ 
+		  // handle vertical cropping
+		  double ppy = (this->image->height - yy) * sy;
+		  if (ppy < this->crop_ay || ppy > this->crop_by)
+		    continue;
+		  
+		  yy++; 
+		} 	      
+	      // now yy is the depth of a line of non-zero pixels
+	      // downward we store the smallest depth - that'll be the
+	      // height of the rectangle
+	      if( yy-y < height ) height = yy-y; // shrink the height to fit
+	    } 
+	  
+	  int width = x - startx;
+	  
+	  // delete the pixels we have used in this rect
+	  this->image->fast_fill_rect( startx, y, width, height, 0 );
+	  
+	  double px = ((startx + (width/2.0) + 0.5 ) * sx) - size_x/2.0;
+	  double py = ((starty - (height/2.0) - 0.5 ) * sy) - size_y/2.0;
+	  //double pth = 0;
+	  double pw = width * sx;
+	  double ph = height * sy;
+	  
+	  // store the rectangles for drawing into the GUI later
+	  bitmap_rectangle_t r;
+	  r.x = px;
+	  r.y = py;
+	  r.w = pw;
+	  r.h = ph;
+	  bitmap_rects.push_back( r );
+	  
+	  // create a matrix rectangle in global coordinates
+	  //this->LocalToGlobal( px, py, pth );
+	  //m_world->SetRectangle( px, py, pth, pw, ph, this, true);
+	}
+    }
+
   return true;
 }
 
@@ -215,84 +293,19 @@ bool CBitmap::Startup()
       //rtk_fig_clear( this->fig );
       return true;
     }
-    
-  double sx = this->scale;
-  double sy = this->scale;
 
-  // Draw the image into the matrix (and GUI if compiled in) 
-
-  // RTV - this box-drawing algorithm compresses hospital.world from
-  // 104,000+ pixels to 5,757 rectangles. it's not perfect but pretty
-  // darn good with bitmaps featuring lots of horizontal and vertical
-  // lines - such as most worlds. Also combined matrix & gui
-  // rendering loops.  hospital.pnm.gz now loads more than twice as
-  // fast and redraws waaaaaay faster. yay!
-  
-  for (int y = 0; y < this->image->height; y++)
+  // draw the add the rectangles we pre-computed in Load() into the matrix
+  for(
+      std::vector<bitmap_rectangle_t>::iterator it = bitmap_rects.begin();
+      it != bitmap_rects.end();
+      it++ )  
     {
-      for (int x = 0; x < this->image->width; x++)
-	{
-	  //m_world->Ticker();
-
-	  if (this->image->get_pixel(x, y) == 0)
-	    continue;
-	  
-	  // a rectangle starts from this point
-	  int startx = x;
-	  int starty = this->image->height - y;
-	  int height = this->image->height; // assume full height for starters
-	  
-	  // grow the width - scan along the line until we hit an empty pixel
-	  for( ;  this->image->get_pixel( x, y ) > 0; x++ )
-	    {
-	      // handle horizontal cropping
-	      double ppx = x * sx; 
-	      if (ppx < this->crop_ax || ppx > this->crop_bx)
-		continue;
-	      
-	      // look down to see how large a rectangle below we can make
-	      int yy  = y;
-	      while( (this->image->get_pixel( x, yy ) > 0 ) 
-		     && (yy < this->image->height) )
-		{ 
-		  // handle vertical cropping
-		  double ppy = (this->image->height - yy) * sy;
-		  if (ppy < this->crop_ay || ppy > this->crop_by)
-		    continue;
-		  
-		  yy++; 
-		} 	      
-	      // now yy is the depth of a line of non-zero pixels
-	      // downward we store the smallest depth - that'll be the
-	      // height of the rectangle
-	      if( yy-y < height ) height = yy-y; // shrink the height to fit
-	    } 
-	  
-	  int width = x - startx;
-	  
-	  // delete the pixels we have used in this rect
-	  this->image->fast_fill_rect( startx, y, width, height, 0 );
-	  
-	  double px = ((startx + (width/2.0) + 0.5 ) * sx) - size_x/2.0;
-	  double py = ((starty - (height/2.0) - 0.5 ) * sy) - size_y/2.0;
-	  double pth = 0;
-	  double pw = width * sx;
-	  double ph = height * sy;
-	  
-	  // store the rectangles for drawing into the GUI later
-	  bitmap_rectangle_t r;
-	  r.x = px;
-	  r.y = py;
-	  r.w = pw;
-	  r.h = ph;
-	  bitmap_rects.push_back( r );
-	  
-	  // create a matrix rectangle in global coordinates
-	  this->LocalToGlobal( px, py, pth );
-	  m_world->SetRectangle( px, py, pth, pw, ph, this, true);
-	}
+      double th = 0;
+      this->LocalToGlobal( it->x, it->y, th );
+      m_world->SetRectangle( it->x, it->y, th, it->w, it->h, this, true);
+      //rtk_fig_rectangle(this->fig, it->x, it->y, 0, it->w, it->h, true ); 
     }
-  // new: don't delete the image so we can download it to clients - rtv
+
   return true;
 }
 
@@ -328,74 +341,3 @@ void CBitmap::RtkStartup()
 #endif
 
 
-#ifdef USE_GNOME2
-
-void CBitmap::GuiStartup( void )
-{
-  CEntity::GuiStartup();  
-  
-  assert( g_group );
-  
-
-  GnomeCanvasPoints *gcp = gnome_canvas_points_new(5);
-  
-
-  // add the figure we pre-computed in Startup() above  
-  for(
-      std::vector<bitmap_rectangle_t>::iterator it = bitmap_rects.begin();
-      it != bitmap_rects.end();
-      it++ )  
-    {
-      // find the bounding box
-       gcp->coords[0] = it->x - it->w/2.0;
-       gcp->coords[1] = it->y - it->h/2.0;
-       gcp->coords[2] = gcp->coords[0] + it->w;
-       gcp->coords[3] = gcp->coords[1];
-       gcp->coords[4] = gcp->coords[2];
-       gcp->coords[5] = gcp->coords[1] + it->h;
-       gcp->coords[6] = gcp->coords[0];
-       gcp->coords[7] = gcp->coords[5];
-       gcp->coords[8] = gcp->coords[0];
-       gcp->coords[9] = gcp->coords[1];
-    
-
-      // add the rectangle   
-      /*
-	// use rectangle in aa mode
-	gnome_canvas_item_new (g_group,
-			     gnome_canvas_rect_get_type(),
-			     "x1", x,
-			     "y1", y,
-			      "x2", a,
-			     "y2", b,
-			     // alpha blending is slow...
-			     //"fill_color_rgba", (color << 8)+128,
-			     //"fill_color_rgba", (color << 8)+255,
-			     "fill_color", "black",
-			     "outline_color", NULL,
-			     "width_pixels", 1,
-			     NULL );            
-      */
-       
-       // use lines in X mode
-       gnome_canvas_item_new (g_group,
-			      gnome_canvas_line_get_type(),
-			      "points", gcp,
-			      //"fill_color", "black",
-			      "fill_color_rgba", (this->color<<8)+255,
-			      //"width_units", it->h,
-			      //"width_pixels", 1,
-			      "width_units", 0.001,
-			      NULL );//(double)THICKNESS,
-    }
-  
-  gnome_canvas_points_free(gcp);
-  
-  // the selction item is only shown when we're selected - it's
-  // initially hidden
-  //gnome_canvas_item_hide(  this->g_select_item );
-  
-     
-}
-
-#endif

@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.32 2002-09-26 01:22:17 rtv Exp $
+ * CVS info: $Id: server.cc,v 1.33 2002-10-07 06:45:59 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -57,7 +57,7 @@
 #include <iomanip>
 
 //using namespace std;
-#define DEBUG
+//#define DEBUG
 //#define VERBOSE
 
 #include "server.hh"
@@ -102,6 +102,11 @@ CStageServer::CStageServer( int argc, char** argv, Library* lib )
     quit = true;
     return;
   }
+
+
+  // give the GUI a go at the command line too
+  if( enable_gui ) GuiInit( argc, argv );
+
     
 #ifdef INCLUDE_RTK2
   ///////////////////////////////////////////////////////////////////////
@@ -155,9 +160,12 @@ CStageServer::CStageServer( int argc, char** argv, Library* lib )
   ///////////////////////////////////////////////////////////////////////
   // STARTUP
   
+    // use the generic hook to start the GUI
+  if( this->enable_gui ) GuiWorldStartup( this );
+  
   // Startup all the entities
   // Devices will create and initialize their device files
-
+  
   if( !root->Startup() )
     {
       PRINT_ERR("Root Entity startup failed" );

@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.87 2002-09-26 07:22:38 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.88 2002-10-07 06:45:59 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -141,6 +141,9 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
 
   m_interval = 0.1; // update interval in seconds 
   m_last_update = -MAXFLOAT; // initialized 
+
+  // init the ptr to GUI-specific data
+  this->gui_data = NULL;
 
 #ifdef INCLUDE_RTK2
   // Default figures for drawing the entity.
@@ -388,13 +391,21 @@ bool CEntity::Startup( void )
   //       this->m_world->lib->TokenFromType( this->stage_type ),
   //       m_parent_entity ? "" : "- ROOT" );
   
+  // use the generic hook
+  if( m_world->enable_gui )
+    GuiEntityStartup( this );
+  
+
  CHILDLOOP( ch )
     ch->Startup();
 
-#ifdef INCLUDE_RTK2
+
+ //#ifdef INCLUDE_RTK2
   // Initialise the rtk gui
  //RtkStartup();
-#endif
+ //#endif
+
+ 
 
  //PRINT_DEBUG( "STARTUP DONE" );
 
@@ -412,12 +423,16 @@ void CEntity::Shutdown()
   CHILDLOOP( ch ) ch->Shutdown();
 
 
-#ifdef INCLUDE_RTK2
+  //#ifdef INCLUDE_RTK2
   // Clean up the figure we created
-  if(m_world->enable_gui)
-    rtk_fig_destroy(this->fig);
-#endif
+  //if(m_world->enable_gui)
+  //rtk_fig_destroy(this->fig);
+  //#endif
 
+  // use the generic hook
+  if( m_world->enable_gui )
+    GuiEntityShutdown( this );
+  
   return;
 }
 
@@ -430,6 +445,8 @@ void CEntity::Update( double sim_time )
 
   // recursively update our children
   CHILDLOOP( ch ) ch->Update( sim_time );    
+
+  GuiEntityUpdate( this );
 }
 
 
@@ -890,10 +907,6 @@ int CEntity::SetProperty( int con, EntityProperty property,
       RtkShutdown();
       RtkStartup();
 #endif
-      
-#ifdef USE_GNOME2 
-      // TODO - change properties on the fly? or just start from scratch like rtk2?
-#endif
     }
   
   if( move_figure )
@@ -903,11 +916,14 @@ int CEntity::SetProperty( int con, EntityProperty property,
 	rtk_fig_origin(this->fig, local_px, local_py, local_pth );
 #endif 
       
-#ifdef USE_GNOME2 
-      this->GuiMove();
-#endif
+      //#ifdef USE_GNOME2 
+      //this->GuiMove();
+      //#endif
     }
 
+  // update the GUI with the new property
+  if( m_world->enable_gui )
+    GuiEntityPropertyChange( this, property );
 
   return 0;
 }
@@ -1036,14 +1052,20 @@ void CEntity::Print( char* prefix )
 // these don't do anything by default, but are overridden by CPlayerEntity
 void CEntity::Subscribe()
 { 
-  puts( "SUB" );
+  //puts( "SUB" );
 };
 
 void CEntity::Unsubscribe()
 { 
-  puts( "UNSUB" );
+  //puts( "UNSUB" );
 };
   
+int CEntity::Subscribed()
+{ 
+  return 0;
+};
+
+
 // these versions sub/unsub to this device and all its decendants
 void CEntity::FamilySubscribe()
 { 
@@ -1055,6 +1077,30 @@ void CEntity::FamilyUnsubscribe()
   CHILDLOOP( ch ) ch->FamilyUnsubscribe(); 
 };
 
+
+void CEntity::GuiStartup( void )
+{
+  // use the interface library hook
+  GuiEntityStartup( this );
+  
+  CHILDLOOP( ch )
+    ch->GuiStartup();
+}
+
+
+void CEntity::GetStatusString( char* buf, int buflen )
+{
+  double x, y, th;
+  this->GetGlobalPose( x, y, th );
+  
+  // check for overflow
+  assert( -1 != 
+	  snprintf( buf, buflen, 
+		    "Pose(%.2f,%.2f,%.2f) Stage(%d:%d)",
+		    x, y, th, 
+		    this->stage_id,
+		    this->stage_type ) );
+}  
 
 #ifdef INCLUDE_RTK2
 

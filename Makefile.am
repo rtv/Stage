@@ -1,4 +1,4 @@
-SUBDIRS = rtk2 src worlds tools
+SUBDIRS = rtk2 gnome2 src worlds tools
 
 dist-hook:
 	mkdir -p $(top_distdir)/doc

@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.8 2002-09-25 20:46:58 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.9 2002-10-07 06:46:00 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -47,16 +47,12 @@
 #include "rtp.h"
 //#include "library.hh"
 
-
+#include "gui.hh"
 
 class Library;
 
 #if INCLUDE_RTK2
 #include "rtk.h"
-#endif
-
-#ifdef USE_GNOME2
-#include <gnome.h>
 #endif
 
 // World class
@@ -303,13 +299,13 @@ public: int GetStopTime( void ){ return m_stoptime; };
   protected: bool RtkSave(CWorldFile *worldfile);
   
   // Start the GUI
-  protected: bool RtkStartup();
+  public: bool RtkStartup();
 
   // Stop the GUI
-  protected: void RtkShutdown();
+  public: void RtkShutdown();
 
   // Update the GUI
-  protected: void RtkUpdate();
+  public: void RtkUpdate();
 
 protected: void RtkMenuHandling();
   
@@ -364,24 +360,7 @@ public: static int autosubscribe;
   private: int export_count;
 #endif
 
-#ifdef USE_GNOME2
-public:
-  GnomeApp* g_app; // application
-  GnomeCanvas* g_canvas; //main drawing window
-  GtkMenuBar* g_menubar; // menu bar
-  GnomeAppBar* g_appbar; // status bar
-  void GuiStartup( void );
-
-  // CALLBACKS
-  static gint GuiEvent(GnomeCanvasItem *item, 
-		       GdkEvent *event, 
-		       gpointer data);
-
-  static void GuiAboutBox(GtkWidget *widget, gpointer data);
-  static void GuiSubscribeToAll(GtkWidget *widget, gpointer data);
-  static void GuiSubscribeInvert(GtkWidget *widget, gpointer data);
-  static gboolean GuiProgressTimeout( gpointer data );
-#endif
+  //public: void GuiStartup( void );
 
 };
 
