@@ -1,5 +1,6 @@
 
 #include <assert.h>
+#include <string.h>
 #include "math.h"
 #include "entity.hh"
 #include "rtkgui.hh"
