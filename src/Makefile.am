@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.76 2004-11-08 20:34:22 rtv Exp $
+# $Id: Makefile.am,v 1.77 2004-11-10 06:29:05 rtv Exp $
 
 # we don't need these right now, but I'll keep this commented out just
 # in case.  
@@ -47,7 +47,6 @@ libstage_la_SOURCES = \
         rtk.h \
         rtk_canvas.c \
         rtk_fig.c \
-        rtk_menu.c \
         rtk_region.c \
         rtkprivate.h \
         stg_driver.cc \
@@ -60,6 +59,9 @@ libstage_la_SOURCES = \
 	stg_position.cc \
 	stg_sonar.cc \
 	stg_blobfinder.cc
+
+#        rtk_menu.c 
+
 
 libstage_la_LDFLAGS = -export-dynamic -version-info 0:0:0
 libstage_la_LIBADD = @GTK_LIBS@ 
