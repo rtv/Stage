@@ -44,6 +44,14 @@ dnl Checks for library functions.
 #AC_TYPE_SIGNAL
 #AC_CHECK_FUNCS(getcwd gethostname gettimeofday mkdir rmdir select socket strcspn strdup strerror)
 
+dnl should we include the RTK GUI?
+AC_ARG_WITH(gui,    [   --without-gui         Don't include the GUI],,
+with_gui=yes)
+if test "x$with_gui" = "xyes"; then
+  AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
+fi
+AM_CONDITIONAL(WITH_GUI, test x$with_gui = xyes)
+
 dnl where's player?
 AC_ARG_WITH(player, [   --with-player=dir      Location of Player (installation or source)],
 PLAYER_DIR=$with_player,
@@ -54,9 +62,5 @@ dnl where's the X11-style color database?
 AC_ARG_WITH(color, [   --with-color=file      Location of X11-style color file],
 CDB=$with_color, CDB="\"/usr/X11R6/lib/X11/rgb.txt\"")
 AC_DEFINE_UNQUOTED(COLOR_DATABASE,$CDB,[the X11-style color database])
-
-dnl include RTK GUI
-AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
-
 
 AC_OUTPUT(Makefile src/Makefile rtk2/Makefile worlds/Makefile tools/Makefile)

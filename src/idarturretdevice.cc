@@ -21,7 +21,7 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/idarturretdevice.cc,v $
 * $Author: gerkey $
-* $Revision: 1.5 $
+* $Revision: 1.6 $
 ******************************************************************************/
 
 #include <math.h>
@@ -92,6 +92,7 @@ CIDARTurretDevice::CIDARTurretDevice(CWorld *world, CEntity *parent )
 }
 
 
+#ifdef INCLUDE_RTK2
 void CIDARTurretDevice::RenderMessages( player_idarturret_reply_t* rep )
 {
   rtk_fig_clear( this->data_fig );
@@ -112,6 +113,7 @@ void CIDARTurretDevice::RenderMessages( player_idarturret_reply_t* rep )
 	}
     }
 }
+#endif
 
 void CIDARTurretDevice::Sync( void ) 
 {
@@ -149,7 +151,9 @@ void CIDARTurretDevice::Sync( void )
 	  
 	case IDAR_RECEIVE:
 	  //puts( "RX" );
+#ifdef INCLUDE_RTK2
 	  RenderMessages( &reply );
+#endif
 
 	  // gather and wipe the current messages from each idar
 	  for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
@@ -160,7 +164,9 @@ void CIDARTurretDevice::Sync( void )
 	  
 	case IDAR_RECEIVE_NOFLUSH:
 	  //puts( "RX_NF" );
+#ifdef INCLUDE_RTK2
 	  RenderMessages( &reply );
+#endif
 
 	  // gather current message from each idar
 	  for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
@@ -181,7 +187,9 @@ void CIDARTurretDevice::Sync( void )
 	  for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
 	    idars[i]->CopyAndClearMessage( &reply.rx[i] );
 
+#ifdef INCLUDE_RTK2
 	  RenderMessages( &reply );
+#endif
 	  
 	  PutReply(client, PLAYER_MSGTYPE_RESP_ACK,NULL,&reply,sizeof(reply));
 	  break;

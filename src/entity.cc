@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.75 2002-07-28 23:37:01 inspectorg Exp $
+ * CVS info: $Id: entity.cc,v 1.76 2002-08-21 01:45:29 gerkey Exp $
  */
 
 #include <math.h>
@@ -52,6 +52,7 @@
 #include "worldfile.hh"
 
 
+#ifdef INCLUDE_RTK2
 // CALLBACK FUNCTION WRAPPERS ////////////////////////////////////////////
 // called by rtk to tweak Stage devices
 
@@ -75,6 +76,7 @@ void CEntity::staticUnselect( void* ent )
     ((CEntity*)ent)->FamilyUnsubscribe();
 }
 ///////////////////////////////////////////////////////////////////////////
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////

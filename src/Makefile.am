@@ -1,4 +1,14 @@
-AM_CPPFLAGS = -Wall -I$(top_srcdir)/include -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/server/drivers/stage -I$(top_srcdir)/rtk2 `gtk-config --cflags`
+if WITH_GUI
+RTKCPPFLAGS = -I$(top_srcdir)/rtk2 `gtk-config --cflags`
+RTKLDADD    = -L$(top_builddir)/rtk2 -lrtk
+RTKLDFLAGS  = `gtk-config --libs gtk gthread`
+else
+RTKCPPFLAGS =
+RTKLDADD    =
+RTKLDFLAGS  =
+endif
+
+AM_CPPFLAGS = -Wall -I$(top_srcdir)/include -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/server/drivers/stage $(RTKCPPFLAGS)
 
 bin_PROGRAMS = stage
 
@@ -38,6 +48,6 @@ stage_SOURCES = boxobstacle.cc \
                 worldfile.cc
                 #bpsdevice.cc
 
-stage_LDADD = -lm -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -lplayerqueue -lpthread -L$(top_builddir)/rtk2 -lrtk
+stage_LDADD = -lm -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -lplayerqueue -lpthread $(RTKLDADD)
 
-stage_LDFLAGS = `gtk-config --libs gtk gthread`
+stage_LDFLAGS = $(RTKLDFLAGS)
