@@ -3,15 +3,14 @@
 #       showing how to include some pre-defined objects
 # Author: Andrew Howard, Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.17 2003-04-07 19:12:26 rtv Exp $
+# CVS: $Id: everything.world,v 1.18 2003-04-27 04:48:13 gerkey Exp $
 
 include "usc_pioneer.inc"
 
 
 include "beacons.inc"
 
-
-
+base_port 50000
 resolution 0.03
 
 #
@@ -45,8 +44,8 @@ define visionbeacon box
   color "red"
 )
 
-laser( pose [ 2 2 0 ] robot 10 )
-laser( pose [ 3 2 0 ] robot 11 )
+laser( pose [ 2 2 0 ] port 7777 )
+laser( pose [ 3 2 0 ] port 7778 )
 
 #
 # define primary colored pucks for moving with the gripper
@@ -57,18 +56,18 @@ define blue_puck puck( color "blue" )
 
 
 # generate some pioneer robots in USC configuario
-usc_pioneer(color "red" name "robot0" robot 0 pose [3.195 1.237 40 ]
+usc_pioneer(color "red" name "robot0" port 6665 pose [3.195 1.237 40 ]
             mcom())
 
 usc_pioneer_gripper( color "green" name "robot1" 
-                     robot 1 pose [3.857 7.823 0.895 ])
+                     port 6666 pose [3.857 7.823 0.895 ])
 
 usc_pioneer_bumper( color "blue" name "robot2" 
-                    robot 2 pose [7.404 0.965 75.599] )
+                    port 6667 pose [7.404 0.965 75.599] )
 
-amigobot( color "red" name "amigo1" robot 3 pose [11.930 4.546 -135.514] )
-amigobot( color "red" name "amigo2" robot 4 pose [11.228 5.092 -121.652] )
-amigobot( color "red" name "amigo3" robot 5  pose [12.554 4.130 -126.121] )
+amigobot( color "red" name "amigo1" port 6670 pose [11.930 4.546 -135.514] )
+amigobot( color "red" name "amigo2" port 6671 pose [11.228 5.092 -121.652] )
+amigobot( color "red" name "amigo3" port 6672  pose [12.554 4.130 -126.121] )
 
 # generate some laser beacons
 laserbeacon( pose [6.420 3.600 -143.139] fiducial_id 5 )
@@ -94,7 +93,7 @@ blue_puck( pose [5.058 7.898 0.000] )
 #
 define cornercube box( size [0.2 0.2] laser_return "bright" )
 
-box(
+box( 
      pose [9.606 1.416 -112.435] 
      size [0.6 0.6 0.0]     
 

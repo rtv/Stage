@@ -1,5 +1,5 @@
 /*
- * $Id: autoplace.cc,v 1.2 2002-10-16 21:19:32 gerkey Exp $
+ * $Id: autoplace.cc,v 1.3 2003-04-27 04:48:13 gerkey Exp $
  *
  * util to autoplace robots (or other entities with position and truth devices)
  * randomly, in free space, inside a given rectangle
@@ -74,7 +74,7 @@ main(int argc, char** argv)
 {
   PlayerClient robot;
   double randx,randy,randth;
-  double x,y,th;
+  //double x,y,th;
 
   srand(time(NULL));
 

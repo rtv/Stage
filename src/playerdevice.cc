@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.58 2003-03-12 00:29:56 rtv Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.59 2003-04-27 04:48:13 gerkey Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -119,16 +119,13 @@ bool CPlayerEntity::Load(CWorldFile *worldfile, int section)
   CEntity::Load( worldfile, section );
 
   // Read the player port (default 0)
-  m_player.robot = worldfile->ReadInt(section, "port", 0 );
+  m_player.port = worldfile->ReadInt(section, "port", 0 );
 
-  // try the new <robot> keyword - overrides the deprecated port
-  m_player.robot = worldfile->ReadInt(section, "robot", 0 );
-  
   // if the port wasn't set, and our parent is a player device,
   // default to the parent's port
-  if (m_player.robot == 0 && RTTI_ISPLAYERP(m_parent_entity) )
+  if (m_player.port == 0 && RTTI_ISPLAYERP(m_parent_entity) )
     {
-      m_player.robot = dynamic_cast<CPlayerEntity*>(m_parent_entity)->m_player.robot;
+      m_player.port = dynamic_cast<CPlayerEntity*>(m_parent_entity)->m_player.port;
     }
 
   // Read the device index
@@ -138,11 +135,14 @@ bool CPlayerEntity::Load(CWorldFile *worldfile, int section)
 
   //PRINT_DEBUG2( "port: %d index %d", m_player.port, m_player.index );
 
-  /*
-  if( m_player.robot == 0 )
+  if(!m_world->m_player_baseport  && !m_player.port)
     printf( "\nWarning: Player device (%s:%d:%d) has zero port. Missing 'port' property in world file?\n",
-	    this->lib_entry->token, m_player.robot, m_player.index );
-            */
+	    this->lib_entry->token, m_player.port, m_player.index );
+
+  if(m_world->m_player_baseport  && m_player.port)
+    printf( "\nWarning: Player device (%s:%d:%d) has non-zero port,\n"
+            "but 'base_port' was given, so ports will be auto-assigned.\n",
+	    this->lib_entry->token, m_player.port, m_player.index );
 
   return true;
 }
@@ -170,7 +170,7 @@ bool CPlayerEntity::Startup( void )
   size_t mem = SharedMemorySize();
    
   snprintf( this->device_filename, sizeof(this->device_filename), "%s/%d.%d.%d", 
-            m_world->m_device_dir, m_player.robot, m_player.code, m_player.index );
+            m_world->m_device_dir, m_player.port, m_player.code, m_player.index );
   
   PRINT_DEBUG1("creating device %s", device_filename);
 
@@ -246,7 +246,7 @@ bool CPlayerEntity::Startup( void )
   m_info_io->command_avail =  0;
   m_info_io->config_avail  =  0;
   
-  m_info_io->player_id.robot = m_player.robot;
+  m_info_io->player_id.port = m_player.port;
   m_info_io->player_id.index = m_player.index;
   m_info_io->player_id.code = m_player.code;
   m_info_io->subscribed = 0;
@@ -277,6 +277,8 @@ bool CPlayerEntity::Startup( void )
   // store our driver name in the player IO structure.
   // use the worldfile token as the driver name to avoid possible confusion
   this->SetDriverName( (char*)this->lib_entry->token );
+
+  this->SetRobotName( (char*)this->name );
 
   return true;
 }
@@ -408,6 +410,26 @@ CPlayerEntity::SetDriverName( char* name )
           sizeof(this->m_info_io->drivername));
   // just to be sure
   this->m_info_io->drivername[sizeof(this->m_info_io->drivername)-1] = '\0';
+
+  Unlock();
+}
+
+////////////////////////////////////////////////////////////////////////////
+// Write to the robot name segment of the IO buffer
+//
+// this is called at the end of CPlayerEntity::Startup() with the
+// name of this entity
+void 
+CPlayerEntity::SetRobotName( char* name )
+{
+  Lock();
+
+  assert(name);
+
+  strncpy((char*)(this->m_info_io->robotname), name, 
+          sizeof(this->m_info_io->robotname));
+  // just to be sure
+  this->m_info_io->robotname[sizeof(this->m_info_io->robotname)-1] = '\0';
 
   Unlock();
 }
@@ -733,7 +755,7 @@ void CPlayerEntity::GetStatusString( char* buf, int buflen )
 		    x, 
 		    y, 
 		    th,
-		    this->m_player.robot, 
+		    this->m_player.port, 
 		    this->m_player.code, 
 		    this->m_player.index, 
 		    this->stage_id,
@@ -859,7 +881,7 @@ bool CPlayerEntity::SpawnPlayerv( void )
   if (pid == 0)
   {
     char portstr[64];
-    sprintf( portstr, "%d", this->m_player.robot );
+    sprintf( portstr, "%d", this->m_player.port );
 
     // Playerv must be in the current path
     if( execlp( "playerv", "playerv",
@@ -894,9 +916,9 @@ void CPlayerEntity::RtkStartup()
 	   this->name,
 	   this->lib_entry->token );
   strncat(label, tmp, sizeof(label));
-  if (m_player.robot > 0)
+  if (m_player.port > 0)
   {
-    snprintf(tmp, sizeof(tmp), "\n%d:%d", m_player.robot, m_player.index);
+    snprintf(tmp, sizeof(tmp), "\n%d:%d", m_player.port, m_player.index);
     strncat(label, tmp, sizeof(label));
   }
    

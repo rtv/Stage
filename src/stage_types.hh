@@ -21,7 +21,7 @@
  * Desc: Shared types, constants, etc
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: stage_types.hh,v 1.12 2003-04-01 00:20:56 rtv Exp $
+ * CVS: $Id: stage_types.hh,v 1.13 2003-04-27 04:48:13 gerkey Exp $
  */
 
 #ifndef STAGE_TYPES_HH
@@ -235,10 +235,14 @@ typedef struct Rect
 #define STAGE_ASYNC 1
 
 // Convert radians to degrees
-#define RTOD(r) ((r) * 180.0 / M_PI)
+#ifndef RTOD
+  #define RTOD(r) ((r) * 180.0 / M_PI)
+#endif
 
 // Convert degrees to radians
-#define DTOR(d) ((d) * M_PI / 180.0)
+#ifndef DTOR
+  #define DTOR(d) ((d) * M_PI / 180.0)
+#endif
 
 // Normalize angle to domain -pi, pi
 #define NORMALIZE(z) atan2(sin(z), cos(z))

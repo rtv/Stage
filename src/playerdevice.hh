@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: playerdevice.hh,v 1.14 2003-01-09 22:01:27 rtv Exp $
+ * CVS info: $Id: playerdevice.hh,v 1.15 2003-04-27 04:48:13 gerkey Exp $
  */
 
 #ifndef PLAYERENTITY_HH
@@ -112,6 +112,10 @@ public: virtual void GetStatusString( char* buf, int buflen );
   // every player device should invoke this method early, like in the
   // constructor.
   protected: void SetDriverName( char* name );
+
+  // Write to the robot name segment of the IO buffer
+  // This is called automatically in CPlayerEntity::Startup()
+  protected: void SetRobotName( char* name );
   
   // Write to the data buffer
   // Returns the number of bytes copied

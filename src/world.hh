@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.22 2002-11-11 03:09:46 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.23 2003-04-27 04:48:13 gerkey Exp $
  */
 
 #ifndef WORLD_HH
@@ -85,6 +85,11 @@ class CWorld
   // The resolution is specified in pixels-per-meter.
   public: double ppm;
 
+  // if "base_port <num>" is given in the world file, then that <num> will
+  // be assigned to m_player_baseport, and Player will be told to
+  // auto-assign ports, starting with this one.  it's stored here so that
+  // the entities can get at it.
+  public: int m_player_baseport;
 
   // Object encapsulating world description file (null if there is no file)
   public: CWorldFile* worldfile;

@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.26 2003-04-01 00:20:56 rtv Exp $
+ * CVS info: $Id: worldfile.cc,v 1.27 2003-04-27 04:48:13 gerkey Exp $
  */
 
 #include <assert.h>
@@ -1627,7 +1627,7 @@ int CWorldFile::ReadTupleInt(int entity, const char *name,
   int property = GetProperty(entity, name);
   if (property < 0)
     return value;
-  return atof(GetPropertyValue(property, index));
+  return atoi(GetPropertyValue(property, index));
 }
 
 

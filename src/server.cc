@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.46 2003-02-05 03:01:02 gerkey Exp $
+ * CVS info: $Id: server.cc,v 1.47 2003-04-27 04:48:13 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -104,9 +104,10 @@ CStageServer::CStageServer( int argc, char** argv, Library* lib )
   // enable player services by default, the command lines may change this
   m_run_player = true;    
   
-  // Player runs on its default port
-  m_player_port = PLAYER_PORTNUM;    
-
+  // by default, we don't auto-assign ports; signify that by setting
+  // baseport to 0, which isn't valid
+  m_player_baseport = 0;
+  
   //  one of our parent's constructors may have failed and set this flag
   if( quit ) return;
 
@@ -184,6 +185,9 @@ bool CStageServer::Load( void )
 
   // set the top-level matrix resolution
   this->ppm = 1.0 / this->worldfile->ReadLength( 0, "resolution", 1.0 / this->ppm );
+  
+  // see if we should tell Player to auto-assign ports
+  this->m_player_baseport = this->worldfile->ReadInt(0, "base_port", 0);
   
   // Get the authorization key to pass to player
   const char *authkey = this->worldfile->ReadString(0, "auth_key", "");
@@ -452,15 +456,6 @@ bool CStageServer::ParseCmdLine( int argc, char** argv )
       printf( "[No Player]" );
     }
     
-    // select player port
-    if((strcmp( argv[a], "-pp" ) == 0 ))
-    {
-      if(++a < argc-1)
-        m_player_port = atoi(argv[a]);
-      else
-        return(false);
-    }
-
     // FAST MODE - run as fast as possible - don't attempt t match real time
     if((strcmp( argv[a], "--fast" ) == 0 ) || 
        (strcmp( argv[a], "-f" ) == 0))
@@ -531,7 +526,7 @@ bool CStageServer::Startup( void )
 
   // inherit parent's method
   CWorld::Startup();
-
+  
   // See if there was anything we didnt understand in the world file
   this->worldfile->WarnUnused();
 
@@ -561,6 +556,10 @@ bool CStageServer::StartupPlayer( void )
 {
   PRINT_DEBUG( "** STARTUP PLAYER **" );
 
+  char* player_argv[16];
+  char portbuf[32];
+  int i;
+
   // ----------------------------------------------------------------------
   // fork off a player process to handle robot I/O
   if( (this->player_pid = fork()) < 0 )
@@ -580,8 +579,7 @@ bool CStageServer::StartupPlayer( void )
     // player will open every file in the device directory
     // and attempt to memory map it as a device. 
 
-    char portbuf[32];
-    sprintf(portbuf,"%d",m_player_port);
+    /*
     // Player must be in the current path
     if( execlp( "player", "player",
                 "-p", portbuf,
@@ -589,6 +587,25 @@ bool CStageServer::StartupPlayer( void )
                 (strlen(m_auth_key)) ? "-k" : NULL,
                 (strlen(m_auth_key)) ? m_auth_key : NULL,
                 NULL) < 0 )
+                */
+    i=0;
+    player_argv[i++] = "player";
+    player_argv[i++] = "-s";
+    player_argv[i++] = DeviceDirectory();
+    if(strlen(m_auth_key))
+    {
+      player_argv[i++] = "-k";
+      player_argv[i++] = m_auth_key;
+    }
+    if(m_player_baseport)
+    {
+      player_argv[i++] = "-a";
+      player_argv[i++] = "-p";
+      sprintf(portbuf,"%d",m_player_baseport);
+      player_argv[i++] = portbuf;
+    }
+    player_argv[i++] = NULL;
+    if(execvp("player", player_argv) < 0)
     {
       PRINT_ERR1("error executing player: [%s]\n"
                  "Make sure player is in your path.", strerror(errno));
