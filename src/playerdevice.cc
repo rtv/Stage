@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.43 2002-10-25 22:48:09 rtv Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.44 2002-10-27 23:32:36 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -48,9 +48,9 @@
 #include <iomanip>
 #include <iostream>
 
-#define DEBUG
+//#define DEBUG
 //#define VERBOSE
-//#undef DEBUG
+#undef DEBUG
 //#undef VERBOSE
 
 #include "playerdevice.hh"

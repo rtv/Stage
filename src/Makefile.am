@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.16 2002-10-27 23:15:50 rtv Exp $
+# $Id: Makefile.am,v 1.17 2002-10-27 23:32:36 rtv Exp $
 
 
 SUBDIRS = models @GUI_DIR@
@@ -19,8 +19,6 @@ AM_CPPFLAGS = 	-Wall \
 		$(RTKCPPFLAGS)
 
 bin_PROGRAMS = stage
-
-stage_DEPENDENCIES = models/libstgmodels.a @GUI_DIR@/@GUI_LIB@
 
 stage_SOURCES = \
 		client.cc			\
@@ -49,7 +47,6 @@ stage_SOURCES = \
 
 stage_LDFLAGS = 
 
-stage_LDADD = -lm -Lmodels -lstgmodels \
+stage_LDADD = 	-lm -Lmodels -lstgmodels \
 		-L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -lplayerqueue \
-		@LIBOBJS@ @GUI_LINK@
-
+		@GUI_LINK@
