@@ -3,7 +3,7 @@
 # stage/Makefile.common - build and installation configurations
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile.common,v 1.48 2002-05-17 03:25:15 gerkey Exp $
+# $Id: Makefile.common,v 1.49 2002-06-11 01:31:12 gerkey Exp $
 #
 # Notes: All user-configurable paths and build options should be specified 
 #        here. This file is included by Makefile and src/Makefile. 
@@ -16,7 +16,7 @@
 # Define Stage's version string for the source to include.
 # Must match Player's version string
 
-VERSION = 1.2-alpha
+VERSION = 1.2
 
 ##############################################################################
 # PLAYER CONFIGURATION (required)
@@ -79,12 +79,13 @@ ZLIB_LINK = -lz
 # choose one of these that suits your build (debug/profile/production)
 # all targets get these flags
 
+CCFLAGS = -Wall
 # production 
-#CCFLAGS = -O2 
+CCFLAGS += -O2 
 # debug
-CCFLAGS = -g3 
+#CCFLAGS += -g3
 # debug + profile + warnings - ideal for development
-#CCFLAGS = -pg -g3 -Wall
+#CCFLAGS += -pg -g3
 
 # you need this link option to get profiling data
 # it can be commented out for production compiles
