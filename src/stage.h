@@ -153,6 +153,8 @@ typedef enum
     GripperEnabled
   } stg_gripper_return_t;
 
+typedef int stg_neighbor_return_t;
+
 // any integer value other than this is a valid fiducial ID
 // TODO - fix this up
 #define FiducialNone 0
@@ -440,7 +442,9 @@ int stg_model_destroy( stg_client_t* cli, stg_id_t id );
 stg_id_t stg_world_create( stg_client_t* cli, stg_world_create_t* world );
 
 int stg_model_set_neighbor_return( stg_client_t* cli, stg_id_t id, 
-				    int *val );
+				    stg_neighbor_return_t *val );
+int stg_model_get_neighbor_return( stg_client_t* cli, stg_id_t id, 
+				    stg_neighbor_return_t *val );
 
 int stg_model_set_laser_return(stg_client_t* cli, stg_id_t id, 
 			       stg_laser_return_t *val);

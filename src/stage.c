@@ -619,12 +619,25 @@ int stg_model_get_transducers( stg_client_t* cli, stg_id_t id,
 }
 
 int stg_model_set_neighbor_return( stg_client_t* cli, stg_id_t id, 
-				    int *val )
+				    stg_neighbor_return_t *val )
 {
   stg_property_t* reply = stg_send_property( cli, id, 
 					     STG_PROP_ENTITY_NEIGHBORRETURN, 
 					     STG_SETGET,
 					     val, sizeof(int) ); 
+  
+  memcpy( val, reply->data, sizeof(int) );
+  stg_property_free( reply );
+  return 0;
+}
+
+int stg_model_get_neighbor_return( stg_client_t* cli, stg_id_t id, 
+				    stg_neighbor_return_t *val )
+{
+  stg_property_t* reply = stg_send_property( cli, id, 
+					     STG_PROP_ENTITY_NEIGHBORRETURN, 
+					     STG_GET,
+					     NULL, 0 ); 
   
   memcpy( val, reply->data, sizeof(int) );
   stg_property_free( reply );

@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.102 2003-08-19 22:09:52 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.103 2003-08-19 23:47:29 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -208,7 +208,7 @@ CEntity::CEntity( stg_entity_create_t* init )
   idar_return = IDARReflect;
   fiducial_return = FiducialNone; // not a recognized fiducial
   gripper_return = GripperDisabled;
-  neighbor_return = false;
+  neighbor_return = 0;
 
   // no visible light
   this->blinkenlight = LightNone;
@@ -295,81 +295,6 @@ CMatrix* CEntity::GetMatrix()
 {
   return( this->GetWorld()->matrix );
 }
-
-/*
-void CEntity::InitWall( void )
-{
-  BASE_DEBUG( "initializing wall" );
-
-  this->model_type = STG_MODEL_WALL;
-
-  // set default color
-  this->color = stg_lookup_color( STG_WALL_COLOR );
-
-  // set up our sensor response
-  this->laser_return = LaserVisible;
-  this->sonar_return = true;
-  this->obstacle_return = true;
-  this->puck_return = true;
-  this->neighbor_return = false;
-
-  // be the world size by default
-  stg_world_t* world = (stg_world_t*)g_node_get_root(this->node)->data;
-  this->size.x = world->width;
-  this->size.y = world->height;
-  this->pose_origin.x = world->width/2.0;
-  this->pose_origin.y = world->height/2.0;
-  this->pose_origin.a = 0.0;
-
-  // this model doesn't require periodic updates
-  this->interval = -1;
-
-  BASE_DEBUG( "initializing wall complete" );
-}
-
-void CEntity::InitPosition( void )
-{
-  BASE_DEBUG( "position creation" );
-  this->model_type = STG_MODEL_POSITION;
- 
-  // set up our sensor response
-  this->laser_return = LaserTransparent;
-  this->sonar_return = true;
-  this->obstacle_return = true;
-  this->puck_return = true;
-
-  // Set default shape and geometry
-  this->size.x = 0.30;
-  this->size.y = 0.30;
-
-  // set default color
-  this->color = stg_lookup_color( STG_POSITION_COLOR );
-
-  //memset( &this->velocity_cmd, 0, sizeof(this->velocity_cmd) );
-  //memset( &this->pose_odo, 0, sizeof(this->pose_odo) );
-  //memset( &this->pose_cmd, 0, sizeof(this->pose_cmd) );
-  
-  // update this device VERY frequently
-  this->interval = 0.01; 
-  
-  // assume robot is 20kg
-  this->mass = 20.0;
-
-  // default to velocity mode - the most common way to control a robot
-  //this->control_mode = VELOCITY_CONTROL_MODE;
-
-  // OMNI_DRIVE_MODE = Omnidirectional drive - x y & th axes are
-  // independent.  DIFF_DRIVE_MODE = Differential-drive - x & th axes
-  // are coupled, y axis disabled
-  //this->drive_mode = OMNI_DRIVE_MODE; // default can be changed in worldfile
-  //this->drive_mode = DIFF_DRIVE_MODE; // default can be changed in worldfile
-
-  //this->stall = false;
-  //this->motors_enabled = true;
-
-  BASE_DEBUG( "position creation complete" );
-}
-*/
 
 void CEntity::GetBoundingBox( double &xmin, double &ymin,
 			      double &xmax, double &ymax )
@@ -961,7 +886,8 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
 
 void CEntity::GetNeighbors( GArray** neighbor_array )
 {
-  
+  PRINT_DEBUG( "searching for neighbors" );
+
   // create the array, pre-allocating some space for speed
   *neighbor_array = g_array_sized_new( FALSE, TRUE, 
 				       sizeof(stg_neighbor_t), 
@@ -977,7 +903,7 @@ void CEntity::GetNeighbors( GArray** neighbor_array )
        node = g_node_next_sibling( node) )
     {
       CEntity* ent = (CEntity*)node->data;
-      
+
       if( !ent->neighbor_return ) // not a neighbor!
       	continue;
 
@@ -1001,6 +927,9 @@ void CEntity::GetNeighbors( GArray** neighbor_array )
       buddy.size.x = sz.x;
       buddy.size.y = sz.y;
 
+      PRINT_DEBUG3( "detected a neighbor id %d at %.2fm, %.2f degrees",
+		    buddy.id, buddy.range, buddy.bearing );
+
       // Filter by detection range
       if( buddy.range > this->bounds_neighbor.max || 
 	  buddy.range < this->bounds_neighbor.min )
@@ -1017,6 +946,7 @@ void CEntity::GetNeighbors( GArray** neighbor_array )
       
       *neighbor_array = g_array_append_vals( *neighbor_array, &buddy, 1 );
     }
+
 
   stg_gui_neighbor_render( this, *neighbor_array );
 }

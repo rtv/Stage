@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.2 2003-08-19 22:09:53 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.3 2003-08-19 23:47:29 rtv Exp $
  */
 
 #include <assert.h>
@@ -1716,7 +1716,7 @@ int CWorldFile::Upload( stg_client_t* cli,
 
 	stg_id_t parent = created_models[this->GetEntityParent(section)].stage_id;
 
-	PRINT_MSG1( "creating child of parent %d", parent );
+	PRINT_DEBUG1( "creating child of parent %d", parent );
 	
 	stg_entity_create_t child;
 	strncpy(child.name, this->ReadString(section,"name", "" ), 
@@ -1768,12 +1768,18 @@ int CWorldFile::Upload( stg_client_t* cli,
 	pose.y = this->ReadTupleFloat( section, "pose", 1, 0.0 );
 	pose.a = this->ReadTupleFloat( section, "pose", 2, 0.0 );
 	stg_model_set_pose( cli, anid, &pose );
-
+	
+	stg_neighbor_return_t nret;
+	nret = this->ReadInt( section, "neighbor", 0 );
+	stg_model_set_neighbor_return( cli, anid, &nret );
+	
 	stg_blinkenlight_t bl;
 	const char* blstr = NULL;
 	blstr = this->ReadString( section, "light", "none" );
 
-	if( strcmp( blstr, "on" ) == 0 )
+	if( strcmp( blstr, "none" ) == 0 )
+	  bl = LightNone;
+	else if( strcmp( blstr, "on" ) == 0 )
 	  bl = LightOn;
 	else if( strcmp( blstr, "off" ) == 0 )
 	  bl = LightOff;
