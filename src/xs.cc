@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.18 2001-09-22 21:07:39 vaughan Exp $
+ * $Id: xs.cc,v 1.19 2001-09-23 03:17:01 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -1655,7 +1655,7 @@ void CXGui::HandleKeyPressEvent( XEvent& reportEvent )
 
       memset( &output, 0, sizeof( output ) );
 
-      output.stage_id = 0; // this indicates a command
+      output.stage_id = -1; // this indicates a command
 
       output.x = (uint32_t) 1;
       

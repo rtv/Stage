@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.12 $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  (empty)
@@ -42,6 +42,10 @@ CVisionBeacon::CVisionBeacon(CWorld *world, CEntity *parent)
     obstacle_return = 1;
     sonar_return = 1;
 
+    m_player_port = 0; // not a player device
+    m_player_type = 0;
+    m_player_index = 0;
+    
     m_radius = 0.1; // our beacons are 10cm radius
     m_size_x = m_radius * 2.0;
     m_size_y = m_radius * 2.0;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.35 $
+//  $Revision: 1.36 $
 //
 // Usage:
 //  (empty)
@@ -548,7 +548,7 @@ void CWorld::Update()
 	
 	// see if this is a stage directive 
 	
-	if( truth.stage_id == 0 ) // its a command for the engine!
+	if( truth.stage_id == -1 ) // its a command for the engine!
 	  {
 	    switch( truth.x ) // used to identify the command
 	      {
@@ -568,9 +568,11 @@ void CWorld::Update()
 
 	//CEntity* ent = (CEntity*)truth.stage_id;
 
-	CEntity* ent = GetEntityByID( truth.id.port, 
-				      truth.id.type,
-				      truth.id.index );
+	//CEntity* ent = GetEntityByID( truth.id.port, 
+	//		      truth.id.type,
+	//		      truth.id.index );
+
+	CEntity* ent = m_object[ truth.stage_id ];
 	
 	assert( ent ); // there really ought to be one!
 	

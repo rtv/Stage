@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.13 $
+//  $Revision: 1.14 $
 //
 // Usage:
 //  (empty)
@@ -729,12 +729,12 @@ int CEntity::Subscribed()
   return( subscribed );
 }
 
-void CEntity::ComposeTruth( stage_truth_t* truth )
+void CEntity::ComposeTruth( stage_truth_t* truth, int index )
 {
   // compose a truth packet
   memset( truth, 0, sizeof(stage_truth_t) ); // just in case
   
-  truth->stage_id = (int)this;
+  truth->stage_id = index;
 
   truth->id.port = m_player_port;
   truth->id.type = m_player_type;

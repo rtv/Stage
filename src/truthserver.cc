@@ -168,7 +168,7 @@ static void * TruthWriter( void* arg )
 
 	  stage_truth_t truth;
 	  
-	  ent->ComposeTruth( &truth );
+	  ent->ComposeTruth( &truth, i );
 
 	  // is the packet different from the last one?
 	  if( memcmp( &truth, &(truths[i]), sizeof( truth ) ) != 0  ) 

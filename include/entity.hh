@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.16 $
+//  $Revision: 1.17 $
 //
 // Usage:
 //  (empty)
@@ -59,9 +59,6 @@ class CEntity
     public: CEntity(CWorld *world, CEntity *parent_object);
 
 
-  // this flag is set if another Stage is managing this entity
-public: bool ignored; 
-  
     StageType m_stage_type; // distinct from the player types found in messages.h
 
     // Sensor return values
@@ -250,7 +247,7 @@ public: double GetMass() { return(m_mass); }
 
 
     // builds a truth packet for this entity
-    public: void ComposeTruth( stage_truth_t* truth );
+    public: void ComposeTruth( stage_truth_t* truth, int index );
 
     // base address for this entity's records in shared memory
     //

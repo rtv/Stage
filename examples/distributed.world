@@ -20,7 +20,7 @@ create position_device pose 3.47 2.03 144 port 6665
 
 set host = orac
 
-create position_device pose 3.47 2.03 144 port 6666  
+create position_device pose 2.47 2.03 244 port 6666  
 {
   create player_device
   create sonar_device 
