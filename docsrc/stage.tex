@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.20 2004-07-16 19:06:56 rtv Exp $
+% CVS: $Id: stage.tex,v 1.21 2004-07-19 18:59:56 rtv Exp $
 
 \documentclass[letter,11pt,twoside]{report}
 
@@ -92,17 +92,24 @@
 
 \chapter{Introduction}
 
-  %\section{What is Stage?}
 \section{ Stage and the Player/Stage Project}
 
 The Player/Stage Project produces software tools to support research
-in autonomous robotics and intelligent sensor systems. Stage is a
-robot simulator. Stage models a population of mobile robots, sensors
-and objects in a two-dimensional bitmapped environment. Stage is
-designed with multi-agent systems in mind, so it provides fairly
-simple, computationally cheap models of lots of devices rather than
-attempting to emulate any device with great fidelity. We have found
-this to be a useful approach.
+in autonomous robotics, sensor systems and animats (artificial
+creatures). Stage is a robot simulator. It models a population of
+mobile robots, sensors and environmental objects in a two-dimensional
+world. Stage is designed with multi-agent systems in mind, so it
+provides fairly simple, computationally cheap models of lots of
+devices rather than attempting to emulate any device with great
+fidelity. This design is intended to be useful compromise between the
+conventional high-fidelity robot simulations, the minimal simulations
+described by Jakobi\cite{jakobi:radical}, and the grid-world
+simulations common in animat research\cite{wilson:animat}. We intend
+Stage to be just realistic enough to enable users to move controllers
+between Stage robots and real robots, while still being fast enough to
+simulate large populations. We also intend Stage to be comprehensible
+to undergraduate students, yet sophisticated enough for professional
+reseachers.
 
 Stage devices are usually controlled through \emph{Player}; a
 networked robot server. Player provides a convenient interface to a
@@ -111,21 +118,26 @@ population of devices and makes them available thorugh Player. Users
 write robot controllers and sensor algorithms as `clients' to the
 Player `server'. Typically, clients cannot tell the difference between
 the real robot devices and their simulated Stage equivalents (unless
-they try very hard). We have found that clients developed using Stage
-will work with little or no modification with the real robots and vice
-versa. Thus Stage allows rapid prototyping of controllers destined for
-real robots. Stage also allows experiments with realistic robot
-devices you don't happen to have.
+they try very hard). We have found that robot controllers developed as
+Player clients controlling Stage robots will work with little or no
+modification with the real robots and vice versa. With a little care,
+the same binary program can often control Stage or real robots without
+even being recompiled. Thus the Player/Stage system allows rapid
+prototyping of controllers destined for real robots. Stage can also be
+very useful by simulating populations of realistic robot devices you
+don't happen to own.
   
-Various sensors and actuators are provided, including sonar, scanning
-laser rangefinder, color-blob tracking, fiducial tracking and mobile
-robot bases with odometry. Some models from previous versions may not
-be available in this release, but we're working on them.
+Various sensors and actuators are provided, including sonar or
+infrared rangers, scanning laser rangefinder, color-blob tracking,
+fiducial tracking and mobile robot bases with odometry. {\bf Note:
+Some models from previous versions may not yet be available in this
+release, but we're working on them. Let us know which ones you need.}
 
 \section{How to get Stage and related software}
 
-The main resource for Player/Stage is the project
-homepage:\\\\ \indent \HOMEPAGE\\
+The main source for all things Player/Stage is the project
+homepage:\\\\ \indent
+\HOMEPAGE\\
 
 \noindent Access to source code releases, access to the CVS
 development tree, bug tracking, user mailing lists, etc.~ is
@@ -136,86 +148,137 @@ available from the Sourceforge project management page:\\\\\indent
 Stage-<version>.src.tgz at:\\\\ \indent
 http://sourceforge.net/project/showfiles.php?group\_id=42445\\
 
-Previous versions were significantly different; this manual
-does not apply to them.
+Where \verb+<version>+ indicates the most recent (i.e. largest)
+version number you find at the site.  Previous versions were
+significantly different; this manual does not apply to them.
 
 \section{What's in the Package?}
 
 In the release tarball you will find:
 \begin{itemize}
-\item Documentation, including this manual and release notes.
-\item C source code for 'stage' the simulation engine.
-\item C and C++ code for the 'libStage' client library.    
-\item Example worldfiles and bitmaps
+\item Documentation, including this manual and release notes (in the
+  directory \verb'docsrc').
+\item C source code for 'stage' the simulation engine (in \verb'src').
+\item C and C++ code for the 'libStage' client library (in \verb'src').
+\item Example worldfiles and bitmaps (in \verb'worlds' ).
+\item Example Player configuration files for using Player with
+Stage(in \verb'config').
 \end{itemize}
 
+\section{Platform and Requirements}
 
-\section{Requirements}
+Stage was developed and tested under Linux kernel 2.4 and 2.6,
+glibc-2.2 and OS X.3. The C and C++ source code is reasonable
+ANSII/POSIX so it often compiles elsewhere. No promises, but people
+have found it to work on a variety of set-ups. Some people have had
+success with Microsoft Windows and CYGWIN, but this is not currently a
+target tested by the maintainers. Using a UNIX-like system will
+probably be easier for you. Player/Stage programs are Free Software
+too, so using them with Linux can cost you \$0, freeing up your budget
+to do more science for the benefit of society and/or your company.
+
+\subsection{Dependencies}
 
 \begin{itemize}
-\item X11R6
-\item glib
-\item GTK+
-\item pkg-config
 \item libRTK2 [the Player/Stage GUI toolkit \HOMEPAGE] 
+\item GTK+ (packaged with GNOME)
+\item glib (usually packaged with GTK+)
+\item pkg-config (usually packaged with GTK+)
+\item X11R6 (usually installed by default on Linux, Solaris and BSD,
+  optional free download on OS X)
 \end{itemize}
 
-Optional (but very useful, and recommended if you ever want to use
-controller code on real robots):
+Optional, but very useful, and recommended if you ever want to use
+controller code on real robots:
 \begin{itemize}
 \item Player [\HOMEPAGE]
 \end{itemize}
 
-Stage was developed and tested under Linux kernel 2.4, glibc-2.2 and
-OS X.3. Code is reasonable ANSII/POSIX so it often compiles
-elsewhere. No promises, but people have found it to work on a variety
-of set-ups.
-
-\section{Ownership}
+\section{Ownership and Licensing}
 
 Stage is released under the GNU General Public License. Stage
-programs, images, examples, source code and documentation are
-ownded and copyrighted by their their authors. The authors are:
+programs, images, examples, source code and documentation are ownded
+and copyrighted by their authors. The authors, roughly in order of
+date of contribution, are:
 
 \begin{itemize}
 \item[] Richard Vaughan [vaughan@sfu.ca]
+\item[] Kasper Stoy 
 \item[] Andrew Howard [ahoward@robotics.usc.edu]
 \item[] Brian Gerkey [gerkey@robotics.stanford.edu]
-\item[] Kasper Stoy [kaspers@robotics.usc.edu]
-\item[] Boyoon Jung [boyoon@robotics.usc.edu]
-\item[] Jakob Fredslund [jakobf@robotics.usc.edu]
+\item[] Boyoon Jung 
+\item[] Jakob Fredslund
+\item[] Esben \O{}sterg\aa{}rd
+\item[] Jason K~ Douglas
+\item[] Kim Jinsuck
+\item[] Gabe Sibley
+\item[] Dave Naffin
 \end{itemize}
 
-See your name here by contributing devices, superior
-algorithms, bugfixes, examples, etc.
+The list of authors above is a partial one: the code itself contains
+the definitive ownership and licensing statements.
+
+See your name here by contributing devices, superior algorithms,
+bugfixes, examples, docs, etc. If you contributed to Stage and we
+forgot to add you here, either add yourself here (if you have CVS
+write access) or let us know and we'll be happy to correct the
+ommision.
 
 \section{Bugs and feedback}
 
-This is constantly evolving research software. It is bound to
-contain bugs, despite developer and user testing.  If you find
-something that appears to be a bug, or if some aspect of Stage's
-behavior seems wrong or non-intuitive, let us know. If you have a
-problem, please check the website and bug tracking logs. If you
-can't find an answer there,{\emph use the bug tracker} to tell us about
-the problem. Better still, fix it and send us the patch. To stay
-in touch with the developers and other users, join the mailing
-lists.
+This is constantly evolving research software. It is bound to contain
+bugs, despite developer and user testing. Stage is occasionally
+overhauled, revealing or introducing new bugs. If you find something
+that appears to be a bug, or if some aspect of Stage's behavior seems
+wrong or non-intuitive, let us know. If you have a problem, please
+first check the website and bug tracking logs - hundreds of questions
+have been answered there. If you can't find an answer there,{\emph use
+the bug tracker} to tell us about the problem. Better still, fix it
+and send us the patch. To stay in touch with the developers and other
+users, join the mailing lists.
 
 When submitting bugs, include as much information as possible,
 including the Stage version, OS type and version, and any output
 messages.  A detailed description of what happened will enable us
-(hopefully) to repeat and analyze the problem.  Of course, there
-is NO WARRANTY on this software, and no guarantee that we will fix
-your problem.  But we use Stage for our research and we want it to
-work properly, so we will do our best. Again {\emph please use the
-  sourceforge bug tracking tools}; that's the best way to see your
-problem solved.
+(hopefully) to repeat and analyze the problem.  Of course, there is NO
+WARRANTY on this software, and no guarantee that we will fix your
+problem.  Remember, you didn't pay for this stuff\footnote{If you {\em
+did} pay for this stuff: thanks, and please ignore the referring
+paragraph. If you are interested in funding Player/Stage research and
+development, get in touch with one of the maintainers. If you really,
+absolutely need formal, paid support for Player/Stage for some reason,
+we could probably work something out, but we'd encourage you to
+consider the community-based approach first. It usually works very
+well.} and we are not responsible for getting it to work on your
+desk. But we use Stage for our research and we want it to work
+properly, so we will do our best. Again {\emph please use the
+sourceforge bug tracking tools}; that's the best way to see your
+problem solved. Sending email directly to the authors is less
+effective than using the tracking tools and is considered impolite.
+
+We'd like to hear from you when the software works, as well as when it
+doesn't. It's more relaxing. If you do something cool with Stage, let
+us know.
 
 \section{Citations}
-If you use Player/Stage Project software for your work, please
-acknowledge our efforts in your publications. The appropriate
-reference for Player is our peer-reviewed article in the proceedings
-of IROS 2001: \cite{GerkeyVaughan01a}:
+
+If you use Player/Stage Project software for your research or
+development, please acknowledge our work in your publications.
+
+At the time of writing, there is no peer-reviewed article about Stage
+alone, but there is a formal USC School of Engineering technical
+report, available online (URL inside www.usc.edu goes here). The
+reference is:
+
+\begin{quote}
+  Richard T.~Vaughan. "Stage: A Multiple Robot Simulator". Technical Report IRIS-00-394, Institute for Robotics and Intelligent Systems, School of Engineering, University of Southern California, 2000.
+\end{quote}
+
+The report is out of date on the details of using Stage, but it
+explains the motivation and design, which are still relevant.
+
+The appropriate reference for Player is our peer-reviewed article in
+the proceedings of IROS 2001: \cite{GerkeyVaughan01a}:
 \begin{quote}
   Brian~P. Gerkey, Richard~T. Vaughan, Kasper St\o{}y, Andrew Howard,
   Maja~J Matari\'c and Gaurav~S Sukhatme.
@@ -225,56 +288,58 @@ of IROS 2001: \cite{GerkeyVaughan01a}:
     Systems (IROS)}, pages 1226--1231, Wailea, Hawaii, October 2001.
 \end{quote}
 
-At the time of writing, there is no peer-reviewed article about Stage,
-but there is a USC technical report, available at:
-
-\begin{quote}
-  Richard T.~Vaughan. "Stage: A Multiple Robot Simulator". Technical Report IRIS-00-394, Institute for Robotics and Intelligent Systems, School of Engineering, University of Southern California, 2000.
-\end{quote}
-
-The report is out of date on the details of using Stage, but it
-explains the motivation and design, which is still relevant.
-
-These papers (and any new ones) are available at: 
+These papers (and several newer ones on various aspects of the
+project) are available at:
 
 \begin{verbatim}
   http://playerstage.sourceforge.net/pubs.html
 \end{verbatim}
 
 If you have space (and are feeling generous), you can also insert a footnote
-similar to the following:
+along these lines:
 \begin{quote}
   The Player/Stage Project is a collaboration between the USC Robotics
   Research Lab, Stanford University Robotics Lab, the Autonomy Lab at
   Simon Fraser University, and contributors around the world. All
-  Player/Stage software is freely available under the GNU General Public
-  License from http://playerstage.sourceforge.net.
+  Player/Stage software is freely available under the GNU General
+  Public License from http://playerstage.sourceforge.net.
 \end{quote}
-By including such acknowledgements, you do more than feed our egos and
-further our careers.  You spread the word about the Player/Stage
-project, which will bring more users and developers, as well as please
-our funders, ensuring that we will continue hacking on the software.
+By including such acknowledgements, you make us feel good and further
+our careers. More importantly, you encourage more people to use and
+contribute to this software. You may even inspire someone to write
+something even better under a similar license so you can use it.
+
+\subsection{Attribution}
+
+Please do not refer to Stage or the Player/Stage Project as being {\em
+  from} USC or otherwise imply exclusive affiliation with USC. While
+  the Player/Stage Project began at USC, for several years it has been
+  an international, multi-institution collaboration. The Project is
+  controlled by its maintainers and contributors and no other
+  institution. Thus, referring to ``USC's Stage robot simulator'' is
+  not correct. You should call it ``the Stage robot simulator from the
+  Player/Stage Project'' or just ``Stage''. 
 
 \section{Acknowledgements}
 
-Stage originated at the University of Southern California Robotics
-Labs. Support at USC has come from DARPA grant DABT63-99-1-0015
-(MARS), NSF grant ANI-9979457 (SCOWR), DARPA contract
-DAAE07-98-C-L028 (TMR), ONR Grants N00014-00-1-0140 and
-N0014-99-1-0162, and JPL Contract No. 1216961. Development at HRL
-Laboratories was supported by a DARPA contract (SDR). Thanks to
-Doug Gage at DARPA IPTO for his long-standing support. Development
-at the Autonomy Lab is supported by an NSERC Discovery Grant, SFU
-President's Award and faculty start-up grants to Richard Vaughan.
+\subsection{Funding}
+Financial support at USC has come from DARPA grant DABT63-99-1-0015
+(MARS), NSF grant ANI-9979457 (SCOWR), DARPA contract DAAE07-98-C-L028
+(TMR), ONR Grants N00014-00-1-0140 and N0014-99-1-0162, and JPL
+Contract No. 1216961. Development at HRL Laboratories was supported by
+a DARPA contract (SDR). Development at the Autonomy Lab is supported by
+an NSERC Discovery Grant, SFU President's Award and faculty start-up
+grants to Richard Vaughan.
+
+\subsection{People}
 
 Thanks to our contributors and users, particularly members of the USC
-Robotics Lab and playerstage-developers mailing list who have been
-generous with their advice, bug reports and fixes, and code
-contributions. Many fine people have contributed code to the project,
-including (in historical order): Esben \O{}sterg\aa{}rd, Jakob
-Fredslund, Boyoon Jung, Jason K. Douglas, Kim Jinsuck, Gabe Sibley,
-and Dave Naffin. Various contributed tools and libraries can be found
-on the website.
+Robotics Lab, SFU Autonomy Lab and playerstage-developers mailing list
+who have been generous with their advice, bug reports and fixes, and
+code contributions. Thanks to Doug Gage at DARPA IPTO for his
+long-standing support. Thanks also to Gaurav Sukhatme and Maja Mataric
+at USC, and Dave Payton at HRL for allowing the birth and growth of
+Stage at their laboratories.
 
 %////////////////////////////////////////////////////////////////////////////
 \chapter{Installing and Running Stage}
@@ -293,23 +358,22 @@ P/S components has changed with v.1.5. The correct build order is:
 
 \section{Building and Installing Stage}
 
-You must install libRTK {\em before} building Stage, and if, like
-most people, you want to use Player with Stage, you must install
-Player {\em after} installing Stage. This is because Player uses the
-stage client library 'libstage', included with the Stage distro, to
-communicate with Stage. Both Stage and Player draw most of their
-graphics using libRTK.
-
-All Player/Stage Project components, including Stage, Player and
-libRTK are available from the Player/Stage files page:
+You must install libRTK {\em before} building Stage, and if, like most
+people, you want to use Player with Stage, you must install Player
+{\em after} installing Stage. This is because both Stage and Player
+draw most of their graphics using libRTK and Player uses the stage
+client library 'libstage', included with the Stage distro, to
+communicate with Stage.  All Player/Stage Project components,
+including Stage, Player and libRTK are available from the Player/Stage
+files page:
 
 \begin{verbatim}
   http://sourceforge.net/project/showfiles.php?group_id=42445
 \end{verbatim}
 
-\noindent Build and install libRTK following the
-instructions in the packages' README and INSTALL files. Now
-download the Stage tarball and unpack it with:
+\noindent Build and install libRTK following the instructions in the
+package's README and INSTALL files. Now download the Stage tarball and
+unpack it with:
 \begin{verbatim}
   $ tar xzvf Stage-<version>.tgz
 \end{verbatim}
@@ -322,9 +386,9 @@ files.
 
 Stage should build on most UNIX-like systems that have GTK
 installed. GTK is an essential part of the GNOME desktop system and is
-available for many platforms. GTK in turn requires glib and
-pkg-config; Stage makes extensive use of these packages. Make sure you
-have GTK installed before attempting to install libRTK and Stage.
+available for many platforms. GTK itself requires glib and pkg-config;
+Stage makes extensive use of these packages. Make sure you have GTK
+installed before attempting to install libRTK and Stage.
 
 \subsubsection{Linux}
 No special configuration should be required for most Linux distros.
@@ -336,7 +400,7 @@ No special configuration should be required for most Solaris distros.
 \subsubsection{Darwin/OS X}
 OS X does not have X11 or GTK installed by default. Apple distributes
 their own X11 package based on XFree86 which works well. The easiest
-way to get GTK and its dependencies installed on OS X is probably via
+way to get GTK+ and its dependencies installed on OS X is probably via
 the excellent ``Fink'' ports system.
 
 You may need to tell the compiler where to find the Fink-installed
@@ -354,12 +418,32 @@ Stage. For example, if your Fink base directory is /sw (the default):
 Some people have experimented with building Player and Stage on
 Windows, with mixed success. Windows support is not a priority for the
 developers, but we're generally interested in cross-platform support
-so if you have insight into or experience with getting the system
-working on Windows, please let us know.
+so if you have success building, using or tweaking Stage on Windows,
+please let us know.
 
 \section{Running Stage}
 
 \subsection{Theory of operation}
+
+Stage is a 'server' that provides simulation services to one or more
+'clients'. Clients connect to Stage over the network using the
+Internet Protocol (TCP/IP). Thus clients can talk to a Stage server on
+the same machine (the most common scenario), or on a local network, or
+over the Internet. Clients can ask Stage to create and modify
+simulated worlds containing robots and other objects. Clients can
+create multiple worlds, and multiple clients can manipulate a single
+world. 
+
+Most people will use Player as their Stage client. Player contains
+drivers that create simulated robots in Stage and present them to the
+user like any other Player device. Users then write their robot
+controllers as clients to {\em Player}: the fact that the robots are
+simulated is hidden from the client program. Player is a very
+powerful, flexible robot interface; this manual only describes its
+interaction with Stage. Refer the Player manual, available in the
+Player package and on the project web site for details of Player.
+
+The process of using Stage goes like this:
 
 \begin{enumerate}
 \item start the Stage server.
@@ -370,8 +454,14 @@ or more simulated ``worlds'', containing one or more ``models''.
 the properties of the models.
 \item the client may subscribe to model properties. When subscribed,
 the client is informed of any changes to the property.
+\item the client may change any property of a model or create and
+  destroy models and worlds at any time. 
 \end{enumerate}
 
+Note that a particular client may not provide access to all the
+  features of Stage; for example the {\tt stageclient} Player driver
+  does not yet allow dynamic creation and destruction of models as
+  this is currently beyond the scope of the Player protocol.
 
 \subsection{Worlds}
 

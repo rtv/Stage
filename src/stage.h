@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.61 2004-07-15 16:11:00 rtv Exp $
+ * CVS: $Id: stage.h,v 1.62 2004-07-19 18:59:57 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -356,7 +356,7 @@ stg_position_steer_mode_t;
 
 //  --------------------------------------------------------------
 
-// standard energy consumption of some devices in mW.
+// standard energy consumption of some devices in W.
 //
 // The MOTIONKG value is a hack to approximate cost of motion, as
 // Stage does not yet have an acceleration model.
