@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11 $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -282,10 +282,9 @@ void CLBDDevice::OnUiUpdate(RtkUiDrawData *event)
 
 void CLBDDevice::DrawData(RtkUiDrawData *event)
 {
-    #define SCAN_COLOR RTK_RGB(0, 0, 255)
+    #define BEACON_ID_COLOR RTK_RGB(0, 0, 255)
+    #define BEACON_ANON_COLOR RTK_RGB(128, 128, 255)
     
-    event->set_color(SCAN_COLOR);
-
     // Get global pose
     //
     double gx, gy, gth;
@@ -293,10 +292,22 @@ void CLBDDevice::DrawData(RtkUiDrawData *event)
 
     for (int i = 0; i < expBeacon.beaconCount; i++)
     {
-        //int id = expBeacon.beacons[i].id;
+        int id = expBeacon.beacons[i].id;
         double px = expBeacon.beacons[i].x;
         double py = expBeacon.beacons[i].y;
+
+        if (id == 0)
+            event->set_color(BEACON_ANON_COLOR);
+        else
+            event->set_color(BEACON_ID_COLOR);
         event->ex_arrow(gx, gy, px, py, 0, 0.10);
+
+        if (id > 0)
+        {
+            char text[32];
+            snprintf(text, sizeof(text), "%d", id);
+            event->draw_text(px + 0.1, py + 0.1, text);
+        }
     }
 }
 
