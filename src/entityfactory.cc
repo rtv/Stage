@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  (empty)
@@ -32,6 +32,7 @@
 #include "usc_pioneer.hh"
 #include "pioneermobiledevice.hh"
 #include "laserdevice.hh"
+#include "playerserver.hh"
 
 /////////////////////////////////////////////////////////////////////////
 // Create an object given a type
@@ -58,6 +59,11 @@ CEntity* CreateObject(const char *type, CWorld *world, CEntity *parent)
     if (strcmp(type, "usc_pioneer") == 0)
         return new CUscPioneer(world, parent);
 
+    // Create a Player
+    //
+    if (strcmp(type, "player") == 0)
+      return new CPlayerServer(world, parent);
+
     // Create a pioneer robot
     //
     //if (strcmp(type, "pioneer") == 0)
@@ -70,4 +76,6 @@ CEntity* CreateObject(const char *type, CWorld *world, CEntity *parent)
 
     return NULL;
 }
+
+
 

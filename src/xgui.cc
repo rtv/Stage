@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xgui.cc,v 1.1.2.9 2001-06-01 00:52:30 vaughan Exp $
+ * $Id: xgui.cc,v 1.1.2.10 2001-06-01 18:19:45 vaughan Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -116,7 +116,7 @@ CXGui::CXGui( CWorld* wworld )//,  char* initFile )
   XStringListToTextProperty( &title, 1, &windowName);
 
 
-  dragging = 0;
+  dragging = near = (ExportData*) NULL;
   showSensors = false;
 
   XSizeHints sz;
@@ -324,6 +324,8 @@ void CXGui::HandleEvent( void )
 	      if( dragging  ) 
   		{ // stopped dragging
   		  dragging = NULL;
+		  near = NULL;
+
 		  HighlightObject( NULL, true ); // erases the highlighting
 	
 		  // disable the pointer motion events
@@ -334,7 +336,9 @@ void CXGui::HandleEvent( void )
   		} 
   	      else 
   		{  
-		  if( !dragging )
+		  if( near )
+		    dragging = near;
+		  else
 		    {
 		      // find nearest robot and drag it
 		      dragging = 
@@ -424,12 +428,12 @@ void CXGui::HandleEvent( void )
 		}	      
 	      else
 		{ 
-		  dragging = 
+		  near = 
 		    NearestObject((reportEvent.xmotion.x+panx )/ppm,
 				  ((imgHeight-reportEvent.xmotion.y)
 				   -pany)/ppm );
 		  
-		  HighlightObject( dragging, true );
+		  HighlightObject( near, true );
 		  
 		  // enable generation of pointer motion events
 		  XSelectInput(display, win, 
@@ -659,6 +663,7 @@ void CXGui::RefreshObjects( void )
     RenderObject( database[o], renderSensorData );
   
   HighlightObject( dragging, false );
+  HighlightObject( near, false );
 
   SetDrawMode( GXcopy );
 }
@@ -800,6 +805,7 @@ void CXGui::ImportExportData( ExportData* exp )
 	  
 	  RenderObject( lastExp, renderExtended ); // draw
 	  if( lastExp == dragging ) HighlightObject( dragging, true );
+	  if( lastExp == near ) HighlightObject( near, true );
 	}
     }
   else // we haven't seen this before - add it to the database
@@ -889,7 +895,7 @@ void CXGui::RenderObject( ExportData* exp, bool extended )
 void CXGui::RenderObjectLabel( ExportData* exp, char* str, int len )
 {
   SetForeground( RGB(255,255,255) );
-  DrawString( exp->x + 0.8, exp->y - (0.5 + exp->objectType * 0.5) , str, len );
+  DrawString( exp->x + 0.6, exp->y - (8.0/ppm + exp->objectType * 11.0/ppm) , str, len );
 }
 
 void CXGui::RenderGenericObject( ExportData* exp )
@@ -1036,6 +1042,9 @@ void CXGui::RenderPlayer( ExportData* exp, bool extended )
 #ifdef LABELS
   RenderObjectLabel( exp, "Player", 6 );
 #endif
+
+  SetForeground( RGB(255,0,0) );
+  DrawString( exp->x, exp->y, "P", 1 );
 }
 
 void CXGui::RenderMisc( ExportData* exp, bool extended )

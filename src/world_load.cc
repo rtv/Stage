@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.6 $
+//  $Revision: 1.1.2.7 $
 //
 // Usage:
 //  (empty)
@@ -275,4 +275,18 @@ bool CWorld::Save(const char *filename)
     rename(tempname, filename);
     return true;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
