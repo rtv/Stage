@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.11.2.27 $
+//  $Author: gerkey $
+//  $Revision: 1.11.2.28 $
 //
 // Usage:
 //  (empty)
@@ -46,7 +46,6 @@ CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent, CPlayerServer* server
   //
   m_update_rate = 360 / 0.200; // 5Hz
   m_last_update = 0;
-  
   m_scan_res = DTOR(0.50);
   m_scan_min = DTOR(-90);
   m_scan_max = DTOR(+90);
@@ -120,7 +119,7 @@ void CLaserDevice::Update()
         m_scan_min = DTOR(-90);
         m_scan_max = DTOR(+90);
         m_scan_count = 361;
-        m_intensity = true;
+        m_intensity = false;
 	
 #ifdef INCLUDE_XGUI
 	// have to invalidate the exported scan data so it gets undrawn
