@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerrobot.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.9 $
+//  $Revision: 1.1.2.10 $
 //
 // Usage:
 //  (empty)
@@ -87,7 +87,7 @@ CPlayerRobot::~CPlayerRobot( void )
 //
 bool CPlayerRobot::Startup()
 {
-    RTK_TRACE0("starting devices");
+    //RTK_TRACE0("starting devices");
 
     if (!CObject::Startup())
         return false;
@@ -116,7 +116,7 @@ bool CPlayerRobot::Startup()
 //
 void CPlayerRobot::Shutdown()
 {
-    RTK_TRACE0("shutting down devices");
+    //RTK_TRACE0("shutting down devices");
 
     // Shutdown player
     //
@@ -140,7 +140,7 @@ void CPlayerRobot::Update()
 //
 bool CPlayerRobot::StartupPlayer(int port)
 {
-    RTK_TRACE0("starting player");
+    //RTK_TRACE0("starting player");
     
     // -- create the memory map for IPC with Player --------------------------
 
@@ -225,7 +225,7 @@ bool CPlayerRobot::StartupPlayer(int port)
 //
 void CPlayerRobot::ShutdownPlayer()
 {
-    RTK_TRACE0("stopping player");
+    //RTK_TRACE0("stopping player");
     
     // BPG
     if(kill(player_pid,SIGINT))
@@ -244,7 +244,7 @@ void CPlayerRobot::ShutdownPlayer()
 //
 bool CPlayerRobot::CreateShmemLock()
 {
-    RTK_TRACE0("making semaphore");
+    //RTK_TRACE0("making semaphore");
 
     semKey = SEMKEY;
 
@@ -260,12 +260,12 @@ bool CPlayerRobot::CreateShmemLock()
 
     if( semid < 0 ) // semget failed
     {
-        RTK_MSG0( "Unable to create semaphore" );
+        printf( "Unable to create semaphore\n" );
         return false;
     }
     if( semctl( semid, 0, SETVAL, argument ) < 0 )
     {
-        RTK_MSG0( "Failed to set semaphore value" );
+        printf( "Failed to set semaphore value\n" );
         return false;
     }
     return true;
@@ -287,7 +287,7 @@ bool CPlayerRobot::LockShmem( void )
   int retval = semop( semid, ops, 1 );
   if (retval != 0)
   {
-      RTK_MSG1("lock failed return value = %d", (int) retval);
+      printf("lock failed return value = %d\n", (int) retval);
       return false;
   }
   return true;
@@ -307,7 +307,7 @@ void CPlayerRobot::UnlockShmem( void )
 
   int retval = semop( semid, ops, 1 );
   if (retval != 0)
-      RTK_MSG1("unlock failed return value = %d", (int) retval);
+      printf("unlock failed return value = %d\n", (int) retval);
 }
 
 #ifdef INCLUDE_RTK

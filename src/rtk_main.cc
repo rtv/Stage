@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: rtkmain.cc
+// File: rtk_main.cc
 // Author: Andrew Howard
 // Date: 4 Dec 2000
-// Desc: Creates an RTK GUI
+// Desc: Program entry point when using RTK
 //
 // CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtkmain.cc,v $
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtk_main.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.1 $
 //
 // Usage:
 //  (empty)
@@ -24,14 +24,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
+#include "../VERSION"
 #include "world.hh"
 #include "rtk_ui.hh"
-
-
-///////////////////////////////////////////////////////////////////////////
-// Version string
-//
-#define VERSION "0.8.3 advanced"
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -43,13 +38,13 @@ char *world_file;
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Command line parsing
+// Parse the command line
 //
-bool ParseCmdLine(int argc, char** argv)
+bool parse_cmdline(int argc, char **argv)
 {
     if (argc < 2)
     {
-        printf("Usage: rtk-stage WORLDFILE\n");
+        printf("Usage: rtk_stage WORLDFILE\n");
         return false;
     }
 
@@ -63,11 +58,13 @@ bool ParseCmdLine(int argc, char** argv)
 ///////////////////////////////////////////////////////////////////////////
 // Program entry
 //
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
+    printf("** rtk_stage %s **\n", (char*) VERSION);
+    
     // Parse the command line
     //
-    if (!ParseCmdLine(argc, argv))
+    if (!parse_cmdline(argc, argv))
         return 1;
     
     // Create the application
@@ -97,10 +94,11 @@ int main(int argc, char** argv)
     // Initialise the RTK interface
     //
     world->InitRtk(RtkAgent::get_default_router());
-
+    
     // Load the world
     //
-    world->Load(world_file);
+    if (!world->Load(world_file))
+        return 0;
     
     // Open and start agents
     //
@@ -109,7 +107,8 @@ int main(int argc, char** argv)
     
     // Start the world
     //
-    world->Startup();
+    if (!world->Startup())
+        return 0;
 
     // Do message loop
     //   
@@ -118,8 +117,8 @@ int main(int argc, char** argv)
     // Stop the world
     //
     world->Shutdown();
-
-    // Shut everything down
+    
+    // Stop agents
     //
     app->close_agents();
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.17 $
+//  $Revision: 1.4.2.18 $
 //
 // Usage:
 //  (empty)
@@ -24,7 +24,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
+#include <unistd.h>
 #include <sys/time.h>
+#include <signal.h>
 #include "stage.h"
 #include "world.hh"
 #include "objectfactory.hh"
@@ -135,7 +137,7 @@ bool CWorld::Load(const char *filename)
             if (m_object_count > 0)
                 parent = m_object[m_object_count - 1];
             else
-                printf("misplaced '{' on line %d; ignoring\n", (int) count + 1);
+                printf("line %d : misplaced '{'\n", (int) count + 1);
         }
 
         // Look for close block tokens
@@ -145,63 +147,49 @@ bool CWorld::Load(const char *filename)
             if (parent != NULL)
                 parent = parent->m_parent;
             else
-                printf("extra '}' on line %d; ignoring\n", (int) count + 1);
+                printf("line %d : extra '}'\n", (int) count + 1);
         }
-            
-        // Parse everything else
+
+        // Parse "set" command
+        // set <variable> = <value>
         //
-        else if (!LoadObject(argc, argv, parent))
-            printf("syntax error on line %d; ignoring\n", (int) count + 1);
+        else if (argc == 4 && strcmp(argv[0], "set") == 0 && strcmp(argv[2], "=") == 0)
+        {
+            if (strcmp(argv[1], "environment_file") == 0)
+                strcpy(m_env_file, argv[3]);
+            else if (strcmp(argv[1], "pixels_per_meter") == 0)
+                ppm = atof(argv[3]);
+            else
+                printf("line %d : variable %s is not defined\n",
+                       (int) count + 1, (char*) argv[1]);  
+        }
+
+        // Parse "create" command
+        // create <type> ...
+        //
+        else if (argc >= 2 && strcmp(argv[0], "create") == 0)
+        {
+            // Create the object
+            //
+            CObject *object = ::CreateObject(argv[1], this, parent);
+            if (object != NULL)
+            {
+                // Let the object initialise itself
+                //
+                object->init(argc - 2, argv + 2);
+
+                // Add to list of objects
+                //
+                m_object[m_object_count++] = object;
+            }
+            else
+                printf("line %d : object type %s is not defined\n",
+                       (int) count + 1, (char*) argv[1]);
+        }
     }
     
     fclose(file);
     return true;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Load an object
-//
-bool CWorld::LoadObject(int argc, char **argv, CObject *parent)
-{
-    // Parse "set" command
-    // set <variable> = <value>
-    //
-    if (argc == 4 && strcmp(argv[0], "set") == 0 && strcmp(argv[2], "=") == 0)
-    {
-        if (strcmp(argv[1], "environment_file") == 0)
-        {
-            strcpy(m_env_file, argv[3]);
-            return true;
-        }
-        if (strcmp(argv[1], "pixels_per_meter") == 0)
-        {
-            ppm = atof(argv[3]);
-            return true;
-        }
-    }
-
-    // Parse "create" command
-    // create <type> ...
-    //
-    if (argc >= 2 && strcmp(argv[0], "create") == 0)
-    {
-        // Create the object
-        //
-        CObject *object = ::CreateObject(argv[1], this, parent);
-        if (object == NULL)
-            return false;
-        
-        // Let the object initialise itself
-        //
-        object->init(argc - 2, argv + 2);
-
-        // Add to list of objects
-        //
-        m_object[m_object_count++] = object;
-        return true;
-    }
-    return false;
 }
 
 
@@ -311,10 +299,11 @@ bool CWorld::Startup()
             return false;
     }
 
-    // Start the simulator thread
-    // 
-    if (pthread_create(&m_thread, NULL, &Main, this) < 0)
+    // Start the world thread
+    //
+    if (!StartThread())
         return false;
+
     return true;
 }
 
@@ -324,6 +313,35 @@ bool CWorld::Startup()
 //
 void CWorld::Shutdown()
 {
+    // Stop the world thread
+    //
+    StopThread();
+    
+    // Shutdown all the objects
+    //
+    for (int i = 0; i < m_object_count; i++)
+        m_object[i]->Shutdown();
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Start world thread (will call Main)
+//
+bool CWorld::StartThread()
+{
+    // Start the simulator thread
+    // 
+    if (pthread_create(&m_thread, NULL, &Main, this) < 0)
+        return false;
+    return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Stop world thread
+//
+void CWorld::StopThread()
+{
     // Send a cancellation request to the thread
     //
     pthread_cancel(m_thread);
@@ -331,11 +349,6 @@ void CWorld::Shutdown()
     // Wait forever for thread to terminate
     //
     pthread_join(m_thread, NULL);
-
-    // Shutdown all the objects
-    //
-    for (int i = 0; i < m_object_count; i++)
-        m_object[i]->Shutdown();
 }
 
 
@@ -346,11 +359,16 @@ void* CWorld::Main(CWorld *world)
 {
     // Make our priority real low
     //
-    nice(10);
+    //nice(10);
     
     // Defer cancel requests so we can handle them properly
     //
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+
+    // Block signals handled by gui
+    //
+    sigblock(SIGINT);
+    sigblock(SIGQUIT);
 
     // Initialise the GUI
     //

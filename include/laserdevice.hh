@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.7 $
+//  $Revision: 1.9.2.8 $
 //
 // Usage:
 //  (empty)
@@ -27,10 +27,7 @@
 #ifndef LASERDEVICE_HH
 #define LASERDEVICE_HH
 
-#include <X11/Xlib.h> // for XPoint structure
-
 #include "playerdevice.hh"
-
 
 #define LASERSAMPLES 361
 
@@ -90,18 +87,7 @@ class CLaserDevice : public CPlayerDevice
     //
     private: double m_map_px, m_map_py, m_map_pth;
 
-#ifndef INCLUDE_RTK
-    
-    // draw myself on the window
-    public: virtual bool GUIDraw();
-    public: virtual bool GUIUnDraw();
-    
-    // storage for the GUI rendering
-    private: XPoint hitPts[ LASERSAMPLES + 1 ];
-    private: XPoint oldHitPts[ LASERSAMPLES + 1];
-    private: int undrawRequired;
-
-#else
+#ifdef INCLUDE_RTK
     
     // Process GUI update messages
     //

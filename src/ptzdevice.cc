@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.10 $
+//  $Revision: 1.4.2.11 $
 //
 // Usage:
 //  (empty)
@@ -67,10 +67,6 @@ CPtzDevice::CPtzDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
     m_fov_max = DTOR(10);
 
     m_pan = m_tilt = m_zoom = 0;
-
-    #ifndef INCLUDE_RTK
-    undrawRequired = 0;
-    #endif
 }
 
 
@@ -106,7 +102,7 @@ void CPtzDevice::Update()
     short command[3];
     if (GetCommand(command, sizeof(command)) != sizeof(command))
     {
-        RTK_TRACE0("command buffer has incorrect length -- ignored");
+        //RTK_TRACE0("command buffer has incorrect length -- ignored");
         return;
     }
 
@@ -165,59 +161,7 @@ void CPtzDevice::GetPTZ(double &pan, double &tilt, double &zoom)
 };
 
 
-#ifndef INCLUDE_RTK
-
-bool CPtzDevice::GUIDraw( void )
-{
-  // dump out if noone is subscribed
-  if( !IsSubscribed() || !m_robot->showDeviceDetail ) return true;
- 
-  // height of the cone - hard coded number is in meters
-  double len = 1.0 * m_robot->m_world->ppm;
-   
-  double p, t, z;
-  GetPTZ( p, t, z );
-
-  double startAngle =  m_robot->a + p - z/2.0;
-  double stopAngle  =  startAngle + z;
-
-    drawPts[0].x = drawPts[3].x = (short)m_robot->x;
-    drawPts[0].y = drawPts[3].y = (short)m_robot->y;
-  
-    drawPts[1].x = (short)(m_robot->x + len * cos( startAngle ));  
-    drawPts[1].y = (short)(m_robot->y + len * sin( startAngle ));  
-
-    drawPts[2].x = (short)(m_robot->x + len * cos( stopAngle ));  
-    drawPts[2].y = (short)(m_robot->y + len * sin( stopAngle ));  
-
-    m_world->win->SetForeground( m_world->win->magenta );
-    //m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot )  );
-    m_world->win->DrawLines( drawPts, 4 );
-    
-    undrawRequired = true;
-    
-    memcpy( unDrawPts, drawPts, sizeof( XPoint ) * 4 );
-    
-    return true; 
-};  
-
-
-bool CPtzDevice::GUIUnDraw()
-{ 
-  // dump out if noone is subscribed
-  if( undrawRequired )
-    {
-      m_world->win->SetForeground( m_world->win->magenta );
-      //m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
-      m_world->win->DrawLines( unDrawPts, 4 );
-      
-      undrawRequired = false;
-    }
-      
-  return true; 
-};
-
-#else
+#ifdef INCLUDE_RTK
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages

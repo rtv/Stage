@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.6 $
+//  $Revision: 1.1.2.7 $
 //
 // Usage:
 //  (empty)
@@ -36,7 +36,6 @@
 CVisionBeacon::CVisionBeacon(CWorld *world, CObject *parent)
         : CObject(world, parent)
 {
-    m_color = 0;
     m_channel = 0;
     m_radius = 0;
     
@@ -122,7 +121,8 @@ void CVisionBeacon::OnUiUpdate(RtkUiDrawData *pData)
     
     if (pData->draw_layer("", TRUE))
     {
-        pData->set_color(m_color);
+        // *** HACK - color?
+        pData->set_color(RTK_RGB(255, 0, 0));
         pData->ex_rectangle(m_map_px, m_map_py, m_map_pth, 2 * m_radius, 2 * m_radius);
     }
 

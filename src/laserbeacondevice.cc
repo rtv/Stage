@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.6 $
+//  $Revision: 1.2.2.7 $
 //
 // Usage:
 //  (empty)
@@ -143,7 +143,7 @@ void CLaserBeaconDevice::Update()
 
         // Check for data buffer overrun
         //
-        if (data.count >= RTK_ARRAYSIZE(data.beacon))
+        if (data.count >= ARRAYSIZE(data.beacon))
             break;
 
         // Update data buffer

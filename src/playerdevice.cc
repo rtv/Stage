@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.12 $
+//  $Revision: 1.2.2.13 $
 //
 // Usage:
 //  (empty)
@@ -69,7 +69,7 @@ bool CPlayerDevice::Startup()
     uint8_t *buffer = (uint8_t*) m_robot->GetShmem();
     if (buffer == NULL)
     {
-        RTK_ERROR("shared memory pointer == NULL; cannot start device");
+        printf("shared memory pointer == NULL; cannot start device\n");
         return false;
     }
     
@@ -80,8 +80,8 @@ bool CPlayerDevice::Startup()
     m_command_buffer = (uint8_t*) m_data_buffer + m_data_len;
     m_config_buffer = (uint8_t*) m_command_buffer + m_command_len;
 
-    RTK_TRACE4("creating player device at addr: %p %p %p %p", m_info, m_data_buffer,
-         m_command_buffer, m_config_buffer);
+    //printf("creating player device at addr: %p %p %p %p\n", m_info, m_data_buffer,
+    //       m_command_buffer, m_config_buffer);
     
     // Mark this device as available
     //

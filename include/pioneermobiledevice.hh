@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/pioneermobiledevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.7 $
+//  $Revision: 1.1.2.8 $
 //
 // Usage:
 //  (empty)
@@ -82,33 +82,11 @@ class CPioneerMobileDevice : public CPlayerDevice
     //
     private: double m_map_px, m_map_py, m_map_pth;
 
-    
-  public:
-  unsigned char stall;
-
-  int Move();
+    public: unsigned char stall;
+    public: int Move();
   
- private:
+#ifdef INCLUDE_RTK
 
-#ifndef INCLUDE_RTK
-
-        
-  Rect rect, oldRect;
-  // center pixel positions are used to draw the direction indicator 
-  int centerx, oldCenterx, centery, oldCentery;
-  
-  // *** REMOVE ahoward void HitObstacle( void );  
-  
-  void CalculateRect( float x, float y, float a );
-  void CalculateRect( void )
-    { CalculateRect( m_robot->x, m_robot->y, m_robot->a ); };
-  void StoreRect( void );
-  XPoint undrawPts[7];
-  virtual bool GUIDraw( void );
-  virtual bool GUIUnDraw( void );
-
-#else
-    
     // Process GUI update messages
     //
     public: virtual void OnUiUpdate(RtkUiDrawData *pData);

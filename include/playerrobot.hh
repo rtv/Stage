@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerrobot.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.6 $
+//  $Revision: 1.1.2.7 $
 //
 // Usage:
 //  (empty)
@@ -27,8 +27,7 @@
 #ifndef ROBOT_H
 #define ROBOT_H
 
-// For CObject
-//
+#include <sys/types.h>
 #include "object.hh"
 
 // Forward declare some of the classes we will use

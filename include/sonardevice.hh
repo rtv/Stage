@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/sonardevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -64,22 +64,7 @@ class CSonarDevice : public CPlayerDevice
     //
     private: unsigned short m_range[SONARSAMPLES];
     
-#ifndef INCLUDE_RTK
-
-    // draw myself on the window
-    virtual bool GUIDraw();
-    virtual bool GUIUnDraw();
-    
-    // store the sonar hit points if we want to render them in the
-    // GUI window
-    private: XPoint hitPts[ SONARSAMPLES+1 ];
-    private: XPoint oldHitPts[ SONARSAMPLES+1 ];
-    private: int undrawRequired;
-    
-    // is GUI drawing enabled for this device?
-    //private: bool GUIrender;
-
-#else
+#ifdef INCLUDE_RTK
     
     // Process GUI update messages
     //

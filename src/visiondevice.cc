@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.10 $
+//  $Revision: 1.4.2.11 $
 //
 // Usage:
 //  (empty)
@@ -97,7 +97,8 @@ void CVisionDevice::Update()
     if( m_world->get_time() - m_last_update < m_update_interval )
         return;
     m_last_update = m_world->get_time();
-    RTK_TRACE0("generating new data");
+
+    //RTK_TRACE0("generating new data");
 
     // Generate the scan-line image
     //
@@ -147,7 +148,7 @@ void CVisionDevice::UpdateScan()
 
     // Make sure the data buffer is big enough
     //
-    ASSERT(m_scan_width <= RTK_ARRAYSIZE(m_scan_channel));
+    ASSERT((size_t) m_scan_width <= sizeof(m_scan_channel) / sizeof(m_scan_channel[0]));
 
     // Do each scan
     //
@@ -366,7 +367,7 @@ size_t CVisionDevice::UpdateACTS()
     // finally, we're done.
     //cout << endl;
 
-    RTK_TRACE1("Found %d blobs", (int) numBlobs);
+    //RTK_TRACE1("Found %d blobs", (int) numBlobs);
 
     return buflen;
 }

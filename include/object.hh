@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/object.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.9 $
+//  $Revision: 1.1.2.10 $
 //
 // Usage:
 //  (empty)
@@ -28,6 +28,9 @@
 #ifndef OBJECT_HH
 #define OBJECT_HH
 
+#include <stddef.h>
+#include <assert.h>
+
 #ifdef INCLUDE_RTK
 #include "rtk_ui.hh"
 #endif
@@ -37,6 +40,33 @@
 class CWorld;
 
 
+///////////////////////////////////////////////////////////////////////////
+// Some useful macros
+
+// Determine size of array
+//
+#ifndef ARRAYSIZE
+#define ARRAYSIZE(x) (int) (sizeof(x) / sizeof(x[0]))
+#endif
+
+#ifndef M_PI
+	#define M_PI        3.14159265358979323846
+#endif
+
+// Convert radians to degrees
+//
+#define RTOD(r) ((r) * 180 / M_PI)
+
+// Convert degrees to radians
+//
+#define DTOR(d) ((d) * M_PI / 180)
+
+#define ASSERT(m) assert(m)
+
+
+///////////////////////////////////////////////////////////////////////////
+// The basic object class
+//
 class CObject
 {
     // Minimal constructor

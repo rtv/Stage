@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.13 $
+//  $Revision: 1.1.2.14 $
 //
 // Usage:
 //  (empty)
@@ -29,6 +29,8 @@
 #define WORLD_HH
 
 #include <pthread.h>
+#include <stdint.h>
+
 #include "playerrobot.hh"
 #include "image.h"
 
@@ -70,21 +72,25 @@ class CWorld
     //
     public: bool Load(const char *filename);
     
-    // Load an object
-    //
-    private: bool LoadObject(int argc, char **argv, CObject *parent);
-
     // Save the world
     //
     public: bool Save(const char *filename);
     
-    // Start world thread
+    // Initialise the world
     //
     public: bool Startup();
 
-    // Stop world thread
+    // Shutdown the world
     //
     public: void Shutdown();
+
+    // Start world thread (will call Main)
+    //
+    public: bool StartThread();
+
+    // Stop world thread
+    //
+    public: void StopThread();
 
     // Thread entry point for the world
     //

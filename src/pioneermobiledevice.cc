@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.11 $
+//  $Revision: 1.9.2.12 $
 //
 // Usage:
 //  (empty)
@@ -56,11 +56,7 @@ CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CObject *parent, CPlay
 
     stall = 0;
 
-    #ifndef INCLUDE_RTK
-        memset( &rect, 0, sizeof( rect ) );
-        memset( &oldRect, 0, sizeof( rect ) );
-        CalculateRect();
-    #else
+    #ifdef INCLUDE_RTK
         m_mouse_radius = 0;
         m_draggable = false;
     #endif
@@ -328,75 +324,7 @@ bool CPioneerMobileDevice::Map(bool render)
 }
 
 
-#ifndef INCLUDE_RTK
-
-void CPioneerMobileDevice::StoreRect( void )
-{
-  memcpy( &oldRect, &rect, sizeof( struct Rect ) );
-  oldCenterx = centerx;
-  oldCentery = centery;
-}
-
-void CPioneerMobileDevice::CalculateRect( float x, float y, float a )
-{
-  // fill an array of Points with the corners of the robots new position
-  float cosa = cos( a );
-  float sina = sin( a );
-  float cxcosa = halfLength * cosa;
-  float cycosa = halfWidth  * cosa;
-  float cxsina = halfLength * sina;
-  float cysina = halfWidth  * sina;
-
-  rect.toplx = (int)(x + (-cxcosa + cysina));
-  rect.toply = (int)(y + (-cxsina - cycosa));
-  rect.toprx = (int)(x + (+cxcosa + cysina));
-  rect.topry = (int)(y + (+cxsina - cycosa));
-  rect.botlx = (int)(x + (+cxcosa - cysina));
-  rect.botly = (int)(y + (+cxsina + cycosa));
-  rect.botrx = (int)(x + (-cxcosa - cysina));
-  rect.botry = (int)(y + (-cxsina + cycosa));
-
-  centerx = (int)x;
-  centery = (int)y;
-}
-
-bool CPioneerMobileDevice::GUIUnDraw()
-{
-  ASSERT(m_world->win != NULL);
-  m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
-  m_world->win->DrawLines( undrawPts, 7 );
-
-  return true;
-}
-
-bool CPioneerMobileDevice::GUIDraw()
-{
-  CWorldWin* win = m_world->win;
-  
-  XPoint pts[7];
-  
-  // draw the new position
-  pts[4].x = pts[0].x = (short)rect.toprx;
-  pts[4].y = pts[0].y = (short)rect.topry;
-  pts[1].x = (short)rect.toplx;
-  pts[1].y = (short)rect.toply;
-  pts[6].x = pts[3].x = (short)rect.botlx;
-  pts[6].y = pts[3].y = (short)rect.botly;
-  pts[2].x = (short)rect.botrx;
-  pts[2].y = (short)rect.botry;
-  pts[5].x = (short)centerx;
-  pts[5].y = (short)centery;
-      
-  win->SetForeground( win->RobotDrawColor( m_robot) );
-  win->DrawLines( pts, 7 );
-
-  // store these points for undrawing
-  memcpy( undrawPts, pts, sizeof( XPoint ) * 7 ); 
-
-  return true;
-}
-
-#else
+#ifdef INCLUDE_RTK
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages

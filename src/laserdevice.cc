@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11.2.13 $
+//  $Revision: 1.11.2.14 $
 //
 // Usage:
 //  (empty)
@@ -31,6 +31,12 @@
 #include "world.hh"
 #include "playerrobot.hh"
 #include "laserdevice.hh"
+
+
+///////////////////////////////////////////////////////////////////////////
+// Macros
+//
+#define MAKEUINT16(lo, hi) ((((uint16_t) (hi)) << 8) | ((uint16_t) (lo)))
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -63,9 +69,7 @@ CLaserDevice::CLaserDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
     m_map_dx = 0.20;
     m_map_dy = 0.20;
     
-    #ifndef INCLUDE_RTK 
-        undrawRequired = false;
-    #else
+    #ifdef INCLUDE_RTK 
         m_hit_count = 0;
     #endif
 }
@@ -133,12 +137,13 @@ bool CLaserDevice::CheckConfig()
 
     if (GetConfig(config, sizeof(config)) == 0)
         return false;  
-    
-    m_min_segment = ntohs(RTK_MAKEUINT16(config[0], config[1]));
-    m_max_segment = ntohs(RTK_MAKEUINT16(config[2], config[3]));
+
+    m_min_segment = ntohs(MAKEUINT16(config[0], config[1]));
+    m_max_segment = ntohs(MAKEUINT16(config[2], config[3]));
     m_intensity = (bool) config[4];
-    RTK_MSG3("new scan range [%d %d], intensity [%d]",
-         (int) m_min_segment, (int) m_max_segment, (int) m_intensity);
+
+    //RTK_MSG3("new scan range [%d %d], intensity [%d]",
+    //     (int) m_min_segment, (int) m_max_segment, (int) m_intensity);
 
     // *** HACK -- change the update rate based on the scan size
     // This is a guess only
@@ -180,7 +185,7 @@ bool CLaserDevice::UpdateScanData()
 
     // Make sure the data buffer is big enough
     //
-    ASSERT(m_samples <= RTK_ARRAYSIZE(m_data));
+    ASSERT(m_samples <= ARRAYSIZE(m_data));
 
     // Do each scan
     //
@@ -253,7 +258,8 @@ bool CLaserDevice::UpdateScanData()
         // Swap the bytes while we're at it,
         // and allow for sparse sampling.
         //
-        for (int i = s; i < s + m_sample_density && i < RTK_ARRAYSIZE(m_data); i++)
+        for (int i = s; i < s + m_sample_density
+                 && (size_t) i < sizeof(m_data) / sizeof(m_data[0]); i++)
             m_data[i] = htons(v);
     }
     return true;
@@ -291,40 +297,7 @@ void CLaserDevice::Map(bool render)
 }
 
 
-#ifndef INCLUDE_RTK
-
-bool CLaserDevice::GUIDraw()
-{ 
-  // dump out if noone is subscribed or the device
-  if( !IsSubscribed() || !m_robot->showDeviceDetail ) return true;
-
-  // replicate the first point at the end in order to draw a closed polygon
-  hitPts[LASERSAMPLES].x = hitPts[0].x;
-  hitPts[LASERSAMPLES].y = hitPts[0].y;
-
-  m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
-  m_world->win->DrawLines( hitPts, LASERSAMPLES+1 );
-    
-  memcpy( oldHitPts, hitPts, sizeof( XPoint ) * (LASERSAMPLES+1) );
-  
-  undrawRequired = true;
-
-  return true; 
-};  
-
-bool CLaserDevice::GUIUnDraw()
-{ 
-  if( undrawRequired )
-  {
-    m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
-    m_world->win->DrawLines( oldHitPts, LASERSAMPLES+1 );
-
-    undrawRequired = false;
-  }   
-  return true; 
-};
-
-#else
+#ifdef INCLUDE_RTK
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages

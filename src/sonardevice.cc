@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.5.2.12 $
+//  $Revision: 1.5.2.13 $
 //
 // Usage:
 //  (empty)
@@ -55,10 +55,6 @@ CSonarDevice::CSonarDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
     
     // zero the data
     memset( m_range, 0, sizeof(m_range) );
-
-    #ifndef INCLUDE_RTK 
-        undrawRequired = false;
-    #endif
 }
 
 
@@ -89,7 +85,7 @@ void CSonarDevice::Update()
 
     // Check bounds
     //
-    ASSERT(m_sonar_count <= RTK_ARRAYSIZE(m_range));
+    ASSERT((size_t) m_sonar_count <= sizeof(m_range) / sizeof(m_range[0]));
     
     // Do each sonar
     //
@@ -145,42 +141,7 @@ void CSonarDevice::Update()
 }
 
 
-#ifndef INCLUDE_RTK
-
-bool CSonarDevice::GUIDraw()
-{  
-  // dump out if noone is subscribed
-  if( !IsSubscribed() || !m_robot->showDeviceDetail ) return true;
-  
-  // copy first to last hit point to draw a closed polygon
-  hitPts[SONARSAMPLES].x = hitPts[0].x;
-  hitPts[SONARSAMPLES].y = hitPts[0].y;
-
-  m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
-  m_world->win->DrawLines( hitPts, SONARSAMPLES+1 );
-
-  memcpy( oldHitPts, hitPts, sizeof( XPoint ) * (SONARSAMPLES+1) );
-
-  undrawRequired = true;
-
-  return true; 
-};  
-
-bool CSonarDevice::GUIUnDraw()
-{ 
-  // dump out if noone is subscribed
-  if( undrawRequired )
-    {
-      m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
-      m_world->win->DrawLines( oldHitPts, SONARSAMPLES+1 );
-      
-      undrawRequired = false;
-    }
-      
-  return true; 
-};
-
-#else
+#ifdef INCLUDE_RTK
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
