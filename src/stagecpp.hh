@@ -23,7 +23,7 @@
  * the basic C library, but right now we only have a C++ implementation.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.hh,v 1.2 2003-08-19 22:09:53 rtv Exp $
+ * CVS info: $Id: stagecpp.hh,v 1.3 2003-08-26 18:59:58 rtv Exp $
  */
 
 #ifndef STAGECPP_HH
@@ -53,6 +53,10 @@ class CWorldFile
   // an array mapping [model_count] device names to Stage ids
 public: int Upload( stg_client_t* cli, 
 		    stg_name_id_t** models, int* model_count );
+
+  
+public: int DownloadAndSave( stg_client_t* cli ); 
+  //stg_name_id_t** models, int* model_count );
 
   // Check for unused properties and print warnings
   public: bool WarnUnused();

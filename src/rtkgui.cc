@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.11 2003-08-25 23:26:32 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.12 2003-08-26 18:59:58 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -60,8 +60,11 @@
 #include "colors.h"
 
 extern int quit;
+extern GArray* global_client_pids;
 
 // defaults
+
+#define STG_CANVAS_RENDER_INTERVAL 200
 
 #define STG_DEFAULT_WINDOW_WIDTH 600
 #define STG_DEFAULT_WINDOW_HEIGHT 600
@@ -171,6 +174,12 @@ void stg_gui_menu_toggle_data( rtk_menuitem_t *item )
   enable_data = rtk_menuitem_ischecked(item);
 }
 
+// send a USR2 signal to all clients
+void stg_gui_save( rtk_menuitem_t *item )
+{
+  for( int p=0; p<global_client_pids->len; p++ )
+    kill( g_array_index( global_client_pids, pid_t, p ), SIGUSR2 );
+}
 
 // build a simulation window
 stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int height )
@@ -183,9 +192,12 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
   win->canvas = rtk_canvas_create(app);
       
   // Add some menu items
-  /*
+  
   win->file_menu = rtk_menu_create(win->canvas, "File");
   win->save_menuitem = rtk_menuitem_create(win->file_menu, "Save", 0);
+  rtk_menuitem_set_callback( win->save_menuitem, stg_gui_save );
+
+  /*
   win->stills_menu = rtk_menu_create_sub(win->file_menu, "Capture stills");
   win->movie_menu = rtk_menu_create_sub(win->file_menu, "Capture movie");
   win->exit_menuitem = rtk_menuitem_create(win->file_menu, "Exit", 0);
@@ -287,8 +299,9 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
   // each device adds itself to the correct view menus in its rtkstartup()
   */
 
-  // update this window every 100ms
-  win->source_tag = g_timeout_add( 100, stg_gui_window_callback, win );
+  // update this window every few ms
+  win->source_tag = g_timeout_add( STG_CANVAS_RENDER_INTERVAL, 
+				   stg_gui_window_callback, win );
   
   // TODO - fix this behavior in rtk - I have to fall back on GTK here.
   PRINT_DEBUG2( "resizing window to %d %d", width, height );
@@ -655,11 +668,11 @@ void RtkOnMouse(rtk_fig_t *fig, int event, int mode)
   switch (event)
     {
     case RTK_EVENT_PRESS:
-      //mod->fig_label = stg_gui_label_create( fig->canvas, entity );
-      
-      // DELIBERATE NO BREAK
-      
+      // DELIBERATE NO-BREAK      
     case RTK_EVENT_MOTION:
+
+      // if there are more motion events pending, do nothing.
+
       // move the object to follow the mouse
       rtk_fig_get_origin(fig, &pose.x, &pose.y, &pose.a );
       entity->SetProperty( STG_PROP_POSE, &pose, sizeof(pose) );
@@ -683,7 +696,6 @@ void RtkOnMouse(rtk_fig_t *fig, int event, int mode)
       // take the pose message from the status bar
       cid = gtk_statusbar_get_context_id( mod->win->statusbar, "on_mouse" );
       gtk_statusbar_pop( mod->win->statusbar, cid ); 
-
       break;
       
       
@@ -901,14 +913,15 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
 	//PRINT_DEBUG3( "moving figure to %.2f %.2f %.2f", px,py,pa );
 	rtk_fig_origin( model->fig, pose.x, pose.y, pose.a );
 
-	// if the matrix is not visible, we can probably afford to
-	// redraw things here
-	
 	// if things get too laggy you can remove this render and the
 	// canvas will be redrawn in a few ms. mousing feels MUCH more
 	// smooth with this here, though, at least with a small
 	// population.
+
+	// if the matrix is not visible, and we're haven't got a lot
+	// of rectangles, we can probably afford to redraw things here	
 	if( !ent->GetWorld()->win->fig_matrix->show )
+	  //&& ent->GetNumRects() < 30 )
 	  rtk_canvas_render( model->fig->canvas );
       }
       break;

@@ -408,27 +408,30 @@ stg_client_t* stg_client_create( char* host, int port )
     }
   
   // send the greeting
-  int c = STG_SERVER_GREETING;
+  stg_greeting_t greeting;
+  greeting.code = STG_SERVER_GREETING;
+  greeting.pid = getpid();
+  
   int r;
-  if( (r = write( cli->pollfd.fd, &c, sizeof(c) )) < 1 )
+  if( (r = write( cli->pollfd.fd, &greeting, sizeof(greeting) )) < 1 )
     {
       PRINT_ERR( "failed to write STG_SERVER_GREETING to server.\n" );
       if( r < 0 ) perror( "error on write" );
       return NULL;
     }
-
+  
   // wait for the reply
-  if( (r = read( cli->pollfd.fd, &c, sizeof(c) )) < 1 )
+  if( (r = read( cli->pollfd.fd, &greeting, sizeof(greeting) )) < 1 )
     {
       PRINT_ERR( "failed to READ STG_CLIENT_GREETING from server.\n" );
       if( r < 0 ) perror( "error on read" );
       return NULL;
     }
-
-  if( c != STG_CLIENT_GREETING ) 
-    PRINT_ERR1( "received bad reply from server (%d)", c );
+  
+  if( greeting.code != STG_CLIENT_GREETING ) 
+    PRINT_ERR1( "received bad reply from server (%d)", greeting.code );
   else
-    PRINT_MSG1( "received good reply from server (%d)", c );
+    PRINT_MSG1( "received good reply from server (%d)", greeting.code );
 
   return cli;
 }  

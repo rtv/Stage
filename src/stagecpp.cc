@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.8 2003-08-26 04:57:27 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.9 2003-08-26 18:59:58 rtv Exp $
  */
 
 #include <assert.h>
@@ -1967,3 +1967,11 @@ int CWorldFile::Upload( stg_client_t* cli,
 }
 
 
+int CWorldFile::DownloadAndSave( stg_client_t* cli )
+{
+  puts( "DOWNLOAD AND SAVE NOT IMPLEMENTED. TODO!" );
+
+  // for all models
+  //worldfile->WriteTupleLength(section, "pose", 0, px);
+  
+}

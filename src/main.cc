@@ -23,7 +23,7 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan
  * Date: 3 July 2003
- * CVS: $Id: main.cc,v 1.65 2003-08-25 23:26:32 rtv Exp $
+ * CVS: $Id: main.cc,v 1.66 2003-08-26 18:59:58 rtv Exp $
  */
 
 
@@ -45,6 +45,10 @@ int quit = 0; // set true by the GUI when it wants to quit
 // globals
 GHashTable* global_hash_table = g_hash_table_new(g_int_hash, g_int_equal);
 int global_next_available_id = 1;
+
+// contains the PIDs of all connected clients
+GArray* global_client_pids = g_array_new( FALSE, TRUE, sizeof(pid_t) );
+
 
 // prints the object tree on stdout
 void StgPrintTree( GNode* treenode, gpointer _prefix )
@@ -338,7 +342,7 @@ gboolean StgClientAcceptConnection( GIOChannel* channel, GHashTable* table )
   
   
   // look for a well-formed greeting
-  int greet, reply;
+  stg_greeting_t greet, reply;
   gsize bytes_read, bytes_written;
 
   PRINT_DEBUG2( "expecting %d byte greeting on %d", 
@@ -357,17 +361,21 @@ gboolean StgClientAcceptConnection( GIOChannel* channel, GHashTable* table )
   PRINT_DEBUG1( "read %d bytes", bytes_read );
   
   // check to make sure we have the right greeting code
-  if( greet != STG_SERVER_GREETING )
+  if( greet.code != STG_SERVER_GREETING )
     {
-      PRINT_ERR1( "bad greeting from client (%d)", greet);
+      PRINT_ERR1( "bad greeting from client (%d)", greet.code );
       g_io_channel_shutdown( channel, TRUE, NULL );
       g_io_channel_unref( channel );
       return FALSE; // fail
     }
-
-  // write the reply
-  reply = STG_CLIENT_GREETING;
   
+  // store the client's PID to we can send it signals 
+  global_client_pids = g_array_append_val( global_client_pids, greet.pid );
+  
+  // write the reply
+  reply.code = STG_CLIENT_GREETING;
+  reply.pid = getpid(); // reply with my PID in case that's useful
+
   g_io_channel_write_chars( client, 
 			    (char*)&reply, (gssize)sizeof(reply),
 			    &bytes_written, NULL );

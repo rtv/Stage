@@ -17,7 +17,8 @@
 #include <unistd.h>
 #include <stdint.h> // for portable int types eg. uint32_t
 #include <sys/poll.h> // for struct pollfd
-   
+#include <sys/types.h>
+
    typedef struct timeval stg_timeval_t;
    
    // global stage configs
@@ -98,6 +99,14 @@
 
 // a unique id for each entity equal to its position in the world's array
 typedef int stg_id_t;
+
+// this packet is exchanged as a handshake when connecting to Stage
+typedef struct
+{
+  int code;
+  pid_t pid;
+} stg_greeting_t;
+
 
 // used for specifying 3 axis positions
 typedef struct
