@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.109 2004-11-21 11:08:01 rtv Exp $
+ * CVS: $Id: stage.h,v 1.110 2004-11-21 19:09:05 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -784,12 +784,14 @@ stg_model_t* itl_first_matching( itl_t* itl,
   void stg_world_save( stg_world_t* world );
   int gui_world_update( stg_world_t* world );
   void stg_world_add_model( stg_world_t* world, stg_model_t* mod  );
+  /// render the geometry of all models
+  void gui_world_geom( stg_world_t* world );
 
   void gui_model_create( stg_model_t* model );
   void gui_model_destroy( stg_model_t* model );
   void gui_model_render( stg_model_t* model );
   void gui_model_nose( stg_model_t* model );
-  void gui_model_pose( stg_model_t* mod );
+  void gui_model_move( stg_model_t* mod );
   void gui_model_geom( stg_model_t* model );
   //void gui_model_lines( stg_model_t* model );
   void gui_model_polygons( stg_model_t* model );
@@ -914,6 +916,9 @@ stg_model_t* itl_first_matching( itl_t* itl,
   int stg_model_set_prop( stg_model_t* mod, stg_id_t propid, void* data, size_t len );
   int stg_model_get_prop( stg_model_t* mod, stg_id_t pid, void** data, size_t* len );
 
+  int stg_model_startup( stg_model_t* mod );
+  int stg_model_shutdown( stg_model_t* mod );
+
   // SET properties - use these to set props, don't set them directly
 
   /** set the pose of a model in its parent's coordinate system */
@@ -975,7 +980,7 @@ stg_model_t* itl_first_matching( itl_t* itl,
   stg_pose_t*            stg_model_get_pose( stg_model_t* mod );
   stg_pose_t*            stg_model_get_odom( stg_model_t* mod );
   stg_kg_t*              stg_model_get_mass( stg_model_t* mod );
-  stg_guifeatures_t*     stg_model_get_guifeaturess( stg_model_t* mod );
+  stg_guifeatures_t*     stg_model_get_guifeatures( stg_model_t* mod );
   stg_energy_data_t*     stg_model_get_energy_data( stg_model_t* mod );
   stg_energy_config_t*   stg_model_get_energy_config( stg_model_t* mod );
   stg_bool_t             stg_model_get_obstaclereturn( stg_model_t* mod );

@@ -99,6 +99,18 @@ static const int menu_table_count = 45;
 /*   gtk_dialog_run( about ); */
 /* } */
 
+void model_refresh( stg_model_t* mod )
+{
+  // re-set the current data, config & geom to force redraws
+  size_t len = 0;
+  void* p = stg_model_get_data( mod, &len );  
+  stg_model_set_data( mod, p, len );
+  p = stg_model_get_config( mod, &len );
+  stg_model_set_config( mod, p, len );  
+  p = stg_model_get_geom( mod );
+  stg_model_set_geom( mod, p );
+}
+
 void refresh_cb( gpointer key, gpointer value, gpointer user )
 {
   model_refresh( (stg_model_t*)value );
@@ -141,11 +153,7 @@ void gui_menu_file_export_format( gpointer data, guint action, GtkWidget* mitem 
     case 2: win->frame_format = RTK_IMAGE_FORMAT_PNG; break;
     case 3: win->frame_format = RTK_IMAGE_FORMAT_PPM; break;
     case 4: win->frame_format = RTK_IMAGE_FORMAT_PNM; break;
-    }void refresh_cb( gpointer key, gpointer value, gpointer user )
-{
-  model_refresh( (stg_model_t*)value );
-}
-
+    }
 }
 
 void gui_menu_file_save_cb( gpointer data, 
@@ -254,21 +262,6 @@ void gui_menu_layer_cb( gpointer data,
   rtk_canvas_layer_show( ((gui_window_t*)data)->canvas, 
 			 action, // action is the layer number
 			 GTK_CHECK_MENU_ITEM(mitem)->active );
-}
-
-void model_refresh( stg_model_t* mod )
-{
-  // re-set the current data, config & geom to force redraws
-  size_t len = 0;
-  void* p = stg_model_get_data( mod, &len );  
-  stg_model_set_data( mod, p, len );
-  p = stg_model_get_config( mod, &len );
-  stg_model_set_config( mod, p, len );  
-  p = stg_model_get_geom( mod );
-  stg_model_set_geom( mod, p );
-  
-  //stg_model_set_lines( mod, mod->lines, mod->lines_count );
-  // stg_model_set_polygons( mod, mod->lines, mod->lines_count );
 }
 
 

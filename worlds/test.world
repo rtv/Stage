@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.33 2004-11-21 10:53:03 rtv Exp $
+# CVS: $Id: test.world,v 1.34 2004-11-21 19:09:05 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -10,15 +10,17 @@ resolution     0.02
 #resolution_low  1.0
 
 interval_sim 100  # milliseconds per update step
-interval_real 30 # real-time milliseconds per update step
+interval_real 100 # real-time milliseconds per update step
 
 # defines Pioneer-like robots
 include "pioneer.inc"
 
 
 
+
 # defines 'map' object used for floorplans
 include "map.inc"
+
 
 
 
@@ -56,19 +58,20 @@ define laserpioneer pioneer2dx
   sicklaser(  fiducialfinder( color "green" obstacle 0 ) )
   blobfinder()
 
-  fiducial_id 42
+  fiducial_return 42
+  blobfinder_return 1
 )
 
 
 laserpioneer
 (
   name "p0"
-  pose [-12.320 2.233 -333.684]
+  pose [-10.302 2.039 -348.743]
 )
 
 laserpioneer
 (
-  color "green"
+  color "red"
   name "p1"
   pose [-5.127 2.584 -162.098]
 )
@@ -80,6 +83,33 @@ laserpioneer
   pose [-4.717 1.938 -194.220]
 )
 
+laserpioneer
+(
+  color "green"
+  name "p3"
+  pose [-4.717 1.938 -194.220]
+)
+
+laserpioneer
+(
+  color "cyan"
+  name "p4"
+  pose [-7.090 3.240 -491.732]
+)
+
+laserpioneer
+(
+  color "yellow"
+  name "p5"
+  pose [-6.334 3.156 -110.414]
+)
+
+laserpioneer
+(
+  color "magenta"
+  name "p6"
+  pose [-5.599 2.883 -135.449]
+)
 
 # a silly object to look at
 #position( 	
@@ -89,7 +119,7 @@ laserpioneer
 #  color "red"  
 #  # loads a bitmap for the model's body
 #  bitmap "bitmaps/submarine.png"
-#  fiducial_id 22
+#  fiducial_return 22
 #  velocity [0 0 10]
 #  laser_return 2
 #)

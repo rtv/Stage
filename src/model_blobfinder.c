@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.26 2004-11-21 10:53:02 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.27 2004-11-21 19:09:04 rtv Exp $
  */
 
 /** 
@@ -96,7 +96,7 @@ stg_model_t* stg_blobfinder_create( stg_world_t* world,
   cfg.tilt =STG_DEFAULT_BLOB_TILT;
   cfg.zoom = STG_DEFAULT_BLOB_ZOOM;
   
-  cfg.channel_count = 6; //STG_DEFAULT_BLOB_CHANNELCOUNT;
+  cfg.channel_count = 6; 
   cfg.channels[0] = stg_lookup_color( "red" );
   cfg.channels[1] = stg_lookup_color( "green" );
   cfg.channels[2] = stg_lookup_color( "blue" );
@@ -114,13 +114,12 @@ stg_model_t* stg_blobfinder_create( stg_world_t* world,
   return mod;
 }
 
-
-// utility - we get the config quite a lot, so use this
 stg_blobfinder_config_t* blobfinder_get_cfg( stg_model_t* mod )
 {
   size_t len = 0;
   stg_blobfinder_config_t* cfg = 
-    (stg_blobfinder_config_t*)stg_model_get_config(mod,&len);
+    (stg_blobfinder_config_t*)stg_model_get_config( mod, &len );
+  
   assert( cfg );
   assert( len == sizeof( stg_blobfinder_config_t ));
   return cfg;
@@ -161,9 +160,9 @@ int blobfinder_update( stg_model_t* mod )
   // only need to work if we're subscribed
   if( mod->subs < 1 )
     return 0; 
-
+  
   size_t len = 0;
-  stg_blobfinder_config_t* cfg = blobfinder_get_config(mod); 
+  stg_blobfinder_config_t* cfg = blobfinder_get_cfg(mod);
   
   // Generate the scan-line image
   
@@ -374,6 +373,11 @@ void blobfinder_render_data( stg_model_t* mod, void* data, size_t len )
 				     NULL, 
 				     STG_LAYER_BLOBDATA );
   
+  stg_blobfinder_blob_t* blobs = (stg_blobfinder_blob_t*)data;
+  
+  if( len < sizeof(stg_blobfinder_blob_t) )
+    return; // no data to render
+
   rtk_fig_t* fig = mod->gui.data;  
   
   // place the visualization a little away from the device
@@ -387,12 +391,7 @@ void blobfinder_render_data( stg_model_t* mod, void* data, size_t len )
   
   double scale = 0.01; // shrink from pixels to meters for display
   
-  stg_blobfinder_config_t* cfg = blobfinder_get_config( mod );
-  
-  stg_blobfinder_blob_t* blobs =  (stg_blobfinder_blob_t*)data;
-  
-  if( len < sizeof(stg_blobfinder_blob_t) )
-    return; // no data to render
+  stg_blobfinder_config_t* cfg = blobfinder_get_cfg(mod);
   
   int num_blobs = len / sizeof(stg_blobfinder_blob_t);
   

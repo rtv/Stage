@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.25 $
+//  $Revision: 1.26 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -291,7 +291,7 @@ int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
       stg_model_map_with_children( mod, 1 );
       
       // move the rtk figure to match
-      gui_render_pose( mod );      
+      gui_model_move( mod );      
     }
   
   return 0; // OK

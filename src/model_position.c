@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.15 $
+//  $Revision: 1.16 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -39,6 +39,8 @@ stg_model_t* stg_position_create( stg_world_t* world,
 				  stg_id_t id, 
 				  char* token )
 {
+  PRINT_DEBUG( "created position model" );
+
   stg_model_t* mod = stg_model_create( world, parent, id, STG_MODEL_POSITION, token );
   
   // override the default methods
@@ -67,7 +69,7 @@ stg_model_t* stg_position_create( stg_world_t* world,
   stg_model_set_config( mod, &cfg, sizeof(cfg) );
 
   stg_position_data_t data;
-  memset( &data, 0, sizeof(data) );
+   memset( &data, 0, sizeof(data) );
 
   stg_model_set_data( mod, &data, sizeof(data) );
 
@@ -245,6 +247,9 @@ int position_update( stg_model_t* mod )
   // publish the data
   stg_model_set_data( mod, &data, sizeof(data));
   
+  // now  inherit the normal update - this does the actual moving
+  _model_update( mod );
+
   return 0; //ok
 }
 

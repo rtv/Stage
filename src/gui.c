@@ -78,7 +78,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   g_string_free( titlestr, TRUE );
   
   double width = 10;//world->size.x;
-  double height = 10;//world->size.y;
+  //double height = 10;//world->size.y;
 
   win->bg = rtk_fig_create( win->canvas, NULL, STG_LAYER_GRID );
   
@@ -244,6 +244,7 @@ void gui_world_matrix( stg_world_t* world, gui_window_t* win )
     }
 }
 
+
 void gui_pose( rtk_fig_t* fig, stg_model_t* mod )
 {
   stg_pose_t* pose = stg_model_get_pose( mod );
@@ -280,8 +281,8 @@ int gui_world_update( stg_world_t* world )
 	    (world->sim_time % 3600000) / 60000, // minutes
 	    (world->sim_time % 60000) / 1000, // seconds
 	    world->sim_time % 1000, // milliseconds
-	    world->sim_interval,
-	    world->real_interval_measured,
+	    (int)world->sim_interval,
+	    (int)world->real_interval_measured,
 	    (double)world->sim_interval / (double)world->real_interval_measured );
 
   //gtk_label_set_text( win->timelabel, clock );
@@ -530,48 +531,48 @@ void gui_model_features( stg_model_t* mod )
 }
 
 
-void stg_model_render_lines( stg_model_t* mod )
-{
-  rtk_fig_t* fig = gui_model_figs(mod)->top;
+/* void stg_model_render_lines( stg_model_t* mod ) */
+/* { */
+/*   rtk_fig_t* fig = gui_model_figs(mod)->top; */
   
-  rtk_fig_clear( fig );
+/*   rtk_fig_clear( fig ); */
   
-  // don't draw objects with no size 
-  if( mod->geom.size.x == 0 && mod->geom.size.y == 0 )
-    return;
+/*   // don't draw objects with no size  */
+/*   if( mod->geom.size.x == 0 && mod->geom.size.y == 0 ) */
+/*     return; */
   
-  rtk_fig_color_rgb32( fig, stg_model_get_color(mod) );
+/*   rtk_fig_color_rgb32( fig, stg_model_get_color(mod) ); */
 
-  size_t count=0;
-  stg_line_t* lines = stg_model_get_lines(mod,&count);
+/*   size_t count=0; */
+/*   stg_line_t* lines = stg_model_get_lines(mod,&count); */
 
-  if( lines )
-    {
-      PRINT_DEBUG1( "rendering %d lines", (int)count );
+/*   if( lines ) */
+/*     { */
+/*       PRINT_DEBUG1( "rendering %d lines", (int)count ); */
       
-      stg_geom_t* geom = stg_model_get_geom(mod);
+/*       stg_geom_t* geom = stg_model_get_geom(mod); */
       
-      double localx = geom->pose.x;
-      double localy = geom->pose.y;
-      double locala = geom->pose.a;
+/*       double localx = geom->pose.x; */
+/*       double localy = geom->pose.y; */
+/*       double locala = geom->pose.a; */
       
-      double cosla = cos(locala);
-      double sinla = sin(locala);
+/*       double cosla = cos(locala); */
+/*       double sinla = sin(locala); */
       
-      int l;
-      for( l=0; l<count; l++ )
-	  {
-	    stg_line_t* line = &lines[l];
+/*       int l; */
+/*       for( l=0; l<count; l++ ) */
+/* 	  { */
+/* 	    stg_line_t* line = &lines[l]; */
 	    
-	    double x1 = localx + line->x1 * cosla - line->y1 * sinla;
-	    double y1 = localy + line->x1 * sinla + line->y1 * cosla;
-	    double x2 = localx + line->x2 * cosla - line->y2 * sinla;
-	    double y2 = localy + line->x2 * sinla + line->y2 * cosla;
+/* 	    double x1 = localx + line->x1 * cosla - line->y1 * sinla; */
+/* 	    double y1 = localy + line->x1 * sinla + line->y1 * cosla; */
+/* 	    double x2 = localx + line->x2 * cosla - line->y2 * sinla; */
+/* 	    double y2 = localy + line->x2 * sinla + line->y2 * cosla; */
 	    
-	    rtk_fig_line( fig, x1,y1, x2,y2 );
-	  }
-    }
-}
+/* 	    rtk_fig_line( fig, x1,y1, x2,y2 ); */
+/* 	  } */
+/*     } */
+/* } */
 
 void stg_model_render_polygons( stg_model_t* mod )
 {
@@ -645,7 +646,7 @@ void gui_model_render_geom_global( stg_model_t* mod, rtk_fig_t* fig )
 }
 
 /// move a model's figure to the model's current location
-void gui_render_pose( stg_model_t* mod )
+void gui_model_move( stg_model_t* mod )
 { 
   rtk_fig_origin( gui_model_figs(mod)->top, 
 		  mod->pose.x, mod->pose.y, mod->pose.a ); 

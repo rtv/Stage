@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.67 2004-11-21 10:53:03 rtv Exp $
+// $Id: stagecpp.cc,v 1.68 2004-11-21 19:09:05 rtv Exp $
 
 //#define DEBUG
 
@@ -22,12 +22,16 @@
 
 static CWorldFile wf;
 
+// todo = move these into stage.h
+extern "C"
+{
+  stg_model_t* stg_blobfinder_create( stg_world_t* world,	stg_model_t* parent, stg_id_t id,  char* token ); 
+  stg_model_t* stg_laser_create( stg_world_t* world, stg_model_t* parent, stg_id_t id, char* token );
+  stg_model_t* stg_fiducial_create( stg_world_t* world,  stg_model_t* parent,  stg_id_t id, char* token );
+  stg_model_t* stg_position_create( stg_world_t* world,  stg_model_t* parent,  stg_id_t id, char* token );
+  stg_model_t* stg_ranger_create( stg_world_t* world,  stg_model_t* parent,  stg_id_t id, char* token );
+}
 
-stg_model_t* stg_blobfinder_create( stg_world_t* world,	stg_model_t* parent, stg_id_t id,  char* token ); 
-stg_model_t* stg_laser_create( stg_world_t* world, stg_model_t* parent, stg_id_t id, char* token );
-stg_model_t* stg_fiducial_create( stg_world_t* world,  stg_model_t* parent,  stg_id_t id, char* token )
-stg_model_t* stg_position_create( stg_world_t* world,  stg_model_t* parent,  stg_id_t id, char* token )
-  
   /** @defgroup model_window GUI Window
 
 <h2>Worldfile Properties</h2>
@@ -356,16 +360,16 @@ void configure_model( stg_model_t* mod, int section )
   vel.a = wf.ReadTupleAngle(section, "velocity", 2, 0 );      
   stg_model_set_velocity( mod, &vel );
     
-  stg_energy_config_t ecfg;
-  ecfg.capacity 
-    = wf.ReadFloat(section, "energy_capacity", STG_DEFAULT_ENERGY_CAPACITY );
-  ecfg.probe_range 
-    = wf.ReadFloat(section, "energy_range", STG_DEFAULT_ENERGY_PROBERANGE );      
-  ecfg.give_rate 
-    = wf.ReadFloat(section, "energy_return", STG_DEFAULT_ENERGY_GIVERATE );
-  ecfg.trickle_rate 
-    = wf.ReadFloat(section, "energy_trickle", STG_DEFAULT_ENERGY_TRICKLERATE );
-  stg_model_set_energy_config( mod, &ecfg );
+//   stg_energy_config_t ecfg;
+//   ecfg.capacity 
+//     = wf.ReadFloat(section, "energy_capacity", STG_DEFAULT_ENERGY_CAPACITY );
+//   ecfg.probe_range 
+//     = wf.ReadFloat(section, "energy_range", STG_DEFAULT_ENERGY_PROBERANGE );      
+//   ecfg.give_rate 
+//     = wf.ReadFloat(section, "energy_return", STG_DEFAULT_ENERGY_GIVERATE );
+//   ecfg.trickle_rate 
+//     = wf.ReadFloat(section, "energy_trickle", STG_DEFAULT_ENERGY_TRICKLERATE );
+//   stg_model_set_energy_config( mod, &ecfg );
 
   stg_kg_t mass;
   mass = wf.ReadFloat(section, "mass", STG_DEFAULT_MASS );
@@ -480,14 +484,14 @@ void configure_fiducial( stg_model_t* mod, int section )
 blobfinder
 (
   # blobfinder properties
-  channel_count 1
-  channels ["red"]
+  channel_count 6
+  channels ["red" "green" "blue" "cyan" "yellow" "magenta" ]
   range_max 8.0
   ptz[0 0 60.0]
-  image[?? ??]
+  image[80 60]
 
   # model properties
-  size [0 0]
+  size [0.01 0.01]
 )
 @endverbatim
 
@@ -496,7 +500,7 @@ blobfinder
   - number of channels; i.e. the number of discrete colors detected
 - channels [ string ... ]
   - define the colors detected in each channel, using color names from the X11 database 
-   (rgb.txt). The number of strings should match channel_counnt.
+   (rgb.txt). The number of strings should match channel_count.
 - image [int int]
   - [width height]
   - dimensions of the image in pixels. This determines the blobfinder's 
@@ -515,7 +519,7 @@ void configure_blobfinder( stg_model_t* mod, int section )
   memset( &bcfg, 0, sizeof(bcfg) );
   
   bcfg.channel_count = 
-    wf.ReadInt(section, "channel_count", STG_DEFAULT_BLOB_CHANNELCOUNT);
+    wf.ReadInt(section, "channel_count", 6 );
   
   bcfg.scan_width = (int)
     wf.ReadTupleFloat(section, "image", 0, STG_DEFAULT_BLOB_SCANWIDTH);
@@ -534,10 +538,19 @@ void configure_blobfinder( stg_model_t* mod, int section )
     bcfg.channel_count = STG_BLOB_CHANNELS_MAX;
   
   for( int ch = 0; ch<bcfg.channel_count; ch++ )
-    bcfg.channels[ch] = 
-      stg_lookup_color( wf.ReadTupleString(section, 
-					   "channels", 
-					   ch, "red" )); 
+    {
+      stg_color_t col = 0xFF0000; //red
+      
+      switch( ch%6 )
+      {
+      case 0:  bcfg.channels[ch] = stg_lookup_color( "red" ); break;
+      case 1:  bcfg.channels[ch] = stg_lookup_color( "green" ); break;
+      case 2:  bcfg.channels[ch] = stg_lookup_color( "blue" ); break;
+      case 3:  bcfg.channels[ch] = stg_lookup_color( "cyan" ); break;
+      case 4:  bcfg.channels[ch] = stg_lookup_color( "yellow" ); break;
+      case 5:  bcfg.channels[ch] = stg_lookup_color( "magenta" ); break;
+      }
+    }    
   
   stg_model_set_config( mod, &bcfg, sizeof(bcfg));
 }
@@ -886,35 +899,36 @@ stg_world_t* stg_world_create_from_file( char* worldfile_path )
 	      configure_blobfinder( mod, section );
 	      break;
 	      
-	      /*
+	      
 	    case STG_MODEL_LASER:
-	      mod = stg_world_model_create( world, section, parent_section, type, &laser_entry, namestr );
+	      mod = stg_laser_create( world,  parent_mod, section, namestr );
 	      configure_model( mod, section );	  
 	      configure_laser( mod, section );
 	      break;
 	      
 	    case STG_MODEL_RANGER:
-	      mod = stg_world_model_create( world, section, parent_section, type, &ranger_entry, namestr );
+	      mod = stg_ranger_create( world,  parent_mod, section, namestr );
 	      configure_model( mod, section );	  
 	      configure_ranger( mod, section );
 	      break;
 	      
 	    case STG_MODEL_FIDUCIAL:
-	      mod = stg_world_model_create( world, section, parent_section, type, &fiducial_entry, namestr );
+	      mod = stg_fiducial_create( world,  parent_mod, section, namestr );
 	      configure_model( mod, section );	  
 	      configure_fiducial( mod, section );
 	      break;
 	      
 	    case STG_MODEL_POSITION:
-	      mod = stg_world_model_create( world, section, parent_section, type, &position_entry, namestr );
+	      mod = stg_position_create( world,  parent_mod, section, namestr );
 	      configure_model( mod, section );	  
 	      configure_position( mod, section );
 	      break;
-	      */
 
 	    default:
-	      PRINT_DEBUG1( "don't know how to configure type %d", type );
+	      PRINT_ERR1( "don't know how to configure type %d", type );
 	    }
+
+	  assert( mod );
 	  
 	  // add the new model to the world
 	  stg_world_add_model( world, mod );
