@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.3 2004-04-23 06:58:53 rtv Exp $
+ * $Id: matrix.c,v 1.4 2004-04-23 19:14:40 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -12,11 +12,13 @@
 
 //#define DEBUG
 
+// if this is defined, empty matrix cells are deleted, saving a little
+// memory at the cost of a little time.
+#define STG_DELETE_EMPTY_CELLS 1
+
 // basic integer drawing functions (not intended for external use)
 void draw_line( stg_matrix_t* matrix,
 		int x1, int y1, int x2, int y2, void* object, int add);
-//void draw_rect( const stg_rect_t& t, void* object, int add );
-//void draw_circle(int x, int y, int r, void* object, int add);
 
 void matrix_key_destroy( gpointer key )
 {
@@ -93,9 +95,6 @@ GPtrArray* stg_matrix_cell_m( stg_matrix_t* matrix, double x, double y)
   coord.x = (gulong)(x * matrix->ppm);
   coord.y = (gulong)(y * matrix->ppm);
    
-  //printf( "inspecting %d,%d contents %p\n", 
-  //  coord.x, coord.y,  g_hash_table_lookup( matrix->table, &coord ) );
-  
   return g_hash_table_lookup( matrix->table, &coord );
 }
 
@@ -115,6 +114,7 @@ void stg_matrix_cell_append(  stg_matrix_t* matrix,
 {
   GPtrArray* cell = stg_matrix_cell( matrix, x, y );
   
+  // if the cell is empty we create a new ptr array for it
   if( cell == NULL )
     {
       stg_matrix_coord_t* coord = calloc( sizeof(stg_matrix_coord_t), 1 );
@@ -155,6 +155,8 @@ void stg_matrix_cell_remove(  stg_matrix_t* matrix,
 
       g_ptr_array_remove_fast( cell, object );
 
+      //#if STG_DELETE_EMPTY_CELLS
+      // if the ptr array is empty, we delete it to save memory.
       if( cell->len == 0 )
 	{
 	  stg_matrix_coord_t coord;
@@ -162,7 +164,10 @@ void stg_matrix_cell_remove(  stg_matrix_t* matrix,
 	  coord.y = y;
 	  
 	  g_hash_table_remove( matrix->table, &coord );
+	  //GPtrArray* p = stg_matrix_cell( matrix, x, y );
+	  //printf( "removed cell %d %d now %p\n", x, y, p  );
 	}
+      //#endif
     }
 }
 

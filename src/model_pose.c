@@ -4,16 +4,77 @@
 #include "stage.h"
 #include "raytrace.h"
 
+///////////////////////////////////////////////////////////////////////////
+// Check to see if the given pose will yield a collision with obstacles.
+// Returns a pointer to the first entity we are in collision with, and stores
+// the location of the hit in hitx,hity (if non-null)
+// Returns NULL if not collisions.
+// This function is useful for writing position devices.
+stg_model_t* model_test_collision( stg_model_t* mod, double* hitx, double* hity )
+{
+  //return NULL;
+  
+  // raytrace along all our rectangles. expensive, but most vehicles
+  // will just be a single rect, grippers 3 rects, etc. not too bad.
+  
+  // no body? no collision
+  if( mod->lines->len < 1 )
+    return NULL;
+
+  int l;
+  for( l=0; l<(int)mod->lines->len; l++ )
+    {
+      // find the global coords of this line
+      stg_line_t* line = &g_array_index( mod->lines, stg_line_t, l );
+
+      stg_pose_t p1;
+      p1.x = line->x1;
+      p1.y = line->y1;
+      p1.a = 0;
+
+      stg_pose_t p2;
+      p2.x = line->x2;
+      p2.y = line->y2;
+      p2.a = 0;
+
+      model_local_to_global( mod, &p1 );
+      model_local_to_global( mod, &p2 );
+
+      itl_t* itl = itl_create( p1.x, p1.y, p2.x, p2.y, 
+			       mod->world->matrix, 
+			       PointToPoint );
+
+      stg_model_t* hitmod;
+      while( (hitmod = itl_next( itl )) ) 
+	{
+	  if( hitmod != mod )//&& mod->obstacle_return ) //&& !IsDescendent(ent) &&
+	    //if( ent != this && ent->obstacle_return )
+	    {
+	      if( hitx || hity ) // if the caller needs to know hit points
+		{
+		  if( hitx ) *hitx = itl->x; // report them
+		  if( hity ) *hity = itl->y;
+
+		}
+	      return hitmod; // we hit this object! stop raytracing
+	    }
+	}
+    }
+  return NULL;  // done 
+}
+
+
 void model_update_pose( stg_model_t* model )
 {  
   stg_velocity_t* vel = &model->velocity;
+  stg_pose_t* pose = &model->pose;
   
   if( vel->x || vel->y || vel->a )
   {
+    stg_pose_t oldpose;
+    memcpy( &oldpose, pose, sizeof(oldpose) );
+    
     double interval = model->world->sim_interval;
-
-    stg_pose_t pose;
-    memcpy( &pose, &model->pose, sizeof(pose) );
 
     // global mode
     //pose.x += vel->x * interval;
@@ -21,11 +82,23 @@ void model_update_pose( stg_model_t* model )
     //pose.a += vel->a * interval;
 
     // local mode
-    pose.x += interval * (vel->x * cos(pose.a) - vel->y * sin(pose.a));
-    pose.y += interval * (vel->x * sin(pose.a) + vel->y * cos(pose.a));
-    pose.a += interval * vel->a;
+    pose->x += interval * (vel->x * cos(pose->a) - vel->y * sin(pose->a));
+    pose->y += interval * (vel->x * sin(pose->a) + vel->y * cos(pose->a));
+    pose->a += interval * vel->a;
     
-    model_set_prop( model, STG_PROP_POSE, &pose, sizeof(pose) );
+    stg_pose_t newpose; // store the new pose
+    memcpy( &newpose, pose, sizeof(newpose) );
+
+    if( model_test_collision( model, NULL, NULL ) == NULL )
+      {
+	// reset the old pose so that unmapping works properly
+	memcpy( pose, &oldpose, sizeof(oldpose) );
+	
+	// now set the new pose handling matrix & gui redrawing 
+	model_set_prop( model, STG_PROP_POSE, &newpose, sizeof(newpose) );
+      }
+    else // reset the old pose
+      memcpy( pose, &oldpose, sizeof(oldpose) );
   }
 }
 

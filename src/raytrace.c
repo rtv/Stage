@@ -93,9 +93,6 @@ void itl_raytrace( itl_t* itl )
       // TODO - use a hexagonal grid for the matrix so we can avoid this
       // double-lookup.
       
-      //int g;
-      //stg_matrix_cell_append_m( itl->matrix, itl->x, itl->y, &g );
-      
       itl->models = stg_matrix_cell_m( itl->matrix, itl->x, itl->y );
       if( !itl->models ) 
 	itl->models = stg_matrix_cell_m( itl->matrix, itl->x+incr, itl->y );
