@@ -54,10 +54,11 @@ libstgmodels_a_SOURCES = \
                    truthdevice.hh \
                    visiondevice.cc \
                    visiondevice.hh \
-								   regularmcldevice.hh \
-								   regularmcldevice.cc \
-								   amcldevice.hh \
-								   amcldevice.cc 
+                   mcomdevice.cc  mcomdevice.hh \
+		   regularmcldevice.hh \
+		   regularmcldevice.cc \
+		   amcldevice.hh \
+		   amcldevice.cc 
 
 # currently broken
 # bpsdevice.cc 

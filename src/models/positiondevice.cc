@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/positiondevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.8 $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -27,6 +27,7 @@
 #define ENABLE_RTK_TRACE 1
 
 #include <math.h>
+#include "player.h"
 #include "world.hh"
 #include "raytrace.hh"
 #include "positiondevice.hh"
