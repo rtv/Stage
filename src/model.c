@@ -213,6 +213,8 @@ stg_polygon_t* unit_polygon_create( void )
 /// grow a model by adding [sz] bytes to the end of its struct
 stg_model_t* stg_model_extend( stg_model_t* mod, size_t sz )
 {
+  stg_model_map_with_children( mod, 0 );
+
   // grow the model to allow for our type-specific extensions
   mod = realloc( mod, sizeof(stg_model_t)+sz );
 
@@ -221,6 +223,8 @@ stg_model_t* stg_model_extend( stg_model_t* mod, size_t sz )
 
   // zero our extension data
   memset( mod->extend, 0, sz );
+
+  stg_model_map_with_children( mod, 1 );
 
   return mod;
 }
