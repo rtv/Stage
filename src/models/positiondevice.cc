@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/positiondevice.cc,v $
 //  $Author: reed $
-//  $Revision: 1.13 $
+//  $Revision: 1.14 $
 //
 // Usage:
 //  (empty)
@@ -114,7 +114,7 @@ bool CPositionDevice::Load(CWorldFile *worldfile, int section)
   // Set initial odometry, if given
   this->odo_px = worldfile->ReadTupleFloat(section, "init_odom", 0, 0.0);
   this->odo_py = worldfile->ReadTupleFloat(section, "init_odom", 1, 0.0);
-  this->odo_pa = worldfile->ReadTupleFloat(section, "init_odom", 2, 0.0);
+  this->odo_pa = DTOR(worldfile->ReadTupleFloat(section, "init_odom", 2, 0.0));
   printf("stage: Starting odometry at [%f %f %f].\n", odo_px, odo_py, odo_pa);
 
   // no-subscribers-reset flag
@@ -164,7 +164,7 @@ void CPositionDevice::Update( double sim_time )
     if( !PositionGetCommand( &this->com_px, &this->com_py, &this->com_pa, 
                              &this->com_vx, &this->com_vy, &this->com_va ) )
       PRINT_DEBUG( "** NO COMMAND AVAILABLE ** " );
-    
+
     // update the robot's position
     if( this->motors_enabled )
     {
