@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.14 2002-06-11 07:19:54 rtv Exp $
+% CVS: $Id: stage.tex,v 1.15 2002-06-11 07:28:56 inspectorg Exp $
 
 \documentclass[11pt]{report}
 
@@ -727,14 +727,14 @@ Note that both the \verb'entity' and \verb'device' types are {\em
 abstract} (to borrow some C++ parlance) since they cannot be
 instantiated directly.
 
-\section{Objects}
+\newpage
+\section{Object Summary}
 \label{sec.ref.objects}
 
 The following table lists all of the {\em objects} (passive entity
 types) supported by Stage.  See Section \ref{sec.ref.devices} for a
 list of supported {\em devices}.
-
-\begin{table}[h]
+\vspace{1em}\\\noindent
 \begin{tabularx}{\columnwidth}{llX}
 \hline 
 Type & Parent type & Description \\
@@ -759,16 +759,16 @@ for use with \verb'lbd' device.\\
 
 \hline
 \end{tabularx}
-\end{table}
+\vspace{1em}\\
 
-\subsection{The {\tt environment} type}
+
+\newpage
+\section{The {\tt environment}}
 
 The \verb'environment' type is used to define the fixed environment
 (walls, obstacles, etc); each world file must instantiate exactly {\em
 one} \verb'environment'.  The following properties are supported.
-
-
-\begin{table}[h]
+\vspace{1em}\\\noindent
 \begin{tabularx}{\columnwidth}{llX}
 \hline
 Name & Values & Description \\
@@ -784,19 +784,19 @@ units-lengths/pixel if some another unit of length is specified).\\
 
 \hline
 \end{tabularx}
-\end{table}
+\vspace{1em}\\
 \noindent Note that both the \verb'file' and \verb'scale'
 properties {\em must} be specified.
 
 
-\subsection{The {\tt entity} type}
+\newpage
+\section{The generic {\tt entity} type}
 
 Most types in Stage are ultimately derived from the generic
 \verb'entity' type.  While this type and cannot be instantiated
 directly, its descendents share most of its properties.  The follow
 properties are supported.
-
-\begin{table}[h]
+\vspace{1em}\\\noindent
 \begin{tabularx}{\columnwidth}{llX}
 \hline
 Name & Values & Description \\
@@ -840,19 +840,36 @@ in the laser).\\
 
 \hline
 \end{tabularx}
-\end{table}
+\vspace{1em}\\
 
 
+\newpage
+\section{The {\tt laserbeacon} object}
+
+The {\tt laserbeacon} object simulates a retro-reflective barcode
+that can be used in conjunction with the {\tt lbd} (laser beacon detector)
+device.  This object has the follow properties.
+\vspace{1em}\\\noindent
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+
+\verb'id' & \verb'beaconid' & The beacon id; must be in the range 1--255. \\
+
+\hline
+\end{tabularx}
+\vspace{1em}\\
 
 
-\section{Devices}
+\newpage
+\section{Device Summary}
 \label{sec.ref.devices}
 
 The following table lists all of the {\em devices}
 (Player-controllable sensors and actuators) supported by Stage.  See
 the Player User Manual for details of the physical devices.
-
-\noindent
+\vspace{1em}\\\noindent
 \begin{tabularx}{\columnwidth}{llX}
 \hline 
 Type & Parent type & Description \\
@@ -891,13 +908,14 @@ truth device will `teleport' the device's parent to a new location.\\
 
 \hline
 \end{tabularx}
+\vspace{1em}\\
 
-
-\subsection{The {\tt device} type}
+\newpage
+\section{The generic {\tt device} type}
 
 All device types are derived from the generic \verb'device' type.
 This device has the follow properties.
-\begin{table}[h]
+\vspace{1em}\\\noindent
 \begin{tabularx}{\columnwidth}{llX}
 \hline
 Name & Values & Description \\
@@ -912,12 +930,142 @@ a single robot).  Will generally be set to 0.\\
 
 \hline
 \end{tabularx}
-\end{table}
+\vspace{1em}\\
 \noindent In general, only the \verb'port' needs to be specified, and
 then only for the top-level device in each robot (usually the
 \verb'position' device).
 
 
+\newpage
+\section{The {\tt broadcast} device}
+
+The {\tt broadcast} device allows clients to communicate with one
+another through Stage/Player; messages sent to one broadcast device
+will be received by all other broadcast devices.  This device has no
+properties.
+
+
+\newpage
+\section{The {\tt gps} device}
+
+The {\tt gps} device simulates a GPS reciever; currently it returns
+the true pose of the GPS device, in the world coordinate system.  This
+device has no properties.
+
+
+\newpage
+\section{The {\tt gripper} device}
+
+The {\tt gripper} device simulates a 1-DOF gripper (i.e., the gripper
+can open and close).  This device has the following properties.
+\vspace{1em}\\\noindent
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+
+\verb'consume' & \verb'"true"' \verb'"false"' & If {\tt true}, the
+gripper will consume pucks; if {\tt false}, the gripper can hold only
+one puck at a time.\\
+
+\hline
+\end{tabularx}
+\vspace{1em}\\
+
+
+\newpage
+\section{The {\tt laser} device}
+
+The {\tt laser} device simulates a scaning laser range-finder with a
+$180^\circ$ field-of-view (the SICK LMS200 to be exact).  This device
+has no properties.
+
+
+\newpage
+\section{The {\tt lbd} device}
+
+The laser beacon detector searches for {\tt laserbeacons}
+(retro-reflective barcodes) in the simulated laser scan.  It returns
+the identity, range, bearing and orientation of the detected beacons.
+Every {\tt lbd} device must always be the child of a {\tt laser}
+device.  This device has no properties.
+
+
+\newpage
+\section{The {\tt position} device}
+
+The {\tt position} device simulates a bare-bones differential-drive
+mobile robot.  This device has no properties.
+
+
+\newpage
+\section{The {\tt ptz} device}
+
+The {\tt ptz} device simulates a pan-tilt-zoom camera.
+This device has the following properties.
+\vspace{1em}\\\noindent
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+
+\verb'lens' & \verb'"normal"' \verb'"wide"' & Select lens type: either
+normal ($60^\circ$ field-of-view) or wide ($120^\circ$
+field-of-view).\\
+
+\hline
+\end{tabularx}
+\vspace{1em}\\
+
+
+\newpage
+\section{The {\tt sonar} device}
+
+The {\tt sonar} device simulates an array of sonar range sensors.
+This device has the following properties.
+\vspace{1em}\\\noindent
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+
+\verb'scount' & \verb'numsonars' & The number of sonar transducers.\\
+
+\verb'spose[i]' & \verb'[x y th]' & The pose of each transducers {\tt i}.\\
+
+\hline
+\end{tabularx}
+\vspace{1em}\\
+
+
+\newpage
+\section{The {\tt truth} device}
+
+The {\tt truth} device allows clients to get and set the pose of
+simulated entities.  Setting the pose of the {\tt truth} device will
+'teleport' the device's parent to a new location.
+This device has no properties.
+
+
+\newpage
+\section{The {\tt vision} device}
+
+The {\tt vision} device simulates the ACTS color blob detector; every
+{\tt vision} device must be a child of a {\tt ptz} device.
+This device has the following properties.
+\vspace{1em}\\\noindent
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+
+\verb'lens' & \verb'"normal"' \verb'"wide"' & Select lens type: either
+normal ($60^\circ$ field-of-view) or wide ($120^\circ$
+field-of-view).\\
+
+\hline
+\end{tabularx}
+\vspace{1em}\\
 
 
 \end{document}
