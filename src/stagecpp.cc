@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.27 2003-04-27 04:48:13 gerkey Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.2 2003-08-19 22:09:53 rtv Exp $
  */
 
 #include <assert.h>
@@ -33,12 +33,12 @@
 #include <string.h>
 #include <unistd.h>
 
-//#define DEBUG
+extern "C" {
+#include <pam.h> // image-reading library
+}
 
 #include "replace.h" // for dirname(3)
-#include "stage_types.hh"
-#include "colors.hh"
-#include "worldfile.hh"
+#include "stagecpp.hh"
 
 // the isblank() macro is not standard - it's a GNU extension
 // and it doesn't work for me, so here's an implementation - rtv
@@ -1470,7 +1470,6 @@ double CWorldFile::ReadAngle(int entity, const char *name, double value)
   return atof(GetPropertyValue(property, 0)) * this->unit_angle;
 }
 
-/* REMOVE?
 ///////////////////////////////////////////////////////////////////////////
 // Read a boolean
 bool CWorldFile::ReadBool(int entity, const char *name, bool value)
@@ -1489,7 +1488,7 @@ bool CWorldFile::ReadBool(int entity, const char *name, bool value)
               this->filename, pproperty->line, v);
   return false;
 }
-*/
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a color (included text -> RGB conversion).
@@ -1505,7 +1504,7 @@ uint32_t CWorldFile::ReadColor(int entity, const char *name, uint32_t value)
   color = GetPropertyValue(property, 0);
 
   // TODO: Hmmm, should do something with the default color here.
-  return ::LookupColor(color);
+  return stg_lookup_color(color);
 }
 
 
@@ -1676,7 +1675,157 @@ void CWorldFile::WriteTupleAngle(int entity, const char *name,
   WriteTupleString(entity, name, index, default_str);
 }
 
+//
+// Create a world in the Stage server based on the current data.
+int CWorldFile::Upload( stg_client_t* cli, 
+			stg_name_id_t** models, int* model_count )
+{
+  // first create a world
+  stg_world_create_t world_cfg;
+  strncpy(world_cfg.name, this->ReadString( 0, "name", filename ), STG_TOKEN_MAX );
+  strncpy(world_cfg.token, this->filename, STG_TOKEN_MAX );
+  world_cfg.width =  this->ReadTupleFloat( 0, "size", 0, 10.0 );
+  world_cfg.height =  this->ReadTupleFloat( 0, "size", 1, 10.0 );
+  world_cfg.resolution = this->ReadFloat( 0, "resolution", 0.1 );
+  stg_id_t root = stg_world_create( cli, &world_cfg );
+  
+  // for every worldfile section, we may need to store a model ID in
+  // order to resolve parents
+  // if everything goes smoothly, we return these in the pointer arguments
+  int created_models_count = this->GetEntityCount();
+  stg_name_id_t* created_models = new stg_name_id_t[ created_models_count ];
+  
+  // the default parent of every model is root
+  for( int m=0; m<created_models_count; m++ )
+    {
+      created_models[m].stage_id = root;
+      strncpy( created_models[m].name, "root", STG_TOKEN_MAX );
+    }
 
+  // Iterate through sections and create entities as required
+  for (int section = 1; section < this->GetEntityCount(); section++)
+  {
+    if( strcmp( "gui", this->GetEntityType(section) ) == 0 )
+      {
+	PRINT_WARN( "gui section not implemented" );
+      }
+    else
+      {
+	// TODO - handle the line numbers
+	const int line = this->ReadInt(section, "line", -1);
 
+	stg_id_t parent = created_models[this->GetEntityParent(section)].stage_id;
+
+	PRINT_MSG1( "creating child of parent %d", parent );
+	
+	stg_entity_create_t child;
+	strncpy(child.name, this->ReadString(section,"name", "" ), 
+		STG_TOKEN_MAX);
+	strncpy(child.token, this->GetEntityType(section), 
+		STG_TOKEN_MAX );
+	strncpy(child.color, this->ReadString(section,"color","red"), 
+		STG_TOKEN_MAX);
+	child.parent_id = parent; // make a new entity on the root 
+
+	// warn the user if no name was specified
+	if( strcmp( child.name, "" ) == 0 )
+	  PRINT_WARN2( "stage1p4: model %s (line %d) has no name specified. Player will not be able to access this device", child.token, line );
+	
+	stg_id_t anid = stg_model_create( cli, &child );
+	
+	// associate the name 
+	strncpy( created_models[section].name, child.name, STG_TOKEN_MAX );
+	
+	PRINT_DEBUG3( "associating section %d name %s "
+		      "with stage model %d",
+		      section, 
+		      created_models[section].name, 
+		      created_models[section].stage_id );
+	
+	// remember the model id for this section
+	created_models[section].stage_id = anid;
+	
+	PRINT_DEBUG1( "created model %d", anid );
+
+	// TODO - is there a nicer way to handle unspecified settings?
+	// right now i set stupid defaults and test for them
+
+	stg_size_t sz;
+	sz.x = this->ReadTupleFloat( section, "size", 0, -99.0 );
+	sz.y = this->ReadTupleFloat( section, "size", 1, -99.0 );
+
+	if( sz.x != -99 && sz.y != 99 )
+	  stg_model_set_size( cli, anid, &sz );
+	
+	stg_velocity_t vel;
+	vel.x = this->ReadTupleFloat( section, "velocity", 0, 0.0 );
+	vel.y = this->ReadTupleFloat( section, "velocity", 1, 0.0 );
+	vel.a = this->ReadTupleFloat( section, "velocity", 2, 0.0 );
+	stg_model_set_velocity( cli, anid, &vel );
+	
+	stg_pose_t pose;
+	pose.x = this->ReadTupleFloat( section, "pose", 0, 0.0 );
+	pose.y = this->ReadTupleFloat( section, "pose", 1, 0.0 );
+	pose.a = this->ReadTupleFloat( section, "pose", 2, 0.0 );
+	stg_model_set_pose( cli, anid, &pose );
+
+	stg_blinkenlight_t bl;
+	const char* blstr = NULL;
+	blstr = this->ReadString( section, "light", "none" );
+
+	if( strcmp( blstr, "on" ) == 0 )
+	  bl = LightOn;
+	else if( strcmp( blstr, "off" ) == 0 )
+	  bl = LightOff;
+	else if( strcmp( blstr, "blinkfast" ) == 0 )
+	  bl = LightBlinkFast;
+	else if( strcmp( blstr, "blink" ) == 0 )
+	  bl = LightBlinkMedium;
+	else if( strcmp( blstr, "blinkslow" ) == 0 )
+	  bl = LightBlinkSlow;
+	else
+	  {
+	    PRINT_WARN1( "unrecognized light state \"%s\" in worldfile."
+			" Using \"none\" instead.", blstr ); 
+	    bl = LightNone;
+	  }
+	
+	stg_model_set_light( cli, anid, &bl );
+	
+	stg_nose_t nose;
+	nose = (stg_nose_t)this->ReadBool( section, "nose", true );
+	stg_model_set_nose( cli, anid, &nose );
+
+	const char* bitmapfile = this->ReadString(section,"bitmap", "" );
+	if( strcmp( bitmapfile, "" ) != 0 )
+	  {
+	    PRINT_DEBUG1("Loading bitmap file \"%s\"", bitmapfile );
+
+	    FILE *bitmap = fopen(bitmapfile, "r" );
+	    if( bitmap == NULL )
+	      {
+		PRINT_WARN1("failed to open bitmap file \"%s\"", bitmapfile);
+		perror( "fopen error" );
+	      }
+	    
+	    struct pam inpam;
+	    pnm_readpaminit(bitmap, &inpam, sizeof(inpam)); 
+	
+	    printf( "read image %dx%dx%d",
+		    inpam.width, 
+		    inpam.height, 
+		    inpam.depth );
+	    // convert the bitmap to rects and poke them into the model
+	  }
+
+      } 
+  }
+
+  // fill in the data we created so the caller can find the model ids
+  *models = created_models;
+  *model_count = created_models_count;
+  
+  return 0; // ok
+}
 
 

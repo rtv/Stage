@@ -18,7 +18,7 @@
  */
 // ==================================================================
 // Filename:	raytrace.hh
-// $Id: raytrace.hh,v 1.2 2002-11-01 19:12:30 rtv Exp $
+// $Id: raytrace.hh,v 1.3 2003-08-19 22:09:53 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -28,7 +28,6 @@
 
 #include <math.h>
 #include "matrix.hh"
-#include "world.hh"
 
 enum LineIteratorMode { PointToPoint=0, PointToBearingRange };
 
@@ -48,25 +47,24 @@ class CLineIterator
   CEntity** m_ent;
   int m_index;
 
-  double m_ppm;
   CMatrix* m_matrix;
 
  public:
   CLineIterator( double x, double y, double a, double b, 
-		 double ppm, CMatrix* matrix, LineIteratorMode pmode );
+		 CMatrix* matrix, LineIteratorMode pmode );
   
   CEntity* GetNextEntity( void );
 
   inline void GetPos( double& x, double& y )
     {
-      x = m_x / m_ppm;
-      y = m_y / m_ppm;
+      x = m_x / m_matrix->ppm;
+      y = m_y / m_matrix->ppm;
     };
   
   inline double GetRange( void )
-    {
-      return( (m_max_range - m_remaining_range) / m_ppm );
-    };
+  {
+    return( (m_max_range - m_remaining_range) / m_matrix->ppm );
+  };
 
   inline double GetAngle( void )
   {
@@ -96,8 +94,6 @@ private:
 
   double m_li_angle;
 
-  double m_ppm;
-
   CMatrix* m_matrix;
 
   CLineIterator* li; // we use LineIterators to do the work
@@ -111,8 +107,7 @@ private:
   // increment between scan lines.
   CTriangleAreaIterator( double x, double y, 
 			 double bearing, double range, double angle,
-			 double skip,
-			 double ppm, CMatrix* matrix );
+			 double skip, CMatrix* matrix );
   
   ~CTriangleAreaIterator();
 
@@ -144,12 +139,11 @@ protected:
   int m_index;
 
   CEntity** m_ent;
-  double m_ppm;
   CMatrix* m_matrix;
 
  public:
   CArcIterator( double x, double y, double th,  double scan_r, double scan_th,
-		   double ppm, CMatrix* matrix );
+		   CMatrix* matrix );
   
   
   inline CEntity** ArcTrace( double &remaining_angle );
@@ -160,13 +154,13 @@ protected:
 
   inline void GetPos( double& x, double& y )
     {
-      x = m_px / m_ppm;
-      y = m_py / m_ppm;
+      x = m_px / m_matrix->ppm;
+      y = m_py / m_matrix->ppm;
     };
   
   inline double GetRange( void )
     {
-      return( hypot( m_px - m_center_x, m_py - m_center_y ) / m_ppm );
+      return( hypot( m_px - m_center_x, m_py - m_center_y ) / m_matrix->ppm );
     };
 
   inline double GetAngle( void )
@@ -181,8 +175,7 @@ protected:
 class CCircleIterator : public CArcIterator
 {
 public: 
-  CCircleIterator( double x, double y, double r, 
-		   double ppm, CMatrix* matrix );
+  CCircleIterator( double x, double y, double r, CMatrix* matrix );
 };
 
 
@@ -196,8 +189,7 @@ class CRectangleIterator
  public:
 
   CRectangleIterator( double x, double y, double th,
-		      double w, double h,  
-		      double ppm, CMatrix* matrix );
+		      double w, double h, CMatrix* matrix );
 
   ~CRectangleIterator( void );
  

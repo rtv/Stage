@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.15 2002-09-07 02:05:24 rtv Exp $
+ * $Id: matrix.cc,v 1.16 2003-08-19 22:09:52 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -12,16 +12,25 @@
 //#endif
 
 #include "matrix.hh"
-#include "world.hh"
+//#include "library.hh"
 
 const int BUFFER_ALLOC_SIZE = 1;
 
 //#define DEBUG
     
 // construct from width / height 
-CMatrix::CMatrix(int w, int h, int default_buf_size)
+CMatrix::CMatrix( double width_meters, double height_meters, double ppm,  int default_buf_size)
 {
-  width = w; height = h;
+  this->ppm = ppm;
+  this->width = (int)(width_meters * ppm) + 1; 
+  this->height = (int)(height_meters * ppm) + 1;
+  this->default_buf_size = default_buf_size;
+  
+  AllocateStorage();
+}
+
+void CMatrix::AllocateStorage()
+{
   assert( data 	= new CEntity**[width*height] );
   assert( used_slots = new unsigned char[ width*height ] );
   assert( available_slots = new unsigned char[ width*height ] );
@@ -36,10 +45,40 @@ CMatrix::CMatrix(int w, int h, int default_buf_size)
       used_slots[p] = 0;
       available_slots[p] = default_buf_size;
     }
+}
+
+void CMatrix::DeallocateStorage()
+{
+  if (data)
+    {
+      // delete the storage in each cell
+      for( int p=0; p< width * height; p++ )
+	if( data[p] )
+	  delete[] data[p];
+      
+      // delete the main array
+      delete [] data;
+    }
   
-#ifdef INCLUDE_RTK2
-  this->fig = NULL;
-#endif
+  if( available_slots )
+    delete [] available_slots;
+  if( used_slots )
+    delete [] used_slots;
+  
+  data = NULL;
+  available_slots = NULL;
+  used_slots = NULL;
+}
+
+void CMatrix::Resize(  double width_meters, double height_meters, double ppm )
+{
+  DeallocateStorage();
+  
+  this->width = (int)(width_meters * ppm) + 1; 
+  this->height = (int)(height_meters * ppm) + 1;
+  this->ppm = ppm;
+  
+  AllocateStorage();
 }
 
 
@@ -64,6 +103,49 @@ CMatrix::~CMatrix(void)
     delete [] used_slots;
 }
 
+
+
+// get a pixel color by its x,y coordinate
+CEntity** CMatrix::get_cell(int x, int y)
+{ 
+  //if (x<0 || x>=width || y<0 || y>=height) 
+  //{
+  //fputs("Stage: WARNING: CEntity::get_cell(int,int) out-of-bounds\n",
+  //stderr);
+  //return 0;
+  //}
+  
+  return data[x+(y*width)]; 
+}
+
+// get a pixel color by its position in the array
+CEntity** CMatrix::get_cell( int i)
+{ 
+  if( i<0 || i > width*height ) 
+    {
+      fputs("Stage: WARNING: CEntity::get_cell(int) out-of-bounds\n",stderr);
+      return 0;
+    }
+  return data[i]; 
+}
+
+// is there an object of this type here?
+/*
+inline bool CMatrix::is_type( int x, int y, int type )
+{ 
+//if( i<0 || i > width*height ) return 0;
+  
+  CEntity** cell = data[x+(y*width)];
+  
+  while( *cell )
+    {
+      if( (*cell)->lib_entry->type_num == type ) return true;
+      cell++;
+    }
+    
+  return false;
+}
+*/
 
 // useful debug function allows plotting the world externally
 void CMatrix::dump( void )
@@ -90,48 +172,6 @@ void CMatrix::dump( void )
 
   puts( "DUMPED" );
 }
-
-
-#ifdef INCLUDE_RTK2
-// useful debug function allows plotting the world externally
-void CMatrix::render( CWorld* world )
-{
- // Create a figure representing this object
-  this->fig = rtk_fig_create(world->canvas, NULL, 60);
-
-  // Set the color to black
-  rtk_fig_color_rgb32(this->fig, ::LookupColor(MATRIX_COLOR) );
-
-  double pixel_size = 1.0 / world->ppm;
-
-  // render every pixel as an unfilled rectangle
-  for( int y=0; y<height; y++ )
-    for( int x=0; x<width; x++ )
-      if( *(get_cell( x, y )) )
-	rtk_fig_rectangle( fig, x*pixel_size, y*pixel_size, 0, pixel_size, pixel_size, 0 );
-}
-
-// useful debug function allows plotting the world externally
-void CMatrix::unrender()
-{
-  if( this->fig )
-    {
-      rtk_fig_destroy( this->fig );
-      this->fig = NULL;
-    }
-}
-
-#endif
-
-// Draw a rectangle
-void CMatrix::draw_rect( const Rect& t, CEntity* ent, bool add)
-{
-  draw_line( t.toplx, t.toply, t.toprx, t.topry, ent, add);
-  draw_line( t.toprx, t.topry, t.botrx, t.botry, ent, add);
-  draw_line( t.botrx, t.botry, t.botlx, t.botly, ent, add);
-  draw_line( t.botlx, t.botly, t.toplx, t.toply, ent, add);
-}
-
 
 // draws (2*PI)/0.1 = 62 little lines to form a circle
 void CMatrix::draw_circle(int x,int y,int r, CEntity* ent, bool add)
@@ -397,5 +437,59 @@ void CMatrix::CheckCell( int cell )
   }
   if (data[cell][used_slots[cell]] != NULL)
     printf("sanity check failed : no end marker\n");
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Set a rectangle in the world grid
+void CMatrix::SetRectangle(double px, double py, double pth,
+			   double dx, double dy, 
+			   CEntity* ent, bool add)
+{
+  dx /= 2.0;
+  dy /= 2.0;
+
+  double cx = dx * cos(pth);
+  double cy = dy * cos(pth);
+  double sx = dx * sin(pth);
+  double sy = dy * sin(pth);
+    
+  int toplx = (int) ((px + cx - sy) * ppm);
+  int toply = (int) ((py + sx + cy) * ppm);
+
+  int toprx = (int) ((px + cx + sy) * ppm);
+  int topry = (int) ((py + sx - cy) * ppm);
+
+  int botlx = (int) ((px - cx - sy) * ppm);
+  int botly = (int) ((py - sx + cy) * ppm);
+
+  int botrx = (int) ((px - cx + sy) * ppm);
+  int botry = (int) ((py - sx - cy) * ppm);
+    
+
+  draw_line( toplx, toply, toprx, topry, ent, add);
+  draw_line( toprx, topry, botrx, botry, ent, add);
+  draw_line( botrx, botry, botlx, botly, ent, add);
+  draw_line( botlx, botly, toplx, toply, ent, add);
+
+
+  //printf( "SetRectangle drawing %d,%d %d,%d %d,%d %d,%d\n",
+  //  toplx, toply,
+  //  toprx, topry,
+  //  botlx, botly,
+  //  botrx, botry );
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Set a circle in the world grid
+void CMatrix::SetCircle(double px, double py, double pr, 
+			CEntity* ent, bool add )
+{
+  // Convert from world to image coords
+  int x = (int) (px * ppm);
+  int y = (int) (py * ppm);
+  int r = (int) (pr * ppm);
+    
+  draw_circle( x,y,r,ent, add);
 }
 

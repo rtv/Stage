@@ -21,11 +21,17 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.101 2003-04-01 00:20:55 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.102 2003-08-19 22:09:52 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
 #endif
+
+#define DEBUG
+//#define VERBOSE
+//#define RENDER_INITIAL_BOUNDING_BOXES
+//#undef DEBUG
+//#undef VERBOSE
 
 #include <math.h>
 #include <string.h>
@@ -43,107 +49,206 @@
 
 #include <iostream>
 
-//#define DEBUG
-//#define VERBOSE
-//#undef DEBUG
-//#undef VERBOSE
-//#define RENDER_INITIAL_BOUNDING_BOXES
-
+#include "world.hh" 
 #include "entity.hh"
 #include "raytrace.hh"
-#include "world.hh"
-#include "worldfile.hh"
-#include "gui.hh"
-#include "library.hh"
 
+extern GHashTable* global_hash_table;
+extern int global_next_available_id;
+
+// static method
+gboolean CEntity::stg_update_signal( gpointer ptr )
+{
+  //PRINT_MSG1("static update called for %p", ptr );
+  return ((CEntity*)ptr)->Update();
+}
+
+
+// plain functions for tree manipulation
+CEntity* stg_ent_next_sibling( CEntity* ent )
+{
+  g_assert( ent->node );   
+  g_assert( ent->node->data );   
+  GNode* sib_node = g_node_next_sibling( ent->node );
+  return((sib_node && sib_node->data)?(CEntity*)sib_node->data:NULL);
+}
+
+CEntity* stg_ent_first_child( CEntity* ent )
+{ 
+  g_assert( ent->node );   
+  g_assert( ent->node->data );   
+  GNode* child_node = g_node_first_child( ent->node );
+  return((child_node && child_node->data)?(CEntity*)child_node->data:NULL);
+}
+
+CEntity* stg_world_first_child( stg_world_t* world )
+{
+  g_assert( world->node );   
+  g_assert( world->node->data );   
+  GNode* child_node = g_node_first_child( world->node );
+  return((child_node && child_node->data )?(CEntity*)child_node->data:NULL);
+}
+
+// the root node of the tree is a stg_world_t
+stg_world_t* stg_world( CEntity* ent )
+{
+  g_assert( ent->node );   
+  g_assert( ent->node->data );   
+  return( (stg_world_t*)g_node_get_root( ent->node )->data );
+}
+
+CEntity* stg_ent_parent( CEntity* ent )
+{ 
+  g_assert( ent->node );       
+  g_assert( ent->node->data );   
+  
+  // if we have a parent node and it's not a root node (world)
+  if( ent->node->parent && 
+      (ent->node->parent->data != g_node_get_root(ent->node)->data) )
+    return( (CEntity*)ent->node->parent->data );
+  else
+    return NULL;
+}
+
+
+void StgPrintTree( GNode* node, gpointer _prefix = NULL );
 
 ///////////////////////////////////////////////////////////////////////////
 // main constructor
-// Requires a pointer to the parent and a pointer to the world.
-CEntity::CEntity(LibraryItem* libit, CWorld *world, CEntity *parent_entity )
+CEntity::CEntity( stg_entity_create_t* init )
 {
-  assert( world );
+  // must set the name and token before using the BASE_DEBUG macro
+  g_assert( init );
+  this->id = global_next_available_id++; // a unique id for this object
+  this->name = g_string_new( init->name );
+  this->token = g_string_new( init->token );
   
-  this->m_world = world; 
-  this->m_parent_entity = parent_entity;
-  this->m_default_entity = this;
+  BASE_DEBUG1( "entity construction - parent id: %d", init->parent_id );
   
-  // store the library's entry for this type
-  this->lib_entry = libit;
-
-  // get the default color
-  this->color = lib_entry->color;
-
-  // attach to my parent
-  if( m_parent_entity )
-    m_parent_entity->AddChild( this );
+  this->running = FALSE;
+  
+  // look up the parent id to find my parent's tree node
+  GNode* parent_node = NULL;
+  g_assert( (parent_node = (GNode*)g_hash_table_lookup( global_hash_table, 
+							&init->parent_id )));
+  
+  // add myself to the object tree
+  g_assert( (this->node = g_node_append_data( parent_node, this )));      
+  
+#ifdef DEBUG
+  // inspect the stg_world_t object at the root of the tree I just attached to. 
+  stg_world_t* world = stg_world( this );
+  g_assert( world );
+  BASE_DEBUG2( "is in world %d:%s", world->id, world->name->str );
+#endif
+  
+  // add my node to the world's hash table with my id as the key
+  // (this ID should not already exist)
+  g_assert( g_hash_table_lookup( global_hash_table, &this->id ) == NULL ); 
+  g_hash_table_insert( global_hash_table, &this->id, this->node );
+  
+  transducers = NULL;
+  
+  // set up reasonble laser defaults
+  this->laser_data.angle_min = -M_PI/2.0;
+  this->laser_data.angle_max =  M_PI/2.0;
+  this->laser_data.sample_count = STG_LASER_SAMPLES_MAX;
+  this->laser_data.range_min = 0.1;
+  this->laser_data.range_max = 8.0;
+  memset( &this->laser_data.samples, 0,
+	  STG_LASER_SAMPLES_MAX * sizeof(stg_laser_sample_t) );
+  
+  // reasonable neighbor detection bounds
+  this->bounds_neighbor.min = 0.00;
+  this->bounds_neighbor.max = 4.00;
+  
+  
+  // TODO? = inherit our parent's color by default?
+  if( strlen( init->color ) > 0 )
+    this->color = stg_lookup_color(init->color); 
   else
-    PRINT_DEBUG1( "ROOT ENTITY %p\n", this );
+    this->color = stg_lookup_color(STG_GENERIC_COLOR); 
   
-  // register with the world to receive our unique id
-  this->stage_id = m_world->RegisterEntity( this );
-
-  // init the child list data
-  this->child_list = this->prev = this->next = NULL;
-
-  // Set our default name
-  this->name[0] = 0;
-
-  // Set default pose
-  this->local_px = this->local_py = this->local_pth = 0;
-
-  // Set global velocity to stopped
-  this->vx = this->vy = this->vth = 0;
-
+  
+  // zero pose
+  memset( &pose_local, 0, sizeof(pose_local) );
+  
+  // zero velocity
+  memset( &velocity, 0, sizeof(velocity) );
+  
+  // zero origin
+  memset( &pose_origin, 0, sizeof(pose_origin) );
+  
+  // zero last-mapped pose
+  // zero pose
+  memset( &pose_map, 0, sizeof(pose_map) );
+  
   // unmoveably MASSIVE! by default
   this->mass = 1000.0;
+
+  // default no-voltage.
+  this->volts = -1;    
+
+  // STG_PROP_ENTITY_POWER
+  this->power_on = 1;
+
+  // Set the default geometry
+  this->size.x = this->size.y = 1.0;
+
+  // initialize our shapes 
+  this->rect_array = NULL;
     
-  // Set the default shape and geometry
-  this->shape = ShapeNone;
-  this->size_x = this->size_y = 0;
-  this->origin_x = this->origin_y = 0;
-
-  // set the default worldfile section to be 0 (top-level)
-  this->worldfile_section = 0;
-
-  m_local = false; 
-  
-  // by default, entities don't show up in any sensors
-  // these must be enabled explicitly in each subclass
-  obstacle_return = false;
-  sonar_return = false;
+  // the default entity is a colored box
+  vision_return = true; 
+  laser_return = LaserVisible;
+  sonar_return = true;
+  obstacle_return = true;
+  idar_return = IDARReflect;
   puck_return = false;
-  vision_return = false;
-  laser_return = LaserTransparent;
-  idar_return = IDARTransparent;
+  idar_return = IDARReflect;
   fiducial_return = FiducialNone; // not a recognized fiducial
   gripper_return = GripperDisabled;
+  neighbor_return = false;
 
-  // Set the initial mapped pose to a dummy value
-  this->map_px = this->map_py = this->map_pth = 0;
+  // no visible light
+  this->blinkenlight = LightNone;
 
-  m_dependent_attached = false;
-
-  // we start out NOT dirty - no one gets deltas unless they ask for 'em.
-  SetDirty( 0 );
+  //m_dependent_attached = false;
   
-  m_last_pixel_x = m_last_pixel_y = m_last_degree = 0;
+  this->mouseable = true;
+  this->draw_nose = true;
+  this->interval = 0.01; // update interval in seconds 
+  
+  // STG_PROP_ENTITY_RANGEBOUNDS
+  this->min_range = 0.5;
+  this->max_range = 5.0;
 
-  m_interval = 0.1; // update interval in seconds 
-  m_last_update = -FLT_MAX; // initialized 
+  
+#ifdef DEBUG
+  CEntity* parent = stg_ent_parent( this );
+  if( parent ) BASE_DEBUG2( "has parent %d:%s",  parent->id, parent->name->str );
+#endif  
 
-  // init the ptr to GUI-specific data
-  this->gui_data = NULL;
+  //this->model_type = init->type; 
+  // do type-specific inits
+  /*  switch( this->model_type )
+      {
+      case STG_MODEL_WALL:
+      this->InitWall();
+      break;
+      
+      case STG_MODEL_POSITION:
+      this->InitPosition();
+      break;
+      
+      default:
+      break;
+  */
 
-#ifdef INCLUDE_RTK2
-  // Default figures for drawing the entity.
-  this->fig = NULL;
-  this->fig_label = NULL;
+  // zero the pointer to our gui data
+  this->guimod = NULL;
 
-  // By default, we can both translate and rotate the entity.
-  this->movemask = RTK_MOVE_TRANS | RTK_MOVE_ROT;
-#endif
-
+  BASE_DEBUG("entity construction complete");
 }
 
 
@@ -151,14 +256,120 @@ CEntity::CEntity(LibraryItem* libit, CWorld *world, CEntity *parent_entity )
 // Destructor
 CEntity::~CEntity()
 {
+  BASE_DEBUG("entity destruction");
+  if( this->running ) this->Shutdown(); 
+  
+  // deleting a child removes it from the tree, so we can't iterate
+  // safely here; instead we repeatedly delete the first child until
+  // they're all gone.
+  CEntity* child = NULL;
+  while( (child = stg_ent_first_child( this ) ))
+    {
+      BASE_DEBUG2( "entity destruction - destroying child [%d:%s]",
+		   child->id, child->name->str );
+      delete child;
+      BASE_DEBUG( "entity destruction - destroying child complete" );
+    }
+  
+  // detatch myself from my parent
+  g_node_unlink( this->node );
+  g_node_destroy( this->node );
+  // remove myself from the database
+  g_hash_table_remove( global_hash_table, &this->id );
+  
+  BASE_DEBUG("entity destruction complete");
+  // actually, we still have to free up the strings that the previous
+  // trace statement uses...
+  if( name ) g_string_free( name, TRUE );
+  if( token ) g_string_free( token, TRUE );
 }
 
-void CEntity::AddChild( CEntity* child )
+// returns the stg_world_t object at the bottom of my node tree
+stg_world_t* CEntity::GetWorld()
 {
-  //printf( "appending entity %p to parent %p\n", child, this );
-  
-  STAGE_LIST_APPEND( this->child_list, child ); 
+  return((stg_world_t*)g_node_get_root(this->node)->data);
 }
+
+// returns the CMatrix object we are rendering into
+CMatrix* CEntity::GetMatrix()
+{
+  return( this->GetWorld()->matrix );
+}
+
+/*
+void CEntity::InitWall( void )
+{
+  BASE_DEBUG( "initializing wall" );
+
+  this->model_type = STG_MODEL_WALL;
+
+  // set default color
+  this->color = stg_lookup_color( STG_WALL_COLOR );
+
+  // set up our sensor response
+  this->laser_return = LaserVisible;
+  this->sonar_return = true;
+  this->obstacle_return = true;
+  this->puck_return = true;
+  this->neighbor_return = false;
+
+  // be the world size by default
+  stg_world_t* world = (stg_world_t*)g_node_get_root(this->node)->data;
+  this->size.x = world->width;
+  this->size.y = world->height;
+  this->pose_origin.x = world->width/2.0;
+  this->pose_origin.y = world->height/2.0;
+  this->pose_origin.a = 0.0;
+
+  // this model doesn't require periodic updates
+  this->interval = -1;
+
+  BASE_DEBUG( "initializing wall complete" );
+}
+
+void CEntity::InitPosition( void )
+{
+  BASE_DEBUG( "position creation" );
+  this->model_type = STG_MODEL_POSITION;
+ 
+  // set up our sensor response
+  this->laser_return = LaserTransparent;
+  this->sonar_return = true;
+  this->obstacle_return = true;
+  this->puck_return = true;
+
+  // Set default shape and geometry
+  this->size.x = 0.30;
+  this->size.y = 0.30;
+
+  // set default color
+  this->color = stg_lookup_color( STG_POSITION_COLOR );
+
+  //memset( &this->velocity_cmd, 0, sizeof(this->velocity_cmd) );
+  //memset( &this->pose_odo, 0, sizeof(this->pose_odo) );
+  //memset( &this->pose_cmd, 0, sizeof(this->pose_cmd) );
+  
+  // update this device VERY frequently
+  this->interval = 0.01; 
+  
+  // assume robot is 20kg
+  this->mass = 20.0;
+
+  // default to velocity mode - the most common way to control a robot
+  //this->control_mode = VELOCITY_CONTROL_MODE;
+
+  // OMNI_DRIVE_MODE = Omnidirectional drive - x y & th axes are
+  // independent.  DIFF_DRIVE_MODE = Differential-drive - x & th axes
+  // are coupled, y axis disabled
+  //this->drive_mode = OMNI_DRIVE_MODE; // default can be changed in worldfile
+  //this->drive_mode = DIFF_DRIVE_MODE; // default can be changed in worldfile
+
+  //this->stall = false;
+  //this->motors_enabled = true;
+
+  BASE_DEBUG( "position creation complete" );
+}
+*/
 
 void CEntity::GetBoundingBox( double &xmin, double &ymin,
 			      double &xmax, double &ymax )
@@ -166,29 +377,29 @@ void CEntity::GetBoundingBox( double &xmin, double &ymin,
   double x[4];
   double y[4];
 
-  double dx = size_x / 2.0;
-  double dy = size_y / 2.0;
+  double dx = this->size.x / 2.0;
+  double dy = this->size.y / 2.0;
   double dummy = 0.0;
   
-  x[0] = origin_x + dx;
-  y[0] = origin_y + dy;
+  x[0] = pose_origin.x + dx;
+  y[0] = pose_origin.y + dy;
   this->LocalToGlobal( x[0], y[0], dummy );
 
-  x[1] = origin_x + dx;
-  y[1] = origin_y - dy;
+  x[1] = pose_origin.x + dx;
+  y[1] = pose_origin.y - dy;
   this->LocalToGlobal( x[1], y[1], dummy );
 
-  x[2] = origin_x - dx;
-  y[2] = origin_y + dy;
+  x[2] = pose_origin.x - dx;
+  y[2] = pose_origin.y + dy;
   this->LocalToGlobal( x[2], y[2], dummy );
 
-  x[3] = origin_x - dx;
-  y[3] = origin_y - dy;
+  x[3] = pose_origin.x - dx;
+  y[3] = pose_origin.y - dy;
   this->LocalToGlobal( x[3], y[3], dummy );
 
   //double ox, oy, oth;
   //GetGlobalPose( ox, oy, oth );
-  //printf( "origin: %.2f,%.2f,%.2f \n", ox, oy, oth );
+  //printf( "pose_origin: %.2f,%.2f,%.2f \n", ox, oy, oth );
   //printf( "corners: \n" );
   //for( int c=0; c<4; c++ )
   //printf( "\t%.2f,%.2f\n", x[c], y[c] );
@@ -211,202 +422,28 @@ void CEntity::GetBoundingBox( double &xmin, double &ymin,
   //printf( "before children: %.2f %.2f %.2f %.2f\n",
   //  xmin, ymin, xmax, ymax );
 
-  CHILDLOOP( ch )
-    ch->GetBoundingBox(xmin, ymin, xmax, ymax ); 
-
+  //CHILDLOOP( ch )
+  // ch->GetBoundingBox(xmin, ymin, xmax, ymax ); 
+  
   //printf( "after children: %.2f %.2f %.2f %.2f\n",
   //  xmin, ymin, xmax, ymax );
 
 }
 
-// this is called very rapidly from the main loop
-// it allows the entity to perform some actions between clock increments
-// (such handling config requests to increase synchronous IO performance)
-void CEntity::Sync()
-{ 
-  // default - do nothing but call the children
-  CHILDLOOP( ch ) ch->Sync(); 
-};
-
-
-// return a pointer to this or a child if it matches the worldfile section
-CEntity* CEntity::FindSectionEntity( int section )
+void CEntity::MapFamily()
 {
-  //PRINT_DEBUG2( "find section %d. my section %d\n", 
-  //	section, this->worldfile_section );
-
-  CEntity* found = NULL;
+  Map();
   
-  if( section == this->worldfile_section )
-    found  = this;
-  
-  //int f=0;
-  // otherwise, recursively check our children
-  if( found == NULL ) CHILDLOOP( ch )
-    {
-      //printf( "looking in child %d\n", f++ ); 
-      found = ch->FindSectionEntity( section ); 
-      if( found ) break;
-    }
-  
-  //printf( "found %s\n", found ? "true" : "false" );
-  
-  return found;
-  
+  //CHILDLOOP( ch )
+  //ch->MapFamily();
 }
 
-
-
-///////////////////////////////////////////////////////////////////////////
-// Load the entity from the world file
-bool CEntity::Load(CWorldFile *worldfile, int section)
+void CEntity::UnMapFamily()
 {
-  // Read the name
-  strcpy( this->name, worldfile->ReadString(section, "name", "") );
-      
-  // Read the pose
-  this->init_px = worldfile->ReadTupleLength(section, "pose", 0, 0);
-  this->init_py = worldfile->ReadTupleLength(section, "pose", 1, 0);
-  this->init_pth = worldfile->ReadTupleAngle(section, "pose", 2, 0);
-  SetPose(this->init_px, this->init_py, this->init_pth);
-
-  // Read the shape
-  const char *shape_desc = worldfile->ReadString(section, "shape", NULL);
-  if (shape_desc)
-  {
-    if (strcmp(shape_desc, "rect") == 0)
-      this->shape = ShapeRect;
-    else if (strcmp(shape_desc, "circle") == 0)
-      this->shape = ShapeCircle;
-    else
-      PRINT_WARN1("invalid shape desc [%s]; using default", shape_desc);
-  }
-
-  // Read the size
-  this->size_x = worldfile->ReadTupleLength(section, "size", 0, this->size_x);
-  this->size_y = worldfile->ReadTupleLength(section, "size", 1, this->size_y);
-
-  // Read the origin offsets (for moving center of rotation)
-  this->origin_x = worldfile->ReadTupleLength(section, "offset", 0, this->origin_x);
-  this->origin_y = worldfile->ReadTupleLength(section, "offset", 1, this->origin_y);
-
-  // Read the entity color
-  this->color = worldfile->ReadColor(section, "color", this->color);
-
-  // read the desired update interval
-  this->m_interval = 
-    worldfile->ReadFloat( section, "interval", this->m_interval );
- 
-  const char *rvalue;
+  UnMap();
   
-  // Obstacle return values
-  if (this->obstacle_return)
-    rvalue = "visible";
-  else
-    rvalue = "invisible";
-  rvalue = worldfile->ReadString(section, "obstacle_return", rvalue);
-  if (strcmp(rvalue, "visible") == 0)
-    this->obstacle_return = true;
-  else
-    this->obstacle_return = false;
-
-  // Sonar return values
-  if (this->sonar_return)
-    rvalue = "visible";
-  else
-    rvalue = "invisible";
-  rvalue = worldfile->ReadString(section, "sonar_return", rvalue);
-  if (strcmp(rvalue, "visible") == 0)
-    this->sonar_return = true;
-  else
-    this->sonar_return = false;
-
-  // Vision return values
-  if (this->vision_return)
-    rvalue = "visible";
-  else
-    rvalue = "invisible";
-  rvalue = worldfile->ReadString(section, "vision_return", rvalue);
-  if (strcmp(rvalue, "visible") == 0)
-    this->vision_return = true;
-  else
-    this->vision_return = false;
-
-  // Gripper return values
-  if (this->gripper_return)
-    rvalue = "visible";
-  else
-    rvalue = "invisible";
-  rvalue = worldfile->ReadString(section, "gripper_return", rvalue);
-  if (strcmp(rvalue, "visible") == 0)
-    this->gripper_return = GripperEnabled;
-  else
-    this->gripper_return = GripperDisabled;
-
-  // Read the beacon id
-  this->fiducial_return \
-    = worldfile->ReadInt(section, "fiducial_id", this->fiducial_return );
-
-  // Use the beacon id as a name if there is no name set
-  if ( strlen(this->name) == 0 && this->fiducial_return != FiducialNone )
-    snprintf( this->name, 64, "id %d", this->fiducial_return );
-  
-  // Laser return values
-  if (this->laser_return == LaserBright)
-    rvalue = "bright";
-  else if (this->laser_return == LaserVisible)
-    rvalue = "visible";
-  else
-    rvalue = "invisible";
-  rvalue = worldfile->ReadString(section, "laser_return", rvalue);
-  if (strcmp(rvalue, "bright") == 0)
-    this->laser_return = LaserBright;
-  else if (strcmp(rvalue, "visible") == 0)
-    this->laser_return = LaserVisible;
-  else
-    this->laser_return = LaserTransparent;
-  
-  // team membership. default zero means no-team
-  this->team = worldfile->ReadInt(section, "team", 0 );
-  
-  // we can emit noise 
-  this->noise.amplitude = worldfile->ReadTupleInt(section, "noise", 0, 0 );
-  this->noise.frequency = worldfile->ReadTupleInt(section, "noise", 1, 0 );
-  
-  // we can emit radiation
-  this->radiation.amplitude = 
-    worldfile->ReadTupleInt(section, "radiation", 0, 0 );
-
-  this->radiation.frequency = 
-    worldfile->ReadTupleInt(section, "radiation", 1, 0 );
-  
-  return true;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Save the entity to the world file
-bool CEntity::Save(CWorldFile *worldfile, int section)
-{
-  // Write the pose (but only if it has changed)
-  double px, py, pth;
-  GetPose(px, py, pth);
-
-  //printf( "pose: %.2f %.2f %.2f   init:  %.2f %.2f %.2f\n",
-  //  px, py, pth, init_px, init_py, init_pth );
-
-  // TODO - save out any other changed properties
-
-  if (px != this->init_px || py != this->init_py || pth != this->init_pth)
-  {
-    worldfile->WriteTupleLength(section, "pose", 0, px);
-    worldfile->WriteTupleLength(section, "pose", 1, py);
-    worldfile->WriteTupleAngle(section, "pose", 2, pth);
-  }
-
-  CHILDLOOP( ch ) ch->Save( worldfile, ch->worldfile_section );
-  
-  return true;
+  //CHILDLOOP( ch )
+  //ch->UnMapFamily();
 }
 
 
@@ -414,834 +451,998 @@ bool CEntity::Save(CWorldFile *worldfile, int section)
 // Startup routine
 // A virtual function that lets entities do some initialization after
 // everything has been loaded.
-bool CEntity::Startup( void )
+int CEntity::Startup( void )
 {
-  PRINT_DEBUG2("ENTITY STARTUP %s %s", 
-         this->lib_entry->token,
-         m_parent_entity ? "" : "- ROOT" );
+  BASE_DEBUG( "entity startup" );
   
-  // use the generic hook
-  if( m_world->enable_gui )
-    GuiEntityStartup( this );
+  // by default, all entities have a single rectangle that is
+  // automagically scaled to fit the size of the entity
+  stg_rotrect_t rect;
+  rect.x = 0.0;
+  rect.y = 0.0;
+  rect.a = 0.0;
+  rect.w = 1.0; // this unit is multiples of my body width, not a fixed sizex
+  rect.h = 1.0; // ditto
   
+  this->SetRects( &rect, 1 );
 
- CHILDLOOP( ch )
-    ch->Startup();
+  /* request callbacks into this object */
+  // real time
 
-  return true;
+  if( this->interval > 0 )
+    {
+      guint ms_interval = (guint)(this->interval * 1000.0);
+      update_tag = g_timeout_add(ms_interval,CEntity::stg_update_signal, this);
+    }  // non-real time
+  
+  Map(); // render in matrix
+  
+  this->guimod = stg_gui_model_create( this );
+
+  BASE_DEBUG( "entity startup complete" );
+  return 0;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Shutdown routine
-void CEntity::Shutdown()
+int CEntity::Shutdown()
 {
-  //PRINT_DEBUG( "entity shutting down" );
-  
-  // recursively shutdown our children
-  CHILDLOOP( ch ) ch->Shutdown();
+  BASE_DEBUG( "entity shutdown" );
+ 
+  UnMap();
 
-  if( m_world->enable_gui )
-    GuiEntityShutdown( this );
+  /* cancel the callbacks into this object */
+  g_source_remove( update_tag );
   
-  return;
+  BASE_DEBUG( "shutting down children" );
+  
+  for( CEntity* child = stg_ent_first_child( this ); child; 
+       child = stg_ent_next_sibling(child))
+    child->Shutdown();
+  
+  BASE_DEBUG( "finished shutting down children" ); 
+  
+  this->running = FALSE;
+
+  if( this->guimod) 
+    {
+      BASE_DEBUG( "shutting down GUI" );
+      stg_gui_model_destroy( this->guimod );
+      this->guimod = NULL;
+    }
+
+  BASE_DEBUG( "entity shutdown complete" );
+
+  return 0; // success
 }
 
 
+int CEntity::Move( stg_velocity_t* vel, double step )
+{
+  //BASE_DEBUG("");
+    
+    //fprintf( stderr, "%.2f %.2f %.2f   %.2f %.2f %.2f\n", 
+    //   px -1, py -1, pa, odo_px, odo_py, odo_pa );
+    
+  if( vel->x == 0 && vel->y == 0 && vel->a == 0 )
+    return 0;
+  
+  // Compute movement deltas
+  // This is a zero-th order approximation
+  double cosa = cos(this->pose_local.a);
+  double sina = sin(this->pose_local.a);
+
+  double dx = step * vel->x * cosa - step * vel->y * sina;
+  double dy = step * vel->x * sina + step * vel->y * cosa;
+  double da = step * vel->a;
+  
+  // compute a new pose by shifting us a little from the current pose
+  stg_pose_t newpose;
+  newpose.x = pose_local.x + dx;
+  newpose.y = pose_local.y + dy;
+  newpose.a = pose_local.a + da;
+
+  // Check for collisions
+  // and accept the new pose if ok
+  if( TestCollision() != NULL )
+    {
+      stg_velocity_t vel;
+      memset( &vel, 0, sizeof(vel) );
+      //SetVelocity( &vel );
+      this->stall = true;
+    }
+  else
+    SetProperty( STG_PROP_ENTITY_POSE, &newpose, sizeof(newpose) );  
+  
+  return 0; // success
+}
 ///////////////////////////////////////////////////////////////////////////
 // Update the entity's representation
-void CEntity::Update( double sim_time )
+gboolean CEntity::Update()
 {
-  //PRINT_DEBUG( "UPDATE" );
+  // PRINT_DEBUG2("update called for %d:%s", this->id, this->name->str );
+  //PRINT_DEBUG3( "vx %.2f vy %.2f vth %.2f", vx, vy, vth);
 
-  // recursively update our children
-  CHILDLOOP( ch ) ch->Update( sim_time );    
-
-  GuiEntityUpdate( this );
+  Move( &this->velocity, this->interval );
+  
+  return TRUE;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Render the entity into the world
-void CEntity::Map(double px, double py, double pth)
+void CEntity::Map( stg_pose_t* pose )
 {
+  // we're figuring out the mapped pose from this new pose
+  memcpy( &this->pose_map, pose, sizeof(stg_pose_t) );
+
   // get the pose in local coords
-  this->GlobalToLocal( px, py, pth );
+  this->GlobalToLocal( &this->pose_map );
 
   // add our center of rotation offsets
-  px += origin_x;
-  py += origin_y;
+  this->pose_map.x += pose_origin.x;
+  this->pose_map.y += pose_origin.y;
 
    // convert back to global coords
-  this->LocalToGlobal( px, py, pth );
+  this->LocalToGlobal( &this->pose_map );
 
-  this->map_px = px;
-  this->map_py = py;
-  this->map_pth = pth;
-
-
-  MapEx(map_px, map_py, map_pth, true);
+  MapEx( &this->pose_map, true);
 }
 
+void CEntity::Map( void )
+{
+  stg_pose_t pose;
+  GetGlobalPose( &pose );
+  Map( &pose );
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Remove the entity from the world
 void CEntity::UnMap()
 {
-  MapEx(this->map_px, this->map_py, this->map_pth, false);
+  MapEx( &this->pose_map, false);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Remap ourself if we have moved
-void CEntity::ReMap(double px, double py, double pth)
+void CEntity::ReMap( stg_pose_t* pose )
 {
-  // if we haven't moved, do nothing
-  if (fabs(px - this->map_px) < 1 / m_world->ppm &&
-      fabs(py - this->map_py) < 1 / m_world->ppm &&
-      pth == this->map_pth)
+  stg_world_t* world = this->GetWorld();
+  
+  // if we have moved less than 1 pixel, do nothing
+  if (fabs(pose->x - this->pose_map.x) < 1.0 / world->ppm &&
+      fabs(pose->y - this->pose_map.y) < 1.0 / world->ppm &&
+      pose->a == this->pose_map.a)
     return;
   
   // otherwise erase the old render and draw a new one
   UnMap();
-  Map(px, py, pth);
+  Map(pose);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Primitive rendering function
-void CEntity::MapEx(double px, double py, double pth, bool render)
+void CEntity::MapEx( stg_pose_t* pose, bool render)
 {
-  switch (this->shape)
-    {
-    case ShapeRect:
-      m_world->SetRectangle(px, py, pth, 
-			    this->size_x, this->size_y, this, render);
-      break;
-    case ShapeCircle:
-      m_world->SetCircle(px, py, this->size_x / 2, this, render);
-      break;
-    case ShapeNone:
-      break;
-    }
+  RenderRects( render );
+}
+
+////////////////////////////////////////////////////////////////////////////
+// convert the rotated rectangle into global coords, taking into account
+// the entities pose and offset and the rectangle scaling
+void CEntity::GetGlobalRect( stg_rotrect_t* dest, stg_rotrect_t* src )
+{
+  dest->x = ((src->x + src->w/2.0) * this->size.x) - this->size.x/2.0 + this->pose_origin.x;
+  dest->y = ((src->y + src->h/2.0) * this->size.y) - this->size.y/2.0 + this->pose_origin.y;
+  
+  dest->a = src->a;
+  dest->w = src->w * this->size.x;
+  dest->h = src->h * this->size.y;
+  
+  LocalToGlobal( dest->x, dest->y, dest->a );    
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Check to see if the given pose will yield a collision with obstacles.
 // Returns a pointer to the first entity we are in collision with, and stores
-// the location of the hit in hitx,hity
+// the location of the hit in hitx,hity (if non-null)
 // Returns NULL if not collisions.
 // This function is useful for writing position devices.
-CEntity *CEntity::TestCollision(double px, double py, double pth)
+CEntity *CEntity::TestCollision( double* hitx, double* hity )
 {
-  double qx = px + this->origin_x * cos(pth) - this->origin_y * sin(pth);
-  double qy = py + this->origin_y * sin(pth) + this->origin_y * cos(pth);
-  double qth = pth;
-  double sx = this->size_x;
-  double sy = this->size_y;
+  // raytrace along all our rectangles. expensive, but most vehicles
+  // will just be a single rect, grippers 3 rects, etc. not too bad.
+  
+  stg_rotrect_t glob;
+  
+  // no rects? no collision
+  if( this->rect_array == NULL )
+    return NULL;
 
-  switch( this->shape ) 
-  {
-    case ShapeRect:
+  if( this->rect_array->rect_count == 0 )
     {
-      CRectangleIterator rit( qx, qy, qth, sx, sy, m_world->ppm, m_world->matrix );
-
-      CEntity* ent;
-      while( (ent = rit.GetNextEntity()) )
-      {
-        if( ent != this && !IsDescendent(ent) && ent->obstacle_return )
-          return ent;
-      }
+      PRINT_WARN( "no rectangles in rect array" );
       return NULL;
     }
-    case ShapeCircle:
-    {
-      CCircleIterator rit( px, py, sx / 2, m_world->ppm, m_world->matrix );
 
+  int r;
+  for( r=0; r<this->rect_array->rect_count; r++ )
+    {
+      // find the global coords of this rectangle
+      GetGlobalRect( &glob, &(this->rect_array->rects[r]) );
+      
+      // trace this rectangle in the matrix
+      CRectangleIterator rit( glob.x, glob.y, glob.a, 
+			      glob.w, glob.h, this->GetMatrix() );
+      
       CEntity* ent;
       while( (ent = rit.GetNextEntity()) )
-      {
-        if( ent != this && !IsDescendent(ent)  && ent->obstacle_return )
-          return ent;
-      }
-      return NULL;
+	{
+	  if( ent != this && !IsDescendent(ent) && ent->obstacle_return )
+	    //if( ent != this && ent->obstacle_return )
+	    {
+	      if( hitx || hity ) // if the caller needs to know hit points
+		{
+		  double x, y;
+		  rit.GetPos(x,y); // find the points		  
+		  if( hitx ) *hitx = x; // and report them
+		  if( hity ) *hity = y;
+
+		}
+	      return ent; // we hit this object! stop raytracing
+	    }
+	}
     }
-    case ShapeNone:
-      break;
-  }
-  return NULL;
+  return NULL;  // done 
+}
+  
+bool CEntity::IsDescendent( CEntity* ent )
+{
+  return( g_node_is_ancestor( this->node, ent->node ) );
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// same as the above method, but stores the hit location in hitx, hity
-CEntity *CEntity::TestCollision(double px, double py, double pth, 
-				double &hitx, double &hity )
+void CEntity::LocalToGlobal( double &x, double &y, double &a )
 {
-  double qx = px + this->origin_x * cos(pth) - this->origin_y * sin(pth);
-  double qy = py + this->origin_y * sin(pth) + this->origin_y * cos(pth);
-  double qth = pth;
-  double sx = this->size_x;
-  double sy = this->size_y;
+  stg_pose_t pose;
+  pose.x = x;
+  pose.y = y;
+  pose.a = a;
 
-  switch( this->shape ) 
-  {
-    case ShapeRect:
-    {
-      CRectangleIterator rit( qx, qy, qth, sx, sy, m_world->ppm, m_world->matrix );
+  this->LocalToGlobal( &pose );
 
-      CEntity* ent;
-      while( (ent = rit.GetNextEntity()) )
-      {
-        if( ent != this && ent->obstacle_return )
-        {
-          rit.GetPos( hitx, hity );
-          return ent;
-        }
-      }
-      return NULL;
-    }
-    case ShapeCircle:
-    {
-      CCircleIterator rit( px, py, sx / 2, m_world->ppm, m_world->matrix );
-
-      CEntity* ent;
-      while( (ent = rit.GetNextEntity()) )
-      {
-        if( ent != this && ent->obstacle_return )
-        {
-          rit.GetPos( hitx, hity );
-          return ent;
-        }
-      }
-      return NULL;
-    }
-  case ShapeNone: // handle the null case
-      break;
-  }
-  return NULL;
-
-}
-
+  x = pose.x;
+  y = pose.y;
+  a = pose.a;
+} 
 
 ///////////////////////////////////////////////////////////////////////////
 // Convert local to global coords
-void CEntity::LocalToGlobal(double &px, double &py, double &pth)
+void CEntity::LocalToGlobal( stg_pose_t* pose )
 {
   // Get the pose of our origin wrt global cs
-  double ox, oy, oth;
-  GetGlobalPose(ox, oy, oth);
+  stg_pose_t origin;
+  GetGlobalPose( &origin );
 
   // Compute pose based on the parent's pose
-  double sx = ox + px * cos(oth) - py * sin(oth);
-  double sy = oy + px * sin(oth) + py * cos(oth);
-  double sth = oth + pth;
-
-  px = sx;
-  py = sy;
-  pth = sth;
+  double cosa = cos(origin.a);
+  double sina = sin(origin.a);
+  double sx = origin.x + pose->x * cosa - pose->y * sina;
+  double sy = origin.y + pose->x * sina + pose->y * cosa;
+  double sth = origin.a + pose->a;
+  
+  pose->x = sx;
+  pose->y = sy;
+  pose->a = sth;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Convert global to local coords
 //
-void CEntity::GlobalToLocal(double &px, double &py, double &pth)
+void CEntity::GlobalToLocal( stg_pose_t* pose )
 {
   // Get the pose of our origin wrt global cs
-  double ox, oy, oth;
-  GetGlobalPose(ox, oy, oth);
+  stg_pose_t origin;
+  GetGlobalPose( &origin );
 
   // Compute pose based on the parent's pose
-  double sx =  (px - ox) * cos(oth) + (py - oy) * sin(oth);
-  double sy = -(px - ox) * sin(oth) + (py - oy) * cos(oth);
-  double sth = pth - oth;
+  double cosa = cos(origin.a);
+  double sina = sin(origin.a);
+  double sx =  (pose->x - origin.x) * cosa + (pose->y - origin.y) * sina;
+  double sy = -(pose->x - origin.x) * sina + (pose->y - origin.y) * cosa;
+  double sth = pose->a - origin.a;
 
-  px = sx;
-  py = sy;
-  pth = sth;
+  pose->x = sx;
+  pose->y = sy;
+  pose->a = sth;
+}
+
+
+int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
+{
+  PRINT_DEBUG4( "Setting %d:%s prop %s with %d bytes", 
+  	this->id, this->token->str, stg_property_string(ptype), len );
+  
+  switch( ptype )
+    {      
+    case STG_PROP_ENTITY_POSE:
+      g_assert( (len == sizeof(stg_pose_t)) );	
+      this->SetPose( (stg_pose_t*)data );
+      break;
+      
+    case STG_PROP_ENTITY_SIZE:
+      g_assert( (len == sizeof(stg_size_t)) );	
+      this->SetSize(  (stg_size_t*)data );
+      break;
+      
+    case STG_PROP_ENTITY_ORIGIN:
+      g_assert( (len == sizeof(stg_pose_t)) );	
+      this->SetOrigin(  (stg_pose_t*)data );
+      break;
+
+    case STG_PROP_ENTITY_VELOCITY:
+      g_assert( (len == sizeof(stg_velocity_t)) );
+      this->SetVelocity( (stg_velocity_t*)data );
+      break;
+      
+    case STG_PROP_ENTITY_NEIGHBORRETURN:
+      g_assert( (len == sizeof(int)) );	
+      this->neighbor_return = *(int*)data;
+      break;
+      
+    case STG_PROP_ENTITY_LASERRETURN:
+      g_assert( (len == sizeof(stg_laser_return_t)) );	
+      this->laser_return = *(stg_laser_return_t*)data;
+      break;
+
+    case STG_PROP_ENTITY_BLINKENLIGHT:
+      g_assert( (len == sizeof(stg_blinkenlight_t)) );	
+      this->blinkenlight = *(stg_blinkenlight_t*)data;
+      break;      
+
+    case STG_PROP_ENTITY_NOSE:
+      g_assert( (len == sizeof(stg_nose_t)) );	
+      this->draw_nose = *(stg_nose_t*)data;
+      break;      
+
+    case STG_PROP_ENTITY_NEIGHBORBOUNDS:
+      g_assert( (len == sizeof(stg_bounds_t)) );	
+      memcpy( &this->bounds_neighbor, (stg_bounds_t*)data, sizeof(stg_bounds_t));
+      break;
+
+    case STG_PROP_ENTITY_TRANSDUCERS:
+      {
+	// kill our old transducers
+	if( this->transducers ) g_array_free( this->transducers, TRUE );
+	
+	// we infer the number of transducers from the data size
+	int tcount = len / sizeof(stg_transducer_t);
+	
+	this->transducers = g_array_sized_new( FALSE, TRUE, 
+					       sizeof(stg_transducer_t), 
+					       tcount );
+	
+	this->transducers = g_array_append_vals( this->transducers,
+						 data, tcount );
+      }
+      break;
+
+    case STG_PROP_ENTITY_RECTS:
+      {
+	// we infer the number of rects from the data size
+	int rect_count = len / sizeof(stg_rotrect_t);
+	// squeeze all this rects inside my body rectangle
+	this->NormalizeRects( (stg_rotrect_t*)data, rect_count );
+	// and accept them as my personal rectangles
+	this->SetRects( (stg_rotrect_t*)data, rect_count );
+      }
+      break;
+      
+    default:
+      PRINT_WARN1( "unhandled property type (%d)", ptype );
+      break;
+    }
+
+  // let our GUI representation reflect the changes
+  if( this->guimod ) stg_gui_model_update( this, ptype );
+  
+ return 0; // success
+}
+
+stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
+{    
+  BASE_DEBUG2( "Getting prop %s (%d)", 
+	       stg_property_string(ptype), ptype );
+  
+  stg_property_t* prop = stg_property_create();
+  prop->id = this->id;
+  prop->property = ptype;
+  prop->timestamp = 100.0;
+  
+  switch( ptype )
+    {
+    case STG_PROP_ENTITY_POSE:
+      stg_pose_t pose;
+      this->GetGlobalPose(&pose);
+      prop = stg_property_attach_data( prop, &pose, sizeof(pose) );
+      break;
+      
+    case STG_PROP_ENTITY_SIZE:
+      prop = stg_property_attach_data( prop, &this->size, sizeof(this->size) );
+      break;
+      
+    case STG_PROP_ENTITY_ORIGIN:
+      prop = stg_property_attach_data( prop, &this->pose_origin, sizeof(this->pose_origin) );
+      break;
+
+    case STG_PROP_ENTITY_VELOCITY:
+      prop = stg_property_attach_data( prop, &this->velocity, sizeof(this->velocity));
+      break;
+
+    case STG_PROP_ENTITY_LASER_DATA:
+      this->UpdateLaserData( &this->laser_data );
+      prop = stg_property_attach_data( prop, 
+				       &this->laser_data,
+				       sizeof(stg_laser_data_t) );
+      break;
+      
+    case STG_PROP_ENTITY_NEIGHBORRETURN:
+      prop = stg_property_attach_data( prop, &this->neighbor_return, 
+				       sizeof(this->neighbor_return));
+      break;
+
+    case STG_PROP_ENTITY_NEIGHBORBOUNDS:
+      prop = stg_property_attach_data( prop, &this->bounds_neighbor, 
+				       sizeof(this->bounds_neighbor));
+
+    case STG_PROP_ENTITY_BLINKENLIGHT:
+      prop = stg_property_attach_data( prop, &this->blinkenlight, 
+				       sizeof(this->blinkenlight));
+      break;
+
+    case STG_PROP_ENTITY_NOSE:
+      prop = stg_property_attach_data( prop, &this->draw_nose, 
+				       sizeof(this->draw_nose));
+      break;
+
+    case STG_PROP_ENTITY_LASERRETURN:
+      prop = stg_property_attach_data( prop, &this->laser_return, 
+				       sizeof(this->laser_return));
+      break;
+
+    case STG_PROP_ENTITY_NEIGHBORS:
+      {
+	GArray* array = NULL;
+	this->GetNeighbors( &array );
+	
+	prop = stg_property_attach_data( prop, 
+					 array->data, 
+					 array->len*sizeof(stg_neighbor_t));
+	g_array_free( array, TRUE );
+      }
+      break;
+      
+    case STG_PROP_ENTITY_TRANSDUCERS:
+      if( this->transducers ) 
+	{
+	  this->UpdateTransducers();
+	  
+	  prop = stg_property_attach_data( prop, 
+					   this->transducers->data,
+					   this->transducers->len * 
+					   sizeof(stg_transducer_t) );
+	}
+      else
+	PRINT_WARN( "requested transducer data, but this model has"
+		    " no transducers" ); 
+      break;
+      
+    case STG_PROP_ENTITY_RECTS:
+      if( this->rect_array != NULL )
+	prop = stg_property_attach_data( prop, 
+					 this->rect_array->rects, 
+					 this->rect_array->rect_count * 
+					 sizeof(stg_rotrect_t) );
+      break;
+
+      
+    default:
+      PRINT_WARN2( "unhandled property type %s (%d) - returning blank property", 
+		   stg_property_string(ptype), ptype );
+      break;
+    }
+  //stg_property_print( prop );
+  return prop;
+};
+
+void CEntity::GetNeighbors( GArray** neighbor_array )
+{
+  
+  // create the array, pre-allocating some space for speed
+  *neighbor_array = g_array_sized_new( FALSE, TRUE, 
+				       sizeof(stg_neighbor_t), 
+				       10 ); 
+  
+  // Search through the global device list looking for devices that
+  // have a non-zero neighbor-return
+  GNode* root_node = g_node_get_root(this->node);
+
+  // for each node in my world's tree
+  for( GNode* node = g_node_first_child(root_node);
+       node; 
+       node = g_node_next_sibling( node) )
+    {
+      CEntity* ent = (CEntity*)node->data;
+      
+      if( !ent->neighbor_return ) // not a neighbor!
+      	continue;
+
+      stg_pose_t pz;
+      ent->GetGlobalPose( &pz );
+
+      stg_size_t sz;
+      ent->GetSize( &sz );
+      
+      // Compute range and bearing of entity relative to sensor
+      //
+      double dx = pz.x - pose_local.x;
+      double dy = pz.y - pose_local.y;
+
+      // construct a neighbor packet
+      stg_neighbor_t buddy;
+      buddy.id = ent->id;
+      buddy.range = sqrt(dx * dx + dy * dy);
+      buddy.bearing = NORMALIZE(atan2(dy, dx) - pose_local.a);
+      buddy.orientation = NORMALIZE(pz.a - pose_local.a);
+      buddy.size.x = sz.x;
+      buddy.size.y = sz.y;
+
+      // Filter by detection range
+      if( buddy.range > this->bounds_neighbor.max || 
+	  buddy.range < this->bounds_neighbor.min )
+	continue;
+ 
+      // Filter by view angle
+      //if( fabs(bearing) > view_angle/2.0 )
+      //continue;
+
+      // as a last resort (because this is so expensice) filter by LOS
+      //if( this->perform_occlusion_test && OcclusionTest(ent) )
+      if( OcclusionTest(ent) )
+	continue;
+      
+      *neighbor_array = g_array_append_vals( *neighbor_array, &buddy, 1 );
+    }
+
+  stg_gui_neighbor_render( this, *neighbor_array );
+}
+
+bool CEntity::OcclusionTest(CEntity* ent )
+{
+  // Compute parameters of scan line
+  stg_pose_t start;
+  stg_pose_t end;
+  //double startx, starty, endx, endy, dummyth;
+  this->GetGlobalPose( &start );
+  ent->GetGlobalPose( &end );
+  
+  CLineIterator lit( start.x, start.y, end.x, end.y,
+		     this->GetWorld()->matrix,  PointToPoint );
+  CEntity* hit;
+  
+  while( (hit = lit.GetNextEntity()) )
+    {
+      if( hit == ent ) // if we hit the entity there was no occlusion
+	return false;
+      
+      // we use laser visibility for basic occlusion
+      //if( hit != this && hit != m_parent_entity && hit->laser_return ) 
+      if( hit != this && hit->laser_return ) 
+	return true;
+    }	
+  
+  // we didn't hit the target and we ran out of entities (a little
+  // wierd, but it's certainly not a hit...
+  return true;  
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Set the entitys pose in the parent cs
-void CEntity::SetPose(double px, double py, double pth)
+void CEntity::SetPose( stg_pose_t* pose )
 {
+  BASE_DEBUG3( "setting pose to [%.2f %.2f %.2f]", pose->x, pose->y, pose->a );
+  
   // if the new position is different, call SetProperty to make the change.
-  // the -1 indicates that this change is dirty on all connections
-  
-  if( this->local_px != px ) 
-    SetProperty( -1, PropPoseX, &px, sizeof(px) );
-  
-  if( this->local_py != py ) 
-    SetProperty( -1, PropPoseY, &py, sizeof(py) );
-  
-  if( this->local_pth != pth ) 
-    SetProperty( -1, PropPoseTh, &pth, sizeof(pth) );  
+  if( memcmp( &this->pose_local, pose, sizeof( stg_pose_t)) != 0 )
+    {
+      this->UnMap();
+      memcpy( &this->pose_local, pose, sizeof(stg_pose_t) );
+      this->Map();
+    }
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Set the entity's origin in the parent cs
+void CEntity::SetOrigin( stg_pose_t* pose )
+{
+  BASE_DEBUG3( "setting origin to [%.2f %.2f %.2f]", pose->x, pose->y, pose->a );
+  
+  // if the new position is different, call SetProperty to make the change.
+  if( memcmp( &this->pose_origin, pose, sizeof( stg_pose_t)) != 0 )
+    {
+      this->UnMap();
+      memcpy( &this->pose_origin, pose, sizeof(stg_pose_t) );
+      this->Map();
+    }
+}
+
+void CEntity::SetSize( stg_size_t* sz )
+{
+  BASE_DEBUG2( "setting size to %.2f %.2f", sz->x, sz->y );
+  
+  // if the new position is different, call SetProperty to make the change.
+  if( memcmp( &this->size, sz, sizeof(stg_size_t)) != 0 )
+    {
+      this->UnMap(); // undraw myself	
+      memcpy( &this->size, sz, sizeof(stg_size_t) );	
+      this->Map(); // redraw myself  
+    }
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Get the entitys pose in the parent cs
-void CEntity::GetPose(double &px, double &py, double &pth)
+void CEntity::GetPose( stg_pose_t* pose )
 {
-  px = this->local_px;
-  py = this->local_py;
-  pth = this->local_pth;
+  g_assert( pose );
+  memcpy( pose, &this->pose_local, sizeof(stg_pose_t) );
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Get the entity's origin in the parent cs
+void CEntity::GetOrigin( stg_pose_t* pose )
+{
+  g_assert( pose );
+  memcpy( pose, &this->pose_origin, sizeof(stg_pose_t) );
+}
+
+////////////////////////////////////////////////////////////////////////////
+// Set the entity's velocity in the global cs
+void CEntity::SetVelocity( stg_velocity_t* vel )
+{ 
+  BASE_DEBUG3( "setting velocity to [%.2f %.2f %.2f]", vel->x, vel->y, vel->a );
+  memcpy( &this->velocity, vel, sizeof(stg_velocity_t) );
+}
+
+////////////////////////////////////////////////////////////////////////////
+// Get the entity's velocity in the global cs
+void CEntity::GetVelocity( stg_velocity_t* vel )
+{
+  g_assert( vel );
+  memcpy( vel, &this->velocity, sizeof(stg_velocity_t) );
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Set the entitys pose in the global cs
-void CEntity::SetGlobalPose(double px, double py, double pth)
+void CEntity::SetGlobalPose( stg_pose_t* pose)
 {
   // Get the pose of our parent in the global cs
-  double ox = 0;
-  double oy = 0;
-  double oth = 0;
+  stg_pose_t origin;
+  memset( &origin, 0, sizeof(stg_pose_t) );
   
-  if (m_parent_entity) m_parent_entity->GetGlobalPose(ox, oy, oth);
+  if( stg_ent_parent(this) ) 
+    stg_ent_parent(this)->GetGlobalPose( &origin );
   
   // Compute our pose in the local cs
-  double new_x  =  (px - ox) * cos(oth) + (py - oy) * sin(oth);
-  double new_y  = -(px - ox) * sin(oth) + (py - oy) * cos(oth);
-  double new_th = pth - oth;
+  stg_pose_t lpose;
+  double cosa = cos(origin.a);
+  double sina = sin(origin.a);
+  lpose.x =  (pose->x - origin.x) * cosa + (pose->y - origin.y) * sina;
+  lpose.y = -(pose->x - origin.x) * sina + (pose->y - origin.y) * cosa;
+  lpose.a = pose->a - origin.a;
   
-  SetPose( new_x, new_y, new_th );
+  SetPose( &lpose );
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Get the entitys pose in the global cs
-void CEntity::GetGlobalPose(double &px, double &py, double &pth)
+void CEntity::GetGlobalPose( stg_pose_t* pose )
 {
   // Get the pose of our parent in the global cs
-  double ox = 0;
-  double oy = 0;
-  double oth = 0;
-  if (m_parent_entity)
-    m_parent_entity->GetGlobalPose(ox, oy, oth);
-    
+  stg_pose_t origin;
+  memset( &origin, 0, sizeof(origin) );
+  
+  if( stg_ent_parent(this) ) 
+    stg_ent_parent(this)->GetGlobalPose( &origin );
+  
   // Compute our pose in the global cs
-  px = ox + this->local_px * cos(oth) - this->local_py * sin(oth);
-  py = oy + this->local_px * sin(oth) + this->local_py * cos(oth);
-  pth = oth + this->local_pth;
+  pose->x = origin.x + this->pose_local.x * cos(origin.a) - this->pose_local.y * sin(origin.a);
+  pose->y = origin.y + this->pose_local.x * sin(origin.a) + this->pose_local.y * cos(origin.a);
+  pose->a = origin.a + this->pose_local.a;
 }
 
-
-////////////////////////////////////////////////////////////////////////////
-// Set the entitys velocity in the global cs
-void CEntity::SetGlobalVel(double vx, double vy, double vth)
+//////////////////////////////////////////////////////////////////////////
+// scale an array of rectangles so they fit in a unit square
+void CEntity::NormalizeRects(  stg_rotrect_t* rects, int num )
 {
-  this->vx = vx;
-  this->vy = vy;
-  this->vth = vth;
-}
-
-
-////////////////////////////////////////////////////////////////////////////
-// Get the entitys velocity in the global cs
-void CEntity::GetGlobalVel(double &vx, double &vy, double &vth)
-{
-  vx = this->vx;
-  vy = this->vy;
-  vth = this->vth;
-}
-
-
-////////////////////////////////////////////////////////////////////////////
-// See if the given entity is one of our descendents
-bool CEntity::IsDescendent(CEntity *entity)
-{
-  while (entity)
-  {
-    entity = entity->m_parent_entity;
-    if (entity == this)
-      return true;
-  }
-  return false;
-}
-
-void CEntity::SetDirty( int con, char v )
-{
-  for( int i=0; i< ENTITY_LAST_PROPERTY; i++ )
-    SetDirty( con, (EntityProperty)i, v );
-}
-
-void CEntity::SetDirty( EntityProperty prop, char v )
-{
-  for( int i=0; i<MAX_POSE_CONNECTIONS; i++ )
-    SetDirty( i, prop, v );
-};
-
-void CEntity::SetDirty( int con, EntityProperty prop, char v )
-{
-  m_dirty[con][prop] = v;
-};
-
-void CEntity::SetDirty( char v )
-{
-  memset( m_dirty, v, 
-	  sizeof(char) * MAX_POSE_CONNECTIONS * ENTITY_LAST_PROPERTY );
-};
-
-///////////////////////////////////////////////////////////////////////////
-// change the parent 
-void CEntity::SetParent(CEntity* new_parent) 
-{ 
-  m_parent_entity = new_parent; 
-};
-
-
-int CEntity::SetProperty( int con, EntityProperty property, 
-			  void* value, size_t len )
-{
-  assert( value );
-  assert( len > 0 );
-  assert( (int)len < MAX_PROPERTY_DATA_LEN );
-
-  switch( property )
-  {
-    case PropParent:
-      // TODO - fix this
-      // get a pointer to the (*value)'th entity - that's our new parent
-      //this->m_parent_entity = m_world->GetEntity( *(int*)value );     
-      break;
-    case PropSizeX:
-      memcpy( &size_x, (double*)value, sizeof(size_x) );
-      break;
-    case PropSizeY:
-      memcpy( &size_y, (double*)value, sizeof(size_y) );
-      break;
-    case PropPoseX:
-      memcpy( &local_px, (double*)value, sizeof(local_px) );
-      break;
-    case PropPoseY:
-      memcpy( &local_py, (double*)value, sizeof(local_py) );
-      break;
-    case PropPoseTh:
-      // normalize theta
-      local_pth = atan2( sin(*(double*)value), cos(*(double*)value));
-      break;
-    case PropOriginX:
-      memcpy( &origin_x, (double*)value, sizeof(origin_x) );
-      break;
-    case PropOriginY:
-      memcpy( &origin_y, (double*)value, sizeof(origin_y) );
-      break;
-    case PropName:
-      strcpy( name, (char*)value );
-      break;
-    case PropColor:
-      memcpy( &color, (StageColor*)value, sizeof(color) );
-      break;
-    case PropShape:
-      memcpy( &shape, (StageShape*)value, sizeof(shape) );
-      break;
-    case PropLaserReturn:
-      memcpy( &laser_return, (LaserReturn*)value, sizeof(laser_return) );
-      break;
-    case PropIdarReturn:
-      memcpy( &idar_return, (IDARReturn*)value, sizeof(idar_return) );
-      break;
-    case PropSonarReturn:
-      memcpy( &sonar_return, (bool*)value, sizeof(sonar_return) );
-      break;
-    case PropObstacleReturn:
-      memcpy( &obstacle_return, (bool*)value, sizeof(obstacle_return) );
-      break;
-    case PropVisionReturn:
-      memcpy( &vision_return, (bool*)value, sizeof(vision_return));
-      break;
-    case PropPuckReturn:
-      memcpy( &puck_return, (bool*)value, sizeof(puck_return) );
-      break;
-
-    default:
-      //printf( "Stage Warning: attempting to set unknown property %d\n", 
-      //      property );
-      break;
-  }
+  // assuming the rectangles fit in a square +/- one billion units
+  double minx, miny, maxx, maxy;
+  minx = miny = BILLION;
+  maxx = maxy = -BILLION;
   
-  // indicate that the property is dirty on all _but_ the connection
-  // it came from - that way it gets propogated onto to other clients
-  // and everyone stays in sync. (assuming no recursive connections...)
-  
-  this->SetDirty( property, 1 ); // dirty on all cons
-  
-  if( con != -1 ) // unless this was a local change 
-    this->SetDirty( con, property, 0 ); // clean on this con
+  for( int r=0; r<num; r++ )
+    {
+      // test the origin of the rect
+      if( rects[r].x < minx ) minx = rects[r].x;
+      if( rects[r].y < miny ) miny = rects[r].y;      
+      if( rects[r].x > maxx ) maxx = rects[r].x;      
+      if( rects[r].y > maxy ) maxy = rects[r].y;
 
-  // update the GUI with the new property
-  if( m_world->enable_gui )
-    GuiEntityPropertyChange( this, property );
+      // test the extremes of the rect
+      if( (rects[r].x+rects[r].w)  < minx ) 
+	minx = (rects[r].x+rects[r].w);
+      
+      if( (rects[r].y+rects[r].h)  < miny ) 
+	miny = (rects[r].y+rects[r].h);
+      
+      if( (rects[r].x+rects[r].w)  > maxx ) 
+	maxx = (rects[r].x+rects[r].w);
+      
+      if( (rects[r].y+rects[r].h)  > maxy ) 
+	maxy = (rects[r].y+rects[r].h);
+    }
   
-  return 0;
+  // now normalize all lengths so that the rects all fit inside
+  // rectangle from 0,0 to 1,1
+  double scalex = maxx - minx;
+  double scaley = maxy - miny;
+  for( int r=0; r<num; r++ )
+    { 
+      rects[r].x = (rects[r].x - minx) / scalex;
+      rects[r].y = (rects[r].y - miny) / scaley;
+      rects[r].w = rects[r].w / scalex;
+      rects[r].h = rects[r].h / scaley;
+    }
 }
 
 
-int CEntity::GetProperty( EntityProperty property, void* value )
+//////////////////////////////////////////////////////////////////////
+// set the rectangles that make up this ent's body
+void CEntity::SetRects( stg_rotrect_t* new_rects, int new_rect_count  )
 {
-  //PRINT_DEBUG1( "finding property %d", property );
-  //printf( "finding property %d", property );
-
-  assert( value );
-
-  // indicate no data - this should be overridden below
-  int retval = 0;
-
-  switch( property )
-  {
-    case PropParent:
-      // TODO - fix
-      // find the parent's position in the world's entity array
-      // if parent pointer is null or otherwise invalid, index is -1 
-      //{ int parent_index = m_world->GetEntityIndex( m_parent_entity );
-
-      { 
-	int parent_index = -1;
-
-	if( m_parent_entity )
-	  parent_index = m_parent_entity->stage_id ;
-	
-	memcpy( value, &parent_index, sizeof(parent_index) );
-	retval = sizeof(parent_index); 
-      }
-    break;
-    case PropSizeX:
-      memcpy( value, &size_x, sizeof(size_x) );
-      retval = sizeof(size_x);
-      break;
-    case PropSizeY:
-      memcpy( value, &size_y, sizeof(size_y) );
-      retval = sizeof(size_y);
-      break;
-    case PropPoseX:
-      memcpy( value, &local_px, sizeof(local_px) );
-      retval = sizeof(local_px);
-      break;
-    case PropPoseY:
-      memcpy( value, &local_py, sizeof(local_py) );
-      retval = sizeof(local_py);
-      break;
-    case PropPoseTh:
-      memcpy( value, &local_pth, sizeof(local_pth) );
-      retval = sizeof(local_pth);
-      break;
-    case PropOriginX:
-      memcpy( value, &origin_x, sizeof(origin_x) );
-      retval = sizeof(origin_x);
-      break;
-      break;
-    case PropOriginY:
-      memcpy( value, &origin_y, sizeof(origin_y) );
-      retval = sizeof(origin_y);
-      break;
-    case PropName:
-      strcpy( (char*)value, name );
-      retval = strlen(name);
-      break;
-    case PropColor:
-      memcpy( value, &color, sizeof(color) );
-      retval = sizeof(color);
-      break;
-    case PropShape:
-      memcpy( value, &shape, sizeof(shape) );
-      retval = sizeof(shape);
-      break;
-    case PropLaserReturn:
-      memcpy( value, &laser_return, sizeof(laser_return) );
-      retval = sizeof(laser_return);
-      break;
-    case PropSonarReturn:
-      memcpy( value, &sonar_return, sizeof(sonar_return) );
-      retval = sizeof(sonar_return);
-      break;
-    case PropIdarReturn:
-      memcpy( value, &idar_return, sizeof(idar_return) );
-      retval = sizeof(idar_return);
-      break;
-    case PropObstacleReturn:
-      memcpy( value, &obstacle_return, sizeof(obstacle_return) );
-      retval = sizeof(obstacle_return);
-      break;
-    case PropVisionReturn:
-      memcpy( value, &vision_return, sizeof(vision_return) );
-      retval = sizeof(vision_return);
-      break;
-    case PropPuckReturn:
-      memcpy( value, &puck_return, sizeof(puck_return) );
-      retval = sizeof(puck_return);
-      break;
-    default:
-      // printf( "Stage Warning: attempting to get unknown property %d\n", 
-      //      property );
-    break;
-  }
-
-  return retval;
+  // delete any old rects
+  if( this->rect_array )
+    {
+      RenderRects( false );
+      stg_rotrect_array_free( this->rect_array );
+      this->rect_array = NULL;
+    } 
+  
+  this->rect_array = stg_rotrect_array_create();
+  assert( this->rect_array );
+  
+  // add the new rectangles to our array, one at a time 
+  for( int r=0; r<new_rect_count; r++ )
+    this->rect_array = stg_rotrect_array_append( this->rect_array, 
+					      &new_rects[r] );
+  
+  BASE_DEBUG1( "set %d rects", this->rect_array->rect_count );
+  
+  // if this is root, add a unit rectangle outline
+  /*
+    if( 0 )//this->this->parent == NULL )
+    {
+    // make space for all the rects plus 1
+    stg_rotrect_t* extraone = new stg_rotrect_t[num+1];
+    
+    // set the first rect as a unit square
+    extraone[0].x = 0.0;
+    extraone[0].y = 0.0;
+    extraone[0].a = 0.0;
+    extraone[0].w = 1.0;
+    extraone[0].h = 1.0;
+    
+    // copy the other rects after the unit square
+    memcpy( &extraone[1], this->rects->rects, 
+    this->rects->rect_count * sizeof(stg_rotrect_t) );
+    
+    // free the old rects
+    delete[] this->rects->rects;
+    
+    // point to the new rects
+    this->rects = extraone;
+    this->rect_count = num+1; // remember we have 1 more now
+    }
+  */    
+  
+  RenderRects( true );
 }
 
+
+//////////////////////////////////////////////////////////////////////////
 // write the entity tree onto the console
-void CEntity::Print( char* prefix )
+void CEntity::Print( int fd, char* prefix )
 {
-  double ox, oy, oth;
-  this->GetGlobalPose( ox, oy, oth );
+  // TODO - write onto the fd, rather than stdout
+  stg_pose_t pose;
+  this->GetGlobalPose( &pose );
 
-  printf( "%s type: %s global: [%.2f,%.2f,%.2f]"
+  printf( "%s id: %d name: %s type: %s global: [%.2f,%.2f,%.2f]"
 	  " local: [%.2f,%.2f,%.2f] vision_return %d )", 
 	  prefix,
-	  this->lib_entry->token,
-	  ox, oy, oth,
-	  local_px, local_py, local_pth,
+	  this->id,
+	  this->name->str,
+	  this->token->str,
+	  pose.x, pose.y, pose.a,
+	  pose_local.x, pose_local.y, pose_local.a,
 	  this->vision_return );
 	  
-  if( this->m_parent_entity == NULL )
-    puts( " - ROOT" );
-  else
-    puts( "" );
-
-  // add an indent to the prefix
-  
+  // add an indent to the prefix 
   char* buf = new char[ strlen(prefix) + 1 ];
   sprintf( buf, "\t%s", prefix );
 
-  CHILDLOOP( ch )
-    ch->Print( buf );
+  //CHILDLOOP( ch )
+    //ch->Print( fd, buf );
 }
 
-
-// subscribe to / unsubscribe from the device
-// these don't do anything by default, but are overridden by CPlayerEntity
-void CEntity::Subscribe()
-{ 
-  //puts( "SUB" );
-};
-
-void CEntity::Unsubscribe()
-{ 
-  //puts( "UNSUB" );
-};
-  
-int CEntity::Subscribed()
-{ 
-  return 0;
-};
-
-
-// these versions sub/unsub to this device and all its decendants
-void CEntity::FamilySubscribe()
-{ 
-  CHILDLOOP( ch ) ch->FamilySubscribe(); 
-};
-
-void CEntity::FamilyUnsubscribe()
-{ 
-  CHILDLOOP( ch ) ch->FamilyUnsubscribe(); 
-};
-
-
-void CEntity::GuiStartup( void )
-{
-  // use the interface library hook
-  GuiEntityStartup( this );
-  
-  CHILDLOOP( ch )
-    ch->GuiStartup();
-}
-
-
+///////////////////////////////////////////////////////////////////
+// Get a string describing the entity, suitable for GUI or console output
 void CEntity::GetStatusString( char* buf, int buflen )
 {
-  double x, y, th;
-  this->GetGlobalPose( x, y, th );
-  
-  // check for overflow
-  assert( -1 != 
-	  snprintf( buf, buflen, 
-		    "Pose(%.2f,%.2f,%.2f) Stage(%d:%d(%s))",
-		    x, y, th, 
-		    this->stage_id,
-		    this->lib_entry->type_num,
-		    this->lib_entry->token ) );
+   stg_pose_t pose;
+   this->GetGlobalPose( &pose );
+   
+   // check for overflow
+   assert( -1 !=  snprintf( buf, buflen, 
+			    "Pose(%.2f,%.2f,%.2f) Stage(%d:%s)",
+			    pose.x, pose.y, pose.a, this->id, this->token->str ) );
 }  
 
-#ifdef INCLUDE_RTK2
-
-///////////////////////////////////////////////////////////////////////////
-// Initialise the rtk gui
-void CEntity::RtkStartup()
+/////////////////////////////////////////////////////////////////////////
+// draw the rectangles in the matrix
+void CEntity::RenderRects( bool render )
 {
-  assert( m_world );
-
-  PRINT_DEBUG2("RTK STARTUP %s %s",
-               this->lib_entry->token,
-               m_parent_entity ? "" : " - ROOT" );
-
-  // Create a figure representing this entity
-  if( m_parent_entity == NULL )
-    this->fig = rtk_fig_create(m_world->canvas, NULL, 50);
-  else
-    this->fig = rtk_fig_create(m_world->canvas, m_parent_entity->fig, 50);
-
-  assert( this->fig );
-
-  // Set the mouse handler
-  this->fig->userdata = this;
-  rtk_fig_add_mouse_handler(this->fig, StaticRtkOnMouse);
-
-  // add this device to the world's device menu 
-  this->m_world->AddToDeviceMenu( this, true); 
-    
-  // visible by default
-  rtk_fig_show( this->fig, true );
-
-  // Set the color
-  rtk_fig_color_rgb32(this->fig, this->color);
-
-  // put the figure's origin at the entity's position
-  rtk_fig_origin( this->fig, local_px, local_py, local_pth );
-
-
-#ifdef RENDER_INITIAL_BOUNDING_BOXES
-  double xmin, ymin, xmax, ymax;
-  xmin = ymin = 999999.9;
-  xmax = ymax = 0.0;
-  this->GetBoundingBox( xmin, ymin, xmax, ymax );
+  stg_rotrect_t glob;
   
-  rtk_fig_t* boundaries = rtk_fig_create( m_world->canvas, NULL, 99);
-  double width = xmax - xmin;
-  double height = ymax - ymin;
-  double xcenter = xmin + width/2.0;
-  double ycenter = ymin + height/2.0;
+  if( this->rect_array )
+    {
+      int r;
+      for( r=0; r<this->rect_array->rect_count; r++ )
+	{
+	  GetGlobalRect( &glob, &(this->rect_array->rects[r]) );
+	  this->GetMatrix()->SetRectangle( glob.x, glob.y, glob.a, 
+					   glob.w, glob.h, this, render );
+	}  
+    }
+}
 
-  rtk_fig_rectangle( boundaries, xcenter, ycenter, 0, width, height, 0 ); 
+///////////////////////////////////////////////////////////////////////////
+// Generate scan data
+void CEntity::UpdateTransducers( void )
+{   
+  BASE_DEBUG( "updating transducers" );
 
-   
-#endif
-   
-  // draw the shape using the center of rotation offsets
-  switch (this->shape)
-  {
-    case ShapeRect:
-      rtk_fig_rectangle(this->fig, 
-                        this->origin_x, this->origin_y, 0, 
-                        this->size_x, this->size_y, false);
-      break;
-    case ShapeCircle:
-      rtk_fig_ellipse(this->fig, 
-                      this->origin_x, this->origin_y, 0,  
-                      this->size_x, this->size_y, false);
-      break;
-    case ShapeNone: // no shape
-      break;
-  }
+  assert( this->transducers );
   
+  if( this->transducers->len < 1 )
+    PRINT_WARN1( "wierd! %d transducers", this->transducers->len );
 
-  // everything except the root object has a label
-  if( m_parent_entity )
-  {
-    // Create the label
-    // By default, the label is not shown
-    this->fig_label = rtk_fig_create(m_world->canvas, this->fig, 51);
-    rtk_fig_show(this->fig_label, false);    
-    rtk_fig_movemask(this->fig_label, 0);
-      
-    char label[1024];
-    char tmp[1024];
-      
-    label[0] = 0;
-    snprintf(tmp, sizeof(tmp), "%s %s", 
-             this->name, this->lib_entry->token );
-    strncat(label, tmp, sizeof(label));
-      
-    rtk_fig_color_rgb32(this->fig, this->color);
-    rtk_fig_text(this->fig_label,  0.75 * size_x,  0.75 * size_y, 0, label);
-      
-    // attach the label to the main figure
-    // rtk will draw the label when the mouse goes over the figure
-    // TODO: FIX
-    //this->fig->mouseover_fig = fig_label;
-      
-    // we can be moved only if we are on the root node
-    if (m_parent_entity != this->m_world->GetRoot() )
-      rtk_fig_movemask(this->fig, 0);
-    else
-      rtk_fig_movemask(this->fig, this->movemask);  
-  }
+  for( int t=0; t < (int)this->transducers->len; t++ )
+    {
+      stg_transducer_t* tran = &g_array_index( this->transducers, 
+					       stg_transducer_t, t );
 
-  // do our children after we're set
-  CHILDLOOP( child ) child->RtkStartup();
-  PRINT_DEBUG( "RTK STARTUP DONE" );
+      g_assert( tran );
+      
+      // Get the global pose of the transducer
+      //
+      stg_pose_t pz;
+      memcpy( &pz, &tran->pose, sizeof(stg_pose_t) );
+      this->LocalToGlobal( &pz );
+      
+      CLineIterator lit( pz.x, pz.y, pz.a, tran->range_max, 
+			 GetWorld()->matrix, 
+			 PointToBearingRange );
+      
+      CEntity* ent;
+      double range = tran->range_max;
+      
+      while( (ent = lit.GetNextEntity()) ) 
+	{
+	  // Ignore myself, things which are attached to me, and
+	  // things that we are attached to (except root) The latter
+	  // is useful if you want to stack beacons on the laser or
+	  // the laser on somethine else.
+	  if (ent == this || this->IsDescendent(ent) )//|| 
+	      //(ent != this->GetRoot() && ent->IsDescendent(this)))
+	    continue;
+	  
+	  // Stop looking when we see something
+	  if(ent->laser_return != LaserTransparent) 
+	    {
+	      range = lit.GetRange();
+	      break;
+	    }	
+	}
+      
+      //if( ent )
+      //{
+	  // poke the scan data into the transducer
+      tran->range = range;
+      //tran->intensity_receive = (double)ent->laser_return;
+	  //}
+      
+
+      //tran->range = 0.4;
+      stg_gui_transducers_render( this ); 
+
+    }
+
+  BASE_DEBUG( "updating transducers complete" );
 }
 
-
-
 ///////////////////////////////////////////////////////////////////////////
-// Finalise the rtk gui
-void CEntity::RtkShutdown()
-{
-  // Clean up the figure we created
-  rtk_fig_destroy(this->fig);
-  rtk_fig_destroy(this->fig_label);
-} 
-
-
-///////////////////////////////////////////////////////////////////////////
-// Update the rtk gui
-void CEntity::RtkUpdate()
-{
-  CHILDLOOP( child ) child->RtkUpdate();
-
-  // TODO this is nasty and inefficient - figure out a better way to
-  // do this  
-
-  // if we're not looking at this device, hide it 
-  if( !m_world->ShowDeviceBody( this->lib_entry->type_num ) )
-  {
-    rtk_fig_show(this->fig, false);
-  }
-  else // we need to show and update this figure
-  {
-    rtk_fig_show( this->fig, true );
-  }
+// Generate scan data
+void  CEntity::UpdateLaserData( stg_laser_data_t* laser )
+{ 
+  // remember the initial data
+  //stg_laser_data_t keep;
+  //memcpy( &keep, laser, sizeof(keep) );
+     
+  // Get the pose of the laser in the global cs
+  stg_pose_t pz;
+  GetGlobalPose( &pz );
+  
+  // the laser geometry is the same as the entity's
+  memcpy( &laser->pose, &this->pose_origin, sizeof(stg_pose_t) );
+  memcpy( &laser->size, &this->size, sizeof(stg_size_t) );
+  
+  double scan_res = (laser->angle_max - laser->angle_min) / laser->sample_count;
+  
+  // Do each scan
+  for (int s = 0; s < laser->sample_count;)
+    {
+      // Compute parameters of scan line
+      double bearing = s * scan_res + laser->angle_min;
+      double pth = pz.a + bearing;
+      
+      CLineIterator lit( pz.x, pz.y, pth, laser->range_max, 
+			 this->GetWorld()->matrix, PointToBearingRange );
+      
+      CEntity* ent;
+      double range = laser->range_max;
+      
+      while( (ent = lit.GetNextEntity()) ) 
+	{
+	  // Ignore ourself, things which are attached to us,
+	  // and things that we are attached to (except root)
+	  // The latter is useful if you want to stack beacons
+	  // on the laser or the laser on somethine else.
+	  if (ent == this || this->IsDescendent(ent) )// || 
+	    //(ent != m_world->root && ent->IsDescendent(this)))
+	    continue;
+	  
+	  // Stop looking when we see something
+	  if(ent->laser_return != LaserTransparent) 
+	    {
+	      range = lit.GetRange();
+	      break;
+	    }	
+	}
+      
+      laser->samples[s].range = range;
+      laser->samples[s].reflectance = 1.0;
+      
+      s++;
+    }
+  
+  // ask the gui to draw this data if it's different to last time
+  //if( memcmp( laser, &keep, sizeof(keep) ) )
+    stg_gui_laser_render( this );
 }
-
-
-///////////////////////////////////////////////////////////////////////////
-// Process mouse events
-void CEntity::RtkOnMouse(rtk_fig_t *fig, int event, int mode)
-{
-  double px, py, pth;
-
-  switch (event)
-  {
-    case RTK_EVENT_PRESS:
-    case RTK_EVENT_MOTION:
-    case RTK_EVENT_RELEASE:
-      rtk_fig_get_origin(fig, &px, &py, &pth);
-      this->SetGlobalPose(px, py, pth);
-      break;
-
-    default:
-      break;
-  }
-
-  return;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Process mouse events (static callback)
-void CEntity::StaticRtkOnMouse(rtk_fig_t *fig, int event, int mode)
-{
-  CEntity *entity;
-  entity = (CEntity*) fig->userdata;
-  entity->RtkOnMouse(fig, event, mode);
-  return;
-}
-
-
-#endif
-

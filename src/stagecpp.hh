@@ -18,15 +18,18 @@
  *
  */
 /*
- * Desc: A class for reading in the world file.
- * Author: Andrew Howard
+ * Desc: C++ extensions to the Stage IO library, including the Worldfile
+ * class for reading in the world file. Ideally this should be provided in 
+ * the basic C library, but right now we only have a C++ implementation.
+ * Author: Richard Vaughan, Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.hh,v 1.2 2003-04-01 00:20:56 rtv Exp $
+ * CVS info: $Id: stagecpp.hh,v 1.2 2003-08-19 22:09:53 rtv Exp $
  */
 
-#ifndef WORLDFILE_HH
-#define WORLDFILE_HH
+#ifndef STAGECPP_HH
+#define STAGECPP_HH
 
+#include <stage.h>
 
 // Class for loading/saving world file.  This class hides the syntax
 // of the world file and provides an 'entity.property = value' style
@@ -45,6 +48,11 @@ class CWorldFile
   // Save world back into file
   // Set filename to NULL to save back into the original file
   public: bool Save(const char *filename);
+
+  // upload the current data into a Stage server.  on exit [models] is
+  // an array mapping [model_count] device names to Stage ids
+public: int Upload( stg_client_t* cli, 
+		    stg_name_id_t** models, int* model_count );
 
   // Check for unused properties and print warnings
   public: bool WarnUnused();
@@ -77,7 +85,7 @@ class CWorldFile
   public: double ReadAngle(int entity, const char *name, double value);
 
   // Read a boolean
-  // REMOVE? public: bool ReadBool(int entity, const char *name, bool value);
+  public: bool ReadBool(int entity, const char *name, bool value);
 
   // Read a color (includes text to RGB conversion)
   public: uint32_t ReadColor(int entity, const char *name, uint32_t value);
@@ -249,6 +257,7 @@ class CWorldFile
 
   // Dump the property list for debugging
   private: void DumpProperties();
+
 
   // Token types.
   private: enum

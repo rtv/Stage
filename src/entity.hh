@@ -18,159 +18,187 @@
  *
  */
 /*
- * Desc: Base class for movable entities.
+ * Desc: Simulated robot with various sensors
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.16 2003-04-01 00:20:55 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.17 2003-08-19 22:09:52 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
 #define _ENTITY_HH
 
 #if HAVE_CONFIG_H
-  #include <config.h>
+// for conditional GUI building
+// it'd be good to not need this here as it causes big rebuilds... rtv. 
+# include <config.h>
 #endif
-#include <sys/types.h>
-#if HAVE_STDINT_H
-  #include <stdint.h>
-#endif
-
 
 #include "stage.h"
-#include "stage_types.hh"
-#include "colors.hh"
-#include "library.hh"
+#include "world.hh"
+#include "rtkgui.hh"
+#include "colors.h"
 
-#include <netdb.h>
-#include <string.h> // for strncpy(3)
-#include <sys/types.h>
-#include <netinet/in.h>
 
-#ifdef INCLUDE_RTK2
-#include "rtk.h"
-#endif
+// plain functions for tree manipulation
+CEntity* stg_ent_next_sibling( CEntity* ent );
+CEntity* stg_ent_first_child( CEntity* ent );
+CEntity* stg_ent_parent( CEntity* ent );
+stg_world_t* stg_world( CEntity* ent );
+CEntity* stg_world_first_child( stg_world_t* world );
 
-//#include "library.hh"
-//extern Library* lib;
-
-// Forward declare the world class
-class CWorld;
-class CWorldFile;
+// Forward declare
+class CMatrix;
 
 ///////////////////////////////////////////////////////////////////////////
 // The basic moveable object class
 class CEntity
 {
-  // Minimal constructor Requires a pointer to the library entry for
-  // this type, a pointer to the world, and a parent
-  public: CEntity( LibraryItem* libit, CWorld *world, CEntity *parent_entity );
+
+public: 
+  CEntity(  stg_entity_create_t* init );
+
+  int id;
+  bool running;
+  GNode* node;  
+  GString *name, *token;
   
-  // a static named constructor - a pointer to this function is given
-  // to the Library object and paired with a string.  When the string
-  // is seen in the worldfile, this function is called to create an
-  // instance of this entity
+  // infrastructure stuff
+private:
+  guint read_tag, update_tag, idle_tag;
 
-  // entities can now be instatiated without deriving a subclass so
-  // can be used as obstacles, fiducials etc by configuration from the
-  // world file
-public: static CEntity* Creator( LibraryItem *libit,  CWorld *world, CEntity *parent )
-  {
-    return( new CEntity( libit, world, parent ) );
-  };
+protected:
+
+  //static int next_available_id;
+  stg_entity_create_t last_child_created;
+
+public:
+  // static stuff shared by all instances 
+  static gboolean stg_update_signal( gpointer ptr );
+    
+  gboolean ChildCreate( stg_entity_create_t* childdata );
+ 
+  // all the data required to render this object sensibly
+  stg_gui_model_t* guimod;
   
-  // a linked list of other entities attached to this one
-public: CEntity* child_list;
-public: CEntity* prev;
-public: CEntity* next;
-protected:  void AddChild( CEntity* child );
-
-
-  // this is unique for each object, and is equal to its position in
-  // the world's child list
-public: stage_id_t stage_id;
-
-  public: void Print( char* prefix );
+public:
   // Destructor
   public: virtual ~CEntity();
 
-  // Load the entity from the worldfile
-  public: virtual bool Load(CWorldFile *worldfile, int section);
-  
-  // Save the entity to the worldfile
-  public: virtual bool Save(CWorldFile *worldfile, int section);
-  
-  // Initialise entity
-  public: virtual bool Startup( void ); 
-  
+public: 
+  // Initialise entity  
+  virtual int Startup(); 
   // Finalize entity
-  public: virtual void Shutdown();
-
-  // Get/set properties
-  public: virtual int SetProperty( int con,
-                                   EntityProperty property, void* value, size_t len );
-  public: virtual int GetProperty( EntityProperty property, void* value );
-  
+  virtual int Shutdown();  
 
   // Update the entity's device-specific representation
-  // this is called every time the simulation clock increments
-  public: virtual void Update( double sim_time );
+  // this is called by a callback installed in CEntity::Startup()
+  virtual gboolean Update();
+  
+  virtual int SetProperty( stg_prop_id_t ptype, void* data, size_t len );
+  virtual stg_property_t* GetProperty( stg_prop_id_t ptype );
 
-  // this is called very rapidly from the main loop
-  // it allows the entity to perform some actions between clock increments
-  // (such handling config requests to increase synchronous IO performance)
-public: virtual void Sync();
+protected:
 
+  // type-specific initialization
+  void InitWall( void );
+  void InitLaser( void );
+  void InitPosition( void );
+
+  stg_rotrect_array_t* rect_array;
+
+  // copies the array of rects into this entity, allocating storage
+  // and setting the rects_max members correctly
+  void SetRects( stg_rotrect_t* rects, int num_rects );
+  
+  // scale an array of rects into a unit square
+  void NormalizeRects( stg_rotrect_t* rects, int num_rects );
+  
+  // convert the rotated rectangle into global coords, taking into account
+  // the entities pose and the rectangle scaling
+  void GetGlobalRect( stg_rotrect_t* dest, stg_rotrect_t* src );
+  
+  // bool controls whether rects are added to or removed from the matrix
+  void RenderRects(  bool render );
+
+public:
+  
+  int GetNumRects( void )
+  { return( this->rect_array == NULL ?  0 : this->rect_array->rect_count );};
+  
+  stg_rotrect_t* GetRects( void )
+  { return( this->rect_array == NULL ? NULL : this->rect_array->rects ); };
+  
+  stg_rotrect_t* GetRect( int i )
+  { return( this->rect_array == NULL? NULL : &this->rect_array->rects[i] ); };
+  
   // Render the entity into the world
-  protected: void Map(double px, double py, double pth);
+  //  protected: void Map(double px, double py, double pth);
+protected: void Map( stg_pose_t* pose );
+  
+  // calls Map(double,double,double) with the current global pose
+  protected: void Map( void );
 
   // Remove the entity from the world
   protected: void UnMap();
 
   // Remove the entity at its current pose and remap it at a new pose.
-  protected: void ReMap(double px, double py, double pth);
-  
+  // protected: void ReMap(double px, double py, double pth);
+  protected: void ReMap( stg_pose_t* pose);
+
+  // maps myself and my children, recursively
+  protected: void MapFamily(void);
+  // unmaps myself and my children, recursively
+  protected: void UnMapFamily(void);
+ 
   // Primitive rendering function using internally
-  private: void MapEx(double px, double py, double pth, bool render);
+  private: void MapEx( stg_pose_t* pose, bool render);
 
   // Check to see if the given pose will yield a collision with obstacles.
   // Returns a pointer to the first entity we are in collision with.
-  // Returns NULL if no collisions.
-  // This function is useful for writing position devices.
-  protected: virtual CEntity *TestCollision(double px, double py, double pth );
+  // Returns NULL if no collisions. records the position of the hit in
+  // hitx and hity, if non-null
+protected: CEntity *TestCollision( double *hity = NULL, double* hity = NULL);  
   
-  // same; also records the position of the hit
-  protected: virtual CEntity *TestCollision(double px, double py, double pth, 
-                                            double &hitx, double &hity );
-
   // writes a description of this device into the buffer
-public: virtual void GetStatusString( char* buf, int buflen );
+public: void GetStatusString( char* buf, int buflen );
   
   // Convert local to global coords
-  public: void LocalToGlobal(double &px, double &py, double &pth);
-
+public: void LocalToGlobal( double &x, double &y, double &a );
+public: void LocalToGlobal( stg_pose_t* pose );
+  
   // Convert global to local coords
-  public: void GlobalToLocal(double &px, double &py, double &pth);
+public: void GlobalToLocal( stg_pose_t* pose );
+  
+  // set the entity's dimensions
+public: void SetSize( stg_size_t* sz );
 
-  // Set the entitys pose in the parent cs
-  public: void SetPose(double px, double py, double pth);
+  virtual void GetSize( stg_size_t* sz )
+  { memcpy( sz, &this->size, sizeof(stg_size_t) ); }
 
-  // Get the entitys pose in the parent cs
-  public: void GetPose(double &px, double &py, double &pth);
 
-  // Get the entitys pose in the global cs
-  public: void SetGlobalPose(double px, double py, double pth);
+  // Set the entity's pose in the parent cs
+  //public: void SetPose(double px, double py, double pth);
+public: void SetPose( stg_pose_t* pose );
+  
+  // Get the entity's pose in the parent cs
+public: void GetPose( stg_pose_t* pose );
 
-  // Get the entitys pose in the global cs
-  public: void GetGlobalPose(double &px, double &py, double &pth);
+public: void GetOrigin( stg_pose_t* pose );
+public: void SetOrigin( stg_pose_t* pose );
 
-  // Set the entitys velocity in the global cs
-  // (I cant be bothered implementing local velocities - AH)
-  public: void SetGlobalVel(double vx, double vy, double vth);
-
-  // Get the entitys velocity in the global cs
-  // (I cant be bothered implementing local velocities - AH)
-  public: void GetGlobalVel(double &vx, double &vy, double &vth);
-
+  // Get the entity's pose in the global cs
+public: void SetGlobalPose( stg_pose_t* pose );
+  
+  // Get the entity's pose in the global cs
+public: void GetGlobalPose( stg_pose_t* pose );
+  //public: void GetGlobalPose( double &x, double &y, double &a );
+  
+  // Set the entity's velocity in the local cs
+public: void SetVelocity(stg_velocity_t* vel);
+  
+  // Get the entity's velocity in the localcs
+public: void GetVelocity(stg_velocity_t* vel);
+  
   // Get the entity mass
   public: double GetMass() { return (this->mass); }
 
@@ -179,185 +207,115 @@ public: void GetBoundingBox( double &xmin, double &ymin,
   
   // See if the given entity is one of our descendents
   public: bool IsDescendent(CEntity *entity);
-
-  // subscribe to / unsubscribe from the device
-  // these don't do anything by default, but are overridden by CPlayerEntity  
-public: virtual int Subscribed();
-public: virtual void Subscribe();
-public: virtual void Unsubscribe();
   
-  // these versions sub/unsub to this device and all its decendants
-public: virtual void FamilySubscribe();
-public: virtual void FamilyUnsubscribe();
-
-  // Pointer to world
-  public: CWorld *m_world;
-    
-  // Pointer to parent entity
-  // i.e. the entity this entity is attached to.
-  public: CEntity *m_parent_entity;
-
-  // Pointer the default entity
-  // i.e. the entity that would-be children of this entity should attach to.
-  // This will usually be the entity itself.
-  private: CEntity *m_default_entity;
-
-  // change the parent
-  public: void SetParent( CEntity* parent );
-
-  // get the parent
-  public: CEntity* GetParent( void ){ return( this->m_parent_entity ); };
+public: 
+  
+  stg_world_t* GetWorld();
+  CMatrix* GetMatrix();
 
   // The section in the world file that describes this entity
   public: int worldfile_section;
 
   // return a pointer to this or a child if it matches the worldfile section
   CEntity* FindSectionEntity( int section );
-    
-  // this is the library's entry for this device, which contains the
-  // object's type number, worldfile token, etc.  this can also be
-  // used as a type identifier, as it is unique for each library entry
-  LibraryItem* lib_entry; 
+      
+  // Our shape and geometry origin specifies my body's offset from my
+  // location (e.g for moving the center of rotation in pioneers
+public: stg_pose_t pose_origin;
+public: stg_size_t size;
   
-  // Our shape and geometry
-  public: StageShape shape;
-  public: double origin_x, origin_y;
-  public: double size_x, size_y;
-
   // Our color
-  public: StageColor color;
-
-  // Descriptive name for this entity
-  public: char name[256];
-  
-  // properties detectable by the FooFinder device
-  public: 
-  int team;  // identify the team this entity is on. 0 means no-team.
-  stage_emmision_t noise, radiation;
+  public: stg_color_t color;
 
   // Entity mass (for collision calculations)
   protected: double mass;
   
+  // stored charge (-1 for objects where this is silly) 
+  protected: double volts;
+
+  // set if object collided and had its velocity zeroed
+public: bool stall;
+
   // Sensor return values
   // Set these appropriately to have this entity 'seen' by
   // the relevant sensor.
-  public: bool obstacle_return;
-  public: bool puck_return;
-  public: bool sonar_return;  
-  public: bool vision_return;
-  public: LaserReturn laser_return;
-  public: IDARReturn idar_return;
-  public: GripperReturn gripper_return;
-  public: int fiducial_return; 
+public: int obstacle_return;
+public: int puck_return;
+public: int sonar_return;  
+public: int vision_return;
+public: stg_laser_return_t laser_return;
+public: stg_idar_return_t idar_return;
+public: stg_gripper_return_t gripper_return;
+public: int fiducial_return; 
+public: int neighbor_return;
 
-  // the full path name of this device in the filesystem
-  //public: char device_filename[256]; 
-
-  // a filedescriptor for this device's file, used for locking
-  //private: int m_fd;
+public: stg_blinkenlight_t blinkenlight;  
 
   // flag is set when a dependent device is  attached to this device
-  public: bool m_dependent_attached;
+  //public: bool m_dependent_attached;
 
   // Initial pose in local cs (ie relative to parent)
-  protected: double init_px, init_py, init_pth;
+protected: stg_pose_t pose_init;
   
   // Pose in local cs (ie relative to parent)
-  protected: double local_px, local_py, local_pth;
-
-  // Velocity in global cs (for coliision calculations)
-  protected: double vx, vy, vth;
-
+protected: stg_pose_t pose_local;
+  
   // The last mapped pose in global cs
-  protected: double map_px, map_py, map_pth;
+protected: stg_pose_t pose_map;
+  
+  // Velocity in local cs 
+  protected: stg_velocity_t velocity;
+
   
   // how often to update this device, in seconds
-  // all devices check this before updating their data
-  // instances can modify this in response to config file or messages
-  protected: double m_interval; 
-  protected: double m_last_update;
+  protected: double interval; 
 
-
-  ///////////////////////////////////////////////////////////////////////
-  // DISTRIBUTED STAGE STUFF
-
-  //public: stage_truth_t truth, old_truth;
-  public: char m_dirty[ MAX_POSE_CONNECTIONS ][ ENTITY_LAST_PROPERTY ];
-
-  // set the dirty flag for each property for each connection
-  public: void SetDirty( char v);
-  public: void SetDirty( EntityProperty prop, char v );
-  public: void SetDirty( int con, char v );
-  public: void SetDirty( int con, EntityProperty prop, char v );
+  // print a tree of info about this entity on the fd
+  public: void Print( int fd, char* prefix );
   
-  // these store the last pose we sent out from the pose server
-  // to be tested when setting the dirty flag to see if we really
-  // need to send a new pose
-  public: int m_last_pixel_x, m_last_pixel_y, m_last_degree;
+  // move using these velocities times the timestep
+protected: 
+  //virtual int Move( double vx, double vy, double va, double timestep );
+  virtual int Move( stg_velocity_t* vel, double timestep );
+
+public:  bool OcclusionTest(CEntity* ent );
+
+  public: 
+  GArray* transducers;
+  void UpdateTransducers( void );
+
+  // this structure specifies our laser scan
+  stg_laser_data_t laser_data;
+  // performs a scan, filling in the structure's sample values
+  void UpdateLaserData( stg_laser_data_t* laser );
   
-  // recursive function that ORs an ent's dirty array with those of
-  // all it's ancestors 
-  public: void InheritDirtyFromParent( int con_count );
-
-  // the IP address of the host that manages this entity
-  // replaced the hostname 'cos it's smaller and faster in comparisons
-  public: struct in_addr m_hostaddr;
-
-  // flag is true iff this entity is updated by this host
-  public: bool m_local; 
+  stg_bounds_t bounds_neighbor;
+  void GetNeighbors( GArray** neighbor_array );
   
-  // functions for drawing this entity in GUIs
-#ifdef INCLUDE_RTK2
-  // Initialise the rtk gui
-  public: virtual void RtkStartup();
-
-  // Finalise the rtk gui
-  public: virtual void RtkShutdown();
-
-  // Update the rtk gui
-  public: virtual void RtkUpdate();
-
-  // Process mouse events
-  public: virtual void RtkOnMouse(rtk_fig_t *fig, int event, int mode);
+  // STG_PROP_ENTITY_POWER - non-zero:on, zero:off
+  int power_on;
   
-  // Process mouse events (static callback)
-  protected: static void StaticRtkOnMouse(rtk_fig_t *fig, int event, int mode);
+  // STG_PROP_ENTITY_RANGEBOUNDS - limits of sensor range in meters 
+  double min_range, max_range;
   
-  // Default figure handle
-  public: rtk_fig_t *fig, *fig_label;
-
-  // Default movement mask
-  protected: int movemask;
-
-  // callbacks - we ask the rtk figures call these when things happen to 'em.
-  /* TODO: fix
-  static void staticSetGlobalPose( void* ent, double x, double y, double th );
-  static void staticSelect( void* ent );
-  static void staticUnselect( void* ent );
-  */
-#endif
-  
-  // calls the GUI hook to startup this object, then recusively calls
-  // the children's GuiStartup()
-public: virtual void GuiStartup( void );
-
-
-  //#ifdef ENTITY_GUI_DATA_TYPE
-  // allow the GUI to attach some data to an object if it needs to.
-  // the GUI library's header file defines this macro to control this
-  // member's type. if the macro isn't set then there is no valud GUI
-  // and this member doesn't exist. value is NULLed in the constuctor.
-  //public: ENTITY_GUI_DATA_TYPE *gui_data; 
-  //#endif
-public: void *gui_data; 
-
+  // user-configurable GUI settings
+  bool mouseable;
+  bool draw_nose;
 };
 
+#ifdef DEBUG
+#define BASE_DEBUG(S) printf("[%d:%s (%s) %p] "S" (%s %s)\n",this->id,this->name->str,this->token->str,this,__FILE__,__FUNCTION__);
+#define BASE_DEBUG1(S,A) printf("[%d:%s (%s) %p] "S" (%s %s)\n",this->id,this->name->str,this->token->str,this,A,__FILE__,__FUNCTION__);
+#define BASE_DEBUG2(S,A,B) printf("[%d:%s (%s) %p] "S" (%s %s)\n",this->id,this->name->str,this->token->str,this,A,B,__FILE__,__FUNCTION__);
+#define BASE_DEBUG3(S,A,B,C) printf("[%d:%s (%s) %p] "S" (%s %s)\n",this->id,this->name->str,this->token->str,this,A,B,C,__FILE__,__FUNCTION__);
+#else
+#define BASE_DEBUG(S)
+#define BASE_DEBUG1(S,A)
+#define BASE_DEBUG2(S,A,B)
+#define BASE_DEBUG3(S,A,B,C)
+#endif
 
-// macro loops over the children
-#define CHILDLOOP( ch )\
-for( CEntity* ch = this->child_list; ch; ch = ch->next )
-    
+
 
 #endif
 
