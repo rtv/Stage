@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.25 2002-11-03 00:14:34 gerkey Exp $
+dnl $Id: configure.in,v 1.26 2002-11-03 06:18:00 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -99,6 +99,11 @@ else
     GUI_LINK="-L$RTK_DIR/lib -Lrtkstage -lrtkstage -lrtk $LIBJPEG `gtk-config --libs gtk gthread`"
   else
     with_rtk=no
+    AC_MSG_WARN([***************************************************])
+    AC_MSG_WARN([Couldn't find RTK, so I won't build RTK-based GUIs])
+    AC_MSG_WARN([Maybe you should download and install RTK?])
+    AC_MSG_WARN([If you have RTK installed, try --with-rtk=path])
+    AC_MSG_WARN([***************************************************])
   fi
   AM_CONDITIONAL(WITH_RTK, test x$with_rtk = xyes)
 fi
