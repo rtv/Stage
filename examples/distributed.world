@@ -1,53 +1,118 @@
 set environment_file = simple.pnm
 set pixels_per_meter =  100
 
-set host = robot
+set host = fnord
 
-create position_device pose 3.47 2.03 144 port 6665  
+create position_device pose 3.47 2.03 144 color red port 6665 index 0 invisible laser visible obstacle visible sonar shape rectangle 
 {
-  create player_device
-  create sonar_device 
-  create laser_device pose 0.08 0.00 0 
+  create player_device pose 0.00 0.00 0 color white port 6665 index 0 invisible obstacle invisible laser invisible sonar 
+  create sonar_device pose 0.00 0.00 0 color blue3 port 6665 index 0 invisible obstacle invisible laser invisible sonar 
+  create laser_device pose 0.08 0.00 0 color blue port 6665 index 0 invisible obstacle invisible sonar visible laser 
   {
-     create lbd_device 	
+     create lbd_device pose 0.00 0.00 0 color gray port 6665 index 0 invisible obstacle invisible laser invisible sonar range 1.50 
 
-     create ptz_device
+     create ptz_device pose 0.00 0.00 0 color magenta port 6665 index 0 invisible obstacle invisible laser invisible sonar 
      {
-        create vision_device
+        create vision_device pose 0.00 0.00 0 color red port 6665 index 0 invisible obstacle invisible laser invisible sonar 
      } 
   }
 }
 
+set host = rover
+
+create position_device pose 3.63 3.05 243 color red port 6666 index 0 invisible laser visible obstacle visible sonar shape rectangle 
+{
+  create player_device pose 0.00 0.00 0 color white port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+  create sonar_device pose 0.00 0.00 0 color blue3 port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+  create laser_device pose 0.08 0.00 0 color blue port 6666 index 0 invisible obstacle invisible sonar visible laser 
+  {
+     create lbd_device pose 0.00 0.00 0 color gray port 6666 index 0 invisible obstacle invisible laser invisible sonar range 1.50 
+
+     create ptz_device pose 0.00 0.00 0 color magenta port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+     {
+        create vision_device pose 0.00 -0.00 -1 color red port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+     } 
+  }
+}
+
+set host = sal218
+
+create position_device pose 2.47 3.03 243 color red port 6666 index 0 invisible laser visible obstacle visible sonar shape rectangle 
+{
+  create player_device pose -0.00 0.00 0 color white port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+  create sonar_device pose -0.00 0.00 0 color blue3 port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+  create laser_device pose 0.08 0.00 0 color blue port 6666 index 0 invisible obstacle invisible sonar visible laser 
+  {
+     create lbd_device pose -0.00 0.00 0 color gray port 6666 index 0 invisible obstacle invisible laser invisible sonar range 1.50 
+
+     create ptz_device pose -0.00 0.00 0 color magenta port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+     {
+        create vision_device pose -0.00 0.00 0 color red port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+     } 
+  }
+}
+set host = eye
+
+create position_device pose 3.98 1.04 243 color red port 6666 index 0 invisible laser visible obstacle visible sonar shape rectangle 
+{
+  create player_device pose -0.00 0.00 0 color white port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+  create sonar_device pose -0.00 0.00 0 color blue3 port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+  create laser_device pose 0.08 0.00 0 color blue port 6666 index 0 invisible obstacle invisible sonar visible laser 
+  {
+     create lbd_device pose -0.00 0.00 0 color gray port 6666 index 0 invisible obstacle invisible laser invisible sonar range 1.50 
+
+     create ptz_device pose -0.00 0.00 0 color magenta port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+     {
+        create vision_device pose -0.00 0.00 0 color red port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+     } 
+  }
+}
 set host = orac
 
-create position_device pose 2.47 2.03 244 port 6666  
+create position_device pose 1.92 3.82 243 color red port 6666 index 0 invisible laser visible obstacle visible sonar shape rectangle 
 {
-  create player_device
-  create sonar_device 
-  create laser_device pose 0.08 0.00 0 
+  create player_device pose -0.00 0.00 0 color white port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+  create sonar_device pose -0.00 0.00 0 color blue3 port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+  create laser_device pose 0.08 0.00 0 color blue port 6666 index 0 invisible obstacle invisible sonar visible laser 
   {
-     create lbd_device 	
+     create lbd_device pose -0.00 0.00 0 color gray port 6666 index 0 invisible obstacle invisible laser invisible sonar range 1.50 
 
-     create ptz_device
+     create ptz_device pose -0.00 0.00 0 color magenta port 6666 index 0 invisible obstacle invisible laser invisible sonar 
      {
-        create vision_device
+        create vision_device pose -0.00 0.00 0 color red port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+     } 
+  }
+}
+set host = robot
+
+create position_device pose 0.97 3.32 243 color red port 6666 index 0 invisible laser visible obstacle visible sonar shape rectangle 
+{
+  create player_device pose -0.00 0.00 0 color white port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+  create sonar_device pose -0.00 0.00 0 color blue3 port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+  create laser_device pose 0.08 0.00 0 color blue port 6666 index 0 invisible obstacle invisible sonar visible laser 
+  {
+     create lbd_device pose -0.00 0.00 0 color gray port 6666 index 0 invisible obstacle invisible laser invisible sonar range 1.50 
+
+     create ptz_device pose -0.00 0.00 0 color magenta port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+     {
+        create vision_device pose -0.00 0.00 0 color red port 6666 index 0 invisible obstacle invisible laser invisible sonar 
      } 
   }
 }
 
 set host = none
 
-create laser_beacon name 1 pose 2.00 2.00 0   id 1 
-create laser_beacon name 2 pose 2.56 3.24 -36 id 2
-create laser_beacon name 3 pose 2.19 2.71 -36 id 3
+create laser_beacon name 1 pose 2.87 1.66 0 color cyan port 0 index 0 invisible obstacle invisible sonar visible laserbright id 1 
+create laser_beacon name 2 pose 3.05 4.09 324 color cyan port 0 index 0 invisible obstacle invisible sonar visible laserbright id 2 
+create laser_beacon name 3 pose 1.83 2.02 324 color cyan port 0 index 0 invisible obstacle invisible sonar visible laserbright id 3 
 
-create vision_beacon pose 1.00 1.00 0 color red radius 0.10 
-create vision_beacon pose 1.20 1.00 0 color green radius 0.10 
-create vision_beacon pose 1.40 1.00 0 color blue radius 0.10 
-create vision_beacon pose 1.60 1.00 0 color yellow radius 0.10 
+create vision_beacon pose 1.00 1.00 0 color red port 0 index 0 visible obstacle visible laser visible sonar radius 0.10 
+create vision_beacon pose 1.20 1.00 0 color green port 0 index 0 visible obstacle visible laser visible sonar radius 0.10 
+create vision_beacon pose 1.40 1.00 0 color blue port 0 index 0 visible obstacle visible laser visible sonar radius 0.10 
+create vision_beacon pose 1.60 1.00 0 color yellow port 0 index 0 visible obstacle visible laser visible sonar radius 0.10 
 
-create box pose 4.00 4.00 0 size 0.10 0.10 
-create box pose 1.00 2.00 0 size 0.40 0.40 
+create box pose 4.00 4.00 0 color yellow port 0 index 0 visible obstacle visible laser visible sonar size 0.10 0.10 
+create box pose 1.00 2.00 0 color yellow port 0 index 0 visible obstacle visible laser visible sonar size 0.40 0.40 
 
 
 
