@@ -1,6 +1,6 @@
 /*##########################################################################
 # manager.cc - implements the Stage Manager for syncing distributed Stages
-# $Id: manager.cc,v 1.8 2001-09-25 20:58:26 vaughan Exp $
+# $Id: manager.cc,v 1.9 2001-09-26 23:44:27 gerkey Exp $
 *#########################################################################/
 
 #include <sys/types.h>	/* basic system data types */
@@ -130,7 +130,7 @@ int main(int argc, char **argv)
       
       char* hostname = argv[s+1];
 
-      printf( "\nConnecting to %s on port %d... ", hostname, TRUTH_SERVER_PORT );
+      printf( "\nConnecting to %s on port %d... ", hostname, DEFAULT_TRUTH_PORT );
 
       struct hostent* entp;
       if( (entp = gethostbyname( hostname )) == NULL)
@@ -145,7 +145,7 @@ int main(int argc, char **argv)
       /* setup our server address (type, IP address and port) */
       bzero(&servaddr, sizeof(servaddr)); /* initialize */
       servaddr.sin_family = AF_INET;   /* internet address space */
-      servaddr.sin_port = htons( TRUTH_SERVER_PORT ); /*our command port */ 
+      servaddr.sin_port = htons( DEFAULT_TRUTH_PORT ); /*our command port */ 
       // hostname
       memcpy(&(servaddr.sin_addr), entp->h_addr_list[0], entp->h_length);
 
@@ -212,8 +212,16 @@ int main(int argc, char **argv)
 	      
 	      // foward the packet to the other servers 
 	      for(int j=0; j<stages; j++)
+              {
 		if( j != i ) 
-		  v = write( servers[j].fd, &truth, sizeof(truth) );
+                {
+                  v = 0;
+                  while(v < sizeof(truth))
+                  {
+                    v += write( servers[j].fd, ((char*)&truth)+v, sizeof(truth)-v);
+                  }
+                }
+              }
 	    }
 	}     
     }

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.17 $
+//  $Author: gerkey $
+//  $Revision: 1.18 $
 //
 // Usage:
 //  (empty)
@@ -27,6 +27,8 @@
 #include "world.hh"
 #include <unistd.h>
 #include <signal.h>
+
+#define PIDFILENAME "stage.pid"
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -65,6 +67,8 @@ char g_host_id[64];
 //
 void sig_quit(int signum)
 {
+  unlink(PIDFILENAME);
+  
   quit = true;
 }
 
@@ -77,7 +81,7 @@ bool parse_cmdline(int argc, char **argv)
 
   for( int a=1; a<argc-1; a++ )
     {
-      puts( argv[a] );
+      //puts( argv[a] );
 
       if( strcmp( argv[a], "-l" ) == 0 )
 	{
@@ -184,9 +188,16 @@ bool parse_cmdline(int argc, char **argv)
 int main(int argc, char **argv)
 {
 // hello world
-printf("** Stage  v%s ** ", (char*) VERSION);
+printf("\n** Stage  v%s ** ", (char*) VERSION);
 
   memset( global_node_name, 0, 64 ); //zero out the node name
+
+  FILE* pidfile;
+  if((pidfile = fopen(PIDFILENAME, "w+")))
+  {
+    fprintf(pidfile,"%d\n", getpid());
+    fclose(pidfile);
+  }
   
   // Parse the command line
   // this may produce more startup output on the first line
@@ -216,39 +227,40 @@ printf("** Stage  v%s ** ", (char*) VERSION);
     world->m_timestep = g_timestep;
   
 
-    puts( "" ); // end the startup output line
-    fflush( stdout );
+  puts( "" ); // end the startup output line
+  fflush( stdout );
 
-    // Start the world
-    //
-    if (!world->Startup())
-    {
-        printf("Stage: aborting\n");
-	world->Shutdown();
-        return 1;
-    }
+  // Start the world
+  //
+  if (!world->Startup())
+  {
+    printf("Stage: aborting\n");
+    world->Shutdown();
+    return 1;
+  }
 
 
-    // Register callback for quit (^C,^\) events
-    //
-      signal(SIGINT, sig_quit);
-      signal(SIGQUIT, sig_quit);
-      signal(SIGHUP, sig_quit);
+  // Register callback for quit (^C,^\) events
+  //
+  signal(SIGINT, sig_quit);
+  signal(SIGQUIT, sig_quit);
+  signal(SIGTERM, sig_quit);
+  signal(SIGHUP, sig_quit);
 
-      // Wait for a signal
-      //
-      while (!quit)
-        pause();
+  // Wait for a signal
+  //
+  while (!quit)
+    pause();
 
-      // Stop the world
-      //
-      world->Shutdown();
+  // Stop the world
+  //
+  world->Shutdown();
 
-      // Destroy the world
-      //
-      delete world;
+  // Destroy the world
+  //
+  delete world;
 
-    return 0;
+  return 0;
 }
 
 

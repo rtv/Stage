@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.27 2001-09-26 18:07:10 vaughan Exp $
+ * $Id: xs.cc,v 1.28 2001-09-26 23:44:27 gerkey Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -234,23 +234,23 @@ static void* TruthReader( void*)
       int recv = 0;
      
       while( recv < packetlen )
-     {
-       //printf( "Reading on %d\n", ffd ); fflush( stdout );
+      {
+        //printf( "Reading on %d\n", ffd ); fflush( stdout );
 
-       /* read will block until it has some bytes to return */
-       r = read( ffd, &truth,  packetlen - recv );
-       
-       if( r < 0 )
-	 perror( "TruthReader(): read error" );
-       else
-	 recv += r;
-     }
-     
+        /* read will block until it has some bytes to return */
+        r = read( ffd, ((char*)&truth)+recv,  packetlen - recv );
+
+        if( r < 0 )
+          perror( "TruthReader(): read error" );
+        else
+          recv += r;
+      }
+
       if( truth.echo_request )
-	{
-	  printf( "\nXS: warning - received an echo request in this truth: " );
-	  PrintStageTruth( truth );
-	}
+      {
+        printf( "\nXS: warning - received an echo request in this truth: " );
+        PrintStageTruth( truth );
+      }
 
       //pthread_mutex_lock( &incoming_mutex );
       incoming_queue.push( truth );

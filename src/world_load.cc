@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.20 $
+//  $Author: gerkey $
+//  $Revision: 1.21 $
 //
 // Usage:
 //  (empty)
@@ -28,9 +28,12 @@
 #include "world.hh"
 #include "entityfactory.hh"
 #include "truthserver.hh"
+#include <libgen.h>  // for dirname(3)
 
 #undef DEBUG
 //#define DEBUG
+
+extern char *world_file;
 
 ///////////////////////////////////////////////////////////////////////////
 // Tokenize a string (naked utility function)
@@ -84,7 +87,7 @@ bool CWorld::Load(const char *filename)
 	
 	strncpy(bare_filename,filename,strlen(filename)-3);
 	bare_filename[strlen(filename)-3] = '\0';
-	sprintf(system_command_string, "m4 -E %s > %s",
+	sprintf(system_command_string, "/usr/bin/m4 -E %s > %s",
 		filename, bare_filename);
 
 	PRINT_MSG1("running m4: %s",system_command_string);
@@ -188,7 +191,10 @@ bool CWorld::Load(const char *filename)
             // ppm and the scale before loading the environment.
             else if (strcmp(argv[1], "environment_file") == 0)
 	      {
-		strcpy(m_env_file, argv[3]);
+                // prepend the base path of the world file.
+                sprintf(m_env_file, "%s/%s",
+                        dirname(world_file),argv[3]);
+		//strcpy(m_env_file, argv[3]);
 	      }
             // the authorization key; it is passed on to Player
             else if (strcmp(argv[1], "auth_key") == 0)
