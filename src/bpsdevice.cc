@@ -1,21 +1,21 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: broadcastdevice.cc
-// Author: Andrew Howard
-// Date: 12 Jan 2000
-// Desc: Simulates the laser-based broadcast detector
+// File: bpsdevice.cc
+// Author: Brian Gerkey
+// Date: 22 May 2002
+// Desc: Simulates the bps device
 //
 // CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/broadcastdevice.cc,v $
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/bpsdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.8 $
+//  $Revision: 1.1 $
 //
 // Usage:
 //  (empty)
 //
 // Theory of operation:
 //  This is really just a place-holder; the real work is done by the
-//  real broadcast device in Player.
+//  real BPS device in Player.
 //
 // Known bugs:
 //  (empty)
@@ -27,29 +27,30 @@
 
 #include <stage.h>
 #include "world.hh"
-#include "broadcastdevice.hh"
+#include "bpsdevice.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CBroadcastDevice::CBroadcastDevice(CWorld *world, CEntity *parent )
+CBpsDevice::CBpsDevice(CWorld *world, CEntity *parent )
   : CEntity(world, parent )
 {
     // set the Player IO sizes correctly for this type of Entity
-    m_data_len    = sizeof( player_broadcast_data_t ); 
-    m_command_len = sizeof( player_broadcast_cmd_t );
-    m_config_len  = 0;//sizeof( player_broadcast_config_t );
+    m_data_len    = sizeof( player_bps_data_t ); 
+    m_command_len = 0;
+    m_config_len  = 1;
+    m_reply_len  = 1;
  
-    m_player_type = PLAYER_BROADCAST_CODE;
-    m_stage_type= BroadcastType;
+    m_player_type = PLAYER_BPS_CODE;
+    m_stage_type = BpsType;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Startup routine
 //
-bool CBroadcastDevice::Startup()
+bool CBpsDevice::Startup()
 {
     if (!CEntity::Startup())
         return false;
@@ -59,6 +60,6 @@ bool CBroadcastDevice::Startup()
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the broadcast data
-void CBroadcastDevice::Update( double sim_time )
+void CBpsDevice::Update( double sim_time )
 {
 }

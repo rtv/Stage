@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.84 2002-05-17 03:25:15 gerkey Exp $
+# $Id: Makefile,v 1.85 2002-05-23 02:57:02 gerkey Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -40,7 +40,7 @@ SRCS = world.cc worldfile.cc truthserver.cc envserver.cc image.cc rtp.cc\
 	ptzdevice.cc boxobstacle.cc \
 	laserbeacon.cc laserbeacondevice.cc visiondevice.cc visionbeacon.cc \
 	puck.cc gpsdevice.cc gripperdevice.cc main.cc \
-	matrix.cc raytrace.cc motedevice.cc 
+	matrix.cc raytrace.cc motedevice.cc bpsdevice.cc
 
 # stage and rtkstage objects are compiled from the same sources, but rtkstage
 # defines a couple of macros to enable some optional code

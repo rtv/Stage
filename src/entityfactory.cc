@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
-//  $Author: gsibley $
-//  $Revision: 1.19 $
+//  $Author: gerkey $
+//  $Revision: 1.20 $
 //
 // Usage:
 //  (empty)
@@ -42,6 +42,7 @@
 #include "visiondevice.hh"
 #include "laserbeacondevice.hh"
 #include "broadcastdevice.hh"
+#include "bpsdevice.hh"
 #include "gripperdevice.hh"
 #include "gpsdevice.hh"
 #include "motedevice.hh"
@@ -111,6 +112,9 @@ CEntity* CWorld::CreateObject(const char *type, CEntity *parent )
 
   if (strcmp(type, "broadcast_device") == 0)
     return new CBroadcastDevice(this, parent);
+
+  if (strcmp(type, "bps_device") == 0)
+    return new CBpsDevice(this, parent);
     
   if (strcmp(type, "puck") == 0)
     return new CPuck(this, parent);

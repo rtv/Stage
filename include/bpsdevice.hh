@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: broadcastdevice.hh
-// Author: Andrew Howard
-// Date: 5 Feb 2000
-// Desc: Simulates the IP broadcast device
+// File: bpsdevice.hh
+// Author: Brian Gerkey
+// Date: 22 May 2002
+// Desc: Simulates the BPS device
 //
 // CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/broadcastdevice.hh,v $
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/bpsdevice.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.9 $
+//  $Revision: 1.1 $
 //
 // Usage:
 //  (empty)
@@ -24,15 +24,15 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef BROADCASTDEVICE_HH
-#define BROADCASTDEVICE_HH
+#ifndef BPSDEVICE_HH
+#define BPSDEVICE_HH
 
 #include "playerdevice.hh"
 
-class CBroadcastDevice : public CEntity
+class CBpsDevice : public CEntity
 {
     // Default constructor
-    public: CBroadcastDevice(CWorld *world, CEntity *parent );
+    public: CBpsDevice(CWorld *world, CEntity *parent );
 
     // Startup routine
     public: virtual bool Startup();
