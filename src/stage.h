@@ -24,11 +24,12 @@
  */
 
 /* File: stage.h
- * Desc: Types and functions for the Stage library
- * Author: Richard Vaughan vaughan@sfu.ca 
+ * Desc: External header file for the Stage library
+ * Authors: Richard Vaughan vaughan@sfu.ca 
+ *          Andrew Howard ahowards@usc.edu
+ *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- *
- * CVS: $Id: stage.h,v 1.117 2004-12-30 04:39:25 rtv Exp $
+ * CVS: $Id: stage.h,v 1.118 2004-12-30 04:44:11 rtv Exp $
  */
 
 
