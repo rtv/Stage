@@ -21,7 +21,7 @@
  * Desc: Device to perform the regular MCL (Monte-Carlo Localization).
  * Author: Boyoon Jung
  * Date: 22 Nov 2002
- * $Id: regularmcldevice.hh,v 1.7 2002-12-10 02:35:40 boyoon Exp $
+ * $Id: regularmcldevice.hh,v 1.8 2002-12-16 22:24:56 gerkey Exp $
  */
 
 #ifndef REGULARMCLDEVICE_HH
@@ -37,7 +37,13 @@
 #include "world.hh"
 #include "library.hh"
 
-#include <stdint.h>
+#if HAVE_CONFIG_H
+  #include <config.h>
+#endif
+
+#if HAVE_STDINT_H
+  #include <stdint.h>
+#endif
 #include <cmath> 
 
 
