@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/omnipositiondevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -59,9 +59,6 @@ class COmniPositionDevice : public CEntity
   private: player_position_cmd_t command;
   private: player_position_data_t data;
 
-  // Robot radius
-  private: double radius;
-    
   // Commanded velocities
   private: double com_vx, com_vy, com_va;
     

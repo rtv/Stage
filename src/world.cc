@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.68.2.2 $
+//  $Revision: 1.68.2.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -551,7 +551,10 @@ void* CWorld::Main(void *arg)
       world->m_step_num++;
 	  
       // if we have spare time, sleep until it runs out
-      if( g_timer_expired < 1 ) sleep( 1 ); 
+      // AH: I had to increase the sleep time to 10 seconds
+      // to allow for very slow simulations (less < 1Hz).
+      // This entire loop probably needs to be restructured.
+      if( g_timer_expired < 1 ) sleep( 10 ); 
     }
     else // handle the connections
     {
@@ -1252,7 +1255,7 @@ void CWorld::ConsoleOutput( double freq,
 //  	  bytes_in, bytes_out, 
 //  	  avg_data );
 
-  printf( " Time: %8.1f - %7.1fHz - %8.2f bytes/sec                     \r", 
+  printf( " Time: %8.1f - %7.2fHz - %8.2f bytes/sec                     \r", 
           m_sim_time, 
           freq,
           avg_data );

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/omnipositiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -52,9 +52,8 @@ COmniPositionDevice::COmniPositionDevice(CWorld *world, CEntity *parent)
   this->obstacle_return = true;
   this->puck_return = true;
 
-  this->radius = 0.15;
-  this->m_size_x = this->radius * 2;
-  this->m_size_y = this->radius * 2;
+  m_size_x = 0.30;
+  m_size_y = 0.30;
 
   this->com_vx = this->com_vy = this->com_va = 0;
   this->odo_px = this->odo_py = this->odo_pa = 0;
@@ -211,7 +210,7 @@ void COmniPositionDevice::ComposeData()
 // Check to see if the given pose will yield a collision
 bool COmniPositionDevice::InCollision(double px, double py, double pa)
 {
-  CCircleIterator rit( px, py, this->radius,  
+  CCircleIterator rit( px, py, m_size_x / 2,  
                        m_world->ppm, m_world->matrix );
 
   CEntity* ent;
@@ -232,7 +231,7 @@ void COmniPositionDevice::Map(double px, double py, double pa, bool render)
   else
     m_world->matrix->SetMode( mode_set );
     
-  m_world->SetCircle(px, py, this->radius, this );
+  m_world->SetCircle(px, py, m_size_x / 2, this );
 }
 
 
