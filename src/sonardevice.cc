@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.7 $
+//  $Author: gerkey $
+//  $Revision: 1.7.2.1 $
 //
 // Usage:
 //  (empty)
@@ -27,6 +27,7 @@
 #include <math.h>
 #include "world.hh"
 #include "sonardevice.hh"
+#include "pioneermobiledevice.hh"
 
 const double TWOPI = 6.283185307;
 
@@ -100,6 +101,9 @@ void CSonarDevice::Update()
     //
     ASSERT((size_t) m_sonar_count <= sizeof(m_range) / sizeof(m_range[0]));
     
+    ASSERT(m_parent_object->exp.objectType == pioneer_o);
+    // unmap parent
+    ((CPioneerMobileDevice*)m_parent_object)->Map(false);
     // Do each sonar
     //
     for (int s = 0; s < m_sonar_count; s++)
@@ -129,8 +133,15 @@ void CSonarDevice::Update()
             // Look in the laser layer for obstacles
             //
             uint8_t cell = m_world->GetCell(px, py, layer_obstacle);
-            if (range > min_range && cell != 0)           
-                break;
+            //m_world->SetCircle(px, py, 0.01, layer_puck, 2);
+            //cell |= m_world->GetCell(px + dr, py, layer_obstacle);
+            //cell |= m_world->GetCell(px, py + dr, layer_obstacle);
+            if(cell)
+            {
+              if(range <= min_range)
+                range = min_range;
+              break;
+            }
             px += dx;
             py += dy;
         }
@@ -153,6 +164,8 @@ void CSonarDevice::Update()
 	expSonar.hitPts[expSonar.hitCount].y = py;// * m_world->ppm;
 	expSonar.hitCount++;
     }
+    // put the parent back
+    ((CPioneerMobileDevice*)m_parent_object)->Map(true);
 	
     PutData(m_range, sizeof( unsigned short ) * SONARSAMPLES );
 }
@@ -218,18 +231,11 @@ void CSonarDevice::GetSonarPose(int s, double &px, double &py, double &pth)
     double yy = 0;
     double a = 0;
     double angle, tangle;
+    double robot_radius = 0.2;
     
 	  switch( s )
 	    {
-#ifdef PIONEER1
-	    case 0: angle = a - 1.57; break; //-90 deg
-	    case 1: angle = a - 0.52; break; // -30 deg
-	    case 2: angle = a - 0.26; break; // -15 deg
-	    case 3: angle = a       ; break;
-	    case 4: angle = a + 0.26; break; // 15 deg
-	    case 5: angle = a + 0.52; break; // 30 deg
-	    case 6: angle = a + 1.57; break; // 90 deg
-#else
+#ifdef FOOBAR
 	    case 0:
 	      angle = a - 1.57;
 	      tangle = a - 0.900;
@@ -310,6 +316,93 @@ void CSonarDevice::GetSonarPose(int s, double &px, double &py, double &pth)
 	      tangle = a - 2.240;
 	      xx += 0.172 * cos( tangle );
 	      yy += 0.172 * sin( tangle );
+	      break; // -90 deg
+        default:
+          angle = 0;
+          xx = 0;
+          yy = 0;
+          break;
+#else
+	    case 0:
+	      angle = a - DTOR(90);
+	      tangle = a - DTOR(70);
+	      xx += robot_radius * cos( tangle );
+	      yy += robot_radius * sin( tangle );
+	      break; 
+	    case 1: angle = a - DTOR(50);
+	      tangle = angle;
+	      xx += robot_radius * cos( tangle );
+	      yy += robot_radius * sin( tangle );
+	      break; 
+	    case 2: angle = a - DTOR(30);
+	      tangle = angle;
+	      xx += robot_radius * cos( tangle );
+	      yy += robot_radius * sin( tangle );
+	      break; 
+	    case 3: angle = a - DTOR(10);
+	      tangle = angle;
+	      xx += robot_radius * cos( tangle );
+	      yy += robot_radius * sin( tangle );
+	      break; 
+	    case 4: angle = a + DTOR(10);
+	      tangle = angle;
+	      xx += robot_radius * cos( tangle );
+	      yy += robot_radius * sin( tangle );
+	      break; 
+	    case 5: angle = a + DTOR(30);
+	      tangle = angle;
+	      xx += robot_radius * cos( tangle );
+	      yy += robot_radius * sin( tangle );
+	      break; 
+	    case 6: angle = a + DTOR(50);
+	      tangle = angle;
+	      xx += robot_radius * cos( tangle );
+	      yy += robot_radius * sin( tangle );
+	      break; 
+	    case 7: angle = a + DTOR(90);
+	      tangle = a + DTOR(70);
+	      xx += robot_radius * cos( tangle );
+	      yy += robot_radius * sin( tangle );
+	      break; 
+	    case 8: angle = a + DTOR(90);
+	      tangle = a + DTOR(110);
+	      xx += robot_radius * cos( tangle );
+	      yy += robot_radius * sin( tangle );
+	      break; 
+	    case 9: angle = a + DTOR(130);
+	      tangle = angle;
+	      xx += robot_radius * cos( tangle );
+	      yy += robot_radius * sin( tangle );
+	      break; 
+	    case 10: angle = a + DTOR(150);
+	      tangle = angle;
+	      xx += robot_radius * cos( tangle );
+	      yy += robot_radius * sin( tangle );
+	      break; 
+	    case 11: angle = a + DTOR(170);
+	      tangle = angle;
+	      xx += robot_radius * cos( tangle );
+	      yy += robot_radius * sin( tangle );
+	      break; 
+	    case 12: angle = a - DTOR(170);
+	      tangle = angle;
+	      xx += robot_radius * cos( tangle );
+	      yy += robot_radius * sin( tangle );
+	      break; 
+	    case 13: angle = a - DTOR(150);
+	      tangle = angle;
+	      xx += robot_radius * cos( tangle );
+	      yy += robot_radius * sin( tangle );
+	      break; 
+	    case 14: angle = a - DTOR(130);
+	      tangle = angle;
+	      xx += robot_radius * cos( tangle );
+	      yy += robot_radius * sin( tangle );
+	      break; 
+	    case 15: angle = a - DTOR(90);
+	      tangle = a - DTOR(110);
+	      xx += robot_radius * cos( tangle );
+	      yy += robot_radius * sin( tangle );
 	      break; // -90 deg
         default:
           angle = 0;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.9 $
+//  $Revision: 1.9.2.1 $
 //
 // Usage:
 //  (empty)
@@ -353,7 +353,7 @@ class CWorld
 
     // *** HACK -- this should be made private.  ahoward
     //
-    public: float ppm;
+    public: double ppm;
 
 #ifdef INCLUDE_RTK
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/pioneermobiledevice.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.8 $
+//  $Revision: 1.8.2.1 $
 //
 // Usage:
 //  (empty)
@@ -70,7 +70,7 @@ class CPioneerMobileDevice : public CPlayerDevice
 
     // Render the object in the world rep
     //
-    private: bool Map(bool render);
+    public: bool Map(bool render);
 
     // Timings
     //
