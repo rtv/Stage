@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.17 $
+//  $Revision: 1.18 $
 //
 // Usage:
 //  (empty)
@@ -558,7 +558,7 @@ void CEntity::SetGlobalPose(double px, double py, double pth)
     m_lth = pth - oth;
 
     // our position has probably changed, so we need to re-transmit our truth
-    MakeDirty();
+    //MakeDirty();
 
     // NEED TO DIRTY THE CHILDREN HERE TOO!
     //if( m_child_object ) m_child_object->MakeDirty();
@@ -755,12 +755,6 @@ void CEntity::ComposeTruth( stage_truth_t* truth, int index )
   // we don't want an echo
   truth->echo_request = false;
 
-  //truth->channel
-  //if( channel_return < 1 )
-  //truth->channel = -1;
-  //else
-  //truth->channel = channel_return-1;
-
   truth->red   = (uint16_t)m_color.red;
   truth->green = (uint16_t)m_color.green;
   truth->blue  = (uint16_t)m_color.blue;
@@ -796,20 +790,6 @@ void CEntity::ComposeTruth( stage_truth_t* truth, int index )
   if( degrees < 0 ) degrees += 360;
 
   truth->th = (uint16_t)degrees;  
-   
-#ifdef VERBOSE
-  //    printf( "Compose Truth: "
-  //  "(%d,%d,%d) parent (%d,%d,%d) [%d,%d,%d]\n", 
-  //  truth->id.port, 
-  //  truth->id.type, 
-  //  truth->id.index,
-  //  truth->parent.port, 
-  //  truth->parent.type, 
-  //  truth->parent.index,
-  //  truth->x, truth->y, truth->th );
-  
-  //fflush( stdout );
-#endif
 }
 
 

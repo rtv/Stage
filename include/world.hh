@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.24 $
+//  $Revision: 1.25 $
 //
 // Usage:
 //  (empty)
@@ -79,10 +79,6 @@ public:
   // a general-purpose obstacle entity, used as a brick in the wall
   CEntity* wall;
 
-  // background image 
-  // replaced by matrix at last 
-  //public: Nimage* m_bimg; 
-  
   // Thread control
 private: pthread_t m_thread;
   
@@ -92,21 +88,25 @@ private: bool m_enable;
   // the hostname of this computer
 public: char m_hostname[ HOSTNAME_SIZE ];
   
-  // truth server stuff
-  // data for the server-server's listening socket
-private: struct pollfd m_truth_listen;
-  // data for each truth connection
-private: struct pollfd m_truth_connections[ MAX_TRUTH_CONNECTIONS ];
-  // the number of truth connections
-private: int m_truth_connection_count;
-
-private: void ListenForTruthConnections( void );
-private: void SetupTruthServer( void );
+  // truth server stuff ---------------------------------------------
+private:
   
-private: void TruthRead();
-private: void TruthWrite();
-private: void InputTruth( stage_truth_t &truth );
-
+  // data for the server-server's listening socket
+  struct pollfd m_truth_listen;
+  // data for each truth connection
+  struct pollfd m_truth_connections[ MAX_TRUTH_CONNECTIONS ];
+  // the number of truth connections
+  int m_truth_connection_count;
+  
+  void ListenForTruthConnections( void );
+  void SetupTruthServer( void );
+  
+  void TruthRead();
+  void TruthWrite();
+  void InputTruth( stage_truth_t &truth );
+  void PrintTruth( stage_truth_t &truth );
+  
+  //-----------------------------------------------------------------------
   // Timing
   // Real time at which simulation started.
   // The time according to the simulator (m_sim_time <= m_start_time).

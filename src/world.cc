@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.47 $
+//  $Revision: 1.48 $
 //
 // Usage:
 //  (empty)
@@ -46,6 +46,9 @@
 #include "playerdevice.hh" 
 
 #include "truthserver.hh"
+
+// thread entry function, defined in envserver.cc
+void* EnvServer( void* );
 
 #define SEMKEY 2000
 
@@ -467,53 +470,53 @@ void CWorld::StopThread()
 //
 void* CWorld::Main(void *arg)
 {
-    CWorld *world = (CWorld*) arg;
+  CWorld *world = (CWorld*) arg;
     
-    // Defer cancel requests so we can handle them properly
-    //
-    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+  // Defer cancel requests so we can handle them properly
+  //
+  pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 
-    // Block signals handled by gui
-    //
-    sigblock(SIGINT);
-    sigblock(SIGQUIT);
-    sigblock(SIGHUP);
+  // Block signals handled by gui
+  //
+  sigblock(SIGINT);
+  sigblock(SIGQUIT);
+  sigblock(SIGHUP);
 
-    // Initialise the GUI
-    //
- #ifdef INCLUDE_RTK
-    double ui_time = 0;
- #endif
+  // Initialise the GUI
+  //
+#ifdef INCLUDE_RTK
+  double ui_time = 0;
+#endif
 
-    // set a timer to go off every 20ms. we'll sleep in
-    // between if there's nothing else to do
-    // sleep will return (almost) immediately if the
-    // timer has already gone off. this should limit
-    // the refresh rate but still allows us to use the processor
-    // if we need it. i.e. it's better than a simple usleep()
+  // set a timer to go off every 20ms. we'll sleep in
+  // between if there's nothing else to do
+  // sleep will return (almost) immediately if the
+  // timer has already gone off. this should limit
+  // the refresh rate but still allows us to use the processor
+  // if we need it. i.e. it's better than a simple usleep()
 
-    //install signal handler for timing
-    if( signal( SIGALRM, &TimerHandler ) == SIG_ERR )
-      {
-	cout << "Failed to install signal handler" << endl;
-	exit( -1 );
-      }
-    
-    //start timer
-    struct itimerval tick;
-    tick.it_value.tv_sec = tick.it_interval.tv_sec = 0;
-    tick.it_value.tv_usec = tick.it_interval.tv_usec = 20000; // 0.02 seconds
-     
-    if( setitimer( ITIMER_REAL, &tick, 0 ) == -1 )
-      {
-	cout << "failed to set timer" << endl;;
-	exit( -1 );
-      }
-    
-    while (true)
+  //install signal handler for timing
+  if( signal( SIGALRM, &TimerHandler ) == SIG_ERR )
     {
-        // Check for thread cancellation
-        //
+      cout << "Failed to install signal handler" << endl;
+      exit( -1 );
+    }
+    
+  //start timer
+  struct itimerval tick;
+  tick.it_value.tv_sec = tick.it_interval.tv_sec = 0;
+  tick.it_value.tv_usec = tick.it_interval.tv_usec = 20000; // 0.02 seconds
+     
+  if( setitimer( ITIMER_REAL, &tick, 0 ) == -1 )
+    {
+      cout << "failed to set timer" << endl;;
+      exit( -1 );
+    }
+    
+  while (true)
+    {
+      // Check for thread cancellation
+      //
       pthread_testcancel();
 
       // look for new connections to the truthserver
@@ -521,35 +524,34 @@ void* CWorld::Main(void *arg)
 
       world->TruthRead();
       
-        // Update the world
-        //
-        if (world->m_enable)
-	  world->Update();
+      // Update the world
+      //
+      if (world->m_enable) world->Update();
 
       world->TruthWrite();
 
 
-	// dump the contents of the matrix to a file
-	//world->matrix->dump();
-	//getchar();	
+      // dump the contents of the matrix to a file
+      //world->matrix->dump();
+      //getchar();	
 
-        /* *** HACK -- should reinstate this somewhere ahoward
-           if( !runDown ) runStart = timeNow;
-           else if( (quitTime > 0) && (timeNow > (runStart + quitTime) ) )
-           exit( 0 );
-        */
+      /* *** HACK -- should reinstate this somewhere ahoward
+	 if( !runDown ) runStart = timeNow;
+	 else if( (quitTime > 0) && (timeNow > (runStart + quitTime) ) )
+	 exit( 0 );
+      */
         
-        // Update the GUI every 100ms
-        //
+      // Update the GUI every 100ms
+      //
 #ifdef INCLUDE_RTK
-        if (world->GetRealTime() - ui_time > 0.050)
+      if (world->GetRealTime() - ui_time > 0.050)
         {
-            ui_time = world->GetRealTime();
-            world->m_router->send_message(RTK_UI_FORCE_UPDATE, NULL);
+	  ui_time = world->GetRealTime();
+	  world->m_router->send_message(RTK_UI_FORCE_UPDATE, NULL);
         }
 #endif
-	// go to sleep until a signal occurs (or a whole second goes by (no way!))
-	sleep( 1 ); 
+      // go to sleep until a signal occurs (or a whole second goes by (no way!))
+      sleep( 1 ); 
     }
 }
 

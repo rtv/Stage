@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.30 $
+//  $Revision: 1.31 $
 //
 // Usage:
 //  (empty)
@@ -151,6 +151,8 @@ void CLaserDevice::Update( double sim_time )
         m_map_py = y;
         m_map_pth = th;
 	
+	//MakeDirty(); // ready to retransmit truth
+
         // Redraw outselves in the world
         //
         if (!m_transparent )

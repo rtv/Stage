@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.19 $
+//  $Revision: 1.20 $
 //
 // Usage:
 //  (empty)
@@ -196,8 +196,11 @@ public: void MakeClean( void )
     memset( m_dirty, false, sizeof(m_dirty[0]) * MAX_TRUTH_CONNECTIONS );
   };
 
-  
-    //////////////////////////////////////////////////////////////////////
+// recursive function that ORs an ent's dirty array with those of
+// all it's ancestors 
+public: void InheritDirtyFromParent( int con_count );
+
+  //////////////////////////////////////////////////////////////////////
     // PLAYER IO STUFF
   
     // Port and index numbers for player

@@ -23,17 +23,12 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#include <queue>
-
 //#define DEBUG
-//#define VERBOSE
+#define VERBOSE
 #undef DEBUG
-#undef VERBOSE
 
 #include "world.hh"
 #include "truthserver.hh"
-
-extern  CWorld* world;
 
 const int LISTENQ = 128;
 const long int MILLION = 1000000L;
@@ -49,20 +44,11 @@ void CatchSigPipe( int signo )
 
 }
 
-// data for each truth connection
-typedef struct
-{
-  int fd; // file descriptor
-  int count; // number of truths
-  stage_truth_t* database; // ptr to array of truths
-} truth_connection_t;
-
-
-void PrintTruth( stage_truth_t &truth )
+void CWorld::PrintTruth( stage_truth_t &truth )
 {
   printf( "[%d] %s ID:(%s:%d,%d,%d)\tPID:(%d,%d,%d)\tpose: [%d,%d,%d]\tsize: [%d,%d]\techo: %d\n",
 	  truth.stage_id,
-	  world->StringType( truth.stage_type ),
+	  StringType( truth.stage_type ),
 	  truth.hostname,
 	  truth.id.port, 
 	  truth.id.type, 
@@ -116,12 +102,22 @@ void CWorld::TruthRead( void )
 		  // read bytes from the socket, quitting if read returns no bytes
 		  if( (v = read( connfd, ((char*)&truth) + r, sizeof(truth) - r )) < 1 )
 		    {
-		      //#ifdef VERBOSE
-		      puts( "Stage: TruthRead() read failed!" );
-		      //#endif	  
+#ifdef VERBOSE
+		      printf( "Stage: truth connection broken (socket %d)\n", connfd );
+#endif	  
 		      close( connfd );
-		      connfd = 0; // forces the writer to quit
-		      //pthread_exit( 0 );
+		      
+		      // this fd seems to be closed
+		      m_truth_connection_count--;
+		      
+		      // shift the rest of the array 1 place left
+		      for( int p=t; p<m_truth_connection_count; p++ )
+			memcpy( &(m_truth_connections[p]), 
+				&(m_truth_connections[p+1]),
+				sizeof( struct pollfd ) );
+		      
+		      return; // give up for this cycle
+		      // we'll try again in a few milliseconds
 		    }
 		  
 		  r+=v;
@@ -129,13 +125,12 @@ void CWorld::TruthRead( void )
 		  // THIS IS DEBUG OUTPUT
 		  if( v < (int)sizeof(truth) )
 		    printf( "STAGE: SHORT READ (%d/%d) r=%d\n",
-			    v, (int)sizeof(truth), r );
-		  
+			    v, (int)sizeof(truth), r );		  
 		}
 	      
 	      assert( r == sizeof( truth ) );
 	      
-	      PrintTruth( truth );
+	      //PrintTruth( truth );
 	      
 	      // INPUT THE TRUTH HERE
 
@@ -156,101 +151,86 @@ void CWorld::TruthRead( void )
 		  CEntity* ent = m_object[ truth.stage_id ];
 		  assert( ent ); // there really ought to be one!
       
-		  // check to see if we really need to move the entity
-     
-		  // this is where the entity is now
-		  //double dx, dy, dth;
-		  //ent->GetGlobalPose( dx, dy, dth );
-      
-		  // compress the doubles to match the truth data
-		  //uint32_t uix = (uint32_t)( dx * 1000.0 );
-		  //uint32_t uiy = (uint32_t)( dy * 1000.0 );
-		  //int degrees = (int)RTOD( dth );
-		  //if( degrees < 0 ) degrees += 360;	    
-		  //uint16_t uith = (uint16_t)degrees;  
-           
-		  // if the pose is different
-		  //if( uix != truth.x || uiy != truth.y || uith != truth.th )
-		  //{
-		      // update the entity with the truth
-		      ent->SetGlobalPose( truth.x/1000.0, truth.y/1000.0, 
-					  DTOR(truth.th) );
-		      
-		      // this ent is now dirty to all channels 
-		      ent->MakeDirty();
-
-		      // unless this channel doesn't want an echo
-		      // in which case it is clean just here.
-		      if( !truth.echo_request )
-			ent->m_dirty[t]= false;
-		      //}
+		  // update the entity with the truth
+		  ent->SetGlobalPose( truth.x/1000.0, truth.y/1000.0, 
+				      DTOR(truth.th) );
+		  
+		  // this ent is now dirty to all channels 
+		  ent->MakeDirty();
+		  
+		  // unless this channel doesn't want an echo
+		  // in which case it is clean just here.
+		  if( !truth.echo_request )
+		    ent->m_dirty[t]= false;
 		}
 	    }
       
     }
 }
 
+//  // here we make the children of dirty parents dirty themselves
+//  void CWorld::InheritDirty( void )
+//  {
+//    for( i=0; i < m_object_count; i++ )
+//      {  
+//        // inherit dirty labels from your parents
+//        if( m_object[i]->m_parent_object )
+//  	for( int c=0; c<m_truth_connections; c++ )
+//  	  m_object[i]->m_dirty[c] &=  m_object[i]->m_parent_object->m_dirty[c];
+//      }
+//  }
+
+// recursive function that ORs an ent's dirty array with those of
+// all it's ancestors 
+void CEntity::InheritDirtyFromParent( int con_count )
+{
+  if( m_parent_object )
+    {
+      m_parent_object->InheritDirtyFromParent( con_count );
+      
+      for( int c=0; c < con_count; c++ )
+	m_dirty[c] |=  m_parent_object->m_dirty[c];
+    }
+}
+
 void CWorld::TruthWrite( void )
 {
   int i;
-
+  
+  // every entity inherits dirty labels from its ancestors
+  for( i=0; i < m_object_count; i++ )
+    // recursively inherit from ancestors
+    m_object[i]->InheritDirtyFromParent( m_truth_connection_count );
+  
   // for all the connections
   for( int t=0; t< m_truth_connection_count; t++ )
     {
       int connfd = m_truth_connections[t].fd;
       
+      assert( connfd > 0 ); // must be good
       
-	  if( connfd == 0 ) // if it was been re-set by the reader on exit
+      for( i=0; i < m_object_count; i++ )
+	{  
+	  // is the entity marked dirty for this connection?
+	  if( m_object[i]->m_dirty[t] )
 	    {
-#ifdef VERBOSE
-	      puts( "Stage: TruthWrite detcted closed fd!" );
-#endif
-	      // delete the datastructures
-	      //if( con->database ) delete [] con->database;
-	      //if( con ) delete con;
-	      
-	      //pthread_exit( 0 );
-	    }
-	  
-	  for( i=0; i < m_object_count; i++ )
-	    {  
-	      // is the entity marked dirty in this connection?
-	      if( m_object[i]->m_dirty[t] )
-		{
-		  stage_truth_t truth;
+	      stage_truth_t truth;
 
-		  m_object[i]->ComposeTruth( &truth, i );
+	      m_object[i]->ComposeTruth( &truth, i );
 		  
-		  // mark it clean on this connection
-		  // it won't get re-sent here until this flag is set again
-		  m_object[i]->m_dirty[t] = false;
+	      // mark it clean on this connection
+	      // it won't get re-sent here until this flag is set again
+	      m_object[i]->m_dirty[t] = false;
+		  		  
+	      // we don't want this echoed back to us
+	      truth.echo_request = false;
+	      // send the packet to the connected client
+	      int v = write( connfd, &truth, sizeof(truth) );
 		  
-		  //printf( "old truth: " );
-		  //PrintTruth( ts_truths[i] );
-		  //printf( "new truth: " );
-		  //PrintTruth( truth );
-		  //puts( "sending..." );
-		  
-		  // we don't want this echoed back to us
-		  truth.echo_request = false;
-		  // send the packet to the connected client
-		  int v = write( connfd, &truth, sizeof(truth) );
-		  
-		  // we really should have written the whole packet
-		  assert( v == (int)sizeof(truth) );
-		  
-		  // and store it
-		  //memcpy( &(con->database[i]), &truth, sizeof( truth ) );
-		  //}
-		  //else
-		  //puts( "same as last time" );
-		  
-		    if( v < 0 )
-		      {
-			perror( "Stage: TruthWrite: write error!" );	      
-		      }
-		  }
+	      // we really should have written the whole packet
+	      assert( v == (int)sizeof(truth) );
 	    }
+	}
     }
 }
 
@@ -282,12 +262,6 @@ void CWorld::SetupTruthServer( void )
   // listen for requests on this socket
   // we poll it in ListenForTruthConnections()
   listen( m_truth_listen.fd, LISTENQ);
-
-
-  // allocate the buffers 
-  //m_old_truths = new stage_truth_t[ m_object_count ];
-  //m_current_truths = new stage_truth_t[ m_object_count ];
-  //m_truth_diff = new bool[ m_object_count ];
 }
 
 
@@ -314,32 +288,16 @@ void CWorld::ListenForTruthConnections( void )
       
       connfd = accept( m_truth_listen.fd, (SA *) &cliaddr, &clilen);
       
-      //#ifdef VERBOSE      
-      printf( "Stage: :ListenForTruthConnections() connection accepted (socket %d)\n", 
+#ifdef VERBOSE      
+      printf( "Stage: truth connection accepted (socket %d)\n", 
 	      connfd );
       fflush( stdout );
-      //#endif            
+#endif            
 
       // add the new connection to the array
       m_truth_connections[ m_truth_connection_count ].fd = connfd;
       m_truth_connections[ m_truth_connection_count ].events = POLLIN;
       m_truth_connection_count++;
-      
-      //truth_connection_t* con = new truth_connection_t();
-      
-      //con->fd = connfd;
-      //con->count = world->GetObjectCount();
-      //con->database = new stage_truth_t[ con->count ];
-      
-      // zero the database
-      //memset( con->database, 0, con->count * sizeof( stage_truth_t ) );
-      
-
-      //pthread_t tid_dummy;
-      // start a thread to handle the connection
-      // passing in the structure they share
-      //pthread_create(&tid_dummy, NULL, &TruthWriter, con ); 
-      //pthread_create(&tid_dummy, NULL, &TruthReader, con ); 
     }
 
 }

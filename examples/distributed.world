@@ -35,6 +35,7 @@ create position_device pose 2.47 2.03 244 port 6666
   }
 }
 
+set host = noone
 
 create laser_beacon name 1 pose 2.00 2.00 0   id 1 
 create laser_beacon name 2 pose 2.56 3.24 -36 id 2

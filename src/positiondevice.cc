@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.9 $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -166,7 +166,7 @@ void CPositionDevice::Update( double sim_time )
 	    }
 	  
 	  Move();      // do things
-	  
+  
 	  ComposeData();     // report the new state of things
 	  PutData( &m_data, sizeof(m_data)  );     // generic device call
 	}
@@ -184,8 +184,6 @@ void CPositionDevice::Update( double sim_time )
   // if we've moved 
   if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
     {
-      MakeDirty();
-
       Map(false); // erase myself
       
       m_map_px = x; // update the render positions
@@ -225,6 +223,10 @@ int CPositionDevice::Move()
     {
         SetPose(qx, qy, qth);
         this->stall = 0;
+
+	// if we moved, we mark ourselves dirty
+	if( (px!=qx) || (py!=qy) || (pth!=qth) )
+	  MakeDirty();
     }
         
     // Compute the new odometric pose

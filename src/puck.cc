@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.17 $
+//  $Revision: 1.18 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -225,6 +225,10 @@ void CPuck::Move()
 	double qth = pth;
 	
 	SetGlobalPose( qx, qy, qth );
+
+	// if we moved, we mark ourselves dirty
+	if( (px!=qx) || (py!=qy) || (pth!=qth) )
+	  MakeDirty();
       }    
     
     // compute a new velocity, based on "friction"

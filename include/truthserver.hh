@@ -9,14 +9,12 @@
 const int TRUTH_SERVER_PORT = 6601;
 const int ENVIRONMENT_SERVER_PORT = 6602;
 
-const int MAX_TRUTH_CONNECTIONS = 100;
+// we usually use 1 or 2, so this should be plenty
+const int MAX_TRUTH_CONNECTIONS = 100; 
 
 // these can be modified in world_load.cc...
 extern int global_truth_port;
 extern int global_environment_port;
-
-void* TruthServer( void* ); // defined in truthserver.cc
-void* EnvServer( void* ); // defined in envserver.cc
 
 typedef	struct sockaddr SA; // useful abbreviation
 
@@ -42,6 +40,11 @@ typedef struct
   uint16_t red, green, blue;
 } __attribute ((packed)) stage_truth_t;
 
+
+// COMMANDS can be sent to Stage over the truth channel
+enum cmd_t { SAVEc = 1, LOADc, PAUSEc };
+
+
 #ifndef _XLIB_H_ // if we're not inclduing the X header
 
 // borrow an X type for compatibility
@@ -49,7 +52,6 @@ typedef struct {
     short x, y;
 } XPoint;
 
-enum cmd_t { SAVEc = 1, LOADc, PAUSEc };
 
 #endif // _XLIB_H
 
