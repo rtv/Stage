@@ -1,7 +1,7 @@
 /*************************************************************************
  * world.cc - top level class that contains and updates robots
  * RTV
- * $Id: world.cc,v 1.2 2000-11-29 04:03:51 ahoward Exp $
+ * $Id: world.cc,v 1.3 2000-12-01 00:20:52 vaughan Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -21,7 +21,7 @@
 #include "win.h"
 #include "offsets.h"
 
-#undef DEBUG
+//#undef DEBUG
 //#define DEBUG
 //#define VERBOSE
 
@@ -36,17 +36,17 @@ double runStart;
 unsigned int RGB( int r, int g, int b );
 
 extern double quitTime;
-extern CWorld* world;
-extern CWorldWin* win;
 
 CWorld::CWorld( char* initFile ) 
 {
+  bots = NULL;
+  win = NULL;
+  
   //#ifdef VERBOSE
   cout << "[" << initFile << "]" << flush;
   //#endif
 
   // initialize the filenames
-  zoneFile[0] = 0;
   bgFile[0] = 0;
   posFile[0] = 0;
 
@@ -117,34 +117,45 @@ CWorld::CWorld( char* initFile )
   cout << "Making the robots... " << flush;
 #endif
 
-  // ahoward -- I'm setting the global world var here, since
-  // the robot's need it when they are constructed.
-  // A better way to do this would be to eliminate the global var
-  // and pass the world in the robot constructor
-  //
-  world = this;
+#ifdef VERBOSE
+  cout << "Loading " << posFile << "... " << flush;
+#endif
+
+  ifstream in( posFile );
 
   while( currentPopulation < population )
     {
-      CRobot* baby = (CRobot*)new CRobot( currentPopulation, 
-					  pioneerWidth, pioneerLength, 
-					  width/2, height/2, 0.0 );
+      double xpos, ypos, theta;
+      
+      in >> xpos >> ypos >> theta;
+      
+#ifdef DEBUG
+      cout << "read: " <<  xpos << ' ' << ypos << ' ' << theta << endl;
+#endif
+
+
+      CRobot* baby = (CRobot*)new CRobot( this, 
+					  currentPopulation + 1,
+					  pioneerWidth, 
+					  pioneerLength,
+					  xpos, ypos, theta );
+
+      baby->channel = channels[currentPopulation];
 
       if( lastRobot ) lastRobot->next = baby;
       else bots = baby;      
       lastRobot = baby;
 
-      baby->channel = channels[currentPopulation];
-      // we're the parent and have spawned a Golem...
+      // we're the parent and have spawned a Player...
       currentPopulation++;
-    }
+
+   }
+
+  refreshBackground = true;
   
 #ifdef VERBOSE
   cout << "done." << endl;
 #endif
-
-  if( posFile[0] != 0 ) LoadPos();   // load the robot's positions from a file
-  //if( zoneFile[0] != 0 ) LoadZones();   // load the zones file
 
   // --------------------------------------------------------------------
   // create a single semaphore to sync access to the shared memory segments
@@ -202,11 +213,12 @@ int CWorld::LockShmem( void )
 
   int retval = semop( semid, ops, 1 );
 
-  /*if( retval == 0 )
+#ifdef DEBUG
+  if( retval == 0 )
     puts( "successful lock" );
   else
     puts( "failed lock" );
-  */
+#endif
 
   return true;
 }
@@ -221,11 +233,13 @@ int CWorld::UnlockShmem( void )
 
   int retval = semop( semid, ops, 1 );
 
-  /*  if( retval == 0 )
+
+#ifdef DEBUG
+  if( retval == 0 )
     puts( "successful unlock" );
   else
     puts( "failed unlock" );
-  */
+#endif
 
   return true;
 }
@@ -233,6 +247,8 @@ int CWorld::UnlockShmem( void )
 void CWorld::Update( void )
 {
   // update is called every approx. 25ms from main using a timer
+
+  if( win ) win->HandleEvent();
 
   if( !paused )
     {
@@ -247,16 +263,16 @@ void CWorld::Update( void )
       timeThen = timeNow;
       
       // use a simple cludge to fix stutters caused by machine load or I/O
-      if( timeStep > 0.05 ) 
+      if( timeStep > 0.1 ) 
 	{
 #ifdef DEBUG 
 	  cout << "MAX TIMESTEP EXCEEDED" << endl;
 #endif
-	  timeStep = 0.05;
+	  timeStep = 0.1;
 	}
       
       // move the robots
-      for( CRobot* b = bots; b; b = b->next ) b->Update( img );
+      for( CRobot* b = bots; b; b = b->next ) b->Update();
 
       if( refreshBackground ) Draw();
       
@@ -295,106 +311,11 @@ void CWorld::SavePos( void )
     out <<  r->x/ppm <<  '\t' << r->y/ppm << '\t' << r->a << endl;
 }
 
-//  void CWorld::SaveZones( void )
-//  {
-//    ofstream out( zoneFile );
-
-
-//    //#ifdef VERBOSE
-//    //cout << "saving " << zc << " zones." << endl;
-//    //#endif
-
-//    for( int c=0; c<zc; c++ )
-//      out << zones[c].x << '\t' << zones[c].y << '\t' 
-//  	<< zones[c].w << '\t' << zones[c].h << endl;
-//  }
-
-//  void CWorld::LoadZones( void )
-//  {
-//  #ifdef VERBOSE
-//    cout << "Loading zones file " << zoneFile << "... " << flush;
-//  #endif
-
-//    ifstream in( zoneFile );
- 
-//    zc = 0;
-//    do
-//      {
-//        in >> ws >> zones[zc].x >> zones[zc].y 
-//  	 >>  zones[zc].w >> zones[zc].h >> ws;
-//        zc++;
-//      } while( !in.eof() );
-    
-
-//  #ifdef VERBOSE
-//    cout << "loaded " << zc << " zones " << flush;
-//    cout << "ok." << endl;
-//  #endif
-//  }
-
-
-void CWorld::LoadPos( void )
-{
-#ifdef VERBOSE
-  cout << "Loading " << posFile << "... " << flush;
-#endif
-
-  ifstream in( posFile );
-
-  double a,b,c;
-
-  for( CRobot* r = bots; r; r = r->next )
-   {
-     in >> a >> b >> c;
-
-#ifdef DEBUG
-     cout << "read: " <<  a << ' ' << b << ' ' << c << endl;
-#endif
-
-     r->x = a*ppm;
-     r->y = b*ppm;
-     r->a = c;
-    
-#ifdef DEBUG
-     //cout << c << ' ' << r->a << ' ' << ppm << endl;
-     cout << "assigned: " << r->x << ' ' << r->y << ' ' << r->a << endl;
-#endif
-
-     r->xorigin = r->xodom = r->x;
-     r->yorigin = r->yodom = r->y;
-     r->aorigin = r->aodom = r->a;
-
-     // ROBOT LOGGING
-     //*(r->log) << endl; // insert a line break into the robot's trail
-     //cout << "Put robot at " << r->x << ' ' << r->y << endl;
-     //r->a = TWOPI * drand48();
-
-     // calculate the initial robot rectangle so it can be drawn
-     r->CalculateRect();
-     r->StoreRect();
-     r->Draw( img );
-   }
-  refreshBackground = true;
-  
-  if( win )
-    {
-      win->Draw();
-      win->DrawRobots();
-    }
-  
-#ifdef VERBOSE
-  cout << "ok." << endl;
-#endif
-}
-
-
-
 void CWorld::Draw( void )
 {
   memcpy( img->data, bimg->data, width*height*sizeof(char) );
 
-  for( CRobot* r = bots; r; r = r->next )
-    r->Draw( img );
+  for( CRobot* r = bots; r; r = r->next ) r->MapDraw();
 
   refreshBackground = 0;
 }
@@ -403,16 +324,6 @@ float diff( float a, float b )
 {
   if( a > b ) return a-b;
   return b-a;
-}
-
-float commRadius = 10.0;
-
-int CWorld::Connected( CRobot* r1, CRobot* r2 )
-{
-  if( hypot( diff( r1->x, r2->x ), diff( r1->y, r2->y ) ) < commRadius )
-    return true;
-  //else
-  return false;
 }
 
 int CWorld::LoadVars( char* filename )
@@ -456,8 +367,6 @@ int CWorld::LoadVars( char* filename )
 	sscanf( value, "%s", bgFile );  
       else if ( strcmp( token, "position_file" ) == 0 )
 	sscanf( value, "%s", posFile );  
-      else if ( strcmp( token, "zone_file" ) == 0 )
-	sscanf( value, "%s", zoneFile );  
       //else if ( strcmp( token, "sonar_noise_variance" ) == 0 )
       //sonarNoise = strtod( value, NULL );  
       //else if ( strcmp( token, "localization_noise_variance" ) == 0 )
@@ -498,20 +407,6 @@ int CWorld::LoadVars( char* filename )
 
   return 1;
 }
-
-
-void CWorld::ToggleTrails( void )
-{
-  cout << "toggle trails" << endl;
-
-  for( CRobot* r = bots; r; r = r->next )
-    r->leaveTrails = !r->leaveTrails; 
-}
-
-
-
-
-
 
 
 

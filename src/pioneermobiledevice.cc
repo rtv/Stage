@@ -1,4 +1,5 @@
-// 	$Id: pioneermobiledevice.cc,v 1.1 2000-11-30 00:29:25 vaughan Exp $	
+// $Id: pioneermobiledevice.cc,v 1.2 2000-12-01 00:20:52 vaughan Exp $	
+#include <math.h>
 
 #include "world.h"
 #include "robot.h"
@@ -8,23 +9,27 @@ const double TWOPI = 6.283185307;
 
 // constructor
 
-CPioneerMobileDevice::CPioneerMobileDevice( void *buffer, 
+CPioneerMobileDevice::CPioneerMobileDevice( CRobot* rr, 
+					    double wwidth, double llength,
+					    void *buffer, 
 					    size_t data_len, 
 					    size_t command_len, 
 					    size_t config_len)
-        : CDevice(buffer, data_len, command_len, config_len)
+        : CDevice(rr, buffer, data_len, command_len, config_len)
 {
-  m_update_interval = 0.01 // update me very fast indeed
+  m_robot = rr;
+  m_world = m_robot->world;
 
-  width = w;
-  length = l;
+  ASSERT(m_robot != NULL);
+  ASSERT(m_world != NULL);
+  
+  m_update_interval = 0.01; // update me very fast indeed
+
+  width = wwidth;
+  length = llength;
 
   halfWidth = width / 2.0;   // the halves are used often in calculations
   halfLength = length / 2.0;
-
-  xorigin = oldx = x = startx;
-  yorigin = oldy = y = starty;
-  aorigin = olda = a = starta;
 
   xodom = yodom = aodom = 0;
 
@@ -36,21 +41,10 @@ CPioneerMobileDevice::CPioneerMobileDevice( void *buffer,
   memset( &rect, 0, sizeof( rect ) );
   memset( &oldRect, 0, sizeof( rect ) );
 
-  StoreRect();
+  CalculateRect();
+  //StoreRect();
 
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Default startup -- doesnt do much
-//
-bool CPioneerMobileDevice::Startup(CRobot *robot, CWorld *world)
-  :Startup( robot, world )
-{
-
-  color = id+1;
-
-
-    return true;
+  cout << "contructor done" << endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -58,53 +52,68 @@ bool CPioneerMobileDevice::Startup(CRobot *robot, CWorld *world)
 //
 bool CPioneerMobileDevice::Update()
 {
-    TRACE0("updating CPioneerMobileDevice");
-    ASSERT(m_robot != NULL);
-    ASSERT(m_world != NULL);
+  //TRACE0("updating CPioneerMobileDevice");
+ 
+  // generic device call  
+  if( GetCommand( commands, P2OS_COMMAND_BUFFER_SIZE ) 
+      == P2OS_COMMAND_BUFFER_SIZE )
+    {
+      ParseCommandBuffer();    // find out what to do    
+    }
+  
+  MapUnDraw(); // erase myself
+   
+  Move();      // do things
     
-    // find out what to do
-    ParseCommandBuffer();
-    
-    // do things
-    Move( m_world->img );
-    
-    // report the new state of things
-    ComposeDataBuffer();
-    
-    PutData( 
+  MapDraw();   // draw myself 
 
-    return true;
+  ComposeData();     // report the new state of things
+  PutData( data, P2OS_DATA_BUFFER_SIZE  );     // generic device call
+
+  return true;
 }
 
 
-int CPioneerMobileDevice::Move( Nimage* img )
+int CPioneerMobileDevice::Move()
 {
+  Nimage* img = m_world->img;
+
+  StoreRect(); // save my current rectangle in cased I move
+
   int moved = false;
 
-  if( ( win->dragging != this ) &&  (speed != 0.0 || turnRate != 0.0) )
+  if( ( m_world->win && m_world->win->dragging != m_robot )  
+      &&  (speed != 0.0 || turnRate != 0.0) )
     {
       // record speeds now - they can be altered in another thread
       float nowSpeed = speed;
       float nowTurn = turnRate;
-      float nowTimeStep = world->timeStep;
+      float nowTimeStep = m_world->timeStep;
 
       // find the new position for the robot
-      float tx = x + nowSpeed * world->ppm * cos( a ) * nowTimeStep;
-      float ty = y + nowSpeed * world->ppm * sin( a ) * nowTimeStep;
-      float ta = a + (nowTurn * nowTimeStep);
+      float tx = m_robot->x 
+	+ nowSpeed * m_world->ppm * cos( m_robot->a ) * nowTimeStep;
+      
+      float ty = m_robot->y 
+	+ nowSpeed * m_world->ppm * sin( m_robot->a ) * nowTimeStep;
+      
+      float ta = m_robot->a + (nowTurn * nowTimeStep);
+      
       ta = fmod( ta + TWOPI, TWOPI );  // normalize angle
-
+      
       // calculate the rectangle for the robot's tentative new position
       CalculateRect( tx, ty, ta );
 
+      //cout << "txya " << tx << ' ' << ty << ' ' << ta << endl;
+
       // trace the robot's outline to see if it will hit anything
       char hit = 0;
-      if( hit = img->rect_detect( rect, color ) > 0 )
+      if( hit = img->rect_detect( rect, m_robot->color ) > 0 )
 	// hit! so don't do the move - just redraw the robot where it was
 	{
 	  //cout << "HIT! " << endl;
+	  // restore from the saved rect
 	  memcpy( &rect, &oldRect, sizeof( struct Rect ) );
-	  Draw( img );
 	  
 	  stall = 1; // motors stalled due to collision
 	}
@@ -114,31 +123,24 @@ int CPioneerMobileDevice::Move( Nimage* img )
 	  
 	  stall = 0; // motors not stalled
 	  
-	  x = tx; // move to the new position
-	  y = ty;
-	  a = ta;
+	  m_robot->x = tx; // move to the new position
+	  m_robot->y = ty;
+	  m_robot->a = ta;
 	  
 	  //update the robot's odometry estimate
-	  xodom +=  nowSpeed * world->ppm * cos( aodom ) * nowTimeStep;
-	  yodom +=  nowSpeed * world->ppm * sin( aodom ) * nowTimeStep;
+	  xodom +=  nowSpeed * m_world->ppm * cos( aodom ) * nowTimeStep;
+	  yodom +=  nowSpeed * m_world->ppm * sin( aodom ) * nowTimeStep;
 	  
-	  if( world->maxAngularError != 0.0 ) //then introduce some error
+	  if( m_world->maxAngularError != 0.0 ) //then introduce some error
 	    {
-	      float error = 1.0 + ( drand48()* world->maxAngularError );
+	      float error = 1.0 + ( drand48()* m_world->maxAngularError );
 	      aodom += nowTurn * nowTimeStep * error;
 	    }
 	  else
 	    aodom += nowTurn * nowTimeStep;
 	  
 	  aodom = fmod( aodom + TWOPI, TWOPI );  // normalize angle
-	  
-	  // erase and redraw the robot in the world bitmap
-	  UnDraw( img );
-	  Draw( img );
-	  
-	  // erase and redraw the robot on the X display
-	  if( win ) win->DrawRobotIfMoved( this );
-	  
+	 	  
 	  // update the `old' stuff
 	  memcpy( &oldRect, &rect, sizeof( struct Rect ) );
 	  oldCenterx = centerx;
@@ -146,40 +148,34 @@ int CPioneerMobileDevice::Move( Nimage* img )
 	}
     }
   
-  oldx = x;
-  oldy = y;
-  olda = a;
-  
+  m_robot->oldx = m_robot->x;
+  m_robot->oldy = m_robot->y;
+  m_robot->olda = m_robot->a;
+ 
   return moved;
 }
 
-void CPioneerMobileDevice::PutData( void )
+void CPioneerMobileDevice::ComposeData()
 {
   // this will put the data into P2OS packet format to be shipped
   // to Player
 
-  // copy position data into the memory buffer shared with player
-
+  unsigned char* deviceData = data;
+  
   double rtod = 180.0/M_PI;
-
-  unsigned char* deviceData = (unsigned char*)(playerIO +
-P2OS_DATA_START);
-
-  //printf( "arena: playerIO: %d   devicedata: %d offset: %d\n", playerIO,
-  // deviceData, (int)deviceData - (int)playerIO );
-
-  // COPY DATA
+ 
   // position device
   *((int*)(deviceData + 0)) =
-    htonl((int)((world->timeNow - world->timeBegan) * 1000.0));
-  *((int*)(deviceData + 4)) = htonl((int)((x - xorigin)/ world->ppm *
-1000.0));
-  *((int*)(deviceData + 8)) = htonl((int)((y - yorigin)/ world->ppm *
-1000.0));
-
-  // odometry heading
-  float odoHeading = fmod( aorigin -a + TWOPI, TWOPI );  // normalize angle
+    htonl((int)((m_world->timeNow - m_world->timeBegan) * 1000.0));
   
+  *((int*)(deviceData + 4)) = 
+    htonl((int)((m_robot->x - m_robot->xorigin)/ m_world->ppm * 1000.0));
+  
+  *((int*)(deviceData + 8)) = 
+    htonl((int)((m_robot->y - m_robot->yorigin)/ m_world->ppm * 1000.0));
+
+  // normalized odometry heading
+  float odoHeading = fmod( m_robot->aorigin - m_robot->a + TWOPI, TWOPI ); 
   *((unsigned short*)(deviceData + 12)) =
     htons((unsigned short)(odoHeading * rtod ));
 
@@ -190,39 +186,20 @@ P2OS_DATA_START);
   *((unsigned short*)(deviceData + 16))
     = htons((unsigned short)(turnRate * rtod ));
 
-  // compass heading
-  float comHeading = fmod( a + M_PI/2.0 + TWOPI, TWOPI );  // normalize angle
+  // normalized compass heading
+  float comHeading = fmod( m_robot->a + M_PI/2.0 + TWOPI, TWOPI ); 
   
   *((unsigned short*)(deviceData + 18))
     = htons((unsigned short)( comHeading * rtod ));
 
   // stall - currently shows if the robot is being dragged by the user
   *(unsigned char*)(deviceData + 20) = stall;
-
 }
 
-
-int CPioneerMobileDevice::HasMoved( void )
-   {
-     //if the robot has moved on the world bitmap
-  if( oldRect.toplx != rect.toplx ||
-      oldRect.toply != rect.toply ||
-      oldRect.toprx != rect.toprx ||
-      oldRect.topry != rect.topry ||
-      oldRect.botlx != rect.botlx ||
-      oldRect.botly != rect.botly ||
-      oldRect.botrx != rect.botrx ||
-      oldRect.botry != rect.botry  ||
-      centerx != oldCenterx ||
-      centery != oldCentery )
-
-    return true;
-  else
-    return false;
-}
-
-void CPioneerMobileDevice::UnDraw( Nimage* img )
+bool CPioneerMobileDevice::MapUnDraw()
 {
+  Nimage* img = m_world->img;
+
   //undraw the robot's old rectangle
   img->draw_line( oldRect.toplx, oldRect.toply,
     oldRect.toprx, oldRect.topry, 0 );
@@ -232,20 +209,30 @@ void CPioneerMobileDevice::UnDraw( Nimage* img )
     oldRect.botrx, oldRect.botry, 0 );
   img->draw_line( oldRect.botrx, oldRect.botry,
     oldRect.toplx, oldRect.toply, 0 );
+
+  return 1;
 }
 
 
-void CPioneerMobileDevice::Draw( Nimage* img )
+bool CPioneerMobileDevice::MapDraw()
 {
+  // calculate my new rectangle
+  CalculateRect( m_robot->x, m_robot->y, m_robot->a );
+
+  Nimage* img = m_world->img;
+
   //draw the robot's rectangle
   img->draw_line( rect.toplx, rect.toply,
-    rect.toprx, rect.topry, color );
+    rect.toprx, rect.topry, m_robot->color );
   img->draw_line( rect.toprx, rect.topry,
-    rect.botlx, rect.botly, color );
+    rect.botlx, rect.botly, m_robot->color );
   img->draw_line( rect.botlx, rect.botly,
-    rect.botrx, rect.botry, color );
+    rect.botrx, rect.botry, m_robot->color );
   img->draw_line( rect.botrx, rect.botry,
-    rect.toplx, rect.toply, color );
+    rect.toplx, rect.toply, m_robot->color );
+
+  StoreRect();
+  return 1;
 }
 
 void CPioneerMobileDevice::Stop( void )
@@ -260,7 +247,7 @@ void CPioneerMobileDevice::StoreRect( void )
   oldCentery = centery;
 }
 
-void CPioneerMobileDevice:CalculateRect( float x, float y, float a )
+void CPioneerMobileDevice::CalculateRect( float x, float y, float a )
 {
   // fill an array of Points with the corners of the robots new position
   float cosa = cos( a );
@@ -283,26 +270,64 @@ void CPioneerMobileDevice:CalculateRect( float x, float y, float a )
   centery = (int)y;
 }
 
-void CPioneerMobileDevice::ParseCommandBuffer( void )
+void CPioneerMobileDevice::ParseCommandBuffer()
 {
   // this will parse the P2OS command buffer to find out what to do
 
-  // read the command buffer and set the robot's speeds
-  short v = *(short*)(playerIO + P2OS_COMMAND_START );
-  short w = *(short*)(playerIO + P2OS_COMMAND_START + 2 );
+  //printf( "cmds: %d   ---    $s \n" , commands, commands );
 
-  // unlock
-  world->UnlockShmem();
+  // read the command buffer and set the robot's speeds
+  short v = *(short*)( commands );
+  short w = *(short*)( commands + 2 );
 
   float fv = (float)(short)ntohs(v);//1000.0 * (float)ntohs(v);
   float fw = (float)(short)ntohs(w);//M_PI/180) * (float)ntohs(w);
 
   // set speeds unless we're being dragged
-  if( win->dragging != this )
+  if( m_world->win->dragging != m_robot )
     {
       speed = 0.001 * fv;
       turnRate = -(M_PI/180.0) * fw;
     }
-
+  
+  //cout << "DONE PARSE" << endl;
 }
+
+bool CPioneerMobileDevice::GUIUnDraw()
+{
+  m_world->win->SetForeground( 0 );
+  m_world->win->DrawLines( undrawPts, 7 );
+
+  return true;
+}
+
+bool CPioneerMobileDevice::GUIDraw()
+{
+  CWorldWin* win = m_world->win;
+  
+  XPoint pts[7];
+  
+  // draw the new position
+  pts[4].x = pts[0].x = (short)rect.toprx;
+  pts[4].y = pts[0].y = (short)rect.topry;
+  pts[1].x = (short)rect.toplx;
+  pts[1].y = (short)rect.toply;
+  pts[6].x = pts[3].x = (short)rect.botlx;
+  pts[6].y = pts[3].y = (short)rect.botly;
+  pts[2].x = (short)rect.botrx;
+  pts[2].y = (short)rect.botry;
+  pts[5].x = (short)centerx;
+  pts[5].y = (short)centery;
+      
+  win->SetForeground( win->RobotDrawColor( m_robot) );
+  win->DrawLines( pts, 7 );
+
+  // store these points for undrawing
+  memcpy( undrawPts, pts, sizeof( XPoint ) * 7 ); 
+
+  return true;
+}
+
+
+
 

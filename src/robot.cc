@@ -1,7 +1,7 @@
 /*************************************************************************
  * robot.cc - most of the action is here
  * RTV
- * $Id: robot.cc,v 1.6 2000-11-30 00:12:17 ahoward Exp $
+ * $Id: robot.cc,v 1.7 2000-12-01 00:20:52 vaughan Exp $
  ************************************************************************/
 
 #include <errno.h>
@@ -38,58 +38,41 @@
 // Devices
 //
 #include "laserdevice.hh"
+#include "pioneermobiledevice.h"
 
 extern int errno;
 
-const double TWOPI = 6.283185307;
-
-extern CWorld* world;
+//extern CWorld* world;
 extern CWorldWin* win;
 
 unsigned char f = 0xFF;
 
 const int numPts = SONARSAMPLES;
-const int laserSamples = LASERSAMPLES;
 
 
-CRobot::CRobot( int iid, float w, float l,
-  float startx, float starty, float starta )
+CRobot::CRobot( CWorld* ww, int col, 
+		float w, float l,
+		float startx, float starty, float starta )
 {
-  id = iid;
+  world = ww;
 
-  color = id+1;
+  //id = iid;
+  color = col;
   next  = NULL;
 
-  width = w;
-  length = l;
-
-  halfWidth = width / 2.0;   // the halves are used often in calculations
-  halfLength = length / 2.0;
-
-  xorigin = oldx = x = startx;
-  yorigin = oldy = y = starty;
+  xorigin = oldx = x = startx * world->ppm;
+  yorigin = oldy = y = starty * world->ppm;
   aorigin = olda = a = starta;
 
-  xodom = yodom = aodom = 0;
-
-
+  // this stuff will get packed into devices soon
+  // from here...
   channel = 0; // vision system color channel - default 0
-
-  speed = 0.0;
-  turnRate = 0.0;
-
-  stall = 0;
 
   redrawSonar = false;
   redrawLaser = false;
   leaveTrail = false;
 
-
-  memset( &rect, 0, sizeof( rect ) );
-  memset( &oldRect, 0, sizeof( rect ) );
-
-  lastLaser = lastSonar = lastVision = 0.0;
-
+  lastSonar = lastVision = 0.0;
 
   cameraAngleMax = 2.0 * M_PI / 3.0; // 120 degrees
   cameraAngleMin = 0.2 * M_PI / 3.0; // 12 degrees
@@ -105,6 +88,8 @@ CRobot::CRobot( int iid, float w, float l,
 
   numBlobs = 0;
   memset( blobs, 0, MAXBLOBS * sizeof( ColorBlob ) );
+
+  // ...to here
 
   // -- create the memory map for IPC with Player --------------------------
 
@@ -154,7 +139,7 @@ CRobot::CRobot( int iid, float w, float l,
       {
  // create player port number for command line
  char portBuf[32];
- sprintf( portBuf, "%d", PLAYER_BASE_PORT + id );
+ sprintf( portBuf, "%d", PLAYER_BASE_PORT + col -1 );
 
         // BPG
         // release controlling tty so Player doesn't get signals
@@ -174,8 +159,6 @@ CRobot::CRobot( int iid, float w, float l,
     //else
     //printf("forked player with pid: %d\n", player_pid);
   }
-
-  StoreRect();
 
   // Initialise the device list
   //
@@ -203,33 +186,45 @@ CRobot::~CRobot( void )
   remove( tmpName );
 }
 
-
 // Start all the devices
 //
 bool CRobot::Startup()
 {
-    TRACE0("starting devices");
-
-    m_device_count = 0;
-    
-    // Create laser device
-    //
-    m_device[m_device_count++] = new CLaserDevice(playerIO + LASER_DATA_START,
+  //TRACE0("starting devices");
+  
+  m_device_count = 0;
+  
+  // Create laser device
+  //
+  m_device[m_device_count++] 
+    = new CPioneerMobileDevice( this, 
+				world->pioneerWidth, 
+				world->pioneerLength,
+				playerIO + P2OS_DATA_START,
+				P2OS_DATA_BUFFER_SIZE,
+				P2OS_COMMAND_BUFFER_SIZE,
+				P2OS_CONFIG_BUFFER_SIZE);
+  
+  
+  m_device[m_device_count++] = new CLaserDevice( this,
+						 playerIO + LASER_DATA_START,
                                                   LASER_DATA_BUFFER_SIZE,
-                                                  LASER_COMMAND_BUFFER_SIZE,
-                                                  LASER_CONFIG_BUFFER_SIZE);
-    // Start all the devices
-    //
-    for (int i = 0; i < m_device_count; i++)
-    {
-        if (!m_device[i]->Startup(this, world))
-        {
-            perror("CRobot::Startup: failed to open device; device unavailable");
-            m_device[i] = NULL;
-        }
-    }
+						 LASER_COMMAND_BUFFER_SIZE,
+						 LASER_CONFIG_BUFFER_SIZE);
+  
 
-    return true;
+  // Start all the devices
+  //
+  for (int i = 0; i < m_device_count; i++)
+    {
+      if (!m_device[i]->Startup() )
+	{
+	  perror("CRobot::Startup: failed to open device; device unavailable");
+	  m_device[i] = NULL;
+	}
+    }
+  
+  return true;
 }
 
 
@@ -237,7 +232,7 @@ bool CRobot::Startup()
 //
 bool CRobot::Shutdown()
 {
-    TRACE0("shutting down devices");
+  //TRACE0("shutting down devices");
     
     for (int i = 0; i < m_device_count; i++)
     {
@@ -250,117 +245,6 @@ bool CRobot::Shutdown()
     return true;
 }
 
-
-void CRobot::Stop( void )
-{
-  speed = turnRate = 0;
-}
-
-void CRobot::StoreRect( void )
-{
-  memcpy( &oldRect, &rect, sizeof( struct Rect ) );
-  oldCenterx = centerx;
-  oldCentery = centery;
-}
-
-void CRobot::CalculateRect( float x, float y, float a )
-{
-  // fill an array of Points with the corners of the robots new position
-  float cosa = cos( a );
-  float sina = sin( a );
-  float cxcosa = halfLength * cosa;
-  float cycosa = halfWidth  * cosa;
-  float cxsina = halfLength * sina;
-  float cysina = halfWidth  * sina;
-
-  rect.toplx = (int)(x + (-cxcosa + cysina));
-  rect.toply = (int)(y + (-cxsina - cycosa));
-  rect.toprx = (int)(x + (+cxcosa + cysina));
-  rect.topry = (int)(y + (+cxsina - cycosa));
-  rect.botlx = (int)(x + (+cxcosa - cysina));
-  rect.botly = (int)(y + (+cxsina + cycosa));
-  rect.botrx = (int)(x + (-cxcosa - cysina));
-  rect.botry = (int)(y + (-cxsina + cycosa));
-
-  centerx = (int)x;
-  centery = (int)y;
-}
-
-
-void CRobot::GetPositionCommands( void )
-{
-  //lock
-  world->LockShmem();
-
-  // read the command buffer and set the robot's speeds
-  short v = *(short*)(playerIO + P2OS_COMMAND_START );
-  short w = *(short*)(playerIO + P2OS_COMMAND_START + 2 );
-
-  // unlock
-  world->UnlockShmem();
-
-  float fv = (float)(short)ntohs(v);//1000.0 * (float)ntohs(v);
-  float fw = (float)(short)ntohs(w);//M_PI/180) * (float)ntohs(w);
-
-  // set speeds unless we're being dragged
-  if( win->dragging != this )
-    {
-      speed = 0.001 * fv;
-      turnRate = -(M_PI/180.0) * fw;
-    }
-
-}
-
-
-void CRobot::PublishPosition( void )
-{
-  // copy position data into the memory buffer shared with player
-
-  // LOCK THE MEMORY
-  world->LockShmem();
-
-  double rtod = 180.0/M_PI;
-
-  unsigned char* deviceData = (unsigned char*)(playerIO +
-P2OS_DATA_START);
-
-  //printf( "arena: playerIO: %d   devicedata: %d offset: %d\n", playerIO,
-  // deviceData, (int)deviceData - (int)playerIO );
-
-  // COPY DATA
-  // position device
-  *((int*)(deviceData + 0)) =
-    htonl((int)((world->timeNow - world->timeBegan) * 1000.0));
-  *((int*)(deviceData + 4)) = htonl((int)((x - xorigin)/ world->ppm *
-1000.0));
-  *((int*)(deviceData + 8)) = htonl((int)((y - yorigin)/ world->ppm *
-1000.0));
-
-  // odometry heading
-  float odoHeading = fmod( aorigin -a + TWOPI, TWOPI );  // normalize angle
-  
-  *((unsigned short*)(deviceData + 12)) =
-    htons((unsigned short)(odoHeading * rtod ));
-
-  // speeds
-  *((unsigned short*)(deviceData + 14))
-    = htons((unsigned short)speed);
-
-  *((unsigned short*)(deviceData + 16))
-    = htons((unsigned short)(turnRate * rtod ));
-
-  // compass heading
-  float comHeading = fmod( a + M_PI/2.0 + TWOPI, TWOPI );  // normalize angle
-  
-  *((unsigned short*)(deviceData + 18))
-    = htons((unsigned short)( comHeading * rtod ));
-
-  // stall - currently shows if the robot is being dragged by the user
-  *(unsigned char*)(deviceData + 20) = stall;
-
-  // UNLOCK MEMORY
-  world->UnlockShmem();
-}
 
 void CRobot::PublishSonar( void )
 {
@@ -380,38 +264,6 @@ void CRobot::PublishSonar( void )
   world->UnlockShmem();
 }
 
-/*void CRobot::PublishLaser( void )
-{
-  // laser device
-  //  int laserDataOffset = P2OS_DATA_BUFFER_SIZE +
-P2OS_COMMAND_BUFFER_SIZE;
-
-  world->LockShmem(); // lock buffer
-
-  unsigned short ss;
-
-  for( int c=0; c<LASERSAMPLES; c++ )
-    {
-      ss = (unsigned short)( laser[c] * 1000.0 );
-      
-      //(unsigned short)(playerIO[ c*2 + LASER_DATA_START ]) = htons(ss);  
-      *((unsigned short*)(playerIO + c*2 + LASER_DATA_START)) = htons(ss);
-      
-    }
-
-  world->UnlockShmem();
-}
-
-*/
-
-//void CRobot::OrientRectangle( Rect& r1 )
-//{
-//Rect r2;
-
-  
-
-
-
 
 void CRobot::PublishVision( void )
 {
@@ -427,62 +279,6 @@ ACTS_BLOB_SIZE;
   *((unsigned short*)(playerIO + ACTS_DATA_START)) = blobDataSize;
 
   world->UnlockShmem();
-}
-
-
-void CRobot::UnDraw( Nimage* img )
-{
-  //undraw the robot's old rectangle
-  img->draw_line( oldRect.toplx, oldRect.toply,
-    oldRect.toprx, oldRect.topry, 0 );
-  img->draw_line( oldRect.toprx, oldRect.topry,
-    oldRect.botlx, oldRect.botly, 0 );
-  img->draw_line( oldRect.botlx, oldRect.botly,
-    oldRect.botrx, oldRect.botry, 0 );
-  img->draw_line( oldRect.botrx, oldRect.botry,
-    oldRect.toplx, oldRect.toply, 0 );
-
-  // solid robot
-  //img->bgfill( centerx, centery, 0 );
-
-  // 11/29/00 RTV -  took out the direction indicator 
-  //img->draw_line( oldRect.botlx, oldRect.botly,
-  //oldCenterx, oldCentery,0);
-  //img->draw_line( oldRect.toprx, oldRect.topry,
-  //oldCenterx, oldCentery,0);
-}
-
-
-void CRobot::Draw( Nimage* img )
-{
-  //draw the robot's rectangle
-  img->draw_line( rect.toplx, rect.toply,
-    rect.toprx, rect.topry, color );
-  img->draw_line( rect.toprx, rect.topry,
-    rect.botlx, rect.botly, color );
-  img->draw_line( rect.botlx, rect.botly,
-    rect.botrx, rect.botry, color );
-  img->draw_line( rect.botrx, rect.botry,
-    rect.toplx, rect.toply, color );
-
-  img->draw_line( rect.toplx + 3, rect.toply + 3,
-    rect.toprx -3, rect.topry + 3, color );
-  /* img->draw_line( rect.toprx, rect.topry,
-    rect.botlx, rect.botly, color );
-  img->draw_line( rect.botlx, rect.botly,
-    rect.botrx, rect.botry, color );
-  img->draw_line( rect.botrx, rect.botry,
-    rect.toplx, rect.toply, color );
-  */
-
-  // solid robot
-  //img->bgfill( centerx, centery, color );
-
-  // 11/29/00 RTV -  took out the direction indicator 
-  //img->draw_line( rect.botlx, rect.botly,
-  //centerx, centery, color );
-  //img->draw_line( rect.toprx, rect.topry,
-  //centerx, centery, color );
 }
 
 
@@ -598,110 +394,41 @@ int CRobot::UpdateSonar( Nimage* img  )
    break; // -90 deg
 #endif
  }
-
+      
       dx = cos( angle );
       dy = sin(  angle);
-
+      
       int maxRange = (int)(5.0 * ppm); // 5m times pixels-per-meter
       int rng = 0;
-
+      
       while( rng < maxRange &&
-      (img->get_pixel( (int)xx, (int)yy ) == 0 ||
-       img->get_pixel( (int)xx, (int)yy ) == color ) &&
-      (xx > 0) &&  (xx < img->width)
-      && (yy > 0) && (yy < img->height)  )
- {
-   xx+=dx;
-   yy+=dy;
-   rng++;
- }
-
+	     (img->get_pixel( (int)xx, (int)yy ) == 0 ||
+	      img->get_pixel( (int)xx, (int)yy ) == color ) &&
+	     (xx > 0) &&  (xx < img->width)
+	     && (yy > 0) && (yy < img->height)  )
+	{
+	  xx+=dx;
+	  yy+=dy;
+	  rng++;
+	}
+      
       // set sonar value, scaled to current ppm
       sonar[s] = rng / ppm;
-
-      if( win && win->showSensors )
- {
-   hitPts[s].x = (short)( (xx - win->panx)  );
-   hitPts[s].y = (short)( (yy - win->pany)  );
-   //hitPts[s].x = (short)( (xx - win->panx) * win->xscale );
-   //hitPts[s].y = (short)( (yy - win->pany) * win->yscale );
- }
+      
+      if( world->win && world->win->showSensors )
+	{
+	  hitPts[s].x = (short)( (xx - world->win->panx)  );
+	  hitPts[s].y = (short)( (yy - world->win->pany)  );
+	  //hitPts[s].x = (short)( (xx - win->panx) * win->xscale );
+	  //hitPts[s].y = (short)( (yy - win->pany) * win->yscale );
+	}
     }
-
+  
   redrawSonar = true;
   return true;
     }
   return false;
 }
-
-/*int CRobot::UpdateLaser( Nimage* img )
-{
-  if( world->timeNow - lastLaser > world->laserInterval )
-    {
-      lastLaser = world->timeNow;
-
-      // draw the new laser beams and discover their ranges
-      double startAngle = a + (M_PI_2);
-      double increment = -M_PI/laserSamples;
-      unsigned char pixel = 0;
-
-      double xx, yy = y;
-
-      int maxRange = (int)(8.0 * world->ppm); // 8m times pixels-per-meter
-      int rng = 0;
-
-      // get the laser ranges, ray-tracing every 2nd sample for speed.
-      // then duplicating that range in the next sample
-      for( int s=0; s < laserSamples; s++)
- {
-   double dist, dx, dy, angle;
-
-   angle = startAngle + ( s * increment );
-
-   dx = cos( angle );
-   dy = sin( angle);
-
-   xx = x;
-   yy = y;
-   rng = 0;
-
-   pixel = img->get_pixel( (int)xx, (int)yy );
-
-   // no need for bounds checking - get_pixel() does that internally
-   while( rng < maxRange && ( pixel == 0 || pixel == color ) )
-     {
-       xx+=dx;
-       yy+=dy;
-       rng++;
-
-       pixel = img->get_pixel( (int)xx, (int)yy );
-     }
-
-   // set laser value, scaled to current ppm
-   double v = rng / world->ppm;
-
-   // copy value into laser buffer twice to save a bit of time
-   //laser[ s+1 ] = laser[s] = v;
-   laser[s] = v;
-   // detect the type of surface that the laser has hit
-   //colors[ s+1 ] = colors[s] = pixel;
-   //colors[s] = pixel;
- 
-   if( win && win->showSensors ) //fill in the laser hit points for display
-     { //just plot the ranges we actually calculated
-       lhitPts[s].x = (short)( (xx - win->panx));
-       lhitPts[s].y = (short)( (yy - win->pany));
-       //lhitPts[s/2].x = (short)( (xx - win->panx) * win->xscale );
-       //lhitPts[s/2].y = (short)( (yy - win->pany) * win->yscale );
-     }
- }
-
-      redrawLaser = true;
-      return true;
-    }
-  return false;
-}
-*/
 
 int CRobot::UpdateVision( Nimage* img )
 {
@@ -960,100 +687,6 @@ int CRobot::UpdateVision( Nimage* img )
   return false;
 }
 
-int CRobot::Move( Nimage* img )
-{
-  int moved = false;
-
-  if( ( win->dragging != this ) &&  (speed != 0.0 || turnRate != 0.0) )
-    {
-      // record speeds now - they can be altered in another thread
-      float nowSpeed = speed;
-      float nowTurn = turnRate;
-      float nowTimeStep = world->timeStep;
-
-      // find the new position for the robot
-      float tx = x + nowSpeed * world->ppm * cos( a ) * nowTimeStep;
-      float ty = y + nowSpeed * world->ppm * sin( a ) * nowTimeStep;
-      float ta = a + (nowTurn * nowTimeStep);
-      ta = fmod( ta + TWOPI, TWOPI );  // normalize angle
-
-      // calculate the rectangle for the robot's tentative new position
-      CalculateRect( tx, ty, ta );
-
-      // trace the robot's outline to see if it will hit anything
-      char hit = 0;
-      if( hit = img->rect_detect( rect, color ) > 0 )
-	// hit! so don't do the move - just redraw the robot where it was
-	{
-	  //cout << "HIT! " << endl;
-	  memcpy( &rect, &oldRect, sizeof( struct Rect ) );
-	  Draw( img );
-	  
-	  stall = 1; // motors stalled due to collision
-	}
-      else // do the move
-	{
-	  moved = true;
-	  
-	  stall = 0; // motors not stalled
-	  
-	  x = tx; // move to the new position
-	  y = ty;
-	  a = ta;
-	  
-	  //update the robot's odometry estimate
-	  xodom +=  nowSpeed * world->ppm * cos( aodom ) * nowTimeStep;
-	  yodom +=  nowSpeed * world->ppm * sin( aodom ) * nowTimeStep;
-	  
-	  if( world->maxAngularError != 0.0 ) //then introduce some error
-	    {
-	      float error = 1.0 + ( drand48()* world->maxAngularError );
-	      aodom += nowTurn * nowTimeStep * error;
-	    }
-	  else
-	    aodom += nowTurn * nowTimeStep;
-	  
-	  aodom = fmod( aodom + TWOPI, TWOPI );  // normalize angle
-	  
-	  // erase and redraw the robot in the world bitmap
-	  UnDraw( img );
-	  Draw( img );
-	  
-	  // erase and redraw the robot on the X display
-	  if( win ) win->DrawRobotIfMoved( this );
-	  
-	  // update the `old' stuff
-	  memcpy( &oldRect, &rect, sizeof( struct Rect ) );
-	  oldCenterx = centerx;
-	  oldCentery = centery;
-	}
-    }
-  
-  oldx = x;
-  oldy = y;
-  olda = a;
-  
-  return moved;
-}
-
-int CRobot::HasMoved( void )
-{
-  //if the robot has moved on the world bitmap
-  if( oldRect.toplx != rect.toplx ||
-      oldRect.toply != rect.toply ||
-      oldRect.toprx != rect.toprx ||
-      oldRect.topry != rect.topry ||
-      oldRect.botlx != rect.botlx ||
-      oldRect.botly != rect.botly ||
-      oldRect.botrx != rect.botrx ||
-      oldRect.botry != rect.botry  ||
-      centerx != oldCenterx ||
-      centery != oldCentery )
-
-    return true;
-  else
-    return false;
-}
 
 int CRobot::UpdateAndPublishPtz( void )
 {
@@ -1113,38 +746,55 @@ int CRobot::UpdateAndPublishPtz( void )
 }
 
 
-void CRobot::Update( Nimage* img )
+void CRobot::Update()
 {
-  // if someone has subscribed to the position device
-  if( playerIO[ SUB_MOTORS ] )
-    {
-      // Get the desired speed and turn rate from Player
-      GetPositionCommands();
 
-      Move( img ); // try to move the robot
-
-      // always publish the P2OS-like data, even if the robot didn't move
-      // it contains the current time
-      PublishPosition();
-    }
-
-  // only publish the sonar and laser if they were changed
-  // UpdateFoo() methods return true if it was time to update this sensor
-  if( playerIO[ SUB_SONAR  ] && UpdateSonar( img ) ) PublishSonar();
-  //*** remove -- use new driver if( playerIO[ SUB_LASER  ] && UpdateLaser( img ) )  PublishLaser();
-  if( playerIO[ SUB_VISION ] && UpdateVision( img ) ) PublishVision();
+  // legacy devices
+  if( playerIO[ SUB_SONAR  ] && UpdateSonar( world->img ) ) PublishSonar();  
+  if( playerIO[ SUB_VISION ] && UpdateVision( world->img ) ) PublishVision();
   if( playerIO[ SUB_PTZ ] ) UpdateAndPublishPtz();
 
   // Update all devices
   //
   for (int i = 0; i < m_device_count; i++)
-  {
-      if (m_device[i]->IsSubscribed())
-          m_device[i]->Update();
-  }
+    {
+      // update subscribed devices, 
+      if (m_device[i]->IsSubscribed() 
+	  || ( world->win && world->win->dragging == this) )
+	
+	  m_device[i]->Update();
+    }
+
 }
 
+bool CRobot::HasMoved( void )
+{
+  if( x != oldx || y != oldy || a != olda )
+    return true;
+  else
+    return false;
+}
 
+void CRobot::MapUnDraw()
+{
+  for (int i = 0; i < m_device_count; i++) m_device[i]->MapUnDraw();
+}  
+
+
+void CRobot::MapDraw()
+{
+  for (int i = 0; i < m_device_count; i++) m_device[i]->MapDraw();
+}  
+
+void CRobot::GUIDraw()
+{
+  for (int i = 0; i < m_device_count; i++) m_device[i]->GUIDraw();
+}  
+
+void CRobot::GUIUnDraw()
+{
+  for (int i = 0; i < m_device_count; i++) m_device[i]->GUIUnDraw();
+}  
 
 
 

@@ -1,7 +1,7 @@
 /*************************************************************************
  * main.cc   
  * RTV
- * $Id: main.cc,v 1.1.1.1 2000-11-29 00:16:53 ahoward Exp $
+ * $Id: main.cc,v 1.2 2000-12-01 00:20:52 vaughan Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -39,7 +39,7 @@ int doQuit = false;
 double quitTime = 0;
 
 CWorld* world;
-CWorldWin* win;
+//CWorldWin* win;
 
 void HandleCommandLine( int argc, char** argv )
 {
@@ -82,8 +82,9 @@ int main( int argc, char** argv )
   HandleCommandLine( argc, argv );
   
   // create the window, unless we switched off graphics
-  if( showWindow ) win = new CWorldWin( world, initFile );
-  else win = NULL;
+  if( showWindow ) world->win = new CWorldWin( world, initFile );
+  else world->win = NULL;
+
 
   // -- other system inits ---------------------------------------------
   srand48( time(NULL) ); // init random number generator
@@ -109,6 +110,8 @@ int main( int argc, char** argv )
     exit( -1 );
   }
 
+  cout << (char)0x07 << flush; // beep!
+
   // -- Main loop -------------------------------------------------------
   // Stage will perform a whole world update each time round this loop.
   // To avoid hogging the processor, we spend most of the time asleep,
@@ -116,7 +119,6 @@ int main( int argc, char** argv )
   while( !doQuit )
     {
       world->Update();
-      if( win )  win->HandleEvent();
 
       sleep( 1000 ); // go to sleep until a timer event occurs
     }

@@ -1,7 +1,7 @@
 /*************************************************************************
  * server.cc - implements the position & GUI servers, plus signal handling
  * RTV
- * $Id: server.cc,v 1.1.1.1 2000-11-29 00:16:53 ahoward Exp $
+ * $Id: server.cc,v 1.2 2000-12-01 00:20:52 vaughan Exp $
  ************************************************************************/
 
 // YUK this file is all in C and implements the PositionServer and GuiServer
@@ -33,7 +33,6 @@
 //#define VERBOSE
 
 #include "world.h"
-#include "win.h"
 #include "ports.h"
 
 #define	SA	struct sockaddr
@@ -46,7 +45,6 @@ typedef struct Pos
 
 
 extern  CWorld* world;
-extern CWorldWin* win;
 
 const int LISTENQ = 128;
 const long int MILLION = 1000000L;
@@ -204,10 +202,12 @@ static void * RunGUI( void * )
 		    doQuit = true;
 		  
 		  else if( strcmp( &buf[1], "showsonar" ) == 0 )
-		    {if( win ) win->showSensors = !win->showSensors;}
+		    {if( world->win ) 
+		      world->win->showSensors = !world->win->showSensors;}
 		  
 		  else if( strcmp( &buf[1], "drawmode" ) == 0 )
-		    {if( win ) win->drawMode = !win->drawMode;}
+		    {if( world->win ) 
+		      world->win->drawMode = !world->win->drawMode;}
 
 		  /* else if( strcmp( &buf[1], "savezones" ) == 0 )
 		    world->SaveZones();
@@ -220,7 +220,7 @@ static void * RunGUI( void * )
 		    world->SavePos();
 		  
 		  else if( strcmp( &buf[1], "loadpos" ) == 0 )
-		    world->LoadPos();
+		    {}//world->LoadPos();
 		}
 	    }
 	}

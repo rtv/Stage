@@ -1,50 +1,63 @@
-/* 	$Id: pioneermobiledevice.h,v 1.1 2000-11-30 02:50:13 vaughan Exp $	 */
+/* 	$Id: pioneermobiledevice.h,v 1.2 2000-12-01 00:20:52 vaughan Exp $	 */
 // this device implements a differential-steer mobility base for the robot
 
-#ifdef PIONEERMOBILEDEVICE_H
+#ifndef PIONEERMOBILEDEVICE_H
 #define PIONEERMOBILEDEVICE_H
 
 #include "device.hh"
 #include "robot.h"
+#include "world.h"
+#include "win.h"
 
 class CPioneerMobileDevice : public CDevice
 {
-  
  public:
   
-  CPioneerMobileDevice( CRobot* rr, void *buffer, size_t data_len, 
+  CPioneerMobileDevice( CRobot* rr, double wwidth, double llength,
+			void *buffer, size_t data_len, 
 			size_t command_len, size_t config_len);
   
-  float width, length, speed, turnRate;
-  float halfWidth, halfLength;
-  
-  float xodom;
-  float yodom;
-  float aodom; 
-  
+  double speed, turnRate;
+
   unsigned char stall;
-  
+
+  double width, length,  halfWidth, halfLength;
+  double xodom, yodom, aodom; 
+    
   Rect rect, oldRect;
   // center pixel positions are used to draw the direction indicator 
   int centerx, oldCenterx, centery, oldCentery;
   
+  bool Update( void );
   
   void Stop( void );
-  void Move( void );
   void HitObstacle( void );  
   
   void CalculateRect( float x, float y, float a );
-  void CalculateRect( void ){ CalculateRect( x, y, a ); };
+  void CalculateRect( void )
+    { CalculateRect( m_robot->x, m_robot->y, m_robot->a ); };
   void StoreRect( void );
-  void UnDraw( Nimage* img );
-  void Draw( Nimage* img );
-  int Move( Nimage* img );
+
+  int Move();
   
-  int HasMoved( void );
+  virtual bool MapDraw( void );
+  virtual bool MapUnDraw( void );
+
+  XPoint undrawPts[7];
+  virtual bool GUIDraw( void );
+  virtual bool GUIUnDraw( void );
   
+  void ComposeData();
+  void ParseCommandBuffer();
+
  private:
   BYTE commands[ P2OS_COMMAND_BUFFER_SIZE ];
   BYTE data[ P2OS_DATA_BUFFER_SIZE ]; 
+
+  double m_update_interval, m_last_update;
+
+  CRobot* m_robot;
+  CWorld* m_world;
 };
 
 #endif

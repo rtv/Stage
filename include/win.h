@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: win.h,v 1.1.1.1 2000-11-29 00:16:53 ahoward Exp $
+ * $Id: win.h,v 1.2 2000-12-01 00:20:52 vaughan Exp $
  ************************************************************************/
 
 #ifndef WIN_H
@@ -55,18 +55,18 @@ public:
   void HandleEvent( void );
   void Update( void );
   void DragRobot( void );
-  void DragBox( void );
+  
   void PrintCoords( void );
-  void DrawSonar( CRobot* r );
-  void DrawLaser( CRobot* r );
-  void DrawCrumRadius( CRobot* r );
+  //void DrawSonar( CRobot* r );
+  //void DrawLaser( CRobot* r );
+  
   void Draw( void );
-  void DrawZones( void );
+  //void DrawZones( void );
   //void DrawCrum( CCrum* aCrum );
   //void DrawCrums( void );
   void DrawRobotIfMoved( CRobot* r );
   void DrawRobot( CRobot* r );
-  void DrawRobotWithScaling( CRobot* r );
+  //void DrawRobotWithScaling( CRobot* r );
   void DrawRobotsInRect( int xx, int yy, int ww, int hh );
   void DrawRobots( void );
   void DrawWalls( void );
@@ -74,9 +74,12 @@ public:
   void BlackBackgroundInRect(int xx, int yy, int ww, int hh  );
   void DrawWallsInRect( int xx, int yy, int ww, int hh );
   void ScanBackground( void );
-  void ScanBackgroundWithScaling( void );
+  //void ScanBackgroundWithScaling( void );
   void MoveSize(void);
-  unsigned long  DrawInRobotColor( CRobot* r );
+  void DrawInRobotColor( CRobot* r );
+  unsigned long  RobotDrawColor( CRobot* r );
+  void SetForeground( unsigned long color );
+  void DrawLines( XPoint* pts, int numPts );
 };
 
 #endif

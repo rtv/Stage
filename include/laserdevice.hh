@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.4 $
+//  $Author: vaughan $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -28,12 +28,14 @@
 #define LASERDEVICE_HH
 
 #include "device.hh"
+#include "robot.h"
 
 class CLaserDevice : public CDevice
 {
     // Default constructor
     //
-    public: CLaserDevice(void *buffer, size_t data_len, size_t command_len, size_t config_len);
+    public: CLaserDevice(CRobot* rr, void *buffer, size_t data_len, 
+			 size_t command_len, size_t config_len);
     
     // Update the device
     //

@@ -2,7 +2,7 @@
  * robot.h - CRobot defintion - most of the action is here
             
  * RTV
- * $Id: robot.h,v 1.4 2000-11-29 22:48:56 ahoward Exp $
+ * $Id: robot.h,v 1.5 2000-12-01 00:20:52 vaughan Exp $
  ************************************************************************/
 
 #include "offsets.h" // for the ACTS size defines
@@ -26,7 +26,7 @@
 // Forward declare some of the class we will use
 //
 class CDevice;
-
+class CWorld;
 
 typedef struct
 {
@@ -44,26 +44,20 @@ class CRobot
   // GPB
 
 public:
-  CRobot( int iid, float w, float l, 
+  CRobot( CWorld* ww, int iid, float w, float l, 
 	  float startx, float starty, float starta );
   ~CRobot( void );
   
+  CWorld* world;
   
   float x, y, a, oldx, oldy, olda;  
-  float width, length, speed, turnRate;
-  float halfWidth, halfLength;
 
   unsigned char color;
   unsigned char channel;
 
-  float xodom;
-  float yodom;
-  float aodom; 
   float xorigin, yorigin, aorigin;
 
-  int id;
   int fd;
-  unsigned char stall;
 
   caddr_t playerIO;
   char tmpName[16];
@@ -71,9 +65,10 @@ public:
   ofstream* log;
 
   float sonar[SONARSAMPLES]; 
-  float laser[LASERSAMPLES]; 
+  //float laser[LASERSAMPLES]; 
 
-  double lastLaser, lastSonar, lastVision, lastPtz;
+  //double lastLaser, lastSonar, lastVision, lastPtz;
+  double lastSonar, lastVision, lastPtz;
 
   double cameraAngleMax, cameraAngleMin, cameraFOV;
   double cameraPanMin, cameraPanMax, cameraPan;
@@ -96,9 +91,6 @@ public:
   XPoint lhitPts[LASERSAMPLES];
   XPoint loldHitPts[LASERSAMPLES];
 
-  Rect rect, oldRect;
-  // center pixel positions are used to draw the direction indicator 
-  int centerx, oldCenterx, centery, oldCentery;
   CRobot* next;
 
   double lastCommand; // remember the time of the last command
@@ -116,26 +108,23 @@ public:
   //
   bool Shutdown();
   
-  void Stop( void );
-  void Move( void );
-  void HitObstacle( void );  
   void DumpSonar( void );
   void DumpOdometry( void );
   void LogPosition( void );
 
-  void Update( Nimage* img );
+  void MapUnDraw( void );
+  void MapDraw( void );
+
+  void GUIUnDraw( void );
+  void GUIDraw( void );
+
+  bool HasMoved( void );
+
+  void Update();
   int UpdateSonar( Nimage* img ); 
   //int UpdateLaser( Nimage* img ); 
   int UpdateVision( Nimage* img ); 
 
-  void CalculateRect( float x, float y, float a );
-  void CalculateRect( void ){ CalculateRect( x, y, a ); };
-  void StoreRect( void );
-  void UnDraw( Nimage* img );
-  void Draw( Nimage* img );
-  int Move( Nimage* img );
-
-  int HasMoved( void );
 
   void PublishVision( void );
   //void PublishLaser( void );

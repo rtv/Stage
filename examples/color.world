@@ -1,4 +1,4 @@
-robots = 8
+robots = 1
 robot_colors = 0 1 2 3 0 1 2 3 0 1 2 3 0 1 2 0 1 2 0 1 2 0 1 2 0 1 2
 robot_width = 0.6
 robot_length = 0.6

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/device.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.4 $
+//  $Author: vaughan $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -31,9 +31,65 @@
 //
 #include <stddef.h>
 
+<<<<<<< device.hh
+
+////////////////////////////////////////////////////////////////////////////////
+// Misc useful macros
+
+#define ARRAYSIZE(m) sizeof(m) / sizeof(m[0])
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Error, msg, trace macros
+
+#define ENABLE_TRACE 1
+
+#include <assert.h>
+
+#define ASSERT(m) assert(m)
+#define VERIFY(m) assert(m)
+
+#define ERROR(m)  printf("Error : %s : %s\n", __PRETTY_FUNCTION__, m)
+#define MSG(m)       printf("Msg   : %s : "m"\n", __PRETTY_FUNCTION__)
+#define MSG1(m, a)   printf("Msg   : %s : "m"\n", __PRETTY_FUNCTION__, a)
+#define MSG2(m, a, b) printf("Msg   : %s : "m"\n", __PRETTY_FUNCTION__, a, b)
+#define MSG3(m, a, b, c) printf("Msg   : %s : "m"\n", __PRETTY_FUNCTION__, a, b, c)
+#define MSG4(m, a, b, c, d) printf("Msg   : %s : "m"\n", __PRETTY_FUNCTION__, a, b, c, d)
+
+#if ENABLE_TRACE
+    #define TRACE0(m)    printf("Debug : %s : "m"\n", __PRETTY_FUNCTION__)
+    #define TRACE1(m, a) printf("Debug : %s : "m"\n", __PRETTY_FUNCTION__, a)
+    #define TRACE2(m, a, b) printf("Debug : %s : "m"\n", __PRETTY_FUNCTION__, a, b)
+    #define TRACE3(m, a, b, c) printf("Debug : %s : "m"\n", __PRETTY_FUNCTION__, a, b, c)
+    #define TRACE4(m, a, b, c, d) printf("Debug : %s : "m"\n", __PRETTY_FUNCTION__, a, b, c, d)
+#else
+    #define TRACE0(m)
+    #define TRACE1(m, a)
+    #define TRACE2(m, a, b)
+    #define TRACE3(m, a, b, c)
+    #define TRACE4(m, a, b, c, d)
+#endif
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Define length-specific data types
 // For type sizes
-//
 #include "rtk-types.hh"
+
+////////////////////////////////////////////////////////////////////////////////
+// Define some usefull math stuff
+//
+#ifndef M_PI
+	#define M_PI        3.14159265358979323846
+#endif
+
+// Convert radians to degrees
+//
+#define RTOD(r) ((r) * 180.0 / M_PI)
+
+// Convert degrees to radians
+//
+#define DTOR(d) ((d) * M_PI / 180.0)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -41,7 +97,7 @@
 //
 class CWorld;
 class CRobot;
-
+class CWorldWindow;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Base class for all simulated devices
@@ -50,13 +106,15 @@ class CDevice
 {
     // Default constructor
     // This is an abstract class and *cannot* be instantiated directly
-    // buffer points to a single buffer containing the data, command and configuration buffers.
+    // buffer points to a single buffer containing the data, command 
+    // and configuration buffers.
     //
-    protected: CDevice(void *buffer, size_t data_len, size_t command_len, size_t config_len);
+    protected: CDevice(CRobot* rr, void *buffer, 
+		       size_t data_len, size_t command_len, size_t config_len);
         
     // Initialise the device
     //
-    public: virtual bool Startup(CRobot *robot, CWorld *world);
+    public: virtual bool Startup();
 
     // Close the device
     //
@@ -66,6 +124,22 @@ class CDevice
     // This is pure virtual and *must* be overloaded
     //
     public: virtual bool Update() = 0;
+
+    // Generic bitmap draw method - most devices don't draw themselves
+    //
+    public: virtual bool MapDraw(){ return true; }; //do nowt 
+
+    // Generic bitmap undraw method - most devices don't undraw themselves
+    //
+    public: virtual bool MapUnDraw(){ return true; }; //do nowt 
+
+    // Generic GUI draw method - most devices don't draw themselves
+    //
+    public: virtual bool GUIDraw(){ return true; }; //do nowt 
+
+    // Generic GUI undraw method - most devices don't undraw themselves
+    //
+    public: virtual bool GUIUnDraw(){ return true; }; //do nowt 
 
     // See if the device is subscribed
     //

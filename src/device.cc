@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/device.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.3 $
+//  $Author: vaughan $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -31,8 +31,12 @@
 ///////////////////////////////////////////////////////////////////////////
 // Minimal constructor
 //
-CDevice::CDevice(void *buffer, size_t data_len, size_t command_len, size_t config_len)
+CDevice::CDevice(CRobot* rr, void *buffer, size_t data_len, 
+		 size_t command_len, size_t config_len)
 {
+  m_robot = rr;
+  m_world = m_robot->world;
+  
     m_info_buffer = (BYTE*) buffer;
     m_info_len = INFO_BUFFER_SIZE;
     
@@ -53,11 +57,9 @@ CDevice::CDevice(void *buffer, size_t data_len, size_t command_len, size_t confi
 ///////////////////////////////////////////////////////////////////////////
 // Default startup -- doesnt do much
 //
-bool CDevice::Startup(CRobot *robot, CWorld *world)
+bool CDevice::Startup()
 {
-    m_robot = robot;
-    m_world = world;
-    return true;
+  return true;
 }
 
 

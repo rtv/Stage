@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.6 $
+//  $Author: vaughan $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -34,8 +34,9 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CLaserDevice::CLaserDevice(void *buffer, size_t data_len, size_t command_len, size_t config_len)
-        : CDevice(buffer, data_len, command_len, config_len)
+CLaserDevice::CLaserDevice(CRobot* rr, void *buffer, size_t data_len, 
+			   size_t command_len, size_t config_len)
+        : CDevice(rr, buffer, data_len, command_len, config_len)
 {
     m_update_interval = 0.2; // RTV - speed to match the real laser
     m_last_update = 0;

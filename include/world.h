@@ -1,7 +1,7 @@
 /*************************************************************************
  * world.h - most of the header action is here 
  * RTV
- * $Id: world.h,v 1.1.1.1 2000-11-29 00:16:53 ahoward Exp $
+ * $Id: world.h,v 1.2 2000-12-01 00:20:52 vaughan Exp $
  ************************************************************************/
 
 #ifndef WORLD_H
@@ -25,12 +25,10 @@
 
 #include "robot.h"
 #include "image.h"
+#include "win.h"
 
-//class ZoneRect
-//{
-//public:
-// float x, y, w, h;
-//};
+// forward declaration
+class CWorldWin;
 
 // various c function declarations - an untidy mix of c and c++ - yuk!
 int InitNetworking( void );
@@ -40,6 +38,8 @@ class CWorld
 {
 public:
   CWorld( char* initFile );
+
+  CWorldWin* win;
 
   int semKey, semid; // semaphore access for shared mem locking
 
@@ -56,7 +56,6 @@ public:
   unsigned char channels[256];
   char posFile[64];
   char bgFile[64];
-  char zoneFile[64];
 
   CRobot* bots;
   float pioneerWidth, pioneerLength;
@@ -67,29 +66,22 @@ public:
 
   float ppm;
 
-  //int zc; // number of zones
-  //ZoneRect zones[PROXIMITY_ZONES];
-
   int* hits;
   int population;
 
   int refreshBackground;
 
   double timeStep, timeNow, timeThen, timeBegan;
-  int useLaser, useColor, useSonar; // deprecated - take these out
 
   double sonarInterval, laserInterval, visionInterval, ptzInterval; // seconds
 
   // methods
-  void ToggleTrails( void );
   int LoadVars( char* initFile);
-  int Connected( CRobot* r1, CRobot* r2 );
   void Update( void );
   void Draw( void );
   void SavePos( void );
-  void LoadPos( void );
-  //void SaveZones( void );
-  //void LoadZones( void );
+  //void LoadPos( void );
+
   void UpdateSonar( int b );
   void DumpSonar( void );
   void DumpOdometry( void );
