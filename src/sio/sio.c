@@ -68,6 +68,39 @@ void SIOPrintUsage( void )
 	 );
 }
 
+const char* SIOPropString( stage_prop_id_t id )
+{
+  switch( id )
+    {
+    case STG_PROP_ENTITY_PARENT: return "STG_PROP_ENTITY_PARENT"; break;
+    case STG_PROP_ENTITY_POSE: return "STG_PROP_ENTITY_POSE"; break;
+    case STG_PROP_ENTITY_SIZE: return "STG_PROP_ENTITY_SIZE"; break;
+    case STG_PROP_ENTITY_VELOCITY: return "STG_PROP_ENTITY_VELOCITY"; break;
+    case STG_PROP_ENTITY_ORIGIN: return "STG_PROP_ENTITY_ORIGIN"; break;
+    case STG_PROP_ENTITY_NAME: return "STG_PROP_ENTITY_NAME"; break;
+    case STG_PROP_ENTITY_COLOR: return "STG_PROP_ENTITY_COLOR"; break;
+    case STG_PROP_ENTITY_SUBSCRIBE: return "STG_PROP_ENTITY_SUBSCRIBE"; break;
+    case STG_PROP_ENTITY_UNSUBSCRIBE: return "STG_PROP_ENTITY_UNSUBSCRIBE"; break;
+    case STG_PROP_ENTITY_VOLTAGE: return "STG_PROP_ENTITY_VOLTAGE"; break;
+    case STG_PROP_ENTITY_LASERRETURN: return "STG_PROP_ENTITY_LASERRETURN"; break;
+    case STG_PROP_ENTITY_SONARRETURN: return "STG_PROP_ENTITY_SONARRETURN"; break;
+    case STG_PROP_ENTITY_IDARRETURN: return "STG_PROP_ENTITY_IDARRETURN"; break;
+    case STG_PROP_ENTITY_OBSTACLERETURN: return "STG_PROP_ENTITY_OBSTACLERETURN"; break;
+    case STG_PROP_ENTITY_VISIONRETURN: return "STG_PROP_ENTITY_VISIONRETURN"; break;
+    case STG_PROP_ENTITY_PUCKRETURN: return "STG_PROP_ENTITY_PUCKETURN"; break;
+    case STG_PROP_ENTITY_PLAYERID: return "STG_PROP_ENTITY_PLAYERID"; break;
+    case STG_PROP_ENTITY_PPM: return "STG_PROP_ENTITY_PPM"; break;
+    case STG_PROP_ENTITY_RECTS: return "STG_PROP_ENTITY_RECTS"; break;
+    case STG_PROP_ENTITY_CIRCLES: return "STG_PROP_ENTITY_CIRCLES"; break;
+    case STG_PROP_ENTITY_COMMAND: return "STG_PROP_ENTITY_COMMAND"; break;
+    case STG_PROP_ENTITY_DATA: return "STG_PROP_ENTITY_DATA"; break;
+    case STG_PROP_ENTITY_CONFIG: return "STG_PROP_ENTITY_CONFIG"; break;
+    default:
+      break;
+    }
+  return "unknown";
+}
+
 void SIOPackPose( stage_pose_t *pose, double x, double y, double a )
 {
   pose->x = x;
@@ -182,27 +215,27 @@ size_t SIOReadPacket( int con, char* buf, size_t len )
   int recv = 0;
   // read a header so we know what's coming
   while( recv < (int)len )
-  {
+    {
     //printf( "Reading on connection %d\n", con );
     
     /* read will block until it has some bytes to return */
     size_t r = read( connection_polls[con].fd, buf+recv,  len - recv );
-      
+    
     if( r == -1 ) // ERROR
-    {
-      if( errno != EINTR )
-	    {
-	      PRINT_ERR1( "ReadPacket: read returned %d\n", r );
-	      perror( "code" );
+      {
+	if( errno != EINTR )
+	  {
+	    PRINT_ERR1( "ReadPacket: read returned %d", r );
+	      perror( "system reports" );
 	      break;
-	    }
-    }
+	  }
+      }
     else if( r == 0 ) // EOF
       break; 
     else
       recv += r;
   }      
-
+  
   //printf( "read %d/%d bytes\n", recv, len );
 
   return recv; // the number of bytes read
@@ -452,7 +485,8 @@ int SIOInitClient( int argc, char** argv )
 }  
 
 // read stuff until we get a continue message on each channel
-int SIOServiceConnections(   stg_data_callback_t cmd_callback, 
+int SIOServiceConnections(   stg_connection_callback_t lostconnection_callback,
+			     stg_data_callback_t cmd_callback, 
 			     stg_data_callback_t model_callback,
 			     stg_data_callback_t prop_callback,
 			     stg_data_callback_t gui_callback )
@@ -500,36 +534,37 @@ int SIOServiceConnections(   stg_data_callback_t cmd_callback,
 		    {
 		      PRINT_DEBUG1( "con %d: failed header read. closing.",t );
 		      SIODestroyConnection( t ); // zap this connection
+		      (*lostconnection_callback)( t );
 		    }
 		  else // find out the type of packet to follow
 		    {  // and handle it
-		      PRINT_DEBUG2( "con %d header reports %d bytes follow",
-				    t, hdr.len );
+		      //PRINT_DEBUG2( "con %d header reports %d bytes follow",
+		      //	    t, hdr.len );
 			
 			switch( hdr.type )
 			  {
 			  case STG_HDR_GUI: // a gui config packet is coming in 
-			    PRINT_DEBUG1( "STG_HDR_GUI on %d", t );
+			    //PRINT_DEBUG1( "STG_HDR_GUI on %d", t );
 			    SIOReadData( t, hdr.len, 
 					 sizeof(stage_gui_config_t), 
 					 gui_callback );
 			    break;
 			    
 			  case STG_HDR_MODELS:
-			    PRINT_DEBUG1( "STG_HDR_MODELS on %d", t );
+			    //PRINT_DEBUG1( "STG_HDR_MODELS on %d", t );
 			    SIOReadData( t, hdr.len, 
 					 sizeof(stage_model_t), 
 					 model_callback );
 			    break;
 			    
 			  case STG_HDR_PROPS: // some poses are coming in 
-			    PRINT_DEBUG1( "STG_HDR_PROPS on %d", t );
+			    //PRINT_DEBUG1( "STG_HDR_PROPS on %d", t );
 			    SIOReadProperties( t, hdr.len, prop_callback );
 			    break;
 			    
 			    
 			  case STG_HDR_CMD:
-			    PRINT_DEBUG1( "STG_HDR_CMD on %d", t );
+			    //PRINT_DEBUG1( "STG_HDR_CMD on %d", t );
 			    if( cmd_callback )
 			      (*cmd_callback)( t, (char*)&(hdr.len), 1 );
 			    break;			  

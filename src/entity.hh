@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15.2.10 2003-02-08 01:20:37 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.11 2003-02-09 00:32:16 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -48,11 +48,11 @@ class CEntity
 {
   // Minimal constructor Requires a pointer to the library entry for
   // this type, a pointer to the world, and a parent
-public: CEntity(  LibraryItem *libit, int id, CEntity* parent );
+public: CEntity(  int id, char* token, char* color, CEntity* parent );
 
-public: static CEntity* Creator( LibraryItem *libit, int id, CEntity* parent )
+public: static CEntity* Creator( int id, char* token, char* color, CEntity* parent )
   {
-    return( new CEntity( libit, id, parent ) );
+    return( new CEntity( id, token, color, parent ) );
   };
 
   // a linked list of other entities attached to this one
@@ -83,8 +83,8 @@ public: stage_id_t stage_id;
   // Destructor
   public: virtual ~CEntity();
 
-  int Subs(){ return sub_count; };
-  int sub_count;
+  //int Subs(){ return sub_count; };
+  //int sub_count;
 
   // SUBCLASS INTERFACE ------------------------------------------
 protected:
@@ -94,9 +94,9 @@ protected:
 
 public: 
   // Initialise entity  
-  virtual bool Startup( void ); 
+  virtual int Startup( void ); 
   // Finalize entity
-  virtual void Shutdown();  
+  virtual int Shutdown();  
 
 
   // Update the entity's device-specific representation
@@ -227,12 +227,7 @@ public: void FamilyUnsubscribe();
 
   // the worldfile token that caused this entity to be created
   // it is set in the constructor (which is called by the library) 
-  protected: char token[STG_TOKEN_MAX]; 
-
-  // this is the library's entry for this device, which contains the
-  // object's type number, worldfile token, etc.  this can also be
-  // used as a type identifier, as it is unique for each library entry
-  public: LibraryItem* lib_entry; 
+  public: char token[STG_TOKEN_MAX]; 
   
   // Our shape and geometry
   public: double origin_x, origin_y;
@@ -300,13 +295,22 @@ private: int BufferPacket( stage_buffer_t* buf, char* data, size_t len );
   ///////////////////////////////////////////////////////////////////////
   // DISTRIBUTED STAGE STUFF
   
-  public: char m_dirty[ STG_MAX_CONNECTIONS ][ STG_PROPERTY_COUNT ];
- 
+  //public: char m_dirty[ STG_MAX_CONNECTIONS ][ STG_PROPERTY_COUNT ];
+
+
+public: 
+  stage_subscription_t subscriptions[ STG_MAX_CONNECTIONS][STG_PROPERTY_COUNT];
+  void Subscribe( int con, stage_prop_id_t *props, int prop_count );
+  void Unsubscribe( int con, stage_prop_id_t *props, int prop_count );
+  bool IsSubscribed( stage_prop_id_t );
+  
   // set the dirty flag for each property for each connection
-public: void SetDirty( char v);
-public: void SetDirty( stage_prop_id_t prop, char v );
-public: void SetDirty( int con, char v );
-public: void SetDirty( int con, stage_prop_id_t prop, char v );
+  void SetDirty( char v);
+  void SetDirty( stage_prop_id_t prop, char v );
+  void SetDirty( int con, char v );
+  void SetDirty( int con, stage_prop_id_t prop, char v );
+  
+  void DestroyConnection( int con );
   
   // these store the last pose we sent out from the pose server
   // to be tested when setting the dirty flag to see if we really

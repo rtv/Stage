@@ -8,6 +8,7 @@
 #include "stage.h"
    
    typedef int (*stg_data_callback_t)(int, char* data, size_t len );
+   typedef int (*stg_connection_callback_t)(int);
    
    void* malloc_debug( size_t );
    void* realloc_debug( void*,  size_t );
@@ -16,6 +17,9 @@
    
    /* EXTERNAL FUNCTIONS - clients should use these */
    void SIOPackPose( stage_pose_t *pose, double x, double y, double a );
+
+   /* maps enum'd property codes to strings */
+   const char* SIOPropString( stage_prop_id_t id );
 
    /* SERVER-ONLY FUNCTIONS */   
    int SIOInitServer( int argc, char** argv );
@@ -33,11 +37,12 @@
    
    // read until we get a continue on all connections.
    // the functions are called to service incoming requests
-   int SIOServiceConnections( stg_data_callback_t cmd_cb,
+   int SIOServiceConnections( stg_connection_callback_t lostconnection_cb,
+			      stg_data_callback_t cmd_cb,
 			      stg_data_callback_t model_cb,
 			      stg_data_callback_t prop_cb,
 			      stg_data_callback_t gui_cb );
-
+   
    // temporary...
    int SIOReportResults( double simtime, char* data, size_t len );
    

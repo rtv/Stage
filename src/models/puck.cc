@@ -8,18 +8,19 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/puck.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.3.6.2 $
+//  $Revision: 1.3.6.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
+#include <assert.h>
 #include "puck.hh"
 #include "raytrace.hh"
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CPuck::CPuck(LibraryItem* libit, int id, CEntity *parent)
-  : CEntity(libit, id, parent)
+CPuck::CPuck( int id,  char* token, char* color, CEntity *parent)
+  : CEntity( id, token, color, parent)
 {
   this->vision_return = true;
   this->vision_return_held = false;

@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.10 2003-02-08 01:20:37 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.11 2003-02-09 00:32:16 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -49,10 +49,10 @@
 //#undef VERBOSE
 //#define RENDER_INITIAL_BOUNDING_BOXES
 
+#include "sio.h" // for SIOPropString()
 #include "entity.hh"
 #include "raytrace.hh"
 #include "gui.hh"
-#include "library.hh"
 
 // init the static vars shared by all entities
  // everyone shares these vars 
@@ -65,7 +65,7 @@ double CEntity::timestep = 0.01; // default 10ms update
 ///////////////////////////////////////////////////////////////////////////
 // main constructor
 // Requires a pointer to the parent and a pointer to the world.
-CEntity::CEntity( LibraryItem* libit, int id, CEntity* parent )
+CEntity::CEntity( int id, char* token, char* color, CEntity* parent )
 {
   this->m_parent_entity = parent;
   
@@ -73,17 +73,18 @@ CEntity::CEntity( LibraryItem* libit, int id, CEntity* parent )
   //if( m_parent_entity )
   //color = m_parent_entity->color;
   //else
-  color = libit->color; //look in library for our color
+  this->color = ::LookupColor(color); 
 
   this->stage_id = id;
-  this->lib_entry = libit; // from here we can find our file token and type number
 
   // init the child list data
+  // do this early - ie. before calling any functions that access our children
   this->child_list = this->prev = this->next = NULL;
 
-  // Set our default name
-  this->name[0] = 0;
-
+  // Set our default name the same
+  strncpy( this->token, token, STG_TOKEN_MAX );
+  strncpy( this->name, token, STG_TOKEN_MAX );
+  
   // Set default pose
   this->local_px = this->local_py = this->local_pth = 0;
 
@@ -102,9 +103,6 @@ CEntity::CEntity( LibraryItem* libit, int id, CEntity* parent )
 
   // TODO
   m_local = true; 
- 
-  // no subscriptions yet
-  sub_count = 0;
  
   // zero our IO buffer headers
   memset( &buffer_data, 0, sizeof(buffer_data) );
@@ -148,16 +146,18 @@ CEntity::CEntity( LibraryItem* libit, int id, CEntity* parent )
 
   m_dependent_attached = false;
 
-  // we start out NOT dirty - no one gets deltas unless they ask for 'em.
-  SetDirty( 0 );
-  
   m_last_pixel_x = m_last_pixel_y = m_last_degree = 0;
 
   m_interval = 0.1; // update interval in seconds 
   m_last_update = -FLT_MAX; // initialized 
-
+  
   // init the ptr to GUI-specific data
   this->gui_data = NULL;
+
+  // clear any garbage subscription data
+  for( int c=0; c<STG_MAX_CONNECTIONS; c++ )
+    DestroyConnection(c);
+
 
 #ifdef INCLUDE_RTK2
   // Default figures for drawing the entity.
@@ -310,31 +310,41 @@ void CEntity::UnMapFamily()
 // Startup routine
 // A virtual function that lets entities do some initialization after
 // everything has been loaded.
-bool CEntity::Startup( void )
+int CEntity::Startup( void )
 {
   PRINT_WARN( "entity starting up" );
   
   Map();
   
+  int success = 0;
+
   CHILDLOOP( ch )
-    ch->Startup();
-  
-  return true;
+    success += ch->Startup();
+
+  if( success < 0 )
+    return -1; // fail 
+  else
+    return 0; // success
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Shutdown routine
-void CEntity::Shutdown()
+int CEntity::Shutdown()
 {
   PRINT_WARN( "entity shutting down" );
-  
-  // recursively shutdown our children
-  CHILDLOOP( ch ) ch->Shutdown();
 
   UnMap();
-
-  return;
+  
+  int success = 0;
+  // recursively shutdown our children
+  CHILDLOOP( ch ) 
+    success += ch->Shutdown();
+  
+  if( success < 0 )
+    return -1; // fail 
+  else
+    return 0; // success
 }
 
 int CEntity::Move( double vx, double vy, double va, double step )
@@ -717,13 +727,14 @@ void CEntity::SetDirty( stage_prop_id_t prop, char v )
 
 void CEntity::SetDirty( int con, stage_prop_id_t prop, char v )
 {
-  m_dirty[con][prop] = v;
+  subscriptions[con][prop].dirty = v;
 };
 
+// make EVERYTHING dirty
 void CEntity::SetDirty( char v )
 {
-  memset( m_dirty, v, 
-	  sizeof(char) * STG_MAX_CONNECTIONS * STG_PROPERTY_COUNT );
+  for( int i=0; i< STG_MAX_CONNECTIONS; i++ )
+    SetDirty( i, v ); //  set all props on this channel to dirty = v
 };
 
 ///////////////////////////////////////////////////////////////////////////
@@ -753,15 +764,67 @@ void CEntity::DetectRectBounds(void)
 }
 
 
+void CEntity::Subscribe( int con, stage_prop_id_t* props, int prop_count )  
+{
+  
+  for( int p=0; p<prop_count; p++ )
+    {
+      stage_prop_id_t prop_code = props[p];
+      
+      if( prop_code == -1 )
+	PRINT_WARN( "subscribe to all properties not implemented" );
+      else
+	{
+	  PRINT_WARN2( "subscribing to property %s on connection %d",
+		       SIOPropString(prop_code), con );
+	  // register the subscription on this channel, for this property
+	  subscriptions[con][prop_code].subscribed = 1;
+	  subscriptions[con][prop_code].dirty = 1;
+	}
+    }
+}
+
+
+void CEntity::Unsubscribe( int con,  stage_prop_id_t* props, int prop_count )  
+{
+  
+  for( int p=0; p<prop_count; p++ )
+    {
+      stage_prop_id_t prop_code = props[p];
+      
+      if( prop_code == -1 )
+	PRINT_WARN( "unsubscribe to all properties not implemented" );
+      else
+	{
+	  PRINT_WARN2( "unsubscribing from property %s on connection %d",
+		       SIOPropString(prop_code), con );
+	  // register the subscription on this channel, for this property
+	  subscriptions[con][prop_code].subscribed = 0;
+	  subscriptions[con][prop_code].dirty = 0;
+	}
+    }
+}
+
+// clear the subscription data for this channel on me and my children
+void CEntity::DestroyConnection( int con )
+{
+  memset( subscriptions[con], 0, 
+	  STG_PROPERTY_COUNT*sizeof(stage_subscription_t) );
+
+  CHILDLOOP(ch)
+    ch->DestroyConnection( con );
+}
+
+
 int CEntity::SetProperty( int con, stage_prop_id_t property, 
 			  char* value, size_t len )
 {
-  PRINT_DEBUG3( "setting prop %d (%d bytes) for ent %p",
-		property, len, this );
+  PRINT_DEBUG3( "setting prop %s (%d bytes) for ent %p",
+		SIOPropString(property), (int)len, this );
 
   assert( value );
   //assert( len > 0 );
-  assert( (int)len < MAX_PROPERTY_DATA_LEN );
+  assert( len < (size_t)STG_PROPERTY_DATA_MAX );
   
   switch( property )
     {
@@ -886,13 +949,20 @@ int CEntity::SetProperty( int con, stage_prop_id_t property,
       break;
 
     case STG_PROP_ENTITY_SUBSCRIBE:
-      assert( len == 0 );
-      sub_count++;
+      // *value is an array of integer property codes that request
+      // subscriptions on this channel
+      PRINT_DEBUG2( "received SUBSCRIBE for %d properties on %d",
+		    (int)(len/sizeof(int)), con );
+      this->Subscribe( con, (stage_prop_id_t*)value, len/sizeof(int) );
       break;
-
+      
     case STG_PROP_ENTITY_UNSUBSCRIBE:
-      assert( len == 0 );
-      sub_count--;
+      // *value is an array of integer property codes that request
+      // subscriptions on this channel
+      PRINT_DEBUG2( "received UNSUBSCRIBE for %d properties on %d",
+		    (int)(len/sizeof(int)), con );
+      
+      this->Unsubscribe( con, (stage_prop_id_t*)value, len/sizeof(int) );
       break;
 
     case STG_PROP_ENTITY_NAME:
@@ -976,7 +1046,7 @@ int CEntity::SetProperty( int con, stage_prop_id_t property,
 }
 
 
-int CEntity::GetProperty( stage_prop_id_t property, void* value )
+int CEntity::GetProperty( stage_prop_id_t property, void* value  )
 {
   //PRINT_DEBUG1( "finding property %d", property );
   //printf( "finding property %d", property );
@@ -1072,10 +1142,15 @@ int CEntity::GetProperty( stage_prop_id_t property, void* value )
       retval = sizeof(puck_return);
       break;
 
+    case STG_PROP_ENTITY_DATA:
+      memcpy( value, buffer_data.data, buffer_data.len );
+      retval = buffer_data.len;
+      break;
+
     default:
-      // printf( "Stage Warning: attempting to get unknown property %d\n", 
-      //      property );
-    break;
+      PRINT_WARN2( "attempting to get unknown property %p from model %d\n", 
+		   SIOPropString, this->stage_id );
+      break;
   }
 
   return retval;
@@ -1088,10 +1163,12 @@ void CEntity::Print( int fd, char* prefix )
   double ox, oy, oth;
   this->GetGlobalPose( ox, oy, oth );
 
-  printf( "%s type: %s global: [%.2f,%.2f,%.2f]"
+  printf( "%s id: %d name: %s type: %s global: [%.2f,%.2f,%.2f]"
 	  " local: [%.2f,%.2f,%.2f] vision_return %d )", 
 	  prefix,
-	  this->lib_entry->token,
+	  this->stage_id,
+	  this->name,
+	  this->token,
 	  ox, oy, oth,
 	  local_px, local_py, local_pth,
 	  this->vision_return );
@@ -1110,6 +1187,17 @@ void CEntity::Print( int fd, char* prefix )
     ch->Print( fd, buf );
 }
 
+// return true if this property is subscribed on any connection
+bool CEntity::IsSubscribed( stage_prop_id_t prop )
+{
+  for( int con=0; con < STG_MAX_CONNECTIONS; con++ )
+    if( subscriptions[con][prop].subscribed )
+      return true;
+  
+  return false;
+}
+
+/*
 // these versions sub/unsub to this device and all its decendants
 void CEntity::FamilySubscribe()
 { 
@@ -1126,6 +1214,7 @@ void CEntity::FamilyUnsubscribe()
   
   sub_count--;
 };
+*/
 
 
 void CEntity::GetStatusString( char* buf, int buflen )
@@ -1136,11 +1225,10 @@ void CEntity::GetStatusString( char* buf, int buflen )
   // check for overflow
   assert( -1 != 
 	  snprintf( buf, buflen, 
-		    "Pose(%.2f,%.2f,%.2f) Stage(%d:%d(%s))",
+		    "Pose(%.2f,%.2f,%.2f) Stage(%d:%s)",
 		    x, y, th, 
 		    this->stage_id,
-		    this->lib_entry->type_num,
-		    this->lib_entry->token ) );
+		    this->token ) );
 }  
 
 
@@ -1177,7 +1265,7 @@ void CEntity::RenderRects( bool render )
 int CEntity::BufferPacket( stage_buffer_t* buf, char* data, size_t len )
 {
   PRINT_DEBUG2( "pushing %d bytes into stage_buffer_t at %p",
-		len, buf );
+		(int)len, buf );
 
   // if the buffer is too small
   if( len > buf->len )
@@ -1197,21 +1285,21 @@ int CEntity::BufferPacket( stage_buffer_t* buf, char* data, size_t len )
 int CEntity::SetCommand( char* data, size_t len )
 {
   PRINT_WARN2( "ent %d received %d bytes of command, but does nothing", 
-	       this->stage_id, len );   
+	       this->stage_id, (int)len );   
   return 0;
 }
 
 int CEntity::SetConfig( char* data, size_t len )
 {
   PRINT_WARN2( "ent %d received %d bytes of config, but does nothing with it", 
-	       this->stage_id, len );   
+	       this->stage_id, (int)len );   
   return 0;
 }
 
 int CEntity::SetData( char* data, size_t len )
 {
   PRINT_WARN2( "ent %d received %d bytes of data", 
-	       this->stage_id, len ); 
+	       this->stage_id, (int)len ); 
   return 0;
 }
 

@@ -32,7 +32,7 @@
 
    // (currently) static memory allocation for getting and setting properties
    //const int MAX_NUM_PROPERTIES = 30;
-#define MAX_PROPERTY_DATA_LEN  20000
+#define STG_PROPERTY_DATA_MAX  20000
    
 #define ENTITY_FIRST_PROPERTY 1
    
@@ -65,8 +65,8 @@
      STG_PROP_ENTITY_CONFIG,
      STG_PROPERTY_COUNT // THIS MUST BE THE LAST ENTRY
    } stage_prop_id_t;
-
-
+   
+   
 // PROPERTY DEFINITIONS ///////////////////////////////////////////////
 
 // Possible laser return values
@@ -137,6 +137,12 @@ typedef enum {
   STG_CMD_QUIT,
 } stage_cmd_t;
 
+
+typedef struct
+{
+  char subscribed; // 0 = not subscribed, else subscribed
+  char dirty; // 0 = not dirty , else dirty
+} stage_subscription_t;
 
 // returned by BufferPacket()
 typedef struct

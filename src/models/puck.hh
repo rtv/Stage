@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/puck.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.2.6.2 $
+//  $Revision: 1.2.6.3 $
 //
 // Usage:
 //  (empty)
@@ -24,24 +24,23 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef PUCK_HH
-#define PUCK_HH
+#ifndef _PUCK_HH
+#define _PUCK_HH
 
 #include "entity.hh"
 
 class CPuck : public CEntity
 {
   // Default constructor
-  public: CPuck( LibraryItem *libit, int id, CEntity *parent);
+  public: CPuck( int id, char* token, char* color, CEntity *parent);
 
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-public: static CPuck* Creator(  LibraryItem *libit, int id, CEntity *parent )
-  { return( new CPuck( libit, id, parent ) ); }
-
-
+public: static CPuck* Creator( int id,  char* token, char* color, CEntity *parent )
+  { return( new CPuck( id, token, color, parent ) ); }
+  
   // Update the device
   public: virtual int Update();
 

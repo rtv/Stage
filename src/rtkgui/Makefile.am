@@ -1,12 +1,12 @@
 
 # Automake config to build the rtkstage gui library Makefile
-# $Id: Makefile.am,v 1.1.2.3 2003-02-08 01:20:37 rtv Exp $
+# $Id: Makefile.am,v 1.1.2.4 2003-02-09 00:32:17 rtv Exp $
 
 if WITH_RTK
 noinst_LIBRARIES = librtkgui.a
 endif
 
-AM_CPPFLAGS = 	-I$(top_srcdir)/src -I$(top_srcdir)/src/models -I@RTK_DIR@/include `gtk-config --cflags` -I$(top_srcdir)/replace 
+AM_CPPFLAGS = 	-I$(top_srcdir)/src -I$(top_srcdir)/src/sio -I$(top_srcdir)/src/models -I@RTK_DIR@/include `gtk-config --cflags` -I$(top_srcdir)/replace 
 
 librtkgui_a_SOURCES = \
 	rtkgui.cc \

@@ -24,127 +24,38 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.13.4.5 2003-02-05 03:59:49 rtv Exp $
+ * CVS info: $Id: library.cc,v 1.13.4.6 2003-02-09 00:32:16 rtv Exp $
  */
 
+#include <assert.h>
 #include "library.hh"
 #include "entity.hh"
-#include "root.hh"
 
 //#define DEBUG
 
-// LibraryItem //////////////////////////////////////////////////////////////
-
-int LibraryItem::type_count = 0;
-
-LibraryItem::LibraryItem( const char* token, 
-			  const char* colorname, 
-			  CreatorFunctionPtr creator_func )
-{
-  assert( token );
-  assert( strlen(token) > 0 );
-  assert( colorname ); 
-  assert( creator_func );
-  
-  this->token = token;
-  this->color = ::LookupColor( colorname ); // convert to StageColor (RGB)
-  this->creator_func = creator_func;
-  this->type_num = LibraryItem::type_count++;
-  this->prev = this->next = NULL;
-}
-
-
-LibraryItem* LibraryItem::FindLibraryItemFromToken( char* token )
-{
-  if( token == this->token ) return this; // same pointer!
-  if( strcmp( token, this->token) == 0 ) return this; // same string!
-  
-  // try the next item in the list
-  if( next ) return next->FindLibraryItemFromToken( token );
-  
-  // fail! token not found here or later in the list
-  PRINT_WARN1( "Failed to find token %s in library\n", token );
-  return NULL;
-}
-
-CreatorFunctionPtr LibraryItem::FindCreatorFromToken( char* token )
-{
-  if( strcmp( token, this->token) == 0 ) return this->creator_func;
-  
-  // try the next item in the list
-  if( next ) return next->FindCreatorFromToken( token );
-  
-  // fail! token not found here or later in the list
-  PRINT_WARN1( "failed to find creator of token %s in library\n", token );
-  return NULL;
-}
-
-int LibraryItem::FindTypeNumFromToken( char* token )
-{
-  if( strcmp( token, this->token) == 0 ) return this->type_num;
-  
-  // try the next item in the list
-  if( next ) return next->FindTypeNumFromToken( token );
-  
-  // fail! token not found here or later in the list
-  PRINT_WARN1( "failed to find type_num of token %s in library\n", token );
-  return -1;
-}
-
-const char* LibraryItem::FindTokenFromCreator( CreatorFunctionPtr cfp )
-{
-  if( cfp == this->creator_func ) return this->token;
-  
-  // try the next item in the list
-  if( next ) return next->FindTokenFromCreator( cfp );
-  
-  // fail! token not found here or later in the list
-  PRINT_WARN1( "failed to find token of creator %p in library\n", cfp );
-  return NULL;
-}
-
 // Library //////////////////////////////////////////////////////////////
 
-// constructor
-Library::Library( void )
+// constructor from null-terminated array
+Library::Library( const stage_libitem_t item_array[] )
 {
   // TODO - fix this with dynamic allocation
   memset( entPtrs, 0, 10000 * sizeof(CEntity*) );
-}
 
-// constructor from null-terminated array
-Library::Library( const libitem_t item_array[] )
-{
-  //PRINT_DEBUG( "Building libray from array\n" );
-
-  int type=1;
-  for( libitem_t* item = (libitem_t*)&(item_array[0]);
-       item->token; 
-       item++ )
+  //PRINT_DEBUG( "Building libray from array" );
+  
+  items = item_array;
+  
+  // count all the items in the array
+  item_count = 0;
+  for( stage_libitem_t* item = (stage_libitem_t*)items; item->token; item++ )
     {
-      //PRINT_DEBUG3( "%s %d %p\n", item->token, item->type, item->fp );
-      this->AddDevice( (char*)item->token, item->colorstr, item->fp );
-      type++;
+      PRINT_DEBUG4( "counting library item %d : %s %s %p", 
+		    item_count, item->token, item->colorstr, item->fp );
+      
+      item_count++;
     }
 }
 
-
-// add a device type to the library
-void Library::AddDevice( const char* token, const char* colorstr, CreatorFunctionPtr creator )
-{
-  LibraryItem* item = new LibraryItem( token, colorstr, creator );
-
-  // check to make sure that this item isn't already there
-  //if( liblist && liblist->FindCreatorFromType( type ) != NULL )
-  //PRINT_ERR2( "attempting to add a duplicate type %d:%s to library",
-  //	type, token );
-  
-  //printf(  "Registering %d:%s %p in library\n",
-  //   type, token, creator );
-
-  // store the new item in our list
-  STAGE_LIST_APPEND( liblist, item );
-}
 
 void Library::StoreEntPtr( int id, CEntity* ent )
 {
@@ -152,6 +63,17 @@ void Library::StoreEntPtr( int id, CEntity* ent )
   // store the pointer in our array
   entPtrs[id] = ent;
 }   
+
+// look in the array for an item with matching token and return a pointer to it
+stage_libitem_t* Library::FindItemWithToken( const stage_libitem_t* items, 
+					     int count, char* token )
+{
+  for( int c=0; c<count; c++ )
+    if( strcmp( items[c].token, token ) == 0 )
+      return (stage_libitem_t*)&(items[c]);
+  
+  return NULL; // didn't find the token
+}
 
 // create an instance of an entity given a worldfile token
 CEntity* Library::CreateEntity( stage_model_t* model )
@@ -161,9 +83,15 @@ CEntity* Library::CreateEntity( stage_model_t* model )
   // if an entity exists with this id, we zap the old one.
   if( CEntity* extant = entPtrs[model->id] )
     {  
-      PRINT_DEBUG3(  "Removing extant model with ID %d (%s) at %p",
-		     extant->stage_id, extant->lib_entry->token, extant );
-      extant->Shutdown();
+      PRINT_DEBUG3(  "Removing extant model %d:%s at %p",
+		     extant->stage_id, extant->token, extant );
+      
+      if( GuiEntityShutdown(extant) == -1 )
+	PRINT_WARN1( "gui shutdown failed for model %d", model->id );
+      
+      if( extant->Shutdown() == -1 )
+	PRINT_WARN1( "enitity shutdown failed for mode %d", model->id );
+      
       delete extant;
       entPtrs[model->id] = NULL;
     }
@@ -171,13 +99,13 @@ CEntity* Library::CreateEntity( stage_model_t* model )
   // now we create the replacement.
 
   // look up this token in the library
-  LibraryItem* libit = liblist->FindLibraryItemFromToken( model->token );
-
+  stage_libitem_t* libit = FindItemWithToken( model->token );
+  
   CEntity* ent;
   
   if( libit )
     {
-      assert( libit->creator_func );
+      assert( libit->fp );
       
       // if it has a valid parent, look up the parent's address
       CEntity* parentPtr = NULL;
@@ -185,11 +113,14 @@ CEntity* Library::CreateEntity( stage_model_t* model )
       
       // create an entity through the creator callback fucntion  
       // which calls the constructor
-      ent = (*libit->creator_func)( libit, model->id, parentPtr ); 
-     
+      ent = (*libit->fp)( model->id, 
+			  (char*)model->token, 
+			  (char*)libit->colorstr, 
+			  parentPtr ); 
+      
       // need to do some startup outside the constructor to allow for
       // full polymorphism
-      if( !ent->Startup() ) // if startup fails
+      if( ent->Startup() == -1 ) // if startup fails
 	{
 	  PRINT_WARN3( "Startup failed for model %d (%s) at %p",
 		      model->id, model->token, ent );
@@ -219,41 +150,15 @@ CEntity* Library::CreateEntity( stage_model_t* model )
 			   model->id, model->token, ent );
   return ent; // NULL if failed
 } 
-  
-  
-const char* Library::TokenFromCreator( CreatorFunctionPtr cfp )
-{ 
-  //printf( "token from creator %p\n", cfp );
-
-  assert( liblist );
-  assert( cfp );
-  return( liblist->FindTokenFromCreator( cfp ) ); 
-}
-
-int Library::TypeNumFromToken( char* token )
-{ 
-  printf( "type_num from token %s\n", token );
-
-  assert( liblist );
-  return( liblist->FindTypeNumFromToken( token ) ); 
-}
-
-LibraryItem* Library::LibraryItemFromToken( char* token )
-{ 
-  //printf( "library item from token %s\n", token );
-
-  assert( liblist );
-  return( liblist->FindLibraryItemFromToken( token ) ); 
-}
-
-
 
 void Library::Print( void )
 {
-  //printf("\n[Library contents:");
+  PRINT_MSG("[Library contents:");
   
-  for( LibraryItem* it = liblist; it; it = it->next )
-    printf( "\n\t%s:%p:%d", it->token, it->creator_func, it->type_num );
+  int i;
+  for( i=0; i<item_count; i++ )
+    printf( "\n\t%s:%s:%p", 
+	    items[i].token, items[i].colorstr, items[i].fp );
   
   puts( "]" );
 }

@@ -21,16 +21,17 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonar.cc,v 1.1.2.1 2003-02-08 01:20:37 rtv Exp $
+ * CVS info: $Id: sonar.cc,v 1.1.2.2 2003-02-09 00:32:17 rtv Exp $
  */
 
+#include <assert.h>
 #include <math.h>
 #include "sonar.hh"
 #include "raytrace.hh"
 
 // constructor
-CSonarModel::CSonarModel( LibraryItem* libit, int id, CEntity *parent )
-  : CEntity( libit, id, parent )    
+CSonarModel::CSonarModel( int id, char* token, char* color, CEntity *parent )
+  : CEntity( id, token, color, parent )    
 {
   this->min_range = 0.20;
   this->max_range = 5.0;
@@ -57,13 +58,11 @@ CSonarModel::CSonarModel( LibraryItem* libit, int id, CEntity *parent )
 ///////////////////////////////////////////////////////////////////////////
 // Update the sonar data
 int CSonarModel::Update() 
-{
-  PRINT_WARN1( "sonar updating at %.4f seconds", CEntity::simtime );
-  
+{ 
   CEntity::Update();
-
-  // dump out if noone is subscribed
-  if( Subs() < 1 )
+  
+  // is anyone interested in my data? if not, bail here.
+  if( !IsSubscribed( STG_PROP_ENTITY_DATA ) )
     return 0;
 
   // Check to see if it is time to update
@@ -103,7 +102,9 @@ int CSonarModel::Update()
 	    }	
 	}
     }
-
+  
+  PRINT_WARN1( "sonar exporting data at %.4f seconds", CEntity::simtime );
+  
   // this is the right way to export data, so everyone else finds out about it
   SetProperty( -1, STG_PROP_ENTITY_DATA, 
 	       (char*)ranges, sonar_count * sizeof(ranges[0]) );

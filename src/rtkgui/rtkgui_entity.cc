@@ -1,3 +1,5 @@
+
+#include <assert.h>
 #include "math.h"
 #include "entity.hh"
 #include "rtkgui.hh"
@@ -71,7 +73,7 @@ void CEntity::RtkStartup()
       
     label[0] = 0;
     snprintf(tmp, sizeof(tmp), "%s %s", 
-             this->name, this->lib_entry->token );
+             this->name, this->token );
     strncat(label, tmp, sizeof(label));
       
     rtk_fig_color_rgb32(this->fig, this->color);
@@ -261,7 +263,7 @@ void CSonarModel::RtkUpdate()
   double ranges[SONARSAMPLES];
   size_t len = SONARSAMPLES * sizeof(ranges[0]);
   
-  if( Subs() > 0 )//&& ShowDeviceData( this->lib_entry->type_num) )
+  if( IsSubscribed( STG_PROP_ENTITY_DATA ) )//&& ShowDeviceData( this->lib_entry->type_num) )
     {
       if( this->GetData( (char*)ranges, &len ) == 0 )
 	{

@@ -21,7 +21,7 @@
  * Desc: Gnome GUI 
  * Author: Richard Vaughan
  * Date: 20 Sept 2002
- * CVS info: $Id: gnomegui.cc,v 1.1.2.1 2003-02-05 04:03:21 rtv Exp $
+ * CVS info: $Id: gnomegui.cc,v 1.1.2.2 2003-02-09 00:32:16 rtv Exp $
  */
 
 
@@ -513,8 +513,8 @@ gint GnomeEventCanvas(GnomeCanvasItem *item, GdkEvent *event, gpointer data)
 	    case 2: 
 	      //puts( "TOGGLE VIEW DATA" );
 	      
-	      GetClickSub(g_watched) ? 
-		g_watched->FamilyUnsubscribe() : g_watched->FamilySubscribe();
+	      //GetClickSub(g_watched) ? 
+	      //g_watched->FamilyUnsubscribe() : g_watched->FamilySubscribe();
 	      
 	      SetClickSub( g_watched, !GetClickSub(g_watched) ); // invert value	      
 	      break;
@@ -1180,7 +1180,8 @@ void GnomeSubscribeToAll(GtkWidget *widget, gpointer data)
   // recursively subscribe/unsubscribe to everything
   static bool sub = false;
   sub = !sub; // invert sub
-  sub ? CEntity::root->FamilySubscribe() : CEntity::root->FamilyUnsubscribe();
+  PRINT_WARN( "subscribe to all not implemented" );
+  //sub ? CEntity::root->FamilySubscribe() : CEntity::root->FamilyUnsubscribe();
 }
 
 

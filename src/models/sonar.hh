@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonar.hh,v 1.1.2.1 2003-02-08 01:20:37 rtv Exp $
+ * CVS info: $Id: sonar.hh,v 1.1.2.2 2003-02-09 00:32:17 rtv Exp $
  */
 
 #ifndef SONARDEVICE_HH
@@ -41,16 +41,15 @@ enum SonarReturn { SonarTransparent=0, SonarOpaque };
 class CSonarModel : public CEntity
 {
   // Default constructor
-  public: CSonarModel( LibraryItem *libit, int id, CEntity *parent);
+  public: CSonarModel( int id, char* token, char* color, CEntity *parent);
   
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-public: static CSonarModel* Creator( LibraryItem *libit,
-				      int id, CEntity *parent )
+public: static CSonarModel* Creator( int id, char* token, char* color, CEntity *parent )
   {
-    return( new CSonarModel( libit, id, parent ) );
+    return( new CSonarModel( id, token, color, parent ) );
   }
     
   // Update the device

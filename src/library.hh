@@ -2,18 +2,12 @@
 #ifndef _LIBRARY_HH
 #define _LIBRARY_HH
 
-#include <map>
-//#include <string>
-
 #include "stage.h"
-#include "colors.hh"
 
 class CEntity;
-class LibraryItem;
 
 // pointer to a function that returns a new  entity
-typedef CEntity*(*CreatorFunctionPtr)( LibraryItem *libit, 
-				       int id, 
+typedef CEntity*(*CreatorFunctionPtr)( int id, char* token, char* color,
 				       CEntity *parent );
 
 typedef CreatorFunctionPtr CFP;
@@ -21,11 +15,9 @@ typedef CreatorFunctionPtr CFP;
 typedef struct libitem
 {
   const char* token;
-  //StageType type;
   const char* colorstr;
   CreatorFunctionPtr fp;
-} libitem_t;
-
+} stage_libitem_t;
 
 // ADDING A DEVICE TO THE LIBRARY
 //
@@ -41,37 +33,14 @@ typedef struct libitem
 //   }
 //
 
-class LibraryItem
-{
-public:
-  LibraryItem( const char* token, const char* colorstr, CreatorFunctionPtr creator_func );
-  
-  CreatorFunctionPtr FindCreatorFromToken( char* token );
-  int  FindTypeNumFromToken( char* token );
-  const char* FindTokenFromCreator( CreatorFunctionPtr cfp );
-  LibraryItem* FindLibraryItemFromToken( char* token );
-
-  const char* token;//[STAGE_TOKEN_MAX];
-  CreatorFunctionPtr creator_func;
-  int type_num; // each library entry has a unique type number
-  
-  StageColor color;
-
-  // this is used to set the type number in the constructor, where it
-  // is incremented in each use.
-  static int type_count;
-
-  // list-enabling pointers for use with STAGE_LIST_X macros
-  LibraryItem *prev, *next;
-};
-
-
 class Library
 {
 private:
-  // a list of [type,token,creator] mappings
-  LibraryItem* liblist;
-  
+  // an array of [token,color,creator_function] structures
+  // the position in the array is used as a type number
+  const stage_libitem_t* items;
+  int item_count;
+
   // TODO - make this length adaptive
   // an array of pointers to entities
   // used to map id (array index) to an entity
@@ -79,12 +48,22 @@ private:
 
 public:
   // constructor
-  Library( void );
-  Library( const libitem_t items[] );
+  Library( const stage_libitem_t items[] );
+  
+  // print the items on stdout
+  void Print(void);
+
+  // returns a pointer the matching item, or NULL if none is found
+  stage_libitem_t* FindItemWithToken( const stage_libitem_t* items, 
+				      int count, char* token );
+  
+  // as above, but uses data members as arguments
+  stage_libitem_t* Library::FindItemWithToken( char* token  )
+  { return FindItemWithToken( this->items, this->item_count, token ); };
   
   void StoreEntPtr( int id, CEntity* ent );
   CEntity* GetEntPtr( int id ){ return( entPtrs[id] ); };
-
+  
   void AddDevice( const char* token, const char* colorstr, CreatorFunctionPtr creator );
   
   // create an instance of an entity given a request
@@ -92,11 +71,10 @@ public:
   // entity object
   CEntity* CreateEntity( stage_model_t* model );
   
-  const char* TokenFromCreator( CreatorFunctionPtr cfp );
-
-  int TypeNumFromToken( char* token );
-  LibraryItem* LibraryItemFromToken( char* token );
-  void Print();
+    CEntity* GetEntFromId( int id )
+  {
+    return entPtrs[id];
+  };
 };
 
  

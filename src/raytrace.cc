@@ -18,10 +18,11 @@
  */
 // ==================================================================
 // Filename:	raytrace.cc
-// $Id: raytrace.cc,v 1.10.6.2 2003-02-07 05:30:34 rtv Exp $
-// RTV
+// Author:      Richard Vaughan
+// $Id: raytrace.cc,v 1.10.6.3 2003-02-09 00:32:16 rtv Exp $
 // ==================================================================
 
+#include <assert.h>
 #include "raytrace.hh"
 
 CEntity* g_nullp = 0;

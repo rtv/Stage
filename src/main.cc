@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.13 2003-02-08 01:20:37 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.14 2003-02-09 00:32:16 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -38,7 +38,6 @@
 
 #include "sio.h"
 #include "entity.hh"
-#include "root.hh"
 
 #include "models/puck.hh"
 #include "models/sonar.hh"
@@ -66,12 +65,12 @@
 // this array defines the models that are available to Stage. New
 // devices must be added here.
 
-libitem_t library_items[] = { 
+stage_libitem_t library_items[] = { 
   { "box", "black", (CFP)CEntity::Creator},
   { "puck", "green", (CFP)CPuck::Creator},
   { "sonar", "red", (CFP)CSonarModel::Creator},
   /*
-  { "bitmap", "blue", (CFP)CBitmap::Creator},
+    { "bitmap", "blue", (CFP)CBitmap::Creator},
   { "laser", "blue", (CFP)CLaserDevice::Creator},
   { "position", "red", (CFP)CPositionDevice::Creator},
   { "box", "yellow", (CFP)CBox::Creator},
@@ -100,7 +99,6 @@ libitem_t library_items[] = {
 // statically allocate a libray filled with the entries above
 Library model_library( library_items );
 
-
 // GUI INSTALLATION -----------------------------------------------------
 //
 // Stage handles multiple GUI libraries. Add your library functions
@@ -117,7 +115,6 @@ stage_gui_library_item_t gui_library[] = {
     RtkGuiEntityPropertyChange
   }
 };
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Global vars
@@ -187,6 +184,15 @@ void sig_quit(int signum)
   quit = 1;
 }
 
+int HandleLostConnection( int connection )
+{
+  // clears subscription data on this connection for all models
+  if( CEntity::root )
+    CEntity::root->DestroyConnection( connection );
+
+  return 0; // success
+}
+
 int HandleModel(  int connection, char* data, size_t len )
 {
   assert( len == sizeof(stage_model_t) );
@@ -208,8 +214,9 @@ int HandleModel(  int connection, char* data, size_t len )
 
 int HandleProperty( int connection,  char* data, size_t len )
 {
-  PRINT_DEBUG3( "Received %d byte property request (of which header is %d bytes ) on connection %d", 
-		len, sizeof(stage_property_t), connection );
+  PRINT_DEBUG3( "Received %d byte property request "
+		"(of which header is %d bytes ) on connection %d", 
+		(int)len, (int)sizeof(stage_property_t), connection );
   
   assert( len >= sizeof(stage_property_t) );
   stage_property_t* prop = (stage_property_t*)data;
@@ -427,7 +434,8 @@ int main(int argc, char **argv)
       // each client. will block until something is read.  if the
       // server receives 'update' commands from all clients, it'll
       // update the world
-      if( SIOServiceConnections( &HandleCommand, 
+      if( SIOServiceConnections( &HandleLostConnection,
+				 &HandleCommand, 
 				 &HandleModel, 
 				 &HandleProperty,
 				 &HandleGui ) == -1 ) break;
@@ -439,6 +447,49 @@ int main(int argc, char **argv)
 	  CEntity::simtime+=0.01; 
 	}
      
+      stage_buffer_t *dirty = SIOCreateBuffer();
+
+      int dirty_prop_count = 0;
+      int e=0;
+      for( e=0; e<100; e++ )
+	{
+	  CEntity *ent = model_library.GetEntFromId(e);
+	  
+	  if( ent )
+	    {	      
+	      int p;
+	      for( p=0; p<STG_PROPERTY_COUNT; p++ )
+		if( ent->subscriptions[0][p].subscribed &&
+		    ent->subscriptions[0][p].dirty )
+		  {
+		    stage_prop_id_t propid = (stage_prop_id_t)p;
+		    
+		    PRINT_WARN3( "ent: %d con: %d prop: %s needs exported",
+				 ent->stage_id, 0, SIOPropString(propid) );
+
+		    // make space for the dirty property
+		    char propdata[ STG_PROPERTY_DATA_MAX ];
+		    // fetch it out of the entity
+		    size_t len = ent->GetProperty( propid, propdata );
+		    
+		    SIOBufferProperty( dirty, ent->stage_id, propid, propdata, len );
+		    
+		    // clean (con,prop,value)
+		    ent->subscriptions[0][propid].dirty = 0;
+		    dirty_prop_count++;
+		  }
+	    }
+	}
+      
+      if( dirty_prop_count > 0 )
+	{
+	  PRINT_WARN2( "writing %d dirty properties on con %d", dirty_prop_count, 0 );
+	  SIOWriteMessage( 0, CEntity::simtime, 
+			   STG_HDR_PROPS, dirty->data, dirty->len );
+	}
+      
+      SIOFreeBuffer( dirty );
+
       //stage_property_t* props = NULL;
       //size_t props_len = 0;
       //props = CEntity::root->GetChangedProperties()

@@ -1,6 +1,6 @@
 
 /*
-  $Id: stest.c,v 1.1.2.9 2003-02-08 01:20:37 rtv Exp $
+  $Id: stest.c,v 1.1.2.10 2003-02-09 00:32:16 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -31,12 +31,18 @@
 		      
 const double timestamp = 0.0;
 
+int HandleLostConnection( int connection )
+{
+  PRINT_ERR1( "lost connection on %d", connection );
+  return 0;
+}
+
 int HandleModel( int connection, char* data, size_t len )
 {
   assert( len == sizeof(stage_model_t) );
   stage_model_t* model = (stage_model_t*)data;
   
-  printf( "Received %d bytes model packet on connection %d", len, connection );
+  printf( "Received %d bytes model packet on connection %d", (int)len, connection );
   return 0; //success
 }
 
@@ -45,8 +51,8 @@ int HandleProperty( int connection, char* data, size_t len )
   assert( len >= sizeof(stage_property_t) );
   stage_property_t* prop = (stage_property_t*)data;
   
-  printf( "Received %d bytes  property (%d,%d,%d) on connection %d\n",
-	  len, prop->id, prop->property, prop->len, connection );
+  printf( "Received %d bytes  property (%d,%s,%d) on connection %d\n",
+	  (int)len, prop->id, SIOPropString(prop->property), (int)prop->len, connection );
   return 0; //success
 }
 
@@ -56,7 +62,7 @@ int HandleCommand( int connection, char* data, size_t len )
   stage_cmd_t* cmd = (stage_cmd_t*)data;
   
   printf( "Received %d bytes command (%d) on connection %d\n", 
-	  len, *cmd, connection );
+	  (int)len, *cmd, connection );
   return 0; //success
 }
 
@@ -195,9 +201,15 @@ int main( int argc, char** argv )
       	 (char*)&pose, sizeof(pose) );
 
       
-      // subscribe to the sonar
+      // subscribe to the sonar's data, pose, size and rects.
+      int subs[4];
+      subs[0] = STG_PROP_ENTITY_DATA;
+      subs[1] = STG_PROP_ENTITY_POSE;
+      subs[2] = STG_PROP_ENTITY_SIZE;
+      subs[3] = STG_PROP_ENTITY_RECTS;
+      
       SIOBufferProperty( props, SONAR, STG_PROP_ENTITY_SUBSCRIBE,
-			 NULL, 0 );
+			 (char*)subs, 4*sizeof(subs[0]) );
 
       // push some rectangles into the bitmap
       stage_rotrect_t rects[10];
@@ -233,19 +245,19 @@ int main( int argc, char** argv )
 	  
 	  SIOWriteMessage( connection, timestamp, STG_HDR_CONTINUE, NULL, 0 );
 	  
-	  Resize( connection, BITMAP,  
-		  0.5 + 3.0 * fabs(sin(x)),  0.5 + 3.0 * fabs(cos(x+=0.05)) );
+	  //Resize( connection, BITMAP,  
+	  //  0.5 + 3.0 * fabs(sin(x)),  0.5 + 3.0 * fabs(cos(x+=0.05)) );
 	  
-	  SetVelocity( connection, BOX, 3.0 * sin(x), 2.0 * cos(x+=0.1), 2.0 );
+	  //SetVelocity( connection, BOX, 3.0 * sin(x), 2.0 * cos(x+=0.1), 2.0 );
 	  
-	  if( c % 10 == 0 )
+	  if( 0 )//c % 10 == 0 )
 	    {
 	      
-	      Resize( connection, ROOT, 
-		      5.0 + 5.0 * fabs(sin(z)), 
-		      5.0 + 5.0 * fabs(cos(z)) );
+	      //Resize( connection, ROOT, 
+	      //      5.0 + 5.0 * fabs(sin(z)), 
+	      //      5.0 + 5.0 * fabs(cos(z)) );
 	      
-	      SetResolution( connection, ROOT, 3.0 + fmod( z*10, 10) );
+	      //SetResolution( connection, ROOT, 3.0 + fmod( z*10, 10) );
 	      
 	      z += 0.1;
 	    }
@@ -267,10 +279,11 @@ int main( int argc, char** argv )
 	    STG_HDR_GUI, (char*)&gui, sizeof(gui) ) ;
 	    }*/
 	   
-	  SIOServiceConnections(&HandleCommand,
-				&HandleModel, 
-				&HandleProperty,
-				NULL );
+	  SIOServiceConnections( &HandleLostConnection,
+				 &HandleCommand,
+				 &HandleModel, 
+				 &HandleProperty,
+				 NULL );
 	}
     }
     

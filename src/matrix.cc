@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.15.6.4 2003-02-07 05:30:34 rtv Exp $
+ * $Id: matrix.cc,v 1.15.6.5 2003-02-09 00:32:16 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -130,9 +130,10 @@ CEntity** CMatrix::get_cell( int i)
 }
 
 // is there an object of this type here?
+/*
 inline bool CMatrix::is_type( int x, int y, int type )
 { 
-  //if( i<0 || i > width*height ) return 0;
+//if( i<0 || i > width*height ) return 0;
   
   CEntity** cell = data[x+(y*width)];
   
@@ -144,7 +145,7 @@ inline bool CMatrix::is_type( int x, int y, int type )
     
   return false;
 }
-
+*/
 
 // useful debug function allows plotting the world externally
 void CMatrix::dump( void )

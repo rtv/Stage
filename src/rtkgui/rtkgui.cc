@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.1.2.6 2003-02-08 01:20:37 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.1.2.7 2003-02-09 00:32:17 rtv Exp $
  */
 
 //
@@ -56,6 +56,7 @@
 #include "entity.hh"
 #include "matrix.hh"
 #include "rtkgui.hh"
+#include "sio.h" // for SIOPropString
 
 extern int quit;
 
@@ -285,9 +286,6 @@ int RtkGuiUpdate( void )
   // Process menus
   RtkMenuHandling();      
   
-  // Update the object tree
-  //root->RtkUpdate();
-  
   // Render the canvas
   rtk_canvas_render( canvas);
   
@@ -361,7 +359,7 @@ int RtkGuiEntityUpdate( CEntity* ent )
 // class so it's sitting out here as a regular function. - rtv
 int RtkGuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
 {
-  PRINT_DEBUG2( "setting prop %d on ent %d", prop, ent->stage_id );
+  PRINT_DEBUG2( "setting prop %s on ent %d", SIOPropString(prop), ent->stage_id );
 
   assert(ent);
   assert( prop < STG_PROPERTY_COUNT );
@@ -377,7 +375,7 @@ int RtkGuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
       // these require just moving the figure
     case STG_PROP_ENTITY_POSE:
       ent->GetPose( px, py, pa );
-      PRINT_DEBUG3( "moving figure to %.2f %.2f %.2f", px,py,pa );
+      //PRINT_DEBUG3( "moving figure to %.2f %.2f %.2f", px,py,pa );
       rtk_fig_origin(ent->fig, px, py, pa );
       break;
 
@@ -404,12 +402,12 @@ int RtkGuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
     case STG_PROP_ENTITY_COMMAND:
     case STG_PROP_ENTITY_DATA:
     case STG_PROP_ENTITY_CONFIG:
-      PRINT_DEBUG1( "gui redraw command/data for %d", prop ); 
+      //PRINT_DEBUG1( "gui redraw command/data for %d", prop ); 
       ent->RtkUpdate();
       break;
       
     default:
-      PRINT_WARN1( "property change %d unhandled by rtkgui", prop ); 
+      PRINT_WARN1( "property change %s unhandled by rtkgui", SIOPropString(prop) ); 
       break;
     } 
   
@@ -558,15 +556,17 @@ void RtkMenuHandling()
   bool thistime = rtk_menuitem_ischecked(subscribedonly_item);
 
   // for now i check if the menu item changed
-  if( thistime != lasttime )
-  {
+  /*
+    if( thistime != lasttime )
+    {
     if( thistime )  // change the subscription counts of any player-capable ent
-      CEntity::root->FamilySubscribe();
+    CEntity::root->FamilySubscribe();
     else
-      CEntity::root->FamilyUnsubscribe();
+    CEntity::root->FamilyUnsubscribe();
     // remember this state
     lasttime = thistime;
-  }
+    }
+  */
       
   return;
 }
