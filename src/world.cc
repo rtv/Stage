@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.25 $
+//  $Author: gerkey $
+//  $Revision: 1.26 $
 //
 // Usage:
 //  (empty)
@@ -257,7 +257,7 @@ bool CWorld::Startup()
   InitSharedMemoryIO();
   
   // we lock up the memory here
-  LockShmem(); 
+  //LockShmem(); 
 
   // Setup IO for all the objects - MUST DO THIS AFTER MAPPING SHARING MEMORY
   // each is passed a pointer to the start of its space in shared memory
@@ -265,12 +265,15 @@ bool CWorld::Startup()
   
   int i;
   for (i = 0; i < m_object_count; i++)
+  {
     if (!m_object[i]->SetupIOPointers( playerIO + entityOffset ) )
-      {
-	cout << "Object " << (int)(m_object[i]) 
-	     << " failed SetupIOPointers()" << endl;
-	return false;
-      }
+    {
+      cout << "Object " << (int)(m_object[i]) 
+              << " failed SetupIOPointers()" << endl;
+      return false;
+    }
+    entityOffset += m_object[i]->SharedMemorySize();
+  }
   
   // start all the players - they will immediately block on the shared memory
   
@@ -288,7 +291,7 @@ bool CWorld::Startup()
       }
   
   // release the lock and the players will start reading
-  UnlockShmem();
+  //UnlockShmem();
 
   // Start the world thread
   //

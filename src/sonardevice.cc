@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.10 $
+//  $Author: gerkey $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -38,8 +38,8 @@ CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent )
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_sonar_data_t );
-  m_command_len = //sizeof( player_sonar_cmd_t );
-    m_config_len  = sizeof( PLAYER_SONAR_POWER_REQ );
+  m_command_len = 0;
+  m_config_len  = sizeof( player_sonar_config_t );
   
   m_player_type = PLAYER_SONAR_CODE; // from player's messages.h
   m_stage_type = SonarType;

@@ -25,7 +25,7 @@ OBJS =  world.o world_load.o truthserver.o envserver.o image.o \
 # debug
 CCFLAGS = -g3 
 # debug + profile
-CCFLAGS = -pg -g3
+#CCFLAGS = -pg -g3
 
 # Flags common to all targets
 #
@@ -33,9 +33,9 @@ CCFLAGS += -Wall -DREENTRANT -I../../include -I$(PLAYER_INC) $(ZLIB_FLAGS)
 CCFLAGS += -DVERSION=\"$(VERSION)\"
 
 # production/debug link
-#LINKFLAGS = -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
+LINKFLAGS = -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
 # profile link
-LINKFLAGS = -pg -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
+#LINKFLAGS = -pg -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
 
 #.SUFFIXES: .cc .o
 

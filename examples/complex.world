@@ -53,10 +53,10 @@ create position_device pose 1.0 3.0 0.0 port 6665
 #####################################################################
 # this is a laser placed in the world, without a robot
 
-create laser_device pose 4.0 1.0 0.0 port 6667 index 0
-{
-  create player_device pose 0 0 0 size 0.05 0.05 port 6667
-}
+#create laser_device pose 4.0 1.0 0.0 port 6667 index 0
+#{
+  #create player_device pose 0 0 0 size 0.05 0.05 port 6667
+#}
 
 
 
