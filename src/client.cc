@@ -169,7 +169,7 @@ CStageClient::CStageClient( int argc, char** argv, Library* lib )
   // Test to see if the required things were created...
   // TODO: MORE CHECKS HERE
   assert( matrix ); // make sure a matrix was created in Read();
-  assert( wall );
+  //assert( wall );
   
   // now we have the world parameters, we can configure things
   
@@ -177,7 +177,7 @@ CStageClient::CStageClient( int argc, char** argv, Library* lib )
   RtkLoad(NULL); // uses default values for now
 #endif
   
-  this->wall->Startup(); // renders the image into the matrix
+  //this->wall->Startup(); // renders the image into the matrix
   
   // Startup all the objects
   // Devices will create and initialize their device files

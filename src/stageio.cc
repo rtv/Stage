@@ -593,7 +593,7 @@ void CStageIO::HandleCommand( int con, cmd_t cmd )
       PRINT_DEBUG( "DOWNLOADc" );
       
       WriteMatrix( m_pose_connections[con].fd );
-      WriteBackground(  m_pose_connections[con].fd );
+      //WriteBackground(  m_pose_connections[con].fd );
       WriteEntities( m_pose_connections[con].fd ); 
       WriteHeader(  m_pose_connections[con].fd, DownloadComplete, 0 );
       break;
