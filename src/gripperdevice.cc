@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.20 $
+//  $Revision: 1.21 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -39,15 +39,14 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
   this->size_y = 0.20;
 
   m_player.code = PLAYER_GRIPPER_CODE;
-  m_stage_type = GripperType;
+  this->stage_type = GripperType;
+  this->color = ::LookupColor(GRIPPER_COLOR);
 
   m_interval = 0.1; 
 
-  SetColor(GRIPPER_COLOR);
-
   puck_return = true; // we interact with pucks and nothing else
 
-  m_mass = 20; // same mass as a robot
+  this->mass = 20; // same mass as a robot
 
   // default to the more common gripper
   m_gripper_consume = false;
@@ -288,7 +287,7 @@ CEntity* CGripperDevice::BreakBeam( int beam )
     //puts( "I SEE SOMETHING!" );
       
     // grippers only perceive pucks right now.
-    if( ent->m_stage_type == PuckType )
+    if( ent->stage_type == PuckType )
     {
       //puts( "its a PUCK!" );
       return ent;

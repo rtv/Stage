@@ -21,7 +21,7 @@
  * Desc: Player device; doesnt do much anymore.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.30 2002-06-07 06:30:52 inspectorg Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.31 2002-06-09 00:33:02 inspectorg Exp $
  */
 
 #include <errno.h>
@@ -72,9 +72,8 @@ CPlayerDevice::CPlayerDevice(CWorld *world, CEntity *parent )
   m_config_len  = 0; //PLAYER_CONFIG_SIZE;
      
   m_player.code = PLAYER_PLAYER_CODE; // from player's messages.h
-  m_stage_type = PlayerType;
-
-  SetColor(PLAYER_COLOR);
+  this->stage_type = PlayerType;
+  this->color = ::LookupColor(PLAYER_COLOR);
 
   this->shape = ShapeRect;
   this->size_x = 0.12; // estimated USC PlayerBox ("whitebox") size

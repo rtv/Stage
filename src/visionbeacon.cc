@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.19 $
+//  $Author: inspectorg $
+//  $Revision: 1.20 $
 //
 // Usage:
 //  (empty)
@@ -34,7 +34,7 @@
 CVisionBeacon::CVisionBeacon(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {   
-  m_stage_type = VisionBeaconType;
+  this->stage_type = VisionBeaconType;
 
   vision_return = true;
   laser_return = LaserReflect;

@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.96 2002-06-07 06:30:52 inspectorg Exp $
+ * CVS info: $Id: world.cc,v 1.97 2002-06-09 00:33:02 inspectorg Exp $
  */
 
 //#undef DEBUG
@@ -155,7 +155,8 @@ CWorld::CWorld( int argc, char** argv )
   
   m_send_idar_packets = false;
 
-  m_run_xs = true;
+  // Run the gui by default
+  this->enable_gui = true;
 
   // default color database file
   strcpy( m_color_database_filename, COLOR_DATABASE );
@@ -169,7 +170,6 @@ CWorld::CWorld( int argc, char** argv )
   
   // start with no key
   bzero(m_auth_key,sizeof(m_auth_key));
-
  
   // give the command line a chance to override the default values
   // we just set
@@ -252,12 +252,12 @@ bool CWorld::ParseCmdline(int argc, char **argv)
     // DIS/ENABLE GUI
     if( strcmp( argv[a], "-g" ) == 0 )
     {
-      m_run_xs = false;
+      this->enable_gui = false;
       printf( "[No GUI]" );
     }
     else if( strcmp( argv[a], "+g" ) == 0 )
     {
-      m_run_xs = true;
+      this->enable_gui = true;
       printf( "[GUI]" );
     }
       
@@ -363,7 +363,7 @@ bool CWorld::Startup()
   m_update_rate = 0;
 
   // Start the GUI
-  if( m_run_xs )
+  if (this->enable_gui)
     RtkStartup();
   
   // start the real-time interrupts going
@@ -381,7 +381,7 @@ void CWorld::Shutdown()
   PRINT_DEBUG( "world shutting down" );
 
   // Stop the GUI
-  if( m_run_xs )
+  if (this->enable_gui)
     RtkShutdown();
   
   // Shutdown all the entities
@@ -475,28 +475,20 @@ void CWorld::Update(void)
 	  
 #ifdef INCLUDE_RTK2
       // update the GUI, whether we manage this device or not
-      if( m_run_xs )
+      if (this->enable_gui)
         m_entity[i]->RtkUpdate();
 #endif
     };
-      
 #ifdef INCLUDE_RTK2
-    if( m_run_xs )
+    if (this->enable_gui)
       RtkUpdate();      
 #endif
-
   }
   else // the model isn't running - update the GUI and go to sleep
   {
-
 #ifdef INCLUDE_RTK2
-    if( m_run_xs ) 
-    {
-      //for (int i = 0; i < m_entity_count; i++)
-      // m_entity[i]->RtkUpdate();
-	  
+    if (this->enable_gui) 
       RtkUpdate();      
-    }
 #endif
 
     PRINT_DEBUG( "SLEEPING - DISABLED" );
@@ -616,55 +608,6 @@ void CWorld::AddEntity(CEntity *entity)
   m_entity[m_entity_count++] = entity;
 }
 
-int CWorld::ColorFromString( StageColor* color, const char* colorString )
-{
-  ifstream db( m_color_database_filename );
-  
-  if( !db )
-    cerr << "Failed to load color database file " << m_color_database_filename << endl; 
-
-  int red, green, blue;
-  
-  //cout << "Searching for " << colorString << " in " <<  m_color_database_filename << endl; 
-
-  while( !db.eof() && !db.bad() )
-  {
-    char c;
-    char line[255];
-    //char name[255];
-      
-    db.get( line, 255, '\n' ); // read in a description string
-      
-    //cout << "Read entry: " << line << endl;
-
-    if( db.get( c ) && c != '\n' )
-      PRINT_WARN("line too long in color database file");
-      
-    if( line[0] == '!' || line[0] == '#' || line[0] == '%' ) 
-      continue; // it's a macro or comment line - ignore the line
-      
-    int chars_matched = 0;
-    sscanf( line, "%d %d %d %n", &red, &green, &blue, &chars_matched );
-      
-    // name points to the rest of the line, after we've matched out the colors
-    char* name = line + chars_matched;
-
-    //printf( "Parsed: %d %d %d :%s\n", red, green, blue, name );
-    //fflush( stdout );
-
-    if( strcmp( name, colorString ) == 0 ) // the name matches!
-    {
-      color->red = (unsigned short)red;
-      color->green = (unsigned short)green;
-      color->blue = (unsigned short)blue;
-	  
-      db.close();
-	  
-      return true;
-    }
-  }
-  return false;
-}  
 
 // returns true if the given hostname matches our hostname, false otherwise
 //  bool CWorld::CheckHostname(char* host)
@@ -841,8 +784,7 @@ char* CWorld::StringType( StageType t )
     case WallType: return "Wall"; break;
     case PlayerType: return "Player"; 
     case MiscType: return "Misc"; 
-    case RectRobotType: return "RectRobot"; 
-    case RoundRobotType: return "RoundRobot"; 
+    case PositionType: return "Position"; 
     case SonarType: return "Sonar"; 
     case LaserTurretType: return "Laser"; 
     case VisionType: return "Vision"; 
@@ -877,7 +819,7 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   
   if (worldfile != NULL)
   {
-    int section = worldfile->LookupSection("rtk");
+    int section = worldfile->LookupEntity("rtk");
 
     // Size of canvas in pixels
     sx = (int) worldfile->ReadTupleFloat(section, "size", 0, this->matrix->width);
@@ -961,7 +903,7 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
 // Save the GUI
 bool CWorld::RtkSave(CWorldFile *worldfile)
 {
-  int section = worldfile->LookupSection("rtk");
+  int section = worldfile->LookupEntity("rtk");
 
   // Size of canvas in pixels
   int sx, sy;

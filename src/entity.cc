@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.61 2002-06-07 06:30:51 inspectorg Exp $
+ * CVS info: $Id: entity.cc,v 1.62 2002-06-09 00:33:02 inspectorg Exp $
  */
 
 #include <math.h>
@@ -62,12 +62,14 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
   m_parent_entity = parent_entity;
   m_default_entity = this;
 
+  // Set our default type (will be reset by subclass).
+  this->stage_type = NullType;
+
+  // Set the filename used for this device's mmap
+  this->device_filename[0] = 0;
+
+  // Set our default name
   this->name[0] = 0;
-  m_stage_type = NullType; // overwritten by subclasses
-
-  m_local = false; 
-
-  memset(m_device_filename, 0, sizeof(m_device_filename));
 
   // Set default pose
   this->local_px = this->local_py = this->local_pth = 0;
@@ -76,18 +78,18 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
   this->vx = this->vy = this->vth = 0;
 
   // unmoveably MASSIVE! by default
-  m_mass = 1000.0;
+  this->mass = 1000.0;
     
   // Set the default shape and geometry
   this->shape = ShapeNone;
   this->size_x = this->size_y = 0;
   this->origin_x = this->origin_y = 0;
-  
-  // initialize color description and values
-  this->color.red = 255;
-  this->color.green = 0;
-  this->color.blue = 0;
 
+  // Set the default color
+  this->color = 0xFF0000;
+
+  m_local = false; 
+  
   // by default, entities don't show up in any sensors
   // these must be enabled explicitly in each subclass
   obstacle_return = false;
@@ -131,9 +133,11 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
   m_repqueue = NULL;
 
 #ifdef INCLUDE_RTK2
+  // Default figures for drawing the entity.
   this->fig = NULL;
   this->fig_label = NULL;
-  // By default, we can both translate and rotate entitys
+
+  // By default, we can both translate and rotate the entity.
   this->movemask = RTK_MOVE_TRANS | RTK_MOVE_ROT;
 #endif
 }
@@ -177,9 +181,7 @@ bool CEntity::Load(CWorldFile *worldfile, int section)
   this->size_y = worldfile->ReadTupleLength(section, "size", 1, this->size_y);
 
   // Read the entity color
-  const char *color_desc = worldfile->ReadString(section, "color", NULL);
-  if (color_desc)
-    SetColor(color_desc);
+  this->color = worldfile->ReadColor(section, "color", this->color);
   
   // Read the sensor flags
   this->obstacle_return = worldfile->ReadBool(section, "obstacle",
@@ -253,24 +255,24 @@ bool CEntity::Startup( void )
 
   size_t mem = SharedMemorySize();
    
-  snprintf( m_device_filename, sizeof(m_device_filename), "%s/%d.%d.%d", 
+  snprintf( this->device_filename, sizeof(this->device_filename), "%s/%d.%d.%d", 
             m_world->m_device_dir, m_player.port, m_player.code, m_player.index );
   
   PRINT_DEBUG1("creating device %s", m_device_filename);
 
   int tfd;
-  if( (tfd = open( m_device_filename, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR )) == -1 )
+  if( (tfd = open( this->device_filename, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR )) == -1 )
   {
       
     PRINT_DEBUG2( "failed to open file %s for device at %p\n"
                   "assuming this is a client device!\n", 
-                  m_device_filename, this );
+                  this->device_filename, this );
       
     // make some memory to store the data
     playerIO = (player_stage_info_t*) new char[ mem ];
 
     // remove the filename so we don't try to unlink it
-    m_device_filename[0] = 0;
+    this->device_filename[0] = 0;
 
     PRINT_DEBUG("successfully created client IO buffers");
 
@@ -398,9 +400,9 @@ void CEntity::Shutdown()
   if( m_player.code == 0 )
     return;
 
-  if( m_device_filename[0] )
+  if( this->device_filename[0] )
     // remove our name in the filesystem
-    if( unlink( m_device_filename ) == -1 )
+    if( unlink( this->device_filename ) == -1 )
       PRINT_ERR1( "Device failed to unlink it's IO file", strerror(errno) );
 }
 
@@ -578,15 +580,6 @@ CEntity *CEntity::TestCollision(double px, double py, double pth,
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Set the color of the entity
-void CEntity::SetColor(const char *desc)
-{
-  if (!m_world->ColorFromString( &this->color, desc ) )
-    PRINT_WARN1("invalid color name [%s]; using default color", desc );
-}
-
-
-///////////////////////////////////////////////////////////////////////////
 // Convert local to global coords
 void CEntity::LocalToGlobal(double &px, double &py, double &pth)
 {
@@ -733,7 +726,7 @@ void CEntity::AnnounceDataViaRTP( void* data, size_t len )
   
   memset( &header, 0, sizeof(header) );
   
-  header.major_type = m_stage_type;
+  header.major_type = this->stage_type;
      
   double x, y, th;
   GetGlobalPose( x, y, th );
@@ -1110,16 +1103,16 @@ int CEntity::SetProperty( int con, EntityProperty property,
   assert( len < MAX_PROPERTY_DATA_LEN );
   
   switch( property )
-    {
+  {
     case PropPlayerSubscriptions:
       PRINT_DEBUG1( "PLAYER SUBSCRIPTIONS %d", *(int*) value);
       
       if( m_info_io )
-	{
-	  Lock();
-	  m_info_io->subscribed = *(int*)value;
-	  Unlock();
-	}      
+      {
+        Lock();
+        m_info_io->subscribed = *(int*)value;
+        Unlock();
+      }      
       break;
 
     case PropParent:
@@ -1194,9 +1187,9 @@ int CEntity::SetProperty( int con, EntityProperty property,
 
     default:
       printf( "Stage Warning: attempting to set unknown property %d\n", 
-	      property );
+              property );
       break;
-    }
+  }
   
   // indicate that the property is dirty on all _but_ the connection
   // it came from - that way it gets propogated onto to other clients
@@ -1218,7 +1211,7 @@ int CEntity::GetProperty( EntityProperty property, void* value )
   int retval = 0;
 
   switch( property )
-    {
+  {
     case PropPlayerSubscriptions:
       PRINT_DEBUG( "GET SUBS PROPERTY");
       { int subs = Subscribed();
@@ -1228,10 +1221,10 @@ int CEntity::GetProperty( EntityProperty property, void* value )
     case PropParent:
       // find the parent's position in the world's entity array
       // if parent pointer is null or otherwise invalid, index is -1 
-      { int parent_index = m_world->GetEntityIndex( m_parent_entity );
-      memcpy( value, &parent_index, sizeof(parent_index) );
-      retval = sizeof(parent_index); }
-      break;
+    { int parent_index = m_world->GetEntityIndex( m_parent_entity );
+    memcpy( value, &parent_index, sizeof(parent_index) );
+    retval = sizeof(parent_index); }
+    break;
     case PropSizeX:
       memcpy( value, &size_x, sizeof(size_x) );
       retval = sizeof(size_x);
@@ -1320,7 +1313,7 @@ int CEntity::GetProperty( EntityProperty property, void* value )
       //printf( "Stage Warning: attempting to get unknown property %d\n", 
       //      property );
       break;
-    }
+  }
   
   return retval;
 }
@@ -1335,10 +1328,7 @@ void CEntity::RtkStartup()
   this->fig = rtk_fig_create(m_world->canvas, NULL, 50);
 
   // Set the color
-  double r = this->color.red / 255.0;
-  double g = this->color.green / 255.0;
-  double b = this->color.blue / 255.0;
-  rtk_fig_color(this->fig, r, g, b);
+  rtk_fig_color_rgb32(this->fig, this->color);
 
   // Compute geometry
   double qx = this->origin_x;
@@ -1367,8 +1357,6 @@ void CEntity::RtkStartup()
 
   label[0] = 0;
   snprintf(tmp, sizeof(tmp), "name: %s", this->name);
-  strncat(label, tmp, sizeof(label));
-  snprintf(tmp, sizeof(tmp), "\ntype: %s", RtkGetStageType());
   strncat(label, tmp, sizeof(label));
   if (m_player.port > 0)
   {
@@ -1426,15 +1414,6 @@ void CEntity::RtkUpdate()
     rtk_fig_show(this->fig_label, true);
   else
     rtk_fig_show(this->fig_label, false);    
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Get a string describing the Stage type of the entity
-const char *CEntity::RtkGetStageType()
-{ 
-  // the world has a string for each type
-  return m_world->StringType( m_stage_type );
 }
 
 #endif

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.17 $
+//  $Author: inspectorg $
+//  $Revision: 1.18 $
 //
 // Usage:
 //  (empty)
@@ -44,12 +44,11 @@ CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent )
   m_reply_len  = 0;
  
   m_player.code = PLAYER_PTZ_CODE;
-  m_stage_type = PtzType;
-
+  this->stage_type = PtzType;
+  this->color = ::LookupColor(PTZ_COLOR);
+  
   m_interval = 0.1;
   m_last_update = 0;
-    
-  SetColor(PTZ_COLOR);
 
   // Set default shape and geometry
   this->shape = ShapeRect;

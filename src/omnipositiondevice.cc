@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/omnipositiondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.11 $
+//  $Author: inspectorg $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -45,7 +45,7 @@ COmniPositionDevice::COmniPositionDevice(CWorld *world, CEntity *parent)
   m_reply_len = 0;
   
   m_player.code = PLAYER_POSITION_CODE;
-  m_stage_type = OmniPositionType;
+  this->stage_type = OmniPositionType;
 
   // set up our sensor response
   this->laser_return = LaserTransparent;
@@ -65,7 +65,7 @@ COmniPositionDevice::COmniPositionDevice(CWorld *world, CEntity *parent)
   m_interval = 0.01; 
   
   // assume robot is 20kg
-  m_mass = 20.0;
+  this->mass = 20.0;
 }
 
 

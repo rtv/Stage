@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.21 $
+//  $Author: inspectorg $
+//  $Revision: 1.22 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -38,13 +38,12 @@
 CLaserBeacon::CLaserBeacon(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {
-   // Set default shape and geometry
+  this->stage_type = LaserBeaconType;
+  this->color = ::LookupColor(LASERBEACON_COLOR);
+  
   this->shape = ShapeRect;
   this->size_x = 0.05; 
   this->size_y = 0.3;     
-
-  SetColor(LASERBEACON_COLOR);
-  m_stage_type = LaserBeaconType;
   
   this->id = 0;
     

@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.hh,v 1.12 2002-06-08 20:52:54 inspectorg Exp $
+ * CVS info: $Id: worldfile.hh,v 1.13 2002-06-09 00:33:01 inspectorg Exp $
  */
 
 #ifndef WORLDFILE_HH
@@ -29,17 +29,10 @@
 
 
 // Class for loading/saving world file.  This class hides the syntax
-// of the world file and provides an 'section.item = value' style
-// interface.  Global settings go in section 0; every other section
+// of the world file and provides an 'entity.property = value' style
+// interface.  Global settings go in entity 0; every other entity
 // refers to a specific entity.  Parent/child relationships are
-// encoded in the form of section/subsection relationships.
-//
-// This class also provides an interface to a parameters database for
-// accessing such things as the geometry of different types of robots
-// and sensors.  This interface is completely orthogonal to the world
-// file interface, and is included in this class only as a convenience
-// (i.e. I cant be bothered changing all the entities to read from
-// stuff from another class).
+// encoded in the form of entity/subentity relationships.
 class CWorldFile
 {
   // Standard constructors/destructors
@@ -56,85 +49,74 @@ class CWorldFile
   // Check for unused properties and print warnings
   public: bool WarnUnused();
 
-  // Get the number of sections.
-  public: int GetSectionCount();
-
-  // Get a section (returns the section type value)
-  public: const char *GetSectionType(int section);
-
-  // Lookup a section number by type name
-  // Returns -1 if there is section with this type
-  public: int LookupSection(const char *type);
-  
-  // Get a section's parent section.
-  // Returns -1 if there is no parent.
-  public: int GetSectionParent(int section);
-
   // Read a string
-  public: const char *ReadString(int section, const char *name, const char *value);
+  public: const char *ReadString(int entity, const char *name, const char *value);
 
   // Write a string
-  public: void WriteString(int section, const char *name, const char *value);
+  public: void WriteString(int entity, const char *name, const char *value);
 
   // Read an integer 
-  public: int ReadInt(int section, const char *name, int value);
+  public: int ReadInt(int entity, const char *name, int value);
 
   // Write an integer
-  public: void WriteInt(int section, const char *name, int value);
+  public: void WriteInt(int entity, const char *name, int value);
 
   // Read a float 
-  public: double ReadFloat(int section, const char *name, double value);
+  public: double ReadFloat(int entity, const char *name, double value);
 
   // Write a float
-  public: void WriteFloat(int section, const char *name, double value);
+  public: void WriteFloat(int entity, const char *name, double value);
 
   // Read a length (includes unit conversion)
-  public: double ReadLength(int section, const char *name, double value);
+  public: double ReadLength(int entity, const char *name, double value);
 
   // Write a length (includes units conversion)
-  public: void WriteLength(int section, const char *name, double value);
+  public: void WriteLength(int entity, const char *name, double value);
   
   // Read an angle (includes unit conversion)
-  public: double ReadAngle(int section, const char *name, double value);
+  public: double ReadAngle(int entity, const char *name, double value);
 
   // Read a boolean
-  public: bool ReadBool(int section, const char *name, bool value);
+  public: bool ReadBool(int entity, const char *name, bool value);
+
+  // Read a color (includes text to RGB conversion)
+  public: uint32_t ReadColor(int entity, const char *name, uint32_t value);
 
   // Read a file name.  Always returns an absolute path.  If the
   // filename is entered as a relative path, we prepend the world
   // files path to it.
-  public: const char *ReadFilename(int section, const char *name, const char *value);
+  public: const char *ReadFilename(int entity, const char *name, const char *value);
   
   // Read a string from a tuple
-  public: const char *ReadTupleString(int section, const char *name,
+  public: const char *ReadTupleString(int entity, const char *name,
                                       int index, const char *value);
   
   // Write a string to a tuple
-  public: void WriteTupleString(int section, const char *name,
+  public: void WriteTupleString(int entity, const char *name,
                                 int index, const char *value);
   
   // Read a float from a tuple
-  public: double ReadTupleFloat(int section, const char *name,
+  public: double ReadTupleFloat(int entity, const char *name,
                                 int index, double value);
 
   // Write a float to a tuple
-  public: void WriteTupleFloat(int section, const char *name,
+  public: void WriteTupleFloat(int entity, const char *name,
                                int index, double value);
 
   // Read a length from a tuple (includes units conversion)
-  public: double ReadTupleLength(int section, const char *name,
+  public: double ReadTupleLength(int entity, const char *name,
                                  int index, double value);
 
   // Write a to a tuple length (includes units conversion)
-  public: void WriteTupleLength(int section, const char *name,
+  public: void WriteTupleLength(int entity, const char *name,
                                 int index, double value);
 
   // Read an angle form a tuple (includes units conversion)
-  public: double ReadTupleAngle(int section, const char *name,
+  public: double ReadTupleAngle(int entity, const char *name,
                                 int index, double value);
 
   // Write an angle to a tuple (includes units conversion)
-  public: void WriteTupleAngle(int section, const char *name,
+  public: void WriteTupleAngle(int entity, const char *name,
                                int index, double value);
 
 
@@ -183,17 +165,17 @@ class CWorldFile
   // Parse a macro definition
   private: bool ParseTokenDefine(int *index, int *line);
 
-  // Parse an word (could be a section or an item) from the token list.
-  private: bool ParseTokenWord(int section, int *index, int *line);
+  // Parse an word (could be a entity or an property) from the token list.
+  private: bool ParseTokenWord(int entity, int *index, int *line);
 
-  // Parse a section from the token list.
-  private: bool ParseTokenSection(int section, int *index, int *line);
+  // Parse a entity from the token list.
+  private: bool ParseTokenEntity(int entity, int *index, int *line);
 
-  // Parse an item from the token list.
-  private: bool ParseTokenItem(int section, int *index, int *line);
+  // Parse an property from the token list.
+  private: bool ParseTokenProperty(int entity, int *index, int *line);
 
   // Parse a tuple.
-  private: bool ParseTokenTuple(int section, int item, int *index, int *line);
+  private: bool ParseTokenTuple(int entity, int property, int *index, int *line);
 
   // Clear the macro list
   private: void ClearMacros();
@@ -209,42 +191,56 @@ class CWorldFile
   // Dump the macro list for debugging
   private: void DumpMacros();
 
-  // Clear the section list
-  private: void ClearSections();
+  // Clear the entity list
+  private: void ClearEntities();
 
-  // Add a section
-  private: int AddSection(int parent, const char *name);
+  // Add a entity
+  private: int AddEntity(int parent, const char *type);
 
-  // Dump the section list for debugging
-  private: void DumpSections();
+    // Get the number of entities.
+  public: int GetEntityCount();
 
-  // Clear the item list
-  private: void ClearItems();
+  // Get a entity (returns the entity type value)
+  public: const char *GetEntityType(int entity);
 
-  // Add an item
-  private: int AddItem(int section, const char *name, int line);
-
-  // Add an item value.
-  private: void AddItemValue(int item, int index, int value_token);
+  // Lookup a entity number by type name
+  // Returns -1 if there is entity with this type
+  public: int LookupEntity(const char *type);
   
-  // Get an item
-  private: int GetItem(int section, const char *name);
+  // Get a entity's parent entity.
+  // Returns -1 if there is no parent.
+  public: int GetEntityParent(int entity);
 
-  // Set the value of an item.
-  private: void SetItemValue(int item, int index, const char *value);
+  // Dump the entity list for debugging
+  private: void DumpEntities();
 
-  // Get the value of an item.
-  private: const char *GetItemValue(int item, int index);
+  // Clear the property list
+  private: void ClearProperties();
 
-  // Dump the item list for debugging
-  private: void DumpItems();
+  // Add an property
+  private: int AddProperty(int entity, const char *name, int line);
+
+  // Add an property value.
+  private: void AddPropertyValue(int property, int index, int value_token);
+  
+  // Get an property
+  private: int GetProperty(int entity, const char *name);
+
+  // Set the value of an property.
+  private: void SetPropertyValue(int property, int index, const char *value);
+
+  // Get the value of an property.
+  private: const char *GetPropertyValue(int property, int index);
+
+  // Dump the property list for debugging
+  private: void DumpProperties();
 
   // Token types.
   private: enum
   {
     TokenComment,
     TokenWord, TokenNum, TokenString,
-    TokenOpenSection, TokenCloseSection,
+    TokenOpenEntity, TokenCloseEntity,
     TokenOpenTuple, TokenCloseTuple,
     TokenSpace, TokenEOL
   };
@@ -285,45 +281,45 @@ class CWorldFile
   private: int macro_count;
   private: CMacro *macros;
   
-  // Private section class
-  private: struct CSection
+  // Private entity class
+  private: struct CEntity
   {
-    // Parent section
+    // Parent entity
     int parent;
 
-    // Name of section
-    const char *name;
+    // Type of entity (i.e. position, laser, etc).
+    const char *type;
   };
 
-  // Section list
-  private: int section_size;
-  private: int section_count;
-  private: CSection *sections;
+  // Entity list
+  private: int entity_size;
+  private: int entity_count;
+  private: CEntity *entities;
 
-  // Private item class
-  private: struct CItem
+  // Private property class
+  private: struct CProperty
   {
-    // Index of section this item belongs to
-    int section;
+    // Index of entity this property belongs to
+    int entity;
 
-    // Name of item
+    // Name of property
     const char *name;
     
     // A list of token indexes
     int value_count;
     int *values;
 
-    // Line this item came from
+    // Line this property came from
     int line;
 
-    // Flag set if item has been used
+    // Flag set if property has been used
     bool used;
   };
   
-  // Item list
-  private: int item_size;
-  private: int item_count;
-  private: CItem *items;
+  // Property list
+  private: int property_size;
+  private: int property_count;
+  private: CProperty *properties;
 
   // Name of the file we loaded
   private: char *filename;

@@ -1,12 +1,37 @@
-//-------------------------------------------------------------------------------------
-// colors.hh - define the default colors for all devices here
-// $Id: colors.hh,v 1.6 2002-01-28 22:32:25 inspectorg Exp $
-//
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/*
+ * Desc: Some useful color routines.  Define the default colors for all
+ * devices here.
+ * Author: Andrew Howard, Richard Vaughan
+ * Date: 8 Jun 2002
+ * CVS info: $Id: colors.hh,v 1.7 2002-06-09 00:33:01 inspectorg Exp $
+ */
 
 #ifndef _STAGECOLORS_H
 #define _STAGECOLORS_H 
 
-#ifdef INCLUDE_RTK2
+#include <stdint.h>
+
+// Color type
+typedef uint32_t StageColor;
 
 #define BACKGROUND_COLOR "light gray"
 #define GRIPPER_COLOR "gray"
@@ -26,25 +51,9 @@
 #define IDAR_COLOR "DarkRed"
 #define DESCARTES_COLOR "green"
 
-#else
-
-#define GRIPPER_COLOR "gray"
-#define POSITION_COLOR "red"
-#define LASER_COLOR  "blue"
-#define SONAR_COLOR  "blue3"
-#define PTZ_COLOR  "magenta"
-#define PUCK_COLOR  "green"
-#define BOX_COLOR  "yellow"
-#define LBD_COLOR  "gray"
-#define MISC_COLOR  "gray"
-#define GPS_COLOR  "gray"
-#define VISION_COLOR  "gray"
-#define PLAYER_COLOR  "white"
-#define LASERBEACON_COLOR  "cyan"
-#define WALL_COLOR "white"
-#define IDAR_COLOR "DarkRed"
-#define DESCARTES_COLOR "green"
-
-#endif
+// Look up the color in a database.  (i.e. transform color name to
+// color value).  If the color is not found in the database, a bright
+// red color will be returned instead.
+StageColor LookupColor(const char *name);
 
 #endif

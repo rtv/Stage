@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.18 $
+//  $Author: inspectorg $
+//  $Revision: 1.19 $
 //
 // Usage:
 //  (empty)
@@ -36,15 +36,13 @@
 CBoxObstacle::CBoxObstacle(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {
-  // Set default shape and geometry
+  this->stage_type = BoxType;
+  this->color = ::LookupColor(BOX_COLOR);
+
   this->shape = ShapeRect;
   this->size_x = 1.0;
   this->size_y = 1.0;
   
-  SetColor(BOX_COLOR);
-  
-  m_stage_type = BoxType;
-
   vision_return = true; 
   laser_return = LaserReflect;
   sonar_return = true;

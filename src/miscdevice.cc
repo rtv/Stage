@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/miscdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.10 $
+//  $Author: inspectorg $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -42,8 +42,8 @@ CMiscDevice::CMiscDevice(CWorld *world, CEntity *parent )
   m_reply_len  = 0;
   
   m_player.code = PLAYER_MISC_CODE;
-  m_stage_type = MiscType;
-  SetColor(MISC_COLOR);
+  this->stage_type = MiscType;
+  this->color = ::LookupColor(MISC_COLOR);
 
   m_interval = 0.1;
 }

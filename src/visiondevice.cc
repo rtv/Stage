@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.26 $
+//  $Author: inspectorg $
+//  $Revision: 1.27 $
 //
 // Usage:
 //  (empty)
@@ -44,18 +44,14 @@ CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent)
   m_reply_len  = 0;
  
   m_player.code = PLAYER_VISION_CODE;
-  m_stage_type = VisionType;
-
+  this->stage_type = VisionType;
+  this->color = ::LookupColor(VISION_COLOR);
+  
   m_interval = 0.1; // 10Hz - the real cam is around this
 
-  // ACTS must be associated with a physical camera
-  // so parent must be a PTZ device
-  // this check isn;t bulletproof, but it's better than nothin'.
-  // But why not allow a naked vision device? AH
-  //ASSERT( parent != NULL);
-  //ASSERT( parent->m_player_type == PLAYER_PTZ_CODE );
-
-  if (parent->m_stage_type == PtzType)
+  // If the parent is a ptz device we will use it, otherwise
+  // we will operate as a naked vision device.
+  if (parent->stage_type == PtzType)
     m_ptz_device = parent;
   else
     m_ptz_device = NULL;
@@ -72,10 +68,8 @@ CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent)
   m_max_range = 8.0;
 
   // Set the default channel-color mapping for ACTS
-  memset( channel, 0, sizeof(StageColor) * ACTS_NUM_CHANNELS );
-  channel[0].red = 255;
-  channel[1].green = 255;
-  channel[2].blue = 255;
+  memset(this->channel, 0, sizeof(StageColor) * ACTS_NUM_CHANNELS);
+  this->channel[0] = 0xFFFFFF;
 
   numBlobs = 0;
   memset( blobs, 0, MAXBLOBS * sizeof( ColorBlob ) );
@@ -94,22 +88,13 @@ bool CVisionDevice::Load(CWorldFile *worldfile, int section)
   if (!CEntity::Load(worldfile, section))
     return false;
 
-  // Read the vision channel/color mapping from global settings
-  for (int i = 0; true; i++)
-  {
-    const char *color = worldfile->ReadTupleString(0, "vision_channels", i, NULL);
-    if (!color)
-      break;
-    m_world->ColorFromString(this->channel + i, color);
-  }
-
   // Read the vision channel/color mapping from local settings
   for (int i = 0; true; i++)
   {
     const char *color = worldfile->ReadTupleString(section, "channels", i, NULL);
     if (!color)
       break;
-    m_world->ColorFromString(this->channel + i, color);
+    this->channel[i] = ::LookupColor(color);
   }
   
   return true;
@@ -251,9 +236,7 @@ void CVisionDevice::UpdateScan()
     // look up this color in the color/channel mapping array
     for( int c=0; c<ACTS_NUM_CHANNELS; c++ )
     {
-      if( channel[c].red == col.red &&
-          channel[c].green == col.green &&
-          channel[c].blue == col.blue  )
+      if( channel[c] == col)
       {
         //printf("m_scan_channel[%d] = %d\n", s, c+1);
         m_scan_channel[s] = c + 1; // channel 0 is no-blob

@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.50 2002-06-07 16:28:39 inspectorg Exp $
+ * CVS info: $Id: entity.hh,v 1.51 2002-06-09 00:33:01 inspectorg Exp $
  */
 
 #ifndef ENTITY_HH
@@ -141,9 +141,6 @@ class CEntity
   protected: virtual CEntity *TestCollision(double px, double py, double pth, 
                                             double &hitx, double &hity );
 
-  // Set the color of the entity
-  public: void SetColor(const char *desc);
-  
   // Convert local to global coords
   public: void LocalToGlobal(double &px, double &py, double &pth);
 
@@ -171,7 +168,7 @@ class CEntity
   public: void GetGlobalVel(double &vx, double &vy, double &vth);
 
   // Get the entity mass
-  public: double GetMass() { return(m_mass); }
+  public: double GetMass() { return (this->mass); }
   
   // See if the given entity is one of our descendents
   public: bool IsDescendent(CEntity *entity);
@@ -192,7 +189,7 @@ class CEntity
   public: int worldfile_section;
 
   // Type of this entity
-  public: StageType m_stage_type; 
+  public: StageType stage_type; 
 
   // Our shape and geometry
   public: StageShape shape;
@@ -206,7 +203,7 @@ class CEntity
   public: char name[256];
 
   // Entity mass (for collision calculations)
-  protected: double m_mass;
+  protected: double mass;
   
   // Sensor return values
   // Set these to true to have this entity 'seen' by
@@ -219,7 +216,7 @@ class CEntity
   public: IDARReturn idar_return;
 
   // the full path name of this device in the filesystem
-  public: char m_device_filename[256]; 
+  public: char device_filename[256]; 
 
   // a filedescriptor for this device's file, used for locking
   //private: int m_fd;
@@ -382,9 +379,6 @@ class CEntity
   // Update the rtk gui
   public: virtual void RtkUpdate();
 
-  // Get a string describing the Stage type of the entity
-  private: const char *RtkGetStageType();
-  
   // Default figure handle
   protected: rtk_fig_t *fig, *fig_label;
 

@@ -21,7 +21,7 @@
  * Desc: Shared types, constants, etc
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: stage_types.hh,v 1.24 2002-06-07 01:53:34 inspectorg Exp $
+ * CVS: $Id: stage_types.hh,v 1.25 2002-06-09 00:33:01 inspectorg Exp $
  */
 
 #ifndef STAGE_TYPES_HH
@@ -137,12 +137,6 @@ extern bool quit;
 ///////////////////////////////////////////////////////////////////////////
 // Useful stage types
 
-// color type
-typedef struct
-{
-  unsigned short red, green, blue;
-} StageColor;
-
 // Shapes for entities
 enum StageShape
 {
@@ -160,8 +154,7 @@ enum StageType
   WallType,
   PlayerType, 
   MiscType, 
-  RectRobotType,
-  RoundRobotType,
+  PositionType,
   SonarType,
   LaserTurretType,
   VisionType,
@@ -170,7 +163,6 @@ enum StageType
   LaserBeaconType,
   LBDType, // Laser Beacon Detector
   VisionBeaconType,
-//VBDType // Vision Beacon Detector?
   GripperType, 
   GpsType,
   PuckType,

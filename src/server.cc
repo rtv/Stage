@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.10 2002-06-07 06:30:52 inspectorg Exp $
+ * CVS info: $Id: server.cc,v 1.11 2002-06-09 00:33:02 inspectorg Exp $
  */
 
 #include <arpa/inet.h>
@@ -83,13 +83,14 @@ CStageServer::CStageServer( int argc, char** argv )
   }
   
   // reassuring console output
-  printf( "[World %s]\n", this->worldfilename );
+  printf( "[World %s]", this->worldfilename );
   
   // reassuring console output
   // printf( "[Host %s]", m_hostname );
   
   ///////////////////////////////////////////////////////////////////////
   // LOAD THE CONFIGURATION FOR THE GUI
+  printf("\n");
   if (!RtkLoad(&this->worldfile))
   {
     PRINT_ERR( "Failed to load worldfile" );
@@ -229,7 +230,7 @@ bool CStageServer::LoadFile( char* filename )
     return false;
   
   // Make sure there is an "environment" section
-  int section = this->worldfile.LookupSection("environment");
+  int section = this->worldfile.LookupEntity("environment");
   if (section < 0)
   {
     PRINT_ERR("no environment specified");
@@ -270,11 +271,11 @@ bool CStageServer::LoadFile( char* filename )
   m_sim_timestep = this->worldfile.ReadFloat(0, "sim_timestep", 0.100);
   
   // Iterate through sections and create entities as needs be
-  for (int section = 1; section < this->worldfile.GetSectionCount(); section++)
+  for (int section = 1; section < this->worldfile.GetEntityCount(); section++)
   {
     // Find out what type of entity this is,
     // and what line it came from.
-    const char *type = this->worldfile.GetSectionType(section);
+    const char *type = this->worldfile.GetEntityType(section);
     int line = this->worldfile.ReadInt(section, "line", -1);
 
     // Ignore some types, since we already have dealt will deal with them
@@ -337,7 +338,7 @@ bool CStageServer::LoadFile( char* filename )
 
     // Find the parent entity
     CEntity *parent = NULL;
-    int psection = this->worldfile.GetSectionParent(section);
+    int psection = this->worldfile.GetEntityParent(section);
     for (int i = 0; i < GetEntityCount(); i++)
     {
       CEntity *entity = GetEntity(i);
@@ -525,7 +526,7 @@ bool CStageServer::StartupPlayer( void )
   // count the number of Players on this host
   int player_count = 0;
   for (int i = 0; i < GetEntityCount(); i++)
-    if( GetEntity(i)->m_stage_type == PlayerType && GetEntity(i)->m_local ) 
+    if( GetEntity(i)->stage_type == PlayerType && GetEntity(i)->m_local ) 
       player_count++;
   
   printf( "DETECTED %d players on this host\n", player_count );

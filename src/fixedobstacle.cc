@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.11 $
+//  $Author: inspectorg $
+//  $Revision: 1.12 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -29,24 +29,24 @@ CFixedObstacle::CFixedObstacle(CWorld *world, CEntity *parent)
   m_config_len  = 0;
   m_reply_len  = 0;
   
-  m_stage_type = WallType;
-  SetColor(WALL_COLOR);
+  this->stage_type = WallType;
+  this->color = ::LookupColor(WALL_COLOR);
 
   vision_return = true; 
   laser_return = LaserReflect;
   sonar_return = true;
   obstacle_return = true;
   puck_return = false; // we trade velocities with pucks
- idar_return = IDARReflect;
+  idar_return = IDARReflect;
 
- this->crop_ax = -DBL_MAX;
- this->crop_ay = -DBL_MAX;
- this->crop_bx = +DBL_MAX;
- this->crop_by = +DBL_MAX;
+  this->crop_ax = -DBL_MAX;
+  this->crop_ay = -DBL_MAX;
+  this->crop_bx = +DBL_MAX;
+  this->crop_by = +DBL_MAX;
  
- this->filename = NULL;
- this->scale = 1.0 / m_world->ppm;
- this->image = NULL;
+  this->filename = NULL;
+  this->scale = 1.0 / m_world->ppm;
+  this->image = NULL;
 
 #ifdef INCLUDE_RTK2
   // We cant move fixed obstacles
@@ -163,10 +163,7 @@ bool CFixedObstacle::Startup()
   // Draw the image into the GUI
   rtk_fig_clear(this->fig);
   rtk_fig_layer(this->fig, -48);
-  rtk_fig_color(this->fig,
-                this->color.red / 255.0,
-                this->color.green / 255.0,
-                this->color.blue / 255.0);
+  rtk_fig_color_rgb32(this->fig, this->color);
   for (int y = 0; y < this->image->height; y++)
   {
     for (int x = 0; x < this->image->width; x++)

@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.53 2002-06-07 23:53:05 inspectorg Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.54 2002-06-09 00:33:02 inspectorg Exp $
  */
 
 #define DEBUG
@@ -50,9 +50,8 @@ CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent )
   m_reply_len  = 1;
   
   m_player.code = PLAYER_LASER_CODE; // from player's messages.h
-  m_stage_type = LaserTurretType;
-
-  SetColor(LASER_COLOR);
+  this->stage_type = LaserTurretType;
+  this->color = ::LookupColor(LASER_COLOR);
   
   // Default visibility settings
   this->laser_return = LaserReflect;
@@ -321,7 +320,7 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
         continue;
 
       // Construct a list of beacons we have seen
-      if( ent->m_stage_type == LaserBeaconType )
+      if( ent->stage_type == LaserBeaconType )
         this->visible_beacons.push_front( (int)ent );
 
       // Stop looking when we see something
@@ -361,13 +360,10 @@ void CLaserDevice::RtkStartup()
   CEntity::RtkStartup();
   
   // Create a figure representing this object
-  this->scan_fig = rtk_fig_create(m_world->canvas, NULL, 49);
+  this->scan_fig = rtk_fig_create(m_world->canvas, NULL, 48);
 
-  // Set the color - pale blue
-  double r = 0.8;
-  double g = 0.8;
-  double b = 1.0;
-  rtk_fig_color(this->scan_fig, r, g, b);
+  // Set the color
+  rtk_fig_color_rgb32(this->scan_fig, this->color);
 }
 
 

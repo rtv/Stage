@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.26 2002-06-07 17:29:45 inspectorg Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.27 2002-06-09 00:33:02 inspectorg Exp $
  */
 
 //#define DEBUG
@@ -43,9 +43,8 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent)
   m_reply_len = 1; 
   
   m_player.code = PLAYER_POSITION_CODE;
-  m_stage_type = RectRobotType;
-
-  SetColor(POSITION_COLOR);
+  this->stage_type = PositionType;
+  this->color = ::LookupColor(POSITION_COLOR);
 
   // set up our sensor response
   laser_return = LaserTransparent;
@@ -62,7 +61,7 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent)
   m_interval = 0.01; 
   
   // assume robot is 20kg
-  m_mass = 20.0;
+  this->mass = 20.0;
   
   // Set the default shape and geometry
   // to correspond to a Pioneer2 DX

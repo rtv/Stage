@@ -27,8 +27,7 @@ CMoteDevice::CMoteDevice(CWorld *world, CEntity *parent )
   m_reply_len  = 1;
   
   m_player.code = PLAYER_MOTE_CODE;
-  m_stage_type = MoteType;
-
+  this->stage_type = MoteType;
 
   m_interval = 0.01;
   m_graph_update_interval = 0.2;

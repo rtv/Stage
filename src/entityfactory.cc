@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.24 $
+//  $Revision: 1.25 $
 //
 // Usage:
 //  (empty)
@@ -56,93 +56,8 @@
 #include "world.hh"
 
 
-//  const char** object_types =
-//  { 
-//    "mote_device", 
-//    "obstacle", 
-//    "position_device", 
-//    "omni_position_device", 
-//    "player_device",
-//    "laser_device",
-//    "sonar_device",
-//    "misc_device",
-//    "ptz_device",
-//    "box",
-//    "laser_beacon",
-//    "lbd_device",
-//    "vision_device",
-//    "vision_beacon",
-//    "movable_object",
-//    "gps_device",
-//    "gripper_device", 
-//    "puck" 
-//  };
-
 /////////////////////////////////////////////////////////////////////////
-// Create an entity given a type
-CEntity* CWorld::CreateEntity( StageType type, CEntity *parent )
-{ 
-  switch( type )
-    {
-    case NullType:
-      puts( "Stage Warning: create null device type request. Ignored." );
-      return NULL;
-    case WallType:
-      return new CFixedObstacle(this, parent);     
-    case PlayerType:
-      return new CPlayerDevice(this, parent );
-    case MiscType: 
-      return new CMiscDevice(this, parent );
-    case RectRobotType:
-    case RoundRobotType:
-      return new CPositionDevice(this, parent );
-    case SonarType:
-      return new CSonarDevice(this, parent );
-    case LaserTurretType:
-      return new CLaserDevice(this, parent );
-    case VisionType:
-      return new CVisionDevice(this, (CPtzDevice*)parent);
-    case PtzType:
-      return new CPtzDevice(this, parent );
-    case BoxType: 
-      return new CBoxObstacle(this, parent);
-    case LaserBeaconType:
-      return new CLaserBeacon(this, parent);
-    case LBDType:
-      return new CLBDDevice(this, (CLaserDevice*)parent );
-    case VisionBeaconType:
-      return new CVisionBeacon(this, parent);
-    case GripperType:
-      return new CGripperDevice(this, parent);
-    case GpsType:
-      return new CGpsDevice(this, parent);
-    case PuckType:
-      return new CPuck(this, parent);
-    case BroadcastType:
-      return new CBroadcastDevice(this, parent);
-    case OmniPositionType:
-      return new COmniPositionDevice(this, parent );
-    case MoteType:
-      return new CMoteDevice(this, parent );
-    case TruthType:
-      return new CTruthDevice(this, parent );
-
-    default:
-      PRINT_WARN1("unknown type %d", type);
-    }
-
-  // case AudioType:
-  // case SpeechType:
-  //VBDType // Vision Beacon Detector?
-  //case IDARType, // HRL's Infrared Data And Ranging turret
-  //case DescartesType, // HRL's customized Descartes robot platform
-  //case TruthType:
-  //case OccupancyType:
-}
-
-
-/////////////////////////////////////////////////////////////////////////
-// Create an entity given a type
+// Create an entity given a type (used by server to create entities).
 CEntity* CWorld::CreateEntity(const char *type, CEntity *parent )
 { 
   if (strcmp(type, "mote") == 0)
@@ -222,5 +137,65 @@ CEntity* CWorld::CreateEntity(const char *type, CEntity *parent )
 }
 
 
+/////////////////////////////////////////////////////////////////////////
+// Create an entity given a type (used by client to create entities).
+CEntity* CWorld::CreateEntity( StageType type, CEntity *parent)
+{ 
+  switch( type )
+  {
+    case NullType:
+      puts( "Stage Warning: create null device type request. Ignored." );
+      return NULL;
+    case WallType:
+      return new CFixedObstacle(this, parent);     
+    case PlayerType:
+      return new CPlayerDevice(this, parent );
+    case MiscType: 
+      return new CMiscDevice(this, parent );
+    case PositionType:
+      return new CPositionDevice(this, parent );
+    case SonarType:
+      return new CSonarDevice(this, parent );
+    case LaserTurretType:
+      return new CLaserDevice(this, parent );
+    case VisionType:
+      return new CVisionDevice(this, (CPtzDevice*)parent);
+    case PtzType:
+      return new CPtzDevice(this, parent );
+    case BoxType: 
+      return new CBoxObstacle(this, parent);
+    case LaserBeaconType:
+      return new CLaserBeacon(this, parent);
+    case LBDType:
+      return new CLBDDevice(this, (CLaserDevice*)parent );
+    case VisionBeaconType:
+      return new CVisionBeacon(this, parent);
+    case GripperType:
+      return new CGripperDevice(this, parent);
+    case GpsType:
+      return new CGpsDevice(this, parent);
+    case PuckType:
+      return new CPuck(this, parent);
+    case BroadcastType:
+      return new CBroadcastDevice(this, parent);
+    case OmniPositionType:
+      return new COmniPositionDevice(this, parent );
+    case MoteType:
+      return new CMoteDevice(this, parent );
+    case TruthType:
+      return new CTruthDevice(this, parent );
+
+    default:
+      PRINT_WARN1("unknown type %d", type);
+  }
+
+  // case AudioType:
+  // case SpeechType:
+  //VBDType // Vision Beacon Detector?
+  //case IDARType, // HRL's Infrared Data And Ranging turret
+  //case DescartesType, // HRL's customized Descartes robot platform
+  //case TruthType:
+  //case OccupancyType:
+}
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gpsdevice.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.12 $
+//  $Revision: 1.13 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -29,9 +29,8 @@ CGpsDevice::CGpsDevice(CWorld *world, CEntity *parent )
   m_reply_len  = 0;
 
   m_player.code = PLAYER_GPS_CODE;
-  m_stage_type = GpsType;
-
-  SetColor(GPS_COLOR);
+  this->stage_type = GpsType;
+  this->color = ::LookupColor(GPS_COLOR);
   
   m_interval = 0.05; 
 }

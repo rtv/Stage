@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.hh,v 1.7 2002-06-04 06:35:07 rtv Exp $
+// $Id: matrix.hh,v 1.8 2002-06-09 00:33:01 inspectorg Exp $
 // RTV
 // ==================================================================
 
@@ -74,7 +74,7 @@ class CMatrix
     
       while( *cell )
       {
-        if( (*cell)->m_stage_type == type ) return true;
+        if( (*cell)->stage_type == type ) return true;
         cell++;
       }
     

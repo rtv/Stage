@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.54 2002-06-07 06:30:51 inspectorg Exp $
+ * CVS info: $Id: world.hh,v 1.55 2002-06-09 00:33:01 inspectorg Exp $
  */
 
 #ifndef WORLD_HH
@@ -197,12 +197,12 @@ class CWorld
   //public: bool m_env_server_ready;
   //private: bool m_run_environment_server;
   //private: bool m_run_pose_server;
-  
+
+  // Non-zero if we should run the gui (a command line setting)
+  private: bool enable_gui;
+
   protected: bool m_external_sync_required;
   public: bool m_send_idar_packets;
-
-  // flag that controls spawning of xs
-  private: bool m_run_xs;
   
   // the pose server port
   //public: int m_server_port;
@@ -259,10 +259,6 @@ class CWorld
 
   ////////////////////////////////////////////////////////////////////////
   // utility methods
-
-  // fill the Stagecolor structure by looking up the color name in the database
-  // return false if failed
-  public: int ColorFromString( StageColor* color, const char* colorString );
 
   // return a string that names this type of entity
   public: char* CWorld::StringType( StageType t );

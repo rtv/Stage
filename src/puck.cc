@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.26 $
+//  $Revision: 1.27 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -22,8 +22,8 @@
 CPuck::CPuck(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {
-  m_stage_type = PuckType;
-  SetColor(PUCK_COLOR);
+  this->stage_type = PuckType;
+  this->color = ::LookupColor(PUCK_COLOR);
 
   this->vision_return = true;
   this->vision_return_held = false;
@@ -40,15 +40,9 @@ CPuck::CPuck(CWorld *world, CEntity *parent)
   puck_return = true; // yes! we interact with pucks!
   
   m_friction = 0.05;
-  // assume puck is 200g
-  m_mass = 0.2;
 
-  /* REMOVE?
-  exp.objectType = puck_o;
-  exp.width = this->size_x;
-  exp.height = this->size_y;
-  strcpy( exp.label, "Puck" );
-  */
+  // assume puck is 200g
+  this->mass = 0.2;
 }
 
 
@@ -157,7 +151,7 @@ void CPuck::Move()
           // we only have really big things(robots) and really small things
           // (pucks).  
           double vr = 0;
-          if(impact_mass > m_mass)
+          if(impact_mass > this->mass)
             vr = 2*fabs(impact_velocity);
           else
             vr = fabs(impact_velocity);

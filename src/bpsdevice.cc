@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/bpsdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.3 $
+//  $Author: inspectorg $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -36,14 +36,14 @@
 CBpsDevice::CBpsDevice(CWorld *world, CEntity *parent )
   : CEntity(world, parent )
 {
-    // set the Player IO sizes correctly for this type of Entity
-    m_data_len    = sizeof( player_bps_data_t ); 
-    m_command_len = 0;
-    m_config_len  = 1;
-    m_reply_len  = 1;
+  // set the Player IO sizes correctly for this type of Entity
+  m_data_len    = sizeof( player_bps_data_t ); 
+  m_command_len = 0;
+  m_config_len  = 1;
+  m_reply_len  = 1;
  
-    m_player.code = PLAYER_BPS_CODE;
-    m_stage_type = BpsType;
+  m_player.code = PLAYER_BPS_CODE;
+  this->stage_type = BpsType;
 }
 
 
@@ -52,9 +52,9 @@ CBpsDevice::CBpsDevice(CWorld *world, CEntity *parent )
 //
 bool CBpsDevice::Startup()
 {
-    if (!CEntity::Startup())
-        return false;
-    return true;
+  if (!CEntity::Startup())
+    return false;
+  return true;
 }
 
 

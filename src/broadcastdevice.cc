@@ -22,7 +22,7 @@
  *       the work is done by Player).
  * Author: Andrew Howard
  * Date: 5 Dec 2000
- * CVS info: $Id: broadcastdevice.cc,v 1.12 2002-06-07 17:29:45 inspectorg Exp $
+ * CVS info: $Id: broadcastdevice.cc,v 1.13 2002-06-09 00:33:02 inspectorg Exp $
  */
 
 #include <stage.h>
@@ -46,5 +46,5 @@ CBroadcastDevice::CBroadcastDevice(CWorld *world, CEntity *parent)
   m_reply_len = 10;
 
   m_player.code = PLAYER_BROADCAST_CODE;
-  m_stage_type= BroadcastType;
+  this->stage_type = BroadcastType;
 }

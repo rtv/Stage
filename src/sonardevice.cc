@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.23 2002-06-07 23:53:06 inspectorg Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.24 2002-06-09 00:33:02 inspectorg Exp $
  */
 
 #include <math.h>
@@ -40,14 +40,11 @@ CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent )
   m_reply_len  = 1;
   
   m_player.code = PLAYER_SONAR_CODE; // from player's messages.h
-  m_stage_type = SonarType;
-  
-  SetColor(SONAR_COLOR);
+  this->stage_type = SonarType;
+  this->color = ::LookupColor(SONAR_COLOR);
 
   this->min_range = 0.20;
   this->max_range = 5.0;
-    
-  // REMOVE? this->size_x = this->size_y = 0.3;
 
   // Initialise the sonar poses to default values
   this->sonar_count = SONARSAMPLES;
@@ -207,11 +204,8 @@ void CSonarDevice::RtkStartup()
   // Create a figure representing this object
   this->scan_fig = rtk_fig_create(m_world->canvas, NULL, 49);
 
-  // Set the color -  blue
-  double r = 0.6;
-  double g = 1.0;
-  double b = 0.6;
-  rtk_fig_color(this->scan_fig, r, g, b);
+  // Set the color
+  rtk_fig_color_rgb32(this->scan_fig, this->color);
 }
 
 

@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.39 2002-06-05 08:30:08 inspectorg Exp $
+ * CVS: $Id: main.cc,v 1.40 2002-06-09 00:33:02 inspectorg Exp $
  */
 
 #include <unistd.h>
@@ -107,7 +107,7 @@ void sig_quit(int signum)
 int main(int argc, char **argv)
 {  
   // hello world
-  printf("\n** Stage  v%s ** ", (char*) VERSION);
+  printf("\n** Stage  v%s ** \n", (char*) VERSION);
 
 #ifdef INCLUDE_RTK2
   // Initialise rtk if we are using it

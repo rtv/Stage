@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.13 2002-06-08 20:52:54 inspectorg Exp $
+ * CVS info: $Id: worldfile.cc,v 1.14 2002-06-09 00:33:02 inspectorg Exp $
  */
 
 #include <assert.h>
@@ -37,6 +37,7 @@
 //#define DEBUG
 
 #include "stage_types.hh"
+#include "colors.hh"
 #include "worldfile.hh"
 
 
@@ -62,13 +63,13 @@ CWorldFile::CWorldFile()
   this->macro_size = 0;
   this->macros = NULL;
 
-  this->section_count = 0;
-  this->section_size = 0;
-  this->sections = NULL;
+  this->entity_count = 0;
+  this->entity_size = 0;
+  this->entities = NULL;
 
-  this->item_count = 0;
-  this->item_size = 0;
-  this->items = NULL;
+  this->property_count = 0;
+  this->property_size = 0;
+  this->properties = NULL;
 
   // Set defaults units
   this->unit_length = 1.0;
@@ -80,9 +81,9 @@ CWorldFile::CWorldFile()
 // Destructor
 CWorldFile::~CWorldFile()
 {
-  ClearItems();
+  ClearProperties();
   ClearMacros();
-  ClearSections();
+  ClearEntities();
   ClearTokens();
 
   if (this->filename)
@@ -98,32 +99,6 @@ bool CWorldFile::Load(const char *filename)
   // so this should be null.
   assert(this->filename == NULL);
   this->filename = strdup(filename);
-
-  // if the extension is 'm4', then run it through m4 first
-  //printf("checking %s for .m4 extension\n", this->filename);
-  if(strlen(this->filename) > 3 && 
-     !strncmp(this->filename+(strlen(this->filename)-3),".m4",3))
-  {
-    //puts("it is m4");
-    char* newfilename = strdup(this->filename);
-    assert(newfilename);
-    newfilename[strlen(newfilename)-3] = '\0';
-
-    char* execstr = (char*)(malloc(strlen(this->filename)+strlen(newfilename)+8));
-    assert(execstr);
-
-    sprintf(execstr,"m4 -E %s > %s", this->filename, newfilename);
-
-    //printf("calling system() with \"%s\"\n", execstr);
-    if(system(execstr) < 0)
-    {
-      PRINT_ERR1("unable to invoke m4 on world file %s", this->filename);
-      return false;
-    }
-
-    strcpy(this->filename, newfilename);
-  }
-  //puts("it is not m4");
 
   // Open the file
   FILE *file = fopen(this->filename, "r");
@@ -141,7 +116,7 @@ bool CWorldFile::Load(const char *filename)
     return false;
   }
 
-  // Parse the tokens to identify sections
+  // Parse the tokens to identify entities
   if (!ParseTokens())
   {
     //DumpTokens();
@@ -154,8 +129,8 @@ bool CWorldFile::Load(const char *filename)
     PRINT_ERR("this is a test file; quitting");
     DumpTokens();
     DumpMacros();
-    DumpSections();
-    DumpItems();
+    DumpEntities();
+    DumpProperties();
     return false;
   }
   
@@ -184,7 +159,7 @@ bool CWorldFile::Load(const char *filename)
 bool CWorldFile::Save(const char *filename)
 {
   // Debugging
-  DumpItems();
+  DumpProperties();
   
   // If no filename is supplied, use default
   if (!filename)
@@ -216,14 +191,14 @@ bool CWorldFile::Save(const char *filename)
 bool CWorldFile::WarnUnused()
 {
   bool unused = false;
-  for (int item = 0; item < this->item_count; item++)
+  for (int i = 0; i < this->property_count; i++)
   {
-    CItem *pitem = this->items + item;
-    if (!pitem->used)
+    CProperty *property = this->properties + i;
+    if (!property->used)
     {
       unused = true;
       PRINT_WARN3("worldfile %s:%d : property [%s] is defined but not used",
-                  this->filename, pitem->line, pitem->name);
+                  this->filename, property->line, property->name);
     }
   }
   return unused;
@@ -282,13 +257,13 @@ bool CWorldFile::LoadTokens(FILE *file)
     {
       token[0] = ch;
       token[1] = 0;
-      AddToken(TokenOpenSection, token);
+      AddToken(TokenOpenEntity, token);
     }
     else if (strchr(")", ch))
     {
       token[0] = ch;
       token[1] = 0;
-      AddToken(TokenCloseSection, token);
+      AddToken(TokenCloseEntity, token);
     }
     else if (strchr("[", ch))
     {
@@ -598,19 +573,19 @@ void CWorldFile::DumpTokens()
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Parse tokens into sections and items.
+// Parse tokens into entities and properties.
 bool CWorldFile::ParseTokens()
 {
   int i;
-  int section;
+  int entity;
   int line;
   CToken *token;
 
-  ClearSections();
-  ClearItems();
+  ClearEntities();
+  ClearProperties();
   
-  // Add in the "global" section.
-  section = AddSection(-1, "");
+  // Add in the "global" entity.
+  entity = AddEntity(-1, "");
   line = 1;
   
   for (i = 0; i < this->token_count; i++)
@@ -627,7 +602,7 @@ bool CWorldFile::ParseTokens()
         }
         else
         {
-          if (!ParseTokenWord(section, &i, &line))
+          if (!ParseTokenWord(entity, &i, &line))
             return false;
         }
         break;
@@ -698,10 +673,10 @@ bool CWorldFile::ParseTokenDefine(int *index, int *line)
           }
         }
         break;
-      case TokenOpenSection:
+      case TokenOpenEntity:
         count++;
         break;
-      case TokenCloseSection:
+      case TokenCloseEntity:
         count--;
         if (count == 0)
         {
@@ -725,8 +700,8 @@ bool CWorldFile::ParseTokenDefine(int *index, int *line)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Parse something starting with a word; could be a section or an item.
-bool CWorldFile::ParseTokenWord(int section, int *index, int *line)
+// Parse something starting with a word; could be a entity or an property.
+bool CWorldFile::ParseTokenWord(int entity, int *index, int *line)
 {
   int i;
   CToken *token;
@@ -744,12 +719,12 @@ bool CWorldFile::ParseTokenWord(int section, int *index, int *line)
       case TokenEOL:
         (*line)++;
         break;
-      case TokenOpenSection:
-        return ParseTokenSection(section, index, line);
+      case TokenOpenEntity:
+        return ParseTokenEntity(entity, index, line);
       case TokenNum:
       case TokenString:
       case TokenOpenTuple:
-        return ParseTokenItem(section, index, line);
+        return ParseTokenProperty(entity, index, line);
       default:
         PARSE_ERR("syntax error 2", *line);
         return false;
@@ -759,8 +734,8 @@ bool CWorldFile::ParseTokenWord(int section, int *index, int *line)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Parse a section from the token list.
-bool CWorldFile::ParseTokenSection(int section, int *index, int *line)
+// Parse a entity from the token list.
+bool CWorldFile::ParseTokenEntity(int entity, int *index, int *line)
 {
   int i;
   int macro;
@@ -770,16 +745,16 @@ bool CWorldFile::ParseTokenSection(int section, int *index, int *line)
   name = *index;
   macro = LookupMacro(GetTokenValue(name));
   
-  // If the section name is a macro...
+  // If the entity name is a macro...
   if (macro >= 0)
   {
     // This is a bit of a hack
-    int nsection = this->section_count;
+    int nentity = this->entity_count;
     int mindex = this->macros[macro].starttoken;
     int mline = this->macros[macro].line;
-    if (!ParseTokenSection(section, &mindex, &mline))
+    if (!ParseTokenEntity(entity, &mindex, &mline))
       return false;
-    section = nsection;
+    entity = nentity;
 
     for (i = *index + 1; i < this->token_count; i++)
     {
@@ -787,13 +762,13 @@ bool CWorldFile::ParseTokenSection(int section, int *index, int *line)
 
       switch (token->type)
       {
-        case TokenOpenSection:
+        case TokenOpenEntity:
           break;
         case TokenWord:
-          if (!ParseTokenWord(section, &i, line))
+          if (!ParseTokenWord(entity, &i, line))
             return false;
           break;
-        case TokenCloseSection:
+        case TokenCloseEntity:
           *index = i;
           return true;
         case TokenComment:
@@ -811,7 +786,7 @@ bool CWorldFile::ParseTokenSection(int section, int *index, int *line)
     PARSE_ERR("missing ')'", *line);
   }
   
-  // If the section name is not a macro...
+  // If the entity name is not a macro...
   else
   {
     for (i = *index + 1; i < this->token_count; i++)
@@ -820,14 +795,14 @@ bool CWorldFile::ParseTokenSection(int section, int *index, int *line)
 
       switch (token->type)
       {
-        case TokenOpenSection:
-          section = AddSection(section, GetTokenValue(name));
+        case TokenOpenEntity:
+          entity = AddEntity(entity, GetTokenValue(name));
           break;
         case TokenWord:
-          if (!ParseTokenWord(section, &i, line))
+          if (!ParseTokenWord(entity, &i, line))
             return false;
           break;
-        case TokenCloseSection:
+        case TokenCloseEntity:
           *index = i;
           return true;
         case TokenComment:
@@ -849,10 +824,10 @@ bool CWorldFile::ParseTokenSection(int section, int *index, int *line)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Parse an item from the token list.
-bool CWorldFile::ParseTokenItem(int section, int *index, int *line)
+// Parse an property from the token list.
+bool CWorldFile::ParseTokenProperty(int entity, int *index, int *line)
 {
-  int i, item;
+  int i, property;
   int name, value, count;
   CToken *token;
 
@@ -867,18 +842,18 @@ bool CWorldFile::ParseTokenItem(int section, int *index, int *line)
     switch (token->type)
     {
       case TokenNum:
-        item = AddItem(section, GetTokenValue(name), *line);
-        AddItemValue(item, 0, i);
+        property = AddProperty(entity, GetTokenValue(name), *line);
+        AddPropertyValue(property, 0, i);
         *index = i;
         return true;
       case TokenString:
-        item = AddItem(section, GetTokenValue(name), *line);
-        AddItemValue(item, 0, i);
+        property = AddProperty(entity, GetTokenValue(name), *line);
+        AddPropertyValue(property, 0, i);
         *index = i;
         return true;
       case TokenOpenTuple:
-        item = AddItem(section, GetTokenValue(name), *line);
-        if (!ParseTokenTuple(section, item, &i, line))
+        property = AddProperty(entity, GetTokenValue(name), *line);
+        if (!ParseTokenTuple(entity, property, &i, line))
           return false;
         *index = i;
         return true;
@@ -895,7 +870,7 @@ bool CWorldFile::ParseTokenItem(int section, int *index, int *line)
 
 ///////////////////////////////////////////////////////////////////////////
 // Parse a tuple.
-bool CWorldFile::ParseTokenTuple(int section, int item, int *index, int *line)
+bool CWorldFile::ParseTokenTuple(int entity, int property, int *index, int *line)
 {
   int i, count;
   CToken *token;
@@ -909,11 +884,11 @@ bool CWorldFile::ParseTokenTuple(int section, int item, int *index, int *line)
     switch (token->type)
     {
       case TokenNum:
-        AddItemValue(item, count++, i);
+        AddPropertyValue(property, count++, i);
         *index = i;
         break;
       case TokenString:
-        AddItemValue(item, count++, i);
+        AddPropertyValue(property, count++, i);
         *index = i;
         break;
       case TokenCloseTuple:
@@ -1007,172 +982,171 @@ void CWorldFile::DumpMacros()
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Clear the section list
-void CWorldFile::ClearSections()
+// Clear the entity list
+void CWorldFile::ClearEntities()
 {
-  free(this->sections);
-  this->sections = NULL;
-  this->section_size = 0;
-  this->section_count = 0;
+  free(this->entities);
+  this->entities = NULL;
+  this->entity_size = 0;
+  this->entity_count = 0;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Add a section
-int CWorldFile::AddSection(int parent, const char *name)
+// Add a entity
+int CWorldFile::AddEntity(int parent, const char *type)
 {
-  if (this->section_count >= this->section_size)
+  if (this->entity_count >= this->entity_size)
   {
-    this->section_size += 100;
-    this->sections = (CSection*)
-      realloc(this->sections, this->section_size * sizeof(this->sections[0]));
+    this->entity_size += 100;
+    this->entities = (CEntity*)
+      realloc(this->entities, this->entity_size * sizeof(this->entities[0]));
   }
 
-  int section = this->section_count;
-  this->sections[section].parent = parent;
-  this->sections[section].name = name;
-  this->section_count++;
+  int entity = this->entity_count;
+  this->entities[entity].parent = parent;
+  this->entities[entity].type = type;
+  this->entity_count++;
   
-  return section;
+  return entity;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Get the number of sections
-int CWorldFile::GetSectionCount()
+// Get the number of entities
+int CWorldFile::GetEntityCount()
 {
-  return this->section_count;
+  return this->entity_count;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Get a section's parent section
-int CWorldFile::GetSectionParent(int section)
+// Get a entity's parent entity
+int CWorldFile::GetEntityParent(int entity)
 {
-  if (section < 0 || section >= this->section_count)
+  if (entity < 0 || entity >= this->entity_count)
     return -1;
-  return this->sections[section].parent;
+  return this->entities[entity].parent;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Get a section (returns the section type value)
-const char *CWorldFile::GetSectionType(int section)
+// Get a entity (returns the entity type value)
+const char *CWorldFile::GetEntityType(int entity)
 {
-  if (section < 0 || section >= this->section_count)
+  if (entity < 0 || entity >= this->entity_count)
     return NULL;
-
-  return this->sections[section].name;
+  return this->entities[entity].type;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Lookup a section number by type name
-// Returns -1 if there is no section with this type
-int CWorldFile::LookupSection(const char *type)
+// Lookup a entity number by type name
+// Returns -1 if there is no entity with this type
+int CWorldFile::LookupEntity(const char *type)
 {
-  for (int section = 0; section < GetSectionCount(); section++)
+  for (int entity = 0; entity < GetEntityCount(); entity++)
   {
-    if (strcmp(GetSectionType(section), type) == 0)
-      return section;
+    if (strcmp(GetEntityType(entity), type) == 0)
+      return entity;
   }
   return -1;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Dump the section list for debugging
-void CWorldFile::DumpSections()
+// Dump the entity list for debugging
+void CWorldFile::DumpEntities()
 {
-  printf("\n## begin sections\n");
-  for (int i = 0; i < this->section_count; i++)
+  printf("\n## begin entities\n");
+  for (int i = 0; i < this->entity_count; i++)
   {
-    CSection *section = this->sections + i;
+    CEntity *entity = this->entities + i;
 
-    printf("## [%d][%d]", i, section->parent);
-    printf("[%s]\n", section->name);
+    printf("## [%d][%d]", i, entity->parent);
+    printf("[%s]\n", entity->type);
   }
-  printf("## end sections\n");
+  printf("## end entities\n");
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Clear the item list
-void CWorldFile::ClearItems()
+// Clear the property list
+void CWorldFile::ClearProperties()
 {
   int i;
-  CItem *item;
+  CProperty *property;
 
-  for (i = 0; i < this->item_count; i++)
+  for (i = 0; i < this->property_count; i++)
   {
-    item = this->items + i;
-    free(item->values);
+    property = this->properties + i;
+    free(property->values);
   }
-  free(this->items);
-  this->items = NULL;
-  this->item_size = 0;
-  this->item_count = 0;
+  free(this->properties);
+  this->properties = NULL;
+  this->property_size = 0;
+  this->property_count = 0;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Add an item
-int CWorldFile::AddItem(int section, const char *name, int line)
+// Add an property
+int CWorldFile::AddProperty(int entity, const char *name, int line)
 {
-  if (this->item_count >= this->item_size)
+  if (this->property_count >= this->property_size)
   {
-    this->item_size += 100;
-    this->items = (CItem*)
-      realloc(this->items, this->item_size * sizeof(this->items[0]));
+    this->property_size += 100;
+    this->properties = (CProperty*)
+      realloc(this->properties, this->property_size * sizeof(this->properties[0]));
   }
 
-  int i = this->item_count;
+  int i = this->property_count;
 
-  CItem *item = this->items + i;
-  memset(item, 0, sizeof(CItem));
-  item->section = section;
-  item->name = name;
-  item->value_count = 0;
-  item->values = NULL;
-  item->line = line;
-  item->used = false;
+  CProperty *property = this->properties + i;
+  memset(property, 0, sizeof(CProperty));
+  property->entity = entity;
+  property->name = name;
+  property->value_count = 0;
+  property->values = NULL;
+  property->line = line;
+  property->used = false;
 
-  this->item_count++;
+  this->property_count++;
 
   return i;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Add an item value
-void CWorldFile::AddItemValue(int item, int index, int value_token)
+// Add an property value
+void CWorldFile::AddPropertyValue(int property, int index, int value_token)
 {
-  assert(item >= 0);
-  CItem *pitem = this->items + item;
+  assert(property >= 0);
+  CProperty *pproperty = this->properties + property;
 
   // Expand the array if it's too small
-  if (index >= pitem->value_count)
+  if (index >= pproperty->value_count)
   {
-    pitem->value_count = index + 1;
-    pitem->values = (int*) realloc(pitem->values, pitem->value_count * sizeof(int));
+    pproperty->value_count = index + 1;
+    pproperty->values = (int*) realloc(pproperty->values, pproperty->value_count * sizeof(int));
   }
 
   // Set the relevant value
-  pitem->values[index] = value_token;
+  pproperty->values[index] = value_token;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Get an item 
-int CWorldFile::GetItem(int section, const char *name)
+// Get an property 
+int CWorldFile::GetProperty(int entity, const char *name)
 {
-  // Find first instance of item
-  for (int i = 0; i < this->item_count; i++)
+  // Find first instance of property
+  for (int i = 0; i < this->property_count; i++)
   {
-    CItem *item = this->items + i;
-    if (item->section != section)
+    CProperty *property = this->properties + i;
+    if (property->entity != entity)
       continue;
-    if (strcmp(item->name, name) == 0)
+    if (strcmp(property->name, name) == 0)
       return i;
   }
   return -1;
@@ -1180,143 +1154,161 @@ int CWorldFile::GetItem(int section, const char *name)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Set the value of an item
-void CWorldFile::SetItemValue(int item, int index, const char *value)
+// Set the value of an property
+void CWorldFile::SetPropertyValue(int property, int index, const char *value)
 {
-  assert(item >= 0 && item < this->item_count);
-  CItem *pitem = this->items + item;
-  assert(index >= 0 && index < pitem->value_count);
+  assert(property >= 0 && property < this->property_count);
+  CProperty *pproperty = this->properties + property;
+  assert(index >= 0 && index < pproperty->value_count);
 
   // Set the relevant value
-  SetTokenValue(pitem->values[index], value);
+  SetTokenValue(pproperty->values[index], value);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Get the value of an item 
-const char *CWorldFile::GetItemValue(int item, int index)
+// Get the value of an property 
+const char *CWorldFile::GetPropertyValue(int property, int index)
 {
-  assert(item >= 0);
-  CItem *pitem = this->items + item;
-  assert(index < pitem->value_count);
-  pitem->used = true;
-  return GetTokenValue(pitem->values[index]);
+  assert(property >= 0);
+  CProperty *pproperty = this->properties + property;
+  assert(index < pproperty->value_count);
+  pproperty->used = true;
+  return GetTokenValue(pproperty->values[index]);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Dump the item list for debugging
-void CWorldFile::DumpItems()
+// Dump the property list for debugging
+void CWorldFile::DumpProperties()
 {
-  printf("\n## begin items\n");
-  for (int i = 0; i < this->item_count; i++)
+  printf("\n## begin properties\n");
+  for (int i = 0; i < this->property_count; i++)
   {
-    CItem *item = this->items + i;
-    CSection *section = this->sections + item->section;
+    CProperty *property = this->properties + i;
+    CEntity *entity = this->entities + property->entity;
     
-    printf("## [%d]", item->section);
-    printf("[%s]", section->name);
-    printf("[%s]", item->name);
-    for (int j = 0; j < item->value_count; j++)
-      printf("[%s]", GetTokenValue(item->values[j]));
+    printf("## [%d]", property->entity);
+    printf("[%s]", entity->type);
+    printf("[%s]", property->name);
+    for (int j = 0; j < property->value_count; j++)
+      printf("[%s]", GetTokenValue(property->values[j]));
     printf("\n");
   }
-  printf("## end items\n");
+  printf("## end properties\n");
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a string
-const char *CWorldFile::ReadString(int section, const char *name, const char *value)
+const char *CWorldFile::ReadString(int entity, const char *name, const char *value)
 {
-  int item = GetItem(section, name);
-  if (item < 0)
+  int property = GetProperty(entity, name);
+  if (property < 0)
     return value;
-  return GetItemValue(item, 0);
+  return GetPropertyValue(property, 0);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Write a string
-void CWorldFile::WriteString(int section, const char *name, const char *value)
+void CWorldFile::WriteString(int entity, const char *name, const char *value)
 {
-  int item = GetItem(section, name);
-  if (item < 0)
+  int property = GetProperty(entity, name);
+  if (property < 0)
     return;
-  SetItemValue(item, 0, value);  
+  SetPropertyValue(property, 0, value);  
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Read an int
-int CWorldFile::ReadInt(int section, const char *name, int value)
+int CWorldFile::ReadInt(int entity, const char *name, int value)
 {
-  int item = GetItem(section, name);
-  if (item < 0)
+  int property = GetProperty(entity, name);
+  if (property < 0)
     return value;
-  return atoi(GetItemValue(item, 0));
+  return atoi(GetPropertyValue(property, 0));
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a float
-double CWorldFile::ReadFloat(int section, const char *name, double value)
+double CWorldFile::ReadFloat(int entity, const char *name, double value)
 {
-  int item = GetItem(section, name);
-  if (item < 0)
+  int property = GetProperty(entity, name);
+  if (property < 0)
     return value;
-  return atof(GetItemValue(item, 0));
+  return atof(GetPropertyValue(property, 0));
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a length (includes unit conversion)
-double CWorldFile::ReadLength(int section, const char *name, double value)
+double CWorldFile::ReadLength(int entity, const char *name, double value)
 {
-  int item = GetItem(section, name);
-  if (item < 0)
+  int property = GetProperty(entity, name);
+  if (property < 0)
     return value;
-  return atof(GetItemValue(item, 0)) * this->unit_length;
+  return atof(GetPropertyValue(property, 0)) * this->unit_length;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Write a length (includes units conversion)
-void CWorldFile::WriteLength(int section, const char *name, double value)
+void CWorldFile::WriteLength(int entity, const char *name, double value)
 {
   char default_str[64];
   snprintf(default_str, sizeof(default_str), "%.3f", value / this->unit_length);
-  WriteString(section, name, default_str);
+  WriteString(entity, name, default_str);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Read an angle (includes unit conversion)
-double CWorldFile::ReadAngle(int section, const char *name, double value)
+double CWorldFile::ReadAngle(int entity, const char *name, double value)
 {
-  int item = GetItem(section, name);
-  if (item < 0)
+  int property = GetProperty(entity, name);
+  if (property < 0)
     return value;
-  return atof(GetItemValue(item, 0)) * this->unit_angle;
+  return atof(GetPropertyValue(property, 0)) * this->unit_angle;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a boolean
-bool CWorldFile::ReadBool(int section, const char *name, bool value)
+bool CWorldFile::ReadBool(int entity, const char *name, bool value)
 {
-  int item = GetItem(section, name);
-  if (item < 0)
+  int property = GetProperty(entity, name);
+  if (property < 0)
     return value;
-  const char *v = GetItemValue(item, 0);
+  const char *v = GetPropertyValue(property, 0);
   if (strcmp(v, "true") == 0)
     return true;
   else if (strcmp(v, "false") == 0)
     return false;
-  CItem *pitem = this->items + item;
+  CProperty *pproperty = this->properties + property;
   PRINT_WARN3("worldfile %s:%d : '%s' is not a valid boolean value; assuming 'false'",
-              this->filename, pitem->line, v);
+              this->filename, pproperty->line, v);
   return false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Read a color (included text -> RGB conversion).
+// We look up the color in one of the common color databases.
+uint32_t CWorldFile::ReadColor(int entity, const char *name, uint32_t value)
+{
+  int property;
+  const char *color;
+  
+  property = GetProperty(entity, name);
+  if (property < 0)
+    return value;
+  color = GetPropertyValue(property, 0);
+
+  // TODO: Hmmm, should do something with the default color here.
+  return ::LookupColor(color);
 }
 
 
@@ -1327,12 +1319,12 @@ bool CWorldFile::ReadBool(int section, const char *name, bool value)
 // the world files path to it.
 // Known bug: will leak memory everytime it is called (but its not called often,
 // so I cant be bothered fixing it).
-const char *CWorldFile::ReadFilename(int section, const char *name, const char *value)
+const char *CWorldFile::ReadFilename(int entity, const char *name, const char *value)
 {
-  int item = GetItem(section, name);
-  if (item < 0)
+  int property = GetProperty(entity, name);
+  if (property < 0)
     return value;
-  const char *filename = GetItemValue(item, 0);
+  const char *filename = GetPropertyValue(property, 0);
   
   if( filename[0] == '/' || filename[0] == '~' )
     return filename;
@@ -1357,96 +1349,96 @@ const char *CWorldFile::ReadFilename(int section, const char *name, const char *
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a string from a tuple
-const char *CWorldFile::ReadTupleString(int section, const char *name,
+const char *CWorldFile::ReadTupleString(int entity, const char *name,
                                         int index, const char *value)
 {
-  int item = GetItem(section, name);
-  if (item < 0)
+  int property = GetProperty(entity, name);
+  if (property < 0)
     return value;
-  return GetItemValue(item, index);
+  return GetPropertyValue(property, index);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Write a string to a tuple
-void CWorldFile::WriteTupleString(int section, const char *name,
+void CWorldFile::WriteTupleString(int entity, const char *name,
                                   int index, const char *value)
 {
-  int item = GetItem(section, name);
+  int property = GetProperty(entity, name);
   /* TODO
-  if (item < 0)
-    item = InsertItem(section, name);
+  if (property < 0)
+    property = InsertProperty(entity, name);
   */
-  SetItemValue(item, index, value);  
+  SetPropertyValue(property, index, value);  
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a float from a tuple
-double CWorldFile::ReadTupleFloat(int section, const char *name,
+double CWorldFile::ReadTupleFloat(int entity, const char *name,
                                   int index, double value)
 {
-  int item = GetItem(section, name);
-  if (item < 0)
+  int property = GetProperty(entity, name);
+  if (property < 0)
     return value;
-  return atof(GetItemValue(item, index));
+  return atof(GetPropertyValue(property, index));
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Write a float to a tuple
-void CWorldFile::WriteTupleFloat(int section, const char *name,
+void CWorldFile::WriteTupleFloat(int entity, const char *name,
                                  int index, double value)
 {
   char default_str[64];
   snprintf(default_str, sizeof(default_str), "%.3f", value);
-  WriteTupleString(section, name, index, default_str);
+  WriteTupleString(entity, name, index, default_str);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a length from a tuple (includes unit conversion)
-double CWorldFile::ReadTupleLength(int section, const char *name,
+double CWorldFile::ReadTupleLength(int entity, const char *name,
                                    int index, double value)
 {
-  int item = GetItem(section, name);
-  if (item < 0)
+  int property = GetProperty(entity, name);
+  if (property < 0)
     return value;
-  return atof(GetItemValue(item, index)) * this->unit_length;
+  return atof(GetPropertyValue(property, index)) * this->unit_length;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Write a length to a tuple (includes unit conversion)
-void CWorldFile::WriteTupleLength(int section, const char *name,
+void CWorldFile::WriteTupleLength(int entity, const char *name,
                                  int index, double value)
 {
   char default_str[64];
   snprintf(default_str, sizeof(default_str), "%.3f", value / this->unit_length);
-  WriteTupleString(section, name, index, default_str);
+  WriteTupleString(entity, name, index, default_str);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Read an angle from a tuple (includes unit conversion)
-double CWorldFile::ReadTupleAngle(int section, const char *name,
+double CWorldFile::ReadTupleAngle(int entity, const char *name,
                                   int index, double value)
 {
-  int item = GetItem(section, name);
-  if (item < 0)
+  int property = GetProperty(entity, name);
+  if (property < 0)
     return value;
-  return atof(GetItemValue(item, index)) * this->unit_angle;
+  return atof(GetPropertyValue(property, index)) * this->unit_angle;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Write an angle to a tuple (includes unit conversion)
-void CWorldFile::WriteTupleAngle(int section, const char *name,
+void CWorldFile::WriteTupleAngle(int entity, const char *name,
                                  int index, double value)
 {
   char default_str[64];
   snprintf(default_str, sizeof(default_str), "%.3f", value / this->unit_angle);
-  WriteTupleString(section, name, index, default_str);
+  WriteTupleString(entity, name, index, default_str);
 }
 
 
