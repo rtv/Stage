@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.87 2005-01-03 04:28:14 rtv Exp $
+# $Id: Makefile.am,v 1.88 2005-01-03 05:48:18 rtv Exp $
 
 # install these headers
 include_HEADERS = stage.h 
@@ -18,7 +18,6 @@ lib_LTLIBRARIES = libstage.la
 # Player plugin.
 #
 libstage_la_SOURCES = \
-	bitmap.c \
 	gui.c \
 	gui.h \
 	gui_menus.c \
