@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.28.2.1 2002-12-04 03:45:19 rtv Exp $
+dnl $Id: configure.in,v 1.28.2.2 2002-12-04 03:53:07 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -30,7 +30,8 @@ dnl Stage. All revisions with this major.minor version must be forwards
 dnl and backwards compatible. This number is used for the install directories.
 define(PS_VERSION,1.3)
 
-dnl STAGE_VERSION is major.minor.revision - unique to this release
+dnl STAGE_VERSION is major.minor.revision - unique to this release and 
+dnl independent of Player's revision number
 define(STAGE_VERSION,PS_VERSION.1)
 
 dnl Initialize automake with name and version of package to be built. 
