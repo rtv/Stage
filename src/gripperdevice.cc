@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.21 $
+//  $Author: gerkey $
+//  $Revision: 1.22 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -26,8 +26,6 @@
 CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
   : CEntity(world, parent )
 {
-  m_puck_channel = -1;
-
   m_data_len    = sizeof( player_gripper_data_t ); 
   m_command_len = sizeof( player_gripper_cmd_t ); 
   m_config_len  = 0;
@@ -48,9 +46,6 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
 
   this->mass = 20; // same mass as a robot
 
-  // default to the more common gripper
-  m_gripper_consume = false;
-  m_puck_capacity = 1;
   
   // these are never changed (for now)
   m_paddles_moving = false;
@@ -67,81 +62,33 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
   m_inner_break_beam = false;
   m_outer_break_beam = false;
 
-  // this is deprecated stuff - should get rid of the exp stuff eventually
-  // gui export stuff
-  /* REMOVE
-  exp.objectType = gripper_o;
-  exp.width = .08;
-  exp.height = .2;
-  */
-
   m_width = .08;
   m_height = 0.2;
   
-  //m_gripper_range = 2.0*exp.width;
   m_puck_count = 0;
-  
-  // gripper specific gui stuff
-  /*
-  expGripper.paddle_width = 0.1;
-  expGripper.paddle_height = exp.height / 4.0;
-  expGripper.paddles_open = m_paddles_open;
-  expGripper.paddles_closed = m_paddles_closed;
-  expGripper.lift_up = m_lift_up;
-  expGripper.lift_down = m_lift_down;
-  expGripper.have_puck = false;
-
-  exp.data = (char*)&expGripper;
-  strcpy( exp.label, "Gripper" );
-  */
 }
 
 
-/** Need to add new load fn, then REMOVE
 ///////////////////////////////////////////////////////////////////////////
-// Load the object from an argument list
-//
-bool CGripperDevice::Load(int argc, char **argv)
+// Load the entity from the world file
+bool CGripperDevice::Load(CWorldFile *worldfile, int section)
 {
-    if (!CEntity::Load(argc, argv))
-        return false;
+  if (!CEntity::Load(worldfile, section))
+    return false;
 
-    for (int i = 0; i < argc;)
-    {
-        if(!strcmp(argv[i], "consume") && i+1 < argc)
-        {
-          if(i+1<argc)
-          {
-            if(!strcmp(argv[i+1], "false"))
-            {
-              m_gripper_consume = false;
-              m_puck_capacity = 1;
-            }
-            else if(!strcmp(argv[i+1], "true"))
-            {
-              m_gripper_consume = true;
-              m_puck_capacity = MAXGRIPPERCAPACITY;
-            }
-            else
-            {
-              PRINT_MSG2("Warning: unknown argument \"%s\" to \"%s\" option "
-                              "for gripper\n",argv[i+1],argv[i]);
-            }
-            i += 2;
-          }
-          else
-          {
-            PRINT_MSG1("Warning: no argument to \"%s\" option for gripper\n",
-                            argv[i]);
-            i++;
-          }
-        }
-        else
-            i++;
-    }
-    return true;
+  if(!strcmp(worldfile->ReadString(section, "consume", "false"),"true"))
+  {
+    m_gripper_consume = true;
+    m_puck_capacity = MAXGRIPPERCAPACITY;
+  } 
+  else
+  {
+    // default to the more common gripper
+    m_gripper_consume = false;
+    m_puck_capacity = 1;
+  }
+  return true;
 }
-*/
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -208,21 +155,18 @@ void CGripperDevice::Update( double sim_time )
       case GRIPhalt:
       case GRIPpress:
       case LIFTcarry:
+        /*
         PRINT_MSG1("CGripperDevice::Update(): unimplemented gripper "
                    "command: %d\n", cmd.cmd);
+         */
+        break;
       default:
+        /*
         PRINT_MSG1("CGripperDevice::Update(): unknown gripper "
                    "command: %d\n", cmd.cmd);
+                   */
+        break;
     }
-
-    // Hackety hack hack...
-    //  this number, if greater than 0, restricts the color of puck
-    //  that the gripper will pick up.   give -1 to go unrestricted.
-    if(cmd.arg)
-      m_puck_channel = (char)cmd.arg-1;
-
-    // This basically assumes instantaneous changes
-    //REMOVE expGripper.paddles_open = m_paddles_open;
   }
 
   m_outer_break_beam = BreakBeam(0) ? true : false;
@@ -444,38 +388,21 @@ void CGripperDevice::PickupObject()
       closest_puck = NULL;
   }
 
-  /* I broke this hack; you may want to find another. AH
-     if(closest_puck && 
-     ((m_puck_channel < 0) || 
-     ((closest_puck->m_color.red == m_world->channel[m_puck_channel].red) &&
-     (closest_puck->m_color.green == m_world->channel[m_puck_channel].green) &&
-     (closest_puck->m_color.blue == m_world->channel[m_puck_channel].blue))))
-     {
-  */
-
-// pickup the puck
-  closest_puck->m_parent_entity = this;
-
-  // if we're consuming the puck then move it behind the gripper
-  if(m_gripper_consume)
+  if(closest_puck)
   {
-    closest_puck->SetPose(-m_width,0,0);
-  }
-  else
-    closest_puck->SetPose(m_width/2.0+closest_puck->size_x/2.0,0,0);
-  
-  m_pucks[m_puck_count++]=closest_puck;
-  //REMOVE expGripper.have_puck = true;
+    // pickup the puck
+    closest_puck->m_parent_entity = this;
 
-  closest_puck->SetDirty(1);
-  
-  /*
-    }
+    // if we're consuming the puck then move it behind the gripper
+    if(m_gripper_consume)
+      closest_puck->SetPose(-m_width,0,0);
     else
-    {
-    //puts("no close pucks");
-    }
-  */
+      closest_puck->SetPose(m_width/2.0+closest_puck->size_x/2.0,0,0);
+
+    m_pucks[m_puck_count++]=closest_puck;
+
+    closest_puck->SetDirty(1);
+  }
 }
 
 #ifdef INCLUDE_RTK

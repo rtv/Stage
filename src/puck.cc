@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.27 $
+//  $Author: gerkey $
+//  $Revision: 1.28 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -137,16 +137,16 @@ void CPuck::Move()
         // Get the velocity of the thing we hit
         double wx, wy, wth;
         ent->GetGlobalVel(wx, wy, wth);
-	      double impact_velocity = sqrt(wx * wx + wy * wy);
+        double impact_velocity = sqrt(wx * wx + wy * wy);
         
         // Get the mass of the thing we hit
         double impact_mass = ent->GetMass();
-	      
-	      // Compute bearing FROM impacted ent
+
+        // Compute bearing FROM impacted ent
         // Align ourselves so we are facing away from this point
-	      pth = atan2( py-oy, px-ox );
+        pth = atan2( py-oy, px-ox );
 	      
-	      if(impact_velocity)
+        if(impact_velocity)
         {
           // we only have really big things(robots) and really small things
           // (pucks).  
@@ -156,10 +156,9 @@ void CPuck::Move()
           else
             vr = fabs(impact_velocity);
           SetGlobalVel(vr * cos(pth), vr * sin(pth), 0);
-          //printf("setting speed to: %f\n", 2*impact_velocity);
         }
-	    }
-  	  else if( ent->obstacle_return )
+      }
+      else if( ent->obstacle_return )
       {
         // If we have collided, stop moving
         SetGlobalVel(0, 0, 0);

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/gripperdevice.hh,v $
-//  $Author: inspectorg $
-//  $Revision: 1.9 $
+//  $Author: gerkey $
+//  $Revision: 1.10 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -93,15 +93,12 @@ class CGripperDevice : public CEntity
   // at a time and it can be dropped
   private: bool m_gripper_consume;
 
-  // Hackety hack hack...
-  //  this number, if greater than 0, restricts the color of puck
-  //  that the gripper will pick up.  you can set it with the auxillary
-  //  argument in the gripper command.  shh; it's a secret.
-  private: char m_puck_channel;
-  
   // these are the pucks we're carrying right now
   private: int m_puck_count;
   private: CEntity* m_pucks[MAXGRIPPERCAPACITY];
+  
+  // Load the entity from the worldfile
+  public: virtual bool Load(CWorldFile *worldfile, int section);
 
   // structure for exporting Gripper-specific data to a GUI
   //REMOVE private: ExportGripperData expGripper; 

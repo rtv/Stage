@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.27 2002-06-09 00:33:02 inspectorg Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.28 2002-06-09 21:16:14 gerkey Exp $
  */
 
 //#define DEBUG
@@ -232,6 +232,10 @@ void CPositionDevice::UpdateCommand()
     // Angular is in radians/sec
     this->com_vr = fv / 1000;
     this->com_vth = DTOR(fw);
+
+    // Set our x,y,th velocity components so that other entities (like pucks)
+    // can get at them.
+    SetGlobalVel(this->com_vr * cos(com_vth),this->com_vr * sin(com_vth), 0.0);
   }
 }
 
