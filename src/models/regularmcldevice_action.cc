@@ -57,7 +57,7 @@ float MCLActionModel::normal(float b)
     float sum = 0.0;
     for (int i=0; i<12; i++)
 	sum += rand() / (RAND_MAX/2.0f) - 1.0;
-    return (b+100)/6.0f * sum;
+    return (b)/6.0f * sum;
 
 }
 
@@ -81,10 +81,11 @@ pose_t MCLActionModel::sample(pose_t state, pose_t from, pose_t to)
 
     double abs_d_rot1 = this->abs(d_rot1);
     double abs_d_rot2 = this->abs(d_rot2);
+    double abs_d_rot = this->abs(d_rot1+d_rot2);
 
-    double nd_rot1 = d_rot1 + this->normal(this->a1*abs_d_rot1 + this->a2*d_trans);
-    double nd_trans = d_trans + this->normal(this->a3*d_trans + this->a4*(abs_d_rot1+abs_d_rot2));
-    double nd_rot2 = d_rot2 + this->normal(this->a1*abs_d_rot2 + this->a2*d_trans);
+    double nd_rot1 = d_rot1 + this->normal(this->a1*abs_d_rot1 + this->a2*d_trans + 0.2);
+    double nd_trans = d_trans + this->normal(this->a3*d_trans + this->a4*(abs_d_rot) + 200);
+    double nd_rot2 = d_rot2 + this->normal(this->a1*abs_d_rot2 + this->a2*d_trans + 0.2);
 
     pose_t sample;
     sample.x = state.x + nd_trans * cos(D2R(state.a) + nd_rot1);

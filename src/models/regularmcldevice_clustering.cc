@@ -32,7 +32,7 @@
 using std::cerr;
 using std::endl;
 
-#define DEBUG 1
+//#define DEBUG 1
 
 #ifdef DEBUG
 static bool m_isnan(const double m[][3]);
@@ -87,7 +87,6 @@ double MCLClustering::determinant(const double cov[][3])
     if (det < 0.0) {
 	cerr << "the determinant of cov. matrix is not supposed to be negative." << endl;
 	printMatrix(cov);
-	exit(-1);
     }
 #endif
 
