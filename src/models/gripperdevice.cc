@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/gripperdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -18,9 +18,6 @@
 #endif
 
 #include <math.h>
-#if HAVE_VALUES_H
-  #include <values.h>
-#endif
 #include "world.hh"
 #include "gripperdevice.hh"
 #include "raytrace.hh"

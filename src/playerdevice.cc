@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.53 2002-12-03 18:22:32 inspectorg Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.54 2002-12-05 04:01:11 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -35,9 +35,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
-#if HAVE_VALUES_H
-  #include <values.h>  // for MAXFLOAT
-#endif
+//#include <float.h>  // for FLT_MAX
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <errno.h>

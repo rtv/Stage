@@ -24,7 +24,7 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.12 2002-12-05 03:09:21 rtv Exp $
+ * CVS info: $Id: library.cc,v 1.13 2002-12-05 04:01:10 rtv Exp $
  */
 
 #include "library.hh"
@@ -76,7 +76,7 @@ libitem_t library_items[] = {
   { "blobfinder", "gray", (CFP)CVisionDevice::Creator},
   { "broadcast", "brown", (CFP)CBroadcastDevice::Creator},
   { "bumper", "LightBlue", (CFP)CBumperDevice::Creator},
-  //  { "regularmcl", "blue", (CFP)CRegularMCLDevice::Creator},
+  { "regularmcl", "blue", (CFP)CRegularMCLDevice::Creator},
   // { "bps", BpsType, (CFP)CBpsDevice::Creator},
   {NULL, NULL, NULL } // marks the end of the array
 };  

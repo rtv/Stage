@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.97 2002-12-03 18:22:31 inspectorg Exp $
+ * CVS info: $Id: entity.cc,v 1.98 2002-12-05 04:01:09 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -33,9 +33,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
-#if HAVE_VALUES_H
-  #include <values.h>  // for MAXFLOAT
-#endif
+#include <float.h> // for FLT_MAX
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -132,7 +130,7 @@ CEntity::CEntity(LibraryItem* libit, CWorld *world, CEntity *parent_entity )
   m_last_pixel_x = m_last_pixel_y = m_last_degree = 0;
 
   m_interval = 0.1; // update interval in seconds 
-  m_last_update = -MAXFLOAT; // initialized 
+  m_last_update = -FLT_MAX; // initialized 
 
   // init the ptr to GUI-specific data
   this->gui_data = NULL;
