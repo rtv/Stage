@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/omnipositiondevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -70,6 +70,8 @@ COmniPositionDevice::COmniPositionDevice(LibraryItem* libit,CWorld *world, CEnti
 
   // x y th axes are independent
   this->enable_omnidrive = true;
+
+  this->stall = false;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -148,15 +150,9 @@ void COmniPositionDevice::UpdateConfig()
     if (len <= 0)
       break;
 
-    printf( "CONFIG %d\n", buffer[0] );
-
-
     switch (buffer[0])
       {
       case PLAYER_POSITION_MOTOR_POWER_REQ:
-
-	puts( "CONFIG POWER" );
-
         // motor state change request 
         // 1 = enable motors (default)
         // 0 = disable motors
@@ -222,17 +218,17 @@ void COmniPositionDevice::UpdateConfig()
         // CONFIGS NOT IMPLEMENTED
 	
       case PLAYER_POSITION_POSITION_PID_REQ:
-	PRINT_WARN( "PLAYER_POSITION_POSITION_PID_REQ not implemented" );
+	PRINT_WARN( "PLAYER_POSITION_POSITION_PID_REQ has no effect" );
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
         break;
 
       case PLAYER_POSITION_SPEED_PID_REQ:
-	PRINT_WARN( "PLAYER_POSITION_SPEED_PID_REQ not implemented" );
+	PRINT_WARN( "PLAYER_POSITION_SPEED_PID_REQ has no effect" );
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
         break;
 
       case PLAYER_POSITION_SPEED_PROF_REQ:
-	PRINT_WARN( "PLAYER_POSITION_SPEED_PROF_REQ not implemented" );
+	PRINT_WARN( "PLAYER_POSITION_SPEED_PROF_REQ has no effect" );
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
         break;
 
@@ -240,7 +236,7 @@ void COmniPositionDevice::UpdateConfig()
         // velocity control mode:
         //   0 = direct wheel velocity control (default)
         //   1 = separate translational and rotational control
-	PRINT_WARN( "PLAYER_POSITION_VELOCITY_MODE_REQ not implemented" );
+	PRINT_WARN( "PLAYER_POSITION_VELOCITY_MODE_REQ has no effect" );
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
         break;
 
@@ -280,7 +276,7 @@ void COmniPositionDevice::Move()
   if (TestCollision(qx, qy, qa ) != NULL)
   {
     SetGlobalVel(0, 0, 0);
-    this->stall = 1;
+    this->stall = true;
   }
   else
   {
@@ -295,7 +291,7 @@ void COmniPositionDevice::Move()
     this->odo_pa += pa + step * va;
     this->odo_pa = fmod(this->odo_pa + TWOPI, TWOPI);
         
-    this->stall = 0;
+    this->stall = false;
   }
 }
 
@@ -316,6 +312,14 @@ void COmniPositionDevice::PositionControl()
   double error_x = this->com_px - this->odo_px;
   double error_y = this->com_py - this->odo_py;
   double error_a = this->com_pa - this->odo_pa;
+
+  // handle the zero-crossing
+  if( error_a > M_PI ) 
+    error_a -= 2.0 * M_PI; 
+  
+  if( error_a < -M_PI )
+    error_a += 2.0 * M_PI;
+  
   
   printf( "Errors: %.2f %.2f %.2f\n", error_x, error_y, error_a );
 
@@ -331,19 +335,26 @@ void COmniPositionDevice::PositionControl()
     {
       // find the angle to the goal
       double error_a_goal = atan2( error_y, error_x );
+
+      // handle the zero-crossing
+      if( error_a_goal > M_PI ) 
+	error_a_goal -= 2.0 * M_PI; 
       
+      if( error_a_goal < -M_PI )
+	error_a_goal += 2.0 * M_PI;
+
       // find the distance from the goal
       double error_d_goal = hypot( error_y, error_x );
 
       // if we're at the goal, turn to face the right direction
-      if( error_d_goal < DISTANCE_THRESHOLD )
+      if( fabs(error_d_goal) < DISTANCE_THRESHOLD )
 	{
 	  this->com_va = 0.5 * error_a;
 	  this->com_vx = 0.0;
 	  this->com_vy = 0.0;
 	}
       else // if we're pointing towards the goal, move towards it 
-	if( error_a_goal < ANGLE_THRESHOLD )
+	if( fabs(error_a_goal) < ANGLE_THRESHOLD )
 	  {
 	    this->com_vx = 0.5 * error_d_goal;
 	    this->com_vx = 0.0;
@@ -386,9 +397,9 @@ void COmniPositionDevice::ParseCommandBuffer()
   this->com_py = py / 1000;
   this->com_pa = DTOR(pa);
 
-  printf( "command: (%.2f %.2f %.2f) [%.2f %.2f %.2f]\n", 
-	  com_vx, com_vy, com_va,
-	  com_px, com_py, com_pa );
+  //printf( "command: (%.2f %.2f %.2f) [%.2f %.2f %.2f]\n", 
+  //  com_vx, com_vy, com_va,
+  //  com_px, com_py, com_pa );
 }
 
 
@@ -412,7 +423,7 @@ void COmniPositionDevice::ComposeData()
   this->data.yspeed = htonl((unsigned short) (this->com_vy * 1000.0));
   this->data.yawspeed = htonl((short) RTOD(this->com_va));  
 
-  this->data.stall = this->stall;
+  this->data.stall = (uint8_t)( this->stall ? 1 : 0 );
 }
 
 
