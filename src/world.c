@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define DEBUG
+//#define DEBUG
 
 #include "stage.h"
 #include "gui.h"

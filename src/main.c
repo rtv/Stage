@@ -183,12 +183,9 @@ int main( int argc, char* argv[] )
 
     }
   
-  // todo - this causes a segfault - fix
+  // todo - this causes a segfault - fix if you get really, really bored.
   //gui_shutdown();
-
-  server_destroy( server );
+  //server_destroy( server );
   
-  puts( "Stage exiting main loop" );
-
   return 0; // done
 }

@@ -47,13 +47,13 @@ const char* stg_property_string( stg_id_t id )
     case STG_PROP_TIME: return "time"; break;
     case STG_PROP_VELOCITY: return "velocity"; break;
     case STG_PROP_VISIONRETURN: return "vision_return"; break;
+    case STG_PROP_FIDUCIALRETURN: return "fiducial_id";break;
 
       //case STG_PROP_BLINKENLIGHT: return "blinkenlight";break;
       //case STG_PROP_BLOBCONFIG: return "blobconfig";break;
       //case STG_PROP_BLOBDATA: return "blobdata";break;
       //case STG_PROP_FIDUCIALCONFIG: return "fiducialconfig";break;
       //case STG_PROP_FIDUCIALDATA: return "fiducialdata";break;
-      //case STG_PROP_FIDUCIALRETURN: return "fiducialreturn";break;
       //case STG_PROP_LASERCONFIG: return "laserconfig";break;
       //case STG_PROP_LASERDATA: return "laserdata";break;
       //case STG_PROP_MATRIXRENDER: return "matrix_render";break;
@@ -622,12 +622,6 @@ stg_line_t* stg_rects_to_lines( stg_rotrect_t* rects, int num_rects )
   return lines;
 }
 
-void stg_copybuf( void** dest, size_t* dest_len, void* src, size_t src_len )
-{
-  *dest = realloc( *dest, src_len );
-  memcpy( *dest, src, src_len );    
-  *dest_len = src_len;
-} 
 
 // sets [result] to the pose of [p2] in [p1]'s coordinate system
 void stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )

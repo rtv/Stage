@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.11 $
+//  $Revision: 1.12 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -19,113 +19,54 @@
 #include "gui.h"
 extern rtk_fig_t* fig_debug;
 
+void fiducial_render_config( model_t* mod );
+void fiducial_render_data( model_t* mod );
 
-void model_fiducial_config_init( model_t* mod );
-int model_fiducial_config_set( model_t* mod, void* config, size_t len );
-int model_fiducial_data_shutdown( model_t* mod );
-int model_fiducial_data_service( model_t* mod );
-int model_fiducial_data_set( model_t* mod, void* data, size_t len );
-void model_fiducial_return_init( model_t* mod );
-void model_fiducial_data_render( model_t* mod );
-void model_fiducial_config_render( model_t* mod );
-
-
-void model_fiducial_register(void)
-{ 
-  PRINT_DEBUG( "FIDUCIAL INIT" );  
-
-  model_register_init( STG_PROP_FIDUCIALCONFIG, model_fiducial_config_init );
-  model_register_set( STG_PROP_FIDUCIALCONFIG, model_fiducial_config_set );
-
-  model_register_set( STG_PROP_FIDUCIALDATA, model_fiducial_data_set );
-  model_register_shutdown( STG_PROP_FIDUCIALDATA, model_fiducial_data_shutdown );
-  model_register_service( STG_PROP_FIDUCIALDATA, model_fiducial_data_service );
-
-  model_register_init( STG_PROP_FIDUCIALRETURN, model_fiducial_return_init );
-
-}
-
-void model_fiducial_return_init( model_t* mod )
+void fiducial_init( model_t* mod )
 {
-  int val = mod->id;
-  model_set_prop_generic( mod, STG_PROP_FIDUCIALRETURN, &val, sizeof(val) );
-}
+  PRINT_DEBUG( "fiducial init" );
 
+  model_set_data( mod, NULL, 0 );
 
-int model_fiducial_return( model_t* mod )
-{
-  int* val = model_get_prop_data_generic( mod, STG_PROP_FIDUCIALRETURN );
-  assert(val);
-  return *val;
-}
-
-
-void model_fiducial_config_init( model_t* mod )
-{
   stg_fiducial_config_t newfc; // init a basic config
   newfc.min_range = 0.0;
   newfc.max_range_anon = 5.0;
   newfc.max_range_id = 5.0;
   newfc.fov = M_PI;
   
-  model_set_prop_generic( mod, STG_PROP_FIDUCIALCONFIG, &newfc, sizeof(newfc) );
+  model_set_config( mod, &newfc, sizeof(newfc) );
 }
 
-void model_fiducial_data_init( model_t* mod )
-{
-  model_set_prop_generic( mod, STG_PROP_RANGERDATA, NULL, 0 );
-}
-
-// convenience 
-stg_fiducial_config_t* model_fiducial_config_get( model_t* mod )
-{
-  stg_fiducial_config_t* cf = model_get_prop_data_generic( mod, STG_PROP_FIDUCIALCONFIG );
-  assert(cf);
-  return cf;
-}
-
-// convenience 
-stg_fiducial_t* model_fiducial_data_get( model_t* mod, size_t* count  )
-{
-  stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_FIDUCIALDATA );
-  assert(prop);
-  
-  stg_fiducial_t* fds = prop->data;
-  *count = prop->len / sizeof(stg_fiducial_t);
-  return fds;
-}
-
-int model_fiducial_data_set( model_t* mod, void* data, size_t len )
+int fiducial_set_data( model_t* mod, void* data, size_t len )
 {  
-  // store the data
-  model_set_prop_generic( mod, STG_PROP_FIDUCIALDATA, data, len );
-    
+  PRINT_DEBUG( "fiducial set data" );
+
+  // store the data normally
+  _set_data( mod, data, len );
+  
   // and redraw it
-  model_fiducial_data_render( mod );
+  fiducial_render_data( mod );
+  
+  //PRINT_DEBUG3( "model %d(%s) now has %d bytes of data",
+  //	mod->id, mod->token, (int)mod->data_len );
 
   return 0; //OK
 }
- 
-int model_fiducial_config_set( model_t* mod, void* config, size_t len )
+
+int fiducial_set_config( model_t* mod, void* config, size_t len )
 {  
-  // store the config
-  model_set_prop_generic( mod, STG_PROP_FIDUCIALCONFIG, config, len );
+  PRINT_DEBUG( "fiducial set config" );
+  
+  // store the data normally
+  _set_cfg( mod, config, len );
   
   // and redraw it
-  model_fiducial_config_render( mod);
+  fiducial_render_config( mod);
 
   return 0; //OK
 }
  
 
-int model_fiducial_data_shutdown( model_t* mod )
-{
-  //PRINT_WARN( "fiducial shutdown" );
-  
-  model_remove_prop_generic( mod, STG_PROP_FIDUCIALDATA );
-  model_fiducial_data_render( mod);
-  return 0;
-}
 
 typedef struct 
 {
@@ -140,9 +81,13 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
   model_fiducial_buffer_t* mfb = (model_fiducial_buffer_t*)user;
   model_t* him = (model_t*)value;
   
+  //PRINT_DEBUG2( "checking model %s - he has fiducial value %d",
+  //	him->token, him->fiducial_return );
+		
   // dont' compare a model with itself, and don't consider models with
-  // fiducial returns less than 1
-  if( him == mfb->mod || model_fiducial_return(him) < 1 ) return; 
+  // invalid returns
+  if( him == mfb->mod || him->fiducial_return == FiducialNone ) 
+    return; 
 
   stg_pose_t hispose;
   model_global_pose( him, &hispose );
@@ -153,14 +98,21 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
   // are we within range?
   double range = hypot( dy, dx );
   if( range > mfb->cfg->max_range_anon )
-    return;
+    {
+      //PRINT_DEBUG1( "  but model %s is outside my range", him->token);
+      return;
+    }
+
   
   // is he in my field of view?
   double hisbearing = atan2( dy, dx );
   double dif = mfb->pose.a - hisbearing;
 
   if( fabs(NORMALIZE(dif)) > mfb->cfg->fov/2.0 )
-    return;
+    {
+      //PRINT_DEBUG1( "  but model %s is outside my FOV", him->token);
+      return;
+    }
    
   // now check if we have line-of-sight
   itl_t *itl = itl_create( mfb->pose.x, mfb->pose.y,
@@ -171,16 +123,25 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
   model_t* hitmod;
   while( (hitmod = itl_next( itl )) ) 
     {
-      if( hitmod != mfb->mod )//&& model_obstacle_get(hitmod) ) 
+      if( hitmod != mfb->mod &&  //&& model_obstacle_get(hitmod) ) 
+	!model_is_descendent(mfb->mod,hitmod) && 
+	!model_is_antecedent(mfb->mod,hitmod) )
 	break;
     }
   
   itl_destroy( itl );
 
+
+  //PRINT_DEBUG( "finished raytracing" );
+  
+  //if( hitmod )
+  //PRINT_DEBUG2( "I saw %s with fid %d",
+  //	 hitmod->token, hitmod->fiducial_return );
+
   // if it was him, we can see him
   if( hitmod == him )
     {
-      stg_geom_t* hisgeom = model_geom_get(him);
+      stg_geom_t* hisgeom = model_get_geom(him);
 
       // record where we saw him and what he looked like
       stg_fiducial_t fid;      
@@ -193,7 +154,10 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
       // if he's within ID range, get his fiducial.return value, else
       // we see value 0
       fid.id = range < mfb->cfg->max_range_id ? 
-	model_fiducial_return(him) : 0;
+	him->fiducial_return : 0;
+
+      //PRINT_DEBUG2( "adding %s's value %d to my list of fiducials",
+      //	    him->token, him->fiducial_return );
 
       g_array_append_val( mfb->fiducials, fid );
     }
@@ -203,9 +167,9 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
 ///////////////////////////////////////////////////////////////////////////
 // Update the beacon data
 //
-int model_fiducial_data_service( model_t* mod )
+int fiducial_update( model_t* mod )
 {
-  //PRINT_WARN( "fiducial update" );
+  PRINT_DEBUG( "fiducial update" );
 
   if( fig_debug ) rtk_fig_clear( fig_debug );
   
@@ -213,19 +177,22 @@ int model_fiducial_data_service( model_t* mod )
   memset( &mfb, 0, sizeof(mfb) );
   
   mfb.mod = mod;
-  mfb.cfg = model_fiducial_config_get(mod);
+  
+  size_t len;
+  model_get_config( mod, (void**)&mfb.cfg, &len );
+
   mfb.fiducials = g_array_new( FALSE, TRUE, sizeof(stg_fiducial_t) );
   model_global_pose( mod, &mfb.pose );
   
   // for all the objects in the world
   g_hash_table_foreach( mod->world->models, model_fiducial_check_neighbor, &mfb );
-  
-  model_set_prop( mod, STG_PROP_FIDUCIALDATA, 
+
+  //PRINT_DEBUG2( "model %s saw %d fiducials", mod->token, mfb.fiducials->len );
+
+  model_set_data( mod, 
 		  mfb.fiducials->data, 
 		  mfb.fiducials->len * sizeof(stg_fiducial_t) );
   
-  //PRINT_WARN1( "setting fiducial data with %d bytes",  mfb.fiducials->len );
-
   g_array_free( mfb.fiducials, TRUE );
 
   return 0;
@@ -233,77 +200,77 @@ int model_fiducial_data_service( model_t* mod )
 
 
 
-void model_fiducial_data_render( model_t* mod )
+void fiducial_render_data( model_t* mod )
 { 
   //PRINT_WARN( "fiducial render" );
 
   char text[32];
 
-  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_FIDUCIALDATA];  
+  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_DATA];  
   
   if( fig  )
     rtk_fig_clear(fig);
   else // create the figure, store it in the model and keep a local pointer
-    fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_FIDUCIALDATA,
+    fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_DATA,
 				 mod->gui.top, STG_LAYER_NEIGHBORDATA );
   
-  if( mod->subs[STG_PROP_FIDUCIALDATA] )
-    {      
-      rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_COLOR ) );
+  rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_COLOR ) );
+  
+  size_t len;
+  stg_fiducial_t* fids = NULL;
+  
+  model_get_data(mod, (void**)&fids, &len);
+  
+  int bcount = len / sizeof(stg_fiducial_t);
+  
+  
+  int b;
+  for( b=0; b < bcount; b++ )
+    {
+      // the location of the target
+      double pa = fids[b].bearing;
+      double px = fids[b].range * cos(pa); 
+      double py = fids[b].range * sin(pa);
       
-      stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_FIDUCIALDATA );
+      rtk_fig_line( fig, 0, 0, px, py );	
       
-      if( prop )
+      // the size and heading of the target
+      double wx = fids[b].geom.x;
+      double wy = fids[b].geom.y;
+      double wa = fids[b].geom.a;
+      
+      rtk_fig_rectangle(fig, px, py, wa, wx, wy, 0);
+      rtk_fig_arrow(fig, px, py, wa, wy, 0.10);
+      
+      if( fids[b].id > 0 )
 	{
-	  int bcount = prop->len / sizeof(stg_fiducial_t);
-	  
-	  stg_fiducial_t* fids = (stg_fiducial_t*)prop->data;
-	  
-	  int b;
-	  for( b=0; b < bcount; b++ )
-	    {
-	      // the location of the target
-	      double pa = fids[b].bearing;
-	      double px = fids[b].range * cos(pa); 
-	      double py = fids[b].range * sin(pa);
-	      
-	      rtk_fig_line( fig, 0, 0, px, py );	
-
-	      // the size and heading of the target
-	      double wx = fids[b].geom.x;
-	      double wy = fids[b].geom.y;
-	      double wa = fids[b].geom.a;
-	      
-	      rtk_fig_rectangle(fig, px, py, wa, wx, wy, 0);
-	      rtk_fig_arrow(fig, px, py, wa, wy, 0.10);
-	      
-	      if( fids[b].id > 0 )
-		{
-		  snprintf(text, sizeof(text), "  %d", fids[b].id);
-		  rtk_fig_text(fig, px, py, pa, text);
-		}
-	    }  
+	  snprintf(text, sizeof(text), "  %d", fids[b].id);
+	  rtk_fig_text(fig, px, py, pa, text);
 	}
-    }
+    }  
 }
 
-void model_fiducial_config_render( model_t* mod )
+void fiducial_render_config( model_t* mod )
 { 
-  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_FIDUCIALCONFIG];  
+  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_CONFIG];  
   
   if( fig  )
     rtk_fig_clear(fig);
   else // create the figure, store it in the model and keep a local pointer
-    fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_FIDUCIALCONFIG,
+    fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_CONFIG,
 				 mod->gui.top, STG_LAYER_NEIGHBORCONFIG );
   
   rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_CFG_COLOR ));
   
-  stg_fiducial_config_t* cfg = (stg_fiducial_config_t*) 
-    model_get_prop_data_generic( mod, STG_PROP_FIDUCIALCONFIG );
+  size_t len;
+  stg_fiducial_config_t* cfg;
+  
+  model_get_config(mod,(void**)&cfg,&len);
   
   if( cfg )
-    {  
+    { 
+      assert( len == sizeof(stg_fiducial_config_t));
+ 
       double mina = -cfg->fov / 2.0;
       double maxa = +cfg->fov / 2.0;
       
@@ -330,3 +297,13 @@ void model_fiducial_config_render( model_t* mod )
 }
 
 
+
+int register_fiducial( void )
+{
+  register_init( STG_MODEL_FIDUCIAL, fiducial_init );
+  register_putdata( STG_MODEL_FIDUCIAL, fiducial_set_data );
+  register_putconfig( STG_MODEL_FIDUCIAL, fiducial_set_config );
+  register_update( STG_MODEL_FIDUCIAL, fiducial_update );
+
+  return 0; //ok
+} 

@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.77 2004-08-27 20:46:43 rtv Exp $
+ * CVS: $Id: stage.h,v 1.78 2004-08-27 23:59:09 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -564,6 +564,7 @@ typedef enum
     LaserBright, // 2
   } stg_laser_return_t;
 
+
 #define STG_DEFAULT_LASERRETURN LaserVisible
 
 typedef struct
@@ -616,6 +617,8 @@ typedef struct
 // any integer value other than this is a valid fiducial ID
 // TODO - fix this up
 #define FiducialNone 0
+
+typedef int stg_fiducial_return_t;
 
 // TODO - line-of-sight messaging
 /* line-of-sight messaging packet */
@@ -1132,11 +1135,6 @@ stg_model_t* stg_client_get_model_serverside( stg_client_t* cli, stg_id_t wid, s
 
 
 // utility
-
-// copies src_len bytes from src to dest, realloc'ing enough space at
-// dest. Sets dest_len to be the new size of the data at dest.
-void stg_copybuf( void** dest, size_t* dest_len, void* src, size_t src_len );
-
 void stg_pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 );
 
 // Some useful macros

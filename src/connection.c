@@ -42,10 +42,8 @@ connection_t* stg_connection_create( server_t* server )
 
 void con_world_kill( connection_t* con, stg_id_t world_id )
 {  
-  // TODO - fix the segfault that this causes when quitting Stage with
-  // an active world.
-  printf( "(not) killing world %d\n", world_id );
-  //server_world_destroy( con->server, world_id );
+  printf( "killing world %d\n", world_id );
+  server_world_destroy( con->server, world_id );
 }
 
 void con_world_kill_cb( gpointer data, gpointer userdata )

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.32 $
+//  $Revision: 1.33 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -297,7 +297,7 @@ int laser_putdata( model_t* mod, void* data, size_t len )
   PRINT_DEBUG( "laser putdata" );
   
   // put the data in the normal way
-  stg_copybuf( &mod->data, &mod->data_len, data, len );
+  _set_data( mod, data, len );
   
     // and render it
   laser_render_data( mod, data, len );
@@ -308,7 +308,7 @@ int laser_putconfig( model_t* mod, void* cfg, size_t len )
   PRINT_DEBUG( "laser putconfig" );
   
   // put the data in the normal way
-  stg_copybuf( &mod->cfg, &mod->cfg_len, cfg, len );
+  _set_cfg( mod, cfg, len );
   
   // and render it
   laser_render_config( mod, (stg_laser_config_t*)cfg );

@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <math.h>
 
-#define DEBUG
+//#define DEBUG
 //#undef DEBUG
 
 #include "stage.h"
@@ -53,8 +53,8 @@ model_t* model_create(  world_t* world,
   // ancestors' names and its worldfile token
   //model_create_name( mod );
 
-  PRINT_WARN3( "creating model %d:%d(%s)", 
-	       world->id, mod->id, mod->token );
+  PRINT_DEBUG3( "creating model %d:%d(%s)", 
+		world->id, mod->id, mod->token );
   
   if( parent) 
     { 
@@ -80,6 +80,7 @@ model_t* model_create(  world_t* world,
 
   mod->laser_return = LaserVisible;
   mod->obstacle_return = TRUE;
+  mod->fiducial_return = FiducialNone;
 
   // sensible defaults
   mod->stall = FALSE;
@@ -310,7 +311,7 @@ void model_map( model_t* mod, gboolean render )
   
   if( lines == NULL )
     {
-      PRINT_ERR1( "expecting %d lines but have no data", count );
+      PRINT_ERR1( "expecting %d lines but have no data", (int)count );
       return;
     }
   
@@ -424,10 +425,10 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
       {
 	stg_prop_t* mp = (stg_prop_t*)msg->payload;
 	
-	PRINT_DEBUG5( "set property %d:%d:%d(%s) with %d bytes",
-		      mp->world,
-		      mp->model,
-		      mp->prop,
+	PRINT_WARN4( "set property %s:%s:%s) with %d bytes",
+		      model->world->token,
+		      model->token,
+		     //mp->prop,
 		      stg_property_string( mp->prop ),
 		      (int)mp->datalen );
 	

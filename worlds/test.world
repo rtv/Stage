@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.3 2004-08-27 20:46:43 rtv Exp $
+# CVS: $Id: test.world,v 1.4 2004-08-27 23:59:09 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution 0.02 
@@ -9,39 +9,13 @@ interval_sim 100  # milliseconds per update step
 interval_real 100 # real-time milliseconds per update step
 
 include "pioneer.inc"  # defines Pioneer-like robots
-#include "map.inc" # defines 'map' object used for floorplans
+include "map.inc" # defines 'map' object used for floorplans
 
-#map(	
-#  size [15.5 11.4]
-#  origin [7.75 5.7 0]
-#  bitmap "autolab.png"
-#)
-
-model
-(
+map(	
   size [15.5 11.4]
   origin [7.75 5.7 0]
   bitmap "bitmaps/autolab.png"
-  color "black"
-
-  gui.nose 0
-  gui.boundary 1
-  gui.grid 1
-  gui.movemask 0
 )
-
-model( 	
-  name "sub" 
-  size [2 1]
-  pose [2.0 6.0 0.0] 
-  color "red"  
-  bitmap "bitmaps/submarine.png"
-  gui.nose 0
-  
- velocity [0 0 10]
-
-)
-
 
 # extend the pioneer2dx definition from pioneer.inc
 #
@@ -52,15 +26,19 @@ define laserpioneer pioneer2dx
     laser.range_max 8.0
     laser.fov 180.0
     laser.samples 180
+
+    fiducialfinder()
   )
 )
 
-
 laserpioneer
 (
-  name "pioneer"
+  name "myrobot"
   pose [1 4 0]
 )
+
+fiducialfinder( name "foof" )
+
 
 laser
 (
@@ -69,7 +47,20 @@ laser
   velocity [0 0 60]
 )
 
-#basic( name "nested" origin [0.2 0 0 ] size [1 1] pose [4 4 0] basic( size [0.5 0.5] basic( size [0.2 0.2] basic( size [0.1 0.1] ))))
-	
+# a silly object to look at
+model( 	
+  name "sub" 
+  size [2 1]
+  pose [2.0 6.0 0.0] 
+  color "red"  
+  bitmap "bitmaps/submarine.png"
+  gui.nose 0
+  
+ fiducial_id 22
+
+ velocity [0 0 10]
+)
+
+
 # TODO
 # laser non-zero origin not implemented

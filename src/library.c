@@ -7,6 +7,7 @@
 int register_test(void);
 int register_laser(void);
 int register_position(void);
+int register_fiducial(void);
 
 lib_entry_t derived[STG_MODEL_COUNT];
 
@@ -18,6 +19,7 @@ void library_create( void )
   register_test();
   register_laser();
   register_position();
+  register_fiducial();
 }
 
 // registration funcs

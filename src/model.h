@@ -62,6 +62,7 @@ typedef struct _model
 
   stg_laser_return_t laser_return;
   stg_bool_t obstacle_return;
+  stg_fiducial_return_t fiducial_return;
 
   stg_pose_t pose;
   stg_velocity_t velocity;
@@ -147,6 +148,7 @@ int model_set_energy_data( model_t* mod, stg_energy_data_t* gf );
 int model_set_lines( model_t* mod, stg_line_t* lines, size_t lines_count );
 int model_set_obstaclereturn( model_t* mod, stg_bool_t ret );
 int model_set_laserreturn( model_t* mod, stg_laser_return_t val );
+int model_set_fiducialreturn( model_t* mod, stg_fiducial_return_t* val );
 
 // GET properties - use these to get props - don't get them directly
 stg_velocity_t*      model_get_velocity( model_t* mod );
@@ -160,11 +162,16 @@ stg_energy_data_t*   model_get_energy_data( model_t* mod );
 stg_energy_config_t* model_get_energy_config( model_t* mod );
 stg_bool_t           model_get_obstaclereturn( model_t* mod );
 stg_laser_return_t   model_get_laserreturn( model_t* mod );
+stg_fiducial_return_t*  model_get_fiducialreturn( model_t* mod );
 
 // special
 int model_set_command( model_t* mod, void* cmd, size_t len );
 int model_set_data( model_t* mod, void* data, size_t len );
 int model_set_config( model_t* mod, void* cmd, size_t len );
+
+int _set_data( model_t* mod, void* data, size_t len );
+int _set_cmd( model_t* mod, void* cmd, size_t len );
+int _set_cfg( model_t* mod, void* cfg, size_t len );
 
 int model_get_command( model_t* mod, void** cmd, size_t* len );
 int model_get_data( model_t* mod, void** data, size_t* len );

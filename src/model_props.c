@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -91,6 +91,13 @@ int model_set_prop( model_t* mod, stg_id_t propid, void* data, size_t len )
 	model_set_mass( mod, (stg_kg_t*)data );
       else
 	model_size_error( mod, propid, len, sizeof(stg_kg_t) );
+      break;
+
+    case STG_PROP_FIDUCIALRETURN:  
+      if( len == sizeof(stg_fiducial_return_t) ) 
+	model_set_fiducialreturn( mod, (stg_fiducial_return_t*)data );
+      else
+	model_size_error( mod, propid, len, sizeof(stg_fiducial_return_t) );
       break;
       
     case STG_PROP_LASERRETURN: 
@@ -185,6 +192,8 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
 // these set and get the generic buffers for derived types
 //
 
+
+
 int model_get_data( model_t* mod, void** data, size_t* len )
 {
   // if this type of model has a getdata function, call it.
@@ -203,6 +212,39 @@ int model_get_data( model_t* mod, void** data, size_t* len )
   return 0; //ok
 }
 
+int _set_data( model_t* mod, void* data, size_t len )
+{
+  mod->data = realloc( mod->data, len );
+  memcpy( mod->data, data, len );    
+  mod->data_len = len;
+  
+  PRINT_DEBUG3( "model %d(%s) put data of %d bytes",
+		mod->id, mod->token, (int)mod->data_len);
+  return 0; //ok
+}
+
+int _set_cmd( model_t* mod, void* cmd, size_t len )
+{
+  mod->cmd = realloc( mod->cmd, len );
+  memcpy( mod->cmd, cmd, len );    
+  mod->cmd_len = len;
+  
+  PRINT_DEBUG3( "model %d(%s) put command of %d bytes",
+		mod->id, mod->token, (int)mod->cmd_len);
+  return 0; //ok
+}
+
+int _set_cfg( model_t* mod, void* cfg, size_t len )
+{
+  mod->cfg = realloc( mod->cfg, len );
+  memcpy( mod->cfg, cfg, len );    
+  mod->cfg_len = len;
+  
+  PRINT_DEBUG3( "model %d(%s) put command of %d bytes",
+		mod->id, mod->token, (int)mod->cfg_len);
+  return 0; //ok
+}
+
 int model_set_data( model_t* mod, void* data, size_t len )
 {
   // if this type of model has a putdata function, call it.
@@ -212,12 +254,8 @@ int model_set_data( model_t* mod, void* data, size_t len )
       PRINT_DEBUG1( "used special putdata returned %d bytes", (int)len );
     }
   else
-    { // we do a generic data copy
-      stg_copybuf( &mod->data, &mod->data_len, data, len );
-      PRINT_DEBUG3( "model %d(%s) put data of %d bytes",
-		   mod->id, mod->token, (int)mod->data_len);
-    }
-
+    _set_data( mod, data, len );
+  
   return 0; //ok
 }
 
@@ -230,12 +268,25 @@ int model_set_command( model_t* mod, void* cmd, size_t len )
       PRINT_DEBUG1( "used special putcommand, put %d bytes", (int)len );
     }
   else
-    {
-      stg_copybuf( &mod->cmd, &mod->cmd_len, cmd, len );
-      PRINT_DEBUG1( "put a command of %d bytes", (int)len);
-    }
+    _set_cmd( mod, cmd, len );    
+
   return 0; //ok
 }
+
+int model_set_config( model_t* mod, void* config, size_t len )
+{
+  // if this type of model has a putconfig function, call it.
+  if( derived[ mod->type ].putconfig )
+    {
+      derived[ mod->type ].putconfig(mod, config, len);
+      PRINT_DEBUG1( "used special putconfig returned %d bytes", (int)len );
+    }
+  else
+    _set_cfg( mod, config, len );
+  
+  return 0; //ok
+}
+
 
 int model_get_command( model_t* mod, void** command, size_t* len )
 {
@@ -251,24 +302,6 @@ int model_get_command( model_t* mod, void** command, size_t* len )
       *len = mod->cmd_len; 
       PRINT_DEBUG1( "used generic getcommand, returned %d bytes", (int)*len );
     }
-  return 0; //ok
-}
-
-int model_set_config( model_t* mod, void* config, size_t len )
-{
-  // if this type of model has a putconfig function, call it.
-  if( derived[ mod->type ].putconfig )
-    {
-      derived[ mod->type ].putconfig(mod, config, len);
-      PRINT_DEBUG1( "used special putconfig returned %d bytes", (int)len );
-    }
-  else
-    { // we do a generic data copy
-      stg_copybuf( &mod->cfg, &mod->cfg_len, config, len );
-      PRINT_DEBUG3( "model %d(%s) generic putconfig of %d bytes",
-		   mod->id, mod->token, (int)mod->cfg_len);
-    }
-  
   return 0; //ok
 }
 
@@ -470,6 +503,22 @@ int model_set_guifeatures( model_t* mod, stg_guifeatures_t* gf )
   // redraw the fancy features
   gui_model_features( mod );
 
+  return 0;
+}
+
+
+stg_fiducial_return_t* model_get_fiducialreturn( model_t* mod )
+{
+  return &mod->fiducial_return;
+}
+
+int model_set_fiducialreturn( model_t* mod, stg_fiducial_return_t* val )     
+{
+  PRINT_WARN1( "fid value set %d", *val );
+
+  memcpy( &mod->fiducial_return, val, sizeof(mod->fiducial_return) );
+
+  PRINT_WARN1( "fid value stored %d", mod->fiducial_return );
   return 0;
 }
 

@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.45 2004-08-27 20:46:43 rtv Exp $
+// $Id: stagecpp.cc,v 1.46 2004-08-27 23:59:09 rtv Exp $
 
 #include "stage.h"
 #include "worldfile.hh"
@@ -66,7 +66,14 @@ void configure_model( stg_model_t* mod, int section )
   if( rangervis != STG_DEFAULT_RANGERRETURN ) 
     stg_model_prop_with_data( mod, STG_PROP_RANGERRETURN, 
 			      &rangervis, sizeof(rangervis) );
-      
+
+  // fiducial visibility
+  int fid_return = wf.ReadInt( section, "fiducial_id", FiducialNone );
+  
+  if( fid_return != FiducialNone )
+    stg_model_prop_with_data( mod, STG_PROP_FIDUCIALRETURN, 
+			      &fid_return, sizeof(fid_return) );
+
   const char* colorstr = wf.ReadString( section, "color", NULL );
   if( colorstr )
     {
@@ -131,14 +138,7 @@ void configure_model( stg_model_t* mod, int section )
   vel.a = wf.ReadTupleAngle(section, "velocity", 2, 0 );      
   if( vel.x || vel.y || vel.a )
     stg_model_prop_with_data( mod, STG_PROP_VELOCITY, &vel, sizeof(vel) );
-      
-      
-  int fid_return = wf.ReadInt( section, "fiducial.return", -99999 );
-
-  if( fid_return != -99999 )
-    stg_model_prop_with_data( mod, STG_PROP_FIDUCIALRETURN, 
-			      &fid_return, sizeof(fid_return) );
-		
+        
   stg_energy_config_t ecfg;
   ecfg.capacity 
     = wf.ReadFloat(section, "energy.capacity", STG_DEFAULT_ENERGY_CAPACITY );
@@ -408,6 +408,8 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 	type = STG_MODEL_POSITION;
       else if( strcmp( typestr, "blobfinder" ) == 0 )
 	type = STG_MODEL_BLOB;
+      else if( strcmp( typestr, "fiducialfinder" ) == 0 )
+	type = STG_MODEL_FIDUCIAL;
       else 
 	{
 	  PRINT_ERR1( "unknown model type \"%s\". Model has not been created.",
