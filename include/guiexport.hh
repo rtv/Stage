@@ -1,7 +1,7 @@
 /*************************************************************************
  * guiexport.hh - data types for exporting data to an external GUI
  * RTV
- * $Id: guiexport.hh,v 1.6 2001-07-12 07:06:18 gerkey Exp $
+ * $Id: guiexport.hh,v 1.7 2001-07-14 23:13:27 gerkey Exp $
  ************************************************************************/
 #ifndef GUIEXPORT_H
 #define GUIEXPORT_H
@@ -106,6 +106,7 @@ typedef struct
   bool paddles_closed;
   bool lift_up;
   bool lift_down;
+  bool have_puck;
   double paddle_width;
   double paddle_height;
 } ExportGripperData;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerserver.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -231,19 +231,14 @@ bool CPlayerServer::StartupPlayer(int port)
     }
     else
     {
-        // BPG
-        //if( pid == 0 ) // new child process
-        // GPB
         if( player_pid == 0 ) // new child process
         {
             // create player port number for command line
             char portBuf[32];
             sprintf( portBuf, "%d", (int) port );
 
-            // BPG
             // release controlling tty so Player doesn't get signals
             setpgrp();
-            // GPB
 
             // we assume Player is in the current path
             if( execlp( "player", "player",
@@ -267,12 +262,10 @@ bool CPlayerServer::StartupPlayer(int port)
 //
 void CPlayerServer::ShutdownPlayer()
 {
-    // BPG
     if(kill(player_pid,SIGINT))
         perror("CPlayerServer::~CPlayerServer(): kill() failed sending SIGINT to Player");
     if(waitpid(player_pid,NULL,0) == -1)
         perror("CPlayerServer::~CPlayerServer(): waitpid() returned an error");
-    // GPB
 
     // delete the playerIO.xxxxxx file
     remove( tmpName );

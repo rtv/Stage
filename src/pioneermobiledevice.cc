@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.20 $
+//  $Revision: 1.21 $
 //
 // Usage:
 //  (empty)
@@ -276,7 +276,8 @@ void CPioneerMobileDevice::SetShape(pioneer_shape_t shape)
 {
   m_shape = shape;
   expPosition.shape = (int)shape;
-  exp.width = exp.height = m_radius;
+  if(shape == circle)
+    exp.width = exp.height = 2*m_radius;
 }
 
 

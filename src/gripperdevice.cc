@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -36,6 +36,10 @@ CGripperDevice::CGripperDevice(CWorld *world,
     m_update_interval = 0.1;
     m_last_update = 0;
 
+    // default to the more common gripper
+    m_gripper_consume = false;
+    m_puck_capacity = 1;
+
     // these are never changed (for now)
     m_paddles_moving = false;
     m_gripper_error = false;
@@ -51,20 +55,20 @@ CGripperDevice::CGripperDevice(CWorld *world,
     // gui export stuff
     exporting = true;
     exp.objectType = gripper_o;
-    exp.width = .05;
-    exp.height = .15;
+    exp.width = .08;
+    exp.height = .2;
 
     m_gripper_range = 2.0*exp.width;
     m_puck_count = 0;
-    m_puck_capacity = 2;
 
     // gripper specific gui stuff
-    expGripper.paddle_width = exp.width;
+    expGripper.paddle_width = 0.1;
     expGripper.paddle_height = exp.height / 4.0;
     expGripper.paddles_open = m_paddles_open;
     expGripper.paddles_closed = m_paddles_closed;
     expGripper.lift_up = m_lift_up;
     expGripper.lift_down = m_lift_down;
+    expGripper.have_puck = false;
 
     exp.data = (char*)&expGripper;
     strcpy( exp.label, "Gripper" );
@@ -80,12 +84,35 @@ bool CGripperDevice::Load(int argc, char **argv)
 
     for (int i = 0; i < argc;)
     {
-        //if (strcmp(argv[i], "transparent") == 0)
-        //{
-            //m_transparent = true;
-            //i += 1;
-        //}
-        //else
+        if(!strcmp(argv[i], "consume") && i+1 < argc)
+        {
+          if(i+1<argc)
+          {
+            if(!strcmp(argv[i+1], "false"))
+            {
+              m_gripper_consume = false;
+              m_puck_capacity = 1;
+            }
+            else if(!strcmp(argv[i+1], "true"))
+            {
+              m_gripper_consume = true;
+              m_puck_capacity = MAXGRIPPERCAPACITY;
+            }
+            else
+            {
+              PRINT_MSG2("Warning: unknown argument \"%s\" to \"%s\" option "
+                              "for gripper\n",argv[i+1],argv[i]);
+            }
+            i += 2;
+          }
+          else
+          {
+            PRINT_MSG1("Warning: no argument to \"%s\" option for gripper\n",
+                            argv[i]);
+            i++;
+          }
+        }
+        else
             i++;
     }
     return true;
@@ -143,7 +170,8 @@ void CGripperDevice::Update()
           {
             m_paddles_open = true;
             m_paddles_closed = false;
-            DropObject();
+            if(!m_gripper_consume)
+              DropObject();
           }
           break;
         case GRIPclose:
@@ -199,8 +227,8 @@ void CGripperDevice::MakeData(player_gripper_data_t* data, size_t len)
   // break beams are sort of implemented
   //   both beams are broken when we're holding a puck
   data->beams = 0;
-  data->beams |= m_puck_count ? 0x04 : 0x00;
-  data->beams |= m_puck_count ? 0x08 : 0x00;
+  data->beams |= (m_puck_count&&!m_gripper_consume) ? 0x04 : 0x00;
+  data->beams |= (m_puck_count&&!m_gripper_consume) ? 0x08 : 0x00;
 
   // set the proper bits
   data->state = 0;
@@ -233,6 +261,8 @@ void CGripperDevice::DropObject()
   m_pucks[m_puck_count]->SetGlobalPose(px+x_offset*cos(pth),
                                        py+x_offset*sin(pth),
                                        pth);
+  if(!m_puck_count)
+    expGripper.have_puck = false;
 }
     
 // Try to pick up an object with the gripper
@@ -275,10 +305,21 @@ void CGripperDevice::PickupObject()
 
   if(closest_puck && closest_dist<m_gripper_range)
   {
-    //printf("picking up puck %d\n", closest_puck);
+    // pickup the puck
     closest_puck->m_parent_object = this;
-    closest_puck->SetPose(exp.width/2.0,0,0);
+    // if we're consuming the puck then draw move it inside the robot
+    if(m_gripper_consume)
+    {
+      if(m_parent_object)
+        closest_puck->SetPose(-exp.width/2.0-m_parent_object->exp.width/2.0,
+                        0,0);
+      else
+        closest_puck->SetPose(-exp.width,0,0);
+    }
+    else
+      closest_puck->SetPose(exp.width/2.0+closest_puck->exp.width/2.0,0,0);
     m_pucks[m_puck_count++]=closest_puck;
+    expGripper.have_puck = true;
   }
   else
   {
@@ -304,44 +345,30 @@ void CGripperDevice::OnUiUpdate(RtkUiDrawData *data)
         // Draw the gripper
         data->ex_rectangle(ox, oy, oth, exp.width,exp.height);
         // Draw the paddles
+        double x_offset;
+        double y_offset;
         if(expGripper.paddles_open)
         {
-          double x_offset = (exp.width/2.0)+(expGripper.paddle_width/2.0);
-          double y_offset = (exp.height/2.0)-(expGripper.paddle_height/2.0);
-          data->ex_rectangle(
-              ox+(x_offset*cos(oth))+(y_offset*-sin(oth)),
-              oy+(x_offset*sin(oth))+(y_offset*cos(oth)),
-              oth, 
-              expGripper.paddle_width,
-              expGripper.paddle_height);
-
-          y_offset = -(exp.height/2.0)+(expGripper.paddle_height/2.0);
-          data->ex_rectangle(
-              ox+(x_offset*cos(oth))+(y_offset*-sin(oth)),
-              oy+(x_offset*sin(oth))+(y_offset*cos(oth)),
-              oth, 
-              expGripper.paddle_width,
-              expGripper.paddle_height);
+          x_offset = (exp.width/2.0)+(expGripper.paddle_width/2.0);
+          y_offset = (exp.height/2.0)-(expGripper.paddle_height/2.0);
         }
         else
         {
-          double x_offset = (exp.width/2.0)+(expGripper.paddle_width/2.0);
-          double y_offset = (expGripper.paddle_height/2.0);
-          data->ex_rectangle(
-              ox+(x_offset*cos(oth))+(y_offset*-sin(oth)),
-              oy+(x_offset*sin(oth))+(y_offset*cos(oth)),
-              oth, 
-              expGripper.paddle_width,
-              expGripper.paddle_height);
-
-          y_offset = -(expGripper.paddle_height/2.0);
-          data->ex_rectangle(
-              ox+(x_offset*cos(oth))+(y_offset*-sin(oth)),
-              oy+(x_offset*sin(oth))+(y_offset*cos(oth)),
-              oth, 
-              expGripper.paddle_width,
-              expGripper.paddle_height);
+          x_offset = (exp.width/2.0)+(expGripper.paddle_width/2.0);
+          y_offset = (expGripper.paddle_height/2.0);
         }
+        data->ex_rectangle(ox+(x_offset*cos(oth))+(y_offset*-sin(oth)),
+                        oy+(x_offset*sin(oth))+(y_offset*cos(oth)),
+                        oth, 
+                        expGripper.paddle_width,
+                        expGripper.paddle_height);
+
+        y_offset = -y_offset;
+        data->ex_rectangle(ox+(x_offset*cos(oth))+(y_offset*-sin(oth)),
+                        oy+(x_offset*sin(oth))+(y_offset*cos(oth)),
+                        oth, 
+                        expGripper.paddle_width,
+                        expGripper.paddle_height);
     }
 
     data->end_section();

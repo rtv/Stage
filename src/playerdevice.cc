@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.10 $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -214,10 +214,13 @@ size_t CPlayerDevice::PutData(void *data, size_t len,
     //
     if (time_sec == 0 && time_usec == 0)
     {
-        timeval curr;
-        gettimeofday(&curr, NULL);
-        m_info->data_timestamp_sec = curr.tv_sec;
-        m_info->data_timestamp_usec = curr.tv_usec;
+      // don't use system time; use simulated time.
+      //timeval curr;
+      //gettimeofday(&curr, NULL);
+      m_info->data_timestamp_sec = (uint32_t)floor(m_world->GetTime());
+      m_info->data_timestamp_usec = 
+              (uint32_t)rint((m_world->GetTime()-
+                              m_info->data_timestamp_sec)*1000000.0);
     }
     else
     {

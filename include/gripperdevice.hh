@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/gripperdevice.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -36,6 +36,8 @@
 #define GRIPhalt   15
 #define GRIPpress  16
 #define LIFTcarry  17
+
+#define MAXGRIPPERCAPACITY 1000
 
 class CGripperDevice : public CPlayerDevice
 {
@@ -88,10 +90,16 @@ class CGripperDevice : public CPlayerDevice
 
     // this is the maximum number of pucks that we can carry
     private: int m_puck_capacity;
+
+    // whether or not we "consume" pucks.  if we do consume, then pucks
+    // are essentially eaten by the gripper and can never be dropped (like
+    // a vacuum  cleaner); if we do not consume, then we only hold one puck
+    // at a time and it can be dropped
+    private: bool m_gripper_consume;
     
     // these are the pucks we're carrying right now
     private: int m_puck_count;
-    private: CEntity* m_pucks[1000];
+    private: CEntity* m_pucks[MAXGRIPPERCAPACITY];
 
     // structure for exporting Gripper-specific data to a GUI
     private: ExportGripperData expGripper; 

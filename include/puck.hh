@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/puck.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -90,6 +90,9 @@ class CPuck : public CEntity
     // Timings (for movement)
     //
     private: double m_last_time;
+
+    // coefficient of "friction"
+    private: double m_friction;
 
 #ifdef INCLUDE_RTK
     

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.7 $
+//  $Revision: 1.8 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -25,6 +25,7 @@ CPuck::CPuck(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {
     m_channel = 0;
+    m_friction = 0.05;
     
     // Set the initial map pose
     //
@@ -52,6 +53,11 @@ bool CPuck::Load(int argc, char **argv)
         if (strcmp(argv[i], "channel") == 0 && i + 1 < argc)
         {
             m_channel = atoi(argv[i + 1]) + 1;
+            i += 2;
+        }
+        else if (strcmp(argv[i], "friction") == 0 && i + 1 < argc)
+        {
+            m_friction = atof(argv[i + 1]);
             i += 2;
         }
         else
@@ -127,7 +133,11 @@ void CPuck::Update()
                            exp.width / 2.0, layer_puck, 0);
         m_world->SetCircle(m_map_px, m_map_py, 
                            exp.width / 2.0, layer_vision, 0);
-        undrawn = true;
+        
+        // should be able to set this flag and avoid constant undraws,
+        // but it doesn't seem to work for some reason; pucks get left in 
+        // the both the vision and puck layers...
+        //undrawn = true;
       }
 
       return;
@@ -242,36 +252,41 @@ void CPuck::Move()
       double impact_velocity = object->GetSpeed();
       double impact_mass = object->GetMass();
       
-      // Compute range and bearing to object
+      // Compute range and bearing FROM impacted object
       //
-      double dx = qx - object->exp.x;
-      double dy = qy - object->exp.y;
-      //double r = sqrt(dx * dx + dy * dy);
-      //printf("range: %f\n", r);
-      double b = NORMALIZE(atan2(dy, dx) - qth);
-      //double o = NORMALIZE(qth - pth);
+      double ox,oy,oth;
+      object->GetGlobalPose(ox,oy,oth);
+      double dx = qx - ox;
+      double dy = qy - oy;
+      double b = NORMALIZE(atan2(dy, dx));
       
-      // determine the direction we should move
-      // it's the robot's orientation minus the bearing from the robot
-      // to the puck (loosely models circular objects colliding)
-      double new_th = NORMALIZE(b-qth);
-      SetGlobalPose(qx,qy,new_th);
+      // Determine the direction we should move
+      // It's the robot's orientation minus the bearing from the robot
+      //   to the puck (loosely models circular objects colliding).
+      double new_th = b;
+      
+      double new_x = qx;
+      double new_y = qy;
+      SetGlobalPose(new_x,new_y,new_th);
 
       if(impact_velocity)
       {
-        SetSpeed(.5*impact_mass*impact_velocity*impact_velocity);
-        printf("setting speed to: %f\n",
-               .5*impact_mass*impact_velocity*impact_velocity);
+        // we only have really big things (robots) and really small things
+        // (pucks).  
+        if(impact_mass > m_mass)
+          SetSpeed(2*fabs(impact_velocity));
+        else
+          SetSpeed(fabs(impact_velocity));
+        //printf("setting speed to: %f\n", 2*impact_velocity);
       }
     }
     // Did we hit a wall?
     // if so, don't move anymore (infinitely soft walls)
     //
-    //else if(InCollision(qx, qy, qth))
-    //{
-      //puts("Wall collision");
-      //m_com_vr = 0;
-    //}
+    else if(InCollision(qx, qy, qth))
+    {
+      m_com_vr = 0;
+    }
     // no collisions; make the move
     else
     {
@@ -279,7 +294,7 @@ void CPuck::Move()
     }
 
     // compute a new velocity, based on "friction"
-    SetSpeed(max(0,m_com_vr - 0.01*m_com_vr));
+    SetSpeed(max(0,m_com_vr - m_friction*m_com_vr));
 }
 
 ///////////////////////////////////////////////////////////////////////////

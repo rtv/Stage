@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -74,7 +74,7 @@ bool CWorld::Load(const char *filename)
 
       strncpy(bare_filename,filename,strlen(filename)-3);
       bare_filename[strlen(filename)-3] = '\0';
-      sprintf(system_command_string, "m4 --fatal-warnings %s > %s",
+      sprintf(system_command_string, "m4 -E %s > %s",
               filename, bare_filename);
 
       PRINT_MSG1("running m4: %s",system_command_string);

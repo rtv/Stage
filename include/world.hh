@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.8 $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -41,6 +41,8 @@
 #if INCLUDE_XGUI
 #include "xgui.hh"
 #endif
+
+#define MAX_OBJECTS 2048
 
 // forward declaration
 //
@@ -312,7 +314,7 @@ class CWorld
     // Object list
     //
     private: int m_object_count;
-    private: CEntity *m_object[1024];
+    private: CEntity *m_object[MAX_OBJECTS];
     
     private: Nimage* m_bimg; // background image 
 
