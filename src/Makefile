@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.106 2002-06-11 06:48:15 rtv Exp $
+# $Id: Makefile,v 1.107 2002-06-11 07:19:54 rtv Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -21,14 +21,14 @@ PLAYER_LIB = $(PLAYER_DIR)/lib
 INCLUDES = -I../include -I$(PLAYER_INC) 
 
 # compile flags for Stage
-CCFLAGS += -DREENTRANT $(ZLIB_FLAGS) $(INCLUDES) $(PLAYER_PLATFORM) \
+CCFLAGS += $(ZLIB_FLAGS) $(INCLUDES) \
 	-DVERSION=\"$(VERSION)\" -DCOLOR_DATABASE=\"$(COLOR_DATABASE)\" \
 	-DINCLUDE_RTK2 -I../$(RTK_INC) `gtk-config --cflags`\
 	$(HRL_FLAGS) 
 
 # Link flags for Stage
 # optional libraries are linked if they were defined in Makefile.common
-LINKFLAGS = -lm -lstdc++ -pthread -L$(PLAYER_DIR)/lib -lplayerqueue\
+LINKFLAGS = -lm -lstdc++ -L$(PLAYER_DIR)/lib -lplayerqueue\
              $(ZLIB_LINK) $(PROFILE_LINK) $(HRL_LINK) $(OLDLIBS) \
 	     -L../$(RTK_LIB) -lrtk `gtk-config --libs gtk gthread`
 

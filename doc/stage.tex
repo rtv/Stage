@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.13 2002-06-11 06:58:17 rtv Exp $
+% CVS: $Id: stage.tex,v 1.14 2002-06-11 07:19:54 rtv Exp $
 
 \documentclass[11pt]{report}
 
@@ -156,9 +156,8 @@
 
     Stage is released under the GNU General Public
     License. Stage programs, images, examples, source code and
-    documentation are copyrighted by their their authors.
+    documentation are copyrighted by their their authors. The authors are:
 
-\subsection{Authors}
       \begin{itemize}
       \item[] Richard Vaughan [rtv@sourceforge.net]
       \item[] Andrew Howard [inspectorg@sourceforge.net]
@@ -199,10 +198,11 @@
 	redundant. Don't worry; things are better now.
 
 \section{Citations}
-If you find Player useful in your work, we would greatly appreciate your
-mentioning that fact in papers that you publish.  A paper of our own
-on Player has been presented in a respected peer-reviewed conference; this
-paper is the definitive reference when citing Player \cite{GerkeyVaughan01a}:
+If you find Player and Stage useful in your work, we would greatly
+appreciate your mentioning that fact in papers that you publish.  A
+paper of our own on Player has been presented in a respected
+peer-reviewed conference; this paper is the definitive reference when
+citing Player \cite{GerkeyVaughan01a}:
 \begin{quote}
 Brian~P. Gerkey, Richard~T. Vaughan, Kasper St\o{}y, Andrew Howard,
 Maja~J Matari\'c and Gaurav~S Sukhatme.
@@ -214,14 +214,15 @@ Maja~J Matari\'c and Gaurav~S Sukhatme.
 If you have space (and are feeling generous), you can also insert a footnote
 similar to the following:
 \begin{quote}
-Player was developed jointly at the USC Robotics Research Lab
-and HRL Labs and is freely available under the GNU General Public License
-from http://playerstage.sourceforge.net.
+Player and Stage were developed jointly at the USC Robotics Research
+Lab and HRL Labs and are freely available under the GNU General Public
+License from http://playerstage.sourceforge.net.
 \end{quote}
-By including such acknowledgements, you do more than feed our egos and further 
-our academic careers.  You spread the word about Player, which will bring more
-users and developers, as well as please our funders, ensuring that we will
-continue to be allowed to hack on the software.
+By including such acknowledgements, you do more than feed our egos and
+further our academic careers.  You spread the word about the
+Player/Stage project, which will bring more users and developers, as
+well as please our funders, ensuring that we will continue to be
+allowed to hack on the software.
 
   \section{Acknowledgements}
 
@@ -230,7 +231,7 @@ Stage originated at the University of Southern California Robotics
     (MARS), NSF grant ANI-9979457 (SCOWR), DARPA contract
     DAAE07-98-C-L028 (TMR), ONR Grants N00014-00-1-0140 and
     N0014-99-1-0162, and JPL Contract No. 1216961. Development at HRL
-    Laboratories is supported by a DARPA contract (SDR).
+    Laboratories is supported by a DARPA contract (SDR). 
 
 Thanks to our contributors and users, particularly the USC Robotics
 Lab students and alumni who have been generous with their advice, bug
@@ -515,6 +516,10 @@ sensors and objects to be simulated by Stage.  Stage reads the world
 file on start-up and creates entities as indicated in the file.  Stage
 may also write updated pose information into the world file when the
 user selects the {\bf File:Save} menu option.
+
+Note that the world file format has changed significantly from
+previous versions. The script \verb+tools/worldfileconv.tcl+ will
+attempt to convert your old world files to the new format.
 
 \section{Basic Syntax}
 
