@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.50 2002-03-12 02:53:09 rtv Exp $
+ * $Id: xs.cc,v 1.51 2002-03-15 02:52:16 rtv Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -844,7 +844,7 @@ int main(int argc, char **argv)
   win->Startup( argc, argv);
 
 
-#ifdef HRL_DEVICES
+#ifdef HRL_HEADERS
   win->SetupMessageServer();
 #endif
 
@@ -861,7 +861,7 @@ int main(int argc, char **argv)
     win->HandleXEvent();
     win->HandleIncomingQueue();
 
-#ifdef HRL_DEVICES
+#ifdef HRL_HEADERS
     win->HandleIDARMessages();
 #endif
 
@@ -871,7 +871,7 @@ int main(int argc, char **argv)
 }
 
 
-#ifdef HRL_DEVICES
+#ifdef HRL_HEADERS
 
 int hrlfd = 0;
 
@@ -1543,7 +1543,7 @@ void CXGui::RefreshObjects( void )
   
   HighlightObject( dragging, false );
 
-#ifdef HRL_DEVICES
+#ifdef HRL_HEADERS
   DrawIDARMessages();
 #endif
 
@@ -2335,11 +2335,6 @@ void CXGui::HandlePlayers( void )
 	    case PLAYER_LASERBEACON_CODE: 
   	      ((CGraphicLaserBeaconProxy*)(playerProxies[p]))->Render();
 	      break;
-#ifdef HRL_HEADERS
-	    case PLAYER_IDAR_CODE: 
-  	      ((CGraphicIDARProxy*)(playerProxies[p]))->Render();
-	      break;
-#endif
 	    }
     }
 }
@@ -2428,19 +2423,6 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 		    
 		  switch( sibling.id.type )
 		    {
-#ifdef HRL_HEADERS
-		    case PLAYER_IDAR_CODE: 
-		      if( enableIDAR )
-			{
-			  CGraphicIDARProxy* gip = 
-			    new CGraphicIDARProxy(this,sibling.stage_id,
-						  cli,sibling.id.index,'r' );
-			  
-			  graphicProxies[num_proxies] = gip;
-			  playerProxies[num_proxies++] = gip;
-			}
-		      break;
-#endif
 		    case PLAYER_LASER_CODE: 
 		      if( enableLaser )
 			{

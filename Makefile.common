@@ -3,7 +3,7 @@
 # stage/Makefile.common - build and installation configurations
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile.common,v 1.41 2002-03-12 02:53:09 rtv Exp $
+# $Id: Makefile.common,v 1.42 2002-03-15 02:52:16 rtv Exp $
 #
 # Notes: All user-configurable paths and build options should be specified 
 #        here. This file is included by Makefile and src/Makefile. 
@@ -44,20 +44,22 @@ SRC_DIST_BLEEDING_NAME = Stage-Bleeding-src
 BIN_DIST_NAME = Stage-$(VERSION)-i386
 
 INSTALL_BIN = $(INSTALL_DIR)/bin
-INSTALL_BIN_FILES = bin/stage bin/xs bin/rtkstage bin/manager
+INSTALL_BIN_FILES = src/stage src/xs src/rtkstage src/manager
+
 INSTALL_EXAMPLES = $(INSTALL_DIR)/examples
+INSTALL_LIB = $(INSTALL_DIR)/lib
 
 #############################################################################
 # RTK CONFIGURATION (required for rtkstage)
 # rtkstage needs the path to the rtk2 source tree - these defaults
 # should work fine, as we now distribute rtk2 with stage
 
-RTK_DIR = ../rtk2
+RTK_DIR = rtk2
 RTK_INC = $(RTK_DIR) #/include
 RTK_LIB = $(RTK_DIR) #/lib
 
 ##############################################################################
-# X COLOR DATABASE CONFFIGURATION (required)
+# X COLOR DATABASE CONFIGURATION (required)
 # set the path to a X11-format color database, usually rgb.txt from X distro
 # I should get rid of this eventually - RTV
 
@@ -65,23 +67,28 @@ RTK_LIB = $(RTK_DIR) #/lib
 COLOR_DATABASE = /usr/X11R6/lib/X11/rgb.txt
 
 ##############################################################################
-# ZLIB CONFIURATION (optional)
+# ZLIB CONFIGURATION (optional)
 # Support for gzipped images; requires zlib.
 # Comment out if you dont have or need zlib.
 
 ZLIB_FLAGS = -DINCLUDE_ZLIB
-ZLIB_LIBS = -lz
-
+ZLIB_LINK = -lz
+ 
 ##############################################################################
 # Build type 
 # choose one of these that suits your build (debug/profile/production)
+# all targets get these flags
 
-# production
+# production 
 #CCFLAGS = -O2 
 # debug
 #CCFLAGS = -g3 
-# debug + profile
-CCFLAGS = -pg -g3 
+# debug + profile + warnings - ideal for development
+CCFLAGS = -pg -g3 -Wall
+
+# you need this link option to get profiling data
+# it can be commented out for production compiles
+PROFILE_LINK = -pg
 
 #############################################################################
 # Platform selection
@@ -126,12 +133,8 @@ LINKER = $(CC)
 
 #############################################################################
 # CONFIGURATION FOR HRL PROPRIETARY CODE 
-# you probably don't need this, but it doesn't hurt to leave it here
-# 'cos I use it all the time - RTV
-
-HRL = $(HOME)/code/LINPHERO/pr_c++/com/hrl/pr
-HRL_HEADERS = -I../hrl -I$(HRL)/pherobot -I$(HRL)/abstractrobot 
-HRL_LIB =  ../hrl/libhrlstage.a
-HRL_LINK =  -L../hrl -lhrlstage
-
-
+# uncomment these lines to build support for HRL devices
+#
+#HRL_DIR = ../hrl
+#HRL_FLAGS = -DHRL_HEADERS -I$(HRL_DIR)
+#HRL_LINK = -L$(HRL_DIR) -lhrlstage 

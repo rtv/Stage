@@ -7,8 +7,8 @@
 #
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
-#  $Author: gsibley $
-#  $Revision: 1.34 $
+#  $Author: rtv $
+#  $Revision: 1.35 $
 #
 # Note: All normal user configurations are in Makefile.common - you
 # probably don't need to change this file
@@ -22,26 +22,28 @@ include Makefile.common
 # Build section
 #
 
-all:	stage rtkstage xs manager
+all:	stage rtkstage xs manager trapdoor
 
 stage: 	
-	cd src && ${MAKE} stage PLAYER_DIR=$(PLAYER_DIR) \
-	&& cp stage ../bin
+	cd src && ${MAKE} stage 
 
 rtkstage: 	
-	cd src && ${MAKE} rtkstage PLAYER_DIR=$(PLAYER_DIR) \
-	&& cp rtkstage ../bin
+	cd src && ${MAKE} rtkstage
 
-hrlstage: 
-	cd hrl && make && cd ..	
-	cd src && ${MAKE} hrlstage PLAYER_DIR=$(PLAYER_DIR) \
-	&& cp hrlstage ../bin
+hrlstage:
+	cd src && ${MAKE} hrlstage
 
 xs: 	
-	cd src && ${MAKE} xs PLAYER_DIR=$(PLAYER_DIR) && cp xs ../bin
+	cd src && ${MAKE} xs 
+
+hrlxs: 	
+	cd src && ${MAKE} hrlxs 
 
 manager: 	
-	cd src && ${MAKE} manager PLAYER_DIR=$(PLAYER_DIR) && cp manager ../bin
+	cd src && ${MAKE} manager 
+
+trapdoor:
+	cd src && ${MAKE} trapdoor
 
 dep:
 	cd src && ${MAKE} dep
@@ -50,23 +52,21 @@ clean: clean_dep
 	rm -f *~ gmon.out 
 	cd src && ${MAKE} clean
 	cd include &&  ${MAKE} clean
-	cd bin && rm -f stage rtkstage hrlstage xs manager core
 	cd examples && rm -f core
-	cd ../rtk2 && ${MAKE} clean
-#	cd hrl && ${MAKE} clean
+	cd $(RTK_DIR) && ${MAKE} clean
 
 clean_dep:
 	cd src && ${MAKE} clean_dep
 
-
 install:
+	mkdir -p $(INSTALL_DIR)/bin
+	install -m 755 $(INSTALL_BIN_FILES) $(INSTALL_BIN)
+	mkdir -p $(INSTALL_LIB)
+	install -m 644 src/*.a $(INSTALL_LIB)
 	mkdir -p $(INSTALL_EXAMPLES)
 	install -m 644 examples/*.world* $(INSTALL_EXAMPLES)
 	install -m 644 examples/*.m4 $(INSTALL_EXAMPLES)
 	install -m 644 examples/*.pnm* $(INSTALL_EXAMPLES)
-	mkdir -p $(INSTALL_DIR)/bin
-	install -m 755 $(INSTALL_BIN_FILES) $(INSTALL_BIN)
-
 
 ###########################################################################
 # Create a source distribution
@@ -94,12 +94,13 @@ BIN_DIST_FILES = \
 	$(BIN_DIST_NAME)/VERSION \
 	$(BIN_DIST_NAME)/Makefile \
 	$(BIN_DIST_NAME)/bin/stage \
-	$(BIN_DIST_NAME)/bin/rtkstage \
-	$(BIN_DIST_NAME)/etc/rtkstage.cfg  
+#	$(BIN_DIST_NAME)/bin/rtkstage \
+#	$(BIN_DIST_NAME)/etc/rtkstage.cfg  
 
 bin_dist:
 	echo Building $(BIN_DIST_NAME)
 	cp -R . /tmp/$(BIN_DIST_NAME)
+	mv /tmp/$(BIN_DIST_NAME)/src /tmp/$(BIN_DIST_NAME)/bin
 	tar -C /tmp -cvzf $(BIN_DIST_NAME).tgz $(BIN_DIST_FILES)
 	rm -Rf /tmp/$(BIN_DIST_NAME)
 

@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xs.hh,v 1.19 2002-02-27 22:27:27 rtv Exp $
+ * $Id: xs.hh,v 1.20 2002-03-15 02:52:16 rtv Exp $
  ************************************************************************/
 
 #ifndef _WIN_H
@@ -27,11 +27,6 @@
 #include "gpsproxy.h"
 #include "visionproxy.h"
 #include "ptzproxy.h"
-
-#ifdef HRL_DEVICES
-#include "laserbeaconproxy.h"
-#include "idarproxy.h"
-#endif
 
 const int NUM_PROXIES = 64;
 
@@ -241,9 +236,6 @@ public:
   void RenderOccupancy( xstruth_t* exp, bool extended );
   void RenderGripper( xstruth_t* exp, bool extended );
   void RenderGps( xstruth_t* exp, bool extended );
-#ifdef HRL_DEVICES
-  void RenderIDAR( xstruth_t* exp, bool extended );
-#endif
   void RenderPuck( xstruth_t* exp, bool extended );
   void RenderOccupancyGrid( void );
 
@@ -373,69 +365,6 @@ public:
   ~CGraphicSonarProxy( void ){Draw();};
   
 };
-
-#ifdef HRL_DEVICES
-
-class CGraphicIDARProxy : public IDARProxy, public GraphicProxy
-{
-protected:
-  DPoint intensitypts[ PLAYER_NUM_IDAR_SAMPLES ];
-  DPoint rangepts[ PLAYER_NUM_IDAR_SAMPLES ][ RAYS_PER_SENSOR ];
-  
-  DPoint origin;
-
-  char rx_buf[PLAYER_NUM_IDAR_SAMPLES][16]; // should be big enough
-
-public:
-  CGraphicIDARProxy( CXGui* w, int id, PlayerClient* pc, unsigned short index, 
-		      unsigned char access='c'):
-    IDARProxy(pc,index,access), GraphicProxy( w, id )
-  {
-    origin.x = origin.y = 0.0;
-
-    memset( intensitypts, 0, PLAYER_NUM_IDAR_SAMPLES *  sizeof(DPoint) );
-    memset( rangepts, 0, 
-	    PLAYER_NUM_IDAR_SAMPLES * RAYS_PER_SENSOR * sizeof(DPoint) );
-
-    // init the value string buffers
-    for( int l=0; l < PLAYER_NUM_IDAR_SAMPLES; l++ )
-      {
-	sprintf( rx_buf[l], "%u", 0 );
-      }
-  };
-
-  virtual void ProcessData( void );
-  virtual void Draw( void )
-  {
-    win->SetForeground( pixel );
-    win->SetDrawMode( GXxor );
-
-    for( int i=0; i<PLAYER_NUM_IDAR_SAMPLES; i++ )
-      {
-	//win->DrawLine( origin, intensitypts[i] );
-	win->DrawString( intensitypts[i].x, intensitypts[i].y, 
-			 rx_buf[i], strlen(rx_buf[i] ) ); 
-      }
-
-    win->SetForeground( win->grey );
-    win->SetDrawMode( GXxor );
-
-    for( int i=0; i<PLAYER_NUM_IDAR_SAMPLES; i++ )
-      {  //for( int f=0; f<RAYS_PER_SENSOR; f++ )
-	//win->DrawLine( origin, rangepts[i][f] ); 
-	win->DrawLines( rangepts[i], RAYS_PER_SENSOR ); 
-	win->DrawLine( rangepts[i][0], origin );
-	win->DrawLine( rangepts[i][RAYS_PER_SENSOR-1], 
-		       rangepts[(i+1)%PLAYER_NUM_IDAR_SAMPLES][0] );
-      }
-    
-  };
-
-  ~CGraphicIDARProxy( void ){Draw();};
-  
-};
-
-#endif
 
 class CGraphicGpsProxy : public GpsProxy, public GraphicProxy
 {

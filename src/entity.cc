@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.48 2002-03-12 08:54:52 rtv Exp $
+//  $Id: entity.cc,v 1.49 2002-03-15 02:52:16 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -34,6 +34,8 @@
 #include "world.hh"
 #include "worldfile.hh"
 
+// static rtp object sending to 127.0.0.1:7777
+//CRTPPlayer rtp_player( 0x7F000001, 7777 );
 
 ///////////////////////////////////////////////////////////////////////////
 // Minimal constructor
@@ -45,7 +47,8 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
   //m_lock = NULL;
 
   this->lock_byte = world->GetObjectCount();
-  
+  //this->rtp_p = &rtp_player; // they all point to the same object just now
+
   m_world = world; 
   m_parent_object = parent_object;
   m_default_object = this;
@@ -718,13 +721,9 @@ size_t CEntity::PutData( void* data, size_t len )
  
   Unlock();
 
-  // if we want to announce this data to the world
-  //if( m_rtp_announce )
-  //m_world->RTPAnnounce( data, len, 
-  //		  m_world->m_sim_timeval.tv_sec,
-  //		  m_world->m_sim_timeval.tv_usec );
- 
-  
+  // if we have an rtp object we announce this data to the world
+  //if( this->rtp_p ) rtp_p->SendData( data, len );
+
   return len;
 }
 

@@ -137,8 +137,6 @@ void CXGui::RenderObject( xstruth_t &orig_truth )
 
 #ifdef HRL_HEADERS
       case DescartesType: RenderRoundRobot( &truth, extended ); break; 
-      case IDARType: if( draw_all_devices )
-	RenderIDAR( &truth, extended ); break;	
 #endif
 
       default: 
@@ -363,14 +361,6 @@ void CXGui::RenderGps( xstruth_t* exp, bool extended )
   DrawCircle( exp->x, exp->y, exp->w/2.0 );
 }
 
-#ifdef HRL_HEADERS
-void CXGui::RenderIDAR( xstruth_t* exp, bool extended )
-{ 
-  SelectColor( exp );
-  DrawCircle( exp->x, exp->y, exp->w/2.0 );
-}
-#endif
-
 void CXGui::RenderBox( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );
@@ -449,70 +439,6 @@ void CGraphicSonarProxy::ProcessData( void )
       endpts[l].y = startpts[l].y + range/1000.0 * sin( angle );       
     }
 }
-
-#ifdef HRL_HEADERS
-void CGraphicIDARProxy::ProcessData( void )
-{
-  // figure out where to draw this data
-  double x,y,th;
-
-  if( !win->PoseFromId( stage_id, x, y, th, pixel ) )
-    {
-      printf( "XS Warning: couldn't find object (%d:%d:%d)"
-	      " so abandoned render\n", 
-	      client->port, device, index );
-      return;
-    }
-  
-  origin.x = x;
-  origin.y = y;
-
-  double angle_per_sensor = (2.0 * M_PI)/(double)PLAYER_NUM_IDAR_SAMPLES;
-  
-  for( int l=0; l < PLAYER_NUM_IDAR_SAMPLES; l++ )
-    {
-      double angle = l * angle_per_sensor + th;
-
-      // max (255) intensity will be a 1m stick
-      //double sticklen = (double)(data.rx[l].intensity) / 255.0;
-
-      double sticklen = 0.40; // 30cm from center of robot
-
-      //intensity works out as 0-255 proportion of max range 
-      //double baselen = data.rx[l].intensity * tan( angle_per_sensor/2.0 );
-
-      double baselen = sticklen * tan( angle_per_sensor/2.0 );
-
-      //double dx = baselen * cos( angle + M_PI/2.0 );
-      //double dy = baselen * sin( angle + M_PI/2.0 );
-
-      intensitypts[l].x = x + sticklen * cos( angle ); 
-      intensitypts[l].y = y + sticklen * sin( angle );       
-
-      double ray_start_angle = angle - angle_per_sensor/2.0;
-      double angle_per_ray = angle_per_sensor / RAYS_PER_SENSOR;
-
-      for( int f=0; f<RAYS_PER_SENSOR; f++ )
-	{
-	  double ray_angle = ray_start_angle + f * angle_per_ray;
-	  double range = data.rx[l].ranges[f] / 1000.0; // meters
-
-	  //printf( "range: %.2f\n", range );
-
-	  rangepts[l][f].x = x + range * cos( ray_angle );
-	  rangepts[l][f].y = y + range * sin( ray_angle );
-	}
-	   
-      
-      // data[2] is the pheremone type
-      // store the value here for display later
-      sprintf( rx_buf[l], "%d:%u", 
-	       l,
-	       //data.tx[l].intensity,
-	       data.rx[l].intensity );
-    }
-}
-#endif
 
 
 void CGraphicGpsProxy::ProcessData( void )
