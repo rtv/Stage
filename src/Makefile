@@ -29,7 +29,8 @@ RTK_DIR = ../rtk
 RTK_INC = $(RTK_DIR)/include
 # added src because lib doesn't get included in the distro
 #	BPG
-RTK_LIB = $(RTK_DIR)/lib $(RTK_DIR)/src
+#RTK_LIB = $(RTK_DIR)/lib $(RTK_DIR)/src
+RTK_LIB = $(RTK_DIR)/src
 
 
 ##############################################################################
