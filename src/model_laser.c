@@ -164,7 +164,7 @@ void model_laser_render( model_t* mod )
   if(  mod->subs[STG_PROP_LASERDATA] )
     {
       rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_COLOR) );
-      rtk_fig_origin( fig, mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );  
+      rtk_fig_origin( fig, mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.a );  
       stg_laser_config_t* cfg = (stg_laser_config_t*)
 	model_get_prop_data_generic( mod, STG_PROP_LASERCONFIG );
       

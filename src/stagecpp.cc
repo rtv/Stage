@@ -158,30 +158,48 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       //stg_world_addmodel( world, mod );
 
       stg_pose_t pose;
-      pose.x = wf.ReadTupleLength(section, "pose", 0, 0);
-      pose.y = wf.ReadTupleLength(section, "pose", 1, 0);
-      pose.a = wf.ReadTupleAngle(section, "pose", 2, 0);      
-      stg_model_prop_with_data( mod, STG_PROP_POSE, &pose, sizeof(pose) );
+      pose.x = wf.ReadTupleLength(section, "pose", 0, STG_DEFAULT_POSEX );
+      pose.y = wf.ReadTupleLength(section, "pose", 1, STG_DEFAULT_POSEY );
+      pose.a = wf.ReadTupleAngle(section, "pose", 2, STG_DEFAULT_POSEA );      
+      
+      if( pose.x != STG_DEFAULT_POSEX ||
+	  pose.y != STG_DEFAULT_POSEY ||
+	  pose.a != STG_DEFAULT_POSEA )
+	stg_model_prop_with_data( mod, STG_PROP_POSE, &pose, sizeof(pose) );
       
       stg_geom_t geom;
-      geom.pose.x = wf.ReadTupleLength(section, "origin", 0, 0.0 );
-      geom.pose.y = wf.ReadTupleLength(section, "origin", 1, 0.0 );
-      geom.pose.a = wf.ReadTupleLength(section, "origin", 2, 0.0 );
-      geom.size.x = wf.ReadTupleLength(section, "size", 0, 10.0 );
-      geom.size.y = wf.ReadTupleLength(section, "size", 1, 10.0 );
-      stg_model_prop_with_data( mod, STG_PROP_GEOM, &geom, sizeof(geom) );
+      geom.pose.x = wf.ReadTupleLength(section, "origin", 0, STG_DEFAULT_ORIGINX );
+      geom.pose.y = wf.ReadTupleLength(section, "origin", 1, STG_DEFAULT_ORIGINY);
+      geom.pose.a = wf.ReadTupleLength(section, "origin", 2, STG_DEFAULT_ORIGINA );
+      geom.size.x = wf.ReadTupleLength(section, "size", 0, STG_DEFAULT_SIZEX );
+      geom.size.y = wf.ReadTupleLength(section, "size", 1, STG_DEFAULT_SIZEY );
+
+      if( geom.pose.x != STG_DEFAULT_ORIGINX ||
+	  geom.pose.y != STG_DEFAULT_ORIGINY ||
+	  geom.pose.a != STG_DEFAULT_ORIGINA ||
+ 	  geom.size.x != STG_DEFAULT_SIZEX ||
+	  geom.size.y != STG_DEFAULT_SIZEY )
+	stg_model_prop_with_data( mod, STG_PROP_GEOM, &geom, sizeof(geom) );
+      
+      stg_bool_t obstacle;
+      obstacle = wf.ReadInt( section, "obstacle_return", STG_DEFAULT_OBSTACLERETURN );
+      if( obstacle != STG_DEFAULT_OBSTACLERETURN ) 
+	stg_model_prop_with_data( mod, STG_PROP_OBSTACLERETURN, &obstacle, sizeof(obstacle) );
       
       stg_bool_t nose;
-      nose = wf.ReadInt( section, "nose", 0 );
-      stg_model_prop_with_data( mod, STG_PROP_NOSE, &nose, sizeof(nose) );
-
+      nose = wf.ReadInt( section, "nose", STG_DEFAULT_NOSE );
+      if( nose != STG_DEFAULT_NOSE )
+	stg_model_prop_with_data( mod, STG_PROP_NOSE, &nose, sizeof(nose) );
+      
       stg_bool_t grid;
-      grid = wf.ReadInt( section, "grid", 0 );
-      stg_model_prop_with_data( mod, STG_PROP_GRID, &grid, sizeof(grid) );
+      grid = wf.ReadInt( section, "grid", STG_DEFAULT_GRID );
+      if( grid != STG_DEFAULT_GRID )
+	stg_model_prop_with_data( mod, STG_PROP_GRID, &grid, sizeof(grid) );
       
       stg_bool_t boundary;
-      boundary = wf.ReadInt( section, "boundary", 0 );
-      stg_model_prop_with_data( mod, STG_PROP_BOUNDARY, &boundary,sizeof(boundary));
+      boundary = wf.ReadInt( section, "boundary", STG_DEFAULT_BOUNDARY );
+      if( boundary != STG_DEFAULT_BOUNDARY )
+	stg_model_prop_with_data( mod, STG_PROP_BOUNDARY, &boundary,sizeof(boundary));
       
       stg_laser_config_t lconf;
       memset( &lconf, 0, sizeof(lconf) );
@@ -218,13 +236,15 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       
       if( bcfg.channel_count != -1 )
 	stg_model_prop_with_data( mod, STG_PROP_BLOBCONFIG, &bcfg,sizeof(bcfg));
-
-      const char* colorstr = wf.ReadString( section, "color", "red" );
+      
+      const char* colorstr = wf.ReadString( section, "color", NULL );
       if( colorstr )
 	{
 	  stg_color_t color = stg_lookup_color( colorstr );
 	  PRINT_DEBUG2( "stage color %s = %X", colorstr, color );
-	  stg_model_prop_with_data( mod, STG_PROP_COLOR, &color,sizeof(color));
+	  
+	  if( color != STG_DEFAULT_COLOR )
+	    stg_model_prop_with_data( mod, STG_PROP_COLOR, &color,sizeof(color));
 	}
 
       const char* bitmapfile = wf.ReadString( section, "bitmap", NULL );
@@ -312,12 +332,13 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 	  
 	  free( lines );
 	}
-
+      
       stg_velocity_t vel;
-      vel.x = wf.ReadTupleLength(section, "velocity", 0, 0);
-      vel.y = wf.ReadTupleLength(section, "velocity", 1, 0);
-      vel.a = wf.ReadTupleAngle(section, "velocity", 2, 0);      
-      stg_model_prop_with_data( mod, STG_PROP_VELOCITY, &vel, sizeof(vel) );
+      vel.x = wf.ReadTupleLength(section, "velocity", 0, 0 );
+      vel.y = wf.ReadTupleLength(section, "velocity", 1, 0 );
+      vel.a = wf.ReadTupleAngle(section, "velocity", 2, 0 );      
+      if( vel.x || vel.y || vel.a )
+	stg_model_prop_with_data( mod, STG_PROP_VELOCITY, &vel, sizeof(vel) );
       
       stg_fiducial_config_t fcfg;
       fcfg.min_range = wf.ReadTupleLength(section, "fiducial", 0, -9999.0 );

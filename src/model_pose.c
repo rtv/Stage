@@ -47,7 +47,7 @@ model_t* model_test_collision( model_t* mod, double* hitx, double* hity )
       model_t* hitmod;
       while( (hitmod = itl_next( itl )) ) 
 	{
-	  if( hitmod != mod )//&& mod->obstacle_return ) //&& !IsDescendent(ent) &&
+	  if( hitmod != mod && hitmod->obstacle_return ) //&& !IsDescendent(ent) &&
 	    //if( ent != this && ent->obstacle_return )
 	    {
 	      if( hitx || hity ) // if the caller needs to know hit points

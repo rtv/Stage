@@ -105,7 +105,7 @@ void model_ranger_config_render( model_t* mod )
 				 mod->gui.top, STG_LAYER_RANGERGEOM );
   
   rtk_fig_color_rgb32( fig, stg_lookup_color(STG_RANGER_GEOM_COLOR) );  
-  rtk_fig_origin( fig, mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );  
+  rtk_fig_origin( fig, mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.a );  
   
   rtk_fig_t* cfgfig = mod->gui.propdata[STG_PROP_RANGERCONFIG];  
   if( cfgfig  )
@@ -115,7 +115,7 @@ void model_ranger_config_render( model_t* mod )
 				 mod->gui.top, STG_LAYER_RANGERCONFIG );
   
   rtk_fig_color_rgb32( cfgfig, stg_lookup_color(STG_RANGER_CONFIG_COLOR) );  
-  rtk_fig_origin( cfgfig, mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );  
+  rtk_fig_origin( cfgfig, mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.a );  
   
   stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_RANGERCONFIG );
   
@@ -150,7 +150,6 @@ void model_ranger_config_render( model_t* mod )
       // TODO - FIX THIS
 
       // show the FOV too
-      //double sidelen = rngr->size.x/2.0;
       double sidelen = rngr->bounds_range.max;
       
       double x1= rngr->pose.x + sidelen*-cos(rngr->pose.a - rngr->fov/2.0 );
@@ -204,7 +203,7 @@ void model_ranger_render( model_t* mod )
 	{
 	  rtk_fig_color_rgb32(fig, stg_lookup_color(STG_RANGER_COLOR) );
 	  rtk_fig_origin( fig, 
-			  mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );	  
+			  mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.a );	  
 	  // draw the range  beams
 	  int s;
 	  for( s=0; s<rcount; s++ )

@@ -26,8 +26,7 @@ typedef struct _model
     
   stg_pose_t pose;
 
-  stg_pose_t local_pose; // local offset from our pose
-
+  //stg_pose_t local_pose; // local offset from our pose
   //stg_size_t size;
   //stg_pose_t origin;
 

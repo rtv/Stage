@@ -455,9 +455,9 @@ void gui_model_lines( model_t* mod )
 
   PRINT_DEBUG1( "rendering %d lines", mod->lines->len );
 
-  double localx = mod->local_pose.x;
-  double localy = mod->local_pose.y;
-  double locala = mod->local_pose.a;
+  double localx = mod->geom.pose.x;
+  double localy = mod->geom.pose.y;
+  double locala = mod->geom.pose.a;
   
   double cosla = cos(locala);
   double sinla = sin(locala);
@@ -490,9 +490,9 @@ void gui_model_geom( model_t* mod )
     {
       rtk_fig_color_rgb32( fig, 0 );
       
-      double localx = mod->local_pose.x;
-      double localy = mod->local_pose.y;
-      double locala = mod->local_pose.a;
+      double localx = mod->geom.pose.x;
+      double localy = mod->geom.pose.y;
+      double locala = mod->geom.pose.a;
       
       if( mod->boundary )
 	rtk_fig_rectangle( fig, localx, localy, locala, 
@@ -523,8 +523,8 @@ void gui_model_nose( model_t* mod )
       
       // draw a line from the center to the front of the model
       rtk_fig_line( fig, 
-		    mod->local_pose.x, 
-		    mod->local_pose.y, 
+		    mod->geom.pose.x, 
+		    mod->geom.pose.y, 
 		    mod->geom.size.x/2, 0 );
     }
 }
@@ -582,7 +582,7 @@ void gui_model_update( model_t* mod, stg_prop_type_t prop )
       
       // do nothing for these things
     case STG_PROP_LASERRETURN:
-    case STG_PROP_SONARRETURN:
+    case STG_PROP_RANGERRETURN:
     case STG_PROP_OBSTACLERETURN:
     case STG_PROP_VISIONRETURN:
     case STG_PROP_PUCKRETURN:

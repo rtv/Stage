@@ -43,20 +43,25 @@ model_t* model_create(  world_t* world,
   // models store data in here, indexed by property id
   mod->props = g_hash_table_new_full( g_int_hash, g_int_equal, NULL, prop_free );
   
-  mod->laser_return = LaserVisible;
+
   // a sensible default fiducial return value is the model's id
   mod->fiducial_return = mod->id;
-  mod->ranger_return = LaserVisible;
-
-  mod->geom.pose.x = 0;
-  mod->geom.pose.y = 0;
-  mod->geom.pose.a = 0;
-  mod->geom.size.x = 0.4;
-  mod->geom.size.y = 0.4;
   
-  mod->obstacle_return = 1;
-
-  mod->color = stg_lookup_color( "red" );
+  mod->pose.x = STG_DEFAULT_POSEX;
+  mod->pose.y = STG_DEFAULT_POSEY;
+  mod->pose.a = STG_DEFAULT_POSEA;
+  
+  mod->geom.pose.x = STG_DEFAULT_ORIGINX;
+  mod->geom.pose.y = STG_DEFAULT_ORIGINY;
+  mod->geom.pose.a = STG_DEFAULT_ORIGINA;
+  mod->geom.size.x = STG_DEFAULT_SIZEX;
+  mod->geom.size.y = STG_DEFAULT_SIZEY;
+  
+  mod->obstacle_return = STG_DEFAULT_OBSTACLERETURN;
+  mod->laser_return = STG_DEFAULT_LASERRETURN;
+  mod->ranger_return = STG_DEFAULT_RANGERRETURN;
+  mod->color = STG_DEFAULT_COLOR;
+  mod->movemask = STG_DEFAULT_MOVEMASK;
   
   // define a unit rectangle from 4 lines
   stg_line_t lines[4];
@@ -69,7 +74,7 @@ model_t* model_create(  world_t* world,
   lines[1].y1 = 0;
   lines[1].x2 = 1; 
   lines[1].y2 = 1;
-
+ 
   lines[2].x1 = 1; 
   lines[2].y1 = 1;
   lines[2].x2 = 0; 
@@ -88,8 +93,6 @@ model_t* model_create(  world_t* world,
   // stash the lines
   mod->lines = g_array_new( FALSE, TRUE, sizeof(stg_line_t) );  
   g_array_append_vals(  mod->lines, lines, 4 );
-  
-  mod->movemask = STG_MOVE_TRANS | STG_MOVE_ROT;
   
   gui_model_create( mod );
 
@@ -166,7 +169,7 @@ void model_local_to_global( model_t* mod, stg_pose_t* pose )
   //pose_sum( &origin, &mod->pose, &mod->origin );
   model_global_pose( mod, &origin );
   
-  pose_sum( &origin, &origin, &mod->local_pose );
+  pose_sum( &origin, &origin, &mod->geom.pose );
   pose_sum( pose, &origin, pose );
 }
 

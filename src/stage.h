@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.56 2004-06-14 02:52:50 rtv Exp $
+ * CVS: $Id: stage.h,v 1.57 2004-06-16 20:24:12 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -71,6 +71,7 @@
 #define STG_MOVE_ROT   (1 << 1)
 #define STG_MOVE_SCALE (1 << 2)
 
+
 // for now I'm specifying packets in the native types. I may change
 // this in the future for cross-platform networks, but right now I 
 // want to keep things simple until everything works.
@@ -101,7 +102,7 @@ typedef enum
     STG_PROP_LASERRETURN,
     STG_PROP_OBSTACLERETURN,
     STG_PROP_VISIONRETURN,
-    STG_PROP_SONARRETURN, 
+    STG_PROP_RANGERRETURN, 
     STG_PROP_NEIGHBORRETURN,
     STG_PROP_VOLTAGE,
     STG_PROP_RANGERDATA,
@@ -345,14 +346,21 @@ stg_position_steer_mode_t;
 
 // energy --------------------------------------------------------------
 
+// energy consumption of some devices in millijoules per second
+#define STG_ENERGY_COST_LASER 1000
+#define STG_ENERGY_COST_RANGER 100
+#define STG_ENERGY_COST_MOVEKG 10000 
+#define STG_ENERGY_COST_BLOB 100
+#define STG_ENERGY_COST_BUMPER 10
+
 typedef struct
 {
   stg_mj_t joules; 
   stg_mjs_t djoules; // current rate of change of power, in milliJoules/sec
   stg_mj_t move_cost;
-  stg_mjs_t give_rate; // give this many Joules/sec of energy to a neighbor
+  stg_mjs_t give_rate; // give this many Joules/sec of energy to a neighbor within range
   stg_meters_t give_range; // a neighbor is anyone within this range
-  stg_bool_t charging; // boolean, true if we are attached to a charger  
+  stg_bool_t charging; // boolean, true if we are currently receiving energy 
 } stg_energy_t;
 
 
@@ -383,38 +391,6 @@ typedef enum
     GripperEnabled
   } stg_gripper_return_t;
 
-// FIDUCIAL ------------------------------------------------------------
-
-typedef int stg_neighbor_return_t;
-
-// any integer value other than this is a valid fiducial ID
-// TODO - fix this up
-#define FiducialNone 0
-
-/* line-of-sight messaging packet */
-#define STG_LOS_MSG_MAX_LEN 32
-
-typedef struct
-{
-  int id;
-  char bytes[STG_LOS_MSG_MAX_LEN];
-  size_t len;
-  int power;
-  //  int consume;
-} stg_los_msg_t;
-
-// print the values in a message packet
-void stg_los_msg_print( stg_los_msg_t* msg );
-
-typedef struct
-{
-  stg_id_t id;
-  stg_meters_t range;
-  stg_radians_t bearing;
-  stg_radians_t orientation;
-  stg_size_t size;
-} stg_neighbor_t;
-
 // RANGER ------------------------------------------------------------
 
 typedef struct
@@ -433,14 +409,13 @@ typedef struct
 typedef struct
 {
   stg_meters_t range;
-  //double error;
+  //double error; // TODO
 } stg_ranger_sample_t;
 
 // RECTS --------------------------------------------------------------
 
 typedef struct
 {
-  //int toplx, toply, toprx, topry, botlx, botly, botrx, botry;
   stg_meters_t x, y, w, h;
 } stg_rect_t;
 
@@ -487,9 +462,6 @@ typedef struct
   char showdata;
 } stg_gui_config_t;
 
-
-// an individual range reading
-typedef stg_meters_t stg_range_t;
 
 // LASER  ------------------------------------------------------------
 
@@ -555,6 +527,28 @@ typedef struct
 
 // fiducial finder ------------------------------------------------------
 
+// any integer value other than this is a valid fiducial ID
+// TODO - fix this up
+#define FiducialNone 0
+
+// TODO - line-of-sight messaging
+/* line-of-sight messaging packet */
+/* 
+#define STG_LOS_MSG_MAX_LEN 32
+   
+typedef struct
+{
+  int id;
+  char bytes[STG_LOS_MSG_MAX_LEN];
+  size_t len;
+  int power; // transmit power or received power
+  //  int consume;
+} stg_los_msg_t;
+
+// print the values in a message packet
+void stg_los_msg_print( stg_los_msg_t* msg );
+*/
+
 typedef struct
 {
   stg_meters_t max_range_anon;
@@ -577,6 +571,25 @@ typedef struct
 
 // end property typedefs -------------------------------------------------
 
+
+// SOME DEFAULT VALUES FOR PROPERTIES -----------------------------------
+
+#define STG_DEFAULT_POSEX 0.0
+#define STG_DEFAULT_POSEY 0.0
+#define STG_DEFAULT_POSEA 0.0
+#define STG_DEFAULT_ORIGINX 0.0
+#define STG_DEFAULT_ORIGINY 0.0
+#define STG_DEFAULT_ORIGINA 0.0
+#define STG_DEFAULT_SIZEX 0.4
+#define STG_DEFAULT_SIZEY 0.4
+#define STG_DEFAULT_OBSTACLERETURN TRUE
+#define STG_DEFAULT_LASERRETURN LaserVisible
+#define STG_DEFAULT_RANGERRETURN TRUE
+#define STG_DEFAULT_COLOR (0xFF0000)
+#define STG_DEFAULT_MOVEMASK (STG_MOVE_TRANS | STG_MOVE_ROT)
+#define STG_DEFAULT_NOSE TRUE
+#define STG_DEFAULT_GRID FALSE
+#define STG_DEFAULT_BOUNDARY FALSE
 
 //  FUNCTION DEFINITIONS
 

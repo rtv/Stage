@@ -44,7 +44,7 @@ const char* stg_property_string( stg_id_t id )
     case STG_PROP_RANGEBOUNDS: return "rangebounds";break;
     case STG_PROP_RECTS: return "rects"; break; 
     case STG_PROP_LINES: return "lines"; break;
-    case STG_PROP_SONARRETURN: return "sonar_return"; break;
+    case STG_PROP_RANGERRETURN: return "ranger_return"; break;
     case STG_PROP_VELOCITY: return "velocity"; break;
     case STG_PROP_VISIONRETURN: return "vision_return"; break;
     case STG_PROP_VOLTAGE: return "voltage"; break;
