@@ -310,8 +310,6 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->geom.size.x = STG_DEFAULT_GEOM_SIZEX;
   mod->geom.size.y = STG_DEFAULT_GEOM_SIZEY;
   
-  mod->map_ppm = 10.0; // pixels per meter
-
   stg_guifeatures_t gf;
   gf.show_data = 1;
   gf.show_cmd = 0;

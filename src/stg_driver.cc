@@ -1,7 +1,6 @@
 /*
  *  Player - One Hell of a Robot Server
- *  Copyright (C) 2003  
- *     Brian Gerkey, Andrew Howard
+ *  Copyright (C) 2004, 2005 Richard Vaughan
  *                      
  * 
  *  This program is free software; you can redistribute it and/or modify
@@ -24,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: stg_driver.cc,v 1.29 2005-02-23 23:59:15 rtv Exp $
+ * CVS: $Id: stg_driver.cc,v 1.30 2005-02-24 04:18:39 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -911,7 +910,7 @@ void  StgDriver::HandleConfigMapInfo( device_record_t* device,
     }
   
   minfo = new stg_map_info_t();
-  minfo->ppm = device->mod->map_ppm;  
+  minfo->ppm = device->mod->world->ppm;  
   minfo->width = (unsigned int)( geom.size.x * minfo->ppm );
   minfo->height = (unsigned int)( geom.size.y * minfo->ppm );
   

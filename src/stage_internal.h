@@ -164,12 +164,7 @@ extern "C" {
     stg_msec_t interval; // time between updates in ms
     stg_msec_t interval_elapsed; // time since last update in ms
 
-    // render the model at this resolution in Player maps (not the world's matrix)
-    double map_ppm;
-  
-    //int section; // worldfile section number
-
-    // todo - thread-safe version
+     // todo - thread-safe version
     // allow exclusive access to this model
     
     // the generic buffers used by specialized model types.
