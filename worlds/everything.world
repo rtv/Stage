@@ -3,7 +3,10 @@
 #       showing how to include some pre-defined objects
 # Author: Andrew Howard, Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.19 2003-04-27 05:25:50 gerkey Exp $
+# CVS: $Id: everything.world,v 1.20 2004-04-05 03:04:06 rtv Exp $
+
+world
+(
 
 include "usc_pioneer.inc"
 
@@ -15,11 +18,11 @@ resolution 0.03
 #
 # load an environmental bitmap
 #
-bitmap
-(
+#bitmap
+#(
   file "cave.pnm.gz"
   resolution 0.03
-)
+#)
 
 #
 # setup the window parameters
@@ -90,7 +93,7 @@ blue_puck( pose [5.058 7.898 0.000] )
 #
 # Create an interesting visual obstacle from boxes
 #
-define cornercube box( size [0.2 0.2] laser_return "bright" )
+#define cornercube box( size [0.2 0.2] laser_return "bright" )
 
 box( 
      pose [9.606 1.416 -112.435] 
@@ -100,4 +103,5 @@ box(
      cornercube( color "green" pose [-0.3 0.3 0.0] )
      cornercube( color "blue" pose [-0.3 -0.3 0.0] )
      cornercube( color "magenta" pose [0.3 -0.3 0.0] )
+)
 )

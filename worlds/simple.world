@@ -1,39 +1,94 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: simple.world,v 1.13 2003-04-07 19:12:27 rtv Exp $
+# CVS: $Id: simple.world,v 1.14 2004-04-05 03:04:06 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 #
-resolution 0.02
-
-# GUI settings
-#
-gui
-(
-  size [ 502.000 506.000 ]
-  origin [5.018 4.950 0]
-  scale 0.021 # the size of each bitmap pixel in meters
-)
-
-# load a bitmapped environment from a file
-#
-bitmap
-(
-  file "cave.pnm.gz" 
-  resolution 0.02
-)
 
 include "pioneer.inc"
 
 
-# create a robot, setting its start position and Player port, 
-# and equipping it with a laser range scanner
-#
-position
-(
- robot 0 
- pose [1.0 1.0 20]
 
- laser()
-) 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+bitmap "worlds/cave.png"
+
+  # GUI settings
+  #
+  #gui
+  #(
+   # size [ 502.000 506.000 ]
+    #origin [5.018 4.950 0]
+    #scale 0.021 # the size of each bitmap pixel in meters
+  #)
+
+  # load a bitmapped environment from a file
+  #
+
+  #file "cave.pnm.gz" 
+  #resolution 0.02
+
+
+
+  # create a robot, setting its start position and Player port, 
+  # and equipping it with a laser range scanner
+  #
+  pioneer
+  (
+     pose [2.331 5.589 -2533.989]
+     #laser()
+   
+     nose 1
+
+    bitmap "worlds/submarine.png"
+
+    color "blue"
+
+     size [2.0 1.0] 
+  )
+
+  budgie( size [ 0.6 0.4 ] pose [2.068 1.003 -1366.829] color "magenta" )
