@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/omnipositiondevice.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Author: gerkey $
+//  $Revision: 1.2.4.1 $
 //
 // Usage:
 //  (empty)
@@ -27,7 +27,7 @@
 #ifndef OMNIPOSITIONDEVICE_H
 #define OMNIPOSITIONDEVICE_H
 
-#include "stage.h"
+#include "stage1p3.h"
 #include "playerdevice.hh"
 
 class COmniPositionDevice : public CPlayerEntity

@@ -23,10 +23,10 @@
  * Author: Reed Hedges <reed@zerohour.net> (Umass/Amherst), based on code by
  *              Andrew Howard
  * Date: Feb 2003
- * CVS info: $Id: mcomdevice.cc,v 1.1.2.1 2003-03-08 18:32:20 gerkey Exp $
+ * CVS info: $Id: mcomdevice.cc,v 1.1.2.1.2.1 2003-12-05 02:08:28 gerkey Exp $
  */
 
-#include <stage.h>
+#include <stage1p3.h>
 #include "mcomdevice.hh"
 
 ///////////////////////////////////////////////////////////////////////////

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/ptzdevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.3 $
+//  $Author: gerkey $
+//  $Revision: 1.3.8.1 $
 //
 // Usage:
 //  (empty)
@@ -125,6 +125,9 @@ bool CPtzDevice::Load(CWorldFile *worldfile, int section)
 //
 void CPtzDevice::Update( double sim_time )
 {
+  char buffer[PLAYER_MAX_REQREP_SIZE];
+  void *client;
+
   CPlayerEntity::Update( sim_time );
   
   ASSERT(m_world != NULL);
@@ -147,7 +150,16 @@ void CPtzDevice::Update( double sim_time )
   }
   
   // we're subscribed, so do the update
-  
+
+  // we don't support any config requests, but some exist for the ptz
+  // interface, so we'll NACK to all of them
+  if(GetConfig(&client, buffer, sizeof(buffer)) > 0)
+  {
+    PLAYER_WARN("tried to make unsupported configuration change to simulated ptz device");
+                
+    PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
+  }
+
   // Get the command string
   //
   player_ptz_cmd_t cmd;
@@ -194,6 +206,7 @@ void CPtzDevice::Update( double sim_time )
   data.pan = htons((short) m_pan);
   data.tilt = htons((short) m_tilt);
   data.zoom = htons((short) m_zoom);
+  data.panspeed = data.tiltspeed = 0;
   
   // Pass back the data
   //

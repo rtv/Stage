@@ -20,8 +20,6 @@ libstgmodels_a_SOURCES = \
                    bumperdevice.hh \
                    fiducialfinderdevice.cc \
                    fiducialfinderdevice.hh \
-                   gpsdevice.cc \
-                   gpsdevice.hh \
                    gripperdevice.cc \
                    gripperdevice.hh \
                    idardevice.cc \
@@ -32,8 +30,6 @@ libstgmodels_a_SOURCES = \
                    image.hh \
                    laserdevice.cc \
                    laserdevice.hh \
-                   motedevice.cc \
-                   motedevice.hh \
 		   omnipositiondevice.cc \
 		   omnipositiondevice.hh \
                    positiondevice.cc \

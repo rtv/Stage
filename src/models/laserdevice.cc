@@ -21,14 +21,14 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.6.4.5 2003-03-08 20:55:57 gerkey Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.6.4.5.2.1 2003-12-05 02:08:28 gerkey Exp $
  */
 
 #define DEBUG
 #undef VERBOSE
 
 #include <iostream>
-#include <stage.h>
+#include <stage1p3.h>
 #include <math.h>
 #include "world.hh"
 #include "laserdevice.hh"
@@ -310,6 +310,8 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
   data->resolution = htons((int) (100 * RTOD(this->scan_res)));
   data->min_angle = htons((int) (100 * RTOD(this->scan_min)));
   data->max_angle = htons((int) (100 * RTOD(this->scan_max)));
+
+  data->range_res = htons(1);
 
   // Make sure the data buffer is big enough
   ASSERT(this->scan_count <= ARRAYSIZE(data->ranges));

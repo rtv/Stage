@@ -22,10 +22,10 @@
  *       the work is done by Player).
  * Author: Andrew Howard
  * Date: 5 Dec 2000
- * CVS info: $Id: broadcastdevice.cc,v 1.2 2002-11-01 19:12:32 rtv Exp $
+ * CVS info: $Id: broadcastdevice.cc,v 1.2.8.1 2003-12-05 02:08:28 gerkey Exp $
  */
 
-#include <stage.h>
+#include <stage1p3.h>
 #include "broadcastdevice.hh"
 
 ///////////////////////////////////////////////////////////////////////////

@@ -21,13 +21,13 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.hh,v 1.2.2.1 2003-04-17 23:40:10 rtv Exp $
+ * CVS info: $Id: positiondevice.hh,v 1.2.2.1.2.1 2003-12-05 02:08:28 gerkey Exp $
  */
 
 #ifndef POSITIONDEVICE_H
 #define POSITIONDEVICE_H
 
-#include "stage.h"
+#include "stage1p3.h"
 #include "playerdevice.hh"
 
 class CPositionDevice : public CPlayerEntity

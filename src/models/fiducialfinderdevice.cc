@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/fiducialfinderdevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.2.4.2 $
+//  $Author: gerkey $
+//  $Revision: 1.2.4.2.2.1 $
 //
 // Usage: detects objects that were laser bright and had non-zero
 // ficucial_return
@@ -27,7 +27,7 @@
 //#define DEBUG
 
 #include <math.h>
-#include <stage.h>
+#include <stage1p3.h>
 #include "world.hh"
 #include "laserdevice.hh"
 #include "fiducialfinderdevice.hh"

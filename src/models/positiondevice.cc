@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.2.2.5 2003-04-19 00:46:56 gerkey Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.2.2.5.2.1 2003-12-05 02:08:28 gerkey Exp $
  */
 
 //#define DEBUG
@@ -325,7 +325,7 @@ void CPositionDevice::UpdateData()
 
   this->data.xspeed = MM_32(this->com_vr);
   this->data.yspeed = MM_32(0); // this device can't move sideways
-  this->data.yawspeed = Deg_32( fmod( this->com_vth + TWOPI, TWOPI) );  
+  this->data.yawspeed = Deg_32(NORMALIZE(this->com_vth));
   
   this->data.stall =  (uint8_t)(this->stall ? 1 : 0 );  
 

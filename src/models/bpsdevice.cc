@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/bpsdevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Author: gerkey $
+//  $Revision: 1.2.8.1 $
 //
 // Usage:
 //  (empty)
@@ -25,7 +25,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#include <stage.h>
+#include <stage1p3.h>
 #include "world.hh"
 #include "bpsdevice.hh"
 
