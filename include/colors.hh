@@ -22,7 +22,7 @@
  * devices here.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 8 Jun 2002
- * CVS info: $Id: colors.hh,v 1.10 2002-06-10 05:00:09 gerkey Exp $
+ * CVS info: $Id: colors.hh,v 1.11 2002-07-09 02:59:51 rtv Exp $
  */
 
 #ifndef _STAGECOLORS_H
@@ -50,7 +50,7 @@ typedef uint32_t StageColor;
 #define VISIONBEACON_COLOR  "red"
 #define WALL_COLOR "black"
 #define IDAR_COLOR "DarkRed"
-#define DESCARTES_COLOR "DarkRed"
+#define DESCARTES_COLOR "DarkBlue"
 
 // Look up the color in a database.  (i.e. transform color name to
 // color value).  If the color is not found in the database, a bright

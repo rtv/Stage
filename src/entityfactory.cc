@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.30 $
+//  $Revision: 1.31 $
 //
 // Usage:
 //  (empty)
@@ -25,6 +25,7 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include <string.h>
+
 #include "entityfactory.hh"
 #include "fixedobstacle.hh"
 #include "boxobstacle.hh"
@@ -35,7 +36,6 @@
 #include "positiondevice.hh"
 #include "omnipositiondevice.hh"
 #include "laserdevice.hh"
-
 #include "playerdevice.hh"
 #include "miscdevice.hh"
 #include "ptzdevice.hh"
@@ -47,11 +47,8 @@
 #include "gpsdevice.hh"
 #include "motedevice.hh"
 #include "truthdevice.hh"
-
-#ifdef HRL_HEADERS
 #include "irdevice.hh"
 #include "descartesdevice.hh"
-#endif
 
 #include "world.hh"
 
@@ -92,8 +89,11 @@ char* CWorld::StringFromType( StageType t )
   case BpsType: return "bps";
   case MoteType: return "mote";
   case OmniPositionType: return "omnipos";
+
     //DEVICE REMOVED
   case VisionBeaconType: break; //return "vision_beacon"; 
+    
+    // this must be the last enum entry!
   case NUMBER_OF_STAGE_TYPES: break;
   }	 
   return( "unknown" );
@@ -147,6 +147,10 @@ CEntity* CWorld::CreateEntity( StageType type, CEntity *parent)
       return new CTruthDevice(this, parent );
     case BpsType:
       return new CBpsDevice(this, parent);
+    case IDARType: // Infrared Data And Ranging turret
+      return new CIDARDevice(this, parent);
+    case DescartesType: // HRL's customized Descartes robot platform
+      return new CDescartesDevice(this, parent);
     case VisionBeaconType:
        break; // DEVICE REMOVED // return new CVisionBeacon(this, parent);
     default:
@@ -158,8 +162,6 @@ CEntity* CWorld::CreateEntity( StageType type, CEntity *parent)
   // case AudioType:
   // case SpeechType:
   //VBDType // Vision Beacon Detector?
-  //case IDARType, // HRL's Infrared Data And Ranging turret
-  //case DescartesType, // HRL's customized Descartes robot platform
   //case TruthType:
   //case OccupancyType:
 

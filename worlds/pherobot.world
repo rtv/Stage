@@ -1,0 +1,28 @@
+
+# Desc: 1 robot with player, sonar and gps
+# CVS: $Id: pherobot.world,v 1.1 2002-07-09 02:59:51 rtv Exp $
+
+environment
+(
+  file "simple.pnm.gz"
+  scale 0.02
+) 
+
+gui
+(
+  size [810.000 753.000]
+  origin [5.752 5.191]
+  scale 0.012
+  grid [0.2 1]
+  showgrid 1
+)
+
+define pherobot descartes( idar() )
+
+pherobot( pose [ 5.870 2.721 0.000 ] port 6665 )
+pherobot( pose [ 4.506 4.293 0.000 ] port 6666 )
+pherobot( pose [ 3.830 3.004 0.000 ] port 6667 )
+pherobot( pose [ 5.869 4.008 0.000 ] port 6668 )
+
+
+
