@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.32 2002-12-05 01:50:22 rtv Exp $
+dnl $Id: configure.in,v 1.33 2002-12-05 03:09:21 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -25,14 +25,22 @@ dnl preprocessor defines in there
 AM_CONFIG_HEADER(config.h)
 
 dnl Define this so that we can refer to it twice below
-define(STAGE_VERSION,1.3)
+dnl PS_VERSION is the major.minor version that is common for Player and
+dnl Stage. All revisions with this major.minor version must be forwards 
+dnl and backwards compatible. This number is used for the install directories.
+define(PS_VERSION,1.3)
+
+dnl STAGE_VERSION is major.minor.revision - unique to this release and 
+dnl independent of Player's revision number - 'dev' should be appended for 
+dnl unreleased development versions
+define(STAGE_VERSION,PS_VERSION.2dev)
 
 dnl Initialize automake with name and version of package to be built. 
 dnl PACKAGE and VERSION will be so defined in <config.h>.
 AM_INIT_AUTOMAKE(stage,STAGE_VERSION)
 
 dnl Change default installation prefix from /usr/local to user's home
-AC_PREFIX_DEFAULT(${HOME}/stage-STAGE_VERSION)
+AC_PREFIX_DEFAULT(${HOME}/stage-PS_VERSION)
 
 dnl Checks for programs.
 AC_PROG_CC
@@ -118,7 +126,7 @@ AM_CONDITIONAL(WITH_GUI, test x$with_gui = xyes)
 dnl where's player?
 AC_ARG_WITH(player, [   --with-player=dir      Location of Player (installation or source)],
 PLAYER_DIR=$with_player,
-PLAYER_DIR="${HOME}/player-STAGE_VERSION")
+PLAYER_DIR="${HOME}/player-PS_VERSION")
 if test ! -f $PLAYER_DIR/include/player.h; then
   if test ! -f $PLAYER_DIR/server/player.h; then
     AC_MSG_ERROR("Could not find player.h.  Player is required to build Stage.")

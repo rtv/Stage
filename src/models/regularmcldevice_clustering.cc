@@ -25,7 +25,6 @@
 
 #include "regularmcldevice.hh"
 
-#include <math.h>
 #include <iostream>
 #include <cstdlib>
 #include <cmath>
@@ -125,7 +124,6 @@ void MCLClustering::inverse(const double cov[][3], double inv[][3])
     if (m_isinf(inv)) cerr << "inverse: inv matrix contains Inf." << endl;
 #endif
 }
-
 
 // compute the (3D) multivariate gaussian
 double MCLClustering::gaussian(const double x[], const double mean[], const double cov[][3])

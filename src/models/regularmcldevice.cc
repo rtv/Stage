@@ -419,7 +419,7 @@ void CRegularMCLDevice::UpdateConfig(void)
 		// check if the config request is valid
 		if (len != sizeof(player_localization_reset_t))
 		{
-		    PRINT_WARN2("config request len is invalid (%d != %d)", len, sizeof(reset));
+		    PRINT_WARN2("config request len is invalid (%d != %lu)", len, sizeof(reset));
 		    if (PutReply(client, PLAYER_MSGTYPE_RESP_NACK) != 0)
 			PRINT_WARN("PutReply() failed");
 		    continue;
@@ -438,7 +438,7 @@ void CRegularMCLDevice::UpdateConfig(void)
 		// check if the config request is valid
 		if (len != sizeof(config.subtype))
 		{
-		    PRINT_WARN2("config request len is invalid (%d != %d)", len, sizeof(config.subtype));
+		    PRINT_WARN2("config request len is invalid (%d != %lu)", len, sizeof(config.subtype));
 		    if (PutReply(client, PLAYER_MSGTYPE_RESP_NACK) != 0)
 			PRINT_WARN("PutReply() failed");
 		    continue;
@@ -457,7 +457,7 @@ void CRegularMCLDevice::UpdateConfig(void)
 		// check if the config request is valid
 		if (len != sizeof(player_localization_config_t))
 		{
-		    PRINT_WARN2("config request len is invalid (%d != %d)", len, sizeof(config));
+		    PRINT_WARN2("config request len is invalid (%d != %lu)", len, sizeof(config));
 		    if (PutReply(client, PLAYER_MSGTYPE_RESP_NACK) != 0)
 			PRINT_WARN("PutReply() failed");
 		    continue;
@@ -479,7 +479,7 @@ void CRegularMCLDevice::UpdateConfig(void)
 		// check if the config request is valid
 		if (len != sizeof(player_localization_map_header_t))
 		{
-		    PRINT_WARN2("config request len is invalid (%d != %d)", len, sizeof(map_header));
+		    PRINT_WARN2("config request len is invalid (%d != %lu)", len, sizeof(map_header));
 		    if (PutReply(client, PLAYER_MSGTYPE_RESP_NACK) != 0)
 			PRINT_WARN("PutReply() failed");
 		    continue;
@@ -502,7 +502,7 @@ void CRegularMCLDevice::UpdateConfig(void)
 		// check if the config request is valid
 		if (len != sizeof(player_localization_map_data_t))
 		{
-		    PRINT_WARN2("config request len is invalid (%d != %d)", len, sizeof(map_data));
+		    PRINT_WARN2("config request len is invalid (%d != %lu)", len, sizeof(map_data));
 		    if (PutReply(client, PLAYER_MSGTYPE_RESP_NACK) != 0)
 			PRINT_WARN("PutReply() failed");
 		    continue;

@@ -1,4 +1,4 @@
-SUBDIRS = src worlds tools 
+SUBDIRS = src worlds tools replace
 
 DOCSRC = $(top_srcdir)/docsrc
 DOCDIST = $(distdir)/doc 
