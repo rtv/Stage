@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.13.2.3 $
+//  $Revision: 1.13.2.4 $
 //
 // Usage:
 //  (empty)
@@ -28,7 +28,7 @@
 #include "world.hh"
 #include "visiondevice.hh"
 #include "ptzdevice.hh"
-
+#include "raytrace.hh"
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor

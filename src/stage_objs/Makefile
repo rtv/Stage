@@ -16,7 +16,7 @@ OBJS =  world.o world_load.o truthserver.o envserver.o image.o \
 	ptzdevice.o truthdevice.o occupancydevice.o boxobstacle.o \
 	laserbeacon.o laserbeacondevice.o visiondevice.o visionbeacon.o \
 	broadcastdevice.o puck.o gpsdevice.o gripperdevice.o main.o \
-	matrix.o
+	matrix.o raytrace.o
 
 # choose one of these that suits your build (debug/profile/production)
 
@@ -63,6 +63,9 @@ dep:
 # Dependancies (make dep)
 
 
+../boxobstacle..o: /home/vaughan/work/player/include/messages.h
+../boxobstacle..o: /home/vaughan/work/player/include/playercommon.h
+../boxobstacle..o: /home/vaughan/work/player/include/stage.h
 ../boxobstacle..o: /usr/include/alloca.h /usr/include/asm/socket.h
 ../boxobstacle..o: /usr/include/asm/sockios.h /usr/include/assert.h
 ../boxobstacle..o: /usr/include/bits/byteswap.h /usr/include/bits/endian.h
@@ -137,9 +140,9 @@ dep:
 ../boxobstacle..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../boxobstacle..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../boxobstacle..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../boxobstacle..o: /usr/local/player-1.0a/include/messages.h
-../boxobstacle..o: /usr/local/player-1.0a/include/playercommon.h
-../boxobstacle..o: /usr/local/player-1.0a/include/stage.h
+../broadcastdevice..o: /home/vaughan/work/player/include/messages.h
+../broadcastdevice..o: /home/vaughan/work/player/include/playercommon.h
+../broadcastdevice..o: /home/vaughan/work/player/include/stage.h
 ../broadcastdevice..o: /usr/include/alloca.h /usr/include/asm/socket.h
 ../broadcastdevice..o: /usr/include/asm/sockios.h /usr/include/assert.h
 ../broadcastdevice..o: /usr/include/bits/byteswap.h /usr/include/bits/endian.h
@@ -216,9 +219,9 @@ dep:
 ../broadcastdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../broadcastdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../broadcastdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../broadcastdevice..o: /usr/local/player-1.0a/include/messages.h
-../broadcastdevice..o: /usr/local/player-1.0a/include/playercommon.h
-../broadcastdevice..o: /usr/local/player-1.0a/include/stage.h
+../entityfactory..o: /home/vaughan/work/player/include/messages.h
+../entityfactory..o: /home/vaughan/work/player/include/playercommon.h
+../entityfactory..o: /home/vaughan/work/player/include/stage.h
 ../entityfactory..o: /usr/include/alloca.h /usr/include/assert.h
 ../entityfactory..o: /usr/include/bits/endian.h /usr/include/bits/huge_val.h
 ../entityfactory..o: /usr/include/bits/local_lim.h
@@ -282,29 +285,29 @@ dep:
 ../entityfactory..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../entityfactory..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../entityfactory..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../entityfactory..o: /usr/local/player-1.0a/include/messages.h
-../entityfactory..o: /usr/local/player-1.0a/include/playercommon.h
-../entityfactory..o: /usr/local/player-1.0a/include/stage.h
-../entity..o: /usr/include/alloca.h /usr/include/asm/errno.h
-../entity..o: /usr/include/asm/socket.h /usr/include/asm/sockios.h
-../entity..o: /usr/include/assert.h /usr/include/bits/byteswap.h
-../entity..o: /usr/include/bits/confname.h /usr/include/bits/endian.h
-../entity..o: /usr/include/bits/environments.h /usr/include/bits/errno.h
-../entity..o: /usr/include/bits/huge_val.h /usr/include/bits/in.h
-../entity..o: /usr/include/bits/initspin.h /usr/include/bits/ipc.h
-../entity..o: /usr/include/bits/locale.h /usr/include/bits/local_lim.h
-../entity..o: /usr/include/bits/mathcalls.h /usr/include/bits/mathdef.h
-../entity..o: /usr/include/bits/nan.h /usr/include/bits/posix1_lim.h
-../entity..o: /usr/include/bits/posix2_lim.h /usr/include/bits/posix_opt.h
-../entity..o: /usr/include/bits/pthreadtypes.h /usr/include/bits/sched.h
-../entity..o: /usr/include/bits/select.h /usr/include/bits/sem.h
-../entity..o: /usr/include/bits/sigset.h /usr/include/bits/sigthread.h
-../entity..o: /usr/include/bits/sockaddr.h /usr/include/bits/socket.h
-../entity..o: /usr/include/bits/stdio_lim.h /usr/include/bits/time.h
-../entity..o: /usr/include/bits/types.h /usr/include/bits/waitflags.h
-../entity..o: /usr/include/bits/waitstatus.h /usr/include/bits/wchar.h
-../entity..o: /usr/include/bits/wordsize.h /usr/include/bits/xopen_lim.h
-../entity..o: /usr/include/ctype.h /usr/include/endian.h /usr/include/errno.h
+../entity..o: /home/vaughan/work/player/include/messages.h
+../entity..o: /home/vaughan/work/player/include/playercommon.h
+../entity..o: /home/vaughan/work/player/include/stage.h /usr/include/alloca.h
+../entity..o: /usr/include/asm/errno.h /usr/include/asm/socket.h
+../entity..o: /usr/include/asm/sockios.h /usr/include/assert.h
+../entity..o: /usr/include/bits/byteswap.h /usr/include/bits/confname.h
+../entity..o: /usr/include/bits/endian.h /usr/include/bits/environments.h
+../entity..o: /usr/include/bits/errno.h /usr/include/bits/huge_val.h
+../entity..o: /usr/include/bits/in.h /usr/include/bits/initspin.h
+../entity..o: /usr/include/bits/ipc.h /usr/include/bits/locale.h
+../entity..o: /usr/include/bits/local_lim.h /usr/include/bits/mathcalls.h
+../entity..o: /usr/include/bits/mathdef.h /usr/include/bits/nan.h
+../entity..o: /usr/include/bits/posix1_lim.h /usr/include/bits/posix2_lim.h
+../entity..o: /usr/include/bits/posix_opt.h /usr/include/bits/pthreadtypes.h
+../entity..o: /usr/include/bits/sched.h /usr/include/bits/select.h
+../entity..o: /usr/include/bits/sem.h /usr/include/bits/sigset.h
+../entity..o: /usr/include/bits/sigthread.h /usr/include/bits/sockaddr.h
+../entity..o: /usr/include/bits/socket.h /usr/include/bits/stdio_lim.h
+../entity..o: /usr/include/bits/time.h /usr/include/bits/types.h
+../entity..o: /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h
+../entity..o: /usr/include/bits/wchar.h /usr/include/bits/wordsize.h
+../entity..o: /usr/include/bits/xopen_lim.h /usr/include/ctype.h
+../entity..o: /usr/include/endian.h /usr/include/errno.h
 ../entity..o: /usr/include/features.h /usr/include/_G_config.h
 ../entity..o: /usr/include/gconv.h /usr/include/getopt.h
 ../entity..o: /usr/include/gnu/stubs.h /usr/include/iconv.h
@@ -407,9 +410,9 @@ dep:
 ../entity..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../entity..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../entity..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../entity..o: /usr/local/player-1.0a/include/messages.h
-../entity..o: /usr/local/player-1.0a/include/playercommon.h
-../entity..o: /usr/local/player-1.0a/include/stage.h
+../envserver..o: /home/vaughan/work/player/include/messages.h
+../envserver..o: /home/vaughan/work/player/include/playercommon.h
+../envserver..o: /home/vaughan/work/player/include/stage.h
 ../envserver..o: /usr/include/alloca.h /usr/include/arpa/inet.h
 ../envserver..o: /usr/include/asm/errno.h /usr/include/asm/sigcontext.h
 ../envserver..o: /usr/include/asm/socket.h /usr/include/asm/sockios.h
@@ -550,9 +553,9 @@ dep:
 ../envserver..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../envserver..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../envserver..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../envserver..o: /usr/local/player-1.0a/include/messages.h
-../envserver..o: /usr/local/player-1.0a/include/playercommon.h
-../envserver..o: /usr/local/player-1.0a/include/stage.h
+../gpsdevice..o: /home/vaughan/work/player/include/messages.h
+../gpsdevice..o: /home/vaughan/work/player/include/playercommon.h
+../gpsdevice..o: /home/vaughan/work/player/include/stage.h
 ../gpsdevice..o: /usr/include/alloca.h /usr/include/asm/socket.h
 ../gpsdevice..o: /usr/include/asm/sockios.h /usr/include/assert.h
 ../gpsdevice..o: /usr/include/bits/byteswap.h /usr/include/bits/endian.h
@@ -625,9 +628,9 @@ dep:
 ../gpsdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../gpsdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../gpsdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../gpsdevice..o: /usr/local/player-1.0a/include/messages.h
-../gpsdevice..o: /usr/local/player-1.0a/include/playercommon.h
-../gpsdevice..o: /usr/local/player-1.0a/include/stage.h
+../gripperdevice..o: /home/vaughan/work/player/include/messages.h
+../gripperdevice..o: /home/vaughan/work/player/include/playercommon.h
+../gripperdevice..o: /home/vaughan/work/player/include/stage.h
 ../gripperdevice..o: /usr/include/alloca.h /usr/include/asm/socket.h
 ../gripperdevice..o: /usr/include/asm/sockios.h /usr/include/assert.h
 ../gripperdevice..o: /usr/include/bits/byteswap.h /usr/include/bits/endian.h
@@ -705,9 +708,6 @@ dep:
 ../gripperdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../gripperdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../gripperdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../gripperdevice..o: /usr/local/player-1.0a/include/messages.h
-../gripperdevice..o: /usr/local/player-1.0a/include/playercommon.h
-../gripperdevice..o: /usr/local/player-1.0a/include/stage.h
 ../image..o: /usr/include/alloca.h /usr/include/asm/errno.h
 ../image..o: /usr/include/assert.h /usr/include/bits/endian.h
 ../image..o: /usr/include/bits/errno.h /usr/include/bits/huge_val.h
@@ -819,6 +819,9 @@ dep:
 ../image..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../image..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../image..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
+../laserbeacondevice..o: /home/vaughan/work/player/include/messages.h
+../laserbeacondevice..o: /home/vaughan/work/player/include/playercommon.h
+../laserbeacondevice..o: /home/vaughan/work/player/include/stage.h
 ../laserbeacondevice..o: /usr/include/alloca.h /usr/include/asm/socket.h
 ../laserbeacondevice..o: /usr/include/asm/sockios.h /usr/include/assert.h
 ../laserbeacondevice..o: /usr/include/bits/byteswap.h
@@ -902,9 +905,9 @@ dep:
 ../laserbeacondevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../laserbeacondevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../laserbeacondevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../laserbeacondevice..o: /usr/local/player-1.0a/include/messages.h
-../laserbeacondevice..o: /usr/local/player-1.0a/include/playercommon.h
-../laserbeacondevice..o: /usr/local/player-1.0a/include/stage.h
+../laserbeacon..o: /home/vaughan/work/player/include/messages.h
+../laserbeacon..o: /home/vaughan/work/player/include/playercommon.h
+../laserbeacon..o: /home/vaughan/work/player/include/stage.h
 ../laserbeacon..o: /usr/include/alloca.h /usr/include/asm/socket.h
 ../laserbeacon..o: /usr/include/asm/sockios.h /usr/include/assert.h
 ../laserbeacon..o: /usr/include/bits/byteswap.h /usr/include/bits/endian.h
@@ -982,9 +985,9 @@ dep:
 ../laserbeacon..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../laserbeacon..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../laserbeacon..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../laserbeacon..o: /usr/local/player-1.0a/include/messages.h
-../laserbeacon..o: /usr/local/player-1.0a/include/playercommon.h
-../laserbeacon..o: /usr/local/player-1.0a/include/stage.h
+../laserdevice..o: /home/vaughan/work/player/include/messages.h
+../laserdevice..o: /home/vaughan/work/player/include/playercommon.h
+../laserdevice..o: /home/vaughan/work/player/include/stage.h
 ../laserdevice..o: /usr/include/alloca.h /usr/include/asm/errno.h
 ../laserdevice..o: /usr/include/asm/socket.h /usr/include/asm/sockios.h
 ../laserdevice..o: /usr/include/assert.h /usr/include/bits/byteswap.h
@@ -1110,44 +1113,43 @@ dep:
 ../laserdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../laserdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../laserdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../laserdevice..o: /usr/local/player-1.0a/include/messages.h
-../laserdevice..o: /usr/local/player-1.0a/include/playercommon.h
-../laserdevice..o: /usr/local/player-1.0a/include/stage.h
-../main..o: /usr/include/alloca.h /usr/include/asm/sigcontext.h
-../main..o: /usr/include/asm/socket.h /usr/include/asm/sockios.h
-../main..o: /usr/include/assert.h /usr/include/bits/byteswap.h
-../main..o: /usr/include/bits/confname.h /usr/include/bits/endian.h
-../main..o: /usr/include/bits/environments.h /usr/include/bits/huge_val.h
-../main..o: /usr/include/bits/in.h /usr/include/bits/initspin.h
-../main..o: /usr/include/bits/ipc.h /usr/include/bits/local_lim.h
-../main..o: /usr/include/bits/mathcalls.h /usr/include/bits/mathdef.h
-../main..o: /usr/include/bits/nan.h /usr/include/bits/posix1_lim.h
-../main..o: /usr/include/bits/posix2_lim.h /usr/include/bits/posix_opt.h
-../main..o: /usr/include/bits/pthreadtypes.h /usr/include/bits/sched.h
-../main..o: /usr/include/bits/select.h /usr/include/bits/sem.h
-../main..o: /usr/include/bits/sigaction.h /usr/include/bits/sigcontext.h
-../main..o: /usr/include/bits/siginfo.h /usr/include/bits/signum.h
-../main..o: /usr/include/bits/sigset.h /usr/include/bits/sigstack.h
-../main..o: /usr/include/bits/sigthread.h /usr/include/bits/sockaddr.h
-../main..o: /usr/include/bits/socket.h /usr/include/bits/stdio_lim.h
-../main..o: /usr/include/bits/time.h /usr/include/bits/types.h
-../main..o: /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h
-../main..o: /usr/include/bits/wchar.h /usr/include/bits/wordsize.h
-../main..o: /usr/include/bits/xopen_lim.h /usr/include/endian.h
-../main..o: /usr/include/features.h /usr/include/_G_config.h
-../main..o: /usr/include/gconv.h /usr/include/getopt.h
-../main..o: /usr/include/gnu/stubs.h /usr/include/libio.h
-../main..o: /usr/include/limits.h /usr/include/linux/limits.h
-../main..o: /usr/include/math.h /usr/include/netinet/in.h
-../main..o: /usr/include/pthread.h /usr/include/sched.h /usr/include/signal.h
-../main..o: /usr/include/stdint.h /usr/include/stdio.h /usr/include/stdlib.h
-../main..o: /usr/include/string.h /usr/include/sys/cdefs.h
-../main..o: /usr/include/sys/ipc.h /usr/include/sys/select.h
-../main..o: /usr/include/sys/sem.h /usr/include/sys/sysmacros.h
-../main..o: /usr/include/sys/time.h /usr/include/sys/types.h
-../main..o: /usr/include/sys/ucontext.h /usr/include/time.h
-../main..o: /usr/include/ucontext.h /usr/include/unistd.h /usr/include/wchar.h
-../main..o: /usr/include/xlocale.h
+../main..o: /home/vaughan/work/player/include/messages.h
+../main..o: /home/vaughan/work/player/include/playercommon.h
+../main..o: /home/vaughan/work/player/include/stage.h /usr/include/alloca.h
+../main..o: /usr/include/asm/sigcontext.h /usr/include/asm/socket.h
+../main..o: /usr/include/asm/sockios.h /usr/include/assert.h
+../main..o: /usr/include/bits/byteswap.h /usr/include/bits/confname.h
+../main..o: /usr/include/bits/endian.h /usr/include/bits/environments.h
+../main..o: /usr/include/bits/huge_val.h /usr/include/bits/in.h
+../main..o: /usr/include/bits/initspin.h /usr/include/bits/ipc.h
+../main..o: /usr/include/bits/local_lim.h /usr/include/bits/mathcalls.h
+../main..o: /usr/include/bits/mathdef.h /usr/include/bits/nan.h
+../main..o: /usr/include/bits/posix1_lim.h /usr/include/bits/posix2_lim.h
+../main..o: /usr/include/bits/posix_opt.h /usr/include/bits/pthreadtypes.h
+../main..o: /usr/include/bits/sched.h /usr/include/bits/select.h
+../main..o: /usr/include/bits/sem.h /usr/include/bits/sigaction.h
+../main..o: /usr/include/bits/sigcontext.h /usr/include/bits/siginfo.h
+../main..o: /usr/include/bits/signum.h /usr/include/bits/sigset.h
+../main..o: /usr/include/bits/sigstack.h /usr/include/bits/sigthread.h
+../main..o: /usr/include/bits/sockaddr.h /usr/include/bits/socket.h
+../main..o: /usr/include/bits/stdio_lim.h /usr/include/bits/time.h
+../main..o: /usr/include/bits/types.h /usr/include/bits/waitflags.h
+../main..o: /usr/include/bits/waitstatus.h /usr/include/bits/wchar.h
+../main..o: /usr/include/bits/wordsize.h /usr/include/bits/xopen_lim.h
+../main..o: /usr/include/endian.h /usr/include/features.h
+../main..o: /usr/include/_G_config.h /usr/include/gconv.h
+../main..o: /usr/include/getopt.h /usr/include/gnu/stubs.h
+../main..o: /usr/include/libio.h /usr/include/limits.h
+../main..o: /usr/include/linux/limits.h /usr/include/math.h
+../main..o: /usr/include/netinet/in.h /usr/include/pthread.h
+../main..o: /usr/include/sched.h /usr/include/signal.h /usr/include/stdint.h
+../main..o: /usr/include/stdio.h /usr/include/stdlib.h /usr/include/string.h
+../main..o: /usr/include/sys/cdefs.h /usr/include/sys/ipc.h
+../main..o: /usr/include/sys/select.h /usr/include/sys/sem.h
+../main..o: /usr/include/sys/sysmacros.h /usr/include/sys/time.h
+../main..o: /usr/include/sys/types.h /usr/include/sys/ucontext.h
+../main..o: /usr/include/time.h /usr/include/ucontext.h /usr/include/unistd.h
+../main..o: /usr/include/wchar.h /usr/include/xlocale.h
 ../main..o: /usr/local/include/g++-v3/bits/concept_check.h
 ../main..o: /usr/local/include/g++-v3/bits/fpos.h
 ../main..o: /usr/local/include/g++-v3/bits/functexcept.h
@@ -1189,23 +1191,22 @@ dep:
 ../main..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../main..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../main..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../main..o: /usr/local/player-1.0a/include/messages.h
-../main..o: /usr/local/player-1.0a/include/playercommon.h
-../main..o: /usr/local/player-1.0a/include/stage.h
-../matrix..o: /usr/include/alloca.h /usr/include/asm/errno.h
-../matrix..o: /usr/include/assert.h /usr/include/bits/endian.h
-../matrix..o: /usr/include/bits/errno.h /usr/include/bits/huge_val.h
-../matrix..o: /usr/include/bits/locale.h /usr/include/bits/local_lim.h
-../matrix..o: /usr/include/bits/mathcalls.h /usr/include/bits/mathdef.h
-../matrix..o: /usr/include/bits/nan.h /usr/include/bits/posix1_lim.h
-../matrix..o: /usr/include/bits/posix2_lim.h /usr/include/bits/pthreadtypes.h
-../matrix..o: /usr/include/bits/sched.h /usr/include/bits/select.h
-../matrix..o: /usr/include/bits/sigset.h /usr/include/bits/stdio_lim.h
-../matrix..o: /usr/include/bits/time.h /usr/include/bits/types.h
-../matrix..o: /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h
-../matrix..o: /usr/include/bits/wchar.h /usr/include/bits/wordsize.h
-../matrix..o: /usr/include/bits/xopen_lim.h /usr/include/ctype.h
-../matrix..o: /usr/include/endian.h /usr/include/errno.h
+../matrix..o: /home/vaughan/work/player/include/messages.h
+../matrix..o: /home/vaughan/work/player/include/playercommon.h
+../matrix..o: /home/vaughan/work/player/include/stage.h /usr/include/alloca.h
+../matrix..o: /usr/include/asm/errno.h /usr/include/assert.h
+../matrix..o: /usr/include/bits/endian.h /usr/include/bits/errno.h
+../matrix..o: /usr/include/bits/huge_val.h /usr/include/bits/locale.h
+../matrix..o: /usr/include/bits/local_lim.h /usr/include/bits/mathcalls.h
+../matrix..o: /usr/include/bits/mathdef.h /usr/include/bits/nan.h
+../matrix..o: /usr/include/bits/posix1_lim.h /usr/include/bits/posix2_lim.h
+../matrix..o: /usr/include/bits/pthreadtypes.h /usr/include/bits/sched.h
+../matrix..o: /usr/include/bits/select.h /usr/include/bits/sigset.h
+../matrix..o: /usr/include/bits/stdio_lim.h /usr/include/bits/time.h
+../matrix..o: /usr/include/bits/types.h /usr/include/bits/waitflags.h
+../matrix..o: /usr/include/bits/waitstatus.h /usr/include/bits/wchar.h
+../matrix..o: /usr/include/bits/wordsize.h /usr/include/bits/xopen_lim.h
+../matrix..o: /usr/include/ctype.h /usr/include/endian.h /usr/include/errno.h
 ../matrix..o: /usr/include/features.h /usr/include/_G_config.h
 ../matrix..o: /usr/include/gconv.h /usr/include/gnu/stubs.h
 ../matrix..o: /usr/include/iconv.h /usr/include/langinfo.h
@@ -1305,9 +1306,9 @@ dep:
 ../matrix..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../matrix..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../matrix..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../matrix..o: /usr/local/player-1.0a/include/messages.h
-../matrix..o: /usr/local/player-1.0a/include/playercommon.h
-../matrix..o: /usr/local/player-1.0a/include/stage.h
+../miscdevice..o: /home/vaughan/work/player/include/messages.h
+../miscdevice..o: /home/vaughan/work/player/include/playercommon.h
+../miscdevice..o: /home/vaughan/work/player/include/stage.h
 ../miscdevice..o: /usr/include/alloca.h /usr/include/asm/socket.h
 ../miscdevice..o: /usr/include/asm/sockios.h /usr/include/assert.h
 ../miscdevice..o: /usr/include/bits/byteswap.h /usr/include/bits/endian.h
@@ -1382,9 +1383,9 @@ dep:
 ../miscdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../miscdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../miscdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../miscdevice..o: /usr/local/player-1.0a/include/messages.h
-../miscdevice..o: /usr/local/player-1.0a/include/playercommon.h
-../miscdevice..o: /usr/local/player-1.0a/include/stage.h
+../occupancydevice..o: /home/vaughan/work/player/include/messages.h
+../occupancydevice..o: /home/vaughan/work/player/include/playercommon.h
+../occupancydevice..o: /home/vaughan/work/player/include/stage.h
 ../occupancydevice..o: /usr/include/alloca.h /usr/include/asm/socket.h
 ../occupancydevice..o: /usr/include/asm/sockios.h /usr/include/assert.h
 ../occupancydevice..o: /usr/include/bits/byteswap.h /usr/include/bits/endian.h
@@ -1461,9 +1462,9 @@ dep:
 ../occupancydevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../occupancydevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../occupancydevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../occupancydevice..o: /usr/local/player-1.0a/include/messages.h
-../occupancydevice..o: /usr/local/player-1.0a/include/playercommon.h
-../occupancydevice..o: /usr/local/player-1.0a/include/stage.h
+../playerdevice..o: /home/vaughan/work/player/include/messages.h
+../playerdevice..o: /home/vaughan/work/player/include/playercommon.h
+../playerdevice..o: /home/vaughan/work/player/include/stage.h
 ../playerdevice..o: /usr/include/alloca.h /usr/include/asm/errno.h
 ../playerdevice..o: /usr/include/asm/sigcontext.h /usr/include/asm/socket.h
 ../playerdevice..o: /usr/include/asm/sockios.h /usr/include/assert.h
@@ -1609,9 +1610,6 @@ dep:
 ../playerdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../playerdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../playerdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../playerdevice..o: /usr/local/player-1.0a/include/messages.h
-../playerdevice..o: /usr/local/player-1.0a/include/playercommon.h
-../playerdevice..o: /usr/local/player-1.0a/include/stage.h
 ../player_xpsi..o: /usr/include/alloca.h /usr/include/asm/errno.h
 ../player_xpsi..o: /usr/include/asm/sigcontext.h /usr/include/assert.h
 ../player_xpsi..o: /usr/include/bits/confname.h /usr/include/bits/endian.h
@@ -1641,18 +1639,18 @@ dep:
 ../player_xpsi..o: /usr/include/limits.h /usr/include/linux/errno.h
 ../player_xpsi..o: /usr/include/linux/limits.h /usr/include/locale.h
 ../player_xpsi..o: /usr/include/math.h /usr/include/nl_types.h
-../player_xpsi..o: /usr/include/signal.h /usr/include/stdint.h
-../player_xpsi..o: /usr/include/stdio.h /usr/include/stdlib.h
-../player_xpsi..o: /usr/include/string.h /usr/include/sys/cdefs.h
-../player_xpsi..o: /usr/include/sys/select.h /usr/include/sys/stat.h
-../player_xpsi..o: /usr/include/sys/sysmacros.h /usr/include/sys/time.h
-../player_xpsi..o: /usr/include/sys/types.h /usr/include/sys/ucontext.h
-../player_xpsi..o: /usr/include/time.h /usr/include/ucontext.h
-../player_xpsi..o: /usr/include/unistd.h /usr/include/values.h
-../player_xpsi..o: /usr/include/wchar.h /usr/include/wctype.h
-../player_xpsi..o: /usr/include/X11/keysymdef.h /usr/include/X11/keysym.h
-../player_xpsi..o: /usr/include/X11/Xfuncproto.h /usr/include/X11/X.h
-../player_xpsi..o: /usr/include/X11/Xutil.h /usr/include/xlocale.h
+../player_xpsi..o: /usr/include/signal.h /usr/include/stdio.h
+../player_xpsi..o: /usr/include/stdlib.h /usr/include/string.h
+../player_xpsi..o: /usr/include/sys/cdefs.h /usr/include/sys/select.h
+../player_xpsi..o: /usr/include/sys/stat.h /usr/include/sys/sysmacros.h
+../player_xpsi..o: /usr/include/sys/time.h /usr/include/sys/types.h
+../player_xpsi..o: /usr/include/sys/ucontext.h /usr/include/time.h
+../player_xpsi..o: /usr/include/ucontext.h /usr/include/unistd.h
+../player_xpsi..o: /usr/include/values.h /usr/include/wchar.h
+../player_xpsi..o: /usr/include/wctype.h /usr/include/X11/keysymdef.h
+../player_xpsi..o: /usr/include/X11/keysym.h /usr/include/X11/Xfuncproto.h
+../player_xpsi..o: /usr/include/X11/X.h /usr/include/X11/Xutil.h
+../player_xpsi..o: /usr/include/xlocale.h
 ../player_xpsi..o: /usr/local/include/g++-v3/backward/backward_warning.h
 ../player_xpsi..o: /usr/local/include/g++-v3/backward/fstream.h
 ../player_xpsi..o: /usr/local/include/g++-v3/backward/iomanip.h
@@ -1749,23 +1747,9 @@ dep:
 ../player_xpsi..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/X11/Xlib.h
 ../player_xpsi..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/X11/Xosdefs.h
 ../player_xpsi..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/X11/Xos.h
-../player_xpsi..o: /usr/local/player-1.0a/include/clientproxy.h
-../player_xpsi..o: /usr/local/player-1.0a/include/gpsproxy.h
-../player_xpsi..o: /usr/local/player-1.0a/include/gripperproxy.h
-../player_xpsi..o: /usr/local/player-1.0a/include/laserbeaconproxy.h
-../player_xpsi..o: /usr/local/player-1.0a/include/laserproxy.h
-../player_xpsi..o: /usr/local/player-1.0a/include/messages.h
-../player_xpsi..o: /usr/local/player-1.0a/include/miscproxy.h
-../player_xpsi..o: /usr/local/player-1.0a/include/occupancyproxy.h
-../player_xpsi..o: /usr/local/player-1.0a/include/playercclient.h
-../player_xpsi..o: /usr/local/player-1.0a/include/playerclient.h
-../player_xpsi..o: /usr/local/player-1.0a/include/playercommon.h
-../player_xpsi..o: /usr/local/player-1.0a/include/positionproxy.h
-../player_xpsi..o: /usr/local/player-1.0a/include/ptzproxy.h
-../player_xpsi..o: /usr/local/player-1.0a/include/sonarproxy.h
-../player_xpsi..o: /usr/local/player-1.0a/include/speechproxy.h
-../player_xpsi..o: /usr/local/player-1.0a/include/truthproxy.h
-../player_xpsi..o: /usr/local/player-1.0a/include/visionproxy.h
+../positiondevice..o: /home/vaughan/work/player/include/messages.h
+../positiondevice..o: /home/vaughan/work/player/include/playercommon.h
+../positiondevice..o: /home/vaughan/work/player/include/stage.h
 ../positiondevice..o: /usr/include/alloca.h /usr/include/asm/socket.h
 ../positiondevice..o: /usr/include/asm/sockios.h /usr/include/assert.h
 ../positiondevice..o: /usr/include/bits/byteswap.h /usr/include/bits/endian.h
@@ -1842,9 +1826,9 @@ dep:
 ../positiondevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../positiondevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../positiondevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../positiondevice..o: /usr/local/player-1.0a/include/messages.h
-../positiondevice..o: /usr/local/player-1.0a/include/playercommon.h
-../positiondevice..o: /usr/local/player-1.0a/include/stage.h
+../ptzdevice..o: /home/vaughan/work/player/include/messages.h
+../ptzdevice..o: /home/vaughan/work/player/include/playercommon.h
+../ptzdevice..o: /home/vaughan/work/player/include/stage.h
 ../ptzdevice..o: /usr/include/alloca.h /usr/include/asm/socket.h
 ../ptzdevice..o: /usr/include/asm/sockios.h /usr/include/assert.h
 ../ptzdevice..o: /usr/include/bits/byteswap.h /usr/include/bits/endian.h
@@ -1917,28 +1901,27 @@ dep:
 ../ptzdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../ptzdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../ptzdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../ptzdevice..o: /usr/local/player-1.0a/include/messages.h
-../ptzdevice..o: /usr/local/player-1.0a/include/playercommon.h
-../ptzdevice..o: /usr/local/player-1.0a/include/stage.h
-../puck..o: /usr/include/alloca.h /usr/include/asm/socket.h
-../puck..o: /usr/include/asm/sockios.h /usr/include/assert.h
-../puck..o: /usr/include/bits/byteswap.h /usr/include/bits/endian.h
-../puck..o: /usr/include/bits/huge_val.h /usr/include/bits/in.h
-../puck..o: /usr/include/bits/initspin.h /usr/include/bits/ipc.h
-../puck..o: /usr/include/bits/local_lim.h /usr/include/bits/mathcalls.h
-../puck..o: /usr/include/bits/mathdef.h /usr/include/bits/nan.h
-../puck..o: /usr/include/bits/posix1_lim.h /usr/include/bits/posix2_lim.h
-../puck..o: /usr/include/bits/pthreadtypes.h /usr/include/bits/sched.h
-../puck..o: /usr/include/bits/select.h /usr/include/bits/sem.h
-../puck..o: /usr/include/bits/sigset.h /usr/include/bits/sigthread.h
-../puck..o: /usr/include/bits/sockaddr.h /usr/include/bits/socket.h
-../puck..o: /usr/include/bits/stdio_lim.h /usr/include/bits/time.h
-../puck..o: /usr/include/bits/types.h /usr/include/bits/waitflags.h
-../puck..o: /usr/include/bits/waitstatus.h /usr/include/bits/wchar.h
-../puck..o: /usr/include/bits/wordsize.h /usr/include/bits/xopen_lim.h
-../puck..o: /usr/include/endian.h /usr/include/features.h
-../puck..o: /usr/include/_G_config.h /usr/include/gconv.h
-../puck..o: /usr/include/gnu/stubs.h /usr/include/libio.h
+../puck..o: /home/vaughan/work/player/include/messages.h
+../puck..o: /home/vaughan/work/player/include/playercommon.h
+../puck..o: /home/vaughan/work/player/include/stage.h /usr/include/alloca.h
+../puck..o: /usr/include/asm/socket.h /usr/include/asm/sockios.h
+../puck..o: /usr/include/assert.h /usr/include/bits/byteswap.h
+../puck..o: /usr/include/bits/endian.h /usr/include/bits/huge_val.h
+../puck..o: /usr/include/bits/in.h /usr/include/bits/initspin.h
+../puck..o: /usr/include/bits/ipc.h /usr/include/bits/local_lim.h
+../puck..o: /usr/include/bits/mathcalls.h /usr/include/bits/mathdef.h
+../puck..o: /usr/include/bits/nan.h /usr/include/bits/posix1_lim.h
+../puck..o: /usr/include/bits/posix2_lim.h /usr/include/bits/pthreadtypes.h
+../puck..o: /usr/include/bits/sched.h /usr/include/bits/select.h
+../puck..o: /usr/include/bits/sem.h /usr/include/bits/sigset.h
+../puck..o: /usr/include/bits/sigthread.h /usr/include/bits/sockaddr.h
+../puck..o: /usr/include/bits/socket.h /usr/include/bits/stdio_lim.h
+../puck..o: /usr/include/bits/time.h /usr/include/bits/types.h
+../puck..o: /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h
+../puck..o: /usr/include/bits/wchar.h /usr/include/bits/wordsize.h
+../puck..o: /usr/include/bits/xopen_lim.h /usr/include/endian.h
+../puck..o: /usr/include/features.h /usr/include/_G_config.h
+../puck..o: /usr/include/gconv.h /usr/include/gnu/stubs.h /usr/include/libio.h
 ../puck..o: /usr/include/limits.h /usr/include/linux/limits.h
 ../puck..o: /usr/include/math.h /usr/include/netinet/in.h
 ../puck..o: /usr/include/pthread.h /usr/include/sched.h /usr/include/signal.h
@@ -1989,9 +1972,8 @@ dep:
 ../puck..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../puck..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../puck..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../puck..o: /usr/local/player-1.0a/include/messages.h
-../puck..o: /usr/local/player-1.0a/include/playercommon.h
-../puck..o: /usr/local/player-1.0a/include/stage.h
+../render..o: /home/vaughan/work/player/include/messages.h
+../render..o: /home/vaughan/work/player/include/playercommon.h
 ../render..o: /usr/include/alloca.h /usr/include/asm/errno.h
 ../render..o: /usr/include/assert.h /usr/include/bits/confname.h
 ../render..o: /usr/include/bits/endian.h /usr/include/bits/environments.h
@@ -2110,8 +2092,9 @@ dep:
 ../render..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/X11/Xlib.h
 ../render..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/X11/Xosdefs.h
 ../render..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/X11/Xos.h
-../render..o: /usr/local/player-1.0a/include/messages.h
-../render..o: /usr/local/player-1.0a/include/playercommon.h
+../rtk_main..o: /home/vaughan/work/player/include/messages.h
+../rtk_main..o: /home/vaughan/work/player/include/playercommon.h
+../rtk_main..o: /home/vaughan/work/player/include/stage.h
 ../rtk_main..o: /usr/include/alloca.h /usr/include/asm/socket.h
 ../rtk_main..o: /usr/include/asm/sockios.h /usr/include/assert.h
 ../rtk_main..o: /usr/include/bits/byteswap.h /usr/include/bits/endian.h
@@ -2184,9 +2167,9 @@ dep:
 ../rtk_main..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../rtk_main..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../rtk_main..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../rtk_main..o: /usr/local/player-1.0a/include/messages.h
-../rtk_main..o: /usr/local/player-1.0a/include/playercommon.h
-../rtk_main..o: /usr/local/player-1.0a/include/stage.h
+../sonardevice..o: /home/vaughan/work/player/include/messages.h
+../sonardevice..o: /home/vaughan/work/player/include/playercommon.h
+../sonardevice..o: /home/vaughan/work/player/include/stage.h
 ../sonardevice..o: /usr/include/alloca.h /usr/include/asm/errno.h
 ../sonardevice..o: /usr/include/asm/socket.h /usr/include/asm/sockios.h
 ../sonardevice..o: /usr/include/assert.h /usr/include/bits/byteswap.h
@@ -2310,9 +2293,9 @@ dep:
 ../sonardevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../sonardevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../sonardevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../sonardevice..o: /usr/local/player-1.0a/include/messages.h
-../sonardevice..o: /usr/local/player-1.0a/include/playercommon.h
-../sonardevice..o: /usr/local/player-1.0a/include/stage.h
+../truthdevice..o: /home/vaughan/work/player/include/messages.h
+../truthdevice..o: /home/vaughan/work/player/include/playercommon.h
+../truthdevice..o: /home/vaughan/work/player/include/stage.h
 ../truthdevice..o: /usr/include/alloca.h /usr/include/asm/socket.h
 ../truthdevice..o: /usr/include/asm/sockios.h /usr/include/assert.h
 ../truthdevice..o: /usr/include/bits/byteswap.h /usr/include/bits/endian.h
@@ -2387,9 +2370,8 @@ dep:
 ../truthdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../truthdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../truthdevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../truthdevice..o: /usr/local/player-1.0a/include/messages.h
-../truthdevice..o: /usr/local/player-1.0a/include/playercommon.h
-../truthdevice..o: /usr/local/player-1.0a/include/stage.h
+../truthlog..o: /home/vaughan/work/player/include/messages.h
+../truthlog..o: /home/vaughan/work/player/include/playercommon.h
 ../truthlog..o: /usr/include/alloca.h /usr/include/arpa/inet.h
 ../truthlog..o: /usr/include/asm/errno.h /usr/include/asm/sigcontext.h
 ../truthlog..o: /usr/include/asm/socket.h /usr/include/asm/sockios.h
@@ -2516,8 +2498,9 @@ dep:
 ../truthlog..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../truthlog..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../truthlog..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../truthlog..o: /usr/local/player-1.0a/include/messages.h
-../truthlog..o: /usr/local/player-1.0a/include/playercommon.h
+../truthserver..o: /home/vaughan/work/player/include/messages.h
+../truthserver..o: /home/vaughan/work/player/include/playercommon.h
+../truthserver..o: /home/vaughan/work/player/include/stage.h
 ../truthserver..o: /usr/include/alloca.h /usr/include/arpa/inet.h
 ../truthserver..o: /usr/include/asm/errno.h /usr/include/asm/sigcontext.h
 ../truthserver..o: /usr/include/asm/socket.h /usr/include/asm/sockios.h
@@ -2661,9 +2644,9 @@ dep:
 ../truthserver..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../truthserver..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../truthserver..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../truthserver..o: /usr/local/player-1.0a/include/messages.h
-../truthserver..o: /usr/local/player-1.0a/include/playercommon.h
-../truthserver..o: /usr/local/player-1.0a/include/stage.h
+../visionbeacon..o: /home/vaughan/work/player/include/messages.h
+../visionbeacon..o: /home/vaughan/work/player/include/playercommon.h
+../visionbeacon..o: /home/vaughan/work/player/include/stage.h
 ../visionbeacon..o: /usr/include/alloca.h /usr/include/asm/socket.h
 ../visionbeacon..o: /usr/include/asm/sockios.h /usr/include/assert.h
 ../visionbeacon..o: /usr/include/bits/byteswap.h /usr/include/bits/endian.h
@@ -2738,9 +2721,9 @@ dep:
 ../visionbeacon..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../visionbeacon..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../visionbeacon..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../visionbeacon..o: /usr/local/player-1.0a/include/messages.h
-../visionbeacon..o: /usr/local/player-1.0a/include/playercommon.h
-../visionbeacon..o: /usr/local/player-1.0a/include/stage.h
+../visiondevice..o: /home/vaughan/work/player/include/messages.h
+../visiondevice..o: /home/vaughan/work/player/include/playercommon.h
+../visiondevice..o: /home/vaughan/work/player/include/stage.h
 ../visiondevice..o: /usr/include/alloca.h /usr/include/asm/socket.h
 ../visiondevice..o: /usr/include/asm/sockios.h /usr/include/assert.h
 ../visiondevice..o: /usr/include/bits/byteswap.h /usr/include/bits/endian.h
@@ -2815,9 +2798,9 @@ dep:
 ../visiondevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../visiondevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../visiondevice..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../visiondevice..o: /usr/local/player-1.0a/include/messages.h
-../visiondevice..o: /usr/local/player-1.0a/include/playercommon.h
-../visiondevice..o: /usr/local/player-1.0a/include/stage.h
+../world_load..o: /home/vaughan/work/player/include/messages.h
+../world_load..o: /home/vaughan/work/player/include/playercommon.h
+../world_load..o: /home/vaughan/work/player/include/stage.h
 ../world_load..o: /usr/include/alloca.h /usr/include/asm/socket.h
 ../world_load..o: /usr/include/asm/sockios.h /usr/include/assert.h
 ../world_load..o: /usr/include/bits/byteswap.h /usr/include/bits/endian.h
@@ -2892,38 +2875,37 @@ dep:
 ../world_load..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../world_load..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../world_load..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../world_load..o: /usr/local/player-1.0a/include/messages.h
-../world_load..o: /usr/local/player-1.0a/include/playercommon.h
-../world_load..o: /usr/local/player-1.0a/include/stage.h
-../world..o: /usr/include/alloca.h /usr/include/asm/errno.h
-../world..o: /usr/include/asm/sigcontext.h /usr/include/asm/socket.h
-../world..o: /usr/include/asm/sockios.h /usr/include/assert.h
-../world..o: /usr/include/bits/byteswap.h /usr/include/bits/confname.h
-../world..o: /usr/include/bits/endian.h /usr/include/bits/environments.h
-../world..o: /usr/include/bits/errno.h /usr/include/bits/fcntl.h
-../world..o: /usr/include/bits/huge_val.h /usr/include/bits/in.h
-../world..o: /usr/include/bits/initspin.h /usr/include/bits/ipc.h
-../world..o: /usr/include/bits/locale.h /usr/include/bits/local_lim.h
-../world..o: /usr/include/bits/mathcalls.h /usr/include/bits/mathdef.h
-../world..o: /usr/include/bits/mman.h /usr/include/bits/nan.h
-../world..o: /usr/include/bits/posix1_lim.h /usr/include/bits/posix2_lim.h
-../world..o: /usr/include/bits/posix_opt.h /usr/include/bits/pthreadtypes.h
-../world..o: /usr/include/bits/sched.h /usr/include/bits/select.h
-../world..o: /usr/include/bits/sem.h /usr/include/bits/sigaction.h
-../world..o: /usr/include/bits/sigcontext.h /usr/include/bits/siginfo.h
-../world..o: /usr/include/bits/signum.h /usr/include/bits/sigset.h
-../world..o: /usr/include/bits/sigstack.h /usr/include/bits/sigthread.h
-../world..o: /usr/include/bits/sockaddr.h /usr/include/bits/socket.h
-../world..o: /usr/include/bits/stat.h /usr/include/bits/stdio_lim.h
-../world..o: /usr/include/bits/time.h /usr/include/bits/types.h
-../world..o: /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h
-../world..o: /usr/include/bits/wchar.h /usr/include/bits/wordsize.h
-../world..o: /usr/include/bits/xopen_lim.h /usr/include/ctype.h
-../world..o: /usr/include/endian.h /usr/include/errno.h /usr/include/fcntl.h
-../world..o: /usr/include/features.h /usr/include/_G_config.h
-../world..o: /usr/include/gconv.h /usr/include/getopt.h
-../world..o: /usr/include/gnu/stubs.h /usr/include/iconv.h
-../world..o: /usr/include/langinfo.h /usr/include/libio.h
+../world..o: /home/vaughan/work/player/include/messages.h
+../world..o: /home/vaughan/work/player/include/playercommon.h
+../world..o: /home/vaughan/work/player/include/stage.h /usr/include/alloca.h
+../world..o: /usr/include/asm/errno.h /usr/include/asm/sigcontext.h
+../world..o: /usr/include/asm/socket.h /usr/include/asm/sockios.h
+../world..o: /usr/include/assert.h /usr/include/bits/byteswap.h
+../world..o: /usr/include/bits/confname.h /usr/include/bits/endian.h
+../world..o: /usr/include/bits/environments.h /usr/include/bits/errno.h
+../world..o: /usr/include/bits/fcntl.h /usr/include/bits/huge_val.h
+../world..o: /usr/include/bits/in.h /usr/include/bits/initspin.h
+../world..o: /usr/include/bits/ipc.h /usr/include/bits/locale.h
+../world..o: /usr/include/bits/local_lim.h /usr/include/bits/mathcalls.h
+../world..o: /usr/include/bits/mathdef.h /usr/include/bits/mman.h
+../world..o: /usr/include/bits/nan.h /usr/include/bits/posix1_lim.h
+../world..o: /usr/include/bits/posix2_lim.h /usr/include/bits/posix_opt.h
+../world..o: /usr/include/bits/pthreadtypes.h /usr/include/bits/sched.h
+../world..o: /usr/include/bits/select.h /usr/include/bits/sem.h
+../world..o: /usr/include/bits/sigaction.h /usr/include/bits/sigcontext.h
+../world..o: /usr/include/bits/siginfo.h /usr/include/bits/signum.h
+../world..o: /usr/include/bits/sigset.h /usr/include/bits/sigstack.h
+../world..o: /usr/include/bits/sigthread.h /usr/include/bits/sockaddr.h
+../world..o: /usr/include/bits/socket.h /usr/include/bits/stat.h
+../world..o: /usr/include/bits/stdio_lim.h /usr/include/bits/time.h
+../world..o: /usr/include/bits/types.h /usr/include/bits/waitflags.h
+../world..o: /usr/include/bits/waitstatus.h /usr/include/bits/wchar.h
+../world..o: /usr/include/bits/wordsize.h /usr/include/bits/xopen_lim.h
+../world..o: /usr/include/ctype.h /usr/include/endian.h /usr/include/errno.h
+../world..o: /usr/include/fcntl.h /usr/include/features.h
+../world..o: /usr/include/_G_config.h /usr/include/gconv.h
+../world..o: /usr/include/getopt.h /usr/include/gnu/stubs.h
+../world..o: /usr/include/iconv.h /usr/include/langinfo.h /usr/include/libio.h
 ../world..o: /usr/include/limits.h /usr/include/linux/errno.h
 ../world..o: /usr/include/linux/limits.h /usr/include/locale.h
 ../world..o: /usr/include/math.h /usr/include/netinet/in.h
@@ -3023,9 +3005,8 @@ dep:
 ../world..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
 ../world..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
 ../world..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
-../world..o: /usr/local/player-1.0a/include/messages.h
-../world..o: /usr/local/player-1.0a/include/playercommon.h
-../world..o: /usr/local/player-1.0a/include/stage.h
+../xs..o: /home/vaughan/work/player/include/messages.h
+../xs..o: /home/vaughan/work/player/include/playercommon.h
 ../xs..o: /usr/include/alloca.h /usr/include/arpa/inet.h
 ../xs..o: /usr/include/asm/errno.h /usr/include/asm/sigcontext.h
 ../xs..o: /usr/include/asm/socket.h /usr/include/asm/sockios.h
@@ -3168,5 +3149,3 @@ dep:
 ../xs..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/X11/Xlib.h
 ../xs..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/X11/Xosdefs.h
 ../xs..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/X11/Xos.h
-../xs..o: /usr/local/player-1.0a/include/messages.h
-../xs..o: /usr/local/player-1.0a/include/playercommon.h

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.23.2.6 $
+//  $Revision: 1.23.2.7 $
 //
 // Usage:
 //  (empty)
@@ -29,6 +29,7 @@
 #include <math.h>
 #include "world.hh"
 #include "laserdevice.hh"
+#include "raytrace.hh"
 
 #define DEBUG
 #undef VERBOSE

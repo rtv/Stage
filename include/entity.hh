@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.8.2.4 $
+//  $Revision: 1.8.2.5 $
 //
 // Usage:
 //  (empty)
@@ -208,11 +208,14 @@ class CEntity
 
     // Commanded speed
     //
-    protected: double m_com_vr, m_com_vth;
-    protected: double m_mass;
+protected: double m_com_vr, m_com_vth;
+protected: double m_mass;
+  
+public: double dx, dy;
 
-    public: double GetSpeed() { return(m_com_vr); }
-    public: double GetMass() { return(m_mass); }
+
+public: double GetSpeed() { return(m_com_vr); }
+public: double GetMass() { return(m_mass); }
     
     // shouldn't really have this, but...
     public: void SetSpeed(double speed) { m_com_vr=speed; }
@@ -223,7 +226,7 @@ class CEntity
     //protected: ExportData exp;
     public: ExportData exp;
    
-    // compose and return the export data structure
+    // compose and return the exported data
     //
     protected: size_t GetCommand( void* command, size_t len);
 

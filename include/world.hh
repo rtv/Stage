@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.14.2.6 $
+//  $Revision: 1.14.2.7 $
 //
 // Usage:
 //  (empty)
@@ -37,12 +37,11 @@
 #include <sys/ipc.h>
 #include <queue> // standard template library container
 
-#include "image.h"
+#include "image.hh"
 #include "entity.hh"
 #include "truthserver.hh"
 #include "playercommon.h"
-
-#include "matrix.h"
+#include "matrix.hh"
 
 #define DEBUG
 

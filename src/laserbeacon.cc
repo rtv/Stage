@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.9.2.3 $
+//  $Revision: 1.9.2.4 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -85,8 +85,8 @@ bool CLaserBeacon::Load(int argc, char **argv)
         }
         else if (strcmp(argv[i], "transparent") == 0)
         {
-            m_transparent = true;
-            i += 1;
+	  laser_return = 0;
+	  i += 1;
         }
         else
             i++;

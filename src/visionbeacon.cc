@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.9.2.2 $
+//  $Revision: 1.9.2.3 $
 //
 // Usage:
 //  (empty)
@@ -67,7 +67,7 @@ bool CVisionBeacon::Load(int argc, char **argv)
             m_radius = atof(argv[i + 1]);
             i += 2;
 
-	    m_size_x = m_size_y = m_radius;
+	    m_size_x = m_size_y = 2.0 * m_radius;
         }
 
 	// RTV - this'd report error before any subclass had a chance

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.21.2.7 $
+//  $Revision: 1.21.2.8 $
 //
 // Usage:
 //  (empty)
@@ -585,7 +585,8 @@ bool CWorld::InitGrids(const char *env_file)
   wall->sonar_return = true;
   wall->obstacle_return = true;
   wall->channel_return = 0; // opaque!
-
+  wall->puck_return = false; // we trade velocities with pucks
+  
   // Copy fixed obstacles into matrix
   //
   for (int y = 0; y < m_bimg->height; y++)

@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.6 2001-08-09 08:00:09 vaughan Exp $
+ * $Id: image.cc,v 1.6.2.1 2001-08-31 02:00:50 vaughan Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -13,7 +13,7 @@
 #include <zlib.h>
 #endif
 
-#include "image.h"
+#include "image.hh"
 
 //#define DEBUG
 

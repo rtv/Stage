@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.8.2.2 $
+//  $Revision: 1.8.2.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -18,7 +18,7 @@
 #include <values.h>
 #include "world.hh"
 #include "gripperdevice.hh"
-
+#include "raytrace.hh"
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
@@ -39,6 +39,8 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
   m_interval = 0.1; 
 
   puck_return = true; // we interact with pucks and nothing else
+
+  m_mass = 20; // same mass as a robot
 
   // default to the more common gripper
   m_gripper_consume = false;

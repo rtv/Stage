@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.14.2.2 $
+//  $Revision: 1.14.2.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -16,7 +16,7 @@
 
 #include "world.hh"
 #include "puck.hh"
-
+#include "raytrace.hh"
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
@@ -33,12 +33,15 @@ CPuck::CPuck(CWorld *world, CEntity *parent)
 
   m_interval = 0.01; // update very fast!
 
+  obstacle_return = false; // we don't stop robots
   puck_return = true; // yes! we interact with pucks!
   
   m_friction = 0.05;
   // assume puck is 200g
   m_mass = 0.2;
   
+  dx = dy = 0;
+
   // Set the initial map pose
   //
   m_map_px = m_map_py = m_map_pth = 0;
@@ -156,85 +159,6 @@ void CPuck::Update( double sim_time )
     }
 }
 
-///////////////////////////////////////////////////////////////////////////
-// Check to see if the given pose will yield a collision with an obstacle
-//
-// To save time, we'll do bounding box detection
-bool CPuck::InCollision(double px, double py, double pth)
-{
-  CEntity* ent;
-  
-  CRectangleIterator rit( px, px, pth, m_size_x, m_size_y, 
-			  m_world->ppm, m_world->matrix );
-  
-  while( (ent = rit.GetNextEntity()) ) 
-    if( ent != this && ent->puck_return )
-      return true;
-  
-  return false;
-
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Check to see if the given pose will yield a collision with a movable object
-//
-// we'll iterate through all the objects and assume that they're circular.
-//   returns a pointer to the first colliding object in the list
-CEntity* CPuck::InCollisionWithMovableObject(double px, double py, double pth)
-{
-  for(int i =0; i < m_world->GetObjectCount(); i++)
-  {
-    CEntity* object = m_world->GetObject(i);
-    
-    // ignore ourselves
-    if(object == this)
-      continue;
-
-    // first match robots
-    if( (object->m_stage_type != RoundRobotType )
-	&& (object->m_stage_type != RectRobotType ) )
-      continue;
-
-    // get the object's position
-    double qx, qy, qth;
-    object->GetGlobalPose(qx,qy,qth);
-    
-    // find distance to its center
-    double dist = hypot( px-qx, py-qy );
-    
-    // are we colliding?
-    if(dist < ((object->m_size_x/2.0) + (m_size_x/2.0)))
-      {
-	return(object);
-      }
-  }
-  for(int i =0; i < m_world->GetObjectCount(); i++)
-    {
-      CEntity* object = m_world->GetObject(i);
-      
-      // ignore ourselves
-      if(object == this)
-	continue;
-      
-      // now match pucks
-      if(object->m_stage_type != PuckType )
-	continue;
-      
-      // get the object's position
-      double qx, qy, qth;
-      object->GetGlobalPose(qx,qy,qth);
-      
-      // find distance to its center
-      double dist = sqrt((px-qx)*(px-qx)+(py-qy)*(py-qy));
-      
-      // are we colliding?
-      if(dist < ((object->m_size_x/2.0) + (m_size_x/2.0)))
-	{
-	  return(object);
-	}
-    }
-  return(NULL);
-}
 
 ///////////////////////////////////////////////////////////////////////////
 // Move the puck
@@ -245,76 +169,67 @@ void CPuck::Move()
     m_last_time += step_time;
 
     // don't move if we've been picked up
-    //if(m_parent_object) return;
+    if(m_parent_object) return;
     
-    // lower bound on velocity
-    if(m_com_vr < 0.01) m_com_vr = 0;
     
     // Get the current puck pose
     //
     double px, py, pth;
     GetGlobalPose(px, py, pth);
+    
+    CCircleIterator cit( px, py, m_size_x/2.0, 
+			 m_world->ppm, m_world->matrix );
+    
+    CEntity* ent;
 
-    // Compute a new pose
-    // This is a zero-th order approximation
-    //
-    double qx = px + m_com_vr * step_time * cos(pth);
-    double qy = py + m_com_vr * step_time * sin(pth);
-    //double qth = pth + m_com_vth * step_time;
-    double qth = pth;
+    while( (ent = cit.GetNextEntity()) ) 
+      if( ent && ent != this )
+	{
+ 	  if( ent->puck_return ) 
+  	    {
 
-    // First, check to see if we hit another 
-    // movable object (e.g., robot, puck)?
-    //
-    // if so, transfer momentum 
-    if(CEntity* object = InCollisionWithMovableObject(qx,qy,qth))
-    {
-      double impact_velocity = object->GetSpeed();
-      double impact_mass = object->GetMass();
-      
-      // Compute range and bearing FROM impacted object
-      //
-      double ox,oy,oth;
-      object->GetGlobalPose(ox,oy,oth);
-      double dx = qx - ox;
-      double dy = qy - oy;
-      double b = NORMALIZE(atan2(dy, dx));
-      
-      // Determine the direction we should move
-      // It's the robot's orientation minus the bearing from the robot
-      //   to the puck (loosely models circular objects colliding).
-      double new_th = b;
-      
-      double new_x = qx;
-      double new_y = qy;
-      SetGlobalPose(new_x,new_y,new_th);
-
-      if(impact_velocity)
+	      double impact_velocity = ent->GetSpeed();
+	      double impact_mass = ent->GetMass();
+	      
+	      // Compute range and bearing FROM impacted ent
+	      //
+	      double ox,oy,oth;
+	      ent->GetGlobalPose(ox,oy,oth);
+	      
+	      pth = atan2( py-oy, px-ox );
+	      
+	      if(impact_velocity)
+		{
+		  // we only have really big things(robots) and really small things
+		  // (pucks).  
+		  if(impact_mass > m_mass)
+		    SetSpeed(2*fabs(impact_velocity));
+		  else
+		    SetSpeed(fabs(impact_velocity));
+		  //printf("setting speed to: %f\n", 2*impact_velocity);
+		}
+	    }
+  	  else if( ent->obstacle_return )
+  	    {
+  	      m_com_vr = 0; // a collision! stop moving
+  	      return; // don;t move at all
+  	    }
+	}
+    
+    // lower bound on velocity
+    if(m_com_vr < 0.01 ) m_com_vr = 0;
+        
+    if( m_com_vr != 0 ) // only move if we have some speed  
       {
-        // we only have really big things (robots) and really small things
-        // (pucks).  
-        if(impact_mass > m_mass)
-          SetSpeed(2*fabs(impact_velocity));
-        else
-          SetSpeed(fabs(impact_velocity));
-        //printf("setting speed to: %f\n", 2*impact_velocity);
-      }
-    }
-    // Did we hit a wall?
-    // if so, don't move anymore (infinitely soft walls)
-    //
-    else if(InCollision(qx, qy, qth))
-    {
-      m_com_vr = 0;
-    }
-    // no collisions; make the move
-    else
-    {
-      SetGlobalPose(qx, qy, qth);
-    }
-
+	double qx = px + m_com_vr * step_time * cos(pth);
+	double qy = py + m_com_vr * step_time * sin(pth);
+	double qth = pth;
+	
+	SetGlobalPose( qx, qy, qth );
+      }    
+    
     // compute a new velocity, based on "friction"
-    SetSpeed(max(0,m_com_vr - m_friction*m_com_vr));
+    m_com_vr -= m_com_vr * m_friction;
 }
 
 #ifdef INCLUDE_RTK

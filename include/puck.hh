@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/puck.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.7.2.1 $
+//  $Revision: 1.7.2.2 $
 //
 // Usage:
 //  (empty)
@@ -58,18 +58,6 @@ class CPuck : public CEntity
     // Move the puck
     // 
     private: void Move();
-
-    // Check to see if the given pose will yield a collision
-    //
-    private: bool InCollision(double px, double py, double pth);
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Check to see if the given pose will yield a collision with a movable 
-    // object (e.g., robot, puck)
-    //
-    private: CEntity* InCollisionWithMovableObject(double px, 
-                                               double py, 
-                                               double pth);
     
   // Return diameter of puck
     //

@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.11.2.2 2001-08-21 01:40:57 vaughan Exp $
+ * $Id: xs.cc,v 1.11.2.3 2001-08-31 02:00:50 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -1044,6 +1044,8 @@ void CXGui::DrawBackground( void )
 		 env->pixels_scaled, env->num_pixels, 
 		 CoordModeOrigin);
 
+  // draw a scale grid over the world
+  //SetForeground(  );
 }
 
 void CXGui::BoundsCheck( void )
@@ -1718,6 +1720,36 @@ void CXGui::HandleKeyPressEvent( XEvent& reportEvent )
       //world->Load();
       //RefreshObjects();
     }
+
+//    if( key == XK_g || key == XK_G )
+//      {
+      
+//        XSetForeground( display, gc, white );
+//        XSetLineAttributes( display, gc, 0, LineOnOffDash, CapRound, JoinRound );
+      
+//        DPoint pts[2];
+//        for( int i=0; i * ppm  < width ; i++ )
+//  	{
+//  	  pts[0].x = 0;
+//  	  pts[0].y = i;
+	  
+//  	  pts[1].x = width;
+//  	  pts[1].y = i; 
+	  
+//  	  DrawLine( pts[0], pts[1] );
+	  
+//  	  pts[0].y = 0;
+//  	  pts[0].x = i;
+	  
+//  	  pts[1].y = width;
+//  	  pts[1].x = i; 
+	  
+//  	  DrawLine( pts[0], pts[1] );
+//  	}
+  
+//        XSetLineAttributes( display, gc, 0, LineSolid, CapRound, JoinRound );
+//      }
+
 }  
 
 void CXGui::HandleExposeEvent( XEvent &reportEvent )

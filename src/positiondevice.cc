@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.5.2.7 $
+//  $Revision: 1.5.2.8 $
 //
 // Usage:
 //  (empty)
@@ -30,6 +30,7 @@
 
 #include "world.hh"
 #include "positiondevice.hh"
+#include "raytrace.hh"
 
 const double TWOPI = 6.283185307;
 
@@ -54,7 +55,9 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
   sonar_return = true;
   obstacle_return = true;
   puck_return = true;
-  
+
+  //  m_com_vr = 0.0;
+  //m_com_vth = 0;
   m_com_vr = m_com_vth = 0;
   m_map_px = m_map_py = m_map_pth = 0;
   
@@ -153,7 +156,7 @@ void CPositionDevice::Update( double sim_time )
     {
       m_last_update = sim_time;
       
-      if( 1 )//Subscribed() > 0 )
+      if( Subscribed() > 0 )
 	{  
 	  // Get the latest command
 	  //
@@ -177,7 +180,7 @@ void CPositionDevice::Update( double sim_time )
   
   double x, y, th;
   GetGlobalPose( x,y,th );
-  
+    
   // if we've moved 
   if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
     {
@@ -298,25 +301,53 @@ void CPositionDevice::ComposeData()
 
 bool CPositionDevice::InCollision(double px, double py, double pth)
 {
-  double qx, qy;
 
-  //switch( GetShape() ) - don't handle circles yet!
-    
-  qx = px + m_offset_x * cos(pth);
-  qy = py + m_offset_y * sin(pth);
-
-  CEntity* ent;
-
-  CRectangleIterator rit( px, px, pth, m_size_x, m_size_y, 
-			  m_world->ppm, m_world->matrix );
-
-  while( (ent = rit.GetNextEntity()) ) 
-    if( ent != this && ent->obstacle_return )
-      return true;
-      
+  switch( GetShape() ) 
+    {
+    case rectangle:
+      {
+	double qx = px + m_offset_x * cos(pth);
+	double qy = py + m_offset_y * sin(pth);
+	
+	CEntity* ent;
+	
+	CRectangleIterator rit( qx, qy, pth, m_size_x, m_size_y, 
+				m_world->ppm, m_world->matrix );
+	
+	while( (ent = rit.GetNextEntity()) ) 
+	  if( ent != this && ent->obstacle_return )
+	    {
+	//printf( "hit ent %p (%d)\n",
+	      //ent, ent->m_stage_type );
+	      
+	      return true;
+	    }
+	
+	return false;
+      }
+    case circle:
+      {
+	CEntity* ent;
+	
+	CCircleIterator rit( px, py, m_size_x/2.0,  
+			     m_world->ppm, m_world->matrix );
+	
+	while( (ent = rit.GetNextEntity()) ) 
+	  if( ent != this && ent->obstacle_return )
+	    {
+	      //printf( "hit ent %p (%d)\n",
+	      //ent, ent->m_stage_type );
+	      
+	      return true;
+	    }
+	
+	return false;
+      }
+    default: printf( "unknown shape in positiondevice::incollision" );
+      break;
+    }
   return false;
 }
-
 
 
 void CPositionDevice::SetShape(pioneer_shape_t shape)

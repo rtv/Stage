@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.6.2.4 $
+//  $Revision: 1.6.2.5 $
 //
 // Usage:
 //  (empty)
@@ -80,6 +80,10 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
     m_map_px = m_map_py = m_map_pth = 0;
 
     strcpy(m_color_desc, "black");
+
+    m_com_vr = 0; // doesn't move
+    
+    m_mass = 1000.0; // unmoveably MASSIVE! by default
 
     m_interval = 0.1; // update interval in seconds 
     m_last_update = -MAXFLOAT; // initialized 
