@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.86 2002-09-26 01:22:16 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.87 2002-09-26 07:22:38 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -151,12 +151,6 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
   this->movemask = RTK_MOVE_TRANS | RTK_MOVE_ROT;
 #endif
 
-#ifdef USE_GNOME2
-  this->g_origin = NULL;
-  this->g_group = NULL;
-  this->g_data = NULL;
-  this->g_body= NULL;
-#endif
 }
 
 

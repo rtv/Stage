@@ -21,7 +21,7 @@
  * Desc: Gnome GUI world components (all methods begin with 'Gui')
  * Author: Richard Vaughan
  * Date: 7 Dec 2000
- * CVS info: $Id: gnomegui.cc,v 1.9 2002-09-26 07:10:23 rtv Exp $
+ * CVS info: $Id: gnomegui.cc,v 1.10 2002-09-26 07:22:38 rtv Exp $
  */
 
 
@@ -528,11 +528,11 @@ gint CWorld::GuiEvent(GnomeCanvasItem *item, GdkEvent *event, gpointer data)
 	  selected->click_subscribed = !selected->click_subscribed; // invert 
 	}
     case GDK_ENTER_NOTIFY:
-      puts( "enter" );
+      //puts( "enter" );
       break;
       
     case GDK_LEAVE_NOTIFY:
-      puts( "leave" );
+      //puts( "leave" );
       break;
 
     default:
@@ -546,6 +546,11 @@ gint CWorld::GuiEvent(GnomeCanvasItem *item, GdkEvent *event, gpointer data)
 
 void CEntity::GuiStartup( void )
 {
+  this->g_origin = NULL;
+  this->g_group = NULL;
+  this->g_data = NULL;
+  this->g_body= NULL;
+
   // find our parent group - if we're root it's the gnome_canvas_root
   GnomeCanvasGroup* parent_group;
   if( m_parent_entity )

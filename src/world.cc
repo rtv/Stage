@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.123 2002-09-25 20:46:58 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.124 2002-09-26 07:22:38 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -775,7 +775,7 @@ CEntity* CWorld::GetNearestChildWithinRange( double x, double y, double range,
 					     CEntity* parent )
 {
 
-  printf( "Searching from %.2f,%.2f for children of %p\n", x, y, parent );
+  //printf( "Searching from %.2f,%.2f for children of %p\n", x, y, parent );
 
   CEntity* nearest = NULL;
   
@@ -794,8 +794,8 @@ CEntity* CWorld::GetNearestChildWithinRange( double x, double y, double range,
       
       d = hypot( py - y, px - x );
       
-      printf( "Entity type %d is %.2fm away at  %.2f,%.2f\n", 
-	      ent->stage_type, d, px, py );
+      //printf( "Entity type %d is %.2fm away at  %.2f,%.2f\n", 
+      //      ent->stage_type, d, px, py );
       
       if( d < range )
 	{
@@ -804,10 +804,10 @@ CEntity* CWorld::GetNearestChildWithinRange( double x, double y, double range,
 	}
     }
   
-  if( nearest )
-    printf ( "Nearest is type %d\n", nearest->stage_type );
-  else
-    puts( "no entity within range" );
+  //if( nearest )
+  //printf ( "Nearest is type %d\n", nearest->stage_type );
+  //else
+  //puts( "no entity within range" );
 
   return nearest;
 }
