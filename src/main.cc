@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.7 $
+//  $Author: gerkey $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -96,6 +96,7 @@ int main(int argc, char **argv)
     if (!world->Startup())
     {
         printf("aborting\n");
+        world->Shutdown();
         return 1;
     }
 

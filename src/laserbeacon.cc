@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.4 $
+//  $Author: gerkey $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -25,7 +25,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_RTK_TRACE 1
+//#define ENABLE_RTK_TRACE 1
 
 #include "world.hh"
 #include "laserbeacon.hh"

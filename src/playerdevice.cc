@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.9 $
+//  $Author: gerkey $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -161,11 +161,15 @@ bool CPlayerDevice::Startup()
 //
 void CPlayerDevice::Shutdown()
 {
-    // Mark this device as unavailable
-    //
+  // Mark this device as unavailable
+  //
+  // but only if our server actually exists - BPG
+  if(m_server)
+  {
     m_server->LockShmem();
     m_info->available = 0;
     m_server->UnlockShmem();
+  }
     
     CEntity::Shutdown();
 }

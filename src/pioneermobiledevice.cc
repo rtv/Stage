@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.17 $
+//  $Revision: 1.18 $
 //
 // Usage:
 //  (empty)
@@ -78,6 +78,34 @@ CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CEntity *parent, CPlay
     strcpy( exp.label, "Pioneer" );
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Load the object from an argument list
+//
+bool CPioneerMobileDevice::Load(int argc, char **argv)
+{
+    if (!CPlayerDevice::Load(argc, argv))
+        return false;
+
+    for (int i = 0; i < argc;)
+    {
+        // Extract shape
+        //
+        if (strcmp(argv[i], "shape") == 0 && i + 1 < argc)
+        {
+          if(!strcmp(argv[i+1],"rectangle"))
+            SetShape(rectangle);
+          else if(!strcmp(argv[i+1],"circle"))
+            SetShape(circle);
+          else
+            PRINT_MSG1("pioneermobilebase: unknown shape \"%s\"; "
+                       "defaulting to rectangle", argv[i+1]);
+          i += 2;
+        }
+        else
+            i++;
+    }
+    return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the position of the robot base

@@ -8,23 +8,11 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.3 $
-//
-// Usage:
-//  (empty)
-//
-// Theory of operation:
-//  (empty)
-//
-// Known bugs:
-//  (empty)
-//
-// Possible enhancements:
-//  (empty)
+//  $Revision: 1.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_RTK_TRACE 1
+//#define ENABLE_RTK_TRACE 1
 
 #include "world.hh"
 #include "puck.hh"
@@ -36,8 +24,7 @@
 CPuck::CPuck(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {
-    //m_beacon_id = 0;
-    m_index = -1;
+    m_channel = 0;
     
     // Set the initial map pose
     //
@@ -60,16 +47,15 @@ bool CPuck::Load(int argc, char **argv)
 
     for (int i = 0; i < argc;)
     {
-        // Extract id
+        // Extract channel
         //
-        //if (strcmp(argv[i], "id") == 0 && i + 1 < argc)
-        //{
-            //strcpy(m_id, argv[i + 1]);
-            //m_beacon_id = atoi(argv[i + 1]);
-            //i += 2;
-        //}
-        //else
-            i++;
+        if (strcmp(argv[i], "channel") == 0 && i + 1 < argc)
+        {
+            m_channel = atoi(argv[i + 1]) + 1;
+            i += 2;
+        }
+        else
+          i++;
     }
 
 #ifdef INCLUDE_RTK
@@ -108,7 +94,6 @@ bool CPuck::Startup()
     assert(m_world != NULL);
     m_last_time = 0;
     m_com_vr = 0;
-    //m_index = m_world->AddPuck(this);
     return CEntity::Startup();
 }
 
@@ -122,13 +107,14 @@ void CPuck::Update()
 
     // Undraw our old representation
     //
-    m_world->SetCircle(m_map_px, m_map_py, exp.width, layer_puck, 0);
+    m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_puck, 0);
+    m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_vision, 0);
 
     // move, if necessary (don't move if we've been picked up)
     if(!m_parent_object)
       Move();      
     
-    // Grag our new global pose
+    // Grab our new global pose
     //
     GetGlobalPose(m_map_px, m_map_py, m_map_pth);
 
@@ -136,6 +122,8 @@ void CPuck::Update()
     // Draw our new representation
     //
     m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_puck, 2);
+    m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_vision, 
+                       m_channel);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -181,8 +169,14 @@ void CPuck::Move()
     double step_time = m_world->GetTime() - m_last_time;
     m_last_time += step_time;
 
-    //if(m_com_vr < 0.01)
-      //return;
+    // don't move if we've been picked up
+    if(m_parent_object)
+      return;
+    
+    // lower bound on velocity
+    if(m_com_vr < 0.01)
+      m_com_vr = 0;
+    
     // Get the current puck pose
     //
     double px, py, pth;
@@ -297,14 +291,6 @@ void CPioneerMobileDevice::MovePuck(double px, double py, double pth)
 }
 */
 
-///////////////////////////////////////////////////////////////////////////
-// Return radius of puck
-//
-double CPuck::GetDiameter()
-{
-  return exp.width;
-}
-
 #ifdef INCLUDE_RTK
 
 ///////////////////////////////////////////////////////////////////////////
@@ -314,9 +300,9 @@ void CPuck::OnUiUpdate(RtkUiDrawData *data)
 {
     CEntity::OnUiUpdate(data);
 
-    data->begin_section("global", "puck");
+    data->begin_section("global", "");
     
-    if (data->draw_layer("puck", true))
+    if (data->draw_layer("", true))
     {
         double ox, oy, oth;
         GetGlobalPose(ox, oy, oth);

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Author: gerkey $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -60,17 +60,50 @@ bool CWorld::Load(const char *filename)
 #ifdef DEBUG
     PRINT_MSG1("loading world file [%s]", filename);
 #endif
+   
     // Keep this file name: we will need it again when we save.
     //
+    // won't work for m4 files...
     strcpy(m_filename, filename);
+
+    FILE *file = NULL;
     
-    // Open the file for reading
-    //
-    FILE *file = fopen(filename, "r");
-    if (file == NULL)
+    // if the filename ends in ".m4", then run it through m4
+    // and parse the result
+    if(!strcmp(filename+strlen(filename)-3, ".m4"))
     {
+      char bare_filename[256];
+      char system_command_string[512];
+      int retval;
+
+      strncpy(bare_filename,filename,strlen(filename)-3);
+      bare_filename[strlen(filename)-3] = '\0';
+      sprintf(system_command_string, "m4 --fatal-warnings %s > %s",
+              filename, bare_filename);
+
+      PRINT_MSG1("running m4: %s",system_command_string);
+      retval = system(system_command_string);
+      if(retval == 127 || retval == -1)
+      {
+        PRINT_MSG("Error while running m4 on world file");
+        return false;
+      }
+
+      if(!(file = fopen(bare_filename, "r")))
+      {
+        printf("unable to open world file %s; ignoring\n", 
+               (char*)bare_filename);
+        return false;
+      }
+    }
+    else
+    {
+      // normal world file; just open it
+      if(!(file = fopen(filename, "r")))
+      {
         printf("unable to open world file %s; ignoring\n", (char*) filename);
         return false;
+      }
     }
 
     int linecount = 0;

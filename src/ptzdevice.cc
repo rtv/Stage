@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.6 $
+//  $Author: gerkey $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -88,7 +88,13 @@ void CPtzDevice::Update()
     // Dont update anything if we are not subscribed
     //
     if (!IsSubscribed())
-        return;
+    {
+      // reset the camera to (0,0,0) to better simulate the physical camera
+      expPtz.pan = m_pan = 0;
+      expPtz.tilt = m_tilt = 0;
+      expPtz.zoom = m_zoom = 0;
+      return;
+    }
     //RTK_TRACE0("is subscribed");
     
     ASSERT(m_server != NULL);

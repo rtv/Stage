@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.13 $
+//  $Revision: 1.14 $
 //
 // Usage:
 //  (empty)
@@ -174,7 +174,10 @@ void CWorld::Shutdown()
     // Shutdown all the objects
     //
     for (int i = 0; i < m_object_count; i++)
+    {
+      if(m_object[i])
         m_object[i]->Shutdown();
+    }
 }
 
 

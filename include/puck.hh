@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/puck.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -70,14 +70,14 @@ class CPuck : public CEntity
     private: bool InCollisionWithMovableObject(double px, 
                                                double py, 
                                                double pth);
+    
+    // puck channel (corresponds to ACTS channel)
+    //
+    private: int m_channel;
 
     // Return diameter of puck
     //
-    public: double GetDiameter();
-
-    // Puck index in the world rep
-    //
-    private: int m_index;
+    public: double GetDiameter() { return(exp.width); }
 
     // Current mapped pose
     //

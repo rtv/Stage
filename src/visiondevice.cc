@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.9 $
+//  $Author: gerkey $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -44,7 +44,14 @@ CVisionDevice::CVisionDevice(CWorld *world, CEntity *parent, CPlayerServer* serv
 {
     // ACTS must be associated with a physical camera
     //
-    ASSERT(ptz_device != NULL);
+    // if the ptz_device is NULL we'll assume that our parent is
+    // the ptz device we're looking for
+    //ASSERT(ptz_device != NULL);
+    if(!ptz_device)
+    {
+      ASSERT(parent != NULL);
+      ptz_device = (CPtzDevice*)parent;
+    }
     m_ptz_device = ptz_device;
         
     m_update_interval = 0.1;
@@ -250,55 +257,55 @@ size_t CVisionDevice::UpdateACTS()
       
     // scan through the samples looking for color blobs
     for( int s=0; s < m_scan_width; s++ )
-	{
-        if( m_scan_channel[s] != 0 && m_scan_channel[s] < ACTS_NUM_CHANNELS)
-	    {
-            blobleft = s;
-            blobcol = m_scan_channel[s];
-	      
-            // loop until we hit the end of the blob
-            // there has to be a gap of >1 pixel to end a blob
-	    // this avoids getting lots of crappy little blobs
-            while( m_scan_channel[s] == blobcol || m_scan_channel[s+1] == blobcol ) s++;
-            //while( m_scan[s] == blobcol ) s++;
-	      
-            blobright = s-1;
-            double robotHeight = 0.6; // meters
-            int xCenterOfBlob = blobleft + ((blobright - blobleft )/2);
-            double rangeToBlobCenter = m_scan_range[ xCenterOfBlob ];
-            double startyangle = atan2( robotHeight/2.0, rangeToBlobCenter );
-            double endyangle = -startyangle;
-            blobtop = cameraImageHeight/2 - (int)(startyangle/yRadsPerPixel);
-            blobbottom = cameraImageHeight/2 -(int)(endyangle/yRadsPerPixel);
-            int yCenterOfBlob = blobtop +  ((blobbottom - blobtop )/2);
+    {
+      if( m_scan_channel[s] != 0 && m_scan_channel[s] < ACTS_NUM_CHANNELS)
+      {
+        blobleft = s;
+        blobcol = m_scan_channel[s];
 
-            if (blobtop < 0)
-                blobtop = 0;
-            if (blobbottom > cameraImageHeight - 1)
-                blobbottom = cameraImageHeight - 1;
-            
-	    // useful debug - keep
-            //cout << "Robot " << (int)color-1
-            //   << " sees " << (int)blobcol-1
-            //   << " start: " << blobleft
-            //   << " end: " << blobright
-            //   << endl << endl;
-	         
-            // fill in an arrau entry for this blob
-            //
-            blobs[numBlobs].channel = blobcol-1;
-            blobs[numBlobs].x = xCenterOfBlob;
-            blobs[numBlobs].y = yCenterOfBlob;
-            blobs[numBlobs].left = blobleft;
-            blobs[numBlobs].top = blobtop;
-            blobs[numBlobs].right = blobright;
-            blobs[numBlobs].bottom = blobbottom;
-            blobs[numBlobs].area = (blobtop - blobbottom) * (blobleft-blobright);
-	      
-            numBlobs++;
-	    }
-	}
-      
+        // loop until we hit the end of the blob
+        // there has to be a gap of >1 pixel to end a blob
+        // this avoids getting lots of crappy little blobs
+        while( m_scan_channel[s] == blobcol || m_scan_channel[s+1] == blobcol ) s++;
+        //while( m_scan[s] == blobcol ) s++;
+
+        blobright = s-1;
+        double robotHeight = 0.6; // meters
+        int xCenterOfBlob = blobleft + ((blobright - blobleft )/2);
+        double rangeToBlobCenter = m_scan_range[ xCenterOfBlob ];
+        double startyangle = atan2( robotHeight/2.0, rangeToBlobCenter );
+        double endyangle = -startyangle;
+        blobtop = cameraImageHeight/2 - (int)(startyangle/yRadsPerPixel);
+        blobbottom = cameraImageHeight/2 -(int)(endyangle/yRadsPerPixel);
+        int yCenterOfBlob = blobtop +  ((blobbottom - blobtop )/2);
+
+        if (blobtop < 0)
+          blobtop = 0;
+        if (blobbottom > cameraImageHeight - 1)
+          blobbottom = cameraImageHeight - 1;
+
+        // useful debug - keep
+        //cout << "Robot " << (int)color-1
+        //   << " sees " << (int)blobcol-1
+        //   << " start: " << blobleft
+        //   << " end: " << blobright
+        //   << endl << endl;
+
+        // fill in an arrau entry for this blob
+        //
+        blobs[numBlobs].channel = blobcol-1;
+        blobs[numBlobs].x = xCenterOfBlob;
+        blobs[numBlobs].y = yCenterOfBlob;
+        blobs[numBlobs].left = blobleft;
+        blobs[numBlobs].top = blobtop;
+        blobs[numBlobs].right = blobright;
+        blobs[numBlobs].bottom = blobbottom;
+        blobs[numBlobs].area = (blobtop - blobbottom) * (blobleft-blobright);
+
+        numBlobs++;
+      }
+    }
+
     int buflen = ACTS_HEADER_SIZE + numBlobs * ACTS_BLOB_SIZE;
     memset( actsBuf, 0, buflen );
             

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/pioneermobiledevice.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -43,6 +43,11 @@ class CPioneerMobileDevice : public CPlayerDevice
     //
     public: CPioneerMobileDevice(CWorld *world, CEntity *parent, CPlayerServer* server);
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Load the object from an argument list
+    //
+    bool Load(int argc, char **argv);
+   
     // Update the device
     //
     public: virtual void Update();

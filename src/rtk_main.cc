@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtk_main.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Author: gerkey $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -108,7 +108,11 @@ int main(int argc, char **argv)
     // Start the world
     //
     if (!world->Startup())
-        return 0;
+    {
+      // shutdown first to make sure Players are killed
+      world->Shutdown();
+      return 0;
+    }
 
     // Do message loop
     //   

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -35,6 +35,10 @@
 #include "laserdevice.hh"
 #include "laserbeacondevice.hh"
 #include "playerserver.hh"
+#include "gripperdevice.hh"
+#include "sonardevice.hh"
+#include "ptzdevice.hh"
+#include "visiondevice.hh"
 
 /////////////////////////////////////////////////////////////////////////
 // Create an object given a type
@@ -55,6 +59,27 @@ CEntity* CreateObject(const char *type, CWorld *world, CEntity *parent)
     //
     if (strcmp(type, "movable_object") == 0)
         return new CPuck(world, parent);
+    
+    // Create gripper
+    //
+    if (strcmp(type, "gripper_device") == 0)
+        return new CGripperDevice(world, parent, NULL);
+    
+    // Create sonar
+    //
+    if (strcmp(type, "sonar_device") == 0)
+        return new CSonarDevice(world, parent, NULL);
+    
+    // Create camera
+    //
+    if (strcmp(type, "ptz_device") == 0)
+        return new CPtzDevice(world, parent, NULL);
+    
+    // Create vision device (ACTS)
+    //
+    if (strcmp(type, "vision_device") == 0)
+        return new CVisionDevice(world, parent, NULL, NULL);
+
 
     // Create vision beacon
     //
