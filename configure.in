@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.34 2002-12-05 04:01:08 rtv Exp $
+dnl $Id: configure.in,v 1.35 2002-12-05 04:50:47 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -68,22 +68,11 @@ dnl Checks for library functions.
 AC_CHECK_LIB(z, gzopen)
 AC_CHECK_LIB(nsl, gethostbyname)
 AC_CHECK_LIB(socket, connect)
+AC_CHECK_LIB(m, isinf)
 
 dnl build mplementations of these in libreplace.a if these are 
 dnl missing
 AC_REPLACE_FUNCS(poll dirname scandir)
-
-dnl Test for socklen_t and define it to int if it's not there.
-dnl Note that we can't simply dnl use AC_CHECK_TYPE because socklen_t 
-dnl isn't in the standard headers (autoconf-2.5 has better methods for this)
-AC_MSG_CHECKING(if socklen_t is defined)
-AC_TRY_COMPILE(
-     [#include <sys/types.h>
-      #include <sys/socket.h>],
-     [socklen_t len = 42; return len;],
-        [AC_MSG_RESULT(yes)],
-         [AC_MSG_RESULT(no)
-          AC_DEFINE(socklen_t, int, must define this on BSD-based platforms)])
 
 dnl if the GNOME2 GUI was requested, we use that
 AC_ARG_WITH(gnome2,    [   --with-gnome2         Compile in the experimental GNOME2 GUI instead of RTK2],,with_gnome2=no)
