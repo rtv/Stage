@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.76 2004-08-26 23:42:49 rtv Exp $
+ * CVS: $Id: stage.h,v 1.77 2004-08-27 20:46:43 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -921,13 +921,16 @@ typedef struct
   
   int id_client; // client-side id
   stg_id_t id_server; // server-side id
-  stg_token_t* token;  
+  //stg_token_t* token;  
+  char* name;
   double ppm;
   stg_msec_t interval_sim;
   stg_msec_t interval_real;
   
   int section; // worldfile index
   
+  int child_type_count[STG_MODEL_COUNT];
+
   GHashTable* models_id_server;
   GHashTable* models_id;   // the models index by client-side id
   GHashTable* models_name; // the models indexed by name
@@ -944,11 +947,15 @@ typedef struct _stg_model
   
   int section; // worldfile index
 
-  stg_token_t* token;
+  //stg_token_t* token;
+
+  char* name;
   stg_model_type_t type;
 
   GHashTable* props;
   
+  int child_type_count[STG_MODEL_COUNT];
+
 } stg_model_t;
 
 #define STG_PACKAGE_KEY 12345
@@ -1029,7 +1036,7 @@ void stg_client_destroy( stg_client_t* client );
 // add a new world to a client, based on a token
 stg_world_t* stg_client_createworld( stg_client_t* client, 
 				     int section,
-				     stg_token_t* token,
+				     char* name,
 				     double ppm, 
 				     stg_msec_t interval_sim, 
 				     stg_msec_t interval_real  );
@@ -1048,7 +1055,7 @@ stg_model_t* stg_world_createmodel( stg_world_t* world,
 				    stg_model_t* parent, 
 				    int section, 
 				    stg_model_type_t type,
-				    stg_token_t* token );
+				    char* name );
 
 void stg_model_destroy( stg_model_t* model );
 int stg_model_pull( stg_model_t* model );

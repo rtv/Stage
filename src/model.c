@@ -11,34 +11,63 @@
 extern lib_entry_t derived[];
 
 
+int model_create_name( model_t* mod )
+{
+  assert( mod );
+  assert( mod->token );
+  
+  char buf[512];  
+  if( mod->parent == NULL )
+    snprintf( buf, 255, "%s:%d", 
+	      mod->token, 
+	      mod->world->child_type_count[mod->type] );
+  else
+    snprintf( buf, 255, "%s.%s:%d", 
+	      mod->parent->token,
+	      mod->token, 
+	      mod->parent->child_type_count[mod->type] );
+  
+  free( mod->token );
+  // return a new string just long enough
+  mod->token = strdup(buf);
+
+  return 0; //ok
+}
+
 model_t* model_create(  world_t* world, 
 			model_t* parent,
 			stg_id_t id, 
 			stg_model_type_t type,
 			char* token )
-{
-  PRINT_WARN3( "creating model %d:%d(%s)", world->id, id, token );
-  
-  if( parent )
-    {
-      PRINT_DEBUG2( "   a child of %d(%s)", parent->id, parent->token );
-    }
-  
+{  
   model_t* mod = calloc( sizeof(model_t),1 );
 
   mod->id = id;
-  mod->token = strdup(token);
-  mod->world = world;
-  mod->parent = parent; // TODO - fix parent stuff from here
-		     //onwards - mainly geometry for matrix rendering
 
-  // add this model to it's parent's list of children
-  if( parent) g_ptr_array_add( parent->children, mod ); 
+  mod->world = world;
+  mod->parent = parent; 
+  mod->type = type;
+  mod->token = strdup(token); // this will be immediately replaced by
+			      // model_create_name  
+  // create a default name for the model that's derived from its
+  // ancestors' names and its worldfile token
+  //model_create_name( mod );
+
+  PRINT_WARN3( "creating model %d:%d(%s)", 
+	       world->id, mod->id, mod->token );
   
+  if( parent) 
+    { 
+      // add this model to it's parent's list of children
+      g_ptr_array_add( parent->children, mod );       
+      // count this type of model in its parent
+      //parent->child_type_count[ type ]++;
+    }
+  //else
+  //world->child_type_count[ type ]++;
+
   // create this model's empty list of children
   mod->children = g_ptr_array_new();
-
-  mod->type = type;
 
   mod->data = NULL;
   mod->data_len = 0;

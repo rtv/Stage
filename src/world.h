@@ -15,6 +15,10 @@ typedef struct _world
    
    GHashTable* models; // the models that make up the world
    
+   // the number of models of each type is counted so we can
+   // automatically generate names for them
+   int child_type_count[ STG_MODEL_COUNT ];
+   
    stg_matrix_t* matrix;
 
    char* token;

@@ -22,13 +22,18 @@ typedef struct _model
   
   world_t* world;
   
-  char* token;
+  char* token; // automatically-generated unique ID string
+  //char* name; // user-specified ID string
 
   int type; // what kind of a model am I?
 
   struct _model *parent;
 
   GPtrArray* children;
+
+  // the number of children of each type is counted so we can
+  // automatically generate names for them
+  int child_type_count[ STG_MODEL_COUNT ];
 
   // the number of subscriptions to each property
   int subs[STG_PROP_COUNT]; 

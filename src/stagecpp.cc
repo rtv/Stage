@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.44 2004-08-26 23:42:49 rtv Exp $
+// $Id: stagecpp.cc,v 1.45 2004-08-27 20:46:43 rtv Exp $
 
 #include "stage.h"
 #include "worldfile.hh"
@@ -329,9 +329,6 @@ void stg_client_load( stg_client_t* cli, stg_id_t world_id )
   //wf.Load();
 }  
 
-
-
-
 // create a world containing a passel of Stage models based on the
 // worldfile
 
@@ -342,8 +339,8 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
   
   int section = 0;
       
-  const char* world_name =
-    wf.ReadString(section, "name", (char*)"Player world" );
+  char* world_name =
+    (char*)wf.ReadString(section, "name", (char*)"Player world" );
   
   double resolution = 
     wf.ReadFloat(0, "resolution", STG_DEFAULT_RESOLUTION ); 
@@ -362,8 +359,10 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
   stg_world_t* world = 
     stg_client_createworld( client, 
 			    0,
-			    stg_token_create( world_name, STG_T_NUM, 99 ),
-			    resolution, interval_sim, interval_real );
+			    world_name, 
+			    resolution, 
+			    interval_sim, 
+			    interval_real );
   if( world == NULL )
     return NULL; // failure
   
@@ -373,9 +372,8 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       // a model has the macro name that defined it as it's name
       // unlesss a name is explicitly defined.  TODO - count instances
       // of macro names so we can autogenerate unique names
-      const char *typestr = wf.GetEntityType(section);      
-      const char *namestr = wf.ReadString(section, "name", typestr );
-      stg_token_t* token = stg_token_create( namestr, STG_T_NUM, 99 );
+      char *typestr = (char*)wf.GetEntityType(section);      
+      //stg_token_t* token = stg_token_create( namestr, STG_T_NUM, 99 );
 
       int parent_section = wf.GetEntityParent( section );
       
@@ -390,7 +388,7 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 #ifdef DEBUG
       if( parent )
 	printf( "parent has id %d name %s\n", 
-		parent->id_client, parent->token->token );
+		parent->id_client, parent->name );
       else
 	printf( "no parent\n" );
 #endif
@@ -417,10 +415,31 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 	  continue;
 	}
       
-      PRINT_DEBUG2( "creating model token %s type %d", typestr, type );
+      //PRINT_WARN3( "creating model token %s type %d instance %d", 
+      //	    typestr, 
+      //	    type,
+      //	    parent ? parent->child_type_count[type] : world->child_type_count[type] );
       
+      // generate a name and count this type in its parent (or world,
+      // if it's a top-level object)
+      char namebuf[STG_TOKEN_MAX];  
+      if( parent == NULL )
+	snprintf( namebuf, STG_TOKEN_MAX, "%s:%d", 
+		  typestr, 
+		  world->child_type_count[type]++);
+      else
+	snprintf( namebuf, STG_TOKEN_MAX, "%s.%s:%d", 
+		  parent->name,
+		  typestr, 
+		  parent->child_type_count[type]++ );
+      
+      //PRINT_WARN1( "generated name %s", namebuf );
+      
+      // having done all that, allow the user to specify a name instead
+      char *namestr = (char*)wf.ReadString(section, "name", namebuf );
+
       stg_model_t* mod = 
-	stg_world_createmodel( world, parent, section, type, token );
+	stg_world_createmodel( world, parent, section, type, namestr );
       
       // load all the generic specs from this section.
       configure_model( mod, section );

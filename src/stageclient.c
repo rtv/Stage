@@ -383,7 +383,7 @@ int stg_model_unsubscribe( stg_model_t* mod, stg_id_t prop )
 
 stg_world_t* stg_client_createworld( stg_client_t* client, 
 				     int section, 
-				     stg_token_t* token, 
+				     char* name, 
 				     double ppm, 
 				     stg_msec_t interval_sim, 
 				     stg_msec_t interval_real )
@@ -394,7 +394,7 @@ stg_world_t* stg_client_createworld( stg_client_t* client,
   w->id_client = static_next_world_id++;
   w->id_server = 0;
   w->section = section;
-  w->token = token;
+  w->name = strdup(name);
   
   w->interval_sim = interval_sim;
   w->interval_real = interval_real;
@@ -407,12 +407,12 @@ stg_world_t* stg_client_createworld( stg_client_t* client,
   w->models_section = g_hash_table_new( g_int_hash, g_int_equal );
   
   PRINT_DEBUG2( "created world %d \"%s\"", 
-		w->id_client, w->token->token );
+		w->id_client, w->name );
   
 
   // index this new world in the client
   g_hash_table_replace( client->worlds_id, &w->id_client, w );
-  g_hash_table_replace( client->worlds_name, w->token->token, w );
+  g_hash_table_replace( client->worlds_name, w->name, w );
 
   // server id is useless right now.
   //g_hash_table_replace( cli->worlds_id_server, &world->id_server, world );
@@ -430,7 +430,7 @@ stg_model_t* stg_world_createmodel( stg_world_t* world,
 				    stg_model_t* parent, 
 				    int section,
 				    stg_model_type_t type,
-				    stg_token_t* token )
+				    char* name )
 { 
   
   stg_model_t* mod = calloc( sizeof(stg_model_t), 1 );
@@ -438,18 +438,18 @@ stg_model_t* stg_world_createmodel( stg_world_t* world,
   mod->id_client = static_next_model_id++;
   mod->id_server = 0;
   mod->section = section;
-  mod->token = token;
+  mod->name = strdup(name);
   mod->world = world;
   mod->parent = parent;
   mod->type = type;
   mod->props = g_hash_table_new( g_int_hash, g_int_equal );
 
   PRINT_DEBUG4( "created model %d:%d \"%s\" section %d", 
-		world->id_client, mod->id_client, mod->token->token, mod->section );
+		world->id_client, mod->id_client, mod->name, mod->section );
 
   // index this new model in it's world
   g_hash_table_replace( world->models_id, &mod->id_client, mod );
-  g_hash_table_replace( world->models_name, mod->token->token, mod );
+  g_hash_table_replace( world->models_name, mod->name, mod );
   g_hash_table_replace( world->models_section, &mod->section, mod );
 
   // server id is useless at this stage
@@ -830,6 +830,8 @@ stg_id_t stg_client_model_new(  stg_client_t* cli,
 				char* token )
 {
   stg_createmodel_t mod;
+  memset(&mod,0,sizeof(mod));
+  
   mod.world = world;
   mod.parent = parent;
   mod.type = type;
@@ -880,6 +882,7 @@ stg_id_t stg_client_world_new(  stg_client_t* cli, char* token,
 				stg_msec_t interval_real  )
 {
   stg_createworld_t wmsg;
+  memset(&wmsg,0,sizeof(wmsg));
   
   wmsg.ppm = ppm;
   wmsg.interval_sim = interval_sim;
@@ -930,7 +933,7 @@ void stg_model_print( stg_model_t* mod )
   printf( "model %d:%d(%s) parent %d props: %d\n", 
 	  mod->world->id_client, 
 	  mod->id_client, 
-	  mod->token->token, 
+	  mod->name, 
 	  mod->parent->id_client,
 	  (int)g_hash_table_size( mod->props) );
   
@@ -979,13 +982,13 @@ void stg_model_push( stg_model_t* mod )
   // take this model out of the server-side id table
   g_hash_table_remove( mod->world->models_id_server, &mod->id_server );
 
-  PRINT_DEBUG2( "  pushing model \"%s\" type %d ", mod->token->token, mod->type );
+  PRINT_DEBUG2( "  pushing model \"%s\" type %d ", mod->name, mod->type );
   
   mod->id_server = stg_client_model_new(  mod->world->client,
 					  mod->world->id_server,
 					  mod->parent ? mod->parent->id_server : 0,
 					  mod->type,
-					  mod->token->token );
+					  mod->name );
 
   PRINT_DEBUG( " done" );
   
@@ -1015,13 +1018,13 @@ void stg_world_push( stg_world_t* world )
   assert( world );
   assert( world->client );
   
-  PRINT_DEBUG1( "pushing world \"%s\"\n", world->token->token );
+  PRINT_DEBUG1( "pushing world \"%s\"\n", world->name);
   
   // take this world out of the server-side id table
   g_hash_table_remove( world->client->worlds_id_server, &world->id_server );
   
   world->id_server = stg_client_world_new( world->client, 
-					   world->token->token, 
+					   world->name, 
 					   10, 10, 
 					   world->ppm,
 					   world->interval_sim,
