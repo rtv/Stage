@@ -23,11 +23,11 @@
  * the basic C library, but right now we only have a C++ implementation.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.hh,v 1.1.2.1 2003-08-19 00:57:19 rtv Exp $
+ * CVS info: $Id: stagecpp.hh,v 1.1.2.2 2003-08-19 21:56:09 rtv Exp $
  */
 
-#ifndef WORLDFILE_HH
-#define WORLDFILE_HH
+#ifndef STAGECPP_HH
+#define STAGECPP_HH
 
 #include <stage.h>
 
