@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.19 2004-09-27 00:58:01 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.20 2004-09-30 02:26:38 rtv Exp $
  */
 
 #include <math.h>
@@ -141,6 +141,15 @@ int blobfinder_shutdown( stg_model_t* mod )
 }
 
 
+int blobfinder_raytrace_filter( stg_model_t* finder, stg_model_t* found )
+{
+  if( !stg_model_is_related( finder, found ) && found->blob_return )
+    return 1;
+  
+  return 0;
+}
+
+
 int blobfinder_update( stg_model_t* mod )
 {
   PRINT_DEBUG( "blobfinder update" );  
@@ -210,31 +219,16 @@ int blobfinder_update( stg_model_t* mod )
       
       stg_model_t* ent;
       double range = cfg->range_max;
-      
-      while( (ent = itl_next( itl ) ))
+
+      ent = itl_first_matching( itl, blobfinder_raytrace_filter, mod );
+
+      if( ent )
 	{
-	  // Ignore itself, its ancestors and its descendents
-	  if( ent == mod )
-	    continue;
-	  
-	  // Ignore transparent things
-	  if( !ent->blob_return )
-	    continue;
-	  
-	  if(  stg_model_is_related( mod, ent ) )
-	    {
-	      PRINT_DEBUG2( "blob \"%s\" ignoring \"%s\" as a relative",
-			    mod->token, ent->token );
-	      continue;
-	    }
-	  
 	  range = itl->range; // it's this far away
 	  
 	  // get the color of the entity
 	  stg_color_t hiscol = stg_model_get_color(ent);
 	  memcpy( &col, &hiscol, sizeof( stg_color_t ) );
-	  
-	  break;
 	}
     
       itl_destroy( itl );
@@ -350,6 +344,9 @@ int blobfinder_update( stg_model_t* mod )
 	}
     }
 
+  //PRINT_WARN1( "blobfinder setting data %d bytes of data", 
+  //       blobs->len * sizeof(stg_blobfinder_blob_t) );
+  
   blobfinder_set_data( mod, 
 		       blobs->data, 
 		       blobs->len * sizeof(stg_blobfinder_blob_t) );

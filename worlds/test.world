@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.21 2004-09-28 16:32:14 rtv Exp $
+# CVS: $Id: test.world,v 1.22 2004-09-30 02:26:38 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -37,7 +37,7 @@ define sicklaser laser
 (
   range_min 0.0
   range_max 8.0
-  fov 180.0
+  fov 90.0
   samples 180
 
   color "blue"
@@ -51,6 +51,8 @@ define laserpioneer pioneer2dx
   sicklaser( 
     fiducialfinder( color "green" obstacle 0 )
   )
+
+  blobfinder()
 )
 
 

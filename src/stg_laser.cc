@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_laser.cc,v 1.5 2004-09-28 05:28:43 rtv Exp $
+ * $Id: stg_laser.cc,v 1.6 2004-09-30 02:26:38 rtv Exp $
  */
 
 #define PLAYER_ENABLE_TRACE 1
@@ -138,6 +138,8 @@ void StgLaser::PublishData( void* ptr )
 	  pdata.intensity[i] = (uint8_t)samples[i].reflectance;
 	}
       
+      //PRINT_WARN1( "laser putting %d bytes of data", sizeof(pdata) );
+
       // publish this data
       laser->PutData( &pdata, sizeof(pdata), NULL ); // time gets filled in
     }

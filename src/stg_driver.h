@@ -22,6 +22,8 @@
 
 // STAGE-1.4 DRIVER CLASS  /////////////////////////////////
 
+#include <pthread.h>
+
 // include all the player stuff
 #include "playercommon.h"
 #include "player.h"
@@ -44,6 +46,9 @@ class Stage1p4 : public Driver
   virtual int Shutdown(); 
 
  protected:
+
+  // set in startup(), unset in shutdown()
+  int ready;
 
   static ConfigFile* config;
 

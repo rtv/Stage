@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_simulation.cc,v 1.5 2004-09-25 02:15:00 rtv Exp $
+ * $Id: stg_simulation.cc,v 1.6 2004-09-30 02:26:38 rtv Exp $
  */
 
 #include "stg_driver.h"
@@ -156,9 +156,10 @@ void StgSimulation_Register(DriverTable* table)
 
 void StgSimulation::Main()
 {
-  //int d=0;
 
   assert( this->world );
+
+  puts( "<ctrl-C is disabled - close the Stage window to quit Player>" );
 
   while(1)
     {   

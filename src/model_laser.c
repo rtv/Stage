@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.48 $
+//  $Revision: 1.49 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -178,7 +178,9 @@ void laser_render_data(  stg_model_t* mod )
   
   rtk_fig_t* fig = mod->gui.data;
 
-  
+  if( mod->gui.bg  )
+    rtk_fig_clear(mod->gui.bg);
+
   stg_pose_t pose;
   stg_model_global_pose( mod, &pose );
 
@@ -220,8 +222,6 @@ void laser_render_data(  stg_model_t* mod )
   // hmm, what's the right cast to get rid of the compiler warning
   // for the points argument?
 
-  if( mod->gui.bg  )
-    rtk_fig_clear(mod->gui.bg);
   
   if( mod->world->win->fill_polygons )
     {
@@ -335,6 +335,7 @@ int laser_shutdown( stg_model_t* mod )
 {
   // clear the figure
   if( mod->gui.data  ) rtk_fig_clear(mod->gui.data);
+  if( mod->gui.bg  ) rtk_fig_clear(mod->gui.bg);
   
   return 0; // ok
 }

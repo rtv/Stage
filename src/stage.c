@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <math.h>
 #include <glib.h>
+#include <locale.h>
 
 //#define DEBUG
 
@@ -22,6 +23,12 @@ int _stg_quit = FALSE;
 int stg_init( int argc, char** argv )
 {
   gui_startup( &argc, &argv );
+
+  // this forces use of decimal points in the config file rather than
+  // euro-style commas. Do this after gui_startup() as GTK messes with
+  // locale.
+  if(!setlocale(LC_ALL,"POSIX"))
+    fputs("Warning: failed to setlocale(); config file may not be parse correctly\n", stderr);
 
   return 0; // ok
 }

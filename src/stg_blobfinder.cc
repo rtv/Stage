@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_blobfinder.cc,v 1.3 2004-09-26 02:00:45 rtv Exp $
+ * $Id: stg_blobfinder.cc,v 1.4 2004-09-30 02:26:38 rtv Exp $
  */
 
 #define PLAYER_ENABLE_TRACE 0
@@ -50,7 +50,7 @@ StgBlobfinder::StgBlobfinder( ConfigFile* cf, int section )
   PLAYER_TRACE0( "constructing StgBlobfinder" ); 
   
   this->model->data_notify = StgBlobfinder::PublishData;
-  this->model->data_notify_arg = this;
+  this->model->data_notify_arg = (void*)this;
 }
 
 Driver* StgBlobfinder_Init( ConfigFile* cf, int section)
@@ -71,8 +71,12 @@ void StgBlobfinder::PublishData( void* ptr )
   size_t datalen = 0;
   stg_blobfinder_blob_t *blobs = (stg_blobfinder_blob_t*)
     stg_model_get_data( bf->model, &datalen );
- 
-  if( blobs )
+
+  if( blobs == NULL )
+    {
+      bf->PutData( NULL, 0, NULL);
+    }
+  else
     {
       size_t bcount = datalen / sizeof(stg_blobfinder_blob_t);
       
@@ -117,6 +121,18 @@ void StgBlobfinder::PublishData( void* ptr )
       player_blobfinder_data_t bfd;
       memset( &bfd, 0, sizeof(bfd) );
       
+      // get the configuration
+      size_t cfglen=0;
+      stg_blobfinder_config_t* cfg = (stg_blobfinder_config_t*)
+	stg_model_get_config( bf->model, &cfglen );
+      assert( cfglen == sizeof(stg_blobfinder_config_t) );
+      
+      // and set the image width * height
+      bfd.width = htons((uint16_t)cfg->scan_width);
+      bfd.height = htons((uint16_t)cfg->scan_height);
+      
+
+
       // now run through the blobs, packing them into the player buffer
       // counting the number of blobs in each channel and making entries
       // in the acts header 
@@ -165,18 +181,12 @@ void StgBlobfinder::PublishData( void* ptr )
 	  PRINT_DEBUG2( "channel: %d blobs: %d\n", ch,  bfd.header[ch].num ); 
 	  bfd.header[ch].num = htons(bfd.header[ch].num);
 	}
-      
-      // get the configuration
-      size_t cfglen=0;
-      stg_blobfinder_config_t* cfg = (stg_blobfinder_config_t*)
-	stg_model_get_config( bf->model, &cfglen );
-      assert( cfglen == sizeof(stg_blobfinder_config_t) );
-      
-      // and set the image width * height
-      bfd.width = htons((uint16_t)cfg->scan_width);
-      bfd.height = htons((uint16_t)cfg->scan_height);
-      
-      bf->PutData( &bfd, sizeof(bfd), NULL); // time gets filled in
+
+      if( bf->ready )
+	{
+	  //PRINT_WARN1( "blobfinder putting %d bytes of data", sizeof(bfd) );
+	  bf->PutData( &bfd, sizeof(bfd), NULL); // time gets filled in
+	}
     }
 }
 
@@ -192,7 +202,7 @@ int StgBlobfinder::PutConfig(player_device_id_t id, void *client,
     default:
       {
 	printf( "Warning: stg_blobfinder doesn't support config id %d\n", buf[0] );
-	if (PutReply(id,client, PLAYER_MSGTYPE_RESP_NACK,NULL) != 0)
+	if (PutReply(client, PLAYER_MSGTYPE_RESP_NACK,NULL) != 0)
 	  PLAYER_ERROR("PutReply() failed");
 	break;
       }
