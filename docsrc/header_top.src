@@ -1,0 +1,131 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+<!-- $Id: header_top.src,v 1.1 2004-10-11 04:59:02 rtv Exp $ -->
+
+<HEAD>
+
+
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html;CHARSET=utf-8">
+<meta name="keywords" content="stage, robot, simulation, player, player/stage">
+
+<style type="text/css">
+
+.floatright { float: right; margin: 0 0 1em 1em; }
+
+body {
+  font-family: sans-serif;
+  width: 98%;
+  margin-left: 1%;
+  background-color: #FFF;
+  color:#000;
+}
+
+.main {
+  background-color: #EEE;
+  color: #000;
+  width: 100%;
+}
+
+a:link { 
+	color: #A00;
+}
+
+a:visited { 
+	color: #800;
+}
+
+a { text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+#sidebar {
+  background-color: #666;
+  color: #FFF;
+}
+
+#sidebar a:link {
+  color: #FFF;
+}
+
+#sidebar a:visited {
+  color: #DDD;
+}
+
+
+#content {
+ background-color: #EEE;
+}
+
+.sourceforge {
+   background-color: #999;
+}
+
+.jump {
+ background-color: #DDF;
+ text-align:center;
+}
+
+.timestamp { text-align:right; background-color: #DDD; font-size:75%;}
+
+th { 
+  text-align:left; 
+  vertical-align:top; 
+}
+
+td { 
+  text-align:left; 
+  vertical-align:top;
+}
+
+h1 { 
+  font-size:160%; 
+}
+
+h2 {
+  font-size:110%;
+  #color: #FFF;
+  #background-color: #666;
+  #padding:3px;
+}
+
+
+img {
+  border: 0;
+}
+
+DIV.fragment {
+	width: 95%;
+	border: 1px solid #000000;
+	background-color: #EEF;
+	padding-left: 5px;
+	margin: 10px;
+}
+
+
+#sidebar { position: absolute; left:5px; top:5px; width:97px; border: 1px solid #000000; padding:6px; }
+
+#content { position: absolute; left:120px; top:5px; border: 1px solid #000000; padding:10px; 
+
+margin-top:0px; margin-right:5px; }
+
+</style>
+
+<TITLE>Stage Manual</TITLE>
+
+</HEAD>
+
+<div id="sidebar"> 
+
+<P>Stage<br>User Manual</p>
+<hr>
+
+<p>
+<a href="index.html">Introduction</a><br>
+<a href="install.html">Installation</a><br>
+<a href="useage.html">Usage</a><br>
+<a href="credits.html">Credits</a><br>
+
+
+<hr>
+
