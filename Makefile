@@ -8,7 +8,7 @@
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
 #  $Author: gerkey $
-#  $Revision: 1.16 $
+#  $Revision: 1.17 $
 #
 ###########################################################################
 
@@ -56,6 +56,7 @@ INSTALL_ETC_FILES = etc/rtkstage.cfg
 install:
 	mkdir -p $(INSTALL_EXAMPLES)
 	install -m 644 examples/*.world* $(INSTALL_EXAMPLES)
+	install -m 644 examples/*.m4 $(INSTALL_EXAMPLES)
 	install -m 644 examples/*.pnm* $(INSTALL_EXAMPLES)
 	mkdir -p $(INSTALL_ETC)
 	install -m 755 $(INSTALL_ETC_FILES) $(INSTALL_ETC)
