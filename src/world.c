@@ -148,7 +148,8 @@ void world_handle_msg( world_t* world, int fd, stg_msg_t* msg )
       {   
 	stg_id_t mid = world_model_create( world, (stg_createmodel_t*)msg->payload );
 	
-	stg_msg_t* reply = stg_msg_create( STG_MSG_CLIENT_MODELCREATEREPLY, 
+	stg_msg_t* reply = stg_msg_create( STG_MSG_CLIENT_MODELCREATEREPLY,
+					   STG_RESPONSE_NONE,
 					   &mid, sizeof(mid) );
 
 	printf( "writing reply (model id %d) on fd %d\n", mid, fd );

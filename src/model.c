@@ -67,18 +67,17 @@ model_t* model_create(  world_t* world,
   mod->ranger_config = g_array_new( FALSE, TRUE, sizeof(stg_ranger_config_t) );
 
   // configure the laser to sensible defaults
+  mod->laser_geom.pose.x = 0;
+  mod->laser_geom.pose.y = 0;
+  mod->laser_geom.pose.a = 0;
+  mod->laser_geom.size.x = 0.0; // invisibly small (so it's not rendered) by default
+  mod->laser_geom.size.y = 0.0;
+  
   mod->laser_config.range_min= 0.0;
   mod->laser_config.range_max = 8.0;
   mod->laser_config.samples = 180;
   mod->laser_config.fov = M_PI;
-  mod->laser_config.pose.x = 0;
-  mod->laser_config.pose.y = 0;
-  mod->laser_config.pose.a = 0;
-  //mod->laser_config.size.x = 0.15;
-  //mod->laser_config.size.y = 0.15;
-  mod->laser_config.size.x = 0.0; // invisibly small (so it's not rendered) by default
-  mod->laser_config.size.y = 0.0;
-  				 
+  
   mod->laser_return = LaserVisible;
 
   gui_model_create( mod );
@@ -327,6 +326,11 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
       *data = &mod->laser_config;
       *len = sizeof(stg_laser_config_t);
       break;
+      
+    case STG_PROP_LASERGEOM:
+      *data = &mod->laser_geom;
+      *len = sizeof(stg_geom_t);
+      break;
      
     default:
       // todo - add random props to a model
@@ -513,6 +517,52 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
 		      (int)mp->datalen );
 	
 	model_set_prop( model, mp->prop, mp->data, mp->datalen ); 
+
+	stg_msg_t* reply = NULL;
+	switch( msg->response )
+	  {
+	  case STG_RESPONSE_NONE:
+	    reply = NULL;
+	    break;
+	    
+	  case STG_RESPONSE_ACK:
+	    reply = stg_msg_create( STG_MSG_MODEL_ACK, 
+				    STG_RESPONSE_NONE,
+				    NULL, 0 );
+	    break;
+	    
+	  case STG_RESPONSE_REPLY:
+	    {
+	      void* reply_data = NULL;
+	      size_t reply_data_len = 0;
+	      
+	      if( model_get_prop( model, mp->prop, &reply_data, &reply_data_len ) )      
+		PRINT_WARN2( "failed to find a reply for property %d(%s)",
+			     mp->prop, stg_property_string(mp->prop) );
+	      else
+		{
+		  stg_print_laser_config( reply_data );
+
+		  reply = stg_msg_create( STG_MSG_MODEL_REPLY, 
+					  STG_RESPONSE_NONE,
+					  reply_data, reply_data_len );
+		  free( reply_data );
+		}
+	    }
+	    break;
+	    
+	  default:
+	    PRINT_WARN1( "ignoring unrecognized response type %d", msg->response );
+	    reply = NULL;
+	    break;
+	  }
+
+	if( reply )
+	  {
+	    stg_fd_msg_write( fd, reply );
+	    free( reply );
+	  }
+
       }
       break;
 
@@ -530,25 +580,13 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
 		       tgt->prop, stg_property_string(tgt->prop) );
 	else
 	  {
-	    size_t mplen = sizeof(stg_prop_t) + len;
-	    stg_prop_t* mp = calloc( mplen,1  );
-	    
-	    mp->timestamp = model->world->sim_time;
-	    mp->world = model->world->id;
-	    mp->model = model->id;
-	    mp->prop = tgt->prop;
-	    mp->datalen = len;
-	    memcpy( mp->data, data, len );
-	    
-	    //printf( "timestamping prop %d(%s) at %.3f seconds\n",
-	    //      mp->prop, stg_property_string(mp->prop), mp->timestamp );
-	    
 	    PRINT_WARN( "SENDING A REPLY" );
-
-	    stg_msg_t* reply = stg_msg_create( STG_MSG_MODEL_REPLY, mp, mplen );
-	    stg_fd_msg_write( fd, reply );
 	    
-	    free( mp );
+	    stg_msg_t* reply = stg_msg_create( STG_MSG_MODEL_REPLY, 
+					       STG_RESPONSE_NONE,
+					       data, len );
+	    stg_fd_msg_write( fd, reply );
+	    free( reply );
 	  }
       }
       break;

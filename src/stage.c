@@ -57,6 +57,7 @@ const char* stg_property_string( stg_id_t id )
     case STG_PROP_RANGERCONFIG: return "rangerconfig";break;
     case STG_PROP_LASERDATA: return "laserdata";break;
     case STG_PROP_LASERCONFIG: return "laserconfig";break;
+    case STG_PROP_LASERGEOM: return "lasergeom";break;
     case STG_PROP_BLINKENLIGHT: return "blinkenlight";break;
     case STG_PROP_NOSE: return "nose";break;
     case STG_PROP_GRID: return "grid";break;
@@ -115,7 +116,30 @@ void stg_property_print_cb( gpointer key, gpointer value, gpointer user )
   stg_property_print( (stg_property_t*)value );
 }
 
+void stg_print_geom( stg_geom_t* geom )
+{
+  printf( "geom pose: (%.2f,%.2f,%.2f) size: [%.2f,%.2f]\n",
+	  geom->pose.x,
+	  geom->pose.y,
+	  geom->pose.a,
+	  geom->size.x,
+	  geom->size.y );
+}
 
+void stg_print_laser_config( stg_laser_config_t* slc )
+{
+  printf( "slc fov: %.2f  range_min: %.2f range_max: %.2f samples: %d\n",
+	  slc->fov,
+	  slc->range_min,
+	  slc->range_max,
+	  slc->samples );
+}
+
+void stg_print_target( stg_target_t* tgt )
+{
+  printf( "target (%d.%d.%d(%s)\n",
+	  tgt->world, tgt->model, tgt->prop, stg_property_string(tgt->prop) );
+}
 
 
 // write a message out	  
@@ -330,12 +354,13 @@ void prop_destroy( stg_property_t* prop )
 }
 
 // create a new message of [type] containing [datalen] bytes of [data]
-stg_msg_t* stg_msg_create( stg_msg_type_t type, void* data, size_t datalen )
+stg_msg_t* stg_msg_create( stg_msg_type_t type, int response, void* data, size_t datalen )
 {
   size_t msglen = sizeof(stg_msg_t) + datalen;
   stg_msg_t* msg = calloc( msglen,1  );
   
   msg->type = type;
+  msg->response = (uint8_t)response;
   msg->payload_len = datalen;
   memcpy( msg->payload, data, datalen );
  

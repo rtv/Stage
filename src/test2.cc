@@ -376,11 +376,11 @@ int main( int argc, char* argv[] )
       stg_model_prop_with_data( mod, STG_PROP_BOUNDARY, &boundary,sizeof(boundary));
       
       stg_laser_config_t lconf;
-      lconf.pose.x = worldfile->ReadTupleLength(section, "laser", 0, 0);
-      lconf.pose.y = worldfile->ReadTupleLength(section, "laser", 1, 0);
-      lconf.pose.a = worldfile->ReadTupleAngle(section, "laser", 2, 0);
-      lconf.size.x = worldfile->ReadTupleLength(section, "laser", 3, 0);
-      lconf.size.y = worldfile->ReadTupleLength(section, "laser", 4, 0);
+      //lconf.pose.x = worldfile->ReadTupleLength(section, "laser", 0, 0);
+      //lconf.pose.y = worldfile->ReadTupleLength(section, "laser", 1, 0);
+      //lconf.pose.a = worldfile->ReadTupleAngle(section, "laser", 2, 0);
+      //lconf.size.x = worldfile->ReadTupleLength(section, "laser", 3, 0);
+      //lconf.size.y = worldfile->ReadTupleLength(section, "laser", 4, 0);
       lconf.range_min = worldfile->ReadTupleLength(section, "laser", 5, 0);
       lconf.range_max = worldfile->ReadTupleLength(section, "laser", 6, 8);
       lconf.fov = worldfile->ReadTupleAngle(section, "laser", 7, 180);

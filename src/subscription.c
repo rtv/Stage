@@ -109,7 +109,10 @@ void subscription_update( subscription_t* sub )
 	  //printf( "timestamping prop %d(%s) at %.3f seconds\n",
 	  //      mp->prop, stg_property_string(mp->prop), mp->timestamp );
 	  
-	  stg_msg_t*  msg = stg_msg_create( STG_MSG_CLIENT_PROPERTY, mp, mplen );
+	  stg_msg_t*  msg = stg_msg_create( STG_MSG_CLIENT_PROPERTY, 
+					    STG_RESPONSE_NONE,
+					    mp, mplen );
+
 	  stg_fd_msg_write( sub->client->fd, msg );
 	  
 	  free( mp );

@@ -498,6 +498,7 @@ void server_handle_msg( server_t* server, int fd, stg_msg_t* msg )
 	stg_id_t wid = server_world_create( server,
 					    (stg_createworld_t*)msg->payload );
 	stg_msg_t* reply = stg_msg_create( STG_MSG_CLIENT_WORLDCREATEREPLY, 
+					   STG_RESPONSE_NONE,
 					   &wid, sizeof(wid) );
 	stg_fd_msg_write( fd, reply );
 	stg_msg_destroy( reply );
@@ -698,14 +699,22 @@ int server_msg_dispatch( server_t* server, int fd, stg_msg_t* msg )
       
     case STG_MSG_WORLD:
       {
-	stg_target_t* tgt = (stg_target_t*)msg->payload;
-      	world_t* world = server_get_world( server, tgt->world );
+	//stg_target_t* tgt = (stg_target_t*)msg->payload;
+	
+	// first part of any world message should be a world id
+	stg_id_t world_id = *(stg_id_t*)msg->payload;
+	
+	//stg_print_target( tgt );
+	
+	printf( "Message for world id %d\n", world_id );
+	
+      	world_t* world = server_get_world( server, world_id );
 	
 	if( world )
 	  world_handle_msg( world, fd, msg );
 	else
 	  PRINT_WARN1( "Ignoring message for non-existent world %d.", 
-		       tgt->world ); 
+		       world_id ); 
 	
       }
       break;

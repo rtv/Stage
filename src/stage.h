@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.34 2004-05-09 06:40:49 rtv Exp $
+ * CVS: $Id: stage.h,v 1.35 2004-05-10 04:14:33 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -108,6 +108,7 @@ typedef enum
     STG_PROP_RANGERCONFIG,
     STG_PROP_LASERDATA,
     STG_PROP_LASERCONFIG,
+    STG_PROP_LASERGEOM,
     STG_PROP_NEIGHBORS,
     STG_PROP_NEIGHBORBOUNDS, // range bounds of neighbor sensor
     STG_PROP_BLINKENLIGHT,  // light blinking rate
@@ -127,10 +128,20 @@ typedef uint16_t stg_msg_type_t;
 #define STG_MSG_MASK_MAJOR 0xFF00 // major type is in first byte
 #define STG_MSG_MASK_MINOR 0x00FF // minor type is in second byte
    
-#define STG_MSG_SERVER 0x0100
-#define STG_MSG_WORLD  0x0200
-#define STG_MSG_MODEL  0x0300
-#define STG_MSG_CLIENT 0x0400
+#define STG_MSG_SERVER      1 << 8
+#define STG_MSG_WORLD       2 << 8
+#define STG_MSG_MODEL       3 << 8
+#define STG_MSG_CLIENT      4 << 8
+   
+   //#define STG_MSG_SERVER      0x010000
+   //#define STG_MSG_WORLD       0x020000
+   //#define STG_MSG_MODEL       0x030000
+   //#define STG_MSG_CLIENT      0x040000
+
+   //#define STG_MSG_COMMAND     1 << 16
+   //#define STG_MSG_DATA        2 << 16
+   //#define STG_MSG_REQUEST     3 << 16
+   //#define STG_MSG_REPLY       4 << 16
 
 #define STG_MSG_SERVER_SUBSCRIBE        (STG_MSG_SERVER | 1)
 #define STG_MSG_SERVER_UNSUBSCRIBE      (STG_MSG_SERVER | 2)
@@ -156,14 +167,20 @@ typedef uint16_t stg_msg_type_t;
 #define STG_MSG_MODEL_LOAD              (STG_MSG_MODEL | 3)
 #define STG_MSG_MODEL_REQUEST           (STG_MSG_MODEL | 4)
 #define STG_MSG_MODEL_REPLY             (STG_MSG_MODEL | 5)
+#define STG_MSG_MODEL_ACK               (STG_MSG_MODEL | 6)
     
 #define STG_MSG_CLIENT_WORLDCREATEREPLY (STG_MSG_CLIENT | 1)
 #define STG_MSG_CLIENT_MODELCREATEREPLY (STG_MSG_CLIENT | 2)
 #define STG_MSG_CLIENT_PROPERTY         (STG_MSG_CLIENT | 3)
 #define STG_MSG_CLIENT_CLOCK            (STG_MSG_CLIENT | 4)
 #define STG_MSG_CLIENT_CYCLEEND         (STG_MSG_CLIENT | 5)
+   
+#define STG_RESPONSE_NONE 0
+#define STG_RESPONSE_ACK 1
+#define STG_RESPONSE_REPLY 2
 
 typedef double stg_time_t;
+
 
 typedef int stg_id_t;
 
@@ -179,6 +196,7 @@ typedef struct
   stg_msg_type_t type;
   size_t payload_len;
   double timestamp;
+  int response;
   char payload[0]; // named access to the end of the struct
 } stg_msg_t;
 
@@ -241,7 +259,7 @@ typedef struct
   
 
 
-stg_msg_t* stg_msg_create( stg_msg_type_t type, void* data, size_t len );
+stg_msg_t* stg_msg_create( stg_msg_type_t type, int response, void* data, size_t len );
 stg_msg_t* stg_msg_append( stg_msg_t* msg, void* data, size_t len );
 void stg_msg_destroy( stg_msg_t* msg );
 
@@ -291,6 +309,14 @@ typedef struct
 {
   double x, y, a;
 } stg_pose_t;
+
+typedef struct
+{
+  stg_pose_t pose;
+  stg_size_t size;
+} stg_geom_t;
+
+void stg_print_geom( stg_geom_t* geom );
 
 typedef enum
   { STG_POSITION_CONTROL_VELOCITY, STG_POSITION_CONTROL_POSITION }
@@ -449,13 +475,14 @@ typedef struct
 
 typedef struct
 {
-  stg_pose_t pose;
-  stg_size_t size;
   double fov;
   double range_max;
   double range_min;
   int samples;
 } stg_laser_config_t;
+
+// print human-readable version of the struct
+void stg_print_laser_config( stg_laser_config_t* slc );
 
 
 // end property typedefs -------------------------------------------------
@@ -549,10 +576,12 @@ typedef struct
   stg_id_t prop; 
 } stg_target_t;
 
+
 void stg_target_error( stg_target_t* tgt, char* errstr );
 void stg_target_debug( stg_target_t* tgt, char* errstr );
 void stg_target_warn( stg_target_t* tgt, char* errstr );
 void stg_target_message( stg_target_t* tgt, char* errstr );
+void stg_print_target( stg_target_t* tgt );
 
 // TOKEN -----------------------------------------------------------------------
 // token stuff for parsing worldfiles
@@ -729,9 +758,35 @@ void stg_model_destroy( stg_model_t* model );
 int stg_model_pull( stg_model_t* model );
 void stg_model_attach_prop( stg_model_t* mod, stg_property_t* prop );
 void stg_model_prop_with_data( stg_model_t* mod, 
-			      stg_id_t type, void* data, size_t len );
-stg_property_t* stg_model_get_prop( stg_model_t* mod, stg_id_t propid );
-stg_property_t* stg_model_get_prop_remote( stg_model_t* mod, stg_id_t propid );
+			       stg_id_t type, void* data, size_t len );
+stg_property_t* stg_model_get_prop_cached( stg_model_t* mod, stg_id_t propid );
+
+/******************/
+
+int stg_model_prop_get( stg_model_t* mod, stg_id_t propid, void* data, size_t len);
+int stg_model_prop_get_var( stg_model_t* mod, stg_id_t propid, void** data, size_t* len);
+
+
+
+// set property [propid] with [len] bytes at [data]
+int stg_model_prop_set( stg_model_t* mod, stg_id_t propid, void* data, size_t len);
+
+// set property [propid] with [len] bytes at [data] and wait for an acknowledgement
+int stg_model_prop_set_ack( stg_model_t* mod, stg_id_t propid, void* data, size_t len);
+
+// set property [propid] with [len] bytes at [data], wait for a reply
+// of [reply_len] bytes and copy it into [reply].
+int stg_model_prop_set_reply( stg_model_t* mod, stg_id_t propid, 
+			      void* data, size_t data_len,
+			      void* reply, size_t reply_len );
+
+// set property [propid] with [len] bytes at [data], wait for a
+// reply. At exit, [reply] is a malloc'ed buffer that contains the
+// reply data [reply_len] contains the allocated buffer size.
+int stg_model_prop_set_reply_var( stg_model_t* mod, stg_id_t propid, 
+				  void* data, size_t data_len,
+				  void** reply, size_t* reply_len );
+/******************/
 
 
 int stg_model_subscribe( stg_model_t* mod, int prop, double interval );

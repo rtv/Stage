@@ -230,9 +230,12 @@ stg_model_t* stg_client_get_model_serverside( stg_client_t* cli, stg_id_t wid, s
 }
 
 
-int stg_client_write_msg( stg_client_t* cli, stg_msg_type_t type, void* data, size_t datalen )
+int stg_client_write_msg( stg_client_t* cli, 
+			  stg_msg_type_t type, 
+			  int response, 
+			  void* data, size_t datalen )
 {
-  stg_msg_t* msg = stg_msg_create( type, data, datalen );
+  stg_msg_t* msg = stg_msg_create( type, response, data, datalen );
   assert( msg );
   
   int retval = 
@@ -256,7 +259,9 @@ int stg_model_subscribe( stg_model_t* mod, int prop, double interval )
   sub.prop = prop;
   sub.interval = interval;
   
-  stg_client_write_msg( mod->world->client, STG_MSG_SERVER_SUBSCRIBE, 
+  stg_client_write_msg( mod->world->client, 
+			STG_MSG_SERVER_SUBSCRIBE, 
+			STG_RESPONSE_NONE,
 			&sub, sizeof(sub) );
   
   return 0;
@@ -274,7 +279,9 @@ int stg_model_unsubscribe( stg_model_t* mod, int prop )
   sub.model = mod->id_server;  
   sub.prop = prop;
   
-  stg_client_write_msg( mod->world->client, STG_MSG_SERVER_UNSUBSCRIBE, 
+  stg_client_write_msg( mod->world->client, 
+			STG_MSG_SERVER_UNSUBSCRIBE, 
+			STG_RESPONSE_NONE, 
 			&sub, sizeof(sub) );
   
   return 0;
@@ -402,14 +409,10 @@ void stg_model_prop_with_data( stg_model_t* mod,
   stg_model_attach_prop( mod, prop );
 }   
 
-stg_property_t* stg_model_get_prop( stg_model_t* mod, stg_id_t propid )
+stg_property_t* stg_model_get_prop_cached( stg_model_t* mod, stg_id_t propid )
 {
   return g_hash_table_lookup( mod->props, &propid );
 }
-  
-
-
-
 
 // send the request [req] of length [req_len] bytes. Wait for a reply
 int stg_model_request_reply( stg_model_t* mod, 
@@ -422,9 +425,11 @@ int stg_model_request_reply( stg_model_t* mod,
   tgt.prop = STG_PROP_LASERCONFIG;
   
 
-  PRINT_DEBUG1( "sending a %d byte request\n", req_len );
+  PRINT_DEBUG1( "sending a %d byte request\n", (int)req_len );
   
-  stg_client_write_msg( mod->world->client, STG_MSG_MODEL_REQUEST,
+  stg_client_write_msg( mod->world->client, 
+			STG_MSG_MODEL_REQUEST,
+			STG_RESPONSE_REPLY, 
 			//		req, req_len );
 			&tgt, sizeof(tgt) );
   
@@ -432,12 +437,110 @@ int stg_model_request_reply( stg_model_t* mod,
   
   stg_msg_t* reply = stg_client_read_until( mod->world->client, STG_MSG_MODEL_REPLY );
   
-  printf( "received a %d byte reply\n", reply->payload_len );
+  printf( "received a %d byte reply\n", (int)reply->payload_len );
   
   return 0; // OK
 }
 
-stg_property_t* stg_model_get_prop_remote( stg_model_t* mod, stg_id_t propid )
+int stg_model_prop_set( stg_model_t* mod, stg_id_t prop, void* data, size_t len )
+{
+  size_t mplen = len + sizeof(stg_prop_t);
+  stg_prop_t* mp = calloc( mplen, 1);
+  
+  mp->world = mod->world->id_server;
+  mp->model = mod->id_server;
+  mp->prop = prop;
+  mp->datalen = len;
+  memcpy( mp->data, data, len );
+  
+  int retval = stg_client_write_msg( mod->world->client, 
+				     STG_MSG_MODEL_PROPERTY, 
+				     STG_RESPONSE_NONE, 
+				     mp, mplen );
+  free( mp );
+  return retval;
+}
+
+int stg_model_prop_set_ack( stg_model_t* mod, stg_id_t prop, void* data, size_t len )
+{
+  size_t mplen = len + sizeof(stg_prop_t);
+  stg_prop_t* mp = calloc( mplen, 1);
+  
+  mp->world = mod->world->id_server;
+  mp->model = mod->id_server;
+  mp->prop = prop;
+  mp->datalen = len;
+  memcpy( mp->data, data, len );
+  
+  PRINT_DEBUG3( "setting prop %d:%d:%d\n", mp->world, mp->model, mp->prop );
+  
+  int retval = stg_client_write_msg( mod->world->client, 
+				     STG_MSG_MODEL_PROPERTY,
+				     STG_RESPONSE_ACK,  
+				     mp, mplen );
+  
+  free( mp );
+
+  PRINT_DEBUG( "waiting for reply" );
+  
+  stg_msg_t* reply = stg_client_read_until( mod->world->client, STG_MSG_MODEL_ACK );
+  
+  printf( "received a %d byte reply\n", reply->payload_len );
+  
+  if( reply == NULL )
+    return -1; // error no-reply
+  
+  if( reply->payload_len != 0 )
+    return -2; // error too-much-data
+
+  free( reply );
+  return 0; // OK
+}
+
+
+int stg_model_prop_set_reply( stg_model_t* mod, stg_id_t prop, 
+			      void* data, size_t len,
+			      void* reply_data, size_t reply_data_len )
+{
+  size_t mplen = len + sizeof(stg_prop_t);
+  stg_prop_t* mp = calloc( mplen, 1);
+  
+  mp->world = mod->world->id_server;
+  mp->model = mod->id_server;
+  mp->prop = prop;
+  mp->datalen = len;
+  memcpy( mp->data, data, len );
+  
+  PRINT_DEBUG3( "setting prop %d:%d:%d\n", mp->world, mp->model, mp->prop );
+  
+  int retval = stg_client_write_msg( mod->world->client, 
+				     STG_MSG_MODEL_PROPERTY,
+				     STG_RESPONSE_REPLY,  
+				     mp, mplen );
+  
+  free( mp );
+
+  PRINT_DEBUG( "waiting for reply" );
+  
+  stg_msg_t* reply = stg_client_read_until( mod->world->client, STG_MSG_MODEL_REPLY );
+  
+  printf( "received a %d byte reply\n", reply->payload_len );
+  
+  if( reply == NULL )
+    return -1; // error no-reply
+  
+  if( reply->payload_len != reply_data_len )
+    return -2; // error non-enough-data
+  
+  // copy the reply data into the caller's buffer
+  memcpy( reply_data, reply->payload, reply_data_len );
+  free( reply );
+
+  return 0; // OK
+}
+
+
+int stg_model_prop_get( stg_model_t* mod, stg_id_t propid, void* data, size_t len )
 {
   stg_target_t tgt;
   tgt.world = mod->world->id_server;
@@ -448,6 +551,7 @@ stg_property_t* stg_model_get_prop_remote( stg_model_t* mod, stg_id_t propid )
   
   stg_client_write_msg( mod->world->client, 
 			STG_MSG_MODEL_REQUEST,
+			STG_RESPONSE_REPLY,  			
 			&tgt, sizeof(tgt) );
   
   PRINT_DEBUG( "waiting for reply" );
@@ -456,10 +560,47 @@ stg_property_t* stg_model_get_prop_remote( stg_model_t* mod, stg_id_t propid )
   
   printf( "received a %d byte reply\n", reply->payload_len );
   
-  stg_property_t* prop = prop_create( propid, &reply->payload, reply->payload_len );
+  if( reply == NULL )
+    return -1; // error no-reply
   
-  return prop; 
+  if( reply->payload_len != len )
+    return -2; // error non-enough-data
+
+  // copy the reply data into the caller's buffer
+  memcpy( data, reply->payload, len );
+  free( reply );
+
+  return 0; // OK
 }
+
+int stg_model_prop_get_var( stg_model_t* mod, stg_id_t propid, void** data, size_t* len )
+{
+  stg_target_t tgt;
+  tgt.world = mod->world->id_server;
+  tgt.model = mod->id_server;
+  tgt.prop = propid;
+  
+  PRINT_DEBUG3( "requesting prop %d:%d:%d\n", tgt.world, tgt.model, tgt.prop );
+  
+  stg_client_write_msg( mod->world->client, 
+			STG_MSG_MODEL_REQUEST,
+			STG_RESPONSE_REPLY,
+			&tgt, sizeof(tgt) );
+  
+  PRINT_DEBUG( "waiting for reply" );
+  
+  stg_msg_t* reply = stg_client_read_until( mod->world->client, STG_MSG_MODEL_REPLY );
+  
+  printf( "received a %d byte reply\n", reply->payload_len );
+  
+  *data = realloc( *data, reply->payload_len );
+  *len = reply->payload_len;
+  memcpy( *data, reply->payload, *len );
+  free( reply );
+
+  return 0; // OK
+}
+
 
 stg_msg_t* stg_client_read_until( stg_client_t* cli, stg_msg_type_t mtype )
 {
@@ -532,26 +673,31 @@ int stg_client_property_set( stg_client_t* cli, stg_id_t world, stg_id_t model,
   mp->datalen = len;
   memcpy( mp->data, data, len );
   
-  int retval = stg_client_write_msg( cli, STG_MSG_MODEL_PROPERTY, mp, mplen );
+  int retval = stg_client_write_msg( cli, 
+				     STG_MSG_MODEL_PROPERTY, 
+				     STG_RESPONSE_NONE,
+				     mp, mplen );
   
   free( mp );
   
   return retval;
 }
 
+
 stg_id_t stg_client_model_new(  stg_client_t* cli, 
 				stg_id_t world,
 				char* token )
 {
   stg_createmodel_t mod;
-  
   mod.world = world;
-  
   strncpy( mod.token, token, STG_TOKEN_MAX );
   
   printf( "creating model %s in world %d\n",  mod.token, mod.world );
 
-  stg_client_write_msg( cli, STG_MSG_WORLD_MODELCREATE, &mod, sizeof(mod) );
+  stg_client_write_msg( cli, 
+			STG_MSG_WORLD_MODELCREATE, 
+			STG_RESPONSE_REPLY,
+			&mod, sizeof(mod) );
   
   // read a reply - it contains the model's id
   stg_msg_t* reply = stg_client_read_until( cli,  STG_MSG_CLIENT_MODELCREATEREPLY );
@@ -584,9 +730,10 @@ int stg_model_pull(  stg_model_t* mod )
   doomed.world = mod->world->id_server;
   doomed.model = mod->id_server;
   
-  stg_client_write_msg( mod->world->client, STG_MSG_WORLD_MODELDESTROY, 
+  stg_client_write_msg( mod->world->client, 
+			STG_MSG_WORLD_MODELDESTROY, 
+			STG_RESPONSE_NONE,  
 			&doomed, sizeof(doomed) );
-  
   return 0;
 }
 
@@ -607,7 +754,10 @@ stg_id_t stg_client_world_new(  stg_client_t* cli, char* token,
   printf( "creating world \"%s\" sim: %.3f real: %.3f ppm %d", 
 	  wmsg.token, wmsg.interval_sim, wmsg.interval_real, wmsg.ppm );
   
-  stg_client_write_msg( cli, STG_MSG_SERVER_WORLDCREATE, &wmsg, sizeof(wmsg) );
+  stg_client_write_msg( cli, 
+			STG_MSG_SERVER_WORLDCREATE,
+			STG_RESPONSE_REPLY,
+			&wmsg, sizeof(wmsg) );
   
   // read a reply - it contains the world's id
   
@@ -634,7 +784,9 @@ int stg_world_pull( stg_world_t* world )
   PRINT_DEBUG2( "pulling world %d (%d)\n", 
 		world->id_client, world->id_server );
   
-  stg_client_write_msg( world->client, STG_MSG_SERVER_WORLDDESTROY, 
+  stg_client_write_msg( world->client, 
+			STG_MSG_SERVER_WORLDDESTROY, 
+			STG_RESPONSE_NONE,
 			&world->id_server, sizeof(world->id_server) );
   return 0;
 }
@@ -700,8 +852,8 @@ void stg_model_push( stg_model_t* mod )
   g_hash_table_remove( mod->world->models_id_server, &mod->id_server );
   
   mod->id_server = stg_client_model_new(  mod->world->client,
-				   mod->world->id_server,
-				   mod->token->token );
+					  mod->world->id_server,
+					  mod->token->token );
   
   // re-index the model by the newly-discovered server-side id
   g_hash_table_replace( mod->world->models_id_server, &mod->id_server, mod );
@@ -833,6 +985,10 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 
     case STG_MSG_MODEL_REPLY:
       puts( "msg: MODEL REPLY" );
+      break;
+
+    case STG_MSG_MODEL_ACK:
+      puts( "msg: MODEL ACK" );
       break;
 
     case STG_MSG_CLIENT_PROPERTY: 

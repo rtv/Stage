@@ -1,10 +1,10 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.51 2004-04-26 03:12:09 rtv Exp $
+dnl $Id: configure.in,v 1.52 2004-05-10 04:14:33 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(src/main.cc)
+AC_INIT(src/main.c)
 
 dnl determine system type.  this is used in a couple of places to infer the 
 dnl types of arguments to some networking library functions.  if/when we 

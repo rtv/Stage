@@ -525,7 +525,7 @@ void gui_model_rangers_data( model_t* mod )
 void gui_model_laser( model_t* mod )
 {
   // only draw the laser gadget if it has a non-zero size
-  if( mod->laser_config.size.x || mod->laser_config.size.y )
+  if( mod->laser_geom.size.x || mod->laser_geom.size.y )
     {
       
       rtk_fig_t* fig = gui_model_figs(mod)->laser;  
@@ -534,11 +534,11 @@ void gui_model_laser( model_t* mod )
       rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_COLOR) );
       rtk_fig_origin( fig, mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );   
       rtk_fig_rectangle( fig, 
-			 mod->laser_config.pose.x, 
-			 mod->laser_config.pose.y, 
-			 mod->laser_config.pose.a,
-			 mod->laser_config.size.x,
-			 mod->laser_config.size.y, 0 );
+			 mod->laser_geom.pose.x, 
+			 mod->laser_geom.pose.y, 
+			 mod->laser_geom.pose.a,
+			 mod->laser_geom.size.x,
+			 mod->laser_geom.size.y, 0 );
     }
 }  
 
@@ -556,9 +556,10 @@ void gui_model_laser_data( model_t* mod )
       rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_DATA_COLOR) );
       rtk_fig_origin( fig, mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );  
       stg_laser_config_t* cfg = &mod->laser_config;
-  
+      stg_geom_t* geom = &mod->laser_geom;
+      
       double sample_incr = cfg->fov / cfg->samples;
-      double bearing = cfg->pose.a - cfg->fov/2.0;
+      double bearing = geom->pose.a - cfg->fov/2.0;
       double px, py;
       stg_laser_sample_t* sample = NULL;
       

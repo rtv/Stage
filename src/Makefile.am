@@ -2,11 +2,13 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.36 2004-04-28 06:10:44 rtv Exp $
+# $Id: Makefile.am,v 1.37 2004-05-10 04:14:33 rtv Exp $
 
 stage_DEPENDENCIES = libstage.a $(top_srcdir)/replace/libreplace.a
 
+AM_CFLAGS = -Wall -I$(top_builddir)/replace @RTK_CFLAGS@
 AM_CPPFLAGS = -Wall -I$(top_builddir)/replace @RTK_CFLAGS@
+
 
 lib_LIBRARIES = libstage.a
 

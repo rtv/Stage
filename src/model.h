@@ -35,6 +35,7 @@ typedef struct _model
   GArray* ranger_data;
   int ranger_return;
  
+  stg_geom_t laser_geom;
   stg_laser_config_t laser_config;
   GArray* laser_data;
   int laser_return;

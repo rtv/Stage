@@ -6,6 +6,7 @@ void model_update_laser( model_t* mod )
   //PRINT_DEBUG1( "[%.3f] updating lasers", mod->world->sim_time );
   
   stg_laser_config_t* cfg = &mod->laser_config;
+  stg_geom_t* geom = &mod->laser_geom;
   
   // we only allocate data space the first time we need it
   if( mod->laser_data == NULL )
@@ -16,7 +17,7 @@ void model_update_laser( model_t* mod )
   
   // get the sensor's pose in global coords
   stg_pose_t pz;
-  memcpy( &pz, &cfg->pose, sizeof(pz) ); 
+  memcpy( &pz, &geom->pose, sizeof(pz) ); 
   model_local_to_global( mod, &pz );
 
   double sample_incr = cfg->fov / (double)cfg->samples;
