@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15.2.19 2003-02-24 04:47:12 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.20 2003-02-25 02:20:00 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -293,8 +293,7 @@ public: void FamilyUnsubscribe();
   // DISTRIBUTED STAGE STUFF
 public: 
   stage_subscription_t subscriptions[ STG_MAX_CONNECTIONS][STG_PROPERTY_COUNT];
-  void Subscribe( int con, stage_prop_id_t *props, int prop_count );
-  void Unsubscribe( int con, stage_prop_id_t *props, int prop_count );
+  void Subscribe( int con, stage_prop_id_t *props, int prop_count, int sub );
   bool IsSubscribed( stage_prop_id_t );
   
   // set the dirty flag for each property for each connection

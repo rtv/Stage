@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonar.cc,v 1.1.2.7 2003-02-24 04:47:13 rtv Exp $
+ * CVS info: $Id: sonar.cc,v 1.1.2.8 2003-02-25 02:20:00 rtv Exp $
  */
 
 #include <assert.h>
@@ -150,7 +150,13 @@ int CSonarModel::Property( int con, stage_prop_id_t property,
     case STG_PROP_SONAR_GEOM:
       if( value ) // set the poses of our transducers 
 	{
-	  PRINT_WARN( "set sonar geometry not implemented" );
+	  PRINT_DEBUG1( "setting sonar geometry for %d", this->stage_id );
+
+	  // copy the geometry data into our array
+	  memcpy( this->sonars, value, len );
+	  // figure out how many sensors we have now
+	  this->sonar_count = len / (3*sizeof(double) );
+
 	}
       if( reply ) // reply with our array of sonar poses
 	{

@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.1.2.13 2003-02-24 04:47:13 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.1.2.14 2003-02-25 02:20:00 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -31,9 +31,9 @@
 // this should go when I get the autoconf set up properly
 #ifdef INCLUDE_RTK2
 
-#undef DEBUG
+//#undef DEBUG
 #undef VERBOSE
-//#define DEBUG 
+#define DEBUG 
 //#define VERBOSE
 
 #include <errno.h>
@@ -60,6 +60,7 @@
 #include "matrix.hh"
 #include "rtkgui.hh"
 #include "sio.h" // for SIOPropString
+#include "idar.hh"
 
 extern int quit;
 
@@ -288,12 +289,14 @@ int RtkGuiUpdate( void )
   // Process events
   rtk_app_main_loop( app);
   
+  //rtk_app_countdown( app );
+
   // Refresh the gui at a fixed rate (in simulator time).
   if ( CEntity::simtime - last_update < rtkgui_update_interval )
     return 0;
 
   last_update = CEntity::simtime;
-  
+
   // when the root object is smaller than the window, keep it centered
   // and scaled to fit the canvas  
   if( CEntity::simtime - last_fit > rtkgui_fit_interval )
@@ -348,7 +351,10 @@ int RtkGuiUpdate( void )
 
   // Process menus
   RtkMenuHandling();      
-  
+
+  // process any flashers 
+  rtk_canvas_flash_update( canvas );
+
   // Render the canvas
   rtk_canvas_render( canvas);
   
@@ -460,13 +466,19 @@ int RtkGuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
 
       // 
     case STG_PROP_ENTITY_DATA:
+    case STG_PROP_ENTITY_COMMAND:
       //PRINT_DEBUG1( "gui redraws data", prop ); 
       ent->RtkUpdate(); // should be something like RtkDrawEntityData( ent );
+      break;      
+
+    case STG_PROP_IDAR_RX:
+      PRINT_ERR1( "rtk IDAR_RX for idar %d", ent->stage_id );
+      ((CIdarModel*)ent)->RtkShowReceived();
       break;
       
-      // these are ignored for now
-    case STG_PROP_ENTITY_COMMAND:
-      //PRINT_DEBUG1( "gui does nothing for prop %s", SIOPropString(prop) ); 
+    case STG_PROP_IDAR_TX:
+      PRINT_ERR1( "rtk IDAR_TX for idar %d", ent->stage_id );
+      ((CIdarModel*)ent)->RtkShowSent();
       break;
 
     default:

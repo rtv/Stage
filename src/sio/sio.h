@@ -91,6 +91,7 @@
    
    stage_buffer_t* SIOCreateBuffer( void );
    void SIOFreeBuffer( stage_buffer_t* bundle );
+   void SIOClearBuffer( stage_buffer_t* buf );
 
    /* INTERNAL FUNCTIONS - not intented for clients to call directly */
    void SIODebugBuffer( stage_buffer_t* buf );

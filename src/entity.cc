@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.22 2003-02-24 04:47:12 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.23 2003-02-25 02:19:59 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -713,8 +713,8 @@ void CEntity::NormalizeRects(  stage_rotrect_t* rects, int num )
     }
 }
 
-
-void CEntity::Subscribe( int con, stage_prop_id_t* props, int prop_count )  
+void CEntity::Subscribe( int con, 
+			 stage_prop_id_t* props, int prop_count, int sub )  
 {
   
   for( int p=0; p<prop_count; p++ )
@@ -725,32 +725,11 @@ void CEntity::Subscribe( int con, stage_prop_id_t* props, int prop_count )
 	PRINT_WARN( "subscribe to all properties not implemented" );
       else
 	{
-	  PRINT_DEBUG3( "subscribing to ent %d property %s on connection %d",
-		       stage_id, SIOPropString(prop_code), con );
+	  PRINT_DEBUG4( "subscribe %d  to ent %d property %s on connection %d",
+			sub, stage_id, SIOPropString(prop_code), con );
 	  // register the subscription on this channel, for this property
-	  subscriptions[con][prop_code].subscribed = 1;
-	  subscriptions[con][prop_code].dirty = 1;
-	}
-    }
-}
-
-
-void CEntity::Unsubscribe( int con,  stage_prop_id_t* props, int prop_count )  
-{
-  
-  for( int p=0; p<prop_count; p++ )
-    {
-      stage_prop_id_t prop_code = props[p];
-      
-      if( prop_code == -1 )
-	PRINT_WARN( "unsubscribe to all properties not implemented" );
-      else
-	{
-	  PRINT_DEBUG2( "unsubscribing from property %s on connection %d",
-		       SIOPropString(prop_code), con );
-	  // register the subscription on this channel, for this property
-	  subscriptions[con][prop_code].subscribed = 0;
-	  subscriptions[con][prop_code].dirty = 0;
+	  subscriptions[con][prop_code].subscribed = sub;
+	  subscriptions[con][prop_code].dirty = sub;
 	}
     }
 }
@@ -758,6 +737,8 @@ void CEntity::Unsubscribe( int con,  stage_prop_id_t* props, int prop_count )
 // clear the subscription data for this channel on me and my children
 void CEntity::DestroyConnection( int con )
 {
+
+
   memset( subscriptions[con], 0, 
 	  STG_PROPERTY_COUNT*sizeof(stage_subscription_t) );
 

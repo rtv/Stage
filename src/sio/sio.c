@@ -997,20 +997,29 @@ int SIOBufferProperty( stage_buffer_t* bundle,
   return 0;
 }
 
+void SIOClearBuffer( stage_buffer_t* buf )
+{
+  if( buf->data ) 
+    {
+      free( buf->data );
+      buf->data = NULL;
+    }
+  
+  buf->len = 0;
+}
+
 void SIOFreeBuffer( stage_buffer_t* bundle )
 {
   if( bundle )
     {
       //printf( "Freeing stage_buffer_t at %p\n", bundle->data); 
       // SIODebugBuffer( bundle );
-
-      fflush( stdout );
-
-      if( bundle->data ) free( bundle->data );
+ 
+      SIOClearBuffer( bundle );
       free( bundle );
     }
 }
- 
+
 stage_buffer_t* SIOCreateBuffer( void )
 {
   //printf( "Allocating stage_buffer_t ... " ); fflush( stdout );
@@ -1027,5 +1036,7 @@ stage_buffer_t* SIOCreateBuffer( void )
   return buf;
 }
     
+
+
  
 

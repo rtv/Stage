@@ -22,7 +22,7 @@
  * properties. It's one big ol'function, so it gets its own file.
  * Author: Richard Vaughan
  * Date: 22 Feb 2003
- * CVS info: $Id: property.cc,v 1.1.2.2 2003-02-24 04:47:12 rtv Exp $
+ * CVS info: $Id: property.cc,v 1.1.2.3 2003-02-25 02:20:00 rtv Exp $
  */
 
 #include <string.h>
@@ -238,9 +238,12 @@ int CEntity::Property( int con, stage_prop_id_t property,
 	{
 	  // *value is an array of integer property codes that request
 	  // subscriptions on this channel
-	  PRINT_DEBUG2( "received SUBSCRIBE for %d properties on %d",
-			(int)(len/sizeof(int)), con );
-	  this->Subscribe( con, (stage_prop_id_t*)value, len/sizeof(int) );
+	  PRINT_DEBUG3( "received SUBSCRIBE (%d) for %d properties on %d",
+			*(int*)value, (int)(len/sizeof(int)), con );
+	  
+	  this->Subscribe( con, 
+			   (stage_prop_id_t*)value, len/sizeof(int), 
+			   *(int*)value );
 	}
       
       if( reply ) // nothing interesting to reply here, just a confirm
@@ -250,25 +253,6 @@ int CEntity::Property( int con, stage_prop_id_t property,
 			     NULL, 0, STG_ISREPLY ); 
 	}
       
-      break;
-      
-    case STG_PROP_ENTITY_UNSUBSCRIBE:
-      if( value )
-	{
-	  // *value is an array of integer property codes that request
-	  // subscriptions on this channel
-	  PRINT_DEBUG2( "received UNSUBSCRIBE for %d properties on %d",
-			(int)(len/sizeof(int)), con );
-	  
-	  this->Unsubscribe( con, (stage_prop_id_t*)value, len/sizeof(int) );
-	}
-
-      if( reply ) // nothing interesting to reply here, just a confirm
-	{
-	  SIOBufferProperty( reply, this->stage_id,
-			     STG_PROP_ENTITY_UNSUBSCRIBE,
-			     NULL, 0, STG_ISREPLY ); 
-	}      
       break;
       
     case STG_PROP_ENTITY_NAME:
@@ -456,11 +440,11 @@ int CEntity::Property( int con, stage_prop_id_t property,
       if( con != -1 ) // unless this was a local change 
 	this->SetDirty( con, property, 0 ); // clean on this con
       
-      
-      // update the GUI with the new property
-      //if( enable_gui )
-      GuiEntityPropertyChange( this, property );
     }
 
+  // update the GUI with the new property
+  //if( enable_gui )
+  GuiEntityPropertyChange( this, property );
+  
   return 0;
 }

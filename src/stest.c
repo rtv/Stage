@@ -1,6 +1,6 @@
 
 /*
-  $Id: stest.c,v 1.1.2.21 2003-02-24 04:47:12 rtv Exp $
+  $Id: stest.c,v 1.1.2.22 2003-02-25 02:20:00 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -311,12 +311,50 @@ int CreateModel( int connection, stage_model_t* model )
 	  strncpy( sonars[b].token, "sonar", STG_TOKEN_MAX );
 	}
       
-      //SIOCreateModels( connection, timestamp, sonars, 4 );
+      SIOCreateModels( connection, timestamp, sonars, 1 );
      
 
       stage_buffer_t* props = SIOCreateBuffer();
       assert(props);
 
+
+      // set the geometry of the sonars
+      double sgeom[3][3];
+      
+      /*      
+	      spose[0] [ 0.115 0.130 90 ]
+	      spose[1] [ 0.155 0.115 50 ]
+	      spose[2] [ 0.190 0.080 30 ]
+	      spose[3] [ 0.210 0.025 10 ]
+	      spose[4] [ 0.210 -0.025 -10 ]
+	      spose[5] [ 0.190 -0.080 -30 ]
+	      spose[6] [ 0.155 -0.115 -50 ]
+	      spose[7] [ 0.115 -0.130 -90 ]
+	      spose[8] [ -0.115 -0.130 -90 ]
+	      spose[9] [ -0.155 -0.115 -130 ]
+	      spose[10] [ -0.190 -0.080 -150 ]
+	      spose[11] [ -0.210 -0.025 -170 ]
+	      spose[12] [ -0.210 0.025 170 ]
+	      spose[13] [ -0.190 0.080 150 ]
+	      spose[14] [ -0.155 0.115 130 ]
+	      spose[15] [ -0.115 0.130 90 ]
+      */
+
+      sgeom[0][0] = 0.2;
+      sgeom[0][1] = 0.0;
+      sgeom[0][2] = 0.0;
+
+      sgeom[1][0] = 0.0;
+      sgeom[1][1] = 0.2;
+      sgeom[1][2] = 1.0;
+
+      sgeom[2][0] = 0.0;
+      sgeom[2][1] = -0.2;
+      sgeom[2][2] = -1.0;
+      
+      SIOBufferProperty( props, sonars[0].id, STG_PROP_SONAR_GEOM,
+			 sgeom, 3*3*sizeof(double), STG_NOREPLY );
+      
       
       // request a GUI so we can see all this stuff
       stage_gui_config_t gui;
@@ -397,8 +435,8 @@ int CreateModel( int connection, stage_model_t* model )
       int sub = STG_PROP_ENTITY_DATA;
       
       //for( b=0; b<4; b++ ) 
-      //SIOBufferProperty( props, sonars[b].id, STG_PROP_ENTITY_SUBSCRIBE,
-      //		   &sub, sizeof(sub), STG_NOREPLY );
+      //SIOBufferProperty( props, sonars[0].id, STG_PROP_ENTITY_SUBSCRIBE,
+      //		 &sub, sizeof(sub), STG_NOREPLY );
       
       //rects = RectsFromPnm( &num_rects, "worlds/smiley.ppm" );
       //SIOBufferProperty( props, bitmap.id, STG_PROP_ENTITY_RECTS, 
@@ -435,8 +473,8 @@ int CreateModel( int connection, stage_model_t* model )
 	  // 0.5 + 3.0 * fabs(sin(x)),  0.5 + 3.0 * fabs(cos(x+=0.05)) );
 	 
 	  //SetVelocity( connection, box.id, 3.0 * sin(x), 2.0 * cos(x+=0.1), 2.0 );
-
-	  if( (c % 100 ) == 0 )
+	  
+	  if( (c > 200) && ((c % 200 ) == 0) )
 	    {
 	      stage_buffer_t* buf = SIOCreateBuffer();
 
@@ -445,12 +483,17 @@ int CreateModel( int connection, stage_model_t* model )
 	      tx.len = strlen( "Foo" );
 	      tx.intensity = 64;
 	      
-	      SIOBufferProperty( buf, idars[0].id, STG_PROP_IDAR_TX, 
-				 &tx, sizeof(tx), STG_NOREPLY );
+	      SIOBufferProperty( buf, idars[0].id, STG_PROP_IDAR_TXRX, 
+				 &tx, sizeof(tx), STG_WANTREPLY );
 	      
-	      result = SIOPropertyUpdate( connection, timestamp, buf, NULL );
+	      stage_buffer_t* res = SIOCreateBuffer();
+		
+	      result = SIOPropertyUpdate( connection, timestamp, buf, res );
+
+	      SIODebugBuffer( res );
 
 	      SIOFreeBuffer( buf );
+	      SIOFreeBuffer( res );
 	    }
 	  /*
 	  if( c == 75 )

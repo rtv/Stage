@@ -274,8 +274,25 @@ int CSonarModel::RtkStartup()
   if( canvas )
     {
       // Create a figure representing this object
-      this->scan_fig = rtk_fig_create( canvas, NULL, 49);
+      this->scan_fig = rtk_fig_create( canvas, this->fig, 49);
+      assert( scan_fig );
+
+      //double gx, gy, ga;
+      //this->GetGlobalPose( gx, gy, ga );
+	
+      //rtk_fig_origin( this->scan_fig, gx, gy, ga );
+
+      //PRINT_DEBUG3( "global %.2f %.2f %.2f", gx, gy, ga );
+
+
       
+      // add rects showing the beam origins
+      for( int s=0; s< this->sonar_count; s++ )
+	rtk_fig_rectangle( this->fig, 
+			   this->sonars[s][0], 
+			   this->sonars[s][1], 
+			   this->sonars[s][2], 0.05, 0.05, 1 ); 
+
       // Set the color
       rtk_fig_color_rgb32(this->scan_fig, this->color);
     }
@@ -328,7 +345,7 @@ int CSonarModel::RtkUpdate()
 		  double ox = this->sonars[s][0];
 		  double oy = this->sonars[s][1];
 		  double oth = this->sonars[s][2];
-		  LocalToGlobal(ox, oy, oth);
+		  //LocalToGlobal(ox, oy, oth);
 		  
 		  // ...out to the range indicated by the data
 		  double x1 = ox;
@@ -351,7 +368,7 @@ int CSonarModel::RtkUpdate()
   return 0; //success
 }
 
-// IDAR --------------------------------------------------------------------------
+// IDAR ------------------------------------------------------------------
 #include "idar.hh"
 
 ///////////////////////////////////////////////////////////////////////////
@@ -379,6 +396,20 @@ int CIdarModel::RtkStartup()
       // Set the color
       rtk_fig_color_rgb32(this->data_fig, this->color);
       rtk_fig_color_rgb32(this->rays_fig, LookupColor( "gray50") );      
+
+
+      this->incoming_fig = rtk_fig_create( canvas, this->fig, 60 );
+      this->outgoing_fig = rtk_fig_create( canvas, this->fig, 60 );
+      
+      // draw an outgoing data arrow in green
+      rtk_fig_color_rgb32(this->outgoing_fig, 0x00AA00 );
+      rtk_fig_arrow(this->outgoing_fig, 0,0,0, 1.8*size_x, size_y );
+      rtk_fig_show( this->outgoing_fig, 0 ); // hide it
+
+      // draw an incoming data arrow in red
+      rtk_fig_color_rgb32(this->incoming_fig, 0xAA0000 );
+      rtk_fig_arrow(this->incoming_fig, 0,0,M_PI, -0.6*size_x, size_y );
+      rtk_fig_show( this->incoming_fig, 0 ); // hide it
     }
 
   return 0;
@@ -390,40 +421,28 @@ int CIdarModel::RtkStartup()
 void CIdarModel::RtkShutdown()
 {
   // Clean up the figure we created
+  if(this->incoming_fig) rtk_fig_destroy(this->incoming_fig);
+  if(this->outgoing_fig) rtk_fig_destroy(this->outgoing_fig);
   if(this->data_fig) rtk_fig_destroy(this->data_fig);
   if(this->rays_fig) rtk_fig_destroy(this->rays_fig);
   
   this->data_fig = NULL;
   this->rays_fig = NULL;
-
+  this->outgoing_fig = NULL;
+  this->incoming_fig = NULL;
+  
   CEntity::RtkShutdown();
 } 
 
 
-///////////////////////////////////////////////////////////////////////////
-// Update the rtk gui
-int CIdarModel::RtkUpdate()
+void CIdarModel::RtkShowReceived( void )
 {
-  if( CEntity::RtkUpdate() == -1 )
-    {
-      PRINT_ERR( "idar failed to rtkupdate base" );
-      return -1;
-    }
-  
-  PRINT_DEBUG1( "idar %d updating", this->stage_id );
-  
-  // Get global pose
-  double gx, gy, gth;
-  GetGlobalPose(gx, gy, gth);
-  rtk_fig_origin(this->data_fig, gx, gy, gth );
-  
-  rtk_fig_show( this->data_fig, true );
-  rtk_fig_show( this->rays_fig, true );
-
-  //if( Subscribed() < 1 )
-  //{
-  //rtk_fig_clear( this->rays_fig );
-  //rtk_fig_clear( this->data_fig );
-  // }
+  rtk_canvas_flash( canvas, this->incoming_fig, 20 );
 }
+
+void CIdarModel::RtkShowSent( void )
+{
+  rtk_canvas_flash( canvas, this->outgoing_fig, 20 );
+}
+
 
