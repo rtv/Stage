@@ -1,7 +1,7 @@
 ****************************************************************************
 * README.stage  - Richard Vaughan - Stage-1.3       
 *                                                                          
-* $Id: README,v 1.4 2002-11-11 09:57:06 rtv Exp $    
+* $Id: README,v 1.5 2002-12-10 00:34:52 rtv Exp $    
 ****************************************************************************
 
 ** Release notes **
@@ -83,22 +83,37 @@ Requires: Player [http://playerstage.sourceforge.net], X11R6, GTK.
 
 -- Compiling ---------------------------------------------------------------
 
+We use the standard GNU build system: download; extract; configure;
+make install. 
+
 0) Obtain and install Player (http://robotics.usc.edu/player)
 
 1) unpack the Stage tarball with
 
 $ tar xzvf Stage-<version>.tgz
 
-2) Check the top-level makefile (stage/Makefile.common). You must set
-the path to your Player source directory. Other settings, such as
-installation directory and the location of X11's color database can
-also be made here. If you have trouble compiling, you should first
-check these settings.
+(the OS X version of tar doesn't support the '-z' option, so you have
+to gunzip first, then 'tar xvf Stage-<version>.tar')
+
+2) configure stage:
+
+Stage needs to know the path to your Player installation or build
+directory, and to librtk and your X11 color database if you want to
+use the GUI. We use the GNU autoconf system to handle these
+configurations, plus various optional components and cross-platform
+compatibility issues. If you installed Player and librtk in their
+default locations, and you want a normal installation,
+the defaults should work:
+
+$ cd stage-<version>
+# configure
+
+To see all the available configuration options do:
+
+$ configure --help
 
 3) compile stage:
 
-$ cd stage-<version>
-$ configure
 $ make
 
 will build the binary src/stage.
@@ -108,8 +123,8 @@ Optionally, as you can do:
 $ make install
 
 this will install the executables in $HOME/stage-<version>/bin/
-(unless you otherwise configured the installation target in
-Makefile.common)
+(unless you otherwise set the installation target as an option
+to `configure')
 
 -- Running ---------------------------------------------------------------
 
@@ -123,6 +138,9 @@ $ stage [options] <filename.world>
 The .world file specifies what stage must simulate. The command-line
 options are described in the manual, and can be listed by doing:
 
+$ stage --help
+
+(or equivalently)
 $ stage -?
 
 To try out Stage with an example world, change to the installation

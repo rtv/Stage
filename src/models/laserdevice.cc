@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.6 2002-11-11 08:21:40 rtv Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.7 2002-12-10 00:34:53 rtv Exp $
  */
 
 #define DEBUG
@@ -325,7 +325,13 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 
       // Construct a list of entities that have a fiducial value
       if( ent->fiducial_return != FiducialNone )
-        this->visible_beacons.push_front( (int)ent );
+        {
+	  this->visible_beacons.push_front( (int)ent );
+	 
+	  // remove duplicates
+	  this->visible_beacons.sort();
+	  this->visible_beacons.unique();
+	}
 
       // Stop looking when we see something
       if(ent->laser_return != LaserTransparent) 

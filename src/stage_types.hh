@@ -21,7 +21,7 @@
  * Desc: Shared types, constants, etc
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: stage_types.hh,v 1.10 2002-11-19 04:27:18 rtv Exp $
+ * CVS: $Id: stage_types.hh,v 1.11 2002-12-10 00:34:52 rtv Exp $
  */
 
 #ifndef STAGE_TYPES_HH
@@ -199,7 +199,7 @@ typedef struct Rect
 #endif
 
 // size of char arrays for hostnames
-#define HOSTNAME_SIZE 32
+#define HOSTNAME_SIZE 256
 #define MILLION 1000000L
 
 #ifndef M_PI
