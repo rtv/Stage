@@ -1,21 +1,30 @@
-///////////////////////////////////////////////////////////////////////////
-//
-// File: irdevice.cc
-// Author: Richard Vaughan
-// Date: 22 October 2001
-// Desc: Simulates HRL's Infrared Data and Ranging System
-//
-// Copyright HRL Laboratories LLC, 2001
-// Supported by DARPA
-//
-// ** This file is not covered by the GNU General Public License **
-//
-// CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/irdevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.6 $
-//
-///////////////////////////////////////////////////////////////////////////
+/******************************************************************************
+* File: irdevice.cc
+* Author: Richard Vaughan
+* Date: 22 October 2001
+* Desc: Simulates a single sensor of HRL's Infrared Data and Ranging Device
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*
+* CVS info:
+* $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/irdevice.cc,v $
+* $Author: rtv $
+* $Revision: 1.7 $
+******************************************************************************/
+
+
 #include <math.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -88,53 +97,25 @@ CIDARDevice::CIDARDevice(CWorld *world, CEntity *parent )
   m_angle_per_scanline = m_angle_per_sensor / m_num_scanlines;
 }
 
-//CIDARDevice::~CIDARDevice( void )
-//{
-//}
-
-void CIDARDevice::Update( double sim_time ) 
+void CIDARDevice::Sync( void )
 {
-  CEntity::Update( sim_time ); // inherit some debug output
-
-  // UPDATE OUR RENDERING
-  double x, y, th;
-  GetGlobalPose( x,y,th );
-  
-  ReMap( x, y, th );
-  
-  // dump out if noone is subscribed
-  if(!Subscribed())
-    {
-#ifdef INCLUDE_RTK2
-      // unrender the message 
-      rtk_fig_clear(this->rays_fig);
-#endif     
-      return; 
-    }
-
-  // Check to see if it is time to update
-  //  - if not, return right away.
-  if( sim_time - m_last_update < m_interval) return;
-
-  m_last_update = sim_time;
-
   void *client;
   player_idar_config_t cfg;
-
+  
   // Get config
   int res = GetConfig( &client, &cfg, sizeof(cfg));
-
+  
   switch( res )
     { 
     case 0:
       // nothing available - nothing to do
       break;
-
+      
     case -1: // error
       PRINT_ERR( "get config failed" );
       break;
       
-    case sizeof(cfg): // the size we expect
+    case sizeof(cfg): // the size we expect - we received a config request
       // what does the client want us to do?
       switch( cfg.instruction )
 	{
@@ -142,19 +123,14 @@ void CIDARDevice::Update( double sim_time )
 	  //puts( "TX" );
 	  TransmitMessage( &(cfg.tx) );
 	  PutReply(client, PLAYER_MSGTYPE_RESP_ACK );
-	
+	  
 	  break;
 	  
 	case IDAR_RECEIVE:
 	  //puts( "RX" );
 	  // send back the currently stored message
 	  PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &recv, sizeof(recv));
-	  // and wipe the message (zero the buffer)
-	  memset( &recv, 0, sizeof(recv) );
-#ifdef INCLUDE_RTK2
-	  // unrender the message 
-	  rtk_fig_clear(this->data_fig);
-#endif
+	  ClearMessage(); // wipe the buffer
 	  break;
 	  
 	case IDAR_RECEIVE_NOFLUSH:
@@ -174,11 +150,43 @@ void CIDARDevice::Update( double sim_time )
       PRINT_ERR1( "wierd: idar config returned %d ", res );
       break;
     }
-  
-  // NOTE unlike most devices, live data is not published here - that's
-  // done in ReceiveMessage()
 }
 
+
+// NOTE unlike most devices, live data is not published here - that's
+// done in ReceiveMessage()
+void CIDARDevice::Update( double sim_time ) 
+{
+  CEntity::Update( sim_time ); // inherit some debug output
+  
+  // UPDATE OUR RENDERING
+  double x, y, th;
+  GetGlobalPose( x,y,th );
+  
+  ReMap( x, y, th );
+  
+  // dump out if noone is subscribed
+  if(!Subscribed())
+    {
+#ifdef INCLUDE_RTK2
+      // unrender the message 
+      rtk_fig_clear(this->rays_fig);
+#endif     
+      return; 
+    }
+  
+  m_last_update = sim_time;
+}
+
+void CIDARDevice::ClearMessage( void )
+{
+  // wipe the message (zero the buffer)
+  memset( &recv, 0, sizeof(recv) );
+#ifdef INCLUDE_RTK2
+  // unrender the message 
+  rtk_fig_clear(this->data_fig);
+#endif
+}
 
 void CIDARDevice::TransmitMessage( idartx_t* transmit )
 {
@@ -409,8 +417,7 @@ uint8_t CIDARDevice::LookupIntensity( uint8_t transmit_intensity,
 {
   // transmit_intensity isn't used for now
 
-  // subtract our radius from the range reading - on the robot the
-  // sensors are on the circumference (approx).
+  // subtract our radius from the range reading
 
   trans_range -= size_x / 2.0;
 
@@ -501,8 +508,8 @@ void CIDARDevice::RtkStartup()
   CEntity::RtkStartup();
   
   // Create a figure representing this object
-  this->data_fig = rtk_fig_create(m_world->canvas, NULL, 49);
-  this->rays_fig = rtk_fig_create(m_world->canvas, NULL, 49);
+  this->data_fig = rtk_fig_create(m_world->canvas, this->fig, 49);
+  this->rays_fig = rtk_fig_create(m_world->canvas, this->fig, 49);
   
   // Set the color
   rtk_fig_color_rgb32(this->data_fig, this->color);
@@ -542,37 +549,22 @@ void CIDARDevice::RtkUpdate()
   rtk_fig_origin(this->data_fig, gx, gy, gth );
   rtk_fig_origin(this->rays_fig, gx, gy, gth );
 
-  if( m_world->ShowDeviceData( this->stage_type) )
-    {
-      rtk_fig_show( this->data_fig, true );
-      rtk_fig_show( this->rays_fig, true );
-    }
-  else
-    {
-      rtk_fig_show( this->data_fig, false );
-      rtk_fig_show( this->rays_fig, false );
-    }
+  //  if( m_world->ShowDeviceData( this->stage_type) )
+  //{
+  //  rtk_fig_show( this->data_fig, true );
+  //  rtk_fig_show( this->rays_fig, true );
+  // }
+  //else
+  //{
+  //  rtk_fig_show( this->data_fig, false );
+  //  rtk_fig_show( this->rays_fig, false );
+  // }
   
   //if( Subscribed() < 1 )
   //{
-  //  rtk_fig_clear( this->rays_fig );
-  //  rtk_fig_clear( this->data_fig );
+  //rtk_fig_clear( this->rays_fig );
+  //rtk_fig_clear( this->data_fig );
   // }
-
-    // convert from integer mm to double m
-    //    double range = (double)ntohs(data.ranges[s]) / 1000.0;
-
-	//if( range < max_range )
-    // {
-    //    double x1 = ox;
-    //    double y1 = oy;
-    //    double x2 = x1 + range * cos(oth); 
-    //    double y2 = y1 + range * sin(oth);       
-    //    
-    //    rtk_fig_line(this->data_fig, x1, y1, x2, y2 );
-    //  }
-    //}
-  //}  
 }
 
 #endif

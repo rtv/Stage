@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/descartesdevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -75,6 +75,17 @@ private:
   bool left_bumper, right_bumper;
 
   double lastcommandtime; // the time in seconds of the last command
+
+#ifdef INCLUDE_RTK2
+  // Initialise the rtk gui
+  protected: virtual void RtkStartup();
+
+  // Finalise the rtk gui
+  protected: virtual void RtkShutdown();
+
+  // Update the rtk gui
+  protected: virtual void RtkUpdate();  
+#endif
 };
 
 #endif

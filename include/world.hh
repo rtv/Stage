@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.61 2002-07-17 00:21:44 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.62 2002-07-23 16:07:55 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -109,17 +109,17 @@ public: CRTPPlayer* rtp_player;
   public: struct in_addr m_hostaddr;
 
   double Pause();
-  void Output( double sleep_duration );
+  void Output();
   void LogOutputHeader( void );
 
   void LogOutput( double freq,
-                  double sleep_duration,
-                  double avg_sleep_duration,
+                  //double sleep_duration,
+                  //double avg_sleep_duration,
                   unsigned int bytes_in, unsigned int bytes_out,
                   unsigned int total_bytes_in, unsigned int total_bytes_out );
 
   void ConsoleOutput( double freq,
-                      double ratio, double avg_ratio,
+                      //double ratio, double avg_ratio,
                       unsigned int bytes_in, unsigned int bytes_out,
                       double avg_data );
     
@@ -321,6 +321,9 @@ public: CRTPPlayer* rtp_player;
   protected: void RtkUpdate();
 
 protected: void RtkMenuHandling();
+  
+  //protected: bool device_view_status[ NUMBER_OF_STAGE_TYPES ];
+  //protected: bool data_view_status[ NUMBER_OF_STAGE_TYPES ];
 
   // Basic GUI elements
   public: rtk_app_t *app;
@@ -341,9 +344,11 @@ protected: void RtkMenuHandling();
   private: rtk_menuitem_t *walls_item;
 
   // The action menu
-  public: rtk_menu_t* action_menu;
-  private: rtk_menuitem_t *subscribedonly_item;
-  
+public: rtk_menu_t* action_menu;
+private: rtk_menuitem_t* subscribedonly_item;
+private: rtk_menuitem_t* autosubscribe_item;
+public: static int autosubscribe;
+
 
   // The view/device menu
 public: rtk_menu_t *device_menu;

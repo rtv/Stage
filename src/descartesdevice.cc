@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/descartesdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -349,6 +349,42 @@ void CDescartesDevice::ComposeData()
 
 
 
+
+#ifdef INCLUDE_RTK2
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise the rtk gui
+void CDescartesDevice::RtkStartup()
+{
+  CEntity::RtkStartup();
+
+  // add a line indicating fowards
+  double ox, oy, oth;
+  this->GetPose( ox, oy, oth );
+  
+  double dx = this->size_x/2.0 * cos( oth );
+  double dy = this->size_x/2.0 * sin( oth );
+  
+  rtk_fig_line( this->fig, 0,0, dx, dy );
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Finalise the rtk gui
+void CDescartesDevice::RtkShutdown()
+{
+  CEntity::RtkShutdown();
+} 
+
+
+///////////////////////////////////////////////////////////////////////////
+// Update the rtk gui
+void CDescartesDevice::RtkUpdate()
+{
+  CEntity::RtkUpdate();   
+}
+
+#endif
 
 
 

@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.73 2002-07-17 00:21:44 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.74 2002-07-23 16:07:56 rtv Exp $
  */
 
 #include <math.h>
@@ -50,6 +50,31 @@
 #include "raytrace.hh"
 #include "world.hh"
 #include "worldfile.hh"
+
+
+// CALLBACK FUNCTION WRAPPERS ////////////////////////////////////////////
+// called by rtk to tweak Stage devices
+
+void CEntity::staticSetGlobalPose( void* ent, double x, double y, double th )
+{
+  ((CEntity*)ent)->SetGlobalPose( x, y, th );
+}
+
+void CEntity::staticSelect( void* ent )
+{
+  //puts( "SELECT" );
+
+  if( CWorld::autosubscribe )
+    ((CEntity*)ent)->FamilySubscribe();
+}
+
+void CEntity::staticUnselect( void* ent )
+{
+  //puts( "UNSELECT" );
+  if( CWorld::autosubscribe )
+    ((CEntity*)ent)->FamilyUnsubscribe();
+}
+///////////////////////////////////////////////////////////////////////////
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -139,8 +164,6 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
   // Default figures for drawing the entity.
   this->fig = NULL;
   this->fig_label = NULL;
-
-  this->guix = this->guiy = this->guia = 0.0;
 
   // By default, we can both translate and rotate the entity.
   this->movemask = RTK_MOVE_TRANS | RTK_MOVE_ROT;
@@ -672,7 +695,7 @@ void CEntity::SetPose(double px, double py, double pth)
     SetProperty( -1, PropPoseY, &py, sizeof(py) );
   
   if( this->local_pth != pth ) 
-    SetProperty( -1, PropPoseTh, &pth, sizeof(pth) );
+    SetProperty( -1, PropPoseTh, &pth, sizeof(pth) );  
 }
 
 
@@ -951,12 +974,33 @@ int CEntity::Subscribed()
   return( subscribed );
 }
 
+void CEntity::FamilySubscribe()
+{
+  for( int i=0; i<m_world->GetEntityCount(); i++ )
+    if( m_world->GetEntity(i)->m_parent_entity == this )
+      m_world->GetEntity(i)->FamilySubscribe();
+
+  this->Subscribe();
+}
+
+void CEntity::FamilyUnsubscribe()
+{
+  for( int i=0; i<m_world->GetEntityCount(); i++ )
+    if( m_world->GetEntity(i)->m_parent_entity == this )
+      m_world->GetEntity(i)->FamilyUnsubscribe();
+
+  this->Unsubscribe();
+}
+
 ///////////////////////////////////////////////////////////////////////////
 //// subscribe to the device (used by other devices that depend on this one)
 void CEntity::Subscribe() 
 {
   //puts( "SUB" );
 
+  if( m_player.code == 0 ) // can't subscribe to non-player devices 
+    return;
+  
   Lock();
   m_info_io->subscribed++;
   Unlock();
@@ -967,6 +1011,8 @@ void CEntity::Subscribe()
 void CEntity::Unsubscribe()
 { 
   //puts( "UNSUB" );
+  if( m_player.code == 0 ) // can't subscribe to non-player devices 
+    return;
 
   Lock();
   m_info_io->subscribed--;
@@ -1088,6 +1134,9 @@ int CEntity::SetProperty( int con, EntityProperty property,
   assert( value );
   assert( len > 0 );
   assert( (int)len < MAX_PROPERTY_DATA_LEN );
+
+  bool refresh_figure = false;
+  bool move_figure = false;
   
   switch( property )
     {
@@ -1109,57 +1158,47 @@ int CEntity::SetProperty( int con, EntityProperty property,
     case PropSizeX:
       memcpy( &size_x, (double*)value, sizeof(size_x) );
       // force the device to re-render itself
-#ifdef INCLUDE_RTK2
-      RtkShutdown();
-      RtkStartup();
-#endif 
+      refresh_figure = true;
      break;
     case PropSizeY:
       memcpy( &size_y, (double*)value, sizeof(size_y) );
       // force the device to re-render itself
-#ifdef INCLUDE_RTK2
-      RtkShutdown();
-      RtkStartup();
-#endif
+      refresh_figure = true;
       break;
     case PropPoseX:
       memcpy( &local_px, (double*)value, sizeof(local_px) );
+      move_figure = true;
       break;
     case PropPoseY:
       memcpy( &local_py, (double*)value, sizeof(local_py) );
+      move_figure = true;
       break;
     case PropPoseTh:
       memcpy( &local_pth, (double*)value, sizeof(local_pth) );
+      move_figure = true;
       break;
     case PropOriginX:
       memcpy( &origin_x, (double*)value, sizeof(origin_x) );
+      refresh_figure = true;
       break;
     case PropOriginY:
       memcpy( &origin_y, (double*)value, sizeof(origin_y) );
+      refresh_figure = true;
       break;
     case PropName:
       strcpy( name, (char*)value );
     // force the device to re-render itself
-#ifdef INCLUDE_RTK2
-      RtkShutdown();
-      RtkStartup();
-#endif
+      refresh_figure = true;
       break;
     case PropColor:
       memcpy( &color, (StageColor*)value, sizeof(color) );
       // force the device to re-render itself
-#ifdef INCLUDE_RTK2
-      RtkShutdown();
-      RtkStartup();
-#endif
+      refresh_figure = true;
       break;
     case PropShape:
       memcpy( &shape, (StageShape*)value, sizeof(shape) );
       // force the device to re-render itself
-#ifdef INCLUDE_RTK2
-      RtkShutdown();
-      RtkStartup();
-#endif
+      refresh_figure = true;
       break;
     case PropLaserReturn:
       memcpy( &laser_return, (LaserReturn*)value, sizeof(laser_return) );
@@ -1222,189 +1261,235 @@ int CEntity::SetProperty( int con, EntityProperty property,
   if( con != -1 ) // unless this was a local change 
     this->SetDirty( con, property, 0 ); // clean on this con
 
-  return 0;
-}
-
-int CEntity::GetProperty( EntityProperty property, void* value )
-{
-  assert( value );
-
-  // indicate no data - this should be overridden below
-  int retval = 0;
-
-  switch( property )
-  {
-    case PropPlayerSubscriptions:
-      PRINT_DEBUG( "GET SUBS PROPERTY");
-      { int subs = Subscribed();
-      memcpy( value, (void*)&subs, sizeof(subs) ); 
-      retval = sizeof(subs); }
-      break;
-    case PropParent:
-      // find the parent's position in the world's entity array
-      // if parent pointer is null or otherwise invalid, index is -1 
-    { int parent_index = m_world->GetEntityIndex( m_parent_entity );
-    memcpy( value, &parent_index, sizeof(parent_index) );
-    retval = sizeof(parent_index); }
-    break;
-    case PropSizeX:
-      memcpy( value, &size_x, sizeof(size_x) );
-      retval = sizeof(size_x);
-      break;
-    case PropSizeY:
-      memcpy( value, &size_y, sizeof(size_y) );
-      retval = sizeof(size_y);
-      break;
-    case PropPoseX:
-      memcpy( value, &local_px, sizeof(local_px) );
-      retval = sizeof(local_px);
-      break;
-    case PropPoseY:
-      memcpy( value, &local_py, sizeof(local_py) );
-      retval = sizeof(local_py);
-      break;
-    case PropPoseTh:
-      memcpy( value, &local_pth, sizeof(local_pth) );
-      retval = sizeof(local_pth);
-      break;
-    case PropOriginX:
-      memcpy( value, &origin_x, sizeof(origin_x) );
-      retval = sizeof(origin_x);
-      break;
-      break;
-    case PropOriginY:
-      memcpy( value, &origin_y, sizeof(origin_y) );
-      retval = sizeof(origin_y);
-      break;
-    case PropName:
-      strcpy( (char*)value, name );
-      retval = strlen(name);
-      break;
-    case PropColor:
-      memcpy( value, &color, sizeof(color) );
-      retval = sizeof(color);
-      break;
-    case PropShape:
-      memcpy( value, &shape, sizeof(shape) );
-      retval = sizeof(shape);
-      break;
-    case PropLaserReturn:
-      memcpy( value, &laser_return, sizeof(laser_return) );
-      retval = sizeof(laser_return);
-      break;
-    case PropSonarReturn:
-      memcpy( value, &sonar_return, sizeof(sonar_return) );
-      retval = sizeof(sonar_return);
-      break;
-    case PropIdarReturn:
-      memcpy( value, &idar_return, sizeof(idar_return) );
-      retval = sizeof(idar_return);
-      break;
-    case PropObstacleReturn:
-      memcpy( value, &obstacle_return, sizeof(obstacle_return) );
-      retval = sizeof(obstacle_return);
-      break;
-    case PropVisionReturn:
-      memcpy( value, &vision_return, sizeof(vision_return) );
-      retval = sizeof(vision_return);
-      break;
-    case PropPuckReturn:
-      memcpy( value, &puck_return, sizeof(puck_return) );
-      retval = sizeof(puck_return);
-      break;
-    case PropPlayerId:
-      memcpy( value, &m_player, sizeof(m_player) );
-      retval = sizeof(m_player);
-      break;
-
-      // these properties manipulate the player IO buffers
-    case PropCommand:
-      retval = GetCommand( value, m_command_len );
-      break;
-    case PropData:
-      retval = GetData( value, m_data_len );
-      break;
-    case PropConfig:
-    { 
-      Lock();
-      size_t len = m_config_len * sizeof(playerqueue_elt_t);
-      memcpy( value, m_config_io, len );
-      retval = len; 
-      Unlock();
-    }
-    break;
-    case PropReply:
-    { 
-      Lock();
-      size_t len = m_reply_len * sizeof(playerqueue_elt_t);
-      memcpy( value, m_reply_io, len );
-      retval = len; 
-      Unlock();
-    }
-    break;
-
-    default:
-      //printf( "Stage Warning: attempting to get unknown property %d\n", 
-      //      property );
-      break;
-  }
-  
-  return retval;
-}
-
 #ifdef INCLUDE_RTK2
-
-///////////////////////////////////////////////////////////////////////////
-// Initialise the rtk gui
-void CEntity::RtkStartup()
-{
-  // Create a figure representing this entity
-  this->fig = rtk_fig_create(m_world->canvas, NULL, 50);
-
-  // Set the color
-  rtk_fig_color_rgb32(this->fig, this->color);
-
-  // Compute geometry
-  double qx = this->origin_x;
-  double qy = this->origin_y;
-  double sx = this->size_x;
-  double sy = this->size_y;
-
-  switch (this->shape)
-  {
-  case ShapeRect:
-    rtk_fig_rectangle(this->fig, qx, qy, 0, sx, sy, false);
-    break;
-  case ShapeCircle:
-    rtk_fig_ellipse(this->fig, qx, qy, 0, sx, sx, false);
-    break;
-  case ShapeNone: // no shape
-    break;
-  }
+  if( refresh_figure )
+    {
+      RtkShutdown();
+      RtkStartup();
+    }
   
-  // Create the label
-  // By default, the label is not shown
-  this->fig_label = rtk_fig_create(m_world->canvas, this->fig, 51);
-  rtk_fig_show(this->fig_label, false);    
-  rtk_fig_movemask(this->fig_label, 0);
-  
-  char label[1024];
-  char tmp[1024];
+  if( move_figure && this->fig )
+    rtk_fig_origin(this->fig, local_px, local_py, local_pth );
+ #endif 
 
-  label[0] = 0;
-  snprintf(tmp, sizeof(tmp), "%s", this->name);
-  strncat(label, tmp, sizeof(label));
-  if (m_player.port > 0)
-  {
-    snprintf(tmp, sizeof(tmp), "\n%d:%d", m_player.port, m_player.index);
-    strncat(label, tmp, sizeof(label));
-  }
+   return 0;
+ }
 
-  qx = qx + 0.75 * sx;
-  qy = qy + 0.75 * sy;
-  rtk_fig_color_rgb32(this->fig, this->color);
-  rtk_fig_text(this->fig_label, qx, qy, 0, label);
-}
+ int CEntity::GetProperty( EntityProperty property, void* value )
+ {
+   assert( value );
+
+   // indicate no data - this should be overridden below
+   int retval = 0;
+
+   switch( property )
+   {
+     case PropPlayerSubscriptions:
+       PRINT_DEBUG( "GET SUBS PROPERTY");
+       { int subs = Subscribed();
+       memcpy( value, (void*)&subs, sizeof(subs) ); 
+       retval = sizeof(subs); }
+       break;
+     case PropParent:
+       // find the parent's position in the world's entity array
+       // if parent pointer is null or otherwise invalid, index is -1 
+     { int parent_index = m_world->GetEntityIndex( m_parent_entity );
+     memcpy( value, &parent_index, sizeof(parent_index) );
+     retval = sizeof(parent_index); }
+     break;
+     case PropSizeX:
+       memcpy( value, &size_x, sizeof(size_x) );
+       retval = sizeof(size_x);
+       break;
+     case PropSizeY:
+       memcpy( value, &size_y, sizeof(size_y) );
+       retval = sizeof(size_y);
+       break;
+     case PropPoseX:
+       memcpy( value, &local_px, sizeof(local_px) );
+       retval = sizeof(local_px);
+       break;
+     case PropPoseY:
+       memcpy( value, &local_py, sizeof(local_py) );
+       retval = sizeof(local_py);
+       break;
+     case PropPoseTh:
+       memcpy( value, &local_pth, sizeof(local_pth) );
+       retval = sizeof(local_pth);
+       break;
+     case PropOriginX:
+       memcpy( value, &origin_x, sizeof(origin_x) );
+       retval = sizeof(origin_x);
+       break;
+       break;
+     case PropOriginY:
+       memcpy( value, &origin_y, sizeof(origin_y) );
+       retval = sizeof(origin_y);
+       break;
+     case PropName:
+       strcpy( (char*)value, name );
+       retval = strlen(name);
+       break;
+     case PropColor:
+       memcpy( value, &color, sizeof(color) );
+       retval = sizeof(color);
+       break;
+     case PropShape:
+       memcpy( value, &shape, sizeof(shape) );
+       retval = sizeof(shape);
+       break;
+     case PropLaserReturn:
+       memcpy( value, &laser_return, sizeof(laser_return) );
+       retval = sizeof(laser_return);
+       break;
+     case PropSonarReturn:
+       memcpy( value, &sonar_return, sizeof(sonar_return) );
+       retval = sizeof(sonar_return);
+       break;
+     case PropIdarReturn:
+       memcpy( value, &idar_return, sizeof(idar_return) );
+       retval = sizeof(idar_return);
+       break;
+     case PropObstacleReturn:
+       memcpy( value, &obstacle_return, sizeof(obstacle_return) );
+       retval = sizeof(obstacle_return);
+       break;
+     case PropVisionReturn:
+       memcpy( value, &vision_return, sizeof(vision_return) );
+       retval = sizeof(vision_return);
+       break;
+     case PropPuckReturn:
+       memcpy( value, &puck_return, sizeof(puck_return) );
+       retval = sizeof(puck_return);
+       break;
+     case PropPlayerId:
+       memcpy( value, &m_player, sizeof(m_player) );
+       retval = sizeof(m_player);
+       break;
+
+       // these properties manipulate the player IO buffers
+     case PropCommand:
+       retval = GetCommand( value, m_command_len );
+       break;
+     case PropData:
+       retval = GetData( value, m_data_len );
+       break;
+     case PropConfig:
+     { 
+       Lock();
+       size_t len = m_config_len * sizeof(playerqueue_elt_t);
+       memcpy( value, m_config_io, len );
+       retval = len; 
+       Unlock();
+     }
+     break;
+     case PropReply:
+     { 
+       Lock();
+       size_t len = m_reply_len * sizeof(playerqueue_elt_t);
+       memcpy( value, m_reply_io, len );
+       retval = len; 
+       Unlock();
+     }
+     break;
+
+     default:
+       //printf( "Stage Warning: attempting to get unknown property %d\n", 
+       //      property );
+       break;
+   }
+
+   return retval;
+ }
+
+ // change the parent of this object
+ // handling GUI issues
+ void CEntity::SetParent( CEntity* parent )
+ {
+   this->m_parent_entity = parent;
+
+ #ifdef INCLUDE_RTK2
+   // if the parent changes, it might change whether we can be dragged around
+   if (m_parent_entity != NULL)
+     rtk_fig_movemask(this->fig, 0);
+   else
+     rtk_fig_movemask(this->fig, this->movemask);
+ #endif
+ }
+
+
+ #ifdef INCLUDE_RTK2
+
+
+
+ ///////////////////////////////////////////////////////////////////////////
+ // Initialise the rtk gui
+ void CEntity::RtkStartup()
+ {
+   // Create a figure representing this entity
+   if( m_parent_entity == NULL )
+     this->fig = rtk_fig_create(m_world->canvas, NULL, 50);
+   else
+     this->fig = rtk_fig_create(m_world->canvas, m_parent_entity->fig, 50);
+
+   this->fig->thing = (void*)this;
+   this->fig->origin_callback = staticSetGlobalPose;
+   this->fig->select_callback = staticSelect;
+   this->fig->unselect_callback = staticUnselect;
+
+   // visible by default
+   rtk_fig_show( this->fig, true );
+
+   // Set the color
+   rtk_fig_color_rgb32(this->fig, this->color);
+
+   // Compute geometry
+   
+   rtk_fig_origin( this->fig, local_px, local_py, local_pth );
+   
+   switch (this->shape)
+     {
+     case ShapeRect:
+       rtk_fig_rectangle(this->fig, 0,0,0, size_x, size_y, false);
+       break;
+     case ShapeCircle:
+       rtk_fig_ellipse(this->fig, 0,0,0,  size_x, size_y, false);
+       break;
+     case ShapeNone: // no shape
+       break;
+     }
+   
+   // Create the label
+   // By default, the label is not shown
+   this->fig_label = rtk_fig_create(m_world->canvas, this->fig, 51);
+   rtk_fig_show(this->fig_label, false);    
+   rtk_fig_movemask(this->fig_label, 0);
+   
+   char label[1024];
+   char tmp[1024];
+   
+   label[0] = 0;
+   snprintf(tmp, sizeof(tmp), "%s", this->name);
+   strncat(label, tmp, sizeof(label));
+   if (m_player.port > 0)
+     {
+       snprintf(tmp, sizeof(tmp), "\n%d:%d", m_player.port, m_player.index);
+       strncat(label, tmp, sizeof(label));
+     }
+   
+   rtk_fig_color_rgb32(this->fig, this->color);
+   rtk_fig_text(this->fig_label,  0.75 * size_x,  0.75 * size_y, 0, label);
+   
+   // attach the label to the main figure
+   // rtk will draw the label when the mouse goes over the figure
+   this->fig->mouseover_fig = fig_label;
+   
+   // we can be moved if we have no parent
+   if (m_parent_entity != NULL)
+     rtk_fig_movemask(this->fig, 0);
+   else
+     rtk_fig_movemask(this->fig, this->movemask);  
+ }
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1421,6 +1506,10 @@ void CEntity::RtkShutdown()
 // Update the rtk gui
 void CEntity::RtkUpdate()
 {
+
+  // TODO this is nasty and inefficient - figure out a better way to
+  // do this
+
   // if we're not looking at this device, hide it 
   if( !m_world->ShowDeviceBody( this->stage_type) )
     {
@@ -1429,58 +1518,6 @@ void CEntity::RtkUpdate()
   else // we need to show and update this figure
     {
       rtk_fig_show( this->fig, true );
-
-      // We need to handle mouse dragging by the user.
-      // We can only move top-level entitys.
-      // Do the test here, since some entitys (eg pucks) may
-      // change their parents.
-      if (m_parent_entity != NULL)
-	rtk_fig_movemask(this->fig, 0);
-      else
-	rtk_fig_movemask(this->fig, this->movemask);
-      
-      // Make sure the entity and the figure have the same pose.
-      // Either update the pose of the entity in the world,
-      // or update the pose of the figure in the GUI.
-      
-      // we'll test the GUI first, because user moves take precedence over
-      // simulation moves
-
-      //        double gx, gy, gth;
-      //GetGlobalPose(gx, gy, gth);
-      //rtk_fig_origin(this->fig, gx, gy, gth);
-      
-        double gx, gy, gth;
-        rtk_fig_get_origin(this->fig, &gx, &gy, &gth);
-      
-        // if the GUI has moved the figure, we move the entity to match
-        if( gx != this->guix || gy != this->guiy || gth != this->guia )
-  	{
-  	  this->guix = gx;
-  	  this->guiy = gy;
-  	  this->guia = gth;
-	  
-  	  SetGlobalPose(gx, gy, gth);
-  	}
-        else // if we've moved the entity, move the figure to match
-  	{ 
-  	  GetGlobalPose(gx, gy, gth);
- 
-  	  if( gx != this->guix || gy != this->guiy || gth != this->guia )
-  	    {
-  	      this->guix = gx;
-  	      this->guiy = gy;
-  	      this->guia = gth;
-      
-  	      rtk_fig_origin(this->fig, gx, gy, gth);
-  	    }
-  	}
-      
-      // Show the figure's label if it is selected
-      if (rtk_fig_mouse_over(this->fig))
-	rtk_fig_show(this->fig_label, true);
-      else
-	rtk_fig_show(this->fig_label, false);    
     }
 }
 #endif

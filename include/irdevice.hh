@@ -13,7 +13,7 @@
 //  CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/irdevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -43,7 +43,7 @@ private:
   double m_angle_per_scanline; // angle between scanlines in a single sensor
 
   idarrx_t recv; // record the most intense message received
- 
+
 public: 
   
   CIDARDevice(CWorld *world, CEntity *parent );
@@ -55,6 +55,8 @@ public:
   // enough in the matrix so that it can guarantee to be hit by at
   // least one scanline in the chord. this looks like a reasonable
   // solution compared to the huge cost of scanning the whole chord.
+
+  virtual void Sync( void );
   
   // Update the device
   //
@@ -71,15 +73,20 @@ public:
 
   virtual void TransmitMessage( idartx_t* transmit );
   
+  // wipe the current message (and clear figure if rtk is used)
+  virtual void ClearMessage( void );
+  virtual void CopyMessage( idarrx_t* msg ){ memcpy( msg, &recv, sizeof(recv)); }; 
+  virtual void CopyAndClearMessage( idarrx_t* msg ){ CopyMessage(msg); ClearMessage(); };    
+
 #ifdef INCLUDE_RTK2
   // Initialise the rtk gui
-  protected: virtual void RtkStartup();
+  public: virtual void RtkStartup();
 
   // Finalise the rtk gui
-  protected: virtual void RtkShutdown();
+  public: virtual void RtkShutdown();
 
   // Update the rtk gui
-  protected: virtual void RtkUpdate();
+ public: virtual void RtkUpdate();
   
   // For drawing the ir message & beams
   private: rtk_fig_t *data_fig;

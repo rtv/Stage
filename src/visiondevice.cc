@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.cc,v 1.36 2002-07-17 20:29:11 rtv Exp $
+ * CVS info: $Id: visiondevice.cc,v 1.37 2002-07-23 16:07:57 rtv Exp $
  */
 
 #include <math.h>
@@ -513,8 +513,7 @@ void CVisionDevice::RtkUpdate()
           double mright = right * scale;
 	    
 	  // get the range in meters
-	  double range = (double)ntohs(data.blobs[index+b].range) / 1000.0; 
-
+	  //double range = (double)ntohs(data.blobs[index+b].range) / 1000.0; 
 	  
           rtk_fig_rectangle(this->vision_fig, 
                             -mwidth/2.0 + (mleft+mright)/2.0, 

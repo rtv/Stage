@@ -621,7 +621,7 @@ int CStageIO::Read( void )
   // otherwise, check the connections for incoming stuff
 
   // if we have nothing to set the time, just increment it
-  if( m_sync_counter == 0 ) m_step_num++;  
+  //if( m_sync_counter == 0 ) m_step_num++;  
   
   // in real time-mode, poll blocks until it is interrupted by
   // a timer signal, so we give it a time-out of -1. Otherwise,

@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.54 2002-07-09 03:31:56 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.55 2002-07-23 16:07:55 rtv Exp $
  */
 
 #ifndef ENTITY_HH
@@ -119,7 +119,16 @@ class CEntity
   private: int lock_byte; 
 
   // Update the entity's device-specific representation
+  // this is called every time the simulation clock increments
   public: virtual void Update( double sim_time );
+
+  // this is called very rapidly from the main loop
+  // it allows the entity to perform some actions between clock increments
+  // (such handling config requests to increase synchronous IO performance)
+  public: virtual void Sync()
+  { 
+    // default - do nothing 
+  };
 
   // Render the entity into the world
   protected: void Map(double px, double py, double pth);
@@ -185,7 +194,13 @@ class CEntity
   // Pointer the default entity
   // i.e. the entity that would-be children of this entity should attach to.
   // This will usually be the entity itself.
-  public: CEntity *m_default_entity;
+  private: CEntity *m_default_entity;
+
+  // change the parent
+  public: void SetParent( CEntity* parent );
+
+  // get the parent
+  public: CEntity* GetParent( void ){ return( this->m_parent_entity ); };
 
   // The section in the world file that describes this entity
   public: int worldfile_section;
@@ -336,13 +351,19 @@ class CEntity
   // See if the device is subscribed
   // returns the number of current subscriptions
   //private int player_subs;
-   public: int Subscribed();
+
+  // this gets called a LOT, so we inline it.
+   public: inline int Subscribed();
 
   // subscribe to / unsubscribe from the device
   // these are used when one device (e.g., lbd) depends on another (e.g.,
   // laser)
   public: void Subscribe();
   public: void Unsubscribe();
+  
+  // these versions sub/unsub to this device and all its decendants
+public: void FamilySubscribe();
+public: void FamilyUnsubscribe();
 
   // packages and sends data via rtp
   protected: void AnnounceDataViaRTP( void* data, size_t len );
@@ -387,10 +408,10 @@ class CEntity
   // Default movement mask
   protected: int movemask;
 
-  // we store the last know GUI pose in here so we can find out if the
-  // GUI has moved the object. kinda inefficient, but it saves
-  // tweaking rtk2 for the moment.
-  protected: double guix, guiy, guia;
+  // callbacks - we ask the rtk figures call these when things happen to 'em.
+  static void staticSetGlobalPose( void* ent, double x, double y, double th );
+  static void staticSelect( void* ent );
+  static void staticUnselect( void* ent );
 #endif
 };
 

@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.48 2002-07-17 00:21:44 rtv Exp $
+ * CVS: $Id: main.cc,v 1.49 2002-07-23 16:07:57 rtv Exp $
  */
 
 #include <unistd.h>
@@ -161,13 +161,10 @@ int main(int argc, char **argv)
   signal(SIGHUP, sig_quit );
   
   // the main loop
-  double pause_duration = 0.0;
-  while( !quit ) // world->Update() might raise this flag
-  {
-    world->Update(); // update the simulation
-    world->Output( world->Pause() ); //wait for a signal and output stuff
-  }
-
+    
+  // update the simulation - stop when the quit flag is raised
+  while( !quit ) world->Update(); 
+  
   // clean up and exit
   StageQuit();
 }

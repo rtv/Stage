@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.111 2002-07-17 20:29:11 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.112 2002-07-23 16:07:57 rtv Exp $
  */
 
 #undef DEBUG
@@ -58,8 +58,14 @@ long int g_bytes_input = 0;
 
 int g_timer_events = 0;
 
+
 #include "world.hh"
 #include "fixedobstacle.hh"
+
+#ifdef INCLUDE_RTK2
+// static var accessible to callbacks
+int CWorld::autosubscribe = 0;
+#endif
 
 // allocate chunks of 32 pointers for entity storage
 const int OBJECT_ALLOC_SIZE = 32;
@@ -118,10 +124,10 @@ CWorld::CWorld( int argc, char** argv )
   m_enable = false;
 
   if( gethostname( m_hostname, sizeof(m_hostname)) == -1)
-  {
-    perror( "Stage: couldn't get hostname. Quitting." );
-    exit( -1 );
-  }
+    {
+      perror( "Stage: couldn't get hostname. Quitting." );
+      exit( -1 );
+    }
 
   /* now strip off domain */
   char* first_dot;
@@ -133,18 +139,18 @@ CWorld::CWorld( int argc, char** argv )
   struct hostent* info = gethostbyname( m_hostname );
   
   if( info )
-  { // make sure this looks like a regular internet address
-    assert( info->h_length == 4 );
-    assert( info->h_addrtype == AF_INET );
+    { // make sure this looks like a regular internet address
+      assert( info->h_length == 4 );
+      assert( info->h_addrtype == AF_INET );
       
-    // copy the address out
-    memcpy( &m_hostaddr.s_addr, info->h_addr_list[0], 4 ); 
-  }
+      // copy the address out
+      memcpy( &m_hostaddr.s_addr, info->h_addr_list[0], 4 ); 
+    }
   else
-  {
-    PRINT_ERR1( "failed to resolve IP for local hostname \"%s\"\n", 
-                m_hostname );
-  }
+    {
+      PRINT_ERR1( "failed to resolve IP for local hostname \"%s\"\n", 
+		  m_hostname );
+    }
   
   
   m_send_idar_packets = false;
@@ -168,10 +174,10 @@ CWorld::CWorld( int argc, char** argv )
   // give the command line a chance to override the default values
   // we just set
   if( !ParseCmdLine( argc, argv )) 
-  {
-    quit = true;
-    return;
-  }
+    {
+      quit = true;
+      return;
+    }
 }
 
 
@@ -198,15 +204,15 @@ int CWorld::CountDirtyOnConnection( int con )
   // count the number of dirty properties on this connection 
   for( int i=0; i < GetEntityCount(); i++ )
     for( int p=0; p < ENTITY_LAST_PROPERTY; p++ )
-    {  
-      // is the entity marked dirty for this connection & property?
-      if( GetEntity(i)->m_dirty[con][p] ) 
-      {
-        // if this property has any data  
-        if( GetEntity(i)->GetProperty( (EntityProperty)p, dummydata ) > 0 )
-          count++; // we count it as dirty
+      {  
+	// is the entity marked dirty for this connection & property?
+	if( GetEntity(i)->m_dirty[con][p] ) 
+	  {
+	    // if this property has any data  
+	    if( GetEntity(i)->GetProperty( (EntityProperty)p, dummydata ) > 0 )
+	      count++; // we count it as dirty
+	  }
       }
-    }
 
   return count;
 }
@@ -216,113 +222,96 @@ int CWorld::CountDirtyOnConnection( int con )
 bool CWorld::ParseCmdLine(int argc, char **argv)
 {
   for( int a=1; a<argc; a++ )
-  {   
-    // USAGE
-    if( (strcmp( argv[a], "-?" ) == 0) || 
-        (strcmp( argv[a], "--help") == 0) )
-    {
-      PrintUsage();
-      exit(0); // bail right here
-    }
+    {   
+      // USAGE
+      if( (strcmp( argv[a], "-?" ) == 0) || 
+	  (strcmp( argv[a], "--help") == 0) )
+	{
+	  PrintUsage();
+	  exit(0); // bail right here
+	}
       
-    // LOGGING
+      // LOGGING
       if( strcmp( argv[a], "-l" ) == 0 )
-      {
-        m_log_output = true;
-        strncpy( m_log_filename, argv[a+1], 255 );
-        printf( "[Logfile %s]", m_log_filename );
-	  
-        //store the command line for logging later
-        memset( m_cmdline, 0, sizeof(m_cmdline) );
-	  
-        for( int g=0; g<argc; g++ )
-  	    {
-  	      strcat( m_cmdline, argv[g] );
-  	      strcat( m_cmdline, " " );
-  	    }
-	  
-        a++;
-	  
-        // open the log file and write out a header
-        LogOutputHeader();
-      }
-      
-    // DIS/ENABLE GUI
-    if( strcmp( argv[a], "-g" ) == 0 )
-    {
-      this->enable_gui = false;
-      printf( "[No GUI]" );
-    }
-      
-    // SET GOAL REAL CYCLE TIME
-    // Stage will attempt to update at this speed
-    else if( strcmp( argv[a], "-u" ) == 0 )
-    {
-      m_real_timestep = atof(argv[a+1]);
-      printf( "[Real time per cycle %f sec]", m_real_timestep );
-      a++;
-    }
-      
-    // SET SIMULATED UPDATE CYCLE
-    // one cycle simulates this much time
-    else if( strcmp( argv[a], "-v" ) == 0 )
-    {
-      m_sim_timestep = atof(argv[a+1]);
-      printf( "[Simulated time per cycle %f sec]", m_sim_timestep );
-      a++;
-    }
-      
-    // DISABLE console output
-    if( strcmp( argv[a], "-o" ) == 0 )
-    {
-      m_console_output = true;
-      printf( "[Console Output]" );
-    }
-      
-    // SWITCH ON SYNCHRONIZED (distributed) MODE
-    // if this option is given, Stage will only run when connected
-    // to an external synchronous pose connection
-    //else if( strcmp( argv[a], "-s" ) == 0 )
-    //{
-    //m_external_sync_required = true; 
-    //m_enable = false; // don't run until we have a sync connection
-    //printf( "[External Sync]");
-    //}      
-
-    else if(!strcmp(argv[a], "-t"))
-    {
-      m_stoptime = atoi(argv[++a]);
-      printf("setting time to: %d\n",m_stoptime);
-    }
-
-    // ENABLE RTP - sensor data is sent in rtp format
-    if( (strcmp( argv[a], "-r" ) == 0 ) || 
-	( strcmp( argv[a], "--rtp" ) == 0 ))
-      {
-	assert( rtp_player = new CRTPPlayer( argv[a+1] ) );
+	{
+	  m_log_output = true;
+	  strncpy( m_log_filename, argv[a+1], 255 );
+	  printf( "[Logfile %s]", m_log_filename );
 	
-	//printf( "World rtp player @ %p\n", rtp_player );
+	  //store the command line for logging later
+	  memset( m_cmdline, 0, sizeof(m_cmdline) );
+	
+	  for( int g=0; g<argc; g++ )
+	    {
+	      strcat( m_cmdline, argv[g] );
+	      strcat( m_cmdline, " " );
+	    }
+	
+	  a++;
+	
+	  // open the log file and write out a header
+	  LogOutputHeader();
+	}
+    
+      // DIS/ENABLE GUI
+      if( strcmp( argv[a], "-g" ) == 0 )
+	{
+	  this->enable_gui = false;
+	  printf( "[No GUI]" );
+	}
+    
+      // SET GOAL REAL CYCLE TIME
+      // Stage will attempt to update at this speed
+      if( strcmp( argv[a], "-u" ) == 0 )
+	{
+	  m_real_timestep = atof(argv[a+1]);
+	  printf( "[Real time per cycle %f sec]", m_real_timestep );
+	  a++;
+	}
+      
+      // SET SIMULATED UPDATE CYCLE
+      // one cycle simulates this much time
+      else if( strcmp( argv[a], "-v" ) == 0 )
+	{
+	  m_sim_timestep = atof(argv[a+1]);
+	  printf( "[Simulated time per cycle %f sec]", m_sim_timestep );
+	  a++;
+	}
+      
+      // DISABLE console output
+      if( strcmp( argv[a], "-o" ) == 0 )
+	{
+	  m_console_output = true;
+	  printf( "[Console Output]" );
+	}
+      
+      if(!strcmp(argv[a], "-t"))
+	{
+	  m_stoptime = atoi(argv[++a]);
+	  printf("setting time to: %d\n",m_stoptime);
+	}
+
+      // ENABLE RTP - sensor data is sent in rtp format
+      if( (strcmp( argv[a], "-r" ) == 0 ) || 
+	  ( strcmp( argv[a], "--rtp" ) == 0 ))
+	{
+	  assert( rtp_player = new CRTPPlayer( argv[a+1] ) );
+	
+	  //printf( "World rtp player @ %p\n", rtp_player );
 	  
       	  printf( "[RTP %s]", argv[a+1] );
       	  a++;
 	  
-      }
-    // ENABLE IDAR packets to be sent to XS
-    //if( strcmp( argv[a], "-i" ) == 0 )
-    //{
-    //  m_send_idar_packets = true;
-    //  printf( "[IDAR->XS]" );
-    //}
-      
 
-    //else if( strcmp( argv[a], "-id" ) == 0 )
-    //{
-    //  memset( m_hostname, 0, 64 );
-    //  strncpy( m_hostname, argv[a+1], 64 );
-    //  printf( "[ID %s]", m_hostname ); fflush( stdout );
-    //  a++;
-    //}
-  }
+	}
+      //else if( strcmp( argv[a], "-id" ) == 0 )
+      //{
+      //  memset( m_hostname, 0, 64 );
+      //  strncpy( m_hostname, argv[a+1], 64 );
+      //  printf( "[ID %s]", m_hostname ); fflush( stdout );
+      //  a++;
+      //}
+    }
     
   return true;
 }
@@ -335,8 +324,14 @@ bool CWorld::Startup()
   PRINT_DEBUG( "** STARTUP **" );
   
   // we must have at least one entity to play with!
-  assert( m_entity_count > 0 );
+  //assert( m_entity_count > 0 );
   
+  if( m_entity_count < 1 )
+    {
+      puts( "\nStage: No entities defined in world file. Nothing to simulate!" );
+      return false;
+    }
+
   // Initialise the real time clock
   // Note that we really do need to set the start time to zero first!
   m_start_time = 0;
@@ -350,8 +345,8 @@ bool CWorld::Startup()
   if (this->enable_gui) RtkStartup();
 #endif
   
-  // start the real-time interrupts going
-  StartTimer( m_real_timestep );
+  if( m_real_timestep > 0.0 ) // if we're in real-time mode
+    StartTimer( m_real_timestep ); // start the real-time interrupts going
   
   PRINT_DEBUG( "** STARTUP DONE **" );
   return true;
@@ -373,10 +368,10 @@ void CWorld::Shutdown()
   // Shutdown all the entities
   // Devices will unlink their device files
   for (int i = 0; i < m_entity_count; i++)
-  {
-    if(m_entity[i])
-      m_entity[i]->Shutdown();
-  }
+    {
+      if(m_entity[i])
+	m_entity[i]->Shutdown();
+    }
   
   // Shutdown the wall
   if(this->wall)
@@ -395,10 +390,10 @@ void CWorld::StartTimer( double interval )
 
   //install signal handler for timing
   if( signal( SIGALRM, &TimerHandler ) == SIG_ERR )
-  {
-    PRINT_ERR("failed to install signal handler");
-    exit( -1 );
-  }
+    {
+      PRINT_ERR("failed to install signal handler");
+      exit( -1 );
+    }
 
   //printf( "interval: %f\n", interval );
 
@@ -425,42 +420,80 @@ void CWorld::Update(void)
   //PRINT_DEBUG( "** Update **" );
   //assert( arg == 0 );
   
-  // calculate new world state
-  if( m_enable )
-    {
-      // Update the simulation time (in both formats)
-      m_sim_time = m_step_num * m_sim_timestep;
-      m_sim_timeval.tv_sec = (long)floor(m_sim_time);
-      m_sim_timeval.tv_usec = (long)((m_sim_time-floor(m_sim_time)) * MILLION); 
+  //while( !quit )
+    
+      // if the sim isn't running, we pause briefly and return
+      if( !m_enable )
+	{
+	  usleep( 100000 );
+	  return;
+	}
+
       // is it time to stop?
       if(m_stoptime && m_sim_time >= m_stoptime)
-	system("kill `cat stage.pid`");
-      
-      // export the time - copy the timeval into the player io buffer
-      if( m_clock ) // if we're managing a clock
-	{
-	  // TODO - move this into the server?
-	  sem_wait( &m_clock->lock );
-	  m_clock->time = m_sim_timeval;
-	  sem_post( &m_clock->lock );
+	{   
+	  //system("kill `cat stage.pid`");
+	  quit = true;
+	  return;
 	}
       
-      // Do the actual work -- update the entities 
-      for (int i = 0; i < m_entity_count; i++)
-	{
-	  // if this host manages this entity
-	  if( m_entity[i]->m_local )
-	    m_entity[i]->Update( m_sim_time ); // update the device model        
-	} 
-    }
-  
-#ifdef INCLUDE_RTK2   // update the gui
-  if (this->enable_gui) RtkUpdate();
-#endif
-  
-  // dump the contents of the matrix to a file for debugging
-  //world->matrix->dump();
-  //getchar();	
+      // otherwise we're running - calculate new world state
+      
+      // let the entities do anything they want to do between clock increments
+      for (int i = 0; i < m_entity_count; i++ )
+	if( m_entity[i]->m_local ) m_entity[i]->Sync(); 
+      
+      // if the timer has gone off recently or we're in fast mode
+      // we increment the clock and do the time-based updates
+      if( g_timer_events > 0 || m_real_timestep == 0 )
+	{          
+	  
+	  // Update the simulation time (in both formats)
+	  m_sim_time = m_step_num * m_sim_timestep;
+	  m_sim_timeval.tv_sec = (long)floor(m_sim_time);
+	  m_sim_timeval.tv_usec = (long)((m_sim_time-floor(m_sim_time)) * MILLION); 
+	  
+	  // export the time - copy the timeval into the player io buffer
+	  if( m_clock ) // if we're managing a clock
+	    {
+	      // TODO - move this into the server?
+	      sem_wait( &m_clock->lock );
+	      m_clock->time = m_sim_timeval;
+	      sem_post( &m_clock->lock );
+	    }
+	  
+	  // update the entities at this time 
+	  for (int i = 0; i < m_entity_count; i++)
+	    {
+	      // if this host manages this entity, update it
+	      if( m_entity[i]->m_local )
+		m_entity[i]->Update( m_sim_time ); 	      
+	    } 
+	  
+#ifdef INCLUDE_RTK2   
+	  // also update the gui at this rate
+	  if (this->enable_gui) RtkUpdate();
+#endif	      
+	  
+
+	  if( g_timer_events > 0 )
+	    g_timer_events--; // we've handled this timer event
+	  
+	  // increase the time step counter
+	  m_step_num++; 
+	}
+      
+      
+      Output(); // perform console and log output
+      
+      // if there's nothing pending and we're not in fast mode, we let go
+      // of the processor (on linux gives us around a 10ms cycle time)
+      if( g_timer_events < 1 && m_real_timestep > 0.0 ) 
+	usleep( 0 );
+      
+      // dump the contents of the matrix to a file for debugging
+      //world->matrix->dump();
+      //getchar();	
 }
 
 
@@ -537,22 +570,22 @@ void CWorld::AddEntity(CEntity *entity)
 {
   // if we've run out of space (or we never allocated any)
   if( (!m_entity) || (!( m_entity_count < m_entity_alloc )) )
-  {
-    // allocate some more
-    CEntity** more_space = new CEntity*[ m_entity_alloc + OBJECT_ALLOC_SIZE ];
+    {
+      // allocate some more
+      CEntity** more_space = new CEntity*[ m_entity_alloc + OBJECT_ALLOC_SIZE ];
       
     // copy the old data into the new space
-    memcpy( more_space, m_entity, m_entity_count * sizeof( CEntity* ) );
+      memcpy( more_space, m_entity, m_entity_count * sizeof( CEntity* ) );
      
-    // delete the original
-    if( m_entity ) delete [] m_entity;
+      // delete the original
+      if( m_entity ) delete [] m_entity;
       
-    // bring in the new
-    m_entity = more_space;
+      // bring in the new
+      m_entity = more_space;
  
-    // record the total amount of space
-    m_entity_alloc += OBJECT_ALLOC_SIZE;
-  }
+      // record the total amount of space
+      m_entity_alloc += OBJECT_ALLOC_SIZE;
+    }
   
   // insert the entity and increment the count
   m_entity[m_entity_count++] = entity;
@@ -596,15 +629,8 @@ double CWorld::Pause()
 }
 
 
-void CWorld::Output( double sleep_duration )
+void CWorld::Output()
 {
-  // time taken
-  static double avg_sleep_duration = 0.0;
-  static double sleep_duration_accumulator = 0.0;
-
-  // count the time
-  sleep_duration_accumulator += sleep_duration;
-
   // comms used
   static unsigned long last_input = 0;
   static unsigned long last_output = 0;
@@ -627,54 +653,39 @@ void CWorld::Output( double sleep_duration )
   updates++;
   
   if( interval > 2.0 ) // measure freq + bandwidth every 2 seconds
-  {
-    lasttime += interval;
+    {
+      lasttime += interval;
 
-    bandw = (double)bytes_accumulator / interval;
-    bytes_accumulator = 0;
+      bandw = (double)bytes_accumulator / interval;
+      bytes_accumulator = 0;
       
-    // find the average sleep duration in this period
-    avg_sleep_duration = sleep_duration_accumulator / (double)updates;
-    sleep_duration_accumulator = 0.0;
-
-    freq = (double)updates / interval;
-    updates = 0;    
-  }
+      freq = (double)updates / interval;
+      updates = 0;    
+    }
 
   double ratio = 0.0;
   double avg_ratio = 0.0;
   
-  if( m_real_timestep > 0 )
-    {
-      ratio = sleep_duration / m_real_timestep * 100.0;
-      avg_ratio = avg_sleep_duration / m_real_timestep * 100.0;
-    }
-    
   if( m_console_output )
-    ConsoleOutput( freq, ratio, avg_ratio, 
-		   bytes_in, bytes_out, bandw );
+    ConsoleOutput( freq, bytes_in, bytes_out, bandw );
   
   
   if( m_log_output ) 
-    LogOutput( freq, sleep_duration, avg_sleep_duration,
-               bytes_in, bytes_out, g_bytes_input, g_bytes_output );
+    LogOutput( freq, bytes_in, bytes_out, g_bytes_input, g_bytes_output );
   
   last_input = g_bytes_input;
   last_output = g_bytes_output; 
 }
 
 void CWorld::ConsoleOutput( double freq, 
-			    double ratio, double avg_ratio,
 			    unsigned int bytes_in, unsigned int bytes_out,
 			    double avg_data)
 {
-  printf( " Time: %8.1f - %7.1fHz - "
-          "[%3.0f/%3.0f%%] [%4u/%4u] %8.2f b/sec\r", 
+  printf( " Time: %8.1f - %7.1fHz - [%4u/%4u] %8.2f b/sec\r", 
+  //printf( "\n Time: %8.1f - %7.1fHz - [%4u/%4u] %8.2f b/sec\n", 
 	  m_sim_time, 
           freq,
-	  ratio,
-	  avg_ratio,
-          bytes_in, bytes_out, 
+	  bytes_in, bytes_out, 
           avg_data );
   
   fflush( stdout );
@@ -683,8 +694,6 @@ void CWorld::ConsoleOutput( double freq,
 
 
 void CWorld::LogOutput( double freq,
-			double sleep_duration,
-			double avg_sleep_duration,
 			unsigned int bytes_in, unsigned int bytes_out, 
 			unsigned int total_bytes_in, 
 			unsigned int total_bytes_out )
@@ -693,11 +702,11 @@ void CWorld::LogOutput( double freq,
   
   char line[512];
   sprintf( line,
-           "%u\t\t%.3f\t\t%.6f\t%.6f\t%u\t%u\t%u\t%u\n", 
+           "%u\t\t%.3f\t%u\t%u\t%u\t%u\n", 
            m_step_num, m_sim_time, // step and time
            //loop_duration, // real cycle time in ms
-           sleep_duration, // real sleep time in ms
-           m_sim_timestep / sleep_duration, // ratio
+           //sleep_duration, // real sleep time in ms
+           //m_sim_timestep / sleep_duration, // ratio
            bytes_in, // bytes in this cycle
            bytes_out, // bytes out this cycle
            total_bytes_in,  // total bytes in
@@ -711,12 +720,12 @@ void CWorld::LogOutputHeader( void )
 {
   int log_instance = 0;
   while( m_log_fd < 0 )
-	{
-	  char fname[256];
-	  sprintf( fname, "%s.%d", m_log_filename, log_instance++ );
-	  m_log_fd = open( fname, O_CREAT | O_EXCL | O_WRONLY, 
-                     S_IREAD | S_IWRITE );
-	}
+    {
+      char fname[256];
+      sprintf( fname, "%s.%d", m_log_filename, log_instance++ );
+      m_log_fd = open( fname, O_CREAT | O_EXCL | O_WRONLY, 
+		       S_IREAD | S_IWRITE );
+    }
 
   struct timeval t;
   gettimeofday( &t, 0 );
@@ -767,89 +776,89 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   bool subscribedonly;
 
   if (worldfile != NULL)
-  {
-    int section = worldfile->LookupEntity("gui");
+    {
+      int section = worldfile->LookupEntity("gui");
 
-    // Size of world in pixels
-    sx = (int) this->matrix->width;
-    sy = (int) this->matrix->height;
+      // Size of world in pixels
+      sx = (int) this->matrix->width;
+      sy = (int) this->matrix->height;
 
-    // Grid size in meters
-    gridx = sx / this->ppm;
-    gridy = sy / this->ppm;
+      // Grid size in meters
+      gridx = sx / this->ppm;
+      gridy = sy / this->ppm;
 
-    // Place a hard limit, just to stop it going off the screen
-    if (sx > 1024)
-      sx = 1024;
-    if (sy > 768)
-      sy = 768;
+      // Place a hard limit, just to stop it going off the screen
+      if (sx > 1024)
+	sx = 1024;
+      if (sy > 768)
+	sy = 768;
 
-    // Size of canvas in pixels
-    sx = (int) worldfile->ReadTupleFloat(section, "size", 0, sx);
-    sy = (int) worldfile->ReadTupleFloat(section, "size", 1, sy);
+      // Size of canvas in pixels
+      sx = (int) worldfile->ReadTupleFloat(section, "size", 0, sx);
+      sy = (int) worldfile->ReadTupleFloat(section, "size", 1, sy);
     
-    // Scale of the pixels
-    scale = worldfile->ReadLength(section, "scale", 1 / this->ppm);
+      // Scale of the pixels
+      scale = worldfile->ReadLength(section, "scale", 1 / this->ppm);
   
-    // Size in meters
-    dx = sx * scale;
-    dy = sy * scale;
+      // Size in meters
+      dx = sx * scale;
+      dy = sy * scale;
 
-    // Origin of the canvas
-    ox = worldfile->ReadTupleLength(section, "origin", 0, dx / 2);
-    oy = worldfile->ReadTupleLength(section, "origin", 1, dy / 2);
+      // Origin of the canvas
+      ox = worldfile->ReadTupleLength(section, "origin", 0, dx / 2);
+      oy = worldfile->ReadTupleLength(section, "origin", 1, dy / 2);
 
 
-    // Grid spacing
-    minor = worldfile->ReadTupleLength(section, "grid", 0, 0.2);
-    major = worldfile->ReadTupleLength(section, "grid", 1, 1.0);
-    showgrid = worldfile->ReadInt(section, "showgrid", true);
+      // Grid spacing
+      minor = worldfile->ReadTupleLength(section, "grid", 0, 0.2);
+      major = worldfile->ReadTupleLength(section, "grid", 1, 1.0);
+      showgrid = worldfile->ReadInt(section, "showgrid", true);
     
-    // toggle display of subscribed or all device data
-    subscribedonly = worldfile->ReadInt(section, "showsubscribed", false);
+      // toggle display of subscribed or all device data
+      subscribedonly = worldfile->ReadInt(section, "showsubscribed", false);
 
-    gridx = ceil(gridx / major) * major;
-    gridy = ceil(gridy / major) * major;
-  }
+      gridx = ceil(gridx / major) * major;
+      gridy = ceil(gridy / major) * major;
+    }
   else
-  {
-    // Size of world in pixels
-    sx = (int) this->matrix->width;
-    sy = (int) this->matrix->height;
+    {
+      // Size of world in pixels
+      sx = (int) this->matrix->width;
+      sy = (int) this->matrix->height;
 
-    // Grid size in meters
-    gridx = sx / this->ppm;
-    gridy = sy / this->ppm;
+      // Grid size in meters
+      gridx = sx / this->ppm;
+      gridy = sy / this->ppm;
 
-    // Place a hard limit, just to stop it going off the screen
-    if (sx > 1024)
-      sx = 1024;
-    if (sy > 768)
-      sy = 768;
+      // Place a hard limit, just to stop it going off the screen
+      if (sx > 1024)
+	sx = 1024;
+      if (sy > 768)
+	sy = 768;
     
-    // Scale of the pixels
-    scale = ((CFixedObstacle*)this->wall)->scale;
+      // Scale of the pixels
+      scale = ((CFixedObstacle*)this->wall)->scale;
     
-    // Size in meters
-    dx = sx * scale;
-    dy = sy * scale;
+      // Size in meters
+      dx = sx * scale;
+      dy = sy * scale;
 
-    // Origin of the canvas
-    ox = dx / 2;
-    oy = dy / 2;
+      // Origin of the canvas
+      ox = dx / 2;
+      oy = dy / 2;
 
 
-    // Grid spacing
-    minor = 0.2;
-    major = 1.0;
-    showgrid = true;
+      // Grid spacing
+      minor = 0.2;
+      major = 1.0;
+      showgrid = true;
 
-    // default
-    subscribedonly = true;
+      // default
+      subscribedonly = true;
 
-    gridx = ceil(gridx / major) * major;
-    gridy = ceil(gridy / major) * major;
-  }
+      gridx = ceil(gridx / major) * major;
+      gridy = ceil(gridy / major) * major;
+    }
   
   this->app = rtk_app_create();
   rtk_app_refresh_rate(this->app, 10);
@@ -879,10 +888,13 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   // create the action menu
   this->action_menu = rtk_menu_create(this->canvas, "Action");
   this->subscribedonly_item = rtk_menuitem_create(this->action_menu, 
-					      "Subscribe to all", 1);
+						  "Subscribe to all", 1);
+
   rtk_menuitem_check(this->subscribedonly_item, subscribedonly);
 
-  
+  this->autosubscribe_item = rtk_menuitem_create(this->action_menu, 
+						    "Subscribe to selection", 1);
+  rtk_menuitem_check(this->autosubscribe_item, 0 );
 
   // Set the initial view menu states
 
@@ -905,43 +917,43 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   // create a view/device menu entry for each type of player-enabled device
   // we are using
   for( int d = 0; d<GetEntityCount(); d++ )
-  {
-    CEntity* ent = GetEntity(d);
-
-    // if it's a player device and we haven't got an item already
-    if( ent->m_player.code && !this->data_menu_items[ ent->stage_type ] ) 
     {
-      // add a data menu item 
-      assert( this->data_menu_items[ ent->stage_type ] =  
-              rtk_menuitem_create(this->data_menu, 
-                                  StringFromType( ent->stage_type), 1) );  
-      
-      rtk_menuitem_check(this->data_menu_items[ ent->stage_type ], 1);
-    }
+      CEntity* ent = GetEntity(d);
 
-    if( !this->device_menu_items[ ent->stage_type ] ) 
-      {
-	// add a device menu item 
-	assert( this->device_menu_items[ ent->stage_type ] =  
-		rtk_menuitem_create(this->device_menu, 
-				    StringFromType( ent->stage_type), 1) );  
+      // if it's a player device and we haven't got an item already
+      if( ent->m_player.code && !this->data_menu_items[ ent->stage_type ] ) 
+	{
+	  // add a data menu item 
+	  assert( this->data_menu_items[ ent->stage_type ] =  
+		  rtk_menuitem_create(this->data_menu, 
+				      StringFromType( ent->stage_type), 1) );  
+      
+	  rtk_menuitem_check(this->data_menu_items[ ent->stage_type ], 1);
+	}
+
+      if( !this->device_menu_items[ ent->stage_type ] ) 
+	{
+	  // add a device menu item 
+	  assert( this->device_menu_items[ ent->stage_type ] =  
+		  rtk_menuitem_create(this->device_menu, 
+				      StringFromType( ent->stage_type), 1) );  
 	
-	rtk_menuitem_check(this->device_menu_items[ ent->stage_type ], 1);
+	  rtk_menuitem_check(this->device_menu_items[ ent->stage_type ], 1);
+	}
     }
-  }
 
   // Create the grid
   this->fig_grid = rtk_fig_create(this->canvas, NULL, -49);
   if (minor > 0)
-  {
-    rtk_fig_color(this->fig_grid, 0.9, 0.9, 0.9);
-    rtk_fig_grid(this->fig_grid, gridx/2, gridy/2, gridx, gridy, minor);
-  }
+    {
+      rtk_fig_color(this->fig_grid, 0.9, 0.9, 0.9);
+      rtk_fig_grid(this->fig_grid, gridx/2, gridy/2, gridx, gridy, minor);
+    }
   if (major > 0)
-  {
-    rtk_fig_color(this->fig_grid, 0.75, 0.75, 0.75);
-    rtk_fig_grid(this->fig_grid, gridx/2, gridy/2, gridx, gridy, major);
-  }
+    {
+      rtk_fig_color(this->fig_grid, 0.75, 0.75, 0.75);
+      rtk_fig_grid(this->fig_grid, gridx/2, gridy/2, gridx, gridy, major);
+    }
   rtk_fig_show(this->fig_grid, showgrid);
 
   return true;
@@ -952,10 +964,10 @@ bool CWorld::RtkSave(CWorldFile *worldfile)
 {
   int section = worldfile->LookupEntity("gui");
   if (section < 0)
-  {
-    PRINT_WARN("No gui entity in the world file; gui settings have not been saved.");
-    return true;
-  }
+    {
+      PRINT_WARN("No gui entity in the world file; gui settings have not been saved.");
+      return true;
+    }
 
   // Size of canvas in pixels
   int sx, sy;
@@ -988,7 +1000,19 @@ bool CWorld::RtkStartup()
   PRINT_DEBUG( "** STARTUP GUI **" );
 
   // don't call this
-  rtk_app_start(this->app);
+  //rtk_app_start(this->app);
+
+  // create the main objects here
+  rtk_canvas_t *canvas;
+  rtk_table_t *table;
+  
+  // Display everything
+  for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
+    gtk_widget_show_all(canvas->frame);
+  for (table = app->table; table != NULL; table = table->next)
+    gtk_widget_show_all(table->frame);
+
+
   return true;
 }
 
@@ -1004,7 +1028,49 @@ void CWorld::RtkShutdown()
 void CWorld::RtkUpdate()
 {
   RtkMenuHandling();      
+
+  // this is from rtk_on_app_timer
+  {
+    rtk_canvas_t *canvas;
+    rtk_table_t *table;
+    
+    // Quit the app if we have been told we should
+    // We first destroy in windows that are still open.
+    if (app->must_quit)
+      {
+	for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
+	  if (!canvas->destroyed)
+	    gtk_widget_destroy(canvas->frame);
+	for (table = app->table; table != NULL; table = table->next)
+	  if (!table->destroyed)
+	    gtk_widget_destroy(table->frame);
+	gtk_main_quit();
+      }
+    
+    
+    // Update the display
+    for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
+      rtk_canvas_render(canvas, FALSE, NULL);
+  }
   
+  struct timeval tv;
+
+  //gettimeofday( &tv, NULL );
+
+  //double start = tv.tv_sec + tv.tv_usec / 1000000.0;
+
+  // allow gtk to do some work
+  while( gtk_events_pending () )
+    gtk_main_iteration ();
+
+  //gettimeofday( &tv, NULL );
+
+   //double duration = (tv.tv_sec + tv.tv_usec / 1000000.0) - start;
+
+  //printf( "gtkloop: %.4f\n", duration );
+  
+  //gtk_main_iteration_do( false );
+  //  rtk_app_on_timer(rtk_app_t *app);
   for (int i=0; i<m_entity_count; i++)
     m_entity[i]->RtkUpdate();
 }
@@ -1025,13 +1091,13 @@ void CWorld::RtkMenuHandling()
   // Handle export menu item
   // TODO - fold in XS's postscript and pnm export here
   if (rtk_menuitem_isactivated(this->export_menuitem))
-  {
-    char filename[128];
-    snprintf(filename, sizeof(filename), 
-             "rtkstage-%04d.fig", this->export_count++);
-    PRINT_MSG1("exporting canvas to [%s]", filename);
-    rtk_canvas_export(this->canvas, filename);
-  }
+    {
+      char filename[128];
+      snprintf(filename, sizeof(filename), 
+	       "rtkstage-%04d.fig", this->export_count++);
+      PRINT_MSG1("exporting canvas to [%s]", filename);
+      rtk_canvas_export(this->canvas, filename);
+    }
 
   // Show or hide the grid
   if (rtk_menuitem_ischecked(this->grid_item))
@@ -1047,7 +1113,11 @@ void CWorld::RtkMenuHandling()
       else
 	rtk_fig_show(this->wall->fig, 0);
     }
-
+  
+  
+  // enable/disable automatic subscription to the selected device
+  CWorld::autosubscribe = rtk_menuitem_ischecked(this->autosubscribe_item);
+  
   // enable/disable subscriptions to show sensor data
   static bool lasttime = rtk_menuitem_ischecked(this->subscribedonly_item);
   bool thistime = rtk_menuitem_ischecked(this->subscribedonly_item);

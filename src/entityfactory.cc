@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.31 $
+//  $Revision: 1.32 $
 //
 // Usage:
 //  (empty)
@@ -49,6 +49,7 @@
 #include "truthdevice.hh"
 #include "irdevice.hh"
 #include "descartesdevice.hh"
+#include "idarturretdevice.hh"
 
 #include "world.hh"
 
@@ -85,6 +86,7 @@ char* CWorld::StringFromType( StageType t )
   case PuckType: return "puck"; 
   case OccupancyType: return "occupancy"; 
   case IDARType: return "idar";
+  case IDARTurretType: return "idarturret";
   case DescartesType: return "descartes";
   case BpsType: return "bps";
   case MoteType: return "mote";
@@ -149,6 +151,8 @@ CEntity* CWorld::CreateEntity( StageType type, CEntity *parent)
       return new CBpsDevice(this, parent);
     case IDARType: // Infrared Data And Ranging turret
       return new CIDARDevice(this, parent);
+    case IDARTurretType: // Infrared Data And Ranging turret
+      return new CIDARTurretDevice(this, parent);
     case DescartesType: // HRL's customized Descartes robot platform
       return new CDescartesDevice(this, parent);
     case VisionBeaconType:
