@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerrobot.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -57,9 +57,7 @@
 ///////////////////////////////////////////////////////////////////////////
 // Macros
 //
-#define SEMKEY 2000;
-
-// *** REMOVE extern int errno;
+#define SEMKEY 2000
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -68,6 +66,7 @@
 CPlayerRobot::CPlayerRobot(CWorld *world, CObject *parent)
         : CObject(world, parent)
 {
+    playerIO = NULL;
 }
 
 
@@ -85,6 +84,9 @@ CPlayerRobot::~CPlayerRobot( void )
 bool CPlayerRobot::Startup(RtkCfgFile *cfg)
 {
     TRACE0("starting devices");
+
+    if (!CObject::Startup(cfg))
+        return false;
     
     cfg->BeginSection(m_id);
     
@@ -104,10 +106,8 @@ bool CPlayerRobot::Startup(RtkCfgFile *cfg)
     //
     if (!StartupPlayer(port))
         return false;
-                              
-    // Start any child objects
-    //
-    return CObject::Startup(cfg);
+    
+    return true;
 }
 
 
@@ -122,8 +122,6 @@ void CPlayerRobot::Shutdown()
     //
     ShutdownPlayer();
 
-    // Shutdown child objects
-    //
     CObject::Shutdown();
 }
 
@@ -269,6 +267,7 @@ bool CPlayerRobot::CreateShmemLock()
 
 ///////////////////////////////////////////////////////////////////////////
 // Lock the shared mem
+// Returns a pointer to the memory
 //
 bool CPlayerRobot::LockShmem( void )
 {
@@ -280,16 +279,18 @@ bool CPlayerRobot::LockShmem( void )
 
   int retval = semop( semid, ops, 1 );
   if (retval != 0)
+  {
       MSG1("lock failed return value = %d", (int) retval);
-
-  return (retval == 0);
+      return false;
+  }
+  return true;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Unlock the shared mem
 //
-bool CPlayerRobot::UnlockShmem( void )
+void CPlayerRobot::UnlockShmem( void )
 {
   struct sembuf ops[1];
 
@@ -300,8 +301,6 @@ bool CPlayerRobot::UnlockShmem( void )
   int retval = semop( semid, ops, 1 );
   if (retval != 0)
       MSG1("unlock failed return value = %d", (int) retval);
-
-  return (retval == 0);
 }
 
 #ifdef INCLUDE_RTK

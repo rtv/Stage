@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.5.2.5 $
+//  $Revision: 1.5.2.6 $
 //
 // Usage:
 //  (empty)
@@ -33,12 +33,13 @@ const double TWOPI = 6.283185307;
 
 // constructor
 
-CSonarDevice::CSonarDevice(CWorld *world, CObject *parent, CPlayerRobot* robot,
-                          void *buffer, size_t buffer_len)
-        : CPlayerDevice(world, parent, robot, buffer, buffer_len,
-                       SSONAR_DATA_BUFFER_SIZE,
-                       SSONAR_COMMAND_BUFFER_SIZE,
-                       SSONAR_CONFIG_BUFFER_SIZE)
+CSonarDevice::CSonarDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
+        : CPlayerDevice(world, parent, robot,
+                        SSONAR_DATA_START,
+                        SSONAR_TOTAL_BUFFER_SIZE,
+                        SSONAR_DATA_BUFFER_SIZE,
+                        SSONAR_COMMAND_BUFFER_SIZE,
+                        SSONAR_CONFIG_BUFFER_SIZE)
 {
     updateInterval = 0.1; //seconds
     lastUpdate = 0;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/objectfactory.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.6 $
 //
 // Usage:
 //  (empty)
@@ -76,9 +76,7 @@ CObject* CreateObject(const char *type, CWorld *world, CObject *parent)
     if (strcmp(type, "pioneer") == 0)
     {
         FIND_PLAYER_ROBOT();
-        return new CPioneerMobileDevice(world, parent, robot,
-                                        robot->playerIO + SPOSITION_DATA_START,
-                                        SPOSITION_TOTAL_BUFFER_SIZE);
+        return new CPioneerMobileDevice(world, parent, robot);
     }
     
     // Create laser device
@@ -86,9 +84,7 @@ CObject* CreateObject(const char *type, CWorld *world, CObject *parent)
     if (strcmp(type, "laser") == 0)
     {
         FIND_PLAYER_ROBOT();
-        return new CLaserDevice(world, parent, robot,
-                                robot->playerIO + LASER_DATA_START,
-                                LASER_TOTAL_BUFFER_SIZE);
+        return new CLaserDevice(world, parent, robot);
     }
 
     // Create sonar device
@@ -96,9 +92,7 @@ CObject* CreateObject(const char *type, CWorld *world, CObject *parent)
     if (strcmp(type, "sonar") == 0)
     {
         FIND_PLAYER_ROBOT();
-        return new CSonarDevice(world, parent, robot,
-                                robot->playerIO + SSONAR_DATA_START,
-                                SSONAR_TOTAL_BUFFER_SIZE);
+        return new CSonarDevice(world, parent, robot);
     }
 
     // Create ptz camera device
@@ -106,9 +100,7 @@ CObject* CreateObject(const char *type, CWorld *world, CObject *parent)
     if (strcmp(type, "ptzcamera") == 0)
     {
         FIND_PLAYER_ROBOT();
-        return new CPtzDevice(world, parent, robot,
-                                robot->playerIO + PTZ_DATA_START,
-                                PTZ_TOTAL_BUFFER_SIZE);
+        return new CPtzDevice(world, parent, robot);
     }
     
     // Create vision device
@@ -122,10 +114,12 @@ CObject* CreateObject(const char *type, CWorld *world, CObject *parent)
             MSG("vision device requires ptz camera as ancestor; ignoring");
             return NULL;
         }
-        return new CVisionDevice(world, parent, robot, ptz,
-                                robot->playerIO + ACTS_DATA_START,
-                                ACTS_TOTAL_BUFFER_SIZE);
+        return new CVisionDevice(world, parent, robot, ptz);
     }
     
     return NULL;
 }
+
+
+
+

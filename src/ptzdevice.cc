@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.5 $
+//  $Revision: 1.4.2.6 $
 //
 // Usage:
 //  (empty)
@@ -35,9 +35,10 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CPtzDevice::CPtzDevice(CWorld *world, CObject *parent, CPlayerRobot* robot,
-                       void *buffer, size_t buffer_len)
-        : CPlayerDevice(world, parent, robot, buffer, buffer_len,
+CPtzDevice::CPtzDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
+        : CPlayerDevice(world, parent, robot,
+                        PTZ_DATA_START,
+                        PTZ_TOTAL_BUFFER_SIZE,
                         PTZ_DATA_BUFFER_SIZE,
                         PTZ_COMMAND_BUFFER_SIZE,
                         PTZ_CONFIG_BUFFER_SIZE)

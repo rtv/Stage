@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11.2.6 $
+//  $Revision: 1.11.2.7 $
 //
 // Usage:
 //  (empty)
@@ -36,10 +36,10 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CLaserDevice::CLaserDevice(CWorld *world, CObject *parent,
-                           CPlayerRobot* robot, void *buffer, size_t buffer_len)
-        : CPlayerDevice(world, parent,
-                        robot, buffer, buffer_len,
+CLaserDevice::CLaserDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
+        : CPlayerDevice(world, parent, robot,
+                        LASER_DATA_START,
+                        LASER_TOTAL_BUFFER_SIZE,
                         LASER_DATA_BUFFER_SIZE,
                         LASER_COMMAND_BUFFER_SIZE,
                         LASER_CONFIG_BUFFER_SIZE)
@@ -311,7 +311,7 @@ void CLaserDevice::OnUiUpdate(RtkUiDrawData *pData)
     //
     pData->BeginSection("global", "laser");
     
-    if (pData->DrawLayer("turret", true) && IsSubscribed())
+    if (pData->DrawLayer("turret", true))
         DrawTurret(pData);
     if (pData->DrawLayer("scan", true) && IsSubscribed())
         DrawScan(pData);

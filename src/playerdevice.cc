@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.5 $
+//  $Revision: 1.2.2.6 $
 //
 // Usage:
 //  (empty)
@@ -24,6 +24,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
+#define ENABLE_TRACE 1
+
 #include "world.hh"
 #include "playerdevice.hh"
 
@@ -32,7 +34,7 @@
 // Minimal constructor
 //
 CPlayerDevice::CPlayerDevice(CWorld *world, CObject *parent,
-                             CPlayerRobot *robot, void *buffer, size_t buffer_len,
+                             CPlayerRobot *robot, size_t offset, size_t buffer_len,
                              size_t data_len, size_t command_len, size_t config_len)
         : CObject(world, parent)
 {
@@ -40,20 +42,16 @@ CPlayerDevice::CPlayerDevice(CWorld *world, CObject *parent,
 
     ASSERT(data_len + command_len + config_len <= buffer_len);
 
-    m_info = (PlayerStageInfo*) buffer;
+    m_info = NULL;
+    m_data_buffer = NULL;
+    m_command_buffer = NULL;
+    m_config_buffer = NULL;
+
+    m_offset = offset;
     m_info_len = INFO_BUFFER_SIZE;
-    
-    m_data_buffer = (BYTE*) buffer + m_info_len;
     m_data_len = data_len;
-
-    m_command_buffer = (BYTE*) m_data_buffer + data_len;
     m_command_len = command_len;
-
-    m_config_buffer = (BYTE*) m_command_buffer + command_len;
     m_config_len = config_len;
-
-    TRACE4("creating player device at addr: %p %p %p %p", m_info, m_data_buffer,
-         m_command_buffer, m_config_buffer);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -64,6 +62,25 @@ bool CPlayerDevice::Startup(RtkCfgFile *cfg)
     if (!CObject::Startup(cfg))
         return false;
 
+    // Get a pointer to the shared memory area
+    //
+    BYTE *buffer = (BYTE*) m_robot->GetShmem();
+    if (buffer == NULL)
+    {
+        ERROR("shared memory pointer == NULL; cannot start device");
+        return false;
+    }
+    
+    // Initialise pointer to buffers
+    //
+    m_info = (PlayerStageInfo*) (buffer + m_offset);
+    m_data_buffer = (BYTE*) m_info + m_info_len;
+    m_command_buffer = (BYTE*) m_data_buffer + m_data_len;
+    m_config_buffer = (BYTE*) m_command_buffer + m_command_len;
+
+    TRACE4("creating player device at addr: %p %p %p %p", m_info, m_data_buffer,
+         m_command_buffer, m_config_buffer);
+    
     /* *** TESTING -- this doesnt work right now
     // Mark this device as available
     //

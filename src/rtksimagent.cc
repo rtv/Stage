@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtksimagent.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -61,7 +61,19 @@ BOOL RtkSimAgent::Open(RtkCfgFile* pCfgFile)
     RtkCfgFile oWorldCfg;
     if (!oWorldCfg.Open("cave.cfg"))
         return false;
-    m_pWorld->Startup(&oWorldCfg);
+
+    // Create all the objects in the world
+    //
+    if (!m_pWorld->CreateChildren(&oWorldCfg))
+        return false;
+
+    // Start all the objects in the world
+    //
+    if (!m_pWorld->Startup(&oWorldCfg))
+        return false;
+    if (!m_pWorld->StartupChildren(&oWorldCfg))
+        return false;
+    
     oWorldCfg.Close();
     
     // Initialise messages
@@ -83,6 +95,7 @@ void RtkSimAgent::Close()
 {
     // Stop the objects
     //
+    m_pWorld->ShutdownChildren();
     m_pWorld->Shutdown();
 }
 
@@ -140,6 +153,7 @@ void RtkSimAgent::Main()
             //
             Sleep(25);
             m_pWorld->Update();
+            m_pWorld->UpdateChildren();
         }
 
         //TRACE1("time %d", (int) GetTime());

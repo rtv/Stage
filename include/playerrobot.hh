@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerrobot.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -66,13 +66,17 @@ class CPlayerRobot : public CObject
     //
     private: bool CreateShmemLock();
 
+    // Get a pointer to shared mem area
+    //
+    public: void* GetShmem() {return playerIO;};
+    
     // Lock the shared mem area
     //
     public: bool LockShmem( void );
 
     // Unlokc the shared mem area
     //
-    public: bool UnlockShmem( void );
+    public: void UnlockShmem( void );
 
     // position, position at t-1, and position origin variables
     // *** REMOVE ahoward private: float x, y, a, oldx, oldy, olda, xorigin, yorigin, aorigin;
@@ -81,10 +85,9 @@ class CPlayerRobot : public CObject
     public: unsigned char color; // unique ID and value drawn into world bitmap
     public: unsigned char channel; // the apparent color of this robot in ACTS
 
-    // *** HACK -- playerIO should be private
     // Stuff needed to interface with player
     //
-    public: caddr_t playerIO; // ptr to shared memory for player I/O
+    private: caddr_t playerIO; // ptr to shared memory for player I/O
     private: char tmpName[16]; // name of shared memory device in filesystem
     private: int semKey, semid; // semaphore access for shared mem locking
 

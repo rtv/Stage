@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/object.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -55,11 +55,11 @@ class CObject
     //
     public: virtual ~CObject();
 
-    // Startup routine -- creates objects in the world
+    // Startup routine
     //
     public: virtual bool Startup(RtkCfgFile *cfg);
 
-    // Shutdown routine -- deletes objects in the world
+    // Shutdown routine
     //
     public: virtual void Shutdown();
     
@@ -67,9 +67,19 @@ class CObject
     //
     public: virtual void Update();
 
-    // Create the objects by reading them from a file
+    // Creation routine
+    // Creates child objects by reading them from a file.
+    // Objects are created recursively
     //
-    private: bool CreateObjects(RtkCfgFile *cfg);
+    public: bool CreateChildren(RtkCfgFile *cfg);
+    
+    // Recursive versions for standard functions
+    // These will call the function for all children, grand-children, etc,
+    // and will normally be called from the root object.
+    //
+    public: bool StartupChildren(RtkCfgFile *cfg);
+    public: void ShutdownChildren();
+    public: void UpdateChildren();
 
     // Add a child object
     //

@@ -1,7 +1,7 @@
 /*************************************************************************
  * main.cc   
  * RTV
- * $Id: main.cc,v 1.2.2.5 2000-12-07 00:30:00 ahoward Exp $
+ * $Id: main.cc,v 1.2.2.6 2000-12-07 22:17:09 ahoward Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -122,7 +122,8 @@ int main( int argc, char** argv )
 
   // Start the objects
   //
-  world->Startup(NULL);
+  if (!world->Startup(NULL))
+      exit(1);
   
   // -- Main loop -------------------------------------------------------
   // Stage will perform a whole world update each time round this loop.

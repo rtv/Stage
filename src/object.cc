@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/object.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -62,7 +62,7 @@ CObject::~CObject()
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Startup routine -- creates objects in the world
+// Startup routine
 //
 bool CObject::Startup(RtkCfgFile *cfg)
 {
@@ -76,29 +76,16 @@ bool CObject::Startup(RtkCfgFile *cfg)
     SetPose(px, py, pth);
 
     cfg->EndSection();
-    
-    // Create child objects
-    //
-    CreateObjects(cfg);
-    
-    // Start each of the children we have just created
-    //
-    for (int i = 0; i < m_child_count; i++)
-    {
-        if (!m_child[i]->Startup(cfg))
-            return false;
-    }
+
     return true;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Shutdown routine -- deletes objects in the world
+// Shutdown routine
 //
 void CObject::Shutdown()
 {
-    for (int i = 0; i < m_child_count; i++)
-        m_child[i]->Shutdown();
 }
 
 
@@ -107,15 +94,48 @@ void CObject::Shutdown()
 //
 void CObject::Update()
 {
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Recursive versions for standard functions
+// These will call the function for all children, grand-children, etc,
+// and will normally be called from the root object.
+//
+bool CObject::StartupChildren(RtkCfgFile *cfg)
+{
     for (int i = 0; i < m_child_count; i++)
+    {
+        if (!m_child[i]->Startup(cfg))
+            return false;
+        if (!m_child[i]->StartupChildren(cfg))
+            return false;
+    }
+    return true;
+}
+void CObject::ShutdownChildren()
+{
+    for (int i = 0; i < m_child_count; i++)
+    {
+        m_child[i]->Shutdown();
+        m_child[i]->ShutdownChildren();
+    }
+}
+void CObject::UpdateChildren()
+{
+    for (int i = 0; i < m_child_count; i++)
+    {
         m_child[i]->Update();
+        m_child[i]->UpdateChildren();
+    }
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Create the objects by reading them from a file
+// Creates objects recursively
 //
-bool CObject::CreateObjects(RtkCfgFile *cfg)
+bool CObject::CreateChildren(RtkCfgFile *cfg)
 { 
     // Read in the objects from the configuration file
     //
@@ -149,7 +169,14 @@ bool CObject::CreateObjects(RtkCfgFile *cfg)
         //
         AddChild(object);
     }
-    
+
+    // Now get the children to create their children
+    //
+    for (int i = 0; i < m_child_count; i++)
+    {
+        if (!m_child[i]->CreateChildren(cfg))
+            return false;
+    }
     return true;
 }
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.5 $
+//  $Revision: 1.4.2.6 $
 //
 // Usage:
 //  (empty)
@@ -37,9 +37,10 @@
 // Default constructor
 //
 CVisionDevice::CVisionDevice(CWorld *world, CObject *parent, CPlayerRobot* robot,
-                             CPtzDevice *ptz_device, void *buffer, size_t buffer_len)
-        : CPlayerDevice(world, parent,
-                        robot, buffer, buffer_len,
+                             CPtzDevice *ptz_device)
+        : CPlayerDevice(world, parent, robot,
+                        ACTS_DATA_START,
+                        ACTS_TOTAL_BUFFER_SIZE,
                         ACTS_DATA_BUFFER_SIZE,
                         ACTS_COMMAND_BUFFER_SIZE,
                         ACTS_CONFIG_BUFFER_SIZE)

@@ -1,7 +1,7 @@
 /*************************************************************************
  * world.cc - top level class that contains and updates robots
  * RTV
- * $Id: world.cc,v 1.4.2.5 2000-12-07 00:30:00 ahoward Exp $
+ * $Id: world.cc,v 1.4.2.6 2000-12-07 22:17:10 ahoward Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -33,16 +33,15 @@
 const double MILLION = 1000000.0;
 const double TWOPI = 6.283185307;
 
-int runDown = false;
-double runStart;
-
-//*** not used? ahoward unsigned int RGB( int r, int g, int b );
-
-extern double quitTime;
 
 CWorld::CWorld()
         : CObject(this, NULL)
 {
+    // *** WARNING -- no overflow check
+    // Set our id
+    //
+    strcpy(m_id, "world");
+
     bots = NULL;
 
     // initialize the filenames
@@ -96,16 +95,14 @@ CWorld::~CWorld()
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Startup routine -- creates objects in the world
+// Startup routine 
 //
 bool CWorld::Startup(RtkCfgFile *cfg)
 {
-    TRACE0("Creating objects");
-
-    // *** WARNING -- no overflow check
-    // Set our id
+    // Call the objects startup function
     //
-    strcpy(m_id, "world");
+    if (!CObject::Startup(cfg))
+        return false;
 
     // Load useful settings from config file
     //
@@ -125,22 +122,15 @@ bool CWorld::Startup(RtkCfgFile *cfg)
     if (!StartupGrids())
         return false;
 
-    // Call the objects startup function
-    //
-    if (!CObject::Startup(cfg))
-        return false;
-
     return true;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Shutdown routine -- deletes objects in the world
+// Shutdown routine 
 //
 void CWorld::Shutdown()
-{
-    TRACE0("Closing objects");
-        
+{        
     CObject::Shutdown();
 }
 
@@ -150,44 +140,29 @@ void CWorld::Shutdown()
 //
 void CWorld::Update()
 {
-  // update is called every approx. 25ms from main using a timer
-    #ifndef INCLUDE_RTK
-        if( win ) win->HandleEvent();
-    #endif
+    CObject::Update();
+    
+    struct timeval tv;
+      
+    gettimeofday( &tv, NULL );
+    timeNow = tv.tv_sec + (tv.tv_usec/MILLION);
+    timeStep = (timeNow - timeThen); // real time
+    //timeStep = 0.01; // step time;   
+    //cout << timeStep << endl;
+    timeThen = timeNow;
 
-  if( !paused )
-    {
-      struct timeval tv;
-      
-      gettimeofday( &tv, NULL );
-      timeNow = tv.tv_sec + (tv.tv_usec/MILLION);
-      
-      timeStep = (timeNow - timeThen); // real time
-      //timeStep = 0.01; // step time;   
-      //cout << timeStep << endl;
-      timeThen = timeNow;
-      
-      // use a simple cludge to fix stutters caused by machine load or I/O
-      if( timeStep > 0.1 ) 
+    // use a simple cludge to fix stutters caused by machine load or I/O
+    if( timeStep > 0.1 ) 
 	{
-#ifdef DEBUG 
-	  cout << "MAX TIMESTEP EXCEEDED" << endl;
-#endif
-	  timeStep = 0.1;
+        TRACE2("MAX TIMESTEP EXCEEDED %f > %f", (double) timeStep, (double) 0.1);
+        timeStep = 0.1;
 	}
 
-      // Update child objects
-      //
-      CObject::Update();
-
-      #ifndef INCLUDE_RTK
-      if( refreshBackground ) Draw();
-      #endif
-      
-      if( !runDown ) runStart = timeNow;
-      else if( (quitTime > 0) && (timeNow > (runStart + quitTime) ) )
-	exit( 0 );
-    }
+    /* *** HACK -- should reinstate this somewhere ahoward
+       if( !runDown ) runStart = timeNow;
+       else if( (quitTime > 0) && (timeNow > (runStart + quitTime) ) )
+       exit( 0 );
+    */
 }
 
 

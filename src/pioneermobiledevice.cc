@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////
 //
 // File: pioneermobiledevice.cc
-// Author: Andrew Howard
+// Author: Richard Vaughan, Andrew Howard
 // Date: 5 Dec 2000
 // Desc: Simulates the Pioneer robot base
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.4 $
+//  $Revision: 1.9.2.5 $
 //
 // Usage:
 //  (empty)
@@ -38,11 +38,10 @@ const double TWOPI = 6.283185307;
 ///////////////////////////////////////////////////////////////////////////
 // Constructor
 //
-CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CObject *parent,
-                                           CPlayerRobot* robot, 
-                                           void *buffer, size_t buffer_len)
+CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
         : CPlayerDevice(world, parent, robot,
-                        buffer, SPOSITION_TOTAL_BUFFER_SIZE,
+                        SPOSITION_DATA_START,
+                        SPOSITION_TOTAL_BUFFER_SIZE,
                         SPOSITION_DATA_BUFFER_SIZE,
                         SPOSITION_COMMAND_BUFFER_SIZE,
                         SPOSITION_CONFIG_BUFFER_SIZE)
@@ -52,11 +51,8 @@ CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CObject *parent,
     
     m_update_interval = 0.01; // update me very fast indeed
 
-    width = 0.6 * m_world->ppm;
-    length = 0.6 * m_world->ppm;
-
-    halfWidth = width / 2.0;   // the halves are used often in calculations
-    halfLength = length / 2.0;
+    m_width = 0.6;
+    m_length = 0.6;
 
     xodom = yodom = aodom = 0;
 
@@ -282,11 +278,13 @@ bool CPioneerMobileDevice::InCollision(double px, double py, double pth)
 //
 bool CPioneerMobileDevice::Map(bool render)
 {
-    double dx = length / m_world->ppm;
-    double dy = width / m_world->ppm;
+    double dx = m_length;
+    double dy = m_width;
 
     if (!render)
     {
+        // Remove ourself from the obstacle map
+        //
         double px = m_map_px;
         double py = m_map_py;
         double pth = m_map_pth;
@@ -421,8 +419,8 @@ void CPioneerMobileDevice::DrawChassis(RtkUiDrawData *pData)
 
     // Robot dimensions
     //
-    double dx = (double) length / m_world->ppm;
-    double dy = (double) width / m_world->ppm;
+    double dx = (double) m_length;
+    double dy = (double) m_width;
 
     // Get global pose
     //
