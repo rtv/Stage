@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.19 $
+//  $Revision: 1.20 $
 //
 // Usage:
 //  (empty)
@@ -283,8 +283,7 @@ bool CWorld::Load(const char *filename)
             else if (strcasecmp(argv[1], "host") == 0)
 	      {
 		strncpy( m_current_hostname, argv[3], HOSTNAME_SIZE );
-		
-		printf( "\nHost context: %s\n", m_current_hostname );
+		//printf( "\nHost context: %s\n", m_current_hostname );
               }
 	  }
 	    // Parse "enable" command

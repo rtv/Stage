@@ -120,9 +120,9 @@ void CWorld::TruthRead( void )
 		  r+=v;
 		  
 		  // THIS IS DEBUG OUTPUT
-		  if( v < (int)sizeof(truth) )
-		    printf( "STAGE: SHORT READ (%d/%d) r=%d\n",
-			    v, (int)sizeof(truth), r );		  
+		  //if( v < (int)sizeof(truth) )
+		  //printf( "STAGE: SHORT READ (%d/%d) r=%d\n",
+		  //    v, (int)sizeof(truth), r );		  
 		}
 	      
 	      assert( r == sizeof( truth ) );
