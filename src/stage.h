@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.32 2004-04-26 07:06:26 rtv Exp $
+ * CVS: $Id: stage.h,v 1.33 2004-04-28 06:10:55 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -135,6 +135,8 @@ typedef uint16_t stg_msg_type_t;
 #define STG_MSG_SERVER_UNSUBSCRIBE      (STG_MSG_SERVER | 2)
 #define STG_MSG_SERVER_WORLDCREATE      (STG_MSG_SERVER | 3)
 #define STG_MSG_SERVER_WORLDDESTROY     (STG_MSG_SERVER | 4)
+   //#define STG_MSG_SERVER_PAUSE            (STG_MSG_SERVER | 5)
+   //#define STG_MSG_SERVER_RUN              (STG_MSG_SERVER | 6)
 
 #define STG_MSG_WORLD_PAUSE             (STG_MSG_WORLD | 1)
 #define STG_MSG_WORLD_RESUME            (STG_MSG_WORLD | 2)
@@ -154,7 +156,7 @@ typedef uint16_t stg_msg_type_t;
 #define STG_MSG_CLIENT_MODELCREATEREPLY (STG_MSG_CLIENT | 2)
 #define STG_MSG_CLIENT_PROPERTY         (STG_MSG_CLIENT | 3)
 #define STG_MSG_CLIENT_CLOCK            (STG_MSG_CLIENT | 4)
-
+#define STG_MSG_CLIENT_CYCLEEND         (STG_MSG_CLIENT | 5)
 
 typedef double stg_time_t;
 
@@ -724,6 +726,9 @@ void stg_world_push( stg_world_t* model );
 void stg_model_push( stg_model_t* model );
 void stg_world_push_cb( gpointer key, gpointer value, gpointer user );
 void stg_model_push_cb( gpointer key, gpointer value, gpointer user );
+
+// sends a property to the serverx
+int stg_model_property_set( stg_model_t* mod, stg_id_t prop, void* data, size_t len );
 
 
 stg_id_t stg_world_new(  stg_client_t* cli, char* token, 

@@ -530,6 +530,8 @@ stg_id_t stg_client_world_new(  stg_client_t* cli, char* token,
   stg_msg_t* reply = NULL;  
   
   while( (reply = stg_client_read( cli )) == NULL )
+    //&& 
+    // reply->type != STG_MSG_CLIENT_WORLDCREATEREPLY )
     {
       putchar( '.' ); fflush(stdout);
     }
@@ -601,6 +603,11 @@ void stg_prop_push_cb( gpointer key, gpointer value, gpointer user )
   stg_prop_push( (stg_property_t*)value, (stg_prop_target_t*)user );
 }
 
+int stg_model_property_set( stg_model_t* mod, stg_id_t prop, void* data, size_t len )
+{
+  stg_client_property_set( mod->world->client, mod->world->id_server, mod->id_server,
+			   prop, data, len );
+}
 
 void stg_model_push( stg_model_t* mod )
 { 
@@ -610,7 +617,6 @@ void stg_model_push( stg_model_t* mod )
 
   // create a model
   printf( "  pushing model \"%s\"\n", mod->token->token );
-
 
   // take this model out of the server-side id table
   g_hash_table_remove( mod->world->models_id_server, &mod->id_server );
@@ -622,6 +628,9 @@ void stg_model_push( stg_model_t* mod )
   // re-index the model by the newly-discovered server-side id
   g_hash_table_replace( mod->world->models_id_server, &mod->id_server, mod );
   
+  PRINT_DEBUG2( "pushed model %d and received server-side id %d", 
+		mod->id_client, mod->id_server );
+
   // upload each of this model's properties
   stg_prop_target_t pt;
   pt.client = mod->world->client;
@@ -642,8 +651,10 @@ void stg_world_push( stg_world_t* world )
   assert( world );
   assert( world->client );
   
-  // create a world
-  printf( "pushing world \"%s\"\n", world->token->token );
+  PRINT_DEBUG1( "pushing world \"%s\"\n", world->token->token );
+  
+  // take this world out of the server-side id table
+  g_hash_table_remove( world->client->worlds_id_server, &world->id_server );
   
   world->id_server = stg_client_world_new( world->client, 
 					   world->token->token, 
@@ -652,6 +663,12 @@ void stg_world_push( stg_world_t* world )
 					   world->interval_sim,
 					   world->interval_real );
   
+  // index the world by its server-side id
+  g_hash_table_replace( world->client->worlds_id_server, &world->id_server, world );
+  
+  PRINT_DEBUG2( "pushed world %d and received server-side id %d", 
+		world->id_client, world->id_server );
+
   // upload all the models in this world
   g_hash_table_foreach( world->models_id, stg_model_push_cb, NULL );
 }
@@ -715,6 +732,10 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
     case STG_MSG_WORLD_SAVE:
       PRINT_WARN( "SAVE" );
       
+      break;
+
+    case STG_MSG_CLIENT_CYCLEEND:
+      puts( "** CYCLE END **" );
       break;
 
     case STG_MSG_CLIENT_PROPERTY: 
@@ -806,7 +827,9 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 	    }
 	    
 	  case STG_PROP_TIME:
-	    puts( "<time>" );
+	    cli->stagetime = prop->timestamp;
+	    printf( "<time packet> [%.3f] ", cli->stagetime );
+	 
 	    break;
 
 	  default:

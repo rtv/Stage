@@ -66,6 +66,9 @@ int model_update_prop( model_t* mod, stg_id_t propid );
 void model_update_rangers( model_t* mod );
 void model_update_laser( model_t* mod );
 
+void model_subscribe( model_t* mod, stg_id_t pid );
+void model_unsubscribe( model_t* mod, stg_id_t pid );
+
 void model_set_pose( model_t* mod, stg_pose_t* pose );
 void model_set_velocity( model_t* mod, stg_velocity_t* vel );
 void model_set_size( model_t* mod, stg_size_t* sz );

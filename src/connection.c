@@ -75,6 +75,11 @@ void stg_connection_sub_update( connection_t* con )
   int i;
   for( i=0; i<con->subs->len; i++ )
     subscription_update( g_ptr_array_index( con->subs, i ) );
+  
+  // finished servicing this connection. we send a sync packet.
+  //stg_msg_t*  msg = stg_msg_create( STG_MSG_CLIENT_CYCLEEND, NULL, 0 );
+  //stg_fd_msg_write( con->fd, msg );
+  //stg_msg_destroy( msg );
 }
 
 void stg_connection_sub_update_cb( gpointer key, gpointer value, gpointer user )

@@ -241,6 +241,19 @@ int model_update_prop( model_t* mod, stg_id_t propid )
   return 0; // ok
 }
 
+
+void model_subscribe( model_t* mod, stg_id_t pid )
+{
+  mod->subs[pid]++;
+  gui_model_render( mod );
+}
+
+void model_unsubscribe( model_t* mod, stg_id_t pid )
+{
+  mod->subs[pid]--;
+  gui_model_render( mod );
+}
+
 int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
 {
   //double time_since_calc =
@@ -330,6 +343,9 @@ int model_set_prop( model_t* mod,
 		     void* data, 
 		     size_t len )
 {
+  PRINT_DEBUG4( "setting property %d:%d:%d(%s)",
+		mod->world->id, mod->id, propid, stg_property_string(propid) );
+
   switch( propid )
     {
     case STG_PROP_TIME:

@@ -25,6 +25,8 @@ typedef struct
 		       // file descriptor. each fd matches one in the
 		       // pollfd array.
 
+  //int running;
+
 } server_t;
 
 

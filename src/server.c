@@ -34,7 +34,9 @@ server_t* server_create( int port )
   
   server->port = port;
   server->host = strdup( "localhost" );
-  
+
+  //server->running = 0; // we start paused
+
   // record the time we were started
   server->start_time = stg_timenow();
   
@@ -111,6 +113,7 @@ void server_destroy( server_t* server )
       free( server );
     }
 }
+
 
 void server_update_subs( server_t* server )
 {
@@ -347,8 +350,8 @@ int server_subscribe( server_t* server, int fd, stg_sub_t* sub )
       else
 	{
 	  // register this subscription with the model
-	  model->subs[sub->prop]++;
-	  
+	  model_subscribe( model, sub->prop );
+
 	  subscription_t* ssub = subscription_create();
 	  
 	  ssub->target.world = sub->world; 
@@ -408,8 +411,8 @@ int server_unsubscribe( server_t* server,
 		 target.world, target.model );
   else
     // unregister this sub with the model
-    mod->subs[ target.prop ]--;
-    
+    model_unsubscribe( mod, target.prop );
+
   for( i=0; i<len; i++ )
     {	
       //
@@ -530,6 +533,16 @@ void server_handle_msg( server_t* server, int fd, stg_msg_t* msg )
 		       unsub->world, unsub->model, unsub->prop );
       }
       break;
+
+      /*
+    case STG_MSG_SERVER_PAUSE:
+      server->running = 0;
+      break;
+
+    case STG_MSG_SERVER_RUN:
+      server->running = 1;
+      break;
+      */
 
     default:
       PRINT_WARN1( "Ignoring unrecognized server message subtype %d.", 

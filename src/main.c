@@ -119,9 +119,15 @@ int main( int argc, char* argv[] )
       server_poll( server ); // read from server port and
 			     // clients. Includes a minimum poll()
 			     // sleep time
+
       server_update_worlds( server );
-      server_update_subs( server );
-      
+
+      if( server->running )
+	{
+	  server_update_subs( server );
+	  //server_update_finish( server );
+	}
+
       gui_poll();
     }
   

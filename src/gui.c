@@ -348,9 +348,10 @@ void gui_model_grid( model_t* model )
   if( gmod->grid )
     rtk_fig_destroy( gmod->grid );
   
-  gmod->grid = gui_grid_create( win->canvas, gmod->top, 
-				0, 0, 0, 
-				model->size.x, model->size.y, 1.0, 0 );
+  if( win->show_grid && model->grid )
+    gmod->grid = gui_grid_create( win->canvas, gmod->top, 
+				  0, 0, 0, 
+				  model->size.x, model->size.y, 1.0, 0 );
 }
   
 void gui_model_create( model_t* model )
@@ -413,23 +414,14 @@ void gui_model_render( model_t* model )
  
   gui_window_t* win = g_hash_table_lookup( wins, &model->world->id );  
 
-  if( win->show_rects )
-    gui_model_lines( model );
-
-  if( win->show_nose && model->nose )
-    gui_model_nose( model );
-  
-  if( win->show_geom ) 
-    gui_model_geom( model );
-
-  if( win->show_rangers ) 
-    gui_model_rangers( model );
-  
-  if( win->show_laser ) 
-    gui_model_laser( model );
-
-  if( win->show_grid && model->grid )
-    gui_model_grid( model );
+  gui_model_lines( model );
+  gui_model_nose( model );
+  gui_model_geom( model );
+  gui_model_rangers( model );
+  gui_model_rangers_data( model );
+  gui_model_laser( model );
+  gui_model_laser_data( model );
+  gui_model_grid( model );
 }
 
 void gui_model_destroy( model_t* model )
@@ -505,10 +497,11 @@ void gui_model_rangers_data( model_t* mod )
 { 
   gui_window_t* win = g_hash_table_lookup( wins, &mod->world->id );  
   
-  if( win->show_rangerdata )
+  rtk_fig_t* fig = gui_model_figs(mod)->ranger_data;  
+  if( fig ) rtk_fig_clear( fig );       
+  
+  if( win->show_rangerdata && mod->subs[STG_PROP_RANGERDATA] && mod->ranger_data )
     {
-      rtk_fig_t* fig = gui_model_figs(mod)->ranger_data;  
-      rtk_fig_clear( fig );       
       rtk_fig_color_rgb32(fig, stg_lookup_color(STG_RANGER_COLOR) );
       rtk_fig_origin( fig, 
 		      mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );
@@ -553,11 +546,13 @@ void gui_model_laser_data( model_t* mod )
 {
   gui_window_t* win = g_hash_table_lookup( wins, &mod->world->id );  
 
-  if( win->show_laserdata )
-    {
-      rtk_fig_t* fig = gui_model_figs(mod)->laser_data;  
-      rtk_fig_clear( fig ); 
+  rtk_fig_t* fig = gui_model_figs(mod)->laser_data;  
+  if( fig ) rtk_fig_clear( fig ); 
   
+  // if we're drawing laser data and this model has a laser subscription
+  // and some data, we'll draw the data
+  if( win->show_laserdata && mod->subs[STG_PROP_LASERDATA] && mod->laser_data )
+    {
       rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_DATA_COLOR) );
       rtk_fig_origin( fig, mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );  
       stg_laser_config_t* cfg = &mod->laser_config;
@@ -629,33 +624,36 @@ void gui_model_geom( model_t* mod )
   printf( "drawing geometry" );
 
   rtk_fig_t* fig = gui_model_figs(mod)->geom;
-  
+  gui_window_t* win = g_hash_table_lookup( wins, &mod->world->id );  
+
   rtk_fig_clear( fig );
 
-  rtk_fig_color_rgb32( fig, 0 );
-  
-  double localx = mod->local_pose.x;
-  double localy = mod->local_pose.y;
-  double locala = mod->local_pose.a;
-  
-  if( mod->boundary )
-    rtk_fig_rectangle( fig, localx, localy, locala, 
-		       mod->size.x, mod->size.y, 0 ); 
-  
-  // draw the origin and the offset arrow
-  double orgx = 0.05;
-  double orgy = 0.03;
-  rtk_fig_arrow_ex( fig, -orgx, 0, orgx, 0, 0.02 );
-  rtk_fig_line( fig, 0,-orgy, 0, orgy );
-  rtk_fig_line( fig, 0, 0, localx, localy );
-  //rtk_fig_line( fig, localx-orgx, localy, localx+orgx, localy );
-  rtk_fig_arrow( fig, localx, localy, locala, orgx, 0.02 );  
-  rtk_fig_arrow( fig, localx, localy, locala-M_PI/2.0, orgy, 0.0 );
-  rtk_fig_arrow( fig, localx, localy, locala+M_PI/2.0, orgy, 0.0 );
-  rtk_fig_arrow( fig, localx, localy, locala+M_PI, orgy, 0.0 );
-  //rtk_fig_arrow( fig, localx, localy, 0.0, orgx, 0.0 );  
+  if( win->show_geom )
+    {
+      rtk_fig_color_rgb32( fig, 0 );
+      
+      double localx = mod->local_pose.x;
+      double localy = mod->local_pose.y;
+      double locala = mod->local_pose.a;
+      
+      if( mod->boundary )
+	rtk_fig_rectangle( fig, localx, localy, locala, 
+			   mod->size.x, mod->size.y, 0 ); 
+      
+      // draw the origin and the offset arrow
+      double orgx = 0.05;
+      double orgy = 0.03;
+      rtk_fig_arrow_ex( fig, -orgx, 0, orgx, 0, 0.02 );
+      rtk_fig_line( fig, 0,-orgy, 0, orgy );
+      rtk_fig_line( fig, 0, 0, localx, localy );
+      //rtk_fig_line( fig, localx-orgx, localy, localx+orgx, localy );
+      rtk_fig_arrow( fig, localx, localy, locala, orgx, 0.02 );  
+      rtk_fig_arrow( fig, localx, localy, locala-M_PI/2.0, orgy, 0.0 );
+      rtk_fig_arrow( fig, localx, localy, locala+M_PI/2.0, orgy, 0.0 );
+      rtk_fig_arrow( fig, localx, localy, locala+M_PI, orgy, 0.0 );
+      //rtk_fig_arrow( fig, localx, localy, 0.0, orgx, 0.0 );  
+    }
 }
-
 
 // add a nose  indicating heading  
 void gui_model_nose( model_t* mod )
@@ -663,8 +661,15 @@ void gui_model_nose( model_t* mod )
   if( mod->nose )
     { 
       rtk_fig_t* fig = gui_model_figs(mod)->top;      
-      rtk_fig_color_rgb32( fig, 0 ); // black
+      rtk_fig_color_rgb32( fig, mod->color );
       
+      // draw a line from the center to the front of the model
+      rtk_fig_line( fig, mod->local_pose.x, mod->local_pose.y, mod->size.x/2, 0 );
+
+      /*
+	// this is the old-style nose-triangle. It doesn't work too
+	// well with the new arbitrary shapes so I've taken it out.
+
       double dx = mod->size.x/2.0;
       double dy = mod->size.y/2.0;
       double cosa = cos(mod->local_pose.a);
@@ -682,8 +687,7 @@ void gui_model_nose( model_t* mod )
 		    x, y );
       rtk_fig_line( fig, mod->local_pose.x, mod->local_pose.y, 
 		    x, yy );
-      
-      rtk_fig_color_rgb32( fig, mod->color );
+      */
     }
 }
 

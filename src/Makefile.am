@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.35 2004-04-26 04:37:49 rtv Exp $
+# $Id: Makefile.am,v 1.36 2004-04-28 06:10:44 rtv Exp $
 
 stage_DEPENDENCIES = libstage.a $(top_srcdir)/replace/libreplace.a
 
@@ -13,7 +13,7 @@ lib_LIBRARIES = libstage.a
 bin_PROGRAMS = stage stest
 
 # install these headers
-include_HEADERS = stage.h stageclient.h token.h bitmap.h worldfile.hh
+include_HEADERS = stage.h
 
 #
 # stage program
