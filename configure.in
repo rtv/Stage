@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.62 2004-12-29 06:39:31 rtv Exp $
+dnl $Id: configure.in,v 1.63 2004-12-30 05:57:39 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -56,7 +56,7 @@ AC_TRY_COMPILE(
           AC_DEFINE(socklen_t, int, required on some BSD-based platforms)])
 
 dnl Checks for library functions.
-AC_CHECK_LIB(z, gzopen)
+dnl AC_CHECK_LIB(z, gzopen)
 AC_CHECK_LIB(nsl, gethostbyname)
 AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(m, isinf)
