@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.2.2.3 2000-12-08 08:19:49 ahoward Exp $
+ * $Id: image.cc,v 1.2.2.4 2001-03-15 06:30:26 ahoward Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -65,9 +65,8 @@ Nimage::Nimage(int w,int h)
   width = w; height = h;
   data 	= new unsigned char[width*height];
 
-  cout << "unsigned char: " << sizeof( unsigned char ) << endl;
-
 #ifdef DEBUG
+  cout << "unsigned char: " << sizeof( unsigned char ) << endl;
   cout << '@' << data << endl;
 #endif
 }
@@ -80,7 +79,6 @@ Nimage::Nimage( const char* fname )
 #endif
 
   int n, m;
-  char p;
 
   //FILE *stream = fopen( fname, "r");
 
@@ -93,7 +91,7 @@ Nimage::Nimage( const char* fname )
   char magicNumber[10];
   char comment[256];
 
-  int fwidth, fheight, whiteNum;
+  int whiteNum;
   char terminator;
 
   if( image.fail() ) cout << "image bad!" << endl;
@@ -239,14 +237,13 @@ void Nimage::load_raw(char* fname)
 void Nimage::load_pnm(char* fname)
 {
   int n, m;
-  char p;
 
   ifstream image( fname );
 
   char magicNumber[10];
   char comment[256];
 
-  int fwidth, fheight, whiteNum;
+  int whiteNum;
   char terminator;
 
   if( image.fail() ) cout << "image bad!" << endl;
@@ -417,16 +414,16 @@ unsigned char Nimage::rect_detect( const Rect& r, unsigned char col )
 {
   unsigned char hit;
   
-  if( hit = line_detect( r.toplx, r.toply, r.toprx, r.topry, col ) > 0 ) 
+  if( (hit = line_detect( r.toplx, r.toply, r.toprx, r.topry, col )) > 0 ) 
     return hit;
   
-  if( hit = line_detect( r.toprx, r.topry, r.botlx, r.botly, col ) > 0 )
+  if( (hit = line_detect( r.toprx, r.topry, r.botlx, r.botly, col )) > 0 )
     return hit;
   
-  if( hit = line_detect( r.botlx, r.botly, r.botrx, r.botry, col ) > 0 )
+  if( (hit = line_detect( r.botlx, r.botly, r.botrx, r.botry, col )) > 0 )
     return hit;
   
-  if( hit = line_detect( r.botrx, r.botry, r.toplx, r.toply, col ) > 0 )
+  if( (hit = line_detect( r.botrx, r.botry, r.toplx, r.toply, col )) > 0 )
     return hit;
 
   return 0;
@@ -565,7 +562,7 @@ void Nimage::clear(unsigned char col)
 
 void Nimage::save_image_as_ppm(char *fname, char *cmap)
 {
-  FILE *f_out_ptr, *cmap_ptr;
+    FILE *f_out_ptr;
 	int bytes_written;
 	unsigned char *im_ptr;
 	short_triple *the_cmap;

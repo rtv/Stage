@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.15 $
+//  $Revision: 1.1.2.16 $
 //
 // Usage:
 //  (empty)
@@ -164,6 +164,10 @@ class CWorld
     // Thread control
     //
     private: pthread_t m_thread;
+
+    // Enable flag -- world only updates while this is set
+    //
+    private: bool m_enable;
     
     // Timing
     // Real time at which simulation started.

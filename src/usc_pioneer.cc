@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/usc_pioneer.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -81,10 +81,6 @@ bool CUscPioneer::Load(char *buffer, int bufflen)
     char *argv[64];
     int argc = Tokenize(buffer, bufflen, argv, ARRAYSIZE(argv)); 
     
-    // Set some defaults
-    //
-    strcpy(m_id, "jane_doe");
-    
     // Loop through args and extract settings
     //
     for (int i = 0; i < argc;)
@@ -109,7 +105,7 @@ bool CUscPioneer::Load(char *buffer, int bufflen)
         //
         else if (strcmp(argv[i], "name") == 0 && i + 1 < argc)
         {
-            strcpy(m_id, argv[i + 1]);
+            strcpy(m_pioneer->m_id, argv[i + 1]);
             i += 2;
         }
 
@@ -146,7 +142,7 @@ bool CUscPioneer::Save(char *buffer, int bufflen)
              "create usc_pioneer pose %.2f %.2f %.2f "
              "name %s port %d\n",
              (double) px, (double) py, (double) RTOD(pth),
-             (char*) m_id, (int) m_player->m_port);
+             (char*) m_pioneer->m_id, (int) m_player->m_port);
     
     return true;
 }

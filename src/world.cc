@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.20 $
+//  $Revision: 1.4.2.21 $
 //
 // Usage:
 //  (empty)
@@ -41,6 +41,10 @@ CWorld::CWorld()
     // seed the random number generator
     srand48( time(NULL) );
 
+    // Allow the simulation to run
+    //
+    m_enable = true;
+    
     // Initialise world filename
     //
     m_filename[0] = 0;
@@ -84,6 +88,8 @@ CWorld::~CWorld()
 //
 bool CWorld::Load(const char *filename)
 {
+    PRINT_MSG1("loading world file [%s]", filename);
+
     // Keep this file name: we will need it again when we save.
     //
     strcpy(m_filename, filename);
@@ -203,6 +209,8 @@ bool CWorld::Load(const char *filename)
 //
 bool CWorld::Save(const char *filename)
 {
+    PRINT_MSG1("saving world file [%s]", filename);
+
     // Generate a temporary file name
     //
     char tempname[64];
@@ -271,7 +279,6 @@ bool CWorld::Startup()
 {
     // Initialise the world grids
     //
-    printf("[%s]\n", m_env_file);
     if (!InitGrids(m_env_file))
         return false;
 
@@ -402,7 +409,8 @@ void* CWorld::Main(CWorld *world)
 
         // Update the world
         //
-        world->Update();
+        if (world->m_enable)
+            world->Update();
 
         /* *** HACK -- should reinstate this somewhere ahoward
            if( !runDown ) runStart = timeNow;
@@ -439,8 +447,8 @@ void CWorld::Update()
     double simtimestep = timestep;
     if (timestep > m_max_timestep)
     {
-        printf("warning: max timestep exceeded (%f > %f)\n",
-               (double) simtimestep, (double) m_max_timestep);
+        PRINT_MSG2("warning: max timestep exceeded (%f > %f)\n",
+                   (double) simtimestep, (double) m_max_timestep);
         simtimestep = m_max_timestep;
     }
 
@@ -808,6 +816,9 @@ void CWorld::OnUiProperty(CWorld *world, RtkUiPropertyData* data)
 void CWorld::OnUiButton(CWorld *world, RtkUiButtonData* data)
 {
     data->begin_section("default", "world");
+
+    if (data->check_button("enable", world->m_enable))
+        world->m_enable = !world->m_enable;
 
     if (data->push_button("save"))
         world->Save(world->m_filename);
