@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -90,11 +90,11 @@ bool CVisionBeacon::Load(int argc, char **argv)
 
 	// RTV - this'd report error before any subclass had a chance
         // Syntax error
-        //else
-        //{
-	//  PLAYER_MSG1("unrecognized token [%s]", argv[i]);
-	//  i += 1;
-        //}
+        else
+        {
+	  PLAYER_MSG1("unrecognized token [%s]", argv[i]);
+	  i += 1;
+        }
     }
 
 #ifdef INCLUDE_RTK

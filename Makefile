@@ -8,11 +8,14 @@
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
 #  $Author: vaughan $
-#  $Revision: 1.13 $
+#  $Revision: 1.14 $
 #
 ###########################################################################
 
 include Makefile.common
+
+# INSTALL PLAYER BEFORE BUILDING STAGE!
+# INSTALL PLAYER AND RTK BEFORE BUILDING RTKSTAGE!
 
 ##############################################################################
 # Top level targets
@@ -26,38 +29,36 @@ xs:
 	cd src &&  make xs -e PLAYER_DIR=$(PLAYER_DIR) && cp xs ../bin/
 
 rtkstage:
-	cd rtk && make all
 	cd src && make clean && make rtkstage -e PLAYER_DIR=$(PLAYER_DIR) &&  cp rtkstage ../bin/
 
 dep:
-	cd rtk &&  make dep
 	cd src &&  make dep
 
 clean:
 	rm -f *~
-	cd rtk &&  make clean
 	cd src &&  make clean 
 	cd include &&  make clean
 	cd bin &&  rm -f stage rtkstage xs core
+	cd examples && rm -f core
 
 
 ###########################################################################
 # Install section
 
 INSTALL_BIN = $(INSTALL_DIR)/bin
-INSTALL_BIN_FILES = bin/stage bin/rtkstage bin/xs
+INSTALL_BIN_FILES = bin/stage bin/xs bin/rtkstage 
 INSTALL_EXAMPLES = $(INSTALL_DIR)/examples
 INSTALL_ETC = /usr/local/etc/rtk
 INSTALL_ETC_FILES = etc/rtkstage.cfg
 
 install:
-	mkdir -p $(INSTALL_DIR)/bin
-	install -m 755 $(INSTALL_BIN_FILES) $(INSTALL_BIN)
 	mkdir -p $(INSTALL_EXAMPLES)
 	install -m 644 examples/*.world* $(INSTALL_EXAMPLES)
 	install -m 644 examples/*.pnm* $(INSTALL_EXAMPLES)
 	mkdir -p $(INSTALL_ETC)
 	install -m 755 $(INSTALL_ETC_FILES) $(INSTALL_ETC)
+	mkdir -p $(INSTALL_DIR)/bin
+	install -m 755 $(INSTALL_BIN_FILES) $(INSTALL_BIN)
 
 
 ###########################################################################

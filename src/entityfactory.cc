@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.9 $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -51,8 +51,6 @@
 //
 CEntity* CreateObject(const char *type, CWorld *world, CEntity *parent)
 {
-  puts( type );
-
     if (strcmp(type, "position_device") == 0)
         return new CPositionDevice(world, parent );
 

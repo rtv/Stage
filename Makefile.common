@@ -1,26 +1,50 @@
 #
-# $Id: Makefile.common,v 1.1 2001-08-09 08:00:05 vaughan Exp $ 
+# $Id: Makefile.common,v 1.2 2001-08-10 19:16:15 vaughan Exp $ 
 #
 
+# INSTALL PLAYER BEFORE BUILDING STAGE!
+# INSTALL PLAYER AND RTK BEFORE BUILDING RTKSTAGE!
+
 ##############################################################################
-# Define a version string for the source to include
+# CONFIGURATION
+
+##############################################################################
+# VERSIONS
+
+# Define Stage's version string for the source to include (required)
 
 VERSION = 1.0a
 
-
 ##############################################################################
-# Player location
+# Player configuration (required)
 # set the absolute path of your Player installation or source tree
 
-# this is a probably a good guess 
-# PLAYER_DIR = /usr/local/player-$(VERSION)
+# define which version of Player you will use to build from
+# PLAYERVERSION = $(VERSION)
 
-PLAYER_DIR = /usr/local/player-$(VERSION)
+PLAYERVERSION = $(VERSION)
+
+# this is Player's default location - probably a good guess:
+# PLAYER_DIR = /usr/local/player-$(PLAYERVERSION)
+# this is good if you have a symlink to your current version:
+# PLAYER_DIR = /usr/local/player
+
+PLAYER_DIR = /usr/local/player-$(PLAYERVERSION)
+
+##############################################################################
+# RTK location (required for rtkstage)
+# set the absolute path of your RTK installation or source tree
+# 
+# this is RTK's default location
+# RTK_DIR = /usr/local/rtk
+
+RTK_DIR = /usr/local/rtk
 
 
 ##############################################################################
+# INSTALLATION OPTIONS
 # These are the key flags needs for the build and install
-
+#
 
 INSTALL_DIR = /usr/local/stage-$(VERSION)
 

@@ -10,9 +10,11 @@ include ../Makefile.common
 
 PLAYER_INC = $(PLAYER_DIR)/include
 
-RTK_DIR = ../rtk
+# rtkstage needs RTK installed and these paths set correctly
+# RTK headers
 RTK_INC = $(RTK_DIR)/include
-RTK_LIB = $(RTK_DIR)/src
+# RTK libraries
+RTK_LIB = $(RTK_DIR)/lib
 
 ##############################################################################
 # Build section
@@ -40,7 +42,9 @@ CCFLAGS = -g3
 CCFLAGS += -Wall -DREENTRANT -I../include -I$(PLAYER_INC) $(ZLIB_FLAGS) 
 CCFLAGS += -DVERSION=\"$(VERSION)\"
 
+# production/debug link
 LINKFLAGS = -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
+# profile link
 #LINKFLAGS = -pg -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
 
 
@@ -55,7 +59,7 @@ MAKEDEP = makedepend
 ##############################################################################
 # Targets
 
-all: stage rtkstage xs truthlog
+all: stage xs truthlog rtkstage 
 
 # Target stage with no GUI
 #

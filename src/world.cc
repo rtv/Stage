@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.17 $
+//  $Revision: 1.18 $
 //
 // Usage:
 //  (empty)
@@ -45,6 +45,8 @@
 #define WATCHRATES
 //#define DEBUG 
 //#define VERBOSE
+#undef DEBUG 
+#undef VERBOSE
 
 // right now i have a single fixed filename for the mmapped IO with Player
 // eventually we'll be able to run multiple stages, each with a different

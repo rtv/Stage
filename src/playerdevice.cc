@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.12 $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  (empty)
@@ -222,7 +222,7 @@ bool CPlayerDevice::StartupPlayer(int port)
 
             // we assume Player is in the current path
             if( execlp( "player", "player",
-                        "-gp", portBuf, 
+                        "-port", portBuf, 
 			"-stage", m_world->PlayerIOFilename(), 
 			(char*) 0) < 0 )
             {
