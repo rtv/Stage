@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.34 2002-09-07 02:05:25 rtv Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.35 2002-09-10 23:41:47 gerkey Exp $
  */
 
 //#define DEBUG
@@ -232,8 +232,8 @@ void CPositionDevice::UpdateCommand()
 {
   if (GetCommand(&this->cmd, sizeof(this->cmd)) == sizeof(this->cmd))
   {
-    double fv = (short) ntohs(this->cmd.xspeed);
-    double fw = (short) ntohs(this->cmd.yawspeed);
+    double fv = (int) ntohl(this->cmd.xspeed);
+    double fw = (int) ntohl(this->cmd.yawspeed);
 
     // Store commanded speed
     // Linear is in m/s
