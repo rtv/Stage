@@ -8,7 +8,10 @@
 //	General image class, includes data storage, and 
 //	display of image. Also uses stuff for live capture
 //
-// $Id: image.h,v 1.2 2000-12-01 22:08:18 vaughan Exp $
+//  Modified by ahoward 24 May 2001 to make top bit 'sticky'.
+//  Once set, this bit can only be reset by 'clear'.
+//
+// $Id: image.h,v 1.3 2001-06-01 21:25:47 ahoward Exp $
 // RTV
 // ==================================================================
 
@@ -21,16 +24,6 @@
 
 
 unsigned int RGB( int r, int g, int b );
-
-/*const int red     = 0x00FF0000;
-const int green   = 0x0000FF00;
-const int blue    = 0x005050FF;
-const int magenta = 0x00FF00FF;
-const int cyan    = 0x0000FFFF;
-const int white   = 0x00FFFFFF;
-const int black   = 0x00000000;
-const int yellow  = 0x00FFFF00;
-*/
 
 typedef struct Point
 {
@@ -45,16 +38,16 @@ typedef struct Rect
 class Nimage
 {
 public:
-        int	width;
+    int	width;
 	int	height;
 	
 	unsigned char*   data;
 	char*	win_title;
-	
+
+	Nimage();
 	Nimage(unsigned char* array, int w,int h);
 	Nimage(int w,int h);
 	Nimage(Nimage*);
-	Nimage(char* fname);
 
 	inline	int	get_width(void)		{return width;}
 	inline	int	get_height(void)	{return height;}
@@ -69,7 +62,8 @@ public:
 	inline void set_pixel(int x, int y, unsigned char c)
 	  {
 	    if (x<0 || x>=width || y<0 || y>=height) return;
-	    data[(x + y*width)] = c;
+        unsigned char *p = data + x + y * width;
+        *p = (*p & 0x80) | c;
 	  }
 	
 	inline	unsigned char *get_data(void)	{return data;}
@@ -88,17 +82,16 @@ public:
 	void	draw_rect( const Rect t, unsigned char c);
 
 	//void	draw_line_detect(int x1,int y1,int x2,int y2,int c);	
-	unsigned char line_detect(int x1,int y1,int x2,int y2,
-				  unsigned char c );
-	unsigned char rect_detect( const Rect& r, 
-				   unsigned char c );
+	unsigned char line_detect(int x1,int y1,int x2,int y2);
+	unsigned char rect_detect( const Rect& r);
+
 	void	clear(unsigned char i);
 	void	save_image_as_ppm(char*,char*);
 	void	save_raw(char* fname);
 	void	load_raw(char* fname);
-	void	load_pnm(char* fname);
-	//char*   color_name( int col );
-
+	bool	load_pnm(const char* fname);
+    bool	load_pnm_gz(const char* fname);
+    
 	~Nimage(void);
 };
 

@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: win.h,v 1.4 2000-12-08 09:08:11 vaughan Exp $
+ * $Id: win.h,v 1.5 2001-06-01 21:25:50 ahoward Exp $
  ************************************************************************/
 
 #ifndef WIN_H
@@ -9,7 +9,7 @@
 
 #include <X11/Xlib.h>
 
-#include "world.h"
+#include "world.hh"
 
 class CWorldWin
 {
@@ -45,11 +45,11 @@ public:
 
  // data
   CWorld* world;
-  CRobot* dragging;
+  CPlayerRobot* dragging;
 
   // methods  
 
-  //void CheckSubscriptions( CRobot* r );
+  //void CheckSubscriptions( CPlayerRobot* r );
   void BoundsCheck( void );
   int LoadVars( char* initFile );
   void HandleEvent( void );
@@ -58,10 +58,11 @@ public:
   
   void PrintCoords( void );
   
-  void DrawBackground( void );
-  //void DrawRobotIfMoved( CRobot* r );
-  
-  //void DrawRobotsInRect( int xx, int yy, int ww, int hh );
+  void Draw( void );
+  void DrawRobotIfMoved( CPlayerRobot* r );
+  void DrawRobot( CPlayerRobot* r );
+
+  void DrawRobotsInRect( int xx, int yy, int ww, int hh );
   void DrawRobots( void );
   void RefreshRobots( void );
   
@@ -72,8 +73,8 @@ public:
   void ScanBackground( void );
 
   void MoveSize(void);
-  void DrawInRobotColor( CRobot* r );
-  unsigned long  RobotDrawColor( CRobot* r );
+  void DrawInRobotColor( CPlayerRobot* r );
+  unsigned long  RobotDrawColor( CPlayerRobot* r );
   void SetForeground( unsigned long color );
   void DrawLines( XPoint* pts, int numPts );
   void DrawPoints( XPoint* pts, int numPts );

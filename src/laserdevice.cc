@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.15 $
+//  $Author: ahoward $
+//  $Revision: 1.16 $
 //
 // Usage:
 //  (empty)
@@ -24,194 +24,109 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 0
-
-#include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
-#include "world.h"
-#include "robot.h"
+#include <iostream.h>
+#include <stage.h>
+#include <math.h>
+#include "world.hh"
 #include "laserdevice.hh"
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CLaserDevice::CLaserDevice(CRobot* rr, void *buffer, size_t data_len, 
-			   size_t command_len, size_t config_len)
-        : CPlayerDevice(rr, buffer, data_len, command_len, config_len)
+CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent, CPlayerServer* server)
+        : CPlayerDevice(world, parent, server,
+                        LASER_DATA_START,
+                        LASER_TOTAL_BUFFER_SIZE,
+                        LASER_DATA_BUFFER_SIZE,
+                        LASER_COMMAND_BUFFER_SIZE,
+                        LASER_CONFIG_BUFFER_SIZE)
 {
-    m_update_interval = 0.2; // RTV - speed to match the real laser
-    m_last_update = 0;
-
-    m_min_segment = 0;
-    m_max_segment = 361;
-    m_intensity = false;
+  // Laser update rate (readings/sec)
+  //
+  m_update_rate = 360 / 0.200; // 5Hz
+  m_last_update = 0;
+  m_scan_res = DTOR(0.50);
+  m_scan_min = DTOR(-90);
+  m_scan_max = DTOR(+90);
+  m_scan_count = 361;
+  m_intensity = false;
   
-    m_samples = 361;
-    m_max_range = 8.0; // meters - this could be dynamic one day
-                     // but this matches the default laser setup.
-
-    sampleIncrement = 3; // specify the degree of under-sampling
-                     // the ray tracing will only compute every sampleIncrement
-                     // sample for speed-up versus lost resolution. 
-                     // must be > 0. I reckon 3 is a good default - RTV
-                     // if you need the best possible quality, set this to 1. 
-
-    undrawRequired = false;
+  m_max_range = 8.0;
+  
+  // Dimensions of laser
+  //
+  m_map_dx = 0.155;
+  m_map_dy = 0.155;
+  
+  // GUI export setup
+  exporting = true; 
+  exp.objectId = this; // used both as ptr and as a unique ID
+  exp.objectType = laserturret_o;
+  strcpy( exp.label, "SICK LMS" );
+  exp.data = (char*)&expLaser;
+  
+#ifdef INCLUDE_RTK 
+  m_hit_count = 0;
+#endif
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the laser data
 //
-bool CLaserDevice::Update()
+void CLaserDevice::Update()
 {
-    //TRACE0("updating laser data");
-    ASSERT(m_robot != NULL);
+    ASSERT(m_server != NULL);
     ASSERT(m_world != NULL);
+    
+    // Undraw ourselves from the world
+    //
+    Map(false);
+
+    //expLaser.hitCount = 0;
 
     // Dont update anything if we are not subscribed
     //
-    if (!IsSubscribed())
-        return true;
-    
-    // Get pointers to the various bitmaps
-    //
-    Nimage *img = m_world->img;
-    Nimage *laser_img = m_world->m_laser_img;
-
-    ASSERT(img != NULL);
-    ASSERT(laser_img != NULL);
-
-    // Check to see if it is time to update the laser
-    //
-    if (m_world->timeNow - m_last_update <= m_update_interval)
-        return false;
-    m_last_update = m_world->timeNow;
-
-    // Check to see if the configuration has changed
-    //
-    CheckConfig();
-
-    // Make sure the data buffer is big enough
-    //
-    ASSERT(m_samples <= ARRAYSIZE(m_data));
-
-    // calculate the angle of the first laser beam
-    double startAngle = m_robot->a + M_PI_2;
-    double increment = -M_PI / m_samples; // and the difference between beams
-    
-    int maxRange = (int)( m_max_range * m_world->ppm); //scaled and quantized
-    int rng = 0;
-
-    //look up a couple of indrect variables to avoid doing it in the loop
-    uint8_t myColor = m_robot->color;
-    double ppm = m_world->ppm; // pixels per metre
-
-    double robotx = m_robot->x;
-    double roboty = m_robot->y;
- 
-    double dist, dx, dy, angle, pixelx, pixely;
-    
-    uint8_t occupied, intensity;
-
-    // Generate a complete set of samples
-    //
-    for(int s = 0; s < m_samples; s+=sampleIncrement)
+    if (IsSubscribed())
     {
-        // Allow for partial scans
+        // Check to see if the configuration has changed
         //
-        if (s < m_min_segment || s > m_max_segment)
+        CheckConfig();
+
+        // Check to see if it is time to update the laser
+        //
+        double interval = m_scan_count / m_update_rate;
+        if (m_world->GetTime() - m_last_update > interval)
         {
-            m_data[s] = 0;
-            continue;
+            m_last_update = m_world->GetTime();
+        
+            // Generate new scan data and copy to data buffer
+            //
+            player_laser_data_t data;
+            GenerateScanData(&data);
+            PutData(&data, sizeof(data));
+
+	    //exporting = true; // ready to send data to a GUI 
         }
-        
-        angle = startAngle + ( s * increment );
-        
-        dx = cos( angle );
-        dy = sin( angle);
-
-        // initialize variables that'll be interated over
-        pixelx = robotx;
-        pixely = roboty;
-
-        // Scan through the entire allowed range
-        //
-        for (rng = 0; rng < maxRange; rng++)
-        {
-            // Look for laser beacons
-            //
-            if (m_intensity)
-            {
-                intensity = laser_img->get_pixel((int) pixelx, (int) pixely);
-                if (intensity != 0)
-                    break;
-            }
-
-            // Look for occupied cells
-            // we have to check 2 pixels to prevent sliding through
-            // 1-pixel gaps in jaggies
-            //
-            occupied = img->get_pixel( (int)pixelx, (int)pixely );
-            if (occupied != 0 && occupied != myColor)
-                break;
-            occupied = img->get_pixel( (int)pixelx + 1, (int)pixely );
-            if (occupied != 0 && occupied != myColor)
-                break;
-
-            // Compute the next pixel to inspect
-            //
-            pixelx += dx;
-            pixely += dy;
-        }
-                
-        // set laser value, scaled to current ppm
-        // and converted to mm
-        //
-        uint16_t v = (uint16_t) (1000.0 * rng / ppm);
-
-        // Add in the intensity values in the top 3 bits
-        //
-        if (m_intensity)
-            v = v | (((uint16_t) intensity) << 13);
-        
-        // Set the range
-        // Swap the bytes while we're at it
-        //
-	if( sampleIncrement == 1 ) // we're not undersampling 
-	  {
-	    m_data[s] = htons( v );
-	    
-	    // store the hit points if we need to draw them on the GUI
-	    if( m_robot->showDeviceDetail )
-	      {
-		hitPts[s].x = (int)pixelx;
-		hitPts[s].y = (int)pixely;
-	      }
-	  }
-	else // we're undersampling so fill in intervening results too
- 	  { 
-	    unsigned short u = htons(v);
-	    // fill in all the elements we've under-sampled
-	    for( int d=0; (d < sampleIncrement) && (s+d < m_samples); d++ )
-	      {
-		m_data[s+d] = u;
-		
-		// store the hit points if we need to draw them on the GUI
-		if( m_robot->showDeviceDetail )
-		  {
-		    hitPts[s+d].x = (int)pixelx;
-		    hitPts[s+d].y = (int)pixely;
-		  }
-	      }
-	  }
     }
-    
-    // Copy the laser data to the data buffer
-    //
-    PutData(m_data, m_samples * sizeof(uint16_t));
+    else
+      {
+        // If not subscribed,
+        // reset configuration to default.
+        //
+        m_scan_res = DTOR(0.50);
+        m_scan_min = DTOR(-90);
+        m_scan_max = DTOR(+90);
+        m_scan_count = 361;
+        m_intensity = false;
+	
+	// have to invalidate the exported scan data
+	memset( &expLaser, 0, expLaser.hitCount * sizeof( DPoint ) );
+      }
 
-    return true;
+    // Redraw outselves in the world
+    //
+    Map(true);
 }
 
 
@@ -220,57 +135,297 @@ bool CLaserDevice::Update()
 //
 bool CLaserDevice::CheckConfig()
 {
-    uint8_t config[5];
-
-    if (GetConfig(config, sizeof(config)) == 0)
+    player_laser_config_t config;
+    if (GetConfig(&config, sizeof(config)) == 0)
         return false;  
-    
-    m_min_segment = ntohs(MAKEUINT16(config[0], config[1]));
-    m_max_segment = ntohs(MAKEUINT16(config[2], config[3]));
-    m_intensity = (bool) config[4];
-    PLAYER_MSG3("new scan range [%d %d], intensity [%d]",
-         (int) m_min_segment, (int) m_max_segment, (int) m_intensity);
 
-    // *** HACK -- change the update rate based on the scan size
-    // This is a guess only
+    // Swap some bytes
     //
-    m_update_interval = 0.2 * (m_max_segment - m_min_segment + 1) / 361;
+    config.resolution = ntohs(config.resolution);
+    config.min_angle = ntohs(config.min_angle);
+    config.max_angle = ntohs(config.max_angle);
+    config.intensity = ntohs(config.intensity);
+
+    // Emulate behaviour of SICK laser range finder
+    //
+    if (config.resolution == 25)
+    {
+        config.min_angle = max(config.min_angle, -5000);
+        config.min_angle = min(config.min_angle, +5000);
+        config.max_angle = max(config.max_angle, -5000);
+        config.max_angle = min(config.max_angle, +5000);
         
+        m_scan_res = DTOR((double) config.resolution / 100.0);
+        m_scan_min = DTOR((double) config.min_angle / 100.0);
+        m_scan_max = DTOR((double) config.max_angle / 100.0);
+        m_scan_count = (int) ((m_scan_max - m_scan_min) / m_scan_res) + 1;
+    }
+    else if (config.resolution == 50 || config.resolution == 100)
+    {
+        config.min_angle = max(config.min_angle, -9000);
+        config.min_angle = min(config.min_angle, +9000);
+        config.max_angle = max(config.max_angle, -9000);
+        config.max_angle = min(config.max_angle, +9000);
+        
+        m_scan_res = DTOR((double) config.resolution / 100.0);
+        m_scan_min = DTOR((double) config.min_angle / 100.0);
+        m_scan_max = DTOR((double) config.max_angle / 100.0);
+        m_scan_count = (int) ((m_scan_max - m_scan_min) / m_scan_res) + 1;
+    }
+    else
+    {
+        // Ignore invalid configurations
+        //  
+        PLAYER_MSG0("invalid laser configuration request");
+        return false;
+    }
+        
+    m_intensity = config.intensity;
+
     return true;
 }
 
-bool CLaserDevice::GUIDraw()
-{ 
-  // dump out if noone is subscribed or the device
-  if( !IsSubscribed() || !m_robot->showDeviceDetail ) return true;
 
-  // replicate the first point at the end in order to draw a closed polygon
-  hitPts[m_samples].x = hitPts[0].x;
-  hitPts[m_samples].y = hitPts[0].y;
+///////////////////////////////////////////////////////////////////////////
+// Generate scan data
+//
+bool CLaserDevice::GenerateScanData(player_laser_data_t *data)
+{    
 
-  m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
-  m_world->win->DrawLines( hitPts, m_samples+1 );
+    expLaser.hitCount = 0;
+
+    // Get the pose of the laser in the global cs
+    //
+    double ox, oy, oth;
+    GetGlobalPose(ox, oy, oth);
+
+    // Compute laser fov, range, etc
+    //
+    double dr = 1.0 / m_world->ppm;
+    double max_range = m_max_range;
+
+    // See how many scan readings to interpolate.
+    // To save time generating laser scans, we can
+    // generate a scan with lower resolution and interpolate
+    // the intermediate values.
+    // We will interpolate <skip> out of <skip+1> readings.
+    //
+    int skip = (int) (m_world->m_laser_res / m_scan_res - 0.5);
+
+#ifdef INCLUDE_RTK
+    // Initialise gui data
+    //
+    m_hit_count = 0;
+#endif
+
+
+    // Set the header part of the data packet
+    //
+    data->range_count = htons(m_scan_count);
+    data->resolution = htons((int) (100 * RTOD(m_scan_res)));
+    data->min_angle = htons((int) (100 * RTOD(m_scan_min)));
+    data->max_angle = htons((int) (100 * RTOD(m_scan_max)));
+
+    // Make sure the data buffer is big enough
+    //
+    ASSERT(m_scan_count <= ARRAYSIZE(data->ranges));
+        
+    // Do each scan
+    //
+    for (int s = 0; s < m_scan_count;)
+    {
+        int intensity = 0;
+        double range = 0;
+        double bearing = s * m_scan_res + m_scan_min;
+
+        // Compute parameters of scan line
+        //
+        double px = ox;
+        double py = oy;
+        double pth = oth + bearing;
+
+        // Compute the step for simple ray-tracing
+        //
+        double dx = dr * cos(pth);
+        double dy = dr * sin(pth);
+
+        // Look along scan line for obstacles
+        // Could make this an int again for a slight speed-up.
+        //
+        for (range = 0; range < max_range; range += dr)
+        {
+            // Look in the laser layer for obstacles
+            // Also look at the two cells to the right and above
+            // so we dont sneak through gaps.
+            //
+            uint8_t cell = 0;
+            cell |= m_world->GetCell(px, py, layer_laser);
+            cell |= m_world->GetCell(px + dr, py, layer_laser);
+            cell |= m_world->GetCell(px, py + dr, layer_laser);
+            if (cell != 0)
+            {
+                if (cell > 1)
+                    intensity = 1;                
+                break;
+            }
+            px += dx;
+            py += dy;
+        }
+            
+        // set laser value, scaled to current ppm
+        // and converted to mm
+        //
+        uint16_t v = (uint16_t) (1000.0 * range);
+
+        // Add in the intensity values in the top 3 bits
+        //
+        if (m_intensity)
+            v = v | (((uint16_t) intensity) << 13);
+        
+        // Set the range
+        //
+        data->ranges[s++] = htons(v);
+
+        // Skip some values to save time
+        //
+        for (int i = 0; i < skip && s < m_scan_count; i++)
+            data->ranges[s++] = htons(v);
+
+#ifdef INCLUDE_RTK
+        // Update the gui data
+        //
+        m_hit[m_hit_count][0] = px;
+        m_hit[m_hit_count][1] = py;
+        m_hit_count++;
+#endif
+
+	expLaser.hitPts[expLaser.hitCount].x = px;// * m_world->ppm;
+	expLaser.hitPts[expLaser.hitCount].y = py;// * m_world->ppm;
+	expLaser.hitCount++;
+    }    
+    return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Draw ourselves into the world rep
+//
+void CLaserDevice::Map(bool render)
+{
+    double dx = m_map_dx;
+    double dy = m_map_dy;
     
-  memcpy( oldHitPts, hitPts, sizeof( XPoint ) * (m_samples+1) );
-  
-  undrawRequired = true;
+    if (!render)
+    {
+        // Remove ourself from the map
+        //
+        double px = m_map_px;
+        double py = m_map_py;
+        double pth = m_map_pth;
+        m_world->SetRectangle(px, py, pth, dx, dy, layer_laser, 0);
+    }
+    else
+    {
+        // Add ourself to the map
+        //
+        double px, py, pth;
+        GetGlobalPose(px, py, pth);
+        m_world->SetRectangle(px, py, pth, dx, dy, layer_laser, 1);
+        m_map_px = px;
+        m_map_py = py;
+        m_map_pth = pth;
+    }
+}
 
-  return true; 
-};  
+#ifdef INCLUDE_RTK
 
-bool CLaserDevice::GUIUnDraw()
-{ 
-  if( undrawRequired )
-  {
-    m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
-    m_world->win->DrawLines( oldHitPts, m_samples+1 );
+///////////////////////////////////////////////////////////////////////////
+// Process GUI update messages
+//
+void CLaserDevice::OnUiUpdate(RtkUiDrawData *event)
+{
+    // Draw our children
+    //
+    CEntity::OnUiUpdate(event);
+    
+    // Draw ourself
+    //
+    event->begin_section("global", "laser");
+    
+    if (event->draw_layer("", true))
+        DrawTurret(event);
+    if (event->draw_layer("scan", true))
+        if (IsSubscribed())
+            DrawScan(event);
+    
+    event->end_section();
+}
 
-    undrawRequired = false;
-  }   
-  return true; 
-};
+
+///////////////////////////////////////////////////////////////////////////
+// Process GUI mouse messages
+//
+void CLaserDevice::OnUiMouse(RtkUiMouseData *event)
+{
+    CEntity::OnUiMouse(event);
+}
 
 
+///////////////////////////////////////////////////////////////////////////
+// Draw the laser turret
+//
+void CLaserDevice::DrawTurret(RtkUiDrawData *event)
+{
+    #define TURRET_COLOR RTK_RGB(0, 0, 255)
+    
+    event->set_color(TURRET_COLOR);
+
+    // Turret dimensions
+    //
+    double dx = m_map_dx;
+    double dy = m_map_dy;
+
+    // Get global pose
+    //
+    double gx, gy, gth;
+    GetGlobalPose(gx, gy, gth);
+    
+    // Draw the outline of the turret
+    //
+    event->ex_rectangle(gx, gy, gth, dx, dy); 
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Draw the laser scan
+//
+void CLaserDevice::DrawScan(RtkUiDrawData *event)
+{
+    #define SCAN_COLOR RTK_RGB(0, 0, 255)
+    
+    event->set_color(SCAN_COLOR);
+
+    // Get global pose
+    //
+    double gx, gy, gth;
+    GetGlobalPose(gx, gy, gth);
+
+    double qx, qy;
+    qx = gx;
+    qy = gy;
+    
+    for (int i = 0; i < m_hit_count; i++)
+    {
+        double px = m_hit[i][0];
+        double py = m_hit[i][1];
+        event->line(qx, qy, px, py);
+        qx = px;
+        qy = py;
+    }
+    event->line(qx, qy, gx, gy);
+}
+
+#endif
 
 
 

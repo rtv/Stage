@@ -1,52 +1,87 @@
-// $Id: pioneermobiledevice.cc,v 1.13 2001-02-06 01:27:06 gerkey Exp $
+///////////////////////////////////////////////////////////////////////////
+//
+// File: pioneermobiledevice.cc
+// Author: Richard Vaughan, Andrew Howard
+// Date: 5 Dec 2000
+// Desc: Simulates the Pioneer robot base
+//
+// CVS info:
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
+//  $Author: ahoward $
+//  $Revision: 1.14 $
+//
+// Usage:
+//  (empty)
+//
+// Theory of operation:
+//  (empty)
+//
+// Known bugs:
+//  (empty)
+//
+// Possible enhancements:
+//  (empty)
+//
+///////////////////////////////////////////////////////////////////////////
 
-//#define ENABLE_TRACE 1
+#define ENABLE_RTK_TRACE 1
 
 #include <math.h>
 
-#include "world.h"
-#include "robot.h"
-#include "pioneermobiledevice.h"
+#include "world.hh"
+#include "pioneermobiledevice.hh"
 
 const double TWOPI = 6.283185307;
 
-// constructor
 
-CPioneerMobileDevice::CPioneerMobileDevice( CRobot* rr, 
-					    double wwidth, double llength,
-					    void *buffer, 
-					    size_t data_len, 
-					    size_t command_len, 
-					    size_t config_len)
-        : CPlayerDevice(rr, buffer, data_len, command_len, config_len)
-{
-  m_update_interval = 0.01; // update me very fast indeed
+///////////////////////////////////////////////////////////////////////////
+// Constructor
+//
+CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CEntity *parent, CPlayerServer* server)
+        : CPlayerDevice(world, parent, server,
+                        POSITION_DATA_START,
+                        POSITION_TOTAL_BUFFER_SIZE,
+                        POSITION_DATA_BUFFER_SIZE,
+                        POSITION_COMMAND_BUFFER_SIZE,
+                        POSITION_CONFIG_BUFFER_SIZE)
+{    
+    m_com_vr = m_com_vth = 0;
+    m_map_px = m_map_py = m_map_pth = 0;
 
-  width = wwidth;
-  length = llength;
+    // Set the robot dimensions
+    // Due to the unusual shape of the pioneer,
+    // it is modelled as a rectangle offset from the origin
+    //
+    m_size_x = 0.440;
+    m_size_y = 0.380;
+    m_offset_x = -0.04;
+    
+    m_odo_px = m_odo_py = m_odo_pth = 0;
 
-  halfWidth = width / 2.0;   // the halves are used often in calculations
-  halfLength = length / 2.0;
+    stall = 0;
 
-  xodom = yodom = aodom = 0;
+#ifdef INCLUDE_RTK
+    m_mouse_radius = 0.400;
+    m_draggable = true;
+#endif
 
-  speed = 0.0;
-  turnRate = 0.0;
-
-  stall = 0;
-
-  memset( &rect, 0, sizeof( rect ) );
-  memset( &oldRect, 0, sizeof( rect ) );
-
-  CalculateRect();
+    exp.objectType = pioneer_o;
+    exp.width = m_size_x;
+    exp.height = m_size_y;
+    strcpy( exp.label, "Pioneer" );
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the position of the robot base
 //
-bool CPioneerMobileDevice::Update()
+void CPioneerMobileDevice::Update()
 {
-    //TRACE0("updating CPioneerMobileDevice");
+    // If the device is not subscribed,
+    // reset to default settings.
+    //
+    if (!IsSubscribed())
+        m_odo_px = m_odo_py = m_odo_pth = 0;
     
     // Get the latest command
     //
@@ -54,250 +89,250 @@ bool CPioneerMobileDevice::Update()
     {
         ParseCommandBuffer();    // find out what to do    
     }
-  
-    MapUnDraw(); // erase myself
+ 
+    Map(false); // erase myself
    
     Move();      // do things
     
-    MapDraw();   // draw myself 
+    Map(true);   // draw myself 
 
     ComposeData();     // report the new state of things
     PutData( &m_data, sizeof(m_data)  );     // generic device call
 
-    return true;
+    // Update our children
+    //
+    CPlayerDevice::Update();
 }
 
 
 int CPioneerMobileDevice::Move()
 {
-  Nimage* img = m_world->img;
+    double step_time = m_world->GetTime() - m_last_time;
+    m_last_time += step_time;
 
-  StoreRect(); // save my current rectangle in cased I move
+    // Get the current robot pose
+    //
+    double px, py, pth;
+    GetPose(px, py, pth);
 
-  int moved = false;
+    // Compute a new pose
+    // This is a zero-th order approximation
+    //
+    double qx = px + m_com_vr * step_time * cos(pth);
+    double qy = py + m_com_vr * step_time * sin(pth);
+    double qth = pth + m_com_vth * step_time;
 
-  if( ( m_world->win && m_world->win->dragging != m_robot )  
-      &&  (speed != 0.0 || turnRate != 0.0) )
+    // Check for collisions
+    // and accept the new pose if ok
+    //
+    if (!InCollision(qx, qy, qth))
     {
-      // record speeds now - they can be altered in another thread
-      double nowSpeed = speed;
-      double nowTurn = turnRate;
-      double nowTimeStep = m_world->timeStep;
-
-      // find the new position for the robot
-      double tx = m_robot->x 
-	+ nowSpeed * m_world->ppm * cos( m_robot->a ) * nowTimeStep;
-      
-      double ty = m_robot->y 
-	+ nowSpeed * m_world->ppm * sin( m_robot->a ) * nowTimeStep;
-      
-      double ta = m_robot->a + (nowTurn * nowTimeStep);
-      
-      ta = fmod( ta + TWOPI, TWOPI );  // normalize angle
-      
-      // calculate the rectangle for the robot's tentative new position
-      CalculateRect( tx, ty, ta );
-
-      //cout << "txya " << tx << ' ' << ty << ' ' << ta << endl;
-
-      // trace the robot's outline to see if it will hit anything
-      char hit = 0;
-      if( hit = img->rect_detect( rect, m_robot->color ) > 0 )
-	// hit! so don't do the move - just redraw the robot where it was
-	{
-	  //cout << "HIT! " << endl;
-	  // restore from the saved rect
-	  memcpy( &rect, &oldRect, sizeof( struct Rect ) );
-	  
-	  stall = 1; // motors stalled due to collision
-	}
-      else // do the move
-	{
-	  moved = true;
-	  
-	  stall = 0; // motors not stalled
-	  
-	  m_robot->x = tx; // move to the new position
-	  m_robot->y = ty;
-	  m_robot->a = ta;
-	  
-	  //update the robot's odometry estimate
-	  // don't have to scale into pixel coords, 'cos these are in meters
-	  xodom +=  nowSpeed * cos( aodom ) * nowTimeStep;
-	  yodom +=  nowSpeed * sin( aodom ) * nowTimeStep;
-	  
-	  if( m_world->maxAngularError != 0.0 ) //then introduce some error
-	    {
-	      // could make this a +/- error, instead of a pure bias
-	      // though i think the pioneer generally underestimates its turn
-	      // due to wheel slippage
-	      double error = 1.0 + ( drand48()* m_world->maxAngularError );
-	      aodom += nowTurn * nowTimeStep * error;
-	    }
-	  else
-	    aodom += nowTurn * nowTimeStep;
-	  
-	  aodom = fmod( aodom + TWOPI, TWOPI );  // normalize angle
-	 	  
-	  // update the `old' stuff
-	  memcpy( &oldRect, &rect, sizeof( struct Rect ) );
-	  oldCenterx = centerx;
-	  oldCentery = centery;
-	}
+        SetPose(qx, qy, qth);
+        this->stall = 0;
     }
-  
-  m_robot->oldx = m_robot->x;
-  m_robot->oldy = m_robot->y;
-  m_robot->olda = m_robot->a;
- 
-  return moved;
+    else
+        this->stall = 1;
+        
+    // Compute the new odometric pose
+    // Uses a first-order integration approximation
+    //
+    double dr = m_com_vr * step_time;
+    double dth = m_com_vth * step_time;
+    m_odo_px += dr * cos(m_odo_pth + dth / 2);
+    m_odo_py += dr * sin(m_odo_pth + dth / 2);
+    m_odo_pth += dth;
+
+    // Normalise the odometric angle
+    //
+    m_odo_pth = fmod(m_odo_pth + TWOPI, TWOPI);
+    
+    return true;
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+// Parse the command buffer to extract commands
+//
+void CPioneerMobileDevice::ParseCommandBuffer()
+{
+    double fv = (short) ntohs(m_command.speed);
+    double fw = (short) ntohs(m_command.turnrate);
+
+    // Store commanded speed
+    // Linear is in m/s
+    // Angular is in radians/sec
+    //
+    m_com_vr = fv / 1000;
+    m_com_vth = DTOR(fw);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Compose data to send back to client
+//
 void CPioneerMobileDevice::ComposeData()
 {
-  // this will put the data into P2OS packet format to be shipped
-  // to Player
-  
-  // *** BROKEN -- this is all over the place.  It needs fixing. ahoward
- 
-  // fixed it. there was a scaling error updating the x,y odometry in Update().
-  // the odometry model was kind of deliberately disabled - the code 
-  // wasn't "wrong". talk to me! - RTV
-
     // Compute odometric pose
-    // Convert to a bottom-left coord system
+    // Convert mm and degrees (0 - 360)
     //
-    double px = xodom * 1000.0;// output in mm
-    double py = -yodom * 1000.0;// output in mm
-    double pth = TWOPI - fmod(aodom + TWOPI, TWOPI);
+    double px = m_odo_px * 1000.0;
+    double py = m_odo_py * 1000.0;
+    double pth = RTOD(fmod(m_odo_pth + TWOPI, TWOPI));
+
+    // Get actual global pose
+    //
+    double gx, gy, gth;
+    GetGlobalPose(gx, gy, gth);
     
     // normalized compass heading
-    double comHeading = fmod( m_robot->a + M_PI/2.0 + TWOPI, TWOPI ); 
+    //
+    double compass = fmod( gth + M_PI/2.0 + TWOPI, TWOPI ); 
   
     // Construct the data packet
     // Basically just changes byte orders and some units
     //
-    //m_data.time = htonl((int)((m_world->timeNow - m_world->timeBegan)*1000.0));
     m_data.xpos = htonl((int) px);
     m_data.ypos = htonl((int) py);
-    m_data.theta = htons((unsigned short) RTOD(pth));
+    m_data.theta = htons((unsigned short) pth);
 
-    m_data.speed = htons((unsigned short) (speed * 1000.0));
-    // *** HACK -- Why do I need to negate this? ahoward 
-    // because of the reversed y-axis on the screen - RTV
-    m_data.turnrate = htons((short) RTOD(-turnRate));  
-    m_data.compass = htons((unsigned short)(RTOD(comHeading)));
-    m_data.stalls = stall;
-}
-
-bool CPioneerMobileDevice::MapUnDraw()
-{
-  m_world->img->draw_rect( oldRect, 0 );
-  return 1;
+    m_data.speed = htons((unsigned short) (m_com_vr * 1000.0));
+    m_data.turnrate = htons((short) RTOD(m_com_vth));  
+    m_data.compass = htons((unsigned short)(RTOD(compass)));
+    m_data.stalls = this->stall;
 }
 
 
-bool CPioneerMobileDevice::MapDraw()
+///////////////////////////////////////////////////////////////////////////
+// Check to see if the given pose will yield a collision
+//
+bool CPioneerMobileDevice::InCollision(double px, double py, double pth)
 {
-  // calculate my new rectangle
-  CalculateRect( m_robot->x, m_robot->y, m_robot->a );
+    double qx = px + m_offset_x * cos(pth);
+    double qy = py + m_offset_x * sin(pth);
+    double sx = m_size_x;
+    double sy = m_size_y;
 
-  m_world->img->draw_rect( rect, m_robot->color );
-
-  StoreRect();
-  return 1;
-}
-
-void CPioneerMobileDevice::Stop( void )
-{
-  speed = turnRate = 0;
-}
-
-void CPioneerMobileDevice::StoreRect( void )
-{
-  memcpy( &oldRect, &rect, sizeof( struct Rect ) );
-  oldCenterx = centerx;
-  oldCentery = centery;
-}
-
-void CPioneerMobileDevice::CalculateRect( double x, double y, double a )
-{
-  // fill an array of Points with the corners of the robots new position
-  double cosa = cos( a );
-  double sina = sin( a );
-  double cxcosa = halfLength * cosa;
-  double cycosa = halfWidth  * cosa;
-  double cxsina = halfLength * sina;
-  double cysina = halfWidth  * sina;
-
-  rect.toplx = (int)(x + (-cxcosa + cysina));
-  rect.toply = (int)(y + (-cxsina - cycosa));
-  rect.toprx = (int)(x + (+cxcosa + cysina));
-  rect.topry = (int)(y + (+cxsina - cycosa));
-  rect.botlx = (int)(x + (+cxcosa - cysina));
-  rect.botly = (int)(y + (+cxsina + cycosa));
-  rect.botrx = (int)(x + (-cxcosa - cysina));
-  rect.botry = (int)(y + (-cxsina + cycosa));
-
-  centerx = (int)x;
-  centery = (int)y;
-}
-
-void CPioneerMobileDevice::ParseCommandBuffer()
-{
-    double fv = (double) (short) ntohs(m_command.speed);
-    double fw = (double) (short) ntohs(m_command.turnrate);
+    if (m_world->GetRectangle(qx, qy, pth, sx, sy, layer_obstacle) > 0)
+        return true;
     
-    // set speeds unless we're being dragged
-    if( m_world->win->dragging != m_robot )
+    return false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Render the object in the world rep
+//
+bool CPioneerMobileDevice::Map(bool render)
+{
+    if (!render)
     {
-        speed = 0.001 * fv;
-        turnRate = -(M_PI/180.0) * fw;
+        // Remove ourself from the obstacle map
+        //
+        double px = m_map_px;
+        double py = m_map_py;
+        double pa = m_map_pth;
+
+        double qx = px + m_offset_x * cos(pa);
+        double qy = py + m_offset_x * sin(pa);
+        double sx = m_size_x;
+        double sy = m_size_y;
+        m_world->SetRectangle(qx, qy, pa, sx, sy, layer_obstacle, 0);
     }
-  
-  //cout << "DONE PARSE" << endl;
+    else
+    {
+        // Add ourself to the obstacle map
+        //
+        double px, py, pa;
+        GetGlobalPose(px, py, pa);
+
+        double qx = px + m_offset_x * cos(pa);
+        double qy = py + m_offset_x * sin(pa);
+        double sx = m_size_x;
+        double sy = m_size_y;
+        m_world->SetRectangle(qx, qy, pa, sx, sy, layer_obstacle, 1);
+        
+        // Store the place we added ourself
+        //
+        m_map_px = px;
+        m_map_py = py;
+        m_map_pth = pa;
+    }
+    return true;
 }
 
-bool CPioneerMobileDevice::GUIUnDraw()
+
+
+#ifdef INCLUDE_RTK
+
+///////////////////////////////////////////////////////////////////////////
+// Process GUI update messages
+//
+void CPioneerMobileDevice::OnUiUpdate(RtkUiDrawData *data)
 {
-  m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
-  m_world->win->DrawLines( undrawPts, 7 );
-
-  return true;
+    CEntity::OnUiUpdate(data);
+    
+    // Draw ourself
+    //
+    data->begin_section("global", "");
+    
+    if (data->draw_layer("chassis", true))
+        DrawChassis(data);
+    
+    data->end_section();
 }
 
-bool CPioneerMobileDevice::GUIDraw()
+
+///////////////////////////////////////////////////////////////////////////
+// Process GUI mouse messages
+//
+void CPioneerMobileDevice::OnUiMouse(RtkUiMouseData *data)
 {
-  CWorldWin* win = m_world->win;
-  
-  XPoint pts[7];
-  
-  // draw the new position
-  pts[4].x = pts[0].x = (short)rect.toprx;
-  pts[4].y = pts[0].y = (short)rect.topry;
-  pts[1].x = (short)rect.toplx;
-  pts[1].y = (short)rect.toply;
-  pts[6].x = pts[3].x = (short)rect.botlx;
-  pts[6].y = pts[3].y = (short)rect.botly;
-  pts[2].x = (short)rect.botrx;
-  pts[2].y = (short)rect.botry;
-  pts[5].x = (short)centerx;
-  pts[5].y = (short)centery;
-      
-  win->SetForeground( win->RobotDrawColor( m_robot) );
-  win->DrawLines( pts, 7 );
-
-  // store these points for undrawing
-  memcpy( undrawPts, pts, sizeof( XPoint ) * 7 ); 
-
-  return true;
+    CEntity::OnUiMouse(data);
 }
 
 
+///////////////////////////////////////////////////////////////////////////
+// Draw the pioneer chassis
+//
+void CPioneerMobileDevice::DrawChassis(RtkUiDrawData *data)
+{
+    #define ROBOT_COLOR RTK_RGB(255, 0, 192)
+    
+    data->set_color(ROBOT_COLOR);
 
+    // Get global pose
+    //
+    double px, py, pa;
+    GetGlobalPose(px, py, pa);
 
+    // Compute an offset
+    //
+    double qx = px + m_offset_x * cos(pa);
+    double qy = py + m_offset_x * sin(pa);
+    double sx = m_size_x;
+    double sy = m_size_y;
+    data->ex_rectangle(qx, qy, pa, sx, sy);
 
+    // Draw the direction indicator
+    //
+    for (int i = 0; i < 3; i++)
+    {
+        double px = min(sx, sy) / 2 * cos(DTOR(i * 45 - 45));
+        double py = min(sx, sy) / 2 * sin(DTOR(i * 45 - 45));
+        double pth = 0;
 
+        // This is ugly, but it works
+        //
+        if (i == 1)
+            px = py = 0;
+        
+        LocalToGlobal(px, py, pth);
+        
+        if (i > 0)
+            data->line(qx, qy, px, py);
+        qx = px;
+        qy = py;
+    }
+}
 
-
-
+#endif

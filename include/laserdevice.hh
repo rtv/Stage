@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.11 $
+//  $Author: ahoward $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -27,29 +27,33 @@
 #ifndef LASERDEVICE_HH
 #define LASERDEVICE_HH
 
-#include <X11/Xlib.h> // for XPoint structure
-
 #include "playerdevice.hh"
-
 
 class CLaserDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CLaserDevice(CRobot* robot, void *buffer, size_t data_len, 
-			 size_t command_len, size_t config_len);
-    
+    public: CLaserDevice(CWorld *world, CEntity *parent, CPlayerServer* server);
+
     // Update the device
     //
-    public: virtual bool Update();
+    public: virtual void Update();
 
     // Check to see if the configuration has changed
     //
     private: bool CheckConfig();
 
+    // Generate scan data
+    //
+    private: bool GenerateScanData(player_laser_data_t *data);
+
+    // Draw ourselves into the world rep
+    //
+    private: void Map(bool render);
+    
     // Laser timing settings
     //
-    private: double m_update_interval;
+    private: double m_update_rate;
     private: double m_last_update;
     
     // Maximum range of sample in meters
@@ -58,28 +62,52 @@ class CLaserDevice : public CPlayerDevice
     
     // Laser configuration parameters
     //
-    private: int m_min_segment;
-    private: int m_max_segment;
-    private: int m_samples;
+    private: double m_scan_res;
+    private: double m_scan_min;
+    private: double m_scan_max;
+    private: int m_scan_count;
     private: bool m_intensity;
 
-    private: int sampleIncrement; // controls undersampling
-
-    // Array holding the laser data
+    // Size of laser in laser rep
     //
-    private: uint16_t m_data[512];
+    private: double m_map_dx, m_map_dy;
     
-    // draw myself on the window
-    virtual bool GUIDraw();
-    virtual bool GUIUnDraw();
+    // The laser's last mapped pose
+    //
+    private: double m_map_px, m_map_py, m_map_pth;
+
+    // storage for exporting the laser hit points
+   private: ExportLaserData expLaser;
+
+#ifdef INCLUDE_RTK
     
-    // storage for the GUI rendering
-     private: XPoint hitPts[ LASERSAMPLES + 1 ];
-     private: XPoint oldHitPts[ LASERSAMPLES + 1];
-     private: int undrawRequired;
+    // Process GUI update messages
+    //
+    public: virtual void OnUiUpdate(RtkUiDrawData *data);
+
+    // Process GUI mouse messages
+    //
+    public: virtual void OnUiMouse(RtkUiMouseData *data);
+
+    // Draw the laser turret
+    //
+    private: void DrawTurret(RtkUiDrawData *data);
+
+    // Draw the laser scan
+    //
+    private: void DrawScan(RtkUiDrawData *data);
+
+    // Laser scan outline
+    //
+    private: int m_hit_count;
+    private: double m_hit[512][2];
+    
+#endif    
 };
 
 #endif
+
+
 
 
 

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/ptzdevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.2 $
+//  $Author: ahoward $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -35,13 +35,11 @@ class CPtzDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CPtzDevice(CRobot* robot,
-                       void *buffer, size_t data_len, 
-                       size_t command_len, size_t config_len);
+    public: CPtzDevice(CWorld *world, CEntity *parent, CPlayerServer* server);
     
     // Update the device
     //
-    public: virtual bool Update();
+    public: virtual void Update();
 
     // Get the pan/tilt/zoom values
     // The pan and tilt are angles (in radians)
@@ -63,14 +61,21 @@ class CPtzDevice : public CPlayerDevice
     // Current camera settings
     //
     private: double m_pan, m_tilt, m_zoom;
-
-public: 
-  bool GUIDraw( void );
-  bool GUIUnDraw( void );
   
-  bool undrawRequired;
-  XPoint drawPts[4];
-  XPoint unDrawPts[4];
+  // structure for exporting PTZ-specific data to a GUI
+    private: ExportPtzData expPtz; 
+
+#ifdef INCLUDE_RTK
+    
+    // Process GUI update messages
+    //
+    public: virtual void OnUiUpdate(RtkUiDrawData *pData);
+
+    // Process GUI mouse messages
+    //
+    public: virtual void OnUiMouse(RtkUiMouseData *pData);
+    
+#endif
 
 };
 

@@ -1,0 +1,15 @@
+
+set environment_file = sal2.pnm
+set pixels_per_meter =  26
+set laser_res = 2
+
+create usc_pioneer pose 7.00 12.50 0.00 name comet port 6665 
+{
+    create laser_beacon pose -0.15 0.00 0 color black id 17 
+}
+
+create usc_pioneer pose 7.00 3.40 0.00 name atom port 6666 
+{
+    create laser_beacon pose -0.15 0.00 0 color black id 19 
+}
+

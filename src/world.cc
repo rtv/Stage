@@ -1,219 +1,73 @@
-/*************************************************************************
- * world.cc - top level class that contains and updates robots
- * RTV
- * $Id: world.cc,v 1.8 2001-01-13 02:47:02 gerkey Exp $
- ************************************************************************/
+///////////////////////////////////////////////////////////////////////////
+//
+// File: world.cc
+// Author: Richard Vaughan, Andrew Howard
+// Date: 7 Dec 2000
+// Desc: top level class that contains everything
+//
+// CVS info:
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
+//  $Author: ahoward $
+//  $Revision: 1.9 $
+//
+// Usage:
+//  (empty)
+//
+// Theory of operation:
+//  (empty)
+//
+// Known bugs:
+//  (empty)
+//
+// Possible enhancements:
+//  (empty)
+//
+///////////////////////////////////////////////////////////////////////////
 
-#include <X11/Xlib.h>
-#include <assert.h>
-#include <fstream.h>
-#include <iomanip.h> 
-#include <math.h>
-#include <sys/time.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <sys/ipc.h>
-#include <sys/sem.h>
-
-#include "world.h"
-#include "win.h"
-//#include "offsets.h"
+#include <sys/time.h>
+#include <signal.h>
+#include <math.h>
+#include <iostream.h>
 #include "stage.h"
+#include "world.hh"
 
-//#undef DEBUG
-//#define DEBUG
-//#define VERBOSE
-//#define DISPLAYFREQ
+#ifdef INCLUDE_XGUI
+#include "xgui.hh"
+#endif
 
-#define SEMKEY 2000;
-
-const double MILLION = 1000000.0;
-const double TWOPI = 6.283185307;
-
-int runDown = false;
-double runStart;
-
-unsigned int RGB( int r, int g, int b );
-
-extern double quitTime;
-
-CWorld::CWorld( char* initFile ) 
+///////////////////////////////////////////////////////////////////////////
+// Default constructor
+//
+CWorld::CWorld()
 {
-  bots = NULL;
-  win = NULL;
-  
-  //#ifdef VERBOSE
-  cout << "[" << initFile << "]" << flush;
-  //#endif
+    // seed the random number generator
+    srand48( time(NULL) );
 
-  // initialize the filenames
-  bgFile[0] = 0;
-  posFile[0] = 0;
+    // Allow the simulation to run
+    //
+    m_enable = true;
+    
+    // Initialise world filename
+    //
+    m_filename[0] = 0;
+    
+    // Initialise grids
+    //
+    m_bimg = NULL;
+    m_obs_img = NULL;
+    m_laser_img = NULL;
+    m_vision_img = NULL;
 
-  //zc = 0; //zonecount
-  
-  paused = false;
-  
-  // load the parameters from the initfile, including the position
-  // and environment bitmap files.
-  LoadVars( initFile); 
+    // Initialise clocks
+    //
+    m_start_time = m_sim_time = 0;
 
-  // report the files we're using
-  cout << "[" << bgFile << "][" << posFile << "]" << endl;
-
-  if( population > 254 )
-    {
-      puts( "more than 254 robots requested. no can do. exiting." );
-      exit( -1 ); // *** Exiting from a constructor is a BAD THING.  ahoward
-    }
-
-  //scale pioneer size to fit world - user specifies it in metres
-  pioneerWidth *= ppm;
-  pioneerLength *= ppm;
-
-  localizationNoise = 0.0;
-  sonarNoise = 0.0;
-  maxAngularError =  0.0; // percent error on turning odometry
-
-  // seed the random number generator
-  srand48( time(NULL) );
-
-  sonarInterval = 0.1;// seconds
-  laserInterval = 0.2; // seconds
-  visionInterval = 1.0; // seconds
-  ptzInterval = 0.5; //seconds
-
-  // create a new background image from the pnm file
-  bimg = new Nimage( bgFile );
-  //cout << "ok." << endl;
-
-  width = bimg->width;
-  height = bimg->height;
-
-  // draw an outline around the background image
-  bimg->draw_box( 0,0,width-1,height-1, 0xFF );
-  
-  // create a new forground image copied from the background
-  img = new Nimage( bimg );
-
-  // Extra data layers
-  // Ultimately, these should go into a startup routine,
-  // or else get created by the devices themselves when they
-  // are subscribed.  This would save some memory.
-  // ahoward
-  //
-  m_laser_img = new Nimage(width, height);
-  m_laser_img->clear(0);
-
-  refreshBackground = false;
-
-
-#ifdef DEBUG
-  cout << "ok." << endl;
-#endif
-
-  int currentPopulation = 0;
-  bots = NULL;
-
-  // create the robots
-#ifdef DEBUG
-  cout << "Creating " << population << " robots... " << flush;
-#endif
-
-  CRobot* lastRobot = NULL;
-
-#ifdef VERBOSE
-  cout << "Making the robots... " << flush;
-#endif
-
-#ifdef VERBOSE
-  cout << "Loading " << posFile << "... " << flush;
-#endif
-
-  ifstream in( posFile );
-
-  while( currentPopulation < population )
-    {
-      double xpos, ypos, theta;
-      
-      in >> xpos >> ypos >> theta;
-      
-#ifdef DEBUG
-      cout << "read: " <<  xpos << ' ' << ypos << ' ' << theta << endl;
-#endif
-
-
-      CRobot* baby = (CRobot*)new CRobot( this, 
-					  currentPopulation + 1,
-					  pioneerWidth, 
-					  pioneerLength,
-					  xpos, ypos, theta );
-
-      baby->channel = channels[currentPopulation];
-
-      if( lastRobot ) lastRobot->next = baby;
-      else bots = baby;      
-      lastRobot = baby;
-
-      // we're the parent and have spawned a Player...
-      currentPopulation++;
-
-   }
-  
-  in.close(); // finished with the position file
-
-  refreshBackground = true;
-  
-#ifdef VERBOSE
-  cout << "done." << endl;
-#endif
-
-  // --------------------------------------------------------------------
-  // create a single semaphore to sync access to the shared memory segments
-
-#ifdef DEBUG  
-  cout << "Obtaining semaphore... " << flush;
-#endif
-
-  semKey = SEMKEY;
-
-  union semun
-    {
-      int val;
-      struct semid_ds *buf;
-      ushort *array;
-  } argument;
-
-  argument.val = 0; // initial semaphore value
-
-  semid = semget( semKey, 1, 0666 | IPC_CREAT );
-
-  if( semid < 0 ) // semget failed
-    {
-      perror( "Unable to create semaphore" );
-      exit( -1 );
-    }
-
-  if( semctl( semid, 0, SETVAL, argument ) < 0 )
-    {
-      perror( "Failed to set semaphore value" );
-    }
-#ifdef DEBUG
-  else
-    cout << "ok" << endl;
-#endif
-
-  // ----------------------------------------------------------------------
-
-  refreshBackground = true;
-  Draw(); // this will draw everything properly before we start up
-
-  // start the internal clock
-  struct timeval tv;
-  gettimeofday( &tv, NULL );
-  timeNow = timeBegan = tv.tv_sec + (tv.tv_usec/MILLION);
+    // Initialise configuration variables
+    //
+    m_laser_res = 0;
+    
+    memset(m_env_file, 0, sizeof(m_env_file));
 }
 
 
@@ -222,244 +76,846 @@ CWorld::CWorld( char* initFile )
 //
 CWorld::~CWorld()
 {
-    // *** WARNING There are lots of things that should be delete here!!
+    if (m_bimg)
+        delete m_bimg;
+    if (m_obs_img)
+        delete m_obs_img;
+    if (m_laser_img)
+        delete m_laser_img;
+    if (m_vision_img)
+        delete m_vision_img;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Startup routine 
+//
+bool CWorld::Startup()
+{
+    // Initialise the world grids
     //
-    // ahoward
+    if (!InitGrids(m_env_file))
+        return false;
 
-  // this should be everything! - RTV
-  
-  // kill all the robots
-  CRobot* doomed = bots;
-  
-  while( doomed )
+    // Initialise the laser beacon rep
+    //
+    InitLaserBeacon();
+    
+    // Initialise the broadcast queue
+    //
+    InitBroadcast();
+
+    // Initialise the real time clock
+    // Note that we really do need to set the start time to zero first!
+    //
+    m_start_time = 0;
+    m_start_time = GetRealTime();
+    m_last_time = 0;
+
+    // Initialise the simulator clock
+    //
+    m_sim_time = 0;
+    m_max_timestep = 0.1;
+
+    // Initialise the rate counter
+    //
+    m_update_ratio = 1;
+    m_update_rate = 0;
+    
+    // Initialise the message router
+    //
+#ifdef INCLUDE_RTK
+    m_router->add_sink(RTK_UI_DRAW, (void (*) (void*, void*)) &OnUiDraw, this);
+    m_router->add_sink(RTK_UI_MOUSE, (void (*) (void*, void*)) &OnUiMouse, this);
+    m_router->add_sink(RTK_UI_PROPERTY, (void (*) (void*, void*)) &OnUiProperty, this);
+    m_router->add_sink(RTK_UI_BUTTON, (void (*) (void*, void*)) &OnUiButton, this);
+#endif
+
+#ifdef INCLUDE_XGUI
+    win = new CXGui( this );
+    assert( win );
+
+    // must call this at least once before the world is updated so that
+    // things are drawn correctly in the first place
+    if( win ) win->HandleEvent();
+#endif
+
+
+    // Start all the objects
+    //
+    for (int i = 0; i < m_object_count; i++)
     {
-      CRobot* next = doomed->next;
-      delete doomed;
-      doomed = next;
+        if (!m_object[i]->Startup())
+            return false;
     }
-  
-  delete m_laser_img;
-  delete bimg;
-  delete img;
+
+    // Start the world thread
+    //
+    if (!StartThread())
+        return false;
+
+    return true;
 }
 
 
-int CWorld::LockShmem( void )
+///////////////////////////////////////////////////////////////////////////
+// Shutdown routine 
+//
+void CWorld::Shutdown()
 {
-  struct sembuf ops[1];
-
-  ops[0].sem_num = 0;
-  ops[0].sem_op = 1;
-  ops[0].sem_flg = 0;
-
-  int retval = semop( semid, ops, 1 );
-
-#ifdef DEBUG
-  if( retval == 0 )
-    puts( "successful lock" );
-  else
-    puts( "failed lock" );
-#endif
-
-  return true;
+    // Stop the world thread
+    //
+    StopThread();
+    
+    // Shutdown all the objects
+    //
+    for (int i = 0; i < m_object_count; i++)
+        m_object[i]->Shutdown();
 }
 
 
-int CWorld::UnlockShmem( void )
+///////////////////////////////////////////////////////////////////////////
+// Start world thread (will call Main)
+//
+bool CWorld::StartThread()
 {
-  struct sembuf ops[1];
-
-  ops[0].sem_num = 0;
-  ops[0].sem_op = -1;
-  ops[0].sem_flg = 0;
-
-  int retval = semop( semid, ops, 1 );
-
-
-#ifdef DEBUG
-  if( retval == 0 )
-    puts( "successful unlock" );
-  else
-    puts( "failed unlock" );
-#endif
-
-  return true;
+    // Start the simulator thread
+    // 
+    if (pthread_create(&m_thread, NULL, &Main, this) < 0)
+        return false;
+    return true;
 }
 
-void CWorld::Update( void )
+
+///////////////////////////////////////////////////////////////////////////
+// Stop world thread
+//
+void CWorld::StopThread()
 {
-  // update is called every approx. 25ms from main using a timer
+    // Send a cancellation request to the thread
+    //
+    pthread_cancel(m_thread);
 
-  static double smoothedTimestep = 0;
+    // Wait forever for thread to terminate
+    //
+    pthread_join(m_thread, NULL);
+}
 
-  if( win ) win->HandleEvent();
 
-  if( !paused )
+///////////////////////////////////////////////////////////////////////////
+// Thread entry point for the world
+//
+void* CWorld::Main(void *arg)
+{
+    CWorld *world = (CWorld*) arg;
+    
+    // Make our priority real low
+    //
+    //nice(10);
+    
+    // Defer cancel requests so we can handle them properly
+    //
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+
+    // Block signals handled by gui
+    //
+    sigblock(SIGINT);
+    sigblock(SIGQUIT);
+
+    // Initialise the GUI
+    //
+ #ifdef INCLUDE_RTK
+    double ui_time = 0;
+ #endif
+    
+    while (true)
     {
-      struct timeval tv;
-      
-      gettimeofday( &tv, NULL );
-      timeNow = tv.tv_sec + (tv.tv_usec/MILLION);
-      
-      timeStep = (timeNow - timeThen); // real time
-      //timeStep = 0.01; // step time;   
-      //cout << timeStep << endl;
-      timeThen = timeNow;
-      
-#ifdef DISPLAYFREQ
-      smoothedTimestep = (smoothedTimestep * 0.9) + ( 0.1 * timeStep );
-      
-      printf( "\r%.4f   ", smoothedTimestep );
-      fflush( stdout );
+        // Check for thread cancellation
+        //
+        pthread_testcancel();
+
+        // Dont hog all the cycles -- sleep for 10ms
+        //
+        usleep(10000);
+
+        // Update the world
+        //
+        if (world->m_enable)
+            world->Update();
+
+        /* *** HACK -- should reinstate this somewhere ahoward
+           if( !runDown ) runStart = timeNow;
+           else if( (quitTime > 0) && (timeNow > (runStart + quitTime) ) )
+           exit( 0 );
+        */
+        
+        // Update the GUI every 100ms
+        //
+#ifdef INCLUDE_RTK
+        if (world->GetRealTime() - ui_time > 0.050)
+        {
+            ui_time = world->GetRealTime();
+            world->m_router->send_message(RTK_UI_FORCE_UPDATE, NULL);
+        }
+#endif
+    }
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Update the world
+//
+void CWorld::Update()
+{
+    // Compute elapsed real time
+    //
+    double timestep = GetRealTime() - m_last_time;
+    m_last_time += timestep;
+    
+    // Place an upper bound on the simulator timestep
+    // This may make us run slower than real-time.
+    //
+    double simtimestep = timestep;
+    if (timestep > m_max_timestep)
+    {
+        //PRINT_MSG2("warning: max timestep exceeded (%f > %f)",
+                   //(double) simtimestep, (double) m_max_timestep);
+        simtimestep = m_max_timestep;
+    }
+
+    // Update the simulation time
+    //
+    m_sim_time += simtimestep;
+
+    // Keep track of the sim/real time ratio
+    // This is done as a moving window filter so we can see
+    // the change over time.
+    //
+    double a = 0.1;
+    m_update_ratio = (1 - a) * m_update_ratio + a * (simtimestep / timestep);
+    
+    // Keep track of the update rate
+    // This is done as a moving window filter so we can see
+    // the change over time.
+    // Note that we must use the *real* timestep to get sensible results.
+    //
+    m_update_rate = (1 - a) * m_update_rate + a * (1 / timestep);
+
+
+    // might move this elsewhere and call it less often
+    // - will test for responsiveness.
+    // must be before the first 
+#ifdef INCLUDE_XGUI
+    if( win ) win->HandleEvent();
+    static double xgui_time = 0;
 #endif
 
-      // use a simple cludge to fix stutters caused by machine load or I/O
-      if( timeStep > 0.1 ) 
+    // Do the actual work -- update the objects
+    //
+    for (int i = 0; i < m_object_count; i++)
+   {
+
+     m_object[i]->Update();
+
+#ifdef INCLUDE_XGUI
+     double tm = GetRealTime();
+     if ( tm - xgui_time > 0.05 ) // update GUI at 20Hz
+	  {
+            xgui_time = GetRealTime();
+	    
+	    for (int i = 0; i < m_object_count; i++)
+	      win->ImportExportData( m_object[i]->ImportExportData( 0 ) );    
+	  }
+#endif   
+   }
+  
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Get the sim time
+// Returns time in sec since simulation started
+//
+double CWorld::GetTime()
+{
+    return m_sim_time;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Get the real time
+// Returns time in sec since simulation started
+//
+double CWorld::GetRealTime()
+{
+    struct timeval tv;
+    gettimeofday( &tv, NULL );
+    double time = tv.tv_sec + (tv.tv_usec / 1000000.0);
+    return time - m_start_time;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise the world grids
+//
+bool CWorld::InitGrids(const char *env_file)
+{
+    // create a new background image from the pnm file
+    // If we cant find it under the given name,
+    // we look for a zipped version.
+    
+  m_bimg = new Nimage;
+  
+  int len = strlen( env_file );
+  
+  if( len > 0 )
+    {
+      if( strcmp( &(env_file[ len - 3 ]), ".gz" ) == 0 )
 	{
-#ifdef DEBUG 
-	  cout << "MAX TIMESTEP EXCEEDED" << endl;
-#endif
-	  timeStep = 0.1;
+	  if (!m_bimg->load_pnm_gz(env_file))
+	    return false;
 	}
-      
-      // move the robots
-      for( CRobot* b = bots; b; b = b->next ) b->Update();
+      else
+	if (!m_bimg->load_pnm(env_file))
+	  {
+	    char zipname[128];
+	    strcpy(zipname, env_file);
+	    strcat(zipname, ".gz");
+	    if (!m_bimg->load_pnm_gz(zipname))
+	      return false;
+	  }
+    }
+  else
+    {
+      cout << "Error: no world image file supplied. Quitting." << endl;
+      exit( 1 );
+    }
 
-      if( refreshBackground ) Draw();
-      
-      if( !runDown ) runStart = timeNow;
-      else if( (quitTime > 0) && (timeNow > (runStart + quitTime) ) )
-	exit( 0 );
+    width = m_bimg->width;
+    height = m_bimg->height;
+
+    // draw an outline around the background image
+    m_bimg->draw_box( 0,0,width-1,height-1, 0xFF );
+  
+    // Clear obstacle image
+    //
+    m_obs_img = new Nimage(width, height);
+    m_obs_img->clear(0);
+    
+    // Clear laser image
+    //
+    m_laser_img = new Nimage(width, height);
+    m_laser_img->clear(0);
+    
+    // Copy fixed obstacles into laser rep
+    //
+    for (int y = 0; y < m_bimg->height; y++)
+    {
+        for (int x = 0; x < m_bimg->width; x++)
+        {
+            if (m_bimg->get_pixel(x, y) != 0)
+            {
+                m_obs_img->set_pixel(x, y, 0xFF);
+                m_laser_img->set_pixel(x, y, 0xFF);
+            }
+        }
+    }
+
+    // Clear vision image
+    //
+    m_vision_img = new Nimage(width, height);
+    m_vision_img->clear(0);
+                
+    return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Get a cell from the world grid
+//
+uint8_t CWorld::GetCell(double px, double py, EWorldLayer layer)
+{
+    // Convert from world to image coords
+    //
+    int ix = (int) (px * ppm);
+    int iy = height - (int) (py * ppm);
+
+    // This could be cleaned up by having an array of images
+    //
+    switch (layer)
+    {
+        case layer_obstacle:
+            return m_obs_img->get_pixel(ix, iy);
+        case layer_laser:
+            return m_laser_img->get_pixel(ix, iy);
+        case layer_vision:
+            return m_vision_img->get_pixel(ix, iy);
+    }
+    return 0;
+}
+
+  // ----------------------------------------------------------------------
+
+///////////////////////////////////////////////////////////////////////////
+// Set a cell in the world grid
+//
+void CWorld::SetCell(double px, double py, EWorldLayer layer, uint8_t value)
+{
+    // Convert from world to image coords
+    //
+    int ix = (int) (px * ppm);
+    int iy = height - (int) (py * ppm);
+
+    // This could be cleaned up by having an array of images
+    //
+    switch (layer)
+    {
+        case layer_obstacle:
+            m_obs_img->set_pixel(ix, iy, value);
+            break;
+        case layer_laser:
+            m_laser_img->set_pixel(ix, iy, value);
+            break;
+        case layer_vision:
+            m_vision_img->set_pixel(ix, iy, value);
+            break;
     }
 }
-  
-    
-CRobot* CWorld::NearestRobot( double x, double y )
+
+
+///////////////////////////////////////////////////////////////////////////
+// Get a rectangle in the world grid
+//
+uint8_t CWorld::GetRectangle(double px, double py, double pth,
+                             double dx, double dy, EWorldLayer layer)
 {
-  CRobot* nearest;
-  double dist, far = 999999.9;
-  
-  for( CRobot* r = bots; r; r = r->next )
-  {
-    dist = hypot( r->x -  x, r->y -  y );
+    Rect rect;
+    double tx, ty;
+
+    dx /= 2;
+    dy /= 2;
+
+    double cx = dx * cos(pth);
+    double cy = dy * cos(pth);
+    double sx = dx * sin(pth);
+    double sy = dy * sin(pth);
     
-    if( dist < far ) 
-      {
-	nearest = r;
-	far = dist;
-      }
-  }
+    // This could be faster
+    //
+    tx = px + cx - sy;
+    ty = py + sx + cy;
+    rect.toplx = (int) (tx * ppm);
+    rect.toply = height - (int) (ty * ppm);
+
+    tx = px - cx - sy;
+    ty = py - sx + cy;
+    rect.toprx = (int) (tx * ppm);
+    rect.topry = height - (int) (ty * ppm);
+
+    tx = px - cx + sy;
+    ty = py - sx - cy;
+    rect.botlx = (int) (tx * ppm);
+    rect.botly = height - (int) (ty * ppm);
+
+    tx = px + cx + sy;
+    ty = py + sx - cy;
+    rect.botrx = (int) (tx * ppm);
+    rect.botry = height - (int) (ty * ppm);
+    
+    // This could be cleaned up by having an array of images
+    //
+    switch (layer)
+    {
+        case layer_obstacle:
+            return m_obs_img->rect_detect(rect);
+        case layer_laser:
+            return m_laser_img->rect_detect(rect);
+        case layer_vision:
+            return m_vision_img->rect_detect(rect);
+    }
+    return 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Set a rectangle in the world grid
+//
+void CWorld::SetRectangle(double px, double py, double pth,
+                          double dx, double dy, EWorldLayer layer, uint8_t value)
+{
+    Rect rect;
+    double tx, ty;
+
+    dx /= 2;
+    dy /= 2;
+
+    double cx = dx * cos(pth);
+    double cy = dy * cos(pth);
+    double sx = dx * sin(pth);
+    double sy = dy * sin(pth);
+    
+    // This could be faster
+    //
+    tx = px + cx - sy;
+    ty = py + sx + cy;
+    rect.toplx = (int) (tx * ppm);
+    rect.toply = height - (int) (ty * ppm);
+
+    tx = px - cx - sy;
+    ty = py - sx + cy;
+    rect.toprx = (int) (tx * ppm);
+    rect.topry = height - (int) (ty * ppm);
+
+    tx = px - cx + sy;
+    ty = py - sx - cy;
+    rect.botlx = (int) (tx * ppm);
+    rect.botly = height - (int) (ty * ppm);
+
+    tx = px + cx + sy;
+    ty = py + sx - cy;
+    rect.botrx = (int) (tx * ppm);
+    rect.botry = height - (int) (ty * ppm);
+    
+    // This could be cleaned up by having an array of images
+    //
+    switch (layer)
+    {
+        case layer_obstacle:
+            m_obs_img->draw_rect(rect, value);
+            break;
+        case layer_laser:
+            m_laser_img->draw_rect(rect, value);
+            break;
+        case layer_vision:
+            m_vision_img->draw_rect(rect, value);
+            break;
+    }
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Add an object to the world
+//
+void CWorld::AddObject(CEntity *object)
+{
+    assert(m_object_count < ARRAYSIZE(m_object));
+    m_object[m_object_count++] = object;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Find the object nearest to the mouse
+//
+CEntity* CWorld::NearestObject( double x, double y )
+{
+  CEntity* nearest = 0;
+  double dist, far = 9999999.9;
+
+  double ox, oy, oth;
+
+  for (int i = 0; i < m_object_count; i++)
+    {
+      m_object[i]->GetGlobalPose( ox, oy, oth );;
+      
+      dist = hypot( ox-x, oy-y );
+      
+      if( dist < far ) 
+	{
+	  nearest = m_object[i];
+	  far = dist;
+	}
+    }
   
   return nearest;
-}	  
-
-
-void CWorld::SavePos( void )
-{
-  ofstream out( posFile );
-
-  for( CRobot* r = bots; r; r = r->next )
-    out <<  r->x/ppm <<  '\t' << r->y/ppm << '\t' << r->a << endl;
 }
 
-void CWorld::Draw( void )
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise laser beacon representation
+//
+void CWorld::InitLaserBeacon()
 {
-  memcpy( img->data, bimg->data, width*height*sizeof(char) );
-
-  for( CRobot* r = bots; r; r = r->next ) r->MapDraw();
-
-  refreshBackground = 0;
+    m_laserbeacon_count = 0;
 }
 
-double diff( double a, double b )
+
+///////////////////////////////////////////////////////////////////////////
+// Add a laser beacon to the world
+// Returns an index for the beacon
+//
+int CWorld::AddLaserBeacon(int id)
 {
-  if( a > b ) return a-b;
-  return b-a;
+    assert(m_laserbeacon_count < ARRAYSIZE(m_laserbeacon));
+    int index = m_laserbeacon_count++;
+    m_laserbeacon[index].m_id = id;
+    return index;
 }
 
-int CWorld::LoadVars( char* filename )
+
+///////////////////////////////////////////////////////////////////////////
+// Set the position of a laser beacon
+//
+void CWorld::SetLaserBeacon(int index, double px, double py, double pth)
 {
-#ifdef DEBUG
-  cout << "\nLoading world parameters from " << filename << "... " << flush;
-#endif
-  
-  ifstream init( filename );
-  char buffer[255];
-  char c;
+    ASSERT(index >= 0 && index < m_laserbeacon_count);
+    m_laserbeacon[index].m_px = px;
+    m_laserbeacon[index].m_py = py;
+    m_laserbeacon[index].m_pth = pth;
+}
 
-  if( !init ) return -1;
 
-  char token[50];
-  char value[200];
-  
-  while( !init.eof() )
+///////////////////////////////////////////////////////////////////////////
+// Get the position of a laser beacon
+//
+bool CWorld::GetLaserBeacon(int index, int *id, double *px, double *py, double *pth)
+{
+    if (index < 0 || index >= m_laserbeacon_count)
+        return false;
+    *id = m_laserbeacon[index].m_id;
+    *px = m_laserbeacon[index].m_px;
+    *py = m_laserbeacon[index].m_py;
+    *pth = m_laserbeacon[index].m_pth;
+    return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise the broadcast queue
+//
+void CWorld::InitBroadcast()
+{
+    m_broadcast_count = 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Add a broadcast device to the list
+//
+void CWorld::AddBroadcastDevice(CBroadcastDevice *device)
+{
+    if (m_broadcast_count >= ARRAYSIZE(m_broadcast))
     {
-      init.get( buffer, 255, '\n' );
-      init.get( c );
-    
-      sscanf( buffer, "%s = %s", token, value );
-      
-#ifdef DEBUG      
-      printf( "token: %s value: %s.\n", token, value );
-      fflush( stdout );
-#endif
-      
-      if( token[0] == '#' ) // its a comment; ignore it
-	{}
-      else if ( strcmp( token, "robots" ) == 0 )
-	population = strtol( value, NULL, 10 );
-      else if ( strcmp( token, "robot_width" ) == 0 )
-	pioneerWidth = strtod( value, NULL );  
-      else if ( strcmp( token, "robot_length" ) == 0 )
-	pioneerLength = strtod( value, NULL );  
-      else if ( strcmp( token, "pixels_per_meter" ) == 0 )
-	ppm = strtod( value, NULL );  
-      else if ( strcmp( token, "environment_file" ) == 0 )
-	sscanf( value, "%s", bgFile );  
-      else if ( strcmp( token, "position_file" ) == 0 )
-	sscanf( value, "%s", posFile );  
-      //else if ( strcmp( token, "sonar_noise_variance" ) == 0 )
-      //sonarNoise = strtod( value, NULL );  
-      //else if ( strcmp( token, "localization_noise_variance" ) == 0 )
-      //localizationNoise = strtod( value, NULL );  
-      else if ( strcmp( token, "robot_colors" ) == 0 )
-	{
-	  //printf( "Colors: %s\n", value );
-	  
-	  // point into th line buffer after the equals sign
-	  char* tokstr = strstr( buffer, "=" ) + 1;
-	  
-	  char* tok = strtok( tokstr, " \t" );
-	  
-	  int n = -1;
-	  for( int c=0; tok; c++ )
-	    {
-	      n = (int)strtol( tok, NULL, 0 );
-	      
-	      if( c > 254 ) 
-		{
-		  puts( "bounds error loading color table" );
-		  exit( -1 );
-		}
+        printf("warning -- no room in broadcast device list\n");
+        return;
+    }
+    m_broadcast[m_broadcast_count++] = device;
+}
 
-	      channels[c] = n;
-	      //printf( "color: %d   tok: %s\n", n, tok );
-	      
-	      tok =  strtok( NULL, " \t" );
-	    }
-	}
-      else if ( strcmp( token, "quit_time" ) == 0 )
-	quitTime = strtod( value, NULL );  
+
+///////////////////////////////////////////////////////////////////////////
+// Remove a broadcast device from the list
+//
+void CWorld::RemoveBroadcastDevice(CBroadcastDevice *device)
+{
+    for (int i = 0; i < m_broadcast_count; i++)
+    {
+        if (m_broadcast[i] == device)
+        {
+            memmove(m_broadcast + i,
+                    m_broadcast + i + 1,
+                    (m_broadcast_count - i - 1) * sizeof(m_broadcast[0]));
+            return;
+        }
+    }
+    printf("warning -- broadcast device not found\n");
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Get a broadcast device from the list
+//
+CBroadcastDevice* CWorld::GetBroadcastDevice(int i)
+{
+    if (i < 0 || i >= ARRAYSIZE(m_broadcast))
+        return NULL;
+    return m_broadcast[i];
+}
+
+
+#ifdef INCLUDE_RTK
+
+/////////////////////////////////////////////////////////////////////////
+// Initialise rtk
+//
+void CWorld::InitRtk(RtkMsgRouter *router)
+{
+    m_router = router;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Process GUI update messages
+//
+void CWorld::OnUiDraw(CWorld *world, RtkUiDrawData *data)
+{
+    // Draw the background
+    //
+    if (data->draw_back("global"))
+        world->DrawBackground(data);
+
+    // Draw grid layers (for debugging)
+    //
+    data->begin_section("global", "debugging");
+
+    if (data->draw_layer("obstacle", false))
+        world->draw_layer(data, layer_obstacle);
+        
+    if (data->draw_layer("laser", false))
+        world->draw_layer(data, layer_laser);
+
+    if (data->draw_layer("vision", false))
+        world->draw_layer(data, layer_vision);
+    
+    data->end_section();
+
+    // Draw the children
+    //
+    for (int i = 0; i < world->m_object_count; i++)
+        world->m_object[i]->OnUiUpdate(data);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Process GUI mouse messages
+//
+void CWorld::OnUiMouse(CWorld *world, RtkUiMouseData *data)
+{
+    data->begin_section("global", "move");
+
+    // Create a mouse mode (used by objects)
+    //
+    data->mouse_mode("object");
+    
+    data->end_section();
+
+    // Update the children
+    //
+    for (int i = 0; i < world->m_object_count; i++)
+        world->m_object[i]->OnUiMouse(data);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// UI property message handler
+//
+void CWorld::OnUiProperty(CWorld *world, RtkUiPropertyData* data)
+{
+    RtkString value;
+
+    data->begin_section("default", "world");
+    
+    RtkFormat1(value, "%7.3f", (double) world->GetTime());
+    data->add_item_text("Simulation time (s)", CSTR(value), "");
+    
+    RtkFormat1(value, "%7.3f", (double) world->GetRealTime());
+    data->add_item_text("Real time (s)", CSTR(value), "");
+
+    RtkFormat1(value, "%7.3f", (double) world->m_update_ratio);
+    data->add_item_text("Sim/real time", CSTR(value), ""); 
+    
+    RtkFormat1(value, "%7.3f", (double) world->m_update_rate);
+    data->add_item_text("Update rate (Hz)", CSTR(value), "");
+
+    data->end_section();
+
+    // Update the children
+    //
+    for (int i = 0; i < world->m_object_count; i++)
+        world->m_object[i]->OnUiProperty(data);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// UI button message handler
+//
+void CWorld::OnUiButton(CWorld *world, RtkUiButtonData* data)
+{
+    data->begin_section("default", "world");
+
+    if (data->check_button("enable", world->m_enable))
+        world->m_enable = !world->m_enable;
+
+    if (data->push_button("save"))
+        world->Save(world->m_filename);
+    
+    data->end_section();
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Draw the background; i.e. things that dont move
+//
+void CWorld::DrawBackground(RtkUiDrawData *data)
+{
+    RTK_TRACE0("drawing background");
+
+    data->set_color(RGB(0, 0, 0));
+    
+    // Loop through the image and draw points individually.
+    // Yeah, it's slow, but only happens once.
+    //
+    for (int y = 0; y < m_bimg->height; y++)
+    {
+        for (int x = 0; x < m_bimg->width; x++)
+        {
+            if (m_bimg->get_pixel(x, y) != 0)
+            {
+                double px = (double) x / ppm;
+                double py = (double) (height - y) / ppm;
+                double s = 1.0 / ppm;
+                data->rectangle(px, py, px + s, py + s);
+            }
+        }
+    }
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Draw the laser layer
+//
+void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
+{
+    Nimage *img = NULL;
+
+    // This could be cleaned up by having an array of images
+    //
+    switch (layer)
+    {
+        case layer_obstacle:
+            img = m_obs_img;
+            break;
+        case layer_laser:
+            img = m_laser_img;
+            break;
+        case layer_vision:
+            img = m_vision_img;
+            break;            
+        default:
+            return;
     }
 
-#ifdef DEBUG
-  cout << "ok." << endl;
-#endif
-
-  return 1;
+    data->set_color(RTK_RGB(0, 0, 255));
+    
+    // Loop through the image and draw points individually.
+    // Yeah, it's slow, but only happens for debugging
+    //
+    for (int y = 0; y < img->height; y++)
+    {
+        for (int x = 0; x < img->width; x++)
+        {
+            if (img->get_pixel(x, y) != 0)
+            {
+                double px = (double) x / ppm;
+                double py = (double) (height - y) / ppm;
+                double s = 1.0 / ppm;
+                data->rectangle(px, py, px + s, py + s);
+            }
+        }
+    }
 }
 
 
+#endif
 
 
 

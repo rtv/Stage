@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visiondevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.6 $
+//  $Author: ahoward $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -33,21 +33,35 @@
 //
 class CPtzDevice;
 
+#define MAXBLOBS 100 // PDOMA!
+
+typedef struct
+{
+  unsigned char channel;
+  int area;
+  int x, y;
+  int left, top, right, bottom;
+} ColorBlob;
+
 
 class CVisionDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CVisionDevice(CRobot *robot, CPtzDevice *ptz_device,
-                          void *buffer, size_t data_len,
-                          size_t command_len, size_t config_len);
+    public: CVisionDevice(CWorld *world, CEntity *parent, CPlayerServer* server,
+                          CPtzDevice *ptz_device);
     
-  // destructor explcitly deletes some buffers
-    public: ~CVisionDevice( void );
-
     // Update the device
     //
-    public: virtual bool Update();
+    public: virtual void Update();
+
+    // Generate the scan-line image
+    //
+    private: void UpdateScan();
+
+    // Generate ACTS data from scan-line image
+    //
+    private: size_t UpdateACTS();
 
     // Timing properties
     //
@@ -57,9 +71,20 @@ class CVisionDevice : public CPlayerDevice
     //
     private: CPtzDevice *m_ptz_device;
 
+    // Current pan/tilt/zoom settings (all angles)
+    //
+    private: double m_pan, m_tilt, m_zoom;
+
     // Camera properties
     //
     private: int cameraImageWidth, cameraImageHeight;
+    private: double m_max_range;
+
+    // Current scan-line data
+    //
+    private: int m_scan_width;
+    private: int m_scan_channel[256];
+    private: double m_scan_range[256];
 
     // Detected blob data
     //
@@ -67,9 +92,29 @@ class CVisionDevice : public CPlayerDevice
     private: ColorBlob blobs[MAXBLOBS];
     private: unsigned char actsBuf[ACTS_TOTAL_MAX_SIZE];
 
-  // working buffers for the update function
-    private: unsigned char* colors;
-    private: double* ranges;
+#ifdef INCLUDE_RTK
+    // Process GUI update messages
+    //
+    public: virtual void OnUiUpdate(RtkUiDrawData *pData);
+
+    // Process GUI mouse messages
+    //
+    public: virtual void OnUiMouse(RtkUiMouseData *pData);
+
+    // Draw the field of view
+    //
+    private: void DrawFOV(RtkUiDrawData *pData);
+    
+    // Draw the image scan-line
+    //
+    private: void DrawScan(RtkUiDrawData *pData);
+
+    // Laser scan outline
+    //
+    private: int m_hit_count;
+    private: double m_hit[256][3];
+    
+#endif  
 };
 
 #endif

@@ -2,16 +2,18 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.3 2000-12-08 09:08:11 vaughan Exp $
+ * $Id: image.cc,v 1.4 2001-06-01 21:25:51 ahoward Exp $
  ************************************************************************/
 
 #include <math.h>
 #include <iostream.h>
+#include <fstream.h>
+
+#if INCLUDE_ZLIB
+#include <zlib.h>
+#endif
 
 #include "image.h"
-#include "world.h"
-
-extern CWorld* world;
 
 //#define DEBUG
 
@@ -37,6 +39,13 @@ void aset_pixel(unsigned char* data, int width, int height, int x, int y, unsign
   data[(x + y*width)] = c;
 }
 
+// Default constructor
+Nimage::Nimage()
+{
+    width = 0;
+    height = 0;
+    data = NULL;
+}
 
 
 // constuct by copying an existing image
@@ -68,80 +77,11 @@ Nimage::Nimage(int w,int h)
   data 	= new unsigned char[width*height];
 
 #ifdef DEBUG
-  cout << '@' << data << endl;
-#endif
-}
-
-// construct from pnm file 
-Nimage::Nimage( char* fname )
-{
-#ifdef DEBUG
-  cout << "Image: " << width << 'x' << height << flush;
-#endif
-
-  int n, m;
-  char p;
-
-  //FILE *stream = fopen( fname, "r");
-
-#ifdef VERBOSE
-  cout << "loading " << fname << flush;
-#endif
-
-  ifstream image( fname );
-
-  char magicNumber[10];
-  char comment[256];
-
-  int fwidth, fheight, whiteNum;
-  char terminator;
-
-  if( image.fail() ) cout << "image bad!" << endl;
-
-  if( strstr( fname, ".pnm" ) )
-    {
-      image >> magicNumber;
-      image.get( terminator );
-      image.get( comment, 255, '\n');
-      image.get( terminator );
-      image >> width >> height >> whiteNum;
-    }
-  else if( strstr( fname, ".pgm" ) )
-    {
-      image >> magicNumber;
-      image.get( terminator );
-      image >> width >> height >> whiteNum;
-    }
-
-#ifdef DEBUG
-  cout << "magic: " << magicNumber << "\ncomment: " << comment 
-       << "\nwidth: " << width << " height: " << height 
-       << " white: " << whiteNum << endl; 
-#endif
-
-
-  //float colorScale = 
-
-  data = new unsigned char[ width * height ];
-  
-   unsigned char a;
-   
-   for( n=0; n<height; n++ )
-     for( m=0; m<width; m++ )
-       {
-	 image.get( a );
-	 set_pixel( m,n, a );
-	 //aset_pixel( m,n, width, height, RGB(a,a,a) );
-       }
-   
-  image.close();
-
-#ifdef DEBUG
+  cout << "unsigned char: " << sizeof( unsigned char ) << endl;
   cout << '@' << data << endl;
 #endif
   //cout << "constructed NImage" << endl;
 }
-
 
 // construct from width / height with existing data
 Nimage::Nimage(unsigned char* array, int w,int h)
@@ -236,50 +176,117 @@ void Nimage::load_raw(char* fname)
   fclose(stream);
 }
 
-void Nimage::load_pnm(char* fname)
+bool Nimage::load_pnm(const char* fname)
 {
-  int n, m;
-  char p;
-
-  ifstream image( fname );
-
+  char line[1024];
   char magicNumber[10];
   char comment[256];
-
-  int fwidth, fheight, whiteNum;
-  char terminator;
-
-  if( image.fail() ) cout << "image bad!" << endl;
-
-  image >> magicNumber;
-  image.get( terminator );
-  image.get( comment, 255, '\n');
-  image.get( terminator );
-  image >> width >> height >> whiteNum;
-  
+  int whiteNum; 
 
 #ifdef DEBUG
-  cout << "loading " << fname << flush;
-  cout << "magic: " << magicNumber << "\ncomment: " << comment 
-       << "\nwidth: " << width << " height: " << height 
-       << " white: " << whiteNum << endl; 
+  printf("opening %s\n", fname);
 #endif
 
+  FILE *file = fopen(fname, "r");
+  if (file == NULL)
+  {
+#ifdef DEBUG
+      printf("unable to open image file\n");
+#endif
+      return false;
+  }
 
-  if( data ) delete[] data;
+  // Extremely crude and ugly file parsing! Fix sometime.  Andrew.
+
+  // Read an check the magic number
+  //
+  fgets(magicNumber, sizeof(magicNumber), file);
+  if (strcmp(magicNumber, "P5\n") != 0)
+  {
+      printf("image file is of incorrect type: should be pnm, binary, monochrome\n");
+      return false;
+  }
+  
+  fgets(comment, sizeof(comment), file);
+  fgets(line, sizeof(line), file);
+  sscanf(line, "%d %d\n%d", &width, &height, &whiteNum);
+
+  if (data)
+      delete[] data;
   data = new unsigned char[ width * height ];
   
-  unsigned char a;
-   
-  for( n=0; n<height; n++ )
-    for( m=0; m<width; m++ )
+  for(int n=0; n<height; n++ )
+  {
+      for(int m=0; m<width; m++ )
       {
-	image.get( a );
-	set_pixel( m,n, a );
+          unsigned char a = fgetc(file);
+          set_pixel( m,n, a );
       }
+  }
 
-  image.close();
+  fclose(file);
+
+  return true;
 }
+
+// Load a gzipped pnm file
+//
+bool Nimage::load_pnm_gz(const char* fname)
+{
+#ifndef INCLUDE_ZLIB
+  printf("opening %s\n", fname);
+  printf("gzipped files not supported\n");
+  return false;
+#else
+    
+  char line[1024];
+  char magicNumber[10];
+  char comment[256];
+  int whiteNum; 
+
+  printf("opening %s\n", fname);
+
+  gzFile file = gzopen(fname, "r");
+  if (file == NULL)
+  {
+      printf("unable to open image file\n");
+      return false;
+  }
+
+  // Extremely crude and ugly file parsing! Fix sometime.  Andrew.
+
+  // Read an check the magic number
+  //
+  gzgets(file, magicNumber, sizeof(magicNumber));
+  if (strcmp(magicNumber, "P5\n") != 0)
+  {
+      printf("image file is of incorrect type: should be pnm, binary, monochrome\n");
+      return false;
+  }
+  
+  gzgets(file, comment, sizeof(comment));
+  gzgets(file, line, sizeof(line));
+  sscanf(line, "%d %d\n%d", &width, &height, &whiteNum);
+
+  if (data)
+      delete[] data;
+  data = new unsigned char[ width * height ];
+  
+  for(int n=0; n<height; n++ )
+  {
+      for(int m=0; m<width; m++ )
+      {
+          unsigned char a = gzgetc(file);
+          set_pixel( m,n, a );
+      }
+  }
+
+  gzclose(file);
+
+  return true;
+#endif
+}
+
 
 void Nimage::draw_big(void)
 {
@@ -413,27 +420,26 @@ void Nimage::draw_line(int x1,int y1,int x2,int y2,unsigned char col)
     }
 }
 
-unsigned char Nimage::rect_detect( const Rect& r, unsigned char col )
+unsigned char Nimage::rect_detect( const Rect& r)
 {
   unsigned char hit;
   
-  if( hit = line_detect( r.toplx, r.toply, r.toprx, r.topry, col ) > 0 ) 
+  if( (hit = line_detect( r.toplx, r.toply, r.toprx, r.topry)) > 0 ) 
     return hit;
   
-  if( hit = line_detect( r.toprx, r.topry, r.botlx, r.botly, col ) > 0 )
+  if( (hit = line_detect( r.toprx, r.topry, r.botlx, r.botly)) > 0 )
     return hit;
   
-  if( hit = line_detect( r.botlx, r.botly, r.botrx, r.botry, col ) > 0 )
+  if( (hit = line_detect( r.botlx, r.botly, r.botrx, r.botry)) > 0 )
     return hit;
   
-  if( hit = line_detect( r.botrx, r.botry, r.toplx, r.toply, col ) > 0 )
+  if( (hit = line_detect( r.botrx, r.botry, r.toplx, r.toply)) > 0 )
     return hit;
 
   return 0;
 }
 
-unsigned char Nimage::line_detect(int x1,int y1,int x2,int y2, 
-				  unsigned char col )
+unsigned char Nimage::line_detect(int x1,int y1,int x2,int y2)
 {
   int delta_x, delta_y;
   int delta, incE, incNE;
@@ -448,7 +454,7 @@ unsigned char Nimage::line_detect(int x1,int y1,int x2,int y2,
       if (y1 > y2)	delta_y = y1 - y2;
       else		delta_y = y2 - y1;
       
-      if (delta_y <= delta_x) return( line_detect(x2, y2, x1, y1, col ));
+      if (delta_y <= delta_x) return( line_detect(x2, y2, x1, y1));
     }
   if (y1 > y2)
     {
@@ -456,7 +462,7 @@ unsigned char Nimage::line_detect(int x1,int y1,int x2,int y2,
       if (x1 > x2)	delta_x = x1 - x2;
       else		delta_x = x2 - x1;
       
-      if (delta_y > delta_x) return( line_detect(x2, y2, x1, y1, col ));
+      if (delta_y > delta_x) return( line_detect(x2, y2, x1, y1));
     }
   
   if (x1 > x2)
@@ -480,7 +486,7 @@ unsigned char Nimage::line_detect(int x1,int y1,int x2,int y2,
   
   //check to see if this pixel is an obstacle
   pixel = get_pixel( x,y );
-  if( pixel != 0 && pixel != col ) //&& pixel != CRUMB_COLOR )
+  if( pixel != 0)
    { 
      return pixel;
    }
@@ -510,7 +516,7 @@ unsigned char Nimage::line_detect(int x1,int y1,int x2,int y2,
 
 	  //check to see if this pixel is an obstacle
 	  pixel = get_pixel( x,y );
-	  if( pixel != 0 && pixel != col ) //&& pixel != CRUMB_COLOR )
+	  if( pixel != 0)
 	    { 
 	      return pixel;
 	    }
@@ -540,7 +546,7 @@ unsigned char Nimage::line_detect(int x1,int y1,int x2,int y2,
 	    }
 	  //check to see if this pixel is an obstacle
 	  pixel = get_pixel( x,y );
-	  if( pixel != 0 && pixel != col ) //&& pixel != CRUMB_COLOR)
+	  if( pixel != 0)
 	    { 
 	      return pixel;
 	    }
@@ -565,7 +571,7 @@ void Nimage::clear(unsigned char col)
 
 void Nimage::save_image_as_ppm(char *fname, char *cmap)
 {
-  FILE *f_out_ptr, *cmap_ptr;
+    FILE *f_out_ptr;
 	int bytes_written;
 	unsigned char *im_ptr;
 	short_triple *the_cmap;
@@ -624,20 +630,6 @@ void Nimage::save_image_as_ppm(char *fname, char *cmap)
 
   fflush(f_out_ptr); fclose(f_out_ptr);
 }
-
-/*char* Nimage::color_name( int col )
-{
-  switch( col )
-    {
-    case red: return "red";
-    case blue: return "blue";
-    case yellow: return "yellow";
-    case green: return "green";
-    case magenta: return "magenta";
-    case white: return "white";
-    case cyan: return "cyan";
-    }
-}*/
 
 
 

@@ -1,7 +1,7 @@
 /*************************************************************************
  * server.cc - implements the position & GUI servers, plus signal handling
  * RTV
- * $Id: server.cc,v 1.3 2000-12-08 09:08:11 vaughan Exp $
+ * $Id: server.cc,v 1.4 2001-06-01 21:25:53 ahoward Exp $
  ************************************************************************/
 
 // YUK this file is all in C and implements the PositionServer and GuiServer
@@ -32,7 +32,7 @@
 //#define DEBUG
 //#define VERBOSE
 
-#include "world.h"
+#include "world.hh"
 #include "ports.h"
 
 #define	SA	struct sockaddr
@@ -113,12 +113,16 @@ void CatchSigInt( int signo )
 #ifdef VERBOSE
   cout << "** SIGINT! **" << endl;
 #endif
-
-  // shutdown stuff moved to destructors - RTV
-
-  delete world;
-
-  cout << "Stage quitting." << endl;
+  // BPG
+  //  collect the bot pointers before deleting them
+  CPlayerRobot* tmpbots[256];
+  tmpbots[0] = world->bots;
+  for(int i=1; i < world->population; i++)
+    tmpbots[i] = tmpbots[i-1]->next;
+  // now delete them
+  for(int i=0; i< world->population; i++)
+    delete tmpbots[i];
+  cout << "Arena Quitting" << endl;
   exit(0);
 }
 
@@ -171,7 +175,7 @@ static void * RunGUI( void * )
       
       unsigned int k = sizeof(foo);   
   
-      //cout << "Waiting for connecyion" << endl;
+      //cout << "Waiting for connection" << endl;
       // the thread will block on accept until a connect request is pending
       bar = accept( ifsock, (struct sockaddr*)&foo, &k );
       
@@ -287,9 +291,9 @@ static void * PositionWriter( void* connfd )
       // compile a string containing the positions of all the robots
       int len = 0;
       
-      for( CRobot* r=world->bots; r; r=r->next )
+      for( CPlayerRobot* r=world->bots; r; r=r->next )
 	{
-	  *(CRobot**)(sendline+len) = r;
+	  *(CPlayerRobot**)(sendline+len) = r;
 	  *(float*)(sendline+len+4)   = (float)r->x/world->ppm;
 	  *(float*)(sendline+len+8) = (float)r->y/world->ppm;
 	  *(float*)(sendline+len+12) = (float)r->a;
@@ -329,7 +333,7 @@ static void* PositionServer( void* )
   // GPB
   
   
-  CRobot* r;
+  CPlayerRobot* r;
   int listenfd;
 
   int* connfd = new int(0);

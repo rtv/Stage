@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.cc - all the graphics and X management
  * RTV
- * $Id: win.cc,v 1.8 2000-12-08 09:08:11 vaughan Exp $
+ * $Id: win.cc,v 1.9 2001-06-01 21:25:54 ahoward Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -27,8 +27,8 @@ int backgroundPtsCount;
 
 
 const double TWOPI = 6.283185307;
-const int numPts = SONARSAMPLES;
-const int laserSamples = LASERSAMPLES;
+//*** REMOVE ahoward const int numPts = SONARSAMPLES;
+//*** REMOVE ahoward int laserSamples = LASERSAMPLES;
 
 const float maxAngularError =  -0.1; // percent error on turning odometry
 
@@ -304,7 +304,16 @@ void CWorldWin::HandleEvent( void )
 	  //DrawRobotsInRect( reportEvent.xexpose.x, 
 	  //	  reportEvent.xexpose.y,
 	  //	  reportEvent.xexpose.width, 
-	  //	  reportEvent.xexpose.height ); 
+	  //	  reportEvent.xexpose.height );
+	  
+	  // draw robots in XOR mode
+	  SetDrawMode( GXxor );
+	  
+	  for( CPlayerRobot* r = world->bots; r; r = r->next )  r->GUIDraw();
+	  
+	  SetDrawMode( GXcopy );
+	  
+	  drawnRobots = true;
 	}
 	break;
 
@@ -340,7 +349,7 @@ void CWorldWin::HandleEvent( void )
 		}
 	      else
 		{
-		  CRobot* near = 
+		  CPlayerRobot* near = 
 		    world->NearestRobot((float)reportEvent.xbutton.x / xscale 
 					+ panx, 
 					(float)reportEvent.xbutton.y / yscale 
@@ -365,8 +374,10 @@ void CWorldWin::HandleEvent( void )
 
 		  getchar();
 		  
-		  DrawBackground();
-		  DrawRobots();
+		  for( CPlayerRobot* r = world->bots; r; r = r->next )  r->GUIDraw();
+		  
+		  SetDrawMode( GXcopy );
+		  
 		  drawnRobots = true;
 #endif
 	    }
@@ -384,8 +395,15 @@ void CWorldWin::HandleEvent( void )
 		  
 		  BoundsCheck();		  
 		  ScanBackground();
-		  DrawBackground();		
-		  DrawRobots();
+		  Draw();
+		  
+		  // draw robots in XOR mode
+		  SetDrawMode( GXxor );
+		  
+		  for( CPlayerRobot* r = world->bots; r; r = r->next )  r->GUIDraw();
+		  
+		  SetDrawMode( GXcopy );
+		  
 		  drawnRobots = true;
 		}
 	      break;
@@ -415,8 +433,15 @@ void CWorldWin::HandleEvent( void )
 	if( panx != oldPanx || pany != oldPany )
 	  {
 	    ScanBackground();
-	    DrawBackground();
-	    DrawRobots();
+	    Draw();
+
+	    // draw robots in XOR mode
+	    SetDrawMode( GXxor );
+
+	    for( CPlayerRobot* r = world->bots; r; r = r->next )  r->GUIDraw();
+
+	    SetDrawMode( GXcopy );
+	    
 	    drawnRobots = true;
 	    
 	  }
@@ -593,13 +618,13 @@ void CWorldWin::DrawWallsInRect( int xx, int yy, int ww, int hh )
 //void CWorldWin::DrawRobotsInRect( int xx, int yy, int ww, int hh )
 //{
   // do bounds checking here sometime - no big deal
-  //for( CRobot* r = world->bots; r; r = r->next )
-  // {
-//    DrawRobots();
-      //}
-//}
+  for( CPlayerRobot* r = world->bots; r; r = r->next )
+    {
+      DrawRobot( r );
+    }
+}
 
-void CWorldWin::DrawRobots( void )
+void CWorldWin::DrawRobot( CPlayerRobot* r )
 {
   SetDrawMode( GXxor );
   
@@ -611,9 +636,7 @@ void CWorldWin::DrawRobots( void )
 
 void CWorldWin::RefreshRobots( void )
 {
-  SetDrawMode( GXxor );
-
-  for( CRobot* r = world->bots; r; r = r->next ) 
+  for( CPlayerRobot* r = world->bots; r; r = r->next )
     {
       r->GUIUnDraw();
       r->GUIDraw();
@@ -622,12 +645,12 @@ void CWorldWin::RefreshRobots( void )
   SetDrawMode( GXcopy );
 }
 
-//void CWorldWin::RefreshRobotIfMoved( CRobot* r )
-//{
-  //if( r->HasMoved() ) RefreshRobot( r );
-//}
+void CWorldWin::DrawRobotIfMoved( CPlayerRobot* r )
+{
+  if( r->HasMoved() ) DrawRobot( r );
+}
 
-unsigned long CWorldWin::RobotDrawColor( CRobot* r )
+unsigned long CWorldWin::RobotDrawColor( CPlayerRobot* r )
 { 
   unsigned long color;
   switch( r->channel % 6 )
@@ -649,10 +672,41 @@ void CWorldWin::SetForeground( unsigned long col )
 }
 
 
-void CWorldWin::DrawInRobotColor( CRobot* r )
+void CWorldWin::DrawInRobotColor( CPlayerRobot* r )
 { 
   XSetForeground( display, gc, RobotDrawColor( r ) );
 }
+
+
+//  void CWorldWin::DrawSonar( CPlayerRobot* r )
+//  {
+//    XSetFunction( display, gc, GXxor );
+//    XSetForeground( display, gc, white );
+ 
+//    XDrawPoints( display, win, gc, r->oldHitPts, numPts, CoordModeOrigin   ); 
+//    XDrawPoints( display, win, gc, r->hitPts, numPts, CoordModeOrigin ); 
+  
+//    memcpy( r->oldHitPts, r->hitPts, numPts * sizeof( XPoint ) );
+  
+//    XSetFunction( display, gc, GXcopy );
+  
+//    r->redrawSonar = false;  
+//  }
+
+//  void CWorldWin::DrawLaser( CPlayerRobot* r )
+//  {
+//    XSetFunction( display, gc, GXxor );
+//    XSetForeground( display, gc, white );
+  
+//    XDrawPoints( display,win,gc, r->loldHitPts, laserSamples/2,CoordModeOrigin);
+//    XDrawPoints( display,win,gc, r->lhitPts, laserSamples/2, CoordModeOrigin); 
+
+//    memcpy( r->loldHitPts, r->lhitPts, laserSamples/2 * sizeof( XPoint ) );
+  
+//    XSetFunction( display, gc, GXcopy );
+  
+//    r->redrawLaser = false;
+//  }
 
 
 void CWorldWin::MoveSize( void )

@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: LaserBeaconDevice.hh
+// File: laserbeacondevice.hh
 // Author: Andrew Howard
-// Date: 28 Nov 2000
-// Desc: Simulates the laser beacons
+// Date: 12 Jan 2000
+// Desc: Simulates the laser-based beacon detector
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacondevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -27,26 +27,52 @@
 #ifndef LASERBEACONDEVICE_HH
 #define LASERBEACONDEVICE_HH
 
-#include "device.hh"
+#include "playerdevice.hh"
 
-class CLaserBeaconDevice : public CDevice
+// Forward declarations
+//
+class CLaserDevice;
+
+
+class CLaserBeaconDevice : public CPlayerDevice
 {
     // Default constructor
-    // Requires the position of the beacon relative to the parent object
     //
-    public: CLaserBeaconDevice(CRobot* robot, double dx, double dy);
+    public: CLaserBeaconDevice(CWorld *world, CEntity *parent,
+                               CPlayerServer *server, CLaserDevice *laser);
     
     // Update the device
     //
-    public: virtual bool Update();
+    public: virtual void Update();
 
-    // Position wrt parent object
+    // Pointer to laser used as souce of data
     //
-    private: double m_dx, m_dy;
+    private: CLaserDevice *m_laser;
 
-    // Position wrt world
+    // Time of last update
     //
-    private: double m_px, m_py;
+    private: uint32_t m_time_sec, m_time_usec;
+
+    // Detection parameters
+    //
+    private: double m_max_anon_range;
+    private: double m_max_id_range;
+ 
+#ifdef INCLUDE_RTK
+    
+    // Process GUI update messages
+    //
+    public: virtual void OnUiUpdate(RtkUiDrawData *pData);
+
+#endif
+
+    private:  ExportLaserBeaconDetectorData expBeacon; 
 };
 
 #endif
+
+
+
+
+
+

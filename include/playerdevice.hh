@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.4 $
+//  $Author: ahoward $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -27,54 +27,62 @@
 #ifndef PLAYERDEVICE_HH
 #define PLAYERDEVICE_HH
 
-// For size_t
+// For size_t and network byte ordering
 //
 #include <stddef.h>
+#include <netinet/in.h>
 
 // For base class
 //
-#include "device.hh"
+#include "entity.hh"
+
+// For all the lengths
+//
+#include <stage.h>
+
+// Forward declarations
+//
+class CPlayerServer;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Base class for all player devices
 //
-class CPlayerDevice : public CDevice
+class CPlayerDevice : public CEntity
 {
     // Minimal constructor
     // This is an abstract class and *cannot* be instantiated directly
     // buffer points to a single buffer containing the data, command and configuration buffers.
     //
-    protected: CPlayerDevice(CRobot *robot, void *buffer, size_t data_len,
-                             size_t command_len, size_t config_len);
-        
+    protected: CPlayerDevice(CWorld *world, CEntity *parent, 
+                             CPlayerServer *server, size_t offset, size_t buffer_len,
+                             size_t data_len, size_t command_len, size_t config_len);
+    
     // Initialise the device
     //
     public: virtual bool Startup();
 
     // Close the device
     //
-    public: virtual bool Shutdown();
-
-    // Update the device
-    // This is pure virtual and *must* be overloaded
-    //
-    public: virtual bool Update() = 0;
-
+    public: virtual void Shutdown();
+   
     // See if the device is subscribed
     //
-    public: bool IsSubscribed();
+    protected: bool IsSubscribed();
     
     // Write to the data buffer
     // Returns the number of bytes copied
     // timestamp should be the time the data was created/sensed. if timestamp
     //   is 0, then current time is used
     //
-    protected: size_t PutData(void *data, size_t len, uint64_t timestamp);
+    protected: size_t PutData(void *data, size_t len,
+                              uint32_t time_sec = 0, uint32_t time_usec = 0);
 
-    // shorcut for not specifying timestamp
-    protected: size_t PutData(void *data, size_t len) 
-               { return(PutData(data, len, 0)); }
+    // Read from the data buffer
+    // Returns the number of bytes copied
+    //
+    public: size_t GetData(void *data, size_t len,
+                           uint32_t *time_sec = NULL, uint32_t *time_usec = NULL);
 
     // Read from the command buffer
     // Returns the number of bytes copied
@@ -86,6 +94,14 @@ class CPlayerDevice : public CDevice
     //
     protected: size_t GetConfig(void *data, size_t len);
 
+    // Pointer to player robot
+    //
+    protected: CPlayerServer *m_server;
+
+    // Offset info shared memory
+    //
+    private: size_t m_offset;
+    
     // Pointer to shared info buffers
     //
     private: player_stage_info_t *m_info;
