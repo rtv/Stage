@@ -2,7 +2,7 @@
 # Desc: Device definitions for handy beacons
 # Author: Richard Vaughan
 # Date: 29 October 2002
-# CVS: $Id: beacons.inc,v 1.4 2004-12-03 01:32:57 rtv Exp $
+# CVS: $Id: beacons.inc,v 1.5 2005-03-25 21:08:03 rtv Exp $
 
 # laser beacons - flat targets that show up bright in the laser, and
 # in the fiducial finder. It's often useful to redefine the
@@ -12,7 +12,7 @@
 define laserbeacon model 
 (
   fiducial_return 1
-  laser_return "bright"
+  laser_return 2
   size [ 0.05 0.3 ]
   color "LightBlue"
 )
