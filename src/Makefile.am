@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.24 2002-11-02 00:46:14 gerkey Exp $
+# $Id: Makefile.am,v 1.25 2002-11-02 02:00:52 inspectorg Exp $
 
 
 SUBDIRS = models rtkstage gnome2
@@ -47,5 +47,4 @@ stage_SOURCES = \
          world.hh
 
 stage_LDFLAGS =
-
 stage_LDADD = 	-lm -Lmodels -lstgmodels -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -lplayerqueue @GUI_LINK@ @LIBOBJS@

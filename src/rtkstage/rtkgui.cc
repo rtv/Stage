@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.5 2002-11-01 19:12:32 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.6 2002-11-02 02:00:52 inspectorg Exp $
  */
 
 
@@ -283,16 +283,18 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   // Add some menu items
   this->file_menu = rtk_menu_create(this->canvas, "File");
   this->save_menuitem = rtk_menuitem_create(this->file_menu, "Save", 0);
-  this->export_menu = rtk_menu_create_sub(this->file_menu, "Export frames");  
+  this->stills_menu = rtk_menu_create_sub(this->file_menu, "Capture stills");
+  this->movie_menu = rtk_menu_create_sub(this->file_menu, "Capture movie");
   this->exit_menuitem = rtk_menuitem_create(this->file_menu, "Exit", 0);
 
-  // Add export menu
-  this->export_enable_menuitem = rtk_menuitem_create(this->export_menu, "Enable export", 1);
-  this->export_jpeg_menuitem = rtk_menuitem_create(this->export_menu, "JPEG format", 1);
-  this->export_ppm_menuitem = rtk_menuitem_create(this->export_menu, "PPM format", 1);
+  this->stills_jpeg_menuitem = rtk_menuitem_create(this->stills_menu, "JPEG format", 1);
+  this->stills_ppm_menuitem = rtk_menuitem_create(this->stills_menu, "PPM format", 1);
+  this->stills_series = 0;
+  this->stills_count = 0;
 
-  this->export_format = RTK_IMAGE_FORMAT_JPEG;
-  this->export_frame_count = 0;
+  this->movie_fps5_menuitem = rtk_menuitem_create(this->movie_menu, "5 fps", 1);
+  this->movie_fps10_menuitem = rtk_menuitem_create(this->movie_menu, "10 fps", 1);
+  this->movie_count = 0;
 
   // Create the view menu
   this->view_menu = rtk_menu_create(this->canvas, "View");
@@ -438,6 +440,8 @@ void CWorld::RtkUpdate()
 // Update the GUI
 void CWorld::RtkMenuHandling()
 {
+  char filename[128];
+      
   // right now we have to check the state of all the menu items each
   // time around the loop. this is pretty unsatisfactory - callbacks
   // would be much better
@@ -452,26 +456,61 @@ void CWorld::RtkMenuHandling()
   if (rtk_menuitem_isactivated(this->save_menuitem))
     Save();
   
-  // Set export format (jpeg)
-  if (rtk_menuitem_isactivated(this->export_jpeg_menuitem))
-    this->export_format = RTK_IMAGE_FORMAT_JPEG;
-  if (rtk_menuitem_isactivated(this->export_ppm_menuitem))
-    this->export_format = RTK_IMAGE_FORMAT_PPM;
-
-  // Make sure the check boxes agree
-  rtk_menuitem_check(this->export_jpeg_menuitem,
-                     (this->export_format == RTK_IMAGE_FORMAT_JPEG));
-  rtk_menuitem_check(this->export_ppm_menuitem,
-                     (this->export_format == RTK_IMAGE_FORMAT_PPM));
-
-  // Start/stop export
-  if (rtk_menuitem_ischecked(this->export_enable_menuitem))
+  // Start/stop export (jpeg)
+  if (rtk_menuitem_isactivated(this->stills_jpeg_menuitem))
   {
-    char filename[128];
-    snprintf(filename, sizeof(filename), "stage-%04d.jpg", this->export_frame_count++);
-    printf("saving [%s]\n", filename);
-    rtk_canvas_export_image(this->canvas, filename, this->export_format);
+      if (rtk_menuitem_ischecked(this->stills_jpeg_menuitem))
+        this->stills_series++;
   }
+  if (rtk_menuitem_ischecked(this->stills_jpeg_menuitem))
+  {
+    snprintf(filename, sizeof(filename), "stage-%03d-%04d.jpg",
+             this->stills_series, this->stills_count++);
+    printf("saving [%s]\n", filename);
+    rtk_canvas_export_image(this->canvas, filename, RTK_IMAGE_FORMAT_JPEG);
+  }
+
+  // Start/stop export (ppm)
+  if (rtk_menuitem_isactivated(this->stills_ppm_menuitem))
+  {
+      if (rtk_menuitem_ischecked(this->stills_ppm_menuitem))
+        this->stills_series++;
+  }
+  if (rtk_menuitem_ischecked(this->stills_ppm_menuitem))
+  {
+    snprintf(filename, sizeof(filename), "stage-%03d-%04d.ppm",
+             this->stills_series, this->stills_count++);
+    printf("saving [%s]\n", filename);
+    rtk_canvas_export_image(this->canvas, filename, RTK_IMAGE_FORMAT_PPM);
+  }
+
+  // Start/stop movie (5 fps)
+  if (rtk_menuitem_isactivated(this->movie_fps5_menuitem))
+  {
+    if (rtk_menuitem_ischecked(this->movie_fps5_menuitem))
+    {
+      snprintf(filename, sizeof(filename), "stage-%03d.mpg", this->movie_count++);
+      rtk_canvas_movie_start(this->canvas, filename, 5);
+    }
+    else
+      rtk_canvas_movie_stop(this->canvas);
+  }
+  if (rtk_menuitem_ischecked(this->movie_fps5_menuitem))
+    rtk_canvas_movie_frame(this->canvas);
+
+  // Start/stop movie (10 fps)
+  if (rtk_menuitem_isactivated(this->movie_fps10_menuitem))
+  {
+    if (rtk_menuitem_ischecked(this->movie_fps10_menuitem))
+    {
+      snprintf(filename, sizeof(filename), "stage-%03d.mpg", this->movie_count++);
+      rtk_canvas_movie_start(this->canvas, "test.mpg", 10);
+    }
+    else
+      rtk_canvas_movie_stop(this->canvas);
+  }
+  if (rtk_menuitem_ischecked(this->movie_fps10_menuitem))
+    rtk_canvas_movie_frame(this->canvas);
 
   // Show or hide the grid
   if (rtk_menuitem_ischecked(this->grid_item))

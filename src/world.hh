@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.16 2002-11-01 19:12:31 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.17 2002-11-02 02:00:52 inspectorg Exp $
  */
 
 #ifndef WORLD_HH
@@ -326,11 +326,23 @@ public: int GetStopTime( void ){ return m_stoptime; };
   private: rtk_menuitem_t *save_menuitem;
   private: rtk_menuitem_t *exit_menuitem;
 
-  // The export menu
-  private: rtk_menu_t *export_menu;
-  private: rtk_menuitem_t *export_enable_menuitem;
-  private: rtk_menuitem_t *export_jpeg_menuitem;
-  private: rtk_menuitem_t *export_ppm_menuitem;
+  // The stills menu
+  private: rtk_menu_t *stills_menu;
+  private: rtk_menuitem_t *stills_jpeg_menuitem;
+  private: rtk_menuitem_t *stills_ppm_menuitem;
+
+  // Export stills info
+  private: int stills_format;
+  private: int stills_series;
+  private: int stills_count;
+
+  // The movie menu
+  private: rtk_menu_t *movie_menu;
+  private: rtk_menuitem_t *movie_fps5_menuitem;
+  private: rtk_menuitem_t *movie_fps10_menuitem;
+
+  // Export movie info
+  private: int movie_count;
 
   // The view menu
   public: rtk_menu_t *view_menu;
@@ -344,9 +356,6 @@ public: int GetStopTime( void ){ return m_stoptime; };
   private: rtk_menuitem_t* autosubscribe_item;
   public: static int autosubscribe;
 
-  // Export stills info
-  private: int export_format;
-  private: int export_frame_count;
 
   typedef struct 
   {
