@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.6 2003-04-01 00:20:56 rtv Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.7 2003-07-02 00:05:11 rtv Exp $
  */
 
 #include <math.h>
@@ -43,8 +43,8 @@ CSonarDevice::CSonarDevice( LibraryItem* libit, CWorld *world, CEntity *parent )
   this->power_on = true;
   
   // we make moderate, high-frequency noise with the sonars
-  this->noise.amplitude = 160; // out of 255
-  this->noise.frequency = 250; // out of 255
+  this->noise.amplitude = STG_SONAR_AMP; // out of 255
+  this->noise.frequency = STG_SONAR_FREQ; // out of 255
 
 
   // Initialise the sonar poses to default values

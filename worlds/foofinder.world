@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: foofinder.world,v 1.1 2003-04-01 00:20:56 rtv Exp $
+# CVS: $Id: foofinder.world,v 1.2 2003-07-02 00:05:11 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 #
@@ -28,7 +28,7 @@ bitmap
 #
 position
 (
- robot 0 
+ port 6665 
  pose [2.974 5.137 20.000]
  team 1
 
@@ -57,7 +57,7 @@ position
 ) 
 
 position( 
- robot 1 
+ port 6666 
  pose [3 3 0] 
  team 2 
  foofinder( mode "team" ) 
@@ -66,15 +66,15 @@ position(
  radiation [100 100]
 )
 
-position( 
- robot 2
+position(
+ port 6667
  pose [4 3 0] 
  team 2 
  foofinder( mode "toplevel" ) 
 )
 
 position( 
- robot 3
+ port 6668
  pose [5 3 0] 
  team 3 
  foofinder( 
@@ -86,7 +86,7 @@ position(
 )
 
 position( 
- robot 4
+ port 6669
  pose [0 2 0] 
  team 0 
  color "green"
@@ -94,7 +94,7 @@ position(
 )
 
 position( 
- robot 5
+ port 6670
  pose [0 3 0] 
  team 0 
  color "orange"
@@ -102,7 +102,7 @@ position(
 )
 
 position( 
- robot 6
+ port 6671
  pose [0 4 0] 
  team 0 
  color "brown"
@@ -110,7 +110,7 @@ position(
 )
 
 position( 
- robot 7
+ port 6672
  pose [0 5 0] 
  team 0 
  color "yellow"

@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.9 2003-06-10 03:29:20 jazzfunk Exp $
+% CVS: $Id: stage.tex,v 1.10 2003-07-02 00:05:11 rtv Exp $
 
 \documentclass[11pt,twoside]{report}
 
@@ -39,7 +39,7 @@
 
  \begin{tabular}{lcr}
    \begin{tabular}{c}
- 	Player/Stage project\\
+        Player/Stage project\\
          \includegraphics{notext_ps_logo}
     \end{tabular}
    &
@@ -57,7 +57,7 @@
  \end{tabular}
 
 
-  \vspace{5cm}	
+  \vspace{5cm}  
   \centerline{ \Huge{Stage}}
   \vspace{0.5cm}
   \centerline{\large{Version \VERSION\ User Manual}}
@@ -122,7 +122,7 @@
 
    The main resource for Player/Stage is the project
     homepage:\\\\ \indent \HOMEPAGE\\
-	
+        
    \noindent Access to source code releases, access to the CVS
    development tree, bug tracking, user mailing lists, etc.~ is
    available from the Sourceforge project management page:\\\\\indent
@@ -132,7 +132,7 @@
  Stage-<version>.src.tgz at:\\\\ \indent
  http://sourceforge.net/project/showfiles.php?group\_id=42445\\
 
-	Previous versions were significantly different; this manual
+        Previous versions were significantly different; this manual
    does not apply to them.
 
   \section{What's in the Package?}
@@ -155,10 +155,10 @@
     Optional (but highly recommended): 
     \begin{itemize}
       \item libRTK [\HOMEPAGE]
-	\begin{itemize}
-	  \item X11R6, GTK++.
+        \begin{itemize}
+          \item X11R6, GTK++.
 \end{itemize}
-	\end{itemize}
+        \end{itemize}
 
     Stage was developed and tested under Linux kernel 2.4,
     glibc-2.2.  Code is reasonable ANSII/POSIX so it should compile
@@ -180,8 +180,8 @@
       \item[] Jakob Fredslund [jakobf@robotics.usc.edu]
       \end{itemize}
 
-	See your name here by contributing devices, superior
-	algorithms, bugfixes, examples, etc.
+        See your name here by contributing devices, superior
+        algorithms, bugfixes, examples, etc.
 
   \section{Bugs and feedback}
   
@@ -206,12 +206,12 @@
     problem solved.
 
   \section{What happened to...?}
-	
-	Previous releases contained some supplementary programs which
-	have been removed during development of
-	Stage-\VERSION. 'RTKStage' has been folded into Stage. Stage
-	client mode makes 'XS' redundant. Stage server makes 'manager'
-	redundant. Don't worry; things are better now.
+        
+        Previous releases contained some supplementary programs which
+        have been removed during development of
+        Stage-\VERSION. 'RTKStage' has been folded into Stage. Stage
+        client mode makes 'XS' redundant. Stage server makes 'manager'
+        redundant. Don't worry; things are better now.
 
 \section{Citations}
 If you find Player and Stage useful in your work, we would greatly
@@ -281,12 +281,12 @@ tools can be found on the website.
  with an interactive GUI, which is highly recommended, you must
  install libRTK before building Stage. Player and libRTK are availabe
  from the Player/Stage files page:
-	\begin{verbatim}
-	http://sourceforge.net/project/showfiles.php?group_id=42445
-	\end{verbatim}
-	\noindent Build and install Player and libRTK following the
-	instructions in the packages' README and INSTALL files. Now
-	download thew Stage tarball and unpack it with:
+        \begin{verbatim}
+        http://sourceforge.net/project/showfiles.php?group_id=42445
+        \end{verbatim}
+        \noindent Build and install Player and libRTK following the
+        instructions in the packages' README and INSTALL files. Now
+        download thew Stage tarball and unpack it with:
       \begin{verbatim}
       $ tar xzvf Stage-1.2.tgz
       \end{verbatim}
@@ -326,13 +326,13 @@ tools can be found on the website.
     standard output, so a sample invocation and start up would look
     like this:
 
-	\begin{verbatim} 
-	$ stage worlds/everything.world
+        \begin{verbatim} 
+        $ stage worlds/everything.world
 
-	 ** Stage  v1.3 ** 
-	[World worlds/everything.world]
-	[Server localhost:6601]
-	** Player v1.3 ** [Stage /tmp/stageIO.username.0]
+         ** Stage  v1.3 ** 
+        [World worlds/everything.world]
+        [Server localhost:6601]
+        ** Player v1.3 ** [Stage /tmp/stageIO.username.0]
       \end{verbatim}
 
     At this point you should be able to interact with objects in the
@@ -414,7 +414,7 @@ tools can be found on the website.
 %%     client/server.  \end{xarg}
 
 %%     \begin{xarg}{-cl}Client mode, server on localhost - equivalent to '-c localhost' 
-%% 	 \end{xarg}
+%%       \end{xarg}
 
 %%     \begin{xarg}{-p <port num>}
 %%     Set the port number for the Stage server to accept connections. Default is 6601.
@@ -891,10 +891,27 @@ in the laser).\\
 
 \verb'idar_return' & \parbox{30mm}{\verb'"IDARTransparent"'
 \verb'"IDARReflect"' \verb'"IDARReceive"'} & Specifies the behavior when hit by an IDAR beam.\\
+\\
+\hline
+\end{tabularx}
+
+<table continues overleaf>\\
+
+\subsubsection*{Properties (continued)}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
 
 \verb'interval' & \verb'seconds' & Specifies the interval between
 model updates in seconds. Smaller intervals can increase simulation
 fidelity at cost of CPU time.\\
+
+\verb'team' & \verb'int' & Specifies a Team number to which this entity belongs. The FooFinder can filter objects by team. A value of 0 means 'no team'.\\
+
+\verb'radiation' & \verb'[amplitude frequency]' & Specifies radiation emmitted. Amplitude and frequency are integers in the range 0-255, where 0 means low, 255 means high. The FooFinder can filter objects by radiation emmisions.\\
+
+\verb'noise' & \verb'[amplitude frequency]' & Specifies noise emmitted. Amplitude and frequency are integers in the range 0-255, where 0 means low, 255 means high. The FooFinder can filter objects by noise emmisions.\\
 
 \hline
 \end{tabularx}
@@ -918,6 +935,9 @@ Name & Value\\
 \verb'id' & \verb'-1'\\
 \verb'mass' & \verb'1000.0'\\
 \verb'interval' & \verb'0.1'\\
+\verb'team' & \verb'0'\\
+\verb'noise' & \verb'[0 0]'\\
+\verb'radiation' & \verb'[0 0]'\\
 \hline
 \end{tabularx}
 
@@ -1362,6 +1382,7 @@ Name & Value\\
 \verb'max_range' & \verb'8.0' \\
 \verb'size' & \verb'[0.155 0.155]'\\
 \verb'color' & \verb'"blue"' \\
+\verb'radiation' & \verb'[200 200]' \\ 
 \hline
 \end{tabularx}
 
@@ -1524,6 +1545,7 @@ RooBot).
 Name & Values & Description \\
 \hline
 \verb'drive' & \verb'"diff"' or \verb'"omni"' & Selects differential or omnidirectional drive\\
+\verb'noise' & \verb'[0/75 50]' & Position device has noise amplitude 75 while driving, 0 when still.\\
 \hline
 \end{tabularx}
 
@@ -1604,6 +1626,7 @@ Name & Value\\
 \verb'spose[5]' & \verb'[0 0 225]'\\
 \verb'spose[6]' & \verb'[0 0 270]'\\
 \verb'spose[7]' & \verb'[0 0 315]'\\
+\verb'noise' & \verb'[150 250]'\\
 \hline
 \end{tabularx}
 
