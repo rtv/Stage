@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.12 2001-09-04 23:01:13 vaughan Exp $
+ * $Id: xs.cc,v 1.13 2001-09-19 04:18:22 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -50,18 +50,18 @@
 Display* display = 0; 
 int screen = 0;
 
-const char* versionStr = "0.1";
+const char* versionStr = "0.1.1";
 const char* titleStr = "X Player/Stage Interface";
 
 //#define LABELS
 //typedef void (*callback_t)(truth_t*);
 
-#define USAGE  "\nUSAGE: xs [-h <host>] [-tp <port>] [-ep <port>]\n\t[-geometry <geometry string>] [-zoom <factor>]\n\t[-pan <X\%xY\%>] [-channels <\"color0 .... colorN\">]\nDESCRIPTIONS:\n-h <host>: connect to Stage on this host (default `localhost')\n-tp <port>: connect to Stage's Truth server on this TCP port (default `6001')\n-ep <port>: connect to Stage's Environment server on this TCP port (default `6001')\n-geometry <string>*: standard X geometry specification\n-zoom <factor>*: floating point zoom multiplier\n-pan <X\%xY\%>*: pan initial view X percent of maximum by Y percent of maximum\n-channels <string>*: specify the colors drawn for each ACTS channel; e.g. \"red green blue\"\n(* this option can be set in your ~/.Xdefaults file - see README.xs)\n"
+#define USAGE  "\nUSAGE: xs [-h <host>] [-tp <port>] [-ep <port>]\n\t[-geometry <geometry string>] [-zoom <factor>]\n\t[-pan <X\%xY\%>] [-channels <\"color0 .... colorN\">]\nDESCRIPTIONS:\n-h <host>: connect to Stage on this host (default `localhost')\n-tp <port>: connect to Stage's Truth server on this TCP port (default `6601')\n-ep <port>: connect to Stage's Environment server on this TCP port (default `6602')\n-geometry <string>*: standard X geometry specification\n-zoom <factor>*: floating point zoom multiplier\n-pan <X\%xY\%>*: pan initial view X percent of maximum by Y percent of maximum\n-channels <string>*: specify the colors drawn for each ACTS channel; e.g. \"red green blue\"\n(* this option can be set in your ~/.Xdefaults file - see README.xs)\n"
 
-char stage_host[256] = "localhost";
-int truth_port = 6001;
-int env_port = 6002;
-
+char stage_host[256] = "localhost"; // default
+int truth_port = TRUTH_SERVER_PORT; // "
+int env_port = ENVIRONMENT_SERVER_PORT; // "
+ 
 struct hostent* entp = 0;
 struct sockaddr_in servaddr;
 
@@ -163,8 +163,26 @@ char* CXGui::StageNameOf( const truth_t& truth )
 
 void PrintStageTruth( stage_truth_t &truth )
 {
-  printf( "ID: %d (%4d,%d,%d)\tPID:(%4d,%d,%d)\tpose: [%d,%d,%d]\tsize: [%d,%d]\n", 
+  printf( "ID: %d (%4d,%d,%d)\tPID:(%4d,%d,%d)\tpose: [%d,%d,%d]\tsize: [%d,%d]\t color: [%d,%d,%d]\n", 
 	  truth.stage_id,
+	  truth.id.port, 
+	  truth.id.type, 
+	  truth.id.index,
+	  truth.parent.port, 
+	  truth.parent.type, 
+	  truth.parent.index,
+	  truth.x, truth.y, truth.th,
+	  truth.w, truth.h,
+	  truth.red, truth.green, truth.blue );
+  
+  fflush( stdout );
+}
+
+void CXGui::PrintMetricTruth( int stage_id, truth_t &truth )
+{
+  printf( "%p:%s\t(%4d,%d,%d)\t(%4d,%d,%d)\t[%.2f,%.2f,%.2f]\t[%.2f,%.2f]\n",
+	  (int*)stage_id,
+	  StageNameOf( truth ),
 	  truth.id.port, 
 	  truth.id.type, 
 	  truth.id.index,
@@ -177,27 +195,10 @@ void PrintStageTruth( stage_truth_t &truth )
   fflush( stdout );
 }
 
-void CXGui::PrintMetricTruth( int stage_id, truth_t &truth )
-{
-  printf( "%p:%s\t(%4d,%d,%d)\t(%4d,%d,%d)\t[%.2f,%.2f,%.2f]\t[%.2f,%.2f]\tACTS: %d\n",
-	  (int*)stage_id,
-	  StageNameOf( truth ),
-	  truth.id.port, 
-	  truth.id.type, 
-	  truth.id.index,
-	  truth.parent.port, 
-	  truth.parent.type, 
-	  truth.parent.index,
-	  truth.x, truth.y, truth.th,
-	  truth.w, truth.h,
-	  truth.channel );
-  
-  fflush( stdout );
-}
-
 void CXGui::PrintMetricTruthVerbose( int stage_id, truth_t &truth )
 {
-  printf( "stage: %p:%s\tplayer: (%4d,%s:%d)\tparent(%4d,%s:%d)\tpose: [%.2f,%.2f,%.2f]\tsize: [%.2f,%.2f]\tACTS: %d\n", 
+  printf( "stage: %p:%s\tplayer: (%4d,%s:%d)\tparent(%4d,%s:%d)"
+	  "\tpose: [%.2f,%.2f,%.2f]\tsize: [%.2f,%.2f]\t\tColor: [%d,%d,%d]\n", 
 	  (int*)stage_id,
 	  StageNameOf( truth ),
 	  truth.id.port, 
@@ -208,7 +209,7 @@ void CXGui::PrintMetricTruthVerbose( int stage_id, truth_t &truth )
 	  truth.parent.index,
 	  truth.x, truth.y, truth.th,
 	  truth.w, truth.h,
-	  truth.channel );
+	  truth.color.red, truth.color.green, truth.color.blue );
   
   fflush( stdout );
 }
@@ -725,7 +726,11 @@ void CXGui::HandleIncomingQueue( void )
 
       truth.stage_type = struth.stage_type;
 
-      truth.channel = struth.channel;
+      //truth.channel = struth.channel;
+
+      truth.color.red = struth.red;
+      truth.color.green = struth.green;
+      truth.color.blue = struth.blue;
 
       truth.id.port = struth.id.port;
       truth.id.type = struth.id.type;
@@ -979,7 +984,11 @@ void CXGui::MoveObject( truth_t* exp, double x, double y, double th )
   output.stage_id = exp->stage_id;
   output.stage_type = exp->stage_type;
 
-  output.channel = exp->channel;
+  //output.channel = exp->channel;
+
+  output.red = exp->color.red;
+  output.green = exp->color.red;
+  output.blue = exp->color.red;
 
   output.id.port = exp->id.port;
   output.id.type = exp->id.type;
@@ -1434,15 +1443,15 @@ void CXGui::HighlightObject( truth_t* exp,  bool undraw )
 		   exp->id.port, PlayerNameOf(exp->id), exp->id.index );
 	}
 
-      if( exp->channel != -1 ) // ie. it is visible in an ACTS channel
-	{
+      //if( exp->channel != -1 ) // ie. it is visible in an ACTS channel
+      //{
 	  // append the channel num
-	  char buf[256];
-	  strncpy( buf, info, sizeof(buf) );
+      //  char buf[256];
+      //  strncpy( buf, info, sizeof(buf) );
 	  
-	  sprintf( info, "%s(ACTS:%d)",
-		   buf, exp->channel );
-	}
+      //  sprintf( info, "%s(ACTS:%d)",
+      //	   buf, exp->channel );
+      //}
       
       XDrawString( display,win,gc,
 		   infox, infoy, info, strlen( info ) );

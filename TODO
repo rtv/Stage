@@ -1,6 +1,6 @@
 ##############################################################################################
 # TODO 
-# $Id: TODO,v 1.1 2001-09-19 01:28:59 vaughan Exp $
+# $Id: TODO,v 1.2 2001-09-19 04:18:19 vaughan Exp $
 ##############################################################################################
 
 ## IN PROGRESS ###############################################################################
@@ -10,8 +10,6 @@
 ## URGENT ####################################################################################
 
  - objects should accept color specification instead of channels once again
- - enable external servers by default
- - spawn XS by default in stage
  - LBD bug: IDs intermitently visible
 
 ## NICE ######################################################################################
@@ -20,6 +18,14 @@
 	- save only relevant state
 	- inherit port by default on load
 
+ - XS: add player interface to display sensor data
+
 ## DONE ######################################################################################
+
+RTV 11/17/01
+ - spawn XS by default in stage 
+ - enable external servers by default
+
+
 
 

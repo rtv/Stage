@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.10 $
+//  $Author: vaughan $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -169,7 +169,7 @@ void CBoxObstacle::OnUiUpdate(RtkUiDrawData *pData)
     {
         double ox, oy, oth;
         GetGlobalPose(ox, oy, oth);
-        pData->set_color(m_color);
+        pData->set_color(m_rtk_color);
         pData->ex_rectangle(ox, oy, oth, m_size_x, m_size_y);
     }
 

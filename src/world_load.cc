@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.12 $
+//  $Author: vaughan $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  (empty)
@@ -243,27 +243,54 @@ bool CWorld::Load(const char *filename)
                 // see if we should run on a non-standard port
                 if(argc >= 4 && !strcmp(argv[2],"port"))
                   global_truth_port = atoi(argv[3]);
-                // kick off the truth server thread
-                pthread_t tid_dummy;
-                pthread_create(&tid_dummy, NULL, &TruthServer, (void *)NULL );  
 
-                //printf( "[Truth %d]", TRUTH_SERVER_PORT );
-                //fflush ( stdout );
+		m_run_truth_server = true;
+
+                printf( "[Truth %d]", global_truth_port );
+                fflush ( stdout );
             }
             else if( strcmp( argv[1], "environment_server" ) == 0 )
             {
                 // see if we should run on a non-standard port
                 if(argc >= 4 && !strcmp(argv[2],"port"))
                   global_environment_port = atoi(argv[3]);
-                // kick off the environment server thread
-                pthread_t tid_dummy;
-                pthread_create(&tid_dummy, NULL, &EnvServer, (void *)NULL );  
+
+		m_run_environment_server = true;
+		
+                printf( "[Env %d]", global_environment_port );
+                fflush ( stdout );
+
             }
             else
                 printf("%s line %d : service %s is not defined\n",
                        filename, (int) linecount, (char*) argv[1]);
         }
         
+        // Parse "disnable" command
+        // disable optional sevices
+        //
+        else if (argc >= 2 && strcmp(argv[0], "disable") == 0)
+        {
+            if( strcmp( argv[1], "truth_server" ) == 0 )
+            {
+		m_run_truth_server = false;
+
+                puts( "[Truth disabled]" );
+                fflush ( stdout );
+            }
+            else if( strcmp( argv[1], "environment_server" ) == 0 )
+            {
+		m_run_environment_server = false;
+		
+                puts( "[Env disabled]" );
+                fflush ( stdout );
+            }
+            else
+                printf("%s line %d : service %s is not defined\n",
+                       filename, (int) linecount, (char*) argv[1]);
+        }
+        
+
         // Parse "create" command
         // create <type> ...
         //

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.9 $
+//  $Author: vaughan $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -80,7 +80,9 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
     //
     m_map_px = m_map_py = m_map_pth = 0;
 
+    // initialize color description and values
     strcpy(m_color_desc, "black");
+    m_color.red = m_color.green = m_color.blue = 0;
 
     m_com_vr = 0; // doesn't move
     
@@ -104,7 +106,7 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
     m_mouse_radius = 0;
     m_mouse_ready = false;
     m_dragging = false;
-    m_color = RTK_RGB(0, 0, 0);
+    m_rtk_color = RTK_RGB(0, 0, 0);
 #endif
 
 }
@@ -195,11 +197,11 @@ bool CEntity::Load(int argc, char **argv)
     
         // Extract channel
         //
-        else if (strcmp(argv[i], "channel") == 0 && i + 1 < argc)
-        {
-            channel_return = atoi(argv[i + 1]) + 1;
-            i += 2;
-        }
+        //else if (strcmp(argv[i], "channel") == 0 && i + 1 < argc)
+        //{
+	//  channel_return = atoi(argv[i + 1]) + 1;
+	//  i += 2;
+        //}
 
         // extract port number
         // one day we'll inherit our parent's port by default.
@@ -223,8 +225,19 @@ bool CEntity::Load(int argc, char **argv)
         }
     }
 
+    // don;t bother looking up black colors - the default m_color is black
+    if( strcmp( m_color_desc, "black" ) != 0 )
+      {
+	// resolve the RGB value of the color name
+	if( !m_world->ColorFromString( &m_color, m_color_desc ) )
+	  {
+	    printf( "warning: invalid color name %s; using black instead\n", m_color_desc );
+	    m_color.red = m_color.green = m_color.blue = 0;
+	  }
+      }
+
 #ifdef INCLUDE_RTK
-    m_color = rtk_color_lookup(m_color_desc);
+    m_rtk_color = rtk_color_lookup(m_color_desc);
 #endif
         
     return true;
@@ -272,10 +285,10 @@ bool CEntity::Save(int &argc, char **argv)
 
     // Save channel
     //
-    char z[128];
-    snprintf(z, sizeof(z), "%d", (int) channel_return-1);
-    argv[argc++] = strdup("channel");
-    argv[argc++] = strdup(z);
+    //char z[128];
+    //snprintf(z, sizeof(z), "%d", (int) channel_return-1);
+    //argv[argc++] = strdup("channel");
+    //argv[argc++] = strdup(z);
 
     // Save player port
     //
@@ -712,10 +725,15 @@ void CEntity::ComposeTruth( stage_truth_t* truth )
 
   truth->stage_type = m_stage_type;
 
-  if( channel_return < 1 )
-    truth->channel = -1;
-  else
-    truth->channel = channel_return-1;
+  //truth->channel
+  //if( channel_return < 1 )
+  //truth->channel = -1;
+  //else
+  //truth->channel = channel_return-1;
+
+  truth->red   = (uint16_t)m_color.red;
+  truth->green = (uint16_t)m_color.green;
+  truth->blue  = (uint16_t)m_color.blue;
 
   if( m_parent_object )
     {
@@ -763,7 +781,6 @@ void CEntity::ComposeTruth( stage_truth_t* truth )
   //fflush( stdout );
 #endif
 }
-
 
 
 #ifdef INCLUDE_RTK

@@ -8,20 +8,20 @@ create box_obstacle pose 8.32 6.97 296 color green size 2.00 0.50
 create laser_beacon pose 9.43 8.61 0 color black id 15 
 create vision_beacon pose 14.54 8.88 22 color black radius 0.25 channel 1 
 
-create usc_pioneer pose 11.28 4.47 451 name comet port 6665 
+create position_device pose 11.28 4.47 451 name comet port 6665 
 {
-    create laser_beacon pose -0.15 0.00 0 color black id 17 
+    create player_device port 6665
+    create laser_beacon pose -0.15 0.00 0 id 1
 }
 
-create usc_pioneer pose 9.06 4.43 0 name atom port 6666 
+create position_device pose 12.28 4.47 451 name punky port 6666 
 {
-    create laser_beacon pose -0.15 0.00 0 color black id 19 
+    create player_device port 6666
+    create laser_beacon pose -0.15 0.00 0 id 2
 }
 
-create box_obstacle pose 5.67 7.20 45 color black size 2.00 1.00 
+create position_device pose 12.28 4.47 451 name bug port 6667 
 {
-    create box_obstacle pose 0.50 1.00 0 color black size 1.00 1.00 
+    create player_device port 6667
+    create laser_beacon pose -0.15 0.00 0 id 3
 }
-
-
-

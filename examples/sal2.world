@@ -5,11 +5,11 @@ set laser_res = 2
 enable truth_server
 enable environment_server
 
-create position_device pose 6.27 3.08 0 port 6665  
+create position_device pose 6.27 3.08 0 port 6665 color green
 {
   create player_device port 6665 
   create sonar_device  port 6665  
-  create laser_device pose 0.08 0.00 0 port 6665 
+  create laser_device pose 0.08 0.00 0 port 6665 color orange
   {
     create lbd_device port 6665 
    }

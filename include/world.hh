@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.19 $
+//  $Author: vaughan $
+//  $Revision: 1.20 $
 //
 // Usage:
 //  (empty)
@@ -103,6 +103,9 @@ private: char m_filename[256];
   // Name of environment bitmap
 private: char m_env_file[256];
 
+  // color definitions
+private: char m_color_database_filename[256];
+
   // Object list
 private: int m_object_count;
 private: int m_object_alloc;
@@ -117,6 +120,13 @@ public: char m_auth_key[PLAYER_KEYLEN];
   // Resolution at which to generate laser data
 public: double m_laser_res;
 public: double m_vision_res; // NYI
+
+  // flags that control servers 
+private: bool m_run_environment_server;
+private: bool m_run_truth_server;
+
+  // flag that controls spawning of xs
+private: bool m_run_xs;
     
   // *** HACK -- this should be made private.  ahoward
 public: float ppm;
@@ -167,6 +177,14 @@ private: void Update();
 
   // Add an object to the world
 public: void AddObject(CEntity *object);
+
+  // attempt to spawn an XS process
+private: void SpawnXS( void );
+
+// fill the Stagecolor structure by looking up the color name in the database
+  // return false if failed
+public: int ColorFromString( StageColor* color, char* colorString );
+
 
   //////////////////////////////////////////////////////////////////////////
   // Time functions

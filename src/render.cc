@@ -371,9 +371,9 @@ void CXGui::RenderBox( truth_t* exp, bool extended )
 void CXGui::SelectColor( truth_t* exp, unsigned long def )
 {
   // choose the channel color, or use default if channel == -1
-  if( exp->channel != -1 )
-    SetForeground( channel_colors[exp->channel] );
-  else
+  //if( exp->channel != -1 )
+  //SetForeground( channel_colors[exp->channel] );
+  // else
     SetForeground( def ); // default color
 }
 

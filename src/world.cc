@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.29 $
+//  $Revision: 1.30 $
 //
 // Usage:
 //  (empty)
@@ -27,6 +27,7 @@
 #include <sys/time.h>
 #include <signal.h>
 #include <math.h>
+#include <fstream.h>
 #include <iostream.h>
 #include <unistd.h>
 #include <sys/mman.h>
@@ -36,6 +37,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <pwd.h>
+
 
 //#include <stage.h>
 #include "world.hh"
@@ -79,7 +81,23 @@ CWorld::CWorld()
     // Allow the simulation to run
     //
     m_enable = true;
-    
+
+    // enable external services by default
+    m_run_environment_server = true;
+    m_run_truth_server = true;
+
+    // default color database file
+    strcpy( m_color_database_filename, "/usr/X11R6/lib/X11/rgb.txt" );
+    //strcpy( m_color_database_filename, "foo.foo.foo" );
+
+#ifdef INCLUDE_RTK
+    // disable XS by default in rtkstage
+    m_run_xs = false;
+#else
+    // enable XS by default in stage
+    m_run_xs = true; 
+#endif
+
     // Initialise world filename
     //
     m_filename[0] = 0;
@@ -240,6 +258,23 @@ bool CWorld::Startup()
   m_router->add_sink(RTK_UI_PROPERTY, (void (*) (void*, void*)) &OnUiProperty, this);
   m_router->add_sink(RTK_UI_BUTTON, (void (*) (void*, void*)) &OnUiButton, this);
 #endif
+  
+
+  // kick off the truth and envirnment servers, unless we disabled them earlier
+  if( m_run_environment_server )
+    {
+      pthread_t tid_dummy;
+      pthread_create(&tid_dummy, NULL, &EnvServer, (void *)NULL );  
+    }
+  
+  if( m_run_truth_server )
+    {
+      pthread_t tid_dummy;
+      pthread_create(&tid_dummy, NULL, &TruthServer, (void *)NULL );  
+    }
+  
+  // spawn an XS process, unless we disabled it (rtkstage disables xs by default)
+  if( m_run_xs ) SpawnXS();
   
   // Startup all the objects
   // this lets them calculate how much shared memory they'll need
@@ -1085,4 +1120,90 @@ char* CWorld::StringType( StageType t )
   return( "unknown" );
 }
   
+// attempts to spawn an XS process. No harm done if it fails
+void CWorld::SpawnXS( void )
+{
+  int pid = 0;
+  
+  // ----------------------------------------------------------------------
+  // fork off an xs process
+  if( (pid = fork()) < 0 )
+    cerr << "fork error in SpawnXS()" << endl;
+  else
+    {
+      if( pid == 0 ) // new child process
+        {
+	  char envbuf[32];
+	  sprintf( envbuf, "%d", global_environment_port );
+
+	  char truthbuf[32];
+	  sprintf( truthbuf, "%d", global_truth_port );
+	  
+	  // we assume xs is in the current path
+	  if( execlp( "xs", "xs",
+		      "-ep", envbuf,
+		      "-tp", truthbuf, NULL ) < 0 )
+	    {
+	      cerr << "exec failed in SpawnXS(): make sure XS can be found"
+		" in the current path."
+		   << endl;
+	      exit( -1 ); // die!
+	    }
+	}
+      else
+	{
+	  //puts( "[XS]" );
+	  //fflush( stdout );
+	}
+    }
+}
+
+int CWorld::ColorFromString( StageColor* color, char* colorString )
+{
+  ifstream db( m_color_database_filename );
+  
+  if( !db )
+    cerr << "Failed to load color database file " << m_color_database_filename << endl; 
+
+  int red, green, blue;
+  
+  //cout << "Searching for " << colorString << " in " <<  m_color_database_filename << endl; 
+
+  while( !db.eof() && !db.bad() )
+    {
+      char c;
+      char line[255];
+      char name[255];
+      
+      db.get( line, 255, '\n' ); // read in a description string
+      
+      //cout << "Read entry: " << line << endl;
+
+      if( db.get( c ) && c != '\n' )
+	cout << "Warning: line too long in color database file" << endl;
+      
+      if( line[0] == '!' ) continue; // it's a macro line - ignore the line
+
+      sscanf( line, "%d %d %d %s", &red, &green, &blue, name );
+      
+      //printf( "Parsed: %d %d %d %s\n", red, green, blue, name );
+      //fflush( stdout );
+
+      if( strcmp( name, colorString ) == 0 ) // the name matches!
+	{
+	  color->red = (unsigned short)red;
+	  color->green = (unsigned short)green;
+	  color->blue = (unsigned short)blue;
+	  
+	  db.close();
+	  
+	  return true;
+	}
+    }
+  
+  return false;
+  
+  
+      
+}  
 

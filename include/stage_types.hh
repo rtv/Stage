@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/stage_types.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.7 $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -63,6 +63,13 @@
 #define PRINT_MSG(m) printf("stage msg : %s :\n  "m"\n", __FILE__)
 #define PRINT_MSG1(m, a) printf("stage msg : %s :\n  "m"\n", __FILE__, a)
 #define PRINT_MSG2(m, a, b) printf("stage msg : %s :\n  "m"\n", __FILE__, a, b)
+
+
+// color type
+typedef struct
+{
+  unsigned short red, green, blue;
+} StageColor;
 
 // definition of stage object type codes
 // similar to player types, but not exactly, as different robots

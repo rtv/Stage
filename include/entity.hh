@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.12 $
+//  $Author: vaughan $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  (empty)
@@ -172,9 +172,10 @@ class CEntity
     //
     protected: double m_map_px, m_map_py, m_map_pth;
 
-    // Object color description (for display)(and maybe vision sensors later?)
+    // Object color description
     //
     private: char m_color_desc[128];
+    private: StageColor m_color;
 
     // how often to update this device, in seconds
     // all devices check this before updating their data
@@ -305,7 +306,7 @@ public: double GetMass() { return(m_mass); }
 
     // Object color
     //
-    public: RTK_COLOR m_color;
+    public: RTK_COLOR m_rtk_color;
     
 #endif
 };
