@@ -18,8 +18,8 @@
 #include "server.h"
 #include "gui.h"
 
-#define HELLOWORLD "** Stage-"VERSION" **"
-#define BYEWORLD "Stage finished"
+#define STARTMESSAGE "* Stage-"VERSION" *"
+#define STOPMESSAGE  "Stage finished."
 
 // Signal catchers ---------------------------------------------------
 
@@ -51,7 +51,7 @@ void catch_signal( int signum )
 void catch_exit( void )
 {
   // write a goodbye message on exit
-  puts( BYEWORLD );
+  puts( STOPMESSAGE );
 }
 
 
@@ -89,7 +89,7 @@ int install_signal_catchers( void )
 
 int main( int argc, char* argv[] )
 {
-  puts( HELLOWORLD );
+  printf( "%s ", STARTMESSAGE ); fflush(stdout);
 
   int server_port = STG_DEFAULT_SERVER_PORT;
  
@@ -114,21 +114,57 @@ int main( int argc, char* argv[] )
   
   gui_startup( &argc, &argv );
   
+  // finish startup line
+  puts( "\n* Ready." );
+  
+
+#ifdef DEBUG
+  struct timeval tv1, tv2;
+#endif
+  
   while( !stg_quit_test() )
     {	  
+#ifdef DEBUG
+      gettimeofday( &tv1, NULL );
+#endif
+
       server_poll( server ); // read from server port and
 			     // clients. Includes a minimum poll()
 			     // sleep time
-
+#ifdef DEBUG
+      gettimeofday( &tv2, NULL );  
+      printf( " server poll time %.6f\n",
+	      (tv2.tv_sec + tv2.tv_usec / 1e6) - 
+	      (tv1.tv_sec + tv1.tv_usec / 1e6) );	    
+#endif
+      
+      
+      
+#ifdef DEBUG
+      gettimeofday( &tv1, NULL );
+#endif
       server_update_worlds( server );
+      server_update_subs( server );
+	
+#ifdef DEBUG
+	gettimeofday( &tv2, NULL );
+	printf( " update worlds & subs time %.6f\n",
+		(tv2.tv_sec + tv2.tv_usec / 1e6) - 
+		(tv1.tv_sec + tv1.tv_usec / 1e6) );	    
+#endif
 
-      //if( server->running )
-	{
-	  server_update_subs( server );
-	  //server_update_finish( server );
-	}
+#ifdef DEBUG
+      gettimeofday( &tv1, NULL );
+#endif
 
       gui_poll();
+
+#ifdef DEBUG
+	gettimeofday( &tv2, NULL );
+	printf( " gui poll time %.6f\n",
+		(tv2.tv_sec + tv2.tv_usec / 1e6) - 
+		(tv1.tv_sec + tv1.tv_usec / 1e6) );	    
+#endif
     }
   
   // todo - this causes a segfault - fix
@@ -136,7 +172,7 @@ int main( int argc, char* argv[] )
 
   server_destroy( server );
   
-  puts( "exiting main loop" );
+  puts( "Stage exiting main loop" );
 
   return 0; // done
 }

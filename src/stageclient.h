@@ -96,6 +96,11 @@ stg_world_t* stg_client_createworld( stg_client_t* client,
 void stg_world_destroy( stg_world_t* world );
 int stg_world_pull( stg_world_t* world );
 
+void stg_world_resume( stg_world_t* world );
+void stg_world_pause( stg_world_t* world );
+
+
+
 // add a new model to a world, based on a parent, section and token
 stg_model_t* stg_world_createmodel( stg_world_t* world, 
 				    stg_model_t* parent, 

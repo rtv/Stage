@@ -29,6 +29,7 @@ world_t* world_create( server_t* server, stg_id_t id, stg_createworld_t* cw )
   //memcpy( &world->size, &cw->size, sizeof(world->size) );
 
   world->ppm = cw->ppm;
+  world->paused = TRUE; // start paused.
   
   world->matrix = stg_matrix_create( world->ppm );
   
@@ -60,35 +61,55 @@ void world_destroy_cb( gpointer world )
 
 void world_update( world_t* world )
 {
-  stg_time_t timenow = stg_timenow();
-  
-  //PRINT_DEBUG5( "timenow %.4f last update %.4f interval %.4f diff %.4f sim_time %.4f", 
-  //	timenow, world->wall_last_update, world->wall_interval,  
-  //	timenow - world->wall_last_update, world->sim_time  );
-  
-  // if it's time for an update, update all the models
-  if( timenow - world->wall_last_update > world->wall_interval )
-    {
-      double real_interval = timenow - world->wall_last_update;
-      printf( " [%d %.3f] real interval %.3f  sim interval %.3f (ratio %.2f)\r",
-	      world->id, world->sim_time,
-	      real_interval, world->sim_interval,
-	      real_interval / world->sim_interval );
-	     
-      fflush( stdout );
+  if( world->paused ) // only update if we're not paused
+    return;
 
-      //printf( "[%d(%s) %.2f] ", world->id, world->token, world->sim_time );
-
-      g_hash_table_foreach( world->models, model_update_cb, world );
+  //{
+      stg_time_t timenow = stg_timenow();
       
-      gui_world_update( world );
-
-      world->wall_last_update = timenow;
-
-      world->sim_time += world->sim_interval;
-    }
+      //PRINT_DEBUG5( "timenow %.4f last update %.4f interval %.4f diff %.4f sim_time %.4f", 
+      //	timenow, world->wall_last_update, world->wall_interval,  
+      //	timenow - world->wall_last_update, world->sim_time  );
+      
+      // if it's time for an update, update all the models
+      if( timenow - world->wall_last_update > world->wall_interval )
+	{
+	  double real_interval = timenow - world->wall_last_update;
+	  printf( " [%d %.3f] real interval %.3f  sim interval %.3f (ratio %.2f)\r",
+	      world->id, world->sim_time,
+		  real_interval, world->sim_interval,
+		  real_interval / world->sim_interval );
+	     
+	  fflush( stdout );
+	  
+	  //printf( "[%d(%s) %.2f] ", world->id, world->token, world->sim_time );
+	  
+	  g_hash_table_foreach( world->models, model_update_cb, world );
+	  
+	  
+	  world->wall_last_update = timenow;
+	  
+	  world->sim_time += world->sim_interval;
+	}
+      //}
+  
+#if 0 //DEBUG
+  struct timeval tv1;
+  gettimeofday( &tv1, NULL );
+#endif
+  
+  gui_world_update( world );
+  
+#if 0// DEBUG
+  struct timeval tv2;
+  gettimeofday( &tv2, NULL );
+  
+  double guitime = (tv2.tv_sec + tv2.tv_usec / 1e6) - 
+    (tv1.tv_sec + tv1.tv_usec / 1e6);
+  
+  printf( " guitime %.4f\n", guitime );
+#endif
 }
-
 
 void world_update_cb( gpointer key, gpointer value, gpointer user )
 {
@@ -152,7 +173,7 @@ void world_handle_msg( world_t* world, int fd, stg_msg_t* msg )
 					   STG_RESPONSE_NONE,
 					   &mid, sizeof(mid) );
 
-	printf( "writing reply (model id %d) on fd %d\n", mid, fd );
+	//printf( "writing reply (model id %d) on fd %d\n", mid, fd );
 	stg_fd_msg_write( fd, reply );
 	stg_msg_destroy( reply );
       }
@@ -160,7 +181,23 @@ void world_handle_msg( world_t* world, int fd, stg_msg_t* msg )
       
     case STG_MSG_WORLD_MODELDESTROY:
       world_model_destroy( world, *(stg_id_t*)msg->payload );
+      break;
       
+      
+    case STG_MSG_WORLD_PAUSE:
+      PRINT_DEBUG1( "world %d pausing", world->id );
+      world->paused = TRUE;
+      break;
+
+    case STG_MSG_WORLD_RESUME:
+      PRINT_DEBUG1( "world %d resuming", world->id );
+      world->paused = FALSE;
+      break;
+
+    case STG_MSG_WORLD_RESTART:
+      PRINT_WARN( "restart not yet implemented" );
+      break;
+	
     default:
       PRINT_WARN1( "Ignoring unrecognized world message subtype %d.",
 		   msg->type & STG_MSG_MASK_MINOR );

@@ -26,6 +26,8 @@ typedef struct _world
 
    double ppm; // the resolution of the world model in pixels per meter
 
+   int paused; // the world only updates when this is zero
+
  } world_t;
 
 

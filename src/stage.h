@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.36 2004-05-18 06:00:30 rtv Exp $
+ * CVS: $Id: stage.h,v 1.37 2004-05-24 04:18:53 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -133,22 +133,10 @@ typedef uint16_t stg_msg_type_t;
 #define STG_MSG_MODEL       3 << 8
 #define STG_MSG_CLIENT      4 << 8
    
-   //#define STG_MSG_SERVER      0x010000
-   //#define STG_MSG_WORLD       0x020000
-   //#define STG_MSG_MODEL       0x030000
-   //#define STG_MSG_CLIENT      0x040000
-
-   //#define STG_MSG_COMMAND     1 << 16
-   //#define STG_MSG_DATA        2 << 16
-   //#define STG_MSG_REQUEST     3 << 16
-   //#define STG_MSG_REPLY       4 << 16
-
 #define STG_MSG_SERVER_SUBSCRIBE        (STG_MSG_SERVER | 1)
 #define STG_MSG_SERVER_UNSUBSCRIBE      (STG_MSG_SERVER | 2)
 #define STG_MSG_SERVER_WORLDCREATE      (STG_MSG_SERVER | 3)
 #define STG_MSG_SERVER_WORLDDESTROY     (STG_MSG_SERVER | 4)
-   //#define STG_MSG_SERVER_PAUSE            (STG_MSG_SERVER | 5)
-   //#define STG_MSG_SERVER_RUN              (STG_MSG_SERVER | 6)
 
 #define STG_MSG_WORLD_PAUSE             (STG_MSG_WORLD | 1)
 #define STG_MSG_WORLD_RESUME            (STG_MSG_WORLD | 2)
@@ -168,16 +156,33 @@ typedef uint16_t stg_msg_type_t;
 #define STG_MSG_MODEL_REQUEST           (STG_MSG_MODEL | 4)
 #define STG_MSG_MODEL_REPLY             (STG_MSG_MODEL | 5)
 #define STG_MSG_MODEL_ACK               (STG_MSG_MODEL | 6)
-    
+#define STG_MSG_MODEL_SUBSCRIBE         (STG_MSG_MODEL | 7)
+#define STG_MSG_MODEL_UNSUBSCRIBE       (STG_MSG_MODEL | 8)
+
 #define STG_MSG_CLIENT_WORLDCREATEREPLY (STG_MSG_CLIENT | 1)
 #define STG_MSG_CLIENT_MODELCREATEREPLY (STG_MSG_CLIENT | 2)
 #define STG_MSG_CLIENT_PROPERTY         (STG_MSG_CLIENT | 3)
 #define STG_MSG_CLIENT_CLOCK            (STG_MSG_CLIENT | 4)
 #define STG_MSG_CLIENT_CYCLEEND         (STG_MSG_CLIENT | 5)
-   
+
+// this is sent in a request to specify the kind of reply required
 #define STG_RESPONSE_NONE 0
 #define STG_RESPONSE_ACK 1
 #define STG_RESPONSE_REPLY 2
+
+   // TESTING
+#define ACK     0
+#define NACK    1
+#define REQUEST 2
+#define REPLY   3
+
+#define CREATE
+#define DESTROY
+#define SAVE
+#define LOAD
+#define PAUSE
+#define RESUME
+#define INTERVAL
 
 typedef double stg_time_t;
 
@@ -196,7 +201,8 @@ typedef struct
   stg_msg_type_t type;
   size_t payload_len;
   double timestamp;
-  int response;
+  int response; // desired response: one of
+			  // STG_RESPONSE_NONE/ _ACK /_REPLY
   char payload[0]; // named access to the end of the struct
 } stg_msg_t;
 
@@ -753,6 +759,10 @@ stg_world_t* stg_client_createworld( stg_client_t* client,
 void stg_world_destroy( stg_world_t* world );
 int stg_world_pull( stg_world_t* world );
 
+void stg_world_resume( stg_world_t* world );
+void stg_world_pause( stg_world_t* world );
+
+
 // add a new model to a world, based on a parent, section and token
 stg_model_t* stg_world_createmodel( stg_world_t* world, 
 				    stg_model_t* parent, 
@@ -804,6 +814,7 @@ void stg_world_push( stg_world_t* model );
 void stg_model_push( stg_model_t* model );
 void stg_world_push_cb( gpointer key, gpointer value, gpointer user );
 void stg_model_push_cb( gpointer key, gpointer value, gpointer user );
+
 
 // sends a property to the serverx
 int stg_model_property_set( stg_model_t* mod, stg_id_t prop, void* data, size_t len );

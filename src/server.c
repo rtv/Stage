@@ -53,8 +53,8 @@ server_t* server_create( int port )
   server->pfds = g_array_new( FALSE, FALSE, sizeof(struct pollfd) );
   
   
-
-  printf( "Starting server on %s:%d... ", server->host, server->port );
+  // console output
+  printf( "[%s:%d...", server->host, server->port );
   fflush(stdout);
 
   int fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -91,7 +91,8 @@ server_t* server_create( int port )
   // install this pollfd as the zeroth entry in our poll array
   g_array_insert_val( server->pfds, 0, pfd );
 
-  printf( "done\n" );
+  // erase the dots and close the brace
+  printf( "\b\b\b   \b\b\b]" );
   
   return server; // success
 }
@@ -678,9 +679,6 @@ void server_print( server_t* server )
   //printf( "Properties (%d):\n", g_hash_table_size( server->props ) );
   //g_hash_table_foreach( server->props, stg_property_print_cb, NULL );
   
-  //printf( "Defaults (%d):\n",  g_hash_table_size( server->prop_defaults ) );
-  //g_hash_table_foreach( server->prop_defaults, stg_property_print_cb, NULL );
-
   puts( "--" );
 }
 
@@ -699,14 +697,10 @@ int server_msg_dispatch( server_t* server, int fd, stg_msg_t* msg )
       
     case STG_MSG_WORLD:
       {
-	//stg_target_t* tgt = (stg_target_t*)msg->payload;
-	
 	// first part of any world message should be a world id
 	stg_id_t world_id = *(stg_id_t*)msg->payload;
 	
-	//stg_print_target( tgt );
-	
-	printf( "Message for world id %d\n", world_id );
+	//printf( "Message for world id %d\n", world_id );
 	
       	world_t* world = server_get_world( server, world_id );
 	

@@ -390,6 +390,24 @@ void stg_world_destroy( stg_world_t* world )
   free( world);
 }
 
+void stg_world_resume( stg_world_t* world )
+{
+  stg_id_t world_id = world->id_server;
+  stg_client_write_msg( world->client, 
+			STG_MSG_WORLD_RESUME,
+			STG_RESPONSE_NONE, 
+			&world_id, sizeof(world_id) );
+}
+
+void stg_world_pause( stg_world_t* world )
+{
+  stg_id_t world_id = world->id_server;
+  stg_client_write_msg( world->client, 
+			STG_MSG_WORLD_PAUSE,
+			STG_RESPONSE_NONE, 
+			&world_id, sizeof(world_id) );
+}
+
 void stg_world_destroy_cb( gpointer key, gpointer value, gpointer user )
 {
   stg_world_destroy( (stg_world_t*)value );
@@ -573,7 +591,8 @@ int stg_model_prop_get( stg_model_t* mod, stg_id_t propid, void* data, size_t le
   return 0; // OK
 }
 
-int stg_model_prop_get_var( stg_model_t* mod, stg_id_t propid, void** data, size_t* len )
+int stg_model_prop_get_var( stg_model_t* mod, stg_id_t propid, 
+			    void** data, size_t* len )
 {
   stg_target_t tgt;
   tgt.world = mod->world->id_server;
@@ -591,7 +610,7 @@ int stg_model_prop_get_var( stg_model_t* mod, stg_id_t propid, void** data, size
   
   stg_msg_t* reply = stg_client_read_until( mod->world->client, STG_MSG_MODEL_REPLY );
   
-  printf( "received a %d byte reply\n", reply->payload_len );
+  PRINT_DEBUG1( "received a %d byte reply\n", reply->payload_len );
   
   *data = realloc( *data, reply->payload_len );
   *len = reply->payload_len;
@@ -608,7 +627,7 @@ stg_msg_t* stg_client_read_until( stg_client_t* cli, stg_msg_type_t mtype )
   
   while(1)
     {
-      putchar( '*' ); fflush(stdout);
+      //putchar( '*' ); fflush(stdout);
       
       if( msg )
 	stg_msg_destroy( msg );
@@ -621,7 +640,7 @@ stg_msg_t* stg_client_read_until( stg_client_t* cli, stg_msg_type_t mtype )
 	    break;
 	}
       else
-	usleep( 1000 ); // wait for a short time before polling again
+	usleep( 10000 ); // wait for a short time before polling again
     }
   
   return msg;
@@ -692,7 +711,7 @@ stg_id_t stg_client_model_new(  stg_client_t* cli,
   mod.world = world;
   strncpy( mod.token, token, STG_TOKEN_MAX );
   
-  printf( "creating model %s in world %d\n",  mod.token, mod.world );
+  //printf( "creating model %s in world %d\n",  mod.token, mod.world );
 
   stg_client_write_msg( cli, 
 			STG_MSG_WORLD_MODELCREATE, 
@@ -708,7 +727,7 @@ stg_id_t stg_client_model_new(  stg_client_t* cli,
   
   stg_id_t mid = *((stg_id_t*)reply->payload);
 
-  printf( " received server-side model id %d\n", mid );
+  //printf( " received server-side model id %d\n", mid );
 
   stg_msg_destroy( reply );
 
@@ -968,27 +987,27 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
       break;
 
     case STG_MSG_CLIENT_CYCLEEND:
-      puts( "** CYCLE END **" );
+      PRINT_DEBUG( "** CYCLE END **" );
       break;
 
     case STG_MSG_CLIENT_WORLDCREATEREPLY:
-      puts( "msg: WORLDCREATEREPLY" );
+      PRINT_DEBUG( "msg: WORLDCREATEREPLY" );
       break;
 
     case STG_MSG_CLIENT_MODELCREATEREPLY:
-      puts( "msg: MODELCREATEREPLY" );
+      PRINT_DEBUG( "msg: MODELCREATEREPLY" );
       break;
 
     case STG_MSG_MODEL_REQUEST:
-      puts( "msg: MODEL REQUEST" );
+      PRINT_DEBUG( "msg: MODEL REQUEST" );
       break;
 
     case STG_MSG_MODEL_REPLY:
-      puts( "msg: MODEL REPLY" );
+      PRINT_DEBUG( "msg: MODEL REPLY" );
       break;
 
     case STG_MSG_MODEL_ACK:
-      puts( "msg: MODEL ACK" );
+      PRINT_DEBUG( "msg: MODEL ACK" );
       break;
 
     case STG_MSG_CLIENT_PROPERTY: 

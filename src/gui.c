@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <math.h>
 
-#define DEBUG
+//#define DEBUG
 
 #include "rtk.h"
 #include "gui.h"
@@ -259,7 +259,7 @@ void gui_world_update( world_t* world )
 	    ((int)world->sim_time % 3600) / 60,
 	    fmod( world->sim_time, 60.0 ) );
 
-  puts( clock );
+  //puts( clock );
   gtk_label_set_text( win->timelabel, clock );
 
 }
@@ -341,7 +341,7 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
       cid = gtk_statusbar_get_context_id( win->statusbar, "on_mouse" );
       gtk_statusbar_pop( win->statusbar, cid ); 
       gtk_statusbar_push( win->statusbar, cid, txt ); 
-      printf( "STATUSBAR: %s\n", txt );
+      //printf( "STATUSBAR: %s\n", txt );
       break;
       
     case RTK_EVENT_RELEASE:
@@ -546,11 +546,15 @@ void gui_model_rangers_data( model_t* mod )
 	  stg_ranger_config_t* rngr 
 	    = &g_array_index( mod->ranger_config, stg_ranger_config_t, s );
 	  
-	  stg_ranger_sample_t* sample 
-	    = &g_array_index(mod->ranger_data, stg_ranger_sample_t, s );
-	  
-	  rtk_fig_arrow( fig, rngr->pose.x, rngr->pose.y, rngr->pose.a, 
-			 sample->range, 0.02 );
+	  if( mod->ranger_data->len > 0 )
+	    {
+	      stg_ranger_sample_t* sample 
+		= &g_array_index(mod->ranger_data, stg_ranger_sample_t, s );
+	      
+	      if( sample )
+		rtk_fig_arrow( fig, rngr->pose.x, rngr->pose.y, rngr->pose.a, 
+			       sample->range, 0.02 );
+	    }
 	}
     }
 }

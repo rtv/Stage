@@ -1,13 +1,14 @@
 
 
-//#define DEBUG
-
 #include <assert.h>
 #include <math.h>
 
 #include "stage.h"
 #include "gui.h"
 #include "raytrace.h"
+
+//#define DEBUG
+#undef DEBUG
 
 model_t* model_create(  world_t* world, 
 			    stg_id_t id, 
@@ -583,7 +584,7 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
 
     case STG_MSG_MODEL_REQUEST:
       {
-	PRINT_WARN( "RECEIVED A REQUEST" );
+	PRINT_DEBUG( "RECEIVED A REQUEST" );
 
 	stg_target_t* tgt = (stg_target_t*)msg->payload;
 
@@ -595,7 +596,7 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
 		       tgt->prop, stg_property_string(tgt->prop) );
 	else
 	  {
-	    PRINT_WARN( "SENDING A REPLY" );
+	    PRINT_DEBUG( "SENDING A REPLY" );
 	    
 	    stg_msg_t* reply = stg_msg_create( STG_MSG_MODEL_REPLY, 
 					       STG_RESPONSE_NONE,
