@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.20 2001-09-23 03:39:51 vaughan Exp $
+ * $Id: xs.cc,v 1.21 2001-09-23 04:46:33 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -50,7 +50,7 @@
 Display* display = 0; 
 int screen = 0;
 
-const char* versionStr = "0.2";
+const char* versionStr = "0.3";
 const char* titleStr = "XS";
 
 //#define LABELS
@@ -157,8 +157,9 @@ char* CXGui::StageNameOf( const xstruth_t& truth )
 
 void PrintStageTruth( stage_truth_t &truth )
 {
-  printf( "ID: %d (%4d,%d,%d)\tPID:(%4d,%d,%d)\tpose: [%d,%d,%d]\tsize: [%d,%d]\t color: [%d,%d,%d]\n", 
+  printf( "ID: %d (%s:%4d,%d,%d)\tPID:(%4d,%d,%d)\tpose: [%d,%d,%d]\tsize: [%d,%d]\t color: [%d,%d,%d]\n", 
 	  truth.stage_id,
+	  truth.hostname,
 	  truth.id.port, 
 	  truth.id.type, 
 	  truth.id.index,
@@ -174,9 +175,10 @@ void PrintStageTruth( stage_truth_t &truth )
 
 void CXGui::PrintMetricTruth( int stage_id, xstruth_t &truth )
 {
-  printf( "%p:%s\t(%4d,%d,%d)\t(%4d,%d,%d)\t[%.2f,%.2f,%.2f]\t[%.2f,%.2f]\n",
+  printf( "%p:%s\t(%s:%4d,%d,%d)\t(%4d,%d,%d)\t[%.2f,%.2f,%.2f]\t[%.2f,%.2f]\n",
 	  (int*)stage_id,
 	  StageNameOf( truth ),
+	  truth.hostname,
 	  truth.id.port, 
 	  truth.id.type, 
 	  truth.id.index,
@@ -191,11 +193,12 @@ void CXGui::PrintMetricTruth( int stage_id, xstruth_t &truth )
 
 void CXGui::PrintMetricTruthVerbose( int stage_id, xstruth_t &truth )
 {
-  printf( "stage: %p:%s\tplayer: (%4d,%s:%d)\tparent(%4d,%s:%d)"
+  printf( "stage: %p:%s\tplayer: (%s:%4d,%s,%d)\tparent(%4d,%s,%d)"
 	  "\tpose: [%.2f,%.2f,%.2f]\tsize: [%.2f,%.2f]\t\tColor: [%d,%d,%d]\n", 
 	  (int*)stage_id,
 	  StageNameOf( truth ),
-	  truth.id.port, 
+	  truth.hostname,
+	  truth.id.port,
 	  PlayerNameOf( truth.id ), 
 	  truth.id.index,
 	  truth.parent.port, 
@@ -1361,9 +1364,9 @@ void CXGui::HighlightObject( xstruth_t* exp,  bool undraw )
 	  char buf[256];
 	  strncpy( buf, info, sizeof(buf) );
 	  
-	  sprintf( info, "%s(%d,%s,%d)",
+	  sprintf( info, "%s(%s:%d,%s,%d)",
 		   buf,
-		   exp->id.port, PlayerNameOf(exp->id), exp->id.index );
+		   exp->hostname, exp->id.port, PlayerNameOf(exp->id), exp->id.index );
 	}
 
       XDrawString( display,win,gc,
@@ -1801,7 +1804,7 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
   if( ent->id.port )
     {
       PlayerClient* cli = playerClients.GetClient( ent->hostname, ent->id.port );
-      
+
       // if we're connected already 
       if( cli ) 
 	{ // delete the client's proxies, then the client itself
@@ -1832,10 +1835,22 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
       else
 	{ // create a new client and add any supported proxies
 	  cli = new PlayerClient( ent->hostname, ent->id.port );
+
+	  if( !cli->Connected() )
+	    { 
+	      printf( "XS: Failed to connect to a Player on %s:%d\n",
+		      ent->hostname, ent->id.port );
+	      
+	      delete cli;
+	      cli = 0;
+	      return;
+	    }
 	  
-	  if( cli ) // if successful, attach this client to the multiclient
+	  assert( cli ); //really should be successful by here
+	  
+	  // if successful, attach this client to the multiclient
 	    {	     
-	    printf( "XS: Starting Player client on %s port %d\n", ent->hostname, ent->id.port );
+	    printf( "XS: Starting Player client on %s:%d\n", ent->hostname, ent->id.port );
 	    
 	    xstruth_t sibling;
 	    int previous_num_proxies = num_proxies;
@@ -1929,10 +1944,14 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 
 	    // if we didn't make any proxies
 	    if( num_proxies - previous_num_proxies == 0 )
-	      delete cli; // zap the client
-	    else
+	      {
+		delete cli; // zap the client
+		cli = 0;
+	      }
+
+	    if( cli )
 	      playerClients.AddClient( cli ); // add it to the multi client
-	  }
+	    }
       }
     }
 } 

@@ -174,7 +174,7 @@ int main(int argc, char **argv)
 		}
 	      else
 		{
-		  cout << "Read error (Arena dead?). quitting. " << endl;
+		  cout << "Read error (Stage dead?). quitting. " << endl;
 		  exit( -1 );
 		}
 	    }

@@ -1,6 +1,6 @@
 ####################################################################################
 # TODO 
-# $Id: TODO,v 1.6 2001-09-22 21:09:42 vaughan Exp $
+# $Id: TODO,v 1.7 2001-09-23 04:46:33 vaughan Exp $
 ####################################################################################
 
 ## IN PROGRESS #####################################################################
@@ -10,6 +10,7 @@
 
 ## URGENT ##########################################################################
 
+ - Stage: sync issues when distributed 
  - LBD bug: IDs intermitently visible
 
 ## NICE ############################################################################
@@ -19,7 +20,10 @@
 
 ## FIXED/DONE ######################################################################
 
+
 RTV 9/22/01
+ - XS: hangs when creating a Player client for a non-existent Player  
+ - Stage/XS: added support for distributed processing
  - XS: fixed window redraws of sensor data, added selective sensor display (num keys)
  - configuration file read: 'port' settings are sticky
  
