@@ -21,10 +21,10 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.109 2002-07-09 03:31:56 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.110 2002-07-17 00:21:44 rtv Exp $
  */
 
-//#undef DEBUG
+#undef DEBUG
 //#undef VERBOSE
 //#define DEBUG 
 //#define VERBOSE
@@ -56,31 +56,21 @@ void StageQuit();
 long int g_bytes_output = 0;
 long int g_bytes_input = 0;
 
-int g_timer_expired = 0;
+int g_timer_events = 0;
 
 #include "world.hh"
 #include "fixedobstacle.hh"
 
-// declare rtk's periodic handler routine
-// we call this ourselves to avoid using a seperate RTK thread
-extern "C" {
-int rtk_app_on_timer(rtk_app_t *app);
-}
-
 // allocate chunks of 32 pointers for entity storage
 const int OBJECT_ALLOC_SIZE = 32;
-
-#define WATCH_RATES
 
 // dummy timer signal func
 void TimerHandler( int val )
 {
-  g_timer_expired++;
+  //puts( "TIMER HANDLER" );
+  g_timer_events++;
   //printf( "\ng_timer_expired: %d\n", g_timer_expired );
 }  
-
-// Main.cc calls constructor, then Load(), then Startup(),
-// Main(), then Shutdown()
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
@@ -286,7 +276,7 @@ bool CWorld::ParseCmdLine(int argc, char **argv)
     if( strcmp( argv[a], "-o" ) == 0 )
     {
       m_console_output = true;
-      printf( "[Quiet]" );
+      printf( "[Console Output]" );
     }
       
     // SWITCH ON SYNCHRONIZED (distributed) MODE
@@ -356,9 +346,9 @@ bool CWorld::Startup()
   m_update_ratio = 1;
   m_update_rate = 0;
 
-  // Start the GUI
-  if (this->enable_gui)
-    RtkStartup();
+#ifdef INCLUDE_RTK2 // Start the GUI
+  if (this->enable_gui) RtkStartup();
+#endif
   
   // start the real-time interrupts going
   StartTimer( m_real_timestep );
@@ -374,10 +364,12 @@ void CWorld::Shutdown()
 {
   PRINT_DEBUG( "world shutting down" );
 
+#ifdef INCLUDE_RTK2
   // Stop the GUI
   if (this->enable_gui)
     RtkShutdown();
-  
+#endif
+
   // Shutdown all the entities
   // Devices will unlink their device files
   for (int i = 0; i < m_entity_count; i++)
@@ -408,6 +400,8 @@ void CWorld::StartTimer( double interval )
     exit( -1 );
   }
 
+  //printf( "interval: %f\n", interval );
+
   //start timer with chosen interval (specified in milliseconds)
   struct itimerval tick;
   // seconds
@@ -417,10 +411,10 @@ void CWorld::StartTimer( double interval )
     (long)fmod( interval * MILLION, MILLION); 
   
   if( setitimer( ITIMER_REAL, &tick, 0 ) == -1 )
-  {
-    PRINT_ERR("failed to set timer");
-    exit( -1 );
-  }
+    {
+      PRINT_ERR("failed to set timer");
+      exit( -1 );
+    }
 }
 
 
@@ -431,78 +425,40 @@ void CWorld::Update(void)
   //PRINT_DEBUG( "** Update **" );
   //assert( arg == 0 );
   
-  static double loop_start = GetRealTime();
-
-  // Set the timer flag depending on the current mode.
-  // If we're NOT in realtime mode, the timer is ALWAYS expired
-  // so we run as fast as possible
-  m_real_timestep > 0.0 ? g_timer_expired = 0 : g_timer_expired = 1;
-            
   // calculate new world state
-  if (m_enable) 
-  {
-    // Update the simulation time (in both formats)
-    m_sim_time = m_step_num * m_sim_timestep;
-    m_sim_timeval.tv_sec = (long)floor(m_sim_time);
-    m_sim_timeval.tv_usec = (long)((m_sim_time - floor(m_sim_time)) * MILLION); 
-    // is it time to stop?
-    if(m_stoptime && m_sim_time >= m_stoptime)
-      system("kill `cat stage.pid`");
-      
-    // copy the timeval into the player io buffer. use the first
-    // entity's info
-
-    if( m_clock ) // if we're managing a clock
+  if( m_enable )
     {
-      // TODO - move this into the server?
-      sem_wait( &m_clock->lock );
-      m_clock->time = m_sim_timeval;
-      sem_post( &m_clock->lock );
+      // Update the simulation time (in both formats)
+      m_sim_time = m_step_num * m_sim_timestep;
+      m_sim_timeval.tv_sec = (long)floor(m_sim_time);
+      m_sim_timeval.tv_usec = (long)((m_sim_time-floor(m_sim_time)) * MILLION); 
+      // is it time to stop?
+      if(m_stoptime && m_sim_time >= m_stoptime)
+	system("kill `cat stage.pid`");
+      
+      // export the time - copy the timeval into the player io buffer
+      if( m_clock ) // if we're managing a clock
+	{
+	  // TODO - move this into the server?
+	  sem_wait( &m_clock->lock );
+	  m_clock->time = m_sim_timeval;
+	  sem_post( &m_clock->lock );
+	}
+      
+      // Do the actual work -- update the entities 
+      for (int i = 0; i < m_entity_count; i++)
+	{
+	  // if this host manages this entity
+	  if( m_entity[i]->m_local )
+	    m_entity[i]->Update( m_sim_time ); // update the device model        
+	} 
     }
-
-    // Do the actual work -- update the entities 
-    for (int i = 0; i < m_entity_count; i++)
-    {
-      // if this host manages this entity
-      if( m_entity[i]->m_local )
-        m_entity[i]->Update( m_sim_time ); // update the device model
-        
-#ifdef INCLUDE_RTK2
-      // update the object's GUI repn., whether we manage this device or not
-      if (this->enable_gui)
-        m_entity[i]->RtkUpdate();
-#endif
-
-    };
-#ifdef INCLUDE_RTK2
-    if (this->enable_gui)
-      RtkUpdate();      
-#endif
-  }
-  else // the model isn't running - update the GUI and go to sleep
-  {
-#ifdef INCLUDE_RTK2
-    if (this->enable_gui) 
-      RtkUpdate();      
-#endif
-
-    PRINT_DEBUG( "SLEEPING - DISABLED" );
-  }
   
-  // for logging statistics
-  double update_time = GetRealTime();
-  // for logging statistics
-  double loop_end = GetRealTime(); 
-  double loop_time = loop_end - loop_start;
-  double sleep_time = loop_end - update_time;
-      
-  // set this here so we're timing the output time too.
-  loop_start = GetRealTime();
-      
-  // generate console and logfile output
-  if( m_enable ) Output( loop_time, sleep_time );
-
-  // dump the contents of the matrix to a file
+#ifdef INCLUDE_RTK2   // update the gui
+  if (this->enable_gui) RtkUpdate();
+#endif
+  
+  // dump the contents of the matrix to a file for debugging
   //world->matrix->dump();
   //getchar();	
 }
@@ -622,57 +578,85 @@ void CWorld::AddEntity(CEntity *entity)
 //  }
 
 
-void CWorld::Output( double loop_duration, double sleep_duration )
+// sleep until a signal goes off
+// return the time in seconds we spent asleep
+double CWorld::Pause()
+{
+  // we're too busy to sleep!
+  if( m_real_timestep == 0 || --g_timer_events > 0  )
+    return 0;
+  
+  // otherwise
+
+  double sleep_start = GetRealTime();
+
+  pause(); // wait for the signal
+
+  return( GetRealTime() - sleep_start );
+}
+
+
+void CWorld::Output( double sleep_duration )
 {
   // time taken
-  double gain = 0.1;
-  
-  static double avg_loop_duration = m_real_timestep;
-  static double avg_sleep_duration = m_real_timestep;
-  avg_loop_duration = (1.0-gain)*avg_loop_duration + gain*loop_duration;
-  avg_sleep_duration = (1.0-gain)*avg_sleep_duration + gain*sleep_duration;
+  static double avg_sleep_duration = 0.0;
+  static double sleep_duration_accumulator = 0.0;
+
+  // count the time
+  sleep_duration_accumulator += sleep_duration;
 
   // comms used
   static unsigned long last_input = 0;
   static unsigned long last_output = 0;
   unsigned int bytes_in = g_bytes_input - last_input;
   unsigned int bytes_out = g_bytes_output - last_output;
+  static int bytes_accumulator = 0;
   
+  // count the data
+  bytes_accumulator += bytes_in + bytes_out;
+
   // measure frequency & bandwidth
   static double freq = 0.0;
   static double bandw = 0.0;
 
   static int updates = 0;
-  static int bytes = 0;
   static double lasttime = GetRealTime();
   double interval = GetRealTime() - lasttime;
 
   // count this update
   updates++;
   
-  // count the data
-  bytes += bytes_in + bytes_out;
-
-  if( interval > 1.0 )
+  if( interval > 2.0 ) // measure freq + bandwidth every 2 seconds
   {
     lasttime += interval;
 
-    freq = (double)updates / interval;
-    bandw = (double)bytes / interval;
+    bandw = (double)bytes_accumulator / interval;
+    bytes_accumulator = 0;
       
-    updates = 0;
-    bytes = 0;
+    // find the average sleep duration in this period
+    avg_sleep_duration = sleep_duration_accumulator / (double)updates;
+    sleep_duration_accumulator = 0.0;
+
+    freq = (double)updates / interval;
+    updates = 0;    
   }
 
+  double ratio = 0.0;
+  double avg_ratio = 0.0;
+  
+  if( m_real_timestep > 0 )
+    {
+      ratio = sleep_duration / m_real_timestep * 100.0;
+      avg_ratio = avg_sleep_duration / m_real_timestep * 100.0;
+    }
+    
   if( m_console_output )
-    ConsoleOutput( freq, loop_duration, sleep_duration, 
-		   avg_loop_duration, avg_sleep_duration,
+    ConsoleOutput( freq, ratio, avg_ratio, 
 		   bytes_in, bytes_out, bandw );
   
   
   if( m_log_output ) 
-    LogOutput( freq, loop_duration, sleep_duration, 
-               avg_loop_duration, avg_sleep_duration,
+    LogOutput( freq, sleep_duration, avg_sleep_duration,
                bytes_in, bytes_out, g_bytes_input, g_bytes_output );
   
   last_input = g_bytes_input;
@@ -680,20 +664,16 @@ void CWorld::Output( double loop_duration, double sleep_duration )
 }
 
 void CWorld::ConsoleOutput( double freq, 
-			    double loop_duration, double sleep_duration,
-			    double avg_loop_duration, 
-			    double avg_sleep_duration,
+			    double ratio, double avg_ratio,
 			    unsigned int bytes_in, unsigned int bytes_out,
 			    double avg_data)
 {
   printf( " Time: %8.1f - %7.1fHz - "
-          "[%3.0f/%3.0f] [%3.0f/%3.0f] [%4u/%4u] %8.2f b/sec\r", 
-          m_sim_time, 
+          "[%3.0f/%3.0f%%] [%4u/%4u] %8.2f b/sec\r", 
+	  m_sim_time, 
           freq,
-          loop_duration * 1000.0, 
-          sleep_duration * 1000.0, 
-          avg_loop_duration * 1000.0, 
-          avg_sleep_duration * 1000.0,  
+	  ratio,
+	  avg_ratio,
           bytes_in, bytes_out, 
           avg_data );
   
@@ -703,8 +683,8 @@ void CWorld::ConsoleOutput( double freq,
 
 
 void CWorld::LogOutput( double freq,
-			double loop_duration, double sleep_duration,
-			double avg_loop_duration, double avg_sleep_duration,
+			double sleep_duration,
+			double avg_sleep_duration,
 			unsigned int bytes_in, unsigned int bytes_out, 
 			unsigned int total_bytes_in, 
 			unsigned int total_bytes_out )
@@ -713,11 +693,11 @@ void CWorld::LogOutput( double freq,
   
   char line[512];
   sprintf( line,
-           "%u\t\t%.3f\t\t%.6f\t%.6f\t%.6f\t%u\t%u\t%u\t%u\n", 
+           "%u\t\t%.3f\t\t%.6f\t%.6f\t%u\t%u\t%u\t%u\n", 
            m_step_num, m_sim_time, // step and time
-           loop_duration, // real cycle time in ms
+           //loop_duration, // real cycle time in ms
            sleep_duration, // real sleep time in ms
-           m_sim_timestep / loop_duration, // ratio
+           m_sim_timestep / sleep_duration, // ratio
            bytes_in, // bytes in this cycle
            bytes_out, // bytes out this cycle
            total_bytes_in,  // total bytes in
@@ -1008,19 +988,20 @@ bool CWorld::RtkStartup()
   PRINT_DEBUG( "** STARTUP GUI **" );
 
   // i'm experimentally running rtk in this thread
-  
+  // no i'm not
+
   // don't call this
-  //rtk_app_start(this->app);
+  rtk_app_start(this->app);
 
   // but do the startup here
-  rtk_canvas_t *canvas;
-  rtk_table_t *table;
+  //rtk_canvas_t *canvas;
+  //rtk_table_t *table;
   
   // Display everything
-  for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
-    gtk_widget_show_all(canvas->frame);
-  for (table = app->table; table != NULL; table = table->next)
-    gtk_widget_show_all(table->frame);
+  //for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
+  //gtk_widget_show_all(canvas->frame);
+  //for (table = app->table; table != NULL; table = table->next)
+  //gtk_widget_show_all(table->frame);
 
   // instead of going into gtk_main() here, we'll call gtk_main_iteration();
   // every time around the loop
@@ -1032,28 +1013,22 @@ bool CWorld::RtkStartup()
 // Stop the GUI
 void CWorld::RtkShutdown()
 {
-  //rtk_app_stop(this->app);
+  rtk_app_stop(this->app);
 }
 
 
 // Update the GUI
 void CWorld::RtkUpdate()
 {
-  //////////////////////////////////////////////////////////
-  // try this instead of using a seperate thread for rtk
-  // it'll mean the GUI might be laggy during high processing load
-  // but it gives us a single thread - great for profiling
-  // - in practice it seems to work pretty well, so I'm for 
-  // keeping it this way. rtv.
+  RtkMenuHandling();      
   
-  // emulate gtk's main loop
-  while (gtk_events_pending())
-    gtk_main_iteration();
+  for (int i=0; i<m_entity_count; i++)
+    m_entity[i]->RtkUpdate();
+}
 
-  // call rtk's periodic update
-  rtk_app_on_timer( this->app );
-  ////////////////////////////////////////////////////////////
-
+// Update the GUI
+void CWorld::RtkMenuHandling()
+{
   // See if we need to quit the program
   if (rtk_menuitem_isactivated(this->exit_menuitem))
     ::quit = 1;

@@ -3,7 +3,7 @@
 # stage/Makefile.common - build and installation configurations
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile.common,v 1.56 2002-07-09 03:31:56 rtv Exp $
+# $Id: Makefile.common,v 1.57 2002-07-17 00:21:44 rtv Exp $
 #
 # Notes: All user-configurable paths and build options should be specified 
 #        here. This file is included by Makefile and src/Makefile. 
@@ -44,15 +44,6 @@ INSTALL_LIB = $(INSTALL_DIR)/lib
 INSTALL_DOC = $(INSTALL_DIR)/doc
 INSTALL_TOOLS = $(INSTALL_DIR)/tools
 
-#############################################################################
-# 
-# rtkstage needs the path to the rtk2 source tree - these defaults
-# should work fine, as we distribute rtk2 with stage
-
-RTK_DIR = rtk2
-RTK_INC = $(RTK_DIR)
-RTK_LIB = $(RTK_DIR)
-
 ##############################################################################
 # X COLOR DATABASE CONFIGURATION (required)
 # set the path to a X11-format color database, usually rgb.txt from X distro
@@ -61,8 +52,26 @@ RTK_LIB = $(RTK_DIR)
 # this is a good guess on Linux systems
 COLOR_DATABASE = /usr/X11R6/lib/X11/rgb.txt
 
+#############################################################################
+# GUI CONFIGURATION (optional - enabled by default)
+
+# Enable/Disable compilation of the RTK-based Stage GUI.
+# When compiled with the GUI, stage needs the path to the rtk2
+# source tree - these defaults should work fine, as we distribute rtk2
+# with stage.
+
+RTK_DIR = rtk2
+RTK_INC = $(RTK_DIR)
+RTK_LIB = $(RTK_DIR)
+
+# By default we compile with optional RTK GUI support. 
+# To compile without the GUI, comment these lines out.
+OPTIONS_COMP += -DINCLUDE_RTK2 -I../$(RTK_INC) `gtk-config --cflags`
+OPTIONS_LINK += -L../$(RTK_LIB) -lrtk `gtk-config --libs gtk gthread`
+
+
 ##############################################################################
-# ZLIB CONFIGURATION (optional)
+# ZLIB CONFIGURATION (optional - enabled by default)
 # Support for gzipped images; requires zlib.
 # Comment out if you dont have or need zlib.
 
@@ -142,12 +151,4 @@ MAKEDEP=makedepend
 SRC_DIST_NAME = Stage-$(VERSION)-src
 SRC_DIST_BLEEDING_NAME = Stage-Bleeding-src
 BIN_DIST_NAME = Stage-$(VERSION)-i386
-
-#############################################################################
-# CONFIGURATION FOR HRL PROPRIETARY CODE 
-# uncomment these lines to build support for HRL devices
-#
-#HRL_DIR = ../hrl
-#HRL_FLAGS = -DHRL_HEADERS -I$(HRL_DIR)
-#HRL_LINK = -L$(HRL_DIR) -lhrlstage 
 

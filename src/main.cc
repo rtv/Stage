@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.47 2002-07-09 03:31:56 rtv Exp $
+ * CVS: $Id: main.cc,v 1.48 2002-07-17 00:21:44 rtv Exp $
  */
 
 #include <unistd.h>
@@ -108,7 +108,7 @@ void sig_quit(int signum)
 int main(int argc, char **argv)
 {  
   // hello world
-  printf("\n** Stage  v%s ** \n", (char*) VERSION);
+  printf("\n** Stage  v%s ** ", (char*) VERSION);
 
   // check the command line for the help request
 
@@ -160,12 +160,12 @@ int main(int argc, char **argv)
   signal(SIGTERM, sig_quit );
   signal(SIGHUP, sig_quit );
   
-  // the main loop - it'll be interrupted by a signal
-  while( !quit )
+  // the main loop
+  double pause_duration = 0.0;
+  while( !quit ) // world->Update() might raise this flag
   {
     world->Update(); // update the simulation
-    
-    pause(); // waits for timer or other signal to be received
+    world->Output( world->Pause() ); //wait for a signal and output stuff
   }
 
   // clean up and exit

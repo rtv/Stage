@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.72 2002-07-10 02:00:34 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.73 2002-07-17 00:21:44 rtv Exp $
  */
 
 #include <math.h>
@@ -757,70 +757,6 @@ bool CEntity::IsDescendent(CEntity *entity)
   return false;
 }
 
-
-/////////////////////////////////////////////////////////////////////////////
-// Package up some data with a header and send it via RTP
-void CEntity::AnnounceDataViaRTP( void* data, size_t len )
-{
-  device_hdr_t header;
-  
-  memset( &header, 0, sizeof(header) );
-  
-  header.major_type = this->stage_type;
-     
-  double x, y, th;
-  GetGlobalPose( x, y, th );
-
-  header.id = 0;
-
-  // find our world index to use as an id (yuk! - fix)
-  for( int h=0; h<m_world->GetEntityCount(); h++ )
-  {
-    if( m_world->GetEntity(h) == this )
-    {
-      header.id = h; // unique id for this entity
-      break;
-    }
-  }
-  
-  header.x = x;
-  header.y = y;
-  header.w = size_y; // yes this is the correct way around
-  header.h = size_x;
-  header.th = th;
-
-  // need this if we go to integer stuff
-  // normalize degrees 0-360 (th is -/+PI)
-  //int degrees = (int)RTOD( th );
-  //if( degrees < 0 ) degrees += 360;
-  //header.th = (uint32_t)degrees;  
-  //printf( "sending %d degrees\n", header.th );
-
-  // timestamp is in milliseconds
-  
-  uint32_t ms = 
-    m_info_io->data_timestamp_sec * 1000 + 
-    m_info_io->data_timestamp_usec / 1000;
-   
-  
-  header.len = len;
-  
-  // combine the header and data in a single buffer 
-  int buflen = sizeof(header) + len;
-  char* buf = new char[buflen];
-  memcpy( buf, &header, sizeof(header) );
-  memcpy( buf+sizeof(header), data, len );
-  
-  //printf( "CEntity sending %d:%d (%d) bytes\n",
-  //      sizeof( device_hdr_t ), 
-  //      len, buflen );
-  
-  m_world->rtp_player->SendData( 0, buf, buflen, ms );
-  
-  delete[] buf;
-}
-
-
 ///////////////////////////////////////////////////////////////////////////
 // Copy data from the shared memory segment
 size_t CEntity::GetIOData( void* dest, size_t dest_len,  
@@ -914,9 +850,6 @@ size_t CEntity::PutData( void* data, size_t len )
   // tell the server to export this data to anyone that needs it
   this->SetDirty( PropData, 1 );
     
-  if( m_world->rtp_player )
-    this->AnnounceDataViaRTP( data, len );
-
   // copy the data into the mmapped data buffer.
   // also set the timestamp and available fields for the data
   return PutIOData( (void*)m_data_io, m_data_len,
@@ -1157,16 +1090,16 @@ int CEntity::SetProperty( int con, EntityProperty property,
   assert( (int)len < MAX_PROPERTY_DATA_LEN );
   
   switch( property )
-  {
+    {
     case PropPlayerSubscriptions:
       PRINT_DEBUG1( "PLAYER SUBSCRIPTIONS %d", *(int*) value);
       
       if( m_info_io )
-      {
-        Lock();
-        m_info_io->subscribed = *(int*)value;
-        Unlock();
-      }      
+	{
+	  Lock();
+	  m_info_io->subscribed = *(int*)value;
+	  Unlock();
+	}      
       break;
       
     case PropParent:
@@ -1176,14 +1109,18 @@ int CEntity::SetProperty( int con, EntityProperty property,
     case PropSizeX:
       memcpy( &size_x, (double*)value, sizeof(size_x) );
       // force the device to re-render itself
+#ifdef INCLUDE_RTK2
       RtkShutdown();
       RtkStartup();
-      break;
+#endif 
+     break;
     case PropSizeY:
       memcpy( &size_y, (double*)value, sizeof(size_y) );
       // force the device to re-render itself
+#ifdef INCLUDE_RTK2
       RtkShutdown();
       RtkStartup();
+#endif
       break;
     case PropPoseX:
       memcpy( &local_px, (double*)value, sizeof(local_px) );
@@ -1202,21 +1139,27 @@ int CEntity::SetProperty( int con, EntityProperty property,
       break;
     case PropName:
       strcpy( name, (char*)value );
-      // force the device to re-render itself
+    // force the device to re-render itself
+#ifdef INCLUDE_RTK2
       RtkShutdown();
       RtkStartup();
+#endif
       break;
     case PropColor:
       memcpy( &color, (StageColor*)value, sizeof(color) );
       // force the device to re-render itself
+#ifdef INCLUDE_RTK2
       RtkShutdown();
       RtkStartup();
+#endif
       break;
     case PropShape:
       memcpy( &shape, (StageShape*)value, sizeof(shape) );
       // force the device to re-render itself
+#ifdef INCLUDE_RTK2
       RtkShutdown();
       RtkStartup();
+#endif
       break;
     case PropLaserReturn:
       memcpy( &laser_return, (LaserReturn*)value, sizeof(laser_return) );
@@ -1502,32 +1445,36 @@ void CEntity::RtkUpdate()
       
       // we'll test the GUI first, because user moves take precedence over
       // simulation moves
+
+      //        double gx, gy, gth;
+      //GetGlobalPose(gx, gy, gth);
+      //rtk_fig_origin(this->fig, gx, gy, gth);
       
-      double gx, gy, gth;
-      rtk_fig_get_origin(this->fig, &gx, &gy, &gth);
+        double gx, gy, gth;
+        rtk_fig_get_origin(this->fig, &gx, &gy, &gth);
       
-      // if the GUI has moved the figure, we move the entity to match
-      if( gx != this->guix || gy != this->guiy || gth != this->guia )
-	{
-	  this->guix = gx;
-	  this->guiy = gy;
-	  this->guia = gth;
+        // if the GUI has moved the figure, we move the entity to match
+        if( gx != this->guix || gy != this->guiy || gth != this->guia )
+  	{
+  	  this->guix = gx;
+  	  this->guiy = gy;
+  	  this->guia = gth;
 	  
-	  SetGlobalPose(gx, gy, gth);
-	}
-      else // if we've moved the entity, move the figure to match
-	{ 
-	  GetGlobalPose(gx, gy, gth);
-	  
-	  if( gx != this->guix || gy != this->guiy || gth != this->guia )
-	    {
-	      this->guix = gx;
-	      this->guiy = gy;
-	      this->guia = gth;
-	      
-	      rtk_fig_origin(this->fig, gx, gy, gth);
-	    }
-	}
+  	  SetGlobalPose(gx, gy, gth);
+  	}
+        else // if we've moved the entity, move the figure to match
+  	{ 
+  	  GetGlobalPose(gx, gy, gth);
+ 
+  	  if( gx != this->guix || gy != this->guiy || gth != this->guia )
+  	    {
+  	      this->guix = gx;
+  	      this->guiy = gy;
+  	      this->guia = gth;
+      
+  	      rtk_fig_origin(this->fig, gx, gy, gth);
+  	    }
+  	}
       
       // Show the figure's label if it is selected
       if (rtk_fig_mouse_over(this->fig))

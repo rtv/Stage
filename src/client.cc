@@ -163,7 +163,10 @@ CStageClient::CStageClient( int argc, char** argv )
   assert( wall );
   
   // now we have the world parameters, we can configure things
+  
+#ifdef INCLUDE_RTK2
   RtkLoad(NULL); // uses default values for now
+#endif
   
   this->wall->Startup(); // renders the image into the matrix
   

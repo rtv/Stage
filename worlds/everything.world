@@ -3,17 +3,22 @@
 #       showing how to include some pre-defined objects
 # Author: Andrew Howard, Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.2 2002-07-04 01:06:02 rtv Exp $
+# CVS: $Id: everything.world,v 1.3 2002-07-17 00:21:44 rtv Exp $
 
 include "usc_pioneer.inc"
-include "objects.inc"
 
+#
+# load an environmental bitmap
+#
 environment
 (
   file "cave.pnm.gz"
   scale 0.03
 )
 
+#
+# setup the window parameters
+#
 gui
 (
   size [810.000 753.000]
@@ -23,21 +28,43 @@ gui
   showgrid 1
 )
 
+#
+# define a large colored cylinder object 
+#
+define visionbeacon box 
+(
+  shape "circle" 
+  size [0.2 0.2] 
+  color "red"
+)
+
+#
+# define primary colored pucks for moving with the gripper
+#
+define red_puck puck( color "red" )
+define green_puck puck( color "green" )
+define blue_puck puck( color "blue" )
+
+# generate some robots
 usc_pioneer(color "red" name "robot1" port 6665 pose [3.195 1.237 51.586 ])
-usc_pioneer(color "green" name "robot2" port 6666 pose [3.984 7.859 -2.915 ])
+usc_pioneer(color "green" name "robot2" port 6666 pose [3.753 7.901 -2.915 ])
 usc_pioneer(color "blue" name "robot3" port 6667 pose [7.950 1.381 89.451])
 
+# generate some laser beacons
 laserbeacon( pose [6.420 3.600 216.861] id 5 )
 laserbeacon( pose [3.040 4.260 -88.274] id 7 )
 
-visionbeacon( pose [3.679 1.813 0.000] color "green" )
-visionbeacon( pose [3.949 1.542 0.000] color "blue" )
-visionbeacon( pose [3.331 1.952 0.000] color "red" )
+# generate some of the large cylinders we defined above
+visionbeacon( pose [3.679 1.813 0.000] color "cyan" )
+visionbeacon( pose [3.949 1.542 0.000] color "magenta" )
+visionbeacon( pose [3.331 1.952 0.000] color "yellow" )
 
-red_puck( pose [5.596 7.866 0.000] )
+# generate some pucks we defined above
+red_puck( pose [5.113 7.404 0.000] )
 red_puck( pose [4.612 7.890 0.000] )
-red_puck( pose [4.809 7.586 0.000] )
-red_puck( pose [4.845 8.190 0.000] )
-red_puck( pose [5.229 8.580 0.000] )
-red_puck( pose [5.205 7.252 0.000] )
-red_puck( pose [5.198 7.841 0.000] )
+red_puck( pose [4.872 7.691 0.000] )
+red_puck( pose [5.345 7.694 0.000] )
+blue_puck( pose [5.328 8.232 0.000] )
+blue_puck( pose [5.103 8.475 0.000] )
+blue_puck( pose [4.869 8.197 0.000] )
+blue_puck( pose [5.058 7.898 0.000] )

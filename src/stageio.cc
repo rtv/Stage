@@ -10,7 +10,7 @@
 #include <string.h>
 #include <signal.h>
 
-extern int g_timer_expired;
+//extern int g_timer_expired;
 
 void CatchSigPipe( int signo ); // from server.cc
 
@@ -613,21 +613,24 @@ int CStageIO::Read( void )
 {
   //PRINT_DEBUG( "StageIO::Read()" );
   
-  // if we have no connections, sleep until the timer signal goes off
-  if( m_pose_connection_count == 0 )
-    if( g_timer_expired < 1 ) sleep( 1 ); 
+  // if we have no connections
+  //if( m_pose_connection_count == 0 )
+  //return 0; // do nothing here
+    //if( g_timer_expired < 1 ) sleep( 1 ); 
   
   // otherwise, check the connections for incoming stuff
-  
+
   // if we have nothing to set the time, just increment it
-  if( m_sync_counter == 0 ) m_step_num++;
+  if( m_sync_counter == 0 ) m_step_num++;  
   
   // in real time-mode, poll blocks until it is interrupted by
   // a timer signal, so we give it a time-out of -1. Otherwise,
   // we give it a zero time-out so it returns quickly.
-  int timeout;
-  m_real_timestep > 0 ? timeout = -1 : timeout = 0;
+  //int timeout;
+  //m_real_timestep > 0 ? timeout = -1 : timeout = 0;
   
+  int timeout = 0; // always return quickly - experimental 
+
   int readable = 0;
   int syncs = 0;  
   
@@ -733,7 +736,8 @@ int CStageIO::Read( void )
 			  
 			  // if that's all the syncs and the timer is up,
 			  //we're done
-			  if( syncs >= m_sync_counter && g_timer_expired > 0 ) 
+			  if( syncs >= m_sync_counter ) 
+			//if( syncs >= m_sync_counter && g_timer_expired > 0 ) 
 			    return 0;
 			  
 			  break;

@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.60 2002-07-09 03:31:56 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.61 2002-07-17 00:21:44 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -108,19 +108,18 @@ public: CRTPPlayer* rtp_player;
   // the IP address of this computer
   public: struct in_addr m_hostaddr;
 
-  
-  void Output( double loop_duration, double sleep_duration );
+  double Pause();
+  void Output( double sleep_duration );
   void LogOutputHeader( void );
 
   void LogOutput( double freq,
-                  double loop_duration, double sleep_duration,
-                  double avg_loop_duration, double avg_sleep_duration,
+                  double sleep_duration,
+                  double avg_sleep_duration,
                   unsigned int bytes_in, unsigned int bytes_out,
                   unsigned int total_bytes_in, unsigned int total_bytes_out );
 
   void ConsoleOutput( double freq,
-                      double loop_duration, double sleep_duration,
-                      double avg_loop_duration, double avg_sleep_duration,
+                      double ratio, double avg_ratio,
                       unsigned int bytes_in, unsigned int bytes_out,
                       double avg_data );
     
@@ -320,6 +319,8 @@ public: CRTPPlayer* rtp_player;
 
   // Update the GUI
   protected: void RtkUpdate();
+
+protected: void RtkMenuHandling();
 
   // Basic GUI elements
   public: rtk_app_t *app;

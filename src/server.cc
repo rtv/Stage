@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.21 2002-07-04 01:06:02 rtv Exp $
+ * CVS info: $Id: server.cc,v 1.22 2002-07-17 00:21:44 rtv Exp $
  */
 
 #include <arpa/inet.h>
@@ -88,10 +88,8 @@ CStageServer::CStageServer( int argc, char** argv )
     quit = true;
     return;
   }
-  
-  // reassuring console output
-  printf( "[World %s]\n", this->worldfilename );
-  
+    
+#ifdef INCLUDE_RTK2
   ///////////////////////////////////////////////////////////////////////
   // LOAD THE CONFIGURATION FOR THE GUI 
   // do this *after* the world has loaded, so we can configure the menus
@@ -102,6 +100,7 @@ CStageServer::CStageServer( int argc, char** argv )
     quit = true;
     return;
   }
+#endif
 
   // See if there was anything we didnt understand in the world file
   this->worldfile.WarnUnused();
@@ -204,7 +203,10 @@ bool CStageServer::LoadFile( char* filename )
   strcpy( this->worldfilename, filename );
   // make sure something happened there...
   assert(  this->worldfilename[0] != 0 );
-  
+
+  // reassuring console output
+  printf( "[World %s]", this->worldfilename );
+
   //////////////////////////////////////////////////////////////////////
   // FIGURE OUT THE DEFAULT FULL HOST NAME & ADDRESS
   // the default hostname is this host's name
@@ -274,10 +276,11 @@ bool CStageServer::LoadFile( char* filename )
   m_auth_key[sizeof(m_auth_key)-1] = '\0';
   
   // Get the real update interval
-  m_real_timestep = this->worldfile.ReadFloat(0, "real_timestep", 0.100);
+  m_real_timestep = this->worldfile.ReadFloat(0, "real_timestep", 
+					      m_real_timestep);
 
   // Get the simulated update interval
-  m_sim_timestep = this->worldfile.ReadFloat(0, "sim_timestep", 0.100);
+  m_sim_timestep = this->worldfile.ReadFloat(0, "sim_timestep", m_sim_timestep);
   
   // Iterate through sections and create entities as needs be
   for (int section = 1; section < this->worldfile.GetEntityCount(); section++)
@@ -424,10 +427,12 @@ bool CStageServer::SaveFile( char* filename )
       return false;
   }
 
+#ifdef INCLUDE_RTK2
   // Let the gui save itself
   if (!RtkSave(&this->worldfile))
     return false;
-  
+#endif
+
   // Save everything
   if (!this->worldfile.Save(this->worldfilename))
     return false;

@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.cc,v 1.34 2002-07-04 01:06:02 rtv Exp $
+ * CVS info: $Id: visiondevice.cc,v 1.35 2002-07-17 00:21:44 rtv Exp $
  */
 
 #include <math.h>
@@ -100,10 +100,15 @@ bool CVisionDevice::Load(CWorldFile *worldfile, int section)
   for (int i = 0; true; i++)
   {
     const char *color = worldfile->ReadTupleString(section, "channels", i, NULL);
-    if (!color)
+
+    if( color ) // if the string looks ok
+    {
+      //printf( "[%d:%s]", i, color );
+      this->channels[i] = ::LookupColor(color);
+      this->channel_count = i + 1;
+    }
+    else
       break;
-    this->channels[i] = ::LookupColor(color);
-    this->channel_count = i + 1;
   }
   
   return true;

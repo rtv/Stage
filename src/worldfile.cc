@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.21 2002-06-11 08:34:26 inspectorg Exp $
+ * CVS info: $Id: worldfile.cc,v 1.22 2002-07-17 00:21:44 rtv Exp $
  */
 
 #include <assert.h>
@@ -1329,7 +1329,7 @@ int CWorldFile::GetProperty(int entity, const char *name)
 // Set the value of an property
 void CWorldFile::SetPropertyValue(int property, int index, const char *value)
 {
-  assert(property >= 0 && property < this->property_count);
+  //assert(property >= 0 && property < this->property_count);
   CProperty *pproperty = this->properties + property;
   assert(index >= 0 && index < pproperty->value_count);
 
@@ -1344,7 +1344,15 @@ const char *CWorldFile::GetPropertyValue(int property, int index)
 {
   assert(property >= 0);
   CProperty *pproperty = this->properties + property;
-  assert(index < pproperty->value_count);
+
+  // changed this as the assert prevents us for asking for a value
+  // that does not exist in the array - it should fail nicely rather
+  // than crashing out -rtv
+  //assert(index < pproperty->value_count);
+  
+  if( !(index < pproperty->value_count) )
+    return NULL;
+
   pproperty->used = true;
   return GetTokenValue(pproperty->values[index]);
 }

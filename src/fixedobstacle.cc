@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.18 $
+//  $Revision: 1.19 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -135,7 +135,7 @@ bool ColorInRectangle( Nimage* image, uint8_t color, int x1, int y1, int x2, int
 }
 
 
-long int rects = 0;
+#ifdef INCLUDE_RTK2
 
 void CFixedObstacle::BuildQuadTree( uint8_t color, int x1, int y1, int x2, int y2 )
 {
@@ -175,10 +175,9 @@ void CFixedObstacle::BuildQuadTree( uint8_t color, int x1, int y1, int x2, int y
       
       // create a rectangle 
       rtk_fig_rectangle( this->fig, px, py, 0.0, width, height, false);
-     	
-      rects++;
     }
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // Initialise object
@@ -271,7 +270,7 @@ bool CFixedObstacle::Startup()
 	  rtk_fig_rectangle(this->fig, px, py, oth, pw, ph, true ); 
 #endif
 			    
-	  rects++;
+	  //rects++;
 	}
     }
 

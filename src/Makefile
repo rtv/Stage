@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.110 2002-07-09 03:01:32 rtv Exp $
+# $Id: Makefile,v 1.111 2002-07-17 00:21:44 rtv Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -17,24 +17,23 @@ include ../Makefile.common
 PLAYER_INC = $(PLAYER_DIR)/include
 PLAYER_LIB = $(PLAYER_DIR)/lib
 
-# the includes everyone needs to have
+# the player and stage headers everyone needs to have
 INCLUDES = -I../include -I$(PLAYER_INC) 
 
-# compile flags for Stage
-CCFLAGS += $(ZLIB_FLAGS) $(INCLUDES) \
-	-DVERSION=\"$(VERSION)\" -DCOLOR_DATABASE=\"$(COLOR_DATABASE)\" \
-	-DINCLUDE_RTK2 -I../$(RTK_INC) `gtk-config --cflags`\
-	$(HRL_FLAGS) 
+# compile flags for devices
+DEVICEFLAGS = $(INCLUDES) $(OPTIONS_COMP)
 
-# Link flags for Stage
-# optional libraries are linked if they were defined in Makefile.common
-LINKFLAGS = -lm -lstdc++ -L$(PLAYER_DIR)/lib -lplayerqueue\
-             $(ZLIB_LINK) $(PROFILE_LINK) $(HRL_LINK) $(OLDLIBS) \
-	     -L../$(RTK_LIB) -lrtk `gtk-config --libs gtk gthread`
+# compile flags for server 
+SERVERFLAGS = $(INCLUDES) $(OPTIONS_COMP) $(ZLIB_FLAGS) \
+	-DVERSION=\"$(VERSION)\" -DCOLOR_DATABASE=\"$(COLOR_DATABASE)\"
+
+# Link flags - optional libs linked if they were defined in Makefile.common
+LINKFLAGS = -lm -lstdc++ -L$(PLAYER_DIR)/lib -lplayerqueue -lpthread\
+             $(ZLIB_LINK) $(PROFILE_LINK) $(OLDLIBS) $(OPTIONS_LINK)
 
 OBS = main.o world.o stageio.o server.o client.o worldfile.o \
 	colors.o raytrace.o matrix.o image.o rtp.o entity.o entityfactory.o \
-	playerdevice.o fixedobstacle.o 	positiondevice.o \
+	playerdevice.o fixedobstacle.o positiondevice.o \
 	omnipositiondevice.o laserdevice.o sonardevice.o \
 	miscdevice.o broadcastdevice.o ptzdevice.o boxobstacle.o \
 	laserbeacon.o visiondevice.o visionbeacon.o \
@@ -44,14 +43,25 @@ OBS = main.o world.o stageio.o server.o client.o worldfile.o \
 all: stage
 
 # STAGE ####################################################################
-RTKFILES = $(shell ls -d ../$(RTK_DIR)/*.[ch])
-stage: $(RTKFILES) $(OBS)
-	cd ../$(RTK_DIR) && ${MAKE}
+stage: $(OBS) rtk
 	${LINKER} $(OBS) $(LINKFLAGS) -o $@
 
+# RTK #######################################################################
+
+rtk: $(shell ls -d ../$(RTK_DIR)/*.[ch])
+	cd ../$(RTK_DIR) && ${MAKE}
+
 # SRC TO OBJECT RULES #######################################################
+
+# devices have the word 'device' on the end and require fewer config options
+# than the simulation engine objects - makes for a tidy compile line
+%device.o : %device.cc
+	${CC} ${CCFLAGS} ${DEVICEFLAGS} -c $< -o $@
+
+# anything else is considered a server file and gets all the options
 %.o : %.cc
-	${CC} ${CCFLAGS} -c $< -o $@
+	${CC} ${CCFLAGS} ${SERVERFLAGS} -c $< -o $@
+
 
 # ADMIN #######################################################################
 clean:

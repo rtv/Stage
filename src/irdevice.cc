@@ -13,7 +13,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/irdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 ///////////////////////////////////////////////////////////////////////////
 #include <math.h>
@@ -72,14 +72,6 @@ CIDARDevice::CIDARDevice(CWorld *world, CEntity *parent )
     
   size_x = 0.03; // this is the actual physical size of the HRL device
   size_y = 0.02; // but can be changed in the world file to suit
-
-  // but i want it to be big enough to be hit in a sparse scan of the sensor
-  // chord
-
-  // this makes it the minimum size 
-  //m_size_x = 0.4;//m_max_range * tan( m_angle_per_scanline );
-  // and just a little more in case of aliasing
-  //m_size_x *= 1.1;
 
   // Set the default shape
   shape = ShapeRect;
