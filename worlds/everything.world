@@ -3,7 +3,7 @@
 #       showing how to include some pre-defined objects
 # Author: Andrew Howard, Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.4 2002-07-23 16:07:57 rtv Exp $
+# CVS: $Id: everything.world,v 1.5 2002-07-26 23:03:40 rtv Exp $
 
 include "usc_pioneer.inc"
 
@@ -21,7 +21,7 @@ environment
 #
 gui
 (
-  size [810.000 753.000]
+  size [600 600]
   origin [8.188 7.438]
   scale 0.021
   grid [0.2 1]

@@ -21,7 +21,7 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/irdevice.cc,v $
 * $Author: rtv $
-* $Revision: 1.7 $
+* $Revision: 1.8 $
 ******************************************************************************/
 
 
@@ -262,7 +262,7 @@ void CIDARDevice::TransmitMessage( idartx_t* transmit )
 	      //     ent->m_player.index );
 
 #ifdef INCLUDE_RTK2
-	      rtk_fig_arrow(this->rays_fig, 0,0, scanline_bearing-oth, range, 0.03);
+	      //rtk_fig_arrow(this->rays_fig, 0,0, scanline_bearing-oth, range, 0.03);
 #endif     
 	      uint8_t intensity;
 		    
@@ -379,7 +379,7 @@ bool CIDARDevice::ReceiveMessage( CEntity* sender,
       sprintf( message, "%s (%d)", message, recv.intensity );
   
       
-      rtk_fig_text(this->data_fig, 0,0,0, message);
+      //rtk_fig_text(this->data_fig, 0,0,0, message);
 #endif
       
       return true;
@@ -511,6 +511,9 @@ void CIDARDevice::RtkStartup()
   this->data_fig = rtk_fig_create(m_world->canvas, this->fig, 49);
   this->rays_fig = rtk_fig_create(m_world->canvas, this->fig, 49);
   
+  rtk_fig_origin(this->data_fig, 0,0,0 );
+  rtk_fig_origin(this->rays_fig, 0,0,0 );
+ 
   // Set the color
   rtk_fig_color_rgb32(this->data_fig, this->color);
   rtk_fig_color_rgb32(this->rays_fig, RGB(200,200,200) );
@@ -544,10 +547,9 @@ void CIDARDevice::RtkUpdate()
   CEntity::RtkUpdate();
    
   // Get global pose
-  double gx, gy, gth;
-  GetGlobalPose(gx, gy, gth);
-  rtk_fig_origin(this->data_fig, gx, gy, gth );
-  rtk_fig_origin(this->rays_fig, gx, gy, gth );
+  //double gx, gy, gth;
+  //GetGlobalPose(gx, gy, gth);
+  //rtk_fig_origin(this->data_fig, gx, gy, gth );
 
   //  if( m_world->ShowDeviceData( this->stage_type) )
   //{

@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: simple.world,v 1.3 2002-07-09 03:31:56 rtv Exp $
+# CVS: $Id: simple.world,v 1.4 2002-07-26 23:03:40 rtv Exp $
 
 include "pioneer.inc"
 
@@ -17,6 +17,6 @@ position
   pose [3.860 6.975 -528.737] 
   player()
   p2dx_sonar()
-  laser()
+  laser( pose [ 0.1 0 0 ] )
 ) 
 

@@ -1,13 +1,13 @@
 
 # Desc: world defines a descartes base with 8 idars	
-# CVS: $Id: pherobot.world,v 1.4 2002-07-23 16:07:57 rtv Exp $
+# CVS: $Id: pherobot.world,v 1.5 2002-07-26 23:03:40 rtv Exp $
 
 
 
 environment
 (
-  #file "simple.pnm.gz"
-  file "blank.pnm"
+  file "simple.pnm.gz"
+  #file "blank.pnm"
   scale 0.02
 ) 
 

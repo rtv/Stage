@@ -21,7 +21,7 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/idarturretdevice.cc,v $
 * $Author: rtv $
-* $Revision: 1.1 $
+* $Revision: 1.2 $
 ******************************************************************************/
 
 
@@ -168,6 +168,10 @@ void CIDARTurretDevice::Update( double sim_time )
   
   ReMap( x, y, th );
   
+  // render our children in the world
+  for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
+    idars[i]->Update( sim_time );
+
   // dump out if noone is subscribed
   if(!Subscribed())
       return; 
@@ -184,7 +188,7 @@ void CIDARTurretDevice::RtkStartup()
   CEntity::RtkStartup();
 
   for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
-    idars[i]->RtkStartup();
+  idars[i]->RtkStartup();
 }
 
 
@@ -193,7 +197,7 @@ void CIDARTurretDevice::RtkStartup()
 void CIDARTurretDevice::RtkShutdown()
 {
   for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
-    idars[i]->RtkShutdown();
+  idars[i]->RtkShutdown();
   
   CEntity::RtkShutdown();
 } 
@@ -205,8 +209,8 @@ void CIDARTurretDevice::RtkUpdate()
 {
   CEntity::RtkUpdate();
    
-  //for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
-    //idars[i]->RtkUpdate();
+  for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
+  idars[i]->RtkUpdate();
 }
 
 #endif
