@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.46 $
+//  $Revision: 1.47 $
 //
 // Usage:
 //  (empty)
@@ -94,6 +94,10 @@ CWorld::CWorld()
     // Allow the simulation to run
     //
     m_enable = true;
+
+    // init the truth server data structures
+    m_truth_connection_count = 0;
+    memset( m_truth_connections, 0, sizeof(struct pollfd) * MAX_TRUTH_CONNECTIONS );
 
     // name this computer
     if( gethostname( m_hostname, sizeof(m_hostname)) == -1)
@@ -295,8 +299,9 @@ bool CWorld::Startup()
   
   if( m_run_truth_server )
     {
-      pthread_t tid_dummy;
-      pthread_create(&tid_dummy, NULL, &TruthServer, (void *)NULL );  
+      SetupTruthServer();
+      //pthread_t tid_dummy;
+      //pthread_create(&tid_dummy, NULL, &TruthServer, (void *)NULL );  
     }
   
   // spawn an XS process, unless we disabled it (rtkstage disables xs by default)
@@ -511,10 +516,18 @@ void* CWorld::Main(void *arg)
         //
       pthread_testcancel();
 
+      // look for new connections to the truthserver
+      world->ListenForTruthConnections();
+
+      world->TruthRead();
+      
         // Update the world
         //
         if (world->m_enable)
 	  world->Update();
+
+      world->TruthWrite();
+
 
 	// dump the contents of the matrix to a file
 	//world->matrix->dump();
@@ -591,80 +604,11 @@ void CWorld::Update()
       }
 #endif
 
-    // import any truths that were queued up by the truth server thread
-    //printf( "update_queue size: %d\n", update_queue.size() );
-
-    while( !input_queue.empty() )
-      {
-	stage_truth_t truth = input_queue.front(); // copy the front object
-	input_queue.pop(); // remove the front object
-
-//  #ifdef DEBUG
-//    	printf( "De-queued Truth: "
-//    		"[%d] (%s:%d,%d,%d) parent (%d,%d,%d) [%d,%d,%d] echo %d\n", 
-//    		truth.stage_id,
-//  		truth.hostname,
-//  		truth.id.port, 
-//    		truth.id.type, 
-//    		truth.id.index,
-//    		truth.parent.port, 
-//    		truth.parent.type, 
-//    		truth.parent.index,
-//    		truth.x, truth.y, truth.th,
-//  		truth.echo_request);
-
-//    	fflush( stdout );
-//  #endif
-
-	// see if this is a stage directive 
-	
-	if( truth.stage_id == -1 ) // its a command for the engine!
-	  {
-	    switch( truth.x ) // used to identify the command
-	      {
-		//case LOADc: Load( m_filename ); break;
-	      case SAVEc: Save( m_filename ); break;
-	      case PAUSEc: m_enable = !m_enable; break;
-	      default: printf( "Stage Warning: "
-			       "Received unknown command (%d); ignoring.\n",
-			       truth.x );
-	      }
-	      continue;
-	  }
-	else // it is an entity update - move it now
-	  {
-	    CEntity* ent = m_object[ truth.stage_id ];
-	    assert( ent ); // there really ought to be one!
-	  
-	
-	    // check to see if we really need to move the entity
-    
-  	    // this is where the entity is now
-  	    double dx, dy, dth;
-  	    ent->GetGlobalPose( dx, dy, dth );
-	    
-  	    // compress the doubles to match the truth data
-  	    uint32_t uix = (uint32_t)( dx * 1000.0 );
-  	    uint32_t uiy = (uint32_t)( dy * 1000.0 );
-  	    int degrees = (int)RTOD( dth );
-  	    if( degrees < 0 ) degrees += 360;	    
-  	    uint16_t uith = (uint16_t)degrees;  
-  
-
-  	    // if the pose is different
-  	    if( uix != truth.x || uiy != truth.y || uith != truth.th )
-  	      // update the entity with the truth
-	      ent->SetGlobalPose( truth.x/1000.0, truth.y/1000.0, 
-				  DTOR(truth.th) );
-	  }
-	
-	// width and height could be changed here too if necessary
-      }
-
     // Do the actual work -- update the objects 
     for (int i = 0; i < m_object_count; i++)
       {
 	// if this host manages this object
+	// (should make a more efficient check here)
 	if( strcmp( m_hostname, m_object[i]->m_hostname ) == 0 )
 	    m_object[i]->Update( m_sim_time ); // update it 
       }

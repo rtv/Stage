@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.8 $
+//  $Author: vaughan $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -184,6 +184,8 @@ void CPositionDevice::Update( double sim_time )
   // if we've moved 
   if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
     {
+      MakeDirty();
+
       Map(false); // erase myself
       
       m_map_px = x; // update the render positions

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.18 $
+//  $Revision: 1.19 $
 //
 // Usage:
 //  (empty)
@@ -183,6 +183,20 @@ class CEntity
     protected: double m_interval; 
     protected: double m_last_update;
 
+  //public: stage_truth_t truth, old_truth;
+public: bool m_dirty[ MAX_TRUTH_CONNECTIONS ];
+
+public: void MakeDirty( void )
+  {
+    memset( m_dirty, true, sizeof(m_dirty[0]) * MAX_TRUTH_CONNECTIONS );
+  };
+
+public: void MakeClean( void )
+  {
+    memset( m_dirty, false, sizeof(m_dirty[0]) * MAX_TRUTH_CONNECTIONS );
+  };
+
+  
     //////////////////////////////////////////////////////////////////////
     // PLAYER IO STUFF
   

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.16 $
+//  $Revision: 1.17 $
 //
 // Usage:
 //  (empty)
@@ -59,7 +59,9 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
     m_line = -1;
     m_type[0] = 0;
     m_name[0] = 0;
-    // *** REMOVE m_id[0] = 0;
+    
+    // all truth connections should send this truth
+    memset( &m_dirty, true, sizeof(bool) * MAX_TRUTH_CONNECTIONS );
 
     // by default, entities don't show up in any sensors
     // these must be enabled explicitly in each subclass
@@ -554,6 +556,12 @@ void CEntity::SetGlobalPose(double px, double py, double pth)
     m_lx =  (px - ox) * cos(oth) + (py - oy) * sin(oth);
     m_ly = -(px - ox) * sin(oth) + (py - oy) * cos(oth);
     m_lth = pth - oth;
+
+    // our position has probably changed, so we need to re-transmit our truth
+    MakeDirty();
+
+    // NEED TO DIRTY THE CHILDREN HERE TOO!
+    //if( m_child_object ) m_child_object->MakeDirty();
 }
 
 

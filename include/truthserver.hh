@@ -4,9 +4,12 @@
 
 #include "messages.h"
 #include "stage_types.hh"
+#include <sys/poll.h>
 
 const int TRUTH_SERVER_PORT = 6601;
 const int ENVIRONMENT_SERVER_PORT = 6602;
+
+const int MAX_TRUTH_CONNECTIONS = 100;
 
 // these can be modified in world_load.cc...
 extern int global_truth_port;

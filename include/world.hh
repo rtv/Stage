@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.23 $
+//  $Revision: 1.24 $
 //
 // Usage:
 //  (empty)
@@ -35,6 +35,7 @@
 #include <sys/types.h>
 #include <sys/sem.h>
 #include <sys/ipc.h>
+#include <sys/poll.h>
 
 #include "messages.h" //from player
 #include "image.hh"
@@ -47,7 +48,7 @@
 // This *must* be loaded after everything else, otherwise
 // is conflicts with the string template in rtk, *if* you are
 // using GCC3.01.  ahoward
-#include <queue> 
+//#include <queue> 
 
 #define DEBUG
 
@@ -91,6 +92,21 @@ private: bool m_enable;
   // the hostname of this computer
 public: char m_hostname[ HOSTNAME_SIZE ];
   
+  // truth server stuff
+  // data for the server-server's listening socket
+private: struct pollfd m_truth_listen;
+  // data for each truth connection
+private: struct pollfd m_truth_connections[ MAX_TRUTH_CONNECTIONS ];
+  // the number of truth connections
+private: int m_truth_connection_count;
+
+private: void ListenForTruthConnections( void );
+private: void SetupTruthServer( void );
+  
+private: void TruthRead();
+private: void TruthWrite();
+private: void InputTruth( stage_truth_t &truth );
+
   // Timing
   // Real time at which simulation started.
   // The time according to the simulator (m_sim_time <= m_start_time).
@@ -148,9 +164,9 @@ public: float angle_multiplier;
 
   // the truth server queues up any truth updates here, ready to be imported
   // in the main thread
-public:
-  std::queue<stage_truth_t> input_queue;
-  std::queue<stage_truth_t> output_queue; // likewise for outputs
+  //public:
+  //std::queue<stage_truth_t> input_queue;
+  //std::queue<stage_truth_t> output_queue; // likewise for outputs
   
 
   // an array that maps vision device channels to colors.
