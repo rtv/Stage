@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.21 2003-02-23 08:01:34 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.22 2003-02-24 04:47:12 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -69,6 +69,8 @@ double CEntity::timestep = 0.01; // default 10ms update
 // Requires a pointer to the parent and a pointer to the world.
 CEntity::CEntity( int id, char* token, char* color, CEntity* parent )
 {
+  fig_count = 0;
+
   this->m_parent_entity = parent;
   
   // TODO = inherit our parent's color by default
@@ -115,7 +117,7 @@ CEntity::CEntity( int id, char* token, char* color, CEntity* parent )
   this->rect_count = 0;
  
   // by default, all non-root entities have a single rectangle
-  if( m_parent_entity )
+  //if( m_parent_entity )
     {
       // rectangles - start with a single rect
       // it is automagically scaled to fit the size of the entity
@@ -173,30 +175,7 @@ CEntity::CEntity( int id, char* token, char* color, CEntity* parent )
   // attach to my parent
   if( m_parent_entity )
     m_parent_entity->AddChild( this );
-  else
-    {
-      // ROOT gets set up specially
-      PRINT_WARN1( "ROOT ENTITY %p", this );  
-      CEntity::root = this; // phear me!
-      
-      size_x = 10.0; // a 10m world by default
-      size_y = 10.0;
-      
-      // the global origin is the bottom left corner of the root object
-      origin_x = size_x/2.0;
-      origin_y = size_y/2.0;
-      
-      /// default 5cm resolution passed into matrix
-      double ppm = 20.0;
-      PRINT_DEBUG3( "Creating a matrix [%.2fx%.2f]m at %.2f ppm",
-		    size_x, size_y, ppm );
-      
-      assert( matrix = new CMatrix( size_x, size_y, ppm, 1) );
-      
-#ifdef INCLUDE_RTK2
-      grid_enable = true;
-#endif
-    }
+
 }
 
 
@@ -309,7 +288,7 @@ void CEntity::UnMapFamily()
 // everything has been loaded.
 int CEntity::Startup( void )
 {
-  PRINT_WARN( "entity starting up" );
+  PRINT_DEBUG( "entity starting up" );
   
   Map();
   
@@ -329,7 +308,7 @@ int CEntity::Startup( void )
 // Shutdown routine
 int CEntity::Shutdown()
 {
-  PRINT_WARN( "entity shutting down" );
+  PRINT_DEBUG( "entity shutting down" );
 
   UnMap();
   
@@ -746,7 +725,7 @@ void CEntity::Subscribe( int con, stage_prop_id_t* props, int prop_count )
 	PRINT_WARN( "subscribe to all properties not implemented" );
       else
 	{
-	  PRINT_WARN3( "subscribing to ent %d property %s on connection %d",
+	  PRINT_DEBUG3( "subscribing to ent %d property %s on connection %d",
 		       stage_id, SIOPropString(prop_code), con );
 	  // register the subscription on this channel, for this property
 	  subscriptions[con][prop_code].subscribed = 1;
@@ -767,7 +746,7 @@ void CEntity::Unsubscribe( int con,  stage_prop_id_t* props, int prop_count )
 	PRINT_WARN( "unsubscribe to all properties not implemented" );
       else
 	{
-	  PRINT_WARN2( "unsubscribing from property %s on connection %d",
+	  PRINT_DEBUG2( "unsubscribing from property %s on connection %d",
 		       SIOPropString(prop_code), con );
 	  // register the subscription on this channel, for this property
 	  subscriptions[con][prop_code].subscribed = 0;
@@ -837,7 +816,7 @@ void CEntity::SetRects( stage_rotrect_t* rects, int num )
       // draw the rects into the matrix
       this->RenderRects( true );
       
-      PRINT_WARN2( "created %d rects for entity %d", this->rect_count,
+      PRINT_DEBUG2( "created %d rects for entity %d", this->rect_count,
 		   this->stage_id );
     }
   else
@@ -914,19 +893,13 @@ void CEntity::RenderRects( bool render )
       GetGlobalRect( &glob, &(this->rects[r]) );
       CEntity::matrix->SetRectangle( glob.x, glob.y, glob.a, 
 				     glob.w, glob.h, this, render );
-    }
-  
-  // draw a boundary rectangle around the root device
-  //if( this == CEntity::root )
-  //CEntity::matrix->SetRectangle( size_x/2.0, size_y/2.0, 0.0, 
-  //			   size_x, size_y, this, render );
-  
+    }  
 }
 
 int CEntity::SetCommand( char* data, size_t len )
 {
-  PRINT_WARN2( "ent %d received %d bytes of command, but does nothing", 
-	       this->stage_id, (int)len );   
+  PRINT_DEBUG2( "ent %d received %d bytes of command", 
+		this->stage_id, (int)len );   
   return 0;
 }
 
@@ -939,7 +912,7 @@ int CEntity::GetCommand( char* data, size_t* len )
 
 int CEntity::SetData( char* data, size_t len )
 {
-  PRINT_WARN2( "ent %d received %d bytes of data", 
+  PRINT_DEBUG2( "ent %d received %d bytes of data", 
 	       this->stage_id, (int)len ); 
   return 0;
 }

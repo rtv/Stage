@@ -21,20 +21,26 @@
  * Desc: A root device model - replaces the CWorld class
  * Author: Richard Vaughan
  * Date: 31 Jan 2003
- * CVS info: $Id: root.cc,v 1.1.2.6 2003-02-23 08:01:37 rtv Exp $
+ * CVS info: $Id: root.cc,v 1.1.2.7 2003-02-24 04:47:12 rtv Exp $
  */
 
 
 #include <math.h>
+#include <stdio.h>
+#include <assert.h>
 
+#include "sio.h"
 #include "root.hh"
 #include "matrix.hh"
-#include <stdio.h>
+#include "library.hh"
 
 #define DEBUG
 
+extern Library model_library;
+extern stage_gui_library_item_t gui_library[];
+
 // constructor
-CRootDevice::CRootDevice( )
+CRootEntity::CRootEntity( )
   : CEntity( 0, "root", "red", NULL )    
 {
   PRINT_DEBUG( "Creating root model" );
@@ -56,29 +62,27 @@ CRootDevice::CRootDevice( )
   obstacle_return = true;
   idar_return = IDARReflect;
   
+  
+  /// default 5cm resolution passed into matrix
+  double ppm = 20.0;
   PRINT_DEBUG3( "Creating a matrix [%.2fx%.2f]m at %.2f ppm",
 		size_x, size_y, ppm );
   
-  //if( matrix ) delete matrix;
-  // make the matrix 1 pixel wider than the world
   assert( matrix = new CMatrix( size_x, size_y, ppm, 1) );
   
-
+  model_library.InsertRoot( this );
+  
+#ifdef INCLUDE_RTK2
+  grid_enable = true;
+#endif
 }
 
-int CRootDevice::SetProperty( int con, stage_prop_id_t property, 
-			      void* value, size_t len, stage_buffer_t reply )
+int CRootEntity::Property( int con, stage_prop_id_t property, 
+			      void* value, size_t len, stage_buffer_t* reply )
 {
   PRINT_DEBUG3( "setting prop %d (%d bytes) for ROOT ent %p",
 		property, len, this );
-  
-  assert( value );
-  assert( len > 0 );
-  assert( (int)len < MAX_PROPERTY_DATA_LEN );
-
-  // get the inherited behavior first
-  CEntity::SetProperty( con, property, value, len );
-  
+    
   double x, y, th;
   
   switch( property )
@@ -91,7 +95,7 @@ int CRootDevice::SetProperty( int con, stage_prop_id_t property,
       this->MapFamily();
       break;
       
-    case STG_PROP_ROOT_PPM:
+      /*    case STG_PROP_ROOT_PPM:
       PRINT_WARN( "setting PPM of ROOT" );
       assert(len == sizeof(ppm) );
       memcpy( &(ppm), value, sizeof(ppm) );
@@ -99,15 +103,80 @@ int CRootDevice::SetProperty( int con, stage_prop_id_t property,
       matrix->Resize( size_x, size_y, ppm );      
       this->MapFamily();
       break;
+      */
 
-    case STG_PROP_ROOT_GUI:
+    case STG_PROP_ROOT_CREATE:
+      {
+	assert( value && reply ); // both must be good
+
+	int num_models =  len / sizeof(stage_model_t);
+	
+	PRINT_WARN1( "root received CREATE request for %d models", num_models );
+	
+	for( int m=0; m<num_models; m++ )
+	  {
+	    // make a new model from the correct offset in the value buffer.
+	    // this call fills in their ID field correctly
+	    stage_model_t* mod = (stage_model_t*)
+	      ((char*)value + m*sizeof(stage_model_t));
+	    
+	    if( model_library.CreateEntity( mod ) == -1 )
+	      PRINT_ERR( "failed to create a new model (invalid ID)" );	    
+	  }
+	
+	// reply with the same array of models, with the IDs set
+	SIOBufferProperty( reply, this->stage_id, 
+			   STG_PROP_ROOT_CREATE,
+			   value, len,
+			   STG_ISREPLY );
+      }
+      break;
       
+    case STG_PROP_ROOT_GUI:
+      if( value )
+	{
+	  assert( len == sizeof(stage_gui_config_t) );
+	  stage_gui_config_t* cfg  = (stage_gui_config_t*)value;
+	  
+	  PRINT_DEBUG1( "received GUI configuraton for library %s", 
+			cfg->token );
+	  
+	  // find the library index of the GUI library with this token
+	  for( stage_gui_library_item_t* gui = gui_library; 
+	       strlen(gui->token) > 0;
+	       gui++ )
+	    {
+	      if( strcmp( gui->token, cfg->token ) == 0 )
+		{
+		  // call the config function from the correct library and return
+		  if( (gui->load_func)( cfg ) == -1 )
+		    PRINT_ERR1( "gui load failed for gui %s",
+				gui->token );
+		  break;
+		}
+	    }
+	  
+	  // re-create my GUI parts 
+	  GuiEntityShutdown( this );
+	  GuiEntityStartup( this );
 
+	  PRINT_WARN1( "Received config for unknown GUI library %s", 
+		       cfg->token );
 
+	  if( reply )
+	    {
+	      //acknowledge (no data)
+	      SIOBufferProperty( reply, this->stage_id, 
+				 STG_PROP_ROOT_GUI,
+				 NULL, 0, STG_ISREPLY );
+	      
+	    }
+	}
     default: 
       break;
     }
-
-
-  return 0;
+  
+  // get the inherited behavior 
+  return CEntity::Property( con, property, value, len, reply  );
 }
+

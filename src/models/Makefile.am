@@ -17,12 +17,9 @@ libmodels_a_SOURCES = \
 puck.cc \
 puck.hh \
 sonar.cc \
-sonar.hh 
-
-
-#\
-#idar.cc \
-#idar.hh	
+sonar.hh \
+idar.cc \
+idar.hh	
 
 
 #	positiondevice.cc \

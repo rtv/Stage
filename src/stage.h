@@ -18,7 +18,8 @@
 #endif
    
 #include <unistd.h>
-      
+#include <stdint.h> // for portable int types eg. uint32_t
+
    // global stage configs
 #define STG_TOKEN_MAX 64
 #define STG_LISTENQ  128
@@ -57,9 +58,14 @@
        STG_PROP_ENTITY_CIRCLES,
        STG_PROP_ENTITY_COMMAND,
        STG_PROP_ENTITY_DATA,
+       STG_PROP_ROOT_CREATE, // see root.cc
+       STG_PROP_ROOT_GUI, 
        STG_PROP_SONAR_RANGEBOUNDS, // see models/sonar.hh
        STG_PROP_SONAR_GEOM,
        STG_PROP_SONAR_POWER,
+       STG_PROP_IDAR_TXRX,
+       STG_PROP_IDAR_TX,
+       STG_PROP_IDAR_RX,
        STG_PROPERTY_COUNT // THIS MUST BE THE LAST ENTRY
      } stage_prop_id_t;
    
@@ -99,6 +105,30 @@ typedef enum
     STG_WANTREPLY,
     STG_ISREPLY
   } stage_reply_mode_t;
+
+// IDAR types ////////////////////////////////////////////////////////////
+
+#define IDARBUFLEN 16   // idar message max in bytes
+#define RAYS_PER_SENSOR 5 // resolution
+
+typedef struct
+{
+  uint8_t mesg[IDARBUFLEN];
+  uint8_t len; //0-IDARBUFLEN
+  uint8_t intensity; //0-255
+} __attribute__ ((packed)) stage_idar_tx_t;
+
+typedef struct
+{
+  uint8_t mesg[IDARBUFLEN];
+  uint8_t len; //0-255
+  uint8_t intensity; //0-255
+  uint8_t reflection; // true/false
+  uint32_t timestamp_sec;
+  uint32_t timestamp_usec;
+  uint16_t range; // mm
+} __attribute__ ((packed)) stage_idar_rx_t; 
+
 
 // image types ////////////////////////////////////////////////////////
 

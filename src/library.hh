@@ -70,12 +70,16 @@ public:
   
   void AddDevice( const char* token, const char* colorstr, CreatorFunctionPtr creator );
   
-  // create an instance of an entity given a request
-  // returns a unique id for the entity, which happens to also be valid pointer to the
-  // entity object
-  CEntity* CreateEntity( stage_model_t* model );
-  
-    CEntity* GetEntFromId( int id )
+  // create an instance of an entity given a request returns a unique
+  // id for the entity, which happens to be it's index in the array
+  stage_id_t CreateEntity( stage_model_t* model );
+
+  // put the root object at the start of the array -
+  // warning -  this destroys the rest of the array, so should
+  // only be called from root's contructor
+  void InsertRoot( CEntity* root );
+
+  CEntity* GetEntFromId( int id )
   {
     return entPtrs[id];
   };

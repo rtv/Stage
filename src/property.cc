@@ -22,13 +22,15 @@
  * properties. It's one big ol'function, so it gets its own file.
  * Author: Richard Vaughan
  * Date: 22 Feb 2003
- * CVS info: $Id: property.cc,v 1.1.2.1 2003-02-23 08:01:37 rtv Exp $
+ * CVS info: $Id: property.cc,v 1.1.2.2 2003-02-24 04:47:12 rtv Exp $
  */
 
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+
+#define DEBUG
 
 #include "sio.h" 
 #include "matrix.hh"
@@ -37,8 +39,13 @@
 int CEntity::Property( int con, stage_prop_id_t property, 
 		       void* value, size_t len, stage_buffer_t* reply )
 {
-  PRINT_DEBUG3( "setting prop %s (%d bytes) for ent %d",
-		SIOPropString(property), (int)len, stage_id );
+  PRINT_DEBUG2( "ent %d prop %s", stage_id, SIOPropString(property) );
+  
+  if( value )
+    PRINT_DEBUG2( "SET %s %d bytes", SIOPropString(property), len );
+  
+  if( reply )
+    PRINT_DEBUG1( "GET %s", SIOPropString(property) );
   
   switch( property )
     {
@@ -113,8 +120,13 @@ int CEntity::Property( int con, stage_prop_id_t property,
 	  pose.y = local_py;
 	  pose.a = local_pth;
 	  
+	  PRINT_DEBUG2( "buffering POSE %lu bytes in %p", 
+		       (unsigned long)sizeof(pose), reply );
+	  
 	  SIOBufferProperty( reply, this->stage_id, STG_PROP_ENTITY_POSE,
 			     &pose, sizeof(pose), STG_ISREPLY );
+
+	  SIODebugBuffer( reply );
 	}
       break;
       
@@ -416,13 +428,13 @@ int CEntity::Property( int con, stage_prop_id_t property,
 	}
       if( reply ) 
 	{
-	  PRINT_WARN( " about to buffer data prop" );
+	  //PRINT_WARN( " about to buffer data prop" );
 	  // reply with the contents of the data buffer
 	  SIOBufferProperty( reply, this->stage_id, 
-			     STG_PROP_ENTITY_COMMAND,
+			     STG_PROP_ENTITY_DATA,
 			     buffer_data.data, buffer_data.len,
 			     STG_ISREPLY );
-	  PRINT_WARN( "done" );
+	  //PRINT_WARN( "done" );
 	}      
       break;
       
@@ -433,7 +445,8 @@ int CEntity::Property( int con, stage_prop_id_t property,
     }
   
   
-  if( value ) // if there was some incoming property change
+  // if there was some incoming property change
+  if( value ) 
     {
       // indicate that the property is dirty on all _but_ the connection
       // it came from - that way it gets propogated onto to other clients

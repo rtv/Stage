@@ -74,35 +74,144 @@ void SIOPrintUsage( void )
 	 );
 }
 
+// sends a buffer full of properties and places any replies in the
+// recv buffer (if non-null)
+int SIOPropertyUpdate( int con, double timestamp, 
+		       stage_buffer_t* send, stage_buffer_t* recv  )
+{
+  if( send == NULL )
+    { 
+      PRINT_ERR( "send buffer is null" );
+      return -1;
+    }
+  
+  PRINT_DEBUG( "writing properties" );
+  
+  // send the properties
+  assert( SIOWriteMessage( con, timestamp, STG_HDR_PROPS, send->data, send->len )
+	  == 0 );
+  
+  PRINT_DEBUG( "reading replies" );
+
+  stage_buffer_t* dbg = SIOCreateBuffer();
+  
+  // the next thing to arrive should be our reply
+  stage_header_t hdr;
+
+  hdr.len = 0;
+  //while( hdr.len == 0 )
+    {
+      size_t hdrbytes = SIOReadPacket( con, &hdr, sizeof(hdr) ); 
+      if( hdr.type != STG_HDR_PROPS )
+	{
+	  PRINT_ERR2( "unexpected header type %s (%d)", 
+		      SIOHdrString(hdr.type), hdr.type );
+	}
+      
+      //SIOBufferPacket( dbg, &hdr, sizeof(hdr) );
+      //SIODebugBuffer( dbg );
+      //SIOFreeBuffer( dbg );
+      
+      PRINT_DEBUG3( "read %d byte reply header type %s %d bytes  follow", 
+		    	    hdrbytes, SIOHdrString(hdr.type), hdr.len ); 
+    }
+
+  // make room for the incoming properties and read them
+  char* buf = calloc(hdr.len,1);
+  size_t databytes = SIOReadPacket( con, buf, hdr.len );
+  assert( databytes == hdr.len );
+  
+  // if the caller is interested in the relies, copy the data we
+  // read into the receive buffer
+  if( recv ) SIOBufferPacket( recv, buf, hdr.len );
+  
+  free( buf );
+
+  return 0; // success
+}
+
+
+int SIOCreateModels( int con, double timestamp, stage_model_t* models, int num_models )
+{
+  stage_buffer_t* request = SIOCreateBuffer();
+  stage_buffer_t* reply = SIOCreateBuffer();
+  
+  
+  // package the models as a property request to root
+  SIOBufferProperty( request, 0, STG_PROP_ROOT_CREATE,
+		     models, num_models * sizeof(stage_model_t), STG_WANTREPLY );
+  
+  // send the requests and read the reply
+  // the reply buffer will contain the models with their ids filled in
+  if( SIOPropertyUpdate( con, timestamp, request, reply ) == -1 )
+    {
+      PRINT_ERR( "failed to swap model requests with server" );
+      return -1;
+    }
+  
+  SIODebugBuffer( reply );
+  
+  PRINT_DEBUG2( "reply[0] type %s len %lu",
+		SIOPropString(((stage_property_t*)(reply->data))->property),
+		(unsigned long)((stage_property_t*)reply->data)->len );
+  
+  // the reply should be the same size as the request, as it should
+  // contain the same models with their id set correctly
+  assert( request->len == reply->len );
+  
+  stage_property_t* prop = (stage_property_t*)(reply->data);
+  stage_model_t* newmodels = (stage_model_t*)(reply->data + sizeof(stage_property_t));
+  
+  PRINT_DEBUG1( "reply prop %s", SIOPropString(prop->property) );
+  
+  int m;
+  for( m=0; m<num_models; m++ )
+    PRINT_DEBUG3( "new model token %s id %d parent %d",
+		  newmodels[m].token, newmodels[m].id, newmodels[m].parent_id );
+  
+  // copy the reply into the original buffer
+  memcpy( models, newmodels, num_models * sizeof(stage_model_t) );  
+  
+  SIOFreeBuffer( request );
+  SIOFreeBuffer( reply );
+  
+  return 0; // success
+}
+
 const char* SIOPropString( stage_prop_id_t id )
 {
   switch( id )
     {
-    case STG_PROP_ENTITY_PARENT: return "STG_PROP_ENTITY_PARENT"; break;
-    case STG_PROP_ENTITY_POSE: return "STG_PROP_ENTITY_POSE"; break;
-    case STG_PROP_ENTITY_SIZE: return "STG_PROP_ENTITY_SIZE"; break;
-    case STG_PROP_ENTITY_VELOCITY: return "STG_PROP_ENTITY_VELOCITY"; break;
-    case STG_PROP_ENTITY_ORIGIN: return "STG_PROP_ENTITY_ORIGIN"; break;
-    case STG_PROP_ENTITY_NAME: return "STG_PROP_ENTITY_NAME"; break;
-    case STG_PROP_ENTITY_COLOR: return "STG_PROP_ENTITY_COLOR"; break;
-    case STG_PROP_ENTITY_SUBSCRIBE: return "STG_PROP_ENTITY_SUBSCRIBE"; break;
-    case STG_PROP_ENTITY_UNSUBSCRIBE: return "STG_PROP_ENTITY_UNSUBSCRIBE"; break;
-    case STG_PROP_ENTITY_VOLTAGE: return "STG_PROP_ENTITY_VOLTAGE"; break;
-    case STG_PROP_ENTITY_LASERRETURN: return "STG_PROP_ENTITY_LASERRETURN"; break;
-    case STG_PROP_ENTITY_SONARRETURN: return "STG_PROP_ENTITY_SONARRETURN"; break;
-    case STG_PROP_ENTITY_IDARRETURN: return "STG_PROP_ENTITY_IDARRETURN"; break;
-    case STG_PROP_ENTITY_OBSTACLERETURN: return "STG_PROP_ENTITY_OBSTACLERETURN"; break;
-    case STG_PROP_ENTITY_VISIONRETURN: return "STG_PROP_ENTITY_VISIONRETURN"; break;
-    case STG_PROP_ENTITY_PUCKRETURN: return "STG_PROP_ENTITY_PUCKETURN"; break;
-    case STG_PROP_ENTITY_PLAYERID: return "STG_PROP_ENTITY_PLAYERID"; break;
-    case STG_PROP_ENTITY_PPM: return "STG_PROP_ENTITY_PPM"; break;
-    case STG_PROP_ENTITY_RECTS: return "STG_PROP_ENTITY_RECTS"; break;
     case STG_PROP_ENTITY_CIRCLES: return "STG_PROP_ENTITY_CIRCLES"; break;
+    case STG_PROP_ENTITY_COLOR: return "STG_PROP_ENTITY_COLOR"; break;
     case STG_PROP_ENTITY_COMMAND: return "STG_PROP_ENTITY_COMMAND"; break;
     case STG_PROP_ENTITY_DATA: return "STG_PROP_ENTITY_DATA"; break;
-    case STG_PROP_SONAR_RANGEBOUNDS: return "STG_PROP_SONAR_RANGEBOUNDS";break;
-    case STG_PROP_SONAR_POWER: return "STG_PROP_SONAR_POWER"; break;
+    case STG_PROP_ENTITY_IDARRETURN: return "STG_PROP_ENTITY_IDARRETURN"; break;
+    case STG_PROP_ENTITY_LASERRETURN: return "STG_PROP_ENTITY_LASERRETURN"; break;
+    case STG_PROP_ENTITY_NAME: return "STG_PROP_ENTITY_NAME"; break;
+    case STG_PROP_ENTITY_OBSTACLERETURN: return "STG_PROP_ENTITY_OBSTACLERETURN";break;
+    case STG_PROP_ENTITY_ORIGIN: return "STG_PROP_ENTITY_ORIGIN"; break;
+    case STG_PROP_ENTITY_PLAYERID: return "STG_PROP_ENTITY_PLAYERID"; break;
+    case STG_PROP_ENTITY_POSE: return "STG_PROP_ENTITY_POSE"; break;
+    case STG_PROP_ENTITY_PPM: return "STG_PROP_ENTITY_PPM"; break;
+    case STG_PROP_ENTITY_PUCKRETURN: return "STG_PROP_ENTITY_PUCKETURN"; break;
+    case STG_PROP_ENTITY_RECTS: return "STG_PROP_ENTITY_RECTS"; break;
+    case STG_PROP_ENTITY_SIZE: return "STG_PROP_ENTITY_SIZE"; break;
+    case STG_PROP_ENTITY_SONARRETURN: return "STG_PROP_ENTITY_SONARRETURN"; break;
+    case STG_PROP_ENTITY_SUBSCRIBE: return "STG_PROP_ENTITY_SUBSCRIBE"; break;
+    case STG_PROP_ENTITY_UNSUBSCRIBE: return "STG_PROP_ENTITY_UNSUBSCRIBE"; break;
+    case STG_PROP_ENTITY_VELOCITY: return "STG_PROP_ENTITY_VELOCITY"; break;
+    case STG_PROP_ENTITY_VISIONRETURN: return "STG_PROP_ENTITY_VISIONRETURN"; break;
+    case STG_PROP_ENTITY_VOLTAGE: return "STG_PROP_ENTITY_VOLTAGE"; break;
+    case STG_PROP_ROOT_CREATE: return "STG_PROP_ROOT_CREATE"; break;
+    case STG_PROP_ROOT_GUI: return "STG_PROP_ROOT_GUI"; break;
     case STG_PROP_SONAR_GEOM: return "STG_PROP_SONAR_GEOM"; break;
+    case STG_PROP_SONAR_POWER: return "STG_PROP_SONAR_POWER"; break;
+    case STG_PROP_SONAR_RANGEBOUNDS: return "STG_PROP_SONAR_RANGEBOUNDS";break;
+    case STG_PROP_IDAR_TXRX: return "STG_PROP_IDAR_TXRX"; break;
+    case STG_PROP_IDAR_TX: return "STG_PROP_IDAR_TX"; break;
+    case STG_PROP_IDAR_RX: return "STG_PROP_IDAR_RX"; break;
+    case STG_PROP_ENTITY_PARENT: return "STG_PROP_ENTITY_PARENT"; break;
     default:
       break;
     }
@@ -144,10 +253,14 @@ void SIOTimeStamp( stage_header_t* hdr, double simtime )
 void SIODebugBuffer( stage_buffer_t* buf )
 {
   assert( buf );
-
+  
   size_t c;
   
-  printf( "Buffer %p:%d bytes: ", buf->data, buf->len );
+  PRINT_DEBUG3( "stage buffer at %p data: %p len: %d bytes: ", 
+		buf, buf->data, buf->len );
+  
+  if( buf->len == 0 )
+    printf( "<none>" );
   
   for( c=0; c<buf->len; c++ )
     {
@@ -184,8 +297,8 @@ size_t SIOWritePacket( int con, void* data, size_t len )
   size_t writecnt = 0;
   int thiswritecnt;
  
-  //printf( "writing packet on connection %d - %p %d bytes\n", 
-  //  con, data, len );
+  //PRINT_DEBUG3( "writing packet on connection %d - %p %d bytes\n", 
+  //	con, data, len );
   
   while(writecnt < len )
   {
@@ -198,9 +311,9 @@ size_t SIOWritePacket( int con, void* data, size_t len )
       
     writecnt += thiswritecnt;
   }
-
-  //printf( "wrote %d/%d packet bytes\n", writecnt, len );
-
+  
+  //PRINT_DEBUG2( "wrote %d/%d packet bytes\n", writecnt, len );
+  
   return len; //success
 }
 
@@ -281,6 +394,8 @@ int SIOWriteMessage( int con, double simtime, stage_header_type_t type,
   SIOBufferPacket( outbuf, &hdr, sizeof(hdr) );
   SIOBufferPacket( outbuf, data, len );
   
+  //SIODebugBuffer( outbuf );
+
   if( con == -1 ) // if ALL CONNECTIONS was requested
     {
       int c;
@@ -348,10 +463,11 @@ int SIOReadData( int con,
   free( buf );
   
   // send the replies
-  assert( SIOWriteMessage( con, 0.0,
-			   STG_HDR_PROPS, replies->data, replies->len )
-	  == 0 );
+  //assert( SIOWriteMessage( con, 0.0,
+  //		   STG_HDR_PROPS, replies->data, replies->len )
+  //  == 0 );
   
+  SIOFreeBuffer( replies );
 
   return 0;
 }
@@ -362,7 +478,7 @@ int SIOReadProperties( int con, size_t len, stg_data_callback_t callback )
 {
   if( len == 0 )
     {
-      PRINT_WARN( "Reading ZERO properties" );
+      //PRINT_WARN( "Reading ZERO properties" );
       return 0; // success
     }
 
@@ -382,6 +498,8 @@ int SIOReadProperties( int con, size_t len, stg_data_callback_t callback )
   // create a buffer for replies
   stage_buffer_t* replies = SIOCreateBuffer();
 
+  stage_buffer_t* this_reply;
+
   // the first property header is at the start of the buffer
   char* prop_header = prop_buf;
   
@@ -394,14 +512,31 @@ int SIOReadProperties( int con, size_t len, stg_data_callback_t callback )
       //PRINT_DEBUG2( "Read property id %d len %d\n", prop->id, prop->len );
       
       // CALL THE CALLBACK WITH THIS SINGLE PROPERTY
+      //PRINT_DEBUG2( "calling callback for property %s, reply %d",
+      //	    SIOPropString(prop->property), prop->reply );
+      
+      // if this prop requests a reply
+      if( prop->reply == STG_WANTREPLY )
+	{
+	  PRINT_DEBUG2( "reply requested for ent %d prop %s", 
+			prop->id, SIOPropString(prop->property) );
+	  
+	  this_reply = replies; // we sent a pointer to the reply buffer
+	}
+      else
+	this_reply = NULL; // if not, we send a null pointer
+      
       if( callback )
 	(*callback)( con, (char*)prop,  sizeof(stage_property_t)+prop->len,
-		     replies );
+		     this_reply );
 
       // move the pointer past this record in the buffer
       prop_header += sizeof(stage_property_t) + prop->len;
     }
 
+  //PRINT_DEBUG( "reply buffer" );
+  //SIODebugBuffer( replies );
+  //PRINT_DEBUG1( "writing %d bytes of props",  replies->len );
   
   // send the replies
   assert( SIOWriteMessage( con, 0.0,
@@ -851,7 +986,8 @@ int SIOBufferProperty( stage_buffer_t* bundle,
   prop.len = len;
   prop.reply = mode;
 
-  printf( "buffering %d byte header + %d bytes data\n", sizeof(prop), len );
+  //PRINT_DEBUG2( "buffering %lu byte header + %lu bytes data", 
+  //	(unsigned long)sizeof(prop), (unsigned long)len );
 
   // buffer the header for this property
   SIOBufferPacket( bundle, &prop, sizeof(prop) );

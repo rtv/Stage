@@ -21,7 +21,7 @@
  * Desc: Simulates a root ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: root.hh,v 1.1.2.4 2003-02-07 05:30:34 rtv Exp $
+ * CVS info: $Id: root.hh,v 1.1.2.5 2003-02-24 04:47:12 rtv Exp $
  */
 
 #ifndef ROOTDEVICE_HH
@@ -31,20 +31,20 @@
 #include "library.hh"
 
 
-class CRootDevice : public CEntity
+class CRootEntity : public CEntity
 {
   // Default constructor
-public: CRootDevice( LibraryItem *libit );
+public: CRootEntity( void );
   
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-public: static CRootDevice* Creator( LibraryItem *libit,
-				     int id, CEntity *parent )
-  {
-    return( new CRootDevice( libit ) );
-  }
+  //public: static CRootEntity* Creator( LibraryItem *libit,
+  //			     int id, CEntity *parent )
+  //{
+  // return( new CRootEntity( libit ) );
+  //}
   
   // Startup routine
 private: int CreateMatrix( void );
@@ -54,9 +54,9 @@ private: int CreateMatrix( void );
   // Update the device
 public: 
   //  virtual void Update(double sim_time);
-  virtual int SetProperty( int con, stage_prop_id_t property, 
-			   void* value, size_t len );
-
+  virtual int Property( int con, stage_prop_id_t property, 
+			void* value, size_t len, stage_buffer_t* reply );
+  
 };
 
 #endif

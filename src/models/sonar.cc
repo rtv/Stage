@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonar.cc,v 1.1.2.6 2003-02-23 08:01:37 rtv Exp $
+ * CVS info: $Id: sonar.cc,v 1.1.2.7 2003-02-24 04:47:13 rtv Exp $
  */
 
 #include <assert.h>
@@ -115,7 +115,7 @@ int CSonarModel::Update()
 	}
     }
   
-  PRINT_WARN1( "sonar exporting data at %.4f seconds", CEntity::simtime );
+  //PRINT_WARN1( "sonar exporting data at %.4f seconds", CEntity::simtime );
   
   // this is the right way to export data, so everyone else finds out about it
   Property( -1, STG_PROP_ENTITY_DATA, 
@@ -199,5 +199,5 @@ int SonarTest( int connection )
   SIOBufferProperty( props, sonar.id, STG_PROP_SONAR_POWER,
 		     &power, sizeof(power), STG_NOREPLY );
   
-
+  return 0; //success
 }

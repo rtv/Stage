@@ -23,6 +23,9 @@
    /* maps enum'd property codes to strings */
    const char* SIOPropString( stage_prop_id_t id );
 
+   /* maps enum'd header codes to strings */
+   const char* SIOHdrString( stage_header_type_t type );
+
    /* returns the number of active connections */
    int SIOGetConnectionCount();
 
@@ -47,9 +50,19 @@
 			      stg_data_callback_t model_cb,
 			      stg_data_callback_t prop_cb,
 			      stg_data_callback_t gui_cb );
-   
+
+   // sends a buffer full of properties and places any replies in the
+   // recv buffer (if non-null)
+   int SIOPropertyUpdate( int con, double timestamp, 
+			  stage_buffer_t* send, stage_buffer_t* recv  );
+
    // temporary...
-   int SIOReportResults( double simtime, char* data, size_t len );
+   //int SIOReportResults( double simtime, char* data, size_t len );
+   
+   // given an array of models, ask stage to create them. If
+   // successful, returns 0 and fills in the correct ID number in each
+   // model
+   int SIOCreateModels( int con, double timestamp, stage_model_t* models, int num );
    
    // ALL THESE FUNCTIONS RETURN -1 ON FAILURE, ELSE 0
    

@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.1.2.12 2003-02-23 08:01:38 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.1.2.13 2003-02-24 04:47:13 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -153,8 +153,7 @@ int RtkGuiCreateApp( void )
 {
   app = rtk_app_create();
   canvas = rtk_canvas_create(app);
-  
-  /*    
+      
   // Add some menu items
   file_menu = rtk_menu_create(canvas, "File");
   save_menuitem = rtk_menuitem_create(file_menu, "Save", 0);
@@ -195,8 +194,7 @@ int RtkGuiCreateApp( void )
   action_menu = rtk_menu_create(canvas, "Action");
   subscribedonly_item = rtk_menuitem_create(action_menu, 
 					    "Subscribe to all", 1);
-  */
-   
+  
   /* BROKEN
   //zero the view menus
   memset( &device_menu,0,sizeof(stage_menu_t));
@@ -259,8 +257,8 @@ int RtkGuiLoad( stage_gui_config_t* cfg )
   rtk_canvas_origin( canvas, ox, oy);
   
   // check the menu items appropriately
-  //rtk_menuitem_check(grid_item, cfg->showgrid);
-  //rtk_menuitem_check(subscribedonly_item, cfg->showsubscribedonly);
+  rtk_menuitem_check(grid_item, cfg->showgrid);
+  rtk_menuitem_check(subscribedonly_item, cfg->showsubscribedonly);
  
   rtk_canvas_render( canvas );
 
@@ -349,7 +347,7 @@ int RtkGuiUpdate( void )
     }
 
   // Process menus
-  //RtkMenuHandling();      
+  RtkMenuHandling();      
   
   // Render the canvas
   rtk_canvas_render( canvas);

@@ -1,6 +1,6 @@
 
 /*
-  $Id: stest.c,v 1.1.2.20 2003-02-23 08:01:37 rtv Exp $
+  $Id: stest.c,v 1.1.2.21 2003-02-24 04:47:12 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -130,12 +130,13 @@ int HandleLostConnection( int connection )
   return 0;
 }
 
-int HandleModel( int connection, void* data, size_t len )
+int HandleModel( int connection, void* data, size_t len, 
+		 stage_buffer_t* replies )
 {
   assert( len == sizeof(stage_model_t) );
   stage_model_t* model = (stage_model_t*)data;
   
-  printf( "Received %d bytes model packet on connection %d", (int)len, connection );
+  //printf( "Received %d bytes model packet on connection %d", (int)len, connection );
 
   // if we see the key we've been waiting for, the model request is confirmed
   if( model->key == pending_key )
@@ -144,17 +145,19 @@ int HandleModel( int connection, void* data, size_t len )
   return 0; //success
 }
 
-int HandleProperty( int connection, void* data, size_t len )
+int HandleProperty( int connection, void* data, size_t len,
+		    stage_buffer_t* replies )
 { 
   assert( len >= sizeof(stage_property_t) );
   stage_property_t* prop = (stage_property_t*)data;
   
   printf( "Received %d bytes property (%d,%s,%d) on connection %d\n",
-	  (int)len, prop->id, SIOPropString(prop->property), (int)prop->len, connection );
+    (int)len, prop->id, SIOPropString(prop->property), (int)prop->len, connection );
   return 0; //success
 }
 
-int HandleCommand( int connection, void* data, size_t len )
+int HandleCommand( int connection, void* data, size_t len,
+		 stage_buffer_t* replies )
 {  
   assert( len == sizeof(stage_cmd_t) );
   stage_cmd_t* cmd = (stage_cmd_t*)data;
@@ -176,7 +179,7 @@ void Resize( int con, int id, double x, double y )
   sz.x = x;
   sz.y = y;
   SIOBufferProperty( bp, id, STG_PROP_ENTITY_SIZE, 
-		     (char*)&sz, sizeof(sz), 0 );
+		     (char*)&sz, sizeof(sz), STG_NOREPLY );
     
   SIOWriteMessage( con, timestamp,
 		   STG_HDR_PROPS, bp->data, bp->len );
@@ -192,7 +195,7 @@ void SetResolution( int con, int id, double ppm )
   
   // set the spatial resolution of the simulator in pixels-per-meter
   SIOBufferProperty( bp, id, STG_PROP_ENTITY_PPM, 
-		     (char*)&ppm, sizeof(ppm), 0);
+		     (char*)&ppm, sizeof(ppm), STG_NOREPLY);
   
   SIOWriteMessage( con, timestamp,
 		   STG_HDR_PROPS, bp->data, bp->len );
@@ -211,7 +214,7 @@ void SetVelocity( int con, int id, double vx, double vy, double va )
   assert(bp);
 
   SIOBufferProperty( bp, id, STG_PROP_ENTITY_VELOCITY, 
-		     (char*)&vel, sizeof(vel), 0 );
+		     (char*)&vel, sizeof(vel),  STG_NOREPLY);
 
   SIOWriteMessage( con, timestamp,
 		   STG_HDR_PROPS, bp->data, bp->len );
@@ -240,41 +243,6 @@ int CreateModel( int connection, stage_model_t* model )
   // now we know the id Stage gave this model
   model->id = pending_id;
   
-  return 0; // success
-}
-
-// sends a buffer full of properties and places any replies in the
-// recv buffer (if non-null)
-int SIOPropertyUpdate( int con, 
-		       stage_buffer_t* send, stage_buffer_t* recv = NULL )
-{
-  if( send == NULL )
-    { 
-      PRINT_ERR( "send buffer is null" );
-      return -1;
-    }
-  
-  // send the properties
-  assert( SIOWriteMessage( connection, timestamp,
-			   STG_HDR_PROPS, props->data, props->len )
-	  == 0 );
-  
-  // the next thing to arrive should be our reply
-  stage_header_t hdr;
-  size_t hdrbytes = SIOReadPacket( con, &hdr, sizeof(hdr) ); 
-  assert( hdr.type == STG_HDR_PROPS );
-  
-  // make room for the incoming properties and read them
-  char* buf = calloc(hdr.len,1);
-  size_t databytes = SIOReadPacket( con, buf, hdr.len );
-  assert( databytes == hdr.len );
-  
-  // if the caller is interested in the relies, copy the data we
-  // read into the receive buffer
-  if( recv ) SIOBufferPacket( recv, buf, hdr.len );
-  
-  free( buf );
-
   return 0; // success
 }
 
@@ -309,8 +277,48 @@ int SIOPropertyUpdate( int con,
     {
       double timestamp = 0.0;
 
-      TEST( "Creating a GUI" );
 
+      stage_model_t boxes[4];
+
+      int b;
+      for( b=0; b<4; b++ )
+	{
+	  boxes[b].parent_id = 0; // root!
+	  strncpy( boxes[b].token, "box", STG_TOKEN_MAX );
+	}
+      
+      SIOCreateModels( connection, timestamp, boxes, 4 );
+      
+      for( b=0; b<4; b++ )
+	{
+	  PRINT_DEBUG3( "created %s id %d parent %d", 
+			boxes[b].token, boxes[b].id, boxes[b].parent_id );
+	}
+
+      stage_model_t idars[2];
+      for( b=0; b<2; b++ )
+	{
+	  idars[b].parent_id = 0; // root 
+	  strncpy( idars[b].token, "idar", STG_TOKEN_MAX );
+	}
+      
+      SIOCreateModels( connection, timestamp, idars, 2 );
+
+      stage_model_t sonars[4];
+      for( b=0; b<4; b++ )
+	{
+	  sonars[b].parent_id = boxes[b].id; 
+	  strncpy( sonars[b].token, "sonar", STG_TOKEN_MAX );
+	}
+      
+      //SIOCreateModels( connection, timestamp, sonars, 4 );
+     
+
+      stage_buffer_t* props = SIOCreateBuffer();
+      assert(props);
+
+      
+      // request a GUI so we can see all this stuff
       stage_gui_config_t gui;
       strcpy( gui.token, "rtk" );
       gui.width = 600;
@@ -321,110 +329,129 @@ int SIOPropertyUpdate( int con,
       gui.showsubscribedonly = 0;
       gui.showgrid = 1;
       gui.showdata = 1;
-            
-      result = SIOWriteMessage( connection, timestamp, 
-				STG_HDR_GUI, (char*)&gui, sizeof(gui) ) ;
       
-      EVAL(result);
+      SIOBufferProperty( props, 0, STG_PROP_ROOT_GUI,
+			 &gui, sizeof(gui), STG_NOREPLY );
       
-      // define some models we want to create
-      stage_model_t root;
-      root.parent_id = -1; // only the root can have no parent
-      strncpy( root.token, "box", STG_TOKEN_MAX );
-      assert( CreateModel( connection,  &root ) == 0 );
-      
-      stage_model_t box;
-      box.parent_id = root.id;
-      strncpy( box.token, "box", STG_TOKEN_MAX );
-      assert( CreateModel( connection,  &box ) == 0 );
-      
-      stage_model_t bitmap;
-      bitmap.parent_id = root.id;
-      strncpy( bitmap.token, "box", STG_TOKEN_MAX );
-      assert( CreateModel( connection,  &bitmap ) == 0 );
-
-      stage_model_t sonar;
-      sonar.parent_id = box.id;
-      strncpy( sonar.token, "sonar", STG_TOKEN_MAX );
-      assert( CreateModel( connection,  &sonar ) == 0 );
-      
-      // define some properties
-      stage_buffer_t* props = SIOCreateBuffer();
-      assert(props);
-      
-      
-      // pose the bitmap
-      stage_pose_t pose;
-      SIOPackPose( &pose, 4.0, 6.0, 0.0 );      
-      SIOBufferProperty( props, bitmap.id, STG_PROP_ENTITY_POSE, 
-			 (char*)&pose, sizeof(pose),0 );
-      
-      // size the bitmap
-      stage_size_t size;
-      size.x = 2.0;
-      size.y = 2.0;
-      SIOBufferProperty( props, bitmap.id, STG_PROP_ENTITY_SIZE,
-			 (char*)&size, sizeof(size),0 );
-      
-      // pose the box
-      SIOPackPose( &pose, 2.0, 1.0, 1.0 );      
-      SIOBufferProperty( props, box.id, STG_PROP_ENTITY_POSE, 
-      	 (char*)&pose, sizeof(pose),0 );
-
-      // subscribe to the box's pose, size and rects.
-      int subs[1];
-      //subs[0] = STG_PROP_ENTITY_DATA;
-      subs[0] = STG_PROP_ENTITY_POSE;
-      //subs[2] = STG_PROP_ENTITY_SIZE;
-      //subs[3] = STG_PROP_ENTITY_RECTS;
-      
-      SIOBufferProperty( props, box.id, STG_PROP_ENTITY_SUBSCRIBE,
-			 subs, 1*sizeof(subs[0]),0 );
-      
-
-      subs[0] =  STG_PROP_ENTITY_DATA;
-      
-      SIOBufferProperty( props, sonar.id, STG_PROP_ENTITY_SUBSCRIBE,
-			 subs, 1*sizeof(subs[0]),0 );
-      
-
       int num_rects;
       stage_rotrect_t* rects = RectsFromPnm( &num_rects, "worlds/cave.pnm" );
-      printf( "attempting to buffer %d rects\n", num_rects );
-
+      
       // send the rectangles to root
-      SIOBufferProperty( props, root.id, STG_PROP_ENTITY_RECTS, 
-			 (char*)rects, num_rects * sizeof(rects[0]),0 );
+      SIOBufferProperty( props, 0, STG_PROP_ENTITY_RECTS, 
+			 rects, num_rects * sizeof(rects[0]), STG_NOREPLY );
+      
+      
+      // size a box
+      stage_size_t size;
 
+      size.x = 0.5;
+      size.y = 0.5;
+      SIOBufferProperty( props, boxes[0].id, STG_PROP_ENTITY_SIZE,
+			 &size, sizeof(size), STG_NOREPLY );
+      
+      size.x = 1.0;
+      size.y = 1.0;
+      SIOBufferProperty( props, boxes[1].id, STG_PROP_ENTITY_SIZE,
+			 &size, sizeof(size), STG_NOREPLY );
+
+      size.x = 1.5;
+      size.y = 1.5;
+      SIOBufferProperty( props, boxes[2].id, STG_PROP_ENTITY_SIZE,
+			 &size, sizeof(size), STG_NOREPLY );
+
+      size.x = 2.0;
+      size.y = 2.0;
+      SIOBufferProperty( props, boxes[3].id, STG_PROP_ENTITY_SIZE,
+			 &size, sizeof(size), STG_NOREPLY );
+
+      // pose the box
+      stage_pose_t pose;
+      SIOPackPose( &pose, 2.0, 1.0, 0.0 );      
+      SIOBufferProperty( props, boxes[0].id, STG_PROP_ENTITY_POSE, 
+			 &pose, sizeof(pose), STG_NOREPLY );
+
+      SIOPackPose( &pose, 4.0, 1.0, 0.5 );      
+      SIOBufferProperty( props, boxes[1].id, STG_PROP_ENTITY_POSE, 
+			 &pose, sizeof(pose), STG_NOREPLY );
+
+      SIOPackPose( &pose, 6.0, 1.0, 1.0 );      
+      SIOBufferProperty( props, boxes[2].id, STG_PROP_ENTITY_POSE, 
+			 &pose, sizeof(pose), STG_NOREPLY );
+
+      SIOPackPose( &pose, 8.0, 1.0, 1.5 );      
+      SIOBufferProperty( props, boxes[3].id, STG_PROP_ENTITY_POSE, 
+			 &pose, sizeof(pose), STG_NOREPLY );
+
+      
+      // subscribe to each box's pose and size
+      int subs[2];
+      subs[0] = STG_PROP_ENTITY_POSE;
+      subs[1] = STG_PROP_ENTITY_SIZE;
+      
+      //for( b=0; b<4; b++ ) 
+      //SIOBufferProperty( props, boxes[b].id, STG_PROP_ENTITY_SUBSCRIBE,
+      //		   subs, 2*sizeof(subs[0]), STG_NOREPLY );
+      
+      
+      // subscribe to each sonar's data
+      int sub = STG_PROP_ENTITY_DATA;
+      
+      //for( b=0; b<4; b++ ) 
+      //SIOBufferProperty( props, sonars[b].id, STG_PROP_ENTITY_SUBSCRIBE,
+      //		   &sub, sizeof(sub), STG_NOREPLY );
+      
       //rects = RectsFromPnm( &num_rects, "worlds/smiley.ppm" );
       //SIOBufferProperty( props, bitmap.id, STG_PROP_ENTITY_RECTS, 
       //	 (char*)rects, num_rects * sizeof(rects[0]),0 );
       
-      TEST( "Sending properties" );
-      result = SIOWriteMessage( connection, timestamp,
-				STG_HDR_PROPS, props->data, props->len );
-      EVAL(result);
+      
+      // no replies expected for these properties
+      result = SIOPropertyUpdate( connection, timestamp, props, NULL );
+     
+      //TEST( "Sending properties" );
+
+      //getprops = SIOCreateBuffer();
+      //result = SIOPropertyUpdate( connection, props, getprops );
+      
+      //EVAL(result);
+
+      //SIODebugBuffer( getprops );
       
       SIOFreeBuffer( props );
 
 
-      puts( "looping" );
+      //puts( "looping" );
       
       int c = 0;
       double x = 0;
       double  y = 0;
       double z = 0;
-      while( c < 1000000 )
+      while( c < 100000 )
 	{
 	  printf( " cycle %d\r", c++ );
 	  
-	  SIOWriteMessage( connection, timestamp, STG_HDR_CONTINUE, NULL, 0 );
 	  
 	  //Resize( connection, bitmap.id,  
 	  // 0.5 + 3.0 * fabs(sin(x)),  0.5 + 3.0 * fabs(cos(x+=0.05)) );
 	 
 	  //SetVelocity( connection, box.id, 3.0 * sin(x), 2.0 * cos(x+=0.1), 2.0 );
 
+	  if( (c % 100 ) == 0 )
+	    {
+	      stage_buffer_t* buf = SIOCreateBuffer();
+
+	      stage_idar_tx_t tx;
+	      strncpy( tx.mesg, "Foo", IDARBUFLEN ); 
+	      tx.len = strlen( "Foo" );
+	      tx.intensity = 64;
+	      
+	      SIOBufferProperty( buf, idars[0].id, STG_PROP_IDAR_TX, 
+				 &tx, sizeof(tx), STG_NOREPLY );
+	      
+	      result = SIOPropertyUpdate( connection, timestamp, buf, NULL );
+
+	      SIOFreeBuffer( buf );
+	    }
 	  /*
 	  if( c == 75 )
 	    {
@@ -444,9 +471,11 @@ int SIOPropertyUpdate( int con,
 	    }
 	  */
 
+	  SIOWriteMessage( connection, timestamp, STG_HDR_CONTINUE, NULL, 0 );
+	  // don't do anything in here!
 	  SIOServiceConnections( &HandleLostConnection,
 				 &HandleCommand,
-				 &HandleModel, 
+				 NULL,//&HandleModel, 
 				 &HandleProperty,
 				 NULL );
 	}

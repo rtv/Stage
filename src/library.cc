@@ -24,7 +24,7 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.13.4.10 2003-02-23 08:01:36 rtv Exp $
+ * CVS info: $Id: library.cc,v 1.13.4.11 2003-02-24 04:47:12 rtv Exp $
  */
 
 #include <assert.h>
@@ -55,6 +55,10 @@ Library::Library( const stage_libitem_t item_array[] )
       
       item_count++;
     }
+
+  // make a root object
+
+  
 }
 
 
@@ -76,8 +80,23 @@ stage_libitem_t* Library::FindItemWithToken( const stage_libitem_t* items,
   return NULL; // didn't find the token
 }
 
+
+// put the root object at the start of the array -
+// warning -  this destroys the rest of the array, so should
+// only be called from root's contructor
+void Library::InsertRoot( CEntity* root )
+{
+  if( model_count > 0 )
+    PRINT_WARN( "attempting to add the root entry while some others exist" );
+  
+  // poke myself into the library as entry zero
+  entPtrs = (CEntity**)realloc(  entPtrs, sizeof( entPtrs[0]) );
+  entPtrs[0] = root;
+  model_count = 1;
+}
+
 // create an instance of an entity given a worldfile token
-CEntity* Library::CreateEntity( stage_model_t* model )
+stage_id_t Library::CreateEntity( stage_model_t* model )
 {
   assert( model );
   
@@ -90,14 +109,14 @@ CEntity* Library::CreateEntity( stage_model_t* model )
     {
       PRINT_ERR1( "requested model '%s' is not in the library", 
 		  model->token );
-      return NULL;
+      return -1;
     }
   
   if( libit->fp == NULL )
   {
     PRINT_ERR1( "requested model '%s' doesn't have a creator function", 
 		model->token );
-    return NULL;
+    return -1;
   }
   
   
@@ -112,7 +131,7 @@ CEntity* Library::CreateEntity( stage_model_t* model )
 	{
 	  PRINT_ERR1( "parent specified (%d) but pointer not found",
 		      model->parent_id );
-	  return NULL;
+	  return -1;
 	}
     }
   
@@ -135,7 +154,7 @@ CEntity* Library::CreateEntity( stage_model_t* model )
       PRINT_WARN3( "Startup failed for model %d (%s) at %p",
 		   model->id, model->token, ent );
       delete ent;
-      return NULL;
+      return -1;
     }
   
   // now start the GUI repn for this entity
@@ -144,7 +163,7 @@ CEntity* Library::CreateEntity( stage_model_t* model )
       PRINT_WARN3( "Gui startup failed for model %d (%s) at %p",
 		   model->id, model->token, ent );
       delete ent; // destructor calls CEntity::Shutdown()
-      return NULL;
+      return -1;
     }      
   
   // add space for this model
@@ -152,12 +171,12 @@ CEntity* Library::CreateEntity( stage_model_t* model )
   entPtrs[model_count] = ent;
   model_count++;
  
-  for( int t=0; t<model_count; t++ )
-    printf( "entPtrs[%d] = %p\n", t, entPtrs[t] );
+  //for( int t=0; t<model_count; t++ )
+  //printf( "entPtrs[%d] = %p\n", t, entPtrs[t] );
 
   if( ent ) PRINT_DEBUG3(  "Startup successful for model %d (%s) at %p",
 			   model->id, model->token, ent );
-  return ent; // NULL if failed
+  return model->id; 
 } 
 
 void Library::Print( void )

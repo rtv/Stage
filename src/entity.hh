@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15.2.18 2003-02-23 08:01:35 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.19 2003-02-24 04:47:12 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -115,7 +115,7 @@ protected:
   // END ---------------------------------------------------------
   
   // Get/set properties
-public: int Property( int con,
+public: virtual int Property( int con,
 		      stage_prop_id_t property, 
 		      void* value, size_t len, 
 		      stage_buffer_t* reply );
@@ -312,17 +312,18 @@ public:
   // flag is true iff this entity is updated by this host
   public: bool m_local; 
 
-
+public: int fig_count;
+  
   // functions for drawing this entity in GUIs
 #ifdef INCLUDE_RTK2
   // Initialise the rtk gui
-  public: virtual void RtkStartup();
+  public: virtual int RtkStartup();
 
   // Finalise the rtk gui
   public: virtual void RtkShutdown();
 
   // Update the rtk gui
-  public: virtual void RtkUpdate();
+  public: virtual int RtkUpdate();
 
   // Default figure handle
   public: rtk_fig_t *fig, *fig_label, *fig_grid;

@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonar.hh,v 1.1.2.3 2003-02-23 08:01:38 rtv Exp $
+ * CVS info: $Id: sonar.hh,v 1.1.2.4 2003-02-24 04:47:13 rtv Exp $
  */
 
 #ifndef SONARDEVICE_HH
@@ -76,13 +76,13 @@ private:
 #ifdef INCLUDE_RTK2
 
   // Initialise the rtk gui
-  public: virtual void RtkStartup();
+  public: virtual int RtkStartup();
 
   // Finalise the rtk gui
   public: virtual void RtkShutdown();
 
   // Update the rtk gui
-  public: virtual void RtkUpdate();
+  public: virtual int RtkUpdate();
   
   // For drawing the sonar beams
   private: rtk_fig_t *scan_fig;

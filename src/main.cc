@@ -23,14 +23,14 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan, Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.30 2003-02-23 08:01:36 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.31 2003-02-24 04:47:12 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
 #  include <config.h>
 #endif
 
-#undef DEBUG
+#define DEBUG
 #undef VERBOSE
 
 #include <stdlib.h>
@@ -47,15 +47,16 @@
 
 #include "sio.h"
 #include "entity.hh"
+#include "root.hh"
 
 #include "models/puck.hh"
 #include "models/sonar.hh"
+#include "models/idar.hh"
 /*
 #include "models/bumperdevice.hh"
 #include "models/broadcastdevice.hh"
 #include "models/gpsdevice.hh"
 #include "models/gripperdevice.hh"
-#include "models/idardevice.hh"
 #include "models/idarturretdevice.hh"
 #include "models/fiducialfinderdevice.hh"
 #include "models/laserdevice.hh"
@@ -78,6 +79,7 @@ stage_libitem_t library_items[] = {
   { "box", "black", (CFP)CEntity::Creator},
   { "puck", "green", (CFP)CPuck::Creator},
   { "sonar", "red", (CFP)CSonarModel::Creator},
+  { "idar", "blue", (CFP)CIdarModel::Creator },
   /*
     { "bitmap", "blue", (CFP)CBitmap::Creator},
   { "laser", "blue", (CFP)CLaserDevice::Creator},
@@ -113,23 +115,22 @@ Library model_library( library_items );
 // Stage handles multiple GUI libraries. Add your library functions
 // here and set the counter correctly
 
-#include "rtkgui/rtkgui.hh"
-
-
 #ifdef INCLUDE_RTK2
-const int gui_count = 1; // must match the number of entries in the array
-stage_gui_library_item_t gui_library[] = {
-  { "rtk", // install callback functions for the RTK2-based GUI 
-    RtkGuiInit, RtkGuiLoad, RtkGuiUpdate, 
-    RtkGuiEntityStartup, RtkGuiEntityShutdown,
-    RtkGuiEntityPropertyChange
-  }
-};
-#else
-const int gui_count = 0; // must match the number of entries in the array
-stage_gui_library_item_t gui_library[] = {};
+#include "rtkgui/rtkgui.hh"
 #endif
 
+stage_gui_library_item_t gui_library[] = {
+#ifdef INCLUDE_RTK2
+  { "rtk", 
+    RtkGuiInit, RtkGuiLoad, RtkGuiUpdate, 
+    RtkGuiEntityStartup, RtkGuiEntityShutdown, RtkGuiEntityPropertyChange 
+  },
+#endif
+  { "", NULL,NULL,NULL,NULL,NULL,NULL} // marks the end of the array
+};
+
+// this is set in GuiInit by counting the entries above
+int gui_count = 0;
 ///////////////////////////////////////////////////////////////////////////
 // Global vars
 
@@ -233,50 +234,26 @@ int HandleLostConnection( int connection )
   return 0; // success
 }
 
-int HandleModel(  int connection, void* data, size_t len, 
-		  stage_buffer_t* replies )
-{
-  assert( len == sizeof(stage_model_t) );
-  stage_model_t* model = (stage_model_t*)data;
-  
-  PRINT_DEBUG1( "Received model on connection %d", connection );
-  
-  // create an entity. returns a pointer to a CEntity, and sets the model.id
-  if( model_library.CreateEntity( model ) == NULL )
-    {
-      PRINT_WARN( "failed to create an entity" );
-      return -1;
-    }
-  
-  // return the model packet to the client with the id filled in.
-  SIOWriteMessage( connection, CEntity::simtime, 
-		   STG_HDR_MODEL, 
-		   (char*)model, sizeof(stage_model_t) );
-  
-  SIOWriteMessage( connection, CEntity::simtime, STG_HDR_CONTINUE, NULL, 0 );
-
-  return 0; // success
-}
-
 int HandleProperty( int connection,  void* data, size_t len,
 		    stage_buffer_t* replies )
 {
-  PRINT_DEBUG3( "Received %d byte property request "
-		"(of which header is %d bytes ) on connection %d", 
-		(int)len, (int)sizeof(stage_property_t), connection );
+  //PRINT_DEBUG3( "Received %d byte property request "
+  //	"(of which header is %d bytes ) on connection %d", 
+  //	(int)len, (int)sizeof(stage_property_t), connection );
   
   assert( len >= sizeof(stage_property_t) );
   stage_property_t* prop = (stage_property_t*)data;
   
-  PRINT_DEBUG2( "Received property %d on connection %d", 
-		prop->property, connection );
+  PRINT_DEBUG3( "Received property %s (%d) on connection %d", 
+		SIOPropString(prop->property), prop->property, connection );
   
 
   // get a pointer to the object with this id
   CEntity* ent = model_library.GetEntFromId( prop->id );
 
   if( !ent )
-    PRINT_WARN2( "Received property %d for non-existent model %d", prop->id, prop->property );
+    PRINT_WARN3( "Received property %s (%d) for non-existent model %d", 
+		 SIOPropString(prop->property), prop->property, prop->id );
   else
     {
       // pass the property data to the entity to absorb
@@ -286,6 +263,9 @@ int HandleProperty( int connection,  void* data, size_t len,
 		     prop->len, // the length of the raw data      
 		     replies ); // a buffer to store replies in
     }
+
+  // send the replies back
+
 
   return 0; //success
 }
@@ -315,40 +295,29 @@ int HandleCommand(  int connection, void* data, size_t len,
   return 0; //success
 }
 
-int HandleGui( int connection, void* data, size_t len ,
-	       stage_buffer_t* replies )
-{
-  assert( len == sizeof(stage_gui_config_t) );
-  stage_gui_config_t* cfg  = (stage_gui_config_t*)data;
-  assert( cfg );
-
-  PRINT_DEBUG1( "received GUI configuraton for library %s", 
-		cfg->token );
-
-  // find the library index of the GUI library with this token
-  int l; 
-  for( l=0; l < gui_count; l++ )
-    if( strcmp( gui_library[l].token, cfg->token ) == 0 )
-      // call the config function from the correct library and return
-      return( (*(gui_library[l].load_func))( cfg ) );
-  
-  PRINT_WARN1( "Received config for unknown GUI library %s", cfg->token );
-  
-  return -1;// fail
-}
-
 int GuiInit( int argc, char** argv )
 {
-  int g;
-  for( g=0; g<gui_count; g++ )
+  // count and initialize the registered GUIs
+  gui_count = 0;
+  for( stage_gui_library_item_t* gui = gui_library; 
+       strlen(gui->token) > 0;
+       gui++ )
     {
-      PRINT_DEBUG1( "init of gui %d", g );
-      if( (*gui_library[g].init_func)(argc, argv) == -1 )
+      PRINT_DEBUG2( "counting gui library item %d : %s", 
+		    gui_count, gui->token );
+      
+      
+      PRINT_DEBUG2( "init of gui %d (%s)", gui_count, gui->token );
+      if( (gui->init_func)(argc, argv) == -1 )
 	{
-	  PRINT_WARN1( "Gui initialization failed on GUI %d\n", g );
-	  return -1;
+	  PRINT_WARN2( "Gui initialization failed on GUI %d (%s)\n", 
+		       gui_count, gui->token );
 	}
+      
+      gui_count++;
+
     }
+
   return 0; // success
 }
 
@@ -360,7 +329,7 @@ int GuiEntityStartup( CEntity* ent )
   int g;
   for( g=0; g<gui_count; g++ )
     {
-      PRINT_DEBUG2( "gui startup for ent %d on GUI %d", ent->stage_id, g );
+      //PRINT_DEBUG2( "gui startup for ent %d on GUI %d", ent->stage_id, g );
       
       if( (*gui_library[g].createmodel_func)(ent) == -1 )
 	{
@@ -382,7 +351,7 @@ int GuiUpdate( void )
   int g;
   for( g=0; g<gui_count; g++ )
     {
-      //printf( "GUI Update on GUI %d\n", g );
+      //PRINT_DEBUG2( "GUI Update on GUI %d (%s)", g, gui_library[g].token );
       
        if( (*gui_library[g].update_func)() == -1 )
 	{
@@ -400,8 +369,8 @@ int GuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
   int g;
   for( g=0; g<gui_count; g++ )
     {
-      PRINT_DEBUG3( "gui prop change for ent %d on GUI %d prop %d", 
-		    ent->stage_id, g, prop );
+      //PRINT_DEBUG3( "gui prop change for ent %d on GUI %d prop %d", 
+      //	    ent->stage_id, g, prop );
       
       if( (*gui_library[g].tweakmodel_func)(ent, prop) == -1 )
 	{
@@ -419,7 +388,7 @@ int GuiEntityShutdown( CEntity* ent )
   int g;
   for( g=0; g<gui_count; g++ )
     {
-      PRINT_DEBUG2( "gui shutdown for ent %d on GUI %d", ent->stage_id, g );
+      //PRINT_DEBUG2( "gui shutdown for ent %d on GUI %d", ent->stage_id, g );
 
       if( (*gui_library[g].destroymodel_func)(ent) == -1 )
 	{
@@ -428,6 +397,12 @@ int GuiEntityShutdown( CEntity* ent )
 	}      
     }
 
+  // stop the children too!
+  CEntity* ch;
+  for( ch = ent->child_list; ch; ch = ch->next )
+    if( GuiEntityShutdown( ch ) == -1 )
+      return -1;
+  
   return 0;
 }
 
@@ -452,7 +427,7 @@ int PublishDirty()
 		  {
 		    stage_prop_id_t propid = (stage_prop_id_t)p;
 		    
-		    PRINT_WARN3( "ent: %d con: %d prop: %s needs exported",
+		    PRINT_DEBUG3( "ent: %d con: %d prop: %s needs exported",
 				 ent, con, SIOPropString(propid) );
 		    
 		    // add the dirty property to the dirty buffer
@@ -467,7 +442,7 @@ int PublishDirty()
       
       if( dirty_prop_count > 0 )
 	{
-	  PRINT_WARN2( "writing %d dirty properties on con %d", dirty_prop_count, con );
+	  PRINT_DEBUG2( "writing %d dirty properties on con %d", dirty_prop_count, con );
 	  SIOWriteMessage( con, CEntity::simtime, 
 			   STG_HDR_PROPS, dirty->data, dirty->len );
 	}
@@ -572,7 +547,8 @@ int main(int argc, char **argv)
   //int c = 0;
   
   // create the root object
-  //RootEntity(
+  CRootEntity root;
+  GuiEntityStartup( &root );
 
   // the main loop
   while( !quit ) 
@@ -588,9 +564,9 @@ int main(int argc, char **argv)
       // update the world
       if( SIOServiceConnections( &HandleLostConnection,
 				 &HandleCommand, 
-				 &HandleModel, 
+				 NULL, 
 				 &HandleProperty,
-				 &HandleGui ) == -1 ) break;
+				 NULL ) == -1 ) break;
       
       // update the simulation model
       if( CEntity::root && !paused  ) 

@@ -1,4 +1,6 @@
 
+#define DEBUG
+
 #include <assert.h>
 #include <string.h>
 #include "math.h"
@@ -8,11 +10,27 @@
 extern rtk_canvas_t* canvas;
 extern rtk_app_t* app;
 
-
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the rtk gui
-void CEntity::RtkStartup()
+int CEntity::RtkStartup()
 {
+  PRINT_DEBUG2( "RTKSTARTUP ent %d (%s)", this->stage_id, this->token );
+  
+  if( canvas == NULL )
+    {
+      PRINT_WARN1( "rtk startup for ent %d no canvas!", this->stage_id );
+      return 0; // it's ok though..
+    }
+
+  if( this->fig )
+    {
+      PRINT_WARN2( " fig already exists for  ent %d (%s). deleting it.", 
+		   this->stage_id, this->token );
+      
+      rtk_fig_destroy( this->fig );
+      fig_count--;
+    }
+
   // Create a figure representing this entity
   if( m_parent_entity == NULL )
     this->fig = rtk_fig_create( canvas, NULL, 50);
@@ -21,6 +39,11 @@ void CEntity::RtkStartup()
 
   assert( this->fig );
 
+  fig_count++;
+  
+  PRINT_DEBUG3( "FIG COUNT %d for  ent %d (%s)", 
+	       fig_count, this->stage_id, this->token );
+  
   // Set the mouse handler
   this->fig->userdata = this;
   rtk_fig_add_mouse_handler(this->fig, RtkOnMouse);
@@ -140,9 +163,15 @@ void CEntity::RtkStartup()
   
   // do our children after we're set
   CHILDLOOP( child ) 
-    child->RtkStartup();
+    if( child->RtkStartup() == -1 )
+      {
+	PRINT_ERR( "failed to rtkstartup child" );
+	return -1;
+      }
 
   PRINT_DEBUG( "RTK STARTUP DONE" );
+
+  return 0;
 }
 
 
@@ -151,14 +180,25 @@ void CEntity::RtkStartup()
 // Finalise the rtk gui
 void CEntity::RtkShutdown()
 {
-  PRINT_DEBUG1( "RTK SHUTDOWN %d", this->stage_id );
-  
+  PRINT_DEBUG2( "RTKSHUTDOWN ent %d (%s)", this->stage_id, this->token );
+
   // do our children first
   CHILDLOOP( child )
     child->RtkShutdown();
-
+  
   // Clean up the figure we created
-  if( this->fig ) rtk_fig_destroy(this->fig);
+  if( this->fig ) 
+    {
+      rtk_fig_destroy(this->fig);
+      this->fig = NULL;
+     
+      fig_count--;
+      
+      PRINT_DEBUG3( "FIG COUNT %d for  ent %d (%s)", 
+		   fig_count, this->stage_id, this->token );
+    }
+
+
   if( this->fig_label ) rtk_fig_destroy(this->fig_label);
   if( this->fig_grid ) rtk_fig_destroy( this->fig_grid );
 
@@ -170,9 +210,9 @@ void CEntity::RtkShutdown()
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the rtk gui
-void CEntity::RtkUpdate()
+int CEntity::RtkUpdate()
 {
-  PRINT_WARN1( "RTK update for ent %d", this->stage_id );
+  PRINT_DEBUG1( "RTK update for ent %d", this->stage_id );
   //CHILDLOOP( child ) child->RtkUpdate();
 
   // TODO this is nasty and inefficient - figure out a better way to
@@ -186,7 +226,9 @@ void CEntity::RtkUpdate()
   //else // we need to show and update this figure
   {
     rtk_fig_show( this->fig, true );  }
-  PRINT_WARN1( "RTK update for ent %d done", this->stage_id );  
+  PRINT_DEBUG1( "RTK update for ent %d done", this->stage_id );  
+
+  return 0; // success
 }
 
 
@@ -220,15 +262,25 @@ void RtkOnMouse(rtk_fig_t *fig, int event, int mode)
 
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the rtk gui
-void CSonarModel::RtkStartup()
+int CSonarModel::RtkStartup()
 {
-  CEntity::RtkStartup();
+  if( CEntity::RtkStartup() == -1 )
+    {
+      PRINT_ERR1( "model %d (sonar) base startup failed", this->stage_id );
+      return -1;
+    }
   
-  // Create a figure representing this object
-  this->scan_fig = rtk_fig_create( canvas, NULL, 49);
+  // there still might not be a canvas
+  if( canvas )
+    {
+      // Create a figure representing this object
+      this->scan_fig = rtk_fig_create( canvas, NULL, 49);
+      
+      // Set the color
+      rtk_fig_color_rgb32(this->scan_fig, this->color);
+    }
 
-  // Set the color
-  rtk_fig_color_rgb32(this->scan_fig, this->color);
+  return 0; //success
 }
 
 
@@ -237,7 +289,112 @@ void CSonarModel::RtkStartup()
 void CSonarModel::RtkShutdown()
 {
   // Clean up the figure we created
-  rtk_fig_destroy(this->scan_fig);
+  if( this->scan_fig) 
+    {
+      rtk_fig_destroy(this->scan_fig);
+      this->scan_fig = NULL;
+    }
+  
+  CEntity::RtkShutdown();
+} 
+
+
+///////////////////////////////////////////////////////////////////////////
+// Update the rtk gui
+int CSonarModel::RtkUpdate()
+{
+  if( CEntity::RtkUpdate() == -1 )
+    {
+      PRINT_ERR1( "model %d (sonar) base update failed", this->stage_id );
+      return -1;
+    }
+
+  if( this->scan_fig )
+    {
+      rtk_fig_clear(this->scan_fig);
+      
+      double ranges[SONARSAMPLES];
+      size_t len = SONARSAMPLES * sizeof(ranges[0]);
+      
+      if( IsSubscribed( STG_PROP_ENTITY_DATA ) )//&& ShowDeviceData( this->lib_entry->type_num) )
+	{
+	  if( this->GetData( (char*)ranges, &len ) == 0 )
+	    {
+	      int range_count = len / sizeof(ranges[0]);
+	      
+	      for (int s = 0; s < range_count; s++)
+		{
+		  // draw a line from the position of the sonar sensor...
+		  double ox = this->sonars[s][0];
+		  double oy = this->sonars[s][1];
+		  double oth = this->sonars[s][2];
+		  LocalToGlobal(ox, oy, oth);
+		  
+		  // ...out to the range indicated by the data
+		  double x1 = ox;
+		  double y1 = oy;
+		  double x2 = x1 + ranges[s] * cos(oth); 
+		  double y2 = y1 + ranges[s] * sin(oth);       
+		  
+		  //PRINT_WARN4( "line: %.2f %.2f to  %.2f %.2f",
+		  //   x1, y1, x2, y2 );
+		  
+		  rtk_fig_line(this->scan_fig, x1, y1, x2, y2 );
+		}
+	    }
+	}
+      
+      //else 
+      //if( this->scan_fig ) rtk_fig_clear( this->scan_fig ); 
+    }
+
+  return 0; //success
+}
+
+// IDAR --------------------------------------------------------------------------
+#include "idar.hh"
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise the rtk gui
+int CIdarModel::RtkStartup()
+{
+  if( CEntity::RtkStartup() == -1 )
+    {
+      PRINT_ERR( "idar failed to rtkstartup base" );
+      return -1;
+    }
+  
+  if( canvas )
+    {
+      // Create a figure representing this object
+      this->data_fig = rtk_fig_create( canvas, this->fig, 49);
+      this->rays_fig = rtk_fig_create( canvas, this->fig, 48);
+      
+      rtk_fig_origin(this->data_fig, 0,0,0 );
+      rtk_fig_origin(this->rays_fig, 0,0,0 );
+      
+      // show our orientation in the body figure
+      rtk_fig_line( this->fig, 0,0, size_x/2.0, 0);
+
+      // Set the color
+      rtk_fig_color_rgb32(this->data_fig, this->color);
+      rtk_fig_color_rgb32(this->rays_fig, LookupColor( "gray50") );      
+    }
+
+  return 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Finalise the rtk gui
+void CIdarModel::RtkShutdown()
+{
+  // Clean up the figure we created
+  if(this->data_fig) rtk_fig_destroy(this->data_fig);
+  if(this->rays_fig) rtk_fig_destroy(this->rays_fig);
+  
+  this->data_fig = NULL;
+  this->rays_fig = NULL;
 
   CEntity::RtkShutdown();
 } 
@@ -245,44 +402,28 @@ void CSonarModel::RtkShutdown()
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the rtk gui
-void CSonarModel::RtkUpdate()
+int CIdarModel::RtkUpdate()
 {
-  CEntity::RtkUpdate();
-
-  rtk_fig_clear(this->scan_fig);
-
-  double ranges[SONARSAMPLES];
-  size_t len = SONARSAMPLES * sizeof(ranges[0]);
-  
-  if( IsSubscribed( STG_PROP_ENTITY_DATA ) )//&& ShowDeviceData( this->lib_entry->type_num) )
+  if( CEntity::RtkUpdate() == -1 )
     {
-      if( this->GetData( (char*)ranges, &len ) == 0 )
-	{
-	  int range_count = len / sizeof(ranges[0]);
-	  
-	  for (int s = 0; s < range_count; s++)
-	    {
-	      // draw a line from the position of the sonar sensor...
-	      double ox = this->sonars[s][0];
-	      double oy = this->sonars[s][1];
-	      double oth = this->sonars[s][2];
-	      LocalToGlobal(ox, oy, oth);
-	      
-	      // ...out to the range indicated by the data
-	      double x1 = ox;
-	      double y1 = oy;
-	      double x2 = x1 + ranges[s] * cos(oth); 
-	      double y2 = y1 + ranges[s] * sin(oth);       
-	      
-	      //PRINT_WARN4( "line: %.2f %.2f to  %.2f %.2f",
-	      //   x1, y1, x2, y2 );
-
-	      rtk_fig_line(this->scan_fig, x1, y1, x2, y2 );
-	    }
-	}
+      PRINT_ERR( "idar failed to rtkupdate base" );
+      return -1;
     }
   
-  //else 
-  //if( this->scan_fig ) rtk_fig_clear( this->scan_fig ); 
+  PRINT_DEBUG1( "idar %d updating", this->stage_id );
+  
+  // Get global pose
+  double gx, gy, gth;
+  GetGlobalPose(gx, gy, gth);
+  rtk_fig_origin(this->data_fig, gx, gy, gth );
+  
+  rtk_fig_show( this->data_fig, true );
+  rtk_fig_show( this->rays_fig, true );
+
+  //if( Subscribed() < 1 )
+  //{
+  //rtk_fig_clear( this->rays_fig );
+  //rtk_fig_clear( this->data_fig );
+  // }
 }
 
