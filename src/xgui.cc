@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xgui.cc,v 1.2 2001-06-01 21:25:54 ahoward Exp $
+ * $Id: xgui.cc,v 1.3 2001-06-29 00:04:35 gerkey Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -760,6 +760,7 @@ size_t CXGui::DataSize( ExportData* exp )
     case laserbeacon_o: break;
     case box_o: break;
     case player_o: break;
+    case puck_o: break;
     }	
   
   return sz;
@@ -848,6 +849,7 @@ void CXGui::ImportExportData( ExportData* exp )
 	case uscpioneer_o: break;
 	case pioneer_o: break;
 	case laserbeacon_o: break;
+	case puck_o: break;
 	case box_o: break;
 	case player_o: break;
 	  
@@ -876,6 +878,7 @@ void CXGui::RenderObject( ExportData* exp, bool extended )
       case uscpioneer_o: RenderUSCPioneer( exp, extended ); break;
       case laserturret_o: RenderLaserTurret( exp, extended ); break;
       case laserbeacon_o: RenderLaserBeacon( exp, extended ); break;
+      case puck_o: RenderPuck( exp, extended ); break;
       case box_o: RenderBox( exp, extended ); break;
       case player_o: RenderPlayer( exp, extended ); break;
       case misc_o: RenderMisc( exp , extended); break;
@@ -1133,6 +1136,22 @@ void CXGui::RenderLaserBeacon( ExportData* exp, bool extended )
   GetRect( exp->x, exp->y, exp->width/2.0, exp->height/2.0, exp->th, pts );
 
   DrawPolygon( pts, 4 );
+}
+
+void CXGui::RenderPuck( ExportData* exp, bool extended )
+{ 
+#ifdef LABELS
+  RenderObjectLabel( exp, "Puck", 4 );
+#endif
+  
+  SetForeground( RGB(0,0,255) );
+  //DrawBox( exp->x, exp->y, 0.1 );
+  DrawCircle( exp->x, exp->y, (exp->width/2));
+
+  //DPoint pts[4];
+  //GetRect( exp->x, exp->y, exp->width/2.0, exp->height/2.0, exp->th, pts );
+
+  //DrawPolygon( pts, 4 );
 }
 
 void CXGui::GetRect( double x, double y, double dx, double dy, 

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.10 $
+//  $Author: gerkey $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -58,6 +58,7 @@ CWorld::CWorld()
     m_obs_img = NULL;
     m_laser_img = NULL;
     m_vision_img = NULL;
+    m_puck_img = NULL;
 
     // Initialise clocks
     //
@@ -89,6 +90,8 @@ CWorld::~CWorld()
         delete m_laser_img;
     if (m_vision_img)
         delete m_vision_img;
+    if (m_puck_img)
+        delete m_puck_img;
 }
 
 
@@ -430,6 +433,11 @@ bool CWorld::InitGrids(const char *env_file)
     //
     m_vision_img = new Nimage(width, height);
     m_vision_img->clear(0);
+
+    // Clear puck image
+    //
+    m_puck_img = new Nimage(width, height);
+    m_puck_img->clear(0);
                 
     return true;
 }
@@ -455,6 +463,8 @@ uint8_t CWorld::GetCell(double px, double py, EWorldLayer layer)
             return m_laser_img->get_pixel(ix, iy);
         case layer_vision:
             return m_vision_img->get_pixel(ix, iy);
+        case layer_puck:
+            return m_puck_img->get_pixel(ix, iy);
     }
     return 0;
 }
@@ -482,6 +492,9 @@ void CWorld::SetCell(double px, double py, EWorldLayer layer, uint8_t value)
             break;
         case layer_vision:
             m_vision_img->set_pixel(ix, iy, value);
+            break;
+        case layer_puck:
+            m_puck_img->set_pixel(ix, iy, value);
             break;
     }
 }
@@ -536,6 +549,8 @@ uint8_t CWorld::GetRectangle(double px, double py, double pth,
             return m_laser_img->rect_detect(rect);
         case layer_vision:
             return m_vision_img->rect_detect(rect);
+        case layer_puck:
+            return m_puck_img->rect_detect(rect);
     }
     return 0;
 }
@@ -592,6 +607,9 @@ void CWorld::SetRectangle(double px, double py, double pth,
             break;
         case layer_vision:
             m_vision_img->draw_rect(rect, value);
+            break;
+        case layer_puck:
+            m_puck_img->draw_rect(rect, value);
             break;
     }
 }
@@ -721,6 +739,55 @@ bool CWorld::GetLaserBeacon(int index, int *id, double *px, double *py, double *
     *py = m_laserbeacon[index].m_py;
     *pth = m_laserbeacon[index].m_pth;
     return true;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise puck representation
+//
+void CWorld::InitPuck()
+{
+    m_puck_count = 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Add a puck to the world
+// Returns an index for the puck
+//
+int CWorld::AddPuck(CPuck* puck)
+{
+  assert(m_puck_count < ARRAYSIZE(m_puck));
+  int index = m_puck_count++;
+  m_puck[index].puck = puck;
+  //m_puck[index].m_id = id;
+  return index;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Set the position of a puck
+//
+void CWorld::SetPuck(int index, double px, double py, double pth)
+{
+  ASSERT(index >= 0 && index < m_puck_count);
+  m_puck[index].m_px = px;
+  m_puck[index].m_py = py;
+  m_puck[index].m_pth = pth;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Get the position of a puck
+//
+CPuck* CWorld::GetPuck(int index, double *px, double *py, double *pth)
+{
+  if (index < 0 || index >= m_puck_count)
+    return NULL;
+  //*id = m_puck[index].m_id;
+  *px = m_puck[index].m_px;
+  *py = m_puck[index].m_py;
+  *pth = m_puck[index].m_pth;
+  return m_puck[index].puck;
 }
 
 

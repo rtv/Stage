@@ -1,7 +1,7 @@
 /*************************************************************************
  * guiexport.hh - data types for exporting data to an external GUI
  * RTV
- * $Id: guiexport.hh,v 1.2 2001-06-01 21:25:47 ahoward Exp $
+ * $Id: guiexport.hh,v 1.3 2001-06-29 00:04:34 gerkey Exp $
  ************************************************************************/
 #ifndef GUIEXPORT_H
 #define GUIEXPORT_H
@@ -34,7 +34,8 @@ enum ExportObjectType
   pioneer_o, 
   uscpioneer_o,		  
   box_o, 
-  laserbeacon_o
+  laserbeacon_o,
+  puck_o,
 };
 
 typedef struct  

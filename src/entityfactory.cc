@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.5 $
+//  $Author: gerkey $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -28,6 +28,7 @@
 #include "entityfactory.hh"
 #include "boxobstacle.hh"
 #include "laserbeacon.hh"
+#include "puck.hh"
 #include "visionbeacon.hh"
 #include "usc_pioneer.hh"
 #include "pioneermobiledevice.hh"
@@ -49,6 +50,11 @@ CEntity* CreateObject(const char *type, CWorld *world, CEntity *parent)
     //
     if (strcmp(type, "laser_beacon") == 0)
         return new CLaserBeacon(world, parent);
+    
+    // Create puck
+    //
+    if (strcmp(type, "movable_object") == 0)
+        return new CPuck(world, parent);
 
     // Create vision beacon
     //

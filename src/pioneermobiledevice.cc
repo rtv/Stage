@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.14 $
+//  $Author: gerkey $
+//  $Revision: 1.15 $
 //
 // Usage:
 //  (empty)
@@ -27,6 +27,7 @@
 #define ENABLE_RTK_TRACE 1
 
 #include <math.h>
+#include <values.h>   // for MAXDOUBLE
 
 #include "world.hh"
 #include "pioneermobiledevice.hh"
@@ -125,13 +126,28 @@ int CPioneerMobileDevice::Move()
     // Check for collisions
     // and accept the new pose if ok
     //
-    if (!InCollision(qx, qy, qth))
+    if (InCollision(qx, qy, qth))
+    {
+        this->stall = 1;
+    }
+    // did we hit a puck?
+    else if(InCollisionWithPuck(qx,qy,qth))
+    {
+        // move the robot 
+        SetPose(qx, qy, qth);
+        
+        // move the closest puck
+        // 
+        // NOTE: maybe not a complete solution; won't handle simultaneous
+        //       puck impacts
+        MovePuck(qx,qy,qth);
+    }
+    // everything's ok
+    else
     {
         SetPose(qx, qy, qth);
         this->stall = 0;
     }
-    else
-        this->stall = 1;
         
     // Compute the new odometric pose
     // Uses a first-order integration approximation
@@ -218,6 +234,97 @@ bool CPioneerMobileDevice::InCollision(double px, double py, double pth)
     return false;
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Check to see if the given pose will yield a collision with a puck
+//
+bool CPioneerMobileDevice::InCollisionWithPuck(double px, double py, double pth)
+{
+    double qx = px + m_offset_x * cos(pth);
+    double qy = py + m_offset_x * sin(pth);
+    double sx = m_size_x;
+    double sy = m_size_y;
+
+    if (m_world->GetRectangle(qx, qy, pth, sx, sy, layer_puck) > 0)
+        return true;
+
+    return false;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Search for which puck(s) we have collided with and move them
+//
+void CPioneerMobileDevice::MovePuck(double px, double py, double pth)
+{
+    double min_range = MAXDOUBLE;
+    double close_puck_bearing = 0;
+    double close_puck_x = 0;
+    double close_puck_y = 0;
+    CPuck* close_puck = NULL;
+    int close_puck_index = -1;
+    
+    //printf("robot pose: %f %f %f\n", px,py,RTOD(pth));
+    // Search for the closest puck in the list
+    // Is quicker than searching the bitmap!
+    //
+    for (int i = 0; true; i++)
+    {
+        // Get the position of the puck (global coords)
+        //
+        double qx, qy, qth;
+        CPuck* tmp_puck;
+        if (!(tmp_puck = m_world->GetPuck(i, &qx, &qy, &qth)))
+            break;
+        
+        //printf("considering puck: %d\n", i);
+
+        // Compute range and bearing to each puck
+        //
+        double dx = qx - px;
+        double dy = qy - py;
+        double r = sqrt(dx * dx + dy * dy);
+        //printf("range: %f\n", r);
+        double b = NORMALIZE(atan2(dy, dx) - pth);
+        //double o = NORMALIZE(qth - pth);
+
+        if(r < min_range)
+        {
+          min_range = r;
+          close_puck_bearing = b;
+          close_puck_x = qx;
+          close_puck_y = qy;
+          //close_puck_orientation = o;
+          close_puck_index = i;
+          close_puck = tmp_puck;
+        }
+    }
+
+    if(close_puck_index == -1)
+    {
+      puts("couldn't find puck to move");
+      return;
+    }
+    
+    // determine the direction to move the puck.
+    // it's the robot's orientation minus the bearing from the robot
+    // to the puck (loosely models circular objects colliding)
+    double puck_th = NORMALIZE(pth-close_puck_bearing);
+
+    // set puck orientation (move it enough to get it away from the robot)
+    close_puck->SetGlobalPose(close_puck_x+
+                                2.0*(close_puck->GetDiameter())*cos(puck_th),
+                              close_puck_y+
+                                2.0*(close_puck->GetDiameter())*sin(puck_th),
+                              puck_th);
+    //close_puck->SetGlobalPose(close_puck_x,close_puck_y,puck_th);
+    //printf("new puck pose: %f %f %f\n",
+       //close_puck_x+2.0*(close_puck->GetDiameter())*cos(puck_th),
+       //close_puck_y+2.0*(close_puck->GetDiameter())*sin(puck_th),
+       //puck_th);
+
+    // transfer some "momentum" (meters/second)
+    // assume that the robot has 10 times the mass of the puck
+    close_puck->SetSpeed(10*m_com_vr);
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Render the object in the world rep

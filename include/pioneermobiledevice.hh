@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/pioneermobiledevice.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Author: gerkey $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -52,6 +52,16 @@ class CPioneerMobileDevice : public CPlayerDevice
     // Check to see if the given pose will yield a collision
     //
     private: bool InCollision(double px, double py, double pth);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Check to see if the given pose will yield a collision with a puck
+    //
+    private: bool InCollisionWithPuck(double px, double py, double pth);
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Search for which puck(s) we have collided with and move them
+    //
+    private: void MovePuck(double px, double py, double pth);
 
     // Render the object in the world rep
     //

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.3 $
+//  $Author: gerkey $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -33,6 +33,7 @@
 
 #include "image.h"
 #include "entity.hh"
+#include "puck.hh" // need this for definition of CPuck to be kept in array
 
 #if INCLUDE_RTK
 #include "rtk_ui.hh"
@@ -57,6 +58,7 @@ enum EWorldLayer
     layer_obstacle = 0,
     layer_laser = 1,
     layer_vision = 2,
+    layer_puck = 3,
 };
 
 
@@ -216,6 +218,37 @@ class CWorld
         double m_px, m_py, m_pth;
     } m_laserbeacon[1000];
     
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Puck stuff
+
+    // Initialise laser beacon representation
+    //
+    private: void InitPuck();
+
+    // Add a puck to the world
+    // Returns an index for the puck
+    //
+    public: int AddPuck(CPuck* puck);
+    
+    // Set the position of a puck
+    //
+    public: void SetPuck(int index, double px, double py, double pth);
+
+    // Get the position of a puck
+    //
+    public: CPuck* GetPuck(int index, double *px, double *py, double *pth);
+                         
+
+    // Array of pucks
+    //
+    private: int m_puck_count;
+    private: struct
+    {
+        //int m_id;
+        double m_px, m_py, m_pth;
+        CPuck* puck;
+    } m_puck[1000];
     
     ///////////////////////////////////////////////////////////////////////////
     // Broadcast device functions
@@ -295,6 +328,11 @@ class CWorld
     //
     private: Nimage *m_vision_img;
 
+    // Puck (i.e., movable object) image
+    // Stores vision data
+    //
+    private: Nimage *m_puck_img;
+
 
     ///////////////////////////////////////////////////////////////////////////
     // Configuration variables
@@ -361,6 +399,7 @@ public:
   Nimage* GetForegroundImage( void ){ return m_obs_img; };
   Nimage* GetLaserImage( void ){ return m_laser_img; };
   Nimage* GetVisionImage( void ){ return m_vision_img; };
+  Nimage* GetPuckImage( void ){ return m_puck_img; };
   double GetWidth( void ){ return width; };
   double GetHeight( void ){ return height; };
 #endif
