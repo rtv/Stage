@@ -1,28 +1,28 @@
-///////////////////////////////////////////////////////////////////////////
-//
-// File: visiondevice.hh
-// Author: Andrew Howard
-// Date: 30 Nov 2000
-// Desc: Simulates the ACTS vision system
-//
-// CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visiondevice.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.15 $
-//
-// Usage:
-//  (empty)
-//
-// Theory of operation:
-//  (empty)
-//
-// Known bugs:
-//  (empty)
-//
-// Possible enhancements:
-//  (empty)
-//
-///////////////////////////////////////////////////////////////////////////
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/*
+ * Desc: Device to simulate the ACTS vision system.
+ * Author: Richard Vaughan, Andrew Howard
+ * Date: 28 Nov 2000
+ * CVS info: $Id: visiondevice.hh,v 1.16 2002-06-09 18:37:06 inspectorg Exp $
+ */
 
 #ifndef VISIONDEVICE_HH
 #define VISIONDEVICE_HH
@@ -30,7 +30,6 @@
 #include "entity.hh"
 
 // Forward declaration for ptz device
-//
 class CPtzDevice;
 
 #define MAXBLOBS 100 // PDOMA!
@@ -68,7 +67,8 @@ class CVisionDevice : public CEntity
   private: double m_pan, m_tilt, m_zoom;
 
   // channel to color map array
-  private: StageColor channel[ VISION_NUM_CHANNELS ];
+  private: int channel_count;
+  private: StageColor channels[VISION_NUM_CHANNELS];
   
   // Camera properties
   private: int cameraImageWidth, cameraImageHeight;
@@ -85,27 +85,7 @@ class CVisionDevice : public CEntity
 
   //private: player_vision_data_t actsBuf;
 
-#ifdef INCLUDE_RTK
-  // Process GUI update messages
-  public: virtual void OnUiUpdate(RtkUiDrawData *pData);
-
-  // Process GUI mouse messages
-  public: virtual void OnUiMouse(RtkUiMouseData *pData);
-
-  // Draw the field of view
-  private: void DrawFOV(RtkUiDrawData *pData);
-    
-  // Draw the image scan-line
-  private: void DrawScan(RtkUiDrawData *pData);
-
-  // Laser scan outline
-  private: int m_hit_count;
-  private: double m_hit[256][6];
-    
-#endif 
-
 #ifdef INCLUDE_RTK2
-  
   // Initialise the rtk gui
   protected: virtual void RtkStartup();
   

@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.15 2002-06-09 06:31:16 rtv Exp $
+ * CVS info: $Id: worldfile.cc,v 1.16 2002-06-09 18:37:06 inspectorg Exp $
  */
 
 #include <assert.h>
@@ -165,7 +165,7 @@ bool CWorldFile::Load(const char *filename)
 bool CWorldFile::Save(const char *filename)
 {
   // Debugging
-  DumpProperties();
+  //DumpProperties();
   
   // If no filename is supplied, use default
   if (!filename)

@@ -21,7 +21,7 @@
  * Desc: A device for getting the true pose of things.
  * Author: Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: truthdevice.cc,v 1.6 2002-06-09 00:33:02 inspectorg Exp $
+ * CVS info: $Id: truthdevice.cc,v 1.7 2002-06-09 18:37:06 inspectorg Exp $
  */
 
 #include "world.hh"
@@ -33,7 +33,7 @@
 CTruthDevice::CTruthDevice(CWorld *world, CEntity *parent)
     : CEntity(world, parent)
 {
-  m_data_len = 0;
+  m_data_len = sizeof(player_truth_data_t);
   m_command_len = 0;
   m_config_len  = 10;
   m_reply_len  = 10;
@@ -44,16 +44,25 @@ CTruthDevice::CTruthDevice(CWorld *world, CEntity *parent)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Update the trush data
+// Update the truth device
 void CTruthDevice::Update(double sim_time)
+{
+  if (!Subscribed())
+    return;
+
+  UpdateConfig();
+  UpdateData();
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Update the truth device
+void CTruthDevice::UpdateConfig()
 {
   int len;
   double px, py, pa;
   void* client;
 
-  if (!Subscribed())
-    return;
-  
   player_truth_pose_t config;
   if (GetConfig(&client, &config, sizeof(config)) > 0)
   {
@@ -102,4 +111,21 @@ void CTruthDevice::Update(double sim_time)
         break;
     }
   }
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Update data
+void CTruthDevice::UpdateData()
+{
+  double px, py, pa;
+
+  player_truth_data_t data;
+
+  GetGlobalPose(px, py, pa);
+  data.px = htonl((int)(px*1000.0));
+  data.py = htonl((int)(py*1000.0));
+  data.pa = htonl((int)(NORMALIZE(pa)*180/M_PI));
+  
+  PutData(&data, sizeof(data));
 }

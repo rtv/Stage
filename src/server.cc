@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.12 2002-06-09 06:31:16 rtv Exp $
+ * CVS info: $Id: server.cc,v 1.13 2002-06-09 18:37:06 inspectorg Exp $
  */
 
 #include <arpa/inet.h>
@@ -399,8 +399,6 @@ bool CStageServer::LoadFile( char* filename )
 // Save the world file
 bool CStageServer::SaveFile( char* filename )
 {
-  PRINT_MSG1("saving world to [%s]", filename);
-
   // Store the new name of the world file (for Save As).
   if (filename != NULL)
   {
@@ -408,7 +406,9 @@ bool CStageServer::SaveFile( char* filename )
     strcpy(this->worldfilename, filename);
     assert(this->worldfilename[0] != 0);
   }
-
+  
+  PRINT_MSG1("saving world to [%s]", this->worldfilename);
+  
   // Let each entity save itself
   for (int i = 0; i < GetEntityCount(); i++)
   {
