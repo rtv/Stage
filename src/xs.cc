@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.11 2001-08-15 23:20:04 vaughan Exp $
+ * $Id: xs.cc,v 1.12 2001-09-04 23:01:13 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -179,8 +179,8 @@ void PrintStageTruth( stage_truth_t &truth )
 
 void CXGui::PrintMetricTruth( int stage_id, truth_t &truth )
 {
-  printf( "%d:%s\t(%4d,%d,%d)\t(%4d,%d,%d)\t[%.2f,%.2f,%.2f]\t[%.2f,%.2f]\tACTS: %d\n",
-	  stage_id,
+  printf( "%p:%s\t(%4d,%d,%d)\t(%4d,%d,%d)\t[%.2f,%.2f,%.2f]\t[%.2f,%.2f]\tACTS: %d\n",
+	  (int*)stage_id,
 	  StageNameOf( truth ),
 	  truth.id.port, 
 	  truth.id.type, 
@@ -197,8 +197,8 @@ void CXGui::PrintMetricTruth( int stage_id, truth_t &truth )
 
 void CXGui::PrintMetricTruthVerbose( int stage_id, truth_t &truth )
 {
-  printf( "stage: %d:%s\tplayer: (%4d,%s:%d)\tparent(%4d,%s:%d)\tpose: [%.2f,%.2f,%.2f]\tsize: [%.2f,%.2f]\tACTS: %d\n", 
-	  stage_id,
+  printf( "stage: %p:%s\tplayer: (%4d,%s:%d)\tparent(%4d,%s:%d)\tpose: [%.2f,%.2f,%.2f]\tsize: [%.2f,%.2f]\tACTS: %d\n", 
+	  (int*)stage_id,
 	  StageNameOf( truth ),
 	  truth.id.port, 
 	  PlayerNameOf( truth.id ), 
@@ -438,6 +438,7 @@ bool DownloadEnvironment( environment_t* env )
 	    }
 	    
 	  recv += res;
+
 	  //#ifdef DEBUG
 	  //printf( "read %d/%d bytes\r", recv, len );
 	  //fflush( stdout );
@@ -449,6 +450,10 @@ bool DownloadEnvironment( environment_t* env )
       //fflush( stdout );
       //#endif
     }
+
+  // invert the y axis!
+  for( int c=0; c<env->num_pixels; c++ )
+    env->pixels[c].y = env->height - env->pixels[c].y;
 
   // make some space for the scaled pixels
   // they get filled in when call ScaleBackground()
@@ -1039,6 +1044,8 @@ void CXGui::DrawBackground( void )
 		 env->pixels_scaled, env->num_pixels, 
 		 CoordModeOrigin);
 
+  // draw a scale grid over the world
+  //SetForeground(  );
 }
 
 void CXGui::BoundsCheck( void )
@@ -1713,6 +1720,36 @@ void CXGui::HandleKeyPressEvent( XEvent& reportEvent )
       //world->Load();
       //RefreshObjects();
     }
+
+//    if( key == XK_g || key == XK_G )
+//      {
+      
+//        XSetForeground( display, gc, white );
+//        XSetLineAttributes( display, gc, 0, LineOnOffDash, CapRound, JoinRound );
+      
+//        DPoint pts[2];
+//        for( int i=0; i * ppm  < width ; i++ )
+//  	{
+//  	  pts[0].x = 0;
+//  	  pts[0].y = i;
+	  
+//  	  pts[1].x = width;
+//  	  pts[1].y = i; 
+	  
+//  	  DrawLine( pts[0], pts[1] );
+	  
+//  	  pts[0].y = 0;
+//  	  pts[0].x = i;
+	  
+//  	  pts[1].y = width;
+//  	  pts[1].x = i; 
+	  
+//  	  DrawLine( pts[0], pts[1] );
+//  	}
+  
+//        XSetLineAttributes( display, gc, 0, LineSolid, CapRound, JoinRound );
+//      }
+
 }  
 
 void CXGui::HandleExposeEvent( XEvent &reportEvent )

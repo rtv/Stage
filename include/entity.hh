@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.10 $
+//  $Author: vaughan $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -43,6 +43,7 @@
 //
 class CWorld;
 
+enum LaserReturn { LaserNothing=0, LaserSomething, LaserBright };
 
 ///////////////////////////////////////////////////////////////////////////
 // The basic object class
@@ -56,6 +57,14 @@ class CEntity
   
   StageType m_stage_type; // distinct from the player types found in messages.h
 
+  //uint32_t renderMask, senseMask;
+
+  bool obstacle_return;
+  bool sonar_return;  
+  bool puck_return;
+  int laser_return;
+  int channel_return; // -1 is transparent, 0 is opaque, 1 is ACTS Ch.0, etc.
+ 
     // Destructor
     //
     public: virtual ~CEntity();
@@ -121,8 +130,6 @@ class CEntity
   // flag is set when a dependent device is  attached to this device
     public: bool m_dependent_attached;
 
-    public: int truth_poked;
-
     // Line in the world description file
     //
     public: int m_line;
@@ -160,13 +167,13 @@ class CEntity
     public: double m_size_x, m_size_y;
     public: double m_offset_x, m_offset_y; // offset center of rotation
 
+    // The last mapped pose
+    //
+    protected: double m_map_px, m_map_py, m_map_pth;
+
     // Object color description (for display)(and maybe vision sensors later?)
     //
     private: char m_color_desc[128];
-
-    // the apparent color of this robot to a vision system like ACTS 
-    // (not yet implemented - get to it!)
-    public: int m_channel; 
 
     // how often to update this device, in seconds
     // all devices check this before updating their data
@@ -200,11 +207,14 @@ class CEntity
 
     // Commanded speed
     //
-    protected: double m_com_vr, m_com_vth;
-    protected: double m_mass;
+protected: double m_com_vr, m_com_vth;
+protected: double m_mass;
+  
+public: double dx, dy;
 
-    public: double GetSpeed() { return(m_com_vr); }
-    public: double GetMass() { return(m_mass); }
+
+public: double GetSpeed() { return(m_com_vr); }
+public: double GetMass() { return(m_mass); }
     
     // shouldn't really have this, but...
     public: void SetSpeed(double speed) { m_com_vr=speed; }
@@ -215,7 +225,7 @@ class CEntity
     //protected: ExportData exp;
     public: ExportData exp;
    
-    // compose and return the export data structure
+    // compose and return the exported data
     //
     protected: size_t GetCommand( void* command, size_t len);
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.8 $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -45,13 +45,17 @@ CBoxObstacle::CBoxObstacle(CWorld *world, CEntity *parent)
   m_player_type = 0;
   m_player_index = 0;
   
-  m_stage_type = BoxType;
-
-  m_channel = 0; // default to visible on ACTS channel 0
-
   m_size_x = 1.0;
   m_size_y = 1.0;
   
+  
+  m_stage_type = BoxType;
+
+  channel_return = 0; // default to visible on ACTS channel 0
+  laser_return = 1;
+  sonar_return = 1;
+  obstacle_return = 1;
+
   // Set the initial map pose
   //
   m_map_px = m_map_py = m_map_pth = 0;
@@ -119,37 +123,35 @@ bool CBoxObstacle::Save(int &argc, char **argv)
 //
 void CBoxObstacle::Update( double simtime )
 {
-  //cout << "UPDATE BOX" << endl;
-  //if( Subscribed() > 0 ) // i.e. our truth has been poked
-  //{
-    ASSERT(m_world);
-
-    if( simtime - m_last_update < m_interval )
-      return;
+  ASSERT(m_world);
+  
+  // See if its time to recalculate boxes
+  //
+  //if( simtime - m_last_update < m_interval )
+  //return;
     
-    m_last_update = simtime;
+  double x, y, th;
+  GetGlobalPose( x,y,th );
 
-    // Undraw our old representation
-    //
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                          m_size_x, m_size_y, layer_obstacle, 0);
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                          m_size_x, m_size_y, layer_laser, 0);
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                          m_size_x, m_size_y, layer_vision, 0);
-
-    // Update our global pose
-    //
-    GetGlobalPose(m_map_px, m_map_py, m_map_pth);
-
-    // Draw our new representation
-    //
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                          m_size_x, m_size_y, layer_obstacle, 1);
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                          m_size_x, m_size_y, layer_laser, 1);
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                          m_size_x, m_size_y, layer_vision, m_channel+1);
+  m_last_update = simtime;
+  
+  // if we've moved 
+  if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
+    {    
+      // Undraw our old representation
+      m_world->matrix->SetMode( mode_unset );
+      m_world->SetRectangle( m_map_px, m_map_py, m_map_pth,
+			     m_size_x, m_size_y, this );
+      
+      m_map_px = x; // update the render positions
+      m_map_py = y;
+      m_map_pth = th;
+      
+      // Draw our new representation
+      m_world->matrix->SetMode( mode_set );
+      m_world->SetRectangle( m_map_px, m_map_py, m_map_pth,
+			     m_size_x, m_size_y, this );
+    }
 }
 
 #ifdef INCLUDE_RTK

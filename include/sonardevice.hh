@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/sonardevice.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -30,6 +30,8 @@
 #include "playerdevice.hh"
 
 #define SONARSAMPLES PLAYER_NUM_SONAR_SAMPLES
+
+enum SonarReturn { SonarTransparent=0, SonarOpaque };
 
 class CSonarDevice : public CEntity
 {

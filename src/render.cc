@@ -350,6 +350,9 @@ void CXGui::RenderPuck( truth_t* exp, bool extended )
 { 
   SelectColor( exp,green );
   FillCircle( exp->x, exp->y, exp->w/2.0 );
+
+  //SetForeground( white );
+  //DrawNose( exp->x, exp->y, exp->w/2.0, exp->th );
 }
 
 void CXGui::RenderGps( truth_t* exp, bool extended )

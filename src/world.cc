@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.23 $
+//  $Author: vaughan $
+//  $Revision: 1.24 $
 //
 // Usage:
 //  (empty)
@@ -45,7 +45,10 @@
 
 #define SEMKEY 2000
 
-#define WATCH_RATES
+// allocate chunks of 32 pointers for entity storage
+const int OBJECT_ALLOC_SIZE = 32;
+
+//#define WATCH_RATES
 //#define DEBUG 
 //#define VERBOSE
 #undef DEBUG 
@@ -67,6 +70,12 @@ CWorld::CWorld()
     // seed the random number generator
     srand48( time(NULL) );
 
+    // AddObject() handles allocation of storage for entities
+    // just initialize stuff here
+    m_object = NULL;
+    m_object_alloc = 0;
+    m_object_count = 0;
+
     // Allow the simulation to run
     //
     m_enable = true;
@@ -78,10 +87,6 @@ CWorld::CWorld()
     // Initialise grids
     //
     m_bimg = NULL;
-    m_obs_img = NULL;
-    m_laser_img = NULL;
-    m_vision_img = NULL;
-    m_puck_img = NULL;
 
     // Initialise clocks
     //
@@ -99,11 +104,9 @@ CWorld::CWorld()
     
     memset( m_env_file, 0, sizeof(m_env_file));
 
-    // the current truth is unpublished
-    m_truth_is_current = false;
-
     // start with no key
     bzero(m_auth_key,sizeof(m_auth_key));
+
 }
 
 
@@ -114,19 +117,13 @@ CWorld::~CWorld()
 {
     if (m_bimg)
         delete m_bimg;
-    if (m_obs_img)
-        delete m_obs_img;
-    if (m_laser_img)
-        delete m_laser_img;
-    if (m_vision_img)
-        delete m_vision_img;
-    if (m_puck_img)
-        delete m_puck_img;
-    
+
+    if( matrix )
+      delete matrix;
+
     // zap the mmap IO point in the filesystem
     // XX fix this to test success later
     unlink( tmpName );
-
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -207,11 +204,7 @@ bool CWorld::InitSharedMemoryIO( void )
 // Startup routine 
 //
 bool CWorld::Startup()
-{
-    // Initialise the laser beacon rep
-    //
-    InitLaserBeacon();
-    
+{  
     // Initialise the broadcast queue
     //
     InitBroadcast();
@@ -402,6 +395,11 @@ void* CWorld::Main(void *arg)
         if (world->m_enable)
 	  world->Update();
 	
+	// dump the contents of the matrix to a file
+	//world->matrix->dump();
+	//getchar();
+	
+
         /* *** HACK -- should reinstate this somewhere ahoward
            if( !runDown ) runStart = timeNow;
            else if( (quitTime > 0) && (timeNow > (runStart + quitTime) ) )
@@ -462,15 +460,6 @@ void CWorld::Update()
     // Note that we must use the *real* timestep to get sensible results.
     //
     m_update_rate = (1 - a) * m_update_rate + a * (1 / timestep);
-
-//      if((GetRealTime() - last_output_time) >= 1.0)
-//      {
-//        printf("Sim time:%8.3fs Real time:%8.3fs Sim/Real:%8.3f Update:%8.3fHz\r",
-//               m_sim_time, GetRealTime(), m_update_ratio, m_update_rate);
-//        last_output_time = GetRealTime();
-//        fflush(stdout);
-//      }
-
 
     static int period = 0;
     if( (++period %= 20)  == 0 )
@@ -539,10 +528,6 @@ void CWorld::Update()
 	ent->SetGlobalPose( truth.x/1000.0, truth.y/1000.0, 
 			    DTOR(truth.th) );
 	
-	ent->truth_poked = 1;
-
-	//ent->Map( true );
-
 	// the parent may have been changed - NYI
 	//ent->parent->port = truth.parent.port;
 	//ent->parent.type = truth.parent.type;
@@ -593,7 +578,7 @@ bool CWorld::InitGrids(const char *env_file)
     // create a new background image from the pnm file
     // If we cant find it under the given name,
     // we look for a zipped version.
-    
+  
   m_bimg = new Nimage;
 
   // Try to guess the file type from the extension
@@ -631,168 +616,37 @@ bool CWorld::InitGrids(const char *env_file)
   // draw an outline around the background image
   m_bimg->draw_box( 0,0,width-1,height-1, 0xFF );
   
-  // Clear obstacle image
-  //
-  m_obs_img = new Nimage(width, height);
-  m_obs_img->clear(0);
-    
-  // Clear laser image
-  //
-  m_laser_img = new Nimage(width, height);
-  m_laser_img->clear(0);
+  matrix = new CMatrix( width, height );
+
+  wall = new CEntity( this, 0 );
   
-  // Copy fixed obstacles into laser rep
+  wall->m_stage_type = WallType;
+  wall->laser_return = LaserSomething;
+  wall->sonar_return = true;
+  wall->obstacle_return = true;
+  wall->channel_return = 0; // opaque!
+  wall->puck_return = false; // we trade velocities with pucks
+  
+  // Copy fixed obstacles into matrix
   //
   for (int y = 0; y < m_bimg->height; y++)
-    {
-        for (int x = 0; x < m_bimg->width; x++)
-        {
-            if (m_bimg->get_pixel(x, y) != 0)
-            {
-                m_obs_img->set_pixel(x, y, 0xFF);
-                m_laser_img->set_pixel(x, y, 0xFF);
-            }
-        }
-    }
+    for (int x = 0; x < m_bimg->width; x++)
+      if (m_bimg->get_pixel(x, y) != 0) matrix->set_cell( x,y,wall );
 
-  // Clear vision image
-  //
-  m_vision_img = new Nimage(width, height);
-  m_vision_img->clear(0);
+  // one day i'll get rid of the Nimage class - it is mostly redundant
+  // but a couple of things will need to switch to accessing the matrix
 
-  // Clear puck image
-  //
-  m_puck_img = new Nimage(width, height);
-  m_puck_img->clear(0);
-                
   return true;
 }
 
-
-///////////////////////////////////////////////////////////////////////////
-// Get a cell from the world grid
-//
-uint8_t CWorld::GetCell(double px, double py, EWorldLayer layer)
-{
-    // Convert from world to image coords
-    //
-    int ix = (int) (px * ppm);
-    int iy = m_bimg->height - (int) (py * ppm);
-
-    // This could be cleaned up by having an array of images
-    //
-    switch (layer)
-    {
-        case layer_obstacle:
-            return m_obs_img->get_pixel(ix, iy);
-        case layer_laser:
-            return m_laser_img->get_pixel(ix, iy);
-        case layer_vision:
-            return m_vision_img->get_pixel(ix, iy);
-        case layer_puck:
-            return m_puck_img->get_pixel(ix, iy);
-    }
-    return 0;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Set a cell in the world grid
-//
-void CWorld::SetCell(double px, double py, EWorldLayer layer, uint8_t value)
-{
-    // Convert from world to image coords
-    //
-    int ix = (int) (px * ppm);
-    int iy = m_bimg->height - (int) (py * ppm);
-
-    // This could be cleaned up by having an array of images
-    //
-    switch (layer)
-    {
-        case layer_obstacle:
-            m_obs_img->set_pixel(ix, iy, value);
-            break;
-        case layer_laser:
-            m_laser_img->set_pixel(ix, iy, value);
-            break;
-        case layer_vision:
-            m_vision_img->set_pixel(ix, iy, value);
-            break;
-        case layer_puck:
-            m_puck_img->set_pixel(ix, iy, value);
-            break;
-    }
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Get a rectangle in the world grid
-//
-uint8_t CWorld::GetRectangle(double px, double py, double pth,
-                             double dx, double dy, EWorldLayer layer)
-{
-    Rect rect;
-    double tx, ty;
-
-    dx /= 2;
-    dy /= 2;
-
-    double cx = dx * cos(pth);
-    double cy = dy * cos(pth);
-    double sx = dx * sin(pth);
-    double sy = dy * sin(pth);
-    
-    // This could be faster
-    //
-    tx = px + cx - sy;
-    ty = py + sx + cy;
-    rect.toplx = (int) (tx * ppm);
-    rect.toply = m_bimg->height - (int) (ty * ppm);
-
-    tx = px - cx - sy;
-    ty = py - sx + cy;
-    rect.toprx = (int) (tx * ppm);
-    rect.topry = m_bimg->height - (int) (ty * ppm);
-
-    tx = px - cx + sy;
-    ty = py - sx - cy;
-    rect.botlx = (int) (tx * ppm);
-    rect.botly = m_bimg->height - (int) (ty * ppm);
-
-    tx = px + cx + sy;
-    ty = py + sx - cy;
-    rect.botrx = (int) (tx * ppm);
-    rect.botry = m_bimg->height - (int) (ty * ppm);
-    
-    // This could be cleaned up by having an array of images
-    //
-    switch (layer)
-    {
-        case layer_obstacle:
-            return m_obs_img->rect_detect(rect);
-        case layer_laser:
-            return m_laser_img->rect_detect(rect);
-        case layer_vision:
-            return m_vision_img->rect_detect(rect);
-        case layer_puck:
-            return m_puck_img->rect_detect(rect);
-    }
-    return 0;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Set a rectangle in the world grid
-//
 void CWorld::SetRectangle(double px, double py, double pth,
-                          double dx, double dy, EWorldLayer layer, uint8_t value)
+                          double dx, double dy, CEntity* ent )
 {
     Rect rect;
     double tx, ty;
 
-    dx /= 2;
-    dy /= 2;
+    dx /= 2.0;
+    dy /= 2.0;
 
     double cx = dx * cos(pth);
     double cy = dy * cos(pth);
@@ -804,71 +658,39 @@ void CWorld::SetRectangle(double px, double py, double pth,
     tx = px + cx - sy;
     ty = py + sx + cy;
     rect.toplx = (int) (tx * ppm);
-    rect.toply = m_bimg->height - (int) (ty * ppm);
+    rect.toply = (int) (ty * ppm);
 
     tx = px - cx - sy;
     ty = py - sx + cy;
     rect.toprx = (int) (tx * ppm);
-    rect.topry = m_bimg->height - (int) (ty * ppm);
+    rect.topry = (int) (ty * ppm);
 
     tx = px - cx + sy;
     ty = py - sx - cy;
     rect.botlx = (int) (tx * ppm);
-    rect.botly = m_bimg->height - (int) (ty * ppm);
+    rect.botly = (int) (ty * ppm);
 
     tx = px + cx + sy;
     ty = py + sx - cy;
     rect.botrx = (int) (tx * ppm);
-    rect.botry = m_bimg->height - (int) (ty * ppm);
+    rect.botry = (int) (ty * ppm);
     
-    // This could be cleaned up by having an array of images
-    //
-    switch (layer)
-    {
-        case layer_obstacle:
-            m_obs_img->draw_rect(rect, value);
-            break;
-        case layer_laser:
-            m_laser_img->draw_rect(rect, value);
-            break;
-        case layer_vision:
-            m_vision_img->draw_rect(rect, value);
-            break;
-        case layer_puck:
-            m_puck_img->draw_rect(rect, value);
-            break;
-    }
+    matrix->draw_rect( rect, ent );
 }
-    
+
 ///////////////////////////////////////////////////////////////////////////
 // Set a circle in the world grid
 //
 void CWorld::SetCircle(double px, double py, double pr,
-                       EWorldLayer layer, uint8_t value)
+                       CEntity* ent )
 {
     // Convert from world to image coords
     //
     int x = (int) (px * ppm);
-    int y = m_bimg->height - (int) (py * ppm);
+    int y = (int) (py * ppm);
     int r = (int) (pr * ppm);
     
-    // This could be cleaned up by having an array of images
-    //
-    switch (layer)
-    {
-        case layer_obstacle:
-            m_obs_img->draw_circle(x,y,r,value);
-            break;
-        case layer_laser:
-            m_laser_img->draw_circle(x,y,r,value);
-            break;
-        case layer_vision:
-            m_vision_img->draw_circle(x,y,r,value);
-            break;
-        case layer_puck:
-            m_puck_img->draw_circle(x,y,r,value);
-            break;
-    }
+    matrix->draw_circle( x,y,r,ent );
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -876,90 +698,29 @@ void CWorld::SetCircle(double px, double py, double pr,
 //
 void CWorld::AddObject(CEntity *object)
 {
-    assert(m_object_count < ARRAYSIZE(m_object));
-    m_object[m_object_count++] = object;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Find the object nearest to the mouse
-//
-CEntity* CWorld::NearestObject( double x, double y )
-{
-  CEntity* nearest = 0;
-  double dist, far = 9999999.9;
-
-  double ox, oy, oth;
-
-  for (int i = 0; i < m_object_count; i++)
+  // if we've run out of space (or we never allocated any)
+  if( (!m_object) || (!( m_object_count < m_object_alloc )) )
     {
-      m_object[i]->GetGlobalPose( ox, oy, oth );;
+      // allocate some more
+      CEntity** more_space = new CEntity*[ m_object_alloc + OBJECT_ALLOC_SIZE ];
       
-      dist = hypot( ox-x, oy-y );
+      // copy the old data into the new space
+      memcpy( more_space, m_object, m_object_count * sizeof( CEntity* ) );
+     
+      // delete the original
+      if( m_object ) delete [] m_object;
       
-      if( dist < far ) 
-	{
-	  nearest = m_object[i];
-	  far = dist;
-	}
+      // bring in the new
+      m_object = more_space;
+ 
+      // record the total amount of space
+      m_object_alloc += OBJECT_ALLOC_SIZE;
     }
   
-  return nearest;
+  // insert the object and increment the count
+  m_object[m_object_count++] = object;
 }
 
-// Initialise laser beacon representation
-//
-void CWorld::InitLaserBeacon()
-{
-    m_laserbeacon_count = 0;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Add a laser beacon to the world
-// Returns an index for the beacon
-//
-int CWorld::AddLaserBeacon(int id)
-{
-  //puts( "ADDING A LASER BEACON" );
-
-    assert(m_laserbeacon_count < ARRAYSIZE(m_laserbeacon));
-    int index = m_laserbeacon_count++;
-    m_laserbeacon[index].m_id = id;
-
-    //printf( "now have %d beacons\n", index );
-    return index;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Set the position of a laser beacon
-//
-void CWorld::SetLaserBeacon(int index, double px, double py, double pth)
-{
-  //  printf( "SETTING BEACON POS %.2f %.2f %.2f\n", 
-  //  px, py, pth );
- 
-  ASSERT(index >= 0 && index < m_laserbeacon_count);
-    m_laserbeacon[index].m_px = px;
-    m_laserbeacon[index].m_py = py;
-    m_laserbeacon[index].m_pth = pth;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Get the position of a laser beacon
-//
-bool CWorld::GetLaserBeacon(int index, int *id, double *px, double *py, double *pth)
-{
-     if (index < 0 || index >= m_laserbeacon_count)
-        return false;
-    *id = m_laserbeacon[index].m_id;
-    *px = m_laserbeacon[index].m_px;
-    *py = m_laserbeacon[index].m_py;
-    *pth = m_laserbeacon[index].m_pth;
-    return true;
-}
 
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the broadcast queue
@@ -1245,8 +1006,7 @@ void CWorld::DrawBackground(RtkUiDrawData *data)
             if (m_bimg->get_pixel(x, y) != 0)
             {
                 double px = (double) x / ppm;
-                //double py = (double) (height - y) / ppm;
-                double py = (double) (m_bimg->height - y) / ppm;
+                double py = (double)  y / ppm;
                 double s = 1.0 / ppm;
                 data->rectangle(px, py, px + s, py + s);
             }
@@ -1266,12 +1026,12 @@ void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
     //
     switch (layer)
     {
-        case layer_obstacle:
-            img = m_obs_img;
-            break;
-        case layer_laser:
-            img = m_laser_img;
-            break;
+      //        case layer_obstacle:
+      //    img = m_obs_img;
+      //    break;
+      //case layer_laser:
+      //    img = m_laser_img;
+      //    break;
         case layer_vision:
             img = m_vision_img;
             break;            
@@ -1294,8 +1054,7 @@ void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
             if (img->get_pixel(x, y) != 0)
             {
                 double px = (double) x / ppm;
-                //double py = (double) (height - y) / ppm;
-                double py = (double) (img->height - y) / ppm;
+                double py = (double) y / ppm;
                 double s = 1.0 / ppm;
                 data->rectangle(px, py, px + s, py + s);
             }
@@ -1305,12 +1064,35 @@ void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
 
 #endif // INCLUDE_RTK
 
-
-
-
-
-
-
-
-
+  
+char* CWorld::StringType( StageType t )
+{
+  switch( t )
+    {
+    case NullType: return "None"; 
+    case WallType: return "Wall"; break;
+    case PlayerType: return "Player"; 
+    case MiscType: return "Misc"; 
+    case RectRobotType: return "RectRobot"; 
+    case RoundRobotType: return "RoundRobot"; 
+    case SonarType: return "Sonar"; 
+    case LaserTurretType: return "Laser"; 
+    case VisionType: return "Vision"; 
+    case PtzType: return "PTZ"; 
+    case BoxType: return "Box"; 
+    case LaserBeaconType: return "LaserBcn"; 
+    case LBDType: return "LBD"; 
+    case VisionBeaconType: return "VisionBcn"; 
+    case GripperType: return "Gripper"; 
+    case AudioType: return "Audio"; 
+    case BroadcastType: return "Bcast"; 
+    case SpeechType: return "Speech"; 
+    case TruthType: return "Truth"; 
+    case GpsType: return "GPS"; 
+    case PuckType: return "Puck"; 
+    case OccupancyType: return "Occupancy"; 
+    }	 
+  return( "unknown" );
+}
+  
 

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.17 $
+//  $Author: vaughan $
+//  $Revision: 1.18 $
 
 //
 // Usage:
@@ -29,6 +29,11 @@
 #define LASERDEVICE_HH
 
 #include "playerdevice.hh"
+#include "laserbeacon.hh"
+
+#include <slist.h> // STL
+
+typedef std::slist< int > LaserBeaconList; 
 
 class CLaserDevice : public CEntity
 {
@@ -56,9 +61,11 @@ class CLaserDevice : public CEntity
     //
     private: bool GenerateScanData(player_laser_data_t *data);
 
+    public: LaserBeaconList m_visible_beacons;
+
     // Draw ourselves into the world rep
     //
-    private: virtual void Map(bool render);
+  //private: virtual void Map(bool render);
     
     // Laser timing settings
     //
@@ -79,14 +86,6 @@ class CLaserDevice : public CEntity
     private: double m_scan_max;
     private: int m_scan_count;
     private: bool m_intensity;
-
-    // Size of laser in laser rep
-    //
-    private: double m_map_dx, m_map_dy;
-    
-    // The laser's last mapped pose
-    //
-    private: double m_map_px, m_map_py, m_map_pth;
 
     // storage for exporting the laser hit points
   //private: ExportLaserData expLaser;

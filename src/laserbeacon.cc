@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.12 $
+//  $Author: vaughan $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -29,6 +29,7 @@
 
 #include "world.hh"
 #include "laserbeacon.hh"
+#include "laserdevice.hh" // for the laser return values
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -51,18 +52,19 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CEntity *parent)
     m_beacon_id = 0;
     m_index = -1;
 
-    // Set this flag to make the beacon transparent to lasesr
-    //
-    m_transparent = false;
-    
-    // Set the initial map pose
-    //
-    m_map_px = m_map_py = m_map_pth = 0;
-
-    // beacons aren;t rendered in the laser grid, 
-    // so these sizes are really just for external viewers
-    m_size_x = 0.05; // very thin!   
-    m_size_y = 0.3;     
+  m_beacon_id = 0;
+  m_index = -1;
+  
+  m_interval = 0.2; // 5Hz update
+  
+  laser_return = LaserBright;
+  
+  // Set this flag to make the beacon transparent to lasesr
+  //
+  m_transparent = false;
+  
+  m_size_x = 0.05; // very thin!   
+  m_size_y = 0.3;     
 }
 
 
@@ -87,8 +89,8 @@ bool CLaserBeacon::Load(int argc, char **argv)
         }
         else if (strcmp(argv[i], "transparent") == 0)
         {
-            m_transparent = true;
-            i += 1;
+	  laser_return = 0;
+	  i += 1;
         }
         else
             i++;
@@ -126,49 +128,50 @@ bool CLaserBeacon::Save(int &argc, char **argv)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Startup routine
-//
-bool CLaserBeacon::Startup()
-{
-    assert(m_world != NULL);
-    m_index = m_world->AddLaserBeacon(m_beacon_id);
-    return CEntity::Startup();
-}
-
-
-///////////////////////////////////////////////////////////////////////////
 // Update the laser data
 //
 void CLaserBeacon::Update( double sim_time )
 {
     ASSERT(m_world != NULL);
 
-    // Dont update anything if we are not subscribed
+    // See if its time to update beacons
     //
-    //if(!Subscribed())
+
+    //if( sim_time - m_last_update < m_interval )
     //return;
     
-    // See if its time to recalculate beacons
-    //
-    if( sim_time - m_last_update < m_interval )
-        return;
-    m_last_update = sim_time;
-
-    // Undraw our old representation
-    //
-    if (!m_transparent)
-        m_world->SetCell(m_map_px, m_map_py, layer_laser, 0); 
-
-    // Update our global pose
-    //
-    GetGlobalPose(m_map_px, m_map_py, m_map_pth);
+    double x, y, th;
+    GetGlobalPose( x,y,th );
     
-    // Draw our new representation
-    //
-    if (!m_transparent)
-        m_world->SetCell(m_map_px, m_map_py, layer_laser, 2);
-
-    m_world->SetLaserBeacon(m_index, m_map_px, m_map_py, m_map_pth);
+    // if we've moved 
+    if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
+      {
+	m_last_update = sim_time;
+	
+	// Undraw our old representation
+	//
+	if (!m_transparent)
+	  {
+	    m_world->matrix->mode = mode_unset;
+	    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
+				   m_size_x, m_size_y, this );
+	  }
+	
+	m_map_px = x;
+	m_map_py = y;
+	m_map_pth = th;
+	
+	// Draw our new representation
+	//
+	if (!m_transparent)
+	  {
+	    m_world->matrix->mode = mode_set;
+	    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
+				   m_size_x, m_size_y, this );
+	  }
+	// CHOP THIS!
+	//m_world->SetLaserBeacon(m_index, m_map_px, m_map_py, m_map_pth);
+      }
 }
 
 

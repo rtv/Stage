@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacon.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -43,10 +43,6 @@ class CLaserBeacon : public CEntity
     //
     public: virtual bool Save(int &argc, char **argv);
 
-    // Startup routine
-    //
-    public: virtual bool Startup();
-    
     // Update the device
     //
     public: virtual void Update( double sim_time );
@@ -62,10 +58,6 @@ class CLaserBeacon : public CEntity
     // Beacon index in the world rep
     //
     private: int m_index;
-
-    // Current mapped pose
-    //
-    private: double m_map_px, m_map_py, m_map_pth;
 
 #ifdef INCLUDE_RTK
     

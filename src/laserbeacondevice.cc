@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.12 $
+//  $Author: vaughan $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  (empty)
@@ -132,14 +132,16 @@ void CLBDDevice::Update( double sim_time )
 
   m_last_update = sim_time;
 
-    
     // Get the laser range data
     //
     uint32_t time_sec=0, time_usec=0;
     player_laser_data_t laser;
     if (m_laser->GetData(&laser, sizeof(laser) ) == 0)
-        return;
-    
+      {
+	puts( "Stage warning: LBD device found no laser data" );
+	return;
+      }
+
     expBeacon.beaconCount = 0; // initialise the count in the export structure
 
 
@@ -164,7 +166,6 @@ void CLBDDevice::Update( double sim_time )
     double scan_res = laser.resolution / 100.0 * M_PI / 180.0;
 
     // Amount of tolerance to allow in range readings
-    //
     double tolerance = 3.0 / m_world->ppm; //*** 0.10;
 
     // Reset the beacon data structure
@@ -175,14 +176,16 @@ void CLBDDevice::Update( double sim_time )
     // Search for beacons in the list
     // Is quicker than searching the bitmap!
     //
-    for (int i = 0; true; i++)
-    {
-        // Get the position of the laser beacon (global coords)
-        //
-        int id;
-        double px, py, pth;
-        if (!m_world->GetLaserBeacon(i, &id, &px, &py, &pth))
-            break;
+    for( LaserBeaconList::iterator it = m_laser->m_visible_beacons.begin();
+	 it != m_laser->m_visible_beacons.end(); 
+	 it++ )
+      {
+	// ray trace to find laser beacons
+
+       int id;
+      double px, py, pth;
+      
+      ((CLaserBeacon*)*it)->GetGlobalPose( px, py, pth );
 
 	//printf( "beacon at: %.2f %.2f %.2f\n", px, py, pth );
 	//fflush( stdout );

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/boxobstacle.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -45,14 +45,8 @@ class CBoxObstacle : public CEntity
     
   // Update the device
   //
-  //public: virtual void Update();
-  public: virtual void Update( double sim_time );
+public: virtual void Update( double sim_time );
   
-    // Current pose
-    //
-    private: double m_map_px, m_map_py, m_map_pth;
-
-
 #ifdef INCLUDE_RTK
     
     // Process GUI update messages

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.8 $
+//  $Author: vaughan $
+//  $Revision: 1.9 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -18,7 +18,7 @@
 #include <values.h>
 #include "world.hh"
 #include "gripperdevice.hh"
-
+#include "raytrace.hh"
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
@@ -31,12 +31,16 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
   m_config_len  = 0;
   
   m_size_x = 0.08;
-  m_size_y = 0.2;
+  m_size_y = 0.20;
 
   m_player_type = PLAYER_GRIPPER_CODE;
   m_stage_type = GripperType;
 
-  m_interval = 0.1;
+  m_interval = 0.1; 
+
+  puck_return = true; // we interact with pucks and nothing else
+
+  m_mass = 20; // same mass as a robot
 
   // default to the more common gripper
   m_gripper_consume = false;
@@ -53,7 +57,8 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
   // these are initial values
   m_paddles_open = true;
   m_paddles_closed = false;
-  
+
+  // this is deprecated stuff - should get rid of the exp stuff eventually
   // gui export stuff
   exp.objectType = gripper_o;
   exp.width = .08;
@@ -205,6 +210,55 @@ void CGripperDevice::Update( double sim_time )
     //
     PutData(&data, sizeof(data));
 }
+
+bool CGripperDevice::BreakBeam( int beam )
+{
+  double px, py, pth;
+  GetGlobalPose( px, py, pth );
+
+  double xoffset, yoffset;
+  
+  assert( beam < 2 );
+  
+  double costh = cos( pth );
+  double sinth = sin( pth );
+
+  // the break beams run two-thirds the length of the gripper
+  // ignoring the open/closed state for now.
+
+  double xdist;
+  double ydist = m_size_y/3.0;
+
+  switch( beam )
+    {
+    case 0: xdist = m_size_x;  break;
+    case 1: xdist = m_size_x/2.0;  break;
+    default: printf( "uknown gripper break beam number %d\n", beam );
+    }
+  
+  xoffset = xdist * costh - xdist * sinth;
+  yoffset = ydist * sinth + ydist * costh;
+    
+  CEntity* ent = 0;
+
+  CLineIterator lit( px+xoffset, py+yoffset, pth - M_PI/2.0, m_size_y * 0.66, 
+		     m_world->ppm, m_world->matrix, PointToBearingRange ); 
+  
+  while( (ent = lit.GetNextEntity()) )
+    {
+      //puts( "I SEE SOMETHING!" );
+      
+      // grippers only perceive pucks right now.
+      if( ent->m_stage_type == PuckType )
+	{
+	  //puts( "its a PUCK!" );
+	  return true;
+	}
+    }
+
+  return false;
+}
+
     
 // Package up the gripper's state in the right format
 //
@@ -217,9 +271,12 @@ void CGripperDevice::MakeData(player_gripper_data_t* data, size_t len)
     return;
   }
 
-  // break beams are sort of implemented
-  //   both beams are broken when we're holding a puck
+  // break beams are now implemented
   data->beams = 0;
+  data->beams |=  BreakBeam( 0 ) ? 0x04 : 0x00;
+  data->beams |=  BreakBeam( 1 ) ? 0x08 : 0x00;
+  
+  //   both beams are broken when we're holding a puck
   data->beams |= (m_puck_count&&!m_gripper_consume) ? 0x04 : 0x00;
   data->beams |= (m_puck_count&&!m_gripper_consume) ? 0x08 : 0x00;
 
@@ -283,54 +340,63 @@ void CGripperDevice::PickupObject()
   double this_dist;
   //for(int i=0;(this_puck=m_world->GetPuck(i));i++)
 
-  for(int i =0; i < m_world->GetObjectCount(); i++)
-    {
-      CEntity* this_puck = m_world->GetObject(i);
+  CRectangleIterator rit( px+m_size_x, py, pth, m_size_x, m_size_y, 
+  		  m_world->ppm, m_world->matrix ); 
 
-      if( this_puck->m_stage_type != PuckType )
+  
+  CEntity* ent = 0;
+
+  while( (ent = rit.GetNextEntity()) )
+    {
+      //puts( "I SEE SOMETHING!" );
+      
+      // if it's not a puck try the next one
+      if( ent->m_stage_type != PuckType )
 	continue;
+      
+      //puts( "I SEE A PUCK!" );
 
-    // first make sure that we're not trying to pick up
-    // an already picked up puck
-    int j;
-    for(j=0;j<m_puck_count;j++)
-    {
-      if(m_pucks[j] == this_puck)
-        break;
+      // first make sure that we're not trying to pick up
+      // an already picked up puck
+      int j;
+      for(j=0;j<m_puck_count;j++)
+	{
+	  if(m_pucks[j] == ent )
+	    break;
+       }
+      if(j < m_puck_count)
+	continue;
+      ent->GetGlobalPose(ox,oy,oth);
+      this_dist = sqrt((px-ox)*(px-ox)+(py-oy)*(py-oy));
+      if(this_dist < closest_dist)
+       {
+	 closest_dist = this_dist;
+	 closest_puck = ent;
+       }
     }
-    if(j < m_puck_count)
-      continue;
-    this_puck->GetGlobalPose(ox,oy,oth);
-    this_dist = sqrt((px-ox)*(px-ox)+(py-oy)*(py-oy));
-    if(this_dist < closest_dist)
-    {
-      closest_dist = this_dist;
-      closest_puck = this_puck;
-    }
-  }
-
+  
   if(closest_puck && closest_dist<m_gripper_range)
-  {
-    // pickup the puck
-    closest_puck->m_parent_object = this;
-    // if we're consuming the puck then draw move it inside the robot
-    if(m_gripper_consume)
     {
-      if(m_parent_object)
-        closest_puck->SetPose(-exp.width/2.0-m_parent_object->exp.width/2.0,
-                        0,0);
+      // pickup the puck
+      closest_puck->m_parent_object = this;
+      // if we're consuming the puck then draw move it inside the robot
+      if(m_gripper_consume)
+	{
+	  if(m_parent_object)
+	    closest_puck->SetPose(-exp.width/2.0-m_parent_object->exp.width/2.0,
+				  0,0);
+	  else
+	    closest_puck->SetPose(-exp.width,0,0);
+	}
       else
-        closest_puck->SetPose(-exp.width,0,0);
+	closest_puck->SetPose(exp.width/2.0+closest_puck->exp.width/2.0,0,0);
+      m_pucks[m_puck_count++]=closest_puck;
+      expGripper.have_puck = true;
     }
-    else
-      closest_puck->SetPose(exp.width/2.0+closest_puck->exp.width/2.0,0,0);
-    m_pucks[m_puck_count++]=closest_puck;
-    expGripper.have_puck = true;
-  }
   else
-  {
-    //puts("no close pucks");
-  }
+    {
+      //puts("no close pucks");
+    }
 }
 
 #ifdef INCLUDE_RTK

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.9 $
+//  $Author: vaughan $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -27,6 +27,7 @@
 #include <math.h>
 #include "world.hh"
 #include "sonardevice.hh"
+#include "raytrace.hh"
 
 const double TWOPI = 6.283185307;
 
@@ -37,23 +38,23 @@ CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent )
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_sonar_data_t );
-  m_command_len = 0;//sizeof( player_sonar_cmd_t );
-  m_config_len  = 0;//sizeof( player_sonar_config_t );
+  m_command_len = //sizeof( player_sonar_cmd_t );
+    m_config_len  = sizeof( PLAYER_SONAR_POWER_REQ );
   
   m_player_type = PLAYER_SONAR_CODE; // from player's messages.h
-   m_stage_type = SonarType;
-
+  m_stage_type = SonarType;
+  
   m_sonar_count = SONARSAMPLES;
-    m_min_range = 0.20;
-    m_max_range = 8.0;
+  m_min_range = 0.20;
+  m_max_range = 5.0;
     
-    // Initialise the sonar poses
-    //
-    for (int i = 0; i < m_sonar_count; i++)
-        GetSonarPose(i, m_sonar[i][0], m_sonar[i][1], m_sonar[i][2]);
-    
-    // zero the data
-    memset( &m_data, 0, sizeof(m_data) );
+  // Initialise the sonar poses
+  //
+  for (int i = 0; i < m_sonar_count; i++)
+    GetSonarPose(i, m_sonar[i][0], m_sonar[i][1], m_sonar[i][2]);
+  
+  // zero the data
+  memset( &m_data, 0, sizeof(m_data) );
 }
 
 
@@ -79,13 +80,17 @@ void CSonarDevice::Update( double sim_time )
   m_hit_count = 0;
 #endif
   
-  // Compute fov, range, etc
-  //
-  double dr = 1.0 / m_world->ppm;
-  double max_range = m_max_range;
-  double min_range = m_min_range;
+  // Get configs  
+  uint16_t cmd;
+  if( GetConfig( &cmd, sizeof(cmd) ) !=  0 )
+    {
+      // we got a config
+      if ( cmd == PLAYER_SONAR_POWER_REQ )
+	// we got a sonar power toggle - i just ignore them.
+	puts( "sonar power toggled" );
+    }
   
-  
+
   // Check bounds
   //
   ASSERT((size_t) m_sonar_count <= sizeof(m_data.ranges) 
@@ -95,42 +100,32 @@ void CSonarDevice::Update( double sim_time )
   //
   for (int s = 0; s < m_sonar_count; s++)
     {
-        // Compute parameters of scan line
-      //
+      // Compute parameters of scan line
       double ox = m_sonar[s][0];
       double oy = m_sonar[s][1];
       double oth = m_sonar[s][2];
       LocalToGlobal(ox, oy, oth);
-      
-      double px = ox;
-      double py = oy;
-      double pth = oth;
-      
-      // Compute the step for simple ray-tracing
-      //
-      double dx = dr * cos(pth);
-      double dy = dr * sin(pth);
 
-      // Look along scan line for obstacles
-      // Could make this an int again for a slight speed-up.
-      //
-      double range;
-      for (range = 0; range < max_range; range += dr)
-        {
-	  // Look in the laser layer for obstacles
-	  //
-	  uint8_t cell = m_world->GetCell(px, py, layer_obstacle);
-	  if (range > min_range && cell != 0)           
+      double range = m_max_range;
+      
+      CLineIterator lit( ox, oy, oth, m_max_range, 
+			 m_world->ppm, m_world->matrix, PointToBearingRange );
+      CEntity* ent;
+      
+      while( (ent = lit.GetNextEntity()) ) 
+	if( ent != this && ent != m_parent_object && ent->sonar_return ) 
+	  {
+	    range = lit.GetRange();
 	    break;
-	  px += dx;
-	  py += dy;
-        }
+	  }	
+      
+      uint16_t v = (uint16_t)(1000.0 * range);
       
       // Store range in mm in network byte order
       //
-      m_data.ranges[s] = htons((uint16_t) (range * 1000));
-      
-      // Update the gui data
+      m_data.ranges[s] = htons(v);
+			      
+       // Update the gui data
       //
 #ifdef INCLUDE_RTK
       m_hit[m_hit_count][0][0] = ox;

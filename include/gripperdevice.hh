@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/gripperdevice.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -44,7 +44,11 @@ class CGripperDevice : public CEntity
     // Default constructor
     //
     public: CGripperDevice(CWorld *world, CEntity *parent ); 
-     
+
+  // update the break beams with the raytrace functions
+  // beam is 0 - inside or 1 - outside
+private: bool BreakBeam( int beam );
+
     // Load the object from an argument list
     //
     public: virtual bool Load(int argc, char **argv);

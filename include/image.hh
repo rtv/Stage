@@ -11,7 +11,7 @@
 //  Modified by ahoward 24 May 2001 to make top bit 'sticky'.
 //  Once set, this bit can only be reset by 'clear'.
 //
-// $Id: image.h,v 1.7 2001-08-31 00:43:48 ahoward Exp $
+// $Id: image.hh,v 1.2 2001-09-04 23:01:12 vaughan Exp $
 // RTV
 // ==================================================================
 

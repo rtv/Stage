@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.10 $
+//  $Author: vaughan $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -191,6 +191,8 @@ bool CWorld::Load(const char *filename)
             }
             else if (strcmp(argv[1], "laser_res") == 0)
               m_laser_res = DTOR(atof(argv[3]));
+            else if (strcmp(argv[1], "vision_res") == 0)
+              m_vision_res = DTOR(atof(argv[3]));
             else
               printf("line %d : variable %s is not defined\n",
                      (int) linecount, (char*) argv[1]);  

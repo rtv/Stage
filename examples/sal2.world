@@ -1,20 +1,20 @@
-
 set environment_file = sal2.pnm
 set pixels_per_meter =  26
 set laser_res = 2
 
-create usc_pioneer pose 7.00 12.50 0 name comet port 6665 
+enable truth_server
+enable environment_server
+
+create position_device pose 6.27 3.08 0 port 6665  
 {
-    create laser_beacon pose -0.15 0.00 0 color black id 17 
+  create player_device port 6665 
+  create sonar_device  port 6665  
+  create laser_device pose 0.08 0.00 0 port 6665 
+  {
+    create lbd_device port 6665 
+   }
 }
 
-create usc_pioneer pose 7.00 3.40 0 name atom port 6666 
-{
-    create laser_beacon pose -0.15 0.00 0 color black id 19 
-}
-
-
-create player_server pose 0.00 0.00 0 color black port 6667 
-create laser_device pose 10.61 3.13 0 color black port 6667 
-
-create vision_beacon pose 9.90 12.60 0 color black radius 0.10 channel 1 norender laser
+create laser_beacon name 1 pose 8.85 2.42 90 id 1 
+create laser_beacon name 2 pose 9.46 7.62 180 id 2 
+create laser_beacon name 3 pose 8.73 12.96 -90 id 3 

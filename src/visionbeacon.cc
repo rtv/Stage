@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.10 $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -33,20 +33,16 @@
 //
 CVisionBeacon::CVisionBeacon(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
-{
-  m_radius = 0.1; // our beacons are 10cm radius
-    
+{   
     m_stage_type = VisionBeaconType;
 
-    m_channel = 0; // visible by default on ACTS ch.0
+    channel_return = 0; // visible by default on ACTS ch.0
 
-    m_render_obstacle = true;
-    m_render_laser = true;
-    
-    // Set the initial map pose
-    //
-    m_map_px = m_map_py = m_map_pth = 0;
+    laser_return = 1;
+    obstacle_return = 1;
+    sonar_return = 1;
 
+    m_radius = 0.1; // our beacons are 10cm radius
     m_size_x = m_radius * 2.0;
     m_size_y = m_radius * 2.0;
 }
@@ -60,7 +56,7 @@ bool CVisionBeacon::Load(int argc, char **argv)
     if (!CEntity::Load(argc, argv))
         return false;
 
-    //printf( "beacon %p channel: %d\n", this, m_channel );
+    //printf( "beacon %p channel: %d\n", this, channel_return );
 
     for (int i = 0; i < argc;)
     {
@@ -71,20 +67,7 @@ bool CVisionBeacon::Load(int argc, char **argv)
             m_radius = atof(argv[i + 1]);
             i += 2;
 
-	    m_size_x = m_size_y = m_radius;
-        }
-
-        // See which layers to render
-        //
-        else if (strcmp(argv[i], "norender") == 0 && i + 1 < argc)
-        {
-            if (strcmp(argv[i + 1], "obstacle") == 0)
-                m_render_obstacle = false;
-            else if (strcmp(argv[i + 1], "laser") == 0)
-                m_render_laser = false;
-            else
-                PLAYER_MSG2("unrecognized token [%s %s]", argv[i], argv[i + 1]);
-            i += 2;
+	    m_size_x = m_size_y = 2.0 * m_radius;
         }
 
 	// RTV - this'd report error before any subclass had a chance
@@ -120,18 +103,6 @@ bool CVisionBeacon::Save(int &argc, char **argv)
     argv[argc++] = strdup("radius");
     argv[argc++] = strdup(z);
 
-    // Save render settings
-    //
-    if (!m_render_obstacle)
-    {
-        argv[argc++] = strdup("norender");
-        argv[argc++] = strdup("obstacle");
-    }
-    if (!m_render_laser)
-    {
-        argv[argc++] = strdup("norender");
-        argv[argc++] = strdup("laser");
-    }
     return true;
 }
 
@@ -142,54 +113,29 @@ bool CVisionBeacon::Save(int &argc, char **argv)
 void CVisionBeacon::Update( double sim_time )
 {
     ASSERT(m_world != NULL);
-
-  
-    //if(!Subscribed()) // will be true if our truth has been poked
-    //return;
     
-    ASSERT(m_world != NULL);
+    double x, y, th;
+    GetGlobalPose( x,y,th );
     
-    // See if its time to recalculate vision
-    //
-    if( sim_time - m_last_update < m_interval )
-        return;
-
-    m_last_update = sim_time;
-
-
-    // Undraw our old representation
-    //
-    if (m_render_obstacle)
-    {
-        m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                              2 * m_radius, 2 * m_radius, layer_obstacle, 0);
-    }
-    if (m_render_laser)
-    {
-        m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                       2 * m_radius, 2 * m_radius, layer_laser, 0);
-    }
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                       2 * m_radius, 2 * m_radius, layer_vision, 0);
-    
-    // Update our global pose
-    //
-    GetGlobalPose(m_map_px, m_map_py, m_map_pth);
-    
-    // Draw our new representation
-    //
-    if (m_render_obstacle)
-    {
-        m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                              2 * m_radius, 2 * m_radius, layer_obstacle, 1);
-    }
-    if (m_render_laser)
-    {
-        m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                              2 * m_radius, 2 * m_radius, layer_laser, 1);
-    }
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                          2 * m_radius, 2 * m_radius, layer_vision, m_channel+1);
+    // if we've moved 
+    //if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
+      {
+	m_last_update = sim_time;
+	
+	// Undraw our old representation
+	//
+	m_world->matrix->mode = mode_unset;
+	m_world->SetCircle(m_map_px, m_map_py, m_radius, this );
+	
+	m_map_px = x;
+	m_map_py = y;
+	m_map_pth = th;
+	
+	// Draw our new representation
+	//
+	m_world->matrix->mode = mode_set;
+	m_world->SetCircle(m_map_px, m_map_py, m_radius, this );
+      }
 }
 
 
