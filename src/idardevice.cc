@@ -21,7 +21,7 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/idardevice.cc,v $
 * $Author: rtv $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 ******************************************************************************/
 
 
@@ -42,13 +42,12 @@
 
 // control display of player index in device body
 //#define RENDER_INDEX
-
+//#define RENDER_SCANLINES
 //#define SHOW_MSGS
 
-//#define IDAR_FOV        M_PI/4.0
-//#define IDAR_SCANLINES        5
-#define IDAR_FOV        0
-#define IDAR_SCANLINES        1
+#define IDAR_TRANSMIT_ANGLE        M_PI/4.0
+#define IDAR_RECEIVE_ANGLE        M_PI/4.0
+#define IDAR_SCANLINES        5
 #define IDAR_MAX_RANGE       1.0
 
 // handy circular normalization macros
@@ -57,6 +56,12 @@
 
 #define NORMALIZERADIANS(value)  NORMALIZECIRCULAR_DOUBLE(value,TWOPI)
 #define NORMALIZEDEGREES(value)  NORMALIZECIRCULAR_DOUBLE(value,360.0)
+
+
+// register this device type with the Library
+CEntity idar_bootstrap( string("idar"), 
+			IDARType, 
+			(void*)&CIdarDevice::Creator ); 
 
 // constructor 
 CIdarDevice::CIdarDevice(CWorld *world, CEntity *parent )
@@ -97,7 +102,7 @@ CIdarDevice::CIdarDevice(CWorld *world, CEntity *parent )
   memset( &recv, 0, sizeof(recv) );
 
   m_num_scanlines = IDAR_SCANLINES; 
-  m_angle_per_sensor = IDAR_FOV;
+  m_angle_per_sensor = IDAR_TRANSMIT_ANGLE;
   m_angle_per_scanline = m_angle_per_sensor / m_num_scanlines;
 }
 
@@ -180,10 +185,6 @@ void CIdarDevice::Update( double sim_time )
   // dump out if noone is subscribed
   if(!Subscribed())
     {
-#ifdef INCLUDE_RTK2
-      // unrender the message 
-      //rtk_fig_clear(this->rays_fig);
-#endif     
       return; 
     }
   
@@ -218,20 +219,20 @@ void CIdarDevice::TransmitMessage( idartx_t* transmit )
   double ox, oy, oth;
   GetGlobalPose( ox, oy, oth ); // start position for the ray trace
 
-  double sensor_bearing = oth;
-
 #ifdef INCLUDE_RTK2
   rtk_fig_clear(this->rays_fig);
 #endif
   
-  for( int scanline=0; scanline < m_num_scanlines; scanline++ )
-    {
-	      
-      // Compute parameters of scan line
-      double scanline_bearing = 
-	(sensor_bearing - m_angle_per_sensor/2.0) 
-	+ scanline * m_angle_per_scanline;
-	      
+  double scan_start_angle = 
+    (oth - m_angle_per_sensor/2.0) + m_angle_per_scanline/2.0;
+    
+    for( int scanline=0; scanline < m_num_scanlines; scanline++ )
+      {
+	
+	// Compute parameters of scan line
+	double scanline_bearing = 
+	scan_start_angle + scanline * m_angle_per_scanline;
+	
       // normalize to make things easier to read
       scanline_bearing = fmod( scanline_bearing, TWOPI );
 	      
@@ -273,9 +274,6 @@ void CIdarDevice::TransmitMessage( idartx_t* transmit )
 	      //     ent, ent->m_player.port,  ent->m_player.code,
 	      //     ent->m_player.index );
 
-#ifdef INCLUDE_RTK2
-	      //rtk_fig_arrow(this->rays_fig, 0,0, scanline_bearing-oth, range, 0.03);
-#endif     
 	      uint8_t intensity;
 		    
 	      switch( ent->idar_return )
@@ -302,7 +300,7 @@ void CIdarDevice::TransmitMessage( idartx_t* transmit )
 		  
 		case IDARReflect: // it's a reflector (ie. an obstacle)
 		  //printf( "REFLECT from %p type %d idar_return %d\n",
-				//ent, ent->m_stage_type, ent->idar_return );
+		  //	ent, ent->stage_type, ent->idar_return );
 			
 		  // try poking this message into my own receiver
 		  if( (intensity = LookupIntensity(0,range,true)) > 0 )
@@ -322,7 +320,10 @@ void CIdarDevice::TransmitMessage( idartx_t* transmit )
 	    }
 	}
 #ifdef INCLUDE_RTK2
+#ifdef RENDER_SCANLINES
+      rtk_fig_color_rgb32(this->rays_fig, RGB(220,220,220) );	
       rtk_fig_arrow(this->rays_fig, 0,0, scanline_bearing-oth, range, 0.03);
+#endif
 #endif    
     }
 }
@@ -338,67 +339,75 @@ bool CIdarDevice::ReceiveMessage( CEntity* sender,
   //printf( "mesg recv - sensor: %d  len: %d  intensity: %d  refl: %d\n",
   //  sensor, len, intensity, reflection );
 
-  //if(!Subscribed())
-  //return false;
-  
+  // TEST INTENSITY
   // we only accept this message if it's the most intense thing we've seen
-  if( intensity > recv.intensity )
-    {
-      double incidence = 0.0;
+  if( intensity < recv.intensity )
+    return false;
 
-      // store the message
-      if( sender != (CEntity*)this )
-	{
-	  double sx, sy, sa; // the sender's pose
-	  double lx, ly, la; // my pose
-
-	  sender->GetGlobalPose( sx, sy, sa );
-
-	  lx = sx; ly = sy; la = sa;
-	  this->GlobalToLocal( lx, ly, la );
-
-	  printf( "%p G: %.2f,%.2f,%.2f   L: %.2f,%.2f,%.2f\n", 
-		  this, sx, sy, sa, lx, ly, la );
-
-	}
+  
+  // TEST REFLECTION AND  ANGLE OF INCIDENCE
+  // we accept reflections without checking angle
+  if( !reflection ) 
+    { // it's not a reflection, so we check the angle of incidence 
+      double sx, sy, sa; // the sender's pose
+      double lx, ly, la; // my pose
       
-      if( fabs(incidence) > 0 )
-	{ 
-	  // copy the message into the data buffer
-	  memcpy( &recv.mesg, mesg, len );
-	  
-	  recv.len = len;
-	  recv.intensity = intensity;
-	  recv.reflection = (uint8_t)reflection;
-	  
-	  // record the time we received this message
-	  recv.timestamp_sec = m_world->m_sim_timeval.tv_sec;
-	  recv.timestamp_usec = m_world->m_sim_timeval.tv_usec;
-	  
-#ifdef INCLUDE_RTK2
-#ifdef SHOW_MSGS
-	  
-	  // room for the message in hex text
-	  char message[ 3 * IDARBUFLEN + 6];
-	  
-	  // print the message in hex, with a space between each char
-	  for( int c=0; c<recv.len; c++ )
-	    sprintf( message + 3*c, "%2X ", recv.mesg[c] );
-	  message[ 3 * recv.len ] = 0; // terminate
-	  
-	  // add the intensity
-	  sprintf( message, "%s (%d)", message, recv.intensity );
-	  
-	  
-	  rtk_fig_text(this->data_fig, 0,0,0, message);
-#endif
-#endif
-	  return true;
-	}
+      sender->GetGlobalPose( sx, sy, sa );
+      this->GetGlobalPose( lx, ly, la );
+      
+      double incidence = atan2( sy-ly, sx-lx ) - la;
+      NORMALIZE(incidence);
+      
+      //printf( "%p G: %.2f,%.2f,%.2f   L: %.2f,%.2f,%.2f inc: %.2f\n", 
+      //      this, sx, sy, sa, lx, ly, la, incidence );
+      
+      // if it's out of our receptive angle, we reject it and bail.
+      if( fabs(incidence) > IDAR_RECEIVE_ANGLE/2.0 )
+	return false;
     }
   
-  return false;
+  
+  // looks good  - accept the message
+  // copy the message into the data buffer
+  memcpy( &recv.mesg, mesg, len );
+  
+  recv.len = len;
+  recv.intensity = intensity;
+  recv.reflection = (uint8_t)reflection;
+  
+  // record the time we received this message
+  recv.timestamp_sec = m_world->m_sim_timeval.tv_sec;
+  recv.timestamp_usec = m_world->m_sim_timeval.tv_usec;
+  
+#ifdef INCLUDE_RTK2
+      
+  // reflections are green, remote messages are red
+  rtk_fig_color_rgb32(this->data_fig, 
+		      reflection ? RGB(0,200,0) : RGB(200,0,0) );
+  
+  rtk_fig_arrow(this->data_fig, 0,0,0, 1.5*size_x, size_y );
+  
+#ifdef SHOW_MSGS
+  
+  // room for the message in hex text
+  char message[ 3 * IDARBUFLEN + 6];
+  
+  // print the message in hex, with a space between each char
+  for( int c=0; c<recv.len; c++ )
+    sprintf( message + 3*c, "%2X ", recv.mesg[c] );
+  message[ 3 * recv.len ] = 0; // terminate
+  
+  // add the intensity
+  sprintf( message, "%s (%d)", message, recv.intensity );
+  
+  
+  rtk_fig_text(this->data_fig, 0,0,0, message);
+#endif
+#endif
+
+  return true; // we accepted the message
 }
+
 
 
 // HERE ARE A BUNCH OF RANGE/INTENSITY CONVERSION TABLES DETERMINED
@@ -521,11 +530,14 @@ void CIdarDevice::RtkStartup()
   
   // Create a figure representing this object
   this->data_fig = rtk_fig_create(m_world->canvas, this->fig, 49);
-  this->rays_fig = rtk_fig_create(m_world->canvas, this->fig, 49);
+  this->rays_fig = rtk_fig_create(m_world->canvas, this->fig, 48);
   
   rtk_fig_origin(this->data_fig, 0,0,0 );
   rtk_fig_origin(this->rays_fig, 0,0,0 );
  
+  // show our orientation in the body figure
+  rtk_fig_line( this->fig, 0,0, size_x/2.0, 0);
+
   // Set the color
   rtk_fig_color_rgb32(this->data_fig, this->color);
   rtk_fig_color_rgb32(this->rays_fig, RGB(200,200,200) );

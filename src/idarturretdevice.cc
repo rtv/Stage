@@ -21,7 +21,7 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/idarturretdevice.cc,v $
 * $Author: rtv $
-* $Revision: 1.8 $
+* $Revision: 1.9 $
 ******************************************************************************/
 
 #include <math.h>
@@ -97,28 +97,6 @@ CIdarTurretDevice::CIdarTurretDevice(CWorld *world, CEntity *parent )
 }
 
 
-#ifdef INCLUDE_RTK2
-void CIdarTurretDevice::RenderMessages( player_idarturret_reply_t* rep )
-{
-  rtk_fig_clear( this->data_fig );
-
-  double angle_per_sensor = 2.0 * M_PI / PLAYER_IDARTURRET_IDAR_COUNT;
-  //double raylen = 2 * size_x;
-
-  for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
-    {
-      // if there's a message, add a line
-      if( rep->rx[i].intensity > 0 && !rep->rx[i].reflection )
-	{
-	  rtk_fig_color_rgb32(this->data_fig, RGB(200,0,0) );
-	  
-	  //double angle = i * angle_per_sensor;
-	  rtk_fig_arrow(this->data_fig, 0,0, 
-			i * angle_per_sensor, 1.5*size_x, 0.04 );
-	}
-    }
-}
-#endif
 
 void CIdarTurretDevice::Sync( void ) 
 {
@@ -150,16 +128,14 @@ void CIdarTurretDevice::Sync( void )
 	  
 	  //puts( "TX" );
 	  for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
-	    idars[i]->TransmitMessage( &(cfg.tx[i]) );
+	    // if there is a message to send in this direction, send it
+	    if( cfg.tx[i].len > 0 )
+	      idars[i]->TransmitMessage( &(cfg.tx[i]) );
 	  
 	  break;
 	  
 	case IDAR_RECEIVE:
 	  //puts( "RX" );
-#ifdef INCLUDE_RTK2
-	  RenderMessages( &reply );
-#endif
-
 	  // gather and wipe the current messages from each idar
 	  for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
 	    idars[i]->CopyAndClearMessage( &reply.rx[i] );
@@ -169,10 +145,6 @@ void CIdarTurretDevice::Sync( void )
 	  
 	case IDAR_RECEIVE_NOFLUSH:
 	  //puts( "RX_NF" );
-#ifdef INCLUDE_RTK2
-	  RenderMessages( &reply );
-#endif
-
 	  // gather current message from each idar
 	  for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
 	    idars[i]->CopyMessage( &reply.rx[i] );
@@ -186,16 +158,14 @@ void CIdarTurretDevice::Sync( void )
 	case IDAR_TRANSMIT_RECEIVE:
 	  //puts( "TX" );
 	  for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
-	    idars[i]->TransmitMessage( &(cfg.tx[i]) );
- 
+	    // if there is a message to send in this direction, send it
+	    if( cfg.tx[i].len > 0 )
+	      idars[i]->TransmitMessage( &(cfg.tx[i]) );
+	  
 	  // puts( "RX" );
 	  for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
 	    idars[i]->CopyAndClearMessage( &reply.rx[i] );
 
-#ifdef INCLUDE_RTK2
-	  RenderMessages( &reply );
-#endif
-	  
 	  PutReply(client, PLAYER_MSGTYPE_RESP_ACK,NULL,&reply,sizeof(reply));
 	  break;
 	  
@@ -243,15 +213,20 @@ void CIdarTurretDevice::RtkStartup()
 {
   CPlayerEntity::RtkStartup();
 
-  this->data_fig = rtk_fig_create(m_world->canvas, this->fig, 49);
+  //this->data_fig = rtk_fig_create(m_world->canvas, this->fig, 49);
  
-  rtk_fig_origin(this->data_fig, 0,0,0 );
+  //rtk_fig_origin(this->data_fig, 0,0,0 );
    
   // Set the color
-    rtk_fig_color_rgb32(this->data_fig, RGB(200,200,200) );
+  //rtk_fig_color_rgb32(this->data_fig, RGB(200,200,200) );
  
   for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
-  idars[i]->RtkStartup();
+  {
+    idars[i]->RtkStartup();
+    // don't display the idar body in the turret (saves some time)
+    rtk_fig_clear( idars[i]->fig );
+  }
+  
 }
 
 
@@ -262,7 +237,7 @@ void CIdarTurretDevice::RtkShutdown()
   for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
   idars[i]->RtkShutdown();
 
-  if(this->data_fig) rtk_fig_destroy(this->data_fig);
+  //if(this->data_fig) rtk_fig_destroy(this->data_fig);
   
   CPlayerEntity::RtkShutdown();
 } 

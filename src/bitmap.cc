@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/bitmap.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -229,64 +229,67 @@ bool CFixedObstacle::Startup()
 #endif
   
   for (int y = 0; y < this->image->height; y++)
-    for (int x = 0; x < this->image->width; x++)
-      {
-	if (this->image->get_pixel(x, y) == 0)
-	  continue;
-	
-	// a rectangle starts from this point
-	int startx = x;
-	int starty = this->image->height - y;
-	int height = this->image->height; // assume full height for starters
-	
-	// grow the width - scan along the line until we hit an empty pixel
-	for( ;  this->image->get_pixel( x, y ) > 0; x++ )
-	  {
-	    // handle horizontal cropping
-	    double ppx = x * sx; 
-	    if (ppx < this->crop_ax || ppx > this->crop_bx)
-	      continue;
-	    
-	    // look down to see how large a rectangle below we can make
-	    int yy  = y;
-	    while( (this->image->get_pixel( x, yy ) > 0 ) 
-		   && (yy < this->image->height) )
-	      { 
-		// handle vertical cropping
-		double ppy = (this->image->height - yy) * sy;
-		if (ppy < this->crop_ay || ppy > this->crop_by)
-		  continue;
-		
-		yy++; 
-	      } 	      
-	    // now yy is the depth of a line of non-zero pixels
-	    // downward we store the smallest depth - that'll be the
-	    // height of the rectangle
-	    if( yy-y < height ) height = yy-y; // shrink the height to fit
-	  } 
-	
-	int width = x - startx;
-	
-	// delete the pixels we have used in this rect
-	this->image->fast_fill_rect( startx, y, width, height, 0 );
-	
-	double px = ((startx + (width/2.0) + 0.5 ) * sx) - size_x/2.0;
-	double py = ((starty - (height/2.0) - 0.5 ) * sy) - size_y/2.0;
-	double pth = 0;
-	double pw = width * sx;
-	double ph = height * sy;
-	
-	
+    {
+      for (int x = 0; x < this->image->width; x++)
+	{
+	  //m_world->Ticker();
+
+	  if (this->image->get_pixel(x, y) == 0)
+	    continue;
+	  
+	  // a rectangle starts from this point
+	  int startx = x;
+	  int starty = this->image->height - y;
+	  int height = this->image->height; // assume full height for starters
+	  
+	  // grow the width - scan along the line until we hit an empty pixel
+	  for( ;  this->image->get_pixel( x, y ) > 0; x++ )
+	    {
+	      // handle horizontal cropping
+	      double ppx = x * sx; 
+	      if (ppx < this->crop_ax || ppx > this->crop_bx)
+		continue;
+	      
+	      // look down to see how large a rectangle below we can make
+	      int yy  = y;
+	      while( (this->image->get_pixel( x, yy ) > 0 ) 
+		     && (yy < this->image->height) )
+		{ 
+		  // handle vertical cropping
+		  double ppy = (this->image->height - yy) * sy;
+		  if (ppy < this->crop_ay || ppy > this->crop_by)
+		    continue;
+		  
+		  yy++; 
+		} 	      
+	      // now yy is the depth of a line of non-zero pixels
+	      // downward we store the smallest depth - that'll be the
+	      // height of the rectangle
+	      if( yy-y < height ) height = yy-y; // shrink the height to fit
+	    } 
+	  
+	  int width = x - startx;
+	  
+	  // delete the pixels we have used in this rect
+	  this->image->fast_fill_rect( startx, y, width, height, 0 );
+	  
+	  double px = ((startx + (width/2.0) + 0.5 ) * sx) - size_x/2.0;
+	  double py = ((starty - (height/2.0) - 0.5 ) * sy) - size_y/2.0;
+	  double pth = 0;
+	  double pw = width * sx;
+	  double ph = height * sy;
+	  
+	  
 #ifdef INCLUDE_RTK2	
-	// create a figure  rectangle in local coordinates
-	rtk_fig_rectangle(this->fig, px, py, 0, pw, ph, true ); 
+	  // create a figure  rectangle in local coordinates
+	  rtk_fig_rectangle(this->fig, px, py, 0, pw, ph, true ); 
 #endif
-
-	// create a matrix rectangle in global coordinates
-	this->LocalToGlobal( px, py, pth );
+	  
+	  // create a matrix rectangle in global coordinates
+	  this->LocalToGlobal( px, py, pth );
 	m_world->SetRectangle( px, py, pth, pw, ph, this, true);
-      }
-
+	}
+    }
   // new: don't delete the image so we can download it to clients - rtv
   return true;
 }

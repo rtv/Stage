@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.1 2002-08-23 00:19:39 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.2 2002-08-24 04:58:58 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -139,6 +139,26 @@ public: inline Library* GetLibrary( void ){ return lib; }
     
   void StartTimer(double interval);
 
+  void Ticker( void )
+  {
+    putchar( ' ' );
+    static int z = 0;
+    char c;
+    
+    switch( z % 4 )
+      {
+      case 0: c = '|'; break;
+      case 1: c = '/'; break;
+      case 2: c = '-'; break;
+      case 3: c = '\\'; break;
+      }
+    
+    putchar( c );
+    putchar( '\b' );
+    fflush( stdout );
+    z++;
+  };
+  
   //-----------------------------------------------------------------------
   // Timing
   // Real time at which simulation started.

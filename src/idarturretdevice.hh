@@ -9,7 +9,7 @@
 //  CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/idarturretdevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -40,7 +40,6 @@ public: static CIdarTurretDevice* Creator( CWorld *world, CEntity *parent )
 
 
 #ifdef INCLUDE_RTK2
-  virtual void RenderMessages( player_idarturret_reply_t* rep );
 
   rtk_fig_t* data_fig;
   // Initialise the rtk gui
