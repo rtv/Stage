@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.17 2002-06-10 17:35:56 inspectorg Exp $
+ * CVS info: $Id: worldfile.cc,v 1.18 2002-06-10 20:27:56 inspectorg Exp $
  */
 
 #include <assert.h>
@@ -114,8 +114,10 @@ bool CWorldFile::Load(const char *filename)
     return false;
   }
 
+  ClearTokens();
+  
   // Read tokens from the file
-  if (!LoadTokens(file))
+  if (!LoadTokens(file, 0))
   {
     //DumpTokens();
     return false;
@@ -212,13 +214,11 @@ bool CWorldFile::WarnUnused()
 
 ///////////////////////////////////////////////////////////////////////////
 // Load tokens from a file.
-bool CWorldFile::LoadTokens(FILE *file)
+bool CWorldFile::LoadTokens(FILE *file, int include)
 {
   int ch;
   int line;
   char token[256];
-
-  ClearTokens();
   
   line = 1;
 
@@ -231,61 +231,61 @@ bool CWorldFile::LoadTokens(FILE *file)
     if ((char) ch == '#')
     {
       ungetc(ch, file);
-      if (!LoadTokenComment(file, &line))
+      if (!LoadTokenComment(file, &line, include))
         return false;
     }
     else if (isalpha(ch))
     {
       ungetc(ch, file);
-      if (!LoadTokenWord(file, &line))
+      if (!LoadTokenWord(file, &line, include))
         return false;
     }
     else if (strchr("+-.0123456789", ch))
     {
       ungetc(ch, file);
-      if (!LoadTokenNum(file, &line))
+      if (!LoadTokenNum(file, &line, include))
         return false;
     }
     else if (isblank(ch))
     {
       ungetc(ch, file);
-      if (!LoadTokenSpace(file, &line))
+      if (!LoadTokenSpace(file, &line, include))
         return false;
     }
     else if (ch == '"')
     {
       ungetc(ch, file);
-      if (!LoadTokenString(file, &line))
+      if (!LoadTokenString(file, &line, include))
         return false;
     }
     else if (strchr("(", ch))
     {
       token[0] = ch;
       token[1] = 0;
-      AddToken(TokenOpenEntity, token);
+      AddToken(TokenOpenEntity, token, include);
     }
     else if (strchr(")", ch))
     {
       token[0] = ch;
       token[1] = 0;
-      AddToken(TokenCloseEntity, token);
+      AddToken(TokenCloseEntity, token, include);
     }
     else if (strchr("[", ch))
     {
       token[0] = ch;
       token[1] = 0;
-      AddToken(TokenOpenTuple, token);
+      AddToken(TokenOpenTuple, token, include);
     }
     else if (strchr("]", ch))
     {
       token[0] = ch;
       token[1] = 0;
-      AddToken(TokenCloseTuple, token);
+      AddToken(TokenCloseTuple, token, include);
     }
     else if (ch == '\n')
     {
       line++;
-      AddToken(TokenEOL, "\n");
+      AddToken(TokenEOL, "\n", include);
     }
     else
     {
@@ -300,7 +300,7 @@ bool CWorldFile::LoadTokens(FILE *file)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read in a comment token
-bool CWorldFile::LoadTokenComment(FILE *file, int *line)
+bool CWorldFile::LoadTokenComment(FILE *file, int *line, int include)
 {
   char token[256];
   int len;
@@ -315,13 +315,13 @@ bool CWorldFile::LoadTokenComment(FILE *file, int *line)
 
     if (ch == EOF)
     {
-      AddToken(TokenComment, token);
+      AddToken(TokenComment, token, include);
       return true;
     }
     else if (ch == '\n')
     {
       ungetc(ch, file);
-      AddToken(TokenComment, token);
+      AddToken(TokenComment, token, include);
       return true;
     }
     else
@@ -333,7 +333,7 @@ bool CWorldFile::LoadTokenComment(FILE *file, int *line)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read in a word token
-bool CWorldFile::LoadTokenWord(FILE *file, int *line)
+bool CWorldFile::LoadTokenWord(FILE *file, int *line, int include)
 {
   char token[256];
   int len;
@@ -348,17 +348,27 @@ bool CWorldFile::LoadTokenWord(FILE *file, int *line)
 
     if (ch == EOF)
     {
-      AddToken(TokenWord, token);
+      AddToken(TokenWord, token, include);
       return true;
     }
-    else if (isalpha(ch) || isdigit(ch) || strchr("_[]", ch))
+    else if (isalpha(ch) || isdigit(ch) || strchr(".-_[]", ch))
     {
       token[len++] = ch;
     }
     else
     {
-      AddToken(TokenWord, token);
-      ungetc(ch, file);
+      if (strcmp(token, "include") == 0)
+      {
+        ungetc(ch, file);
+        AddToken(TokenWord, token, include);
+        if (!LoadTokenInclude(file, line, include))
+          return false;
+      }
+      else
+      {
+        ungetc(ch, file);
+        AddToken(TokenWord, token, include);
+      }
       return true;
     }
   }
@@ -368,8 +378,99 @@ bool CWorldFile::LoadTokenWord(FILE *file, int *line)
 
 
 ///////////////////////////////////////////////////////////////////////////
+// Load an include token; this will load the include file.
+bool CWorldFile::LoadTokenInclude(FILE *file, int *line, int include)
+{
+  int ch;
+  const char *filename;
+  char *fullpath;
+  
+  ch = fgetc(file);
+
+  if (ch == EOF)
+  {
+    TOKEN_ERR("incomplete include statement", *line);
+    return false;
+  }
+  else if (!isblank(ch))
+  {
+    TOKEN_ERR("syntax error in include statement", *line);
+    return false;
+  }
+
+  ungetc(ch, file);
+  if (!LoadTokenSpace(file, line, include))
+    return false;
+
+  ch = fgetc(file);
+  
+  if (ch == EOF)
+  {
+    TOKEN_ERR("incomplete include statement", *line);
+    return false;
+  }
+  else if (ch != '"')
+  {
+    TOKEN_ERR("syntax error in include statement", *line);
+    return false;
+  }
+
+  ungetc(ch, file);
+  if (!LoadTokenString(file, line, include))
+    return false;
+
+  // This is the basic filename
+  filename = GetTokenValue(this->token_count - 1);
+
+  // Now do some manipulation.  If its a relative path,
+  // we append the path of the world file.
+  
+  if (filename[0] == '/' || filename[0] == '~')
+  {
+    fullpath = strdup(filename);
+  }
+  else
+  {
+    // Note that dirname() modifies the contents, so
+    // we need to make a copy of the filename.
+    // There's no bounds-checking, but what the heck.
+    char *tmp = strdup(this->filename);
+    fullpath = (char*) malloc(PATH_MAX);
+    getcwd(fullpath, PATH_MAX);
+    strcat( fullpath, "/" ); 
+    strcat( fullpath, dirname(tmp));
+    strcat( fullpath, "/" ); 
+    strcat( fullpath, filename );
+    assert(strlen(fullpath) + 1 < PATH_MAX);
+    free(tmp);
+  }
+
+  // Open the include file
+  FILE *infile = fopen(fullpath, "r");
+  if (!infile)
+  {
+    PRINT_ERR2("unable to open include file %s : %s",
+               fullpath, strerror(errno));
+    free(fullpath);
+    return false;
+  }
+
+  // Read tokens from the file
+  if (!LoadTokens(infile, include + 1))
+  {
+    //DumpTokens();
+    free(fullpath);
+    return false;
+  }
+
+  free(fullpath);
+  return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // Read in a number token
-bool CWorldFile::LoadTokenNum(FILE *file, int *line)
+bool CWorldFile::LoadTokenNum(FILE *file, int *line, int include)
 {
   char token[256];
   int len;
@@ -384,7 +485,7 @@ bool CWorldFile::LoadTokenNum(FILE *file, int *line)
 
     if (ch == EOF)
     {
-      AddToken(TokenNum, token);
+      AddToken(TokenNum, token, include);
       return true;
     }
     else if (strchr("+-.0123456789", ch))
@@ -393,7 +494,7 @@ bool CWorldFile::LoadTokenNum(FILE *file, int *line)
     }
     else
     {
-      AddToken(TokenNum, token);
+      AddToken(TokenNum, token, include);
       ungetc(ch, file);
       return true;
     }
@@ -405,7 +506,7 @@ bool CWorldFile::LoadTokenNum(FILE *file, int *line)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read in a string token
-bool CWorldFile::LoadTokenString(FILE *file, int *line)
+bool CWorldFile::LoadTokenString(FILE *file, int *line, int include)
 {
   int ch;
   int len;
@@ -427,7 +528,7 @@ bool CWorldFile::LoadTokenString(FILE *file, int *line)
     }
     else if (ch == '"')
     {
-      AddToken(TokenString, token);
+      AddToken(TokenString, token, include);
       return true;
     }
     else
@@ -442,7 +543,7 @@ bool CWorldFile::LoadTokenString(FILE *file, int *line)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read in a whitespace token
-bool CWorldFile::LoadTokenSpace(FILE *file, int *line)
+bool CWorldFile::LoadTokenSpace(FILE *file, int *line, int include)
 {
   int ch;
   int len;
@@ -457,7 +558,7 @@ bool CWorldFile::LoadTokenSpace(FILE *file, int *line)
 
     if (ch == EOF)
     {
-      AddToken(TokenSpace, token);
+      AddToken(TokenSpace, token, include);
       return true;
     }
     else if (isblank(ch))
@@ -466,7 +567,7 @@ bool CWorldFile::LoadTokenSpace(FILE *file, int *line)
     }
     else
     {
-      AddToken(TokenSpace, token);
+      AddToken(TokenSpace, token, include);
       ungetc(ch, file);
       return true;
     }
@@ -487,6 +588,8 @@ bool CWorldFile::SaveTokens(FILE *file)
   {
     token = this->tokens + i;
 
+    if (token->include > 0)
+      continue;
     if (token->type == TokenString)
       fprintf(file, "\"%s\"", token->value);  
     else
@@ -517,7 +620,7 @@ void CWorldFile::ClearTokens()
 
 ///////////////////////////////////////////////////////////////////////////
 // Add a token to the token list
-bool CWorldFile::AddToken(int type, const char *value)
+bool CWorldFile::AddToken(int type, const char *value, int include)
 {
   if (this->token_count >= this->token_size)
   {
@@ -525,6 +628,7 @@ bool CWorldFile::AddToken(int type, const char *value)
     this->tokens = (CToken*) realloc(this->tokens, this->token_size * sizeof(this->tokens[0]));
   }
 
+  this->tokens[this->token_count].include = include;  
   this->tokens[this->token_count].type = type;
   this->tokens[this->token_count].value = strdup(value);
   this->token_count++;
@@ -568,7 +672,7 @@ void CWorldFile::DumpTokens()
   for (int i = 0; i < this->token_count; i++)
   {
     if (this->tokens[i].value[0] == '\n')
-      printf("[\\n]\n## %4d : ", ++line);
+      printf("[\\n]\n## %4d : %02d ", ++line, this->tokens[i].include);
     else
       printf("[%s] ", this->tokens[i].value);
   }
@@ -600,7 +704,12 @@ bool CWorldFile::ParseTokens()
     switch (token->type)
     {
       case TokenWord:
-        if (strcmp(token->value, "define") == 0)
+        if (strcmp(token->value, "include") == 0)
+        {
+          if (!ParseTokenInclude(&i, &line))
+            return false;
+        }
+        else if (strcmp(token->value, "define") == 0)
         {
           if (!ParseTokenDefine(&i, &line))
             return false;
@@ -628,6 +737,36 @@ bool CWorldFile::ParseTokens()
 
 
 ///////////////////////////////////////////////////////////////////////////
+// Parse an include statement
+bool CWorldFile::ParseTokenInclude(int *index, int *line)
+{
+  int i;
+  CToken *token;
+
+  for (i = *index + 1; i < this->token_count; i++)
+  {
+    token = this->tokens + i;
+
+    switch (token->type)
+    {
+      case TokenString:
+        break;
+      case TokenSpace:
+        break;
+      case TokenEOL:
+        *index = i;
+        (*line)++;
+        return true;
+      default:
+        PARSE_ERR("syntax error in include statement", *line);
+    }
+  }
+  PARSE_ERR("incomplete include statement", *line);
+  return false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // Parse a macro definition
 bool CWorldFile::ParseTokenDefine(int *index, int *line)
 {
@@ -640,7 +779,7 @@ bool CWorldFile::ParseTokenDefine(int *index, int *line)
   count = 0;
   macroname = NULL;
   entityname = NULL;
-  starttoken;
+  starttoken = -1;
 
   for (i = *index + 1; i < this->token_count; i++)
   {

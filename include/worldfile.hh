@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.hh,v 1.13 2002-06-09 00:33:01 inspectorg Exp $
+ * CVS info: $Id: worldfile.hh,v 1.14 2002-06-10 20:27:55 inspectorg Exp $
  */
 
 #ifndef WORLDFILE_HH
@@ -124,22 +124,25 @@ class CWorldFile
   // Private methods used to load stuff from the world file
   
   // Load tokens from a file.
-  private: bool LoadTokens(FILE *file);
+  private: bool LoadTokens(FILE *file, int include);
 
   // Read in a comment token
-  private: bool LoadTokenComment(FILE *file, int *line);
+  private: bool LoadTokenComment(FILE *file, int *line, int include);
 
   // Read in a word token
-  private: bool LoadTokenWord(FILE *file, int *line);
+  private: bool LoadTokenWord(FILE *file, int *line, int include);
+
+  // Load an include token; this will load the include file.
+  private: bool LoadTokenInclude(FILE *file, int *line, int include);
 
   // Read in a number token
-  private: bool LoadTokenNum(FILE *file, int *line);
+  private: bool LoadTokenNum(FILE *file, int *line, int include);
 
   // Read in a string token
-  private: bool LoadTokenString(FILE *file, int *line);
+  private: bool LoadTokenString(FILE *file, int *line, int include);
 
   // Read in a whitespace token
-  private: bool LoadTokenSpace(FILE *file, int *line);
+  private: bool LoadTokenSpace(FILE *file, int *line, int include);
 
   // Save tokens to a file.
   private: bool SaveTokens(FILE *file);
@@ -148,7 +151,7 @@ class CWorldFile
   private: void ClearTokens();
 
   // Add a token to the token list
-  private: bool AddToken(int type, const char *value);
+  private: bool AddToken(int type, const char *value, int include);
 
   // Set a token in the token list
   private: bool SetTokenValue(int index, const char *value);
@@ -161,6 +164,9 @@ class CWorldFile
 
   // Parse a line
   private: bool ParseTokens();
+
+  // Parse an include statement
+  private: bool ParseTokenInclude(int *index, int *line);
 
   // Parse a macro definition
   private: bool ParseTokenDefine(int *index, int *line);
@@ -248,6 +254,9 @@ class CWorldFile
   // Token structure.
   private: struct CToken
   {
+    // Non-zero if token is from an include file.
+    int include;
+    
     // Token type (enumerated value).
     int type;
 
