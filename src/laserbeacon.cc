@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.10 $
+//  $Author: ahoward $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -151,7 +151,6 @@ void CLaserBeacon::Update( double sim_time )
     //
     if( sim_time - m_last_update < m_interval )
         return;
-
     m_last_update = sim_time;
 
     // Undraw our old representation
@@ -166,7 +165,7 @@ void CLaserBeacon::Update( double sim_time )
     // Draw our new representation
     //
     if (!m_transparent)
-        m_world->SetCell(m_map_px, m_map_py, layer_laser, m_channel );
+        m_world->SetCell(m_map_px, m_map_py, layer_laser, 2);
 
     m_world->SetLaserBeacon(m_index, m_map_px, m_map_py, m_map_pth);
 }

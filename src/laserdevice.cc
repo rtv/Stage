@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.25 $
+//  $Revision: 1.26 $
 //
 // Usage:
 //  (empty)
@@ -43,7 +43,7 @@ CLaserDevice::CLaserDevice(CWorld *world,
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_laser_data_t );
   m_command_len = 0;
-  m_config_len  = 0;//sizeof( player_laser_config_t );
+  m_config_len  = sizeof( player_laser_config_t );
   
   m_player_type = PLAYER_LASER_CODE; // from player's messages.h
 
