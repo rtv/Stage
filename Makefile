@@ -8,7 +8,7 @@
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
 #  $Author: gerkey $
-#  $Revision: 1.15 $
+#  $Revision: 1.16 $
 #
 ###########################################################################
 
@@ -19,25 +19,28 @@ include Makefile.common
 ##############################################################################
 # Top level targets
 
-all: stage xs rtkstage
+all: stage xs rtkstage truthlog
 
 stage: 
-	cd src && make clean && make stage -e PLAYER_DIR=$(PLAYER_DIR) &&  cp stage ../bin/
+	cd src && make stage && cp stage_objs/stage ../bin/
 
 xs: 
-	cd src &&  make xs -e PLAYER_DIR=$(PLAYER_DIR) && cp xs ../bin/
+	cd src && make xs && cp xs ../bin/
+
+truthlog: 
+	cd src && make truthlog
 
 rtkstage:
-	cd src && make clean && make rtkstage -e PLAYER_DIR=$(PLAYER_DIR) &&  cp rtkstage ../bin/
+	cd src && make rtkstage && cp rtkstage_objs/rtkstage ../bin/
 
 dep:
 	cd src &&  make dep
 
 clean:
 	rm -f *~
-	cd src &&  make clean 
+	cd src && make clean 
 	cd include &&  make clean
-	cd bin &&  rm -f stage rtkstage xs core
+	cd bin && rm -f stage rtkstage xs core
 	cd examples && rm -f core
 
 
@@ -45,7 +48,7 @@ clean:
 # Install section
 
 INSTALL_BIN = $(INSTALL_DIR)/bin
-INSTALL_BIN_FILES = bin/stage bin/xs bin/rtkstage 
+INSTALL_BIN_FILES = bin/stage bin/xs bin/rtkstage
 INSTALL_EXAMPLES = $(INSTALL_DIR)/examples
 INSTALL_ETC = /usr/local/etc/rtk
 INSTALL_ETC_FILES = etc/rtkstage.cfg
@@ -94,15 +97,4 @@ bin_dist:
 	cp -R . /tmp/$(BIN_DIST_NAME)
 	tar -C /tmp -cvzf $(BIN_DIST_NAME).tgz $(BIN_DIST_FILES)
 	rm -Rf /tmp/$(BIN_DIST_NAME)
-
-
-# DO NOT DELETE
-
-
-
-
-
-
-
-
 

@@ -5,29 +5,8 @@
 
 include ../Makefile.common
 
-#############################################################################
-# These are the key paths needed for the build
-
-PLAYER_INC = $(PLAYER_DIR)/include
-
-RTK_DIR = ../rtk
-# rtkstage needs RTK installed and these paths set correctly
-# RTK headers
-RTK_INC = $(RTK_DIR)/include
-# RTK libraries
-RTK_LIB = $(RTK_DIR)/lib
-
 ##############################################################################
 # Build section
-
-# Objects common to all targets
-#
-OBJS =  world.o world_load.o truthserver.o envserver.o image.o \
-	entity.o entityfactory.o playerdevice.o \
-	positiondevice.o laserdevice.o sonardevice.o miscdevice.o \
-	ptzdevice.o truthdevice.o occupancydevice.o boxobstacle.o \
-	laserbeacon.o laserbeacondevice.o visiondevice.o visionbeacon.o \
-	broadcastdevice.o puck.o gpsdevice.o gripperdevice.o
 
 # choose one of these that suits your build (debug/profile/production)
 
@@ -49,24 +28,16 @@ LINKFLAGS = -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
 #LINKFLAGS = -pg -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
 
 
-# Standard tools
-#
-CC := g++
-LINKER = g++
-MAKEDEP = makedepend
-
-.SUFFIXES: .cc .o
-
 ##############################################################################
 # Targets
 
-all: stage xs truthlog rtkstage 
+all: stage rtkstage xs truthlog 
 
-# Target stage with no GUI
-#
-stage : OBJS += main.o
-stage : $(OBJS) main.o 
-	$(LINKER) $(LINKFLAGS) -o stage $(OBJS) 
+stage:
+	cd stage_objs && make stage
+
+rtkstage:
+	cd rtkstage_objs && make rtkstage
 
 # Target XS - the X Player/Stage Interface
 #
@@ -78,19 +49,16 @@ xs : xs.cc render.cc
 truthlog: truthlog.cc 
 	$(CC) -I../include -I$(PLAYER_INC) -lstdc++ truthlog.cc -o truthlog
 
-# Target stage with RTK GUI
-#
-rtkstage : OBJS += rtk_main.o
-rtkstage : CCFLAGS += -DINCLUDE_RTK -I$(RTK_INC) `gtk-config --cflags`
-rtkstage : LINKFLAGS += -L$(RTK_LIB) -lrtk `gtk-config --libs gtk gthread`
-rtkstage : $(OBJS) rtk_main.o 
-	${LINKER} $(OBJS) $(LINKFLAGS) -o rtkstage
-
 clean:
-	rm -f *.o *~ core stage xs truthlog rtkstage
+	rm -f *.o *~ core xs truthlog 
+	cd stage_objs && make clean
+	cd rtkstage_objs && make clean
 
 dep:
-	$(MAKEDEP) -Y -I../include -I$(PLAYER_INC) -s "# Dependancies (make dep)" *.cc 2>/dev/null
+	$(MAKEDEP) -Y -I../include -I$(PLAYER_INC) -s "# Dependancies (make dep)" truthlog.cc xs.cc render.cc 2>/dev/null
+	$(RM) -f Makefile.bak
+	cd stage_objs && make dep
+	cd rtkstage_objs && make dep
 
 %.o : %.cc
 	${CC} ${CCFLAGS} -c $< -o $@
@@ -98,8 +66,13 @@ dep:
 ##############################################################################
 # Dependancies (make dep)
 
-
-
-
-
-
+truthlog.o: ../include/truthserver.hh
+truthlog.o: /usr/local/player-1.0a/include/messages.h
+truthlog.o: /usr/local/player-1.0a/include/playercommon.h
+truthlog.o: ../include/stage_types.hh
+xs.o: ../include/stage_types.hh ../include/truthserver.hh
+xs.o: /usr/local/player-1.0a/include/messages.h
+xs.o: /usr/local/player-1.0a/include/playercommon.h ../include/xs.hh
+render.o: ../include/stage_types.hh ../include/truthserver.hh
+render.o: /usr/local/player-1.0a/include/messages.h
+render.o: /usr/local/player-1.0a/include/playercommon.h ../include/xs.hh
