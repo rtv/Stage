@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.14 2002-12-03 18:22:32 inspectorg Exp $
+ * CVS info: $Id: entity.hh,v 1.15 2003-01-10 00:17:49 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -64,6 +64,19 @@ class CEntity
   // Minimal constructor Requires a pointer to the library entry for
   // this type, a pointer to the world, and a parent
   public: CEntity( LibraryItem* libit, CWorld *world, CEntity *parent_entity );
+  
+  // a static named constructor - a pointer to this function is given
+  // to the Library object and paired with a string.  When the string
+  // is seen in the worldfile, this function is called to create an
+  // instance of this entity
+
+  // entities can now be instatiated without deriving a subclass so
+  // can be used as obstacles, fiducials etc by configuration from the
+  // world file
+public: static CEntity* Creator( LibraryItem *libit,  CWorld *world, CEntity *parent )
+  {
+    return( new CEntity( libit, world, parent ) );
+  };
   
   // a linked list of other entities attached to this one
 public: CEntity* child_list;

@@ -3,10 +3,14 @@
 #       showing how to include some pre-defined objects
 # Author: Andrew Howard, Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.14 2003-01-09 02:54:38 rtv Exp $
+# CVS: $Id: everything.world,v 1.15 2003-01-10 00:17:49 rtv Exp $
 
 include "usc_pioneer.inc"
+
+
 include "beacons.inc"
+
+
 
 resolution 0.03
 
@@ -24,7 +28,7 @@ bitmap
 #
 gui
 (
-  size [600.000 600.000]
+  size [600.000 580.000]
   origin [7.538 7.464]
   scale 0.026
   grid [0.2 1]
@@ -51,18 +55,19 @@ define red_puck puck( color "red" )
 define green_puck puck( color "green" )
 define blue_puck puck( color "blue" )
 
+
 # generate some pioneer robots in USC configuario
 usc_pioneer(color "red" name "robot1" port 6665 pose [3.195 1.237 40 ])
 
 usc_pioneer_gripper( color "green" name "robot2" 
-                     port 6666 pose [3.753 7.901 -2.915 ])
+                     port 6666 pose [3.857 7.823 0.895 ])
 
 usc_pioneer_bumper( color "blue" name "robot3" 
-                    port 6667 pose [7.950 1.381 89.451] )
+                    port 6667 pose [7.404 0.965 75.599] )
 
-amigobot( color "red" name "amigo1" port 6670 pose [11.774 4.104 -135.514] )
-amigobot( color "red" name "amigo2" port 6671 pose [11.514 4.754 -121.652] )
-amigobot( color "red" name "amigo3" port 6672 pose [12.476 3.974 -126.121] )
+amigobot( color "red" name "amigo1" port 6670 pose [11.930 4.546 -135.514] )
+amigobot( color "red" name "amigo2" port 6671 pose [11.228 5.092 -121.652] )
+amigobot( color "red" name "amigo3" port 6672 pose [12.554 4.130 -126.121] )
 
 # generate some laser beacons
 laserbeacon( pose [6.420 3.600 -143.139] fiducial_id 5 )
@@ -82,3 +87,18 @@ blue_puck( pose [5.328 8.232 0.000] )
 blue_puck( pose [5.103 8.475 0.000] )
 blue_puck( pose [4.869 8.197 0.000] )
 blue_puck( pose [5.058 7.898 0.000] )
+
+#
+# Create an interesting visual obstacle from boxes
+#
+define cornercube box( size [0.2 0.2] laser_return "bright" )
+
+box(
+     pose [9.606 1.416 -112.435] 
+     size [0.6 0.6 0.0]     
+
+     cornercube( color "red" pose [0.3 0.3 0.0] )
+     cornercube( color "green" pose [-0.3 0.3 0.0] )
+     cornercube( color "blue" pose [-0.3 -0.3 0.0] )
+     cornercube( color "magenta" pose [0.3 -0.3 0.0] )
+)
