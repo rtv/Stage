@@ -192,22 +192,24 @@ int main(int argc, char **argv)
 	      
 	      //printf("reading from: %d 0x%x\n", i,servers[i].events);
 
-	      r = read( servers[i].fd, &truth, sizeof(truth) );
+	      int r = 0;
 	      
-	      if( r > 0 )
-		{		  
-		  // foward the packet to the other servers 
-		  for(int j=0; j<stages; j++)
-		    if( j != i ) 
-		      v = write( servers[j].fd, &truth, sizeof(truth) );
-		}
-	      else
+	      while( r < (int)sizeof(truth) )
 		{
-		  cout << "Read error (Stage dead?). quitting. " << endl;
-		  exit( -1 );
+		  int v=0;
+		  if( (v = read( servers[i].fd, ((char*)&truth)+r, sizeof(truth)-r )) < 1 )
+		    {
+		      cout << "Read error (Stage dead?). quitting. " << endl;
+		      exit( -1 );
+		    }
+		  r+=v;
 		}
+	      
+	      // foward the packet to the other servers 
+	      for(int j=0; j<stages; j++)
+		if( j != i ) 
+		  v = write( servers[j].fd, &truth, sizeof(truth) );
 	    }
-	  
 	}     
     }
 }

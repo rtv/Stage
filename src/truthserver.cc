@@ -85,7 +85,6 @@ static void* TruthReader( void* arg )
 #endif
 
   truth_connection_t* con = (truth_connection_t*)arg;
-
   int connfd = con->fd;
 
   sigblock(SIGINT);
@@ -94,15 +93,10 @@ static void* TruthReader( void* arg )
 
   pthread_detach(pthread_self());
 
-  stage_truth_t truth;
-  
-  int r = 0;
   while( 1 )
     {	      
-      /* read will block until it has some bytes to return */
-
-      r = 0;
-
+      stage_truth_t truth;
+      int r = 0;
       // read until we have a whole truth packet
       while( r < (int)sizeof(truth ) )
 	{
@@ -118,6 +112,11 @@ static void* TruthReader( void* arg )
 	      pthread_exit( 0 );
 	    }
 	  r+=v;
+
+	  if( v < (int)sizeof(truth) )
+	    printf( "STAGE: SHORT READ (%d/%d) r=%d\n",
+		    v, (int)sizeof(truth), r );
+	  
 	}
       
       assert( r == sizeof( truth ) );
