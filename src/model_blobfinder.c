@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.39 2005-03-11 21:56:57 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.40 2005-03-11 22:07:46 rtv Exp $
  */
 
 #include <math.h>
@@ -41,6 +41,8 @@ extern stg_rtk_fig_t* fig_debug_rays;
 #define STG_DEFAULT_BLOB_TILT 0.0
 #define STG_DEFAULT_BLOB_ZOOM DTOR(60)
 
+const int STG_BLOBFINDER_BLOBS_MAX = 32;
+const double STG_BLOB_WATTS = 10.0; // power consumption
 
 /** @defgroup model_blobfinder Blobfinder model
 
@@ -150,7 +152,7 @@ stg_model_t* stg_blobfinder_create( stg_world_t* world,
   // override the default methods
   mod->f_startup = blobfinder_startup;
   mod->f_shutdown = blobfinder_shutdown;
-  mod->f_update = blobfinder_update;
+  mod->f_update = NULL;// installed at startup/shutdown
   mod->f_render_data = blobfinder_render_data;
   mod->f_render_cfg = blobfinder_render_cfg;
   mod->f_load = blobfinder_load;
@@ -212,12 +214,18 @@ int blobfinder_startup( stg_model_t* mod )
 {
   PRINT_DEBUG( "blobfinder startup" );  
   
+  mod->f_update = blobfinder_update;
+  mod->watts = STG_BLOB_WATTS;
+  
   return 0;
 }
 
 int blobfinder_shutdown( stg_model_t* mod )
 {
   PRINT_DEBUG( "blobfinder shutdown" );  
+  
+  mod->f_update = NULL;
+  mod->watts = 0.0;
   
   // clear the data - this will unrender it too
   stg_model_set_data( mod, NULL, 0 );
@@ -238,10 +246,6 @@ int blobfinder_update( stg_model_t* mod )
 {
   PRINT_DEBUG( "blobfinder update" );  
   
-  // only need to work if we're subscribed
-  if( mod->subs < 1 )
-    return 0; 
- 
   stg_blobfinder_config_t cfg;
   blobfinder_get_cfg(mod,&cfg);
   
@@ -445,9 +449,6 @@ int blobfinder_update( stg_model_t* mod )
 
   return 0; //OK
 }
-
-
-#define STG_BLOBFINDER_BLOBS_MAX 32
 
 void blobfinder_render_data( stg_model_t* mod )
 { 

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.36 $
+//  $Revision: 1.37 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -25,6 +25,8 @@ extern stg_rtk_fig_t* fig_debug_rays;
 #define STG_DEFAULT_FIDUCIAL_RANGEMAXID 5
 #define STG_DEFAULT_FIDUCIAL_RANGEMAXANON 8
 #define STG_DEFAULT_FIDUCIAL_FOV DTOR(180)
+
+const double STG_FIDUCIAL_WATTS = 10.0;
 
 /** @defgroup model_fiducial Fiducial detector model
 The fiducial model simulates a fiducial-detecting device.
@@ -72,6 +74,7 @@ void fiducial_load( stg_model_t* mod )
   stg_model_set_config( mod, &cfg, sizeof(cfg));
 }
 
+int fiducial_startup( stg_model_t* mod );
 int fiducial_shutdown( stg_model_t* mod );
 int fiducial_update( stg_model_t* mod );
 void fiducial_render_cfg( stg_model_t* mod );
@@ -85,8 +88,9 @@ stg_model_t* stg_fiducial_create( stg_world_t* world,
   stg_model_t* mod = stg_model_create( world, parent, id, STG_MODEL_FIDUCIAL, token );
   
   // override the default methods
+  mod->f_startup = fiducial_startup;
   mod->f_shutdown = fiducial_shutdown;
-  mod->f_update = fiducial_update;
+  mod->f_update = NULL; // installed at startup/shutdown
   mod->f_render_data = fiducial_render_data;
   mod->f_render_cfg = fiducial_render_cfg;
   mod->f_load = fiducial_load;
@@ -117,8 +121,21 @@ stg_model_t* stg_fiducial_create( stg_world_t* world,
   return mod;
 }
 
+int fiducial_startup( stg_model_t* mod )
+{
+  PRINT_DEBUG( "fiducial startup" );  
+  
+  mod->f_update = fiducial_update;
+  mod->watts = STG_FIDUCIAL_WATTS;
+  
+  return 0;
+}
+
 int fiducial_shutdown( stg_model_t* mod )
 {
+  mod->f_update = NULL;
+  mod->watts = 0.0;
+
   // this will undrender the data
   stg_model_set_data( mod, NULL, 0 );
   
