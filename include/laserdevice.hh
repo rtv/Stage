@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.16.2.3 $
+//  $Revision: 1.16.2.4 $
 
 //
 // Usage:
@@ -31,13 +31,8 @@
 #include "playerdevice.hh"
 #include "laserbeacon.hh"
 
-#include <slist> // STL
+#include <slist.h> // STL
 
-
-class CEntityPointer
-{
-  public: CEntity* ptr;
-};
 
 typedef std::slist< int > LaserBeaconList; 
 

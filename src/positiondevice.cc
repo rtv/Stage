@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.5.2.3 $
+//  $Revision: 1.5.2.4 $
 //
 // Usage:
 //  (empty)
@@ -299,25 +299,35 @@ void CPositionDevice::ComposeData()
 //
 bool CPositionDevice::InCollision(double px, double py, double pth)
 {
-  if(GetShape() == rectangle)
-  {
-    double qx = px + m_offset_x * cos(pth);
-    double qy = py + m_offset_x * sin(pth);
-    double sx = m_size_x;
-    double sy = m_size_y;
+  CEntity** ent = 0;
+   
+  switch( GetShape() )
+    {
+    case rectangle:
+      double qx = px + m_offset_x * cos(pth);
+      double qy = py + m_offset_x * sin(pth);
+      double sx = m_size_x;
+      double sy = m_size_y;
+      
+      ent = m_world->GetRectangle(qx, qy, pth, sx, sy  );
+      break;
 
-    if (m_world->GetRectangle(qx, qy, pth, sx, sy, layer_obstacle) > 0)
-        return true;
-    
-  }
-  else if(GetShape() == circle)
-  {
-    if (m_world->GetRectangle(px, py, pth, m_size_x, m_size_x,  // CIRCLE! 
-                              layer_obstacle) > 0)
-        return true;
-  }
-  else
-    PRINT_MSG("CPositionDevice::InCollision(): unknown shape!");
+    case circle:
+      ent = m_world->GetRectangle(px, py, pth, m_size_x, m_size_x );  // CIRCLE! 
+      break;
+      
+    default:  
+      PRINT_MSG("CPositionDevice::InCollision(): unknown shape!");       
+    }
+  
+  if( ent && ent[0] ) // we hit something
+    {
+      // look in the list of things we hit
+      int s=0;
+      while( ent[s] )if( ent[s++]->obstacle_layer > 0 ) // it's an obstacle!
+	return true;
+    } 
+ 
   return false;
 }
 

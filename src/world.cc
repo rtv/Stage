@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.21.2.4 $
+//  $Revision: 1.21.2.5 $
 //
 // Usage:
 //  (empty)
@@ -821,6 +821,50 @@ uint8_t CWorld::GetRectangle(double px, double py, double pth,
         case layer_puck:
             return m_puck_img->rect_detect(rect);
     }
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Get a rectangle in the world grid
+//
+CEntity** CWorld::GetRectangle(double px, double py, double pth,
+                             double dx, double dy )
+{
+    Rect rect;
+    double tx, ty;
+
+    dx /= 2;
+    dy /= 2;
+
+    double cx = dx * cos(pth);
+    double cy = dy * cos(pth);
+    double sx = dx * sin(pth);
+    double sy = dy * sin(pth);
+    
+    // This could be faster
+    //
+    tx = px + cx - sy;
+    ty = py + sx + cy;
+    rect.toplx = (int) (tx * ppm);
+    rect.toply = (int) (ty * ppm);
+
+    tx = px - cx - sy;
+    ty = py - sx + cy;
+    rect.toprx = (int) (tx * ppm);
+    rect.topry = (int) (ty * ppm);
+
+    tx = px - cx + sy;
+    ty = py - sx - cy;
+    rect.botlx = (int) (tx * ppm);
+    rect.botly = (int) (ty * ppm);
+
+    tx = px + cx + sy;
+    ty = py + sx - cy;
+    rect.botrx = (int) (tx * ppm);
+    rect.botry = (int) (ty * ppm);
+    
+    return matrix->rect_detect( rect );
+
     return 0;
 }
 

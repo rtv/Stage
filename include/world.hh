@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.14.2.3 $
+//  $Revision: 1.14.2.4 $
 //
 // Usage:
 //  (empty)
@@ -177,6 +177,11 @@ public: CEntity** GetEntityAtCell( int, int );
     //
     public: uint8_t GetRectangle(double px, double py, double pth,
                                  double dx, double dy, EWorldLayer layer);
+
+    // Get a rectangle in the world grid
+    //
+    public: CEntity** GetRectangle(double px, double py, double pth,
+                                 double dx, double dy );
 
     // Set a rectangle in the world grid
     //
