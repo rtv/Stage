@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/positiondevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.12 $
+//  $Author: reed $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  (empty)
@@ -57,6 +57,9 @@ CPositionDevice::CPositionDevice(LibraryItem* libit,CWorld *world, CEntity *pare
   this->com_vx = this->com_vy = this->com_va = 0;
   this->com_px = this->com_py = this->com_pa = 0;
   this->odo_px = this->odo_py = this->odo_pa = 0;
+
+  // default to behavior of previous versions of Stage
+  this->reset_if_no_subscribers = true;
 
   // update this device VERY frequently
   m_interval = 0.01; 
@@ -108,7 +111,25 @@ bool CPositionDevice::Load(CWorldFile *worldfile, int section)
   this->odo_ey = worldfile->ReadTupleFloat(section, "odom_bias", 1, 0.0);
   this->odo_ea = worldfile->ReadTupleFloat(section, "odom_bias", 2, 0.0);
      
+  // Set initial odometry, if given
+  this->odo_px = worldfile->ReadTupleFloat(section, "init_odom", 0, 0.0);
+  this->odo_py = worldfile->ReadTupleFloat(section, "init_odom", 1, 0.0);
+  this->odo_pa = worldfile->ReadTupleFloat(section, "init_odom", 2, 0.0);
+  printf("stage: Starting odometry at [%f %f %f].\n", odo_px, odo_py, odo_pa);
+
+  // no-subscribers-reset flag
+  const char* reset = this->reset_if_no_subscribers?"yes":"no";
+  reset = worldfile->ReadString(section, "reset_if_no_subscribers", reset);
+  if(!strcmp(reset, "yes"))
+    this->reset_if_no_subscribers = true;
+  else if(!strcmp(reset, "no"))
+    this->reset_if_no_subscribers = false;
+  else 
+    PRINT_WARN("Unknown value for \"reset_if_no_subscribers\" (Must be \"yes\"
+on \"no\"). Using default");
+
   return true;
+
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -126,6 +147,7 @@ bool CPositionDevice::Startup()
 // Update the device
 void CPositionDevice::Update( double sim_time )
 {  
+
   // Do some default processing
   CPlayerEntity::Update(sim_time);
 
@@ -160,13 +182,14 @@ void CPositionDevice::Update( double sim_time )
   }
   else  
   {
-    // TODO: this should be an option in the config file
     // the device is not subscribed,
     // so reset odometry to default settings.
-    this->odo_px = this->odo_py = this->odo_pa = 0;
+    if(reset_if_no_subscribers) {
+        this->odo_px = this->odo_py = this->odo_pa = 0;
 
-    // we go quiet when not subscribed
-    this->noise.amplitude = 0; // out of 255
+        // we go quiet when not subscribed
+        this->noise.amplitude = 0; // out of 255
+    }
   }
 
   // Get our new pose
@@ -175,12 +198,13 @@ void CPositionDevice::Update( double sim_time )
 
   // Remap ourselves if we have moved
   ReMap(px, py, pa);
+
 }
 
-  ///////////////////////////////////////////////////////////////////////////
-  // Process configuration requests.
-  void CPositionDevice::UpdateConfig()
-  {
+///////////////////////////////////////////////////////////////////////////
+// Process configuration requests.
+void CPositionDevice::UpdateConfig()
+{
     int len;
     void *client;
     char buffer[PLAYER_MAX_REQREP_SIZE];
@@ -295,7 +319,7 @@ void CPositionDevice::Update( double sim_time )
           break;
 	    }
     }
-  }
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Compute the robots new pose

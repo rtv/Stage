@@ -8,8 +8,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/positiondevice.hh,v $
-//  $Author: inspectorg $
-//  $Revision: 1.6 $
+//  $Author: reed $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -21,7 +21,8 @@
 //  (empty)
 //
 // Possible enhancements:
-//  (empty)
+//  * Don't reset when all clients unsubscribe. (Conditional on flag in world
+//  file maybe)
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -91,6 +92,9 @@ class CPositionDevice : public CPlayerEntity
   
   // Timings
   private: double last_time;
+
+  // Reset setting (from world file)
+  private: bool reset_if_no_subscribers;
 
   // Current command and data buffers
   //private: player_position_cmd_t command;

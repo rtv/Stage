@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.10 2003-07-02 00:05:11 rtv Exp $
+% CVS: $Id: stage.tex,v 1.11 2003-07-18 20:33:53 reed Exp $
 
 \documentclass[11pt,twoside]{report}
 
@@ -1546,6 +1546,11 @@ Name & Values & Description \\
 \hline
 \verb'drive' & \verb'"diff"' or \verb'"omni"' & Selects differential or omnidirectional drive\\
 \verb'noise' & \verb'[0/75 50]' & Position device has noise amplitude 75 while driving, 0 when still.\\
+\verb'init_odom' & \verb'[x y a]' & Initialize odometry (position and 
+orientation). Default is to use 0.0, 0.0, 0.0.\\
+\verb'reset_if_no_subscribers' & \verb'"yes"' or \verb'"no"' & If "yes", then
+the odometry will be reset to 0.0, 0.0, 0.0 if no clients are subscribed (prior
+versions of Stage always did this). If "no", then previous values will remain.  The default is "yes".\\
 \hline
 \end{tabularx}
 
