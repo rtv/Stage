@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_simulation.cc,v 1.3 2004-09-22 20:47:22 rtv Exp $
+ * $Id: stg_simulation.cc,v 1.4 2004-09-24 20:58:30 rtv Exp $
  */
 
 #include "stg_driver.h"
@@ -30,6 +30,9 @@ extern char** global_argv;
 
 // DRIVER FOR SIMULATION INTERFACE ////////////////////////////////////////
 
+// Player's command line args
+extern int global_argc;
+extern char** global_argv;
 
 // CLASS -------------------------------------------------------------
 
@@ -39,11 +42,12 @@ public:
   StgSimulation( ConfigFile* cf, int section);
   ~StgSimulation();
   
-  // TODO - implement some simulator interface things - pause, resume,
+  // TODO soon - implement some simulator interface things - pause, resume,
   // save, load, etc.
   
+  // TODO eventually - add interface code to change everything in the simulator
+  
   virtual void Main();
-  virtual void Update();
   virtual int Setup();
   virtual int Shutdown();
 };
@@ -57,10 +61,10 @@ StgSimulation::StgSimulation( ConfigFile* cf, int section )
 	      sizeof(player_simulation_cmd_t), 1, 1 )
 {
   PLAYER_MSG0( "constructing stg_simulation device" );
-
-  // boot rtk 
-  gui_startup( NULL, NULL );
-
+  
+  // boot libstage 
+  stg_init( global_argc, global_argv );
+  
   this->world = NULL;
 
   // load a worldfile
@@ -121,13 +125,14 @@ StgSimulation::StgSimulation( ConfigFile* cf, int section )
   printf( "    Starting world clock... " ); fflush(stdout);
   //stg_world_resume( world );
 
-
-
   world->paused = FALSE;
   puts( "done." );
 
+  
+  this->StartThread();
+
   // make Player call Update() on this device even when noone is subscribed
-  this->alwayson = TRUE;
+  //this->alwayson = TRUE;
 }
 
 StgSimulation::~StgSimulation()
@@ -149,12 +154,6 @@ void StgSimulation_Register(DriverTable* table)
 }
 
 
-void StgSimulation::Update( void )
-{
-  //puts( "UPDATE" );
-}
-
-
 void StgSimulation::Main()
 {
   //int d=0;
@@ -167,7 +166,7 @@ void StgSimulation::Main()
       if( this->world )
 	{
 	  //printf( "  D = %d\r", ++d ); fflush(stdout);
-	  gui_poll(); // update the Stage window
+	  //gui_poll(); // update the Stage window
 	  
 	  stg_world_update( this->world );
 
@@ -182,8 +181,6 @@ void StgSimulation::Main()
 int StgSimulation::Setup()
 {
   PRINT_WARN( "stg_simulation setup" );
-
-  this->StartThread();
 
   return 0; //ok
 }

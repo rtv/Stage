@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.19 $
+//  $Revision: 1.20 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -189,6 +189,9 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
 int fiducial_update( stg_model_t* mod )
 {
   PRINT_DEBUG( "fiducial update" );
+
+  if( mod->subs < 1 )
+    return 0;
 
   if( fig_debug ) rtk_fig_clear( fig_debug );
   

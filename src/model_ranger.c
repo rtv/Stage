@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.27 $
+//  $Revision: 1.28 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -93,6 +93,9 @@ int ranger_update( stg_model_t* mod )
 {   
   PRINT_DEBUG1( "[%.3f] updating rangers", mod->world->sim_time );
   
+  if( mod->subs < 1 )
+    return 0;
+
   size_t len = 0;
   stg_ranger_config_t* cfg = 
     (stg_ranger_config_t*)stg_model_get_config(mod,&len);

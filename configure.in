@@ -1,10 +1,10 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.56 2004-09-16 06:54:27 rtv Exp $
+dnl $Id: configure.in,v 1.57 2004-09-24 20:58:29 rtv Exp $
 dnl -----------------------------------------------------------------------
 
-dnl Process this file with autoconf to produce a configure script.
-AC_INIT(src/main.c)
+dnl AC_INIT( package, version )
+AC_INIT(stage,1.6)
 
 dnl determine system type.  this is used in a couple of places to infer the 
 dnl types of arguments to some networking library functions.  if/when we 
@@ -19,10 +19,12 @@ esac
 dnl Need AC_PROG_MAKE_SET for recursive building
 AC_PROG_MAKE_SET
 
+
 dnl tell libtool to enable dynamic-loadable libraries
 AC_LIBTOOL_DLOPEN
 dnl enable libtool for building shared libraries in a platform-independent way
 AC_PROG_LIBTOOL
+AC_SUBST(LIBTOOL_DEPS)
 
 dnl Generate a configuration header called <config.h> and put all the C
 dnl preprocessor defines in there
@@ -32,16 +34,15 @@ dnl Define this so that we can refer to it twice below
 dnl PS_VERSION is the major.minor version that is common for Player and
 dnl Stage. All revisions with this major.minor version must be forwards 
 dnl and backwards compatible. This number is used for the install directories.
-define(PS_VERSION,1.5)
+dnl define(PS_VERSION,1.6)
 
 dnl STAGE_VERSION is major.minor.revision - unique to this release and 
 dnl independent of Player's revision number - 'dev' should be appended for 
 dnl unreleased development versions
-define(STAGE_VERSION,PS_VERSION.0)
+dnl define(STAGE_VERSION,PS_VERSION.0)
 
-dnl Initialize automake with name and version of package to be built. 
-dnl PACKAGE and VERSION will be so defined in <config.h>.
-AM_INIT_AUTOMAKE(stage,STAGE_VERSION)
+dnl automake now automatically inherits PACKAGE and VERSION created by AC_INIT above
+AM_INIT_AUTOMAKE
 
 dnl Checks for programs.
 AC_PROG_CC
@@ -51,8 +52,6 @@ AC_PROG_RANLIB
 
 dnl Checks for header files of required libraries
 AC_CHECK_HEADERS(stdint.h strings.h)
-
-dnl AC_CHECK_HEADER(pam.h,[],[AC_MSG_ERROR([Couldn't find <pam.h>, which is required to build Stage.  Perhaps you should install netpbm?])]x)
 
 dnl Check for types that are not defined on some systems
 dnl Test for socklen_t and define it to int if it's not there.

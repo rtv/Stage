@@ -19,6 +19,19 @@
 
 int _stg_quit = FALSE;
 
+int stg_init( int argc, char** argv )
+{
+  gui_startup( &argc, &argv );
+
+  return 0; // ok
+}
+
+const char* stg_get_version_string( void )
+{
+  return PACKAGE_STRING;
+}
+
+
 // returns a human readable desciption of the property type [id]
 const char* stg_property_string( stg_id_t id )
 {
@@ -76,6 +89,7 @@ const char* stg_model_type_string( stg_model_type_t type )
     case STG_MODEL_RANGER: return "ranger";
     case STG_MODEL_TEST: return "test";
     default:
+      break;
     }  
   return "<unknown type>";
 }

@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.65 2004-09-22 21:04:32 rtv Exp $
+# $Id: Makefile.am,v 1.66 2004-09-24 20:58:30 rtv Exp $
 
 #SUBDIRS = models
 
@@ -80,7 +80,7 @@ bin_PROGRAMS = stest
 #	
 stest_SOURCES = stest.c
 stest_LDFLAGS =
-stest_LDADD =  @GTK_LIBS@ -lstage
+stest_LDADD =  @GTK_LIBS@ -lstage -ljpeg
 
 
 

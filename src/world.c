@@ -6,6 +6,8 @@
 
 #include "stage.h"
 
+extern int _stg_quit; // quit flag is returned by stg_world_update()
+
 stg_world_t* stg_world_create( stg_id_t id, 
 			   char* token, 
 			   int sim_interval, 
@@ -80,8 +82,12 @@ int stg_world_update( stg_world_t* world )
   gettimeofday( &tv1, NULL );
 #endif
   
-  gui_world_update( world );
-  
+  if( world->win )
+    {
+      gui_poll();
+      gui_world_update( world );
+    }
+
 #if 0// DEBUG
   struct timeval tv2;
   gettimeofday( &tv2, NULL );
@@ -98,8 +104,6 @@ int stg_world_update( stg_world_t* world )
   
   //PRINT_WARN( "World update - not paused" );
  
-
-  //{
   stg_msec_t timenow = stg_timenow();
   
  
@@ -131,9 +135,8 @@ int stg_world_update( stg_world_t* world )
       world->sim_time += world->sim_interval;
       
     }
-  //}
- 
-  return 0;
+  
+  return _stg_quit; // may have been set TRUE by the GUI or someone else
 }
 
 void world_update_cb( gpointer key, gpointer value, gpointer user )

@@ -21,7 +21,7 @@
 /*
  * Desc: Rtk application functions
  * Author: Andrew Howard
- * CVS: $Id: rtk.c,v 1.1 2004-09-16 06:54:27 rtv Exp $
+ * CVS: $Id: rtk.c,v 1.2 2004-09-24 20:58:30 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -103,14 +103,14 @@ void rtk_app_destroy(rtk_app_t *app)
     PRINT_WARN1("garbage collected %d canvases", count);
 
   // Get rid of any tables  we still have
-  count = 0;
-  while (app->table)
-  {
-    rtk_table_destroy(app->table);
-    count++;
-  }
-  if (count > 0)
-    PRINT_WARN1("garbage collected %d tables", count);
+  //count = 0;
+  //while (app->table)
+  //{
+  //rtk_table_destroy(app->table);
+  //count++;
+  //}
+  //if (count > 0)
+  //PRINT_WARN1("garbage collected %d tables", count);
 
   // Free ourself
   free(app);
@@ -165,13 +165,13 @@ int rtk_app_main(rtk_app_t *app)
 void rtk_app_main_init(rtk_app_t *app)
 {
   rtk_canvas_t *canvas;
-  rtk_table_t *table;
+  //rtk_table_t *table;
   
   // Display everything
   for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
     gtk_widget_show_all(canvas->frame);
-  for (table = app->table; table != NULL; table = table->next)
-    gtk_widget_show_all(table->frame);
+  //for (table = app->table; table != NULL; table = table->next)
+  //gtk_widget_show_all(table->frame);
 
   return;
 }
@@ -196,7 +196,7 @@ int rtk_app_main_loop(rtk_app_t *app)
 {
   int ret;
   rtk_canvas_t *canvas;
-  rtk_table_t *table;
+  //rtk_table_t *table;
   
   while (gtk_events_pending())
     ret = gtk_main_iteration();
@@ -208,9 +208,9 @@ int rtk_app_main_loop(rtk_app_t *app)
     for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
       if (!canvas->destroyed)
         gtk_widget_destroy(canvas->frame);
-    for (table = app->table; table != NULL; table = table->next)
-      if (!table->destroyed)
-        gtk_widget_destroy(table->frame);
+    //for (table = app->table; table != NULL; table = table->next)
+    //if (!table->destroyed)
+    //  gtk_widget_destroy(table->frame);
     gtk_main_quit();
   }
 

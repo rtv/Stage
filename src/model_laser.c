@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.43 $
+//  $Revision: 1.44 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -67,6 +67,10 @@ int laser_update( stg_model_t* mod )
 {   
   PRINT_DEBUG1( "[%lu] laser update", mod->world->sim_time );
   
+  // no work to do if we're unsubscribed
+  if( mod->subs < 1 )
+    return 0;
+    
   stg_laser_config_t* cfg = mod->cfg;
   assert(cfg);
   stg_geom_t* geom = &mod->geom;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_driver.cc,v 1.3 2004-09-22 20:47:22 rtv Exp $
+ * $Id: stg_driver.cc,v 1.4 2004-09-24 20:58:30 rtv Exp $
  */
 
 // STAGE-1.4 DRIVER CLASS ///////////////////////////////
@@ -42,15 +42,15 @@
 #include <math.h>
 #include <unistd.h>
 
+#define DEBUG
+
 #include "stg_time.h"
 #include "stg_driver.h"
 
 // init static vars
 ConfigFile* Stage1p4::config = NULL;
-//stg_client_t* Stage1p4::stage_client = NULL;
 stg_world_t* Stage1p4::world = NULL;
 
-//char* Stage1p4::world_name;
 
 // declare Player's emergency stop function (defined in main.cc)
 void Interrupt( int dummy );
@@ -64,10 +64,6 @@ Stage1p4::Stage1p4( ConfigFile* cf, int section, int interface, uint8_t access,
   PLAYER_TRACE1( "Stage1p4 device created for interface %s\n", interface );
   
   this->config = cf;
-    
-  //this->subscribe_list = NULL;
-
-  //const char *enttype = config->GetEntityType(section);
 
   if( this->device_id.code == PLAYER_SIMULATION_CODE )
     {
@@ -142,10 +138,14 @@ void StgFiducial_Register(DriverTable *table);
 extern "C" {
   int player_driver_init(DriverTable* table)
   {
-    puts("stg_simulation driver initializing");
+    printf( "Stage plugin: \"%s\"\n", stg_get_version_string() );
+
     StgSimulation_Register(table);
     StgLaser_Register(table);
-    puts("Example driver done");
+    StgFiducial_Register(table);
+    StgSonar_Register(table);
+    StgPosition_Register(table);
+    StgBlobfinder_Register(table);
     return(0);
   }
 }

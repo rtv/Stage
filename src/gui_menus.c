@@ -4,6 +4,7 @@
 #include "stage.h"
 
 extern rtk_fig_t* fig_debug;
+extern int _stg_quit;
 
 enum {
   STG_MITEM_FILE_SAVE,
@@ -70,7 +71,10 @@ void gui_menu_exit( rtk_menuitem_t *item )
   //quit = TRUE;
   PRINT_DEBUG( "Exit menu item" );
 
-  //world_t* world = (world_t*)item->userdata;
+  //stg_world_t* world = (stg_world_t*)item->userdata;
+
+  _stg_quit = TRUE;
+
   //stg_id_t wid = world->id;
   
   // TODO
