@@ -75,11 +75,11 @@ void CXGui::RenderObject( xstruth_t &orig_truth )
     truth.y = y;
     truth.th = th;
 
+
 #ifdef DEBUG
     printf( "rendering %d at %.4f %.4f %.4f\n", 
 	    truth.stage_id, truth.x, truth.y, truth.th );
 #endif
-
 
     bool extended = false;
 

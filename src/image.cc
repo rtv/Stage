@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.8 2001-09-04 23:01:13 vaughan Exp $
+ * $Id: image.cc,v 1.9 2001-09-29 00:47:12 vaughan Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -393,7 +393,7 @@ bool Nimage::load_fig_polyline(FILE *file, char *line, int size, double scale)
       continue;
 
     char *t1, *t2;
-    int ax, ay, bx, by;
+    int ax=0, ay=0, bx=0, by=0;
     
     t1 = strtok(line, " \t\n");
     while (i < npoints)

@@ -1,15 +1,15 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.8 2001-09-28 21:55:42 gerkey Exp $
+ * $Id: matrix.cc,v 1.9 2001-09-29 00:47:12 vaughan Exp $
  ************************************************************************/
 
 #include <math.h>
 #include <iostream.h>
 #include <fstream.h>
 
-#if INCLUDE_ZLIB
-#include <zlib.h>
-#endif
+//#if INCLUDE_ZLIB
+//#include <zlib.h>
+//#endif
 
 #include "matrix.hh"
 
@@ -303,7 +303,7 @@ inline void CMatrix::unset_cell(int x, int y, CEntity* ent )
   {
     //fputs("Stage: WARNING: CMatrix::unset_cell() out of bounds!\n",stderr);
     //fprintf(stderr,"Stage: WARNING: x,y: %d,%d\t w,h: %d,%d\n",
-            //x,y,width,height);
+    //      x,y,width,height);
     return;
   }
   
@@ -313,20 +313,27 @@ inline void CMatrix::unset_cell(int x, int y, CEntity* ent )
   //printf( "before " );
   //PrintCell( cell );
   
-  for( int slot = 0; slot < current_slot[ cell ]; slot++ )
+  int current =  current_slot[ cell ];
+  int end = available_slots[ cell ];
+
+  for( int slot = 0; slot < current; slot++ )
     if( data[cell][slot] == ent )
       {
-	// we've found it! now delete by
-	// copying the next slot over this one
-	// and repeat until we're at the end
-	// the last copy copies over the zero'd pointer
-	while( data[cell][slot] )
-	    data[cell][slot] = data[cell][++slot];
+	for( int s=slot; slot<end; slot++ )
+	  data[cell][s] = data[cell][s+1];
 	
-	current_slot[ cell ] = slot-1; // zero the new end slot
+	current--; // reduce the slot count
 	
-	break;break; // dump both loops
+	// zero from the current slot to the end
+	for( int h = current; h < end; h++ )
+	  data[cell][h] = NULL;
+	
+	// set current again;
+	current_slot[ cell ] = current;
+	
+	break; // dump out
       }
+
   
   //printf( "after " );
   //PrintCell( cell );  

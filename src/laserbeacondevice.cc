@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.17 $
+//  $Revision: 1.18 $
 //
 // Usage:
 //  (empty)
@@ -167,7 +167,7 @@ void CLBDDevice::Update( double sim_time )
     double scan_res = laser.resolution / 100.0 * M_PI / 180.0;
 
     // Amount of tolerance to allow in range readings
-    double tolerance = 3.0 / m_world->ppm; //*** 0.10;
+    //double tolerance = 3.0 / m_world->ppm; //*** 0.10;
 
     // Reset the beacon data structure
     //
@@ -196,22 +196,11 @@ void CLBDDevice::Update( double sim_time )
         double b = NORMALIZE(atan2(dy, dx) - oth);
         double o = NORMALIZE(pth - oth);
 
-
-	// RTV took this out as it is redundant and doesn't work
-	// properly anyway. The laser scanner builds the list of
-	// beacons in the first place!  i fixed a bug that left the
-	// list full when the laser was unsubscribed, so occlusion is
-	// handled properly now.
-
-        // See if it is in the laser scan
-        //
-        //int bi = (int) ((b - scan_min) / scan_res);
-        //if (bi < 0 || bi >= laser.range_count)
-	//  continue;
-        //if (r > (laser.ranges[bi] & 0x1FFF) / 1000.0 + tolerance)
-	//  continue;
-
-
+	// filter out very acute angles of incidence as unreadable
+	int bi = (int) ((b - scan_min) / scan_res);
+        if (bi < 0 || bi >= laser.range_count)
+	  continue;
+	
 	//SHOULD CHANGE THESE RANGES BASED ON CURRENT LASER RESOLUTION!
 
         // Now see if it is within detection range

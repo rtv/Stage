@@ -11,9 +11,9 @@ include ../Makefile.common
 # choose one of these that suits your build (debug/profile/production)
 
 # production
-CCFLAGS = -O2 
+#CCFLAGS = -O2 
 # debug
-#CCFLAGS = -g3 
+CCFLAGS = -g3 
 # debug + profile
 #CCFLAGS = -pg -g3 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.10 $
+//  $Revision: 1.11 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -228,7 +228,7 @@ bool CGripperDevice::BreakBeam( int beam )
   // the break beams run two-thirds the length of the gripper
   // ignoring the open/closed state for now.
 
-  double xdist;
+  double xdist = 0;
   double ydist = m_size_y/3.0;
 
   switch( beam )

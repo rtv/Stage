@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.35 2001-09-28 18:29:43 gerkey Exp $
+ * $Id: xs.cc,v 1.36 2001-09-29 00:47:12 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -868,9 +868,11 @@ void CXGui::RenderFamily( xstruth_t &truth )
   for( it = truth_map.begin(); it != truth_map.end(); it++ )
     if( it->second.parent_id == truth.stage_id )
       {
+
 #ifdef DEBUG
 	puts( "RECURSE" );
 #endif
+
 	// recurse to render the child 
 	RenderFamily( it->second );
       }
@@ -894,12 +896,14 @@ void CXGui::HandleIncomingQueue( void )
 #ifdef DEBUG
       puts( "undraw" );
 #endif
+
       RenderFamily( truth ); // undraw it
       
       // update it
       truth.x = pose.x / 1000.0;
       truth.y = pose.y / 1000.0;
       truth.th = DTOR(pose.th);
+
 
 #ifdef DEBUG
       puts( "\nredraw" );
@@ -909,10 +913,10 @@ void CXGui::HandleIncomingQueue( void )
 
       XFlush( display );// reduces flicker
 
+
 #ifdef DEBUG
       puts( "" );
 #endif
-
       truth_map[ pose.stage_id ] = truth; // update the database with it
     }
 }
