@@ -22,7 +22,7 @@
  * Desc: Rtk canvas functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.3 2004-11-03 09:28:52 rtv Exp $
+ * CVS: $Id: rtk_canvas.c,v 1.4 2004-11-08 05:08:08 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -109,12 +109,6 @@ rtk_canvas_t *rtk_canvas_create(rtk_app_t *app)
   canvas->fig = NULL;
   canvas->layer_fig = NULL;
 
-  /* REMOVE
-  // Create a mutex and some TLS
-  pthread_key_create(&canvas->key, NULL);
-  pthread_mutex_init(&canvas->mutex, NULL);
-  */
-  
   // Initialise mouse handling
   canvas->zoom_fig = NULL;
   canvas->mouse_mode = MOUSE_NONE;
@@ -130,12 +124,17 @@ rtk_canvas_t *rtk_canvas_create(rtk_app_t *app)
   gtk_drawing_area_size(GTK_DRAWING_AREA(canvas->canvas), 100, 100);
 
   // Create menu bar
-  canvas->menu_bar = gtk_menu_bar_new();
-  
+  //canvas->menu_bar = gtk_menu_bar_new();
+
+  canvas->status_bar = GTK_STATUSBAR(gtk_statusbar_new());
+  gtk_statusbar_set_has_resize_grip( canvas->status_bar, FALSE );
+
   // Put it all together
   gtk_container_add(GTK_CONTAINER(canvas->frame), canvas->layout);
-  gtk_box_pack_start(GTK_BOX(canvas->layout), canvas->menu_bar, FALSE, FALSE, 0);
-  gtk_box_pack_start(GTK_BOX(canvas->layout), canvas->canvas, TRUE, TRUE, 0);
+  //gtk_box_pack_end(GTK_BOX(canvas->layout), canvas->menu_bar, FALSE, FALSE, 0);
+  gtk_box_pack_end(GTK_BOX(canvas->layout), 
+		   GTK_WIDGET(canvas->status_bar), FALSE, TRUE, 0);
+  gtk_box_pack_end(GTK_BOX(canvas->layout), canvas->canvas, TRUE, TRUE, 0);
 
   canvas->bg_pixmap = NULL;
   canvas->fg_pixmap = NULL;
@@ -282,8 +281,8 @@ void rtk_canvas_size(rtk_canvas_t *canvas, int sizex, int sizey)
   // Interpret the given size as the size of the drawing area, and use
   // this to compute the default window size.  There must be a less hacky way
   // to do this.
-  gtk_widget_size_request(GTK_WIDGET(canvas->menu_bar), &size);
-  sizey += size.height + 4;
+  //gtk_widget_size_request(GTK_WIDGET(canvas->menu_bar), &size);
+  //sizey += size.height + 4;
   gtk_window_set_default_size(GTK_WINDOW(canvas->frame), sizex, sizey);
 
   // You can do use the line below, but then you cant shrink the window.

@@ -51,8 +51,6 @@ void gui_shutdown( void )
   rtk_app_main_term( app );  
 }
 
-
-
 gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 {
   gui_window_t* win = calloc( sizeof(gui_window_t), 1 );
@@ -64,24 +62,11 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   // enable all objects on the canvas to find our window object
   win->canvas->userdata = (void*)win; 
 
-  GtkHBox* hbox = GTK_HBOX(gtk_hbox_new( TRUE, 10 ));
-  
-  win->statusbar = GTK_STATUSBAR(gtk_statusbar_new());
-  gtk_statusbar_set_has_resize_grip( win->statusbar, FALSE );
-  gtk_box_pack_start(GTK_BOX(hbox), 
-		     GTK_WIDGET(win->statusbar), FALSE, TRUE, 0);
-  
-  //win->timelabel = GTK_LABEL(gtk_label_new("0:00:00"));
-  //gtk_box_pack_end(GTK_BOX(hbox), 
-  //	   GTK_WIDGET(win->timelabel), FALSE, FALSE, 0);
-
-  gtk_box_pack_start(GTK_BOX(win->canvas->layout), 
-		     GTK_WIDGET(hbox), FALSE, TRUE, 0);
-
+  gui_window_menus_create( win );
 
   char txt[256];
   snprintf( txt, 256, "Stage v%s", VERSION );
-  gtk_statusbar_push( win->statusbar, 0, txt ); 
+  gtk_statusbar_push( win->canvas->status_bar, 0, txt ); 
 
   rtk_canvas_size( win->canvas, xdim, ydim );
   
@@ -90,9 +75,6 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   
   rtk_canvas_title( win->canvas, titlestr->str );
   g_string_free( titlestr, TRUE );
-  
-  // todo - destructors for figures
-  //win->guimods = g_hash_table_new( g_int_hash, g_int_equal );
   
   double width = 10;//world->size.x;
   double height = 10;//world->size.y;
@@ -104,11 +86,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   rtk_fig_grid( win->bg, 0,0, 100.0, 100.0, 1.0 );
   
   win->show_matrix = FALSE;
-  win->fill_polygons = FALSE;
-  //win->movie_exporting = FALSE;
-  //win->movie_count = 0;
-  //win->movie_speed = STG_DEFAULT_MOVIE_SPEED;
-
+  win->fill_polygons = TRUE;
   win->frame_interval = 500; // ms
   
   win->poses = rtk_fig_create( win->canvas, NULL, 0 );
@@ -119,7 +97,11 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 
   win->selection_active = NULL;
   
-  gui_window_menus_create( win );
+  // hide the config layers by default
+  rtk_canvas_layer_show( win->canvas, STG_LAYER_NEIGHBORCONFIG, FALSE );
+  rtk_canvas_layer_show( win->canvas, STG_LAYER_LASERCONFIG, FALSE );
+  rtk_canvas_layer_show( win->canvas, STG_LAYER_RANGERCONFIG, FALSE );
+  rtk_canvas_layer_show( win->canvas, STG_LAYER_BLOBCONFIG, FALSE );
 
   return win;
 }
@@ -296,9 +278,9 @@ int gui_world_update( stg_world_t* world )
     gui_model_display_pose( win->selection_active, "Selection:" );
   else      
     {	  
-      guint cid = gtk_statusbar_get_context_id( win->statusbar, "on_mouse" );
-      gtk_statusbar_pop( win->statusbar, cid ); 
-      gtk_statusbar_push( win->statusbar, cid, clock ); 
+      guint cid = gtk_statusbar_get_context_id( win->canvas->status_bar, "on_mouse" );
+      gtk_statusbar_pop( win->canvas->status_bar, cid ); 
+      gtk_statusbar_push( win->canvas->status_bar, cid, clock ); 
     }
   
   rtk_canvas_render( win->canvas );      
@@ -341,9 +323,9 @@ void gui_model_display_pose( stg_model_t* mod, char* verb )
 
   // display the pose
   snprintf(txt, sizeof(txt), "%s %s", verb, gui_model_describe(mod)); 
-  guint cid = gtk_statusbar_get_context_id( win->statusbar, "on_mouse" );
-  gtk_statusbar_pop( win->statusbar, cid ); 
-  gtk_statusbar_push( win->statusbar, cid, txt ); 
+  guint cid = gtk_statusbar_get_context_id( win->canvas->status_bar, "on_mouse" );
+  gtk_statusbar_pop( win->canvas->status_bar, cid ); 
+  gtk_statusbar_push( win->canvas->status_bar, cid, txt ); 
   //printf( "STATUSBAR: %s\n", txt );
 }
 
@@ -375,8 +357,8 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
       win->selection_active = NULL;      
       
       // get rid of the selection info
-      cid = gtk_statusbar_get_context_id( win->statusbar, "on_mouse" );
-      gtk_statusbar_pop( win->statusbar, cid ); 
+      cid = gtk_statusbar_get_context_id( win->canvas->status_bar, "on_mouse" );
+      gtk_statusbar_pop( win->canvas->status_bar, cid ); 
       break;
       
     case RTK_EVENT_PRESS:

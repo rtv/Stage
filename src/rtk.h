@@ -22,7 +22,7 @@
  * Desc: Combined Rtk functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk.h,v 1.1 2004-09-16 06:54:27 rtv Exp $
+ * CVS: $Id: rtk.h,v 1.2 2004-11-08 05:08:08 rtv Exp $
  */
 
 #ifndef RTK_H
@@ -161,6 +161,9 @@ typedef struct _rtk_canvas_t
 
   // The menu bar widget
   GtkWidget *menu_bar;
+  
+  // The status bar widget
+  GtkStatusbar *status_bar;
 
   // File in which to render xfig figures.
   FILE *file;
