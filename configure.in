@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.28.2.6 2003-05-24 22:33:13 gerkey Exp $
+dnl $Id: configure.in,v 1.28.2.7 2003-05-24 23:10:31 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -92,22 +92,30 @@ AC_CHECK_PROG([have_gtk], [gtk-config], [yes], [no])
 if test "x$have_gtk" = "xyes"; then
   if test "x$RTK_DIR" = "xNONE"; then
     AC_CHECK_LIB(rtk,rtk_init,
-                 with_rtk=yes
-                 RTK_CPPFLAGS="`gtk-config --cflags`"
-                 RTK_LDADD="-lrtk $LIBJPEG `gtk-config --libs gtk gthread`",
-                 with_rtk=no,
-                 [$LIBJPEG `gtk-config --libs gtk gthread`])
+      AC_CHECK_LIB(rtk,LIBRTK_VERSION_2_2,
+        with_rtk=yes,
+        AC_MSG_WARN([Your librtk installation is too old (< 2.2).])
+        AC_MSG_WARN([Either download a newer version of librtk])
+        AC_MSG_WARN([or pass --without-rtk to configure.])
+        AC_MSG_ERROR([RTK is too old]),
+        [$LIBJPEG `gtk-config --libs gtk gthread`]),
+      with_rtk=no,
+      [$LIBJPEG `gtk-config --libs gtk gthread`])
+    RTK_CPPFLAGS="`gtk-config --cflags`"
+    RTK_LDADD="-lrtk $LIBJPEG `gtk-config --libs gtk gthread`"
   elif test ! "x$RTK_DIR" = "xno"; then
-    AC_MSG_CHECKING(for $RTK_DIR/lib/librtk.a)
-    if test -f $RTK_DIR/lib/librtk.a; then
-      with_rtk=yes
-      RTK_CPPFLAGS="-I$RTK_DIR/include `gtk-config --cflags`"
-      RTK_LDADD="-L$RTK_DIR/lib -lrtk $LIBJPEG `gtk-config --libs gtk gthread`"
-      AC_MSG_RESULT(yes)
-    else
-      with_rtk=no
-      AC_MSG_RESULT(no)
-    fi
+    AC_CHECK_LIB(rtk,rtk_init,
+      AC_CHECK_LIB(rtk,LIBRTK_VERSION_2_2,
+        with_rtk=yes
+        RTK_CPPFLAGS="-I$RTK_DIR/include `gtk-config --cflags`"
+        RTK_LDADD="-L$RTK_DIR/lib -lrtk $LIBJPEG `gtk-config --libs gtk gthread`",
+        AC_MSG_WARN([Your librtk installation is too old (< 2.2).])
+        AC_MSG_WARN([Either download a newer version of librtk])
+        AC_MSG_WARN([or pass --without-rtk to configure.])
+        AC_MSG_ERROR([RTK is too old]),
+        [-L$RTK_DIR/lib $LIBJPEG `gtk-config --libs gtk gthread`]),
+      with_rtk=no,
+      [-L$RTK_DIR/lib $LIBJPEG `gtk-config --libs gtk gthread`])
   fi
 else
   with_rtk=no
