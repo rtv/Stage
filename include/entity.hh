@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -141,6 +141,9 @@ class CEntity
 
     public: double GetSpeed() { return(m_com_vr); }
     public: double GetMass() { return(m_mass); }
+    
+    // shouldn't really have this, but...
+    public: void SetSpeed(double speed) { m_com_vr=speed; }
 
     // struct that holds data for external GUI rendering
     //

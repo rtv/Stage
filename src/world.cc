@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.15 $
+//  $Revision: 1.16 $
 //
 // Usage:
 //  (empty)
@@ -274,6 +274,8 @@ void* CWorld::Main(void *arg)
 //
 void CWorld::Update()
 {
+    //static double last_output_time = 0;
+    
     // Compute elapsed real time
     //
     double timestep = GetRealTime() - m_last_time;
@@ -307,6 +309,16 @@ void CWorld::Update()
     // Note that we must use the *real* timestep to get sensible results.
     //
     m_update_rate = (1 - a) * m_update_rate + a * (1 / timestep);
+
+    /*
+    if((GetRealTime() - last_output_time) >= 1.0)
+    {
+      printf("Sim time:%8.3fs Real time:%8.3fs Sim/Real:%8.3f Update:%8.3fHz\r",
+             m_sim_time, GetRealTime(), m_update_ratio, m_update_rate);
+      last_output_time = GetRealTime();
+      fflush(stdout);
+    }
+    */
 
 
     // might move this elsewhere and call it less often

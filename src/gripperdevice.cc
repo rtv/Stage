@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -261,6 +261,11 @@ void CGripperDevice::DropObject()
   m_pucks[m_puck_count]->SetGlobalPose(px+x_offset*cos(pth),
                                        py+x_offset*sin(pth),
                                        pth);
+  m_pucks[m_puck_count]->SetSpeed(0.0);
+
+  //printf("dropped puck %d at (%f,%f,%f) with speed %f\n",
+         //m_pucks[m_puck_count],
+         //px,py,pth,m_pucks[m_puck_count]->GetSpeed());
   if(!m_puck_count)
     expGripper.have_puck = false;
 }

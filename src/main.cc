@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.8 $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -105,7 +105,7 @@ int main(int argc, char **argv)
     signal(SIGINT, sig_quit);
     signal(SIGQUIT, sig_quit);
     signal(SIGHUP, sig_quit);
-    
+
     // Wait for a signal
     //
     while (!quit)
