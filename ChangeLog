@@ -1,3 +1,19 @@
+2002-11-11 01:22  rtv
+
+	* worlds/multi-bitmap.world: renamed from multi-eviroment.world
+	(sic)
+
+2002-11-11 01:21  rtv
+
+	* configure.in, src/playerdevice.cc, src/gnome2/gnomegui.cc,
+	src/models/idarturretdevice.cc, worlds/Makefile.am,
+	worlds/multi-evironment.world: fixed autoconf settings for gnome2
+	gui
+
+2002-11-11 00:30  rtv
+
+	* ChangeLog, worlds/puck.world: fixed invalid property tag
+
 2002-11-11 00:22  rtv
 
 	* tools/run: removed tool/run - out of date

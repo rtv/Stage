@@ -9,6 +9,7 @@ dist-hook:
 	mkdir -p $(DOCDIST)
 	cp -p $(DOCSRC)/stage.ps $(DOCDIST)
 	cp -p $(DOCSRC)/stage.pdf $(DOCDIST)
+	cp -p stage.xpm $(distdir)
 
 install-data-hook:
 	mkdir -p $(DOCINST)
