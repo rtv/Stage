@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_interfaces.cc,v 1.3 2005-03-05 00:20:53 rtv Exp $
+ * CVS: $Id: player_interfaces.cc,v 1.4 2005-03-09 18:16:38 gerkey Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -827,6 +827,7 @@ void LaserConfig( device_record_t* device, void* client, void* buffer, size_t le
 	
 	// fill in the geometry data formatted player-like
 	player_laser_geom_t pgeom;
+        pgeom.subtype = PLAYER_LASER_GET_GEOM;
 	pgeom.pose[0] = htons((uint16_t)(1000.0 * geom.pose.x));
 	pgeom.pose[1] = htons((uint16_t)(1000.0 * geom.pose.y));
 	pgeom.pose[2] = htons((uint16_t)RTOD( geom.pose.a));
@@ -1096,6 +1097,7 @@ void PositionConfig( device_record_t* device, void* client, void* buffer, size_t
 
 	// fill in the geometry data formatted player-like
 	player_position_geom_t pgeom;
+	pgeom.subtype = PLAYER_POSITION_GET_GEOM_REQ;
 	pgeom.pose[0] = ntohs((uint16_t)(1000.0 * geom.pose.x));
 	pgeom.pose[1] = ntohs((uint16_t)(1000.0 * geom.pose.y));
 	pgeom.pose[2] = ntohs((uint16_t)RTOD(geom.pose.a));

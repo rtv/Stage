@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_driver.cc,v 1.6 2005-03-02 00:35:45 gerkey Exp $
+ * CVS: $Id: player_driver.cc,v 1.7 2005-03-09 18:16:38 gerkey Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -720,12 +720,23 @@ int StgDriver::PutConfig(player_device_id_t id, void *client,
   return(0);
 }
 
+// Moved this declaration here (and changed its name) because 
+// when it's declared on the stack inside StgDriver::Update below, it 
+// corrupts the stack.  This makes makes valgrind unhappy (errors about
+// invalid reads/writes to another thread's stack.  This may also be related
+// to occasional mysterious crashed with Stage that I've seen.
+//        - BPG
+uint8_t stage_cmd_buffer[ PLAYER_MAX_MESSAGE_SIZE ];
+
 void StgDriver::Update(void)
 {
   // puts( "stgdriver update" );
 
+  // Can't declare objects this big (PLAYER_MAX_MESSAGE_SIZE = 2MB) 
+  // on the stack.  Moved this declaration above - BPG
+  //
   // Check for commands
-  uint8_t cmd[ PLAYER_MAX_MESSAGE_SIZE ];
+  // uint8_t cmd[ PLAYER_MAX_MESSAGE_SIZE ];
   
   //printf( "driver %p has %d devices to inspect\n",
   //  this, (int)this->devices->len );
@@ -743,7 +754,7 @@ void StgDriver::Update(void)
 	{    
 	  // copy the command from Player
 	  size_t cmd_len = 
-	    this->GetCommand( device->id, cmd, device->cmd_len, NULL);
+	    this->GetCommand( device->id, stage_cmd_buffer, device->cmd_len, NULL);
 	  
 	  //printf( "command for %d:%d:%d is %d bytes\n",
 	  //  device->id.port, 
@@ -752,7 +763,7 @@ void StgDriver::Update(void)
 	  //  (int)cmd_len );
 	    
 	  if( cmd_len && device && device->command_callback )
-	    (*device->command_callback)( device, cmd, cmd_len );	  
+	    (*device->command_callback)( device, stage_cmd_buffer, cmd_len );	  
 	}
     }
   
