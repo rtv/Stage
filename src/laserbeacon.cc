@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.6 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -48,30 +48,30 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CObject *parent)
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the object from an argument list
 //
-bool CLaserBeacon::init(int argc, char **argv)
+bool CLaserBeacon::Load(int argc, char **argv)
 {
-    if (!CObject::init(argc, argv))
+    if (!CObject::Load(argc, argv))
         return false;
 
-    for (int arg = 0; arg < argc; )
+    for (int i = 0; i < argc; )
     {
-        // Extact pose
+        // Extact beacon pose
         //
-        if (strcmp(argv[arg], "pose") == 0 && arg + 3 < argc)
+        if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
         {
-            double px = atof(argv[arg + 1]);
-            double py = atof(argv[arg + 2]);
-            double pth = DTOR(atof(argv[arg + 3]));
+            double px = atof(argv[i + 1]);
+            double py = atof(argv[i + 2]);
+            double pth = DTOR(atof(argv[i + 3]));
             SetPose(px, py, pth);
-            arg += 4;
+            i += 4;
         }
 
         // Extract id
         //
-        else if (strcmp(argv[arg], "id") == 0 && arg + 1 < argc)
+        else if (strcmp(argv[i], "id") == 0 && i + 1 < argc)
         {
-            m_beacon_id = atoi(argv[argc + 1]);
-            arg += 2;
+            m_beacon_id = atoi(argv[i + 1]);
+            i += 2;
         }
 
         // Print syntax
@@ -84,8 +84,8 @@ bool CLaserBeacon::init(int argc, char **argv)
     }
         
     #ifdef INCLUDE_RTK
-        m_mouse_radius = (m_parent == NULL ? 0.2 : 0.0);
-        m_draggable = (m_parent == NULL);
+        m_mouse_radius = (m_parent_object == NULL ? 0.2 : 0.0);
+        m_draggable = (m_parent_object == NULL);
     #endif
         
     return true;

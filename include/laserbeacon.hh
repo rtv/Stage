@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacon.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -35,9 +35,9 @@ class CLaserBeacon : public CObject
     //
     public: CLaserBeacon(CWorld *world, CObject *parent);
 
-    // Initialise the object from an argument list
+    // Load the object
     //
-    public: virtual bool init(int argc, char **argv);
+    public: virtual bool Load(int argc, char **argv);
     
     // Startup routine
     //

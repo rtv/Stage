@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/boxobstacle.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  (empty)
@@ -35,9 +35,9 @@ class CBoxObstacle : public CObject
     //
     public: CBoxObstacle(CWorld *world, CObject *parent);
 
-    // Initialise the object from an argument list
+    // Load the object
     //
-    public: virtual bool init(int argc, char **argv);
+    public: virtual bool Load(int argc, char **argv);
 
     // Update the device
     //

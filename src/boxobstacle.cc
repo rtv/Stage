@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -48,31 +48,31 @@ CBoxObstacle::CBoxObstacle(CWorld *world, CObject *parent)
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the object from an argument list
 //
-bool CBoxObstacle::init(int argc, char **argv)
+bool CBoxObstacle::Load(int argc, char **argv)
 {
-    if (!CObject::init(argc, argv))
+    if (!CObject::Load(argc, argv))
         return false;
 
-    for (int arg = 0; arg < argc; )
+    for (int i = 0; i < argc; )
     {
         // Extact box pose
         //
-        if (strcmp(argv[arg], "pose") == 0 && arg + 3 < argc)
+        if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
         {
-            double px = atof(argv[arg + 1]);
-            double py = atof(argv[arg + 2]);
-            double pth = DTOR(atof(argv[arg + 3]));
+            double px = atof(argv[i + 1]);
+            double py = atof(argv[i + 2]);
+            double pth = DTOR(atof(argv[i + 3]));
             SetPose(px, py, pth);
-            arg += 4;
+            i += 4;
         }
 
         // Extract box size
         //
-        else if (strcmp(argv[arg], "size") == 0 && arg + 2 < argc)
+        else if (strcmp(argv[i], "size") == 0 && i + 2 < argc)
         {
-            m_size_x = atof(argv[arg + 1]);
-            m_size_y = atof(argv[arg + 2]);
-            arg += 3;
+            m_size_x = atof(argv[i + 1]);
+            m_size_y = atof(argv[i + 2]);
+            i += 3;
         }
 
         // Print syntax
@@ -86,7 +86,7 @@ bool CBoxObstacle::init(int argc, char **argv)
 
     #ifdef INCLUDE_RTK
         m_mouse_radius = max(m_size_x, m_size_y) * 0.6;
-        m_draggable = (m_parent == NULL);
+        m_draggable = (m_parent_object == NULL);
     #endif
         
     return true;

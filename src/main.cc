@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.8 $
+//  $Revision: 1.2.2.9 $
 //
 // Usage:
 //  (empty)
@@ -88,7 +88,8 @@ int main(int argc, char **argv)
 
     // Load the world
     //
-    world->Load(world_file);
+    if (!world->Load(world_file))
+        return 0;
     
     // Start the world
     //

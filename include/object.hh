@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/object.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.10 $
+//  $Revision: 1.1.2.11 $
 //
 // Usage:
 //  (empty)
@@ -72,25 +72,25 @@ class CObject
     // Minimal constructor
     // Requires a pointer to the parent and a pointer to the world.
     //
-    public: CObject(CWorld *world, CObject *parent);
+    public: CObject(CWorld *world, CObject *parent_object);
 
     // Destructor
     //
     public: virtual ~CObject();
 
-    // Initialise the object from an argument list
+    // Load the object from a token list
     //
-    public: virtual bool init(int argc, char **argv);
+    public: virtual bool Load(int argc, char **argv);
 
-    // Save the object to a file
+    // Save the object to a token list
     //
-    public: virtual bool Save(char *buffer, size_t bufflen);
+    public: virtual bool Save(int argc, char **argv);
 
-    // Startup routine
+    // Initialise object
     //
     public: virtual bool Startup();
 
-    // Shutdown routine
+    // Finalize object
     //
     public: virtual void Shutdown();
     
@@ -122,21 +122,37 @@ class CObject
     //
     public: void GetGlobalPose(double &px, double &py, double &pth);
 
+    // Type of this object
+    //
+    public: char m_type[64];
+    
     // Id of this object
     //
     public: char m_id[64];
 
+    // Number of parents this object has
+    //
+    public: int m_depth;
+
+    // Argument list used for loading/saving
+    //
+    public: int m_argc;
+    public: char *m_argv[64];
+    
     // Pointer to world
     //
     public: CWorld *m_world;
     
     // Pointer to parent object
+    // i.e. the object this object is attached to.
     //
-    public: CObject *m_parent;
+    public: CObject *m_parent_object;
 
-    // Number of parents this object has
+    // Pointer the default object
+    // i.e. the object that would-be children of this object should attach to.
+    // This will usually be the object itself.
     //
-    public: int m_depth;
+    public: CObject *m_default_object;
 
     // Object pose in local cs (ie relative to parent)
     //

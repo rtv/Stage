@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/object.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.10 $
+//  $Revision: 1.1.2.11 $
 //
 // Usage:
 //  (empty)
@@ -26,6 +26,9 @@
 
 #define ENABLE_RTK_TRACE 1
 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <math.h>
 #include "object.hh"
 #include "objectfactory.hh"
@@ -35,17 +38,16 @@
 // Minimal constructor
 // Requires a pointer to the parent and a pointer to the world.
 //
-CObject::CObject(CWorld *world, CObject *parent)
+CObject::CObject(CWorld *world, CObject *parent_object)
 {
     m_world = world;
-    m_parent = parent;
+    m_parent_object = parent_object;
+    m_default_object = this;
 
-    if (m_parent)
-        m_depth = m_parent->m_depth + 1;
-    else
-        m_depth = 0;
-       
-    m_id[0] = 0;    
+    m_type[0] = 0;
+    m_id[0] = 0;
+    m_depth = 0;
+    
     m_lx = m_ly = m_lth = 0;
 
 #ifdef INCLUDE_RTK
@@ -66,19 +68,63 @@ CObject::~CObject()
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Initialise the object from an argument list
+// Load the object from a token list
 //
-bool CObject::init(int argc, char **argv)
+bool CObject::Load(int argc, char **argv)
 {
+    // Read the object pose
+    //
+    for (int i = 0; i < argc;)
+    {
+        if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
+        {
+            double px = atof(argv[i + 1]);
+            double py = atof(argv[i + 2]);
+            double pth = DTOR(atof(argv[i + 3]));
+            SetPose(px, py, pth);
+            i += 4;
+        }
+        else
+            i += 1;
+    }
     return true;
-}
+}    
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Save the object back to an argument list
+// Save the object to a token list
 //
-bool CObject::Save(char *buffer, size_t bufflen)
+bool CObject::Save(int argc, char **argv)
 {
+    for (int i = 0; i < argc;)
+    {
+        // Save the pose
+        //
+        if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
+        {
+            double px, py, pth;
+            GetPose(px, py, pth);
+            snprintf(argv[i + 1], strlen(argv[i + 1]) + 1, "%.2f", (double) px);
+            snprintf(argv[i + 2], strlen(argv[i + 2]) + 1, "%.2f", (double) py);
+            snprintf(argv[i + 3], strlen(argv[i + 3]) + 1, "%.2f", (double) pth);
+            i += 4;
+        }
+        else
+            i += 1;
+    }
+
+    /*
+    char tmp[64];
+
+    // Save the object pose
+    //
+    double px, py, pth;
+    GetPose(px, py, pth);
+    snprintf(tmp, sizeof(tmp), "pose %.2f %.2f %.2f", px, py, pth);
+    ASSERT(*argc < max_argc);
+    argv[(*argc)++] = strdup(tmp);
+    */
+
     return true;
 }
 
@@ -185,8 +231,8 @@ void CObject::SetGlobalPose(double px, double py, double pth)
     double ox = 0;
     double oy = 0;
     double oth = 0;
-    if (m_parent)
-        m_parent->GetGlobalPose(ox, oy, oth);
+    if (m_parent_object)
+        m_parent_object->GetGlobalPose(ox, oy, oth);
     
     // Compute our pose in the local cs
     //
@@ -206,8 +252,8 @@ void CObject::GetGlobalPose(double &px, double &py, double &pth)
     double ox = 0;
     double oy = 0;
     double oth = 0;
-    if (m_parent)
-        m_parent->GetGlobalPose(ox, oy, oth);
+    if (m_parent_object)
+        m_parent_object->GetGlobalPose(ox, oy, oth);
     
     // Compute our pose in the global cs
     //

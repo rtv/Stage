@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/usc_pioneer.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -40,10 +40,14 @@ CUscPioneer::CUscPioneer(CWorld *world, CObject *parent)
         : CObject(world, parent)
 {
     m_player = new CPlayerRobot(world, this);
-    m_pioneer = new CPioneerMobileDevice(world, this, m_player);
+    m_pioneer = new CPioneerMobileDevice(world, parent, m_player);
     m_misc = new CMiscDevice(world, m_pioneer, m_player);
     m_sonar = new CSonarDevice(world, m_pioneer, m_player);
     m_laser = new CLaserDevice(world, m_pioneer, m_player);
+
+    // Make the pioneer base the default parent of any would be children
+    //
+    m_default_object = m_pioneer;
     
     // Add everything into a list of anonymous objects
     //
@@ -53,11 +57,6 @@ CUscPioneer::CUscPioneer(CWorld *world, CObject *parent)
     m_child[m_child_count++] = m_misc;
     m_child[m_child_count++] = m_sonar;    
     m_child[m_child_count++] = m_laser;
-
-    #ifdef INCLUDE_RTK
-    m_mouse_radius = 0.6;
-    m_draggable = true;
-    #endif
 }
 
 
@@ -72,46 +71,43 @@ CUscPioneer::~CUscPioneer()
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Initialise the object from an argument list
+// Load the object
 //
-bool CUscPioneer::init(int argc, char **argv)
+bool CUscPioneer::Load(int argc, char **argv)
 {
-    if (!CObject::init(argc, argv))
-        return false;
-
     // Set some defaults
     //
     strcpy(m_id, "jane_doe");
     
     // Loop through args and extract settings
     //
-    for (int arg = 0; arg < argc;)
+    for (int i = 0; i < argc;)
     {
-        // Extact robot pose
+        // Extract pose
         //
-        if (strcmp(argv[arg], "pose") == 0 && arg + 3 < argc)
+        if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
         {
-            double px = atof(argv[arg + 1]);
-            double py = atof(argv[arg + 2]);
-            double pth = DTOR(atof(argv[arg + 3]));
-            SetPose(px, py, pth);
-            arg += 4;
+            double px = atof(argv[i + 1]);
+            double py = atof(argv[i + 2]);
+            double pth = DTOR(atof(argv[i + 3]));
+            m_pioneer->SetPose(px, py, pth);
+            i += 4;
         }
         
         // Extract the robot name
         //
-        else if (strcmp(argv[arg], "name") == 0 && arg + 1 < argc)
+        else if (strcmp(argv[i], "name") == 0 && i + 1 < argc)
         {
-            strcpy(m_id, argv[arg + 1]);
-            arg += 2;
+            strcpy(m_id, argv[i + 1]);
+            i += 2;
         }
 
         // Extract player server port number
         //
-        else if (strcmp(argv[arg], "port") == 0 && arg + 1 < argc)
+        else if (strcmp(argv[i], "port") == 0 && i + 1 < argc)
         {
-            m_player->m_port = atoi(argv[arg + 1]);
-            arg += 2;
+            m_player->m_port = atoi(argv[i + 1]);
+            i += 2;
         }
         
         // Print the syntax
@@ -123,23 +119,6 @@ bool CUscPioneer::init(int argc, char **argv)
             return false;
         }
     }
-    return true;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Save the object back to an argument list
-//
-bool CUscPioneer::Save(char *buffer, size_t bufflen)
-{
-    double px, py, pth;
-    GetPose(px, py, pth);
-    
-    snprintf(buffer, bufflen,
-             "create usc_pioneer pose %.2f %.2f %.2f name %s port %d", 
-             (double) px, (double) py, (double) RTOD(pth),
-             (char*) m_id, (int) m_player->m_port);
-    
     return true;
 }
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.18 $
+//  $Revision: 1.4.2.19 $
 //
 // Usage:
 //  (empty)
@@ -79,6 +79,8 @@ CWorld::~CWorld()
 //
 bool CWorld::Load(const char *filename)
 {
+    // Open the file for reading
+    //
     FILE *file = fopen(filename, "r");
     if (file == NULL)
     {
@@ -87,7 +89,7 @@ bool CWorld::Load(const char *filename)
     }
 
     int count = 0;
-    CObject *parent = NULL;
+    CObject *parent_object = NULL;
     
     while (true)
     {
@@ -106,7 +108,7 @@ bool CWorld::Load(const char *filename)
         char *token = line;
         while (true)
         {
-            assert((size_t) argc < sizeof(argv) / sizeof(argv[0]));
+            ASSERT(argc < ARRAYSIZE(argv));
             argv[argc] = strsep(&token, " \t\n");
             if (token == NULL)
                 break;
@@ -135,7 +137,7 @@ bool CWorld::Load(const char *filename)
         if (strcmp(argv[0], "{") == 0)
         {
             if (m_object_count > 0)
-                parent = m_object[m_object_count - 1];
+                parent_object = m_object[m_object_count - 1]->m_default_object;
             else
                 printf("line %d : misplaced '{'\n", (int) count + 1);
         }
@@ -144,8 +146,8 @@ bool CWorld::Load(const char *filename)
         //
         else if (strcmp(argv[0], "}") == 0)
         {
-            if (parent != NULL)
-                parent = parent->m_parent;
+            if (parent_object != NULL)
+                parent_object = parent_object->m_parent_object;
             else
                 printf("line %d : extra '}'\n", (int) count + 1);
         }
@@ -171,12 +173,36 @@ bool CWorld::Load(const char *filename)
         {
             // Create the object
             //
-            CObject *object = ::CreateObject(argv[1], this, parent);
+            CObject *object = ::CreateObject(argv[1], this, parent_object);
             if (object != NULL)
             {
-                // Let the object initialise itself
+                // Set some properties we will need later
                 //
-                object->init(argc - 2, argv + 2);
+                strcpy(object->m_type, argv[1]);
+                object->m_depth = 0;
+                if (object->m_parent_object != NULL)
+                    object->m_depth = object->m_parent_object->m_depth + 1;
+
+                /*
+                // Copy the argument list used to create the object
+                // We will use this again when saving.
+                // *** WARNING -- possible buffer overrun
+                //
+                object->m_argc = argc;
+                for (int i = 0; i < argc; i++)
+                {
+                    object->m_argv[i] = new char[64];
+                    strcpy(object->m_argv[i], argv[i]);
+                }
+                */
+                
+                // Let the object load itself
+                //
+                if (!object->Load(argc - 2, argv + 2))
+                {
+                    fclose(file);
+                    return false;
+                }
 
                 // Add to list of objects
                 //
@@ -198,10 +224,15 @@ bool CWorld::Load(const char *filename)
 //
 bool CWorld::Save(const char *filename)
 {
-    FILE *file = fopen(filename, "w+");
+    return false;
+    
+    /* This is completely BOGUS
+    // Open the file for writing
+    //
+    FILE *file = fopen(filename, "r+");
     if (file == NULL)
     {
-        printf("unable to create world file %s; ignoring\n", (char*) filename);
+        printf("unable to find file %s; ignoring\n", (char*) filename);
         return false;
     }
 
@@ -223,18 +254,29 @@ bool CWorld::Save(const char *filename)
             depth--;
         }
 
-        // Let object prepare line to save
+        // Let object overwrite tokens to save
         //
-        char line[1024];
-        memset(line, 0, sizeof(line));
-        object->Save(line, sizeof(line));
-
-        // Write line to file
+        if (!object->Save(object->m_argc, object->m_argv))
+        {
+            fclose(file);
+            return false;
+        }
+        
+        // Write tokens to file
         //
         for (int j = 0; j < depth; j++)
             fputs("    ", file);
-        fputs(line, file);
+        for (int j = 0; j < object->m_argc; j++)
+        {
+            fputs(object->m_argv[j], file);
+            fputs(" ", file);
+        }
         fputs("\n", file);
+
+        // Now delete the tokens
+        //
+        for (int j = 0; j < object->m_argc; j++)
+            delete object->m_argv[j];
     }
 
     // Close any trailing blocks
@@ -247,6 +289,7 @@ bool CWorld::Save(const char *filename)
    
     fclose(file);
     return true;
+    */
 }
 
 

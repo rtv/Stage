@@ -1,9 +1,6 @@
 
-set environment_file  = SAL2.pnm
+set environment_file = SAL2.pnm
 set pixels_per_meter =  20
-
-create bitmap pose 0 0 0 file SAL2.pnm ppm 20
-# create bit_obstacle file SAL2.pnm ppm 20
 
 create box_obstacle pose 10 10 45 size 1 0.5
 create box_obstacle pose 10 10 45 size 2 0.5
