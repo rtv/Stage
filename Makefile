@@ -7,8 +7,8 @@
 #
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
-#  $Author: ahoward $
-#  $Revision: 1.9 $
+#  $Author: gerkey $
+#  $Revision: 1.10 $
 #
 ###########################################################################
 
@@ -20,6 +20,7 @@ VERSION=$(shell awk '{print substr($$3,2,length($$3)-2);}' VERSION)
 PLAYER_DIR = /usr/local/player$(VERSION)
 INSTALL_DIR = /usr/local/stage$(VERSION)
 SRC_DIST_NAME = Stage-$(VERSION)-src
+SRC_DIST_BLEEDING_NAME = Stage-Bleeding-src
 BIN_DIST_NAME = Stage-$(VERSION)-i386
 
 
@@ -80,6 +81,11 @@ src_dist:
 	tar -C /tmp -cvzf $(SRC_DIST_NAME).tgz --exclude CVS --exclude '*.tgz' $(SRC_DIST_NAME)
 	rm -Rf /tmp/$(SRC_DIST_NAME)
 
+src_dist_bleeding:
+	echo Building $(SRC_DIST_BLEEDING_NAME)
+	cp -R . /tmp/$(SRC_DIST_BLEEDING_NAME)
+	tar -C /tmp -cvzf $(SRC_DIST_BLEEDING_NAME).tgz --exclude CVS --exclude '*.tgz' $(SRC_DIST_BLEEDING_NAME)
+	rm -Rf /tmp/$(SRC_DIST_BLEEDING_NAME)
 
 ###########################################################################
 # Create a binary distribution
