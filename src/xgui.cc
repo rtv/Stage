@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xgui.cc,v 1.1.2.7 2001-05-30 22:10:36 vaughan Exp $
+ * $Id: xgui.cc,v 1.1.2.8 2001-05-31 02:19:31 vaughan Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -458,6 +458,21 @@ void CXGui::HandleEvent( void )
 	    RefreshObjects();
 	  }
 
+	// check for LOAD and SAVE key commands
+	if( key == XK_l || key == XK_L )
+	{
+	  cout << "LOAD not implemented!" << endl;
+	  //world->Load();
+	  //RefreshObjects();
+	}
+
+	if( key == XK_s || key == XK_S )
+	{
+	  //cout << "SAVE" << endl;
+	  world->Save();
+	}
+
+  
 	break;
       }
 

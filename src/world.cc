@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.4.2.37 $
+//  $Revision: 1.4.2.38 $
 //
 // Usage:
 //  (empty)
@@ -589,7 +589,7 @@ void CWorld::AddObject(CEntity *object)
 //
 CEntity* CWorld::NearestObject( double x, double y )
 {
-  CEntity* nearest;
+  CEntity* nearest = 0;
   double dist, far = 9999999.9;
 
   double ox, oy, oth;
