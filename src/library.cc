@@ -24,7 +24,7 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.16 2003-03-12 00:29:56 rtv Exp $
+ * CVS info: $Id: library.cc,v 1.17 2003-04-01 00:20:55 rtv Exp $
  */
 
 #include "library.hh"
@@ -38,6 +38,7 @@
 #include "models/gripperdevice.hh"
 #include "models/idardevice.hh"
 #include "models/idarturretdevice.hh"
+#include "models/foofinderdevice.hh"
 #include "models/fiducialfinderdevice.hh"
 #include "models/laserdevice.hh"
 #include "models/motedevice.hh"
@@ -68,8 +69,9 @@ libitem_t library_items[] = {
   { "gripper", "blue", (CFP)CGripperDevice::Creator},
   { "idar", "DarkRed", (CFP)CIdarDevice::Creator},
   { "idarturret", "DarkRed", (CFP)CIdarTurretDevice::Creator},
-  { "lbd", "gray", (CFP)CFiducialFinder::Creator},
-  { "fiducialfinder", "gray", (CFP)CFiducialFinder::Creator},
+  { "foofinder", "purple", (CFP)CFooFinder::Creator},
+  //{ "lbd", "gray", (CFP)CFiducialFinder::Creator},
+  //  { "fiducialfinder", "gray", (CFP)CFiducialFinder::Creator},
   { "mote", "orange", (CFP)CMoteDevice::Creator},
   { "power", "wheat", (CFP)CPowerDevice::Creator},
   { "ptz", "magenta", (CFP)CPtzDevice::Creator},

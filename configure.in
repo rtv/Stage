@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.38 2003-03-12 02:31:39 rtv Exp $
+dnl $Id: configure.in,v 1.39 2003-04-01 00:20:54 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -81,7 +81,6 @@ dnl otherwise use the RTK GUI unless it is explicitly refused
 dnl where's RTK?
 AC_ARG_WITH(rtk, [   --with-rtk=dir      Location of RTK],
 RTK_DIR=$with_rtk,
-dnl RTK_DIR="${HOME}/librtk-2.2")
 RTK_DIR=$prefix)
 AC_SUBST(RTK_DIR)
 

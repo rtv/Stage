@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.25 2002-11-11 04:46:06 inspectorg Exp $
+ * CVS info: $Id: worldfile.cc,v 1.26 2003-04-01 00:20:56 rtv Exp $
  */
 
 #include <assert.h>
@@ -1599,7 +1599,6 @@ double CWorldFile::ReadTupleFloat(int entity, const char *name,
   return atof(GetPropertyValue(property, index));
 }
 
-
 ///////////////////////////////////////////////////////////////////////////
 // Write a float to a tuple
 void CWorldFile::WriteTupleFloat(int entity, const char *name,
@@ -1608,6 +1607,27 @@ void CWorldFile::WriteTupleFloat(int entity, const char *name,
   char default_str[64];
   snprintf(default_str, sizeof(default_str), "%.3f", value);
   WriteTupleString(entity, name, index, default_str);
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Write an int to a tuple
+void CWorldFile::WriteTupleInt(int entity, const char *name,
+                                 int index, int value)
+{
+  char default_str[64];
+  snprintf(default_str, sizeof(default_str), "%d", value);
+  WriteTupleString(entity, name, index, default_str);
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Read an int from a tuple
+int CWorldFile::ReadTupleInt(int entity, const char *name,
+                                  int index, int value)
+{
+  int property = GetProperty(entity, name);
+  if (property < 0)
+    return value;
+  return atof(GetPropertyValue(property, index));
 }
 
 

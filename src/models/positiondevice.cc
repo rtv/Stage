@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/positiondevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.10 $
+//  $Author: rtv $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -75,6 +75,8 @@ CPositionDevice::CPositionDevice(LibraryItem* libit,CWorld *world, CEntity *pare
 
   this->stall = false;
   this->motors_enabled = true;
+
+  this->noise.frequency = STG_POSITION_FREQ; // out of 255
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -146,7 +148,7 @@ void CPositionDevice::Update( double sim_time )
       // and update our position based on the current velocities
       Move();
     }
-    
+  
     PositionPutData( this->odo_px, this->odo_py, this->odo_pa,
                      this->com_vx, this->com_vy,  this->com_va, 
                      this->stall );
@@ -157,6 +159,9 @@ void CPositionDevice::Update( double sim_time )
     // the device is not subscribed,
     // so reset odometry to default settings.
     this->odo_px = this->odo_py = this->odo_pa = 0;
+
+    // we go quiet when not subscribed
+    this->noise.amplitude = 0; // out of 255
   }
 
   // Get our new pose
@@ -341,6 +346,9 @@ void CPositionDevice::Move()
   {
     SetGlobalVel(0, 0, 0);
     this->stall = true;
+
+    // we go quiet when stalled 
+    this->noise.amplitude = 0; // out of 255
   }
   else
   {
@@ -350,13 +358,17 @@ void CPositionDevice::Move()
         
     // Compute the new odometric pose
     // we currently have PERFECT odometry. yum!
-    this->odo_px += step * vx * cos(this->odo_pa) + step * vy * sin(this->odo_pa);
-    this->odo_py += step * vx * sin(this->odo_pa) + step * vy * cos(this->odo_pa);
+    this->odo_px += 
+      step * vx * cos(this->odo_pa) + step * vy * sin(this->odo_pa);
+    this->odo_py += 
+      step * vx * sin(this->odo_pa) + step * vy * cos(this->odo_pa);
     this->odo_pa += step * va;
     
     this->stall = false;
-  }
 
+    // we're noisy while driving
+    this->noise.amplitude = STG_POSITION_AMP; // out of 255
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////

@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.6 2002-11-20 21:34:25 rtv Exp $
+% CVS: $Id: stage.tex,v 1.7 2003-04-01 00:20:54 rtv Exp $
 
 \documentclass[11pt,twoside]{report}
 
@@ -1080,8 +1080,10 @@ number, device index, etc). \\
 one another through Stage/Player; messages sent to the broadcast
 device will be received by all other broadcast devices.\\
 
-\verb'fiducialfinder' & \verb'device' & Locate & ID fiducials (formerly Laser
+\verb'fiducialfinder' & \verb'device' & Locate \& ID fiducials (formerly Laser
 beacon detector).\\
+
+\verb'foofinder' & \verb'device' & Locate targets based on various criteria (movement, sound, device type, team membership, etc.).\\ 
 
 \verb'gps' & \verb'device' & GPS receiver; currently just returns the
 true pose of the GPS device.\\
@@ -1133,8 +1135,8 @@ how the device is addressed through the Player interface.
 Name & Values & Description \\
 \hline
 
-\verb'port' & \verb'int' & The port to which this device is attached;
-if not specified, the parent device's port will be used.\\
+\verb'robot' & \verb'int' & The robot to which this device is attached;
+if not specified, the parent device's robot will be used.\\
 
 \verb'index' & \verb'int' & The index for this device; used to
 distinguish between multiple instances of the same type of device (on
@@ -1148,17 +1150,17 @@ a single robot).  Will generally be set to 0.\\
 \hline
 Name & Value\\
 \hline
-\verb'port' & \verb'<6665 or inherited from parent>'\\
+\verb'robot' & \verb'<0 or inherited from parent>'\\
 \verb'index' & \verb'0'\\
 \hline
 \end{tabularx}
 
 \subsubsection{Notes}
-Typically the \verb'port' is specified for the top-level
-device in each robot (usually a \verb'position' device). Descendant
-devices inherit the port number. If you have more than one device of a
-given type on a robot, be sure to give them unique \verb'index'
-numbers.
+Typically \verb'robot' specified only for the top-level device in each
+robot (usually a \verb'position' device). Descendant devices inherit
+the robot number. If you have more than one device of a given type on
+a robot, be sure to give them unique \verb'index' numbers, or
+undefined (and often bizarre) behavior may result.
 
 \newpage
 \subsection{The {\tt broadcast} device}
@@ -1364,7 +1366,107 @@ Name & Value\\
 \end{tabularx}
 
 
+\newpage
+\subsection{The {\tt foofinder} device}
 
+\subsubsection*{Parent}
+{\tt device}
+
+\subsubsection*{Interface}
+{\tt fiducial}
+
+\subsubsection*{Description}
+
+The \verb'foofinder' is a general-purpose target locator. Using the
+fiducial interface, it locates models that fall within its
+configurable field of view, and that match certain criteria. The
+foofinder's ``mode'' parameter selects the filter used to identify
+targets. See the notes below for a description of each filter and how
+to interpret its data.
+
+{\bf Important: } this device uses an $O^2$ algorithm that is fast
+with small populations but will not scale linearly with population.
+
+\subsubsection*{Properties}
+\begin{tabularx}{\columnwidth}{lXX}
+\hline Name & Values & Description \\ \hline 
+\verb'min_range' & \verb'float' & minimum sensor range in meters\\ 
+\verb'max_range' & \verb'float' & maximum sensor range in meters\\ 
+\verb'fov' & \verb'float' & angular field of view\\ 
+\verb'occlusion' & \verb'"on"' \verb'"off"' & If on, only detect targets that are in laser line-of-sight.\\ 
+\verb'mode' & \verb'"fiducial"' \verb'"model"'
+\verb'"movement"' \verb'"sound"' \verb'"radiation"' \verb'"toplevel"'
+\verb'"color"' \verb'"team"' & select the type of targets to locate\\
+
+{\bf color mode only}\\
+\verb'color_match' & \verb'<color string>' & detect models of this color, where <color string> is a string from the X11 database.\\
+{\bf model mode only}\\
+\verb'model_token' & \verb'<token>' & detect models of this type, where  <token> is a string from the Stage library database (defined in src/library.cc)\\ 
+{\bf movement mode only}\\
+\verb'threshold' & \verb'float' & smallest detectable linear velocity\\
+\verb'theta_threshold' & \verb'float' & smallest detectable angular velocity\\
+\verb'frame' & \verb'"absolute"' \verb'"relative"' & measure target velocity in global terms or with relative to the sensor\\  
+\hline
+\end{tabularx}
+
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'size' & \verb'[0.05 0.05]'\\
+\verb'color' & \verb'"purple"' \\
+\verb'min_range' & 0.5 \\
+\verb'max_range' & 5.0 \\
+\verb'fov' & 90 degrees \\
+\verb'mode' & \verb'"fiducial"'\\
+\verb'occlusion' & \verb'"on"'\\
+\verb'threshold' & 0.0 \\
+\verb'theta_threshold' & 0.0 \\
+\verb'color_match' & <same color as the foofinder> \\
+\verb'model_token' &  \verb'"position"'\\
+\verb'frame' &  \verb'"absolute"'\\
+
+\hline
+\end{tabularx}
+
+\subsubsection*{Notes}
+\begin{itemize}
+\item {\bf Color mode: } locates models that are a certain color,
+specified by the \verb'color_match' parameter. The fiducial
+interface's 'id' field is not set.
+
+\item {\bf Fiducial mode (default): } locates models with non-zero
+\verb'fiducial' values. The value is returned in the fiducial
+interface's 'id' field. This mode is functionaly similar to the
+FiducialFinder device, but that device is based on laser scan data and
+may be more realistic.
+
+\item {\bf Model mode: } locates Stage models by library
+token, for example ``position'', ``box'' or ``laser'', specified by
+the \verb'model_token' parameter.  The fiducial interface's 'id' field
+is not set.
+
+\item {\bf Movement mode: } locates top-level models that are moving
+faster than \verb'threshold' (linear) or \verb'theta_threshold'
+(angular) velocities. The fiducial interface's 'id' field is not set.
+
+\item {\bf Radiation mode: }
+TODO
+
+\item {\bf Sound mode: }
+TODO
+
+\item {\bf Team mode: } locates models with non-zero \verb'team'
+values. The team number is returned in the fiducial interface's 'id'
+field.
+
+\item {\bf Toplevel mode: } locates models that are on the top level,
+i.e. models that have the root as their parent. The fiducial interface's 'id' field is
+not set.
+
+
+\end{itemize}
 
 \newpage
 \subsection{The {\tt fiducialfinder} device}
@@ -1400,7 +1502,6 @@ Name & Value\\
 \verb'<none>'\\
 \hline
 \end{tabularx}
-
 
 
 \newpage

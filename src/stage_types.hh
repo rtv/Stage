@@ -21,7 +21,7 @@
  * Desc: Shared types, constants, etc
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: stage_types.hh,v 1.11 2002-12-10 00:34:52 rtv Exp $
+ * CVS: $Id: stage_types.hh,v 1.12 2003-04-01 00:20:56 rtv Exp $
  */
 
 #ifndef STAGE_TYPES_HH
@@ -175,6 +175,23 @@ enum GripperReturn
 // any integer value other than this is a valid fiducial ID
 const int FiducialNone = 0;
 
+// FOOFINDER property types/////////////////////////////////////////////
+
+// entities can emit signals specified like this
+typedef struct {
+  unsigned char amplitude; // 0-255
+  unsigned char frequency; // 0-255
+} stage_emmision_t;
+
+// the values emmitted by the models when thay are working
+#define STG_LASER_FREQ 200
+#define STG_LASER_AMP 200
+#define STG_SONAR_FREQ 250
+#define STG_SONAR_AMP 150
+#define STG_POSITION_FREQ 50
+#define STG_POSITION_AMP 75
+
+
 // image types ////////////////////////////////////////////////////////
 
 unsigned int RGB( int r, int g, int b );
@@ -207,17 +224,21 @@ typedef struct Rect
 #endif
 
 #ifndef TWOPI
-#define TWOPI 2 * M_PI
+#define TWOPI (2.0 * M_PI)
+#endif
+
+#ifndef HALFPI
+#define HALFPI (M_PI/2.0)
 #endif
 
 #define STAGE_SYNC 0
 #define STAGE_ASYNC 1
 
 // Convert radians to degrees
-#define RTOD(r) ((r) * 180 / M_PI)
+#define RTOD(r) ((r) * 180.0 / M_PI)
 
 // Convert degrees to radians
-#define DTOR(d) ((d) * M_PI / 180)
+#define DTOR(d) ((d) * M_PI / 180.0)
 
 // Normalize angle to domain -pi, pi
 #define NORMALIZE(z) atan2(sin(z), cos(z))

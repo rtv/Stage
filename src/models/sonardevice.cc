@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.5 2002-12-03 18:22:33 inspectorg Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.6 2003-04-01 00:20:56 rtv Exp $
  */
 
 #include <math.h>
@@ -41,6 +41,11 @@ CSonarDevice::CSonarDevice( LibraryItem* libit, CWorld *world, CEntity *parent )
   this->max_range = 5.0;
 
   this->power_on = true;
+  
+  // we make moderate, high-frequency noise with the sonars
+  this->noise.amplitude = 160; // out of 255
+  this->noise.frequency = 250; // out of 255
+
 
   // Initialise the sonar poses to default values
   this->sonar_count = SONARSAMPLES;
@@ -81,6 +86,15 @@ bool CSonarDevice::Load(CWorldFile *worldfile, int section)
   
   // power on or off? (TODO - have this setting saved)
   this->power_on = worldfile->ReadInt(section, "power_on", this->power_on );
+  
+  if( power_on )
+    {
+      // we make moderate, high-frequency noise with the sonars
+      this->noise.amplitude = STG_SONAR_AMP; // out of 255
+    }
+  else
+      this->noise.amplitude = 0; // out of 255
+
 
   // Load the geometry of the sonar ring
   scount = worldfile->ReadInt(section, "scount", 0);
@@ -122,33 +136,40 @@ void CSonarDevice::Update( double sim_time )
   double ranges[PLAYER_SONAR_MAX_SAMPLES];
   
   if( this->power_on )
-    // Do each sonar
-    for (int s = 0; s < this->sonar_count; s++)
-      {
-	// Compute parameters of scan line
-	double ox = this->sonars[s][0];
-	double oy = this->sonars[s][1];
-	double oth = this->sonars[s][2];
-	LocalToGlobal(ox, oy, oth);
-	
-	ranges[s] = this->max_range;
-	
-	CLineIterator lit( ox, oy, oth, this->max_range, 
-			   m_world->ppm, m_world->matrix, PointToBearingRange );
-	CEntity* ent;
-	
-	while( (ent = lit.GetNextEntity()) )
-	  {
-	    if( ent != this && ent != m_parent_entity && ent->sonar_return ) 
-	      {
-		ranges[s] = lit.GetRange();
-		break;
+    {
+      // Do each sonar
+      for (int s = 0; s < this->sonar_count; s++)
+	{
+	  // Compute parameters of scan line
+	  double ox = this->sonars[s][0];
+	  double oy = this->sonars[s][1];
+	  double oth = this->sonars[s][2];
+	  LocalToGlobal(ox, oy, oth);
+	  
+	  ranges[s] = this->max_range;
+	  
+	  CLineIterator lit( ox, oy, oth, this->max_range, 
+			     m_world->ppm, m_world->matrix, PointToBearingRange );
+	  CEntity* ent;
+	  
+	  while( (ent = lit.GetNextEntity()) )
+	    {
+	      if( ent != this && ent != m_parent_entity && ent->sonar_return ) 
+		{
+		  ranges[s] = lit.GetRange();
+		  break;
 	      }
-	  }	
-      }
+	    }	
+	}
+      
+      // we're noisy while scanning
+      this->noise.amplitude = STG_SONAR_AMP;
+    }
+  else // we're quiet when the sonars are off
+    this->noise.amplitude = 0; // out of 255
 
   SonarPutData( this->sonar_count, ranges );
-
+  
   return;
 }
 

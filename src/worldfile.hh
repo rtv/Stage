@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.hh,v 1.1 2002-08-23 00:19:39 rtv Exp $
+ * CVS info: $Id: worldfile.hh,v 1.2 2003-04-01 00:20:56 rtv Exp $
  */
 
 #ifndef WORLDFILE_HH
@@ -102,6 +102,15 @@ class CWorldFile
   // Write a float to a tuple
   public: void WriteTupleFloat(int entity, const char *name,
                                int index, double value);
+
+  // Read an int from a tuple
+  public: int ReadTupleInt(int entity, const char *name,
+			      int index, int value);
+  
+  // Write a float to a tuple
+  public: void WriteTupleInt(int entity, const char *name,
+                               int index, int value);
+
 
   // Read a length from a tuple (includes units conversion)
   public: double ReadTupleLength(int entity, const char *name,

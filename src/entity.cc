@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100 2003-01-10 03:46:30 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.101 2003-04-01 00:20:55 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -365,7 +365,21 @@ bool CEntity::Load(CWorldFile *worldfile, int section)
     this->laser_return = LaserVisible;
   else
     this->laser_return = LaserTransparent;
-    
+  
+  // team membership. default zero means no-team
+  this->team = worldfile->ReadInt(section, "team", 0 );
+  
+  // we can emit noise 
+  this->noise.amplitude = worldfile->ReadTupleInt(section, "noise", 0, 0 );
+  this->noise.frequency = worldfile->ReadTupleInt(section, "noise", 1, 0 );
+  
+  // we can emit radiation
+  this->radiation.amplitude = 
+    worldfile->ReadTupleInt(section, "radiation", 0, 0 );
+
+  this->radiation.frequency = 
+    worldfile->ReadTupleInt(section, "radiation", 1, 0 );
+  
   return true;
 }
 

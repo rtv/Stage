@@ -26,6 +26,8 @@ libstgmodels_a_SOURCES = \
                    bumperdevice.hh \
                    descartesdevice.hh \
                    descartesdevice.cc \
+                   foofinderdevice.hh \
+                   foofinderdevice.cc \
                    fiducialfinderdevice.cc \
                    fiducialfinderdevice.hh \
                    gpsdevice.cc \

@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////
 //
 // File: laserbeacondevice.hh
-// Author: Andrew Howard
+// Author: Andrew Howard, Richard Vaughan
 // Date: 12 Jan 2000
 // Desc: Simulates the laser-based beacon detector
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/fiducialfinderdevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)

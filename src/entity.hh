@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15 2003-01-10 00:17:49 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.16 2003-04-01 00:20:55 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -214,11 +214,6 @@ public: virtual void FamilyUnsubscribe();
   // return a pointer to this or a child if it matches the worldfile section
   CEntity* FindSectionEntity( int section );
     
-
-  // the worldfile token that caused this entity to be created
-  // it is set in the constructor (which is called by the library) 
-  //protected: char token[STAGE_TOKEN_MAX]; 
-
   // this is the library's entry for this device, which contains the
   // object's type number, worldfile token, etc.  this can also be
   // used as a type identifier, as it is unique for each library entry
@@ -234,6 +229,11 @@ public: virtual void FamilyUnsubscribe();
 
   // Descriptive name for this entity
   public: char name[256];
+  
+  // properties detectable by the FooFinder device
+  public: 
+  int team;  // identify the team this entity is on. 0 means no-team.
+  stage_emmision_t noise, radiation;
 
   // Entity mass (for collision calculations)
   protected: double mass;

@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.13 2003-03-12 00:29:57 rtv Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.14 2003-04-01 00:20:56 rtv Exp $
  */
 
 #define DEBUG
@@ -74,6 +74,11 @@ CLaserDevice::CLaserDevice(LibraryItem* libit, CWorld *world, CEntity *parent )
   this->shape = ShapeRect;
   this->size_x = 0.155;
   this->size_y = 0.155;
+
+  // we emit moderate, high-frequency radiation with the laser
+  this->noise.amplitude = STG_LASER_AMP; // out of 255
+  this->noise.frequency = STG_LASER_FREQ; // out of 255
+
   
 #ifdef INCLUDE_RTK2
   this->scan_fig = NULL;
@@ -145,6 +150,10 @@ void CLaserDevice::Update( double sim_time )
       
       // Generate new scan data and copy to data buffer
       player_laser_data_t scan_data;
+      
+      // we're now emmitting radiation
+      this->radiation.amplitude = STG_LASER_AMP;
+      
       GenerateScanData( &scan_data );
       PutData( &scan_data, sizeof( scan_data) );
 	
@@ -153,6 +162,9 @@ void CLaserDevice::Update( double sim_time )
     }
     else
     {
+      // we're not emmitting right now.
+      this->radiation.amplitude = 0;
+
       // reset configuration to default.
       /* REMOVE
       this->scan_res = DTOR(DEFAULT_RES);

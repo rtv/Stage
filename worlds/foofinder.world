@@ -1,0 +1,118 @@
+
+# Desc: 1 robot with player, laser, sonar and gps
+# CVS: $Id: foofinder.world,v 1.1 2003-04-01 00:20:56 rtv Exp $
+
+# the resolution of Stage's raytrace model in meters
+#
+resolution 0.02
+
+# GUI settings
+#
+gui
+(
+  size [ 502.000 506.000 ]
+  origin [5.018 4.950 0]
+  scale 0.021 # the size of each bitmap pixel in meters
+)
+
+# load a bitmapped environment from a file
+#
+bitmap
+(
+  file "cave.pnm.gz" 
+  resolution 0.02
+)
+
+# create a robot, setting its start position and Player port, 
+# and equipping it with a laser range scanner
+#
+position
+(
+ robot 0 
+ pose [2.974 5.137 20.000]
+ team 1
+
+ sonar()
+
+ fiducial_id 4
+
+ foofinder( 
+   min_range 0.1 
+   max_range 5.0 
+   fov 3.0 
+   threshold 0.05
+ 
+   occlusion "on"
+
+   #mode "movement"
+   #movement_frame "relative"
+
+   mode "model"
+   model_token "box"
+
+   #mode "toplevel"
+
+   #mode "team"
+ )	
+) 
+
+position( 
+ robot 1 
+ pose [3 3 0] 
+ team 2 
+ foofinder( mode "team" ) 
+ 
+ color "purple"
+ radiation [100 100]
+)
+
+position( 
+ robot 2
+ pose [4 3 0] 
+ team 2 
+ foofinder( mode "toplevel" ) 
+)
+
+position( 
+ robot 3
+ pose [5 3 0] 
+ team 3 
+ foofinder( 
+    mode "movement" 
+    frame "relative" 
+    threshold 0.1 
+    theta_threshold 0.2 
+  ) 
+)
+
+position( 
+ robot 4
+ pose [0 2 0] 
+ team 0 
+ color "green"
+ foofinder( mode "sound" ) 
+)
+
+position( 
+ robot 5
+ pose [0 3 0] 
+ team 0 
+ color "orange"
+ foofinder( mode "radiation" threshold 10 ) 
+)
+
+position( 
+ robot 6
+ pose [0 4 0] 
+ team 0 
+ color "brown"
+ foofinder( mode "color" color_match "orange" ) 
+)
+
+position( 
+ robot 7
+ pose [0 5 0] 
+ team 0 
+ color "yellow"
+ foofinder( mode "fiducial" ) 
+)
