@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.32 $
+//  $Revision: 1.33 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -71,27 +71,9 @@ int stg_model_set_data( stg_model_t* mod, void* data, size_t len )
 
   // if a callback was registered, call it
   if( mod->data_notify )
-    {
-      //PRINT_WARN2( "calling notify func for %s at time %d", 
-      //	   mod->token, mod->world->sim_time ); 
-      (*mod->data_notify)(mod->data_notify_arg);
-    }
+    (*mod->data_notify)(mod->data_notify_arg);
   
-  // if a rendering callback was registered, and the gui wants to
-  // render this type of data, call it
-  if( mod->f_render_data && 
-      mod->world->win->render_data_flag[mod->type] )
-    (*mod->f_render_data)(mod,data,len);
-  else
-    {
-      // remove any graphics that linger
-      if( mod->gui.data )
-	rtk_fig_clear( mod->gui.data );
-      
-      if( mod->gui.data_bg )
-	rtk_fig_clear( mod->gui.data_bg );
-    }
-  
+  gui_model_render_data( mod );
   
   PRINT_DEBUG3( "model %d(%s) put data of %d bytes",
 		mod->id, mod->token, (int)mod->data_len);
@@ -105,28 +87,12 @@ int stg_model_set_command( stg_model_t* mod, void* cmd, size_t len )
   memcpy( mod->cmd, cmd, len );    
   mod->cmd_len = len;  
   pthread_mutex_unlock( &mod->cmd_mutex );
-
-  // if a rendering callback was registered, and the gui wants to
-  // render this type of command, call it
-  if( mod->f_render_cmd && 
-      mod->world->win->render_cmd_flag[mod->type] )
-    (*mod->f_render_cmd)(mod,cmd,len);
-  else
-    {
-      // remove any graphics that linger
-      if( mod->gui.cmd )
-	rtk_fig_clear( mod->gui.cmd );
-      
-      if( mod->gui.cmd_bg )
-	rtk_fig_clear( mod->gui.cmd_bg );
-    }
   
-
+  gui_model_render_command( mod );
+  
   PRINT_DEBUG3( "model %d(%s) put command of %d bytes",
 		mod->id, mod->token, (int)mod->cmd_len);
-
-  //PRINT_WARN3( "model %d(%s) put command of %d bytes",
-  //	mod->id, mod->token, (int)mod->cmd_len);
+  
   return 0; //ok
 }
 
@@ -137,23 +103,8 @@ int stg_model_set_config( stg_model_t* mod, void* cfg, size_t len )
   memcpy( mod->cfg, cfg, len );    
   mod->cfg_len = len;
   pthread_mutex_unlock( &mod->cfg_mutex );  
-  
-  //printf( "setting config for model %d", mod->id );
-  
-  // if a rendering callback was registered, and the gui wants to
-  // render this type of cfg, call it
-  if( mod->f_render_cfg && 
-      mod->world->win->render_cfg_flag[mod->type] )
-    (*mod->f_render_cfg)(mod,cfg,len);
-  else
-    {
-      // remove any graphics that linger
-      if( mod->gui.cfg )
-	rtk_fig_clear( mod->gui.cfg );
-      
-      if( mod->gui.cfg_bg )
-	rtk_fig_clear( mod->gui.cfg_bg );
-    }
+
+  gui_model_render_config( mod );
   
   PRINT_DEBUG3( "model %d(%s) put command of %d bytes",
 		mod->id, mod->token, (int)mod->cfg_len);

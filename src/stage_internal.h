@@ -207,7 +207,7 @@ extern "C" {
 
   typedef void(*func_data_notify_t)( void* );
 
-  typedef void(*func_render_t)(struct _stg_model*,void*,size_t);
+  typedef void(*func_render_t)(struct _stg_model*);
 
   struct _stg_model
   {
@@ -280,6 +280,9 @@ extern "C" {
     // stg_energy_config_t energy_config;   // these are a little strange
     // stg_energy_data_t energy_data;
     // double friction; // units? our model doesn't have a direct physical value
+
+    //stg_energy_consume_t* e_consume;
+    //stg_energy_store_t* e_buffer;
 
     char extend[0]; // this must be the last field!
 

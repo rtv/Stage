@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.32 2004-12-30 05:46:58 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.33 2005-01-02 07:10:50 rtv Exp $
  */
 
 #include <math.h>
@@ -37,8 +37,8 @@ void blobfinder_init( stg_model_t* mod );
 int blobfinder_startup( stg_model_t* mod );
 int blobfinder_shutdown( stg_model_t* mod );
 int blobfinder_update( stg_model_t* mod );
-void blobfinder_render_cfg( stg_model_t* mod, void* data, size_t len );
-void blobfinder_render_data( stg_model_t* mod, void* data, size_t len );
+void blobfinder_render_cfg( stg_model_t* mod );
+void blobfinder_render_data( stg_model_t* mod );
 
 stg_model_t* stg_blobfinder_create( stg_world_t* world, 
 				    stg_model_t* parent, 
@@ -62,9 +62,6 @@ stg_model_t* stg_blobfinder_create( stg_world_t* world,
   geom.size.x = 0.01; //STG_DEFAULT_LASER_SIZEX;
   geom.size.y = 0.01; //STG_DEFAULT_LASER_SIZEY;
   stg_model_set_geom( mod, &geom );
-  
-  // a blobfinder has no body
-  //stg_model_set_lines( mod, NULL, 0 );
   
   // nothing can see a blobfinder
   //mod->obstacle_return = 0;
@@ -350,7 +347,9 @@ int blobfinder_update( stg_model_t* mod )
 }
 
 
-void blobfinder_render_data( stg_model_t* mod, void* data, size_t len )
+#define STG_BLOBFINDER_BLOBS_MAX 32
+
+void blobfinder_render_data( stg_model_t* mod )
 { 
   PRINT_DEBUG( "blobfinder render" );  
   
@@ -361,7 +360,10 @@ void blobfinder_render_data( stg_model_t* mod, void* data, size_t len )
 				     NULL, 
 				     STG_LAYER_BLOBDATA );
   
-  stg_blobfinder_blob_t* blobs = (stg_blobfinder_blob_t*)data;
+  
+  stg_blobfinder_blob_t blobs[STG_BLOBFINDER_BLOBS_MAX];
+  size_t max_len = STG_BLOBFINDER_BLOBS_MAX * sizeof(stg_blobfinder_blob_t);
+  size_t len = stg_model_get_data( mod, blobs, max_len );
   
   if( len < sizeof(stg_blobfinder_blob_t) )
     return; // no data to render
@@ -426,7 +428,7 @@ void blobfinder_render_data( stg_model_t* mod, void* data, size_t len )
     }
 }
 
-void blobfinder_render_cfg( stg_model_t* mod, void* data, size_t len )
+void blobfinder_render_cfg( stg_model_t* mod )
 { 
   PRINT_DEBUG( "blobfinder render config" );  
   

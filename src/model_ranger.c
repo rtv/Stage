@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.42 $
+//  $Revision: 1.43 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -22,8 +22,10 @@
 
 extern rtk_fig_t* fig_debug_rays;
 
-void ranger_render_cfg( stg_model_t* mod, void* data, size_t len );
-void ranger_render_data( stg_model_t* mod, void* data, size_t len ) ;
+#define STG_RANGER_DATA_MAX 64
+
+void ranger_render_cfg( stg_model_t* mod );
+void ranger_render_data( stg_model_t* mod ) ;
 int ranger_update( stg_model_t* mod );
 int ranger_shutdown( stg_model_t* mod );
 
@@ -166,21 +168,8 @@ int ranger_update( stg_model_t* mod )
   return 0;
 }
 
-void ranger_render_cfg( stg_model_t* mod, void* data, size_t len )
+void ranger_render_cfg( stg_model_t* mod )
 {
-  //PRINT_DEBUG( "drawing rangers" );
-  
-  stg_geom_t geom;
-  stg_model_get_geom(mod,&geom);
-  
-  
-  //if(  mod->gui.geom  )
-  //rtk_fig_clear( mod->gui.geom);
-  //else // create the figure, store it in the model and keep a local pointer
-  // mod->gui.geom = model_prop_fig_create( mod, mod->gui.propgeom, STG_PROP_CONFIG,
-  //			 mod->gui.top, STG_LAYER_RANGERGEOM );
-  
-
   if( mod->gui.cfg  )
     rtk_fig_clear(mod->gui.cfg);
   else // create the figure, store it in the model and keep a local pointer
@@ -190,33 +179,29 @@ void ranger_render_cfg( stg_model_t* mod, void* data, size_t len )
       rtk_fig_color_rgb32( mod->gui.cfg, stg_lookup_color(STG_RANGER_CONFIG_COLOR) );  
     }
   
-  rtk_fig_t* fig = mod->gui.cfg; 
+  stg_ranger_config_t cfg[STG_RANGER_DATA_MAX];
+  size_t max_clen = STG_RANGER_DATA_MAX * sizeof(cfg[0]);    
+  size_t clen = stg_model_get_config(mod,cfg,max_clen);
   
-  rtk_fig_origin( fig, geom.pose.x, geom.pose.y, geom.pose.a );  
-  
-  stg_ranger_config_t* cfg = (stg_ranger_config_t*)data;
-
-  if( len < sizeof(stg_ranger_config_t) )
+  if( clen < sizeof(stg_ranger_config_t) )
     return ; // nothing to render
 
-  assert( cfg );
+  int rcount = clen / sizeof( stg_ranger_config_t );
 
-  int rcount = len / sizeof( stg_ranger_config_t );
+  stg_geom_t geom;
+  stg_model_get_geom(mod,&geom);
+
+  rtk_fig_origin( mod->gui.cfg, geom.pose.x, geom.pose.y, geom.pose.a );  
+
   
-  //rtk_fig_t* geomfig = gui_model_figs(mod)->ranger_ge;
-
   // add rects showing ranger positions
   int s;
   for( s=0; s<rcount; s++ )
     {
       stg_ranger_config_t* rngr = &cfg[s];
-      //printf( "drawing a ranger rect (%.2f,%.2f,%.2f)[%.2f %.2f][%.2f %.2f %.2f]\n",
-      //      rngr->pose.x, rngr->pose.y, rngr->pose.a,
-      //      rngr->size.x, rngr->size.y,
-      //      rngr->bounds_range.min, rngr->bounds_range.max, rngr->fov );
-      
+
       // sensor pose
-      rtk_fig_rectangle( fig, 
+      rtk_fig_rectangle( mod->gui.cfg, 
 			 rngr->pose.x, rngr->pose.y, rngr->pose.a,
 			 rngr->size.x, rngr->size.y, 
 			 mod->world->win->fill_polygons ); 
@@ -232,17 +217,19 @@ void ranger_render_cfg( stg_model_t* mod, void* data, size_t len )
       double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + da );
       double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + da );
       
-      rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x1, y1 );
-      rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x2, y2 );	
+      rtk_fig_line( mod->gui.cfg, rngr->pose.x, rngr->pose.y, x1, y1 );
+      rtk_fig_line( mod->gui.cfg, rngr->pose.x, rngr->pose.y, x2, y2 );	
       
-      rtk_fig_ellipse_arc( fig, rngr->pose.x, rngr->pose.y, rngr->pose.a,
+      rtk_fig_ellipse_arc( mod->gui.cfg, 
+			   rngr->pose.x, rngr->pose.y, rngr->pose.a,
 			   2.0*cfg->bounds_range.max,
 			   2.0*cfg->bounds_range.max, 
 			   -da, da );
     }
 }
 
-void ranger_render_data( stg_model_t* mod, void* data, size_t len ) 
+
+void ranger_render_data( stg_model_t* mod) 
 { 
   PRINT_DEBUG( "ranger render data" );
     
@@ -252,27 +239,21 @@ void ranger_render_data( stg_model_t* mod, void* data, size_t len )
     mod->gui.data = rtk_fig_create( mod->world->win->canvas, 
 				    mod->gui.top, STG_LAYER_RANGERDATA );
   
-  rtk_fig_t* fig = mod->gui.data;
-  
-  stg_ranger_config_t cfg[100];
-  
-  size_t clen = stg_model_get_config(mod,cfg,100*sizeof(cfg[0]));  
-  
+  stg_ranger_config_t cfg[STG_RANGER_DATA_MAX];
+  size_t max_clen = STG_RANGER_DATA_MAX * sizeof(cfg[0]);    
+  size_t clen = stg_model_get_config(mod,cfg,max_clen);
+
+  // any samples at all?
   if( clen < sizeof(stg_ranger_config_t) )
     return;
   
   int rcount = clen / sizeof( stg_ranger_config_t );
   
-  stg_ranger_sample_t* samples = (stg_ranger_sample_t*)data;
-  
-  if( len != (rcount * sizeof(stg_ranger_sample_t) ))
-    {
-      PRINT_DEBUG3( "wrong data size %d/%d bytes in ranger %s",
-		    (int)len, 
-		    (int)(rcount * sizeof(stg_ranger_sample_t)), 
-		    mod->token );
-      return;
-    }
+  stg_ranger_sample_t samples[STG_RANGER_DATA_MAX];
+  size_t max_dlen = STG_RANGER_DATA_MAX * sizeof(samples[0]);  
+  size_t dlen = stg_model_get_data( mod, samples, max_dlen );   
+  //assert( dlen == (rcount * sizeof(stg_ranger_sample_t) ));
+
   
   // should be ok by now!
   if( rcount > 0 && samples )
@@ -280,8 +261,8 @@ void ranger_render_data( stg_model_t* mod, void* data, size_t len )
       stg_geom_t geom;
       stg_model_get_geom(mod,&geom);
       
-      rtk_fig_color_rgb32(fig, stg_lookup_color(STG_RANGER_COLOR) );
-      rtk_fig_origin( fig, geom.pose.x, geom.pose.y, geom.pose.a );	  
+      rtk_fig_color_rgb32(mod->gui.data, stg_lookup_color(STG_RANGER_COLOR) );
+      rtk_fig_origin( mod->gui.data, geom.pose.x, geom.pose.y, geom.pose.a );	  
       // draw the range  beams
       int s;
       for( s=0; s<rcount; s++ )
@@ -290,7 +271,8 @@ void ranger_render_data( stg_model_t* mod, void* data, size_t len )
 	    {
 	      stg_ranger_config_t* rngr = &cfg[s];
 	      
-	      rtk_fig_arrow( fig, rngr->pose.x, rngr->pose.y, rngr->pose.a, 			       samples[s].range, 0.02 );
+	      rtk_fig_arrow( mod->gui.data, 
+			     rngr->pose.x, rngr->pose.y, rngr->pose.a, 			       samples[s].range, 0.02 );
 	    }
 	}
     }

@@ -562,6 +562,8 @@ void gui_model_features( stg_model_t* mod )
 /*     } */
 /* } */
 
+
+
 void stg_model_render_polygons( stg_model_t* mod )
 {
   rtk_fig_t* fig = gui_model_figs(mod)->top;

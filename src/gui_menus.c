@@ -101,47 +101,104 @@ static const int menu_table_count = 45;
 /*   gtk_dialog_run( about ); */
 /* } */
 
-void model_refresh( stg_model_t* mod )
+
+// TODO - move this somewhere sensible - so far it's only used here
+#define STG_DATA_MAX 32767
+#define STG_CFG_MAX 32767
+#define STG_CMD_MAX 32767
+
+void gui_model_render_data( stg_model_t* mod )
 {
-  char buf[32767];
+  // if a rendering callback was registered, and the gui wants to
+  // render this type of data, call it
+  if( mod->f_render_data && 
+      mod->world->win->render_data_flag[mod->type] )
+    (*mod->f_render_data)(mod);
+  else
+    {
+      // remove any graphics that linger
+      if( mod->gui.data )
+	rtk_fig_clear( mod->gui.data );
+      
+      if( mod->gui.data_bg )
+	rtk_fig_clear( mod->gui.data_bg );
+    }
+} 
 
-  // re-set the current data, config & geom to force redraws
-  size_t len = 0;
-  
-  len = stg_model_get_data( mod, buf, 32767 );  
-  stg_model_set_data( mod, buf, len );
-  
-  len = stg_model_get_command( mod, buf, 32767 );  
-  stg_model_set_command( mod, buf, len );
-
-  len = stg_model_get_config( mod, buf, 32767 );  
-  stg_model_set_config( mod, buf, len );
+void gui_model_render_command( stg_model_t* mod )
+{
+  // if a rendering callback was registered, and the gui wants to
+  // render this type of command, call it
+  if( mod->f_render_cmd && 
+      mod->world->win->render_cmd_flag[mod->type] )
+    (*mod->f_render_cmd)(mod);
+  else
+    {
+      // remove any graphics that linger
+      if( mod->gui.cmd )
+	rtk_fig_clear( mod->gui.cmd );
+      
+      if( mod->gui.cmd_bg )
+	rtk_fig_clear( mod->gui.cmd_bg );
+    }
 }
 
-void refresh_cb( gpointer key, gpointer value, gpointer user )
+void gui_model_render_config( stg_model_t* mod )
 {
-  model_refresh( (stg_model_t*)value );
+  // if a rendering callback was registered, and the gui wants to
+  // render this type of cfg, call it
+  if( mod->f_render_cfg && 
+      mod->world->win->render_cfg_flag[mod->type] )
+    (*mod->f_render_cfg)(mod);
+  else
+    {
+      // remove any graphics that linger
+      if( mod->gui.cfg )
+	rtk_fig_clear( mod->gui.cfg );
+      
+      if( mod->gui.cfg_bg )
+	rtk_fig_clear( mod->gui.cfg_bg );
+    } 
 }
+
+void gui_model_render_data_cb( gpointer key, gpointer value, gpointer user )
+{
+  gui_model_render_data( (stg_model_t*)value );
+}
+
+void gui_model_render_command_cb( gpointer key, gpointer value, gpointer user )
+{
+  gui_model_render_command( (stg_model_t*)value );
+}
+
+void gui_model_render_config_cb( gpointer key, gpointer value, gpointer user )
+{
+  gui_model_render_config( (stg_model_t*)value );
+}
+
 
 void gui_menu_view_data( gpointer data, guint action, GtkWidget* mitem )
 {
   ((gui_window_t*)data)->render_data_flag[action] = 
     GTK_CHECK_MENU_ITEM(mitem)->active;
-  g_hash_table_foreach( ((gui_window_t*)data)->world->models, refresh_cb, NULL );   
+  g_hash_table_foreach( ((gui_window_t*)data)->world->models, 
+			gui_model_render_data_cb, NULL );   
 }
 
 void gui_menu_view_cfg( gpointer data, guint action, GtkWidget* mitem )
 {
   ((gui_window_t*)data)->render_cfg_flag[action] = 
     GTK_CHECK_MENU_ITEM(mitem)->active;
-  g_hash_table_foreach( ((gui_window_t*)data)->world->models, refresh_cb, NULL );   
+  g_hash_table_foreach( ((gui_window_t*)data)->world->models, 
+			gui_model_render_config_cb, NULL );   
 }
 
 void gui_menu_view_cmd( gpointer data, guint action, GtkWidget* mitem )
 {
   ((gui_window_t*)data)->render_cmd_flag[action] = 
     GTK_CHECK_MENU_ITEM(mitem)->active;
-  g_hash_table_foreach( ((gui_window_t*)data)->world->models, refresh_cb, NULL );   
+  g_hash_table_foreach( ((gui_window_t*)data)->world->models, 
+			gui_model_render_command_cb, NULL );   
 }
 
 
@@ -264,13 +321,20 @@ void gui_menu_layer_cb( gpointer data,
 			 GTK_CHECK_MENU_ITEM(mitem)->active );
 }
 
+void model_render_polygons_cb( gpointer key, gpointer data, gpointer user )
+{
+  stg_model_render_polygons( (stg_model_t*)data );
+}
+
 
 void gui_menu_polygons_cb( gpointer data, guint action, GtkWidget* mitem )
 {
   gui_window_t* win = (gui_window_t*)data;
   win->fill_polygons = GTK_CHECK_MENU_ITEM(mitem)->active;
-  // redraw everything to see the polygons change gcc -Wall -o sched 300-a-3.c 
-  g_hash_table_foreach( win->world->models, refresh_cb, NULL ); 
+
+  // redraw everything to see the polygons change 
+  //g_hash_table_foreach( win->world->models, refresh_cb, NULL ); 
+  g_hash_table_foreach( win->world->models, model_render_polygons_cb, NULL ); 
 }
   
 void gui_menu_debug_cb( gpointer data, guint action, GtkWidget* mitem )

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.30 $
+//  $Revision: 1.31 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -20,10 +20,12 @@
 
 extern rtk_fig_t* fig_debug_rays;
 
+#define STG_FIDUCIALS_MAX 64
+
 int fiducial_shutdown( stg_model_t* mod );
 int fiducial_update( stg_model_t* mod );
-void fiducial_render_cfg( stg_model_t* mod, void* data, size_t len );
-void fiducial_render_data( stg_model_t* mod, void* data, size_t len );
+void fiducial_render_cfg( stg_model_t* mod );
+void fiducial_render_data( stg_model_t* mod );
 
 stg_model_t* stg_fiducial_create( stg_world_t* world, 
 				  stg_model_t* parent, 
@@ -207,13 +209,8 @@ int fiducial_update( stg_model_t* mod )
   return 0;
 }
 
-void fiducial_render_data( stg_model_t* mod, void* data, size_t len )
+void fiducial_render_data( stg_model_t* mod )
 { 
-  //PRINT_WARN( "fiducial render" );
-
-  char text[32];
-
-  
   if(  mod->gui.data  )
     rtk_fig_clear( mod->gui.data);
   else // create the figure, store it in the model and keep a local pointer
@@ -222,11 +219,15 @@ void fiducial_render_data( stg_model_t* mod, void* data, size_t len )
 				      mod->gui.top, STG_LAYER_NEIGHBORDATA );
       rtk_fig_color_rgb32( mod->gui.data, stg_lookup_color( STG_FIDUCIAL_COLOR ) );
     }
-
-  rtk_fig_t* fig = mod->gui.data; 
-  stg_fiducial_t* fids = (stg_fiducial_t*)data;  
-  int bcount = len / sizeof(stg_fiducial_t);
   
+  stg_fiducial_t fids[ STG_FIDUCIALS_MAX ];
+  size_t max_len = sizeof(fids[0]) * STG_FIDUCIALS_MAX;
+  size_t len = stg_model_get_data( mod, fids, max_len );
+  
+  int bcount =len / sizeof(stg_fiducial_t);
+  
+  char text[32];
+
   int b;
   for( b=0; b < bcount; b++ )
     {
@@ -235,25 +236,25 @@ void fiducial_render_data( stg_model_t* mod, void* data, size_t len )
       double px = fids[b].range * cos(pa); 
       double py = fids[b].range * sin(pa);
       
-      rtk_fig_line( fig, 0, 0, px, py );	
+      rtk_fig_line(  mod->gui.data, 0, 0, px, py );	
       
       // the size and heading of the target
       double wx = fids[b].geom.x;
       double wy = fids[b].geom.y;
       double wa = fids[b].geom.a;
       
-      rtk_fig_rectangle(fig, px, py, wa, wx, wy, 0);
-      rtk_fig_arrow(fig, px, py, wa, wy, 0.10);
+      rtk_fig_rectangle( mod->gui.data, px, py, wa, wx, wy, 0);
+      rtk_fig_arrow( mod->gui.data, px, py, wa, wy, 0.10);
       
       if( fids[b].id > 0 )
 	{
 	  snprintf(text, sizeof(text), "  %d", fids[b].id);
-	  rtk_fig_text(fig, px, py, pa, text);
+	  rtk_fig_text( mod->gui.data, px, py, pa, text);
 	}
     }  
 }
 
-void fiducial_render_cfg( stg_model_t* mod, void* data,  size_t len )
+void fiducial_render_cfg( stg_model_t* mod )
 { 
   
   if( mod->gui.cfg  )
@@ -265,34 +266,33 @@ void fiducial_render_cfg( stg_model_t* mod, void* data,  size_t len )
       rtk_fig_color_rgb32( mod->gui.cfg, stg_lookup_color( STG_FIDUCIAL_CFG_COLOR ));
     }
   
-  rtk_fig_t* fig = mod->gui.cfg;  
+  stg_fiducial_config_t cfg;
+  assert( stg_model_get_config( mod, &cfg, sizeof(cfg) ) 
+	  == sizeof(stg_fiducial_config_t) );
   
-  stg_fiducial_config_t* cfg = (stg_fiducial_config_t*)data;
+  double mina = -cfg.fov / 2.0;
+  double maxa = +cfg.fov / 2.0;
   
-  assert( len == sizeof(stg_fiducial_config_t) );
-  assert( cfg );
+  double dx =  cfg.max_range_anon * cos(mina);
+  double dy =  cfg.max_range_anon * sin(mina);
+  double ddx = cfg.max_range_anon * cos(maxa);
+  double ddy = cfg.max_range_anon * sin(maxa);
   
-  double mina = -cfg->fov / 2.0;
-  double maxa = +cfg->fov / 2.0;
-  
-  double dx =  cfg->max_range_anon * cos(mina);
-  double dy =  cfg->max_range_anon * sin(mina);
-  double ddx = cfg->max_range_anon * cos(maxa);
-  double ddy = cfg->max_range_anon * sin(maxa);
-  
-  rtk_fig_line( fig, 0,0, dx, dy );
-  rtk_fig_line( fig, 0,0, ddx, ddy );
+  rtk_fig_line( mod->gui.cfg, 0,0, dx, dy );
+  rtk_fig_line( mod->gui.cfg, 0,0, ddx, ddy );
   
   // max range
-  rtk_fig_ellipse_arc( fig, 0,0,0,
-  	       2.0*cfg->max_range_anon,
-  	       2.0*cfg->max_range_anon, 
-  	       mina, maxa );      
-
+  rtk_fig_ellipse_arc( mod->gui.cfg,
+		       0,0,0,
+		       2.0*cfg.max_range_anon,
+		       2.0*cfg.max_range_anon, 
+		       mina, maxa );      
+  
   // max range that IDs can be, er... identified	  
-  rtk_fig_ellipse_arc( fig, 0,0,0,
-  	       2.0*cfg->max_range_id,
-  	       2.0*cfg->max_range_id, 
-  	       mina, maxa );      
+  rtk_fig_ellipse_arc( mod->gui.cfg, 
+		       0,0,0,
+		       2.0*cfg.max_range_id,
+		       2.0*cfg.max_range_id, 
+		       mina, maxa );      
 }
 
