@@ -1,4 +1,4 @@
-robots = 4
+robots = 5
 robot_colors = 0 1 2 3 4 
 environment_file = SAL2.pnm
 position_file = SAL2.pos
