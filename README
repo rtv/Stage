@@ -1,15 +1,15 @@
 ****************************************************************************
 * README.stage  - Richard Vaughan - Stage-1.3       
 *                                                                          
-* $Id: README,v 1.3 2002-11-11 09:42:36 rtv Exp $    
+* $Id: README,v 1.4 2002-11-11 09:57:06 rtv Exp $    
 ****************************************************************************
 
-** Stage v1.3 ** Release notes
+** Release notes **
 
 End user:
-
 + New devices and terminology to match Player-1.3
 + New model configurations (AmigoBot, Pioneer bumpers, etc).
++ Capture JPEG and PPM stills and MPEG movies of the Stage window in real time
 + More entity properties can be set in the worldfile (see manual for details)
 + Worldfiles can specify multiple bitmaps that respect property settings such as pose
 + Can start with clock stopped (-s flag) - start/stop the clock with SIGUSR1
@@ -17,13 +17,10 @@ End user:
 + Many performance improvements, particularly with the new libRTK GUI
 
 Developer:
-
 + Autotools build environment
 + GUI hooks simplify writing new GUIs (GNOME2 skeleton included)
 + Simplified entity registration/creation (see src/library.cc)
 + Builds on Solaris (GUI not tested)
-
-
 
 ** README ***
 
