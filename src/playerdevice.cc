@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.10 $
+//  $Revision: 1.2.2.11 $
 //
 // Usage:
 //  (empty)
@@ -82,13 +82,12 @@ bool CPlayerDevice::Startup(RtkCfgFile *cfg)
     RTK_TRACE4("creating player device at addr: %p %p %p %p", m_info, m_data_buffer,
          m_command_buffer, m_config_buffer);
     
-    /* *** TODO -- this doesnt work right now
     // Mark this device as available
     //
-    m_world->LockShmem();
+    m_robot->LockShmem();
     m_info->available = 1;
-    m_world->UnlockShmem();
-    */
+    m_robot->UnlockShmem();
+    
     return true;
 }
 
@@ -98,6 +97,12 @@ bool CPlayerDevice::Startup(RtkCfgFile *cfg)
 //
 void CPlayerDevice::Shutdown()
 {
+    // Mark this device as unavailable
+    //
+    m_robot->LockShmem();
+    m_info->available = 0;
+    m_robot->UnlockShmem();
+    
     CObject::Shutdown();
 }
 

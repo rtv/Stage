@@ -1,7 +1,7 @@
 #*************************************************************************
 # src/Makefile - makes the sources
 # RTV
-# $Id: Makefile,v 1.9.2.13 2001-02-06 03:42:49 ahoward Exp $
+# $Id: Makefile,v 1.9.2.14 2001-02-07 01:07:47 ahoward Exp $
 # ************************************************************************/
 
 .SUFFIXES: .cc .o
@@ -16,6 +16,7 @@ OBS = world.o image.o \
 		playerrobot.o playerdevice.o \
 		pioneermobiledevice.o laserdevice.o \
 		visiondevice.o ptzdevice.o sonardevice.o \
+		laserbeacondevice.o broadcastdevice.o miscdevice.o \
 		boxobstacle.o \
 		laserbeacon.o visionbeacon.o
 WIN_OBS = main.o win.o server.o
@@ -87,21 +88,30 @@ image.o: ../include/image.h
 laserbeacon.o: ../include/world.hh ../include/playerrobot.hh
 laserbeacon.o: ../include/object.hh ../include/rtk-types.hh
 laserbeacon.o: ../include/image.h ../include/laserbeacon.hh
+laserbeacondevice.o: ../include/world.hh ../include/playerrobot.hh
+laserbeacondevice.o: ../include/object.hh ../include/rtk-types.hh
+laserbeacondevice.o: ../include/image.h ../include/laserdevice.hh
+laserbeacondevice.o: ../include/playerdevice.hh
+laserbeacondevice.o: ../include/laserbeacondevice.hh
 laserdevice.o: ../include/world.hh ../include/playerrobot.hh
 laserdevice.o: ../include/object.hh ../include/rtk-types.hh
 laserdevice.o: ../include/image.h ../include/laserdevice.hh
 laserdevice.o: ../include/playerdevice.hh
 main.o: ../include/world.hh ../include/playerrobot.hh ../include/object.hh
 main.o: ../include/rtk-types.hh ../include/image.h ../include/win.h
+miscdevice.o: ../include/world.hh ../include/playerrobot.hh
+miscdevice.o: ../include/object.hh ../include/rtk-types.hh ../include/image.h
+miscdevice.o: ../include/miscdevice.hh ../include/playerdevice.hh
 object.o: ../include/object.hh ../include/rtk-types.hh
 object.o: ../include/objectfactory.hh
 objectfactory.o: ../include/objectfactory.hh ../include/boxobstacle.hh
 objectfactory.o: ../include/object.hh ../include/rtk-types.hh
 objectfactory.o: ../include/laserbeacon.hh ../include/visionbeacon.hh
 objectfactory.o: ../include/playerrobot.hh ../include/pioneermobiledevice.hh
-objectfactory.o: ../include/playerdevice.hh ../include/sonardevice.hh
-objectfactory.o: ../include/laserdevice.hh ../include/ptzdevice.hh
-objectfactory.o: ../include/visiondevice.hh ../include/beacondevice.hh
+objectfactory.o: ../include/playerdevice.hh ../include/miscdevice.hh
+objectfactory.o: ../include/sonardevice.hh ../include/laserdevice.hh
+objectfactory.o: ../include/ptzdevice.hh ../include/visiondevice.hh
+objectfactory.o: ../include/laserbeacondevice.hh
 objectfactory.o: ../include/broadcastdevice.hh
 pioneermobiledevice.o: ../include/world.hh ../include/playerrobot.hh
 pioneermobiledevice.o: ../include/object.hh ../include/rtk-types.hh

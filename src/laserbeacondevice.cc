@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: beacondevice.cc
+// File: laserbeacondevice.cc
 // Author: Andrew Howard
 // Date: 12 Jan 2000
 // Desc: Simulates the laser-based beacon detector
 //
 // CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/beacondevice.cc,v $
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.2.2.5 $
 //
 // Usage:
 //  (empty)
@@ -30,20 +30,20 @@
 #include "world.hh"
 #include "playerrobot.hh"
 #include "laserdevice.hh"
-#include "beacondevice.hh"
+#include "laserbeacondevice.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CBeaconDevice::CBeaconDevice(CWorld *world, CObject *parent,
+CLaserBeaconDevice::CLaserBeaconDevice(CWorld *world, CObject *parent,
                              CPlayerRobot *robot, CLaserDevice *laser)
         : CPlayerDevice(world, parent, robot,
-                        BEACON_DATA_START,
-                        BEACON_TOTAL_BUFFER_SIZE,
-                        BEACON_DATA_BUFFER_SIZE,
-                        BEACON_COMMAND_BUFFER_SIZE,
-                        BEACON_CONFIG_BUFFER_SIZE)
+                        LASERBEACON_DATA_START,
+                        LASERBEACON_TOTAL_BUFFER_SIZE,
+                        LASERBEACON_DATA_BUFFER_SIZE,
+                        LASERBEACON_COMMAND_BUFFER_SIZE,
+                        LASERBEACON_CONFIG_BUFFER_SIZE)
 {
     m_laser = laser;
     
@@ -72,7 +72,7 @@ CBeaconDevice::CBeaconDevice(CWorld *world, CObject *parent,
 ///////////////////////////////////////////////////////////////////////////
 // Update the beacon data
 //
-void CBeaconDevice::Update()
+void CLaserBeaconDevice::Update()
 {
     ASSERT(m_robot != NULL);
     ASSERT(m_world != NULL);
@@ -90,7 +90,7 @@ void CBeaconDevice::Update()
 
     // Reset the beacon data structure
     //
-    BeaconData data;
+    player_laserbeacon_data_t data;
     data.count = 0;
 
     #ifdef INCLUDE_RTK
@@ -104,12 +104,12 @@ void CBeaconDevice::Update()
     // Get the laser range data
     //
     ASSERT(m_laser != NULL);
-    UINT16 laser[LASER_NUM_SAMPLES];
+    uint16_t laser[PLAYER_NUM_LASER_SAMPLES];
     m_laser->GetData((void*) laser, sizeof(laser));
     
     // Go through range data looking for beacons
     //
-    for (int i = 0; i < LASER_NUM_SAMPLES; i++)
+    for (int i = 0; i < PLAYER_NUM_LASER_SAMPLES; i++)
     {
         // Look for range readings with high reflectivity
         //
@@ -191,7 +191,7 @@ void CBeaconDevice::Update()
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
 //
-void CBeaconDevice::OnUiUpdate(RtkUiDrawData *pData)
+void CLaserBeaconDevice::OnUiUpdate(RtkUiDrawData *pData)
 {
     // Draw our children
     //

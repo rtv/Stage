@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: beacondevice.hh
+// File: laserbeacondevice.hh
 // Author: Andrew Howard
 // Date: 12 Jan 2000
 // Desc: Simulates the laser-based beacon detector
 //
 // CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/beacondevice.hh,v $
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacondevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  (empty)
@@ -24,8 +24,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef BEACONDEVICE_HH
-#define BEACONDEVICE_HH
+#ifndef LASERBEACONDEVICE_HH
+#define LASERBEACONDEVICE_HH
 
 #include "playerdevice.hh"
 
@@ -34,11 +34,11 @@
 class CLaserDevice;
 
 
-class CBeaconDevice : public CPlayerDevice
+class CLaserBeaconDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CBeaconDevice(CWorld *world, CObject *parent,
+    public: CLaserBeaconDevice(CWorld *world, CObject *parent,
                           CPlayerRobot *robot, CLaserDevice *laser);
     
     // Update the device

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerrobot.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.6 $
+//  $Revision: 1.1.2.7 $
 //
 // Usage:
 //  (empty)
@@ -99,7 +99,7 @@ bool CPlayerRobot::Startup(RtkCfgFile *cfg)
     
     // Get the port for this robot
     //
-    int port = cfg->ReadInt("port", 6666, "");
+    int port = cfg->ReadInt("port", 6665, "");
     
     cfg->EndSection();
 
@@ -177,8 +177,15 @@ bool CPlayerRobot::StartupPlayer(int port)
 
     //cout << "Mapped area: " << (unsigned int)playerIO << endl;
 
+    // Initialise entire space
+    //
+    memset(playerIO, 0, areaSize);
+    
     // test the memory space
-    for( int t=0; t<64; t++ ) playerIO[t] = (unsigned char)t;
+    // Player will try to read this data
+    //
+    for( int t=0; t < TEST_TOTAL_BUFFER_SIZE; t++ )
+        playerIO[TEST_DATA_START + t] = (unsigned char) t;
 
     // ----------------------------------------------------------------------
     // fork off a player process to handle robot I/O

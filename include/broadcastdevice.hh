@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/broadcastdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -50,8 +50,8 @@ class CBroadcastDevice : public CPlayerDevice
 
     // Buffers for storing data
     //
-    private: BroadcastData m_data;
-    private: BroadcastCmd m_cmd;
+    private: player_broadcast_data_t m_data;
+    private: player_broadcast_cmd_t m_cmd;
  
 #ifdef INCLUDE_RTK
     
