@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/puck.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.8 $
+//  $Author: gerkey $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -69,6 +69,9 @@ class CPuck : public CEntity
 
     // coefficient of "friction"
     private: double m_friction;
+
+    // use this to store our real color while we're picked up
+    private: int m_tmp_channel_return;
 
 #ifdef INCLUDE_RTK
     

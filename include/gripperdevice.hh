@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/gripperdevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.5 $
+//  $Author: gerkey $
+//  $Revision: 1.6 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -45,9 +45,10 @@ class CGripperDevice : public CEntity
     //
     public: CGripperDevice(CWorld *world, CEntity *parent ); 
 
-  // update the break beams with the raytrace functions
-  // beam is 0 - inside or 1 - outside
-private: bool BreakBeam( int beam );
+    // update the break beams with the raytrace functions
+    // beam is 0 - inside or 1 - outside
+    // returns pointer to the puck in the beam, or NULL if none
+    private: CEntity* BreakBeam( int beam );
 
     // Load the object from an argument list
     //
@@ -73,18 +74,19 @@ private: bool BreakBeam( int beam );
     //
     //  note that these will be folded in as bitmasks to
     //  the gripper data. also note that not all of these are
-    //  used right now (e.g., the simulated gripper doesn't actually
-    //  have breakbeams)
+    //  used right now 
     //
     //  we're adhering to the OLD P2 gripper (i.e., the one that
     //  attaches to the User I/O port on the pioneer)
     private: bool m_paddles_open, m_paddles_closed, m_paddles_moving,
                   m_gripper_error, m_lift_up, m_lift_down,
-                  m_lift_moving, m_lift_error;
+                  m_lift_moving, m_lift_error, m_inner_break_beam,
+                  m_outer_break_beam;
                    
     // this is the range at which the gripper will actually pick
     // up a puck
-    private: double m_gripper_range;
+    //   ***no longer used*** now the breakbeams decide
+    //private: double m_gripper_range;
 
     // this is the maximum number of pucks that we can carry
     private: int m_puck_capacity;

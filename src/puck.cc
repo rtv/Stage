@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.20 $
+//  $Author: gerkey $
+//  $Revision: 1.21 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -28,6 +28,8 @@ CPuck::CPuck(CWorld *world, CEntity *parent)
   strcpy( m_color_desc, PUCK_COLOR );
 
   channel_return = 0; // default to visible on ACTS channel 0
+
+  m_tmp_channel_return = channel_return;
 
   m_size_x = 0.1;
   m_size_y = 0.1;
@@ -52,6 +54,9 @@ CPuck::CPuck(CWorld *world, CEntity *parent)
   exp.height = m_size_y;
   strcpy( exp.label, "Puck" );
 
+  m_player_port = 0; // not a player device
+  m_player_type = 0;
+  m_player_index = 0;
 }
 
 
@@ -128,6 +133,16 @@ bool CPuck::Startup()
 void CPuck::Update( double sim_time )
 {
     ASSERT(m_world != NULL);
+
+    // have we been picked up?  then make ourselves transparent so the ptz
+    // doesn't see us in the gripper. otherwise make ourselves visible.
+    if(m_parent_object && channel_return > -1)
+    {
+      m_tmp_channel_return = channel_return;
+      channel_return = -1;
+    }
+    else if(!m_parent_object && channel_return != m_tmp_channel_return)
+      channel_return = m_tmp_channel_return;
 
     // if its time to recalculate state and we're on the ground
     //

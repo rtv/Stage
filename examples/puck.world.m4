@@ -4,10 +4,6 @@ set environment_file = rink.pnm
 set pixels_per_meter = 80
 set laser_res = 2
 
-# these servers enable clients (e.g. xs) access to Stage's internal models
-enable truth_server
-enable environment_server
-
 forager(3.48223304703,3.48223304703,0,6665)
 forager(6.51776695296,3.48223304703,0,6666)
 forager(3.48223304703,6.51776695296,0,6667)
@@ -27,4 +23,4 @@ create movable_object pose 7.27665042946 5.75888347649 0 friction 0.035
 create movable_object pose 2.72334957055 7.27665042946 0 friction 0.035
 create movable_object pose 4.24111652352 7.27665042946 0 friction 0.035
 create movable_object pose 5.75888347649 7.27665042946 0 friction 0.035
-create movable_object pose 7.27665042946 7.27665042946 0 friction 0.035
+create movable_object pose 7.27665042946 7.27665042946 0 friction 0.035 

@@ -39,8 +39,11 @@ typedef struct
 {
   char echo_request;
   int16_t stage_id;
-  uint32_t x, y; // mm, mm
+  // i changed the x and y to signed ints so that XS can handle negative
+  // local coords -BPG
+  int32_t x, y; // mm, mm 
   int16_t th; // degrees
+  int16_t parent_id;
 } __attribute ((packed)) stage_pose_t;
 
 // packet for truth device

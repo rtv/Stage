@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.39 2001-10-13 02:31:48 vaughan Exp $
+ * $Id: xs.cc,v 1.40 2001-10-15 03:30:55 gerkey Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -948,6 +948,7 @@ void CXGui::HandleIncomingQueue( void )
       truth.x = pose.x / 1000.0;
       truth.y = pose.y / 1000.0;
       truth.th = DTOR(pose.th);
+      truth.parent_id = pose.parent_id;
 
       truth_map[ pose.stage_id ] = truth; // update the database with it
 
@@ -1957,8 +1958,8 @@ void CXGui::HandleConfigureEvent( XEvent &reportEvent )
 {
   // ignore this if it has a count > 0
 
-  if( reportEvent.xexpose.count > 0 )
-    return;
+  //if( reportEvent.xexpose.count > 0 )
+    //return;
 
   //cout << "CONFIGURE NOTIFY" << endl;
   

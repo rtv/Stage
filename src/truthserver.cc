@@ -30,6 +30,7 @@
 #include "world.hh"
 #include "truthserver.hh"
 //extern bool g_log_continue;
+extern CWorld* world;
 
 long int g_bytes_output = 0;
 long int g_bytes_input = 0;
@@ -424,6 +425,17 @@ void CWorld::PoseWrite( void )
 	      // we don't want this echoed back to us
 	      pose.echo_request = false;
 	      pose.stage_id = i;
+
+              pose.parent_id = -1;
+              // find the index of our parent to use as an id
+              for(int h=0; h<world->GetObjectCount(); h++)
+              {
+                if(world->GetObject(h) == m_object[i]->m_parent_object)
+                {
+                  pose.parent_id = h;
+                  break;
+                }
+              }
 	      
 	      // copy it into the right place
 	      memcpy( next_entry++, 
