@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.15 2002-10-27 21:55:37 rtv Exp $
+dnl $Id: configure.in,v 1.16 2002-10-27 23:15:50 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -66,25 +66,22 @@ if test "x$with_gnome2" = "xyes"; then
   AC_DEFINE(USE_GNOME2,1,[include the GNOME2 GUI])
   GUI_DIR=gnome2
   GUI_LIB=libgnomestage.a
-  GUI_LIB_NAME=gnomestage
-  GUI_PKG_LINK="`pkg-config --libs libgnomecanvas-2.0 libgnomeui-2.0`"
+  GUI_LINK="-Lgnome2 -lgnomestage `pkg-config --libs libgnomecanvas-2.0 libgnomeui-2.0`"
 else
   dnl otherwise we use the RTK GUI unless it is explicitly refused
   AC_ARG_WITH(gui,    [   --without-gui         Don't compile in a GUI],,with_gui=yes)
   if test "x$with_gui" = "xyes"; then
     AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
-    GUI_DIR=rtk2
-    GUI_LIB=librtk.a
-    GUI_LIB_NAME=rtk
-    GUI_PKG_LINK="`gtk-config --libs gtk gthread` @LIBJPEG@"
+    GUI_DIR=rtkstage
+    GUI_LIB=librtkstage.a
+    GUI_LINK="-L../rtk2 -Lrtkstage -lrtkstage -lrtk @LIBJPEG@ `gtk-config --libs gtk gthread`"
   fi
 fi
 
 # define the paths, libs and deps for the GUI
 AC_SUBST(GUI_DIR)
 AC_SUBST(GUI_LIB)
-AC_SUBST(GUI_LIB_NAME)
-AC_SUBST(GUI_PKG_LINK)
+AC_SUBST(GUI_LINK)
 
 # set vars depending on the GUI tests
 AM_CONDITIONAL(WITH_GNOME2, test x$with_gnome2 = xyes)
@@ -115,8 +112,9 @@ AM_CONDITIONAL(WITH_TESTS, test x$with_tests = xyes)
 AC_OUTPUT(Makefile 
           src/Makefile 
 	  src/models/Makefile	
-          src/rtk2/Makefile 
-          src/rtk2/test/Makefile
           src/gnome2/Makefile 
+	  src/rtkstage/Makefile
           worlds/Makefile 
-          tools/Makefile)
+          tools/Makefile
+          rtk2/Makefile 
+          rtk2/test/Makefile )

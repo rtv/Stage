@@ -7,7 +7,7 @@
 
 # we need this while rtk code is still in the device files
 if WITH_GUI
-RTKCPPFLAGS = -I$(top_srcdir)/src/rtk2 `gtk-config --cflags`
+RTKCPPFLAGS = -I$(top_srcdir)/rtk2 `gtk-config --cflags`
 endif
 
 

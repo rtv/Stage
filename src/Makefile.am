@@ -2,14 +2,14 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.15 2002-10-27 21:55:37 rtv Exp $
+# $Id: Makefile.am,v 1.16 2002-10-27 23:15:50 rtv Exp $
 
 
 SUBDIRS = models @GUI_DIR@
 
 # we need extra flags as long as RTK code is embedded in the main simulator source
 if WITH_GUI
-RTKCPPFLAGS = -I$(top_srcdir)/src/rtk2 `gtk-config --cflags`
+RTKCPPFLAGS = -I$(top_srcdir)/rtk2 `gtk-config --cflags`
 endif
 
 AM_CPPFLAGS = 	-Wall \
@@ -28,6 +28,7 @@ stage_SOURCES = \
 		colors.hh			\
 		entity.cc			\
 		entity.hh			\
+		gui.hh				\
 		library.cc			\
 		library.hh			\
 		main.cc				\
@@ -37,7 +38,6 @@ stage_SOURCES = \
 		playerdevice.hh			\
 		raytrace.cc			\
 		raytrace.hh			\
-                rtkgui.cc                       \
 		server.cc			\
 		server.hh			\
 		stage_types.hh			\
@@ -51,5 +51,5 @@ stage_LDFLAGS =
 
 stage_LDADD = -lm -Lmodels -lstgmodels \
 		-L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -lplayerqueue \
-		@LIBOBJS@ -L@GUI_DIR@ -l@GUI_LIB_NAME@ @GUI_PKG_LINK@
+		@LIBOBJS@ @GUI_LINK@
 
