@@ -1,6 +1,6 @@
 ####################################################################################
 # TODO 
-# $Id: TODO,v 1.3 2001-09-20 18:29:21 vaughan Exp $
+# $Id: TODO,v 1.4 2001-09-22 01:51:50 vaughan Exp $
 ####################################################################################
 
 ## IN PROGRESS #####################################################################
@@ -17,10 +17,10 @@
 	- save only relevant state
 	- inherit port by default on load
 
- - XS: add player interface to display sensor data
-
 ## FIXED/DONE ######################################################################
 
+RTV 9/21/01
+ - XS: add player interface to display sensor data
 
 RTV 9/20/01
  - added ACTS channel congfiguration to .world file

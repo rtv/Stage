@@ -9,11 +9,27 @@
 #include "truthserver.hh"
 #include "xs.hh"
 
-#include "laserproxy.h"
-#include "sonarproxy.h"
-#include "gpsproxy.h"
-#include "visionproxy.h"
-#include "ptzproxy.h"
+bool CXGui::PoseFromId( int port, int device, int index, 
+			double& x, double& y, double& th, unsigned long& col )
+{
+  TruthMap::iterator it;
+  // find this object
+  for( it = truth_map.begin(); it != truth_map.end(); it++ )
+    if( it->second.id.port == port &&  
+  	it->second.id.type == device &&
+  	it->second.id.index == index )
+      {
+	// record the position of this object
+	x = it->second.x;
+	y = it->second.y;
+	th = it->second.th;
+	col = it->second.pixel_color;
+	
+	return true;
+      }
+  return false;
+}
+    
 
 void CXGui::RenderObject( xstruth_t &truth )
   {
@@ -105,38 +121,6 @@ void CXGui::RenderLaserTurret( xstruth_t* exp, bool extended )
   DrawNoseBox( exp->x, exp->y, exp->w/2.0, exp->h/2.0, exp->th );
 }
 
-void CXGui::RenderLaserProxy( LaserProxy* prox )
-{
-  prox->Print();
-  
-  //if( extended && exp->data )
-  //      {
-  //        SetForeground( RGB(70,70,70) );
-  //        ExportLaserData* ld = (ExportLaserData*) exp->data;
-  //        DrawPolygon( ld->hitPts, ld->hitCount );
-  //      }
-}
-
-void CXGui::RenderSonarProxy( SonarProxy* prox )
-{
-  prox->Print();
-}
-
-void CXGui::RenderGpsProxy( GpsProxy* prox )
-{
-  prox->Print();
-}
-
-void CXGui::RenderPtzProxy( PtzProxy* prox )
-{
-  prox->Print();
-}
-
-void CXGui::RenderVisionProxy( VisionProxy* prox )
-{
-  prox->Print();
-}
-
 
 void CXGui::RenderLaserBeaconDetector( xstruth_t* exp, bool extended )
 { 
@@ -188,60 +172,28 @@ void CXGui::RenderPTZ( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );    
   DrawNoseBox( exp->x, exp->y, exp->w/2.0, exp->h/2.0, exp->th );
-
-  //GetRect( exp->x, exp->y, exp->w, exp->h, exp->th, pts );  
-  //DrawPolygon( pts, 4 );
-
-  //DrawCircle( exp->x, exp->y, exp->w/2 );
-  
-  //DrawArc( exp->x, exp->y, exp->w, exp->h, exp->th + M_PI_2, M_PI );
-
-  
-//    if( 0 )
-//    //if( extended && exp->data ) 
-//      {
-
-//        ExportPtzData* p = (ExportPtzData*)exp->data;
-      
-//        //DPoint pts[4];
-//        //GetRect( exp->x, exp->y, 0.4, 0.4, exp->th, pts );
-//        //DrawPolygon( pts, 4 );
-      
-//        double len = 0.2; // meters
-//        // have to figure out the zoom with Andrew
-//        // for now i have a fixed width triangle
-//        //double startAngle =  exp->th + p->pan - p->zoom/2.0;
-//        //double stopAngle  =  startAngle + p->zoom;
-//        double startAngle =  exp->th + p->pan - DTOR( 30 );
-//        double stopAngle  =  startAngle + DTOR( 60 );
-      
-//        pts[0].x = exp->x;
-//        pts[0].y = exp->y;
-      
-//        pts[1].x = exp->x + len * cos( startAngle );  
-//        pts[1].y = exp->y + len * sin( startAngle );  
-      
-//        pts[2].x = exp->x + len * cos( stopAngle );  
-//        pts[2].y = exp->y + len * sin( stopAngle );  
-      
-//        DrawPolygon( pts, 3 );
-//      }
- }
+}
 
 void CXGui::RenderSonar( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );
-  //    if( extended && exp->data )
-  //      {
-  //        ExportSonarData* p = (ExportSonarData*)exp->data;
-  //        SetForeground( RGB(70,70,70) );
-  //        DrawPolygon( p->hitPts, p->hitCount );
-  //      }
-  //  }
 
-  //SetForeground( RGB(255,0,0) );
-  //SetForeground( yellow );
-  //DrawString( exp->x, exp->y, "Sonar", 1 );
+  for( int l=0; l < PLAYER_NUM_SONAR_SAMPLES; l++ )
+    {
+      double xoffset, yoffset, angle;
+      GetSonarPose( l, xoffset, yoffset, angle );
+      
+      angle += exp->th;
+      
+      double sonarx = exp->x + (xoffset * cos(exp->th) - yoffset * sin(exp->th));
+      double sonary = exp->y + (xoffset * sin(exp->th) + yoffset * cos(exp->th));
+      
+      char buf[10];
+      sprintf( buf, "%d", l );
+      DrawString( sonarx, sonary, buf, strlen(buf ) ); 
+      DrawNoseBox( sonarx, sonary, 0.02, 0.02, angle );
+      
+    }
 }
 
 void CXGui::RenderVision( xstruth_t* exp, bool extended )
@@ -404,6 +356,325 @@ void CXGui::SelectColor( xstruth_t* exp )
   XSetForeground( display, gc, exp->pixel_color );
 }
 
+void CGraphicLaserProxy::Render( void )
+{
+  // undraw the old data
+  win->SetForeground( pixel );
+  win->SetDrawMode( GXxor );
+  win->DrawPolygon( pts, samples );
+  
+  // find the pose and color of the matching truth
+  double x,y,th;
+  
+  if( !win->PoseFromId( client->port, device, index, x, y, th, pixel ) )
+    {
+      printf( "XS Warning: couldn't find object (%d:%d:%d)"
+	      " so abandoned render\n", 
+	      client->port, device, index );
+      return;
+    }
+   
+  double start_angle = th + DTOR( min_angle/100.0 );
+  double angle_incr = 0;
+  
+  samples = range_count;
+  
+  if( samples > 0 ) // catch a pesky /0 error!
+    angle_incr = DTOR( (max_angle - min_angle)/100.0) / samples;
+  
+  //printf( "XS: RenderLaserProxy() "
+  //"x:%.2f y:%.2f th:%.2f min:%d max:%d incr:%.2f ranges:%d\n",
+  //x, y, th, prox->min_angle, prox->max_angle, angle_incr, samples );
+  
+  double range, angle;
+  for( int l=0; l < samples; l++ )
+    {
+      range = ranges[l];
+      angle = start_angle + l * angle_incr;
+      
+      pts[l].x = x + range/1000.0 * cos( angle ); 
+      pts[l].y = y + range/1000.0 * sin( angle );       
+    }
+  
+  // setup the GC 
+  win->SetForeground( pixel );
+  win->DrawPolygon( pts, samples );
+}
+
+void CGraphicSonarProxy::Render()
+{
+  // undraw the old data
+  win->SetForeground( pixel );
+  win->SetDrawMode( GXxor );
+  win->DrawPolygon( pts, PLAYER_NUM_SONAR_SAMPLES );
+  
+  // figure out where to draw this data
+  double x,y,th;
+
+  if( !win->PoseFromId( client->port, device, index, x, y, th, pixel ) )
+    {
+      printf( "XS Warning: couldn't find object (%d:%d:%d)"
+	      " so abandoned render\n", 
+	      client->port, device, index );
+      return;
+    }
+  
+  //double start_angle = th - DTOR(90);
+  //double angle_incr = M_PI / 8.0;
+          
+  for( int l=0; l < PLAYER_NUM_SONAR_SAMPLES; l++ )
+    {
+      double xoffset, yoffset, angle;
+      win->GetSonarPose( l, xoffset, yoffset, angle );
+      
+      double range = ranges[l];
+      
+      angle += th;
+
+      double sonarx = x + xoffset * cos(th) - yoffset * sin(th);
+      double sonary = y + xoffset * sin(th) + yoffset * cos(th);
+            
+      pts[l].x = sonarx + range/1000.0 * cos( angle ); 
+      pts[l].y = sonary + range/1000.0 * sin( angle );       
+    }
+  
+  // setup the GC 
+  win->SetForeground( pixel );
+  win->DrawPolygon( pts, PLAYER_NUM_SONAR_SAMPLES );
+}
+
+void CGraphicGpsProxy::Render()
+{
+  // undraw the old data
+  win->SetForeground( pixel );
+  win->SetDrawMode( GXxor );
+  win->DrawString( drawx, drawy, buf, strlen(buf) );
+  
+  // figure out where to draw this data
+  double dummyth;
+  
+  if( !win->PoseFromId( client->port, device, index, drawx, drawy, dummyth, pixel ) )
+    {
+      printf( "XS Warning: couldn't find object (%d:%d:%d)"
+	      " so abandoned render\n", 
+	      client->port, device, index );
+      return;
+    }
+
+  // fill the output string
+  sprintf( buf, "GPS(%d,%d,%d)", xpos, ypos, heading );
+  
+  // setup the GC 
+  win->SetForeground( pixel );
+  win->DrawString( drawx, drawy, buf, strlen(buf) );
+}
+
+void CGraphicPtzProxy::Render()
+{
+  // undraw the old data
+  win->SetForeground( pixel );
+  win->SetDrawMode( GXxor );
+  win->DrawPolygon( pts, 3 );
+
+  // figure out where to draw this data
+  double x,y,th;
+  
+  if( !win->PoseFromId( client->port, device, index, x, y, th, pixel ) )
+    {
+      printf( "XS Warning: couldn't find object (%d:%d:%d)"
+	      " so abandoned render\n", 
+	      client->port, device, index );
+      return;
+    }
+  
+  double len = 0.5; // meters
+  // have to figure out the zoom with Andrew
+  // for now i have a fixed width triangle
+  
+  double startAngle =  th + DTOR(pan) - DTOR( 30 );
+  double stopAngle  =  startAngle + DTOR( 60 );
+      
+  pts[0].x = x;
+  pts[0].y = y;
+  
+  pts[1].x = x + len * cos( startAngle );  
+  pts[1].y = y + len * sin( startAngle );  
+  
+  pts[2].x = x + len * cos( stopAngle );  
+  pts[2].y = y + len * sin( stopAngle );  
+  
+  // setup the GC 
+  win->SetForeground( pixel );
+  win->DrawPolygon( pts, 3 );
+}
+
+void CGraphicLaserBeaconProxy::Render()
+{
+  char buf[16];
+
+  // undraw the old data
+  win->SetForeground( pixel );
+  win->SetDrawMode( GXxor );
+  
+  for( int b=0; b<stored; b++ )
+    {
+      win->DrawLine( origin, pts[b] );
+      sprintf( buf, "%d", ids[b] );
+      win->DrawString( pts[b].x + 0.1, pts[b].y, buf, strlen(buf) ); 
+    }
+  
+  // figure out where to draw this data
+  double x,y,th;
+  
+  if( !win->PoseFromId( client->port, device, index, x, y, th, pixel ) )
+    {
+      printf( "XS Warning: couldn't find object (%d:%d:%d)"
+	      " so abandoned render\n", 
+	      client->port, device, index );
+      return;
+    }
+
+  // store the home position
+  origin.x = x;
+  origin.y = y;
+  
+  // calculate the beacon positions
+  for( int c=0; c<count; c++ )
+    {
+      pts[c].x = x + (beacons[c].range/1000.0) * cos( th + DTOR(beacons[c].bearing) );  
+      pts[c].y = y + (beacons[c].range/1000.0) * sin( th + DTOR(beacons[c].bearing) );
+
+      ids[c] = beacons[c].id;
+    }
+  
+  stored = count;
+  
+  win->SetForeground( pixel );
+  win->SetDrawMode( GXxor );
+  
+  for( int b=0; b<stored; b++ )
+    {
+      win->DrawLine( origin, pts[b] );
+      sprintf( buf, "%d", ids[b] );
+      //win->DrawString( origin.x + 0.1, origin.y, buf, strlen(buf) ); 
+      win->DrawString( pts[b].x + 0.1, pts[b].y, buf, strlen(buf) ); 
+    }
+}
 
 
+
+///////////////////////////////////////////////////////////////////////////
+// Get the pose of the sonar
+//
+void CXGui::GetSonarPose(int s, double &px, double &py, double &pth )
+{
+  double xx = 0;
+  double yy = 0;
+  double a = 0;
+  double angle, tangle;
+  
+  switch( s )
+    {
+#ifdef PIONEER1
+    case 0: angle = a - 1.57; break; //-90 deg
+    case 1: angle = a - 0.52; break; // -30 deg
+    case 2: angle = a - 0.26; break; // -15 deg
+    case 3: angle = a       ; break;
+    case 4: angle = a + 0.26; break; // 15 deg
+    case 5: angle = a + 0.52; break; // 30 deg
+    case 6: angle = a + 1.57; break; // 90 deg
+#else
+    case 0:
+      angle = a - 1.57;
+      tangle = a - 0.900;
+      xx += 0.172 * cos( tangle );
+      yy += 0.172 * sin( tangle );
+      break; //-90 deg
+    case 1: angle = a - 0.87;
+      tangle = a - 0.652;
+      xx += 0.196 * cos( tangle );
+      yy += 0.196 * sin( tangle );
+      break; // -50 deg
+    case 2: angle = a - 0.52;
+      tangle = a - 0.385;
+      xx += 0.208 * cos( tangle );
+      yy += 0.208 * sin( tangle );
+      break; // -30 deg
+    case 3: angle = a - 0.17;
+      tangle = a - 0.137;
+      xx += 0.214 * cos( tangle );
+      yy += 0.214 * sin( tangle );
+      break; // -10 deg
+    case 4: angle = a + 0.17;
+      tangle = a + 0.137;
+      xx += 0.214 * cos( tangle );
+      yy += 0.214 * sin( tangle );
+      break; // 10 deg
+    case 5: angle = a + 0.52;
+      tangle = a + 0.385;
+      xx += 0.208 * cos( tangle );
+      yy += 0.208 * sin( tangle );
+      break; // 30 deg
+    case 6: angle = a + 0.87;
+      tangle = a + 0.652;
+      xx += 0.196 * cos( tangle );
+      yy += 0.196 * sin( tangle );
+      break; // 50 deg
+    case 7: angle = a + 1.57;
+      tangle = a + 0.900;
+      xx += 0.172 * cos( tangle );
+      yy += 0.172 * sin( tangle );
+      break; // 90 deg
+    case 8: angle = a + 1.57;
+      tangle = a + 2.240;
+      xx += 0.172 * cos( tangle );
+      yy += 0.172 * sin( tangle );
+      break; // 90 deg
+    case 9: angle = a + 2.27;
+      tangle = a + 2.488;
+      xx += 0.196 * cos( tangle );
+      yy += 0.196 * sin( tangle );
+      break; // 130 deg
+    case 10: angle = a + 2.62;
+      tangle = a + 2.755;
+      xx += 0.208 * cos( tangle );
+      yy += 0.208 * sin( tangle );
+      break; // 150 deg
+    case 11: angle = a + 2.97;
+      tangle = a + 3.005;
+      xx += 0.214 * cos( tangle );
+      yy += 0.214 * sin( tangle );
+      break; // 170 deg
+    case 12: angle = a - 2.97;
+      tangle = a - 3.005;
+      xx += 0.214 * cos( tangle );
+      yy += 0.214 * sin( tangle );
+      break; // -170 deg
+    case 13: angle = a - 2.62;
+      tangle = a - 2.755;
+      xx += 0.208 * cos( tangle );
+      yy += 0.208 * sin( tangle );
+      break; // -150 deg
+    case 14: angle = a - 2.27;
+      tangle = a - 2.488;
+      xx += 0.196 * cos( tangle );
+      yy += 0.196 * sin( tangle );
+      break; // -130 deg
+    case 15: angle = a - 1.57;
+      tangle = a - 2.240;
+      xx += 0.172 * cos( tangle );
+      yy += 0.172 * sin( tangle );
+      break; // -90 deg
+    default:
+      angle = 0;
+      xx = 0;
+      yy = 0;
+      break;
+#endif
+    }
+
+  px = xx;
+  py = -yy;
+  pth = -angle;
+}
 

@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xs.hh,v 1.7 2001-09-21 02:04:39 vaughan Exp $
+ * $Id: xs.hh,v 1.8 2001-09-22 01:51:50 vaughan Exp $
  ************************************************************************/
 
 #ifndef _WIN_H
@@ -13,8 +13,17 @@
 
 #include <messages.h> // player data types
 #include <playermulticlient.h>
+#include <map>
+
+#include "laserproxy.h"
+#include "sonarproxy.h"
+#include "gpsproxy.h"
+#include "visionproxy.h"
+#include "ptzproxy.h"
+#include "laserbeaconproxy.h"
 
 const int NUM_PROXIES = 64;
+
 
 typedef struct
 {
@@ -28,8 +37,11 @@ typedef struct
   double x, y, th, w, h; // pose and extents
   double rotdx, rotdy; // center of rotation offsets
   int subtype; 
+  
 } xstruth_t;
 
+// a map template for storing them
+typedef std::map< int, xstruth_t > TruthMap;
 
 typedef struct  
 {
@@ -58,6 +70,7 @@ typedef struct
   XPoint* pixels; // coords in original image pixels
   XPoint* pixels_scaled; // coords in screen pixels
 } environment_t;
+
 
 class CXGui
 {
@@ -99,6 +112,9 @@ public:
 
   XEvent reportEvent;
 
+  // an associative array, indexed by player ID (neat!)
+  TruthMap truth_map; 
+  
   double ppm; // scale between world and X coordinates
   
   // methods  
@@ -108,8 +124,11 @@ public:
     return (((r << 8) | g) << 8) | b;
   };
 
+  bool PoseFromId( int port, int device, int index, 
+		   double& x, double& y, double& th, unsigned long& col );
+    
   void HandlePlayers( void );
-  void AddClient( xstruth_t* ent );
+  void TogglePlayerClient( xstruth_t* ent );
 
   void BoundsCheck( void );
   int LoadVars( char* initFile );
@@ -178,13 +197,9 @@ public:
   void RenderPuck( xstruth_t* exp, bool extended );
   void RenderOccupancyGrid( void );
 
-  void RenderLaserProxy( LaserProxy* prox );
-  void RenderSonarProxy( SonarProxy* prox );
-  void RenderGpsProxy( GpsProxy* prox );
-  void RenderPtzProxy( PtzProxy* prox );
-  void RenderVisionProxy( VisionProxy* prox );
-
   xstruth_t* NearestEntity( double x, double y );
+
+  void GetSonarPose(int s, double &px, double &py, double &pth );  
 
   void GetRect( double x, double y, double dx, double dy, 
 	       double rotateAngle, DPoint* pts );
@@ -216,6 +231,201 @@ public:
   void SetupChannels( char* );
 
   Colormap default_cmap;
+};
+
+class CGraphicLaserProxy : public LaserProxy
+{
+protected:
+  DPoint pts[ PLAYER_NUM_LASER_SAMPLES ];
+  unsigned long pixel;
+  int samples;
+  CXGui* win;
+  
+public:
+  
+  CGraphicLaserProxy( CXGui* w, PlayerClient* pc, unsigned short index, 
+		      unsigned char access='c'):
+    LaserProxy(pc,index,access) 
+  {
+    win = w;
+    pixel = 0;
+    samples = 0;
+    memset( pts, 0, PLAYER_NUM_LASER_SAMPLES * sizeof( unsigned short ) );
+  };
+
+  ~CGraphicLaserProxy( void )
+  {
+    // undraw the old data
+    win->SetForeground( pixel );
+    win->SetDrawMode( GXxor );
+    win->DrawPolygon( pts, samples );
+  };
+
+  void Render();
+  
+};
+
+class CGraphicSonarProxy : public SonarProxy
+{
+protected:
+  DPoint pts[ PLAYER_NUM_SONAR_SAMPLES ];
+  unsigned long pixel;
+  CXGui* win;
+  
+public:
+  
+  CGraphicSonarProxy( CXGui* w, PlayerClient* pc, unsigned short index, 
+		      unsigned char access='c'):
+    SonarProxy(pc,index,access) 
+  {
+    win = w;
+    pixel = 0;
+    memset( pts, 0, PLAYER_NUM_SONAR_SAMPLES * sizeof( unsigned short ) );
+  };
+
+  ~CGraphicSonarProxy( void )
+  {
+    // undraw the old data
+    win->SetForeground( pixel );
+    win->SetDrawMode( GXxor );
+    win->DrawPolygon( pts, PLAYER_NUM_SONAR_SAMPLES );
+  };
+  
+  void Render();
+};
+
+class CGraphicGpsProxy : public GpsProxy
+{
+protected:
+  char buf[64];
+  double drawx, drawy;
+  
+  unsigned long pixel;
+  CXGui* win;
+  
+public:
+  
+  CGraphicGpsProxy( CXGui* w, PlayerClient* pc, unsigned short index, 
+		    unsigned char access='c'):
+    GpsProxy(pc,index,access) 
+  {
+    win = w;
+    pixel = 0;
+    drawx = drawy = -99999;
+    memset( buf, 0, 64 );
+  };
+
+  ~CGraphicGpsProxy( void )
+  {
+    // undraw the old data
+    win->SetForeground( pixel );
+    win->SetDrawMode( GXxor );
+    win->DrawString( drawx, drawy, buf, strlen(buf) );
+  };
+  
+  void Render();
+};
+
+class CGraphicVisionProxy : public VisionProxy
+{
+protected:
+  unsigned long pixel;
+  CXGui* win;
+  
+public:
+  
+  CGraphicVisionProxy( CXGui* w, PlayerClient* pc, unsigned short index, 
+		       unsigned char access='c'):
+    VisionProxy(pc,index,access) 
+  {
+    win = w;
+    pixel = 0;
+  };
+  
+  ~CGraphicVisionProxy( void )
+  {
+    // undraw the old data
+    win->SetForeground( pixel );
+    win->SetDrawMode( GXxor );
+  };
+  
+  void Render()
+  {};
+  //  { Print(); };
+  
+};
+
+class CGraphicPtzProxy : public PtzProxy
+{
+protected:
+  unsigned long pixel;
+  CXGui* win;
+  DPoint pts[3];
+
+public:
+  
+  CGraphicPtzProxy( CXGui* w, PlayerClient* pc, unsigned short index, 
+		       unsigned char access='c'):
+    PtzProxy(pc,index,access) 
+  {
+    win = w;
+    pixel = 0;
+  };
+  
+  ~CGraphicPtzProxy( void )
+  {
+    // undraw the old data
+    win->SetForeground( pixel );
+    win->SetDrawMode( GXxor );
+    win->DrawPolygon( pts, 3 );
+  };
+  
+  void Render();
+};
+
+
+class CGraphicLaserBeaconProxy : public LaserbeaconProxy
+{
+protected:
+  unsigned long pixel;
+  CXGui* win;
+  
+  DPoint origin;
+  DPoint pts[ PLAYER_MAX_LASERBEACONS ];
+  int ids[ PLAYER_MAX_LASERBEACONS ];
+  int stored;
+  
+public:
+  
+  CGraphicLaserBeaconProxy( CXGui* w, PlayerClient* pc, unsigned short index, 
+			    unsigned char access='c'):
+    LaserbeaconProxy(pc,index,access) 
+  {
+    origin.x = origin.y = 0;
+    win = w;
+    pixel = 0;
+    stored = 0;
+  };
+  
+  ~CGraphicLaserBeaconProxy( void )
+  {
+    // undraw the old data
+    win->SetForeground( pixel );
+    win->SetDrawMode( GXxor );
+    
+    char buf[16];
+    
+    for( int b=0; b<stored; b++ )
+      {
+	win->DrawLine( origin, pts[b] );
+	
+	sprintf( buf, "%d", ids[b] );
+	win->DrawString( pts[b].x + 0.1, pts[b].y, buf, strlen(buf) ); 
+	//win->DrawString( origin.x + 0.1, origin.y, buf, strlen(buf) ); 
+      };
+  };
+  
+  void Render();
 };
 
 

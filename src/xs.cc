@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.16 2001-09-21 02:04:40 vaughan Exp $
+ * $Id: xs.cc,v 1.17 2001-09-22 01:51:50 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -80,10 +80,6 @@ std::queue<stage_truth_t> outgoing_queue;
 //pthread_mutex_t incoming_mutex;
 //pthread_mutex_t outgoing_mutex;
 
-// an associative array, indexed by player ID (neat!)
-//typedef map< CPlayerID, xstruth_t > TruthMap;
-typedef std::map< int, xstruth_t > TruthMap;
-TruthMap truth_map; 
 
 int truthfd = 0;
 
@@ -654,7 +650,7 @@ int main(int argc, char **argv)
   // we're set up, so go into the read/handle loop
   while( true )
   {
-    //win->HandlePlayers();
+    win->HandlePlayers();
     win->HandleXEvent();
     win->HandleIncomingQueue();
     // snooze to avoid hogging the processor
@@ -889,62 +885,6 @@ CXGui::~CXGui( void )
 {
   // empty destructor
 }
-
-
-//  int CXGui::LoadVars( char* filename )
-//  {
-  
-//  #ifdef DEBUG
-//    cout << "Loading window parameters from " << filename << "... " << flush;
-//  #endif
-
-//    ifstream init( filename );
-//    char buffer[255];
-//    char c;
-
-//    if( !init )
-//      {
-//        cout << "FAILED" << endl;
-//        return -1;
-//      }
-  
-//    char token[50];
-//    char value[200];
-  
-//    while( !init.eof() )
-//      {
-//        init.get( buffer, 255, '\n' );
-//        init.get( c );
-    
-//        sscanf( buffer, "%s = %s", token, value );
-      
-//  #ifdef DEBUG      
-//        printf( "token: %s value: %s.\n", token, value );
-//        fflush( stdout );
-//  #endif
-      
-//        if ( strcmp( token, "window_x_pos" ) == 0 )
-//  	x = strtol( value, NULL, 10 );
-//        else if ( strcmp( token, "window_y_pos" ) == 0 )
-//  	y = strtol( value, NULL, 10 );
-//        else if ( strcmp( token, "window_width" ) == 0 )
-//  	width = strtol( value, NULL, 10 );
-//        else if ( strcmp( token, "window_height" ) == 0 )
-//  	height = strtol( value, NULL, 10 );
-//        else if ( (strcmp( token, "window_xscroll" ) == 0) 
-//  		|| (strcmp( token, "window_x_scroll" ) == 0) )
-//  	panx = strtol( value, NULL, 10 );
-//        else if ( (strcmp( token, "window_yscroll" ) == 0 )
-//  		|| (strcmp( token, "window_y_scroll" ) == 0) )
-//  	pany = strtol( value, NULL, 10 );
-//      }
-
-//  #ifdef DEBUG
-//    cout << "ok." << endl;
-//  #endif
-//    return 1;
-//  }
-
 
 void CXGui::MoveObject( xstruth_t* exp, double x, double y, double th )
 {    
@@ -1548,7 +1488,7 @@ void CXGui::HandleButtonPressEvent( XEvent& reportEvent )
 			   ((iheight-pany)/ppm)-reportEvent.xbutton.y/ppm );
 	  
 	  assert( nearest );
-	  AddClient( nearest );	  
+	  TogglePlayerClient( nearest );	  
 	}
       break;
 	      
@@ -1794,26 +1734,29 @@ void CXGui::HandlePlayers( void )
 	  switch( playerProxies[p]->device )
 	    {
 	    case PLAYER_LASER_CODE: 
-	      RenderLaserProxy( (LaserProxy*)(playerProxies[p]) );
+	      ((CGraphicLaserProxy*)(playerProxies[p]))->Render();
 	      break;
 	    case PLAYER_SONAR_CODE: 
-	      RenderSonarProxy( (SonarProxy*)(playerProxies[p]) );
+	      ((CGraphicSonarProxy*)(playerProxies[p]))->Render();
 	      break;
 	    case PLAYER_GPS_CODE: 
-	      RenderGpsProxy( (GpsProxy*)(playerProxies[p]) );
+	      ((CGraphicGpsProxy*)(playerProxies[p]))->Render();
 	      break;
 	    case PLAYER_VISION_CODE: 
-	      RenderVisionProxy( (VisionProxy*)(playerProxies[p]) );
+	      ((CGraphicVisionProxy*)(playerProxies[p]))->Render();
 	      break;
 	    case PLAYER_PTZ_CODE: 
-	      RenderPtzProxy( (PtzProxy*)(playerProxies[p]) );
+	      ((CGraphicPtzProxy*)(playerProxies[p]))->Render();
+		break;
+	    case PLAYER_LASERBEACON_CODE: 
+	      ((CGraphicLaserBeaconProxy*)(playerProxies[p]))->Render();
 		break;
 	    }
     }
 }
 
 
-void CXGui::AddClient( xstruth_t* ent )
+void CXGui::TogglePlayerClient( xstruth_t* ent )
 {
   // if this is a player-controlled object and we're not connected already,
   // try to connect to it
@@ -1824,17 +1767,25 @@ void CXGui::AddClient( xstruth_t* ent )
       // if we're connected already 
       if( cli ) 
 	{
-	  // should delete all the orphaned proxies here
-	  for( int n=0; n<num_proxies; n++ )	    
+	  int n = 0;
+	  while( n<num_proxies )
 	    {
+	      //printf( "XS: playerProxies" );
+	      
+	      // print the proxy array
+	      //for( int x=0; x<num_proxies; x++ )
+	      //printf( " [%x][%p]", x, playerProxies[x] );
+	      
+	      puts( "" );
+	      
 	      // if this proxy needs the doomed client
 	      if( playerProxies[n]->client == cli )
 		{
 		  // remove the link in the client
 		  // probably redundant as the client is doomed anyway
-		  cli->RemoveProxy( playerProxies[n] );
+		  //cli->RemoveProxy( playerProxies[n] );
 		  
-		  printf( "deleting proxy %d\n", n );
+		  //printf( "\nXS: deleting proxy %d\n", n );
 		 
 		  delete playerProxies[n]; // zap it
 		  
@@ -1845,13 +1796,19 @@ void CXGui::AddClient( xstruth_t* ent )
 		  n = 0; // reset the loop counter 
 		  num_proxies--;
 		}
+	      else
+		n++;
 	    }
 	  
-	  puts( "removing client\n" );
+	  //puts( "XS: removing client\n" );
 	  playerClients.RemoveClient( cli );
 
-	  puts( "deleting client\n" );
+	  //puts( "XS: deleting client\n" );
 	  delete cli;
+
+	  //printf( "XS: num_proxies = %d\n", num_proxies );
+	  //printf( "XS: MultiClient num_clients = %d\n", playerClients.GetNumClients() );
+	  
 	}
       else
       {
@@ -1862,9 +1819,10 @@ void CXGui::AddClient( xstruth_t* ent )
 
 	    printf( "adding player client on %s port %d\n", stage_host, ent->id.port );
 	  
-	    playerClients.AddClient( cli );
-
 	    xstruth_t sibling;
+
+	    int previous_num_proxies = num_proxies;
+	    
 	    // now create proxies for all supported devices on the same port
 	    for( TruthMap::iterator it = truth_map.begin(); it != truth_map.end(); it++ )
 	      {	      
@@ -1872,30 +1830,52 @@ void CXGui::AddClient( xstruth_t* ent )
 	      
 		if( sibling.id.port == ent->id.port ) // the port matches
 		  {
-		    printf( "added proxy on %s (%d:%d:%d)\n", stage_host, 
-			    sibling.id.port, sibling.id.type, sibling.id.index );
+		    //printf( "XS: finding proxy for %s (%d:%d:%d)\n", stage_host, 
+		    //    sibling.id.port, sibling.id.type, sibling.id.index );
 	  
 		    switch( sibling.id.type )
 		      {
 		      case PLAYER_LASER_CODE: 
 			playerProxies[num_proxies++] = 
-			  new LaserProxy( cli, sibling.id.index, 'r' );
+			  new CGraphicLaserProxy( this, cli, sibling.id.index, 'r' );
+			//printf( "XS: creating LaserProxy on %s (%d:%d:%d)\n", 
+				//stage_host, 
+				//sibling.id.port, sibling.id.type, sibling.id.index );
 			break;
 		      case PLAYER_SONAR_CODE: 
 			playerProxies[num_proxies++] = 
-			  new SonarProxy( cli, sibling.id.index, 'r' );   
+			  new CGraphicSonarProxy( this, cli, sibling.id.index, 'r' );   
+		//  	printf( "XS: creating SonarProxy on %s (%d:%d:%d)\n", 
+//  				stage_host, 
+//  				sibling.id.port, sibling.id.type, sibling.id.index );
 			break;
 		      case PLAYER_GPS_CODE: 
 			playerProxies[num_proxies++] = 
-			  new GpsProxy( cli, sibling.id.index, 'r' );
+			  new CGraphicGpsProxy( this, cli, sibling.id.index, 'r' );
+		//  	printf( "XS: creating GpsProxy on %s (%d:%d:%d)\n", 
+//  				stage_host, 
+//  				sibling.id.port, sibling.id.type, sibling.id.index );
 			break;
 		      case PLAYER_VISION_CODE: 
 			playerProxies[num_proxies++] = 
-			  new VisionProxy( cli, sibling.id.index, 'r' );
+			  new CGraphicVisionProxy( this, cli, sibling.id.index, 'r' );
+		//  	printf( "XS: creating VisionProxy on %s (%d:%d:%d)\n", 
+//  				stage_host, 
+//  				sibling.id.port, sibling.id.type, sibling.id.index );
 			break;
 		      case PLAYER_PTZ_CODE: 
 			playerProxies[num_proxies++] = 
-			  new PtzProxy( cli, sibling.id.index, 'r' );
+			  new CGraphicPtzProxy( this, cli, sibling.id.index, 'r' );
+		//  	printf( "XS: creating PtzProxy on %s (%d:%d:%d)\n", 
+//  				stage_host, 
+//  				sibling.id.port, sibling.id.type, sibling.id.index );
+			break;
+		      case PLAYER_LASERBEACON_CODE: 
+			playerProxies[num_proxies++] = 
+			  new CGraphicLaserBeaconProxy(this,cli,sibling.id.index,'r');
+		//  	printf( "XS: creating LaserBeaconProxy on %s (%d:%d:%d)\n", 
+//  				stage_host, 
+//  				sibling.id.port, sibling.id.type, sibling.id.index );
 			break;
 		      default: 
 			printf( "XS: no proxy for device %d supported\n", 
@@ -1904,7 +1884,13 @@ void CXGui::AddClient( xstruth_t* ent )
 		  }
 	      }
 
-	    printf( "added %d proxies\n", num_proxies );
+	    //printf( "XS: added %d proxies\n", num_proxies - previous_num_proxies );
+
+	    // if we didn't make any proxies
+	    if( num_proxies - previous_num_proxies == 0 )
+	      delete cli; // zap the client
+	    else
+	      playerClients.AddClient( cli ); // add it to the multi client
 	  }
       }
     }

@@ -9,35 +9,33 @@ enable truth_server
 enable environment_server
 
 
-create position_device pose 1.00 3.00 0 color black channel -2 port 6665 index 0 invisible laser visible obstacle visible sonar shape rectangle 
+create position_device pose 3.47 2.03 144 color red port 6665 index 0 invisible laser visible obstacle visible sonar shape rectangle 
 {
-  create player_device pose -0.10 0.00 0 color black channel -2 port 6665 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color black channel -2 port 6665 index 0 invisible obstacle invisible laser invisible sonar 
-  create laser_device pose 0.08 0.00 0 color black channel -2 port 6665 index 0 invisible obstacle invisible sonar visible laser 
+  create player_device pose -0.10 0.00 0 color white port 6665 index 0 invisible obstacle invisible laser invisible sonar 
+  create sonar_device pose 0.00 0.00 0 color light blue port 6665 index 0 invisible obstacle invisible laser invisible sonar 
+  create laser_device pose 0.08 0.00 0 color blue port 6665 index 0 invisible obstacle invisible sonar visible laser 
   {
- create lbd_device pose 0.00 0.00 0 color black channel -2 port 6665 index 0 invisible obstacle invisible laser invisible sonar range 1.50 
+ create lbd_device pose 0.00 0.00 0 color gray port 6665 index 0 invisible obstacle invisible laser invisible sonar range 1.50 
   } 
 
-  create ptz_device pose 0.08 0.00 0 color black channel -2 port 6665 index 0 invisible obstacle invisible laser invisible sonar 
+  create ptz_device pose 0.08 0.00 0 color magenta port 6665 index 0 invisible obstacle invisible laser invisible sonar 
   {
- create vision_device pose 0.00 0.00 0 color black channel -2 port 6665 index 0 invisible obstacle invisible laser invisible sonar 
+ create vision_device pose 0.00 0.00 0 color red port 6665 index 0 invisible obstacle invisible laser invisible sonar 
   } 
 }
 
-#create position_device pose 4.0 3.0 0.0 
-#{
-#  create laser_beacon
-#  create box pose 0.0 1.0 0.0 size 0.4 0.4
-#}
-
-create vision_beacon pose 1.00 1.00 0 color black channel 0 port 0 index 0 invisible laser visible obstacle visible sonar radius 0.10 
-create vision_beacon pose 1.20 1.00 0 color black channel 1 port 0 index 0 visible obstacle visible laser visible sonar radius 0.10 
-create vision_beacon pose 1.40 1.00 0 color black channel 2 port 0 index 0 invisible sonar visible obstacle visible laser radius 0.10 
-create vision_beacon pose 1.60 1.00 0 color black channel 3 port 0 index 0 visible obstacle visible laser visible sonar radius 0.10 
+create laser_beacon name 1 pose 2.00 2.00 0 color cyan port 0 index 0 invisible obstacle invisible sonar visible laserbright id 1 
+create laser_beacon name 2 pose 2.56 3.24 -36 color cyan port 0 index 0 invisible obstacle invisible sonar visible laserbright id 2 
+create laser_beacon name 3 pose 2.19 2.71 -36 color cyan port 0 index 0 invisible obstacle invisible sonar visible laserbright id 3 
 
 
-create box pose 4.00 4.00 0 color black channel -1 port 0 index 0 visible obstacle visible laser visible sonar size 0.10 0.10 
+create vision_beacon pose 1.00 1.00 0 color red port 0 index 0 invisible laser visible obstacle visible sonar radius 0.10 
+create vision_beacon pose 1.20 1.00 0 color red port 0 index 0 visible obstacle visible laser visible sonar radius 0.10 
+create vision_beacon pose 1.40 1.00 0 color red port 0 index 0 invisible sonar visible obstacle visible laser radius 0.10 
+create vision_beacon pose 1.60 1.00 0 color red port 0 index 0 visible obstacle visible laser visible sonar radius 0.10 
 
-create box pose 1.00 2.00 0 color black channel -1 port 0 index 0 visible obstacle visible laser visible sonar size 0.40 0.40 
+create box pose 4.00 4.00 0 color yellow port 0 index 0 visible obstacle visible laser visible sonar size 0.10 0.10 
+
+create box pose 1.00 2.00 0 color yellow port 0 index 0 visible obstacle visible laser visible sonar size 0.40 0.40 
 
 
