@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.6 $
+//  $Revision: 1.1.2.7 $
 //
 // Usage:
 //  (empty)
@@ -73,6 +73,16 @@ class CWorld : public CObject
     // Update everything
     //
     public: virtual void Update();
+
+    // Get the simulation time
+    // Returns time in sec since simulation started
+    //
+    public: double GetTime();
+
+    // Get the real time
+    // Returns time in sec since simulation started
+    //
+    public: double GetRealTime();
     
     // Initialise the world grids
     //
@@ -91,6 +101,19 @@ class CWorld : public CObject
     public: void SetRectangle(double px, double py, double pth,
                               double dx, double dy, EWorldLayer layer, BYTE value);
 
+    // Timing
+    // Real time at which simulation started.
+    // The time according to the simulator (m_sim_time <= m_start_time).
+    //
+    private: double m_start_time, m_last_time;
+    private: double m_sim_time;
+    private: double m_max_timestep;
+
+    // Update rate (just for diagnostics)
+    //
+    private: double m_update_ratio;
+    private: double m_update_rate;
+    
     // Obstacle data
     //
     private: Nimage* m_bimg; // background image 
@@ -110,11 +133,11 @@ class CWorld : public CObject
     // old stuff here -- ahoward
     // some of these are no longer used.
 
-    public:
-    int width, height, depth; 
-    float ppm;
+    private: int width, height, depth;
 
-    double timeStep, timeNow, timeThen, timeBegan;
+    // *** HACK -- this should be made private.  ahoward
+    //
+    public: float ppm;
 
 #ifdef INCLUDE_RTK
 

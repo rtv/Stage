@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.7 $
+//  $Revision: 1.4.2.8 $
 //
 // Usage:
 //  (empty)
@@ -96,9 +96,9 @@ void CPtzDevice::Update()
     
     // if its time to recalculate ptz
     //
-    if( m_world->timeNow - m_last_update <= m_update_interval )
+    if( m_world->GetTime() - m_last_update <= m_update_interval )
         return;
-    m_last_update = m_world->timeNow;
+    m_last_update = m_world->GetTime();
 
     // Get the command string
     //

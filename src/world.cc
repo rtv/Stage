@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.8 $
+//  $Revision: 1.4.2.9 $
 //
 // Usage:
 //  (empty)
@@ -30,8 +30,6 @@
 #include "world.hh"
 #include "offsets.h"
 
-
-const double MILLION = 1000000.0;
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -55,10 +53,16 @@ CWorld::CWorld()
     m_laser_img = NULL;
     m_vision_img = NULL;
 
+    // Initialise clocks
+    //
+    m_start_time = m_sim_time = 0;
+
+    /* *** REMOVE
     // start the internal clock
     struct timeval tv;
     gettimeofday( &tv, NULL );
     timeNow = timeThen = timeBegan = tv.tv_sec + (tv.tv_usec/MILLION);
+    */
 }
 
 
@@ -110,7 +114,24 @@ bool CWorld::Startup(RtkCfgFile *cfg)
     /* *** TODO
     if (!ReadPos(pos_file))
         return false;
-    */ 
+    */
+
+    // Initialise the real time clock
+    // Note that we really do need to set the start time to zero first!
+    //
+    m_start_time = 0;
+    m_start_time = GetRealTime();
+    m_last_time = 0;
+
+    // Initialise the simulator clock
+    //
+    m_sim_time = 0;
+    m_max_timestep = 0.1;
+
+    // Initialise the rate counter
+    //
+    m_update_ratio = 1;
+    m_update_rate = 0;
 
     return true;
 }
@@ -130,8 +151,42 @@ void CWorld::Shutdown()
 //
 void CWorld::Update()
 {
-    CObject::Update();
+    // Compute elapsed real time
+    //
+    double timestep = GetRealTime() - m_last_time;
+    m_last_time += timestep;
     
+    // Place an upper bound on the simulator timestep
+    // This may make us run slower than real-time.
+    //
+    double simtimestep = timestep;
+    if (timestep > m_max_timestep)
+    {
+        TRACE2("MAX TIMESTEP EXCEEDED %f > %f", (double) simtimestep, (double) m_max_timestep);
+        simtimestep = m_max_timestep;
+    }
+
+    // Update the simulation time
+    //
+    m_sim_time += simtimestep;
+
+    // Keep track of the sim/real time ratio
+    // This is done as a moving window filter so we can see
+    // the change over time.
+    //
+    double a = 0.1;
+    m_update_ratio = (1 - a) * m_update_ratio + a * (simtimestep / timestep);
+    
+    // Keep track of the update rate
+    // This is done as a moving window filter so we can see
+    // the change over time.
+    // Note that we must use the *real* timestep to get sensible results.
+    //
+    m_update_rate = (1 - a) * m_update_rate + a * (1 / timestep);
+    
+    CObject::Update();
+
+    /* *** REMOVE
     struct timeval tv;
 
     gettimeofday( &tv, NULL );
@@ -147,12 +202,36 @@ void CWorld::Update()
         TRACE2("MAX TIMESTEP EXCEEDED %f > %f", (double) timeStep, (double) 0.1);
         timeStep = 0.1;
 	}
+    */
 
     /* *** HACK -- should reinstate this somewhere ahoward
        if( !runDown ) runStart = timeNow;
        else if( (quitTime > 0) && (timeNow > (runStart + quitTime) ) )
        exit( 0 );
     */
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Get the sim time
+// Returns time in sec since simulation started
+//
+double CWorld::GetTime()
+{
+    return m_sim_time;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Get the real time
+// Returns time in sec since simulation started
+//
+double CWorld::GetRealTime()
+{
+    struct timeval tv;
+    gettimeofday( &tv, NULL );
+    double time = tv.tv_sec + (tv.tv_usec / 1000000.0);
+    return time - m_start_time;
 }
 
 
@@ -318,12 +397,19 @@ void CWorld::OnUiProperty(RtkUiPropertyData* pData)
 {
     CObject::OnUiProperty(pData);
 
-    // *** WARNING -- no overflow checks in this function
+    RtkString value;
+
+    RtkFormat1(value, "%7.3f", (double) GetTime());
+    pData->AddItemText("Simulation time (s)", CSTR(value), "");
     
-    char value[64];
+    RtkFormat1(value, "%7.3f", (double) GetRealTime());
+    pData->AddItemText("Real time (s)", CSTR(value), "");
+
+    RtkFormat1(value, "%7.3f", (double) m_update_ratio);
+    pData->AddItemText("Sim/real time", CSTR(value), ""); 
     
-    sprintf(value, "%7.3f", (double) timeNow - timeBegan);
-    pData->AddItemText("Simulation time (s)", value, "");
+    RtkFormat1(value, "%7.3f", (double) m_update_rate);
+    pData->AddItemText("Update rate (Hz)", CSTR(value), ""); 
 }
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/pioneermobiledevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -59,7 +59,7 @@ class CPioneerMobileDevice : public CPlayerDevice
 
     // Timings
     //
-    private: double m_update_interval, m_last_update;
+    private: double m_last_time;
 
     // Robot dimensions
     //

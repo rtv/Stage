@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.6 $
+//  $Revision: 1.9.2.7 $
 //
 // Usage:
 //  (empty)
@@ -48,8 +48,6 @@ CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CObject *parent, CPlay
 {    
     m_com_vr = m_com_vth = 0;
     m_map_px = m_map_py = m_map_pth = 0;
-    
-    m_update_interval = 0.01; // update me very fast indeed
 
     m_width = 0.6;
     m_length = 0.6;
@@ -106,7 +104,8 @@ int CPioneerMobileDevice::Move()
     // simplifies a lot of things in other places.
     //     ahoward
     
-    double time_step = m_world->timeStep;
+    double step_time = m_world->GetTime() - m_last_time;
+    m_last_time += step_time;
 
     // Get the current robot pose
     //
@@ -116,9 +115,9 @@ int CPioneerMobileDevice::Move()
     // Compute a new pose
     // This is a zero-th order approximation
     //
-    double qx = px + m_com_vr * time_step * cos(pth);
-    double qy = py + m_com_vr * time_step * sin(pth);
-    double qth = pth + m_com_vth * time_step;
+    double qx = px + m_com_vr * step_time * cos(pth);
+    double qy = py + m_com_vr * step_time * sin(pth);
+    double qth = pth + m_com_vth * step_time;
 
     // Normalise the angle
     //
@@ -259,7 +258,7 @@ void CPioneerMobileDevice::ComposeData()
     // Construct the data packet
     // Basically just changes byte orders and some units
     //
-    m_data.time = htonl((int)((m_world->timeNow - m_world->timeBegan)*1000.0));
+    m_data.time = htonl((int)((m_world->GetTime())*1000.0));
     m_data.px = htonl((int) px);
     m_data.py = htonl((int) py);
     m_data.pth = htons((unsigned short) RTOD(pth));
@@ -397,7 +396,7 @@ void CPioneerMobileDevice::OnUiUpdate(RtkUiDrawData *pData)
     
     // Draw ourself
     //
-    pData->BeginSection("global", "robots");
+    pData->BeginSection("global", "chassis");
     
     if (pData->DrawLayer("chassis", true))
         DrawChassis(pData);

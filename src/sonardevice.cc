@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.5.2.8 $
+//  $Revision: 1.5.2.9 $
 //
 // Usage:
 //  (empty)
@@ -71,9 +71,9 @@ void CSonarDevice::Update()
         return;
 
     // if its time to recalculate vision
-    if( m_world->timeNow - lastUpdate <= updateInterval )
+    if( m_world->GetTime() - lastUpdate <= updateInterval )
         return;
-    lastUpdate = m_world->timeNow;
+    lastUpdate = m_world->GetTime();
 
     // Initialise gui data
     //

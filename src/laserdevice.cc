@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11.2.8 $
+//  $Revision: 1.11.2.9 $
 //
 // Usage:
 //  (empty)
@@ -136,9 +136,9 @@ bool CLaserDevice::UpdateScanData()
 {
     // Check to see if it is time to update the laser
     //
-    if (m_world->timeNow - m_last_update <= m_update_interval)
+    if (m_world->GetTime() - m_last_update <= m_update_interval)
         return false;
-    m_last_update = m_world->timeNow;
+    m_last_update = m_world->GetTime();
 
     // Get the pose of the laser in the global cs
     //
