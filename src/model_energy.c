@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.15 $
+//  $Revision: 1.16 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -109,7 +109,7 @@ stg_model_t* stg_energy_create( stg_world_t* world,
   stg_model_set_data( mod, (void*)&data, sizeof(data));
 
   // set default color
-  stg_color_t col = stg_lookup_color( "yellow" ); 
+  stg_color_t col = stg_lookup_color( "orange" ); 
   stg_model_set_color( mod, &col );
 
   return mod;
@@ -326,6 +326,33 @@ void energy_render_data( stg_model_t* mod )
   //if(  mod->subs )
   if(  1 )
     {
+      stg_energy_data_t* data = (stg_energy_data_t*)mod->data;
+      stg_energy_config_t* cfg = (stg_energy_config_t*)mod->cfg;;
+      
+      double bar_height = data->stored / cfg->capacity;
+
+     
+      if( bar_height > 0.5 )
+	rtk_fig_color_rgb32(mod->gui.data, 0x00FF00 ); // green
+      else if( bar_height > 0.1 )
+	rtk_fig_color_rgb32(mod->gui.data, 0xFFFF00 ); // yellow
+      else
+	rtk_fig_color_rgb32(mod->gui.data, 0xFF0000 ); // red      
+
+      rtk_fig_rectangle( mod->gui.data, 0,0,0, 
+			 mod->geom.size.x * 0.5,
+			 mod->geom.size.y * 0.8,
+			 FALSE );
+
+      double ylen = mod->geom.size.y * bar_height * 0.8; 
+      rtk_fig_rectangle( mod->gui.data, 
+			 0,
+			 mod->geom.size.y/2 *0.8 - ylen/2,
+			 0, 
+			 mod->geom.size.x * 0.5,
+			 ylen,
+			 TRUE );
+
       // place the visualization a little away from the device
       //stg_pose_t pose;
       //model_get_global_pose( mod, &pose );
@@ -335,9 +362,8 @@ void energy_render_data( stg_model_t* mod )
       //pose.a = 0.0;
       //rtk_fig_origin( fig, pose.x, pose.y, pose.a );
 
-      stg_energy_data_t* data = (stg_energy_data_t*)mod->data;
-      stg_energy_config_t* cfg = (stg_energy_config_t*)mod->cfg;;
-      
+      rtk_fig_color_rgb32(mod->gui.data, stg_lookup_color(STG_ENERGY_COLOR) );
+
       if( data->charging ) 
 	rtk_fig_arrow( fig, 0,0,0, data->range, 0.3 );
 
