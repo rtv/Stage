@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.45 2002-03-08 03:26:15 gsibley Exp $
+//  $Id: entity.cc,v 1.46 2002-03-10 03:16:38 gsibley Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -26,8 +26,8 @@
 
 //#define DEBUG
 //#define VERBOSE
-//#undef DEBUG
-//#undef VERBOSE
+#undef DEBUG
+#undef VERBOSE
 
 #include "entity.hh"
 #include "raytrace.hh"
@@ -682,12 +682,12 @@ size_t CEntity::PutData( void* data, size_t len )
 {
   Lock();
   
-
+/*
   printf( "S: Entity::PutData() (%d,%d,%d) at %p\n", 
 	  m_info_io->player_id.port, 
 	  m_info_io->player_id.type, 
 	  m_info_io->player_id.index, data);
-
+*/
 
   // the data mustn't be too big!
   //if( len <= m_info_io->data_len )
