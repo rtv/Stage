@@ -15,6 +15,8 @@
 
 //#define DEBUG
 
+#define TIMING 0
+
 #include "server.h"
 #include "gui.h"
 
@@ -118,55 +120,59 @@ int main( int argc, char* argv[] )
   puts( "\n* Ready." );
   
 
-#ifdef DEBUG
+#if TIMING
   struct timeval tv1, tv2;
 #endif
   
   while( !stg_quit_test() )
     {	  
-      //puts( "Loop start" );
 
-#ifdef DEBUG
+#if TIMING
+      puts( "\nLoop start" );
       gettimeofday( &tv1, NULL );
 #endif
 
       server_poll( server ); // read from server port and
 			     // clients. Includes a minimum poll()
 			     // sleep time
-#ifdef DEBUG
+
+#if TIMING
       gettimeofday( &tv2, NULL );  
       printf( " server poll time %.6f\n",
 	      (tv2.tv_sec + tv2.tv_usec / 1e6) - 
 	      (tv1.tv_sec + tv1.tv_usec / 1e6) );	    
 #endif
-      
-      
-      
-#ifdef DEBUG
+
+
+#if TIMING
       gettimeofday( &tv1, NULL );
 #endif
-      server_update_worlds( server );
-      server_update_subs( server );
-	
-#ifdef DEBUG
-	gettimeofday( &tv2, NULL );
-	printf( " update worlds & subs time %.6f\n",
-		(tv2.tv_sec + tv2.tv_usec / 1e6) - 
-		(tv1.tv_sec + tv1.tv_usec / 1e6) );	    
-#endif
-
-#ifdef DEBUG
-      gettimeofday( &tv1, NULL );
-#endif
-
-      gui_poll();
-
-#ifdef DEBUG
+      
+      gui_poll(); // handle any pending gui events (rtk main loop)
+      
+#if TIMING
 	gettimeofday( &tv2, NULL );
 	printf( " gui poll time %.6f\n",
 		(tv2.tv_sec + tv2.tv_usec / 1e6) - 
 		(tv1.tv_sec + tv1.tv_usec / 1e6) );	    
 #endif
+            
+      
+#if TIMING
+      gettimeofday( &tv1, NULL );
+#endif
+
+      server_update_worlds( server );
+      server_update_subs( server );
+      //server_end_cycle( server );
+
+#if TIMING
+	gettimeofday( &tv2, NULL );
+	printf( " sim update time %.6f\n",
+		(tv2.tv_sec + tv2.tv_usec / 1e6) - 
+		(tv1.tv_sec + tv1.tv_usec / 1e6) );	    
+#endif
+
     }
   
   // todo - this causes a segfault - fix

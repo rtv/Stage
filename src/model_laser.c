@@ -1,9 +1,12 @@
 #include "stage.h"
 #include "raytrace.h"
+#include <sys/time.h>
+
+#define TIMING 0
 
 void model_update_laser( model_t* mod )
 {   
-  //PRINT_DEBUG1( "[%.3f] updating lasers", mod->world->sim_time );
+  PRINT_DEBUG1( "[%lu] updating lasers", mod->world->sim_time );
   
   stg_laser_config_t* cfg = &mod->laser_config;
   stg_geom_t* geom = &mod->laser_geom;
@@ -24,16 +27,22 @@ void model_update_laser( model_t* mod )
   
   double bearing = pz.a - cfg->fov/2.0;
   
+#if TIMING
+  struct timeval tv1, tv2;
+  gettimeofday( &tv1, NULL );
+#endif
+      
   int t;
   for( t=0; t<cfg->samples; t++ )
     {
+      
       itl_t* itl = itl_create( pz.x, pz.y, bearing, 
 			       cfg->range_max, 
 			       mod->world->matrix, 
 			       PointToBearingRange );
       
       bearing += sample_incr;
-
+      
       model_t* hitmod;
       double range = cfg->range_max;
       
@@ -70,6 +79,16 @@ void model_update_laser( model_t* mod )
 
       //printf( "%d ", sample->range );
     }
+  
+#if TIMING
+  gettimeofday( &tv2, NULL );
+  printf( " laser data update time %.6f\n",
+	  (tv2.tv_sec + tv2.tv_usec / 1e6) - 
+	  (tv1.tv_sec + tv1.tv_usec / 1e6) );	    
+#endif
+  
+
+
 
   //puts("");
   //puts("");

@@ -50,7 +50,8 @@ void subscription_print_cb( gpointer value, gpointer user )
   subscription_print( (subscription_t*)value, (char*)user ); 
 }
 
-void subscription_update( subscription_t* sub )
+// returns 1 if a delta is sent, else 0
+int subscription_update( subscription_t* sub )
 {
   //double timenow = stg_timenow();
   stg_msec_t timenow = server_world_time( sub->server, sub->target.world );
@@ -120,10 +121,17 @@ void subscription_update( subscription_t* sub )
 					    STG_RESPONSE_NONE,
 					    mp, mplen );
 
-	  stg_fd_msg_write( sub->client->fd, msg );
-	  
+	  //stg_fd_msg_write( sub->client->fd, msg );	  
+
+	  stg_buffer_append_msg( sub->client->outbuf, msg );
+	  free( msg );
+
 	  free( mp );
+
+	  return 1; // we sent a message
 	}
     }
+
+  return 0; // we didn't send a message
 }
 

@@ -26,6 +26,8 @@ void  subscription_destroy_cb( gpointer sub, gpointer user );
 int   subscription_due( subscription_t* sub, stg_msec_t timenow );
 void  subscription_print( subscription_t* sub, char* prefix );
 void  subscription_print_cb( gpointer value, gpointer user );
-void  subscription_update( subscription_t* sub );
+
+// returns 1 if a delta is sent, else 0
+int  subscription_update( subscription_t* sub );
 
 #endif

@@ -33,7 +33,9 @@ connection_t* stg_connection_create( server_t* server )
   
   con->server = server;
   con->worlds_owned = g_array_new( FALSE, TRUE, sizeof(stg_id_t) );
-
+  
+  con->outbuf = g_byte_array_new();
+  
   return con;
 }
 
@@ -72,6 +74,8 @@ void stg_connection_destroy( connection_t* con )
   
   g_array_free( con->worlds_owned, TRUE);
 
+  g_byte_array_free( con->outbuf, TRUE );
+
   free( con );
 } 
 
@@ -94,14 +98,39 @@ size_t stg_connection_read( connection_t* con, void* buf, size_t len )
 void stg_connection_sub_update( connection_t* con )
 { 
   // for each subscription
+  int deltas_sent = 0;
   int i;
   for( i=0; i<con->subs->len; i++ )
-    subscription_update( g_ptr_array_index( con->subs, i ) );
+    deltas_sent += subscription_update( g_ptr_array_index( con->subs, i ) );
   
-  // finished servicing this connection. we send a sync packet.
-  //stg_msg_t*  msg = stg_msg_create( STG_MSG_CLIENT_CYCLEEND, NULL, 0 );
-  //stg_fd_msg_write( con->fd, msg );
+  // if there are any outbound deltas
+  if( con->outbuf->len > 0 )
+    {
+      // add a sync packet.
+      //stg_msg_t*  msg = stg_msg_create( STG_MSG_CLIENT_CYCLEEND, 
+      //				STG_RESPONSE_NONE, NULL, 0 );
+  //stg_buffer_append_msg( con->outbuf, msg );
   //stg_msg_destroy( msg );
+      
+      // prepend a package header
+      stg_package_t pkg;
+      pkg.key = STG_PACKAGE_KEY;
+      pkg.payload_len = con->outbuf->len;
+      
+      // a real-time timestamp for performance measurements
+      struct timeval tv;
+      gettimeofday( &tv, NULL );
+      memcpy( &pkg.timestamp, &tv, sizeof(pkg.timestamp ) );
+      
+      stg_buffer_prepend( con->outbuf, &pkg, sizeof(pkg) );
+
+      // send the whole buffer in one go
+      //printf( "writing the buffer (%d bytes)\n", (int)con->outbuf->len );
+      stg_connection_write( con, con->outbuf->data, con->outbuf->len );
+      
+      // empty the buffer  
+      stg_buffer_clear( con->outbuf );
+    }
 }
 
 void stg_connection_sub_update_cb( gpointer key, gpointer value, gpointer user )

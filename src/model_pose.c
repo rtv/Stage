@@ -74,7 +74,7 @@ void model_update_pose( model_t* model )
     stg_pose_t oldpose;
     memcpy( &oldpose, pose, sizeof(oldpose) );
     
-    double interval = model->world->sim_interval;
+    double interval = (double)model->world->sim_interval / 1000.0;
 
     // global mode
     //pose.x += vel->x * interval;

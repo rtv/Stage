@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.40 2004-05-26 08:18:40 rtv Exp $
+ * CVS: $Id: stage.h,v 1.41 2004-05-26 22:13:41 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -273,6 +273,10 @@ stg_msg_t* stg_msg_create( stg_msg_type_t type, int response, void* data, size_t
 stg_msg_t* stg_msg_append( stg_msg_t* msg, void* data, size_t len );
 void stg_msg_destroy( stg_msg_t* msg );
 
+void stg_buffer_append( GByteArray* buf, void* bytes, size_t len );
+void stg_buffer_append_msg( GByteArray* buf, stg_msg_t* msg );
+void stg_buffer_prepend( GByteArray* buf, void* bytes, size_t len );
+void stg_buffer_clear( GByteArray* buf );
 
 typedef struct 
 {
@@ -683,6 +687,25 @@ typedef struct
   //pthread_t* thread;
 
 } stg_client_t;
+
+#define STG_PACKAGE_KEY 12345
+
+typedef struct
+{
+  int key; // must be STG_PACKAGE_KEY
+  struct timeval timestamp; // real-time timestamp for performance
+			    // measurements
+  size_t payload_len;
+  char payload[0]; // named access to the end of the struct
+} stg_package_t;
+
+// read a package: a complete set of Stage deltas. If no package is
+// available, return NULL. If an error occurred, return NULL and set
+// err > 0
+stg_package_t* stg_client_read_package( stg_client_t* cli, int* err );
+
+// break the package into individual messages and handle them
+int stg_client_package_parse( stg_client_t* cli, stg_package_t* pkg );
 
 // Stage Client functions. Most client programs will call all of these
 // in this order.

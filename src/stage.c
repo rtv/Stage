@@ -82,6 +82,33 @@ void stg_err( char* err )
 }
 
 
+void stg_buffer_append( GByteArray* buf, void* bytes, size_t len )
+{
+  g_byte_array_append( buf, (guint8*)bytes, len );
+
+  //printf( "appended buffer %p now %d bytes\n", buf, (int)buf->len );
+}
+
+void stg_buffer_prepend( GByteArray* buf, void* bytes, size_t len )
+{
+  g_byte_array_prepend( buf, (guint8*)bytes, len );
+
+  //printf( "prepended buffer %p now %d bytes\n", buf, (int)buf->len );
+}
+
+
+void stg_buffer_append_msg( GByteArray* buf, stg_msg_t* msg )
+{
+  stg_buffer_append( buf,
+		     (guint8*)msg, 
+		     sizeof(stg_msg_t) + msg->payload_len );
+}
+
+void stg_buffer_clear( GByteArray* buf )
+{
+  g_byte_array_set_size( buf, 0 );
+}
+
 // compose a human readable string desrcribing property [prop]
 char* stg_property_sprint( char* str, stg_property_t* prop )
 {

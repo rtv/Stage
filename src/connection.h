@@ -20,6 +20,8 @@ typedef struct
   // persistent worlds.
   
   server_t* server; // the server that created this connection
+
+  GByteArray* outbuf;
   
   // etc.
   void* userdata; // hook for random data

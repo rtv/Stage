@@ -620,14 +620,110 @@ int stg_model_prop_get_var( stg_model_t* mod, stg_id_t propid,
   return 0; // OK
 }
 
+stg_package_t* stg_client_read_package( stg_client_t* cli, int* err )
+{
+  //PRINT_DEBUG( "Checking for data on Stage connection" );
+  
+  assert( cli );
+  assert( err );
+
+  *err = 0;
+
+  if( cli->pfd.fd < 1 )
+    {
+      PRINT_WARN( "not connected" );
+      return NULL; 
+    } 
+  
+  // poll - don't sleep (very important!)
+  if( poll( &cli->pfd,1,0 ) && (cli->pfd.revents & POLLIN) )
+    {
+      //PRINT_DEBUG( "pollin on Stage connection" );
+      
+      stg_package_t* pkg = calloc( sizeof(stg_package_t), 1 );
+      
+      ssize_t res = stg_fd_packet_read( cli->pfd.fd, 
+					pkg, sizeof(stg_package_t) );
+      
+      if( res != sizeof(stg_package_t) )
+	{
+	  PRINT_ERR2( "failed to read package header (%d/%d bytes)\n",
+		      res, (int)sizeof(stg_package_t) );
+	  free( pkg );
+	  *err = 1;
+	  return NULL;
+	}
+      
+      //printf( "package key:%d timestamp:%lu len:%d\n",
+      //      pkg->key, pkg->timestamp, pkg->payload_len );
+
+      if( pkg->key != STG_PACKAGE_KEY )
+	{
+	  PRINT_ERR2( "package has incorrect key (%d not %d)\n",
+		      pkg->key, STG_PACKAGE_KEY );
+	  free( pkg );
+	  *err = 2;
+	  return NULL;
+	}
+
+      // read the body of the package
+      size_t total_size = sizeof(stg_package_t) + pkg->payload_len;
+      pkg = realloc( pkg, total_size );
+      
+      res = stg_fd_packet_read( cli->pfd.fd, 
+				pkg->payload, 
+				pkg->payload_len );
+      
+      if( res != pkg->payload_len )
+	{
+	  PRINT_ERR2( "failed to read package payload (%d/%d bytes)\n",
+		      res,(int)pkg->payload_len );
+	  free( pkg );
+	  *err = 3;
+	  return NULL;
+	}
+      
+      return pkg;
+    }
+
+  return NULL; // ok
+}
+
+// break the package into individual messages and handle them
+int stg_client_package_parse( stg_client_t* cli, stg_package_t* pkg )
+{
+  assert( cli );
+  assert( pkg );
+  
+  stg_msg_t* msg = (stg_msg_t*)pkg->payload;
+  
+  while( (char*)msg < (pkg->payload + pkg->payload_len) )
+    {
+      // eat this message
+      stg_client_handle_message( cli, msg );
+      
+      // jump to the next message in the buffer
+      (char*)msg += sizeof(stg_msg_t) + msg->payload_len;
+    }
+
+  return 0; // ok
+}
+
 
 stg_msg_t* stg_client_read_until( stg_client_t* cli, stg_msg_type_t mtype )
 {
   stg_msg_t* msg = NULL;
   
+  int spin = 0;
+  const char* spinner = "|/-\\"; // the last slash is escaped
+
+  printf( "  " );
+
   while(1)
     {
-      putchar( '.' ); fflush(stdout);
+      spin %= 4; // limit spin to 0-3
+      printf( "\b\b%c ", spinner[spin++] );
+      fflush(stdout);
       
       if( msg )
 	stg_msg_destroy( msg );
@@ -1020,8 +1116,14 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
       {
 	stg_prop_t* prop = (stg_prop_t*)msg->payload;
 
+	
+	if( prop->timestamp > cli->stagetime )	  
+	  cli->stagetime = prop->timestamp;
+	
+	printf( "[stage: %lu] ", cli->stagetime );
+
 #if 1
-	printf( "[%lu] received property %d:%d:%d(%s) %d/%d bytes\n",
+	printf( "[prop: %lu] received property %d:%d:%d(%s) %d/%d bytes",
 		prop->timestamp,
 		prop->world, 
 		prop->model, 
@@ -1031,8 +1133,8 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 		(int)msg->payload_len );
 #endif	
 
-	cli->stagetime = prop->timestamp;
-	//printf( "[%lu] ", cli->stagetime );
+	puts("");
+
 	
 	// don't bother stashing a time
 	if( prop->prop == STG_PROP_TIME )
@@ -1045,7 +1147,8 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 	//PRINT_DEBUG2( "looking up client-side model for %d:%d",
 	//      prop->world, prop->model );
 	
-	stg_model_t* mod = stg_client_get_model_serverside( cli, prop->world, prop->model );
+	stg_model_t* mod = 
+	  stg_client_get_model_serverside( cli, prop->world, prop->model );
 	
 	if( mod == NULL )
 	  {
@@ -1057,11 +1160,12 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 	    //PRINT_DEBUG4( "stashing prop %d(%s) bytes %d in model \"%s\"",
 	    //	  prop->prop, stg_property_string(prop->prop),
 	    //	  (int)prop->datalen, mod->token->token );
+	    
+	    stg_model_prop_with_data( mod, prop->prop, 
+				      prop->data, prop->datalen );
+	  }
 
-	    stg_model_prop_with_data( mod, prop->prop, prop->data, prop->datalen );
-	  }	    
-	
-
+#ifdef DEBUG	
 	// human-readable output for some of the data
 	switch( prop->prop )
 	  {
@@ -1069,7 +1173,7 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 	    {
 	      stg_pose_t* pose = (stg_pose_t*)prop->data;
 	      
-	      printf( "pose: %.3f %.3f %.3f\n",
+	      printf( "pose: %.3f %.3f %.3f\n",    
 		      pose->x, pose->y, pose->a );
 	    }
 	    break;
@@ -1123,6 +1227,7 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 	    PRINT_WARN2( "property type %d(%s) unhandled",
 			 prop->prop, stg_property_string(prop->prop ) ); 
 	  }
+#endif
       }
       break;
   

@@ -12,7 +12,7 @@
 // models that have fewer rectangles than this get matrix rendered when dragged
 #define STG_LINE_THRESHOLD 40
 
-#define LASER_FILLED 1
+#define LASER_FILLED 0
 
 // single static application visible to all funcs in this file
 static rtk_app_t *app = NULL; 
@@ -254,10 +254,11 @@ void gui_world_update( world_t* world )
 
 
   char clock[256];
-  snprintf( clock, 255, "%d:%d:%.2f\n",
-	    (int)world->sim_time / 3600, // hours
-	    ((int)world->sim_time % 3600) / 60,
-	    fmod( world->sim_time, 60.0 ) );
+  snprintf( clock, 255, "%d:%2d:%2d.%3d\n",
+	    world->sim_time / 3600000, // hours
+	    (world->sim_time % 3600000) / 60000, // minutes
+	    (world->sim_time % 60000) / 1000, // seconds
+	    world->sim_time % 1000 ); // milliseconds
 
   //puts( clock );
   gtk_label_set_text( win->timelabel, clock );
