@@ -7,8 +7,8 @@
 #
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
-#  $Author: ahoward $
-#  $Revision: 1.3.2.7 $
+#  $Author: gerkey $
+#  $Revision: 1.3.2.8 $
 #
 ###########################################################################
 
@@ -29,26 +29,26 @@ BIN_DIST_NAME = Stage-$(VERSION)-i386
 all: stage rtkstage
 
 stage: 
-	cd src; make clean; make stage -e PLAYER_DIR=$(PLAYER_DIR); cp stage ../bin/
+	cd src &&  make clean &&  make stage -e PLAYER_DIR=$(PLAYER_DIR) &&  cp stage ../bin/
 
 xstage:
-	cd src; make clean; make xstage -e PLAYER_DIR=$(PLAYER_DIR); cp xstage ../bin/
+	cd src &&  make clean &&  make xstage -e PLAYER_DIR=$(PLAYER_DIR) &&  cp xstage ../bin/
 
 rtkstage:
-	cd rtk; make all
-	cd src; make clean; make rtkstage -e PLAYER_DIR=$(PLAYER_DIR); cp rtkstage ../bin/
+	cd rtk && make all
+	cd src &&  make clean &&  make rtkstage -e PLAYER_DIR=$(PLAYER_DIR) &&  cp rtkstage ../bin/
 
 dep:
-	cd rtk; make dep
-	cd src; make dep
+	cd rtk &&  make dep
+	cd src &&  make dep
 
 clean:
 	rm -f *~
-	cd rtk; make clean
-	cd src; make clean 
-	cd include; make clean
-	cd examples; make clean
-	cd bin; rm -f stage rtkstage core
+	cd rtk &&  make clean
+	cd src &&  make clean 
+	cd include &&  make clean
+	cd examples &&  make clean
+	cd bin &&  rm -f stage rtkstage core
 
 
 ###########################################################################
