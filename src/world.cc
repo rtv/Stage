@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.130 2002-10-27 21:55:37 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.131 2002-10-28 23:03:26 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -194,6 +194,18 @@ CWorld::CWorld( int argc, char** argv, Library* lib )
   // Construct a fixed obstacle representing the boundary of the 
   // the environment - this the root for all other entities
   assert( root = (CEntity*)new CBitmap(this, NULL) );
+  
+  // give the command line a chance to override the default values
+  // we just set
+  if( !ParseCmdLine( this->argc, this->argv )) 
+    {
+	    /*
+      quit = true;
+      return false;
+      */
+      exit(-1);
+    }
+  
 
   // give the GUI a go at the command line too
   if( enable_gui )  GuiInit( argc, argv ); 
@@ -305,14 +317,6 @@ bool CWorld::ParseCmdLine(int argc, char **argv)
 bool CWorld::Startup()
 {  
   PRINT_DEBUG( "** STARTUP **" );
-  
-  // give the command line a chance to override the default values
-  // we just set
-  if( !ParseCmdLine( this->argc, this->argv )) 
-    {
-      quit = true;
-      return false;
-    }
   
   // we must have at least one entity to play with!
   // they should have been created by server or client before here
