@@ -1,17 +1,43 @@
-// $Id: pioneermobiledevice.cc,v 1.9 2000-12-04 18:04:01 ahoward Exp $
+///////////////////////////////////////////////////////////////////////////
+//
+// File: pioneermobiledevice.cc
+// Author: Andrew Howard
+// Date: 5 Dec 2000
+// Desc: Simulates the Pioneer robot base
+//
+// CVS info:
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
+//  $Author: ahoward $
+//  $Revision: 1.9.2.1 $
+//
+// Usage:
+//  (empty)
+//
+// Theory of operation:
+//  (empty)
+//
+// Known bugs:
+//  (empty)
+//
+// Possible enhancements:
+//  (empty)
+//
+///////////////////////////////////////////////////////////////////////////
 
-//#define ENABLE_TRACE 1
+#define ENABLE_TRACE 1
 
 #include <math.h>
 
 #include "world.h"
 #include "robot.h"
-#include "pioneermobiledevice.h"
+#include "pioneermobiledevice.hh"
 
 const double TWOPI = 6.283185307;
 
-// constructor
 
+///////////////////////////////////////////////////////////////////////////
+// Constructor
+//
 CPioneerMobileDevice::CPioneerMobileDevice( CRobot* rr, 
 					    double wwidth, double llength,
 					    void *buffer, 
@@ -20,6 +46,13 @@ CPioneerMobileDevice::CPioneerMobileDevice( CRobot* rr,
 					    size_t config_len)
         : CPlayerDevice(rr, buffer, data_len, command_len, config_len)
 {
+    // Default pose
+    //
+    SetPose(0.0, 0.0, 0);
+
+    m_com_vr = m_com_vth = 0;
+    m_map_px = m_map_py = m_map_pth = 0;
+    
   m_update_interval = 0.01; // update me very fast indeed
 
   width = wwidth;
@@ -30,9 +63,6 @@ CPioneerMobileDevice::CPioneerMobileDevice( CRobot* rr,
 
   xodom = yodom = aodom = 0;
 
-  speed = 0.0;
-  turnRate = 0.0;
-
   stall = 0;
 
   memset( &rect, 0, sizeof( rect ) );
@@ -41,10 +71,11 @@ CPioneerMobileDevice::CPioneerMobileDevice( CRobot* rr,
   CalculateRect();
 }
 
+
 ///////////////////////////////////////////////////////////////////////////
 // Update the position of the robot base
 //
-bool CPioneerMobileDevice::Update()
+void CPioneerMobileDevice::Update()
 {
     //TRACE0("updating CPioneerMobileDevice");
     
@@ -55,21 +86,46 @@ bool CPioneerMobileDevice::Update()
         ParseCommandBuffer();    // find out what to do    
     }
   
-    MapUnDraw(); // erase myself
+    Map(false); // erase myself
    
     Move();      // do things
     
-    MapDraw();   // draw myself 
+    Map(true);   // draw myself 
 
     ComposeData();     // report the new state of things
     PutData( &m_data, sizeof(m_data)  );     // generic device call
-
-    return true;
 }
 
 
 int CPioneerMobileDevice::Move()
 {
+    double time_step = m_world->timeStep;
+
+    // Get the current robot pose
+    //
+    double px, py, pth;
+    m_robot->GetPose(px, py, pth);
+
+    // Compute a new pose
+    // This is a zero-th order approximation
+    //
+    double qx = px + m_com_vr * time_step * cos(pth);
+    double qy = py + m_com_vr * time_step * sin(pth);
+    double qth = pth + m_com_vth * time_step;
+
+    // Normalise the angle
+    //
+    // *** ? qth = fmod(qth + 2 * M_PI, 2 * M_PI);
+
+    // Check for collisions
+    // and accept the new pose if ok
+    //
+    if (!InCollision(qx, qy, qth))
+        m_robot->SetPose(qx, qy, qth);
+
+    return true;
+  
+    /* *** RETIRE ahoward
   Nimage* img = m_world->img;
 
   StoreRect(); // save my current rectangle in cased I move
@@ -149,21 +205,34 @@ int CPioneerMobileDevice::Move()
   m_robot->oldx = m_robot->x;
   m_robot->oldy = m_robot->y;
   m_robot->olda = m_robot->a;
- 
+
   return moved;
+    */
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+// Parse the command buffer to extract commands
+//
+void CPioneerMobileDevice::ParseCommandBuffer()
+{
+    double fv = (short) ntohs(m_command.vr);
+    double fw = (short) ntohs(m_command.vth);
+
+    // Store commanded speed
+    // Linear is in m/s
+    // Angular is in radians/sec
+    //
+    m_com_vr = fv / 1000;
+    m_com_vth = DTOR(fw);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Compose data to send back to client
+//
 void CPioneerMobileDevice::ComposeData()
 {
-  // this will put the data into P2OS packet format to be shipped
-  // to Player
-  
-  // *** BROKEN -- this is all over the place.  It needs fixing. ahoward
- 
-  // fixed it. there was a scaling error updating the x,y odometry in Update().
-  // the odometry model was kind of deliberately disabled - the code 
-  // wasn't "wrong". talk to me! - RTV
-
     // Compute odometric pose
     // Convert to a bottom-left coord system
     //
@@ -182,35 +251,58 @@ void CPioneerMobileDevice::ComposeData()
     m_data.py = htonl((int) py);
     m_data.pth = htons((unsigned short) RTOD(pth));
 
-    m_data.vr = htons((unsigned short) (speed * 1000.0));
-    // *** HACK -- Why do I need to negate this? ahoward 
-    // because of the reversed y-axis on the screen - RTV
-    m_data.vth = htons((short) RTOD(-turnRate));  
+    m_data.vr = htons((unsigned short) (m_com_vr * 1000.0));
+    m_data.vth = htons((short) RTOD(m_com_vth));  
     m_data.compass = htons((unsigned short)(RTOD(comHeading)));
     m_data.stall = stall;
 }
 
-bool CPioneerMobileDevice::MapUnDraw()
+
+///////////////////////////////////////////////////////////////////////////
+// Check to see if the given pose will yield a collision
+//
+bool CPioneerMobileDevice::InCollision(double px, double py, double pth)
 {
-  m_world->img->draw_rect( oldRect, 0 );
-  return 1;
+    return false;
 }
 
 
-bool CPioneerMobileDevice::MapDraw()
+///////////////////////////////////////////////////////////////////////////
+// Render the object in the world rep
+//
+bool CPioneerMobileDevice::Map(bool render)
 {
-  // calculate my new rectangle
-  CalculateRect( m_robot->x, m_robot->y, m_robot->a );
+    double dx = length / m_world->ppm;
+    double dy = width / m_world->ppm;
 
-  m_world->img->draw_rect( rect, m_robot->color );
+    if (!render)
+    {
+        double px = m_map_px;
+        double py = m_map_py;
+        double pth = m_map_pth;
+        m_world->SetRectangle(px, py, pth, dx, dy, layer_obstacle, 0);
+    }
+    else
+    {
+        // Add ourself to the obstacle map
+        //
+        double px, py, pth;
+        GetGlobalPose(px, py, pth);
+        m_world->SetRectangle(px, py, pth, dx, dy, layer_obstacle, 1);
 
-  StoreRect();
-  return 1;
+        // Store the place we added ourself
+        //
+        m_map_px = px;
+        m_map_py = py;
+        m_map_pth = pth;
+    }
+
+    return true;
 }
 
 void CPioneerMobileDevice::Stop( void )
 {
-  speed = turnRate = 0;
+    // *** REMOVE speed = turnRate = 0;
 }
 
 void CPioneerMobileDevice::StoreRect( void )
@@ -243,23 +335,10 @@ void CPioneerMobileDevice::CalculateRect( float x, float y, float a )
   centery = (int)y;
 }
 
-void CPioneerMobileDevice::ParseCommandBuffer()
-{
-    float fv = (float) (short) ntohs(m_command.vr);
-    float fw = (float) (short) ntohs(m_command.vth);
-    
-    // set speeds unless we're being dragged
-    if( m_world->win->dragging != m_robot )
-    {
-        speed = 0.001 * fv;
-        turnRate = -(M_PI/180.0) * fw;
-    }
-  
-  //cout << "DONE PARSE" << endl;
-}
 
 bool CPioneerMobileDevice::GUIUnDraw()
 {
+  ASSERT(m_world->win != NULL);
   m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
   m_world->win->DrawLines( undrawPts, 7 );
 
@@ -293,11 +372,61 @@ bool CPioneerMobileDevice::GUIDraw()
   return true;
 }
 
+#ifdef INCLUDE_RTK
+
+///////////////////////////////////////////////////////////////////////////
+// Process GUI update messages
+//
+void CPioneerMobileDevice::OnUiUpdate(RtkUiDrawData *pData)
+{
+    // Draw our children
+    //
+    CObject::OnUiUpdate(pData);
+    
+    // Draw ourself
+    //
+    pData->BeginSection("global", "robots");
+    
+    if (pData->DrawLayer("chassis", true))
+        DrawChassis(pData);
+    
+    pData->EndSection();
+}
 
 
+///////////////////////////////////////////////////////////////////////////
+// Process GUI mouse messages
+//
+void CPioneerMobileDevice::OnUiMouse(RtkUiMouseData *pData)
+{
+    CObject::OnUiMouse(pData);
+}
 
 
+///////////////////////////////////////////////////////////////////////////
+// Draw the pioneer chassis
+//
+void CPioneerMobileDevice::DrawChassis(RtkUiDrawData *pData)
+{
+    #define ROBOT_COLOR RGB(255, 0, 192)
+    
+    pData->SetColor(ROBOT_COLOR);
+    
+    for (int i = 0; i < 5; i++)
+    {
+        double px = (double) length / m_world->ppm / 2 * cos(DTOR(i * 90 + 45));
+        double py = (double) width / m_world->ppm / 2 * sin(DTOR(i * 90 + 45));
+        double pth = 0;
+        LocalToGlobal(px, py, pth);
+        
+        if (i == 0)
+            pData->MoveTo(px, py);
+        else
+            pData->LineTo(px, py);
+    }           
+}
 
+#endif
 
 
 

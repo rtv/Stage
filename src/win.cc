@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.cc - all the graphics and X management
  * RTV
- * $Id: win.cc,v 1.6 2000-12-04 05:19:44 vaughan Exp $
+ * $Id: win.cc,v 1.6.2.1 2000-12-05 23:17:34 ahoward Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -27,8 +27,8 @@ int backgroundPtsCount;
 
 
 const double TWOPI = 6.283185307;
-const int numPts = SONARSAMPLES;
-const int laserSamples = LASERSAMPLES;
+//*** REMOVE ahoward const int numPts = SONARSAMPLES;
+//*** REMOVE ahoward int laserSamples = LASERSAMPLES;
 
 const float maxAngularError =  -0.1; // percent error on turning odometry
 

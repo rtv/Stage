@@ -1,7 +1,7 @@
 /*************************************************************************
  * main.cc   
  * RTV
- * $Id: main.cc,v 1.2 2000-12-01 00:20:52 vaughan Exp $
+ * $Id: main.cc,v 1.2.2.1 2000-12-05 23:17:34 ahoward Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -23,14 +23,20 @@
 #include <time.h>
 
 #include "world.h" 
-#include "win.h" 
+#include "win.h"
 
-#define VERSION "0.7.2"
+// For RTK user interface
+//
+#ifdef INCLUDE_RTK
+#include "rtkmain.hh"
+#endif
+
+#define VERSION "0.8.1 advanced"
 
 //#define DEBUG
 //#define VERBOSE
 
-static long int MILLION = 1000000L;
+//static long int MILLION = 1000000L;
 
 extern void TimerHandler( int val );
 
@@ -81,10 +87,11 @@ int main( int argc, char** argv )
   // read command line args - these may override the initfile
   HandleCommandLine( argc, argv );
   
+#ifndef INCLUDE_RTK
+  
   // create the window, unless we switched off graphics
   if( showWindow ) world->win = new CWorldWin( world, initFile );
   else world->win = NULL;
-
 
   // -- other system inits ---------------------------------------------
   srand48( time(NULL) ); // init random number generator
@@ -112,6 +119,10 @@ int main( int argc, char** argv )
 
   cout << (char)0x07 << flush; // beep!
 
+  // Start the objects
+  //
+  world->Startup();
+  
   // -- Main loop -------------------------------------------------------
   // Stage will perform a whole world update each time round this loop.
   // To avoid hogging the processor, we spend most of the time asleep,
@@ -122,6 +133,18 @@ int main( int argc, char** argv )
 
       sleep( 1000 ); // go to sleep until a timer event occurs
     }
+
+  // Stop the objects
+  //
+  world->Shutdown();
+
+#else
+
+  // Run the RTK interface
+  //
+  rtkmain(argc, argv, world);
+  
+#endif
 }  
 
 

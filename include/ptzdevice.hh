@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/ptzdevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.2 $
+//  $Author: ahoward $
+//  $Revision: 1.2.2.1 $
 //
 // Usage:
 //  (empty)
@@ -41,7 +41,7 @@ class CPtzDevice : public CPlayerDevice
     
     // Update the device
     //
-    public: virtual bool Update();
+    public: virtual void Update();
 
     // Get the pan/tilt/zoom values
     // The pan and tilt are angles (in radians)

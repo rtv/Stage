@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visiondevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.4 $
+//  $Author: ahoward $
+//  $Revision: 1.4.2.1 $
 //
 // Usage:
 //  (empty)
@@ -33,6 +33,16 @@
 //
 class CPtzDevice;
 
+#define MAXBLOBS 100 // PDOMA!
+
+typedef struct
+{
+  unsigned char channel;
+  int area;
+  int x, y;
+  int left, top, right, bottom;
+} ColorBlob;
+
 
 class CVisionDevice : public CPlayerDevice
 {
@@ -44,7 +54,7 @@ class CVisionDevice : public CPlayerDevice
     
     // Update the device
     //
-    public: virtual bool Update();
+    public: virtual void Update();
 
     // Timing properties
     //

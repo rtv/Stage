@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacondevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1 $
+//  $Revision: 1.1.2.1 $
 //
 // Usage:
 //  (empty)
@@ -38,7 +38,7 @@ class CLaserBeaconDevice : public CDevice
     
     // Update the device
     //
-    public: virtual bool Update();
+    public: virtual void Update();
 
     // Position wrt parent object
     //

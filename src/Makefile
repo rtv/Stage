@@ -1,7 +1,7 @@
 #*************************************************************************
 # src/Makefile - makes the sources
 # RTV
-# $Id: Makefile,v 1.9 2000-12-02 01:29:57 ahoward Exp $
+# $Id: Makefile,v 1.9.2.1 2000-12-05 23:17:34 ahoward Exp $
 # ************************************************************************/
 
 .SUFFIXES: .cc .o
@@ -14,7 +14,8 @@ CFLAGS = -I../include -I$(PLAYERSRC)/include -I/usr/lib/g++-include -I/usr/X11R6
 OBS = main.o robot.o world.o win.o image.o server.o \
 	device.o playerdevice.o pioneermobiledevice.o laserdevice.o \
 	visiondevice.o ptzdevice.o \
-	sonardevice.o laserbeacondevice.o
+	sonardevice.o laserbeacondevice.o \
+	object.o laserbeaconobject.o
 LIBS = -L/usr/X11R6/lib -lX11 -lm -lpthread
 
 clean:
@@ -35,51 +36,90 @@ posreader: posreader.cc
 .cc.o: 
 	g++ $(CFLAGS) -c $<
 
+
+##############################################################################
+# Use these targets to build with RTK
+
+PLAYER_INC = $(PLAYERSRC)/include
+RTK_INC = ../rtk/include
+RTK_LIB = ../rtk/lib
+
+RTK_OBJS = $(OBS) rtkmain.o rtksimagent.o
+RTK_CCFLAGS = -DINCLUDE_RTK \
+			-g3 -Wall \
+			-I../include \
+			-I$(PLAYER_INC) \
+			-I$(RTK_INC) `gtk-config --cflags`
+RTK_LINKFLAGS = -L$(PLAYER_LIB) -lplayerclient \
+			-L$(RTK_LIB) -lrtk \
+			-lm -lstdc++ -lpthread `gtk-config --libs gtk gthread`
+
+%.o : %.cc
+	g++ ${RTK_CCFLAGS} -c $< -o $@
+
+rtk-stage:  $(RTK_OBJS) 
+	g++ $(RTK_OBJS) $(RTK_LINKFLAGS) -o rtk-stage
+
+
 # DO NOT DELETE.  FOLLOWING IS FROM MAKEDEPEND
 
 device.o: ../include/world.h ../include/robot.h ../include/image.h
-device.o: ../include/win.h ../include/device.hh ../include/rtk-types.hh
+device.o: ../include/object.hh ../include/rtk-types.hh ../include/win.h
+device.o: ../include/device.hh
 image.o: ../include/image.h ../include/world.h ../include/robot.h
-image.o: ../include/win.h
+image.o: ../include/object.hh ../include/rtk-types.hh ../include/win.h
 laserbeacondevice.o: ../include/world.h ../include/robot.h ../include/image.h
+laserbeacondevice.o: ../include/object.hh ../include/rtk-types.hh
 laserbeacondevice.o: ../include/win.h ../include/laserbeacondevice.hh
-laserbeacondevice.o: ../include/device.hh ../include/rtk-types.hh
+laserbeacondevice.o: ../include/device.hh
+laserbeaconobject.o: ../include/world.h ../include/robot.h ../include/image.h
+laserbeaconobject.o: ../include/object.hh ../include/rtk-types.hh
+laserbeaconobject.o: ../include/win.h ../include/laserbeaconobject.hh
 laserdevice.o: ../include/world.h ../include/robot.h ../include/image.h
-laserdevice.o: ../include/win.h ../include/laserdevice.hh
-laserdevice.o: ../include/playerdevice.hh ../include/device.hh
-laserdevice.o: ../include/rtk-types.hh
+laserdevice.o: ../include/object.hh ../include/rtk-types.hh ../include/win.h
+laserdevice.o: ../include/laserdevice.hh ../include/playerdevice.hh
+laserdevice.o: ../include/device.hh
 main.o: ../include/world.h ../include/robot.h ../include/image.h
-main.o: ../include/win.h
+main.o: ../include/object.hh ../include/rtk-types.hh ../include/win.h
+object.o: ../include/object.hh ../include/rtk-types.hh
 pioneermobiledevice.o: ../include/world.h ../include/robot.h
-pioneermobiledevice.o: ../include/image.h ../include/win.h
-pioneermobiledevice.o: ../include/pioneermobiledevice.h
+pioneermobiledevice.o: ../include/image.h ../include/object.hh
+pioneermobiledevice.o: ../include/rtk-types.hh ../include/win.h
+pioneermobiledevice.o: ../include/pioneermobiledevice.hh
 pioneermobiledevice.o: ../include/playerdevice.hh ../include/device.hh
-pioneermobiledevice.o: ../include/rtk-types.hh
 playerdevice.o: ../include/world.h ../include/robot.h ../include/image.h
-playerdevice.o: ../include/win.h ../include/playerdevice.hh
-playerdevice.o: ../include/device.hh ../include/rtk-types.hh
+playerdevice.o: ../include/object.hh ../include/rtk-types.hh ../include/win.h
+playerdevice.o: ../include/playerdevice.hh ../include/device.hh
 posreader.o: ../include/ports.h
 ptzdevice.o: ../include/world.h ../include/robot.h ../include/image.h
-ptzdevice.o: ../include/win.h ../include/ptzdevice.hh
-ptzdevice.o: ../include/playerdevice.hh ../include/device.hh
-ptzdevice.o: ../include/rtk-types.hh ../include/visiondevice.hh
+ptzdevice.o: ../include/object.hh ../include/rtk-types.hh ../include/win.h
+ptzdevice.o: ../include/ptzdevice.hh ../include/playerdevice.hh
+ptzdevice.o: ../include/device.hh
 robot.o: ../include/world.h ../include/robot.h ../include/image.h
-robot.o: ../include/win.h ../include/ports.h ../include/pioneermobiledevice.h
+robot.o: ../include/object.hh ../include/rtk-types.hh ../include/win.h
+robot.o: ../include/ports.h ../include/sonardevice.h
 robot.o: ../include/playerdevice.hh ../include/device.hh
-robot.o: ../include/rtk-types.hh ../include/sonardevice.h
 robot.o: ../include/laserdevice.hh ../include/visiondevice.hh
 robot.o: ../include/ptzdevice.hh ../include/laserbeacondevice.hh
+rtkmain.o: ../include/world.h ../include/robot.h ../include/image.h
+rtkmain.o: ../include/object.hh ../include/rtk-types.hh ../include/win.h
+rtkmain.o: rtksimagent.hh
+rtksimagent.o: rtksimagent.hh ../include/world.h ../include/robot.h
+rtksimagent.o: ../include/image.h ../include/object.hh
+rtksimagent.o: ../include/rtk-types.hh ../include/win.h
 server.o: ../include/world.h ../include/robot.h ../include/image.h
-server.o: ../include/win.h ../include/ports.h
+server.o: ../include/object.hh ../include/rtk-types.hh ../include/win.h
+server.o: ../include/ports.h
 sonardevice.o: ../include/world.h ../include/robot.h ../include/image.h
-sonardevice.o: ../include/win.h ../include/sonardevice.h
-sonardevice.o: ../include/playerdevice.hh ../include/device.hh
-sonardevice.o: ../include/rtk-types.hh
+sonardevice.o: ../include/object.hh ../include/rtk-types.hh ../include/win.h
+sonardevice.o: ../include/sonardevice.h ../include/playerdevice.hh
+sonardevice.o: ../include/device.hh
 visiondevice.o: ../include/world.h ../include/robot.h ../include/image.h
-visiondevice.o: ../include/win.h ../include/visiondevice.hh
-visiondevice.o: ../include/playerdevice.hh ../include/device.hh
-visiondevice.o: ../include/rtk-types.hh
+visiondevice.o: ../include/object.hh ../include/rtk-types.hh ../include/win.h
+visiondevice.o: ../include/visiondevice.hh ../include/playerdevice.hh
+visiondevice.o: ../include/device.hh ../include/ptzdevice.hh
 win.o: ../include/win.h ../include/world.h ../include/robot.h
-win.o: ../include/image.h
+win.o: ../include/image.h ../include/object.hh ../include/rtk-types.hh
 world.o: ../include/world.h ../include/robot.h ../include/image.h
-world.o: ../include/win.h
+world.o: ../include/object.hh ../include/rtk-types.hh ../include/win.h
+world.o: ../include/laserbeaconobject.hh

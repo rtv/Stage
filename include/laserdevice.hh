@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.9 $
+//  $Author: ahoward $
+//  $Revision: 1.9.2.1 $
 //
 // Usage:
 //  (empty)
@@ -32,6 +32,9 @@
 #include "playerdevice.hh"
 
 
+#define LASERSAMPLES 361
+
+
 class CLaserDevice : public CPlayerDevice
 {
     // Default constructor
@@ -41,12 +44,20 @@ class CLaserDevice : public CPlayerDevice
     
     // Update the device
     //
-    public: virtual bool Update();
+    public: virtual void Update();
 
     // Check to see if the configuration has changed
     //
     private: bool CheckConfig();
 
+    // Generate scan data
+    //
+    private: bool UpdateScanData();
+
+    // Draw ourselves into the world rep
+    //
+    private: void Map(bool render);
+    
     // Laser timing settings
     //
     private: double m_update_interval;
@@ -66,6 +77,14 @@ class CLaserDevice : public CPlayerDevice
     // Array holding the laser data
     //
     private: UINT16 m_data[512];
+
+    // Size of laser in laser rep
+    //
+    private: double m_map_dx, m_map_dy;
+    
+    // The laser's last mapped pose
+    //
+    private: double m_map_px, m_map_py, m_map_pth;
     
     // draw myself on the window
     virtual bool GUIDraw();

@@ -1,4 +1,4 @@
-// $Id: sonardevice.cc,v 1.5 2000-12-04 05:19:44 vaughan Exp $
+// $Id: sonardevice.cc,v 1.5.2.1 2000-12-05 23:17:34 ahoward Exp $
 #include <math.h>
 
 #include "world.h"
@@ -59,12 +59,12 @@ bool CSonarDevice::GUIUnDraw()
 };
 
 
-bool CSonarDevice::Update() 
+void CSonarDevice::Update() 
 {
   Nimage* img = m_robot->world->img;
 
   // dump out if noone is subscribed
-  if( !IsSubscribed() ) return true;
+  if( !IsSubscribed() ) return;
 
   // if its time to recalculate vision
   if( m_robot->world->timeNow - lastUpdate > updateInterval )
@@ -79,7 +79,7 @@ bool CSonarDevice::Update()
       // trace the new sonar beams to discover their ranges
       for( int s=0; s < SONARSAMPLES; s++ )
 	{
-	  float dist, dx, dy, angle;
+	  float dx, dy, angle;
 	  float xx = m_robot->x;
 	  float yy = m_robot->y;
 	  
@@ -210,8 +210,5 @@ bool CSonarDevice::Update()
 	}
 
       PutData( sonar, sizeof( unsigned short ) * SONARSAMPLES );
-
-      return true;
     }
-  return false;
 }

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.4 $
+//  $Author: ahoward $
+//  $Revision: 1.4.2.1 $
 //
 // Usage:
 //  (empty)
@@ -74,14 +74,14 @@ CPtzDevice::CPtzDevice(CRobot *robot,
 ///////////////////////////////////////////////////////////////////////////
 // Update the device data
 //
-bool CPtzDevice::Update()
+void CPtzDevice::Update()
 {
     //TRACE0("updating");
 
     // Dont update anything if we are not subscribed
     //
     if (!IsSubscribed())
-        return true;
+        return;
     //TRACE0("is subscribed");
     
     ASSERT(m_robot != NULL);
@@ -95,7 +95,7 @@ bool CPtzDevice::Update()
     // if its time to recalculate ptz
     //
     if( m_world->timeNow - m_last_update <= m_update_interval )
-        return false;
+        return;
     m_last_update = m_world->timeNow;
 
     // Get the command string
@@ -105,7 +105,7 @@ bool CPtzDevice::Update()
     if (GetCommand(command, sizeof(command)) != sizeof(command))
     {
         TRACE0("command buffer has incorrect length -- ignored");
-        return false;
+        return;
     }
 
     // Parse the command string
@@ -146,8 +146,6 @@ bool CPtzDevice::Update()
     //
     //TRACE0("returning data");
     PutData(data, sizeof(data));
-
-    return true;
 }
 
 

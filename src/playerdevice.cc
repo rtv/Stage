@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Revision: 1.2.2.1 $
 //
 // Usage:
 //  (empty)
@@ -65,9 +65,9 @@ bool CPlayerDevice::Startup()
 ///////////////////////////////////////////////////////////////////////////
 // Default shutdown -- doesnt do much
 //
-bool CPlayerDevice::Shutdown()
+void CPlayerDevice::Shutdown()
 {
-    return true;
+    CDevice::Shutdown();
 }
 
 

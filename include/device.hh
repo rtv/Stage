@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/device.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.7 $
+//  $Revision: 1.7.2.1 $
 //
 // Usage:
 //  (empty)
@@ -38,19 +38,21 @@ class CWorld;
 class CRobot;
 class CWorldWindow;
 
+// For base class
+//
+#include "object.hh"
+
 
 //////////////////////////////////////////////////////////////////////////////
 // Base class for all simulated devices
 //
-class CDevice
+class CDevice : public CObject
 {
     // Minimal constructor
-    // This is an abstract class and *cannot* be instantiated directly
-    // buffer points to a single buffer containing the data, command 
-    // and configuration buffers.
     //
     protected: CDevice(CRobot* robot);
-        
+
+    /* *** REMOVE ahoward
     // Initialise the device
     //
     public: virtual bool Startup();
@@ -63,6 +65,7 @@ class CDevice
     // This is pure virtual and *must* be overloaded
     //
     public: virtual bool Update() = 0;
+    */
 
     // Generic bitmap draw method - most devices don't draw themselves
     //
@@ -83,7 +86,7 @@ class CDevice
     // Pointer to the robot and world objects
     //
     protected: CRobot *m_robot;
-    protected: CWorld *m_world;
+    // *** REMOVE ahoward protected: CWorld *m_world;
 };
 
 

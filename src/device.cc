@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/device.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.5 $
+//  $Revision: 1.5.2.1 $
 //
 // Usage:
 //  (empty)
@@ -32,26 +32,11 @@
 // Minimal constructor
 //
 CDevice::CDevice(CRobot* robot)
+        : CObject(robot->world, robot)
 {
     m_robot = robot;
-    m_world = m_robot->world;
+    // *** remove m_world = m_robot->world;
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// Default startup -- doesnt do much
-//
-bool CDevice::Startup()
-{
-  return true;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Default shutdown -- doesnt do much
-//
-bool CDevice::Shutdown()
-{
-    return true;
-}
 

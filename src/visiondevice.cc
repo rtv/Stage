@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.4 $
+//  $Author: ahoward $
+//  $Revision: 1.4.2.1 $
 //
 // Usage:
 //  (empty)
@@ -57,14 +57,14 @@ CVisionDevice::CVisionDevice(CRobot *robot, CPtzDevice *ptz_device,
 ///////////////////////////////////////////////////////////////////////////
 // Update the laser data
 //
-bool CVisionDevice::Update()
+void CVisionDevice::Update()
 {
     //TRACE0("updating vision data");
     
     // Dont update anything if we are not subscribed
     //
     if (!IsSubscribed())
-        return false;
+        return;
     //TRACE0("device has been subscribed");
     
     ASSERT(m_robot != NULL);
@@ -81,7 +81,7 @@ bool CVisionDevice::Update()
     // See if its time to recalculate vision
     //
     if( m_world->timeNow - m_last_update < m_update_interval )
-        return false;
+        return;
     m_last_update = m_world->timeNow;
     TRACE0("generating new data");
     
@@ -102,13 +102,13 @@ bool CVisionDevice::Update()
 
     float xx, yy;
 
-    int maxRange = (int)(8.0 * m_world->ppm); // 8m times pixels-per-meter
+    int maxRange = (int)(10.0 * m_world->ppm); // 8m times pixels-per-meter
     int rng = 0;
 
     // do the ray trace for each pixel across the 1D image
     for( int s=0; s < cameraImageWidth; s++)
 	{
-        float dist, dx, dy, angle;
+        double dx, dy, angle;
 	  
         angle = startAngle + ( s * xRadsPerPixel );
 	  
@@ -122,8 +122,7 @@ bool CVisionDevice::Update()
         pixel = img->get_pixel( (int)xx, (int)yy );
 	  
         // no need for bounds checking - get_pixel() does that internally
-        // i'll put a bound of 1000 ion the ray length for sanity
-        while( rng < 1000 && ( pixel == 0 || pixel == m_robot->color ) )
+        while( rng < maxRange && ( pixel == 0 || pixel == m_robot->color ) )
 	    {
             xx+=dx;
             yy+=dy;
@@ -316,8 +315,6 @@ bool CVisionDevice::Update()
     // no need to byteswap - this is single-byte data
     //
     PutData(actsBuf, buflen);
-    
-    return true;
 }
 
 

@@ -1,7 +1,7 @@
 /*************************************************************************
  * robot.cc - most of the action is here
  * RTV
- * $Id: robot.cc,v 1.13 2000-12-04 05:19:44 vaughan Exp $
+ * $Id: robot.cc,v 1.13.2.1 2000-12-05 23:17:34 ahoward Exp $
  ************************************************************************/
 
 #include <errno.h>
@@ -31,13 +31,15 @@
 
 #include <offsets.h> // from Player's include directory
 
+#define ENABLE_TRACE 1
+
 #include "world.h"
 #include "win.h"
 #include "ports.h"
 
 // Active (player) devices
 //
-#include "pioneermobiledevice.h"
+#include "pioneermobiledevice.hh"
 #include "sonardevice.h"
 #include "laserdevice.hh"
 #include "visiondevice.hh"
@@ -63,13 +65,18 @@ const int numPts = SONARSAMPLES;
 CRobot::CRobot( CWorld* ww, int col, 
 		float w, float l,
 		float startx, float starty, float starta )
+        : CObject(ww, NULL)
 {
   world = ww;
 
+    // Initial pose
+    //
+    SetPose(startx, starty, starta);
+  
   //id = iid;
   color = col;
   next  = NULL;
-
+  
   xorigin = oldx = x = startx * world->ppm;
   yorigin = oldy = y = starty * world->ppm;
   aorigin = olda = a = starta;
@@ -78,107 +85,51 @@ CRobot::CRobot( CWorld* ww, int col,
   
   showDeviceDetail = false; // bool controls GUI display of device data/status
  
-  // -- create the memory map for IPC with Player --------------------------
-
-// amount of memory to reserve per robot for Player IO
-  size_t areaSize = TOTAL_SHARED_MEMORY_BUFFER_SIZE;
-
-  // make a unique temporary file for shared mem
-  strcpy( tmpName, "playerIO.XXXXXX" );
-  int tfd = mkstemp( tmpName );
-
-  // make the file the right size
-  if( ftruncate( tfd, areaSize ) < 0 )
-    {
-      perror( "Failed to set file size" );
-      exit( -1 );
-    }
-
-  if( (playerIO = (caddr_t)mmap( NULL, areaSize,
-    PROT_READ | PROT_WRITE,
-    MAP_SHARED, tfd, (off_t)0 ))
-      == MAP_FAILED )
-    {
-      perror( "Failed to map memory" );
-      exit( -1 );
-    }
-
-  close( tfd ); // can close fd once mapped
-
-  //cout << "Mapped area: " << (unsigned int)playerIO << endl;
-
-  // test the memory space
-  for( int t=0; t<64; t++ ) playerIO[t] = (unsigned char)t;
-
-  // ----------------------------------------------------------------------
-  // fork off a player process to handle robot I/O
-  if( (player_pid = fork()) < 0 )
-    {
-      cerr << "fork error creating robots" << flush;
-      exit( -1 );
-    }
-  else
-  {
-    // BPG
-    //if( pid == 0 ) // new child process
-    // GPB
-    if( player_pid == 0 ) // new child process
-      {
- // create player port number for command line
- char portBuf[32];
- sprintf( portBuf, "%d", PLAYER_BASE_PORT + col -1 );
-
-        // BPG
-        // release controlling tty so Player doesn't get signals
-        setpgrp();
-        // GPB
-
- // we assume Player is in the current path
- if( execlp( "player", "player",
-      "-gp", portBuf, "-stage", tmpName, (char*) 0) < 0 )
-   {
-     cerr << "execlp failed: make sure Player can be found"
-       " in the current path."
-   << endl;
-     exit( -1 );
-   }
-      }
-    //else
-    //printf("forked player with pid: %d\n", player_pid);
-  }
-
   // Initialise the device list
   //
   m_device_count = 0;
-  
-  // *** TESTING -- should be moved
-  //
-  Startup();
 }
 
 CRobot::~CRobot( void )
 {
-  // *** TESTING -- should be moved
-  //
-  Shutdown();
-
-  // BPG
-  if(kill(player_pid,SIGINT))
-    perror("CRobot::~CRobot(): kill() failed sending SIGINT to Player");
-  if(waitpid(player_pid,NULL,0) == -1)
-    perror("CRobot::~CRobot(): waitpid() returned an error");
-  // GPB
-
-  // delete the playerIO.xxxxxx file
-  remove( tmpName );
 }
 
+
+///////////////////////////////////////////////////////////////////////////
 // Start all the devices
 //
 bool CRobot::Startup()
 {
     TRACE0("starting devices");
 
+    // Startup player
+    // This will generate the memory map, so it must be done first
+    //
+    if (!StartupPlayer())
+        return false;
+
+    // Create pioneer device    
+    //
+    AddChild(new CPioneerMobileDevice(this, 
+                                      world->pioneerWidth, 
+                                      world->pioneerLength,
+                                      playerIO + SPOSITION_DATA_START,
+                                      SPOSITION_DATA_BUFFER_SIZE,
+                                      SPOSITION_COMMAND_BUFFER_SIZE,
+                                      SPOSITION_CONFIG_BUFFER_SIZE));
+
+    // Create laser device
+    //
+    AddChild(new CLaserDevice(this, playerIO + LASER_DATA_START,
+                              LASER_DATA_BUFFER_SIZE,
+                              LASER_COMMAND_BUFFER_SIZE,
+                              LASER_CONFIG_BUFFER_SIZE));
+
+    // Start any child objects
+    //
+    CObject::Startup();
+   
+    /* *** REMOVE ahoward
     m_device_count = 0;
 
     // Create pioneer device    
@@ -194,12 +145,11 @@ bool CRobot::Startup()
 
     // Sonar device
     //
-    m_device[m_device_count++] 
-    = new CSonarDevice( this,
-			playerIO + SSONAR_DATA_START,
-			SSONAR_DATA_BUFFER_SIZE,
-			SSONAR_COMMAND_BUFFER_SIZE,
-			SSONAR_CONFIG_BUFFER_SIZE);
+    m_device[m_device_count++] = new CSonarDevice( this,
+                                                   playerIO + SSONAR_DATA_START,
+                                                   SSONAR_DATA_BUFFER_SIZE,
+                                                   SSONAR_COMMAND_BUFFER_SIZE,
+                                                   SSONAR_CONFIG_BUFFER_SIZE);
     
     // Create laser device
     //
@@ -208,15 +158,6 @@ bool CRobot::Startup()
                                                   LASER_DATA_BUFFER_SIZE,
                                                   LASER_COMMAND_BUFFER_SIZE,
                                                   LASER_CONFIG_BUFFER_SIZE);
-
-    // *** HACK -- this should be read from config file
-    // Create laser beacon device
-    //
-    ASSERT_INDEX(m_device_count, m_device);
-    m_device[m_device_count++] = new CLaserBeaconDevice(this, -0.10, +0.4);
-    m_device[m_device_count++] = new CLaserBeaconDevice(this, -0.10, -0.4);
-
-
 
     // Create ptz device
     //
@@ -250,30 +191,44 @@ bool CRobot::Startup()
             m_device[i] = NULL;
         }
     }
-  
+    */
+    
     return true;
 }
 
 
+///////////////////////////////////////////////////////////////////////////
 // Shutdown the devices
 //
-bool CRobot::Shutdown()
+void CRobot::Shutdown()
 {
-  //TRACE0("shutting down devices");
+    TRACE0("shutting down devices");
+
+    // Shutdown player
+    //
+    ShutdownPlayer();
+
+    // Shutdown child objects
+    //
+    CObject::Shutdown();
     
     for (int i = 0; i < m_device_count; i++)
     {
         if (!m_device[i])
             continue;
-        if (!m_device[i]->Shutdown())
-            perror("CRobot::Shutdown: failed to close device");
+        m_device[i]->Shutdown();
         delete m_device[i];
     }
-    return true;
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+// Update the robot 
+//
 void CRobot::Update()
 {
+    CObject::Update();
+    
     // Update all devices
     //
     for (int i = 0; i < m_device_count; i++)
@@ -281,6 +236,104 @@ void CRobot::Update()
         m_device[i]->Update();
     }
 }
+
+
+///////////////////////////////////////////////////////////////////////////
+// Start player instance
+//
+bool CRobot::StartupPlayer()
+{
+    TRACE0("starting player");
+    
+    // -- create the memory map for IPC with Player --------------------------
+
+    // amount of memory to reserve per robot for Player IO
+    size_t areaSize = TOTAL_SHARED_MEMORY_BUFFER_SIZE;
+
+    // make a unique temporary file for shared mem
+    strcpy( tmpName, "playerIO.XXXXXX" );
+    int tfd = mkstemp( tmpName );
+
+    // make the file the right size
+    if( ftruncate( tfd, areaSize ) < 0 )
+    {
+        perror( "Failed to set file size" );
+        return false;
+    }
+
+    playerIO = (caddr_t)mmap( NULL, areaSize,
+                              PROT_READ | PROT_WRITE, MAP_SHARED, tfd, (off_t) 0);
+    if (playerIO == MAP_FAILED )
+    {
+        perror( "Failed to map memory" );
+        return false;
+    }
+
+    close( tfd ); // can close fd once mapped
+
+    //cout << "Mapped area: " << (unsigned int)playerIO << endl;
+
+    // test the memory space
+    for( int t=0; t<64; t++ ) playerIO[t] = (unsigned char)t;
+
+    // ----------------------------------------------------------------------
+    // fork off a player process to handle robot I/O
+    if( (player_pid = fork()) < 0 )
+    {
+        cerr << "fork error creating robots" << flush;
+        return false;
+    }
+    else
+    {
+        // BPG
+        //if( pid == 0 ) // new child process
+        // GPB
+        if( player_pid == 0 ) // new child process
+        {
+            // create player port number for command line
+            char portBuf[32];
+            sprintf( portBuf, "%d", (int) (PLAYER_BASE_PORT + color -1) );
+
+            // BPG
+            // release controlling tty so Player doesn't get signals
+            setpgrp();
+            // GPB
+
+            // we assume Player is in the current path
+            if( execlp( "player", "player",
+                        "-gp", portBuf, "-stage", tmpName, (char*) 0) < 0 )
+            {
+                cerr << "execlp failed: make sure Player can be found"
+                    " in the current path."
+                     << endl;
+                return false;
+            }
+        }
+        //else
+        //printf("forked player with pid: %d\n", player_pid);
+    }
+    return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Stop player instance
+//
+void CRobot::ShutdownPlayer()
+{
+    TRACE0("stopping player");
+    
+    // BPG
+    if(kill(player_pid,SIGINT))
+        perror("CRobot::~CRobot(): kill() failed sending SIGINT to Player");
+    if(waitpid(player_pid,NULL,0) == -1)
+        perror("CRobot::~CRobot(): waitpid() returned an error");
+    // GPB
+
+    // delete the playerIO.xxxxxx file
+    remove( tmpName );
+}
+
 
 bool CRobot::HasMoved( void )
 {
@@ -310,7 +363,25 @@ void CRobot::GUIUnDraw()
 }  
 
 
+#ifdef INCLUDE_RTK
+
+///////////////////////////////////////////////////////////////////////////
+// Process GUI update messages
+//
+void CRobot::OnUiUpdate(RtkUiDrawData *pData)
+{
+    // Draw our children
+    //
+    CObject::OnUiUpdate(pData);
+}
 
 
+///////////////////////////////////////////////////////////////////////////
+// Process GUI mouse messages
+//
+void CRobot::OnUiMouse(RtkUiMouseData *pData)
+{
+    CObject::OnUiMouse(pData);
+}
 
-
+#endif

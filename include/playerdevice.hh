@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1 $
+//  $Revision: 1.1.2.1 $
 //
 // Usage:
 //  (empty)
@@ -54,12 +54,7 @@ class CPlayerDevice : public CDevice
 
     // Close the device
     //
-    public: virtual bool Shutdown();
-
-    // Update the device
-    // This is pure virtual and *must* be overloaded
-    //
-    public: virtual bool Update() = 0;
+    public: virtual void Shutdown();
 
     // See if the device is subscribed
     //

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.2 $
+//  $Author: ahoward $
+//  $Revision: 1.2.2.1 $
 //
 // Usage:
 //  (empty)
@@ -53,7 +53,7 @@ CLaserBeaconDevice::CLaserBeaconDevice(CRobot *robot, double dx, double dy)
 ///////////////////////////////////////////////////////////////////////////
 // Update the laser data
 //
-bool CLaserBeaconDevice::Update()
+void CLaserBeaconDevice::Update()
 {
     //TRACE0("updating laser data");
     ASSERT(m_robot != NULL);
@@ -95,8 +95,6 @@ bool CLaserBeaconDevice::Update()
     //
     m_px = px;
     m_py = py;
-
-    return true; // added to prevent warning - RTV
 }
 
 

@@ -1,7 +1,7 @@
 /*************************************************************************
  * world.cc - top level class that contains and updates robots
  * RTV
- * $Id: world.cc,v 1.4 2000-12-01 03:13:32 ahoward Exp $
+ * $Id: world.cc,v 1.4.2.1 2000-12-05 23:17:34 ahoward Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -17,9 +17,13 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 
+#define ENABLE_TRACE 1
+
 #include "world.h"
 #include "win.h"
 #include "offsets.h"
+
+#include "laserbeaconobject.hh"
 
 //#undef DEBUG
 //#define DEBUG
@@ -33,7 +37,7 @@ const double TWOPI = 6.283185307;
 int runDown = false;
 double runStart;
 
-unsigned int RGB( int r, int g, int b );
+//*** not used? ahoward unsigned int RGB( int r, int g, int b );
 
 extern double quitTime;
 
@@ -105,6 +109,10 @@ CWorld::CWorld( char* initFile )
   m_laser_img = new Nimage(width, height);
   m_laser_img->clear(0);
 
+  // Reset object counter, just in case
+  //
+  m_object_count = 0;
+
   refreshBackground = false;
 
 
@@ -132,6 +140,7 @@ CWorld::CWorld( char* initFile )
 
   ifstream in( posFile );
 
+  /* *** REMOVE ahoward
   while( currentPopulation < population )
     {
       double xpos, ypos, theta;
@@ -141,6 +150,7 @@ CWorld::CWorld( char* initFile )
 #ifdef DEBUG
       cout << "read: " <<  xpos << ' ' << ypos << ' ' << theta << endl;
 #endif
+
 
 
       CRobot* baby = (CRobot*)new CRobot( this, 
@@ -157,8 +167,8 @@ CWorld::CWorld( char* initFile )
 
       // we're the parent and have spawned a Player...
       currentPopulation++;
-
    }
+  */
 
   refreshBackground = true;
   
@@ -225,6 +235,164 @@ CWorld::~CWorld()
     delete m_laser_img;
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+// Startup routine -- creates objects in the world
+//
+bool CWorld::Startup()
+{
+    TRACE0("Creating objects");
+    
+    m_object_count = 0;
+
+    // *** HACK -- should read from configuration file
+    m_object[m_object_count++] = new CRobot( this, 1,
+                                             pioneerWidth, 
+                                             pioneerLength,
+                                             1.0, 2.0, 0);
+
+    // *** HACK -- should read from configuration file
+    m_object[m_object_count++] = new CRobot( this, 2,
+                                             pioneerWidth, 
+                                             pioneerLength,
+                                             2.0, 2.0, 0);
+    
+    // *** HACK -- should read from configuration file
+    m_object[m_object_count++] = new CLaserBeaconObject(this, NULL, 1.0, 1.0);
+
+    // Call the objects startup function
+    //
+    for (int i = 0; i < m_object_count; i++)
+    {
+        if (!m_object[i]->Startup())
+        {
+            puts("Startup failed; exiting");
+            return false;
+        }
+    }
+    return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Shutdown routine -- deletes objects in the world
+//
+void CWorld::Shutdown()
+{
+    TRACE0("Closing objects");
+        
+    // Call the objects shutdown function
+    //
+    for (int i = 0; i < m_object_count; i++)
+        m_object[i]->Shutdown();
+
+    // Delete objects
+    //
+    for (int i = 0; i < m_object_count; i++)
+        delete m_object[i];
+    m_object_count = 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Get a cell from the world grid
+//
+BYTE CWorld::GetCell(double px, double py, EWorldLayer layer)
+{
+    // Convert from world to image coords
+    //
+    int ix = (int) (px * ppm);
+    int iy = height - (int) (py * ppm);
+
+    // This could be cleaned up by having an array of images
+    //
+    switch (layer)
+    {
+        case layer_obstacle:
+            return img->get_pixel(ix, iy);
+        case layer_laser:
+            return m_laser_img->get_pixel(ix, iy);
+    }
+    return 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Set a cell in the world grid
+//
+void CWorld::SetCell(double px, double py, EWorldLayer layer, BYTE value)
+{
+    // Convert from world to image coords
+    //
+    int ix = (int) (px * ppm);
+    int iy = height - (int) (py * ppm);
+
+    // This could be cleaned up by having an array of images
+    //
+    switch (layer)
+    {
+        case layer_obstacle:
+            img->set_pixel(ix, iy, value);
+            break;
+        case layer_laser:
+            m_laser_img->set_pixel(ix, iy, value);
+            break;
+    }
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Set a rectangle in the world grid
+//
+void CWorld::SetRectangle(double px, double py, double pth,
+                          double dx, double dy, EWorldLayer layer, BYTE value)
+{
+    Rect rect;
+    double tx, ty;
+
+    dx /= 2;
+    dy /= 2;
+
+    double cx = dx * cos(pth);
+    double cy = dy * cos(pth);
+    double sx = dx * sin(pth);
+    double sy = dy * sin(pth);
+    
+    // This could be faster
+    //
+    tx = px + cx - sy;
+    ty = py + sx + cy;
+    rect.toplx = (int) (tx * ppm);
+    rect.toply = height - (int) (ty * ppm);
+
+    tx = px - cx - sy;
+    ty = py - sx + cy;
+    rect.toprx = (int) (tx * ppm);
+    rect.topry = height - (int) (ty * ppm);
+
+    tx = px - cx + sy;
+    ty = py - sx - cy;
+    rect.botlx = (int) (tx * ppm);
+    rect.botly = height - (int) (ty * ppm);
+
+    tx = px + cx + sy;
+    ty = py + sx - cy;
+    rect.botrx = (int) (tx * ppm);
+    rect.botry = height - (int) (ty * ppm);
+    
+    // This could be cleaned up by having an array of images
+    //
+    switch (layer)
+    {
+        case layer_obstacle:
+            img->draw_rect(rect, value);
+            break;
+        case layer_laser:
+            m_laser_img->draw_rect(rect, value);
+            break;
+    }
+}
+  
 
 int CWorld::LockShmem( void )
 {
@@ -294,9 +462,16 @@ void CWorld::Update( void )
 #endif
 	  timeStep = 0.1;
 	}
-      
+
+      // Update objects
+      //
+      for (int i = 0; i < m_object_count; i++)
+          m_object[i]->Update();
+
+      /*** remove. ahoward
       // move the robots
       for( CRobot* b = bots; b; b = b->next ) b->Update();
+      */
 
       if( refreshBackground ) Draw();
       
@@ -433,6 +608,117 @@ int CWorld::LoadVars( char* filename )
 }
 
 
+#ifdef INCLUDE_RTK
+
+///////////////////////////////////////////////////////////////////////////
+// Process GUI update messages
+//
+void CWorld::OnUiUpdate(RtkUiDrawData *pData)
+{
+    // Draw the background
+    //
+    if (pData->DrawBack("global"))
+        DrawBackground(pData);
+
+    // Draw grid layers (for debugging)
+    //
+    pData->BeginSection("global", "debugging");
+
+    if (pData->DrawLayer("obstacle", false))
+        DrawLayer(pData, layer_obstacle);
+        
+    if (pData->DrawLayer("laser", false))
+        DrawLayer(pData, layer_laser);
+    
+    pData->EndSection();
+
+    // Get children to process message
+    //
+    for (int i = 0; i < m_object_count; i++)
+        m_object[i]->OnUiUpdate(pData);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Process GUI mouse messages
+//
+void CWorld::OnUiMouse(RtkUiMouseData *pData)
+{
+    // Get children to process message
+    //
+    for (int i = 0; i < m_object_count; i++)
+        m_object[i]->OnUiMouse(pData);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Draw the background; i.e. things that dont move
+//
+void CWorld::DrawBackground(RtkUiDrawData *pData)
+{
+    TRACE0("drawing background");
+
+    pData->SetColor(RGB(0, 0, 0));
+    
+    // Loop through the image and draw points individually.
+    // Yeah, it's slow, but only happens once.
+    //
+    for (int y = 0; y < img->height; y++)
+    {
+        for (int x = 0; x < img->width; x++)
+        {
+            if (img->get_pixel(x, y) != 0)
+            {
+                double px = (double) x / ppm;
+                double py = (double) (height - y) / ppm;
+                double s = 1.0 / ppm;
+                pData->Rectangle(px, py, px + s, py + s);
+            }
+        }
+    }
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Draw the laser layer
+//
+void CWorld::DrawLayer(RtkUiDrawData *pData, EWorldLayer layer)
+{
+    Nimage *img = NULL;
+
+    // This could be cleaned up by having an array of images
+    //
+    switch (layer)
+    {
+        case layer_obstacle:
+            img = this->img;
+            break;
+        case layer_laser:
+            img = m_laser_img;
+            break;
+        default:
+            return;
+    }
+    
+    // Loop through the image and draw points individually.
+    // Yeah, it's slow, but only happens for debugging
+    //
+    for (int y = 0; y < img->height; y++)
+    {
+        for (int x = 0; x < img->width; x++)
+        {
+            if (img->get_pixel(x, y) != 0)
+            {
+                double px = (double) x / ppm;
+                double py = (double) (height - y) / ppm;
+                pData->SetPixel(px, py, RGB(0, 0, 255));
+            }
+        }
+    }
+}
+
+
+#endif
 
 
 

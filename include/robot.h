@@ -2,7 +2,7 @@
  * robot.h - CRobot defintion - most of the action is here
             
  * RTV
- * $Id: robot.h,v 1.8 2000-12-04 05:19:44 vaughan Exp $
+ * $Id: robot.h,v 1.8.2.1 2000-12-05 23:17:34 ahoward Exp $
  ************************************************************************/
 
 #include "offsets.h" // for the ACTS size defines
@@ -13,32 +13,31 @@
 #ifndef ROBOT_H
 #define ROBOT_H
 
+/* *** remove ahoward
 //#define PIONEER1
 //#define SONARSAMPLES 7
 
 //#define PIONEER2
-#define LASERSAMPLES 361
-#define SONARSAMPLES 16
-
-#define MAXBLOBS 100 // PDOMA!
-#define MAXDEVICES 32
 
 
-// Forward declare some of the class we will use
+
+
+*/
+
+// For CObject
+//
+#include "object.hh"
+
+// Forward declare some of the classes we will use
 //
 class CDevice;
 class CWorld;
 
-typedef struct
-{
-  unsigned char channel;
-  int area;
-  int x, y;
-  int left, top, right, bottom;
-} ColorBlob;
+// Maximum number of devices
+//
+#define MAXDEVICES 32
 
-
-class CRobot
+class CRobot : public CObject
 {
   // BPG
   pid_t player_pid;
@@ -65,14 +64,6 @@ public:
   //
   int m_device_count;
   CDevice *m_device[ MAXDEVICES ]; 
-
-  // Start all the devices
-  //
-  bool Startup();
-
-  // Shutdown the devices
-  //
-  bool Shutdown();
  
   // render robot in the shared world representation
   void MapUnDraw( void );
@@ -95,8 +86,37 @@ public:
 
   // Update robot and all its devices
   //
-  void Update();
+  public: virtual void Update();
 
+  // Start all the devices
+  //
+  public: virtual bool Startup();
+
+  // Shutdown the devices
+  //
+  public: virtual void Shutdown();
+
+  // Start player
+  //
+  private: bool StartupPlayer();
+
+  // Stop player
+  //
+  private: void ShutdownPlayer();
+  
+  // RTK interface
+  //
+#ifdef INCLUDE_RTK
+    
+  // Process GUI update messages
+  //
+  public: virtual void OnUiUpdate(RtkUiDrawData *pData);
+
+  // Process GUI mouse messages
+  //
+  public: virtual void OnUiMouse(RtkUiMouseData *pData);
+
+#endif
 };
 
 #endif

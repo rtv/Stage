@@ -1,5 +1,5 @@
 // sonardevice.h - RTV
-// $Id: sonardevice.h,v 1.4 2000-12-04 02:11:31 vaughan Exp $
+// $Id: sonardevice.h,v 1.4.2.1 2000-12-05 23:17:34 ahoward Exp $
 
 #ifndef SONARDEVICE_HH
 #define SONARDEVICE_HH
@@ -8,6 +8,7 @@
 #include "robot.h"
 #include <X11/Xlib.h> // for XPoint
 
+#define SONARSAMPLES 16
 
 class CSonarDevice : public CPlayerDevice
 {
@@ -18,7 +19,7 @@ class CSonarDevice : public CPlayerDevice
     
     // Update the device
     //
-    public: virtual bool Update();
+    public: virtual void Update();
 
     // draw myself on the window
     virtual bool GUIDraw();
