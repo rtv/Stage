@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.19 2002-11-09 02:32:34 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.20 2002-11-11 01:29:23 inspectorg Exp $
  */
 
 #ifndef WORLD_HH
@@ -306,6 +306,9 @@ public: uint32_t m_step_num; // the number of cycles executed, from 0
 
   // Handle menu stuff
   protected: void RtkMenuHandling();
+
+  // Handle the movie sub-menu.
+  private: void RtkUpdateMovieMenu();
   
   // Basic GUI elements
   public: rtk_app_t *app;
@@ -334,10 +337,15 @@ public: uint32_t m_step_num; // the number of cycles executed, from 0
   private: int stills_series;
   private: int stills_count;
 
-  // The movie menu
+  // The movie menu  
   private: rtk_menu_t *movie_menu;
-  private: rtk_menuitem_t *movie_x1_menuitem;
-  private: rtk_menuitem_t *movie_x2_menuitem;
+  private: struct CMovieOption
+  {
+    rtk_menuitem_t *menuitem;
+    int speed;
+  };
+  private: int movie_option_count;
+  private: CMovieOption movie_options[10];
 
   // Export movie info
   private: int movie_count;

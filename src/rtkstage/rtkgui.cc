@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.11 2002-11-09 02:32:34 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.12 2002-11-11 01:29:23 inspectorg Exp $
  */
 
 
@@ -279,8 +279,16 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   this->stills_series = 0;
   this->stills_count = 0;
 
-  this->movie_x1_menuitem = rtk_menuitem_create(this->movie_menu, "Speed x1", 1);
-  this->movie_x2_menuitem = rtk_menuitem_create(this->movie_menu, "Speed x2", 1);
+  this->movie_options[0].menuitem = rtk_menuitem_create(this->movie_menu, "Speed x1", 1);
+  this->movie_options[0].speed = 1;
+  this->movie_options[1].menuitem = rtk_menuitem_create(this->movie_menu, "Speed x2", 1);
+  this->movie_options[1].speed = 2;
+  this->movie_options[2].menuitem = rtk_menuitem_create(this->movie_menu, "Speed x5", 1);
+  this->movie_options[2].speed = 5;
+  this->movie_options[3].menuitem = rtk_menuitem_create(this->movie_menu, "Speed x10", 1);
+  this->movie_options[3].speed = 10;
+  this->movie_option_count = 4;
+
   this->movie_count = 0;
 
   // Create the view menu
@@ -429,7 +437,7 @@ void CWorld::RtkUpdate()
 void CWorld::RtkMenuHandling()
 {
   char filename[128];
-      
+    
   // See if we need to quit the program
   if (rtk_menuitem_isactivated(this->exit_menuitem))
     ::quit = 1;
@@ -478,6 +486,10 @@ void CWorld::RtkMenuHandling()
     rtk_canvas_export_image(this->canvas, filename, RTK_IMAGE_FORMAT_PPM);
   }
 
+  // Update movie menu
+  this->RtkUpdateMovieMenu();
+  
+  /* REMOVE
   // Start/stop movie (x1)
   if (rtk_menuitem_isactivated(this->movie_x1_menuitem))
   {
@@ -513,7 +525,7 @@ void CWorld::RtkMenuHandling()
   }
   if (rtk_menuitem_ischecked(this->movie_x2_menuitem))
     rtk_canvas_movie_frame(this->canvas);
-
+  */
   
   // Show or hide the grid
   if (rtk_menuitem_ischecked(this->grid_item))
@@ -541,7 +553,53 @@ void CWorld::RtkMenuHandling()
     lasttime = thistime;
   }
       
-  
+  return;
 }
+
+
+// Handle the movie sub-menu.
+// This is still yucky.
+void CWorld::RtkUpdateMovieMenu()
+{
+  int i, j;
+  char filename[128];
+  CMovieOption *option;
+  
+  for (i = 0; i < this->movie_option_count; i++)
+  {
+    option = this->movie_options + i;
+    
+    if (rtk_menuitem_isactivated(option->menuitem))
+    {
+      if (rtk_menuitem_ischecked(option->menuitem))
+      {
+        // Start the movie capture
+        snprintf(filename, sizeof(filename), "stage-%03d-sp%02d.mpg",
+                 this->movie_count++, option->speed);
+        rtk_canvas_movie_start(this->canvas, filename,
+                               this->rtk_update_rate, option->speed);
+
+        // Disable all other capture options
+        for (j = 0; j < this->movie_option_count; j++)
+          rtk_menuitem_enable(this->movie_options[j].menuitem, i == j);
+      }
+      else
+      {
+        // Stop movie capture
+        rtk_canvas_movie_stop(this->canvas);
+
+        // Enable all capture options
+        for (j = 0; j < this->movie_option_count; j++)
+          rtk_menuitem_enable(this->movie_options[j].menuitem, 1);
+      }
+    }
+
+    // Export the frame
+    if (rtk_menuitem_ischecked(option->menuitem))
+      rtk_canvas_movie_frame(this->canvas);
+  }
+  return;
+}
+
 #endif
 
