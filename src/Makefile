@@ -78,8 +78,3 @@ clean_dep:
 	${CC} ${CCFLAGS} -c $< -o $@
 
 # Dependancies (make dep)
-
-truthlog.o: ../include/truthserver.hh ../include/stage_types.hh
-xs.o: ../include/stage_types.hh ../include/truthserver.hh ../include/xs.hh
-render.o: ../include/stage_types.hh ../include/truthserver.hh
-render.o: ../include/xs.hh
