@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.9 2002-11-02 08:24:58 inspectorg Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.10 2002-11-02 20:06:51 inspectorg Exp $
  */
 
 
@@ -494,7 +494,7 @@ void CWorld::RtkMenuHandling()
     if (rtk_menuitem_ischecked(this->movie_x1_menuitem))
     {
       snprintf(filename, sizeof(filename), "stage-%03d.mpg", this->movie_count++);
-      rtk_canvas_movie_start(this->canvas, filename, (int) (this->rtk_update_rate));
+      rtk_canvas_movie_start(this->canvas, filename, this->rtk_update_rate, 1);
       rtk_menuitem_enable(this->movie_x2_menuitem, 0);
     }
     else
@@ -512,7 +512,7 @@ void CWorld::RtkMenuHandling()
     if (rtk_menuitem_ischecked(this->movie_x2_menuitem))
     {
       snprintf(filename, sizeof(filename), "stage-%03d.mpg", this->movie_count++);
-      rtk_canvas_movie_start(this->canvas, "test.mpg", (int) (this->rtk_update_rate * 2));
+      rtk_canvas_movie_start(this->canvas, filename, this->rtk_update_rate, 2);
       rtk_menuitem_enable(this->movie_x1_menuitem, 0);
     }
     else
