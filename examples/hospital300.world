@@ -7,6 +7,15 @@ environment
    resolution 0.0833333333333
 )
 
+gui
+(
+  size [1033.000 479.000]
+  origin [130.959 45.475]
+  scale 0.253
+  grid [1 10]
+  showgrid 1
+)
+
 position
 (
   shape "circle" pose [116.51 75.63 168] port 40272 color "red" 
