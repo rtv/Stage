@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -34,10 +34,10 @@
 CPlayerDevice::CPlayerDevice(CRobot *robot, void *buffer, size_t data_len, size_t command_len, size_t config_len)
         : CDevice(robot)
 {
-    m_info_buffer = (BYTE*) buffer;
+    m_info = (PlayerStageInfo*) buffer;
     m_info_len = INFO_BUFFER_SIZE;
     
-    m_data_buffer = (BYTE*) m_info_buffer + m_info_len;
+    m_data_buffer = (BYTE*) buffer + m_info_len;
     m_data_len = data_len;
 
     m_command_buffer = (BYTE*) m_data_buffer + data_len;
@@ -57,7 +57,16 @@ CPlayerDevice::CPlayerDevice(CRobot *robot, void *buffer, size_t data_len, size_
 bool CPlayerDevice::Startup()
 {
     if (!CDevice::Startup())
-        return false;   
+        return false;
+
+    /* *** TESTING -- this doesnt work right now
+    // Mark this device as available
+    //
+    m_world->LockShmem();
+    m_info->available = 1;
+    m_world->UnlockShmem();
+    */
+    
     return true;
 }
 
@@ -77,7 +86,7 @@ bool CPlayerDevice::Shutdown()
 bool CPlayerDevice::IsSubscribed()
 {
     m_world->LockShmem();
-    bool subscribed = m_info_buffer[INFO_SUBSCRIBE_FLAG];
+    bool subscribed = m_info->subscribed;
     m_world->UnlockShmem();
 
     return subscribed;
@@ -106,7 +115,7 @@ size_t CPlayerDevice::PutData(void *data, size_t len)
 
     // Set data flag to indicate data is available
     //
-    m_info_buffer[INFO_DATA_FLAG] = 1;
+    m_info->data_len = len;
     
     m_world->UnlockShmem();
     return len;
@@ -124,25 +133,19 @@ size_t CPlayerDevice::GetCommand(void *data, size_t len)
     
     m_world->LockShmem();
 
-    // See if there is any command info available
+    // See if there is a command
     //
-    if (m_info_buffer[INFO_COMMAND_FLAG] != 0)
-    {
-        // Take the smallest number of bytes
-        // This avoids an overflow of either buffer
-        //
-        len = min(len, m_command_len);
-        
-        // Copy the command
-        //
-        memcpy(data, m_command_buffer, len);
-    }
-    else
-    {
-        // Reset the length to indicate that there is no new data
-        //
-        len = 0;
-    }
+    size_t command_len = m_info->command_len;
+    ASSERT(command_len <= m_command_len);
+
+    // Take the smallest number of bytes
+    // This avoids an overflow of either buffer
+    //
+    len = min(len, command_len);
+
+    // Copy the command
+    //
+    memcpy(data, m_command_buffer, len);
     
     m_world->UnlockShmem();
     return len;
@@ -160,29 +163,19 @@ size_t CPlayerDevice::GetConfig(void *data, size_t len)
     
     m_world->LockShmem();
 
-    // See if there is any configuration info available
+    // See if there is a config
     //
-    if (m_info_buffer[INFO_CONFIG_FLAG] != 0)
-    {
-        // Take the smallest number of bytes
-        // This avoids an overflow of either buffer
-        //
-        len = min(len, m_config_len);
-        
-        // Copy the configuration
-        //
-        memcpy(data, m_config_buffer, len);
+    size_t config_len = m_info->config_len;
+    ASSERT(config_len <= m_config_len);
 
-        // Reset the config flag to indicate data has been read
-        //
-        m_info_buffer[INFO_CONFIG_FLAG] = 0;
-    }
-    else
-    {
-        // Reset the length to indicate that there is no new data
-        //
-        len = 0;
-    }
+    // Take the smallest number of bytes
+    // This avoids an overflow of either buffer
+    //
+    len = min(len, config_len);
+
+    // Copy the command
+    //
+    memcpy(data, m_config_buffer, len);
     
     m_world->UnlockShmem();
     return len;
