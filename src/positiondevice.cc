@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.5 $
+//  $Revision: 1.5.2.1 $
 //
 // Usage:
 //  (empty)
@@ -347,6 +347,7 @@ void CPositionDevice::Map(bool render)
         }
         else if(GetShape() == circle)
         {
+
           m_world->SetCircle(m_map_px,m_map_py,m_size_x/2.0,layer_obstacle,0);
           m_world->SetCircle(m_map_px,m_map_py,m_size_x/2.0,layer_puck,0);
         }

@@ -11,7 +11,7 @@
 //  Modified by ahoward 24 May 2001 to make top bit 'sticky'.
 //  Once set, this bit can only be reset by 'clear'.
 //
-// $Id: image.h,v 1.6 2001-08-09 08:00:07 vaughan Exp $
+// $Id: image.h,v 1.6.2.1 2001-08-17 20:48:04 vaughan Exp $
 // RTV
 // ==================================================================
 
@@ -23,7 +23,7 @@
 #include <string.h>
 
 
-unsigned int RGB( int r, int g, int b );
+//unsigned int RGB( int r, int g, int b );
 
 typedef struct Point
 {

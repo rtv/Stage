@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.14 $
+//  $Revision: 1.14.2.1 $
 //
 // Usage:
 //  (empty)
@@ -41,6 +41,8 @@
 #include "truthserver.hh"
 #include "playercommon.h"
 
+#include "matrix.h"
+
 #define DEBUG
 
 #if INCLUDE_RTK
@@ -72,6 +74,14 @@ enum EWorldLayer
 //
 class CWorld
 {
+public: CMatrix *matrix;
+public: void SetEntityAtCell( CEntity* ent, double px, double py );
+public: CEntity** GetEntityAtCell(double px, double py );
+public: void SetEntityAtCell( CEntity*, int, int );
+public: CEntity** GetEntityAtCell( int, int );
+
+  CEntity* wall;
+
     // Default constructor
     //
     public: CWorld();
@@ -173,6 +183,14 @@ class CWorld
     public: void SetRectangle(double px, double py, double pth,
                               double dx, double dy, 
 			      EWorldLayer layer, uint8_t value);
+
+  void SetRectangle(double px, double py, double pth,
+		    double dx, double dy, CEntity* ent );
+
+  //void UnsetRectangle(double px, double py, double pth,
+  //	    double dx, double dy, CEntity* ent );
+
+
 
     // Set a circle in the world grid
     //

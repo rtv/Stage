@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.7 $
+//  $Revision: 1.7.2.1 $
 //
 // Usage:
 //  (empty)
@@ -52,6 +52,9 @@ CBoxObstacle::CBoxObstacle(CWorld *world, CEntity *parent)
   m_size_x = 1.0;
   m_size_y = 1.0;
   
+
+  laser_return = 1;
+
   // Set the initial map pose
   //
   m_map_px = m_map_py = m_map_pth = 0;
@@ -126,12 +129,17 @@ void CBoxObstacle::Update( double simtime )
 
     // Undraw our old representation
     //
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                          m_size_x, m_size_y, layer_obstacle, 0);
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                          m_size_x, m_size_y, layer_laser, 0);
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                          m_size_x, m_size_y, layer_vision, 0);
+    //m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+    //                    m_size_x, m_size_y, layer_obstacle, 0);
+    //m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+    //                    m_size_x, m_size_y, layer_laser, 0);
+    //m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+    //                    m_size_x, m_size_y, layer_vision, 0);
+
+
+    m_world->matrix->SetMode( mode_unset );
+    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth,
+			   m_size_x, m_size_y, this );
 
     // Update our global pose
     //
@@ -139,12 +147,18 @@ void CBoxObstacle::Update( double simtime )
 
     // Draw our new representation
     //
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                          m_size_x, m_size_y, layer_obstacle, 1);
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                          m_size_x, m_size_y, layer_laser, 1);
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                          m_size_x, m_size_y, layer_vision, m_channel+1);
+    //m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+    //                    m_size_x, m_size_y, layer_obstacle, 1);
+    //m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+    //                    m_size_x, m_size_y, layer_laser, 1);
+    //m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+    //                    m_size_x, m_size_y, layer_vision, m_channel+1);
+
+    // draw into the matrix
+    m_world->matrix->SetMode( mode_set );
+    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth,
+			   m_size_x, m_size_y, this );
+    
   }
 }
 

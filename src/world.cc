@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.21 $
+//  $Author: vaughan $
+//  $Revision: 1.21.2.1 $
 //
 // Usage:
 //  (empty)
@@ -95,6 +95,7 @@ CWorld::CWorld()
 
     // start with no key
     bzero(m_auth_key,sizeof(m_auth_key));
+
 }
 
 
@@ -621,13 +622,95 @@ bool CWorld::InitGrids(const char *env_file)
   //
   m_vision_img = new Nimage(width, height);
   m_vision_img->clear(0);
-
+    
   // Clear puck image
   //
   m_puck_img = new Nimage(width, height);
   m_puck_img->clear(0);
                 
+
+  matrix = new CMatrix( width, height );
+
+  wall = new CEntity( this, 0 );
+  
+  wall->laser_return = 1;
+  wall->sonar_return = 1;
+  //wall->channel_return = -1;
+
+
+  // Copy fixed obstacles into matrix
+  //
+  for (int y = 0; y < m_bimg->height; y++)
+    for (int x = 0; x < m_bimg->width; x++)
+      if (m_bimg->get_pixel(x, y) != 0) matrix->set_cell( x,y,wall );
+
   return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Get a cell from the world grid
+//
+CEntity** CWorld::GetEntityAtCell(double px, double py )
+{
+
+  // Convert from world to image coords
+  //
+  int ix = (int) (px * ppm);
+  int iy = matrix->height - (int) (py * ppm);
+
+  CEntity** ent = matrix->get_cell( ix, iy );
+
+  //if( ent )
+  //printf( "reading %p at %d,%d\n", ent, ix, iy );
+
+  return ent;
+
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Get a cell from the world grid
+//
+CEntity** CWorld::GetEntityAtCell( int ix, int iy )
+{
+  iy = matrix->height - iy;
+  
+  CEntity** ent = matrix->get_cell( ix, iy );
+  
+  //if( ent )
+  //printf( "reading %p at %d,%d\n", ent, ix, iy );
+  
+  return ent;
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Get a cell from the world grid
+//
+void CWorld::SetEntityAtCell( CEntity* ent, double px, double py )
+{
+  // Convert from world to image coords
+  //
+  int ix = (int) (px * ppm);
+  int iy = matrix->height - (int) (py * ppm);
+  
+    matrix->set_cell( ix, iy, ent );
+    
+  printf( "setting %p at %d,%d\n", ent, ix, iy );
+
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Get a cell from the world grid
+//
+void CWorld::SetEntityAtCell( CEntity* ent, int ix, int iy )
+{
+  iy = matrix->height - iy;
+  
+  matrix->set_cell( ix, iy, ent );
+ 
+  printf( "setting %p at %d,%d\n", ent, ix, iy );
 }
 
 
@@ -743,6 +826,45 @@ uint8_t CWorld::GetRectangle(double px, double py, double pth,
     return 0;
 }
 
+
+void CWorld::SetRectangle(double px, double py, double pth,
+                          double dx, double dy, CEntity* ent )
+{
+    Rect rect;
+    double tx, ty;
+
+    dx /= 2.0;
+    dy /= 2.0;
+
+    double cx = dx * cos(pth);
+    double cy = dy * cos(pth);
+    double sx = dx * sin(pth);
+    double sy = dy * sin(pth);
+    
+    // This could be faster
+    //
+    tx = px + cx - sy;
+    ty = py + sx + cy;
+    rect.toplx = (int) (tx * ppm);
+    rect.toply = m_bimg->height - (int) (ty * ppm);
+
+    tx = px - cx - sy;
+    ty = py - sx + cy;
+    rect.toprx = (int) (tx * ppm);
+    rect.topry = m_bimg->height - (int) (ty * ppm);
+
+    tx = px - cx + sy;
+    ty = py - sx - cy;
+    rect.botlx = (int) (tx * ppm);
+    rect.botly = m_bimg->height - (int) (ty * ppm);
+
+    tx = px + cx + sy;
+    ty = py + sx - cy;
+    rect.botrx = (int) (tx * ppm);
+    rect.botry = m_bimg->height - (int) (ty * ppm);
+    
+    matrix->draw_rect( rect, ent );
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Set a rectangle in the world grid

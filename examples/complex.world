@@ -1,5 +1,3 @@
-#set environment_file = hospital.pnm
-#set environment_file = sparse.pnm
 set environment_file = cave.pnm
 set pixels_per_meter =  100
 set laser_res = 1
@@ -13,8 +11,8 @@ enable environment_server
 #####################################################################
 # Populate the world with some interesting objects (non-player devices)
 
-create laser_beacon pose 4.0 4.0 id 1
-create laser_beacon pose 3.0 4.0 id 2
+create laser_beacon pose 4.0 4.0 0.0 id 1
+create laser_beacon pose 3.0 4.0 0.0 id 2
 
 create puck pose 2.3 2.0 0 channel 0
 create puck pose 2.0 2.0 0 channel 0

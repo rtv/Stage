@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.11 2001-08-15 23:20:04 vaughan Exp $
+ * $Id: xs.cc,v 1.11.2.1 2001-08-17 20:48:06 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -179,8 +179,8 @@ void PrintStageTruth( stage_truth_t &truth )
 
 void CXGui::PrintMetricTruth( int stage_id, truth_t &truth )
 {
-  printf( "%d:%s\t(%4d,%d,%d)\t(%4d,%d,%d)\t[%.2f,%.2f,%.2f]\t[%.2f,%.2f]\tACTS: %d\n",
-	  stage_id,
+  printf( "%p:%s\t(%4d,%d,%d)\t(%4d,%d,%d)\t[%.2f,%.2f,%.2f]\t[%.2f,%.2f]\tACTS: %d\n",
+	  (int*)stage_id,
 	  StageNameOf( truth ),
 	  truth.id.port, 
 	  truth.id.type, 
@@ -197,8 +197,8 @@ void CXGui::PrintMetricTruth( int stage_id, truth_t &truth )
 
 void CXGui::PrintMetricTruthVerbose( int stage_id, truth_t &truth )
 {
-  printf( "stage: %d:%s\tplayer: (%4d,%s:%d)\tparent(%4d,%s:%d)\tpose: [%.2f,%.2f,%.2f]\tsize: [%.2f,%.2f]\tACTS: %d\n", 
-	  stage_id,
+  printf( "stage: %p:%s\tplayer: (%4d,%s:%d)\tparent(%4d,%s:%d)\tpose: [%.2f,%.2f,%.2f]\tsize: [%.2f,%.2f]\tACTS: %d\n", 
+	  (int*)stage_id,
 	  StageNameOf( truth ),
 	  truth.id.port, 
 	  PlayerNameOf( truth.id ), 

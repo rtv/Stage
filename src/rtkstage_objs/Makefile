@@ -2597,6 +2597,118 @@ dep:
 ../main..o: /usr/local/player-1.0a/include/messages.h
 ../main..o: /usr/local/player-1.0a/include/playercommon.h
 ../main..o: /usr/local/player-1.0a/include/stage.h
+../matrix..o: /usr/include/alloca.h /usr/include/asm/errno.h
+../matrix..o: /usr/include/assert.h /usr/include/bits/endian.h
+../matrix..o: /usr/include/bits/errno.h /usr/include/bits/huge_val.h
+../matrix..o: /usr/include/bits/locale.h /usr/include/bits/local_lim.h
+../matrix..o: /usr/include/bits/mathcalls.h /usr/include/bits/mathdef.h
+../matrix..o: /usr/include/bits/nan.h /usr/include/bits/posix1_lim.h
+../matrix..o: /usr/include/bits/posix2_lim.h /usr/include/bits/pthreadtypes.h
+../matrix..o: /usr/include/bits/sched.h /usr/include/bits/select.h
+../matrix..o: /usr/include/bits/sigset.h /usr/include/bits/stdio_lim.h
+../matrix..o: /usr/include/bits/time.h /usr/include/bits/types.h
+../matrix..o: /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h
+../matrix..o: /usr/include/bits/wchar.h /usr/include/bits/wordsize.h
+../matrix..o: /usr/include/bits/xopen_lim.h /usr/include/ctype.h
+../matrix..o: /usr/include/endian.h /usr/include/errno.h
+../matrix..o: /usr/include/features.h /usr/include/_G_config.h
+../matrix..o: /usr/include/gconv.h /usr/include/gnu/stubs.h
+../matrix..o: /usr/include/iconv.h /usr/include/langinfo.h
+../matrix..o: /usr/include/libio.h /usr/include/limits.h
+../matrix..o: /usr/include/linux/errno.h /usr/include/linux/limits.h
+../matrix..o: /usr/include/locale.h /usr/include/math.h
+../matrix..o: /usr/include/nl_types.h /usr/include/stdio.h
+../matrix..o: /usr/include/stdlib.h /usr/include/string.h
+../matrix..o: /usr/include/sys/cdefs.h /usr/include/sys/select.h
+../matrix..o: /usr/include/sys/sysmacros.h /usr/include/sys/types.h
+../matrix..o: /usr/include/time.h /usr/include/wchar.h /usr/include/wctype.h
+../matrix..o: /usr/include/xlocale.h /usr/include/zconf.h /usr/include/zlib.h
+../matrix..o: /usr/local/include/g++-v3/backward/backward_warning.h
+../matrix..o: /usr/local/include/g++-v3/backward/fstream.h
+../matrix..o: /usr/local/include/g++-v3/backward/iostream.h
+../matrix..o: /usr/local/include/g++-v3/bits/basic_file.h
+../matrix..o: /usr/local/include/g++-v3/bits/basic_ios.h
+../matrix..o: /usr/local/include/g++-v3/bits/basic_ios.tcc
+../matrix..o: /usr/local/include/g++-v3/bits/basic_string.h
+../matrix..o: /usr/local/include/g++-v3/bits/basic_string.tcc
+../matrix..o: /usr/local/include/g++-v3/bits/char_traits.h
+../matrix..o: /usr/local/include/g++-v3/bits/codecvt.h
+../matrix..o: /usr/local/include/g++-v3/bits/concept_check.h
+../matrix..o: /usr/local/include/g++-v3/bits/fpos.h
+../matrix..o: /usr/local/include/g++-v3/bits/fstream.tcc
+../matrix..o: /usr/local/include/g++-v3/bits/functexcept.h
+../matrix..o: /usr/local/include/g++-v3/bits/ios_base.h
+../matrix..o: /usr/local/include/g++-v3/bits/istream.tcc
+../matrix..o: /usr/local/include/g++-v3/bits/locale_facets.h
+../matrix..o: /usr/local/include/g++-v3/bits/locale_facets.tcc
+../matrix..o: /usr/local/include/g++-v3/bits/localefwd.h
+../matrix..o: /usr/local/include/g++-v3/bits/ostream.tcc
+../matrix..o: /usr/local/include/g++-v3/bits/sbuf_iter.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_algorithm.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_cassert.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_cctype.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_cerrno.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_cfloat.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_climits.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_clocale.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_cstddef.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_cstdio.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_cstdlib.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_cstring.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_ctime.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_cwchar.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_cwctype.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_fstream.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_iosfwd.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_ios.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_iostream.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_istream.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_iterator.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_locale.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_memory.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_ostream.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_streambuf.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_string.h
+../matrix..o: /usr/local/include/g++-v3/bits/std_vector.h
+../matrix..o: /usr/local/include/g++-v3/bits/stl_algobase.h
+../matrix..o: /usr/local/include/g++-v3/bits/stl_algo.h
+../matrix..o: /usr/local/include/g++-v3/bits/stl_alloc.h
+../matrix..o: /usr/local/include/g++-v3/bits/stl_bvector.h
+../matrix..o: /usr/local/include/g++-v3/bits/stl_construct.h
+../matrix..o: /usr/local/include/g++-v3/bits/stl_heap.h
+../matrix..o: /usr/local/include/g++-v3/bits/stl_iterator_base_funcs.h
+../matrix..o: /usr/local/include/g++-v3/bits/stl_iterator_base_types.h
+../matrix..o: /usr/local/include/g++-v3/bits/stl_iterator.h
+../matrix..o: /usr/local/include/g++-v3/bits/stl_pair.h
+../matrix..o: /usr/local/include/g++-v3/bits/stl_raw_storage_iter.h
+../matrix..o: /usr/local/include/g++-v3/bits/stl_tempbuf.h
+../matrix..o: /usr/local/include/g++-v3/bits/stl_threads.h
+../matrix..o: /usr/local/include/g++-v3/bits/stl_uninitialized.h
+../matrix..o: /usr/local/include/g++-v3/bits/stl_vector.h
+../matrix..o: /usr/local/include/g++-v3/bits/streambuf.tcc
+../matrix..o: /usr/local/include/g++-v3/bits/stringfwd.h
+../matrix..o: /usr/local/include/g++-v3/bits/type_traits.h
+../matrix..o: /usr/local/include/g++-v3/cstddef
+../matrix..o: /usr/local/include/g++-v3/cstdio
+../matrix..o: /usr/local/include/g++-v3/exception
+../matrix..o: /usr/local/include/g++-v3/exception_defines.h
+../matrix..o: /usr/local/include/g++-v3/i686-pc-linux-gnu/bits/atomicity.h
+../matrix..o: /usr/local/include/g++-v3/i686-pc-linux-gnu/bits/basic_file_model.h
+../matrix..o: /usr/local/include/g++-v3/i686-pc-linux-gnu/bits/c++config.h
+../matrix..o: /usr/local/include/g++-v3/i686-pc-linux-gnu/bits/c++io.h
+../matrix..o: /usr/local/include/g++-v3/i686-pc-linux-gnu/bits/c++locale.h
+../matrix..o: /usr/local/include/g++-v3/i686-pc-linux-gnu/bits/ctype_base.h
+../matrix..o: /usr/local/include/g++-v3/i686-pc-linux-gnu/bits/ctype_inline.h
+../matrix..o: /usr/local/include/g++-v3/i686-pc-linux-gnu/bits/gthr.h
+../matrix..o: /usr/local/include/g++-v3/i686-pc-linux-gnu/bits/gthr-single.h
+../matrix..o: /usr/local/include/g++-v3/i686-pc-linux-gnu/bits/os_defines.h
+../matrix..o: /usr/local/include/g++-v3/i686-pc-linux-gnu/bits/std_limits.h
+../matrix..o: /usr/local/include/g++-v3/new /usr/local/include/g++-v3/typeinfo
+../matrix..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/float.h
+../matrix..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/limits.h
+../matrix..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stdarg.h
+../matrix..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/stddef.h
+../matrix..o: /usr/local/lib/gcc-lib/i686-pc-linux-gnu/3.0/include/syslimits.h
 ../miscdevice..o: /usr/include/alloca.h /usr/include/asm/socket.h
 ../miscdevice..o: /usr/include/asm/sockios.h /usr/include/assert.h
 ../miscdevice..o: /usr/include/bits/byteswap.h /usr/include/bits/confname.h

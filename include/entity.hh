@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.8 $
+//  $Revision: 1.8.2.1 $
 //
 // Usage:
 //  (empty)
@@ -56,6 +56,11 @@ class CEntity
   
   StageType m_stage_type; // distinct from the player types found in messages.h
 
+  //uint32_t renderMask, senseMask;
+
+  int sonar_return;  
+  int laser_return;
+  
     // Destructor
     //
     public: virtual ~CEntity();

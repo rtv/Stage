@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.23 $
+//  $Revision: 1.23.2.1 $
 //
 // Usage:
 //  (empty)
@@ -297,14 +297,37 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
         //
         for (range = 0; range < max_range; range += dr)
         {
+
+	  CEntity **ent = m_world->GetEntityAtCell( px, py );
+	  if( !ent[0] ) ent = m_world->GetEntityAtCell( px+dr, py );
+	  if( !ent[0] ) ent = m_world->GetEntityAtCell( px, py+dr );
+
+	  //if( ent )
+	  //printf( "Found (%d,%d,%d) %d %p\n",
+	  //    ent->m_player_port, 
+	  //    ent->m_player_type, 
+	  //    ent->m_player_index,
+	  //    ent->m_stage_type, ent );
+	  
+
             // Look in the laser layer for obstacles
             // Also look at the two cells to the right and above
             // so we dont sneak through gaps.
             //
             uint8_t cell = 0;
-            cell |= m_world->GetCell(px, py, layer_laser);
-            cell |= m_world->GetCell(px + dr, py, layer_laser);
-	    // 1x2 cells is enough to avoid slipping thru gaps -RTV
+
+	    // see if any of the entities intercept the laser beam
+	    // and store the first non-negative laser_return value
+	    int s=0;
+	    while( ent[s] ) if( cell = ent[s++]->laser_return ) break;
+	    
+		
+
+	    //if( ent[0] ) cell = ent[0]->laser_return;
+
+	  //cell |= m_world->GetCell(px, py, layer_laser);
+	  //cell |= m_world->GetCell(px + dr, py, layer_laser);
+	    // 2x1 cells is enough to avoid slipping thru gaps -RTV
             //cell |= m_world->GetCell(px, py + dr, layer_laser);
             if (cell != 0)
             {
