@@ -15,7 +15,6 @@
 #define DEBUG
 
 #include "replace.h"
-#include "stage_macros.h"
 #include "stage.h"
 
 int _stg_quit = FALSE;
