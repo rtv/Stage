@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.57 2003-02-05 03:01:00 gerkey Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.58 2003-03-12 00:29:56 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -120,6 +120,9 @@ bool CPlayerEntity::Load(CWorldFile *worldfile, int section)
 
   // Read the player port (default 0)
   m_player.robot = worldfile->ReadInt(section, "port", 0 );
+
+  // try the new <robot> keyword - overrides the deprecated port
+  m_player.robot = worldfile->ReadInt(section, "robot", 0 );
   
   // if the port wasn't set, and our parent is a player device,
   // default to the parent's port

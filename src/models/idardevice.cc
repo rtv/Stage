@@ -21,7 +21,7 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/idardevice.cc,v $
 * $Author: rtv $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 ******************************************************************************/
 
 
@@ -42,8 +42,8 @@
 
 // control display of player index in device body
 //#define RENDER_INDEX
-//#define RENDER_SCANLINES
-//#define SHOW_MSGS
+#define RENDER_SCANLINES
+#define SHOW_MSGS
 
 #define IDAR_TRANSMIT_ANGLE        M_PI/4.0
 #define IDAR_RECEIVE_ANGLE        M_PI/4.0
@@ -575,26 +575,28 @@ void CIdarDevice::RtkUpdate()
   CPlayerEntity::RtkUpdate();
    
   // Get global pose
-  //double gx, gy, gth;
-  //GetGlobalPose(gx, gy, gth);
-  //rtk_fig_origin(this->data_fig, gx, gy, gth );
+  double gx, gy, gth;
+  GetGlobalPose(gx, gy, gth);
+  rtk_fig_origin(this->data_fig, gx, gy, gth );
 
-  //  if( m_world->ShowDeviceData( this->type_num) )
-  //{
-  //  rtk_fig_show( this->data_fig, true );
-  //  rtk_fig_show( this->rays_fig, true );
-  // }
-  //else
-  //{
-  //  rtk_fig_show( this->data_fig, false );
-  //  rtk_fig_show( this->rays_fig, false );
-  // }
-  
-  //if( Subscribed() < 1 )
-  //{
-  //rtk_fig_clear( this->rays_fig );
-  //rtk_fig_clear( this->data_fig );
-  // }
+  /*
+  if( m_world->ShowDeviceData( this->type_num) )
+    {
+    rtk_fig_show( this->data_fig, true );
+    rtk_fig_show( this->rays_fig, true );
+   }
+  else
+  {
+    rtk_fig_show( this->data_fig, false );
+    rtk_fig_show( this->rays_fig, false );
+   }
+  */  
+
+  if( Subscribed() < 1 )
+  {
+  rtk_fig_clear( this->rays_fig );
+  rtk_fig_clear( this->data_fig );
+   }
 }
 
 #endif

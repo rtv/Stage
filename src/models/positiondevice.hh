@@ -9,7 +9,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/positiondevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -61,7 +61,7 @@ public: static CPositionDevice* Creator(  LibraryItem *libit, CWorld *world, CEn
   public: virtual void Update( double sim_time );
 
   // Move the device according to the current velocities
-  private: void Move();
+  protected: void Move();
 
   // computes velocities that'll servo towards the goal position
   private: void PositionControl();
@@ -94,16 +94,16 @@ public: static CPositionDevice* Creator(  LibraryItem *libit, CWorld *world, CEn
   //private: player_position_data_t data;
 
   // Commanded velocities (for velocity control)
-  private: double com_vx, com_vy, com_va;
+  protected: double com_vx, com_vy, com_va;
     
   // Commanded pose (for position control)
-  private: double com_px, com_py, com_pa;
+  protected: double com_px, com_py, com_pa;
 
   // Stall flag -- set if robot is stalled
-  private: int stall;
+  protected: int stall;
 
   // Current odometry values
-  private: double odo_px, odo_py, odo_pa;
+  protected: double odo_px, odo_py, odo_pa;
 
 #ifdef INCLUDE_RTK2
   // Initialise the rtk gui

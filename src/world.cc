@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.138 2002-11-12 06:22:19 gerkey Exp $
+ * CVS info: $Id: world.cc,v 1.139 2003-03-12 00:29:56 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -584,6 +584,8 @@ bool CWorld::Load( void )
 bool CWorld::Save( )
 {
   if( this->enable_gui ) GuiSave( this );
+
+  PRINT_WARN( "GUI SAVE" );
 
   return true; // success
 }

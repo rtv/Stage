@@ -24,6 +24,8 @@ libstgmodels_a_SOURCES = \
                    broadcastdevice.hh \
                    bumperdevice.cc \
                    bumperdevice.hh \
+                   descartesdevice.hh \
+                   descartesdevice.cc \
                    fiducialfinderdevice.cc \
                    fiducialfinderdevice.hh \
                    gpsdevice.cc \
@@ -62,8 +64,3 @@ libstgmodels_a_SOURCES = \
 
 # currently broken
 # bpsdevice.cc 
-
-# REMOVE
-#                   positiondevice.cc \
-#                   positiondevice.hh \
-

@@ -24,7 +24,7 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.15 2003-03-08 08:41:20 gerkey Exp $
+ * CVS info: $Id: library.cc,v 1.16 2003-03-12 00:29:56 rtv Exp $
  */
 
 #include "library.hh"
@@ -33,6 +33,7 @@
 #include "models/box.hh"
 #include "models/bumperdevice.hh"
 #include "models/broadcastdevice.hh"
+#include "models/descartesdevice.hh"
 #include "models/gpsdevice.hh"
 #include "models/gripperdevice.hh"
 #include "models/idardevice.hh"
@@ -81,6 +82,7 @@ libitem_t library_items[] = {
   { "regular_mcl", "blue", (CFP)CRegularMCLDevice::Creator},
   { "adaptive_mcl", "blue", (CFP)CAdaptiveMCLDevice::Creator},
   { "mcom", "brown", (CFP)CMComDevice::Creator},
+  { "descartes", "purple", (CFP)CDescartesDevice::Creator},
   // { "bps", BpsType, (CFP)CBpsDevice::Creator},
   {NULL, NULL, NULL } // marks the end of the array
 };  
@@ -139,6 +141,8 @@ CreatorFunctionPtr LibraryItem::FindCreatorFromToken( char* token )
 
 int LibraryItem::FindTypeNumFromToken( char* token )
 {
+  PRINT_DEBUG2( "token %s typenum %d", token, type_num );
+
   if( strcmp( token, this->token) == 0 ) return this->type_num;
   
   // try the next item in the list
