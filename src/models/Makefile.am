@@ -40,8 +40,8 @@ libstgmodels_a_SOURCES = \
                    laserdevice.hh \
                    motedevice.cc \
                    motedevice.hh \
-                   omnipositiondevice.cc \
-                   omnipositiondevice.hh \
+                   positiondevice.cc \
+                   positiondevice.hh \
                    powerdevice.cc \
                    powerdevice.hh \
                    ptzdevice.cc \

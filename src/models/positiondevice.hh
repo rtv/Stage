@@ -1,12 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: omniposition.hh
-// Author: Andrew Howard
+// File: position.hh
+// Author: Richard Vaughan, Andrew Howard
 // Date: 19 Oct 2001
-// Desc: Simulates an omni-robot
+// Desc: Simulates a mobile robot with odometry and stall sensor. Supports
+//       differential and omnidirectional drive modes.
 //
 // CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/omnipositiondevice.hh,v $
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/positiondevice.hh,v $
 //  $Author: rtv $
 //  $Revision: 1.4 $
 //
@@ -24,23 +25,34 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef OMNIPOSITIONDEVICE_H
-#define OMNIPOSITIONDEVICE_H
+#ifndef POSITIONDEVICE_H
+#define POSITIONDEVICE_H
 
 #include "stage.h"
 #include "playerdevice.hh"
 
-class COmniPositionDevice : public CPlayerEntity
+// control mode
+typedef enum{ VELOCITY_CONTROL_MODE, POSITION_CONTROL_MODE } 
+stage_position_control_mode_t;
+
+// drive mode
+typedef enum{ DIFF_DRIVE_MODE, OMNI_DRIVE_MODE } 
+stage_position_drive_mode_t;
+
+class CPositionDevice : public CPlayerEntity
 {
   // Minimal constructor
-  public: COmniPositionDevice( LibraryItem *libit, CWorld *world, CEntity *parent);
+  public: CPositionDevice( LibraryItem *libit, CWorld *world, CEntity *parent);
     
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-public: static COmniPositionDevice* Creator(  LibraryItem *libit, CWorld *world, CEntity *parent )
-  { return( new COmniPositionDevice( libit, world, parent ) ); }
+public: static CPositionDevice* Creator(  LibraryItem *libit, CWorld *world, CEntity *parent )
+  { return( new CPositionDevice( libit, world, parent ) ); }
+
+  // load settings from worldfile
+  bool Load(CWorldFile *worldfile, int section);
 
   // Startup routine
   public: virtual bool Startup();
@@ -66,12 +78,13 @@ public: static COmniPositionDevice* Creator(  LibraryItem *libit, CWorld *world,
   // when false, Move() is never called and the robot doesn't move
   bool motors_enabled;
   
-  // when true x, y, a axes work independently, when false, we model a
-  // differential-steer robot (like a Pioneer 2 or a tank).
-  bool enable_omnidrive; 
-
-  // movement mode - VELOCITY_MODE or POSITION_MODE
-  stage_move_mode_t move_mode;
+  // OMNI_MOVE_MODE = Omnidirectional drive - x y & th axes are
+  // independent.  DIFF_MOVE_MODE = Differential-drive - x & th axes
+  // are coupled, y axis disabled (like a Pioneer 2 or a tank).
+  stage_position_drive_mode_t  drive_mode; 
+  
+  // movement mode - VELOCITY_CONTROL_MODE or POSITION_CONTROL_MODE
+  stage_position_control_mode_t control_mode;
   
   // Timings
   private: double last_time;

@@ -6,7 +6,7 @@
 // Desc: Simulates an omni robot
 //
 // CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/omnipositiondevice.cc,v $
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/positiondevice.cc,v $
 //  $Author: rtv $
 //  $Revision: 1.5 $
 //
@@ -29,11 +29,14 @@
 #include <math.h>
 #include "world.hh"
 #include "raytrace.hh"
-#include "omnipositiondevice.hh"
+#include "positiondevice.hh"
+
+#define THMAX(A,B) (A > B ? A : B)
+#define THMIN(A,B) (A < B ? A : B)
 
 ///////////////////////////////////////////////////////////////////////////
 // Constructor
-COmniPositionDevice::COmniPositionDevice(LibraryItem* libit,CWorld *world, CEntity *parent)
+CPositionDevice::CPositionDevice(LibraryItem* libit,CWorld *world, CEntity *parent)
   : CPlayerEntity( libit,world, parent )
 {    
   // setup our Player interface for a POSITION device interface
@@ -61,18 +64,49 @@ COmniPositionDevice::COmniPositionDevice(LibraryItem* libit,CWorld *world, CEnti
   this->mass = 20.0;
 
   // default to velocity mode - the most common way to control a robot
-  this->move_mode = VELOCITY_MODE;
+  this->control_mode = VELOCITY_CONTROL_MODE;
 
-  // x y th axes are independent
-  this->enable_omnidrive = true;
+  // OMNI_DRIVE_MODE = Omnidirectional drive - x y & th axes are
+  // independent.  DIFF_DRIVE_MODE = Differential-drive - x & th axes
+  // are coupled, y axis disabled
+  //this->drive_mode = OMNI_DRIVE_MODE; // default can be changed in worldfile
+  this->drive_mode = DIFF_DRIVE_MODE; // default can be changed in worldfile
 
   this->stall = false;
+  this->motors_enabled = true;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Load the entity from the world file
+bool CPositionDevice::Load(CWorldFile *worldfile, int section)
+{
+  if (!CPlayerEntity::Load(worldfile, section))
+    return false;
+  
+  const char *rvalue;
+  // initialize the string to our default mode
+  rvalue = (this->drive_mode == OMNI_DRIVE_MODE) ? "omni" : "diff";
+  
+  rvalue = worldfile->ReadString(section, "drive", rvalue);
+  
+  if (strcmp(rvalue, "omni") == 0)
+    this->drive_mode = OMNI_DRIVE_MODE;
+  else if (strcmp(rvalue, "diff") == 0)
+    this->drive_mode = DIFF_DRIVE_MODE;
+  else
+    {
+      PRINT_WARN1( "Unknown drive mode (%s)in world file. "
+		   "Using differential mode.", rvalue );
+      this->drive_mode = DIFF_DRIVE_MODE;
+    }
+     
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 // Startup routine
 //
-bool COmniPositionDevice::Startup()
+bool CPositionDevice::Startup()
 {
   if (!CPlayerEntity::Startup())
     return false;
@@ -82,7 +116,7 @@ bool COmniPositionDevice::Startup()
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the device
-void COmniPositionDevice::Update( double sim_time )
+void CPositionDevice::Update( double sim_time )
 {  
   // Do some default processing
   CPlayerEntity::Update(sim_time);
@@ -97,13 +131,14 @@ void COmniPositionDevice::Update( double sim_time )
     // Process configuration requests
     UpdateConfig();
 
-    PositionGetCommand( &this->com_px, &this->com_py, &this->com_pa, 
-			&this->com_vx, &this->com_vy, &this->com_va );
+    if( !PositionGetCommand( &this->com_px, &this->com_py, &this->com_pa, 
+			     &this->com_vx, &this->com_vy, &this->com_va ) )
+      PRINT_DEBUG( "** NO COMMAND AVAILABLE ** " );
     
     // update the robot's position
     if( this->motors_enabled )
       {
-	if( this->move_mode == POSITION_MODE )
+	if( this->control_mode == POSITION_CONTROL_MODE )
 	  // compute some velocities that'll move us to the goal position
 	  PositionControl();
 	
@@ -132,7 +167,7 @@ void COmniPositionDevice::Update( double sim_time )
 
   ///////////////////////////////////////////////////////////////////////////
   // Process configuration requests.
-  void COmniPositionDevice::UpdateConfig()
+  void CPositionDevice::UpdateConfig()
   {
     int len;
     void *client;
@@ -201,16 +236,17 @@ void COmniPositionDevice::Update( double sim_time )
   	// switch between velocity and position control
   	switch( buffer[1] )
   	  {
-  	  case 0: this->move_mode = VELOCITY_MODE; 
+  	  case 0: this->control_mode = VELOCITY_CONTROL_MODE; 
   	    break;
-  	  case 1: this->move_mode = POSITION_MODE; 
+  	  case 1: this->control_mode = POSITION_CONTROL_MODE; 
   	    break;
   	  default: 
   	    PRINT_WARN2("Unrecognized mode in"
   			" PLAYER_POSITION_POSITION_MODE_REQ (%d)."
 			"Sticking with current mode (%s)", 
   			buffer[0], 
-			this->move_mode ? "POSITION_MODE" : "VELOCITY_MODE" ); 
+			this->control_mode ? 
+			"POSITION_CONTROL_MODE" : "VELOCITY_CONTROL_MODE" ); 
   	    break;
   	  }
           PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
@@ -251,7 +287,7 @@ void COmniPositionDevice::Update( double sim_time )
 
 ///////////////////////////////////////////////////////////////////////////
 // Compute the robots new pose
-void COmniPositionDevice::Move()
+void CPositionDevice::Move()
 {
   double step = m_world->m_sim_timestep;
 
@@ -259,18 +295,38 @@ void COmniPositionDevice::Move()
   //
   double px, py, pa;
   GetPose(px, py, pa);
-
+  
+  //fprintf( stderr, "%.2f %.2f %.2f   %.2f %.2f %.2f\n", 
+  //   px -1, py -1, pa, odo_px, odo_py, odo_pa );
+  
   // Compute the new velocity
   // For now, just set to commanded velocity
   double vx = this->com_vx;
   double vy = this->com_vy;
   double va = this->com_va;
-    
+  
   // Compute movement deltas
   // This is a zero-th order approximation
-  double dx = step * vx * cos(pa) - step * vy * sin(pa);
-  double dy = step * vx * sin(pa) + step * vy * cos(pa);
-  double da = step * va;
+  double dx=0, dy=0, da=0;
+
+  switch( this->drive_mode )
+    {
+    case OMNI_DRIVE_MODE: // omnidirectional - axes independent
+      dx = step * vx;
+      dy = step * vy;
+      da = step * va;
+      break;
+      
+    case DIFF_DRIVE_MODE: //differential steering - no vy allowed
+      dx = step * vx * cos(pa); // - step * vy * sin(pa);
+      dy = step * vx * sin(pa); // + step * vy * cos(pa);
+      da = step * va;
+      break;
+      
+    default:
+      PRINT_WARN1( "unknown drive mode (%d)", this->drive_mode );
+      break;
+    }
   
   // compute a new pose
   double qx = px + dx;
@@ -291,96 +347,102 @@ void COmniPositionDevice::Move()
     SetGlobalVel(vx, vy, va);
         
     // Compute the new odometric pose
-    // Uses a zero-th order approximation
-    this->odo_px += step * vx;// * cos(pa) - step * vy * sin(pa);
-    this->odo_py += step * vy;//step * vx * sin(pa) + step * vy * cos(pa);
-    this->odo_pa += step * va;//step * va;
-    this->odo_pa = fmod(this->odo_pa + TWOPI, TWOPI);
-
+    // we currently have PERFECT odometry. yum!
+    this->odo_px += dx;
+    this->odo_py += dy;
+    this->odo_pa += da;
+    
     this->stall = false;
   }
+
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// Compute the robots new pose
-void COmniPositionDevice::PositionControl()
+// Generate sensible velocities to achieve the goal pose
+void CPositionDevice::PositionControl()
 {
-  const double DISTANCE_THRESHOLD = 0.05;
-  const double ANGLE_THRESHOLD = 0.3;
+  const double DISTANCE_THRESHOLD = 0.02;
+  const double ANGLE_THRESHOLD = 0.1;
 
-  // TODO - position control servoing
-  // this doesn't work, but it shows the idea
-
-  double step = m_world->m_sim_timestep;
+  // normalize odo_pa to +-PI
+  this->odo_pa = NORMALIZE(this->odo_pa);
 
   // Get the pose error
-  //
   double error_x = this->com_px - this->odo_px;
   double error_y = this->com_py - this->odo_py;
   double error_a = this->com_pa - this->odo_pa;
 
   // handle the zero-crossing
-  if( error_a > M_PI ) 
-    error_a -= 2.0 * M_PI; 
+  error_a = NORMALIZE(error_a);
   
-  if( error_a < -M_PI )
-    error_a += 2.0 * M_PI;
-  
-  
-  printf( "Odo: %.2f %.2f %.2f\n", odo_px, odo_py, odo_pa );
-  printf( "Errors: %.2f %.2f %.2f\n", error_x, error_y, error_a );
+  //printf( "Odo: %.2f %.2f %.2f\n", odo_px, odo_py, odo_pa );
+  //printf( "Errors: %.2f %.2f %.2f\n", error_x, error_y, error_a );
 
   // set the translation speeds
-  if( this->enable_omnidrive )
+  if( this->drive_mode )
     {
       // set speeds proportional to error
       this->com_vx = error_x;
       this->com_vy = error_y;
       this->com_va = error_a;
     }
-  else // a little more complex with a diff steer robot
+  else // a little more complex with a diff steer robot - this
+ // controller seems to work ok
     {
       // find the angle to the goal
-      double error_a_goal = atan2( error_y, error_x );
-
-      // handle the zero-crossing
-      if( error_a_goal > M_PI ) 
-	error_a_goal -= 2.0 * M_PI; 
-      
-      if( error_a_goal < -M_PI )
-	error_a_goal += 2.0 * M_PI;
-
+      double error_a_goal = atan2( error_y, error_x ) - this->odo_pa;
       // find the distance from the goal
       double error_d_goal = hypot( error_y, error_x );
 
+      // if the goal is behind us, we'll go backwards!
+      if( error_a_goal > M_PI/2.0 || error_a_goal < -M_PI/2 )
+	{
+	  //puts( "BACKWARDS" );
+	  error_d_goal = -error_d_goal; // negative speed
+	  error_a_goal = NORMALIZE( error_a_goal + M_PI );// invert heading
+	}
+      //else
+	//puts( "FORWARDS" );
+      
       // if we're at the goal, turn to face the right direction
       if( fabs(error_d_goal) < DISTANCE_THRESHOLD )
 	{
-	  this->com_va = 0.5 * error_a;
-	  this->com_vx = 0.0;
+	  //puts( "turning to the right heading" );
+	  this->com_vx = error_d_goal;
 	  this->com_vy = 0.0;
+	  this->com_va = error_a;
 	}
       else // if we're pointing towards the goal, move towards it 
-	if( fabs(error_a_goal) < ANGLE_THRESHOLD )
-	  {
-	    this->com_vx = 0.5 * error_d_goal;
-	    this->com_vx = 0.0;
-	    this->com_vy = 0.0;
-	  }
+  	if( fabs(error_a_goal) < ANGLE_THRESHOLD )
+  	  {
+  	    //puts( "moving towards goal point" );
+  	    this->com_vx = error_d_goal;
+  	    this->com_vy = 0.0;
+  	    this->com_va = error_a_goal; // keep turning towards the goal
+  	  }
 	else // turn towards the goal
 	  {
-	    this->com_va = 0.5 * error_a_goal;
+	    //puts( "turning towards goal point" );
+	    this->com_va = error_a_goal;
 	    this->com_vx = 0.0;
 	    this->com_vy = 0.0;
 	  }
     }
+
+  // threshold speeds
+  this->com_vx = THMIN(this->com_vx,  0.5);
+  this->com_vx = THMAX(this->com_vx, -0.5);
+  this->com_vy = THMIN(this->com_vy,  0.5);
+  this->com_vy = THMAX(this->com_vy, -0.5);
+  this->com_va = THMIN(this->com_va,  1.0);
+  this->com_va = THMAX(this->com_va, -1.0);
 }
 
 #ifdef INCLUDE_RTK2
 
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the rtk gui
-void COmniPositionDevice::RtkStartup()
+void CPositionDevice::RtkStartup()
 {
   CPlayerEntity::RtkStartup();
   
