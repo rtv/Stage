@@ -24,7 +24,7 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.13.4.2 2003-02-01 23:19:51 rtv Exp $
+ * CVS info: $Id: library.cc,v 1.13.4.3 2003-02-03 03:07:26 rtv Exp $
  */
 
 #include "library.hh"
@@ -320,10 +320,14 @@ int CreateEntityFromLibrary( stage_model_t* model )
   return( model_library.CreateEntity( model ) ? 0 : -1);
 }
 
-int Update( double simtime )
+double UpdateSimulation( void )
 {
-  CEntity::root->Update( simtime );
-  return 0;
+  static double simtime = 0.0;
+
+  if( CEntity::root )
+    CEntity::root->Update( simtime+=0.1 );
+  
+  return simtime;
 }
 
 

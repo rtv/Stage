@@ -1,4 +1,4 @@
-/*  $Id: replace.h,v 1.1 2002-09-16 23:44:34 gerkey Exp $
+/*  $Id: replace.h,v 1.1.6.1 2003-02-03 03:07:26 rtv Exp $
  *
  * replacement function prototypes
  */
@@ -80,6 +80,12 @@ int poll (struct pollfd *fds, unsigned long int nfds, int timeout);
 #else
   #include <libgen.h> // for dirname(3)
 #endif // !HAVE_DIRNAME
+  
+/* some systems (Solaris, Darwin) don't have this defined */
+#if !HAVE_SOCKLEN_T
+  #define socklen_t int
+#endif //!HAVE_SOCKLEN_T
+
 
 #ifdef __cplusplus
 }

@@ -132,10 +132,9 @@ typedef struct
 typedef int stage_id_t;
 
 // the server reads a header to discover which type of data follows...
-typedef enum { StageModelPackets, 
-	       StagePropertyPackets, 
-	       StageCommand,
-	       StageContinue,
+typedef enum { STG_HDR_MODELS, 
+	       STG_HDR_PROPS, 
+	       STG_HDR_CMD,
 } stage_header_type_t;
 
 
@@ -151,15 +150,25 @@ typedef struct
 {
   stage_header_type_t type; // see enum above
   // the meaning of the data field varies with the message type:
-  // for _Packets types, this gives the number of packets to follow
-  // for Command types, specifies the command
-  // for Continue types, is not used.
+  // for STG_HDR_MODELS, gives the number of stage_model_t packets to follow
+  // for STG_HDR_CMD, specifies the command type
+  // for STG_HDR_PROPS, specifies the number of bytes to follow, of contiguous
+  // stage_property_t + data packet  pairs
+
+  uint32_t sec; // at this many seconds
+  uint32_t usec; // plus this many microseconds
+
   uint32_t data;   
 } __attribute ((packed)) stage_header_t;
 
 // COMMANDS - no packet follows; the header's data field is set to one
 // of these
-typedef enum { SAVEc = 1, LOADc, PAUSEc, DOWNLOADc, SUBSCRIBEc } stage_cmd_t;
+typedef enum { STG_CMD_CONTINUE = 1, 
+	       STG_CMD_SAVE, 
+	       STG_CMD_LOAD, 
+	       STG_CMD_PAUSE, 
+	       STG_CMD_UNPAUSE, 
+} stage_cmd_t;
 
 // this allows us to set a property for an entity
 // pretty much any data member of an entity can be set
@@ -194,15 +203,6 @@ typedef struct
   int32_t sizey;
   double scale;
 } __attribute ((packed)) stage_background_t;
-
-
-typedef struct
-{
-  //uint32_t step; // at this timestep
-  uint32_t sec; // at this many seconds
-  uint32_t usec; // plus this many microseconds
-  uint32_t len; // this many bytes of data follows (zero to many properties)
-} stage_report_header_t;
 
 
 // pose changes are so common that we have a special message for them,

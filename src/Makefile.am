@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.29.4.3 2003-02-01 23:19:51 rtv Exp $
+# $Id: Makefile.am,v 1.29.4.4 2003-02-03 03:07:26 rtv Exp $
 
 
 #SUBDIRS = models rtkstage gnome2
@@ -27,8 +27,6 @@ bin_PROGRAMS = stage
 stage_SOURCES = \
         colors.cc \
         colors.hh \
-	server.c \
-	server.h \
 	stageio.c \
 	stageio.h \
 	main.cc \

@@ -7,7 +7,7 @@ extern "C" {
   // C wrappers to access the library
   int CreateEntityFromLibrary( stage_model_t* model );
   int Startup( void );
-  int Update( double simtime );
+  double UpdateSimulation( void );
 
 #ifdef __cplusplus
 }

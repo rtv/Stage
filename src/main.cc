@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.3 2003-02-01 23:19:51 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.4 2003-02-03 03:07:26 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -106,6 +106,7 @@ void sig_quit(int signum)
   quit = 1;
 }
 
+  
 
 ///////////////////////////////////////////////////////////////////////////
 // Program entry
@@ -123,7 +124,7 @@ int main(int argc, char **argv)
       quit = 1;
     }
 
-  GuiInit( argc, argv );
+  //GuiInit( argc, argv );
   
   puts( "" ); // end the startup output line
   
@@ -137,11 +138,13 @@ int main(int argc, char **argv)
   // catch clock start/stop commands
   //signal(SIGUSR1, CatchSigUsr1 );
   
+  int c = 0;
   // the main loop  
   // update the simulation - stop when the quit flag is raised
   while( !quit ) 
     {
-      
+      printf( "cycle %d\n", c++ );
+
       // set up new clients
       if( AcceptConnections() == -1 ) break;
       
@@ -151,8 +154,11 @@ int main(int argc, char **argv)
       // update the world
       if( ServiceConnections() == -1 ) break;
 
+     
       // write out any changed, subscribed properties
-      //server->WriteToClients();
+      if( ReportResults( UpdateSimulation() ) == -1 ) break;
+
+      sleep( 1 ); // just stop the powerbook getting hot :)
     }
   
   // clean up and exit

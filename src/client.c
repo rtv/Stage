@@ -33,14 +33,29 @@ int main( int argc, char** argv )
       ent[2].parent_id = 0;
       strcpy( ent[2].token, "box" );
 
-
       
-      printf( "result %d\n", CreateModels( stage_fd, ent, 3 ) );
+      // create a bunch of devices
+      printf( "create models result %d\n", WriteModels( stage_fd, 0.0, ent, 3 ) );
 
+      int c;
+      //while( 1 )
+      for( c=0; c<10; c++ )
+	{
+	  printf( "cycle %d\n", c );
 
-      //stage_report_header_t rep;
-      //ReadPacket
+	  // tell stage to do an update
+	  printf( "command result %d\n", 
+		  WriteCommand( stage_fd, 0.0, STG_CMD_CONTINUE ) );
+	  
+	  puts( "reading a report header" );
+	  
+	  stage_header_t hdr;
 
+	  if( ReadHeader( stage_fd, &hdr ) == -1 )
+	    puts( "failed to read header" );
 
-  }
+	}
+    }
+    
+    return 0;
 }
