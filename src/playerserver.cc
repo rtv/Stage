@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerserver.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -190,7 +190,7 @@ bool CPlayerServer::StartupPlayer(int port)
     size_t areaSize = TOTAL_SHARED_MEMORY_BUFFER_SIZE;
 
     // make a unique temporary file for shared mem
-    strcpy( tmpName, "/tmp/playerIO.XXXXXX" );
+    strncpy( tmpName, "/tmp/playerIO.XXXXXX", sizeof(tmpName));
     int tfd = mkstemp( tmpName );
 
     // make the file the right size
