@@ -21,7 +21,7 @@
  * Desc: the regular MCL (Monte-Carlo Localization) device.
  * Author: Boyoon Jung
  * Date: 22 Nov 2002
- * $Id: regularmcldevice.cc,v 1.5 2002-12-08 02:43:52 boyoon Exp $
+ * $Id: regularmcldevice.cc,v 1.6 2002-12-10 02:35:40 boyoon Exp $
  */
 
 #include "regularmcldevice.hh"
@@ -60,8 +60,9 @@ CRegularMCLDevice::CRegularMCLDevice(LibraryItem* libit, CWorld *world, CEntity 
     this->hypothesis_color = ::LookupColor("blue");
 
     // no update
+    this->subscribe_flag = false;
     this->update_flag = false;
-    this->data.command = MCL_CMD_STOP;
+    this->data.command = MCL_CMD_NONE;
     m_last_update = 0;
 
 #ifdef INCLUDE_RTK2
@@ -153,7 +154,7 @@ bool CRegularMCLDevice::Load(CWorldFile *worldfile, int section)
 void CRegularMCLDevice::Update(double sim_time)
 {
     // slow down the update speed
-    if (sim_time - m_last_update < 0.2)
+    if (sim_time - m_last_update < 0.1)		// 10 Hz
 	return;
     else
 	m_last_update = sim_time;
@@ -161,8 +162,18 @@ void CRegularMCLDevice::Update(double sim_time)
     // retrieve the data from Player device
     if (GetCommand((void*)&this->data, sizeof(mcl_data_t)) > 0)
     {
-	switch (this->data.command)
+	// mark the current data has been processed
+	int command = this->data.command;
+	this->data.command = MCL_CMD_NONE;
+	PutCommand((void*)&this->data, sizeof(this->data.command));
+
+	switch (command)
 	{
+	    case MCL_CMD_NONE:
+		// there is no new data; do nothing
+		this->update_flag = false;
+		break;
+
 	    case MCL_CMD_CONFIG:
 		// send the configuration to Player device.
 		PutData((void*)&this->config, sizeof(mcl_config_t));
@@ -170,15 +181,18 @@ void CRegularMCLDevice::Update(double sim_time)
 
 	    case MCL_CMD_UPDATE:
 		// keep updating
+		this->subscribe_flag = true;
 		this->update_flag = true;
 		break;
 
 	    case MCL_CMD_STOP:
 		// stop updating
+		this->subscribe_flag = false;
 		this->update_flag = false;
 		break;
 
 	    default:
+		// error ?
 		PLAYER_WARN1("invalid MCL command (%d)\n", this->data.command);
 		this->update_flag = false;
 		break;
@@ -222,12 +236,20 @@ void CRegularMCLDevice::RtkUpdate()
 
     CPlayerEntity::RtkUpdate();
 
-    rtk_fig_clear(this->particle_fig);
-    rtk_fig_clear(this->hypothesis_fig);
-  
-    // if a client is subscribed to this device
-    if (this->update_flag)
+    // if a client is not subscribed to this device
+    if (! this->subscribe_flag)
     {
+	// clear the canvas
+	rtk_fig_clear(this->particle_fig);
+	rtk_fig_clear(this->hypothesis_fig);
+    }
+    // if a client is subscribed to this device
+    else if (this->update_flag)
+    {
+	// clear the canvas
+	rtk_fig_clear(this->particle_fig);
+	rtk_fig_clear(this->hypothesis_fig);
+  
 	// draw particles
 	if (this->data.num_particles > 0) {
 	    rtk_fig_color_rgb32(this->particle_fig, this->particle_color);

@@ -21,7 +21,7 @@
  * Desc: Device to perform the regular MCL (Monte-Carlo Localization).
  * Author: Boyoon Jung
  * Date: 22 Nov 2002
- * $Id: regularmcldevice.hh,v 1.6 2002-12-08 02:43:52 boyoon Exp $
+ * $Id: regularmcldevice.hh,v 1.7 2002-12-10 02:35:40 boyoon Exp $
  */
 
 #ifndef REGULARMCLDEVICE_HH
@@ -47,9 +47,10 @@
 
 #define MCL_MAX_PARTICLES 100000		// packet size must be fixed
 
-#define MCL_CMD_CONFIG	0			// command 'send configuration'
-#define MCL_CMD_UPDATE	1			// command 'update'
-#define MCL_CMD_STOP	2			// command 'stop update'
+#define MCL_CMD_NONE	0			// there is no command
+#define MCL_CMD_CONFIG	1			// command 'send configuration'
+#define MCL_CMD_UPDATE	2			// command 'update'
+#define MCL_CMD_STOP	3			// command 'stop update'
 
 
 /*****************************************************************************
@@ -125,7 +126,7 @@ typedef struct mcl_hypothesis
 // data coming from a Player device
 typedef struct mcl_data
 {
-    bool command;			// is a request message ?
+    int command;			// is a request message ?
     uint32_t num_hypothesis;
     mcl_hypothesis_t hypothesis[PLAYER_LOCALIZATION_MAX_HYPOTHESIS];
     uint32_t num_particles;
@@ -182,6 +183,9 @@ class CRegularMCLDevice : public CPlayerEntity
 
 	// data
 	mcl_data_t data;
+
+	// subscribed?
+	bool subscribe_flag;
 
 	// start update?
 	bool update_flag;
