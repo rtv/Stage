@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.63 2004-10-05 19:37:34 rtv Exp $
+// $Id: stagecpp.cc,v 1.64 2004-10-11 05:22:23 rtv Exp $
 
 //#define DEBUG
 
@@ -24,7 +24,7 @@ static CWorldFile wf;
 
 extern stg_lib_entry_t model_entry, laser_entry, position_entry, ranger_entry, blobfinder_entry, fiducial_entry;
 
-/** @addtogroup gui
+/** @defgroup model_window GUI Window
 
 <h2>Worldfile Properties</h2>
 
@@ -41,7 +41,7 @@ window
 )
 @endverbatim
 
-@par Properties
+@par Details
 - size [int int]
   - [width height] 
   - size of the window in pixels
@@ -95,8 +95,14 @@ void save_gui( gui_window_t* win )
   wf.WriteFloat( win->wf_section, "scale", win->canvas->sx );
 }
 
-
-/** @addtogroup model
+/** 
+@defgroup model_basic Basic model
+ 
+The basic model simulates an object with basic properties; position,
+size, velocity, color, visibility to various sensors, etc. The basic
+model also has a body made up of a list of lines. Internally, the
+basic model is used base class for all other model types. You can use
+the basic model to simulate environmental objects
 
 <h2>Worldfile properties</h2>
 
@@ -136,7 +142,7 @@ model
 )
 @endverbatim
 
-@par Properties
+@par Details
 - pose [float float float]
   - [x_position y_position heading_angle]
   - specify the pose of the model in its parent's coordinate system
@@ -340,7 +346,7 @@ void configure_model( stg_model_t* mod, int section )
   stg_model_set_mass( mod, &mass );
 }
 
-/** @addtogroup model_laser 
+/** @defgroup model_laser Laser model
 
 <h2>Worldfile properties</h2>
 
@@ -360,7 +366,7 @@ laser
 )
 @endverbatim
 
-@par Properties
+@par Details
 - samples int
   - the number of laser samples per scan
 - range_min float
@@ -389,7 +395,7 @@ void configure_laser( stg_model_t* mod, int section )
   stg_model_set_config( mod, &lconf, sizeof(lconf));
 }
 
-/** @addtogroup model_fiducial
+/** @addtogroup model_fiducial Fiducial model
 
 <h2>Worldfile properties</h2>
 
@@ -408,7 +414,7 @@ fiducialfinder
 )
 @endverbatim
 
-@par Properties
+@par Details
 - range_min float
   - the minimum range reported by the sensor, in meters. The sensor will detect objects closer than this, but report their range as the minimum.
 - range_max float
@@ -439,7 +445,7 @@ void configure_fiducial( stg_model_t* mod, int section )
   stg_model_set_config( mod, &fcfg, sizeof(fcfg));
 }
 
-/** @addtogroup model_blobfinder 
+/** @addtogroup model_blobfinder Blobfinder model
 
 <h2>Worldfile properties</h2>
 
@@ -459,7 +465,7 @@ blobfinder
 )
 @endverbatim
 
-@par Properties
+@par Details
 - channel_count int
   - number of channels; i.e. the number of discrete colors detected
 - channels [ string ... ]
@@ -510,7 +516,7 @@ void configure_blobfinder( stg_model_t* mod, int section )
   stg_model_set_config( mod, &bcfg, sizeof(bcfg));
 }
 
-/** @addtogroup model_ranger
+/** @addtogroup model_ranger Ranger model
 
 <h2>Worldfile properties</h2>
 
@@ -548,7 +554,7 @@ ranger
 
 The ranger model allows configuration of the pose, size and view parameters of each transducer seperately (using spose[index], ssize[index] and sview[index]). However, most users will set a common size and view (using ssize and sview), and just specify individual transducer poses.
 
-@par Properties
+@par Details
 - scount int 
   - the number of range transducers
 - spose[\<transducer index\>] [float float float]
@@ -627,7 +633,7 @@ void configure_ranger( stg_model_t* mod, int section )
     }
 }
 
-/** @addtogroup model_position
+/** @addtogroup model_position Position model
 
 <h2>Worldfile properties</h2>
 
@@ -642,7 +648,7 @@ position
 )
 @endverbatim
 
-@par Properties
+@par Details
 - drive "diff" or "omni"
   - select differential-steer mode (like a Pioneer) or omnidirectional mode.
 
