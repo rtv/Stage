@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.59 2002-11-15 03:07:47 jazzfunk Exp $
+ * CVS: $Id: main.cc,v 1.60 2002-11-19 21:14:38 jazzfunk Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -82,6 +82,7 @@ void PrintUsage( void )
 	 " -u <float>\tSet the desired real time per cycle [0.1 sec].\n"
 	 " -f \t\tRun as fast as possible; don't try to match real time\n"
 	 " -r <IP:port>\tSend sensor data to this address in RTP format\n"
+	 " -s\t\tStart stage with the clock stopped (send SIGUSR1 to toggle clock)\n"
 	 "\nSwitches for experimental/undocumented features:\n"
 	 " -p <portnum>\tSet the server port [6601]\n"
 	 " -c <hostname>\tRun as a client to a Stage server on hostname\n"
