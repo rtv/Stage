@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.35 2002-12-05 04:50:47 rtv Exp $
+dnl $Id: configure.in,v 1.36 2003-03-08 21:14:17 inspectorg Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -81,7 +81,7 @@ dnl otherwise use the RTK GUI unless it is explicitly refused
 dnl where's RTK?
 AC_ARG_WITH(rtk, [   --with-rtk=dir      Location of RTK],
 RTK_DIR=$with_rtk,
-RTK_DIR="${HOME}/librtk-2.1")
+RTK_DIR="${HOME}/librtk-2.2")
 AC_SUBST(RTK_DIR)
 
 if test "x$with_gnome2" = "xyes"; then

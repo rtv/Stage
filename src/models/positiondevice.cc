@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/positiondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.9 $
+//  $Author: inspectorg $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -133,23 +133,23 @@ void CPositionDevice::Update( double sim_time )
     UpdateConfig();
 
     if( !PositionGetCommand( &this->com_px, &this->com_py, &this->com_pa, 
-			     &this->com_vx, &this->com_vy, &this->com_va ) )
+                             &this->com_vx, &this->com_vy, &this->com_va ) )
       PRINT_DEBUG( "** NO COMMAND AVAILABLE ** " );
     
     // update the robot's position
     if( this->motors_enabled )
-      {
-	if( this->control_mode == POSITION_CONTROL_MODE )
-	  // compute some velocities that'll move us to the goal position
-	  PositionControl();
+    {
+      if( this->control_mode == POSITION_CONTROL_MODE )
+        // compute some velocities that'll move us to the goal position
+        PositionControl();
 	
-	// and update our position based on the current velocities
-	Move();
-      }
+      // and update our position based on the current velocities
+      Move();
+    }
     
     PositionPutData( this->odo_px, this->odo_py, this->odo_pa,
-		     this->com_vx, this->com_vy,  this->com_va, 
-		     this->stall );
+                     this->com_vx, this->com_vy,  this->com_va, 
+                     this->stall );
   }
   else  
   {
