@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.108 2004-11-21 10:53:02 rtv Exp $
+ * CVS: $Id: stage.h,v 1.109 2004-11-21 11:08:01 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -607,7 +607,7 @@ extern "C" {
 
   typedef void(*func_data_notify_t)( void* );
 
-  typedef void*(*func_render_t)(struct _stg_model*,void*,size_t);
+  typedef void(*func_render_t)(struct _stg_model*,void*,size_t);
 
 
   /// defines a simulated world
@@ -950,8 +950,12 @@ stg_model_t* itl_first_matching( itl_t* itl,
   int stg_model_set_energy_data( stg_model_t* mod, stg_energy_data_t* gf );
 
   /** set a model's polygon array*/
-  int stg_model_set_polygons( stg_model_t* mod, stg_polygon_t* polys, size_t poly_count );
-
+  int stg_model_set_polygons( stg_model_t* mod, 
+			      stg_polygon_t* polys, size_t poly_count );
+  
+  /** get a model's polygon array */
+  stg_polygon_t* stg_model_get_polygons( stg_model_t* mod, size_t* count);
+  
   /** set a model's obstacle return value */
   int stg_model_set_obstaclereturn( stg_model_t* mod, stg_bool_t* ret );
 

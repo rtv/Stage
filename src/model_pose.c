@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.36 $
+//  $Revision: 1.37 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -139,9 +139,9 @@ int stg_model_update_pose( stg_model_t* mod )
       gvel.a -= gvel.a * mod->friction; 
 
       // lower bounds
-      if( fabs(gvel.x) < 0.001 ) gvel.x == 0.0;
-      if( fabs(gvel.y) < 0.001 ) gvel.y == 0.0;
-      if( fabs(gvel.a) < 0.01 ) gvel.a == 0.0;
+      if( fabs(gvel.x) < 0.001 ) gvel.x = 0.0;
+      if( fabs(gvel.y) < 0.001 ) gvel.y = 0.0;
+      if( fabs(gvel.a) < 0.01 ) gvel.a = 0.0;
 	  
     }
 

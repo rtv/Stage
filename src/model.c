@@ -219,7 +219,7 @@ void stg_model_destroy( stg_model_t* mod )
   if( mod->token ) free( mod->token );
 
   if( mod->polygons->data ) 
-    stg_polygons_destroy( mod->polygons->data, mod->polygons->len ); 
+    stg_polygons_destroy( (stg_polygon_t*)mod->polygons->data, mod->polygons->len ); 
   
   free( mod );
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_driver.cc,v 1.10 2004-11-21 10:53:03 rtv Exp $
+ * $Id: stg_driver.cc,v 1.11 2004-11-21 11:08:01 rtv Exp $
  */
 
 // STAGE-1.4 DRIVER CLASS ///////////////////////////////
@@ -134,7 +134,6 @@ int Stage1p4::Shutdown()
 //#include "drivertable.h"
 
 
-/* need the extern to avoid C++ name-mangling  */
 void StgSimulation_Register(DriverTable *table);
 void StgLaser_Register(DriverTable *table);
 void StgPosition_Register(DriverTable *table);
@@ -144,6 +143,8 @@ void StgBlobfinder_Register(DriverTable *table);
 void StgFiducial_Register(DriverTable *table);
 //void StgBlinkenlight_Register(DriverTable *table);
 
+
+/* need the extern to avoid C++ name-mangling  */
 extern "C" {
   
   int player_driver_init(DriverTable* table)
