@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.57 $
+//  $Revision: 1.58 $
 //
 // Usage:
 //  (empty)
@@ -47,7 +47,7 @@ extern bool g_log_output;
 extern char g_log_filename[];
 extern char g_cmdline[];
 
-int g_log_fd = 0; // logging file descriptor
+int g_log_fd = -1; // logging file descriptor
 
 //#include <stage.h>
 #include "world.hh"
@@ -565,11 +565,12 @@ void* CWorld::Main(void *arg)
       //puts( g_log_filename );
       
       int log_instance = 0;
-      while( g_log_fd < 1 )
+      while( g_log_fd < 0 )
 	{
 	  char fname[256];
 	  sprintf( fname, "%s.%d", g_log_filename, log_instance++ );
-	  g_log_fd = open( fname, O_CREAT | O_EXCL | O_WRONLY );
+	  g_log_fd = open( fname, O_CREAT | O_EXCL | O_WRONLY, 
+			   S_IREAD | S_IWRITE );
 	}
 
       struct timeval t;
@@ -678,7 +679,7 @@ void CWorld::Update()
   
   last_real_time += real_timestep;
   
-  if( g_log_output && g_log_fd > 0 )
+  if( g_log_output && g_log_fd >= 0 )
     {
       static long cycle = 0;
       char line[512];
