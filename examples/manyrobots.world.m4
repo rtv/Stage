@@ -11,10 +11,14 @@ enable environment_server
 define(`baseport', `40000')
 create box 
 
+set host = robot
 # create a bunch of sonar robots
 #forloop(`i',0,10,`simplerobot(eval(i+14),eval(i+14),0,eval(i+baseport))')
 forloop(`i',0,49,`simplerobot(eval(i+14),eval(i+14),0,eval(i+baseport))')
-#forloop(`i',0,49,`simplerobot(eval(i+14),eval(i+15),0,eval(i+baseport+50))')
+
+set host = orac
+
+forloop(`i',0,49,`simplerobot(eval(i+14),eval(i+15),0,eval(i+baseport+50))')
 #forloop(`i',0,49,`simplerobot(eval(i+14),eval(i+16),0,eval(i+baseport+100))')
 #forloop(`i',0,49,`simplerobot(eval(i+14),eval(i+17),0,eval(i+baseport+150))')
 #forloop(`i',0,49,`simplerobot(eval(i+14),eval(i+18),0,eval(i+baseport+200))')

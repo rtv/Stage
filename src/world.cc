@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.48 $
+//  $Revision: 1.49 $
 //
 // Usage:
 //  (empty)
@@ -93,6 +93,10 @@ CWorld::CWorld()
     m_object = NULL;
     m_object_alloc = 0;
     m_object_count = 0;
+
+    m_real_timeslice_ms = 50; // 20Hz default
+    m_stage_timeslice_ms = m_real_timeslice_ms; // approx real-time default
+
 
     // Allow the simulation to run
     //
@@ -505,7 +509,8 @@ void* CWorld::Main(void *arg)
   //start timer
   struct itimerval tick;
   tick.it_value.tv_sec = tick.it_interval.tv_sec = 0;
-  tick.it_value.tv_usec = tick.it_interval.tv_usec = 20000; // 0.02 seconds
+  //tick.it_value.tv_usec = tick.it_interval.tv_usec = 20000; // 0.02 seconds
+  tick.it_value.tv_usec = tick.it_interval.tv_usec = world->m_real_timeslice_ms * 1000; 
      
   if( setitimer( ITIMER_REAL, &tick, 0 ) == -1 )
     {
@@ -561,47 +566,43 @@ void* CWorld::Main(void *arg)
 //
 void CWorld::Update()
 {
-  //static double last_output_time = 0;
-
-    // Compute elapsed real time
-    //
-    double timestep = GetRealTime() - m_last_time;
-    m_last_time += timestep;
-    
-    // Place an upper bound on the simulator timestep
-    // This may make us run slower than real-time.
-    //
-    double simtimestep = timestep;
-    if (timestep > m_max_timestep)
-    {
-        //PRINT_MSG2("warning: max timestep exceeded (%f > %f)",
-                   //(double) simtimestep, (double) m_max_timestep);
-        simtimestep = m_max_timestep;
-    }
-
-    // Update the simulation time
-    //
-    m_sim_time += simtimestep;
-
+  // this much simulated time has passed since the last update
+  //
+  double timestep = m_stage_timeslice_ms / 1000.0;
+  
+  // Update the simulation time
+  //
+  m_sim_time += timestep;
+  m_last_time += timestep; // TODO: get rid of this! it's used in a couple of ents
+  
 #ifdef WATCH_RATES
     // Keep track of the sim/real time ratio
     // This is done as a moving window filter so we can see
     // the change over time.
     //
+
+  static double last_real_time;
+  
+  double realtimestep = GetRealTime() - last_real_time;
+    
+
+    last_real_time += realtimestep;
+
     double a = 0.05;
-    m_update_ratio = (1 - a) * m_update_ratio + a * (simtimestep / timestep);
+    m_update_ratio = (1 - a) * m_update_ratio + a * ( timestep / realtimestep );
     
     // Keep track of the update rate
     // This is done as a moving window filter so we can see
     // the change over time.
     // Note that we must use the *real* timestep to get sensible results.
     //
-    m_update_rate = (1 - a) * m_update_rate + a * (1 / timestep);
+    m_update_rate = (1 - a) * m_update_rate + a * (1.0 / realtimestep);
 
     static int period = 0;
     if( (++period %= 20)  == 0 )
       {
-	printf( "%4.0f Hz (%.2f)\r", m_update_rate, m_update_ratio );
+	//printf( "Real: %4.0f Hz (%3.1f%%)\r", m_update_rate, (100.0 * m_update_ratio) );
+	printf( " %4.0f Hz (%2.1f)\r", m_update_rate,  m_update_ratio );
 	fflush( stdout );
       }
 #endif

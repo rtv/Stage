@@ -294,6 +294,10 @@ void CWorld::ListenForTruthConnections( void )
       fflush( stdout );
 #endif            
 
+      // set the dirty flag for all entities on this connection
+      for( int i=0; i < m_object_count; i++ )
+	m_object[i]->m_dirty[ m_truth_connection_count ] = true;
+
       // add the new connection to the array
       m_truth_connections[ m_truth_connection_count ].fd = connfd;
       m_truth_connections[ m_truth_connection_count ].events = POLLIN;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.25 $
+//  $Revision: 1.26 $
 //
 // Usage:
 //  (empty)
@@ -78,6 +78,17 @@ public:
   
   // a general-purpose obstacle entity, used as a brick in the wall
   CEntity* wall;
+
+private:
+  // the two time slices determine the speed that stage updates itself
+  // and the time reported to clients, respectively
+  // e.g. if they are both set to 50 (milliseconds), thes stage will
+  // update at _approximately_ 20Hz, but stage will increment its internal clock
+  // by _exactly_ 50ms. Thus Stage is approximateoly real-time.
+  // the ratio of these is adjusted to run stage faster or slower than real time.
+ 
+  int m_real_timeslice_ms; // the real-time interval between stage updates
+  int m_stage_timeslice_ms; // the simulated-time length of each update cycle
 
   // Thread control
 private: pthread_t m_thread;

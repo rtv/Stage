@@ -1,6 +1,6 @@
 ####################################################################################
 # TODO 
-# $Id: TODO,v 1.8 2001-09-23 22:36:36 vaughan Exp $
+# $Id: TODO,v 1.9 2001-09-25 02:54:13 vaughan Exp $
 ####################################################################################
 
 ## IN PROGRESS #####################################################################
@@ -15,6 +15,7 @@
 
 ## NICE ############################################################################
 
+ - nice up player output to show all port numbers and hostname that connects
  - configuration file write: save only relevant state
  - add vision device sensor display - skeleton is in place
 

@@ -13,7 +13,7 @@ create position_device pose 3.47 2.03 144 port 6665
 
      create ptz_device
      {
-        create vision_device
+        #create vision_device
      } 
   }
 }
