@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.9 2004-09-25 02:14:59 rtv Exp $
+ * $Id: matrix.c,v 1.10 2004-09-27 00:58:01 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -13,9 +13,10 @@
 
 //#define DEBUG
 
-// if this is defined, empty matrix cells are deleted, saving a little
-// memory at the cost of a little time.
-#define STG_DELETE_EMPTY_CELLS 0
+// if this is defined, empty matrix cells are deleted, saving memory
+// at the cost of a little time. If you turn this off - Stage may use
+// a LOT of memory if it runs a long time in large worlds.
+#define STG_DELETE_EMPTY_CELLS 1
 
 // basic integer drawing functions (not intended for external use)
 void draw_line( stg_matrix_t* matrix,
@@ -31,22 +32,32 @@ void matrix_value_destroy( gpointer value )
   g_ptr_array_free( (GPtrArray*)value, TRUE );
 }
 
-// compress the two coordinates into the two halves of a single gint
+// compress the two (long) coordinates into a single (ulong) value
 guint matrix_hash( gconstpointer key )
 {
   stg_matrix_coord_t* coord = (stg_matrix_coord_t*)key;
   
-  gshort x = (gshort)coord->x; // ignore overflow
-  gshort y = (gshort)coord->y; // ignore overflow
+  long x = coord->x * 73856093; // big prime numbers
+  long y = coord->y * 19349663;  
+  long z = x ^ y; // XOR
+  
+  return( (guint)z );
+  
+  //gshort x = ; // ignore overflow
+  //gshort y = (gshort)coord->y; // ignore overflow
   
   //printf( " %d %d hash %d\n", x, y, ( (x << 16) | y ) );
 
-  return( (guint)((x << 16) | y) );
+  //return( (guint)((((gshort)coord->x) << 16) | (gshort)coord->y) );
 }
 
 // returns TRUE if the two coordinates are the same, else FALSE
 gboolean matrix_equal( gconstpointer c1, gconstpointer c2 )
 {
+  static long hits = 0;
+  
+  //printf( "hits %ld\n", ++hits );
+
   stg_matrix_coord_t* mc1 = (stg_matrix_coord_t*)c1;
   stg_matrix_coord_t* mc2 = (stg_matrix_coord_t*)c2;
   
@@ -119,24 +130,24 @@ GPtrArray* stg_matrix_table_add_cell( GHashTable* table, glong x, glong y )
 GPtrArray* stg_matrix_cell_get( stg_matrix_t* matrix, double x, double y)
 {
   return stg_table_cell( matrix->table, 
-			 (glong)(x * matrix->ppm), 
-			 (glong)(y * matrix->ppm) );  
+			 (glong)floor(x * matrix->ppm), 
+			 (glong)floor(y * matrix->ppm) );  
 }
 
 // get the array of pointers in cell y*width+x, specified in meters
 GPtrArray* stg_matrix_bigcell_get( stg_matrix_t* matrix, double x, double y)
 {
   return stg_table_cell( matrix->bigtable, 
-			 (glong)(x * matrix->bigppm), 
-			 (glong)(y * matrix->bigppm) );  
+			 (glong)floor(x * matrix->bigppm), 
+			 (glong)floor(y * matrix->bigppm) );  
 }
 
 // get the array of pointers in cell y*width+x, specified in meters
 GPtrArray* stg_matrix_medcell_get( stg_matrix_t* matrix, double x, double y)
 {
   return stg_table_cell( matrix->medtable, 
-			 (glong)(x * matrix->medppm), 
-			 (glong)(y * matrix->medppm) );  
+			 (glong)floor(x * matrix->medppm), 
+			 (glong)floor(y * matrix->medppm) );  
 }
 
 
@@ -145,12 +156,12 @@ void stg_matrix_cell_append(  stg_matrix_t* matrix,
 			      double x, double y, void* object )
 {
   GPtrArray* cell = stg_matrix_cell_get( matrix, x, y );
-  
+ 
   // if the cell is empty we create a new ptr array for it
   if( cell == NULL )
     cell = stg_matrix_table_add_cell( matrix->table, 
-				      (glong)(x*matrix->ppm),
-				      (glong)(y*matrix->ppm) );
+				      (glong)floor(x*matrix->ppm),
+				      (glong)floor(y*matrix->ppm) );
   else // make sure we're only in the cell once 
     g_ptr_array_remove_fast( cell, object );
   
@@ -162,8 +173,8 @@ void stg_matrix_cell_append(  stg_matrix_t* matrix,
   // if the cell is empty we create a new ptr array for it
   if( medcell == NULL )
     medcell = stg_matrix_table_add_cell( matrix->medtable, 
-					 (glong)(x*matrix->medppm),
-					 (glong)(y*matrix->medppm) );
+					 (glong)floor(x*matrix->medppm),
+					 (glong)floor(y*matrix->medppm) );
   else // make sure we're only in the cell once 
     g_ptr_array_remove_fast( medcell, object );
   
@@ -174,8 +185,8 @@ void stg_matrix_cell_append(  stg_matrix_t* matrix,
   
   if( bigcell == NULL )
     bigcell = stg_matrix_table_add_cell( matrix->bigtable, 
-					 (glong)(x*matrix->bigppm), 
-					 (glong)(y*matrix->bigppm) );
+					 (glong)floor(x*matrix->bigppm), 
+					 (glong)floor(y*matrix->bigppm) );
   else // make sure we're only in the cell once 
     g_ptr_array_remove_fast( bigcell, object );
   
@@ -207,8 +218,8 @@ void stg_matrix_cell_remove( stg_matrix_t* matrix,
       if( cell->len == 0 )
 	{
 	  stg_matrix_coord_t coord;
-	  coord.x = (glong)(x*matrix->ppm);
-	  coord.y = (glong)(y*matrix->ppm);
+	  coord.x = (glong)floor(x*matrix->ppm);
+	  coord.y = (glong)floor(y*matrix->ppm);
 	  
 	  g_hash_table_remove( matrix->table, &coord );
 	  //GPtrArray* p = stg_matrix_cell( matrix, x, y );

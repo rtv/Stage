@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.56 2004-09-25 02:15:00 rtv Exp $
+// $Id: stagecpp.cc,v 1.57 2004-09-27 00:58:01 rtv Exp $
 
 //#define DEBUG
 
@@ -32,29 +32,18 @@ void configure_model( stg_model_t* mod, int section )
   pose.x = wf.ReadTupleLength(section, "pose", 0, STG_DEFAULT_POSEX );
   pose.y = wf.ReadTupleLength(section, "pose", 1, STG_DEFAULT_POSEY );
   pose.a = wf.ReadTupleAngle(section, "pose", 2, STG_DEFAULT_POSEA );      
-  
-  //if( pose.x || pose.y || pose.a )
-  //stg_model_prop_with_data( mod, STG_PROP_POSE, &pose, sizeof(pose) );
   stg_model_set_pose( mod, &pose );
-
   
-  /** Load the geometry */
   stg_geom_t geom;
   geom.pose.x = wf.ReadTupleLength(section, "origin", 0, STG_DEFAULT_GEOM_POSEX );
   geom.pose.y = wf.ReadTupleLength(section, "origin", 1, STG_DEFAULT_GEOM_POSEY);
   geom.pose.a = wf.ReadTupleLength(section, "origin", 2, STG_DEFAULT_GEOM_POSEA );
-  geom.size.x = wf.ReadTupleLength(section, "size", 0, STG_DEFAULT_GEOM_SIZEX );
-  geom.size.y = wf.ReadTupleLength(section, "size", 1, STG_DEFAULT_GEOM_SIZEY );
-
-//   if( geom.pose.x != STG_DEFAULT_GEOM_POSEX ||
-//       geom.pose.y != STG_DEFAULT_GEOM_POSEY ||
-//       geom.pose.a != STG_DEFAULT_GEOM_POSEA ||
-//       geom.size.x != STG_DEFAULT_GEOM_SIZEX ||
-//       geom.size.y != STG_DEFAULT_GEOM_SIZEY )
-//     stg_model_prop_with_data( mod, STG_PROP_GEOM, &geom, sizeof(geom) );
+  //geom.size.x = wf.ReadTupleLength(section, "size", 0, STG_DEFAULT_GEOM_SIZEX );
+  //geom.size.y = wf.ReadTupleLength(section, "size", 1, STG_DEFAULT_GEOM_SIZEY );
+  geom.size.x = wf.ReadTupleLength(section, "size", 0, 0 );
+  geom.size.y = wf.ReadTupleLength(section, "size", 1, 0 );
 
   stg_model_set_geom( mod, &geom );
-
       
   stg_bool_t obstacle;
   obstacle = wf.ReadInt( section, "obstacle_return", STG_DEFAULT_OBSTACLERETURN );    
@@ -102,6 +91,7 @@ void configure_model( stg_model_t* mod, int section )
       stg_model_set_color( mod, &color );
     }
 
+
   const char* bitmapfile = wf.ReadString( section, "bitmap", NULL );
   if( bitmapfile )
     {
@@ -114,9 +104,23 @@ void configure_model( stg_model_t* mod, int section )
       PRINT_DEBUG2( "in %s attempting to load %s",
 		    path, bitmapfile );
 #endif
-
-      if( stg_load_image( bitmapfile, &rects, &num_rects ) )
+      
+      int image_width=0, image_height=0;
+      if( stg_load_image( bitmapfile, &rects, &num_rects, 
+			  &image_width, &image_height ) )
 	exit( -1 );
+      
+      double bitmap_resolution = 
+	wf.ReadFloat( section, "bitmap_resolution", 0 );
+      
+      // if a bitmap resolution was specified, we override the object
+      // geometry
+      if( bitmap_resolution )
+	{
+	  geom.size.x = image_width *  bitmap_resolution;
+	  geom.size.y = image_height *  bitmap_resolution; 	    
+	  stg_model_set_geom( mod, &geom );	  
+	}
 	  
       // convert rects to an array of lines
       int num_lines = 4 * num_rects;
@@ -133,7 +137,7 @@ void configure_model( stg_model_t* mod, int section )
 	  
     }
       
-  int linecount = wf.ReadInt( section, "lines.count", 0 );
+  int linecount = wf.ReadInt( section, "lines", 0 );
   if( linecount > 0 )
     {
       char key[256];
@@ -141,21 +145,19 @@ void configure_model( stg_model_t* mod, int section )
       int l;
       for(l=0; l<linecount; l++ )
 	{
-	  snprintf(key, sizeof(key), "lines.points[%d]", l);
+	  snprintf(key, sizeof(key), "line[%d]", l);
 
 	  lines[l].x1 = wf.ReadTupleLength(section, key, 0, 0);
 	  lines[l].y1 = wf.ReadTupleLength(section, key, 1, 0);
 	  lines[l].x2 = wf.ReadTupleLength(section, key, 2, 0);
 	  lines[l].y2 = wf.ReadTupleLength(section, key, 3, 0);	      
 	}
-	  
+  
       // printf( "NOTE: loaded line %d/%d (%.2f,%.2f - %.2f,%.2f)\n",
       //      l, linecount, 
       //      lines[l].x1, lines[l].y1, 
       //      lines[l].x2, lines[l].y2 ); 
 	  
-      //stg_model_prop_with_data( mod, STG_PROP_LINES,
-      //			lines, linecount * sizeof(stg_line_t) );
       stg_model_set_lines( mod, lines, linecount );
       free( lines );
     }
@@ -168,13 +170,13 @@ void configure_model( stg_model_t* mod, int section )
     
   stg_energy_config_t ecfg;
   ecfg.capacity 
-    = wf.ReadFloat(section, "energy.capacity", STG_DEFAULT_ENERGY_CAPACITY );
+    = wf.ReadFloat(section, "energy_capacity", STG_DEFAULT_ENERGY_CAPACITY );
   ecfg.probe_range 
-    = wf.ReadFloat(section, "energy.range", STG_DEFAULT_ENERGY_PROBERANGE );      
+    = wf.ReadFloat(section, "energy_range", STG_DEFAULT_ENERGY_PROBERANGE );      
   ecfg.give_rate 
     = wf.ReadFloat(section, "energy_return", STG_DEFAULT_ENERGY_GIVERATE );
   ecfg.trickle_rate 
-    = wf.ReadFloat(section, "energy.trickle", STG_DEFAULT_ENERGY_TRICKLERATE );
+    = wf.ReadFloat(section, "energy_trickle", STG_DEFAULT_ENERGY_TRICKLERATE );
   stg_model_set_energy_config( mod, &ecfg );
 
   stg_kg_t mass;
@@ -185,10 +187,10 @@ void configure_model( stg_model_t* mod, int section )
 /** @addtogroup worldfile */
 /** @{ */
 /** @defgroup worldfilelaser Laser model properties
- - laser.samples
- - laser.range_min
- - laser.range_max
- - laser.fov
+ - samples
+ - range_min
+ - range_max
+ - fov
 */
 /** @} */
 
@@ -199,13 +201,13 @@ void configure_laser( stg_model_t* mod, int section )
   memset( &lconf, 0, sizeof(lconf) );
   
   lconf.samples = 
-    wf.ReadInt(section, "laser.samples", STG_DEFAULT_LASER_SAMPLES);
+    wf.ReadInt(section, "samples", STG_DEFAULT_LASER_SAMPLES);
   lconf.range_min = 
-    wf.ReadLength(section, "laser.range_min", STG_DEFAULT_LASER_MINRANGE);
+    wf.ReadLength(section, "range_min", STG_DEFAULT_LASER_MINRANGE);
   lconf.range_max = 
-    wf.ReadLength(section, "laser.range_max", STG_DEFAULT_LASER_MAXRANGE);
+    wf.ReadLength(section, "range_max", STG_DEFAULT_LASER_MAXRANGE);
   lconf.fov = 
-    wf.ReadAngle(section, "laser.fov", STG_DEFAULT_LASER_FOV);
+    wf.ReadAngle(section, "fov", STG_DEFAULT_LASER_FOV);
 
   stg_model_set_config( mod, &lconf, sizeof(lconf));
 }
@@ -213,10 +215,10 @@ void configure_laser( stg_model_t* mod, int section )
 /** @addtogroup worldfile */
 /** @{ */
 /** @defgroup worldfilefiducial Fiducial model properties
- - fiducial.range_min
- - fiducial.range_max_anon
- - fiducial.range_max_id
- - fiducial.fov
+ - range_min
+ - range_max_anon
+ - range_max_id
+ - fov
 */
 /** @} */
 
@@ -224,16 +226,16 @@ void configure_fiducial( stg_model_t* mod, int section )
 {
   stg_fiducial_config_t fcfg;
   fcfg.min_range = 
-    wf.ReadLength(section, "fiducial.range_min", 
+    wf.ReadLength(section, "range_min", 
 		  STG_DEFAULT_FIDUCIAL_RANGEMIN );
   fcfg.max_range_anon = 
-    wf.ReadLength(section, "fiducial.range_max_anon", 
+    wf.ReadLength(section, "range_max", 
 		  STG_DEFAULT_FIDUCIAL_RANGEMAXANON );
   fcfg.fov = 
-    wf.ReadAngle(section, "fiducial.fov",
+    wf.ReadAngle(section, "fov",
 		 STG_DEFAULT_FIDUCIAL_FOV );
   fcfg.max_range_id = 
-    wf.ReadLength(section, "fiducial.range_max_id", 
+    wf.ReadLength(section, "range_max_id", 
 		  STG_DEFAULT_FIDUCIAL_RANGEMAXID );
 
   stg_model_set_config( mod, &fcfg, sizeof(fcfg));
@@ -242,7 +244,9 @@ void configure_fiducial( stg_model_t* mod, int section )
 /** @addtogroup worldfile */
 /** @{ */
 /** @defgroup worldfileblobfinder Blobfinder model properties
- - 
+ - channel_count
+ - image [xdim_pixels ydim_pixels]
+ - ptz [pan_angle tilt_angle zoom_angle] 
 */
 /** @} */
 
@@ -252,20 +256,20 @@ void configure_blobfinder( stg_model_t* mod, int section )
   memset( &bcfg, 0, sizeof(bcfg) );
   
   bcfg.channel_count = 
-    wf.ReadInt(section, "blob.count", STG_DEFAULT_BLOB_CHANNELCOUNT);
+    wf.ReadInt(section, "channel_count", STG_DEFAULT_BLOB_CHANNELCOUNT);
   
   bcfg.scan_width = (int)
-    wf.ReadTupleFloat(section, "blobf.image", 0, STG_DEFAULT_BLOB_SCANWIDTH);
+    wf.ReadTupleFloat(section, "image", 0, STG_DEFAULT_BLOB_SCANWIDTH);
   bcfg.scan_height = (int)
-    wf.ReadTupleFloat(section, "blob.image", 1, STG_DEFAULT_BLOB_SCANHEIGHT );	    
+    wf.ReadTupleFloat(section, "image", 1, STG_DEFAULT_BLOB_SCANHEIGHT );	    
   bcfg.range_max = 
-    wf.ReadLength(section, "blob.range_max", STG_DEFAULT_BLOB_RANGEMAX );
+    wf.ReadLength(section, "range_max", STG_DEFAULT_BLOB_RANGEMAX );
   bcfg.pan = 
-    wf.ReadTupleAngle(section, "blob.ptz", 0, STG_DEFAULT_BLOB_PAN );
+    wf.ReadTupleAngle(section, "ptz", 0, STG_DEFAULT_BLOB_PAN );
   bcfg.tilt = 
-    wf.ReadTupleAngle(section, "blob.ptz", 1, STG_DEFAULT_BLOB_TILT );
+    wf.ReadTupleAngle(section, "ptz", 1, STG_DEFAULT_BLOB_TILT );
   bcfg.zoom =  
-    wf.ReadTupleAngle(section, "blob.ptz", 2, STG_DEFAULT_BLOB_ZOOM );
+    wf.ReadTupleAngle(section, "ptz", 2, STG_DEFAULT_BLOB_ZOOM );
   
   if( bcfg.channel_count > STG_BLOB_CHANNELS_MAX )
     bcfg.channel_count = STG_BLOB_CHANNELS_MAX;
@@ -273,7 +277,7 @@ void configure_blobfinder( stg_model_t* mod, int section )
   for( int ch = 0; ch<bcfg.channel_count; ch++ )
     bcfg.channels[ch] = 
       stg_lookup_color( wf.ReadTupleString(section, 
-					   "blob.channels", 
+					   "channels", 
 					   ch, "red" )); 
   
   stg_model_set_config( mod, &bcfg, sizeof(bcfg));
@@ -294,7 +298,7 @@ void configure_blobfinder( stg_model_t* mod, int section )
 void configure_ranger( stg_model_t* mod, int section )
 {
   // Load the geometry of a ranger array
-  int scount = wf.ReadInt( section, "ranger.count", 0);
+  int scount = wf.ReadInt( section, "scount", 0);
   if (scount > 0)
     {
       char key[256];
@@ -304,16 +308,16 @@ void configure_ranger( stg_model_t* mod, int section )
       int i;
       for(i = 0; i < scount; i++)
 	{
-	  snprintf(key, sizeof(key), "ranger.pose[%d]", i);
+	  snprintf(key, sizeof(key), "spose[%d]", i);
 	  configs[i].pose.x = wf.ReadTupleLength(section, key, 0, 0);
 	  configs[i].pose.y = wf.ReadTupleLength(section, key, 1, 0);
 	  configs[i].pose.a = wf.ReadTupleAngle(section, key, 2, 0);
 	  
-	  snprintf(key, sizeof(key), "ranger.size[%d]", i);
+	  snprintf(key, sizeof(key), "ssize[%d]", i);
 	  configs[i].size.x = wf.ReadTupleLength(section, key, 0, 0.01);
 	  configs[i].size.y = wf.ReadTupleLength(section, key, 1, 0.05);
 	  
-	  snprintf(key, sizeof(key), "ranger.view[%d]", i);
+	  snprintf(key, sizeof(key), "sview[%d]", i);
 	  configs[i].bounds_range.min = 
 	    wf.ReadTupleLength(section, key, 0, 0);
 	  configs[i].bounds_range.max = 
@@ -355,19 +359,21 @@ void configure_position( stg_model_t* mod, int section )
       
       cfg.steer_mode = STG_POSITION_STEER_DIFFERENTIAL;
     }
-  
-  //stg_model_prop_with_data( mod, STG_PROP_CONFIG, &cfg, sizeof(cfg));
-
   stg_model_set_config( mod, &cfg, sizeof(cfg) ); 
 }
-
 
 
 void stg_model_save( stg_model_t* model, CWorldFile* worldfile )
 {
   stg_pose_t* pose = stg_model_get_pose(model);
   
-  // right noe we only save poses
+  PRINT_DEBUG4( "saving model %s pose %.2f %.2f %.2f",
+		model->token,
+		pose->x,
+		pose->y,
+		pose->a );
+
+  // right now we only save poses
   worldfile->WriteTupleLength( model->id, "pose", 0, pose->x);
   worldfile->WriteTupleLength( model->id, "pose", 1, pose->y);
   worldfile->WriteTupleAngle( model->id, "pose", 2, pose->a);
@@ -382,10 +388,17 @@ void stg_world_save( stg_world_t* world, CWorldFile* wfp )
 {
   // ask every model to save itself
   g_hash_table_foreach( world->models, stg_model_save_cb, wfp );
+
+  wfp->Save( NULL );
 }
 
+void stg_world_save( stg_world_t* world )
+{
+  // ask every model to save itself
+  g_hash_table_foreach( world->models, stg_model_save_cb, &wf );
 
-
+  wf.Save( NULL );
+}
 
 // create a world containing a passel of Stage models based on the
 // worldfile
@@ -399,18 +412,20 @@ stg_world_t* stg_world_create_from_file( char* worldfile_path )
   char* world_name =
     (char*)wf.ReadString(section, "name", worldfile_path );
   
-  double resolution = 
-    wf.ReadFloat(0, "resolution", STG_DEFAULT_RESOLUTION ); 
-  resolution = 1.0 / resolution; // invert res to ppm
-  
   stg_msec_t interval_real = 
     wf.ReadInt(section, "interval_real", STG_DEFAULT_INTERVAL_REAL );
 
   stg_msec_t interval_sim = 
     wf.ReadInt(section, "interval_sim", STG_DEFAULT_INTERVAL_SIM );
       
-  //printf( "interval sim %lu   interval real %lu\n",
-  //      interval_sim, interval_real );
+  double ppm_high = 
+    1.0 / wf.ReadFloat(0, "resolution", STG_DEFAULT_RESOLUTION ); 
+
+  double ppm_med = 
+    1.0 / wf.ReadFloat(0, "resolution_med", 0.2 ); 
+  
+  double ppm_low = 
+    1.0 / wf.ReadFloat(0, "resolution_low", 1.0 ); 
   
   // create a single world
   stg_world_t* world = 
@@ -418,7 +433,9 @@ stg_world_t* stg_world_create_from_file( char* worldfile_path )
 		      world_name, 
 		      interval_sim, 
 		      interval_real,
-		      resolution );
+		      ppm_high,
+		      ppm_med,
+		      ppm_low );
 
   if( world == NULL )
     return NULL; // failure

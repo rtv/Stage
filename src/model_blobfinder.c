@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.18 2004-09-25 02:14:59 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.19 2004-09-27 00:58:01 rtv Exp $
  */
 
 #include <math.h>
@@ -29,6 +29,7 @@
 //#define DEBUG
 
 #include "stage.h"
+#include "gui.h"
 
 extern rtk_fig_t* fig_debug;
 

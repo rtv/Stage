@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.92 2004-09-26 02:00:44 rtv Exp $
+ * CVS: $Id: stage.h,v 1.93 2004-09-27 00:58:01 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -45,7 +45,7 @@
 #include <semaphore.h>
 
 #include <glib.h> // we use GLib's data structures extensively
-#include <rtk.h> // and RTK's graphics stuff too
+#include <rtk.h> // andRTK's graphics stuff too
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,63 +64,6 @@ extern "C" {
 #define STG_MOVE_ROT   (1 << 1)
 #define STG_MOVE_SCALE (1 << 2)
 
-  // GUI colors   
-#define STG_GRID_MAJOR_COLOR "gray85"
-#define STG_GRID_MINOR_COLOR "gray95"
-#define STG_GRID_AXIS_COLOR "gray40"
-#define STG_BACKGROUND_COLOR "ivory"
-#define STG_BOUNDINGBOX_COLOR "magenta"
-#define STG_MATRIX_COLOR "dark green"
-
-  // model color defaults
-#define STG_GENERIC_COLOR "black"
-#define STG_POSITION_COLOR "red"
-
-#define STG_LASER_COLOR "light blue"
-#define STG_LASER_GEOM_COLOR "blue"
-#define STG_LASER_CFG_COLOR "light steel blue"
-#define STG_LASER_BRIGHT_COLOR "blue"
-
-#define STG_FIDUCIAL_COLOR "lime green"
-#define STG_FIDUCIAL_CFG_COLOR "green"
-
-#define STG_ENERGY_COLOR "purple"
-#define STG_ENERGY_CFG_COLOR "magenta"
-   
-#define STG_RANGER_COLOR "gray75" 
-#define STG_RANGER_GEOM_COLOR "orange"
-#define STG_RANGER_CONFIG_COLOR "gray90"
-
-#define STG_DEBUG_COLOR "green"
-#define STG_BLOB_CFG_COLOR "gray75"
-
-#define STG_LAYER_BACKGROUND 10
-#define STG_LAYER_BODY 30
-#define STG_LAYER_GRID 20
-#define STG_LAYER_USER 99
-#define STG_LAYER_GEOM 80
-#define STG_LAYER_MATRIX 40
-#define STG_LAYER_DEBUG 98
-
-#define STG_LAYER_LASERGEOM 31
-#define STG_LAYER_LASERDATA 25
-#define STG_LAYER_LASERCONFIG 32
-
-#define STG_LAYER_RANGERGEOM 41
-#define STG_LAYER_RANGERCONFIG 42
-#define STG_LAYER_RANGERDATA 43
-
-#define STG_LAYER_BLOBGEOM 51
-#define STG_LAYER_BLOBCONFIG 52
-#define STG_LAYER_BLOBDATA 53
-
-#define STG_LAYER_NEIGHBORGEOM 61
-#define STG_LAYER_NEIGHBORCONFIG 62
-#define STG_LAYER_NEIGHBORDATA 63
-
-#define STG_LAYER_ENERGYGEOM 71
-#define STG_LAYER_ENERGYCONFIG 72
-#define STG_LAYER_ENERGYDATA 73
 
 #define STG_DEFAULT_WINDOW_WIDTH 700
 #define STG_DEFAULT_WINDOW_HEIGHT 740
@@ -527,6 +470,7 @@ extern "C" {
     rtk_fig_t* data;
     rtk_fig_t* cmd;
     rtk_fig_t* cfg;
+    rtk_fig_t* bg; // background (used e.g for laser scan fill)
   } gui_model_t;
 
   // forward declare
@@ -782,6 +726,7 @@ void itl_raytrace( itl_t* itl );
   void gui_shutdown( void );
   gui_window_t* gui_world_create( stg_world_t* world );
   void gui_world_destroy( stg_world_t* world );
+  void stg_world_save( stg_world_t* world );
   int gui_world_update( stg_world_t* world );
   void gui_model_create( stg_model_t* model );
   void gui_model_destroy( stg_model_t* model );
@@ -842,12 +787,14 @@ void itl_raytrace( itl_t* itl );
 			 void* object, int add );
 
 
-
+  
   stg_world_t* stg_world_create( stg_id_t id, 
 				 char* token, 
 				 int sim_interval, 
 				 int real_interval,
-				 double ppm );
+				 double ppm_high,
+				 double ppm_med,
+				 double ppm_low );
    
   stg_world_t* stg_world_create_from_file( char* worldfile_path );
   void stg_world_destroy( stg_world_t* world );
@@ -1106,10 +1053,13 @@ void itl_raytrace( itl_t* itl );
   // Bitmap loading -------------------------------------------------------
 
   // load <filename>, an image format understood by gdk-pixbuf, and
-  // return a set of rectangles that approximate the image. Caller must
-  // free the array of rectangles.
-  int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count );
-
+  // return a set of rectangles that approximate the image. Caller
+  // must free the array of rectangles. If width and height are
+  // non-null, they are filled in with the size of the image in pixels
+  int stg_load_image( const char* filename, 
+		      stg_rotrect_t** rects,
+		      int* rect_count,
+		      int* widthp, int* heightp );
 
   // functions for parsing worldfiles 
   //stg_token_t* stg_tokenize( FILE* wf );

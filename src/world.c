@@ -9,10 +9,12 @@
 extern int _stg_quit; // quit flag is returned by stg_world_update()
 
 stg_world_t* stg_world_create( stg_id_t id, 
-			   char* token, 
-			   int sim_interval, 
-			   int real_interval,
-			   double ppm )
+			       char* token, 
+			       int sim_interval, 
+			       int real_interval,
+			       double ppm_high,
+			       double ppm_med,
+			       double ppm_low )
 {
   PRINT_DEBUG2( "alternate world creator %d (%s)", id, token );
   
@@ -20,24 +22,20 @@ stg_world_t* stg_world_create( stg_id_t id,
   
   world->library = stg_library_create();
   assert(world->library);
-  //world->con = NULL;
   world->id = id;
   world->token = strdup( token );
   world->models = g_hash_table_new_full( g_int_hash, g_int_equal,
 					 NULL, model_destroy_cb );
   world->models_by_name = g_hash_table_new_full( g_str_hash, g_str_equal,
-						 NULL, NULL );
-  
-  //world->server = NULL; // stash the server pointer
-  
+						 NULL, NULL );  
   world->sim_time = 0.0;
   world->sim_interval = sim_interval;
   world->wall_interval = real_interval;
   world->wall_last_update = 0;
-  world->ppm = ppm;
   
-  // todo - have the matrix resolutions fully configurable at startup
-  world->matrix = stg_matrix_create( world->ppm, 5, 1 ); 
+  world->matrix = stg_matrix_create( ppm_high, ppm_med, ppm_low ); 
+  
+  world->ppm = ppm_high; // this is the finest resolution of the matrix
   
   world->paused = TRUE; // start paused.
   

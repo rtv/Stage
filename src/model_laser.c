@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.46 $
+//  $Revision: 1.47 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -26,6 +26,7 @@ some properties here
 
 #include <sys/time.h>
 #include <math.h>
+#include "gui.h"
 
 //#define DEBUG
 
@@ -217,12 +218,28 @@ void laser_render_data(  stg_model_t* mod )
       bearing += sample_incr;
     }
   
-  rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_COLOR) );
   // hmm, what's the right cast to get rid of the compiler warning
   // for the points argument?
-  rtk_fig_polygon( fig, 0,0,0, cfg->samples+1, points, 	
-		   mod->world->win->fill_polygons );   
+
+  if( mod->gui.bg  )
+    rtk_fig_clear(mod->gui.bg);
   
+  if( mod->world->win->fill_polygons )
+    {
+      if( mod->gui.bg == NULL )
+	{
+	  mod->gui.bg = rtk_fig_create( mod->world->win->canvas,
+					fig, STG_LAYER_BACKGROUND );      
+	  rtk_fig_color_rgb32( mod->gui.bg, 
+			       stg_lookup_color( STG_LASER_FILL_COLOR ));
+	}
+      rtk_fig_polygon( mod->gui.bg, 0,0,0, cfg->samples+1, points,TRUE );   
+    }
+
+  rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_COLOR) );
+  rtk_fig_polygon( fig, 0,0,0, cfg->samples+1, points, FALSE ); 	
+    
+
   rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_BRIGHT_COLOR) );
   
   // loop through again, drawing bright boxes on top of the polygon

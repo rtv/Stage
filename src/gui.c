@@ -8,6 +8,7 @@
 //#undef DEBUG
 
 #include "stage.h"
+#include "gui.h"
 
 // models that have fewer rectangles than this get matrix rendered when dragged
 #define STG_LINE_THRESHOLD 40
@@ -93,13 +94,8 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   
   // draw a grid
   rtk_fig_color_rgb32( win->bg, stg_lookup_color(STG_GRID_MAJOR_COLOR) );    
-  rtk_fig_grid( win->bg, 0,0, width, height, 1.0 );
+  rtk_fig_grid( win->bg, 0,0, 100.0, 100.0, 1.0 );
   
-  // draw the axis origin lines
-  rtk_fig_color_rgb32( win->bg, stg_lookup_color(STG_GRID_AXIS_COLOR) );    
-  rtk_fig_line( win->bg, -width/2, 0, width/2, 0 );
-  rtk_fig_line( win->bg, 0, -height/2, 0, height/2 );
-
   win->show_matrix = FALSE;
   win->fill_polygons = FALSE;
   win->movie_exporting = FALSE;
@@ -160,6 +156,18 @@ void render_matrix_cell( gui_mf_t*mf, stg_matrix_coord_t* coord )
 		     (double)coord->x * pixel_size + pixel_size/2.0, 
 		     (double)coord->y * pixel_size + pixel_size/2.0, 0, 
 		     pixel_size, pixel_size, 0 );
+  
+#if 0 // render coords of matrix cells
+  char str[32];
+  snprintf( str, 32, "%.2f,%.2f",
+	    (double)coord->x * pixel_size,
+	    (double)coord->y * pixel_size );
+
+  rtk_fig_text( mf->fig, 
+		(double)coord->x * pixel_size,
+		(double)coord->y * pixel_size,
+		0, str );
+#endif
 }
 
 void render_matrix_cell_cb( gpointer key, gpointer value, gpointer user )
@@ -532,12 +540,16 @@ void model_render_lines( stg_model_t* mod )
 
 void gui_render_geom( stg_model_t* mod )
 {
+  stg_geom_t* geom = stg_model_get_geom(mod);
+
   rtk_fig_t* fig = gui_model_figs(mod)->geom;
   rtk_fig_clear( fig );
 
+  // don't draw objects with no size 
+  if( geom->size.x == 0 && geom->size.y == 0 )
+    return;
+
   rtk_fig_color_rgb32( fig, 0 );
-  
-  stg_geom_t* geom = stg_model_get_geom(mod);
   
   double localx = geom->pose.x;
   double localy = geom->pose.y;

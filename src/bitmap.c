@@ -54,7 +54,10 @@ gboolean pb_pixel_is_set( GdkPixbuf* pb, int x, int y )
   return FALSE;
 }
 
-int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count )
+int stg_load_image( const char* filename, 
+		    stg_rotrect_t** rects, 
+		    int* rect_count,
+		    int* widthp, int* heightp )
 {
   g_type_init(); // glib GObject initialization
 
@@ -90,6 +93,10 @@ int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count
   
   int img_width = gdk_pixbuf_get_width(pb);
   int img_height = gdk_pixbuf_get_height(pb);
+  
+  // if the caller wanted to know the dimensions
+  if( widthp ) *widthp = img_width;
+  if( heightp ) *heightp = img_height;
   
   int y, x;
   for(y = 0; y < img_height; y++)

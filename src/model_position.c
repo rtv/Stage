@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.8 $
+//  $Revision: 1.9 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -17,6 +17,8 @@
 //#define DEBUG
 
 #include "stage.h"
+#include "gui.h"
+
 extern rtk_fig_t* fig_debug;
   
 void position_init( stg_model_t* mod )

@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include "stage.h"
+#include "gui.h"
 
 extern rtk_fig_t* fig_debug;
 extern int _stg_quit;
@@ -53,17 +54,11 @@ enum {
 //const int STG_MOVIE_SPEEDS[] = {1, 2, 5, 10, 20, 50, 100};
 //const int STG_MOVIE_SPEED_COUNT = 7; // must match the static array length
 
-// send a USR2 signal to the client process that created this menuitem
 void gui_menu_save( rtk_menuitem_t *item )
 {
-  PRINT_DEBUG( "Save menu item" );
-
-  //world_t* world = (world_t*)item->userdata;
-  //stg_id_t wid = world->id;
-  
-  // TODO
-  // tell the client to save the world with this server-side id
-  //stg_connection_write_msg( world->con, STG_MSG_CLIENT_SAVE, &wid, sizeof(wid) ); 
+  stg_world_t* world = (stg_world_t*)item->userdata;
+  printf( "Saving world \"%s\"\n",  world->token );
+  stg_world_save( world );
 }
 
 void gui_menu_exit( rtk_menuitem_t *item )

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.20 $
+//  $Revision: 1.21 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -15,6 +15,8 @@
 
 #include <math.h>
 #include "stage.h"
+#include "gui.h"
+
 extern rtk_fig_t* fig_debug;
 
 void fiducial_render_config( stg_model_t* mod );

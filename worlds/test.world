@@ -1,28 +1,39 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.15 2004-09-26 02:00:45 rtv Exp $
+# CVS: $Id: test.world,v 1.16 2004-09-27 00:58:01 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
-resolution 0.02 
+resolution     0.02 
+
+# optionally tune the medium and high matrix pixel sizes
+#resolution_med  0.2
+#resolution_low  1.0
 
 interval_sim 100  # milliseconds per update step
-interval_real 50 # real-time milliseconds per update step
+interval_real 10 # real-time milliseconds per update step
 
-include "pioneer.inc"  # defines Pioneer-like robots
-include "map.inc" # defines 'map' object used for floorplans
+include "pioneer.inc"
+
+  # defines Pioneer-like robots
+include "map.inc"
+
+ # defines 'map' object used for floorplans
 
 map(
-  size [15.5 11.4]
-  bitmap "bitmaps/autolab.png"
+  #size [15.5 11.4]
+  #bitmap "bitmaps/autolab.png"
+
+  bitmap "bitmaps/sal2.png"
+  bitmap_resolution 0.03
 )
 
 
 define sicklaser laser
 (
-  laser.range_min 0.0
-  laser.range_max 8.0
-  laser.fov 180.0
-  laser.samples 180
+  range_min 0.0
+  range_max 8.0
+  fov 180.0
+  samples 180
 
   color "blue"
   size [ 0.14 0.14 ]	
@@ -33,41 +44,59 @@ define sicklaser laser
 define laserpioneer pioneer2dx
 (
   sicklaser( 
-    fiducialfinder( color "green" size [0.05 0.05] obstacle 0 )
+    fiducialfinder( color "green" obstacle 0 )
   )
 )
 
 
-#laser( pose [3 3 0] )
+laserpioneer
+(
+  name "p0"
+  pose [1.860 -3.362 0.000]
+)
 
 laserpioneer
 (
-  name "myrobot1"
-  pose [-1 -4 0]
-  gui.nose 1 
-
-  blobfinder(
-    ### TODO - problem parsing this line?
-   # blob.channels [ "red" "green" "blue" "cyan" "yellow" "magenta" ] 
-  )	
-
-  #drive "omni"
+  name "p1"
+  pose [-2.320 -3.497 0.000]
 )
+
+laserpioneer
+(
+  name "p2"
+  pose [0.647 -3.777 0.000]
+)
+
+laserpioneer
+(
+  name "p3"
+  pose [2.810 -3.718 0.000]
+)
+
+laserpioneer
+(
+  name "p4"
+  pose [-1.000 -3.660 0.000]
+)
+
 
 # a silly object to look at
 position( 	
   name "sub" 
   size [2 1]
-  pose [-2.0 0.0 0.0] 
+  pose [-2.000 0.000 0.000] 
   color "red"  
-  bitmap "bitmaps/submarine.png"
-  gui.nose 1
+
+  # loads a bitmap and converts it to lines
+  #bitmap "bitmaps/submarine.png"
+  gui_nose 1
   
   fiducial_id 22
 
-  laser.return 2
+  return 2
 
   #velocity [0 0 10]
 
+  laser_return 2
   drive "omni"
 )

@@ -10,6 +10,10 @@ void itl_destroy( itl_t* itl )
   free( itl );
 }
 
+// TODO take a filter function in here, so raytrace will only return
+// pointers that satisfy the filter - thus we can test for relatives,
+// etc in the large grids
+
 itl_t* itl_create( double x, double y, double a, double b, 
 		   stg_matrix_t* matrix, itl_mode_t pmode )
 {   
@@ -82,13 +86,13 @@ void itl_raytrace( itl_t* itl )
       // if there is nothing in the big cell
       if( !(itl->models && itl->models->len > 0) )
 	{	      
-	  int bigcell_x = (int)(itl->x * itl->matrix->bigppm);
-	  int bigcell_y = (int)(itl->y * itl->matrix->bigppm);
+	  long bigcell_x = (long)floor(itl->x * itl->matrix->bigppm);
+	  long bigcell_y = (long)floor(itl->y * itl->matrix->bigppm);
 	  
 	  // move forward in increments of one small cell until we
 	  // get into a new big cell
-	  while( bigcell_x == (int)(itl->x * itl->matrix->bigppm) &&
-		 bigcell_y == (int)(itl->y * itl->matrix->bigppm) )
+	  while( bigcell_x == (long)floor(itl->x * itl->matrix->bigppm) &&
+		 bigcell_y == (long)floor(itl->y * itl->matrix->bigppm) )
 	    {
 	      itl->x += itl->small_incr * itl->cosa;
 	      itl->y += itl->small_incr * itl->sina;
@@ -110,13 +114,13 @@ void itl_raytrace( itl_t* itl )
       // if there is nothing in the big cell
       if( !(itl->models && itl->models->len > 0) )
 	{	      
-	  int medcell_x = (int)(itl->x * itl->matrix->medppm);
-	  int medcell_y = (int)(itl->y * itl->matrix->medppm);
+	  long medcell_x = (long)floor(itl->x * itl->matrix->medppm);
+	  long medcell_y = (long)floor(itl->y * itl->matrix->medppm);
 	  
 	  // move forward in increments of one small cell until we
 	  // get into a new medium cell
-	  while( medcell_x == (int)(itl->x * itl->matrix->medppm) &&
-		 medcell_y == (int)(itl->y * itl->matrix->medppm) )
+	  while( medcell_x == (long)floor(itl->x * itl->matrix->medppm) &&
+		 medcell_y == (long)floor(itl->y * itl->matrix->medppm) )
 	    {
 	      itl->x += itl->small_incr * itl->cosa;
 	      itl->y += itl->small_incr * itl->sina;

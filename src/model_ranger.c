@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.29 $
+//  $Revision: 1.30 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -16,7 +16,10 @@
 //#define DEBUG
 
 #include "stage.h"
+#include "gui.h"
+
 extern rtk_fig_t* fig_debug;
+
 
 void ranger_render_config( stg_model_t* mod );
 void ranger_render_data( stg_model_t* mod );
