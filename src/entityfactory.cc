@@ -3,12 +3,12 @@
 // File: entityfactory.cc
 // Author: Andrew Howard
 // Date: 05 Dec 2000
-// Desc: Naked function for creating different types of objects
+// Desc: CWorld method for creating different types of objects
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.11 $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -45,70 +45,72 @@
 //#include "truthdevice.hh"
 //#include "occupancydevice.hh"
 
+#include "world.hh"
 
 /////////////////////////////////////////////////////////////////////////
 // Create an object given a type
 //
-CEntity* CreateObject(const char *type, CWorld *world, CEntity *parent)
+CEntity* CWorld::CreateObject(const char *type, CEntity *parent)
 {
     if (strcmp(type, "position_device") == 0)
-        return new CPositionDevice(world, parent );
+        return new CPositionDevice(this, parent );
 
     if (strcmp(type, "player_device") == 0)
-        return new CPlayerDevice(world, parent );
+        return new CPlayerDevice(this, parent );
 
     if (strcmp(type, "laser_device") == 0)
-        return new CLaserDevice(world, parent );
+        return new CLaserDevice(this, parent );
 
     if (strcmp(type, "sonar_device") == 0)
-        return new CSonarDevice(world, parent );
+        return new CSonarDevice(this, parent );
 
     if (strcmp(type, "misc_device") == 0)
-        return new CMiscDevice(world, parent );
+        return new CMiscDevice(this, parent );
 
     if (strcmp(type, "ptz_device") == 0)
-        return new CPtzDevice(world, parent );
+        return new CPtzDevice(this, parent );
 
     if (strcmp(type, "box") == 0 )
-      return new CBoxObstacle(world, parent);
+      return new CBoxObstacle(this, parent);
     
     if (strcmp(type, "laser_beacon") == 0)
-      return new CLaserBeacon(world, parent);
+      return new CLaserBeacon(this, parent);
    
     if (strcmp(type, "lbd_device") == 0)
-      return new CLBDDevice(world, (CLaserDevice*)parent );
+      return new CLBDDevice(this, (CLaserDevice*)parent );
 
+    // the channel-to-color mapping array is set up in the config file
     if (strcmp(type, "vision_device") == 0)
-      return new CVisionDevice(world, (CPtzDevice*)parent );
+      return new CVisionDevice(this, (CPtzDevice*)parent, channel );
         
     if (strcmp(type, "vision_beacon") == 0)
-      return new CVisionBeacon(world, parent);
+      return new CVisionBeacon(this, parent);
 
     if (strcmp(type, "movable_object") == 0)
-      return new CPuck(world, parent);
+      return new CPuck(this, parent);
 
     if (strcmp(type, "gps_device") == 0)
-      return new CGpsDevice(world, parent);
+      return new CGpsDevice(this, parent);
 
     if (strcmp(type, "gripper_device") == 0)
-      return new CGripperDevice(world, parent);
+      return new CGripperDevice(this, parent);
 
     if (strcmp(type, "puck") == 0)
-      return new CPuck(world, parent);
+      return new CPuck(this, parent);
 
     // TODO - devices in various stages of brokeness
     
     if (strcmp(type, "broadcast_device") == 0)
-      return new CBroadcastDevice(world, parent);
+      return new CBroadcastDevice(this, parent);
     
     // these devices are probably abandonded, replaced by
     // truth and env servers
 
     //if (strcmp(type, "truth_device") == 0)
-    //  return new CTruthDevice(world, parent );
+    //  return new CTruthDevice(this, parent );
 
     //if (strcmp(type, "occupancy_device") == 0)
-    //  return new COccupancyDevice(world, parent );
+    //  return new COccupancyDevice(this, parent );
 
     return NULL;
 }

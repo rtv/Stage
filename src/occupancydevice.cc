@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: &
-//  $Author: gerkey $
-//  $Revision: 1.2 $
+//  $Author: vaughan $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -63,13 +63,15 @@ bool COccupancyDevice::Startup( void )
 
   //count the number of filled pixels in the world's background image
   m_filled_pixels = 0;
-  m_total_pixels = m_world->m_bimg->width * m_world->m_bimg->height;
+  m_total_pixels = m_world->matrix->width * m_world->matrix->height;
 
-  for( unsigned int index = 0; index < m_total_pixels; index++ )
-    if( m_world->m_bimg->get_pixel( index) != 0 )
-      m_filled_pixels++;
+  for int
+
+    for( unsigned int x = 0; x < m_world->matrix->width; x++ )
+      for( unsigned int y = 0; y < m_world->matrix->height; y++ )
+	if( m_world->matrix->is_type( x, y, WallType ) )
+	  m_filled_pixels++;
   
-
   m_data_len = sizeof( player_occupancy_data_t ) 
     + m_filled_pixels * sizeof(pixel_t);
 
@@ -79,8 +81,8 @@ bool COccupancyDevice::Startup( void )
 #endif
  
   // now we record data about the world's background environment
-  m_width  = m_world->m_bimg->width;
-  m_height = m_world->m_bimg->height;
+  m_width  = m_world->matrix->width;
+  m_height = m_world->matrix->height;
   m_ppm    = (unsigned int)m_world->ppm;
 
   // allocate storage for the filled pixels
@@ -89,17 +91,16 @@ bool COccupancyDevice::Startup( void )
   memset( m_pixels, 0, m_filled_pixels * sizeof( pixel_t ) );
 
   int store = 0;
+
   // iterate through again, this time recording the pixel's details
-  for( int index = 0; index < (int)m_total_pixels; index++ )
-    {
-      unsigned int val = m_world->m_bimg->get_pixel( index );
-      
-      if( val != 0 ) // it's not a background pixel
+  for( unsigned int x = 0; x < m_world->matrix->width; x++ )
+    for( unsigned int y = 0; y < m_world->matrix->height; y++ )
+      if( m_world->matrix->is_type( x, y, WallType ) )
 	{
-	  m_pixels[store].color = val;
+	  m_pixels[store].color = 1;
 	  m_pixels[store].x = index % m_width;
 	  m_pixels[store].y = index / m_width;
-
+	  
 	  store++;
 	}
     }

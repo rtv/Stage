@@ -64,15 +64,11 @@ static void * EnvWriter( void* arg )
   og.ppm = (uint16_t)world->ppm;
   og.num_pixels = 0; // we'll count them below
 
-  // count the filled pixels
-  unsigned int total_pixels = world->matrix->width * world->matrix->height;
+  for( int x = 0; x < world->matrix->width; x++ )
+    for( int y = 0; y < world->matrix->height; y++ )
+      if( world->matrix->is_type( x, y, WallType ) )
+	og.num_pixels++;
   
-  //for( unsigned int index = 0; index < total_pixels; index++ )
-  //if( (CEntity** c = world->matrix->get_cell( index)  )
-  //  while( og.num_pixels++;
-
-  og.num_pixels = 100000; // HACK for now!
-
   int errorretval = -1;
 
   // send the header to the connected client
@@ -92,12 +88,10 @@ static void * EnvWriter( void* arg )
 
   int store = 0;
   // iterate through again, this time recording the pixel's details
-  for( int x = 0; x < world->m_bimg->width; x++ )
-    for( int y = 0; y < world->m_bimg->height; y++ )
+  for( int x = 0; x < world->matrix->width; x++ )
+    for( int y = 0; y < world->matrix->height; y++ )
       {
-	unsigned int val = world->m_bimg->get_pixel( x, y );
-	
-	if( val != 0 ) // it's not a background pixel
+	if( world->matrix->is_type( x, y, WallType ) )
 	  {
 	    pixels[store].x = x;
 	    pixels[store].y = y;

@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.14 2001-09-19 21:52:57 vaughan Exp $
+ * $Id: xs.cc,v 1.15 2001-09-20 18:29:24 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -58,8 +58,6 @@ const char* titleStr = "XS";
 
 #define USAGE  "\nUSAGE: xs [-h <host>] [-tp <port>] [-ep <port>]\n\t[-geometry <geometry string>] [-zoom <factor>]\n\t[-pan <X\%xY\%>]\nDESCRIPTIONS:\n-h <host>: connect to Stage on this host (default `localhost')\n-tp <port>: connect to Stage's Truth server on this TCP port (default `6601')\n-ep <port>: connect to Stage's Environment server on this TCP port (default `6602')\n-geometry <string>*: standard X geometry specification\n-zoom <factor>*: floating point zoom multiplier\n-pan <X\%xY\%>*: pan initial view X percent of maximum by Y percent of maximum\n"
 
-//  -channels <string>*: specify the colors drawn for each ACTS channel; e.g. \"red green blue\"\n(* this option can be set in your ~/.Xdefaults file - see README.xs)\n"
-
 char stage_host[256] = "localhost"; // default
 int truth_port = TRUTH_SERVER_PORT; // "
 int env_port = ENVIRONMENT_SERVER_PORT; // "
@@ -68,12 +66,10 @@ struct hostent* entp = 0;
 struct sockaddr_in servaddr;
 
 char* geometry = 0;
-//char* channels = 0;
 char* zoom = 0;
 char* pan = 0;
 
 // provide some sensible defaults for the parameters/resources
-//char* default_channels = "red green blue magenta yellow cyan";
 char* default_geometry = "400x400";
 char* default_zoom = "1.0";
 char* default_pan = "0x0";
@@ -511,33 +507,6 @@ void  CXGui::SetupGeometry( char* geom )
 #endif
 }
 
-//  void  CXGui::SetupChannels( char* channels )
-//  {
-//    assert( channels );
-//    assert( strlen(channels) > 0 );
-    
-//    XColor a, b;
-//    int c = 0;
-//    char* token = strtok( channels, " \t" );
-
-//    while( token )
-//      {
-//        if( !XAllocNamedColor( display, default_cmap, token, &a, &b ) )
-//  	{
-//  	  printf( "Warning: color name %s not recognized for channel %d\n",
-//  		  token, c );
-//  	}
-      
-//  #ifdef VERBOSE
-//        printf( "ACTS channel %d: \"%s\" (%d,%d,%d)\n",
-//  	      c, token, a.red, a.green, a.blue );
-//  #endif
-//        channel_colors[c++] = a.pixel;
-      
-//        token = strtok( NULL, " \t" );
-//      }
-//  }
-
 /* easy little command line argument parser */
 void parse_args(int argc, char** argv)
 {
@@ -591,21 +560,6 @@ void parse_args(int argc, char** argv)
 	    exit(1);
 	  }
       }
-//      else if(!strcmp(argv[i],"-channels"))
-//        {
-//  	if(++i<argc)
-//  	  { 
-//  	    channels = new char[ strlen( argv[i] ) + 1 ];
-//  	    memset( channels, 0, strlen(argv[i]) +1 );
-//  	    strncpy( channels,argv[i], strlen( argv[i] ) );
-//  	    printf( "[channels: %s]", channels );
-//  	  }
-//  	else
-//  	  {
-//  	    printf( "\n%s\n", USAGE );
-//  	    exit(1);
-//  	  }
-//        }
     else if(!strcmp(argv[i],"-h"))
     {
       if(++i<argc)
@@ -727,8 +681,6 @@ void CXGui::HandleIncomingQueue( void )
       int stage_id = truth.stage_id = struth.stage_id; // this is the map key
 
       truth.stage_type = struth.stage_type;
-
-      //truth.channel = struth.channel;
 
       truth.color.red = struth.red;
       truth.color.green = struth.green;
@@ -859,14 +811,6 @@ CXGui::CXGui( int argc, char** argv, environment_t* anenv )
     if( !geometry ) geometry = XGetDefault( display, argv[0], "geometry" ); 
     if( !geometry ) geometry = default_geometry;
     SetupGeometry( geometry );
-    
-//      if( !channels ) channels = XGetDefault( display, argv[0], "channels" );
-//      if( !channels )
-//        {
-//  	channels = new char[ strlen( default_channels ) ];
-//  	strcpy( channels, default_channels );
-//        }
-//      SetupChannels( channels );
     
     if( !zoom ) zoom = XGetDefault( display, argv[0], "zoom" );
     if( !zoom ) zoom= default_zoom;
@@ -1007,8 +951,6 @@ void CXGui::MoveObject( truth_t* exp, double x, double y, double th )
 
   output.stage_id = exp->stage_id;
   output.stage_type = exp->stage_type;
-
-  //output.channel = exp->channel;
 
   output.red = exp->color.red;
   output.green = exp->color.red;
@@ -1467,16 +1409,6 @@ void CXGui::HighlightObject( truth_t* exp,  bool undraw )
 		   exp->id.port, PlayerNameOf(exp->id), exp->id.index );
 	}
 
-      //if( exp->channel != -1 ) // ie. it is visible in an ACTS channel
-      //{
-	  // append the channel num
-      //  char buf[256];
-      //  strncpy( buf, info, sizeof(buf) );
-	  
-      //  sprintf( info, "%s(ACTS:%d)",
-      //	   buf, exp->channel );
-      //}
-      
       XDrawString( display,win,gc,
 		   infox, infoy, info, strlen( info ) );
     }
@@ -1839,26 +1771,3 @@ void CXGui::HandleConfigureEvent( XEvent &reportEvent )
   //fflush( stdout );
 } 
   
-//  // hide the CRobot reference
-//  //  unsigned long CXGui::RobotDrawColor( CRobot* r )
-//  //  { 
-//  //    unsigned long color;
-//  //    switch( r->channel % 6 )
-//  //      {
-//  //      case 0: color = red; break;
-//  //      case 1: color = green; break;
-//  //      case 2: color = blue; break;
-//  //      case 3: color = yellow; break;
-//  //      case 4: color = magenta; break;
-//  //      case 5: color = cyan; break;
-//  //      }
-
-//  //    return color;
-//  //  }
-
-//  // hide the CRobot reference
-//  //  void CXGui::DrawInRobotColor( CRobot* r )
-//  //  { 
-//  //    XSetForeground( display, gc, RobotDrawColor( r ) );
-//  //  }
-

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.20 $
+//  $Revision: 1.21 $
 //
 // Usage:
 //  (empty)
@@ -36,6 +36,7 @@
 #include <sys/sem.h>
 #include <sys/ipc.h>
 
+#include "messages.h" //from player
 #include "image.hh"
 #include "entity.hh"
 #include "truthserver.hh"
@@ -77,8 +78,9 @@ public:
   // a general-purpose obstacle entity, used as a brick in the wall
   CEntity* wall;
 
-  // background image
-public: Nimage* m_bimg; 
+  // background image 
+  // replaced by matrix at last 
+  //public: Nimage* m_bimg; 
   
   // Thread control
 private: pthread_t m_thread;
@@ -147,6 +149,12 @@ public:
   std::queue<stage_truth_t> input_queue;
   std::queue<stage_truth_t> output_queue; // likewise for outputs
   
+
+  // an array that maps vision device channels to colors.
+  // gets given to the visiondevice constructor which makes a copy
+  // the channels are set to defaults
+  // which can be overridden in the .world file
+  StageColor channel[ ACTS_NUM_CHANNELS ];
 
     // Load the world
 public:  bool Load(const char *filename);
@@ -259,16 +267,17 @@ public: void UnlockShmem( void );
   
 public: CEntity* GetEntityByID( int port, int type, int index );
   
+private: CEntity* CreateObject(const char *type, CEntity *parent);
 
   /////////////////////////////////////////////////////////////////////////////
   // access methods
   
 public:
   double GetWidth( void )
-  { if( m_bimg ) return m_bimg->width; else return 0; };
+  { if( matrix ) return matrix->width; else return 0; };
   
   double GetHeight( void )
-  { if( m_bimg ) return m_bimg->height; else return 0; };
+  { if( matrix ) return matrix->height; else return 0; };
   
   int GetObjectCount( void )
   { return m_object_count; };

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.14 $
+//  $Revision: 1.15 $
 //
 // Usage:
 //  (empty)
@@ -30,6 +30,7 @@
 #include "truthserver.hh"
 
 #undef DEBUG
+//#define DEBUG
 
 ///////////////////////////////////////////////////////////////////////////
 // Tokenize a string (naked utility function)
@@ -207,8 +208,8 @@ bool CWorld::Load(const char *filename)
                 unit_multiplier = 0.001;
               else
               {
-                printf("line %d : unknown unit specifier \"%s\". "
-                       "defaulting to meters\n",
+                printf("\nline %d : unknown unit specifier \"%s\". "
+                       "defaulting to meters.",
                      (int) linecount, (char*) argv[3]);  
                 unit_multiplier = 1.0;
               }
@@ -222,14 +223,30 @@ bool CWorld::Load(const char *filename)
                 angle_multiplier = 1.0;
               else
               {
-                printf("line %d : unknown angle specifier \"%s\". "
-                       "defaulting to degrees\n",
+                printf("\nline %d : unknown angle specifier \"%s\". "
+                       "defaulting to degrees.",
                      (int) linecount, (char*) argv[3]);  
                 angle_multiplier = M_PI/180.0;
               }
             }
+	    // case-insensitive
+            else if (strcasecmp(argv[1], "channel") == 0)
+	      {
+		int channel_num;
+		int offset;
+		sscanf( argv[3], "%d : %n", &channel_num, &offset );
+
+		char* color_name = argv[3] + offset;
+
+		ColorFromString( &(channel[ channel_num ]), color_name );
+		//strcpy( &(channel[ channel_num ]), color_name, strlen( color_name ) );
+
+#ifdef DEBUG
+		printf( "\nsetting channel %d to %s.", channel_num, color_name );
+#endif
+              }
             else
-              printf("line %d : variable %s is not defined\n",
+              printf("\nline %d : variable %s is not defined",
                      (int) linecount, (char*) argv[1]);  
         }
 
@@ -261,6 +278,13 @@ bool CWorld::Load(const char *filename)
                 fflush ( stdout );
 
             }
+            else if( strcmp( argv[1], "xs" ) == 0 )
+            {
+		m_run_xs = true;
+		
+                printf( "[XS]" );
+                fflush ( stdout );
+            }
             else
                 printf("%s line %d : service %s is not defined\n",
                        filename, (int) linecount, (char*) argv[1]);
@@ -285,6 +309,13 @@ bool CWorld::Load(const char *filename)
                 printf( "[Env disabled]" );
                 fflush ( stdout );
             }
+            else if( strcmp( argv[1], "xs" ) == 0 )
+            {
+		m_run_xs = false;
+		
+                printf( "[XS disabled]" );
+                fflush ( stdout );
+            }
             else
                 printf("\nStage warning: %s line %d : service %s is not defined\n",
                        filename, (int) linecount, (char*) argv[1]);
@@ -298,7 +329,7 @@ bool CWorld::Load(const char *filename)
         {
             // Create the object
             //
-            CEntity *object = ::CreateObject(argv[1], this, parent_object);
+            CEntity *object = CreateObject(argv[1], parent_object);
             if (object != NULL)
             {
                 // Set some properties we will need later

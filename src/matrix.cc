@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.4 2001-09-08 01:48:44 vaughan Exp $
+ * $Id: matrix.cc,v 1.5 2001-09-20 18:29:23 vaughan Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -13,11 +13,9 @@
 
 #include "matrix.hh"
 
-const int BUFFER_ALLOC_SIZE = 4;
+const int BUFFER_ALLOC_SIZE = 1;
 
 //#define DEBUG
-
-typedef short           short_triple[3];
 
 void CMatrix::PrintCell( int cell )
 {
@@ -40,8 +38,8 @@ CMatrix::CMatrix(int w,int h)
 
   width = w; height = h;
   data 	= new CEntity**[width*height];
-  current_slot = new int[ width*height ];
-  available_slots = new int[ width*height ];
+  current_slot = new unsigned char[ width*height ];
+  available_slots = new unsigned char[ width*height ];
 
   for( int p=0; p< width * height; p++ )
     {

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.31 $
+//  $Revision: 1.32 $
 //
 // Usage:
 //  (empty)
@@ -60,7 +60,7 @@ const int OBJECT_ALLOC_SIZE = 32;
 // eventually we'll be able to run multiple stages, each with a different
 // suffix - for now its IOFILENAME.$USER
 #define IOFILENAME "/tmp/stageIO"
-//#define COLOR_DATABASE "/usr/X11R6/lib/X11/rgb.txt"
+
 // main.cc calls constructor, then Load(), then Startup(), then starts thread
 // at CWorld::Main();
 
@@ -88,7 +88,14 @@ CWorld::CWorld()
     
     // default color database file
     strcpy( m_color_database_filename, COLOR_DATABASE );
-
+    
+    memset( channel, 0, sizeof(StageColor) * ACTS_NUM_CHANNELS );
+    
+    // initialize the channel mapping to something reasonable
+    channel[0].red = 255;
+    channel[1].green = 255;
+    channel[2].blue = 255;
+    
 #ifdef INCLUDE_RTK
     // disable XS by default in rtkstage
     m_run_xs = false;
@@ -101,10 +108,6 @@ CWorld::CWorld()
     //
     m_filename[0] = 0;
     
-    // Initialise grids
-    //
-    m_bimg = NULL;
-
     // Initialise clocks
     //
     m_start_time = m_sim_time = 0;
@@ -134,9 +137,6 @@ CWorld::CWorld()
 //
 CWorld::~CWorld()
 {
-    if (m_bimg)
-        delete m_bimg;
-
     if( matrix )
       delete matrix;
 
@@ -552,10 +552,10 @@ void CWorld::Update()
 
 	CEntity* ent = (CEntity*)truth.stage_id;
  
-	  //GetEntityByID( truth.id.port, 
-	  //      truth.id.type,
-	  //    truth.id.index );
-
+	//GetEntityByID( truth.id.port, 
+	//      truth.id.type,
+	//    truth.id.index );
+	
 	assert( ent ); // there really ought to be one!
 	
 	//ent->Map( false );
@@ -611,11 +611,13 @@ double CWorld::GetRealTime()
 //
 bool CWorld::InitGrids(const char *env_file)
 {
-    // create a new background image from the pnm file
-    // If we cant find it under the given name,
-    // we look for a zipped version.
+  // create a new background image from the pnm file
+  // If we cant find it under the given name,
+  // we look for a zipped version.
   
-  m_bimg = new Nimage;
+  // we use the image class just for its nice loading stuff.
+  // this could be moved into the matrix pretty easily
+  Nimage* img = new Nimage;
 
   // Try to guess the file type from the extension
   int len = strlen( env_file );
@@ -623,20 +625,20 @@ bool CWorld::InitGrids(const char *env_file)
   {
     if (strcmp(&(env_file[len - 4]), ".fig") == 0)
     {
-      if (!m_bimg->load_fig(env_file, this->ppm, this->scale))
+      if (!img->load_fig(env_file, this->ppm, this->scale))
         return false;
     }
     else if( strcmp( &(env_file[ len - 7 ]), ".pnm.gz" ) == 0 )
 	{
-	  if (!m_bimg->load_pnm_gz(env_file))
+	  if (!img->load_pnm_gz(env_file))
 	    return false;
 	}
-    else if (!m_bimg->load_pnm(env_file))
+    else if (!img->load_pnm(env_file))
     {
 	    char zipname[128];
 	    strcpy(zipname, env_file);
 	    strcat(zipname, ".gz");
-	    if (!m_bimg->load_pnm_gz(zipname))
+	    if (!img->load_pnm_gz(zipname))
 	      return false;
     }
   }
@@ -646,32 +648,36 @@ bool CWorld::InitGrids(const char *env_file)
     exit( 1 );
   }
 
-  int width = m_bimg->width;
-  int height = m_bimg->height;
+  int width = img->width;
+  int height = img->height;
   
   // draw an outline around the background image
-  m_bimg->draw_box( 0,0,width-1,height-1, 0xFF );
+  img->draw_box( 0,0,width-1,height-1, 0xFF );
   
   matrix = new CMatrix( width, height );
 
   wall = new CEntity( this, 0 );
   
+  // set up the wall object, as it doesn't have a special class
   wall->m_stage_type = WallType;
   wall->laser_return = LaserSomething;
   wall->sonar_return = true;
   wall->obstacle_return = true;
   wall->channel_return = 0; // opaque!
   wall->puck_return = false; // we trade velocities with pucks
+
+  strcpy( wall->m_color_desc, WALL_COLOR );
+  ColorFromString( &(wall->m_color), WALL_COLOR );
   
   // Copy fixed obstacles into matrix
   //
-  for (int y = 0; y < m_bimg->height; y++)
-    for (int x = 0; x < m_bimg->width; x++)
-      if (m_bimg->get_pixel(x, y) != 0) matrix->set_cell( x,y,wall );
+  for (int y = 0; y < img->height; y++)
+    for (int x = 0; x < img->width; x++)
+      if (img->get_pixel(x, y) != 0) matrix->set_cell( x,y,wall );
 
-  // one day i'll get rid of the Nimage class - it is mostly redundant
-  // but a couple of things will need to switch to accessing the matrix
-
+  // kill it!
+  if( img ) delete img;
+  
   return true;
 }
 
@@ -1028,16 +1034,16 @@ void CWorld::DrawBackground(RtkUiDrawData *data)
     // Loop through the image and draw points individually.
     // Yeah, it's slow, but only happens once.
     //
-    for (int y = 0; y < m_bimg->height; y++)
+    for (int y = 0; y < matrix->height; y++)
     {
-        for (int x = 0; x < m_bimg->width; x++)
+        for (int x = 0; x < matrix->width; x++)
         {
-            if (m_bimg->get_pixel(x, y) != 0)
+	  if( matrix->is_type(x, y, WallType ) )
             {
-                double px = (double) x / ppm;
-                double py = (double)  y / ppm;
-                double s = 1.0 / ppm;
-                data->rectangle(px, py, px + s, py + s);
+	      double px = (double) x / ppm;
+	      double py = (double)  y / ppm;
+	      double s = 1.0 / ppm;
+	      data->rectangle(px, py, px + s, py + s);
             }
         }
     }
@@ -1181,8 +1187,9 @@ int CWorld::ColorFromString( StageColor* color, char* colorString )
       if( db.get( c ) && c != '\n' )
 	cout << "Warning: line too long in color database file" << endl;
       
-      if( line[0] == '!' ) continue; // it's a macro line - ignore the line
-
+      if( line[0] == '!' || line[0] == '#' || line[0] == '%' ) 
+	continue; // it's a macro or comment line - ignore the line
+      
       int chars_matched = 0;
       sscanf( line, "%d %d %d %n", &red, &green, &blue, &chars_matched );
       

@@ -2,6 +2,12 @@ set environment_file = table.pnm
 set pixels_per_meter =  80
 set laser_res = 1
 
+# set the color/channel mapping for the vision device
+set channel = 0:red
+set channel = 2:yellow
+set channel = 3:blue 
+set channel = 4:green 
+
 #####################################################################
 # Populate the world with some interesting objects (non-player devices)
 

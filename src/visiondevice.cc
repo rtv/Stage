@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.14 $
+//  $Revision: 1.15 $
 //
 // Usage:
 //  (empty)
@@ -33,7 +33,8 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent)
+CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent, 
+			     StageColor* channel_map )
         : CEntity( world, parent )
 {
   // set the Player IO sizes correctly for this type of Entity
@@ -47,6 +48,9 @@ CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent)
 
   m_size_x = 0.9 * parent->m_size_x;
   m_size_y = 0.9 * parent->m_size_y;
+  
+  // copy in the channel-to-color mapping
+  memcpy( channel, channel_map, sizeof(StageColor) * ACTS_NUM_CHANNELS );
 
   //m_interval = 0.2; // 5Hz
   m_interval = 0.1; // 10Hz - the real cam is around this
@@ -178,9 +182,11 @@ void CVisionDevice::UpdateScan()
 
     // i'm scanning this as half-resolution for a significant speed-up
 
+    StageColor col;
+
     for (int s = 0; s < m_scan_width; s++)
     {
-      int channel = 0;
+      //int channel = 0;
       double range = m_max_range;
       
       // Compute parameters of scan line
@@ -207,8 +213,11 @@ void CVisionDevice::UpdateScan()
 		//ent, m_world->StringType( ent->m_stage_type ) );
 		
 		range = lit.GetRange(); // it's this far away
-		channel = ent->channel_return; // it's this color
+		//channel = ent->channel_return; // it's this color
 		
+		// get the color of the entity
+		memcpy( &col, &(ent->m_color), sizeof( StageColor ) );
+
 		break;
 	      }
 	  }
@@ -216,19 +225,30 @@ void CVisionDevice::UpdateScan()
 	//printf( "ray: %d channel: %d\n", s, channel );
 	//fflush( stdout );
 
-        // Set the channel
+	// initialize the reading 
+	m_scan_channel[s] = 0; // channel 0 is no-blob
+	m_scan_range[s] = 0;
+	
+        // look up this color in the color/channel mapping array
         //
-        m_scan_channel[s] = channel;
-	m_scan_range[s] = range;
-                
+	for( int c=0; c<ACTS_NUM_CHANNELS; c++ )
+	  if( channel[c].red == col.red &&
+	      channel[c].green == col.green &&
+	      channel[c].blue == col.blue  )
+	    {
+	      m_scan_channel[s] = c + 1; // channel 0 is no-blob
+	      m_scan_range[s] = range;
+	      break;
+	    }
+	
         // Update the gui data
         //
 #ifdef INCLUDE_RTK
-        if (channel > 0)
+        if (m_scan_channel > 0)
         {
             m_hit[m_hit_count][0] = px;
             m_hit[m_hit_count][1] = py;
-            m_hit[m_hit_count][2] = channel;
+            m_hit[m_hit_count][2] = m_scan_channel;
             m_hit_count++;
         }
 #endif

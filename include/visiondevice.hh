@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visiondevice.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.10 $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -48,7 +48,7 @@ class CVisionDevice : public CEntity
 {
     // Default constructor
     //
-    public: CVisionDevice(CWorld *world, CPtzDevice *parent );
+    public: CVisionDevice(CWorld *world, CPtzDevice *parent, StageColor* channel_map );
     
     // Update the device
     //
@@ -70,6 +70,9 @@ class CVisionDevice : public CEntity
     //
     private: double m_pan, m_tilt, m_zoom;
 
+  // channel to color map array
+  StageColor channel[ ACTS_NUM_CHANNELS ];
+  
     // Camera properties
     //
     private: int cameraImageWidth, cameraImageHeight;
