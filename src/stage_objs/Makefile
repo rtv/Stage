@@ -21,9 +21,9 @@ OBJS =  world.o world_load.o truthserver.o envserver.o image.o \
 # choose one of these that suits your build (debug/profile/production)
 
 # production
-#CCFLAGS = -O3 
+CCFLAGS = -O2 
 # debug
-CCFLAGS = -g3 
+#CCFLAGS = -g3 
 # debug + profile
 #CCFLAGS = -pg -g3
 
@@ -54,7 +54,7 @@ clean:
 
 dep:
 	$(MAKEDEP) -Y -- $(CCFLAGS) -- -s "# Dependancies (make dep)" ../*.cc 2>/dev/null
-	$(RM) -f Makefile.bak
+	sed s/"^\.\.\/"// < Makefile > Makefile.bak && mv Makefile.bak Makefile
 
 clean_dep:
 	$(MAKEDEP) -s "# Dependancies (make dep)" 
