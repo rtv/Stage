@@ -24,7 +24,7 @@
  *          Douglas S. Blank <dblank@brynmawr.edu>
  *
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.31 2004-12-30 04:39:25 rtv Exp $
+ * CVS info: $Id: worldfile.cc,v 1.32 2005-02-15 20:01:14 gerkey Exp $
  */
 
 #include <assert.h>
@@ -324,8 +324,19 @@ bool CWorldFile::LoadTokens(FILE *file, int include)
       token[1] = 0;
       AddToken(TokenCloseTuple, token, include);
     }
-    else if (ch == '\n')
+    else if ( 0x0d == ch )
     {
+      ch = fgetc(file);
+      if ( 0x0a != ch ) 
+        ungetc(ch, file);
+      line++;
+      AddToken(TokenEOL, "\n", include);
+    }
+    else if ( 0x0a == ch )
+    {
+      ch = fgetc(file);
+      if ( 0x0d != ch ) 
+        ungetc(ch, file);
       line++;
       AddToken(TokenEOL, "\n", include);
     }
@@ -360,7 +371,7 @@ bool CWorldFile::LoadTokenComment(FILE *file, int *line, int include)
       AddToken(TokenComment, token, include);
       return true;
     }
-    else if (ch == '\n')
+    else if ( 0x0a == ch || 0x0d == ch )
     {
       ungetc(ch, file);
       AddToken(TokenComment, token, include);
@@ -582,7 +593,7 @@ bool CWorldFile::LoadTokenString(FILE *file, int *line, int include)
   {
     ch = fgetc(file);
 
-    if (ch == EOF || ch == '\n')
+    if ( EOF == ch || 0x0a == ch || 0x0d == ch )
     {
       TOKEN_ERR("unterminated string constant", *line);
       return false;
