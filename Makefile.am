@@ -4,6 +4,10 @@ DOCSRC = $(top_srcdir)/docsrc
 DOCDIST = $(distdir)/doc 
 DOCINST = $(DESTDIR)$(prefix)/doc
 
+# create the pkg-config entries
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = stage.pc stagecpp.pc
+
 dist-hook:
 	cd $(DOCSRC) && make 
 	mkdir -p $(DOCDIST)

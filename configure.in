@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.35.4.9 2003-08-09 01:28:02 rtv Exp $
+dnl $Id: configure.in,v 1.35.4.10 2003-08-19 00:58:41 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -69,9 +69,7 @@ dnl build mplementations of these in libreplace.a if these are
 dnl missing
 AC_REPLACE_FUNCS(poll dirname scandir)
 
-dnl PKG_CHECK_MODULES(RTVRTK, gtk+, AC_MSG_WARN([GTK+ found]),AC_MSG_WARN([GTK+ not found])
-PKG_CHECK_MODULES(RTK, librtk2-gtk2 >= 2.2,
-dnl PKG_CHECK_MODULES(RTK, librtk2 >= 2.2,
+PKG_CHECK_MODULES(RTK, librtk2 >= 2.2,
 AC_DEFINE(INCLUDE_RTK2,1,[building RTK GUI]),
 AC_MSG_WARN([no suitable RTK was found. ])
 )
@@ -81,9 +79,6 @@ AC_CHECK_HEADER(jpeglib.h,
   AC_DEFINE(HAVE_JPEGLIB_H,1,[include jpeg support])
   LIBJPEG="-ljpeg",,)
 AC_SUBST(LIBJPEG)
-
-
-
 
 dnl where's the X11-style color database?
 AC_CHECK_FILE([/usr/X11R6/lib/X11/rgb.txt],
@@ -104,7 +99,9 @@ AC_OUTPUT(Makefile
           src/Makefile 
           worlds/Makefile 
           replace/Makefile
-          tools/Makefile)
+          tools/Makefile
+	  stage.pc
+	  stagecpp.pc)
 
 #          src/gnomegui/Makefile 
 #	  src/models/Makefile	
