@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.42 $
+//  $Revision: 1.43 $
 //
 // Usage:
 //  (empty)
@@ -577,16 +577,17 @@ void CWorld::Update()
 
 //  #ifdef DEBUG
   	printf( "De-queued Truth: "
-  		"[%d] (%s:%d,%d,%d) parent (%d,%d,%d) [%d,%d,%d]\n", 
-		truth.stage_id,
-  		truth.hostname,
+  		"[%d] (%s:%d,%d,%d) parent (%d,%d,%d) [%d,%d,%d] echo %d\n", 
+  		truth.stage_id,
+		truth.hostname,
 		truth.id.port, 
   		truth.id.type, 
   		truth.id.index,
   		truth.parent.port, 
   		truth.parent.type, 
   		truth.parent.index,
-  		truth.x, truth.y, truth.th );
+  		truth.x, truth.y, truth.th,
+		truth.echo_request);
 
   	fflush( stdout );
 //  #endif
