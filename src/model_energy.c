@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.12 $
+//  $Revision: 1.13 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -17,82 +17,108 @@
 
 //#define DEBUG
 
-#include "stage.h"
+#include "stage_internal.h"
 #include "gui.h"
 extern rtk_fig_t* fig_debug;
 
 #define TIMING 0
 #define ENERGY_FILLED 1
 
-void  stg_model_energy_config_render( stg_model_t* mod );
-void  stg_model_energy_data_render( stg_model_t* mod );
+void  energy_render_config( stg_model_t* mod );
+void  energy_render_data( stg_model_t* mod );
+int energy_update( stg_model_t* mod );
+void energy_load( stg_model_t* mod );
 
-stg_energy_config_t* stg_model_get_energy_config( stg_model_t* mod )
+stg_model_t* stg_energy_create( stg_world_t* world, 
+			       stg_model_t* parent, 
+			       stg_id_t id, 
+			       char* token )
 {
-  return &mod->energy_config;
-}
-
-stg_energy_data_t* stg_model_get_energy_data( stg_model_t* mod )
-{
-  return &mod->energy_data;
-}
-
-int stg_model_set_energy_data( stg_model_t* mod, stg_energy_data_t* data )
-{  
-  memcpy( &mod->energy_data, data, sizeof(mod->energy_data));
+  stg_model_t* mod = 
+    stg_model_create( world, parent, id, STG_MODEL_ENERGY, token );
   
-  // and redraw it
-  stg_model_energy_data_render( mod );
+  // override the default methods
+  //mod->f_shutdown = energy_shutdown;
+  mod->f_update = energy_update;
+  mod->f_render_data = energy_render_data;
+  mod->f_render_cfg = energy_render_config;
+  mod->f_load = energy_load;
 
-  return 0; //OK
+  // sensible energy defaults
+  stg_geom_t geom;
+  geom.pose.x = 0.0;
+  geom.pose.y = 0.0;
+  geom.pose.a = 0.0;
+  geom.size.x = 0.2;
+  geom.size.y = 0.2;
+  stg_model_set_geom( mod, &geom );
+
+  // set up config structure
+  stg_energy_config_t econf;
+  memset(&econf,0,sizeof(econf));  
+  econf.probe_range = 1.0;
+  econf.give = 0.0;
+  econf.take = 100.0;
+  econf.capacity = 10000.0;
+  stg_model_set_config( mod, &econf, sizeof(econf) );
+
+  // set default color
+  stg_color_t col = stg_lookup_color( "yellow" ); 
+  stg_model_set_color( mod, &col );
+
+  return mod;
 }
 
-int stg_model_set_energy_config( stg_model_t* mod, stg_energy_config_t* config )
-{  
-  memcpy( &mod->energy_config, config, sizeof(mod->energy_config));
-  
-  // and redraw it
-  stg_model_energy_config_render( mod );
-
-  return 0; //OK
-}
  
+void energy_load( stg_model_t* mod )
+{
+  stg_energy_config_t econf;
+  memset( &econf, 0, sizeof(econf) );
+  
+  econf.capacity = wf_read_float( mod->id, "capacity", 10000.0 );
+  econf.probe_range = wf_read_length( mod->id, "probe_range", 1.0 );
+  econf.give = wf_read_float( mod->id, "give", 0 );
+  econf.take = wf_read_float( mod->id, "take", 100 );
+
+  stg_model_set_config( mod, &econf, sizeof(econf));
+}
+
 
 void stg_model_energy_consume( stg_model_t* mod, stg_watts_t rate )
 {
-  stg_energy_data_t* data = stg_model_get_energy_data(mod);
-  stg_energy_config_t* cfg = stg_model_get_energy_config(mod);
+  stg_energy_data_t* data = (stg_energy_data_t*)(mod->data);
+  stg_energy_config_t* cfg = (stg_energy_config_t*)(mod->cfg);
   
   if( data && cfg && cfg->capacity > 0 )
     {
-      data->joules -=  rate * (double)mod->world->sim_interval / 1000.0;
-      data->joules = MAX( data->joules, 0 ); // not too little
-      data->joules = MIN( data->joules, cfg->capacity );// not too much
+      data->stored -=  rate * (double)mod->world->sim_interval / 1000.0;
+      data->stored = MAX( data->stored, 0 ); // not too little
+      data->stored = MIN( data->stored, cfg->capacity );// not too much
     }
 }
 
 void stg_model_energy_absorb( stg_model_t* mod, stg_watts_t rate )
 {
-  stg_energy_data_t* data = stg_model_get_energy_data(mod);
-  stg_energy_config_t* cfg = stg_model_get_energy_config(mod);
+  stg_energy_data_t* data = (stg_energy_data_t*)mod->data;
+  stg_energy_config_t* cfg = (stg_energy_config_t*)mod->cfg;;
 
   if( data && cfg && cfg->capacity > 0 )
     {
-      data->joules +=  rate * (double)mod->world->sim_interval / 1000.0;
+      data->stored +=  rate * (double)mod->world->sim_interval / 1000.0;
 
-      //printf( "joules: %.2f max: %.2f\n", data->joules, cfg->capacity );
+      //printf( "joules: %.2f max: %.2f\n", data->stored, cfg->capacity );
 
-      data->joules = MIN( data->joules, cfg->capacity );
+      data->stored = MIN( data->stored, cfg->capacity );
     }
 }
 
 
-int stg_model_energy_data_service( stg_model_t* mod )
+int energy_update( stg_model_t* mod )
 {     
   PRINT_DEBUG1( "energy service model %d", mod->id  );  
   
-  stg_energy_config_t* cfg = stg_model_get_energy_config(mod);
-  stg_energy_data_t* data = stg_model_get_energy_data(mod);
+  stg_energy_data_t* data = (stg_energy_data_t*)mod->data;
+  stg_energy_config_t* cfg = (stg_energy_config_t*)mod->cfg;;
 
   data->charging = FALSE;
 
@@ -106,37 +132,45 @@ int stg_model_energy_data_service( stg_model_t* mod )
 			       PointToBearingRange );
       
       stg_model_t* him;
-      while( (him = itl_next( itl )) ) 
-	{
-	  // if we hit something
-	  if( him != mod )
-	    {
-	      stg_energy_config_t* hiscfg =  stg_model_get_energy_config(him);
-	      //stg_energy_data_t* hisdata =  model_energy_data_get(him);
+
+      //hitmod = itl_first_matching( itl, energy_raytrace_match, mod );
+
+      //if( hitmod )
+      //range = itl->range;
+
+
+
+/*       while( (him = itl_next( itl )) )  */
+/* 	{ */
+/* 	  // if we hit something */
+/* 	  if( him != mod ) */
+/* 	    { */
+/* 	      stg_energy_config_t* hiscfg =  1.0;//stg_model_get_energy_config(him); */
+/* 	      //stg_energy_data_t* hisdata =  model_energy_data_get(him); */
 	      
-	      //printf( "inspecting mod %d to see if he will give me juice\n",
-	      //      him->id );
+/* 	      //printf( "inspecting mod %d to see if he will give me juice\n", */
+/* 	      //      him->id ); */
 	      
-	      if( hiscfg->give_rate > 0 && hiscfg->capacity != 0 )
-		{
-		  //puts( "TRADING ENERGY" );
+/* 	      if( hiscfg->give > 0 && hiscfg->capacity != 0 ) */
+/* 		{ */
+/* 		  //puts( "TRADING ENERGY" ); */
 		  
-		  stg_model_energy_absorb( mod, hiscfg->give_rate );		  
-		  stg_model_energy_consume( him, hiscfg->give_rate );
+/* 		  stg_model_energy_absorb( mod, hiscfg->give );		   */
+/* 		  stg_model_energy_consume( him, hiscfg->give ); */
 
-		  data->charging = TRUE;
-		  data->range = itl->range;
-		}
+/* 		  data->charging = TRUE; */
+/* 		  data->range = itl->range; */
+/* 		} */
 
-	      break; // we only charge the first energy-using thing we hit
-	    }
-	}      
+/* 	      break; // we only charge the first energy-using thing we hit */
+/* 	    } */
+/* 	}       */
     }
 
-  stg_model_energy_consume( mod, cfg->trickle_rate );
+  //stg_model_energy_consume( mod, cfg->trickle_rate );
 
   // re-publish our data (so it gets rendered on the screen)
-  stg_energy_data_t nrg;
+  stg_energy_data_t nrg;(stg_energy_data_t*)
   memcpy(&nrg,data,sizeof(nrg));
 
   //model_set_prop( mod, STG_PROP_ENERGYDATA, &nrg, sizeof(nrg) );
@@ -145,7 +179,7 @@ int stg_model_energy_data_service( stg_model_t* mod )
 }
 
 
-void stg_model_energy_data_render( stg_model_t* mod )
+void energy_render_data( stg_model_t* mod )
 {
   PRINT_DEBUG( "energy data render" );
 
@@ -175,12 +209,12 @@ void stg_model_energy_data_render( stg_model_t* mod )
       //pose.a = 0.0;
       //rtk_fig_origin( fig, pose.x, pose.y, pose.a );
 
-      stg_energy_data_t* data = stg_model_get_energy_data(mod);
-      stg_energy_config_t* cfg = stg_model_get_energy_config(mod);
+      stg_energy_data_t* data = (stg_energy_data_t*)mod->data;
+      stg_energy_config_t* cfg = (stg_energy_config_t*)mod->cfg;;
       
       /*  char buf[256];
       snprintf( buf, 256, "%.2f/%.2fJ %.2fW %s", 
-		data->joules, 
+		data->stored, 
 		cfg->capacity, 
 		data->watts,
 		data->charging ? "charging" : "" );
@@ -194,7 +228,7 @@ void stg_model_energy_data_render( stg_model_t* mod )
 	{
 	  char buf[64];
 	  snprintf( buf, 32, "%.2f %s", 
-		    data->joules, 
+		    data->stored, 
 		    data->charging ? "charging" : "" );
 	  
 	  rtk_fig_text( fig, 0.0,0.0,0, buf ); 
@@ -203,7 +237,7 @@ void stg_model_energy_data_render( stg_model_t* mod )
 	{
 	  char buf[64];
 	  snprintf( buf, 32, "supplying %.2f Watts", 
-		    cfg->give_rate );
+		    cfg->give );
 	  
 	  rtk_fig_text( fig, 0,0,0, buf ); 	  
 	}
@@ -212,7 +246,7 @@ void stg_model_energy_data_render( stg_model_t* mod )
 }
 
 
-void stg_model_energy_config_render( stg_model_t* mod )
+void energy_render_config( stg_model_t* mod )
 { 
   PRINT_DEBUG( "energy config render" );
   
@@ -229,7 +263,7 @@ void stg_model_energy_config_render( stg_model_t* mod )
 
   stg_energy_config_t* cfg = stg_model_get_energy_config(mod);
   
-  if( cfg && cfg->give_rate > 0 )
+  if( cfg && cfg->give > 0 )
     {  
       // draw the charging radius
       //double radius = cfg->probe_range;

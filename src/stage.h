@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.122 2005-01-05 09:01:53 rtv Exp $
+ * CVS: $Id: stage.h,v 1.123 2005-02-11 04:21:29 rtv Exp $
  */
 
 
@@ -82,6 +82,7 @@ extern "C" {
       STG_MODEL_FIDUCIAL,
       STG_MODEL_RANGER,
       STG_MODEL_BLOB,
+      STG_MODEL_ENERGY,
       STG_MODEL_COUNT // this must be the last entry - it counts the entries
       
     } stg_model_type_t;
@@ -136,6 +137,46 @@ extern "C" {
     stg_pose_t pose;
     stg_size_t size;
   } stg_geom_t;
+
+  // ENERGY --------------------------------------------------------------
+  
+  /** energy data packet */
+  typedef struct
+  {
+    /** estimate of current energy stored */
+    stg_joules_t stored;
+
+    /** maximum storage capacity */
+    stg_joules_t capacity;
+
+    /** estimate of current energy use */
+    stg_watts_t use;
+
+    /** TRUE iff the device is receiving energy from a charger */
+    stg_bool_t charging;
+
+    /** the range to the charger, if attached, in meters */
+    stg_meters_t range;
+  } stg_energy_data_t;
+
+  /** energy config packet (use this to set or get energy configuration)*/
+  typedef struct
+  {
+    /** maximum storage capacity */
+    stg_joules_t capacity;
+
+    /** when charging another device, supply this many joules/sec at most*/
+    stg_watts_t give;
+
+    /** when charging from another device, receive this many
+	joules/sec at most*/
+    stg_watts_t take;
+
+    /** length of the charging probe */
+    stg_meters_t probe_range;
+  } stg_energy_config_t;
+
+  // there is currently no energy command packet
 
   // BLINKENLIGHT -------------------------------------------------------
 

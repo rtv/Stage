@@ -144,6 +144,8 @@ stg_world_t* stg_world_create_from_file( char* worldfile_path )
 	    type = STG_MODEL_BLOB;
 	  else if( strcmp( typestr, "fiducialfinder" ) == 0 )
 	    type = STG_MODEL_FIDUCIAL;
+	  else if( strcmp( typestr, "energy" ) == 0 )
+	    type = STG_MODEL_ENERGY;
 	  else 
 	    {
 	      PRINT_ERR1( "unknown model type \"%s\". Model has not been created.",
@@ -207,6 +209,10 @@ stg_world_t* stg_world_create_from_file( char* worldfile_path )
 	      
 	    case STG_MODEL_POSITION:
 	      mod = stg_position_create( world,  parent_mod, section, namestr );
+	      break;
+
+	    case STG_MODEL_ENERGY:
+	      mod = stg_energy_create( world,  parent_mod, section, namestr );
 	      break;
 
 	    default:

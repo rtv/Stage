@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.88 2005-01-03 05:48:18 rtv Exp $
+# $Id: Makefile.am,v 1.89 2005-02-11 04:21:28 rtv Exp $
 
 # install these headers
 include_HEADERS = stage.h 
@@ -24,6 +24,7 @@ libstage_la_SOURCES = \
 	matrix.c \
 	model.c \
 	model_blobfinder.c \
+	model_energy.c \
 	model_fiducial.c \
 	model_laser.c \
 	model_position.c \
