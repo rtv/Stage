@@ -2,9 +2,9 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.15 2002-06-11 07:28:56 inspectorg Exp $
+% CVS: $Id: stage.tex,v 1.16 2002-06-11 08:29:57 rtv Exp $
 
-\documentclass[11pt]{report}
+\documentclass[11pt,twoside]{report}
 
 % this one apparently fixes the < and > chars
 \usepackage[T1]{fontenc}
@@ -112,7 +112,7 @@
   
     Various sensors and actuators are provided, including sonar,
     scanning laser rangefinders, vision (color blob detection),
-    odometry, and both differential and omni-drive platforms.
+    odometry, and a differential steer robot base.
 
   \section{How to get Stage and related software}
 
@@ -211,6 +211,20 @@ Maja~J Matari\'c and Gaurav~S Sukhatme.
 \newblock In {\em Proc. of the IEEE/RSJ Intl. Conf. on Intelligent Robots and
   Systems (IROS)}, pages 1226--1231, Wailea, Hawaii, October 2001.
 \end{quote}
+
+At the time of writing, there is no peer-reviewed article about Stage,
+but there is a USC technical report, available at:
+
+\begin{quote}
+Richard T.~Vaughan. "Stage: A Multiple Robot Simulator". Technical Report IRIS-00-394, Institute for Robotics and Intelligent Systems, School of Engineering, University of Southern California, 2000.
+\end{quote}
+
+These papers (and any new ones) are available at: 
+
+\begin{verbatim}
+   http://playerstage.sourceforge.net/pubs.html
+\end{verbatim}
+
 If you have space (and are feeling generous), you can also insert a footnote
 similar to the following:
 \begin{quote}
@@ -231,7 +245,8 @@ Stage originated at the University of Southern California Robotics
     (MARS), NSF grant ANI-9979457 (SCOWR), DARPA contract
     DAAE07-98-C-L028 (TMR), ONR Grants N00014-00-1-0140 and
     N0014-99-1-0162, and JPL Contract No. 1216961. Development at HRL
-    Laboratories is supported by a DARPA contract (SDR). 
+    Laboratories is supported by a DARPA contract (SDR). Thanks to
+    Doug Gage at DARPA.
 
 Thanks to our contributors and users, particularly the USC Robotics
 Lab students and alumni who have been generous with their advice, bug
@@ -298,8 +313,7 @@ tools can be found on the website.
 	** Player v1.2 ** [Stage /tmp/stageIO.vaughan.0]
       \end{verbatim}
 
-    Stage also outputs a status line on stdout at every cycle.  At
-    this point you should be able to interact with objects in the
+    At this point you should be able to interact with objects in the
     world with the GUI (try dragging things around) and access sensors
     and actuators through Player. Try using the Player client program
     (<player1.2>/utils/playerv/playerv) to see the output from some
@@ -948,7 +962,7 @@ properties.
 \newpage
 \section{The {\tt gps} device}
 
-The {\tt gps} device simulates a GPS reciever; currently it returns
+The {\tt gps} device simulates a GPS receiver; currently it returns
 the true pose of the GPS device, in the world coordinate system.  This
 device has no properties.
 
@@ -1031,7 +1045,7 @@ Name & Values & Description \\
 
 \verb'scount' & \verb'numsonars' & The number of sonar transducers.\\
 
-\verb'spose[i]' & \verb'[x y th]' & The pose of each transducers {\tt i}.\\
+\verb'spose[i]' & \verb'[x y th]' & The pose of each transducer number {\tt i}.\\
 
 \hline
 \end{tabularx}
@@ -1066,6 +1080,10 @@ field-of-view).\\
 \hline
 \end{tabularx}
 \vspace{1em}\\
+
+
+\bibliographystyle{plain}
+\bibliography{playerstage}
 
 
 \end{document}
