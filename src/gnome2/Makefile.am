@@ -1,6 +1,6 @@
 # Automake script to build Stage GNOME2 GUI Makefile
 # RTV 20021026
-# $Id
+# $Id: Makefile.am,v 1.2 2002-10-27 21:39:28 rtv Exp $
 
 lib_LIBRARIES = libgnomestage.a 
 
