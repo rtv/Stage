@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.9 2002-10-07 06:46:00 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.10 2002-10-15 22:13:03 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -79,14 +79,14 @@ class CWorld
   
   // the locks file descriptor
   public: int m_locks_fd;
+  
+  // these do nothing in the base CWorld class, but are overridden in
+  // CServer
+  virtual bool LockByte( int offset );
+  virtual bool UnlockByte( int offset );
 
   public: char m_device_dir[PATH_MAX]; //device  directory name 
   
-  // this should really be in the CStageServer, but the update is tricky there
-  // so i'll leave it here for now - RTV
-  // export the time in this buffer
-  protected: stage_clock_t* m_clock; // a timeval and lock
-
   // Properties of the underlying matrix representation
   // for the world.
   // The resolution is specified in pixels-per-meter.
@@ -98,8 +98,12 @@ class CWorld
    public: double m_sim_timestep; // the sim time increment in seconds
   // change ratio of these to run stage faster or slower than real time.
 
-   public: uint32_t m_step_num; // the number of cycles executed, from 0
-
+public: uint32_t m_step_num; // the number of cycles executed, from 0
+  
+  // set the current time from the interval and step number
+  // returning the current time in seconds
+  virtual double SetClock( double interval, uint32_t step_num );
+  
   // when to shutdown (in seconds)
 private: int m_stoptime;
 public: int GetStopTime( void ){ return m_stoptime; };

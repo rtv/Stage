@@ -21,7 +21,7 @@
  * Desc: Gnome GUI 
  * Author: Richard Vaughan
  * Date: 7 Dec 2000
- * CVS info: $Id: gnomegui.cc,v 1.1 2002-10-07 06:45:59 rtv Exp $
+ * CVS info: $Id: gnomegui.cc,v 1.2 2002-10-15 22:13:02 rtv Exp $
  */
 
 
@@ -34,7 +34,7 @@
 
 #ifdef USE_GNOME2
 
-//#undef DEBUG
+#undef DEBUG
 //#undef VERBOSE
 //#define DEBUG 
 //#define VERBOSE
@@ -615,7 +615,6 @@ gint GnomeEventCanvas(GnomeCanvasItem *item, GdkEvent *event, gpointer data)
 
 void GnomeEntityStartup( CEntity* entity )
 { 
-
   PRINT_DEBUG( "" );
 
   // allocte storage for gui data, zero it, and stow it in the entity
@@ -850,12 +849,12 @@ gint GnomeEventBody(GnomeCanvasItem *item, GdkEvent *event, gpointer data)
   switch (event->type) 
     {
     case GDK_ENTER_NOTIFY:
-      puts( "enter top level entity - GuiSelect" );
+      //puts( "enter top level entity - GuiSelect" );
       GnomeSelect( entity );
       break;
       
     case GDK_LEAVE_NOTIFY:
-      puts( "leave top level entity" );
+      //puts( "leave top level entity" );
         break;
 
     default:
@@ -978,7 +977,7 @@ void GnomeSelect( CEntity* ent )
 
   g_watched = ent;
   
-  printf( "select: %d \n", ent->stage_type ); 
+  //printf( "select: %d \n", ent->stage_type ); 
   
   double border = 0.7;
   double noselen = 0.2;

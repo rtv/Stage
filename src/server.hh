@@ -5,7 +5,7 @@
 // Class provides a network server for Stage internals
 // used by external GUIs (XS) and distributed Stage modules
 //
-// $Id: server.hh,v 1.3 2002-09-16 23:44:34 gerkey Exp $
+// $Id: server.hh,v 1.4 2002-10-15 22:13:03 rtv Exp $
 
 #ifndef _SERVER_H
 #define _SERVER_H
@@ -257,6 +257,16 @@ class CStageServer : public CStageIO
   
   private: char clockName[PATH_MAX]; // path of mmap node in filesystem
   private: bool CreateClockDevice( void );
+private: int clock_lock_byte; // offset into the lock file controlling
+ // access to the clock structure
+  
+  // export the time in this buffer
+  protected: stage_clock_t* m_clock; // a timeval and lock
+
+  // override the CWorld time setting method
+  // we inherit the CWorld method, plus we set the external shared clock 
+  // we return the new time in seconds
+  virtual double SetClock( double interval, uint32_t step_num );
   
   // CREATE THE DEVICE DIRECTORY for external IO
   private: bool CreateDeviceDirectory( void );
@@ -272,6 +282,9 @@ class CStageServer : public CStageIO
 // creates the file m_device_dir/devices.lock,  m_object_count bytes long
   // stores the filename in m_locks_name and the fd in m_locks_fd
   private: bool CreateLockFile( void );
+
+  virtual bool LockByte( int offset );
+  virtual bool UnlockByte( int offset );
  
   //////////////////////////////////////////////////////////////////
   // WHEN LINUX SUPPORTS PROCESS-SHARED SEMAPHORES WE'LL USE THEM AND

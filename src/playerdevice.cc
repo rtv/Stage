@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.41 2002-10-10 02:45:25 gerkey Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.42 2002-10-15 22:13:03 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -225,29 +225,11 @@ bool CPlayerEntity::Startup( void )
     }
       
     close( tfd ); // can close fd once mapped
-      
+    
     //PRINT_DEBUG("successfully mapped shared memory");
-      
+    
     //PRINT_DEBUG2( "S: mmapped %d bytes at %p\n", mem, playerIO );
   }
-  // we use the lock field in the player_stage_info_t structure to
-  // control access with a semaphore.
-  
-  
-  // initialise a POSIX semaphore
-  //
-  // we'd use this to create a semaphore that is shared across
-  // processes if only linux supported it.  hopefully it'll show up in
-  // the next kernel, so keep this around.  this should work on
-  // BSD,Solaris, etc. (conditional compilation?)
-  // 
-  //m_lock = &playerIO->lock;
-  //if( sem_init( m_lock, 1, 1 ) < 0 )
-  //perror( "sem_init failed" );
-  
-  // we'll do file locking instead (see ::Lock() and ::Unlock())
-  
-  //PRINT_DEBUG1( "Stage: device lock at %p\n", m_lock );
   
   // try a lock
   assert( Lock() );
@@ -576,21 +558,16 @@ void CPlayerEntity::FamilyUnsubscribe()
 //// subscribe to the device (used by other devices that depend on this one)
 void CPlayerEntity::Subscribe() 
 {
-  //puts( "PSUB" );
-
-  
   Lock();
-  m_info_io->subscribed++;
-
-  printf( "player %d.%d.%d subs %d\n", 
-	  this->m_player.port,  
-	  this->m_player.code,  
-	  this->m_player.index,
-	  m_info_io->subscribed );
-  
-  
+  m_info_io->subscribed++;  
   Unlock(); 
   
+  //printf( "player %d.%d.%d subs %d\n", 
+  //  this->m_player.port,  
+  //  this->m_player.code,  
+  //  this->m_player.index,
+  //  m_info_io->subscribed );
+
   CEntity::Subscribe();
 }
 
@@ -615,41 +592,8 @@ void CPlayerEntity::Unsubscribe()
 //
 bool CPlayerEntity::Lock( void )
 {
-  if( m_world->m_locks_fd > 0 ) // if the world has a locking file open
-  {
-
-    // POSIX RECORD LOCKING METHOD
-    struct flock cmd;
-
-    cmd.l_type = F_WRLCK; // request write lock
-    cmd.l_whence = SEEK_SET; // count bytes from start of file
-    cmd.l_start = this->lock_byte; // lock my unique byte
-    cmd.l_len = 1; // lock 1 byte
-
-    fcntl( m_world->m_locks_fd, F_SETLKW, &cmd );
-
-    // DEBUG: write into the file to show which byte is locked
-    // X = locked, '_' = unlocked
-    lseek( m_world->m_locks_fd, this->lock_byte, SEEK_SET );
-    write(  m_world->m_locks_fd, "X", 1 );
-
-    //////////////////////////////////////////////////////////////////
-    // BSD file locking method
-    // block until we can get an exclusive lock on this file
-    //if( flock( m_fd, LOCK_EX ) != 0 )
-    //perror( "flock() LOCK failed" );
-
-    ///////////////////////////////////////////////////////////////////
-    // POSIX semaphore method
-    //assert( m_lock );
-    //PRINT_DEBUG1( "%p", m_lock );
-    //if( sem_wait( m_lock ) < 0 )
-    //{
-    //PRINT_ERR( "sem_wait failed" );
-    //return false;
-    //}
-  }
-  return true;
+  assert(m_world);
+  return m_world->LockByte( this->lock_byte );
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -657,41 +601,8 @@ bool CPlayerEntity::Lock( void )
 //
 bool CPlayerEntity::Unlock( void )
 {
-  if( m_world->m_locks_fd > 0 ) // if the world has a locking file open
-  {
-      // POSIX RECORD LOCKING METHOD
-      struct flock cmd;
-      
-      cmd.l_type = F_UNLCK; // request unlock
-      cmd.l_whence = SEEK_SET; // count bytes from start of file
-      cmd.l_start = this->lock_byte; // unlock my unique byte
-      cmd.l_len = 1; // unlock 1 byte
-      
-      // DEBUG: write into the file to show which byte is locked
-      // X = locked, '_' = unlocked
-      lseek( m_world->m_locks_fd, this->lock_byte, SEEK_SET );
-      write(  m_world->m_locks_fd, "_", 1 );
-      
-      fcntl( m_world->m_locks_fd, F_SETLKW, &cmd );
-      
-      ///////////////////////////////////////////////////////////////////
-      // BSD file locking method
-      // block until we can get an exclusive lock on this file
-      //if( flock( m_fd, LOCK_UN ) != 0 )
-      //perror( "flock() UNLOCK failed" );
-      
-      ////////////////////////////////////////////////////////////////
-      // POSIX semaphore method
-      //assert( m_lock );
-      //PRINT_DEBUG1( "%p", m_lock );
-      //if( sem_post( m_lock ) < 0 )
-      //{
-      //PRINT_ERR( "sem_post failed" );
-      //return false;
-      //}     
-  }
-
-  return true;
+  assert(m_world);
+  return m_world->UnlockByte( this->lock_byte );
 }
 
 int CPlayerEntity::SetProperty( int con, EntityProperty property, 

@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.126 2002-10-10 23:12:06 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.127 2002-10-15 22:13:03 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -110,8 +110,6 @@ CWorld::CWorld( int argc, char** argv, Library* lib )
   // stop time of zero means run forever
   m_stoptime = 0;
   
-  m_clock = 0;
-
   // invalid file descriptor initially
   m_log_fd = -1;
 
@@ -331,14 +329,6 @@ bool CWorld::Startup()
   m_update_ratio = 1;
   m_update_rate = 0;
     
-  //#ifdef INCLUDE_RTK2 // Start the GUI
-  //if (this->enable_gui) RtkStartup();
-  //#endif
-  
-  //#ifdef USE_GNOME2
-  //if( this->enable_gui ) GuiStartup();
-  //#endif
-
   if( m_real_timestep > 0.0 ) // if we're in real-time mode
     StartTimer( m_real_timestep ); // start the real-time interrupts going
   
@@ -357,15 +347,9 @@ void CWorld::Shutdown()
 {
   PRINT_DEBUG( "world shutting down" );
   
-  // use the generic hook
+  // use the hook to shutdown the GUI
   if( this->enable_gui ) GuiWorldShutdown( this );
   
-  //#ifdef INCLUDE_RTK2
-  // Stop the GUI
-  //if (this->enable_gui)
-  //RtkShutdown();
-  //#endif
-
   // Shutdown all the entities
   // Devices will unlink their device files
   root->Shutdown(); 
@@ -439,41 +423,20 @@ void CWorld::Update(void)
       // we increment the clock and do the time-based updates
       if( g_timer_events > 0 || m_real_timestep == 0 )
 	{          
-	  
-	  // Update the simulation time (in both formats)
-	  m_sim_time = m_step_num * m_sim_timestep;
-	  m_sim_timeval.tv_sec = (long)floor(m_sim_time);
-	  m_sim_timeval.tv_usec = (long)((m_sim_time-floor(m_sim_time)) * MILLION); 
-	  
-	  // export the time - copy the timeval into the player io buffer
-	  if( m_clock ) // if we're managing a clock
-	    {
-	      // TODO - move this into the server?
-
-              // TODO - change to record locking; that's what Player's using,
-              //        so the time is *not* actually protected right now - BPG
-	      //sem_wait( &m_clock->lock );
-	      m_clock->time = m_sim_timeval;
-	      //sem_post( &m_clock->lock );
-	    }
-	  
+	  // set the current time and
 	  // update the entities managed by this host at this time 
-	  root->Update( m_sim_time );	  
+	  root->Update(this->SetClock( m_real_timestep, m_step_num ));
 	  
-	  //#ifdef INCLUDE_RTK2   
-	  // also update the gui at this rate
-	  //if (this->enable_gui) RtkUpdate();
-	  //#endif	      
+	  // all the entities are done, now let's draw the graphics
+	  if( this->enable_gui )
+	    GuiWorldUpdate( this );
 	  
-
 	  if( g_timer_events > 0 )
 	    g_timer_events--; // we've handled this timer event
 	  
 	  // increase the time step counter
 	  m_step_num++; 
 
-	  if( this->enable_gui )
-	    GuiWorldUpdate( this );
 	}
       
       Output(); // perform console and log output
@@ -488,6 +451,16 @@ void CWorld::Update(void)
       //getchar();	
 }
 
+
+double CWorld::SetClock( double interval, uint32_t step_num )
+{	  
+  // Update the simulation time (in both formats)
+  m_sim_time = step_num * interval;
+  m_sim_timeval.tv_sec = (long)floor(m_sim_time);
+  m_sim_timeval.tv_usec = (long)((m_sim_time-floor(m_sim_time)) * MILLION); 
+
+  return m_sim_time;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Get the sim time
@@ -831,3 +804,18 @@ CEntity* CWorld::GetNearestEntityWithinRange( double x, double y, double range )
   return nearest;
 }
 
+///////////////////////////////////////////////////////////////////////////
+// lock the shared mem
+//
+bool CWorld::LockByte( int offset )
+{
+  return true; // success
+}
+
+///////////////////////////////////////////////////////////////////////////
+// unlock the shared mem
+//
+bool CWorld::UnlockByte( int offset )
+{
+  return true; // success
+}

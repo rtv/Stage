@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.34 2002-10-10 02:45:25 gerkey Exp $
+ * CVS info: $Id: server.cc,v 1.35 2002-10-15 22:13:03 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -89,7 +89,8 @@ CStageServer::CStageServer( int argc, char** argv, Library* lib )
 
   //  one of our parent's constructors may have failed and set this flag
   if( quit ) return;
-  
+
+  m_clock = NULL;  
 
   // Construct a fixed obstacle representing the boundary of the 
   // the environment - this the root for all other entities
@@ -411,8 +412,11 @@ bool CStageServer::LoadFile( char* filename )
   r.botry = h-2;
 
   matrix->draw_rect( r, root, true );
-
+  
+#ifdef DEBUG
+  // prints a minimal description of the ent tree on the console
   root->Print( "" );
+#endif
 
   return true;
 }
@@ -750,8 +754,8 @@ bool CStageServer::CreateLockFile( void )
     return false;
   } 
   
-  // set the file size - 1 byte per entity
-  off_t sz = GetEntityCount();
+  // set the file size - 1 byte per entity + 1 for the clock
+  off_t sz = GetEntityCount() + 1;
   
   if( ftruncate( m_locks_fd, sz ) < 0 )
   {
@@ -759,11 +763,82 @@ bool CStageServer::CreateLockFile( void )
     return false;
   }
 
-  //printf( "Created lock file %s of %d bytes (fd %d)\n", 
-  //  m_locks_name, m_entity_count, m_locks_fd );
+  PRINT_DEBUG3( "Created lock file %s of %d bytes (fd %d)\n", 
+		m_locks_name, GetEntityCount(), m_locks_fd );
+  
+  return true;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// lock the shared mem
+//
+bool CStageServer::LockByte( int offset )
+{
+  assert( this->m_locks_fd > 0 );  // must have a lock file open
+
+  // POSIX RECORD LOCKING METHOD
+  struct flock cmd;
+  
+  cmd.l_type = F_WRLCK; // request write lock
+  cmd.l_whence = SEEK_SET; // count bytes from start of file
+  cmd.l_start = offset; // lock my unique byte
+  cmd.l_len = 1; // lock 1 byte
+  
+  fcntl( this->m_locks_fd, F_SETLKW, &cmd );
+  
+#ifdef DEBUG
+  // DEBUG: write into the file to show which byte is locked
+  // X = locked, '_' = unlocked
+  lseek( this->m_locks_fd, offset, SEEK_SET );
+  write(  this->m_locks_fd, "X", 1 );
+  //printf( "locking byte %d\n", offset );
+#endif
 
   return true;
 }
+
+///////////////////////////////////////////////////////////////////////////
+// unlock the shared mem
+//
+bool CStageServer::UnlockByte( int offset )
+{
+  assert( this->m_locks_fd > 0 ); // if the world must have a locking file open
+
+  // POSIX RECORD LOCKING METHOD
+  struct flock cmd;
+  
+  cmd.l_type = F_UNLCK; // request unlock
+  cmd.l_whence = SEEK_SET; // count bytes from start of file
+  cmd.l_start = offset; // unlock my unique byte
+  cmd.l_len = 1; // unlock 1 byte
+  
+  fcntl( this->m_locks_fd, F_SETLKW, &cmd );
+  
+#ifdef DEBUG
+  // DEBUG: write into the file to show which byte is locked
+  // X = locked, '_' = unlocked
+  lseek( this->m_locks_fd, offset, SEEK_SET );
+  write(  this->m_locks_fd, "_", 1 );
+  //printf( "unlocking byte %d\n", offset );
+#endif
+  
+  return true;
+}
+
+double CStageServer::SetClock( double interval, uint32_t step_num )
+{
+  // set the current time internally 
+  double retval = CWorld::SetClock( interval, step_num );
+
+  // set the current time in shared mem
+  this->LockByte( clock_lock_byte );
+  m_clock->time.tv_sec = m_sim_timeval.tv_sec;
+  m_clock->time.tv_usec = m_sim_timeval.tv_usec;
+  this->UnlockByte( clock_lock_byte );
+
+  return retval;
+}
+
 
 void CStageServer::Write( void )
 {
@@ -868,18 +943,10 @@ bool CStageServer::CreateClockDevice( void )
   // store the pointer to the clock
   m_clock = (stage_clock_t*)map;
   
-  // init the clock's semaphore
-  // TODO - change to record locking; that's what Player's using,
-  //        so the time is *not* actually protected right now - BPG
-/*
-  if( sem_init( &m_clock->lock, 0, 1 ) < 0 )
-  {
-    PRINT_ERR1( "Failed to initialize record locking semaphore:%s", 
-                strerror(errno) );
-    return false;
-  }
-*/
-  
+  this->clock_lock_byte = this->GetEntityCount()+1;
+
+  PRINT_DEBUG1( "Clock lock byte: %d\n", this->clock_lock_byte ) ;
+
   close( tfd ); // can close fd once mapped
   
   PRINT_DEBUG( "Successfully mapped clock device." );
