@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.125 2003-10-22 07:04:51 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.126 2003-10-22 19:51:01 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -208,7 +208,7 @@ CEntity::CEntity( stg_model_create_t* init,  stg_id_t id )
   ENT_DEBUG("entity construction complete");
 
   // must do this before setting the default rectangle, or we'll never see it.
-  this->guimod = stg_gui_model_create( this );
+  this->guimod = gui_model_create( this );
   
   ENT_DEBUG( "entity startup" );
   
@@ -291,7 +291,7 @@ CEntity::~CEntity()
   if( this->guimod) 
     {
       ENT_DEBUG( "shutting down GUI model" );
-      stg_gui_model_destroy( this->guimod );
+      gui_model_destroy( this->guimod );
       this->guimod = NULL;
     }
   
@@ -767,7 +767,7 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
     }
 
   // let our GUI representation reflect the changes
-  if( this->guimod ) stg_gui_model_update( this, ptype );
+  if( this->guimod ) gui_model_update( this, ptype );
   
  return 0; // success
 }
@@ -952,7 +952,7 @@ void CEntity::SendLosMessage( stg_los_msg_t* msg )
   
   //stg_los_msg_print( msg );
 
-  stg_gui_los_msg_send( this, msg );
+  gui_los_msg_send( this, msg );
 
   if( msg->id > 0 ) // we're targeting a specific entity
     {
@@ -993,7 +993,7 @@ void CEntity::SendLosMessage( stg_los_msg_t* msg )
       //stg_los_msg_print( &g_array_index( target->received_msgs, 
       //				   stg_los_msg_t, i ) );
       
-      stg_gui_los_msg_recv( target, this, msg );
+      gui_los_msg_recv( target, this, msg );
     }
   else
     {
@@ -1050,7 +1050,7 @@ void CEntity::SendLosMessage( stg_los_msg_t* msg )
 	  // stg_los_msg_print( &g_array_index( target->received_msgs, 
 	  //			       stg_los_msg_t, i ) );
 	  
-	  stg_gui_los_msg_recv( target, this, msg );	  
+	  gui_los_msg_recv( target, this, msg );	  
 	}
     }
 }
@@ -1120,7 +1120,7 @@ void CEntity::GetNeighbors( GArray** neighbor_array )
     }
 
 
-  stg_gui_neighbor_render( this, *neighbor_array );
+  gui_neighbor_render( this, *neighbor_array );
 }
 
 bool CEntity::OcclusionTest(CEntity* ent )
@@ -1496,7 +1496,7 @@ void CEntity::UpdateRangers( void )
       
       tran->range = range;
 
-      stg_gui_rangers_render( this ); 
+      gui_rangers_render( this ); 
     }
 
   ENT_DEBUG( "updating rangers complete" );
@@ -1563,5 +1563,5 @@ void  CEntity::UpdateLaserData( stg_laser_data_t* laser )
   
   // ask the gui to draw this data if it's different to last time
   //if( memcmp( laser, &keep, sizeof(keep) ) )
-    stg_gui_laser_render( this );
+    gui_laser_render( this );
 }

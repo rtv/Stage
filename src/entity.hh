@@ -21,7 +21,7 @@
  * Desc: Simulated robot with various sensors
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.32 2003-10-22 07:04:52 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.33 2003-10-22 19:51:01 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -77,7 +77,7 @@ public:
   gboolean ChildCreate( stg_model_create_t* childdata );
  
   // all the data required to render this object sensibly
-  stg_gui_model_t* guimod;
+  gui_model_t* guimod;
   
 public:
   // Destructor

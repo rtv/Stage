@@ -21,7 +21,7 @@
  * Desc: a container for models 
  * Author: Richard Vaughan
  * Date: 24 July 2003
- * CVS info: $Id: world.hh,v 1.35 2003-10-22 07:04:55 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.36 2003-10-22 19:51:02 rtv Exp $
  */
 
 #ifndef _WORLD_HH
@@ -40,7 +40,7 @@ typedef struct
   GIOChannel *channel;
   GList *worlds; // list of the worlds created by this client
   GList *subs;
-} stg_client_data_t;
+} ss_client_t;
 
 typedef struct ss_world
 {
@@ -54,8 +54,8 @@ typedef struct ss_world
   guint clock_tag;
   double width, height;
   double ppm; // the resolution of the world model in pixels per meter
-  stg_gui_window_t* win;   // each world has a GUI window of it's own
-  stg_client_data_t* client; // the client that created this world
+  gui_window_t* win;   // each world has a GUI window of it's own
+  ss_client_t* client; // the client that created this world
 } ss_world_t;
 
 

@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@hrl.com 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.24 2003-10-22 07:04:54 rtv Exp $
+ * CVS: $Id: stage.h,v 1.25 2003-10-22 19:51:02 rtv Exp $
  */
 
 #ifdef __cplusplus
@@ -139,10 +139,10 @@ typedef enum
     STG_MOD_MOUSE_MODE,
     STG_MOD_BORDER,        // if non-zero, add a bounding rectangle
     STG_MOD_MATRIX_RENDER, // if non-zero, render in the matrix
-    STG_MOD_CREATE_WORLD,
-    STG_MOD_DESTROY_WORLD,
-    STG_MOD_WORLD_SIZE,
-    STG_MOD_WORLD_GUI, 
+    //STG_MOD_CREATE_WORLD,
+    //STG_MOD_DESTROY_WORLD,
+    //STG_MOD_WORLD_SIZE,
+    //STG_MOD_WORLD_GUI, 
     // remove?
     //STG_MOD_POSITION_ORIGIN, // see position.cc
     //STG_MOD_POSITION_ODOM,

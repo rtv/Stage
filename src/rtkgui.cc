@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.30 2003-10-22 07:04:54 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.31 2003-10-22 19:51:02 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -84,8 +84,8 @@ extern int global_num_clients;
 #define STG_LAYER_GRID 45
 #define STG_LAYER_USER 99
 
-#define STG_GUI_COUNTDOWN_INTERVAL_MS 200
-#define STG_GUI_COUNTDOWN_TIME_DATA 500
+#define GUI_COUNTDOWN_INTERVAL_MS 200
+#define GUI_COUNTDOWN_TIME_DATA 500
 
 // the menu-selectable window refresh rates
 int intervals[] = {25, 50, 100, 200, 500, 1000};
@@ -97,11 +97,11 @@ static rtk_app_t *app = NULL;
 
 
 void RtkOnMouse(rtk_fig_t *fig, int event, int mode);
-void StgClientDestroy( stg_client_data_t* cli ); // from main.cc
+void StgClientDestroy( ss_client_t* cli ); // from main.cc
 
 
 // allow the GUI to do any startup it needs to, including cmdline parsing
-int stg_gui_init( int* argc, char*** argv )
+int gui_init( int* argc, char*** argv )
 { 
   //PRINT_DEBUG( "init_func" );
   rtk_init(argc, argv);
@@ -113,7 +113,7 @@ int stg_gui_init( int* argc, char*** argv )
 }
 
 // useful debug function allows plotting the world externally
-void stg_gui_matrix_render( stg_gui_window_t* win )
+void gui_matrix_render( gui_window_t* win )
 {
   if( win->fig_matrix == NULL )
     {
@@ -139,7 +139,7 @@ void stg_gui_matrix_render( stg_gui_window_t* win )
 
 
 // shows or hides a layer
-void stg_gui_menuitem_show_layer( rtk_menuitem_t *item )
+void gui_menuitem_show_layer( rtk_menuitem_t *item )
 {
   //printf( "%s layer %d\n", rtk_menuitem_ischecked(item) ? "showing" : "hiding", (int)item->userdata );
 
@@ -148,17 +148,17 @@ void stg_gui_menuitem_show_layer( rtk_menuitem_t *item )
 }
 
 /*
-gboolean stg_gui_movie_frame_callback( gpointer data )
+gboolean gui_movie_frame_callback( gpointer data )
 {
   rtk_canvas_movie_frame( (rtk_canvas_t*)data );
 }
 */
 
 // toggle movie exports
-void stg_gui_handle_movie( rtk_menuitem_t *item )
+void gui_handle_movie( rtk_menuitem_t *item )
 {
   int speed = (int)item->userdata;
-  stg_gui_window_t* win = (stg_gui_window_t*)item->menu->canvas->userdata;
+  gui_window_t* win = (gui_window_t*)item->menu->canvas->userdata;
   
   if( win->movies_exporting ) 
     {
@@ -176,28 +176,28 @@ void stg_gui_handle_movie( rtk_menuitem_t *item )
       rtk_canvas_movie_start( win->canvas, filename, 10, speed );
 
       //win->movie_tag = 
-      //g_timeout_add( 100, stg_gui_movie_frame_callback, win->canvas );
+      //g_timeout_add( 100, gui_movie_frame_callback, win->canvas );
     }
 }
 
 
 // send a USR2 signal to the client process that created this menuitem
-void stg_gui_save( rtk_menuitem_t *item )
+void gui_save( rtk_menuitem_t *item )
 {
-  stg_client_data_t* client = 
-    ((stg_gui_window_t*)item->menu->canvas->userdata)->world->client;
+  ss_client_t* client = 
+    ((gui_window_t*)item->menu->canvas->userdata)->world->client;
   if( client )
     {
-      ss_world_save(((stg_gui_window_t*)item->menu->canvas->userdata)->world );
+      ss_world_save(((gui_window_t*)item->menu->canvas->userdata)->world );
     }
 }
 
-void stg_gui_exit( rtk_menuitem_t *item )
+void gui_exit( rtk_menuitem_t *item )
 {
   //quit = TRUE;
   puts( "Exit menu item. Destroying world" );
   
-  ss_world_t* world = ((stg_gui_window_t*)item->menu->canvas->userdata)->world;
+  ss_world_t* world = ((gui_window_t*)item->menu->canvas->userdata)->world;
   ss_world_destroy( world );
 
   // if the client has no worlds left, shut it down
@@ -206,10 +206,10 @@ void stg_gui_exit( rtk_menuitem_t *item )
 }
 
 
-void stg_gui_menu_interval_callback( rtk_menuitem_t *item )
+void gui_menu_interval_callback( rtk_menuitem_t *item )
 {
   assert(item);
-  stg_gui_window_t* win = (stg_gui_window_t*)item->menu->canvas->userdata;
+  gui_window_t* win = (gui_window_t*)item->menu->canvas->userdata;
   int interval = (int)item->userdata;
   
   if( rtk_menuitem_ischecked( item ) )
@@ -222,7 +222,7 @@ void stg_gui_menu_interval_callback( rtk_menuitem_t *item )
       
       
       PRINT_DEBUG1( "refresh rate set to %d ms", interval );
-      win->tag_refresh = g_timeout_add(interval,stg_gui_window_callback,win);
+      win->tag_refresh = g_timeout_add(interval,gui_window_callback,win);
       PRINT_DEBUG2( "added source %d at interval %d",  
 		    win->tag_refresh, interval );
 
@@ -243,9 +243,9 @@ void stg_gui_menu_interval_callback( rtk_menuitem_t *item )
 }
 
 // build a simulation window
-stg_gui_window_t* stg_gui_window_create( ss_world_t* world, int width, int height )
+gui_window_t* gui_window_create( ss_world_t* world, int width, int height )
 {
-  stg_gui_window_t* win = (stg_gui_window_t*)calloc( 1, sizeof(stg_gui_window_t) );
+  gui_window_t* win = (gui_window_t*)calloc( 1, sizeof(gui_window_t) );
  
   if( width < 1 ) width = STG_DEFAULT_WINDOW_WIDTH;
   if( height < 1 ) height = STG_DEFAULT_WINDOW_HEIGHT;
@@ -256,7 +256,7 @@ stg_gui_window_t* stg_gui_window_create( ss_world_t* world, int width, int heigh
   //PRINT_DEBUG2( "created window %p with canvas %p and client %p", 
   //	win, win->canvas 
 
-  win->fig_grid = stg_gui_grid_create( win->canvas, NULL, 
+  win->fig_grid = gui_grid_create( win->canvas, NULL, 
 				       world->width/2.0,world->height/2.0,0, 
 				       world->width, world->height, 1.0, 0.1 );
       
@@ -394,41 +394,41 @@ stg_gui_window_t* stg_gui_window_create( ss_world_t* world, int width, int heigh
 
   // add the callbacks 
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_MOVIE_1], 
-			     stg_gui_handle_movie );
+			     gui_handle_movie );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_MOVIE_2], 
-			     stg_gui_handle_movie );
+			     gui_handle_movie );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_MOVIE_5], 
-			     stg_gui_handle_movie );
+			     gui_handle_movie );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_MOVIE_10], 
-			     stg_gui_handle_movie );
+			     gui_handle_movie );
  
-  rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_SAVE], stg_gui_save );
-  rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_QUIT], stg_gui_exit );
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_SAVE], gui_save );
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_QUIT], gui_exit );
 			     
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_OBJECT_BODY], 
-			     stg_gui_menuitem_show_layer );
+			     gui_menuitem_show_layer );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_OBJECT_SENSOR], 
-			     stg_gui_menuitem_show_layer );
+			     gui_menuitem_show_layer );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_OBJECT_LIGHT], 
-			     stg_gui_menuitem_show_layer );
+			     gui_menuitem_show_layer );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_OBJECT_USER], 
-			     stg_gui_menuitem_show_layer );
+			     gui_menuitem_show_layer );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_GRID], 
-			     stg_gui_menuitem_show_layer );
+			     gui_menuitem_show_layer );
     
   // refresh rate items
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_REFRESH_25], 
-			     stg_gui_menu_interval_callback );
+			     gui_menu_interval_callback );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_REFRESH_50], 
-			     stg_gui_menu_interval_callback );
+			     gui_menu_interval_callback );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_REFRESH_100], 
-			     stg_gui_menu_interval_callback );
+			     gui_menu_interval_callback );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_REFRESH_200], 
-			     stg_gui_menu_interval_callback );
+			     gui_menu_interval_callback );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_REFRESH_500], 
-			     stg_gui_menu_interval_callback );
+			     gui_menu_interval_callback );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_REFRESH_1000], 
-			     stg_gui_menu_interval_callback );
+			     gui_menu_interval_callback );
 
 
   // set the default checks - the callback functions will set things
@@ -472,14 +472,14 @@ stg_gui_window_t* stg_gui_window_create( ss_world_t* world, int width, int heigh
   gtk_widget_show_all(win->canvas->frame);
 
   // start a callback that deletes expired data figures
-  win->tag_countdown = g_timeout_add( STG_GUI_COUNTDOWN_INTERVAL_MS, 
-				      stg_gui_window_clear_countdowns, win );
+  win->tag_countdown = g_timeout_add( GUI_COUNTDOWN_INTERVAL_MS, 
+				      gui_window_clear_countdowns, win );
   
   // return the completed window
   return win;
 }
 
-const char* stg_gui_model_describe(  stg_gui_model_t* mod )
+const char* gui_model_describe(  gui_model_t* mod )
 {
   static char txt[256];
   
@@ -494,16 +494,16 @@ const char* stg_gui_model_describe(  stg_gui_model_t* mod )
 }
 
 // this gets called periodically from a callback installed in
-// stg_gui_window_create() or stg_gui_menu_interval_callback()
-gboolean stg_gui_window_callback( gpointer data )
+// gui_window_create() or gui_menu_interval_callback()
+gboolean gui_window_callback( gpointer data )
 {
   //putchar( '.' ); fflush(stdout);
 
-  stg_gui_window_t* win = (stg_gui_window_t*)data;
+  gui_window_t* win = (gui_window_t*)data;
   
   // if the menu says draw the matrix, we do it.
   if( rtk_menuitem_ischecked(win->mitems[STG_MITEM_VIEW_MATRIX]) )
-    stg_gui_matrix_render( win );
+    gui_matrix_render( win );
   else if( win->fig_matrix ) // if there's a left over matrix fig, we zap it
     {
       rtk_fig_destroy( win->fig_matrix );
@@ -533,7 +533,7 @@ gboolean stg_gui_window_callback( gpointer data )
 	  CEntity* ent = (CEntity*)win->canvas->mouse_over_fig->userdata;
 	  char txt[256];
 	  snprintf( txt, sizeof(txt), "Selection: %s",
-		    stg_gui_model_describe(ent->guimod) ); 
+		    gui_model_describe(ent->guimod) ); 
 	  gtk_statusbar_push( win->statusbar, cid, txt ); 
 	}
     }
@@ -541,7 +541,7 @@ gboolean stg_gui_window_callback( gpointer data )
   return TRUE;
 }
 
-void stg_gui_window_destroy( stg_gui_window_t* win )
+void gui_window_destroy( gui_window_t* win )
 {
   PRINT_DEBUG1( "destroying window %p", win );
 
@@ -570,16 +570,16 @@ void stg_gui_window_destroy( stg_gui_window_t* win )
   free( win );
 }
 
-gboolean stg_gui_window_clear_countdowns( gpointer ptr )
+gboolean gui_window_clear_countdowns( gpointer ptr )
 {
-  stg_gui_window_t* win = (stg_gui_window_t*)ptr;
+  gui_window_t* win = (gui_window_t*)ptr;
   
   // operate on the head of the list of figures we should kill
 
   GList* lel = win->countdowns;
   while( lel )
     {
-      stg_gui_countdown_t* cd = (stg_gui_countdown_t*)lel->data;
+      gui_countdown_t* cd = (gui_countdown_t*)lel->data;
       
       if( cd->timeleft < 1 )
 	{ 
@@ -593,7 +593,7 @@ gboolean stg_gui_window_clear_countdowns( gpointer ptr )
       else
 	{
 	  // decrement the timeleft by the interval we were called at
-	  cd->timeleft -= STG_GUI_COUNTDOWN_INTERVAL_MS;
+	  cd->timeleft -= GUI_COUNTDOWN_INTERVAL_MS;
 	  lel = lel->next;
 	}
 	  
@@ -603,7 +603,7 @@ gboolean stg_gui_window_clear_countdowns( gpointer ptr )
 }
 
 
-rtk_fig_t* stg_gui_grid_create( rtk_canvas_t* canvas, rtk_fig_t* parent, 
+rtk_fig_t* gui_grid_create( rtk_canvas_t* canvas, rtk_fig_t* parent, 
 				double origin_x, double origin_y, double origin_a, 
 				double width, double height, double major, double minor )
 {
@@ -627,47 +627,47 @@ rtk_fig_t* stg_gui_grid_create( rtk_canvas_t* canvas, rtk_fig_t* parent,
 }
 
 
-void stg_gui_model_blinkenlight( CEntity* ent )
+void gui_model_blinkenlight( CEntity* ent )
 {
   g_assert(ent);
   g_assert(ent->guimod);
   
-  stg_gui_model_t* mod = ent->guimod;
+  gui_model_t* mod = ent->guimod;
   
-  if( mod->fig[STG_GUI_OBJECT_LIGHT] == NULL )
+  if( mod->fig[GUI_OBJECT_LIGHT] == NULL )
     {
-      mod->fig[STG_GUI_OBJECT_LIGHT] = 
+      mod->fig[GUI_OBJECT_LIGHT] = 
 	rtk_fig_create( mod->win->canvas, *mod->fig, STG_LAYER_LIGHT);
       
-      rtk_fig_color_rgb32( mod->fig[STG_GUI_OBJECT_LIGHT], 
+      rtk_fig_color_rgb32( mod->fig[GUI_OBJECT_LIGHT], 
 			   mod->ent->color );
     }
   else
-    rtk_fig_clear( mod->fig[STG_GUI_OBJECT_LIGHT] );
+    rtk_fig_clear( mod->fig[GUI_OBJECT_LIGHT] );
   
   // nothing to see here
   if( !ent->blinkenlight.enable )
     return;
   
-  rtk_fig_ellipse( mod->fig[STG_GUI_OBJECT_LIGHT], 
+  rtk_fig_ellipse( mod->fig[GUI_OBJECT_LIGHT], 
 		   0,0,0,  ent->size.x, ent->size.y, 1 );
   
   // start the light blinking if it's not stuck on (ie. period 0)
   if( ent->blinkenlight.period_ms != 0 )    
-    rtk_fig_blink( mod->fig[STG_GUI_OBJECT_LIGHT], 
+    rtk_fig_blink( mod->fig[GUI_OBJECT_LIGHT], 
 		   ent->blinkenlight.period_ms/2, 1 );  
 }
 
-void stg_gui_model_rects( CEntity* ent )
+void gui_model_rects( CEntity* ent )
 {
   g_assert(ent);
   g_assert(ent->guimod);
   
-  stg_gui_model_t* mod = ent->guimod;
+  gui_model_t* mod = ent->guimod;
 
   // the rectangle figure already exists
-  rtk_fig_clear( mod->fig[STG_GUI_OBJECT_RECT] );
-  rtk_fig_color_rgb32( mod->fig[STG_GUI_OBJECT_RECT], 
+  rtk_fig_clear( mod->fig[GUI_OBJECT_RECT] );
+  rtk_fig_color_rgb32( mod->fig[GUI_OBJECT_RECT], 
 		       ent->color );
   
   int r;
@@ -688,32 +688,32 @@ void stg_gui_model_rects( CEntity* ent )
       w = src->w * ent->size.x;
       h = src->h * ent->size.y;
       
-      rtk_fig_rectangle( mod->fig[STG_GUI_OBJECT_RECT], 
+      rtk_fig_rectangle( mod->fig[GUI_OBJECT_RECT], 
 			 x,y,a,w,h, 0 ); 
     }
 }
 
-void stg_gui_model_rangers( CEntity* ent )
+void gui_model_rangers( CEntity* ent )
 {
   g_assert(ent);
   g_assert(ent->guimod);
 
-  stg_gui_model_t* mod = ent->guimod;
+  gui_model_t* mod = ent->guimod;
   
-  if( mod->fig[STG_GUI_OBJECT_SENSOR] == NULL )
+  if( mod->fig[GUI_OBJECT_SENSOR] == NULL )
     {
-      mod->fig[STG_GUI_OBJECT_SENSOR] = 
+      mod->fig[GUI_OBJECT_SENSOR] = 
 	rtk_fig_create( mod->win->canvas, *mod->fig, STG_LAYER_SENSOR);
       
-      rtk_fig_color_rgb32( mod->fig[STG_GUI_OBJECT_SENSOR], 
+      rtk_fig_color_rgb32( mod->fig[GUI_OBJECT_SENSOR], 
 			   stg_lookup_color(STG_RANGER_COLOR) );
      
-      //rtk_fig_show(  mod->fig[STG_GUI_OBJECT_SENSOR], 
+      //rtk_fig_show(  mod->fig[GUI_OBJECT_SENSOR], 
       //	     rtk_menuitem_ischecked( mod->win->mitems[STG_MITEM_VIEW_OBJECT_SENSOR] ) 
       ///	     );
     }
   else
-    rtk_fig_clear( mod->fig[STG_GUI_OBJECT_SENSOR] );
+    rtk_fig_clear( mod->fig[GUI_OBJECT_SENSOR] );
   
   // add rects showing ranger positions
   if( ent->rangers )
@@ -726,7 +726,7 @@ void stg_gui_model_rangers( CEntity* ent )
 	//  rngr->pose.x, rngr->pose.y, rngr->pose.a,
 	//  rngr->size.x, rngr->size.y );
 	
-	rtk_fig_rectangle( mod->fig[STG_GUI_OBJECT_SENSOR], 
+	rtk_fig_rectangle( mod->fig[GUI_OBJECT_SENSOR], 
 			   rngr->pose.x, rngr->pose.y, rngr->pose.a,
 			   rngr->size.x, rngr->size.y, 0 ); 
 	
@@ -738,28 +738,28 @@ void stg_gui_model_rangers( CEntity* ent )
 	double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + rngr->fov/2.0 );
 	double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + rngr->fov/2.0 );
 	
-	rtk_fig_line( mod->fig[STG_GUI_OBJECT_SENSOR],
+	rtk_fig_line( mod->fig[GUI_OBJECT_SENSOR],
 		      rngr->pose.x, rngr->pose.y, x1, y1 );
-	rtk_fig_line( mod->fig[STG_GUI_OBJECT_SENSOR],
+	rtk_fig_line( mod->fig[GUI_OBJECT_SENSOR],
 		      rngr->pose.x, rngr->pose.y, x2, y2 );
       }
 }
 
-void stg_gui_model_nose( CEntity* ent )
+void gui_model_nose( CEntity* ent )
 {
   g_assert(ent);
   g_assert(ent->guimod);
  
-  stg_gui_model_t* mod = ent->guimod;
+  gui_model_t* mod = ent->guimod;
   
-  if( mod->fig[STG_GUI_OBJECT_NOSE] == NULL )
+  if( mod->fig[GUI_OBJECT_NOSE] == NULL )
     {
-      mod->fig[STG_GUI_OBJECT_NOSE] = 
+      mod->fig[GUI_OBJECT_NOSE] = 
 	rtk_fig_create( mod->win->canvas, *mod->fig, STG_LAYER_BODY);
-      rtk_fig_color_rgb32( mod->fig[STG_GUI_OBJECT_NOSE], ent->color );
+      rtk_fig_color_rgb32( mod->fig[GUI_OBJECT_NOSE], ent->color );
     }
   else
-    rtk_fig_clear( mod->fig[STG_GUI_OBJECT_NOSE] );
+    rtk_fig_clear( mod->fig[GUI_OBJECT_NOSE] );
   
   // add a nose-line to position models
   if( ent->draw_nose )
@@ -768,17 +768,17 @@ void stg_gui_model_nose( CEntity* ent )
       ent->GetOrigin( &origin );
       stg_size_t size;
       ent->GetSize( &size );
-      rtk_fig_line( mod->fig[STG_GUI_OBJECT_NOSE],
+      rtk_fig_line( mod->fig[GUI_OBJECT_NOSE],
 		    origin.x, origin.y, size.x/2.0, origin.y );
     }
 }
 
-void stg_gui_model_mouse_mode( CEntity* ent )
+void gui_model_mouse_mode( CEntity* ent )
 {
   g_assert(ent);
   g_assert(ent->guimod);
 
-  stg_gui_model_t* mod = ent->guimod;
+  gui_model_t* mod = ent->guimod;
   
   // we can only manipulate top-level figures
   if( ent->parent == NULL )
@@ -804,20 +804,20 @@ void stg_gui_model_mouse_mode( CEntity* ent )
 }
 
 // Initialise the GUI
-stg_gui_model_t* stg_gui_model_create(  CEntity* ent )
+gui_model_t* gui_model_create(  CEntity* ent )
 {
   g_assert( ent );
 
-  PRINT_DEBUG2( "creating a stg_gui_model_t for ent %d (%s)", 
+  PRINT_DEBUG2( "creating a gui_model_t for ent %d (%s)", 
 		ent->id, ent->name->str );
   
-  stg_gui_window_t* win = ent->world->win;
+  gui_window_t* win = ent->world->win;
 
   g_assert( win );
   g_assert( win->canvas );
  
   // calloc zeros the structure
-  stg_gui_model_t* mod = (stg_gui_model_t*)calloc( 1,sizeof(stg_gui_model_t));
+  gui_model_t* mod = (gui_model_t*)calloc( 1,sizeof(gui_model_t));
   
   // associate the window and entity with this figure
   mod->ent = ent; 
@@ -844,27 +844,27 @@ stg_gui_model_t* stg_gui_model_create(  CEntity* ent )
   rtk_fig_origin( *mod->fig, 
 		  pose.x, pose.y, pose.a );
   
-  //rtk_fig_show( mod->fig[STG_GUI_OBJECT_RECT], true ); 
+  //rtk_fig_show( mod->fig[GUI_OBJECT_RECT], true ); 
   rtk_fig_color_rgb32( *mod->fig, ent->color);   
 
   // zero the pointers and counters of our data figures
-  memset( mod->datafigs, 0, sizeof(rtk_fig_t*) * STG_GUI_DATA_COUNT );
+  memset( mod->datafigs, 0, sizeof(rtk_fig_t*) * GUI_DATA_COUNT );
 
   return mod;
 }
 
-void stg_gui_model_destroy( stg_gui_model_t* mod )
+void gui_model_destroy( gui_model_t* mod )
 {
   //printf( "destroying model %p\n", mod );
 
 
   //printf( "destroying data figs\n" );
   // clean up the figures
-  for( int i=0; i<STG_GUI_DATA_COUNT; i++ )
+  for( int i=0; i<GUI_DATA_COUNT; i++ )
     if( mod->datafigs[i].fig ) rtk_fig_destroy( mod->datafigs[i].fig );
 
   //printf( "destroying object figs\n" );
-  for( int i=1; i<STG_GUI_OBJECT_COUNT; i++ )
+  for( int i=1; i<GUI_OBJECT_COUNT; i++ )
     if( mod->fig[i] ) rtk_fig_destroy( mod->fig[i] );  
   
   //printf( "destroying head fig\n" );
@@ -886,7 +886,7 @@ void RtkOnMouse(rtk_fig_t *fig, int event, int mode)
   assert( entity );
 
   // the entity stores a set of figures and display options here
-  stg_gui_model_t* mod = entity->guimod;
+  gui_model_t* mod = entity->guimod;
   assert( mod );
   
   //static rtk_fig_t* fig_pose = NULL;
@@ -917,7 +917,7 @@ void RtkOnMouse(rtk_fig_t *fig, int event, int mode)
       entity->SetProperty( STG_MOD_POSE, &pose, sizeof(pose) );
       
       // display the pose
-      snprintf(txt, sizeof(txt), "Dragging: %s", stg_gui_model_describe(mod)); 
+      snprintf(txt, sizeof(txt), "Dragging: %s", gui_model_describe(mod)); 
       cid = gtk_statusbar_get_context_id( mod->win->statusbar, "on_mouse" );
       gtk_statusbar_pop( mod->win->statusbar, cid ); 
       gtk_statusbar_push( mod->win->statusbar, cid, txt ); 
@@ -941,11 +941,11 @@ void RtkOnMouse(rtk_fig_t *fig, int event, int mode)
 
   return;
 }
-void stg_gui_neighbor_render( CEntity* ent, GArray* neighbors )
+void gui_neighbor_render( CEntity* ent, GArray* neighbors )
 {
-  stg_gui_model_t* model = ent->guimod;
+  gui_model_t* model = ent->guimod;
 
-  stg_gui_countdown_t* cd = &model->datafigs[STG_GUI_DATA_NEIGHBORS];
+  gui_countdown_t* cd = &model->datafigs[GUI_DATA_NEIGHBORS];
   model->win->countdowns = g_list_remove( model->win->countdowns, cd );
 
   if( cd->fig == NULL )
@@ -989,7 +989,7 @@ void stg_gui_neighbor_render( CEntity* ent, GArray* neighbors )
     }
 
   // reset the timer on our countdown
-  cd->timeleft = STG_GUI_COUNTDOWN_TIME_DATA;
+  cd->timeleft = GUI_COUNTDOWN_TIME_DATA;
   
   // if our countdown does not appear in the window's list, add it.
   if( g_list_find( model->win->countdowns, cd ) == NULL  )
@@ -997,13 +997,13 @@ void stg_gui_neighbor_render( CEntity* ent, GArray* neighbors )
 }
 
 // render the entity's laser data
-void stg_gui_laser_render( CEntity* ent )
+void gui_laser_render( CEntity* ent )
 {
-  stg_gui_model_t* model = ent->guimod;
+  gui_model_t* model = ent->guimod;
   stg_laser_data_t* laser = &ent->laser_data;
   
   // reset the timer on our countdown
-  stg_gui_countdown_t* cd = &model->datafigs[STG_GUI_DATA_LASER];
+  gui_countdown_t* cd = &model->datafigs[GUI_DATA_LASER];
   model->win->countdowns = g_list_remove( model->win->countdowns, cd );
   
   if( cd->fig == NULL )
@@ -1051,18 +1051,18 @@ void stg_gui_laser_render( CEntity* ent )
   
   rtk_fig_line( cd->fig, 0.0, 0.0, lx, ly );
 
-  cd->timeleft = STG_GUI_COUNTDOWN_TIME_DATA;
+  cd->timeleft = GUI_COUNTDOWN_TIME_DATA;
   model->win->countdowns = g_list_append( model->win->countdowns, cd );
 }
 
 // render the entity's rangers
-void stg_gui_rangers_render( CEntity* ent )
+void gui_rangers_render( CEntity* ent )
 {
-  stg_gui_model_t* model = ent->guimod;
+  gui_model_t* model = ent->guimod;
   
   // the world will clear this fig in a few ms
   // so we reset the timer
-  stg_gui_countdown_t* cd = &model->datafigs[STG_GUI_DATA_RANGER];
+  gui_countdown_t* cd = &model->datafigs[GUI_DATA_RANGER];
   model->win->countdowns = g_list_remove( model->win->countdowns, cd );
 
   if( cd->fig == NULL )
@@ -1110,11 +1110,11 @@ void stg_gui_rangers_render( CEntity* ent )
   
   
   // if our countdown does not appear in the window's list, add it.
-   cd->timeleft = STG_GUI_COUNTDOWN_TIME_DATA;
+   cd->timeleft = GUI_COUNTDOWN_TIME_DATA;
   model->win->countdowns = g_list_append( model->win->countdowns, cd );
 }
 
-int stg_gui_los_msg_send( CEntity* ent, stg_los_msg_t* msg )
+int gui_los_msg_send( CEntity* ent, stg_los_msg_t* msg )
 { 
   if( !rtk_menuitem_ischecked( ent->guimod->win->mitems[STG_MITEM_VIEW_DATA_NEIGHBORS] ) )
     return 0;
@@ -1141,7 +1141,7 @@ int stg_gui_los_msg_send( CEntity* ent, stg_los_msg_t* msg )
   return 0; // ok
 }
 
-int stg_gui_los_msg_recv( CEntity* receiver, CEntity* sender, 
+int gui_los_msg_recv( CEntity* receiver, CEntity* sender, 
 			  stg_los_msg_t* msg )
 { 
   if( !rtk_menuitem_ischecked( receiver->guimod->win->mitems[STG_MITEM_VIEW_DATA_NEIGHBORS] ) )
@@ -1169,7 +1169,7 @@ int stg_gui_los_msg_recv( CEntity* receiver, CEntity* sender,
   return 0; //ok
 }
 
-int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
+int gui_model_update( CEntity* ent, stg_prop_id_t prop )
 {
   //PRINT_DEBUG3( "gui update for %d:%s prop %s", 
   //	ent->id, ent->name->str, stg_property_string(prop) );
@@ -1178,7 +1178,7 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
   assert( prop > 0 );
   assert( prop < STG_MOD_PROP_COUNT );
     
-  stg_gui_model_t* model = ent->guimod;
+  gui_model_t* model = ent->guimod;
 
   switch( prop )
     {
@@ -1195,28 +1195,28 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
     case STG_MOD_SIZE:
     case STG_MOD_COLOR:
     case STG_MOD_ORIGIN: // could this one be faster?
-      stg_gui_model_rects( ent );
-      stg_gui_model_nose( ent );
+      gui_model_rects( ent );
+      gui_model_nose( ent );
       break;
 
     case STG_MOD_RECTS:
-      stg_gui_model_rects( ent );
+      gui_model_rects( ent );
       break;
 
     case STG_MOD_RANGERS:
-      stg_gui_model_rangers( ent );
+      gui_model_rangers( ent );
       break;
 
     case STG_MOD_NOSE:
-      stg_gui_model_nose( ent );
+      gui_model_nose( ent );
       break;
 
     case STG_MOD_BLINKENLIGHT:
-      stg_gui_model_blinkenlight( ent );
+      gui_model_blinkenlight( ent );
       break;
 
     case STG_MOD_MOUSE_MODE:
-      stg_gui_model_mouse_mode( ent );
+      gui_model_mouse_mode( ent );
       break;
 
 

@@ -26,7 +26,7 @@
  * Author: Richard Vaughan vaughan@hrl.com 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.c,v 1.24 2003-10-22 07:04:54 rtv Exp $
+ * CVS: $Id: stage.c,v 1.25 2003-10-22 19:51:02 rtv Exp $
  */
 
 #define DEBUG
@@ -145,6 +145,8 @@ const char* stg_property_string( stg_prop_id_t id )
   switch( id )
     {
       //case STG_MOD_NULL: return "STG_MOD_NULL"; break;
+    case STG_MOD_CHILDREN: return "STG_MOD_CHILDREN"; break;
+    case STG_MOD_STATUS: return "STG_MOD_STATUSTIME"; break;
     case STG_MOD_TIME: return "STG_MOD_TIME"; break;
     case STG_MOD_CIRCLES: return "STG_MOD_CIRCLES"; break;
     case STG_MOD_COLOR: return "STG_MOD_COLOR"; break;
@@ -360,6 +362,8 @@ void stg_client_read( stg_client_t* cli )
 	{
 	  PRINT_ERR1( "error reading message on fd %d", 
 		      cli->pollfd.fd  );
+	  // todo - close client nicely
+	  PRINT_DEBUG( "close client nicely" );
 	  exit(-1);
 	}
       
@@ -379,8 +383,13 @@ void stg_client_read( stg_client_t* cli )
 	case STG_MSG_PROPERTY:
 	  puts( "PROPERTY" );
 	  {
-	    stg_property_t* prop = (stg_property_t*)hdr->payload;
-	    
+	    // copy the property out of the message so we can
+	    // free the header & property independently
+	    stg_property_t* tmpprop = (stg_property_t*)hdr->payload;
+	    size_t plen = sizeof(stg_property_t) + tmpprop->len;
+	    stg_property_t* prop = calloc( plen, 1 );
+	    memcpy( prop, tmpprop, plen );
+
 	    // TODO - this doesn't seem to b triggered when Stage dies. what
 	    // is up with that?
 	    if( prop == NULL )
@@ -425,6 +434,17 @@ void stg_client_read( stg_client_t* cli )
 			      prop->id );
 		else
 		  {
+		    //int y=0;
+		    //for( y=0; y<STG_MOD_PROP_COUNT; y++ )
+		    //if( target->props[y] )
+		    //PRINT_WARN4( "model %p id %d prop %s %p\n",
+		    //	     target, 
+		    //	     target->id, 
+		    //	     stg_property_string(y),
+		    //	     target->props[y] );
+		    
+		    PRINT_DEBUG2( "deleting prop %d:%s",
+				  target->id, stg_property_string(prop->type));
 		    stg_model_property_delete( target, prop->type );
 		    target->props[prop->type] = prop;
 		  }
@@ -437,6 +457,8 @@ void stg_client_read( stg_client_t* cli )
 		       stg_message_string(hdr->type) );
 	  break;
 	}
+
+      free(hdr);
     }
 }
 
@@ -497,7 +519,7 @@ int stg_fd_msg_write( int fd, stg_msg_type_t type,
 // NULL on error.
 stg_header_t* stg_fd_msg_read( int fd )
 {
-  PRINT_DEBUG( "msg read" );
+  //PRINT_DEBUG( "msg read" );
 
   // read a header
   stg_header_t* hdr = (stg_header_t*)calloc( sizeof(stg_header_t), 1);
@@ -509,15 +531,15 @@ stg_header_t* stg_fd_msg_read( int fd )
       return NULL;
     }
     
-  PRINT_DEBUG2( "read msg type %s with %d bytes to follow", 
-		stg_message_string(hdr->type), hdr->len );
+  //PRINT_DEBUG2( "read msg type %s with %d bytes to follow", 
+  //	stg_message_string(hdr->type), hdr->len );
   
   if( hdr->len > 0 ) // if there is some data to follow
     {
       // allocate enough memory for it
       hdr = (stg_header_t*)realloc( hdr, sizeof(stg_header_t) + hdr->len );
       
-      PRINT_DEBUG1( "reading %d byte message payload", hdr->len );
+      //PRINT_DEBUG1( "reading %d byte message payload", hdr->len );
       
       // read the message
       if( stg_fd_packet_read( fd, hdr->payload, hdr->len ) != hdr->len )
@@ -783,24 +805,26 @@ stg_property_t* stg_world_property_get(stg_world_t* world, stg_prop_id_t type)
 // set a property of a world
 void stg_world_property_set( stg_world_t* world, stg_property_t* prop )
 {
-  PRINT_DEBUG3( "setting world %p property %s with %d bytes of data", 
-		world, stg_property_string(prop->type), prop->len );
+  //PRINT_DEBUG3( "setting world %p property %s with %d bytes of data", 
+  //	world, stg_property_string(prop->type), prop->len );
   
   switch( prop->type )
     {
     case STG_MOD_TIME:
       assert( prop->len == sizeof(stg_time_t) );
-      PRINT_DEBUG1( "prop says the world time is %.3f", 
-		    *(stg_time_t*)prop->data );
+      //PRINT_DEBUG1( "prop says the world time is %.3f", 
+      //	    *(stg_time_t*)prop->data );
       
       world->time =  *(stg_time_t*)prop->data;
-      PRINT_DEBUG1( "setting time. time now %.3f seconds",
-		    world->time );
+      //PRINT_DEBUG1( "setting time. time now %.3f seconds",
+      //	    world->time );
       break;
       
     default:
-      PRINT_WARN1( "setting world property %s not implemented",
-		   stg_property_string( prop->type ) );
+      PRINT_WARN2( "setting world property %s not implemented"
+		   " (%d bytes of data)",
+		   stg_property_string(prop->type), 
+		   prop->len );
       break;
     }
 }

@@ -16,34 +16,34 @@ typedef struct
 {
   rtk_menu_t *menu;
   rtk_menuitem_t *items[ 1000 ]; // TODO - get rid of this fixed size buffer
-} stg_gui_menu_t;
+} gui_menu_t;
 
 typedef struct 
 {
   rtk_menuitem_t *menuitem;
   int speed;
-} stg_gui_movie_option_t;
+} gui_movie_option_t;
 
-typedef rtk_app_t stg_gui_app_t;
-
-typedef enum
-  {
-    STG_GUI_DATA_NEIGHBORS,
-    STG_GUI_DATA_RANGER,
-    STG_GUI_DATA_LASER,
-    STG_GUI_DATA_BLOBFINDER,
-    STG_GUI_DATA_COUNT // this must be the last entry
-  } stg_gui_data_types;
+typedef rtk_app_t gui_app_t;
 
 typedef enum
   {
-    STG_GUI_OBJECT_RECT,
-    STG_GUI_OBJECT_LIGHT,
-    STG_GUI_OBJECT_SENSOR,
-    STG_GUI_OBJECT_NOSE,
-    STG_GUI_OBJECT_USER,
-    STG_GUI_OBJECT_COUNT // this must be the last entry
-  } stg_gui_object_types;
+    GUI_DATA_NEIGHBORS,
+    GUI_DATA_RANGER,
+    GUI_DATA_LASER,
+    GUI_DATA_BLOBFINDER,
+    GUI_DATA_COUNT // this must be the last entry
+  } gui_data_types;
+
+typedef enum
+  {
+    GUI_OBJECT_RECT,
+    GUI_OBJECT_LIGHT,
+    GUI_OBJECT_SENSOR,
+    GUI_OBJECT_NOSE,
+    GUI_OBJECT_USER,
+    GUI_OBJECT_COUNT // this must be the last entry
+  } gui_object_types;
 
 
 enum {
@@ -123,63 +123,63 @@ typedef struct
   
   struct ss_world* world;
 
-} stg_gui_window_t;
+} gui_window_t;
 
 typedef struct
 {
   rtk_fig_t* fig;
   int timeleft; //milliseconds until the figure must be cleared
-} stg_gui_countdown_t;
+} gui_countdown_t;
 
 
 typedef struct
 {
   CEntity* ent;
-  stg_gui_window_t* win;
+  gui_window_t* win;
 
   //bool grid_enable;
   //double grid_major, grid_minor;
   int movemask;
   
   // a figure for each of our object types
-  rtk_fig_t* fig[STG_GUI_OBJECT_COUNT];
+  rtk_fig_t* fig[GUI_OBJECT_COUNT];
   // a  countdown figure for each of our sensor types
-  stg_gui_countdown_t datafigs[STG_GUI_DATA_COUNT];
-} stg_gui_model_t;
+  gui_countdown_t datafigs[GUI_DATA_COUNT];
+} gui_model_t;
 
 //INIT
-int stg_gui_init( int* argc, char*** argv );
+int gui_init( int* argc, char*** argv );
 
 // WINDOWS
-stg_gui_window_t* stg_gui_window_create( struct ss_world* world, int width, int height);
-void stg_gui_window_destroy( stg_gui_window_t* win );
-int stg_gui_window_update( struct ss_world* world, stg_prop_id_t prop );
+gui_window_t* gui_window_create( struct ss_world* world, int width, int height);
+void gui_window_destroy( gui_window_t* win );
+int gui_window_update( struct ss_world* world, stg_prop_id_t prop );
 
-gboolean stg_gui_window_callback( gpointer win );
+gboolean gui_window_callback( gpointer win );
 
 // a timeout callback that clears all figures in the countdowns list
-gboolean stg_gui_window_clear_countdowns( gpointer data );
+gboolean gui_window_clear_countdowns( gpointer data );
 
 
 // MODELS
-stg_gui_model_t* stg_gui_model_create(CEntity* ent);
-void stg_gui_model_destroy( stg_gui_model_t* model );
-int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop );
-void stg_gui_rangers_render( CEntity* ent );
+gui_model_t* gui_model_create(CEntity* ent);
+void gui_model_destroy( gui_model_t* model );
+int gui_model_update( CEntity* ent, stg_prop_id_t prop );
+void gui_rangers_render( CEntity* ent );
 // render the entity's laser data
-void stg_gui_laser_render( CEntity* ent );
-void stg_gui_neighbor_render( CEntity* ent, GArray* neighbors );
-void stg_gui_model_rangers( CEntity* ent );
+void gui_laser_render( CEntity* ent );
+void gui_neighbor_render( CEntity* ent, GArray* neighbors );
+void gui_model_rangers( CEntity* ent );
 
 // MISC
-rtk_fig_t* stg_gui_grid_create( rtk_canvas_t* canvas, rtk_fig_t* parent, 
+rtk_fig_t* gui_grid_create( rtk_canvas_t* canvas, rtk_fig_t* parent, 
 				double origin_x, double origin_y, double origin_a, 
 				double width, double height, double major, double minor );
 
 
 void RtkOnMouse(rtk_fig_t *fig, int event, int mode);
 
-int stg_gui_los_msg_send( CEntity* ent, stg_los_msg_t* msg );
-int stg_gui_los_msg_recv( CEntity* receiver, CEntity* sender, 
+int gui_los_msg_send( CEntity* ent, stg_los_msg_t* msg );
+int gui_los_msg_recv( CEntity* receiver, CEntity* sender, 
 			  stg_los_msg_t* msg );
 #endif

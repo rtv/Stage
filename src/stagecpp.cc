@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.22 2003-10-22 07:04:55 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.23 2003-10-22 19:51:02 rtv Exp $
  */
 
 //#undef DEBUG
@@ -1927,15 +1927,15 @@ int CWorldFile::Upload( stg_client_t* cli )
 	      int i=0;
 	      for( i=0; i<cli->model_count; i++ )
 		{
-		  PRINT_DEBUG2( "model index %d is section %d",
-				i,  cli->models[i]->section );
+		  //PRINT_DEBUG2( "model index %d is section %d",
+		  //	i,  cli->models[i]->section );
 		  
 		  if( cli->models[i]->section == parent_section )
 		    {
-		      PRINT_DEBUG3( "entry %d (%d : \"%s\") is the parent!",
-				    i, 
-				    cli->models[i]->id,
-				    cli->models[i]->name );
+		      // PRINT_DEBUG3( "entry %d (%d : \"%s\") is the parent!",
+		      //	    i, 
+		      //	    cli->models[i]->id,
+		      //	    cli->models[i]->name );
 		      
 		      break;
 		    }
@@ -2078,6 +2078,9 @@ int CWorldFile::Upload( stg_client_t* cli )
 		      cli->models[p]->section, 
 		      cli->models[p]->key ); 
 	    }
+	  
+	  // make sure the property array is zeroed
+	  memset( mod->props, 0, sizeof(stg_property_t*)*STG_MOD_PROP_COUNT);
 	  
 	  PRINT_DEBUG1( "configuring model %d", mod->id ); 
 	  

@@ -21,7 +21,7 @@
  * Desc: A world device model - replaces the CWorld class
  * Author: Richard Vaughan
  * Date: 31 Jan 2003
- * CVS info: $Id: world.cc,v 1.152 2003-10-22 07:04:55 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.153 2003-10-22 19:51:02 rtv Exp $
  */
 
 
@@ -67,7 +67,7 @@ ss_world_t* ss_world_create( stg_id_t id, stg_world_create_t* rc )
   g_assert( ss_world_create_matrix( world ) );
 
   if( world->win ) PRINT_WARN( "creating window, but window pointer not NULL" );  
-  world->win = stg_gui_window_create( world, 0,0 ); // use default dimensions
+  world->win = gui_window_create( world, 0,0 ); // use default dimensions
 
   world->running = TRUE;
   
@@ -84,27 +84,14 @@ ss_world_t* ss_world_create( stg_id_t id, stg_world_create_t* rc )
 }
 
 
-
-void stg_update_entity( GNode* node, void* data )
-{
-  // recursively update the children of this node
-  //g_node_children_foreach( node, G_TRAVERSE_ALL,
-  //		   stg_update_entity, data );
-  
-  // update this node
-  //CEntity* ent = (CEntity*)node->data;
-  //ss_world_t* world = (ss_world_t*)data;
-
-  //if( (world->time - ent->last_update) > (double)ent->interval / 1000.0 )
-  // ent->Update();
-}
-
-
-void stg_model_update( gpointer data, gpointer userdata )
+void ss_model_update( gpointer data, gpointer userdata )
 {
   CEntity* ent = (CEntity*)data;
   // recursively update the model's children
-  g_list_foreach( ent->children, stg_model_update, NULL );
+  g_list_foreach( ent->children, ss_model_update, NULL );
+  
+  // todo?
+  //if( (world->time - ent->last_update) > (double)ent->interval / 1000.0 )
 
   // then the model itself
   ent->Update();
@@ -122,10 +109,11 @@ void ss_world_save( ss_world_t* world )
 void ss_world_update( ss_world_t* world  )
 {  
   world->time += world->interval;
+  
+  PRINT_DEBUG2( "world \"%s\" time: %.3f", 
+		world->name->str, world->time );
 
-  //printf( " world (%s) time: %.3f\n", 
-  //  world->name->str, world->time );
-  g_list_foreach( world->models, stg_model_update, NULL );
+  g_list_foreach( world->models, ss_model_update, NULL );
 }
 
 int ss_world_destroy( ss_world_t* world )
@@ -140,7 +128,7 @@ int ss_world_destroy( ss_world_t* world )
   world->models = NULL;
   
   // kill this gui window
-  if( world->win ) stg_gui_window_destroy( world->win );
+  if( world->win ) gui_window_destroy( world->win );
   world->win = NULL;
   
   world->running = FALSE;
@@ -192,14 +180,13 @@ stg_property_t* ss_world_property_get( ss_world_t* world, stg_prop_id_t id )
   switch( id )
     {
     case STG_MOD_TIME:
-      PRINT_DEBUG2( "getting world %d time %.3f", world->id, world->time );
+      //PRINT_DEBUG2( "getting world %d time %.3f", world->id, world->time );
 
       prop = stg_property_create(); 
       prop->id = world->id;
       prop->type = STG_MOD_TIME;
-
-      prop = stg_property_attach_data( prop, &world->time, sizeof(world->time) );
-      PRINT_DEBUG1( "time in the prop is %.3f", *(stg_time_t*)prop->data );
+      
+      prop = stg_property_attach_data(prop, &world->time, sizeof(world->time));
       break;
       
     default:
