@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/device.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -69,6 +69,19 @@ bool CDevice::Shutdown()
     m_robot = NULL;
     m_world = NULL;
     return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// See if the device is subscribed
+//
+bool CDevice::IsSubscribed()
+{
+    m_world->LockShmem();
+    bool subscribed = m_info_buffer[INFO_SUBSCRIBE_FLAG];
+    m_world->UnlockShmem();
+
+    return subscribed;
 }
 
 

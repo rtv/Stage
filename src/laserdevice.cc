@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -40,6 +40,11 @@ CLaserDevice::CLaserDevice(void *buffer, size_t data_len, size_t command_len, si
   //m_update_interval = 0.05; // fast!
   m_update_interval = 0.2; // RTV - speed to match the real laser
   m_last_update = 0;
+
+  m_min_segment = 0;
+  m_max_segment = 361;
+  m_intensity = false;
+  
   m_samples = 361;
   m_max_range = 8.0; // meters - this could be dynamic one day
                      // but this matches the default laser setup.
@@ -63,7 +68,11 @@ bool CLaserDevice::Update()
     //
     if (m_world->timeNow - m_last_update <= m_update_interval)
         return false;
-    m_last_update = m_world->timeNow; 
+    m_last_update = m_world->timeNow;
+
+    // Check to see if the configuration has changed
+    //
+    CheckConfig();
 
     // Make sure the data buffer is big enough
     //
@@ -93,6 +102,14 @@ bool CLaserDevice::Update()
     //
     for(int s = 0; s < m_samples; s++)
     {
+        // Allow for partial scans
+        //
+        if (s < m_min_segment || s > m_max_segment)
+        {
+            m_data[s] = 0;
+            continue;
+        }
+        
         angle = startAngle + ( s * increment );
         
         dx = cos( angle );
@@ -128,13 +145,45 @@ bool CLaserDevice::Update()
         // Set the range
         // Swap the bytes while we're at it
         //
-        m_data[s] = htons((WORD16) v);
+        m_data[s] = htons((UINT16) v);
     }
     
     // Copy the laser data to the data buffer
     //
-    PutData(m_data, m_samples * sizeof(WORD16));
+    PutData(m_data, m_samples * sizeof(UINT16));
 
     //~redrawLaser = true;
     return true;
 }
+
+
+///////////////////////////////////////////////////////////////////////////
+// Check to see if the configuration has changed
+//
+bool CLaserDevice::CheckConfig()
+{
+    BYTE config[5];
+
+    if (GetConfig(config, sizeof(config)) == 0)
+        return false;  
+    
+    m_min_segment = ntohs(MAKEUINT16(config[0], config[1]));
+    m_max_segment = ntohs(MAKEUINT16(config[2], config[3]));
+    m_intensity = (bool) config[4];
+    MSG3("new scan range [%d %d], intensity [%d]",
+         (int) m_min_segment, (int) m_max_segment, (int) m_intensity);
+
+    // *** HACK -- change the update rate based on the scan size
+    // This is a guess only
+    //
+    m_update_interval = 0.2 * (m_max_segment - m_min_segment + 1) / 361;
+        
+    return true;
+}
+
+
+
+
+
+
+

@@ -1,7 +1,7 @@
 #*************************************************************************
 # src/Makefile - makes the sources
 # RTV
-# $Id: Makefile,v 1.4 2000-11-29 22:48:56 ahoward Exp $
+# $Id: Makefile,v 1.5 2000-11-30 00:12:17 ahoward Exp $
 # ************************************************************************/
 
 .SUFFIXES: .cc .o
@@ -35,3 +35,20 @@ posreader: posreader.cc
 
 # DO NOT DELETE.  FOLLOWING IS FROM MAKEDEPEND
 
+device.o: ../include/world.h ../include/robot.h ../include/image.h
+device.o: ../include/device.hh
+image.o: ../include/image.h ../include/world.h ../include/robot.h
+laserdevice.o: ../include/world.h ../include/robot.h ../include/image.h
+laserdevice.o: ../include/laserdevice.hh ../include/device.hh
+main.o: ../include/world.h ../include/robot.h ../include/image.h
+main.o: ../include/win.h
+posreader.o: ../include/ports.h
+robot.o: ../include/world.h ../include/robot.h ../include/image.h
+robot.o: ../include/win.h ../include/ports.h ../include/laserdevice.hh
+robot.o: ../include/device.hh
+server.o: ../include/world.h ../include/robot.h ../include/image.h
+server.o: ../include/win.h ../include/ports.h
+win.o: ../include/win.h ../include/world.h ../include/robot.h
+win.o: ../include/image.h
+world.o: ../include/world.h ../include/robot.h ../include/image.h
+world.o: ../include/win.h

@@ -1,7 +1,7 @@
 /*************************************************************************
  * robot.cc - most of the action is here
  * RTV
- * $Id: robot.cc,v 1.5 2000-11-29 22:48:56 ahoward Exp $
+ * $Id: robot.cc,v 1.6 2000-11-30 00:12:17 ahoward Exp $
  ************************************************************************/
 
 #include <errno.h>
@@ -1137,9 +1137,11 @@ void CRobot::Update( Nimage* img )
 
   // Update all devices
   //
-  for (int i = 0; i < m_device_count; i++) 
-    // this subscription test is a hack for now!
-       if( playerIO[ SUB_LASER ] ) m_device[i]->Update();
+  for (int i = 0; i < m_device_count; i++)
+  {
+      if (m_device[i]->IsSubscribed())
+          m_device[i]->Update();
+  }
 }
 
 
