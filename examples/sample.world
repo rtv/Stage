@@ -1,0 +1,98 @@
+
+# Desc: 2 robots well-equipped robots
+# Robots have omni-drive, laser, lbd and laserbeacon
+# CVS: $Id: sample.world,v 1.1 2001-12-31 17:22:00 inspectorg Exp $
+
+#environment_size (20 20)
+#environment_res  20
+
+#begin obstacle
+#  file cave.pnm.gz
+#end
+
+#begin obstacle
+#  file hospital.pnm
+#  pose (-2 -2 0)
+#  scale 0.05
+#end
+
+begin environment
+  file hospital.pnm
+  scale 0.05
+  resolution 0.10
+end
+
+begin rtk
+  size (640 480)
+  scale 0.05
+end
+
+laser_min_res 0.5 
+laser_scan_rate 7200 
+
+lbd_range_anon 4 
+lbd_range_id 4 
+
+
+begin laser_beacon
+  id 6665 
+  laser true 
+  laser_bright true 
+  pose (6.000 5.000 0.000) 
+end 
+
+
+begin omni_position_device
+  name 6665 
+  port 6665 
+  pose (4 4 0.000) 
+  shape circle 
+  color blue 
+  begin player_device
+    pose (0.000 0.000 0.000) 
+  end 
+  begin gps_device
+    pose (0.000 0.000 0.000) 
+  end 
+  begin laser_device
+    pose (0.000 0.000 0.000) 
+    laser false 
+    begin lbd_device
+      pose (0.000 0.000 0.000) 
+    end 
+    begin laser_beacon
+      id 6665 
+      laser true 
+      laser_bright true 
+      pose (0.000 0.000 0.000) 
+    end 
+  end 
+end 
+
+
+begin omni_position_device
+  name 6666 
+  port 6666 
+  pose (5 4 0.000) 
+  shape circle 
+  color blue 
+  begin player_device
+    pose (0.000 0.000 0.000) 
+  end 
+  begin gps_device
+    pose (0.000 0.000 0.000) 
+  end 
+  begin laser_device
+    pose (0.000 0.000 0.000) 
+    laser false 
+    begin lbd_device
+      pose (0.000 0.000 0.000) 
+    end 
+    begin laser_beacon
+      id 6666 
+      laser true 
+      laser_bright true 
+      pose (0.000 0.000 0.000) 
+    end 
+  end 
+end 
