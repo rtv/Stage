@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.14 $
+//  $Revision: 1.15 $
 //
 // Usage:
 //  (empty)
@@ -228,7 +228,7 @@ bool CLaserDevice::CheckConfig()
     m_min_segment = ntohs(MAKEUINT16(config[0], config[1]));
     m_max_segment = ntohs(MAKEUINT16(config[2], config[3]));
     m_intensity = (bool) config[4];
-    MSG3("new scan range [%d %d], intensity [%d]",
+    PLAYER_MSG3("new scan range [%d %d], intensity [%d]",
          (int) m_min_segment, (int) m_max_segment, (int) m_intensity);
 
     // *** HACK -- change the update rate based on the scan size

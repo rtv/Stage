@@ -1,7 +1,7 @@
 /*************************************************************************
  * robot.cc - most of the action is here
  * RTV
- * $Id: robot.cc,v 1.16 2001-02-06 01:27:06 gerkey Exp $
+ * $Id: robot.cc,v 1.17 2001-02-07 20:26:41 gerkey Exp $
  ************************************************************************/
 
 #include <errno.h>
@@ -182,7 +182,7 @@ CRobot::~CRobot( void )
 //
 bool CRobot::Startup()
 {
-    TRACE0("starting devices");
+    PLAYER_TRACE0("starting devices");
 
     m_device_count = 0;
 
@@ -264,7 +264,7 @@ bool CRobot::Startup()
 //
 bool CRobot::Shutdown()
 {
-  //TRACE0("shutting down devices");
+  //PLAYER_TRACE0("shutting down devices");
     
     for (int i = 0; i < m_device_count; i++)
     {

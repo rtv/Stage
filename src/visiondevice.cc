@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.7 $
+//  $Author: gerkey $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -95,7 +95,7 @@ bool CVisionDevice::Update()
     if( m_world->timeNow - m_last_update < m_update_interval )
         return false;
     m_last_update = m_world->timeNow;
-    TRACE0("generating new data");
+    PLAYER_TRACE0("generating new data");
     
     // Get the ptz settings
     //
@@ -319,7 +319,7 @@ bool CVisionDevice::Update()
     // finally, we're done.
     //cout << endl;
 
-    TRACE1("Found %d blobs", (int) numBlobs);
+    PLAYER_TRACE1("Found %d blobs", (int) numBlobs);
     
     // Copy data to the output buffer
     // no need to byteswap - this is single-byte data

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -48,7 +48,7 @@ CPlayerDevice::CPlayerDevice(CRobot *robot, void *buffer, size_t data_len, size_
     m_config_buffer = (uint8_t*) m_command_buffer + command_len;
     m_config_len = config_len;
 
-    TRACE4("creating player device at addr: %p %p %p %p", m_info_buffer, m_data_buffer,
+    PLAYER_TRACE4("creating player device at addr: %p %p %p %p", m_info, m_data_buffer,
          m_command_buffer, m_config_buffer);
 }
 
@@ -61,13 +61,11 @@ bool CPlayerDevice::Startup()
     if (!CDevice::Startup())
         return false;
 
-    /* *** TESTING -- this doesnt work right now
     // Mark this device as available
     //
     m_world->LockShmem();
     m_info->available = 1;
     m_world->UnlockShmem();
-    */
     
     return true;
 }
