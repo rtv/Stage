@@ -21,7 +21,7 @@
  * Desc: Gnome GUI world components (all methods begin with 'Gui')
  * Author: Richard Vaughan
  * Date: 7 Dec 2000
- * CVS info: $Id: gnomegui.cc,v 1.10 2002-09-26 07:22:38 rtv Exp $
+ * CVS info: $Id: gnomegui.cc,v 1.11 2002-10-02 22:10:43 rtv Exp $
  */
 
 
@@ -189,9 +189,12 @@ void CWorld::GuiStartup( void )
   // create a canvas
   gtk_widget_push_visual(gdk_rgb_get_visual());
   gtk_widget_push_colormap(gdk_rgb_get_cmap());
-  // TODO - read which type to use from world file & menus
+
+  // TODO - read which type to use from world file
   //this->g_canvas = GNOME_CANVAS(gnome_canvas_new()); // Xlib - fast
   this->g_canvas = GNOME_CANVAS(gnome_canvas_new_aa()); //  anti-aliased, slow
+
+
   gtk_widget_pop_colormap();
   gtk_widget_pop_visual();
 

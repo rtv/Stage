@@ -52,7 +52,9 @@ dnl should we include the GNOME2 GUI?
 AC_ARG_WITH(gnome2,    [   --with-gnome2         Compile in the experimental GNOME2 GUI],,with_gnome2=no)
 if test "x$with_gnome2" = "xyes"; then
   AC_DEFINE(USE_GNOME2,1,[include the GNOME2 GUI])
-  dnl - check for presence of GNOME2 libs
+  dnl - check for presence of GNOME2 libs and get their dependencies
+  dnl - use the new pkg-config system
+  dnl - (provides PKG_CHECK_MODULES defined in aclocal/pkg.am)
   PKG_CHECK_MODULES(GNOME2, libgnomeui-2.0 libgnomecanvas-2.0)
   dnl - define the GNOME2 build macros used in src/Makefile.am
   AC_SUBST(GNOME2_CFLAGS)
