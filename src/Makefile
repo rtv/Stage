@@ -105,14 +105,14 @@ boxobstacle.o: ../include/stage_types.hh ../include/guiexport.hh
 boxobstacle.o: /usr/local/player0.9.1-Bleeding/include/stage.h
 boxobstacle.o: /usr/local/player0.9.1-Bleeding/include/messages.h
 boxobstacle.o: /usr/local/player0.9.1-Bleeding/include/playercommon.h
-boxobstacle.o: ../include/puck.hh ../include/boxobstacle.hh
+boxobstacle.o: ../include/boxobstacle.hh
 broadcastdevice.o: /usr/local/player0.9.1-Bleeding/include/stage.h
 broadcastdevice.o: /usr/local/player0.9.1-Bleeding/include/messages.h
 broadcastdevice.o: /usr/local/player0.9.1-Bleeding/include/playercommon.h
 broadcastdevice.o: ../include/world.hh ../include/image.h
 broadcastdevice.o: ../include/entity.hh ../include/stage_types.hh
-broadcastdevice.o: ../include/guiexport.hh ../include/puck.hh
-broadcastdevice.o: ../include/broadcastdevice.hh ../include/playerdevice.hh
+broadcastdevice.o: ../include/guiexport.hh ../include/broadcastdevice.hh
+broadcastdevice.o: ../include/playerdevice.hh
 entity.o: ../include/entity.hh ../include/stage_types.hh
 entity.o: ../include/guiexport.hh
 entity.o: /usr/local/player0.9.1-Bleeding/include/stage.h
@@ -135,64 +135,59 @@ laserbeacon.o: ../include/stage_types.hh ../include/guiexport.hh
 laserbeacon.o: /usr/local/player0.9.1-Bleeding/include/stage.h
 laserbeacon.o: /usr/local/player0.9.1-Bleeding/include/messages.h
 laserbeacon.o: /usr/local/player0.9.1-Bleeding/include/playercommon.h
-laserbeacon.o: ../include/puck.hh ../include/laserbeacon.hh
+laserbeacon.o: ../include/laserbeacon.hh
 laserbeacondevice.o: /usr/local/player0.9.1-Bleeding/include/stage.h
 laserbeacondevice.o: /usr/local/player0.9.1-Bleeding/include/messages.h
 laserbeacondevice.o: /usr/local/player0.9.1-Bleeding/include/playercommon.h
 laserbeacondevice.o: ../include/world.hh ../include/image.h
 laserbeacondevice.o: ../include/entity.hh ../include/stage_types.hh
-laserbeacondevice.o: ../include/guiexport.hh ../include/puck.hh
-laserbeacondevice.o: ../include/laserdevice.hh ../include/playerdevice.hh
+laserbeacondevice.o: ../include/guiexport.hh ../include/laserdevice.hh
+laserbeacondevice.o: ../include/playerdevice.hh
 laserbeacondevice.o: ../include/laserbeacondevice.hh
 laserdevice.o: /usr/local/player0.9.1-Bleeding/include/stage.h
 laserdevice.o: /usr/local/player0.9.1-Bleeding/include/messages.h
 laserdevice.o: /usr/local/player0.9.1-Bleeding/include/playercommon.h
 laserdevice.o: ../include/world.hh ../include/image.h ../include/entity.hh
 laserdevice.o: ../include/stage_types.hh ../include/guiexport.hh
-laserdevice.o: ../include/puck.hh ../include/laserdevice.hh
-laserdevice.o: ../include/playerdevice.hh
+laserdevice.o: ../include/laserdevice.hh ../include/playerdevice.hh
 main.o: ../VERSION ../include/world.hh ../include/image.h
 main.o: ../include/entity.hh ../include/stage_types.hh
 main.o: ../include/guiexport.hh
 main.o: /usr/local/player0.9.1-Bleeding/include/stage.h
 main.o: /usr/local/player0.9.1-Bleeding/include/messages.h
 main.o: /usr/local/player0.9.1-Bleeding/include/playercommon.h
-main.o: ../include/puck.hh
 miscdevice.o: /usr/local/player0.9.1-Bleeding/include/stage.h
 miscdevice.o: /usr/local/player0.9.1-Bleeding/include/messages.h
 miscdevice.o: /usr/local/player0.9.1-Bleeding/include/playercommon.h
 miscdevice.o: ../include/world.hh ../include/image.h ../include/entity.hh
 miscdevice.o: ../include/stage_types.hh ../include/guiexport.hh
-miscdevice.o: ../include/puck.hh ../include/miscdevice.hh
-miscdevice.o: ../include/playerdevice.hh
+miscdevice.o: ../include/miscdevice.hh ../include/playerdevice.hh
 pioneermobiledevice.o: ../include/world.hh ../include/image.h
 pioneermobiledevice.o: ../include/entity.hh ../include/stage_types.hh
 pioneermobiledevice.o: ../include/guiexport.hh
 pioneermobiledevice.o: /usr/local/player0.9.1-Bleeding/include/stage.h
 pioneermobiledevice.o: /usr/local/player0.9.1-Bleeding/include/messages.h
 pioneermobiledevice.o: /usr/local/player0.9.1-Bleeding/include/playercommon.h
-pioneermobiledevice.o: ../include/puck.hh ../include/pioneermobiledevice.hh
+pioneermobiledevice.o: ../include/pioneermobiledevice.hh
 pioneermobiledevice.o: ../include/playerdevice.hh
 playerdevice.o: ../include/world.hh ../include/image.h ../include/entity.hh
 playerdevice.o: ../include/stage_types.hh ../include/guiexport.hh
 playerdevice.o: /usr/local/player0.9.1-Bleeding/include/stage.h
 playerdevice.o: /usr/local/player0.9.1-Bleeding/include/messages.h
 playerdevice.o: /usr/local/player0.9.1-Bleeding/include/playercommon.h
-playerdevice.o: ../include/puck.hh ../include/playerserver.hh
-playerdevice.o: ../include/playerdevice.hh
+playerdevice.o: ../include/playerserver.hh ../include/playerdevice.hh
 playerserver.o: /usr/local/player0.9.1-Bleeding/include/stage.h
 playerserver.o: /usr/local/player0.9.1-Bleeding/include/messages.h
 playerserver.o: /usr/local/player0.9.1-Bleeding/include/playercommon.h
 playerserver.o: ../include/world.hh ../include/image.h ../include/entity.hh
 playerserver.o: ../include/stage_types.hh ../include/guiexport.hh
-playerserver.o: ../include/puck.hh ../include/playerserver.hh
+playerserver.o: ../include/playerserver.hh
 ptzdevice.o: ../include/world.hh ../include/image.h ../include/entity.hh
 ptzdevice.o: ../include/stage_types.hh ../include/guiexport.hh
 ptzdevice.o: /usr/local/player0.9.1-Bleeding/include/stage.h
 ptzdevice.o: /usr/local/player0.9.1-Bleeding/include/messages.h
 ptzdevice.o: /usr/local/player0.9.1-Bleeding/include/playercommon.h
-ptzdevice.o: ../include/puck.hh ../include/ptzdevice.hh
-ptzdevice.o: ../include/playerdevice.hh
+ptzdevice.o: ../include/ptzdevice.hh ../include/playerdevice.hh
 puck.o: ../include/world.hh ../include/image.h ../include/entity.hh
 puck.o: ../include/stage_types.hh ../include/guiexport.hh
 puck.o: /usr/local/player0.9.1-Bleeding/include/stage.h
@@ -205,9 +200,8 @@ rtk_main.o: ../include/guiexport.hh
 rtk_main.o: /usr/local/player0.9.1-Bleeding/include/stage.h
 rtk_main.o: /usr/local/player0.9.1-Bleeding/include/messages.h
 rtk_main.o: /usr/local/player0.9.1-Bleeding/include/playercommon.h
-rtk_main.o: ../include/puck.hh ../rtk/include/rtk_ui.hh
-rtk_main.o: ../rtk/include/rtk_types.hh ../rtk/include/rtk_msg.hh
-rtk_main.o: ../rtk/include/rtk_msg_router.hh
+rtk_main.o: ../rtk/include/rtk_ui.hh ../rtk/include/rtk_types.hh
+rtk_main.o: ../rtk/include/rtk_msg.hh ../rtk/include/rtk_msg_router.hh
 rtk_main.o: ../rtk/include/rtk_ui_draw_data.hh ../rtk/include/rtk_ui_data.hh
 rtk_main.o: ../rtk/include/rtk_string.hh ../rtk/include/rtk_ui_mouse_data.hh
 rtk_main.o: ../rtk/include/rtk_ui_property_data.hh
@@ -223,46 +217,45 @@ sonardevice.o: ../include/stage_types.hh ../include/guiexport.hh
 sonardevice.o: /usr/local/player0.9.1-Bleeding/include/stage.h
 sonardevice.o: /usr/local/player0.9.1-Bleeding/include/messages.h
 sonardevice.o: /usr/local/player0.9.1-Bleeding/include/playercommon.h
-sonardevice.o: ../include/puck.hh ../include/sonardevice.hh
-sonardevice.o: ../include/playerdevice.hh
+sonardevice.o: ../include/sonardevice.hh ../include/playerdevice.hh
 usc_pioneer.o: ../include/world.hh ../include/image.h ../include/entity.hh
 usc_pioneer.o: ../include/stage_types.hh ../include/guiexport.hh
 usc_pioneer.o: /usr/local/player0.9.1-Bleeding/include/stage.h
 usc_pioneer.o: /usr/local/player0.9.1-Bleeding/include/messages.h
 usc_pioneer.o: /usr/local/player0.9.1-Bleeding/include/playercommon.h
-usc_pioneer.o: ../include/puck.hh ../include/usc_pioneer.hh
-usc_pioneer.o: ../include/playerserver.hh ../include/pioneermobiledevice.hh
-usc_pioneer.o: ../include/playerdevice.hh ../include/miscdevice.hh
-usc_pioneer.o: ../include/sonardevice.hh ../include/laserdevice.hh
-usc_pioneer.o: ../include/laserbeacondevice.hh ../include/ptzdevice.hh
-usc_pioneer.o: ../include/visiondevice.hh
+usc_pioneer.o: ../include/usc_pioneer.hh ../include/playerserver.hh
+usc_pioneer.o: ../include/pioneermobiledevice.hh ../include/playerdevice.hh
+usc_pioneer.o: ../include/miscdevice.hh ../include/sonardevice.hh
+usc_pioneer.o: ../include/laserdevice.hh ../include/laserbeacondevice.hh
+usc_pioneer.o: ../include/ptzdevice.hh ../include/visiondevice.hh
 visionbeacon.o: ../include/world.hh ../include/image.h ../include/entity.hh
 visionbeacon.o: ../include/stage_types.hh ../include/guiexport.hh
 visionbeacon.o: /usr/local/player0.9.1-Bleeding/include/stage.h
 visionbeacon.o: /usr/local/player0.9.1-Bleeding/include/messages.h
 visionbeacon.o: /usr/local/player0.9.1-Bleeding/include/playercommon.h
-visionbeacon.o: ../include/puck.hh ../include/visionbeacon.hh
+visionbeacon.o: ../include/visionbeacon.hh
 visiondevice.o: ../include/world.hh ../include/image.h ../include/entity.hh
 visiondevice.o: ../include/stage_types.hh ../include/guiexport.hh
 visiondevice.o: /usr/local/player0.9.1-Bleeding/include/stage.h
 visiondevice.o: /usr/local/player0.9.1-Bleeding/include/messages.h
 visiondevice.o: /usr/local/player0.9.1-Bleeding/include/playercommon.h
-visiondevice.o: ../include/puck.hh ../include/visiondevice.hh
-visiondevice.o: ../include/playerdevice.hh ../include/ptzdevice.hh
+visiondevice.o: ../include/visiondevice.hh ../include/playerdevice.hh
+visiondevice.o: ../include/ptzdevice.hh
 world.o: /usr/local/player0.9.1-Bleeding/include/stage.h
 world.o: /usr/local/player0.9.1-Bleeding/include/messages.h
 world.o: /usr/local/player0.9.1-Bleeding/include/playercommon.h
 world.o: ../include/world.hh ../include/image.h ../include/entity.hh
-world.o: ../include/stage_types.hh ../include/guiexport.hh ../include/puck.hh
+world.o: ../include/stage_types.hh ../include/guiexport.hh
 world_load.o: ../include/stage_types.hh ../include/world.hh
 world_load.o: ../include/image.h ../include/entity.hh ../include/guiexport.hh
 world_load.o: /usr/local/player0.9.1-Bleeding/include/stage.h
 world_load.o: /usr/local/player0.9.1-Bleeding/include/messages.h
 world_load.o: /usr/local/player0.9.1-Bleeding/include/playercommon.h
-world_load.o: ../include/puck.hh ../include/entityfactory.hh
+world_load.o: ../include/entityfactory.hh
 xgui.o: ../include/xgui.hh ../include/guiexport.hh
 xgui.o: /usr/local/player0.9.1-Bleeding/include/stage.h
 xgui.o: /usr/local/player0.9.1-Bleeding/include/messages.h
 xgui.o: /usr/local/player0.9.1-Bleeding/include/playercommon.h
 xgui.o: ../include/world.hh ../include/image.h ../include/entity.hh
-xgui.o: ../include/stage_types.hh ../include/puck.hh
+xgui.o: ../include/stage_types.hh ../include/pioneermobiledevice.hh
+xgui.o: ../include/playerdevice.hh

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -108,7 +108,7 @@ bool CPuck::Startup()
     assert(m_world != NULL);
     m_last_time = 0;
     m_com_vr = 0;
-    m_index = m_world->AddPuck(this);
+    //m_index = m_world->AddPuck(this);
     return CEntity::Startup();
 }
 
@@ -118,29 +118,24 @@ bool CPuck::Startup()
 //
 void CPuck::Update()
 {
-    //RTK_TRACE0("updating laser beacon");
     ASSERT(m_world != NULL);
 
     // Undraw our old representation
     //
-    //m_world->SetCell(m_map_px, m_map_py, layer_puck, 0);
     m_world->SetCircle(m_map_px, m_map_py, exp.width, layer_puck, 0);
 
-    // move, if necessary
-    Move();      
+    // move, if necessary (don't move if we've been picked up)
+    if(!m_parent_object)
+      Move();      
     
-    // Update our global pose
+    // Grag our new global pose
     //
     GetGlobalPose(m_map_px, m_map_py, m_map_pth);
 
     
     // Draw our new representation
     //
-    //m_world->SetCell(m_map_px, m_map_py, layer_puck, 2);
-    m_world->SetCircle(m_map_px, m_map_py, exp.width, layer_puck, 2);
-    
-    // write back into world array
-    m_world->SetPuck(m_index, m_map_px, m_map_py, m_map_pth);
+    m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_puck, 2);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -168,6 +163,17 @@ bool CPuck::InCollision(double px, double py, double pth)
 }
 
 ///////////////////////////////////////////////////////////////////////////
+// Check to see if the given pose will yield a collision with a movable object
+//
+bool CPuck::InCollisionWithMovableObject(double px, double py, double pth)
+{
+  if(m_world->GetRectangle(px, py, pth, exp.width, exp.width, layer_puck) > 0)
+    return true;
+
+  return(false);
+}
+
+///////////////////////////////////////////////////////////////////////////
 // Move the puck
 // 
 void CPuck::Move()
@@ -175,8 +181,8 @@ void CPuck::Move()
     double step_time = m_world->GetTime() - m_last_time;
     m_last_time += step_time;
 
-    if(m_com_vr < 0.01)
-      return;
+    //if(m_com_vr < 0.01)
+      //return;
     // Get the current puck pose
     //
     double px, py, pth;
@@ -190,26 +196,20 @@ void CPuck::Move()
     //double qth = pth + m_com_vth * step_time;
     double qth = pth;
 
-    // Check for collisions
-    // and accept the new pose if ok
-    //
-    if(InCollision(qx, qy, qth))
+    // did we hit another movable object (e.g., robot, puck)?
+    if(InCollisionWithMovableObject(qx,qy,qth))
     {
+      // transfer some momentum...
+      //printf("Collision: %d\n",this);
     }
-    // did we hit another puck?
-    //  Solve this one later...
-    /*else if(InCollisionWithPuck(qx,qy,qth))
+    // Did we hit a wall?
+    // if so, don't move anymore (infinitely soft walls)
+    //
+    else if(InCollision(qx, qy, qth))
     {
-        // move the robot 
-        SetPose(qx, qy, qth);
-        
-        // move the closest puck
-        // 
-        // NOTE: maybe not a complete solution; won't handle simultaneous
-        //       puck impacts
-        MovePuck(qx,qy,qth);
-    }*/
-    // everything's ok
+      m_com_vr = 0;
+    }
+    // no collisions; make the move
     else
     {
         SetGlobalPose(qx, qy, qth);
@@ -218,6 +218,84 @@ void CPuck::Move()
     // compute a new velocity, based on "friction"
     SetSpeed(max(0,m_com_vr - 0.1*m_com_vr));
 }
+
+///////////////////////////////////////////////////////////////////////////
+// Search for which puck(s) we have collided with and move them
+//
+/*
+void CPioneerMobileDevice::MovePuck(double px, double py, double pth)
+{
+    double min_range = MAXDOUBLE;
+    double close_puck_bearing = 0;
+    double close_puck_x = 0;
+    double close_puck_y = 0;
+    CPuck* close_puck = NULL;
+    int close_puck_index = -1;
+    
+    //printf("robot pose: %f %f %f\n", px,py,RTOD(pth));
+    // Search for the closest puck in the list
+    // Is quicker than searching the bitmap!
+    //
+    for (int i = 0; true; i++)
+    {
+        // Get the position of the puck (global coords)
+        //
+        double qx, qy, qth;
+        CPuck* tmp_puck;
+        if (!(tmp_puck = m_world->GetPuck(i, &qx, &qy, &qth)))
+            break;
+        
+        //printf("considering puck: %d\n", i);
+
+        // Compute range and bearing to each puck
+        //
+        double dx = qx - px;
+        double dy = qy - py;
+        double r = sqrt(dx * dx + dy * dy);
+        //printf("range: %f\n", r);
+        double b = NORMALIZE(atan2(dy, dx) - pth);
+        //double o = NORMALIZE(qth - pth);
+
+        if(r < min_range)
+        {
+          min_range = r;
+          close_puck_bearing = b;
+          close_puck_x = qx;
+          close_puck_y = qy;
+          //close_puck_orientation = o;
+          close_puck_index = i;
+          close_puck = tmp_puck;
+        }
+    }
+
+    if(close_puck_index == -1)
+    {
+      puts("couldn't find puck to move");
+      return;
+    }
+    
+    // determine the direction to move the puck.
+    // it's the robot's orientation minus the bearing from the robot
+    // to the puck (loosely models circular objects colliding)
+    double puck_th = NORMALIZE(pth-close_puck_bearing);
+
+    // set puck orientation (move it enough to get it away from the robot)
+    close_puck->SetGlobalPose(close_puck_x+
+                                2.0*(close_puck->GetDiameter())*cos(puck_th),
+                              close_puck_y+
+                                2.0*(close_puck->GetDiameter())*sin(puck_th),
+                              puck_th);
+    //close_puck->SetGlobalPose(close_puck_x,close_puck_y,puck_th);
+    //printf("new puck pose: %f %f %f\n",
+       //close_puck_x+2.0*(close_puck->GetDiameter())*cos(puck_th),
+       //close_puck_y+2.0*(close_puck->GetDiameter())*sin(puck_th),
+       //puck_th);
+
+    // transfer some "momentum" (meters/second)
+    // assume that the robot has 10 times the mass of the puck
+    close_puck->SetSpeed(10*m_com_vr);
+}
+*/
 
 ///////////////////////////////////////////////////////////////////////////
 // Return radius of puck
@@ -232,22 +310,20 @@ double CPuck::GetDiameter()
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
 //
-void CLaserBeacon::OnUiUpdate(RtkUiDrawData *data)
+void CPuck::OnUiUpdate(RtkUiDrawData *data)
 {
     CEntity::OnUiUpdate(data);
 
-    data->begin_section("global", "");
+    data->begin_section("global", "puck");
     
-    if (data->draw_layer("laser_beacon", true))
+    if (data->draw_layer("puck", true))
     {
-        double r = 0.10;
         double ox, oy, oth;
         GetGlobalPose(ox, oy, oth);
-        double dx = 2 * r * cos(oth);
-        double dy = 2 * r * sin(oth);
-        data->set_color(RTK_RGB(255, 0, 0));
-        data->ellipse(ox - r, oy - r, ox + r, oy + r);
-        data->line(ox - dx, oy - dy, ox + dx, oy + dy);
+        double radius = GetDiameter() / 2.0;
+        data->set_color(RTK_RGB(0, 0, 255));
+        data->ellipse(ox - radius, oy - radius, 
+                      ox + radius, oy + radius);
     }
 
     data->end_section();
@@ -257,7 +333,7 @@ void CLaserBeacon::OnUiUpdate(RtkUiDrawData *data)
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI mouse messages
 //
-void CLaserBeacon::OnUiMouse(RtkUiMouseData *data)
+void CPuck::OnUiMouse(RtkUiMouseData *data)
 {
     CEntity::OnUiMouse(data);
 }

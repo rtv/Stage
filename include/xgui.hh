@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xgui.hh,v 1.3 2001-06-29 00:04:35 gerkey Exp $
+ * $Id: xgui.hh,v 1.4 2001-07-06 01:23:05 gerkey Exp $
  ************************************************************************/
 
 #ifndef WIN_H
@@ -16,7 +16,6 @@
 // forward definition
 class CWorld;
 class CEntity;
-
 
 class CXGui
 {

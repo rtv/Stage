@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xgui.cc,v 1.3 2001-06-29 00:04:35 gerkey Exp $
+ * $Id: xgui.cc,v 1.4 2001-07-06 01:23:06 gerkey Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -15,6 +15,7 @@
 
 #include "xgui.hh"
 #include "world.hh"
+#include "pioneermobiledevice.hh"
 
 #include <X11/keysym.h> 
 #include <X11/keysymdef.h> 
@@ -1077,7 +1078,7 @@ void CXGui::RenderMisc( ExportData* exp, bool extended )
 
 
 void CXGui::RenderPioneer( ExportData* exp, bool extended )
-{ 
+{
 #ifdef LABELS
   RenderObjectLabel( exp, "Pioneer base", 12 );
 #endif
@@ -1085,21 +1086,49 @@ void CXGui::RenderPioneer( ExportData* exp, bool extended )
   //SetForeground( RGB(255,0,0) ); // red Pioneer base color
   SetForeground( RGB(255,100,100) ); // red Pioneer base color
 
-  DPoint pts[7];
-  GetRect( exp->x, exp->y, exp->width/2.0, exp->height/2.0, exp->th, pts );
+  CPioneerMobileDevice* pioneer = (CPioneerMobileDevice*)(exp->objectId);
 
-  pts[4].x = pts[0].x;
-  pts[4].y = pts[0].y;
+  if(pioneer->GetShape() == rectangle)
+  {
+    DPoint pts[7];
+    GetRect( exp->x, exp->y, exp->width/2.0, exp->height/2.0, exp->th, pts );
 
-  pts[5].x = exp->x;
-  pts[5].y = exp->y;
+    pts[4].x = pts[0].x;
+    pts[4].y = pts[0].y;
 
-  pts[6].x = pts[3].x;
-  pts[6].y = pts[3].y;
+    pts[5].x = exp->x;
+    pts[5].y = exp->y;
 
-  //DrawCircle( pts[1].x, pts[1].y, 0.3 );
+    pts[6].x = pts[3].x;
+    pts[6].y = pts[3].y;
 
-  DrawLines( pts, 7 );
+    DrawLines( pts, 7 );
+  }
+  else if(pioneer->GetShape() == circle)
+  {
+    DPoint pts[3];
+
+    double radius = pioneer->GetRadius();
+    
+    // draw the chassis
+    DrawCircle(exp->x, exp->y, radius);
+    
+    // Draw the direction indicator
+    //
+
+    pts[0].x = exp->x + radius * cos(exp->th + M_PI/4.0);
+    pts[0].y = exp->y + radius * sin(exp->th + M_PI/4.0);
+
+    pts[1].x = exp->x;
+    pts[1].y = exp->y;
+
+    pts[2].x = exp->x + radius * cos(exp->th - M_PI/4.0);
+    pts[2].y = exp->y + radius * sin(exp->th - M_PI/4.0);
+
+    DrawLines(pts,3);
+  }
+  else
+    PRINT_MSG("CXGui::RenderPioneer(): unknown shape!");
 }
 
 void CXGui::RenderUSCPioneer( ExportData* exp, bool extended )
@@ -1139,14 +1168,14 @@ void CXGui::RenderLaserBeacon( ExportData* exp, bool extended )
 }
 
 void CXGui::RenderPuck( ExportData* exp, bool extended )
-{ 
+{
 #ifdef LABELS
   RenderObjectLabel( exp, "Puck", 4 );
 #endif
   
   SetForeground( RGB(0,0,255) );
   //DrawBox( exp->x, exp->y, 0.1 );
-  DrawCircle( exp->x, exp->y, (exp->width/2));
+  DrawCircle( exp->x, exp->y, (exp->width/2.0));
 
   //DPoint pts[4];
   //GetRect( exp->x, exp->y, exp->width/2.0, exp->height/2.0, exp->th, pts );

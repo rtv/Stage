@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -33,8 +33,6 @@
 
 #include "image.h"
 #include "entity.hh"
-
-#include "puck.hh" // need this for definition of CPuck to be kept in array
 
 #if INCLUDE_RTK
 #include "rtk_ui.hh"
@@ -224,37 +222,6 @@ class CWorld
     } m_laserbeacon[1000];
     
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Puck stuff
-
-    // Initialise laser beacon representation
-    //
-    private: void InitPuck();
-
-    // Add a puck to the world
-    // Returns an index for the puck
-    //
-    public: int AddPuck(CPuck* puck);
-    
-    // Set the position of a puck
-    //
-    public: void SetPuck(int index, double px, double py, double pth);
-
-    // Get the position of a puck
-    //
-    public: CPuck* GetPuck(int index, double *px, double *py, double *pth);
-                         
-
-    // Array of pucks
-    //
-    private: int m_puck_count;
-    private: struct
-    {
-        //int m_id;
-        double m_px, m_py, m_pth;
-        CPuck* puck;
-    } m_puck[1000];
-    
     ///////////////////////////////////////////////////////////////////////////
     // Broadcast device functions
 

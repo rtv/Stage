@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/pioneermobiledevice.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -59,16 +59,6 @@ class CPioneerMobileDevice : public CPlayerDevice
     //
     private: bool InCollision(double px, double py, double pth);
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Check to see if the given pose will yield a collision with a puck
-    //
-    private: bool InCollisionWithPuck(double px, double py, double pth);
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Search for which puck(s) we have collided with and move them
-    //
-    private: void MovePuck(double px, double py, double pth);
-
     // Get and set shape parameter
     public: pioneer_shape_t GetShape() { return(m_shape); };
     public: void SetShape(pioneer_shape_t shape) { m_shape = shape; };
@@ -89,6 +79,8 @@ class CPioneerMobileDevice : public CPlayerDevice
 
     // Circular robot:
     private: double m_radius;
+
+    public: double GetRadius() { return(m_radius); }
 
     ////////////////////////
 

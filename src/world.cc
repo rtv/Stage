@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.12 $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  (empty)
@@ -31,10 +31,6 @@
 #include <iostream.h>
 #include "stage.h"
 #include "world.hh"
-
-#ifdef INCLUDE_XGUI
-#include "xgui.hh"
-#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
@@ -772,56 +768,6 @@ bool CWorld::GetLaserBeacon(int index, int *id, double *px, double *py, double *
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// Initialise puck representation
-//
-void CWorld::InitPuck()
-{
-    m_puck_count = 0;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Add a puck to the world
-// Returns an index for the puck
-//
-int CWorld::AddPuck(CPuck* puck)
-{
-  assert(m_puck_count < ARRAYSIZE(m_puck));
-  int index = m_puck_count++;
-  m_puck[index].puck = puck;
-  //m_puck[index].m_id = id;
-  return index;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Set the position of a puck
-//
-void CWorld::SetPuck(int index, double px, double py, double pth)
-{
-  ASSERT(index >= 0 && index < m_puck_count);
-  m_puck[index].m_px = px;
-  m_puck[index].m_py = py;
-  m_puck[index].m_pth = pth;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Get the position of a puck
-//
-CPuck* CWorld::GetPuck(int index, double *px, double *py, double *pth)
-{
-  if (index < 0 || index >= m_puck_count)
-    return NULL;
-  //*id = m_puck[index].m_id;
-  *px = m_puck[index].m_px;
-  *py = m_puck[index].m_py;
-  *pth = m_puck[index].m_pth;
-  return m_puck[index].puck;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
 // Initialise the broadcast queue
 //
 void CWorld::InitBroadcast()
@@ -907,6 +853,9 @@ void CWorld::OnUiDraw(CWorld *world, RtkUiDrawData *data)
 
     if (data->draw_layer("vision", false))
         world->draw_layer(data, layer_vision);
+
+    if (data->draw_layer("puck", false))
+        world->draw_layer(data, layer_puck);
     
     data->end_section();
 
@@ -1013,7 +962,7 @@ void CWorld::DrawBackground(RtkUiDrawData *data)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Draw the laser layer
+// Draw the various layers
 //
 void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
 {
@@ -1031,6 +980,9 @@ void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
             break;
         case layer_vision:
             img = m_vision_img;
+            break;            
+        case layer_puck:
+            img = m_puck_img;
             break;            
         default:
             return;
@@ -1058,7 +1010,3 @@ void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
 
 
 #endif
-
-
-
-
