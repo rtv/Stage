@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.14 $
+//  $Revision: 1.15 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -29,11 +29,11 @@ void fiducial_init( model_t* mod )
   // fiducialfinders don't have a body in the sim
   //model_set_lines( mod, NULL, 0 );
   
-  // same body size as a laser by default
+  // a fraction smaller than a laser by default
   stg_geom_t geom;
   memset( &geom, 0, sizeof(geom));
-  geom.size.x = STG_DEFAULT_LASER_SIZEX;
-  geom.size.y = STG_DEFAULT_LASER_SIZEY;
+  geom.size.x = STG_DEFAULT_LASER_SIZEX * 0.9;
+  geom.size.y = STG_DEFAULT_LASER_SIZEY * 0.9;
   model_set_geom( mod, &geom );  
   
   stg_color_t color = stg_lookup_color( "magenta" );
@@ -286,36 +286,32 @@ void fiducial_render_config( model_t* mod )
   size_t len;
   stg_fiducial_config_t* cfg = model_get_config(mod,&len);
   
-  if( cfg )
-    { 
-      assert( len == sizeof(stg_fiducial_config_t));
- 
-      double mina = -cfg->fov / 2.0;
-      double maxa = +cfg->fov / 2.0;
-      
-      double dx =  cfg->max_range_anon * cos(mina);
-      double dy =  cfg->max_range_anon * sin(mina);
-      double ddx = cfg->max_range_anon * cos(maxa);
-      double ddy = cfg->max_range_anon * sin(maxa);
-      
-      rtk_fig_line( fig, 0,0, dx, dy );
-      rtk_fig_line( fig, 0,0, ddx, ddy );
-      
-      // max range
-      rtk_fig_ellipse_arc( fig, 0,0,0,
-			   2.0*cfg->max_range_anon,
-			   2.0*cfg->max_range_anon, 
-			   mina, maxa );      
-      
-      // max range that IDs can be, er... identified	  
-      rtk_fig_ellipse_arc( fig, 0,0,0,
-			   2.0*cfg->max_range_id,
-			   2.0*cfg->max_range_id, 
-			   mina, maxa );      
-    }
+  assert( len == sizeof(stg_fiducial_config_t) );
+  assert( cfg );
+
+  double mina = -cfg->fov / 2.0;
+  double maxa = +cfg->fov / 2.0;
+  
+  double dx =  cfg->max_range_anon * cos(mina);
+  double dy =  cfg->max_range_anon * sin(mina);
+  double ddx = cfg->max_range_anon * cos(maxa);
+  double ddy = cfg->max_range_anon * sin(maxa);
+  
+  rtk_fig_line( fig, 0,0, dx, dy );
+  rtk_fig_line( fig, 0,0, ddx, ddy );
+  
+  // max range
+  rtk_fig_ellipse_arc( fig, 0,0,0,
+  	       2.0*cfg->max_range_anon,
+  	       2.0*cfg->max_range_anon, 
+  	       mina, maxa );      
+
+  // max range that IDs can be, er... identified	  
+  rtk_fig_ellipse_arc( fig, 0,0,0,
+  	       2.0*cfg->max_range_id,
+  	       2.0*cfg->max_range_id, 
+  	       mina, maxa );      
 }
-
-
 
 int register_fiducial( void )
 {

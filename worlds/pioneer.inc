@@ -1,13 +1,11 @@
 
-# Desc: Device definitions for Activemedia Pioneer robots.
-# Author: Andrew Howard
+# Desc: Device definitions for Activemedia robots.
+# Author: Andrew Howard, Richard Vaughan
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.10 2004-08-30 02:49:57 rtv Exp $
+# CVS: $Id: pioneer.inc,v 1.11 2004-08-30 04:00:44 rtv Exp $
+
 
 # The Pioneer2DX sonar array
-
-
-# The Pioneer2DX sonar array (new format)
 define p2dx_sonar ranger
 (
   ranger.count 16
@@ -29,26 +27,20 @@ define p2dx_sonar ranger
   ranger.pose[15] [ -0.155 0.130 90 ]
 )
 
-# the pioneer's center of rotation is offset from its 
-# center of area 
-#
+# a Pioneer 2 or 3 in standard configuration
 define pioneer2dx position
 (
   size [0.44 0.33]
-  origin [-0.04 0.0 0]
 
+  origin [-0.04 0.0 0] # the pioneer's center of rotation is offset from its 
+	               # center of area 
   p2dx_sonar()
   
   gui.nose 1
 
-  #power()
-  #energy.capacity 3000.0
-  #energy.range 1.0
-  #energy.return 0 # we don't give charge
-
-  mass 15.0 # mass in KG
-
-
+  mass 15.0 # estimated mass in KG
+	
+  # these lines draw the approximate shape of a Pioneer
   lines.count 8
   lines.points[0] [0.23 0.05 0.15 0.15]
   lines.points[1] [0.15 0.15 -0.15 0.15]
@@ -58,6 +50,12 @@ define pioneer2dx position
   lines.points[5] [-0.15 -0.15 0.15 -0.15]
   lines.points[6] [0.15 -0.15 0.23 -0.05]
   lines.points[7] [0.23 -0.05 0.23 0.05] 
+
+  # TODO
+  #power()
+  #energy.capacity 3000.0
+  #energy.range 1.0
+  #energy.return 0 # we don't give charge
 ) 
 
 # define 10 straight bumpers around the edge of the robot
@@ -81,7 +79,7 @@ define pioneer2dxbumper bumper
 )
 
 # The AmigoBot sonar array
-define amigo_sonar sonar
+define amigo_sonar ranger
 (
   ranger.count 8
   ranger.pose[0] [ 0.073 0.105 90 ]
@@ -97,8 +95,7 @@ define amigo_sonar sonar
 define amigobot position
 (
   size [.330 .280]
-  # what should the offset be?
-  #offset [0.0 0.0]
+  #offset [0.0 0.0]   # what should this be? send email to vaughan@sfu.ca.
   amigo_sonar()
   power()
 )

@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.48 2004-08-30 02:49:57 rtv Exp $
+// $Id: stagecpp.cc,v 1.49 2004-08-30 04:00:44 rtv Exp $
 
 #include "stage.h"
 #include "worldfile.hh"
@@ -376,11 +376,7 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
   // Iterate through sections and create client-side models
   for (int section = 1; section < wf.GetEntityCount(); section++)
     {
-      // a model has the macro name that defined it as it's name
-      // unlesss a name is explicitly defined.  TODO - count instances
-      // of macro names so we can autogenerate unique names
       char *typestr = (char*)wf.GetEntityType(section);      
-      //stg_token_t* token = stg_token_create( namestr, STG_T_NUM, 99 );
 
       int parent_section = wf.GetEntityParent( section );
       
@@ -447,6 +443,8 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       // having done all that, allow the user to specify a name instead
       char *namestr = (char*)wf.ReadString(section, "name", namebuf );
 
+      //PRINT_WARN2( "loading model name %s for type %s", namebuf, typestr );
+      
       stg_model_t* mod = 
 	stg_world_createmodel( world, parent, section, type, namestr );
       

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -167,6 +167,34 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
       break;
     case STG_PROP_CONFIG: 
       *data = model_get_config( mod, len );
+      break;
+    case STG_PROP_POSE: 
+      *data = (void*)&mod->pose;
+      *len = sizeof(mod->pose);
+      break;      
+    case STG_PROP_COLOR: 
+      *data = (void*)&mod->color;
+      *len = sizeof(mod->pose);
+      break;      
+    case STG_PROP_LINES: 
+      *data = (void*)&mod->lines;
+      *len = mod->lines_count * sizeof(stg_line_t);
+      break;      
+    case STG_PROP_GUIFEATURES: 
+      *data = (void*)&mod->guifeatures;
+      *len = sizeof(mod->guifeatures);
+      break;      
+    case STG_PROP_FIDUCIALRETURN: 
+      *data = (void*)&mod->fiducial_return;
+      *len = sizeof(mod->fiducial_return);
+      break;      
+    case STG_PROP_LASERRETURN: 
+      *data = (void*)&mod->laser_return;
+      *len = sizeof(mod->laser_return);
+      break;      
+    case STG_PROP_OBSTACLERETURN: 
+      *data = (void*)&mod->obstacle_return;
+      *len = sizeof(mod->obstacle_return);
       break;      
       
       // TODO -  more props here
@@ -350,8 +378,6 @@ int model_set_obstaclereturn( model_t* mod, stg_bool_t val )
 
 stg_pose_t* model_get_pose( model_t* model )
 {
-  //stg_pose_t* pose = model_get_prop_data_generic( model, STG_PROP_POSE );
-  //assert(pose);
   return &model->pose;
 }
 

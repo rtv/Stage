@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.81 2004-08-30 02:49:57 rtv Exp $
+ * CVS: $Id: stage.h,v 1.82 2004-08-30 04:00:44 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -726,7 +726,7 @@ typedef struct
 #define STG_DEFAULT_FIDUCIAL_RANGEMIN 0
 #define STG_DEFAULT_FIDUCIAL_RANGEMAXID 5
 #define STG_DEFAULT_FIDUCIAL_RANGEMAXANON 8
-#define STG_DEFAULT_FIDUCIAL_FOV 180
+#define STG_DEFAULT_FIDUCIAL_FOV DTOR(180)
  
 //  FUNCTION DEFINITIONS
 

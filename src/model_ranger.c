@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.20 $
+//  $Revision: 1.21 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -39,7 +39,7 @@ void ranger_init( model_t* mod )
   size_t datalen = 16*sizeof(data[0]);
   memset( data, 0, datalen);
   
-  double offset = MIN(mod->geom.size.x, mod->geom.size.y);
+  double offset = MIN(mod->geom.size.x, mod->geom.size.y) / 2.0;
   int c;
   for( c=0; c<16; c++ )
     {

@@ -7,14 +7,14 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 #include <sys/time.h>
 #include <math.h>
 
-#define DEBUG
+//#define DEBUG
 
 #include "model.h"
 #include "gui.h"

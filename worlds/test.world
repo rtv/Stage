@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.7 2004-08-30 02:49:57 rtv Exp $
+# CVS: $Id: test.world,v 1.8 2004-08-30 04:00:44 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution 0.02 
@@ -14,7 +14,7 @@ include "map.inc" # defines 'map' object used for floorplans
 map(	
   size [15.5 11.4]
   origin [7.75 5.7 0]
-  bitmap "../worlds/bitmaps/autolab.png"
+  bitmap "bitmaps/autolab.png"
 )
 
 # extend the pioneer2dx definition from pioneer.inc
@@ -22,7 +22,7 @@ map(
 define laserpioneer pioneer2dx
 (
   laser( 
-    laser.range_min 0.0x
+    laser.range_min 0.0
     laser.range_max 8.0
     laser.fov 180.0
     laser.samples 180
@@ -31,12 +31,14 @@ define laserpioneer pioneer2dx
   )
 )
 
+
+
 laserpioneer
 (
   name "myrobot"
   pose [1 4 0]
- 
-  #ranger()
+  nose 1 
+  color "green"
 
   blobfinder(
     ### TODO - problem parsing this line?
@@ -44,13 +46,13 @@ laserpioneer
   )	
 )
 
-laser
-(
-  name "scanner"
-  pose [11 11 -120]
-  velocity [0 0 60]
-  color "red"
-)
+#laser
+#(
+#  name "scanner"
+#  pose [11 11 -120]
+#  velocity [0 0 60]
+#  color "red"
+#)
 
 # a silly object to look at
 model( 	
@@ -58,14 +60,10 @@ model(
   size [2 1]
   pose [2.0 6.0 0.0] 
   color "green"  
-  #bitmap "bitmaps/submarine.png"
+  bitmap "bitmaps/submarine.png"
   gui.nose 1
   
  fiducial_id 22
 
  velocity [0 0 10]
 )
-
-
-# TODO
-# laser non-zero origin not implemented
