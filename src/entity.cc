@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.105 2003-08-25 00:57:19 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.106 2003-08-25 21:06:41 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -119,13 +119,13 @@ void StgPrintTree( GNode* node, gpointer _prefix = NULL );
 // main constructor
 CEntity::CEntity( stg_entity_create_t* init )
 {
-  // must set the name and token before using the BASE_DEBUG macro
+  // must set the name and token before using the ENT_DEBUG macro
   g_assert( init );
   this->id = global_next_available_id++; // a unique id for this object
   this->name = g_string_new( init->name );
   this->token = g_string_new( init->token );
   
-  BASE_DEBUG1( "entity construction - parent id: %d", init->parent_id );
+  ENT_DEBUG1( "entity construction - parent id: %d", init->parent_id );
   
   this->running = FALSE;
   
@@ -141,7 +141,7 @@ CEntity::CEntity( stg_entity_create_t* init )
   // inspect the stg_world_t object at the root of the tree I just attached to. 
   stg_world_t* world = stg_world( this );
   g_assert( world );
-  BASE_DEBUG2( "is in world %d:%s", world->id, world->name->str );
+  //ENT_DEBUG2( "is in world %d:%s", world->id, world->name->str );
 #endif
   
   // add my node to the world's hash table with my id as the key
@@ -228,7 +228,7 @@ CEntity::CEntity( stg_entity_create_t* init )
   
 #ifdef DEBUG
   CEntity* parent = stg_ent_parent( this );
-  if( parent ) BASE_DEBUG2( "has parent %d:%s",  parent->id, parent->name->str );
+  if( parent ) ENT_DEBUG2( "has parent %d:%s",  parent->id, parent->name->str );
 #endif  
 
   //this->model_type = init->type; 
@@ -250,7 +250,7 @@ CEntity::CEntity( stg_entity_create_t* init )
   // zero the pointer to our gui data
   this->guimod = NULL;
 
-  BASE_DEBUG("entity construction complete");
+  ENT_DEBUG("entity construction complete");
 }
 
 
@@ -258,7 +258,7 @@ CEntity::CEntity( stg_entity_create_t* init )
 // Destructor
 CEntity::~CEntity()
 {
-  BASE_DEBUG("entity destruction");
+  ENT_DEBUG("entity destruction");
   if( this->running ) this->Shutdown(); 
   
   // deleting a child removes it from the tree, so we can't iterate
@@ -267,10 +267,10 @@ CEntity::~CEntity()
   CEntity* child = NULL;
   while( (child = stg_ent_first_child( this ) ))
     {
-      BASE_DEBUG2( "entity destruction - destroying child [%d:%s]",
+      ENT_DEBUG2( "entity destruction - destroying child [%d:%s]",
 		   child->id, child->name->str );
       delete child;
-      BASE_DEBUG( "entity destruction - destroying child complete" );
+      ENT_DEBUG( "entity destruction - destroying child complete" );
     }
   
   // detatch myself from my parent
@@ -279,7 +279,7 @@ CEntity::~CEntity()
   // remove myself from the database
   g_hash_table_remove( global_hash_table, &this->id );
   
-  BASE_DEBUG("entity destruction complete");
+  ENT_DEBUG("entity destruction complete");
   // actually, we still have to free up the strings that the previous
   // trace statement uses...
   if( name ) g_string_free( name, TRUE );
@@ -380,7 +380,7 @@ void CEntity::UnMapFamily()
 // everything has been loaded.
 int CEntity::Startup( void )
 {
-  BASE_DEBUG( "entity startup" );
+  ENT_DEBUG( "entity startup" );
   
   // by default, all entities have a single rectangle that is
   // automagically scaled to fit the size of the entity
@@ -406,7 +406,7 @@ int CEntity::Startup( void )
   
   this->guimod = stg_gui_model_create( this );
 
-  BASE_DEBUG( "entity startup complete" );
+  ENT_DEBUG( "entity startup complete" );
   return 0;
 }
 
@@ -415,31 +415,31 @@ int CEntity::Startup( void )
 // Shutdown routine
 int CEntity::Shutdown()
 {
-  BASE_DEBUG( "entity shutdown" );
+  ENT_DEBUG( "entity shutdown" );
  
   UnMap();
 
   /* cancel the callbacks into this object */
   g_source_remove( update_tag );
   
-  BASE_DEBUG( "shutting down children" );
+  ENT_DEBUG( "shutting down children" );
   
   for( CEntity* child = stg_ent_first_child( this ); child; 
        child = stg_ent_next_sibling(child))
     child->Shutdown();
   
-  BASE_DEBUG( "finished shutting down children" ); 
+  ENT_DEBUG( "finished shutting down children" ); 
   
   this->running = FALSE;
 
   if( this->guimod) 
     {
-      BASE_DEBUG( "shutting down GUI" );
+      ENT_DEBUG( "shutting down GUI" );
       stg_gui_model_destroy( this->guimod );
       this->guimod = NULL;
     }
 
-  BASE_DEBUG( "entity shutdown complete" );
+  ENT_DEBUG( "entity shutdown complete" );
 
   return 0; // success
 }
@@ -447,7 +447,7 @@ int CEntity::Shutdown()
 
 int CEntity::Move( stg_velocity_t* vel, double step )
 {
-  //BASE_DEBUG("");
+  //ENT_DEBUG("");
     
     //fprintf( stderr, "%.2f %.2f %.2f   %.2f %.2f %.2f\n", 
     //   px -1, py -1, pa, odo_px, odo_py, odo_pa );
@@ -589,17 +589,18 @@ CEntity *CEntity::TestCollision( double* hitx, double* hity )
   if( this->rect_array == NULL )
     return NULL;
 
-  if( this->rect_array->rect_count == 0 )
+  if( this->rect_array->len == 0 )
     {
       PRINT_WARN( "no rectangles in rect array" );
       return NULL;
     }
 
   int r;
-  for( r=0; r<this->rect_array->rect_count; r++ )
+  for( r=0; r<this->rect_array->len; r++ )
     {
       // find the global coords of this rectangle
-      GetGlobalRect( &glob, &(this->rect_array->rects[r]) );
+      GetGlobalRect( &glob, 
+		     &g_array_index(this->rect_array, stg_rotrect_t, r) );
       
       // trace this rectangle in the matrix
       CRectangleIterator rit( glob.x, glob.y, glob.a, 
@@ -691,8 +692,8 @@ void CEntity::GlobalToLocal( stg_pose_t* pose )
 
 int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
 {
-  BASE_DEBUG3( "Setting prop %s (%d) with %d bytes", 
-	       stg_property_string(ptype), ptype, len );
+  //ENT_DEBUG3( "Setting prop %s (%d) with %d bytes", 
+  //       stg_property_string(ptype), ptype, len );
 
   switch( ptype )
     {      
@@ -757,10 +758,10 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
 	  {
 	    stg_ranger_t* rgr = ((stg_ranger_t*)data) + t;
 	    
-	    printf( "setting ranger %d (%.2f,%.2f,%.2f)[%.2f %.2f]\n",
-		    t, 
-		    rgr->pose.x, rgr->pose.y, rgr->pose.a,
-		    rgr->size.x, rgr->size.y );
+	    //printf( "setting ranger %d (%.2f,%.2f,%.2f)[%.2f %.2f]\n",
+	    //    t, 
+	    //    rgr->pose.x, rgr->pose.y, rgr->pose.a,
+	    //    rgr->size.x, rgr->size.y );
 	  }
 
 	this->rangers = g_array_sized_new( FALSE, TRUE, 
@@ -796,8 +797,8 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
 
 stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
 {    
-  BASE_DEBUG2( "Getting prop %s (%d)", 
-	       stg_property_string(ptype), ptype );
+  //ENT_DEBUG2( "Getting prop %s (%d)", 
+  //       stg_property_string(ptype), ptype );
   
   stg_property_t* prop = stg_property_create();
   prop->id = this->id;
@@ -890,8 +891,8 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
     case STG_PROP_ENTITY_RECTS:
       if( this->rect_array != NULL )
 	prop = stg_property_attach_data( prop, 
-					 this->rect_array->rects, 
-					 this->rect_array->rect_count * 
+					 this->rect_array->data, 
+					 this->rect_array->len * 
 					 sizeof(stg_rotrect_t) );
       break;
 
@@ -1014,7 +1015,7 @@ void CEntity::SendLosMessage( stg_los_msg_t* msg )
 
 void CEntity::GetNeighbors( GArray** neighbor_array )
 {
-  PRINT_DEBUG( "searching for neighbors" );
+  //PRINT_DEBUG( "searching for neighbors" );
 
   // create the array, pre-allocating some space for speed
   *neighbor_array = g_array_sized_new( FALSE, TRUE, 
@@ -1113,7 +1114,7 @@ bool CEntity::OcclusionTest(CEntity* ent )
 // Set the entitys pose in the parent cs
 void CEntity::SetPose( stg_pose_t* pose )
 {
-  BASE_DEBUG3( "setting pose to [%.2f %.2f %.2f]", pose->x, pose->y, pose->a );
+  //ENT_DEBUG3( "setting pose to [%.2f %.2f %.2f]", pose->x, pose->y, pose->a );
   
   // if the new position is different, call SetProperty to make the change.
   if( memcmp( &this->pose_local, pose, sizeof( stg_pose_t)) != 0 )
@@ -1128,7 +1129,7 @@ void CEntity::SetPose( stg_pose_t* pose )
 // Set the entity's origin in the parent cs
 void CEntity::SetOrigin( stg_pose_t* pose )
 {
-  BASE_DEBUG3( "setting origin to [%.2f %.2f %.2f]", pose->x, pose->y, pose->a );
+  //ENT_DEBUG3( "setting origin to [%.2f %.2f %.2f]", pose->x, pose->y, pose->a );
   
   // if the new position is different, call SetProperty to make the change.
   if( memcmp( &this->pose_origin, pose, sizeof( stg_pose_t)) != 0 )
@@ -1141,7 +1142,7 @@ void CEntity::SetOrigin( stg_pose_t* pose )
 
 void CEntity::SetSize( stg_size_t* sz )
 {
-  BASE_DEBUG2( "setting size to %.2f %.2f", sz->x, sz->y );
+  //ENT_DEBUG2( "setting size to %.2f %.2f", sz->x, sz->y );
   
   // if the new position is different, call SetProperty to make the change.
   if( memcmp( &this->size, sz, sizeof(stg_size_t)) != 0 )
@@ -1172,7 +1173,7 @@ void CEntity::GetOrigin( stg_pose_t* pose )
 // Set the entity's velocity in the global cs
 void CEntity::SetVelocity( stg_velocity_t* vel )
 { 
-  BASE_DEBUG3( "setting velocity to [%.2f %.2f %.2f]", vel->x, vel->y, vel->a );
+  //ENT_DEBUG3( "setting velocity to [%.2f %.2f %.2f]", vel->x, vel->y, vel->a );
   memcpy( &this->velocity, vel, sizeof(stg_velocity_t) );
 }
 
@@ -1273,24 +1274,25 @@ void CEntity::NormalizeRects(  stg_rotrect_t* rects, int num )
 //////////////////////////////////////////////////////////////////////
 // set the rectangles that make up this ent's body
 void CEntity::SetRects( stg_rotrect_t* new_rects, int new_rect_count  )
-{
+{	
   // delete any old rects
   if( this->rect_array )
     {
       RenderRects( false );
-      stg_rotrect_array_free( this->rect_array );
+      g_array_free( this->rect_array, TRUE );
       this->rect_array = NULL;
     } 
   
-  this->rect_array = stg_rotrect_array_create();
-  assert( this->rect_array );
+  this->rect_array = g_array_sized_new( FALSE, TRUE, 
+					sizeof(stg_rotrect_t), 
+					new_rect_count );
   
-  // add the new rectangles to our array, one at a time 
-  for( int r=0; r<new_rect_count; r++ )
-    this->rect_array = stg_rotrect_array_append( this->rect_array, 
-					      &new_rects[r] );
-  
-  BASE_DEBUG1( "set %d rects", this->rect_array->rect_count );
+  g_assert( this->rect_array );
+
+  this->rect_array = g_array_append_vals( this->rect_array,
+					  new_rects, new_rect_count );
+   
+  //ENT_DEBUG1( "set %d rects", this->rect_array->len );
   
   // if this is root, add a unit rectangle outline
   /*
@@ -1371,9 +1373,11 @@ void CEntity::RenderRects( bool render )
   if( this->rect_array )
     {
       int r;
-      for( r=0; r<this->rect_array->rect_count; r++ )
+      for( r=0; r<this->rect_array->len; r++ )
 	{
-	  GetGlobalRect( &glob, &(this->rect_array->rects[r]) );
+	  GetGlobalRect( &glob, 
+			 &g_array_index(this->rect_array, stg_rotrect_t, r) );
+	  
 	  this->GetMatrix()->SetRectangle( glob.x, glob.y, glob.a, 
 					   glob.w, glob.h, this, render );
 	}  
@@ -1384,7 +1388,7 @@ void CEntity::RenderRects( bool render )
 // Generate scan data
 void CEntity::UpdateRangers( void )
 {   
-  BASE_DEBUG( "updating rangers" );
+  ENT_DEBUG( "updating rangers" );
 
   assert( this->rangers );
   
@@ -1431,20 +1435,12 @@ void CEntity::UpdateRangers( void )
 	    }	
 	}
       
-      //if( ent )
-      //{
-	  // poke the scan data into the ranger
       tran->range = range;
-      //tran->intensity_receive = (double)ent->laser_return;
-	  //}
-      
 
-      //tran->range = 0.4;
       stg_gui_rangers_render( this ); 
-
     }
 
-  BASE_DEBUG( "updating rangers complete" );
+  ENT_DEBUG( "updating rangers complete" );
 }
 
 ///////////////////////////////////////////////////////////////////////////

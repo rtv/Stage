@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.9 2003-08-25 00:57:19 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.10 2003-08-25 21:06:41 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -78,6 +78,7 @@ extern int quit;
 #define STG_LAYER_BODY 50
 #define STG_LAYER_DATA 60
 #define STG_LAYER_LIGHTS 70
+#define STG_LAYER_SENSORS 61
 
 bool enable_matrix = FALSE;
 bool enable_data = TRUE;
@@ -146,6 +147,14 @@ void stg_gui_menu_toggle_bodies( rtk_menuitem_t *item )
   stg_gui_window_t* win = (stg_gui_window_t*)item->userdata;  
   rtk_canvas_layer_show( win->canvas, STG_LAYER_BODY, 
 			 !win->canvas->layer_show[STG_LAYER_BODY] );
+}
+
+// shows or hides all the figure bodies in a window
+void stg_gui_menu_toggle_sensors( rtk_menuitem_t *item )
+{
+  stg_gui_window_t* win = (stg_gui_window_t*)item->userdata;  
+  rtk_canvas_layer_show( win->canvas, STG_LAYER_SENSORS, 
+			 !win->canvas->layer_show[STG_LAYER_SENSORS] );
 }
 
 // shows or hides all the lights in a window
@@ -242,6 +251,15 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
   rtk_menuitem_check(win->lights_item, 1);
   // the callback shows/hides all light figs in the window
   rtk_menuitem_set_callback( win->lights_item, stg_gui_menu_toggle_lights );
+
+  // sensors item
+  win->sensors_item = rtk_menuitem_create(win->view_menu, "Sensors", 1);  
+  win->sensors_item->userdata = (void*)win;
+  rtk_menuitem_check(win->sensors_item, 0);
+  rtk_menuitem_set_callback( win->sensors_item, stg_gui_menu_toggle_sensors );
+  
+  // sensors start out hidden - they'ye visual clutter
+  rtk_canvas_layer_show( win->canvas, STG_LAYER_SENSORS, 0 ); 
 
   // create the action menu
   /*
@@ -380,8 +398,6 @@ void stg_gui_model_blinkenlight( stg_gui_model_t* mod )
       mod->fig_light = NULL;
     }
   
-  printf( "blinkenlight %d\n", mod->ent->blinkenlight );
-
   // nothing to see here
   if( mod->ent->blinkenlight == STG_LIGHT_OFF )
     return;
@@ -536,20 +552,36 @@ stg_gui_model_t* stg_gui_model_create(  CEntity* ent )
 
   // add rects showing ranger positions
   if( ent->rangers )
-    for( int s=0; s< (int)ent->rangers->len; s++ )
-      {
-	stg_ranger_t* rngr = &g_array_index( ent->rangers, 
-						 stg_ranger_t, s );
-
-	printf( "drawing a ranger rect (%.2f,%.2f,%.2f)[%.2f %.2f]\n",
-		rngr->pose.x, rngr->pose.y, rngr->pose.a,
-		rngr->size.x, rngr->size.y );
-
-	rtk_fig_rectangle( mod->fig, 
-			   rngr->pose.x, rngr->pose.y, rngr->pose.a,
-			   rngr->size.x, rngr->size.y, 0 ); 
-      }
-
+    {
+      mod->fig_sensors = 
+	rtk_fig_create( mod->win->canvas, mod->fig, STG_LAYER_SENSORS );
+      
+      for( int s=0; s< (int)ent->rangers->len; s++ )
+	{
+	  stg_ranger_t* rngr = &g_array_index( ent->rangers, 
+					       stg_ranger_t, s );
+	  
+	  //printf( "drawing a ranger rect (%.2f,%.2f,%.2f)[%.2f %.2f]\n",
+	  //  rngr->pose.x, rngr->pose.y, rngr->pose.a,
+	  //  rngr->size.x, rngr->size.y );
+	  
+	  rtk_fig_rectangle( mod->fig_sensors, 
+			     rngr->pose.x, rngr->pose.y, rngr->pose.a,
+			     rngr->size.x, rngr->size.y, 0 ); 
+	  
+	  // show the FOV too
+	  double sidelen = rngr->size.x/2.0;
+	  
+	  double x1= rngr->pose.x + sidelen*cos(rngr->pose.a - rngr->fov/2.0 );
+	  double y1= rngr->pose.y + sidelen*sin(rngr->pose.a - rngr->fov/2.0 );
+	  double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + rngr->fov/2.0 );
+	  double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + rngr->fov/2.0 );
+	  
+	  rtk_fig_line(mod->fig_sensors, rngr->pose.x, rngr->pose.y, x1, y1 );
+	  rtk_fig_line(mod->fig_sensors, rngr->pose.x, rngr->pose.y, x2, y2 );
+	}
+    }
+  
   // conditionally add blinking bits
   stg_gui_model_blinkenlight( mod );
 
@@ -565,6 +597,7 @@ void stg_gui_model_destroy( stg_gui_model_t* mod )
   if( mod->fig_rects ) rtk_fig_destroy( mod->fig_rects );
   if( mod->fig_user ) rtk_fig_destroy( mod->fig_user );
   if( mod->fig_light ) rtk_fig_destroy( mod->fig_light );
+  if( mod->fig_sensors ) rtk_fig_destroy( mod->fig_sensors );
   if( mod->fig ) rtk_fig_destroy( mod->fig );
 }
 
@@ -761,36 +794,42 @@ void stg_gui_rangers_render( CEntity* ent )
    stg_gui_model_t* model = ent->guimod;
    rtk_canvas_t* canvas = model->fig->canvas;
 
-   if( model->fig_trans )
-     rtk_fig_destroy( model->fig_trans );
+   rtk_fig_t* fig = rtk_fig_create( canvas, NULL, STG_LAYER_DATA );
    
-   model->fig_trans = rtk_fig_create( canvas, NULL, STG_LAYER_DATA );
-   
+   rtk_fig_color_rgb32( fig, stg_lookup_color(STG_SONAR_COLOR) );
+
    for( int t=0; t < (int)ent->rangers->len; t++ )
      {
        stg_ranger_t* tran = &g_array_index( ent->rangers, 
 						stg_ranger_t, t );
-       
        stg_pose_t pz;
        memcpy( &pz, &tran->pose, sizeof(stg_pose_t) );
-       ent->LocalToGlobal( &pz );
+       ent->LocalToGlobal( &pz );       
        
-       rtk_fig_rectangle( model->fig_trans, pz.x, pz.y, pz.a, 
-			  tran->size.x, tran->size.y, 1 );
+       rtk_fig_arrow( fig, pz.x, pz.y, pz.a, tran->range, 0.05 );
        
-       //PRINT_WARN1( "range %.2f", tran->range );
-       //stg_pose_t hit;
-       // hit.x = tran->pose.x + tran->range * cos(tran->pose.a);
-       //hit.y = tran->pose.y + tran->range * sin(tran->pose.a);
-       //hit.a = 0.0;
+       // this code renders triangles indicating the beam width
+       /*
+	 double hitx =  pz.x + tran->range * cos(pz.a); 
+       double hity =  pz.y + tran->range * sin(pz.a);       
+       double sidelen = tran->range / cos(tran->fov/2.0);
+       
+       double x1 = pz.x + sidelen * cos( pz.a - tran->fov/2.0 );
+       double y1 = pz.y + sidelen * sin( pz.a - tran->fov/2.0 );
+       double x2 = pz.x + sidelen * cos( pz.a + tran->fov/2.0 );
+       double y2 = pz.y + sidelen * sin( pz.a + tran->fov/2.0 );
 
-       //ent->LocalToGlobal( &hit );
-       //rtk_fig_line( model->fig_data, pz.x, pz.y, hit.x, hit.y); 
+       rtk_fig_line( fig, pz.x, pz.y, x1, y1 );
+       rtk_fig_line( fig, pz.x, pz.y, x2, y2 );
+       rtk_fig_line( fig, x1, y1, x2, y2 );
+       */
 
-       rtk_fig_arrow( model->fig_trans, pz.x, pz.y, pz.a, tran->range, 0.05 );
+       // this code renders the ranger's body
+       //rtk_fig_rectangle( fig, pz.x, pz.y, pz.a, 
+       //	  tran->size.x, tran->size.y, 1 );
      }
 
-   //   rtk_canvas_render( canvas );
+   rtk_canvas_flash( canvas, fig, 2, 1 );
 }
 
 int stg_gui_los_msg_send( CEntity* ent, stg_los_msg_t* msg )

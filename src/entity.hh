@@ -21,7 +21,7 @@
  * Desc: Simulated robot with various sensors
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.19 2003-08-25 00:57:19 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.20 2003-08-25 21:06:41 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -104,7 +104,7 @@ protected:
   void InitLaser( void );
   void InitPosition( void );
 
-  stg_rotrect_array_t* rect_array;
+  GArray* rect_array;
 
   // copies the array of rects into this entity, allocating storage
   // and setting the rects_max members correctly
@@ -123,13 +123,13 @@ protected:
 public:
   
   int GetNumRects( void )
-  { return( this->rect_array == NULL ?  0 : this->rect_array->rect_count );};
+  { return( this->rect_array == NULL ?  0 : this->rect_array->len );};
   
   stg_rotrect_t* GetRects( void )
-  { return( this->rect_array == NULL ? NULL : this->rect_array->rects ); };
+  { return( this->rect_array == NULL ? NULL : (stg_rotrect_t*)this->rect_array->data ); };
   
   stg_rotrect_t* GetRect( int i )
-  { return( this->rect_array == NULL? NULL : &this->rect_array->rects[i] ); };
+  { return( this->rect_array == NULL? NULL : &g_array_index(this->rect_array, stg_rotrect_t, i)); };
   
   // Render the entity into the world
   //  protected: void Map(double px, double py, double pth);
@@ -314,15 +314,15 @@ CEntity* StgEntityFromId( stg_id_t id );
 
 
 #ifdef DEBUG
-#define BASE_DEBUG(S) printf("[%d:%s (%s) %p] "S" (%s %s)\n",this->id,this->name->str,this->token->str,this,__FILE__,__FUNCTION__);
-#define BASE_DEBUG1(S,A) printf("[%d:%s (%s) %p] "S" (%s %s)\n",this->id,this->name->str,this->token->str,this,A,__FILE__,__FUNCTION__);
-#define BASE_DEBUG2(S,A,B) printf("[%d:%s (%s) %p] "S" (%s %s)\n",this->id,this->name->str,this->token->str,this,A,B,__FILE__,__FUNCTION__);
-#define BASE_DEBUG3(S,A,B,C) printf("[%d:%s (%s) %p] "S" (%s %s)\n",this->id,this->name->str,this->token->str,this,A,B,C,__FILE__,__FUNCTION__);
+#define ENT_DEBUG(S) printf("[%d:%s (%s) %p] "S" (%s %s)\n",this->id,this->name->str,this->token->str,this,__FILE__,__FUNCTION__);
+#define ENT_DEBUG1(S,A) printf("[%d:%s (%s) %p] "S" (%s %s)\n",this->id,this->name->str,this->token->str,this,A,__FILE__,__FUNCTION__);
+#define ENT_DEBUG2(S,A,B) printf("[%d:%s (%s) %p] "S" (%s %s)\n",this->id,this->name->str,this->token->str,this,A,B,__FILE__,__FUNCTION__);
+#define ENT_DEBUG3(S,A,B,C) printf("[%d:%s (%s) %p] "S" (%s %s)\n",this->id,this->name->str,this->token->str,this,A,B,C,__FILE__,__FUNCTION__);
 #else
-#define BASE_DEBUG(S)
-#define BASE_DEBUG1(S,A)
-#define BASE_DEBUG2(S,A,B)
-#define BASE_DEBUG3(S,A,B,C)
+#define ENT_DEBUG(S)
+#define ENT_DEBUG1(S,A)
+#define ENT_DEBUG2(S,A,B)
+#define ENT_DEBUG3(S,A,B,C)
 #endif
 
 

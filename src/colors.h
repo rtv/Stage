@@ -19,7 +19,7 @@
 #define STG_POSITION_COLOR "red"
 #define STG_LASER_COLOR "blue"
 #define STG_WALL_COLOR "dark blue"
-#define STG_SONAR_COLOR "green"
+#define STG_SONAR_COLOR "gray70"
 #define STG_FIDUCIAL_COLOR "goldenrod2"
 
 

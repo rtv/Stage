@@ -602,21 +602,21 @@ int stg_model_get_origin( stg_client_t* cli, stg_id_t id, stg_pose_t* org )
 }
 
 int stg_model_set_rects(  stg_client_t* cli, stg_id_t id, 
-			  stg_rotrect_array_t* rects )
+			  stg_rotrect_t* rects, int count )
 {
   stg_property_t* reply = stg_send_property( cli, id,
 					     STG_PROP_ENTITY_RECTS, 
 					     STG_SETGET,
-					     rects->rects, 
-					     rects->rect_count*
-					     sizeof(stg_rotrect_t) );
+					     rects, 
+					     count*sizeof(stg_rotrect_t) );
 
   if( reply == NULL )
     return -1;
 
-  // infer the size of rectangles in the data from the size
-  memcpy( rects->rects, reply->data, reply->len );
-  rects->rect_count = reply->len / sizeof(stg_rotrect_t);
+  // todo - do something with the return data?
+  // infer the number of rectangles in the data from the size in bytes
+  //memcpy( rects->rects, reply->data, reply->len );
+  //rects->rect_count = reply->len / sizeof(stg_rotrect_t);
   stg_property_free( reply );
   
   return 0;
@@ -992,11 +992,10 @@ void stg_rect_array_free( stg_rect_array_t* r )
   free( r );
 }
 
-*/
 
 // ROTATED ROTRECTANGLES ///////////////////////////////////////////////
 
-stg_rotrect_array_t* stg_rotrect_array_create( void )
+stg_rotrect__t* stg_rotrect_array_create( void )
 {
   stg_rotrect_array_t *r = (stg_rotrect_array_t*)calloc(sizeof(stg_rotrect_array_t),1);
   assert(r);
@@ -1029,3 +1028,4 @@ void stg_rotrect_array_free( stg_rotrect_array_t* r )
   free( r->rects );
   free( r );
 }
+*/

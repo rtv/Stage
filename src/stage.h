@@ -248,6 +248,7 @@ typedef struct
   double x, y, a, w, h;
 } stg_rotrect_t; // rotated rectangle
 
+/*
 typedef struct
 {
   stg_rect_t* rects;
@@ -259,6 +260,7 @@ typedef struct
   stg_rotrect_t* rects;
   int rect_count;
 } stg_rotrect_array_t;
+*/
 
 typedef struct
 {
@@ -402,11 +404,11 @@ stg_model_type_t stg_model_type_from_string( char* str );
 stg_id_t stg_model_create( stg_client_t* cli, stg_entity_create_t* ent );
 int stg_model_destroy( stg_client_t* cli, stg_id_t id );
 
-stg_rotrect_array_t* stg_rotrect_array_create( void );
-void stg_rotrect_array_free( stg_rotrect_array_t* r );
+//stg_rotrect_array_t* stg_rotrect_array_create( void );
+//void stg_rotrect_array_free( stg_rotrect_array_t* r );
 // add a rectangle to the end of the array, allocating memory 
-stg_rotrect_array_t* stg_rotrect_array_append( stg_rotrect_array_t* array, 
-					 stg_rotrect_t* rect );
+//stg_rotrect_array_t* stg_rotrect_array_append( stg_rotrect_array_t* array, 
+//				 stg_rotrect_t* rect );
 
 stg_property_t* stg_send_property( stg_client_t* cli,
 				   int id, 
@@ -445,7 +447,7 @@ int stg_model_get_neighbor_bounds( stg_client_t* cli, stg_id_t id,
 				   stg_bounds_t* data );
 
 int stg_model_set_rects(  stg_client_t* cli, stg_id_t id, 
-			  stg_rotrect_array_t* rects );
+			  stg_rotrect_t* rects, int count );
 
 int stg_model_set_rangers( stg_client_t* cli, stg_id_t id, 
 			       stg_ranger_t* trans, int count );

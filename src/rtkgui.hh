@@ -69,6 +69,7 @@ typedef struct
   rtk_menuitem_t *objects_item;
   rtk_menuitem_t *data_item;
   rtk_menuitem_t *lights_item;
+  rtk_menuitem_t *sensors_item;
 
   // The action menu
   rtk_menu_t* action_menu;
@@ -109,8 +110,7 @@ typedef struct
   bool grid_enable;
   double grid_major, grid_minor;
   
-  rtk_fig_t *fig, *fig_rects, *fig_grid, *fig_user, *fig_trans, *fig_light;   
-
+  rtk_fig_t *fig, *fig_rects, *fig_grid, *fig_user, *fig_sensors, *fig_light;  
   int movemask;
   
   //int type; // the model type
