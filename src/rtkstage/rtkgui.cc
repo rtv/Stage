@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.12 2002-11-11 01:29:23 inspectorg Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.13 2002-11-11 02:25:54 inspectorg Exp $
  */
 
 
@@ -131,6 +131,7 @@ void GuiEntityPropertyChange( CEntity* ent, EntityProperty prop )
 
 void CWorld::AddToMenu( stage_menu_t* menu, CEntity* ent, int check )
 {
+  /* BROKEN
   assert( menu );
   assert( ent );
 
@@ -141,39 +142,53 @@ void CWorld::AddToMenu( stage_menu_t* menu, CEntity* ent, int check )
 	    rtk_menuitem_create( menu->menu, ent->lib_entry->token, 1 ));
   
   rtk_menuitem_check( menu->items[ ent->lib_entry->type_num ], check );
+  */
 }
+
 
 void CWorld::AddToDataMenu(  CEntity* ent, int check )
 {
+  /* BROKEN
   assert( ent );
   AddToMenu( &this->data_menu, ent, check );
+  */
 }
 
 void CWorld::AddToDeviceMenu(  CEntity* ent, int check )
 {
+  /* BROKEN
   assert( ent );
   AddToMenu( &this->device_menu, ent, check );
+  */
 }
 
-  // devices check this to see if they should display their data
+// devices check this to see if they should display their data
 bool CWorld::ShowDeviceData( int devtype )
-{ 
+{
+  return rtk_menuitem_ischecked(this->data_item);
+  
+  /* BROKEN
   rtk_menuitem_t* menu_item = data_menu.items[ devtype ];
   
   if( menu_item )
     return( rtk_menuitem_ischecked( menu_item ) );  
   else // if there's no option in the menu, display this data
     return true;
+  */
 }
 
 bool CWorld::ShowDeviceBody( int devtype )
 {
+  return rtk_menuitem_ischecked(this->objects_item);
+
+  /* BROKEN
   rtk_menuitem_t* menu_item = device_menu.items[ devtype ];
   
   if( menu_item )
     return( rtk_menuitem_ischecked( menu_item ) );  
   else // if there's no option in the menu, display this data
-    return true;    
+    return true;
+  */
 }
 
 
@@ -296,11 +311,15 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
 
   // create the view menu items and set their initial checked state
   this->grid_item = rtk_menuitem_create(this->view_menu, "Grid", 1);
-  rtk_menuitem_check(this->grid_item, showgrid);
-
   this->matrix_item = rtk_menuitem_create(this->view_menu, "Matrix", 1);
+  this->objects_item = rtk_menuitem_create(this->view_menu, "Objects", 1);
+  this->data_item = rtk_menuitem_create(this->view_menu, "Data", 1);
+  
+  rtk_menuitem_check(this->grid_item, showgrid);
   rtk_menuitem_check(this->matrix_item, 0);
-
+  rtk_menuitem_check(this->objects_item, 1);
+  rtk_menuitem_check(this->data_item, 1);
+  
   // create the action menu
   this->action_menu = rtk_menu_create(this->canvas, "Action");
   this->subscribedonly_item = rtk_menuitem_create(this->action_menu, 
@@ -308,6 +327,7 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
 
   rtk_menuitem_check(this->subscribedonly_item, subscribedonly);
 
+  /* BROKEN
   //zero the view menus
   memset( &device_menu,0,sizeof(stage_menu_t));
   memset( &data_menu,0,sizeof(stage_menu_t));
@@ -321,7 +341,7 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
           rtk_menu_create_sub(this->view_menu, "Object"));
 
   // each device adds itself to the correct view menus in its rtkstartup()
-  
+  */
   
   // Create the grid
   this->fig_grid = rtk_fig_create(this->canvas, NULL, -49);
@@ -413,10 +433,9 @@ void CWorld::RtkUpdate()
   // Process events
   rtk_app_main_loop(this->app);
 
-  // Run the gui at a fixed rate (in simulator time).
+  // Refresh the gui at a fixed rate (in simulator time).
   if (this->m_sim_time < this->rtk_update_time + 1 / this->rtk_update_rate)
     return;
-
   this->rtk_update_time = 
     this->m_sim_time - fmod(this->m_sim_time, 1 / this->rtk_update_rate);
   
@@ -488,44 +507,6 @@ void CWorld::RtkMenuHandling()
 
   // Update movie menu
   this->RtkUpdateMovieMenu();
-  
-  /* REMOVE
-  // Start/stop movie (x1)
-  if (rtk_menuitem_isactivated(this->movie_x1_menuitem))
-  {
-    if (rtk_menuitem_ischecked(this->movie_x1_menuitem))
-    {
-      snprintf(filename, sizeof(filename), "stage-%03d.mpg", this->movie_count++);
-      rtk_canvas_movie_start(this->canvas, filename, this->rtk_update_rate, 1);
-      rtk_menuitem_enable(this->movie_x2_menuitem, 0);
-    }
-    else
-    {
-      rtk_canvas_movie_stop(this->canvas);
-      rtk_menuitem_enable(this->movie_x2_menuitem, 1);
-    }
-  }
-  if (rtk_menuitem_ischecked(this->movie_x1_menuitem))
-    rtk_canvas_movie_frame(this->canvas);
-
-  // Start/stop movie (x2)
-  if (rtk_menuitem_isactivated(this->movie_x2_menuitem))
-  {
-    if (rtk_menuitem_ischecked(this->movie_x2_menuitem))
-    {
-      snprintf(filename, sizeof(filename), "stage-%03d.mpg", this->movie_count++);
-      rtk_canvas_movie_start(this->canvas, filename, this->rtk_update_rate, 2);
-      rtk_menuitem_enable(this->movie_x1_menuitem, 0);
-    }
-    else
-    {
-      rtk_canvas_movie_stop(this->canvas);
-      rtk_menuitem_enable(this->movie_x1_menuitem, 1);
-    }
-  }
-  if (rtk_menuitem_ischecked(this->movie_x2_menuitem))
-    rtk_canvas_movie_frame(this->canvas);
-  */
   
   // Show or hide the grid
   if (rtk_menuitem_ischecked(this->grid_item))

@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.46 2002-11-07 00:02:27 rtv Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.47 2002-11-11 02:25:54 inspectorg Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -620,16 +620,16 @@ int CPlayerEntity::SetProperty( int con, EntityProperty property,
   assert( (int)len < MAX_PROPERTY_DATA_LEN );
 
   switch( property )
-    {
+  {
     case PropPlayerSubscriptions:
       PRINT_DEBUG1( "PLAYER SUBSCRIPTIONS %d", *(int*) value);
       
       if( m_info_io )
-	{
-	  Lock();
-	  m_info_io->subscribed = *(int*)value;
-	  Unlock();
-	}      
+      {
+        Lock();
+        m_info_io->subscribed = *(int*)value;
+        Unlock();
+      }      
       break;
       
     case PropPlayerId:
@@ -646,26 +646,26 @@ int CPlayerEntity::SetProperty( int con, EntityProperty property,
       break;
       
     case PropConfig: // copy the  playerqueue's external memory chunk
-      { 
-	Lock();
-	size_t len = m_config_len * sizeof(playerqueue_elt_t);
-	memcpy( m_config_io, value, len ); 
-	Unlock();
-      }
-      break;
+    { 
+      Lock();
+      size_t len = m_config_len * sizeof(playerqueue_elt_t);
+      memcpy( m_config_io, value, len ); 
+      Unlock();
+    }
+    break;
   
     case PropReply:
-      { 
-	Lock();
-	size_t len = m_reply_len * sizeof(playerqueue_elt_t);
-	memcpy( m_reply_io, value, len ); 
-	Unlock();
-      }
-      break;
+    { 
+      Lock();
+      size_t len = m_reply_len * sizeof(playerqueue_elt_t);
+      memcpy( m_reply_io, value, len ); 
+      Unlock();
+    }
+    break;
       
     default: // assume it'll be handled by CEntity::SetProperty
       break; 
-    }
+  }
 
   // even if we handled it, we still call the basic SetProperty in
   // order to set the dirty flags correctly
@@ -676,10 +676,10 @@ int CPlayerEntity::SetProperty( int con, EntityProperty property,
 int CPlayerEntity::GetProperty( EntityProperty property, void* value )
 { 
   PRINT_DEBUG3( "finding property %d for entity (%d %s)", 
-		property, this->stage_id, this->lib_entry->token );
+                property, this->stage_id, this->lib_entry->token );
 
   printf( "finding property %d for entity (%d %s)\n", 
-	  property, this->stage_id, this->lib_entry->token );
+          property, this->stage_id, this->lib_entry->token );
 
   assert( value );
 
@@ -719,7 +719,7 @@ int CPlayerEntity::GetProperty( EntityProperty property, void* value )
     }
     break;
     
-  case PropReply:
+    case PropReply:
     { 
       Lock();
       size_t len = m_reply_len * sizeof(playerqueue_elt_t);

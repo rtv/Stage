@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.94 2002-11-09 02:32:34 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.95 2002-11-11 02:25:54 inspectorg Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -1120,8 +1120,8 @@ void CEntity::RtkStartup()
   assert( m_world );
 
   PRINT_DEBUG2("RTK STARTUP %s %s",
-	       this->lib_entry->token,
-	       m_parent_entity ? "" : " - ROOT" );
+               this->lib_entry->token,
+               m_parent_entity ? "" : " - ROOT" );
 
   // Create a figure representing this entity
   if( m_parent_entity == NULL )
@@ -1157,7 +1157,7 @@ void CEntity::RtkStartup()
   this->GetBoundingBox( xmin, ymin, xmax, ymax );
   
   rtk_fig_t* boundaries = rtk_fig_create( m_world->canvas, NULL, 99);
-   double width = xmax - xmin;
+  double width = xmax - xmin;
   double height = ymax - ymin;
   double xcenter = xmin + width/2.0;
   double ycenter = ymin + height/2.0;
@@ -1172,13 +1172,13 @@ void CEntity::RtkStartup()
   {
     case ShapeRect:
       rtk_fig_rectangle(this->fig, 
-			this->origin_x, this->origin_y, 0, 
-			this->size_x, this->size_y, false);
+                        this->origin_x, this->origin_y, 0, 
+                        this->size_x, this->size_y, false);
       break;
     case ShapeCircle:
       rtk_fig_ellipse(this->fig, 
-		      this->origin_x, this->origin_y, 0,  
-		      this->size_x, this->size_y, false);
+                      this->origin_x, this->origin_y, 0,  
+                      this->size_x, this->size_y, false);
       break;
     case ShapeNone: // no shape
       break;
@@ -1187,34 +1187,34 @@ void CEntity::RtkStartup()
 
   // everything except the root object has a label
   if( m_parent_entity )
-    {
-      // Create the label
-      // By default, the label is not shown
-      this->fig_label = rtk_fig_create(m_world->canvas, this->fig, 51);
-      rtk_fig_show(this->fig_label, false);    
-      rtk_fig_movemask(this->fig_label, 0);
+  {
+    // Create the label
+    // By default, the label is not shown
+    this->fig_label = rtk_fig_create(m_world->canvas, this->fig, 51);
+    rtk_fig_show(this->fig_label, false);    
+    rtk_fig_movemask(this->fig_label, 0);
       
-      char label[1024];
-      char tmp[1024];
+    char label[1024];
+    char tmp[1024];
       
-      label[0] = 0;
-      snprintf(tmp, sizeof(tmp), "%s %s", 
-	       this->name, this->lib_entry->token );
-      strncat(label, tmp, sizeof(label));
+    label[0] = 0;
+    snprintf(tmp, sizeof(tmp), "%s %s", 
+             this->name, this->lib_entry->token );
+    strncat(label, tmp, sizeof(label));
       
-      rtk_fig_color_rgb32(this->fig, this->color);
-      rtk_fig_text(this->fig_label,  0.75 * size_x,  0.75 * size_y, 0, label);
+    rtk_fig_color_rgb32(this->fig, this->color);
+    rtk_fig_text(this->fig_label,  0.75 * size_x,  0.75 * size_y, 0, label);
       
-      // attach the label to the main figure
-      // rtk will draw the label when the mouse goes over the figure
-      this->fig->mouseover_fig = fig_label;
+    // attach the label to the main figure
+    // rtk will draw the label when the mouse goes over the figure
+    this->fig->mouseover_fig = fig_label;
       
-      // we can be moved only if we are on the root node
-      if (m_parent_entity != this->m_world->GetRoot() )
-	rtk_fig_movemask(this->fig, 0);
-      else
-	rtk_fig_movemask(this->fig, this->movemask);  
-    }
+    // we can be moved only if we are on the root node
+    if (m_parent_entity != this->m_world->GetRoot() )
+      rtk_fig_movemask(this->fig, 0);
+    else
+      rtk_fig_movemask(this->fig, this->movemask);  
+  }
 
   // do our children after we're set
   CHILDLOOP( child ) child->RtkStartup();
