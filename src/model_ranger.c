@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.17 $
+//  $Revision: 1.18 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -46,7 +46,7 @@ void model_ranger_register(void)
 
 void model_ranger_return_init( model_t* mod )
 {
-  stg_bool_t val = TRUE;
+  stg_bool_t val = STG_DEFAULT_RANGERRETURN;
   model_set_prop_generic( mod, STG_PROP_RANGERRETURN, &val, sizeof(val) );
 }
 

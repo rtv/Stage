@@ -27,6 +27,7 @@
 #define STG_LASER_COLOR "light blue"
 #define STG_LASER_GEOM_COLOR "blue"
 #define STG_LASER_CFG_COLOR "light steel blue"
+#define STG_LASER_BRIGHT_COLOR "blue"
 
 #define STG_FIDUCIAL_COLOR "lime green"
 #define STG_FIDUCIAL_CFG_COLOR "green"

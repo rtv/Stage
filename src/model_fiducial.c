@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.10 $
+//  $Revision: 1.11 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -123,7 +123,7 @@ int model_fiducial_data_shutdown( model_t* mod )
   //PRINT_WARN( "fiducial shutdown" );
   
   model_remove_prop_generic( mod, STG_PROP_FIDUCIALDATA );
- model_fiducial_data_render( mod);
+  model_fiducial_data_render( mod);
   return 0;
 }
 
@@ -167,11 +167,11 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
 			   hispose.x, hispose.y, 
 			   him->world->matrix, PointToPoint );
   
-  // iterate until we hit something solid
+  // iterate until we hit something 
   model_t* hitmod;
   while( (hitmod = itl_next( itl )) ) 
     {
-      if( hitmod != mfb->mod && model_obstacle_get(hitmod) ) 
+      if( hitmod != mfb->mod )//&& model_obstacle_get(hitmod) ) 
 	break;
     }
   
@@ -186,11 +186,15 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
       stg_fiducial_t fid;      
       fid.range = range;
       fid.bearing = NORMALIZE( hisbearing - mfb->pose.a);
-      fid.id = range < mfb->cfg->max_range_id ? him->id : 0;
       fid.geom.x = hisgeom->size.x;
       fid.geom.y = hisgeom->size.y;
       fid.geom.a = NORMALIZE( hispose.a - mfb->pose.a);
       
+      // if he's within ID range, get his fiducial.return value, else
+      // we see value 0
+      fid.id = range < mfb->cfg->max_range_id ? 
+	model_fiducial_return(him) : 0;
+
       g_array_append_val( mfb->fiducials, fid );
     }
 }
@@ -220,6 +224,8 @@ int model_fiducial_data_service( model_t* mod )
 		  mfb.fiducials->data, 
 		  mfb.fiducials->len * sizeof(stg_fiducial_t) );
   
+  //PRINT_WARN1( "setting fiducial data with %d bytes",  mfb.fiducials->len );
+
   g_array_free( mfb.fiducials, TRUE );
 
   return 0;

@@ -26,6 +26,7 @@ const char* stg_property_string( stg_id_t id )
 {
   switch( id )
     {
+    case STG_PROP_MASS: return "mass";break;
     case STG_PROP_BLINKENLIGHT: return "blinkenlight";break;
     case STG_PROP_BLOBCONFIG: return "blobconfig";break;
     case STG_PROP_BLOBDATA: return "blobdata";break;

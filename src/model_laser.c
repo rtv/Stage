@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.21 $
+//  $Revision: 1.22 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -51,10 +51,17 @@ void model_laser_register(void)
 
 void model_laser_return_init( model_t* mod )
 {
-  stg_laser_return_t val = LaserVisible;
+  stg_laser_return_t val = STG_DEFAULT_LASERRETURN;
   model_set_prop_generic( mod, STG_PROP_LASERRETURN, &val, sizeof(val) );
 }
 
+stg_laser_return_t model_laser_return( model_t* mod )
+{
+  stg_laser_return_t *val = 
+    model_get_prop_data_generic( mod, STG_PROP_LASERRETURN );
+  assert(val);
+  return *val;
+}
 
 void model_laser_config_init( model_t* mod )
 {
@@ -151,8 +158,7 @@ int model_laser_data_service( model_t* mod )
 	    continue;
 	  
 	  // Stop looking when we see something
-	  hisreturn = *(stg_laser_return_t*)
-	    model_get_prop_data_generic( hitmod, STG_PROP_LASERRETURN );
+	  hisreturn = model_laser_return(hitmod);
 	  
 	  if( hisreturn != LaserTransparent) 
 	    {
@@ -166,7 +172,8 @@ int model_laser_data_service( model_t* mod )
             
       // record the range in mm
       scan[t].range = (uint32_t)( range * 1000.0 );
-      scan[t].reflectance = hisreturn == LaserBright ? 4 : 1;
+      // if the object is bright, it has a non-zero reflectance
+      scan[t].reflectance = hisreturn >= LaserBright ? 1 : 0;
 
       itl_destroy( itl );
 
@@ -235,7 +242,6 @@ void model_laser_data_render( model_t* mod )
   if(  mod->subs[STG_PROP_LASERDATA] )
     {
       stg_geom_t* geom = model_geom_get(mod);
-      rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_COLOR) );
       rtk_fig_origin( fig, geom->pose.x, geom->pose.y, geom->pose.a );  
       stg_laser_config_t* cfg = model_laser_config_get(mod);
       
@@ -258,6 +264,8 @@ void model_laser_data_render( model_t* mod )
       double bearing = cfg->geom.pose.a - cfg->fov/2.0;
       stg_point_t* points = calloc( sizeof(stg_point_t), cfg->samples + 1 );
 
+      rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_BRIGHT_COLOR) );
+
       int s;
       for( s=0; s<cfg->samples; s++ )
 	{
@@ -269,9 +277,25 @@ void model_laser_data_render( model_t* mod )
 	  bearing += sample_incr;
 	}
 
+      rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_COLOR) );
       // hmm, what's the right cast to get rid of the compiler warning
       // for the points argument?
       rtk_fig_polygon( fig, 0,0,0, cfg->samples+1, points, LASER_FILLED );      
+
+
+      rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_BRIGHT_COLOR) );
+
+      // loop through again, drawing bright boxes on top of the polygon
+      for( s=0; s<cfg->samples; s++ )
+	{
+	  // if this hit point is bright, we draw a little box
+	  if( samples[s].reflectance > 0 )
+	    rtk_fig_rectangle( fig, 
+			       points[1+s].x, points[1+s].y, 0,
+			       0.04, 0.04, 1 );
+	}
+
+
 
       free( points );
     }

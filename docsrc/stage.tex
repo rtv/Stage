@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.18 2004-07-07 21:14:10 rtv Exp $
+% CVS: $Id: stage.tex,v 1.19 2004-07-15 16:10:47 rtv Exp $
 
 \documentclass[letter,11pt,twoside]{report}
 
@@ -868,11 +868,11 @@ The Laser sensor model simulates a scanning laser rangefinder.
 Name & Values & Description \\
 \hline
 
-\verb'laser.return' & \parbox{30mm}{\verb'"bright"' \verb'"visible"'
-\verb'"invisible"'} & controls how the model appears
-to a laser sensor. The \verb'"bright"' value indicates that the
-entity is a retro-reflector (and hence produces a high-intensity sample
-in the laser).\\
+\verb'laser.return' & \verb'int' & controls how the model appears to a
+laser sensor. Set to 0 to be invisible, 1 to be visible or 2 to be
+'bright', i.e. return a non-zero reflectance like a
+retroreflector. This bright setting is useful for picking out special
+objects in your laser scan.\\
 
 \verb'laser.pose' & \verb'[x y a]' & pose of the laser sensor in local CS.\\
 
@@ -893,10 +893,10 @@ field of view.\\
 \section{Fiducuial model}
 
 The Fiducial sensor model locates models that have a non-zero
-\verb'fidicial.return' property. It returns the identity, range, bearing,
-orientation and size of the detected fiducials (note that Player's
-fiducial interface does not return an individual size for each
-fiducial).
+\verb'fidicial.return' property. It returns the identity, range,
+bearing, orientation and size of the detected fiducials (note that
+Player's fiducial interface does not return an individual size for
+each fiducial.
 
 \subsubsection*{Properties}
 \begin{tabularx}{\columnwidth}{llX}
@@ -956,9 +956,8 @@ approximates real-world sonar and infrared rangefinders.
 Name & Values & Description \\
 \hline
 
-\verb'ranger.return' & \parbox{30mm}{\verb'"visible"'
-\verb'"invisible"'} & Specifies whether or not this entity will be
-detected by ranger sensors.\\
+\verb'ranger.return' & \verb'int' & Specifies whether or not this entity will be
+detected by ranger sensors. Set to 1 to be visible, 0 to be invisible.\\
 
 \verb'ranger.count' & \verb'integer' & The number of ranger
 transducers.\\ 
@@ -987,10 +986,10 @@ as ACTS and the CMUCam.
 \hline Name & Values & Description \\ 
 \hline 
 
-\verb'blob.return' & \parbox{30mm}{\verb'"visible"'
-\verb'"invisible"'} & Specifies whether or not this entity will be
-seen by a blobfinder; the channel in which we appear is determined by
-our \verb'color' property and the viewer's \verb'blob.channels'
+\verb'blob.return' & \verb'int' & Specifies whether or not this entity
+will be seen by a blobfinder; set to 1 to be visible, 0 to be
+invisible. The channel in which we appear is determined by our
+\verb'color' property and the viewer's \verb'blob.channels'
 property.\\
 
 \verb'blob.count' & \verb'integer' & the number of color channels to

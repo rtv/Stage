@@ -185,7 +185,7 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 	stg_model_prop_with_data( mod, STG_PROP_GEOM, &geom, sizeof(geom) );
       
       stg_bool_t obstacle;
-      obstacle = wf.ReadInt( section, "obstacle_return", STG_DEFAULT_OBSTACLERETURN );
+      obstacle = wf.ReadInt( section, "obstacle.return", STG_DEFAULT_OBSTACLERETURN );
       if( obstacle != STG_DEFAULT_OBSTACLERETURN ) 
 	stg_model_prop_with_data( mod, STG_PROP_OBSTACLERETURN, &obstacle, sizeof(obstacle) );
       
@@ -210,7 +210,21 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 
       if( lconf.geom.pose.x != -9999.0 )
 	stg_model_prop_with_data( mod, STG_PROP_LASERCONFIG, &lconf,sizeof(lconf));
-  
+      
+      // laser visibility
+      int laservis = 
+	wf.ReadInt(section, "laser.return", STG_DEFAULT_LASERRETURN );      
+      if( laservis != STG_DEFAULT_LASERRETURN )
+	stg_model_prop_with_data(mod, STG_PROP_LASERRETURN, 
+				 &laservis, sizeof(laservis) );
+      
+      // ranger visibility
+      stg_bool_t rangervis = 
+	wf.ReadInt( section, "ranger.return", STG_DEFAULT_RANGERRETURN );
+      if( rangervis != STG_DEFAULT_RANGERRETURN ) 
+	stg_model_prop_with_data( mod, STG_PROP_RANGERRETURN, 
+				  &rangervis, sizeof(rangervis) );
+      
       
       stg_blobfinder_config_t bcfg;
       memset( &bcfg, 0, sizeof(bcfg) );
@@ -347,10 +361,15 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       if( fcfg.min_range != -9999.0 )
 	stg_model_prop_with_data( mod, STG_PROP_FIDUCIALCONFIG, &fcfg, sizeof(fcfg) );
       
+      int fid_return = wf.ReadInt( section, "fiducial.return", -99999 );
+
+      if( fid_return != -99999 )
+	stg_model_prop_with_data( mod, STG_PROP_FIDUCIALRETURN, 
+				  &fid_return, sizeof(fid_return) );
+		
       stg_energy_config_t ecfg;
       ecfg.capacity 
 	= wf.ReadFloat(section, "energy.capacity", STG_DEFAULT_ENERGY_CAPACITY );
-      
       ecfg.probe_range 
 	= wf.ReadFloat(section, "energy.range", STG_DEFAULT_ENERGY_PROBERANGE );
       

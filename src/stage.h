@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.60 2004-07-07 21:14:10 rtv Exp $
+ * CVS: $Id: stage.h,v 1.61 2004-07-15 16:11:00 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -500,9 +500,11 @@ typedef struct
 typedef enum 
   {
     LaserTransparent = 0,
-    LaserVisible, 
-    LaserBright,
+    LaserVisible, // 1
+    LaserBright, // 2
   } stg_laser_return_t;
+
+#define STG_DEFAULT_LASERRETURN LaserVisible
 
 typedef struct
 {
