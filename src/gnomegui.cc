@@ -21,7 +21,7 @@
  * Desc: Gnome GUI world components for CWorld and CEntity
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: gnomegui.cc,v 1.1 2002-09-07 02:05:23 rtv Exp $
+ * CVS info: $Id: gnomegui.cc,v 1.2 2002-09-20 00:39:22 rtv Exp $
  */
 
 
@@ -51,18 +51,14 @@
 
 void CWorld::GuiAboutBox(GtkWidget *widget, gpointer data)                   
 {                       
-  GtkWidget* box = gnome_about_new(/*title: */ "Stage",                
-				   /*version: */VERSION,
-				   /*copyright: */ "(C) the Authors, 2000-2002",
-				   /*authors: */stage_authors,
-				   /*other comments: */
-				   "Funding & facilites:\n\tDARPA\n"
-				   "\tUniversity of Southern California\n"
-				   "\tHRL Laboratories LLC\n"
-				   "\nHomepage: http://playerstage.sourceforge.net\n"
-				   "\n\"All the World's a stage "
-				   "and all the men and women merely players\"",
-				   NULL);
+  GtkWidget* box = gnome_about_new( stage_name,                
+				    VERSION,
+				    stage_copyright,
+				    stage_comments,
+				    stage_authors,
+				    stage_documenters,
+				    stage_translators,
+				    stage_logo_pixbuf );
   gtk_widget_show(box);           
 } 
 
@@ -101,8 +97,8 @@ void CWorld::GuiStartup( void )
   gtk_widget_push_visual(gdk_rgb_get_visual());
   gtk_widget_push_colormap(gdk_rgb_get_cmap());
   // TODO - read which type to use from world file
-  this->g_canvas = GNOME_CANVAS(gnome_canvas_new()); // Xlib - fast
-  //this->g_canvas = GNOME_CANVAS(gnome_canvas_new_aa()); //  anti-aliased, slow
+  //this->g_canvas = GNOME_CANVAS(gnome_canvas_new()); // Xlib - fast
+  this->g_canvas = GNOME_CANVAS(gnome_canvas_new_aa()); //  anti-aliased, slow
   gtk_widget_pop_colormap();
   gtk_widget_pop_visual();
 
@@ -387,9 +383,8 @@ void CEntity::GuiStartup( void )
   switch( this->shape )
     {
     case ShapeRect:
-    case ShapeCircle: // TODO - implement circle
       //case ShapeNone:
-      
+      /*
       points1 = gnome_canvas_points_new(5);
       points1->coords[0] =  - size_x/2.0;
       points1->coords[1] =  - size_y/2.0;
@@ -402,28 +397,46 @@ void CEntity::GuiStartup( void )
       points1->coords[8] =  points1->coords[0]; 
       points1->coords[9] =  points1->coords[1]; 
 
-      this->g_body =  gnome_canvas_item_new(g_group,
+            this->g_body =  gnome_canvas_item_new(g_group,
 					   GNOME_TYPE_CANVAS_LINE,
 					   "points", points1,
 					   "fill_color_rgba", (this->color << 8)+255,
 					   "width_pixels", 1,
 					   NULL);
-      break;
-      /*this->g_body = 
+      */
+      this->g_body = 
 	gnome_canvas_item_new (g_group,
-			       // TODO - REPLACE THIS WITH ELLIPSE
-			       //gnome_canvas_rect_get_type(),
-			       // ELLIPSE DOESN'T HANDLE ROTATION
-			       //gnome_canvas_ellipse_get_type(),
+			       gnome_canvas_rect_get_type(),
 			       "x1", - size_x/2.0,
 			       "y1", - size_y/2.0,
 			       "x2", + size_x/2.0,
 			       "y2", + size_y/2.0,
-			       "fill_color_rgba", (this->color<<8)+255,
+			       "fill_color_rgba", (this->color<<8)+128,
+			       "outline_color_rgba", (this->color<<8)+255,
 			       "width_pixels", 1,
 			       NULL );
       break;
-      */
+
+
+
+      break;
+    case ShapeCircle: // TODO - implement circle
+      this->g_body = 
+	gnome_canvas_item_new (g_group,
+			       // TODO - REPLACE THIS WITH ELLIPSE
+			       ////gnome_canvas_rect_get_type(),
+			       // ELLIPSE DOESN'T HANDLE ROTATION
+			       gnome_canvas_ellipse_get_type(),
+			       "x1", - size_x/2.0,
+			       "y1", - size_y/2.0,
+			       "x2", + size_x/2.0,
+			       "y2", + size_y/2.0,
+			       "fill_color_rgba", (this->color<<8)+128,
+			       "outline_color_rgba", (this->color<<8)+255,
+			       "width_pixels", 1,
+			       NULL );
+      break;
+   
     case ShapeNone: // draw nothin'.
       break;
     }      

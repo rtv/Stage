@@ -9,12 +9,9 @@ RTKLDFLAGS  =
 endif
 
 if WITH_RTVG
-# a little sed magic to strip off the -I/usr/include that confuses gcc-3.1
-RTVGCPPFLAGS = `gnome-config --cflags gnome gnomeui | sed 's/-I\/usr\/include//'`
-#RTVGCPPFLAGS = $(GNOME2_CFLAGS)
+RTVGCPPFLAGS = $(GNOME2_CFLAGS)
 RTVGLDADD    =
-RTVGLDFLAGS  = `gnome-config --libs gnome gnomeui` 
-#RTVGLDFLAGS  = $(GNOME2_LIBS)
+RTVGLDFLAGS  = $(GNOME2_LIBS)
 else
 RTVGCPPFLAGS =
 RTVGLDADD    =

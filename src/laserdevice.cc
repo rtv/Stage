@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.66 2002-09-07 02:05:24 rtv Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.67 2002-09-20 00:39:22 rtv Exp $
  */
 
 #define DEBUG
@@ -215,15 +215,17 @@ size_t CLaserDevice::PutData( player_laser_data_t* data, size_t len )
     }
 
   // construct a polygon matching the lasersweep
-  assert( g_data = gnome_canvas_item_new ( g_group,
-					   gnome_canvas_line_get_type(),
-					   "points", points,
-					   "fill_color_rgba", (this->color << 8)+255,
-					   "width_pixels", 1,
-					   NULL ) );
+  assert( g_data = 
+	  gnome_canvas_item_new ( g_group,
+				  gnome_canvas_polygon_get_type(),
+				  "points", points,
+				  "fill_color_rgba", (this->color<<8)+32,
+				  "outline_color_rgba", (this->color<<8)+255,
+				  "width_pixels", 1,
+				  NULL ) );
   gnome_canvas_points_free(points);
 #endif
-
+  
 // and paste in the data
   return CPlayerEntity::PutData( data, len );
 }

@@ -49,23 +49,20 @@ AC_CHECK_FUNCS(inet_aton srand48 lrand48)
 #AC_CHECK_FUNCS(getcwd gethostname gettimeofday mkdir rmdir select socket strcspn strdup strerror)
 
 dnl should we include the RTK GUI?
-AC_ARG_WITH(gui,    [   --without-gui         Don't include the GUI],,
-with_gui=yes)
+AC_ARG_WITH(gui,    [   --without-gui         Don't include the GUI],,with_gui=yes)
 if test "x$with_gui" = "xyes"; then
   AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
 fi
 AM_CONDITIONAL(WITH_GUI, test x$with_gui = xyes)
 
-dnl - RTV in progress - check for presence of GNOME libs
-dnl PKG_CHECK_MODULES(GNOME2, libgnome-2.0 >= 2.0 libgnomeui-2.0 >= 2.0)
-dnl AC_SUBST(GNOME2_CFLAGS)
-dnl AC_SUBST(GNOME2_LIBS)
-
-dnl should we include the GNOME GUI?
-AC_ARG_WITH(rtvg,    [   --without-rtvg         Don't include the experimental GNOME GUI],,
-with_rtvg=yes)
+dnl should we include the GNOME2 GUI?
+AC_ARG_WITH(rtvg,    [   --with-rtvg         Compile in the experimental GNOME2 GUI],,with_rtvg=no)
 if test "x$with_rtvg" = "xyes"; then
   AC_DEFINE(RTVG,1,[include the RTVG GUI])
+  dnl - check for presence of GNOME2 libs
+  PKG_CHECK_MODULES(GNOME2, libgnomeui-2.0 libgnomecanvas-2.0)
+  AC_SUBST(GNOME2_CFLAGS)
+  AC_SUBST(GNOME2_LIBS)
 fi
 AM_CONDITIONAL(WITH_RTVG, test x$with_rtvg = xyes)
 
@@ -90,3 +87,12 @@ AC_OUTPUT(Makefile
           rtk2/Makefile 
           worlds/Makefile 
           tools/Makefile)
+
+
+
+
+
+
+
+
+
