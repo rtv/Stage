@@ -13,6 +13,7 @@
 \usepackage{fullpage}
 %\usepackage{epsf}
 \usepackage{epsfig}
+\usepackage{graphicx}
 % add nifty DRAFT watermark thingy in PS
 %\usepackage{draftcopy}
 
@@ -27,33 +28,37 @@
 
 \titlepage
 
-\begin{flushright}
-\begin{tabular}{r}
-{\bf USC Robotics Labs}\\
-University of Southern California\\
-Los Angeles, USA\\
-\end{tabular}
+ \begin{flushright}
+  {Player/Stage project}\\
+  \includegraphics{notext_ps_logo}
 \end{flushright}
 
-\vspace{6cm}
-\centerline{\huge{Stage}}
-\vspace{0.5cm}
-\centerline{\large{Version \VERSION\ User Manual}}
-\vspace{2cm}
+  \vspace{3cm}	
+  \centerline{ \Huge{Stage}}
+  \vspace{0.5cm}
+  \centerline{\Large{Version \VERSION\ User Manual}}
+  \vspace{2cm}
+  \centerline{\large   
+	\begin{tabular}{l}
+	  {\Large Richard T. Vaughan}\\Information Sciences Laboratory\\HRL Laboratories LLC\\Malibu, USA\\
+  	\end{tabular} \\ 
+	\begin{tabular}{r}
+	  {\Large Andrew Howard}\\USC Robotics Labs\\University of Southern California\\Los Angeles, USA\\
+	\end{tabular}
+	}
+  \vspace{1cm}
 
-\centerline{\large Richard T. Vaughan \\ Andrew Howard}
-\vspace{1cm}
+  \centerline{This document may not contain the most current documentation on}
+  \centerline{Stage.  For the latest documentation, consult the Player/Stage homepage:}
+  \centerline{{\tt http://playerstage.sourceforge.net}}
 
-\centerline{This document may not contain the most current documentation on}
-\centerline{Stage.  For the latest documentation, consult the Player/Stage homepage:}
-\centerline{{\tt http://robotics.usc.edu/player}}
+  \vspace{4cm}
 
-\vspace{4cm}
-
-\centerline{\today}
+ \centerline{\today}
 
 \tableofcontents
-\newpage
+%\newpage
+
 %\listoffigures
 %\newpage
 %\listoftables
@@ -76,25 +81,31 @@ Los Angeles, USA\\
     sonar, scanning laser rangefinders, vision (color blob detection),
     odometry, and both differential and omni-drive platforms.
 
-    Stage was created at the USC Robotics Research Labs to support
-    research into multi-agent intelligent autonomous systems.
+	Stage is designed to support research into multi-agent
+    intelligent autonomous systems.  Stage originated at the USC
+    Robotics Research Labs to . One of the authors (
 
   \section{How to get Stage}
 
-    The primary source for Player and Stage is:
+    The primary source for all things Player and Stage is:
       \begin{verbatim}
-      http://robotics.usc.edu/player
+      http://playerstage.sourceforge.net
+      \end{verbatim}	
+   Official releases are available as source tarballs at:
+      \begin{verbatim}
+      http://playerstage.sourceforge.net
       \end{verbatim}
-    The downloads page contains source tarballs for both
-    stable and unstable (bleeding edge) releases.
+   The current development source is available by anonymous CVS from:
+      \begin{verbatim}
+      http://playerstage.sourceforge.net
+      \end{verbatim}
+The current release is Stage-\VERSION.
 
   \section{What's in the Package?}
 
-    In the tarball you will find:
+    In the release tarball you will find:
       \begin{itemize}    
       \item stage    - the simulation engine.
-      \item xs       - an X GUI for Stage
-      \item rtkstage - a version of Stage with a built-in GUI based on the RTK library
       %\item manager  - a program for synchronizing several Stages distributed across
       %      multiple hosts. Experimental.
       %\item truthlog - a utility for logging the positions of all Stage's objects
@@ -110,7 +121,8 @@ Los Angeles, USA\\
     variety of set-ups.
 
     Requires: Player [http://robotics.usc.edu/player/]
-              TCP/IP, POSIX threads, X11R6
+              TCP/IP, POSIX threads.
+	Optional (but highly recommended): X11R6, GTK++.
   
   \section{Related Packages}
 
@@ -137,12 +149,12 @@ Los Angeles, USA\\
 
     \noindent Stage was created by:
       \begin{itemize}
-      \item[] Richard Vaughan
-      \item[] Andrew Howard
-      \item[] Brian Gerkey
-      \item[] Kasper Stoy
-      \item[] Boyoon Jung
-      \item[] Jakob Fredslund
+      \item[] Richard Vaughan [rtv@sourceforge.net]
+      \item[] Andrew Howard [inspectorg@sourceforge.net]
+      \item[] Brian Gerkey [gerkey@sourceforge.net]
+      \item[] Kasper Stoy [kaspers@robotics.usc.edu]
+      \item[] Boyoon Jung [boyoon@robotics.usc.edu]
+      \item[] Jakob Fredslund [jakobf@robotics.usc.edu]
       \end{itemize}
 
   \section{Bugs}
@@ -501,4 +513,6 @@ world file examples.
 \end{tabularx}
 
 
+\chapter*{Acknowledgements}
+Player/Stage development is funded by DARPA under the Mobile Autonomous Robot Software
 \end{document}

@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.57 2002-06-10 04:57:49 rtv Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.58 2002-06-10 16:04:04 rtv Exp $
  */
 
 #define DEBUG
@@ -406,7 +406,7 @@ void CLaserDevice::RtkUpdate()
       double gx, gy, gth;
       GetGlobalPose(gx, gy, gth);
 
-      rtk_fig_origin( this->scan_fig, gx, gy, gth - M_PI/2.0 );
+      rtk_fig_origin( this->scan_fig, gx, gy, gth);
       
       // we got it, so parse out the data and display it
       short min_ang_deg = ntohs(data.min_angle);
@@ -415,20 +415,21 @@ void CLaserDevice::RtkUpdate()
 	
       double min_ang_rad = DTOR( (double)min_ang_deg ) / 100.0;
       double max_ang_rad = DTOR( (double)max_ang_deg ) / 100.0;
-	
+
       double incr = (double)(max_ang_rad - min_ang_rad) / (double)samples;
 	
       double lx = 0.0;
       double ly = 0.0;
 
+      double bearing = min_ang_rad;
       for( int i=0; i < (int)samples; i++ )
 	{
 	  // get range, converting from mm to m
 	  unsigned short range_mm = ntohs(data.ranges[i]) & 0x1FFF;
 	  double range_m = (double)range_mm / 1000.0;
 	  
-	  double bearing = i * incr;
-	  
+	  bearing += incr;
+
 	  double px = range_m * cos(bearing);
 	  double py = range_m * sin(bearing);
 	  
