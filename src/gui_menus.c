@@ -324,8 +324,8 @@ void gui_window_menus_create( gui_window_t* win )
   // create the VIEW sub-menus
   win->menus[STG_MENU_VIEW_DATA] = 
     rtk_menu_create_sub(win->menus[STG_MENU_VIEW], "Data");
-  win->menus[STG_MENU_VIEW_GEOM] = 
-    rtk_menu_create_sub(win->menus[STG_MENU_VIEW], "Geometry");
+  //  win->menus[STG_MENU_VIEW_GEOM] = 
+  //rtk_menu_create_sub(win->menus[STG_MENU_VIEW], "Geometry");
   win->menus[STG_MENU_VIEW_CONFIG] = 
     rtk_menu_create_sub(win->menus[STG_MENU_VIEW], "Configuration");
 
@@ -361,7 +361,7 @@ void gui_window_menus_create( gui_window_t* win )
   win->mitems[STG_MITEM_VIEW_CONFIG_ENERGY] 
     = rtk_menuitem_create(win->menus[STG_MENU_VIEW_CONFIG], "Energy", 1);
 
-  win->mitems[STG_MITEM_VIEW_GEOM_LASER] 
+  /*  win->mitems[STG_MITEM_VIEW_GEOM_LASER] 
     = rtk_menuitem_create(win->menus[STG_MENU_VIEW_GEOM], "Laser", 1);
   win->mitems[STG_MITEM_VIEW_GEOM_RANGER] 
     = rtk_menuitem_create(win->menus[STG_MENU_VIEW_GEOM], "Ranger", 1);
@@ -371,7 +371,7 @@ void gui_window_menus_create( gui_window_t* win )
     = rtk_menuitem_create(win->menus[STG_MENU_VIEW_GEOM], "Blobfinder", 1);
   win->mitems[STG_MITEM_VIEW_GEOM_ENERGY] 
     = rtk_menuitem_create(win->menus[STG_MENU_VIEW_GEOM], "Energy", 1);
-
+  */
   
   win->mitems[STG_MITEM_VIEW_OBJECT]->userdata = (void*)STG_LAYER_BODY;
   win->mitems[STG_MITEM_VIEW_GRID]->userdata = (void*)STG_LAYER_GRID;
@@ -388,12 +388,12 @@ void gui_window_menus_create( gui_window_t* win )
   win->mitems[STG_MITEM_VIEW_CONFIG_NEIGHBORS]->userdata =(void*)STG_LAYER_NEIGHBORCONFIG;
   win->mitems[STG_MITEM_VIEW_CONFIG_ENERGY]->userdata =(void*)STG_LAYER_ENERGYCONFIG;
 
-  win->mitems[STG_MITEM_VIEW_GEOM_LASER]->userdata =(void*)STG_LAYER_LASERGEOM;
+  /*  win->mitems[STG_MITEM_VIEW_GEOM_LASER]->userdata =(void*)STG_LAYER_LASERGEOM;
   win->mitems[STG_MITEM_VIEW_GEOM_RANGER]->userdata =(void*)STG_LAYER_RANGERGEOM;
   win->mitems[STG_MITEM_VIEW_GEOM_BLOB]->userdata =(void*)STG_LAYER_BLOBGEOM;
   win->mitems[STG_MITEM_VIEW_GEOM_NEIGHBORS]->userdata =(void*)STG_LAYER_NEIGHBORGEOM;
   win->mitems[STG_MITEM_VIEW_GEOM_ENERGY]->userdata =(void*)STG_LAYER_ENERGYGEOM;
-
+  */
   
   // add the callbacks   
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_MOVIE_START], 
@@ -428,7 +428,7 @@ void gui_window_menus_create( gui_window_t* win )
 			     gui_menu_layer );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_DATA_ENERGY], 
 			     gui_menu_layer );
-
+  /*
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_GEOM_LASER], 
 			     gui_menu_layer );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_GEOM_RANGER], 
@@ -439,6 +439,7 @@ void gui_window_menus_create( gui_window_t* win )
 			     gui_menu_layer );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_GEOM_ENERGY], 
 			     gui_menu_layer );
+  */
 
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_CONFIG_LASER], 
 			     gui_menu_layer );
@@ -479,11 +480,13 @@ void gui_window_menus_create( gui_window_t* win )
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_CONFIG_BLOB], 0);    
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_CONFIG_ENERGY], 0);    
 
+  /*
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_GEOM_LASER], 1);
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_GEOM_RANGER], 1);
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_GEOM_NEIGHBORS], 1);
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_GEOM_BLOB], 1);    
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_GEOM_ENERGY], 1);    
+  */
 }
 
 void gui_window_menu_destroy( gui_window_t* win )

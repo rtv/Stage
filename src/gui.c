@@ -4,7 +4,8 @@
 #include <assert.h>
 #include <math.h>
 
-#undef DEBUG
+#define DEBUG
+//#undef DEBUG
 
 #include "config.h"
 #include "rtk.h"
@@ -299,8 +300,8 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
       //if( !gtk_events_pending() )
 	
       // only update simple objects on drag
-      //if( mod->lines->len < STG_LINE_THRESHOLD )
-      model_set_pose( mod, &pose );
+      if( mod->lines_count < STG_LINE_THRESHOLD )
+	model_set_pose( mod, &pose );
       
       // display the pose
       snprintf(txt, sizeof(txt), "Dragging: %s", gui_model_describe(mod)); 
@@ -340,55 +341,29 @@ void gui_model_create( model_t* model )
   PRINT_DEBUG( "gui model create" );
   
   gui_window_t* win = model->world->win;  
-  rtk_fig_t* parent_fig = win->bg;
+  rtk_fig_t* parent_fig = win->bg; // default parent
   
-  // attach to our parent's fig if there is one
+  // attach instead to our parent's fig if there is one
   if( model->parent )
     parent_fig = model->parent->gui.top;
   
-  gui_model_t* gmod = &model->gui;
-  memset( gmod, 0, sizeof(gui_model_t) );
+  // clean the structure
+  memset( &model->gui, 0, sizeof(gui_model_t) );
   
-  gmod->grid = NULL;
-  
-  gmod->top = 
+  model->gui.top = 
     rtk_fig_create( model->world->win->canvas, parent_fig, STG_LAYER_BODY );
 
-  gmod->geom = 
+  model->gui.geom = 
     rtk_fig_create( model->world->win->canvas, parent_fig, STG_LAYER_GEOM );
 
-  gmod->top->userdata = model;
+  model->gui.top->userdata = model;
 
-  rtk_fig_movemask( gmod->top,STG_DEFAULT_MOVEMASK );
-  rtk_fig_add_mouse_handler( gmod->top, gui_model_mouse );
-  
-  //gui_model_render( model );
+  gui_model_features( model );
 }
 
 gui_model_t* gui_model_figs( model_t* model )
 {
   return &model->gui;
-}
-
-// draw a model from scratch
-void gui_model_render( model_t* model )
-{
-  PRINT_DEBUG( "gui model render" );
-  
-  rtk_fig_t* fig = gui_model_figs(model)->top;
-  rtk_fig_clear( fig );
-  
-  stg_pose_t* pose = model_get_pose( model );
-  rtk_fig_origin( fig, pose->x, pose->y, pose->a );
-
-#if BOUNDINGBOX 
-  rtk_fig_color_rgb32( fig, stg_lookup_color(STG_BOUNDINGBOX_COLOR) );
-  rtk_fig_rectangle( fig, 0,0,0, model->size.x, model->size.y, 0 );
-#endif
-  
-  //gui_model_nose( model );
-  gui_model_geom( model );
-  //gui_model_grid( model );
 }
 
 void gui_model_destroy( model_t* model )
@@ -403,6 +378,75 @@ void gui_model_destroy( model_t* model )
   // todo - erase the property figs
 }
 
+
+// add a nose  indicating heading  
+void gui_model_features( model_t* mod )
+{
+  stg_guifeatures_t* gf = model_get_guifeatures( mod );
+
+  
+  PRINT_DEBUG4( "model %d gui features grid %d nose %d boundary mask %d",
+		(int)gf->grid, (int)gf->nose, (int)gf->boundary, (int)gf->movemask );
+
+  
+  gui_window_t* win = mod->world->win;
+  
+  // if we need a nose, draw one
+  if( gf->nose )
+    { 
+      rtk_fig_t* fig = gui_model_figs(mod)->top;      
+      rtk_fig_color_rgb32( fig, model_get_color(mod) );
+      
+      stg_geom_t* geom = model_get_geom(mod);
+      
+      // draw a line from the center to the front of the model
+      rtk_fig_line( fig, 
+		    geom->pose.x, 
+		    geom->pose.y, 
+		    geom->size.x/2, 0 );
+    }
+
+  rtk_fig_movemask( gui_model_figs(mod)->top, gf->movemask);  
+  
+  // only install a mouse handler if the object needs one
+  //(TODO can we remove mouse handlers dynamically?)
+  if( gf->movemask )    
+    rtk_fig_add_mouse_handler( gui_model_figs(mod)->top, gui_model_mouse );
+  
+  // if we need a grid and don't have one, make one
+  if( gf->grid && gui_model_figs(mod)->grid == NULL )
+    {
+      gui_model_figs(mod)->grid = 
+	rtk_fig_create( win->canvas, gui_model_figs(mod)->top, STG_LAYER_GRID);
+      
+      rtk_fig_color_rgb32( gui_model_figs(mod)->grid, 
+			   stg_lookup_color(STG_GRID_MAJOR_COLOR ) );
+      
+      stg_geom_t* geom = model_get_geom(mod);
+      
+      rtk_fig_grid( gui_model_figs(mod)->grid, 
+		    geom->pose.x, geom->pose.y, 
+		    geom->size.x, geom->size.y, 1.0  ) ;
+    }
+
+  
+  // if we have a grid and don't need one, destroy it
+  if( !gf->grid && gui_model_figs(mod)->grid )
+    {
+      rtk_fig_destroy( gui_model_figs(mod)->grid );
+      gui_model_figs(mod)->grid == NULL;
+    }
+
+  
+  if( gf->boundary )
+    {
+      stg_geom_t* geom = model_get_geom(mod);
+      
+      rtk_fig_rectangle( gui_model_figs(mod)->grid, 
+			 geom->pose.x, geom->pose.y, geom->pose.a, 
+			 geom->size.x, geom->size.y, 0 ); 
+    }
+}
 
 
 

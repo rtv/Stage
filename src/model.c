@@ -306,7 +306,7 @@ void model_map( model_t* mod, gboolean render )
 
 int model_update( model_t* mod )
 {
-  PRINT_DEBUG2( "updating model %d:%s", mod->id, mod->token );
+  //PRINT_DEBUG2( "updating model %d:%s", mod->id, mod->token );
   
   mod->interval_elapsed = 0;
 
@@ -485,6 +485,23 @@ int model_set_mass( model_t* mod, stg_kg_t* mass )
   memcpy( &mod->mass, mass, sizeof(mod->mass) );
   return 0;
 }
+
+stg_guifeatures_t* model_get_guifeatures( model_t* mod )
+{
+  return &mod->guifeatures;
+}
+
+
+int model_set_guifeatures( model_t* mod, stg_guifeatures_t* gf )
+{
+  memcpy( &mod->guifeatures, gf, sizeof(mod->guifeatures));
+  
+  // redraw the fancy features
+  gui_model_features( mod );
+
+  return 0;
+}
+
 
 
 //------------------------------------------------------------------

@@ -132,6 +132,7 @@ void gui_model_nose( model_t* model );
 void gui_model_rangers( model_t* mod );
 void gui_model_rangers_data( model_t* mod );
 
+void gui_model_features( model_t* mod );
 
 void gui_model_laser_data( model_t* mod );
 void gui_model_laser( model_t* mod );

@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.73 2004-08-26 03:33:51 rtv Exp $
+ * CVS: $Id: stage.h,v 1.74 2004-08-26 05:25:52 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -655,8 +655,13 @@ typedef struct
 
 // SOME DEFAULT VALUES FOR PROPERTIES -----------------------------------
 
-// basic
-#define STG_DEFAULT_MASS 10.0 
+// world
+#define STG_DEFAULT_RESOLUTION    0.02  // 2cm pixels
+#define STG_DEFAULT_INTERVAL_REAL 100   // msec between updates
+#define STG_DEFAULT_INTERVAL_SIM  100 
+
+// basic model
+#define STG_DEFAULT_MASS 10.0  // kg
 #define STG_DEFAULT_POSEX 0.0
 #define STG_DEFAULT_POSEY 0.0
 #define STG_DEFAULT_POSEA 0.0
@@ -700,6 +705,12 @@ typedef struct
 #define STG_DEFAULT_BLOB_PAN 0.0
 #define STG_DEFAULT_BLOB_TILT 0.0
 #define STG_DEFAULT_BLOB_ZOOM DTOR(60)
+
+// fiducialfinder
+#define STG_DEFAULT_FIDUCIAL_RANGEMIN 0
+#define STG_DEFAULT_FIDUCIAL_RANGEMAXID 5
+#define STG_DEFAULT_FIDUCIAL_RANGEMAXANON 8
+#define STG_DEFAULT_FIDUCIAL_FOV 180
  
 //  FUNCTION DEFINITIONS
 

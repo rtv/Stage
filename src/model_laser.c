@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.29 $
+//  $Revision: 1.30 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -163,10 +163,14 @@ void laser_render_data(  model_t* mod, void* data, size_t len )
     rtk_fig_clear(fig);
   else // create the figure, store it in the model and keep a local pointer
     fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_DATA,
-				 mod->gui.top, STG_LAYER_LASERDATA );
+				 NULL, STG_LAYER_LASERDATA );
   
+  stg_pose_t pose;
+  model_global_pose( mod, &pose );
+
+  rtk_fig_origin( fig, pose.x, pose.y, pose.a );  
+
   stg_geom_t* geom = &mod->geom;
-  rtk_fig_origin( fig, geom->pose.x, geom->pose.y, geom->pose.a );  
 
   assert(mod->cfg);
   assert(mod->cfg_len == sizeof(stg_laser_config_t));
