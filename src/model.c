@@ -13,7 +13,7 @@ Implements a model - the basic object of Stage simulation
 //#define DEBUG
 //#undef DEBUG
 
-#include "stage.h"
+#include "stage_internal.h"
 //#include "gui.h"
 //#include "raytrace.h"
 
@@ -72,6 +72,26 @@ int stg_model_create_name( stg_model_t* mod )
 
   return 0; //ok
 }
+
+
+stg_polygon_t* unit_polygon_create( void )
+{
+  stg_point_t pts[4];
+  pts[0].x = 0;
+  pts[0].y = 0;
+  pts[1].x = 1;
+  pts[1].y = 0;
+  pts[2].x = 1;
+  pts[2].y = 1;
+  pts[3].x = 0;
+  pts[3].y = 1;
+  
+  stg_polygon_t* poly = stg_polygon_create();
+  stg_polygon_set_points( poly, pts, 4 );
+  
+  return poly;
+}
+
 
 /// create a new model
 stg_model_t* stg_model_create( stg_world_t* world, 
@@ -162,7 +182,7 @@ stg_model_t* stg_model_create( stg_world_t* world,
   pts[2].y = 1;
   pts[3].x = 0;
   pts[3].y = 1;
-
+  
   stg_polygon_t* poly = stg_polygon_create();
   stg_polygon_set_points( poly, pts, 4 );
   stg_model_set_polygons( mod, poly, 1 );
@@ -373,21 +393,30 @@ void stg_model_map( stg_model_t* mod, gboolean render )
   if( count == 0 ) 
     return;
   
-  if( polys )
-    {
-      // get model's global pose
-      stg_pose_t org;
-      memcpy( &org, &mod->geom.pose, sizeof(org));
-      stg_model_local_to_global( mod, &org );
-      
-      stg_matrix_polygons( mod->world->matrix, 
-			   org.x, org.y, org.a,
-			   polys, count, 
-			   mod, render );  
-    }
+
+  // get model's global pose
+  stg_pose_t org;
+  memcpy( &org, &mod->geom.pose, sizeof(org));
+  stg_model_local_to_global( mod, &org );
+  
+  if( polys )    
+    stg_matrix_polygons( mod->world->matrix, 
+			 org.x, org.y, org.a,
+			 polys, count, 
+			 mod, render );  
   else
     PRINT_ERR1( "expecting %d polygons but have no data", (int)count );
+  
+  
+  if( mod->guifeatures.boundary )    
+    stg_matrix_rectangle( mod->world->matrix,
+			  org.x, org.y, org.a,
+			  mod->geom.size.x,
+			  mod->geom.size.y,
+			  mod, render );
+  
 }
+
 
 
 void model_update_cb( gpointer key, gpointer value, gpointer user )
@@ -431,3 +460,21 @@ void model_print_cb( gpointer key, gpointer value, gpointer user )
 }
 
 
+
+void stg_get_default_pose( stg_pose_t* pose )
+{
+  assert(pose);
+  pose->x = STG_DEFAULT_GEOM_POSEX;
+  pose->y = STG_DEFAULT_GEOM_POSEY;
+  pose->a = STG_DEFAULT_GEOM_POSEA;
+}
+
+void stg_get_default_geom( stg_geom_t* geom )
+{
+  assert(geom);
+  geom->pose.x = STG_DEFAULT_GEOM_POSEX;
+  geom->pose.y = STG_DEFAULT_GEOM_POSEY;
+  geom->pose.a = STG_DEFAULT_GEOM_POSEA;  
+  geom->size.x = STG_DEFAULT_GEOM_SIZEX;
+  geom->size.y = STG_DEFAULT_GEOM_SIZEY;
+}

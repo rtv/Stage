@@ -1,6 +1,6 @@
 
-# Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: everything.world,v 1.21 2004-12-03 05:26:21 rtv Exp $
+# Desc: Stage demo with lots of models. Works with everything.cfg.
+# CVS: $Id: everything.world,v 1.22 2004-12-09 01:34:44 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 

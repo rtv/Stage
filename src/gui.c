@@ -513,9 +513,13 @@ void gui_model_features( stg_model_t* mod )
     {
       stg_geom_t* geom = stg_model_get_geom(mod);
       
-      rtk_fig_rectangle( gui_model_figs(mod)->grid, 
+      rtk_fig_rectangle( gui_model_figs(mod)->top, 
 			 geom->pose.x, geom->pose.y, geom->pose.a, 
 			 geom->size.x, geom->size.y, 0 ); 
+			 
+      //rtk_fig_rectangle( gui_model_figs(mod)->top, 
+      //		 geom->pose.x, geom->pose.y, geom->pose.a, 
+      //		 20, 20, 1 );
     }
 }
 
@@ -578,11 +582,11 @@ void stg_model_render_polygons( stg_model_t* mod )
   size_t count=0;
   stg_polygon_t* polys = stg_model_get_polygons(mod,&count);
 
+  stg_geom_t* geom = stg_model_get_geom(mod);
+
   if( polys )
     {
       PRINT_DEBUG1( "rendering %d polygons", (int)count );
-      
-      stg_geom_t* geom = stg_model_get_geom(mod);
       
       int p;
       for( p=0; p<count; p++ )
@@ -594,6 +598,15 @@ void stg_model_render_polygons( stg_model_t* mod )
 			 polys[p].points->data,
 			 mod->world->win->fill_polygons );
     }
+  
+  if( mod->guifeatures.boundary )
+    {      
+      rtk_fig_rectangle( gui_model_figs(mod)->top, 
+			 geom->pose.x, geom->pose.y, geom->pose.a, 
+			 geom->size.x, geom->size.y, 0 ); 
+    }
+
+
 }
 
 /// render a model's global pose vector

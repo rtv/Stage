@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.70 2004-12-02 18:51:11 rtv Exp $
+// $Id: stagecpp.cc,v 1.71 2004-12-09 01:34:44 rtv Exp $
 
 //#define DEBUG
 
@@ -200,31 +200,38 @@ model
 
 */
 
+  
 void configure_model( stg_model_t* mod, int section )
 {
-  stg_pose_t pose;
-  pose.x = wf.ReadTupleLength(section, "pose", 0, STG_DEFAULT_POSEX );
-  pose.y = wf.ReadTupleLength(section, "pose", 1, STG_DEFAULT_POSEY );
-  pose.a = wf.ReadTupleAngle(section, "pose", 2, STG_DEFAULT_POSEA );      
-  stg_model_set_pose( mod, &pose );
-  
-  stg_geom_t geom;
-  geom.pose.x = wf.ReadTupleLength(section, "origin", 0, STG_DEFAULT_GEOM_POSEX );
-  geom.pose.y = wf.ReadTupleLength(section, "origin", 1, STG_DEFAULT_GEOM_POSEY);
-  geom.pose.a = wf.ReadTupleLength(section, "origin", 2, STG_DEFAULT_GEOM_POSEA );
-  //geom.size.x = wf.ReadTupleLength(section, "size", 0, STG_DEFAULT_GEOM_SIZEX );
-  //geom.size.y = wf.ReadTupleLength(section, "size", 1, STG_DEFAULT_GEOM_SIZEY );
-  geom.size.x = wf.ReadTupleLength(section, "size", 0, 0 );
-  geom.size.y = wf.ReadTupleLength(section, "size", 1, 0 );
+  stg_pose_t pose, pose_default;
+  stg_get_default_pose( &pose_default );
 
-  stg_model_set_geom( mod, &geom );
-      
+  pose.x = wf.ReadTupleLength(section, "pose", 0, pose_default.x );
+  pose.y = wf.ReadTupleLength(section, "pose", 1, pose_default.y ); 
+  pose.a = wf.ReadTupleAngle(section, "pose", 2,  pose_default.a );
+
+  if( memcmp( &pose, &pose_default, sizeof(pose))) // if different to default
+    stg_model_set_pose( mod, &pose );
+  
+  stg_geom_t geom, geom_default;
+  stg_get_default_geom( &geom_default );
+  
+  geom.pose.x = wf.ReadTupleLength(section, "origin", 0, geom_default.pose.x );
+  geom.pose.y = wf.ReadTupleLength(section, "origin", 1, geom_default.pose.y );
+  geom.pose.a = wf.ReadTupleLength(section, "origin", 2, geom_default.pose.a );
+  geom.size.x = wf.ReadTupleLength(section, "size", 0, geom_default.size.x );
+  geom.size.y = wf.ReadTupleLength(section, "size", 1, geom_default.size.x );
+  
+  if( memcmp( &geom, &geom_default, sizeof(geom))) // if different to default
+    stg_model_set_geom( mod, &geom );
+  
   stg_bool_t obstacle;
   obstacle = wf.ReadInt( section, "obstacle_return", STG_DEFAULT_OBSTACLERETURN );    
   stg_model_set_obstaclereturn( mod, &obstacle );
   
   stg_guifeatures_t gf;
-  gf.boundary = wf.ReadInt(section, "gui_boundary", STG_DEFAULT_GUI_BOUNDARY );
+  //gf.boundary = wf.ReadInt(section, "gui_boundary", STG_DEFAULT_GUI_BOUNDARY );
+  gf.boundary = wf.ReadInt(section, "gui_boundary", 1 );
   gf.nose = wf.ReadInt(section, "gui_nose", STG_DEFAULT_GUI_NOSE );
   gf.grid = wf.ReadInt(section, "gui_grid", STG_DEFAULT_GUI_GRID );
   gf.movemask = wf.ReadInt(section, "gui_movemask", STG_DEFAULT_GUI_MOVEMASK );

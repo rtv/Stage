@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.29 $
+//  $Revision: 1.30 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -377,9 +377,17 @@ int stg_model_set_polygons( stg_model_t* mod, stg_polygon_t* polys, size_t poly_
   // remove the old polygons
   g_array_set_size( mod->polygons, 0 );
   
+  
   // append the new polys
   g_array_append_vals( mod->polygons, polys, poly_count );
-    
+  
+  // if we need a boundary, add a unit rectangle to the polys
+  //if( mod->guifeatures.boundary )
+  //{
+  //  PRINT_WARN1( "adding a boundary to mod %s", mod->token );
+  //g_array_append_vals( mod->polygons, unit_polygon_create(), poly_count );
+  // }
+
   stg_model_render_polygons( mod );
 
   stg_model_map( mod, 1 ); // map the model into the matrix with the new polys

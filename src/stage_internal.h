@@ -136,7 +136,9 @@ stg_model_t* itl_first_matching( itl_t* itl,
 			    double x, double y, double a,
 			    stg_polygon_t* polys, int num_polys,
 			    void* object, int add );
-  
+
+  // creates a unit square polygon
+  stg_polygon_t* unit_polygon_create( void );
   
   /**@}*/
 

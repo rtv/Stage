@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.112 2004-12-02 18:51:10 rtv Exp $
+ * CVS: $Id: stage.h,v 1.113 2004-12-09 01:34:44 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -477,6 +477,14 @@ extern "C" {
   } stg_fiducial_t;
 
   // end property typedefs -------------------------------------------------
+
+  // get property structs with default values filled in --------------------
+  
+  void stg_get_default_pose( stg_pose_t* pose );
+  void stg_get_default_geom( stg_geom_t* geom );
+  
+  // end defaults --------------------------------------------
+  
 
   /// Structure that holds the GUI figure for each model
   typedef struct

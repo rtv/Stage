@@ -16,13 +16,19 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_driver.cc,v 1.12 2004-12-03 01:32:57 rtv Exp $
+ * $Id: stg_driver.cc,v 1.13 2004-12-09 01:34:44 rtv Exp $
  */
 
 // STAGE-1.4 DRIVER CLASS ///////////////////////////////
 //
 // creates a single static Stage client. This is subclassed for each
 // Player interface. Each instance shares the single Stage connection
+
+// TODO: collapse all stg_X drivers into a single driver with multiple
+// interfaces. Need to make sure the driver is fully reentrant
+// first.This would make Player's .cfg files easier to write, and
+// reduce the amount of Player driver code in Stage. - rtv.
+
 
 #define PLAYER_ENABLE_TRACE 0
 #define PLAYER_ENABLE_MSG 1
