@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.23 2002-09-16 23:44:34 gerkey Exp $
+ * CVS info: $Id: worldfile.cc,v 1.24 2002-10-16 20:50:09 gerkey Exp $
  */
 
 #include <assert.h>
@@ -1330,6 +1330,8 @@ int CWorldFile::GetProperty(int entity, const char *name)
 void CWorldFile::SetPropertyValue(int property, int index, const char *value)
 {
   //assert(property >= 0 && property < this->property_count);
+  if(property < 0 || property >= this->property_count)
+    return;
   CProperty *pproperty = this->properties + property;
   assert(index >= 0 && index < pproperty->value_count);
 
