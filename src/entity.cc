@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.15 $
+//  $Revision: 1.16 $
 //
 // Usage:
 //  (empty)
@@ -743,6 +743,9 @@ void CEntity::ComposeTruth( stage_truth_t* truth, int index )
   truth->id.index = m_player_index;
 
   truth->stage_type = m_stage_type;
+
+  // we don't want an echo
+  truth->echo_request = false;
 
   //truth->channel
   //if( channel_return < 1 )

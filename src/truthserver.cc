@@ -115,8 +115,10 @@ static void* TruthReader( void* arg )
 	  if( !truth.echo_request )
 	    // store it in the comparison database
 	    // to fool the writer thread into thinking we'cve sent this one before
-	    memcpy( &(con->database[ truth.stage_id ]), &truth, sizeof( truth ) );
-	  
+	    {
+	      truth.echo_request = false;
+	      memcpy( &(con->database[ truth.stage_id ]), &truth, sizeof( truth ) );
+	    }
 	  // we can't just impose the truth here as we're not
 	  // in sync with the main simulator thread, so:
 	  // copy the incoming truth into the update queue.

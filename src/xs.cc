@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.23 2001-09-23 18:59:36 vaughan Exp $
+ * $Id: xs.cc,v 1.24 2001-09-23 20:32:40 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -157,7 +157,7 @@ char* CXGui::StageNameOf( const xstruth_t& truth )
 
 void PrintStageTruth( stage_truth_t &truth )
 {
-  printf( "ID: %d (%s:%4d,%d,%d)\tPID:(%4d,%d,%d)\tpose: [%d,%d,%d]\tsize: [%d,%d]\t color: [%d,%d,%d]\n", 
+  printf( "ID: %d (%s:%4d,%d,%d)\tPID:(%4d,%d,%d)\tpose: [%d,%d,%d]\tsize: [%d,%d]\t color: [%d,%d,%d]\t echo: %d\n", 
 	  truth.stage_id,
 	  truth.hostname,
 	  truth.id.port, 
@@ -168,7 +168,8 @@ void PrintStageTruth( stage_truth_t &truth )
 	  truth.parent.index,
 	  truth.x, truth.y, truth.th,
 	  truth.w, truth.h,
-	  truth.red, truth.green, truth.blue );
+	  truth.red, truth.green, truth.blue,
+	  truth.echo_request);
   
   fflush( stdout );
 }
@@ -247,9 +248,12 @@ static void* TruthReader( void*)
 	 recv += r;
      }
      
-      //printf( "RECV: " );
-      //PrintStageTruth( truth );
-     
+      if( truth.echo_request )
+	{
+	  printf( "\nXS: warning - received an echo request in this truth: " );
+	  PrintStageTruth( truth );
+	}
+
       //pthread_mutex_lock( &incoming_mutex );
       incoming_queue.push( truth );
       //pthread_mutex_unlock( &incoming_mutex );
@@ -309,7 +313,7 @@ static void* TruthWriter( void* )
       
       //pthread_mutex_unlock( &outgoing_mutex );	  
       
-      usleep( 10000 );
+      usleep( 1000 ); // sleep for just a little bit
     }
 }
 

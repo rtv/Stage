@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.13 $
+//  $Revision: 1.14 $
 //
 // Usage:
 //  (empty)
@@ -36,8 +36,12 @@ CVisionBeacon::CVisionBeacon(CWorld *world, CEntity *parent)
 {   
     m_stage_type = VisionBeaconType;
 
-    channel_return = 0; // visible by default on ACTS ch.0
+    // set the Player IO sizes correctly for this type of Entity
+    m_data_len    = 0;
+    m_command_len = 0;
+    m_config_len  = 0;
 
+    channel_return = 0; // visible by default on ACTS ch.0
     laser_return = 1;
     obstacle_return = 1;
     sonar_return = 1;
@@ -49,6 +53,10 @@ CVisionBeacon::CVisionBeacon(CWorld *world, CEntity *parent)
     m_radius = 0.1; // our beacons are 10cm radius
     m_size_x = m_radius * 2.0;
     m_size_y = m_radius * 2.0;
+
+  // Set the initial map pose
+  //
+  m_map_px = m_map_py = m_map_pth = 0;
 }
 
 

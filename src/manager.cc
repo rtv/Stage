@@ -79,13 +79,12 @@ void Activity( int reading )
 
      
     char* buf = new char[ stages+1 ];
+    memset( buf, 0, stages+1 );
   
     for( int c=0; c<stages; c++ )
 //      // is this one ready to read?
       (servers[c].revents & POLLIN) ?  buf[c] = '!' : buf[c] = '.';
   
-    buf[c] = 0; // string terminator
-    
       printf( "\rActivity: %c %c [%s]", b, c, buf);
  
       //printf( "\rActivity: %c", c );
@@ -199,7 +198,7 @@ int main(int argc, char **argv)
 		{		  
 		  // foward the packet to the other servers 
 		  for(int j=0; j<stages; j++)
-		    if( j != i || truth.echo_request ) 
+		    if( j != i ) 
 		      v = write( servers[j].fd, &truth, sizeof(truth) );
 		}
 	      else
