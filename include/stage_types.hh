@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/stage_types.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.10 $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -42,7 +42,7 @@
 
 // size of char arrays for hostnames
 #define HOSTNAME_SIZE 32
-#define MILLION 1000000
+#define MILLION 1000000L
 
 #ifndef M_PI
 	#define M_PI        3.14159265358979323846
