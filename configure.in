@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.57 2004-09-24 20:58:29 rtv Exp $
+dnl $Id: configure.in,v 1.58 2004-10-11 05:54:49 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -48,7 +48,7 @@ dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
-AC_PROG_RANLIB
+dnl AC_PROG_RANLIB
 
 dnl Checks for header files of required libraries
 AC_CHECK_HEADERS(stdint.h strings.h)
