@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.24 2002-06-09 00:33:02 inspectorg Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.25 2002-06-09 06:31:16 rtv Exp $
  */
 
 #include <math.h>
@@ -227,8 +227,9 @@ void CSonarDevice::RtkUpdate()
   CEntity::RtkUpdate();
    
   // Get global pose
-  double gx, gy, gth;
-  GetGlobalPose(gx, gy, gth);
+  //double gx, gy, gth;
+  //GetGlobalPose(gx, gy, gth);
+  //rtk_fig_origin(this->scan_fig, gx, gy, gth );
 
   rtk_fig_clear(this->scan_fig);
 
@@ -236,7 +237,7 @@ void CSonarDevice::RtkUpdate()
   // the buffer instead of storing hit points in ::Update() - RTV
   player_sonar_data_t data;
   
-  if( Subscribed() > 0 )
+  if( Subscribed() > 0 && m_world->ShowDeviceData( this->stage_type) )
   {
     size_t res = GetData( &data, sizeof(data));
 
@@ -249,12 +250,13 @@ void CSonarDevice::RtkUpdate()
         double oth = this->sonars[s][2];
         LocalToGlobal(ox, oy, oth);
         
-        double range = (double) ntohs(data.ranges[s]);
-	    
+	// convert from integer mm to double m
+        double range = (double)ntohs(data.ranges[s]) / 1000.0;
+	
         double x1 = ox;
         double y1 = oy;
-        double x2 = x1 + range/1000.0 * cos(oth); 
-        double y2 = y1 + range/1000.0 * sin(oth);       
+        double x2 = x1 + range * cos(oth); 
+        double y2 = y1 + range * sin(oth);       
         rtk_fig_line(this->scan_fig, x1, y1, x2, y2 );
       }
     }

@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.hh,v 1.23 2002-06-07 17:29:45 inspectorg Exp $
+ * CVS info: $Id: laserdevice.hh,v 1.24 2002-06-09 06:31:15 rtv Exp $
  */
 
 #ifndef LASERDEVICE_HH
@@ -81,8 +81,9 @@ class CLaserDevice : public CEntity
   // Update the rtk gui
   protected: virtual void RtkUpdate();
   
-  // For drawing the laser scan
+  // For drawing the laser scan & intensity values
   private: rtk_fig_t *scan_fig;
+  private: rtk_fig_t *intensity_fig;
 
 #endif
   

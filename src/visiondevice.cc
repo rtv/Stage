@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.27 $
+//  $Author: rtv $
+//  $Revision: 1.28 $
 //
 // Usage:
 //  (empty)
@@ -25,7 +25,8 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include <math.h>
-//#include <iostream.h>
+#include <iostream.h>
+
 #include "world.hh"
 #include "visiondevice.hh"
 #include "ptzdevice.hh"
@@ -69,7 +70,17 @@ CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent)
 
   // Set the default channel-color mapping for ACTS
   memset(this->channel, 0, sizeof(StageColor) * ACTS_NUM_CHANNELS);
-  this->channel[0] = 0xFFFFFF;
+
+  //this->channel[0] = 0xFFFFFF;
+
+  // let's start with a reasonable set of color channels
+  // these get overwritten when specifiedby the worldfile
+  this->channel[0] = ::LookupColor( "red" );
+  this->channel[1] = ::LookupColor( "green" );
+  this->channel[2] = ::LookupColor( "blue" );
+  this->channel[3] = ::LookupColor( "yellow" );
+  this->channel[4] = ::LookupColor( "cyan" );
+  this->channel[5] = ::LookupColor( "magenta" );
 
   numBlobs = 0;
   memset( blobs, 0, MAXBLOBS * sizeof( ColorBlob ) );
@@ -78,6 +89,9 @@ CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent)
   m_hit_count = 0;
 #endif
 
+#ifdef INCLUDE_RTK2
+  vision_fig = NULL;
+#endif
 }
 
 
@@ -129,14 +143,15 @@ void CVisionDevice::Update( double sim_time )
   UpdateScan();
   
   // Generate ACTS data
-  //
-  size_t len = UpdateACTS();
+  
+  player_vision_data_t data;
+  memset( &data, 0, sizeof(data) );
 
+  size_t len = UpdateACTS( &data );
+  
   // Copy data to the output buffer
-  // no need to byteswap - this is single-byte data
-  //
-  if (len > 0)
-    PutData((void*)(&actsBuf), len);
+  //if (len > 0)
+  PutData( &data, sizeof(data) );
 }
 
 
@@ -187,79 +202,60 @@ void CVisionDevice::UpdateScan()
 #endif
   
   StageColor col;
-
+  
   for (int s = 0; s < m_scan_width; s++)
-  {
-    bzero(&col,sizeof(col));
-      
-    // Compute parameters of scan line
-    double px = ox;
-    double py = oy;
-    double pth = oth - s * dth;
-      
-    CLineIterator lit( px, py, pth, m_max_range, 
-                       m_world->ppm, m_world->matrix, PointToBearingRange );
-    
-    CEntity* ent;
-    double range = m_max_range;
-	
-    while( (ent = lit.GetNextEntity()) ) 
     {
-#ifdef DEBUG
-      printf("2?\n");
-#endif
+      // indicate no valid color found (MSB normally unused in 32bit RGB value)
+      col = 0xFF000000; 
       
-      // Ignore ourself, our ancestors and our descendents
-      if( ent == this || this->IsDescendent(ent) || ent->IsDescendent(this))
-        continue;
+      // Compute parameters of scan line
+      double px = ox;
+      double py = oy;
+      double pth = oth - s * dth;
+      
+      CLineIterator lit( px, py, pth, m_max_range, 
+			 m_world->ppm, m_world->matrix, PointToBearingRange );
+      
+      CEntity* ent;
+      double range = m_max_range;
+      
+      while( (ent = lit.GetNextEntity()) ) 
+	{
+	  // Ignore ourself, our ancestors and our descendents
+	  if( ent == this || this->IsDescendent(ent) || ent->IsDescendent(this))
+	    continue;
+	  
+	  // Ignore transparent things
+	  if (!ent->vision_return)
+	    continue;
+	  
+	  range = lit.GetRange(); // it's this far away
+	  //channel = ent->channel_return; // it's this color
+	  
+	  // get the color of the entity
+	  memcpy( &col, &(ent->color), sizeof( StageColor ) );
+	  
+	  break;
+	}
+	
+      // initialize the reading 
+      m_scan_channel[s] = 0; // channel 0 is no-blob
+      m_scan_range[s] = 0;
+      
+      if( !(col & 0xFF000000) ) // if we found a color on this ray
+	// look up this color in the color/channel mapping array
+	for( int c=0; c<ACTS_NUM_CHANNELS; c++ )
+	  {
+	    if( channel[c] == col)
+	      {
+		//printf("color %d is channel %d\n", col, c);
+		//printf("m_scan_channel[%d] = %d\n", s, c+1);
 
-      // Ignore transparent things
-      if (!ent->vision_return)
-        continue;
-      
-      range = lit.GetRange(); // it's this far away
-      //channel = ent->channel_return; // it's this color
-		
-      // get the color of the entity
-      memcpy( &col, &(ent->color), sizeof( StageColor ) );
-            
-      break;
-    }
-	
-    //printf( "ray: %d channel: %d\n", s, channel );
-    //fflush( stdout );
-
-    // initialize the reading 
-    m_scan_channel[s] = 0; // channel 0 is no-blob
-    m_scan_range[s] = 0;
-	
-    // look up this color in the color/channel mapping array
-    for( int c=0; c<ACTS_NUM_CHANNELS; c++ )
-    {
-      if( channel[c] == col)
-      {
-        //printf("m_scan_channel[%d] = %d\n", s, c+1);
-        m_scan_channel[s] = c + 1; // channel 0 is no-blob
-        m_scan_range[s] = range;
-        break;
-      }
-    }
-	
-    // Update the gui data
-    //
-#ifdef INCLUDE_RTK
-    if (m_scan_channel[s] > 0)
-    {
-      assert((unsigned) m_hit_count < sizeof(m_hit) / sizeof(m_hit[0]));
-      m_hit[m_hit_count][0] = px + range * cos(pth);
-      m_hit[m_hit_count][1] = py + range * sin(pth);
-      m_hit[m_hit_count][2] = m_scan_channel[s];            
-      m_hit[m_hit_count][3] = col.red;
-      m_hit[m_hit_count][4] = col.green;
-      m_hit[m_hit_count][5] = col.blue;
-      m_hit_count++;
-    }
-#endif
+		m_scan_channel[s] = c + 1; // channel 0 is no-blob
+		m_scan_range[s] = range;
+		break;
+	      }
+	  }      
   }   
 }
 
@@ -267,8 +263,10 @@ void CVisionDevice::UpdateScan()
 ///////////////////////////////////////////////////////////////////////////
 // Generate ACTS data from scan-line image
 //
-size_t CVisionDevice::UpdateACTS()
+size_t CVisionDevice::UpdateACTS( player_vision_data_t* data )
 {
+  assert( data );
+
   // now the colors and ranges are filled in - time to do blob detection
   float yRadsPerPixel = m_zoom / cameraImageHeight;
 
@@ -307,11 +305,13 @@ size_t CVisionDevice::UpdateACTS()
         blobbottom = cameraImageHeight - 1;
 
       // useful debug - keep
-      //cout << "Robot " << this
-      //<< " sees " << (int)blobcol-1
-      //<< " start: " << blobleft
-      //<< " end: " << blobright
-      //<< endl << endl;
+      /*
+	cout << "Robot " << this
+      << " sees " << (int)blobcol-1
+      << " start: " << blobleft
+      << " end: " << blobright
+      << endl << endl;
+      */
 
       // fill in an arrau entry for this blob
       //
@@ -327,10 +327,6 @@ size_t CVisionDevice::UpdateACTS()
       numBlobs++;
     }
   }
-
-  int buflen = VISION_HEADER_SIZE + numBlobs * VISION_BLOB_SIZE;
-  //bzero(&actsBuf, buflen );
-  bzero(&actsBuf, sizeof(actsBuf));
 
   // now we have the blobs we have to pack them into ACTS format (yawn...)
 
@@ -377,12 +373,10 @@ size_t CVisionDevice::UpdateACTS()
     // bounding box, or if it is in fact the pixel count of the
     // actual blob. Here it's just the rectangular area.
 
-    // RTV - blobs[b].area is already set above
-    actsBuf.blobs[b].area = htonl(blobs[b].area);
-
-    // useful debug
+    // useful debug - leave in
     /*
     cout << "blob "
+    << " channel: " <<  (int)blobs[b].channel
     << " area: " <<  blobs[b].area
     << " left: " <<  blobs[b].left
     << " right: " <<  blobs[b].right
@@ -391,33 +385,42 @@ size_t CVisionDevice::UpdateACTS()
     << endl;
     */
 
-    actsBuf.blobs[b].x = htons(blobs[b].x);
-    actsBuf.blobs[b].y = htons(blobs[b].y);
-    actsBuf.blobs[b].left = htons(blobs[b].left);
-    actsBuf.blobs[b].right = htons(blobs[b].right);
-    actsBuf.blobs[b].top = htons(blobs[b].top);
-    actsBuf.blobs[b].bottom = htons(blobs[b].bottom);
+    // RTV - blobs[b].area is already set above - just byteswap
+    data->blobs[b].area = htonl(blobs[b].area);
 
+    // look up the color for this channel
+    data->blobs[b].color = htonl( channel[ blobs[b].channel ] );
 
-    // increment the count for this channel (and byte-swap)
-    actsBuf.header[blobs[b].channel].num = 
-            htons(ntohs(actsBuf.header[blobs[b].channel].num)+1);
+    data->blobs[b].x = htons(blobs[b].x);
+    data->blobs[b].y = htons(blobs[b].y);
+    data->blobs[b].left = htons(blobs[b].left);
+    data->blobs[b].right = htons(blobs[b].right);
+    data->blobs[b].top = htons(blobs[b].top);
+    data->blobs[b].bottom = htons(blobs[b].bottom);
+
+    // increment the count for this channel
+    data->header[blobs[b].channel].num++;
   }
 
-  // now we finish the header by setting the blob indexes.
+
+  // now we finish the header by setting the blob indexes and byte
+  // swapping the counts.
   int pos = 0;
   for( int ch=0; ch<VISION_NUM_CHANNELS; ch++ )
   {
-    actsBuf.header[ch].index = htons(pos);
-    pos += actsBuf.header[ch].num;
+    data->header[ch].index = htons(pos);
+    pos += data->header[ch].num;
+
+    // byte swap the blob count for each channel
+    PRINT_DEBUG2( "channel: %d blobs: %d\n", ch,  data->header[ch].num ); 
+    data->header[ch].num = htons(data->header[ch].num);
   }
 
-  // finally, we're done.
-  //cout << endl;
+  // and set the image width * height
+  data->width = htons((uint16_t)cameraImageWidth);
+  data->height = htons((uint16_t)cameraImageHeight);
 
-  //RTK_TRACE1("Found %d blobs", (int) numBlobs);
-
-  return buflen;
+  return sizeof(player_vision_data_t);
 }
 
 
@@ -513,4 +516,106 @@ void CVisionDevice::DrawScan(RtkUiDrawData *data)
 #endif
 
 
+
+#ifdef INCLUDE_RTK2
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise the rtk gui
+void CVisionDevice::RtkStartup()
+{
+  CEntity::RtkStartup();
+  
+  // Create a figure representing this object
+  this->vision_fig = rtk_fig_create(m_world->canvas, NULL, 49);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Finalise the rtk gui
+void CVisionDevice::RtkShutdown()
+{
+  // Clean up the figure we created
+  rtk_fig_destroy(this->vision_fig);
+
+  CEntity::RtkShutdown();
+} 
+
+
+///////////////////////////////////////////////////////////////////////////
+// Update the rtk gui
+void CVisionDevice::RtkUpdate()
+{
+  CEntity::RtkUpdate();
+ 
+  // Get global pose
+  double gx, gy, gth;
+  GetGlobalPose(gx, gy, gth);
+
+  int style = 0;
+
+  rtk_fig_clear(this->vision_fig);
+  rtk_fig_origin(this->vision_fig, gx-0.75, gy+0.75, 0.0 );
+  
+  player_vision_data_t data;
+
+  // if a client is subscribed to this device
+  if( Subscribed() > 0 && m_world->ShowDeviceData( this->stage_type) )
+  {
+    // attempt to get the right size chunk of data from the mmapped buffer
+    if( GetData( &data, sizeof(data) ) == sizeof(data) )
+      {  
+	double scale = 0.007; // shrink from pixels to meters for display
+	
+	rtk_fig_color( this->vision_fig, 0.8, 0.8, 0.8 ); // Grey
+	
+	short width = ntohs(data.width);
+	short height = ntohs(data.height);
+	double mwidth = width * scale;
+	double mheight = height * scale;
+	
+	// the view outline rectangle
+	rtk_fig_rectangle(this->vision_fig, 0.0, 0.0, 0.0, 
+			  mwidth,  mheight, 1 ); 
+
+	for( int c=0; c<VISION_NUM_CHANNELS;c++)
+	  {
+	    short numblobs = ntohs(data.header[c].num);
+	    short index = ntohs(data.header[c].index);	    
+	    
+	    for( int b=0; b<numblobs; b++ )
+	      {
+		// set the color from the blob data
+		rtk_fig_color_rgb32( this->vision_fig, 
+				     ntohl(data.blobs[index+b].color) ); 
+
+		short x =  ntohs(data.blobs[index+b].x);
+		short y =  ntohs(data.blobs[index+b].y);
+		short top =  ntohs(data.blobs[index+b].top);
+		short bot =  ntohs(data.blobs[index+b].bottom);
+		short left =  ntohs(data.blobs[index+b].left);
+		short right =  ntohs(data.blobs[index+b].right);
+		
+		//double mx = x * scale;
+		//double my = y * scale;
+		double mtop = top * scale;
+		double mbot = bot * scale;
+		double mleft = left * scale;
+		double mright = right * scale;
+	    
+		rtk_fig_rectangle(this->vision_fig, 
+				  -mwidth/2.0 + (mleft+mright)/2.0, 
+				  -mheight/2.0 +  (mtop+mbot)/2.0,
+				  0.0, 
+				  mright-mleft, 
+				  mbot-mtop, 
+				  1 );
+	      }
+	  }
+      }
+    else
+      PRINT_WARN( "no vision data available" );
+  }
+}
+
+#endif
 

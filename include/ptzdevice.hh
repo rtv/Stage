@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/ptzdevice.hh,v $
-//  $Author: inspectorg $
-//  $Revision: 1.7 $
+//  $Author: rtv $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -68,6 +68,21 @@ class CPtzDevice : public CEntity
     //
     public: virtual void OnUiMouse(RtkUiMouseData *pData);
     
+#endif
+
+#ifdef INCLUDE_RTK2
+
+  // Initialise the rtk gui
+  protected: virtual void RtkStartup();
+
+  // Finalise the rtk gui
+  protected: virtual void RtkShutdown();
+
+  // Update the rtk gui
+  protected: virtual void RtkUpdate();
+  
+  // For drawing the laser scan & intensity values
+  private: rtk_fig_t *fov_fig;
 #endif
 
 };

@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.11 2002-06-09 00:33:02 inspectorg Exp $
+ * CVS info: $Id: server.cc,v 1.12 2002-06-09 06:31:16 rtv Exp $
  */
 
 #include <arpa/inet.h>
@@ -89,7 +89,9 @@ CStageServer::CStageServer( int argc, char** argv )
   // printf( "[Host %s]", m_hostname );
   
   ///////////////////////////////////////////////////////////////////////
-  // LOAD THE CONFIGURATION FOR THE GUI
+  // LOAD THE CONFIGURATION FOR THE GUI 
+  // do this *after* the world has loaded, so we can configure the menus
+  // correctly
   printf("\n");
   if (!RtkLoad(&this->worldfile))
   {
@@ -806,23 +808,6 @@ void CStageServer::Write( void )
 // Clock device -- create the memory map for IPC with Player 
 bool CStageServer::CreateClockDevice( void )
 {   
-  //   char hostdir[256];
-//    sprintf( hostdir, "%s", m_device_dir );
-
-//    if( mkdir( hostdir, S_IRWXU | S_IRWXG | S_IRWXO ) == -1 )
-//    {
-//      if( errno != EEXIST )
-//      {
-//        perror( "Stage: failed to make host directory" );
-//        exit( -1 );
-//      }
-//    }
-  
-//    printf( "Created directories %s\n", hostdir );
-//    //printf( "[Instance %d]", m_instance-1 );
-
-  // create the time device
-
   size_t clocksize = sizeof( stage_clock_t );
   
   sprintf( clockName, "%s/clock", m_device_dir );

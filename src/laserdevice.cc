@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.54 2002-06-09 00:33:02 inspectorg Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.55 2002-06-09 06:31:16 rtv Exp $
  */
 
 #define DEBUG
@@ -360,10 +360,11 @@ void CLaserDevice::RtkStartup()
   CEntity::RtkStartup();
   
   // Create a figure representing this object
-  this->scan_fig = rtk_fig_create(m_world->canvas, NULL, 48);
+  this->scan_fig = rtk_fig_create(m_world->canvas, NULL, 49);
 
   // Set the color
   rtk_fig_color_rgb32(this->scan_fig, this->color);
+
 }
 
 
@@ -384,20 +385,26 @@ void CLaserDevice::RtkUpdate()
 {
   CEntity::RtkUpdate();
  
+  int style = 0;
+  
   rtk_fig_clear(this->scan_fig);
-
+   
   // draw a figure from the data in the data buffer
   // we might have put it there ourselves, or another stage
   // might have generated it
-
+  
   // this is a good way to see the _real_ output of Stage, rather than
   // some intermediate values. also it allows us to view data that was
   // generated elsewhere, without this Stage being subscribed to a
-  // device.  so even though it does use a few more flops.  i think
+  // device.  so even though it does use a few more flops, i think
   // it's the Right Thing to do - RTV.
-
+  
+  //gth -= M_PI / 2.0;
+  
+  player_laser_data_t data;
+  
   // if a client is subscribed to this device
-  if( Subscribed() > 0 )
+  if( Subscribed() > 0 && m_world->ShowDeviceData( this->stage_type) )
   {
     player_laser_data_t data;
     
@@ -408,6 +415,9 @@ void CLaserDevice::RtkUpdate()
       double gx, gy, gth;
       GetGlobalPose(gx, gy, gth);
 
+      rtk_fig_origin( this->scan_fig, gx, gy, gth - M_PI/2.0 );
+      rtk_fig_origin( this->scan_fig, gx, gy, gth - M_PI/2.0 );
+      
       // we got it, so parse out the data and display it
       short min_ang_deg = ntohs(data.min_angle);
       short max_ang_deg = ntohs(data.max_angle);
@@ -418,21 +428,38 @@ void CLaserDevice::RtkUpdate()
 	
       double incr = (double)(max_ang_rad - min_ang_rad) / (double)samples;
 	
-      for( int i=0; i < (int)samples; i++ )
-      {
-        // get range, converting from mm to m
-        unsigned short range_mm = ntohs(data.ranges[i]);
-        double range_m = (double)range_mm / 1000.0;
+      double lx = 0.0;
+      double ly = 0.0;
 
-        double bearing = gth - M_PI/2 + i * incr;
-        double px = gx + range_m * cos(bearing);
-        double py = gy + range_m * sin(bearing);
-	    	    
-        rtk_fig_line(this->scan_fig, gx, gy, px, py);
-      }
+      for( int i=0; i < (int)samples; i++ )
+	{
+	  // get range, converting from mm to m
+	  unsigned short range_mm = ntohs(data.ranges[i]) & 0x1FFF;
+	  double range_m = (double)range_mm / 1000.0;
+	  
+	  double bearing = i * incr;
+	  
+	  double px = range_m * cos(bearing);
+	  double py = range_m * sin(bearing);
+	  
+	  //rtk_fig_line(this->scan_fig, 0.0, 0.0, px, py);
+	  
+	  rtk_fig_line( this->scan_fig, lx, ly, px, py );
+	  lx = px;
+	  ly = py;
+	  
+	  // add little boxes at high intensities (like in playerv)
+	  if(  (unsigned char)(ntohs(data.ranges[i]) >> 13) > 0 )
+	    rtk_fig_rectangle(this->scan_fig, px, py, 0, 0.05, 0.05, 1);
+	  
+	}
+
+        rtk_fig_line( this->scan_fig, 0.0, 0.0, lx, ly );
+	
     }
+    //else
+    //  puts( "subscribed but no data avail!!!!!!!!!!!!!!" );
   }
 }
-
 #endif
 

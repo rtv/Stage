@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.97 2002-06-09 00:33:02 inspectorg Exp $
+ * CVS info: $Id: world.cc,v 1.98 2002-06-09 06:31:16 rtv Exp $
  */
 
 //#undef DEBUG
@@ -173,7 +173,7 @@ CWorld::CWorld( int argc, char** argv )
  
   // give the command line a chance to override the default values
   // we just set
-  ParseCmdline( argc, argv );
+  ParseCmdLine( argc, argv );
 }
 
 
@@ -215,7 +215,7 @@ int CWorld::CountDirtyOnConnection( int con )
 
 ///////////////////////////////////////////////////////////////////////////
 // Parse the command line
-bool CWorld::ParseCmdline(int argc, char **argv)
+bool CWorld::ParseCmdLine(int argc, char **argv)
 {
   for( int a=1; a<argc-1; a++ )
   {
@@ -802,6 +802,7 @@ char* CWorld::StringType( StageType t )
     case PuckType: return "Puck"; 
     case OccupancyType: return "Occupancy"; 
     case IDARType: return "IDAR";
+    case DescartesType: return "Descartes";
   }	 
   return( "unknown" );
 }
@@ -879,11 +880,40 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
 
   // Create the view menu
   this->view_menu = rtk_menu_create(this->canvas, "View");
-  this->grid_item = rtk_menuitem_create(this->view_menu, "Grid", 1);
 
+  // create the grid menu item
+  this->grid_item = rtk_menuitem_create(this->view_menu, "Grid", 1);
   // Set the initial view menu state
   rtk_menuitem_check(this->grid_item, 1);
 
+  // Create the view/device sub menu
+  this->device_data_menu = rtk_menu_create_sub(this->view_menu, "Device data");
+
+  // create a menu item for each device
+  // start with all sensor visualizations enabled - might re-think
+  // this and turn some or all of these off later, but this is good
+  // for debugging
+
+  //zero the array of device menu item ptrs
+  memset( &device_menu_items, 0, NUMBER_OF_STAGE_TYPES*sizeof(rtk_menuitem_t*));
+  
+  // create a view/device menu entry for each type of player-enabled device
+  // we are using
+  for( int d = 0; d<GetEntityCount(); d++ )
+    {
+      CEntity* ent = GetEntity(d);
+
+      // if it's a player device and we haven't got an item already
+      if( ent->m_player.code && !this->device_menu_items[ ent->stage_type ] ) 
+	{
+	  assert( this->device_menu_items[ ent->stage_type ] =  
+		  rtk_menuitem_create(this->device_data_menu, 
+				      StringType( ent->stage_type), 1) );  
+	  
+	  rtk_menuitem_check(this->device_menu_items[ ent->stage_type ], 1);
+	}
+    }
+  
   // Create the grid
   this->fig_grid = rtk_fig_create(this->canvas, NULL, -49);
   if (minor > 0)
@@ -972,6 +1002,7 @@ void CWorld::RtkUpdate()
     rtk_fig_show(this->fig_grid, 1);
   else
     rtk_fig_show(this->fig_grid, 0);
+
 }
 #endif
 

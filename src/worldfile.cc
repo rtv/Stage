@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.14 2002-06-09 00:33:02 inspectorg Exp $
+ * CVS info: $Id: worldfile.cc,v 1.15 2002-06-09 06:31:16 rtv Exp $
  */
 
 #include <assert.h>
@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+//#include <ctype.h>
 
 //#define DEBUG
 
@@ -40,6 +41,11 @@
 #include "colors.hh"
 #include "worldfile.hh"
 
+// the isblank() macro is not standard - it's a GNU extension
+// and it doesn't work for me, so here's an implementation - rtv
+#ifndef isblank
+#define isblank(a) (a == ' ' || a == '\t')
+#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // Useful macros for dumping parser errors

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.12 $
+//  $Author: rtv $
+//  $Revision: 1.13 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -32,7 +32,7 @@ CFixedObstacle::CFixedObstacle(CWorld *world, CEntity *parent)
   this->stage_type = WallType;
   this->color = ::LookupColor(WALL_COLOR);
 
-  vision_return = true; 
+  vision_return = true;
   laser_return = LaserReflect;
   sonar_return = true;
   obstacle_return = true;

@@ -8,7 +8,7 @@
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
 #  $Author: rtv $
-#  $Revision: 1.37 $
+#  $Revision: 1.38 $
 #
 # Note: All normal user configurations are in Makefile.common - you
 # probably don't need to change this file
@@ -52,6 +52,9 @@ install:
 	install -m 644 examples/*.world* $(INSTALL_EXAMPLES)
 	install -m 644 examples/*.m4 $(INSTALL_EXAMPLES)
 	install -m 644 examples/*.pnm* $(INSTALL_EXAMPLES)
+
+fresh: clean
+	${MAKE} dep all
 
 ###########################################################################
 # Create a source distribution

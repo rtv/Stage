@@ -566,10 +566,12 @@ void CStageIO::HandleCommand( int con, cmd_t cmd )
 
   switch( cmd )
     {
+      // TODO:
       //case LOADc: Load( m_filename ); break;
-      //case SAVEc: Save( this->worldfilename ); break;
 
-    case PAUSEc: m_enable = !m_enable; break;
+    case PAUSEc: // toggle simulation pause 
+      m_enable = !m_enable; 
+      break; 
 
     case SUBSCRIBEc: 
       PRINT_DEBUG1( "Received dirty: subscription on connection %d\n", con );
@@ -578,13 +580,18 @@ void CStageIO::HandleCommand( int con, cmd_t cmd )
       //WriteSubscriptions( m_pose_connections[con].fd );
       break;
 
-    case DOWNLOADc: 
-      puts( "DOWNLOADc" );
+    case DOWNLOADc: // someone has requested a download of the world state
+      PRINT_DEBUG( "DOWNLOADc" );
       
       WriteMatrix( m_pose_connections[con].fd );
       WriteBackground(  m_pose_connections[con].fd );
       WriteEntities( m_pose_connections[con].fd ); 
       WriteHeader(  m_pose_connections[con].fd, DownloadComplete, 0 );
+      break;
+
+    case SAVEc: // someone has asked us to save the world file
+      PRINT_DEBUG( "SAVEc" );
+      SaveFile(NULL); 
       break;
 
     default: printf( "Stage Warning: "

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.18 $
+//  $Author: rtv $
+//  $Revision: 1.19 $
 //
 // Usage:
 //  (empty)
@@ -124,6 +124,8 @@ void CPtzDevice::Update( double sim_time )
   //
   if (len > 0)
     {
+      // TODO: put a little controller in here to pan gradually
+      // rather than instantly for better realism - rtv
       double pan = (short) ntohs(cmd.pan);
       double tilt = (short) ntohs(cmd.tilt);
       double zoom = (unsigned short) ntohs(cmd.zoom);
@@ -195,6 +197,87 @@ void CPtzDevice::OnUiMouse(RtkUiMouseData *pData)
     CEntity::OnUiMouse(pData);
 }
 
+
+#endif
+
+#ifdef INCLUDE_RTK2
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise the rtk gui
+void CPtzDevice::RtkStartup()
+{
+  CEntity::RtkStartup();
+  
+  // Create a figure representing this object
+  this->fov_fig = rtk_fig_create(m_world->canvas, NULL, 49);
+
+  // Set the color
+  rtk_fig_color_rgb32(this->fov_fig, this->color);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Finalise the rtk gui
+void CPtzDevice::RtkShutdown()
+{
+  // Clean up the figure we created
+  rtk_fig_destroy(this->fov_fig);
+
+  CEntity::RtkShutdown();
+} 
+
+
+///////////////////////////////////////////////////////////////////////////
+// Update the rtk gui
+void CPtzDevice::RtkUpdate()
+{
+  CEntity::RtkUpdate();
+ 
+  // Get global pose
+  double gx, gy, gth;
+  GetGlobalPose(gx, gy, gth);
+
+  int style = 0;
+
+  rtk_fig_clear(this->fov_fig);
+  rtk_fig_origin(this->fov_fig, gx, gy, gth );
+
+  player_ptz_data_t data;
+
+  // if a client is subscribed to this device
+  if( Subscribed() > 0 && m_world->ShowDeviceData( this->stage_type) )
+  {
+    // attempt to get the right size chunk of data from the mmapped buffer
+    if( GetData( &data, sizeof(data) ) == sizeof(data) )
+    { 
+      
+      short pan_deg = (short)ntohs(data.pan);
+      short tilt_deg = (short)ntohs(data.tilt); // unused..?
+      unsigned short zoom = ntohs(data.zoom);
+
+      double pan = DTOR((double)pan_deg);
+      
+      double ox, oy;
+      double fx;
+      
+      // have to figure out the camera field of view based on zoom
+      // for now we show a fixed-angle triangle
+
+      // Camera field of view in x-direction (radians)
+      fx = DTOR(30.0);
+      
+      ox = 100 * cos(pan);
+      oy = 100 * sin(pan);
+      rtk_fig_line(this->fov_fig, 0.0, 0.0, ox, oy);
+      ox = 100 * cos(pan + fx / 2);
+      oy = 100 * sin(pan + fx / 2);
+      rtk_fig_line(this->fov_fig, 0.0, 0.0, ox, oy);
+      ox = 100 * cos(pan - fx / 2);
+      oy = 100 * sin(pan - fx / 2);
+      rtk_fig_line(this->fov_fig, 0.0, 0.0, ox, oy);      
+    }
+  }
+}
 
 #endif
 

@@ -1,8 +1,8 @@
 
-# Desc: Test world file containing one of everything.
-# Author: Andrew Howard
+# Desc: Test world file containing examples of everything.
+# Author: Andrew Howard, Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.9 2002-06-07 17:29:44 inspectorg Exp $
+# CVS: $Id: everything.world,v 1.10 2002-06-09 06:31:15 rtv Exp $
 
 environment
 (
@@ -13,7 +13,7 @@ environment
 
 position
 (
-  name "robot1" port 6665 pose [1 2 0]
+  name "robot1" port 6665 pose [5.260 1.220 48.823]
   player () 
   truth ()
   sonar ()
@@ -21,13 +21,13 @@ position
   laser 
   (
     lbd () 
-    ptz (vision ())
+    ptz (vision())
   )
 )
 
 position
 (
-  name "robot2" port 6666 pose [1 3 0]
+  name "robot2" port 6666 pose [1.000 2.880 0.000]
   player () 
   truth ()
   sonar ()
@@ -39,3 +39,9 @@ position
   )
 )
 
+laser_beacon( pose [6.420 3.600 216.861] id 5 )
+laser_beacon( pose [3.040 4.260 -88.274] id 7 )
+
+vision_beacon( pose [6.000 2.000 0.000] color "green" )
+vision_beacon( pose [6.420 2.000 0.000] color "blue" )
+vision_beacon( pose [5.560 2.000 0.000] color "red" )

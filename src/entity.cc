@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.62 2002-06-09 00:33:02 inspectorg Exp $
+ * CVS info: $Id: entity.cc,v 1.63 2002-06-09 06:31:16 rtv Exp $
  */
 
 #include <math.h>
@@ -107,6 +107,7 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
   // by default, we are not a player device
   // player devices set this up sensibly in their constructor and ::Load() 
   // TODO - should create a player device subclass again :)
+  // that would require changes in *many* device files. boo. rtv
   memset( &m_player, 0, sizeof(m_player) );
     
   // we start out NOT dirty - no one gets deltas unless they ask for 'em.
@@ -269,7 +270,7 @@ bool CEntity::Startup( void )
                   this->device_filename, this );
       
     // make some memory to store the data
-    playerIO = (player_stage_info_t*) new char[ mem ];
+    assert( playerIO = (player_stage_info_t*) new char[ mem ] );
 
     // remove the filename so we don't try to unlink it
     this->device_filename[0] = 0;
@@ -792,8 +793,8 @@ size_t CEntity::GetIOData( void* dest, size_t dest_len,
   if( src == 0 ) // this device doesn't have any data here
     return 0; // so bail right away
 
-  // if there is exactly the right amount of data available 
-  if( dest_len == (size_t)*avail) 
+  // if there is enough space for the data 
+  if( dest_len >= (size_t)*avail) 
     memcpy( dest, src, dest_len ); // copy the data
   else
   {

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.25 $
+//  $Author: rtv $
+//  $Revision: 1.26 $
 //
 // Usage:
 //  (empty)
@@ -54,7 +54,6 @@
 #endif
 
 #include "world.hh"
-
 
 /////////////////////////////////////////////////////////////////////////
 // Create an entity given a type (used by server to create entities).

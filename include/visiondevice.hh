@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visiondevice.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.14 $
+//  $Author: rtv $
+//  $Revision: 1.15 $
 //
 // Usage:
 //  (empty)
@@ -59,7 +59,7 @@ class CVisionDevice : public CEntity
   private: void UpdateScan();
 
   // Generate ACTS data from scan-line image
-  private: size_t UpdateACTS();
+  private: size_t UpdateACTS( player_vision_data_t* data );
 
   // Pointer to the ptz device we attach to (same as out parent
   private: CPtzDevice *m_ptz_device;
@@ -82,8 +82,8 @@ class CVisionDevice : public CEntity
   // Detected blob data
   private: int numBlobs;
   private: ColorBlob blobs[MAXBLOBS];
-  //private: unsigned char actsBuf[ACTS_TOTAL_MAX_SIZE];
-  private: player_vision_data_t actsBuf;
+
+  //private: player_vision_data_t actsBuf;
 
 #ifdef INCLUDE_RTK
   // Process GUI update messages
@@ -102,7 +102,23 @@ class CVisionDevice : public CEntity
   private: int m_hit_count;
   private: double m_hit[256][6];
     
-#endif  
+#endif 
+
+#ifdef INCLUDE_RTK2
+  
+  // Initialise the rtk gui
+  protected: virtual void RtkStartup();
+  
+  // Finalise the rtk gui
+  protected: virtual void RtkShutdown();
+  
+  // Update the rtk gui
+  protected: virtual void RtkUpdate();
+  
+  // For drawing a little screen with blobs on
+  private: rtk_fig_t *vision_fig;
+#endif
+
 };
 
 #endif

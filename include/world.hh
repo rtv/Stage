@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.55 2002-06-09 00:33:01 inspectorg Exp $
+ * CVS info: $Id: world.hh,v 1.56 2002-06-09 06:31:16 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -45,8 +45,8 @@
 
 #if INCLUDE_RTK2
 #include "rtk.h"
+#define MAX_DEVICE_MENU_ITEMS 32
 #endif
-
 
 // World class
 class CWorld
@@ -207,11 +207,11 @@ class CWorld
   // the pose server port
   //public: int m_server_port;
 
-  public: bool ParseCmdline( int argv, char* argv[] );
+  public: bool ParseCmdLine( int argv, char** argv );
 
   // Save the world file.  This is pure virtual since the actual
   // saving is implemented in the CServer or CClient subclasses.
-  private: virtual bool SaveFile( char* filename ) = 0;
+  protected: virtual bool SaveFile( char* filename ) = 0;
 
   
   //////////////////////////////////////////////////////////////////////
@@ -333,6 +333,14 @@ class CWorld
   public: rtk_menu_t *view_menu;
   private: rtk_menuitem_t *grid_item;
 
+  // The view/device menu
+public: rtk_menu_t *device_data_menu;
+private: rtk_menuitem_t *device_menu_items[ NUMBER_OF_STAGE_TYPES ];
+  
+  // devices check this to see if they should display their data
+public: bool ShowDeviceData( StageType devtype )
+  { return( rtk_menuitem_ischecked( device_menu_items[ devtype ]) ); } 
+  
   // Number of exported images
   private: int export_count;
 #endif

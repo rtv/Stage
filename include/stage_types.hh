@@ -21,7 +21,7 @@
  * Desc: Shared types, constants, etc
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: stage_types.hh,v 1.25 2002-06-09 00:33:01 inspectorg Exp $
+ * CVS: $Id: stage_types.hh,v 1.26 2002-06-09 06:31:15 rtv Exp $
  */
 
 #ifndef STAGE_TYPES_HH
@@ -175,7 +175,8 @@ enum StageType
   DescartesType, // HRL's customized Descartes robot platform
   OmniPositionType,
   MoteType,
-  BpsType
+  BpsType,
+  NUMBER_OF_STAGE_TYPES // THIS MUST BE LAST - put yours before this.
 };
 
 

@@ -148,13 +148,18 @@ CStageClient::CStageClient( int argc, char** argv )
   // Devices will create and initialize their device files
   for (int i = 0; i < GetEntityCount(); i++)
   {
-    if( !GetEntity(i)->Startup() )
+    CEntity* ent = GetEntity(i);
+    
+    assert( ent );
+
+    if( !ent->Startup() )
     {
-      PRINT_ERR("entity startup failed");
+      PRINT_ERR("object startup failed");
+      quit = true;
       return;// false;
     }
   }
-  
+
   // now we've set everything up, we request updates as the world changes 
   // (we MUST have downloaded and started everything before subscribing)
   WriteCommand( SUBSCRIBEc );
@@ -171,7 +176,8 @@ CStageClient::~CStageClient( void )
 // Save the world file
 bool CStageClient::SaveFile( char* filename )
 {
-  // TODO : send a message to the server to save the world file.
+  // send a message to the server to save the world file.
+  WriteCommand( SAVEc );
   return false;
 }
 
