@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/object.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.13 $
+//  $Revision: 1.1.2.14 $
 //
 // Usage:
 //  (empty)
@@ -25,6 +25,8 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include <math.h>
+#include <string.h>
+#include <stdio.h>
 #include "object.hh"
 
 
@@ -62,19 +64,55 @@ CObject::~CObject()
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Load the object from a token list
+// Load the object from an argument list
 //
-bool CObject::Load(char *buffer, int bufflen)
+bool CObject::Load(int argc, char **argv)
 {
+    for (int i = 0; i < argc;)
+    {
+        // Extract pose from the argument list
+        //
+        if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
+        {
+            double px = atof(argv[i + 1]);
+            double py = atof(argv[i + 2]);
+            double pa = DTOR(atof(argv[i + 3]));
+            SetPose(px, py, pa);
+            i += 4;
+        }
+        else
+            i++;
+    }
     return true;
-}    
+} 
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Save the object to a buffer
+// Save the object
 //
-bool CObject::Save(char *buffer, int bufflen)
+bool CObject::Save(int &argc, char **argv)
 {
+    // Get the robot pose (relative to parent)
+    //
+    double px, py, pa;
+    GetPose(px, py, pa);
+
+    // Convert to strings
+    //
+    char sx[32];
+    snprintf(sx, sizeof(sx), "%.2lf", px);
+    char sy[32];
+    snprintf(sy, sizeof(sy), "%.2lf", py);
+    char sa[32];
+    snprintf(sa, sizeof(sa), "%.0lf", RTOD(pa));
+
+    // Add to argument list
+    //
+    argv[argc++] = strdup("pose");
+    argv[argc++] = strdup(sx);
+    argv[argc++] = strdup(sy);
+    argv[argc++] = strdup(sa);
+        
     return true;
 }
 

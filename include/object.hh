@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/object.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.13 $
+//  $Revision: 1.1.2.14 $
 //
 // Usage:
 //  (empty)
@@ -53,13 +53,13 @@ class CObject
     //
     public: virtual ~CObject();
 
-    // Load the object from a token list
+    // Load the object from an argument list
     //
-    public: virtual bool Load(char *buffer, int bufflen);
+    public: virtual bool Load(int argc, char **argv);
 
-    // Save the object to a buffer
+    // Save the object to an argument list
     //
-    public: virtual bool Save(char *buffer, int bufflen);
+    public: virtual bool Save(int &argc, char **argv);
 
     // Initialise object
     //
@@ -100,6 +100,7 @@ class CObject
     // Line in the world description file
     //
     public: int m_line;
+    public: int m_column;
 
     // Type of this object
     //

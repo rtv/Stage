@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.9 $
+//  $Revision: 1.1.2.10 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -47,74 +47,54 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CObject *parent)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Initialise the object from an argument list
+// Load the object from an argument list
 //
-bool CLaserBeacon::Load(char *buffer, int bufflen)
+bool CLaserBeacon::Load(int argc, char **argv)
 {
-    // Tokenize the buffer
-    //
-    char *argv[64];
-    int argc = Tokenize(buffer, bufflen, argv, ARRAYSIZE(argv)); 
+    if (!CObject::Load(argc, argv))
+        return false;
 
-    for (int i = 0; i < argc; )
+    for (int i = 0; i < argc;)
     {
-        // Ignore create token
-        //
-        if (strcmp(argv[i], "create") == 0 && i + 1 < argc)
-            i += 2;
-        
-        // Extact beacon pose
-        //
-        else if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
-        {
-            double px = atof(argv[i + 1]);
-            double py = atof(argv[i + 2]);
-            double pth = DTOR(atof(argv[i + 3]));
-            SetPose(px, py, pth);
-            i += 4;
-        }
-
         // Extract id
         //
-        else if (strcmp(argv[i], "id") == 0 && i + 1 < argc)
+        if (strcmp(argv[i], "id") == 0 && i + 1 < argc)
         {
             strcpy(m_id, argv[i + 1]);
             m_beacon_id = atoi(argv[i + 1]);
             i += 2;
         }
-
-        // Print syntax
-        //
         else
-        {
-            printf("syntax: create laser_beacon pose <x> <y> <th> id <id>\n");
-            return false;
-        }
+            i++;
     }
-        
-    #ifdef INCLUDE_RTK
-        m_mouse_radius = (m_parent_object == NULL ? 0.2 : 0.0);
-        m_draggable = (m_parent_object == NULL);
-    #endif
+
+#ifdef INCLUDE_RTK
+    m_mouse_radius = (m_parent_object == NULL ? 0.2 : 0.0);
+    m_draggable = (m_parent_object == NULL);
+#endif
         
     return true;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Save the object to a buffer
+// Save the object
 //
-bool CLaserBeacon::Save(char *buffer, int bufflen)
+bool CLaserBeacon::Save(int &argc, char **argv)
 {
-    double px, py, pth;
-    GetPose(px, py, pth);
-    
-    snprintf(buffer, bufflen,
-             "create laser_beacon pose %.2f %.2f %.2f id %d\n",
-             (double) px, (double) py, (double) RTOD(pth), (int) m_beacon_id);
+    if (!CObject::Save(argc, argv))
+        return false;
+
+    // Save id
+    //
+    char id[32];
+    snprintf(id, sizeof(id), "%d", (int) m_beacon_id);
+    argv[argc++] = strdup("id");
+    argv[argc++] = strdup(id);
     
     return true;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Startup routine

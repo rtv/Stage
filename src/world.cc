@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.23 $
+//  $Revision: 1.4.2.24 $
 //
 // Usage:
 //  (empty)
@@ -27,10 +27,9 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <signal.h>
-#include "tokenize.hh"
+#include <math.h>
 #include "stage.h"
 #include "world.hh"
-#include "objectfactory.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -80,195 +79,6 @@ CWorld::~CWorld()
         delete m_beacon_img;
     if (m_vision_img)
         delete m_vision_img;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Load the world
-//
-bool CWorld::Load(const char *filename)
-{
-    PRINT_MSG1("loading world file [%s]", filename);
-
-    // Keep this file name: we will need it again when we save.
-    //
-    strcpy(m_filename, filename);
-    
-    // Open the file for reading
-    //
-    FILE *file = fopen(filename, "r");
-    if (file == NULL)
-    {
-        printf("unable to open world file %s; ignoring\n", (char*) filename);
-        return false;
-    }
-
-    int linecount = 0;
-    CObject *parent_object = NULL;
-    
-    while (true)
-    {
-        // Get a line
-        //
-        char line[1024];
-        if (fgets(line, sizeof(line), file) == NULL)
-            break;
-        linecount++;
-
-        // Make a copy of the line an tokenize it
-        //
-        char tokens[1024];
-        strcpy(tokens, line);
-        char *argv[32];
-        int argc = Tokenize(tokens, sizeof(tokens), argv, ARRAYSIZE(argv));
-
-        // Skip blank lines
-        //
-        if (argc == 0)
-            continue;
-        
-        // Ignore comment lines
-        //
-        if (argv[0][0] == '#')
-            continue;
-
-        // Look for open block tokens
-        //
-        if (strcmp(argv[0], "{") == 0)
-        {
-            if (m_object_count > 0)
-                parent_object = m_object[m_object_count - 1]->m_default_object;
-            else
-                printf("line %d : misplaced '{'\n", (int) linecount);
-        }
-
-        // Look for close block tokens
-        //
-        else if (strcmp(argv[0], "}") == 0)
-        {
-            if (parent_object != NULL)
-                parent_object = parent_object->m_parent_object;
-            else
-                printf("line %d : extra '}'\n", (int) linecount);
-        }
-
-        // Parse "set" command
-        // set <variable> = <value>
-        //
-        else if (argc == 4 && strcmp(argv[0], "set") == 0 && strcmp(argv[2], "=") == 0)
-        {
-            if (strcmp(argv[1], "environment_file") == 0)
-                strcpy(m_env_file, argv[3]);
-            else if (strcmp(argv[1], "pixels_per_meter") == 0)
-                ppm = atof(argv[3]);
-            else
-                printf("line %d : variable %s is not defined\n",
-                       (int) linecount, (char*) argv[1]);  
-        }
-
-        // Parse "create" command
-        // create <type> ...
-        //
-        else if (argc >= 2 && strcmp(argv[0], "create") == 0)
-        {
-            // Create the object
-            //
-            CObject *object = ::CreateObject(argv[1], this, parent_object);
-            if (object != NULL)
-            {
-                // Set some properties we will need later
-                //
-                object->m_line = linecount;
-                strcpy(object->m_type, argv[1]);
-                
-                // Let the object load itself
-                //
-                if (!object->Load(line, sizeof(line)))
-                {
-                    fclose(file);
-                    return false;
-                }
-
-                // Add to list of objects
-                //
-                m_object[m_object_count++] = object;
-            }
-            else
-                printf("line %d : object type %s is not defined\n",
-                       (int) linecount, (char*) argv[1]);
-        }
-    }
-    
-    fclose(file);
-    return true;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Save objects to a file
-//
-bool CWorld::Save(const char *filename)
-{
-    PRINT_MSG1("saving world file [%s]", filename);
-
-    // Generate a temporary file name
-    //
-    char tempname[64];
-    strcpy(tempname, m_filename);
-    strcat(tempname, ".tmp");
-    
-    // Open the original file for reading
-    //
-    FILE *file = fopen(m_filename, "r");
-    if (file == NULL)
-    {
-        printf("unable to find file %s; aborting save\n", (char*) filename);
-        return false;
-    }
-
-    // Open the temp file for writing
-    //
-    FILE *tempfile = fopen(tempname, "w+");
-    if (file == NULL)
-    {
-        printf("unable to create file %s; aborting save\n", (char*) tempname);
-        return false;
-    }
-
-    // Do a line-by-line copy of the original file to the temp file
-    //
-    int linecount = 0;
-    while (true)
-    {
-        // Get a line from the orginal file
-        //
-        char line[1024];
-        if (fgets(line, sizeof(line), file) == NULL)
-            break;
-        linecount++;
-
-        // See if this line corresponds to an object;
-        // if it does, let the object modify it.
-        //
-        for (int i = 0; i < m_object_count; i++)
-        {
-            CObject *object = m_object[i];
-            if (object->m_line == linecount)
-                object->Save(line, sizeof(line));
-        }
-
-        // Write the line to the temp file
-        //
-        fputs(line, tempfile);
-    }
-
-    fclose(file);
-    fclose(tempfile);
-
-    // Now rename the temp file to the desired value
-    //
-    rename(tempname, filename);
-    return true;
 }
 
 
@@ -376,8 +186,10 @@ void CWorld::StopThread()
 ///////////////////////////////////////////////////////////////////////////
 // Thread entry point for the world
 //
-void* CWorld::Main(CWorld *world)
+void* CWorld::Main(void *arg)
 {
+    CWorld *world = (CWorld*) arg;
+    
     // Make our priority real low
     //
     //nice(10);

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/usc_pioneer.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.6 $
+//  $Revision: 1.1.2.7 $
 //
 // Usage:
 //  (empty)
@@ -75,27 +75,19 @@ CUscPioneer::~CUscPioneer()
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Load the object
+// Load the object from an argument list
 //
-bool CUscPioneer::Load(char *buffer, int bufflen)
+bool CUscPioneer::Load(int argc, char **argv)
 {
-    // Tokenize the buffer
-    //
-    char *argv[64];
-    int argc = Tokenize(buffer, bufflen, argv, ARRAYSIZE(argv)); 
+    // Note that we dont call the underlying CObject load;
+    // this will load the wrong pose from the file.
     
-    // Loop through args and extract settings
-    //
     for (int i = 0; i < argc;)
     {
-        // Ignore create token
-        //
-        if (strcmp(argv[i], "create") == 0 && i + 1 < argc)
-            i += 2;
-        
         // Extract pose
+        // This as a bit of a hack -- we want the pioneer base to get the pose
         //
-        else if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
+        if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
         {
             double px = atof(argv[i + 1]);
             double py = atof(argv[i + 2]);
@@ -103,7 +95,7 @@ bool CUscPioneer::Load(char *buffer, int bufflen)
             m_pioneer->SetPose(px, py, pth);
             i += 4;
         }
-        
+
         // Extract the robot name
         //
         else if (strcmp(argv[i], "name") == 0 && i + 1 < argc)
@@ -119,36 +111,57 @@ bool CUscPioneer::Load(char *buffer, int bufflen)
             m_player->m_port = atoi(argv[i + 1]);
             i += 2;
         }
-        
-        // Print the syntax
-        //
         else
-        {
-            printf("syntax: create usc_pioneer pose <x> <y> <th>\n");
-            printf("                           name <name> port <port>\n");
-            return false;
-        }
+            i++;
     }
     return true;
-}
+} 
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Save the object to a buffer
+// Save the object
 //
-bool CUscPioneer::Save(char *buffer, int bufflen)
+bool CUscPioneer::Save(int &argc, char **argv)
 {
-    double px, py, pth;
-    m_pioneer->GetPose(px, py, pth);
-    
-    snprintf(buffer, bufflen,
-             "create usc_pioneer pose %.2f %.2f %.2f "
-             "name %s port %d\n",
-             (double) px, (double) py, (double) RTOD(pth),
-             (char*) m_pioneer->m_id, (int) m_player->m_port);
-    
+    // Note that we dont call the underlying CObject save;
+    // this will insert the wrong pose in the file
+
+    // Get the pioneer base pose
+    //
+    double px, py, pa;
+    m_pioneer->GetPose(px, py, pa);
+
+    // Convert to strings
+    //
+    char sx[32];
+    snprintf(sx, sizeof(sx), "%.2lf", px);
+    char sy[32];
+    snprintf(sy, sizeof(sy), "%.2lf", py);
+    char sa[32];
+    snprintf(sa, sizeof(sa), "%.0lf", RTOD(pa));
+
+    // Save pose
+    //
+    argv[argc++] = strdup("pose");
+    argv[argc++] = strdup(sx);
+    argv[argc++] = strdup(sy);
+    argv[argc++] = strdup(sa);
+
+    // Save name
+    //
+    argv[argc++] = strdup("name");
+    argv[argc++] = strdup(m_pioneer->m_id);
+
+    // Save port
+    //
+    char port[32];
+    snprintf(port, sizeof(port), "%d", m_player->m_port);
+    argv[argc++] = strdup("port");
+    argv[argc++] = strdup(port);
+
     return true;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Default startup -- doesnt do much

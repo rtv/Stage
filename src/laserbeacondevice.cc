@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.9 $
+//  $Revision: 1.2.2.10 $
 //
 // Usage:
 //  (empty)
@@ -26,6 +26,7 @@
 
 #define ENABLE_RTK_TRACE 1
 
+#include <math.h>
 #include <stage.h>
 #include "world.hh"
 #include "playerrobot.hh"

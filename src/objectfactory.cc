@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/objectfactory.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.13 $
+//  $Revision: 1.1.2.14 $
 //
 // Usage:
 //  (empty)
@@ -24,6 +24,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
+#include <string.h>
 #include "objectfactory.hh"
 #include "boxobstacle.hh"
 #include "laserbeacon.hh"
@@ -33,7 +34,6 @@
 
 /////////////////////////////////////////////////////////////////////////
 // Create an object given a type
-// Additional arguments can be passed in through argv.
 //
 CObject* CreateObject(const char *type, CWorld *world, CObject *parent)
 {
@@ -59,21 +59,4 @@ CObject* CreateObject(const char *type, CWorld *world, CObject *parent)
 
     return NULL;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

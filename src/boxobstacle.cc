@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.7 $
+//  $Revision: 1.1.2.8 $
 //
 // Usage:
 //  (empty)
@@ -47,73 +47,57 @@ CBoxObstacle::CBoxObstacle(CWorld *world, CObject *parent)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Initialise the object from an argument list
+// Load the object from an argument list
 //
-bool CBoxObstacle::Load(char *buffer, int bufflen)
+bool CBoxObstacle::Load(int argc, char **argv)
 {
-    // Tokenize the buffer
-    //
-    char *argv[64];
-    int argc = Tokenize(buffer, bufflen, argv, ARRAYSIZE(argv)); 
+    if (!CObject::Load(argc, argv))
+        return false;
 
-    for (int i = 0; i < argc; )
+    for (int i = 0; i < argc;)
     {
-        // Ignore create token
-        //
-        if (strcmp(argv[i], "create") == 0 && i + 1 < argc)
-            i += 2;
-        
-        // Extact box pose
-        //
-        else if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
-        {
-            double px = atof(argv[i + 1]);
-            double py = atof(argv[i + 2]);
-            double pth = DTOR(atof(argv[i + 3]));
-            SetPose(px, py, pth);
-            i += 4;
-        }
-
         // Extract box size
         //
-        else if (strcmp(argv[i], "size") == 0 && i + 2 < argc)
+        if (strcmp(argv[i], "size") == 0 && i + 2 < argc)
         {
             m_size_x = atof(argv[i + 1]);
             m_size_y = atof(argv[i + 2]);
             i += 3;
         }
-
-        // Print syntax
-        //
         else
-        {
-            printf("syntax: create box_obstacle pose <x> <y> <th> size <dx> <dy>\n");
-            return false;
-        }
+            i++;
     }
 
-    #ifdef INCLUDE_RTK
-        m_mouse_radius = max(m_size_x, m_size_y) * 0.6;
-        m_draggable = (m_parent_object == NULL);
-    #endif
-        
+#ifdef INCLUDE_RTK
+    m_mouse_radius = max(m_size_x, m_size_y) * 0.6;
+    m_draggable = (m_parent_object == NULL);
+#endif
+    
     return true;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Save the object to a buffer
+// Save the object
 //
-bool CBoxObstacle::Save(char *buffer, int bufflen)
+bool CBoxObstacle::Save(int &argc, char **argv)
 {
-    double px, py, pth;
-    GetPose(px, py, pth);
+    if (!CObject::Save(argc, argv))
+        return false;
     
-    snprintf(buffer, bufflen,
-             "create box_obstacle pose %.2f %.2f %.2f size %.2f %.2f\n",
-             (double) px, (double) py, (double) RTOD(pth),
-             (double) m_size_x, (double) m_size_y);
-    
+    // Convert to strings
+    //
+    char sx[32];
+    snprintf(sx, sizeof(sx), "%.2lf", m_size_x);
+    char sy[32];
+    snprintf(sy, sizeof(sy), "%.2lf", m_size_y);
+
+    // Add to argument list
+    //
+    argv[argc++] = strdup("size");
+    argv[argc++] = strdup(sx);
+    argv[argc++] = strdup(sy);
+        
     return true;
 }
 

@@ -2,20 +2,20 @@
 set environment_file = SAL2.pnm
 set pixels_per_meter =  20
 
-create box_obstacle pose 4.52 9.04 0.79 size 1.00 0.50
-create box_obstacle pose 4.40 12.20 250.64 size 2.00 0.50
-create laser_beacon pose 5.80 10.68 0.00 id 169
+create box_obstacle pose 5.89 7.96 1 size 1.00 0.50 
+create box_obstacle pose 5.80 11.84 251 size 2.00 0.50 
+create laser_beacon pose 13.81 13.77 0 id 169 
 
-create usc_pioneer pose 11.08 4.20 450.00 name comet port 6665
+create usc_pioneer pose 9.99 4.23 450 name comet port 6665 
 {
-create laser_beacon pose -0.25 0.00 0.00 id 0
+    create laser_beacon pose -0.25 0.00 0 id 0 
 }
 
-create usc_pioneer pose 3.16 3.92 0.00 name atom port 6666
+create usc_pioneer pose 3.16 3.92 0 name atom port 6666 
 
-create box_obstacle pose 7.52 11.00 45.00 size 2.00 1.00
+create box_obstacle pose 15.16 9.27 45 size 2.00 1.00 
 {
-create box_obstacle pose 0.50 1.00 0.00 size 1.00 1.00
+    create box_obstacle pose 0.50 1.00 0 size 1.00 1.00 
 }
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/usc_pioneer.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.6 $
 //
 // Usage:
 //  (empty)
@@ -53,13 +53,13 @@ class CUscPioneer : public CObject
     //
     public: ~CUscPioneer();
 
-    // Load the object
+    // Load the object from an argument list
     //
-    public: virtual bool Load(char *buffer, int bufflen);
+    public: virtual bool Load(int argc, char **argv);
 
-    // Save the object to a buffer
+    // Save the object to an argument list
     //
-    public: virtual bool Save(char *buffer, int bufflen);
+    public: virtual bool Save(int &argc, char **argv);
     
     // Initialise the device
     //

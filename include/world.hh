@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.17 $
+//  $Revision: 1.1.2.18 $
 //
 // Usage:
 //  (empty)
@@ -94,7 +94,7 @@ class CWorld
 
     // Thread entry point for the world
     //
-    public: static void* Main(CWorld *world);
+    public: static void* Main(void *arg);
 
     // Update everything
     //
