@@ -1,7 +1,7 @@
 ****************************************************************************
 * README.stage  - Richard Vaughan - Stage-1.3       
 *                                                                          
-* $Id: README,v 1.5 2002-12-10 00:34:52 rtv Exp $    
+* $Id: README,v 1.6 2003-03-12 02:38:32 rtv Exp $    
 ****************************************************************************
 
 ** Release notes **
@@ -106,7 +106,7 @@ default locations, and you want a normal installation,
 the defaults should work:
 
 $ cd stage-<version>
-# configure
+$ ./configure
 
 To see all the available configuration options do:
 
@@ -118,35 +118,35 @@ $ make
 
 will build the binary src/stage.
 
-Optionally, as you can do:
+Optionally, as root you can do:
  
 $ make install
 
-this will install the executables in $HOME/stage-<version>/bin/
-(unless you otherwise set the installation target as an option
-to `configure')
+to install the executables in /usr/local/bin/
+
+You can specify a different installation directory using:
+
+$ configure --prefix=<install dir>
+
+Which is useful if you don't have root access to your machine.
 
 -- Running ---------------------------------------------------------------
 
 To run stage, first make sure the Player executable can be found in
 your path.
 
-To run stage itself do:
+The syntax for running Stage is generally:
 
-$ stage [options] <filename.world>
+ stage [options] <worldfile>
+
+e.g. from the top build directory, you can try
+
+$ src/stage worlds/everything.world
 
 The .world file specifies what stage must simulate. The command-line
 options are described in the manual, and can be listed by doing:
 
 $ stage --help
-
-(or equivalently)
-$ stage -?
-
-To try out Stage with an example world, change to the installation
-directory and do:
-
-$ bin/stage worlds/simple.world
 
 -- Configuration file ----------------------------------------------------
 
