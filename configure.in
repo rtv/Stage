@@ -1,43 +1,48 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.66 2005-01-05 09:20:49 rtv Exp $
+dnl $Id: configure.in,v 1.67 2005-02-07 19:16:49 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
 AC_INIT(stage,1.6.2)
 
+AC_CONFIG_SRCDIR(src/stage.c)
+
 dnl determine system type.  this is used in a couple of places to infer the 
 dnl types of arguments to some networking library functions.  if/when we 
 dnl upgrade to newer Autotools, this can probably go away.
 AC_CANONICAL_SYSTEM
-case $host in	
-*-*-solaris*) AC_DEFINE(PLAYER_SOLARIS,1,[building for Solaris]);;
-*-*-linux*) AC_DEFINE(PLAYER_LINUX,1,[building for Linux]);;
-*-*-darwin*) AC_DEFINE(PLAYER_DARWIN,1,[building for Darwin]);;
-esac
+
+dnl Initialize automake, requiring version 1.7 or better
+AM_INIT_AUTOMAKE(1.7)
+
+dnl The following macros don't appear to be used.
+dnl
+dnl case $host in	
+dnl *-*-solaris*) AC_DEFINE(PLAYER_SOLARIS,1,[building for Solaris]);;
+dnl *-*-linux*) AC_DEFINE(PLAYER_LINUX,1,[building for Linux]);;
+dnl *-*-darwin*) AC_DEFINE(PLAYER_DARWIN,1,[building for Darwin]);;
+dnl esac
 
 dnl Need AC_PROG_MAKE_SET for recursive building
 AC_PROG_MAKE_SET
 
-
-dnl tell libtool to enable dynamic-loadable libraries
-AC_LIBTOOL_DLOPEN
-dnl enable libtool for building shared libraries in a platform-independent way
-AC_PROG_LIBTOOL
-AC_SUBST(LIBTOOL_DEPS)
-
 dnl Generate a configuration header called <config.h> and put all the C
 dnl preprocessor defines in there
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS(config.h)
 
-dnl automake now automatically inherits PACKAGE and VERSION created by AC_INIT above
-AM_INIT_AUTOMAKE
 
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
 dnl AC_PROG_RANLIB
+
+dnl tell libtool to enable dynamic-loadable libraries
+AC_LIBTOOL_DLOPEN
+dnl enable libtool for building shared libraries in a platform-independent way
+AC_PROG_LIBTOOL
+AC_SUBST(LIBTOOL_DEPS)
 
 dnl Checks for header files of required libraries
 AC_CHECK_HEADERS(stdint.h strings.h)
