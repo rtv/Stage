@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/descartesdevice.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Author: gerkey $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -46,6 +46,8 @@ public: static CDescartesDevice* Creator( CWorld *world, CEntity *parent )
  //
  public: void Servo( void );
  
+ // Startup routine
+ public: virtual bool Startup();
 
   virtual void Sync( void );
   

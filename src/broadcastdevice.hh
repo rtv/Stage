@@ -22,7 +22,7 @@
  *       the work is done by Player).
  * Author: Andrew Howard
  * Date: 5 Dec 2000
- * CVS info: $Id: broadcastdevice.hh,v 1.1 2002-08-23 00:19:39 rtv Exp $
+ * CVS info: $Id: broadcastdevice.hh,v 1.2 2002-10-10 02:45:25 gerkey Exp $
  */
 
 #ifndef BROADCASTDEVICE_HH
@@ -34,7 +34,7 @@ class CBroadcastDevice : public CPlayerEntity
 {
   // Default constructor
   public: CBroadcastDevice(CWorld *world, CEntity *parent);
-
+    
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an

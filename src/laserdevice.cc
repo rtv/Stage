@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.72 2002-10-07 06:45:59 rtv Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.73 2002-10-10 02:45:25 gerkey Exp $
  */
 
 #define DEBUG
@@ -85,6 +85,18 @@ CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent )
 #ifdef INCLUDE_RTK2
   this->scan_fig = NULL;
 #endif
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Startup routine
+//
+bool CLaserDevice::Startup()
+{
+  if (!CPlayerEntity::Startup())
+    return false;
+
+  SetDriverName("sicklms200");
+  return true;
 }
 
 

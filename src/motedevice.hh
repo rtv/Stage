@@ -10,11 +10,6 @@
 
 #define RSSI(a) (this->m_strength * (1 / (Distance(a, this) * Distance(a, this))))
 
-// RTV - this def was missing from my file - is this a reasonable value?
-// BPG - i have no idea, but it's now defined as 10 in
-// player/include/messages.h, so i've commented out this one
-//#define MAX_MOTE_Q_LEN 20
-
 class CMoteDevice;
 
 // update the connectivity graph
@@ -35,6 +30,9 @@ class CMoteDevice : public CPlayerEntity
 public: static CMoteDevice* Creator( CWorld *world, CEntity *parent )
   { return( new CMoteDevice( world, parent ) ); }
 
+  // Startup routine
+  public: virtual bool Startup();
+    
     // Update the device
     //
     public: virtual void Update(double sim_time );

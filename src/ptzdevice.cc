@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.25 $
+//  $Author: gerkey $
+//  $Revision: 1.26 $
 //
 // Usage:
 //  (empty)
@@ -71,6 +71,18 @@ CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent )
   m_zoom_max = 1024;
   
   m_pan = m_tilt = m_zoom = 0;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Startup routine
+//
+bool CPtzDevice::Startup()
+{
+  if (!CPlayerEntity::Startup())
+    return false;
+
+  SetDriverName("sonyevid30");
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////

@@ -12,8 +12,8 @@
 //
 //  CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/idardevice.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Author: gerkey $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -56,6 +56,8 @@ public:
 public: static CIdarDevice* Creator( CWorld *world, CEntity *parent )
   { return( new CIdarDevice( world, parent ) ); }
 
+  // Startup routine
+  public: virtual bool Startup();
 
   // each sensor must transmit over a wide area (45 degrees on the
   // orginal robots), so we do several ray traces per sensor to make

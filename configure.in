@@ -30,6 +30,12 @@ AC_CHECK_HEADERS(stdint.h sys/types.h strings.h values.h)
 #AC_HEADER_SYS_WAIT
 #AC_CHECK_HEADERS(fcntl.h limits.h sys/file.h sys/time.h unistd.h)
 
+dnl RTK2 uses libjpeg to export images.
+AC_CHECK_HEADER(jpeglib.h,
+  AC_DEFINE(HAVE_JPEGLIB_H,1,[include jpeg support])
+  LIBJPEG="-ljpeg",,)
+AC_SUBST(LIBJPEG)
+
 dnl Checks for typedefs, structures, and compiler characteristics.
 #AC_C_CONST
 #AC_TYPE_OFF_T
@@ -80,6 +86,11 @@ AC_CHECK_FILE([/usr/X11R6/lib/X11/rgb.txt],
 AC_ARG_WITH(color, [   --with-color=file      Location of X11-style color file],
 CDB="\"$with_color\"",)
 AC_DEFINE_UNQUOTED(COLOR_DATABASE,$CDB,[the X11-style color database])
+
+dnl should tests (e.g., RTK) be built?
+AC_ARG_WITH(tests, [  --with-tests            Build tests],,
+with_tests=yes)
+AM_CONDITIONAL(WITH_TESTS, test x$with_tests = xyes)
 
 AC_OUTPUT(Makefile 
           src/Makefile 

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/omnipositiondevice.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Author: gerkey $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -42,6 +42,9 @@ class COmniPositionDevice : public CPlayerEntity
 public: static COmniPositionDevice* Creator( CWorld *world, CEntity *parent )
   { return( new COmniPositionDevice( world, parent ) ); }
 
+  // Startup routine
+  public: virtual bool Startup();
+  
   // Update the device
   public: virtual void Update( double sim_time );
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.28 $
+//  $Revision: 1.29 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -84,6 +84,17 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
   m_puck_count = 0;
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Startup routine
+//
+bool CGripperDevice::Startup()
+{
+  if (!CPlayerEntity::Startup())
+    return false;
+
+  SetDriverName("p2os_gripper");
+  return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Load the entity from the world file

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/descartesdevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.7 $
+//  $Author: gerkey $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -81,6 +81,18 @@ CDescartesDevice::CDescartesDevice(CWorld *world, CEntity *parent )
   left_bumper = right_bumper = 0;
 
   goalspeed = goalheading = goaldistance = distance_travelled = 0;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Startup routine
+//
+bool CDescartesDevice::Startup()
+{
+  if (!CPlayerEntity::Startup())
+    return false;
+
+  SetDriverName("hrl_descartes");
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////

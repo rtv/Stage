@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.hh,v 1.5 2002-10-07 06:45:59 rtv Exp $
+ * CVS info: $Id: laserdevice.hh,v 1.6 2002-10-10 02:45:25 gerkey Exp $
  */
 
 #ifndef LASERDEVICE_HH
@@ -47,6 +47,9 @@ public: static CLaserDevice* Creator( CWorld *world, CEntity *parent )
   {
     return( new CLaserDevice( world, parent ) );
   }
+    
+  // Startup routine
+  public: virtual bool Startup();
 
   // Load the entity from the worldfile
   public: virtual bool Load(CWorldFile *worldfile, int section);

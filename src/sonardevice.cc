@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.37 2002-10-07 06:45:59 rtv Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.38 2002-10-10 02:45:25 gerkey Exp $
  */
 
 #include <math.h>
@@ -66,6 +66,17 @@ CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent )
   memset( &this->data, 0, sizeof(this->data) );
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Startup routine
+//
+bool CSonarDevice::Startup()
+{
+  if (!CPlayerEntity::Startup())
+    return false;
+
+  SetDriverName("p2os_sonar");
+  return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Load the entity from the world file

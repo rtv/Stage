@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.38 $
+//  $Author: gerkey $
+//  $Revision: 1.39 $
 //
 // Usage:
 //  (empty)
@@ -95,6 +95,18 @@ CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
   this->beacon_fig = NULL;
 #endif
 
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Startup routine
+//
+bool CLBDDevice::Startup()
+{
+  if (!CPlayerEntity::Startup())
+    return false;
+
+  SetDriverName("laserbarcode");
+  return true;
 }
 
 

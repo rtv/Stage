@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: playerdevice.hh,v 1.7 2002-10-07 06:45:59 rtv Exp $
+ * CVS info: $Id: playerdevice.hh,v 1.8 2002-10-10 02:45:25 gerkey Exp $
  */
 
 #ifndef PLAYERENTITY_HH
@@ -107,6 +107,12 @@ public: virtual void GetStatusString( char* buf, int buflen );
     
   // specific external IO functions
 
+  // Write to the driver name segment of the IO buffer
+  //
+  // every player device should invoke this method early, like in the
+  // constructor.
+  protected: void SetDriverName( char* name );
+  
   // Write to the data buffer
   // Returns the number of bytes copied
   // timestamp should be the time the data was created/sensed. if timestamp

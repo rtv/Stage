@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/omnipositiondevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.15 $
+//  $Author: gerkey $
+//  $Revision: 1.16 $
 //
 // Usage:
 //  (empty)
@@ -72,6 +72,17 @@ COmniPositionDevice::COmniPositionDevice(CWorld *world, CEntity *parent)
   this->mass = 20.0;
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Startup routine
+//
+bool COmniPositionDevice::Startup()
+{
+  if (!CPlayerEntity::Startup())
+    return false;
+
+  SetDriverName("usc_omnibot");
+  return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the device

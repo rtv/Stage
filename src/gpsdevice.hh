@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gpsdevice.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Author: gerkey $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -31,6 +31,9 @@ public: static CGpsDevice* Creator( CWorld *world, CEntity *parent )
   {
     return( new CGpsDevice( world, parent ) );
   }
+    
+    // Startup routine
+    public: virtual bool Startup();
 
     // Update the device
     //

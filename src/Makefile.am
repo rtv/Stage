@@ -1,6 +1,6 @@
 if WITH_GUI
 RTKCPPFLAGS = -I$(top_srcdir)/rtk2 `gtk-config --cflags`
-RTKLDADD    = -L$(top_builddir)/rtk2 -lrtk
+RTKLDADD    = -L$(top_builddir)/rtk2 -lrtk $(LIBJPEG)
 RTKLDFLAGS  = `gtk-config --libs gtk gthread`
 else
 RTKCPPFLAGS =

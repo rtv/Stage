@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.40 2002-10-07 06:45:59 rtv Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.41 2002-10-10 02:45:25 gerkey Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -285,6 +285,11 @@ bool CPlayerEntity::Startup( void )
   // replies.  pass in the chunks of memory that are already mmap()ed
   assert(m_reqqueue = new PlayerQueue(m_config_io,m_config_len));
   assert(m_repqueue = new PlayerQueue(m_reply_io,m_reply_len));
+  
+  // initialize the driver name with something sensible, in case the device
+  // doesn't set it
+  strncpy((char*)(this->m_info_io->drivername), "stage_device", 
+          sizeof(this->m_info_io->drivername));
 
 #ifdef DEBUG
   printf( "\t\t(%p) (%d,%d,%d) IO at %p\n"
@@ -413,6 +418,25 @@ size_t CPlayerEntity::PutIOData( void* dest, size_t dest_len,
   return src_len;
 }
 
+////////////////////////////////////////////////////////////////////////////
+// Write to the driver name segment of the IO buffer
+//
+// every player device should invoke this method early, like in the
+// constructor.
+void 
+CPlayerEntity::SetDriverName( char* name )
+{
+  Lock();
+
+  assert(name);
+
+  strncpy((char*)(this->m_info_io->drivername), name, 
+          sizeof(this->m_info_io->drivername));
+  // just to be sure
+  this->m_info_io->drivername[sizeof(this->m_info_io->drivername)-1] = '\0';
+
+  Unlock();
+}
 
 ////////////////////////////////////////////////////////////////////////////
 // Copy the data into shared memory & update the info buffer

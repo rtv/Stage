@@ -20,8 +20,8 @@
 *
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/idardevice.cc,v $
-* $Author: rtv $
-* $Revision: 1.5 $
+* $Author: gerkey $
+* $Revision: 1.6 $
 ******************************************************************************/
 
 
@@ -106,6 +106,17 @@ CIdarDevice::CIdarDevice(CWorld *world, CEntity *parent )
   m_angle_per_scanline = m_angle_per_sensor / m_num_scanlines;
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Startup routine
+//
+bool CIdarDevice::Startup()
+{
+  if (!CPlayerEntity::Startup())
+    return false;
+
+  SetDriverName("hrl_idar");
+  return true;
+}
 
 void CIdarDevice::Sync( void )
 {

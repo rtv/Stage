@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.cc,v 1.40 2002-09-07 02:05:25 rtv Exp $
+ * CVS info: $Id: visiondevice.cc,v 1.41 2002-10-10 02:45:25 gerkey Exp $
  */
 
 #include <math.h>
@@ -92,6 +92,17 @@ CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent)
 #endif
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Startup routine
+//
+bool CVisionDevice::Startup()
+{
+  if (!CPlayerEntity::Startup())
+    return false;
+
+  SetDriverName("acts");
+  return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Load the entity from the worldfile

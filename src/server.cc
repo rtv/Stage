@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.33 2002-10-07 06:45:59 rtv Exp $
+ * CVS info: $Id: server.cc,v 1.34 2002-10-10 02:45:25 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -566,7 +566,7 @@ bool CStageServer::StartupPlayer( void )
     // Player must be in the current path
     if( execlp( "player", "player",
                 "-s", DeviceDirectory(), 
-                (strlen(m_auth_key)) ? "-key" : NULL,
+                (strlen(m_auth_key)) ? "-k" : NULL,
                 (strlen(m_auth_key)) ? m_auth_key : NULL,
                 NULL) < 0 )
     {

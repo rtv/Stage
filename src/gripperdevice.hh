@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Author: gerkey $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -52,6 +52,9 @@ class CGripperDevice : public CPlayerEntity
 public: static CGripperDevice* Creator( CWorld *world, CEntity *parent )
   { return( new CGripperDevice( world, parent ) ); }
 
+  // Startup routine
+  public: virtual bool Startup();
+  
   // update the break beams with the raytrace functions
   // beam is 0 - inside or 1 - outside
   // returns pointer to the puck in the beam, or NULL if none

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/bpsdevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.5 $
+//  $Author: gerkey $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -58,6 +58,8 @@ bool CBpsDevice::Startup()
 {
   if (!CPlayerEntity::Startup())
     return false;
+
+  SetDriverName("bps");
   return true;
 }
 

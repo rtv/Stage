@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Author: gerkey $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -57,6 +57,9 @@ class CLBDDevice : public CPlayerEntity
   // instance of this entity
 public: static CLBDDevice* Creator( CWorld *world, CEntity *parent )
   { return( new CLBDDevice( world, (CLaserDevice*)parent ) ); }
+    
+  // Startup routine
+  public: virtual bool Startup();
 
   // Load the entity from the worldfile
   public: virtual bool Load(CWorldFile *worldfile, int section);

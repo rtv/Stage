@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gpsdevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.16 $
+//  $Author: gerkey $
+//  $Revision: 1.17 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -40,6 +40,17 @@ CGpsDevice::CGpsDevice(CWorld *world, CEntity *parent )
   m_interval = 0.05; 
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Startup routine
+//
+bool CGpsDevice::Startup()
+{
+  if (!CPlayerEntity::Startup())
+    return false;
+
+  SetDriverName("gps");
+  return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the gps data

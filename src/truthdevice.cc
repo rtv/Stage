@@ -21,7 +21,7 @@
  * Desc: A device for getting the true pose of things.
  * Author: Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: truthdevice.cc,v 1.11 2002-09-07 02:05:25 rtv Exp $
+ * CVS info: $Id: truthdevice.cc,v 1.12 2002-10-10 02:45:25 gerkey Exp $
  */
 
 #include "world.hh"
@@ -47,6 +47,17 @@ CTruthDevice::CTruthDevice(CWorld *world, CEntity *parent)
   this->stage_type = TruthType;
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Startup routine
+//
+bool CTruthDevice::Startup()
+{
+  if (!CPlayerEntity::Startup())
+    return false;
+
+  SetDriverName("stage_truth");
+  return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the truth device

@@ -65,6 +65,18 @@ CMoteDevice::CMoteDevice(CWorld *world, CEntity *parent )
 }
 
 ///////////////////////////////////////////////////////////////////////////
+// Startup routine
+//
+bool CMoteDevice::Startup()
+{
+  if (!CPlayerEntity::Startup())
+    return false;
+
+  SetDriverName("usc_mote");
+  return true;
+}
+
+///////////////////////////////////////////////////////////////////////////
 // Load the object from file
 //
 bool CMoteDevice::Load(CWorldFile *worldfile, int section)

@@ -21,7 +21,7 @@
  * Desc: A device for getting the true pose of things.
  * Author: Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: truthdevice.hh,v 1.1 2002-08-23 00:19:39 rtv Exp $
+ * CVS info: $Id: truthdevice.hh,v 1.2 2002-10-10 02:45:25 gerkey Exp $
  */
 #ifndef TRUTHDEVICE_HH
 #define TRUTHDEVICE_HH
@@ -40,6 +40,9 @@ class CTruthDevice : public CPlayerEntity
 public: static CTruthDevice* Creator( CWorld *world, CEntity *parent )
   { return( new CTruthDevice( world, parent ) ); }
 
+  // Startup routine
+  public: virtual bool Startup();
+  
   // Update the device
   public: virtual void Update(double sim_time);
 

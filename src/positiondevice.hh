@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.hh,v 1.2 2002-08-30 18:17:28 rtv Exp $
+ * CVS info: $Id: positiondevice.hh,v 1.3 2002-10-10 02:45:25 gerkey Exp $
  */
 
 #ifndef POSITIONDEVICE_H
@@ -43,6 +43,9 @@ public: static CPositionDevice* Creator( CWorld *world, CEntity *parent )
   {
     return( new CPositionDevice( world, parent ) );
   }
+    
+  // Startup routine
+  public: virtual bool Startup();
 
   // Update the device
   public: virtual void Update( double sim_time );

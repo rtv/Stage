@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.35 2002-09-10 23:41:47 gerkey Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.36 2002-10-10 02:45:25 gerkey Exp $
  */
 
 //#define DEBUG
@@ -80,6 +80,17 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent)
   this->origin_y = 0;
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Startup routine
+//
+bool CPositionDevice::Startup()
+{
+  if (!CPlayerEntity::Startup())
+    return false;
+
+  SetDriverName("p2os_position");
+  return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the position of the robot base
