@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.1.2.5 $
+//  $Author: vaughan $
+//  $Revision: 1.1.2.6 $
 //
 // Usage:
 //  (empty)
@@ -57,8 +57,9 @@ static int Tokenize(char *buffer, int bufflen, char **argv, int maxargs)
 //
 bool CWorld::Load(const char *filename)
 {
+#ifdef DEBUG
     PRINT_MSG1("loading world file [%s]", filename);
-
+#endif
     // Keep this file name: we will need it again when we save.
     //
     strcpy(m_filename, filename);

@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.2.2.7 2001-05-25 02:02:10 ahoward Exp $
+ * $Id: image.cc,v 1.2.2.8 2001-06-01 00:53:20 vaughan Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -182,12 +182,16 @@ bool Nimage::load_pnm(const char* fname)
   char comment[256];
   int whiteNum; 
 
+#ifdef DEBUG
   printf("opening %s\n", fname);
+#endif
 
   FILE *file = fopen(fname, "r");
   if (file == NULL)
   {
+#ifdef DEBUG
       printf("unable to open image file\n");
+#endif
       return false;
   }
 

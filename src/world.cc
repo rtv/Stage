@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.4.2.38 $
+//  $Revision: 1.4.2.39 $
 //
 // Usage:
 //  (empty)
@@ -362,17 +362,34 @@ bool CWorld::InitGrids(const char *env_file)
     // create a new background image from the pnm file
     // If we cant find it under the given name,
     // we look for a zipped version.
-    //
-    m_bimg = new Nimage;
-    if (!m_bimg->load_pnm(env_file))
-    {
-        char zipname[128];
-        strcpy(zipname, env_file);
-        strcat(zipname, ".gz");
-        if (!m_bimg->load_pnm_gz(zipname))
-            return false;
-    }
     
+  m_bimg = new Nimage;
+  
+  int len = strlen( env_file );
+  
+  if( len > 0 )
+    {
+      if( strcmp( &(env_file[ len - 3 ]), ".gz" ) == 0 )
+	{
+	  if (!m_bimg->load_pnm_gz(env_file))
+	    return false;
+	}
+      else
+	if (!m_bimg->load_pnm(env_file))
+	  {
+	    char zipname[128];
+	    strcpy(zipname, env_file);
+	    strcat(zipname, ".gz");
+	    if (!m_bimg->load_pnm_gz(zipname))
+	      return false;
+	  }
+    }
+  else
+    {
+      cout << "Error: no world image file supplied. Quitting." << endl;
+      exit( 1 );
+    }
+
     width = m_bimg->width;
     height = m_bimg->height;
 
