@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerserver.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -242,7 +242,7 @@ bool CPlayerServer::StartupPlayer(int port)
 
             // we assume Player is in the current path
             if( execlp( "player", "player",
-                        "-gp", portBuf, "-stage", tmpName, (char*) 0) < 0 )
+                        "-port", portBuf, "-stage", tmpName, (char*) 0) < 0 )
             {
                 cerr << "execlp failed: make sure Player can be found"
                     " in the current path."
