@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.4.2.17 $
+//  $Revision: 1.4.2.18 $
 //
 // Usage:
 //  (empty)
@@ -110,12 +110,6 @@ void CPtzDevice::Update()
         PRINT_MSG("command buffer has incorrect length -- ignored");
         return;
     }
-
-    // Parse the command string
-    //
-    double pan = (short) ntohs(cmd.pan);
-    double tilt = (short) ntohs(cmd.tilt);
-    double zoom = (unsigned short) ntohs(cmd.zoom);
 
     // Parse the command string (if there is one)
     //

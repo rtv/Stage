@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.14 $
+//  $Revision: 1.1.2.15 $
 //
 // Usage:
 //  (empty)
@@ -149,6 +149,9 @@ ExportData* CBoxObstacle::ImportExportData( ImportData* imp  )
   if( !exporting ) return 0;
 
   // fill in the exp structure  
+
+  GetGlobalPose( exp.x, exp.y, exp.th );
+
   exp.width = m_size_x;
   exp.height = m_size_y;
   

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.9.2.24 $
+//  $Revision: 1.9.2.25 $
 //
 // Usage:
 //  (empty)
@@ -67,6 +67,8 @@ CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CEntity *parent, CPlay
 
 #ifdef INCLUDE_XGUI
     exp.objectType = pioneer_o;
+    exp.width = m_size_x;
+    exp.height = m_size_y;
 #endif
 }
 
@@ -349,10 +351,12 @@ ExportData* CPioneerMobileDevice::ImportExportData( ImportData* imp )
 
   if( !exporting ) return 0;
 
-  // fill in the exp structure
- // fill in the exp structure  
-  exp.width = m_size_x;
-  exp.height = m_size_y;
+    // fill in the exp structure
+  GetGlobalPose( exp.x, exp.y, exp.th );
+
+  // m_size_x appears to be zero here!
+  //exp.width = m_size_x;
+  //exp.height = m_size_y;
 
   return &exp;
 }

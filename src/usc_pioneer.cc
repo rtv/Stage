@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/usc_pioneer.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.1.2.16 $
+//  $Revision: 1.1.2.17 $
 //
 // Usage:
 //  (empty)
@@ -250,7 +250,9 @@ ExportData* CUscPioneer::ImportExportData( ImportData* imp )
   if( !exporting ) return 0;
 
   // fill in the exp structure
- // fill in the exp structure  
+  GetGlobalPose( exp.x, exp.y, exp.th );
+
+  // fill in the exp structure  
   //exp.width = m_size_x;
   //exp.height = m_size_y;
 

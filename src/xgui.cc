@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xgui.cc,v 1.1.2.4 2001-05-25 04:26:56 vaughan Exp $
+ * $Id: xgui.cc,v 1.1.2.5 2001-05-25 05:17:41 vaughan Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -47,20 +47,6 @@ const float maxAngularError =  -0.1; // percent error on turning odometry
 unsigned int RGB( int r, int g, int b );
 
 int coords = false;
-
-//  ExportLaserData::ExportLaserData( void )// default constuctor 
-//                  :ExportData(); 
-//  {
-//  };
-
-//  ExportLaserData::ExportLaserData( ExportLaserData& copy ) // copy constructor
-//                  :ExportData( copy )
-//  {
-//    //cout << "ExportLaserData copy constructor" << endl;
-//    memcpy( hitPts, copy.hitPts, sizeof( DPoint ) * LASERSAMPLES );
-//    hitCount = copy.hitCount;
-//  };
-
 
 CXGui::CXGui( CWorld* wworld )//,  char* initFile )
 {
@@ -278,7 +264,6 @@ void CXGui::HandleEvent( void )
 {    
   XEvent reportEvent;
   KeySym key;
-  int drawnRobots = false;
   
   // used for inverting Y between world and X coordinates
   int imgHeight= world->GetBackgroundImage()->height;
@@ -1057,7 +1042,8 @@ void CXGui::RenderPioneer( ExportData* exp, bool extended )
   RenderObjectLabel( exp, "Pioneer base", 12 );
 #endif
   
-  SetForeground( RGB(255,0,0) ); // red Pioneer base color
+  //SetForeground( RGB(255,0,0) ); // red Pioneer base color
+  SetForeground( RGB(255,100,100) ); // red Pioneer base color
 
   DPoint pts[7];
   GetRect( exp->x, exp->y, exp->width/2.0, exp->height/2.0, exp->th, pts );
@@ -1071,7 +1057,7 @@ void CXGui::RenderPioneer( ExportData* exp, bool extended )
   pts[6].x = pts[3].x;
   pts[6].y = pts[3].y;
 
-  DrawCircle( pts[1].x, pts[1].y, 0.3 );
+  //DrawCircle( pts[1].x, pts[1].y, 0.3 );
 
   DrawLines( pts, 7 );
 }
