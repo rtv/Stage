@@ -18,17 +18,47 @@ create position_device pose 3.47 2.03 144 port 6665
   }
 }
 
-create laser_beacon name 1 pose 2.00 2.00 0   id 1 
-create laser_beacon name 2 pose 2.56 3.24 -36 id 2
-create laser_beacon name 3 pose 2.19 2.71 -36 id 3
+create position_device pose 2.47 2.03 144 port 6666  
+{
+  create player_device
+  create sonar_device 
+  create laser_device pose 0.08 0.00 0 
+  {
+     create lbd_device 	
 
-create vision_beacon pose 1.00 1.00 0 color red radius 0.10 
-create vision_beacon pose 1.20 1.00 0 color green radius 0.10 
-create vision_beacon pose 1.40 1.00 0 color blue radius 0.10 
-create vision_beacon pose 1.60 1.00 0 color yellow radius 0.10 
+     create ptz_device
+     {
+        create vision_device
+     } 
+  }
+}
 
-create box pose 4.00 4.00 0 size 0.10 0.10 
-create box pose 1.00 2.00 0 size 0.40 0.40 
+create position_device pose 1.47 2.03 144 port 6667  
+{
+  create player_device
+  create sonar_device 
+  create laser_device pose 0.08 0.00 0 
+  {
+     create lbd_device 	
+
+     create ptz_device
+     {
+        create vision_device
+     } 
+  }
+}
+
+#create laser_beacon name 1 pose 2.00 2.00 0   id 1 
+#create laser_beacon name 2 pose 2.56 3.24 -36 id 2
+#create laser_beacon name 3 pose 2.19 2.71 -36 id 3
+
+#create vision_beacon pose 1.00 1.00 0 color red radius 0.10 
+#create vision_beacon pose 1.20 1.00 0 color green radius 0.10 
+#create vision_beacon pose 1.40 1.00 0 color blue radius 0.10 
+#create vision_beacon pose 1.60 1.00 0 color yellow radius 0.10 
+
+#create box pose 4.00 4.00 0 size 0.10 0.10 
+#create box pose 1.00 2.00 0 size 0.40 0.40 
 
 
 

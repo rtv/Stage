@@ -49,9 +49,14 @@ void CatchSigPipe( int signo )
 
 }
 
-// rather hacky - this gets poked into by incoming truths
-// to avoid them being re-exported
-stage_truth_t* ts_truths = 0;
+// data for each truth connection
+typedef struct
+{
+  int fd; // file descriptor
+  int count; // number of truths
+  stage_truth_t* database; // ptr to array of truths
+} truth_connection_t;
+
 
 void PrintTruth( stage_truth_t &truth )
 {
@@ -75,7 +80,9 @@ static void* TruthReader( void* arg )
   fflush( stdout );
 #endif
 
-  int* connfd = (int*)arg;
+  truth_connection_t* con = (truth_connection_t*)arg;
+
+  int connfd = con->fd;
 
   sigblock(SIGINT);
   sigblock(SIGQUIT);
@@ -89,7 +96,7 @@ static void* TruthReader( void* arg )
   while( 1 )
     {	      
       /* read will block until it has some bytes to return */
-      r = read( *connfd, &truth, sizeof(truth) );
+      r = read( connfd, &truth, sizeof(truth) );
       
       //#ifdef DEBUG
       //printf( "Stage: TruthReader read (%d,%d/%d)\n", 
@@ -104,6 +111,12 @@ static void* TruthReader( void* arg )
 	  //PrintTruth( truth );
 	  //#endif
 	  
+	  // if we don't want an echo
+	  if( !truth.echo_request )
+	    // store it in the comparison database
+	    // to fool the writer thread into thinking we'cve sent this one before
+	    memcpy( &(con->database[ truth.stage_id ]), &truth, sizeof( truth ) );
+	  
 	  // we can't just impose the truth here as we're not
 	  // in sync with the main simulator thread, so:
 	  // copy the incoming truth into the update queue.
@@ -116,9 +129,8 @@ static void* TruthReader( void* arg )
 #ifdef VERBOSE
 	  puts( "Stage: TruthReader thread exit." );
 #endif	  
-	  close( *connfd );
-	  *connfd = 0; // forces the writer to quit
-
+	  close( connfd );
+	  connfd = 0; // forces the writer to quit
 	  pthread_exit( 0 );
 	}
     }
@@ -134,8 +146,10 @@ static void * TruthWriter( void* arg )
   printf( "Stage: TruthWriter thread (socket %d)\n", *connfd );
   fflush( stdout );
 #endif
-
-  int* connfd = (int*)arg;
+  
+  truth_connection_t* con = (truth_connection_t*)arg;
+  
+  int connfd = con->fd;
 
   sigblock(SIGINT);
   sigblock(SIGQUIT);
@@ -146,26 +160,24 @@ static void * TruthWriter( void* arg )
 
   int v = 0;
 
-  int obs = world->GetObjectCount();
-  
-  // store all the truths we publish for comparison
-  ts_truths = new stage_truth_t[ obs ];
-  memset( ts_truths, 0, obs * sizeof( stage_truth_t ) );
   
   while( 1 ) 
     {
-      for( int i=0; i < obs; i++ )
+      for( int i=0; i < con->count; i++ )
 	{
 	  CEntity* ent =  world->GetObject( i );
 	  
 	  assert( ent );
 	  
-	  if( *connfd == 0 ) // if it hasn't been re-set by the reader on exit
+	  if( connfd == 0 ) // if it hasn't been re-set by the reader on exit
 	    {
 #ifdef VERBOSE
 	      puts( "Stage: TruthWriter thread exit." );
 #endif
-	      delete connfd;
+	      // delete the datastructures
+	      if( con->database ) delete [] con->database;
+	      if( con ) delete con;
+
 	      pthread_exit( 0 );
 	    }
 
@@ -174,7 +186,7 @@ static void * TruthWriter( void* arg )
 	  ent->ComposeTruth( &truth, i );
 
 	  // is the packet different from the last one?
-	  if( memcmp( &truth, &(ts_truths[i]), sizeof( truth ) ) != 0  ) 
+	  if( memcmp( &truth, &(con->database[i]), sizeof( truth ) ) != 0  ) 
 	    {
 	      //printf( "old truth: " );
 	      //PrintTruth( ts_truths[i] );
@@ -184,10 +196,10 @@ static void * TruthWriter( void* arg )
 
 	      truth.echo_request = false;
 	      // send the packet to the connected client
-	      v = write( *connfd, &truth, sizeof(truth) );
+	      v = write( connfd, &truth, sizeof(truth) );
 	      
 	      // and store it
-	      memcpy( &(ts_truths[i]), &truth, sizeof( truth ) );
+	      memcpy( &(con->database[i]), &truth, sizeof( truth ) );
 	    }
 	  //else
 	  //puts( "same as last time" );
@@ -195,12 +207,12 @@ static void * TruthWriter( void* arg )
 	  if( v < 0 )
 	    {
 	      perror( "Stage: TruthWriter: write error: quitting thread" );
-	      close( *connfd );
+	      close( connfd );
 	      pthread_exit( 0 );
 	    }
 	  
 	} 
-      usleep( 50000 ); // give the cpu a break for 10ms 
+      usleep( 10000 ); // give the cpu a break for 10ms 
       //usleep( 100000 ); // give the cpu a break for 100ms
     }
 }
@@ -242,18 +254,29 @@ void* TruthServer( void* )
     {
       clilen = sizeof(cliaddr);
 
-      int* connfd = new int( 0 );
+      int connfd = 0;
 
-      *connfd = accept(listenfd, (SA *) &cliaddr, &clilen);
+      connfd = accept(listenfd, (SA *) &cliaddr, &clilen);
 
 #ifdef VERBOSE      
       printf( "Stage: TruthServer connection accepted (socket %d)\n", 
 	      *connfd );
       fflush( stdout );
 #endif            
+
+      truth_connection_t* con = new truth_connection_t();
+
+      con->fd = connfd;
+      con->count = world->GetObjectCount();
+      con->database = new stage_truth_t[ con->count ];
+     
+      // zero the database
+      memset( con->database, 0, con->count * sizeof( stage_truth_t ) );
+      
       // start a thread to handle the connection
-      pthread_create(&tid_dummy, NULL, &TruthWriter, connfd ); 
-      pthread_create(&tid_dummy, NULL, &TruthReader, connfd ); 
+      // passing in the structure they share
+      pthread_create(&tid_dummy, NULL, &TruthWriter, con ); 
+      pthread_create(&tid_dummy, NULL, &TruthReader, con ); 
     }
 }
 

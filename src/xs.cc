@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.22 2001-09-23 05:03:15 vaughan Exp $
+ * $Id: xs.cc,v 1.23 2001-09-23 18:59:36 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -1936,9 +1936,12 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 			    playerProxies[num_proxies++] = glbp;
 			  }
 			break;
-  		      default: 
+  		      default:	
+#ifdef DEBUG
   			printf( "XS: no proxy for device %d supported\n", 
   				sibling.id.type ); 
+#endif
+			break;
 		      }
 		  }
 	      }

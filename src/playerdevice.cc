@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.21 $
+//  $Author: vaughan $
+//  $Revision: 1.22 $
 //
 // Usage:
 //  (empty)
@@ -141,10 +141,6 @@ int CPlayerDevice::StartupPlayer(int count)
   int fds[2];
   fds[0] = fds[1] = -1;
  
-  // hmmm.....should probably move this into world.cc somewhere...
-  // don't start up if we're not managed by this host; succeed but do nowt
-  if( strcmp( m_hostname, m_world->m_hostname ) != 0 ) return true;
-
   /*
   if(port < 0)
     port = m_player_port;

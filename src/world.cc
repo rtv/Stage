@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.39 $
+//  $Author: vaughan $
+//  $Revision: 1.40 $
 //
 // Usage:
 //  (empty)
@@ -46,8 +46,6 @@
 #include "playerdevice.hh" 
 
 #include "truthserver.hh"
-extern stage_truth_t* ts_truths;
-
 
 #define SEMKEY 2000
 
@@ -333,9 +331,14 @@ bool CWorld::Startup()
     }
     entityOffset += m_object[i]->SharedMemorySize();
 
+
+    // count the number of Players on this host, and record the index
+    // of the first one.
     // this lets us know that we should start the one Player and go through
     // the next loop to give a port list...
-    if(m_object[i]->m_stage_type == PlayerType)
+    if(m_object[i]->m_stage_type == PlayerType && 
+       (strcmp( m_object[i]->m_hostname, m_hostname ) == 0 ) 
+      )
     {
       player_count++;
       if(first_player_idx < 0)
@@ -349,6 +352,8 @@ bool CWorld::Startup()
   {
     int pipe_out_fd;
     FILE* pipe_out;
+
+    //printf( "Starting Player listening on %d ports\n", player_count );
 
     if((pipe_out_fd = ((CPlayerDevice*)m_object[first_player_idx])->
                                      StartupPlayer(player_count)) == -1)
@@ -367,8 +372,12 @@ bool CWorld::Startup()
     // now pipe everbody's port into player
     for(i = 0; i < m_object_count; i++)
     {
-      if(m_object[i]->m_stage_type == PlayerType)
+      // again, choose Player type objects managed by this host
+      if(m_object[i]->m_stage_type == PlayerType &&
+	 (strcmp( m_object[i]->m_hostname, m_hostname ) == 0 ) )
       {
+	//printf( "Stage: piping portnum %d to Player\n",  m_object[i]->m_player_port );
+
         fprintf(pipe_out,"%d\n", m_object[i]->m_player_port);
         fflush(pipe_out);
       }
@@ -478,7 +487,7 @@ void* CWorld::Main(void *arg)
 	// RTV - linux seems to usleep for a minimum of 10ms.
 	// so values below 10000 microseconds here don't make any difference.
 	// by usleeping at all here you get a max 50Hz update rate.
-        usleep(1000);
+      //usleep(1000);
 
         // Update the world
         //
@@ -608,12 +617,6 @@ void CWorld::Update()
 	// update the entity with the truth
 	ent->SetGlobalPose( truth.x/1000.0, truth.y/1000.0, 
 			    DTOR(truth.th) );
-
-	// if we don't want an echo
-	if( !truth.echo_request )
-	  // store it in the truthserver's comparison database
-	  // to fool the server into thinking we'cve sent this one before
-	  memcpy( &(ts_truths[ truth.stage_id ]), &truth, sizeof( truth ) );
 	
 	// width and height could be changed here too if necessary
       }
