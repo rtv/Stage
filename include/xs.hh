@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xs.hh,v 1.12 2001-09-27 22:33:43 vaughan Exp $
+ * $Id: xs.hh,v 1.13 2001-09-28 00:18:30 vaughan Exp $
  ************************************************************************/
 
 #ifndef _WIN_H
@@ -148,6 +148,8 @@ public:
   void MoveObject( xstruth_t *obj, double x, double y, double th );
 
   void HeadingStick( xstruth_t* truth );
+
+  void GetGlobalPose( xstruth_t &truth, double &px, double &py, double &pth);
   
   void PrintCoords( void );
   char* StageNameOf( const xstruth_t& truth ); 

@@ -78,3 +78,48 @@ clean_dep:
 	${CC} ${CCFLAGS} -c $< -o $@
 
 # Dependancies (make dep)
+
+truthlog.o: ../include/truthserver.hh
+truthlog.o: /usr/local/player-1.0-gamma/include/messages.h
+truthlog.o: /usr/local/player-1.0-gamma/include/playercommon.h
+truthlog.o: ../include/stage_types.hh
+xs.o: ../include/stage_types.hh ../include/truthserver.hh
+xs.o: /usr/local/player-1.0-gamma/include/messages.h
+xs.o: /usr/local/player-1.0-gamma/include/playercommon.h ../include/xs.hh
+xs.o: /usr/local/player-1.0-gamma/include/playermulticlient.h
+xs.o: /usr/local/player-1.0-gamma/include/playerclient.h
+xs.o: /usr/local/player-1.0-gamma/include/playercclient.h
+xs.o: /usr/local/player-1.0-gamma/include/laserproxy.h
+xs.o: /usr/local/player-1.0-gamma/include/clientproxy.h
+xs.o: /usr/local/player-1.0-gamma/include/sonarproxy.h
+xs.o: /usr/local/player-1.0-gamma/include/miscproxy.h
+xs.o: /usr/local/player-1.0-gamma/include/positionproxy.h
+xs.o: /usr/local/player-1.0-gamma/include/ptzproxy.h
+xs.o: /usr/local/player-1.0-gamma/include/gripperproxy.h
+xs.o: /usr/local/player-1.0-gamma/include/speechproxy.h
+xs.o: /usr/local/player-1.0-gamma/include/laserbeaconproxy.h
+xs.o: /usr/local/player-1.0-gamma/include/visionproxy.h
+xs.o: /usr/local/player-1.0-gamma/include/truthproxy.h
+xs.o: /usr/local/player-1.0-gamma/include/occupancyproxy.h
+xs.o: /usr/local/player-1.0-gamma/include/gpsproxy.h
+xs.o: /usr/local/player-1.0-gamma/include/bpsproxy.h
+render.o: ../include/stage_types.hh ../include/truthserver.hh
+render.o: /usr/local/player-1.0-gamma/include/messages.h
+render.o: /usr/local/player-1.0-gamma/include/playercommon.h ../include/xs.hh
+render.o: /usr/local/player-1.0-gamma/include/playermulticlient.h
+render.o: /usr/local/player-1.0-gamma/include/playerclient.h
+render.o: /usr/local/player-1.0-gamma/include/playercclient.h
+render.o: /usr/local/player-1.0-gamma/include/laserproxy.h
+render.o: /usr/local/player-1.0-gamma/include/clientproxy.h
+render.o: /usr/local/player-1.0-gamma/include/sonarproxy.h
+render.o: /usr/local/player-1.0-gamma/include/miscproxy.h
+render.o: /usr/local/player-1.0-gamma/include/positionproxy.h
+render.o: /usr/local/player-1.0-gamma/include/ptzproxy.h
+render.o: /usr/local/player-1.0-gamma/include/gripperproxy.h
+render.o: /usr/local/player-1.0-gamma/include/speechproxy.h
+render.o: /usr/local/player-1.0-gamma/include/laserbeaconproxy.h
+render.o: /usr/local/player-1.0-gamma/include/visionproxy.h
+render.o: /usr/local/player-1.0-gamma/include/truthproxy.h
+render.o: /usr/local/player-1.0-gamma/include/occupancyproxy.h
+render.o: /usr/local/player-1.0-gamma/include/gpsproxy.h
+render.o: /usr/local/player-1.0-gamma/include/bpsproxy.h

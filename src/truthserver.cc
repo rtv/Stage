@@ -131,7 +131,7 @@ void CWorld::PoseRead( void )
 	      int r = 0;
 	      uint16_t num_poses;
 
-	      printf( "Reading header...\n" );
+	      //printf( "Reading header...\n" );
 
 	      // read the two-byte header
 	      while( r < (int)sizeof(num_poses) )
@@ -152,8 +152,8 @@ void CWorld::PoseRead( void )
 		  
 		  r+=v;
 		  
-		  printf( "Stage: read %d bytes of %d-byte header - value: %d\n",
-			  v, sizeof(num_poses), num_poses );
+		  //printf( "Stage: read %d bytes of %d-byte header - value: %d\n",
+		  //  v, sizeof(num_poses), num_poses );
 
 		  // record the total bytes input
 		  g_bytes_input += v;
@@ -170,8 +170,8 @@ void CWorld::PoseRead( void )
 	      r = 0;
 	      size_t packet_len = sizeof(stage_pose_t) * num_poses;
 
-	      printf( "Stage: expecting to read %u poses (%u bytes)\n",
-		      num_poses, packet_len );
+	      //printf( "Stage: expecting to read %u poses (%u bytes)\n",
+	      //      num_poses, packet_len );
 
 	      // read until we have a all the poses
 	      while( r < (int)packet_len )
@@ -194,8 +194,8 @@ void CWorld::PoseRead( void )
 		  // record the total bytes input
 		  g_bytes_input += v;
 
-		  printf( "Stage: read %d/%d bytes\n",
-			  r, packet_len );
+		  //printf( "Stage: read %d/%d bytes\n",
+		  //  r, packet_len );
 		  // THIS IS DEBUG OUTPUT
 		  //if( v < (int)sizeof(pose) )
 		  //printf( "STAGE: SHORT READ (%d/%d) r=%d\n",
@@ -231,24 +231,25 @@ void CWorld::PoseRead( void )
 		      CEntity* ent = m_object[ pose.stage_id ];
 		      assert( ent ); // there really ought to be one!
 		      
-		      printf( "Stage: received " );
-		      PrintPose( pose );
+		      //printf( "Stage: received " );
+		      //PrintPose( pose );
 		      
 		      double newx = (double)pose.x / 1000.0;
 		      double newy = (double)pose.y / 1000.0;
 		      double newth = DTOR((double)pose.th);
 		      
-		      printf( "Move %d to (%.2f,%.2f,%.2f)\n",
-			      pose.stage_id, newx, newy, newth );
+		      //printf( "Move %d to (%.2f,%.2f,%.2f)\n",
+		      //      pose.stage_id, newx, newy, newth );
 		      
 		      // update the entity with the pose
-		      ent->SetGlobalPose( newx, newy, newth );
+		      //ent->SetGlobalPose( newx, newy, newth );
+		      ent->SetPose( newx, newy, newth );
 		      
 		      double x,y,th;
 		      ent->GetGlobalPose( x, y, th );
 		      
-		      printf( "Entity %d moved to (%.2f,%.2f,%.2f)\n",
-			      pose.stage_id, x, y, th );
+		      //printf( "Entity %d moved to (%.2f,%.2f,%.2f)\n",
+		      //      pose.stage_id, x, y, th );
 		      
 		      ent->Update( m_sim_time );
 		      
@@ -282,10 +283,12 @@ void CWorld::PoseWrite( void )
 {
   int i;
   
+  // GOING TO LOCAL COORDINATE SYSTEM
+
   // every entity inherits dirty labels from its ancestors
-  for( i=0; i < m_object_count; i++ )
+  //for( i=0; i < m_object_count; i++ )
     // recursively inherit from ancestors
-    m_object[i]->InheritDirtyFromParent( m_pose_connection_count );
+    //m_object[i]->InheritDirtyFromParent( m_pose_connection_count );
 
   // for all the connections
   for( int t=0; t< m_pose_connection_count; t++ )
@@ -304,8 +307,8 @@ void CWorld::PoseWrite( void )
       
       if( send_count > 0 )
 	{
-	  printf( "Stage: Sending %d poses on connection %d/%d\n",
-		  send_count, t, m_pose_connection_count );
+	  //printf( "Stage: Sending %d poses on connection %d/%d\n",
+	  //  send_count, t, m_pose_connection_count );
 	  
 	  // allocate a buffer for the data
 	  // one stage_pose_t per object plus a count short
@@ -323,18 +326,19 @@ void CWorld::PoseWrite( void )
 	      // is the entity marked dirty for this connection?
 	      if( m_object[i]->m_dirty[t] )
 		{
-		  printf( "dirty object: [%d]: %d (%d,%d,%d)\n",
-			  i, 
-			  m_object[i]->m_stage_type,
-			  m_object[i]->m_player_port,
-			  m_object[i]->m_player_type,
-			  m_object[i]->m_player_index );
+		  //printf( "dirty object: [%d]: %d (%d,%d,%d)\n",
+		  //  i, 
+		  //  m_object[i]->m_stage_type,
+		  //  m_object[i]->m_player_port,
+		  //  m_object[i]->m_player_type,
+		  //  m_object[i]->m_player_index );
 		  
 		  // get the pose and fill in the structure
 		  double x,y,th;
 		  stage_pose_t pose;
 	      
-		  m_object[i]->GetGlobalPose( x,y,th );
+		  //m_object[i]->GetGlobalPose( x,y,th );
+		  m_object[i]->GetPose( x,y,th );
 	      
 		  pose.stage_id = i;
 		  // position and extents
@@ -354,8 +358,8 @@ void CWorld::PoseWrite( void )
 		  // it won't get re-sent here until this flag is set again
 		  m_object[i]->m_dirty[t] = false;
 
-		  printf( "Assembled pose: " );
-		  PrintPose( pose );
+		  //printf( "Assembled pose: " );
+		  //PrintPose( pose );
 
 		  // copy it into the right place
 		  memcpy( next_entry++, 
@@ -364,7 +368,7 @@ void CWorld::PoseWrite( void )
 		}
 	    }
 	  
-	  PrintSendBuffer( send_buf, send_buf_len );
+	  //PrintSendBuffer( send_buf, send_buf_len );
 	  
 	  // send the packet to the connected client
 	  unsigned int  writecnt = 0;

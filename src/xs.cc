@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.31 2001-09-27 22:33:43 vaughan Exp $
+ * $Id: xs.cc,v 1.32 2001-09-28 00:18:31 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -133,8 +133,8 @@ char* CXGui::StageNameOf( const xstruth_t& truth )
       case 0: return "None"; 
       case PlayerType: return "Player"; 
       case MiscType: return "Misc"; 
-      case RectRobotType: return "RectRobot"; 
-      case RoundRobotType: return "RoundRobot"; 
+      case RectRobotType: return "Robot"; 
+      case RoundRobotType: return "Robot"; 
       case SonarType: return "Sonar"; 
       case LaserTurretType: return "Laser"; 
       case VisionType: return "Vision"; 
@@ -277,7 +277,7 @@ static void* TruthReader( void*)
           recv += r;
       }
 
-      printf( "XS: reading %d poses...\n", num_poses );
+      //printf( "XS: reading %d poses...\n", num_poses );
 
       // now read in all the poses
 
@@ -298,7 +298,7 @@ static void* TruthReader( void*)
         else
           recv += r;
 
-        printf( "Read %d/%d bytes on %d\n",recv,packetlen,ffd ); 
+        //printf( "Read %d/%d bytes on %d\n",recv,packetlen,ffd ); 
       }
 
       //PrintStagePose( pose );
@@ -311,7 +311,7 @@ static void* TruthReader( void*)
 
      	  
 
-      printf( "XS: received %d poses: \n", num_poses );
+      //printf( "XS: received %d poses: \n", num_poses );
       
       for( int p=0; p<num_poses; p++ )
 	{  
@@ -319,8 +319,8 @@ static void* TruthReader( void*)
 	  
 	  memcpy( &pose, &(poses[p]), sizeof(stage_pose_t) );
 
-	  printf( "#%d ", p );
-	  PrintStagePose( pose );
+	  //printf( "#%d ", p );
+	  //PrintStagePose( pose );
 
 	  //pthread_mutex_lock( &incoming_mutex );
 	  incoming_queue.push( pose );
@@ -368,7 +368,7 @@ static void* TruthWriter( void* )
 	  outgoing_queue.pop();
 	  
 	  //printf( "WRITING %d bytes on %d - ", sizeof(pose), ffd );
-	  PrintStagePose( pose );
+	  //PrintStagePose( pose );
 	  //fflush( stdout );
 	  
 	  // please send this truth back to us for redisplay
@@ -391,9 +391,9 @@ static void* TruthWriter( void* )
 	  size_t packet_len = 
 	    sizeof(uint16_t) + pose_count * sizeof(stage_pose_t);
 	  
-	  printf( "XS: writing %d poses (%d bytes)\n", pose_count, packet_len );
+	  //printf( "XS: writing %d poses (%d bytes)\n", pose_count, packet_len );
 	  
-	  PrintSendBuffer( sendbuf, packet_len );
+	  //PrintSendBuffer( sendbuf, packet_len );
 
 	  while(writecnt < packet_len )
 	    {
@@ -405,7 +405,7 @@ static void* TruthWriter( void* )
 	    }
 	}      
       
-      usleep( 10000 );
+      usleep( 1000 );
     }
 }
 
@@ -1094,10 +1094,10 @@ void CXGui::MoveObject( xstruth_t* exp, double x, double y, double th )
   outgoing_queue.push( output );
   //pthread_mutex_unlock( &outgoing_mutex );
 
-  printf( "MOVING OBJECT\n" );
-  PrintMetricTruth( exp->stage_id, *exp );
-  PrintStagePose( output );
-  puts( "PUSHED" );
+  //printf( "MOVING OBJECT\n" );
+  //PrintMetricTruth( exp->stage_id, *exp );
+  //PrintStagePose( output );
+  //puts( "PUSHED" );
 
 
   dragging->x = x;

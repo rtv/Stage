@@ -21,9 +21,12 @@ bool CXGui::PoseFromId( char* host, int port, int device, int index,
 	(strcmp( it->second.hostname, host ) == 0 ) )
       {
 	// record the position of this object
-	x = it->second.x;
-	y = it->second.y;
-	th = it->second.th;
+	//x = it->second.x;
+	//y = it->second.y;
+	//th = it->second.th;
+
+	GetGlobalPose( it->second, x, y, th );
+
 	col = it->second.pixel_color;
 	
 	return true;
@@ -32,7 +35,42 @@ bool CXGui::PoseFromId( char* host, int port, int device, int index,
 }
     
 
-void CXGui::RenderObject( xstruth_t &truth )
+
+
+// Get the objects pose in the global cs
+//
+void CXGui::GetGlobalPose( xstruth_t &truth, double &px, double &py, double &pth)
+{
+    // Get the pose of our parent in the global cs
+    //
+    double ox = 0;
+    double oy = 0;
+    double oth = 0;
+
+    // if we have a parent
+    if( truth.parent.type != 0 )
+      {
+	// find the parent
+	TruthMap::iterator it;
+	// find this object
+	for( it = truth_map.begin(); it != truth_map.end(); it++ )
+	  if( it->second.id.port == truth.parent.port &&  
+	      it->second.id.type == truth.parent.type &&
+	      it->second.id.index == truth.parent.index )
+	    {
+	      GetGlobalPose( it->second, ox, oy, oth);
+	      break;
+	    }
+      }
+
+    // Compute our pose in the global cs
+    //
+    px = ox + truth.x * cos(oth) - truth.y * sin(oth);
+    py = oy + truth.x * sin(oth) + truth.y * cos(oth);
+    pth = oth + truth.th;
+}
+
+void CXGui::RenderObject( xstruth_t &orig_truth )
   {
 #ifdef DEBUG
     //    char buf[30]
@@ -42,6 +80,20 @@ void CXGui::RenderObject( xstruth_t &truth )
     //printf( "R(%d,%d,%d)\n", pid.port, pid.type, pid.index );
     //fflush( stdout );
 #endif
+
+    xstruth_t truth;
+    
+    // copy the original truth
+    memcpy( &truth, &orig_truth, sizeof(xstruth_t) );
+    
+    // and replace it's local with global coordinates
+    
+    double x, y, th;
+    GetGlobalPose( truth, x, y, th );
+    
+    truth.x = x;
+    truth.y = y;
+    truth.th = th;
 
     bool extended = false;
 
