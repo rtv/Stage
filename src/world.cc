@@ -1,7 +1,7 @@
 /*************************************************************************
  * world.cc - top level class that contains and updates robots
  * RTV
- * $Id: world.cc,v 1.1.1.1 2000-11-29 00:16:53 ahoward Exp $
+ * $Id: world.cc,v 1.2 2000-11-29 04:03:51 ahoward Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -36,6 +36,7 @@ double runStart;
 unsigned int RGB( int r, int g, int b );
 
 extern double quitTime;
+extern CWorld* world;
 extern CWorldWin* win;
 
 CWorld::CWorld( char* initFile ) 
@@ -115,6 +116,13 @@ CWorld::CWorld( char* initFile )
 #ifdef VERBOSE
   cout << "Making the robots... " << flush;
 #endif
+
+  // ahoward -- I'm setting the global world var here, since
+  // the robot's need it when they are constructed.
+  // A better way to do this would be to eliminate the global var
+  // and pass the world in the robot constructor
+  //
+  world = this;
 
   while( currentPopulation < population )
     {

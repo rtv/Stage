@@ -1,7 +1,7 @@
 /*************************************************************************
  * robot.cc - most of the action is here
  * RTV
- * $Id: robot.cc,v 1.2 2000-11-29 00:59:16 ahoward Exp $
+ * $Id: robot.cc,v 1.3 2000-11-29 04:03:51 ahoward Exp $
  ************************************************************************/
 
 #include <errno.h>
@@ -34,6 +34,10 @@
 #include "world.h"
 #include "win.h"
 #include "ports.h"
+
+// Devices
+//
+#include "laserdevice.hh"
 
 extern int errno;
 
@@ -169,10 +173,22 @@ CRobot::CRobot( int iid, float w, float l,
   }
 
   StoreRect();
+
+  // Initialise the device list
+  //
+  m_device_count = 0;
+  
+  // *** TESTING -- should be moved
+  //
+  Startup();
 }
 
 CRobot::~CRobot( void )
 {
+  // *** TESTING -- should be moved
+  //
+  Shutdown();
+
   // BPG
   if(kill(player_pid,SIGINT))
     perror("CRobot::~CRobot(): kill() failed sending SIGINT to Player");
@@ -183,6 +199,52 @@ CRobot::~CRobot( void )
   // delete the playerIO.xxxxxx file
   remove( tmpName );
 }
+
+
+// Start all the devices
+//
+bool CRobot::Startup()
+{
+    TRACE0("starting devices");
+
+    m_device_count = 0;
+    
+    // Create laser device
+    //
+    m_device[m_device_count++] = new CLaserDevice(playerIO + LASER_DATA_START,
+                                                  LASER_DATA_BUFFER_SIZE);
+    // Start all the devices
+    //
+    for (int i = 0; i < m_device_count; i++)
+    {
+        if (!m_device[i]->Open(this, world))
+        {
+            perror("CRobot::Startup: failed to open device; device unavailable");
+            m_device[i] = NULL;
+        }
+    }
+
+    return true;
+}
+
+
+// Shutdown the devices
+//
+bool CRobot::Shutdown()
+{
+    TRACE0("shutting down devices");
+    
+    for (int i = 0; i < m_device_count; i++)
+    {
+        if (!m_device[i])
+            continue;
+        if (!m_device[i]->Close())
+            perror("CRobot::Shutdown: failed to close device");
+        delete m_device[i];
+    }
+    return true;
+}
+
 
 void CRobot::Stop( void )
 {
@@ -1035,9 +1097,14 @@ void CRobot::Update( Nimage* img )
   // only publish the sonar and laser if they were changed
   // UpdateFoo() methods return true if it was time to update this sensor
   if( playerIO[ SUB_SONAR  ] && UpdateSonar( img ) ) PublishSonar();
-  if( playerIO[ SUB_LASER  ] && UpdateLaser( img ) )  PublishLaser();
+  //*** remove -- use new driver if( playerIO[ SUB_LASER  ] && UpdateLaser( img ) )  PublishLaser();
   if( playerIO[ SUB_VISION ] && UpdateVision( img ) ) PublishVision();
   if( playerIO[ SUB_PTZ ] ) UpdateAndPublishPtz();
+
+  // Update all devices
+  //
+  for (int i = 0; i < m_device_count; i++)
+      m_device[i]->Update();
 }
 
 

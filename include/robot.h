@@ -2,7 +2,7 @@
  * robot.h - CRobot defintion - most of the action is here
             
  * RTV
- * $Id: robot.h,v 1.1.1.1 2000-11-29 00:16:53 ahoward Exp $
+ * $Id: robot.h,v 1.2 2000-11-29 04:03:51 ahoward Exp $
  ************************************************************************/
 
 #include <offsets.h> // for the ACTS size defines
@@ -21,6 +21,11 @@
 #define SONARSAMPLES 16
 
 #define MAXBLOBS 100 // PDOMA!
+
+
+// Forward declare some of the class we will use
+//
+class CDevice;
 
 
 typedef struct
@@ -95,6 +100,19 @@ public:
 
   double lastCommand; // remember the time of the last command
 
+  // Device list
+  //
+  int m_device_count;
+  CDevice *m_device[32];
+
+  // Start all the devices
+  //
+  bool Startup();
+
+  // Shutdown the devices
+  //
+  bool Shutdown();
+  
   void Stop( void );
   void Move( void );
   void HitObstacle( void );  
