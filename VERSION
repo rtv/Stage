@@ -1,0 +1,7 @@
+##############################################################################
+# VERSION
+#
+# Define Stage's version string for the source to include (required)
+# Must match Player's version string
+
+VERSION = 1.2
