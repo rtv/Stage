@@ -5,5 +5,4 @@ aclocal
 autoheader
 automake --gnu --add-missing
 autoconf
-cd rtk2 && bootstrap && cd ..
 ./configure "$@"

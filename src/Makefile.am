@@ -2,16 +2,14 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.23 2002-11-01 19:12:28 rtv Exp $
+# $Id: Makefile.am,v 1.24 2002-11-02 00:46:14 gerkey Exp $
 
 
 SUBDIRS = models rtkstage gnome2
 
 # we need extra flags as long as RTK code is embedded in the main simulator source
-if WITH_RTK_GUI
-if HAVE_GTK
-RTKCPPFLAGS = -I$(top_srcdir)/rtk2 `gtk-config --cflags`
-endif
+if WITH_RTK
+RTKCPPFLAGS = -I@RTK_DIR@/include `gtk-config --cflags`
 endif
 
 stage_DEPENDENCIES = $(NOGUIOBJ) models/libstgmodels.a  @GUI_DIR@/@GUI_LIB@

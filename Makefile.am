@@ -1,4 +1,4 @@
-SUBDIRS = rtk2 src worlds tools 
+SUBDIRS = src worlds tools 
 
 DOCSRC = $(top_srcdir)/docsrc
 DOCDIST = $(distdir)/doc 

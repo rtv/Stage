@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.23 2002-11-01 19:46:10 gerkey Exp $
+dnl $Id: configure.in,v 1.24 2002-11-02 00:46:14 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -23,9 +23,6 @@ AC_PROG_MAKE_SET
 dnl Generate a configuration header called <config.h> and put all the C
 dnl preprocessor defines in there
 AM_CONFIG_HEADER(config.h)
-
-dnl run RTK's configure as well
-AC_CONFIG_SUBDIRS(rtk2)
 
 dnl Define this so that we can refer to it twice below
 define(STAGE_VERSION,1.3)
@@ -83,7 +80,27 @@ if test "x$with_gnome2" = "xyes"; then
   GUI_LINK="-Lgnome2 -lgnomestage `pkg-config --libs libgnomecanvas-2.0 libgnomeui-2.0`"
 else
   dnl otherwise we use the RTK GUI unless it is explicitly refused
-  RTK2_TESTS
+  dnl where's RTK?
+  AC_ARG_WITH(rtk, [   --with-rtk=dir      Location of RTK],
+  RTK_DIR=$with_rtk,
+  RTK_DIR="${HOME}/rtk-2.1")
+  AC_SUBST(RTK_DIR)
+
+  dnl RTK2 uses libjpeg to export images.
+  AC_CHECK_HEADER(jpeglib.h,
+    AC_DEFINE(HAVE_JPEGLIB_H,1,[include jpeg support])
+    LIBJPEG="-ljpeg",,)
+
+  if test -f $RTK_DIR/include/rtk.h; then
+    with_rtk=yes
+    AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
+    GUI_DIR=rtkstage
+    GUI_LIB=librtkstage.a
+    GUI_LINK="-L$RTK_DIR/lib -Lrtkstage -lrtkstage -lrtk $LIBJPEG `gtk-config --libs gtk gthread`"
+  else
+    with_rtk=no
+  fi
+  AM_CONDITIONAL(WITH_RTK, test x$with_rtk = xyes)
 fi
 
 # define the paths, libs and deps for the GUI
@@ -124,5 +141,3 @@ AC_OUTPUT(Makefile
 	  src/rtkstage/Makefile
           worlds/Makefile 
           tools/Makefile)
-          #rtk2/Makefile 
-          #rtk2/test/Makefile )
