@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.34 $
+//  $Author: gerkey $
+//  $Revision: 1.35 $
 //
 // Usage:
 //  (empty)
@@ -90,6 +90,9 @@ public:
 
   // Thread control
 private: pthread_t m_thread;
+
+  // when to shutdown (in seconds)
+private: int m_stoptime;
   
   // Enable flag -- world only updates while this is set
 private: bool m_enable;

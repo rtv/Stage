@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.66 $
+//  $Author: gerkey $
+//  $Revision: 1.67 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -75,6 +75,9 @@ CWorld::CWorld()
 {
     // seed the random number generator
     srand48( time(NULL) );
+
+    // stop time of zero means run forever
+    m_stoptime = 0;
 
     // invalid file descriptor initially
     m_log_fd = -1;
@@ -622,6 +625,7 @@ void* CWorld::Main(void *arg)
 ///////////////////////////////////////////////////////////////////////////
 // Update the world
 //
+extern bool quit;
 void CWorld::Update()
 {  
   // Update the simulation time (in both formats)
@@ -629,6 +633,10 @@ void CWorld::Update()
   m_sim_time = m_step_num * m_sim_timestep;
   m_sim_timeval.tv_sec = (long)floor(m_sim_time);
   m_sim_timeval.tv_usec = (long)((m_sim_time - floor(m_sim_time)) * MILLION); 
+
+  // is it time to stop?
+  if(m_stoptime && m_sim_time >= m_stoptime)
+    system("kill `cat stage.pid`");
 
   // copy the timeval into the player io buffer
   // use the first object's info

@@ -5,7 +5,7 @@
 // Date: 14 May 2001
 // Desc: Load/save routines & command line processing for the world 
 //
-// $Id: world_load.cc,v 1.26 2001-10-13 02:01:42 vaughan Exp $
+// $Id: world_load.cc,v 1.27 2001-10-22 22:22:38 gerkey Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -616,6 +616,12 @@ bool CWorld::ParseCmdline(int argc, char **argv)
 	  m_enable = false; // don't run until we have a sync connection
 	  printf( "[External Sync]");
 	}      
+      else if(!strcmp(argv[a], "-time"))
+      {
+        m_stoptime = atoi(argv[++a]);
+        printf("setting time to: %d\n",m_stoptime);
+      }
+
       //else if( strcmp( argv[a], "-id" ) == 0 )
       //{
       //  memset( m_hostname, 0, 64 );
