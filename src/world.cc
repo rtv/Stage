@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.27 $
+//  $Revision: 1.4.2.28 $
 //
 // Usage:
 //  (empty)
@@ -748,7 +748,8 @@ void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
             {
                 double px = (double) x / ppm;
                 double py = (double) (height - y) / ppm;
-                data->point(px, py);
+                double s = 1.0 / ppm;
+                data->rectangle(px, py, px + s, py + s);
             }
         }
     }

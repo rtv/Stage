@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11.2.21 $
+//  $Revision: 1.11.2.22 $
 //
 // Usage:
 //  (empty)
@@ -73,7 +73,6 @@ CLaserDevice::CLaserDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
 //
 void CLaserDevice::Update()
 {
-    //RTK_TRACE0("updating laser data");
     ASSERT(m_robot != NULL);
     ASSERT(m_world != NULL);
 
@@ -154,7 +153,10 @@ bool CLaserDevice::CheckConfig()
     }
     else
     {
-        // Ignore invalid config
+        // Ignore invalid configurations
+        //  
+        PLAYER_MSG0("invalid laser configuration request");
+        return false;
     }
         
     m_intensity = config.intensity;
@@ -220,8 +222,13 @@ bool CLaserDevice::GenerateScanData(player_laser_data_t *data)
         for (range = 0; range < max_range; range += dr)
         {
             // Look in the laser layer for obstacles
+            // Also look at the two cells to the right and above
+            // so we dont sneak through gaps.
             //
-            uint8_t cell = m_world->GetCell(px, py, layer_laser);
+            uint8_t cell = 0;
+            cell |= m_world->GetCell(px, py, layer_laser);
+            cell |= m_world->GetCell(px + dr, py, layer_laser);
+            cell |= m_world->GetCell(px, py + dr, layer_laser);
             if (cell != 0)
             {
                 if (cell > 1)

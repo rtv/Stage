@@ -6,7 +6,7 @@ create box_obstacle pose 5.89 7.96 1 size 1.00 0.50
 create box_obstacle pose 5.80 11.84 251 size 2.00 0.50 
 create laser_beacon pose 13.81 13.77 0 id 15 
 
-create usc_pioneer pose 9.99 4.23 0 name comet port 6665 
+create usc_pioneer pose 13.50 7.96 0 name comet port 6665 
 {
     create laser_beacon pose -0.15 0.00 0 id 17 
 }
