@@ -24,14 +24,14 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: stg_driver.cc,v 1.19 2004-12-30 05:46:58 rtv Exp $
+ * CVS: $Id: stg_driver.cc,v 1.20 2004-12-30 07:08:00 rtv Exp $
  */
 
 // DOCUMENTATION ---------------------------------------------------------------------
 
 /** @defgroup driver_stage Stage plugin driver for Player
 
-This driver gives Player access to Stage's models.x
+This driver gives Player access to Stage's models.
 
 @par Provides
 
@@ -72,99 +72,59 @@ is a link to its entry in the Player manual:
 @par Player configuration file options
 
 - model (string)
-  - where (string) is the name of a Stage position model that will be controlled by this interface.
+  - where (string) is the name of a Stage position model that will be controlled by this interface. Stage will search the tree of models below the named model to find a device of the right type.
   
 @par Configuration file examples:
 
-Creating models in a Stage world (.world) file:
+Creating models in a Stage worldfile, saved as "example.world":
 
 @verbatim
+# create a position model - it can drive around like a robot
 position
 (
-  name "marvin"
   pose [ 1 1 0 ]
   color "red"
+  name "marvin"
+
+  # add a laser scanner on top of the robot
+  laser() 
 )
 @endverbatim
+
 
 Using Stage models in a Player config (.cfg) file:
 
 @verbatim
+# load the Stage plugin and create a world from a worldfile
+driver
+(		
+  name "stage"
+  provides ["simulation:0"]
+  plugin "libstage"
+
+  # create the simulated world described by this worldfile
+  worldfile "example.world"	
+)
+
+# create a position device, connected to a Stage position model 
 driver
 (
   name "stage"
   provides ["position:0" ]
   model "marvin"
 )
-@endverbatim
 
-
-@par Example Player config (.cfg) file:
-
-In this example we create three sonar devices, demonstrating the
-explicit and implicit model-naming schemes.
-
-@verbatim
+# create a laser device, connected to a Stage laser model
 driver
 (
-  name "stg_sonar"
-  provides ["sonar:0" ]
-
-  # identify a model with an explicit, user-defined name
-  model "myranger"
+  name "stage"
+  provides ["laser:0" ]
+  model "marvin"
 )
-
-driver
-(
-  name "stg_sonar"
-  provides ["sonar:1" ]
-
-  # identify the first ranger attached the the model named "green_robot"
-  model "green_robot:ranger:0" 
-)
-
-driver
-(
-  name "stg_sonar"
-  provides ["sonar:2" ]
-
-  # identify the first ranger attached to the third position device
-  model "position:2.ranger:0" 
-)
-
 @endverbatim
 
-@par Example Stage world (.world) file:
-
-@verbatim
-
-# create position and ranger models with explicit names
-position
-(
-  name "red_robot"
-  pose [ 1 1 0 ]
-  color "red"
-  ranger( name "myranger" ) # this model is explicitly named "myranger"
-)
-
-# create position and ranger models, naming just the position (parent) model
-position
-(
-  name "green_robot"
-  pose [ 3 1 0 ]
-  color "green"
-  ranger() # this model is implicity named "green_robot.ranger:0"
-)
-
-# create position and ranger models without naming them explicitly
-position
-(
-  pose [ 2 1 0 ]
-  color "blue"
-  ranger() # this model is implicitly named "position:2.ranger:0"
-)
-
-@endverbatim
+More examples can be found in the Stage source tree, in directory
+<stage-version>/worlds.
 
 @par Authors
 

@@ -1,6 +1,6 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: help.txt,v 1.5 2004-12-30 05:04:59 rtv Exp $
+ * $Id: help.txt,v 1.6 2004-12-30 07:08:00 rtv Exp $
 */
 
 /**
@@ -51,17 +51,57 @@ fiducial tracking and mobile robot bases with odometry.
 
 <i>Note:
 Some models from previous versions may not yet be available in this
-release, but we're working on them. Let us know which ones you need.
+release (e.g. gripper & puck), but we're working on them. Let us know which ones you need.
 </i>
 
 [@ref refs]
 
 <hr>
 <small>
-Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: help.txt,v 1.5 2004-12-30 05:04:59 rtv Exp $
+Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: help.txt,v 1.6 2004-12-30 07:08:00 rtv Exp $
 </small>
 
 */
+
+/** @page help Getting Help
+
+If you're having problems and you can't find what you need in this manual, there are several places to find help. 
+
+First, please check the <a
+href=http://playerstage.sourceforge.net/doc/doc.html>online
+documentation page</a> to make sure you have the latest
+documentation. In particular, check the <a
+href=http://playerstage.sourceforge.net/doc/stage_user/faq.html>latest
+online latest FAQ page</a>.
+
+Next, you should search <a
+href=http://sourceforge.net/mailarchive/forum.php?forum_id=8201>the
+playerstage_users mailing list archive</a> to
+see if your questions have already been answered.
+
+Next, you should probably spend a few minutes with <a
+href=http://www.google.com>Google</a>. This often works well, as it
+picks up P/S conversations from all over the place.
+
+If you still need help, you can send email to the mailing list
+playerstage_users@lists.sourceforge.net and a user or developer may
+reply to you. <b>Remember that these mails go to hundreds of people</b>, so
+please be polite and give as much information as you can in your
+email.
+
+*/
+
+
+/** @page faq Frequently Asked Questions (FAQ)
+
+<b>There are no questions about the 1.6 release yet. If you have a question, <a href=help.html>follow the advice here</a></b>.
+
+<ol>
+<li> [none]
+</ol>
+
+*/
+
 
 /**
 @page refs References
@@ -177,14 +217,17 @@ benefit of this is that <b>all Player drivers are now available for
 use directly with Stage</b>, including sophisticated drivers like
 AMCL, without needing passthrough drivers.
 
+<li>Stage depends on Player 1.6 or newer.
+
 <li>Worldfile syntax has a changed, so you need to edit your existing
 worlds to get them to work. Look at the example worlds in <tt>(stage
 src)/worlds</tt> to get the idea.
 
 <li>Any object can now have its shape specified by a bitmap file
 
-<li>Many, many, bitmap file formats are supported. Load maps and robot
-bodies from JPG, PNG, etc. No more PNM troubles.
+<li>Several bitmap file formats are supported, using a third-party
+library. Load maps and robot bodies from JPG, PNG, etc. No more PNM
+troubles.
 
 <li>Worlds can now be very large (thousands of meters square).
 
@@ -195,14 +238,27 @@ blobfinder models.
 
 <li>Stage no longer depends on libRTK.
 
+<li>Some models from previous versions may not yet be available in
+this release (e.g. gripper & puck), but we're working on them. Let us
+know which ones you need.
+
 </ol>
 
 <h3>Significant changes under the hood</h3>
 
 <ol>
 
+<li>The Stage simulation engine is now a library rather than an
+application. The library can be used to write custom robot
+simulations. This is very useful if you need to do synchronous control
+of robots (e.g for perfectly repeatable experiments), or dynamically
+create and destroy robots or other objects. You can't (yet) do this
+though Player. Refer to the <a
+href=http://playerstage.sf.net/doc/stage_reference>libstage reference
+manual</a> for the API and developer docs.</a>.
+
 <li>Stage is now mostly written in C. A simple object-oriented system
-allows one-level of inheritance for writing polymorphic model code.
+allows one level of inheritance for writing polymorphic model code.
 
 <li>The underlying occupancy grid model has changed from a simple
 fixed-size array to a sparse array of (almost) unlimited size
@@ -314,7 +370,10 @@ Stage was written by:
 
 Stage is part of the <a
 href="http://playerstage.sourceforge.net">Player/Stage Project</a>, a
-community effort to develop Free Software tools for robotics research.
+community effort to develop Free Software tools for robotics
+research. Stage is free to use, modify and redistribute under the
+terms of the <a href=http://www.gnu.org/licenses/licenses.html> GNU
+General Public License</a>.
 
 Funding for Stage has been provided in part by:
 <ul>
@@ -323,6 +382,22 @@ Funding for Stage has been provided in part by:
  <li>DARPA (USA)
  <li>NASA (USA)
  <li>NSF (USA)
+</ul>
+
+
+If you use Stage in your work, we'd appreciate a citation. At the time of writing, the most suitable reference is:
+
+<ul>
+<li>
+Brian Gerkey, Richard T. Vaughan and Andrew Howard. "The
+Player/Stage Project: Tools for Multi-Robot and Distributed Sensor
+Systems"
+Proceedings of the 11th International Conference on Advanced Robotics,
+pages 317-323,
+Coimbra, Portugal, June 2003 <A HREF="http://www.isr.uc.pt/icar03/">(ICAR'03)</A>.
+<br>
+<A HREF="http://robotics.stanford.edu/~gerkey/research/final_papers/icar03-player.ps.gz">[gzipped
+postscript]</A> <A HREF="http://robotics.stanford.edu/~gerkey/research/final_papers/icar03-player.pdf">[pdf]</A>  
 </ul>
 
 */
