@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/ptzdevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Author: inspectorg $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -60,10 +60,11 @@ CPtzDevice::CPtzDevice(LibraryItem* libit,CWorld *world, CEntity *parent )
   m_tilt_max = 0;
   m_tilt_min = 0;
   
-  m_zoom_min = 0;
-  m_zoom_max = 1024;
+  m_zoom_min = 10;
+  m_zoom_max = 120;
   
-  m_pan = m_tilt = m_zoom = 0;
+  m_pan = m_tilt = 0;
+  m_zoom = m_zoom_max;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -84,8 +85,6 @@ bool CPtzDevice::Load(CWorldFile *worldfile, int section)
   if (!CPlayerEntity::Load(worldfile, section))
     return false;
 
-  char lens_str[32];
-  
   // Field of view (for scaling zoom values)
   //
   // should look in the Sony manual to get these numbers right,
@@ -97,27 +96,25 @@ bool CPtzDevice::Load(CWorldFile *worldfile, int section)
   // cameras lens has a 60-degree FOV and 12x zoom (and an assumption of linear
   // zoom.  note that the normal/wide lens issue is dealt with via a 
   // .world file option - BPG
-  double normal_lens_fov = DTOR(60.0);
+  double normal_lens_fov = 60.0;
   double max_zoom = 12.0;
   double wide_lens_multiplier = 2.0;
 
   // Read ptz settings
-  strncpy(lens_str, worldfile->ReadString(section, "lens", "normal"),
-          sizeof(lens_str));
-  lens_str[sizeof(lens_str)-1] = '\0';
+  const char *lens = worldfile->ReadString(section, "lens", "normal");
 
-  if(!strcmp(lens_str, "normal"))
-    m_fov_min = normal_lens_fov;
-  else if(!strcmp(lens_str, "wide"))
-    m_fov_min = normal_lens_fov * wide_lens_multiplier;
+  if(!strcmp(lens, "normal"))
+    m_zoom_max = normal_lens_fov;
+  else if(!strcmp(lens, "wide"))
+    m_zoom_max = normal_lens_fov * wide_lens_multiplier;
   else
   {
-    fprintf(stderr, "CPtzDevice: Warning: ignoring unknown lens "
-            "specifier \"%s\"\n", lens_str);
-    m_fov_min = normal_lens_fov;
+    PRINT_ERR1(" ignoring unknown lens specifier \"%s\"\n", lens);
+    m_zoom_max = normal_lens_fov;
   }
 
-  m_fov_max = m_fov_min / max_zoom;
+  m_zoom_min = m_zoom_max / max_zoom;
+  m_zoom = m_zoom_max;
   
   return true;
 }
@@ -141,13 +138,13 @@ void CPtzDevice::Update( double sim_time )
   // Dont update anything if we are not subscribed
   //
   if(!Subscribed())
-    {
-      // reset the camera to (0,0,0) to better simulate the physical camera
-      m_pan = 0;
-      m_tilt = 0;
-      m_zoom = 0;
-      return;
-    }
+  {
+    // reset the camera to (0,0,0) to better simulate the physical camera
+    m_pan = 0;
+    m_tilt = 0;
+    m_zoom = m_zoom_max;
+    return;
+  }
   
   // we're subscribed, so do the update
   
@@ -156,47 +153,47 @@ void CPtzDevice::Update( double sim_time )
   player_ptz_cmd_t cmd;
   int len = GetCommand(&cmd, sizeof(cmd));
   if (len > 0 && len != sizeof(cmd))
-    {
-      PRINT_MSG("command buffer has incorrect length -- ignored");
-      return;
-    }
+  {
+    PRINT_MSG("command buffer has incorrect length -- ignored");
+    return;
+  }
   
   // Parse the command string (if there is one)
   //
   if (len > 0)
-    {
-      // TODO: put a little controller in here to pan gradually
-      // rather than instantly for better realism - rtv
-      double pan = (short) ntohs(cmd.pan);
-      double tilt = (short) ntohs(cmd.tilt);
-      double zoom = (unsigned short) ntohs(cmd.zoom);
+  {
+    // TODO: put a little controller in here to pan gradually
+    // rather than instantly for better realism - rtv
+    double pan = (short) ntohs(cmd.pan);
+    double tilt = (short) ntohs(cmd.tilt);
+    double zoom = (short) ntohs(cmd.zoom);
       
-      // Threshold
-      //
-      pan = (pan < m_pan_max ? pan : m_pan_max);
-      pan = (pan > m_pan_min ? pan : m_pan_min);
+    // Threshold
+    //
+    pan = (pan < m_pan_max ? pan : m_pan_max);
+    pan = (pan > m_pan_min ? pan : m_pan_min);
       
-      tilt = (tilt < m_tilt_max ? tilt : m_tilt_max);
-      tilt = (tilt > m_tilt_min ? tilt : m_tilt_min);
+    tilt = (tilt < m_tilt_max ? tilt : m_tilt_max);
+    tilt = (tilt > m_tilt_min ? tilt : m_tilt_min);
       
-      zoom = (zoom < m_zoom_max ? zoom : m_zoom_max);
-      zoom = (zoom > m_zoom_min ? zoom : m_zoom_min);
+    zoom = (zoom < m_zoom_max ? zoom : m_zoom_max);
+    zoom = (zoom > m_zoom_min ? zoom : m_zoom_min);
       
-      // Set the current values
-      // This basically assumes instantaneous changes
-      // We could add a velocity in here later. ahoward
-      //
-      m_pan = pan;
-      m_tilt = tilt;
-      m_zoom = zoom;
-    }
+    // Set the current values
+    // This basically assumes instantaneous changes
+    // We could add a velocity in here later. ahoward
+    //
+    m_pan = pan;
+    m_tilt = tilt;
+    m_zoom = zoom;
+  }
   
   // Construct the return data buffer
   //
   player_ptz_data_t data;
   data.pan = htons((short) m_pan);
   data.tilt = htons((short) m_tilt);
-  data.zoom = htons((unsigned short) m_zoom);
+  data.zoom = htons((short) m_zoom);
   
   // Pass back the data
   //
@@ -206,15 +203,13 @@ void CPtzDevice::Update( double sim_time )
 
 ///////////////////////////////////////////////////////////////////////////
 // Get the pan/tilt/zoom values
-// The pan and tilt are angles (in radians)
-// The zoom is a focal length (in m)
-//
+// All values are angles.
 void CPtzDevice::GetPTZ(double &pan, double &tilt, double &zoom)
 {
-    pan = DTOR(m_pan);
-    tilt = DTOR(m_tilt);
-    zoom = m_fov_min + (m_zoom - m_zoom_min) *
-        (m_fov_max - m_fov_min) / (m_zoom_max - m_zoom_min);
+  pan = DTOR(m_pan);
+  tilt = DTOR(m_tilt);
+  zoom = DTOR(m_zoom);
+  return;
 }
 
 
@@ -277,8 +272,7 @@ void CPtzDevice::RtkUpdate()
       double fx;
 
       // Camera field of view in x-direction (radians), based on zoom
-      fx = m_fov_min + (m_zoom - m_zoom_min) * 
-              (m_fov_max - m_fov_min) / (m_zoom_max - m_zoom_min);
+      fx = DTOR(m_zoom);
       
       ox = 100 * cos(pan);
       oy = 100 * sin(pan);

@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.57 2002-11-11 03:09:46 rtv Exp $
+ * CVS: $Id: main.cc,v 1.58 2002-11-11 04:46:06 inspectorg Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -161,7 +161,12 @@ int main(int argc, char **argv)
   if( !world->Load() )
   {
     puts("Stage: failed to load world. Quitting.");
-    StageQuit();
+
+    // Dont use StageQuit(): it calls world->ShutDown(), which
+    // bombs out because we havent yet called world->Startup().
+    //StageQuit();
+    delete world;
+    exit(0);
   }
 
   // startup is (externally) identical for client and server, but they

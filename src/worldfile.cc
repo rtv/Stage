@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.24 2002-10-16 20:50:09 gerkey Exp $
+ * CVS info: $Id: worldfile.cc,v 1.25 2002-11-11 04:46:06 inspectorg Exp $
  */
 
 #include <assert.h>
@@ -384,7 +384,7 @@ bool CWorldFile::LoadTokenInclude(FILE *file, int *line, int include)
   int ch;
   const char *filename;
   char *fullpath;
-  
+
   ch = fgetc(file);
 
   if (ch == EOF)
@@ -468,6 +468,9 @@ bool CWorldFile::LoadTokenInclude(FILE *file, int *line, int include)
     return false;
   }
 
+  // Terminate the include line
+  AddToken(TokenEOL, "\n", include);
+      
   // Read tokens from the file
   if (!LoadTokens(infile, include + 1))
   {
@@ -772,6 +775,7 @@ bool CWorldFile::ParseTokenInclude(int *index, int *line)
         return true;
       default:
         PARSE_ERR("syntax error in include statement", *line);
+        return false;
     }
   }
   PARSE_ERR("incomplete include statement", *line);

@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.48 2002-11-11 03:09:46 rtv Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.49 2002-11-11 04:46:06 inspectorg Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -325,31 +325,37 @@ int CPlayerEntity::SharedMemorySize( void )
 
 // Copy data from the shared memory segment
 size_t CPlayerEntity::GetIOData( void* dest, size_t dest_len,  
-				 void* src, uint32_t* avail )
+                                 void* src, uint32_t* avail )
 {
+  size_t len;
+  
+  assert( dest ); // the caller must have somewhere to put this data
+  if( src == 0 )  // this device doesn't have any data here
+    return 0;     // so bail right away
+
   Lock();
 
-  assert( dest ); // the caller must have somewhere to put this data
-  
-  if( src == 0 ) // this device doesn't have any data here
-    return 0; // so bail right away
+  len = 0;
 
-  // if there is enough space for the data 
-  if( dest_len >= (size_t)*avail) 
-    memcpy( dest, src, dest_len ); // copy the data
-  else
+  // If there is data available...
+  if (*avail > 0)
   {
-    //PRINT_ERR2( "requested %d data but %d bytes available\n", 
-    //	    dest_len, *avail );  
-      
-    // indicate failure - caller might have to handle this, but
-    // this usually isn't an error - there was just nothing to fetch.
-    dest_len = 0; 
+    // If the data fits...
+    if ((size_t) *avail <= dest_len)
+    {
+      memcpy( dest, src, *avail);
+      len = *avail;
+    }
+    else
+    {
+      PRINT_ERR2("command buffer overflow; (%d > %d)", *avail, dest_len);
+      len = 0;
+    }
   }
 
   Unlock();
 
-  return dest_len;
+  return len;
 }
 
 size_t CPlayerEntity::GetData( void* data, size_t len )
