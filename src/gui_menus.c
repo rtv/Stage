@@ -97,22 +97,30 @@ static const int menu_table_count = 43;
 /*   gtk_dialog_run( about ); */
 /* } */
 
+void refresh_cb( gpointer key, gpointer value, gpointer user )
+{
+  model_refresh( (stg_model_t*)value );
+}
+
 void gui_menu_view_data( gpointer data, guint action, GtkWidget* mitem )
 {
   ((gui_window_t*)data)->render_data_flag[action] = 
     GTK_CHECK_MENU_ITEM(mitem)->active;
+  g_hash_table_foreach( ((gui_window_t*)data)->world->models, refresh_cb, NULL );   
 }
 
 void gui_menu_view_cfg( gpointer data, guint action, GtkWidget* mitem )
 {
   ((gui_window_t*)data)->render_cfg_flag[action] = 
     GTK_CHECK_MENU_ITEM(mitem)->active;
+  g_hash_table_foreach( ((gui_window_t*)data)->world->models, refresh_cb, NULL );   
 }
 
 void gui_menu_view_cmd( gpointer data, guint action, GtkWidget* mitem )
 {
   ((gui_window_t*)data)->render_cmd_flag[action] = 
     GTK_CHECK_MENU_ITEM(mitem)->active;
+  g_hash_table_foreach( ((gui_window_t*)data)->world->models, refresh_cb, NULL );   
 }
 
 
@@ -131,7 +139,11 @@ void gui_menu_file_export_format( gpointer data, guint action, GtkWidget* mitem 
     case 2: win->frame_format = RTK_IMAGE_FORMAT_PNG; break;
     case 3: win->frame_format = RTK_IMAGE_FORMAT_PPM; break;
     case 4: win->frame_format = RTK_IMAGE_FORMAT_PNM; break;
-    }
+    }void refresh_cb( gpointer key, gpointer value, gpointer user )
+{
+  model_refresh( (stg_model_t*)value );
+}
+
 }
 
 void gui_menu_file_save_cb( gpointer data, 
@@ -191,7 +203,7 @@ void gui_menu_file_export_frame_cb( gpointer data,
 				    guint action, 
 				    GtkWidget* mitem )
 {
-  PRINT_DEBUG( "File/Image/Save frame menu item" );
+  PRINT_DEBUG( "File/Image/Save frame menu item");
   export_window( (gui_window_t*)data );
 }
 
@@ -253,10 +265,6 @@ void model_refresh( stg_model_t* mod )
   stg_model_set_lines( mod, mod->lines, mod->lines_count );
 }
 
-void refresh_cb( gpointer key, gpointer value, gpointer user )
-{
-  model_refresh( (stg_model_t*)value );
-}
 
 void gui_menu_polygons_cb( gpointer data, guint action, GtkWidget* mitem )
 {

@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.104 2004-11-08 20:55:14 rtv Exp $
+ * CVS: $Id: stage.h,v 1.105 2004-11-08 22:46:59 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -481,7 +481,9 @@ extern "C" {
     rtk_fig_t* data;
     rtk_fig_t* cmd;
     rtk_fig_t* cfg;
-    rtk_fig_t* bg; // background (used e.g for laser scan fill)
+    rtk_fig_t* data_bg; // background (used e.g for laser scan fill)
+    rtk_fig_t* cmd_bg; 
+    rtk_fig_t* cfg_bg; 
   } gui_model_t;
 
   // forward declare

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.32 $
+//  $Revision: 1.33 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -25,12 +25,6 @@ The ranger model simulates an array of sonar or infra-red (IR) range sensors.
 #include "gui.h"
 
 extern rtk_fig_t* fig_debug;
-
-
-void ranger_render_config( stg_model_t* mod );
-void ranger_render_data( stg_model_t* mod );
-int ranger_set_data( stg_model_t* mod, void* data, size_t len );
-int ranger_set_config( stg_model_t* mod, void* config, size_t len );
 
 void ranger_init( stg_model_t* mod )
 {
@@ -63,41 +57,15 @@ void ranger_init( stg_model_t* mod )
       cfg[c].fov = M_PI/6.0;
     }
   
-  ranger_set_config( mod, cfg, cfglen );
-  //ranger_set_data( mod, data, datalen );
+  stg_model_set_config( mod, cfg, cfglen );
 }
-
-int ranger_set_data( stg_model_t* mod, void* data, size_t len )
-{  
-  PRINT_DEBUG1( "ranger set data (%d bytes)", len );
-
-  // store the data
-  _set_data( mod, data, len );
-  
-  // and redraw it
-  ranger_render_data( mod );
-
-  return 0; //OK
-}
-
-int ranger_set_config( stg_model_t* mod, void* config, size_t len )
-{  
-  // store the config
-  _set_cfg( mod, config, len );
-  
-  // and redraw it
-  ranger_render_config( mod);
-
-  return 0; //OK
-}
-
 
 int ranger_shutdown( stg_model_t* mod )
 {
   PRINT_DEBUG( "ranger shutdown" );
 
   // clear the data - this will unrender it too.
-  ranger_set_data( mod, NULL, 0 );
+  stg_model_set_data( mod, NULL, 0 );
 
   return 0;
 }
@@ -170,7 +138,7 @@ int ranger_update( stg_model_t* mod )
       itl_destroy( itl );
     }
   
-  ranger_set_data( mod, ranges, sizeof(stg_ranger_sample_t) * rcount );
+  stg_model_set_data( mod, ranges, sizeof(stg_ranger_sample_t) * rcount );
 
   return 0;
 }
@@ -250,31 +218,29 @@ void ranger_render_config( stg_model_t* mod )
     }
 }
 
-void ranger_render_data( stg_model_t* mod )
+void ranger_render_data( stg_model_t* mod, void* data, size_t len ) 
 { 
   PRINT_DEBUG( "ranger render data" );
-
+  
   
   if( mod->gui.data  )
     rtk_fig_clear(mod->gui.data);
   else // create the figure, store it in the model and keep a local pointer
     mod->gui.data = rtk_fig_create( mod->world->win->canvas, 
-				 mod->gui.top, STG_LAYER_RANGERDATA );
+				    mod->gui.top, STG_LAYER_RANGERDATA );
   
   rtk_fig_t* fig = mod->gui.data;
-
-  size_t len = 0;
-  stg_ranger_config_t* cfg = 
-    (stg_ranger_config_t*)stg_model_get_config(mod,&len);  
   
-  if( len < sizeof(stg_ranger_config_t) )
+  size_t clen = 0;
+  stg_ranger_config_t* cfg = 
+    (stg_ranger_config_t*)stg_model_get_config(mod,&clen);  
+  
+  if( clen < sizeof(stg_ranger_config_t) )
     return;
   
-  int rcount = len / sizeof( stg_ranger_config_t );
+  int rcount = clen / sizeof( stg_ranger_config_t );
   
-  len = 0;
-  stg_ranger_sample_t* samples = 
-    (stg_ranger_sample_t*)stg_model_get_data(mod, &len );
+  stg_ranger_sample_t* samples = (stg_ranger_sample_t*)data;
   
   if( len != (rcount * sizeof(stg_ranger_sample_t) ))
     {
@@ -284,7 +250,7 @@ void ranger_render_data( stg_model_t* mod )
 		    mod->token );
       return;
     }
- 
+  
   // should be ok by now!
   if( rcount > 0 && cfg && samples )
     {
@@ -302,7 +268,7 @@ void ranger_render_data( stg_model_t* mod )
 	      
 	      rtk_fig_arrow( fig, rngr->pose.x, rngr->pose.y, rngr->pose.a, 			       samples[s].range, 0.02 );
 	    }
-	}
+	}stg_model_get_config( mod, &len );
     }
 }
 
@@ -312,10 +278,13 @@ stg_lib_entry_t ranger_entry = {
   NULL,            // startup
   ranger_shutdown, // shutdown
   ranger_update,   // update
-  ranger_set_data,   // set data
+  NULL,            // set data
   NULL,              // get data
   NULL,              // set command
   NULL,              // get command
-  ranger_set_config, // set config
-  NULL               // get config
+  NULL,              // set config
+  NULL,               // get config
+  ranger_render_data, // render data
+  NULL,              // render cmd
+  NULL               // render cfg
 };

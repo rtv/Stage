@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.21 $
+//  $Revision: 1.22 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +54,17 @@ int _set_data( stg_model_t* mod, void* data, size_t len )
   if( mod->lib->render_data && 
       mod->world->win->render_data_flag[mod->type] )
     (*mod->lib->render_data)(mod,data,len);
-
+  else
+    {
+      // remove any graphics that linger
+      if( mod->gui.data )
+	rtk_fig_clear( mod->gui.data );
+      
+      if( mod->gui.data_bg )
+	rtk_fig_clear( mod->gui.data_bg );
+    }
+  
+  
   PRINT_DEBUG3( "model %d(%s) put data of %d bytes",
 		mod->id, mod->token, (int)mod->data_len);
   return 0; //ok
@@ -76,6 +86,21 @@ int _set_cfg( stg_model_t* mod, void* cfg, size_t len )
   mod->cfg = realloc( mod->cfg, len );
   memcpy( mod->cfg, cfg, len );    
   mod->cfg_len = len;
+  
+  // if a rendering callback was registered, and the gui wants to
+  // render this type of cfg, call it
+  if( mod->lib->render_cfg && 
+      mod->world->win->render_cfg_flag[mod->type] )
+    (*mod->lib->render_cfg)(mod,cfg,len);
+  else
+    {
+      // remove any graphics that linger
+      if( mod->gui.cfg )
+	rtk_fig_clear( mod->gui.cfg );
+      
+      if( mod->gui.cfg_bg )
+	rtk_fig_clear( mod->gui.cfg_bg );
+    }
   
   PRINT_DEBUG3( "model %d(%s) put command of %d bytes",
 		mod->id, mod->token, (int)mod->cfg_len);
@@ -223,7 +248,7 @@ int stg_model_set_odom( stg_model_t* mod, stg_pose_t* pose )
 {
   memcpy( &mod->odom, pose, sizeof(stg_pose_t) );
   return 0;
-}
+}// background (used e.g for laser scan fill)
 
 int stg_model_set_friction( stg_model_t* mod, stg_friction_t* fricp )
 {
@@ -318,7 +343,7 @@ int stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom )
 #if SHOW_GEOM
       gui_render_geom( mod );
 #endif
-     
+     // background (used e.g for laser scan fill)
       // re-render int the matrix
       stg_model_map( mod, 1 );
     }
@@ -338,7 +363,7 @@ int stg_model_set_lines( stg_model_t* mod, stg_line_t* lines, size_t lines_count
 {
   assert(mod);
   if( lines_count > 0 ) assert( lines );
-
+// background (used e.g for laser scan fill)
   PRINT_DEBUG3( "model %d(%s) received %d lines", 
 		mod->id, mod->token, (int)lines_count );
   

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.23 $
+//  $Revision: 1.24 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -26,8 +26,6 @@ The fiducialfinder model simulates a fiducial-detecting device.
 
 extern rtk_fig_t* fig_debug;
 
-void fiducial_render_config( stg_model_t* mod );
-void fiducial_render_data( stg_model_t* mod );
 
 void fiducial_init( stg_model_t* mod )
 {
@@ -61,39 +59,12 @@ void fiducial_init( stg_model_t* mod )
   stg_model_set_config( mod, &cfg, sizeof(cfg) );
 }
 
-int fiducial_set_data( stg_model_t* mod, void* data, size_t len )
-{  
-  PRINT_DEBUG( "fiducial set data" );
-
-  // store the data normally
-  _set_data( mod, data, len );
-  
-  // and redraw it
-  fiducial_render_data( mod );
-  
-  //PRINT_DEBUG3( "model %d(%s) now has %d bytes of data",
-  //	mod->id, mod->token, (int)mod->data_len );
-
-  return 0; //OK
-}
-
-int fiducial_set_config( stg_model_t* mod, void* config, size_t len )
-{  
-  PRINT_DEBUG( "fiducial set config" );
-  
-  // store the data normally
-  _set_cfg( mod, config, len );
-  
-  // and redraw it
-  fiducial_render_config( mod);
-
-  return 0; //OK
-}
- 
 int fiducial_shutdown( stg_model_t* mod )
 {
   // this will undrender the data
   stg_model_set_data( mod, NULL, 0 );
+  
+  return 0;
 }
 
 
@@ -230,9 +201,7 @@ int fiducial_update( stg_model_t* mod )
   return 0;
 }
 
-
-
-void fiducial_render_data( stg_model_t* mod )
+void fiducial_render_data( stg_model_t* mod, void* data, size_t len )
 { 
   //PRINT_WARN( "fiducial render" );
 
@@ -242,18 +211,15 @@ void fiducial_render_data( stg_model_t* mod )
   if(  mod->gui.data  )
     rtk_fig_clear( mod->gui.data);
   else // create the figure, store it in the model and keep a local pointer
-    mod->gui.data = rtk_fig_create( mod->world->win->canvas,
-				    mod->gui.top, STG_LAYER_NEIGHBORDATA );
-  
-  rtk_fig_t* fig = mod->gui.data;
-  
-  rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_COLOR ) );
-  
-  size_t len;
-  stg_fiducial_t* fids = stg_model_get_data(mod, &len);
-  
+    {
+      mod->gui.data = rtk_fig_create( mod->world->win->canvas,
+				      mod->gui.top, STG_LAYER_NEIGHBORDATA );
+      rtk_fig_color_rgb32( mod->gui.data, stg_lookup_color( STG_FIDUCIAL_COLOR ) );
+    }
+
+  rtk_fig_t* fig = mod->gui.data; 
+  stg_fiducial_t* fids = (stg_fiducial_t*)data;  
   int bcount = len / sizeof(stg_fiducial_t);
-  
   
   int b;
   for( b=0; b < bcount; b++ )
@@ -281,25 +247,25 @@ void fiducial_render_data( stg_model_t* mod )
     }  
 }
 
-void fiducial_render_config( stg_model_t* mod )
+void fiducial_render_config( stg_model_t* mod, void* data,  size_t len )
 { 
   
   if( mod->gui.cfg  )
     rtk_fig_clear(mod->gui.cfg);
   else // create the figure, store it in the model and keep a local pointer
-    mod->gui.cfg = rtk_fig_create( mod->world->win->canvas,
-				 mod->gui.top, STG_LAYER_NEIGHBORCONFIG );
-
+    {
+      mod->gui.cfg = rtk_fig_create( mod->world->win->canvas,
+				     mod->gui.top, STG_LAYER_NEIGHBORCONFIG );
+      rtk_fig_color_rgb32( mod->gui.cfg, stg_lookup_color( STG_FIDUCIAL_CFG_COLOR ));
+    }
+  
   rtk_fig_t* fig = mod->gui.cfg;  
   
-  rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_CFG_COLOR ));
-  
-  size_t len;
-  stg_fiducial_config_t* cfg = stg_model_get_config(mod,&len);
+  stg_fiducial_config_t* cfg = (stg_fiducial_config_t*)data;
   
   assert( len == sizeof(stg_fiducial_config_t) );
   assert( cfg );
-
+  
   double mina = -cfg->fov / 2.0;
   double maxa = +cfg->fov / 2.0;
   
@@ -324,28 +290,18 @@ void fiducial_render_config( stg_model_t* mod )
   	       mina, maxa );      
 }
 
-/* int register_fiducial( lib_entry_t* lib ) */
-/* {  */
-/*   assert(lib); */
-  
-/*   lib[STG_MODEL_FIDUCIAL].init = fiducial_init; */
-/*   lib[STG_MODEL_FIDUCIAL].update = fiducial_update; */
-/*   lib[STG_MODEL_FIDUCIAL].shutdown = fiducial_shutdown; */
-/*   lib[STG_MODEL_FIDUCIAL].set_config = fiducial_set_config; */
-/*   lib[STG_MODEL_FIDUCIAL].set_data = fiducial_set_data; */
-
-/*   return 0; //ok */
-/* }  */
-
 stg_lib_entry_t fiducial_entry = { 
   fiducial_init,     // init
   NULL,              // startup
   fiducial_shutdown, // shutdown
   fiducial_update,   // update
-  fiducial_set_data, // set data
+  NULL,               // set data
   NULL,              // get data
   NULL,              // set command
   NULL,              // get command
-  fiducial_set_config, // set config
-  NULL               // get config
+  NULL,               // set config
+  NULL,               // get config
+  fiducial_render_data,
+  NULL,
+  fiducial_render_config
 };

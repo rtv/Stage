@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.22 2004-10-02 01:37:27 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.23 2004-11-08 22:46:59 rtv Exp $
  */
 
 /** 
@@ -47,12 +47,8 @@ with each channel is configurable.
 extern rtk_fig_t* fig_debug;
 
 void blobfinder_init( stg_model_t* mod );
-int blobfinder_set_config( stg_model_t* mod, void* config, size_t len );
-int blobfinder_set_data( stg_model_t* mod, void* data, size_t len );
 int blobfinder_startup( stg_model_t* mod );
 int blobfinder_shutdown( stg_model_t* mod );
-void blobfinder_render_data( stg_model_t* mod );
-void blobfinder_render_config( stg_model_t* mod );
 int blobfinder_update( stg_model_t* mod );
 
 // utility - we get the config quite a lot, so use this
@@ -109,31 +105,8 @@ void blobfinder_init( stg_model_t* mod )
   //for( c=0; c<6; c++ )
   //PRINT_WARN2( "init channel %d has val %X", c, cfg.channels[c] );
 
-  blobfinder_set_config( mod, &cfg,sizeof(cfg) );
-
-  blobfinder_set_data( mod, NULL, 0 );
-}
-
-int blobfinder_set_data( stg_model_t* mod, void* data, size_t len )
-{  
-  // store the data
-  _set_data( mod, data, len );
-  
-  // and redraw it
-  blobfinder_render_data( mod );
-
-  return 0; //OK
-}
- 
-int blobfinder_set_config( stg_model_t* mod, void* config, size_t len )
-{  
-  // store the config
-  _set_cfg( mod, config, len );
-  
-  // and redraw it
-  blobfinder_render_config( mod);
-
-  return 0; //OK
+  stg_model_set_config( mod, &cfg,sizeof(cfg) );
+  stg_model_set_data( mod, NULL, 0 );
 }
 
 
@@ -149,7 +122,7 @@ int blobfinder_shutdown( stg_model_t* mod )
   PRINT_DEBUG( "blobfinder shutdown" );  
   
   // clear the data - this will unrender it too
-  blobfinder_set_data( mod, NULL, 0 );
+  stg_model_set_data( mod, NULL, 0 );
   return 0;
 }
 
@@ -360,9 +333,9 @@ int blobfinder_update( stg_model_t* mod )
   //PRINT_WARN1( "blobfinder setting data %d bytes of data", 
   //       blobs->len * sizeof(stg_blobfinder_blob_t) );
   
-  blobfinder_set_data( mod, 
-		       blobs->data, 
-		       blobs->len * sizeof(stg_blobfinder_blob_t) );
+  stg_model_set_data( mod, 
+		      blobs->data, 
+		      blobs->len * sizeof(stg_blobfinder_blob_t) );
   
   g_array_free( blobs, TRUE );
 
@@ -372,11 +345,9 @@ int blobfinder_update( stg_model_t* mod )
 }
 
 
-void blobfinder_render_data( stg_model_t* mod )
+void blobfinder_render_data( stg_model_t* mod, void* data, size_t len )
 { 
   PRINT_DEBUG( "blobfinder render" );  
-
- 
   
   if( mod->gui.data  )
     rtk_fig_clear(mod->gui.data);
@@ -400,8 +371,7 @@ void blobfinder_render_data( stg_model_t* mod )
   
   stg_blobfinder_config_t* cfg = blobfinder_get_config( mod );
   
-  size_t len = 0;
-  stg_blobfinder_blob_t* blobs =  stg_model_get_data(mod,&len);
+  stg_blobfinder_blob_t* blobs =  (stg_blobfinder_blob_t*)data;
   
   if( len < sizeof(stg_blobfinder_blob_t) )
     return; // no data to render
@@ -450,7 +420,7 @@ void blobfinder_render_data( stg_model_t* mod )
     }
 }
 
-void blobfinder_render_config( stg_model_t* mod )
+void blobfinder_render_config( stg_model_t* mod, void* data, size_t len )
 { 
   PRINT_DEBUG( "blobfinder render config" );  
   
@@ -466,7 +436,7 @@ void blobfinder_render_config( stg_model_t* mod )
   
   rtk_fig_color_rgb32( fig, stg_lookup_color( STG_BLOB_CFG_COLOR ));
   
-  stg_blobfinder_config_t* cfg = blobfinder_get_config(mod);
+  stg_blobfinder_config_t* cfg = (stg_blobfinder_config_t*)data;
   
   // Get the camera's global pose
   stg_pose_t* pose = stg_model_get_pose( mod );
@@ -495,11 +465,14 @@ stg_lib_entry_t blobfinder_entry = {
   blobfinder_startup,  // startup
   blobfinder_shutdown, // shutdown
   blobfinder_update,   // update
-  blobfinder_set_data,     // set data
+  NULL,                // set data
   NULL,              // get data
   NULL,              // set command
   NULL,              // get command
-  blobfinder_set_config,   // set config
-  NULL               // get config
+  NULL,            // set config
+  NULL,              // get config
+  blobfinder_render_data,
+  NULL,
+  blobfinder_render_config
 };
 

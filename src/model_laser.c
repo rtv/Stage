@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.52 $
+//  $Revision: 1.53 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -165,31 +165,40 @@ int laser_update( stg_model_t* mod )
 void laser_render_data(  stg_model_t* mod, void* data, size_t len )
 {
   
+
+
   if( mod->gui.data  )
     rtk_fig_clear(mod->gui.data);
-  else // create the figure, store it in the model and keep a local pointer
-    mod->gui.data = rtk_fig_create( mod->world->win->canvas,
-				    NULL, STG_LAYER_LASERDATA );
+  else 
+    {
+      mod->gui.data = rtk_fig_create( mod->world->win->canvas,
+				      NULL, STG_LAYER_LASERDATA );
+      
+      rtk_fig_color_rgb32( mod->gui.data, stg_lookup_color(STG_LASER_COLOR) );
+    }
+
+  if( mod->gui.data_bg )
+    rtk_fig_clear( mod->gui.data_bg );
+  else // create the data background
+    {
+      mod->gui.data_bg = rtk_fig_create( mod->world->win->canvas,
+					 mod->gui.data, STG_LAYER_BACKGROUND );      
+      rtk_fig_color_rgb32( mod->gui.data_bg, 
+			   stg_lookup_color( STG_LASER_FILL_COLOR ));
+    }
   
-  rtk_fig_t* fig = mod->gui.data;
-
-  if( mod->gui.bg  )
-    rtk_fig_clear(mod->gui.bg);
-
   stg_pose_t pose;
   stg_model_global_pose( mod, &pose );
-
-  rtk_fig_origin( fig, pose.x, pose.y, pose.a );  
-
+  
+  rtk_fig_origin( mod->gui.data, pose.x, pose.y, pose.a );  
+  
   stg_geom_t* geom = &mod->geom;
-
+  
   assert(mod->cfg);
   assert(mod->cfg_len == sizeof(stg_laser_config_t));
   
   stg_laser_config_t* cfg = mod->cfg;
-
-  size_t len;
-  stg_laser_sample_t* samples = (stg_laser_sample_t*)data;//stg_model_get_data( mod, &len );
+  stg_laser_sample_t* samples = (stg_laser_sample_t*)data;
   
   if( samples == NULL || len < sizeof(stg_laser_sample_t) )
     {
@@ -201,7 +210,7 @@ void laser_render_data(  stg_model_t* mod, void* data, size_t len )
   double bearing = geom->pose.a - cfg->fov/2.0;
   stg_point_t* points = calloc( sizeof(stg_point_t), cfg->samples + 1 );
   
-  rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_BRIGHT_COLOR) );
+  rtk_fig_color_rgb32( mod->gui.data, stg_lookup_color(STG_LASER_BRIGHT_COLOR) );
   
   int s;
   for( s=0; s<cfg->samples; s++ )
@@ -216,50 +225,38 @@ void laser_render_data(  stg_model_t* mod, void* data, size_t len )
   
   // hmm, what's the right cast to get rid of the compiler warning
   // for the points argument?
-
   
-  //if( mod->gui.show_data )
+  if( mod->world->win->fill_polygons )
     {
-      if( mod->world->win->fill_polygons )
-	{
-	  if( mod->gui.bg == NULL )
-	    {
-	      mod->gui.bg = rtk_fig_create( mod->world->win->canvas,
-					    fig, STG_LAYER_BACKGROUND );      
-	      rtk_fig_color_rgb32( mod->gui.bg, 
-				   stg_lookup_color( STG_LASER_FILL_COLOR ));
-	    }
-	  rtk_fig_polygon( mod->gui.bg, 0,0,0, cfg->samples+1, points,TRUE );   
-	}
-      
-      rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_COLOR) );
-      rtk_fig_polygon( fig, 0,0,0, cfg->samples+1, points, FALSE ); 	
-      
-      
-      rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_BRIGHT_COLOR) );
-      
-      // loop through again, drawing bright boxes on top of the polygon
-      for( s=0; s<cfg->samples; s++ )
-	{
-	  // if this hit point is bright, we draw a little box
-	  if( samples[s].reflectance > 0 )
-	    rtk_fig_rectangle( fig, 
-			       points[1+s].x, points[1+s].y, 0,
-			       0.04, 0.04, 1 );
-	}
-      
-      free( points );
+      rtk_fig_polygon( mod->gui.data_bg, 0,0,0, cfg->samples+1, points, TRUE );   
     }
-
+  
+  rtk_fig_polygon( mod->gui.data, 0,0,0, cfg->samples+1, points, FALSE ); 	
+  
+  // loop through again, drawing bright boxes on top of the polygon
+  for( s=0; s<cfg->samples; s++ )
+    {      
+      // if this hit point is bright, we draw a little box
+      if( samples[s].reflectance > 0 )
+	{
+	  rtk_fig_color_rgb32( mod->gui.data, stg_lookup_color(STG_LASER_BRIGHT_COLOR) );
+	  rtk_fig_rectangle( mod->gui.data, 
+			     points[1+s].x, points[1+s].y, 0,
+			     0.04, 0.04, 1 );
+	  rtk_fig_color_rgb32( mod->gui.data, stg_lookup_color(STG_LASER_COLOR) );
+	}
+    }
+  
+  free( points );
 }
 
-void laser_render_config( stg_model_t* mod )
+void laser_render_cfg( stg_model_t* mod, void* data, size_t len)
 { 
   PRINT_DEBUG( "laser config render" );
   
   // get the config and make sure it's the right size
-  size_t len=0;
-  stg_laser_config_t* cfg = (stg_laser_config_t*)stg_model_get_config( mod, &len );
+  stg_laser_config_t* cfg = (stg_laser_config_t*)data;
+
   if( len != sizeof(stg_laser_config_t) )
     {
       PRINT_WARN2( "laser config is wrong size (%d/%d bytes). Not rendering",
@@ -279,7 +276,8 @@ void laser_render_config( stg_model_t* mod )
 
   
   // draw the FOV and range lines
-  rtk_fig_color_rgb32( fig, stg_lookup_color( STG_LASER_CFG_COLOR ));
+  rtk_fig_color_rgb32( fig, stg_lookup_color( STG_LASER_CFG_COLOR  //ranger_set_data( mod, data, datalen );
+ ));
   
   double mina = cfg->fov / 2.0;
   double maxa = -cfg->fov / 2.0;
@@ -289,7 +287,8 @@ void laser_render_config( stg_model_t* mod )
   double rightfarx = cfg->range_max * cos(maxa);
   double rightfary = cfg->range_max * sin(maxa);
   
-  double leftnearx = cfg->range_min * cos(mina);
+  double leftnearx = cfg->range_min * cos(mina);  //ranger_set_data( mod, data, datalen );
+
   double leftneary = cfg->range_min * sin(mina);
   double rightnearx = cfg->range_min * cos(maxa);
   double rightneary = cfg->range_min * sin(maxa);
@@ -308,35 +307,16 @@ void laser_render_config( stg_model_t* mod )
 		       mina, maxa );      
 }
 
-int laser_set_data( stg_model_t* mod, void* data, size_t len )
-{
-  PRINT_DEBUG( "laser putdata" );
-  
-  // put the data in the normal way
-  _set_data( mod, data, len );
-  
-  // and render it
-  //laser_render_data( mod );
-  //gui_render_data( mod );
-}
-
-int laser_set_config( stg_model_t* mod, void* cfg, size_t len )
-{
-  PRINT_DEBUG( "laser putconfig" );
-  
-  // put the data in the normal way
-  _set_cfg( mod, cfg, len );
-  
-  // and render it
-  laser_render_config( mod );
-}
-
 int laser_shutdown( stg_model_t* mod )
-{
+{ 
+  // clear the data - this will unrender it too
+  stg_model_set_data( mod, NULL, 0 );
+
   // clear the figure
-  if( mod->gui.data  ) rtk_fig_clear(mod->gui.data);
-  if( mod->gui.bg  ) rtk_fig_clear(mod->gui.bg);
-  
+  //if( mod->gui.data  ) rtk_fig_clear(mod->gui.data);
+  //if( mod->gui.data_bg  ) rtk_fig_clear(mod->gui.bg);
+    stg_model_set_data( mod, NULL, 0 );
+
   return 0; // ok
 }
 
@@ -345,13 +325,13 @@ stg_lib_entry_t laser_entry = {
   NULL,              // startup
   laser_shutdown,    // shutdown
   laser_update,      // update
-  laser_set_data,    // set data
+  NULL,              // set data
   NULL,              // get data
   NULL,              // set command
   NULL,              // get command
-  laser_set_config,  // set config
+  NULL,              // set config
   NULL,              // get config
   laser_render_data, // render data
   NULL,              // render cmd
-  NULL               // render cfg
+  laser_render_cfg   // render cfg
 };

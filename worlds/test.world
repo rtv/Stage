@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.29 2004-11-08 20:34:23 rtv Exp $
+# CVS: $Id: test.world,v 1.30 2004-11-08 22:46:59 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -56,11 +56,10 @@ define sicklaser laser
 #
 define laserpioneer pioneer2dx
 (
-  sicklaser( 
-    fiducialfinder( color "green" obstacle 0 )
-  )
-
+  sicklaser(  fiducialfinder( color "green" obstacle 0 ) )
   blobfinder()
+
+  fiducial_id 42
 )
 
 
