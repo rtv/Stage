@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.50 2004-06-10 04:12:39 rtv Exp $
+ * CVS: $Id: stage.h,v 1.51 2004-06-11 05:19:42 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -537,6 +537,27 @@ typedef struct
   stg_meters_t range;
 } stg_blobfinder_blob_t;
 
+
+// fiducial finder ------------------------------------------------------
+
+typedef struct
+{
+  stg_meters_t max_range;
+  stg_meters_t min_range;
+  stg_radians_t fov; // field of view 
+  stg_radians_t heading; // center of field of view
+
+} stg_fiducialfinder_config_t;
+
+
+typedef struct
+{
+  stg_meters_t range; // range to the target
+  stg_radians_t bearing; // bearing to the target 
+  stg_pose_t geom; // size and relative angle of the target
+  int id; // the identifier of the target, or -1 if none can be detected.
+
+} stg_fiducialfinder_fiducial_t;
 
 // end property typedefs -------------------------------------------------
 

@@ -51,6 +51,8 @@ typedef struct _model
   // store the time that each property was last calculated
   stg_msec_t update_times[STG_PROP_COUNT];
   
+  GHashTable* props;
+
   // todo - random user properties
   //GHashTable* props;  
 } model_t;  

@@ -27,7 +27,8 @@ model_t* model_create(  world_t* world,
   mod->energy.joules = 3600000L; // 1 Amp hour
   mod->energy.move_cost = 1000; // one joule per move (quite high!)
   
-  //mod->props = g_hash_table_new( g_int_hash, g_int_equal );
+  // models store data in here, indexed by property id
+  mod->props = g_hash_table_new( g_int_hash, g_int_equal );
   
   mod->size.x = 0.4;
   mod->size.y = 0.4;
