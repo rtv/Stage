@@ -8,7 +8,7 @@
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
 #  $Author: gerkey $
-#  $Revision: 1.40 $
+#  $Revision: 1.41 $
 #
 # Note: All normal user configurations are in Makefile.common - you
 # probably don't need to change this file
@@ -43,7 +43,7 @@ clean: clean_dep
 clean_dep:
 	cd src && ${MAKE} clean_dep
 
-install:
+install: all
 	mkdir -p $(INSTALL_DIR)/bin
 	install -m 755 src/stage $(INSTALL_BIN)
 	mkdir -p $(INSTALL_WORLDS)
@@ -53,7 +53,7 @@ install:
 	mkdir -p $(INSTALL_DOC)
 	install -m 644 doc/* $(INSTALL_DOC)
 	mkdir -p $(INSTALL_TOOLS)
-	install -m 644 tools/* $(INSTALL_TOOLS)
+	install -m 755 tools/* $(INSTALL_TOOLS)
 
 uninstall:
 	rm -f $(INSTALL_BIN)/stage
@@ -66,6 +66,7 @@ uninstall:
 	rmdir --ignore-fail-on-non-empty $(INSTALL_DOC)
 	rm -f $(INSTALL_TOOLS)/* 
 	rmdir --ignore-fail-on-non-empty $(INSTALL_TOOLS)
+	rmdir --ignore-fail-on-non-empty $(INSTALL_DIR)
 
 fresh: clean
 	${MAKE} dep all
@@ -79,6 +80,9 @@ src_dist: clean
 	cp -R . /tmp/$(SRC_DIST_NAME)
 	tar -C /tmp -cvzf $(SRC_DIST_NAME).tgz --exclude CVS --exclude '*.tgz' --exclude "*/doc/Makefile" --exclude "*/doc/*.aux" --exclude "*/doc/*.log" --exclude "*/doc/tex" --exclude "*/doc/*.toc" --exclude "*/doc/*.eps" --exclude "*/doc/*.jpg" --exclude "*/doc/*.tex" --exclude "*/doc/*.dvi" $(SRC_DIST_NAME)
 	rm -Rf /tmp/$(SRC_DIST_NAME)
+
+# because i can't remember to type src_dist - BPG
+distro: src_dist
 
 src_dist_bleeding:
 	echo Building $(SRC_DIST_BLEEDING_NAME)
