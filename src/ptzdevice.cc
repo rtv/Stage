@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.13 $
+//  $Revision: 1.14 $
 //
 // Usage:
 //  (empty)
@@ -48,10 +48,12 @@ CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent )
   m_interval = 0.1;
   m_last_update = 0;
     
-  m_color_desc = PTZ_COLOR;
+  SetColor(PTZ_COLOR);
 
-  m_size_x = 0.165;
-  m_size_y = 0.145;
+  // Set default shape and geometry
+  this->shape = ShapeRect;
+  this->size_x = 0.165;
+  this->size_y = 0.145;
 
   // these pans are the right numbers for our PTZ - RTV
   m_pan_min = -100;

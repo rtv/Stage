@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.43 $
+//  $Author: inspectorg $
+//  $Revision: 1.44 $
 //
 // Usage:
 //  (empty)
@@ -51,8 +51,9 @@ CLaserDevice::CLaserDevice(CWorld *world,
   m_config_len  = sizeof( player_laser_config_t );
   
   m_player_type = PLAYER_LASER_CODE; // from player's messages.h
-  m_color_desc = LASER_COLOR;
   m_stage_type = LaserTurretType;
+
+  SetColor(LASER_COLOR);
   
   // Default visibility settings
   this->laser_return = LaserReflect;
@@ -74,8 +75,9 @@ CLaserDevice::CLaserDevice(CWorld *world,
   m_last_update = 0;
   
   // Dimensions of laser
-  m_size_x = 0.155;
-  m_size_y = 0.155;
+  this->shape = ShapeRect;
+  this->size_x = 0.155;
+  this->size_y = 0.155;
   
 #ifdef INCLUDE_RTK
   this->hit_count = 0;
@@ -112,7 +114,7 @@ bool CLaserDevice::Load(CWorldFile *worldfile, int section)
 //
 void CLaserDevice::Update( double sim_time )
 {
-  CEntity::Update( sim_time ); // inherit useful debug output
+  CEntity::Update( sim_time );
 
   ASSERT(m_world != NULL);
     
@@ -120,21 +122,8 @@ void CLaserDevice::Update( double sim_time )
   double x, y, th;
   GetGlobalPose( x,y,th );
     
-  // if we've moved 
-  if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
-  {
-    // Undraw ourselves from the world
-    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
-                           m_size_x, m_size_y, this, false );
-	
-    m_map_px = x; // update our render position
-    m_map_py = y;
-    m_map_pth = th;
-	
-    // Redraw outselves in the world
-    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
-                           m_size_x, m_size_y, this, true );
-  }
+  // if we've moved
+  ReMap(x, y, th);
     
   // UPDATE OUR SENSOR DATA
 

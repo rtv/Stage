@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/stage_types.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.16 $
+//  $Author: inspectorg $
+//  $Revision: 1.17 $
 //
 // Usage:
 //  (empty)
@@ -121,7 +121,8 @@ typedef struct
 // Shapes for entities
 enum StageShape
 {
-  ShapeCircle = 0,
+  ShapeNone = 0,
+  ShapeCircle,
   ShapeRect
 };
 

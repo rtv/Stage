@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.75 $
+//  $Author: inspectorg $
+//  $Revision: 1.76 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -348,8 +348,8 @@ bool CWorld::Load(const char *filename)
   this->ppm = 1 / this->worldfile.ReadLength(section, "resolution", 1 / this->ppm);
 
   // Initialise the matrix, now that we know its size
-  int w = (int) ceil(this->wall->m_size_x * this->ppm);
-  int h = (int) ceil(this->wall->m_size_y * this->ppm);
+  int w = (int) ceil(this->wall->size_x * this->ppm);
+  int h = (int) ceil(this->wall->size_y * this->ppm);
   this->matrix = new CMatrix(w, h, 1);
   
   // Get the authorization key to pass to player

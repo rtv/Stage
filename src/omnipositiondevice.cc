@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/omnipositiondevice.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -44,11 +44,7 @@ COmniPositionDevice::COmniPositionDevice(CWorld *world, CEntity *parent)
   m_command_len = sizeof( player_position_cmd_t );
   m_config_len = 0;
   
-  m_player_type = PLAYER_POSITION_CODE; // from player's messages.h
-  
-  // andrew - should have a unique stage type for each device independent of
-  // the player type for use by external viewers/loggers - rtv
-  // constants are enumerated in stage_types.hh
+  m_player_type = PLAYER_POSITION_CODE;
   m_stage_type = OmniPositionType;
 
   // set up our sensor response
@@ -57,8 +53,10 @@ COmniPositionDevice::COmniPositionDevice(CWorld *world, CEntity *parent)
   this->obstacle_return = true;
   this->puck_return = true;
 
-  m_size_x = 0.30;
-  m_size_y = 0.30;
+  // Set default shape and geometry
+  this->shape = ShapeCircle;
+  this->size_x = 0.30;
+  this->size_y = 0.30;
 
   this->com_vx = this->com_vy = this->com_va = 0;
   this->odo_px = this->odo_py = this->odo_pa = 0;
@@ -106,17 +104,9 @@ void COmniPositionDevice::Update( double sim_time )
   // Get our new pose
   double px, py, pa;
   GetGlobalPose(px, py, pa);
-    
-  // if we've moved,
-  // undraw then redraw ourself
-  if((m_map_px != px) || (m_map_py != py) || (m_map_pth != pa))
-  {
-    Map(m_map_px, m_map_py, m_map_pth, false);
-    m_map_px = px;
-    m_map_py = py;
-    m_map_pth = pa;
-    Map(m_map_px, m_map_py, m_map_pth, true);
-  }
+
+  // Remap ourselves if we have moved
+  ReMap(px, py, pa);
 }
 
 
@@ -145,7 +135,7 @@ void COmniPositionDevice::Move()
 
   // Check for collisions
   // and accept the new pose if ok
-  if (InCollision(qx, qy, qa))
+  if (TestCollision(qx, qy, qa) != NULL)
   {
     SetGlobalVel(0, 0, 0);
     this->stall = 1;
@@ -210,96 +200,5 @@ void COmniPositionDevice::ComposeData()
   this->data.compass = 0;
   this->data.stalls = this->stall;
 }
-
-
-///////////////////////////////////////////////////////////////////////////
-// Check to see if the given pose will yield a collision
-bool COmniPositionDevice::InCollision(double px, double py, double pa)
-{
-  CCircleIterator rit( px, py, m_size_x / 2,  
-                       m_world->ppm, m_world->matrix );
-
-  CEntity* ent;
-	while ( (ent = rit.GetNextEntity()) )
-    if( ent != this && ent->obstacle_return )
-      return true;
-	
-	return false;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Render the object in the world rep
-void COmniPositionDevice::Map(double px, double py, double pa, bool render)
-{
-  m_world->SetCircle(px, py, m_size_x / 2, this, render);
-}
-
-
-
-#ifdef INCLUDE_RTK
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI update messages
-//
-void COmniPositionDevice::OnUiUpdate(RtkUiDrawData *data)
-{
-  CEntity::OnUiUpdate(data);
-    
-  data->begin_section("global", "");
-    
-  if (data->draw_layer("chassis", true))
-    DrawChassis(data);
-    
-  data->end_section();
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI mouse messages
-//
-void COmniPositionDevice::OnUiMouse(RtkUiMouseData *data)
-{
-    CEntity::OnUiMouse(data);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Draw the pioneer chassis
-//
-void COmniPositionDevice::DrawChassis(RtkUiDrawData *data)
-{
-  data->set_color(RTK_RGB(m_color.red, m_color.green, m_color.blue));
-
-  // Get global pose
-  double px, py, pa;
-  GetGlobalPose(px, py, pa);
-
-  // Draw robot
-  data->ellipse(px - m_size_x/2.0, py - m_size_x/2.0, 
-                px + m_size_x/2.0, py + m_size_x/2.0,
-                false);
-  
-  // Draw the direction indicator
-  for (int i = 0; i < 3; i++)
-  {
-    double qx = m_size_x/2.0 * cos(DTOR(i * 45 - 45));
-    double qy = m_size_x/2.0 * sin(DTOR(i * 45 - 45));
-    double qth = 0;
-        
-    // This is ugly, but it works
-    if (i == 1)
-      qx = qy = 0;
-
-    LocalToGlobal(qx, qy, qth);
-
-    if (i > 0)
-      data->line(px, py, qx, qy);
-    px = qx;
-    py = qy;
-  }
-}
-
-#endif
 
 

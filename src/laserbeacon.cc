@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.17 $
+//  $Revision: 1.18 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -48,10 +48,12 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CEntity *parent)
   m_player_index = 0;
   m_player_type = 0;
 
-  m_size_x = 0.05; // very thin!   
-  m_size_y = 0.3;     
+  // Set default shape and geometry
+  this->shape = ShapeRect;
+  this->size_x = 0.05; 
+  this->size_y = 0.3;     
 
-  m_color_desc = LASERBEACON_COLOR;
+  SetColor(LASERBEACON_COLOR);
   m_stage_type = LaserBeaconType;
   
   this->id = 0;
@@ -85,69 +87,10 @@ void CLaserBeacon::Update( double sim_time )
     
   double x, y, th;
   GetGlobalPose( x,y,th );
-    
-  // if we've moved 
-  if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
-  {
-    m_last_update = sim_time;
-	
-    // Undraw our old representation
-    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
-                             m_size_x, m_size_y, this, false);
-	
-    m_map_px = x;
-    m_map_py = y;
-    m_map_pth = th;
-	
-    // Draw our new representation
-    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
-                           m_size_x, m_size_y, this, true);
-  }
+
+  ReMap(x, y, th);
 }
 
-
-#ifdef INCLUDE_RTK
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI update messages
-//
-void CLaserBeacon::OnUiUpdate(RtkUiDrawData *data)
-{
-    CEntity::OnUiUpdate(data);
-
-    data->begin_section("global", "");
-    
-    if (data->draw_layer("laser_beacon", true))
-    {
-        double sx = m_size_x;
-        double sy = m_size_y;        
-        double ox, oy, oth;
-        GetGlobalPose(ox, oy, oth);
-        data->set_color(RTK_RGB(m_color.red, m_color.green, m_color.blue));
-        data->ex_rectangle(ox, oy, oth, sx, sy);
-
-        // Draw in a little arrow showing our orientation
-        if (IsMouseReady())
-        {
-            double dx = 0.20 * cos(oth);
-            double dy = 0.20 * sin(oth);
-            data->ex_arrow(ox, oy, ox + dx, oy + dy, 0, 0.05);
-        }
-    }
-
-    data->end_section();
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI mouse messages
-//
-void CLaserBeacon::OnUiMouse(RtkUiMouseData *data)
-{
-    CEntity::OnUiMouse(data);
-}
-
-#endif
 
 
 

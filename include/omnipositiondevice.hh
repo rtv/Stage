@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/omnipositiondevice.hh,v $
 //  $Author: inspectorg $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -46,12 +46,6 @@ class COmniPositionDevice : public CEntity
   // Compose the reply packet
   private: void ComposeData( void );
 
-  // Check to see if the given pose will yield a collision
-  private: bool InCollision(double px, double py, double pa);
-
-  // Render the object in the world rep
-  private: virtual void Map(double px, double py, double pa, bool render);
-
   // Timings
   private: double last_time;
 
@@ -67,19 +61,6 @@ class COmniPositionDevice : public CEntity
 
   // Current odometry values
   private: double odo_px, odo_py, odo_pa;
-
-#ifdef INCLUDE_RTK
-
-  // Process GUI update messages
-  public: virtual void OnUiUpdate(RtkUiDrawData *data);
-
-  // Process GUI mouse messages
-  public: virtual void OnUiMouse(RtkUiMouseData *data);
-
-  // Draw the chassis
-  public: void DrawChassis(RtkUiDrawData *data);
-  
-#endif
 };
 
 #endif

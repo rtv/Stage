@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/fixedobstacle.hh,v $
 //  $Author: inspectorg $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -39,6 +39,9 @@ class CFixedObstacle : public CEntity
 
   // Scale of the image (m/pixel)
   private: double scale;
+
+  // Crop region (m)
+  private: double crop_ax, crop_ay, crop_bx, crop_by;
 
   // The image representing the environment
   private: Nimage *image;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.14 $
+//  $Revision: 1.15 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -31,16 +31,18 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
   m_data_len    = sizeof( player_gripper_data_t ); 
   m_command_len = sizeof( player_gripper_cmd_t ); 
   m_config_len  = 0;
-  
-  m_size_x = 0.08;
-  m_size_y = 0.20;
+
+  // Set default shape and geometry
+  this->shape = ShapeRect;
+  this->size_x = 0.08;
+  this->size_y = 0.20;
 
   m_player_type = PLAYER_GRIPPER_CODE;
   m_stage_type = GripperType;
 
   m_interval = 0.1; 
 
-  m_color_desc = GRIPPER_COLOR;
+  SetColor(GRIPPER_COLOR);
 
   puck_return = true; // we interact with pucks and nothing else
 
@@ -88,7 +90,7 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
 }
 
 
-/** Added new load fn, then REMOVE
+/** Need to add new load fn, then REMOVE
 ///////////////////////////////////////////////////////////////////////////
 // Load the object from an argument list
 //
@@ -154,80 +156,80 @@ void CGripperDevice::Update( double sim_time )
   m_last_update = sim_time;
   
   // Get the command string
-    //
+  //
   player_gripper_cmd_t cmd;
   int len = GetCommand(&cmd, sizeof(cmd));
   if (len > 0 && len != sizeof(cmd))
-    {
-      PRINT_MSG1("command buffer has incorrect length: %d -- ignored",len);
-      return;
-    }
+  {
+    PRINT_MSG1("command buffer has incorrect length: %d -- ignored",len);
+    return;
+  }
   
-    // Parse the command string (if there is one)
-    //
-    // this gripper only understands a subset of the P2 gripper commands.
-    // also we ignore the cmd.arg byte, which can set actuation times
-    // on the real gripper
-    //
-    if (len > 0)
+  // Parse the command string (if there is one)
+  //
+  // this gripper only understands a subset of the P2 gripper commands.
+  // also we ignore the cmd.arg byte, which can set actuation times
+  // on the real gripper
+  //
+  if (len > 0)
+  {
+    switch(cmd.cmd)
     {
-      switch(cmd.cmd)
-      {
-        case GRIPopen:
-          if(!m_paddles_open)
-          {
-            m_paddles_open = true;
-            m_paddles_closed = false;
-            if(!m_gripper_consume)
-              DropObject();
-          }
-          break;
-        case GRIPclose:
-          if(m_paddles_open)
-          {
-            PickupObject();
-            m_paddles_open = false;
-            m_paddles_closed = true;
-          }
-          break;
-        case GRIPstop:
-        case LIFTup:
-        case LIFTdown:
-        case LIFTstop:
-        case GRIPstore:
-        case GRIPdeploy:
-        case GRIPhalt:
-        case GRIPpress:
-        case LIFTcarry:
-          PRINT_MSG1("CGripperDevice::Update(): unimplemented gripper "
-                      "command: %d\n", cmd.cmd);
-        default:
-          PRINT_MSG1("CGripperDevice::Update(): unknown gripper "
-                      "command: %d\n", cmd.cmd);
-      }
-
-      // Hackety hack hack...
-      //  this number, if greater than 0, restricts the color of puck
-      //  that the gripper will pick up.   give -1 to go unrestricted.
-      if(cmd.arg)
-        m_puck_channel = (char)cmd.arg-1;
-
-      // This basically assumes instantaneous changes
-      //
-      expGripper.paddles_open = m_paddles_open;
+      case GRIPopen:
+        if(!m_paddles_open)
+        {
+          m_paddles_open = true;
+          m_paddles_closed = false;
+          if(!m_gripper_consume)
+            DropObject();
+        }
+        break;
+      case GRIPclose:
+        if(m_paddles_open)
+        {
+          PickupObject();
+          m_paddles_open = false;
+          m_paddles_closed = true;
+        }
+        break;
+      case GRIPstop:
+      case LIFTup:
+      case LIFTdown:
+      case LIFTstop:
+      case GRIPstore:
+      case GRIPdeploy:
+      case GRIPhalt:
+      case GRIPpress:
+      case LIFTcarry:
+        PRINT_MSG1("CGripperDevice::Update(): unimplemented gripper "
+                   "command: %d\n", cmd.cmd);
+      default:
+        PRINT_MSG1("CGripperDevice::Update(): unknown gripper "
+                   "command: %d\n", cmd.cmd);
     }
 
-    m_outer_break_beam = BreakBeam(0) ? true : false;
-    m_inner_break_beam = BreakBeam(1) ? true : false;
+    // Hackety hack hack...
+    //  this number, if greater than 0, restricts the color of puck
+    //  that the gripper will pick up.   give -1 to go unrestricted.
+    if(cmd.arg)
+      m_puck_channel = (char)cmd.arg-1;
 
-    // Construct the return data buffer
+    // This basically assumes instantaneous changes
     //
-    player_gripper_data_t data;
-    MakeData(&data, sizeof(data));
+    expGripper.paddles_open = m_paddles_open;
+  }
 
-    // Pass back the data
-    //
-    PutData(&data, sizeof(data));
+  m_outer_break_beam = BreakBeam(0) ? true : false;
+  m_inner_break_beam = BreakBeam(1) ? true : false;
+
+  // Construct the return data buffer
+  //
+  player_gripper_data_t data;
+  MakeData(&data, sizeof(data));
+
+  // Pass back the data
+  //
+  PutData(&data, sizeof(data));
 }
 
 // returns pointer to the puck in the beam, or NULL if none
@@ -257,34 +259,34 @@ CEntity* CGripperDevice::BreakBeam( int beam )
   }
 
   double xdist = 0;
-  double ydist = m_size_y/3.0;
+  double ydist = this->size_y/3.0;
 
   switch( beam )
-    {
-    case 0: xdist = m_size_x;  break;
-    case 1: xdist = m_size_x/2.0;  break;
+  {
+    case 0: xdist = this->size_x;  break;
+    case 1: xdist = this->size_x/2.0;  break;
     default: printf( "uknown gripper break beam number %d\n", beam );
-    }
+  }
   
   xoffset = xdist * costh - xdist * sinth;
   yoffset = ydist * sinth + ydist * costh;
     
   CEntity* ent = 0;
 
-  CLineIterator lit( px+xoffset, py+yoffset, pth - M_PI/2.0, m_size_y * 0.66, 
-		     m_world->ppm, m_world->matrix, PointToBearingRange ); 
+  CLineIterator lit( px+xoffset, py+yoffset, pth - M_PI/2.0, this->size_y * 0.66, 
+                     m_world->ppm, m_world->matrix, PointToBearingRange ); 
   
   while( (ent = lit.GetNextEntity()) )
-    {
-      //puts( "I SEE SOMETHING!" );
+  {
+    //puts( "I SEE SOMETHING!" );
       
-      // grippers only perceive pucks right now.
-      if( ent->m_stage_type == PuckType )
-	{
-	  //puts( "its a PUCK!" );
-	  return ent;
-	}
+    // grippers only perceive pucks right now.
+    if( ent->m_stage_type == PuckType )
+    {
+      //puts( "its a PUCK!" );
+      return ent;
     }
+  }
 
   return NULL;
 }

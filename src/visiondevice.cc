@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.20 $
+//  $Author: inspectorg $
+//  $Revision: 1.21 $
 //
 // Usage:
 //  (empty)
@@ -43,13 +43,8 @@ CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent)
   m_config_len  = 0;//sizeof( player_vision_config_t );
  
   m_player_type = PLAYER_VISION_CODE;
-  
   m_stage_type = VisionType;
 
-  m_size_x = 0.9 * parent->m_size_x;
-  m_size_y = 0.9 * parent->m_size_y;
-  
-  //m_interval = 0.2; // 5Hz
   m_interval = 0.1; // 10Hz - the real cam is around this
 
   // ACTS must be associated with a physical camera
@@ -125,11 +120,9 @@ bool CVisionDevice::Load(CWorldFile *worldfile, int section)
 //
 void CVisionDevice::Update( double sim_time )
 {
-#ifdef DEBUG
-  CEntity::Update( sim_time ); // inherit debug output
-#endif
-
   ASSERT(m_world != NULL);
+
+  CEntity::Update( sim_time );
 
   // Dont update anything if we are not subscribed
   //
@@ -234,7 +227,7 @@ void CVisionDevice::UpdateScan()
       //channel = ent->channel_return; // it's this color
 		
       // get the color of the entity
-      memcpy( &col, &(ent->m_color), sizeof( StageColor ) );
+      memcpy( &col, &(ent->color), sizeof( StageColor ) );
             
       break;
     }

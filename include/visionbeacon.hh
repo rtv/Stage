@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visionbeacon.hh,v $
 //  $Author: inspectorg $
-//  $Revision: 1.8 $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -32,28 +32,10 @@
 class CVisionBeacon : public CEntity
 {
     // Default constructor
-    //
     public: CVisionBeacon(CWorld *world, CEntity *parent);
 
     // Update the device
-    //
     public: virtual void Update( double sim_time );
-
-    // Beacon radius
-    //
-    private: double m_radius;
-    
-#ifdef INCLUDE_RTK
-    
-    // Process GUI update messages
-    //
-    public: virtual void OnUiUpdate(RtkUiDrawData *pData);
-
-    // Process GUI mouse messages
-    //
-    public: virtual void OnUiMouse(RtkUiMouseData *pData);
-
-#endif
 };
 
 #endif

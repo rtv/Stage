@@ -7,13 +7,13 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.5 $
+//  $Author: inspectorg $
+//  $Revision: 1.6 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
+#include <float.h>
 #include <libgen.h> // for dirname(3)
-
 #include "image.hh"
 #include "world.hh"
 #include "fixedobstacle.hh"
@@ -34,12 +34,8 @@ CFixedObstacle::CFixedObstacle(CWorld *world, CEntity *parent)
   m_player_type = 0;
   m_player_index = 0;
   
-  m_size_x = 0.0;
-  m_size_y = 0.0;
-  
-  m_color_desc = WALL_COLOR;
-
   m_stage_type = WallType;
+  SetColor(WALL_COLOR);
 
   vision_return = true; 
   laser_return = LaserReflect;
@@ -80,30 +76,30 @@ bool CFixedObstacle::Load(CWorldFile *worldfile, int section)
   // in a different working directory)
 
   if( this->filename[0] != '/' && this->filename[0] != '~' )
+  {
+    // store the current filename
+    //char* tmp = new char[ PATH_MAX ];
+    //strncpy( tmp, this->filename, PATH_MAX ); 
+
+    char* fullpath = new char[ PATH_MAX ];
+      
+    strncpy( fullpath, dirname( worldfile->Filename() ), PATH_MAX );
+      
+    // lookout for buffer overrun
+    if( strlen( fullpath ) + 1 + strlen( this->filename ) < PATH_MAX )
     {
-      // store the current filename
-      //char* tmp = new char[ PATH_MAX ];
-      //strncpy( tmp, this->filename, PATH_MAX ); 
-
-      char* fullpath = new char[ PATH_MAX ];
-      
-      strncpy( fullpath, dirname( worldfile->Filename() ), PATH_MAX );
-      
-      // lookout for buffer overrun
-      if( strlen( fullpath ) + 1 + strlen( this->filename ) < PATH_MAX )
-	{
-	  strcat( fullpath, "/" );
-	  strcat( fullpath, this->filename ); 
-	}
-      else
-	{
-	  perror( "Stage: image filename buffer overrun" );
-	  return false;
-	}
-
-      delete[] this->filename;
-      this->filename = fullpath;
+      strcat( fullpath, "/" );
+      strcat( fullpath, this->filename ); 
     }
+    else
+    {
+      perror( "Stage: image filename buffer overrun" );
+      return false;
+    }
+
+    delete[] this->filename;
+    this->filename = fullpath;
+  }
 
   // Get the scale of the image;
   // i.e. the width/length of each pixel in m.
@@ -116,6 +112,13 @@ bool CFixedObstacle::Load(CWorldFile *worldfile, int section)
     this->scale = 1 / m_world->ppm;
   }
 
+  // Get the crop region;
+  // i.e. the bit of the image we are interested in
+  this->crop_ax = worldfile->ReadTupleLength(section, "crop", 0, -DBL_MAX);
+  this->crop_ay = worldfile->ReadTupleLength(section, "crop", 1, -DBL_MAX);
+  this->crop_bx = worldfile->ReadTupleLength(section, "crop", 2, +DBL_MAX);
+  this->crop_by = worldfile->ReadTupleLength(section, "crop", 3, +DBL_MAX);
+
   // Create and load the image here (we need to know its size)
   // Try to guess the file type from the extension.
   this->image = new Nimage;
@@ -123,8 +126,8 @@ bool CFixedObstacle::Load(CWorldFile *worldfile, int section)
   if (strcmp(&(this->filename[len - 4]), ".fig") == 0)
   {
     /* REINSTATE
-    if (!img.load_fig(this->filename, this->ppm, this->scale))
-      return false;
+       if (!img.load_fig(this->filename, this->ppm, this->scale))
+       return false;
     */
     return false;
   } 
@@ -143,8 +146,8 @@ bool CFixedObstacle::Load(CWorldFile *worldfile, int section)
   }
 
   // Compute the object size based on the image
-  m_size_x = this->scale * this->image->width;
-  m_size_y = this->scale * this->image->height;
+  this->size_x = this->scale * this->image->width;
+  this->size_y = this->scale * this->image->height;
 
   // draw a border around the image
   this->image->draw_box(0,0,this->image->width-1, this->image->height-1, 255 );
@@ -179,6 +182,10 @@ bool CFixedObstacle::Startup()
       double ly = (this->image->height - y) * sy;
       double px = ox + lx * cos(oth) - ly * sin(oth);
       double py = oy + lx * sin(oth) + ly * cos(oth);
+      if (px < this->crop_ax || px > this->crop_bx)
+        continue;
+      if (py < this->crop_ay || py > this->crop_by)
+        continue;
       m_world->SetRectangle(px, py, oth, sx, sy, this, true);
     }
   }
@@ -187,6 +194,10 @@ bool CFixedObstacle::Startup()
   // Draw the image into the GUI
   rtk_fig_clear(this->fig);
   rtk_fig_layer(this->fig, -50);
+  rtk_fig_color(this->fig,
+                this->color.red / 255.0,
+                this->color.green / 255.0,
+                this->color.blue / 255.0);
   for (int y = 0; y < this->image->height; y++)
   {
     for (int x = 0; x < this->image->width; x++)
@@ -195,6 +206,10 @@ bool CFixedObstacle::Startup()
         continue;
       double px = x * sx;
       double py = (this->image->height - y) * sy;
+      if (px < this->crop_ax || px > this->crop_bx)
+        continue;
+      if (py < this->crop_ay || py > this->crop_by)
+        continue;
       rtk_fig_rectangle(this->fig, px, py, oth, sx, sy, true);
     }
   }

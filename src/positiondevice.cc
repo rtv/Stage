@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.17 $
+//  $Author: inspectorg $
+//  $Revision: 1.18 $
 //
 // Usage:
 //  (empty)
@@ -27,7 +27,6 @@
 #include <math.h>
 #include "world.hh"
 #include "positiondevice.hh"
-#include "raytrace.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -42,7 +41,8 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
   
   m_player_type = PLAYER_POSITION_CODE; // from player's messages.h
   m_stage_type = RectRobotType;
-  m_color_desc = POSITION_COLOR;
+
+  SetColor(POSITION_COLOR);
 
   // set up our sensor response
   laser_return = LaserTransparent;
@@ -51,21 +51,8 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
   puck_return = true;
   idar_return = IDARTransparent;
 
-  //  m_com_vr = 0.0;
-  //m_com_vth = 0;
   m_com_vr = m_com_vth = 0;
-  m_map_px = m_map_py = m_map_pth = 0;
-  
-  // Set the robot dimensions
-  // Due to the unusual shape of the pioneer,
-  // it is modelled as a rectangle offset from the origin
-  //
-  m_size_x = 0.440;
-  m_size_y = 0.380;
-  m_offset_x = -0.04;
-  
   m_odo_px = m_odo_py = m_odo_pth = 0;
-  
   stall = 0;
   
   m_interval = 0.01; // update this device VERY frequently
@@ -73,8 +60,13 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
   // assume robot is 20kg
   m_mass = 20.0;
   
-  // Set the default shape
+  // Set the default shape and geometry
+  // to correspond to a Pioneer2 DX
   this->shape = ShapeRect;
+  this->size_x = 0.440;
+  this->size_y = 0.380;
+  this->origin_x = -0.04;
+  this->origin_y = 0;
   
 #ifdef INCLUDE_RTK
     m_mouse_radius = 0.400;
@@ -83,68 +75,12 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
 }
 
 
-/* REMOVE
-///////////////////////////////////////////////////////////////////////////
-// Load the object from an argument list
-//
-bool CPositionDevice::Load(int argc, char **argv)
-{
-    if (!CEntity::Load(argc, argv))
-        return false;
-
-    for (int i = 0; i < argc;)
-    {
-        // Extract shape
-        //
-        if (strcmp(argv[i], "shape") == 0 && i + 1 < argc)
-        {
-          if(!strcmp(argv[i+1],"rectangle"))
-            SetShape(rectangle);
-          else if(!strcmp(argv[i+1],"circle"))
-            SetShape(circle);
-          else
-            PRINT_MSG1("pioneermobilebase: unknown shape \"%s\"; "
-                       "defaulting to rectangle", argv[i+1]);
-          i += 2;
-        }
-        else
-            i++;
-    }
-    return true;
-}
-
-// Save the object
-//
-bool CPositionDevice::Save(int &argc, char **argv)
-{
-    if (!CEntity::Save(argc, argv))
-        return false;
-    
-    argv[argc++] = strdup("shape");
-    
-    switch( m_shape )
-      {
-      case circle:
-	argv[argc++] = strdup("circle");
-	break;
-      case rectangle:
-	argv[argc++] = strdup("rectangle");
-	break;
-      default:
-	printf( "Warning: wierd position device shape (%d)\n", m_shape );
-	argv[argc++] = strdup("rectangle");
-      }
-	
-    return true;
-}
-*/
-
-
 ///////////////////////////////////////////////////////////////////////////
 // Update the position of the robot base
-//
 void CPositionDevice::Update( double sim_time )
 {
+  CEntity::Update(sim_time);
+
   ASSERT(m_world != NULL);
   
   // if its time to recalculate state
@@ -228,18 +164,9 @@ void CPositionDevice::Update( double sim_time )
   
   double x, y, th;
   GetGlobalPose( x,y,th );
-    
-  // if we've moved 
-  if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
-  {
-    Map(false); // erase myself
-      
-    m_map_px = x; // update the render positions
-    m_map_py = y;
-    m_map_pth = th;
-      
-    Map(true);   // draw myself 
-  }      
+
+  // Redraw ourself it we have moved
+  ReMap(x, y, th);
 }
 
 
@@ -262,7 +189,7 @@ int CPositionDevice::Move()
   // Check for collisions
   // and accept the new pose if ok
   //
-  if (InCollision(qx, qy, qth))
+  if (TestCollision(qx, qy, qth) != NULL)
   {
     this->stall = 1;
   }
@@ -339,182 +266,3 @@ void CPositionDevice::ComposeData()
   m_data.stalls = this->stall;
 }
 
-
-///////////////////////////////////////////////////////////////////////////
-// Check to see if the given pose will yield a collision
-bool CPositionDevice::InCollision(double px, double py, double pth)
-{
-  switch( this->shape ) 
-  {
-    case ShapeRect:
-    {
-      double qx = px + m_offset_x * cos(pth);
-      double qy = py + m_offset_y * sin(pth);
-      CEntity* ent;
-      CRectangleIterator rit( qx, qy, pth, m_size_x, m_size_y, 
-                              m_world->ppm, m_world->matrix );
-	
-      while( (ent = rit.GetNextEntity()) )
-      {
-        if( ent != this && ent->obstacle_return )
-        {
-          //printf( "hit ent %p (%d)\n",
-          //ent, ent->m_stage_type );
-	      
-          return true;
-        }
-      }
-      return false;
-    }
-    case ShapeCircle:
-    {
-      CEntity* ent;
-      CCircleIterator rit( px, py, m_size_x/2.0,  
-                           m_world->ppm, m_world->matrix );
-	
-      while( (ent = rit.GetNextEntity()) )
-      {
-        if( ent != this && ent->obstacle_return )
-        {
-          //printf( "hit ent %p (%d)\n",
-          //ent, ent->m_stage_type );
-	      
-          return true;
-        }
-      }
-      return false;
-    }
-    default:
-      printf( "unknown shape in positiondevice::incollision" );
-      break;
-  }
-  return false;
-}
-
-
-
-///////////////////////////////////////////////////////////////////////////
-// Render the object in the world rep
-void CPositionDevice::Map(bool render )
-{
-
-  if(this->shape == ShapeRect)
-  {
-    double px = m_map_px;
-    double py = m_map_py;
-    double pa = m_map_pth;
-	  
-    double qx = px + m_offset_x * cos(pa);
-    double qy = py + m_offset_x * sin(pa);
-    double sx = m_size_x;
-    double sy = m_size_y;
-	  
-    m_world->SetRectangle( qx, qy, pa, sx, sy, this, render );
-  }
-  else if (this->shape == ShapeCircle)
-    m_world->SetCircle( m_map_px, m_map_py, m_size_x/2.0, this, render );
-}
-
-#ifdef INCLUDE_RTK
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI update messages
-//
-void CPositionDevice::OnUiUpdate(RtkUiDrawData *data)
-{
-    CEntity::OnUiUpdate(data);
-    
-    data->begin_section("global", "");
-    
-    if (data->draw_layer("chassis", true))
-        DrawChassis(data);
-    
-    data->end_section();
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI mouse messages
-//
-void CPositionDevice::OnUiMouse(RtkUiMouseData *data)
-{
-    CEntity::OnUiMouse(data);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Draw the pioneer chassis
-//
-void CPositionDevice::DrawChassis(RtkUiDrawData *data)
-{
-    #define ROBOT_COLOR RTK_RGB(255, 0, 192)
-    
-    data->set_color(ROBOT_COLOR);
-
-    // Get global pose
-    //
-    double px, py, pa;
-    GetGlobalPose(px, py, pa);
-
-    if(GetShape() == rectangle)
-    {
-      // Compute an offset
-      //
-      double qx = px + m_offset_x * cos(pa);
-      double qy = py + m_offset_x * sin(pa);
-      double sx = m_size_x;
-      double sy = m_size_y;
-      data->ex_rectangle(qx, qy, pa, sx, sy);
-
-      // Draw the direction indicator
-      //
-      for (int i = 0; i < 3; i++)
-      {
-        double px = (sx < sy ? sx : sy) / 2 * cos(DTOR(i * 45 - 45));
-        double py = (sx < sy ? sx : sy) / 2 * sin(DTOR(i * 45 - 45));
-        double pth = 0;
-
-        // This is ugly, but it works
-        //
-        if (i == 1)
-          px = py = 0;
-
-        LocalToGlobal(px, py, pth);
-
-        if (i > 0)
-          data->line(qx, qy, px, py);
-        qx = px;
-        qy = py;
-      }
-    }
-    else if(GetShape() == circle)
-    {
-      data->ellipse(px - m_size_x/2.0, py - m_size_x/2.0, 
-                    px + m_size_x/2.0, py + m_size_x/2.0);
-      
-      // Draw the direction indicator
-      //
-      for (int i = 0; i < 3; i++)
-      {
-        double qx = m_size_x/2.0 * cos(DTOR(i * 45 - 45));
-        double qy = m_size_x/2.0 * sin(DTOR(i * 45 - 45));
-        double qth = 0;
-
-        // This is ugly, but it works
-        //
-        if (i == 1)
-          qx = qy = 0;
-
-        LocalToGlobal(qx, qy, qth);
-
-        if (i > 0)
-          data->line(px, py, qx, qy);
-        px = qx;
-        py = qy;
-      }
-    }
-    else
-      PRINT_MSG("CPositionDevice::DrawChassis(): unknown shape!");
-}
-
-#endif

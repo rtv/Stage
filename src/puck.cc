@@ -8,11 +8,9 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.22 $
+//  $Revision: 1.23 $
 //
 ///////////////////////////////////////////////////////////////////////////
-
-//#define ENABLE_RTK_TRACE 1
 
 #include "world.hh"
 #include "puck.hh"
@@ -25,15 +23,16 @@ CPuck::CPuck(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {
   m_stage_type = PuckType;
-  m_color_desc = PUCK_COLOR;
+  SetColor(PUCK_COLOR);
 
   this->vision_return = true;
   this->vision_return_held = false;
   this->vision_return_notheld = true;
 
+  // Set default shape and geometry
   this->shape = ShapeCircle;
-  m_size_x = 0.1;
-  m_size_y = 0.1;
+  this->size_x = 0.1;
+  this->size_y = 0.1;
 
   m_interval = 0.01; // update very fast!
 
@@ -44,13 +43,9 @@ CPuck::CPuck(CWorld *world, CEntity *parent)
   // assume puck is 200g
   m_mass = 0.2;
   
-  // Set the initial map pose
-  //
-  m_map_px = m_map_py = m_map_pth = 0;
-  
   exp.objectType = puck_o;
-  exp.width = m_size_x;
-  exp.height = m_size_y;
+  exp.width = this->size_x;
+  exp.height = this->size_y;
   strcpy( exp.label, "Puck" );
 
   m_player_port = 0; // not a player device
@@ -95,6 +90,8 @@ void CPuck::Update( double sim_time )
 {
   ASSERT(m_world != NULL);
 
+  CEntity::Update(sim_time);
+
   // have we been picked up?  then make ourselves transparent so the vision
   // doesn't see us in the gripper. otherwise make ourselves visible.
   if(m_parent_object)
@@ -113,20 +110,8 @@ void CPuck::Update( double sim_time )
     
   double x, y, th;
   GetGlobalPose( x,y,th );
-    
-  // if we've moved 
-  if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
-  {
-    // Undraw our old representation
-    m_world->SetCircle( m_map_px, m_map_py, m_size_x/2.0, this, false);
-	
-    m_map_px = x; // update the render positions
-    m_map_py = y;
-    m_map_pth = th;
-	
-    // Draw our new representation
-    m_world->SetCircle( m_map_px, m_map_py, m_size_x/2.0, this, true);
-  }
+
+  ReMap(x, y, th);
 }
 
 
@@ -143,7 +128,7 @@ void CPuck::Move()
   double px, py, pth;
   GetGlobalPose(px, py, pth);
     
-  CCircleIterator cit( px, py, m_size_x/2.0, 
+  CCircleIterator cit( px, py, this->size_x/2.0, 
                        m_world->ppm, m_world->matrix );
   CEntity* ent;
 
@@ -218,38 +203,6 @@ void CPuck::Move()
       MakeDirtyIfPixelChanged();
   }    
 }
-
-#ifdef INCLUDE_RTK
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI update messages
-void CPuck::OnUiUpdate(RtkUiDrawData *data)
-{
-  CEntity::OnUiUpdate(data);
-
-  data->begin_section("global", "");
-    
-  if (data->draw_layer("", true))
-  {
-    double ox, oy, oth;
-    GetGlobalPose(ox, oy, oth);
-    double radius = GetDiameter() / 2.0;
-    data->set_color(RTK_RGB(m_color.red, m_color.green, m_color.blue));
-    data->ellipse(ox - radius, oy - radius, ox + radius, oy + radius);
-  }
-
-  data->end_section();
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI mouse messages
-void CPuck::OnUiMouse(RtkUiMouseData *data)
-{
-  CEntity::OnUiMouse(data);
-}
-
-#endif
 
 
 

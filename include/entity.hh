@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: inspectorg $
-//  $Revision: 1.28 $
+//  $Revision: 1.29 $
 //
 // Usage:
 //  (empty)
@@ -82,10 +82,27 @@ class CEntity
   // Update the object's device-specific representation
   public: virtual void Update( double sim_time );
 
-  // Draw ourselves into the world rep
-  //REMOVE public: virtual void Map(bool render)
-  //  { puts( "DEFAULT MAP" ); };
-    
+  // Render the entity into the world
+  protected: void Map(double px, double py, double pth);
+
+  // Remove the entity from the world
+  protected: void UnMap();
+
+  // Remove the entity at its current pose and remap it at a new pose.
+  protected: void ReMap(double px, double py, double pth);
+  
+  // Primitive rendering function using internally
+  private: void MapEx(double px, double py, double pth, bool render);
+
+  // Check to see if the given pose will yield a collision with obstacles.
+  // Returns a pointer to the first entity we are in collision with.
+  // Returns NULL if not collisions.
+  // This function is useful for writing position devices.
+  protected: CEntity *TestCollision(double px, double py, double pth);
+
+  // Set the color of the entity
+  public: void SetColor(const char *desc);
+  
   // Convert local to global coords
   public: void LocalToGlobal(double &px, double &py, double &pth);
 
@@ -136,13 +153,14 @@ class CEntity
   // Type of this object
   public: StageType m_stage_type; 
 
-  // Shape of this object
-  protected: const char *shape_desc;
-  protected: StageShape shape;
+  // Our shape and geometry
+  // REMOVE protected: const char *shape_desc;
+  public: StageShape shape;
+  public: double origin_x, origin_y;
+  public: double size_x, size_y;
 
-  // Color of this object
-  public: const char* m_color_desc;
-  public: StageColor m_color;
+  // Our color
+  public: StageColor color;
 
   // Descriptive name for this object
   public: const char *m_name;
@@ -166,18 +184,14 @@ class CEntity
   // flag is set when a dependent device is  attached to this device
   public: bool m_dependent_attached;
 
-  // Object pose in local cs (ie relative to parent)
-  private: double m_lx, m_ly, m_lth;
+  // Pose in local cs (ie relative to parent)
+  private: double lx, ly, lth;
 
-  // dimensions
-  public: double m_size_x, m_size_y;
-  public: double m_offset_x, m_offset_y; // offset center of rotation
-
-  // The last mapped pose
-  protected: double m_map_px, m_map_py, m_map_pth;
-
-  // Object velocity (for coliision calculations)
+  // Velocity in global cs (for coliision calculations)
   protected: double vx, vy, vth;
+
+  // The last mapped pose in global cs
+  protected: double map_px, map_py, map_pth;
   
   // how often to update this device, in seconds
   // all devices check this before updating their data
@@ -216,7 +230,6 @@ class CEntity
   
   // Port and index numbers for player
   // identify this device as belonging to the Player on port N at index M
-  //
   public: int m_player_port; // N
   public: int m_player_index; // M
   public: int m_player_type; // one of the device types from messages.h
@@ -231,12 +244,10 @@ class CEntity
   // Returns the number of bytes copied
   // timestamp should be the time the data was created/sensed. if timestamp
   //   is 0, then current time is used
-  //
   protected: size_t PutData( void* data, size_t len );
 
   // Read from the data buffer
   // Returns the number of bytes copied
-  //
   public: size_t GetData( void* data, size_t len );
 
   // struct that holds data for external GUI rendering
@@ -246,24 +257,18 @@ class CEntity
   public: ExportData exp;
    
   // compose and return the exported data
-  //
   protected: size_t GetCommand( void* command, size_t len);
 
   // Read from the configuration buffer
   // Returns the number of bytes copied
-  //
   protected: size_t GetConfig( void* config, size_t len);
 
   // See if the device is subscribed
   // returns the number of current subscriptions
   protected: int Subscribed();
 
-
   // builds a truth packet for this entity
   public: void ComposeTruth( stage_truth_t* truth, int index );
-
-  // base address for this entity's records in shared memory
-  //
 
   // Pointers into shared mmap for the IO structures
   // the io buffer is allocated by the World 
@@ -281,52 +286,6 @@ class CEntity
   protected: size_t m_command_len;
   protected: size_t m_config_len;
   protected: size_t m_info_len;
-
-  //////////////////////////////////////////////////////////////////////
-
-#ifdef INCLUDE_RTK
-
-  // UI property message handler
-  //
-  public: virtual void OnUiProperty(RtkUiPropertyData* pData);
-    
-  // Process GUI update messages
-  //
-  public: virtual void OnUiUpdate(RtkUiDrawData *pData);
-
-  // Process GUI mouse messages
-  //
-  public: virtual void OnUiMouse(RtkUiMouseData *pData);
-
-  // Return true if mouse is over object
-  //
-  protected: bool IsMouseReady() {return m_mouse_ready;};
-
-  // Move object with the mouse
-  //
-  public: bool MouseMove(RtkUiMouseData *pData);
-    
-  // Mouse must be withing this radius for interaction
-  //
-  protected: double m_mouse_radius;
-
-  // Flag set of object is draggable
-  //
-  protected: bool m_draggable;
-
-  // Flag set of mouse is within radius
-  //
-  private: bool m_mouse_ready;
-
-  // Flag set if object is being dragged
-  //
-  private: bool m_dragging;
-
-  // Object color
-  //
-  public: RTK_COLOR m_rtk_color;
-    
-#endif
 
 #ifdef INCLUDE_RTK2
   // Default figure handle

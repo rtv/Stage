@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.32 2002-01-03 18:34:37 rtv Exp $
+//  $Id: entity.cc,v 1.33 2002-01-28 22:32:25 inspectorg Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 
 #include "entity.hh"
+#include "raytrace.hh"
 #include "world.hh"
 #include "worldfile.hh"
 
@@ -45,14 +46,9 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
   m_stage_type = NullType; // overwritten by subclasses
 
   memset(m_device_filename, 0, sizeof(m_device_filename));
-  
-  // Set the initial map pose
-  m_lx = m_ly = m_lth = 0;
-  m_map_px = m_map_py = m_map_pth = 0;
 
-  // init all the sizes
-  m_size_x = 0; m_size_y = 0;
-  m_offset_x = m_offset_y = 0;
+  // Set default pose
+  this->lx = this->ly = this->lth = 0;
 
   // Set global velocity to stopped
   this->vx = this->vy = this->vth = 0;
@@ -60,15 +56,15 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
   // unmoveably MASSIVE! by default
   m_mass = 1000.0;
     
-  // Set the default shape
-  this->shape_desc = "rect";
-  this->shape = ShapeRect;
-    
+  // Set the default shape and geometry
+  this->shape = ShapeNone;
+  this->size_x = this->size_y = 0;
+  this->origin_x = this->origin_y = 0;
+  
   // initialize color description and values
-  m_color_desc = "red";
-  m_color.red = 255;
-  m_color.green = 0;
-  m_color.blue = 0;
+  this->color.red = 255;
+  this->color.green = 0;
+  this->color.blue = 0;
 
   // by default, entities don't show up in any sensors
   // these must be enabled explicitly in each subclass
@@ -79,6 +75,9 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
   idar_return = false;
   laser_return = LaserTransparent;
 
+  // Set the initial mapped pose to a dummy value
+  this->map_px = this->map_py = this->map_pth = 0;
+  
   m_dependent_attached = false;
 
   m_player_index = 0; // these are all set in load() 
@@ -104,11 +103,6 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
   m_data_io     = NULL; 
   m_command_io  = NULL;
   m_config_io   = NULL;
-
-#ifdef INCLUDE_RTK
-  m_mouse_ready = false;
-  m_dragging = false;
-#endif
 
 #ifdef INCLUDE_RTK2
   this->fig = NULL;
@@ -138,23 +132,26 @@ bool CEntity::Load(CWorldFile *worldfile, int section)
   SetPose(px, py, pa);
 
   // Read the shape
-  this->shape_desc = worldfile->ReadString(section, "shape", this->shape_desc);
-  if (strcmp(this->shape_desc, "rect") == 0)
-    this->shape = ShapeRect;
-  else if (strcmp(this->shape_desc, "circle") == 0)
-    this->shape = ShapeCircle;
-  else
-    PRINT_WARN1("invalid shape desc [%s]; using default", this->shape_desc);
+  const char *shape_desc = worldfile->ReadString(section, "shape", NULL);
+  if (shape_desc)
+  {
+    if (strcmp(shape_desc, "rect") == 0)
+      this->shape = ShapeRect;
+    else if (strcmp(shape_desc, "circle") == 0)
+      this->shape = ShapeCircle;
+    else
+      PRINT_WARN1("invalid shape desc [%s]; using default", shape_desc);
+  }
 
   // Read the size
-  m_size_x = worldfile->ReadTupleLength(section, "size", 0, m_size_x);
-  m_size_y = worldfile->ReadTupleLength(section, "size", 1, m_size_y);
+  this->size_x = worldfile->ReadTupleLength(section, "size", 0, this->size_x);
+  this->size_y = worldfile->ReadTupleLength(section, "size", 1, this->size_y);
 
   // Read the object color
-  m_color_desc = worldfile->ReadString(section, "color", m_color_desc);
-  if( !m_world->ColorFromString( &m_color, m_color_desc ) )
-    PRINT_WARN1("invalid color name [%s]; using default", m_color_desc );
-
+  const char *color_desc = worldfile->ReadString(section, "color", NULL);
+  if (color_desc)
+    SetColor(color_desc);
+  
   // Read the sensor flags
   this->obstacle_return = worldfile->ReadBool(section, "obstacle",
                                               this->obstacle_return);
@@ -219,22 +216,25 @@ bool CEntity::Startup( void )
   else
     this->fig = rtk_fig_create(m_world->canvas, NULL, 50);
 
-  // Richard likes a black background, but I want a white
-  // background, so I'll invert Richards colors.
-  // This really should compute the HSV, then invert the intensity,
-  // then convert back to RGB.
-  double r = 1 - m_color.red / 255.0;
-  double g = 1 - m_color.green / 255.0;
-  double b = 1 - m_color.blue / 255.0;
+  // Set the color
+  double r = this->color.red / 255.0;
+  double g = this->color.green / 255.0;
+  double b = this->color.blue / 255.0;
   rtk_fig_color(this->fig, r, g, b);
+
+  // Compute geometry
+  double qx = this->origin_x;
+  double qy = this->origin_y;
+  double sx = this->size_x;
+  double sy = this->size_y;
   
   switch (this->shape)
   {
     case ShapeRect:
-      rtk_fig_rectangle(this->fig, 0, 0, 0, m_size_x, m_size_y, false);
+      rtk_fig_rectangle(this->fig, qx, qy, 0, sx, sy, false);
       break;
     case ShapeCircle:
-      rtk_fig_ellipse(this->fig, 0, 0, 0, m_size_x, m_size_y, false);
+      rtk_fig_ellipse(this->fig, qx, qy, 0, sx, sx, false);
       break;
   }
 #endif
@@ -391,6 +391,7 @@ int CEntity::SharedMemorySize( void )
 void CEntity::Update( double sim_time )
 {
 #ifdef INCLUDE_RTK2
+  // We need to handle mouse dragging by the user.
   // We can only move top-level objects.
   // Do the test here, since some objects (eg pucks) may
   // change their parents.
@@ -424,8 +425,115 @@ void CEntity::Update( double sim_time )
 
 
 ///////////////////////////////////////////////////////////////////////////
+// Render the entity into the world
+void CEntity::Map(double px, double py, double pth)
+{
+  MapEx(px, py, pth, true);
+  this->map_px = px;
+  this->map_py = py;
+  this->map_pth = pth;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Remove the entity from the world
+void CEntity::UnMap()
+{
+  MapEx(this->map_px, this->map_py, this->map_pth, false);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Remap ourself if we have moved
+void CEntity::ReMap(double px, double py, double pth)
+{
+  if (fabs(px - this->map_px) < 1 / m_world->ppm &&
+      fabs(py - this->map_py) < 1 / m_world->ppm &&
+      pth == this->map_pth)
+    return;
+  
+  UnMap();
+  Map(px, py, pth);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Primitive rendering function
+void CEntity::MapEx(double px, double py, double pth, bool render)
+{
+  double qx = px + this->origin_x * cos(pth) - this->origin_y * sin(pth);
+  double qy = py + this->origin_y * sin(pth) + this->origin_y * cos(pth);
+  double qth = pth;
+  double sx = this->size_x;
+  double sy = this->size_y;
+
+  switch (this->shape)
+  {
+    case ShapeRect:
+      m_world->SetRectangle(qx, qy, qth, sx, sy, this, render);
+    case ShapeCircle:
+      m_world->SetCircle(qx, qy, sx / 2, this, render); 
+  }
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+// Check to see if the given pose will yield a collision with obstacles.
+// Returns a pointer to the first entity we are in collision with.
+// Returns NULL if not collisions.
+// This function is useful for writing position devices.
+CEntity *CEntity::TestCollision(double px, double py, double pth)
+{
+  double qx = px + this->origin_x * cos(pth) - this->origin_y * sin(pth);
+  double qy = py + this->origin_y * sin(pth) + this->origin_y * cos(pth);
+  double qth = pth;
+  double sx = this->size_x;
+  double sy = this->size_y;
+
+  switch( this->shape ) 
+  {
+    case ShapeRect:
+    {
+      CRectangleIterator rit( qx, qy, qth, sx, sy, m_world->ppm, m_world->matrix );
+
+      CEntity* ent;
+      while( (ent = rit.GetNextEntity()) )
+      {
+        if( ent != this && ent->obstacle_return )
+          return ent;
+      }
+      return NULL;
+    }
+    case ShapeCircle:
+    {
+      CCircleIterator rit( px, py, sx / 2, m_world->ppm, m_world->matrix );
+
+      CEntity* ent;
+      while( (ent = rit.GetNextEntity()) )
+      {
+        if( ent != this && ent->obstacle_return )
+          return ent;
+      }
+      return NULL;
+    }
+  }
+  return NULL;
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Set the color of the entity
+void CEntity::SetColor(const char *desc)
+{
+  if (!m_world->ColorFromString( &this->color, desc ) )
+    PRINT_WARN1("invalid color name [%s]; using default color", desc );
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // Convert local to global coords
-//
 void CEntity::LocalToGlobal(double &px, double &py, double &pth)
 {
   // Get the pose of our origin wrt global cs
@@ -468,9 +576,9 @@ void CEntity::GlobalToLocal(double &px, double &py, double &pth)
 void CEntity::SetPose(double px, double py, double pth)
 {
   // Set our pose wrt our parent
-  m_lx = px;
-  m_ly = py;
-  m_lth = pth;
+  this->lx = px;
+  this->ly = py;
+  this->lth = pth;
 }
 
 
@@ -478,9 +586,9 @@ void CEntity::SetPose(double px, double py, double pth)
 // Get the objects pose in the parent cs
 void CEntity::GetPose(double &px, double &py, double &pth)
 {
-  px = m_lx;
-  py = m_ly;
-  pth = m_lth;
+  px = this->lx;
+  py = this->ly;
+  pth = this->lth;
 }
 
 
@@ -496,9 +604,9 @@ void CEntity::SetGlobalPose(double px, double py, double pth)
     m_parent_object->GetGlobalPose(ox, oy, oth);
     
   // Compute our pose in the local cs
-  m_lx =  (px - ox) * cos(oth) + (py - oy) * sin(oth);
-  m_ly = -(px - ox) * sin(oth) + (py - oy) * cos(oth);
-  m_lth = pth - oth;
+  this->lx =  (px - ox) * cos(oth) + (py - oy) * sin(oth);
+  this->ly = -(px - ox) * sin(oth) + (py - oy) * cos(oth);
+  this->lth = pth - oth;
 }
 
 
@@ -514,9 +622,9 @@ void CEntity::GetGlobalPose(double &px, double &py, double &pth)
     m_parent_object->GetGlobalPose(ox, oy, oth);
     
   // Compute our pose in the global cs
-  px = ox + m_lx * cos(oth) - m_ly * sin(oth);
-  py = oy + m_lx * sin(oth) + m_ly * cos(oth);
-  pth = oth + m_lth;
+  px = ox + this->lx * cos(oth) - this->ly * sin(oth);
+  py = oy + this->lx * sin(oth) + this->ly * cos(oth);
+  pth = oth + this->lth;
 }
 
 
@@ -712,15 +820,15 @@ void CEntity::ComposeTruth( stage_truth_t* truth, int index )
   truth->stage_id = index;
   
   if( m_parent_object )
-   {
-     // find the index of our parent to use as an id
-     for( int h=0; h<m_world->GetObjectCount(); h++ )
-       if( m_world->GetObject(h) == m_parent_object )
-	 {
-	   truth->parent_id = h;
-	   break;
-	 }
-   }
+  {
+    // find the index of our parent to use as an id
+    for( int h=0; h<m_world->GetObjectCount(); h++ )
+      if( m_world->GetObject(h) == m_parent_object )
+      {
+        truth->parent_id = h;
+        break;
+      }
+  }
   else
     truth->parent_id = -1;
 
@@ -739,9 +847,9 @@ void CEntity::ComposeTruth( stage_truth_t* truth, int index )
   // we don't want an echo
   truth->echo_request = false;
 
-  truth->red   = (uint16_t)m_color.red;
-  truth->green = (uint16_t)m_color.green;
-  truth->blue  = (uint16_t)m_color.blue;
+  truth->red   = (uint16_t)this->color.red;
+  truth->green = (uint16_t)this->color.green;
+  truth->blue  = (uint16_t)this->color.blue;
 
   double x, y, th;
   GetGlobalPose( x,y,th );
@@ -749,12 +857,12 @@ void CEntity::ComposeTruth( stage_truth_t* truth, int index )
   // position and extents
   truth->x = (uint32_t)( x * 1000.0 );
   truth->y = (uint32_t)( y * 1000.0 );
-  truth->w = (uint16_t)( m_size_x * 1000.0 );
-  truth->h = (uint16_t)( m_size_y * 1000.0 );
+  truth->w = (uint16_t)( this->size_x * 1000.0 );
+  truth->h = (uint16_t)( this->size_y * 1000.0 );
  
   // center of rotation offsets
-  truth->rotdx = (int16_t)( m_offset_x * 1000.0 );
-  truth->rotdy = (int16_t)( m_offset_y * 1000.0 );
+  truth->rotdx = (int16_t)( this->origin_x * 1000.0 );
+  truth->rotdy = (int16_t)( this->origin_y * 1000.0 );
 
   // normalize degrees 0-360 (th is -/+PI)
   int degrees = (int)RTOD( th );
@@ -776,130 +884,16 @@ void CEntity::MakeDirtyIfPixelChanged( void )
   // if we've moved pixel or 1 degree, then we should mark dirty to
   // update external clients (GUI or distributed stage siblings)
   if( m_last_pixel_x != x || m_last_pixel_y != y ||
-    m_last_degree != degree )
-    {
-      memset( m_dirty, true, sizeof(m_dirty[0]) * MAX_POSE_CONNECTIONS );
+      m_last_degree != degree )
+  {
+    memset( m_dirty, true, sizeof(m_dirty[0]) * MAX_POSE_CONNECTIONS );
      
-      //puts( "dirty!" );
-    }
+    //puts( "dirty!" );
+  }
 
   // store these quantized locations for next time
   m_last_pixel_x = x;
   m_last_pixel_y = y;
   m_last_degree = degree;
 };
-
-
-#ifdef INCLUDE_RTK
-
-
-///////////////////////////////////////////////////////////////////////////
-// UI property message handler
-void CEntity::OnUiProperty(RtkUiPropertyData* data)
-{
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI update messages
-void CEntity::OnUiUpdate(RtkUiDrawData *data)
-{
-  data->begin_section("global", "");
-
-  // Draw a marker to show we have focus
-  if (data->draw_layer("focus", true))
-  {
-    if (m_mouse_ready || m_dragging)
-    {
-      if (m_mouse_ready)
-        data->set_color(RTK_RGB(128, 128, 255));
-      if (m_dragging)
-        data->set_color(RTK_RGB(0, 0, 255));
-
-      // Get position and size of object
-      double ox, oy, oth;
-      GetGlobalPose(ox, oy, oth);
-      double dr = 1.3 * max(m_size_x, m_size_y) / 2;
-      
-      data->ellipse(ox - dr, oy - dr, ox + dr, oy + dr);
-      if (strlen(m_name) > 0)
-        data->draw_text(ox + dr, oy + dr, m_name);
-    }
-  }
-  data->end_section();
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI mouse messages
-void CEntity::OnUiMouse(RtkUiMouseData *data)
-{
-  data->begin_section("global", "move");
-
-  if (data->use_mouse_mode("object"))
-  {
-    if (MouseMove(data))
-      data->reset_button();
-  }
-  data->end_section();
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Move object with the mouse
-bool CEntity::MouseMove(RtkUiMouseData *data)
-{
-  // Only top level objects can be dragged
-  if (m_parent_object != NULL)
-    return false;
-
-  // Get current pose
-  double px, py, pth;
-  GetGlobalPose(px, py, pth);
-
-  // Get the mouse position
-  double mx, my;
-  data->get_point(mx, my);
-  double mth = pth;
-
-  // Convert mouse position to object-local coords
-  // and see if we are clicking inside the object
-  double nx = mx;
-  double ny = my;
-  double nth = mth;
-  GlobalToLocal(nx, ny, nth);
-
-  if (fabs(nx) < m_size_x/2 && fabs(ny) < m_size_y/2)
-    m_mouse_ready = true;
-  else
-    m_mouse_ready = false;
-
-  // If the mouse is within range and we are draggable...
-  if (m_mouse_ready)
-  {
-    if (data->is_button_down())
-    {
-      // Drag on left
-      if (data->which_button() == 1)
-        m_dragging = true;
-            
-      // Rotate on right
-      else if (data->which_button() == 3)
-      {
-        m_dragging = true;
-        mth += M_PI / 8;
-      }
-    }
-    else if (data->is_button_up())
-      m_dragging = false;
-  }   
-    
-  // If we are dragging, set the pose
-  if (m_dragging)
-    SetGlobalPose(mx, my, mth);
-
-  return (m_mouse_ready);
-}
-
-#endif
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/puck.hh,v $
 //  $Author: inspectorg $
-//  $Revision: 1.10 $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -47,7 +47,7 @@ class CPuck : public CEntity
   private: void Move();
     
   // Return diameter of puck
-  public: double GetDiameter() { return(m_size_x); }
+  public: double GetDiameter() { return(this->size_x); }
 
   // Timings (for movement)
   private: double m_last_time;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.21 $
+//  $Revision: 1.22 $
 //
 // Usage:
 //  (empty)
@@ -44,10 +44,9 @@ CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
   m_config_len  = 0; //sizeof( player_laserbeacon_config_t );
 
   m_player_type = PLAYER_LASERBEACON_CODE;
- 
-  m_color_desc = LBD_COLOR;
   m_stage_type = LBDType;
-
+  SetColor(LBD_COLOR);
+  
   // the parent MUST be a laser device
   ASSERT( parent );
   ASSERT( parent->m_player_type == PLAYER_LASER_CODE );
@@ -62,10 +61,7 @@ CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
   this->vision_return = false;
   this->idar_return = false;
   this->laser_return = LaserTransparent;
-  
-  m_size_x = 0.9 * this->laser->m_size_x;
-  m_size_y = 0.9 * this->laser->m_size_y;
-  
+
   this->time_sec = 0;
   this->time_usec = 0;
 

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: pioneermobiledevice.hh
+// File: positiondevice.hh
 // Author: Richard Vaughan, Andrew Howard
 // Date: 5 Dec 2000
 // Desc: Simulates the Pioneer robot base
@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/positiondevice.hh,v $
 //  $Author: inspectorg $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -24,14 +24,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef PIONEERMOBILEDEVICE_H
-#define PIONEERMOBILEDEVICE_H
+#ifndef POSITIONDEVICE_H
+#define POSITIONDEVICE_H
 
 #include "stage.h"
-//#include "playerdevice.hh"
-
-enum pioneer_shape_t { rectangle, circle };
-
 
 class CPositionDevice : public CEntity
 {
@@ -51,12 +47,6 @@ class CPositionDevice : public CEntity
 
   // Move the robot
   private: int Move();
-  
-  // Check to see if the given pose will yield a collision
-  private: virtual bool InCollision(double px, double py, double pth);
-
-  // Render the object in the world rep
-  protected: virtual void Map(bool render);
 
   // Timings
   private: double m_last_time;
@@ -71,22 +61,6 @@ class CPositionDevice : public CEntity
   // Odometric pose
   protected: double m_odo_px, m_odo_py, m_odo_pth;
   protected: unsigned char stall;
-
-#ifdef INCLUDE_RTK
-
-  // Process GUI update messages
-  //
-  public: virtual void OnUiUpdate(RtkUiDrawData *data);
-
-  // Process GUI mouse messages
-  //
-  public: virtual void OnUiMouse(RtkUiMouseData *data);
-
-  // Draw the pioneer chassis
-  //
-  public: void DrawChassis(RtkUiDrawData *data);
-  
-#endif
 };
 
 #endif
