@@ -19,17 +19,13 @@ typedef struct
 typedef struct _model
 {
   stg_id_t id; // used as hash table key
-  
-  world_t* world;
-  
+  world_t* world; // pointer to the world in which this model exists
   char* token; // automatically-generated unique ID string
-  //char* name; // user-specified ID string
-
   int type; // what kind of a model am I?
 
-  struct _model *parent;
+  struct _model *parent; // the model that owns this one, possibly NULL
 
-  GPtrArray* children;
+  GPtrArray* children; // the models owned by this model
 
   // the number of children of each type is counted so we can
   // automatically generate names for them
@@ -48,38 +44,28 @@ typedef struct _model
 
   stg_msec_t interval; // time between updates in ms
   stg_msec_t interval_elapsed; // time since last update in ms
-  
-  void* data;
-  size_t data_len;
 
-  void* cmd;
-  size_t cmd_len;
-  
-  void* cfg;
-  size_t cfg_len;
+  // the generic buffers used by specialized model types
+  void *data, *cmd, *cfg;
+  size_t data_len, cmd_len, cfg_len;
 
-  stg_bool_t stall;
-
-  stg_laser_return_t laser_return;
-  stg_bool_t obstacle_return;
-  stg_fiducial_return_t fiducial_return;
-
-  stg_pose_t pose;
-  stg_velocity_t velocity;
-  stg_geom_t geom;
-  stg_color_t color;
-  stg_kg_t mass;
- 
   stg_line_t* lines; // this buffer is lines_count * sizeof(stg_line_t) big
   int lines_count; // the number of lines
 
+  // basic model properties
+  stg_laser_return_t laser_return;
+  stg_bool_t obstacle_return;
+  stg_fiducial_return_t fiducial_return;
+  stg_pose_t pose;
+  stg_velocity_t velocity;
+  stg_bool_t stall;
+  stg_geom_t geom;
+  stg_color_t color;
+  stg_kg_t mass;
   stg_guifeatures_t guifeatures;
-
-  // these are a little strange
-  stg_energy_config_t energy_config;
+  stg_energy_config_t energy_config;   // these are a little strange
   stg_energy_data_t energy_data;
-
-
+ 
 } model_t;  
 
 
