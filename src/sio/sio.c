@@ -448,7 +448,7 @@ int SIOInitClient( int argc, char** argv )
   connection_polls[con].events = POLLIN; // notify me when data is available
   
   // switch on the re-use-address option
-  const char on = 1;
+  const int on = 1;
   setsockopt( connection_polls[con].fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on) );
 
   //  printf( "POLLFD = %d\n", m_pose_connections[con].fd );
@@ -697,7 +697,7 @@ int SIOInitServer( int argc, char** argv )
   servaddr.sin_port        = htons(server_port);
   
   // switch on the re-use-address option
-  const char on = 1;
+  const int on = 1;
   setsockopt( listen_poll.fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on) );
   
   if( bind(listen_poll.fd, (struct sockaddr*) &servaddr, sizeof(servaddr) )  < 0 )
