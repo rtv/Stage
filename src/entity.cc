@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.14 2003-02-12 08:48:48 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.15 2003-02-13 00:14:47 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -363,25 +363,14 @@ int CEntity::Move( double vx, double vy, double va, double step )
 
   // Check for collisions
   // and accept the new pose if ok
-  //if (TestCollision(qx, qy, qa ) != NULL)
-  //{
-  //SetGlobalVel(0, 0, 0);
-  //this->stall = true;
-  // }
-  //else
-  {
-    // set pose now takes care of marking us dirty
-    SetPose(qx, qy, qa);
-    //SetGlobalVel(vx, vy, va);
-        
-    // Compute the new odometric pose
-    // we currently have PERFECT odometry. yum!
-    //this->odo_px += step * vx * cos(this->odo_pa) + step * vy * sin(this->odo_pa);
-    //this->odo_py += step * vx * sin(this->odo_pa) + step * vy * cos(this->odo_pa);
-    //this->odo_pa += step * va;
-    
-    //this->stall = false;
-  }
+  if (TestCollision(qx, qy, qa ) != NULL)
+    {
+      SetGlobalVel(0, 0, 0);
+      //this->stall = true;
+    }
+  else
+    SetPose(qx, qy, qa);  // set pose takes care of marking us dirty
+  
   
   return 0; // success
 }
@@ -464,115 +453,67 @@ void CEntity::MapEx(double px, double py, double pth, bool render)
     RenderRects( render );
 }
 
+// convert the rotated rectangle into global coords, taking into account
+// the entities pose and the rectangle scaling
+void CEntity::GetGlobalRect( stage_rotrect_t* dest, stage_rotrect_t* src )
+{
+  double scalex = size_x / rects_max_x;
+  double scaley = size_y / rects_max_y;
+  
+  dest->x = ((src->x + src->w/2.0) * scalex) - size_x/2.0;
+  dest->y = ((src->y + src->h/2.0) * scaley) - size_y/2.0;
+  dest->a = src->a;
+  dest->w = src->w * scalex;
+  dest->h = src->h * scaley;
+  
+  LocalToGlobal( dest->x, dest->y, dest->a );    
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Check to see if the given pose will yield a collision with obstacles.
 // Returns a pointer to the first entity we are in collision with, and stores
-// the location of the hit in hitx,hity
+// the location of the hit in hitx,hity (if non-null)
 // Returns NULL if not collisions.
 // This function is useful for writing position devices.
-CEntity *CEntity::TestCollision(double px, double py, double pth)
-{
-  // TODO - raytrace along our rectangles - more expensive, but most vehicles
-  // will just be a single rect, so we're back where we started.
-  
-  /*  for( int r=0; r < rect_count; r++ )
-    {
-      double rx = rectangles[r].x;
-      double ry = rectangles[r].y;
-      double ra = rectangles[r].a;
-      double rw = rectangles[r].w;
-      double rh = rectangles[r].h;
-            
-      double qx = rx + origin_x * cos(rth) - this->origin_y * sin(rth);
-      double qy = ry + origin_y * sin(rth) + this->origin_y * cos(rth);
-      double qth = rth;
-      double sx = this->size_x;
-      double sy = this->size_y;
-     
-
-      CRectangleIterator rit( qx, qy, qth, sx, sy, matrix );
-
-      CEntity* ent;
-      while( (ent = rit.GetNextEntity()) )
-      {
-        if( ent != this && !IsDescendent(ent) && ent->obstacle_return )
-          return ent;
-      }
-      return NULL;
-    }
-    case ShapeCircle:
-    {
-      CCircleIterator rit( px, py, sx / 2, matrix );
-
-      CEntity* ent;
-      while( (ent = rit.GetNextEntity()) )
-      {
-        if( ent != this && !IsDescendent(ent)  && ent->obstacle_return )
-          return ent;
-      }
-      return NULL;
-    }
-    case ShapeNone:
-      break;
-      }*/
-
-  return NULL;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// same as the above method, but stores the hit location in hitx, hity
 CEntity *CEntity::TestCollision(double px, double py, double pth, 
-				double &hitx, double &hity )
+				double* hitx, double* hity )
 {
-  double qx = px + this->origin_x * cos(pth) - this->origin_y * sin(pth);
-  double qy = py + this->origin_y * sin(pth) + this->origin_y * cos(pth);
-  double qth = pth;
-  double sx = this->size_x;
-  double sy = this->size_y;
-
-
-  /*  switch( this->shape ) 
-  {
-    case ShapeRect:
+  // raytrace along all our rectangles. expensive, but most vehicles
+  // will just be a single rect, grippers 3 rects, etc. not too bad.
+  
+  stage_rotrect_t glob;
+  
+  int r;
+  for( r=0; r<this->rect_count; r++ )
     {
-      CRectangleIterator rit( qx, qy, qth, sx, sy, matrix );
-
+      // find the global coords of this rectangle
+      GetGlobalRect( &glob, &(this->rects[r]) );
+      
+      // trace this rectangle in the matrix
+      CRectangleIterator rit( glob.x, glob.y, glob.a, 
+			      glob.w, glob.h, matrix );
+      
       CEntity* ent;
       while( (ent = rit.GetNextEntity()) )
-      {
-        if( ent != this && ent->obstacle_return )
-        {
-          rit.GetPos( hitx, hity );
-          return ent;
-        }
-      }
-      return NULL;
+	{
+	  if( ent != this && !IsDescendent(ent) && ent->obstacle_return )
+	    {
+	      if( hitx || hity ) // if the caller needs to know hit points
+		{
+		  double x, y;
+		  rit.GetPos(x,y); // find the points		  
+		  if( hitx ) *hitx = x; // and report them
+		  if( hity ) *hity = y;
+
+		}
+	      return ent; // we hit this object! stop raytracing
+	    }
+	}
     }
-    case ShapeCircle:
-    {
-      CCircleIterator rit( px, py, sx / 2, matrix );
-
-      CEntity* ent;
-      while( (ent = rit.GetNextEntity()) )
-      {
-        if( ent != this && ent->obstacle_return )
-        {
-          rit.GetPos( hitx, hity );
-          return ent;
-        }
-      }
-      return NULL;
-    }
-  case ShapeNone: // handle the null case
-      break;
-  }
-  */
-
-  return NULL;
-
+  return NULL;  // done 
 }
+  
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1236,24 +1177,14 @@ void CEntity::GetStatusString( char* buf, int buflen )
 
 void CEntity::RenderRects( bool render )
 {
-  // TODO: find the scaling
-  double scalex = size_x / rects_max_x;
-  double scaley = size_y / rects_max_y;
-  
-  double x,y,a,w,h;
+  stage_rotrect_t glob;
   
   int r;
   for( r=0; r<this->rect_count; r++ )
     {
-      x = ((this->rects[r].x + this->rects[r].w/2.0) * scalex) - size_x/2.0;
-      y = ((this->rects[r].y + this->rects[r].h/2.0)* scaley) - size_y/2.0;
-      a = this->rects[r].a;
-      w = this->rects[r].w * scalex;
-      h = this->rects[r].h * scaley;
-      
-      LocalToGlobal( x,y,a );    
-
-      CEntity::matrix->SetRectangle( x, y, a, w, h, this, render );
+      GetGlobalRect( &glob, &(this->rects[r]) );
+      CEntity::matrix->SetRectangle( glob.x, glob.y, glob.a, 
+				     glob.w, glob.h, this, render );
     }
   
   // draw a boundary rectangle around the root device

@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15.2.13 2003-02-12 08:48:48 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.14 2003-02-13 00:14:47 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -132,7 +132,10 @@ protected:
   // sets our local rectangle bounds members to the extreme values
   // of the rectangle array members
   void DetectRectBounds(void);
-
+  // convert the rotated rectangle into global coords, taking into account
+  // the entities pose and the rectangle scaling
+  void GetGlobalRect( stage_rotrect_t* dest, stage_rotrect_t* src );
+  
   // bool controls whether rects are added to or removed from the matrix
   void RenderRects(  bool render );
   
@@ -158,14 +161,11 @@ protected:
 
   // Check to see if the given pose will yield a collision with obstacles.
   // Returns a pointer to the first entity we are in collision with.
-  // Returns NULL if no collisions.
-  // This function is useful for writing position devices.
-  protected: CEntity *TestCollision(double px, double py, double pth );
+  // Returns NULL if no collisions. records the position of the hit in
+  // hitx and hity, if non-null
+protected: CEntity *TestCollision(double px, double py, double pth,
+				  double *hity = NULL, double* hity = NULL);  
   
-  // same; also records the position of the hit
-  protected: CEntity *TestCollision(double px, double py, double pth, 
-                                            double &hitx, double &hity );
-
   // writes a description of this device into the buffer
 public: void GetStatusString( char* buf, int buflen );
   

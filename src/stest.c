@@ -1,6 +1,6 @@
 
 /*
-  $Id: stest.c,v 1.1.2.15 2003-02-12 03:02:34 rtv Exp $
+  $Id: stest.c,v 1.1.2.16 2003-02-13 00:14:47 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -259,7 +259,6 @@ int main( int argc, char** argv )
       
       SIOFreeBuffer( props );
 
-      //SetVelocity( connection, box.id, 0.0, 0.0, 2.0 );
 
       puts( "looping" );
       
@@ -278,6 +277,8 @@ int main( int argc, char** argv )
 	 
 	  //SetVelocity( connection, box.id, 3.0 * sin(x), 2.0 * cos(x+=0.1), 2.0 );
 
+	  SetVelocity( connection, box.id, 0.1, 0.0, 2.0 );
+	  
 	  if( c % 50 == 0 )
 	    {
 	      
