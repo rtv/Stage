@@ -3,104 +3,32 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.72 2002-01-26 02:41:35 rtv Exp $
+# $Id: Makefile,v 1.73 2002-01-28 22:46:15 rtv Exp $
+#
+# Note: All normal user configurations are in ../Makefile.common - you
+# probably don't need to change this file
 #
 ##############################################################################
-# Build type 
-# choose one of these that suits your build (debug/profile/production)
 
-# production
-#CCFLAGS = -O2 
-# debug
-CCFLAGS = -g3 
-# debug + profile
-#CCFLAGS = -pg -g3 
+# include the configuration file
+include ../Makefile.common
 
-#######################################
-# Compiler selection
-#
-#   normally, you'll use the standard 'g++' and 'gcc' compilers. 
-CC = g++
-
-#   however, if you're running a glibc-2.2-based system (e.g., RedHat 7.x), 
-#   and you want to run the resultant binaries on a glibc-2.1-based system
-#   (e.g., RedHat 6.x), then use the 'i386-glibc21-linux-g++' and
-#   'i386-glibc21-linux-gcc' compilers. note that you must have installed 
-#   the compatibility compiler and library packages (they are included with 
-#   the RedHat 7.x distro):
-#     compat-libs-6.2-3
-#     compat-glibc-6.2-2.1.3.2
-#     compat-egcs-c++-6.2-1.1.2.14
-#     compat-libstdc++-6.2-2.9.0.14
-#     compat-egcs-6.2-1.1.2.14
-
-#CC = i386-glibc21-linux-g++
-
-# if using the old libs you also need this in order to link properly with X
-#OLDLIBS = -L/usr/i386-glibc21-linux/lib
-
-# use the same tool to link
-LINKER = $(CC)
-
-##############################################################################
-# include Stage's version number
-#
-include ../VERSION
-
-##############################################################################
-# PLAYER CONFIGURATION (required)
-# this is overridden by the top-level Makefile
-# but setting sensible defaults here allows you to build from the src dir.
-
-PLAYER_VERSION = $(VERSION)
-PLAYER_DIR = $(HOME)/player-$(PLAYER_VERSION)
-
-#############################################################################
-# RTK CONFIGURATION (required for rtkstage)
-# rtkstage needs the path to the rtk2 source tree - these defaults
-# should work fine, as we now distribute rtk2 with stage
-
-RTK_DIR = ../rtk2
-RTK_INC = $(RTK_DIR) #/include
-RTK_LIB = $(RTK_DIR) #/lib
-
-##############################################################################
-# X COLOR DATABASE CONFFIGURATION (required)
-# set the path to a X11-format color database, usually rgb.txt from X distro
-
-# this is a good guess on Linux systems
-COLOR_DATABASE = /usr/X11R6/lib/X11/rgb.txt
-
-##############################################################################
-# ZLIB CONFIURATION (optional)
-# Support for gzipped images; requires zlib.
-# Comment out if you dont have or need zlib.
-
-ZLIB_FLAGS = -DINCLUDE_ZLIB
-ZLIB_LIBS = -lz
-
-#############################################################################
-# CONFIGURATION FOR HRL PROPRIETARY CODE - you probably don't want this
-
-#HRL = $(HOME)/LINPHERO/pr_c++/com/hrl/pr
-#HRL_HEADERS = -I$(HRL)/pherobot -I$(HRL)/abstractrobot
-#HRL_SRCS = $(HRL)/descartes.cc $(HRL)/irdevice.cc
-
-####################### DO NOT CHANGE BELOW HERE #############################
-
+# locate the player sources and libraries
 PLAYER_INC = $(PLAYER_DIR)/include
 PLAYER_LIB = $(PLAYER_DIR)/lib
 
-# Flags common to all targets
-#
+# Flags common to stage and rtkstage
 INCLUDES = -I../include -I$(PLAYER_INC)
 CCFLAGS += -Wall -DREENTRANT $(ZLIB_FLAGS) $(INCLUDES) $(HRL_HEADERS) 
 CCFLAGS += -DVERSION=\"$(VERSION)\" -DCOLOR_DATABASE=\"$(COLOR_DATABASE)\"
 
 # production/debug link
 LINKFLAGS = -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
+
 # profile link
 #LINKFLAGS = -pg -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
+
+# add the libc5 libaries if they were specified in Makefile.commin
 LINKFLAGS += $(OLDLIBS)
 
 ##############################################################################
@@ -149,7 +77,7 @@ rtkstage: ${RTK_OBS} rtk
 	${CC} ${CCFLAGS} -c $< -o $@
 
 rtk:
-	cd $(RTK_DIR) && make
+	cd $(RTK_DIR) && ${MAKE}
 
 
 # STAGE TOOLS ###############################################################
@@ -174,8 +102,8 @@ clean:
 #dep:
 #	$(MAKEDEP) -Y -I../include -I$(PLAYER_INC) -s "# Dependancies (make dep)" truthlog.cc xs.cc render.cc 2>/dev/null
 #	$(RM) -f Makefile.bak
-#	cd stage_objs && make dep
-#	cd rtkstage_objs && make dep
+#	cd stage_objs && ${MAKE} dep
+#	cd rtkstage_objs && ${MAKE} dep
 
 #dep:
 #	$(MAKEDEP) -Y -- $(CCFLAGS) -- -s "# Dependancies (make dep)" *.cc 2>/dev/null

@@ -1,52 +1,40 @@
+##############################################################################
 #
-# $Id: Makefile.common,v 1.31 2002-01-25 23:21:03 rtv Exp $ 
+# stage/Makefile.common - build and installation configurations
+# Author: Richard Vaughan, Andrew Howard
 #
-
-# INSTALL PLAYER BEFORE BUILDING STAGE!
+# $Id: Makefile.common,v 1.32 2002-01-28 22:46:15 rtv Exp $
+#
+# Notes: All user-configurable paths and build options should be specified 
+#        here. This file is included by Makefile and src/Makefile. 
+#        The defaults should be OK for most users. 
+#
+##############################################################################
 
 ##############################################################################
-# CONFIGURATION
-
-
-##############################################################################
-# VERSIONS
-
-# Define Stage's version string for the source to include (required)
+# VERSION NUMBER (required)
+# Define Stage's version string for the source to include.
 # Must match Player's version string
 
 VERSION = 1.2
 
 ##############################################################################
-# Player configuration (required)
-# set the absolute path of your Player installation or source tree
+# PLAYER CONFIGURATION (required)
+# this is overridden by the top-level Makefile
+# but setting sensible defaults here allows you to build from the src dir.
 
-# define which version of Player you will use to build from
-# this is often the same as stage's version number:
 PLAYER_VERSION = $(VERSION)
-
-# this is Player's default location - probably a good guess:
-PLAYER_BASE = $(HOME)/player
-
-PLAYER_DIR = $(PLAYER_BASE)-$(PLAYER_VERSION)
-PLAYER_INC=$(PLAYER_DIR)/include
-PLAYER_LIB=$(PLAYER_DIR)/lib
+PLAYER_DIR = $(HOME)/player-$(PLAYER_VERSION)
 
 ##############################################################################
-# Color datbase configuration (required)
-# set the path to a X11-format color database, usually rgb.txt from X distro
+# INSTALLATION CONFIGURATION (required for 'make install')
 
-# this is a good guess on Linux systems
-COLOR_DATABASE = /usr/X11R6/lib/X11/rgb.txt
-
-##############################################################################
-# INSTALLATION OPTIONS
-# These are the key flags needs for the build and install
-#
 # Stage will be installed under the directory INSTALL_BASE-VERSION.
 # Change INSTALL_BASE if you want to install somewhere else.
 # You can also specify the INSTALL_BASE from the make command line, eg:
 # make install -e INSTALL_BASE=~/playerstage/stage
 
+# By default, stage is installed in ~/stage
 INSTALL_BASE = $(HOME)/stage
 INSTALL_DIR = $(INSTALL_BASE)-$(VERSION)
 
@@ -57,18 +45,58 @@ SRC_DIST_NAME = Stage-$(VERSION)-src
 SRC_DIST_BLEEDING_NAME = Stage-Bleeding-src
 BIN_DIST_NAME = Stage-$(VERSION)-i386
 
+INSTALL_BIN = $(INSTALL_DIR)/bin
+INSTALL_BIN_FILES = bin/stage bin/xs bin/rtkstage bin/manager
+INSTALL_EXAMPLES = $(INSTALL_DIR)/examples
+
+#############################################################################
+# RTK CONFIGURATION (required for rtkstage)
+# rtkstage needs the path to the rtk2 source tree - these defaults
+# should work fine, as we now distribute rtk2 with stage
+
+RTK_DIR = ../rtk2
+RTK_INC = $(RTK_DIR) #/include
+RTK_LIB = $(RTK_DIR) #/lib
+
 ##############################################################################
+# X COLOR DATABASE CONFFIGURATION (required)
+# set the path to a X11-format color database, usually rgb.txt from X distro
+
+# this is a good guess on Linux systems
+COLOR_DATABASE = /usr/X11R6/lib/X11/rgb.txt
+
+##############################################################################
+# ZLIB CONFIURATION (optional)
 # Support for gzipped images; requires zlib.
-# Comment out if you dont have/need zlib.
+# Comment out if you dont have or need zlib.
 
 ZLIB_FLAGS = -DINCLUDE_ZLIB
 ZLIB_LIBS = -lz
 
-#######################################
-# Compiler selection
+#############################################################################
+# CONFIGURATION FOR HRL PROPRIETARY CODE - you probably don't want this
+
+#HRL = $(HOME)/LINPHERO/pr_c++/com/hrl/pr
+#HRL_HEADERS = -I$(HRL)/pherobot -I$(HRL)/abstractrobot
+#HRL_SRCS = $(HRL)/descartes.cc $(HRL)/irdevice.cc
+
+##############################################################################
+# Build type 
+# choose one of these that suits your build (debug/profile/production)
+
+# production
+#CCFLAGS = -O2 
+# debug
+CCFLAGS = -g3 
+# debug + profile
+#CCFLAGS = -pg -g3 
+
+#############################################################################
+# COMPILER SELECTION
 #
 #   normally, you'll use the standard 'g++' and 'gcc' compilers. 
-#
+CC = g++
+
 #   however, if you're running a glibc-2.2-based system (e.g., RedHat 7.x), 
 #   and you want to run the resultant binaries on a glibc-2.1-based system
 #   (e.g., RedHat 6.x), then use the 'i386-glibc21-linux-g++' and
@@ -80,32 +108,14 @@ ZLIB_LIBS = -lz
 #     compat-egcs-c++-6.2-1.1.2.14
 #     compat-libstdc++-6.2-2.9.0.14
 #     compat-egcs-6.2-1.1.2.14
-CC = g++
 
 #CC = i386-glibc21-linux-g++
-# need this in order to link properly with X
+
+# if using the old libs you also need this in order to link properly with X
 #OLDLIBS = -L/usr/i386-glibc21-linux/lib
 
-
-## CONFIGURATION FOR HRL PROPRIETARY CODE ###################################
-
-#HRL = $(HOME)/LINPHERO/pr_c++/com/hrl/pr
-#HRL_HEADERS = -I$(HRL)/pherobot -I$(HRL)/abstractrobot
-
-####################### DO NOT CHANGE BELOW HERE #############################
-PLAYER_INC = $(PLAYER_DIR)/include
-PLAYER_LIB = $(PLAYER_DIR)/lib
-
-# Standard tools
-#
-#CC = g++
+# use the same tool to link
 LINKER = $(CC)
-MAKEDEP = makedepend
-CP = cp
-RM = rm
-
-
-
 
 
 
