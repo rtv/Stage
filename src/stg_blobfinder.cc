@@ -16,15 +16,12 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_blobfinder.cc,v 1.1 2004-09-16 06:54:28 rtv Exp $
+ * $Id: stg_blobfinder.cc,v 1.2 2004-09-25 02:15:00 rtv Exp $
  */
 
 #define PLAYER_ENABLE_TRACE 0
 #define PLAYER_ENABLE_MSG 1
 
-#include "playercommon.h"
-#include "drivertable.h"
-#include "player.h"
 #include <stdlib.h>
 #include "stg_driver.h"
 
@@ -74,12 +71,13 @@ size_t StgBlobfinder::GetData(player_device_id_t id,
 			      struct timeval* timestamp )
 {  
   
-  stg_property_t* prop = stg_model_get_prop_cached( model, STG_PROP_DATA);
-
-  if( prop )
+  size_t datalen = 0;
+  stg_blobfinder_blob_t *blobs = (stg_blobfinder_blob_t*)
+    stg_model_get_data( this->model, &datalen );
+ 
+  if( blobs )
     {
-      stg_blobfinder_blob_t *blobs = (stg_blobfinder_blob_t*)prop->data;
-      size_t bcount = prop->len / sizeof(stg_blobfinder_blob_t);
+      size_t bcount = datalen / sizeof(stg_blobfinder_blob_t);
       
       // ACTS has blobs sorted by channel (color), and by area within
       // channel. Player has inherited this awful mess, so we'll
@@ -172,13 +170,10 @@ size_t StgBlobfinder::GetData(player_device_id_t id,
 	}
       
       // get the configuration
-      stg_property_t* cfg_prop = 
-	stg_model_get_prop_cached( model, STG_PROP_CONFIG);
-      
-      assert( cfg_prop );
-      assert( cfg_prop->data );
-      assert( cfg_prop->len == sizeof(stg_blobfinder_config_t) );
-      stg_blobfinder_config_t* cfg = (stg_blobfinder_config_t*)cfg_prop->data;
+      size_t cfglen=0;
+      stg_blobfinder_config_t* cfg = (stg_blobfinder_config_t*)
+	stg_model_get_config( this->model, &cfglen );
+      assert( cfglen == sizeof(stg_blobfinder_config_t) );
       
       // and set the image width * height
       bfd.width = htons((uint16_t)cfg->scan_width);

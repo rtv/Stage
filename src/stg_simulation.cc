@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_simulation.cc,v 1.4 2004-09-24 20:58:30 rtv Exp $
+ * $Id: stg_simulation.cc,v 1.5 2004-09-25 02:15:00 rtv Exp $
  */
 
 #include "stg_driver.h"
@@ -158,24 +158,19 @@ void StgSimulation::Main()
 {
   //int d=0;
 
+  assert( this->world );
+
   while(1)
     {   
       // test if we are supposed to cancel
       pthread_testcancel();
-
-      if( this->world )
-	{
-	  //printf( "  D = %d\r", ++d ); fflush(stdout);
-	  //gui_poll(); // update the Stage window
-	  
-	  stg_world_update( this->world );
-
-	  //usleep(1000); // take some strain off the CPU
-	}
+      
+      // update the world, asking it to sleep a little if it has
+      // spare  time.
+      if( stg_world_update( this->world, TRUE ) )
+	//pthread_exit(NULL);
+	exit( 0 );
     }
-
-  // in case we break out of the loop above
-  pthread_exit(NULL);
 }
 
 int StgSimulation::Setup()

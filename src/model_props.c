@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.13 $
+//  $Revision: 1.14 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -200,10 +200,22 @@ int stg_model_set_blobreturn( stg_model_t* mod, stg_bool_t val )
   return 0;
 }
 
+stg_pose_t* stg_model_get_odom( stg_model_t* model )
+{
+  return &model->odom;
+}
+
+int stg_model_set_odom( stg_model_t* mod, stg_pose_t* pose )
+{
+  memcpy( &mod->odom, pose, sizeof(stg_pose_t) );
+}
+
+
 stg_pose_t* stg_model_get_pose( stg_model_t* model )
 {
   return &model->pose;
 }
+
 
 int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
 {
@@ -252,6 +264,9 @@ int stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom )
       
       // set the new lines (this will cause redraw)
       stg_model_set_lines( mod, lines, count );
+
+      // we may need to re-render our nose
+      gui_model_features(mod);
 
 #if SHOW_GEOM
       gui_render_geom( mod );

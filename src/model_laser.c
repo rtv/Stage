@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.44 $
+//  $Revision: 1.45 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -56,7 +56,7 @@ void laser_init( stg_model_t* mod )
   lconf.fov         = STG_DEFAULT_LASER_FOV;
   lconf.samples     = STG_DEFAULT_LASER_SAMPLES;
   
-  stg_color_t col =stg_lookup_color( STG_LASER_GEOM_COLOR ); 
+  stg_color_t col = stg_lookup_color( STG_LASER_GEOM_COLOR ); 
   stg_model_set_color( mod, &col );
 
   stg_model_set_config( mod, &lconf, sizeof(lconf) );
@@ -93,9 +93,10 @@ int laser_update( stg_model_t* mod )
       
   if( fig_debug ) rtk_fig_clear( fig_debug );
 
-  // make a scan buffer
-  stg_laser_sample_t* scan = 
-    calloc( sizeof(stg_laser_sample_t), cfg->samples );
+  // make a scan buffer (static for speed, so we only have to allocate
+  // memory when the number of samples changes).
+  static stg_laser_sample_t* scan = 0;
+  scan = realloc( scan, sizeof(stg_laser_sample_t) * cfg->samples );
   
   int t;
   // only compute every second sample, for speed
@@ -152,7 +153,7 @@ int laser_update( stg_model_t* mod )
   // new style
   stg_model_set_data( mod, scan, sizeof(stg_laser_sample_t) * cfg->samples );
   
-  free( scan );
+  //free( scan );
 
 #if TIMING
   gettimeofday( &tv2, NULL );

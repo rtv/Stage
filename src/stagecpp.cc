@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.55 2004-09-22 20:47:21 rtv Exp $
+// $Id: stagecpp.cc,v 1.56 2004-09-25 02:15:00 rtv Exp $
 
 //#define DEBUG
 
@@ -423,6 +423,10 @@ stg_world_t* stg_world_create_from_file( char* worldfile_path )
   if( world == NULL )
     return NULL; // failure
   
+  // configure the GUI
+  
+
+
   // Iterate through sections and create client-side models
   for (int section = 1; section < wf.GetEntityCount(); section++)
     {
@@ -504,7 +508,11 @@ stg_world_t* stg_world_create_from_file( char* worldfile_path )
 	case STG_MODEL_LASER:
 	  configure_laser( mod, section );
 	  break;
-	  /*  
+
+	case STG_MODEL_RANGER:
+	  configure_ranger( mod, section );
+	  break;
+
 	case STG_MODEL_BLOB:
 	  configure_blobfinder( mod, section );
 	  break;
@@ -517,10 +525,6 @@ stg_world_t* stg_world_create_from_file( char* worldfile_path )
 	  configure_position( mod, section );
 	  break;
 	  
-	case STG_MODEL_RANGER:
-	  configure_ranger( mod, section );
-	  break;
-	  */
 	default:
 	  PRINT_DEBUG1( "don't know how to configure type %d", type );
 	}

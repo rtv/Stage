@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_laser.cc,v 1.2 2004-09-22 20:47:22 rtv Exp $
+ * $Id: stg_laser.cc,v 1.3 2004-09-25 02:15:00 rtv Exp $
  */
 
 #define PLAYER_ENABLE_TRACE 1
@@ -24,7 +24,7 @@
 
 #include <stdlib.h>
 
-#define DEBUG
+//#define DEBUG
 
 #include "stg_driver.h"
 
@@ -96,7 +96,10 @@ size_t StgLaser::GetData(player_device_id_t id,
     (stg_laser_sample_t*)stg_model_get_data( this->model, &dlen );
   
   int sample_count = dlen / sizeof( stg_laser_sample_t );
-  
+
+  //for( int i=0; i<sample_count; i++ )
+  //  printf( "rrrange %d %d\n", i, samples[i].range);
+
   player_laser_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
 
@@ -159,8 +162,6 @@ int StgLaser::PutConfig(player_device_id_t device, void* client,
 	
         if( len == sizeof(player_laser_config_t) )
 	  {
-	    stg_laser_config_t slc_request;
-	    memset( &slc_request, 0, sizeof(slc_request) );
 	    int min_a = (int16_t)ntohs(plc->min_angle);
 	    int max_a = (int16_t)ntohs(plc->max_angle);
 	    int ang_res = (int16_t)ntohs(plc->resolution);
@@ -174,19 +175,23 @@ int StgLaser::PutConfig(player_device_id_t device, void* client,
 	    max_a /= 100;
 	    ang_res /= 100;
 
-	    slc_request.fov = DTOR(max_a - min_a);
-	    // todo - slc_request.intensity = plc->intensity;
-
-	    slc_request.samples = (int)(slc_request.fov / DTOR(ang_res));
-	    	    
-	    //int err;
-	    //if( (err = stg_model_prop_set( this->model, STG_PROP_CONFIG,
-	    //			   &slc_request, sizeof(slc_request)) ) )
-	    // PLAYER_ERROR1( "error %d setting laser config", err );
-	    //else
-	    //PLAYER_TRACE0( "set laser config OK" );
+	    size_t cfglen=0;
+	    stg_laser_config_t* current = (stg_laser_config_t*)
+	      stg_model_get_config( this->model, &cfglen );
+	    assert( cfglen == sizeof(stg_laser_config_t));
 	    
-	    stg_model_set_config( this->model, &slc_request, sizeof(slc_request));
+	    stg_laser_config_t slc;
+	    // copy the existing config
+	    memcpy( &slc, current, sizeof(slc));
+	    
+	    // tweak the parts that player knows about
+	    slc.fov = DTOR(max_a - min_a);
+	    slc.samples = (int)(slc.fov / DTOR(ang_res));
+	    
+	    PRINT_DEBUG2( "setting laser config: fov %.2f samples %d", 
+			  slc.fov, slc.samples );
+	    
+	    stg_model_set_config( this->model, &slc, sizeof(slc));
 	    
 	    if(PutReply(client, PLAYER_MSGTYPE_RESP_ACK, plc, len, NULL) != 0)
 	      PLAYER_ERROR("PutReply() failed for PLAYER_LASER_SET_CONFIG");

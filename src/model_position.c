@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -67,7 +67,12 @@ int position_update( stg_model_t* mod )
     {
     case STG_POSITION_CONTROL_VELOCITY :
       {
-	puts( "velocity control mode" );
+	PRINT_DEBUG( "velocity control mode" );
+	PRINT_DEBUG4( "model %s command(%.2f %.2f %.2f)",
+		      mod->token, 
+		      cmd->x, 
+		      cmd->y, 
+		      cmd->a );
 
 	switch( cfg->steer_mode )
 	  {
@@ -92,13 +97,13 @@ int position_update( stg_model_t* mod )
       
     case STG_POSITION_CONTROL_POSITION:
       {
-	puts( "position control mode" );
+	PRINT_DEBUG( "position control mode" );
 
 	double x_error = cmd->x - mod->odom.x;
 	double y_error = cmd->y - mod->odom.y;
 	double a_error = NORMALIZE( cmd->a - mod->odom.a );
 	
-	printf( "errors: %.2f %.2f %.2f\n", x_error, y_error, a_error );
+	PRINT_DEBUG3( "errors: %.2f %.2f %.2f\n", x_error, y_error, a_error );
 
 	// speed limits for controllers
 	// TODO - have these configurable
@@ -137,14 +142,14 @@ int position_update( stg_model_t* mod )
 	      // if we're at the right spot
 	      if( fabs(x_error) < close_enough && fabs(y_error) < close_enough )
 		{
-		  puts( "TURNING ON THE SPOT" );
+		  PRINT_DEBUG( "TURNING ON THE SPOT" );
 		  // turn on the spot to minimize the error
 		  calc.a = MIN( a_error, max_speed_a );
 		  calc.a = MAX( a_error, -max_speed_a );
 		}
 	      else
 		{
-		  puts( "TURNING TO FACE THE GOAL POINT" );
+		  PRINT_DEBUG( "TURNING TO FACE THE GOAL POINT" );
 		  // turn to face the goal point
 		  double goal_angle = atan2( y_error, x_error );
 		  double goal_distance = hypot( y_error, x_error );
@@ -153,13 +158,13 @@ int position_update( stg_model_t* mod )
 		  calc.a = MIN( a_error, max_speed_a );
 		  calc.a = MAX( a_error, -max_speed_a );
 
-		  printf( "steer errors: %.2f %.2f \n", a_error, goal_distance );
+		  PRINT_DEBUG2( "steer errors: %.2f %.2f \n", a_error, goal_distance );
  
 		  // if we're pointing about the right direction, move
 		  // forward
 		  if( fabs(a_error) < M_PI/16 )
 		    {
-		      puts( "DRIVING TOWARDS THE GOAL" );
+		      PRINT_DEBUG( "DRIVING TOWARDS THE GOAL" );
 		      calc.x = MIN( goal_distance, max_speed_x );
 		    }
 		}
@@ -184,7 +189,12 @@ int position_update( stg_model_t* mod )
 
   stg_model_set_velocity( mod, &vel );
   
-  
+  PRINT_DEBUG4( "model %s velocity (%.2f %.2f %.2f)",
+		mod->token, 
+		mod->velocity.x, 
+		mod->velocity.y, 
+		mod->velocity.a );
+
   double interval = (double)mod->world->sim_interval / 1000.0;
   
   // set the data here

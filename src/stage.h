@@ -24,11 +24,11 @@
  */
 
 /* File: stage.h
- * Desc: packet types and functions for interfacing with the Stage server
+ * Desc: Types and functions for the Stage library
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.89 2004-09-24 20:58:30 rtv Exp $
+ * CVS: $Id: stage.h,v 1.90 2004-09-25 02:15:00 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -577,13 +577,16 @@ extern "C" {
 
     double bigppm;
     GHashTable* bigtable;
-
+    
+    // todo - record a timestamp for matrix mods so devices can see if
+    //the matrix has changed since they last peeked into it
+    // stg_msec_t last_mod_time;
   } stg_matrix_t;
   
   typedef struct
   {
-    gulong x; // address a very large space of cells
-    gulong y;
+    glong x; // address a very large space of cells
+    glong y;
   } stg_matrix_coord_t;
 
 
@@ -766,7 +769,7 @@ void itl_raytrace( itl_t* itl );
   void gui_shutdown( void );
   gui_window_t* gui_world_create( stg_world_t* world );
   void gui_world_destroy( stg_world_t* world );
-  void gui_world_update( stg_world_t* world );
+  int gui_world_update( stg_world_t* world );
   void gui_model_create( stg_model_t* model );
   void gui_model_destroy( stg_model_t* model );
   void gui_model_render( stg_model_t* model );
@@ -796,16 +799,11 @@ void itl_raytrace( itl_t* itl );
   // removes all pointers from every cell in the matrix
   void stg_matrix_clear( stg_matrix_t* matrix );
 
-  // get the array of pointers in cell y*width+x
-  //GPtrArray* stg_matrix_cell( stg_matrix_t* matrix, gulong x, gulong y);
-
   GPtrArray* stg_matrix_cell_get( stg_matrix_t* matrix, double x, double y);
   GPtrArray* stg_matrix_bigcell_get( stg_matrix_t* matrix, double x, double y);
   GPtrArray* stg_matrix_medcell_get( stg_matrix_t* matrix, double x, double y);
 
   // append the [object] to the pointer array at the cell
-  //void stg_matrix_cell_append(  stg_matrix_t* matrix, 
-  //		      gulong x, gulong y, void* object );
   void stg_matrix_cell_append(  stg_matrix_t* matrix, 
 				double x, double y, void* object );
 
@@ -840,7 +838,7 @@ void itl_raytrace( itl_t* itl );
    
   stg_world_t* stg_world_create_from_file( char* worldfile_path );
   void stg_world_destroy( stg_world_t* world );
-  int stg_world_update( stg_world_t* world );
+  int stg_world_update( stg_world_t* world, int sleepflag );
   void stg_world_print( stg_world_t* world );
 
   /// create a new model  
@@ -872,6 +870,7 @@ void itl_raytrace( itl_t* itl );
 
   // SET properties - use these to set props, don't set them directly
   int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose );
+  int stg_model_set_odom( stg_model_t* mod, stg_pose_t* pose );
   int stg_model_set_velocity( stg_model_t* mod, stg_velocity_t* vel );
   int stg_model_set_size( stg_model_t* mod, stg_size_t* sz );
   int stg_model_set_color( stg_model_t* mod, stg_color_t* col );
@@ -890,6 +889,7 @@ void itl_raytrace( itl_t* itl );
   stg_geom_t*          stg_model_get_geom( stg_model_t* mod );
   stg_color_t          stg_model_get_color( stg_model_t* mod );
   stg_pose_t*          stg_model_get_pose( stg_model_t* mod );
+  stg_pose_t*          stg_model_get_odom( stg_model_t* mod );
   stg_kg_t*            stg_model_get_mass( stg_model_t* mod );
   stg_line_t*          stg_model_get_lines( stg_model_t* mod, size_t* count );
   stg_guifeatures_t*   stg_model_get_guifeaturess( stg_model_t* mod );

@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.66 2004-09-24 20:58:30 rtv Exp $
+# $Id: Makefile.am,v 1.67 2004-09-25 02:14:59 rtv Exp $
 
 #SUBDIRS = models
 
@@ -67,7 +67,11 @@ libstageplugin_la_SOURCES = \
 	stg_time.cc \
 	stg_time.h \
 	stg_simulation.cc \
-	stg_laser.cc 
+	stg_laser.cc \
+	stg_fiducial.cc \
+	stg_position.cc \
+	stg_sonar.cc \
+	stg_blobfinder.cc 
 
 libstageplugin_la_DEPENDENCIES = libstage.la
 libstageplugin_la_LDFLAGS = -module -export-dynamic -version-info 0:0:0 

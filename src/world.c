@@ -48,6 +48,17 @@ stg_world_t* stg_world_create( stg_id_t id,
   return world;
 }
 
+/// calculate the bounding rectangle of everything in the world
+void stg_world_dimensions( stg_world_t* world, 
+			   double* min_x, double * min_y,
+			   double* max_x, double * max_y )
+{
+  double min_x = min_y =  MILLION;
+  double max_x = max_y = -MILLION;
+  
+  
+
+}
 
 
 void stg_world_destroy( stg_world_t* world )
@@ -73,9 +84,13 @@ void world_destroy_cb( gpointer world )
 }
 
 
-int stg_world_update( stg_world_t* world )
+int stg_world_update( stg_world_t* world, int sleepflag )
 {
   //PRINT_WARN( "World update" );
+
+  //PRINT_WARN( "World update - not paused" );
+ 
+
 
 #if 0 //DEBUG
   struct timeval tv1;
@@ -85,7 +100,10 @@ int stg_world_update( stg_world_t* world )
   if( world->win )
     {
       gui_poll();
-      gui_world_update( world );
+      
+      // if the window was closed, we request a quit
+      if( gui_world_update( world ) )
+	stg_quit_request();
     }
 
 #if 0// DEBUG
@@ -98,25 +116,28 @@ int stg_world_update( stg_world_t* world )
   printf( " guitime %.4f\n", guitime );
 #endif
 
+  //putchar( '.' );
+  //fflush( stdout );
+
   if( world->paused ) // only update if we're not paused
     return 0;
 
   
-  //PRINT_WARN( "World update - not paused" );
- 
   stg_msec_t timenow = stg_timenow();
-  
- 
+   
   //PRINT_DEBUG5( "timenow %lu last update %lu interval %lu diff %lu sim_time %lu", 
   //	timenow, world->wall_last_update, world->wall_interval,  
   //	timenow - world->wall_last_update, world->sim_time  );
   
   // if it's time for an update, update all the models
-  if( timenow - world->wall_last_update > world->wall_interval )
+  stg_msec_t elapsed =  timenow - world->wall_last_update;
+
+  if( world->wall_interval < elapsed )
     {
       stg_msec_t real_interval = timenow - world->wall_last_update;
 
-      printf( " [%d %lu] sim:%lu real:%lu  ratio:%.2f\r",
+#if 0      
+      printf( " [%d %lu] sim:%lu real:%lu  ratio:%.2f\n",
 	      world->id, 
 	      world->sim_time,
 	      world->sim_interval,
@@ -124,8 +145,7 @@ int stg_world_update( stg_world_t* world )
 	      (double)world->sim_interval / (double)real_interval  );
       
       fflush(stdout);
-
-      //fflush( stdout );
+#endif
       
       g_hash_table_foreach( world->models, model_update_cb, world );
       
@@ -135,14 +155,16 @@ int stg_world_update( stg_world_t* world )
       world->sim_time += world->sim_interval;
       
     }
+  else
+    if( sleepflag ) usleep( 10000 ); // sleep a little
   
   return _stg_quit; // may have been set TRUE by the GUI or someone else
 }
 
-void world_update_cb( gpointer key, gpointer value, gpointer user )
-{
-  stg_world_update( (stg_world_t*)value );
-}
+//void world_update_cb( gpointer key, gpointer value, gpointer user )
+//{
+// stg_world_update( (stg_world_t*)value );
+//}
 
 stg_model_t* stg_world_get_model( stg_world_t* world, stg_id_t mid )
 {

@@ -16,15 +16,12 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_sonar.cc,v 1.1 2004-09-16 06:54:28 rtv Exp $
+ * $Id: stg_sonar.cc,v 1.2 2004-09-25 02:15:00 rtv Exp $
  */
 
 #define PLAYER_ENABLE_TRACE 0
 #define PLAYER_ENABLE_MSG 1
 
-#include "playercommon.h"
-#include "drivertable.h"
-#include "player.h"
 #include <stdlib.h>
 #include "stg_driver.h"
 
@@ -76,13 +73,13 @@ size_t StgSonar::GetData(player_device_id_t id,
 			 void* dest, size_t len,
 			 struct timeval* timestamp )
 {  
+  size_t datalen;
+  stg_ranger_sample_t *rangers = (stg_ranger_sample_t*)
+    stg_model_get_data( this->model, &datalen );
   
-  stg_property_t* prop = stg_model_get_prop_cached( model, STG_PROP_DATA);
-  
-  if( prop )
+  if( rangers && datalen > 0 )
     {
-      stg_ranger_sample_t *rangers = (stg_ranger_sample_t*)prop->data;
-      size_t rcount = prop->len / sizeof(stg_ranger_sample_t);
+      size_t rcount = datalen / sizeof(stg_ranger_sample_t);
       
       PLAYER_TRACE2( "i see %d bytes of ranger data: %d ranger readings", 
 		     (int)prop->len, (int)rcount );
@@ -120,27 +117,18 @@ int StgSonar::PutConfig(player_device_id_t id, void *client,
     {  
     case PLAYER_SONAR_GET_GEOM_REQ:
       { 
-	stg_ranger_config_t* cfgs = NULL;
-	size_t len = 0;
-	if( stg_model_prop_get_var( this->model, STG_PROP_CONFIG, 
-				    (void**)&cfgs, &len ))
-	  {
-	    PLAYER_ERROR( "error requesting STG_PROP_CONFIG" );
-	    
-	    if(PutReply( id, client, PLAYER_MSGTYPE_RESP_NACK, NULL ))
-	      PLAYER_ERROR("failed to PutReply for NACK");
-	  }
-	else
-	  PLAYER_TRACE0( "got ranger config OK" );
+	size_t cfglen = 0;	
+	stg_ranger_config_t* cfgs = (stg_ranger_config_t*)
+	  stg_model_get_config( this->model, &cfglen );
 	
-	size_t rcount = len / sizeof(stg_ranger_config_t);
+	size_t rcount = cfglen / sizeof(stg_ranger_config_t);
 	
 	// convert the ranger data into Player-format sonar poses	
 	player_sonar_geom_t pgeom;
 	memset( &pgeom, 0, sizeof(pgeom) );
 	
 	pgeom.subtype = PLAYER_SONAR_GET_GEOM_REQ;
-
+	
 	// limit the number of samples to Player's maximum
 	if( rcount > PLAYER_SONAR_MAX_SAMPLES )
 	  rcount = PLAYER_SONAR_MAX_SAMPLES;

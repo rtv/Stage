@@ -21,7 +21,7 @@
 /*
  * Desc: Rtk application functions
  * Author: Andrew Howard
- * CVS: $Id: rtk.c,v 1.2 2004-09-24 20:58:30 rtv Exp $
+ * CVS: $Id: rtk.c,v 1.3 2004-09-25 02:15:00 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -214,6 +214,6 @@ int rtk_app_main_loop(rtk_app_t *app)
     gtk_main_quit();
   }
 
-  return ret;
+  return app->must_quit;
 }
 

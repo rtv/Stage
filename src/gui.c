@@ -33,7 +33,8 @@ void gui_startup( int* argc, char** argv[] )
 void gui_poll( void )
 {
   //PRINT_DEBUG( "gui poll" );
-  rtk_app_main_loop( app );
+  if( rtk_app_main_loop( app ) )
+    stg_quit_request();
 }
 
 void gui_shutdown( void )
@@ -85,15 +86,19 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   // todo - destructors for figures
   //win->guimods = g_hash_table_new( g_int_hash, g_int_equal );
   
-  win->bg = rtk_fig_create( win->canvas, NULL, 0 );
-  
   double width = 10;//world->size.x;
   double height = 10;//world->size.y;
 
+  win->bg = rtk_fig_create( win->canvas, NULL, STG_LAYER_GRID );
+  
+  // draw a grid
+  rtk_fig_color_rgb32( win->bg, stg_lookup_color(STG_GRID_MAJOR_COLOR) );    
+  rtk_fig_grid( win->bg, 0,0, width, height, 1.0 );
+  
   // draw the axis origin lines
-  //rtk_fig_color_rgb32( win->grid, stg_lookup_color(STG_GRID_AXIS_COLOR) );  
-  //rtk_fig_line( win->grid, 0, 0, width, 0 );
-  //rtk_fig_line( win->grid, 0, 0, 0, height );
+  rtk_fig_color_rgb32( win->bg, stg_lookup_color(STG_GRID_AXIS_COLOR) );    
+  rtk_fig_line( win->bg, -width/2, 0, width/2, 0 );
+  rtk_fig_line( win->bg, 0, -height/2, 0, height/2 );
 
   win->show_matrix = FALSE;
   win->fill_polygons = FALSE;
@@ -105,7 +110,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
 
   // start in the center, fully zoomed out
   rtk_canvas_scale( win->canvas, 1.1*width/xdim, 1.1*width/xdim );
-  rtk_canvas_origin( win->canvas, width/2.0, height/2.0 );
+  //rtk_canvas_origin( win->canvas, width/2.0, height/2.0 );
 
   win->selection_active = NULL;
   
@@ -209,7 +214,8 @@ void gui_pose_cb( gpointer key, gpointer value, gpointer user )
 }
 
 
-void gui_world_update( stg_world_t* world )
+// returns 1 if the world should be destroyed
+int gui_world_update( stg_world_t* world )
 {
   //PRINT_DEBUG( "gui world update" );
   
@@ -217,34 +223,35 @@ void gui_world_update( stg_world_t* world )
   
   if( rtk_canvas_isclosed( win->canvas ) )
     {
-      //PRINT_WARN( "marking world for destruction" );
-      //world->destroy = TRUE;
+      PRINT_WARN( "window closed" );
+      //stg_world_destroy( world );
+      return 1;
     }
-  else
-    {
-      if( win->show_matrix ) gui_world_matrix( world, win );
-      
-      char clock[128];
-      snprintf( clock, 255, "Time: %lu:%lu:%2lu:%2lu.%3lu",
-		world->sim_time / (24*3600000), // days
-		world->sim_time / 3600000, // hours
-		(world->sim_time % 3600000) / 60000, // minutes
-		(world->sim_time % 60000) / 1000, // seconds
-		world->sim_time % 1000 ); // milliseconds
-      
-      //gtk_label_set_text( win->timelabel, clock );
-      
-      if( win->selection_active )
-	gui_model_display_pose( win->selection_active, "Selection:" );
-      else      
-	{	  
-	  guint cid = gtk_statusbar_get_context_id( win->statusbar, "on_mouse" );
-	  gtk_statusbar_pop( win->statusbar, cid ); 
-	  gtk_statusbar_push( win->statusbar, cid, clock ); 
-	}
-      
-      rtk_canvas_render( win->canvas );      
+
+  if( win->show_matrix ) gui_world_matrix( world, win );
+  
+  char clock[128];
+  snprintf( clock, 255, "Time: %lu:%lu:%2lu:%2lu.%3lu",
+	    world->sim_time / (24*3600000), // days
+	    world->sim_time / 3600000, // hours
+	    (world->sim_time % 3600000) / 60000, // minutes
+	    (world->sim_time % 60000) / 1000, // seconds
+	    world->sim_time % 1000 ); // milliseconds
+  
+  //gtk_label_set_text( win->timelabel, clock );
+  
+  if( win->selection_active )
+    gui_model_display_pose( win->selection_active, "Selection:" );
+  else      
+    {	  
+      guint cid = gtk_statusbar_get_context_id( win->statusbar, "on_mouse" );
+      gtk_statusbar_pop( win->statusbar, cid ); 
+      gtk_statusbar_push( win->statusbar, cid, clock ); 
     }
+  
+  rtk_canvas_render( win->canvas );      
+
+  return 0;
 }
 
 void gui_world_destroy( stg_world_t* world )

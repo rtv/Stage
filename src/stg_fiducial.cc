@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_fiducial.cc,v 1.1 2004-09-16 06:54:28 rtv Exp $
+ * $Id: stg_fiducial.cc,v 1.2 2004-09-25 02:15:00 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -26,9 +26,9 @@
 #define PLAYER_ENABLE_TRACE 0
 #define PLAYER_ENABLE_MSG 1
 
-#include "playercommon.h"
-#include "drivertable.h"
-#include "player.h"
+//#include "playercommon.h"
+//#include "drivertable.h"
+//#include "player.h"
 #include "stg_driver.h"
 
 class StgFiducial:public Stage1p4
@@ -74,15 +74,17 @@ size_t StgFiducial::GetData(player_device_id_t id,
   PLAYER_TRACE2(" STG_FIDUCIAL GETDATA section %d -> model %d",
 		model->section, model->id_client );
   
-  stg_property_t* prop = stg_model_get_prop_cached( model, STG_PROP_DATA);
+  //stg_property_t* prop = stg_model_get_prop_cached( model, STG_PROP_DATA);
 
   player_fiducial_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
   
-  if( prop && prop->len > 0 )
+  size_t datalen=0;
+  stg_fiducial_t *fids = (stg_fiducial_t*)stg_model_get_data(this->model,&datalen);
+
+  if( fids && datalen>0 )
     {
-      stg_fiducial_t *fids = (stg_fiducial_t*)prop->data;    
-      size_t fcount = prop->len / sizeof(stg_fiducial_t);      
+      size_t fcount = datalen / sizeof(stg_fiducial_t);      
       assert( fcount > 0 );
       
       pdata.count = htons((uint16_t)fcount);
@@ -128,20 +130,17 @@ int StgFiducial::PutConfig(player_device_id_t id, void *client,
 
 	// just get the model's geom - Stage doesn't have separate
 	// fiducial geom (yet)
-	stg_geom_t geom;
-	if( stg_model_prop_get( this->model, STG_PROP_GEOM, &geom,sizeof(geom)))
-	  PLAYER_ERROR( "error requesting STG_PROP_GEOM" );
-	else
-	  PLAYER_TRACE0( "got fiducial geom OK" );
-      
+	stg_geom_t* geom = stg_model_get_geom(this->model);
+	assert(geom);
+	
 	// fill in the geometry data formatted player-like
 	player_fiducial_geom_t pgeom;
-	pgeom.pose[0] = htons((uint16_t)(1000.0 * geom.pose.x));
-	pgeom.pose[1] = htons((uint16_t)(1000.0 * geom.pose.y));
-	pgeom.pose[2] = htons((uint16_t)RTOD( geom.pose.a));
+	pgeom.pose[0] = htons((uint16_t)(1000.0 * geom->pose.x));
+	pgeom.pose[1] = htons((uint16_t)(1000.0 * geom->pose.y));
+	pgeom.pose[2] = htons((uint16_t)RTOD( geom->pose.a));
 	
-	pgeom.size[0] = htons((uint16_t)(1000.0 * geom.size.x)); 
-	pgeom.size[1] = htons((uint16_t)(1000.0 * geom.size.y)); 
+	pgeom.size[0] = htons((uint16_t)(1000.0 * geom->size.x)); 
+	pgeom.size[1] = htons((uint16_t)(1000.0 * geom->size.y)); 
 	
 	pgeom.fiducial_size[0] = ntohs((uint16_t)100); // TODO - get this info
 	pgeom.fiducial_size[1] = ntohs((uint16_t)100);
@@ -169,11 +168,7 @@ int StgFiducial::PutConfig(player_device_id_t id, void *client,
 	  //printf( "setting fiducial FOV to min %f max %f fov %f\n",
 	  //  setcfg.min_range, setcfg.max_range_anon, setcfg.fov );
 	  
-	  if( stg_model_prop_set( this->model, STG_PROP_CONFIG, 
-				  &setcfg,sizeof(setcfg)))
-	    PLAYER_ERROR( "error setting fiducial STG_PROP_CONFIG" );
-	  else
-	    PLAYER_TRACE0( "set fiducial config OK" );
+	  stg_model_set_config( this->model, &setcfg, sizeof(setcfg));
 	}    
       else
 	PLAYER_ERROR2("Incorrect packet size setting fiducial FOV (%d/%d)",
@@ -185,18 +180,17 @@ int StgFiducial::PutConfig(player_device_id_t id, void *client,
       {
 	PLAYER_TRACE0( "requesting fiducial FOV" );
 	
-	stg_fiducial_config_t cfg;
-	if( stg_model_prop_get( this->model, STG_PROP_CONFIG, 
-				&cfg,sizeof(cfg))
-	    != 0 )
-	  PLAYER_TRACE0( "error requesting STG_PROP_CONFIG" );
+	size_t cfglen=0;
+	stg_fiducial_config_t* cfg = (stg_fiducial_config_t*)
+	  stg_model_get_config( this->model, &cfglen );
 	
-	
+	assert( cfglen == sizeof(stg_fiducial_config_t) );
+
 	// fill in the geometry data formatted player-like
 	player_fiducial_fov_t pfov;
-	pfov.min_range = htons((uint16_t)(1000.0 * cfg.min_range));
-	pfov.max_range = htons((uint16_t)(1000.0 * cfg.max_range_anon));
-	pfov.view_angle = htons((uint16_t)RTOD(cfg.fov));
+	pfov.min_range = htons((uint16_t)(1000.0 * cfg->min_range));
+	pfov.max_range = htons((uint16_t)(1000.0 * cfg->max_range_anon));
+	pfov.view_angle = htons((uint16_t)RTOD(cfg->fov));
 	
 	if( PutReply( id, client, PLAYER_MSGTYPE_RESP_ACK, 
 		      &pfov, sizeof(pfov), NULL ) != 0 )
@@ -212,12 +206,8 @@ int StgFiducial::PutConfig(player_device_id_t id, void *client,
 	  PLAYER_TRACE0( "setting fiducial id" );
 	  
 	  int id = ntohl(((player_fiducial_id_t*)src)->id);
-	  
-	  if( stg_model_prop_set( this->model, STG_PROP_FIDUCIALRETURN, 
-				  &id,sizeof(id)))
-	    PLAYER_ERROR( "error setting STG_PROP_FIDUCIALRETURN" );
-	  else
-	    PLAYER_TRACE0( "set fiducial id OK" );
+
+	  stg_model_set_fiducialreturn( this->model, &id );
 	}
       else
 	PLAYER_ERROR2("Incorrect packet size setting fiducial ID (%d/%d)",
@@ -230,18 +220,11 @@ int StgFiducial::PutConfig(player_device_id_t id, void *client,
 	PLAYER_TRACE0( "requesting fiducial ID" );
 	//puts( "requesting fiducial ID" );
 	
-	int id = 0;
-	if( stg_model_prop_get( this->model, STG_PROP_FIDUCIALRETURN, 
-				&id,sizeof(id))
-	    != 0 )
-	  PLAYER_TRACE0( "error requesting STG_PROP_FIDUCIALRETURN" );
-		
-	//if( id == 0 )
-	//id = -1; // player says unidentified is -1
+	stg_fiducial_return_t* ret = stg_model_get_fiducialreturn(this->model); 
 
 	// fill in the data formatted player-like
 	player_fiducial_id_t pid;
-	pid.id = htonl(id);
+	pid.id = htonl((int)*ret);
 	
 	if( PutReply( client, PLAYER_MSGTYPE_RESP_ACK, 
 		      &pid, sizeof(pid), NULL ) != 0 )

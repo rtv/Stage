@@ -16,15 +16,13 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_position.cc,v 1.1 2004-09-16 06:54:28 rtv Exp $
+ * $Id: stg_position.cc,v 1.2 2004-09-25 02:15:00 rtv Exp $
  */
 
-#include <stdlib.h>
+#define DEBUG
 
-#include "playercommon.h"
-#include "drivertable.h"
-#include "player.h"
-#include "stageclient.h"
+#include <stdlib.h>
+#include "stg_driver.h"
 
 // CLASS FOR POSITION INTERFACE //////////////////////////////////////////
 class StgPosition:public Stage1p4
@@ -74,26 +72,27 @@ size_t StgPosition::GetData( player_device_id_t id,
 			     void* dest, size_t len,
 			     struct timeval* timestamp)
 {
-  stg_property_t* prop = stg_model_get_prop_cached( model, STG_PROP_DATA );
+  size_t datalen=0;
+  stg_position_data_t* data = (stg_position_data_t*)
+    stg_model_get_data( this->model, &datalen );
   
-  if( prop && prop->len == sizeof(stg_position_data_t) )      
+  if( data && datalen == sizeof(stg_position_data_t) )      
     {      
-      stg_position_data_t* posdat = (stg_position_data_t*)prop->data;
       
-      //PLAYER_MSG3( "get data posdat %.2f %.2f %.2f", posdat->x, posdat->y, posdat->a );
+      //PLAYER_MSG3( "get data data %.2f %.2f %.2f", data->x, data->y, data->a );
       player_position_data_t position_data;
       memset( &position_data, 0, sizeof(position_data) );
       // pack the data into player format
-      position_data.xpos = ntohl((int32_t)(1000.0 * posdat->pose.x));
-      position_data.ypos = ntohl((int32_t)(1000.0 * posdat->pose.y));
-      position_data.yaw = ntohl((int32_t)(RTOD(posdat->pose.a)));
+      position_data.xpos = ntohl((int32_t)(1000.0 * data->pose.x));
+      position_data.ypos = ntohl((int32_t)(1000.0 * data->pose.y));
+      position_data.yaw = ntohl((int32_t)(RTOD(data->pose.a)));
       
       // speeds
-      position_data.xspeed= ntohl((int32_t)(1000.0 * posdat->velocity.x)); // mm/sec
-      position_data.yspeed = ntohl((int32_t)(1000.0 * posdat->velocity.y));// mm/sec
-      position_data.yawspeed = ntohl((int32_t)(RTOD(posdat->velocity.a))); // deg/sec
+      position_data.xspeed= ntohl((int32_t)(1000.0 * data->velocity.x)); // mm/sec
+      position_data.yspeed = ntohl((int32_t)(1000.0 * data->velocity.y));// mm/sec
+      position_data.yawspeed = ntohl((int32_t)(RTOD(data->velocity.a))); // deg/sec
       
-      position_data.stall = posdat->stall;// ? 1 : 0;
+      position_data.stall = data->stall;// ? 1 : 0;
       
       //printf( "getdata called at %lu ms\n", stage_client->stagetime );
       
@@ -121,9 +120,8 @@ void  StgPosition::PutCommand(player_device_id_t id,
       cmd.y = ((double)((int32_t)ntohl(pcmd->yspeed))) / 1000.0;
       cmd.a = DTOR((double)((int32_t)ntohl(pcmd->yawspeed)));
       cmd.mode = STG_POSITION_CONTROL_VELOCITY;
-
-      stg_model_prop_delta( this->model, STG_PROP_COMMAND, 
-			    &cmd, sizeof(cmd) ) ;
+      
+      stg_model_set_command( this->model, &cmd, sizeof(cmd) ) ;
     }
   else
     PLAYER_ERROR2( "wrong size position command packet (%d/%d bytes)",
@@ -141,18 +139,17 @@ int StgPosition::PutConfig( player_device_id_t id, void *client,
     {  
     case PLAYER_POSITION_GET_GEOM_REQ:
       {
-	stg_geom_t geom;
-	if( stg_model_prop_get( this->model, STG_PROP_GEOM, &geom,sizeof(geom)))
-	  PLAYER_ERROR( "error requesting STG_PROP_GEOM" );
-	
+	stg_geom_t* geom = stg_model_get_geom( this->model );
+	assert(geom);
+
 	// fill in the geometry data formatted player-like
 	player_position_geom_t pgeom;
-	pgeom.pose[0] = ntohs((uint16_t)(1000.0 * geom.pose.x));
-	pgeom.pose[1] = ntohs((uint16_t)(1000.0 * geom.pose.y));
-	pgeom.pose[2] = ntohs((uint16_t)RTOD(geom.pose.a));
+	pgeom.pose[0] = ntohs((uint16_t)(1000.0 * geom->pose.x));
+	pgeom.pose[1] = ntohs((uint16_t)(1000.0 * geom->pose.y));
+	pgeom.pose[2] = ntohs((uint16_t)RTOD(geom->pose.a));
 	
-	pgeom.size[0] = ntohs((uint16_t)(1000.0 * geom.size.x)); 
-	pgeom.size[1] = ntohs((uint16_t)(1000.0 * geom.size.y)); 
+	pgeom.size[0] = ntohs((uint16_t)(1000.0 * geom->size.x)); 
+	pgeom.size[1] = ntohs((uint16_t)(1000.0 * geom->size.y)); 
 	
 	PutReply( client, 
 		  PLAYER_MSGTYPE_RESP_ACK, 
@@ -162,9 +159,56 @@ int StgPosition::PutConfig( player_device_id_t id, void *client,
       
     case PLAYER_POSITION_RESET_ODOM_REQ:
       {
-	PRINT_DEBUG( "sending reset odom request" );
-	unsigned char msg = STG_MM_POSITION_RESETODOM;
-	stg_model_message( this->model, &msg, 1 );
+	PRINT_DEBUG( "resetting odometry" );
+	
+	stg_pose_t origin;
+	memset(&origin,0,sizeof(origin));
+	stg_model_set_odom( this->model, &origin );
+	
+	PutReply( client, PLAYER_MSGTYPE_RESP_ACK, NULL );
+      }
+      break;
+
+    case PLAYER_POSITION_SET_ODOM_REQ:
+      {
+	player_position_set_odom_req_t* req = 
+	  (player_position_set_odom_req_t*)src;
+	
+	PRINT_DEBUG3( "setting odometry to (%.d,%d,%.2f)",
+		      (int32_t)ntohl(req->x),
+		      (int32_t)ntohl(req->y),
+		      DTOR((int32_t)ntohl(req->theta)) );
+	
+	stg_pose_t pose;
+	pose.x = ((double)(int32_t)ntohl(req->x)) / 1000.0;
+	pose.y = ((double)(int32_t)ntohl(req->y)) / 1000.0;
+	pose.a = DTOR( (double)(int32_t)ntohl(req->theta) );
+
+	stg_model_set_odom( this->model, &pose );
+	
+	PRINT_DEBUG3( "set odometry to (%.2f,%.2f,%.2f)",
+		      pose.x,
+		      pose.y,
+		      pose.a );
+
+	PRINT_DEBUG3( "set odometry to (%.2f,%.2f,%.2f)",
+		      this->model->odom.x,
+		      this->model->odom.y,
+		      this->model->odom.a );
+	
+	PutReply( client, PLAYER_MSGTYPE_RESP_ACK, NULL );
+      }
+      break;
+
+    case PLAYER_POSITION_MOTOR_POWER_REQ:
+      {
+	player_position_power_config_t* req = 
+	  (player_position_power_config_t*)src;
+
+	int motors_on = req->value;
+
+	PRINT_WARN1( "Stage ignores motor power state (%d)",
+		     motors_on );
 	PutReply( client, PLAYER_MSGTYPE_RESP_ACK, NULL );
       }
       break;
