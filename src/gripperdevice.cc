@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.15 $
+//  $Author: gerkey $
+//  $Revision: 1.16 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -31,6 +31,7 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
   m_data_len    = sizeof( player_gripper_data_t ); 
   m_command_len = sizeof( player_gripper_cmd_t ); 
   m_config_len  = 0;
+  m_reply_len  = 0;
 
   // Set default shape and geometry
   this->shape = ShapeRect;

@@ -23,7 +23,8 @@ CMoteDevice::CMoteDevice(CWorld *world, CEntity *parent )
 {
   m_data_len    = MAX_MOTE_Q_LEN * sizeof( player_mote_data_t );
   m_command_len = sizeof( player_mote_data_t );
-  m_config_len  = sizeof( player_mote_config_t );
+  m_config_len  = 1;
+  m_reply_len  = 1;
   
   m_player_type = PLAYER_MOTE_CODE;
   m_stage_type = MoteType;
@@ -84,11 +85,13 @@ void CMoteDevice::Update( double sim_time )
   m_last_update = sim_time;
   
   /* check if transmission power has changed */
+  void* client;
   player_mote_config_t config;
-  if (GetConfig(&config, sizeof(config)) > 0){
+  if(GetConfig(&client, &config, sizeof(config)) > 0)
+  {
     m_strength = config.strength;
+    PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, NULL, 0);
   }
-      
   
   // Get messege
   //

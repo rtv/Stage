@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.9 $
+//  $Author: gerkey $
+//  $Revision: 1.10 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -27,6 +27,7 @@ CFixedObstacle::CFixedObstacle(CWorld *world, CEntity *parent)
   m_data_len    = 0;
   m_command_len = 0;
   m_config_len  = 0;
+  m_reply_len  = 0;
 
   // not a player device
   m_player_port = 0; 

@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.83 2002-03-16 02:57:31 rtv Exp $
+# $Id: Makefile,v 1.84 2002-05-17 03:25:15 gerkey Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -27,7 +27,7 @@ STAGEFLAGS = -DREENTRANT $(ZLIB_FLAGS) $(INCLUDES) $(PLAYER_PLATFORM) \
 
 # Link flags common to all versions of Stage
 # optional libraries are linked if they were defined in Makefile.common
-STAGELINK =  -lm -lstdc++ -pthread \
+STAGELINK =  -L$(PLAYER_DIR)/lib -lplayerqueue -lm -lstdc++ -pthread \
              $(ZLIB_LINK) $(PROFILE_LINK) $(HRL_LINK) $(OLDLIBS) 
 
 ##############################################################################
@@ -56,7 +56,8 @@ RTK_OBS = ${SRCS:.cc=_rtk.o}
 # TARGETS  #########################################################
 
 typical: stage rtkstage xs manager 
-all: typical trapdoor truthlog
+#all: typical trapdoor truthlog
+all: typical truthlog
 
 # STAGE ####################################################################
 

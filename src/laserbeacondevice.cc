@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.24 $
+//  $Author: gerkey $
+//  $Revision: 1.25 $
 //
 // Usage:
 //  (empty)
@@ -40,8 +40,9 @@ CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_laserbeacon_data_t );
-  m_command_len = 0; //sizeof( player_laserbeacon_command_t );
-  m_config_len  = 0; //sizeof( player_laserbeacon_config_t );
+  m_command_len = 0; 
+  m_config_len  = 1;
+  m_reply_len  = 1;
 
   m_player_type = PLAYER_LASERBEACON_CODE;
   m_stage_type = LBDType;
@@ -120,6 +121,19 @@ void CLBDDevice::Update( double sim_time )
     return;
 
   m_last_update = sim_time;
+
+  // check for configuration requests
+
+  // Get latest config
+  player_laserbeacon_setthresh_t cfg;
+  void* client;
+
+  if(GetConfig(&client, &cfg, sizeof(cfg)) > 0)
+  {
+    // we don't actually implement the laserbeacondevice's configuration
+    // requests, because they don't make sense in simulation
+    PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, NULL, 0);
+  }
 
   // Get the laser range data
   //

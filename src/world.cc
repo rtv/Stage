@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.89 $
+//  $Author: gerkey $
+//  $Revision: 1.90 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -269,6 +269,13 @@ bool CWorld::ParseCmdline(int argc, char **argv)
     {
       m_run_player = true;
       printf( "[Player]" );
+    }
+
+    // DISABLE console output
+    if( strcmp( argv[a], "-q" ) == 0 )
+    {
+      m_console_output = false;
+      printf( "[Quiet]" );
     }
 
     // ENABLE IDAR packets to be sent to XS
@@ -627,11 +634,14 @@ bool CWorld::Startup()
   
   // exec and set up Player
   if( m_run_player )
-    {
-      PRINT_DEBUG( "STARTING PLAYER" );
-      StartupPlayer();    
-      PRINT_DEBUG( "DONE STARTING PLAYER" );
-    }
+  {
+    PRINT_DEBUG( "STARTING PLAYER" );
+    StartupPlayer();    
+    PRINT_DEBUG( "DONE STARTING PLAYER" );
+  } 
+  else 
+    printf("Not starting Player; Stage I/O in %s\n", DeviceDirectory());
+
 
   // spawn an XS process, unless we disabled it (rtkstage disables xs by default)
   if( m_run_xs && m_run_pose_server && m_run_environment_server ) 
@@ -1259,9 +1269,10 @@ void CWorld::Output( double loop_duration, double sleep_duration )
     bytes = 0;
   }
 
-  ConsoleOutput( freq, loop_duration, sleep_duration, 
-                 avg_loop_duration, avg_sleep_duration,
-                 bytes_in, bytes_out, bandw );
+  if(m_console_output)
+    ConsoleOutput( freq, loop_duration, sleep_duration, 
+                   avg_loop_duration, avg_sleep_duration,
+                   bytes_in, bytes_out, bandw );
   
   if( m_log_output ) 
     LogOutput( freq, loop_duration, sleep_duration, 
@@ -1418,6 +1429,7 @@ bool CWorld::LoadGUI(CWorldFile *worldfile)
   double oy = worldfile->ReadTupleLength(section, "origin", 1, dy / 2);
 
   this->app = rtk_app_create();
+  rtk_app_size(this->app, 100, 100);
   rtk_app_refresh_rate(this->app, 10);
   
   this->canvas = rtk_canvas_create(this->app);
@@ -1426,9 +1438,8 @@ bool CWorld::LoadGUI(CWorldFile *worldfile)
   rtk_canvas_origin(this->canvas, ox, oy);
 
   // Add some menu items
-  this->file_menu = rtk_menu_create(this->canvas, "File");
-  this->save_menuitem = rtk_menuitem_create(this->file_menu, "Save", 0);
-  this->export_menuitem = rtk_menuitem_create(this->file_menu, "Export", 0);
+  this->save_menuitem = rtk_menuitem_create(this->canvas, "Save");
+  this->export_menuitem = rtk_menuitem_create(this->canvas, "Export");
   this->export_count = 0;
 
   // Grid spacing
@@ -1496,11 +1507,11 @@ void CWorld::ShutdownGUI()
 void CWorld::UpdateGUI()
 {
   // Handle save menu item
-  if (rtk_menuitem_isactivated(this->save_menuitem))
+  if (rtk_menuitem_selected(this->save_menuitem))
     Save(this->worldfilename);
 
   // Handle export menu item
-  if (rtk_menuitem_isactivated(this->export_menuitem))
+  if (rtk_menuitem_selected(this->export_menuitem))
   {
     char filename[128];
     snprintf(filename, sizeof(filename), "rtkstage-%04d.fig", this->export_count++);

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gpsdevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.8 $
+//  $Author: gerkey $
+//  $Revision: 1.9 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -25,7 +25,9 @@ CGpsDevice::CGpsDevice(CWorld *world, CEntity *parent )
 {
   m_data_len    = sizeof( player_gps_data_t ); 
   m_command_len = 0;
-  m_config_len  = sizeof( player_gps_config_t );
+  //m_config_len  = sizeof( player_gps_config_t );
+  m_config_len  = 1;
+  m_reply_len  = 1;
 
   m_player_type = PLAYER_GPS_CODE;
   m_stage_type = GpsType;
@@ -42,6 +44,7 @@ CGpsDevice::CGpsDevice(CWorld *world, CEntity *parent )
 void CGpsDevice::Update( double sim_time )
 {
   double px,py,pth;
+  void* client;
 
   ASSERT(m_world != NULL);
     
@@ -57,7 +60,7 @@ void CGpsDevice::Update( double sim_time )
   // Should probably move the top-level object that the
   // device is attached to.
   player_gps_config_t config;
-  if (GetConfig(&config, sizeof(config)) > 0)
+  if(GetConfig(&client,&config, sizeof(config)) > 0)
   {
     px = ntohl(config.xpos)/1000.0;
     py = ntohl(config.ypos)/1000.0;
@@ -69,6 +72,8 @@ void CGpsDevice::Update( double sim_time )
     }
     else
       SetGlobalPose(px, py, pth);
+
+    PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, NULL, 0);
   }
 
   // Return global pose

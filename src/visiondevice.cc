@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.21 $
+//  $Author: gerkey $
+//  $Revision: 1.22 $
 //
 // Usage:
 //  (empty)
@@ -39,8 +39,9 @@ CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent)
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_vision_data_t ); 
-  m_command_len = 0;//sizeof( player_vision_cmd_t );
-  m_config_len  = 0;//sizeof( player_vision_config_t );
+  m_command_len = 0;
+  m_config_len  = 0;
+  m_reply_len  = 0;
  
   m_player_type = PLAYER_VISION_CODE;
   m_stage_type = VisionType;

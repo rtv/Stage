@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: inspectorg $
-//  $Revision: 1.47 $
+//  $Author: gerkey $
+//  $Revision: 1.48 $
 //
 // Usage:
 //  (empty)
@@ -231,7 +231,7 @@ public: bool m_send_idar_packets;
 
   // flag that controls spawning of xs
   private: bool m_run_xs;
-    
+  
   // the pose server port
   public: int m_pose_port;
 
@@ -452,7 +452,6 @@ private: CEntity* CreateObject(const char *type, CEntity *parent );
   private: rtk_fig_t *fig_grid;
   
   // Some menu items
-  private: rtk_menu_t *file_menu;
   private: rtk_menuitem_t *save_menuitem;
   private: rtk_menuitem_t *export_menuitem;
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/omnipositiondevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.8 $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -42,6 +42,7 @@ COmniPositionDevice::COmniPositionDevice(CWorld *world, CEntity *parent)
   m_data_len = sizeof( player_position_data_t );
   m_command_len = sizeof( player_position_cmd_t );
   m_config_len = 0;
+  m_reply_len = 0;
   
   m_player_type = PLAYER_POSITION_CODE;
   m_stage_type = OmniPositionType;
