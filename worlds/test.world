@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.35 2004-11-21 22:03:47 rtv Exp $
+# CVS: $Id: test.world,v 1.36 2004-11-21 22:41:37 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -21,6 +21,9 @@ include "pioneer.inc"
 
 
 
+
+
+
 # defines 'map' object used for floorplans
 include "map.inc"
 
@@ -30,9 +33,12 @@ include "map.inc"
 
 
 
+
+
+
 # window_size doesn't work, thanks to broken rtk_canvas_size()
 #
-window( size [ 846.000 698.000 ] center [-10.139 1.699] scale 0.015 )
+window( size [ 830.000 556.000 ] center [-8.109 2.708] scale 0.014 )
 
 map(
   #size [15.5 11.4]
@@ -121,7 +127,7 @@ laserpioneer
 position( 	
   name "invader" 
   size [0.3 0.3]
-  pose [-14.489 2.461 0.000] 
+  pose [-15.551 -0.066 0.000] 
   color "red"  
   # loads a bitmap for the model's body
   bitmap "bitmaps/space_invader.png"
@@ -133,7 +139,7 @@ position(
 position( 	
   name "ghost" 
   size [0.3 0.3 ]
-  pose [-9.495 -2.575 0.000] 
+  pose [-12.978 -2.980 0.000] 
   color "blue"  
   # loads a bitmap for the model's body
   bitmap "bitmaps/ghost.tiff"

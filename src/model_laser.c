@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.55 $
+//  $Revision: 1.56 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -294,8 +294,7 @@ void laser_render_cfg( stg_model_t* mod, void* data, size_t len)
 
   
   // draw the FOV and range lines
-  rtk_fig_color_rgb32( fig, stg_lookup_color( STG_LASER_CFG_COLOR  //ranger_set_data( mod, data, datalen );
- ));
+  rtk_fig_color_rgb32( fig, stg_lookup_color( STG_LASER_CFG_COLOR ));
   
   double mina = cfg->fov / 2.0;
   double maxa = -cfg->fov / 2.0;
@@ -303,10 +302,8 @@ void laser_render_cfg( stg_model_t* mod, void* data, size_t len)
   double leftfarx = cfg->range_max * cos(mina);
   double leftfary = cfg->range_max * sin(mina);
   double rightfarx = cfg->range_max * cos(maxa);
-  double rightfary = cfg->range_max * sin(maxa);
-  
-  double leftnearx = cfg->range_min * cos(mina);  //ranger_set_data( mod, data, datalen );
-
+  double rightfary = cfg->range_max * sin(maxa);  
+  double leftnearx = cfg->range_min * cos(mina);  
   double leftneary = cfg->range_min * sin(mina);
   double rightnearx = cfg->range_min * cos(maxa);
   double rightneary = cfg->range_min * sin(maxa);

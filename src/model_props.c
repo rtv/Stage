@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.26 $
+//  $Revision: 1.27 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -121,6 +121,8 @@ int _model_set_cfg( stg_model_t* mod, void* cfg, size_t len )
   memcpy( mod->cfg, cfg, len );    
   mod->cfg_len = len;
   
+  //printf( "setting config for model %d", mod->id );
+  
   // if a rendering callback was registered, and the gui wants to
   // render this type of cfg, call it
   if( mod->f_render_cfg && 
@@ -154,12 +156,12 @@ int _model_update( stg_model_t* mod )
 
 int _model_startup( stg_model_t* mod )
 {
-  puts( "default startup proc" );
+  PRINT_DEBUG( "default startup proc" );
 }
 
 int _model_shutdown( stg_model_t* mod )
 {
-  puts( "default shutdown proc" );
+  PRINT_DEBUG( "default shutdown proc" );
 }
 
 /* These functions are wrappers that implement the polymorphic hooks

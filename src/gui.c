@@ -109,12 +109,6 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
       win->render_cfg_flag[f] = FALSE;
     }
 
-  // hide the config layers by default
-  rtk_canvas_layer_show( win->canvas, STG_LAYER_NEIGHBORCONFIG, FALSE );
-  rtk_canvas_layer_show( win->canvas, STG_LAYER_LASERCONFIG, FALSE );
-  rtk_canvas_layer_show( win->canvas, STG_LAYER_RANGERCONFIG, FALSE );
-  rtk_canvas_layer_show( win->canvas, STG_LAYER_BLOBCONFIG, FALSE );
-
   return win;
 }
 

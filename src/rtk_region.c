@@ -21,7 +21,7 @@
 /*
  * Desc: Rtk region manipulation
  * Author: Andrew Howard
- * CVS: $Id: rtk_region.c,v 1.1 2004-09-16 06:54:27 rtv Exp $
+ * CVS: $Id: rtk_region.c,v 1.2 2004-11-21 22:41:37 rtv Exp $
  *
  * TODO:
  *  - Use GdkRegions instead of GdkRectangles.
@@ -98,7 +98,7 @@ void rtk_region_set_union_rect(rtk_region_t *region, int ax, int ay, int bx, int
     rectb.width = 0;
   else
     rectb.width = bx - ax + 1;
-
+  
   if (by - ay + 1 <= 0)
     rectb.height = 0;
   else
