@@ -11,6 +11,7 @@
 #include "raytrace.h"
 
 extern lib_entry_t library[];
+extern lib_entry_t derived[];
 
 
 void prop_free( stg_property_t* prop )
@@ -31,6 +32,7 @@ void prop_free_cb( gpointer gp )
 model_t* model_create(  world_t* world, 
 			model_t* parent,
 			stg_id_t id, 
+			stg_model_type_t type,
 			char* token )
 {
   PRINT_DEBUG3( "creating model %d:%d (%s)", world->id, id, token );
@@ -52,12 +54,26 @@ model_t* model_create(  world_t* world,
   // models store data in here, indexed by property id
   mod->props = g_hash_table_new_full( g_int_hash, g_int_equal, NULL, prop_free_cb );
   
+  mod->type = type;
+
+  mod->data = NULL;
+  mod->data_len = 0;
+  
+  mod->cmd = NULL;
+  mod->cmd_len = 0;
+
+  PRINT_WARN2( "model %d type %d", mod->id, mod->type );
+
   gui_model_create( mod );
 
   int p;
   for( p=0; p<STG_PROP_COUNT; p++ )
     if( library[p].init )
       library[p].init(mod);
+
+  // if this type of model has an init function, call it.
+  if( derived[ mod->type ].init )
+    derived[ mod->type ].init(mod);
   
   return mod;
 }
@@ -210,11 +226,17 @@ int model_update( model_t* mod )
 {
   //PRINT_DEBUG2( "updating model %d:%s", model->id, model->token );
   
+  mod->interval_elapsed = 0;
+
   // call all registered update functions
   int p;
   for( p=0; p<STG_PROP_COUNT; p++ )
     if( library[p].update )
       library[p].update(mod);
+
+  // if this type of model has an update function, call it.
+  if( derived[ mod->type ].update )
+    derived[ mod->type ].update(mod);
 
   return 0;
 }
@@ -227,6 +249,11 @@ void model_update_cb( gpointer key, gpointer value, gpointer user )
 int model_service_default( model_t* mod )
 {
   PRINT_DEBUG1( "default service method mod %d", mod->id );
+
+  // if this type of model has an service function, call it.
+  if( derived[ mod->type ].service )
+    derived[ mod->type ].service(mod);
+
   return 0;
 }
 
@@ -247,6 +274,11 @@ int model_startup_default( model_t* mod )
 {
   //PRINT_DEBUG( "default startup method" );
   PRINT_DEBUG1( "default startup method mod %d", mod->id );
+  
+  // if this type of model has a startup function, call it.
+  if( derived[ mod->type ].startup )
+   return  derived[ mod->type ].startup(mod);
+  
   return 0;
 }
 
@@ -267,6 +299,10 @@ void model_subscribe( model_t* mod, stg_id_t pid )
 int model_shutdown_default( model_t* mod )
 {
   PRINT_DEBUG1( "default shutdown method mod %d", mod->id );
+
+  // if this type of model has a shutdown function, call it.
+  if( derived[ mod->type ].shutdown )
+   return  derived[ mod->type ].shutdown(mod);
 
   return 0;
 }
@@ -310,6 +346,31 @@ int model_get_prop_default( model_t* mod, stg_id_t pid, void** data, size_t* len
       *len = 0;
     }
 
+  return 0; //ok
+}
+
+int model_getdata( model_t* mod, void** data, size_t* len )
+{
+  // if this type of model has an getdata function, call it.
+  if( derived[ mod->type ].getdata )
+    {
+      derived[ mod->type ].getdata(mod, data, len);
+      PRINT_WARN1( "used special getdata, returned %d bytes", (int)*len );
+    }
+  else
+    { // we do a generic data copy
+      *data = mod->data;
+      *len = mod->data_len; 
+      PRINT_WARN1( "used generic getdata, returned %d bytes", (int)*len );
+    }
+  return 0; //ok
+}
+
+int model_putcommand( model_t* mod, void* cmd, size_t len )
+{
+  mod->cmd = realloc( mod->cmd, len );
+  memcpy( mod->cmd, cmd, len );
+  mod->cmd_len = len;
   return 0; //ok
 }
 
@@ -464,8 +525,36 @@ void model_register_get( stg_id_t pid, func_get_t func )
   library[pid].get = func;
 }
 
+// new registration funcs
+void register_init( stg_model_type_t type, func_init_t func )
+{
+  derived[type].init = func;
+}
 
+void register_startup( stg_model_type_t type, func_startup_t func )
+{
+  derived[type].startup = func;
+}
 
+void register_shutdown( stg_model_type_t type, func_shutdown_t func )
+{
+  derived[type].shutdown = func;
+}
+
+void register_getdata( stg_model_type_t type, func_getdata_t func )
+{
+  derived[type].getdata = func;
+}
+
+void register_update( stg_model_type_t type, func_update_t func )
+{
+  derived[type].update = func;
+}
+
+void register_putcommand( stg_model_type_t type, func_putcommand_t func )
+{
+  derived[type].putcommand = func;
+}
 
 
 void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )

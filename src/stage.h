@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.66 2004-08-11 23:38:19 rtv Exp $
+ * CVS: $Id: stage.h,v 1.67 2004-08-23 18:47:28 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -118,10 +118,28 @@ typedef enum
     STG_PROP_MATRIXRENDER, // if non-zero, render in the matrix
     STG_PROP_FOV, // generic sensor field of view
 
+    STG_PROP_DATA, //generic data
+    STG_PROP_CONFIG, 
+    STG_PROP_COMMAND,
+    STG_PROP_REQUEST, // generic request
+    STG_PROP_REQREPLY, // generic reply
+
     STG_PROP_COUNT // this must be the last entry (it's not a real
 		   // property - it just counts 'em).
 } stg_prop_type_t;
 
+
+typedef enum
+  {
+    STG_MODEL_BASIC,
+    STG_MODEL_TEST,
+    STG_MODEL_LASER,
+    STG_MODEL_FIDUCIAL,
+    STG_MODEL_RANGER,
+    STG_MODEL_BLOB,
+    STG_MODEL_COUNT // this must be the last entry - it counts the entries
+
+  } stg_model_type_t;
 
    // These events can happen regarding a property. Callback functions
    // can be installed to handle each event.
@@ -260,6 +278,7 @@ typedef struct
 {
   stg_id_t world;
   stg_id_t parent; // server-side ID of the parent
+  stg_model_type_t type;
   char token[ STG_TOKEN_MAX ];
 } stg_createmodel_t;
 
@@ -892,6 +911,7 @@ typedef struct _stg_model
   int section; // worldfile index
 
   stg_token_t* token;
+  stg_model_type_t type;
 
   GHashTable* props;
   
@@ -993,6 +1013,7 @@ stg_model_t* stg_world_model_name_lookup( stg_world_t* world,
 stg_model_t* stg_world_createmodel( stg_world_t* world, 
 				    stg_model_t* parent, 
 				    int section, 
+				    stg_model_type_t type,
 				    stg_token_t* token );
 
 void stg_model_destroy( stg_model_t* model );

@@ -428,6 +428,7 @@ stg_model_t* stg_world_model_name_lookup( stg_world_t* world,
 stg_model_t* stg_world_createmodel( stg_world_t* world, 
 				    stg_model_t* parent, 
 				    int section,
+				    stg_model_type_t type,
 				    stg_token_t* token )
 { 
   
@@ -439,6 +440,7 @@ stg_model_t* stg_world_createmodel( stg_world_t* world,
   mod->token = token;
   mod->world = world;
   mod->parent = parent;
+  mod->type = type;
   mod->props = g_hash_table_new( g_int_hash, g_int_equal );
 
   PRINT_DEBUG3( "created model %d:%d \"%s\"", 
@@ -823,11 +825,13 @@ int stg_client_property_set( stg_client_t* cli, stg_id_t world, stg_id_t model,
 stg_id_t stg_client_model_new(  stg_client_t* cli, 
 				stg_id_t world,
 				stg_id_t parent,
+				stg_model_type_t type,
 				char* token )
 {
   stg_createmodel_t mod;
   mod.world = world;
   mod.parent = parent;
+  mod.type = type;
   strncpy( mod.token, token, STG_TOKEN_MAX );
   
   //printf( "creating model %s in world %d\n",  mod.token, mod.world );
@@ -974,11 +978,12 @@ void stg_model_push( stg_model_t* mod )
   // take this model out of the server-side id table
   g_hash_table_remove( mod->world->models_id_server, &mod->id_server );
 
-  PRINT_DEBUG1( "  pushing model \"%s\" ", mod->token->token );
+  PRINT_WARN2( "  pushing model \"%s\" type %d ", mod->token->token, mod->type );
   
   mod->id_server = stg_client_model_new(  mod->world->client,
 					  mod->world->id_server,
 					  mod->parent ? mod->parent->id_server : 0,
+					  mod->type,
 					  mod->token->token );
 
   PRINT_DEBUG( " done" );

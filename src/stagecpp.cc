@@ -97,7 +97,8 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
   // create a special model for the background
   stg_token_t* token = stg_token_create( "root", STG_T_NUM, 99 );
 
-  stg_model_t* root = stg_world_createmodel( world, NULL, 0, token );
+  stg_model_t* root = stg_world_createmodel( world, NULL, 0, 
+					     STG_MODEL_BASIC, token );
       
   stg_geom_t geom;
   geom.pose.x = wf.ReadTupleLength(section, "origin", 0, 0.0 );
@@ -171,8 +172,18 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       //printf( "parent has id %d name %s\n", parent->id_client, parent->token->token );
       //else
       //printf( "no parent\n" );
+      
+      stg_model_type_t type = STG_MODEL_BASIC;
+      
+      PRINT_WARN1( "token %s", token->token );
 
-      stg_model_t* mod = stg_world_createmodel( world, parent, section, token );
+      if( strcmp( token->token, "special" ) == 0 )
+	type = STG_MODEL_TEST;
+      
+      PRINT_WARN2( "creating model token %s type %d", token->token, type );
+
+      stg_model_t* mod = stg_world_createmodel( world, parent, section, 
+						type, token );
 
       stg_pose_t pose;
       pose.x = wf.ReadTupleLength(section, "pose", 0, STG_DEFAULT_POSEX );

@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.3 2004-07-23 01:05:13 rtv Exp $
+# CVS: $Id: test.world,v 1.4 2004-08-23 18:47:27 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 #
@@ -46,16 +46,8 @@ define testrobot pioneer2dx
   energy.return 0 # we don't give charge
 )
 
-testrobot( 
- name "r0" 
- pose [3.022 5.962 7290.846] 
- fiducial.return 33 
-
- #testrobot()
-)
-
-
+testrobot( name "r0" pose [3.022 5.962 7290.846] fiducial.return 33 )
 #testrobot( name "r1" pose [2.408 7.217 -20.084] fiducial.return 34 color "green" laser.return 2 )
 #testrobot( name "r2" pose [3.128 7.154 -71.250] fiducial.return 35 color "blue" 
-#laser.return 0 ranger.return 0 )
+laser.return 0 ranger.return 0 )
 

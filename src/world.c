@@ -137,7 +137,8 @@ model_t* world_get_model( world_t* world, stg_id_t mid )
 int world_model_create( world_t* world, stg_createmodel_t* cm )
 {
   char* token  = cm->token;
-  
+  stg_model_type_t type = cm->type;  
+
   // find the lowest integer that has not yet been assigned to a world (starting with 1)
   stg_id_t candidate = 1;
   while( g_hash_table_lookup( world->models, &candidate ) )
@@ -147,7 +148,7 @@ int world_model_create( world_t* world, stg_createmodel_t* cm )
   
   model_t* parent = g_hash_table_lookup( world->models, &cm->parent );
 
-  model_t* mod = model_create( world, parent, candidate, token ); 
+  model_t* mod = model_create( world, parent, candidate, type, token ); 
   
   g_hash_table_replace( world->models, &mod->id, mod );
 

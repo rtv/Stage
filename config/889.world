@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: 889.world,v 1.4 2004-07-24 00:39:51 rtv Exp $
+# CVS: $Id: 889.world,v 1.5 2004-08-23 18:47:27 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 #
@@ -55,6 +55,21 @@ define bigrobot pioneer2dx
 #bigrobot( name "r7" pose [27.281 5.354 6.995]  color "cyan" )
 #bigrobot( name "r8" pose [27.116 7.643 30.366] color "red" )
 #bigrobot( name "r9" pose [27.246 8.818 -336.023] color "red" )
+
+# naming scheme for device trees
+
+# # refer to the laser device as bigrobot.laser
+bigrobot( laser( pose [ 0 0 0] ) )
+
+# # refer to the laser device as foo.laser
+# bigrobot( name "foo" laser( pose [ 0 0 0] ) )
+
+# # refer to the laser device as foo.bar
+# bigrobot( name "foo" laser( name "bar" pose [ 0 0 0] ) )
+
+# create multiple worlds from one worldfile:
+#world( name "world1" device( subdevice() ) )
+#world( name "world2" device( subdevice() ) )
 
 
 define bluechatterbox chatterbox

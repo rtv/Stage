@@ -24,6 +24,9 @@ typedef struct _model
   
   char* token;
 
+  int type; // what kind of a model am I?
+
+
   // todo
   struct _model *parent;
   
@@ -39,7 +42,16 @@ typedef struct _model
 
   // todo - add this as a property?
   stg_joules_t energy_consumed;
+
+  stg_msec_t interval; // time between updates in ms
+  stg_msec_t interval_elapsed; // time since last update in ms
   
+  void* data;
+  size_t data_len;
+
+  void* cmd;
+  size_t cmd_len;
+
 } model_t;  
 
 
@@ -51,6 +63,10 @@ typedef int(*func_service_t)(model_t*);
 typedef int(*func_startup_t)(model_t*);
 typedef int(*func_shutdown_t)(model_t*);
 
+typedef int(*func_putcommand_t)(model_t*,void*,size_t);
+typedef int(*func_getdata_t)(model_t*,void**,size_t*);
+typedef int(*func_request_t)(model_t*);
+
 typedef struct
 {
   func_init_t init;
@@ -60,13 +76,15 @@ typedef struct
   func_service_t service;
   func_get_t get;
   func_set_t set;
-
+  func_getdata_t getdata;
+  func_putcommand_t putcommand;
+  func_request_t request;
 } lib_entry_t;
 
 
 
 // MODEL
-model_t* model_create(  world_t* world, model_t* parent, stg_id_t id, char* token );
+model_t* model_create(  world_t* world, model_t* parent, stg_id_t id, stg_model_type_t type, char* token );
 void model_destroy( model_t* mod );
 void model_destroy_cb( gpointer mod );
 void model_handle_msg( model_t* model, int fd, stg_msg_t* msg );
@@ -74,6 +92,9 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg );
 int model_set_prop( model_t* mod, stg_id_t propid, void* data, size_t len );
 int model_get_prop( model_t* model, stg_id_t propid, 
 		    void** data, size_t* size );
+
+int model_getdata( model_t* mod, void** data, size_t* len );
+int model_putcommand( model_t* mod, void* cmd, size_t len );
 
 void model_global_pose( model_t* mod, stg_pose_t* pose );
 
@@ -132,9 +153,30 @@ void model_register_service( stg_id_t pid, func_service_t func );
 void model_register_set( stg_id_t pid, func_set_t func );
 void model_register_get( stg_id_t pid, func_get_t func );
 
+void register_init( stg_model_type_t type, func_init_t func );
+void register_startup( stg_model_type_t type, func_startup_t func );
+void register_shutdown( stg_model_type_t type, func_shutdown_t func );
+void register_update( stg_model_type_t type, func_update_t func );
+void register_service( stg_model_type_t type, func_service_t func );
+void register_set( stg_model_type_t type, func_set_t func );
+void register_get( stg_model_type_t type, func_get_t func );
+
+/*int model_register_type( stg_model_type_t type, 
+			 func_init_t initf,
+			 func_startup_t startupf,
+			 func_shutdown_t shutdownf,
+			 func_service_t servicef,
+			 func_putcommand_t putcommandf,
+			 func_getdata_t getdataf,
+			 func_request_t requestf );
+*/
+
+
+
 stg_bool_t model_obstacle_get( model_t* model );
 
 void model_map( model_t* mod, gboolean render );
+
 
 
 rtk_fig_t* model_prop_fig_create( model_t* mod, 

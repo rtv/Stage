@@ -97,6 +97,11 @@ int subscription_update( subscription_t* sub )
       void* data = NULL;
       size_t len = 0;
       
+      // test new stuff
+      model_getdata( mod, &data, &len );
+      
+      PRINT_WARN2( "got %d bytes of data from model %s", len, mod->token );
+
       if( model_get_prop( mod, sub->target.prop, &data, &len ) )      
 	PRINT_WARN2( "failed to service subscription for property %d(%s)",
 		     sub->target.prop, stg_property_string(sub->target.prop) );
