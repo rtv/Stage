@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.68 2002-09-21 08:14:20 rtv Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.69 2002-09-22 18:33:19 inspectorg Exp $
  */
 
 #define DEBUG
@@ -415,16 +415,21 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
     }
 	
     // Construct the return value for the laser
-    uint16_t v = (uint16_t)(1000.0 * range);
-    if( ent && ent->laser_return >= LaserBright )
-      v = v | (((uint16_t)1) << 13); 
-
-    // Set the range
-    data->ranges[s++] = htons(v);
+    uint16_t v = (uint16_t) (1000.0 * range);
+    data->ranges[s] = htons(v);
+    if (ent && ent->laser_return >= LaserBright)
+      data->intensity[s] = 1;
+    else
+      data->intensity[s] = 0;
+    s++;
 
     // Skip some values to save time
     for (int i = 0; i < skip && s < this->scan_count; i++)
-      data->ranges[s++] = htons(v);
+    {
+      data->ranges[s] = data->ranges[s - 1];
+      data->intensity[s] = data->intensity[s - 1];
+      s++;
+    }
   }
   
   // remove all duplicates from the beacon list
