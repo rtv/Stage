@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.15 $
+//  $Revision: 1.16 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -44,7 +44,7 @@ int _set_data( stg_model_t* mod, void* data, size_t len )
   // if a callback was registered, call it
   if( mod->data_notify )
     {
-      PRINT_WARN1( "calling notify func for %s", mod->token ); 
+      //PRINT_WARN1( "calling notify func for %s", mod->token ); 
       (*mod->data_notify)(mod->data_notify_arg);
     }
   
