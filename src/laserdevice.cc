@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.23.2.1 $
+//  $Revision: 1.23.2.2 $
 //
 // Usage:
 //  (empty)
@@ -48,6 +48,9 @@ CLaserDevice::CLaserDevice(CWorld *world,
   m_player_type = PLAYER_LASER_CODE; // from player's messages.h
 
   m_stage_type = LaserTurretType;
+
+  laser_return = 1;
+  //obstacle_return = 1;
    
   // Laser update rate (readings/sec)
   //
@@ -128,53 +131,59 @@ void CLaserDevice::Update( double sim_time )
 
     ASSERT(m_world != NULL);
     
+    
+    double x, y, th;
+    GetGlobalPose( x,y,th );
+    
+    // if we've moved 
+    if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
+      {
 
-    // Dont update anything if we are not subscribed
-    //
-    if(Subscribed())
-    {
-        // Check to see if the configuration has changed
-        //
-        CheckConfig();
-
-	//cout << " UPDATE " << endl;
-
-        // Check to see if it is time to update the laser scan
-        //
-        if( sim_time - m_last_update >= m_interval )
-	  {
-	    m_last_update = sim_time;
-	    
-	    // Undraw ourselves from the world
+	    // Check to see if it is time to update the laser scan
 	    //
-	    if (!m_transparent)
-	      Map(false);
-	    
+	    if( sim_time - m_last_update >= m_interval )
+	      {
+		m_last_update = sim_time;
+
+	// Undraw ourselves from the world
+	//
+	if (!m_transparent)
+	  Map(false);
+	
+	m_map_px = x; // update our render position
+	m_map_py = y;
+	m_map_pth = th;
+		
+	if( Subscribed() )
+	  {
+	    // Check to see if the configuration has changed
+	    //
+	    CheckConfig();
 	    // Generate new scan data and copy to data buffer
 	    //
 	    player_laser_data_t scan_data;
 	    GenerateScanData( &scan_data );
 	    PutData( &scan_data, sizeof( scan_data) );
-	    
-	    // Redraw outselves in the world
-	    //
-	    if (!m_transparent )
-	      Map(true);
 	  }
-    }
-    else
-      {
-        // If not subscribed,
-        // reset configuration to default.
-        //
-        m_scan_res = DTOR(0.50);
-        m_scan_min = DTOR(-90);
-        m_scan_max = DTOR(+90);
-        m_scan_count = 361;
-        m_intensity = false;
+      }
+	else
+	  {
+	    // If not subscribed,
+	    // reset configuration to default.
+	    //
+	    m_scan_res = DTOR(0.50);
+	    m_scan_min = DTOR(-90);
+	    m_scan_max = DTOR(+90);
+	    m_scan_count = 361;
+	    m_intensity = false;
+	  }
+	
+	// Redraw outselves in the world
+	//
+	if (!m_transparent )
+	  Map(true);
       }
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Check to see if the configuration has changed
@@ -234,8 +243,7 @@ bool CLaserDevice::CheckConfig()
 //
 bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 {    
-
-  //expLaser.hitCount = 0;
+  // i put much of this back to integer, a
 
     // Get the pose of the laser in the global cs
     //
@@ -244,8 +252,8 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 
     // Compute laser fov, range, etc
     //
-    double dr = 1.0 / m_world->ppm;
-    double max_range = m_max_range;
+    //double dr = 1.0 / m_world->ppm;
+    double max_range = m_max_range * m_world->ppm;
 
     // See how many scan readings to interpolate.
     // To save time generating laser scans, we can
@@ -272,84 +280,62 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
     // Make sure the data buffer is big enough
     //
     ASSERT(m_scan_count <= ARRAYSIZE(data->ranges));
-        
+            
     // Do each scan
     //
     for (int s = 0; s < m_scan_count;)
-    {
-        int intensity = 0;
-        double range = 0;
-        double bearing = s * m_scan_res + m_scan_min;
+      {
+	int intensity = 0;
+	int range = 0;
+	
+	double bearing = s * m_scan_res + m_scan_min;
+	
+	// Compute parameters of scan line
+	double pth = oth + bearing;
+	
+	//printf( "Ray: %d angle: %.2f\n", s, RTOD(pth) );
 
-        // Compute parameters of scan line
-        //
-        double px = ox;
-        double py = oy;
-        double pth = oth + bearing;
+	// MOVED THIS BACK TO MAINLY INTEGER MATH, DID PIXEL/M SCALING
+	// OUTSIDE THE LOOP AND ELIMINATED A FUNCTION CALL 
+	// - RTV 8/20/01
 
-        // Compute the step for simple ray-tracing
-        //
-        double dx = dr * cos(pth);
-        double dy = dr * sin(pth);
-
+	// hops along each axis
+	double cospth = cos( pth );
+	double sinpth = sin( pth );
+ 
+	// start at the scan origin (pixel coords for speed)
+	double cellx = (int)(ox * m_world->ppm);
+	double celly = (int)(oy * m_world->ppm);
+	
         // Look along scan line for obstacles
-        // Could make this an int again for a slight speed-up.
-        //
-        for (range = 0; range < max_range; range += dr)
+        for( range = 0; range < max_range; range++ ) // increase range 1 pixel at a time
         {
-
-	  CEntity **ent = m_world->GetEntityAtCell( px, py );
-	  if( !ent[0] ) ent = m_world->GetEntityAtCell( px+dr, py );
-	  if( !ent[0] ) ent = m_world->GetEntityAtCell( px, py+dr );
-
-	  //if( ent )
-	  //printf( "Found (%d,%d,%d) %d %p\n",
-	  //    ent->m_player_port, 
-	  //    ent->m_player_type, 
-	  //    ent->m_player_index,
-	  //    ent->m_stage_type, ent );
+	  cellx += cospth;
+	  celly += sinpth;
+ 
+	  CEntity **ent = m_world->matrix->get_cell( (int)cellx, (int)celly );
+	  if( !ent[0] ) ent = m_world->matrix->get_cell( (int)cellx+1, (int)celly );
 	  
-
-            // Look in the laser layer for obstacles
-            // Also look at the two cells to the right and above
-            // so we dont sneak through gaps.
-            //
-            uint8_t cell = 0;
-
-	    // see if any of the entities intercept the laser beam
-	    // and store the first non-negative laser_return value
-	    int s=0;
-	    while( ent[s] ) if( cell = ent[s++]->laser_return ) break;
-	    
-		
-
-	    //if( ent[0] ) cell = ent[0]->laser_return;
-
-	  //cell |= m_world->GetCell(px, py, layer_laser);
-	  //cell |= m_world->GetCell(px + dr, py, layer_laser);
-	    // 2x1 cells is enough to avoid slipping thru gaps -RTV
-            //cell |= m_world->GetCell(px, py + dr, layer_laser);
-            if (cell != 0)
-            {
-                // Check for reflections
-                // (ignore the sticky bit).
-                //
-                if ((cell & 0x8F) == 2)
-                    intensity = 1;                
-                break;
-            }
-            px += dx;
-            py += dy;
+	  uint8_t cell = 0;
+	  // see if any of the entities intercept the laser beam
+	  // and store the first non-negative laser_return value
+	  int s=0;
+	  while( ent[s] ) if( (cell = ent[s++]->laser_return) ) break;
+	  
+	  if (cell != 0) // we hit something that reflects laser beams!
+	    break; // quit tracing this ray
         }
-            
+	
+	//cout << s << ' ' << range << endl;
+
         // set laser value in mm
         //
-        uint16_t v = (uint16_t) (1000.0 * range);
+        uint16_t v = (uint16_t) (1000.0 * ((double)range/m_world->ppm));
 
         // Add in the intensity values in the top 3 bits
         //
-        if (m_intensity)
-            v = v | (((uint16_t) intensity) << 13);
+        //if (m_intensity)
+	//  v = v | (((uint16_t) intensity) << 13);
         
         // Set the range
         //
@@ -367,7 +353,7 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
         m_hit[m_hit_count][1] = py;
         m_hit_count++;
 #endif
-    }    
+      }
     return true;
 }
 

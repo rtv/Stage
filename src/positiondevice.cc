@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.5.2.1 $
+//  $Revision: 1.5.2.2 $
 //
 // Usage:
 //  (empty)
@@ -49,7 +49,10 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
   
   m_stage_type = RectRobotType;
 
-  //m_render = layer_laser | layer_obstacle;
+  // we show up in these sensors
+  laser_return = 0;
+  sonar_return = 1;
+  obstacle_return = 1;
   
   uint64_t foo = 1;
   
@@ -326,63 +329,72 @@ void CPositionDevice::SetShape(pioneer_shape_t shape)
 ///////////////////////////////////////////////////////////////////////////
 // Render the object in the world rep
 //
-void CPositionDevice::Map(bool render)
+void CPositionDevice::Map(bool render )
 {
     if (!render)
     {
-        if(GetShape() == rectangle)
+     
+      m_world->matrix->SetMode( mode_unset );
+      
+      if(GetShape() == rectangle)
         {
           // Remove ourself from the obstacle map
           //
           double px = m_map_px;
           double py = m_map_py;
           double pa = m_map_pth;
-
+	  
           double qx = px + m_offset_x * cos(pa);
           double qy = py + m_offset_x * sin(pa);
           double sx = m_size_x;
           double sy = m_size_y;
-          m_world->SetRectangle(qx, qy, pa, sx, sy, layer_obstacle, 0);
-          m_world->SetRectangle(qx, qy, pa, sx, sy, layer_puck, 0);
+	  
+          //m_world->SetRectangle(qx, qy, pa, sx, sy, layer_obstacle, 0);
+          //m_world->SetRectangle(qx, qy, pa, sx, sy, layer_puck, 0); 
+	  m_world->SetRectangle( qx, qy, pa, sx, sy, this );
         }
-        else if(GetShape() == circle)
+      else if(GetShape() == circle)
         {
-
-          m_world->SetCircle(m_map_px,m_map_py,m_size_x/2.0,layer_obstacle,0);
-          m_world->SetCircle(m_map_px,m_map_py,m_size_x/2.0,layer_puck,0);
+          //m_world->SetCircle(m_map_px,m_map_py,m_size_x/2.0,layer_obstacle,0);
+          //m_world->SetCircle(m_map_px,m_map_py,m_size_x/2.0,layer_puck,0);
+	  m_world->SetCircle( m_map_px, m_map_py, m_size_x/2.0, this );
         }
-        else
-          PRINT_MSG("CPositionDevice::Map(): unknown shape!");
+      else
+	PRINT_MSG("CPositionDevice::Map(): unknown shape!");
     }
     else
-    {
-      // Add ourself to the obstacle map
-      //
-      double px, py, pa;
-      GetGlobalPose(px, py, pa);
-      if(GetShape() == rectangle)
       {
-        double qx = px + m_offset_x * cos(pa);
-        double qy = py + m_offset_x * sin(pa);
-        double sx = m_size_x;
-        double sy = m_size_y;
-        m_world->SetRectangle(qx, qy, pa, sx, sy, layer_obstacle, 1);
-        m_world->SetRectangle(qx, qy, pa, sx, sy, layer_puck, 1);
+	m_world->matrix->SetMode( mode_set );
+  
+	// Add ourself to the obstacle map
+	//
+	double px, py, pa;
+	GetGlobalPose(px, py, pa);
+	if(GetShape() == rectangle)
+	  {
+	    double qx = px + m_offset_x * cos(pa);
+	    double qy = py + m_offset_x * sin(pa);
+	    double sx = m_size_x;
+	    double sy = m_size_y;
+	    //m_world->SetRectangle(qx, qy, pa, sx, sy, layer_obstacle, 1);
+	    //m_world->SetRectangle(qx, qy, pa, sx, sy, layer_puck, 1);
+	  m_world->SetRectangle( qx, qy, pa, sx, sy, this );
+	  }
+	else if(GetShape() == circle)
+	  {
+	    //m_world->SetCircle(px,py,m_size_x/2.0,layer_obstacle,1);
+	    //m_world->SetCircle(px,py,m_size_x/2.0,layer_puck,1);
+	    m_world->SetCircle( px, py, m_size_x/2.0, this );
+	  }
+	else
+	  PRINT_MSG("CPositionDevice::Map(): unknown shape!");
+	
+	// Store the place we added ourself
+	//
+	m_map_px = px;
+	m_map_py = py;
+	m_map_pth = pa;
       }
-      else if(GetShape() == circle)
-      {
-          m_world->SetCircle(px,py,m_size_x/2.0,layer_obstacle,1);
-          m_world->SetCircle(px,py,m_size_x/2.0,layer_puck,1);
-      }
-      else
-        PRINT_MSG("CPositionDevice::Map(): unknown shape!");
-
-      // Store the place we added ourself
-      //
-      m_map_px = px;
-      m_map_py = py;
-      m_map_pth = pa;
-    }
 }
 
 

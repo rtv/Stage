@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.14.2.1 $
+//  $Revision: 1.14.2.2 $
 //
 // Usage:
 //  (empty)
@@ -196,6 +196,9 @@ public: CEntity** GetEntityAtCell( int, int );
     //
     public: void SetCircle(double px, double py, double pr,
                               EWorldLayer layer, uint8_t value);
+
+    public: void SetCircle(double px, double py, double pr,
+			   CEntity* ent );
 
     ///////////////////////////////////////////////////////////////////////////
     // Player server functions

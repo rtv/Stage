@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.21.2.1 $
+//  $Revision: 1.21.2.2 $
 //
 // Usage:
 //  (empty)
@@ -369,6 +369,11 @@ void* CWorld::Main(void *arg)
         if (world->m_enable)
 	  world->Update();
 	
+	// dump the contents of the matrix to a file
+	//world->matrix->dump();
+	//getchar();
+	
+
         /* *** HACK -- should reinstate this somewhere ahoward
            if( !runDown ) runStart = timeNow;
            else if( (quitTime > 0) && (timeNow > (runStart + quitTime) ) )
@@ -633,10 +638,11 @@ bool CWorld::InitGrids(const char *env_file)
 
   wall = new CEntity( this, 0 );
   
+  wall->m_stage_type = NullType;
+
   wall->laser_return = 1;
   wall->sonar_return = 1;
-  //wall->channel_return = -1;
-
+  wall->obstacle_return = 1;
 
   // Copy fixed obstacles into matrix
   //
@@ -653,11 +659,12 @@ bool CWorld::InitGrids(const char *env_file)
 //
 CEntity** CWorld::GetEntityAtCell(double px, double py )
 {
+  cout << "DOUBLE CALLED" << endl;
 
   // Convert from world to image coords
   //
   int ix = (int) (px * ppm);
-  int iy = matrix->height - (int) (py * ppm);
+  int iy = (int) (py * ppm);
 
   CEntity** ent = matrix->get_cell( ix, iy );
 
@@ -673,8 +680,7 @@ CEntity** CWorld::GetEntityAtCell(double px, double py )
 //
 CEntity** CWorld::GetEntityAtCell( int ix, int iy )
 {
-  iy = matrix->height - iy;
-  
+  //cout << endl << ix << ' ' << iy << flush;
   CEntity** ent = matrix->get_cell( ix, iy );
   
   //if( ent )
@@ -684,7 +690,6 @@ CEntity** CWorld::GetEntityAtCell( int ix, int iy )
 
 }
 
-
 ///////////////////////////////////////////////////////////////////////////
 // Get a cell from the world grid
 //
@@ -693,7 +698,7 @@ void CWorld::SetEntityAtCell( CEntity* ent, double px, double py )
   // Convert from world to image coords
   //
   int ix = (int) (px * ppm);
-  int iy = matrix->height - (int) (py * ppm);
+  int iy = (int) (py * ppm);
   
     matrix->set_cell( ix, iy, ent );
     
@@ -706,8 +711,6 @@ void CWorld::SetEntityAtCell( CEntity* ent, double px, double py )
 //
 void CWorld::SetEntityAtCell( CEntity* ent, int ix, int iy )
 {
-  iy = matrix->height - iy;
-  
   matrix->set_cell( ix, iy, ent );
  
   printf( "setting %p at %d,%d\n", ent, ix, iy );
@@ -722,7 +725,7 @@ uint8_t CWorld::GetCell(double px, double py, EWorldLayer layer)
     // Convert from world to image coords
     //
     int ix = (int) (px * ppm);
-    int iy = m_bimg->height - (int) (py * ppm);
+    int iy = (int) (py * ppm);
 
     // This could be cleaned up by having an array of images
     //
@@ -749,7 +752,7 @@ void CWorld::SetCell(double px, double py, EWorldLayer layer, uint8_t value)
     // Convert from world to image coords
     //
     int ix = (int) (px * ppm);
-    int iy = m_bimg->height - (int) (py * ppm);
+    int iy = (int) (py * ppm);
 
     // This could be cleaned up by having an array of images
     //
@@ -793,22 +796,22 @@ uint8_t CWorld::GetRectangle(double px, double py, double pth,
     tx = px + cx - sy;
     ty = py + sx + cy;
     rect.toplx = (int) (tx * ppm);
-    rect.toply = m_bimg->height - (int) (ty * ppm);
+    rect.toply = (int) (ty * ppm);
 
     tx = px - cx - sy;
     ty = py - sx + cy;
     rect.toprx = (int) (tx * ppm);
-    rect.topry = m_bimg->height - (int) (ty * ppm);
+    rect.topry = (int) (ty * ppm);
 
     tx = px - cx + sy;
     ty = py - sx - cy;
     rect.botlx = (int) (tx * ppm);
-    rect.botly = m_bimg->height - (int) (ty * ppm);
+    rect.botly = (int) (ty * ppm);
 
     tx = px + cx + sy;
     ty = py + sx - cy;
     rect.botrx = (int) (tx * ppm);
-    rect.botry = m_bimg->height - (int) (ty * ppm);
+    rect.botry = (int) (ty * ppm);
     
     // This could be cleaned up by having an array of images
     //
@@ -846,22 +849,22 @@ void CWorld::SetRectangle(double px, double py, double pth,
     tx = px + cx - sy;
     ty = py + sx + cy;
     rect.toplx = (int) (tx * ppm);
-    rect.toply = m_bimg->height - (int) (ty * ppm);
+    rect.toply = (int) (ty * ppm);
 
     tx = px - cx - sy;
     ty = py - sx + cy;
     rect.toprx = (int) (tx * ppm);
-    rect.topry = m_bimg->height - (int) (ty * ppm);
+    rect.topry = (int) (ty * ppm);
 
     tx = px - cx + sy;
     ty = py - sx - cy;
     rect.botlx = (int) (tx * ppm);
-    rect.botly = m_bimg->height - (int) (ty * ppm);
+    rect.botly = (int) (ty * ppm);
 
     tx = px + cx + sy;
     ty = py + sx - cy;
     rect.botrx = (int) (tx * ppm);
-    rect.botry = m_bimg->height - (int) (ty * ppm);
+    rect.botry = (int) (ty * ppm);
     
     matrix->draw_rect( rect, ent );
 }
@@ -888,22 +891,22 @@ void CWorld::SetRectangle(double px, double py, double pth,
     tx = px + cx - sy;
     ty = py + sx + cy;
     rect.toplx = (int) (tx * ppm);
-    rect.toply = m_bimg->height - (int) (ty * ppm);
+    rect.toply = (int) (ty * ppm);
 
     tx = px - cx - sy;
     ty = py - sx + cy;
     rect.toprx = (int) (tx * ppm);
-    rect.topry = m_bimg->height - (int) (ty * ppm);
+    rect.topry = (int) (ty * ppm);
 
     tx = px - cx + sy;
     ty = py - sx - cy;
     rect.botlx = (int) (tx * ppm);
-    rect.botly = m_bimg->height - (int) (ty * ppm);
+    rect.botly = (int) (ty * ppm);
 
     tx = px + cx + sy;
     ty = py + sx - cy;
     rect.botrx = (int) (tx * ppm);
-    rect.botry = m_bimg->height - (int) (ty * ppm);
+    rect.botry = (int) (ty * ppm);
     
     // This could be cleaned up by having an array of images
     //
@@ -933,7 +936,7 @@ void CWorld::SetCircle(double px, double py, double pr,
     // Convert from world to image coords
     //
     int x = (int) (px * ppm);
-    int y = m_bimg->height - (int) (py * ppm);
+    int y = (int) (py * ppm);
     int r = (int) (pr * ppm);
     
     // This could be cleaned up by having an array of images
@@ -953,6 +956,21 @@ void CWorld::SetCircle(double px, double py, double pr,
             m_puck_img->draw_circle(x,y,r,value);
             break;
     }
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Set a circle in the world grid
+//
+void CWorld::SetCircle(double px, double py, double pr,
+                       CEntity* ent )
+{
+    // Convert from world to image coords
+    //
+    int x = (int) (px * ppm);
+    int y = (int) (py * ppm);
+    int r = (int) (pr * ppm);
+    
+    matrix->draw_circle( x,y,r,ent );
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1329,8 +1347,7 @@ void CWorld::DrawBackground(RtkUiDrawData *data)
             if (m_bimg->get_pixel(x, y) != 0)
             {
                 double px = (double) x / ppm;
-                //double py = (double) (height - y) / ppm;
-                double py = (double) (m_bimg->height - y) / ppm;
+                double py = (double)  y / ppm;
                 double s = 1.0 / ppm;
                 data->rectangle(px, py, px + s, py + s);
             }
@@ -1378,8 +1395,7 @@ void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
             if (img->get_pixel(x, y) != 0)
             {
                 double px = (double) x / ppm;
-                //double py = (double) (height - y) / ppm;
-                double py = (double) (img->height - y) / ppm;
+                double py = (double) y / ppm;
                 double s = 1.0 / ppm;
                 data->rectangle(px, py, px + s, py + s);
             }

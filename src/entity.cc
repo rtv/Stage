@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.6.2.1 $
+//  $Revision: 1.6.2.2 $
 //
 // Usage:
 //  (empty)
@@ -56,8 +56,10 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
     m_type[0] = 0;
     m_id[0] = 0;
 
-    laser_return = 0;
-    sonar_return = 0;
+    // by default, entities show up in some sensors
+    laser_return = 1;
+    sonar_return = 1;
+    obstacle_return = 1;
 
     m_dependent_attached = false;
 

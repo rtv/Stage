@@ -4,7 +4,7 @@ set laser_res = 1
 
 #set auth_key = foobar
 
-# these servers enable clients (e.g. xpsi) access to Stage's internal models
+# these servers enable clients (e.g. xs) access to Stage's internal models
 enable truth_server
 enable environment_server
 
@@ -14,6 +14,16 @@ create position_device pose 1.0 3.0 0.0 port 6665
   create player_device size 0.05 0.05 pose -0.1 0.0 0.0 port 6665
   create sonar_device  port 6665
   create laser_device  pose 0.08 0.0 0.0 port 6665
+  {
+	create lbd_device port 6665	
+  }
+}
+
+create position_device pose 4.0 3.0 0.0 
+{
+  create laser_beacon
+  create box pose 0.0 1.0 0.0 size 0.4 0.4
 }
 
 create box pose 4.0 4.0 0.0 size 1.0 1.0
+

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.9 $
+//  $Revision: 1.9.2.1 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -29,6 +29,7 @@
 
 #include "world.hh"
 #include "laserbeacon.hh"
+#include "laserdevice.hh" // for the laser return values
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -50,6 +51,10 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CEntity *parent)
 
     m_beacon_id = 0;
     m_index = -1;
+
+    m_interval = 0.2; // 5Hz update
+
+    laser_return = 1; // extra bright! normal objects return 1
 
     // Set this flag to make the beacon transparent to lasesr
     //
@@ -142,33 +147,45 @@ void CLaserBeacon::Update( double sim_time )
 {
     ASSERT(m_world != NULL);
 
-    // Dont update anything if we are not subscribed
-    //
-    if(!Subscribed())
-      return;
-    
     // See if its time to recalculate beacons
     //
     if( sim_time - m_last_update < m_interval )
-        return;
-
-    m_last_update = sim_time;
-
-    // Undraw our old representation
-    //
-    if (!m_transparent)
-        m_world->SetCell(m_map_px, m_map_py, layer_laser, 0);
-
-    // Update our global pose
-    //
-    GetGlobalPose(m_map_px, m_map_py, m_map_pth);
+      return;
     
-    // Draw our new representation
-    //
-    if (!m_transparent)
-        m_world->SetCell(m_map_px, m_map_py, layer_laser, m_channel );
-
-    m_world->SetLaserBeacon(m_index, m_map_px, m_map_py, m_map_pth);
+    m_last_update = sim_time;
+    
+    
+    double x, y, th;
+    GetGlobalPose( x,y,th );
+    
+    // if we've moved 
+    if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
+      {
+	// Undraw our old representation
+	//
+	if (!m_transparent)
+	  {
+	    m_world->matrix->mode = mode_unset;
+	    m_world->matrix->set_cell( (int)(m_map_px * m_world->ppm),
+				       (int)(m_map_py * m_world->ppm), 
+				       this ); 
+	  }
+	
+	m_map_px = x;
+	m_map_py = y;
+	m_map_pth = th;
+	
+	// Draw our new representation
+	//
+	if (!m_transparent)
+	  {
+	    m_world->matrix->mode = mode_set;
+	    m_world->matrix->set_cell( (int)(m_map_px * m_world->ppm),
+				       (int)(m_map_py * m_world->ppm), 
+				       this ); 
+	  }
+	m_world->SetLaserBeacon(m_index, m_map_px, m_map_py, m_map_pth);
+      }
 }
 
 

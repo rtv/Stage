@@ -1,8 +1,6 @@
 /*************************************************************************
- * image.cc - bitmap image class CMatrix with processing functions
- *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: matrix.cc,v 1.2.2.1 2001-08-17 21:00:16 vaughan Exp $
+ * $Id: matrix.cc,v 1.2.2.2 2001-08-21 01:40:56 vaughan Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -26,10 +24,12 @@ void CMatrix::PrintCell( int cell )
   while( data[cell][p] )
     printf( "\t%p", data[cell][p++] );
   
-  puts( "" );
+  printf( "\t %d/%d\n", current_slot[cell], available_slots[cell] );
+  
+  fflush( stdout );
 }
-
-
+  
+  
 // construct from width / height 
 CMatrix::CMatrix(int w,int h)
 {
@@ -57,24 +57,8 @@ CMatrix::CMatrix(int w,int h)
       available_slots[p] = initial_buf_size;
     }
 
-  //cout << "constructed NImage" << endl;
 }
 
-// construct from width / height with existing data
-//  CMatrix::CMatrix(unsigned char* array, int w,int h)
-//  {
-//  #ifdef DEBUG
-//    cout << "Image: " << width << 'x' << height << flush;
-//  #endif
-
-//    width 	= w;
-//    height 	= h;
-//    data 		= array;
-
-//  #ifdef DEBUG
-//    cout << '@' << data << endl;
-//  #endif
-//  }
 
 //destruct
 CMatrix::~CMatrix(void) 	
@@ -95,7 +79,38 @@ void CMatrix::copy_from(CMatrix* img)
 }
 
 
+void CMatrix::dump( void )
+{
+  ofstream out( "world.dump" );
+  
+  for( int y=0; y<height; y++ )
+    {
+      for( int x=0; x<width; x++ )
+	{
+	  
+	  CEntity** ent = get_cell( x,y );
+	  
+	  //while( *ent )
+	  if( *ent )
+	    {   
+	      out << x << ' ' << y;
+	      out << ' ' << (int)*ent << endl;
+	    }
+	  //else
 
+	  //out << ' ' << 0;
+	  
+	  //out << endl;
+	  
+	}
+      
+      //out << endl; // blank line
+    }
+
+  out.close();
+
+  cout << "DUMPED" << endl;
+}
 
 void CMatrix::draw_circle(int x,int y,int r, CEntity* ent )
 {
@@ -117,7 +132,7 @@ void CMatrix::draw_circle(int x,int y,int r, CEntity* ent )
 }
 
 
-void CMatrix::draw_rect( const Rect t, CEntity* ent )
+void CMatrix::draw_rect( const Rect& t, CEntity* ent )
 {
   draw_line( t.toplx, t.toply, t.toprx, t.topry, ent );
   draw_line( t.toprx, t.topry, t.botlx, t.botly, ent );
@@ -362,51 +377,39 @@ void CMatrix::clear( void )
 }
 
 inline void CMatrix::set_cell(int x, int y, CEntity* ent )
-{
+{    
   if( mode == mode_unset ) // HACK! 
     {
       unset_cell( x, y, ent );
       return;
     }
   
-  
   if( ent == 0 ) return;
+
   if (x<0 || x>=width || y<0 || y>=height) return;
   
   int cell = x + y * width;
   int slot = current_slot[ cell ];
-  int slots = available_slots[ cell ];
   
-  printf( "SET %p\n", ent );
-  printf( "before " );
-  PrintCell( cell );
+  //printf( "SET %d %p (%d)\n", cell, ent, ent->m_stage_type );
+  //printf( "before " );
+  //PrintCell( cell );
   
   // if it's already here do nothing
   for( int s=0; s<=slot; s++ )
     if( data[cell][s] == ent ) return;
   
-  // old sticky bit stuff
-  //unsigned char *p = data + x + y * width;
-  //*p = (*p & 0x80) | c;
-  
-  if( slot < slots )
+  if( slot < available_slots[ cell ] )
     {
-      //printf( "Putting %p in cell:%d slot:%d slots:%d\n",
-      //ent, cell, slot, slots );
-      
       data[ cell ][ slot ] = ent;
-      
       current_slot[ cell ]++;
-      
-      //printf( "Now cell:%d slot:%d slots:%d\n",
-      //cell, current_slot[ cell ], available_slots[ cell ] );
     }
   else
     printf( "out of slots! cell:%d slot:%d slots:%d\n",
-	    cell, slot, slots );
+	    cell, slot, available_slots[cell] );
   
-  printf( "after " );
-  PrintCell( cell );
+  //printf( "after " );
+  //PrintCell( cell );
 }
 
 inline void CMatrix::unset_cell(int x, int y, CEntity* ent )
@@ -414,12 +417,11 @@ inline void CMatrix::unset_cell(int x, int y, CEntity* ent )
   if( ent == 0 ) return;
   if (x<0 || x>=width || y<0 || y>=height) return;
   
-  
   int cell = x + y * width;
   
-  printf( "UNSET %p\n", ent );
-  printf( "before " );
-  PrintCell( cell );
+  //printf( "UNSET %d %p (%d)\n", cell, ent, ent->m_stage_type );
+  //printf( "before " );
+  //PrintCell( cell );
   
   for( int slot = 0; slot < current_slot[ cell ]; slot++ )
     if( data[cell][slot] == ent )
@@ -429,16 +431,13 @@ inline void CMatrix::unset_cell(int x, int y, CEntity* ent )
 	// and repeat until we're at the end
 	// the last copy copies over the zero'd pointer
 	while( data[cell][slot] )
-	  {
 	    data[cell][slot] = data[cell][++slot];
-	    //data[cell][slot] = 0;
-	  }		  
 	
-	current_slot[ cell ] = slot; // zero the new end slot
+	current_slot[ cell ] = slot-1; // zero the new end slot
 	
 	break;break;
       }
   
-  printf( "after " );
-  PrintCell( cell );  
+  //printf( "after " );
+  //PrintCell( cell );  
 }

@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.h,v 1.2.2.1 2001-08-17 21:00:16 vaughan Exp $
+// $Id: matrix.h,v 1.2.2.2 2001-08-21 01:40:55 vaughan Exp $
 // RTV
 // ==================================================================
 
@@ -12,9 +12,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <image.h>
+#include "image.h" // for Rect
+#include "entity.hh"
 
-class CEntity;
 
 enum MatrixMode { mode_set, mode_unset };
 
@@ -32,6 +32,8 @@ public:
 	char*	win_title;
 
 	int initial_buf_size;
+
+	void dump( void );
 
 	MatrixMode mode;
 	void PrintCell( int cell );
@@ -74,7 +76,7 @@ public:
 	void	draw_line(int x1,int y1,int x2,int y2,CEntity* ent);
 
 	// new 1 Dec 2000 - RTV
-	void	draw_rect( const Rect t, CEntity* ent );
+	void	draw_rect( const Rect& t, CEntity* ent );
 
 	//void	draw_line_detect(int x1,int y1,int x2,int y2,int c);	
 	CEntity** line_detect(int x1,int y1,int x2,int y2);

@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.11.2.1 2001-08-17 20:48:06 vaughan Exp $
+ * $Id: xs.cc,v 1.11.2.2 2001-08-21 01:40:57 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -438,6 +438,7 @@ bool DownloadEnvironment( environment_t* env )
 	    }
 	    
 	  recv += res;
+
 	  //#ifdef DEBUG
 	  //printf( "read %d/%d bytes\r", recv, len );
 	  //fflush( stdout );
@@ -449,6 +450,10 @@ bool DownloadEnvironment( environment_t* env )
       //fflush( stdout );
       //#endif
     }
+
+  // invert the y axis!
+  for( int c=0; c<env->num_pixels; c++ )
+    env->pixels[c].y = env->height - env->pixels[c].y;
 
   // make some space for the scaled pixels
   // they get filled in when call ScaleBackground()

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.16 $
+//  $Revision: 1.16.2.1 $
 
 //
 // Usage:
@@ -29,6 +29,10 @@
 #define LASERDEVICE_HH
 
 #include "playerdevice.hh"
+
+
+// if laser gives a value > reflector, it's a beacon
+enum LaserReturn { laser_nothing=0, laser_object, laser_reflector, laser_beacon };
 
 class CLaserDevice : public CEntity
 {

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.8.2.1 $
+//  $Revision: 1.8.2.2 $
 //
 // Usage:
 //  (empty)
@@ -60,6 +60,8 @@ class CEntity
 
   int sonar_return;  
   int laser_return;
+  int obstacle_return;
+  //int puck_return;
   
     // Destructor
     //
