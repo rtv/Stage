@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.4.2.35 $
+//  $Author: gerkey $
+//  $Revision: 1.4.2.36 $
 //
 // Usage:
 //  (empty)
@@ -277,8 +277,8 @@ void CWorld::Update()
     double simtimestep = timestep;
     if (timestep > m_max_timestep)
     {
-        PRINT_MSG2("warning: max timestep exceeded (%f > %f)",
-                   (double) simtimestep, (double) m_max_timestep);
+        //PRINT_MSG2("warning: max timestep exceeded (%f > %f)",
+                   //(double) simtimestep, (double) m_max_timestep);
         simtimestep = m_max_timestep;
     }
 
