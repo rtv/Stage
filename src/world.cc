@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.36 $
+//  $Revision: 1.37 $
 //
 // Usage:
 //  (empty)
@@ -44,6 +44,10 @@
 // for the definition of CPlayerDevice, used to treat them specially
 // below
 #include "playerdevice.hh" 
+
+#include "truthserver.hh"
+extern stage_truth_t* ts_truths;
+
 
 #define SEMKEY 2000
 
@@ -581,6 +585,10 @@ void CWorld::Update()
 	// update the entity with the truth
 	ent->SetGlobalPose( truth.x/1000.0, truth.y/1000.0, 
 			    DTOR(truth.th) );
+
+
+	// store it in the truthserver's comparison database
+	memcpy( &(ts_truths[ truth.stage_id ]), &truth, sizeof( truth ) );
 	
 	// the parent may have been changed - NYI
 	//ent->parent->port = truth.parent.port;

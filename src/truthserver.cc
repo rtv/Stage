@@ -49,6 +49,9 @@ void CatchSigPipe( int signo )
 
 }
 
+// rather hacky - this gets poked into by incoming truths
+// to avoid them being re-exported
+stage_truth_t* ts_truths = 0;
 
 void PrintTruth( stage_truth_t &truth )
 {
@@ -146,8 +149,8 @@ static void * TruthWriter( void* arg )
   int obs = world->GetObjectCount();
   
   // store all the truths we publish for comparison
-  stage_truth_t* truths = new stage_truth_t[ obs ];
-  memset( truths, 0, obs * sizeof( stage_truth_t ) );
+  ts_truths = new stage_truth_t[ obs ];
+  memset( ts_truths, 0, obs * sizeof( stage_truth_t ) );
   
   while( 1 ) 
     {
@@ -171,10 +174,10 @@ static void * TruthWriter( void* arg )
 	  ent->ComposeTruth( &truth, i );
 
 	  // is the packet different from the last one?
-	  if( memcmp( &truth, &(truths[i]), sizeof( truth ) ) != 0  ) 
+	  if( memcmp( &truth, &(ts_truths[i]), sizeof( truth ) ) != 0  ) 
 	    {
 	      //printf( "old truth: " );
-	      //PrintTruth( truths[i] );
+	      //PrintTruth( ts_truths[i] );
 	      //printf( "new truth: " );
 	      //PrintTruth( truth );
 	      //puts( "sending..." );
@@ -183,7 +186,7 @@ static void * TruthWriter( void* arg )
 	      v = write( *connfd, &truth, sizeof(truth) );
 	      
 	      // and store it
-	      memcpy( &(truths[i]), &truth, sizeof( truth ) );
+	      memcpy( &(ts_truths[i]), &truth, sizeof( truth ) );
 	    }
 	  //else
 	  //puts( "same as last time" );
