@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.24 $
+//  $Revision: 1.25 $
 //
 // Usage:
 //  (empty)
@@ -48,7 +48,7 @@
 // allocate chunks of 32 pointers for entity storage
 const int OBJECT_ALLOC_SIZE = 32;
 
-//#define WATCH_RATES
+#define WATCH_RATES
 //#define DEBUG 
 //#define VERBOSE
 #undef DEBUG 
@@ -205,103 +205,100 @@ bool CWorld::InitSharedMemoryIO( void )
 //
 bool CWorld::Startup()
 {  
-    // Initialise the broadcast queue
-    //
-    InitBroadcast();
+  // we must have at least one object to play with!
+  assert( m_object_count > 0 );
+  
+  // Initialise the broadcast queue
+  //
+  InitBroadcast();
 
-    // Initialise the real time clock
-    // Note that we really do need to set the start time to zero first!
-    //
-    m_start_time = 0;
-    m_start_time = GetRealTime();
-    m_last_time = 0;
-
-    // Initialise the simulator clock
-    //
-    m_sim_time = 0;
-    m_max_timestep = 0.1;
-
-    // Initialise the rate counter
-    //
-    m_update_ratio = 1;
-    m_update_rate = 0;
-    
-   
-    // Initialise the message router
-    //
+  // Initialise the real time clock
+  // Note that we really do need to set the start time to zero first!
+  //
+  m_start_time = 0;
+  m_start_time = GetRealTime();
+  m_last_time = 0;
+  
+  // Initialise the simulator clock
+  //
+  m_sim_time = 0;
+  m_max_timestep = 0.1;
+  
+  // Initialise the rate counter
+  //
+  m_update_ratio = 1;
+  m_update_rate = 0;
+  
+  
+  // Initialise the message router
+  //
 #ifdef INCLUDE_RTK
-    m_router->add_sink(RTK_UI_DRAW, (void (*) (void*, void*)) &OnUiDraw, this);
-    m_router->add_sink(RTK_UI_MOUSE, (void (*) (void*, void*)) &OnUiMouse, this);
-    m_router->add_sink(RTK_UI_PROPERTY, (void (*) (void*, void*)) &OnUiProperty, this);
-    m_router->add_sink(RTK_UI_BUTTON, (void (*) (void*, void*)) &OnUiButton, this);
+  m_router->add_sink(RTK_UI_DRAW, (void (*) (void*, void*)) &OnUiDraw, this);
+  m_router->add_sink(RTK_UI_MOUSE, (void (*) (void*, void*)) &OnUiMouse, this);
+  m_router->add_sink(RTK_UI_PROPERTY, (void (*) (void*, void*)) &OnUiProperty, this);
+  m_router->add_sink(RTK_UI_BUTTON, (void (*) (void*, void*)) &OnUiButton, this);
 #endif
-
-    // Startup all the objects
-    // this lets them calculate how much shared memory they'll need
-    for (int i = 0; i < m_object_count; i++)
-      {
-	if( !m_object[i]->Startup() )
+  
+  // Startup all the objects
+  // this lets them calculate how much shared memory they'll need
+  for (int i = 0; i < m_object_count; i++)
+    {
+      if( !m_object[i]->Startup() )
 	{
 	  cout << "Object " << (int)(m_object[i]) 
 	       << " failed Startup()" << endl;
 	  return false;
 	}
-	fflush( stdout );
-      }
-    // Create the shared memory map
-    //
-    InitSharedMemoryIO();
-
-    // Setup IO for all the objects - MUST DO THIS AFTER MAPPING SHARING MEMORY
-    // each is passed a pointer to the start of its space in shared memory
-
-    int entityOffset = 0;
-
-    // keep a list of player devices, and start them AFTER all the IO pointers
-    // are setup.
-    // (bigger than strictly necessary, but who cares)
-    if (m_object_count > 0)
-    {
-      CPlayerDevice** tmpplayers = new CPlayerDevice*[m_object_count];  
-      bzero(tmpplayers,m_object_count*sizeof(CPlayerDevice*));
-      int currplayer = 0;
-      for (int i = 0; i < m_object_count; i++)
-      {
-        if (!m_object[i]->SetupIOPointers( playerIO + entityOffset ) )
-        {
-          cout << "Object " << (int)(m_object[i]) 
-               << " failed SetupIOPointers()" << endl;
-          return false;
-        }
-        if(m_object[i]->m_stage_type == PlayerType)
-        {
-          tmpplayers[currplayer] = (CPlayerDevice*)m_object[i];
-          currplayer++;
-        }
-        entityOffset += m_object[i]->SharedMemorySize();
-      }
-
-      for(currplayer=0;tmpplayers[currplayer];currplayer++)
-      {
-        // -1 makes it use its internal m_player_port
-        if(!(tmpplayers[currplayer]->StartupPlayer(-1)))
-        {
-          cout << "PlayerDevice " << (int)(tmpplayers[currplayer]) 
-               << " failed StartupPlayer()" << endl;
-          return false;
-        }
-      }
-      delete tmpplayers;
+      fflush( stdout );
     }
+  
+  // Create the shared memory map
+  //
+  InitSharedMemoryIO();
+  
+  // we lock up the memory here
+  LockShmem(); 
+
+  // Setup IO for all the objects - MUST DO THIS AFTER MAPPING SHARING MEMORY
+  // each is passed a pointer to the start of its space in shared memory
+  int entityOffset = 0;
+  
+  int i;
+  for (i = 0; i < m_object_count; i++)
+    if (!m_object[i]->SetupIOPointers( playerIO + entityOffset ) )
+      {
+	cout << "Object " << (int)(m_object[i]) 
+	     << " failed SetupIOPointers()" << endl;
+	return false;
+      }
+  
+  // start all the players - they will immediately block on the shared memory
+  
+  // startup any player devices - hacky!
+  // we need to have fixed up all the shared memory and pointers before these go
+  for(i = 0; i < m_object_count; i++)
+    if(m_object[i]->m_stage_type == PlayerType)
+      {
+	if(!((CPlayerDevice*)m_object[i])->StartupPlayer(-1) )
+	  {
+	    cout << "PlayerDevice " << (int)(m_object[i]) 
+		 << " failed StartupPlayer()" << endl;
+	    return false;
+	  }
+      }
+  
+  // release the lock and the players will start reading
+  UnlockShmem();
+
+  // Start the world thread
+  //
+  if (!StartThread())  
+    return false;
+  
     
-    // Start the world thread
-    //
-    if (!StartThread())
-        return false;
-
-    return true;
+  return true;
 }
-
+    
 
 ///////////////////////////////////////////////////////////////////////////
 // Shutdown routine 
@@ -381,7 +378,7 @@ void* CWorld::Main(void *arg)
     {
         // Check for thread cancellation
         //
-        pthread_testcancel();
+      pthread_testcancel();
 
         // Dont hog all the cycles -- sleep for 10ms
         //

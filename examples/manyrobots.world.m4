@@ -9,6 +9,11 @@ enable environment_server
 
 # create a bunch of sonar robots
 forloop(`i',0,49,`simplerobot(eval(i+14),eval(i+14),0,eval(i+6665))')
-forloop(`i',0,49,`simplerobot(eval(i+14),eval(i+15),0,eval(i+6665+50))')
-forloop(`i',0,49,`simplerobot(eval(i+14),eval(i+16),0,eval(i+6665+100))')
-forloop(`i',0,49,`simplerobot(eval(i+14),eval(i+17),0,eval(i+6665+150))')
+#forloop(`i',0,49,`simplerobot(eval(i+14),eval(i+15),0,eval(i+6665+50))')
+#forloop(`i',0,49,`simplerobot(eval(i+14),eval(i+16),0,eval(i+6665+100))')
+#forloop(`i',0,49,`simplerobot(eval(i+14),eval(i+17),0,eval(i+6665+150))')
+#forloop(`i',0,49,`simplerobot(eval(i+14),eval(i+18),0,eval(i+6665+200))')
+#forloop(`i',0,49,`simplerobot(eval(i+14),eval(i+19),0,eval(i+6665+250))')
+#forloop(`i',0,49,`simplerobot(eval(i+14),eval(i+20),0,eval(i+6665+300))')
+#forloop(`i',0,49,`simplerobot(eval(i+14),eval(i+21),0,eval(i+6665+350))')
+#forloop(`i',0,49,`simplerobot(eval(i+14),eval(i+22),0,eval(i+6665+400))')
