@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.18 $
+//  $Revision: 1.19 $
 //
 // Usage:
 //  (empty)
@@ -35,13 +35,18 @@
 #include <sys/types.h>
 #include <sys/sem.h>
 #include <sys/ipc.h>
-#include <queue> // standard template library container
 
 #include "image.hh"
 #include "entity.hh"
 #include "truthserver.hh"
 #include "playercommon.h"
 #include "matrix.hh"
+
+// standard template library container
+// This *must* be loaded after everything else, otherwise
+// is conflicts with the string template in rtk, *if* you are
+// using GCC3.01.  ahoward
+#include <queue> 
 
 #define DEBUG
 
