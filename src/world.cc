@@ -21,7 +21,7 @@
  * Desc: A world device model - replaces the CWorld class
  * Author: Richard Vaughan
  * Date: 31 Jan 2003
- * CVS info: $Id: world.cc,v 1.145 2003-08-30 21:02:22 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.146 2003-09-05 20:58:45 rtv Exp $
  */
 
 
@@ -64,6 +64,17 @@ stg_world_t* stg_world_create( stg_client_data_t* client,
   
   WORLD_DEBUG( world, "world construction complete" );
 
+  WORLD_DEBUG( world,"world startup");
+  
+  g_assert( stg_world_create_matrix( world ) );
+
+  if( world->win ) PRINT_WARN( "creating window, but window pointer not NULL" );  
+  world->win = stg_gui_window_create( world, 0,0 ); // use default dimensions
+
+  world->running = TRUE;
+  
+  WORLD_DEBUG( world, "world startup complete" );
+
   // console output
   PRINT_MSG1( "Created world \"%s\".", world->name->str ); 
 
@@ -74,8 +85,24 @@ int stg_world_destroy( stg_world_t* world )
 {
   WORLD_DEBUG( world, "world destruction" );
   
-  // this destroys all children and the matrix
-  if( world->running ) stg_world_shutdown( world );
+  WORLD_DEBUG( world, "world shutdown");
+  
+  // shutdown all the entities in the world
+  //for( CEntity* child = stg_world_first_child( world ); child; 
+  //   child = stg_ent_next_sibling( child ) )
+  //if( child ) child->Shutdown();
+  
+  while( stg_world_first_child(world) )
+    delete stg_world_first_child(world);
+  
+  if( world->matrix ) stg_world_destroy_matrix( world );
+
+  // kill this gui window
+  if( world->win ) stg_gui_window_destroy( world->win );
+  world->win = NULL;
+  
+  world->running = FALSE;
+  WORLD_DEBUG( world,"world shutdown complete");
   
   // remove the world from the client that created it
   world->client->worlds = g_list_remove( world->client->worlds, world ); 
@@ -88,45 +115,6 @@ int stg_world_destroy( stg_world_t* world )
   return 0; //ok
 }
 
-int stg_world_startup( stg_world_t* world )
-{
-  WORLD_DEBUG( world,"world startup");
-  
-  g_assert( stg_world_create_matrix( world ) );
-
-  if( world->win ) PRINT_WARN( "creating window, but window pointer not NULL" );  
-  world->win = stg_gui_window_create( world, 0,0 ); // use default dimensions
-
-  // startup all the entities in the world (possibly none at this point)
-  for( CEntity* child = stg_world_first_child(world); child; 
-       child = stg_ent_next_sibling( child ) )
-    if( child ) child->Startup();
-  
-  world->running = TRUE;
-  
-  WORLD_DEBUG( world, "world startup complete" );
-  return 0; //ok
-}
-
-int stg_world_shutdown( stg_world_t* world )
-{
-  WORLD_DEBUG( world, "world shutdown");
-  
-  // shutdown all the entities in the world
-  for( CEntity* child = stg_world_first_child( world ); child; 
-       child = stg_ent_next_sibling( child ) )
-    if( child ) child->Shutdown();
-  
-  // kill this gui window
-  if( world->win ) stg_gui_window_destroy( world->win );
-  world->win = NULL;
-
-  if( world->matrix ) stg_world_destroy_matrix( world );
-  
-  world->running = FALSE;
-  WORLD_DEBUG( world,"world shutdown complete");
-  return 0;
-}
 
 CMatrix* stg_world_create_matrix( stg_world_t* world )
 {

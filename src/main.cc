@@ -23,7 +23,7 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan
  * Date: 3 July 2003
- * CVS: $Id: main.cc,v 1.70 2003-09-02 05:17:25 rtv Exp $
+ * CVS: $Id: main.cc,v 1.71 2003-09-05 20:58:45 rtv Exp $
  */
 
 
@@ -138,6 +138,7 @@ void stg_client_destroy( stg_client_data_t* cli )
   while( cli->worlds )
     {
       PRINT_DEBUG1( "destroying world %p", cli->worlds->data);
+      printf( "destroying world %p\n", cli->worlds->data);
       stg_world_destroy( (stg_world_t*)cli->worlds->data );
     }
   
@@ -212,8 +213,6 @@ gboolean StgClientRead( GIOChannel* channel,
 		g_hash_table_insert(global_model_table, &aworld->id, 
 				    aworld->node );  
 
-		stg_world_startup( aworld );
-
 		PRINT_DEBUG2( "Created world %p on channel %p",
 			      aworld, channel );
 		
@@ -245,7 +244,7 @@ gboolean StgClientRead( GIOChannel* channel,
 			  == NULL ); 
 		g_hash_table_insert( global_model_table, &ent->id, ent->node );
 		
-		ent->Startup();
+		//ent->Startup();
 
 		// reply with the id of the entity
 		reply = stg_property_create();
@@ -273,6 +272,7 @@ gboolean StgClientRead( GIOChannel* channel,
 		    {
 		    case STG_PROP_DESTROY_WORLD: 
 		      {
+			puts( "DESTROY WORLD REQUEST" );
 			stg_world_t* world = (stg_world_t*)node->data;	      
 			g_hash_table_remove( global_model_table, &world->id );
 			stg_world_destroy( world );			

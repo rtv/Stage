@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.117 2003-09-03 02:04:14 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.118 2003-09-05 20:58:44 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -245,6 +245,37 @@ CEntity::CEntity( stg_entity_create_t* init, stg_id_t id )
   this->guimod = NULL;
 
   ENT_DEBUG("entity construction complete");
+
+  // must do this before setting the default rectangle, or we'll never see it.
+  this->guimod = stg_gui_model_create( this );
+  
+  ENT_DEBUG( "entity startup" );
+  
+  // by default, all entities have a single rectangle that is
+  // automagically scaled to fit the size of the entity
+  stg_rotrect_t rect;
+  rect.x = 0.0;
+  rect.y = 0.0;
+  rect.a = 0.0;
+  rect.w = 1.0; // this unit is multiples of my body width, not a fixed size
+  rect.h = 1.0; // ditto
+    
+  this->SetProperty( STG_PROP_RECTS, &rect, sizeof(rect) );
+
+  Map(); // render in matrix
+
+  /* the LAST THING WE DO is to request callbacks into this object */
+  
+  // todo - real time vs. non-real time
+  if( this->interval > 0 )
+    {
+      guint ms_interval = (guint)(this->interval * 1000.0);
+      update_tag = g_timeout_add(ms_interval,CEntity::stg_update_signal, this);
+    } 
+
+  // don't put anything here!
+  
+  ENT_DEBUG( "entity startup complete" );
 }
 
 
@@ -253,8 +284,26 @@ CEntity::CEntity( stg_entity_create_t* init, stg_id_t id )
 CEntity::~CEntity()
 {
   ENT_DEBUG("entity destruction");
-  if( this->running ) this->Shutdown(); 
+  //if( this->running ) this->Shutdown(); 
   
+  ENT_DEBUG( "entity shutdown" );
+  
+  UnMap();
+  
+  /* cancel the callbacks into this object */
+  g_source_remove( update_tag );
+  
+  //ENT_DEBUG( "shutting down children" );
+  
+  //for( CEntity* child = stg_ent_first_child( this ); child; 
+  //   child = stg_ent_next_sibling(child))
+  // child->Shutdown();
+  
+  //ENT_DEBUG( "finished shutting down children" ); 
+  
+  this->running = FALSE;
+  
+
   // deleting a child removes it from the tree, so we can't iterate
   // safely here; instead we repeatedly delete the first child until
   // they're all gone.
@@ -266,6 +315,16 @@ CEntity::~CEntity()
       delete child;
       ENT_DEBUG( "entity destruction - destroying child complete" );
     }
+
+  if( this->guimod) 
+    {
+      ENT_DEBUG( "shutting down GUI" );
+      stg_gui_model_destroy( this->guimod );
+      this->guimod = NULL;
+    }
+  
+  //ENT_DEBUG( "entity shutdown complete" );
+
   
   g_array_free( this->received_msgs, TRUE );
 
@@ -348,79 +407,6 @@ void CEntity::GetBoundingBox( double &xmin, double &ymin,
   //printf( "after children: %.2f %.2f %.2f %.2f\n",
   //  xmin, ymin, xmax, ymax );
 
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Startup routine
-// A virtual function that lets entities do some initialization after
-// everything has been loaded.
-int CEntity::Startup( void )
-{
-  // must do this before setting the default rectangle, or we'll never see it.
-  this->guimod = stg_gui_model_create( this );
-  
-  ENT_DEBUG( "entity startup" );
-  
-  // by default, all entities have a single rectangle that is
-  // automagically scaled to fit the size of the entity
-  stg_rotrect_t rect;
-  rect.x = 0.0;
-  rect.y = 0.0;
-  rect.a = 0.0;
-  rect.w = 1.0; // this unit is multiples of my body width, not a fixed size
-  rect.h = 1.0; // ditto
-    
-  this->SetProperty( STG_PROP_RECTS, &rect, sizeof(rect) );
-
-  Map(); // render in matrix
-
-  /* the LAST THING WE DO is to request callbacks into this object */
-  
-  // todo - real time vs. non-real time
-  if( this->interval > 0 )
-    {
-      guint ms_interval = (guint)(this->interval * 1000.0);
-      update_tag = g_timeout_add(ms_interval,CEntity::stg_update_signal, this);
-    } 
-
-  // don't put anything here!
-  
-  ENT_DEBUG( "entity startup complete" );
-  return 0;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Shutdown routine
-int CEntity::Shutdown()
-{
-  ENT_DEBUG( "entity shutdown" );
- 
-  UnMap();
-
-  /* cancel the callbacks into this object */
-  g_source_remove( update_tag );
-  
-  ENT_DEBUG( "shutting down children" );
-  
-  for( CEntity* child = stg_ent_first_child( this ); child; 
-       child = stg_ent_next_sibling(child))
-    child->Shutdown();
-  
-  ENT_DEBUG( "finished shutting down children" ); 
-  
-  this->running = FALSE;
-
-  if( this->guimod) 
-    {
-      ENT_DEBUG( "shutting down GUI" );
-      stg_gui_model_destroy( this->guimod );
-      this->guimod = NULL;
-    }
-
-  ENT_DEBUG( "entity shutdown complete" );
-
-  return 0; // success
 }
 
 

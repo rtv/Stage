@@ -21,7 +21,7 @@
  * Desc: a container for models 
  * Author: Richard Vaughan
  * Date: 24 July 2003
- * CVS info: $Id: world.hh,v 1.28 2003-09-02 05:17:26 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.29 2003-09-05 20:58:45 rtv Exp $
  */
 
 #ifndef _WORLD_HH
@@ -63,9 +63,6 @@ stg_world_t* stg_world_create( stg_client_data_t* client,
 			       stg_world_create_t* rc );
 
 int stg_world_destroy( stg_world_t* world );
-int stg_world_startup( stg_world_t* world );
-int stg_world_shutdown( stg_world_t* world );
-
 CMatrix* stg_world_create_matrix( stg_world_t* world );
 void stg_world_destroy_matrix( stg_world_t* world );
 

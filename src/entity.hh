@@ -21,7 +21,7 @@
  * Desc: Simulated robot with various sensors
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.28 2003-09-03 02:04:14 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.29 2003-09-05 20:58:45 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -85,17 +85,13 @@ public:
   public: virtual ~CEntity();
 
 public: 
-  // Initialise entity  
-  virtual int Startup(); 
-  // Finalize entity
-  virtual int Shutdown();  
 
   // Update the entity's device-specific representation
   // this is called by a callback installed in CEntity::Startup()
-  virtual gboolean Update();
+  gboolean Update();
   
-  virtual int SetProperty( stg_prop_id_t ptype, void* data, size_t len );
-  virtual stg_property_t* GetProperty( stg_prop_id_t ptype );
+  int SetProperty( stg_prop_id_t ptype, void* data, size_t len );
+  stg_property_t* GetProperty( stg_prop_id_t ptype );
 
 protected:
 
