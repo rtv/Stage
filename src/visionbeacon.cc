@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.6 $
+//  $Author: gerkey $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -39,7 +39,6 @@ CVisionBeacon::CVisionBeacon(CWorld *world, CEntity *parent)
     m_stage_type = VisionBeaconType;
 
     m_channel = 0; // visible by default on ACTS ch.0
-    m_radius = 0;
 
     m_render_obstacle = true;
     m_render_laser = true;
@@ -208,8 +207,9 @@ void CVisionBeacon::OnUiUpdate(RtkUiDrawData *data)
     
     if (data->draw_layer("vision_beacon", true))
     {
-        data->set_color(m_color);
-        data->ex_rectangle(m_map_px, m_map_py, m_map_pth, 2 * m_radius, 2 * m_radius);
+      data->set_color(m_color);
+      data->ellipse(m_map_px-m_radius, m_map_py-m_radius, 
+                    m_map_px+m_radius,m_map_py+m_radius);
     }
 
     data->end_section();
