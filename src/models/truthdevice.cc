@@ -21,7 +21,7 @@
  * Desc: A device for getting the true pose of things.
  * Author: Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: truthdevice.cc,v 1.2.4.1 2003-05-09 00:16:46 rtv Exp $
+ * CVS info: $Id: truthdevice.cc,v 1.2.4.1.2.1 2004-09-17 18:47:22 gerkey Exp $
  */
 
 #include "world.hh"
@@ -79,9 +79,9 @@ void CTruthDevice::UpdateConfig()
       case PLAYER_TRUTH_GET_POSE:
 	
         GetGlobalPose(px, py, pa);
-        config.px = htonl((int)(px*1000.0));
-        config.py = htonl((int)(py*1000.0));
-        config.pa = htonl((int)(NORMALIZE(pa)*180/M_PI));
+        config.px = (int)htonl((int)((px-((m_world->GetWidth()/2.0)/m_world->ppm))*1000.0));
+        config.py = (int)htonl((int)((py-((m_world->GetHeight()/2.0)/m_world->ppm))*1000.0));
+        config.pa = (int)htonl((int)(NORMALIZE(pa)*180/M_PI));
 	
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &config, sizeof(config));
         break;
@@ -101,9 +101,11 @@ void CTruthDevice::UpdateConfig()
           break;
         }
 
-        px = ntohl(config.px)/1000.0;
-        py = ntohl(config.py)/1000.0;
-        pa = ntohl(config.pa)*M_PI/180;
+        px = ((int)ntohl(config.px))/1000.0 + 
+                ((m_world->GetWidth()/2.0)/m_world->ppm);
+        py = ((int)ntohl(config.py))/1000.0 +
+                ((m_world->GetHeight()/2.0)/m_world->ppm);
+        pa = ((int)ntohl(config.pa))*M_PI/180;
 
         // Move our parent.  Should possibly move the top level
         // ancestor.
@@ -138,9 +140,9 @@ void CTruthDevice::UpdateData()
   player_truth_data_t data;
 
   GetGlobalPose(px, py, pa);
-  data.px = htonl((int)(px*1000.0));
-  data.py = htonl((int)(py*1000.0));
-  data.pa = htonl((int)(NORMALIZE(pa)*180/M_PI));
+  data.px = (int)htonl((int)((px-((m_world->GetWidth()/2.0)/m_world->ppm))*1000.0));
+  data.py = (int)htonl((int)((py-((m_world->GetHeight()/2.0)/m_world->ppm))*1000.0));
+  data.pa = (int)htonl((int)(NORMALIZE(pa)*180/M_PI));
   
   PutData(&data, sizeof(data));
 }

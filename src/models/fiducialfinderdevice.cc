@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/fiducialfinderdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.2.4.2.2.1 $
+//  $Revision: 1.2.4.2.2.2 $
 //
 // Usage: detects objects that were laser bright and had non-zero
 // ficucial_return
@@ -275,9 +275,9 @@ void CFiducialFinder::Update( double sim_time )
       }
     
     beacon.fiducials[beacon.count].id = id;
-    beacon.fiducials[beacon.count].pose[0] = (int) (r * 1000);
-    beacon.fiducials[beacon.count].pose[1] = (int) RTOD(b);
-    beacon.fiducials[beacon.count].pose[2] = (int) RTOD(o);
+    beacon.fiducials[beacon.count].pos[0] = (int) (r * 1000);
+    beacon.fiducials[beacon.count].pos[1] = (int) RTOD(b);
+    beacon.fiducials[beacon.count].pos[2] = (int) RTOD(o);
     beacon.count++;
   }
 
@@ -286,9 +286,9 @@ void CFiducialFinder::Update( double sim_time )
   for (int i = 0; i < beacon.count; i++)
   {
     beacon.fiducials[i].id = htons(beacon.fiducials[i].id);
-    beacon.fiducials[i].pose[0] = htons(beacon.fiducials[i].pose[0]);
-    beacon.fiducials[i].pose[1] = htons(beacon.fiducials[i].pose[1]);
-    beacon.fiducials[i].pose[2] = htons(beacon.fiducials[i].pose[2]);
+    beacon.fiducials[i].pos[0] = htons(beacon.fiducials[i].pos[0]);
+    beacon.fiducials[i].pos[1] = htons(beacon.fiducials[i].pos[1]);
+    beacon.fiducials[i].pos[2] = htons(beacon.fiducials[i].pos[2]);
   }
   beacon.count = htons(beacon.count);
     
@@ -396,9 +396,9 @@ void CFiducialFinder::RtkUpdate()
       for( int b=0; b < beacon_count; b++ )
 	{
 	  int16_t id = ntohs((int16_t)data.fiducials[b].id);
-	  uint16_t range_mm = ntohs(data.fiducials[b].pose[0]);
-	  int16_t bearing_deg = ntohs(data.fiducials[b].pose[1]);
-	  int16_t orient_deg = ntohs(data.fiducials[b].pose[2]);
+	  uint16_t range_mm = ntohs(data.fiducials[b].pos[0]);
+	  int16_t bearing_deg = ntohs(data.fiducials[b].pos[1]);
+	  int16_t orient_deg = ntohs(data.fiducials[b].pos[2]);
 
 	  double range = (double)range_mm / 1000.0;
 	  double bearing = DTOR((double)bearing_deg);
