@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_guifeatures.c,v $
 //  $Author: rtv $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -89,7 +89,7 @@ void gui_model_features( model_t* mod )
     }
   
     if( gf->grid )
-      rtk_fig_grid( gui_model_figs(mod)->grid, 0, 0, geom->size.x, geom->size.y, 1.0  ) ;
+      rtk_fig_grid( gui_model_figs(mod)->grid, geom->pose.x, geom->pose.y, geom->size.x, geom->size.y, 1.0  ) ;
     
     
     if( gf->boundary )

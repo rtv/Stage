@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 //
 // File: model_color.c
 // Author: Richard Vaughan
@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_geom.c,v $
 //  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -25,24 +25,35 @@ stg_geom_t* model_get_geom( model_t* mod )
 
 
 int model_set_geom( model_t* mod, stg_geom_t* geom )
-{
-  // store the geom
-  memcpy( &mod->geom, geom, sizeof(mod->geom) );
-
-  size_t count=0;
-  stg_line_t* lines = model_get_lines( mod, &count );
+{ 
   
-  // force the body lines to fit inside this new rectangle
-  stg_normalize_lines( lines, count );
-  stg_scale_lines(  lines, count, geom->size.x, geom->size.y );
-  stg_translate_lines( lines, count, -geom->size.x/2.0, -geom->size.y/2.0 );
-
-  // set the new lines (this will cause redraw)
-  model_set_prop( mod, STG_PROP_LINES, lines, count*sizeof(stg_line_t));
+  // if the new geom is different
+  if( memcmp( &mod->geom, geom, sizeof(stg_geom_t) ))
+    {
+      // unrender from the matrix
+      model_map( mod, 0 );
+      
+      // store the geom
+      memcpy( &mod->geom, geom, sizeof(mod->geom) );
+      
+      size_t count=0;
+      stg_line_t* lines = model_get_lines( mod, &count );
+      
+      // force the body lines to fit inside this new rectangle
+      stg_normalize_lines( lines, count );
+      stg_scale_lines(  lines, count, geom->size.x, geom->size.y );
+      stg_translate_lines( lines, count, -geom->size.x/2.0, -geom->size.y/2.0 );
+      
+      // set the new lines (this will cause redraw)
+      model_set_lines( mod, lines, count );
 
 #if SHOW_GEOM
-  gui_model_geom( mod );
+      gui_model_geom( mod );
 #endif
+     
+      // re-render int the matrix
+      model_map( mod, 1 );
+    }
 
   return 0;
 }

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.27 $
+//  $Revision: 1.28 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -62,6 +62,8 @@ int laser_update( model_t* mod )
   memcpy( &pz, &geom->pose, sizeof(pz) ); 
   model_local_to_global( mod, &pz );
 
+  PRINT_WARN3( "laser origin %.2f %.2f %.2f", pz.x, pz.y, pz.a );
+
   double sample_incr = cfg->fov / (double)cfg->samples;
   
   double bearing = pz.a - cfg->fov/2.0;
@@ -78,6 +80,8 @@ int laser_update( model_t* mod )
     calloc( sizeof(stg_laser_sample_t), cfg->samples );
   
   int t;
+  // only compute every second sample, for speed
+  //for( t=0; t<cfg->samples-1; t+=2 )
   for( t=0; t<cfg->samples; t++ )
     {
       
@@ -118,13 +122,14 @@ int laser_update( model_t* mod )
 	range = cfg->range_min;
             
       // record the range in mm
-      scan[t].range = (uint32_t)( range * 1000.0 );
+      //scan[t+1].range = 
+	scan[t].range = (uint32_t)( range * 1000.0 );
       // if the object is bright, it has a non-zero reflectance
-      scan[t].reflectance = 
-	(hitmod && (hitmod->laser_return >= LaserBright)) ? 1 : 0;
+      //scan[t+1].reflectance = 
+	scan[t].reflectance = 
+	  (hitmod && (hitmod->laser_return >= LaserBright)) ? 1 : 0;
 
       itl_destroy( itl );
-
       //printf( "%d ", sample->range );
     }
   

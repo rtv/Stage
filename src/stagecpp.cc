@@ -94,63 +94,63 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
   if( world == NULL )
     return NULL; // failure
   
-  // create a special model for the background
-  stg_token_t* token = stg_token_create( "root", STG_T_NUM, 99 );
+//   // create a special model for the background
+//   stg_token_t* token = stg_token_create( "root", STG_T_NUM, 99 );
 
-  stg_model_t* root = stg_world_createmodel( world, NULL, 0, 
-					     STG_MODEL_BASIC, token );
+//   stg_model_t* root = stg_world_createmodel( world, NULL, 0, 
+// 					     STG_MODEL_BASIC, token );
       
-  stg_geom_t geom;
-  geom.pose.x = wf.ReadTupleLength(section, "origin", 0, 0.0 );
-  geom.pose.y = wf.ReadTupleLength(section, "origin", 1, 0.0 );
-  geom.pose.a = wf.ReadTupleLength(section, "origin", 2, 0.0 );
-  geom.size.x = wf.ReadTupleLength(section, "size", 0, 10.0 );
-  geom.size.y = wf.ReadTupleLength(section, "size", 1, 10.0 );
-  stg_model_prop_with_data( root, STG_PROP_GEOM, &geom, sizeof(geom) );
+//   stg_geom_t geom;
+//   geom.pose.x = wf.ReadTupleLength(section, "origin", 0, 0.0 );
+//   geom.pose.y = wf.ReadTupleLength(section, "origin", 1, 0.0 );
+//   geom.pose.a = wf.ReadTupleLength(section, "origin", 2, 0.0 );
+//   geom.size.x = wf.ReadTupleLength(section, "size", 0, 10.0 );
+//   geom.size.y = wf.ReadTupleLength(section, "size", 1, 10.0 );
+//   stg_model_prop_with_data( root, STG_PROP_GEOM, &geom, sizeof(geom) );
       
-  stg_pose_t pose;
-  pose.x = geom.size.x/2.0;
-  pose.y = geom.size.y/2.0;
-  pose.a = 0.0;
-  stg_model_prop_with_data( root, STG_PROP_POSE, &pose, sizeof(pose) );
+//   stg_pose_t pose;
+//   pose.x = geom.size.x/2.0;
+//   pose.y = geom.size.y/2.0;
+//   pose.a = 0.0;
+//   stg_model_prop_with_data( root, STG_PROP_POSE, &pose, sizeof(pose) );
       
       
-  const char* colorstr = wf.ReadString(section, "color", "black" );
-  stg_color_t color = stg_lookup_color( colorstr );
-  stg_model_prop_with_data( root, STG_PROP_COLOR, &color,sizeof(color));
+//   const char* colorstr = wf.ReadString(section, "color", "black" );
+//   stg_color_t color = stg_lookup_color( colorstr );
+//   stg_model_prop_with_data( root, STG_PROP_COLOR, &color,sizeof(color));
       
-  const char* bitmapfile = wf.ReadString(section, "bitmap", NULL );
-  if( bitmapfile )
-    {
-      stg_rotrect_t* rects = NULL;
-      int num_rects = 0;
-      stg_load_image( bitmapfile, &rects, &num_rects );
+//   const char* bitmapfile = wf.ReadString(section, "bitmap", NULL );
+//   if( bitmapfile )
+//     {
+//       stg_rotrect_t* rects = NULL;
+//       int num_rects = 0;
+//       stg_load_image( bitmapfile, &rects, &num_rects );
 	  
-      // convert rects to an array of lines
-      int num_lines = 4 * num_rects;
-      stg_line_t* lines = stg_rects_to_lines( rects, num_rects );
-      stg_normalize_lines( lines, num_lines );
-      stg_scale_lines( lines, num_lines, geom.size.x, geom.size.y );
-      stg_translate_lines( lines, num_lines, -geom.size.x/2.0, -geom.size.y/2.0 );
+//       // convert rects to an array of lines
+//       int num_lines = 4 * num_rects;
+//       stg_line_t* lines = stg_rects_to_lines( rects, num_rects );
+//       stg_normalize_lines( lines, num_lines );
+//       stg_scale_lines( lines, num_lines, geom.size.x, geom.size.y );
+//       stg_translate_lines( lines, num_lines, -geom.size.x/2.0, -geom.size.y/2.0 );
 	  
-      stg_model_prop_with_data( root, STG_PROP_LINES, 
-				lines, num_lines * sizeof(stg_line_t ));
+//       stg_model_prop_with_data( root, STG_PROP_LINES, 
+// 				lines, num_lines * sizeof(stg_line_t ));
 	  
-      free( lines );
-    }
+//       free( lines );
+//     }
       
-  stg_guifeatures_t gf;
-  gf.boundary = wf.ReadInt(section, "gui.boundary", 1 );
-  gf.nose = wf.ReadInt(section, "gui.nose", 0 );
-  gf.grid = wf.ReadInt(section, "gui.grid", 1 );
-  gf.movemask = wf.ReadInt(section, "gui.movemask", 0 );
-  stg_model_prop_with_data(root, STG_PROP_GUIFEATURES, &gf, sizeof(gf));
+//   stg_guifeatures_t gf;
+//   gf.boundary = wf.ReadInt(section, "gui.boundary", 1 );
+//   gf.nose = wf.ReadInt(section, "gui.nose", 0 );
+//   gf.grid = wf.ReadInt(section, "gui.grid", 1 );
+//   gf.movemask = wf.ReadInt(section, "gui.movemask", 0 );
+//   stg_model_prop_with_data(root, STG_PROP_GUIFEATURES, &gf, sizeof(gf));
       
   
-  stg_energy_config_t ecfg;
-  memset(&ecfg,0,sizeof(ecfg));
-  ecfg.capacity = -1;
-  stg_model_prop_with_data( root, STG_PROP_ENERGYCONFIG, &ecfg, sizeof(ecfg) );   
+//   stg_energy_config_t ecfg;
+//   memset(&ecfg,0,sizeof(ecfg));
+//   ecfg.capacity = -1;
+//   stg_model_prop_with_data( root, STG_PROP_ENERGYCONFIG, &ecfg, sizeof(ecfg) );   
 
   // Iterate through sections and create client-side models
   for (int section = 1; section < wf.GetEntityCount(); section++)
@@ -163,15 +163,17 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       stg_token_t* token = stg_token_create( namestr, STG_T_NUM, 99 );
 
       int parent_section = wf.GetEntityParent( section );
-      //printf( "section is %d parent section is %d\n", section, parent_section );
+      printf( "section is %d parent section is %d\n", section, parent_section );
 
-      stg_model_t* parent = 
-	(stg_model_t*)g_hash_table_lookup( world->models_section, &parent_section );
+      stg_model_t* parent = NULL;
+      
+      //if( parent_section > 0 ) // i.e. we're on top of another object
+	parent = (stg_model_t*)g_hash_table_lookup( world->models_section, &parent_section );
 
-      //if( parent )
-      //printf( "parent has id %d name %s\n", parent->id_client, parent->token->token );
-      //else
-      //printf( "no parent\n" );
+      if( parent )
+	printf( "parent has id %d name %s\n", parent->id_client, parent->token->token );
+      else
+	printf( "no parent\n" );
       
       stg_model_type_t type = STG_MODEL_BASIC;
       
@@ -183,9 +185,9 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 	type = STG_MODEL_RANGER;
       else if( strcmp( typestr, "position" ) == 0 )
 	type = STG_MODEL_POSITION;
-      else
-	type = STG_MODEL_BASIC;
-
+      else if( strcmp( typestr, "blobfinder" ) == 0 )
+	type = STG_MODEL_BLOB;
+      
       PRINT_DEBUG2( "creating model token %s type %d", typestr, type );
 
       stg_model_t* mod = stg_world_createmodel( world, parent, section, 
@@ -227,22 +229,54 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       gf.movemask = wf.ReadInt(section, "gui.movemask", STG_DEFAULT_MOVEMASK );
       stg_model_prop_with_data(mod, STG_PROP_GUIFEATURES, &gf, sizeof(gf));
       
-      stg_laser_config_t lconf;
-      memset( &lconf, 0, sizeof(lconf) );
-      //lconf.geom.pose.x = wf.ReadTupleLength(section, "laser.pose", 0, -9999.0 );
-      //lconf.geom.pose.y = wf.ReadTupleLength(section, "laser.pose", 1, 0);
-      //lconf.geom.pose.a = wf.ReadTupleAngle(section, "laser.pose", 2, 0);
-      //lconf.geom.size.x = wf.ReadTupleLength(section, "laser.size", 0, STG_DEFAULT_LASER_SIZEX);
-      //lconf.geom.size.y = wf.ReadTupleLength(section, "laser.size", 1, STG_DEFAULT_LASER_SIZEY);
 
-      lconf.range_min   = wf.ReadTupleLength(section, "laser.view", 0, STG_DEFAULT_LASER_MINRANGE);
-      lconf.range_max   = wf.ReadTupleLength(section, "laser.view", 1, STG_DEFAULT_LASER_MAXRANGE);
-      lconf.fov         = wf.ReadTupleAngle(section, "laser.view", 2, 0);
-      lconf.samples = wf.ReadInt(section, "laser.samples", STG_DEFAULT_LASER_SAMPLES);
-
-      //if( lconf.geom.pose.x != -9999.0 )
-       stg_model_prop_with_data( mod, STG_PROP_CONFIG, &lconf,sizeof(lconf));
       
+      switch( type )
+	{
+	case STG_MODEL_LASER:
+	  {
+	    stg_laser_config_t lconf;
+	    memset( &lconf, 0, sizeof(lconf) );
+	    lconf.samples = wf.ReadInt(section, "samples", STG_DEFAULT_LASER_SAMPLES);
+	    lconf.range_min = wf.ReadLength(section, "range_min", STG_DEFAULT_LASER_MINRANGE);
+	    lconf.range_max = wf.ReadLength(section, "range_max", STG_DEFAULT_LASER_MAXRANGE);
+	    lconf.fov       = wf.ReadAngle(section, "fov", STG_DEFAULT_LASER_FOV);
+	    
+	    stg_model_prop_with_data( mod, STG_PROP_CONFIG, &lconf,sizeof(lconf));
+	  } break;
+	  
+	case STG_MODEL_BLOB:
+	  {
+	    stg_blobfinder_config_t bcfg;
+	    memset( &bcfg, 0, sizeof(bcfg) );
+	    bcfg.channel_count = 
+	      wf.ReadInt(section, "blob.count", STG_DEFAULT_BLOB_CHANNELCOUNT);
+	    
+	    bcfg.scan_width = (int)wf.ReadTupleFloat(section, "blobf.image", 0, STG_DEFAULT_BLOB_SCANWIDTH );
+	    bcfg.scan_height = (int)wf.ReadTupleFloat(section, "blob.image", 1, STG_DEFAULT_BLOB_SCANHEIGHT );
+	    
+	    bcfg.range_max = wf.ReadLength(section, "blob.range", STG_DEFAULT_BLOB_RANGEMAX );
+	    
+	    bcfg.pan = wf.ReadTupleAngle(section, "blob.ptz", 0, STG_DEFAULT_BLOB_PAN );
+	    bcfg.tilt = wf.ReadTupleAngle(section, "blob.ptz", 1, STG_DEFAULT_BLOB_TILT );
+	    bcfg.zoom =  wf.ReadTupleAngle(section, "blob.ptz", 2, STG_DEFAULT_BLOB_ZOOM );
+	    
+	    if( bcfg.channel_count > STG_BLOBFINDER_CHANNELS_MAX )
+	      bcfg.channel_count = STG_BLOBFINDER_CHANNELS_MAX;
+	    
+	    for( int ch = 0; ch<bcfg.channel_count; ch++ )
+	      bcfg.channels[ch] = 
+		stg_lookup_color( wf.ReadTupleString(section, "blob.channels", ch, "red" )); 
+	    
+	    if( bcfg.channel_count != -1 )
+	      stg_model_prop_with_data( mod, STG_PROP_BLOBCONFIG, &bcfg,sizeof(bcfg));
+	  } break;
+	  
+	default:
+	  PRINT_DEBUG1( "don't know how to configure type %d", type );
+	}
+      
+	  
       // laser visibility
       int laservis = 
 	wf.ReadInt(section, "laser.return", STG_DEFAULT_LASERRETURN );      
@@ -258,29 +292,6 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 				  &rangervis, sizeof(rangervis) );
       
       
-      stg_blobfinder_config_t bcfg;
-      memset( &bcfg, 0, sizeof(bcfg) );
-      bcfg.channel_count = 
-	wf.ReadInt(section, "blob.count", STG_DEFAULT_BLOB_CHANNELCOUNT);
-      
-      bcfg.scan_width = (int)wf.ReadTupleFloat(section, "blobf.image", 0, STG_DEFAULT_BLOB_SCANWIDTH );
-      bcfg.scan_height = (int)wf.ReadTupleFloat(section, "blob.image", 1, STG_DEFAULT_BLOB_SCANHEIGHT );
-
-      bcfg.range_max = wf.ReadLength(section, "blob.range", STG_DEFAULT_BLOB_RANGEMAX );
-
-      bcfg.pan = wf.ReadTupleAngle(section, "blob.ptz", 0, STG_DEFAULT_BLOB_PAN );
-      bcfg.tilt = wf.ReadTupleAngle(section, "blob.ptz", 1, STG_DEFAULT_BLOB_TILT );
-      bcfg.zoom =  wf.ReadTupleAngle(section, "blob.ptz", 2, STG_DEFAULT_BLOB_ZOOM );
-      
-      if( bcfg.channel_count > STG_BLOBFINDER_CHANNELS_MAX )
-	bcfg.channel_count = STG_BLOBFINDER_CHANNELS_MAX;
-      
-      for( int ch = 0; ch<bcfg.channel_count; ch++ )
-	bcfg.channels[ch] = 
-	  stg_lookup_color( wf.ReadTupleString(section, "blob.channels", ch, "red" )); 
-      
-      if( bcfg.channel_count != -1 )
-	stg_model_prop_with_data( mod, STG_PROP_BLOBCONFIG, &bcfg,sizeof(bcfg));
       
       const char* colorstr = wf.ReadString( section, "color", NULL );
       if( colorstr )

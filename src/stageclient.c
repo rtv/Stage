@@ -6,11 +6,12 @@
 //#include <pthread.h>
 #include <signal.h>
 
-//#define DEBUG
+#define DEBUG
 
 #include "stage.h"
 
-static int static_next_id = 0;
+static int static_next_world_id = 0;
+static int static_next_model_id = 0;
 
 // function declarations for use inside this file only (mostly
 // wrappers for use as callbacks)
@@ -390,7 +391,7 @@ stg_world_t* stg_client_createworld( stg_client_t* client,
   stg_world_t* w = calloc( sizeof(stg_world_t), 1 );
 
   w->client = client;
-  w->id_client = static_next_id++;
+  w->id_client = static_next_world_id++;
   w->id_server = 0;
   w->section = section;
   w->token = token;
@@ -434,7 +435,7 @@ stg_model_t* stg_world_createmodel( stg_world_t* world,
   
   stg_model_t* mod = calloc( sizeof(stg_model_t), 1 );
   
-  mod->id_client = static_next_id++;
+  mod->id_client = static_next_model_id++;
   mod->id_server = 0;
   mod->section = section;
   mod->token = token;
@@ -443,8 +444,8 @@ stg_model_t* stg_world_createmodel( stg_world_t* world,
   mod->type = type;
   mod->props = g_hash_table_new( g_int_hash, g_int_equal );
 
-  PRINT_DEBUG3( "created model %d:%d \"%s\"", 
-		world->id_client, mod->id_client, mod->token->token );
+  PRINT_DEBUG4( "created model %d:%d \"%s\" section %d", 
+		world->id_client, mod->id_client, mod->token->token, mod->section );
 
   // index this new model in it's world
   g_hash_table_replace( world->models_id, &mod->id_client, mod );

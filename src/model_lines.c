@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_lines.c,v $
 //  $Author: rtv $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -31,7 +31,7 @@ int model_set_lines( model_t* mod, stg_line_t* lines, size_t lines_count )
   assert(mod);
   if( lines_count > 0 ) assert( lines );
 
-  PRINT_DEBUG3( "model %d(%s) received %d lines\n", 
+  PRINT_DEBUG3( "model %d(%s) received %d lines", 
 		mod->id, mod->token, (int)lines_count );
   
   model_map( mod, 0 );

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-//#define DEBUG
+#define DEBUG
 
 #include "stage.h"
 #include "gui.h"
@@ -144,7 +144,7 @@ int world_model_create( world_t* world, stg_createmodel_t* cm )
   while( g_hash_table_lookup( world->models, &candidate ) )
     candidate++;
   
-  PRINT_DEBUG3( "creating model %d:%d (%s)", world->id, candidate, token  );
+  PRINT_DEBUG4( "creating model %d:%d (%s) parent %d", world->id, candidate, token, cm->parent  );
   
   model_t* parent = g_hash_table_lookup( world->models, &cm->parent );
 

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.15 $
+//  $Revision: 1.16 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -36,13 +36,13 @@ int model_set_pose( model_t* mod, stg_pose_t* pose )
   if( memcmp( &mod->pose, pose, sizeof(stg_pose_t) ))
     {
       // unrender from the matrix
-      model_map( mod, 0 );
+      model_map_with_children( mod, 0 );
       
       // copy the new pose
       memcpy( &mod->pose, pose, sizeof(mod->pose) );
       
       // render in the matrix
-      model_map( mod, 1 );
+      model_map_with_children( mod, 1 );
       
       // move the rtk figure to match
       gui_model_pose( mod );

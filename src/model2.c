@@ -18,13 +18,13 @@ int model_get_data( model_t* mod, void** data, size_t* len )
   if( derived[ mod->type ].getdata )
     {
       derived[ mod->type ].getdata(mod, data, len);
-      PRINT_WARN1( "used special getdata, returned %d bytes", (int)*len );
+      PRINT_DEBUG1( "used special getdata, returned %d bytes", (int)*len );
     }
   else
     { // we do a generic data copy
       *data = mod->data;
       *len = mod->data_len; 
-      PRINT_WARN3( "model %d(%s) generic getdata, returned %d bytes", 
+      PRINT_DEBUG3( "model %d(%s) generic getdata, returned %d bytes", 
 		   mod->id, mod->token, (int)*len );
     }
   return 0; //ok
@@ -36,12 +36,12 @@ int model_set_data( model_t* mod, void* data, size_t len )
   if( derived[ mod->type ].putdata )
     {
       derived[ mod->type ].putdata(mod, data, len);
-      PRINT_WARN1( "used special putdata returned %d bytes", (int)len );
+      PRINT_DEBUG1( "used special putdata returned %d bytes", (int)len );
     }
   else
     { // we do a generic data copy
       stg_copybuf( &mod->data, &mod->data_len, data, len );
-      PRINT_WARN3( "model %d(%s) put data of %d bytes",
+      PRINT_DEBUG3( "model %d(%s) put data of %d bytes",
 		   mod->id, mod->token, (int)mod->data_len);
     }
 
@@ -54,7 +54,7 @@ int model_set_command( model_t* mod, void* cmd, size_t len )
   if( derived[ mod->type ].putcommand )
     {
       derived[ mod->type ].putcommand(mod, cmd, len);
-      PRINT_WARN1( "used special putcommand, put %d bytes", (int)len );
+      PRINT_DEBUG1( "used special putcommand, put %d bytes", (int)len );
     }
   else
     {
@@ -70,13 +70,13 @@ int model_get_command( model_t* mod, void** command, size_t* len )
   if( derived[ mod->type ].getcommand )
     {
       derived[ mod->type ].getcommand(mod, command, len);
-      PRINT_WARN1( "used special getcommand, returned %d bytes", (int)*len );
+      PRINT_DEBUG1( "used special getcommand, returned %d bytes", (int)*len );
     }
   else
     { // we do a generic command copy
       *command = mod->cmd;
       *len = mod->cmd_len; 
-      PRINT_WARN1( "used generic getcommand, returned %d bytes", (int)*len );
+      PRINT_DEBUG1( "used generic getcommand, returned %d bytes", (int)*len );
     }
   return 0; //ok
 }
@@ -87,12 +87,12 @@ int model_set_config( model_t* mod, void* config, size_t len )
   if( derived[ mod->type ].putconfig )
     {
       derived[ mod->type ].putconfig(mod, config, len);
-      PRINT_WARN1( "used special putconfig returned %d bytes", (int)len );
+      PRINT_DEBUG1( "used special putconfig returned %d bytes", (int)len );
     }
   else
     { // we do a generic data copy
       stg_copybuf( &mod->cfg, &mod->cfg_len, config, len );
-      PRINT_WARN3( "model %d(%s) generic putconfig of %d bytes",
+      PRINT_DEBUG3( "model %d(%s) generic putconfig of %d bytes",
 		   mod->id, mod->token, (int)mod->cfg_len);
     }
   
@@ -106,13 +106,13 @@ int model_get_config( model_t* mod, void** config, size_t* len )
   if( derived[ mod->type ].getconfig )
     {
       derived[ mod->type ].getconfig(mod, config, len);
-      PRINT_WARN1( "used special getconfig returned %d bytes", (int)*len );
+      PRINT_DEBUG1( "used special getconfig returned %d bytes", (int)*len );
     }
   else
     { // we do a generic data copy
       *config = mod->cfg;
       *len = mod->cfg_len; 
-      PRINT_WARN3( "model %d(%s) generic getconfig, returned %d bytes", 
+      PRINT_DEBUG3( "model %d(%s) generic getconfig, returned %d bytes", 
 		   mod->id, mod->token, (int)*len );
     }
   return 0; //ok

@@ -79,8 +79,8 @@ int subscription_update( subscription_t* sub )
 					   sub->target.world,
 					   sub->target.model );
       
-      if( timenow - mod->update_times[ sub->target.prop ] >= sub->interval )
-	model_update_prop( mod, sub->target.prop );
+      //if( timenow - mod->update_times[ sub->target.prop ] >= sub->interval )
+      //model_update_prop( mod, sub->target.prop );
 	
 
       // set the last update time
@@ -104,9 +104,10 @@ int subscription_update( subscription_t* sub )
 	    PRINT_WARN2( "failed to service subscription for property %d(%s)",
 			 sub->target.prop, stg_property_string(sub->target.prop) );
 	}
-
-      PRINT_WARN2( "got %d bytes of data from model %s", len, mod->token );
-
+      
+      if(  sub->target.prop != STG_PROP_TIME )
+	PRINT_DEBUG2( "got %d bytes of data from model %s", len, mod->token );
+      
       size_t mplen = sizeof(stg_prop_t) + len;
       stg_prop_t* mp = calloc( mplen,1  );
       

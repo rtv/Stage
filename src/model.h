@@ -26,17 +26,15 @@ typedef struct _model
 
   int type; // what kind of a model am I?
 
-
-  // todo
   struct _model *parent;
-  
+
+  GPtrArray* children;
+
   // the number of subscriptions to each property
   int subs[STG_PROP_COUNT]; 
   
   // the time that each property was last calculated
   stg_msec_t update_times[STG_PROP_COUNT];
-  
-  //GHashTable* props; // table of stg_property_t's indexed by property id
   
   gui_model_t gui; // all the gui stuff - this should be a property too!
 
@@ -211,6 +209,7 @@ void register_get( stg_model_type_t type, func_get_t func );
 stg_bool_t model_obstacle_get( model_t* model );
 
 void model_map( model_t* mod, gboolean render );
+void model_map_with_children( model_t* mod, gboolean render );
 
 
 

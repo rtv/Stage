@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.71 2004-08-25 15:58:01 rtv Exp $
+ * CVS: $Id: stage.h,v 1.72 2004-08-25 23:34:38 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -326,6 +326,16 @@ typedef struct
 stg_property_t* stg_property_create( stg_id_t id, void* data, size_t len );
 void stg_property_destroy( stg_property_t* prop );
 
+// creates a prop from the data
+stg_prop_t* stg_prop_create( stg_msec_t timestamp, 
+			     stg_id_t world_id, 
+			     stg_id_t model_id, 
+			     stg_id_t prop_id,
+			     void* data, 
+			     size_t data_len );
+
+// frees the memory allocatd for a prop
+void stg_prop_destroy( stg_prop_t* prop );
 
 // this packet is exchanged as a handshake when connecting to Stage
 typedef struct
@@ -645,6 +655,7 @@ typedef struct
 
 // SOME DEFAULT VALUES FOR PROPERTIES -----------------------------------
 
+// basic
 #define STG_DEFAULT_MASS 10.0 
 #define STG_DEFAULT_POSEX 0.0
 #define STG_DEFAULT_POSEY 0.0
@@ -663,12 +674,14 @@ typedef struct
 #define STG_DEFAULT_GRID FALSE
 #define STG_DEFAULT_BOUNDARY FALSE
 
+// energy
 #define STG_DEFAULT_ENERGY_CAPACITY 1000.0
 #define STG_DEFAULT_ENERGY_CHARGEENABLE 1
 #define STG_DEFAULT_ENERGY_PROBERANGE 0.0
 #define STG_DEFAULT_ENERGY_GIVERATE 0.0
 #define STG_DEFAULT_ENERGY_TRICKLERATE 0.1
 
+// laser
 #define STG_DEFAULT_LASER_POSEX 0.0
 #define STG_DEFAULT_LASER_POSEY 0.0
 #define STG_DEFAULT_LASER_POSEA 0.0
@@ -679,6 +692,7 @@ typedef struct
 #define STG_DEFAULT_LASER_FOV M_PI
 #define STG_DEFAULT_LASER_SAMPLES 180
 
+// blobfinder
 #define STG_DEFAULT_BLOB_CHANNELCOUNT 6
 #define STG_DEFAULT_BLOB_SCANWIDTH 80
 #define STG_DEFAULT_BLOB_SCANHEIGHT 60 

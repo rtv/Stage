@@ -11,42 +11,32 @@
 extern lib_entry_t derived[];
 
 
-void prop_free( stg_property_t* prop )
-{
-  if( prop )
-    {
-      if( prop->data ) 
-	free( prop->data );
-      free( prop );
-    }
-}
-
-void prop_free_cb( gpointer gp )
-{
-  prop_free( (stg_property_t*)gp);
-}
-
 model_t* model_create(  world_t* world, 
 			model_t* parent,
 			stg_id_t id, 
 			stg_model_type_t type,
 			char* token )
 {
-  PRINT_DEBUG3( "creating model %d:%d (%s)", world->id, id, token );
-
+  PRINT_WARN3( "creating model %d:%d(%s)", world->id, id, token );
+  
   if( parent )
     {
       PRINT_DEBUG2( "   a child of %d(%s)", parent->id, parent->token );
     }
   
-  // calloc zeros the whole structure
   model_t* mod = calloc( sizeof(model_t),1 );
 
   mod->id = id;
   mod->token = strdup(token);
   mod->world = world;
-  mod->parent = NULL;//parent; // TODO - fix parent stuff from here
+  mod->parent = parent; // TODO - fix parent stuff from here
 		     //onwards - mainly geometry for matrix rendering
+
+  // add this model to it's parent's list of children
+  if( parent) g_ptr_array_add( parent->children, mod ); 
+  
+  // create this model's empty list of children
+  mod->children = g_ptr_array_new();
 
   mod->type = type;
 
@@ -78,6 +68,8 @@ model_t* model_create(  world_t* world,
   mod->guifeatures.grid = STG_DEFAULT_GRID;
   mod->guifeatures.movemask = STG_DEFAULT_MOVEMASK;
   
+  mod->color = stg_lookup_color( "red" );
+
   // zero velocity
   memset( &mod->velocity, 0, sizeof(mod->velocity) );
   
@@ -126,13 +118,14 @@ model_t* model_create(  world_t* world,
   mod->energy_data.range = mod->energy_config.probe_range;
 
 
-  PRINT_WARN2( "model %d type %d", mod->id, mod->type );
 
   gui_model_create( mod );
 
   // if this type of model has an init function, call it.
   if( derived[ mod->type ].init )
     derived[ mod->type ].init(mod);
+
+  PRINT_DEBUG2( "created model %d type %d.", mod->id, mod->type );
   
   return mod;
 }
@@ -142,8 +135,15 @@ void model_destroy( model_t* mod )
   assert( mod );
   
   gui_model_destroy( mod );
-  
+
+  if( mod->parent && mod->parent->children ) g_ptr_array_remove( mod->parent->children, mod );
+  if( mod->children ) g_ptr_array_free( mod->children, FALSE );
+  if( mod->lines ) free( mod->lines );
+  if( mod->data ) free( mod->data );
+  if( mod->cmd ) free( mod->cmd );
+  if( mod->cfg ) free( mod->cfg );
   if( mod->token ) free( mod->token );
+
   free( mod );
 }
 
@@ -169,32 +169,28 @@ rtk_fig_t* model_prop_fig_create( model_t* mod,
 }
 
 
-void model_global_pose( model_t* mod, stg_pose_t* pose )
+void model_global_pose( model_t* mod, stg_pose_t* gpose )
 { 
-  //stg_pose_t glob;
+  // start from zero
+  //memset( pose, 0, sizeof(stg_pose_t));
   
-  //if( mod->parent )
-  //model_global_pose( mod->parent, &glob );
+  stg_pose_t parent_pose;
+  memset( &parent_pose, 0, sizeof(parent_pose));
   
-  //memcpy( &glob, &mod->pose, sizeof(glob) );
- 
-  
-  //model_local_to_global( mod, &glob );
+  // find my parent's pose
+  if( mod->parent )
+    model_global_pose( mod->parent, &parent_pose );
 
-  //memset( &origin, 0, sizeof(origin) );
-    
-  //stg_pose_sum( pose, &glob, &mod->pose );
-
-  stg_pose_t* mypose = model_get_pose( mod );
-  
-  memcpy( pose, mypose, sizeof(stg_pose_t) ); 
-  pose->a = NORMALIZE( pose->a );
+  // Compute our pose in the global cs
+  gpose->x = parent_pose.x + mod->pose.x * cos(parent_pose.a) - mod->pose.y * sin(parent_pose.a);
+  gpose->y = parent_pose.y + mod->pose.x * sin(parent_pose.a) + mod->pose.y * cos(parent_pose.a);
+  gpose->a = NORMALIZE(parent_pose.a + mod->pose.a);
 }
 
 // should one day do all this with affine transforms for neatness
 void model_local_to_global( model_t* mod, stg_pose_t* pose )
 {  
-  stg_pose_t origin;  
+  stg_pose_t origin;   
   //stg_pose_sum( &origin, &mod->pose, &mod->origin );
   model_global_pose( mod, &origin );
   
@@ -223,12 +219,26 @@ void model_global_rect( model_t* mod, stg_rotrect_t* glob, stg_rotrect_t* loc )
 }
 
 
+void model_map_with_children(  model_t* mod, gboolean render )
+{
+  // call this function for all the model's children
+  int ch;
+  for( ch=0; ch<mod->children->len; ch++ )
+    model_map_with_children( (model_t*)g_ptr_array_index(mod->children, ch), render );
+  
+  // now map the model
+  model_map( mod, render );
+}
+
 // if render is true, render the model into the matrix, else unrender
 // the model
 void model_map( model_t* mod, gboolean render )
 {
   assert( mod );
   
+  //stg_pose_t gpose;
+  //model_global_pose( mod, &gpose );
+
   size_t count=0;
   stg_line_t* lines = model_get_lines(mod, &count);
 
@@ -288,16 +298,6 @@ int model_service_default( model_t* mod )
   return 0;
 }
 
-int model_update_prop( model_t* mod, stg_id_t pid )
-{
-  model_service_default(mod);
-  
-  mod->update_times[pid] = mod->world->sim_time;
-  
-  return 0; // ok
-}
-
-
 int model_startup_default( model_t* mod )
 {
   //PRINT_DEBUG( "default startup method" );
@@ -355,13 +355,19 @@ void model_unsubscribe( model_t* mod, stg_id_t pid )
 
 int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
 {
-  PRINT_DEBUG1( "default get method mod %d", mod->id );
+  if( pid != STG_PROP_TIME )
+    PRINT_DEBUG4( "GET PROP model %d(%s) prop %d(%s)", 
+		  mod->id, mod->token, pid, stg_property_string(pid) );
   
   switch( pid )
     {
     case STG_PROP_TIME:
       *data = (void*)&mod->world->sim_time;
       *len = sizeof(mod->world->sim_time);
+      break;
+    case STG_PROP_GEOM: 
+      *data = (void*)model_get_geom( mod );
+      *len = sizeof(stg_geom_t);
       break;
     case STG_PROP_DATA: 
       assert( model_get_data( mod, data, len ) == 0 );
@@ -371,7 +377,7 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
       break;
     case STG_PROP_CONFIG: 
       assert( model_get_config( mod, data, len ) == 0 );
-      break;
+      break;      
       
     default:
       PRINT_WARN4( "model %d(%s) unhandled property get %d(%s)",
@@ -381,6 +387,9 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
   if( *len == 0 )
     PRINT_WARN3( "no data available for model %d property %d(%s)",
 		 mod->id, pid, stg_property_string(pid) );
+
+  if( pid != STG_PROP_TIME )
+    PRINT_DEBUG1( "got a %d byte property", (int)*len);
   
   return 0; // ok
 }
@@ -517,13 +526,39 @@ int model_set_prop( model_t* mod, stg_id_t propid, void* data, size_t len )
 	model_size_error( mod, propid, len, sizeof(stg_guifeatures_t) );      
       break;
 
+    case STG_PROP_ENERGYCONFIG: 
+      if( len == sizeof(stg_energy_config_t) ) 
+	model_set_energy_config( mod, (stg_energy_config_t*)data ); 
+      else
+	model_size_error( mod, propid, len, sizeof(stg_energy_config_t) );      
+      break;
+
+    case STG_PROP_ENERGYDATA: 
+      if( len == sizeof(stg_energy_data_t) ) 
+	model_set_energy_data( mod, (stg_energy_data_t*)data ); 
+      else
+	model_size_error( mod, propid, len, sizeof(stg_energy_data_t) );      
+      break;
       
+    case STG_PROP_CONFIG:
+      model_set_config( mod, data, len );
+      break;
+
+    case STG_PROP_DATA:
+      model_set_data( mod, data, len );
+      break;
+
+    case STG_PROP_COMMAND:
+      model_set_command( mod, data, len );
+      break;
       
+
+
       // etc!
 
     default:
       PRINT_WARN3( "unhandled property %d(%s) of size %d bytes",
-		   propid, stg_property_string(propid), len );
+		   propid, stg_property_string(propid), (int)len );
       break;
     }
 
@@ -568,23 +603,22 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
 	// reply with the requested property
 	model_get_prop( model, tgt->prop, &data, &len );
 	
-	size_t mplen = sizeof(stg_prop_t) + len;
-	stg_prop_t* mp = calloc( mplen,1);
+	//stg_prop_t* prop = 
+	//stg_prop_create(  model->world->sim_time, model->world->id,
+	//	    model->id, tgt->prop, data, len );
 	
-	mp->timestamp = model->world->sim_time;
-	mp->world = model->world->id;
-	mp->model = model->id;
-	mp->prop =  tgt->prop;
-	mp->datalen = len;
-	memcpy( mp->data, data, len );
+	//size_t prop_len = sizeof(stg_prop_t) + prop->datalen;
 	
-	PRINT_DEBUG( "SENDING A REPLY" );	 	    
+	//PRINT_DEBUG3( "SENDING A PROPGET REPLY, %d size prop of which "
+	//      "%d is data, %d is header",
+	//      (int)prop_len, (int)len, (int)sizeof(stg_prop_t) );	  
+	
 	stg_fd_msg_write( fd, 
 			  STG_MSG_CLIENT_REPLY, 
-			  mp, 
-			  sizeof(stg_prop_t) + mp->datalen );
+			  data, 
+			  len );
 
-	free(mp);
+	//stg_prop_destroy( prop );
       }
       break;
 

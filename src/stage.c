@@ -351,6 +351,30 @@ void stg_target_message( stg_target_t* tgt, char* errstr )
 }
 
 
+stg_prop_t* stg_prop_create( stg_msec_t timestamp, 
+			     stg_id_t world_id, 
+			     stg_id_t model_id, 
+			     stg_id_t prop_id,
+			     void* data, 
+			     size_t data_len )
+{
+  size_t prop_len = sizeof(stg_prop_t) + data_len;
+  stg_prop_t* prop =calloc(prop_len,1);
+  
+  prop->timestamp = timestamp;
+  prop->world = world_id;
+  prop->model = model_id;
+  prop->prop =  prop_id;
+  prop->datalen = data_len;
+  memcpy( prop->data, data, data_len );
+  return prop;
+}
+
+void stg_prop_destroy( stg_prop_t* prop )
+{
+  if( prop ) free( prop );
+}
+
 // create a new message of [type] containing [datalen] bytes of [data]
 stg_msg_t* stg_msg_create( stg_msg_type_t type, void* data, size_t datalen )
 {
