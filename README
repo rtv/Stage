@@ -1,10 +1,30 @@
 ****************************************************************************
-* README.stage  - Richard Vaughan - Stage-1.5       
+* README.stage  - Richard Vaughan - Stage-1.6.2       
 *                                                                          
-* $Id: README,v 1.11 2004-07-07 21:14:10 rtv Exp $    
+* $Id: README,v 1.12 2005-02-09 01:52:11 rtv Exp $    
 ****************************************************************************
 
-** Release notes **
+** Release Notes for 1.6.2 **
+
+This is a bugfix release that fixes several problems with previous
+versions. For example:
+
+ - fixed invisible 'shadow' object at origin
+ - builds on latest GCC
+ - can set robot odometry & odometry origin properly
+ - can respond to config messages from Player drivers
+
+New features include:
+
+ - simulation interface can move arbitrary named simulation objects
+(Player CVS HEAD is needed for this)
+
+ - visualization of odometry data (selectable in view menu)
+
+Enjoy. 
+rtv - 2005.2.8
+
+** Release notes for 1.6.0 **
 
  You should read these notes carefully before running Stage. This is
 the first release after a substantial rewrite: plenty has changed

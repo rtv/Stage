@@ -1,11 +1,9 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: 889.world,v 1.3 2005-02-08 23:41:39 rtv Exp $
+# CVS: $Id: 889.world,v 1.4 2005-02-09 01:52:13 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 resolution 0.02 
-
-
 
 interval_sim 100  # milliseconds per update step
 interval_real 100 # real-time milliseconds per update step
@@ -13,14 +11,8 @@ interval_real 100 # real-time milliseconds per update step
 # defines a several robot types from the ActivMedia Pioneer family
 include "pioneer.inc"
 
-
-
-
 # defines 'map' object used for floorplans
 include "map.inc"
-
-
-
 
 # set the size of a pixel in meters
 resolution 0.02
@@ -92,7 +84,8 @@ define charger model
  #energy.range 0.0
 
  obstacle_return 0
- fiducial_return 1
+ fiducial_return 45
+ laser_return 0
 )
 
 charger( pose [ 12.585 10.592 0.000 ] )
