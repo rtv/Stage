@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/boxobstacle.hh,v $
 //  $Author: inspectorg $
-//  $Revision: 1.7 $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -31,25 +31,11 @@
 
 class CBoxObstacle : public CEntity
 {
-    // Default constructor
-    //
-    public: CBoxObstacle(CWorld *world, CEntity *parent);
+  // Default constructor
+  public: CBoxObstacle(CWorld *world, CEntity *parent);
 
   // Update the device
-  //
-public: virtual void Update( double sim_time );
-  
-#ifdef INCLUDE_RTK
-    
-    // Process GUI update messages
-    //
-    public: virtual void OnUiUpdate(RtkUiDrawData *pData);
-
-    // Process GUI mouse messages
-    //
-    public: virtual void OnUiMouse(RtkUiMouseData *pData);
-
-#endif
+  public: virtual void Update(double sim_time);
 };
 
 #endif

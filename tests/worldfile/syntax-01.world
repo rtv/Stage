@@ -2,14 +2,14 @@
 # Desc: Test world file with various formats (this one has no errors)
 # Author: Andrew Howard
 # Date: 4 Jun 2002
-# CVS: $Id: syntax-01.world,v 1.1 2002-06-07 16:28:40 inspectorg Exp $
+# CVS: $Id: syntax-01.world,v 1.2 2002-06-10 17:35:57 inspectorg Exp $
 # Notes: The bottom half of the file lists the expected results.
 
 test 1
 
 environment
 (
-  file "cave.pnm"
+  file "cave.pnm.gz"
   scale 0.03
   resolution 0.03
 )
@@ -33,7 +33,7 @@ position
 
 ## stage error : worldfile.cc : this is a test file; quitting
 
-## begin sections
+## begin entities
 ## [0][-1][]
 ## [1][0][environment]
 ## [2][0][position]
@@ -43,9 +43,9 @@ position
 ## [6][5][lbd]
 ## [7][5][ptz]
 ## [8][7][vision]
-## end sections
+## end entities
 
-## begin items
+## begin properties
 ## [0][][test][1]
 ## [1][environment][file][cave.pnm]
 ## [1][environment][scale][0.03]
@@ -53,4 +53,4 @@ position
 ## [2][position][name][robot1]
 ## [2][position][port][6665]
 ## [2][position][pose][1][2][0]
-## end items
+## end properties

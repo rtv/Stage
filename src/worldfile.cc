@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.16 2002-06-09 18:37:06 inspectorg Exp $
+ * CVS info: $Id: worldfile.cc,v 1.17 2002-06-10 17:35:56 inspectorg Exp $
  */
 
 #include <assert.h>
@@ -33,7 +33,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-//#include <ctype.h>
 
 //#define DEBUG
 
@@ -1099,16 +1098,29 @@ void CWorldFile::ClearProperties()
 // Add an property
 int CWorldFile::AddProperty(int entity, const char *name, int line)
 {
-  if (this->property_count >= this->property_size)
+  int i;
+  CProperty *property;
+  
+  // See if this property already exists; if it does, we dont need to
+  // add it again.
+  for (i = 0; i < this->property_count; i++)
+  {
+    property = this->properties + i;
+    if (property->entity != entity)
+      continue;
+    if (strcmp(property->name, name) == 0)
+      return i;
+  }
+
+  // Expand property array if necessary.
+  if (i >= this->property_size)
   {
     this->property_size += 100;
     this->properties = (CProperty*)
       realloc(this->properties, this->property_size * sizeof(this->properties[0]));
   }
 
-  int i = this->property_count;
-
-  CProperty *property = this->properties + i;
+  property = this->properties + i;
   memset(property, 0, sizeof(CProperty));
   property->entity = entity;
   property->name = name;
