@@ -3,14 +3,13 @@
 #       showing how to include some pre-defined objects
 # Author: Andrew Howard, Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.18 2003-04-27 04:48:13 gerkey Exp $
+# CVS: $Id: everything.world,v 1.19 2003-04-27 05:25:50 gerkey Exp $
 
 include "usc_pioneer.inc"
 
 
 include "beacons.inc"
 
-base_port 50000
 resolution 0.03
 
 #

@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.59 2003-04-27 04:48:13 gerkey Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.60 2003-04-27 05:25:50 gerkey Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -141,6 +141,11 @@ bool CPlayerEntity::Load(CWorldFile *worldfile, int section)
 
   if(m_world->m_player_baseport  && m_player.port)
     printf( "\nWarning: Player device (%s:%d:%d) has non-zero port,\n"
+            "but 'base_port' was given, so ports will be auto-assigned.\n",
+	    this->lib_entry->token, m_player.port, m_player.index );
+
+  if(m_world->m_player_baseport  && !strlen(this->name))
+    printf( "\nWarning: Player device (%s:%d:%d) has no name,\n"
             "but 'base_port' was given, so ports will be auto-assigned.\n",
 	    this->lib_entry->token, m_player.port, m_player.index );
 
