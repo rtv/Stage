@@ -1,6 +1,6 @@
 
 /*
-  $Id: stest.c,v 1.1.2.7 2003-02-06 06:09:23 rtv Exp $
+  $Id: stest.c,v 1.1.2.8 2003-02-07 05:30:34 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -85,9 +85,9 @@ int main( int argc, char** argv )
       strcpy( gui.token, "rtk" );
       gui.width = 600;
       gui.height = 600;
-      gui.ppm = 10;
-      gui.originx = 0;
-      gui.originy = 0;
+      gui.ppm = 40;
+      gui.originx = 0;//300;
+      gui.originy = 0;//300;
       gui.showsubscribedonly = 0;
       gui.showgrid = 1;
       gui.showdata = 1;
@@ -103,7 +103,7 @@ int main( int argc, char** argv )
       stage_model_t models[3];
       models[0].id = ROOT;
       models[0].parent_id = -1; // only the root can have no parent
-      strncpy( models[0].token, "root", STG_TOKEN_MAX );
+      strncpy( models[0].token, "box", STG_TOKEN_MAX );
       
       models[1].id = BOX;
       models[1].parent_id = ROOT; // root
@@ -111,7 +111,7 @@ int main( int argc, char** argv )
       
       models[2].id = BITMAP;
       models[2].parent_id = ROOT; // root
-      strncpy( models[2].token, "bitmap", STG_TOKEN_MAX );
+      strncpy( models[2].token, "box", STG_TOKEN_MAX );
       
       TEST( "Sending models" );
       result = SIOWriteMessage( connection, timestamp, STG_HDR_MODELS, 
@@ -122,25 +122,17 @@ int main( int argc, char** argv )
       stage_buffer_t* props = SIOCreateBuffer();
       assert(props);
       
-      // set the size of the root (and hence the matrix)
-      stage_size_t sz;
-      sz.x = 10.0;
-      sz.y = 5.0;
-      SIOBufferProperty( props, ROOT, STG_PROP_ENTITY_SIZE, 
-			 (char*)&sz, sizeof(sz) );
-
-      // set the spatial resolution of the simulator in pixels-per-meter
-      double ppm = 200;
-      //SIOBufferProperty( props, ROOT, STG_PROP_ENTITY_PPM, 
-      //		 (char*)&ppm, sizeof(ppm) );
-      
-      
       // pose the bitmap
       stage_pose_t pose;
       SIOPackPose( &pose, 4.0, 6.0, 0.0 );      
       SIOBufferProperty( props, BITMAP, STG_PROP_ENTITY_POSE, 
-      		 (char*)&pose, sizeof(pose) );
+      	 (char*)&pose, sizeof(pose) );
       
+      // pose the box
+      SIOPackPose( &pose, 2.0, 1.0, 1.0 );      
+      SIOBufferProperty( props, BOX, STG_PROP_ENTITY_POSE, 
+      	 (char*)&pose, sizeof(pose) );
+
       
       // push some rectangles into the bitmap
       stage_rotrect_t rects[10];
@@ -154,8 +146,8 @@ int main( int argc, char** argv )
 	  rects[r].h = 0.1;
 	}
       
-      SIOBufferProperty( props, BITMAP, STG_PROP_BITMAP_RECTS, 
-			 (char*)&rects, 10*sizeof(rects[0]) );
+      SIOBufferProperty( props, BITMAP, STG_PROP_ENTITY_RECTS, 
+      		 (char*)&rects, 10*sizeof(rects[0]) );
       
       TEST( "Sending properties" );
       result = SIOWriteMessage( connection, timestamp,
@@ -174,8 +166,6 @@ int main( int argc, char** argv )
 	  
 	  SIOWriteMessage( connection, timestamp, STG_HDR_CONTINUE, NULL, 0 );
 
-	  //if( x == 0 ) sleep(3);
-
 	  // define some properties
 	  stage_buffer_t* bp = SIOCreateBuffer();
 	  assert(bp);
@@ -185,15 +175,40 @@ int main( int argc, char** argv )
 	  bitmapsize.y = 0.5 + 3.0 * fabs(cos(x+=0.05));
 	  
 	  SIOBufferProperty( bp, BITMAP, STG_PROP_ENTITY_SIZE, 
-			     (char*)&bitmapsize, sizeof(bitmapsize) );
+	       (char*)&bitmapsize, sizeof(bitmapsize) );
 	  
 	  //TEST( "Sending properties" );
-	  result = SIOWriteMessage( connection, timestamp,
-	  			    STG_HDR_PROPS, bp->data, bp->len );
+	  //result = SIOWriteMessage( connection, timestamp,
+	  //	    STG_HDR_PROPS, bp->data, bp->len );
 	  //EVAL(result);
 	   SIOFreeBuffer( bp );
 	   
-	   if( c == 75 )
+	   if( c == 90 )
+	     {
+	       // define some properties
+	       stage_buffer_t* bp = SIOCreateBuffer();
+	       assert(bp);
+	       
+	       // set the size of the root (and hence the matrix)
+	       stage_size_t sz;
+	       sz.x = 7.0;
+	       sz.y = 10.0;
+	       SIOBufferProperty( props, ROOT, STG_PROP_ENTITY_SIZE, 
+	       	  (char*)&sz, sizeof(sz) );
+	       
+	       // set the spatial resolution of the simulator in pixels-per-meter
+	       double ppm = 10;
+	       //SIOBufferProperty( props, ROOT, STG_PROP_ROOT_PPM, 
+	       // (char*)&ppm, sizeof(ppm) );
+	       
+	       result = SIOWriteMessage( connection, timestamp,
+					 STG_HDR_PROPS, bp->data, bp->len );
+	       
+	       SIOFreeBuffer( bp );
+	     }
+
+	   
+	   /*if( c == 75 )
 	     {
 	       stage_gui_config_t gui;
 	       strcpy( gui.token, "rtk" );
@@ -208,7 +223,7 @@ int main( int argc, char** argv )
 	       
 	       result = SIOWriteMessage( connection, timestamp, 
 					 STG_HDR_GUI, (char*)&gui, sizeof(gui) ) ;
-	     }
+					 }*/
 	   
 	  SIOServiceConnections(&HandleCommand,
 				&HandleModel, 

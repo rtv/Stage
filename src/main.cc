@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.10 2003-02-06 06:09:23 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.11 2003-02-07 05:30:34 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -69,10 +69,9 @@
 // devices must be added here.
 
 libitem_t library_items[] = { 
-  { "root", "black", (CFP)CRootDevice::Creator},
-  { "box", "blue", (CFP)CBox::Creator},
-  { "bitmap", "black", (CFP)CBitmap::Creator},
+  { "box", "black", (CFP)CEntity::Creator},
   /*
+  { "bitmap", "blue", (CFP)CBitmap::Creator},
   { "laser", "blue", (CFP)CLaserDevice::Creator},
   { "position", "red", (CFP)CPositionDevice::Creator},
   { "sonar", "green", (CFP)CSonarDevice::Creator},
@@ -211,17 +210,21 @@ int HandleModel(  int connection, char* data, size_t len )
 
 int HandleProperty( int connection,  char* data, size_t len )
 {
+  PRINT_DEBUG3( "Received %d byte property request (of which header is %d bytes ) on connection %d", 
+		len, sizeof(stage_property_t), connection );
+  
   assert( len >= sizeof(stage_property_t) );
   stage_property_t* prop = (stage_property_t*)data;
   
   PRINT_DEBUG2( "Received property %d on connection %d", 
 		prop->property, connection );
+  
 
   // get a pointer to the object with this id
   CEntity* ent = model_library.GetEntPtr( prop->id );
 
   if( !ent )
-    PRINT_WARN1( "Received property for non-existant model %d", prop->id );
+    PRINT_WARN2( "Received property %d for non-existent model %d", prop->id, prop->property );
   else
     {
       // pass the property data to the entity to absorb

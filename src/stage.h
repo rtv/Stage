@@ -44,7 +44,6 @@
      STG_PROP_ENTITY_ORIGIN,
      STG_PROP_ENTITY_NAME,
      STG_PROP_ENTITY_COLOR,
-     STG_PROP_ENTITY_SHAPE,
      STG_PROP_ENTITY_LASERRETURN,
      STG_PROP_ENTITY_SONARRETURN,
      STG_PROP_ENTITY_IDARRETURN,
@@ -57,20 +56,13 @@
      STG_PROP_ENTITY_CONFIG,
      STG_PROP_ENTITY_REPLY, 
      STG_PROP_ENTITY_PPM,
-     STG_PROP_BITMAP_RECTS,
+     STG_PROP_ENTITY_RECTS,
+     STG_PROP_ENTITY_CIRCLES,
      STG_PROPERTY_COUNT // THIS MUST BE THE LAST ENTRY
    } stage_prop_id_t;
 
 
 // PROPERTY DEFINITIONS ///////////////////////////////////////////////
-
-// Shapes for entities
-enum StageShape
-{
-  ShapeNone = 0,
-  ShapeCircle,
-  ShapeRect
-};
 
 // Possible laser return values
 enum LaserReturn

@@ -21,7 +21,7 @@
  * Desc: Simulates a root ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: root.hh,v 1.1.2.3 2003-02-06 03:36:48 rtv Exp $
+ * CVS info: $Id: root.hh,v 1.1.2.4 2003-02-07 05:30:34 rtv Exp $
  */
 
 #ifndef ROOTDEVICE_HH
@@ -47,11 +47,13 @@ public: static CRootDevice* Creator( LibraryItem *libit,
   }
   
   // Startup routine
-public: virtual bool Startup();
-  
+private: int CreateMatrix( void );
+
+  double ppm; // passed into CMatrix creator
+
   // Update the device
-  public: 
-  virtual void Update(double sim_time);
+public: 
+  //  virtual void Update(double sim_time);
   virtual int SetProperty( int con, stage_prop_id_t property, 
 			   void* value, size_t len );
 

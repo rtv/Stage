@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.hh,v 1.4.6.3 2003-02-05 03:59:49 rtv Exp $
+// $Id: matrix.hh,v 1.4.6.4 2003-02-07 05:30:34 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -24,16 +24,18 @@ class CMatrix
   CEntity***  data;
   unsigned char* used_slots;
   unsigned char* available_slots;
-  
+  int default_buf_size;
   public:
 
-  CMatrix(int w, int h, int default_buf_size);
+  CMatrix( double width_meters, double height_meters, double ppm, int default_buf_size);
   ~CMatrix(void);
-    
+  
   inline int get_width(void) {return width;}
   inline int get_height(void) {return height;}
   inline int get_size(void) {return width*height;}
   
+  double ppm; // pixels per meter - matrix does its own scaling now.
+
   // MUST BE IN-BOUNDS!
 
   // get a pixel color by its x,y coordinate
@@ -59,12 +61,6 @@ class CMatrix
 // utilities for visualizing the matrix
   void dump( void );
 
-  //#ifdef INCLUDE_RTK2
-  //rtk_fig_t* fig;
-  //void render( CWorld* world );
-  //void unrender( void );
-  //#endif
-
   void PrintCell( int cell );
   void CheckCell( int cell );
 
@@ -72,11 +68,14 @@ class CMatrix
   // meters about a center point
   void SetRectangle(double px, double py, double pth,
 		    double dx, double dy, 
-		    CEntity* ent, double ppm, bool add);
+		    CEntity* ent, bool add);
 
   void SetCircle(double px, double py, double pr, 
-		 CEntity* ent, double ppm, bool add );
+		 CEntity* ent, bool add );
   
+  void AllocateStorage();
+  void DeallocateStorage();
+  void Resize(  double width_meters, double height_meters, double ppm );
 };
 
 

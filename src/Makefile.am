@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.29.4.12 2003-02-06 06:37:15 rtv Exp $
+# $Id: Makefile.am,v 1.29.4.13 2003-02-07 05:30:34 rtv Exp $
 
 
 #SUBDIRS = models rtkstage gnome2
@@ -38,9 +38,11 @@ stage_SOURCES = \
 	raytrace.cc \
 	raytrace.hh \
 	raytrace.hh \
-	root.cc \
-	root.hh \
 	stage.h
+
+
+#	root.cc \
+#	root.hh \
 
 stage_LDFLAGS = 
 stage_LDADD = @GUI_LINK@ -lm -Lmodels -lmodels -Lsio -lsio -L$(top_builddir)/replace -lreplace 

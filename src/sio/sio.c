@@ -35,8 +35,8 @@
 #include "replace.h"
 #include "sio.h"
 
-//#undef DEBUG 
-#define DEBUG
+#undef DEBUG 
+//#define DEBUG
 
 // these vars are used only in this file (hence static)
 
@@ -343,7 +343,7 @@ int SIOReadProperties( int con, size_t len, stg_data_callback_t callback )
       // TODO - put the correct connection number in here!
       // should use connection num,bers instead of fds everywhere
       if( callback )
-	(*callback)( con, (char*)prop, prop->len );
+	(*callback)( con, (char*)prop,  sizeof(stage_property_t)+prop->len );
 
       // move the pointer past this record in the buffer
       prop_header += sizeof(stage_property_t) + prop->len;
@@ -775,6 +775,8 @@ int SIOBufferProperty( stage_buffer_t* bundle,
   prop.id = id;
   prop.property = type;
   prop.len = len;
+
+  printf( "buffering %d byte header + %d bytes data\n", sizeof(prop), len );
 
   // buffer the header for this property
   SIOBufferPacket( bundle, (char*)&prop, sizeof(prop) );

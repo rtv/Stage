@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.15.6.3 2003-02-06 03:36:48 rtv Exp $
+ * $Id: matrix.cc,v 1.15.6.4 2003-02-07 05:30:34 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -19,9 +19,18 @@ const int BUFFER_ALLOC_SIZE = 1;
 //#define DEBUG
     
 // construct from width / height 
-CMatrix::CMatrix(int w, int h, int default_buf_size)
+CMatrix::CMatrix( double width_meters, double height_meters, double ppm,  int default_buf_size)
 {
-  width = w; height = h;
+  this->ppm = ppm;
+  this->width = (int)(width_meters * ppm) + 1; 
+  this->height = (int)(height_meters * ppm) + 1;
+  this->default_buf_size = default_buf_size;
+  
+  AllocateStorage();
+}
+
+void CMatrix::AllocateStorage()
+{
   assert( data 	= new CEntity**[width*height] );
   assert( used_slots = new unsigned char[ width*height ] );
   assert( available_slots = new unsigned char[ width*height ] );
@@ -36,6 +45,40 @@ CMatrix::CMatrix(int w, int h, int default_buf_size)
       used_slots[p] = 0;
       available_slots[p] = default_buf_size;
     }
+}
+
+void CMatrix::DeallocateStorage()
+{
+  if (data)
+    {
+      // delete the storage in each cell
+      for( int p=0; p< width * height; p++ )
+	if( data[p] )
+	  delete[] data[p];
+      
+      // delete the main array
+      delete [] data;
+    }
+  
+  if( available_slots )
+    delete [] available_slots;
+  if( used_slots )
+    delete [] used_slots;
+  
+  data = NULL;
+  available_slots = NULL;
+  used_slots = NULL;
+}
+
+void CMatrix::Resize(  double width_meters, double height_meters, double ppm )
+{
+  DeallocateStorage();
+  
+  this->width = (int)(width_meters * ppm) + 1; 
+  this->height = (int)(height_meters * ppm) + 1;
+  this->ppm = ppm;
+  
+  AllocateStorage();
 }
 
 
@@ -410,7 +453,7 @@ void CMatrix::CheckCell( int cell )
 // Set a rectangle in the world grid
 void CMatrix::SetRectangle(double px, double py, double pth,
 			   double dx, double dy, 
-			   CEntity* ent, double ppm, bool add)
+			   CEntity* ent, bool add)
 {
   stage_rect_t rect;
 
@@ -447,7 +490,7 @@ void CMatrix::SetRectangle(double px, double py, double pth,
 ///////////////////////////////////////////////////////////////////////////
 // Set a circle in the world grid
 void CMatrix::SetCircle(double px, double py, double pr, 
-			CEntity* ent, double ppm, bool add )
+			CEntity* ent, bool add )
 {
   // Convert from world to image coords
   int x = (int) (px * ppm);

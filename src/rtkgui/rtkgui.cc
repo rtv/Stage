@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.1.2.4 2003-02-06 03:55:54 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.1.2.5 2003-02-07 05:30:34 rtv Exp $
  */
 
 //
@@ -65,6 +65,9 @@
 #include "library.hh"
 #include "entity.hh"
 #include "matrix.hh"
+#include "rtkgui.hh"
+
+extern int quit;
 
 // Basic GUI elements
 rtk_canvas_t *canvas = NULL; // the canvas
@@ -135,13 +138,11 @@ stage_menu_t data_menu;
 // Number of exported images
 int export_count;
 
+// these are internal and can only be called in rtkgui.cc
+static void RtkMenuHandling();
+static void RtkUpdateMovieMenu();
 
-// handle changes to the entity that might make it look different
-//void RtkEntityPropertyChange( CEntity* ent, EntityProperty prop );
-
-
-// TODO - unwrap RTK code from around the place and have it work
-// through the GUI hooks
+// TODO - unwrap RTK code from around the models and put it in this subdir or file
 
 // THESE FUNCTIONS ARE THE STANDARD INTERFACE FOR STAGE GUIS /////////////
 
@@ -242,20 +243,8 @@ int RtkGuiLoad( stage_gui_config_t* cfg )
   dy = height * scale;
   
   // Origin of the canvas
-  //ox = dx / 2;
-  //oy = dy / 2;
-
-  // if we have a root, we'll center it
-  if( CEntity::root )
-    {
-      ox = CEntity::root->size_x / 2.0;
-      oy = CEntity::root->size_y / 2.0;
-    }
-  else
-    {
-      ox = dx/2.0;
-      oy = dy/2.0;
-    }
+  ox = cfg->originx + dx/2.0;
+  oy = cfg->originy + dy/2.0;
 
   rtk_update_time = 0;
   rtk_update_rate = 10;
@@ -304,7 +293,7 @@ int RtkGuiUpdate( void )
   //this->m_sim_time - fmod(this->m_sim_time, 1 / this->rtk_update_rate);
   
   // Process menus
-  //RtkMenuHandling();      
+  RtkMenuHandling();      
   
   // Update the object tree
   //root->RtkUpdate();
@@ -321,7 +310,7 @@ int RtkGuiUpdate( void )
 // have to wrap the polymorphic call as this is a callback
 int RtkGuiEntityStartup( CEntity* ent )
 { 
-  PRINT_WARN1( "gui startup for ent %d", ent->stage_id );
+  PRINT_DEBUG1( "gui startup for ent %d", ent->stage_id );
   
   // explot the polymorphism here
   assert(ent);
@@ -331,7 +320,7 @@ int RtkGuiEntityStartup( CEntity* ent )
 // have to wrap the polymorphic call as this is a callback
 int RtkGuiEntityShutdown( CEntity* ent )
 {
-  PRINT_WARN1( "gui shutdown for ent %d", ent->stage_id );
+  PRINT_DEBUG1( "gui shutdown for ent %d", ent->stage_id );
 
   // explot the polymorphism here
   assert(ent);
@@ -349,6 +338,8 @@ void UnrenderMatrix()
 
 void RenderMatrix( )
 {
+  assert( CEntity::matrix );
+
   // Create a figure representing this object
   if( matrix_fig )
     UnrenderMatrix();
@@ -358,7 +349,7 @@ void RenderMatrix( )
   // Set the default color 
   rtk_fig_color_rgb32( matrix_fig, ::LookupColor(MATRIX_COLOR) );
   
-  double pixel_size = 1.0 / CEntity::ppm;
+  double pixel_size = 1.0 / CEntity::matrix->ppm;
   
   // render every pixel as an unfilled rectangle
   for( int y=0; y<CEntity::matrix->get_height(); y++ )
@@ -406,7 +397,6 @@ int RtkGuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
     case STG_PROP_ENTITY_ORIGIN:
     case STG_PROP_ENTITY_NAME:
     case STG_PROP_ENTITY_COLOR:
-    case STG_PROP_ENTITY_SHAPE:
     case STG_PROP_ENTITY_LASERRETURN:
     case STG_PROP_ENTITY_SONARRETURN:
     case STG_PROP_ENTITY_IDARRETURN:
@@ -414,7 +404,8 @@ int RtkGuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
     case STG_PROP_ENTITY_VISIONRETURN:
     case STG_PROP_ENTITY_PUCKRETURN:
     case STG_PROP_ENTITY_PLAYERID:
-    case STG_PROP_BITMAP_RECTS:
+    case STG_PROP_ENTITY_RECTS:
+    case STG_PROP_ENTITY_CIRCLES:
       RtkGuiEntityShutdown( ent ); 
       RtkGuiEntityStartup( ent );
       break;
@@ -436,9 +427,6 @@ int RtkGuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
 }
  
 
-
-
-#if 0
 
 // END OF INTERFACE FUNCTIONS //////////////////////////////////////////
 
@@ -478,7 +466,7 @@ void AddToDeviceMenu(  CEntity* ent, int check )
 // devices check this to see if they should display their data
 bool ShowDeviceData( int devtype )
 {
-  return rtk_menuitem_ischecked(this->data_item);
+  //return rtk_menuitem_ischecked(this->data_item);
   
   /* BROKEN
   rtk_menuitem_t* menu_item = data_menu.items[ devtype ];
@@ -492,7 +480,7 @@ bool ShowDeviceData( int devtype )
 
 bool ShowDeviceBody( int devtype )
 {
-  return rtk_menuitem_ischecked(this->objects_item);
+  //return rtk_menuitem_ischecked(this->objects_item);
 
   /* BROKEN
   rtk_menuitem_t* menu_item = device_menu.items[ devtype ];
@@ -505,69 +493,6 @@ bool ShowDeviceBody( int devtype )
 }
 
 
-// Save the GUI
-bool RtkSave(CWorldFile *worldfile)
-{
-  int section = worldfile->LookupEntity("gui");
-  if (section < 0)
-  {
-    PRINT_WARN("No gui entity in the world file; gui settings have not been saved.");
-    return true;
-  }
-
-  // Size of canvas in pixels
-  int sx, sy;
-  rtk_canvas_get_size(this->canvas, &sx, &sy);
-  worldfile->WriteTupleFloat(section, "size", 0, sx);
-  worldfile->WriteTupleFloat(section, "size", 1, sy);
-
-  // Origin of the canvas
-  double ox, oy;
-  rtk_canvas_get_origin(this->canvas, &ox, &oy);
-  worldfile->WriteTupleLength(section, "origin", 0, ox);
-  worldfile->WriteTupleLength(section, "origin", 1, oy);
-
-  // Scale of the canvas
-  double scale;
-  rtk_canvas_get_scale(this->canvas, &scale, &scale);
-  worldfile->WriteLength(section, "scale", scale);
-
-  // Grid on/off
-  int showgrid = rtk_menuitem_ischecked(this->grid_item);
-  worldfile->WriteInt(section, "showgrid", showgrid);
-  
-  return true;
-}
-
-
-// Start the GUI
-bool RtkStartup()
-{
-  // these must exist already
-  assert( this->app );
-  assert( this->app->canvas );
-  
-  // Initialise rtk
-  rtk_app_main_init(this->app);
-
-  // this rtkstarts all entities
-  root->RtkStartup();
-    
-  return true;
-}
-
-
-// Stop the GUI
-void RtkShutdown()
-{
-  assert( this->app );
-
-  // Finalize rtk
-  rtk_app_main_term(this->app);
-
-  return;
-}
-
 
 // Update the GUI
 void RtkMenuHandling()
@@ -575,78 +500,80 @@ void RtkMenuHandling()
   char filename[128];
     
   // See if we need to quit the program
-  if (rtk_menuitem_isactivated(this->exit_menuitem))
+  if (rtk_menuitem_isactivated(exit_menuitem))
     ::quit = 1;
-  if (rtk_canvas_isclosed(this->canvas))
+  if (rtk_canvas_isclosed(canvas))
     ::quit = 1;
 
   // Save the world file
-  if (rtk_menuitem_isactivated(this->save_menuitem))
-    Save();
+  //if (rtk_menuitem_isactivated(save_menuitem))
+  //Save();
   
   // Start/stop export (jpeg)
-  if (rtk_menuitem_isactivated(this->stills_jpeg_menuitem))
+  if (rtk_menuitem_isactivated(stills_jpeg_menuitem))
   {
-    if (rtk_menuitem_ischecked(this->stills_jpeg_menuitem))
+    if (rtk_menuitem_ischecked(stills_jpeg_menuitem))
     {
-      this->stills_series++;
-      rtk_menuitem_enable(this->stills_ppm_menuitem, 0);
+      stills_series++;
+      rtk_menuitem_enable(stills_ppm_menuitem, 0);
     }
     else
-      rtk_menuitem_enable(this->stills_ppm_menuitem, 1);      
+      rtk_menuitem_enable(stills_ppm_menuitem, 1);      
   }
-  if (rtk_menuitem_ischecked(this->stills_jpeg_menuitem))
+  if (rtk_menuitem_ischecked(stills_jpeg_menuitem))
   {
     snprintf(filename, sizeof(filename), "stage-%03d-%04d.jpg",
-             this->stills_series, this->stills_count++);
+             stills_series, stills_count++);
     printf("saving [%s]\n", filename);
-    rtk_canvas_export_image(this->canvas, filename, RTK_IMAGE_FORMAT_JPEG);
+    rtk_canvas_export_image(canvas, filename, RTK_IMAGE_FORMAT_JPEG);
   }
 
   // Start/stop export (ppm)
-  if (rtk_menuitem_isactivated(this->stills_ppm_menuitem))
+  if (rtk_menuitem_isactivated(stills_ppm_menuitem))
   {
-    if (rtk_menuitem_ischecked(this->stills_ppm_menuitem))
+    if (rtk_menuitem_ischecked(stills_ppm_menuitem))
     {
-      this->stills_series++;
-      rtk_menuitem_enable(this->stills_jpeg_menuitem, 0);
+      stills_series++;
+      rtk_menuitem_enable(stills_jpeg_menuitem, 0);
     }
     else
-      rtk_menuitem_enable(this->stills_jpeg_menuitem, 1);      
+      rtk_menuitem_enable(stills_jpeg_menuitem, 1);      
   }
-  if (rtk_menuitem_ischecked(this->stills_ppm_menuitem))
+  if (rtk_menuitem_ischecked(stills_ppm_menuitem))
   {
     snprintf(filename, sizeof(filename), "stage-%03d-%04d.ppm",
-             this->stills_series, this->stills_count++);
+             stills_series, stills_count++);
     printf("saving [%s]\n", filename);
-    rtk_canvas_export_image(this->canvas, filename, RTK_IMAGE_FORMAT_PPM);
+    rtk_canvas_export_image(canvas, filename, RTK_IMAGE_FORMAT_PPM);
   }
 
   // Update movie menu
-  this->RtkUpdateMovieMenu();
+  RtkUpdateMovieMenu();
   
   // Show or hide the grid
-  //if (rtk_menuitem_ischecked(this->grid_item))
-  //rtk_fig_show( CEntity::rootthis->fig_grid, 1);
+  //if (rtk_menuitem_ischecked(grid_item))
+  //rtk_fig_show( CEntity::rootfig_grid, 1);
   //else
-  //rtk_fig_show(this->fig_grid, 0);
+  //rtk_fig_show(fig_grid, 0);
 
   // clear any matrix rendering, then redraw if the emnu item is checked
-  this->matrix->unrender();
-  if (rtk_menuitem_ischecked(this->matrix_item))
-    this->matrix->render( this );
+  //matrix->unrender();
+  if (rtk_menuitem_ischecked(matrix_item))
+    RenderMatrix();
+  else
+    if( matrix_fig ) UnrenderMatrix();
   
   // enable/disable subscriptions to show sensor data
-  static bool lasttime = rtk_menuitem_ischecked(this->subscribedonly_item);
-  bool thistime = rtk_menuitem_ischecked(this->subscribedonly_item);
+  static bool lasttime = rtk_menuitem_ischecked(subscribedonly_item);
+  bool thistime = rtk_menuitem_ischecked(subscribedonly_item);
 
   // for now i check if the menu item changed
   if( thistime != lasttime )
   {
     if( thistime )  // change the subscription counts of any player-capable ent
-      root->FamilySubscribe();
+      CEntity::root->FamilySubscribe();
     else
-      root->FamilyUnsubscribe();
+      CEntity::root->FamilyUnsubscribe();
     // remember this state
     lasttime = thistime;
   }
@@ -663,9 +590,9 @@ void RtkUpdateMovieMenu()
   char filename[128];
   CMovieOption *option;
   
-  for (i = 0; i < this->movie_option_count; i++)
+  for (i = 0; i < movie_option_count; i++)
   {
-    option = this->movie_options + i;
+    option = movie_options + i;
     
     if (rtk_menuitem_isactivated(option->menuitem))
     {
@@ -673,33 +600,34 @@ void RtkUpdateMovieMenu()
       {
         // Start the movie capture
         snprintf(filename, sizeof(filename), "stage-%03d-sp%02d.mpg",
-                 this->movie_count++, option->speed);
-        rtk_canvas_movie_start(this->canvas, filename,
-                               this->rtk_update_rate, option->speed);
+                 movie_count++, option->speed);
+        rtk_canvas_movie_start(canvas, filename,
+                               rtk_update_rate, option->speed);
 
         // Disable all other capture options
-        for (j = 0; j < this->movie_option_count; j++)
-          rtk_menuitem_enable(this->movie_options[j].menuitem, i == j);
+        for (j = 0; j < movie_option_count; j++)
+          rtk_menuitem_enable(movie_options[j].menuitem, i == j);
       }
       else
       {
         // Stop movie capture
-        rtk_canvas_movie_stop(this->canvas);
+        rtk_canvas_movie_stop(canvas);
 
         // Enable all capture options
-        for (j = 0; j < this->movie_option_count; j++)
-          rtk_menuitem_enable(this->movie_options[j].menuitem, 1);
+        for (j = 0; j < movie_option_count; j++)
+          rtk_menuitem_enable(movie_options[j].menuitem, 1);
       }
     }
 
     // Export the frame
     if (rtk_menuitem_ischecked(option->menuitem))
-      rtk_canvas_movie_frame(this->canvas);
+      rtk_canvas_movie_frame(canvas);
   }
   return;
 }
 
 
+#endif
 
-#endif
-#endif
+
+

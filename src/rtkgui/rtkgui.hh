@@ -1,6 +1,7 @@
 
 class CEntity;
 
+// these funcs are the external interface to the rtkgui library
 int RtkGuiInit( int argc, char** argv );
 int RtkGuiLoad( stage_gui_config_t* cfg );
 int RtkGuiUpdate( void );

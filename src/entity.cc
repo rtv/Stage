@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.7 2003-02-06 03:36:48 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.8 2003-02-07 05:30:34 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -59,7 +59,6 @@ extern rtk_app_t* app;
 
 // init the static vars shared by all entities
  // everyone shares these vars 
-double CEntity::ppm = 100;
 CMatrix* CEntity::matrix = NULL;
 bool CEntity::enable_gui = true;
 CEntity* CEntity::root = NULL;
@@ -71,16 +70,13 @@ double CEntity::simtime = 0.0; // start the clock at zero time
 CEntity::CEntity( LibraryItem* libit, int id, CEntity* parent )
 {
   this->m_parent_entity = parent;
-
-  // get the default color
-  this->color = LookupColor( "red" );
-
-  // attach to my parent
-  if( m_parent_entity )
-    m_parent_entity->AddChild( this );
-  else
-    PRINT_DEBUG1( "ROOT ENTITY %p", this );
   
+  // TODO = inherit our parent's color by default
+  //if( m_parent_entity )
+  //color = m_parent_entity->color;
+  //else
+  color = libit->color; //look in library for our color
+
   this->stage_id = id;
   this->lib_entry = libit; // from here we can find our file token and type number
 
@@ -99,22 +95,42 @@ CEntity::CEntity( LibraryItem* libit, int id, CEntity* parent )
   // unmoveably MASSIVE! by default
   this->mass = 1000.0;
     
-  // Set the default shape and geometry
-  this->shape = ShapeNone;
-  this->size_x = this->size_y = 0;
+  // Set the default geometry
+  this->size_x = this->size_y = 1.0;
   this->origin_x = this->origin_y = 0;
 
-
+  // TODO
   m_local = true; 
   
-  // by default, entities don't show up in any sensors
-  // these must be enabled explicitly in each subclass
-  obstacle_return = false;
-  sonar_return = false;
+  // initialize our shapes 
+  this->rects = NULL;
+  this->rect_count = 0;
+  
+  // by default, all non-root entities have a single rectangle
+  if( m_parent_entity )
+    {
+      // rectangles - start with a single rect
+      // it is automagically scaled to fit the size of the entity
+      this->rects = new stage_rotrect_t[1];
+      this->rects[0].x = 0.0;
+      this->rects[0].y = 0.0;
+      this->rects[0].a = 0.0;
+      this->rects[0].w = 1.0;
+      this->rects[0].h = 1.0;
+      this->rect_count = 1;
+    }
+      
+  // sets our rect boundary members
+  this->DetectRectBounds();
+      
+  // the default entity is a colored box
+  vision_return = true; 
+  laser_return = LaserVisible;
+  sonar_return = true;
+  obstacle_return = true;
+  idar_return = IDARReflect;
   puck_return = false;
-  vision_return = false;
-  laser_return = LaserTransparent;
-  idar_return = IDARTransparent;
+  idar_return = IDARReflect;
   fiducial_return = FiducialNone; // not a recognized fiducial
   gripper_return = GripperDisabled;
 
@@ -134,7 +150,6 @@ CEntity::CEntity( LibraryItem* libit, int id, CEntity* parent )
   // init the ptr to GUI-specific data
   this->gui_data = NULL;
 
-
 #ifdef INCLUDE_RTK2
   // Default figures for drawing the entity.
   this->fig = NULL;
@@ -143,12 +158,39 @@ CEntity::CEntity( LibraryItem* libit, int id, CEntity* parent )
   
   grid_major = 1.0;
   grid_minor = 0.2;
-  grid_enable = true;
+  grid_enable = false;
 
   // By default, we can both translate and rotate the entity.
   this->movemask = RTK_MOVE_TRANS | RTK_MOVE_ROT;
 #endif
 
+  // attach to my parent
+  if( m_parent_entity )
+    m_parent_entity->AddChild( this );
+  else
+    {
+      // ROOT gets set up specially
+      PRINT_WARN1( "ROOT ENTITY %p", this );  
+      CEntity::root = this; // phear me!
+      
+      size_x = 10.0; // a 10m world by default
+      size_y = 10.0;
+      
+      // the global origin is the bottom left corner of the root object
+      origin_x = size_x/2.0;
+      origin_y = size_y/2.0;
+      
+      /// default 5cm resolution passed into matrix
+      double ppm = 20.0;
+      PRINT_DEBUG3( "Creating a matrix [%.2fx%.2f]m at %.2f ppm",
+		    size_x, size_y, ppm );
+      
+      assert( matrix = new CMatrix( size_x, size_y, ppm, 1) );
+      
+#ifdef INCLUDE_RTK2
+      grid_enable = true;
+#endif
+    }
 }
 
 
@@ -234,16 +276,32 @@ void CEntity::Sync()
 };
 
 
+void CEntity::MapFamily()
+{
+  Map();
+  
+  CHILDLOOP( ch )
+    ch->MapFamily();
+}
+
+void CEntity::UnMapFamily()
+{
+  UnMap();
+  
+  CHILDLOOP( ch )
+    ch->UnMapFamily();
+}
+
+
 ///////////////////////////////////////////////////////////////////////////
 // Startup routine
 // A virtual function that lets entities do some initialization after
 // everything has been loaded.
 bool CEntity::Startup( void )
 {
-  // use the generic hook
-  //if( enable_gui ) 
-  //GuiEntityStartup( this );
+  PRINT_WARN( "entity starting up" );
   
+  Map();
   
   CHILDLOOP( ch )
     ch->Startup();
@@ -256,14 +314,13 @@ bool CEntity::Startup( void )
 // Shutdown routine
 void CEntity::Shutdown()
 {
-  //PRINT_DEBUG( "entity shutting down" );
+  PRINT_WARN( "entity shutting down" );
   
   // recursively shutdown our children
   CHILDLOOP( ch ) ch->Shutdown();
 
-  //if( enable_gui )
-  //GuiEntityShutdown( this );
-  
+  UnMap();
+
   return;
 }
 
@@ -303,6 +360,12 @@ void CEntity::Map(double px, double py, double pth)
   MapEx(map_px, map_py, map_pth, true);
 }
 
+void CEntity::Map( void )
+{
+  double x,y,a;
+  GetGlobalPose( x,y,a );
+  Map(x,y,a);
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Remove the entity from the world
@@ -316,9 +379,11 @@ void CEntity::UnMap()
 // Remap ourself if we have moved
 void CEntity::ReMap(double px, double py, double pth)
 {
+  assert( matrix );
+  
   // if we haven't moved, do nothing
-  if (fabs(px - this->map_px) < 1 / ppm &&
-      fabs(py - this->map_py) < 1 / ppm &&
+  if (fabs(px - this->map_px) < 1 / matrix->ppm &&
+      fabs(py - this->map_py) < 1 / matrix->ppm &&
       pth == this->map_pth)
     return;
   
@@ -332,18 +397,7 @@ void CEntity::ReMap(double px, double py, double pth)
 // Primitive rendering function
 void CEntity::MapEx(double px, double py, double pth, bool render)
 {
-  switch (this->shape)
-    {
-    case ShapeRect:
-      matrix->SetRectangle(px, py, pth, 
-			   this->size_x, this->size_y, this, ppm, render);
-      break;
-    case ShapeCircle:
-      matrix->SetCircle(px, py, this->size_x / 2, this, ppm, render);
-      break;
-    case ShapeNone:
-      break;
-    }
+    RenderRects( render );
 }
 
 
@@ -361,11 +415,15 @@ CEntity *CEntity::TestCollision(double px, double py, double pth)
   double sx = this->size_x;
   double sy = this->size_y;
 
+
+  // TODO - raytrace along our rectangles - more expensive, but most vehicles
+  // will just be a single rect, so we're back where we started.
+  /*
   switch( this->shape ) 
   {
     case ShapeRect:
     {
-      CRectangleIterator rit( qx, qy, qth, sx, sy, ppm, matrix );
+      CRectangleIterator rit( qx, qy, qth, sx, sy, matrix );
 
       CEntity* ent;
       while( (ent = rit.GetNextEntity()) )
@@ -377,7 +435,7 @@ CEntity *CEntity::TestCollision(double px, double py, double pth)
     }
     case ShapeCircle:
     {
-      CCircleIterator rit( px, py, sx / 2, ppm, matrix );
+      CCircleIterator rit( px, py, sx / 2, matrix );
 
       CEntity* ent;
       while( (ent = rit.GetNextEntity()) )
@@ -389,7 +447,8 @@ CEntity *CEntity::TestCollision(double px, double py, double pth)
     }
     case ShapeNone:
       break;
-  }
+      }*/
+
   return NULL;
 }
 
@@ -405,11 +464,12 @@ CEntity *CEntity::TestCollision(double px, double py, double pth,
   double sx = this->size_x;
   double sy = this->size_y;
 
-  switch( this->shape ) 
+
+  /*  switch( this->shape ) 
   {
     case ShapeRect:
     {
-      CRectangleIterator rit( qx, qy, qth, sx, sy, ppm, matrix );
+      CRectangleIterator rit( qx, qy, qth, sx, sy, matrix );
 
       CEntity* ent;
       while( (ent = rit.GetNextEntity()) )
@@ -424,7 +484,7 @@ CEntity *CEntity::TestCollision(double px, double py, double pth,
     }
     case ShapeCircle:
     {
-      CCircleIterator rit( px, py, sx / 2, ppm, matrix );
+      CCircleIterator rit( px, py, sx / 2, matrix );
 
       CEntity* ent;
       while( (ent = rit.GetNextEntity()) )
@@ -440,6 +500,8 @@ CEntity *CEntity::TestCollision(double px, double py, double pth,
   case ShapeNone: // handle the null case
       break;
   }
+  */
+
   return NULL;
 
 }
@@ -616,6 +678,25 @@ void CEntity::SetParent(CEntity* new_parent)
 };
 
 
+// sets our local rectangle bounds members to the extreme values
+// of the rectangle array members
+void CEntity::DetectRectBounds(void)
+{
+  // find the bounds
+  rects_max_x = rects_max_y = 0.0;
+  
+  int r;
+  for( r=0; r<this->rect_count; r++ )
+    {
+      if( (rects[r].x+rects[r].w)  > rects_max_x ) 
+	rects_max_x = (rects[r].x+rects[r].w);
+      
+      if( (rects[r].y+rects[r].h)  > rects_max_y ) 
+	rects_max_y = (rects[r].y+rects[r].h);
+    }
+}
+
+
 int CEntity::SetProperty( int con, stage_prop_id_t property, 
 			  void* value, size_t len )
 {
@@ -628,6 +709,20 @@ int CEntity::SetProperty( int con, stage_prop_id_t property,
   
   switch( property )
     {
+    case STG_PROP_ENTITY_PPM:
+      PRINT_WARN( "setting PPM" );
+      assert(len == sizeof(double) );
+      
+      if( CEntity::matrix )
+	{
+	  double ppm = *((double*)value);
+	  CEntity::matrix->Resize( size_x, size_y, ppm );      
+	  this->MapFamily();
+	}
+      else
+	PRINT_WARN( "trying to set ppm for non-existent matrix" );
+      break;
+      
     case STG_PROP_ENTITY_PARENT:
       // TODO - fix this
       // get a pointer to the (*value)'th entity - that's our new parent
@@ -638,71 +733,124 @@ int CEntity::SetProperty( int con, stage_prop_id_t property,
     case STG_PROP_ENTITY_POSE:
       {
 	assert( len == sizeof(stage_pose_t) );
+
+	UnMap();
+
 	stage_pose_t* pose = (stage_pose_t*)value;      
 	local_px = pose->x;
 	local_py = pose->y;
 	local_pth = pose->a;
 
-	//PRINT_DEBUG3( "NEW POSE: %.2f %.2f %.2f", local_px, local_py, local_pth );
+	Map();
+
       }
       break;
       
     case STG_PROP_ENTITY_SIZE:
       {
 	assert( len == sizeof(stage_size_t) );
+
+	UnMap();
+
 	stage_size_t* sz = (stage_size_t*)value;
 	size_x = sz->x;
 	size_y = sz->y;
+
+	if( this == CEntity::root )
+	  {
+	    PRINT_WARN( "setting size of ROOT" );
+	    
+	    // shift root so the origin is in the bottom left corner
+	    origin_x = size_x/2.0;
+	    origin_y = size_y/2.0;
+	    
+	    // resize the matrix
+	    CEntity::matrix->Resize( size_x, size_y, CEntity::matrix->ppm );      
+	    MapFamily(); // matrix re-render everything
+	  }
+	else
+	  Map();
       }
       break;
       
     case STG_PROP_ENTITY_ORIGIN:
       {
 	assert( len == sizeof(stage_size_t) );
-	stage_size_t* sz = (stage_size_t*)value;
-	origin_x = sz->x;
-	size_y = sz->y; 
+	
+	UnMapFamily();
+	
+	stage_size_t* og = (stage_size_t*)value;
+	origin_x = og->x;
+	origin_y = og->y; 
+	
+	MapFamily();
       }
       break;
     
-    case STG_PROP_ENTITY_PPM:
-      assert(len == sizeof(ppm) );
-      memcpy( &CEntity::ppm, value, sizeof(ppm) );
+    case STG_PROP_ENTITY_RECTS:
+      {
+	// delete any previous rectangles we might have
+	if( this->rects )
+	  {
+	    RenderRects( false ); // remove them from the matrix
+	    delete[] rects;
+	  }
+	
+	// we just got this many rectangles
+	this->rect_count = len / sizeof(stage_rotrect_t);
+	
+	// make space for the new rects
+	this->rects = new stage_rotrect_t[ this->rect_count ];
+	
+	// copy the rects into our local storage
+	memcpy( this->rects, value, len );
+	
+	DetectRectBounds();
+
+	//PRINT_WARN2( "bounds %.2f %.2f", rects_max_x, rects_max_y );
+
+	RenderRects( true );
+      }
       break;
 
+
     case STG_PROP_ENTITY_NAME:
+      assert( len <= STG_TOKEN_MAX );
       strncpy( name, (char*)value, STG_TOKEN_MAX );
       break;
       
     case STG_PROP_ENTITY_COLOR:
+      assert( len == sizeof(StageColor) );
       memcpy( &color, (StageColor*)value, sizeof(color) );
       break;
-      
-    case STG_PROP_ENTITY_SHAPE:
-      memcpy( &shape, (StageShape*)value, sizeof(shape) );
-      break;
-      
+            
     case STG_PROP_ENTITY_LASERRETURN:
+      assert( len == sizeof(LaserReturn) );
       memcpy( &laser_return, (LaserReturn*)value, sizeof(laser_return) );
       break;
 
     case STG_PROP_ENTITY_IDARRETURN:
+      assert( len == sizeof(IDARReturn) );
       memcpy( &idar_return, (IDARReturn*)value, sizeof(idar_return) );
       break;
 
     case STG_PROP_ENTITY_SONARRETURN:
+      assert( len == sizeof(bool) );
       memcpy( &sonar_return, (bool*)value, sizeof(sonar_return) );
       break;
 
     case STG_PROP_ENTITY_OBSTACLERETURN:
+      assert( len == sizeof(bool) );
       memcpy( &obstacle_return, (bool*)value, sizeof(obstacle_return) );
       break;
 
     case STG_PROP_ENTITY_VISIONRETURN:
+      assert( len == sizeof(bool) );
       memcpy( &vision_return, (bool*)value, sizeof(vision_return));
       break;
 
     case STG_PROP_ENTITY_PUCKRETURN:
+      assert( len == sizeof(bool) );
       memcpy( &puck_return, (bool*)value, sizeof(puck_return) );
       break;
 
@@ -794,11 +942,6 @@ int CEntity::GetProperty( stage_prop_id_t property, void* value )
     case STG_PROP_ENTITY_COLOR:
       memcpy( value, &color, sizeof(color) );
       retval = sizeof(color);
-      break;
-
-    case STG_PROP_ENTITY_SHAPE:
-      memcpy( value, &shape, sizeof(shape) );
-      retval = sizeof(shape);
       break;
 
     case STG_PROP_ENTITY_LASERRETURN:
@@ -914,6 +1057,37 @@ void CEntity::GetStatusString( char* buf, int buflen )
 }  
 
 
+void CEntity::RenderRects( bool render )
+{
+  // TODO: find the scaling
+  double scalex = size_x / rects_max_x;
+  double scaley = size_y / rects_max_y;
+  
+  double x,y,a,w,h;
+  
+  int r;
+  for( r=0; r<this->rect_count; r++ )
+    {
+      x = ((this->rects[r].x + this->rects[r].w/2.0) * scalex) - size_x/2.0;
+      y = ((this->rects[r].y + this->rects[r].h/2.0)* scaley) - size_y/2.0;
+      a = this->rects[r].a;
+      w = this->rects[r].w * scalex;
+      h = this->rects[r].h * scaley;
+      
+      LocalToGlobal( x,y,a );    
+
+      CEntity::matrix->SetRectangle( x, y, a, w, h, this, render );
+    }
+  
+  // draw a boundary rectangle around the root device
+  if( this == CEntity::root )
+    CEntity::matrix->SetRectangle( size_x/2.0, size_y/2.0, 0.0, 
+				   size_x, size_y, this, render );
+  
+}
+
+
+
 #ifdef INCLUDE_RTK2
 
 ///////////////////////////////////////////////////////////////////////////
@@ -967,28 +1141,6 @@ void CEntity::RtkStartup()
    
 #endif
    
-  // draw the shape using the center of rotation offsets
-  switch (this->shape)
-    {
-    case ShapeRect:
-      rtk_fig_rectangle(this->fig, 
-                        this->origin_x, this->origin_y, 0, 
-                        this->size_x, this->size_y, false);
-      break;
-    case ShapeCircle:
-      rtk_fig_ellipse(this->fig, 
-                      this->origin_x, this->origin_y, 0,  
-                      this->size_x, this->size_y, false);
-      break;
-    case ShapeNone: // no shape
-      // TODO - remove for no shaped things
-      //rtk_fig_rectangle(this->fig, 
-      //		this->origin_x, this->origin_y, 0, 
-      //		this->size_x, this->size_y, false);
-      break;
-    }
-  
-
   // everything except the root object has a label
   //if( m_parent_entity )
   //{
@@ -1042,6 +1194,34 @@ void CEntity::RtkStartup()
     }
   else
     this->fig_grid = NULL;
+  
+
+  PRINT_DEBUG1( "rendering %d rectangles", this->rect_count );
+  
+  double scalex = size_x / rects_max_x;
+  double scaley = size_y / rects_max_y;
+  
+  //rtk_fig_origin( this->fig, local_px, local_py, local_pth );
+  
+  // now create GUI rects
+  int r;
+  for( r=0; r<this->rect_count; r++ )
+    {
+      double x, y, a, w, h;
+      
+      x = ((this->rects[r].x + this->rects[r].w/2.0) * scalex) - size_x/2.0;
+      y = ((this->rects[r].y + this->rects[r].h/2.0)* scaley) - size_y/2.0;
+      a = this->rects[r].a;
+      w = this->rects[r].w * scalex;
+      h = this->rects[r].h * scaley;
+      
+      rtk_fig_rectangle(this->fig, x, y, a, w, h, 0 ); 
+    }
+
+  // draw a boundary rectangle around the root device
+  if( this == CEntity::root )
+    rtk_fig_rectangle( this->fig, size_x/2.0, size_y/2.0, 0.0, 
+		       size_x, size_y, 0 );
   
   // do our children after we're set
   //CHILDLOOP( child ) child->RtkStartup();

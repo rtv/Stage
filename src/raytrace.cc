@@ -18,7 +18,7 @@
  */
 // ==================================================================
 // Filename:	raytrace.cc
-// $Id: raytrace.cc,v 1.10.6.1 2003-02-01 02:14:30 rtv Exp $
+// $Id: raytrace.cc,v 1.10.6.2 2003-02-07 05:30:34 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -27,13 +27,12 @@
 CEntity* g_nullp = 0;
 
 CLineIterator::CLineIterator( double x, double y, double a, double b, 
-			      double ppm, CMatrix* matrix, LineIteratorMode pmode )
+			      CMatrix* matrix, LineIteratorMode pmode )
 {   
   m_matrix = matrix;
-  m_ppm = ppm;       
   
-  m_x = x * m_ppm;
-  m_y = y * m_ppm;
+  m_x = x * m_matrix->ppm;
+  m_y = y * m_matrix->ppm;
 
   m_ent = 0;
   m_index = 0;
@@ -46,7 +45,7 @@ CLineIterator::CLineIterator( double x, double y, double a, double b,
       double bearing = a;
 	
       m_angle = bearing;
-      m_max_range = m_remaining_range = range * m_ppm;
+      m_max_range = m_remaining_range = range * m_matrix->ppm;
     }
     break;
     case PointToPoint:
@@ -57,7 +56,7 @@ CLineIterator::CLineIterator( double x, double y, double a, double b,
       //printf( "From %.2f,%.2f to %.2f,%.2f\n", x,y,x1,y1 );
 
       m_angle = atan2( y1-y, x1-x );
-      m_max_range = m_remaining_range = hypot( x1-x, y1-y ) * m_ppm;
+      m_max_range = m_remaining_range = hypot( x1-x, y1-y ) * m_matrix->ppm;
     }
     break;
     default:
@@ -189,13 +188,12 @@ CTriangleAreaIterator::
 CTriangleAreaIterator( double x, double y, 
 		       double bearing, double range, double angle,
 		       double skip,
-		       double ppm, CMatrix* matrix )
+		       CMatrix* matrix )
 {
   //printf( "new CTriangleAreaIterator( %.2f, %.2f, %.2f, %.2f, %.2f )\n",
   //  x, y, bearing, range, angle, skip ); 
   
   m_matrix = matrix;
-  m_ppm = ppm;       
   
   m_x = x;
   m_y = y;
@@ -256,7 +254,7 @@ CEntity* CTriangleAreaIterator::GetNextEntity( void )
       
 
     li = new CLineIterator( m_x, m_y, m_li_angle, li_len, 
-                            m_ppm, m_matrix, PointToBearingRange );
+                            m_matrix, PointToBearingRange );
   }
   return 0;
 }
@@ -270,7 +268,7 @@ double CTriangleAreaIterator::GetRange( void )
 
 CRectangleIterator::CRectangleIterator( double x, double y, double th,
 					double w, double h,  
-					double ppm, CMatrix* matrix )
+					CMatrix* matrix )
 {
   // calculate the corners of our body
 
@@ -294,19 +292,19 @@ CRectangleIterator::CRectangleIterator( double x, double y, double th,
   
   lits[0] = new CLineIterator( corners[0][0], corners[0][1], 
                                corners[1][0], corners[1][1],
-                               ppm, matrix, PointToPoint );
+                               matrix, PointToPoint );
   
   lits[1] = new CLineIterator( corners[1][0], corners[1][1], 
                                corners[2][0], corners[2][1],
-                               ppm, matrix, PointToPoint );
+                               matrix, PointToPoint );
 
   lits[2] = new CLineIterator( corners[2][0], corners[2][1], 
                                corners[3][0], corners[3][1],
-                               ppm, matrix, PointToPoint );
+                               matrix, PointToPoint );
   
   lits[3] = new CLineIterator( corners[3][0], corners[3][1], 
                                corners[0][0], corners[0][1],
-                               ppm, matrix, PointToPoint );
+                               matrix, PointToPoint );
   
 } 
 
@@ -338,24 +336,22 @@ CEntity* CRectangleIterator::GetNextEntity( void )
 
 
 // a circle iterator is an arc iterator with a 2PI scan range
-CCircleIterator::CCircleIterator( double x, double y, double r, 
-				  double ppm, CMatrix* matrix )
-  : CArcIterator( x, y, 0, r, M_PI*2.0, ppm, matrix )
+CCircleIterator::CCircleIterator( double x, double y, double r, CMatrix* matrix )
+  : CArcIterator( x, y, 0, r, M_PI*2.0, matrix )
 {
 }
 
 CArcIterator::CArcIterator( double x, double y, double th,
 			    double scan_r, double scan_th, 
-			      double ppm, CMatrix* matrix )
+			    CMatrix* matrix )
 {   
   m_matrix = matrix;
-  m_ppm = ppm;       
 
-  m_center_x = x * m_ppm;
-  m_center_y = y * m_ppm;
+  m_center_x = x * m_matrix->ppm;
+  m_center_y = y * m_matrix->ppm;
   m_angle = th - scan_th/2.0;
 
-  m_radius = scan_r * m_ppm;
+  m_radius = scan_r * m_matrix->ppm;
   m_max_angle = m_angle + scan_th; // this is the angle length of the scan in radians
 
   m_ent = 0;

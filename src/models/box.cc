@@ -21,7 +21,7 @@
  * Desc: Simulates a simple box 
  * Author: Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: box.cc,v 1.3.6.1 2003-02-05 03:59:49 rtv Exp $
+ * CVS info: $Id: box.cc,v 1.3.6.2 2003-02-07 05:30:34 rtv Exp $
  */
 
 #include "box.hh"
@@ -31,35 +31,4 @@
 CBox::CBox(LibraryItem* libit, int id, CEntity *parent)
         : CEntity(libit, id, parent)
 {
-  if(parent)
-    this->color = parent->color;
-  else
-    this->color = libit->color;
-
-  this->shape = ShapeRect;
-  this->size_x = 1.0;
-  this->size_y = 1.0;
-  
-  vision_return = true; 
-  laser_return = LaserVisible;
-  sonar_return = true;
-  obstacle_return = true;
-  idar_return = IDARReflect;
 }
-
-
-///////////////////////////////////////////////////////////////////////////
-// Update the laser data
-void CBox::Update( double simtime )
-{
-  CEntity::Update(simtime);
-  
-  double x, y, th;
-  GetGlobalPose( x,y,th );
-
-  ReMap(x, y, th);
-}
-
-
-
-

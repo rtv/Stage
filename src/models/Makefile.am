@@ -14,12 +14,11 @@ AM_CPPFLAGS = 	-Wall -I$(top_builddir)/src  -I$(top_builddir)/replace $(RTKCPPFL
 noinst_LIBRARIES = libmodels.a 
 
 libmodels_a_SOURCES = \
-	box.cc \
-	box.hh \
-	bitmap.cc \
+	bitmap.cc \   #remove this once we have some files in here
 	bitmap.hh
 
-
+#	box.cc \
+#	box.hh \
 #	positiondevice.cc \
 #	positiondevice.hh
 #                   broadcastdevice.cc \

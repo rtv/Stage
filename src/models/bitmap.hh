@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/bitmap.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.2.6.1 $
+//  $Revision: 1.2.6.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -46,7 +46,8 @@ private:
   int rect_count;
   double rects_max_x, rects_max_y; // the upper bounds on rectangle positions
   
-  void RenderRects( void );
+  // bool controls whether rects are added to or removed from the matrix
+  void RenderRects(  bool render );
 
 public:
   virtual int SetProperty( int con, stage_prop_id_t property, 

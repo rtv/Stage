@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15.2.8 2003-02-06 03:36:48 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.9 2003-02-07 05:30:34 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -65,7 +65,7 @@ protected:  void AddChild( CEntity* child );
 
   // everyone shares these vars 
 public:
-  static double ppm; 
+  //static double ppm; 
   static CMatrix* matrix;
   static bool enable_gui;
 
@@ -96,8 +96,20 @@ public: stage_id_t stage_id;
 				   void* value, size_t len );
   
 public: virtual int GetProperty( stage_prop_id_t property, void* value );
+
   
+protected:
+  stage_rotrect_t* rects;
+  int rect_count;
+  double rects_max_x, rects_max_y; // the upper bounds on rectangle positions
+  // sets our local rectangle bounds members to the extreme values
+  // of the rectangle array members
+  void DetectRectBounds(void);
+
+  // bool controls whether rects are added to or removed from the matrix
+  void RenderRects(  bool render );
   
+
   // Update the entity's device-specific representation
   // this is called every time the simulation clock increments
   public: virtual void Update( double sim_time );
@@ -109,13 +121,21 @@ public: virtual void Sync();
 
   // Render the entity into the world
   protected: void Map(double px, double py, double pth);
+  
+  // calls Map(double,double,double) with the current global pose
+  protected: void Map( void );
 
   // Remove the entity from the world
   protected: void UnMap();
 
   // Remove the entity at its current pose and remap it at a new pose.
   protected: void ReMap(double px, double py, double pth);
-  
+
+  // maps myself and my children, recursively
+  protected: void MapFamily(void);
+  // unmaps myself and my children, recursively
+  protected: void UnMapFamily(void);
+ 
   // Primitive rendering function using internally
   private: void MapEx(double px, double py, double pth, bool render);
 
@@ -204,7 +224,6 @@ public: virtual void FamilyUnsubscribe();
   public: LibraryItem* lib_entry; 
   
   // Our shape and geometry
-  public: StageShape shape;
   public: double origin_x, origin_y;
   public: double size_x, size_y;
 
