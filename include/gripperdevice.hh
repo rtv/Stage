@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/gripperdevice.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.3 $
+//  $Revision: 1.3.2.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -82,7 +82,8 @@ class CGripperDevice : public CPlayerDevice
     //  attaches to the User I/O port on the pioneer)
     private: bool m_paddles_open, m_paddles_closed, m_paddles_moving,
                   m_gripper_error, m_lift_up, m_lift_down,
-                  m_lift_moving, m_lift_error;
+                  m_lift_moving, m_lift_error,m_inner_breakbeam,
+                  m_outer_breakbeam;
                    
     // this is the range at which the gripper will actually pick
     // up a puck
