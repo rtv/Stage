@@ -23,7 +23,7 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan
  * Date: 3 July 2003
- * CVS: $Id: main.cc,v 1.75 2003-10-13 08:37:00 rtv Exp $
+ * CVS: $Id: main.cc,v 1.76 2003-10-13 16:52:51 rtv Exp $
  */
 
 
@@ -448,7 +448,11 @@ gboolean StgSubClientRead( GIOChannel* channel,
 			cli, g_list_length(cli->subs) );
 	    
 	    reply = stg_property_create();
-	    reply->action = STG_ACK;
+	    reply->id = prop->id;
+	    reply->action = prop->action;
+	    reply->property = prop->property;
+	    char success = 1;
+	    stg_property_attach_data( reply, &success, 1 );
 	  }
 	  break;
 	  
@@ -472,16 +476,20 @@ gboolean StgSubClientRead( GIOChannel* channel,
 	    g_free( dead_link->data );   
 	    
 	    reply = stg_property_create();
-	    reply->action = STG_ACK;
+	    reply->id = prop->id;
+	    reply->action = prop->action;
+	    reply->property = prop->property;
+	    char fail = 0;
+	    stg_property_attach_data( reply, &fail, 1 );
 	  }
 	  break;
-
+	  
 	default:
 	  PRINT_WARN3( "default action handler for action %d id %d prop %s",
 		       prop->action, 
 		       prop->id, 
 		       stg_property_string(prop->property) );
-
+	  
 	  reply = stg_property_create();
 	  reply->action = STG_NACK; // assume it will not work
 

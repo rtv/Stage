@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@hrl.com 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.20 2003-10-13 08:37:00 rtv Exp $
+ * CVS: $Id: stage.h,v 1.21 2003-10-13 16:52:51 rtv Exp $
  */
 
 #ifdef __cplusplus
@@ -343,7 +343,7 @@ typedef struct
   stg_prop_id_t property; // identify the property
   double timestamp;
   int id; // identify the entity or world if appropriate
-  stg_prop_action_t action; // determines property set, get, or both
+  stg_prop_action_t action; // what does this request do?
   size_t len; // the property uses this much data (to follow)
   char data[0]; // allows us named entry to the end of the struct
 } stg_property_t;
