@@ -143,7 +143,7 @@ typedef struct
   int movemask;
   
   // a figure for each of our object types
-  rtk_fig_t* fig[STG_GUI_DATA_COUNT];
+  rtk_fig_t* fig[STG_GUI_OBJECT_COUNT];
   // a  countdown figure for each of our sensor types
   stg_gui_countdown_t datafigs[STG_GUI_DATA_COUNT];
 } stg_gui_model_t;

@@ -21,7 +21,7 @@
  * Desc: A world device model - replaces the CWorld class
  * Author: Richard Vaughan
  * Date: 31 Jan 2003
- * CVS info: $Id: world.cc,v 1.146 2003-09-05 20:58:45 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.147 2003-09-09 21:44:39 rtv Exp $
  */
 
 
@@ -87,15 +87,10 @@ int stg_world_destroy( stg_world_t* world )
   
   WORLD_DEBUG( world, "world shutdown");
   
-  // shutdown all the entities in the world
-  //for( CEntity* child = stg_world_first_child( world ); child; 
-  //   child = stg_ent_next_sibling( child ) )
-  //if( child ) child->Shutdown();
-  
+  // recursibelyshutdown all the entities in the world
   while( stg_world_first_child(world) )
     delete stg_world_first_child(world);
   
-  if( world->matrix ) stg_world_destroy_matrix( world );
 
   // kill this gui window
   if( world->win ) stg_gui_window_destroy( world->win );
@@ -106,6 +101,8 @@ int stg_world_destroy( stg_world_t* world )
   
   // remove the world from the client that created it
   world->client->worlds = g_list_remove( world->client->worlds, world ); 
+
+  if( world->matrix ) stg_world_destroy_matrix( world );
 
   WORLD_DEBUG( world, "world destruction complete" );
 

@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.118 2003-09-05 20:58:44 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.119 2003-09-09 21:44:39 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -267,10 +267,12 @@ CEntity::CEntity( stg_entity_create_t* init, stg_id_t id )
   /* the LAST THING WE DO is to request callbacks into this object */
   
   // todo - real time vs. non-real time
+  this->update_tag = 0;
   if( this->interval > 0 )
     {
       guint ms_interval = (guint)(this->interval * 1000.0);
-      update_tag = g_timeout_add(ms_interval,CEntity::stg_update_signal, this);
+      this->update_tag = g_timeout_add(ms_interval,CEntity::stg_update_signal, this);
+      //printf( "ADD ent %p update tag %d\n", this, this->update_tag );
     } 
 
   // don't put anything here!
@@ -287,23 +289,19 @@ CEntity::~CEntity()
   //if( this->running ) this->Shutdown(); 
   
   ENT_DEBUG( "entity shutdown" );
-  
-  UnMap();
-  
+
+  //printf( "DESTROY ent %p update tag %d\n", this, this->update_tag );
+
   /* cancel the callbacks into this object */
-  g_source_remove( update_tag );
-  
-  //ENT_DEBUG( "shutting down children" );
-  
-  //for( CEntity* child = stg_ent_first_child( this ); child; 
-  //   child = stg_ent_next_sibling(child))
-  // child->Shutdown();
-  
-  //ENT_DEBUG( "finished shutting down children" ); 
+  if( this->update_tag > 0 )
+    g_source_remove( this->update_tag );
+
+  UnMap();
+    
   
   this->running = FALSE;
-  
 
+  ENT_DEBUG( "entity destruction - destroying children" );
   // deleting a child removes it from the tree, so we can't iterate
   // safely here; instead we repeatedly delete the first child until
   // they're all gone.
@@ -315,15 +313,16 @@ CEntity::~CEntity()
       delete child;
       ENT_DEBUG( "entity destruction - destroying child complete" );
     }
+  ENT_DEBUG( "entity destructuion - destroying all children complete" );
 
   if( this->guimod) 
     {
-      ENT_DEBUG( "shutting down GUI" );
+      ENT_DEBUG( "shutting down GUI model" );
       stg_gui_model_destroy( this->guimod );
       this->guimod = NULL;
     }
   
-  //ENT_DEBUG( "entity shutdown complete" );
+  ENT_DEBUG( "entity destructuion - destroying gui model complete" );
 
   
   g_array_free( this->received_msgs, TRUE );

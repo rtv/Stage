@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.23 2003-09-05 20:58:45 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.24 2003-09-09 21:44:39 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -783,38 +783,31 @@ stg_gui_model_t* stg_gui_model_create(  CEntity* ent )
   //rtk_fig_show( mod->fig[STG_GUI_OBJECT_RECT], true ); 
   rtk_fig_color_rgb32( *mod->fig, ent->color);   
 
-  // create a fig for each of our sensor types
-  for( int i=0; i<STG_GUI_DATA_COUNT; i++ )
-    {
-      mod->datafigs[i].fig =
-	rtk_fig_create( mod->win->canvas, NULL, STG_LAYER_DATA ); 
-    }
+  // zero the pointers and counters of our data figures
+  memset( mod->datafigs, 0, sizeof(rtk_fig_t*) * STG_GUI_DATA_COUNT );
 
-  // set the appropriate colors here
-  rtk_fig_color_rgb32(  mod->datafigs[STG_GUI_DATA_NEIGHBORS].fig, 
-			stg_lookup_color( STG_FIDUCIAL_COLOR ) );
-  
-  rtk_fig_color_rgb32(  mod->datafigs[STG_GUI_DATA_RANGER].fig, 
-			stg_lookup_color( STG_SONAR_COLOR ) );
-  
-  rtk_fig_color_rgb32(  mod->datafigs[STG_GUI_DATA_LASER].fig, 
-			stg_lookup_color( STG_LASER_COLOR ) );
-  
   return mod;
 }
 
 void stg_gui_model_destroy( stg_gui_model_t* mod )
 {
-  printf( "destroying model %p\n", mod );
+  //printf( "destroying model %p\n", mod );
 
+
+  //printf( "destroying data figs\n" );
   // clean up the figures
   for( int i=0; i<STG_GUI_DATA_COUNT; i++ )
     if( mod->datafigs[i].fig ) rtk_fig_destroy( mod->datafigs[i].fig );
 
-  for( int i=0; i<STG_GUI_OBJECT_COUNT; i++ )
+  //printf( "destroying object figs\n" );
+  for( int i=1; i<STG_GUI_OBJECT_COUNT; i++ )
     if( mod->fig[i] ) rtk_fig_destroy( mod->fig[i] );  
   
-  
+  //printf( "destroying head fig\n" );
+  // destroy the parent fig last
+  rtk_fig_destroy( mod->fig[0] );
+  //printf( "destroying figs for model %p done\n", mod );
+
   free( mod );
 }
 
@@ -891,16 +884,22 @@ void stg_gui_neighbor_render( CEntity* ent, GArray* neighbors )
   stg_gui_countdown_t* cd = &model->datafigs[STG_GUI_DATA_NEIGHBORS];
   model->win->countdowns = g_list_remove( model->win->countdowns, cd );
 
-  rtk_fig_t* fig = model->datafigs[STG_GUI_DATA_NEIGHBORS].fig;  
-  rtk_fig_clear( fig );
-
+  if( cd->fig == NULL )
+    {
+      cd->fig = rtk_fig_create( model->win->canvas, NULL, STG_LAYER_DATA ); 
+      rtk_fig_color_rgb32( cd->fig, stg_lookup_color( STG_FIDUCIAL_COLOR ) );
+    }
+  else
+    rtk_fig_clear( cd->fig );
+  
+  
   if( !rtk_menuitem_ischecked( model->win->mitems[STG_MITEM_VIEW_DATA_NEIGHBORS]))
     return;
-
+  
   stg_pose_t pz;
   ent->GetGlobalPose( &pz );
   
-  rtk_fig_origin( fig, pz.x, pz.y, pz.a );
+  rtk_fig_origin( cd->fig, pz.x, pz.y, pz.a );
 
   char text[65];
   
@@ -912,17 +911,17 @@ void stg_gui_neighbor_render( CEntity* ent, GArray* neighbors )
       double py = nbor->range * sin(nbor->bearing);
       double pa = nbor->orientation;
       
-      rtk_fig_line( fig, 0, 0, px, py );	
+      rtk_fig_line( cd->fig, 0, 0, px, py );	
       
       // double wx = nbor->size.x;
       //double wy = nbor->size.y;
-      //rtk_fig_rectangle( fig, px, py, pa, wx, wy, 0);
-      //rtk_fig_line( fig, px+wx/2.0, py+wy/2.0, px-wx/2.0, py-wy/2.0 );
-      //rtk_fig_line( fig, px+wx/2.0, py-wy/2.0, px-wx/2.0, py+wy/2.0 );
-      //rtk_fig_arrow( fig, px, py, pa, wy, 0.10);
+      //rtk_fig_rectangle( cd->fig, px, py, pa, wx, wy, 0);
+      //rtk_fig_line( cd->fig, px+wx/2.0, py+wy/2.0, px-wx/2.0, py-wy/2.0 );
+      //rtk_fig_line( cd->fig, px+wx/2.0, py-wy/2.0, px-wx/2.0, py+wy/2.0 );
+      //rtk_fig_arrow( cd->fig, px, py, pa, wy, 0.10);
       
       snprintf(text, 64, "  %d", nbor->id );
-      rtk_fig_text( fig, px, py, pa, text);
+      rtk_fig_text( cd->fig, px, py, pa, text);
     }
 
   // reset the timer on our countdown
@@ -942,17 +941,22 @@ void stg_gui_laser_render( CEntity* ent )
   // reset the timer on our countdown
   stg_gui_countdown_t* cd = &model->datafigs[STG_GUI_DATA_LASER];
   model->win->countdowns = g_list_remove( model->win->countdowns, cd );
-
-  rtk_fig_t *fig = model->datafigs[STG_GUI_DATA_LASER].fig;
-  rtk_fig_clear( fig );
-
+  
+  if( cd->fig == NULL )
+    {
+      cd->fig = rtk_fig_create( model->win->canvas, NULL, STG_LAYER_DATA ); 
+      rtk_fig_color_rgb32( cd->fig, stg_lookup_color( STG_LASER_COLOR ) );
+    }
+  else
+    rtk_fig_clear( cd->fig );
+  
   if( !rtk_menuitem_ischecked( model->win->mitems[STG_MITEM_VIEW_DATA_LASER]))
     return;
   
   stg_pose_t pz;
   memcpy( &pz, &laser->pose, sizeof(stg_pose_t) );
   ent->LocalToGlobal( &pz );
-  rtk_fig_origin( fig, pz.x, pz.y, pz.a );
+  rtk_fig_origin( cd->fig, pz.x, pz.y, pz.a );
   
   double bearing = laser->angle_min;
   double incr = (laser->angle_max-laser->angle_min)/(double)laser->sample_count;
@@ -971,17 +975,17 @@ void stg_gui_laser_render( CEntity* ent )
       
       //rtk_fig_line(this->scan_fig, 0.0, 0.0, px, py);
       
-      rtk_fig_line( fig, lx, ly, px, py );
+      rtk_fig_line( cd->fig, lx, ly, px, py );
       lx = px;
       ly = py;
       
       // add little boxes at high intensities (like in playerv)
       if(  laser->samples[i].reflectance > 0 )
-	rtk_fig_rectangle( fig, px, py, 0, 0.02, 0.02, 1);
+	rtk_fig_rectangle( cd->fig, px, py, 0, 0.02, 0.02, 1);
       
     }
   
-  rtk_fig_line( fig, 0.0, 0.0, lx, ly );
+  rtk_fig_line( cd->fig, 0.0, 0.0, lx, ly );
 
   cd->timeleft = STG_GUI_COUNTDOWN_TIME_DATA;
   model->win->countdowns = g_list_append( model->win->countdowns, cd );
@@ -997,9 +1001,15 @@ void stg_gui_rangers_render( CEntity* ent )
   stg_gui_countdown_t* cd = &model->datafigs[STG_GUI_DATA_RANGER];
   model->win->countdowns = g_list_remove( model->win->countdowns, cd );
 
-  rtk_fig_t* fig = model->datafigs[STG_GUI_DATA_RANGER].fig;
-  rtk_fig_clear( fig );
-
+  if( cd->fig == NULL )
+    {
+      cd->fig = rtk_fig_create( model->win->canvas, NULL, STG_LAYER_DATA ); 
+      rtk_fig_color_rgb32( cd->fig, stg_lookup_color(STG_RANGER_COLOR) );
+    }
+  else
+    rtk_fig_clear( cd->fig );
+  
+  
   if( !rtk_menuitem_ischecked( model->win->mitems[STG_MITEM_VIEW_DATA_RANGER] ) )
     return;
 
@@ -1011,7 +1021,7 @@ void stg_gui_rangers_render( CEntity* ent )
       memcpy( &pz, &tran->pose, sizeof(stg_pose_t) );
       ent->LocalToGlobal( &pz );       
       
-      rtk_fig_arrow( fig, pz.x, pz.y, pz.a, tran->range, 0.05 );
+      rtk_fig_arrow( cd->fig, pz.x, pz.y, pz.a, tran->range, 0.05 );
       
       // this code renders triangles indicating the beam width
       /*

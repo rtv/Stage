@@ -23,7 +23,7 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan
  * Date: 3 July 2003
- * CVS: $Id: main.cc,v 1.71 2003-09-05 20:58:45 rtv Exp $
+ * CVS: $Id: main.cc,v 1.72 2003-09-09 21:44:39 rtv Exp $
  */
 
 
@@ -138,7 +138,6 @@ void stg_client_destroy( stg_client_data_t* cli )
   while( cli->worlds )
     {
       PRINT_DEBUG1( "destroying world %p", cli->worlds->data);
-      printf( "destroying world %p\n", cli->worlds->data);
       stg_world_destroy( (stg_world_t*)cli->worlds->data );
     }
   
@@ -408,6 +407,7 @@ gboolean StgClientAcceptConnection( GIOChannel* channel, GHashTable* table )
   g_io_channel_flush( client, NULL );
 
   stg_client_data_t* cli = stg_client_create( greet.pid, client );
+  g_assert( cli );
 
   return TRUE; // success
 }      
