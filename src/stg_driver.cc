@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: stg_driver.cc,v 1.32 2005-02-24 14:45:46 rtv Exp $
+ * CVS: $Id: stg_driver.cc,v 1.33 2005-02-24 19:04:54 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -479,17 +479,21 @@ StgDriver::StgDriver(ConfigFile* cf, int section)
       
       if( base_model == NULL )
 	{
-	  PRINT_ERR1( " Error! find a Stage model named \"%s\"", model_name );
+	  PRINT_ERR1( " Error! can't find a Stage model named \"%s\"", model_name );
 	  this->SetError(-1);
 	  return;
 	}
-      
+
       // printf( "found base model %s\n", base_model->token );
 
-      // now find the model for this player device
-      // find the first model in the tree that is the right type and
-      // has not been used before
-      device->mod = model_match( base_model, mod_type, this->devices );
+      // map interface can attach only to the base model
+      if( device->id.code == PLAYER_MAP_CODE )
+	device->mod = base_model;
+      else
+	// now find the model for this player device
+	// find the first model in the tree that is the right type and
+	// has not been used before
+	device->mod = model_match( base_model, mod_type, this->devices );
       
       if( device->mod )
 	{
