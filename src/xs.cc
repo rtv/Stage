@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.5 2001-08-13 21:05:34 vaughan Exp $
+ * $Id: xs.cc,v 1.6 2001-08-14 00:09:37 gerkey Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -504,6 +504,8 @@ void  CXGui::SetupGeometry( char* geom )
 void  CXGui::SetupChannels( char* channels )
 {
   assert( channels );
+  if(!strlen(channels))
+    return;
 
   XColor a, b;
   int c = 0;
@@ -1467,20 +1469,25 @@ void CXGui::StartDragging( XEvent& reportEvent )
   dragging = new truth_t();
   
     
+  truth_t* nearest = NearestEntity( (reportEvent.xmotion.x+panx)/ppm,
+			 ((iheight-pany)/ppm)-reportEvent.xmotion.y/ppm );
   // copy the details of the nearest device
-  memcpy( dragging,  
-	  NearestEntity( (reportEvent.xmotion.x+panx)/ppm,
-			 ((iheight-pany)/ppm)-reportEvent.xmotion.y/ppm ),
-	  sizeof( truth_t ) );
+  if(!nearest)
+  {
+    dragging = NULL;
+    XUngrabPointer( display, CurrentTime );
+    return;
+  }
+  memcpy( dragging,  nearest, sizeof( truth_t ) );
   
-  assert( dragging );
+  //assert( dragging );
   
   //printf( "XS: Dragging (%d,%d,%d)",
   //dragging->id.port, dragging->id.type, dragging->id.index );
   //fflush( stdout );
 
   HighlightObject( dragging, false );
-}  
+}
   
 
 void CXGui::StopDragging( XEvent& reportEvent )
