@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.2 2002-11-09 01:41:13 rtv Exp $
+% CVS: $Id: stage.tex,v 1.3 2002-11-09 01:52:11 rtv Exp $
 
 \documentclass[11pt,twoside]{report}
 
@@ -1316,7 +1316,10 @@ $180^\circ$ field-of-view (the SICK LMS200 to be exact).
 \hline
 Name & Values & Description \\
 \hline
-\verb'<none>'\\
+\verb'min_res' & \verb'float' & 
+The angular resolution of a range sample in degrees\\
+\verb'max_range' & \verb'float' & The max range of a scan beam in meters\\
+% \verb'scan_rate' & \verb'float' & \\ this doesn't seem to do anything just now
 \hline
 \end{tabularx}
 
@@ -1325,7 +1328,10 @@ Name & Values & Description \\
 \hline
 Name & Value\\
 \hline
-\verb'<none>'\\
+\verb'min_res' & \verb'0.25'\\
+\verb'max_range' & \verb'8.0' \\
+\verb'size' & \verb'[0.155 0.155]'\\
+\verb'color' & \verb'"blue"' \\
 \hline
 \end{tabularx}
 
