@@ -2,7 +2,7 @@
 define(`forager',`
 # Robot Expansion
 #   The following code was expanded from the macro call:
-#       $0($1,$2,$3,$4)
+#       $0($*)
 
 create position_device radius 0.2 pose $1 $2 $3 port $4 shape circle
 {
@@ -14,5 +14,18 @@ create position_device radius 0.2 pose $1 $2 $3 port $4 shape circle
   }
   create gripper_device pose 0.16 0 0 consume true port $4
   create gps_device pose 0 0 0 port $4
+}
+')
+
+#  args are (<x>,<y>,<th>,<port>)
+define(`simplerobot',`
+# Robot Expansion
+#   The following code was expanded from the macro call:
+#        $0($*)
+
+create position_device pose $1 $2 $3 port $4 shape circle
+{
+  create player_device port $4
+  create sonar_device port $4
 }
 ')
