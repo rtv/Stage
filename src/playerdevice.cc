@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -89,13 +89,18 @@ bool CPlayerDevice::IsSubscribed()
 //
 size_t CPlayerDevice::PutData(void *data, size_t len)
 {
-    if (len > m_data_len)
-        MSG2("data len (%d) > buffer len (%d)", (int) len, (int) m_data_len);
-    ASSERT(len <= m_data_len);
+    //if (len > m_data_len)
+    //    MSG2("data len (%d) > buffer len (%d)", (int) len, (int) m_data_len);
+    //ASSERT(len <= m_data_len);
 
     m_world->LockShmem();
 
-    // Copy the data
+    // Take the smallest number of bytes
+    // This avoids an overflow of either buffer
+    //
+    len = min(len, m_data_len);
+
+    // Copy the data (or as much as we were given)
     //
     memcpy(m_data_buffer, data, len);
 
@@ -113,9 +118,9 @@ size_t CPlayerDevice::PutData(void *data, size_t len)
 //
 size_t CPlayerDevice::GetCommand(void *data, size_t len)
 {   
-    if (len > m_command_len)
-        MSG2("command len (%d) > buffer len (%d)", (int) len, (int) m_command_len);
-    ASSERT(len <= m_command_len);
+    //if (len < m_command_len)
+    //    MSG2("buffer len (%d) < command len (%d)", (int) len, (int) m_command_len);
+    //ASSERT(len >= m_command_len);
     
     m_world->LockShmem();
 
@@ -123,6 +128,11 @@ size_t CPlayerDevice::GetCommand(void *data, size_t len)
     //
     if (m_info_buffer[INFO_COMMAND_FLAG] != 0)
     {
+        // Take the smallest number of bytes
+        // This avoids an overflow of either buffer
+        //
+        len = min(len, m_command_len);
+        
         // Copy the command
         //
         memcpy(data, m_command_buffer, len);
@@ -144,9 +154,9 @@ size_t CPlayerDevice::GetCommand(void *data, size_t len)
 //
 size_t CPlayerDevice::GetConfig(void *data, size_t len)
 {
-    if (len > m_config_len)
-        MSG2("config len (%d) > buffer len (%d)", (int) len, (int) m_config_len);
-    ASSERT(len <= m_config_len);
+    //if (len < m_config_len)
+    //    MSG2("buffer len (%d) < config len (%d)", (int) len, (int) m_config_len);
+    //ASSERT(len >= m_config_len);
     
     m_world->LockShmem();
 
@@ -154,6 +164,11 @@ size_t CPlayerDevice::GetConfig(void *data, size_t len)
     //
     if (m_info_buffer[INFO_CONFIG_FLAG] != 0)
     {
+        // Take the smallest number of bytes
+        // This avoids an overflow of either buffer
+        //
+        len = min(len, m_config_len);
+        
         // Copy the configuration
         //
         memcpy(data, m_config_buffer, len);

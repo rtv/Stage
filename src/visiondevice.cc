@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -30,29 +30,24 @@
 #include "world.h"
 #include "robot.h"
 #include "visiondevice.hh"
+#include "ptzdevice.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CVisionDevice::CVisionDevice(CRobot *robot, void *buffer, size_t data_len,
+CVisionDevice::CVisionDevice(CRobot *robot, CPtzDevice *ptz_device,
+                             void *buffer, size_t data_len,
                              size_t command_len, size_t config_len)
         : CPlayerDevice(robot, buffer, data_len, command_len, config_len)
 {
+    m_ptz_device = ptz_device;
+        
     m_update_interval = 0.1;
     m_last_update = 0;
 
-    cameraAngleMax = 2.0 * M_PI / 3.0; // 120 degrees
-    cameraAngleMin = 0.2 * M_PI / 3.0; // 12 degrees
-
-    cameraFOV = cameraAngleMax;
-
     cameraImageWidth = 160 / 2;
     cameraImageHeight = 120 / 2;
-
-    cameraPan = 0.0;
-    cameraPanMax = 100.0; // degrees
-    cameraPanMin = -cameraPanMax;
 
     numBlobs = 0;
     memset( blobs, 0, MAXBLOBS * sizeof( ColorBlob ) );
@@ -92,11 +87,17 @@ bool CVisionDevice::Update()
     
     unsigned char* colors = new unsigned char[ cameraImageWidth ];
     float* ranges = new float[ cameraImageWidth ];
-        
+
+    // Get the ptz settings
+    //
+    double pan, tilt, zoom;
+    ASSERT(m_ptz_device != NULL);
+    m_ptz_device->GetPTZ(pan, tilt, zoom);
+    
     // ray trace the 1d color / range image
-    float startAngle = (m_robot->a + cameraPan) - (cameraFOV / 2.0);
-    float xRadsPerPixel = cameraFOV / cameraImageWidth;
-    float yRadsPerPixel = cameraFOV / cameraImageHeight;
+    float startAngle = (m_robot->a + pan) - (zoom / 2.0);
+    float xRadsPerPixel = zoom / cameraImageWidth;
+    float yRadsPerPixel = zoom / cameraImageHeight;
     unsigned char pixel = 0;
 
     float xx, yy;

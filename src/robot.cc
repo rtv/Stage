@@ -1,7 +1,7 @@
 /*************************************************************************
  * robot.cc - most of the action is here
  * RTV
- * $Id: robot.cc,v 1.9 2000-12-01 03:13:32 ahoward Exp $
+ * $Id: robot.cc,v 1.10 2000-12-02 01:29:57 ahoward Exp $
  ************************************************************************/
 
 #include <errno.h>
@@ -41,6 +41,7 @@
 #include "sonardevice.h"
 #include "laserdevice.hh"
 #include "visiondevice.hh"
+#include "ptzdevice.hh"
 
 // Passive devices
 //
@@ -221,14 +222,30 @@ bool CRobot::Startup()
     m_device[m_device_count++] = new CLaserBeaconDevice(this, -0.10, +0.4);
     m_device[m_device_count++] = new CLaserBeaconDevice(this, -0.10, -0.4);
 
+
+
+    // Create ptz device
+    //
+    CPtzDevice *ptz_device = new CPtzDevice(this, playerIO + PTZ_DATA_START,
+                                            PTZ_DATA_BUFFER_SIZE,
+                                            PTZ_COMMAND_BUFFER_SIZE,
+                                            PTZ_CONFIG_BUFFER_SIZE);
+    ASSERT_INDEX(m_device_count, m_device);
+    m_device[m_device_count++] = ptz_device;
+
     // Create vision device
+    // **** HACK -- pass a pointer to the ptz device so we can determine
+    // the vision parameters.
+    // A better way to do this would be to generalize the concept of a coordinate
+    // frame, so that the PTZ device defines a new cs for the camera.
     //
     ASSERT_INDEX(m_device_count, m_device);
-    m_device[m_device_count++] = new CVisionDevice(this, playerIO + ACTS_DATA_START,
-                                                  ACTS_DATA_BUFFER_SIZE,
-                                                  ACTS_COMMAND_BUFFER_SIZE,
-                                                  ACTS_CONFIG_BUFFER_SIZE);
-    
+    m_device[m_device_count++] = new CVisionDevice(this, ptz_device,
+                                                   playerIO + ACTS_DATA_START,
+                                                   ACTS_DATA_BUFFER_SIZE,
+                                                   ACTS_COMMAND_BUFFER_SIZE,
+                                                   ACTS_CONFIG_BUFFER_SIZE);
+
     // Start all the devices
     //
     for (int i = 0; i < m_device_count; i++)
@@ -261,70 +278,8 @@ bool CRobot::Shutdown()
     return true;
 }
 
-
-int CRobot::UpdateAndPublishPtz( void )
-{
-  // if its time to recalculate vision
-  if( world->timeNow - lastPtz > world->ptzInterval )
-    {
-      lastPtz = world->timeNow;
-
-      // LOCK THE MEMORY
-      world->LockShmem();
-
-      short* cmd = (short*)( playerIO +  PTZ_COMMAND_START);
-
-      short pan = ntohs(cmd[0]);
-      short tilt = ntohs(cmd[1]);
-      unsigned short zoom = (unsigned short) ntohs(cmd[2]);
-
-      world->UnlockShmem();
-
-      int p = pan;
-      //int t = tilt;
-      int t = 0;
-      int z = zoom;
-
-      // threshold panning
-      if( p < cameraPanMin ) p = (short)cameraPanMin;
-      if( p > cameraPanMax ) p = (short)cameraPanMax;
-
-      cameraPan = -p * M_PI/180.0;
-
-      //cameraTilt = t * M_PI/180.0; // leave tilt alone for now
-
-      // threshold scaling
-      if( z < 0 ) z = 0;
-      if( z > 1024 ) z = 1024;
-
-      double cameraAngleRange = cameraAngleMax - cameraAngleMin;
-      double cameraScaling = cameraAngleRange / 1024.0;
-      cameraFOV = cameraAngleMax - z * cameraScaling;
-
-      short* ptzdata = (short*)( playerIO +  PTZ_DATA_START);
-
-      // LOCK THE MEMORY
-      world->LockShmem();
-
-      ptzdata[0] = htons((short)p);
-      ptzdata[1] = htons((short)t);
-      (unsigned short)(ptzdata[2]) = htons((unsigned short)z);
-
-      world->UnlockShmem();
-
-      //cout << "p: " << p << " t: " << t << " z: " << z << endl;
-      return true;
-    }
-  else
-    return false;
-}
-
-
 void CRobot::Update()
 {
-    // legacy devices
-    if( playerIO[ SUB_PTZ ] ) UpdateAndPublishPtz();
-
     // Update all devices
     //
     for (int i = 0; i < m_device_count; i++)
