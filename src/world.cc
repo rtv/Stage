@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.40 $
+//  $Revision: 1.41 $
 //
 // Usage:
 //  (empty)
@@ -576,22 +576,20 @@ void CWorld::Update()
 	input_queue.pop(); // remove the front object
 
 //  #ifdef DEBUG
-//  	printf( "De-queued Truth: "
-//  		"(%d,%d,%d) parent (%d,%d,%d) [%d,%d,%d]\n", 
-//  		truth.id.port, 
-//  		truth.id.type, 
-//  		truth.id.index,
-//  		truth.parent.port, 
-//  		truth.parent.type, 
-//  		truth.parent.index,
-//  		truth.x, truth.y, truth.th );
-	
-//  	fflush( stdout );
+  	printf( "De-queued Truth: "
+  		"($s:%d,%d,%d) parent (%d,%d,%d) [%d,%d,%d]\n", 
+  		truth.hostname,
+		truth.id.port, 
+  		truth.id.type, 
+  		truth.id.index,
+  		truth.parent.port, 
+  		truth.parent.type, 
+  		truth.parent.index,
+  		truth.x, truth.y, truth.th );
+
+  	fflush( stdout );
 //  #endif
 
-	// find the matching entity
-	// (this implies that these ID fields cannot be changed externally)
-	
 	// see if this is a stage directive 
 	
 	if( truth.stage_id == -1 ) // its a command for the engine!
@@ -607,16 +605,15 @@ void CWorld::Update()
 	      }
 	      continue;
 	  }
-
-	CEntity* ent = m_object[ truth.stage_id ];
-	
-	assert( ent ); // there really ought to be one!
-	
-	//ent->Map( false );
-	
-	// update the entity with the truth
-	ent->SetGlobalPose( truth.x/1000.0, truth.y/1000.0, 
-			    DTOR(truth.th) );
+	else // it is an entity update - move it now
+	  {
+	    CEntity* ent = m_object[ truth.stage_id ];
+	    assert( ent ); // there really ought to be one!
+	  	
+	    // update the entity with the truth
+	    ent->SetGlobalPose( truth.x/1000.0, truth.y/1000.0, 
+				DTOR(truth.th) );
+	  }
 	
 	// width and height could be changed here too if necessary
       }

@@ -47,13 +47,17 @@ int stages = 0;
 struct pollfd* servers = 0;
 
 
-void Activity( void )
+void Activity( int reading )
 {
-  static int t = 0;
+  static int t = 0, s = 0;
 
-  char c;
+  char b,c;
   
-  switch( t++ )
+  // if there was activity, spin the active ticker
+  // else spin the idle ticker
+  ( reading > 0 ) ? t++ : s++;
+
+  switch( t )
     {
     case 0: c = '|'; break;
     case 1: c = '/'; break;
@@ -62,8 +66,33 @@ void Activity( void )
       t = 0;
       break;
     }    
+
+  switch( s )
+    {
+    case 0: b = '|'; break;
+    case 1: b = '/'; break;
+    case 2: b = '-'; break;
+    case 3: b = '\\'; 
+      s = 0;
+      break;
+    }    
+
      
-  printf( "\rActivity: %c ", c ); fflush( stdout );
+    char* buf = new char[ stages+1 ];
+  
+    for( int c=0; c<stages; c++ )
+//      // is this one ready to read?
+      (servers[c].revents & POLLIN) ?  buf[c] = '!' : buf[c] = '.';
+  
+    buf[c] = 0; // string terminator
+    
+      printf( "\rActivity: %c %c [%s]", b, c, buf);
+ 
+      //printf( "\rActivity: %c", c );
+
+  delete [] buf;
+
+ fflush( stdout );
 }
 
 int main(int argc, char **argv)
@@ -143,8 +172,8 @@ int main(int argc, char **argv)
 
       int num_to_read = 0;
       
-      // let's try this poll(2) thing (with no timeout)
-      if((num_to_read = poll( servers, stages, -1)) == -1)
+      // let's try this poll(2) thing (with a timeout so we can be sure it is running)
+      if((num_to_read = poll( servers, stages, 100)) == -1)
 	{
 	  perror( "poll failed");
 	  return(-1);
@@ -153,6 +182,9 @@ int main(int argc, char **argv)
       //printf("poll returned %d to-read\n", num_to_read);
       // call the corresponding Read() for each one that's ready
       
+      Activity( num_to_read );
+
+
       if( num_to_read > 0 ) for(int i=0; i<stages; i++)
 	{
 	  // is this one ready to read?
@@ -164,9 +196,7 @@ int main(int argc, char **argv)
 	      r = read( servers[i].fd, &truth, sizeof(truth) );
 	      
 	      if( r > 0 )
-		{
-		  Activity();
-		  
+		{		  
 		  // foward the packet to the other servers 
 		  for(int j=0; j<stages; j++)
 		    if( j != i || truth.echo_request ) 
