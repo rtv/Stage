@@ -2,11 +2,11 @@
 # Desc: Test world file containing examples of everything.
 # Author: Andrew Howard, Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.14 2002-06-10 05:00:08 gerkey Exp $
+# CVS: $Id: everything.world,v 1.15 2002-06-10 20:59:08 rtv Exp $
 
 environment
 (
-  file "cave.pnm"
+  file "cave.pnm.gz"
   scale 0.03
   resolution 0.03
 )

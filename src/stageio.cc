@@ -240,17 +240,23 @@ int CStageIO::ReadEntities( int fd, int num )
   {
     ReadEntity( fd, &ent );
      
-    printf( "attempting to create entity %d:%d:%d\n",
-            ent.id, ent.parent, ent.type );
-
-    CEntity* obj = 0;
-    if( ent.parent == -1 )
-      assert( obj = CreateEntity( ent.type, 0 ) );
+    if( ent.type > 0 && ent.type < NUMBER_OF_STAGE_TYPES )
+      {
+	PRINT_DEBUG3( "attempting to create entity %d:%d:%d\n",
+		      ent.id, ent.parent, ent.type );
+	
+	CEntity* obj = 0;
+	if( ent.parent == -1 )
+	  assert( obj = CreateEntity( ent.type, 0 ) );
+	else
+	  assert( obj = CreateEntity( ent.type, 
+				      GetEntity(ent.parent)));
+	
+	AddEntity( obj );
+      }
     else
-      assert( obj = CreateEntity( ent.type, 
-                                  GetEntity(ent.parent)));
-		
-    AddEntity( obj );
+      PRINT_WARN1( "entity type %d out of range\n", ent.type );
+      
       
   }
   

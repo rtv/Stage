@@ -1,23 +1,20 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: simple.world,v 1.22 2002-06-04 06:35:06 rtv Exp $
+# CVS: $Id: simple.world,v 1.23 2002-06-10 20:59:08 rtv Exp $
 
-begin environment
-  file cave.pnm 
+environment
+(
+  file "cave.pnm.gz" 
   scale 0.02
   resolution 0.02 
-end 
+)
 
-begin position_device
+position
+(
   port 6665 
-  pose (1.0 1.0 0.0) 
-  begin player_device
-  end 
-  begin laser_device
-  end 
-  begin sonar_device
-  end 
-  begin gps_device
-  end
-end 
+  pose [1.0 1.0 0.0] 
+  player()
+  sonar()
+  laser()
+) 
 

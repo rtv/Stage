@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.56 2002-06-09 06:31:16 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.57 2002-06-10 20:59:08 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -261,12 +261,13 @@ class CWorld
   // utility methods
 
   // return a string that names this type of entity
-  public: char* CWorld::StringType( StageType t );
+  public: char* CWorld::StringFromType( StageType t );
+  public: StageType TypeFromString( const char* ent_string );
 
   public: CEntity* GetEntityByID( int port, int type, int index );
   
   // entities can be created by type number or by string description
-  public: CEntity* CreateEntity(const char *type, CEntity *parent );
+  public: CEntity* CreateEntity(const char *type_str, CEntity *parent );
   public: CEntity* CreateEntity( StageType type, CEntity *parent );
   
   /////////////////////////////////////////////////////////////////////////////

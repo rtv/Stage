@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.26 $
+//  $Revision: 1.27 $
 //
 // Usage:
 //  (empty)
@@ -55,93 +55,53 @@
 
 #include "world.hh"
 
-/////////////////////////////////////////////////////////////////////////
-// Create an entity given a type (used by server to create entities).
-CEntity* CWorld::CreateEntity(const char *type, CEntity *parent )
-{ 
-  if (strcmp(type, "mote") == 0)
-    return new CMoteDevice(this, parent );
+// TO ADD NEW DEVICES 
+// - ADD A STRING TO CWorld::StringFromType()
+// - ADD A CONSTRUCTOR CALL TO CWorld::CreateEntity()
 
-  if (strcmp(type, "obstacle") == 0 )
-    return new CFixedObstacle(this, parent);
 
-  if (strcmp(type, "position") == 0)
-    return new CPositionDevice(this, parent );
-
-  if (strcmp(type, "omni_position") == 0)
-    return new COmniPositionDevice(this, parent );
-
-  if (strcmp(type, "player") == 0)
-    return new CPlayerDevice(this, parent );
-
-  if (strcmp(type, "laser") == 0)
-    return new CLaserDevice(this, parent );
-
-  if (strcmp(type, "sonar") == 0)
-    return new CSonarDevice(this, parent );
-
-  if (strcmp(type, "misc") == 0)
-    return new CMiscDevice(this, parent );
-
-  if (strcmp(type, "ptz") == 0)
-    return new CPtzDevice(this, parent );
-  
-  if (strcmp(type, "box") == 0 )
-    return new CBoxObstacle(this, parent);
-    
-  if (strcmp(type, "laser_beacon") == 0)
-    return new CLaserBeacon(this, parent);
-   
-  if (strcmp(type, "lbd") == 0)
-    return new CLBDDevice(this, (CLaserDevice*)parent );
-
-  if (strcmp(type, "vision") == 0)
-    return new CVisionDevice(this, (CPtzDevice*)parent);
-        
-  if (strcmp(type, "vision_beacon") == 0)
-    return new CVisionBeacon(this, parent);
-
-  if (strcmp(type, "movable_object") == 0)
-    return new CPuck(this, parent);
-
-  if (strcmp(type, "gps") == 0)
-    return new CGpsDevice(this, parent);
-
-  if (strcmp(type, "gripper") == 0)
-    return new CGripperDevice(this, parent);
-
-  if (strcmp(type, "broadcast") == 0)
-    return new CBroadcastDevice(this, parent);
-
-  if (strcmp(type, "bps") == 0)
-    return new CBpsDevice(this, parent);
-    
-  if (strcmp(type, "puck") == 0)
-    return new CPuck(this, parent);
-
-  if (strcmp(type, "truth") == 0)
-    return new CTruthDevice(this, parent);
-
-#ifdef HRL_HEADERS 
-  // these the proprietary HRL devices - the device code cannot be distributed
-  // so they are implemented in an external library
-  if (strcmp(type, "idar") == 0)
-    return new CIDARDevice(this, parent);
-
-  if (strcmp(type, "descartes") == 0)
-    return new CDescartesDevice(this, parent);
-#endif
-
-  return NULL;
+// PUT YOUR DEVICE'S NAME IN HERE
+// THIS STRING IS THE DEVICE'S NAME IN THE WORLD FILE
+// AND IS USED AS A DESCRIPTIVE NAME IN THE GUI
+char* CWorld::StringFromType( StageType t )
+{
+  switch( t )
+  {
+    case NullType: return "None"; 
+    case WallType: return "wall"; break;
+    case PlayerType: return "player"; 
+    case MiscType: return "misc"; 
+    case PositionType: return "position"; 
+    case SonarType: return "sonar"; 
+    case LaserTurretType: return "laser"; 
+    case VisionType: return "vision"; 
+    case PtzType: return "ptz"; 
+    case BoxType: return "box"; 
+    case LaserBeaconType: return "laser_beacon"; 
+    case LBDType: return "lbd"; 
+    case VisionBeaconType: return "vision_beacon"; 
+    case GripperType: return "gripper"; 
+    case AudioType: return "audio"; 
+    case BroadcastType: return "broadcast"; 
+    case SpeechType: return "speech"; 
+    case TruthType: return "truth"; 
+    case GpsType: return "gps"; 
+    case PuckType: return "puck"; 
+    case OccupancyType: return "occupancy"; 
+    case IDARType: return "idar";
+    case DescartesType: return "descartes";
+    case BpsType: return "bps";
+  }	 
+  return( "unknown" );
 }
 
-
+// CONSTRUCT YOUR DEVICE HERE
 /////////////////////////////////////////////////////////////////////////
 // Create an entity given a type (used by client to create entities).
 CEntity* CWorld::CreateEntity( StageType type, CEntity *parent)
 { 
   switch( type )
-  {
+    {
     case NullType:
       puts( "Stage Warning: create null device type request. Ignored." );
       return NULL;
@@ -183,7 +143,9 @@ CEntity* CWorld::CreateEntity( StageType type, CEntity *parent)
       return new CMoteDevice(this, parent );
     case TruthType:
       return new CTruthDevice(this, parent );
-
+    case BpsType:
+      return new CBpsDevice(this, parent);
+      
     default:
       PRINT_WARN1("unknown type %d", type);
   }
@@ -197,4 +159,23 @@ CEntity* CWorld::CreateEntity( StageType type, CEntity *parent)
   //case OccupancyType:
 }
 
+//////////////////////////////////////////////////////////////////////////
+// find the type number of an entity by looking up it's name
+StageType CWorld::TypeFromString( const char* ent_string )
+{
+  for( StageType t = NullType; t< NUMBER_OF_STAGE_TYPES; ((int)t)++ )
+       if( strcmp( ent_string, StringFromType(t) ) == 0 )
+	 return t;
+  
+  return NullType; // string not found
+}
+
+/////////////////////////////////////////////////////////////////////////
+// Create an entity given it's string name (used by server to create entities).
+CEntity* CWorld::CreateEntity(const char *type_str, CEntity *parent )
+{
+  StageType t = TypeFromString( type_str );
+
+  return CreateEntity( t, parent ); 
+}
 

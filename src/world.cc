@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.99 2002-06-10 04:57:49 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.100 2002-06-10 20:59:09 rtv Exp $
  */
 
 //#undef DEBUG
@@ -771,36 +771,6 @@ void CWorld::LogOutputHeader( void )
   write( m_log_fd, line, strlen(line) );
 }
 
-char* CWorld::StringType( StageType t )
-{
-  switch( t )
-  {
-    case NullType: return "None"; 
-    case WallType: return "Wall"; break;
-    case PlayerType: return "Player"; 
-    case MiscType: return "Misc"; 
-    case PositionType: return "Position"; 
-    case SonarType: return "Sonar"; 
-    case LaserTurretType: return "Laser"; 
-    case VisionType: return "Vision"; 
-    case PtzType: return "PTZ"; 
-    case BoxType: return "Box"; 
-    case LaserBeaconType: return "LaserBcn"; 
-    case LBDType: return "LBD"; 
-    case VisionBeaconType: return "VisionBcn"; 
-    case GripperType: return "Gripper"; 
-    case AudioType: return "Audio"; 
-    case BroadcastType: return "Bcast"; 
-    case SpeechType: return "Speech"; 
-    case TruthType: return "Truth"; 
-    case GpsType: return "GPS"; 
-    case PuckType: return "Puck"; 
-    case OccupancyType: return "Occupancy"; 
-    case IDARType: return "IDAR";
-    case DescartesType: return "Descartes";
-  }	 
-  return( "unknown" );
-}
 
 #ifdef INCLUDE_RTK2
 
@@ -903,7 +873,7 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
 	{
 	  assert( this->device_menu_items[ ent->stage_type ] =  
 		  rtk_menuitem_create(this->device_data_menu, 
-				      StringType( ent->stage_type), 1) );  
+				      StringFromType( ent->stage_type), 1) );  
 	  
 	  rtk_menuitem_check(this->device_menu_items[ ent->stage_type ], 1);
 	}
