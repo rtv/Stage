@@ -1,4 +1,5 @@
-subdirs = bitmaps
+SUBDIRS = bitmaps
+
 worldsdir = $(prefix)/share/stage/worlds
 
 worlds_DATA = test.world                        \

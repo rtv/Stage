@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.53 2004-07-02 01:37:29 rtv Exp $
+dnl $Id: configure.in,v 1.54 2004-07-02 02:12:56 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -27,12 +27,12 @@ dnl Define this so that we can refer to it twice below
 dnl PS_VERSION is the major.minor version that is common for Player and
 dnl Stage. All revisions with this major.minor version must be forwards 
 dnl and backwards compatible. This number is used for the install directories.
-define(PS_VERSION,1.4)
+define(PS_VERSION,1.5)
 
 dnl STAGE_VERSION is major.minor.revision - unique to this release and 
 dnl independent of Player's revision number - 'dev' should be appended for 
 dnl unreleased development versions
-define(STAGE_VERSION,PS_VERSION.dev)
+define(STAGE_VERSION,PS_VERSION.0)
 
 dnl Initialize automake with name and version of package to be built. 
 dnl PACKAGE and VERSION will be so defined in <config.h>.
