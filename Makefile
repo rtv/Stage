@@ -8,7 +8,7 @@
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
 #  $Author: gerkey $
-#  $Revision: 1.11 $
+#  $Revision: 1.12 $
 #
 ###########################################################################
 
@@ -17,7 +17,9 @@
 # These are the key flags needs for the build and install
 
 VERSION=$(shell awk '{print substr($$3,2,length($$3)-2);}' VERSION)
-PLAYER_DIR = /usr/local/player$(VERSION)
+PWD=$(shell pwd)
+#PLAYER_DIR = /usr/local/player$(VERSION)
+PLAYER_DIR = $(PWD)/../player
 INSTALL_DIR = /usr/local/stage$(VERSION)
 SRC_DIST_NAME = Stage-$(VERSION)-src
 SRC_DIST_BLEEDING_NAME = Stage-Bleeding-src

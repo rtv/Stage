@@ -50,8 +50,8 @@ OBJS = world.o world_load.o image.o \
 
 # Flags common to all targets
 #
-CCFLAGS = -g3 -Wall -I../include -I$(PLAYER_INC) $(ZLIB_FLAGS)
-#CCFLAGS = -O2 -Wall -I../include -I$(PLAYER_INC) $(ZLIB_FLAGS)
+#CCFLAGS = -g3 -Wall -I../include -I$(PLAYER_INC) $(ZLIB_FLAGS)
+CCFLAGS = -O3 -Wall -I../include -I$(PLAYER_INC) $(ZLIB_FLAGS)
 #LINKFLAGS = -lm -lstdc++ -lpthread  -L$(PLAYER_LIB) -lplayerclient $(ZLIB_LIBS)
 LINKFLAGS = -lm -lstdc++ -lpthread  -L$(PLAYER_LIB) $(ZLIB_LIBS)
 
@@ -90,7 +90,7 @@ rtkstage : $(OBJS) rtk_main.o
 	${LINKER} $(OBJS) $(LINKFLAGS) -o rtkstage
 
 clean:
-	rm -f *.o *~ core
+	rm -f *.o *~ core xstage rtkstage stage
 
 dep:
 	$(MAKEDEP) -Y -I../include -I$(PLAYER_INC) -I$(RTK_INC) -s "# Dependancies (make dep)" *.cc 2>/dev/null
