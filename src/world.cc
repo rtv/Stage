@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.131 2002-10-28 23:03:26 gerkey Exp $
+ * CVS info: $Id: world.cc,v 1.132 2002-10-30 02:18:20 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -198,18 +198,13 @@ CWorld::CWorld( int argc, char** argv, Library* lib )
   // give the command line a chance to override the default values
   // we just set
   if( !ParseCmdLine( this->argc, this->argv )) 
-    {
-	    /*
-      quit = true;
-      return false;
-      */
-      exit(-1);
-    }
-  
+  {
+    quit = true;
+    return;
+  }
 
   // give the GUI a go at the command line too
   if( enable_gui )  GuiInit( argc, argv ); 
- 
 }
 
 

@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.37 2002-10-27 21:55:37 rtv Exp $
+ * CVS info: $Id: server.cc,v 1.38 2002-10-30 02:18:20 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -94,7 +94,11 @@ CStageServer::CStageServer( int argc, char** argv, Library* lib )
 
   // create the object that loads and parses the file
   assert( worldfile = new CWorldFile() );
-  
+  if(!ParseCmdLine(argc, argv))
+  {
+    quit = true;
+    return;
+  }
   printf( "WORLDFILE: %s\n", argv[argc-1]  );
 }
 
