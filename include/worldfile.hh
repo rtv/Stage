@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.hh,v 1.9 2002-06-05 07:58:20 inspectorg Exp $
+ * CVS info: $Id: worldfile.hh,v 1.10 2002-06-07 01:53:34 inspectorg Exp $
  */
 
 #ifndef WORLDFILE_HH
@@ -137,19 +137,25 @@ class CWorldFile
   private: bool LoadTokens(FILE *file);
 
   // Read in a comment token
-  private: bool LoadTokenComment(FILE *file);
+  private: bool LoadTokenComment(FILE *file, int *line);
 
   // Read in a word token
-  private: bool LoadTokenWord(FILE *file);
+  private: bool LoadTokenWord(FILE *file, int *line);
 
   // Read in a number token
-  private: bool LoadTokenNum(FILE *file);
+  private: bool LoadTokenNum(FILE *file, int *line);
 
   // Read in a string token
-  private: bool LoadTokenString(FILE *file);
+  private: bool LoadTokenString(FILE *file, int *line);
 
   // Read in a whitespace token
-  private: bool LoadTokenSpace(FILE *file);
+  private: bool LoadTokenSpace(FILE *file, int *line);
+
+  // Save tokens to a file.
+  private: bool SaveTokens(FILE *file);
+
+  // Clear the token list
+  private: void ClearTokens();
 
   // Add a token to the token list
   private: bool AddToken(int type, const char *value);
@@ -167,16 +173,19 @@ class CWorldFile
   private: bool ParseTokens();
 
   // Parse an word (could be a section or an item) from the token list.
-  private: bool ParseTokenWord(int section, int *index);
+  private: bool ParseTokenWord(int section, int *index, int *line);
 
   // Parse a section from the token list.
-  private: bool ParseTokenSection(int section, int *index);
+  private: bool ParseTokenSection(int section, int *index, int *line);
 
   // Parse an item from the token list.
-  private: bool ParseTokenItem(int section, int *index);
+  private: bool ParseTokenItem(int section, int *index, int *line);
 
   // Parse a tuple.
-  private: bool ParseTokenTuple(int section, int item, int *index);
+  private: bool ParseTokenTuple(int section, int item, int *index, int *line);
+
+  // Clear the section list
+  private: void ClearSections();
 
   // Add a section
   private: int AddSection(int parent, const char *name);
@@ -184,15 +193,15 @@ class CWorldFile
   // Dump the section list for debugging
   private: void DumpSections();
 
+  // Clear the item list
+  private: void ClearItems();
+
   // Add an item
-  private: int AddItem(int section, const char *name);
+  private: int AddItem(int section, const char *name, int line);
 
   // Add an item value.
   private: void AddItemValue(int item, int index, int value_token);
   
-  // Insert an item
-  //? private: int InsertItem(int section, const char *name);
-
   // Get an item
   private: int GetItem(int section, const char *name);
 
@@ -230,9 +239,6 @@ class CWorldFile
   private: int token_size, token_count;
   private: CToken *tokens;
 
-  // Line counter (useful for printing error messages)
-  private: int line_count;
-  
   // Private section class
   private: struct CSection
   {

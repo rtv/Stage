@@ -165,3 +165,11 @@ CStageClient::~CStageClient( void )
   // do nothing
 }
 
+
+// Save the world file
+bool CStageClient::SaveFile( char* filename )
+{
+  // TODO : send a message to the server to save the world file.
+  return false;
+}
+

@@ -21,7 +21,7 @@
  * Desc: Shared types, constants, etc
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: stage_types.hh,v 1.23 2002-06-05 08:30:06 inspectorg Exp $
+ * CVS: $Id: stage_types.hh,v 1.24 2002-06-07 01:53:34 inspectorg Exp $
  */
 
 #ifndef STAGE_TYPES_HH
@@ -91,21 +91,21 @@ extern bool quit;
 #define ASSERT(m) assert(m)
 
 // Error macros
-#define PRINT_ERR(m)         printf("\rstage error : %s %s\n  "m"\n", \
-                                    __FILE__, __FUNCTION__)
-#define PRINT_ERR1(m, a)     printf("\rstage error : %s %s\n  "m"\n", \
-                                    __FILE__, __FUNCTION__, a)
-#define PRINT_ERR2(m, a, b)  printf("\rstage error : %s %s\n  "m"\n", \
-                                    __FILE__, __FUNCTION__, a, b)
+#define PRINT_ERR(m)         printf("\nstage error : %s : "m"\n", \
+                                    __FILE__)
+#define PRINT_ERR1(m, a)     printf("\nstage error : %s : "m"\n", \
+                                    __FILE__, a)
+#define PRINT_ERR2(m, a, b)  printf("\nstage error : %s : "m"\n", \
+                                    __FILE__, a, b)
 
 // Warning macros
-#define PRINT_WARN(m)         printf("\rstage warning : %s %s\n  "m"\n", \
+#define PRINT_WARN(m)         printf("\nstage warning : %s %s "m"\n", \
                                      __FILE__, __FUNCTION__)
-#define PRINT_WARN1(m, a)     printf("\rstage warning : %s %s\n  "m"\n", \
+#define PRINT_WARN1(m, a)     printf("\nstage warning : %s %s "m"\n", \
                                      __FILE__, __FUNCTION__, a)
-#define PRINT_WARN2(m, a, b)  printf("\rstage warning : %s %s\n  "m"\n", \
+#define PRINT_WARN2(m, a, b)  printf("\nstage warning : %s %s "m"\n", \
                                      __FILE__, __FUNCTION__, a, b)
-#define PRINT_WARN3(m, a, b, c) printf("\rstage warning : %s %s\n  "m"\n", \
+#define PRINT_WARN3(m, a, b, c) printf("\nstage warning : %s %s "m"\n", \
                                      __FILE__, __FUNCTION__, a, b, c)
 
 // Message macros

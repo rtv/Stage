@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.52 2002-06-05 08:30:06 inspectorg Exp $
+ * CVS info: $Id: world.hh,v 1.53 2002-06-07 01:53:34 inspectorg Exp $
  */
 
 #ifndef WORLD_HH
@@ -205,6 +205,7 @@ class CWorld
   ///////////////////////////////////////////////////////////////////////////
   // Configuration variables
 
+  // REMOVE?
   // flags that control servers
   //public: bool m_env_server_ready;
   //private: bool m_run_environment_server;
@@ -221,8 +222,9 @@ class CWorld
 
   public: bool ParseCmdline( int argv, char* argv[] );
 
-  // Save the world
-  public: virtual bool Save( void );
+  // Save the world file.  This is pure virtual since the actual
+  // saving is implemented in the CServer or CClient subclasses.
+  private: virtual bool SaveFile( char* filename ) = 0;
 
   
   //////////////////////////////////////////////////////////////////////
@@ -233,9 +235,7 @@ class CWorld
   
   // Shutdown the world
   public: virtual void Shutdown();
-
   
-
   // Update everything
   public: virtual void Update();
 

@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.94 2002-06-05 08:30:08 inspectorg Exp $
+ * CVS info: $Id: world.cc,v 1.95 2002-06-07 01:53:34 inspectorg Exp $
  */
 
 //#undef DEBUG
@@ -342,35 +342,6 @@ bool CWorld::ParseCmdline(int argc, char **argv)
     //}
   }
     
-  return true;
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Save objects to a file
-bool CWorld::Save( void )
-{
-//    PRINT_MSG1("saving world to [%s]", filename);
-  
-//    this->worldfilename = filename;
-
-//    // Let each object save itself
-//    for (int i = 0; i < GetObjectCount(); i++)
-//    {
-//      CEntity *object = GetObject(i);
-//      if (!object->Save(&this->worldfile, object->worldfile_section))
-//        return false;
-//    }
-
-//  #ifdef INCLUDE_RTK2
-//    // Save changes to the GUI
-//    if (!SaveGUI(&this->worldfile))
-//      return false;
-//  #endif
-  
-//    // Save everything
-//    if (!this->worldfile.Save(filename))
-//      return false;
-
   return true;
 }
 
@@ -1035,20 +1006,15 @@ void CWorld::RtkShutdown()
 // Update the GUI
 void CWorld::RtkUpdate()
 {
-  // Handle save menu item
-
-  // TODO - server must save the world
-  //      - client must send a save request to server
-  //      - this function will just handle the fig export
-
-  //if (rtk_menuitem_isactivated(this->save_menuitem))
-  //Save(this->worldfilename);
-
   // See if we need to quit the program
   if (rtk_menuitem_isactivated(this->exit_menuitem))
     ::quit = 1;
   if (rtk_canvas_isclosed(this->canvas))
     ::quit = 1;
+
+  // Save the world file
+  if (rtk_menuitem_isactivated(this->save_menuitem))
+    SaveFile(NULL);
 
   // Handle export menu item
   // TODO - fold in XS's postscript and pnm export here

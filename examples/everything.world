@@ -2,39 +2,39 @@
 # Desc: Test world file containing one of everything.
 # Author: Andrew Howard
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.6 2002-06-05 08:30:06 inspectorg Exp $
+# CVS: $Id: everything.world,v 1.7 2002-06-07 01:53:34 inspectorg Exp $
 
 environment
-{
+(
   file "cave.pnm"
   scale 0.03
   resolution 0.03
-}
+)
 
 position
-{
+(
   name "robot1" 
   port 6665
   pose [1 2 0]
-  player {port 6665} 
-  sonar{}
+  player (port 6665) 
+  sonar()
   laser 
-  {
-    lbd{} 
-    ptz{vision{}}
-  }
-}
+  (
+    lbd() 
+    ptz(vision())
+  )
+)
 
 position
-{
+(
   name "robot2" port 6666 pose [1 3 0]
-  player{} 
-  sonar{}
+  player() 
+  sonar()
   laser 
-  {
-    lbd{} 
-    ptz{vision{}}
-  }
-}
+  (
+    lbd() 
+    ptz(vision())
+  )
+)
 
 

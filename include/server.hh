@@ -5,7 +5,7 @@
 // Class provides a network server for Stage internals
 // used by external GUIs (XS) and distributed Stage modules
 //
-// $Id: server.hh,v 1.2 2002-06-04 22:36:27 rtv Exp $
+// $Id: server.hh,v 1.3 2002-06-07 01:53:34 inspectorg Exp $
 
 #ifndef _SERVER_H
 #define _SERVER_H
@@ -201,7 +201,7 @@ protected:
 
 class CStageServer : public CStageIO
 {
-public:
+  public:
   CStageServer( int argc, char** argv );
   ~CStageServer( void );
   
@@ -217,14 +217,19 @@ public:
   
   ////////////////////////////////////////////////////////////////////
   // CONFIGURATION FILE 
-private: char worldfilename[512];
+  private: char worldfilename[512];
   
   // Object encapsulating world description file
   private: CWorldFile worldfile;
 
   // parse and set configs from the argument list
-private: bool ParseCmdLine( int argc, char** argv );
-private: bool LoadFile( char* filename );
+  private: bool ParseCmdLine( int argc, char** argv );
+
+  // Load the world file
+  private: bool LoadFile( char* filename );
+
+  // Save the world file
+  private: virtual bool SaveFile( char* filename );
   
   ///////////////////////////////////////////////////////////////////
   // SERVER STUFF
@@ -264,7 +269,7 @@ private: bool LoadFile( char* filename );
 
 // creates the file m_device_dir/devices.lock,  m_object_count bytes long
   // stores the filename in m_locks_name and the fd in m_locks_fd
-   private: bool CreateLockFile( void );
+  private: bool CreateLockFile( void );
  
   //////////////////////////////////////////////////////////////////
   // WHEN LINUX SUPPORTS PROCESS-SHARED SEMAPHORES WE'LL USE THEM AND
@@ -299,7 +304,10 @@ public:
   //virtual void Write( void );
   //virtual void Update( void );
   //virtual void Shutdown( void );
- 
+
+  // Save the world file
+  protected: virtual bool SaveFile( char* filename );
+
 private:
     
   int WriteCommand( cmd_t cmd )

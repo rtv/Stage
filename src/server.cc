@@ -158,6 +158,8 @@ CStageServer::~CStageServer( void )
 }
 
 
+//////////////////////////////////////////////////////////////////////
+// Load the world file and create all of the relevant entities.
 bool CStageServer::LoadFile( char* filename )
 {
   
@@ -366,6 +368,43 @@ bool CStageServer::LoadFile( char* filename )
   return true;
 }
 
+
+//////////////////////////////////////////////////////////////////////
+// Save the world file
+bool CStageServer::SaveFile( char* filename )
+{
+  PRINT_MSG1("saving world to [%s]", filename);
+
+  // Store the new name of the world file (for Save As).
+  if (filename != NULL)
+  {
+    this->worldfilename[0] = 0;
+    strcpy(this->worldfilename, filename);
+    assert(this->worldfilename[0] != 0);
+  }
+
+  // Let each object save itself
+  for (int i = 0; i < GetObjectCount(); i++)
+  {
+      CEntity *object = GetObject(i);
+      if (!object->Save(&this->worldfile, object->worldfile_section))
+        return false;
+  }
+
+//  #ifdef INCLUDE_RTK2
+//    // Save changes to the GUI
+//    if (!SaveGUI(&this->worldfile))
+//      return false;
+//  #endif
+  
+  // Save everything
+  if (!this->worldfile.Save(this->worldfilename))
+    return false;
+
+  return false;
+}
+
+
 //////////////////////////////////////////////////////////////////////
 // SET UP THE SERVER TO ACCEPT INCOMING CONNECTIONS
 bool CStageServer::SetupConnectionServer( void )
@@ -432,27 +471,27 @@ bool CStageServer::ParseCmdLine( int argc, char** argv )
 {
   // we've loaded the worldfile, now give the cmdline a chance to change things
   for( int a=1; a<argc-1; a++ )
+  {
+    // DIS/ENABLE Player
+    if( strcmp( argv[a], "-p" ) == 0 )
     {
-      // DIS/ENABLE Player
-      if( strcmp( argv[a], "-p" ) == 0 )
-	{
-	  m_run_player = false;
-	  printf( "[No Player]" );
-	}
-      else if( strcmp( argv[a], "+p" ) == 0 )
-	{
-	  m_run_player = true;
-	  printf( "[Player]" );
-	}
-
-      // FAST MODE - run as fast as possible - don't attempt t match real time
-      if((strcmp( argv[a], "--fast" ) == 0 ) || 
-	 (strcmp( argv[a], "-f" ) == 0))
-	{
-	  m_real_timestep = 0.0;
-	  printf( "[Fast]" );
-	}
+      m_run_player = false;
+      printf( "[No Player]" );
     }
+    else if( strcmp( argv[a], "+p" ) == 0 )
+    {
+      m_run_player = true;
+      printf( "[Player]" );
+    }
+
+    // FAST MODE - run as fast as possible - don't attempt t match real time
+    if((strcmp( argv[a], "--fast" ) == 0 ) || 
+       (strcmp( argv[a], "-f" ) == 0))
+    {
+      m_real_timestep = 0.0;
+      printf( "[Fast]" );
+    }
+  }
 
   return true;
 }

@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.9 2002-06-05 07:58:20 inspectorg Exp $
+ * CVS info: $Id: worldfile.cc,v 1.10 2002-06-07 01:53:34 inspectorg Exp $
  */
 
 #include <assert.h>
@@ -43,9 +43,9 @@
 ///////////////////////////////////////////////////////////////////////////
 // Useful macros for dumping parser errors
 #define TOKEN_ERR(z, l) \
-  PRINT_ERR2("world file %s:%d : " z, this->filename, l)
+  PRINT_ERR2("%s:%d : " z, this->filename, l)
 #define PARSE_ERR(z, l) \
-  PRINT_ERR2("world file %s:%d : " z, this->filename, l)
+  PRINT_ERR2("%s:%d : " z, this->filename, l)
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -76,7 +76,9 @@ CWorldFile::CWorldFile()
 // Destructor
 CWorldFile::~CWorldFile()
 {
-  // TODO : clean up lists
+  ClearItems();
+  ClearSections();
+  ClearTokens();
 
   if (this->filename)
     free(this->filename);
@@ -102,8 +104,7 @@ bool CWorldFile::Load(const char *filename)
     assert(newfilename);
     newfilename[strlen(newfilename)-3] = '\0';
 
-    char* execstr = 
-      (char*)(malloc(strlen(this->filename)+strlen(newfilename)+8));
+    char* execstr = (char*)(malloc(strlen(this->filename)+strlen(newfilename)+8));
     assert(execstr);
 
     sprintf(execstr,"m4 -E %s > %s", this->filename, newfilename);
@@ -130,18 +131,27 @@ bool CWorldFile::Load(const char *filename)
 
   // Read tokens from the file
   if (!LoadTokens(file))
+  {
+    //DumpTokens();
     return false;
+  }
 
   // Parse the tokens to identify sections
   if (!ParseTokens())
   {
+    //DumpTokens();
+    return false;
+  }
+
+  // Dump contents and exit if this file is meant for debugging only.
+  if (ReadInt(0, "test", 0) != 0)
+  {
+    PRINT_ERR("this is a test file; quitting");
+    DumpTokens();
     DumpSections();
     DumpItems();
     return false;
   }
-
-  DumpSections();
-  DumpItems();
   
   // Work out what the length units are
   const char *unit = ReadString(0, "unit_length", "m");
@@ -167,9 +177,8 @@ bool CWorldFile::Load(const char *filename)
 // Save world to file
 bool CWorldFile::Save(const char *filename)
 {
-  /* TO DO
   // Debugging
-  //DumpItems();
+  DumpItems();
   
   // If no filename is supplied, use default
   if (!filename)
@@ -184,70 +193,14 @@ bool CWorldFile::Save(const char *filename)
     return false;
   }
 
-  // Write items to file
-  for (int item = 0; item < this->item_count; item++)
+  // Write the current set of tokens to the file
+  if (!SaveTokens(file))
   {
-    CItem *pitem = this->items + item;
-    CSection *psection = this->sections + pitem->section;
-
-    // Comments
-    if (strcmp(pitem->name, "#") == 0)
-    {
-      assert(pitem->value_count == 1);
-      fprintf(file, "%*s", psection->indent * 2, "");
-      fprintf(file, "#%s", pitem->values[0]);
-    }
-
-    // EOL
-    else if (strcmp(pitem->name, "\n") == 0)
-    {
-      // Do nothing
-    }
-
-    // Begin
-    else if (strcmp(pitem->name, "begin") == 0)
-    {
-      assert(pitem->value_count == 1);
-      fprintf(file, "%*s", (psection->indent - 1) * 2, "");
-      fprintf(file, "%s ", pitem->name);
-      fprintf(file, "%s", pitem->values[0]);
-    }
-
-    // End
-    else if (strcmp(pitem->name, "end") == 0)
-    {
-      assert(pitem->value_count == 0);
-      fprintf(file, "%*s", (psection->indent - 1) * 2, "");
-      fprintf(file, "%s ", pitem->name);
-    }
-    
-    // Add key-value-pairs
-    else
-    {
-      fprintf(file, "%*s", psection->indent * 2, "");
-      fprintf(file, "%s ", pitem->name);
-
-      if (pitem->value_count == 1)
-        fprintf(file, "%s ", pitem->values[0]);
-      else if (pitem->value_count > 1)
-      {
-        fprintf(file, "(");
-        for (int i = 0; i < pitem->value_count; i++)
-        {
-          if (i > 0)
-            fprintf(file, " ");
-          fprintf(file, "%s", pitem->values[i]);
-        }
-        fprintf(file, ") ");
-      }
-    }
-
-    // Put in eol
-    fprintf(file, "\n");
+    fclose(file);
+    return false;
   }
 
   fclose(file);
-  */
   return true;
 }
 
@@ -278,8 +231,10 @@ bool CWorldFile::LoadTokens(FILE *file)
   int ch;
   int line;
   char token[256];
+
+  ClearTokens();
   
-  this->line_count = 1;
+  line = 1;
 
   while (true)
   {
@@ -290,40 +245,40 @@ bool CWorldFile::LoadTokens(FILE *file)
     if ((char) ch == '#')
     {
       ungetc(ch, file);
-      if (!LoadTokenComment(file))
+      if (!LoadTokenComment(file, &line))
         return false;
     }
     else if (isalpha(ch))
     {
       ungetc(ch, file);
-      if (!LoadTokenWord(file))
+      if (!LoadTokenWord(file, &line))
         return false;
     }
     else if (strchr("+-.0123456789", ch))
     {
       ungetc(ch, file);
-      if (!LoadTokenNum(file))
+      if (!LoadTokenNum(file, &line))
         return false;
     }
     else if (isblank(ch))
     {
       ungetc(ch, file);
-      if (!LoadTokenSpace(file))
+      if (!LoadTokenSpace(file, &line))
         return false;
     }
     else if (ch == '"')
     {
       ungetc(ch, file);
-      if (!LoadTokenString(file))
+      if (!LoadTokenString(file, &line))
         return false;
     }
-    else if (strchr("{", ch))
+    else if (strchr("(", ch))
     {
       token[0] = ch;
       token[1] = 0;
       AddToken(TokenOpenSection, token);
     }
-    else if (strchr("}", ch))
+    else if (strchr(")", ch))
     {
       token[0] = ch;
       token[1] = 0;
@@ -343,21 +298,23 @@ bool CWorldFile::LoadTokens(FILE *file)
     }
     else if (ch == '\n')
     {
-      this->line_count++;
+      line++;
       AddToken(TokenEOL, "\n");
+    }
+    else
+    {
+      TOKEN_ERR("syntax error", line);
+      return false;
     }
   }
 
-  // Dump a token list for debugging
-  DumpTokens();
-  
   return true;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Read in a comment token
-bool CWorldFile::LoadTokenComment(FILE *file)
+bool CWorldFile::LoadTokenComment(FILE *file, int *line)
 {
   char token[256];
   int len;
@@ -390,7 +347,7 @@ bool CWorldFile::LoadTokenComment(FILE *file)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read in a word token
-bool CWorldFile::LoadTokenWord(FILE *file)
+bool CWorldFile::LoadTokenWord(FILE *file, int *line)
 {
   char token[256];
   int len;
@@ -426,7 +383,7 @@ bool CWorldFile::LoadTokenWord(FILE *file)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read in a number token
-bool CWorldFile::LoadTokenNum(FILE *file)
+bool CWorldFile::LoadTokenNum(FILE *file, int *line)
 {
   char token[256];
   int len;
@@ -462,7 +419,7 @@ bool CWorldFile::LoadTokenNum(FILE *file)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read in a string token
-bool CWorldFile::LoadTokenString(FILE *file)
+bool CWorldFile::LoadTokenString(FILE *file, int *line)
 {
   int ch;
   int len;
@@ -479,7 +436,7 @@ bool CWorldFile::LoadTokenString(FILE *file)
 
     if (ch == EOF || ch == '\n')
     {
-      TOKEN_ERR("unterminated string constant", this->line_count);
+      TOKEN_ERR("unterminated string constant", line);
       return false;
     }
     else if (ch == '"')
@@ -499,7 +456,7 @@ bool CWorldFile::LoadTokenString(FILE *file)
 
 ///////////////////////////////////////////////////////////////////////////
 // Read in a whitespace token
-bool CWorldFile::LoadTokenSpace(FILE *file)
+bool CWorldFile::LoadTokenSpace(FILE *file, int *line)
 {
   int ch;
   int len;
@@ -530,6 +487,45 @@ bool CWorldFile::LoadTokenSpace(FILE *file)
   }
   assert(false);
   return false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Save tokens to a file.
+bool CWorldFile::SaveTokens(FILE *file)
+{
+  int i;
+  CToken *token;
+  
+  for (i = 0; i < this->token_count; i++)
+  {
+    token = this->tokens + i;
+
+    if (token->type == TokenString)
+      fprintf(file, "\"%s\"", token->value);  
+    else
+      fprintf(file, "%s", token->value);
+  }
+  return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Clear the token list
+void CWorldFile::ClearTokens()
+{
+  int i;
+  CToken *token;
+
+  for (i = 0; i < this->token_count; i++)
+  {
+    token = this->tokens + i;
+    free(token->value);
+  }
+  free(this->tokens);
+  this->tokens = 0;
+  this->token_size = 0;
+  this->token_count = 0;
 }
 
 
@@ -581,15 +577,17 @@ void CWorldFile::DumpTokens()
   int line;
 
   line = 1;
-  printf("\n%4d : ", line);
+  printf("\n## begin tokens\n");
+  printf("## %4d : ", line);
   for (int i = 0; i < this->token_count; i++)
   {
     if (this->tokens[i].value[0] == '\n')
-      printf("[\\n]\n%4d : ", ++line);
+      printf("[\\n]\n## %4d : ", ++line);
     else
       printf("[%s] ", this->tokens[i].value);
   }
   printf("\n");
+  printf("## end tokens\n");
 }
 
 
@@ -598,12 +596,16 @@ void CWorldFile::DumpTokens()
 bool CWorldFile::ParseTokens()
 {
   int i;
+  int line;
   CToken *token;
 
+  ClearSections();
+  ClearItems();
+  
   // Add in the "global" section.
   AddSection(-1, "");
   
-  this->line_count = 1;
+  line = 1;
   
   for (i = 0; i < this->token_count; i++)
   {
@@ -612,18 +614,17 @@ bool CWorldFile::ParseTokens()
     switch (token->type)
     {
       case TokenWord:
-        if (!ParseTokenWord(0, &i))
+        if (!ParseTokenWord(0, &i, &line))
           return false;
       case TokenComment:
         break;
       case TokenSpace:
         break;
       case TokenEOL:
-        this->line_count++;
+        line++;
         break;
       default:
-        printf("%d %s\n", token->type, token->value);
-        PARSE_ERR("syntax error 1", this->line_count);
+        PARSE_ERR("syntax error 1", line);
         return false;
     }
   }
@@ -633,7 +634,7 @@ bool CWorldFile::ParseTokens()
 
 ///////////////////////////////////////////////////////////////////////////
 // Parse something starting with a word; could be a section or an item.
-bool CWorldFile::ParseTokenWord(int section, int *index)
+bool CWorldFile::ParseTokenWord(int section, int *index, int *line)
 {
   int i;
   CToken *token;
@@ -649,17 +650,16 @@ bool CWorldFile::ParseTokenWord(int section, int *index)
       case TokenSpace:
         break;
       case TokenEOL:
-        this->line_count++;
+        (*line)++;
         break;
       case TokenOpenSection:
-        return ParseTokenSection(section, index);
+        return ParseTokenSection(section, index, line);
       case TokenNum:
       case TokenString:
       case TokenOpenTuple:
-        return ParseTokenItem(section, index);
+        return ParseTokenItem(section, index, line);
       default:
-        printf("%d %s\n", token->type, token->value);
-        PARSE_ERR("syntax error 2", this->line_count);
+        PARSE_ERR("syntax error 2", *line);
         return false;
     }
   }
@@ -668,7 +668,7 @@ bool CWorldFile::ParseTokenWord(int section, int *index)
 
 ///////////////////////////////////////////////////////////////////////////
 // Parse a section from the token list.
-bool CWorldFile::ParseTokenSection(int section, int *index)
+bool CWorldFile::ParseTokenSection(int section, int *index, int *line)
 {
   int i;
   int name;
@@ -686,7 +686,7 @@ bool CWorldFile::ParseTokenSection(int section, int *index)
         section = AddSection(section, GetTokenValue(name));
         break;
       case TokenWord:
-        if (!ParseTokenWord(section, &i))
+        if (!ParseTokenWord(section, &i, line))
           return false;
         break;
       case TokenCloseSection:
@@ -697,21 +697,21 @@ bool CWorldFile::ParseTokenSection(int section, int *index)
       case TokenSpace:
         break;
       case TokenEOL:
-        this->line_count++;
+        (*line)++;
         break;
       default:
-        printf("%d %s\n", token->type, token->value);
-        PARSE_ERR("syntax error 3", this->line_count);
+        PARSE_ERR("syntax error 3", *line);
         return false;
     }
   }
+  PARSE_ERR("missing ')'", *line);  
   return false;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Parse an item from the token list.
-bool CWorldFile::ParseTokenItem(int section, int *index)
+bool CWorldFile::ParseTokenItem(int section, int *index, int *line)
 {
   int i, item;
   int name, value, count;
@@ -728,25 +728,25 @@ bool CWorldFile::ParseTokenItem(int section, int *index)
     switch (token->type)
     {
       case TokenNum:
-        item = AddItem(section, GetTokenValue(name));
+        item = AddItem(section, GetTokenValue(name), *line);
         AddItemValue(item, 0, i);
         *index = i;
         return true;
       case TokenString:
-        item = AddItem(section, GetTokenValue(name));
+        item = AddItem(section, GetTokenValue(name), *line);
         AddItemValue(item, 0, i);
         *index = i;
         return true;
       case TokenOpenTuple:
-        item = AddItem(section, GetTokenValue(name));
-        if (!ParseTokenTuple(section, item, &i))
+        item = AddItem(section, GetTokenValue(name), *line);
+        if (!ParseTokenTuple(section, item, &i, line))
           return false;
         *index = i;
         return true;
       case TokenSpace:
         break;
       default:
-        PARSE_ERR("syntax error 4", this->line_count);
+        PARSE_ERR("syntax error 4", *line);
         return false;
     }
   }
@@ -756,7 +756,7 @@ bool CWorldFile::ParseTokenItem(int section, int *index)
 
 ///////////////////////////////////////////////////////////////////////////
 // Parse a tuple.
-bool CWorldFile::ParseTokenTuple(int section, int item, int *index)
+bool CWorldFile::ParseTokenTuple(int section, int item, int *index, int *line)
 {
   int i, count;
   CToken *token;
@@ -783,11 +783,22 @@ bool CWorldFile::ParseTokenTuple(int section, int item, int *index)
       case TokenSpace:
         break;
       default:
-        PARSE_ERR("syntax error 5", this->line_count);
+        PARSE_ERR("syntax error 5", *line);
         return false;
     }
   }
   return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Clear the section list
+void CWorldFile::ClearSections()
+{
+  free(this->sections);
+  this->sections = NULL;
+  this->section_size = 0;
+  this->section_count = 0;
 }
 
 
@@ -858,20 +869,40 @@ int CWorldFile::LookupSection(const char *type)
 // Dump the section list for debugging
 void CWorldFile::DumpSections()
 {
-  printf("section list:\n");
+  printf("\n## begin sections\n");
   for (int i = 0; i < this->section_count; i++)
   {
     CSection *section = this->sections + i;
 
-    printf("[%d][%d]", i, section->parent);
+    printf("## [%d][%d]", i, section->parent);
     printf("[%s]\n", section->name);
   }
+  printf("## end sections\n");
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Clear the item list
+void CWorldFile::ClearItems()
+{
+  int i;
+  CItem *item;
+
+  for (i = 0; i < this->item_count; i++)
+  {
+    item = this->items + i;
+    free(item->values);
+  }
+  free(this->items);
+  this->items = NULL;
+  this->item_size = 0;
+  this->item_count = 0;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Add an item
-int CWorldFile::AddItem(int section, const char *name)
+int CWorldFile::AddItem(int section, const char *name, int line)
 {
   if (this->item_count >= this->item_size)
   {
@@ -888,7 +919,7 @@ int CWorldFile::AddItem(int section, const char *name)
   item->name = name;
   item->value_count = 0;
   item->values = NULL;
-  //TODO item->line = line;
+  item->line = line;
   item->used = false;
 
   this->item_count++;
@@ -914,47 +945,6 @@ void CWorldFile::AddItemValue(int item, int index, int value_token)
   // Set the relevant value
   pitem->values[index] = value_token;
 }
-
-
-/* REMOVE?
-///////////////////////////////////////////////////////////////////////////
-// Insert an item
-int CWorldFile::InsertItem(int section, const char *name)
-{
-  assert(this->item_count < this->item_size);
-  
-  // Find the right place in the list to add the item
-  int item = -1;
-  for (int i = 0; i < this->item_count; i++)
-  {
-    CItem *pitem = this->items + i;
-    if (pitem->section == section)
-      item = i;
-  } 
-  if (item < 0)
-    item = this->item_count;
-  
-  // Move stuff up to make room for the new item
-  if (item < this->item_count)
-    memmove(this->items + item + 1, this->items + item,
-            (this->item_count - item) * sizeof(this->items[0]));
-
-  CItem *pitem = this->items + item;
-  memset(pitem, 0, sizeof(CItem));
-  pitem->line = -1;
-  pitem->property = true;
-  pitem->used = true;
-  pitem->section = section;
-  pitem->name = strdup(name);
-  pitem->value_count = 0;
-  pitem->value_size = 0;
-  pitem->values = NULL;
-
-  this->item_count++;
-
-  return item;
-}
-*/
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1003,19 +993,20 @@ const char *CWorldFile::GetItemValue(int item, int index)
 // Dump the item list for debugging
 void CWorldFile::DumpItems()
 {
-  printf("item list:\n");
+  printf("\n## begin items\n");
   for (int i = 0; i < this->item_count; i++)
   {
     CItem *item = this->items + i;
     CSection *section = this->sections + item->section;
     
-    printf("[%d]", item->section);
+    printf("## [%d]", item->section);
     printf("[%s]", section->name);
     printf("[%s]", item->name);
     for (int j = 0; j < item->value_count; j++)
       printf("[%s]", GetTokenValue(item->values[j]));
     printf("\n");
   }
+  printf("## end items\n");
 }
 
 
@@ -1035,10 +1026,8 @@ const char *CWorldFile::ReadString(int section, const char *name, const char *va
 void CWorldFile::WriteString(int section, const char *name, const char *value)
 {
   int item = GetItem(section, name);
-  /* TODO
   if (item < 0)
-    item = InsertItem(section, name);
-  */
+    return;
   SetItemValue(item, 0, value);  
 }
 
