@@ -2,13 +2,17 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.11 2002-01-14 01:46:19 rtv Exp $
+ * $Id: image.cc,v 1.12 2002-01-15 03:38:14 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
 #include <iostream.h>
-#include <fstream.h>
 #include <assert.h>
+
+#include <iostream>
+#include <fstream>
+
+using namespace std;
 
 #if INCLUDE_ZLIB
 #include <zlib.h>
