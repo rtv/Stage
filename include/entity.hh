@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.8 $
+//  $Author: ahoward $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -121,7 +121,7 @@ class CEntity
   // flag is set when a dependent device is  attached to this device
     public: bool m_dependent_attached;
 
-public: int truth_poked;
+    public: int truth_poked;
 
     // Line in the world description file
     //

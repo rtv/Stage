@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.10 $
+//  $Author: ahoward $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -262,7 +262,7 @@ void CLBDDevice::OnUiUpdate(RtkUiDrawData *event)
     //
     event->begin_section("global", "laser_beacon");
     
-    if (event->draw_layer("data", true))
+    if (event->draw_layer("data", false))
     {
       if(Subscribed())
       {
