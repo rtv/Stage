@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -52,15 +52,7 @@ class CPlayerDevice : public CObject
     protected: CPlayerDevice(CWorld *world, CObject *parent, 
                              CPlayerRobot *robot, void *buffer, size_t buffer_len,
                              size_t data_len, size_t command_len, size_t config_len);
-
-    // *** RETIRE ahoward
-    // Minimal constructor
-    // This is an abstract class and *cannot* be instantiated directly
-    // buffer points to a single buffer containing the data, command and configuration buffers.
-    //
-    protected: CPlayerDevice(CPlayerRobot *robot, void *buffer, size_t data_len,
-                             size_t command_len, size_t config_len);
-        
+    
     // Initialise the device
     //
     public: virtual bool Startup(RtkCfgFile *cfg);
@@ -94,7 +86,7 @@ class CPlayerDevice : public CObject
 
     // Pointer to shared info buffers
     //
-    private: BYTE *m_info_buffer;
+    private: PlayerStageInfo *m_info;
     private: size_t m_info_len;
 
     // Pointer to shared data buffers
