@@ -9,7 +9,6 @@
 # They are just here so you can compile stuff while testing new code.
 
 VERSION=$(shell awk '{print substr($$3,2,length($$3)-2);}' ../VERSION)
-#PLAYER_DIR = /usr/local/player$(VERSION)
 PLAYER_DIR = ../../player
 
 
