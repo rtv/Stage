@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.74 2004-08-26 05:25:52 rtv Exp $
+ * CVS: $Id: stage.h,v 1.75 2004-08-26 22:16:08 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -364,13 +364,11 @@ typedef uint32_t stg_color_t;
 // red color will be returned instead.
 stg_color_t stg_lookup_color(const char *name);
 
-// POSITION -------------------------------------------------------------
 
 // used for specifying 3 axis positions
 typedef struct
 {
   stg_meters_t x, y, a;
-  stg_bool_t stall;
 } stg_pose_t;
 
 typedef struct
@@ -381,6 +379,8 @@ typedef struct
 
 void stg_print_geom( stg_geom_t* geom );
 
+// POSITION -------------------------------------------------------------
+
 typedef enum
   { STG_POSITION_CONTROL_VELOCITY, STG_POSITION_CONTROL_POSITION }
 stg_position_control_mode_t;
@@ -388,6 +388,27 @@ stg_position_control_mode_t;
 typedef enum
   { STG_POSITION_STEER_DIFFERENTIAL, STG_POSITION_STEER_INDEPENDENT }
 stg_position_steer_mode_t;
+
+typedef struct
+{
+  stg_meters_t x,y,a;
+  stg_position_control_mode_t mode; 
+} stg_position_cmd_t;
+
+typedef struct
+{
+  stg_position_steer_mode_t steer_mode;
+} stg_position_cfg_t;
+
+typedef stg_pose_t stg_velocity_t;
+
+typedef struct
+{
+  stg_pose_t pose; // current position estimate
+  stg_velocity_t velocity; // current velocity estimate
+  stg_bool_t stall; // motors stalled flag
+} stg_position_data_t;
+
 
 
 //  --------------------------------------------------------------
@@ -434,10 +455,6 @@ typedef struct
 
 } stg_energy_config_t;
 
-
-// VELOCITY ------------------------------------------------------------
-
-typedef stg_pose_t stg_velocity_t;
 
 // BLINKENLIGHT ------------------------------------------------------------
 

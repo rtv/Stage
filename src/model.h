@@ -53,6 +53,8 @@ typedef struct _model
   void* cfg;
   size_t cfg_len;
 
+  stg_bool_t stall;
+
   stg_laser_return_t laser_return;
   stg_bool_t obstacle_return;
 

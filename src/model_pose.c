@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.18 $
+//  $Revision: 1.19 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -166,20 +166,15 @@ int model_update_pose( model_t* model )
 
       if( model_test_collision_at_pose( model, &pose, NULL, NULL ) )
 	{
-	  PRINT_WARN( "HIT" );
-	  // add the stall flag to the current pose
-	  if( oldpose.stall == 0 )
-	    {
-	      oldpose.stall = 1;
+	  PRINT_DEBUG( "HIT something!" );
 
-	      // now set the new pose handling matrix & gui redrawing 
-	      model_set_pose( model, &oldpose );
-
-	    }	  
+	  model->stall = 1;
+	  // now set the new pose handling matrix & gui redrawing 
+	  //model_set_pose( model, &oldpose );
 	}
       else	  
 	{
-	  pose.stall = 0;
+	  model->stall = 0;
 
 	  // now set the new pose handling matrix & gui redrawing 
 	  model_set_pose( model, &pose );

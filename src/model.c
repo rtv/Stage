@@ -53,6 +53,8 @@ model_t* model_create(  world_t* world,
   mod->obstacle_return = TRUE;
 
   // sensible defaults
+  mod->stall = FALSE;
+
   mod->pose.x = STG_DEFAULT_POSEX;
   mod->pose.y = STG_DEFAULT_POSEY;
   mod->pose.a = STG_DEFAULT_POSEA;
