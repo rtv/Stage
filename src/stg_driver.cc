@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: stg_driver.cc,v 1.31 2005-02-24 14:11:31 rtv Exp $
+ * CVS: $Id: stg_driver.cc,v 1.32 2005-02-24 14:45:46 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -1017,11 +1017,6 @@ void StgDriver::HandleConfigMapData( device_record_t* device,
   int8_t* map = NULL;  
   assert( (map = minfo->data ) );
 
-  //const char* spin = "|/-\\";
-  //static int spini = 0;
-  //putchar( spin[spini++%4] );
-  //fflush(stdout);
-  
   // Construct reply
   memcpy(&data, request, len);
   
@@ -1030,6 +1025,27 @@ void StgDriver::HandleConfigMapData( device_record_t* device,
    si = ntohl(data.width);
    sj = ntohl(data.height);
       
+  const char* spin = "|/-\\";
+  static int spini = 0;
+
+  if( spini == 0 )
+    printf( "Stage: downloading map... " );
+  
+  putchar( 8 ); // backspace
+  
+  if( oi+si == minfo->width && oj+sj == minfo->height )
+    {
+      puts( " done." );
+      spini = 0;
+    }
+  else
+    {
+      putchar( spin[spini++%4] );
+      fflush(stdout);
+    }
+
+  fflush(stdout);
+  
    //   // Grab the pixels from the map
    for( unsigned int j = 0; j < sj; j++)
      {
@@ -1069,8 +1085,6 @@ void StgDriver::HandleConfigMapData( device_record_t* device,
    //printf( "Stage driver: providing map data %d/%d %d/%d\n",
    // oi+si, minfo->width, oj+si, minfo->height );
 
-   //if( oi+si == minfo->width && oj+sj == minfo->height )
-   //puts( " done." );
 
    //fflush(stdout);
      
@@ -1823,6 +1837,11 @@ void StgDriver::RefreshDataEnergy( device_record_t* device )
 		datalen, sizeof(data));
 }
 
+
+void StgDriver::RefreshDataSimulation( device_record_t* device )
+{
+  PRINT_WARN( "refresh data requested for simulation device - devices produces no data" );
+}
 
 void StgDriver::RefreshDataFiducial( device_record_t* device )
 {
