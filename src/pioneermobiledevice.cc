@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.9 $
+//  $Revision: 1.9.2.10 $
 //
 // Usage:
 //  (empty)
@@ -110,7 +110,7 @@ int CPioneerMobileDevice::Move()
     // Get the current robot pose
     //
     double px, py, pth;
-    m_robot->GetPose(px, py, pth);
+    m_parent->GetPose(px, py, pth);
 
     // Compute a new pose
     // This is a zero-th order approximation
@@ -127,7 +127,7 @@ int CPioneerMobileDevice::Move()
     // and accept the new pose if ok
     //
     if (!InCollision(qx, qy, qth))
-        m_robot->SetPose(qx, qy, qth);
+        m_parent->SetPose(qx, qy, qth);
 
     // Compute the new odometric pose
     // Uses a first-order integration approximation
@@ -262,7 +262,7 @@ void CPioneerMobileDevice::ComposeData()
     // Get actual global pose
     //
     double gx, gy, gth;
-    GetGlobalPose(gx, gy, gth);
+    m_parent->GetGlobalPose(gx, gy, gth);
     
     // normalized compass heading
     //
@@ -403,8 +403,6 @@ bool CPioneerMobileDevice::GUIDraw()
 //
 void CPioneerMobileDevice::OnUiUpdate(RtkUiDrawData *pData)
 {
-    // Draw our children
-    //
     CObject::OnUiUpdate(pData);
     
     // Draw ourself

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/broadcastdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  (empty)
@@ -51,15 +51,16 @@ CBroadcastDevice::CBroadcastDevice(CWorld *world, CObject *parent, CPlayerRobot 
 ///////////////////////////////////////////////////////////////////////////
 // Startup routine
 //
-bool CBroadcastDevice::Startup(RtkCfgFile *cfg)
+bool CBroadcastDevice::StartUp()
 {
+    /*
     if (!CPlayerDevice::Startup(cfg))
         return false;
 
     // Register ourself as a broadcast device with the world
     //
     m_world->AddBroadcastDevice(this);
-    
+    */
     return true;
 }
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -49,8 +49,9 @@ CVisionBeacon::CVisionBeacon(CWorld *world, CObject *parent)
 ///////////////////////////////////////////////////////////////////////////
 // Initialise object
 //
-bool CVisionBeacon::Startup(RtkCfgFile *cfg)
+bool CVisionBeacon::StartUp()
 {
+    /*
     if (!CObject::Startup(cfg))
         return false;
 
@@ -71,7 +72,7 @@ bool CVisionBeacon::Startup(RtkCfgFile *cfg)
         m_mouse_radius = m_radius * 1.5;
         m_draggable = (m_parent == m_world);
     #endif
-    
+    */
     return true;
 }
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visionbeacon.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -37,7 +37,7 @@ class CVisionBeacon : public CObject
 
     // Initialise object
     //
-    public: virtual bool Startup(RtkCfgFile *cfg);
+    public: virtual bool StartUp();
     
     // Update the device
     //

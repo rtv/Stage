@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.9 $
+//  $Revision: 1.1.2.10 $
 //
 // Usage:
 //  (empty)
@@ -56,7 +56,7 @@ class CPlayerDevice : public CObject
     
     // Initialise the device
     //
-    public: virtual bool Startup(RtkCfgFile *cfg);
+    public: virtual bool Startup();
 
     // Close the device
     //

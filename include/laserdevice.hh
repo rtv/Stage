@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.6 $
+//  $Revision: 1.9.2.7 $
 //
 // Usage:
 //  (empty)
@@ -43,7 +43,7 @@ class CLaserDevice : public CPlayerDevice
 
     // Initialise the device
     //
-    public: virtual bool Startup(RtkCfgFile *cfg);
+    public: virtual bool StartUp();
     
     // Update the device
     //

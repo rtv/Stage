@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/broadcastdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  (empty)
@@ -37,7 +37,7 @@ class CBroadcastDevice : public CPlayerDevice
 
     // Startup routine
     //
-    public: virtual bool Startup(RtkCfgFile *cfg);
+    public: virtual bool StartUp();
 
     // Shutdown routine
     //

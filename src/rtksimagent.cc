@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtksimagent.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.6 $
+//  $Revision: 1.1.2.7 $
 //
 // Usage:
 //  (empty)
@@ -34,10 +34,9 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-RtkSimAgent::RtkSimAgent(const char *pszWorldFile)
+RtkSimAgent::RtkSimAgent(CWorld *world)
 {
-    m_strWorldFile = pszWorldFile;
-    m_pWorld = NULL;
+    m_pWorld = world;
 }
 
 
@@ -57,28 +56,6 @@ bool RtkSimAgent::Open(RtkCfgFile* pCfgFile)
     if (!RtkAgent::Open(pCfgFile))
         return FALSE;
 
-    m_pWorld = new CWorld;    
-
-    // Start the world
-    //
-    RtkCfgFile oWorldCfg;
-    if (!oWorldCfg.Open(CSTR(m_strWorldFile)))
-        return false;
-
-    // Create all the objects in the world
-    //
-    if (!m_pWorld->CreateChildren(&oWorldCfg))
-        return false;
-
-    // Start all the objects in the world
-    //
-    if (!m_pWorld->Startup(&oWorldCfg))
-        return false;
-    if (!m_pWorld->StartupChildren(&oWorldCfg))
-        return false;
-    
-    oWorldCfg.Close();
-    
     // Initialise messages
     //
     UiForceUpdateSource::Init(m_pMsgRouter);
@@ -96,10 +73,6 @@ bool RtkSimAgent::Open(RtkCfgFile* pCfgFile)
 //
 void RtkSimAgent::Close()
 {
-    // Stop the objects
-    //
-    m_pWorld->ShutdownChildren();
-    m_pWorld->Shutdown();
 }
 
 
@@ -118,7 +91,7 @@ bool RtkSimAgent::Start()
 {
 	// Start the module thread
 	//
-	StartThread(-1);
+	StartThread(-10);
 	return TRUE;
 }
 
@@ -139,27 +112,16 @@ bool RtkSimAgent::Stop()
 // Main agent loop
 //
 void RtkSimAgent::Main()
-{
-    //RTK_TRACE("RtkSimAgent::Main\n");
-  
+{ 
     // Update the GUI now.
     //
     SendUiForceUpdate(NULL);
     
     while (!Quit())
     {
-        // Update the world
+        // Update at 10Hz
         //
-        for (int i = 0; i < 3; i++)
-        {
-            // *** HACK -- sleep time?
-            //
-            Sleep(25);
-            m_pWorld->Update();
-            m_pWorld->UpdateChildren();
-        }
-
-        //RTK_TRACE1("time %d", (int) GetTime());
+        Sleep(100);
         
         // Update the GUI now
         //
@@ -174,7 +136,7 @@ void RtkSimAgent::Main()
 //
 void RtkSimAgent::OnUiDraw(RtkUiDrawData* pData)
 {
-    m_pWorld->OnUiUpdate(pData);
+    m_pWorld->OnUiDraw(pData);
 }
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerrobot.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.7 $
+//  $Revision: 1.1.2.8 $
 //
 // Usage:
 //  (empty)
@@ -24,8 +24,6 @@
 //  (empty)
 //
 ///////////////////////////////////////////////////////////////////////////
-
-#define ENABLE_RTK_TRACE 0
 
 #include <errno.h>
 #include <fcntl.h>
@@ -67,11 +65,10 @@
 CPlayerRobot::CPlayerRobot(CWorld *world, CObject *parent)
         : CObject(world, parent)
 {
+    m_port = 6665;
     playerIO = NULL;
 
     #ifdef INCLUDE_RTK
-        m_mouse_radius = 0.6;
-        m_draggable = true;
         m_show_sensors = false;
     #endif
 }
@@ -88,20 +85,16 @@ CPlayerRobot::~CPlayerRobot( void )
 ///////////////////////////////////////////////////////////////////////////
 // Start all the devices
 //
-bool CPlayerRobot::Startup(RtkCfgFile *cfg)
+bool CPlayerRobot::Startup()
 {
     RTK_TRACE0("starting devices");
 
-    if (!CObject::Startup(cfg))
+    if (!CObject::Startup())
         return false;
-    
-    cfg->BeginSection(m_id);
-    
+ 
     // Get the port for this robot
     //
-    int port = cfg->ReadInt("port", 6665, "");
-    
-    cfg->EndSection();
+    // *** int port = cfg->ReadInt("port", 6665, "");
 
     // Create the lock object for the shared mem
     //
@@ -111,9 +104,9 @@ bool CPlayerRobot::Startup(RtkCfgFile *cfg)
     // Startup player
     // This will generate the memory map, so it must be done first
     //
-    if (!StartupPlayer(port))
+    if (!StartupPlayer(m_port))
         return false;
-    
+
     return true;
 }
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -41,32 +41,62 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CObject *parent)
     
     // Set the initial map pose
     //
-    m_gx = m_gy = m_gth = 0;
-
-    #ifdef INCLUDE_RTK
-        m_mouse_radius = (m_parent == m_world ? 0.2 : 0.0);
-        m_draggable = (m_parent == m_world);
-    #endif
+    m_map_px = m_map_py = m_map_pth = 0;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
+// Initialise the object from an argument list
+//
+bool CLaserBeacon::Init(int argc, char **argv)
+{
+    if (!CObject::Init(argc, argv))
+        return false;
+
+    for (int arg = 0; arg < argc; )
+    {
+        // Extact pose
+        //
+        if (strcmp(argv[arg], "pose") == 0 && arg + 3 < argc)
+        {
+            double px = atof(argv[arg + 1]);
+            double py = atof(argv[arg + 2]);
+            double pth = DTOR(atof(argv[arg + 3]));
+            SetPose(px, py, pth);
+            arg += 4;
+        }
+
+        // Extract id
+        //
+        else if (strcmp(argv[arg], "id") == 0 && arg + 1 < argc)
+        {
+            m_beacon_id = atoi(argv[argc + 1]);
+            arg += 2;
+        }
+
+        // Print syntax
+        //
+        else
+        {
+            printf("syntax: create laser_beacon pose <x> <y> <th> id <id>\n");
+            return false;
+        }
+    }
+        
+    #ifdef INCLUDE_RTK
+        m_mouse_radius = (m_parent == NULL ? 0.2 : 0.0);
+        m_draggable = (m_parent == NULL);
+    #endif
+        
+    return true;
+}
+
+///////////////////////////////////////////////////////////////////////////
 // Startup routine
 //
-bool CLaserBeacon::Startup(RtkCfgFile *cfg)
+bool CLaserBeacon::Startup()
 {
-    if (!CObject::Startup(cfg))
-        return false;
-    
-    cfg->BeginSection(m_id);
-   
-    // Read in our beacon id
-    //   
-    m_beacon_id = cfg->ReadInt("id", 0, "");
-
-    cfg->EndSection();
-
-    return true;
+    return CObject::Startup();
 }
 
 
@@ -80,17 +110,17 @@ void CLaserBeacon::Update()
 
     // Undraw our old representation
     //
-    m_world->SetCell(m_gx, m_gy, layer_laser, 0);
-    m_world->SetCell(m_gx, m_gy, layer_beacon, 0);
+    m_world->SetCell(m_map_px, m_map_py, layer_laser, 0);
+    m_world->SetCell(m_map_px, m_map_py, layer_beacon, 0);
     
     // Update our global pose
     //
-    GetGlobalPose(m_gx, m_gy, m_gth);
+    GetGlobalPose(m_map_px, m_map_py, m_map_pth);
     
     // Draw our new representation
     //
-    m_world->SetCell(m_gx, m_gy, layer_laser, 2);
-    m_world->SetCell(m_gx, m_gy, layer_beacon, m_beacon_id);
+    m_world->SetCell(m_map_px, m_map_py, layer_laser, 2);
+    m_world->SetCell(m_map_px, m_map_py, layer_beacon, m_beacon_id);
 }
 
 
@@ -105,11 +135,13 @@ void CLaserBeacon::OnUiUpdate(RtkUiDrawData *pData)
 
     pData->BeginSection("global", "laserbeacons");
     
-    if (pData->DrawLayer("", TRUE))
+    if (pData->DrawLayer("", true))
     {
         double r = 0.05;
+        double ox, oy, oth;
+        GetGlobalPose(ox, oy, oth);
         pData->SetColor(RTK_RGB(0, 0, 255));
-        pData->Rectangle(m_gx - r, m_gy - r, m_gx + r, m_gy + r);
+        pData->Rectangle(ox - r, oy - r, ox + r, oy + r);
     }
 
     pData->EndSection();
@@ -125,6 +157,8 @@ void CLaserBeacon::OnUiMouse(RtkUiMouseData *pData)
 }
 
 #endif
+
+
 
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.11 $
+//  $Revision: 1.2.2.12 $
 //
 // Usage:
 //  (empty)
@@ -55,12 +55,13 @@ CPlayerDevice::CPlayerDevice(CWorld *world, CObject *parent,
     m_config_len = config_len;
 }
 
+
 ///////////////////////////////////////////////////////////////////////////
 // Default startup -- doesnt do much
 //
-bool CPlayerDevice::Startup(RtkCfgFile *cfg)
+bool CPlayerDevice::Startup()
 {
-    if (!CObject::Startup(cfg))
+    if (!CObject::Startup())
         return false;
 
     // Get a pointer to the shared memory area

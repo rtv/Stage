@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.15 $
+//  $Revision: 1.4.2.16 $
 //
 // Usage:
 //  (empty)
@@ -24,24 +24,17 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_RTK_TRACE 0
-
 #include <sys/time.h>
-#include "world.hh"
 #include "stage.h"
+#include "world.hh"
+#include "objectfactory.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
 CWorld::CWorld()
-        : CObject(this, NULL)
 {
-    // *** WARNING -- no overflow check
-    // Set our id
-    //
-    strcpy(m_id, "world");
-  
     // seed the random number generator
     srand48( time(NULL) );
 
@@ -57,12 +50,7 @@ CWorld::CWorld()
     //
     m_start_time = m_sim_time = 0;
 
-    /* *** REMOVE
-    // start the internal clock
-    struct timeval tv;
-    gettimeofday( &tv, NULL );
-    timeNow = timeThen = timeBegan = tv.tv_sec + (tv.tv_usec/MILLION);
-    */
+    memset(m_env_file, 0, sizeof(m_env_file));
 }
 
 
@@ -85,42 +73,209 @@ CWorld::~CWorld()
 
 
 ///////////////////////////////////////////////////////////////////////////
+// Load the world
+//
+bool CWorld::Load(const char *filename)
+{
+    FILE *file = fopen(filename, "r");
+    if (file == NULL)
+    {
+        printf("unable to open world file %s; ignoring\n", (char*) filename);
+        return false;
+    }
+
+    int count = 0;
+    CObject *parent = NULL;
+    
+    while (true)
+    {
+        // Get a line
+        //
+        char line[1024];
+        if (fgets(line, sizeof(line), file) == NULL)
+            break;
+        count++;
+
+        // Parse the line into tokens
+        // Tokens are delimited by spaces
+        //
+        int argc = 0;
+        char *argv[400];
+        char *token = line;
+        while (true)
+        {
+            assert((size_t) argc < sizeof(argv) / sizeof(argv[0]));
+            argv[argc] = strsep(&token, " \t\n");
+            if (token == NULL)
+                break;
+            if (argv[argc][0] != 0)
+                argc++;
+        }
+
+        // Debugging -- dump the tokens
+        //
+        for (int i = 0; i < argc; i++)
+            printf("[%s]", (char*) argv[i]);
+        printf("\n");
+
+        // Skip blank lines
+        //
+        if (argc == 0)
+            continue;
+        
+        // Ignore comment lines
+        //
+        if (argv[0][0] == '#')
+            continue;
+
+        // Look for open block tokens
+        //
+        if (strcmp(argv[0], "{") == 0)
+        {
+            if (m_object_count > 0)
+                parent = m_object[m_object_count - 1];
+            else
+                printf("misplaced '{' on line %d; ignoring\n", (int) count + 1);
+        }
+
+        // Look for close block tokens
+        //
+        else if (strcmp(argv[0], "}") == 0)
+        {
+            if (parent != NULL)
+                parent = parent->m_parent;
+            else
+                printf("extra '}' on line %d; ignoring\n", (int) count + 1);
+        }
+            
+        // Parse everything else
+        //
+        else if (!LoadObject(argc, argv, parent))
+            printf("syntax error on line %d; ignoring\n", (int) count + 1);
+    }
+    
+    fclose(file);
+    return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Load an object
+//
+bool CWorld::LoadObject(int argc, char **argv, CObject *parent)
+{
+    // Parse "set" command
+    // set <variable> = <value>
+    //
+    if (argc == 4 && strcmp(argv[0], "set") == 0 && strcmp(argv[2], "=") == 0)
+    {
+        if (strcmp(argv[1], "environment_file") == 0)
+        {
+            strcpy(m_env_file, argv[3]);
+            return true;
+        }
+        if (strcmp(argv[1], "pixels_per_meter") == 0)
+        {
+            ppm = atof(argv[3]);
+            return true;
+        }
+    }
+
+    // Parse "create" command
+    // create <type> ...
+    //
+    if (argc >= 2 && strcmp(argv[0], "create") == 0)
+    {
+        // Create the object
+        //
+        CObject *object = ::CreateObject(argv[1], this, parent);
+        if (object == NULL)
+            return false;
+        
+        // Let the object initialise itself
+        //
+        object->Init(argc - 2, argv + 2);
+
+        // Add to list of objects
+        //
+        m_object[m_object_count++] = object;
+        return true;
+    }
+    return false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Save objects to a file
+//
+bool CWorld::Save(const char *filename)
+{
+    FILE *file = fopen(filename, "w+");
+    if (file == NULL)
+    {
+        printf("unable to create world file %s; ignoring\n", (char*) filename);
+        return false;
+    }
+
+    int depth = 0;
+    for (int i = 0; i < m_object_count; i++)
+    {
+        CObject *object = m_object[i];
+
+        // Put in start/end block tokens
+        //
+        while (object->m_depth > depth)
+        {
+            fprintf(file, "{\n");
+            depth++;
+        }
+        while (object->m_depth < depth)
+        {
+            fprintf(file, "}\n");
+            depth--;
+        }
+
+        // Let object prepare line to save
+        //
+        char line[1024];
+        memset(line, 0, sizeof(line));
+        object->Save(line, sizeof(line));
+
+        // Write line to file
+        //
+        for (int j = 0; j < depth; j++)
+            fputs("    ", file);
+        fputs(line, file);
+        fputs("\n", file);
+    }
+
+    // Close any trailing blocks
+    //
+    while (depth > 0)
+    {
+        fprintf(file, "}\n");
+        depth--;
+    }
+   
+    fclose(file);
+    return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // Startup routine 
 //
-bool CWorld::Startup(RtkCfgFile *cfg)
+bool CWorld::Startup()
 {
-    // Call the objects startup function
-    //
-    if (!CObject::Startup(cfg))
-        return false;
-
-    // Load useful settings from config file
-    //
-    cfg->BeginSection("world");
-    ppm = cfg->ReadInt("pixels_per_meter", 25, "");
-    RtkString env_file = cfg->ReadString("environment_file", "", "");
-    RtkString pos_file = cfg->ReadString("position_file", "", "");
-    cfg->EndSection();
-
-    // Display the files we are reading
-    //
-    printf("[%s] [%s]\n", CSTR(env_file), CSTR(pos_file));
-    
     // Initialise the world grids
     //
-    if (!InitGrids(CSTR(env_file)))
+    printf("[%s]\n", m_env_file);
+    if (!InitGrids(m_env_file))
         return false;
 
     // Initialise the broadcast queue
     //
     InitBroadcast();
-
-    // Read robot positions from file
-    //
-    /* *** TODO
-    if (!ReadPos(pos_file))
-        return false;
-    */
 
     // Initialise the real time clock
     // Note that we really do need to set the start time to zero first!
@@ -139,6 +294,27 @@ bool CWorld::Startup(RtkCfgFile *cfg)
     m_update_ratio = 1;
     m_update_rate = 0;
 
+    // Initialise the message router
+    //
+    #ifdef INCLUDE_RTK
+    m_router->AddSink(RTK_UI_DRAW, (void (*) (void*, void*)) &OnUiDraw, this);
+    m_router->AddSink(RTK_UI_MOUSE, (void (*) (void*, void*)) &OnUiMouse, this);
+    m_router->AddSink(RTK_UI_PROPERTY, (void (*) (void*, void*)) &OnUiProperty, this);
+    m_router->AddSink(RTK_UI_BUTTON, (void (*) (void*, void*)) &OnUiButton, this);
+    #endif
+
+    // Start all the objects
+    //
+    for (int i = 0; i < m_object_count; i++)
+    {
+        if (!m_object[i]->Startup())
+            return false;
+    }
+
+    // Start the simulator thread
+    // 
+    if (pthread_create(&m_thread, NULL, &Main, this) < 0)
+        return false;
     return true;
 }
 
@@ -147,8 +323,71 @@ bool CWorld::Startup(RtkCfgFile *cfg)
 // Shutdown routine 
 //
 void CWorld::Shutdown()
-{        
-    CObject::Shutdown();
+{
+    // Send a cancellation request to the thread
+    //
+    pthread_cancel(m_thread);
+
+    // Wait forever for thread to terminate
+    //
+    pthread_join(m_thread, NULL);
+
+    // Shutdown all the objects
+    //
+    for (int i = 0; i < m_object_count; i++)
+        m_object[i]->Shutdown();
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Thread entry point for the world
+//
+void* CWorld::Main(CWorld *world)
+{
+    // Make our priority real low
+    //
+    nice(10);
+    
+    // Defer cancel requests so we can handle them properly
+    //
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+
+    // Initialise the GUI
+    //
+    #ifdef INCLUDE_RTK
+    double ui_time = 0;
+    #endif
+    
+    while (true)
+    {
+        // Check for thread cancellation
+        //
+        pthread_testcancel();
+
+        // Dont hog all the cycles -- sleep for 10ms
+        //
+        usleep(10000);
+
+        // Update the world
+        //
+        world->Update();
+
+        /* *** HACK -- should reinstate this somewhere ahoward
+           if( !runDown ) runStart = timeNow;
+           else if( (quitTime > 0) && (timeNow > (runStart + quitTime) ) )
+           exit( 0 );
+        */
+        
+        // Update the GUI every 100ms
+        //
+        #ifdef INCLUDE_RTK
+        if (world->GetRealTime() - ui_time > 0.050)
+        {
+            world->m_router->SendMessage(RTK_UI_FORCE_UPDATE, NULL);
+            ui_time = world->GetRealTime();
+        }
+        #endif
+    }
 }
 
 
@@ -168,7 +407,8 @@ void CWorld::Update()
     double simtimestep = timestep;
     if (timestep > m_max_timestep)
     {
-        RTK_TRACE2("MAX TIMESTEP EXCEEDED %f > %f", (double) simtimestep, (double) m_max_timestep);
+        printf("warning: max timestep exceeded (%f > %f)\n",
+               (double) simtimestep, (double) m_max_timestep);
         simtimestep = m_max_timestep;
     }
 
@@ -189,14 +429,11 @@ void CWorld::Update()
     // Note that we must use the *real* timestep to get sensible results.
     //
     m_update_rate = (1 - a) * m_update_rate + a * (1 / timestep);
-    
-    CObject::Update();
 
-    /* *** HACK -- should reinstate this somewhere ahoward
-       if( !runDown ) runStart = timeNow;
-       else if( (quitTime > 0) && (timeNow > (runStart + quitTime) ) )
-       exit( 0 );
-    */
+    // Do the actual work -- update the objects
+    //
+    for (int i = 0; i < m_object_count; i++)
+        m_object[i]->Update();
 }
 
 
@@ -228,8 +465,6 @@ double CWorld::GetRealTime()
 //
 bool CWorld::InitGrids(const char *env_file)
 {
-    RTK_TRACE0("initialising grids");
-
     // create a new background image from the pnm file
     m_bimg = new Nimage( env_file );
     //cout << "ok." << endl;
@@ -411,6 +646,7 @@ void CWorld::AddBroadcastDevice(CBroadcastDevice *device)
     m_broadcast[m_broadcast_count++] = device;
 }
 
+
 ///////////////////////////////////////////////////////////////////////////
 // Remove a broadcast device from the list
 //
@@ -443,80 +679,119 @@ CBroadcastDevice* CWorld::GetBroadcastDevice(int i)
 
 #ifdef INCLUDE_RTK
 
-
-///////////////////////////////////////////////////////////////////////////
-// UI property message handler
+/////////////////////////////////////////////////////////////////////////
+// Initialise rtk
 //
-void CWorld::OnUiProperty(RtkUiPropertyData* pData)
+void CWorld::InitRtk(RtkMsgRouter *router)
 {
-    CObject::OnUiProperty(pData);
-
-    RtkString value;
-
-    RtkFormat1(value, "%7.3f", (double) GetTime());
-    pData->AddItemText("Simulation time (s)", CSTR(value), "");
-    
-    RtkFormat1(value, "%7.3f", (double) GetRealTime());
-    pData->AddItemText("Real time (s)", CSTR(value), "");
-
-    RtkFormat1(value, "%7.3f", (double) m_update_ratio);
-    pData->AddItemText("Sim/real time", CSTR(value), ""); 
-    
-    RtkFormat1(value, "%7.3f", (double) m_update_rate);
-    pData->AddItemText("Update rate (Hz)", CSTR(value), ""); 
+    m_router = router;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
 //
-void CWorld::OnUiUpdate(RtkUiDrawData *pData)
+void CWorld::OnUiDraw(CWorld *world, RtkUiDrawData *data)
 {
     // Draw the background
     //
-    if (pData->DrawBack("global"))
-        DrawBackground(pData);
+    if (data->DrawBack("global"))
+        world->DrawBackground(data);
 
     // Draw grid layers (for debugging)
     //
-    pData->BeginSection("global", "debugging");
+    data->BeginSection("global", "debugging");
 
-    if (pData->DrawLayer("obstacle", false))
-        DrawLayer(pData, layer_obstacle);
+    if (data->DrawLayer("obstacle", false))
+        world->DrawLayer(data, layer_obstacle);
         
-    if (pData->DrawLayer("laser", false))
-        DrawLayer(pData, layer_laser);
+    if (data->DrawLayer("laser", false))
+        world->DrawLayer(data, layer_laser);
 
-    if (pData->DrawLayer("vision", false))
-        DrawLayer(pData, layer_vision);
+    if (data->DrawLayer("vision", false))
+        world->DrawLayer(data, layer_vision);
     
-    pData->EndSection();
+    data->EndSection();
 
-    // Get children to process message
+    // Draw the children
     //
-    CObject::OnUiUpdate(pData);
+    for (int i = 0; i < world->m_object_count; i++)
+        world->m_object[i]->OnUiUpdate(data);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI mouse messages
 //
-void CWorld::OnUiMouse(RtkUiMouseData *pData)
+void CWorld::OnUiMouse(CWorld *world, RtkUiMouseData *data)
 {
-    // Get children to process message
+    data->BeginSection("global", "move");
+
+    // Create a mouse mode (used by objects)
     //
-    CObject::OnUiMouse(pData);
+    data->MouseMode("object");
+    
+    data->EndSection();
+
+    // Update the children
+    //
+    for (int i = 0; i < world->m_object_count; i++)
+        world->m_object[i]->OnUiMouse(data);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// UI property message handler
+//
+void CWorld::OnUiProperty(CWorld *world, RtkUiPropertyData* data)
+{
+    RtkString value;
+
+    data->BeginSection("default", "world");
+    
+    RtkFormat1(value, "%7.3f", (double) world->GetTime());
+    data->AddItemText("Simulation time (s)", CSTR(value), "");
+    
+    RtkFormat1(value, "%7.3f", (double) world->GetRealTime());
+    data->AddItemText("Real time (s)", CSTR(value), "");
+
+    RtkFormat1(value, "%7.3f", (double) world->m_update_ratio);
+    data->AddItemText("Sim/real time", CSTR(value), ""); 
+    
+    RtkFormat1(value, "%7.3f", (double) world->m_update_rate);
+    data->AddItemText("Update rate (Hz)", CSTR(value), "");
+
+    data->EndSection();
+
+    // Update the children
+    //
+    for (int i = 0; i < world->m_object_count; i++)
+        world->m_object[i]->OnUiProperty(data);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// UI button message handler
+//
+void CWorld::OnUiButton(CWorld *world, RtkUiButtonData* data)
+{
+    data->BeginSection("default", "world");
+
+    if (data->PushButton("save"))
+        world->Save("temp.world"); // ***
+    
+    data->EndSection();
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Draw the background; i.e. things that dont move
 //
-void CWorld::DrawBackground(RtkUiDrawData *pData)
+void CWorld::DrawBackground(RtkUiDrawData *data)
 {
     RTK_TRACE0("drawing background");
 
-    pData->SetColor(RGB(0, 0, 0));
+    data->SetColor(RGB(0, 0, 0));
     
     // Loop through the image and draw points individually.
     // Yeah, it's slow, but only happens once.
@@ -530,7 +805,7 @@ void CWorld::DrawBackground(RtkUiDrawData *pData)
                 double px = (double) x / ppm;
                 double py = (double) (height - y) / ppm;
                 double s = 1.0 / ppm;
-                pData->Rectangle(px, py, px + s, py + s);
+                data->Rectangle(px, py, px + s, py + s);
             }
         }
     }
@@ -540,7 +815,7 @@ void CWorld::DrawBackground(RtkUiDrawData *pData)
 ///////////////////////////////////////////////////////////////////////////
 // Draw the laser layer
 //
-void CWorld::DrawLayer(RtkUiDrawData *pData, EWorldLayer layer)
+void CWorld::DrawLayer(RtkUiDrawData *data, EWorldLayer layer)
 {
     Nimage *img = NULL;
 
@@ -569,7 +844,7 @@ void CWorld::DrawLayer(RtkUiDrawData *pData, EWorldLayer layer)
             {
                 double px = (double) x / ppm;
                 double py = (double) (height - y) / ppm;
-                pData->SetPixel(px, py, RGB(0, 0, 255));
+                data->SetPixel(px, py, RGB(0, 0, 255));
             }
         }
     }

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.11 $
+//  $Revision: 1.1.2.12 $
 //
 // Usage:
 //  (empty)
@@ -28,6 +28,7 @@
 #ifndef WORLD_HH
 #define WORLD_HH
 
+#include <pthread.h>
 #include "playerrobot.hh"
 #include "image.h"
 
@@ -55,7 +56,7 @@ enum EWorldLayer
 
 // World class
 //
-class CWorld : public CObject
+class CWorld
 {
     // Default constructor
     //
@@ -64,19 +65,38 @@ class CWorld : public CObject
     // Destructor
     //
     public: virtual ~CWorld();
-    
-    // Startup routine -- creates objects in the world
-    //
-    public: virtual bool Startup(RtkCfgFile *cfg);
 
-    // Shutdown routine -- deletes objects in the world
+    // Load the world
     //
-    public: virtual void Shutdown();
+    public: bool Load(const char *filename);
+    
+    // Load an object
+    //
+    private: bool LoadObject(int argc, char **argv, CObject *parent);
+
+    // Save the world
+    //
+    public: bool Save(const char *filename);
+    
+    // Start world thread
+    //
+    public: bool Startup();
+
+    // Stop world thread
+    //
+    public: void Shutdown();
+
+    // Thread entry point for the world
+    //
+    public: static void* Main(CWorld *world);
 
     // Update everything
     //
-    public: virtual void Update();
+    private: void Update();
 
+    //////////////////////////////////////////////////////////////////////////
+    // Time functions
+    
     // Get the simulation time
     // Returns time in sec since simulation started
     //
@@ -106,10 +126,6 @@ class CWorld : public CObject
     //
     public: void SetRectangle(double px, double py, double pth,
                               double dx, double dy, EWorldLayer layer, uint8_t value);
-
-    //
-    ///////////////////////////////////////////////////////////////////////////
-
     
     ///////////////////////////////////////////////////////////////////////////
     // Broadcast device functions
@@ -134,11 +150,15 @@ class CWorld : public CObject
     //
     private: int m_broadcast_count;
     private: CBroadcastDevice *m_broadcast[256];
-    
-    //
-    ///////////////////////////////////////////////////////////////////////////
-    
+   
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Misc vars
+
+    // Thread control
+    //
+    private: pthread_t m_thread;
+    
     // Timing
     // Real time at which simulation started.
     // The time according to the simulator (m_sim_time <= m_start_time).
@@ -151,6 +171,15 @@ class CWorld : public CObject
     //
     private: double m_update_ratio;
     private: double m_update_rate;
+
+    // Name of environment bitmap
+    //
+    private: char m_env_file[256];
+
+    // Object list
+    //
+    private: int m_object_count;
+    private: CObject *m_object[1024];
     
     // Obstacle data
     //
@@ -184,30 +213,58 @@ class CWorld : public CObject
 
 #ifdef INCLUDE_RTK
 
-    // UI property message handler
+    // Initialise rtk
     //
-    public: virtual void OnUiProperty(RtkUiPropertyData* pData);
+    public: void InitRtk(RtkMsgRouter *router);
 
     // Process GUI update messages
     //
-    public: virtual void OnUiUpdate(RtkUiDrawData *pData);
+    public: static void OnUiDraw(CWorld *world, RtkUiDrawData *data);
 
     // Process GUI mouse messages
     //
-    public: virtual void OnUiMouse(RtkUiMouseData *pData);
+    public: static void OnUiMouse(CWorld *world, RtkUiMouseData *data);
 
+    // UI property message handler
+    //
+    public: static void OnUiProperty(CWorld *world, RtkUiPropertyData* data);
+
+    // UI button message handler
+    //
+    public: static void OnUiButton(CWorld *world, RtkUiButtonData* data);
+    
     // Draw the background; i.e. things that dont move
     //
-    private: void DrawBackground(RtkUiDrawData *pData);
+    private: void DrawBackground(RtkUiDrawData *data);
 
     // Draw the laser layer
     //
-    private: void DrawLayer(RtkUiDrawData *pData, EWorldLayer layer);
+    private: void DrawLayer(RtkUiDrawData *data, EWorldLayer layer);
+
+    // Move an object using the mouse
+    //
+    private: void MouseMove(RtkUiMouseData *data);
+    
+    // RTK message router
+    //
+    private: RtkMsgRouter *m_router;
   
 #endif
 };
 
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

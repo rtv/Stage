@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -36,8 +36,8 @@
 CBoxObstacle::CBoxObstacle(CWorld *world, CObject *parent)
         : CObject(world, parent)
 {
-    m_size_x = 0;
-    m_size_y = 0;
+    m_size_x = 1;
+    m_size_y = 1;
         
     // Set the initial map pose
     //
@@ -46,25 +46,49 @@ CBoxObstacle::CBoxObstacle(CWorld *world, CObject *parent)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Initialise object
+// Initialise the object from an argument list
 //
-bool CBoxObstacle::Startup(RtkCfgFile *cfg)
+bool CBoxObstacle::Init(int argc, char **argv)
 {
-    if (!CObject::Startup(cfg))
+    if (!CObject::Init(argc, argv))
         return false;
 
-    cfg->BeginSection(m_id);
+    for (int arg = 0; arg < argc; )
+    {
+        // Extact box pose
+        //
+        if (strcmp(argv[arg], "pose") == 0 && arg + 3 < argc)
+        {
+            double px = atof(argv[arg + 1]);
+            double py = atof(argv[arg + 2]);
+            double pth = DTOR(atof(argv[arg + 3]));
+            SetPose(px, py, pth);
+            arg += 4;
+        }
 
-    m_size_x = cfg->ReadDouble("size_x", 1.00, "");
-    m_size_y = cfg->ReadDouble("size_y", 1.00, "");
-    
-    cfg->EndSection();
+        // Extract box size
+        //
+        else if (strcmp(argv[arg], "size") == 0 && arg + 2 < argc)
+        {
+            m_size_x = atof(argv[arg + 1]);
+            m_size_y = atof(argv[arg + 2]);
+            arg += 3;
+        }
+
+        // Print syntax
+        //
+        else
+        {
+            printf("syntax: create box_obstacle pose <x> <y> <th> size <dx> <dy>\n");
+            return false;
+        }
+    }
 
     #ifdef INCLUDE_RTK
         m_mouse_radius = max(m_size_x, m_size_y) * 0.6;
-        m_draggable = (m_parent == m_world);
+        m_draggable = (m_parent == NULL);
     #endif
-    
+        
     return true;
 }
 
@@ -111,8 +135,10 @@ void CBoxObstacle::OnUiUpdate(RtkUiDrawData *pData)
     
     if (pData->DrawLayer("", TRUE))
     {
+        double ox, oy, oth;
+        GetGlobalPose(ox, oy, oth);
         pData->SetColor(RTK_RGB(128, 128, 255));
-        pData->ExRectangle(m_map_px, m_map_py, m_map_pth, m_size_x, m_size_y);
+        pData->ExRectangle(ox, oy, oth, m_size_x, m_size_y);
     }
 
     pData->EndSection();

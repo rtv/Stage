@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerrobot.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -42,18 +42,18 @@ class CPlayerRobot : public CObject
     public: CPlayerRobot( CWorld* world, CObject *parent);
     public: ~CPlayerRobot( void );
     
-    // Update robot and all its devices
-    //
-    public: virtual void Update();
-
     // Start all the devices
     //
-    public: virtual bool Startup(RtkCfgFile *cfg);
+    public: virtual bool Startup();
 
     // Shutdown the devices
     //
     public: virtual void Shutdown();
 
+    // Update robot and all its devices
+    //
+    public: virtual void Update();
+    
     // Start player
     //
     private: bool StartupPlayer(int port);
@@ -84,6 +84,10 @@ class CPlayerRobot : public CObject
     // *** HACK these should be moved. ahoward
     public: unsigned char color; // unique ID and value drawn into world bitmap
     public: unsigned char channel; // the apparent color of this robot in ACTS
+
+    // Port number for player
+    //
+    public: int m_port;
 
     // Stuff needed to interface with player
     //

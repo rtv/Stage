@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/object.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.7 $
+//  $Revision: 1.1.2.8 $
 //
 // Usage:
 //  (empty)
@@ -51,13 +51,20 @@ class CObject
     public: CObject(CWorld *world, CObject *parent);
 
     // Destructor
-    // Will delete children
     //
     public: virtual ~CObject();
 
+    // Initialise the object from an argument list
+    //
+    public: virtual bool Init(int argc, char **argv);
+
+    // Save the object to a file
+    //
+    public: virtual bool Save(char *buffer, size_t bufflen);
+
     // Startup routine
     //
-    public: virtual bool Startup(RtkCfgFile *cfg);
+    public: virtual bool Startup();
 
     // Shutdown routine
     //
@@ -66,29 +73,6 @@ class CObject
     // Update the object's representation
     //
     public: virtual void Update();
-
-    // Creation routine
-    // Creates child objects by reading them from a file.
-    // Objects are created recursively
-    //
-    public: bool CreateChildren(RtkCfgFile *cfg);
-    
-    // Recursive versions for standard functions
-    // These will call the function for all children, grand-children, etc,
-    // and will normally be called from the root object.
-    //
-    public: bool StartupChildren(RtkCfgFile *cfg);
-    public: void ShutdownChildren();
-    public: void UpdateChildren();
-
-    // Add a child object
-    //
-    public: void AddChild(CObject *child);
-
-    // Get the first ancestor of the given run-time type
-    // Note: will return ourself if the type matches.
-    //
-    public: CObject* FindAncestor(const type_info &type); 
 
     // Convert local to global coords
     //
@@ -120,28 +104,20 @@ class CObject
 
     // Pointer to world
     //
-    protected: CWorld *m_world;
+    public: CWorld *m_world;
     
     // Pointer to parent object
     //
-    protected: CObject *m_parent;
+    public: CObject *m_parent;
+
+    // Number of parents this object has
+    //
+    public: int m_depth;
 
     // Object pose in local cs (ie relative to parent)
     //
     private: double m_lx, m_ly, m_lth;
-    
-    // Current object pose in global cs
-    //
-    private: double m_gx, m_gy, m_gth;
-
-    // Flag set if global pose is out-of-date
-    //
-    private: bool m_global_dirty;
-
-    // List of child objects
-    //
-    private: int m_child_count;
-    private: CObject *m_child[64];
+ 
     
 #ifdef INCLUDE_RTK
 
@@ -159,11 +135,12 @@ class CObject
 
     // Return true if mouse is over object
     //
-    protected: bool IsMouseReady()
-        {
-            return m_mouse_ready;
-        };
+    protected: bool IsMouseReady() {return m_mouse_ready;};
 
+    // Move object with the mouse
+    //
+    public: bool MouseMove(RtkUiMouseData *pData);
+    
     // Mouse must be withing this radius for interaction
     //
     protected: double m_mouse_radius;
@@ -178,7 +155,7 @@ class CObject
 
     // Flag set if object is being dragged
     //
-    private: bool  m_dragging;
+    private: bool m_dragging;
     
 #endif
 };

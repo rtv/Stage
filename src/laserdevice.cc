@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11.2.11 $
+//  $Revision: 1.11.2.12 $
 //
 // Usage:
 //  (empty)
@@ -74,8 +74,9 @@ CLaserDevice::CLaserDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the device
 //
-bool CLaserDevice::Startup(RtkCfgFile *cfg)
+bool CLaserDevice::StartUp()
 {
+    /*
     if (!CPlayerDevice::Startup(cfg))
         return false;
     
@@ -85,7 +86,7 @@ bool CLaserDevice::Startup(RtkCfgFile *cfg)
                                     "(int) Density of samples 1 = full, 2 = half, etc");
     
     cfg->EndSection();
-
+    */
     return true;
 }
 
