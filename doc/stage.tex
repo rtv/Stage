@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.10 2002-06-11 05:15:14 rtv Exp $
+% CVS: $Id: stage.tex,v 1.11 2002-06-11 05:29:12 inspectorg Exp $
 
 \documentclass[11pt]{report}
 
@@ -31,6 +31,7 @@
 \def\SFPAGE {{\tt http://sourceforge.net/projects/playerstage/}}
 
 \begin{document}
+
 \setcounter{page}{0}
 \pagenumbering{roman}
 
@@ -663,9 +664,13 @@ properties:
 \hline
 Name & Values & Description \\
 \hline
-\verb'unit_length' & \verb'["m", "cm", "mm"]' & Set the unit length to meters, centimeters
-or millimeters. \\
-\verb'unit_angle' & \verb'["degrees", "radians"]' & Set the unit angle to degrees or radians.\\
+
+\verb'unit_length' & \parbox{30mm}{\verb'"m"'\\\verb'"cm"'\\\verb'"mm"'}
+& Set the unit length to meters, centimeters or millimeters. \\
+
+\verb'unit_angle' & \parbox{30mm}{\verb'"degrees"' \\ \verb'"radians"'} &
+Set the unit angle to degrees or radians.\\
+
 \hline
 \end{tabularx}
 \end{table}
@@ -720,12 +725,12 @@ Note that both the \verb'entity' and \verb'device' types are {\em
 abstract} (to borrow some C++ parlance) since they cannot be
 instantiated directly.
 
-\section{Entities}
+\section{Objects}
 \label{sec.ref.objects}
 
-The following table lists all of the passive entity types supported by
-Stage.  See Section \ref{sec.ref.devices} for a list of supported {\em
-devices}.
+The following table lists all of the {\em objects} (passive entity
+types) supported by Stage.  See Section \ref{sec.ref.devices} for a
+list of supported {\em devices}.
 
 \begin{table}[h]
 \begin{tabularx}{\columnwidth}{llX}
@@ -754,6 +759,33 @@ for use with \verb'lbd' device.\\
 \end{tabularx}
 \end{table}
 
+\subsection{The {\tt environment} type}
+
+The \verb'environment' type is used to define the fixed environment
+(walls, obstacles, etc); each world file must instantiate exactly {\em
+one} \verb'environment'.  The following properties are supported.
+
+
+\begin{table}[h]
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+
+\verb'file' & \verb'"filename"' & The name of the image file
+describing the fixed obstacles; non-black image pixels will be treated
+as obstacles, black image pixels will be treated as empty space.  Only
+pnm and gzipped pnm images are supported.\\
+
+\verb'scale' & \verb'scale' & The image scale, in meters/pixel (or
+units-lengths/pixel if some another unit of length is specified).\\
+
+\hline
+\end{tabularx}
+\end{table}
+\noindent Note that both the \verb'file' and \verb'scale'
+properties {\em must} be specified.
+
 
 \subsection{The {\tt entity} type}
 
@@ -774,14 +806,35 @@ by the GUI.\\
 \verb'pose' & \verb'[x y a]' & Initialse pose (position and
 orientation).\\
 
-\verb'shape' & \verb'"rect"' or \verb'"circle"' & Entity shape; entities
-can be either rectangular or circular.\\
+\verb'shape' & \parbox{30mm}{\verb'"rect"' \verb'"circle"'} & Entity
+shape; entities can be either rectangular or circular.\\
 
 \verb'size' & \verb'[sizex sizey]' & Entity dimensions.\\
 
 \verb'color' & \verb'"color"' & Descriptive color (e.g. \verb'"red"' or
 \verb'"blue"'); only colors listed in the X11 color database should be used
 (look for \verb'rgb.txt' in your X installation).\\
+
+\verb'obstacle_return' & \parbox{30mm}{\verb'"visible"'
+\verb'"invisible"'} & Specifies whether or not this entity will be
+treated as a fixed obstacle for the purposes of collision detection.
+Derived types will set this to a sensible default.\\
+
+\verb'sonar_return' & \parbox{30mm}{\verb'"visible"'
+\verb'"invisible"'} & Specifies whether or not this entity will be
+detected by sonar sensors.  Derived types will set this to a sensible
+default.\\
+
+\verb'vision_return' & \parbox{30mm}{\verb'"visible"'
+\verb'"invisible"'} & Specifies whether or not this entity will be
+seen by cameras; the color is specified by the \verb'color' property.
+Derived types will set \verb'vision_return' to a sensible default.\\
+
+\verb'laser_return' & \parbox{30mm}{\verb'"bright"' \verb'"visible"'
+\verb'"invisible"'} & Specifies whether or not this entity will be seen
+be laser range finders; the \verb'"bright"' value indicates that the
+entity is a retro-reflector (and hence produces a very intense return
+in the laser).\\
 
 \hline
 \end{tabularx}
@@ -790,14 +843,14 @@ can be either rectangular or circular.\\
 
 
 
-\section{Device Summary}
+\section{Devices}
 \label{sec.ref.devices}
 
-Most of the devices described in this section are simulated versions
-of the real devices supported by Player; see the Player User Manual
-for details on these devices.
+The following table lists all of the {\em devices}
+(Player-controllable sensors and actuators) supported by Stage.  See
+the Player User Manual for details of the physical devices.
 
-\begin{table}[h]
+\noindent
 \begin{tabularx}{\columnwidth}{llX}
 \hline 
 Type & Parent type & Description \\
@@ -836,15 +889,33 @@ truth device will `teleport' the device's parent to a new location.\\
 
 \hline
 \end{tabularx}
+
+
+\subsection{The {\tt device} type}
+
+All device types are derived from the generic \verb'device' type.
+This device has the follow properties.
+\begin{table}[h]
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+
+\verb'port' & \verb'port' & The port to which this device is attached;
+if not specified, the parent device's port will be used.\\
+
+\verb'index' & \verb'index' & The index for this device; used to
+distinguish between multiple instances of the same type of device (on
+a single robot).  Will generally be set to 0.\\
+
+\hline
+\end{tabularx}
 \end{table}
+\noindent In general, only the \verb'port' needs to be specified, and
+then only for the top-level device in each robot (usually the
+\verb'position' device).
 
 
 
-
-
-
-
-\chapter*{Acknowledgements}
-Player/Stage development is funded by DARPA under the Mobile Autonomous Robot Software
 
 \end{document}
