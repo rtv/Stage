@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.125 2002-10-07 06:45:59 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.126 2002-10-10 23:12:06 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -471,10 +471,10 @@ void CWorld::Update(void)
 	  
 	  // increase the time step counter
 	  m_step_num++; 
+
+	  if( this->enable_gui )
+	    GuiWorldUpdate( this );
 	}
-      
-      if( this->enable_gui )
-	GuiWorldUpdate( this );
       
       Output(); // perform console and log output
       
