@@ -24,10 +24,10 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: stg_driver.cc,v 1.28 2005-02-17 19:12:03 rtv Exp $
+ * CVS: $Id: stg_driver.cc,v 1.29 2005-02-23 23:59:15 rtv Exp $
  */
 
-// DOCUMENTATION ---------------------------------------------------------------------
+// DOCUMENTATION ------------------------------------------------------------
 
 /** @defgroup driver_stage Stage plugin driver for Player
 
@@ -151,6 +151,7 @@ Richard Vaughan
 #include "player/drivertable.h"
 #include <player/drivertable.h>
 #include <player/driver.h>
+#include <player/error.h>
 #include "playercommon.h"
 
 #include "stage_internal.h"
@@ -168,6 +169,17 @@ extern char** global_argv;
 //#define NTOH_SEC(s) ntohl(s)
 //#define HTON_SEC(s) htonl(s) // byte ordering for SECONDS
 //#define NTOH_SEC(s) ntohl(s)
+
+
+
+// map interface macros
+//
+// compute linear index for given map coords
+#define MAP_IDX(mf, i, j) ((mf->size_x) * (j) + (i))
+// check that given coords are valid (i.e., on the map)
+#define MAP_VALID(mf, i, j) ((i >= 0) && (i < mf->size_x) && (j >= 0) && (j < mf->size_y))
+
+
 
 #define STG_DEFAULT_WORLDFILE "default.world"
 #define DRIVER_ERROR(X) printf( "Stage driver error: %s\n", X )
@@ -260,12 +272,14 @@ private:
   // MAP INTERFACE - TODO
   void RefreshDataMap( device_record_t* device );
   void HandleConfigMap( device_record_t* device, void* client, void* buffer, size_t len);
+  void HandleConfigMapInfo( device_record_t* device, void* client, void* buffer, size_t len);
+  void HandleConfigMapData( device_record_t* device, void* client, void* buffer, size_t len);
   
   /// an array of pointers to device_record_t structs
   private: GPtrArray* devices;
 
   protected: static GPtrArray* all_devices;
-  
+
   /// all player devices share the same Stage world
   static stg_world_t* world;
 };
@@ -361,8 +375,7 @@ stg_model_t* model_match( stg_model_t* mod, stg_model_type_t tp, GPtrArray* devi
 // pre-Setup() setup.
 StgDriver::StgDriver(ConfigFile* cf, int section)
     : Driver(cf, section)
-{
-  
+{  
   // init the array of device ids
   this->devices = g_ptr_array_new();
   
@@ -854,13 +867,239 @@ void StgDriver::HandleConfigBlobfinder( device_record_t* device, void* client, v
     DRIVER_ERROR("PutReply() failed");  
 }
 
+char* testdata = "hello world";
+
+typedef struct
+{
+  double ppm;
+  unsigned int width, height;
+  int8_t* data;
+} stg_map_info_t;
+
+// Handle map info request - adapted from Player's mapfile driver by
+// Brian Gerkey
+void  StgDriver::HandleConfigMapInfo( device_record_t* device,  
+				      void *client, 
+				      void *request, 
+				      size_t len)
+{
+  printf( "Stage: device \"%s\" received map info request\n", device->mod->token );
+  
+  // prepare the map info for the client
+  player_map_info_t info;  
+  size_t reqlen =  sizeof(info.subtype); // Expected length of request
+  
+  // check if the config request is valid
+  if(len != reqlen)
+  {
+    PLAYER_ERROR2("config request len is invalid (%d != %d)", len, reqlen);
+    if (PutReply(client, PLAYER_MSGTYPE_RESP_NACK,NULL) != 0)
+      PLAYER_ERROR("PutReply() failed");
+    return;
+  }
+
+  // create and render a map for this model
+  stg_geom_t geom;
+  stg_model_get_geom( device->mod, &geom );
+  
+  // if we already have a map info for this model, destroy it
+  stg_map_info_t* minfo = (stg_map_info_t*)stg_model_get_prop( device->mod, "_map" );
+  if( minfo )
+    {
+      if( minfo->data ) delete [] minfo->data;
+      delete minfo;
+    }
+  
+  minfo = new stg_map_info_t();
+  minfo->ppm = device->mod->map_ppm;  
+  minfo->width = (unsigned int)( geom.size.x * minfo->ppm );
+  minfo->height = (unsigned int)( geom.size.y * minfo->ppm );
+  
+  // create an occupancy grid of the correct size, initially full of
+  // unknown cells
+  //int8_t* map = NULL; 
+  assert( (minfo->data = new int8_t[minfo->width*minfo->height] ));
+  memset( minfo->data, 0, minfo->width * minfo->height );
+  
+  printf( "Stage: created map for model \"%s\" of %d by %d cells\n", 
+	  device->mod->token, minfo->width, minfo->height );
+  
+  size_t count=0;
+  stg_polygon_t* polys = stg_model_get_polygons( device->mod, &count);
+  
+  if( polys && count ) // if we have something to render
+    {
+      
+      // we'll use a temporary matrix, as it knows how to render objects
+      
+      stg_matrix_t* matrix = stg_matrix_create( minfo->ppm, 1.0, 1.0 );
+            
+      if( count > 0 ) 
+	{
+	  // render the model into the matrix
+	  stg_matrix_polygons( matrix, 
+			       geom.size.x/2.0,
+			       geom.size.y/2.0,
+			       0,
+			       polys, count, 
+			       device->mod, 1 );  
+	  
+	  if( device->mod->guifeatures.boundary )    
+	    stg_matrix_rectangle( matrix,
+				  geom.size.x/2.0,
+				  geom.size.y/2.0,
+				  0,
+				  geom.size.x,
+				  geom.size.y,
+				  device->mod, 1 );
+	}
+      
+      // Now convert the matrix to a Player occupancy grid. if the
+      // matrix contains anything in a cell, we set that map cell to
+      // be occupied, else unoccupied
+      
+      for( unsigned int p=0; p<minfo->width; p++ )
+	for( unsigned int q=0; q<minfo->height; q++ )
+	  {
+	    GPtrArray* pa = stg_table_cell( matrix->table, p, q );
+	    minfo->data[ q * minfo->width + p ] =  pa ? 1 : -1;
+	  }
+      
+      // we're done with the matrix
+      stg_matrix_destroy( matrix );
+    }
+
+  // store the map as a model property named "_map"
+  stg_model_set_prop( device->mod, "_map", (void*)minfo );
+
+  //if(this->mapdata == NULL)
+  //{
+  //PLAYER_ERROR("NULL map data");
+  //if(PutReply(client, PLAYER_MSGTYPE_RESP_NACK,NULL) != 0)
+  //  PLAYER_ERROR("PutReply() failed");
+  // return;
+  
+  // pixels per kilometer
+  info.scale = htonl((uint32_t)rint(minfo->ppm * 1e3 ));
+  
+  // size in pixels
+  info.width = htonl((uint32_t)minfo->width);
+  info.height = htonl((uint32_t)minfo->height);
+  
+  // Send map info to the client
+  if (PutReply(client, PLAYER_MSGTYPE_RESP_ACK, &info, sizeof(info), NULL) != 0)
+    PLAYER_ERROR("PutReply() failed");
+
+  return;
+}
+
+// Handle map data request
+void StgDriver::HandleConfigMapData( device_record_t* device,  
+				     void *client, 
+				     void *request, 
+				     size_t len)
+{
+  //printf( "device %s received map data request", device->mod->token );
+
+  //int i, j;
+  unsigned int oi, oj, si, sj;
+  size_t reqlen;
+  player_map_data_t data;
+  
+  // Expected length of request
+  reqlen = sizeof(data) - sizeof(data.data);
+  
+  // check if the config request is valid
+  if(len != reqlen)
+    {
+      PLAYER_ERROR2("config request len is invalid (%d != %d)", len, reqlen);
+      if(PutReply(client, PLAYER_MSGTYPE_RESP_NACK,NULL) != 0)
+      PLAYER_ERROR("PutReply() failed");
+      return;
+    }
+  
+  stg_map_info_t* minfo = NULL;
+  assert( (minfo=(stg_map_info_t*)stg_model_get_prop( device->mod, "_map" )));
+  
+  int8_t* map = NULL;  
+  assert( (map = minfo->data ) );
+
+  //printf( "fetched map: %s\n", str );
+  
+  // Construct reply
+  memcpy(&data, request, len);
+  
+   oi = ntohl(data.col);
+   oj = ntohl(data.row);
+   si = ntohl(data.width);
+   sj = ntohl(data.height);
+   
+   //printf( "map data request: col: %d row: %d width: %d height: %d\n",
+   //   oi, oj, si, sj );
+   
+   //   // Grab the pixels from the map
+   for( unsigned int j = 0; j < sj; j++)
+     {
+       for( unsigned int i = 0; i < si; i++)
+	 {
+	   if((i * j) <= PLAYER_MAP_MAX_CELLS_PER_TILE)
+	     {
+	       if( i+oi >= 0 &&
+		   i+oi < minfo->width &&
+		   j+oj >= 0 &&
+		   j+oj < minfo->height )
+		 data.data[i + j * si] = map[ i+oi + (minfo->width * (j+oj)) ];
+	       else
+		 {
+		   PLAYER_WARN2("requested cell (%d,%d) is offmap", i+oi, j+oj);
+		   data.data[i + j * si] = 0;
+		 }
+	     }
+	   else
+	     {
+	       PLAYER_WARN("requested tile is too large; truncating");
+	       if(i == 0)
+		 {
+		   data.width = htonl(si-1);
+		   data.height = htonl(j-1);
+		 }
+	       else
+		 {
+		   data.width = htonl(i);
+		   data.height = htonl(j);
+		 }
+	     }
+	 }
+     }
+   
+  // Send map info to the client
+  if(PutReply(client, PLAYER_MSGTYPE_RESP_ACK, &data, 
+              sizeof(data) - sizeof(data.data) + 
+              ntohl(data.width) * ntohl(data.height),NULL) != 0)
+    PLAYER_ERROR("PutReply() failed");
+  return;
+}
+
+
 void StgDriver::HandleConfigMap( device_record_t* device, void* client, void* buffer, size_t len )
 {
-  printf("got map request\n");
-  
-  if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
-    DRIVER_ERROR("PutReply() failed");  
+  switch( ((unsigned char*)buffer)[0])
+  {
+    case PLAYER_MAP_GET_INFO_REQ:
+      HandleConfigMapInfo( device, client, buffer, len);
+      break;
+  case PLAYER_MAP_GET_DATA_REQ:
+      HandleConfigMapData( device, client, buffer, len);
+      break;
+    default:
+      PLAYER_ERROR("got unknown map config request; ignoring");
+      if(PutReply(client, PLAYER_MSGTYPE_RESP_NACK,NULL) != 0)
+        PLAYER_ERROR("PutReply() failed");
+      break;
+  }
 }
+
+
 
 
 

@@ -163,6 +163,9 @@ extern "C" {
     gui_model_t gui; // all the gui stuff    
     stg_msec_t interval; // time between updates in ms
     stg_msec_t interval_elapsed; // time since last update in ms
+
+    // render the model at this resolution in Player maps (not the world's matrix)
+    double map_ppm;
   
     //int section; // worldfile section number
 
@@ -417,6 +420,9 @@ extern "C" {
 			    stg_polygon_t* polys, int num_polys,
 			    void* object, int add );
 
+  /** get a single cell by pixel coordinate */
+  GPtrArray* stg_table_cell( GHashTable* table, glong x, glong y);
+  
   /**@}*/
 
   // RAYTRACE ITERATORS -------------------------------------------------------------
