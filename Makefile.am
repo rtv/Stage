@@ -2,7 +2,11 @@ SUBDIRS = replace src worlds tools
 
 DOCSRC = $(top_srcdir)/docsrc
 DOCDIST = $(distdir)/doc 
-DOCINST = $(DESTDIR)$(prefix)/share/doc
+DOCINST = $(DESTDIR)$(prefix)/doc
+
+# create the pkg-config entries
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = stage.pc stagecpp.pc
 
 dist-hook:
 	cd $(DOCSRC) && make 
@@ -16,7 +20,6 @@ install-data-hook:
 	cp -p $(top_srcdir)/doc/stage.ps $(DOCINST)
 	cp -p $(top_srcdir)/doc/stage.pdf $(DOCINST)
 
-# need to figure out safe way to do this
-#uninstall-local:
-#	rm -f $(DOCINST)/*
+uninstall-local:
+	rm -f $(DOCINST)/*
 
