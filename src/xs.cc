@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.21 2001-09-23 04:46:33 vaughan Exp $
+ * $Id: xs.cc,v 1.22 2001-09-23 05:03:15 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -293,7 +293,10 @@ static void* TruthWriter( void* )
 	  
 	  //printf( "WRITING %d bytes on %d", sizeof(struth), ffd );
 	  //fflush( stdout );
-	  
+
+	  // please send this truth back to us for redisplay
+	  struth.echo_request = true;
+
 	  size_t b = write( ffd, &struth, sizeof( struth ) );
 	  
 	  if( b < 0 )

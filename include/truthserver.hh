@@ -28,6 +28,9 @@ typedef struct
   player_id_t id;
   player_id_t parent;
   
+  // stage will echo these truths if this is true
+  bool echo_request; 
+
   //int16_t channel; // ACTS color channel (-1 = no channel)
   uint32_t x, y; // mm, mm
   uint16_t w, h; // mm, mm  

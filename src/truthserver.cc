@@ -181,7 +181,8 @@ static void * TruthWriter( void* arg )
 	      //printf( "new truth: " );
 	      //PrintTruth( truth );
 	      //puts( "sending..." );
-	      
+
+	      truth.echo_request = false;
 	      // send the packet to the connected client
 	      v = write( *connfd, &truth, sizeof(truth) );
 	      

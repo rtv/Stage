@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.37 $
+//  $Revision: 1.38 $
 //
 // Usage:
 //  (empty)
@@ -566,16 +566,6 @@ void CWorld::Update()
 	      continue;
 	  }
 
-	//assert( (CEntity*)truth.stage_id ); // should be good -otherwise a bug
-
-	//printf( "PTR: %d\n", truth.stage_id ); fflush( stdout );
-
-	//CEntity* ent = (CEntity*)truth.stage_id;
-
-	//CEntity* ent = GetEntityByID( truth.id.port, 
-	//		      truth.id.type,
-	//		      truth.id.index );
-
 	CEntity* ent = m_object[ truth.stage_id ];
 	
 	assert( ent ); // there really ought to be one!
@@ -586,18 +576,13 @@ void CWorld::Update()
 	ent->SetGlobalPose( truth.x/1000.0, truth.y/1000.0, 
 			    DTOR(truth.th) );
 
-
-	// store it in the truthserver's comparison database
-	memcpy( &(ts_truths[ truth.stage_id ]), &truth, sizeof( truth ) );
+	// if we don't want an echo
+	if( !truth.echo_request )
+	  // store it in the truthserver's comparison database
+	  // to fool the server into thinking we'cve sent this one before
+	  memcpy( &(ts_truths[ truth.stage_id ]), &truth, sizeof( truth ) );
 	
-	// the parent may have been changed - NYI
-	//ent->parent->port = truth.parent.port;
-	//ent->parent.type = truth.parent.type;
-	//ent->parent.index = truth.parent.index;
-
 	// width and height could be changed here too if necessary
-
-	//ent->m_publish_truth = true; // re-export this new truth
       }
 
     // Do the actual work -- update the objects 
