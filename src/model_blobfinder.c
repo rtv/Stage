@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.6 2004-06-14 19:21:00 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.7 2004-06-14 20:06:19 rtv Exp $
  */
 
 #include <math.h>
@@ -29,37 +29,11 @@
 #include "model.h"
 #include "raytrace.h"
 
-#define DEBUG
+//#define DEBUG
 
 #include "gui.h"
 extern rtk_fig_t* fig_debug;
 
-
-/* void model_blobfinder_init( model_t* mod ) */
-/* { */
-/*   stg_blobfinder_config_t cfg; */
-/*   memset( &cfg, 0, sizeof(stg_blobfinder_config_t) ); */
-  
-/*   cfg.scan_width  = 160; // pixels */
-/*   cfg.scan_height = 120; */
-/*   cfg.range_max = 8.0; // meters */
-
-/*   cfg.pan = 0; // radians */
-/*   cfg.tilt = 0; */
-/*   cfg.zoom = DTOR( 60 ); // field of view */
-  
-/*   // reasonable channel defaults */
-/*   cfg.channel_count = 6; */
-/*   cfg.channels[0] = stg_lookup_color( "red" ); */
-/*   cfg.channels[1] = stg_lookup_color( "green" ); */
-/*   cfg.channels[2] = stg_lookup_color( "blue" ); */
-/*   cfg.channels[3] = stg_lookup_color( "yellow" ); */
-/*   cfg.channels[4] = stg_lookup_color( "cyan" ); */
-/*   cfg.channels[5] = stg_lookup_color( "magenta" ); */
-  
-/*   model_set_prop_generic( mod, STG_PROP_BLOBCONFIG,  */
-/* 			  &cfg, sizeof(cfg) ); */
-/* } */
 
 void model_blobfinder_startup( model_t* mod )
 {
@@ -76,7 +50,7 @@ void model_blobfinder_shutdown( model_t* mod )
 
 void model_blobfinder_update( model_t* mod )
 {
-  PRINT_WARN( "blobfinder update" );  
+  PRINT_DEBUG( "blobfinder update" );  
 
   stg_blobfinder_config_t* cfg = (stg_blobfinder_config_t*)
     model_get_prop_data_generic( mod, STG_PROP_BLOBCONFIG );
@@ -279,13 +253,18 @@ void model_blobfinder_update( model_t* mod )
 
 void model_blobfinder_render( model_t* mod )
 { 
-  PRINT_WARN( "blobfinder render" );  
+  PRINT_DEBUG( "blobfinder render" );  
 
-  gui_window_t* win = mod->world->win;
-  rtk_fig_t* fig = gui_model_figs(mod)->blob_data;  
-  rtk_fig_clear(fig);
+  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_BLOBDATA];  
+  
+  if( fig  )
+    rtk_fig_clear(fig);
+  else // create the figure, store it in the model and keep a local pointer
+    fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_BLOBDATA,
+				 mod->gui.top->parent, STG_LAYER_BLOBDATA );
 
-  if( win->show_blobdata && mod->subs[STG_PROP_BLOBDATA] )
+
+  if( mod->subs[STG_PROP_BLOBDATA] )
     {
       // place the visualization a little away from the device
       stg_pose_t pose;
@@ -298,7 +277,7 @@ void model_blobfinder_render( model_t* mod )
       pose.a = 0.0;
       rtk_fig_origin( fig, pose.x, pose.y, pose.a );
 
-      double scale = 0.007; // shrink from pixels to meters for display
+      double scale = 0.01; // shrink from pixels to meters for display
   
       stg_blobfinder_config_t* cfg = (stg_blobfinder_config_t*) 
 	model_get_prop_data_generic( mod, STG_PROP_BLOBCONFIG );
@@ -307,14 +286,6 @@ void model_blobfinder_render( model_t* mod )
       stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_BLOBDATA );
   
       if( prop == NULL )
-	return; // no data to render yet
-  
-      stg_blobfinder_blob_t* blobs = (stg_blobfinder_blob_t*)prop->data;
-      if( blobs == NULL )
-	return; // no data to render yet
-  
-      int num_blobs = prop->len / sizeof(stg_blobfinder_blob_t);
-      if( num_blobs < 1 )
 	return; // no data to render yet
   
       short width = cfg->scan_width;
@@ -327,6 +298,14 @@ void model_blobfinder_render( model_t* mod )
       rtk_fig_rectangle(fig, 0.0, 0.0, 0.0, mwidth,  mheight, 1 ); 
       rtk_fig_color_rgb32(fig, 0x000000);
       rtk_fig_rectangle(fig, 0.0, 0.0, 0.0, mwidth,  mheight, 0); 
+  
+      stg_blobfinder_blob_t* blobs = (stg_blobfinder_blob_t*)prop->data;
+      if( blobs == NULL )
+	return; // no data to render yet
+  
+      int num_blobs = prop->len / sizeof(stg_blobfinder_blob_t);
+      if( num_blobs < 1 )
+	return; // no data to render yet
   
       int c;
       for( c=0; c<num_blobs; c++)
@@ -362,12 +341,17 @@ void model_blobfinder_render( model_t* mod )
 
 void model_blobfinder_config_render( model_t* mod )
 { 
-  PRINT_WARN( "blobfinder config render" );  
+  PRINT_DEBUG( "blobfinder config render" );  
 
-  gui_window_t* win = mod->world->win;
+  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_BLOBCONFIG];  
+  
+  if( fig  )
+    rtk_fig_clear(fig);
+  else // create the figure, store it in the model and keep a local pointer
+    fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_BLOBCONFIG,
+				 mod->gui.top, STG_LAYER_BLOBCONFIG );
 
-  rtk_fig_t* fig = gui_model_figs(mod)->blob_cfg;  
-  rtk_fig_clear(fig);
+
   rtk_fig_color_rgb32( fig, stg_lookup_color( STG_BLOB_CFG_COLOR ));
   
   stg_blobfinder_config_t* cfg = (stg_blobfinder_config_t*) 

@@ -13,7 +13,7 @@ extern rtk_fig_t* fig_debug;
 
 /* void model_laser_init( model_t* mod ) */
 /* {      */
-/*   PRINT_WARN( "laser init" ); */
+/*   PRINT_DEBUG( "laser init" ); */
 
 /*   // configure the laser to sensible defaults   */
 /*   stg_laser_config_t lcfg; */
@@ -42,7 +42,7 @@ void model_laser_shutdown( model_t* mod )
 
 void model_laser_update( model_t* mod )
 {   
-  PRINT_WARN( "laser update" );
+  PRINT_DEBUG( "laser update" );
 
   PRINT_DEBUG1( "[%lu] updating lasers", mod->world->sim_time );
   
@@ -170,7 +170,7 @@ rtk_fig_t* model_prop_fig_create( model_t* mod,
 
 void model_laser_render( model_t* mod )
 {
-  PRINT_WARN( "laser render" );
+  PRINT_DEBUG( "laser render" );
 
   rtk_fig_t* fig = mod->gui.propdata[STG_PROP_LASERDATA];  
   
@@ -234,7 +234,7 @@ void model_laser_render( model_t* mod )
 
 void model_laser_config_render( model_t* mod )
 { 
-  PRINT_WARN( "laser config render" );
+  PRINT_DEBUG( "laser config render" );
   
   rtk_fig_t* fig = mod->gui.propdata[STG_PROP_LASERCONFIG];  
   

@@ -571,9 +571,7 @@ void gui_model_update( model_t* mod, stg_prop_type_t prop )
     case STG_PROP_COLOR:
     case STG_PROP_NOSE:
     case STG_PROP_MOVEMASK:
-    case STG_PROP_RANGERCONFIG:
     case STG_PROP_GRID:
-    case STG_PROP_LASERCONFIG:
       gui_model_render( mod );
       gui_model_movemask( mod );
       break;
@@ -603,6 +601,9 @@ void gui_model_update( model_t* mod, stg_prop_type_t prop )
     case STG_PROP_INTERVAL:
     case STG_PROP_MATRIXRENDER:
     case STG_PROP_BLOBCONFIG:
+    case STG_PROP_RANGERCONFIG:
+    case STG_PROP_LASERCONFIG:
+    case STG_PROP_FIDUCIALCONFIG:
       break;
 
     default:

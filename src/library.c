@@ -47,23 +47,23 @@ libitem_t items[] =
       model_ranger_config_render
     },
     
-/*     { STG_PROP_BLOBDATA, */
-/*       "blob", */
-/*       NULL, */
-/*       model_blobfinder_startup, */
-/*       model_blobfinder_shutdown, */
-/*       model_blobfinder_update, */
-/*       model_blobfinder_render */
-/*     }, */
+    { STG_PROP_BLOBDATA,
+      "blob",
+      NULL,
+      model_blobfinder_startup,
+      model_blobfinder_shutdown,
+      model_blobfinder_update,
+      model_blobfinder_render
+    },
 
-/*     { STG_PROP_BLOBCONFIG,  */
-/*       "blobconfig", */
-/*       NULL, */
-/*       NULL, */
-/*       NULL, */
-/*       NULL, */
-/*       model_blobfinder_config_render  */
-/*     }, */
+    { STG_PROP_BLOBCONFIG,
+      "blobconfig",
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      model_blobfinder_config_render
+    },
     
     { STG_PROP_LASERDATA, 
       "laser",
@@ -83,24 +83,24 @@ libitem_t items[] =
       model_laser_config_render 
     },
 
- /*    { STG_PROP_FIDUCIALDATA,  */
-/*       "fiducial", */
-/*       NULL, */
-/*       NULL,  */
-/*       model_fiducial_shutdown, */
-/*       model_fiducial_update, */
-/*       model_fiducial_render */
-/*     }, */
+    { STG_PROP_FIDUCIALDATA,
+      "fiducial",
+      NULL,
+      NULL,
+      model_fiducial_shutdown,
+      model_fiducial_update,
+      model_fiducial_render
+    },
 
     
-/*     { STG_PROP_FIDUCIALCONFIG,  */
-/*       "fiducialconfig", */
-/*       NULL, */
-/*       NULL, */
-/*       NULL,  */
-/*       NULL, */
-/*       model_fiducial_config_render */
-/*     }, */
+    { STG_PROP_FIDUCIALCONFIG,
+      "fiducialconfig",
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      model_fiducial_config_render
+    },
     
     { 0,NULL,NULL,NULL,NULL,NULL}
   };

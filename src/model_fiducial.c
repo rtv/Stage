@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -20,25 +20,10 @@
 #include "gui.h"
 extern rtk_fig_t* fig_debug;
 
-/* void model_fiducial_init( model_t* mod ) */
-/* { */
-/*   PRINT_WARN( "fiducial init" ); */
-
-/*   stg_fiducial_config_t* fid = calloc( sizeof(stg_fiducial_config_t), 1 ); */
-/*   memset( fid, 0, sizeof(stg_fiducial_config_t) ); */
-/*   fid->max_range_anon = 6.0;  */
-/*   fid->max_range_id = 3.0; */
-/*   fid->fov = 2.0 * M_PI;  */
-
-/*   // add this property to the model */
-/*   model_set_prop_generic( mod, STG_PROP_FIDUCIALCONFIG,  */
-/* 			  fid, sizeof(stg_fiducial_config_t) );   */
-/* } */
-
 
 void model_fiducial_shutdown( model_t* mod )
 {
-  PRINT_WARN( "fiducial shutdown" );
+  //PRINT_WARN( "fiducial shutdown" );
   
   model_remove_prop_generic( mod, STG_PROP_FIDUCIALDATA );
 }
@@ -74,8 +59,8 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
   // is he in my field of view?
   double hisbearing = atan2( dy, dx );
   double dif = mfb->pose.a - hisbearing;
-  printf( "my heading %f   his bearing %f  dif %f\n", 
-	  mfb->pose.a, hisbearing, dif );
+  //printf( "my heading %f   his bearing %f  dif %f\n", 
+  //  mfb->pose.a, hisbearing, dif );
   
   if( fabs(dif) > mfb->cfg->fov/2.0 )
     return;
@@ -117,7 +102,7 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
 //
 void model_fiducial_update( model_t* mod )
 {
-  PRINT_WARN( "fiducial update" );
+  //PRINT_WARN( "fiducial update" );
 
   if( fig_debug ) rtk_fig_clear( fig_debug );
   
@@ -144,16 +129,19 @@ void model_fiducial_update( model_t* mod )
 
 void model_fiducial_render( model_t* mod )
 { 
-  PRINT_WARN( "fiducial render" );
+  //PRINT_WARN( "fiducial render" );
 
   char text[32];
 
-  gui_window_t* win = mod->world->win;  
+  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_FIDUCIALDATA];  
   
-  rtk_fig_t* fig = gui_model_figs(mod)->fiducial_data;  
-  if( fig ) rtk_fig_clear( fig ); 
+  if( fig  )
+    rtk_fig_clear(fig);
+  else // create the figure, store it in the model and keep a local pointer
+    fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_FIDUCIALDATA,
+				 mod->gui.top, STG_LAYER_NEIGHBORDATA );
   
-  if( win->show_fiducialdata && mod->subs[STG_PROP_FIDUCIALDATA] )
+  if( mod->subs[STG_PROP_FIDUCIALDATA] )
     {      
       rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_COLOR ) );
       
@@ -195,10 +183,14 @@ void model_fiducial_render( model_t* mod )
 
 void model_fiducial_config_render( model_t* mod )
 { 
-  gui_window_t* win = mod->world->win;
-
-  rtk_fig_t* fig = gui_model_figs(mod)->fiducial_cfg;  
-  rtk_fig_clear(fig);
+  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_FIDUCIALCONFIG];  
+  
+  if( fig  )
+    rtk_fig_clear(fig);
+  else // create the figure, store it in the model and keep a local pointer
+    fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_FIDUCIALCONFIG,
+				 mod->gui.top, STG_LAYER_NEIGHBORCONFIG );
+  
   rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_CFG_COLOR ));
   
   stg_fiducial_config_t* cfg = (stg_fiducial_config_t*) 
