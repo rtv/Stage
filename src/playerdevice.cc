@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.13 $
+//  $Revision: 1.2.2.14 $
 //
 // Usage:
 //  (empty)
@@ -144,9 +144,9 @@ size_t CPlayerDevice::PutData(void *data, size_t len)
     //
     timeval curr;
     gettimeofday(&curr, NULL);
-    uint64_t timestamp =  (((uint64_t) curr.tv_sec) * 1000000 + (uint64_t) curr.tv_usec);
-    m_info->data_timestamp = htonll(timestamp);
-    
+    m_info->data_timestamp_sec = curr.tv_sec;
+    m_info->data_timestamp_usec = curr.tv_usec;
+
     // Set data flag to indicate data is available
     //
     m_info->data_len = len;

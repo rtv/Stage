@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11.2.16 $
+//  $Revision: 1.11.2.17 $
 //
 // Usage:
 //  (empty)
@@ -34,12 +34,6 @@
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Macros
-//
-#define MAKEUINT16(lo, hi) ((((uint16_t) (hi)) << 8) | ((uint16_t) (lo)))
-
-
-///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
 CLaserDevice::CLaserDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
@@ -50,7 +44,7 @@ CLaserDevice::CLaserDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
                         LASER_COMMAND_BUFFER_SIZE,
                         LASER_CONFIG_BUFFER_SIZE)
 {
-    // *** HACK -- should measure the interval properly
+    // Laser update interval
     //
     m_update_interval = 0.2;
     m_last_update = 0;
@@ -80,17 +74,6 @@ CLaserDevice::CLaserDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
 //
 bool CLaserDevice::StartUp()
 {
-    /*
-    if (!CPlayerDevice::Startup(cfg))
-        return false;
-    
-    cfg->begin_section(m_id);
-
-    m_sample_density = cfg->ReadInt("sample_density", 1,
-                                    "(int) Density of samples 1 = full, 2 = half, etc");
-    
-    cfg->end_section();
-    */
     return true;
 }
 
@@ -133,20 +116,18 @@ void CLaserDevice::Update()
 //
 bool CLaserDevice::CheckConfig()
 {
-    uint8_t config[5];
-
-    if (GetConfig(config, sizeof(config)) == 0)
+    player_laser_config_t config;
+    if (GetConfig(&config, sizeof(config)) == 0)
         return false;  
 
-    m_min_segment = ntohs(MAKEUINT16(config[0], config[1]));
-    m_max_segment = ntohs(MAKEUINT16(config[2], config[3]));
-    m_intensity = (bool) config[4];
+    m_min_segment = ntohs(config.min_segment);
+    m_max_segment = ntohs(config.max_segment);
+    m_intensity = config.intensity;
 
     //RTK_MSG3("new scan range [%d %d], intensity [%d]",
     //     (int) m_min_segment, (int) m_max_segment, (int) m_intensity);
 
-    // *** HACK -- change the update rate based on the scan size
-    // This is a guess only
+    // Change the update rate based on the scan size
     //
     m_update_interval = 0.2 * (m_max_segment - m_min_segment + 1) / 361;
         
@@ -164,7 +145,7 @@ bool CLaserDevice::UpdateScanData()
     if (m_world->GetTime() - m_last_update <= m_update_interval)
         return false;
     m_last_update = m_world->GetTime();
-
+    
     // Get the pose of the laser in the global cs
     //
     double ox, oy, oth;
@@ -302,43 +283,43 @@ void CLaserDevice::Map(bool render)
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
 //
-void CLaserDevice::OnUiUpdate(RtkUiDrawData *pData)
+void CLaserDevice::OnUiUpdate(RtkUiDrawData *event)
 {
     // Draw our children
     //
-    CObject::OnUiUpdate(pData);
+    CObject::OnUiUpdate(event);
     
     // Draw ourself
     //
-    pData->begin_section("global", "laser");
+    event->begin_section("global", "laser");
     
-    if (pData->draw_layer("", true))
-        DrawTurret(pData);
-    if (pData->draw_layer("scan", true))
+    if (event->draw_layer("", true))
+        DrawTurret(event);
+    if (event->draw_layer("scan", true))
         if (IsSubscribed() && m_robot->ShowSensors())
-            DrawScan(pData);
+            DrawScan(event);
     
-    pData->end_section();
+    event->end_section();
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI mouse messages
 //
-void CLaserDevice::OnUiMouse(RtkUiMouseData *pData)
+void CLaserDevice::OnUiMouse(RtkUiMouseData *event)
 {
-    CObject::OnUiMouse(pData);
+    CObject::OnUiMouse(event);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Draw the laser turret
 //
-void CLaserDevice::DrawTurret(RtkUiDrawData *pData)
+void CLaserDevice::DrawTurret(RtkUiDrawData *event)
 {
     #define TURRET_COLOR RTK_RGB(0, 0, 255)
     
-    pData->set_color(TURRET_COLOR);
+    event->set_color(TURRET_COLOR);
 
     // Turret dimensions
     //
@@ -352,28 +333,28 @@ void CLaserDevice::DrawTurret(RtkUiDrawData *pData)
     
     // Draw the outline of the turret
     //
-    pData->ex_rectangle(gx, gy, gth, dx, dy); 
+    event->ex_rectangle(gx, gy, gth, dx, dy); 
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Draw the laser scan
 //
-void CLaserDevice::DrawScan(RtkUiDrawData *pData)
+void CLaserDevice::DrawScan(RtkUiDrawData *event)
 {
     #define SCAN_COLOR RTK_RGB(0, 0, 255)
     
-    pData->set_color(SCAN_COLOR);
+    event->set_color(SCAN_COLOR);
 
     // Get global pose
     //
     double gx, gy, gth;
     GetGlobalPose(gx, gy, gth);
 
-    pData->move_to(gx, gy);
+    event->move_to(gx, gy);
     for (int i = 0; i < m_hit_count; i++)
-        pData->line_to(m_hit[i][0], m_hit[i][1]);
-    pData->line_to(gx, gy);
+        event->line_to(m_hit[i][0], m_hit[i][1]);
+    event->line_to(gx, gy);
 }
 
 #endif

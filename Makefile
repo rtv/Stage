@@ -1,11 +1,13 @@
 #
 # Makefile - the top level Makefile to build Stage
 # RTV
-# $Id: Makefile,v 1.3.2.3 2001-04-02 18:41:45 ahoward Exp $
+# $Id: Makefile,v 1.3.2.4 2001-04-27 20:23:46 ahoward Exp $
 # 
 
 # the directory of the player source
-PLAYERSRC = /usr/local/player
+PLAYER_DIR = /usr/local/player1.1beta
+#PLAYER_DIR = ../../player
+RTK_DIR = ../../rtk
 
 # install stage in these directories
 INSTALL = /usr/local/stage
@@ -15,10 +17,14 @@ INSTALL_BIN_FILES = bin/stage bin/rtk_stage
 INSTALL_ETC_FILES = etc/rtk_stage.cfg
 
 stage: 
-	cd src; make clean; make stage; mv stage ../bin/
+	cd src; make stage -e PLAYER_DIR=$(PLAYER_DIR); cp stage ../bin/
 
 rtk_stage:
-	cd src; make clean; make rtk_stage; mv rtk_stage ../bin/
+	cd src; make rtk_stage -e PLAYER_DIR=$(PLAYER_DIR) -e RTK_DIR=$(RTK_DIR); \
+	cp rtk_stage ../bin/
+
+dep:
+	cd src; make dep
 
 clean:
 	rm -f *~
