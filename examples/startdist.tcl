@@ -56,10 +56,10 @@ puts "Found the following hosts: $hosts\n"
 puts "Using the bitmap: $bitmap\n"
 
 if {$send} {
-  set playerbinary "/home/gerkey/code/player/src/player"
-  set stagebinary "/home/gerkey/code/stage/src/stage_objs/stage"
-  set xsbinary "/home/gerkey/code/stage/src/xs"
-  set managerbinary "/home/gerkey/code/stage/src/manager"
+  set playerbinary "/home/vaughan/PS/player/src/player"
+  set stagebinary "/home/vaughan/PS/stage/src/stage_objs/stage"
+  set xsbinary "/home/vaughan/PS/stage/src/xs"
+  set managerbinary "/home/vaughan/PS/stage/src/manager"
   
   exec cp $playerbinary .
   exec cp $stagebinary .

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.28 $
+//  $Revision: 1.29 $
 //
 // Usage:
 //  (empty)
@@ -171,12 +171,11 @@ public: float angle_multiplier;
   // Scale of fig-based world file
     private: double scale;
 
-  // the truth server queues up any truth updates here, ready to be imported
-  // in the main thread
-  //public:
-  //std::queue<stage_truth_t> input_queue;
-  //std::queue<stage_truth_t> output_queue; // likewise for outputs
-  
+  // the truth server port
+public: int m_truth_port;
+
+  // the environment server port
+public: int m_env_port;
 
   // an array that maps vision device channels to colors.
   // gets given to the visiondevice constructor which makes a copy

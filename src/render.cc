@@ -78,12 +78,7 @@ void CXGui::RenderObject( xstruth_t &truth )
 		    << truth.id.type << endl;
       }
 
-      	// deprecated
-	//case PLAYER_TRUTH_CODE: RenderTruth(&truth,extended); break;  
-	//case PLAYER_OCCUPANCY_CODE: RenderOccupancy(&truth,extended); break; 
-
-    SetDrawMode( GXcopy );
-    
+    SetDrawMode( GXcopy );    
   }
 
 void CXGui::HeadingStick( xstruth_t* exp )
@@ -127,34 +122,6 @@ void CXGui::RenderLaserBeaconDetector( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );
   DrawCircle( exp->x, exp->y, exp->w/2.0 );
-//    if( extended && exp->data )
-//      {
-//        DPoint pts[4];
-//        char buf[20];
-      
-//        SetForeground( RGB( 255, 0, 255 ) );
-      
-//        ExportLaserBeaconDetectorData* p = 
-//  	(ExportLaserBeaconDetectorData*)exp->data;
-      
-//        if( p->beaconCount > 0 ) for( int b=0; b < p->beaconCount; b ++ )
-//  	{
-//  	  GetRect( p->beacons[ b ].x, p->beacons[ b ].y, 
-//  		   (4.0/ppm), 0.12 + (2.0/ppm), p->beacons[ b ].th, pts );
-	  
-//  	  // don't close the rectangle 
-//  	  // so the open box visually indicates heading of the beacon
-//  	  DrawLines( pts, 4 ); 
-	  
-//  	  //DrawLines( &(pts[1]), 2 ); 
-
-//  	  // render the beacon id as text
-//  	  sprintf( buf, "%d", p->beacons[ b ].id );
-//  	  DrawString( p->beacons[ b ].x + 0.2 + (5.0/ppm), 
-//  		      p->beacons[ b ].y - (4.0/ppm), 
-//  		      buf, strlen( buf ) );
-//  	}
-//      }
 }
 
 void CXGui::RenderTruth( xstruth_t* exp, bool extended )
@@ -186,14 +153,13 @@ void CXGui::RenderSonar( xstruth_t* exp, bool extended )
       
       angle += exp->th;
       
-      double sonarx = exp->x + (xoffset * cos(exp->th) - yoffset * sin(exp->th));
-      double sonary = exp->y + (xoffset * sin(exp->th) + yoffset * cos(exp->th));
+      double sonarx = exp->x + (xoffset*cos(exp->th) - yoffset*sin(exp->th));
+      double sonary = exp->y + (xoffset*sin(exp->th) + yoffset*cos(exp->th));
       
       char buf[10];
       sprintf( buf, "%d", l );
       DrawString( sonarx, sonary, buf, strlen(buf ) ); 
       DrawNoseBox( sonarx, sonary, 0.02, 0.02, angle );
-      
     }
 }
 
@@ -219,23 +185,6 @@ void CXGui::RenderPlayer( xstruth_t* exp, bool extended )
 
 void CXGui::RenderMisc( xstruth_t* exp, bool extended )
 {
-  //    if( 0 ) // disable for now
-//    //if( extended && exp->data )
-//      {
-  //        SetForeground( RGB(255,0,0) ); // red to match Pioneer base
-      
-  //  char buf[20];
-      
-//        player_misc_data_t* p = (player_misc_data_t*)exp->data;
-      
-        // support bumpers eventually
-        //p->rearbumpers;
-//        //p->frontbumpers;
-      
-  //float v = 11.9;//p->voltage / 10.0;
-  //sprintf( buf, "%.1fV", v );
-  //DrawString( exp->x + 1.0, exp->y + 1.0, buf, strlen( buf ) ); 
-//      }
 }
 
 
@@ -334,9 +283,6 @@ void CXGui::RenderPuck( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );
   FillCircle( exp->x, exp->y, exp->w/2.0 );
-
-  //SetForeground( white );
-  //DrawNose( exp->x, exp->y, exp->w/2.0, exp->th );
 }
 
 void CXGui::RenderGps( xstruth_t* exp, bool extended )
@@ -398,7 +344,8 @@ void CGraphicSonarProxy::ProcessData( void )
   // figure out where to draw this data
   double x,y,th;
 
-  if( !win->PoseFromId( client->hostname,  client->port, device, index, x, y, th, pixel ) )
+  if( !win->PoseFromId( client->hostname, client->port, 
+			device, index, x, y, th, pixel ) )
     {
       printf( "XS Warning: couldn't find object (%d:%d:%d)"
 	      " so abandoned render\n", 
@@ -428,7 +375,8 @@ void CGraphicGpsProxy::ProcessData( void )
   // figure out where to draw this data
   double dummyth;
   
-  if( !win->PoseFromId(  client->hostname, client->port, device, index, drawx, drawy, dummyth, pixel ) )
+  if( !win->PoseFromId(  client->hostname, client->port, 
+			 device, index, drawx, drawy, dummyth, pixel ) )
     {
       printf( "XS Warning: couldn't find object (%d:%d:%d)"
 	      " so abandoned render\n", 
@@ -445,7 +393,8 @@ void CGraphicPtzProxy::ProcessData( void )
   // figure out where to draw this data
   double x,y,th;
   
-  if( !win->PoseFromId(  client->hostname, client->port, device, index, x, y, th, pixel ) )
+  if( !win->PoseFromId( client->hostname, client->port, 
+			device, index, x, y, th, pixel ) )
     {
       printf( "XS Warning: couldn't find object (%d:%d:%d)"
 	      " so abandoned render\n", 
@@ -475,7 +424,8 @@ void CGraphicLaserBeaconProxy::ProcessData( void )
   // figure out where to draw this data
   double x,y,th;
   
-  if( !win->PoseFromId(  client->hostname, client->port, device, index, x, y, th, pixel ) )
+  if( !win->PoseFromId( client->hostname, client->port,
+			device, index, x, y, th, pixel ) )
     {
       printf( "XS Warning: couldn't find object (%d:%d:%d)"
 	      " so abandoned render\n", 
@@ -615,4 +565,9 @@ void CXGui::GetSonarPose(int s, double &px, double &py, double &pth )
   py = -yy;
   pth = -angle;
 }
+
+
+
+
+
 

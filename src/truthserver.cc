@@ -33,9 +33,6 @@
 const int LISTENQ = 128;
 //const long int MILLION = 1000000L;
 
-// these can be modified in world_load.cc...
-int global_truth_port = TRUTH_SERVER_PORT;
-
 void CatchSigPipe( int signo )
 {
 #ifdef VERBOSE
@@ -245,7 +242,7 @@ void CWorld::SetupTruthServer( void )
 
   servaddr.sin_family      = AF_INET;
   servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-  servaddr.sin_port        = htons(global_truth_port);
+  servaddr.sin_port        = htons(m_truth_port);
   
   // switch on the re-use-address option
   const int on = 1;
@@ -253,7 +250,7 @@ void CWorld::SetupTruthServer( void )
   
   if( bind(m_truth_listen.fd, (SA *) &servaddr, sizeof(servaddr) )  < 0 )
     {
-      cout << "Port " << global_truth_port 
+      cout << "Port " << m_truth_port 
 	   << " is in use. Quitting (but try again in a few seconds)." 
 	   <<endl;
       exit( -1 );

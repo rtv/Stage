@@ -1,6 +1,6 @@
 ####################################################################################
 # TODO 
-# $Id: TODO,v 1.11 2001-09-25 19:31:53 vaughan Exp $
+# $Id: TODO,v 1.12 2001-09-26 18:07:09 vaughan Exp $
 ####################################################################################
 
 ## IN PROGRESS #####################################################################
@@ -14,11 +14,18 @@
 
 ## NICE ############################################################################
 
- - nice up player output to show all port numbers and hostname that connects
+ - nice up player output to show all port numbers
  - configuration file write: save only relevant state
  - add vision device sensor display - skeleton is in place
 
 ## FIXED/DONE ######################################################################
+
+RTV 9/26/01
+  - player shows hostnames of connecting clients
+
+RTV 9/24/01
+ - support for multiple Stages per user per machine; just make sure that 
+   ports requested are unique (via .world and optional cmdline) and all is well
 
 RTV 9/23/01
  - LBD bug: IDs intermitently visible

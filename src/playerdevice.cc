@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.22 $
+//  $Revision: 1.23 $
 //
 // Usage:
 //  (empty)
@@ -141,11 +141,6 @@ int CPlayerDevice::StartupPlayer(int count)
   int fds[2];
   fds[0] = fds[1] = -1;
  
-  /*
-  if(port < 0)
-    port = m_player_port;
-   */
-
 #ifdef DEBUG
   cout << "StartupPlayer()" << endl;
 #endif
@@ -165,16 +160,6 @@ int CPlayerDevice::StartupPlayer(int count)
   {
     cerr << "fork error creating robots" << flush;
     return(-1);
-
-    // RTV - dunno what this does, so casually chopped it out :)
-    //
-    // don't use system time; use simulated time.
-    //timeval curr;
-    //gettimeofday(&curr, NULL);
-    //m_info->data_timestamp_sec = (uint32_t)floor(m_world->GetTime());
-    //m_info->data_timestamp_usec = 
-    //    (uint32_t)rint((m_world->GetTime()-
-    //                    m_info->data_timestamp_sec)*1000000.0);
   }
   else
   {
@@ -197,10 +182,9 @@ int CPlayerDevice::StartupPlayer(int count)
         exit(-1);
       }
 
-
       // we assume Player is in the current path
       if( execlp( "player", "player",
-                  "-port", portBuf, 
+                  "-ports", portBuf, 
                   "-stage", m_world->PlayerIOFilename(), 
                   (strlen(m_world->m_auth_key)) ? "-key" : NULL,
                   (strlen(m_world->m_auth_key)) ? m_world->m_auth_key : NULL,

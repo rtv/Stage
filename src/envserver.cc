@@ -40,8 +40,6 @@ const int LISTENQ = 128;
 
 extern void CatchSigPipe( int signo );
 
-int global_environment_port = ENVIRONMENT_SERVER_PORT;
-
 static void * EnvWriter( void* arg )
 {
 #ifdef VERBOSE
@@ -163,7 +161,7 @@ void* EnvServer( void* )
   bzero(&servaddr, sizeof(servaddr));
   servaddr.sin_family      = AF_INET;
   servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-  servaddr.sin_port        = htons(global_environment_port);
+  servaddr.sin_port        = htons( world->m_env_port);
   
   // switch on the re-use-address option
   const int on = 1;
@@ -171,7 +169,7 @@ void* EnvServer( void* )
 
   if( bind(listenfd, (SA *) &servaddr, sizeof(servaddr) )  < 0 )
       {
-	cout << "Port " << global_environment_port 
+	cout << "Port " << world->m_env_port 
 	     << " is in use. Quitting (but try again in a few seconds)." 
 	     <<endl;
 	exit( -1 );

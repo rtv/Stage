@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.26 2001-09-25 22:40:34 vaughan Exp $
+ * $Id: xs.cc,v 1.27 2001-09-26 18:07:10 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -56,8 +56,8 @@ const char* titleStr = "XS";
 #define USAGE  "\nUSAGE: xs [-h <host>] [-tp <port>] [-ep <port>]\n\t[-geometry <geometry string>] [-zoom <factor>]\n\t[-pan <X\%xY\%>]\nDESCRIPTIONS:\n-h <host>: connect to Stage on this host (default `localhost')\n-tp <port>: connect to Stage's Truth server on this TCP port (default `6601')\n-ep <port>: connect to Stage's Environment server on this TCP port (default `6602')\n-geometry <string>*: standard X geometry specification\n-zoom <factor>*: floating point zoom multiplier\n-pan <X\%xY\%>*: pan initial view X percent of maximum by Y percent of maximum\n"
 
 char stage_host[256] = "localhost"; // default
-int truth_port = TRUTH_SERVER_PORT; // "
-int env_port = ENVIRONMENT_SERVER_PORT; // "
+int truth_port = DEFAULT_TRUTH_PORT; // "
+int env_port = DEFAULT_ENV_PORT; // "
  
 struct hostent* entp = 0;
 struct sockaddr_in servaddr;
@@ -147,6 +147,7 @@ char* CXGui::StageNameOf( const xstruth_t& truth )
       case GpsType: return "GPS"; 
       case PuckType: return "Puck"; 
       case OccupancyType: return "Occupancy"; 
+      case WallType: return "Wall";
       }	 
     return "Unknown"; 
   } 
@@ -581,7 +582,7 @@ void parse_args(int argc, char** argv)
         if(++i<argc)
 	  {
 	    truth_port = atoi(argv[i]); 
-	    printf( "[Truth port %d]", truth_port );
+	    printf( "[Truth %d]", truth_port );
 	  }
 	else
 	  {
@@ -594,7 +595,7 @@ void parse_args(int argc, char** argv)
         if(++i<argc)
 	  {
 	    env_port = atoi(argv[i]); 
-	    printf( "[Environment port %d]", env_port );
+	    printf( "[Env %d]", env_port );
 	  }
 	else
         {
@@ -1813,6 +1814,9 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
       // if we're connected already 
       if( cli ) 
 	{ // delete the client's proxies, then the client itself
+
+	  puts( "EXISTING CLIENT" );
+
 	  int n = 0;
 	  while( n<num_proxies )
 	    {
@@ -1838,13 +1842,32 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 	  delete cli;
 	}
       else
-	{ // create a new client and add any supported proxies
-	  cli = new PlayerClient( ent->hostname, ent->id.port );
+	{ 
+	  printf( "XS: Creating PlayerClient on %s:%d\n",
+		  ent->hostname, ent->id.port );
+	  
+	  // int* goo;
+	  // create a new client and add any supported proxies
+	  //if( !(goo = new int[ 60000 ] ))
+	  //{
+	  //printf( "_new_ failed on ints shit!. Bailing\n" );
+	  //exit( -1 );
+	  //}
+
+	  // create a new client and add any supported proxies
+	  if( !(cli = new PlayerClient( ent->hostname, ent->id.port ) ))
+	  {
+	    printf( "_new_ failed on PlayerClient. Bailing\n" );
+	    exit( -1 );
+	  }
+	      
+	  assert( cli );
 
 	  if( !cli->Connected() )
 	    { 
 	      printf( "XS: Failed to connect to a Player on %s:%d\n",
 		      ent->hostname, ent->id.port );
+	      fflush( 0 );
 	      
 	      delete cli;
 	      cli = 0;
@@ -1854,114 +1877,114 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 	  assert( cli ); //really should be successful by here
 	  
 	  // if successful, attach this client to the multiclient
-	    {	     
-	    printf( "XS: Starting Player client on %s:%d\n", ent->hostname, ent->id.port );
-	    
-	    xstruth_t sibling;
-	    int previous_num_proxies = num_proxies;
-	    
-	    // now create proxies for all supported devices on the same port
-	    for( TruthMap::iterator it = truth_map.begin(); it != truth_map.end(); it++ )
-	      {	      
-		sibling = it->second;
-	      
-		if( sibling.id.port == ent->id.port && // port matches
-		    (strcmp( sibling.hostname, ent->hostname ) == 0) ) // hostname matches
-		  {
-		    //printf( "XS: finding proxy for %s (%d:%d:%d)\n", ent->hostname, 
-		    //    sibling.id.port, sibling.id.type, sibling.id.index );
+	  printf( "\nXS: Starting Player client on %s:%d\n", ent->hostname, ent->id.port );
+	  fflush( 0 );
 	  
-		    switch( sibling.id.type )
-		      {
-		      case PLAYER_LASER_CODE: 
-			if( enableLaser )
-			  {
-			    CGraphicLaserProxy* glp = 
-			      new CGraphicLaserProxy(this,cli,sibling.id.index,'r' );
-			    
-			    graphicProxies[num_proxies] = glp;
-			    playerProxies[num_proxies++] = glp;
-			  }
-			break;
+	  xstruth_t sibling;
+	  int previous_num_proxies = num_proxies;
+	  
+	  // now create proxies for all supported devices on the same port
+	  for( TruthMap::iterator it = truth_map.begin(); it != truth_map.end(); it++ )
+	    {	      
+	      sibling = it->second;
+	      
+	      // match port and hostname
+	      if( sibling.id.port == ent->id.port && 
+		  (strcmp( sibling.hostname, ent->hostname ) == 0) ) 
+		{
+		  printf( "XS: finding proxy for %s (%d:%d:%d)\n", 
+			  ent->hostname, sibling.id.port, 
+			  sibling.id.type, sibling.id.index );
+		    
+		  switch( sibling.id.type )
+		    {
+		    case PLAYER_LASER_CODE: 
+		      if( enableLaser )
+			{
+			  CGraphicLaserProxy* glp = 
+			    new CGraphicLaserProxy(this,cli,sibling.id.index,'r' );
+			
+			  graphicProxies[num_proxies] = glp;
+			  playerProxies[num_proxies++] = glp;
+			}
+		      break;
 
-  		      case PLAYER_SONAR_CODE: 
-			if( enableSonar )
-			  {
-			    CGraphicSonarProxy* gsp =
-			      new CGraphicSonarProxy( this, cli, sibling.id.index, 'r' );   
+		    case PLAYER_SONAR_CODE: 
+		      if( enableSonar )
+			{
+			  CGraphicSonarProxy* gsp =
+			    new CGraphicSonarProxy( this, cli, sibling.id.index, 'r' );   
 			    
-			    graphicProxies[num_proxies] = gsp; 
-			    playerProxies[num_proxies++] = gsp;
-			  }
-			break;
+			  graphicProxies[num_proxies] = gsp; 
+			  playerProxies[num_proxies++] = gsp;
+			}
+		      break;
 			
-  		      case PLAYER_GPS_CODE: 
-			if( enableGps )
-			  {
-			    CGraphicGpsProxy* ggp = 
-			      new CGraphicGpsProxy( this, cli, sibling.id.index, 'r' );
+		    case PLAYER_GPS_CODE: 
+		      if( enableGps )
+			{
+			  CGraphicGpsProxy* ggp = 
+			    new CGraphicGpsProxy( this, cli, sibling.id.index, 'r' );
 			    
-			    graphicProxies[num_proxies] = ggp;
-			    playerProxies[num_proxies++] = ggp;
-			  }
-  			break;
+			  graphicProxies[num_proxies] = ggp;
+			  playerProxies[num_proxies++] = ggp;
+			}
+		      break;
 			
-  		      case PLAYER_VISION_CODE: 
-			if( enableVision )
-			  {
-			    CGraphicVisionProxy* gvp = 
-			      new CGraphicVisionProxy( this, cli, sibling.id.index, 'r' );
+		    case PLAYER_VISION_CODE: 
+		      if( enableVision )
+			{
+			  CGraphicVisionProxy* gvp = 
+			    new CGraphicVisionProxy( this, cli, sibling.id.index, 'r' );
 			    
-			    graphicProxies[num_proxies] = gvp;
-			    playerProxies[num_proxies++] = gvp;
-			  }
-  			break;
+			  graphicProxies[num_proxies] = gvp;
+			  playerProxies[num_proxies++] = gvp;
+			}
+		      break;
 			
-  		      case PLAYER_PTZ_CODE: 
-			if( enablePtz )
-			  {
-			    CGraphicPtzProxy* gpp = 
-			      new CGraphicPtzProxy( this, cli, sibling.id.index, 'r' );
+		    case PLAYER_PTZ_CODE: 
+		      if( enablePtz )
+			{
+			  CGraphicPtzProxy* gpp = 
+			    new CGraphicPtzProxy( this, cli, sibling.id.index, 'r' );
 			    
-			    graphicProxies[num_proxies] = gpp;
-			    playerProxies[num_proxies++] = gpp;
-			  }
-			break;
+			  graphicProxies[num_proxies] = gpp;
+			  playerProxies[num_proxies++] = gpp;
+			}
+		      break;
 			
-  		      case PLAYER_LASERBEACON_CODE: 
-			if( enableLaserBeacon )
-			  {
-			    CGraphicLaserBeaconProxy* glbp = 
-			      new CGraphicLaserBeaconProxy(this,cli,sibling.id.index,'r');
+		    case PLAYER_LASERBEACON_CODE: 
+		      if( enableLaserBeacon )
+			{
+			  CGraphicLaserBeaconProxy* glbp = 
+			    new CGraphicLaserBeaconProxy(this,cli,sibling.id.index,'r');
 			    
-			    graphicProxies[num_proxies] = glbp;
-			    playerProxies[num_proxies++] = glbp;
-			  }
-			break;
-  		      default:	
+			  graphicProxies[num_proxies] = glbp;
+			  playerProxies[num_proxies++] = glbp;
+			}
+		      break;
+		    default:	
 #ifdef DEBUG
-  			printf( "XS: no proxy for device %d supported\n", 
-  				sibling.id.type ); 
+		      printf( "XS: no proxy for device %d supported\n", 
+			      sibling.id.type ); 
 #endif
-			break;
-		      }
-		  }
-	      }
+		      break;
+		    }
+		}
+	    }
 
-	    //printf( "XS: added %d proxies\n", num_proxies - previous_num_proxies );
+	  //printf( "XS: added %d proxies\n", num_proxies - previous_num_proxies );
 
 	    // if we didn't make any proxies
-	    if( num_proxies - previous_num_proxies == 0 )
-	      {
-		delete cli; // zap the client
-		cli = 0;
-	      }
-
-	    if( cli )
-	      playerClients.AddClient( cli ); // add it to the multi client
+	  if( num_proxies - previous_num_proxies == 0 )
+	    {
+	      delete cli; // zap the client
+	      cli = 0;
 	    }
-      }
-    }
-} 
 
+	  if( cli )
+	    playerClients.AddClient( cli ); // add it to the multi client
+	}
+    }
+}
   

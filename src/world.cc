@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.54 $
+//  $Revision: 1.55 $
 //
 // Usage:
 //  (empty)
@@ -39,6 +39,8 @@
 #include <pwd.h>
 
 extern int g_interval, g_timestep; // from main.cc
+extern int  g_instance; //from main.cc
+extern char* g_host_id;
 
 //#include <stage.h>
 #include "world.hh"
@@ -95,33 +97,43 @@ CWorld::CWorld()
     m_object_alloc = 0;
     m_object_count = 0;
 
-    // defaults at top of main.cc can be tweaked by command line
-    m_timer_interval = g_interval; 
-    m_timestep = g_timestep; 
-
+    // defaults time steps can be tweaked by command line or config file
+    m_timer_interval = 50; //ms
+    m_timestep = 50; //ms; 
 
     // Allow the simulation to run
     //
     m_enable = true;
 
+    // set the server ports to default values
+    m_truth_port = DEFAULT_TRUTH_PORT;
+    m_env_port = DEFAULT_ENV_PORT;
+    
     // init the truth server data structures
     m_truth_connection_count = 0;
     memset( m_truth_connections, 0, sizeof(struct pollfd) * MAX_TRUTH_CONNECTIONS );
 
-    // name this computer
-    if( gethostname( m_hostname, sizeof(m_hostname)) == -1)
+    // if we gave Stage an id on the command line, use that
+    //if( g_host_id && strlen( g_host_id ) > 0)
+    //strncpy( m_hostname, g_host_id, sizeof(m_hostname) ); 
+    //else
       {
-	perror( "XS: couldn't get hostname. Quitting." );
-	exit( -1 );
+	// use the hostname as the id
+	if( gethostname( m_hostname, sizeof(m_hostname)) == -1)
+	  {
+	    perror( "XS: couldn't get hostname. Quitting." );
+	    exit( -1 );
+	  }
+	
+	/* now, strip down to just the hostname */
+	char* first_dot;
+	if( (first_dot = strchr(m_hostname,'.') ))
+	  *first_dot = '\0';
+	
       }
     
-    /* now, strip down to just the hostname */
-    char* first_dot;
-    if( (first_dot = strchr(m_hostname,'.') ))
-      *first_dot = '\0';
-    
-    //printf( "[Host %s]", m_hostname );
-    
+    printf( "[Id %s]", m_hostname ); fflush( stdout );
+
     // enable external services by default
     m_run_environment_server = true;
     m_run_truth_server = true;
@@ -218,14 +230,30 @@ bool CWorld::InitSharedMemoryIO( void )
        << " (" << mem << ")" << endl;
 #endif
 
-    // make a filename for mmapped IO from a base name and the user's name
+  // get the user's name
   struct passwd* user_info = getpwuid( getuid() );
-  sprintf( tmpName, "%s.%s", IOFILENAME, user_info->pw_name );
 
   // XX handle this better later?
-  unlink( tmpName ); // if the file exists, trash it.
+  //unlink( tmpName ); // if the file exists, trash it.
 
-  int tfd = open( tmpName, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR );
+  int tfd = 0;
+
+  while( tfd < 1 )
+    {
+      // make a filename for mmapped IO from a base name and the user's name
+      sprintf( tmpName, "%s.%s.%d", 
+	       IOFILENAME, user_info->pw_name, g_instance++ );
+      
+      // try to open a temporary file
+      // this'll fail if the file exists
+      //  while( (tfd = open( tmpName, O_RDWR | O_CREAT | //O_EXCL |
+      //	      O_TRUNC, S_IRUSR | S_IWUSR ) == -1 ))
+      tfd = open( tmpName, O_RDWR | O_CREAT | O_EXCL |
+		  O_TRUNC, S_IRUSR | S_IWUSR );
+    }
+  
+  if( g_instance > 1 ) 
+    printf( "[Instance %d]", g_instance-1 );
   
   // make the file the right size
   if( ftruncate( tfd, areaSize ) < 0 )
@@ -506,8 +534,8 @@ void* CWorld::Main(void *arg)
   //start timer with chosen interval (specified in milliseconds)
   struct itimerval tick;
   // seconds
-  tick.it_value.tv_sec = tick.it_interval.tv_sec = 0;
-  //    world->m_timer_interval / 1000;
+  tick.it_value.tv_sec = tick.it_interval.tv_sec = 
+    world->m_timer_interval / 1000;
   // microseconds
   tick.it_value.tv_usec = tick.it_interval.tv_usec = 
     world->m_timer_interval * 1000; 
@@ -1182,10 +1210,10 @@ void CWorld::SpawnXS( void )
       if( pid == 0 ) // new child process
         {
 	  char envbuf[32];
-	  sprintf( envbuf, "%d", global_environment_port );
+	  sprintf( envbuf, "%d", m_env_port );
 
 	  char truthbuf[32];
-	  sprintf( truthbuf, "%d", global_truth_port );
+	  sprintf( truthbuf, "%d", m_truth_port );
 	  
 	  // we assume xs is in the current path
 	  if( execlp( "xs", "xs",

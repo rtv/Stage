@@ -6,28 +6,30 @@ set angles = degrees
 enable truth_server
 enable environment_server
 
-create position_device pose 6.27 3.08 0 port 6665 color red
+create position_device pose 5.49 3.15 190 color red port 6665 index 0 invisible laser visible obstacle visible sonar shape rectangle 
 {
-  create player_device port 6665 
-  create sonar_device  port 6665  
-  create gps_device port 6665 
-  create laser_device pose 0.08 0.00 0 port 6665
+  create sonar_device
+  create player_device pose 0.00 0.00 0 color white port 6665 index 0 invisible obstacle invisible laser invisible sonar 
+  create sonar_device pose 0.00 0.00 0 color blue port 6665 index 0 invisible obstacle invisible laser invisible sonar 
+  create gps_device pose 0.00 0.00 0 color gray port 6665 index 0 invisible obstacle invisible laser invisible sonar 
+  create laser_device pose 0.08 0.00 0 color blue port 6665 index 0 invisible obstacle invisible sonar visible laser 
   {
-    create lbd_device port 6665 
+    create lbd_device pose 0.00 0.00 0 color gray port 6665 index 0 invisible obstacle invisible laser invisible sonar range 1.50 
   }
 }
 
-create position_device pose 10.27 3.08 180 port 6666 color green
+create position_device pose 8.69 2.97 498 color green port 6666 index 0 invisible laser visible obstacle visible sonar shape rectangle 
 {
-  create player_device port 6666 
-  create sonar_device  port 6666  
-  create gps_device port 6666 
-  create laser_device pose 0.08 0.00 0 port 6666
+  create sonar_device
+  create player_device pose 0.00 0.00 0 color white port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+  create sonar_device pose 0.00 0.00 0 color  blue port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+  create gps_device pose 0.00 0.00 0 color gray port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+  create laser_device pose 0.08 0.00 0 color blue port 6666 index 0 invisible obstacle invisible sonar visible laser 
   {
-    create lbd_device port 6666 
+    create lbd_device pose 0.00 0.00 0 color gray port 6666 index 0 invisible obstacle invisible laser invisible sonar range 1.50 
   }
 }
 
-create laser_beacon name 1 pose 8.85 2.42 90 id 1 
-create laser_beacon name 2 pose 9.46 7.62 180 id 2 
-create laser_beacon name 3 pose 8.73 12.96 -90 id 3 
+create laser_beacon name 1 pose 8.85 2.42 90 color cyan port 0 index 0 invisible obstacle invisible sonar visible laserbright id 1 
+create laser_beacon name 2 pose 9.46 7.62 180 color cyan port 0 index 0 invisible obstacle invisible sonar visible laserbright id 2 
+create laser_beacon name 3 pose 8.73 12.96 -90 color cyan port 0 index 0 invisible obstacle invisible sonar visible laserbright id 3 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.19 $
+//  $Revision: 1.20 $
 //
 // Usage:
 //  (empty)
@@ -608,6 +608,9 @@ size_t CEntity::PutData( void* data, size_t len )
       m_info_io->data_timestamp_sec = m_world->m_sim_timeval.tv_sec;
       m_info_io->data_timestamp_usec = m_world->m_sim_timeval.tv_usec;
       
+      // set the flag to show we're controlled locally or remotely
+      m_info_io->local = m_local;
+     
       memcpy( m_data_io, data, len); // export data
     }
   else

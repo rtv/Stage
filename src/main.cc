@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.15 $
+//  $Revision: 1.16 $
 //
 // Usage:
 //  (empty)
@@ -47,7 +47,15 @@ char global_node_name[64];
 
 // the parameters controlling stage's update frequency
 // and simulator timestep respectively (milliseconds)
-int g_interval = 50, g_timestep = 50;
+int g_interval = 0, g_timestep = 0;
+
+int g_truth_port = 0, g_env_port = 0;
+// the number of stages running
+int g_instance = 0;
+
+// if this is set on the cmd line, take this string as an ID instead
+// of the hostname 
+char g_host_id[64];
 
 ///////////////////////////////////////////////////////////////////////////
 // Handle quit signals
@@ -90,6 +98,25 @@ bool parse_cmdline(int argc, char **argv)
 	{
 	  g_timestep = (int)( g_interval * atof(argv[a+1]) );
 	  printf( "[Virtual time %.2f]", atof(argv[a+1]) );
+	  a++;
+	}
+      else if( strcmp( argv[a], "-tp" ) == 0 )
+	{
+	  g_truth_port = atoi(argv[a+1]);
+	  printf( "[Truth %d]", g_truth_port );
+	  a++;
+	}
+      else if( strcmp( argv[a], "-ep" ) == 0 )
+	{
+	  g_env_port = atoi(argv[a+1]);
+	  printf( "[Env %d]", g_env_port );
+	  a++;
+	}
+      else if( strcmp( argv[a], "-id" ) == 0 )
+	{
+	  memset( g_host_id, 0, 64 );
+	  strncpy( g_host_id, argv[a+1], 64 );
+	  printf( "[ID %s]", g_host_id ); fflush( stdout );
 	  a++;
 	}
       // arbitary node naming stuff
@@ -138,8 +165,8 @@ bool parse_cmdline(int argc, char **argv)
 //
 int main(int argc, char **argv)
 {
-  // hello world
-  printf("** Stage  v%s ** ", (char*) VERSION);
+// hello world
+printf("** Stage  v%s ** ", (char*) VERSION);
 
   memset( global_node_name, 0, 64 ); //zero out the node name
   
@@ -149,14 +176,28 @@ int main(int argc, char **argv)
     return 1;
   
     // Create the world
-    //
-    world = new CWorld();
-    
-    // Load the world
-    // this may produce more startup output
-    if (!world->Load(world_file))
-        return 0;
-    
+  //
+  world = new CWorld();
+  
+  // Load the world
+  // this may produce more startup output
+  if (!world->Load(world_file))
+    return 0;
+  
+  // override config file values with command line options
+  if( g_truth_port )
+    world->m_truth_port = g_truth_port;
+  
+  if( g_env_port )
+    world->m_env_port = g_env_port;
+  
+  if( g_interval )
+    world->m_timer_interval = g_interval;
+  
+  if( g_timestep )
+    world->m_timestep = g_timestep;
+  
+
     puts( "" ); // end the startup output line
     fflush( stdout );
 

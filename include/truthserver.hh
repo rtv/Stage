@@ -6,8 +6,8 @@
 #include "stage_types.hh"
 #include <sys/poll.h>
 
-const int TRUTH_SERVER_PORT = 6601;
-const int ENVIRONMENT_SERVER_PORT = 6602;
+const int DEFAULT_TRUTH_PORT = 6601;
+const int DEFAULT_ENV_PORT = 6602;
 
 // we usually use 1 or 2, so this should be plenty
 const int MAX_TRUTH_CONNECTIONS = 100; 
