@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.114 2002-07-26 23:05:48 rtv Exp $
+# $Id: Makefile,v 1.115 2002-08-13 02:04:59 gerkey Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -14,11 +14,12 @@
 include ../Makefile.common
 
 # locate the player sources and libraries
-PLAYER_INC = $(PLAYER_DIR)/include
-PLAYER_LIB = $(PLAYER_DIR)/lib
+PLAYER_INC = -I$(PLAYER_DIR)/include -I$(PLAYER_DIR)/server \
+             -I$(PLAYER_DIR)/server/drivers/stage
+PLAYER_LIB = -L$(PLAYER_DIR)/lib -L$(PLAYER_DIR)/server
 
 # the player and stage headers everyone needs to have
-INCLUDES = -I../include -I$(PLAYER_INC) 
+INCLUDES = -I../include $(PLAYER_INC) 
 
 # compile flags for devices
 DEVICEFLAGS = $(INCLUDES) $(OPTIONS_COMP)
@@ -28,7 +29,7 @@ SERVERFLAGS = $(INCLUDES) $(OPTIONS_COMP) $(ZLIB_FLAGS) \
 	-DVERSION=\"$(VERSION)\" -DCOLOR_DATABASE=\"$(COLOR_DATABASE)\"
 
 # Link flags - optional libs linked if they were defined in Makefile.common
-LINKFLAGS = -lm -lstdc++ -L$(PLAYER_DIR)/lib -lplayerqueue -lpthread\
+LINKFLAGS = -lm -lstdc++ $(PLAYER_LIB) -lplayerqueue -lpthread\
              $(ZLIB_LINK) $(PROFILE_LINK) $(OLDLIBS) $(OPTIONS_LINK)
 
 OBS = main.o world.o stageio.o server.o client.o worldfile.o \
