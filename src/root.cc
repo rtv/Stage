@@ -21,7 +21,7 @@
  * Desc: A root device model - replaces the CWorld class
  * Author: Richard Vaughan
  * Date: 31 Jan 2003
- * CVS info: $Id: root.cc,v 1.1.2.2 2003-02-01 23:19:51 rtv Exp $
+ * CVS info: $Id: root.cc,v 1.1.2.3 2003-02-05 03:59:49 rtv Exp $
  */
 
 
@@ -96,7 +96,7 @@ bool CRootDevice::Startup()
 // Update everything
 void CRootDevice::Update( double sim_time ) 
 {
-  PRINT_DEBUG( "Update root model" );
+  //PRINT_DEBUG( "Update root model" );
 
   CEntity::Update( sim_time );
   

@@ -21,16 +21,15 @@
  * Desc: Simulates a simple box 
  * Author: Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: box.cc,v 1.3 2002-11-11 08:21:39 rtv Exp $
+ * CVS info: $Id: box.cc,v 1.3.6.1 2003-02-05 03:59:49 rtv Exp $
  */
 
-#include "world.hh"
 #include "box.hh"
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
-CBox::CBox(LibraryItem* libit, CWorld *world, CEntity *parent)
-        : CEntity(libit, world, parent)
+CBox::CBox(LibraryItem* libit, int id, CEntity *parent)
+        : CEntity(libit, id, parent)
 {
   if(parent)
     this->color = parent->color;

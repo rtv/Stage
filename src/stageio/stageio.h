@@ -7,17 +7,16 @@
 
 #include "stage.h"
    
-   typedef int (*command_callback_t)(int, stage_cmd_t*);
-   typedef int (*model_callback_t)(int, stage_model_t*);
-   typedef int (*property_callback_t)(int, stage_property_t* );
+   typedef int (*stg_data_callback_t)(int, char* data, size_t len );
    
    void* malloc_debug( size_t );
    void* realloc_debug( void*,  size_t );
    void free_debug( void* );
-
-
-   /* EXTERNAL FUNCTIONS - clients should use these */
    
+   
+   /* EXTERNAL FUNCTIONS - clients should use these */
+   void SIOPackPose( stage_pose_t *pose, double x, double y, double a );
+
    /* SERVER-ONLY FUNCTIONS */   
    int SIOInitServer( int argc, char** argv );
    int SIOAcceptConnections( void );
@@ -30,35 +29,34 @@
    /* CLIENT & SERVER FUNCTIONS */
    
    // issue a 'continue' packet to tell the other end we're done talking
-   int SIOContinue( int fd, double simtime );
+   //int SIOContinue( int con, double simtime );
    
    // read until we get a continue on all connections.
    // the functions are called to service incoming requests
-   int SIOServiceConnections( command_callback_t, 
-			      model_callback_t,
-			      property_callback_t );
-   
+   int SIOServiceConnections( stg_data_callback_t cmd_cb,
+			      stg_data_callback_t model_cb,
+			      stg_data_callback_t prop_cb,
+			      stg_data_callback_t gui_cb );
+
    // temporary...
    int SIOReportResults( double simtime, char* data, size_t len );
    
    // ALL THESE FUNCTIONS RETURN -1 ON FAILURE, ELSE 0
    
-   // reads num stage_model_t structs from the fd, and calls the function with each
-   int SIOReadModels( int fd, int num, model_callback_t callback );
+   // reads datalen bytes of data, then passes it in recordlen sized chunks to
+   // the callback function
+   // function with each one in turn
+   int SIOReadData( int con, size_t datalen, size_t recordlen, 
+		    stg_data_callback_t callback );
    
-   // reads len bytes from the fd, parses the buffer and calls the
+   // reads len bytes from the con, parses the buffer and calls the
    // callback with each property change
-   int SIOReadProperties( int fd, size_t len, property_callback_t callback  );
+   int SIOReadProperties( int con, size_t len, stg_data_callback_t callback  );
 
    // this adds a header, so it needs a timestamp
-   int SIOWriteProperties( int fd, double simtime, char* data, size_t data_len );
+   int SIOWriteMessage( int con, double simtime, stage_header_type_t type,
+			char* data, size_t len );
    
-   // sends a request to create the models. returns -1 on failure, else 0
-   int SIOWriteModels( int fd, double simtime, stage_model_t* ent, int count );
-   
-   // sends a command.  adds a header, so needs a timestamp
-   int SIOWriteCommand( int fd, double simtime, stage_cmd_t cmd );
-
    // buffers a command for sending later. adds a header, so needs a timestamp
    int SIOBufferCommand( stage_buffer_t* buf, double simtime, stage_cmd_t cmd );
 
@@ -74,9 +72,9 @@
    void SIODebugBuffer( stage_buffer_t* buf );
    void SIODestroyConnection( int con );
 
-   size_t SIOWritePacket( int fd, char* data, size_t len );
+   size_t SIOWritePacket( int con, char* data, size_t len );
    size_t SIOBufferPacket( stage_buffer_t* buf, char* data, size_t len );
-   size_t SIOReadPacket( int fd, char* data, size_t len );
+   size_t SIOReadPacket( int con, char* data, size_t len );
       
 
 #ifdef __cplusplus

@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.7 2003-02-04 03:35:38 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.8 2003-02-05 03:59:49 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -40,9 +40,9 @@
 #include "entity.hh"
 #include "root.hh"
 
+#include "models/box.hh"
 /*
 #include "models/bitmap.hh"
-#include "models/box.hh"
 #include "models/bumperdevice.hh"
 #include "models/broadcastdevice.hh"
 #include "models/gpsdevice.hh"
@@ -63,13 +63,14 @@
 //#include "models/bpsdevice.hh"
 */
 
-
+// MODEL INSTALLATION --------------------------------------------
+//
 // this array defines the models that are available to Stage. New
 // devices must be added here.
 
 libitem_t library_items[] = { 
   { "root", "black", (CFP)CRootDevice::Creator},
-  { "box", "blue", (CFP)CEntity::Creator},
+  { "box", "blue", (CFP)CBox::Creator},
   /*
   { "bitmap", "black", (CFP)CBitmap::Creator},
   { "laser", "blue", (CFP)CLaserDevice::Creator},
@@ -101,6 +102,25 @@ libitem_t library_items[] = {
 
 // statically allocate a libray filled with the entries above
 Library model_library( library_items );
+
+
+// GUI INSTALLATION -----------------------------------------------------
+//
+// Stage handles multiple GUI libraries. Add your library functions
+// here and set the counter correctly
+
+#include "rtkgui/rtkgui.hh"
+
+const int gui_count = 1; // must match the number of entries in the array
+
+stage_gui_library_item_t gui_library[] = {
+  { "rtk", // install callback functions for the RTK2-based GUI 
+    RtkGuiInit, RtkGuiLoad, RtkGuiUpdate, 
+    RtkGuiEntityStartup, RtkGuiEntityShutdown,
+    RtkGuiEntityPropertyChange
+  }
+};
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Global vars
@@ -170,16 +190,31 @@ void sig_quit(int signum)
   quit = 1;
 }
 
-int HandleModel(  int connection, stage_model_t* model )
+int HandleModel(  int connection, char* data, size_t len )
 {
+  assert( len == sizeof(stage_model_t) );
+  stage_model_t* model = (stage_model_t*)data;
+  
   PRINT_DEBUG1( "Received model on connection %d", connection );
-
+  
+  printf( "\ncreating model %p  - %d %s %d\n",
+	  model, model->id, model->token, model->parent_id );
+  
   // create an entity. return success on getting a valid pointer
-  return( model_library.CreateEntity( model ) ? 0 : -1);
+  if( model_library.CreateEntity( model ) == NULL )
+    {
+      PRINT_WARN( "failed to create an entity" );
+      return -1;
+    }
+  
+  return 0; // success
 }
 
-int HandleProperty( int connection, stage_property_t* prop )
+int HandleProperty( int connection,  char* data, size_t len )
 {
+  assert( len >= sizeof(stage_property_t) );
+  stage_property_t* prop = (stage_property_t*)data;
+  
   PRINT_DEBUG1( "Received property on connection %d", connection );
 
   // get a pointer to the object with this id
@@ -191,13 +226,18 @@ int HandleProperty( int connection, stage_property_t* prop )
 		    ((char*)prop)+sizeof(prop), // the raw data
 		    prop->len ); // the length of the raw data
 
+  GuiEntityPropertyChange( ent, prop->property );
+
   return 0; //success
 }
 
-int HandleCommand(  int connection, stage_cmd_t* cmd )
+int HandleCommand(  int connection, char* data, size_t len )
 {
+  assert( len == sizeof(stage_cmd_t) );
+  stage_cmd_t* cmd = (stage_cmd_t*)data;
+  
   PRINT_DEBUG2( "Received command %d on connection %d", *cmd, connection );
-
+  
   switch( *cmd ) // 
     {
     case STG_CMD_SAVE:
@@ -211,9 +251,126 @@ int HandleCommand(  int connection, stage_cmd_t* cmd )
       PRINT_WARN1( "Unknown command (%d) not handled", *cmd);
       break;
     }
-
+  
   return 0; //success
 }
+
+int HandleGui( int connection, char* data, size_t len )
+{
+  assert( len == sizeof(stage_gui_config_t) );
+  stage_gui_config_t* cfg  = (stage_gui_config_t*)data;
+
+  PRINT_DEBUG1( "received GUI configuraton for library %s", 
+		cfg->token );
+
+  // on first call, choose and install a GUI
+  //static int first_call = true;
+  // if( first_call )
+
+  // choose and install a GUI
+  
+  assert( cfg );
+  
+  // find the library index of the GUI library with this token
+  int l; 
+  for( l=0; l < gui_count; l++ )
+      if( strcmp( gui_library[l].token, cfg->token ) == 0 )
+      // call the config function from the correct library and return
+	return( (*(gui_library[l].load_func))( cfg ) );
+  
+  PRINT_WARN1( "Received config for unknown GUI library %s", cfg->token );
+
+  return -1;// fail
+}
+
+int GuiInit( int argc, char** argv )
+{
+  int g;
+  for( g=0; g<gui_count; g++ )
+    {
+      printf( "GuiInit on GUI %d\n", g );
+      if( (*gui_library[g].init_func)(argc, argv) == -1 )
+	{
+	  PRINT_WARN1( "Gui initialization failed on GUI %d\n", g );
+	  return -1;
+	}
+    }
+  return 0; // success
+}
+
+
+int GuiEntityStartup( CEntity* ent )
+{
+  assert(ent);
+  
+  int g;
+  for( g=0; g<gui_count; g++ )
+    {
+      printf( "GUIEntityStartup for ent %d on GUI %d\n", ent->stage_id, g );
+      
+      if( (*gui_library[g].createmodel_func)(ent) == -1 )
+	{
+	  PRINT_WARN1( "Gui create model failed on GUI %d\n", g );
+	  return -1;
+	}
+    }
+  return 0;
+}
+
+int GuiUpdate( void )
+{
+  int g;
+  for( g=0; g<gui_count; g++ )
+    {
+      //printf( "GUI Update on GUI %d\n", g );
+      
+       if( (*gui_library[g].update_func)() == -1 )
+	{
+	  PRINT_WARN1( "Gui update failed on GUI %d\n", g );
+	  return -1;
+	}
+    }
+  return 0;
+}
+
+int GuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
+{
+  assert(ent);
+  
+  int g;
+  for( g=0; g<gui_count; g++ )
+    {
+      printf( "GUIEntityPropertyChange for ent %d on GUI %d prop %d\n", 
+	      ent->stage_id, g, prop );
+      
+      if( (*gui_library[g].tweakmodel_func)(ent, prop) == -1 )
+	{
+	  PRINT_WARN1( "Gui property change failed on GUI %d\n", g );
+	  return -1;
+	}
+    }
+  return 0;
+}
+
+int GuiEntityShutdown( CEntity* ent )
+{
+  assert(ent);
+  
+  int g;
+  for( g=0; g<gui_count; g++ )
+    {
+      printf( "GUIEntityShutdown for ent %d on GUI %d\n", ent->stage_id, g );
+
+      if( (*gui_library[g].destroymodel_func)(ent) == -1 )
+	{
+	  PRINT_WARN1( "Gui destroy model failed on GUI %d\n", g );
+	  return -1;
+	}
+    }
+
+  return 0;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Program entry
@@ -230,8 +387,8 @@ int main(int argc, char **argv)
       printf( "\n Server failed to initialize. Quitting." );
       quit = 1;
     }
-
-  //GuiInit( argc, argv );
+  
+  GuiInit( argc, argv );
   
   puts( "" ); // end the startup output line
   
@@ -260,22 +417,39 @@ int main(int argc, char **argv)
       // server receives 'update' commands from all clients, it'll
       // update the world
       if( SIOServiceConnections( &HandleCommand, 
-			      &HandleModel, 
-			      &HandleProperty ) == -1 ) break;
+				 &HandleModel, 
+				 &HandleProperty,
+				 &HandleGui ) == -1 ) break;
       
       // update the simulation model
       if( CEntity::root ) CEntity::root->Update( CEntity::simtime+=0.1 );
      
-      stage_property_t* props = NULL;
-      size_t props_len = 0;
+      //stage_property_t* props = NULL;
+      //size_t props_len = 0;
       //props = CEntity::root->GetChangedProperties()
       
       // pass the changed props to the server, which distributes them
       // on the appropriate connections
-      if( SIOReportResults( CEntity::simtime, (char*)props, props_len) == -1 ) 
-	break;
+      //if( SIOReportResults( CEntity::simtime, (char*)props, props_len) == -1 ) 
+      //break;
+
+      //int t;
+      //for( t=0; t<connection_count; t++ )// all the connections
+      //{      
+	  // TODO figure out how many dirty props are on this connection, buffer them
+	  // together, and write 'em out.
+      // for now we'll just send all the props on all connections
+      //if( SIOWriteMessage( t, simtime, STG_HDR_PROPS, data, len ) == -1 )
+      //return -1; // fail
       
-      sleep( 1 ); // just stop the powerbook getting hot :)
+      // send a continue to all clients so they know we're done talking
+      // -1 means ALL CONNECTIONS
+      if( SIOWriteMessage( -1, CEntity::simtime, 
+			   STG_HDR_CONTINUE, NULL, 0 ) == -1 ) break;
+
+      if( GuiUpdate() == -1 ) break;
+      
+      usleep( 1000 ); // just stop the powerbook getting hot :)
     }
   
   // clean up and exit

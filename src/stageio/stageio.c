@@ -8,8 +8,6 @@
 
 
 #define MALLOC_CHECK_ 1
-//#undef DEBUG 
-#define DEBUG
 
 #include <stdio.h>
 #include <assert.h>
@@ -42,6 +40,9 @@
 #include "dmalloc.h"
 #endif
 
+//#undef DEBUG 
+#define DEBUG
+
 // these vars are used only in this file (hence static)
 
 static int server_port = STG_DEFAULT_SERVER_PORT;
@@ -53,32 +54,6 @@ static struct pollfd listen_poll;
 // the current connection details
 static struct pollfd connection_polls[ STG_MAX_CONNECTIONS ];
 static int connection_count;
-
-int alloc_counts = 0;
-
-/*
-void*malloc_debug( size_t sz )
-{
-  printf( "malloc (%d)\n", ++alloc_counts );
-
-  return( malloc( sz ) );
-}
-
-void*realloc_debug( void* ptr, size_t sz )
-{
-  printf( "realloc (%d)\n", ++alloc_counts );
-  
-  return( realloc( ptr, sz ) );
-}
-
-void free_debug( void* ptr )
-{
-  printf( "free (%d)\n", --alloc_counts );
-  
-  return( free( ptr ) );
-}
-  
-*/
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -96,6 +71,13 @@ void SIOPrintUsage( void )
 	 " [http://www.gnu.org/copyleft/gpl.html].\n"
 	 "\n"
 	 );
+}
+
+void SIOPackPose( stage_pose_t *pose, double x, double y, double a )
+{
+  pose->x = x;
+  pose->y = y;
+  pose->a = a;
 }
 
 void CatchSigPipe( int signo )
@@ -166,8 +148,8 @@ size_t SIOWritePacket( int con, char* data, size_t len )
   size_t writecnt = 0;
   int thiswritecnt;
  
-  printf( "writing packet on connection %d - %p %d bytes\n", 
-	  con, data, len );
+  //printf( "writing packet on connection %d - %p %d bytes\n", 
+  //  con, data, len );
   
   while(writecnt < len )
   {
@@ -189,8 +171,8 @@ size_t SIOWritePacket( int con, char* data, size_t len )
 // write out the contents of the buffer
 size_t SIOWriteBuffer( int con, stage_buffer_t* buf )
 {
-  printf( "writing buffer on connection %d - %p %d bytes\n", 
-	  con, buf->data, buf->len );
+  //printf( "writing buffer on connection %d - %p %d bytes\n", 
+  //  con, buf->data, buf->len );
   
   return( SIOWritePacket( con, buf->data, buf->len ) );
 }
@@ -230,134 +212,108 @@ size_t SIOReadPacket( int con, char* buf, size_t len )
 
   return recv; // the number of bytes read
 }
- 
-int SIOWriteCommand( int con, double timestamp, stage_cmd_t cmd )
-{
-  stage_header_t hdr;
-  hdr.type = STG_HDR_CMD;
-  hdr.data = cmd;
 
-  SIOTimeStamp( &hdr, timestamp );
-  
-  return( SIOWritePacket( con, (char*)&hdr, sizeof(hdr)) == sizeof(hdr) 
-	  ? 0 : -1 );
-}
-
-int SIOBufferCommand( stage_buffer_t* buf, double timestamp, stage_cmd_t cmd )
+const char* SIOHdrString( stage_header_type_t type )
 {
-  stage_header_t hdr;
-  hdr.type = STG_HDR_CMD;
-  hdr.data = cmd;
-  
-  SIOTimeStamp( &hdr, timestamp );
-  
-  return( SIOBufferPacket( buf, (char*)&hdr, sizeof(hdr)) == sizeof(hdr)   
-	  ? 0 : -1 );
+  switch( type )
+    {
+    case STG_HDR_CONTINUE: return "STG_HDR_CONTINUE";
+    case STG_HDR_MODELS: return "STG_HDR_MODELS";
+    case STG_HDR_PROPS: return "STG_HDR_PROPS";
+    case STG_HDR_CMD: return "STG_HDR_CMD";
+    case STG_HDR_GUI: return "STG_HDR_GUI";
+    default: return "unknown";
+    }
 }
 
 /// COMPOUND FUNCTIONS
-
-int SIOWriteModels( int con, double simtime, stage_model_t* ent, int count )
+int SIOWriteMessage( int con, double simtime, stage_header_type_t type,  
+		     char* data, size_t len )
 {
-  // create a header  - we're sending 'count' model creation requests
-  stage_header_t hdr;
-  hdr.type = STG_HDR_MODELS;
-  hdr.data = count;
+  //PRINT_DEBUG3( "con %d: type: %s bytes: %d", con, SIOHdrString(type), len );
 
+  // create a header
+  stage_header_t hdr;
+  hdr.type = type;
+  hdr.len = len;
   SIOTimeStamp( &hdr, simtime );
-  
-  // this is the same thing but buffered so only one write happens:
-  // first add the header and model requests to the buffer
   
   stage_buffer_t* outbuf = SIOCreateBuffer();
   assert( outbuf );
   
+  // buffer the header, then the data
   SIOBufferPacket( outbuf, (char*)&hdr, sizeof(hdr) );
-  SIOBufferPacket( outbuf, (char*)ent, count * sizeof(stage_model_t) );
-
-  // then write and clear the buffer
-  if( SIOWriteBuffer( con, outbuf ) != outbuf->len )
+  SIOBufferPacket( outbuf, data, len );
+  
+  if( con == -1 ) // if ALL CONNECTIONS was requested
     {
-      puts( "Failed to write model requests" );
-      SIOFreeBuffer( outbuf );
-      return -1;
+      int c;
+      for( c=0; c < connection_count; c++ )
+	{
+	  // then write buffer out on the connection
+	  if( SIOWriteBuffer( c, outbuf ) != outbuf->len )
+	    {
+	      puts( "Failed to write model requests" );
+	      SIOFreeBuffer( outbuf );
+	      return -1; // fail
+	    }
+	  //PRINT_DEBUG1( "ok on con %d", c);
+	}
+    }
+  else // a specific connection was requested
+    {
+      // then write buffer out on the connection
+      if( SIOWriteBuffer( con, outbuf ) != outbuf->len )
+	{
+	  puts( "Failed to write model requests" );
+	  SIOFreeBuffer( outbuf );
+	  return -1; // fail
+	}
+      //PRINT_DEBUG1( "ok on con %d", con);
     }
   
   SIOFreeBuffer( outbuf );
   return 0; //success
 }
 
-int SIOWriteProperties( int con, double simtime, char* data, size_t data_len )
-{
-  PRINT_DEBUG4( "con %d time %.2f data %p len %d \n",
-		con, simtime, data, data_len );
-
-  stage_header_t hdr;
+int SIOReadData( int con, 
+		 size_t datalen, 
+		 size_t recordlen, 
+		 stg_data_callback_t callback )
+{	       
+  char* buf = calloc(datalen,1);
+  assert(buf);
   
-  hdr.type = STG_HDR_PROPS;
-  hdr.data = data_len; // no dirty properties so far
+  double num_packets = (double)datalen / (double)recordlen;
+  PRINT_DEBUG3( "attempting to read %d bytes (%.2f records) on con %d", 
+		datalen, num_packets, con );
   
-  SIOTimeStamp( &hdr, simtime );
-
-  stage_buffer_t* outbuf = SIOCreateBuffer();
-  // buffer the header
-  SIOBufferPacket( outbuf, (char*)&hdr, sizeof(hdr) );  
-  // buffer the data (possibly zero bytes)
-  SIOBufferPacket( outbuf, data, data_len );
-  
-  // write and clear the buffer onto this connection's fd
-  if( SIOWriteBuffer( con, outbuf ) != outbuf->len )
-    {
-      printf( "Failed to write properties" );	
-      SIOFreeBuffer( outbuf );
-      return -1; // fail
-    }
-
-  SIOFreeBuffer( outbuf );
-  return 0; //success
-}
-
-
-int SIOReadModels( int con, int num, model_callback_t callback )
-{
-  size_t bytes_expected = num * sizeof(stage_model_t);
-  stage_model_t* models =  (stage_model_t*)calloc(bytes_expected,1);
-  
-  assert( models );
-
   size_t bytes_read;
-  if( (bytes_read = SIOReadPacket( con, (char*)models, num*sizeof(stage_model_t) )) 
-      != bytes_expected )
+  if( (bytes_read = SIOReadPacket( con, buf,datalen )) != datalen )
     {
-      free( models );
+      PRINT_WARN2( "short read %d/%d bytes", bytes_read, datalen );
+      free( buf );
       return -1; // fail
     }
-  
+ 
   // handle each packet as an individual request
-  int m;
-  for( m=0; m<num; m++ )
+  char* record;
+  for( record = buf; record < buf + datalen; record += recordlen )
     {
-      // CALL THE MODEL CREATION CALLBACK WITH A SINGLE MODEL REQUEST
+      printf( "Passing packet to callback %p\n", callback );
       
-      printf( "Creating model %d %s parent %d\n",
-	      models[m].id, models[m].token, models[m].parent_id );
-      
-      // CALL THE CALLBACK WITH THIS SINGLE PROPERTY
+      // CALL THE CALLBACK WITH THIS SINGLE config
       if( callback )
-	(*callback)( con, &(models[m]) );
-      
-      //if( CreateEntityFromLibrary( &(models[m])) == -1 )
-      //printf( "enitity create failed!\n" );
-      
+	(*callback)( con, record, recordlen );
     }
   
-  free( models );
+  free( buf );
   return 0;
 }
 
 // read a buffer len bytes long from fd, then call the property handling callback
 // for each property packed into the buffer
-int SIOReadProperties( int con, size_t len, property_callback_t callback )
+int SIOReadProperties( int con, size_t len, stg_data_callback_t callback )
 {
   if( len == 0 )
     {
@@ -371,8 +327,7 @@ int SIOReadProperties( int con, size_t len, property_callback_t callback )
   
   // read in the right number of bytes
   size_t bytes_read;
-  if( (bytes_read = SIOReadPacket( connection_polls[con].fd, 
-				   prop_buf, len )) != len )
+  if( (bytes_read = SIOReadPacket( con, prop_buf, len )) != len )
     {
       free( prop_buf );
       return -1; // fail
@@ -393,7 +348,7 @@ int SIOReadProperties( int con, size_t len, property_callback_t callback )
       // TODO - put the correct connection number in here!
       // should use connection num,bers instead of fds everywhere
       if( callback )
-	(*callback)( con, prop );
+	(*callback)( con, (char*)prop, prop->len );
 
       // move the pointer past this record in the buffer
       prop_header += sizeof(stage_property_t) + prop->len;
@@ -486,11 +441,11 @@ int SIOInitClient( int argc, char** argv )
   }
   // send the connection type byte - we want an asynchronous connection
   
-  char c = STAGE_SYNC;
+  char c = STAGE_HELLO;
   int r;
   if( (r = write( connection_polls[con].fd, &c, 1 )) < 1 )
     {
-      printf( "XS: failed to write STAGE_SYNC byte to Stage. Quitting\n" );
+      printf( "failed to write STAGE_HELLO greeting byte to server.\n" );
     if( r < 0 ) perror( "error on write" );
     return -1;
   }
@@ -501,9 +456,10 @@ int SIOInitClient( int argc, char** argv )
   return con;
 }  
 
-int SIOServiceConnections(   command_callback_t cmd_callback, 
-			     model_callback_t model_callback,
-			     property_callback_t prop_callback )
+int SIOServiceConnections(   stg_data_callback_t cmd_callback, 
+			     stg_data_callback_t model_callback,
+			     stg_data_callback_t prop_callback,
+			     stg_data_callback_t gui_callback )
 {
   // read stuff until we get a continue message on each channel
 #ifdef VERBOSE
@@ -550,50 +506,56 @@ int SIOServiceConnections(   command_callback_t cmd_callback,
 		  
 		  if( hdrbytes < (int)sizeof(hdr) )
 		    {
-		      //printf( "Failed to read header on connection %d "
-		      //      "(%d/%d bytes).\n"
-		      //      "Connection closed",
-		      //      t, hdrbytes, sizeof(hdr) );
-		      
+		      PRINT_DEBUG1( "con %d: failed header read. closing.",t );
 		      SIODestroyConnection( t ); // zap this connection
 		    }
 		  else // find out the type of packet to follow
 		    {  // and handle it
-		      switch( hdr.type )
-			{
-			case STG_HDR_MODELS:
-			  PRINT_DEBUG2( "Header: STG_HDR_MODELS (%d) on con %d", 
-					hdr.data, t );
-			  SIOReadModels( t, hdr.data, model_callback );
-			  break;
-			  
-			case STG_HDR_PROPS: // some poses are coming in 
-			  PRINT_DEBUG2( "Header: STG_HDR_PROPS (%d) on con %d", 
-					hdr.data, t );
-			  SIOReadProperties( t, hdr.data, prop_callback );
-			  break;
-			  
-			case STG_HDR_CMD:
-			  PRINT_DEBUG2( "Header: STG_HDR_CMD (%d) on con %d",
-					hdr.data, t );
-			  if( cmd_callback )
-			    (*cmd_callback)( t, &(hdr.data) );
-			  break;			  
-			  
-			case STG_HDR_CONTINUE: 
-			  PRINT_DEBUG1( "Header: STG_HDR_CONTINUE on con %d", 
-					t );
-			  syncs++;
-			  
-			  printf( "received %d of %d required continues\n",
-				  syncs, connection_count );
-			  break;
-			  
-			  
-			default:
-			  PRINT_WARN2( "Unknown header type (%d) on %d",
-				       hdr.type, t  );
-			}
+		      PRINT_DEBUG2( "con %d header reports %d bytes follow",
+				    t, hdr.len );
+			
+			switch( hdr.type )
+			  {
+			  case STG_HDR_GUI: // a gui config packet is coming in 
+			    PRINT_DEBUG( "header: STG_HDR_GUI" );
+			    SIOReadData( t, hdr.len, 
+					 sizeof(stage_gui_config_t), 
+					 gui_callback );
+			    break;
+			    
+			  case STG_HDR_MODELS:
+			    PRINT_DEBUG( "header: STG_HDR_MODELS" );
+			    SIOReadData( t, hdr.len, 
+					 sizeof(stage_model_t), 
+					 model_callback );
+			    break;
+			    
+			  case STG_HDR_PROPS: // some poses are coming in 
+			    PRINT_DEBUG( "header: STG_HDR_PROPS" );
+			    SIOReadProperties( t, hdr.len, prop_callback );
+			    break;
+			    
+			    
+			  case STG_HDR_CMD:
+			    PRINT_DEBUG( "header: STG_HDR_CMD" );
+			    if( cmd_callback )
+			      (*cmd_callback)( t, (char*)&(hdr.len), 1 );
+			    break;			  
+			    
+			  case STG_HDR_CONTINUE: 
+			    PRINT_DEBUG1( "Header: STG_HDR_CONTINUE on con %d", 
+					  t );
+			    syncs++;
+			    
+			    printf( "received %d of %d required continues\n",
+				    syncs, connection_count );
+			    break;
+			    
+			    
+			  default:
+			    PRINT_WARN2( "Unknown header type (%d) on %d",
+					 hdr.type, t  );
+			  }
 		    }
 		}
 	      // if poll reported some badness on this connection
@@ -668,38 +630,6 @@ int SIOParseCmdLine( int argc, char** argv )
 
    PRINT_DEBUG1( "remaining connections %d", connection_count );
  }
-
- int SIOContinue( int fd, double simtime )
- {
-   stage_header_t hdr;
-   hdr.type = STG_HDR_CONTINUE;
-
-   SIOTimeStamp( &hdr, simtime );
-
-   return( SIOWritePacket( fd, (char*)&hdr, sizeof(hdr) ) == sizeof(hdr)
-	   ? 0 : -1 );
- }
-
-
-int SIOReportResults( double simtime, char* data, size_t len )
-{
-  int t;
-   for( t=0; t<connection_count; t++ )// all the connections
-     {      
-       // TODO figure out how many dirty props are on this connection, buffer them
-       // together, and write 'em out.
-       // for now we'll just send all the props on all connections
-       if( SIOWriteProperties( connection_polls[t].fd, simtime, data, len ) == -1 )
-	 return -1; // fail
-       
-       // send a continue so the client knows we're done
-       if( SIOContinue( connection_polls[t].fd, simtime ) == -1 )
-	 return -1;
-     }
-
-   return 0; // success
- }
-
 
 int SIOInitServer( int argc, char** argv )
 { 
@@ -813,20 +743,21 @@ int SIOAcceptConnections( void )
 	  if( r < 0 ) perror( "read error" );
 	  return -1; // fail
 	}
+
+      printf( "Stage: received greeting %c\n", b );
       
       // if this is a syncronized connection, increase the sync counter 
       switch( b )
 	{
-	case STAGE_SYNC: 
-#ifdef VERBOSE      
-	  printf( "\nStage: connection accepted (id: %d fd: %d)\n", 
+	case STAGE_HELLO: 
+	  printf( "Stage: connection accepted (id: %d fd: %d)\n", 
 		  connection_count, connfd );
 	  fflush( stdout );
-#endif            
+
 	  retval = 0; //success
 	  break;
 	  
-	default: printf( "Stage: unknown sync on %d. Closing connection\n",
+	default: printf( "Stage: bad greeting on %d. Closing connection\n",
 			 connfd  );
 	  close( connfd );
 	  retval = -1; // fail
@@ -871,20 +802,19 @@ void SIOFreeBuffer( stage_buffer_t* bundle )
 {
   if( bundle )
     {
-      printf( "Freeing stage_buffer_t at %p\n", bundle->data); 
+      //printf( "Freeing stage_buffer_t at %p\n", bundle->data); 
       // SIODebugBuffer( bundle );
 
       fflush( stdout );
 
       if( bundle->data ) free( bundle->data );
       free( bundle );
-      printf( "done\n" );
     }
 }
  
 stage_buffer_t* SIOCreateBuffer( void )
 {
-  printf( "Allocating stage_buffer_t ... " ); fflush( stdout );
+  //printf( "Allocating stage_buffer_t ... " ); fflush( stdout );
 
   // create and zero a buffer structure
   stage_buffer_t* buf = (stage_buffer_t*)malloc( sizeof(stage_buffer_t) );
@@ -892,7 +822,7 @@ stage_buffer_t* SIOCreateBuffer( void )
   assert( buf );
   memset( buf, 0, sizeof(stage_buffer_t) );
 
-  printf( "done at %p\n", buf );
+  //printf( "done at %p\n", buf );
   //SIODebugBuffer( buf );
   
   return buf;

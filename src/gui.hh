@@ -21,7 +21,7 @@
  * Desc: GUI interface definitions.
  * Author: Richard Vaughan
  * Date: 6 Oct 2002
- * CVS info: $Id: gui.hh,v 1.4.2.2 2003-02-04 03:35:38 rtv Exp $
+ * CVS info: $Id: gui.hh,v 1.4.2.3 2003-02-05 03:59:49 rtv Exp $
  */
 
 // GUI hooks - the Stage GUI implements these functions called by Stage
@@ -32,30 +32,37 @@
 #ifndef STAGE_GUI_HH
 #define STAGE_GUI_HH
 
+#include "stage.h"
 
-// called from  CStageServer::CStageServer()
-void GuiInit( int argc, char** argv );
+typedef struct
+{
+  char token[ STG_TOKEN_MAX ]; // string identifying the GUI library
+  // a bunch of function pointers
+  int (*init_func)(int argc, char** argv);
+  int (*load_func)( stage_gui_config_t* cfg );
+  int (*update_func)(void);
+  int (*createmodel_func)( CEntity* ent );
+  int (*destroymodel_func)( CEntity* ent );
+  int (*tweakmodel_func)( CEntity* ent, stage_prop_id_t prop );
+  // save_func
+  // prop_func
+  /// etc.
+} stage_gui_library_item_t;
 
-// called from  CStageServer::CStageServer()
-void GuiUpdate( void );
 
-// called from CWorld::Load()
-void GuiLoad( CEntity* ent );
 
-// called from CWorld::Save();
-void GuiSave( CEntity* ent );
+void GuiLoad( stage_gui_config_t* cfg );
+void GuiSave( stage_gui_config_t* cfg );
 
-// called from CEntity::Startup()
-void GuiEntityStartup( CEntity* ent );
+int GuiUpdate( void );
 
-// called from CEntity::Shutdown()
-void GuiEntityShutdown( CEntity* ent );
+int GuiInit( int argc, char** argv );
 
-// called from CEntity::Update()
-void GuiEntityUpdate( CEntity* ent );
+int GuiEntityStartup( CEntity* ent );
+int GuiEntityShutdown( CEntity* ent );
+int GuiEntityUpdate( CEntity* ent );
+int GuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop );
 
-// called from CEntity::SetProperty()
-void GuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop );
 
 #endif //STAGE_GUI_HH
 

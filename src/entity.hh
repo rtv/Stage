@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15.2.6 2003-02-04 03:35:38 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.7 2003-02-05 03:59:49 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -36,6 +36,8 @@
 #ifdef INCLUDE_RTK2
 #include "rtk.h"
 #endif
+
+#include "gui.hh"
 
 // Forward declare
 class CMatrix;
@@ -281,7 +283,8 @@ public: void SetDirty( int con, stage_prop_id_t prop, char v );
 
   // flag is true iff this entity is updated by this host
   public: bool m_local; 
-  
+
+
   // functions for drawing this entity in GUIs
 #ifdef INCLUDE_RTK2
   // Initialise the rtk gui
@@ -312,10 +315,10 @@ public: void SetDirty( int con, stage_prop_id_t prop, char v );
   static void staticUnselect( void* ent );
   */
 #endif
-  
+
   // calls the GUI hook to startup this object, then recusively calls
   // the children's GuiStartup()
-public: virtual void GuiStartup( void );
+  //public: virtual void GuiStartup( void );
 
 public: void *gui_data; 
 

@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.15.6.1 2003-02-01 02:14:30 rtv Exp $
+ * $Id: matrix.cc,v 1.15.6.2 2003-02-05 03:59:49 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -36,10 +36,6 @@ CMatrix::CMatrix(int w, int h, int default_buf_size)
       used_slots[p] = 0;
       available_slots[p] = default_buf_size;
     }
-  
-#ifdef INCLUDE_RTK2
-  this->fig = NULL;
-#endif
 }
 
 
@@ -133,7 +129,7 @@ void CMatrix::dump( void )
   puts( "DUMPED" );
 }
 
-
+#if 0
 #ifdef INCLUDE_RTK2
 // useful debug function allows plotting the world externally
 void CMatrix::render( CWorld* world )
@@ -163,6 +159,7 @@ void CMatrix::unrender()
     }
 }
 
+#endif
 #endif
 
 // Draw a rectangle

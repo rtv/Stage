@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.5 2003-02-04 03:35:38 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.6 2003-02-05 03:59:49 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -54,6 +54,8 @@
 #include "gui.hh"
 #include "library.hh"
 
+extern rtk_canvas_t* canvas;
+extern rtk_app_t* app;
 
 // init the static vars shared by all entities
  // everyone shares these vars 
@@ -131,6 +133,7 @@ CEntity::CEntity( LibraryItem* libit, int id, CEntity* parent )
 
   // init the ptr to GUI-specific data
   this->gui_data = NULL;
+
 
 #ifdef INCLUDE_RTK2
   // Default figures for drawing the entity.
@@ -233,8 +236,8 @@ void CEntity::Sync()
 bool CEntity::Startup( void )
 {
   // use the generic hook
-  if( enable_gui ) 
-    GuiEntityStartup( this );
+  //if( enable_gui ) 
+  //GuiEntityStartup( this );
   
   
   CHILDLOOP( ch )
@@ -253,8 +256,8 @@ void CEntity::Shutdown()
   // recursively shutdown our children
   CHILDLOOP( ch ) ch->Shutdown();
 
-  if( enable_gui )
-    GuiEntityShutdown( this );
+  //if( enable_gui )
+  //GuiEntityShutdown( this );
   
   return;
 }
@@ -269,7 +272,7 @@ void CEntity::Update( double sim_time )
   // recursively update our children
   CHILDLOOP( ch ) ch->Update( sim_time );    
 
-  GuiEntityUpdate( this );
+  //GuiEntityUpdate( this );
 }
 
 
@@ -611,6 +614,9 @@ void CEntity::SetParent(CEntity* new_parent)
 int CEntity::SetProperty( int con, stage_prop_id_t property, 
 			  void* value, size_t len )
 {
+  PRINT_DEBUG3( "setting prop %d (%d bytes) for ent %p",
+		property, len, this );
+
   assert( value );
   assert( len > 0 );
   assert( (int)len < MAX_PROPERTY_DATA_LEN );
@@ -701,8 +707,8 @@ int CEntity::SetProperty( int con, stage_prop_id_t property,
     this->SetDirty( con, property, 0 ); // clean on this con
 
   // update the GUI with the new property
-  if( enable_gui )
-    GuiEntityPropertyChange( this, property );
+  //if( enable_gui )
+  //GuiEntityPropertyChange( this, property );
   
   return 0;
 }
@@ -876,16 +882,6 @@ void CEntity::FamilyUnsubscribe()
 };
 
 
-void CEntity::GuiStartup( void )
-{
-  // use the interface library hook
-  GuiEntityStartup( this );
-  
-  CHILDLOOP( ch )
-    ch->GuiStartup();
-}
-
-
 void CEntity::GetStatusString( char* buf, int buflen )
 {
   double x, y, th;
@@ -900,6 +896,7 @@ void CEntity::GetStatusString( char* buf, int buflen )
 		    this->lib_entry->type_num,
 		    this->lib_entry->token ) );
 }  
+
 
 #ifdef INCLUDE_RTK2
 
@@ -920,7 +917,7 @@ void CEntity::RtkStartup()
   rtk_fig_add_mouse_handler(this->fig, StaticRtkOnMouse);
 
   // add this device to the world's device menu 
-  this->m_world->AddToDeviceMenu( this, true); 
+  //this->m_world->AddToDeviceMenu( this, true); 
     
   // visible by default
   rtk_fig_show( this->fig, true );
@@ -938,7 +935,7 @@ void CEntity::RtkStartup()
   xmax = ymax = 0.0;
   this->GetBoundingBox( xmin, ymin, xmax, ymax );
   
-  rtk_fig_t* boundaries = rtk_fig_create( m_world->canvas, NULL, 99);
+  rtk_fig_t* boundaries = rtk_fig_create( canvas, NULL, 99);
   double width = xmax - xmin;
   double height = ymax - ymin;
   double xcenter = xmin + width/2.0;
@@ -972,7 +969,7 @@ void CEntity::RtkStartup()
   {
     // Create the label
     // By default, the label is not shown
-    this->fig_label = rtk_fig_create(m_world->canvas, this->fig, 51);
+    this->fig_label = rtk_fig_create( canvas, this->fig, 51);
     rtk_fig_show(this->fig_label, false);    
     rtk_fig_movemask(this->fig_label, 0);
       
@@ -991,9 +988,9 @@ void CEntity::RtkStartup()
     // rtk will draw the label when the mouse goes over the figure
     // TODO: FIX
     //this->fig->mouseover_fig = fig_label;
-      
+    
     // we can be moved only if we are on the root node
-    if (m_parent_entity != this->m_world->GetRoot() )
+    if (m_parent_entity != CEntity::root )
       rtk_fig_movemask(this->fig, 0);
     else
       rtk_fig_movemask(this->fig, this->movemask);  
@@ -1026,14 +1023,13 @@ void CEntity::RtkUpdate()
   // do this  
 
   // if we're not looking at this device, hide it 
-  if( !m_world->ShowDeviceBody( this->lib_entry->type_num ) )
+  //if( !m_world->ShowDeviceBody( this->lib_entry->type_num ) )
+  //{
+  //rtk_fig_show(this->fig, false);
+  //}
+  //else // we need to show and update this figure
   {
-    rtk_fig_show(this->fig, false);
-  }
-  else // we need to show and update this figure
-  {
-    rtk_fig_show( this->fig, true );
-  }
+    rtk_fig_show( this->fig, true );  }
 }
 
 
@@ -1072,4 +1068,3 @@ void CEntity::StaticRtkOnMouse(rtk_fig_t *fig, int event, int mode)
 
 
 #endif
-

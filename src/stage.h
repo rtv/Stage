@@ -113,10 +113,11 @@ typedef int stage_id_t;
 
 // the server reads a header to discover which type of data follows...
 typedef enum { 
-  STG_HDR_CONTINUE, 
-  STG_HDR_MODELS, 
-  STG_HDR_PROPS, 
-  STG_HDR_CMD,
+  STG_HDR_CONTINUE,  // marks the end of a  transaction
+  STG_HDR_MODELS, // requests for new models follow
+  STG_HDR_PROPS, // model property settings follow
+  STG_HDR_CMD, // a command to the server (save, load, pause, quit, etc)
+  STG_HDR_GUI // a GUI configuration packet follows
 } stage_header_type_t;
 
 // COMMANDS - no packet follows; the header's data field is set to one
@@ -126,6 +127,7 @@ typedef enum {
   STG_CMD_LOAD, 
   STG_CMD_PAUSE, 
   STG_CMD_UNPAUSE, 
+  STG_CMD_QUIT,
 } stage_cmd_t;
 
 
@@ -139,17 +141,27 @@ typedef struct
 typedef struct
 {
   stage_header_type_t type; // see enum above
-  // the meaning of the data field varies with the message type:
-  // for STG_HDR_MODELS, gives the number of stage_model_t packets to follow
-  // for STG_HDR_CMD, specifies the command type
-  // for STG_HDR_PROPS, specifies the number of bytes to follow, of contiguous
-  // stage_property_t + data packet  pairs
-
   uint32_t sec; // at this many seconds
   uint32_t usec; // plus this many microseconds
 
-  uint32_t data;   
+  uint32_t len; // this many bytes of data follow (for CMDs this is
+ // actually the command number instead)
 } __attribute ((packed)) stage_header_t;
+
+// used for loading and saving GUI state
+// prefer to expand this single packet with new fields rather
+// than create extra GUI packets
+typedef struct
+{
+  char token[ STG_TOKEN_MAX ]; // string identifying the GUI library
+  double ppm;
+  int width, height;
+  double originx, originy;
+  char showgrid;
+  char showdata;
+  char showsubscribedonly;
+} stage_gui_config_t;
+
 
 // this allows us to set a property for an entity
 // pretty much any data member of an entity can be set
@@ -206,11 +218,16 @@ typedef struct
 #define ARRAYSIZE(x) (int) (sizeof(x) / sizeof(x[0]))
 #endif
 
+#ifndef TRUE
 #define TRUE 1
-#define FALSE 0
+#endif
 
-#define SUCCESS TRUE
-#define FAIL FALSE
+#ifndef FALSE
+#define FALSE 0
+#endif
+
+//#define SUCCESS TRUE
+//#define FAIL FALSE
 
 #define MILLION 1000000L
 
@@ -219,11 +236,10 @@ typedef struct
 #endif
 
 #ifndef TWOPI
-#define TWOPI 2 * M_PI
+#define TWOPI 2.0 * M_PI
 #endif
 
-#define STAGE_SYNC 0
-#define STAGE_ASYNC 1
+#define STAGE_HELLO 'S'
 
 // Convert radians to degrees
 #define RTOD(r) ((r) * 180 / M_PI)

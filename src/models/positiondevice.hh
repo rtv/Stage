@@ -9,7 +9,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/positiondevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.4 $
+//  $Revision: 1.4.4.1 $
 //
 // Usage:
 //  (empty)
@@ -29,7 +29,6 @@
 #define POSITIONDEVICE_H
 
 #include "stage.h"
-#include "playerdevice.hh"
 
 // control mode
 typedef enum{ VELOCITY_CONTROL_MODE, POSITION_CONTROL_MODE } 
@@ -39,20 +38,17 @@ stage_position_control_mode_t;
 typedef enum{ DIFF_DRIVE_MODE, OMNI_DRIVE_MODE } 
 stage_position_drive_mode_t;
 
-class CPositionDevice : public CPlayerEntity
+class CPositionDevice : public CEntity
 {
   // Minimal constructor
-  public: CPositionDevice( LibraryItem *libit, CWorld *world, CEntity *parent);
+  public: CPositionDevice( LibraryItem *libit, int id, CEntity *parent);
     
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-public: static CPositionDevice* Creator(  LibraryItem *libit, CWorld *world, CEntity *parent )
-  { return( new CPositionDevice( libit, world, parent ) ); }
-
-  // load settings from worldfile
-  bool Load(CWorldFile *worldfile, int section);
+public: static CPositionDevice* Creator(  LibraryItem *libit, int id, CEntity *parent )
+  { return( new CPositionDevice( libit, int, parent ) ); }
 
   // Startup routine
   public: virtual bool Startup();

@@ -24,7 +24,7 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.13.4.4 2003-02-03 07:10:36 rtv Exp $
+ * CVS info: $Id: library.cc,v 1.13.4.5 2003-02-05 03:59:49 rtv Exp $
  */
 
 #include "library.hh"
@@ -197,8 +197,14 @@ CEntity* Library::CreateEntity( stage_model_t* model )
 	  ent = NULL;
 	}
 
-      PRINT_DEBUG3(  "Startup successful for model %d (%s) at %p",
-		     model->id, model->token, ent );
+      // now start the GUI repn for this entity
+      if( GuiEntityStartup( ent ) == -1 )
+	{
+	  PRINT_WARN3( "Gui startup failed for model %d (%s) at %p",
+		       model->id, model->token, ent );
+	  delete ent; // destructor calls CEntity::Shutdown()
+	  ent = NULL;
+	}      
     }
   else
     {
@@ -208,6 +214,9 @@ CEntity* Library::CreateEntity( stage_model_t* model )
     }
   
   StoreEntPtr( model->id, ent );
+
+  if( ent ) PRINT_DEBUG3(  "Startup successful for model %d (%s) at %p",
+			   model->id, model->token, ent );
   return ent; // NULL if failed
 } 
   

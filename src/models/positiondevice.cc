@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/positiondevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.7 $
+//  $Author: rtv $
+//  $Revision: 1.7.2.1 $
 //
 // Usage:
 //  (empty)
@@ -27,7 +27,6 @@
 #define ENABLE_RTK_TRACE 1
 
 #include <math.h>
-#include "world.hh"
 #include "raytrace.hh"
 #include "positiondevice.hh"
 
@@ -36,8 +35,8 @@
 
 ///////////////////////////////////////////////////////////////////////////
 // Constructor
-CPositionDevice::CPositionDevice(LibraryItem* libit,CWorld *world, CEntity *parent)
-  : CPlayerEntity( libit,world, parent )
+CPositionDevice::CPositionDevice(LibraryItem* libit, int id, CEntity *parent)
+  : CPlayerEntity( libit, id, parent )
 {    
   // setup our Player interface for a POSITION device interface
   PositionInit();
@@ -77,38 +76,11 @@ CPositionDevice::CPositionDevice(LibraryItem* libit,CWorld *world, CEntity *pare
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// Load the entity from the world file
-bool CPositionDevice::Load(CWorldFile *worldfile, int section)
-{
-  if (!CPlayerEntity::Load(worldfile, section))
-    return false;
-  
-  const char *rvalue;
-  // initialize the string to our default mode
-  rvalue = (this->drive_mode == OMNI_DRIVE_MODE) ? "omni" : "diff";
-  
-  rvalue = worldfile->ReadString(section, "drive", rvalue);
-  
-  if (strcmp(rvalue, "omni") == 0)
-    this->drive_mode = OMNI_DRIVE_MODE;
-  else if (strcmp(rvalue, "diff") == 0)
-    this->drive_mode = DIFF_DRIVE_MODE;
-  else
-    {
-      PRINT_WARN1( "Unknown drive mode (%s)in world file. "
-		   "Using differential mode.", rvalue );
-      this->drive_mode = DIFF_DRIVE_MODE;
-    }
-     
-  return true;
-}
-
-///////////////////////////////////////////////////////////////////////////
 // Startup routine
 //
 bool CPositionDevice::Startup()
 {
-  if (!CPlayerEntity::Startup())
+  if (!CEntity::Startup())
     return false;
 
   return true;
@@ -289,7 +261,7 @@ void CPositionDevice::Update( double sim_time )
 // Compute the robots new pose
 void CPositionDevice::Move()
 {
-  double step = m_world->m_sim_timestep;
+  double step = CEntity::timestep;
 
   // Get the current robot pose
   //
