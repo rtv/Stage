@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.4 2004-08-27 23:59:09 rtv Exp $
+# CVS: $Id: test.world,v 1.5 2004-08-29 01:11:58 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution 0.02 
@@ -35,6 +35,8 @@ laserpioneer
 (
   name "myrobot"
   pose [1 4 0]
+
+  ranger()
 )
 
 fiducialfinder( name "foof" )

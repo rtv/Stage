@@ -13,9 +13,7 @@
 
 // models that have fewer rectangles than this get matrix rendered when dragged
 #define STG_LINE_THRESHOLD 40
-
 #define LASER_FILLED 1
-
 #define BOUNDINGBOX 0
 
 // single static application visible to all funcs in this file

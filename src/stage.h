@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.78 2004-08-27 23:59:09 rtv Exp $
+ * CVS: $Id: stage.h,v 1.79 2004-08-29 01:11:58 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -489,6 +489,12 @@ typedef struct
   stg_bounds_t bounds_range;
   stg_radians_t fov;
 } stg_ranger_config_t;
+
+//typedef struct
+//{
+//int sensor_count;
+//stg_ranger_sensor_t sensors[ STG_RANGER_SENSOR_MAX ];
+//} stg_ranger_config_t;
 
 typedef struct
 {
