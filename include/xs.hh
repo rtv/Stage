@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xs.hh,v 1.5 2001-09-19 04:18:20 vaughan Exp $
+ * $Id: xs.hh,v 1.6 2001-09-19 21:52:57 vaughan Exp $
  ************************************************************************/
 
 #ifndef _WIN_H
@@ -19,6 +19,7 @@ typedef struct
   StageType stage_type;
   //int channel;
   StageColor color;
+  unsigned long pixel_color;
   player_id_t id;
   player_id_t parent;
   double x, y, th, w, h; // pose and extents
@@ -188,7 +189,7 @@ public:
   void HandleButtonPressEvent( XEvent& reportEvent );
   void HandleMotionEvent( XEvent& reportEvent );
 
-  void SelectColor( truth_t* exp, unsigned long def );
+  void SelectColor( truth_t* exp );
 
   void SetupZoom( char* );
   void SetupPan( char* );

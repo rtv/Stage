@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.13 2001-09-19 04:18:22 vaughan Exp $
+ * $Id: xs.cc,v 1.14 2001-09-19 21:52:57 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -51,12 +51,14 @@ Display* display = 0;
 int screen = 0;
 
 const char* versionStr = "0.1.1";
-const char* titleStr = "X Player/Stage Interface";
+const char* titleStr = "XS";
 
 //#define LABELS
 //typedef void (*callback_t)(truth_t*);
 
-#define USAGE  "\nUSAGE: xs [-h <host>] [-tp <port>] [-ep <port>]\n\t[-geometry <geometry string>] [-zoom <factor>]\n\t[-pan <X\%xY\%>] [-channels <\"color0 .... colorN\">]\nDESCRIPTIONS:\n-h <host>: connect to Stage on this host (default `localhost')\n-tp <port>: connect to Stage's Truth server on this TCP port (default `6601')\n-ep <port>: connect to Stage's Environment server on this TCP port (default `6602')\n-geometry <string>*: standard X geometry specification\n-zoom <factor>*: floating point zoom multiplier\n-pan <X\%xY\%>*: pan initial view X percent of maximum by Y percent of maximum\n-channels <string>*: specify the colors drawn for each ACTS channel; e.g. \"red green blue\"\n(* this option can be set in your ~/.Xdefaults file - see README.xs)\n"
+#define USAGE  "\nUSAGE: xs [-h <host>] [-tp <port>] [-ep <port>]\n\t[-geometry <geometry string>] [-zoom <factor>]\n\t[-pan <X\%xY\%>]\nDESCRIPTIONS:\n-h <host>: connect to Stage on this host (default `localhost')\n-tp <port>: connect to Stage's Truth server on this TCP port (default `6601')\n-ep <port>: connect to Stage's Environment server on this TCP port (default `6602')\n-geometry <string>*: standard X geometry specification\n-zoom <factor>*: floating point zoom multiplier\n-pan <X\%xY\%>*: pan initial view X percent of maximum by Y percent of maximum\n"
+
+//  -channels <string>*: specify the colors drawn for each ACTS channel; e.g. \"red green blue\"\n(* this option can be set in your ~/.Xdefaults file - see README.xs)\n"
 
 char stage_host[256] = "localhost"; // default
 int truth_port = TRUTH_SERVER_PORT; // "
@@ -66,12 +68,12 @@ struct hostent* entp = 0;
 struct sockaddr_in servaddr;
 
 char* geometry = 0;
-char* channels = 0;
+//char* channels = 0;
 char* zoom = 0;
 char* pan = 0;
 
 // provide some sensible defaults for the parameters/resources
-char* default_channels = "red green blue magenta yellow cyan";
+//char* default_channels = "red green blue magenta yellow cyan";
 char* default_geometry = "400x400";
 char* default_zoom = "1.0";
 char* default_pan = "0x0";
@@ -509,32 +511,32 @@ void  CXGui::SetupGeometry( char* geom )
 #endif
 }
 
-void  CXGui::SetupChannels( char* channels )
-{
-  assert( channels );
-  assert( strlen(channels) > 0 );
+//  void  CXGui::SetupChannels( char* channels )
+//  {
+//    assert( channels );
+//    assert( strlen(channels) > 0 );
     
-  XColor a, b;
-  int c = 0;
-  char* token = strtok( channels, " \t" );
+//    XColor a, b;
+//    int c = 0;
+//    char* token = strtok( channels, " \t" );
 
-  while( token )
-    {
-      if( !XAllocNamedColor( display, default_cmap, token, &a, &b ) )
-	{
-	  printf( "Warning: color name %s not recognized for channel %d\n",
-		  token, c );
-	}
+//    while( token )
+//      {
+//        if( !XAllocNamedColor( display, default_cmap, token, &a, &b ) )
+//  	{
+//  	  printf( "Warning: color name %s not recognized for channel %d\n",
+//  		  token, c );
+//  	}
       
-#ifdef VERBOSE
-      printf( "ACTS channel %d: \"%s\" (%d,%d,%d)\n",
-	      c, token, a.red, a.green, a.blue );
-#endif
-      channel_colors[c++] = a.pixel;
+//  #ifdef VERBOSE
+//        printf( "ACTS channel %d: \"%s\" (%d,%d,%d)\n",
+//  	      c, token, a.red, a.green, a.blue );
+//  #endif
+//        channel_colors[c++] = a.pixel;
       
-      token = strtok( NULL, " \t" );
-    }
-}
+//        token = strtok( NULL, " \t" );
+//      }
+//  }
 
 /* easy little command line argument parser */
 void parse_args(int argc, char** argv)
@@ -589,21 +591,21 @@ void parse_args(int argc, char** argv)
 	    exit(1);
 	  }
       }
-    else if(!strcmp(argv[i],"-channels"))
-      {
-	if(++i<argc)
-	  { 
-	    channels = new char[ strlen( argv[i] ) + 1 ];
-	    memset( channels, 0, strlen(argv[i]) +1 );
-	    strncpy( channels,argv[i], strlen( argv[i] ) );
-	    printf( "[channels: %s]", channels );
-	  }
-	else
-	  {
-	    printf( "\n%s\n", USAGE );
-	    exit(1);
-	  }
-      }
+//      else if(!strcmp(argv[i],"-channels"))
+//        {
+//  	if(++i<argc)
+//  	  { 
+//  	    channels = new char[ strlen( argv[i] ) + 1 ];
+//  	    memset( channels, 0, strlen(argv[i]) +1 );
+//  	    strncpy( channels,argv[i], strlen( argv[i] ) );
+//  	    printf( "[channels: %s]", channels );
+//  	  }
+//  	else
+//  	  {
+//  	    printf( "\n%s\n", USAGE );
+//  	    exit(1);
+//  	  }
+//        }
     else if(!strcmp(argv[i],"-h"))
     {
       if(++i<argc)
@@ -732,6 +734,28 @@ void CXGui::HandleIncomingQueue( void )
       truth.color.green = struth.green;
       truth.color.blue = struth.blue;
 
+      // look up the X pixel value for this color
+
+      XColor xcol;
+
+      xcol.pixel = 0;
+      xcol.red = truth.color.red * 256;
+      xcol.green = truth.color.green * 256;
+      xcol.blue = truth.color.blue * 256;
+
+      //printf( "Requesting %lu for %u,%u,%u\n", 
+      //      xcol.pixel, xcol.red, xcol.green, xcol.blue );
+      
+      // find out what pixel value corresponds most closely
+      // to this color
+      if( !XAllocColor(display, default_cmap, &xcol ) )
+	puts( "XS: warning - allocate color failed" );
+      
+      truth.pixel_color = xcol.pixel;
+      
+      //printf( "Allocated %lu for %u,%u,%u (%d)\n", 
+      //      xcol.pixel, xcol.red, xcol.green, xcol.blue );
+
       truth.id.port = struth.id.port;
       truth.id.type = struth.id.type;
       truth.id.index = struth.id.index;
@@ -836,13 +860,13 @@ CXGui::CXGui( int argc, char** argv, environment_t* anenv )
     if( !geometry ) geometry = default_geometry;
     SetupGeometry( geometry );
     
-    if( !channels ) channels = XGetDefault( display, argv[0], "channels" );
-    if( !channels )
-      {
-	channels = new char[ strlen( default_channels ) ];
-	strcpy( channels, default_channels );
-      }
-    SetupChannels( channels );
+//      if( !channels ) channels = XGetDefault( display, argv[0], "channels" );
+//      if( !channels )
+//        {
+//  	channels = new char[ strlen( default_channels ) ];
+//  	strcpy( channels, default_channels );
+//        }
+//      SetupChannels( channels );
     
     if( !zoom ) zoom = XGetDefault( display, argv[0], "zoom" );
     if( !zoom ) zoom= default_zoom;

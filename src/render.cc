@@ -52,7 +52,7 @@ void CXGui::RenderObject( truth_t &truth )
       case GpsType: if( draw_all_devices )
 	RenderGps( &truth, extended ); break;
 
-      default: cout << "XGui: unknown object type " 
+      default: cout << "XS: unknown object type " 
 		    << truth.id.type << endl;
       }
 
@@ -96,7 +96,7 @@ void CXGui::RenderObjectLabel( truth_t* exp, char* str, int len )
 
 void CXGui::RenderLaserTurret( truth_t* exp, bool extended )
 { 
-  SelectColor( exp,blue );  
+  SelectColor( exp );  
   DrawNoseBox( exp->x, exp->y, exp->w/2.0, exp->h/2.0, exp->th );
 
   //if( extended && exp->data )
@@ -109,7 +109,7 @@ void CXGui::RenderLaserTurret( truth_t* exp, bool extended )
 
 void CXGui::RenderLaserBeaconDetector( truth_t* exp, bool extended )
 { 
-  SelectColor( exp,blue );
+  SelectColor( exp );
   DrawCircle( exp->x, exp->y, exp->w/2.0 );
 //    if( extended && exp->data )
 //      {
@@ -143,19 +143,19 @@ void CXGui::RenderLaserBeaconDetector( truth_t* exp, bool extended )
 
 void CXGui::RenderTruth( truth_t* exp, bool extended )
 { 
-  SelectColor( exp,green );
+  SelectColor( exp );
   DrawString( exp->x, exp->y, "Truth", 5 );
 }
 
 void CXGui::RenderOccupancy( truth_t* exp, bool extended )
 { 
-  SelectColor( exp,green );
+  SelectColor( exp );
   DrawString( exp->x, exp->y, "Occupancy", 9 ); 
 }
 
 void CXGui::RenderPTZ( truth_t* exp, bool extended )
 { 
-  SelectColor( exp,magenta );    
+  SelectColor( exp );    
   DrawNoseBox( exp->x, exp->y, exp->w/2.0, exp->h/2.0, exp->th );
 
   //GetRect( exp->x, exp->y, exp->w, exp->h, exp->th, pts );  
@@ -199,7 +199,7 @@ void CXGui::RenderPTZ( truth_t* exp, bool extended )
 
 void CXGui::RenderSonar( truth_t* exp, bool extended )
 { 
-  SelectColor( exp,green );
+  SelectColor( exp );
   //    if( extended && exp->data )
   //      {
   //        ExportSonarData* p = (ExportSonarData*)exp->data;
@@ -215,13 +215,13 @@ void CXGui::RenderSonar( truth_t* exp, bool extended )
 
 void CXGui::RenderVision( truth_t* exp, bool extended )
 { 
-  SelectColor( exp,magenta );
+  SelectColor( exp );
   DrawCircle( exp->x, exp->y, exp->w/2.0 );
 }
 
 void CXGui::RenderPlayer( truth_t* exp, bool extended )
 { 
-  SelectColor( exp,white );
+  SelectColor( exp );
 
   DPoint pts[8];
   GetRect( exp->x, exp->y, exp->w/2.0, exp->h/2.0, exp->th, pts );  
@@ -257,7 +257,7 @@ void CXGui::RenderMisc( truth_t* exp, bool extended )
 
 void CXGui::RenderRectRobot( truth_t* exp, bool extended )
  { 
-   SelectColor( exp,red );
+   SelectColor( exp );
    
    double sinth = sin( exp->th );
    double costh = cos( exp->th );
@@ -283,13 +283,13 @@ void CXGui::RenderRectRobot( truth_t* exp, bool extended )
 
 void CXGui::RenderLaserBeacon( truth_t* exp, bool extended )
 { 
-  SelectColor( exp,cyan );  
+  SelectColor( exp );  
   DrawNoseBox( exp->x, exp->y, exp->w/2.0, exp->h/2.0, exp->th );
 }
 
 void CXGui::RenderGripper( truth_t* exp, bool extended )
 { 
-  SelectColor( exp,white );  
+  SelectColor( exp );  
   DrawRect( exp->x, exp->y, exp->w/2.0, exp->h/2.0, exp->th );
   
   double x_offset, y_offset;
@@ -326,7 +326,7 @@ void CXGui::RenderGripper( truth_t* exp, bool extended )
 
 void CXGui::RenderRoundRobot( truth_t* exp, bool extended )
 { 
-  SelectColor( exp,red );
+  SelectColor( exp );
   DrawCircle( exp->x, exp->y, exp->w/2.0 );
 
   DrawNose( exp->x, exp->y, exp->w/2.0, exp->th - 0.6 );
@@ -335,20 +335,20 @@ void CXGui::RenderRoundRobot( truth_t* exp, bool extended )
 
 void CXGui::RenderVisionBeacon( truth_t* exp, bool extended )
 { 
-  SelectColor( exp,yellow );
+  SelectColor( exp );
   DrawCircle( exp->x, exp->y, exp->w/2.0 );
   FillCircle( exp->x, exp->y, exp->w/3.0 );
 }
 
 void CXGui::RenderBroadcast( truth_t* exp, bool extended )
 { 
-  SelectColor( exp,green );
+  SelectColor( exp );
   DrawCircle( exp->x, exp->y, exp->w/2.0 );
 }
 
 void CXGui::RenderPuck( truth_t* exp, bool extended )
 { 
-  SelectColor( exp,green );
+  SelectColor( exp );
   FillCircle( exp->x, exp->y, exp->w/2.0 );
 
   //SetForeground( white );
@@ -357,24 +357,20 @@ void CXGui::RenderPuck( truth_t* exp, bool extended )
 
 void CXGui::RenderGps( truth_t* exp, bool extended )
 { 
-  SelectColor( exp,white );
+  SelectColor( exp );
   DrawCircle( exp->x, exp->y, exp->w/2.0 );
 }
 
 
 void CXGui::RenderBox( truth_t* exp, bool extended )
 { 
-  SelectColor( exp,yellow );
+  SelectColor( exp );
   DrawRect( exp->x, exp->y, exp->w/2.0, exp->h/2.0, exp->th );
 }
 
-void CXGui::SelectColor( truth_t* exp, unsigned long def )
+void CXGui::SelectColor( truth_t* exp )
 {
-  // choose the channel color, or use default if channel == -1
-  //if( exp->channel != -1 )
-  //SetForeground( channel_colors[exp->channel] );
-  // else
-    SetForeground( def ); // default color
+  XSetForeground( display, gc, exp->pixel_color );
 }
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.10 $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -81,8 +81,10 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
     m_map_px = m_map_py = m_map_pth = 0;
 
     // initialize color description and values
-    strcpy(m_color_desc, "black");
-    m_color.red = m_color.green = m_color.blue = 0;
+    strcpy(m_color_desc, "red");
+    m_color.red = 255;
+    m_color.green = 0;
+    m_color.blue = 0;
 
     m_com_vr = 0; // doesn't move
     
@@ -225,14 +227,17 @@ bool CEntity::Load(int argc, char **argv)
         }
     }
 
-    // don;t bother looking up black colors - the default m_color is black
-    if( strcmp( m_color_desc, "black" ) != 0 )
+    // don;t bother looking up red colors - the default m_color is red
+    if( strcmp( m_color_desc, "red" ) != 0 )
       {
 	// resolve the RGB value of the color name
 	if( !m_world->ColorFromString( &m_color, m_color_desc ) )
 	  {
-	    printf( "warning: invalid color name %s; using black instead\n", m_color_desc );
-	    m_color.red = m_color.green = m_color.blue = 0;
+	    printf( "warning: invalid color name %s; using default red instead\n", 
+		    m_color_desc );
+	    
+	    m_color.red = 255;
+	    m_color.green = m_color.blue = 0;
 	  }
       }
 
