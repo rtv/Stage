@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.44 2004-05-31 06:25:37 rtv Exp $
+ * CVS: $Id: stage.h,v 1.45 2004-05-31 06:49:35 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -723,6 +723,10 @@ int stg_client_package_parse( stg_client_t* cli, stg_package_t* pkg );
 //void stg_client_thread( void* data );
 //int stg_client_thread_start( stg_client_t* cli );
 
+//int stg_client_write_msg( stg_client_t* cli, 
+//		  stg_msg_type_t type, 
+//		  void* data, size_t datalen );
+
 // read and parse a package from the server
 int stg_client_read( stg_client_t* cli, int sleeptime );
 
@@ -816,7 +820,7 @@ stg_property_t* stg_model_get_prop_cached( stg_model_t* mod, stg_id_t propid );
 int stg_model_prop_get( stg_model_t* mod, stg_id_t propid, void* data, size_t len);
 int stg_model_prop_get_var( stg_model_t* mod, stg_id_t propid, void** data, size_t* len);
 
-
+int stg_model_prop_delta( stg_model_t* mod, stg_id_t prop, void* data, size_t len );
 
 // set property [propid] with [len] bytes at [data]
 int stg_model_prop_set( stg_model_t* mod, stg_id_t propid, void* data, size_t len);

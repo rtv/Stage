@@ -621,6 +621,23 @@ int stg_client_request_reply( stg_client_t* client,
   return 0; // OK
 }
 
+int stg_model_prop_delta( stg_model_t* mod, stg_id_t prop, void* data, size_t len )
+{
+  size_t mplen = len + sizeof(stg_prop_t);
+  stg_prop_t* mp = calloc( mplen, 1);
+  
+  mp->world = mod->world->id_server;
+  mp->model = mod->id_server;
+  mp->prop = prop;
+  mp->datalen = len;
+  memcpy( mp->data, data, len );
+  
+  return stg_client_write_msg ( mod->world->client, 
+				STG_MSG_MODEL_DELTA,
+				mp, mplen );
+}
+
+
 int stg_model_prop_set( stg_model_t* mod, stg_id_t prop, void* data, size_t len )
 {
   size_t mplen = len + sizeof(stg_prop_t);
@@ -635,7 +652,7 @@ int stg_model_prop_set( stg_model_t* mod, stg_id_t prop, void* data, size_t len 
   int ack;
   stg_client_request_reply_fixed( mod->world->client,
 				  STG_MSG_MODEL_PROPSET,
-				  mp, sizeof(stg_prop_t)+len,
+				  mp, mplen,
 				  &ack, sizeof(ack) );  
   return ack;
 }
@@ -713,8 +730,8 @@ stg_package_t* stg_client_read_package( stg_client_t* cli,
 	}
       
       double sec = pkg->timestamp.tv_sec + (double)pkg->timestamp.tv_usec / 1e6; 
-      printf( "package key:%d timestamp:%.3f len:%d\n",
-	      pkg->key, sec, pkg->payload_len );
+      //printf( "package key:%d timestamp:%.3f len:%d\n",
+      //      pkg->key, sec, pkg->payload_len );
       
       if( pkg->key != STG_PACKAGE_KEY )
 	{
