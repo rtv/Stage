@@ -1,10 +1,11 @@
 toolsdir = $(prefix)/bin
 
-tools_PROGRAMS = autoplace
-
-AM_CPPFLAGS = @PLAYER_CPPFLAGS@
-autoplace_SOURCES = autoplace.cc
-autoplace_LDADD = @PLAYER_LDADD@
+# autoplace is broken for 1.4
+# TODO - fix
+#tools_PROGRAMS = autoplace
+#AM_CPPFLAGS = @PLAYER_CPPFLAGS@
+#autoplace_SOURCES = autoplace.cc
+#autoplace_LDADD = @PLAYER_LDADD@
 
 tools_SCRIPTS = worldfileconv.tcl \
                 pause

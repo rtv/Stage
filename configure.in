@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.45 2003-08-19 22:11:55 rtv Exp $
+dnl $Id: configure.in,v 1.46 2003-08-19 22:17:25 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -102,8 +102,3 @@ AC_OUTPUT(Makefile
           tools/Makefile
 	  stage.pc
 	  stagecpp.pc)
-
-#          src/gnomegui/Makefile 
-#	  src/models/Makefile	
-#	  src/rtkgui/Makefile
-#	  src/sio/Makefile
