@@ -1,7 +1,7 @@
 #!/bin/bash
 
 OUTPUT=header.html
-PAGEDIR=html
+PAGEDIR=user/html
 
 cat header_top.src > $OUTPUT
 
