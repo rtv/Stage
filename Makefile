@@ -8,7 +8,7 @@
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
 #  $Author: gerkey $
-#  $Revision: 1.41 $
+#  $Revision: 1.42 $
 #
 # Note: All normal user configurations are in Makefile.common - you
 # probably don't need to change this file
@@ -76,9 +76,10 @@ fresh: clean
 # Do a make clean and remove extraneous files first.
 
 src_dist: clean
+	cd doc && make ps
 	echo Building $(SRC_DIST_NAME)
 	cp -R . /tmp/$(SRC_DIST_NAME)
-	tar -C /tmp -cvzf $(SRC_DIST_NAME).tgz --exclude CVS --exclude '*.tgz' --exclude "*/doc/Makefile" --exclude "*/doc/*.aux" --exclude "*/doc/*.log" --exclude "*/doc/tex" --exclude "*/doc/*.toc" --exclude "*/doc/*.eps" --exclude "*/doc/*.jpg" --exclude "*/doc/*.tex" --exclude "*/doc/*.dvi" $(SRC_DIST_NAME)
+	tar -C /tmp -cvzf $(SRC_DIST_NAME).tgz --exclude CVS --exclude '*.tgz' --exclude "*/doc/Makefile" --exclude "*/doc/*.aux" --exclude "*/doc/*.log" --exclude "*/doc/tex" --exclude "*/doc/*.toc" --exclude "*/doc/*.eps" --exclude "*/doc/*.jpg" --exclude "*/doc/*.tex" --exclude "*/doc/*.bbl" --exclude "*/doc/*.bib" --exclude "*/doc/*.dvi" $(SRC_DIST_NAME)
 	rm -Rf /tmp/$(SRC_DIST_NAME)
 
 # because i can't remember to type src_dist - BPG
