@@ -1,0 +1,3368 @@
+2002-06-11 01:35  inspectorg
+
+	* src/laserdevice.cc: No changes? 
+
+2002-06-11 01:34  inspectorg
+
+	* src/worldfile.cc: Fixed absolute path problem with includes 
+
+2002-06-11 01:29  rtv
+
+	* doc/: playerstage.bib, stage.tex: added .bib, tweaked manual 
+
+2002-06-11 00:54  gerkey
+
+	* Makefile, rtk2/Makefile: for distro 
+
+2002-06-11 00:34  gerkey
+
+	* Makefile, Makefile.common: going for release 
+
+2002-06-11 00:28  inspectorg
+
+	* doc/stage.tex: Added properties for most devices 
+
+2002-06-11 00:19  rtv
+
+	* Makefile.common, doc/stage.tex, src/Makefile: moved to optimized
+	build in prep for release 
+
+2002-06-11 00:13  gerkey
+
+	* etc/rtkstage.cfg: andrew says ancient 
+
+2002-06-10 23:58  rtv
+
+	* Makefile.common, doc/stage.tex, src/main.cc, src/world.cc: added
+	-o option to enable console output 
+
+2002-06-10 23:50  rtv
+
+	* src/world.cc: cleaned deps 
+
+2002-06-10 23:48  rtv
+
+	* Makefile, Makefile.common, README, README.stage, README.world,
+	README.xs, rtk2/Makefile, src/Makefile, src/client.cc, src/main.cc,
+	src/server.cc, src/stageio.cc, src/world.cc: removed README.xs
+	README.world. renamed README.stage to README. worked on manual 
+
+2002-06-10 23:34  rtv
+
+	* doc/stage.tex: manual shaping up 
+
+2002-06-10 23:33  gerkey
+
+	* src/: Makefile, gpsdevice.cc: fixed GPS bug 
+
+2002-06-10 23:32  gerkey
+
+	* rtk2/rtk_canvas.c: fixed file bug 
+
+2002-06-10 23:06  inspectorg
+
+	* src/sonardevice.cc: Fixed sonar gemometry 
+
+2002-06-10 22:47  inspectorg
+
+	* src/: entityfactory.cc, server.cc: Removed vision_beacon 
+
+2002-06-10 22:29  inspectorg
+
+	* doc/stage.tex: More stuff in devices section 
+
+2002-06-10 22:15  rtv
+
+	* doc/stage.tex: added GUI section 
+
+2002-06-10 20:31  inspectorg
+
+	* doc/stage.tex, include/stage_types.hh, src/Makefile,
+	src/boxobstacle.cc, src/entity.cc, src/fixedobstacle.cc,
+	src/laserbeacon.cc, src/laserdevice.cc, src/server.cc,
+	src/visionbeacon.cc: Modified device return types 
+
+2002-06-10 19:53  rtv
+
+	* doc/stage.tex: working on running stage section 
+
+2002-06-10 19:16  gerkey
+
+	* Makefile.common: minor comment 
+
+2002-06-10 19:06  inspectorg
+
+	* doc/Makefile: Added makefile 
+
+2002-06-10 18:54  inspectorg
+
+	* src/: Makefile, entity.cc, visiondevice.cc: Some minor gui tweaks 
+
+2002-06-10 18:51  inspectorg
+
+	* rtk2/: rtk.h, rtk_canvas.c, rtk_fig.c: Fixed figure selection;
+	added figure for zooming 
+
+2002-06-10 18:40  gerkey
+
+	* src/truthdevice.cc: fixed bug 
+
+2002-06-10 18:39  gerkey
+
+	* src/world.cc: changed RTK refresh rate back to 10Hz 
+
+2002-06-10 18:34  gerkey
+
+	* rtk2/Makefile: added optimize flag 
+
+2002-06-10 18:31  gerkey
+
+	* Makefile.common: almost ready for 1.2 
+
+2002-06-10 18:30  gerkey
+
+	* src/: entity.cc, entityfactory.cc, envserver.cc,
+	laserbeacondevice.cc, laserdevice.cc, main.cc, ptzdevice.cc,
+	server.cc, sonardevice.cc, truthdevice.cc, visiondevice.cc,
+	world.cc, worldfile.cc: fixed many compiler warnings 
+
+2002-06-10 17:14  inspectorg
+
+	* doc/stage.tex: Expanded chapter on worldfile syntax 
+
+2002-06-10 17:13  gerkey
+
+	* tools/: killdist.tcl, startdist.tcl, worldfileconv.tcl: moved tcl
+	scripts in here 
+
+2002-06-10 17:10  inspectorg
+
+	* src/entity.cc, src/server.cc, src/world.cc, include/world.hh,
+	include/worldfile.hh, src/worldfile.cc: Added loadable properties
+	for gui 
+
+2002-06-10 16:13  gerkey
+
+	* tools/worldfileconv.tcl: a world file converter 
+
+2002-06-10 13:59  rtv
+
+	* doc/stage.tex, include/world.hh, src/Makefile,
+	src/entityfactory.cc, src/stageio.cc, src/world.cc: modified
+	entityfactory to get rid of duplicate CWorld::CreateDevice() calls 
+
+2002-06-10 13:27  inspectorg
+
+	* include/worldfile.hh, src/worldfile.cc: Added support for
+	includes 
+
+2002-06-10 13:27  inspectorg
+
+	* tests/worldfile/: include-01.world, include-02.world,
+	usc-devices.inc: Added tests for include files 
+
+2002-06-10 10:35  inspectorg
+
+	* include/boxobstacle.hh, src/worldfile.cc,
+	tests/worldfile/macro-01.world, tests/worldfile/macro-02.world,
+	tests/worldfile/syntax-01.world: Fixed worldfile bug with multiple
+	entries for same property 
+
+2002-06-10 10:14  inspectorg
+
+	* src/: boxobstacle.cc, fixedobstacle.cc, image.cc, server.cc,
+	visiondevice.cc: Fixed some load error messages; changed vision gui
+	slightly 
+
+2002-06-10 09:04  rtv
+
+	* doc/stage.tex, src/Makefile, src/laserdevice.cc: manual tweaks 
+
+2002-06-10 09:00  rtv
+
+	* doc/: notext_ps_logo.eps, notext_ps_logo.jpg: PS project logo
+	(review this?) 
+
+2002-06-09 23:11  inspectorg
+
+	* src/sonardevice.cc: Minor tweaks 
+
+2002-06-09 23:00  inspectorg
+
+	* doc/stage.tex: Added some worldfile stuff to manual 
+
+2002-06-09 22:04  gerkey
+
+	* src/gripperdevice.cc: don't draw beams when paddles are closed 
+
+2002-06-09 22:00  gerkey
+
+	* include/colors.hh, include/gripperdevice.hh, src/colors.cc,
+	src/gripperdevice.cc, src/ptzdevice.cc, src/puck.cc: added gripper
+	visualization 
+
+2002-06-09 21:57  rtv
+
+	* include/colors.hh, include/entity.hh,
+	include/laserbeacondevice.hh, src/client.cc, src/entity.cc,
+	src/laserbeacondevice.cc, src/laserdevice.cc, src/main.cc,
+	src/server.cc, src/stageio.cc, src/visionbeacon.cc, src/world.cc: 
+	added code to re-render rtk figures when properties are changed.
+	added visualization for laser beacons. added code for distributing
+	configs and replies - can't be properly tested until rest of dstage
+	code added but no ill effects observed 
+
+2002-06-09 19:28  gerkey
+
+	* include/ptzdevice.hh, src/Makefile, src/positiondevice.cc,
+	src/ptzdevice.cc, src/visiondevice.cc: several small things: 
+	  Stage PTZ's device: 
+	    - visualization incorporates zoom, in the same way as the vision
+	    device.  
+	- defaults to 60-degree FOV, with linear 12x zoom (kind of like a
+	    Sony) 
+	- takes 'lens' option (either "normal" or "wide", where wide is 2x
+	FOV) 
+	
+	  Stage's position device: 
+	    - fixed little compass bug 
+	
+	  Stage's vision device: 
+	    - fixed little bug when joining two symmetrically placed blobs 
+	
+	  tkplayerv: 
+	    - draws vision data using blob color fields 
+
+2002-06-09 14:16  gerkey
+
+	* include/gripperdevice.hh, src/Makefile, src/gripperdevice.cc,
+	src/positiondevice.cc, src/puck.cc: added more devices and stuff to
+	everything.world.  fixed up and tested gripper and puck
+	interactions.  
+
+2002-06-09 11:37  inspectorg
+
+	* include/truthdevice.hh, include/visiondevice.hh, src/Makefile,
+	src/laserdevice.cc, src/server.cc, src/truthdevice.cc,
+	src/visiondevice.cc, src/worldfile.cc: Added data to truth device,
+	minor tweaks to some other stuff 
+
+2002-06-08 23:57  rtv
+
+	* src/Makefile: removed deps 
+
+2002-06-08 23:31  rtv
+
+	* Makefile, include/colors.hh, include/laserdevice.hh,
+	include/ptzdevice.hh, include/stage_types.hh,
+	include/visiondevice.hh, include/world.hh, src/Makefile,
+	src/client.cc, src/entity.cc, src/entityfactory.cc,
+	src/fixedobstacle.cc, src/laserdevice.cc, src/ptzdevice.cc,
+	src/server.cc, src/sonardevice.cc, src/stageio.cc,
+	src/visiondevice.cc, src/world.cc, src/worldfile.cc: fixed a bug,
+	added stage visualization and default color/channel mapping in the
+	visiondevice. added view/device sub menu to cotrol device
+	visualizations. tweaked devices to use ahoward's recent color mods.  
+
+2002-06-08 17:33  inspectorg
+
+	* include/colors.hh, include/entity.hh, include/matrix.hh,
+	include/stage_types.hh, include/world.hh, include/worldfile.hh,
+	src/Makefile, src/boxobstacle.cc, src/bpsdevice.cc,
+	src/broadcastdevice.cc, src/colors.cc, src/entity.cc,
+	src/entityfactory.cc, src/fixedobstacle.cc, src/gpsdevice.cc,
+	src/gripperdevice.cc, src/laserbeacon.cc, src/laserbeacondevice.cc,
+	src/laserdevice.cc, src/main.cc, src/miscdevice.cc,
+	src/motedevice.cc, src/omnipositiondevice.cc, src/playerdevice.cc,
+	src/positiondevice.cc, src/ptzdevice.cc, src/puck.cc,
+	src/server.cc, src/sonardevice.cc, src/stageio.cc,
+	src/truthdevice.cc, src/visionbeacon.cc, src/visiondevice.cc,
+	src/world.cc, src/worldfile.cc: Did some garbage collection; tidied
+	up colors 
+
+2002-06-08 13:52  inspectorg
+
+	* include/worldfile.hh, src/Makefile, src/worldfile.cc,
+	tests/worldfile/macro-01.world, tests/worldfile/syntax-07.world: 
+	Added macros to world file 
+
+2002-06-07 16:53  inspectorg
+
+	* include/sonardevice.hh, include/worldfile.hh, src/laserdevice.cc,
+	src/sonardevice.cc, src/worldfile.cc: Added geometry support to
+	sonar 
+
+2002-06-07 11:35  gerkey
+
+	* src/visiondevice.cc: some minor fixes; Player now ignores the
+	"lock" file, in addition to ignoring the "clock" file.  gets rid of
+	that "Unknown device type 24515" error.  
+	
+	also, i "#ifdef DEBUG"ed some output in Stage vision device.  
+
+2002-06-07 10:29  inspectorg
+
+	* include/broadcastdevice.hh, include/laserdevice.hh,
+	include/positiondevice.hh, src/broadcastdevice.cc,
+	src/laserbeacondevice.cc, src/laserdevice.cc,
+	src/positiondevice.cc, src/visiondevice.cc, src/worldfile.cc: Added
+	geometry request to laser 
+
+2002-06-07 09:28  inspectorg
+
+	* include/entity.hh, include/positiondevice.hh,
+	src/positiondevice.cc, tests/worldfile/syntax-01.world,
+	tests/worldfile/syntax-02.world, tests/worldfile/syntax-03.world,
+	tests/worldfile/syntax-04.world, tests/worldfile/syntax-05.world,
+	tests/worldfile/syntax-06.world, tests/worldfile/test.py: Added
+	geometry request to position device 
+
+2002-06-06 23:30  inspectorg
+
+	* include/entity.hh, include/truthdevice.hh, include/world.hh,
+	src/Makefile, src/client.cc, src/entity.cc, src/entityfactory.cc,
+	src/gpsdevice.cc, src/gripperdevice.cc, src/playerdevice.cc,
+	src/puck.cc, src/server.cc, src/sonardevice.cc, src/stageio.cc,
+	src/truthdevice.cc, src/world.cc: Added truth device (replaces GPS
+	device) 
+
+2002-06-06 19:54  gerkey
+
+	* src/Makefile: took deps out of Makefile 
+
+2002-06-06 18:53  inspectorg
+
+	* include/server.hh, include/stage_types.hh, include/world.hh,
+	include/worldfile.hh, src/Makefile, src/client.cc, src/server.cc,
+	src/world.cc, src/worldfile.cc: Added saving of world file 
+
+2002-06-05 01:30  inspectorg
+
+	* include/entity.hh, include/gripperdevice.hh,
+	include/stage_types.hh, include/world.hh, src/Makefile,
+	src/client.cc, src/entity.cc, src/entityfactory.cc,
+	src/gripperdevice.cc, src/laserdevice.cc, src/main.cc, src/puck.cc,
+	src/server.cc, src/world.cc: Various mods, doesnt work quite right 
+
+2002-06-05 00:58  inspectorg
+
+	* include/worldfile.hh, src/worldfile.cc: Added new file format 
+
+2002-06-04 17:29  rtv
+
+	* src/Makefile: removed duplicate flag - merge musta screwed it up 
+
+2002-06-04 17:05  gerkey
+
+	* include/entity.hh, src/Makefile, src/entity.cc,
+	src/entityfactory.cc: reintroduced CEntity::Subscribe() and
+	CEntity:Unsubscribe(), and reenabled laserbeacondevice; seems to
+	work fine.  
+
+2002-06-04 16:15  gerkey
+
+	* include/entity.hh, include/truthserver.hh, src/Makefile,
+	src/bpsdevice.cc, src/broadcastdevice.cc, src/entity.cc,
+	src/gpsdevice.cc, src/gripperdevice.cc, src/laserbeacondevice.cc,
+	src/laserdevice.cc, src/miscdevice.cc, src/motedevice.cc,
+	src/omnipositiondevice.cc, src/playerdevice.cc,
+	src/positiondevice.cc, src/ptzdevice.cc, src/sonardevice.cc,
+	src/truthlog.cc, src/visiondevice.cc: a few changes in most
+	devices, having to do with: 
+	
+	  - PutReply interface changed a bit 
+	
+	  - player_id_t became player_device_id_t, and the member field 'type'
+	    became 'code' 
+
+2002-06-04 15:36  rtv
+
+	* include/entity.hh, include/server.hh, include/world.hh,
+	src/entity.cc, src/laserdevice.cc, src/main.cc, src/server.cc,
+	src/sonardevice.cc, src/stageio.cc, src/world.cc: fixed
+	merge-related bug and re-worked distribution of player
+	subscriptions. things are working a little better now 
+
+2002-06-03 23:35  rtv
+
+	* Makefile, include/entity.hh, include/fixedobstacle.hh,
+	include/guiexport.hh, include/image.hh, include/laserdevice.hh,
+	include/matrix.hh, include/rtp.h, include/server.hh,
+	include/sonardevice.hh, include/stage_types.hh,
+	include/truthserver.hh, include/world.hh, include/xs.hh,
+	rtk2/rtk_canvas.c, src/Makefile, src/boxobstacle.cc,
+	src/bpsdevice.cc, src/broadcastdevice.cc, src/client.cc,
+	src/entity.cc, src/entityfactory.cc, src/fixedobstacle.cc,
+	src/gpsdevice.cc, src/gripperdevice.cc, src/laserbeacon.cc,
+	src/laserbeacondevice.cc, src/laserdevice.cc, src/main.cc,
+	src/matrix.cc, src/miscdevice.cc, src/motedevice.cc,
+	src/omnipositiondevice.cc, src/playerdevice.cc,
+	src/positiondevice.cc, src/ptzdevice.cc, src/puck.cc,
+	src/render.cc, src/rtp.cc, src/server.cc, src/sonardevice.cc,
+	src/stageio.cc, src/truthserver.cc, src/visionbeacon.cc,
+	src/visiondevice.cc, src/world.cc, src/xs.cc: improved support for
+	distributed modes by creating stage client and server modes. stage
+	can be as  run with or without the RTK2 GUI, which is now standard.
+	In server mode (the default) stage reads a worldfile, creates
+	external IO files and spawns a Player. In client mode (-c on the
+	command line) stage connects to a server and downloads the world
+	model. Clients may update devices, thus sharing the compulational
+	load [NOT TESTED - PROBABLY BROKEN]. A client's GUI can be used as a
+	remote world viewer. This replaces XS which has been removed. Lots
+	to do here before this is releasable...  
+
+2002-06-03 10:30  inspectorg
+
+	* rtk2/: rtk.h, rtk_fig.c: Added gavins patch to stop mem leak on
+	text strokes 
+
+2002-05-31 17:22  gerkey
+
+	* src/laserbeacondevice.cc: fixed lbd symbol name 
+
+2002-05-30 23:00  inspectorg
+
+	* rtk2/Makefile: Updated BPS device 
+
+2002-05-30 17:14  inspectorg
+
+	* rtk2/Makefile: Moved examples for libplayerc 
+
+2002-05-29 01:28  gerkey
+
+	* include/entity.hh, include/laserbeacondevice.hh,
+	src/broadcastdevice.cc, src/entity.cc, src/laserbeacondevice.cc,
+	src/sonardevice.cc: fixed some things: 
+	  - sonardevice now accepts both 'enable' and 'disable' configs (but
+	      doesn't do anything) 
+	
+	  - laserbeacondevice now accepts configuration settings and
+	      regurgitates them in response to configuration queries.  of
+	      course, the settings don't actually have any effect on the operation
+	of the device.  
+	
+	  - laserbeacondevice now subscribes (and unsubscribes) to its
+	      underlying laser device 
+	
+	  - broadcastdevice now compiles (and works) 
+
+2002-05-26 22:44  inspectorg
+
+	* rtk2/: rtk.h, rtk_canvas.c: Added vision and ptz 
+
+2002-05-22 19:57  gerkey
+
+	* include/bpsdevice.hh, include/broadcastdevice.hh,
+	include/stage_types.hh, src/Makefile, src/bpsdevice.cc,
+	src/broadcastdevice.cc, src/entityfactory.cc: added bps placeholder
+	device (all the work is done by the "real" bps device in player,
+	based on simulated position and laser data).  added BpsType to list
+	of stage types.  you can now declare a "bps_device" in your .world.  
+	
+	also removed the overriding Shutdown method from the broadcast
+	device, which was causing the associated mmap()ed file not to be
+	deleted.  
+	
+	both devices *seem* to work in that they start up properly (there is
+	special code in Player's main.cc to handle that), but i haven't
+	tested them.  
+
+2002-05-17 23:02  inspectorg
+
+	* src/laserdevice.cc: Updated laser device 
+
+2002-05-17 23:01  inspectorg
+
+	* rtk2/rtk_menu.c: Added get config to laser 
+
+2002-05-17 11:18  gerkey
+
+	* rtk2/: Makefile, rtk_table.c: trying the synchronous I/O merge
+	again.  hopefully i've gotten it right this time.  
+
+2002-05-17 10:58  gerkey
+
+	* include/world.hh, rtk2/LICENCE, rtk2/Makefile, rtk2/pyrtk.c,
+	rtk2/rtk.c, rtk2/rtk.h, rtk2/rtk_canvas.c, rtk2/rtk_fig.c,
+	rtk2/rtk_menu.c, rtk2/rtk_table.c, rtk2/rtkprivate.h,
+	src/entity.cc, src/main.cc, src/world.cc: retrying merge 
+
+2002-05-16 23:45  inspectorg
+
+	* include/world.hh, src/entity.cc, src/main.cc, src/world.cc: 
+	Re-fixed rtk stuff 
+
+2002-05-16 20:53  inspectorg
+
+	* rtk2/: Makefile, pyrtk.c, rtk.c, rtk.h, rtk_canvas.c, rtk_fig.c,
+	rtk_menu.c, rtkprivate.h: Fixed some bogus checked-in stuff 
+
+2002-05-16 20:25  gerkey
+
+	* Makefile.common, include/entity.hh, include/world.hh,
+	rtk2/Makefile, rtk2/pyrtk.c, rtk2/rtk.c, rtk2/rtk.h,
+	rtk2/rtk_canvas.c, rtk2/rtk_fig.c, rtk2/rtk_menu.c,
+	rtk2/rtkprivate.h, src/Makefile, src/entity.cc,
+	src/fixedobstacle.cc, src/gpsdevice.cc, src/gripperdevice.cc,
+	src/laserbeacon.cc, src/laserbeacondevice.cc, src/laserdevice.cc,
+	src/main.cc, src/miscdevice.cc, src/motedevice.cc,
+	src/omnipositiondevice.cc, src/positiondevice.cc, src/ptzdevice.cc,
+	src/sonardevice.cc, src/visionbeacon.cc, src/visiondevice.cc,
+	src/world.cc: one big change:  Stage now follows Player's
+	synchronous request/reply model for device configuration.  requests
+	come in on queues, and replies go out on queues.  
+	
+	this seems to work, and has been tested with all configurable
+	devices, except the Mote.  
+	
+	possible problem: Stage is now linking to some object code from
+	Player, in order to get the PlayerQueue functionality, used in
+	manipulating the request/reply queues.  maybe this could be avoided,
+	with some thought...  
+
+2002-05-16 19:18  gerkey
+
+	* include/entity.hh, rtk2/Makefile, src/Makefile, src/entity.cc,
+	src/fixedobstacle.cc, src/gpsdevice.cc, src/gripperdevice.cc,
+	src/laserbeacon.cc, src/laserbeacondevice.cc, src/laserdevice.cc,
+	src/miscdevice.cc, src/motedevice.cc, src/omnipositiondevice.cc,
+	src/positiondevice.cc, src/ptzdevice.cc, src/sonardevice.cc,
+	src/visionbeacon.cc, src/visiondevice.cc, src/world.cc: changed a
+	few things, mostly related to request/reply queuing. seems to work 
+	now, but requires some testing.  
+
+2002-05-15 15:07  inspectorg
+
+	* rtk2/: rtk.h, rtk_fig.c, rtk_menu.c: [no log message] 
+
+2002-05-06 17:24  inspectorg
+
+	* rtk2/Makefile: Alpha release 
+
+2002-05-02 21:55  inspectorg
+
+	* rtk2/LICENCE: Added licences and fiddled with links 
+
+2002-05-02 15:40  inspectorg
+
+	* rtk2/: rtk.h, rtk_menu.c: Added identification code 
+
+2002-05-01 14:16  inspectorg
+
+	* include/world.hh, src/entity.cc, src/main.cc, src/world.cc: Fixed
+	for rtk changes (but not tested) 
+
+2002-05-01 14:16  inspectorg
+
+	* rtk2/: rtk.c, rtk.h: Added initialization function 
+
+2002-05-01 13:57  inspectorg
+
+	* rtk2/: Makefile, pyrtk.c, rtk.c, rtk.h, rtk_canvas.c, rtk_fig.c,
+	rtk_menu.c, rtk_table.c, rtkprivate.h: Lots of changes; added
+	tables 
+
+2002-04-30 22:51  gerkey
+
+	* include/world.hh, src/world.cc: added a -q command-line arg,
+	which turns off console output 
+
+2002-04-30 17:54  gerkey
+
+	* src/entity.cc: changed data length check 
+
+2002-04-30 13:58  inspectorg
+
+	* Makefile.common: Upgraded version to 1.2-alpha 
+
+2002-04-30 13:57  inspectorg
+
+	* src/laserdevice.cc, include/entity.hh, include/laserdevice.hh: 
+	Added some RTK2 gui support to the laser device 
+
+2002-04-27 12:04  gerkey
+
+	* include/motedevice.hh: fixed multiply-defined symbol 
+
+2002-04-10 10:19  inspectorg
+
+	* rtk2/: Makefile, pyrtk.c, rtk.h, rtk_canvas.c, rtk_fig.c: Removed
+	non-portable mutexes 
+
+2002-03-15 18:57  rtv
+
+	* include/entity.hh, include/motedevice.hh, include/rtp.h,
+	src/Makefile, src/entity.cc, src/rtp.cc: experimenting with RTP
+	functions 
+
+2002-03-15 10:41  gerkey
+
+	* bin/.dummy: removed .dummy file 
+
+2002-03-15 10:39  gerkey
+
+	* Makefile.common, include/stage_types.hh, rtk2/Makefile,
+	src/Makefile, src/image.cc, src/omnipositiondevice.cc: 
+	- fixed makedepend support 
+	
+	- fixed a couple of little things that were causing compiler errors 
+
+2002-03-15 10:35  gerkey
+
+	* src/: rtkstage_objs/Makefile, stage_objs/Makefile: deleted unused
+	Makefiles 
+
+2002-03-15 09:41  gerkey
+
+	* Makefile.common: change RTK_DIR to point down, rather than up 
+
+2002-03-14 20:20  gsibley
+
+	* Makefile, Makefile.common: [no log message] 
+
+2002-03-14 20:01  gsibley
+
+	* Makefile.common, include/motedevice.hh, src/entity.cc,
+	src/motedevice.cc: [no log message] 
+
+2002-03-14 18:52  rtv
+
+	* Makefile, Makefile.common, include/xs.hh, src/Makefile,
+	src/entity.cc, src/render.cc, src/xs.cc: cleaned up Makefiles,
+	removing seperate HRL targets (these are now controlled completely
+	from Makefile.common) 
+
+2002-03-13 18:12  rtv
+
+	* include/world.hh, src/world.cc: made host lookups a little more
+	robust 
+
+2002-03-12 00:54  rtv
+
+	* include/entity.hh, include/world.hh, src/entity.cc, src/world.cc: 
+	implemented POSIX record locking - number of open files is now
+	constant (=2) with population 
+
+2002-03-11 18:53  rtv
+
+	* Makefile.common, include/entity.hh, src/Makefile, src/entity.cc,
+	src/xs.cc: entity hosts now stored as 32bit binary IP rather than
+	hostname string 
+
+2002-03-09 19:16  gsibley
+
+	* src/entity.cc: turn off debugging #define's - GTS 
+
+2002-03-09 16:52  gsibley
+
+	* include/motedevice.hh, src/motedevice.cc: forgot to add
+	motedevice files - my bad - GTS 
+
+2002-03-07 19:26  gsibley
+
+	* Makefile, Makefile.common, include/stage_types.hh, src/Makefile,
+	src/entity.cc, src/entityfactory.cc, src/playerdevice.cc,
+	src/rtkstage_objs/Makefile: fixed Makefiles for rtk2.  added mote
+	device (point to point).  
+
+2002-03-04 12:53  rtv
+
+	* Makefile, Makefile.common, src/manager.cc, src/render.cc,
+	src/world.cc, src/xs.cc, tools/dstage, tools/push, tools/run,
+	tools/slay: various fixes for DARPA demo 
+
+2002-02-27 14:27  rtv
+
+	* include/entity.hh, include/truthserver.hh, include/world.hh,
+	include/xs.hh, rtk2/rtk.h, rtk2/rtk_canvas.c, src/entity.cc,
+	src/entityfactory.cc, src/truthserver.cc, src/world.cc, src/xs.cc,
+	tools/dstage, tools/push, tools/run, tools/slay: changed host ID to
+	IP instead of name for compactness and speed 
+
+2002-02-25 09:50  inspectorg
+
+	* rtk2/: pyrtk.c, rtk.h, rtk_canvas.c: Added font selection
+	function 
+
+2002-02-20 00:44  rtv
+
+	* include/truthserver.hh, src/Makefile, src/entity.cc, src/main.cc,
+	src/world.cc, src/xs.cc: fixed hostname settings for distributed
+	stage, plus some tidying 
+
+2002-02-19 16:22  inspectorg
+
+	* rtk2/: pyrtk.c, rtk.c, rtk.h, rtk_canvas.c, rtk_fig.c: Added some
+	error-checking to python bindings 
+
+2002-02-15 09:20  inspectorg
+
+	* rtk2/rtk_fig.c: Rectangles now fill properly on export 
+
+2002-02-12 23:08  inspectorg
+
+	* rtk2/: pyrtk.c, rtk_fig.c: Fixed text strokes so they draw in the
+	right place 
+
+2002-02-09 15:38  inspectorg
+
+	* rtk2/: Makefile, pyrtk.c: Tweaked makefile 
+
+2002-02-08 19:37  rtv
+
+	* Makefile, Makefile.common, include/entity.hh,
+	include/guiexport.hh, include/truthserver.hh, include/world.hh,
+	include/xs.hh, src/Makefile, src/entity.cc, src/fixedobstacle.cc,
+	src/laserbeacondevice.cc, src/main.cc, src/raytrace.cc,
+	src/render.cc, src/truthserver.cc, src/world.cc, src/xs.cc: working
+	on hrlstage 
+
+2002-02-06 18:57  rtv
+
+	* Makefile: working on HRL device support 
+
+2002-02-06 16:45  rtv
+
+	* Makefile, Makefile.common, include/entity.hh, include/world.hh,
+	src/Makefile, src/entity.cc, src/envserver.cc, src/image.cc,
+	src/laserbeacondevice.cc, src/main.cc, src/truthserver.cc,
+	src/world.cc, src/worldfile.cc, src/xs.cc: new BSD-style locking
+	model, no threads 
+
+2002-02-05 14:50  rtv
+
+	* Makefile.common, src/entity.cc, src/positiondevice.cc: fixed
+	device config bug 
+
+2002-02-02 15:43  inspectorg
+
+	* include/entity.hh, src/entity.cc, src/world.cc: Fixed support for
+	configuration requests 
+
+2002-02-01 17:23  rtv
+
+	* Makefile.common, include/entity.hh, include/world.hh,
+	src/Makefile, src/entity.cc, src/world.cc: new POSIX-compliant
+	semaphores, 1-per-device 
+
+2002-01-30 18:43  inspectorg
+
+	* rtk2/pyrtk.c, src/entity.cc, src/world.cc: Minor tweaks 
+
+2002-01-29 19:33  inspectorg
+
+	* include/entity.hh, include/world.hh, include/worldfile.hh,
+	rtk2/rtk.c, rtk2/rtk.h, rtk2/rtk_canvas.c, rtk2/rtk_fig.c,
+	src/entity.cc, src/fixedobstacle.cc, src/laserbeacon.cc,
+	src/world.cc, src/worldfile.cc: Many updates to rtk interface 
+
+2002-01-28 19:31  gerkey
+
+	* Makefile: foo 
+
+2002-01-28 19:25  inspectorg
+
+	* include/entity.hh, include/world.hh, include/worldfile.hh,
+	rtk2/rtk.h, rtk2/rtk_canvas.c, rtk2/rtk_fig.c, src/entity.cc,
+	src/fixedobstacle.cc, src/main.cc, src/positiondevice.cc,
+	src/world.cc, src/worldfile.cc: Fixes to world file 
+
+2002-01-28 18:43  rtv
+
+	* Makefile.common: put the HRL configs out of the way 
+
+2002-01-28 18:33  rtv
+
+	* Makefile, Makefile.common, include/entity.hh,
+	include/irdevice.hh, include/positiondevice.hh,
+	include/raytrace.hh, include/stage_types.hh, src/Makefile,
+	src/entity.cc, src/entityfactory.cc, src/irdevice.cc,
+	src/omnipositiondevice.cc, src/positiondevice.cc, src/raytrace.cc,
+	src/render.cc, src/xs.cc: added a new target - hrlstage - which
+	links the proprietary HRL devices. These devices cannot yet be
+	distributed under the GPL (but I'm working on it).  
+
+2002-01-28 16:46  gerkey
+
+	* include/worldfile.hh: upped some hard limits 
+
+2002-01-28 16:42  gerkey
+
+	* src/worldfile.cc: increased several limiting constants (file
+	size, number of items, etc.) 
+
+2002-01-28 15:57  inspectorg
+
+	* src/raytrace.cc: Fixed Iterator bug 
+
+2002-01-28 14:46  rtv
+
+	* Makefile, Makefile.common, VERSION, src/Makefile: reinstated
+	Makefile.common and killed VERSION 
+
+2002-01-28 14:32  inspectorg
+
+	* include/colors.hh, include/entity.hh, include/fixedobstacle.hh,
+	include/omnipositiondevice.hh, include/positiondevice.hh,
+	include/puck.hh, include/stage_types.hh, include/visionbeacon.hh,
+	src/boxobstacle.cc, src/broadcastdevice.cc, src/entity.cc,
+	src/fixedobstacle.cc, src/gpsdevice.cc, src/gripperdevice.cc,
+	src/laserbeacon.cc, src/laserbeacondevice.cc, src/laserdevice.cc,
+	src/miscdevice.cc, src/omnipositiondevice.cc, src/playerdevice.cc,
+	src/positiondevice.cc, src/ptzdevice.cc, src/puck.cc,
+	src/sonardevice.cc, src/visionbeacon.cc, src/visiondevice.cc,
+	src/world.cc: Did some cleaning up of shapes, geometry and colors 
+
+2002-01-28 09:21  rtv
+
+	* VERSION: adding version file 
+
+2002-01-27 19:21  inspectorg
+
+	* rtk2/rtk_fig.c: minor speed tweaks 
+
+2002-01-25 18:41  rtv
+
+	* Makefile, src/Makefile, src/world.cc, src/rtkstage_objs/Makefile,
+	src/stage_objs/Makefile: messing with Makefiles to simplify Life,
+	sort of 
+
+2002-01-25 15:21  rtv
+
+	* Makefile.common: changed default install location to
+	~/stage-(version). updated examples/simple.world to new format 
+
+2002-01-25 15:19  rtv
+
+	* src/world_load.cc: removed world_load.cc from the tree 
+
+2002-01-25 15:12  rtv
+
+	* src/rtk_main.cc: removed rtk_main.cc from the tree 
+
+2002-01-25 15:10  rtv
+
+	* src/: fixedobstacle.cc, image.cc, laserdevice.cc, main.cc,
+	occupancydevice.cc, player_xpsi.cc, positiondevice.cc,
+	truthdevice.cc, world.cc: fixed default resolution bug in
+	laserdevice.cc, removed unused devices 
+
+2002-01-24 13:46  gerkey
+
+	* include/visiondevice.hh, src/fixedobstacle.cc, src/image.cc,
+	src/visiondevice.cc, src/world.cc, src/worldfile.cc: several fixes: 
+	  - now builds with G++ 3.0.1 
+	  - no longer segfaults on old world-file format 
+	  - no longer segfault on exit 
+	  - vision device now generates data in new Player vision data
+	      format, not ACTS format.  
+
+2002-01-16 12:22  gerkey
+
+	* include/worldfile.hh: fixed name of Filename method 
+
+2002-01-16 11:52  rtv
+
+	* include/worldfile.hh: added a public access method to get the
+	private member filename 
+
+2002-01-14 22:43  rtv
+
+	* src/: fixedobstacle.cc, main.cc, world.cc: added proper path
+	support for world file and image file loading - working directory is
+	now arbitrary. world file is specified absolute or relative to cwd;
+	image file is specified absolute or relative to world file. much
+	better 
+
+2002-01-14 19:38  rtv
+
+	* src/image.cc: trying to be new-fashioned C++ style for GCC 3.X 
+
+2002-01-13 17:46  rtv
+
+	* src/: fixedobstacle.cc, image.cc: cleaned up some debug output 
+
+2002-01-12 23:54  rtv
+
+	* src/: image.cc, render.cc: fixed bugs in image.cc that mis-loaded
+	the image (it was offset 1 pixel in plain pnm, 2 pixels gzipped
+	pnm). Improved image load speed for uncompressed images.  
+
+2002-01-11 14:17  inspectorg
+
+	* Makefile, src/boxobstacle.cc, src/laserbeacondevice.cc,
+	src/laserdevice.cc, src/omnipositiondevice.cc: Some minor fixes on
+	laserbeacons 
+
+2002-01-11 14:13  inspectorg
+
+	* rtk2/: Makefile, rtk_canvas.c: Fixed sticky mouse 
+
+2002-01-11 14:13  inspectorg
+
+	* rtk2/: Makefile, rtk.c, rtk_canvas.c: Changed export to draw
+	layers in correct order 
+
+2002-01-08 14:23  rtv
+
+	* src/xs.cc: removed excess debug output 
+
+2002-01-03 10:35  rtv
+
+	* include/stage_types.hh: added a type for the omni position device 
+
+2002-01-03 10:35  rtv
+
+	* src/omnipositiondevice.cc: set a unique stage type for this
+	device 
+
+2002-01-03 10:34  rtv
+
+	* src/entity.cc: added a couple of missing headers that prevented
+	compliation 
+
+2002-01-02 14:13  rtv
+
+	* src/truthserver.cc: fixed logic bug in ListenForPoseConnections() 
+
+2001-12-31 12:00  inspectorg
+
+	* include/world.hh, src/world.cc: Added saving to rtkstage 
+
+2001-12-31 12:00  inspectorg
+
+	* rtk2/: Makefile, rtk.c, rtk.h, rtk_canvas.c, rtk_menu.c: Added
+	menus to canvases 
+
+2001-12-31 09:32  inspectorg
+
+	* README.RTK, README.world, include/fixedobstacle.hh,
+	src/fixedobstacle.cc: Added missing files 
+
+2001-12-31 09:21  inspectorg
+
+	* Makefile, Makefile.common, include/boxobstacle.hh,
+	include/broadcastdevice.hh, include/entity.hh,
+	include/gpsdevice.hh, include/gripperdevice.hh,
+	include/laserbeacon.hh, include/laserbeacondevice.hh,
+	include/laserdevice.hh, include/matrix.hh, include/miscdevice.hh,
+	include/omnipositiondevice.hh, include/playerdevice.hh,
+	include/positiondevice.hh, include/ptzdevice.hh, include/puck.hh,
+	include/sonardevice.hh, include/stage_types.hh,
+	include/visionbeacon.hh, include/visiondevice.hh, include/world.hh,
+	include/worldfile.hh, src/Makefile, src/boxobstacle.cc,
+	src/broadcastdevice.cc, src/entity.cc, src/entityfactory.cc,
+	src/gpsdevice.cc, src/gripperdevice.cc, src/laserbeacon.cc,
+	src/laserbeacondevice.cc, src/laserdevice.cc, src/main.cc,
+	src/matrix.cc, src/miscdevice.cc, src/omnipositiondevice.cc,
+	src/playerdevice.cc, src/positiondevice.cc, src/ptzdevice.cc,
+	src/puck.cc, src/raytrace.cc, src/sonardevice.cc,
+	src/visionbeacon.cc, src/visiondevice.cc, src/world.cc,
+	src/world_load.cc, src/worldfile.cc, src/rtkstage_objs/Makefile,
+	src/stage_objs/Makefile: Merged in new world file; merged in new
+	rtk interface 
+
+2001-12-31 09:11  inspectorg
+
+	* rtk2/: Makefile, pyrtk.c, rtk.c, rtk.h, rtk_canvas.c, rtk_fig.c,
+	rtkprivate.h: Added rtk2 to repository 
+
+2001-12-21 11:38  inspectorg
+
+	* Makefile.common, src/positiondevice.cc: Changed for 1.1 bugfix
+	release 
+
+2001-12-19 19:11  vaughan
+
+	* Makefile, Makefile.common, include/colors.hh, include/entity.hh,
+	include/playerdevice.hh, include/positiondevice.hh,
+	include/raytrace.hh, include/stage_types.hh, include/world.hh,
+	include/xs.hh, src/Makefile, src/boxobstacle.cc, src/entity.cc,
+	src/entityfactory.cc, src/laserdevice.cc, src/main.cc,
+	src/omnipositiondevice.cc, src/playerdevice.cc,
+	src/positiondevice.cc, src/raytrace.cc, src/render.cc,
+	src/truthserver.cc, src/world.cc, src/world_load.cc, src/xs.cc,
+	src/rtkstage_objs/Makefile, src/stage_objs/Makefile: branched to
+	try out the new device model and simplified startup 
+
+2001-12-17 10:32  ahoward
+
+	* include/matrix.hh, src/matrix.cc: Fixed matrix undraw bugs 
+
+2001-12-17 10:11  ahoward
+
+	* include/laserbeacon.hh, include/laserbeacondevice.hh,
+	include/matrix.hh, src/laserbeacondevice.cc, src/matrix.cc,
+	src/world.cc: Minor mods to beacons; fixed matrix class 
+
+2001-12-04 16:10  ahoward
+
+	* include/laserdevice.hh, src/entity.cc, src/laserdevice.cc,
+	src/omnipositiondevice.cc, src/world.cc: Removed my hacks 
+
+2001-12-03 10:59  ahoward
+
+	* src/: gpsdevice.cc, laserdevice.cc, omnipositiondevice.cc: Some
+	UI hacks (work in progress) 
+
+2001-12-03 10:57  ahoward
+
+	* include/omnipositiondevice.hh, src/Makefile,
+	src/omnipositiondevice.cc, src/world.cc,
+	src/rtkstage_objs/Makefile, src/stage_objs/Makefile: Some minor
+	mods to allow slower simulations 
+
+2001-11-30 13:20  ahoward
+
+	* src/worldfile.cc: Increased file size limit 
+
+2001-11-27 10:40  ahoward
+
+	* include/laserdevice.hh, src/Makefile, src/entity.cc,
+	src/laserdevice.cc, src/rtk_main.cc, src/world.cc,
+	src/worldfile.cc, src/rtkstage_objs/Makefile,
+	src/stage_objs/Makefile: Added some properties 
+
+2001-11-20 17:38  ahoward
+
+	* doc/stage.tex, include/entity.hh, include/gripperdevice.hh,
+	include/laserbeacon.hh, include/laserdevice.hh, include/matrix.hh,
+	include/omnipositiondevice.hh, include/positiondevice.hh,
+	include/puck.hh, include/stage_types.hh, include/visiondevice.hh,
+	include/world.hh, include/worldfile.hh, src/boxobstacle.cc,
+	src/entity.cc, src/entityfactory.cc, src/gpsdevice.cc,
+	src/gripperdevice.cc, src/irdevice.cc, src/laserbeacon.cc,
+	src/laserbeacondevice.cc, src/laserdevice.cc, src/main.cc,
+	src/miscdevice.cc, src/omnipositiondevice.cc, src/playerdevice.cc,
+	src/positiondevice.cc, src/ptzdevice.cc, src/puck.cc,
+	src/sonardevice.cc, src/visionbeacon.cc, src/visiondevice.cc,
+	src/world.cc, src/world_load.cc, src/worldfile.cc,
+	src/rtkstage_objs/Makefile, src/stage_objs/Makefile: Brand new
+	world file class 
+
+2001-11-17 13:45  ahoward
+
+	* include/worldfile.hh, src/worldfile.cc: Almost working version 
+
+2001-11-16 16:24  ahoward
+
+	* include/worldfile.hh, src/worldfile.cc: Added worldfile classes 
+
+2001-11-14 23:34  ahoward
+
+	* doc/stage.tex: Re-ordered author list (who needs first author,
+	anyway?) 
+
+2001-11-14 23:30  ahoward
+
+	* doc/stage.tex: Prelim version of manual 
+
+2001-11-14 22:39  ahoward
+
+	* doc/stage.tex: Prelim version of manual 
+
+2001-11-12 14:45  ahoward
+
+	* src/: Makefile, rtkstage_objs/Makefile, stage_objs/Makefile: 
+	Fixes for broadcast device 
+
+2001-11-12 14:18  ahoward
+
+	* include/broadcastdevice.hh, src/Makefile, src/broadcastdevice.cc,
+	src/rtkstage_objs/Makefile, src/stage_objs/Makefile: More-or-less
+	working broadcast device 
+
+2001-11-08 21:54  ahoward
+
+	* include/broadcastdevice.hh, src/broadcastdevice.cc,
+	src/laserbeacondevice.cc: Updated broadcast device (not tested) 
+
+2001-11-07 14:50  ahoward
+
+	* include/entity.hh, include/laserdevice.hh,
+	include/visiondevice.hh, src/Makefile, src/entity.cc,
+	src/laserdevice.cc, src/visionbeacon.cc, src/visiondevice.cc,
+	src/rtkstage_objs/Makefile, src/stage_objs/Makefile: Added
+	ancestor/child check to laser and vision devices; fixed some rtk gui
+	stuff 
+
+2001-11-05 14:37  gerkey
+
+	* src/positiondevice.cc: fixed odometry stuff 
+
+2001-11-04 10:35  gerkey
+
+	* Makefile.common, src/Makefile, src/main.cc, src/rtk_main.cc,
+	src/world.cc, src/rtkstage_objs/Makefile, src/stage_objs/Makefile: 
+	some timing stuff 
+
+2001-10-25 15:17  ahoward
+
+	* include/entity.hh, include/omnipositiondevice.hh, src/Makefile,
+	src/entity.cc, src/entityfactory.cc, src/laserdevice.cc,
+	src/omnipositiondevice.cc, src/rtkstage_objs/Makefile,
+	src/stage_objs/Makefile: Added omni-device 
+
+2001-10-24 12:16  vaughan
+
+	* TODO: XS mouse wheel stuff 
+
+2001-10-24 12:12  vaughan
+
+	* Makefile.common, include/colors.hh, include/entity.hh,
+	include/irdevice.hh, include/stage_types.hh, include/xs.hh,
+	src/entityfactory.cc, src/irdevice.cc, src/laserdevice.cc,
+	src/main.cc, src/positiondevice.cc, src/render.cc,
+	src/sonardevice.cc, src/world_load.cc, src/xs.cc,
+	src/rtkstage_objs/Makefile, src/stage_objs/Makefile: added IDAR
+	device-in-progress 
+
+2001-10-22 15:22  gerkey
+
+	* include/world.hh, src/world.cc, src/world_load.cc: added -time
+	cmd line arg 
+
+2001-10-18 23:53  gerkey
+
+	* include/gripperdevice.hh, src/gripperdevice.cc,
+	src/visiondevice.cc: some gripper hacks and a vision fix 
+
+2001-10-17 14:06  vaughan
+
+	* src/xs.cc: improved redraw situation 
+
+2001-10-14 20:30  gerkey
+
+	* include/gripperdevice.hh, include/puck.hh,
+	include/truthserver.hh, src/gripperdevice.cc, src/puck.cc,
+	src/truthserver.cc, src/xs.cc: fixed several things regarding
+	gripper/puck interactions.  notably, the break beams are now both
+	set and used properly.  also, added parent_id field to stage_pose
+	packet, so that XS knows the change of parent when a puck is picked
+	up.  also had to MakeDirty() the puck when picking it up or dropping
+	it.  
+
+2001-10-12 19:31  vaughan
+
+	* src/xs.cc: fixed redraw bug 
+
+2001-10-12 19:25  gerkey
+
+	* Makefile: added manager to INSTALL_BIN_FILES 
+
+2001-10-12 19:01  vaughan
+
+	* Makefile.common, README.stage, README.world, README.xs,
+	src/entity.cc, src/main.cc, src/rtk_main.cc, src/truthlog.cc,
+	src/world.cc, src/world_load.cc: fixed things up for the 1.0
+	release - xs still has the display bug, but all else looks OK 
+
+2001-10-11 12:36  gerkey
+
+	* Makefile, Makefile.common, src/Makefile, src/visiondevice.cc: 
+	fixed a few things to make compile work 
+
+2001-10-08 17:49  gerkey
+
+	* src/manager.cc: added a delete 
+
+2001-10-07 20:55  vaughan
+
+	* TODO, include/world.hh, src/Makefile, src/entity.cc,
+	src/envserver.cc, src/laserdevice.cc, src/main.cc,
+	src/truthserver.cc, src/world.cc, src/world_load.cc, src/xs.cc,
+	src/rtkstage_objs/Makefile, src/stage_objs/Makefile: working on
+	distributed stuff and tidying main.cc 
+
+2001-10-05 19:10  vaughan
+
+	* Makefile.common, include/entity.hh, include/stage_types.hh,
+	include/truthserver.hh, include/world.hh, src/Makefile,
+	src/entity.cc, src/envserver.cc, src/laserbeacon.cc,
+	src/laserdevice.cc, src/main.cc, src/manager.cc,
+	src/positiondevice.cc, src/puck.cc, src/truthserver.cc,
+	src/world.cc, src/world_load.cc, src/xs.cc,
+	src/rtkstage_objs/Makefile, src/stage_objs/Makefile: step time
+	distributed stage, with some messy stuff 
+
+2001-10-01 17:16  gerkey
+
+	* src/: entity.cc, gpsdevice.cc, manager.cc: added code for GPS
+	teleport to set dirty flags properly 
+
+2001-09-28 17:48  vaughan
+
+	* Makefile.common, src/Makefile, src/rtkstage_objs/Makefile,
+	src/stage_objs/Makefile, src/Makefile, src/rtkstage_objs/Makefile,
+	src/stage_objs/Makefile: makefile clean again 
+
+2001-09-28 17:47  vaughan
+
+	* Makefile.common, src/Makefile, src/gripperdevice.cc,
+	src/image.cc, src/laserbeacondevice.cc, src/matrix.cc,
+	src/render.cc, src/xs.cc, src/stage_objs/Makefile: fixed bug in
+	matrix::unset_cell exposed by optimizer. boo.  
+
+2001-09-28 16:20  gerkey
+
+	* src/world.cc: changed to 10Hz 
+
+2001-09-28 14:55  gerkey
+
+	* Makefile, Makefile.common, TODO, include/matrix.hh,
+	include/world.hh, src/Makefile, src/manager.cc, src/matrix.cc,
+	src/raytrace.cc, src/world.cc, src/world_load.cc: fixed iterators
+	to check matrix bounds 
+
+2001-09-28 12:19  gerkey
+
+	* src/stage_objs/Makefile: added sed code to fix dependencies 
+
+2001-09-28 11:29  gerkey
+
+	* src/: render.cc, xs.cc: wrapped debug in DEBUG 
+
+2001-09-28 11:22  vaughan
+
+	* include/truthserver.hh, include/xs.hh, src/entity.cc,
+	src/render.cc, src/truthserver.cc, src/xs.cc: speeded up XS a
+	little with new parent id system 
+
+2001-09-27 18:47  vaughan
+
+	* TODO, include/truthserver.hh, include/xs.hh, src/Makefile,
+	src/entity.cc, src/render.cc, src/xs.cc,
+	src/rtkstage_objs/Makefile, src/stage_objs/Makefile: still have an
+	XOR  redraw bug.. nearly there 
+
+2001-09-27 17:18  vaughan
+
+	* include/xs.hh, src/Makefile, src/render.cc, src/truthserver.cc,
+	src/xs.cc, src/rtkstage_objs/Makefile, src/stage_objs/Makefile: 
+	truth & xs in local coordinate systems 
+
+2001-09-27 15:33  vaughan
+
+	* Makefile.common, include/entity.hh, include/truthserver.hh,
+	include/world.hh, include/xs.hh, src/entity.cc, src/envserver.cc,
+	src/laserdevice.cc, src/main.cc, src/manager.cc,
+	src/truthserver.cc, src/world.cc, src/world_load.cc, src/xs.cc: 
+	reduced size of truth server packet 
+
+2001-09-26 18:12  vaughan
+
+	* src/world.cc: back to real time mode 
+
+2001-09-26 17:45  vaughan
+
+	* src/world.cc: back to real time mode 
+
+2001-09-26 17:41  vaughan
+
+	* src/render.cc: clean 
+
+2001-09-26 17:19  vaughan
+
+	* include/world.hh, src/Makefile, src/laserdevice.cc, src/main.cc,
+	src/render.cc, src/truthserver.cc, src/xs.cc,
+	src/rtkstage_objs/Makefile, src/stage_objs/Makefile: fixed
+	truthserver connection bugs 
+
+2001-09-26 17:02  gerkey
+
+	* src/: Makefile, manager.cc, truthserver.cc, xs.cc: fixed
+	read/write loops even more 
+
+2001-09-26 16:44  gerkey
+
+	* src/: Makefile, main.cc, manager.cc, world_load.cc, xs.cc,
+	rtkstage_objs/Makefile, stage_objs/Makefile: fixed read and write
+	loops 
+
+2001-09-26 15:48  vaughan
+
+	* src/: truthserver.cc, world_load.cc: removed some debug output 
+
+2001-09-26 15:41  vaughan
+
+	* src/world.cc: fixed permissions on log file 
+
+2001-09-26 15:30  vaughan
+
+	* src/: main.cc, world.cc: added logging command line options 
+
+2001-09-26 11:53  vaughan
+
+	* src/: Makefile, envserver.cc, world.cc, rtkstage_objs/Makefile,
+	stage_objs/Makefile: stage waits for env server to be ready before
+	spawning xs 
+
+2001-09-26 11:38  vaughan
+
+	* src/: Makefile, truthserver.cc, rtkstage_objs/Makefile,
+	stage_objs/Makefile: 
+	 added entity update when truth arrives 
+
+2001-09-26 11:20  gerkey
+
+	* Makefile.common: fixed Makefile.common 
+
+2001-09-26 11:16  gerkey
+
+	* Makefile.common, src/Makefile, src/rtkstage_objs/Makefile,
+	src/stage_objs/Makefile: fixed Makefiles 
+
+2001-09-26 11:07  vaughan
+
+	* Makefile.common, TODO, include/truthserver.hh, include/world.hh,
+	src/Makefile, src/entity.cc, src/envserver.cc, src/main.cc,
+	src/playerdevice.cc, src/render.cc, src/truthserver.cc,
+	src/world.cc, src/world_load.cc, src/xs.cc: added support for
+	multiple Stages per user per machine 
+
+2001-09-25 19:53  vaughan
+
+	* include/xs.hh: tried to fix multi-host render bug 
+
+2001-09-25 19:51  vaughan
+
+	* src/render.cc: tried to fix multi-host rendering bug 
+
+2001-09-25 19:48  gerkey
+
+	* src/Makefile: add OLDLIBS 
+
+2001-09-25 19:46  gerkey
+
+	* Makefile.common: fixed 
+
+2001-09-25 19:37  gerkey
+
+	* Makefile.common: added oldlib compat stuff 
+
+2001-09-25 19:35  gerkey
+
+	* include/colors.hh: change light blue to blue3 
+
+2001-09-25 15:40  vaughan
+
+	* src/xs.cc: added hostname to XS titlebar 
+
+2001-09-25 14:46  vaughan
+
+	* include/stage_types.hh, src/world.cc: working stage/player time
+	feed 
+
+2001-09-25 14:11  vaughan
+
+	* src/world.cc: debugging time export 
+
+2001-09-25 14:06  vaughan
+
+	* src/world.cc: debugging time export 
+
+2001-09-25 13:58  vaughan
+
+	* src/manager.cc: added cvs info header 
+
+2001-09-25 12:31  vaughan
+
+	* TODO, include/stage_types.hh, include/world.hh, src/entity.cc,
+	src/envserver.cc, src/laserbeacondevice.cc, src/truthserver.cc,
+	src/world.cc, src/world_load.cc: exported stage time into player io
+	buffer 
+
+2001-09-25 11:20  vaughan
+
+	* TODO, include/entity.hh, include/world.hh,
+	src/laserbeacondevice.cc, src/laserdevice.cc, src/main.cc,
+	src/positiondevice.cc, src/puck.cc, src/truthserver.cc,
+	src/world.cc, src/world_load.cc, src/xs.cc: added configs for
+	timing parameters 
+
+2001-09-24 19:54  vaughan
+
+	* TODO, include/world.hh, src/truthserver.cc, src/world.cc: fixed
+	dirty bits problem with new truth connection. made stage step-time -
+	defaults to 20Hz. yet to add command-line and/or .world file
+	tweakability 
+
+2001-09-23 20:58  vaughan
+
+	* include/entity.hh, include/truthserver.hh, include/world.hh,
+	src/entity.cc, src/laserdevice.cc, src/positiondevice.cc,
+	src/puck.cc, src/truthserver.cc, src/world.cc: implemented nice
+	model for updating truths 
+
+2001-09-23 18:56  vaughan
+
+	* include/entity.hh, include/truthserver.hh, include/world.hh,
+	src/entity.cc, src/positiondevice.cc, src/truthserver.cc,
+	src/world.cc: pulled truth server into main thread 
+
+2001-09-23 15:58  vaughan
+
+	* src/world.cc: more sync 
+
+2001-09-23 15:36  vaughan
+
+	* TODO, src/truthserver.cc, src/world.cc: added itimer/signal based
+	timing to main loop - works better than usleep 
+
+2001-09-23 14:54  vaughan
+
+	* src/: manager.cc, truthserver.cc: more sync 
+
+2001-09-23 14:28  vaughan
+
+	* src/truthserver.cc: more sync 
+
+2001-09-23 14:16  vaughan
+
+	* src/: truthserver.cc, world.cc: still syncing 
+
+2001-09-23 13:36  vaughan
+
+	* src/world.cc: added some debug 
+
+2001-09-23 13:32  vaughan
+
+	* src/: boxobstacle.cc, entity.cc, manager.cc, truthserver.cc,
+	visionbeacon.cc, world.cc, xs.cc: more sync tweaking 
+
+2001-09-23 12:38  vaughan
+
+	* src/: manager.cc, world.cc: working on sync  and manager 
+
+2001-09-23 11:59  vaughan
+
+	* src/: Makefile, playerdevice.cc, truthserver.cc, world.cc, xs.cc,
+	rtkstage_objs/Makefile, stage_objs/Makefile: fixed playerdevice
+	startup to combine multi-hosts and player's new multi-port stuff 
+
+2001-09-23 00:44  gerkey
+
+	* include/playerdevice.hh, src/Makefile, src/main.cc,
+	src/matrix.cc, src/playerdevice.cc, src/world.cc,
+	src/rtkstage_objs/Makefile, src/stage_objs/Makefile: changed Stage
+	to pass port list on a pipe to a single child Player.  
+
+2001-09-22 22:09  vaughan
+
+	* src/manager.cc: syncing is still dodgy when distributing stage.
+	otherwise looking good 
+
+2001-09-22 22:03  vaughan
+
+	* include/truthserver.hh, src/truthserver.cc, src/world.cc,
+	src/xs.cc: working on the sync problem 
+
+2001-09-22 21:46  vaughan
+
+	* TODO, src/manager.cc, src/xs.cc: fixed remote player workings in
+	XS 
+
+2001-09-22 20:57  vaughan
+
+	* src/: truthserver.cc, world.cc: working on the sync issue 
+
+2001-09-22 20:39  vaughan
+
+	* include/entity.hh, include/stage_types.hh,
+	include/truthserver.hh, include/xs.hh, src/entity.cc, src/xs.cc: 
+	added support to XS for connecting to Players on any host 
+
+2001-09-22 20:17  vaughan
+
+	* include/entity.hh, src/entity.cc, src/truthserver.cc,
+	src/visionbeacon.cc, src/world.cc, src/xs.cc: changed method for
+	ID'ing entities between stages and xs 
+
+2001-09-22 19:43  vaughan
+
+	* include/world.hh, src/playerdevice.cc: 
+	 more fiddling 
+
+2001-09-22 19:36  vaughan
+
+	* include/entity.hh, include/world.hh, src/entity.cc, src/main.cc,
+	src/manager.cc, src/truthserver.cc, src/world.cc,
+	src/world_load.cc: working on distribution 
+
+2001-09-22 17:19  vaughan
+
+	* Makefile, src/main.cc, src/manager.cc, src/world.cc: added
+	manager target for distributing stage. added +/-xs command line
+	option 
+
+2001-09-22 16:42  vaughan
+
+	* src/: Makefile, matrix.cc, world.cc: removed pointer-id use to
+	enable distribution 
+
+2001-09-22 14:09  vaughan
+
+	* TODO: cleaned up TODO 
+
+2001-09-22 14:07  vaughan
+
+	* TODO, include/xs.hh, src/Makefile, src/entity.cc, src/render.cc,
+	src/xs.cc, src/rtkstage_objs/Makefile, src/stage_objs/Makefile: 
+	finished sensor device support in XS. made _port_ specifications
+	sticky in .config file. cleaned up simple.world 
+
+2001-09-21 18:51  vaughan
+
+	* TODO, include/xs.hh, src/render.cc, src/xs.cc: added sensor
+	visualization support to XS, enabled by middle mouse button. needs
+	synced with window redraw events (todo) 
+
+2001-09-20 19:04  vaughan
+
+	* Makefile.common, include/xs.hh, src/Makefile, src/render.cc,
+	src/xs.cc, src/rtkstage_objs/Makefile, src/stage_objs/Makefile: 
+	adding player support to xs - currently may crash when middle
+	clicking 
+
+2001-09-20 13:29  vaughan
+
+	* src/: Makefile, rtkstage_objs/Makefile, stage_objs/Makefile: 
+	removed lingering dependencies with a make clean 
+
+2001-09-20 11:29  vaughan
+
+	* TODO, include/colors.hh, include/entity.hh, include/matrix.hh,
+	include/visiondevice.hh, include/world.hh, src/Makefile,
+	src/entityfactory.cc, src/envserver.cc, src/matrix.cc,
+	src/occupancydevice.cc, src/visiondevice.cc, src/world.cc,
+	src/world_load.cc, src/xs.cc, src/rtkstage_objs/Makefile,
+	src/stage_objs/Makefile: fixed vision device for new color model
+	and added channel/color mapping to cnfig file 
+
+2001-09-19 16:13  vaughan
+
+	* Makefile.common, include/colors.hh, include/entity.hh,
+	src/boxobstacle.cc, src/envserver.cc, src/gpsdevice.cc,
+	src/gripperdevice.cc, src/laserbeacon.cc, src/laserbeacondevice.cc,
+	src/laserdevice.cc, src/miscdevice.cc, src/playerdevice.cc,
+	src/ptzdevice.cc, src/puck.cc, src/sonardevice.cc, src/world.cc,
+	src/world_load.cc, src/rtkstage_objs/Makefile,
+	src/stage_objs/Makefile: added centralized device color
+	configuration 
+
+2001-09-19 14:52  vaughan
+
+	* include/xs.hh, src/entity.cc, src/render.cc, src/xs.cc: added
+	proper color handling to XS. rtkstage yet to be tested 
+
+2001-09-18 21:18  vaughan
+
+	* TODO, include/entity.hh, include/stage_types.hh,
+	include/truthserver.hh, include/world.hh, include/xs.hh,
+	src/Makefile, src/boxobstacle.cc, src/entity.cc,
+	src/laserbeacon.cc, src/render.cc, src/visionbeacon.cc,
+	src/world.cc, src/world_load.cc, src/xs.cc,
+	src/rtkstage_objs/Makefile, src/stage_objs/Makefile: 
+	 reinstated color support for devices. removed m_channel member and
+	 changed semantics of channel_return. XS currently only displays
+	 default colors, which should be moved into Stage.  
+
+2001-09-18 18:28  vaughan
+
+	* TODO: initial commit 
+
+2001-09-12 16:34  ahoward
+
+	* src/: boxobstacle.cc, positiondevice.cc, ptzdevice.cc: Created
+	work-around for stupid templates conflict 
+
+2001-09-12 16:26  ahoward
+
+	* include/world.hh: Created work-around for stupid templates
+	conflict 
+
+2001-09-07 18:48  vaughan
+
+	* src/: matrix.cc, world.cc: fixed bug in matrix::draw_line() 
+
+2001-09-07 12:17  ahoward
+
+	* src/laserdevice.cc: Fixed laser update interval 
+
+2001-09-07 11:54  ahoward
+
+	* include/laserbeacon.hh, src/laserbeacondevice.cc: Fixed laser
+	beacons so they report id's 
+
+2001-09-07 10:17  ahoward
+
+	* Makefile.common, include/entity.hh, include/world.hh,
+	src/laserdevice.cc, src/sonardevice.cc, src/world.cc,
+	src/rtkstage_objs/Makefile: Fixed rtkstage; fixed Makefile.common 
+
+2001-09-06 11:26  gerkey
+
+	* Makefile, Makefile.common, include/truthserver.hh,
+	include/world.hh, src/Makefile, src/entity.cc, src/envserver.cc,
+	src/truthserver.cc, src/world.cc, src/world_load.cc,
+	src/rtkstage_objs/Makefile, src/stage_objs/Makefile: added support
+	for "set units = <unit>" and "set angles = <unit>" commands.  
+	
+	also added 'clean_dep' target to makefiles to remove dependencies.  
+
+2001-09-05 19:27  gerkey
+
+	* src/: Makefile, sonardevice.cc, world.cc, stage_objs/Makefile: 
+	fixed sonar config bug and iopointer bug 
+
+2001-09-04 19:43  vaughan
+
+	* src/: Makefile, playerdevice.cc, world.cc: investigating
+	performance problems...  
+
+2001-09-04 17:15  vaughan
+
+	* Makefile.common: changed version string in Makefile.common 
+
+2001-09-04 16:01  vaughan
+
+	* include/boxobstacle.hh, include/entity.hh,
+	include/gripperdevice.hh, include/image.h, include/image.hh,
+	include/laserbeacon.hh, include/laserdevice.hh, include/matrix.hh,
+	include/positiondevice.hh, include/puck.hh, include/raytrace.hh,
+	include/sonardevice.hh, include/stage_types.hh,
+	include/visionbeacon.hh, include/world.hh, src/Makefile,
+	src/boxobstacle.cc, src/entity.cc, src/gripperdevice.cc,
+	src/image.cc, src/laserbeacon.cc, src/laserbeacondevice.cc,
+	src/laserdevice.cc, src/matrix.cc, src/positiondevice.cc,
+	src/ptzdevice.cc, src/puck.cc, src/raytrace.cc, src/render.cc,
+	src/sonardevice.cc, src/truthdevice.cc, src/visionbeacon.cc,
+	src/visiondevice.cc, src/world.cc, src/world_load.cc, src/xs.cc,
+	src/stage_objs/Makefile: merged RTV's matrix branch - seems to work
+	ok except rtkstage which is very brokwn - sorry! 
+
+2001-09-04 15:18  vaughan
+
+	* src/sonardevice.cc: added config reading to sonardevice.cc -
+	accepts but ignores power configs 
+
+2001-09-04 15:11  vaughan
+
+	* src/sonardevice.cc: added config reading to sonardevice.cc -
+	accepts but ignores power configs 
+
+2001-09-04 13:36  vaughan
+
+	* include/raytrace.hh, src/raytrace.cc: fixed memory leak in
+	CRectangleIterator 
+
+2001-09-04 13:11  vaughan
+
+	* include/gripperdevice.hh, src/gripperdevice.cc: added break-beam
+	sensing to gripper device 
+
+2001-09-03 08:33  ahoward
+
+	* src/laserbeacondevice.cc: Tweaked the ui 
+
+2001-08-31 18:32  vaughan
+
+	* src/gripperdevice.cc: converted gripper to local interaction only
+	- just broadcast remains, and perhaps that should be left as-is.
+	phew! time to check with BG&AH then merge with the main branch 
+
+2001-08-31 18:04  vaughan
+
+	* include/world.hh, src/laserbeacondevice.cc, src/matrix.cc,
+	src/truthdevice.cc, src/world.cc: removed limit on entity numbers,
+	tidied up (mainly CWorld class). Gripper and broadcast are the only
+	remaining types which access the global entity array.  
+
+2001-08-31 09:44  vaughan
+
+	* include/: image.h, matrix.h: deleted renamed files matrix.h and
+	image.h - naming is now consistent 
+
+2001-08-31 09:42  vaughan
+
+	* include/image.hh: file image.hh was initially added on branch
+	matrix.  
+
+2001-08-31 09:42  vaughan
+
+	* include/: image.hh, matrix.hh: renamed matrix.h and image.h to
+	match the others before a new release 
+
+2001-08-31 09:42  vaughan
+
+	* include/matrix.hh: file matrix.hh was initially added on branch
+	matrix.  
+
+2001-08-31 09:40  vaughan
+
+	* src/raytrace.cc: added file raytrace.cc - moved functionality
+	from matrix.cc 
+
+2001-08-31 09:40  vaughan
+
+	* src/raytrace.cc: file raytrace.cc was initially added on branch
+	matrix.  
+
+2001-08-31 09:39  vaughan
+
+	* include/raytrace.hh: pulled raytarcing functionality into its own
+	files - raytrace.* 
+
+2001-08-31 09:39  vaughan
+
+	* include/raytrace.hh: file raytrace.hh was initially added on
+	branch matrix.  
+
+2001-08-30 19:00  vaughan
+
+	* include/entity.hh, include/puck.hh, include/world.hh,
+	src/entity.cc, src/gripperdevice.cc, src/image.cc,
+	src/laserbeacon.cc, src/laserdevice.cc, src/matrix.cc,
+	src/positiondevice.cc, src/puck.cc, src/render.cc,
+	src/sonardevice.cc, src/visionbeacon.cc, src/visiondevice.cc,
+	src/world.cc, src/xs.cc, src/rtkstage_objs/Makefile,
+	src/stage_objs/Makefile: puck surrender - went with small mods to
+	brians original model 
+
+2001-08-30 17:43  ahoward
+
+	* include/entity.hh, include/image.h, include/world.hh,
+	src/entity.cc, src/image.cc, src/laserbeacon.cc,
+	src/playerdevice.cc, src/positiondevice.cc, src/world.cc,
+	src/world_load.cc: Added support for xfig backgrounds 
+
+2001-08-24 11:38  vaughan
+
+	* include/matrix.h, src/gripperdevice.cc, src/matrix.cc,
+	src/positiondevice.cc, src/puck.cc, src/visiondevice.cc: working on
+	the pucks and circular iterator 
+
+2001-08-23 20:42  vaughan
+
+	* Makefile.common, include/entity.hh, include/laserbeacon.hh,
+	include/laserdevice.hh, include/matrix.h, include/sonardevice.hh,
+	include/world.hh, src/boxobstacle.cc, src/entity.cc,
+	src/gripperdevice.cc, src/laserbeacon.cc, src/laserdevice.cc,
+	src/matrix.cc, src/positiondevice.cc, src/ptzdevice.cc,
+	src/puck.cc, src/sonardevice.cc, src/visionbeacon.cc,
+	src/visiondevice.cc, src/world.cc, src/world_load.cc,
+	src/stage_objs/Makefile: converted all devices - still a bug in
+	position device's collision detection 
+
+2001-08-23 17:35  ahoward
+
+	* src/: laserbeacon.cc, laserdevice.cc: Fixed laser beacons so they
+	are unrendered properly; fixed lasers so they respond to
+	configuration requests 
+
+2001-08-23 09:22  ahoward
+
+	* Makefile.common, include/entity.hh, src/gpsdevice.cc,
+	src/laserbeacondevice.cc, src/laserdevice.cc: Added heading and
+	configuration packet to gps device 
+
+2001-08-22 19:59  vaughan
+
+	* Makefile.common, include/matrix.h, include/world.hh,
+	src/laserdevice.cc, src/matrix.cc, src/positiondevice.cc,
+	src/sonardevice.cc, src/world.cc: added CLineIterator - very useful
+	ray tracing wrapper. cool stuff 
+
+2001-08-22 11:10  vaughan
+
+	* include/laserdevice.hh, include/world.hh, src/positiondevice.cc,
+	src/world.cc, src/stage_objs/Makefile: working on position device 
+
+2001-08-22 10:38  vaughan
+
+	* include/laserdevice.hh, include/stage_types.hh, include/world.hh,
+	src/boxobstacle.cc, src/laserbeacondevice.cc, src/laserdevice.cc,
+	src/sonardevice.cc, src/visiondevice.cc, src/world.cc: moved ray
+	tracing functionality to world.  
+
+2001-08-21 17:15  vaughan
+
+	* include/boxobstacle.hh, include/entity.hh,
+	include/laserbeacon.hh, include/laserdevice.hh,
+	include/positiondevice.hh, include/puck.hh,
+	include/visionbeacon.hh, src/boxobstacle.cc, src/entity.cc,
+	src/laserbeacon.cc, src/laserbeacondevice.cc, src/laserdevice.cc,
+	src/positiondevice.cc, src/ptzdevice.cc, src/visionbeacon.cc,
+	src/world.cc: more tweaks 
+
+2001-08-21 15:47  ahoward
+
+	* Makefile.common: Candidate for 1.0-beta 
+
+2001-08-21 15:08  ahoward
+
+	* Makefile, include/laserdevice.hh, src/laserdevice.cc: Fixed laser
+	device: now updates rep when not subscribed 
+
+2001-08-21 15:07  ahoward
+
+	* Makefile.common: Added options for user install 
+
+2001-08-21 13:51  vaughan
+
+	* src/: boxobstacle.cc, laserbeacon.cc, visionbeacon.cc: fixed
+	update bugs in box, vision beacon and laser beacon devices pending
+	proper upgrade to matrix model RV.  
+
+2001-08-20 18:40  vaughan
+
+	* include/entity.hh, include/laserdevice.hh, include/matrix.h,
+	include/world.hh, src/boxobstacle.cc, src/entity.cc,
+	src/laserbeacon.cc, src/laserdevice.cc, src/matrix.cc,
+	src/positiondevice.cc, src/world.cc, src/xs.cc: converting devices
+	to matrix and improving update fucntions 
+
+2001-08-17 14:00  vaughan
+
+	* include/matrix.h, src/matrix.cc: first check in on branch matrix
+	- experimental single-grid (matrix) code 
+
+2001-08-17 13:52  vaughan
+
+	* include/matrix.h, src/matrix.cc: removing matrix files
+	accidentally added when creating matrix branch 
+
+2001-08-17 13:48  vaughan
+
+	* README.xs, include/entity.hh, include/image.h, include/matrix.h,
+	include/world.hh, src/boxobstacle.cc, src/entity.cc,
+	src/laserdevice.cc, src/matrix.cc, src/positiondevice.cc,
+	src/world.cc, src/xs.cc, src/rtkstage_objs/Makefile,
+	src/stage_objs/Makefile: added matrix files and experimental matrix
+	code in box and laserdevice 
+
+2001-08-16 20:17  gerkey
+
+	* Makefile.common: to version 1.0-alpha 
+
+2001-08-16 20:14  vaughan
+
+	* src/truthlog.cc: fixed to display time and stuff 
+
+2001-08-16 20:13  vaughan
+
+	* README.stage, README.world: docs inn progress 
+
+2001-08-16 15:41  gerkey
+
+	* Makefile, src/Makefile, src/rtkstage_objs/Makefile,
+	src/stage_objs/Makefile: removed dependencies 
+
+2001-08-15 17:59  vaughan
+
+	* src/: Makefile, puck.cc, render.cc, stage_objs/Makefile: returned
+	makefiles to default non-optimized code - because on gcc < 3.0 the
+	optimizer breaks many code. boo.  
+
+2001-08-15 16:44  gerkey
+
+	* include/playerdevice.hh, src/playerdevice.cc, src/world.cc: 
+	changed player startup behavior 
+
+2001-08-15 16:20  vaughan
+
+	* Makefile.common, include/truthserver.hh, include/world.hh,
+	include/xs.hh, src/Makefile, src/boxobstacle.cc,
+	src/laserbeacon.cc, src/laserbeacondevice.cc, src/laserdevice.cc,
+	src/positiondevice.cc, src/puck.cc, src/render.cc,
+	src/visiondevice.cc, src/xs.cc, src/rtkstage_objs/Makefile,
+	src/stage_objs/Makefile: fixed bug in xs argv parsing; objects draw
+	correct ACTS channel; Makefile defaults to -O3 as this shows a good
+	speed-up 
+
+2001-08-14 14:36  gerkey
+
+	* include/world.hh, src/Makefile, src/boxobstacle.cc,
+	src/entity.cc, src/gpsdevice.cc, src/gripperdevice.cc,
+	src/laserbeacon.cc, src/laserbeacondevice.cc, src/laserdevice.cc,
+	src/main.cc, src/miscdevice.cc, src/occupancydevice.cc,
+	src/playerdevice.cc, src/positiondevice.cc, src/ptzdevice.cc,
+	src/puck.cc, src/rtk_main.cc, src/sonardevice.cc,
+	src/truthdevice.cc, src/visionbeacon.cc, src/visiondevice.cc,
+	src/world.cc, src/world_load.cc, src/rtkstage_objs/Makefile,
+	src/stage_objs/Makefile: added auth_key, cleaned up Subscribed(),
+	initialized m_last_update to -MAXFLOAT 
+
+2001-08-14 11:50  vaughan
+
+	* src/: puck.cc, render.cc: fixed puck::save() and tweaked xs 
+
+2001-08-13 20:15  vaughan
+
+	* include/xs.hh, src/boxobstacle.cc, src/laserbeacon.cc,
+	src/positiondevice.cc, src/render.cc, src/visionbeacon.cc,
+	src/xs.cc: xs fixes and tweaks 
+
+2001-08-13 19:55  gerkey
+
+	* bin/.dummy: added .dummy to bin 
+
+2001-08-13 17:54  gerkey
+
+	* src/rtk_main.cc: world is now a global var (for use in things
+	like environment server 
+
+2001-08-13 17:41  gerkey
+
+	* src/xs.cc: added RefreshObjects() to Zoom() 
+
+2001-08-13 17:36  gerkey
+
+	* src/xs.cc: changed default_zoom 
+
+2001-08-13 17:19  vaughan
+
+	* src/xs.cc: cking down bugs 
+
+2001-08-13 17:09  gerkey
+
+	* src/xs.cc: handles no objects now 
+
+2001-08-13 16:19  gerkey
+
+	* Makefile, Makefile.common, src/Makefile,
+	src/rtkstage_objs/Makefile, src/stage_objs/Makefile: new build
+	strategy 
+
+2001-08-13 14:19  gerkey
+
+	* src/: entity.cc, gripperdevice.cc, laserbeacondevice.cc: changed
+	RTK updating thing 
+
+2001-08-13 14:05  vaughan
+
+	* src/xs.cc: xs tweaks 
+
+2001-08-12 18:47  gerkey
+
+	* src/visionbeacon.cc: change default radius 
+
+2001-08-10 18:50  vaughan
+
+	* src/xs.cc: handle 24bit x mode 
+
+2001-08-10 18:49  vaughan
+
+	* README.xs, include/playerdevice.hh, include/positiondevice.hh,
+	include/truthserver.hh, src/boxobstacle.cc, src/entityfactory.cc,
+	src/laserdevice.cc, src/playerdevice.cc, src/puck.cc,
+	src/visionbeacon.cc, src/world.cc, src/world_load.cc, src/xs.cc: 
+	tweaks 
+
+2001-08-10 16:06  gerkey
+
+	* src/: envserver.cc, truthserver.cc, world.cc: now blocking more
+	signals in non-GUI threads 
+
+2001-08-10 16:05  gerkey
+
+	* Makefile, Makefile.common, src/Makefile: moved RTK_DIR into
+	src/Makefile 
+
+2001-08-10 13:48  vaughan
+
+	* README.xs, include/stage_types.hh, include/xs.hh,
+	src/positiondevice.cc, src/render.cc, src/xs.cc: various fixes. in
+	working condition now.  
+
+2001-08-10 12:16  vaughan
+
+	* Makefile, Makefile.common, README.xs, src/Makefile,
+	src/entityfactory.cc, src/playerdevice.cc, src/visionbeacon.cc,
+	src/world.cc: fixed laserbeacondevice startup bug and tweaked
+	makefiles.  RTK must now be built separately - a little hassle but
+	saves some some confusion and symlinks i think. RTV.  
+
+2001-08-09 01:04  gerkey
+
+	* src/render.cc: took out duplicate 
+
+2001-08-09 01:00  vaughan
+
+	* Makefile, Makefile.common, VERSION, bin/sif, etc/rtkstage.cfg,
+	include/boxobstacle.hh, include/broadcastdevice.hh,
+	include/entity.hh, include/gpsdevice.hh, include/gripperdevice.hh,
+	include/guiexport.hh, include/image.h, include/laserbeacon.hh,
+	include/laserbeacondevice.hh, include/laserdevice.hh,
+	include/miscdevice.hh, include/playerdevice.hh,
+	include/positiondevice.hh, include/ptzdevice.hh, include/puck.hh,
+	include/sonardevice.hh, include/stage_types.hh,
+	include/visionbeacon.hh, include/visiondevice.hh, include/world.hh,
+	src/Makefile, src/boxobstacle.cc, src/broadcastdevice.cc,
+	src/entity.cc, src/entityfactory.cc, src/envserver.cc,
+	src/gpsdevice.cc, src/gripperdevice.cc, src/image.cc,
+	src/laserbeacon.cc, src/laserbeacondevice.cc, src/laserdevice.cc,
+	src/main.cc, src/miscdevice.cc, src/occupancydevice.cc,
+	src/pioneermobiledevice.cc, src/player_xpsi.cc,
+	src/playerdevice.cc, src/playerserver.cc, src/positiondevice.cc,
+	src/ptzdevice.cc, src/puck.cc, src/render.cc, src/rtk_main.cc,
+	src/sonardevice.cc, src/truthdevice.cc, src/truthlog.cc,
+	src/truthserver.cc, src/usc_pioneer.cc, src/visionbeacon.cc,
+	src/visiondevice.cc, src/world.cc, src/world_load.cc, src/xgui.cc,
+	src/xs.cc: first commit after big merge - builds OK but run fails
+	when loading visionbeacon objects. will fix ASAP 
+
+2001-08-08 21:50  gerkey
+
+	* src/Makefile: foo 
+
+2001-08-08 19:20  gerkey
+
+	* include/: boxobstacle.hh, broadcastdevice.hh, entity.hh,
+	guiexport.hh, image.h, laserbeacon.hh, laserbeacondevice.hh,
+	laserdevice.hh, miscdevice.hh, playerdevice.hh, ptzdevice.hh,
+	sonardevice.hh, stage_types.hh, visionbeacon.hh, visiondevice.hh,
+	world.hh: back to before bad commit 
+
+2001-08-08 19:06  vaughan
+
+	* include/: Makefile, boxobstacle.hh, broadcastdevice.hh,
+	entity.hh, guiexport.hh, image.h, laserbeacon.hh,
+	laserbeacondevice.hh, laserdevice.hh, miscdevice.hh,
+	occupancydevice.hh, pioneermobiledevice.hh, playerdevice.hh,
+	playerserver.hh, positiondevice.hh, ptzdevice.hh, sonardevice.hh,
+	stage_types.hh, truthdevice.hh, truthserver.hh, usc_pioneer.hh,
+	visionbeacon.hh, visiondevice.hh, world.hh, xgui.hh, xs.hh: first
+	merge after stageexp experiments - the road to 1.0! 
+
+2001-08-07 14:15  gerkey
+
+	* src/puck.cc: pucks now have radius (and can be on top of each
+	other) 
+
+2001-08-06 20:46  gerkey
+
+	* include/pioneermobiledevice.hh, include/world.hh, src/puck.cc,
+	src/sonardevice.cc: fixed sonars tracing and puck-on-puck
+	collisions; now version 1.3 
+
+2001-08-05 15:30  gerkey
+
+	* src/playerserver.cc: changed -gp to -port, to match new player
+	command-line args 
+
+2001-07-16 17:14  gerkey
+
+	* include/gripperdevice.hh, src/gripperdevice.cc: about to ship 
+
+2001-07-16 12:33  ahoward
+
+	* include/laserbeacondevice.hh, include/visionbeacon.hh,
+	src/visionbeacon.cc: Added norender option to vision beacon 
+
+2001-07-16 09:26  gerkey
+
+	* src/Makefile: from optimize to debug 
+
+2001-07-15 15:40  gerkey
+
+	* Makefile, src/Makefile: turned on -O3 
+
+2001-07-15 00:04  gerkey
+
+	* include/entity.hh, src/gripperdevice.cc, src/main.cc,
+	src/world.cc: slight changes 
+
+2001-07-14 16:13  gerkey
+
+	* include/gripperdevice.hh, include/guiexport.hh, include/puck.hh,
+	include/world.hh, src/Makefile, src/gripperdevice.cc,
+	src/pioneermobiledevice.cc, src/playerdevice.cc,
+	src/playerserver.cc, src/puck.cc, src/world_load.cc: gripper,puck,
+	and collisions version 1.0 now done 
+
+2001-07-12 00:06  gerkey
+
+	* include/gpsdevice.hh, include/guiexport.hh, src/Makefile,
+	src/entityfactory.cc, src/gpsdevice.cc: added GPS device 
+
+2001-07-11 18:42  gerkey
+
+	* src/: gripperdevice.cc, puck.cc, world_load.cc: gripper works
+	now; pucks still don't collide properly 
+
+2001-07-10 19:09  gerkey
+
+	* include/entity.hh, include/gripperdevice.hh,
+	include/guiexport.hh, include/pioneermobiledevice.hh,
+	include/puck.hh, include/world.hh, include/xgui.hh,
+	src/gripperdevice.cc, src/pioneermobiledevice.cc, src/puck.cc,
+	src/world.cc, src/xgui.cc: gripper works (sort of) 
+
+2001-07-10 00:36  gerkey
+
+	* Makefile, include/entity.hh, include/pioneermobiledevice.hh,
+	include/puck.hh, include/world.hh, src/pioneermobiledevice.cc,
+	src/puck.cc: changes toward a general collision model 
+
+2001-07-09 20:15  gerkey
+
+	* src/world_load.cc: now writes into file expanded from m4 
+
+2001-07-09 20:10  gerkey
+
+	* include/gripperdevice.hh, include/guiexport.hh,
+	include/pioneermobiledevice.hh, include/puck.hh, src/Makefile,
+	src/entityfactory.cc, src/gripperdevice.cc, src/laserbeacon.cc,
+	src/main.cc, src/pioneermobiledevice.cc, src/playerdevice.cc,
+	src/ptzdevice.cc, src/puck.cc, src/rtk_main.cc,
+	src/visiondevice.cc, src/world.cc, src/world_load.cc: new simulated
+	gripper 
+
+2001-07-06 10:45  gerkey
+
+	* src/Makefile: changed MAKEDEP 
+
+2001-07-05 18:23  gerkey
+
+	* include/laserbeacondevice.hh, include/pioneermobiledevice.hh,
+	include/puck.hh, include/world.hh, include/xgui.hh, src/Makefile,
+	src/pioneermobiledevice.cc, src/puck.cc, src/world.cc, src/xgui.cc: 
+	now have circular robots with rectangular collision detection;
+	renders in both GUIs 
+
+2001-07-03 18:31  gerkey
+
+	* include/pioneermobiledevice.hh, include/world.hh, src/Makefile,
+	src/pioneermobiledevice.cc, src/puck.cc, src/usc_pioneer.cc,
+	src/world.cc: now have circular robots (sort of) 
+
+2001-06-29 17:17  gerkey
+
+	* VERSION: added Bleeding to VERSION 
+
+2001-06-29 11:55  gerkey
+
+	* src/playerserver.cc: now using strncpy() to write
+	CPlayerServer::tmpName 
+
+2001-06-29 11:47  gerkey
+
+	* include/playerserver.hh, src/Makefile, src/playerserver.cc: fixed
+	buffer overrun in CPlayerServer::tmpName 
+
+2001-06-28 17:12  gerkey
+
+	* src/puck.cc: added puck.cc 
+
+2001-06-28 17:07  gerkey
+
+	* include/puck.hh: added puck.hh 
+
+2001-06-28 17:04  gerkey
+
+	* include/guiexport.hh, include/pioneermobiledevice.hh,
+	include/world.hh, include/xgui.hh, src/Makefile,
+	src/entityfactory.cc, src/pioneermobiledevice.cc, src/world.cc,
+	src/xgui.cc: begin to add pucks 
+
+2001-06-28 14:14  gerkey
+
+	* Makefile: added src_dist_bleeding target 
+
+2001-06-26 18:29  ahoward
+
+	* src/: Makefile, laserbeacon.cc, laserbeacondevice.cc,
+	laserdevice.cc: Add beacon detector to rtk gui 
+
+2001-06-25 23:42  ahoward
+
+	* src/: entityfactory.cc, laserbeacondevice.cc: Bug fixes 
+
+2001-06-25 08:36  ahoward
+
+	* include/laserbeacon.hh, include/laserbeacondevice.hh,
+	include/laserdevice.hh, src/entityfactory.cc, src/laserbeacon.cc,
+	src/laserbeacondevice.cc, src/laserdevice.cc: Added some
+	transparency flags 
+
+2001-06-06 15:29  ahoward
+
+	* include/playerdevice.hh, include/playerserver.hh,
+	include/world.hh, src/entity.cc, src/entityfactory.cc,
+	src/image.cc, src/laserdevice.cc, src/playerdevice.cc,
+	src/playerserver.cc, src/usc_pioneer.cc, src/world.cc: Added
+	support for naked player servers and lasers 
+
+2001-06-06 15:29  ahoward
+
+	* src/main.cc: Added check for sighup 
+
+2001-06-01 19:03  ahoward
+
+	* Makefile: Makefile now installs examples 
+
+2001-06-01 18:47  ahoward
+
+	* include/device.hh, include/pioneermobiledevice.h,
+	include/playerrobot.hh, include/ports.h, include/robot.h,
+	include/win.h, include/world.h, src/playerrobot.cc,
+	src/posreader.cc, src/robot.cc, src/server.cc, src/win.cc: Removed
+	unused files 
+
+2001-06-01 14:25  ahoward
+
+	* include/Makefile, include/boxobstacle.hh,
+	include/broadcastdevice.hh, include/entity.hh,
+	include/entityfactory.hh, include/guiexport.hh, include/image.h,
+	include/laserbeacon.hh, include/laserbeacondevice.hh,
+	include/laserdevice.hh, include/miscdevice.hh,
+	include/pioneermobiledevice.hh, include/playerdevice.hh,
+	include/playerrobot.hh, include/playerserver.hh, include/ports.h,
+	include/ptzdevice.hh, include/rtk-types.hh, include/sonardevice.h,
+	include/sonardevice.hh, include/stage_types.hh,
+	include/usc_pioneer.hh, include/visionbeacon.hh,
+	include/visiondevice.hh, include/win.h, include/world.hh,
+	include/xgui.hh, src/Makefile, src/boxobstacle.cc,
+	src/broadcastdevice.cc, src/device.cc, src/entity.cc,
+	src/entityfactory.cc, src/image.cc, src/laserbeacon.cc,
+	src/laserbeacondevice.cc, src/laserdevice.cc, src/main.cc,
+	src/miscdevice.cc, src/pioneermobiledevice.cc, src/playerdevice.cc,
+	src/playerrobot.cc, src/playerserver.cc, src/posreader.cc,
+	src/ptzdevice.cc, src/rtk_main.cc, src/server.cc,
+	src/sonardevice.cc, src/usc_pioneer.cc, src/visionbeacon.cc,
+	src/visiondevice.cc, src/win.cc, src/world.cc, src/world_load.cc,
+	src/xgui.cc: Big merge with advanced branch 
+
+2001-06-01 14:18  ahoward
+
+	* Makefile, README.RTK, VERSION, distro.sh, etc/rtkstage.cfg: Big
+	merge with advanced branch 
+
+2001-06-01 14:10  vaughan
+
+	* include/: world.hh, xgui.hh: [no log message] 
+
+2001-06-01 12:52  vaughan
+
+	* src/world.cc: added header for cout 
+
+2001-06-01 11:19  vaughan
+
+	* src/: entityfactory.cc, world_load.cc, xgui.cc: a couple of
+	usability tweaks in xgui.cc plus a little experimentation in loading
+	from the config file 
+
+2001-05-31 17:53  vaughan
+
+	* src/: image.cc, world.cc, world_load.cc: tweaked pnm loading to
+	detect .gz filenames and be a little less verbose (unless in debug
+	mode) 
+
+2001-05-31 17:52  vaughan
+
+	* src/xgui.cc: added right-click to move non-top-level objects 
+
+2001-05-30 19:19  vaughan
+
+	* src/: Makefile, entityfactory.cc, world.cc, xgui.cc: added save
+	functionality (press S key on keyboard) to XGUI - XGUI now pretty
+	useable for experiments 
+
+2001-05-30 15:10  vaughan
+
+	* include/guiexport.hh: file guiexport.hh was initially added on
+	branch rel-0-8-advanced.  
+
+2001-05-30 15:10  vaughan
+
+	* include/boxobstacle.hh, include/entity.hh, include/guiexport.hh,
+	include/laserbeacondevice.hh, include/laserdevice.hh,
+	include/miscdevice.hh, include/pioneermobiledevice.hh,
+	include/playerrobot.hh, include/ptzdevice.hh,
+	include/sonardevice.hh, include/usc_pioneer.hh, include/world.hh,
+	include/xgui.hh, src/boxobstacle.cc, src/entity.cc,
+	src/entityfactory.cc, src/laserbeacon.cc, src/laserbeacondevice.cc,
+	src/laserdevice.cc, src/miscdevice.cc, src/pioneermobiledevice.cc,
+	src/playerrobot.cc, src/ptzdevice.cc, src/sonardevice.cc,
+	src/usc_pioneer.cc, src/visiondevice.cc, src/xgui.cc: added more
+	functionality to xgui mode. compiles ok in stage and xstage
+	versions. xstage is pretty usable now, but requires load and save
+	functions 
+
+2001-05-29 19:21  vaughan
+
+	* include/boxobstacle.hh, include/entity.hh, include/xgui.hh,
+	src/boxobstacle.cc, src/laserbeacon.cc, src/laserdevice.cc,
+	src/pioneermobiledevice.cc, src/ptzdevice.cc, src/server.cc,
+	src/usc_pioneer.cc, src/xgui.cc: removed interactions between world
+	and GUI to one place - the world's Update() method. this will make
+	it easier to externalize the GUI. also fixed XOR bugs and added
+	highlight behavior. RTV.  
+
+2001-05-27 15:06  gerkey
+
+	* Makefile: now installs xstage by default 
+
+2001-05-27 14:59  gerkey
+
+	* src/Makefile: small distro change 
+
+2001-05-27 14:48  gerkey
+
+	* src/Makefile: slight distro fix 
+
+2001-05-27 14:27  gerkey
+
+	* VERSION: now 0.9.1 
+
+2001-05-27 14:16  gerkey
+
+	* src/Makefile: added RTK_LIB/src to link line 
+
+2001-05-25 16:37  gerkey
+
+	* VERSION: version 
+
+2001-05-25 00:32  gerkey
+
+	* Makefile: added xstage to target all 
+
+2001-05-25 00:30  gerkey
+
+	* Makefile: change ; to && to fix build 
+
+2001-05-25 00:26  ahoward
+
+	* include/object.hh, src/object.cc: Removed object.cc and object.hh 
+
+2001-05-24 22:17  vaughan
+
+	* src/: Makefile, boxobstacle.cc, pioneermobiledevice.cc,
+	ptzdevice.cc, usc_pioneer.cc, xgui.cc: fixed pioneer drawing bug -
+	but colors are still wrong - will fix 
+
+2001-05-24 21:29  gerkey
+
+	* src/laserdevice.cc: turned intensity off by default 
+
+2001-05-24 21:26  vaughan
+
+	* include/boxobstacle.hh, include/laserbeacondevice.hh,
+	include/laserdevice.hh, include/miscdevice.hh, include/object.hh,
+	include/pioneermobiledevice.hh, include/playerrobot.hh,
+	include/ptzdevice.hh, include/sonardevice.hh,
+	include/usc_pioneer.hh, include/world.hh, include/xgui.hh,
+	src/Makefile, src/boxobstacle.cc, src/entity.cc,
+	src/laserbeacondevice.cc, src/laserdevice.cc, src/miscdevice.cc,
+	src/object.cc, src/pioneermobiledevice.cc, src/playerrobot.cc,
+	src/ptzdevice.cc, src/sonardevice.cc, src/usc_pioneer.cc,
+	src/visiondevice.cc, src/world.cc, src/xgui.cc: Merged working XGUI
+	with Andrew's fixes, including CObject > CEntity change - getting
+	there 
+
+2001-05-24 20:28  gerkey
+
+	* src/world.cc: took out msg 
+
+2001-05-24 19:02  ahoward
+
+	* include/image.h, include/world.hh, src/image.cc,
+	src/pioneermobiledevice.cc, src/world.cc: Made collision detection
+	work properly 
+
+2001-05-24 18:13  ahoward
+
+	* include/image.h, src/image.cc, src/world.cc: Added sticky bit to
+	image class to prevent erasure of background 
+
+2001-05-23 20:17  ahoward
+
+	* include/usc_pioneer.hh, include/world.hh, src/Makefile,
+	src/laserdevice.cc, src/pioneermobiledevice.cc, src/world.cc,
+	src/world_load.cc: Added configuration setting for laser resolution 
+
+2001-05-23 19:14  ahoward
+
+	* src/playerserver.cc: file playerserver.cc was initially added on
+	branch rel-0-8-advanced.  
+
+2001-05-23 19:14  ahoward
+
+	* include/playerserver.hh: file playerserver.hh was initially added
+	on branch rel-0-8-advanced.  
+
+2001-05-23 19:14  ahoward
+
+	* include/broadcastdevice.hh, include/laserbeacondevice.hh,
+	include/laserdevice.hh, include/miscdevice.hh,
+	include/pioneermobiledevice.hh, include/playerdevice.hh,
+	include/playerrobot.hh, include/playerserver.hh,
+	include/ptzdevice.hh, include/sonardevice.hh,
+	include/usc_pioneer.hh, include/visiondevice.hh, include/world.hh,
+	src/Makefile, src/broadcastdevice.cc, src/laserbeacondevice.cc,
+	src/laserdevice.cc, src/miscdevice.cc, src/pioneermobiledevice.cc,
+	src/playerdevice.cc, src/playerrobot.cc, src/playerserver.cc,
+	src/ptzdevice.cc, src/sonardevice.cc, src/usc_pioneer.cc,
+	src/visiondevice.cc, src/world_load.cc: Changes CPlayerRobot to
+	CPlayerServer 
+
+2001-05-23 18:55  ahoward
+
+	* src/entityfactory.cc: file entityfactory.cc was initially added
+	on branch rel-0-8-advanced.  
+
+2001-05-23 18:55  ahoward
+
+	* src/entity.cc: file entity.cc was initially added on branch
+	rel-0-8-advanced.  
+
+2001-05-23 18:55  ahoward
+
+	* include/entityfactory.hh: file entityfactory.hh was initially
+	added on branch rel-0-8-advanced.  
+
+2001-05-23 18:55  ahoward
+
+	* include/boxobstacle.hh, include/broadcastdevice.hh,
+	include/entity.hh, include/entityfactory.hh,
+	include/laserbeacon.hh, include/laserbeacondevice.hh,
+	include/laserdevice.hh, include/miscdevice.hh, include/object.hh,
+	include/objectfactory.hh, include/pioneermobiledevice.hh,
+	include/playerdevice.hh, include/playerrobot.hh,
+	include/ptzdevice.hh, include/sonardevice.hh,
+	include/usc_pioneer.hh, include/visionbeacon.hh,
+	include/visiondevice.hh, include/world.hh, include/xgui.hh,
+	src/Makefile, src/boxobstacle.cc, src/broadcastdevice.cc,
+	src/entity.cc, src/entityfactory.cc, src/laserbeacon.cc,
+	src/laserbeacondevice.cc, src/laserdevice.cc, src/miscdevice.cc,
+	src/object.cc, src/objectfactory.cc, src/pioneermobiledevice.cc,
+	src/playerdevice.cc, src/playerrobot.cc, src/ptzdevice.cc,
+	src/sonardevice.cc, src/usc_pioneer.cc, src/visionbeacon.cc,
+	src/visiondevice.cc, src/world.cc, src/world_load.cc, src/xgui.cc: 
+	Changed CObject to CEntity 
+
+2001-05-23 18:55  ahoward
+
+	* include/entity.hh: file entity.hh was initially added on branch
+	rel-0-8-advanced.  
+
+2001-05-22 16:25  ahoward
+
+	* src/ptzdevice.cc: Fixed ptz -- was not sending data if no
+	commands had been received 
+
+2001-05-21 19:05  ahoward
+
+	* Makefile: Changed distro name 
+
+2001-05-21 16:48  ahoward
+
+	* include/object.hh, include/world.hh, src/Makefile, src/object.cc,
+	src/usc_pioneer.cc, src/world.cc, src/world_load.cc: Changed
+	CUscPioneer to add objects to world, rather than itself.  
+
+2001-05-21 16:34  vaughan
+
+	* src/xgui.cc: bug fix 
+
+2001-05-21 16:26  vaughan
+
+	* src/xgui.cc: file xgui.cc was initially added on branch
+	rel-0-8-advanced.  
+
+2001-05-21 16:26  vaughan
+
+	* src/xgui.cc: RTV - first check in of XGUI enabled source 
+
+2001-05-21 16:25  vaughan
+
+	* include/xgui.hh: file xgui.hh was initially added on branch
+	rel-0-8-advanced.  
+
+2001-05-21 16:25  vaughan
+
+	* include/: boxobstacle.hh, laserdevice.hh, object.hh,
+	usc_pioneer.hh, world.hh, xgui.hh: RTV - first check in of XGUI
+	enabled headers 
+
+2001-05-21 16:21  vaughan
+
+	* Makefile: RTV - first check in of XGUI-enabled code 
+
+2001-05-21 15:38  vaughan
+
+	* src/: Makefile, boxobstacle.cc, laserbeacon.cc,
+	laserbeacondevice.cc, laserdevice.cc, object.cc,
+	pioneermobiledevice.cc, usc_pioneer.cc, world.cc: RTV - completing
+	check-in after adding original-style GUI code 
+
+2001-05-17 17:37  ahoward
+
+	* src/visiondevice.cc: Fixed sign error in vision device 
+
+2001-05-17 17:26  ahoward
+
+	* include/stage_types.hh, include/usc_pioneer.hh, src/ptzdevice.cc,
+	src/usc_pioneer.cc, src/visionbeacon.cc, src/visiondevice.cc,
+	src/world.cc: Fixed vision device so it returns sensible results 
+
+2001-05-16 19:49  ahoward
+
+	* include/object.hh, include/visionbeacon.hh, src/boxobstacle.cc,
+	src/object.cc, src/visionbeacon.cc: Added color for objects 
+
+2001-05-16 19:02  ahoward
+
+	* src/: laserdevice.cc, world.cc: Fixed laser so it doesnt pass
+	through objects (but takes a bit more time to compute) 
+
+2001-05-15 22:45  ahoward
+
+	* include/laserbeacon.hh, include/laserbeacondevice.hh,
+	include/playerdevice.hh, include/stage_types.hh, include/world.hh,
+	src/Makefile, src/laserbeacon.cc, src/laserbeacondevice.cc,
+	src/playerdevice.cc, src/world.cc: Fixed laser beacon device (it
+	works now) 
+
+2001-05-15 18:51  ahoward
+
+	* include/laserdevice.hh, include/playerdevice.hh,
+	src/laserdevice.cc, src/world.cc: Fixups for timestamps 
+
+2001-05-14 22:00  ahoward
+
+	* include/image.h, src/Makefile, src/boxobstacle.cc, src/image.cc,
+	src/object.cc, src/usc_pioneer.cc, src/world.cc: Added support for
+	compressed images 
+
+2001-05-14 18:10  ahoward
+
+	* include/laserdevice.hh, include/pioneermobiledevice.hh,
+	src/laserbeacon.cc, src/laserdevice.cc, src/pioneermobiledevice.cc,
+	src/usc_pioneer.cc: Set proper dimensions for pioneer robots 
+
+2001-05-14 16:01  ahoward
+
+	* src/: boxobstacle.cc, laserbeacon.cc, object.cc, usc_pioneer.cc: 
+	Removed some obsolete includes 
+
+2001-05-14 15:43  ahoward
+
+	* src/world_load.cc: file world_load.cc was initially added on
+	branch rel-0-8-advanced.  
+
+2001-05-14 15:42  ahoward
+
+	* VERSION, include/boxobstacle.hh, include/laserbeacon.hh,
+	include/object.hh, include/tokenize.hh, include/usc_pioneer.hh,
+	include/world.hh, src/Makefile, src/boxobstacle.cc,
+	src/laserbeacon.cc, src/laserbeacondevice.cc, src/object.cc,
+	src/objectfactory.cc, src/tokenize.cc, src/usc_pioneer.cc,
+	src/world.cc, src/world_load.cc: Re-wrote load/save routines 
+
+2001-05-11 14:21  gerkey
+
+	* Makefile: added dep target 
+
+2001-05-11 14:18  gerkey
+
+	* src/Makefile: removed makedep results 
+
+2001-05-09 23:35  ahoward
+
+	* include/laserdevice.hh, include/playerrobot.hh,
+	src/laserbeacondevice.cc, src/laserdevice.cc, src/playerrobot.cc,
+	src/sonardevice.cc, src/visiondevice.cc: Fixed laser device (to
+	match changes in player).  Laser beacon device is still broken.  
+
+2001-04-30 11:55  ahoward
+
+	* README.RTK, include/usc_pioneer.hh, src/laserbeacon.cc,
+	src/pioneermobiledevice.cc, src/usc_pioneer.cc: Added note on
+	installing RTK 
+
+2001-04-30 11:55  ahoward
+
+	* README.RTK: file README.RTK was initially added on branch
+	rel-0-8-advanced.  
+
+2001-04-29 23:38  ahoward
+
+	* etc/rtkstage.cfg, src/Makefile, src/laserdevice.cc,
+	src/pioneermobiledevice.cc, src/sonardevice.cc,
+	src/visiondevice.cc, src/world.cc: Fixed for modified rtk 
+
+2001-04-28 18:10  gerkey
+
+	* src/playerdevice.cc: fixed timestamp interaction in info buffer
+	(i think) 
+
+2001-04-27 18:44  ahoward
+
+	* Makefile, VERSION, distro.sh, src/Makefile: Changed makefiles;
+	top-level makefile will now generate distributions 
+
+2001-04-27 17:48  ahoward
+
+	* etc/: rtk_stage.cfg, rtkstage.cfg: Changed cfg file name 
+
+2001-04-27 17:48  ahoward
+
+	* etc/rtkstage.cfg: file rtkstage.cfg was initially added on branch
+	rel-0-8-advanced.  
+
+2001-04-27 13:23  ahoward
+
+	* Makefile, src/Makefile, src/laserdevice.cc, src/playerdevice.cc: 
+	Fixed time handling 
+
+2001-04-02 11:41  ahoward
+
+	* etc/rtk_stage.cfg: file rtk_stage.cfg was initially added on
+	branch rel-0-8-advanced.  
+
+2001-04-02 11:41  ahoward
+
+	* Makefile, etc/rtk-stage.cfg, etc/rtk_stage.cfg: Now installs rtk
+	config files in the correct place 
+
+2001-03-15 13:02  ahoward
+
+	* include/stage_types.hh, include/world.hh, src/Makefile,
+	src/broadcastdevice.cc, src/laserbeacondevice.cc,
+	src/laserdevice.cc, src/pioneermobiledevice.cc, src/ptzdevice.cc,
+	src/sonardevice.cc, src/visiondevice.cc, src/world.cc: Minor tweaks 
+
+2001-03-14 22:30  ahoward
+
+	* include/object.hh, include/stage_types.hh, include/world.hh,
+	src/image.cc, src/usc_pioneer.cc, src/world.cc: Minor fixes 
+
+2001-03-14 22:30  ahoward
+
+	* include/stage_types.hh: file stage_types.hh was initially added
+	on branch rel-0-8-advanced.  
+
+2001-03-14 09:01  ahoward
+
+	* src/: boxobstacle.cc, laserbeacon.cc, laserdevice.cc, object.cc,
+	pioneermobiledevice.cc, tokenize.cc: No changes? 
+
+2001-03-13 17:08  ahoward
+
+	* include/tokenize.hh, src/tokenize.cc: Oops, here are some new
+	files 
+
+2001-03-13 17:08  ahoward
+
+	* src/tokenize.cc: file tokenize.cc was initially added on branch
+	rel-0-8-advanced.  
+
+2001-03-13 17:08  ahoward
+
+	* include/tokenize.hh: file tokenize.hh was initially added on
+	branch rel-0-8-advanced.  
+
+2001-03-13 17:07  ahoward
+
+	* include/boxobstacle.hh, include/laserbeacon.hh,
+	include/object.hh, include/usc_pioneer.hh, include/world.hh,
+	src/Makefile, src/boxobstacle.cc, src/laserbeacon.cc,
+	src/object.cc, src/rtk_main.cc, src/usc_pioneer.cc, src/world.cc: 
+	Now with saving.  Yay 
+
+2001-03-13 15:06  ahoward
+
+	* Makefile, include/boxobstacle.hh, include/laserbeacon.hh,
+	include/object.hh, include/usc_pioneer.hh, src/boxobstacle.cc,
+	src/laserbeacon.cc, src/main.cc, src/object.cc,
+	src/pioneermobiledevice.cc, src/usc_pioneer.cc, src/world.cc: Add
+	code to handle child objects sensibly; saving is completely fucked
+	up 
+
+2001-03-12 19:40  ahoward
+
+	* VERSION: file VERSION was initially added on branch
+	rel-0-8-advanced.  
+
+2001-03-12 19:40  ahoward
+
+	* VERSION: Added version file 
+
+2001-03-12 19:40  ahoward
+
+	* src/rtk_main.cc: file rtk_main.cc was initially added on branch
+	rel-0-8-advanced.  
+
+2001-03-12 19:40  ahoward
+
+	* include/laserdevice.hh, include/object.hh,
+	include/pioneermobiledevice.hh, include/playerrobot.hh,
+	include/ptzdevice.hh, include/rtkmain.hh, include/rtksimagent.hh,
+	include/sonardevice.hh, include/visionbeacon.hh, include/world.hh,
+	src/Makefile, src/laserbeacondevice.cc, src/laserdevice.cc,
+	src/main.cc, src/pioneermobiledevice.cc, src/playerdevice.cc,
+	src/playerrobot.cc, src/ptzdevice.cc, src/rtk_main.cc,
+	src/rtkmain.cc, src/rtksimagent.cc, src/sonardevice.cc,
+	src/visionbeacon.cc, src/visiondevice.cc, src/world.cc: Fixed for
+	multiple targets (with or without GIU) 
+
+2001-03-12 16:18  ahoward
+
+	* include/boxobstacle.hh, include/laserbeacon.hh,
+	include/object.hh, include/playerrobot.hh, include/rtk-types.hh,
+	include/rtksimagent.hh, include/usc_pioneer.hh, include/world.hh,
+	src/Makefile, src/boxobstacle.cc, src/broadcastdevice.cc,
+	src/laserbeacon.cc, src/laserbeacondevice.cc, src/laserdevice.cc,
+	src/object.cc, src/pioneermobiledevice.cc, src/playerrobot.cc,
+	src/ptzdevice.cc, src/rtkmain.cc, src/rtksimagent.cc,
+	src/sonardevice.cc, src/usc_pioneer.cc, src/visionbeacon.cc,
+	src/visiondevice.cc, src/world.cc: Did rtk name change 
+
+2001-03-06 17:58  ahoward
+
+	* include/usc_pioneer.hh, src/usc_pioneer.cc: Added usc_pioneer
+	object 
+
+2001-03-06 17:58  ahoward
+
+	* src/usc_pioneer.cc: file usc_pioneer.cc was initially added on
+	branch rel-0-8-advanced.  
+
+2001-03-06 17:58  ahoward
+
+	* include/usc_pioneer.hh: file usc_pioneer.hh was initially added
+	on branch rel-0-8-advanced.  
+
+2001-03-06 17:57  ahoward
+
+	* include/boxobstacle.hh, include/broadcastdevice.hh,
+	include/laserbeacon.hh, include/laserdevice.hh, include/object.hh,
+	include/playerdevice.hh, include/playerrobot.hh,
+	include/rtksimagent.hh, include/visionbeacon.hh, include/world.hh,
+	src/Makefile, src/boxobstacle.cc, src/broadcastdevice.cc,
+	src/laserbeacon.cc, src/laserdevice.cc, src/object.cc,
+	src/objectfactory.cc, src/pioneermobiledevice.cc,
+	src/playerdevice.cc, src/playerrobot.cc, src/rtkmain.cc,
+	src/rtksimagent.cc, src/visionbeacon.cc, src/world.cc: Huge
+	refactoring -- improved separation between engine and rtk;
+	simplified internal design 
+
+2001-02-09 11:00  ahoward
+
+	* etc/rtk-stage.cfg: file rtk-stage.cfg was initially added on
+	branch rel-0-8-advanced.  
+
+2001-02-09 11:00  ahoward
+
+	* etc/rtk-stage.cfg: Moved cfg file to sensible place 
+
+2001-02-08 14:54  ahoward
+
+	* include/broadcastdevice.hh, include/world.hh, src/Makefile,
+	src/broadcastdevice.cc, src/world.cc: Broadcast device now works
+	(not well tested) 
+
+2001-02-07 12:26  gerkey
+
+	* src/: laserdevice.cc, playerdevice.cc, robot.cc, visiondevice.cc: 
+	changed some macro names to agree with player's definitions, and 
+	enabled the 'available' flag 
+
+2001-02-06 17:08  ahoward
+
+	* src/miscdevice.cc: file miscdevice.cc was initially added on
+	branch rel-0-8-advanced.  
+
+2001-02-06 17:08  ahoward
+
+	* include/miscdevice.hh, src/miscdevice.cc: Added misc device files 
+
+2001-02-06 17:08  ahoward
+
+	* include/miscdevice.hh: file miscdevice.hh was initially added on
+	branch rel-0-8-advanced.  
+
+2001-02-06 17:07  ahoward
+
+	* include/beacondevice.hh, include/broadcastdevice.hh,
+	include/laserbeacondevice.hh, src/Makefile, src/beacondevice.cc,
+	src/laserbeacondevice.cc, src/objectfactory.cc,
+	src/playerdevice.cc, src/playerrobot.cc, src/posreader.cc: Changes
+	for new version of player 
+
+2001-02-05 19:42  ahoward
+
+	* include/laserdevice.hh, include/pioneermobiledevice.hh,
+	include/playerdevice.hh, include/rtk-types.hh,
+	include/rtksimagent.hh, include/world.hh, src/Makefile,
+	src/beacondevice.cc, src/boxobstacle.cc, src/broadcastdevice.cc,
+	src/laserbeacon.cc, src/laserdevice.cc, src/object.cc,
+	src/objectfactory.cc, src/pioneermobiledevice.cc,
+	src/playerdevice.cc, src/playerrobot.cc, src/posreader.cc,
+	src/ptzdevice.cc, src/rtksimagent.cc, src/sonardevice.cc,
+	src/visionbeacon.cc, src/visiondevice.cc, src/world.cc: Changed to
+	use new player 
+
+2001-02-05 19:06  ahoward
+
+	* include/broadcastdevice.hh: file broadcastdevice.hh was initially
+	added on branch rel-0-8-advanced.  
+
+2001-02-05 19:06  ahoward
+
+	* include/broadcastdevice.hh, include/world.hh, src/Makefile,
+	src/broadcastdevice.cc, src/objectfactory.cc, src/world.cc: Added
+	(but did not test) broadcast device 
+
+2001-02-05 19:06  ahoward
+
+	* src/broadcastdevice.cc: file broadcastdevice.cc was initially
+	added on branch rel-0-8-advanced.  
+
+2001-02-05 17:27  gerkey
+
+	* include/device.hh, include/playerdevice.hh, src/Makefile,
+	src/pioneermobiledevice.cc, src/playerdevice.cc, src/robot.cc,
+	include/ports.h: small changes, mostly to do with timestamping.  
+
+2001-02-02 11:44  ahoward
+
+	* src/beacondevice.cc, src/laserbeacondevice.cc,
+	include/beacondevice.hh, include/laserbeacondevice.hh: Added
+	anonymous beacons 
+
+2001-02-01 16:01  gerkey
+
+	* src/pioneermobiledevice.cc: took out timestamp extraction from
+	position packet, because it's no longer there, but rather in the
+	message header.  
+
+2001-02-01 09:47  ahoward
+
+	* Makefile, include/beacondevice.hh, src/Makefile,
+	src/beacondevice.cc: Minor tweaks 
+
+2001-01-15 18:10  ahoward
+
+	* include/beacondevice.hh: file beacondevice.hh was initially added
+	on branch rel-0-8-advanced.  
+
+2001-01-15 18:10  ahoward
+
+	* include/beacondevice.hh, include/laserbeacon.hh,
+	include/playerdevice.hh, include/world.hh, src/Makefile,
+	src/beacondevice.cc, src/laserbeacon.cc, src/objectfactory.cc,
+	src/playerdevice.cc, src/sonardevice.cc, src/world.cc: Added laser
+	beacon detector 
+
+2001-01-15 18:10  ahoward
+
+	* src/beacondevice.cc: file beacondevice.cc was initially added on
+	branch rel-0-8-advanced.  
+
+2001-01-12 18:47  gerkey
+
+	* src/: Makefile, laserdevice.cc, pioneermobiledevice.cc,
+	playerdevice.cc, ptzdevice.cc, robot.cc, sonardevice.cc, world.cc: 
+	various changes.  removed references to "rtk-types.hh" in deference
+	to Player's "playercommon.h", which is included through "stage.h". 
+	also removed references to Player's "offsets.h", which doesn't exist 
+	anymore.  fixed a PTZ bug/problem to do with empty commands.  
+
+2001-01-12 18:45  gerkey
+
+	* include/: device.hh, laserdevice.hh, pioneermobiledevice.h,
+	playerdevice.hh, robot.h: various changes.  removed "rtk-types.hh",
+	because it's subsumed by the declarations in player's
+	"playercommon.h", which is included eventually by "stage.h".  also
+	changed macros like "SSONAR_*" to "SONAR_*" to agree with Player. 
+	also, PlayerStageInfo is now player_stage_info_t.  
+
+2001-01-12 18:44  gerkey
+
+	* Makefile: changed default player src path to ../player 
+
+2000-12-18 18:01  ahoward
+
+	* src/boxobstacle.cc: file boxobstacle.cc was initially added on
+	branch rel-0-8-advanced.  
+
+2000-12-18 18:01  ahoward
+
+	* include/boxobstacle.hh: file boxobstacle.hh was initially added
+	on branch rel-0-8-advanced.  
+
+2000-12-18 18:01  ahoward
+
+	* include/boxobstacle.hh, src/Makefile, src/boxobstacle.cc,
+	src/objectfactory.cc, src/playerrobot.cc: Added box obstacle 
+
+2000-12-14 16:20  ahoward
+
+	* include/laserdevice.hh, src/laserdevice.cc, src/world.cc: Minor
+	tweaks for panning and zooming 
+
+2000-12-12 19:08  ahoward
+
+	* include/pioneermobiledevice.hh, src/Makefile,
+	src/pioneermobiledevice.cc: Put odometry back 
+
+2000-12-08 21:13  ahoward
+
+	* include/pioneermobiledevice.h, include/sonardevice.hh,
+	src/playerdevice.cc, src/world.cc: Added timings 
+
+2000-12-08 21:13  ahoward
+
+	* include/sonardevice.hh: file sonardevice.hh was initially added
+	on branch rel-0-8-advanced.  
+
+2000-12-08 11:23  ahoward
+
+	* include/pioneermobiledevice.hh, include/world.hh,
+	src/laserdevice.cc, src/pioneermobiledevice.cc, src/ptzdevice.cc,
+	src/sonardevice.cc, src/visiondevice.cc, src/world.cc: Changed the
+	timing code 
+
+2000-12-08 01:08  vaughan
+
+	* Makefile, README.stage, bin/sif, include/pioneermobiledevice.h,
+	include/robot.h, include/visiondevice.hh, include/win.h,
+	include/world.h, src/Makefile, src/image.cc, src/laserdevice.cc,
+	src/main.cc, src/pioneermobiledevice.cc, src/robot.cc,
+	src/server.cc, src/visiondevice.cc, src/win.cc, src/world.cc: fixed
+	loading of robot positions from sif GUI during a run.  also some X
+	graphics tweaks and some improved shutdown logic.  about time to do
+	a new release...  
+
+2000-12-08 00:19  ahoward
+
+	* include/image.h, include/object.hh, include/world.hh,
+	src/image.cc, src/object.cc, src/playerdevice.cc,
+	src/rtksimagent.cc, src/sonardevice.cc, src/world.cc: Minor tweaks 
+
+2000-12-07 17:31  ahoward
+
+	* src/laserbeacon.cc: file laserbeacon.cc was initially added on
+	branch rel-0-8-advanced.  
+
+2000-12-07 17:31  ahoward
+
+	* include/laserbeacon.hh: file laserbeacon.hh was initially added
+	on branch rel-0-8-advanced.  
+
+2000-12-07 17:31  ahoward
+
+	* include/laserbeacon.hh, include/laserbeaconobject.hh,
+	include/object.hh, include/playerdevice.hh, include/playerrobot.hh,
+	include/rtksimagent.hh, include/world.hh, src/Makefile,
+	src/image.cc, src/laserbeacon.cc, src/laserbeaconobject.cc,
+	src/laserdevice.cc, src/main.cc, src/object.cc,
+	src/objectfactory.cc, src/pioneermobiledevice.cc,
+	src/playerrobot.cc, src/ptzdevice.cc, src/rtkmain.cc,
+	src/rtksimagent.cc, src/sonardevice.cc, src/visionbeacon.cc,
+	src/visiondevice.cc, src/world.cc: Lots of ui improvements 
+
+2000-12-07 17:19  vaughan
+
+	* src/visiondevice.cc: :removed superfluous delete[]'s from end of
+	update.  i'm kind of surprised these didn't cause seg faults! - RTV 
+	 
+	----------------------------------------------------------------------
+
+2000-12-07 14:17  ahoward
+
+	* include/laserdevice.hh, include/object.hh,
+	include/pioneermobiledevice.hh, include/playerdevice.hh,
+	include/playerrobot.hh, include/ptzdevice.hh,
+	include/visiondevice.hh, src/laserdevice.cc, src/main.cc,
+	src/object.cc, src/objectfactory.cc, src/pioneermobiledevice.cc,
+	src/playerdevice.cc, src/playerrobot.cc, src/ptzdevice.cc,
+	src/rtksimagent.cc, src/sonardevice.cc, src/visiondevice.cc,
+	src/world.cc: Changed object interface again 
+
+2000-12-06 22:30  vaughan
+
+	* README.stage, src/main.cc: [no log message] 
+
+2000-12-06 22:14  ahoward
+
+	* include/playerdevice.hh, src/playerdevice.cc: Added
+	variable-length data protocol to player/stage shared mem interface 
+
+2000-12-06 22:00  ahoward
+
+	* include/playerdevice.hh, src/playerdevice.cc: Added
+	variable-length data protocol to player/stage shared mem interface 
+
+2000-12-06 21:47  vaughan
+
+	* include/visiondevice.hh, src/visiondevice.cc, src/world.cc: fixed
+	a memory leak in CVisionDevice::Update().  
+
+2000-12-06 21:22  ahoward
+
+	* include/ptzdevice.hh, include/sonardevice.h,
+	include/visionbeacon.hh, include/visiondevice.hh, src/Makefile,
+	src/laserdevice.cc, src/objectfactory.cc, src/ptzdevice.cc,
+	src/rtksimagent.cc, src/sonardevice.cc, src/visionbeacon.cc,
+	src/visiondevice.cc: Sonar now works 
+
+2000-12-06 20:30  vaughan
+
+	* include/laserdevice.hh, src/laserdevice.cc, src/world.cc: added
+	support for undersampling for laser device - resolution is specified 
+	in the laserdevice's constructor.  
+
+2000-12-06 16:30  ahoward
+
+	* src/visionbeacon.cc: file visionbeacon.cc was initially added on
+	branch rel-0-8-advanced.  
+
+2000-12-06 16:30  ahoward
+
+	* include/visionbeacon.hh: file visionbeacon.hh was initially added
+	on branch rel-0-8-advanced.  
+
+2000-12-06 16:29  ahoward
+
+	* include/laserbeaconobject.hh, include/playerdevice.hh,
+	include/playerrobot.hh, include/visionbeacon.hh,
+	include/visiondevice.hh, include/world.hh, src/Makefile,
+	src/laserbeaconobject.cc, src/laserdevice.cc, src/main.cc,
+	src/objectfactory.cc, src/playerrobot.cc, src/visionbeacon.cc,
+	src/visiondevice.cc, src/world.cc: Added vision and vision beacons 
+
+2000-12-06 13:49  ahoward
+
+	* src/playerrobot.cc: file playerrobot.cc was initially added on
+	branch rel-0-8-advanced.  
+
+2000-12-06 13:49  ahoward
+
+	* include/playerrobot.hh: file playerrobot.hh was initially added
+	on branch rel-0-8-advanced.  
+
+2000-12-06 13:48  ahoward
+
+	* include/device.hh, include/laserbeacondevice.hh,
+	include/laserdevice.hh, include/object.hh,
+	include/objectfactory.hh, include/pioneermobiledevice.hh,
+	include/playerdevice.hh, include/ptzdevice.hh, include/robot.h,
+	include/sonardevice.h, include/visiondevice.hh, include/win.h,
+	include/world.hh, src/Makefile, src/device.cc,
+	src/laserbeacondevice.cc, src/laserbeaconobject.cc,
+	src/laserdevice.cc, src/main.cc, src/object.cc,
+	src/objectfactory.cc, src/pioneermobiledevice.cc,
+	src/playerdevice.cc, src/ptzdevice.cc, src/robot.cc, src/server.cc,
+	src/sonardevice.cc, src/visiondevice.cc, src/win.cc, src/world.cc,
+	include/playerrobot.hh, src/playerrobot.cc: Got dynamic loading of
+	devices working 
+
+2000-12-05 21:15  ahoward
+
+	* include/rtksimagent.hh: file rtksimagent.hh was initially added
+	on branch rel-0-8-advanced.  
+
+2000-12-05 21:14  ahoward
+
+	* include/rtkmain.hh: file rtkmain.hh was initially added on branch
+	rel-0-8-advanced.  
+
+2000-12-05 21:14  ahoward
+
+	* include/rtkmain.hh, src/rtkmain.cc, src/rtksimagent.cc,
+	include/rtksimagent.hh: Added rtk files 
+
+2000-12-05 21:14  ahoward
+
+	* src/rtksimagent.cc: file rtksimagent.cc was initially added on
+	branch rel-0-8-advanced.  
+
+2000-12-05 21:14  ahoward
+
+	* src/rtkmain.cc: file rtkmain.cc was initially added on branch
+	rel-0-8-advanced.  
+
+2000-12-05 21:13  ahoward
+
+	* include/objectfactory.hh: file objectfactory.hh was initially
+	added on branch rel-0-8-advanced.  
+
+2000-12-05 21:13  ahoward
+
+	* include/device.hh, include/laserdevice.hh, include/object.hh,
+	include/objectfactory.hh, include/pioneermobiledevice.hh,
+	include/playerdevice.hh, include/ptzdevice.hh, include/robot.h,
+	include/sonardevice.h, include/world.hh, src/Makefile,
+	src/laserbeaconobject.cc, src/laserdevice.cc, src/main.cc,
+	src/object.cc, src/objectfactory.cc, src/pioneermobiledevice.cc,
+	src/playerdevice.cc, src/ptzdevice.cc, src/robot.cc,
+	src/sonardevice.cc, src/world.cc: Tweaks 
+
+2000-12-05 19:57  ahoward
+
+	* src/objectfactory.cc: file objectfactory.cc was initially added
+	on branch rel-0-8-advanced.  
+
+2000-12-05 19:57  ahoward
+
+	* include/laserbeaconobject.hh, include/object.hh, include/robot.h,
+	include/win.h, include/world.h, include/world.hh, src/Makefile,
+	src/device.cc, src/image.cc, src/laserbeacondevice.cc,
+	src/laserbeaconobject.cc, src/laserdevice.cc, src/main.cc,
+	src/object.cc, src/pioneermobiledevice.cc, src/playerdevice.cc,
+	src/ptzdevice.cc, src/robot.cc, src/server.cc, src/sonardevice.cc,
+	src/visiondevice.cc, src/world.cc, src/objectfactory.cc: Objects
+	created from cfg file 
+
+2000-12-05 19:57  ahoward
+
+	* include/world.hh: file world.hh was initially added on branch
+	rel-0-8-advanced.  
+
+2000-12-05 18:31  vaughan
+
+	* Makefile, README.stage, include/Makefile, src/Makefile,
+	src/main.cc: [no log message] 
+
+2000-12-05 18:29  vaughan
+
+	* src/win.cc: fixed bug - walls were not redrawn properly after
+	dragging a robot 
+
+2000-12-05 15:17  ahoward
+
+	* include/laserbeaconobject.hh: file laserbeaconobject.hh was
+	initially added on branch rel-0-8-advanced.  
+
+2000-12-05 15:17  ahoward
+
+	* src/object.cc: file object.cc was initially added on branch
+	rel-0-8-advanced.  
+
+2000-12-05 15:17  ahoward
+
+	* include/device.hh, include/laserbeacondevice.hh,
+	include/laserbeaconobject.hh, include/laserdevice.hh,
+	include/object.hh, include/pioneermobiledevice.hh,
+	include/playerdevice.hh, include/ptzdevice.hh, include/robot.h,
+	include/sonardevice.h, include/visiondevice.hh, include/world.h,
+	src/Makefile, src/device.cc, src/laserbeacondevice.cc,
+	src/laserbeaconobject.cc, src/laserdevice.cc, src/main.cc,
+	src/object.cc, src/pioneermobiledevice.cc, src/playerdevice.cc,
+	src/ptzdevice.cc, src/robot.cc, src/sonardevice.cc,
+	src/visiondevice.cc, src/win.cc, src/world.cc: Advanced version 
+
+2000-12-05 15:17  ahoward
+
+	* include/object.hh: file object.hh was initially added on branch
+	rel-0-8-advanced.  
+
+2000-12-05 15:17  ahoward
+
+	* include/pioneermobiledevice.hh: file pioneermobiledevice.hh was
+	initially added on branch rel-0-8-advanced.  
+
+2000-12-05 15:17  ahoward
+
+	* src/laserbeaconobject.cc: file laserbeaconobject.cc was initially
+	added on branch rel-0-8-advanced.  
+
+2000-12-05 11:46  vaughan
+
+	* distro.sh: script for making distributions of software. RTV. 
+
+2000-12-04 10:52  vaughan
+
+	* src/ptzdevice.cc: ready for Stage-0.8 release 
+
+2000-12-04 10:46  vaughan
+
+	* README.stage: new for v0.8.  
+
+2000-12-04 10:04  ahoward
+
+	* src/ptzdevice.cc: Removed error message for 0 length command data 
+
+2000-12-04 10:04  ahoward
+
+	* src/pioneermobiledevice.cc: Fixed signs on odometry.  
+
+2000-12-03 21:19  vaughan
+
+	* include/pioneermobiledevice.h, include/ptzdevice.hh,
+	include/robot.h, include/visiondevice.hh, src/laserbeacondevice.cc,
+	src/laserdevice.cc, src/pioneermobiledevice.cc, src/ptzdevice.cc,
+	src/robot.cc, src/sonardevice.cc, src/visiondevice.cc, src/win.cc: 
+	fixed the pioneer odometry model in robot.cc - x,y,theta, etc now 
+	correctly in robot-centric coords.  
+	
+	added bool showDeviceDetail to CRobot class - devices' GUIDraw
+	methods use this to determine whether to draw fancy graphics into
+	the window.  showDeviceDetail can be toggled by clicking the middle
+	mouse button on a robot in the GUI window.  
+	
+	implemented basic device visualization for laser, sonar and PTZ.
+	this shows off the new, more efficient X graphics, but it still
+	slows things down quite a bit.  
+
+2000-12-03 18:11  vaughan
+
+	* include/laserdevice.hh, include/sonardevice.h, include/win.h,
+	src/laserdevice.cc, src/pioneermobiledevice.cc, src/sonardevice.cc,
+	src/win.cc: re-trying my last check-in 
+
+2000-12-01 19:54  ahoward
+
+	* include/pioneermobiledevice.h, src/pioneermobiledevice.cc,
+	src/robot.cc: Fixed packets on position device 
+
+2000-12-01 19:25  vaughan
+
+	* include/laserdevice.hh, include/robot.h, include/sonardevice.h,
+	src/laserdevice.cc, src/pioneermobiledevice.cc, src/robot.cc,
+	src/sonardevice.cc, src/win.cc: added GUI draw routines for sonar &
+	laser - they're stuck `on' just now but i'll switch 'em off shortly 
+
+2000-12-01 17:29  ahoward
+
+	* include/ptzdevice.hh, include/visiondevice.hh, src/Makefile,
+	src/playerdevice.cc, src/ptzdevice.cc, src/robot.cc,
+	src/visiondevice.cc: Added ptz device 
+
+2000-12-01 14:09  vaughan
+
+	* src/pioneermobiledevice.cc: simplified GUIdraw a little with new
+	Nimage::draw_rect method 
+
+2000-12-01 14:07  vaughan
+
+	* src/image.cc, include/image.h: added draw_rect method 
+
+2000-12-01 13:26  ahoward
+
+	* include/laserbeacondevice.hh, src/laserbeacondevice.cc: Added
+	laser beacon 
+
+2000-12-01 13:25  ahoward
+
+	* include/playerdevice.hh, src/playerdevice.cc: Added player device 
+
+2000-11-30 19:13  ahoward
+
+	* include/device.hh, include/laserdevice.hh,
+	include/pioneermobiledevice.h, include/sonardevice.h,
+	include/visiondevice.hh, include/world.h, src/Makefile,
+	src/device.cc, src/laserdevice.cc, src/pioneermobiledevice.cc,
+	src/robot.cc, src/sonardevice.cc, src/visiondevice.cc,
+	src/world.cc: Merged versions, almost all devices are now in 
+
+2000-11-30 18:57  vaughan
+
+	* src/sonardevice.cc: sonar device - modular style device first cut
+	- RTV 
+
+2000-11-30 18:57  vaughan
+
+	* include/sonardevice.h: sonar device header - first cut - RTV 
+
+2000-11-30 18:50  vaughan
+
+	* include/device.hh, include/laserdevice.hh, include/robot.h,
+	src/Makefile, src/robot.cc: implemented sonar device model 
+
+2000-11-30 18:25  ahoward
+
+	* include/visiondevice.hh: Created 
+
+2000-11-30 18:24  ahoward
+
+	* src/visiondevice.cc: [no log message] 
+
+2000-11-30 16:20  vaughan
+
+	* include/device.hh, include/laserdevice.hh,
+	include/pioneermobiledevice.h, include/robot.h, include/win.h,
+	include/world.h, src/Makefile, src/device.cc, src/laserdevice.cc,
+	src/main.cc, src/pioneermobiledevice.cc, src/robot.cc,
+	src/server.cc, src/win.cc, src/world.cc: aha - that fixed it. there
+	was a clash in device.h. done.  
+
+2000-11-29 18:57  ahoward
+
+	* include/rtk-types.hh: Added rtk-types.hh 
+
+2000-11-29 18:50  vaughan
+
+	* include/pioneermobiledevice.h: in-progress initial check-in 
+
+2000-11-29 16:53  ahoward
+
+	* include/device.hh, src/laserdevice.cc: Added rtk-types.hh to
+	provide useful macros 
+
+2000-11-29 16:33  ahoward
+
+	* include/: device.hh, laserdevice.hh: Added config data 
+
+2000-11-29 16:29  vaughan
+
+	* src/pioneermobiledevice.cc: in-progress first checkin 
+
+2000-11-29 16:12  ahoward
+
+	* src/: Makefile, device.cc, laserdevice.cc, robot.cc: Added
+	subscription test and config data 
+
+2000-11-29 14:48  ahoward
+
+	* include/device.hh, include/laserdevice.hh, include/robot.h,
+	src/Makefile, src/device.cc, src/laserdevice.cc, src/robot.cc: 
+	Added command and config interface to devices 
+
+2000-11-29 14:44  vaughan
+
+	* Makefile, include/laserdevice.hh, include/robot.h, src/Makefile,
+	src/laserdevice.cc, src/robot.cc, src/win.cc: RTV - a few
+	optimizing teaks + fixed laser jumping through jaggies + fixed
+	compilation problems in RedHat-7.0 
+
+2000-11-29 11:00  vaughan
+
+	* src/laserdevice.cc: added <math.h> to pacify the fussy RedHat-7.0
+	compiler 
+
+2000-11-28 20:03  ahoward
+
+	* include/device.hh, include/laserdevice.hh, include/robot.h,
+	src/Makefile, src/device.cc, src/laserdevice.cc, src/robot.cc,
+	src/world.cc: Created new device architecture, with laser device 
+
+2000-11-28 18:28  ahoward
+
+	* Makefile: make clean now cleans examples 
+
+2000-11-28 16:59  ahoward
+
+	* src/robot.cc: Minor tweak to make sure player gets correct
+	command line args 
+
+2000-11-28 16:16  ahoward
+
+	* Makefile, README.stage, bin/sif, include/Makefile,
+	include/image.h, include/ports.h, include/robot.h, include/win.h,
+	include/world.h, src/Makefile, src/image.cc, src/main.cc,
+	src/posreader.cc, src/robot.cc, src/server.cc, src/win.cc,
+	src/world.cc: Initial revision 
+
+2000-11-28 16:16  ahoward
+
+	* Makefile, README.stage, bin/sif, include/Makefile,
+	include/image.h, include/ports.h, include/robot.h, include/win.h,
+	include/world.h, src/Makefile, src/image.cc, src/main.cc,
+	src/posreader.cc, src/robot.cc, src/server.cc, src/win.cc,
+	src/world.cc: Initial import 
+
