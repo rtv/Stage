@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.23 $
+//  $Revision: 1.24 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -471,7 +471,9 @@ void CGripperDevice::RtkUpdate()
   rtk_fig_clear(this->outer_beam_fig);
   
   // if a client is subscribed to this device, then draw break beams
-  if(Subscribed() > 0 && m_world->ShowDeviceData(this->stage_type) )
+  if(this->m_paddles_open && 
+     Subscribed() > 0 && 
+     m_world->ShowDeviceData(this->stage_type) )
   {
     rtk_fig_origin(this->inner_beam_fig, gx, gy, gth );
     rtk_fig_origin(this->outer_beam_fig, gx, gy, gth );
