@@ -72,6 +72,10 @@ static void* TruthReader( void* arg )
 
   int* connfd = (int*)arg;
 
+  sigblock(SIGINT);
+  sigblock(SIGQUIT);
+  sigblock(SIGHUP);
+
   pthread_detach(pthread_self());
 
   stage_truth_t truth;
@@ -127,6 +131,10 @@ static void * TruthWriter( void* arg )
 #endif
 
   int* connfd = (int*)arg;
+
+  sigblock(SIGINT);
+  sigblock(SIGQUIT);
+  sigblock(SIGHUP);
 
   pthread_detach(pthread_self());
 

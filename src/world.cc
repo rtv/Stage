@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.18 $
+//  $Author: gerkey $
+//  $Revision: 1.19 $
 //
 // Usage:
 //  (empty)
@@ -339,6 +339,7 @@ void* CWorld::Main(void *arg)
     //
     sigblock(SIGINT);
     sigblock(SIGQUIT);
+    sigblock(SIGHUP);
 
     // Initialise the GUI
     //

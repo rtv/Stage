@@ -49,6 +49,10 @@ static void * EnvWriter( void* arg )
 
   int* connfd = (int*)arg;
 
+  sigblock(SIGINT);
+  sigblock(SIGQUIT);
+  sigblock(SIGHUP);
+
   pthread_detach(pthread_self());
 
   player_occupancy_data_t og;
@@ -143,6 +147,10 @@ static void * EnvWriter( void* arg )
 
 void* EnvServer( void* )
 {
+  sigblock(SIGINT);
+  sigblock(SIGQUIT);
+  sigblock(SIGHUP);
+
   pthread_detach(pthread_self());
     
   int listenfd;
@@ -188,41 +196,4 @@ void* EnvServer( void* )
       pthread_create(&tid_dummy, NULL, &EnvWriter, connfd ); 
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
