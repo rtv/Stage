@@ -5,7 +5,7 @@
 // Class provides a network server for Stage internals
 // used by external GUIs (XS) and distributed Stage modules
 //
-// $Id: server.hh,v 1.9 2002-11-11 03:09:46 rtv Exp $
+// $Id: server.hh,v 1.9.6.1 2003-01-31 22:35:16 rtv Exp $
 
 #ifndef _SERVER_H
 #define _SERVER_H
@@ -18,8 +18,7 @@
 #include <errno.h>
 
 #include "replace.h" // for poll(2)
-#include "player.h" // from player
-#include "stage_types.hh"
+#include "player.h" // from playerinclude "stage_types.hh"
 #include "worldfile.hh"
 #include "world.hh"
 #include "library.hh"

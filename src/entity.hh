@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15 2003-01-10 00:17:49 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.1 2003-01-31 22:35:15 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -54,8 +54,8 @@
 //extern Library* lib;
 
 // Forward declare the world class
-class CWorld;
-class CWorldFile;
+//class CWorld;
+//class CWorldFile;
 
 ///////////////////////////////////////////////////////////////////////////
 // The basic moveable object class
@@ -63,7 +63,7 @@ class CEntity
 {
   // Minimal constructor Requires a pointer to the library entry for
   // this type, a pointer to the world, and a parent
-  public: CEntity( LibraryItem* libit, CWorld *world, CEntity *parent_entity );
+public: CEntity( int id, int parent_id );
   
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
@@ -84,6 +84,11 @@ public: CEntity* prev;
 public: CEntity* next;
 protected:  void AddChild( CEntity* child );
 
+
+  // everyone shares these vars 
+  static double ppm; 
+  static CMatrix* matrix;
+  static bool enable_gui;
 
   // this is unique for each object, and is equal to its position in
   // the world's child list
@@ -341,14 +346,6 @@ public: virtual void FamilyUnsubscribe();
   // the children's GuiStartup()
 public: virtual void GuiStartup( void );
 
-
-  //#ifdef ENTITY_GUI_DATA_TYPE
-  // allow the GUI to attach some data to an object if it needs to.
-  // the GUI library's header file defines this macro to control this
-  // member's type. if the macro isn't set then there is no valud GUI
-  // and this member doesn't exist. value is NULLed in the constuctor.
-  //public: ENTITY_GUI_DATA_TYPE *gui_data; 
-  //#endif
 public: void *gui_data; 
 
 };

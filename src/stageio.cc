@@ -22,7 +22,7 @@
  * Desc: Stage client/server IO class
  * Author: Richard Vaughan
  * Date: 7 Dec 2000
- * CVS info: $Id: stageio.cc,v 1.22 2002-11-09 02:32:34 rtv Exp $
+ * CVS info: $Id: stageio.cc,v 1.22.6.1 2003-01-31 22:35:16 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -820,4 +820,8 @@ int CStageIO::Read( void )
     
     return 0;
 }
+
+
+
+
 

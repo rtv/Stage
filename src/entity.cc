@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100 2003-01-10 03:46:30 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.1 2003-01-31 22:35:14 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -57,6 +57,12 @@
 #include "library.hh"
 
 
+// init the static vars shared by all entities
+ // everyone shares these vars 
+double CEntity::ppm = 100;
+CMatrix* CEntity::matrix = NULL;
+bool CEntity::enable_gui = true;
+
 ///////////////////////////////////////////////////////////////////////////
 // main constructor
 // Requires a pointer to the parent and a pointer to the world.
@@ -81,7 +87,7 @@ CEntity::CEntity(LibraryItem* libit, CWorld *world, CEntity *parent_entity )
     PRINT_DEBUG1( "ROOT ENTITY %p\n", this );
   
   // register with the world to receive our unique id
-  this->stage_id = m_world->RegisterEntity( this );
+  this->stage_id = 0;//m_world->RegisterEntity( this );
 
   // init the child list data
   this->child_list = this->prev = this->next = NULL;

@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.c,v 1.1.2.1 2003-01-31 01:39:32 rtv Exp $
+ * CVS: $Id: main.c,v 1.1.2.2 2003-01-31 22:35:15 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -37,21 +37,13 @@
 #include <unistd.h> /* for exit(2) */
 
 #include "server.h"
-#include "stage_macros.h"
-//#include "library.hh"
-
-// defined in library.cc
-//extern Library model_library; 
-
-//#define DEBUG
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Global vars
 
 // Quit signal
-int quit = FALSE;
-int paused = FALSE;
+int quit = 0;
+int paused = 0;
 
 // SIGUSR1 toggles pause
 void CatchSigUsr1( int signo )
@@ -110,8 +102,8 @@ void StageQuit( void )
 // Handle quit signals
 void sig_quit(int signum)
 {
-  PRINT_DEBUG1( "SIGNAL %d\n", signum );
-  quit = TRUE;
+  //PRINT_DEBUG1( "SIGNAL %d\n", signum );
+  quit = 1;
 }
 
 
@@ -125,8 +117,12 @@ int main(int argc, char **argv)
 
   fflush( stdout );
 
-  assert( InitServer( argc, argv ) );
-
+  if( InitServer( argc, argv ) == -1 )
+    {
+      printf( "\n Server failed to initialize. Quitting." );
+      quit = 1;
+    }
+  
   puts( "" ); // end the startup output line
   
   // Register callback for quit (^C,^\) events
@@ -145,13 +141,13 @@ int main(int argc, char **argv)
     {
       
       // set up new clients
-      if( AcceptConnections() == FAIL ) break;
+      if( AcceptConnections() == -1 ) break;
       
       // receive commands, property changes and subscriptions from
       // each client. will block until something is read.  if the
       // server receives 'update' commands from all clients, it'll
       // update the world
-      if( ReadFromConnections() == FAIL ) break;
+      if( ServiceConnections() == -1 ) break;
 
       // write out any changed, subscribed properties
       //server->WriteToClients();
@@ -159,6 +155,8 @@ int main(int argc, char **argv)
   
   // clean up and exit
   StageQuit();
+
+  return 0; 
 }
 
 
