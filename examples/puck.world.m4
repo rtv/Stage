@@ -4,6 +4,10 @@ set environment_file = rink.pnm
 set pixels_per_meter = 80
 set laser_res = 2
 
+# these servers enable clients (e.g. xs) access to Stage's internal models
+enable truth_server
+enable environment_server
+
 isi_robot(3.48223304703,3.48223304703,0,6665)
 isi_robot(6.51776695296,3.48223304703,0,6666)
 isi_robot(3.48223304703,6.51776695296,0,6667)
