@@ -2,7 +2,7 @@ SUBDIRS = src worlds tools
 
 DOCSRC = $(top_srcdir)/docsrc
 DOCDIST = $(distdir)/doc 
-DOCINST = $(DESTDIR)$(prefix)/doc
+DOCINST = $(DESTDIR)$(prefix)/share/doc
 
 dist-hook:
 	cd $(DOCSRC) && make 
