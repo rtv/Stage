@@ -1,0 +1,254 @@
+****************************************************************************
+* README.stage  - Richard Vaughan - 28 Nov 2000  - Stage-0.7.2        
+*                                                                          
+* $Id: README.stage,v 1.1.1.1 2000-11-29 00:16:28 ahoward Exp $    
+****************************************************************************
+
+** NOTE **
+** STAGE IS THE NEW NAME FOR ARENA **
+** PLAYER IS THE NEW NAME FOR GOLEM **
+
+** THIS VERSION REQUIRES >= Player-0.7.4a but I recommend you always
+use the most up-to-date Player unless its distribution warns you of
+Stage interface problems.
+
+throughout the text <version> refers to the current Stage version 0.7.2
+
+-- What is Stage? ---------------------------------------------------------
+
+Stage simulates (0<N<254) mobile robots moving in and sensing a
+two-dimensional bitmapped environment, controlled through Player. Player
+provides a powerful, flexible interface to ActivMedia Pioneer 2
+robots; Stage provides virtual Player robots. Various sensor models are
+provided, including sonar, scanning laser rangefinder, color blob
+tracking from a pan-tilt-zoom camera and odometry. Several controllers
+designed in Stage have been demonstrated to work on real robots.
+
+It was designed at the USC Robotics Research Labs to support research
+into multi-agent intelligent autonomous systems.
+
+-- Ownership ------------------------------------------------------------
+
+I hope to release Stage under the GPL in the future.  But for the time
+being all Stage programs, images, examples, source code and
+documentation are copyright (c) Richard Vaughan, 1998-2000.  You *do
+not* have permission to distribute this work. Please point interested
+parties to the Stage home page:
+
+http://robot.usc.edu/stage/
+
+Thanks and enjoy.  RTV.
+
+-- Contributors -----------------------------------------------------------
+
+These fine people have contributed features and fixes:
+
+Brian Gerkey
+Kasper Stoy
+Boyoon Jung
+Jakob Fredslund
+Andrew Howard
+
+Richard Vaughan is supported at the University of Southern California
+by DARPA's TMR & MARS programs, and by an NSF grant. 
+
+-- Whats here? ------------------------------------------------------------
+
+Programs:
+  stage - the simulation engine.
+  sif - a simple TCL/TK GUI for some of Stage's features.
+  posreader - an example client that logs robot position data.
+
+Source for the above is provided, plus some example environments and
+setup files, and this (admittedly minimal) documentation.
+
+-- Requirements ------------------------------------------------------------ 
+
+Developed and tested under Linux kernel 2.2.16, glibc2 [RedHat
+7.0]. Written in reasonable ANSII/POSIX so should compile elsewhere.
+
+Requires: Player [available at http://fnord.usc.edu/player/]
+          TCP/IP, POSIX threads, X11R6, (TCL/TK optional).
+
+-- New features -------------------------------------------------------------
+
+28 Nov 2000:
+	renamed Arena to Stage and updated references to Golem to Player.
+	why? because Arena and Golem are incredibly over-used names for
+	robot simulations. The new names are inspired by a dead poet and
+	reflect the our attitude to life and a-life alike:
+
+	All the world's a stage,
+	And all the men and women merely players;
+	(As You Like It)
+
+	"Life's but a walking shadow, a poor player,
+	That struts and frets his hour upon the stage
+	And then is heard no more. It is a tale	
+	Told by an idiot, full of sound and fury,
+	Signifying nothing." (Macbeth)
+
+15 Nov 2000:
+	heading and compass-heading devices now work properly - 
+	heading gives direction relative to the robot's direction
+	on startup. compass now gives heading relative to north/up.
+
+	added the complex environment `hospital.world' to the examples	
+
+12 Nov 2000:
+	pan-tilt-zoom camera device implemented
+
+7 Nov 2000:
+	color blob tracking and ptz devices implemented
+
+-- Recent bug fixes ---------------------------------------------------------
+
+
+
+15 Nov 2000: 
+	color blobs now sorted and report area correctly 
+
+7 Nov 2000:
+	Position server, GUI server threads now working
+	
+	Window now redrawn when .pos file is re-read
+	
+8 Sept 2000:
+	X window killed behaviour fixed. Shutdown is now graceful.	
+
+	<ctrl>-c behaviour implemented by Brian Gerkey, thanks!
+	Wall crash detection fixed.
+	Messy graphics when dragging fixed.
+	Robots invisible to sensors on startup fixed. 
+
+-- Known bugs, symptoms & fixes ---------------------------------------------
+
+bug in Player - sonar returns garbage if requested before position
+device ie. "pasr" works ok, but "srpa" gives garbled sonar readings.
+
+-- To do --------------------------------------------------------------------
+
+Add final remaining devices to match real Player robots - misc device
+(battery, bumpers, etc)
+
+-- Compiling ---------------------------------------------------------------
+
+0) Obtain and install Player (http://fnord.usc.edu/player)
+
+1) unpack the tarball with
+
+$ tar xzvf Stage-<version>.tgz
+
+2) Check that the top-level Makefile (Stage-<version>/Makefile) has a
+valid path the your Player source e.g. PLAYERSRC = /usr/local/player/ so
+that Stage can find Player's offsets.h file.
+
+3) compile stage:
+
+$ cd Stage-<version>
+$ make clean
+$ make 
+
+will make the executable bin/stage
+
+optionally, as root you can do:
+ 
+$ make install
+
+this will install the executable as /usr/local/stage/bin/stage
+
+-- Running ---------------------------------------------------------------
+
+To run stage, first make sure the Player executable can be found in
+your path, ie. doing
+
+$ which Player
+
+returns a valid Player executable path, such as
+
+/usr/local/player/bin/Player
+
+ - note: I hope that Player will lose its capital 'G' in the near future!
+
+If not, set your PATH variable to include the Player binary directory. 
+eg. in BASH do:
+
+$ export PATH=$PATH:/usr/local/player/bin
+
+To run stage itself do:
+
+$ stage <filename.world>
+
+The .world file specifies what stage must simulate - look at the tag
+names in `demo/SAL2.world' to get the idea. The robot_colors tag
+refers to the ACTS color blob channel for each robot - the nth entry
+specifies the ACTS color channel of the nth robot.
+
+The .pnm entry is the filename of a PNM format graphics file (binary,
+8-bit grayscale, black=floor, white=walls) used as the background.
+GIMP and Photoshop can produce PNM files. A few example environment
+bitmaps (demo/*.pnm) are included in the distribution.
+
+The .pos file specifies the starting (x, y, heading) positions for the
+robots.  Stage will load the first N entries, where N is the number of
+robots requested in the .world file. Entries indicate x y theta in
+meters, meters and radians respectively.
+
+-- Controlling the robots ----------------------------------------------
+
+The virtual robots in Stage are controlled through the Player interface
+package developed by Brian Gerkey, Kasper Stoy and Richard Vaughan at USC.
+Demo controllers in various languages (currently C, TCL & Java) are included
+in the Player distribution which can be found at:
+
+http://fnord.usc.edu/player/
+
+Try using the Player example client <Player_dir>/examples/tcl/viewer.tk
+to check that you can control Stage robots and read from their
+sensors. Viewer.tk is a very useful tool for testing and debugging
+your controller code.
+
+-- Position logging ----------------------------------------------------
+
+Stage provides a TCP server that periodically reports the location of
+all the robots, along with the current simulation time. I haven't
+documented this properly yet, but it is straightforward if you look at
+the example client `posreader'.
+
+Compile it in the src directory with:
+
+$ make posreader
+
+run stage first, the run posreader: 
+
+$ ./posreader
+
+you should see the unique IDs (in hex) and positions (x,y,theta) of
+each robot printed on the standard output every 0.5s. Look at the code
+to see how it works.  I usually pipe the standard output to a file to
+log the robot's positions during an experiment. eg:
+
+$ ./posreader > experiment1.log
+
+-- SIF -------------------------------------------------------------------
+
+A small TCL/TK GUI, the Stage InterFace (SIF) is provided as bin/sif.
+This allows the user to load and save the robot start positions, pause
+the simulation, and to inspect the range sensors (with imperfect
+graphics). It is useful for seting up experiements and debugging
+controllers. Try it out with:
+
+$ sif &
+
+TCL/TK is required. If sif doesn't work right away, check that the first
+line in the file points to a valid `wish' executable.
+
+-------------------------------------------------------------------------
+
+
+
+
+
+
+
+

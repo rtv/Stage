@@ -1,0 +1,22 @@
+#!/usr/bin/wish -f
+
+proc send {id value} {
+    set outsock [socket localhost 50020]
+    puts -nonewline $outsock $id$value
+    #flush $outsock 
+    close $outsock
+}
+
+option add *font fixed
+option add *relief groove
+option add *TixControl*label.width       14
+option add *TixControl*label.anchor      e
+option add *TixControl*entry.width       4
+
+button .sonar -text "View sensors" -command { send "t" "showsonar" }
+button .load -text "Load robot positions" -command { send "t" "loadpos" }
+button .save -text "Save robot positions" -command { send "t" "savepos" }
+button .quit -text Quit -command { send "t" "quit" }
+button .pause -text Pause -command { send "t" "pause" }
+
+pack .quit .pause .save .load .sonar -side bottom -fill x
