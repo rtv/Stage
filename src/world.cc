@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.115 2002-08-22 02:04:38 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.116 2002-08-22 21:13:30 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -556,6 +556,12 @@ void CWorld::SetRectangle(double px, double py, double pth,
   rect.botrx = (int) ((px - cx + sy) * ppm);
   rect.botry = (int) ((py - sx - cy) * ppm);
     
+  //printf( "draw_rect %d,%d %d,%d %d,%d %d,%d\n",
+  //  rect.toplx, rect.toply,
+  //  rect.toprx, rect.topry,
+  //  rect.botlx, rect.botly,
+  //  rect.botrx, rect.botry );
+
   matrix->draw_rect( rect, ent, add );
 }
 

@@ -3,17 +3,17 @@
 #       showing how to include some pre-defined objects
 # Author: Andrew Howard, Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.5 2002-07-26 23:03:40 rtv Exp $
+# CVS: $Id: everything.world,v 1.6 2002-08-22 21:13:30 rtv Exp $
 
 include "usc_pioneer.inc"
 
 #
 # load an environmental bitmap
 #
-environment
+bitmap
 (
   file "cave.pnm.gz"
-  scale 0.03
+  resolution 0.03
 )
 
 #
@@ -21,9 +21,9 @@ environment
 #
 gui
 (
-  size [600 600]
-  origin [8.188 7.438]
-  scale 0.021
+  size [600.000 600.000]
+  origin [7.538 7.464]
+  scale 0.026
   grid [0.2 1]
   showgrid 1
 )
@@ -54,7 +54,7 @@ usc_pioneer(color "green" name "robot2" port 6666 pose [3.753 7.901 -2.915 ])
 usc_pioneer(color "blue" name "robot3" port 6667 pose [7.950 1.381 89.451])
 
 # generate some laser beacons
-laserbeacon( pose [6.420 3.600 216.861] id 5 )
+laserbeacon( pose [6.420 3.600 -143.139] id 5 )
 laserbeacon( pose [3.040 4.260 -88.274] id 7 )
 
 # generate some of the large cylinders we defined above

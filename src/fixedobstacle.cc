@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.21 $
+//  $Revision: 1.22 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -73,7 +73,7 @@ bool CFixedObstacle::Load(CWorldFile *worldfile, int section)
   // Get the scale of the image;
   // i.e. the width/length of each pixel in m.
   // If no scale is specified, use the world resolution.
-  this->scale = worldfile->ReadLength(section, "scale", 0);
+  this->scale = worldfile->ReadLength(section, "scale", 0 );
   
   if( this->scale != 0 )
     PRINT_WARN("worldfile bitmap keyword 'scale' is deprecated,"
@@ -82,7 +82,7 @@ bool CFixedObstacle::Load(CWorldFile *worldfile, int section)
   // Get the scale of the image;
   // i.e. the width/length of each pixel in m.
   // If no scale is specified, use the world resolution.
-  this->scale = worldfile->ReadLength(section, "resolution", 0);
+  this->scale = worldfile->ReadLength(section, "resolution", this->scale );
   if (this->scale == 0)
   {
     this->scale = 1.0 / m_world->ppm;

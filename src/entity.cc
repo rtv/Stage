@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.77 2002-08-22 02:04:38 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.78 2002-08-22 21:13:30 rtv Exp $
  */
 
 #include <math.h>
@@ -143,14 +143,6 @@ CEntity::~CEntity()
 void CEntity::GetGlobalBoundingBox( double &xmin, double &ymin,
 				   double &xmax, double &ymax )
 {
-  //double ox, oy, oth;
-
-  //this->GetGlobalPose( ox, oy, oth );
-
-  // find the positions of our corners
-  //double dx = size_x/2.0 * cos(oth) - size_x/2.0 * sin(oth);
-  //double dy = size_y/2.0 * sin(oth) + size_y/2.0 * cos(oth);
-
   double x[4];
   double y[4];
 
@@ -174,7 +166,6 @@ void CEntity::GetGlobalBoundingBox( double &xmin, double &ymin,
   y[3] = - dy;
   this->LocalToGlobal( x[3], y[3], dummy );
 
-  // now sort them by size
   //printf( "origin: %.2f,%.2f,%.2f \n", ox, oy, oth );
   //printf( "corners: \n" );
   //for( int c=0; c<4; c++ )
@@ -353,10 +344,36 @@ void CEntity::Update( double sim_time )
 // Render the entity into the world
 void CEntity::Map(double px, double py, double pth)
 {
-  MapEx(px, py, pth, true);
+  //printf( "\nMAP\t%.2f %.2f %.2f\n",
+  //  px, py, pth );
+
+  // shift the center of our image by the offset
+ 
+  //printf( "map global %.2f %.2f %.2f\n",
+  //  px, py, pth );
+
+  // get the pose in local coords
+  this->GlobalToLocal( px, py, pth );
+
+  //printf( "map local %.2f %.2f %.2f\n",
+  //  px, py, pth );
+
+  // add our center of rotation offsets
+  px += origin_x;
+  py += origin_y;
+
+  //printf( "map local shifted %.2f %.2f %.2f\n",
+  //  px, py, pth );
+
+   // convert back to global coords
+  this->LocalToGlobal( px, py, pth );
+
   this->map_px = px;
   this->map_py = py;
   this->map_pth = pth;
+
+
+  MapEx(map_px, map_py, map_pth, true);
 }
 
 
@@ -364,6 +381,9 @@ void CEntity::Map(double px, double py, double pth)
 // Remove the entity from the world
 void CEntity::UnMap()
 {
+  //printf( "UNMAP\t%.2f %.2f %.2f\n",
+  //  map_px, map_py, map_pth );
+
   MapEx(this->map_px, this->map_py, this->map_pth, false);
 }
 
@@ -388,28 +408,17 @@ void CEntity::ReMap(double px, double py, double pth)
 // Primitive rendering function
 void CEntity::MapEx(double px, double py, double pth, bool render)
 {
-  double qx = px;
-  double qy = py;
-  double qth = pth;
- 
-  // get the pose in local coords
-  this->GlobalToLocal( qx, qy, qth );
-
-  // add our center of rotation offsets
-  qx += origin_x;
-  qy += origin_y;
-
-   // convert back to global coords
-  this->LocalToGlobal( qx, qy, qth );
-
+  //printf( "mapex %.2f %.2f %.2f\n",
+  //  px, py, pth );
+  
   switch (this->shape)
     {
     case ShapeRect:
-      m_world->SetRectangle(qx, qy, qth, 
+      m_world->SetRectangle(px, py, pth, 
 			    this->size_x, this->size_y, this, render);
       break;
     case ShapeCircle:
-      m_world->SetCircle(qx, qy, size_x / 2, this, render);
+      m_world->SetCircle(px, py, this->size_x / 2, this, render);
       break;
     case ShapeNone:
       break;
@@ -788,8 +797,11 @@ int CEntity::SetProperty( int con, EntityProperty property,
     RtkStartup();
   }
   
-  if( move_figure && this->fig )
-    rtk_fig_origin(this->fig, local_px, local_py, local_pth );
+  //double gx, gy, gth)
+  //ReMap
+
+  //if( move_figure && this->fig )
+  //rtk_fig_origin(this->fig, local_px, local_py, local_pth );
 #endif 
 
   return 0;
