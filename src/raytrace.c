@@ -169,7 +169,7 @@ stg_model_t* itl_first_matching( itl_t* itl,
       itl->x += itl->small_incr * itl->cosa;// - itl->offx;
       itl->y += itl->small_incr * itl->sina;// - itl->offy;
       itl->range += itl->small_incr;
-      
+
       // if there's anything matching in the small cell
       if( (found = array_first_matching( itl->models, func, finder )) )
 	{

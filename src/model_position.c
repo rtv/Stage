@@ -1,13 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: model_laser.c
+// File: model_position.c
 // Author: Richard Vaughan
 // Date: 10 June 2004
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.12 $
+//  $Revision: 1.12.2.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 

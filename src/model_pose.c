@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.31 $
+//  $Revision: 1.31.2.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -78,7 +78,9 @@ stg_model_t* stg_model_test_collision_at_pose( stg_model_t* mod,
       stg_pose_sum( &p1, pose, &pp1 );
       stg_pose_sum( &p2, pose, &pp2 );
 
-      //printf( "tracing %.2f %.2f   %.2f %.2f\n",  p1.x, p1.y, p2.x, p2.y );
+      
+
+      //printf( "tracing line %d of %d %.2f %.2f   %.2f %.2f\n", l, count, p1.x, p1.y, p2.x, p2.y );
 
       itl_t* itl = itl_create( p1.x, p1.y, p2.x, p2.y, 
 			       mod->world->matrix, 
@@ -90,11 +92,11 @@ stg_model_t* stg_model_test_collision_at_pose( stg_model_t* mod,
 	{
 	  if( hitx ) *hitx = itl->x; // report them
 	  if( hity ) *hity = itl->y;	  
+	  return hitmod; // we hit this object! stop raytracing
 	}
 
       itl_destroy( itl );
 
-      return hitmod; // we hit this object! stop raytracing
     }
 
   return NULL;  // done 
@@ -104,24 +106,14 @@ stg_model_t* stg_model_test_collision_at_pose( stg_model_t* mod,
 
 int stg_model_update_pose( stg_model_t* model )
 { 
-  PRINT_DEBUG4( "pose update model %d (vel %.2f, %.2f %.2f)", 
-		model->id, model->velocity.x, model->velocity.y, model->velocity.a );
+  //PRINT_DEBUG4( "pose update model %d (vel %.2f, %.2f %.2f)", 
+  //	model->id, model->velocity.x, model->velocity.y, model->velocity.a );
  
   stg_velocity_t* vel = stg_model_get_velocity(model);  
-
 
   stg_pose_t pose;
   memcpy( &pose, stg_model_get_pose( model ), sizeof(pose));
   
-  stg_pose_t oldpose;
-  memcpy( &oldpose, &pose, sizeof(pose));
-
-  stg_energy_data_t* en = stg_model_get_energy_data( model );
-
-  // see if we get any velocity from impacts
-  stg_model_impact( model );
-
-  //if( en->joules > 0 && (vel->x || vel->y || vel->a ) )
   if( (vel->x || vel->y || vel->a ) )
     {
       
@@ -137,68 +129,12 @@ int stg_model_update_pose( stg_model_t* model )
       stg_model_t* hitthing = 
 	stg_model_test_collision_at_pose( model, &pose, &hitx, &hity );
       
-      if( model->friction )
-	{
-	  // compute a new velocity, based on "friction"
-	  double vr = hypot( vel->x, vel->y );
-	  double va = atan2( vel->y, vel->x );
-	  vr -= vr * model->friction;
-	  vel->x = vr * cos(va);
-	  vel->y = vr * sin(va);
-	  vel->a -= vel->a * model->friction; 
-
-	  // lower bounds
-	  if( vel->x < 0.001 ) vel->x == 0.0;
-	  if( vel->y < 0.001 ) vel->y == 0.0;
-	  if( vel->a < 0.01 ) vel->a == 0.0;
-	  
-	}
-
       if( hitthing )
 	{
-	  if( hitthing->friction == 0 ) // hit an immovable thing
-	    {
-	      PRINT_DEBUG( "HIT something immovable!" );
-	      model->stall = 1;
-	    }
-	  else
-	    {
-	      puts( "hit something with non-zero friction" );
-
-	      // Get the velocity of the thing we hit
-	      //stg_velocity_t* vel = stg_model_get_velocity( hitthing );
-	      double impact_vel = hypot( vel->x, vel->y );
-	      
-	      // TODO - use relative mass and velocity properly
-	      //stg_kg_t* mass = stg_model_get_mass( hitthing );
-	     
-	      // Compute bearing from my center of mass to the impact point
-	      double pth = atan2( hity-pose.y, hitx-pose.x );
-	      
-	      // Compute bearing TO impacted ent
-	      //double pth2 = atan2( o.y-pose.y, o.x-pose.x );
-	      
-	      if( impact_vel )
-		{
-		  double vr =  fabs(impact_vel);
-
-		  stg_velocity_t given;
-		  given.x = vr * cos(pth);
-		  given.y = vr * sin(pth);
-		  given.a = 0;//vr * sin(pth2);
-		  
-		  // get some velocity from the impact
-		  //hitthing->velocity.x = vr * cos(pth);
-		  //hitthing->velocity.y = vr * sin(pth);		  
-
-		  printf( "gave %.2f %.2f vel\n",
-			  given.x, given.y );
-
-		  stg_model_set_velocity( hitthing, &given );
-		}
-	      
-	    }
+	  PRINT_DEBUG( "HIT something immovable!" );
+	  model->stall = 1;
 	  
+	  vel->x = vel->y = vel->a = 0.0;
 	}
       else	  
 	{

@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.25 2004-10-11 22:34:08 rtv Exp $
+# CVS: $Id: test.world,v 1.25.2.1 2004-10-29 01:09:41 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -10,7 +10,7 @@ resolution     0.02
 #resolution_low  1.0
 
 interval_sim 100  # milliseconds per update step
-interval_real 50 # real-time milliseconds per update step
+interval_real 100 # real-time milliseconds per update step
 
 # defines Pioneer-like robots
 include "pioneer.inc"
