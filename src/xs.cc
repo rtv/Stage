@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.38 2001-10-08 03:55:39 vaughan Exp $
+ * $Id: xs.cc,v 1.39 2001-10-13 02:31:48 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -54,7 +54,7 @@ CXGui* win = 0;
 Display* display = 0; 
 int screen = 0;
 
-const char* versionStr = "0.3";
+const char* versionStr = "0.4";
 const char* titleStr = "XS";
 
 #define USAGE  "\nUSAGE: xs [-h <host>] [-tp <port>] [-ep <port>]\n\t[-geometry <geometry string>] [-zoom <factor>]\n\t[-pan <X\%xY\%>]\nDESCRIPTIONS:\n-h <host>: connect to Stage on this host (default `localhost')\n-tp <port>: connect to Stage's Truth server on this TCP port (default `6601')\n-ep <port>: connect to Stage's Environment server on this TCP port (default `6602')\n-geometry <string>*: standard X geometry specification\n-zoom <factor>*: floating point zoom multiplier\n-pan <X\%xY\%>*: pan initial view X percent of maximum by Y percent of maximum\n"
@@ -427,19 +427,6 @@ static void* TruthWriter( void* )
 	      writecnt += (size_t)thiswritecnt;
 	    }
 	}
-
-      //stage_header_t ack;
-      //ack.type = Continue;
-      //ack.data = 0xFFFFFFFF;
-      
-      // send an ACK
-      //puts( "XS: sending ACK" );
-      //if( write( ffd, &ack, sizeof(ack) ) < 1 )
-      //perror( "XS: Failed to write ACK" );
-      
-      //printf( "[ACK (%d:%x)]\n", ack.type, ack.data );
-                  
-      //sleep( 1 ); // sleep until the timer goes off in max.100ms time
     }
 }
 
@@ -475,11 +462,6 @@ bool ConnectToTruth( void )
       fflush( stdout );
       exit( -1 );
     }
-  //#ifdef VERBOSE
-  //else
-  //puts( " OK." );
-  //#endif
-
   // send the connection type byte - we want an asynchronous connection
 
   char c = STAGE_ASYNC;
@@ -929,15 +911,15 @@ void CXGui::RenderFamily( xstruth_t &truth )
   TruthMap::iterator it;
   for( it = truth_map.begin(); it != truth_map.end(); it++ )
     if( it->second.parent_id == truth.stage_id )
-      {
-
-#ifdef DEBUG
-	puts( "RECURSE" );
-#endif
-
-	// recurse to render the child 
-	RenderFamily( it->second );
-      }
+    {
+      
+      //#ifdef DEBUG
+      //puts( "RECURSE" );
+      //#endif
+      
+      // recurse to render the child 
+      RenderFamily( it->second );
+    }
   
   RenderObject( truth );
 }
@@ -959,6 +941,7 @@ void CXGui::HandleIncomingQueue( void )
       puts( "undraw" );
 #endif
 
+      
       RenderFamily( truth ); // undraw it
       
       // update it
@@ -966,6 +949,7 @@ void CXGui::HandleIncomingQueue( void )
       truth.y = pose.y / 1000.0;
       truth.th = DTOR(pose.th);
 
+      truth_map[ pose.stage_id ] = truth; // update the database with it
 
 #ifdef DEBUG
       puts( "\nredraw" );
@@ -974,12 +958,6 @@ void CXGui::HandleIncomingQueue( void )
       RenderFamily( truth ); // redraw it
 
       XFlush( display );// reduces flicker
-
-
-#ifdef DEBUG
-      puts( "" );
-#endif
-      truth_map[ pose.stage_id ] = truth; // update the database with it
     }
 }
 
@@ -1977,6 +1955,11 @@ void CXGui::HandleMotionEvent( XEvent &reportEvent )
 
 void CXGui::HandleConfigureEvent( XEvent &reportEvent )
 {
+  // ignore this if it has a count > 0
+
+  if( reportEvent.xexpose.count > 0 )
+    return;
+
   //cout << "CONFIGURE NOTIFY" << endl;
   
   //if( width != reportEvent.xconfigure.width ||
@@ -2068,17 +2051,6 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 	}
       else
 	{ 
-	  //printf( "XS: Creating PlayerClient on %s:%d\n",
-	  //  ent->hostname, ent->id.port );
-	  
-	  // int* goo;
-	  // create a new client and add any supported proxies
-	  //if( !(goo = new int[ 60000 ] ))
-	  //{
-	  //printf( "_new_ failed on ints shit!. Bailing\n" );
-	  //exit( -1 );
-	  //}
-
 	  // create a new client and add any supported proxies
 	  if( !(cli = new PlayerClient( ent->hostname, ent->id.port ) ))
 	  {
