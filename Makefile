@@ -1,11 +1,11 @@
 #
 # Makefile - the top level Makefile to build Stage
 # RTV
-# $Id: Makefile,v 1.5 2000-12-08 09:08:11 vaughan Exp $
+# $Id: Makefile,v 1.6 2001-01-13 02:44:29 gerkey Exp $
 # 
 
 # the directory of the player source
-PLAYERSRC = /usr/local/player
+PLAYERSRC = $(PWD)/../player
 
 # install stage in this directory
 INSTALL = /usr/local/stage
