@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: 889.world,v 1.4 2005-02-09 01:52:13 rtv Exp $
+# CVS: $Id: 889.world,v 1.5 2005-03-25 02:45:07 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 resolution 0.02 
@@ -32,6 +32,7 @@ map
   size [36 12]
   pose [18.000 6.000 0.000]
   boundary 1
+  gui_grid 1
 )
 
 # create a robot
