@@ -5,7 +5,7 @@
 // Date: 15 Nov 2001
 // Desc: Class for handling world files
 //
-// $Id: worldfile.hh,v 1.3 2001-12-31 17:21:26 inspectorg Exp $
+// $Id: worldfile.hh,v 1.4 2002-01-16 19:52:04 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -159,6 +159,8 @@ class CWorldFile
   
   // Name of the file we loaded
   private: char *filename;
+  // Name of the file we loaded
+public: char *GetFilename( void ) { return( filename ); };
 
   // Section list
   private: int section_size;
