@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.1 2002-10-28 02:35:38 rtv Exp $
+% CVS: $Id: stage.tex,v 1.2 2002-11-09 01:41:13 rtv Exp $
 
 \documentclass[11pt,twoside]{report}
 
@@ -90,34 +90,38 @@
 
   \section{What is Stage?}
 
-    Stage simulates a population of mobile robots, sensors and objects
-    in a two-dimensional bitmapped environment. Stage is designed to
-    support research into multi-agent autonomous systems, so it
-    provides fairly simple, computationally cheap models of lots of
-    devices rather than attempting to emulate any device with great
+    Stage is a product of the Player/Stage Project, a collection of
+    software tools to support research in autonomous robotics and
+    intelligent sensor systems.  Stage simulates a population of
+    mobile robots, sensors and objects in a two-dimensional bitmapped
+    environment. Stage is designed with multi-agent systems in mind,
+    so it provides fairly simple, computationally cheap models of lots
+    of devices rather than attempting to emulate any device with great
     fidelity. We have found this to be a useful approach.
 
     Stage devices are usually controlled through \emph{Player}; a
-    networked robot server. Player comes with a collection of device
-    drivers for interfacing with real robots and sensors. Stage
-    provides populations of virtual devices for Player. Users write
-    robot controllers and sensor algorithms as 'clients' to the Player
-    'server'. Typically, clients cannot tell the difference between
-    the real robot devices and their simulated Stage equivalents
-    (unless they try very hard). We have found that clients developed
-    using Stage will work with little or no modification with the real
-    robots and vice versa. Thus Stage allows rapid prototyping of
-    controllers destined for real robots. Stage also allows
-    experiments with realistic robot devices you don't happen to have.
+    networked robot server. Player provides a convenient interface to
+    a set of device drivers for real robots and sensors. Stage
+    simulates a population of devices and makes them available thorugh
+    Player. Users
+    write robot controllers and sensor algorithms as `clients' to the
+    Player `server'. Typically, clients cannot tell the difference
+    between the real robot devices and their simulated Stage
+    equivalents (unless they try very hard). We have found that
+    clients developed using Stage will work with little or no
+    modification with the real robots and vice versa. Thus Stage
+    allows rapid prototyping of controllers destined for real
+    robots. Stage also allows experiments with realistic robot devices
+    you don't happen to have.
   
     Various sensors and actuators are provided, including sonar,
-    scanning laser rangefinders, vision (color blob detection),
-    odometry, and a differential steer robot base.
+    scanning laser rangefinder, color-blob vision, odometry, grippers,
+    bumpers/whiskers and mobile robot bases.
 
   \section{How to get Stage and related software}
 
-    The primary source for all things Player and Stage is the project
-    homepage:\\\\ \indent \HOMEPAGE\\	
+   The main resource for Player/Stage is the project
+    homepage:\\\\ \indent \HOMEPAGE\\
 	
    \noindent Access to source code releases, access to the CVS
    development tree, bug tracking, user mailing lists, etc.~ is
@@ -143,14 +147,23 @@
 
   \section{Requirements}
 
-    Stage was developed and tested under Linux kernel 2.4.2,
-    glibc-2.2.2.  Written in reasonable ANSII/POSIX so should compile
+    \begin{itemize}
+    \item Player [\HOMEPAGE]
+    \item libstdc++
+    \end{itemize}
+    
+    Optional (but highly recommended): 
+    \begin{itemize}
+      \item libRTK [\HOMEPAGE]
+	\begin{itemize}
+	  \item X11R6, GTK++.
+\end{itemize}
+	\end{itemize}
+
+    Stage was developed and tested under Linux kernel 2.4,
+    glibc-2.2.  Code is reasonable ANSII/POSIX so it should compile
     elsewhere. No promises, but people have found it to work on a
     variety of set-ups.
-
-    Requires: Player [http://robotics.usc.edu/player/]
-              TCP/IP, POSIX threads.
-	Optional (but highly recommended): X11R6, GTK++.
   
   \section{Ownership}
 
@@ -173,13 +186,14 @@
   \section{Bugs and feedback}
   
     This is constantly evolving research software. It is bound to
-    contain bugs, despite our diligent testing.  If you manage to
-    break something, or if some aspect of Stage's behavior seems wrong
-    or non-intuitive, let us know. If you have a problem, please check
-    the website and bug tracking logs. If you can't find an answer
-    there, use the bug tracker to tell us about the problem. Better
-    still, fix it and send us the patch. To stay in touch with the
-    developers and other users, join the mailing lists.
+    contain bugs, despite developer and user testing.  If you find
+    something that appears to be a bug, or if some aspect of Stage's
+    behavior seems wrong or non-intuitive, let us know. If you have a
+    problem, please check the website and bug tracking logs. If you
+    can't find an answer there, use the bug tracker to tell us about
+    the problem. Better still, fix it and send us the patch. To stay
+    in touch with the developers and other users, join the mailing
+    lists.
 
     When submitting bugs, include as much information as possible,
     including the Stage version, OS type and version, and any output
@@ -187,7 +201,9 @@
     (hopefully) to repeat and analyze the problem.  Of course, there
     is NO WARRANTY on this software, and no guarantee that we will fix
     your problem.  But we use Stage for our research and we want it to
-    work properly, so we will do our best.
+    work properly, so we will do our best. Again {\emph please use the
+    sourceforge bug tracking tools}; that's the best way to see your
+    problem solved.
 
   \section{What happened to...?}
 	
@@ -233,10 +249,9 @@ Lab and HRL Labs and are freely available under the GNU General Public
 License from http://playerstage.sourceforge.net.
 \end{quote}
 By including such acknowledgements, you do more than feed our egos and
-further our academic careers.  You spread the word about the
-Player/Stage project, which will bring more users and developers, as
-well as please our funders, ensuring that we will continue to be
-allowed to hack on the software.
+further our careers.  You spread the word about the Player/Stage
+project, which will bring more users and developers, as well as please
+our funders, ensuring that we will continue hacking on the software.
 
   \section{Acknowledgements}
 
@@ -246,7 +261,7 @@ Stage originated at the University of Southern California Robotics
     DAAE07-98-C-L028 (TMR), ONR Grants N00014-00-1-0140 and
     N0014-99-1-0162, and JPL Contract No. 1216961. Development at HRL
     Laboratories is supported by a DARPA contract (SDR). Thanks to
-    Doug Gage at DARPA.
+    Doug Gage at DARP IPTO.
 
 Thanks to our contributors and users, particularly the USC Robotics
 Lab students and alumni who have been generous with their advice, bug
@@ -259,30 +274,34 @@ tools can be found on the website.
 \chapter{Running Stage}
   \section{Building and Installing Stage}
 
-    {\bf You must install Player {\sl before} installing Stage.} 
-    See:
+  You must install Player {\em before} building Stage. To build Stage
+ with an interactive GUI, which is highly recommended, you must
+ install libRTK before building Stage. Player and libRTK are availabe
+ from the Player/Stage files page:
 	\begin{verbatim}
-	 http://playerstage.sourceforge.net/player
+	http://sourceforge.net/project/showfiles.php?group_id=42445
 	\end{verbatim}
-
-    \noindent Once you've downloaded, built and installed Player, download
-    the Stage tarball and unpack it with:
+	\noindent Build and install Player and libRTK following the
+	instructions in the packages' README and INSTALL files. Now
+	download thew Stage tarball and unpack it with:
       \begin{verbatim}
       $ tar xzvf Stage-1.2.tgz
       \end{verbatim}
-    Now follow the instructions in the top-level README file.
+   \noindent Now follow the instructions for your release in the
+    top-level README and INSTALL files.
 
   \section{Running Stage}
 
     Before running stage, first make sure the Player executable can be
-    found in your path (by default, Stage will automatically start an instance of Player, so it needs to know where to find the Player executable).
+    found in your path (Stage will automatically start an instance of
+    Player, so it needs to know where to find the Player executable).
     For example, try:
       \begin{verbatim}
       $ which player
       \end{verbatim}
     and make sure it returns a valid Player executable path, such as
       \begin{verbatim}
-      ~/player-1.2/bin/player
+      ~/player-1.3/bin/player
       \end{verbatim}
     If not, set your PATH variable to include the Player binary directory. 
     For example, in BASH do:
@@ -290,7 +309,7 @@ tools can be found on the website.
       $ export PATH=$PATH:$HOME/player-1.2/bin
       \end{verbatim}  
 
-    To run stage do: 
+    The general command line to run Stage is: 
       \begin{verbatim} 
       stage [options] <filename.world> 
       \end{verbatim} 
@@ -305,18 +324,18 @@ tools can be found on the website.
     like this:
 
 	\begin{verbatim} 
-	$ stage examples/simple.world
+	$ stage worlds/everything.world
 
-	 ** Stage  v1.2 ** 
-	[World examples/simple.world]
-	[Server rover:6601]
-	** Player v1.2 ** [Stage /tmp/stageIO.vaughan.0]
+	 ** Stage  v1.3 ** 
+	[World worlds/everything.world]
+	[Server localhost:6601]
+	** Player v1.3 ** [Stage /tmp/stageIO.username.0]
       \end{verbatim}
 
     At this point you should be able to interact with objects in the
     world with the GUI (try dragging things around) and access sensors
     and actuators through Player. Try using the Player client program
-    (<player1.2>/utils/playerv/playerv) to see the output from some
+    (<player\_root>/utils/playerv/playerv) to see the output from some
     sensors.
 
     %Should probably have a Help! It didnt work section. AH
@@ -325,14 +344,13 @@ tools can be found on the website.
   
   \section{The World File}
 
-    The world file is a description of the world that Stage
-    must simulate.  It describes robots, sensors, actuators,
-    moveable and immovable objects.  The world file can also
-    be used to control many aspects of the simulation engine,
-    such as its speed and fidelity.  
-    See Chapter \ref{sec:world} for a complete description of
-    the world file format.  Sample world files can also be
-    found in the examples directory.
+    The world file is a description of the world that Stage must
+    simulate.  It describes robots, sensors, actuators, moveable and
+    immovable objects.  The world file can also be used to control
+    many aspects of the simulation engine, such as its speed and
+    fidelity.  See Chapter \ref{sec:world} for a complete description
+    of the world file format.  Sample world files can also be found in
+    the `worlds' directory.
 
   \section{Command Line Arguments}
 
@@ -380,16 +398,17 @@ tools can be found on the website.
     zero seconds (-u 0.0).  
     \end{xarg}
 
-    \begin{xarg}{-c <hostname>}Client mode - run Stage as a client to
-    a Stage server on <hostname>. See below for discussion of Stage
-    client/server.  \end{xarg}
+%% RTV - ommitting client/server stuff for 1.3
+%%     \begin{xarg}{-c <hostname>}Client mode - run Stage as a client to
+%%     a Stage server on <hostname>. See below for discussion of Stage
+%%     client/server.  \end{xarg}
 
-    \begin{xarg}{-cl}Client mode (on localhost) - equivalent to '-c localhost' 
-	 \end{xarg}
+%%     \begin{xarg}{-cl}Client mode, server on localhost - equivalent to '-c localhost' 
+%% 	 \end{xarg}
 
-    \begin{xarg}{-p <port num>}
-    Set the port number for the Stage server to accept connections. Default is 6601.
-    \end{xarg}
+%%     \begin{xarg}{-p <port num>}
+%%     Set the port number for the Stage server to accept connections. Default is 6601.
+%%     \end{xarg}
 
     \begin{xarg}{-l <logfile>} Enables logging of timing and
     throughput measurements into <logfile>. The file has a header that
@@ -410,47 +429,47 @@ tool for testing and debugging your controller code.
 Client libraries in other languages including Java and Python are also
 available. Check the website for the latest resources.
 
-\section{Stage Server and Clients}
-Internally, Stage consists of an environment and a collection of
-devices. Together these comprise a world model. Stage also contains a
-GUI which shows the state of the world and allows the user to
-manipulate objects. This is all that many users need to use. However,
-Stage also contains a network server that allows external client
-programs to obtain complete information about the world. Eventually,
-Stage will be capable of distributing compute load across multiple
-clients (``imagine a Beowulf cluster of those'', etc.). For now, Stage can
-act as a client to itself. This is great as an external networked
-viewer (it replaces the old program XS). For example, you can run
-Stage on one machine without a gui:
+%% \section{Stage Server and Clients}
+%% Internally, Stage consists of an environment and a collection of
+%% devices. Together these comprise a world model. Stage also contains a
+%% GUI which shows the state of the world and allows the user to
+%% manipulate objects. This is all that many users need to use. However,
+%% Stage also contains a network server that allows external client
+%% programs to obtain complete information about the world. Eventually,
+%% Stage will be capable of distributing compute load across multiple
+%% clients (``imagine a Beowulf cluster of those'', etc.). For now, Stage can
+%% act as a client to itself. This is great as an external networked
+%% viewer (it replaces the old program XS). For example, you can run
+%% Stage on one machine without a gui:
 
-\begin{verbatim}
-batman% stage -g examples/everything.world 
-\end{verbatim}
+%% \begin{verbatim}
+%% batman% stage -g examples/everything.world 
+%% \end{verbatim}
 
-It'll start up and run as normal (actually a little faster than normal
-as it isn't working on the GUI). When you want to see what's going on, you can start up another Stage in client mode:
+%% It'll start up and run as normal (actually a little faster than normal
+%% as it isn't working on the GUI). When you want to see what's going on, you can start up another Stage in client mode:
 
-\begin{verbatim}
-batman% stage -c localhost
-\end{verbatim}
+%% \begin{verbatim}
+%% batman% stage -c localhost
+%% \end{verbatim}
 
-or equivalently, use the '-cl' client-to-localhost option:
+%% or equivalently, use the '-cl' client-to-localhost option:
 
-\begin{verbatim}
-batman% stage -cl
-\end{verbatim}
+%% \begin{verbatim}
+%% batman% stage -cl
+%% \end{verbatim}
 
-The Stage client should start up, connect to the Stage server running
-on the local machine, download the world and allow you to interact
-with it as normal. When you're done, you can quit the client; the
-server keeps running. Even better, you can run the Stage client on a
-different machine and connect via the network to the server:
+%% The Stage client should start up, connect to the Stage server running
+%% on the local machine, download the world and allow you to interact
+%% with it as normal. When you're done, you can quit the client; the
+%% server keeps running. Even better, you can run the Stage client on a
+%% different machine and connect via the network to the server:
 
-\begin{verbatim}
-robin% stage -c batman
-\end{verbatim}
+%% \begin{verbatim}
+%% robin% stage -c batman
+%% \end{verbatim}
 
-Stage can handle many simultaneous clients.
+%% Stage can handle many simultaneous clients.
 
 %////////////////////////////////////////////////////////////////////////////
 \chapter{Using the Stage GUI}
@@ -516,7 +535,18 @@ Quit & exit Stage\\
 \begin{tabular}{|l|l|}
 \hline 
 Grid & toggle view of a 1m grid\\
-Device data menu & toggle visualizations of data generated by devices\\
+Matrix & toggle view of underlying bitmap representation\\
+Data menu & toggle visualizations of data generated by devices\\
+Object menu & toggle visualizations of object bodies\\
+\hline
+\end{tabular}
+
+\subsection{Action Menu}
+
+\begin{tabular}{|l|l|}
+\hline 
+Subscribe to all & toggle Player subscriptions to all devices,
+enabling data visualization for just about evetrything. \\
 \hline
 \end{tabular}
 
@@ -533,7 +563,8 @@ user selects the {\bf File:Save} menu option.
 
 Note that the world file format has changed significantly from
 previous versions. The script \verb+tools/worldfileconv.tcl+ will
-attempt to convert your old world files to the new format.
+attempt to convert your old (pre Stage-1.2) world files to the new
+format.
 
 \section{Basic Syntax}
 
@@ -602,7 +633,7 @@ This entry creates a position device named ``robot1'' attached to port
 6665, with initial position $(1, 1)$ and orientation of $0$.  Property
 values can be either numbers (\verb'6665'), strings (indicated by
 double quotes \verb'"robot1"') or tuples (indicated by brackets
-\verb'[1 1 0]').
+\verb'[1 1 0]'). 
 
 \section{Defining new entity types}
 
@@ -720,33 +751,34 @@ world file examples.
 
 \chapter{Entity Reference}
 
-This chapter describes all of the {\em primitive} entity types
-supported by Stage.  All entity types defined in the world file are
-ultimately composed of one or more primitive types.
+This chapter describes all of the models supported by Stage.  All
+entity types defined in the world file are ultimately composed of one
+or more models. Each model is implemented by code in the
+{\tt <stage\_src>/src/models} directory.
 
 
 \section{Properties and the type heirarchy}
 
-Each entity type has zero or more {\em properties} associated with it;
-these properties specify characteristics such as an object's shape or
-a sensor's range.  Entity types are organized into a heriarchy, with
-sub-types inheriting properties from their parent type.  Thus, for
-example, all passive objects (boxes, pucks, beacons and so on) are
-derived from a generic \verb'entity' type.  Similary, all controllable
-objects (sensors and actuators) are derived from a generic
-\verb'device' type, which is in turn derived from the generic
-\verb'entity' type.
+Each model has zero or more {\em properties} associated with it; these
+properties specify characteristics such as an object's shape or a
+sensor's range.  Models are organized into a heriarchy, with sub-types
+inheriting properties from their parent type.  Thus, for example, all
+passive objects (boxes, pucks, beacons and so on) are derived from a
+generic \verb'entity' type.  Similary, all controllable objects
+(sensors and actuators) are derived from a generic \verb'device' type,
+which is in turn derived from the generic \verb'entity' type.
 
 Note that both the \verb'entity' and \verb'device' types are {\em
-abstract} (to borrow some C++ parlance) since they cannot be
-instantiated directly.
+abstract} (in C++ parlance) since they cannot be instantiated
+directly.
 
-\newpage
+%\newpage
 \section{Object Summary}
 \label{sec.ref.objects}
 
-The following table lists all of the {\em objects} (passive entity
-types) supported by Stage.  See Section \ref{sec.ref.devices} for a
+The following table lists all of the {\em objects} (models of passive
+environmental objects) supported by Stage. They are described in
+detail in the follwing pages. See Section \ref{sec.ref.devices} for a
 list of supported {\em devices}.
 \vspace{1em}\\\noindent
 \begin{tabularx}{\columnwidth}{llX}
@@ -754,13 +786,15 @@ list of supported {\em devices}.
 Type & Parent type & Description \\
 \hline 
 
-\verb'environment' & None & Describes the fixed environment (extent,
-obstacles, etc). \\
 
 \verb'entity' & None & A generic entity, which has shape, exent and
-color. \\
+color - cannot be instantiated directly. \\
 
 \hline
+
+\verb'bitmap' & \verb'entity' & A pattern of fixed obstacles loaded
+from a PNM bitmap file. Used to import building floorplans, walls,
+boulders, etc. \\
 
 \verb'box' & \verb'entity' & A fixed obstacle (can be moved by the
 user but not the robot). \\
@@ -768,55 +802,30 @@ user but not the robot). \\
 \verb'puck' & \verb'entity' & A movable object (can be moved by both
 the user and the robot).\\
 
-\verb'laserbeacon' & \verb'entity' & A retro-reflective laser barcode;
-for use with \verb'lbd' device.\\
-
 \hline
 \end{tabularx}
 \vspace{1em}\\
 
 
-\newpage
-\section{The {\tt environment}}
 
-The \verb'environment' type is used to define the fixed environment
-(walls, obstacles, etc); each world file must instantiate exactly {\em
-one} \verb'environment'.  The following properties are supported.
-\vspace{1em}\\\noindent
+\newpage
+\subsection{The generic {\tt entity} type}
+
+\subsubsection*{Parent}
+{\tt <none>}
+
+\subsubsection*{Description}
+All Stage models are derived from the generic \verb'entity' type.
+While this type and cannot be instantiated directly, its descendents
+inherit its properties. 
+
+\subsubsection*{Properties}
 \begin{tabularx}{\columnwidth}{llX}
 \hline
 Name & Values & Description \\
 \hline
 
-\verb'file' & \verb'"filename"' & The name of the image file
-describing the fixed obstacles; non-black image pixels will be treated
-as obstacles, black image pixels will be treated as empty space.  Only
-pnm and gzipped pnm images are supported.\\
-
-\verb'scale' & \verb'scale' & The image scale, in meters/pixel (or
-units-lengths/pixel if some another unit of length is specified).\\
-
-\hline
-\end{tabularx}
-\vspace{1em}\\
-\noindent Note that both the \verb'file' and \verb'scale'
-properties {\em must} be specified.
-
-
-\newpage
-\section{The generic {\tt entity} type}
-
-Most types in Stage are ultimately derived from the generic
-\verb'entity' type.  While this type and cannot be instantiated
-directly, its descendents share most of its properties.  The follow
-properties are supported.
-\vspace{1em}\\\noindent
-\begin{tabularx}{\columnwidth}{llX}
-\hline
-Name & Values & Description \\
-\hline
-
-\verb'name' & \verb'"name"' & A descriptive name for this entity; used
+\verb'name' & \verb'"name string"' & A descriptive name for this entity; used
 by the GUI.\\
 
 \verb'pose' & \verb'[x y a]' & Initialse pose (position and
@@ -825,11 +834,16 @@ orientation).\\
 \verb'shape' & \parbox{30mm}{\verb'"rect"' \verb'"circle"'} & Entity
 shape; entities can be either rectangular or circular.\\
 
-\verb'size' & \verb'[sizex sizey]' & Entity dimensions.\\
+\verb'size' & \verb'[sizex sizey]' & Entity dimensions.\\ \verb'mass'
+& \verb'float' & mass for puck collision model; defaults to be
+immoveably massive.\\
 
 \verb'color' & \verb'"color"' & Descriptive color (e.g. \verb'"red"' or
 \verb'"blue"'); only colors listed in the X11 color database should be used
 (look for \verb'rgb.txt' in your X installation).\\
+
+\verb'id' & \verb'beaconid' & The beacon id returned by an LBD device
+scanning this object. In the range 0-255\\
 
 \verb'obstacle_return' & \parbox{30mm}{\verb'"visible"'
 \verb'"invisible"'} & Specifies whether or not this entity will be
@@ -852,28 +866,167 @@ be laser range finders; the \verb'"bright"' value indicates that the
 entity is a retro-reflector (and hence produces a very intense return
 in the laser).\\
 
+\verb'idar_return' & \parbox{30mm}{\verb'"IDARTransparent"'
+\verb'"IDARReflect"' \verb'"IDARReceive"'} & Specifies the behavior when hit by an IDAR beam.\\
+
+\verb'interval' & \verb'seconds' & Specifies the interval between
+model updates in seconds. Smaller intervals can increase simulation
+fidelity at cost of CPU time.\\
+
 \hline
 \end{tabularx}
-\vspace{1em}\\
+
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'name' & \verb'""'\\
+\verb'shape' & \verb'"none"'\\
+\verb'size' & \verb'[0 0]'\\
+\verb'pose' & \verb'[0 0 0]'\\
+\verb'color' & \verb'"black"'\\
+\verb'obstacle_return' & \verb'"invisible"'\\
+\verb'sonar_return' & \verb'"invisible"'\\
+\verb'vision_return' & \verb'"invisible"'\\
+\verb'laser_return' & \verb'"invisible"'\\
+\verb'gripper_return' & \verb'"invisible"'\\
+\verb'idar_return' & \verb'"IDARTransparent"'\\
+\verb'id' & \verb'-1'\\
+\verb'mass' & \verb'1000.0'\\
+\verb'interval' & \verb'0.1'\\
+\hline
+\end{tabularx}
 
 
+
+%% BOX OBJECT %%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
-\section{The {\tt laserbeacon} object}
+\subsection{The {\tt box} object}
 
-The {\tt laserbeacon} object simulates a retro-reflective barcode
-that can be used in conjunction with the {\tt lbd} (laser beacon detector)
-device.  This object has the follow properties.
-\vspace{1em}\\\noindent
+\subsubsection*{Parent}
+{\tt entity}
+
+\subsubsection*{Description}
+The most simple object type, the \verb'box' is used to create a
+rectangular or circular obstacle.
+
+\subsubsection*{Properties}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+<no special properties>\\
+\hline
+\end{tabularx}
+
+
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'shape' & \verb'"rect"'\\
+\verb'size' & \verb'[1.0 1.0]'\\
+\verb'color' & \verb'"yellow"'\\
+\verb'obstacle_return' & \verb'"visible"'\\
+\verb'sonar_return' & \verb'"visible"'\\
+\verb'vision_return' & \verb'"visible"'\\
+\verb'laser_return' & \verb'"visible"'\\
+\hline
+\end{tabularx}
+
+%% BITMAP OBJECT %%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\subsection{The {\tt bitmap} object}
+
+\subsubsection*{Parent}
+{\tt entity}
+
+\subsubsection*{Description}
+The \verb'bitmap' type is used to load a pattern of fixed obstacles
+(walls, rocks, trees, furniture, etc) defined in a PNM bitmap
+file. Since v1.3 a world file can specify as many bitmaps as desired,
+and bitmap respects the \verb'pose', \verb'color' and most other
+properties. 
+
+\subsubsection*{Properties}
 \begin{tabularx}{\columnwidth}{llX}
 \hline
 Name & Values & Description \\
 \hline
 
-\verb'id' & \verb'beaconid' & The beacon id; must be in the range 1--255. \\
+\verb'file' & \verb'"filename"' & The name of the image file
+describing the fixed obstacles; non-black image pixels will be treated
+as obstacles, black image pixels will be treated as empty space.  Only
+pnm and gzipped pnm images are supported.\\
+
+\verb'scale' & \verb'scale' & The image scale, in meters/pixel (or
+units-lengths/pixel if some another unit of length is specified).\\
 
 \hline
 \end{tabularx}
-\vspace{1em}\\
+
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'color' & \verb'"black"'\\
+\verb'obstacle_return' & \verb'"visible"'\\
+\verb'sonar_return' & \verb'"visible"'\\
+\verb'vision_return' & \verb'"visible"'\\
+\verb'laser_return' & \verb'"visible"'\\
+\verb'idar_return' & \verb'"IDARReflect"'\\
+\verb'file' & \verb'""' \\
+\verb'scale' & \verb'0' \\
+\hline
+\end{tabularx}
+
+\subsubsection*{Notes}
+Both the \verb'file' and \verb'scale' properties {\em must} be
+specified.
+
+
+
+%% PUCK OBJECT %%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\subsection{The {\tt puck} object}
+
+\subsubsection*{Parent}
+{\tt entity}
+
+\subsubsection*{Description}
+The most simple object type, the \verb'box' type is used to create a
+rectangular or circular obstacle. 
+
+\subsubsection*{Properties} 
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+\verb'friction' & \verb'float' & Coefficient of friction for the puck sliding model.\\
+\hline
+\end{tabularx}
+
+
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'shape' & \verb'"circle"'\\
+\verb'size' & \verb'[0.08 0.08]'\\
+\verb'color' & \verb'"green"'\\
+\verb'obstacle_return' & \verb'"visible"'\\
+\verb'vision_return' & \verb'"visible"'\\
+\verb'gripper_return' & \verb'"visible"'\\
+\verb'puck_return' & \verb'"visible"'\\
+\verb'friction' & \verb'0.05'\\
+\verb'mass' & \verb'0.2'\\
+\verb'interval' & \verb'0.01'\\
+\hline
+\end{tabularx}
 
 
 \newpage
@@ -905,7 +1058,8 @@ true pose of the GPS device.\\
 
 \verb'laser' & \verb'device' & Scanning laser range finder.\\
 
-\verb'lbd' & \verb'device' & Laser beacon detector.\\
+\verb'fiducialfinder' & \verb'device' & Find fiducials (formerly Laser
+beacon detector).\\
 
 \verb'position' & \verb'device' & A bare-bones differential-drive
 mobile robot with odometry.\\
@@ -918,7 +1072,14 @@ mobile robot with odometry.\\
 and set the pose of entities in the simulator; setting the pose of a
 truth device will `teleport' the device's parent to a new location.\\
 
-\verb'vision' & \verb'device' & Vision-based color blob detector.\\
+\verb'blobfinder' & \verb'device' & Vision-based color blob detector
+(formerly visiondevice.\\
+
+\verb'idar' & \verb'device' & Infrared Data and Ranging device, based
+on the HRL Labs Pherobot main sensor.\\
+
+\verb'idarturret' & \verb'device' & Array of IDARs accessed together
+for efficiency.\\
 
 \hline
 \end{tabularx}
@@ -927,9 +1088,18 @@ truth device will `teleport' the device's parent to a new location.\\
 \newpage
 \section{The generic {\tt device} type}
 
-All device types are derived from the generic \verb'device' type.
-This device has the follow properties.
-\vspace{1em}\\\noindent
+\subsubsection*{Parent}
+{\tt <none>}
+
+\subsubsection*{Interface}
+{\tt <none>}
+
+
+\subsubsection*{Description}
+This is a base type for all device models. The properties specify how
+the device is addressed through the Player interface. 
+
+\subsubsection*{Properties}
 \begin{tabularx}{\columnwidth}{llX}
 \hline
 Name & Values & Description \\
@@ -944,145 +1114,437 @@ a single robot).  Will generally be set to 0.\\
 
 \hline
 \end{tabularx}
-\vspace{1em}\\
-\noindent In general, only the \verb'port' needs to be specified, and
-then only for the top-level device in each robot (usually the
-\verb'position' device).
 
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'port' & \verb'<6665 or inherited from parent>'\\
+\verb'index' & \verb'0'\\
+\hline
+\end{tabularx}
+
+\subsubsection{Notes}
+Typically the \verb'port' is specified for the top-level
+device in each robot (usually a \verb'position' device). Descendant
+devices inherit the port number. If you have more than one device of a
+given type on a robot, be sure to give them unique \verb'index'
+numbers.
 
 \newpage
 \section{The {\tt broadcast} device}
 
+\subsubsection*{Parent}
+{\tt device}
+
+\subsubsection*{Interface}
+{\tt comms}
+
+\subsubsection*{Description}
 The {\tt broadcast} device allows clients to communicate with one
 another through Stage/Player; messages sent to one broadcast device
-will be received by all other broadcast devices.  This device has no
-properties.
+will be received by all other broadcast devices. 
+
+\subsubsection*{Properties}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+\verb'<none>'\\
+\hline
+\end{tabularx}
+
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'<none>'\\
+\hline
+\end{tabularx}
 
 
 \newpage
 \section{The {\tt gps} device}
 
+\subsubsection*{Parent}
+{\tt device}
+
+\subsubsection*{Interface}
+{\tt gps}
+
+\subsubsection*{Description}
 The {\tt gps} device simulates a GPS receiver; currently it returns
-the true pose of the GPS device, in the world coordinate system.  This
-device has no properties.
+the true pose of the GPS device, in the world coordinate system.
 
-
-\newpage
-\section{The {\tt gripper} device}
-
-The {\tt gripper} device simulates a 1-DOF gripper (i.e., the gripper
-can open and close).  This device has the following properties.
-\vspace{1em}\\\noindent
+\subsubsection*{Properties}
 \begin{tabularx}{\columnwidth}{llX}
 \hline
 Name & Values & Description \\
 \hline
+\verb'<none>'\\
+\hline
+\end{tabularx}
 
-\verb'consume' & \verb'"true"' \verb'"false"' & If {\tt true}, the
-gripper will consume pucks; if {\tt false}, the gripper can hold only
-one puck at a time.\\
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'<none>'\\
+\hline
+\end{tabularx}
+
+\newpage
+\section{The {\tt idar} device}
+
+\subsubsection*{Parent}
+{\tt device}
+
+\subsubsection*{Interface}
+{\tt idar}
+
+\subsubsection*{Description}
+The {\tt idar} device simulates the Infrared Data and Ranging sensor
+used by HRL Labs Pherobot. This device beams out short data strings
+which can be received by another IDAR, or by reflection from an
+obstacle. Received signal strength gives an approximate range.
+
+\subsubsection*{Properties}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+\verb'<none>'\\
+\hline
+\end{tabularx}
+
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'idar_return' & \verb'"IDARReceive"'\\
+\verb'size' & \verb'[0.03 0.02]'\\
+\verb'shape' & \verb'"ShapeRect"'\\
 
 \hline
 \end{tabularx}
-\vspace{1em}\\
 
+\newpage
+\section{The {\tt idarturret} device}
+
+\subsubsection*{Parent}
+{\tt device}
+
+\subsubsection*{Interface}
+{\tt idarturret}
+
+\subsubsection*{Description}
+The {\tt idarturret} device simulates an array of \verb'idar'
+devices, combined for efficiency.
+
+\subsubsection*{Properties}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+\verb'<none>'\\
+\hline
+\end{tabularx}
+
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'<none>'\\
+\hline
+\end{tabularx}
+
+\newpage
+\section{The {\tt gripper} device}
+
+
+\subsubsection*{Parent}
+{\tt device}
+
+\subsubsection*{Interface}
+{\tt gripper}
+
+\subsubsection*{Description}
+The {\tt gripper} device simulates a 1-DOF gripper (i.e., the gripper
+can open and close), with inner and outer break beams.
+
+\subsubsection*{Properties}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+\verb'consume' &  \parbox{30mm}{\verb'"true"' \verb'"false"'} & If {\tt true}, the
+gripper will consume pucks, ie. they will disappear from the world; if {\tt false}, the gripper can hold only
+one puck at a time and the puck will be dropped when the gripper opens.\\
+\hline
+\end{tabularx}
+
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'consume' & \verb'"true"' \\
+\verb'size' & \verb'[0.08 0.3]'\\
+\hline
+\end{tabularx}
 
 \newpage
 \section{The {\tt laser} device}
 
+\subsubsection*{Parent}
+{\tt device}
+
+\subsubsection*{Interface}
+{\tt gps}
+
+\subsubsection*{Description}
 The {\tt laser} device simulates a scaning laser range-finder with a
-$180^\circ$ field-of-view (the SICK LMS200 to be exact).  This device
-has no properties.
+$180^\circ$ field-of-view (the SICK LMS200 to be exact).
+
+\subsubsection*{Properties}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+\verb'<none>'\\
+\hline
+\end{tabularx}
+
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'<none>'\\
+\hline
+\end{tabularx}
+
+
 
 
 \newpage
-\section{The {\tt lbd} device}
+\section{The {\tt fiducialfinder} device}
 
-The laser beacon detector searches for {\tt laserbeacons}
-(retro-reflective barcodes) in the simulated laser scan.  It returns
-the identity, range, bearing and orientation of the detected beacons.
-Every {\tt lbd} device must always be the child of a {\tt laser}
-device.  This device has no properties.
+\subsubsection*{Parent}
+{\tt device}
+
+\subsubsection*{Interface}
+{\tt fiducial}
+
+\subsubsection*{Description}
+
+The \verb'fiducialfinder' locates models that have their
+\verb'fiducial_id' property set. It returns the identity, range,
+bearing and orientation of the detected fiducials.  Currently a {\tt
+fiducialfinder} device must be the child of a {\tt laser} device,
+though this constraint will be relaxed in future releases.
+
+\subsubsection*{Properties}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+\verb'<none>'\\
+\hline
+\end{tabularx}
+
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'<none>'\\
+\hline
+\end{tabularx}
+
 
 
 \newpage
 \section{The {\tt position} device}
 
+\subsubsection*{Parent}
+{\tt device}
+
+\subsubsection*{Interface}
+{\tt position}
+
+\subsubsection*{Description}
 The {\tt position} device simulates a bare-bones differential-drive
-mobile robot.  This device has no properties.
+mobile robot. 
+
+\subsubsection*{Properties}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+\verb'<none>'\\
+\hline
+\end{tabularx}
+
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'<none>'\\
+\hline
+\end{tabularx}
 
 
 \newpage
 \section{The {\tt ptz} device}
 
+\subsubsection*{Parent}
+{\tt device}
+
+\subsubsection*{Interface}
+{\tt ptz}
+
+\subsubsection*{Description}
 The {\tt ptz} device simulates a pan-tilt-zoom camera.
 This device has the following properties.
-\vspace{1em}\\\noindent
+
+\subsubsection*{Properties}
 \begin{tabularx}{\columnwidth}{llX}
 \hline
 Name & Values & Description \\
 \hline
-
 \verb'lens' & \verb'"normal"' \verb'"wide"' & Select lens type: either
 normal ($60^\circ$ field-of-view) or wide ($120^\circ$
 field-of-view).\\
-
 \hline
 \end{tabularx}
-\vspace{1em}\\
 
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'lens' & \verb'"normal"'\\
+\hline
+\end{tabularx}
 
 \newpage
 \section{The {\tt sonar} device}
 
+\subsubsection*{Parent}
+{\tt device}
+
+\subsubsection*{Interface}
+{\tt gps}
+
+\subsubsection*{Description}
 The {\tt sonar} device simulates an array of sonar range sensors.
-This device has the following properties.
-\vspace{1em}\\\noindent
+
+\subsubsection*{Properties}
 \begin{tabularx}{\columnwidth}{llX}
 \hline
 Name & Values & Description \\
 \hline
-
 \verb'scount' & \verb'numsonars' & The number of sonar transducers.\\
-
 \verb'spose[i]' & \verb'[x y th]' & The pose of each transducer number {\tt i}.\\
-
 \hline
 \end{tabularx}
-\vspace{1em}\\
 
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'scount' & \verb'8'\\
+\verb'spose[0]' & \verb'[0 0   0]'\\
+\verb'spose[1]' & \verb'[0 0  45]'\\
+\verb'spose[2]' & \verb'[0 0  90]'\\
+\verb'spose[3]' & \verb'[0 0 135]'\\
+\verb'spose[4]' & \verb'[0 0 180]'\\
+\verb'spose[5]' & \verb'[0 0 225]'\\
+\verb'spose[6]' & \verb'[0 0 270]'\\
+\verb'spose[7]' & \verb'[0 0 315]'\\
+\hline
+\end{tabularx}
+
+\subsubsection*{Notes}
+The default sonar array has 8 evenly spaced beams covering 360
+degrees. The example file worlds/pioneer.inc provides sonar device
+configurations that match the Pioneer2 and AmigBot robots.
 
 \newpage
 \section{The {\tt truth} device}
 
+\subsubsection*{Parent}
+{\tt device}
+
+\subsubsection*{Interface}
+{\tt truth}
+
+\subsubsection*{Description}
 The {\tt truth} device allows clients to get and set the pose of
 simulated entities.  Setting the pose of the {\tt truth} device will
 'teleport' the device's parent to a new location.
-This device has no properties.
 
-
-\newpage
-\section{The {\tt vision} device}
-
-The {\tt vision} device simulates the ACTS color blob detector; every
-{\tt vision} device must be a child of a {\tt ptz} device.
-This device has the following properties.
-\vspace{1em}\\\noindent
+\subsubsection*{Properties}
 \begin{tabularx}{\columnwidth}{llX}
 \hline
 Name & Values & Description \\
 \hline
+\verb'<none>'\\
+\hline
+\end{tabularx}
 
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'<none>'\\
+\hline
+\end{tabularx}
+
+\newpage
+\section{The {\tt blobfinder} device}
+
+\subsubsection*{Parent}
+{\tt device}
+
+\subsubsection*{Interface}
+{\tt blobfinder}
+
+\subsubsection*{Description}
+The \verb'blobfinder' device simulates the ACTS color blob
+detector. If the \verb'blobfinder' device is a child of a
+\verb'ptzdevice' it respects the field of view of the PTZ.
+
+\subsubsection*{Properties}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
 \verb'channels' & \verb'["color0" "color1" ...]' & The
 color detected by each channel in the vision device.  Descriptive
 color names from the X11 color database should be used
 (e.g. \verb'"red"' or \verb'"blue"').  Look for \verb'rgb.txt' in your
 X installation).\\
-
 \hline
 \end{tabularx}
-\vspace{1em}\\
 
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'channels' & \verb'["red" "green" "blue" "yellow" "cyan" "magenta"]'\\
+\hline
+\end{tabularx}
 
 \bibliographystyle{plain}
 \bibliography{playerstage}
