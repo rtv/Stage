@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.20 $
+//  $Revision: 1.21 $
 //
 // Usage:
 //  (empty)
@@ -61,7 +61,7 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
     m_name[0] = 0;
     
     // all truth connections should send this truth
-    memset( &m_dirty, true, sizeof(bool) * MAX_TRUTH_CONNECTIONS );
+    memset( &m_dirty, true, sizeof(bool) * MAX_POSE_CONNECTIONS );
 
     // by default, entities don't show up in any sensors
     // these must be enabled explicitly in each subclass

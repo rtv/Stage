@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.19 $
+//  $Revision: 1.20 $
 //
 // Usage:
 //  (empty)
@@ -54,7 +54,7 @@ char g_cmdline[256];
 // and simulator timestep respectively (milliseconds)
 int g_interval = 0, g_timestep = 0;
 
-int g_truth_port = 0, g_env_port = 0;
+int g_pose_port = 0, g_env_port = 0;
 // the number of stages running
 int g_instance = 0;
 
@@ -122,8 +122,8 @@ bool parse_cmdline(int argc, char **argv)
 	}
       else if( strcmp( argv[a], "-tp" ) == 0 )
 	{
-	  g_truth_port = atoi(argv[a+1]);
-	  printf( "[Truth %d]", g_truth_port );
+	  g_pose_port = atoi(argv[a+1]);
+	  printf( "[Pose %d]", g_pose_port );
 	  a++;
 	}
       else if( strcmp( argv[a], "-ep" ) == 0 )
@@ -212,8 +212,8 @@ printf("\n** Stage  v%s ** ", (char*) VERSION);
     return 0;
   
   // override config file values with command line options
-  if( g_truth_port )
-    world->m_truth_port = g_truth_port;
+  if( g_pose_port )
+    world->m_pose_port = g_pose_port;
   
   if( g_env_port )
     world->m_env_port = g_env_port;

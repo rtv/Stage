@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.60 $
+//  $Revision: 1.61 $
 //
 // Usage:
 //  (empty)
@@ -46,6 +46,8 @@ extern bool g_wait_for_env_server;
 extern bool g_log_output;
 extern char g_log_filename[];
 extern char g_cmdline[];
+
+extern long g_bytes_input, g_bytes_output;
 
 int g_log_fd = -1; // logging file descriptor
 
@@ -113,12 +115,12 @@ CWorld::CWorld()
     m_enable = true;
 
     // set the server ports to default values
-    m_truth_port = DEFAULT_TRUTH_PORT;
+    m_pose_port = DEFAULT_POSE_PORT;
     m_env_port = DEFAULT_ENV_PORT;
     
-    // init the truth server data structures
-    m_truth_connection_count = 0;
-    memset( m_truth_connections, 0, sizeof(struct pollfd) * MAX_TRUTH_CONNECTIONS );
+    // init the pose server data structures
+    m_pose_connection_count = 0;
+    memset( m_pose_connections, 0, sizeof(struct pollfd) * MAX_POSE_CONNECTIONS );
 
     // if we gave Stage an id on the command line, use that
     //if( g_host_id && strlen( g_host_id ) > 0)
@@ -143,7 +145,7 @@ CWorld::CWorld()
 
     // enable external services by default
     m_run_environment_server = true;
-    m_run_truth_server = true;
+    m_run_pose_server = true;
     
     // default color database file
     strcpy( m_color_database_filename, COLOR_DATABASE );
@@ -335,8 +337,8 @@ bool CWorld::Startup()
 #endif
   
 
-  // kick off the truth and envirnment servers, unless we disabled them earlier
-  if( m_run_truth_server )  SetupTruthServer();
+  // kick off the pose and envirnment servers, unless we disabled them earlier
+  if( m_run_pose_server )  SetupPoseServer();
   
   if( m_run_environment_server )
     {
@@ -350,7 +352,7 @@ bool CWorld::Startup()
   
   // spawn an XS process, unless we disabled it (rtkstage disables xs by default)
   if( !global_no_gui && m_run_xs 
-      && m_run_truth_server && m_run_environment_server ) 
+      && m_run_pose_server && m_run_environment_server ) 
     SpawnXS();
   
   // Startup all the objects
@@ -594,7 +596,8 @@ void* CWorld::Main(void *arg)
 	       "# Host:\t\t%s\n"
 	       "# Bitmap:\t%s\n"
 	       "# Objects:\t%d of %d\n#\n"
-	       "#STEP\t\tTIME(s)\t\tCYCLE(msec)\tRATIO\n",
+	       "#STEP\t\tTIME(s)\t\tCYCLE(msec)\tRATIO"
+	       "\tINPUT\tOUTPUT\tITOTAL\tOTOTAL\n",
 	       g_cmdline, 
 	       tmstr, 
 	       world->m_hostname, 
@@ -612,16 +615,16 @@ void* CWorld::Main(void *arg)
       //
       pthread_testcancel();
 
-      // look for new connections to the truthserver
-      world->ListenForTruthConnections();
+      // look for new connections to the poseserver
+      world->ListenForPoseConnections();
 
-      world->TruthRead();
+      world->PoseRead();
       
       // Update the world
       //
       if (world->m_enable) world->Update();
 
-      world->TruthWrite();
+      world->PoseWrite();
 
 
       // dump the contents of the matrix to a file
@@ -685,12 +688,22 @@ void CWorld::Update()
   if( g_log_output && g_log_fd >= 0 )
     {
       static long cycle = 0;
+      static long last_input = 0;
+      static long last_output = 0;
+
       char line[512];
       sprintf( line,
-	       "%ld\t\t%.3f\t\t%d\t\t%.3f\n", 
+	       "%ld\t\t%.3f\t\t%d\t\t%.3f\t%ld\t%ld\t%ld\t%ld\n", 
 	       cycle++, GetRealTime(), 
 	       //(int)(real_timestep * 1000.0), timestep / real_timestep );
-	       (int)(timestep * 1000.0), timestep / (m_timestep/1000.0) );
+	       (int)(timestep * 1000.0), timestep / (m_timestep/1000.0), 
+	       g_bytes_input - last_input,
+	       g_bytes_output - last_output,
+	       g_bytes_input, 
+	       g_bytes_output);
+
+      last_input = g_bytes_input;
+      last_output = g_bytes_output;
 
       write( g_log_fd, line, strlen(line) );
     }
@@ -1289,13 +1302,13 @@ void CWorld::SpawnXS( void )
 	  char envbuf[32];
 	  sprintf( envbuf, "%d", m_env_port );
 
-	  char truthbuf[32];
-	  sprintf( truthbuf, "%d", m_truth_port );
+	  char posebuf[32];
+	  sprintf( posebuf, "%d", m_pose_port );
 	  
 	  // we assume xs is in the current path
 	  if( execlp( "xs", "xs",
 		      "-ep", envbuf,
-		      "-tp", truthbuf, NULL ) < 0 )
+		      "-tp", posebuf, NULL ) < 0 )
 	    {
 	      cerr << "exec failed in SpawnXS(): make sure XS can be found"
 		" in the current path."

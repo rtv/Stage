@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xs.hh,v 1.11 2001-09-26 02:53:00 vaughan Exp $
+ * $Id: xs.hh,v 1.12 2001-09-27 22:33:43 vaughan Exp $
  ************************************************************************/
 
 #ifndef _WIN_H
@@ -78,11 +78,13 @@ class CXGui
 {
 public:
   // constructor
-  CXGui( int argc, char** argv, environment_t* anenv );
+  CXGui( int argc, char** argv );
 
   // destructor
   ~CXGui( void );
 
+  void Startup( int argc, char** argv );
+  
   char* window_title;
 
   /* create a multiclient to poll my Player reading */
@@ -136,6 +138,9 @@ public:
   void HandlePlayers( void );
   void TogglePlayerClient( xstruth_t* ent );
 
+  bool DownloadEnvironment();
+  bool DownloadObjects( int, int);
+
   void BoundsCheck( void );
   int LoadVars( char* initFile );
   void HandleXEvent( void );
@@ -143,7 +148,7 @@ public:
   void MoveObject( xstruth_t *obj, double x, double y, double th );
 
   void HeadingStick( xstruth_t* truth );
-
+  
   void PrintCoords( void );
   char* StageNameOf( const xstruth_t& truth ); 
   char* PlayerNameOf( const player_id_t& ent ); 
@@ -215,6 +220,7 @@ public:
   void HighlightObject( xstruth_t* exp, bool undraw );
 
   void HandleIncomingQueue( void );
+  void ImportTruth( stage_truth_t &struth ); 
 
   void CalcPPM( void );
   void ScaleBackground( void );

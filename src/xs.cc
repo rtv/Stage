@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.30 2001-09-27 00:19:16 vaughan Exp $
+ * $Id: xs.cc,v 1.31 2001-09-27 22:33:43 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -41,11 +41,15 @@
 #include "truthserver.hh"
 #include "xs.hh"
 
+int envfd, num_objects;
+
 #define MIN_WINDOW_WIDTH 0
 #define MIN_WINDOW_HEIGHT 0
 
 //#define DEBUG
 //#define VERBOSE
+
+CXGui* win = 0;
 
 Display* display = 0; 
 int screen = 0;
@@ -56,7 +60,7 @@ const char* titleStr = "XS";
 #define USAGE  "\nUSAGE: xs [-h <host>] [-tp <port>] [-ep <port>]\n\t[-geometry <geometry string>] [-zoom <factor>]\n\t[-pan <X\%xY\%>]\nDESCRIPTIONS:\n-h <host>: connect to Stage on this host (default `localhost')\n-tp <port>: connect to Stage's Truth server on this TCP port (default `6601')\n-ep <port>: connect to Stage's Environment server on this TCP port (default `6602')\n-geometry <string>*: standard X geometry specification\n-zoom <factor>*: floating point zoom multiplier\n-pan <X\%xY\%>*: pan initial view X percent of maximum by Y percent of maximum\n"
 
 char stage_host[256] = "localhost"; // default
-int truth_port = DEFAULT_TRUTH_PORT; // "
+int truth_port = DEFAULT_POSE_PORT; // "
 int env_port = DEFAULT_ENV_PORT; // "
  
 struct hostent* entp = 0;
@@ -71,8 +75,8 @@ char* default_geometry = "400x400";
 char* default_zoom = "1.0";
 char* default_pan = "0x0";
 
-std::queue<stage_truth_t> incoming_queue;
-std::queue<stage_truth_t> outgoing_queue;
+std::queue<stage_pose_t> incoming_queue;
+std::queue<stage_pose_t> outgoing_queue;
 
 //pthread_mutex_t incoming_mutex;
 //pthread_mutex_t outgoing_mutex;
@@ -152,6 +156,33 @@ char* CXGui::StageNameOf( const xstruth_t& truth )
     return "Unknown"; 
   } 
 
+void PrintStagePose( stage_pose_t &pose )
+{
+  printf( "[%d] (%d,%d,%d) echo: %d\n",
+	  pose.stage_id,
+	  pose.x, pose.y, pose.th,
+	  pose.echo_request );
+  
+  fflush( stdout );
+}
+
+
+void PrintSendBuffer( char* send_buf, size_t len )
+{
+  printf( "Send Buffer at %p is %d bytes and contains %d records:\n", 
+	  send_buf, len, (uint16_t)send_buf[0] );
+
+  for( int t=0; t< (uint16_t)send_buf[0]; t++ )
+    {
+      printf( "[%d] ", t );
+
+      stage_pose_t pose;
+      memcpy( &pose, (send_buf+sizeof(uint16_t)+sizeof(stage_pose_t)*t),
+	      sizeof( stage_pose_t ) );
+
+      PrintStagePose( pose );
+    }
+}
 
 void PrintStageTruth( stage_truth_t &truth )
 {
@@ -174,8 +205,8 @@ void PrintStageTruth( stage_truth_t &truth )
 
 void CXGui::PrintMetricTruth( int stage_id, xstruth_t &truth )
 {
-  printf( "%p:%s\t(%s:%4d,%d,%d)\t(%4d,%d,%d)\t[%.2f,%.2f,%.2f]\t[%.2f,%.2f]\n",
-	  (int*)stage_id,
+  printf( "%d:%s\t(%s:%4d,%d,%d)\t(%4d,%d,%d)\t[%.2f,%.2f,%.2f]\t[%.2f,%.2f]\n",
+	  stage_id,
 	  StageNameOf( truth ),
 	  truth.hostname,
 	  truth.id.port, 
@@ -225,36 +256,76 @@ static void* TruthReader( void*)
 
   pthread_detach(pthread_self());
 
-  stage_truth_t truth;
-
   int r = 0;
   while( 1 )
     {	      
-      int packetlen = sizeof(truth);
-      int recv = 0;
+      // read the first two bytes to see how many poses are coming
+      size_t packetlen = sizeof(uint16_t);
+      size_t recv = 0;
      
+      uint16_t num_poses;
       while( recv < packetlen )
       {
         //printf( "Reading on %d\n", ffd ); fflush( stdout );
 
         /* read will block until it has some bytes to return */
-        r = read( ffd, ((char*)&truth)+recv,  packetlen - recv );
-
+        r = read( ffd, ((char*)&num_poses)+recv,  packetlen - recv );
+	
         if( r < 0 )
           perror( "TruthReader(): read error" );
         else
           recv += r;
       }
 
-      if( truth.echo_request )
+      printf( "XS: reading %d poses...\n", num_poses );
+
+      // now read in all the poses
+
+      stage_pose_t* poses = new stage_pose_t[ num_poses ]; 
+      
+      packetlen = sizeof(stage_pose_t) * num_poses;
+      recv = 0;
+     
+      // read the first two bytes to see how many poses are coming
+
+      while( recv < packetlen )
       {
-        printf( "\nXS: warning - received an echo request in this truth: " );
-        PrintStageTruth( truth );
+        /* read will block until it has some bytes to return */
+        r = read( ffd, ((char*)poses)+recv,  packetlen - recv );
+
+        if( r < 0 )
+          perror( "TruthReader(): read error" );
+        else
+          recv += r;
+
+        printf( "Read %d/%d bytes on %d\n",recv,packetlen,ffd ); 
       }
 
-      //pthread_mutex_lock( &incoming_mutex );
-      incoming_queue.push( truth );
-      //pthread_mutex_unlock( &incoming_mutex );
+      //PrintStagePose( pose );
+
+      //if( pose.echo_request )
+      ///{
+      //printf( "\nXS: warning - received an echo request in this pose: " );
+      //PrintStagePose( pose );
+      //}
+
+     	  
+
+      printf( "XS: received %d poses: \n", num_poses );
+      
+      for( int p=0; p<num_poses; p++ )
+	{  
+	  stage_pose_t pose;
+	  
+	  memcpy( &pose, &(poses[p]), sizeof(stage_pose_t) );
+
+	  printf( "#%d ", p );
+	  PrintStagePose( pose );
+
+	  //pthread_mutex_lock( &incoming_mutex );
+	  incoming_queue.push( pose );
+	  //pthread_mutex_unlock( &incoming_mutex );
+	}
     }
 
     /* shouldn't ever get here, but just to be tidy */
@@ -282,34 +353,59 @@ static void* TruthWriter( void* )
 
   // write out anything we find on the output queue
   
+  // create space for 20 poses + count header
+  char* sendbuf = new char[ sizeof(uint16_t)+sizeof(stage_pose_t)*20 ]; 
+
+  
   while( 1 )
     {
-      // very cautiously mutex the queue
-      //pthread_mutex_lock( &outgoing_mutex );
-      
-      while( !outgoing_queue.empty() )
+      stage_pose_t *next_entry = (stage_pose_t*)( sendbuf + sizeof(uint16_t) );
+      uint16_t pose_count = 0;
+
+      while( !outgoing_queue.empty() && (int)pose_count < 20 )
 	{
-	  
-	  stage_truth_t struth = outgoing_queue.front();
+	  stage_pose_t pose = outgoing_queue.front();
 	  outgoing_queue.pop();
 	  
-	  //printf( "WRITING %d bytes on %d", sizeof(struth), ffd );
+	  //printf( "WRITING %d bytes on %d - ", sizeof(pose), ffd );
+	  PrintStagePose( pose );
 	  //fflush( stdout );
-
+	  
 	  // please send this truth back to us for redisplay
-	  struth.echo_request = true;
+	  pose.echo_request = true;
+	  
+	  memcpy( next_entry, &pose, sizeof(pose) );
+	  
+	  pose_count++;
+	  next_entry++;
+	}
 
-          unsigned int writecnt = 0;
-          int thiswritecnt;
-          while(writecnt < sizeof(struth))
-          {
-            thiswritecnt = write( ffd, ((char*)&struth)+writecnt, 
-                                  sizeof( struth )-writecnt);
-            assert(thiswritecnt >= 0);
+      if( pose_count > 0 )
+	{
+	  *((uint16_t*)sendbuf) = pose_count;
+	  
+	  
+	  size_t writecnt = 0;
+	  int thiswritecnt;
+	  
+	  size_t packet_len = 
+	    sizeof(uint16_t) + pose_count * sizeof(stage_pose_t);
+	  
+	  printf( "XS: writing %d poses (%d bytes)\n", pose_count, packet_len );
+	  
+	  PrintSendBuffer( sendbuf, packet_len );
 
-            writecnt += thiswritecnt;
-          }
+	  while(writecnt < packet_len )
+	    {
+	      thiswritecnt = write( ffd, ((char*)sendbuf)+writecnt, 
+				    packet_len-writecnt);
+	      assert(thiswritecnt >= 0);
+	      
+	      writecnt += (size_t)thiswritecnt;
+	    }
 	}      
+      
+      usleep( 10000 );
     }
 }
 
@@ -333,13 +429,13 @@ bool ConnectToTruth( void )
   servaddr.sin_port = htons( truth_port ); /*our command port */ 
   memcpy(&(servaddr.sin_addr), entp->h_addr_list[0], entp->h_length);
 
-  //printf( "[Truth on %s]", entp->h_name ); fflush( stdout );
+  //printf( "[Pose on %s]", entp->h_name ); fflush( stdout );
 
   int v = connect( truthfd, (sockaddr*)&servaddr, sizeof( servaddr) );
     
   if( v < 0 )
     {
-      printf( "Can't find a Stage truth server on %s. Quitting.\n", 
+      printf( "Can't find a Stage pose server on %s. Quitting.\n", 
 	      stage_host ); 
       perror( "" );
       fflush( stdout );
@@ -370,11 +466,13 @@ bool ConnectToTruth( void )
 } 
 
 
-bool DownloadEnvironment( environment_t* env )
+bool CXGui::DownloadEnvironment( void )
 {
   /* open socket for network I/O */
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
   
+  envfd = sockfd; // keep this for later
+
   if( sockfd < 0 )
     {
       printf( "Error opening network socket. Exiting\n" );
@@ -395,7 +493,7 @@ bool DownloadEnvironment( environment_t* env )
       return false; // connect failed - boo.
     }
 
-  player_occupancy_data_t header;
+  stage_header_t header;
   int len = sizeof( header );
   int recv = 0;
   int r = 0;
@@ -419,6 +517,8 @@ bool DownloadEnvironment( environment_t* env )
   env->ppm = header.ppm;
   env->num_pixels = header.num_pixels;
 
+  num_objects = header.num_objects; // keep this for later
+
   if( env->num_pixels > 0 )
     {
       // allocate the pixel storage
@@ -440,16 +540,16 @@ bool DownloadEnvironment( environment_t* env )
 	    
 	  recv += res;
 
-	  //#ifdef DEBUG
-	  //printf( "read %d/%d bytes\r", recv, len );
-	  //fflush( stdout );
-	  //#endif
+#ifdef DEBUG
+	  printf( "read %d/%d bytes\r", recv, len );
+	  fflush( stdout );
+#endif
 	}		
       
-      //#ifdef DEBUG
-      //printf( "\nreceived %d pixels\nDONE", env->num_pixels );
-      //fflush( stdout );
-      //#endif
+#ifdef DEBUG
+      printf( "\nreceived %d pixels\nDONE", env->num_pixels );
+      fflush( stdout );
+#endif
     }
 
   // invert the y axis!
@@ -457,10 +557,58 @@ bool DownloadEnvironment( environment_t* env )
     env->pixels[c].y = env->height - env->pixels[c].y;
 
   // make some space for the scaled pixels
-  // they get filled in when call ScaleBackground()
+  // they get filled in when calling ScaleBackground()
   env->pixels_scaled = new XPoint[ env->num_pixels ];
+
     
   // all seems well...
+  return true;
+}
+
+
+bool CXGui::DownloadObjects( int sockfd, int num_objects )
+{
+  // NOW READ IN THE TRUTH PACKETS
+
+  stage_truth_t truth;
+  
+#ifdef DEBUG
+  printf( "\nExpecting %d truths...", num_objects );
+  fflush( stdout );
+#endif
+
+  for( int g=0; g<num_objects; g++ )
+    {
+      
+      int r = 0;
+
+      int packetlen = sizeof(truth);
+      int recv = 0;
+      
+      while( recv < packetlen )
+	{
+	  //printf( "Reading Truth %d/%d on %d\n", g, num_objects, sockfd );
+	  
+	  /* read will block until it has some bytes to return */
+	  r = read( sockfd, ((char*)&truth)+recv,  packetlen - recv );
+	  
+	  if( r < 0 )
+	    perror( "TruthReader(): read error" );
+	  else
+	    recv += r;
+	}
+      
+      //PrintStageTruth( truth );
+
+      if( truth.echo_request )
+	{
+	  printf( "\nXS: warning - received an echo request in this truth: " );
+	  PrintStageTruth( truth );
+	}
+      
+      ImportTruth( truth );
+    }
+
   return true;
 }
 
@@ -633,25 +781,19 @@ int main(int argc, char **argv)
 	      exit( -1 );
     }	  
   
-  environment_t env;
- 
-  if( !DownloadEnvironment( &env ) )
-     {
-      puts( "\nFailed to download Stage's environment. Exiting" );
-      exit( -1 );
-    }
-
-  if( !ConnectToTruth() )
-    {
-      puts( "\nFailed to connect to Stage's truth server. Exiting" );
-      exit( -1 );
-    }
-
   // now we have the environment and we have access to truths,
   // we can make a window
-  CXGui* win = new CXGui( argc, argv, &env ); 
+  win = new CXGui( argc, argv ); 
 
   assert( win ); // make sure the window was created
+
+  win->Startup( argc, argv);
+
+  if( !ConnectToTruth() )
+  {
+    puts( "\nFailed to connect to Stage's truth server. Exiting" );
+    exit( -1 );
+  }
 
   // we're set up, so go into the read/handle loop
   while( true )
@@ -659,6 +801,7 @@ int main(int argc, char **argv)
     win->HandlePlayers();
     win->HandleXEvent();
     win->HandleIncomingQueue();
+
     // snooze to avoid hogging the processor
     usleep( 50000 ); // 0.05 seconds 
   }
@@ -670,116 +813,130 @@ int main(int argc, char **argv)
   #define ULI unsigned long int
   #define USI unsigned short int
 
-void CXGui::HandleIncomingQueue( void )
+void CXGui::ImportTruth( stage_truth_t &struth )
 {
   //pthread_mutex_lock( &incoming_mutex );
 
-  while( !incoming_queue.empty() )
-    {
-      stage_truth_t struth = incoming_queue.front();
-      incoming_queue.pop();
-
-      xstruth_t truth;
-
-      int stage_id = truth.stage_id = struth.stage_id; // this is the map key
-
-      strncpy( truth.hostname, struth.hostname, HOSTNAME_SIZE );
-
-      truth.stage_type = struth.stage_type;
-
-      truth.color.red = struth.red;
-      truth.color.green = struth.green;
-      truth.color.blue = struth.blue;
-
-      // look up the X pixel value for this color
-
-      XColor xcol;
-
-      xcol.pixel = 0;
-      xcol.red = truth.color.red * 256;
-      xcol.green = truth.color.green * 256;
-      xcol.blue = truth.color.blue * 256;
-
-      //printf( "Requesting %lu for %u,%u,%u\n", 
-      //      xcol.pixel, xcol.red, xcol.green, xcol.blue );
-      
-      // find out what pixel value corresponds most closely
-      // to this color
-      if( !XAllocColor(display, default_cmap, &xcol ) )
-	puts( "XS: warning - allocate color failed" );
-      
-      truth.pixel_color = xcol.pixel;
-      
-      //printf( "Allocated %lu for %u,%u,%u (%d)\n", 
-      //      xcol.pixel, xcol.red, xcol.green, xcol.blue );
-
-      truth.id.port = struth.id.port;
-      truth.id.type = struth.id.type;
-      truth.id.index = struth.id.index;
-      
-      truth.parent.port = struth.parent.port;
-      truth.parent.type = struth.parent.type;
-      truth.parent.index = struth.parent.index;
-
-      truth.x = (double)struth.x / 1000.0;
-      truth.y = (double)struth.y / 1000.0;
-      truth.w = (double)struth.w / 1000.0;
-      truth.h = (double)struth.h / 1000.0;
-      //truth.th = NORMALIZE(DTOR( struth.th ));
-      truth.th = DTOR( struth.th );
-
-      truth.rotdx = (double)(struth.rotdx / 1000.0);
-      truth.rotdy = (double)(struth.rotdy / 1000.0);
-
-      //int presize = truth_map.size();
-      xstruth_t old = truth_map[ stage_id ]; // get any old data
-      //int postsize = truth_map.size();
-
-      //if( presize != postsize )
-      //{
-      //  printf( "FOUND: " );
-      //  PrintMetricTruth( old );
-	  
-      //  printf( "DB size prev: %d post %d\n", presize, postsize );
-	  //}
-	  
-      RenderObject( old ); // undraw it
-      RenderObject( truth ); // redraw it
-
-      XFlush( display );// reduces flicker
-
-      truth_map[ stage_id ] = truth; // update the database with it
-
-      //puts( "RESULT: " );
-      //for( TruthMap::iterator it = truth_map.begin();
-      //	   it != truth_map.end(); it++ )
-      //{
-      //  cout << it->first << " -- ";
-      //  PrintMetricTruth( it->second );
-      //}
+  xstruth_t truth;
   
-      //puts( "" );
-    }
+  int stage_id = truth.stage_id = struth.stage_id; // this is the map key
+  
+  strncpy( truth.hostname, struth.hostname, HOSTNAME_SIZE );
+  
+  truth.stage_type = struth.stage_type;
+  
+  truth.color.red = struth.red;
+  truth.color.green = struth.green;
+  truth.color.blue = struth.blue;
+  
+  // look up the X pixel value for this color
+  
+  XColor xcol;
+  
+  xcol.pixel = 0;
+  xcol.red = truth.color.red * 256;
+  xcol.green = truth.color.green * 256;
+  xcol.blue = truth.color.blue * 256;
+  
+  //printf( "Requesting %lu for %u,%u,%u\n", 
+  //      xcol.pixel, xcol.red, xcol.green, xcol.blue );
+  
+  // find out what pixel value corresponds most closely
+  // to this color
+  if( !XAllocColor(display, default_cmap, &xcol ) )
+    puts( "XS: warning - allocate color failed" );
+  
+  truth.pixel_color = xcol.pixel;
+  
+  //printf( "Allocated %lu for %u,%u,%u (%d)\n", 
+  //      xcol.pixel, xcol.red, xcol.green, xcol.blue );
+  
+  truth.id.port = struth.id.port;
+  truth.id.type = struth.id.type;
+  truth.id.index = struth.id.index;
+  
+  truth.parent.port = struth.parent.port;
+  truth.parent.type = struth.parent.type;
+  truth.parent.index = struth.parent.index;
+  
+  truth.x = (double)struth.x / 1000.0;
+  truth.y = (double)struth.y / 1000.0;
+  truth.w = (double)struth.w / 1000.0;
+  truth.h = (double)struth.h / 1000.0;
+  //truth.th = NORMALIZE(DTOR( struth.th ));
+  truth.th = DTOR( struth.th );
+  
+  truth.rotdx = (double)(struth.rotdx / 1000.0);
+  truth.rotdy = (double)(struth.rotdy / 1000.0);
+  
+  //RenderObject( truth ); // draw it
+  
+  XFlush( display );// reduces flicker
+  
+  truth_map[ stage_id ] = truth; // update the database with it
+  
+  //puts( "RESULT: " );
+  //for( TruthMap::iterator it = truth_map.begin();
+  //   it != truth_map.end(); it++ )
+  //  {
+  //    cout << it->first << " -- ";
+  //    PrintMetricTruth( stage_id, it->second );
+  //  }
+  //  puts( "" );
 
   //pthread_mutex_unlock( &incoming_mutex );
 }
 
-CXGui::CXGui( int argc, char** argv, environment_t* anenv )
+void CXGui::HandleIncomingQueue( void )
+{
+  while( !incoming_queue.empty() )
+    {
+      stage_pose_t pose = incoming_queue.front();
+      incoming_queue.pop();
+
+      // get the object with this id (if it exists)
+      xstruth_t truth = truth_map[ pose.stage_id ]; 
+	  
+      //printf( "POSE ID %d MATCHES: ", pose.stage_id );
+      //PrintMetricTruth( pose.stage_id, truth );
+
+      RenderObject( truth ); // undraw it
+      
+      // update it
+      truth.x = pose.x / 1000.0;
+      truth.y = pose.y / 1000.0;
+      truth.th = DTOR(pose.th);
+
+      RenderObject( truth ); // redraw it
+
+      XFlush( display );// reduces flicker
+
+      truth_map[ pose.stage_id ] = truth; // update the database with it
+    }
+}
+
+
+CXGui::CXGui( int argc, char** argv )
 {
 #ifdef DEBUG
   cout << "Creating a window..." << flush;
 #endif
 
+  env = new environment_t();
+
+}
+
+void CXGui::Startup(int argc, char** argv )
+{
+
   dragging = NULL;
   
-  env = anenv;
-
   window_title = new char[256];
-
+  
   draw_all_devices = false;
-
+  
   char hostname[64];
-
+  
   gethostname( hostname, 64 );
   
   /* now, strip down to just the hostname */
@@ -788,74 +945,80 @@ CXGui::CXGui( int argc, char** argv, environment_t* anenv )
     *first_dot = '\0';
   
   sprintf( window_title,  "%s@%s", titleStr, hostname );
-
+  
   num_proxies = 0;
+  
+  //  LoadVars( initFile ); // read the window parameters from the initfile
+  
+  //    // init X globals 
+  display = XOpenDisplay( (char*)NULL );
+  screen = DefaultScreen( display );
+  
+  assert( display );
+  
+  default_cmap = DefaultColormap( display, screen ); 
+  
+  XColor col, rcol;
+  XAllocNamedColor( display, default_cmap, "red", &col, &rcol ); 
+  red = col.pixel;
+  XAllocNamedColor( display, default_cmap, "green", &col, &rcol ); 
+  green= col.pixel;
+  XAllocNamedColor( display, default_cmap, "blue", &col, &rcol ); 
+  blue = col.pixel;
+  XAllocNamedColor( display, default_cmap, "cyan", &col, &rcol ); 
+  cyan = col.pixel;
+  XAllocNamedColor( display, default_cmap, "magenta", &col, &rcol ); 
+  magenta = col.pixel;
+  XAllocNamedColor( display, default_cmap, "yellow", &col, &rcol ); 
+  yellow = col.pixel;
+  XAllocNamedColor( display, default_cmap, "dark grey", &col, &rcol ); 
+  grey = col.pixel;
+  
+  black = BlackPixel( display, screen );
+  white = WhitePixel( display, screen );
+  
+  XTextProperty windowName;
+  
+  
+  if( !DownloadEnvironment() )
+    {
+      puts( "\nFailed to download Stage's environment. Exiting" );
+      exit( -1 );
+    }
 
-//  LoadVars( initFile ); // read the window parameters from the initfile
-
-//    // init X globals 
-    display = XOpenDisplay( (char*)NULL );
-    screen = DefaultScreen( display );
-
-    assert( display );
-
-    default_cmap = DefaultColormap( display, screen ); 
-
-    XColor col, rcol;
-    XAllocNamedColor( display, default_cmap, "red", &col, &rcol ); 
-    red = col.pixel;
-    XAllocNamedColor( display, default_cmap, "green", &col, &rcol ); 
-    green= col.pixel;
-    XAllocNamedColor( display, default_cmap, "blue", &col, &rcol ); 
-    blue = col.pixel;
-    XAllocNamedColor( display, default_cmap, "cyan", &col, &rcol ); 
-    cyan = col.pixel;
-    XAllocNamedColor( display, default_cmap, "magenta", &col, &rcol ); 
-    magenta = col.pixel;
-    XAllocNamedColor( display, default_cmap, "yellow", &col, &rcol ); 
-    yellow = col.pixel;
-    XAllocNamedColor( display, default_cmap, "dark grey", &col, &rcol ); 
-    grey = col.pixel;
-
-    black = BlackPixel( display, screen );
-    white = WhitePixel( display, screen );
-   
-    XTextProperty windowName;
-        
-    
-    // load the X resources here
-    
-    if( !geometry ) geometry = XGetDefault( display, argv[0], "geometry" ); 
-    if( !geometry ) geometry = default_geometry;
-    SetupGeometry( geometry );
-    
-    if( !zoom ) zoom = XGetDefault( display, argv[0], "zoom" );
-    if( !zoom ) zoom= default_zoom;
-    SetupZoom( zoom );
-    
-    if( !pan ) pan = XGetDefault( display, argv[0], "pan" );
-    if( !pan ) pan= default_pan;
-    SetupPan( pan ); // must setupzoom first!
-    
-
-
-    win = XCreateSimpleWindow( display, 
+  // load the X resources here
+  
+  if( !geometry ) geometry = XGetDefault( display, argv[0], "geometry" ); 
+  if( !geometry ) geometry = default_geometry;
+  SetupGeometry( geometry );
+  
+  if( !zoom ) zoom = XGetDefault( display, argv[0], "zoom" );
+  if( !zoom ) zoom= default_zoom;
+  SetupZoom( zoom );
+  
+  if( !pan ) pan = XGetDefault( display, argv[0], "pan" );
+  if( !pan ) pan= default_pan;
+  SetupPan( pan ); // must setupzoom first!
+  
+  
+  
+  win = XCreateSimpleWindow( display, 
   			     RootWindow( display, screen ), 
   			     x, y, width, height, 4, 
   			     black, white );
   
-    XSelectInput(display, win, ExposureMask | StructureNotifyMask | 
+  XSelectInput(display, win, ExposureMask | StructureNotifyMask | 
   	       ButtonPressMask | ButtonReleaseMask | KeyPressMask );
   
-    XStringListToTextProperty( &window_title, 1, &windowName);
-
-    XSizeHints sz;
-
-    sz.flags = PMinSize;
-    sz.min_width = MIN_WINDOW_WIDTH; 
-    sz.min_height = MIN_WINDOW_HEIGHT;
-      
-    XSetWMProperties(display, win, &windowName, (XTextProperty*)NULL, 
+  XStringListToTextProperty( &window_title, 1, &windowName);
+  
+  XSizeHints sz;
+  
+  sz.flags = PMinSize;
+  sz.min_width = MIN_WINDOW_WIDTH; 
+  sz.min_height = MIN_WINDOW_HEIGHT;
+  
+  XSetWMProperties(display, win, &windowName, (XTextProperty*)NULL, 
   		   (char**)NULL, 0, 
   		   &sz, (XWMHints*)NULL, (XClassHint*)NULL );
   
@@ -905,6 +1068,8 @@ CXGui::CXGui( int argc, char** argv, environment_t* anenv )
     enableVision = true;
     enablePtz = true;
     enableLaserBeacon = true;
+
+    DownloadObjects( envfd, num_objects );
 }
 
 
@@ -916,42 +1081,28 @@ CXGui::~CXGui( void )
 void CXGui::MoveObject( xstruth_t* exp, double x, double y, double th )
 {    
   // compose the structure
-  stage_truth_t output;
+  stage_pose_t output;
 
   output.stage_id = exp->stage_id;
-  output.stage_type = exp->stage_type;
-
-  strncpy( output.hostname, exp->hostname, HOSTNAME_SIZE );
-
-  output.red = exp->color.red;
-  output.green = exp->color.red;
-  output.blue = exp->color.red;
-
-  output.id.port = exp->id.port;
-  output.id.type = exp->id.type;
-  output.id.index = exp->id.index;
-
-  output.parent.port = exp->parent.port;
-  output.parent.type = exp->parent.type;
-  output.parent.index = exp->parent.index;
 
   output.x = (uint32_t)(x * 1000.0); // the new pose
   output.y = (uint32_t)(y * 1000.0); // "
   output.th = (uint16_t)RTOD( th );  // "
-  output.w = (uint32_t)(exp->w * 1000.0);
-  output.h = (uint32_t)(exp->h * 1000.0);
-  output.rotdx = (uint16_t)(exp->rotdx * 1000.0);
-  output.rotdy = (uint16_t)(exp->rotdy * 1000.0);
 
   // and queue it up for the server thread to write out
   //pthread_mutex_lock( &outgoing_mutex );
   outgoing_queue.push( output );
   //pthread_mutex_unlock( &outgoing_mutex );
 
+  printf( "MOVING OBJECT\n" );
+  PrintMetricTruth( exp->stage_id, *exp );
+  PrintStagePose( output );
+  puts( "PUSHED" );
+
+
   dragging->x = x;
   dragging->y = y;
   dragging->th = th;
-
 
   //#ifdef DEBUG
   //printf( "XS: Moving object "
@@ -1674,7 +1825,7 @@ void CXGui::HandleKeyPressEvent( XEvent& reportEvent )
       // send a save command to Stage
 
       // compose the structure
-      stage_truth_t output;
+      stage_pose_t output;
 
       memset( &output, 0, sizeof( output ) );
 
@@ -1736,6 +1887,12 @@ void CXGui::HandleMotionEvent( XEvent &reportEvent )
 
       double xpos = xpixel / ppm;
       double ypos = ypixel / ppm; 
+      
+      //printf( "iwidth %d iheight %d panx %d pany %d\n",
+      //      iwidth, iheight, panx, pany );
+
+      // printf( "xmotion %d ymotion %d\n", 
+      //      reportEvent.xmotion.x, reportEvent.xmotion.y);
       
       //printf( "motion: %d %d \t %.2f %.2f \n", xpixel, ypixel, xpos, ypos );
 
@@ -1841,8 +1998,8 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 	}
       else
 	{ 
-	  printf( "XS: Creating PlayerClient on %s:%d\n",
-		  ent->hostname, ent->id.port );
+	  //printf( "XS: Creating PlayerClient on %s:%d\n",
+	  //  ent->hostname, ent->id.port );
 	  
 	  // int* goo;
 	  // create a new client and add any supported proxies

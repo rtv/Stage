@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.21 $
+//  $Author: vaughan $
+//  $Revision: 1.22 $
 //
 // Usage:
 //  (empty)
@@ -297,15 +297,15 @@ bool CWorld::Load(const char *filename)
 	    //
 	    else if (argc >= 2 && strcmp(argv[0], "enable") == 0)
 	      {
-		if( strcmp( argv[1], "truth_server" ) == 0 )
+		if( strcmp( argv[1], "pose_server" ) == 0 )
 		  {
 		    // see if we should run on a non-standard port
 		    if(argc >= 4 && !strcmp(argv[2],"port"))
-		      m_truth_port = atoi(argv[3]);
+		      m_pose_port = atoi(argv[3]);
 
-		    m_run_truth_server = true;
+		    m_run_pose_server = true;
 
-		    printf( "[Truth %d]", m_truth_port );
+		    printf( "[Pose %d]", m_pose_port );
 		    fflush ( stdout );
 		  }
 		else if( strcmp( argv[1], "environment_server" ) == 0 )
@@ -337,11 +337,11 @@ bool CWorld::Load(const char *filename)
 	    //
 	    else if (argc >= 2 && strcmp(argv[0], "disable") == 0)
 	      {
-		if( strcmp( argv[1], "truth_server" ) == 0 )
+		if( strcmp( argv[1], "pose_server" ) == 0 )
 		  {
-		    m_run_truth_server = false;
+		    m_run_pose_server = false;
 
-		    printf( "[Truth disabled]" );
+		    printf( "[Pose disabled]" );
 		    fflush ( stdout );
 		  }
 		else if( strcmp( argv[1], "environment_server" ) == 0 )

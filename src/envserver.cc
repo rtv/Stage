@@ -30,8 +30,6 @@
 
 #include "world.hh"
 #include "truthserver.hh"
-//#include "comms.h"
-//#include "crums.h"
 
 extern  CWorld* world;
 
@@ -45,7 +43,7 @@ extern void CatchSigPipe( int signo );
 static void * EnvWriter( void* arg )
 {
 #ifdef VERBOSE
-  printf( "Stage: EnvWriter thread (socket %d)\n", *connfd );
+  printf( "Stage: EnvWriter thread\n" );
   fflush( stdout );
 #endif
 
@@ -57,22 +55,23 @@ static void * EnvWriter( void* arg )
 
   pthread_detach(pthread_self());
 
-  player_occupancy_data_t og;
+  stage_header_t hdr;
 
-  og.width = (uint16_t)world->matrix->width;
-  og.height = (uint16_t)world->matrix->height;
-  og.ppm = (uint16_t)world->ppm;
-  og.num_pixels = 0; // we'll count them below
+  hdr.width = (uint16_t)world->matrix->width;
+  hdr.height = (uint16_t)world->matrix->height;
+  hdr.ppm = (uint16_t)world->ppm;
+  hdr.num_objects = (uint16_t)world->GetObjectCount();
+  hdr.num_pixels = 0; // we'll count them below
 
   for( int x = 0; x < world->matrix->width; x++ )
     for( int y = 0; y < world->matrix->height; y++ )
       if( world->matrix->is_type( x, y, WallType ) )
-	og.num_pixels++;
+	hdr.num_pixels++;
   
   int errorretval = -1;
 
   // send the header to the connected client
-  if( write( *connfd, &og, sizeof(og) ) < 0 )
+  if( write( *connfd, &hdr, sizeof(hdr) ) < 0 )
     {
       perror( "EnvWriter failed writing header" );
       close( *connfd );
@@ -82,9 +81,9 @@ static void * EnvWriter( void* arg )
   // while the client is reading that, we'll process he pixels
 
   // allocate storage for the filled pixels
-  XPoint* pixels = new XPoint[ og.num_pixels ];
+  XPoint* pixels = new XPoint[ hdr.num_pixels ];
   
-  memset( pixels, 0, og.num_pixels * sizeof( XPoint ) );
+  memset( pixels, 0, hdr.num_pixels * sizeof( XPoint ) );
 
   int store = 0;
   // iterate through again, this time recording the pixel's details
@@ -102,13 +101,12 @@ static void * EnvWriter( void* arg )
   
   
   // send the pixels
-
-  int send = og.num_pixels*sizeof(XPoint);
+  int send = hdr.num_pixels*sizeof(XPoint);
   int sent = 0;
 
 #ifdef VERBOSE      
       printf( "Stage: EnvWriter sending %d pixels (%d bytes)\n", 
-	      og.num_pixels, send );
+	      hdr.num_pixels, send );
       fflush( stdout );
 #endif
 
@@ -132,7 +130,44 @@ static void * EnvWriter( void* arg )
       
     }
 
-  close( *connfd );
+  stage_truth_t truth;
+
+  for( int n=0; n<hdr.num_objects; n++ )
+    {
+      world->GetObject(n)->ComposeTruth( &truth, n );
+      
+      // send the truth
+      send = sizeof(stage_truth_t);
+      sent = 0;
+      
+#ifdef VERBOSE      
+      printf( "Stage: EnvWriter sending %d truths (%d bytes)\n", 
+	      1, send );
+      fflush( stdout );
+#endif
+      
+      while( sent < send )
+	{
+	  int b = write( *connfd, &truth, send - sent );
+	  
+	  if( b < 0 )
+	    {
+	      perror( "EnvWriter failed writing truths" );
+	      close( *connfd );
+	      pthread_exit( (void*)&errorretval );
+	    }
+	  
+	  sent += b;
+	  
+#ifdef VERBOSE      
+	  printf( "Stage: EnvWriter sent %d/%d bytes\n", sent, send );
+	  fflush( stdout );
+#endif
+	  
+	}
+    }
+  
+  //close( *connfd );
 
 #ifdef VERBOSE
   puts( "Stage: EnvWriter thread exit" );

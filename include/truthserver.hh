@@ -2,21 +2,36 @@
 #ifndef _TRUTHSERVER_H
 #define _TRUTHSERVER_H
 
-#include "messages.h"
+#include "messages.h" // from player
 #include "stage_types.hh"
 #include <sys/poll.h>
 
-const int DEFAULT_TRUTH_PORT = 6601;
+const int DEFAULT_POSE_PORT = 6601;
 const int DEFAULT_ENV_PORT = 6602;
 
 // we usually use 1 or 2, so this should be plenty
-const int MAX_TRUTH_CONNECTIONS = 100; 
+const int MAX_POSE_CONNECTIONS = 100; 
 
 // these can be modified in world_load.cc...
 extern int global_truth_port;
 extern int global_environment_port;
 
 typedef	struct sockaddr SA; // useful abbreviation
+
+typedef struct
+{
+  uint16_t width, height, ppm;
+  uint32_t num_pixels;
+  uint16_t num_objects;
+} __attribute ((packed)) stage_header_t;
+
+typedef struct
+{
+  char echo_request;
+  int16_t stage_id;
+  uint32_t x, y; // mm, mm
+  int16_t th; // degrees
+} __attribute ((packed)) stage_pose_t;
 
 // packet for truth device
 typedef struct

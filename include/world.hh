@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.30 $
+//  $Revision: 1.31 $
 //
 // Usage:
 //  (empty)
@@ -94,25 +94,28 @@ private: bool m_enable;
   // the hostname of this computer
 public: char m_hostname[ HOSTNAME_SIZE ];
   
-  // truth server stuff ---------------------------------------------
+  // pose server stuff ---------------------------------------------
 private:
   
   // data for the server-server's listening socket
-  struct pollfd m_truth_listen;
-  // data for each truth connection
-  struct pollfd m_truth_connections[ MAX_TRUTH_CONNECTIONS ];
-  // the number of truth connections
-  int m_truth_connection_count;
+  struct pollfd m_pose_listen;
+  // data for each pose connection
+  struct pollfd m_pose_connections[ MAX_POSE_CONNECTIONS ];
+  // the number of pose connections
+  int m_pose_connection_count;
   
-  void ListenForTruthConnections( void );
-  void SetupTruthServer( void );
+  void ListenForPoseConnections( void );
+  void SetupPoseServer( void );
   void DestroyConnection( int con );
 
-  void TruthRead();
-  void TruthWrite();
-  void InputTruth( stage_truth_t &truth );
-  void PrintTruth( stage_truth_t &truth );
+  void PoseRead();
+  void PoseWrite();
+  void InputPose( stage_pose_t &pose );
+  void PrintPose( stage_pose_t &pose );
+  void PrintSendBuffer( char* send_buf, size_t len );
   
+  void PrintTruth( stage_truth_t &truth );
+
   //-----------------------------------------------------------------------
   // Timing
   // Real time at which simulation started.
@@ -154,7 +157,7 @@ public: double m_vision_res; // NYI
 
   // flags that control servers 
 private: bool m_run_environment_server;
-private: bool m_run_truth_server;
+private: bool m_run_pose_server;
 
   // flag that controls spawning of xs
 private: bool m_run_xs;
@@ -172,8 +175,8 @@ public: float angle_multiplier;
   // Scale of fig-based world file
     private: double scale;
 
-  // the truth server port
-public: int m_truth_port;
+  // the pose server port
+public: int m_pose_port;
 
   // the environment server port
 public: int m_env_port;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.33 $
+//  $Revision: 1.34 $
 //
 // Usage:
 //  (empty)
@@ -332,7 +332,7 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 	
        
         // if we hit something shiny
-	if( ent->laser_return == LaserBright )
+	if( ent && ent->laser_return == LaserBright )
 	  v = v | (((uint16_t)1) << 13); // set the shiny bits to 1
 	
         // Set the range

@@ -1,6 +1,6 @@
 /*##########################################################################
 # manager.cc - implements the Stage Manager for syncing distributed Stages
-# $Id: manager.cc,v 1.10 2001-09-27 00:02:29 gerkey Exp $
+# $Id: manager.cc,v 1.11 2001-09-27 22:33:43 vaughan Exp $
 *#########################################################################*/
 
 #include <sys/types.h>	/* basic system data types */
@@ -31,26 +31,18 @@
 
 #define VERBOSE
 
-void PrintStageTruth( stage_truth_t &truth, double seconds )
+void PrintPose( stage_pose_t &pose )
 {
-  printf( "Time: %.3f ID: %d (%4d,%d,%d)\tPID:(%4d,%d,%d)\tpose: [%d,%d,%d]\tsize: [%d,%d]\n", 
-	  seconds,
-	  truth.stage_id,
-	  truth.id.port, 
-	  truth.id.type, 
-	  truth.id.index,
-	  truth.parent.port, 
-	  truth.parent.type, 
-	  truth.parent.index,
-	  truth.x, truth.y, truth.th,
-	  truth.w, truth.h );
+  printf( "[%d] (%d,%d,%d) echo: %d\n",
+	  pose.stage_id,
+	  pose.x, pose.y, pose.th,
+	  pose.echo_request );
   
   fflush( stdout );
 }
 
 int stages = 0;
 struct pollfd* servers = 0;
-
 
 void Activity( int reading )
 {
@@ -99,6 +91,76 @@ void Activity( int reading )
  fflush( stdout );
 }
 
+
+size_t ReadHeader( int s )
+{
+  // read the first two bytes to see how many poses are coming
+  size_t packetlen = sizeof(uint16_t);
+  size_t recv = 0;
+  
+  uint16_t num_poses;
+  
+  while( recv < packetlen )
+    {
+      //printf( "Reading on %d\n", ffd ); fflush( stdout );
+      
+      int r = read(servers[s].fd, ((char*)&num_poses)+recv,  packetlen - recv );
+      
+      if( r < 0 )
+	perror( "Manager: read error" );
+      else
+	recv += r;
+    }
+  
+  return num_poses;
+}
+
+size_t ReadData( int s, char* data, size_t packetlen )
+{
+  
+  int recv = 0;
+  
+  // read the first two bytes to see how many poses are coming
+  
+  while( recv < (int)packetlen )
+    {
+      /* read will block until it has some bytes to return */
+      int r = read( servers[s].fd, data + recv,  packetlen - recv );
+      
+      if( r < 0 )
+	perror( "Manager: read error" );
+      else
+	recv += r;
+      
+      //printf( "Read %d/%d bytes on %d\n",recv,packetlen, servers[s].fd ); 
+    }
+  return(  recv );
+}
+
+int ForwardData( int sender, char* buf, size_t buflen )
+{
+  // foward the packet to the other servers 
+  for(int j=0; j<stages; j++)
+    {
+      if( j != sender ) 
+	{
+	  unsigned int writecnt = 0;
+	  int thiswritecnt;
+	  while(writecnt < buflen)
+	    {
+	      thiswritecnt = write( servers[j].fd, 
+				    buf+writecnt, 
+				    buflen-writecnt);
+
+	      assert(thiswritecnt >= 0);
+	      writecnt += thiswritecnt;
+	    }
+	}
+    }
+  return true;
+}
+
+
 int main(int argc, char **argv)
 {
   // hello world
@@ -131,7 +193,7 @@ int main(int argc, char **argv)
       
       char* hostname = argv[s+1];
 
-      printf( "\nConnecting to %s on port %d... ", hostname, DEFAULT_TRUTH_PORT );
+      printf( "\nConnecting to %s on port %d... ", hostname, DEFAULT_POSE_PORT );
 
       struct hostent* entp;
       if( (entp = gethostbyname( hostname )) == NULL)
@@ -146,7 +208,7 @@ int main(int argc, char **argv)
       /* setup our server address (type, IP address and port) */
       bzero(&servaddr, sizeof(servaddr)); /* initialize */
       servaddr.sin_family = AF_INET;   /* internet address space */
-      servaddr.sin_port = htons( DEFAULT_TRUTH_PORT ); /*our command port */ 
+      servaddr.sin_port = htons( DEFAULT_POSE_PORT ); /*our command port */ 
       // hostname
       memcpy(&(servaddr.sin_addr), entp->h_addr_list[0], entp->h_length);
 
@@ -154,7 +216,7 @@ int main(int argc, char **argv)
       
       if( v < 0 )
 	{
-	  printf( "\nCan't find a Stage truth server on %s. Quitting.\n", 
+	  printf( "\nCan't find a Stage pose server on %s. Quitting.\n", 
 		  ip ); 
 	  fflush( stdout );
 	  exit( -1 );
@@ -164,8 +226,6 @@ int main(int argc, char **argv)
     }
 
   puts( "" );
-
-  stage_truth_t truth;
 
   struct timeval start_tv;
   //struct timeval tv;
@@ -195,44 +255,25 @@ int main(int argc, char **argv)
 	{
 	  // is this one ready to read?
 	  if(servers[i].revents & POLLIN)
-	    {
+	    {      
+	      uint16_t num_poses = ReadHeader( i );
 	      
-	      //printf("reading from: %d 0x%x\n", i,servers[i].events);
-
-	      int r = 0;
+	      size_t bufsize = sizeof(uint16_t)+sizeof(stage_pose_t)*num_poses;
+	      char* buf = new char[ bufsize ];
 	      
-	      while( r < (int)sizeof(truth) )
-		{
-		  int v=0;
-		  if( (v = read( servers[i].fd, ((char*)&truth)+r, sizeof(truth)-r )) < 1 )
-		    {
-		      cout << "Read error (Stage dead?). quitting. " << endl;
-		      exit( -1 );
-		    }
-		  r+=v;
-		}
+	      // put the size in the beginning of the buffer
+	      *(uint16_t*)buf = num_poses;
 	      
-	      // foward the packet to the other servers 
-	      for(int j=0; j<stages; j++)
-              {
-		if( j != i ) 
-                {
-                  unsigned int writecnt = 0;
-                  int thiswritecnt;
-                  while(writecnt < sizeof(truth))
-                  {
-                    thiswritecnt = write( servers[j].fd, 
-                                          ((char*)&truth)+writecnt, 
-                                          sizeof(truth)-writecnt);
-                    assert(thiswritecnt >= 0);
-                    writecnt += thiswritecnt;
-                  }
-                }
-              }
+	      // read data into the rest of it
+	      ReadData( i, buf+sizeof(uint16_t), bufsize-sizeof(uint16_t) );
+	      
+	      // forward the whole buffer
+	      ForwardData( i, buf, bufsize ); 
+	      
 	    }
-	}     
+	}
     }
-}
+}     
 
 
 
