@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.13 $
+//  $Revision: 1.14 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -219,34 +219,34 @@ void model_ranger_config_render( model_t* mod )
   for( s=0; s<rcount; s++ )
     {
       stg_ranger_config_t* rngr = &cfg[s];
-      //printf( "drawing a ranger rect (%.2f,%.2f,%.2f)[%.2f %.2f]\n",
-      //  rngr->pose.x, rngr->pose.y, rngr->pose.a,
-      //  rngr->size.x, rngr->size.y );
+      printf( "drawing a ranger rect (%.2f,%.2f,%.2f)[%.2f %.2f][%.2f %.2f %.2f]\n",
+	      rngr->pose.x, rngr->pose.y, rngr->pose.a,
+	      rngr->size.x, rngr->size.y,
+	      rngr->bounds_range.min, rngr->bounds_range.max, rngr->fov );
       
+      // sensor pose
       rtk_fig_rectangle( fig, 
 			 rngr->pose.x, rngr->pose.y, rngr->pose.a,
 			 rngr->size.x, rngr->size.y, 0 ); 
       
       // TODO - FIX THIS
 
-      // show the FOV too
+      // sensor FOV
       double sidelen = rngr->bounds_range.max;
-      
-      double x1= rngr->pose.x + sidelen*-cos(rngr->pose.a - rngr->fov/2.0 );
-      double y1= rngr->pose.y + sidelen*-sin(rngr->pose.a - rngr->fov/2.0 );
-      double x2= rngr->pose.x + sidelen*-cos(rngr->pose.a + rngr->fov/2.0 );
-      double y2= rngr->pose.y + sidelen*-sin(rngr->pose.a + rngr->fov/2.0 );
+      double da = rngr->fov/2.0;
+
+      double x1= rngr->pose.x + sidelen*cos(rngr->pose.a - da );
+      double y1= rngr->pose.y + sidelen*sin(rngr->pose.a - da );
+      double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + da );
+      double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + da );
       
       rtk_fig_line( cfgfig, rngr->pose.x, rngr->pose.y, x1, y1 );
       rtk_fig_line( cfgfig, rngr->pose.x, rngr->pose.y, x2, y2 );	
-   
-      double mina = rngr->fov / 2.0;
-      double maxa = -rngr->fov / 2.0;
-   
-      rtk_fig_ellipse_arc( cfgfig,0,0,0, 
+      
+      rtk_fig_ellipse_arc( cfgfig, rngr->pose.x, rngr->pose.y, rngr->pose.a,
 			   2.0*cfg->bounds_range.max,
 			   2.0*cfg->bounds_range.max, 
-			   mina, maxa );      
+			   -da, da );
     }
 }
 

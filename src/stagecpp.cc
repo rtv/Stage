@@ -293,7 +293,7 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 	      configs[i].bounds_range.max = 
 		wf.ReadTupleLength(section, key, 1, 5.0);
 	      configs[i].fov 
-		= wf.ReadTupleAngle(section, key, 2, 30.0 );
+		= DTOR(wf.ReadTupleAngle(section, key, 2, 5.0 ));
 	    }
 	  
 	  PRINT_DEBUG1( "loaded %d ranger configs", scount );	  
