@@ -9,7 +9,7 @@ environment
 
 gui
 (
-  size [1033.000 479.000]
+  size [512.000 479.000]
   origin [130.959 45.475]
   scale 0.253
   grid [1 10]

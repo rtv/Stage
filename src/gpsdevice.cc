@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gpsdevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.13 $
+//  $Author: gerkey $
+//  $Revision: 1.14 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -56,7 +56,7 @@ void CGpsDevice::Update( double sim_time )
   GetGlobalPose(px,py,pth);
   m_data.xpos = htonl((int)(px*1000.0));
   m_data.ypos = htonl((int)(py*1000.0));
-  m_data.heading = htonl((int)(pth*180/M_PI));
+  m_data.heading = htonl((int)(RTOD(NORMALIZE(pth))));
   PutData(&m_data, sizeof(m_data));
 }
 

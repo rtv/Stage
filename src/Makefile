@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.104 2002-06-11 03:31:18 inspectorg Exp $
+# $Id: Makefile,v 1.105 2002-06-11 06:33:52 gerkey Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -92,29 +92,68 @@ clean_dep:
 
 # Dependancies (make dep)
 
-boxobstacle.o: ../include/world.hh ../include/image.hh ../include/entity.hh
-boxobstacle.o: ../include/stage_types.hh ../include/colors.hh
+boxobstacle.o: ../include/world.hh
+boxobstacle.o: /home/gerkey/code/player/include/messages.h
+boxobstacle.o: /home/gerkey/code/player/include/playercommon.h
+boxobstacle.o: /home/gerkey/code/player/include/defaults.h
+boxobstacle.o: ../include/image.hh ../include/entity.hh
+boxobstacle.o: /home/gerkey/code/player/include/stage.h
+boxobstacle.o: /home/gerkey/code/player/include/playerqueue.h
+boxobstacle.o: ../include/stage_types.hh
+boxobstacle.o: /home/gerkey/code/player/include/player.h ../include/colors.hh
 boxobstacle.o: ../include/rtp.h ../include/matrix.hh ../include/worldfile.hh
 boxobstacle.o: ../include/boxobstacle.hh
+bpsdevice.o: /home/gerkey/code/player/include/stage.h
+bpsdevice.o: /home/gerkey/code/player/include/messages.h
+bpsdevice.o: /home/gerkey/code/player/include/playercommon.h
+bpsdevice.o: /home/gerkey/code/player/include/defaults.h
+bpsdevice.o: /home/gerkey/code/player/include/playerqueue.h
 bpsdevice.o: ../include/world.hh ../include/image.hh ../include/entity.hh
-bpsdevice.o: ../include/stage_types.hh ../include/colors.hh ../include/rtp.h
-bpsdevice.o: ../include/matrix.hh ../include/worldfile.hh
+bpsdevice.o: ../include/stage_types.hh
+bpsdevice.o: /home/gerkey/code/player/include/player.h ../include/colors.hh
+bpsdevice.o: ../include/rtp.h ../include/matrix.hh ../include/worldfile.hh
 bpsdevice.o: ../include/bpsdevice.hh ../include/playerdevice.hh
+broadcastdevice.o: /home/gerkey/code/player/include/stage.h
+broadcastdevice.o: /home/gerkey/code/player/include/messages.h
+broadcastdevice.o: /home/gerkey/code/player/include/playercommon.h
+broadcastdevice.o: /home/gerkey/code/player/include/defaults.h
+broadcastdevice.o: /home/gerkey/code/player/include/playerqueue.h
 broadcastdevice.o: ../include/world.hh ../include/image.hh
 broadcastdevice.o: ../include/entity.hh ../include/stage_types.hh
+broadcastdevice.o: /home/gerkey/code/player/include/player.h
 broadcastdevice.o: ../include/colors.hh ../include/rtp.h ../include/matrix.hh
 broadcastdevice.o: ../include/worldfile.hh ../include/broadcastdevice.hh
 broadcastdevice.o: ../include/playerdevice.hh
-client.o: ../include/server.hh ../include/stage_types.hh
+client.o: ../include/server.hh /home/gerkey/code/player/include/messages.h
+client.o: /home/gerkey/code/player/include/playercommon.h
+client.o: /home/gerkey/code/player/include/defaults.h
+client.o: ../include/stage_types.hh /home/gerkey/code/player/include/player.h
 client.o: ../include/worldfile.hh ../include/world.hh ../include/image.hh
-client.o: ../include/entity.hh ../include/colors.hh ../include/rtp.h
-client.o: ../include/matrix.hh
-colors.o: ../include/stage_types.hh ../include/colors.hh
-entity.o: ../include/entity.hh ../include/stage_types.hh ../include/colors.hh
-entity.o: ../include/rtp.h ../include/raytrace.hh ../include/matrix.hh
-entity.o: ../include/image.hh ../include/world.hh ../include/worldfile.hh
+client.o: ../include/entity.hh /home/gerkey/code/player/include/stage.h
+client.o: /home/gerkey/code/player/include/playerqueue.h ../include/colors.hh
+client.o: ../include/rtp.h ../include/matrix.hh
+colors.o: ../include/stage_types.hh /home/gerkey/code/player/include/player.h
+colors.o: /home/gerkey/code/player/include/messages.h
+colors.o: /home/gerkey/code/player/include/playercommon.h
+colors.o: /home/gerkey/code/player/include/defaults.h ../include/colors.hh
+entity.o: ../include/entity.hh /home/gerkey/code/player/include/stage.h
+entity.o: /home/gerkey/code/player/include/messages.h
+entity.o: /home/gerkey/code/player/include/playercommon.h
+entity.o: /home/gerkey/code/player/include/defaults.h
+entity.o: /home/gerkey/code/player/include/playerqueue.h
+entity.o: ../include/stage_types.hh /home/gerkey/code/player/include/player.h
+entity.o: ../include/colors.hh ../include/rtp.h ../include/raytrace.hh
+entity.o: ../include/matrix.hh ../include/image.hh ../include/world.hh
+entity.o: ../include/worldfile.hh
 entityfactory.o: ../include/entityfactory.hh ../include/fixedobstacle.hh
-entityfactory.o: ../include/entity.hh ../include/stage_types.hh
+entityfactory.o: ../include/entity.hh
+entityfactory.o: /home/gerkey/code/player/include/stage.h
+entityfactory.o: /home/gerkey/code/player/include/messages.h
+entityfactory.o: /home/gerkey/code/player/include/playercommon.h
+entityfactory.o: /home/gerkey/code/player/include/defaults.h
+entityfactory.o: /home/gerkey/code/player/include/playerqueue.h
+entityfactory.o: ../include/stage_types.hh
+entityfactory.o: /home/gerkey/code/player/include/player.h
 entityfactory.o: ../include/colors.hh ../include/rtp.h
 entityfactory.o: ../include/boxobstacle.hh ../include/laserbeacon.hh
 entityfactory.o: ../include/puck.hh ../include/visionbeacon.hh
@@ -129,112 +168,272 @@ entityfactory.o: ../include/gpsdevice.hh ../include/motedevice.hh
 entityfactory.o: ../include/truthdevice.hh ../include/world.hh
 entityfactory.o: ../include/image.hh ../include/matrix.hh
 entityfactory.o: ../include/worldfile.hh
-envserver.o: ../include/world.hh ../include/image.hh ../include/entity.hh
-envserver.o: ../include/stage_types.hh ../include/colors.hh ../include/rtp.h
-envserver.o: ../include/matrix.hh ../include/worldfile.hh
+envserver.o: ../include/world.hh /home/gerkey/code/player/include/messages.h
+envserver.o: /home/gerkey/code/player/include/playercommon.h
+envserver.o: /home/gerkey/code/player/include/defaults.h ../include/image.hh
+envserver.o: ../include/entity.hh /home/gerkey/code/player/include/stage.h
+envserver.o: /home/gerkey/code/player/include/playerqueue.h
+envserver.o: ../include/stage_types.hh
+envserver.o: /home/gerkey/code/player/include/player.h ../include/colors.hh
+envserver.o: ../include/rtp.h ../include/matrix.hh ../include/worldfile.hh
 envserver.o: ../include/truthserver.hh
-fixedobstacle.o: ../include/image.hh ../include/world.hh ../include/entity.hh
-fixedobstacle.o: ../include/stage_types.hh ../include/colors.hh
-fixedobstacle.o: ../include/rtp.h ../include/matrix.hh
+fixedobstacle.o: ../include/image.hh ../include/world.hh
+fixedobstacle.o: /home/gerkey/code/player/include/messages.h
+fixedobstacle.o: /home/gerkey/code/player/include/playercommon.h
+fixedobstacle.o: /home/gerkey/code/player/include/defaults.h
+fixedobstacle.o: ../include/entity.hh
+fixedobstacle.o: /home/gerkey/code/player/include/stage.h
+fixedobstacle.o: /home/gerkey/code/player/include/playerqueue.h
+fixedobstacle.o: ../include/stage_types.hh
+fixedobstacle.o: /home/gerkey/code/player/include/player.h
+fixedobstacle.o: ../include/colors.hh ../include/rtp.h ../include/matrix.hh
 fixedobstacle.o: ../include/worldfile.hh ../include/fixedobstacle.hh
+gpsdevice.o: /home/gerkey/code/player/include/stage.h
+gpsdevice.o: /home/gerkey/code/player/include/messages.h
+gpsdevice.o: /home/gerkey/code/player/include/playercommon.h
+gpsdevice.o: /home/gerkey/code/player/include/defaults.h
+gpsdevice.o: /home/gerkey/code/player/include/playerqueue.h
 gpsdevice.o: ../include/world.hh ../include/image.hh ../include/entity.hh
-gpsdevice.o: ../include/stage_types.hh ../include/colors.hh ../include/rtp.h
-gpsdevice.o: ../include/matrix.hh ../include/worldfile.hh
+gpsdevice.o: ../include/stage_types.hh
+gpsdevice.o: /home/gerkey/code/player/include/player.h ../include/colors.hh
+gpsdevice.o: ../include/rtp.h ../include/matrix.hh ../include/worldfile.hh
 gpsdevice.o: ../include/gpsdevice.hh
-gripperdevice.o: ../include/world.hh ../include/image.hh ../include/entity.hh
-gripperdevice.o: ../include/stage_types.hh ../include/colors.hh
-gripperdevice.o: ../include/rtp.h ../include/matrix.hh
+gripperdevice.o: ../include/world.hh
+gripperdevice.o: /home/gerkey/code/player/include/messages.h
+gripperdevice.o: /home/gerkey/code/player/include/playercommon.h
+gripperdevice.o: /home/gerkey/code/player/include/defaults.h
+gripperdevice.o: ../include/image.hh ../include/entity.hh
+gripperdevice.o: /home/gerkey/code/player/include/stage.h
+gripperdevice.o: /home/gerkey/code/player/include/playerqueue.h
+gripperdevice.o: ../include/stage_types.hh
+gripperdevice.o: /home/gerkey/code/player/include/player.h
+gripperdevice.o: ../include/colors.hh ../include/rtp.h ../include/matrix.hh
 gripperdevice.o: ../include/worldfile.hh ../include/gripperdevice.hh
 gripperdevice.o: ../include/raytrace.hh
-image.o: ../include/stage_types.hh ../include/image.hh
-laserbeacon.o: ../include/world.hh ../include/image.hh ../include/entity.hh
-laserbeacon.o: ../include/stage_types.hh ../include/colors.hh
+image.o: ../include/stage_types.hh /home/gerkey/code/player/include/player.h
+image.o: /home/gerkey/code/player/include/messages.h
+image.o: /home/gerkey/code/player/include/playercommon.h
+image.o: /home/gerkey/code/player/include/defaults.h ../include/image.hh
+laserbeacon.o: ../include/world.hh
+laserbeacon.o: /home/gerkey/code/player/include/messages.h
+laserbeacon.o: /home/gerkey/code/player/include/playercommon.h
+laserbeacon.o: /home/gerkey/code/player/include/defaults.h
+laserbeacon.o: ../include/image.hh ../include/entity.hh
+laserbeacon.o: /home/gerkey/code/player/include/stage.h
+laserbeacon.o: /home/gerkey/code/player/include/playerqueue.h
+laserbeacon.o: ../include/stage_types.hh
+laserbeacon.o: /home/gerkey/code/player/include/player.h ../include/colors.hh
 laserbeacon.o: ../include/rtp.h ../include/matrix.hh ../include/worldfile.hh
 laserbeacon.o: ../include/laserbeacon.hh ../include/laserdevice.hh
 laserbeacon.o: ../include/playerdevice.hh
+laserbeacondevice.o: /home/gerkey/code/player/include/stage.h
+laserbeacondevice.o: /home/gerkey/code/player/include/messages.h
+laserbeacondevice.o: /home/gerkey/code/player/include/playercommon.h
+laserbeacondevice.o: /home/gerkey/code/player/include/defaults.h
+laserbeacondevice.o: /home/gerkey/code/player/include/playerqueue.h
 laserbeacondevice.o: ../include/world.hh ../include/image.hh
 laserbeacondevice.o: ../include/entity.hh ../include/stage_types.hh
+laserbeacondevice.o: /home/gerkey/code/player/include/player.h
 laserbeacondevice.o: ../include/colors.hh ../include/rtp.h
 laserbeacondevice.o: ../include/matrix.hh ../include/worldfile.hh
 laserbeacondevice.o: ../include/laserdevice.hh ../include/playerdevice.hh
 laserbeacondevice.o: ../include/laserbeacon.hh
 laserbeacondevice.o: ../include/laserbeacondevice.hh ../include/guiexport.hh
+laserdevice.o: /home/gerkey/code/player/include/stage.h
+laserdevice.o: /home/gerkey/code/player/include/messages.h
+laserdevice.o: /home/gerkey/code/player/include/playercommon.h
+laserdevice.o: /home/gerkey/code/player/include/defaults.h
+laserdevice.o: /home/gerkey/code/player/include/playerqueue.h
 laserdevice.o: ../include/world.hh ../include/image.hh ../include/entity.hh
-laserdevice.o: ../include/stage_types.hh ../include/colors.hh
+laserdevice.o: ../include/stage_types.hh
+laserdevice.o: /home/gerkey/code/player/include/player.h ../include/colors.hh
 laserdevice.o: ../include/rtp.h ../include/matrix.hh ../include/worldfile.hh
 laserdevice.o: ../include/laserdevice.hh ../include/playerdevice.hh
 laserdevice.o: ../include/laserbeacon.hh ../include/raytrace.hh
-main.o: ../include/server.hh ../include/stage_types.hh
-main.o: ../include/worldfile.hh ../include/world.hh ../include/image.hh
-main.o: ../include/entity.hh ../include/colors.hh ../include/rtp.h
-main.o: ../include/matrix.hh
-manager.o: ../include/truthserver.hh ../include/stage_types.hh
+main.o: ../include/server.hh /home/gerkey/code/player/include/messages.h
+main.o: /home/gerkey/code/player/include/playercommon.h
+main.o: /home/gerkey/code/player/include/defaults.h ../include/stage_types.hh
+main.o: /home/gerkey/code/player/include/player.h ../include/worldfile.hh
+main.o: ../include/world.hh ../include/image.hh ../include/entity.hh
+main.o: /home/gerkey/code/player/include/stage.h
+main.o: /home/gerkey/code/player/include/playerqueue.h ../include/colors.hh
+main.o: ../include/rtp.h ../include/matrix.hh
+manager.o: ../include/truthserver.hh
+manager.o: /home/gerkey/code/player/include/messages.h
+manager.o: /home/gerkey/code/player/include/playercommon.h
+manager.o: /home/gerkey/code/player/include/defaults.h
+manager.o: ../include/stage_types.hh
+manager.o: /home/gerkey/code/player/include/player.h
 matrix.o: ../include/matrix.hh ../include/image.hh ../include/entity.hh
-matrix.o: ../include/stage_types.hh ../include/colors.hh ../include/rtp.h
+matrix.o: /home/gerkey/code/player/include/stage.h
+matrix.o: /home/gerkey/code/player/include/messages.h
+matrix.o: /home/gerkey/code/player/include/playercommon.h
+matrix.o: /home/gerkey/code/player/include/defaults.h
+matrix.o: /home/gerkey/code/player/include/playerqueue.h
+matrix.o: ../include/stage_types.hh /home/gerkey/code/player/include/player.h
+matrix.o: ../include/colors.hh ../include/rtp.h
+miscdevice.o: /home/gerkey/code/player/include/stage.h
+miscdevice.o: /home/gerkey/code/player/include/messages.h
+miscdevice.o: /home/gerkey/code/player/include/playercommon.h
+miscdevice.o: /home/gerkey/code/player/include/defaults.h
+miscdevice.o: /home/gerkey/code/player/include/playerqueue.h
 miscdevice.o: ../include/world.hh ../include/image.hh ../include/entity.hh
-miscdevice.o: ../include/stage_types.hh ../include/colors.hh ../include/rtp.h
-miscdevice.o: ../include/matrix.hh ../include/worldfile.hh
+miscdevice.o: ../include/stage_types.hh
+miscdevice.o: /home/gerkey/code/player/include/player.h ../include/colors.hh
+miscdevice.o: ../include/rtp.h ../include/matrix.hh ../include/worldfile.hh
 miscdevice.o: ../include/miscdevice.hh ../include/playerdevice.hh
+motedevice.o: /home/gerkey/code/player/include/stage.h
+motedevice.o: /home/gerkey/code/player/include/messages.h
+motedevice.o: /home/gerkey/code/player/include/playercommon.h
+motedevice.o: /home/gerkey/code/player/include/defaults.h
+motedevice.o: /home/gerkey/code/player/include/playerqueue.h
 motedevice.o: ../include/world.hh ../include/image.hh ../include/entity.hh
-motedevice.o: ../include/stage_types.hh ../include/colors.hh ../include/rtp.h
-motedevice.o: ../include/matrix.hh ../include/worldfile.hh
+motedevice.o: ../include/stage_types.hh
+motedevice.o: /home/gerkey/code/player/include/player.h ../include/colors.hh
+motedevice.o: ../include/rtp.h ../include/matrix.hh ../include/worldfile.hh
 motedevice.o: ../include/motedevice.hh
-omnipositiondevice.o: ../include/world.hh ../include/image.hh
-omnipositiondevice.o: ../include/entity.hh ../include/stage_types.hh
+omnipositiondevice.o: ../include/world.hh
+omnipositiondevice.o: /home/gerkey/code/player/include/messages.h
+omnipositiondevice.o: /home/gerkey/code/player/include/playercommon.h
+omnipositiondevice.o: /home/gerkey/code/player/include/defaults.h
+omnipositiondevice.o: ../include/image.hh ../include/entity.hh
+omnipositiondevice.o: /home/gerkey/code/player/include/stage.h
+omnipositiondevice.o: /home/gerkey/code/player/include/playerqueue.h
+omnipositiondevice.o: ../include/stage_types.hh
+omnipositiondevice.o: /home/gerkey/code/player/include/player.h
 omnipositiondevice.o: ../include/colors.hh ../include/rtp.h
 omnipositiondevice.o: ../include/matrix.hh ../include/worldfile.hh
 omnipositiondevice.o: ../include/raytrace.hh ../include/omnipositiondevice.hh
+playerdevice.o: /home/gerkey/code/player/include/stage.h
+playerdevice.o: /home/gerkey/code/player/include/messages.h
+playerdevice.o: /home/gerkey/code/player/include/playercommon.h
+playerdevice.o: /home/gerkey/code/player/include/defaults.h
+playerdevice.o: /home/gerkey/code/player/include/playerqueue.h
 playerdevice.o: ../include/world.hh ../include/image.hh ../include/entity.hh
-playerdevice.o: ../include/stage_types.hh ../include/colors.hh
-playerdevice.o: ../include/rtp.h ../include/matrix.hh ../include/worldfile.hh
-playerdevice.o: ../include/playerdevice.hh
-positiondevice.o: ../include/world.hh ../include/image.hh
-positiondevice.o: ../include/entity.hh ../include/stage_types.hh
+playerdevice.o: ../include/stage_types.hh
+playerdevice.o: /home/gerkey/code/player/include/player.h
+playerdevice.o: ../include/colors.hh ../include/rtp.h ../include/matrix.hh
+playerdevice.o: ../include/worldfile.hh ../include/playerdevice.hh
+positiondevice.o: ../include/world.hh
+positiondevice.o: /home/gerkey/code/player/include/messages.h
+positiondevice.o: /home/gerkey/code/player/include/playercommon.h
+positiondevice.o: /home/gerkey/code/player/include/defaults.h
+positiondevice.o: ../include/image.hh ../include/entity.hh
+positiondevice.o: /home/gerkey/code/player/include/stage.h
+positiondevice.o: /home/gerkey/code/player/include/playerqueue.h
+positiondevice.o: ../include/stage_types.hh
+positiondevice.o: /home/gerkey/code/player/include/player.h
 positiondevice.o: ../include/colors.hh ../include/rtp.h ../include/matrix.hh
 positiondevice.o: ../include/worldfile.hh ../include/positiondevice.hh
-ptzdevice.o: ../include/world.hh ../include/image.hh ../include/entity.hh
-ptzdevice.o: ../include/stage_types.hh ../include/colors.hh ../include/rtp.h
-ptzdevice.o: ../include/matrix.hh ../include/worldfile.hh
+ptzdevice.o: ../include/world.hh /home/gerkey/code/player/include/messages.h
+ptzdevice.o: /home/gerkey/code/player/include/playercommon.h
+ptzdevice.o: /home/gerkey/code/player/include/defaults.h ../include/image.hh
+ptzdevice.o: ../include/entity.hh /home/gerkey/code/player/include/stage.h
+ptzdevice.o: /home/gerkey/code/player/include/playerqueue.h
+ptzdevice.o: ../include/stage_types.hh
+ptzdevice.o: /home/gerkey/code/player/include/player.h ../include/colors.hh
+ptzdevice.o: ../include/rtp.h ../include/matrix.hh ../include/worldfile.hh
 ptzdevice.o: ../include/ptzdevice.hh ../include/playerdevice.hh
-puck.o: ../include/world.hh ../include/image.hh ../include/entity.hh
-puck.o: ../include/stage_types.hh ../include/colors.hh ../include/rtp.h
-puck.o: ../include/matrix.hh ../include/worldfile.hh ../include/puck.hh
-puck.o: ../include/raytrace.hh
+puck.o: ../include/world.hh /home/gerkey/code/player/include/messages.h
+puck.o: /home/gerkey/code/player/include/playercommon.h
+puck.o: /home/gerkey/code/player/include/defaults.h ../include/image.hh
+puck.o: ../include/entity.hh /home/gerkey/code/player/include/stage.h
+puck.o: /home/gerkey/code/player/include/playerqueue.h
+puck.o: ../include/stage_types.hh /home/gerkey/code/player/include/player.h
+puck.o: ../include/colors.hh ../include/rtp.h ../include/matrix.hh
+puck.o: ../include/worldfile.hh ../include/puck.hh ../include/raytrace.hh
 raytrace.o: ../include/raytrace.hh ../include/matrix.hh ../include/image.hh
-raytrace.o: ../include/entity.hh ../include/stage_types.hh
-raytrace.o: ../include/colors.hh ../include/rtp.h ../include/world.hh
-raytrace.o: ../include/worldfile.hh
+raytrace.o: ../include/entity.hh /home/gerkey/code/player/include/stage.h
+raytrace.o: /home/gerkey/code/player/include/messages.h
+raytrace.o: /home/gerkey/code/player/include/playercommon.h
+raytrace.o: /home/gerkey/code/player/include/defaults.h
+raytrace.o: /home/gerkey/code/player/include/playerqueue.h
+raytrace.o: ../include/stage_types.hh
+raytrace.o: /home/gerkey/code/player/include/player.h ../include/colors.hh
+raytrace.o: ../include/rtp.h ../include/world.hh ../include/worldfile.hh
 rtp.o: ../include/rtp.h
-server.o: ../include/server.hh ../include/stage_types.hh
+server.o: ../include/server.hh /home/gerkey/code/player/include/messages.h
+server.o: /home/gerkey/code/player/include/playercommon.h
+server.o: /home/gerkey/code/player/include/defaults.h
+server.o: ../include/stage_types.hh /home/gerkey/code/player/include/player.h
 server.o: ../include/worldfile.hh ../include/world.hh ../include/image.hh
-server.o: ../include/entity.hh ../include/colors.hh ../include/rtp.h
-server.o: ../include/matrix.hh ../include/fixedobstacle.hh
-sonardevice.o: ../include/world.hh ../include/image.hh ../include/entity.hh
-sonardevice.o: ../include/stage_types.hh ../include/colors.hh
+server.o: ../include/entity.hh /home/gerkey/code/player/include/stage.h
+server.o: /home/gerkey/code/player/include/playerqueue.h ../include/colors.hh
+server.o: ../include/rtp.h ../include/matrix.hh ../include/fixedobstacle.hh
+sonardevice.o: ../include/world.hh
+sonardevice.o: /home/gerkey/code/player/include/messages.h
+sonardevice.o: /home/gerkey/code/player/include/playercommon.h
+sonardevice.o: /home/gerkey/code/player/include/defaults.h
+sonardevice.o: ../include/image.hh ../include/entity.hh
+sonardevice.o: /home/gerkey/code/player/include/stage.h
+sonardevice.o: /home/gerkey/code/player/include/playerqueue.h
+sonardevice.o: ../include/stage_types.hh
+sonardevice.o: /home/gerkey/code/player/include/player.h ../include/colors.hh
 sonardevice.o: ../include/rtp.h ../include/matrix.hh ../include/worldfile.hh
 sonardevice.o: ../include/sonardevice.hh ../include/playerdevice.hh
 sonardevice.o: ../include/raytrace.hh
-stageio.o: ../include/server.hh ../include/stage_types.hh
-stageio.o: ../include/worldfile.hh ../include/world.hh ../include/image.hh
-stageio.o: ../include/entity.hh ../include/colors.hh ../include/rtp.h
-stageio.o: ../include/matrix.hh ../include/fixedobstacle.hh
-truthdevice.o: ../include/world.hh ../include/image.hh ../include/entity.hh
-truthdevice.o: ../include/stage_types.hh ../include/colors.hh
+stageio.o: ../include/server.hh /home/gerkey/code/player/include/messages.h
+stageio.o: /home/gerkey/code/player/include/playercommon.h
+stageio.o: /home/gerkey/code/player/include/defaults.h
+stageio.o: ../include/stage_types.hh
+stageio.o: /home/gerkey/code/player/include/player.h ../include/worldfile.hh
+stageio.o: ../include/world.hh ../include/image.hh ../include/entity.hh
+stageio.o: /home/gerkey/code/player/include/stage.h
+stageio.o: /home/gerkey/code/player/include/playerqueue.h
+stageio.o: ../include/colors.hh ../include/rtp.h ../include/matrix.hh
+stageio.o: ../include/fixedobstacle.hh
+truthdevice.o: ../include/world.hh
+truthdevice.o: /home/gerkey/code/player/include/messages.h
+truthdevice.o: /home/gerkey/code/player/include/playercommon.h
+truthdevice.o: /home/gerkey/code/player/include/defaults.h
+truthdevice.o: ../include/image.hh ../include/entity.hh
+truthdevice.o: /home/gerkey/code/player/include/stage.h
+truthdevice.o: /home/gerkey/code/player/include/playerqueue.h
+truthdevice.o: ../include/stage_types.hh
+truthdevice.o: /home/gerkey/code/player/include/player.h ../include/colors.hh
 truthdevice.o: ../include/rtp.h ../include/matrix.hh ../include/worldfile.hh
 truthdevice.o: ../include/truthdevice.hh
-truthlog.o: ../include/truthserver.hh ../include/stage_types.hh
-visionbeacon.o: ../include/world.hh ../include/image.hh ../include/entity.hh
-visionbeacon.o: ../include/stage_types.hh ../include/colors.hh
-visionbeacon.o: ../include/rtp.h ../include/matrix.hh ../include/worldfile.hh
-visionbeacon.o: ../include/visionbeacon.hh
-visiondevice.o: ../include/world.hh ../include/image.hh ../include/entity.hh
-visiondevice.o: ../include/stage_types.hh ../include/colors.hh
-visiondevice.o: ../include/rtp.h ../include/matrix.hh ../include/worldfile.hh
-visiondevice.o: ../include/visiondevice.hh ../include/ptzdevice.hh
-visiondevice.o: ../include/playerdevice.hh ../include/raytrace.hh
-world.o: ../include/world.hh ../include/image.hh ../include/entity.hh
-world.o: ../include/stage_types.hh ../include/colors.hh ../include/rtp.h
-world.o: ../include/matrix.hh ../include/worldfile.hh
-world.o: ../include/fixedobstacle.hh
-worldfile.o: ../include/stage_types.hh ../include/colors.hh
+truthlog.o: ../include/truthserver.hh
+truthlog.o: /home/gerkey/code/player/include/messages.h
+truthlog.o: /home/gerkey/code/player/include/playercommon.h
+truthlog.o: /home/gerkey/code/player/include/defaults.h
+truthlog.o: ../include/stage_types.hh
+truthlog.o: /home/gerkey/code/player/include/player.h
+visionbeacon.o: ../include/world.hh
+visionbeacon.o: /home/gerkey/code/player/include/messages.h
+visionbeacon.o: /home/gerkey/code/player/include/playercommon.h
+visionbeacon.o: /home/gerkey/code/player/include/defaults.h
+visionbeacon.o: ../include/image.hh ../include/entity.hh
+visionbeacon.o: /home/gerkey/code/player/include/stage.h
+visionbeacon.o: /home/gerkey/code/player/include/playerqueue.h
+visionbeacon.o: ../include/stage_types.hh
+visionbeacon.o: /home/gerkey/code/player/include/player.h
+visionbeacon.o: ../include/colors.hh ../include/rtp.h ../include/matrix.hh
+visionbeacon.o: ../include/worldfile.hh ../include/visionbeacon.hh
+visiondevice.o: ../include/world.hh
+visiondevice.o: /home/gerkey/code/player/include/messages.h
+visiondevice.o: /home/gerkey/code/player/include/playercommon.h
+visiondevice.o: /home/gerkey/code/player/include/defaults.h
+visiondevice.o: ../include/image.hh ../include/entity.hh
+visiondevice.o: /home/gerkey/code/player/include/stage.h
+visiondevice.o: /home/gerkey/code/player/include/playerqueue.h
+visiondevice.o: ../include/stage_types.hh
+visiondevice.o: /home/gerkey/code/player/include/player.h
+visiondevice.o: ../include/colors.hh ../include/rtp.h ../include/matrix.hh
+visiondevice.o: ../include/worldfile.hh ../include/visiondevice.hh
+visiondevice.o: ../include/ptzdevice.hh ../include/playerdevice.hh
+visiondevice.o: ../include/raytrace.hh
+world.o: ../include/world.hh /home/gerkey/code/player/include/messages.h
+world.o: /home/gerkey/code/player/include/playercommon.h
+world.o: /home/gerkey/code/player/include/defaults.h ../include/image.hh
+world.o: ../include/entity.hh /home/gerkey/code/player/include/stage.h
+world.o: /home/gerkey/code/player/include/playerqueue.h
+world.o: ../include/stage_types.hh /home/gerkey/code/player/include/player.h
+world.o: ../include/colors.hh ../include/rtp.h ../include/matrix.hh
+world.o: ../include/worldfile.hh ../include/fixedobstacle.hh
+worldfile.o: ../include/stage_types.hh
+worldfile.o: /home/gerkey/code/player/include/player.h
+worldfile.o: /home/gerkey/code/player/include/messages.h
+worldfile.o: /home/gerkey/code/player/include/playercommon.h
+worldfile.o: /home/gerkey/code/player/include/defaults.h ../include/colors.hh
 worldfile.o: ../include/worldfile.hh
