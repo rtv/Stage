@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.27 $
+//  $Revision: 1.28 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -260,16 +260,16 @@ int stg_model_set_odom( stg_model_t* mod, stg_pose_t* pose )
   return 0;
 }// background (used e.g for laser scan fill)
 
-int stg_model_set_friction( stg_model_t* mod, stg_friction_t* fricp )
-{
-  mod->friction = *fricp;
-  return 0;
-}
+/* int stg_model_set_friction( stg_model_t* mod, stg_friction_t* fricp ) */
+/* { */
+/*   mod->friction = *fricp; */
+/*   return 0; */
+/* } */
 
-stg_friction_t* stg_model_get_friction( stg_model_t* mod )
-{
-  return &mod->friction;
-}
+/* stg_friction_t* stg_model_get_friction( stg_model_t* mod ) */
+/* { */
+/*   return &mod->friction; */
+/* } */
 
 
 stg_pose_t* stg_model_get_pose( stg_model_t* model )
@@ -414,7 +414,7 @@ int stg_model_set_color( stg_model_t* mod, stg_color_t* col )
 
   // redraw my image
   stg_model_render_polygons( mod );
-
+    
   return 0; // OK
 }
 

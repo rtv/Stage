@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.39 $
+//  $Revision: 1.40 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -134,7 +134,8 @@ int stg_model_update_pose( stg_model_t* mod )
   stg_model_t* hitthing =
     stg_model_test_collision_at_pose( mod, &gpose, &hitx, &hity );
       
-  if( mod->friction )
+  /*
+   if( mod->friction )
     {
       // compute a new velocity, based on "friction"
       double vr = hypot( gvel.x, gvel.y );
@@ -150,15 +151,18 @@ int stg_model_update_pose( stg_model_t* mod )
       if( fabs(gvel.a) < 0.01 ) gvel.a = 0.0;
 	  
     }
+  */
 
   if( hitthing )
     {
-      if( hitthing->friction == 0 ) // hit an immovable thing
+      // TODO - friction simulation
+      //if( hitthing->friction == 0 ) // hit an immovable thing
 	{
 	  PRINT_DEBUG( "HIT something immovable!" );
 	  mod->stall = 1;
 	}
-      else
+      /*
+	  else
 	{
 	  puts( "hit something with non-zero friction" );
 
@@ -195,6 +199,7 @@ int stg_model_update_pose( stg_model_t* mod )
 	    }
 	      
 	}
+      */
 	  
     }
   else	  

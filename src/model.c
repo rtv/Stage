@@ -120,7 +120,6 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->laser_return = LaserVisible;
   mod->obstacle_return = TRUE;
   mod->fiducial_return = FiducialNone;
-  mod->blob_return = TRUE;
   
   // sensible defaults
   mod->stall = FALSE;
@@ -145,20 +144,10 @@ stg_model_t* stg_model_create( stg_world_t* world,
   gf.movemask = STG_DEFAULT_GUI_MOVEMASK;  
   stg_model_set_guifeatures( mod, &gf );
 
+  mod->blob_return = TRUE;
+
   // zero velocity
   memset( &mod->velocity, 0, sizeof(mod->velocity) );
-  
-  memset(&mod->energy_config,0,sizeof(mod->energy_config));
-  mod->energy_config.capacity = STG_DEFAULT_ENERGY_CAPACITY;
-  mod->energy_config.give_rate = STG_DEFAULT_ENERGY_GIVERATE;
-  mod->energy_config.probe_range = STG_DEFAULT_ENERGY_PROBERANGE;      
-  mod->energy_config.trickle_rate = STG_DEFAULT_ENERGY_TRICKLERATE;
-
-  memset(&mod->energy_data,0,sizeof(mod->energy_data));
-  mod->energy_data.joules = mod->energy_config.capacity;
-  mod->energy_data.watts = 0;
-  mod->energy_data.charging = FALSE;
-  mod->energy_data.range = mod->energy_config.probe_range;
 
   mod->color = stg_lookup_color( "red" );
   
@@ -181,10 +170,8 @@ stg_model_t* stg_model_create( stg_world_t* world,
   // initialize odometry
   memset( &mod->odom, 0, sizeof(mod->odom));
   
-  mod->friction = 0.0;
-  
   // install the default functions
-   mod->f_startup = _model_startup;
+  mod->f_startup = _model_startup;
   mod->f_shutdown = _model_shutdown;
   mod->f_update = _model_update;
   mod->f_set_data = _model_set_data;
@@ -196,11 +183,29 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->f_render_data = NULL;
   mod->f_render_cmd = NULL;
   mod->f_render_cfg = NULL;
+
+  // TODO
+
+  // mod->friction = 0.0;
+
+
+  /*
+    memset(&mod->energy_config,0,sizeof(mod->energy_config));
+    mod->energy_config.capacity = STG_DEFAULT_ENERGY_CAPACITY;
+    mod->energy_config.give_rate = STG_DEFAULT_ENERGY_GIVERATE;
+    mod->energy_config.probe_range = STG_DEFAULT_ENERGY_PROBERANGE;      
+    mod->energy_config.trickle_rate = STG_DEFAULT_ENERGY_TRICKLERATE;
+    
+    memset(&mod->energy_data,0,sizeof(mod->energy_data));
+    mod->energy_data.joules = mod->energy_config.capacity;
+    mod->energy_data.watts = 0;
+    mod->energy_data.charging = FALSE;
+    mod->energy_data.range = mod->energy_config.probe_range;
+  */
   
   PRINT_DEBUG4( "finished model %d.%d(%s) type %s", 
 		mod->world->id, mod->id, 
 		mod->token, stg_model_type_string(mod->type) );
-  
   return mod;
 }
 

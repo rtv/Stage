@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.68 2004-11-21 19:09:05 rtv Exp $
+// $Id: stagecpp.cc,v 1.69 2004-12-02 01:25:32 rtv Exp $
 
 //#define DEBUG
 
@@ -196,7 +196,7 @@ model
 - fiducial_return int
   - if non-zero, this model is detected by fiducialfinder sensors. The value is used as the fiducial ID.
 - friction float
-  - if > 0 the model can be pushed around by other moving objects. The value determines the proportion of velocity lost per second. For example, 0.1 would mean that the object would lose 10% of its speed due to friction per second. A value of zero (the default) means this model can not be pushed around (infinite friction). 
+  - [WARNING: Friction model is not yet implemented; details may change] if > 0 the model can be pushed around by other moving objects. The value determines the proportion of velocity lost per second. For example, 0.1 would mean that the object would lose 10% of its speed due to friction per second. A value of zero (the default) means this model can not be pushed around (infinite friction). 
 
 */
 
@@ -230,9 +230,9 @@ void configure_model( stg_model_t* mod, int section )
   gf.movemask = wf.ReadInt(section, "gui_movemask", STG_DEFAULT_GUI_MOVEMASK );
   stg_model_set_guifeatures( mod, &gf );
   
-  stg_friction_t friction;
-  friction = wf.ReadFloat(section, "friction", 0.0 );
-  stg_model_set_friction(mod, &friction );
+  //stg_friction_t friction;
+  //friction = wf.ReadFloat(section, "friction", 0.0 );
+  //stg_model_set_friction(mod, &friction );
 
   // laser visibility
   int laservis = 

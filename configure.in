@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.59 2004-11-21 10:53:02 rtv Exp $
+dnl $Id: configure.in,v 1.60 2004-12-02 01:25:30 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -80,12 +80,8 @@ dnl add prefix to the pkg-config path in case things were installed there
 dnl and the  user didn't add it manually
 export PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$PKG_CONFIG_PATH
 
-dnl PKG_CHECK_MODULES(RTK, librtk2 >= 2.2,
-dnl AC_DEFINE(INCLUDE_RTK,1,[building RTK GUI]),
-dnl AC_MSG_WARN([no suitable RTK was found. ])
-dnl )
-
-PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.0,
+dnl PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.0,
+PKG_CHECK_MODULES(GTK, libgnomecanvas-2.0 >= 2.0,
 AC_DEFINE(INCLUDE_GTK,1,[building GTK components]),
 AC_MSG_WARN([no suitable GTK was found. ])
 )

@@ -63,20 +63,22 @@ static GtkItemFactoryEntry menu_table[] = {
   { "/File/_Quit",    "<CTRL>Q", gui_menu_file_exit_cb, 0, "<StockItem>", GTK_STOCK_QUIT },
   { "/_View",         NULL,      NULL, 0, "<Branch>" },
   { "/View/tear1",    NULL,      NULL, 0, "<Tearoff>" },
-  { "/View/Data",            NULL,   NULL, 1, "<Branch>" },
-  { "/View/Data/Laser",      NULL,   gui_menu_view_data, STG_MODEL_LASER,    "<CheckItem>" },
-  { "/View/Data/Ranger",     NULL,   gui_menu_view_data, STG_MODEL_RANGER,   "<CheckItem>" },
-  { "/View/Data/Blob",       NULL,   gui_menu_view_data, STG_MODEL_BLOB,     "<CheckItem>" },
-  { "/View/Data/Fiducial",   NULL,   gui_menu_view_data, STG_MODEL_FIDUCIAL, "<CheckItem>" },
-  { "/View/Config",          NULL,    NULL, 1, "<Branch>" },
-  { "/View/Config/Laser",    NULL,   gui_menu_view_cfg, STG_MODEL_LASER,    "<CheckItem>" },
-  { "/View/Config/Ranger",   NULL,   gui_menu_view_cfg, STG_MODEL_RANGER ,  "<CheckItem>" },  
-  { "/View/Config/Blob",     NULL,   gui_menu_view_cfg, STG_MODEL_BLOB,     "<CheckItem>" },
-  { "/View/Config/Fiducial", NULL,   gui_menu_view_cfg, STG_MODEL_FIDUCIAL, "<CheckItem>" },
-
-  { "/View/sep1",     NULL,      NULL, 0, "<Separator>" },
   { "/View/Fill polygons", "<CTRL>P", gui_menu_polygons_cb, 1, "<CheckItem>" },
   { "/View/Grid", "<CTRL>G",   gui_menu_layer_cb, STG_LAYER_GRID, "<CheckItem>" },
+  { "/View/sep0",     NULL,      NULL, 0, "<Separator>" },
+  { "/View/Data",       NULL,   NULL, 0, "<Title>" },
+  { "/View/Laser data",      NULL,   gui_menu_view_data, STG_MODEL_LASER,    "<CheckItem>" },
+  { "/View/Ranger data",     NULL,   gui_menu_view_data, STG_MODEL_RANGER,   "<CheckItem>" },
+  { "/View/Blobfinder data", NULL,   gui_menu_view_data, STG_MODEL_BLOB,     "<CheckItem>" },
+  { "/View/Fiducial data",   NULL,   gui_menu_view_data, STG_MODEL_FIDUCIAL, "<CheckItem>" },
+  { "/View/sep1",       NULL,   NULL, 0, "<Separator>" },
+  { "/View/Config",          NULL,    NULL, 0, "<Title>" },
+  { "/View/Laser config",    NULL,   gui_menu_view_cfg, STG_MODEL_LASER,    "<CheckItem>" },
+  { "/View/Ranger config",   NULL,   gui_menu_view_cfg, STG_MODEL_RANGER ,  "<CheckItem>" },  
+  { "/View/Blobfinder config",     NULL,   gui_menu_view_cfg, STG_MODEL_BLOB,     "<CheckItem>" },
+  { "/View/Fiducial config", NULL,   gui_menu_view_cfg, STG_MODEL_FIDUCIAL, "<CheckItem>" },
+
+  { "/View/sep2",     NULL,      NULL, 0, "<Separator>" },
   { "/View/Debug", NULL, NULL, 1, "<Branch>" },
   { "/View/Debug/Raytrace", NULL, gui_menu_debug_cb, 1, "<CheckItem>" },
   { "/View/Debug/Geometry", NULL, gui_menu_debug_cb, 2, "<CheckItem>" },
@@ -86,7 +88,7 @@ static GtkItemFactoryEntry menu_table[] = {
   { "/Clock/Pause", NULL, gui_menu_clock_pause_cb, 1, "<CheckItem>" }
 };
 
-static const int menu_table_count = 44;
+static const int menu_table_count = 45;
 
 /* void gui_menu_file_about( void ) */
 /* { */
@@ -340,23 +342,23 @@ void gui_window_menus_create( gui_window_t* win )
   gtk_check_menu_item_set_active( mitem, TRUE );
 
   // View/Data
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Data/Laser"));
+  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Laser data"));
   gtk_check_menu_item_set_active( mitem, TRUE );
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Data/Ranger"));
+  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Ranger data"));
   gtk_check_menu_item_set_active( mitem, TRUE );
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Data/Fiducial"));
+  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Fiducial data"));
   gtk_check_menu_item_set_active( mitem, TRUE );
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Data/Blob"));
+  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Blobfinder data"));
   gtk_check_menu_item_set_active( mitem, TRUE );
 
   // View/Config
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Config/Laser"));
+  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Laser config"));
   gtk_check_menu_item_set_active( mitem, FALSE );
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Config/Ranger"));
+  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Ranger config"));
   gtk_check_menu_item_set_active( mitem, FALSE );
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Config/Fiducial"));
+  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Fiducial config"));
   gtk_check_menu_item_set_active( mitem, FALSE );
-  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Config/Blob"));
+  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Blobfinder config"));
   gtk_check_menu_item_set_active( mitem, FALSE );
   
   gtk_box_pack_start(GTK_BOX(win->canvas->layout), 

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.56 $
+//  $Revision: 1.57 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -250,7 +250,7 @@ void laser_render_data(  stg_model_t* mod, void* data, size_t len )
     }
   
   rtk_fig_polygon( mod->gui.data, 0,0,0, cfg->samples+1, points, FALSE ); 	
-  
+			   
   // loop through again, drawing bright boxes on top of the polygon
   for( s=0; s<cfg->samples; s++ )
     {      

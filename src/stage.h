@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.110 2004-11-21 19:09:05 rtv Exp $
+ * CVS: $Id: stage.h,v 1.111 2004-12-02 01:25:32 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -672,24 +672,11 @@ extern "C" {
     // automatically generate names for them
     int child_type_count[ STG_MODEL_COUNT ];
 
-    // the number of subscriptions to this model
-    int subs;
-  
-    /// if set, this callback is run when we do model_put_data() -
-    /// it's used by the player plugin to notify Player that data is
-    /// ready.
-    func_data_notify_t data_notify;
-    void* data_notify_arg;
-
-    gui_model_t gui; // all the gui stuff
-    
-    // todo - add this as a property?
-    stg_joules_t energy_consumed;
-
+    int subs;     // the number of subscriptions to this model
+    gui_model_t gui; // all the gui stuff    
     stg_msec_t interval; // time between updates in ms
     stg_msec_t interval_elapsed; // time since last update in ms
-
-    stg_pose_t odom;
+  
 
     // the generic buffers used by specialized model types
     void *data, *cmd, *cfg;
@@ -700,23 +687,21 @@ extern "C" {
     GArray* polygons;
     
     // basic model properties
-    stg_laser_return_t laser_return;
-    stg_bool_t obstacle_return; 
-    stg_bool_t blob_return; // visible in blobfinder?
-    stg_fiducial_return_t fiducial_return;
-    stg_pose_t pose;
-    stg_velocity_t velocity;
-    stg_bool_t stall;
-    stg_geom_t geom;
-    stg_color_t color;
-    stg_kg_t mass;
-    stg_guifeatures_t guifeatures;
-    stg_energy_config_t energy_config;   // these are a little strange
-    stg_energy_data_t energy_data;
-    double friction; // units? our model doesn't have a direct physical value
+    stg_bool_t blob_return; 
+    stg_laser_return_t laser_return; // value returned to a laser sensor
+    stg_bool_t obstacle_return; // if TRUE, we are included in obstacle detection
+    stg_fiducial_return_t fiducial_return; // value returned to a fiducial finder
+    stg_pose_t pose; // current pose in parent's CS
+    stg_pose_t odom; // accumulate odometric pose estimate
+    stg_velocity_t velocity; // current velocity
+    stg_bool_t stall; // true IFF we hit an obstacle
+    stg_geom_t geom; // pose and size in local CS
+    stg_color_t color; // RGB color 
+    stg_kg_t mass; // mass in kg
+    stg_guifeatures_t guifeatures; // controls how we are rendered in the GUI
 
-    // type-dependent functions for this model
-    //func_init_t f_init;
+    // type-dependent functions for this model, implementing simple
+    // polymorphism
     func_startup_t f_startup;
     func_shutdown_t f_shutdown;
     func_update_t f_update;
@@ -729,10 +714,22 @@ extern "C" {
     func_render_t f_render_data;
     func_render_t f_render_cmd;
     func_render_t f_render_cfg;
+    
+    /// if set, this callback is run when we do model_put_data() -
+    /// it's used by the player plugin to notify Player that data is
+    /// ready.
+    func_data_notify_t data_notify;
+    void* data_notify_arg;
+
+    // todo - add this as a property?
+    // stg_joules_t energy_consumed;
+    // stg_energy_config_t energy_config;   // these are a little strange
+    // stg_energy_data_t energy_data;
+    // double friction; // units? our model doesn't have a direct physical value
 
   } stg_model_t;  
   
- 
+  
 typedef enum 
   { PointToPoint=0, PointToBearingRange } 
 itl_mode_t;

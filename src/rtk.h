@@ -22,7 +22,7 @@
  * Desc: Combined Rtk functions
  * Author: Andrew Howard, Richard Vaughan
 
- * CVS: $Id: rtk.h,v 1.4 2004-11-21 10:53:02 rtv Exp $
+ * CVS: $Id: rtk.h,v 1.5 2004-12-02 01:25:31 rtv Exp $
  */
 
 #ifndef RTK_H
@@ -420,6 +420,9 @@ typedef struct _rtk_fig_t
 
   // Event callback functions.
   rtk_mouse_fn_t mouse_fn;
+
+  
+
 } rtk_fig_t;
 
 

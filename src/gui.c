@@ -409,29 +409,29 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
 }
 
 
-void gui_model_create( stg_model_t* model )
+void gui_model_create( stg_model_t* mod )
 {
   PRINT_DEBUG( "gui model create" );
   
-  gui_window_t* win = model->world->win;  
+  gui_window_t* win = mod->world->win;  
   rtk_fig_t* parent_fig = win->bg; // default parent
   
   // attach instead to our parent's fig if there is one
-  if( model->parent )
-    parent_fig = model->parent->gui.top;
+  if( mod->parent )
+    parent_fig = mod->parent->gui.top;
   
   // clean the structure
-  memset( &model->gui, 0, sizeof(gui_model_t) );
+  memset( &mod->gui, 0, sizeof(gui_model_t) );
   
-  model->gui.top = 
-    rtk_fig_create( model->world->win->canvas, parent_fig, STG_LAYER_BODY );
+  mod->gui.top = 
+    rtk_fig_create( mod->world->win->canvas, parent_fig, STG_LAYER_BODY );
 
-  model->gui.geom = 
-    rtk_fig_create( model->world->win->canvas, model->gui.top, STG_LAYER_GEOM );
+  mod->gui.geom = 
+    rtk_fig_create( mod->world->win->canvas, mod->gui.top, STG_LAYER_GEOM );
 
-  model->gui.top->userdata = model;
-
-  gui_model_features( model );
+  mod->gui.top->userdata = mod;
+  
+  gui_model_features( mod );
 }
 
 gui_model_t* gui_model_figs( stg_model_t* model )
@@ -588,14 +588,14 @@ void stg_model_render_polygons( stg_model_t* mod )
       for( p=0; p<count; p++ )
 	rtk_fig_polygon( fig,
 			 geom->pose.x,
-			   geom->pose.y,
+			 geom->pose.y,
 			 geom->pose.a,
 			 polys[p].points->len,
 			 polys[p].points->data,
 			 mod->world->win->fill_polygons );
     }
 }
-  
+
 /// render a model's global pose vector
 void gui_model_render_geom_global( stg_model_t* mod, rtk_fig_t* fig )
 {
@@ -638,7 +638,7 @@ void gui_model_render_geom_global( stg_model_t* mod, rtk_fig_t* fig )
 void gui_model_move( stg_model_t* mod )
 { 
   rtk_fig_origin( gui_model_figs(mod)->top, 
-		  mod->pose.x, mod->pose.y, mod->pose.a ); 
+		  mod->pose.x, mod->pose.y, mod->pose.a );   
 }
 
 ///  render a model's geometry if geom viewing is enabled

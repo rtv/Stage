@@ -21,7 +21,7 @@
 /*
  * Desc: Rtk canvas functions
  * Author: Andrew Howard, Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.8 2004-11-22 20:47:26 rtv Exp $
+ * CVS: $Id: rtk_canvas.c,v 1.9 2004-12-02 01:25:31 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -136,7 +136,6 @@ rtk_canvas_t *rtk_canvas_create(rtk_app_t *app)
   gtk_box_pack_end(GTK_BOX(canvas->layout), canvas->canvas, TRUE, TRUE, 0);
 
 
-  //gtk_box_pack_end(GTK_BOX(canvas->layout), scrolled_win, TRUE, TRUE, 0);
 
   //gtk_scrolled_window_add_with_viewport( scrolled_win, canvas->canvas );
   
