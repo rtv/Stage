@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.11 2003-07-18 20:33:53 reed Exp $
+% CVS: $Id: stage.tex,v 1.12 2003-07-18 21:02:16 reed Exp $
 
 \documentclass[11pt,twoside]{report}
 
@@ -318,7 +318,7 @@ tools can be found on the website.
       \end{verbatim} 
 
     By convention, Stage configuration files end with a `.world'
-    extension and are referred to as 'world files'. A world file
+    extension and are referred to as `world files'. A world file
     specifies what stage must simulate. The user can override some of
     the world file settings at run time using the command-line options
     described below. If all is well, Stage will start up, load the
@@ -1118,6 +1118,8 @@ for efficiency.\\
 
 \verb'laser' & \verb'device' & Scanning laser range finder.\\
 
+\verb'mcom' & \verb'device' & Inter-client communication mechanism.\\
+
 \verb'position' & \verb'device' & A mobile robot platform with
 odometric localization and stall sensor. Supports differential-steer
 (like a Pioneer) and omnidirectional drive (like a U.Melbourne
@@ -1523,6 +1525,38 @@ Name & Value\\
 \hline
 \end{tabularx}
 
+\newpage
+\subsection{The {\tt mcom} device}
+
+\subsection*{Parent}
+{\tt device}
+
+\subsection*{Interface}
+{\tt mcom}
+
+\subsection*{Description}
+The {\tt mcom} device adds a client communication mechanism to your robot.
+Clients may add, read and remove messages of various types on any number
+of named channels.
+
+\subsubsection*{Properties}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+\verb'<none>'\\
+\hline
+\end{tabularx}
+
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'<none>'\\
+\hline
+\end{tabularx}
+
 
 \newpage
 \subsection{The {\tt position} device}
@@ -1546,11 +1580,12 @@ Name & Values & Description \\
 \hline
 \verb'drive' & \verb'"diff"' or \verb'"omni"' & Selects differential or omnidirectional drive\\
 \verb'noise' & \verb'[0/75 50]' & Position device has noise amplitude 75 while driving, 0 when still.\\
-\verb'init_odom' & \verb'[x y a]' & Initialize odometry (position and 
-orientation). Default is to use 0.0, 0.0, 0.0.\\
-\verb'reset_if_no_subscribers' & \verb'"yes"' or \verb'"no"' & If "yes", then
-the odometry will be reset to 0.0, 0.0, 0.0 if no clients are subscribed (prior
-versions of Stage always did this). If "no", then previous values will remain.  The default is "yes".\\
+\verb'init_odom' & \verb'[x y a]' & Initial odometry (position and 
+orientation).\\
+\verb'reset_if_no_subscribers' & \verb'"yes"' or \verb'"no"' & If \verb'"yes"', 
+then the odometry will be reset to 0.0, 0.0, 0.0 if no clients are subscribed
+(Prior versions of Stage always did this.)
+If \verb'"no"', then previous values will remain.\\
 \hline
 \end{tabularx}
 
@@ -1559,6 +1594,8 @@ versions of Stage always did this). If "no", then previous values will remain.  
 \hline Name & Value\\ 
 \hline
 \verb'drive' & \verb'"diff"'\\
+\verb'init_odom' & \verb'[0.0 0.0 0.0]'\\
+\verb'reset_if_no_subscribers' & \verb'"yes"'\\
 \hline
 \end{tabularx}
 
