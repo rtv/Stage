@@ -2,7 +2,7 @@
 # Four vision-based puck-foraging robots 
 # Works nicely with Player's examples/c++/forage 
 #
-# $Id: puck.world,v 1.6 2002-11-11 08:30:20 rtv Exp $
+# $Id: puck.world,v 1.6.8.1 2003-12-07 04:34:46 gerkey Exp $
 #
 
 #resolution 0.025
@@ -28,7 +28,7 @@ define forager position
 (
   size [0.4 0.4] 
   shape "circle" 
-  gps()
+  #gps()
   gripper( consume "true" pose [0.16 0 0])
   sonar()
   ptz( vision() )
