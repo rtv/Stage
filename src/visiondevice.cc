@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.cc,v 1.37 2002-07-23 16:07:57 rtv Exp $
+ * CVS info: $Id: visiondevice.cc,v 1.38 2002-08-16 06:18:35 gerkey Exp $
  */
 
 #include <math.h>
@@ -40,12 +40,12 @@ CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent)
         : CEntity( world, parent )
 {
   // set the Player IO sizes correctly for this type of Entity
-  m_data_len    = sizeof( player_vision_data_t ); 
+  m_data_len    = sizeof( player_blobfinder_data_t ); 
   m_command_len = 0;
   m_config_len  = 0;
   m_reply_len  = 0;
  
-  m_player.code = PLAYER_VISION_CODE;
+  m_player.code = PLAYER_BLOBFINDER_CODE;
   this->stage_type = VisionType;
   this->color = ::LookupColor(VISION_COLOR);
   
@@ -140,7 +140,7 @@ void CVisionDevice::Update( double sim_time )
   UpdateScan();
   
   // Generate ACTS data  
-  player_vision_data_t data;
+  player_blobfinder_data_t data;
   memset( &data, 0, sizeof(data) );
   UpdateACTS( &data );
   
@@ -244,7 +244,7 @@ void CVisionDevice::UpdateScan()
 
 ///////////////////////////////////////////////////////////////////////////
 // Generate ACTS data from scan-line image
-size_t CVisionDevice::UpdateACTS( player_vision_data_t* data )
+size_t CVisionDevice::UpdateACTS( player_blobfinder_data_t* data )
 {
   assert( data );
 
@@ -259,7 +259,8 @@ size_t CVisionDevice::UpdateACTS( player_vision_data_t* data )
   // scan through the samples looking for color blobs
   for( int s=0; s < m_scan_width; s++ )
   {
-    if( m_scan_channel[s] != 0 && m_scan_channel[s] < VISION_NUM_CHANNELS)
+    if( m_scan_channel[s] != 0 && m_scan_channel[s] < 
+        PLAYER_BLOBFINDER_MAX_CHANNELS)
     {
       blobleft = s;
       blobcol = m_scan_channel[s];
@@ -399,7 +400,7 @@ size_t CVisionDevice::UpdateACTS( player_vision_data_t* data )
   // now we finish the header by setting the blob indexes and byte
   // swapping the counts.
   int pos = 0;
-  for( int ch=0; ch<VISION_NUM_CHANNELS; ch++ )
+  for( int ch=0; ch<PLAYER_BLOBFINDER_MAX_CHANNELS; ch++ )
   {
     data->header[ch].index = htons(pos);
     pos += data->header[ch].num;
@@ -413,7 +414,7 @@ size_t CVisionDevice::UpdateACTS( player_vision_data_t* data )
   data->width = htons((uint16_t)cameraImageWidth);
   data->height = htons((uint16_t)cameraImageHeight);
 
-  return sizeof(player_vision_data_t);
+  return sizeof(player_blobfinder_data_t);
 }
 
 
@@ -466,7 +467,7 @@ void CVisionDevice::RtkUpdate()
   rtk_fig_get_origin(this->vision_fig, &nx, &ny, &nth);
   rtk_fig_origin(this->vision_fig, nx, ny, -gth);
   
-  player_vision_data_t data;
+  player_blobfinder_data_t data;
 
   // if a client is subscribed to this device
   if( Subscribed() > 0 && m_world->ShowDeviceData( this->stage_type) )
@@ -487,7 +488,7 @@ void CVisionDevice::RtkUpdate()
       rtk_fig_color_rgb32(this->vision_fig, 0x000000);
       rtk_fig_rectangle(this->vision_fig, 0.0, 0.0, 0.0, mwidth,  mheight, 0); 
 
-      for( int c=0; c<VISION_NUM_CHANNELS;c++)
+      for( int c=0; c<PLAYER_BLOBFINDER_MAX_CHANNELS;c++)
       {
         short numblobs = ntohs(data.header[c].num);
         short index = ntohs(data.header[c].index);	    

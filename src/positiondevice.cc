@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.29 2002-06-10 02:28:21 gerkey Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.30 2002-08-16 06:18:35 gerkey Exp $
  */
 
 //#define DEBUG
@@ -176,7 +176,7 @@ void CPositionDevice::UpdateConfig()
 
     switch (buffer[0])
     {
-      case PLAYER_POSITION_MOTOR_POWER_REQ:
+      case PLAYER_P2OS_POSITION_MOTOR_POWER_REQ:
         // motor state change request 
         // 1 = enable motors
         // 0 = disable motors
@@ -185,7 +185,7 @@ void CPositionDevice::UpdateConfig()
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
         break;
 
-      case PLAYER_POSITION_VELOCITY_CONTROL_REQ:
+      case PLAYER_P2OS_POSITION_VELOCITY_CONTROL_REQ:
         // velocity control mode:
         //   0 = direct wheel velocity control (default)
         //   1 = separate translational and rotational control
@@ -193,7 +193,7 @@ void CPositionDevice::UpdateConfig()
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
         break;
 
-      case PLAYER_POSITION_RESET_ODOM_REQ:
+      case PLAYER_P2OS_POSITION_RESET_ODOM_REQ:
         // reset position to 0,0,0: ignore value
         this->odo_px = this->odo_py = this->odo_pth = 0.0;
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
@@ -224,8 +224,8 @@ void CPositionDevice::UpdateCommand()
 {
   if (GetCommand(&this->cmd, sizeof(this->cmd)) == sizeof(this->cmd))
   {
-    double fv = (short) ntohs(this->cmd.speed);
-    double fw = (short) ntohs(this->cmd.turnrate);
+    double fv = (short) ntohs(this->cmd.xspeed);
+    double fw = (short) ntohs(this->cmd.yawspeed);
 
     // Store commanded speed
     // Linear is in m/s
@@ -263,12 +263,12 @@ void CPositionDevice::UpdateData()
   // Basically just changes byte orders and some units
   this->data.xpos = htonl((int) px);
   this->data.ypos = htonl((int) py);
-  this->data.theta = htons((unsigned short) pth);
+  this->data.yaw = htons((unsigned short) pth);
 
-  this->data.speed = htons((unsigned short) (this->com_vr * 1000.0));
-  this->data.turnrate = htons((short) RTOD(this->com_vth));  
-  this->data.compass = htons((unsigned short)(RTOD(compass)));
-  this->data.stalls = this->stall;
+  this->data.xspeed = htons((unsigned short) (this->com_vr * 1000.0));
+  this->data.yawspeed = htons((short) RTOD(this->com_vth));  
+  //this->data.compass = htons((unsigned short)(RTOD(compass)));
+  this->data.stall = this->stall;
 
   PutData(&this->data, sizeof(this->data));     
 }

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/omnipositiondevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.12 $
+//  $Author: gerkey $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  (empty)
@@ -162,9 +162,9 @@ void COmniPositionDevice::Move()
 // Parse the command buffer to extract commands
 void COmniPositionDevice::ParseCommandBuffer()
 {
-  double vx = (short) ntohs(this->command.speed);
-  double vy = (short) ntohs(this->command.sidespeed);
-  double va = (short) ntohs(this->command.turnrate);
+  double vx = (short) ntohs(this->command.xspeed);
+  double vy = (short) ntohs(this->command.yspeed);
+  double va = (short) ntohs(this->command.yawspeed);
     
   // Store commanded speed
   // Linear is in m/s
@@ -189,13 +189,13 @@ void COmniPositionDevice::ComposeData()
   // Basically just changes byte orders and some units
   this->data.xpos = htonl((int) px);
   this->data.ypos = htonl((int) py);
-  this->data.theta = htons((unsigned short) pa);
+  this->data.yaw = htons((unsigned short) pa);
 
-  this->data.speed = htons((unsigned short) (this->com_vx * 1000.0));
-  this->data.sidespeed = htons((unsigned short) (this->com_vy * 1000.0));
-  this->data.turnrate = htons((short) RTOD(this->com_va));  
-  this->data.compass = 0;
-  this->data.stalls = this->stall;
+  this->data.xspeed = htons((unsigned short) (this->com_vx * 1000.0));
+  this->data.yspeed = htons((unsigned short) (this->com_vy * 1000.0));
+  this->data.yawspeed = htons((short) RTOD(this->com_va));  
+  //this->data.compass = 0;
+  this->data.stall = this->stall;
 }
 
 

@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.hh,v 1.17 2002-07-17 20:29:09 rtv Exp $
+ * CVS info: $Id: visiondevice.hh,v 1.18 2002-08-16 06:18:34 gerkey Exp $
  */
 
 #ifndef VISIONDEVICE_HH
@@ -59,7 +59,7 @@ class CVisionDevice : public CEntity
   private: void UpdateScan();
 
   // Generate ACTS data from scan-line image
-  private: size_t UpdateACTS( player_vision_data_t* data );
+  private: size_t UpdateACTS( player_blobfinder_data_t* data );
 
   // Pointer to the ptz device we attach to (same as out parent
   private: CPtzDevice *m_ptz_device;
@@ -69,7 +69,7 @@ class CVisionDevice : public CEntity
 
   // channel to color map array
   private: int channel_count;
-  private: StageColor channels[VISION_NUM_CHANNELS];
+  private: StageColor channels[PLAYER_BLOBFINDER_MAX_CHANNELS];
   
   // Camera properties
   private: int cameraImageWidth, cameraImageHeight;

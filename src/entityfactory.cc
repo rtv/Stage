@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.32 $
+//  $Author: gerkey $
+//  $Revision: 1.33 $
 //
 // Usage:
 //  (empty)
@@ -37,12 +37,12 @@
 #include "omnipositiondevice.hh"
 #include "laserdevice.hh"
 #include "playerdevice.hh"
-#include "miscdevice.hh"
+//#include "miscdevice.hh"
 #include "ptzdevice.hh"
 #include "visiondevice.hh"
 #include "laserbeacondevice.hh"
 #include "broadcastdevice.hh"
-#include "bpsdevice.hh"
+//#include "bpsdevice.hh"
 #include "gripperdevice.hh"
 #include "gpsdevice.hh"
 #include "motedevice.hh"
@@ -68,7 +68,7 @@ char* CWorld::StringFromType( StageType t )
   case NullType: return "None"; 
   case WallType: return "wall"; break;
   case PlayerType: return "player"; 
-  case MiscType: return "misc"; 
+  //case MiscType: return "misc"; 
   case PositionType: return "position"; 
   case SonarType: return "sonar"; 
   case LaserTurretType: return "laser"; 
@@ -115,8 +115,10 @@ CEntity* CWorld::CreateEntity( StageType type, CEntity *parent)
       return new CFixedObstacle(this, parent);     
     case PlayerType:
       return new CPlayerDevice(this, parent );
+      /*
     case MiscType: 
       return new CMiscDevice(this, parent );
+      */
     case PositionType:
       return new CPositionDevice(this, parent );
     case SonarType:
@@ -147,8 +149,10 @@ CEntity* CWorld::CreateEntity( StageType type, CEntity *parent)
       return new CMoteDevice(this, parent );
     case TruthType:
       return new CTruthDevice(this, parent );
+      /*
     case BpsType:
       return new CBpsDevice(this, parent);
+      */
     case IDARType: // Infrared Data And Ranging turret
       return new CIDARDevice(this, parent);
     case IDARTurretType: // Infrared Data And Ranging turret

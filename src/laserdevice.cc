@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.62 2002-07-04 01:06:02 rtv Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.63 2002-08-16 06:18:35 gerkey Exp $
  */
 
 #define DEBUG
@@ -44,12 +44,12 @@ CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent )
     : CEntity(world, parent )
 {
   // set the Player IO sizes correctly for this type of Entity
-  m_data_len    = sizeof( player_laser_data_t );
+  m_data_len    = sizeof( player_srf_data_t );
   m_command_len = 0;
   m_config_len  = 1;
   m_reply_len  = 1;
   
-  m_player.code = PLAYER_LASER_CODE; // from player's messages.h
+  m_player.code = PLAYER_SRF_CODE; // from player's messages.h
   this->stage_type = LaserTurretType;
   this->color = ::LookupColor(LASER_COLOR);
   
@@ -129,7 +129,7 @@ void CLaserDevice::Update( double sim_time )
       CheckConfig();
 	
       // Generate new scan data and copy to data buffer
-      player_laser_data_t scan_data;
+      player_srf_data_t scan_data;
       GenerateScanData( &scan_data );
       PutData( &scan_data, sizeof( scan_data) );
 	
@@ -165,8 +165,8 @@ bool CLaserDevice::CheckConfig()
   int len;
   void* client;
   char buffer[PLAYER_MAX_REQREP_SIZE];
-  player_laser_config_t config;
-  player_laser_geom_t geom;
+  player_srf_config_t config;
+  player_srf_geom_t geom;
 
   while (true)
   {
@@ -176,7 +176,7 @@ bool CLaserDevice::CheckConfig()
 
     switch (buffer[0])
     {
-      case PLAYER_LASER_SET_CONFIG:
+      case PLAYER_SRF_SET_CONFIG:
 
         if (len < (int)sizeof(config))
         {
@@ -230,7 +230,7 @@ bool CLaserDevice::CheckConfig()
         }
         break;
 
-      case PLAYER_LASER_GET_CONFIG:
+      case PLAYER_SRF_GET_CONFIG:
         // Return the laser configuration
         config.resolution = htons((int) (RTOD(this->scan_res) * 100));
         config.min_angle = htons((unsigned int) (int) (RTOD(this->scan_min) * 100));
@@ -239,7 +239,7 @@ bool CLaserDevice::CheckConfig()
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &config, sizeof(config));
         break;
 
-      case PLAYER_LASER_GET_GEOM:
+      case PLAYER_SRF_GET_GEOM:
         // Return the laser geometry
         geom.pose[0] = htons((short) (this->origin_x * 1000));
         geom.pose[1] = htons((short) (this->origin_y * 1000));
@@ -261,7 +261,7 @@ bool CLaserDevice::CheckConfig()
 
 ///////////////////////////////////////////////////////////////////////////
 // Generate scan data
-bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
+bool CLaserDevice::GenerateScanData( player_srf_data_t *data )
 {    
   // Get the pose of the laser in the global cs
   //
@@ -395,7 +395,7 @@ void CLaserDevice::RtkUpdate()
   // if a client is subscribed to this device
   if( Subscribed() > 0 && m_world->ShowDeviceData( this->stage_type) )
   {
-    player_laser_data_t data;
+    player_srf_data_t data;
     
     // attempt to get the right size chunk of data from the mmapped buffer
     if( GetData( &data, sizeof(data) ) == sizeof(data) )
