@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.1.2.10 2003-02-14 03:36:33 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.1.2.11 2003-02-16 04:49:20 rtv Exp $
  */
 
 //
@@ -60,17 +60,18 @@
 
 extern int quit;
 
+
+// Timing info for the gui.
+// [update_interval] is the time to wait between GUI updates (simulated seconds).
+// [root_check_interval] is the time to wait between fitting the root entity nicely into the canvas
+double rtkgui_update_interval = 0.01;
+double rtkgui_fit_interval = 0.5; 
+
 // Basic GUI elements
 rtk_canvas_t *canvas = NULL; // the canvas
 rtk_app_t *app = NULL; // the RTK/GTK application
 
 rtk_fig_t* matrix_fig = NULL;
-
-// Timing info for the gui.
-// [rtk_update_rate] is the update rate (Hz).
-// [rtk_update_time] is the last time the gui was update (simulation time).
-double rtk_update_rate;
-double rtk_update_time;
 
 // The file menu
 rtk_menu_t *file_menu= NULL;;
@@ -236,9 +237,9 @@ int RtkGuiLoad( stage_gui_config_t* cfg )
   // Origin of the canvas
   ox = cfg->originx + dx/2.0;
   oy = cfg->originy + dy/2.0;
-
-  rtk_update_time = 0;
-  rtk_update_rate = 10;
+  
+  //rtkgui_update_interval = 1.0 / cfg->update_rate;
+  //rtkgui_fit_interval = 1.0 / cfg->root_fit_rate;
   
   if( app == NULL ) // we need to create the basic data for the app
     {
@@ -267,22 +268,82 @@ int RtkGuiLoad( stage_gui_config_t* cfg )
 // of work here.
 // (if the GUI has its own thread you may not need to do much in here)
 int RtkGuiUpdate( void )
-{  
-  //PRINT_DEBUG( "updating gui" );
+{    
+  // the time we last updated the GUI
+  static double last_update = 0.0; 
+  // the time we last checked that the root fits nicely in the canvas
+  static double last_fit = 0.0; 
+
+  // we test to see if these change between calls
+  static double canvas_scale = 0.0;
+  static double canvas_origin_x = 0.0;
+  static double canvas_origin_y = 0.0;
   
   // if we have no GUI data, do nothing
   if( !app || !canvas )
     return 0; 
-
+  
   // Process events
   rtk_app_main_loop( app);
   
   // Refresh the gui at a fixed rate (in simulator time).
-  //if (this->m_sim_time < this->rtk_update_time + 1 / this->rtk_update_rate)
-  //return;
-  //this->rtk_update_time = 
-  //this->m_sim_time - fmod(this->m_sim_time, 1 / this->rtk_update_rate);
+  if ( CEntity::simtime - last_update < rtkgui_update_interval )
+    return 0;
+
+  last_update = CEntity::simtime;
   
+  // when the root object is smaller than the window, keep it centered
+  // and scaled to fit the canvas  
+  if( CEntity::simtime - last_fit > rtkgui_fit_interval )
+    {
+      
+      int width, height;
+      double xscale, yscale, xorg, yorg;
+      
+      rtk_canvas_get_size( canvas, &width, &height );
+      rtk_canvas_get_scale( canvas, &xscale, &yscale );
+      rtk_canvas_get_origin( canvas, &xorg, &yorg );
+      
+      last_fit = CEntity::simtime;
+      
+      // calculate the desired scale
+      if( xscale > (CEntity::root->size_x * 1.1) / width )
+	xscale = (CEntity::root->size_x * 1.1) / width;
+      
+      if( yscale > (CEntity::root->size_y * 1.1) / height )
+	yscale = (CEntity::root->size_y * 1.1 ) / height;
+      
+      // choose the largest scale so we keep the correct aspect ratio
+      double scale;
+      xscale > yscale ? scale = xscale : scale = yscale; 
+
+      // if we're not at the desired scale, we set it
+      if( canvas_scale != scale )
+	{
+	  rtk_canvas_scale( canvas, scale, scale );
+	  canvas_scale = scale;
+	}
+      
+      // calculate the ideal canvas origin
+      if( CEntity::root->size_x  < width * xscale ) 
+	xorg = CEntity::root->size_x/2.0;
+      
+      if( CEntity::root->size_y  < height * yscale )
+	yorg = CEntity::root->size_y/2.0;
+      
+      // if we're not at the desired origin, we set it 
+      if( canvas_origin_x != xorg || canvas_origin_y != yorg )
+	{
+	  rtk_canvas_origin( canvas, xorg, yorg );
+	  canvas_origin_x = xorg;
+	  canvas_origin_y = yorg;
+	}
+      
+      // I'd like to automatically scale the canvas when the user resizes
+      // the window, but I can't get those events out of RTK and I don't
+      // want to check *everything* each time - rtv
+    }
+
   // Process menus
   RtkMenuHandling();      
   
@@ -352,9 +413,6 @@ int RtkGuiEntityUpdate( CEntity* ent )
   ent->RtkUpdate();
 }
 
-// this functionality was previously in CEntity::SetProperty - this is
-// a lot cleaner, though I didn't want to shoehorn it into the world
-// class so it's sitting out here as a regular function. - rtv
 int RtkGuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
 {
   PRINT_DEBUG2( "setting prop %s on ent %d", SIOPropString(prop), ent->stage_id );
@@ -373,14 +431,15 @@ int RtkGuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
       // these require just moving the figure
     case STG_PROP_ENTITY_POSE:
       ent->GetPose( px, py, pa );
-      //PRINT_DEBUG3( "moving figure to %.2f %.2f %.2f", px,py,pa );
+      PRINT_DEBUG3( "moving figure to %.2f %.2f %.2f", px,py,pa );
       rtk_fig_origin(ent->fig, px, py, pa );
       break;
 
-      // these all need us to totally redraw the object
-    case STG_PROP_ENTITY_PARENT:
-    case STG_PROP_ENTITY_SIZE:
     case STG_PROP_ENTITY_ORIGIN:
+      // PRINT_WARN2( "entity %d moved to %.2f %.2f", ent->stage_id, 
+      // these all need us to totally redraw the object
+    case STG_PROP_ENTITY_SIZE:
+    case STG_PROP_ENTITY_PARENT:
     case STG_PROP_ENTITY_NAME:
     case STG_PROP_ENTITY_COLOR:
     case STG_PROP_ENTITY_LASERRETURN:
@@ -595,7 +654,7 @@ void RtkUpdateMovieMenu()
         snprintf(filename, sizeof(filename), "stage-%03d-sp%02d.mpg",
                  movie_count++, option->speed);
         rtk_canvas_movie_start(canvas, filename,
-                               rtk_update_rate, option->speed);
+                               1.0/rtkgui_update_interval, option->speed);
 
         // Disable all other capture options
         for (j = 0; j < movie_option_count; j++)

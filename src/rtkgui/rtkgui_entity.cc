@@ -201,6 +201,8 @@ void RtkOnMouse(rtk_fig_t *fig, int event, int mode)
   switch (event)
     {
     case RTK_EVENT_PRESS:
+      break;
+
     case RTK_EVENT_MOTION:
     case RTK_EVENT_RELEASE:
       rtk_fig_get_origin(fig, &px, &py, &pth);

@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.19 2003-02-15 21:15:01 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.20 2003-02-16 04:49:20 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -559,7 +559,7 @@ void CEntity::SetPose(double px, double py, double pth)
 {
   // if the new position is different, call SetProperty to make the change.
   // the -1 indicates that this change is dirty on all connections
-  
+ 
   // only change the pose if these are different to the current pose
   if( this->local_px != px || this->local_py != py || this->local_pth != pth )
     {
