@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.82 $
+//  $Revision: 1.83 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -148,6 +148,7 @@ CWorld::CWorld()
   m_run_pose_server = true;
   m_run_player = true;    
   m_run_xs = true; 
+  m_send_idar_packets = false;
 
 #ifdef INCLUDE_RTK2
   m_run_xs = false; // disable xs in rtkstage
@@ -159,7 +160,7 @@ CWorld::CWorld()
 
   // Initialise world filename
   //
-  m_filename[0] = 0;
+  //m_filename[0] = 0;
     
   // Initialise clocks
   m_start_time = m_sim_time = 0;
@@ -258,6 +259,13 @@ bool CWorld::ParseCmdline(int argc, char **argv)
     {
       m_run_player = true;
       printf( "[Player]" );
+    }
+
+    // ENABLE IDAR packets to be sent to XS
+    if( strcmp( argv[a], "-i" ) == 0 )
+    {
+      m_send_idar_packets = true;
+      printf( "[IDAR->XS]" );
     }
 
     // SET GOAL REAL CYCLE TIME
@@ -500,16 +508,6 @@ bool CWorld::Startup()
   if( m_run_environment_server )
     SetupEnvServer();
 
-//    if( m_run_environment_server )
-//    {
-//      pthread_t tid_dummy;
-//      pthread_create(&tid_dummy, NULL, &EnvServer, (void *)NULL );  
-      
-//      // env server sets this flag when it's ready
-//      while( !m_env_server_ready )
-//        usleep( 100000 );
-//    }
-  
   // Create the device directory and clock 
   CreateClockDevice();
   
@@ -1225,7 +1223,7 @@ void CWorld::LogOutputHeader( void )
            m_cmdline, 
            tmstr, 
            m_hostname, 
-           m_filename,
+           worldfilename,//m_filename,
            (int)(m_sim_timestep * 1000.0),
            m, 
            m_object_count );

@@ -29,6 +29,29 @@ bool CXGui::PoseFromId( int stage_id,
 }
     
 
+bool CXGui::PoseFromPlayerId( int port, int type, int index, 
+			double& x, double& y, double& th, unsigned long& col )
+{
+  TruthMap::iterator it;
+  // find this object
+  for( it = truth_map.begin(); it != truth_map.end(); it++ )
+    if( it->second.id.port == port &&
+	it->second.id.type == type &&
+	it->second.id.index == index )
+      {
+	GetGlobalPose( it->second, x, y, th );
+	
+	col = it->second.pixel_color;
+	
+	//printf( "object %d using color %ld\n", stage_id, col );
+
+	return true;
+      }
+  return false;
+}
+    
+
+
 // Get the objects pose in the global cs
 //
 void CXGui::GetGlobalPose( xstruth_t &truth, double &px, double &py, double &pth)

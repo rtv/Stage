@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.41 2002-02-07 00:45:38 rtv Exp $
+//  $Id: entity.cc,v 1.42 2002-02-09 03:37:47 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -78,8 +78,8 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
   sonar_return = false;
   puck_return = false;
   vision_return = false;
-  idar_return = false;
   laser_return = LaserTransparent;
+  idar_return = IDARTransparent;
 
   // Set the initial mapped pose to a dummy value
   this->map_px = this->map_py = this->map_pth = 0;
@@ -123,6 +123,7 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
 // Destructor
 CEntity::~CEntity()
 {
+  close( m_fd ); 
 }
 
 ///////////////////////////////////////////////////////////////////////////

@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.45 2002-02-07 00:45:38 rtv Exp $
+ * $Id: xs.cc,v 1.46 2002-02-09 03:37:47 rtv Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -34,6 +34,9 @@
 #include <stdlib.h>  // for atoi(3)
 #include <string.h> /* for strcpy() */
 #include <X11/cursorfont.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 #include <queue> // STL containers
 #include <map>
@@ -41,6 +44,7 @@
 #include "stage_types.hh"
 #include "truthserver.hh"
 #include "xs.hh"
+#include "irdevice.hh"
 
 int envfd, num_objects;
 
@@ -49,6 +53,7 @@ int envfd, num_objects;
 
 //#define DEBUG
 //#define VERBOSE
+short IDARMSGPORT = 6606;
 
 CXGui* win = 0;
 
@@ -92,6 +97,8 @@ void CatchSigPipe( int signo )
 #ifdef VERBOSE
   cout << "** SIGPIPE! **" << endl;
 #endif
+
+  //close( truthfd );
 
   exit( 0 );
 }
@@ -592,6 +599,7 @@ bool CXGui::DownloadEnvironment( void )
   // they get filled in when calling ScaleBackground()
   env->pixels_scaled = new XPoint[ env->num_pixels ];
 
+  //close( sockfd );
     
   // all seems well...
   return true;
@@ -825,6 +833,8 @@ int main(int argc, char **argv)
 
   win->Startup( argc, argv);
 
+  win->SetupMessageServer();
+
   if( !ConnectToTruth() )
   {
     puts( "\nFailed to connect to Stage's truth server. Exiting" );
@@ -838,11 +848,120 @@ int main(int argc, char **argv)
     win->HandleXEvent();
     win->HandleIncomingQueue();
 
+    //#ifdef HRL_HEADERS
+    win->HandleIDARMessages();
+    //#endif
+
     // snooze to avoid hogging the processor
     usleep( 50000 ); // 0.05 seconds 
   }
 }
 
+
+//#ifdef HRL_HEADERS
+int hrlfd = 0;
+
+struct sockaddr_in hrlserv, client;
+
+// setup a socket to receive UDP datagrams on port HRLPORT
+void CXGui::SetupMessageServer( void )
+{
+  hrlfd = socket( AF_INET, SOCK_DGRAM, 0 );
+
+  // make the socket nonblocking
+  int val = fcntl( hrlfd, F_GETFL, 0 );
+  fcntl( hrlfd, F_SETFL, val | O_NONBLOCK );
+  
+  memset( &hrlserv, 0, sizeof(hrlserv) );
+
+  hrlserv.sin_family = AF_INET;
+  hrlserv.sin_addr.s_addr = htonl( INADDR_ANY );
+  hrlserv.sin_port = htons( IDARMSGPORT );
+
+  bind( hrlfd, (const struct sockaddr*)&hrlserv, sizeof(hrlserv) );
+}
+
+void CXGui::DrawIDARMessages( void )
+{
+  if( idar_count > 0 )
+    {
+      SetDrawMode( GXxor );
+      
+      for( int i=0; i<idar_count; i++ )
+	{
+	  SetForeground( idar_col[i] );
+	  DrawLine( idar_from[i], idar_to[i] );
+	}
+    }
+}
+
+
+void CXGui::HandleIDARMessages( void )
+{  
+  DrawIDARMessages();
+ 
+  idar_count = 0;
+  
+  while( ReceiveMessage( idar_from[idar_count], 
+			 idar_to[idar_count], 
+			 idar_col[idar_count] ) 
+	 && idar_count < MAXMSGS )
+    {
+      idar_count++;
+    }
+
+  DrawIDARMessages();
+}
+
+bool CXGui::ReceiveMessage( DPoint& from, DPoint& to, unsigned long& col ) 
+{
+  idar_message_t msg;
+  
+  socklen_t len = sizeof(client);
+  int n = recvfrom( hrlfd, &msg, sizeof(msg), 0, 
+		    (sockaddr *)&client, &len );
+
+  
+  if( n == -1 )//&& errno == EWOULDBLOCK )
+    return false;//puts( "WOULD BLOCK " );
+  
+  //printf( "XS: RECV %d bytes.\n", n );
+  
+  assert( (n ==  sizeof( idar_message_t )) ); 
+  
+  //printf( "FROM (%d,%d,%d) to (%d,%d,%d) dir:%d int:%d\n",
+  //      msg.from_port, msg.from_type, msg.from_index,
+  //      msg.to_port, msg.to_type, msg.to_index,
+  //      msg.direction, msg.intensity );	  
+  
+
+  double th;
+  // locate these two objects
+  PoseFromPlayerId( msg.from_port, msg.from_type, msg.from_index,
+		    from.x, from.y, th, col );
+  
+  PoseFromPlayerId( msg.to_port, msg.to_type, msg.to_index,
+		    to.x, to.y, th, col );
+  
+  // if this was a reflection, we'll draw an arrow in the direction it came
+  // from
+  if( to.x == from.x && to.y == from.y )
+    { 
+      double angle_per_sensor = (2.0 * M_PI)/(double)PLAYER_NUM_IDAR_SAMPLES;
+      double angle = msg.direction * angle_per_sensor + th;
+      double sticklen = 0.40; // from center of robot
+      //double baselen = sticklen * tan( angle_per_sensor/2.0 );
+
+      to.x += sticklen * cos( angle ); 
+      to.y += sticklen * sin( angle );       
+
+      col = grey;
+    }
+
+  return true;
+}
+
+//#endif
 
 //#define LABELS
 
@@ -956,6 +1075,7 @@ CXGui::CXGui( int argc, char** argv )
 
   env = new environment_t();
 
+  idar_count = 0;
 }
 
 void CXGui::Startup(int argc, char** argv )
@@ -1110,7 +1230,8 @@ void CXGui::Startup(int argc, char** argv )
 
 CXGui::~CXGui( void )
 {
-  // empty destructor
+  //close( truthfd );
+  //close( hrlfd );
 }
 
 void CXGui::MoveObject( xstruth_t* exp, double x, double y, double th )
@@ -1399,6 +1520,8 @@ void CXGui::RefreshObjects( void )
     graphicProxies[i]->Draw();
   
   HighlightObject( dragging, false );
+
+  DrawIDARMessages();
 
   SetDrawMode( GXcopy );
 }

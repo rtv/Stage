@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.31 $
+//  $Revision: 1.32 $
 //
 // Usage:
 //  (empty)
@@ -31,6 +31,7 @@
 #include <fcntl.h>
 
 //#define DEBUG
+
 #include "world.hh"
 
 ///////////////////////////////////////////////////////////////////////////
@@ -62,6 +63,9 @@ void PrintUsage( void )
 	 " -ep <portnum>\tSet the environment server port\n"
 	 " -fast\t\tRun as fast as possible; don't try to match real time\n"
 	 " -s\t\tSynchronize to an external client (experimental)\n"
+#ifdef HRL_HEADERS
+	 " -i\t\tSend IDAR messages to XS (hrlstage only)\n"
+#endif
 	 "Command-line options override any configuration file equivalents.\n"
 	 "\n"
 	 );

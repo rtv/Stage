@@ -1,12 +1,14 @@
 /*************************************************************************
  * guiexport.hh - data types for exporting data to an external GUI
  * RTV
- * $Id: guiexport.hh,v 1.10 2001-08-09 08:00:07 vaughan Exp $
+ * $Id: guiexport.hh,v 1.11 2002-02-09 03:37:47 rtv Exp $
  ************************************************************************/
-#ifndef GUIEXPORT_H
-#define GUIEXPORT_H
 
 #include <stage.h> // for some player data types and sizes
+#include "xs.hh"
+
+#ifndef GUIEXPORT_H
+#define GUIEXPORT_H
 
 //#include "pioneermobiledevice.hh" // for definition of pioneer_shape_t
 
@@ -42,20 +44,20 @@ enum ExportObjectType
   gps_o,
 };
 
-typedef struct  
-{
-  double x, y;
-} DPoint;
+//  typedef struct  
+//  {
+//    double x, y;
+//  } DPoint;
 
-typedef struct  
-{
-  double x, y, th;
-} DTriple;
+//  typedef struct  
+//  {
+//    double x, y, th;
+//  } DTriple;
 
-typedef struct
-{
-  double toplx, toply, toprx, topry, botlx, botly, botrx, botry;
-} DRect;
+//  typedef struct
+//  {
+//    double toplx, toply, toprx, topry, botlx, botly, botrx, botry;
+//  } DRect;
 
 typedef struct  
 {

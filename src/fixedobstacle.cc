@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.8 $
+//  $Author: rtv $
+//  $Revision: 1.9 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -41,6 +41,7 @@ CFixedObstacle::CFixedObstacle(CWorld *world, CEntity *parent)
   sonar_return = true;
   obstacle_return = true;
   puck_return = false; // we trade velocities with pucks
+ idar_return = IDARReflect;
 
   this->filename = NULL;
   this->scale = 0.0;

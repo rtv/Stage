@@ -8,7 +8,7 @@
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
 #  $Author: rtv $
-#  $Revision: 1.31 $
+#  $Revision: 1.32 $
 #
 # Note: All normal user configurations are in Makefile.common - you
 # probably don't need to change this file
@@ -47,11 +47,13 @@ dep:
 	cd src && ${MAKE} dep
 
 clean: clean_dep
-	rm -f *~
+	rm -f *~ gmon.out 
 	cd src && ${MAKE} clean
 	cd include &&  ${MAKE} clean
-	cd bin && rm -f stage rtkstage xs manager core
+	cd bin && rm -f stage rtkstage hrlstage xs manager core
 	cd examples && rm -f core
+	cd rtk2 && ${MAKE} clean
+	cd hrl && ${MAKE} clean
 
 clean_dep:
 	cd src && ${MAKE} clean_dep

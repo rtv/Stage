@@ -297,7 +297,7 @@ void CWorld::InputPose( stage_pose_t& newpose, int connection )
      switch( pose.x ) // used to identify the command
        {
 	 //case LOADc: Load( m_filename ); break;
-       case SAVEc: Save( m_filename ); break;
+       case SAVEc: Save( this->worldfilename ); break;
        case PAUSEc: m_enable = !m_enable; break;
        default: printf( "Stage Warning: "
 			"Received unknown command (%d); ignoring.\n",

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.42 $
+//  $Revision: 1.43 $
 //
 // Usage:
 //  (empty)
@@ -60,7 +60,6 @@
 #if INCLUDE_RTK2
 #include "rtk.h"
 #endif
-
 
 // forward declaration
 //
@@ -117,7 +116,7 @@ class CWorld
   // the hostname of this computer
   public: char m_hostname[ HOSTNAME_SIZE ];
   public: char m_hostname_short[ HOSTNAME_SIZE ];  // same thing, w/out domain
-  
+
   // pose server stuff ---------------------------------------------
   private:
   
@@ -197,7 +196,7 @@ class CWorld
   private: double m_update_rate;
   
   // Name of the file the world was loaded from
-  private: char m_filename[256];
+  //private: char m_filename[256];
     
   // color definitions
   private: char m_color_database_filename[256];
@@ -228,7 +227,7 @@ private: bool m_run_pose_server;
 private: bool m_run_player;
   
   private: bool m_external_sync_required;
-  
+public: bool m_send_idar_packets;
 
   // flag that controls spawning of xs
   private: bool m_run_xs;
@@ -242,12 +241,12 @@ private: bool m_run_player;
   public: bool ParseCmdline( int argv, char* argv[] );
   // Load the world
   public:  bool Load(const char *filename);
-  public:  bool Load(){ return Load(m_filename); };
+  public:  bool Load(){ return Load(worldfilename); };
   
   // Save the world
   //
   public: bool Save(const char *filename);
-  public: bool Save() {return Save(m_filename);};
+  public: bool Save() {return Save(worldfilename);};
   
   // Initialise the world
   public: bool Startup();

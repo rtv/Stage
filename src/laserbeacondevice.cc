@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.23 $
+//  $Revision: 1.24 $
 //
 // Usage:
 //  (empty)
@@ -59,7 +59,7 @@ CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
   this->sonar_return = false;
   this->puck_return = false;
   this->vision_return = false;
-  this->idar_return = false;
+  this->idar_return = IDARTransparent;
   this->laser_return = LaserTransparent;
 
   this->time_sec = 0;

@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xs.hh,v 1.17 2001-12-20 03:11:47 vaughan Exp $
+ * $Id: xs.hh,v 1.18 2002-02-09 03:37:47 rtv Exp $
  ************************************************************************/
 
 #ifndef _WIN_H
@@ -77,10 +77,21 @@ typedef struct
   XPoint* pixels_scaled; // coords in screen pixels
 } environment_t;
 
+const int MAXMSGS = 10000;
 
 class CXGui
 {
 public:
+  void DrawIDARMessages( void );
+  bool ReceiveMessage( DPoint& from, DPoint& to, unsigned long &col );
+  void HandleIDARMessages( void );
+  void SetupMessageServer( void );
+
+  unsigned long idar_col[MAXMSGS];  
+  DPoint idar_from[MAXMSGS];
+  DPoint idar_to[MAXMSGS];
+  int idar_count;
+
   // constructor
   CXGui( int argc, char** argv );
 
@@ -142,6 +153,10 @@ public:
   bool PoseFromId( int stage_id,  
 		   double& x, double& y, double& th, unsigned long& col );
     
+  bool PoseFromPlayerId( int port, int type, int index, 
+			 double& x, double& y, double& th, unsigned long& col);
+    
+
   void HandlePlayers( void );
   void TogglePlayerClient( xstruth_t* ent );
 

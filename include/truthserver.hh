@@ -72,15 +72,12 @@ typedef struct
 enum cmd_t { SAVEc = 1, LOADc, PAUSEc };
 
 
-#ifndef _XLIB_H_ // if we're not inclduing the X header
-
+//#ifndef XPoint // if we're not inclduing the X header
 // borrow an X type for compatibility
-typedef struct {
-    short x, y;
-} XPoint;
-
-
-#endif // _XLIB_H
+//typedef struct {
+///   short x, y;
+//} XPoint;
+//#endif // _XLIB_H
 
 #endif // _TRUTHSERVER_H
 

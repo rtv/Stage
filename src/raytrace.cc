@@ -1,6 +1,6 @@
 // ==================================================================
 // Filename:	raytrace.cc
-// $Id: raytrace.cc,v 1.7 2002-01-29 02:33:38 rtv Exp $
+// $Id: raytrace.cc,v 1.8 2002-02-09 03:37:47 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -133,8 +133,8 @@ inline CEntity** CLineIterator::RayTrace( double &px, double &py, double pth,
   remaining_range -= (double)range+1; // we have this much left to go
   
   //if( ent && ent[0] )
-  //printf( "Hit %p at %.2f,%.2f with %.2f to go\n", 
-  //    ent[0], px, py, remaining_range );
+  //printf( "Hit %p (%d) at %.2f,%.2f with %.2f to go\n", 
+  //    ent[0], ent[0]->m_stage_type, px, py, remaining_range );
   //else
   //printf( "hit nothing. remaining range = %.2f\n", remaining_range );
   // fflush( stdout );

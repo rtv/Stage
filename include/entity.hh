@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.35 $
+//  $Revision: 1.36 $
 //
 // Usage:
 //  (empty)
@@ -180,7 +180,7 @@ private: sem_t* m_lock;
   public: bool sonar_return;  
   public: bool vision_return;
   public: LaserReturn laser_return;
-  public: bool idar_return;
+  public: IDARReturn idar_return;
 
   // the full path name of this device in the filesystem
   public: char m_device_filename[256]; 

@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.76 2002-02-07 00:45:38 rtv Exp $
+# $Id: Makefile,v 1.77 2002-02-09 03:37:47 rtv Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -85,8 +85,8 @@ rtk:
 # working on releasing these under the GPL - RTV
 # hrlstage WILL NOT BUILD without the external headers and library.
 
-hrlstage: ${HRL_OBS}
-	$(LINKER) $(HRL_OBS) $(HRL_LIB) $(LINKFLAGS)  -o $@
+hrlstage: ${HRL_OBS} ${HRL_LIB}
+	$(LINKER) $(HRL_OBS) $(HRL_LINK) $(LINKFLAGS)  -o $@
 
 %_hrl.o : CCFLAGS += $(HRL_HEADERS) -DHRL_HEADERS 
 %_hrl.o : %.cc
@@ -95,7 +95,7 @@ hrlstage: ${HRL_OBS}
 
 # STAGE TOOLS ###############################################################
 
-xs: CCFLAGS += -I/usr/X11R6/include 
+xs: CCFLAGS += -I/usr/X11R6/include $(HRL_HEADERS) #-DHRL_HEADERS 
 xs: LINKFLAGS += -L/usr/X11R6/lib -lX11 -L$(PLAYER_LIB) -lplayerclient
 xs : xs.cc render.cc	
 	$(CC) xs.cc render.cc $(CCFLAGS) $(LINKFLAGS) -o xs
@@ -110,7 +110,7 @@ truthlog: truthlog.cc
 # ADMIN #######################################################################
 
 clean:
-	rm -f *.o *~ core xs truthlog
+	rm -f *.o *~ stage rtkstage hrlstage manager core xs truthlog
 
 #dep:
 #	$(MAKEDEP) -Y -I../include -I$(PLAYER_INC) -s "# Dependancies (make dep)" truthlog.cc xs.cc render.cc 2>/dev/null
@@ -128,3 +128,4 @@ clean_dep:
 	$(RM) -f Makefile.bak
 
 # Dependancies (make dep)
+

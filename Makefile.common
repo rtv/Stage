@@ -3,7 +3,7 @@
 # stage/Makefile.common - build and installation configurations
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile.common,v 1.37 2002-02-07 00:45:38 rtv Exp $
+# $Id: Makefile.common,v 1.38 2002-02-09 03:37:47 rtv Exp $
 #
 # Notes: All user-configurable paths and build options should be specified 
 #        here. This file is included by Makefile and src/Makefile. 
@@ -79,9 +79,9 @@ ZLIB_LIBS = -lz
 # production
 #CCFLAGS = -O2 
 # debug
-#CCFLAGS = -g3 
+CCFLAGS = -g3 
 # debug + profile
-CCFLAGS = -pg -g3 
+#CCFLAGS = -pg -g3 
 
 #############################################################################
 # Platform selection
@@ -131,6 +131,7 @@ LINKER = $(CC)
 
 HRL = $(HOME)/code/LINPHERO/pr_c++/com/hrl/pr
 HRL_HEADERS = -I../hrl -I$(HRL)/pherobot -I$(HRL)/abstractrobot 
-HRL_LIB =  -L../hrl -lhrlstage
+HRL_LIB =  ../hrl/libhrlstage.a
+HRL_LINK =  -L../hrl -lhrlstage
 
 
