@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.45 $
+//  $Revision: 1.46 $
 //
 // Usage:
 //  (empty)
@@ -635,10 +635,27 @@ void CWorld::Update()
 	  {
 	    CEntity* ent = m_object[ truth.stage_id ];
 	    assert( ent ); // there really ought to be one!
-	  	
-	    // update the entity with the truth
-	    ent->SetGlobalPose( truth.x/1000.0, truth.y/1000.0, 
-				DTOR(truth.th) );
+	  
+	
+	    // check to see if we really need to move the entity
+    
+  	    // this is where the entity is now
+  	    double dx, dy, dth;
+  	    ent->GetGlobalPose( dx, dy, dth );
+	    
+  	    // compress the doubles to match the truth data
+  	    uint32_t uix = (uint32_t)( dx * 1000.0 );
+  	    uint32_t uiy = (uint32_t)( dy * 1000.0 );
+  	    int degrees = (int)RTOD( dth );
+  	    if( degrees < 0 ) degrees += 360;	    
+  	    uint16_t uith = (uint16_t)degrees;  
+  
+
+  	    // if the pose is different
+  	    if( uix != truth.x || uiy != truth.y || uith != truth.th )
+  	      // update the entity with the truth
+	      ent->SetGlobalPose( truth.x/1000.0, truth.y/1000.0, 
+				  DTOR(truth.th) );
 	  }
 	
 	// width and height could be changed here too if necessary
