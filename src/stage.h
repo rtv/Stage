@@ -20,6 +20,8 @@
 #include <unistd.h>
 #include <stdint.h> // for portable int types eg. uint32_t
 
+   typedef struct timeval stage_timeval_t;
+
    // global stage configs
 #define STG_TOKEN_MAX 64
 #define STG_LISTENQ  128
@@ -63,6 +65,7 @@
        STG_PROP_IDAR_TX,
        STG_PROP_IDAR_TXRX,
        STG_PROP_ROOT_CREATE, // see root.cc
+       STG_PROP_ROOT_DESTROY,
        STG_PROP_ROOT_GUI, 
        STG_PROP_POSITION_ORIGIN, // see position.cc
        STG_PROP_POSITION_ODOM,
@@ -172,12 +175,6 @@ typedef enum {
 } stage_cmd_t;
 
 
-typedef struct
-{
-  char subscribed; // 0 = not subscribed, else subscribed
-  char dirty; // 0 = not dirty , else dirty
-} stage_subscription_t;
-
 // returned by BufferPacket()
 typedef struct
 {
@@ -188,9 +185,7 @@ typedef struct
 typedef struct
 {
   stage_header_type_t type; // see enum above
-  unsigned int sec; // at this many seconds
-  unsigned int usec; // plus this many microseconds
-
+  double timestamp;
   size_t len; // this many bytes of data follow (for CMDs this is
  // actually the command number instead)
 } __attribute ((packed)) stage_header_t;
@@ -220,6 +215,20 @@ typedef struct
   stage_reply_mode_t reply; // if non-zero, Stage replies with the current property data
   size_t len; // the property uses this much data (to follow)
 } __attribute ((packed)) stage_property_t;
+
+typedef enum { STG_NOT_SUBSCRIBED, STG_SUBSCRIBED } stage_subscription_flag_t;
+
+typedef struct
+{
+  stage_prop_id_t property;
+  stage_subscription_flag_t flag;
+} stage_subscription_t;
+
+typedef struct
+{
+  stage_subscription_flag_t subscribed; 
+  char dirty; // 0 = not dirty , else dirty
+} stage_subdirty_t;
 
 // a client that receives this packet should create a new entity
 // and return a single int identifier

@@ -8,15 +8,20 @@
 
 #include "stage.h"
      
-   typedef int (*stg_data_callback_t)(int, void* data, size_t len, 
+   typedef int (*stg_data_callback_t)(int connection, 
+				      double timestamp, 
+				      void* data, size_t len, 
 				      stage_buffer_t* replies );
    typedef int (*stg_connection_callback_t)(int);
    
    void* malloc_debug( size_t );
    void* realloc_debug( void*,  size_t );
    void free_debug( void* );
-   
-   
+
+   int SIOGetHeader( int con, stage_header_t* hdr );
+
+   void SIOPackTimeval( struct timeval* tv, double simtime );
+  
    /* EXTERNAL FUNCTIONS - clients should use these */
    void SIOPackPose( stage_pose_t *pose, double x, double y, double a );
 
@@ -67,12 +72,14 @@
    // reads datalen bytes of data, then passes it in recordlen sized chunks to
    // the callback function
    // function with each one in turn
-   int SIOReadData( int con, size_t datalen, size_t recordlen, 
+   int SIOReadData( int con, double timestamp,
+		    size_t datalen, size_t recordlen, 
 		    stg_data_callback_t callback );
    
    // reads len bytes from the con, parses the buffer and calls the
    // callback with each property change
-   int SIOReadProperties( int con, size_t len, stg_data_callback_t callback  );
+   int SIOReadProperties( int con, double timestamp, 
+			  size_t len, stg_data_callback_t callback  );
 
    // this adds a header, so it needs a timestamp
    int SIOWriteMessage( int con, double simtime, stage_header_type_t type,

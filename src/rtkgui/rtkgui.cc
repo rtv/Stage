@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.1.2.15 2003-02-26 01:57:16 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.1.2.16 2003-02-27 02:10:18 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -31,9 +31,9 @@
 // this should go when I get the autoconf set up properly
 #ifdef INCLUDE_RTK2
 
-//#undef DEBUG
+#undef DEBUG
 #undef VERBOSE
-#define DEBUG 
+//#define DEBUG 
 //#define VERBOSE
 
 #include <errno.h>

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/position.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -99,7 +99,6 @@ void CPositionModel::VelocityControl( void )
   }   
 }
 
-
 ///////////////////////////////////////////////////////////////////////////
 // Update the device
 int CPositionModel::Update()
@@ -115,13 +114,10 @@ int CPositionModel::Update()
   
   //PRINT_WARN1( "updating position %d", this->stage_id );
   
-  
-  
-  // update the robot's position
+  // if we're on, update the robot's position
   if( this->power_on )
     {
       //PRINT_WARN1( "position %d is powered up and updating", this->stage_id );
-      
       switch( this->control_mode )
 	{
 	case STG_POSITION_CONTROL_POSITION:
@@ -140,13 +136,21 @@ int CPositionModel::Update()
 	}
       
     }
+  else // no power, no move
+    this->vx = this->vy = this->vth = 0.0;
 
-  PRINT_DEBUG4( "position %d com_v %.2f,%.2f,%.2f",
-		this->stage_id, com_vx, com_vy, com_va );
+  //PRINT_DEBUG4( "position %d command vel %.2f,%.2f,%.2f",
+  //		this->stage_id, com_vx, com_vy, com_va );
   
-  PRINT_DEBUG4( "position %d v %.2f,%.2f,%.2f",
-		this->stage_id, vx, vy, vth );
-      
+  //PRINT_DEBUG4( "position %d command pos %.2f,%.2f,%.2f",
+  //	this->stage_id, com_px, com_py, com_pa );
+  
+  //PRINT_DEBUG4( "position %d odo %.2f,%.2f,%.2f",
+  //	this->stage_id, odo_px, odo_py, odo_pa );
+
+  //PRINT_DEBUG4( "position %d vel %.2f,%.2f,%.2f",
+  //	this->stage_id, vx, vy, vth );
+  
   
   stage_position_data_t posdata;
   posdata.x = this->odo_px;
@@ -305,6 +309,29 @@ int CPositionModel::Property( int con, stage_prop_id_t property,
     }
 
   return CEntity::Property( con, property, value, len, reply );
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Compute the robots new pose
+int CPositionModel::Move( double vx, double vy, double va, double timestep )
+{
+  CEntity::Move( vx,vy,vth, timestep );
+  
+  // Compute the new odometric pose
+  // we currently have PERFECT odometry. yum!
+  
+  this->odo_px += timestep * vx * cos(this->odo_pa) 
+    + timestep * vy * sin(this->odo_pa);
+  
+  this->odo_py += timestep * vx * sin(this->odo_pa) 
+    + timestep * vy * cos(this->odo_pa);
+
+  this->odo_pa += timestep * va;
+  
+  this->stall = false;
+
+  return 0;
 }
 
 

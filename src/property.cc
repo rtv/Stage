@@ -22,7 +22,7 @@
  * properties. It's one big ol'function, so it gets its own file.
  * Author: Richard Vaughan
  * Date: 22 Feb 2003
- * CVS info: $Id: property.cc,v 1.1.2.4 2003-02-26 01:57:15 rtv Exp $
+ * CVS info: $Id: property.cc,v 1.1.2.5 2003-02-27 02:10:14 rtv Exp $
  */
 
 #include <string.h>
@@ -39,13 +39,13 @@
 int CEntity::Property( int con, stage_prop_id_t property, 
 		       void* value, size_t len, stage_buffer_t* reply )
 {
-  PRINT_DEBUG2( "ent %d prop %s", stage_id, SIOPropString(property) );
+  //PRINT_DEBUG2( "ent %d prop %s", stage_id, SIOPropString(property) );
   
-  if( value )
-    PRINT_DEBUG2( "SET %s %d bytes", SIOPropString(property), len );
+  //if( value )
+  //PRINT_DEBUG2( "SET %s %d bytes", SIOPropString(property), len );
   
-  if( reply )
-    PRINT_DEBUG1( "GET %s", SIOPropString(property) );
+  //if( reply )
+  //PRINT_DEBUG1( "GET %s", SIOPropString(property) );
   
   switch( property )
     {
@@ -297,12 +297,12 @@ int CEntity::Property( int con, stage_prop_id_t property,
 	{
 	  // *value is an array of integer property codes that request
 	  // subscriptions on this channel
-	  PRINT_DEBUG3( "received SUBSCRIBE (%d) for %d properties on %d",
-			*(int*)value, (int)(len/sizeof(int)), con );
+	  PRINT_DEBUG4( "ent %d (%s) SUBSCRIBING %d properties on %d",
+			this->stage_id, this->token,
+			(int)(len/sizeof(stage_subscription_t)), con );
 	  
-	  this->Subscribe( con, 
-			   (stage_prop_id_t*)value, len/sizeof(int), 
-			   *(int*)value );
+	  this->Subscribe( con, (stage_subscription_t*)value, 
+			   len/sizeof(stage_subscription_t) );
 	}
       
       if( reply ) // nothing interesting to reply here, just a confirm
@@ -441,10 +441,6 @@ int CEntity::Property( int con, stage_prop_id_t property,
 	    buffer_cmd.data = (char*)realloc( buffer_cmd.data, len );
 	  memcpy( buffer_cmd.data, value, len );
 	  buffer_cmd.len = len;
-
-	  // virtual function is overridden in subclasses.  the
-	  // subclass handles the command in their own special way
-	  this->SetCommand( (char*)value, len ); 
 	}
       if( reply ) 
 	{
@@ -463,11 +459,7 @@ int CEntity::Property( int con, stage_prop_id_t property,
 	  if( buffer_data.len != len )
 	    buffer_data.data = (char*)realloc( buffer_data.data, len );
 	  memcpy( buffer_data.data, value, len );
-	  buffer_data.len = len;
-	  
-	  // virtual function is overriden in subclasses. the subclass
-	  // may want to react to someone setting its data.
-	  this->SetData( (char*)value, len ); 
+	  buffer_data.len = len;	  
 	}
       if( reply ) 
 	{

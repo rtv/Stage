@@ -21,17 +21,17 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.24 2003-02-26 01:57:14 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.25 2003-02-27 02:10:08 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
 #endif
 
 
-//#define DEBUG
+#define DEBUG
 //#define VERBOSE
 //#define RENDER_INITIAL_BOUNDING_BOXES
-#undef DEBUG
+//#undef DEBUG
 #undef VERBOSE
 
 #include <math.h>
@@ -190,6 +190,8 @@ CEntity::CEntity( int id, char* token, char* color, CEntity* parent )
 // Destructor
 CEntity::~CEntity()
 {
+  CHILDLOOP(ch)
+    delete ch;
 }
 
 void CEntity::AddChild( CEntity* child )
@@ -720,23 +722,25 @@ void CEntity::NormalizeRects(  stage_rotrect_t* rects, int num )
     }
 }
 
-void CEntity::Subscribe( int con, 
-			 stage_prop_id_t* props, int prop_count, int sub )  
+void CEntity::Subscribe( int con, stage_subscription_t* subs, int sub_count )  
 {
-  
-  for( int p=0; p<prop_count; p++ )
+  for( int p=0; p<sub_count; p++ )
     {
-      stage_prop_id_t prop_code = props[p];
-      
+      stage_prop_id_t prop_code = subs[p].property;
+      stage_subscription_flag_t flag = subs[p].flag;
+
       if( prop_code == -1 )
 	PRINT_WARN( "subscribe to all properties not implemented" );
       else
 	{
 	  PRINT_DEBUG4( "subscribe %d  to ent %d property %s on connection %d",
-			sub, stage_id, SIOPropString(prop_code), con );
+			flag, stage_id, 
+			SIOPropString(prop_code), con );
+
 	  // register the subscription on this channel, for this property
-	  subscriptions[con][prop_code].subscribed = sub;
-	  subscriptions[con][prop_code].dirty = sub;
+	  subscriptions[con][prop_code].subscribed = flag;
+	  subscriptions[con][prop_code].dirty = 
+	    (flag == STG_SUBSCRIBED) ? 1 : 0;
 	}
     }
 }
@@ -744,10 +748,8 @@ void CEntity::Subscribe( int con,
 // clear the subscription data for this channel on me and my children
 void CEntity::DestroyConnection( int con )
 {
-
-
   memset( subscriptions[con], 0, 
-	  STG_PROPERTY_COUNT*sizeof(stage_subscription_t) );
+	  STG_PROPERTY_COUNT*sizeof(stage_subdirty_t) );
 
   CHILDLOOP(ch)
     ch->DestroyConnection( con );
@@ -884,17 +886,11 @@ void CEntity::RenderRects( bool render )
     }  
 }
 
+/*
 int CEntity::SetCommand( char* data, size_t len )
 {
   PRINT_DEBUG2( "ent %d received %d bytes of command", 
 		this->stage_id, (int)len );   
-  return 0;
-}
-
-int CEntity::GetCommand( char* data, size_t* len )
-{
-  memcpy( data, &(buffer_cmd.data), buffer_cmd.len );
-  *len = buffer_cmd.len;
   return 0;
 }
 
@@ -904,6 +900,8 @@ int CEntity::SetData( char* data, size_t len )
 	       this->stage_id, (int)len ); 
   return 0;
 }
+*/
+
 
 int CEntity::GetData( char* data, size_t* len )
 {
@@ -914,3 +912,12 @@ int CEntity::GetData( char* data, size_t* len )
   *len = buffer_data.len;
   return 0;
 }
+
+int CEntity::GetCommand( char* data, size_t* len )
+{
+  memcpy( data, buffer_cmd.data, buffer_cmd.len );
+  *len = buffer_cmd.len;
+  return 0;
+}
+
+

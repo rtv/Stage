@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15.2.21 2003-02-26 01:57:15 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.22 2003-02-27 02:10:11 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -108,9 +108,12 @@ public:
   virtual int Sync();
   
 protected: 
-  virtual int SetData( char* data, size_t len ); // receive data
+  //  virtual int SetData( char* data, size_t len ); // receive data
+  //virtual int SetCommand( char* data, size_t len ); // receive command
+
+  // a quick way of getting the current cmd and data without having to
+  // make a property request
   virtual int GetData( char* data, size_t* len ); // get data data
-  virtual int SetCommand( char* data, size_t len ); // receive command
   virtual int GetCommand( char* data, size_t* len ); // get command data
   // END ---------------------------------------------------------
   
@@ -285,15 +288,16 @@ public: void FamilyUnsubscribe();
 
   // print a tree of info about this entity on the fd
   public: void Print( int fd, char* prefix );
- 
+  
   // move using these velocities times the timestep
-  protected: int Move( double vx, double vy, double va, double timestep );
+protected: 
+  virtual int Move( double vx, double vy, double va, double timestep );
 
   ///////////////////////////////////////////////////////////////////////
   // DISTRIBUTED STAGE STUFF
 public: 
-  stage_subscription_t subscriptions[ STG_MAX_CONNECTIONS][STG_PROPERTY_COUNT];
-  void Subscribe( int con, stage_prop_id_t *props, int prop_count, int sub );
+  stage_subdirty_t subscriptions[ STG_MAX_CONNECTIONS][STG_PROPERTY_COUNT];
+  void Subscribe( int con, stage_subscription_t *subs, int sub_count );
   bool IsSubscribed( stage_prop_id_t );
   
   // set the dirty flag for each property for each connection

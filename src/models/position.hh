@@ -9,7 +9,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/position.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -53,6 +53,9 @@ private:
   // set the current velocities to the commanded velocities, subject
   // to the current steering rules
   void VelocityControl();
+
+protected: 
+  virtual int Move( double vx, double vy, double va, double timestep );
   
   // Process configuration requests.
 private: int Property( int con, stage_prop_id_t property, 

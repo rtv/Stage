@@ -1,4 +1,3 @@
-
 #if HAVE_CONFIG_H
   #include <config.h>
 #endif
@@ -99,22 +98,21 @@ int SIOPropertyUpdate( int con, double timestamp,
   stage_header_t hdr;
 
   hdr.len = 0;
-  //while( hdr.len == 0 )
+
+  size_t hdrbytes = SIOReadPacket( con, &hdr, sizeof(hdr) ); 
+  
+  if( hdr.type != STG_HDR_PROPS )
     {
-      size_t hdrbytes = SIOReadPacket( con, &hdr, sizeof(hdr) ); 
-      if( hdr.type != STG_HDR_PROPS )
-	{
-	  PRINT_ERR2( "unexpected header type %s (%d)", 
-		      SIOHdrString(hdr.type), hdr.type );
-	}
-      
-      //SIOBufferPacket( dbg, &hdr, sizeof(hdr) );
-      //SIODebugBuffer( dbg );
-      //SIOFreeBuffer( dbg );
-      
-      PRINT_DEBUG3( "read %d byte reply header type %s %d bytes  follow", 
-		    	    hdrbytes, SIOHdrString(hdr.type), hdr.len ); 
+      PRINT_ERR2( "unexpected header type %s (%d)", 
+		  SIOHdrString(hdr.type), hdr.type );
     }
+  
+  //SIOBufferPacket( dbg, &hdr, sizeof(hdr) );
+  //SIODebugBuffer( dbg );
+  //SIOFreeBuffer( dbg );
+  
+  PRINT_DEBUG3( "read %d byte reply header type %s %d bytes  follow", 
+		hdrbytes, SIOHdrString(hdr.type), hdr.len ); 
 
   // make room for the incoming properties and read them
   char* buf = calloc(hdr.len,1);
@@ -211,6 +209,7 @@ const char* SIOPropString( stage_prop_id_t id )
     case STG_PROP_IDAR_TX: return "STG_PROP_IDAR_TX"; break;
     case STG_PROP_IDAR_TXRX: return "STG_PROP_IDAR_TXRX"; break;
     case STG_PROP_ROOT_CREATE: return "STG_PROP_ROOT_CREATE"; break;
+    case STG_PROP_ROOT_DESTROY: return "STG_PROP_ROOT_DESTROY"; break;
     case STG_PROP_ROOT_GUI: return "STG_PROP_ROOT_GUI"; break;
 
     case STG_PROP_POSITION_ORIGIN: return "STG_PROP_POSITION_ORIGIN"; break;
@@ -247,13 +246,13 @@ void ClientCatchSigPipe( int signo )
 #endif
 }
 
-void SIOTimeStamp( stage_header_t* hdr, double simtime )
+void SIOPackTimeval( stage_timeval_t* tv, double simtime )
 {
   double seconds = floor( simtime );
   double usec = (simtime - seconds) * MILLION; 
   
-  hdr->sec = (int)seconds; 
-  hdr->usec = (int)usec;
+  tv->tv_sec = (int)seconds; 
+  tv->tv_usec = (int)usec;
 }
 
 void SIODebugBuffer( stage_buffer_t* buf )
@@ -389,7 +388,7 @@ int SIOWriteMessage( int con, double simtime, stage_header_type_t type,
   stage_header_t hdr;
   hdr.type = type;
   hdr.len = len;
-  SIOTimeStamp( &hdr, simtime );
+  hdr.timestamp = simtime;
   
   stage_buffer_t* outbuf = SIOCreateBuffer();
   assert( outbuf );
@@ -432,6 +431,7 @@ int SIOWriteMessage( int con, double simtime, stage_header_type_t type,
 }
 
 int SIOReadData( int con, 
+		 double timestamp,
 		 size_t datalen, 
 		 size_t recordlen, 
 		 stg_data_callback_t callback )
@@ -461,7 +461,7 @@ int SIOReadData( int con,
       
       // CALL THE CALLBACK WITH THIS SINGLE config
       if( callback )
-	(*callback)( con, record, recordlen, replies );
+	(*callback)( con, timestamp, record, recordlen, replies );
     }
   
   free( buf );
@@ -478,7 +478,8 @@ int SIOReadData( int con,
 
 // read a buffer len bytes long from fd, then call the property handling callback
 // for each property packed into the buffer
-int SIOReadProperties( int con, size_t len, stg_data_callback_t callback )
+int SIOReadProperties( int con, double timestamp, 
+		       size_t len, stg_data_callback_t callback )
 {
   if( len == 0 )
     {
@@ -531,7 +532,8 @@ int SIOReadProperties( int con, size_t len, stg_data_callback_t callback )
 	this_reply = NULL; // if not, we send a null pointer
       
       if( callback )
-	(*callback)( con, (char*)prop,  sizeof(stage_property_t)+prop->len,
+	(*callback)( con, timestamp, 
+		     (char*)prop,  sizeof(stage_property_t)+prop->len,
 		     this_reply );
 
       // move the pointer past this record in the buffer
@@ -659,6 +661,73 @@ int SIOInitClient( int argc, char** argv )
   return con;
 }  
 
+// read a header on the specified connection
+int SIOGetHeader( int con, stage_header_t* hdr )
+{
+  // we want poll to block until it is interrupted by a timer signal,
+  // so we give it a time-out of -1.
+  int timeout = -1;
+  int readable = 0;
+  int retval = 0;
+  
+  // we loop on a poll until we have a header or the connection dies
+  while( 1 ) 
+    {
+      // use poll to see which pose connections have data
+      if((readable = 
+	  poll( connection_polls,
+		sio_connection_count,
+		timeout )) == -1) 
+	{
+	  PRINT_ERR( "poll(2) returned error)");
+	  perror("");
+	  return -1; // fail
+	}
+      
+      if( readable > 0 )
+	{
+	  // see if my connection is readable
+	  short revents = connection_polls[con].revents;
+	  
+	  if( revents & POLLIN )// data available
+	    { 
+	      size_t hdrbytes;
+	      
+	      hdrbytes = SIOReadPacket( con, hdr, sizeof(stage_header_t) ); 
+	      
+	      if( hdrbytes < sizeof(stage_header_t) )
+		{
+		  PRINT_DEBUG1( "con %d: failed header read. closing.",con );
+		  SIODestroyConnection( con ); // zap this connection
+		  
+		  retval = -1; // fail; connection lost
+		  break;
+		}
+	      else // find out the type of packet to follow
+		{ 
+		  retval = 0; //success
+		  break;
+		}
+	    }
+	  // if poll reported some badness on this connection
+	  else if( !revents & EINTR ) //
+	    {
+	      PRINT_MSG1( "connection %d seems bad", con );
+	      SIODestroyConnection( con ); // zap this connection
+	      retval = -1;
+	      break;
+	    }    
+	}
+    }     
+  
+#ifdef VERBOSE
+  PRINT_DEBUG( "End");
+#endif
+  
+  return retval;
+}
+
+
 // read stuff until we get a continue message on each channel
 int SIOServiceConnections(   stg_connection_callback_t lostconnection_callback,
 			     stg_data_callback_t cmd_callback, 
@@ -721,13 +790,20 @@ int SIOServiceConnections(   stg_connection_callback_t lostconnection_callback,
 			  {
 			  case STG_HDR_PROPS: // some poses are coming in 
 			    //PRINT_DEBUG1( "STG_HDR_PROPS on %d", t );
-			    SIOReadProperties( t, hdr.len, prop_callback );
+			    SIOReadProperties( t, 
+					       hdr.timestamp, 
+					       hdr.len, 
+					       prop_callback );
 			    break;
 			    
 			  case STG_HDR_CMD:
 			    //PRINT_DEBUG1( "STG_HDR_CMD on %d", t );
 			    if( cmd_callback )
-			      (*cmd_callback)( t, &(hdr.len), 1, NULL );
+			      (*cmd_callback)( t, 
+					       hdr.timestamp, 
+					       &(hdr.len), 
+					       1, 
+					       NULL );
 			    break;			  
 			    
 			  case STG_HDR_CONTINUE: 

@@ -73,7 +73,10 @@ public:
   // create an instance of an entity given a request returns a unique
   // id for the entity, which happens to be it's index in the array
   stage_id_t CreateEntity( stage_model_t* model );
-
+  
+  // remove an entity and its children from the sim
+  int DestroyEntity( stage_model_t* model );
+  
   // put the root object at the start of the array -
   // warning -  this destroys the rest of the array, so should
   // only be called from root's contructor

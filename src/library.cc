@@ -24,7 +24,7 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.13.4.11 2003-02-24 04:47:12 rtv Exp $
+ * CVS info: $Id: library.cc,v 1.13.4.12 2003-02-27 02:10:12 rtv Exp $
  */
 
 #include <assert.h>
@@ -93,6 +93,23 @@ void Library::InsertRoot( CEntity* root )
   entPtrs = (CEntity**)realloc(  entPtrs, sizeof( entPtrs[0]) );
   entPtrs[0] = root;
   model_count = 1;
+}
+
+int Library::DestroyEntity( stage_model_t* model )
+{
+  // look up the pointer
+  CEntity* ent = entPtrs[model->id];
+  
+  model_count--;
+ 
+  // shuffle down the entPtr array to fill the gap
+  for( int p=model->id; p<model_count; p++ )
+    entPtrs[p] = entPtrs[p+1];
+ 
+  GuiEntityShutdown( ent );
+  delete ent;
+
+  return 0;
 }
 
 // create an instance of an entity given a worldfile token

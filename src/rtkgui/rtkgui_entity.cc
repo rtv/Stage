@@ -1,5 +1,5 @@
-
-#define DEBUG
+//#define DEBUG
+#undef DEBUG
 
 #include <assert.h>
 #include <string.h>
@@ -88,20 +88,28 @@ int CEntity::RtkStartup()
   //{
     // Create the label
     // By default, the label is not shown
-    this->fig_label = rtk_fig_create( canvas, this->fig, 51);
-    rtk_fig_show(this->fig_label, true); // TODO - re-hide the label    
+    this->fig_label = rtk_fig_create( canvas, NULL, 51);
+    rtk_fig_show(this->fig_label, 0); 
     rtk_fig_movemask(this->fig_label, 0);
       
     char label[1024];
     char tmp[1024];
       
     label[0] = 0;
-    snprintf(tmp, sizeof(tmp), "%s %s", 
-             this->name, this->token );
+
+    // if the name and token are the same, just print one
+    if( strcmp( this->name, this->token ) == 0 )
+      snprintf(tmp, sizeof(tmp), "(%d) %s", 
+	       this->stage_id, this->token );
+    else // print them botj
+      snprintf(tmp, sizeof(tmp), "(%d) %s (%s)", 
+	       this->stage_id, this->name, this->token );      
+
     strncat(label, tmp, sizeof(label));
       
     rtk_fig_color_rgb32(this->fig, this->color);
-    rtk_fig_text(this->fig_label,  0.75 * size_x,  0.75 * size_y, 0, label);
+    //rtk_fig_origin( this->fig_label, 0.05, 1.0, 0 );
+    rtk_fig_text(this->fig_label, 0,0,0, label);
       
     // attach the label to the main figure
     // rtk will draw the label when the mouse goes over the figure
@@ -242,18 +250,48 @@ void RtkOnMouse(rtk_fig_t *fig, int event, int mode)
 {
   CEntity *entity = (CEntity*) fig->userdata;
   
+  static rtk_fig_t* fig_pose = NULL;
+
   double px, py, pth;
   
   switch (event)
     {
     case RTK_EVENT_PRESS:
-      break;
+      rtk_fig_show( entity->fig_label, 1 );
 
+      if( fig_pose ) rtk_fig_destroy( fig_pose );
+      fig_pose = rtk_fig_create( canvas, entity->fig_label, 51 );
+      rtk_fig_color_rgb32( fig_pose, 0x000000 );
+      
+      // DELIBERATE NO BREAK
+      
     case RTK_EVENT_MOTION:
-    case RTK_EVENT_RELEASE:
       rtk_fig_get_origin(fig, &px, &py, &pth);
       entity->SetGlobalPose(px, py, pth);
+      
+      rtk_fig_origin( entity->fig_label, 
+		      px + entity->size_x,
+		      py + entity->size_y, 0.0 );
+      
+      // display the pose
+      char txt[100];
+      txt[0] = 0;
+      snprintf(txt, sizeof(txt), "[%.2f,%.2f,%.2f]",  px,py,pth  );
+      rtk_fig_clear( fig_pose );
+      rtk_fig_text( fig_pose, 0.2, -0.3, 0.0, txt );
       break;
+      
+
+    case RTK_EVENT_RELEASE:
+      rtk_fig_show( entity->fig_label, 0 );
+
+      rtk_fig_get_origin(fig, &px, &py, &pth);
+      entity->SetGlobalPose(px, py, pth);
+      
+      rtk_fig_destroy( fig_pose );
+      fig_pose = NULL;
+      break;
+      
       
     default:
       break;

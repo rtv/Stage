@@ -21,7 +21,7 @@
  * Desc: A root device model - replaces the CWorld class
  * Author: Richard Vaughan
  * Date: 31 Jan 2003
- * CVS info: $Id: root.cc,v 1.1.2.7 2003-02-24 04:47:12 rtv Exp $
+ * CVS info: $Id: root.cc,v 1.1.2.8 2003-02-27 02:10:14 rtv Exp $
  */
 
 
@@ -106,32 +106,59 @@ int CRootEntity::Property( int con, stage_prop_id_t property,
       */
 
     case STG_PROP_ROOT_CREATE:
-      {
-	assert( value && reply ); // both must be good
-
-	int num_models =  len / sizeof(stage_model_t);
-	
-	PRINT_WARN1( "root received CREATE request for %d models", num_models );
-	
-	for( int m=0; m<num_models; m++ )
-	  {
-	    // make a new model from the correct offset in the value buffer.
-	    // this call fills in their ID field correctly
-	    stage_model_t* mod = (stage_model_t*)
-	      ((char*)value + m*sizeof(stage_model_t));
-	    
-	    if( model_library.CreateEntity( mod ) == -1 )
-	      PRINT_ERR( "failed to create a new model (invalid ID)" );	    
-	  }
-	
-	// reply with the same array of models, with the IDs set
-	SIOBufferProperty( reply, this->stage_id, 
-			   STG_PROP_ROOT_CREATE,
-			   value, len,
-			   STG_ISREPLY );
-      }
+      if( value && reply ) // both must be good
+	{
+	  int num_models =  len / sizeof(stage_model_t);
+	  
+	  PRINT_WARN1( "root received CREATE request for %d models", num_models );	  
+	  for( int m=0; m<num_models; m++ )
+	    {
+	      // make a new model from the correct offset in the value buffer.
+	      // this call fills in their ID field correctly
+	      stage_model_t* mod = (stage_model_t*)
+		((char*)value + m*sizeof(stage_model_t));
+	      
+	      if( model_library.CreateEntity( mod ) == -1 )
+		PRINT_ERR( "failed to create a new model (invalid ID)" );	    
+	    }
+	  
+	  // reply with the same array of models, with the IDs set
+	  SIOBufferProperty( reply, this->stage_id, 
+			     STG_PROP_ROOT_CREATE,
+			     value, len,
+			     STG_ISREPLY );
+	}
+      else
+	PRINT_ERR2( "root received CREATE request but didn't"
+		    "get data and/or reply buffers (data: %p) (reply: %p)",		    value, reply );
       break;
       
+    case STG_PROP_ROOT_DESTROY:
+      if( value )
+	{
+	  int num_models = len / sizeof(stage_model_t);
+	  
+	  PRINT_WARN1( "root received DESTROY request for %d models", 
+		       num_models );
+	  
+	  for( int m=0; m<num_models; m++ )
+	    {	    
+	      stage_model_t* mod = (stage_model_t*)
+		((char*)value + m*sizeof(stage_model_t));
+	      
+	      // todo - remove from my list of children
+	      
+	      if( model_library.DestroyEntity( mod ) == -1 )
+		PRINT_ERR1( "failed to destroy model %d", mod->id );
+	    }
+	}
+      
+      if( reply ) //acknowledge by returning the same models
+	SIOBufferProperty( reply, this->stage_id, 
+			   STG_PROP_ROOT_DESTROY,
+			   value, len, STG_ISREPLY );
+      break;
+	
     case STG_PROP_ROOT_GUI:
       if( value )
 	{
@@ -163,14 +190,10 @@ int CRootEntity::Property( int con, stage_prop_id_t property,
 	  PRINT_WARN1( "Received config for unknown GUI library %s", 
 		       cfg->token );
 
-	  if( reply )
-	    {
-	      //acknowledge (no data)
-	      SIOBufferProperty( reply, this->stage_id, 
-				 STG_PROP_ROOT_GUI,
-				 NULL, 0, STG_ISREPLY );
-	      
-	    }
+	  if( reply ) //acknowledge (no data)
+	    SIOBufferProperty( reply, this->stage_id, 
+			       STG_PROP_ROOT_GUI,
+			       NULL, 0, STG_ISREPLY );
 	}
     default: 
       break;

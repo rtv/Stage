@@ -23,7 +23,7 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan, Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.32 2003-02-26 01:57:15 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.33 2003-02-27 02:10:14 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -236,7 +236,9 @@ int HandleLostConnection( int connection )
   return 0; // success
 }
 
-int HandleProperty( int connection,  void* data, size_t len,
+int HandleProperty( int connection, 
+		    double timestamp,  
+		    void* data, size_t len,
 		    stage_buffer_t* replies )
 {
   //PRINT_DEBUG3( "Received %d byte property request "
@@ -272,7 +274,8 @@ int HandleProperty( int connection,  void* data, size_t len,
   return 0; //success
 }
 
-int HandleCommand(  int connection, void* data, size_t len, 
+int HandleCommand(  int connection, double timestamp, 
+		    void* data, size_t len, 
 		    stage_buffer_t* replies )
 {
   assert( len == sizeof(stage_cmd_t) );
@@ -306,20 +309,16 @@ int GuiInit( int argc, char** argv )
        gui++ )
     {
       PRINT_DEBUG2( "counting gui library item %d : %s", 
-		    gui_count, gui->token );
-      
+		    gui_count, gui->token );      
       
       PRINT_DEBUG2( "init of gui %d (%s)", gui_count, gui->token );
       if( (gui->init_func)(argc, argv) == -1 )
 	{
 	  PRINT_WARN2( "Gui initialization failed on GUI %d (%s)\n", 
 		       gui_count, gui->token );
-	}
-      
+	}  
       gui_count++;
-
     }
-
   return 0; // success
 }
 

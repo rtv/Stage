@@ -1,6 +1,6 @@
 
 /*
-  $Id: stest.c,v 1.1.2.23 2003-02-26 01:57:15 rtv Exp $
+  $Id: stest.c,v 1.1.2.24 2003-02-27 02:10:17 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -375,17 +375,6 @@ void SetVelocity( int con, int id, double vx, double vy, double va )
 			 &pose, sizeof(pose), STG_NOREPLY );
 
       
-      stage_position_cmd_t cmd;
-      cmd.xdot = 0.3;
-      cmd.ydot = 0.1;
-      cmd.adot = 0.3;
-      cmd.x = 0.0;
-      cmd.y = 0.0;
-      cmd.a = 0.0;
-      
-      SIOBufferProperty( props, bases[1].id, STG_PROP_ENTITY_COMMAND, 
-			 &cmd, sizeof(cmd), STG_NOREPLY );
-      
 
       // subscribe to each box's pose and size
       int subs[2];
@@ -478,10 +467,12 @@ void SetVelocity( int con, int id, double vx, double vy, double va )
 	 
 	  //SetVelocity( connection, box.id, 3.0 * sin(x), 2.0 * cos(x+=0.1), 2.0 );
 	  
-	  if(  0 )//(c > 400 ) && ((c % 20 ) == 0) ) // 5Hz
+	  
+	  if( (c > 1000 ) && ((c % 100 ) == 0 ) ) // 1Hz
 	    {
 	      stage_buffer_t* buf = SIOCreateBuffer();
-
+	      stage_buffer_t* res = SIOCreateBuffer();
+	      
 	      stage_idar_tx_t tx;
 	      strncpy( tx.mesg, "Foo", IDARBUFLEN ); 
 	      tx.len = strlen( "Foo" );
@@ -490,15 +481,42 @@ void SetVelocity( int con, int id, double vx, double vy, double va )
 	      SIOBufferProperty( buf, idars[0].id, STG_PROP_IDAR_TXRX, 
 				 &tx, sizeof(tx), STG_WANTREPLY );
 	      
-	      stage_buffer_t* res = SIOCreateBuffer();
-		
+	      
 	      result = SIOPropertyUpdate( connection, timestamp, buf, res );
-
+	      
 	      SIODebugBuffer( res );
-
-	      SIOFreeBuffer( buf );
+	      
 	      SIOFreeBuffer( res );
+	      SIOFreeBuffer( buf );
 	    }
+	  
+	  
+	  if( (c % 1000 ) == 0  )
+	    {
+	      static double foo = 0;
+	      
+	      stage_buffer_t* props = SIOCreateBuffer();
+	      
+	      stage_position_cmd_t cmd;
+	      cmd.xdot = 0.3;
+	      cmd.ydot = 0.1;
+	      cmd.adot = foo += 1;
+	      cmd.x = 0.0;
+	      cmd.y = 0.0;
+	      cmd.a = 0.0;
+	      
+	      if( foo > 6.0 ) foo = 0.0;
+	      
+	      SIOBufferProperty( props, bases[0].id, STG_PROP_ENTITY_COMMAND, 
+				 &cmd, sizeof(cmd), STG_NOREPLY );
+	      
+	      result = SIOPropertyUpdate( connection, timestamp, props, NULL );
+	      
+	      SIOFreeBuffer( props);
+	    }
+	  
+	 
+	  
 	  /*
 	  if( c == 75 )
 	    {
