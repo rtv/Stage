@@ -21,7 +21,7 @@
  * Desc: Device to perform the regular MCL (Monte-Carlo Localization).
  * Author: Boyoon Jung
  * Date: 22 Nov 2002
- * $Id: regularmcldevice.hh,v 1.3 2002-12-05 04:50:47 rtv Exp $
+ * $Id: regularmcldevice.hh,v 1.4 2002-12-05 04:55:32 rtv Exp $
  */
 
 #ifndef REGULARMCLDEVICE_HH
@@ -40,10 +40,12 @@
 using std::vector;
 using std::sort;
 
-// THIS HACK FIXES THIS FILE UNDER OS X
+// THIS HACK FIXES THIS FILE UNDER OS X - rtv
+// can anyone figure out why this problem occurs?
 #ifdef __APPLE__
 // Darwin appears to undefine this math.h macro for some reason...?
 #ifndef isinf
+// copied this code from Darwin's /usr/include/architecture/ppc/math.h
 #define isinf( x )( (sizeof(x) == sizeof(double)) ?  __isinfd (x) : \
                (sizeof(x) == sizeof(float)) ? __isinff(x) : __isinf(x))
 #endif
