@@ -1,7 +1,7 @@
 #*************************************************************************
 # src/Makefile - makes the sources
 # RTV
-# $Id: Makefile,v 1.9.2.11 2001-02-01 17:47:02 ahoward Exp $
+# $Id: Makefile,v 1.9.2.12 2001-02-06 03:06:33 ahoward Exp $
 # ************************************************************************/
 
 .SUFFIXES: .cc .o
@@ -15,7 +15,7 @@ OBS = world.o image.o \
 		object.o objectfactory.o \
 		playerrobot.o playerdevice.o \
 		pioneermobiledevice.o laserdevice.o beacondevice.o \
-		visiondevice.o ptzdevice.o sonardevice.o \
+		visiondevice.o ptzdevice.o sonardevice.o broadcastdevice.o \
 		boxobstacle.o \
 		laserbeacon.o visionbeacon.o
 WIN_OBS = main.o win.o server.o
@@ -43,9 +43,12 @@ posreader: posreader.cc
 ##############################################################################
 # Use these targets to build with RTK
 
-PLAYER_INC = $(PLAYERSRC)/include
-RTK_INC = /usr/local/rtk/include
-RTK_LIB = /usr/local/rtk/lib
+PLAYER_SRC = /usr/local/player
+RTK_SRC = /usr/local/rtk
+
+PLAYER_INC = $(PLAYER_SRC)/include
+RTK_INC = $(RTK_SRC)/include
+RTK_LIB = $(RTK_SRC)/lib
 
 RTK_OBJS = $(OBS) rtkmain.o rtksimagent.o
 RTK_CCFLAGS = 	-DINCLUDE_RTK \

@@ -8,13 +8,14 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.8 $
+//  $Revision: 1.1.2.9 $
 //
 // Usage:
 //  (empty)
 //
 // Theory of operation:
-//  (empty)
+//  The world object stores all simulation-wide data.  Sensors, for example,
+//  interogate the world to detect objects, robots, etc.
 //
 // Known bugs:
 //  (empty)
@@ -84,6 +85,9 @@ class CWorld : public CObject
     // Returns time in sec since simulation started
     //
     public: double GetRealTime();
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Grid-based world functions
     
     // Initialise the world grids
     //
@@ -101,6 +105,35 @@ class CWorld : public CObject
     //
     public: void SetRectangle(double px, double py, double pth,
                               double dx, double dy, EWorldLayer layer, BYTE value);
+
+    //
+    ///////////////////////////////////////////////////////////////////////////
+
+    
+    ///////////////////////////////////////////////////////////////////////////
+    // Broadcast device functions
+
+    // Initialise the broadcast queue
+    //
+    public: void InitBroadcast();
+
+    // Add a packet to the broadcast queue
+    //
+    public: void PutBroadcast(BYTE *buffer, size_t bufflen);
+
+    // Get a packet from the broadcast queue
+    //
+    public: size_t GetBroadcast(int *index, BYTE *buffer, size_t bufflen);
+
+    // The broadcast queue
+    //
+    private: int m_broadcast_first, m_broadcast_last, m_broadcast_size;
+    private: size_t m_broadcast_len[128];
+    private: BYTE m_broadcast_data[128][4096];
+    
+    //
+    ///////////////////////////////////////////////////////////////////////////
+    
 
     // Timing
     // Real time at which simulation started.

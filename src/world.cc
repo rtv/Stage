@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.12 $
+//  $Revision: 1.4.2.13 $
 //
 // Usage:
 //  (empty)
@@ -110,6 +110,10 @@ bool CWorld::Startup(RtkCfgFile *cfg)
     //
     if (!InitGrids(CSTR(env_file)))
         return false;
+
+    // Initialise the broadcast queue
+    //
+    InitBroadcast();
 
     // Read robot positions from file
     //
@@ -383,6 +387,85 @@ void CWorld::SetRectangle(double px, double py, double pth,
             break;
     }
 }
+
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise the broadcast queue
+//
+void CWorld::InitBroadcast()
+{
+    m_broadcast_first = 0;
+    m_broadcast_last = -1;
+    m_broadcast_size = ARRAYSIZE(m_broadcast_data);
+
+    memset(m_broadcast_len, 0, sizeof(m_broadcast_len));
+    memset(m_broadcast_data, 0, sizeof(m_broadcast_data));
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Add a packet to the broadcast queue
+//
+void CWorld::PutBroadcast(BYTE *buffer, size_t bufflen)
+{
+    int index = m_broadcast_last++;
+
+    // Make this a circular queue -- things at the front get overwritten
+    //
+    if (m_broadcast_last - m_broadcast_first + 1 > m_broadcast_size)
+        m_broadcast_first++;
+    ASSERT(m_broadcast_last - m_broadcast_first + 1 <= m_broadcast_size);
+    
+    BYTE *packet = m_broadcast_data[index % m_broadcast_size];
+    size_t *packetlen = &m_broadcast_len[index % m_broadcast_size];
+    
+    // Check for buffer overflow
+    //
+    *packetlen = bufflen;
+    if (*packetlen > ARRAYSIZE(m_broadcast_data[0]))
+    {
+        *packetlen = ARRAYSIZE(m_broadcast_data[0]);
+        TRACE0("warning : data buffer too large; data has been truncated");
+    }
+   
+    // Copy the data
+    //
+    memcpy(packet, buffer, *packetlen);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Get a packet from the broadcast queue
+//
+size_t CWorld::GetBroadcast(int *index, BYTE *buffer, size_t bufflen)
+{
+    if (*index < m_broadcast_first)
+        *index = m_broadcast_first;
+    if (*index > m_broadcast_last)
+        *index = m_broadcast_last;
+
+    // See if there is anything in the queue
+    //
+    if (m_broadcast_last - m_broadcast_first + 1 == 0)
+        return 0;
+
+    BYTE *packet = m_broadcast_data[(*index) % m_broadcast_size];
+    size_t packetlen = m_broadcast_len[(*index) % m_broadcast_size];
+
+    // Check for buffer overflow
+    //
+    if (packetlen > bufflen)
+    {
+        packetlen = bufflen;
+        TRACE0("warning : data buffer too small; data has been truncated");
+    }
+
+    // Copy the data
+    //
+    memcpy(buffer, packet, packetlen);
+    return packetlen;
+}
+
 
 #ifdef INCLUDE_RTK
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/objectfactory.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.9 $
+//  $Revision: 1.1.2.10 $
 //
 // Usage:
 //  (empty)
@@ -44,6 +44,7 @@
 #include "ptzdevice.hh"
 #include "visiondevice.hh"
 #include "beacondevice.hh"
+#include "broadcastdevice.hh"
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -142,6 +143,14 @@ CObject* CreateObject(const char *type, CWorld *world, CObject *parent)
             return NULL;
         }      
         return new CBeaconDevice(world, parent, robot, laser);
+    }
+
+    // Create broadcast device
+    //
+    if (strcmp(type, "broadcast") == 0)
+    {
+        FIND_PLAYER_ROBOT();
+        return new CBroadcastDevice(world, parent, robot);
     }
 
     return NULL;
