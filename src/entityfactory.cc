@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.16 $
+//  $Author: rtv $
+//  $Revision: 1.17 $
 //
 // Usage:
 //  (empty)
@@ -45,13 +45,10 @@
 #include "gripperdevice.hh"
 #include "gpsdevice.hh"
 
-#ifdef HRL_DEVICES
+#ifdef HRL_HEADERS
 #include "irdevice.hh"
 #include "descartesdevice.hh"
 #endif
-
-//#include "truthdevice.hh"
-//#include "occupancydevice.hh"
 
 #include "world.hh"
 
@@ -114,8 +111,9 @@ CEntity* CWorld::CreateObject(const char *type, CEntity *parent)
   if (strcmp(type, "puck") == 0)
     return new CPuck(this, parent);
 
-  // TODO - devices in various stages of brokeness
-#ifdef HRL_DEVICES  
+#ifdef HRL_HEADERS 
+  // these the proprietary HRL devices - the device code cannot be distributed
+  // so they are implemented in an external library
   if (strcmp(type, "idar_device") == 0)
     return new CIDARDevice(this, parent);
 

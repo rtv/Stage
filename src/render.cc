@@ -112,7 +112,7 @@ void CXGui::RenderObject( xstruth_t &orig_truth )
       case GpsType: if( draw_all_devices )
 	RenderGps( &truth, extended ); break;
 
-#ifdef HRL_DEVICES
+#ifdef HRL_HEADERS
       case DescartesType: RenderRoundRobot( &truth, extended ); break; 
       case IDARType: if( draw_all_devices )
 	RenderIDAR( &truth, extended ); break;	
@@ -340,7 +340,7 @@ void CXGui::RenderGps( xstruth_t* exp, bool extended )
   DrawCircle( exp->x, exp->y, exp->w/2.0 );
 }
 
-#ifdef HRL_DEVICES
+#ifdef HRL_HEADERS
 void CXGui::RenderIDAR( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );
@@ -425,7 +425,7 @@ void CGraphicSonarProxy::ProcessData( void )
     }
 }
 
-#ifdef HRL_DEVICES
+#ifdef HRL_HEADERS
 void CGraphicIDARProxy::ProcessData( void )
 {
   // figure out where to draw this data

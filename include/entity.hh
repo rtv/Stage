@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
-//  $Author: inspectorg $
-//  $Revision: 1.29 $
+//  $Author: rtv $
+//  $Revision: 1.30 $
 //
 // Usage:
 //  (empty)
@@ -98,7 +98,11 @@ class CEntity
   // Returns a pointer to the first entity we are in collision with.
   // Returns NULL if not collisions.
   // This function is useful for writing position devices.
-  protected: CEntity *TestCollision(double px, double py, double pth);
+protected: virtual CEntity *TestCollision(double px, double py, double pth );
+  
+  // same; also records the position of the hit
+protected: virtual CEntity *TestCollision(double px, double py, double pth, 
+				    double &hitx, double &hity );
 
   // Set the color of the entity
   public: void SetColor(const char *desc);

@@ -3,7 +3,7 @@
 # stage/Makefile.common - build and installation configurations
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile.common,v 1.32 2002-01-28 22:46:15 rtv Exp $
+# $Id: Makefile.common,v 1.33 2002-01-29 02:33:37 rtv Exp $
 #
 # Notes: All user-configurable paths and build options should be specified 
 #        here. This file is included by Makefile and src/Makefile. 
@@ -76,9 +76,9 @@ ZLIB_LIBS = -lz
 #############################################################################
 # CONFIGURATION FOR HRL PROPRIETARY CODE - you probably don't want this
 
-#HRL = $(HOME)/LINPHERO/pr_c++/com/hrl/pr
-#HRL_HEADERS = -I$(HRL)/pherobot -I$(HRL)/abstractrobot
-#HRL_SRCS = $(HRL)/descartes.cc $(HRL)/irdevice.cc
+#HRL = $(HOME)/work/LINPHERO/pr_c++/com/hrl/pr
+#HRL_HEADERS = -I../HRL -I$(HRL)/pherobot -I$(HRL)/abstractrobot 
+#HRL_LIB =  -L../HRL -lhrlstage
 
 ##############################################################################
 # Build type 

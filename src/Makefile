@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.73 2002-01-28 22:46:15 rtv Exp $
+# $Id: Makefile,v 1.74 2002-01-29 02:33:38 rtv Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -19,11 +19,11 @@ PLAYER_LIB = $(PLAYER_DIR)/lib
 
 # Flags common to stage and rtkstage
 INCLUDES = -I../include -I$(PLAYER_INC)
-CCFLAGS += -Wall -DREENTRANT $(ZLIB_FLAGS) $(INCLUDES) $(HRL_HEADERS) 
+CCFLAGS += -Wall -DREENTRANT $(ZLIB_FLAGS) $(INCLUDES) 
 CCFLAGS += -DVERSION=\"$(VERSION)\" -DCOLOR_DATABASE=\"$(COLOR_DATABASE)\"
 
 # production/debug link
-LINKFLAGS = -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
+LINKFLAGS = -lm -lstdc++ -lpthread $(ZLIB_LIBS)
 
 # profile link
 #LINKFLAGS = -pg -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
@@ -41,7 +41,7 @@ SRCS = world.cc worldfile.cc truthserver.cc envserver.cc image.cc \
 	ptzdevice.cc boxobstacle.cc \
 	laserbeacon.cc laserbeacondevice.cc visiondevice.cc visionbeacon.cc \
 	puck.cc gpsdevice.cc gripperdevice.cc main.cc \
-	matrix.cc raytrace.cc $(HRL_SRCS)
+	matrix.cc raytrace.cc
 
 # stage and rtkstage objects are compiled from the same sources, but rtkstage
 # defines a couple of macros to enable some optional code
@@ -50,6 +50,7 @@ SRCS = world.cc worldfile.cc truthserver.cc envserver.cc image.cc \
 # rtkstage objects have a _rtkstage.o suffix
 STG_OBS = ${SRCS:.cc=_stg.o}
 RTK_OBS = ${SRCS:.cc=_rtk.o}
+HRL_OBS = ${SRCS:.cc=_hrl.o}
 
 # use the suffix rules below to munge files with these suffixes
 SUFFIXES = _stg.o _rtk.o .cc
@@ -78,6 +79,18 @@ rtkstage: ${RTK_OBS} rtk
 
 rtk:
 	cd $(RTK_DIR) && ${MAKE}
+
+# HRLSTAGE ################################################################
+# hrlstage links in some HRL proprietary devices - I'm
+# working on releasing these under the GPL - RTV
+# hrlstage WILL NOT BUILD without the external headers and library.
+
+hrlstage: ${HRL_OBS}
+	$(LINKER) $(HRL_OBS) $(HRL_LIB) $(LINKFLAGS)  -o $@
+
+%_hrl.o : CCFLAGS += $(HRL_HEADERS) -DHRL_HEADERS 
+%_hrl.o : %.cc
+	${CC} ${CCFLAGS} -c $< -o $@
 
 
 # STAGE TOOLS ###############################################################

@@ -1,6 +1,6 @@
 // ==================================================================
 // Filename:	raytrace.cc
-// $Id: raytrace.cc,v 1.6 2002-01-28 23:57:26 inspectorg Exp $
+// $Id: raytrace.cc,v 1.7 2002-01-29 02:33:38 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -318,17 +318,6 @@ CEntity* CRectangleIterator::GetNextEntity( void )
   
   return ent;
 }
-
-void CRectangleIterator::GetPos( double& x, double& y )
-{
-  for( int i=0; i<4; i++ )
-    if( lits[i] != 0 ) // find the current line iterator
-    {
-      lits[i]->GetPos( x, y );
-      break;
-    }
-}
-
 
 
 CCircleIterator::CCircleIterator( double x, double y, double r, 

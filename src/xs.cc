@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.43 2001-12-20 03:11:47 vaughan Exp $
+ * $Id: xs.cc,v 1.44 2002-01-29 02:33:38 rtv Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -2149,7 +2149,7 @@ void CXGui::HandlePlayers( void )
 	    case PLAYER_LASERBEACON_CODE: 
   	      ((CGraphicLaserBeaconProxy*)(playerProxies[p]))->Render();
 	      break;
-#ifdef HRL_DEVICES
+#ifdef HRL_HEADERS
 	    case PLAYER_IDAR_CODE: 
   	      ((CGraphicIDARProxy*)(playerProxies[p]))->Render();
 	      break;
@@ -2243,7 +2243,7 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 		    
 		  switch( sibling.id.type )
 		    {
-#ifdef HRL_DEVICES
+#ifdef HRL_HEADERS
 		    case PLAYER_IDAR_CODE: 
 		      if( enableIDAR )
 			{

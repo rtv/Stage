@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/positiondevice.hh,v $
-//  $Author: inspectorg $
-//  $Revision: 1.7 $
+//  $Author: rtv $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -46,7 +46,7 @@ class CPositionDevice : public CEntity
   private: void ComposeData( void );
 
   // Move the robot
-  private: int Move();
+  protected: int Move(); 
 
   // Timings
   private: double m_last_time;
@@ -56,7 +56,7 @@ class CPositionDevice : public CEntity
   private: player_position_data_t m_data;
     
   // Commanded robot speed
-  private: double m_com_vr, m_com_vth;
+  protected: double m_com_vr, m_com_vth;
 
   // Odometric pose
   protected: double m_odo_px, m_odo_py, m_odo_pth;

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/omnipositiondevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.6 $
+//  $Author: rtv $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -135,7 +135,7 @@ void COmniPositionDevice::Move()
 
   // Check for collisions
   // and accept the new pose if ok
-  if (TestCollision(qx, qy, qa) != NULL)
+  if (TestCollision(qx, qy, qa ) != NULL)
   {
     SetGlobalVel(0, 0, 0);
     this->stall = 1;

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.18 $
+//  $Author: rtv $
+//  $Revision: 1.19 $
 //
 // Usage:
 //  (empty)
@@ -189,7 +189,7 @@ int CPositionDevice::Move()
   // Check for collisions
   // and accept the new pose if ok
   //
-  if (TestCollision(qx, qy, qth) != NULL)
+  if (TestCollision(qx, qy, qth ) != NULL)
   {
     this->stall = 1;
   }

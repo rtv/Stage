@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.33 2002-01-28 22:32:25 inspectorg Exp $
+//  $Id: entity.cc,v 1.34 2002-01-29 02:33:38 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -478,9 +478,11 @@ void CEntity::MapEx(double px, double py, double pth, bool render)
 
 
 
+
 ///////////////////////////////////////////////////////////////////////////
 // Check to see if the given pose will yield a collision with obstacles.
-// Returns a pointer to the first entity we are in collision with.
+// Returns a pointer to the first entity we are in collision with, and stores
+// the location of the hit in hitx,hity
 // Returns NULL if not collisions.
 // This function is useful for writing position devices.
 CEntity *CEntity::TestCollision(double px, double py, double pth)
@@ -501,7 +503,7 @@ CEntity *CEntity::TestCollision(double px, double py, double pth)
       while( (ent = rit.GetNextEntity()) )
       {
         if( ent != this && ent->obstacle_return )
-          return ent;
+	    return ent;
       }
       return NULL;
     }
@@ -513,7 +515,7 @@ CEntity *CEntity::TestCollision(double px, double py, double pth)
       while( (ent = rit.GetNextEntity()) )
       {
         if( ent != this && ent->obstacle_return )
-          return ent;
+	    return ent;
       }
       return NULL;
     }
@@ -521,6 +523,54 @@ CEntity *CEntity::TestCollision(double px, double py, double pth)
   return NULL;
 
 }
+
+// same as the above method, but stores the hit location in hitx, hity
+CEntity *CEntity::TestCollision(double px, double py, double pth, 
+				double &hitx, double &hity )
+{
+  double qx = px + this->origin_x * cos(pth) - this->origin_y * sin(pth);
+  double qy = py + this->origin_y * sin(pth) + this->origin_y * cos(pth);
+  double qth = pth;
+  double sx = this->size_x;
+  double sy = this->size_y;
+
+  switch( this->shape ) 
+  {
+    case ShapeRect:
+    {
+      CRectangleIterator rit( qx, qy, qth, sx, sy, m_world->ppm, m_world->matrix );
+
+      CEntity* ent;
+      while( (ent = rit.GetNextEntity()) )
+      {
+        if( ent != this && ent->obstacle_return )
+	  {
+	    rit.GetPos( hitx, hity );
+	    return ent;
+	  }
+      }
+      return NULL;
+    }
+    case ShapeCircle:
+    {
+      CCircleIterator rit( px, py, sx / 2, m_world->ppm, m_world->matrix );
+
+      CEntity* ent;
+      while( (ent = rit.GetNextEntity()) )
+      {
+        if( ent != this && ent->obstacle_return )
+	  {
+	    rit.GetPos( hitx, hity );
+	    return ent;
+	  }
+      }
+      return NULL;
+    }
+  }
+  return NULL;
+
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////

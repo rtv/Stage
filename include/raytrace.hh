@@ -1,6 +1,6 @@
 // ==================================================================
 // Filename:	raytrace.hh
-// $Id: raytrace.hh,v 1.3 2001-12-20 03:11:46 vaughan Exp $
+// $Id: raytrace.hh,v 1.4 2002-01-29 02:33:38 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -49,6 +49,11 @@ class CLineIterator
     {
       return( (m_max_range - m_remaining_range) / m_ppm );
     };
+
+  inline double GetAngle( void )
+  {
+    return( m_angle );
+  };
 
   inline CEntity** RayTrace( double &px, double &py, double pth, 
 			     double &remaining_range );
@@ -169,7 +174,16 @@ class CRectangleIterator
  
   CEntity* GetNextEntity( void );   
   
-  void GetPos( double& x, double& y );
+  inline void GetPos( double& x, double& y )
+  {
+    for( int i=0; i<4; i++ )
+      if( lits[i] != 0 ) // find the current line iterator
+	{
+	  lits[i]->GetPos( x, y );
+	  break;
+	}
+  };
+
 };
 
 
