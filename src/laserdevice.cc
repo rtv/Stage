@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.37 $
+//  $Author: ahoward $
+//  $Revision: 1.38 $
 //
 // Usage:
 //  (empty)
@@ -318,10 +318,17 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 	
         while( (ent = lit.GetNextEntity()) ) 
         {
+            // Ignore ourself and things which are attached to us
+            // The latter is useful if you want to have stack beacons
+            // on the laser
+            if (ent == this || this->IsChild(ent))
+                continue;
+
+            // Construct a list of beacons we have seen
             if( ent->m_stage_type == LaserBeaconType )
                 m_visible_beacons.push_front( (int)ent );
             
-            if( ent != this && (intensity = ent->laser_return) ) 
+            if((intensity = ent->laser_return)) 
             {
                 range = lit.GetRange();
                 break;
@@ -340,7 +347,10 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 	      v = v | (((uint16_t)2) << 13); // set the shiny bits to 2
 	      break;
 	    case LaserBright3:
-	      v = v | (((uint16_t)3) << 13); // set the shiny bits to 3
+	      v = v | (((uint16_t)3) << 13); // set the shiny bits to 1
+	      break;
+	    case LaserBright4:
+	      v = v | (((uint16_t)4) << 13); // set the shiny bits to 1
 	      break;
 	    }
 

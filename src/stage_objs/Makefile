@@ -12,7 +12,7 @@ include ../../Makefile.common
 #
 OBJS =  world.o world_load.o truthserver.o envserver.o image.o \
 	entity.o entityfactory.o playerdevice.o \
-	positiondevice.o laserdevice.o sonardevice.o miscdevice.o \
+	positiondevice.o omnipositiondevice.o laserdevice.o sonardevice.o miscdevice.o \
 	ptzdevice.o boxobstacle.o \
 	laserbeacon.o laserbeacondevice.o visiondevice.o visionbeacon.o \
 	broadcastdevice.o puck.o gpsdevice.o gripperdevice.o main.o \
@@ -64,3 +64,5 @@ clean_dep:
 	${CC} ${CCFLAGS} -c $< -o $@
 
 # Dependancies (make dep)
+
+

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.13 $
+//  $Author: ahoward $
+//  $Revision: 1.14 $
 //
 // Usage:
 //  (empty)
@@ -32,6 +32,7 @@
 #include "visionbeacon.hh"
 #include "sonardevice.hh"
 #include "positiondevice.hh"
+#include "omnipositiondevice.hh"
 #include "laserdevice.hh"
 
 #include "playerdevice.hh"
@@ -56,6 +57,9 @@ CEntity* CWorld::CreateObject(const char *type, CEntity *parent)
 {
     if (strcmp(type, "position_device") == 0)
         return new CPositionDevice(this, parent );
+
+    if (strcmp(type, "omni_position_device") == 0)
+        return new COmniPositionDevice(this, parent );
 
     if (strcmp(type, "player_device") == 0)
         return new CPlayerDevice(this, parent );

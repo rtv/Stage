@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.24 $
+//  $Author: ahoward $
+//  $Revision: 1.25 $
 //
 // Usage:
 //  (empty)
@@ -129,6 +129,10 @@ class CEntity
     // Get the objects pose in the global cs
     //
     public: void GetGlobalPose(double &px, double &py, double &pth);
+
+    // See if the given entity is one of our children
+    //
+    public: bool IsChild(CEntity *entity);
 
   // flag is set when a dependent device is  attached to this device
     public: bool m_dependent_attached;

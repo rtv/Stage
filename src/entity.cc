@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.27 2001-10-13 02:01:41 vaughan Exp $
+//  $Id: entity.cc,v 1.28 2001-10-25 22:17:42 ahoward Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -554,6 +554,22 @@ void CEntity::GetGlobalPose(double &px, double &py, double &pth)
     py = oy + m_lx * sin(oth) + m_ly * cos(oth);
     pth = oth + m_lth;
 }
+
+
+////////////////////////////////////////////////////////////////////////////
+// See if the given entity is one of our children
+//
+bool CEntity::IsChild(CEntity *entity)
+{
+    while (entity)
+    {
+        entity = entity->m_parent_object;
+        if (entity == this)
+            return true;
+    }
+    return false;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////
 // Copy the device data and info into the shared memory segment
