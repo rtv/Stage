@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -79,6 +79,8 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
 	break;
     }
   
+  itl_destroy( itl );
+
   // if it was him, we can see him
   if( hitmod == him )
     {

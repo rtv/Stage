@@ -59,6 +59,8 @@ model_t* model_test_collision( model_t* mod, double* hitx, double* hity )
 	      return hitmod; // we hit this object! stop raytracing
 	    }
 	}
+
+      itl_destroy( itl );
     }
   return NULL;  // done 
 }

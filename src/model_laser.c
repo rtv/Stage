@@ -91,6 +91,7 @@ void model_laser_update( model_t* mod )
       scan[t].range = (uint32_t)( range * 1000.0 );
       scan[t].reflectance = 1;
 
+      itl_destroy( itl );
 
       //printf( "%d ", sample->range );
     }

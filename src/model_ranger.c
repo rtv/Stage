@@ -83,6 +83,8 @@ void model_ranger_update( model_t* mod )
       
       ranges[t].range = range;
       //ranges[t].error = TODO;
+
+      itl_destroy( itl );
     }
   
   model_set_prop_generic( mod, STG_PROP_RANGERDATA,

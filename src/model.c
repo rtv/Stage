@@ -111,6 +111,9 @@ void model_destroy( model_t* mod )
   gui_model_destroy( mod );
   
   if( mod->token ) free( mod->token );
+
+  if(mod->props) g_hash_table_destroy( mod->props );
+
   free( mod );
 }
 
