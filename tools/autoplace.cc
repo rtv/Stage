@@ -1,5 +1,5 @@
 /*
- * $Id: autoplace.cc,v 1.2 2002-10-16 21:19:32 gerkey Exp $
+ * $Id: autoplace.cc,v 1.2.8.1 2004-11-13 00:30:33 gerkey Exp $
  *
  * util to autoplace robots (or other entities with position and truth devices)
  * randomly, in free space, inside a given rectangle
@@ -102,7 +102,7 @@ main(int argc, char** argv)
       randy = ((1000*myy0)+(rand() % (1000*(myy1-myy0))))/1000.0;
       randth = (rand() % 360) * M_PI / 180.0;
 
-      if(tp.SetPose(randx,randy,randth))
+      if(tp.SetPose(randx,randy,0.0,0.0,0.0,randth))
         exit(-1);
 
       robot.Read();

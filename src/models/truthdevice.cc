@@ -21,7 +21,7 @@
  * Desc: A device for getting the true pose of things.
  * Author: Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: truthdevice.cc,v 1.2.4.1.2.1 2004-09-17 18:47:22 gerkey Exp $
+ * CVS info: $Id: truthdevice.cc,v 1.2.4.1.2.2 2004-11-13 00:30:33 gerkey Exp $
  */
 
 #include "world.hh"
@@ -79,9 +79,12 @@ void CTruthDevice::UpdateConfig()
       case PLAYER_TRUTH_GET_POSE:
 	
         GetGlobalPose(px, py, pa);
-        config.px = (int)htonl((int)((px-((m_world->GetWidth()/2.0)/m_world->ppm))*1000.0));
-        config.py = (int)htonl((int)((py-((m_world->GetHeight()/2.0)/m_world->ppm))*1000.0));
-        config.pa = (int)htonl((int)(NORMALIZE(pa)*180/M_PI));
+        config.pos[0] = (int)htonl((int)((px-((m_world->GetWidth()/2.0)/m_world->ppm))*1000.0));
+        config.pos[1] = (int)htonl((int)((py-((m_world->GetHeight()/2.0)/m_world->ppm))*1000.0));
+        config.pos[2] = 0;
+        config.rot[0] = 0;
+        config.rot[1] = 0;
+        config.rot[2] = (int)htonl((int)(NORMALIZE(pa)*180/M_PI));
 	
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &config, sizeof(config));
         break;
@@ -101,11 +104,11 @@ void CTruthDevice::UpdateConfig()
           break;
         }
 
-        px = ((int)ntohl(config.px))/1000.0 + 
+        px = ((int)ntohl(config.pos[0]))/1000.0 + 
                 ((m_world->GetWidth()/2.0)/m_world->ppm);
-        py = ((int)ntohl(config.py))/1000.0 +
+        py = ((int)ntohl(config.pos[1]))/1000.0 +
                 ((m_world->GetHeight()/2.0)/m_world->ppm);
-        pa = ((int)ntohl(config.pa))*M_PI/180;
+        pa = ((int)ntohl(config.rot[2]))*M_PI/180;
 
         // Move our parent.  Should possibly move the top level
         // ancestor.
@@ -140,9 +143,12 @@ void CTruthDevice::UpdateData()
   player_truth_data_t data;
 
   GetGlobalPose(px, py, pa);
-  data.px = (int)htonl((int)((px-((m_world->GetWidth()/2.0)/m_world->ppm))*1000.0));
-  data.py = (int)htonl((int)((py-((m_world->GetHeight()/2.0)/m_world->ppm))*1000.0));
-  data.pa = (int)htonl((int)(NORMALIZE(pa)*180/M_PI));
+  data.pos[0] = (int)htonl((int)((px-((m_world->GetWidth()/2.0)/m_world->ppm))*1000.0));
+  data.pos[1] = (int)htonl((int)((py-((m_world->GetHeight()/2.0)/m_world->ppm))*1000.0));
+  data.pos[2] = 0;
+  data.rot[0] = 0;
+  data.rot[1] = 0;
+  data.rot[2] = (int)htonl((int)(NORMALIZE(pa)*180/M_PI));
   
   PutData(&data, sizeof(data));
 }

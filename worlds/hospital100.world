@@ -2,7 +2,7 @@
 # A very large indoor environment with 100 little robots
 # !!note that the port numbers start at 40000 - not the normal 6665!!
 #
-# $Id: hospital100.world,v 1.4.8.1 2003-12-07 04:34:45 gerkey Exp $
+# $Id: hospital100.world,v 1.4.8.2 2004-11-13 00:30:33 gerkey Exp $
 #
 
 include "pioneer.inc"
@@ -32,7 +32,7 @@ define simple_robot position
   color "red" 
   shape "circle" 
   sonar()
-  #gps()
+  truth()
 )
 
 simple_robot( pose [ 61.164 15.709 0.000 ] port 40000 )
