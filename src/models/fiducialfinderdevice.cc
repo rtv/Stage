@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/fiducialfinderdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage: detects objects that were laser bright and had non-zero
 // ficucial_return
@@ -211,70 +211,69 @@ void CFiducialFinder::Update( double sim_time )
   // Saves us from searching the bitmap again
   //
   for( LaserBeaconList::iterator it = this->laser->visible_beacons.begin();
-       it != this->laser->visible_beacons.end(); it++ )
-  {
-    CEntity *nbeacon = (CEntity*)*it;        
-    int id = nbeacon->fiducial_return;
-    double px, py, pth;   
-    nbeacon->GetGlobalPose( px, py, pth );
-
-    //printf( "beacon at: %.2f %.2f %.2f\n", px, py, pth );
-    //fflush( stdout );
-
-    // Compute range and bearing of beacon relative to sensor
-    //
-    double dx = px - ox;
-    double dy = py - oy;
-    double range = sqrt(dx * dx + dy * dy);
-    double bearing = NORMALIZE(atan2(dy, dx) - oth);
-    double orientation = NORMALIZE(pth - oth);
-
-    // filter out very acute angles of incidence as unreadable
-    int bi = (int) ((bearing - scan_min) / scan_res);
-    if (bi < 0 || bi >= laser.range_count)
-      continue;
-	
-    //SHOULD CHANGE THESE RANGES BASED ON CURRENT LASER RESOLUTION!
-
-    // Now see if it is within detection range
-    //
-    if (range > this->max_range_anon * DTOR(0.50) / scan_res)
-      continue;
-    if (range > this->max_range_id * DTOR(0.50) / scan_res)
-      id = -1;
-
-    // record the size of the most recent target
-    // as we can;t return individual sizes.
-    this->fiducial_width = nbeacon->size_x;
-    this->fiducial_height = nbeacon->size_y;
-
-    // store the fiducial location in the structure (if there's room)
-    if( f_count < PLAYER_FIDUCIAL_MAX_SAMPLES )
-      {
-	f_ids[f_count] = id;
-	
-	f_poses[f_count][0] = range; 
-	f_poses[f_count][1] = bearing; 
-	f_poses[f_count][2] = orientation; 
-	
-	f_pose_errors[f_count][0] = 0; // RANGE
-	f_pose_errors[f_count][1] = 0; // BEARING
-	f_pose_errors[f_count][2] = 0; // ORIENTATION
-	
-	f_count++;
-      }  
-    
-    // pack into the network-safe player structure
-    player_fiducial_data_t data;
-    FiducialDataPack( &data, f_count, f_ids, f_poses, f_pose_errors ); 
-    
-    // Write beacon buffer to shared mem
-    // Note that we apply the laser data's timestamp to this data.
-    //
-    PutData( &data, sizeof(data) );
-    this->time_sec = time_sec;
-    this->time_usec = time_usec;
-  }
+       it != this->laser->visible_beacons.end() &&  
+	 f_count <= PLAYER_FIDUCIAL_MAX_SAMPLES;
+       it++ )
+    {
+      CEntity *nbeacon = (CEntity*)*it;        
+      int id = nbeacon->fiducial_return;
+      double px, py, pth;   
+      nbeacon->GetGlobalPose( px, py, pth );
+      
+      //printf( "beacon at: %.2f %.2f %.2f\n", px, py, pth );
+      //fflush( stdout );
+      
+      // Compute range and bearing of beacon relative to sensor
+      //
+      double dx = px - ox;
+      double dy = py - oy;
+      double range = sqrt(dx * dx + dy * dy);
+      double bearing = NORMALIZE(atan2(dy, dx) - oth);
+      double orientation = NORMALIZE(pth - oth);
+      
+      // filter out very acute angles of incidence as unreadable
+      int bi = (int) ((bearing - scan_min) / scan_res);
+      if (bi < 0 || bi >= laser.range_count)
+	continue;
+      
+      //SHOULD CHANGE THESE RANGES BASED ON CURRENT LASER RESOLUTION!
+      
+      // Now see if it is within detection range
+      //
+      if (range > this->max_range_anon * DTOR(0.50) / scan_res)
+	continue;
+      if (range > this->max_range_id * DTOR(0.50) / scan_res)
+	id = -1;
+      
+      // store the fiducial location in the structure (if there's room)
+      f_ids[f_count] = id;
+      
+      f_poses[f_count][0] = range; 
+      f_poses[f_count][1] = bearing; 
+      f_poses[f_count][2] = orientation; 
+      
+      f_pose_errors[f_count][0] = 0; // RANGE
+      f_pose_errors[f_count][1] = 0; // BEARING
+      f_pose_errors[f_count][2] = 0; // ORIENTATION
+      
+      f_count++;
+      
+      // record the size of this most recent target
+      // as we can;t return individual sizes.
+      this->fiducial_width = nbeacon->size_x;
+      this->fiducial_height = nbeacon->size_y;
+    }
+  
+  // pack into the network-safe player structure
+  player_fiducial_data_t data;
+  FiducialDataPack( &data, f_count, f_ids, f_poses, f_pose_errors ); 
+  
+  // Write beacon buffer to shared mem
+  // Note that we apply the laser data's timestamp to this data.
+  //
+  PutData( &data, sizeof(data) );
+  this->time_sec = time_sec;
+  this->time_usec = time_usec;
 }
 
 void CFiducialFinder::UpdateConfig( void )
@@ -292,7 +291,8 @@ void CFiducialFinder::UpdateConfig( void )
       switch (buffer[0])
         {
 	case PLAYER_FIDUCIAL_GET_GEOM: 
-	  // Return geometry of this sensor and size of fiducials
+	  // Return geometry of this sensor and size of most recently
+	  // seen fiducial
 	  player_fiducial_geom_t geom;	  
 
 	  FiducialGeomPack( &geom, 
