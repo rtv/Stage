@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.110 2002-07-17 00:21:44 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.111 2002-07-17 20:29:11 rtv Exp $
  */
 
 #undef DEBUG
@@ -987,25 +987,8 @@ bool CWorld::RtkStartup()
 {
   PRINT_DEBUG( "** STARTUP GUI **" );
 
-  // i'm experimentally running rtk in this thread
-  // no i'm not
-
   // don't call this
   rtk_app_start(this->app);
-
-  // but do the startup here
-  //rtk_canvas_t *canvas;
-  //rtk_table_t *table;
-  
-  // Display everything
-  //for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
-  //gtk_widget_show_all(canvas->frame);
-  //for (table = app->table; table != NULL; table = table->next)
-  //gtk_widget_show_all(table->frame);
-
-  // instead of going into gtk_main() here, we'll call gtk_main_iteration();
-  // every time around the loop
-
   return true;
 }
 

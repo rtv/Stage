@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.cc,v 1.35 2002-07-17 00:21:44 rtv Exp $
+ * CVS info: $Id: visiondevice.cc,v 1.36 2002-07-17 20:29:11 rtv Exp $
  */
 
 #include <math.h>
@@ -210,8 +210,7 @@ void CVisionDevice::UpdateScan()
         continue;
 	  
       range = lit.GetRange(); // it's this far away
-      //channel = ent->channel_return; // it's this color
-	  
+
       // get the color of the entity
       memcpy( &col, &(ent->color), sizeof( StageColor ) );
 	  
@@ -315,6 +314,7 @@ size_t CVisionDevice::UpdateACTS( player_vision_data_t* data )
       blobs[numBlobs].right = blobright;
       blobs[numBlobs].bottom = blobbottom;
       blobs[numBlobs].area = (blobtop - blobbottom) * (blobleft-blobright);
+      blobs[numBlobs].range = (int)(rangeToBlobCenter*1000.0); 
 
       numBlobs++;
     }
@@ -389,6 +389,7 @@ size_t CVisionDevice::UpdateACTS( player_vision_data_t* data )
     data->blobs[b].right = htons(blobs[b].right);
     data->blobs[b].top = htons(blobs[b].top);
     data->blobs[b].bottom = htons(blobs[b].bottom);
+    data->blobs[b].range = htons(blobs[b].range);
 
     // increment the count for this channel
     data->header[blobs[b].channel].num++;
@@ -511,6 +512,10 @@ void CVisionDevice::RtkUpdate()
           double mleft = left * scale;
           double mright = right * scale;
 	    
+	  // get the range in meters
+	  double range = (double)ntohs(data.blobs[index+b].range) / 1000.0; 
+
+	  
           rtk_fig_rectangle(this->vision_fig, 
                             -mwidth/2.0 + (mleft+mright)/2.0, 
                             -mheight/2.0 +  (mtop+mbot)/2.0,
@@ -518,6 +523,10 @@ void CVisionDevice::RtkUpdate()
                             mright-mleft, 
                             mbot-mtop, 
                             1 );
+
+	  //rtk_fig_line( this->vision_fig,
+	  //	0,0,0, 
+
 	      }
       }
     }

@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.hh,v 1.16 2002-06-09 18:37:06 inspectorg Exp $
+ * CVS info: $Id: visiondevice.hh,v 1.17 2002-07-17 20:29:09 rtv Exp $
  */
 
 #ifndef VISIONDEVICE_HH
@@ -40,6 +40,7 @@ typedef struct
   int area;
   int x, y;
   int left, top, right, bottom;
+  int range; //mm
 } ColorBlob;
 
 
