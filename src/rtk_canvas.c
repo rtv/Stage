@@ -22,7 +22,7 @@
  * Desc: Rtk canvas functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.5 2004-11-08 06:28:17 rtv Exp $
+ * CVS: $Id: rtk_canvas.c,v 1.6 2004-11-20 04:57:20 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -766,18 +766,22 @@ void rtk_canvas_mouse(rtk_canvas_t *canvas, int event, int button, int x, int y)
       }
       else if (button == 3 && (canvas->movemask & RTK_MOVE_ZOOM))
       {
-        // Store the logical coordinate of the start point
-        canvas->mouse_mode = MOUSE_ZOOM;
-        canvas->mouse_start_x = LX(x);
-        canvas->mouse_start_y = LY(y);
-
-        // Create a figure for showing the zoom
-        assert(canvas->zoom_fig == NULL);
-        canvas->zoom_fig = rtk_fig_create(canvas, NULL, RTK_CANVAS_LAYERS-1);
-        px = LX(canvas->sizex / 2);
-        py = LY(canvas->sizey / 2);
-        rl = 2 * sqrt((LX(x) - px) * (LX(x) - px) + (LY(y) - py) * (LY(y) - py));
-        rtk_fig_ellipse(canvas->zoom_fig, px, py, 0, rl, rl, 0);
+	if( canvas->zoom_fig == NULL )
+	  {
+	    // Store the logical coordinate of the start point
+	    canvas->mouse_mode = MOUSE_ZOOM;
+	    canvas->mouse_start_x = LX(x);
+	    canvas->mouse_start_y = LY(y);
+	    
+	    // Create a figure for showing the zoom
+	    //assert(canvas->zoom_fig == NULL);
+	   	    
+	    canvas->zoom_fig = rtk_fig_create(canvas, NULL, RTK_CANVAS_LAYERS-1);
+	    px = LX(canvas->sizex / 2);
+	    py = LY(canvas->sizey / 2);
+	    rl = 2 * sqrt((LX(x) - px) * (LX(x) - px) + (LY(y) - py) * (LY(y) - py));
+	    rtk_fig_ellipse(canvas->zoom_fig, px, py, 0, rl, rl, 0);
+	  }
       }
 
       /* BROKEN

@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.78 2004-11-20 04:49:35 rtv Exp $
+# $Id: Makefile.am,v 1.79 2004-11-20 04:57:19 rtv Exp $
 
 # install these headers
 include_HEADERS = stage.h 
@@ -12,8 +12,9 @@ AM_CPPFLAGS = -Wall -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GTK_CFLAGS@
 
 lib_LTLIBRARIES = libstage.la 
 
-# the stage library contains everything you need to build a robot
-# simulation, including a graphics library and and worldfile parser
+# The stage library contains everything you need to build a robot
+# simulation, including graphics and a worldfile parser. It also
+# contains hooks for Player, so you can load it as a Player plugin.
 #
 libstage_la_SOURCES = \
 	bitmap.c \
@@ -55,9 +56,6 @@ libstage_la_SOURCES = \
 	stg_position.cc \
 	stg_sonar.cc \
 	stg_blobfinder.cc
-
-#        rtk_menu.c 
-
 
 libstage_la_LDFLAGS = -export-dynamic -version-info 0:0:0
 libstage_la_LIBADD = @GTK_LIBS@ 

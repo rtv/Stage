@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.22 $
+//  $Revision: 1.23 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -341,7 +341,7 @@ int stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom )
       gui_model_features(mod);
 
 #if SHOW_GEOM
-      gui_render_geom( mod );
+      gui_render_geom_local( mod );
 #endif
      // background (used e.g for laser scan fill)
       // re-render int the matrix

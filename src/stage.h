@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.105 2004-11-08 22:46:59 rtv Exp $
+ * CVS: $Id: stage.h,v 1.106 2004-11-20 04:57:20 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -508,7 +508,8 @@ extern "C" {
 
     gboolean show_matrix;  
     gboolean fill_polygons;
-
+    gboolean show_geom;
+    
     //gboolean movie_exporting;
     //int movie_speed;
     //int movie_count;

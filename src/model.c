@@ -17,7 +17,7 @@ Implements a model - the basic object of Stage simulation
 //#include "gui.h"
 //#include "raytrace.h"
 
-/** convert a global pose into the model's local coordinate system */
+/// convert a global pose into the model's local coordinate system
 void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose )
 {
   printf( "g2l global pose %.2f %.2f %.2f\n",
@@ -42,6 +42,8 @@ void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose )
 }
 
 
+/// generate the default name for a model, based on the name of its
+/// parent, and its type. This can be overridden in the world file.
 int stg_model_create_name( stg_model_t* mod )
 {
   assert( mod );
@@ -71,6 +73,7 @@ int stg_model_create_name( stg_model_t* mod )
   return 0; //ok
 }
 
+/// create a new model
 stg_model_t* stg_model_create( stg_world_t* world, 
 			       stg_model_t* parent,
 			       stg_id_t id, 
@@ -205,6 +208,7 @@ stg_model_t* stg_model_create( stg_world_t* world,
   return mod;
 }
 
+/// free the memory allocated for a model
 void stg_model_destroy( stg_model_t* mod )
 {
   assert( mod );
@@ -243,6 +247,7 @@ int stg_model_is_antecedent( stg_model_t* mod, stg_model_t* testmod )
   return FALSE;
 }
 
+/// returns TRUE if model [testmod] is a descendent of model [mod]
 int stg_model_is_descendent( stg_model_t* mod, stg_model_t* testmod )
 {
   if( mod == testmod )
@@ -260,7 +265,7 @@ int stg_model_is_descendent( stg_model_t* mod, stg_model_t* testmod )
   return FALSE;
 }
 
-// returns 1 if mod1 and mod2 are in the same tree
+/// returns 1 if model [mod1] and [mod2] are in the same model tree
 int stg_model_is_related( stg_model_t* mod1, stg_model_t* mod2 )
 {
   if( mod1 == mod2 )
@@ -275,7 +280,7 @@ int stg_model_is_related( stg_model_t* mod1, stg_model_t* mod2 )
   return stg_model_is_descendent( t, mod2 );
 }
 
-
+/// get the model's velocity in the global frame
 void stg_model_global_velocity( stg_model_t* mod, stg_velocity_t* gvel )
 {
   stg_pose_t gpose;
@@ -293,6 +298,7 @@ void stg_model_global_velocity( stg_model_t* mod, stg_velocity_t* gvel )
   //  gvel->x, gvel->y, gvel->a );
 }
 
+/// set the model's velocity in the global frame
 void stg_model_set_global_velocity( stg_model_t* mod, stg_velocity_t* gvel )
 {
   // TODO - do this properly
@@ -307,21 +313,27 @@ void stg_model_set_global_velocity( stg_model_t* mod, stg_velocity_t* gvel )
   stg_model_set_velocity( mod, &lvel );
 }
 
+/// get the model's position in the global frame
 void  stg_model_global_pose( stg_model_t* mod, stg_pose_t* gpose )
 { 
   stg_pose_t parent_pose;
-  memset( &parent_pose, 0, sizeof(parent_pose));
   
   // find my parent's pose
   if( mod->parent )
-    stg_model_global_pose( mod->parent, &parent_pose );
-
-  // Compute our pose in the global cs
-  gpose->x = parent_pose.x + mod->pose.x * cos(parent_pose.a) - mod->pose.y * sin(parent_pose.a);
-  gpose->y = parent_pose.y + mod->pose.x * sin(parent_pose.a) + mod->pose.y * cos(parent_pose.a);
-  gpose->a = NORMALIZE(parent_pose.a + mod->pose.a);
+    {
+      stg_model_global_pose( mod->parent, &parent_pose );
+      
+      gpose->x = parent_pose.x + mod->pose.x * cos(parent_pose.a) 
+	- mod->pose.y * sin(parent_pose.a);
+      gpose->y = parent_pose.y + mod->pose.x * sin(parent_pose.a) 
+	+ mod->pose.y * cos(parent_pose.a);
+      gpose->a = NORMALIZE(parent_pose.a + mod->pose.a);
+    }
+  else
+    memcpy( gpose, &mod->pose, sizeof(mod->pose));
 }
-
+    
+    
 // should one day do all this with affine transforms for neatness
 
 /** convert a pose in this model's local coordinates into global
@@ -330,31 +342,31 @@ void stg_model_local_to_global( stg_model_t* mod, stg_pose_t* pose )
 {  
   stg_pose_t origin;   
   stg_model_global_pose( mod, &origin );
-  
-  stg_geom_t* geom = stg_model_get_geom(mod); 
-  stg_pose_sum( &origin, &origin, &geom->pose );
+  //stg_pose_sum( &origin, &origin, &mod->geom.pose );
   stg_pose_sum( pose, &origin, pose );
+  //  memcpy( 
 }
 
-void stg_model_global_rect( stg_model_t* mod, stg_rotrect_t* glob, stg_rotrect_t* loc )
-{
-  stg_geom_t* geom = stg_model_get_geom(mod); 
+/* /// convert a local rotrect into global coords */
+/* void stg_model_global_rect( stg_model_t* mod, stg_rotrect_t* glob, stg_rotrect_t* loc ) */
+/* { */
+/*   stg_geom_t* geom = stg_model_get_geom(mod);  */
 
-  double w = geom->size.x;
-  double h = geom->size.y;
+/*   double w = geom->size.x; */
+/*   double h = geom->size.y; */
 
-  // scale first
-  glob->pose.x = ((loc->pose.x + loc->size.x/2.0) * w) - w/2.0;
-  glob->pose.y = ((loc->pose.y + loc->size.y/2.0) * h) - h/2.0;
-  glob->pose.a = loc->pose.a;
-  glob->size.x = loc->size.x * w;
-  glob->size.y = loc->size.y * h;
+/*   // scale first */
+/*   glob->pose.x = ((loc->pose.x + loc->size.x/2.0) * w) - w/2.0; */
+/*   glob->pose.y = ((loc->pose.y + loc->size.y/2.0) * h) - h/2.0; */
+/*   glob->pose.a = loc->pose.a; */
+/*   glob->size.x = loc->size.x * w; */
+/*   glob->size.y = loc->size.y * h; */
   
-  // now transform into local coords
-  stg_model_local_to_global( mod, (stg_pose_t*)glob );
-}
+/*   // now transform into local coords */
+/*   stg_model_local_to_global( mod, (stg_pose_t*)glob ); */
+/* } */
 
-
+/// recursively map a model and all it's descendents
 void stg_model_map_with_children(  stg_model_t* mod, gboolean render )
 {
   // call this function for all the model's children
@@ -366,8 +378,8 @@ void stg_model_map_with_children(  stg_model_t* mod, gboolean render )
   stg_model_map( mod, render );
 }
 
-// if render is true, render the model into the matrix, else unrender
-// the model
+/// if render is true, render the model into the matrix, else unrender
+/// the model
 void stg_model_map( stg_model_t* mod, gboolean render )
 {
   assert( mod );
@@ -389,15 +401,16 @@ void stg_model_map( stg_model_t* mod, gboolean render )
   for( l=0; l<count; l++ )
     {
       stg_line_t* line = &lines[l];
-
+      
       stg_pose_t p1, p2;
-      p1.x = line->x1;
+      p1.x = line->x1 + mod->geom.pose.x;
+      p1.y = line->y1 + mod->geom.pose.y;
       p1.y = line->y1;
-      p1.a = 0;
-
-      p2.x = line->x2;
-      p2.y = line->y2;
-      p2.a = 0;
+      p1.a = mod->geom.pose.a;
+      
+      p2.x = line->x2 + mod->geom.pose.x;
+      p2.y = line->y2 + mod->geom.pose.y;
+      p2.a = mod->geom.pose.a;
       
       stg_model_local_to_global( mod, &p1 );
       stg_model_local_to_global( mod, &p2 );
@@ -454,7 +467,7 @@ void stg_model_subscribe( stg_model_t* mod )
 {
   mod->subs++;
   
-  // if this is the first sub, call startup & render if there is one
+  // if this is the first sub, call startup
   if( mod->subs == 1 )
     stg_model_startup(mod);
 }
@@ -463,7 +476,7 @@ void stg_model_unsubscribe( stg_model_t* mod )
 {
   mod->subs--;
   
-  // if this is the first sub, call startup & render if there is one
+  // if this is the last sub, call shutdown
   if( mod->subs < 1 )
     stg_model_shutdown(mod);
 }

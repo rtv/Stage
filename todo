@@ -1,17 +1,9 @@
 -- TODO --
 
-position
-gripper 
+fiducial bugs?
 pucks
+gripper 
 energy
 docs
-fix API
-review stage.h, stageclient, etc.
-
-release schedule?
-
 
 -- DONE --
-Bus error on exit
-quit menu item
-close window behavior

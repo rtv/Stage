@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.30 2004-11-08 22:46:59 rtv Exp $
+# CVS: $Id: test.world,v 1.31 2004-11-20 04:57:20 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -33,9 +33,9 @@ window( size [ 534.000 476.000 ] center [-0.246 0.531] scale 0.018 )
 map(
   #size [15.5 11.4]
   #bitmap "bitmaps/autolab.png"
-
   #bitmap "bitmaps/sal2.png"
   bitmap "bitmaps/cave.png"
+
   bitmap_resolution 0.03
   boundary 1
 )
@@ -56,7 +56,7 @@ define sicklaser laser
 #
 define laserpioneer pioneer2dx
 (
-  sicklaser(  fiducialfinder( color "green" obstacle 0 ) )
+  #sicklaser(  fiducialfinder( color "green" obstacle 0 ) )
   blobfinder()
 
   fiducial_id 42
@@ -96,11 +96,18 @@ laserpioneer
 )
 
 
+define yellowlaser laser
+(
+  size [0.2 0.2] 
+  origin [ 0.5 0 0 ]
+  color "yellow"
+)
+
 # a silly object to look at
 position( 	
   name "sub" 
   size [2 1]
-  pose [2.682 0.448 -225.177] 
+  pose [2.682 0.448 0] 
   color "red"  
 
   # loads a bitmap and converts it to lines
@@ -114,6 +121,8 @@ position(
   return 2
 
   #velocity [0 0 10]
+
+  yellowlaser( pose [ 2 1 0 ] yellowlaser( pose [ 1 2 90 ]  yellowlaser( pose [ 1 1 0 ] ) ) )
 
   laser_return 2
   drive "omni"

@@ -85,6 +85,7 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   rtk_fig_color_rgb32( win->bg, stg_lookup_color(STG_GRID_MAJOR_COLOR) );    
   rtk_fig_grid( win->bg, 0,0, 100.0, 100.0, 1.0 );
   
+  win->show_geom = TRUE;
   win->show_matrix = FALSE;
   win->fill_polygons = TRUE;
   win->frame_interval = 500; // ms
@@ -293,6 +294,9 @@ int gui_world_update( stg_world_t* world )
       gtk_statusbar_push( win->canvas->status_bar, cid, clock ); 
     }
   
+  if( win->show_geom )
+    gui_world_geom( world );
+  
   rtk_canvas_render( win->canvas );      
 
   return 0;
@@ -427,7 +431,7 @@ void gui_model_create( stg_model_t* model )
     rtk_fig_create( model->world->win->canvas, parent_fig, STG_LAYER_BODY );
 
   model->gui.geom = 
-    rtk_fig_create( model->world->win->canvas, parent_fig, STG_LAYER_GEOM );
+    rtk_fig_create( model->world->win->canvas, model->gui.top, STG_LAYER_GEOM );
 
   model->gui.top->userdata = model;
 
@@ -575,32 +579,52 @@ void model_render_lines( stg_model_t* mod )
 
 }
 
-void gui_render_geom( stg_model_t* mod )
+
+rtk_fig_t *global_geom_fig = NULL;
+
+/// render a model's global pose vector
+void gui_model_render_geom_global( stg_model_t* mod )
 {
-  stg_geom_t* geom = stg_model_get_geom(mod);
-
-  rtk_fig_t* fig = gui_model_figs(mod)->geom;
-  rtk_fig_clear( fig );
-
-  rtk_fig_color_rgb32( fig, 0 );
+  stg_pose_t glob;
+  stg_model_global_pose( mod, &glob );
   
-  double localx = geom->pose.x;
-  double localy = geom->pose.y;
-  double locala = geom->pose.a;
+  if( global_geom_fig == NULL )
+    global_geom_fig = rtk_fig_create( mod->world->win->canvas, NULL, 99 );
   
-  // draw the origin and the offset arrow
-  double orgx = 0.05;
-  double orgy = 0.03;
-  rtk_fig_arrow_ex( fig, -orgx, 0, orgx, 0, 0.02 );
-  rtk_fig_line( fig, 0,-orgy, 0, orgy );
-  rtk_fig_line( fig, 0, 0, localx, localy );
-  //rtk_fig_line( fig, localx-orgx, localy, localx+orgx, localy );
-  rtk_fig_arrow( fig, localx, localy, locala, orgx, 0.02 );  
-  rtk_fig_arrow( fig, localx, localy, locala-M_PI/2.0, orgy, 0.0 );
-  rtk_fig_arrow( fig, localx, localy, locala+M_PI/2.0, orgy, 0.0 );
-  rtk_fig_arrow( fig, localx, localy, locala+M_PI, orgy, 0.0 );
-  //rtk_fig_arrow( fig, localx, localy, 0.0, orgx, 0.0 );  
+  rtk_fig_t* fig = global_geom_fig;
+  rtk_fig_color_rgb32( fig, 0x0000FF ); // blue
+  //rtk_fig_line( fig, 0, 0, glob.x, glob.y );
+  rtk_fig_arrow( fig, glob.x, glob.y, glob.a, 0.15, 0.05 );  
+
+  if( mod->parent )
+    {
+      stg_pose_t parentpose;
+      stg_model_global_pose( mod->parent, &parentpose );
+      rtk_fig_line( fig, parentpose.x, parentpose.y, glob.x, glob.y );
+    }
+  else
+    rtk_fig_line( fig, 0, 0, glob.x, glob.y );
+
+  stg_pose_t localpose;
+  memcpy( &localpose, &mod->geom.pose, sizeof(localpose));
+  stg_model_local_to_global( mod, &localpose );
+  
+  // draw the local offset
+  rtk_fig_line( fig, 
+		glob.x, glob.y, 
+		localpose.x, localpose.y );
+
+  // draw the bounding box
+  stg_pose_t bbox_pose;
+  memcpy( &bbox_pose, &mod->geom.pose, sizeof(bbox_pose));
+  stg_model_local_to_global( mod, &bbox_pose );
+  rtk_fig_rectangle( fig, 
+		     bbox_pose.x, bbox_pose.y, bbox_pose.a, 
+		     mod->geom.size.x,
+		     mod->geom.size.y, 0 );
+
 }
+
 
 void gui_render_pose( stg_model_t* mod )
 { 
@@ -608,5 +632,28 @@ void gui_render_pose( stg_model_t* mod )
   //PRINT_DEBUG( "gui model pose" );
   rtk_fig_origin( gui_model_figs(mod)->top, 
 		  pose->x, pose->y, pose->a );
+
+  // debug
 }
 
+void gui_model_render_geom( stg_model_t* mod )
+{
+  rtk_fig_clear( mod->gui.geom );
+  gui_model_render_geom_global( mod ); 
+  //gui_model_render_geom_parent( mod );
+  //gui_model_render_geom_local( mod );
+}
+
+void gui_model_render_geom_cb( gpointer key, gpointer value, gpointer user )
+{
+  gui_model_render_geom( (stg_model_t*)value );
+}
+
+/// render the geometry of all models
+void gui_world_geom( stg_world_t* world )
+{
+  if( global_geom_fig )
+    rtk_fig_clear( global_geom_fig );
+
+  g_hash_table_foreach( world->models, gui_model_render_geom_cb, NULL ); 
+}
