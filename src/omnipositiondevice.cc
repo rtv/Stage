@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/omnipositiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  (empty)
@@ -271,18 +271,15 @@ void COmniPositionDevice::DrawChassis(RtkUiDrawData *data)
   data->set_color(RTK_RGB(m_color.red, m_color.green, m_color.blue));
 
   // Get global pose
-  //
   double px, py, pa;
   GetGlobalPose(px, py, pa);
 
-  // *** TESTING, REMOVE
-  data->set_line_style(2);
-  
+  // Draw robot
   data->ellipse(px - m_size_x/2.0, py - m_size_x/2.0, 
-                px + m_size_x/2.0, py + m_size_x/2.0);
-      
+                px + m_size_x/2.0, py + m_size_x/2.0,
+                false);
+  
   // Draw the direction indicator
-  //
   for (int i = 0; i < 3; i++)
   {
     double qx = m_size_x/2.0 * cos(DTOR(i * 45 - 45));
@@ -290,7 +287,6 @@ void COmniPositionDevice::DrawChassis(RtkUiDrawData *data)
     double qth = 0;
         
     // This is ugly, but it works
-    //
     if (i == 1)
       qx = qy = 0;
 
@@ -301,8 +297,6 @@ void COmniPositionDevice::DrawChassis(RtkUiDrawData *data)
     px = qx;
     py = qy;
   }
-
-  data->set_line_style(1);
 }
 
 #endif

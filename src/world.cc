@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.68.2.3 $
+//  $Revision: 1.68.2.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -968,7 +968,7 @@ void CWorld::OnUiButton(CWorld *world, RtkUiButtonData* data)
 
   if (data->push_button("save"))
     world->Save(NULL);
-    
+
   data->end_section();
 }
 
@@ -977,8 +977,6 @@ void CWorld::OnUiButton(CWorld *world, RtkUiButtonData* data)
 // Draw the background; i.e. things that dont move
 void CWorld::DrawBackground(RtkUiDrawData *data)
 {
-  RTK_TRACE0("drawing background");
-
   data->set_color(RGB(0, 0, 0));
     
   // Loop through the image and draw points individually.
@@ -992,7 +990,7 @@ void CWorld::DrawBackground(RtkUiDrawData *data)
 	      double px = (double) x / ppm;
 	      double py = (double)  y / ppm;
 	      double s = 1.0 / ppm;
-	      data->rectangle(px, py, px + s, py + s);
+	      data->rectangle(px, py, px + s, py + s, true);
       }
     }
   }

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.19.2.2 $
+//  $Revision: 1.19.2.3 $
 
 //
 // Usage:
@@ -87,7 +87,7 @@ class CLaserDevice : public CEntity
 
   // Draw the laser scan
   //
-  private: void DrawScan(RtkUiDrawData *data);
+  private: void DrawScan(RtkUiDrawData *data, int style);
 
   // Laser scan outline
   //

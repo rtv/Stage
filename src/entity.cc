@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.29.2.2 2001-11-27 18:40:51 ahoward Exp $
+//  $Id: entity.cc,v 1.29.2.3 2001-12-05 00:10:04 ahoward Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -139,7 +139,7 @@ bool CEntity::Load(CWorldFile *worldfile, int section)
   m_size_y = worldfile->ReadTupleLength(section, "size", 1, m_size_y);
 
   // Read the object color
-  m_color_desc = worldfile->ReadString(section, "color", "red");
+  m_color_desc = worldfile->ReadString(section, "color", m_color_desc);
   if( !m_world->ColorFromString( &m_color, m_color_desc ) )
     PRINT_WARN1("invalid color name %s; using default", m_color_desc );
 

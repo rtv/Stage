@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.39.2.3 $
+//  $Revision: 1.39.2.4 $
 //
 // Usage:
 //  (empty)
@@ -51,6 +51,8 @@ CLaserDevice::CLaserDevice(CWorld *world,
   m_color_desc = LASER_COLOR;
   m_stage_type = LaserTurretType;
 
+  m_color_desc = "grey";
+  
   // Default visibility settings
   this->laser_return = LaserSomething;
   this->sonar_return = 0;
@@ -312,8 +314,9 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 	
 #ifdef INCLUDE_RTK
     // Update the gui data
-    this->hit[this->hit_count][0] = ox + range * cos(pth);
-    this->hit[this->hit_count][1] = oy + range * sin(pth);
+    // Show laser just a bit short of objects
+    this->hit[this->hit_count][0] = ox + (range - 0.1) * cos(pth);
+    this->hit[this->hit_count][1] = oy + (range - 0.1) * sin(pth);
     this->hit_count++;
 #endif
   }
@@ -330,102 +333,103 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
 //
-void CLaserDevice::OnUiUpdate(RtkUiDrawData *event)
+void CLaserDevice::OnUiUpdate(RtkUiDrawData *data)
 {
-    CEntity::OnUiUpdate(event);
+  CEntity::OnUiUpdate(data);
 
-    event->begin_section("global", "laser");
-    
-    if (event->draw_layer("", true))
-        DrawTurret(event);
+  data->begin_section("global", "laser");
 
-    if (event->draw_layer("data", false, 49))
-    {
-        if(Subscribed())
-        {
-            DrawScan(event);
-            // call Update(), because we may have stolen the truth_poked
-            // URGHH!  There must be a better way of doing this.  AH
-            Update(m_world->GetTime());
-        }
-    }
-    
-    event->end_section();
+  if (data->draw_layer("", true))
+      DrawTurret(data);
+
+  if (data->draw_layer("outline", false, 49))
+  {
+    if(Subscribed())
+      DrawScan(data, 0);
+  } 
+
+  if (data->draw_layer("coverage", false, 49))
+  {
+    if(Subscribed())
+      DrawScan(data, 1);
+  }
+
+  data->end_section();
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI mouse messages
 //
-void CLaserDevice::OnUiMouse(RtkUiMouseData *event)
+void CLaserDevice::OnUiMouse(RtkUiMouseData *data)
 {
-    CEntity::OnUiMouse(event);
+    CEntity::OnUiMouse(data);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Draw the laser turret
 //
-void CLaserDevice::DrawTurret(RtkUiDrawData *event)
+void CLaserDevice::DrawTurret(RtkUiDrawData *data)
 {
-    #define TURRET_COLOR RTK_RGB(0, 0, 255)
-    
-    event->set_color(TURRET_COLOR);
+    data->set_color(RTK_RGB(m_color.red, m_color.green, m_color.blue));
 
     // Turret dimensions
-    //
     double dx = m_size_x;
     double dy = m_size_y;
 
     // Get global pose
-    //
     double gx, gy, gth;
     GetGlobalPose(gx, gy, gth);
     
     // Draw the outline of the turret
-    //
-    event->ex_rectangle(gx, gy, gth, dx, dy); 
+    data->ex_rectangle(gx, gy, gth, dx, dy); 
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Draw the laser scan
 //
-void CLaserDevice::DrawScan(RtkUiDrawData *event)
+void CLaserDevice::DrawScan(RtkUiDrawData *data, int style)
 {
-#define SCAN_COLOR RTK_RGB(0, 0, 255)
-    
-    event->set_color(SCAN_COLOR);
+  data->set_color(RTK_RGB(m_color.red, m_color.green, m_color.blue));
+  
+  // Get global pose
+  double gx, gy, gth;
+  GetGlobalPose(gx, gy, gth);
 
-    // Get global pose
-    double gx, gy, gth;
-    GetGlobalPose(gx, gy, gth);
-
+  // Draw the scan outline
+  if (style == 0)
+  {
     double qx, qy;
     qx = gx;
     qy = gy;
     
     for (int i = 0; i < this->hit_count; i++)
     {
-        double px = this->hit[i][0];
-        double py = this->hit[i][1];
-        event->line(qx, qy, px, py);
-        qx = px;
-        qy = py;
+      double px = this->hit[i][0];
+      double py = this->hit[i][1];
+      data->line(qx, qy, px, py);
+      qx = px;
+      qy = py;
     }
-    event->line(qx, qy, gx, gy);
+    data->line(qx, qy, gx, gy);
+  }
 
-    // HACK - just to generate animation
-    event->set_line_style(4);
+  // Draw the dense scan coverage
+  else
+  {
     for (int i = 0; i < this->hit_count; i++)
     {
-        double px = this->hit[i][0];
-        double py = this->hit[i][1];
-        event->line(gx, gy, px, py);
+      double px = this->hit[i][0];
+      double py = this->hit[i][1];
+      data->line(gx, gy, px, py);
     }
+  }
 }
 
 #endif
+
 
 
 
