@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.43 2002-11-11 03:09:46 rtv Exp $
+ * CVS info: $Id: server.cc,v 1.43.4.1 2003-12-05 16:56:25 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -419,9 +419,14 @@ bool CStageServer::CreateDeviceDirectory( void )
   // get the user's name
   struct passwd* user_info = getpwuid( getuid() );
   
+  // get the pid
+  pid_t pid = getpid();
+  
   // make a device directory from a base name and the user's name
-  sprintf( m_device_dir, "%s.%s.%d", 
-           IOFILENAME, user_info->pw_name, m_instance++ );
+  //sprintf( m_device_dir, "%s.%s.%d", 
+           //IOFILENAME, user_info->pw_name, m_instance++ );
+  sprintf( m_device_dir, "%s.%s.%d.%d",
+           IOFILENAME, user_info->pw_name, pid ,m_instance++ );
   
   if( mkdir( m_device_dir, S_IRWXU | S_IRWXG | S_IRWXO ) == -1 )
   {
