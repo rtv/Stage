@@ -21,7 +21,7 @@
  * Desc: Gnome GUI world components (all methods begin with 'Gui')
  * Author: Richard Vaughan
  * Date: 7 Dec 2000
- * CVS info: $Id: gnomegui.cc,v 1.3 2002-09-21 08:14:20 rtv Exp $
+ * CVS info: $Id: gnomegui.cc,v 1.4 2002-09-21 08:23:37 rtv Exp $
  */
 
 
@@ -214,7 +214,7 @@ gint CWorld::GuiEvent(GnomeCanvasItem *item, GdkEvent *event, gpointer data)
 	    else if( selected &&  nearby == selected ) // we clicked on the same thing again - do nothing
 	      {
 		selected->GuiUnwatch();
-		selected->GuiUnselect();
+		//selected->GuiUnselect();
 		selected->GuiSelect();
 	      }
 	    else if( !selected && nearby ) // no previous selection, select nearby
@@ -587,7 +587,6 @@ void CEntity::GuiWatch( void )
 
    gnome_canvas_item_lower( (GnomeCanvasItem*)watch_rect, 99 );
    
-   //gnome_appbar_push(  this->m_world->g_appbar, "Select" );
    this->GuiStatus();
    
 }
@@ -678,7 +677,7 @@ void CEntity::GuiUnselect( void )
 void CEntity::GuiStatus( void )
 {
   // describe my status on the appbar
-  const char buflen = 256;
+  const int buflen = 256;
   char buf[buflen];
   double x, y, th;
   this->GetGlobalPose( x, y, th );
@@ -697,7 +696,7 @@ void CEntity::GuiStatus( void )
 void CPlayerEntity::GuiStatus( void )
 {
   // describe my status on the appbar
-  const char buflen = 256;
+  const int buflen = 256;
   char buf[buflen];
   double x, y, th;
   this->GetGlobalPose( x, y, th );
