@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.5 $
+//  $Author: vaughan $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -28,12 +28,11 @@
 #ifndef ENTITY_HH
 #define ENTITY_HH
 
+#include "stage.h"
 #include "stage_types.hh"
-#include "guiexport.hh"
+#include "truthserver.hh"
 
-#ifdef INCLUDE_XGUI
-#include "xgui.hh"
-#endif
+//#include "messages.h"
 
 #ifdef INCLUDE_RTK
 #include "rtk_ui.hh"
@@ -53,6 +52,8 @@ class CEntity
     // Requires a pointer to the parent and a pointer to the world.
     //
     public: CEntity(CWorld *world, CEntity *parent_object);
+  
+  StageType m_stage_type; // distinct from the player types found in messages.h
 
     // Destructor
     //
@@ -68,16 +69,30 @@ class CEntity
 
     // Initialise object
     //
-    public: virtual bool Startup();
+    public: virtual bool Startup( void ); 
+
+    // Set the io pointers correctly
+    //
+    public: virtual bool SetupIOPointers( char* io );
 
     // Finalize object
     //
     public: virtual void Shutdown();
     
-    // Update the object's representation
+    // Fetch commands & truth, update the object, then publish truth
     //
-    public: virtual void Update();
+  //public: virtual void ImportUpdateExport();
 
+    // Update the object's device-specific representation
+    //
+    public: virtual void Update( double sim_time );
+
+    // Draw ourselves into the world rep
+    //
+  public: virtual void Map(bool render)
+  { puts( "DEFAULT MAP" ); };
+    
+ 
     // Convert local to global coords
     //
     public: void LocalToGlobal(double &px, double &py, double &pth);
@@ -101,6 +116,11 @@ class CEntity
     // Get the objects pose in the global cs
     //
     public: void GetGlobalPose(double &px, double &py, double &pth);
+
+  // flag is set when a dependent device is  attached to this device
+    public: bool m_dependent_attached;
+
+public: int truth_poked;
 
     // Line in the world description file
     //
@@ -134,39 +154,89 @@ class CEntity
     //
     private: double m_lx, m_ly, m_lth;
 
-    // Commanded speed
+    // dimensions
     //
-    protected: double m_com_vr, m_com_vth;
-    protected: double m_mass;
+    public: double m_size_x, m_size_y;
+    public: double m_offset_x, m_offset_y; // offset center of rotation
 
-    public: double GetSpeed() { return(m_com_vr); }
-    public: double GetMass() { return(m_mass); }
-    
-    // shouldn't really have this, but...
-    public: void SetSpeed(double speed) { m_com_vr=speed; }
-
-    // struct that holds data for external GUI rendering
-    //
-    // i made this public so that an object can get another object's
-    // type - BPG
-    //protected: ExportData exp;
-    public: ExportData exp;
-   
-    // compose and return the export data structure
-    //
-    public: virtual ExportData* ImportExportData( const ImportData* imp ); 
-  //public: virtual void ImportData( ImportData* data ); 
-
-    // enable/disable export subscription
-    protected: bool exporting;
-    public: void EnableGuiExport( void ){ exporting = true; };
-    public: void DisableGuiExport( void ){ exporting = false; };
-    public: void ToggleGuiExport( void ){ exporting = !exporting; };
-
-    // Object color description (for display)
+    // Object color description (for display)(and maybe vision sensors later?)
     //
     private: char m_color_desc[128];
-    
+
+  // the apparent color of this robot to a vision system like ACTS 
+    // (not yet implemented - get to it!)
+    public: int m_channel; 
+
+    // how often to update this device, in seconds
+    // all devices check this before updating their data
+    // instances can modify this in response to config file or messages
+    protected: double m_interval; 
+    protected: double m_last_update;
+
+  //////////////////////////////////////////////////////////////////////
+  // PLAYER IO STUFF
+  
+    // Port and index numbers for player
+    // identify this device as belonging to the Player on port N at index M
+    //
+  public: int m_player_port; // N
+  public: int m_player_index; // M
+  public: int m_player_type; // one of the device types from messages.h
+
+    public: int SharedMemorySize( void );
+
+    // Write to the data buffer
+    // Returns the number of bytes copied
+    // timestamp should be the time the data was created/sensed. if timestamp
+    //   is 0, then current time is used
+    //
+    protected: size_t PutData( void* data, size_t len );
+
+    // Read from the data buffer
+    // Returns the number of bytes copied
+    //
+    public: size_t GetData( void* data, size_t len );
+
+    // Read from the command buffer
+    // Returns the number of bytes copied
+    //
+    protected: size_t GetCommand( void* command, size_t len);
+
+    // Read from the configuration buffer
+    // Returns the number of bytes copied
+    //
+    protected: size_t GetConfig( void* config, size_t len);
+
+    // See if the device is subscribed
+    // returns the number of current subscriptions
+    protected: int Subscribed();
+
+
+  // builds a truth packet for this entity
+  public: void ComposeTruth( stage_truth_t* truth );
+
+    // base address for this entity's records in shared memory
+    //
+
+    // Pointers into shared mmap for the IO structures
+    // the io buffer is allocated by the World 
+    // after it has loaded all the Entities (so it knows how 
+    // much to allocate). Then the world calls Startup() to allocate 
+    // the local storage for each entity. 
+
+    protected: player_stage_info_t *m_info_io;
+    protected: uint8_t *m_data_io; 
+    protected: uint8_t *m_command_io;
+    protected: uint8_t *m_config_io;
+
+  // the sizes of these buffers in bytes
+    protected: size_t m_data_len;
+    protected: size_t m_command_len;
+    protected: size_t m_config_len;
+    protected: size_t m_info_len;
+
+  //////////////////////////////////////////////////////////////////////
+
 #ifdef INCLUDE_RTK
 
     // UI property message handler
@@ -214,4 +284,8 @@ class CEntity
 
 
 #endif
+
+
+
+
 

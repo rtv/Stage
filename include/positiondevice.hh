@@ -6,9 +6,9 @@
 // Desc: Simulates the Pioneer robot base
 //
 // CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/pioneermobiledevice.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.8 $
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/positiondevice.hh,v $
+//  $Author: vaughan $
+//  $Revision: 1.1 $
 //
 // Usage:
 //  (empty)
@@ -30,79 +30,45 @@
 #include "stage.h"
 #include "playerdevice.hh"
 
-enum pioneer_shape_t
-{
-  rectangle,
-  circle
-};
 
-
-class CPioneerMobileDevice : public CPlayerDevice
+class CPositionDevice : public CEntity
 {
     // Minimal constructor
     //
-    public: CPioneerMobileDevice(CWorld *world, CEntity *parent, CPlayerServer* server);
+    public: CPositionDevice(CWorld *world, CEntity *parent );
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Load the object from an argument list
-    //
-    bool Load(int argc, char **argv);
-   
     // Update the device
     //
-    public: virtual void Update();
+    public: virtual void Update( double sim_time );
 
     // Extract command from the command buffer
     //
-    private: void ParseCommandBuffer();
-
+    private: void ParseCommandBuffer(player_position_cmd_t &command );
+				    
     // Compose the reply packet
     //
-    private: void ComposeData();
+    private: void ComposeData(player_position_data_t &position );
 
     // Check to see if the given pose will yield a collision
     //
     private: bool InCollision(double px, double py, double pth);
 
-    // Get and set shape parameter
-    public: pioneer_shape_t GetShape() { return(m_shape); };
-    public: void SetShape(pioneer_shape_t shape);
-
     // Render the object in the world rep
     //
-    private: bool Map(bool render);
+    private: virtual void Map(bool render);
 
     // Timings
     //
     private: double m_last_time;
 
-    ////////////////////////
-    // Robot dimensions
-
-    // Rectangular robot:
-    private: double m_size_x, m_size_y, m_offset_x;
-
-    // Circular robot:
-    private: double m_radius;
-    
-    // structure for exporting pioneer-specific data to a GUI
-    private: ExportPositionData expPosition; 
-
-    public: double GetRadius() { return(m_radius); }
-
-    ////////////////////////
-
-    // Rectangular robot:
-
     // Current command and data buffers
     //
-    private: player_position_cmd_t m_command;
-    private: player_position_data_t m_data;
+  //private: player_position_cmd_t m_command;
+  // private: player_position_data_t m_data;
     
-    // Our shape
+    // Commanded robot speed
     //
-    private: pioneer_shape_t m_shape;
-
+    private: double m_com_vr, m_com_vth;
 
     // Odometric pose
     //

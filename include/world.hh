@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.9 $
+//  $Author: vaughan $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -28,11 +28,20 @@
 #ifndef WORLD_HH
 #define WORLD_HH
 
+#include <stddef.h>
+#include <netinet/in.h>
 #include <pthread.h>
 #include <stdint.h>
-
+#include <sys/types.h>
+#include <sys/sem.h>
+#include <sys/ipc.h>
+#include <queue> // standard template library container
 #include "image.h"
 #include "entity.hh"
+#include "truthserver.hh"
+#include "playercommon.h"
+
+#define DEBUG
 
 #if INCLUDE_RTK
 #include "rtk_ui.hh"
@@ -42,13 +51,11 @@
 #include "xgui.hh"
 #endif
 
-#define MAX_OBJECTS 2048
-
 // forward declaration
 //
 class CXGui;
 class CEntity;
-class CPlayerServer;
+class CPlayerDevice;
 class CBroadcastDevice;
 
 
@@ -59,8 +66,8 @@ enum EWorldLayer
     layer_obstacle = 0,
     layer_laser = 1,
     layer_vision = 2,
-    layer_puck = 3,
 };
+
 
 // World class
 //
@@ -154,7 +161,8 @@ class CWorld
 
     // Set a cell in the world grid
     //
-    public: void SetCell(double px, double py, EWorldLayer layer, uint8_t value);
+    public: void SetCell(double px, double py, 
+			 EWorldLayer layer, uint8_t value);
 
     // Get a rectangle in the world grid
     //
@@ -164,12 +172,9 @@ class CWorld
     // Set a rectangle in the world grid
     //
     public: void SetRectangle(double px, double py, double pth,
-                              double dx, double dy, EWorldLayer layer, uint8_t value);
+                              double dx, double dy, 
+			      EWorldLayer layer, uint8_t value);
 
-    // Set a circle in the world grid
-    //
-    public: void SetCircle(double px, double py, double pr,
-                              EWorldLayer layer, uint8_t value);
 
     ///////////////////////////////////////////////////////////////////////////
     // Player server functions
@@ -181,45 +186,17 @@ class CWorld
     // Register a server by its port number
     // Returns false if the number is alread taken
     //
-    public: bool AddServer(int port, CPlayerServer *server);
+    public: bool AddServer(int port, CPlayerDevice *server);
     
     // Lookup a server using its port number
     //
-    public: CPlayerServer *FindServer(int port);
+    public: CPlayerDevice *FindServer(int port);
 
     // List of player servers
     //
     private: int m_server_count;
-    private: struct {int m_port; CPlayerServer *m_server;} m_servers[512];
+    private: struct {int m_port; CPlayerDevice *m_server;} m_servers[512];
 
-    
-    ///////////////////////////////////////////////////////////////////////////
-    // Puck stuff
-
-    // Initialise puck representation
-    //
-    private: void InitPuck();
-
-    // Add a puck to the world
-    // Returns an index for the puck
-    //
-    public: int AddPuck(CEntity* puck);
-    
-    // Set the position of a puck
-    //
-    //public: void SetPuck(int index, double px, double py, double pth);
-
-    // Get the pointer to a puck
-    //
-    public: CEntity* GetPuck(int index);
-
-    // Array of pucks
-    //
-    private: int m_puck_count;
-    private: struct
-    {
-      CEntity* puck;
-    } m_puck[1000];
     
     ///////////////////////////////////////////////////////////////////////////
     // Laser beacon device stuff
@@ -239,7 +216,8 @@ class CWorld
 
     // Get the position of a laser beacon
     //
-    public: bool GetLaserBeacon(int index, int *id, double *px, double *py, double *pth);
+    public: bool GetLaserBeacon(int index, int *id, 
+				double *px, double *py, double *pth);
 
     // Array of laser beacons
     //
@@ -250,7 +228,7 @@ class CWorld
         double m_px, m_py, m_pth;
     } m_laserbeacon[1000];
     
-
+    
     ///////////////////////////////////////////////////////////////////////////
     // Broadcast device functions
 
@@ -274,10 +252,39 @@ class CWorld
     //
     private: int m_broadcast_count;
     private: CBroadcastDevice *m_broadcast[256];
-   
+  
+     ////////////////////////////////////////////////////////////////
+    // shared memory management for interfacing with Player
 
-    public: int GetObjectCount() { return(m_object_count); }
-    public: CEntity* GetObject(int index) { return(m_object[index]); }
+private: char tmpName[ 512 ]; // path of mmap node in filesystem
+public: char* PlayerIOFilename( void ){ return tmpName; };
+  
+private: caddr_t playerIO;  
+private: bool InitSharedMemoryIO( void );
+
+public: bool m_truth_is_current;
+  
+  //public: void* GetIOAddress( CEntity* entity );
+
+    // Create a single semaphore to sync access to the shared memory segments
+    //
+    private: bool CreateShmemLock();
+
+    // Get a pointer to shared mem area
+    //
+    public: void* GetShmem() {return playerIO;};
+    
+    // lock the shared mem area
+    //
+    public: bool LockShmem( void );
+
+    // Unlock the shared mem area
+    //
+    public: void UnlockShmem( void );
+
+    private: key_t semKey;
+    private: int semid; // semaphore access for shared mem locking
+
 
     ///////////////////////////////////////////////////////////////////////////
     // Misc vars
@@ -314,9 +321,21 @@ class CWorld
     // Object list
     //
     private: int m_object_count;
-    private: CEntity *m_object[MAX_OBJECTS];
-    
-    private: Nimage* m_bimg; // background image 
+    public: int GetObjectCount( void ){ return m_object_count; };
+
+    private: CEntity *m_object[1024];
+  
+    // return a pointer to the i'th object in the array; 0 if i is too big
+    // 
+    public: CEntity* GetObject( int i )
+    { 
+       if( i < m_object_count ) return (m_object[i]); else  return 0; 
+    }; 
+
+   public: CEntity* GetEntityByID( int port, int type, int index );
+
+
+    public: Nimage* m_bimg; // background image
 
     // Obstacle image
     //
@@ -332,10 +351,6 @@ class CWorld
     //
     private: Nimage *m_vision_img;
 
-    // Puck (i.e., movable object) image
-    //
-    private: Nimage *m_puck_img;
-
 
     ///////////////////////////////////////////////////////////////////////////
     // Configuration variables
@@ -344,13 +359,6 @@ class CWorld
     //
     public: double m_laser_res;
     
-    
-    ///////////////////////////////////////////////////////
-    // old stuff here -- ahoward
-    // some of these are no longer used.
-
-    private: int width, height, depth;
-
     // *** HACK -- this should be made private.  ahoward
     //
     public: float ppm;
@@ -402,14 +410,21 @@ public:
   Nimage* GetForegroundImage( void ){ return m_obs_img; };
   Nimage* GetLaserImage( void ){ return m_laser_img; };
   Nimage* GetVisionImage( void ){ return m_vision_img; };
-  Nimage* GetPuckImage( void ){ return m_puck_img; };
-  double GetWidth( void ){ return width; };
-  double GetHeight( void ){ return height; };
+  double GetWidth( void ){ m_bimg ? return m_bimg->width : return 0; };
+  double GetHeight( void ){ m_bimg ? return m_bimg->height : return 0; };
 #endif
+
+  // the truth server queues up any truth updates here, ready to be imported
+  // in the main thread
+public:
+  queue<stage_truth_t> input_queue;
+  queue<stage_truth_t> output_queue; // likewise for outputs
+
 
 };
 
 #endif
+
 
 
 

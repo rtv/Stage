@@ -11,7 +11,7 @@
 //  Modified by ahoward 24 May 2001 to make top bit 'sticky'.
 //  Once set, this bit can only be reset by 'clear'.
 //
-// $Id: image.h,v 1.3 2001-06-01 21:25:47 ahoward Exp $
+// $Id: image.h,v 1.4 2001-08-09 02:06:27 vaughan Exp $
 // RTV
 // ==================================================================
 
@@ -53,12 +53,20 @@ public:
 	inline	int	get_height(void)	{return height;}
 	inline	int	get_size(void)		{return width*height;}
 
+	// get a pixel color by its x,y coordinate
 	inline unsigned char get_pixel(int x, int y)
 	  { 
 	    if (x<0 || x>=width || y<0 || y>=height) return 0;
 	    return (char)data[x+(y*width)]; 
 	  }
 	
+	// get a pixel color by its position in the array
+	inline unsigned char get_pixel( int i)
+	  { 
+	    if( i<0 || i > width*height ) return 0;
+	    return (char)data[i]; 
+	  }
+
 	inline void set_pixel(int x, int y, unsigned char c)
 	  {
 	    if (x<0 || x>=width || y<0 || y>=height) return;
