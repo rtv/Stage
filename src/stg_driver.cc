@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: stg_driver.cc,v 1.30 2005-02-24 04:18:39 rtv Exp $
+ * CVS: $Id: stg_driver.cc,v 1.31 2005-02-24 14:11:31 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -168,16 +168,6 @@ extern char** global_argv;
 //#define NTOH_SEC(s) ntohl(s)
 //#define HTON_SEC(s) htonl(s) // byte ordering for SECONDS
 //#define NTOH_SEC(s) ntohl(s)
-
-
-
-// map interface macros
-//
-// compute linear index for given map coords
-#define MAP_IDX(mf, i, j) ((mf->size_x) * (j) + (i))
-// check that given coords are valid (i.e., on the map)
-#define MAP_VALID(mf, i, j) ((i >= 0) && (i < mf->size_x) && (j >= 0) && (j < mf->size_y))
-
 
 
 #define STG_DEFAULT_WORLDFILE "default.world"
@@ -343,7 +333,6 @@ stg_model_t* model_match( stg_model_t* mod, stg_model_type_t tp, GPtrArray* devi
 	model_match( (stg_model_t*)g_ptr_array_index( mod->children, i ), 
 		     tp, devices );      
       if( match )
-	//return match; // if we found a match, we're done searching
 	{
 	  // if mod appears in devices already, it can not be used now
 	  //printf( "[inspecting %d devices used already]", devices->len );
@@ -352,15 +341,16 @@ stg_model_t* model_match( stg_model_t* mod, stg_model_type_t tp, GPtrArray* devi
 	      device_record_t* record =  
 		(device_record_t*)g_ptr_array_index( devices, i );
 	      
-	      //printf( "comparing %p and %p (%d.%d.%d)\n", mod, record->mod,
-	      //      record->id.port, record->id.code, record->id.index );
+	      printf( "comparing %p and %p (%d.%d.%d)\n", mod, record->mod,
+		      record->id.port, record->id.code, record->id.index );
 	      
-	      if( match == record->mod )
+	      if( match == record->mod )//&& ! tp == STG_MODEL_BASIC )
 		{
-		  //printf( "[ALREADY USED]" );
+		  printf( "[ALREADY USED]" );
 		  return NULL;
 		}
 	    }
+	  // if we found a match, we're done searching
 	  return match;
 	}
     }
@@ -920,8 +910,9 @@ void  StgDriver::HandleConfigMapInfo( device_record_t* device,
   assert( (minfo->data = new int8_t[minfo->width*minfo->height] ));
   memset( minfo->data, 0, minfo->width * minfo->height );
   
-  printf( "Stage: created map for model \"%s\" of %d by %d cells\n", 
+  printf( "Stage: creating map for model \"%s\" of %d by %d cells... ", 
 	  device->mod->token, minfo->width, minfo->height );
+  fflush(stdout);
   
   size_t count=0;
   stg_polygon_t* polys = stg_model_get_polygons( device->mod, &count);
@@ -960,6 +951,7 @@ void  StgDriver::HandleConfigMapInfo( device_record_t* device,
       for( unsigned int p=0; p<minfo->width; p++ )
 	for( unsigned int q=0; q<minfo->height; q++ )
 	  {
+	    //printf( "%d,%d \n", p,q );
 	    GPtrArray* pa = stg_table_cell( matrix->table, p, q );
 	    minfo->data[ q * minfo->width + p ] =  pa ? 1 : -1;
 	  }
@@ -967,6 +959,8 @@ void  StgDriver::HandleConfigMapInfo( device_record_t* device,
       // we're done with the matrix
       stg_matrix_destroy( matrix );
     }
+
+  puts( "done." );
 
   // store the map as a model property named "_map"
   stg_model_set_prop( device->mod, "_map", (void*)minfo );
@@ -998,7 +992,7 @@ void StgDriver::HandleConfigMapData( device_record_t* device,
 				     void *request, 
 				     size_t len)
 {
-  //printf( "device %s received map data request", device->mod->token );
+  //printf( "device %s received map data request\n", device->mod->token );
 
   //int i, j;
   unsigned int oi, oj, si, sj;
@@ -1023,7 +1017,10 @@ void StgDriver::HandleConfigMapData( device_record_t* device,
   int8_t* map = NULL;  
   assert( (map = minfo->data ) );
 
-  //printf( "fetched map: %s\n", str );
+  //const char* spin = "|/-\\";
+  //static int spini = 0;
+  //putchar( spin[spini++%4] );
+  //fflush(stdout);
   
   // Construct reply
   memcpy(&data, request, len);
@@ -1032,10 +1029,7 @@ void StgDriver::HandleConfigMapData( device_record_t* device,
    oj = ntohl(data.row);
    si = ntohl(data.width);
    sj = ntohl(data.height);
-   
-   //printf( "map data request: col: %d row: %d width: %d height: %d\n",
-   //   oi, oj, si, sj );
-   
+      
    //   // Grab the pixels from the map
    for( unsigned int j = 0; j < sj; j++)
      {
@@ -1070,7 +1064,17 @@ void StgDriver::HandleConfigMapData( device_record_t* device,
 	     }
 	 }
      }
+      
    
+   //printf( "Stage driver: providing map data %d/%d %d/%d\n",
+   // oi+si, minfo->width, oj+si, minfo->height );
+
+   //if( oi+si == minfo->width && oj+sj == minfo->height )
+   //puts( " done." );
+
+   //fflush(stdout);
+     
+
   // Send map info to the client
   if(PutReply(client, PLAYER_MSGTYPE_RESP_ACK, &data, 
               sizeof(data) - sizeof(data.data) + 
