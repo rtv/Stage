@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.16 $
+//  $Revision: 1.17 $
 //
 // Usage:
 //  (empty)
@@ -44,6 +44,9 @@ CWorld *world = 0;
 
 bool global_no_gui = false;
 char global_node_name[64];
+bool g_log_output = false;
+char g_log_filename[256];
+char g_cmdline[256];
 
 // the parameters controlling stage's update frequency
 // and simulator timestep respectively (milliseconds)
@@ -70,14 +73,29 @@ void sig_quit(int signum)
 //
 bool parse_cmdline(int argc, char **argv)
 {
-  //for( int g=0; g<argc; g++ )
-  //printf( "\nargv[%d] : %s", g, argv[g] );
-  //puts( "" );
-
   bool usage = false;
 
   for( int a=1; a<argc-1; a++ )
     {
+      puts( argv[a] );
+
+      if( strcmp( argv[a], "-l" ) == 0 )
+	{
+	  g_log_output = true;
+	  strncpy( g_log_filename, argv[a+1], 255 );
+	  printf( "[Logfile %s]", g_log_filename );
+
+	  //store the command line for logging later
+	  memset( g_cmdline, 0, sizeof(g_cmdline) );
+	  
+	  for( int g=0; g<argc; g++ )
+	    {
+	      strcat( g_cmdline, argv[g] );
+	      strcat( g_cmdline, " " );
+	    }
+
+	  a++;
+	}
       if( strcmp( argv[a], "-xs" ) == 0 )
 	{
 	  global_no_gui = true;
@@ -125,8 +143,8 @@ bool parse_cmdline(int argc, char **argv)
       //  	  strncpy( global_node_name, argv[a+1], 64 );
       //  	  printf( "[Node %s]", global_node_name );
       //  	}
-      else
-	usage = true;
+      //else
+      //usage = true;
     }
 
   if( usage )

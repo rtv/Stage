@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.56 $
+//  $Revision: 1.57 $
 //
 // Usage:
 //  (empty)
@@ -43,6 +43,11 @@ extern int  g_instance; //from main.cc
 extern char* g_host_id;
 
 extern bool g_wait_for_env_server;
+extern bool g_log_output;
+extern char g_log_filename[];
+extern char g_cmdline[];
+
+int g_log_fd = 0; // logging file descriptor
 
 //#include <stage.h>
 #include "world.hh"
@@ -331,13 +336,17 @@ bool CWorld::Startup()
   
 
   // kick off the truth and envirnment servers, unless we disabled them earlier
+  if( m_run_truth_server )  SetupTruthServer();
+  
   if( m_run_environment_server )
     {
       pthread_t tid_dummy;
       pthread_create(&tid_dummy, NULL, &EnvServer, (void *)NULL );  
+      
+      // env server unsets this flag when it's ready
+      while( g_wait_for_env_server )
+	usleep( 100000 );
     }
-  
-  if( m_run_truth_server )  SetupTruthServer();
   
   // spawn an XS process, unless we disabled it (rtkstage disables xs by default)
   if( !global_no_gui && m_run_xs 
@@ -543,12 +552,58 @@ void* CWorld::Main(void *arg)
   // microseconds
   tick.it_value.tv_usec = tick.it_interval.tv_usec = 
     world->m_timer_interval * 1000; 
-     
+  
   if( setitimer( ITIMER_REAL, &tick, 0 ) == -1 )
     {
       cout << "failed to set timer" << endl;;
       exit( -1 );
     }
+  
+  if( g_log_output )
+    {
+      //for( int f=0; f<10; f++ )
+      //puts( g_log_filename );
+      
+      int log_instance = 0;
+      while( g_log_fd < 1 )
+	{
+	  char fname[256];
+	  sprintf( fname, "%s.%d", g_log_filename, log_instance++ );
+	  g_log_fd = open( fname, O_CREAT | O_EXCL | O_WRONLY );
+	}
+
+      struct timeval t;
+      gettimeofday( &t, 0 );
+      
+      // count the locally managed objects
+      int m=0;
+      for( int c=0; c<world->m_object_count; c++ )
+	if( world->m_object[c]->m_local ) m++;
+      
+      char* tmstr = ctime( &t.tv_sec);
+      tmstr[ strlen(tmstr)-1 ] = 0; // delete the newline
+      
+
+      
+      char line[512];
+      sprintf( line,
+	       "# Stage output log\n#\n"
+	       "# Command:\t%s\n"
+	       "# Date:\t\t%s\n"
+	       "# Host:\t\t%s\n"
+	       "# Bitmap:\t%s\n"
+	       "# Objects:\t%d of %d\n#\n"
+	       "#STEP\t\tTIME(s)\t\tCYCLE(msec)\tRATIO\n",
+	       g_cmdline, 
+	       tmstr, 
+	       world->m_hostname, 
+	       world->m_filename,
+	       m, 
+	       world->m_object_count );
+
+      write( g_log_fd, line, strlen(line) );
+    }
+  
     
   while (true)
     {
@@ -612,36 +667,49 @@ void CWorld::Update()
   //  m_sim_timeval.tv_sec,
   //  m_sim_timeval.tv_usec );
 
-#ifdef WATCH_RATES
     // Keep track of the sim/real time ratio
     // This is done as a moving window filter so we can see
     // the change over time.
   //
+#ifdef WATCH_RATES
   
   static double last_real_time;
   double real_timestep = GetRealTime() - last_real_time;
   
-  
   last_real_time += real_timestep;
   
-  double a = 0.05;
-  m_update_ratio = (1 - a) * m_update_ratio + a * ( timestep / real_timestep );
-  
-  // Keep track of the update rate
-  // This is done as a moving window filter so we can see
-  // the change over time.
-  // Note that we must use the *real* timestep to get sensible results.
-  //
-  m_update_rate = (1 - a) * m_update_rate + a * (1.0 / real_timestep);
-  
-  static int period = 0;
-  if( (++period %= 20)  == 0 )
+  if( g_log_output && g_log_fd > 0 )
     {
-      printf( " %4.0f Hz (%2.1f)\r", m_update_rate,  m_update_ratio );
-      fflush( stdout );
+      static long cycle = 0;
+      char line[512];
+      sprintf( line,
+	       "%ld\t\t%.3f\t\t%d\t\t%.3f\n", 
+	       cycle++, GetRealTime(), 
+	       (int)(real_timestep * 1000.0), timestep / real_timestep );
+
+      write( g_log_fd, line, strlen(line) );
     }
+  else
+    {
+      static int period = 0;
+      double a = 0.05;
+      m_update_ratio = (1 - a) * m_update_ratio + a * ( timestep / real_timestep );
+      
+      // Keep track of the update rate
+      // This is done as a moving window filter so we can see
+      // the change over time.
+      // Note that we must use the *real* timestep to get sensible results.
+      //
+      m_update_rate = (1 - a) * m_update_rate + a * (1.0 / real_timestep);
+      
+      if( (++period %= 20)  == 0 )
+	{
+	  printf( " %4.0f Hz (%2.1f)\r", m_update_rate,  m_update_ratio );
+	  fflush( stdout );
+	}
 #endif
-  
+    }
+      
   // copy the timeval into the player io buffer
   // use the first object's info
   LockShmem();
