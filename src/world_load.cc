@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.7 $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -64,6 +64,7 @@ bool CWorld::Load(const char *filename)
     PRINT_MSG1("loading world file [%s]", filename);
 #endif
    
+    // TODO: if we have any object's already, kill 'em, clear grids, etc.  
 
     FILE *file = NULL;
     

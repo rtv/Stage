@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.2 2001-08-10 20:48:38 vaughan Exp $
+ * $Id: xs.cc,v 1.3 2001-08-11 01:49:01 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -1527,18 +1527,6 @@ void CXGui::HandleKeyPressEvent( XEvent& reportEvent )
 
   // handle all the non-cursor keys here
   
-  if( key == XK_l || key == XK_L )
-    {
-      cout << "LOAD" << endl;
-      //world->Load();
-      //RefreshObjects();
-    }
-  
-  if( key == XK_s || key == XK_S )
-    {
-      //cout << "SAVE" << endl;
-      //world->Save();
-    }
   
   if( key == XK_q || key == XK_Q )
     {
@@ -1625,8 +1613,31 @@ void CXGui::HandleKeyPressEvent( XEvent& reportEvent )
 	  execlp( "import", "import", "-w", window_title, outname, NULL );
     }
 
+  if( key == XK_s )
+    {
+      // send a save command to Stage
 
+      // compose the structure
+      stage_truth_t output;
 
+      memset( &output, 0, sizeof( output ) );
+
+      output.stage_id = 0; // this indicates a command
+
+      output.x = (uint32_t) 1;
+      
+      // and queue it up for the server thread to write out
+      pthread_mutex_lock( &outgoing_mutex );
+      outgoing_queue.push( output );
+      pthread_mutex_unlock( &outgoing_mutex );
+    }
+
+  if( key == XK_l || key == XK_L )
+    {
+      //cout << "LOAD" << endl;
+      //world->Load();
+      //RefreshObjects();
+    }
 }  
 
 void CXGui::HandleExposeEvent( XEvent &reportEvent )

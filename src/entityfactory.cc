@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.10 $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -92,6 +92,9 @@ CEntity* CreateObject(const char *type, CWorld *world, CEntity *parent)
 
     if (strcmp(type, "gripper_device") == 0)
       return new CGripperDevice(world, parent);
+
+    if (strcmp(type, "puck") == 0)
+      return new CPuck(world, parent);
 
     // TODO - devices in various stages of brokeness
     

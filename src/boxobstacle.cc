@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -46,6 +46,8 @@ CBoxObstacle::CBoxObstacle(CWorld *world, CEntity *parent)
   m_player_index = 0;
   
   m_stage_type = BoxType;
+
+  m_channel = 0; // default to visible on ACTS channel 0
 
   m_size_x = 1.0;
   m_size_y = 1.0;

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.19 $
+//  $Author: vaughan $
+//  $Revision: 1.20 $
 //
 // Usage:
 //  (empty)
@@ -42,7 +42,7 @@
 
 #define SEMKEY 2000
 
-#define WATCHRATES
+#define WATCH_RATES
 //#define DEBUG 
 //#define VERBOSE
 #undef DEBUG 
@@ -411,6 +411,7 @@ void CWorld::Update()
     //
     m_sim_time += simtimestep;
 
+#ifdef WATCH_RATES
     // Keep track of the sim/real time ratio
     // This is done as a moving window filter so we can see
     // the change over time.
@@ -423,7 +424,7 @@ void CWorld::Update()
     // the change over time.
     // Note that we must use the *real* timestep to get sensible results.
     //
-//      m_update_rate = (1 - a) * m_update_rate + a * (1 / timestep);
+    m_update_rate = (1 - a) * m_update_rate + a * (1 / timestep);
 
 //      if((GetRealTime() - last_output_time) >= 1.0)
 //      {
@@ -434,7 +435,6 @@ void CWorld::Update()
 //      }
 
 
-#ifdef WATCH_RATES
     static int period = 0;
     if( (++period %= 20)  == 0 )
       {
@@ -468,6 +468,22 @@ void CWorld::Update()
 	// find the matching entity
 	// (this implies that these ID fields cannot be changed externally)
 	
+	// see if this is a stage directive 
+	
+	if( truth.stage_id == 0 ) // its a command for the engine!
+	  {
+	    switch( truth.x ) // used to identify the command
+	      {
+		//case LOADc: Load( m_filename ); break;
+	      case SAVEc: Save( m_filename ); break;
+	      case PAUSEc: m_enable = !m_enable; break;
+	      default: printf( "Stage Warning: "
+			       "Received unknown command (%d); ignoring.\n",
+			       truth.x );
+	      }
+	      continue;
+	  }
+
 	assert( (CEntity*)truth.stage_id ); // should be good -otherwise a bug
 
 	//printf( "PTR: %d\n", truth.stage_id ); fflush( stdout );

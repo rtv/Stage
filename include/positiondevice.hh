@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/positiondevice.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -84,7 +84,7 @@ public: void SetShape( pioneer_shape_t );
     
     // Commanded robot speed
     //
-    private: double m_com_vr, m_com_vth;
+  //private: double m_com_vr, m_com_vth;
 
     // Odometric pose
     //

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.13 $
+//  $Revision: 1.14 $
 //
 // Usage:
 //  (empty)
@@ -88,56 +88,6 @@ CPlayerDevice::CPlayerDevice(CWorld *world, CEntity *parent )
 //
 CPlayerDevice::~CPlayerDevice( void )
 {
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Load the object from an argument list
-//
-bool CPlayerDevice::Load(int argc, char **argv)
-{
-    if (!CEntity::Load(argc, argv))
-        return false;
-
-    // Set the default port number
-    // We take our parents port number by default.
-    //
-    // *** TODO
-
-    for (int i = 0; i < argc;)
-    {
-        if (strcmp(argv[i], "port") == 0 && i + 1 < argc)
-        {
-            m_player_port = atoi(argv[i + 1]);
-            i += 2;
-        }
-        else
-        {
-            PLAYER_MSG1("unrecognized token [%s]", argv[i]);
-            i += 1;
-        }
-    }
-
-    return true;
-}
-
-
-/////////////////////////////////////////////////////////////////////////
-// Save the object
-//
-bool CPlayerDevice::Save(int &argc, char **argv)
-{
-    if (!CEntity::Save(argc, argv))
-        return false;
-
-    // Save port
-    //
-    char port[32];
-    snprintf(port, sizeof(port), "%d", m_player_port);
-    argv[argc++] = strdup("port");
-    argv[argc++] = strdup(port);
-
-    return true;
 }
 
 

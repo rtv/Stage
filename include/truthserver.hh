@@ -36,6 +36,8 @@ typedef struct {
     short x, y;
 } XPoint;
 
+enum cmd_t { SAVEc = 1, LOADc, PAUSEc };
+
 #endif // _XLIB_H
 
 #endif // _TRUTHSERVER_H

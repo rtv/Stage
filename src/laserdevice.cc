@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.20 $
+//  $Revision: 1.21 $
 //
 // Usage:
 //  (empty)
@@ -124,7 +124,7 @@ bool CLaserDevice::Save(int &argc, char **argv)
 //
 void CLaserDevice::Update( double sim_time )
 {
-  CEntity::Update( sim_time ); // inherit useful debug output
+    CEntity::Update( sim_time ); // inherit useful debug output
 
     ASSERT(m_world != NULL);
     
@@ -137,28 +137,30 @@ void CLaserDevice::Update( double sim_time )
         //
         CheckConfig();
 
+	//cout << " UPDATE " << endl;
+
         // Check to see if it is time to update the laser scan
         //
-        if ( sim_time - m_last_update < m_interval)
-        {
-	  m_last_update = sim_time;
-
-	  // Undraw ourselves from the world
-	  //
-	  if (!m_transparent)
-	    Map(false);
-	  	  
-	  // Generate new scan data and copy to data buffer
-	  //
-	  player_laser_data_t scan_data;
-	  GenerateScanData( &scan_data );
-	  PutData( &scan_data, sizeof( scan_data) );
-	  	  
-	  // Redraw outselves in the world
-	  //
-	   if (!m_transparent )
-	     Map(true);
-        }
+        if( sim_time - m_last_update >= m_interval )
+	  {
+	    m_last_update = sim_time;
+	    
+	    // Undraw ourselves from the world
+	    //
+	    if (!m_transparent)
+	      Map(false);
+	    
+	    // Generate new scan data and copy to data buffer
+	    //
+	    player_laser_data_t scan_data;
+	    GenerateScanData( &scan_data );
+	    PutData( &scan_data, sizeof( scan_data) );
+	    
+	    // Redraw outselves in the world
+	    //
+	    if (!m_transparent )
+	      Map(true);
+	  }
     }
     else
       {

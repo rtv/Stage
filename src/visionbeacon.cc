@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -146,8 +146,8 @@ void CVisionBeacon::Update( double sim_time )
 
     // Dont update anything if we are not subscribed
     //
-    if( Subscribed() < 1 )
-      return;
+    //if( Subscribed() < 1 )
+    //return;
     
     ASSERT(m_world != NULL);
     

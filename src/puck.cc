@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.10 $
+//  $Revision: 1.11 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -31,6 +31,9 @@ CPuck::CPuck(CWorld *world, CEntity *parent)
   m_size_x = 0.1;
   m_size_y = 0.1;
 
+  m_interval = 0.05; // update fast!
+    
+    
     m_friction = 0.05;
     // assume puck is 200g
     m_mass = 0.2;
@@ -56,14 +59,7 @@ bool CPuck::Load(int argc, char **argv)
 
     for (int i = 0; i < argc;)
     {
-        // Extract channel
-        //
-        if (strcmp(argv[i], "channel") == 0 && i + 1 < argc)
-        {
-            m_channel = atoi(argv[i + 1]) + 1;
-            i += 2;
-        }
-        else if (strcmp(argv[i], "friction") == 0 && i + 1 < argc)
+        if (strcmp(argv[i], "friction") == 0 && i + 1 < argc)
         {
             m_friction = atof(argv[i + 1]);
             i += 2;
@@ -96,6 +92,8 @@ bool CPuck::Save(int &argc, char **argv)
     if (!CEntity::Save(argc, argv))
         return false;
 
+    // TODO!
+
     // Save id
     //
     //char id[32];
@@ -127,17 +125,18 @@ void CPuck::Update( double sim_time )
 {
     static bool undrawn = false;
 
-    if( Subscribed() < 1)
-      return;
+    // no subscriptions for pucks!
+    //if( Subscribed() < 1)
+    //return;
     
     ASSERT(m_world != NULL);
   
     // if its time to recalculate state
     //
-    if( m_world->GetTime() - m_last_update <= m_interval )
+    if( sim_time - m_last_update < m_interval )
       return;
     
-    m_last_update = m_world->GetTime();
+    m_last_update = sim_time;
        
     // if we've been picked up by a gripper, then undraw once
     // and don't do anything else
@@ -170,18 +169,15 @@ void CPuck::Update( double sim_time )
     //
     m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_puck, 0);
     m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_vision, 0);
-
     
     // Grab our new global pose
     //
     GetGlobalPose(m_map_px, m_map_py, m_map_pth);
-
     
     // Draw our new representation
     //
-    m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_puck, 2);
-    m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_vision, 
-                       m_channel);
+    m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_puck, 1);
+    m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_vision, 1);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -213,7 +209,8 @@ CEntity* CPuck::InCollisionWithMovableObject(double px, double py, double pth)
       continue;
 
     // first match robots
-    if(object->m_stage_type != ( RoundRobotType || RectRobotType ) )
+    if( (object->m_stage_type != RoundRobotType )
+	&& (object->m_stage_type != RectRobotType ) )
       continue;
 
     // get the object's position
@@ -266,12 +263,10 @@ void CPuck::Move()
     m_last_time += step_time;
 
     // don't move if we've been picked up
-    if(m_parent_object)
-      return;
+    if(m_parent_object) return;
     
     // lower bound on velocity
-    if(m_com_vr < 0.01)
-      m_com_vr = 0;
+    if(m_com_vr < 0.01) m_com_vr = 0;
     
     // Get the current puck pose
     //

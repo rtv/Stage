@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.9 $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -41,14 +41,6 @@ class CPlayerDevice : public CEntity
     public: CPlayerDevice( CWorld* world, CEntity *parent );
     public: ~CPlayerDevice( void );
     
-    // Load the object from an argument list
-    //
-    public: virtual bool Load(int argc, char **argv);
-
-    // Save the object to an argument list
-    //
-    public: virtual bool Save(int &argc, char **argv);
-
     // Start all the devices
     //
     public: virtual bool SetupIOPointers( char* io );

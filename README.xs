@@ -1,5 +1,5 @@
 ############################################################################
-# $Id: README.xs,v 1.2 2001-08-10 20:48:38 vaughan Exp $
+# $Id: README.xs,v 1.3 2001-08-11 01:49:00 vaughan Exp $
 ############################################################################
 
 xs is an X GUI for stage that replaces the old xstage. It runs as an
@@ -20,11 +20,13 @@ To use it:
 
 xs understands the following keystrokes:
 
-cursor keys - pan
+(cursor keys) - pan 
 z - zoom in
 x - zoom out
 d - print a description of Stage's internal model on stdout
 f - print a more verbose description of Stage's internal model on stdout
+p - create a postscript format dump of the window in the current directory
+j - create a jpg format dump of the window in the current directory
 
 ##########################################################################
 
