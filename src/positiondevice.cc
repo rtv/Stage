@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.5 $
+//  $Author: ahoward $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -395,8 +395,6 @@ void CPositionDevice::OnUiUpdate(RtkUiDrawData *data)
 {
     CEntity::OnUiUpdate(data);
     
-    // Draw ourself
-    //
     data->begin_section("global", "");
     
     if (data->draw_layer("chassis", true))

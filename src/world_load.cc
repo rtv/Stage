@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.9 $
+//  $Author: ahoward $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -170,31 +170,25 @@ bool CWorld::Load(const char *filename)
         //
          else if (argc == 4 && strcmp(argv[0], "set") == 0 && strcmp(argv[2], "=") == 0)
         {
-            if (strcmp(argv[1], "environment_file") == 0)
+            // Get the number of pixels per meter
+            if (strcmp(argv[1], "pixels_per_meter") == 0)
+              this->ppm = atof(argv[3]);
+            // Get the scale of fig-based environment files
+            else if (strcmp(argv[1], "environment_scale") == 0)
+              this->scale = atof(argv[3]);
+            // Get the name of the environment file, but
+            // defer loading until later.
+            // For fig-based environment files, we need to know both the
+            // ppm and the scale before loading the environment.
+            else if (strcmp(argv[1], "environment_file") == 0)
             {
               strcpy(m_env_file, argv[3]);
-
-              printf( "[%s LOADING]", m_env_file );
-              fflush( stdout );
-
-              // Initialise the world grids
-              if( !InitGrids(m_env_file) )
-                printf( "Stage warning: "
-                        "error loading environment bitmap %s\n", 
-                        m_env_file );
-
-              printf( "\b\b\b\b\b\b\b\b\b" ); // erase load indicator
-              printf( "         " ); // erase load indicator
-              printf( "\b\b\b\b\b\b\b\b\b]" ); // erase load indicator
-              fflush( stdout );
             }
             else if (strcmp(argv[1], "auth_key") == 0)
             {
               strncpy(m_auth_key, argv[3],sizeof(m_auth_key));
               m_auth_key[sizeof(m_auth_key)-1] = '\0';
             }
-            else if (strcmp(argv[1], "pixels_per_meter") == 0)
-              ppm = atof(argv[3]);
             else if (strcmp(argv[1], "laser_res") == 0)
               m_laser_res = DTOR(atof(argv[3]));
             else
@@ -207,26 +201,26 @@ bool CWorld::Load(const char *filename)
         //
         else if (argc >= 2 && strcmp(argv[0], "enable") == 0)
         {
-	  if( strcmp( argv[1], "truth_server" ) == 0 )
-	    {
-	      // kick off the truth server thread
-	      pthread_t tid_dummy;
-	      pthread_create(&tid_dummy, NULL, &TruthServer, (void *)NULL );  
+            if( strcmp( argv[1], "truth_server" ) == 0 )
+            {
+                // kick off the truth server thread
+                pthread_t tid_dummy;
+                pthread_create(&tid_dummy, NULL, &TruthServer, (void *)NULL );  
 
-	      //printf( "[Truth %d]", TRUTH_SERVER_PORT );
-	      //fflush ( stdout );
-
-	    }
-	  else if( strcmp( argv[1], "environment_server" ) == 0 )
-	    {
-	      // kick off the environment server thread
-	      pthread_t tid_dummy;
-	      pthread_create(&tid_dummy, NULL, &EnvServer, (void *)NULL );  
-	    }
+                //printf( "[Truth %d]", TRUTH_SERVER_PORT );
+                //fflush ( stdout );
+            }
+            else if( strcmp( argv[1], "environment_server" ) == 0 )
+            {
+                // kick off the environment server thread
+                pthread_t tid_dummy;
+                pthread_create(&tid_dummy, NULL, &EnvServer, (void *)NULL );  
+            }
             else
                 printf("%s line %d : service %s is not defined\n",
                        filename, (int) linecount, (char*) argv[1]);
-	}
+        }
+        
         // Parse "create" command
         // create <type> ...
         //
@@ -261,6 +255,18 @@ bool CWorld::Load(const char *filename)
                        (int) linecount, (char*) argv[1]);
         }
     }
+
+    // Now load the environment file
+    printf( "[%s LOADING]", m_env_file );
+    fflush( stdout );
+    if( !InitGrids(m_env_file) )
+        printf( "Stage warning: "
+                "error loading environment bitmap %s\n", 
+                m_env_file );
+    printf( "\b\b\b\b\b\b\b\b\b" ); // erase load indicator
+    printf( "         " ); // erase load indicator
+    printf( "\b\b\b\b\b\b\b\b\b]" ); // erase load indicator
+    fflush( stdout );
     
     fclose(file);
     return true;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11 $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -37,17 +37,17 @@
 CLaserBeacon::CLaserBeacon(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {
-  // set the Player IO sizes correctly for this type of Entity
-  m_data_len    = 0;
-  m_command_len = 0;
-  m_config_len  = 0;
+    // set the Player IO sizes correctly for this type of Entity
+    m_data_len    = 0;
+    m_command_len = 0;
+    m_config_len  = 0;
 
-  m_player_port = 0; // not a player device
-  m_player_index = 0;
-  m_player_type = 0;
+    m_player_port = 0; // not a player device
+    m_player_index = 0;
+    m_player_type = 0;
 
-  m_stage_type = LaserBeaconType;
-
+    m_stage_type = LaserBeaconType;
+  
     m_beacon_id = 0;
     m_index = -1;
 
@@ -80,7 +80,8 @@ bool CLaserBeacon::Load(int argc, char **argv)
         //
         if (strcmp(argv[i], "id") == 0 && i + 1 < argc)
         {
-            strcpy(m_id, argv[i + 1]);
+            if (m_name[0] == 0)
+                strcpy(m_name, argv[i + 1]);
             m_beacon_id = atoi(argv[i + 1]);
             i += 2;
         }
@@ -156,7 +157,7 @@ void CLaserBeacon::Update( double sim_time )
     // Undraw our old representation
     //
     if (!m_transparent)
-        m_world->SetCell(m_map_px, m_map_py, layer_laser, 0);
+        m_world->SetCell(m_map_px, m_map_py, layer_laser, 0); 
 
     // Update our global pose
     //
@@ -184,14 +185,20 @@ void CLaserBeacon::OnUiUpdate(RtkUiDrawData *data)
     
     if (data->draw_layer("laser_beacon", true))
     {
-        double r = 0.10;
+        double sx = m_size_x;
+        double sy = m_size_y;        
         double ox, oy, oth;
         GetGlobalPose(ox, oy, oth);
-        double dx = 2 * r * cos(oth);
-        double dy = 2 * r * sin(oth);
-        data->set_color(m_color);
-        data->ellipse(ox - r, oy - r, ox + r, oy + r);
-        data->line(ox - dx, oy - dy, ox + dx, oy + dy);
+        data->set_color(m_color); 
+        data->ex_rectangle(ox, oy, oth, sx, sy);
+
+        // Draw in a little arrow showing our orientation
+        if (IsMouseReady())
+        {
+            double dx = 0.20 * cos(oth);
+            double dy = 0.20 * sin(oth);
+            data->ex_arrow(ox, oy, ox + dx, oy + dy, 0, 0.05);
+        }
     }
 
     data->end_section();

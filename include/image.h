@@ -11,7 +11,7 @@
 //  Modified by ahoward 24 May 2001 to make top bit 'sticky'.
 //  Once set, this bit can only be reset by 'clear'.
 //
-// $Id: image.h,v 1.6 2001-08-09 08:00:07 vaughan Exp $
+// $Id: image.h,v 1.7 2001-08-31 00:43:48 ahoward Exp $
 // RTV
 // ==================================================================
 
@@ -99,6 +99,9 @@ public:
 	void	load_raw(char* fname);
 	bool	load_pnm(const char* fname);
     bool	load_pnm_gz(const char* fname);
+    bool    load_fig(const char* filename, double ppm, double scale);
+    bool    load_fig_polyline(FILE *file, char *line, int size, double scale);
+
     
 	~Nimage(void);
 };

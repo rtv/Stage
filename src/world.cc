@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.22 $
+//  $Author: ahoward $
+//  $Revision: 1.23 $
 //
 // Usage:
 //  (empty)
@@ -87,8 +87,14 @@ CWorld::CWorld()
     //
     m_start_time = m_sim_time = 0;
 
+    // Initialise object list
+    //
+    m_object_count = 0;
+    
     // Initialise configuration variables
     //
+    this->ppm = 20;
+    this->scale = 100;
     m_laser_res = 0;
     
     memset( m_env_file, 0, sizeof(m_env_file));
@@ -201,7 +207,7 @@ bool CWorld::InitSharedMemoryIO( void )
 // Startup routine 
 //
 bool CWorld::Startup()
-{  
+{
     // Initialise the laser beacon rep
     //
     InitLaserBeacon();
@@ -261,37 +267,39 @@ bool CWorld::Startup()
     // keep a list of player devices, and start them AFTER all the IO pointers
     // are setup.
     // (bigger than strictly necessary, but who cares)
-    CPlayerDevice** tmpplayers = new CPlayerDevice*[m_object_count];  
-    bzero(tmpplayers,m_object_count*sizeof(CPlayerDevice*));
-    int currplayer = 0;
-    for (int i = 0; i < m_object_count; i++)
+    if (m_object_count > 0)
     {
-      if (!m_object[i]->SetupIOPointers( playerIO + entityOffset ) )
+      CPlayerDevice** tmpplayers = new CPlayerDevice*[m_object_count];  
+      bzero(tmpplayers,m_object_count*sizeof(CPlayerDevice*));
+      int currplayer = 0;
+      for (int i = 0; i < m_object_count; i++)
       {
-        cout << "Object " << (int)(m_object[i]) 
-                << " failed SetupIOPointers()" << endl;
-        return false;
-      }
-      if(m_object[i]->m_stage_type == PlayerType)
-      {
-        tmpplayers[currplayer] = (CPlayerDevice*)m_object[i];
-        currplayer++;
+        if (!m_object[i]->SetupIOPointers( playerIO + entityOffset ) )
+        {
+          cout << "Object " << (int)(m_object[i]) 
+               << " failed SetupIOPointers()" << endl;
+          return false;
+        }
+        if(m_object[i]->m_stage_type == PlayerType)
+        {
+          tmpplayers[currplayer] = (CPlayerDevice*)m_object[i];
+          currplayer++;
+        }
+        entityOffset += m_object[i]->SharedMemorySize();
       }
 
-      entityOffset += m_object[i]->SharedMemorySize();
-    }
-
-    for(currplayer=0;tmpplayers[currplayer];currplayer++)
-    {
-      // -1 makes it use its internal m_player_port
-      if(!(tmpplayers[currplayer]->StartupPlayer(-1)))
+      for(currplayer=0;tmpplayers[currplayer];currplayer++)
       {
-        cout << "PlayerDevice " << (int)(tmpplayers[currplayer]) 
-                << " failed StartupPlayer()" << endl;
-        return false;
+        // -1 makes it use its internal m_player_port
+        if(!(tmpplayers[currplayer]->StartupPlayer(-1)))
+        {
+          cout << "PlayerDevice " << (int)(tmpplayers[currplayer]) 
+               << " failed StartupPlayer()" << endl;
+          return false;
+        }
       }
+      delete tmpplayers;
     }
-    delete tmpplayers;
     
     // Start the world thread
     //
@@ -587,31 +595,35 @@ bool CWorld::InitGrids(const char *env_file)
     // we look for a zipped version.
     
   m_bimg = new Nimage;
-  
+
+  // Try to guess the file type from the extension
   int len = strlen( env_file );
-  
   if( len > 0 )
+  {
+    if (strcmp(&(env_file[len - 4]), ".fig") == 0)
     {
-      if( strcmp( &(env_file[ len - 3 ]), ".gz" ) == 0 )
+      if (!m_bimg->load_fig(env_file, this->ppm, this->scale))
+        return false;
+    }
+    else if( strcmp( &(env_file[ len - 7 ]), ".pnm.gz" ) == 0 )
 	{
 	  if (!m_bimg->load_pnm_gz(env_file))
 	    return false;
 	}
-      else
-	if (!m_bimg->load_pnm(env_file))
-	  {
+    else if (!m_bimg->load_pnm(env_file))
+    {
 	    char zipname[128];
 	    strcpy(zipname, env_file);
 	    strcat(zipname, ".gz");
 	    if (!m_bimg->load_pnm_gz(zipname))
 	      return false;
-	  }
     }
+  }
   else
-    {
-      cout << "Error: no world image file supplied. Quitting." << endl;
-      exit( 1 );
-    }
+  {
+    cout << "Error: no world image file supplied. Quitting." << endl;
+    exit( 1 );
+  }
 
   int width = m_bimg->width;
   int height = m_bimg->height;

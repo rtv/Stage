@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.6 2001-08-09 08:00:09 vaughan Exp $
+ * $Id: image.cc,v 1.7 2001-08-31 00:43:49 ahoward Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -291,6 +291,128 @@ bool Nimage::load_pnm_gz(const char* fname)
 
   return true;
 #endif
+}
+
+
+// Load from an xfig file
+// Note that we need both the pixels-per-meter and the figure scale
+// to create an image of the correct size and scale.
+bool Nimage::load_fig(const char* filename, double ppm, double scale)
+{
+  FILE *file = fopen(filename, "r");
+  if (file == NULL)
+  {
+    printf("unable to open image file\n");
+    return false;
+  }
+
+  char line[1024];
+  int format;
+
+  if (!fgets(line, sizeof(line), file))
+  {
+    printf("unexpected end-of-file\n");
+    fclose(file);
+    return false;
+  }
+
+  // Read the file format
+  if (strncmp(line, "#FIG 3.2", 8) == 0)
+    format = 32;
+  else
+  {
+    printf("unrecognized file format\n");
+    fclose(file);
+    return false;
+  }
+
+  // Read the header and discard most of it
+  // The <units> variable is used to handle imperial vs metric units.
+  // When using imperial units, xfig will use 1200 pixels/inch.
+  // When using metric units, xfig will use 450 pixels/cm.
+  // This latter figure is completely undocumented; its just a magic
+  // number I derived empirically.  ahoward
+  double units = 1200 / 0.0254;
+  for (int i = 0; i < 8;)
+  {
+    if (fgets(line, sizeof(line), file) == NULL)
+      break;
+    if (line[0] == '#')
+      continue;
+    if (i == 2)
+    {
+      if (strncmp(line, "Metric", 6) == 0)
+        units = 450 / 0.01;
+    }
+    i++;
+  }
+
+  // Create the figure
+  // We assume the whole page should be included,
+  // and that we are using US letter in landscape mode.
+  this->width = (int) (ppm * 11.5 * 0.0254 * scale);
+  this->height = (int) (ppm * 8.5 * 0.0254 * scale);
+  if (this->data)
+      delete[] this->data;
+  this->data = new unsigned char[ this->width * this->height ];
+
+  // Read the objects
+  while (true)
+  {
+    if (fgets(line, sizeof(line), file) == NULL)
+      break;
+    if (line[0] == '#')
+      continue;
+
+    int code = atoi(line);
+    if (code == 2)
+        load_fig_polyline(file, line, sizeof(line), ppm / units * scale);
+    else
+        printf("warning : unsupported object type in figure\n");
+  }
+  
+  fclose(file);
+  return true;
+}
+
+
+// Read in a polyline figure
+bool Nimage::load_fig_polyline(FILE *file, char *line, int size, double scale)
+{
+  // Read object header and discard most of it  
+  strtok(line, " \t");
+  for (int i = 0; i < 14; i++)
+    strtok(NULL, " \t");
+  int npoints = atoi(strtok(NULL, " \t"));
+
+  for (int i = 0; i < npoints;)
+  {
+    if (fgets(line, size, file) == NULL)
+      break;
+    if (line[0] == '#')
+      continue;
+
+    char *t1, *t2;
+    int ax, ay, bx, by;
+    
+    t1 = strtok(line, " \t\n");
+    while (i < npoints)
+    {
+      t2 = strtok(NULL, " \t\n");      
+      bx = (int) (atoi(t1) * scale);
+      by = (int) (atoi(t2) * scale);
+      i++;
+      if (i >= 2)
+          draw_line(ax, ay, bx, by, 1);
+      ax = bx;
+      ay = by;
+      t1 = strtok(NULL, " \t\n");
+      if (!t1)
+          break;
+    }
+  }
+
+  return true;
 }
 
 

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.14 $
+//  $Author: ahoward $
+//  $Revision: 1.15 $
 //
 // Usage:
 //  (empty)
@@ -256,18 +256,18 @@ class CWorld
     private: int m_broadcast_count;
     private: CBroadcastDevice *m_broadcast[256];
   
-     ////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////
     // shared memory management for interfacing with Player
 
-private: char tmpName[ 512 ]; // path of mmap node in filesystem
-public: char* PlayerIOFilename( void ){ return tmpName; };
+    private: char tmpName[ 512 ]; // path of mmap node in filesystem
+    public: char* PlayerIOFilename( void ){ return tmpName; };
   
-private: caddr_t playerIO;  
-private: bool InitSharedMemoryIO( void );
+    private: caddr_t playerIO;  
+    private: bool InitSharedMemoryIO( void );
 
-public: bool m_truth_is_current;
+    public: bool m_truth_is_current;
   
-  //public: void* GetIOAddress( CEntity* entity );
+    //public: void* GetIOAddress( CEntity* entity );
 
     // Create a single semaphore to sync access to the shared memory segments
     //
@@ -312,6 +312,10 @@ public: bool m_truth_is_current;
     private: double m_update_ratio;
     private: double m_update_rate;
 
+    // Scale of fig-based world file
+    //
+    private: double scale;
+    
     // Name of the file the world was loaded from
     //
     private: char m_filename[256];

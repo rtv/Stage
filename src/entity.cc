@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.6 $
+//  $Author: ahoward $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -54,7 +54,8 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
   
     m_line = -1;
     m_type[0] = 0;
-    m_id[0] = 0;
+    m_name[0] = 0;
+    // *** REMOVE m_id[0] = 0;
 
     m_dependent_attached = false;
 
@@ -110,9 +111,17 @@ bool CEntity::Load(int argc, char **argv)
 {
     for (int i = 0; i < argc;)
     {
+        // Extract a name
+        //
+        if (strcmp(argv[i], "name") == 0 && i + 1 < argc)
+        {
+            strncpy(m_name, argv[i + 1], sizeof(m_name) - 1);
+            i += 2;
+        }
+        
         // Extract pose from the argument list
         //
-        if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
+        else if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
         {
             double px = atof(argv[i + 1]);
             double py = atof(argv[i + 2]);
@@ -132,13 +141,13 @@ bool CEntity::Load(int argc, char **argv)
         // Extract size
         //
         else if (strcmp(argv[i], "size") == 0 && i + 2 < argc)
-	  {
+        {
             m_size_x = atof(argv[i + 1]);
             m_size_y = atof(argv[i + 2]);
             i += 3;
-	  }
+        }
     
-	// Extract channel
+        // Extract channel
         //
         else if (strcmp(argv[i], "channel") == 0 && i + 1 < argc)
         {
@@ -146,15 +155,15 @@ bool CEntity::Load(int argc, char **argv)
             i += 2;
         }
 
-	// extract port number
-	// one day we'll inherit our parent's port by default.
+        // extract port number
+        // one day we'll inherit our parent's port by default.
         else if (strcmp(argv[i], "port") == 0 && i + 1 < argc)
         {
             m_player_port = atoi(argv[i + 1]);
             i += 2;
         }
 
-	// extract index number
+        // extract index number
         else if (strcmp(argv[i], "index") == 0 && i + 1 < argc)
         {
             m_player_index = atoi(argv[i + 1]);
@@ -195,7 +204,15 @@ bool CEntity::Save(int &argc, char **argv)
     char sa[32];
     snprintf(sa, sizeof(sa), "%.0f", RTOD(pa));
 
-    // Add to argument list
+    // Save name
+    //
+    if (m_name[0] != 0)
+    {
+        argv[argc++] = strdup("name");
+        argv[argc++] = strdup(m_name);
+    }
+    
+    // Save pose
     //
     argv[argc++] = strdup("pose");
     argv[argc++] = strdup(sx);
@@ -702,7 +719,8 @@ void CEntity::OnUiUpdate(RtkUiDrawData *pData)
             
             pData->ellipse(ox - m_mouse_radius, oy - m_mouse_radius,
                            ox + m_mouse_radius, oy + m_mouse_radius);
-            pData->draw_text(ox + m_mouse_radius, oy + m_mouse_radius, m_id);
+            if (m_name[0] != 0)
+                pData->draw_text(ox + m_mouse_radius, oy + m_mouse_radius, m_name);
         }
     }
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.9 $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -132,9 +132,9 @@ class CEntity
     //
     public: char m_type[64];
     
-    // Id of this object
+    // Descriptive name for this object
     //
-    public: char m_id[64];
+    public: char m_name[64];
 
     // Pointer to world
     //
@@ -164,7 +164,7 @@ class CEntity
     //
     private: char m_color_desc[128];
 
-  // the apparent color of this robot to a vision system like ACTS 
+    // the apparent color of this robot to a vision system like ACTS 
     // (not yet implemented - get to it!)
     public: int m_channel; 
 
@@ -174,8 +174,8 @@ class CEntity
     protected: double m_interval; 
     protected: double m_last_update;
 
-  //////////////////////////////////////////////////////////////////////
-  // PLAYER IO STUFF
+    //////////////////////////////////////////////////////////////////////
+    // PLAYER IO STUFF
   
     // Port and index numbers for player
     // identify this device as belonging to the Player on port N at index M
@@ -229,8 +229,8 @@ class CEntity
     protected: int Subscribed();
 
 
-  // builds a truth packet for this entity
-  public: void ComposeTruth( stage_truth_t* truth );
+    // builds a truth packet for this entity
+    public: void ComposeTruth( stage_truth_t* truth );
 
     // base address for this entity's records in shared memory
     //
@@ -246,7 +246,7 @@ class CEntity
     protected: uint8_t *m_command_io;
     protected: uint8_t *m_config_io;
 
-  // the sizes of these buffers in bytes
+    // the sizes of these buffers in bytes
     protected: size_t m_data_len;
     protected: size_t m_command_len;
     protected: size_t m_config_len;

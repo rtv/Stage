@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.16 $
+//  $Author: ahoward $
+//  $Revision: 1.17 $
 //
 // Usage:
 //  (empty)
@@ -221,9 +221,9 @@ void CPlayerDevice::ShutdownPlayer()
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
 //
-void CPlayerDevice::OnUiUpdate(RtkUiDrawData *pData)
+void CPlayerDevice::OnUiUpdate(RtkUiDrawData *data)
 {
-    CEntity::OnUiUpdate(pData);
+    CEntity::OnUiUpdate(data);
 }
 
 
@@ -236,3 +236,4 @@ void CPlayerDevice::OnUiMouse(RtkUiMouseData *pData)
 }
 
 #endif
+
