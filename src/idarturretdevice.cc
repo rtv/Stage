@@ -20,8 +20,8 @@
 *
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/idarturretdevice.cc,v $
-* $Author: rtv $
-* $Revision: 1.3 $
+* $Author: gerkey $
+* $Revision: 1.4 $
 ******************************************************************************/
 
 
@@ -98,7 +98,7 @@ void CIDARTurretDevice::RenderMessages( player_idarturret_reply_t* rep )
   rtk_fig_clear( this->data_fig );
 
   double angle_per_sensor = 2.0 * M_PI / PLAYER_IDARTURRET_IDAR_COUNT;
-  double raylen = 2 * size_x;
+  //double raylen = 2 * size_x;
 
   for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
     {
@@ -107,7 +107,7 @@ void CIDARTurretDevice::RenderMessages( player_idarturret_reply_t* rep )
 	{
 	  rtk_fig_color_rgb32(this->data_fig, RGB(200,0,0) );
 	  
-	  double angle = i * angle_per_sensor;
+	  //double angle = i * angle_per_sensor;
 	  rtk_fig_arrow(this->data_fig, 0,0, 
 			i * angle_per_sensor, 1.5*size_x, 0.04 );
 	}
