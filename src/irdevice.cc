@@ -21,7 +21,7 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/irdevice.cc,v $
 * $Author: rtv $
-* $Revision: 1.8 $
+* $Revision: 1.9 $
 ******************************************************************************/
 
 
@@ -262,7 +262,7 @@ void CIDARDevice::TransmitMessage( idartx_t* transmit )
 	      //     ent->m_player.index );
 
 #ifdef INCLUDE_RTK2
-	      //rtk_fig_arrow(this->rays_fig, 0,0, scanline_bearing-oth, range, 0.03);
+	      rtk_fig_arrow(this->rays_fig, 0,0, scanline_bearing-oth, range, 0.03);
 #endif     
 	      uint8_t intensity;
 		    
@@ -379,7 +379,7 @@ bool CIDARDevice::ReceiveMessage( CEntity* sender,
       sprintf( message, "%s (%d)", message, recv.intensity );
   
       
-      //rtk_fig_text(this->data_fig, 0,0,0, message);
+      rtk_fig_text(this->data_fig, 0,0,0, message);
 #endif
       
       return true;
