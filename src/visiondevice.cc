@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.19 $
+//  $Author: gerkey $
+//  $Revision: 1.20 $
 //
 // Usage:
 //  (empty)
@@ -157,7 +157,7 @@ void CVisionDevice::Update( double sim_time )
   // no need to byteswap - this is single-byte data
   //
   if (len > 0)
-    PutData(actsBuf, len);
+    PutData((void*)(&actsBuf), len);
 }
 
 
@@ -286,26 +286,26 @@ size_t CVisionDevice::UpdateACTS()
 {
   // now the colors and ranges are filled in - time to do blob detection
   float yRadsPerPixel = m_zoom / cameraImageHeight;
-    
+
   int blobleft = 0, blobright = 0;
   unsigned char blobcol = 0;
   int blobtop = 0, blobbottom = 0;
-      
+
   numBlobs = 0;
   // scan through the samples looking for color blobs
   for( int s=0; s < m_scan_width; s++ )
-	{
+  {
     if( m_scan_channel[s] != 0 && m_scan_channel[s] < ACTS_NUM_CHANNELS)
     {
       blobleft = s;
       blobcol = m_scan_channel[s];
-	      
+
       // loop until we hit the end of the blob
       // there has to be a gap of >1 pixel to end a blob
-	    // this avoids getting lots of crappy little blobs
+      // this avoids getting lots of crappy little blobs
       while( m_scan_channel[s] == blobcol || m_scan_channel[s+1] == blobcol ) s++;
       //while( m_scan[s] == blobcol ) s++;
-	      
+
       blobright = s-1;
       double robotHeight = 0.6; // meters
       int xCenterOfBlob = blobleft + ((blobright - blobleft )/2);
@@ -320,14 +320,14 @@ size_t CVisionDevice::UpdateACTS()
         blobtop = 0;
       if (blobbottom > cameraImageHeight - 1)
         blobbottom = cameraImageHeight - 1;
-            
-	    // useful debug - keep
+
+      // useful debug - keep
       //cout << "Robot " << this
       //<< " sees " << (int)blobcol-1
       //<< " start: " << blobleft
       //<< " end: " << blobright
       //<< endl << endl;
-	         
+
       // fill in an arrau entry for this blob
       //
       blobs[numBlobs].channel = blobcol-1;
@@ -338,29 +338,30 @@ size_t CVisionDevice::UpdateACTS()
       blobs[numBlobs].right = blobright;
       blobs[numBlobs].bottom = blobbottom;
       blobs[numBlobs].area = (blobtop - blobbottom) * (blobleft-blobright);
-	      
+
       numBlobs++;
     }
-	}
-     
-  int buflen = ACTS_HEADER_SIZE + numBlobs * ACTS_BLOB_SIZE;
-  memset( actsBuf, 0, buflen );
-            
+  }
+
+  int buflen = VISION_HEADER_SIZE + numBlobs * VISION_BLOB_SIZE;
+  //bzero(&actsBuf, buflen );
+  bzero(&actsBuf, sizeof(actsBuf));
+
   // now we have the blobs we have to pack them into ACTS format (yawn...)
-    
+
   // ACTS has blobs sorted by channel (color), and by area within channel, 
   // so we'll bubble sort the
   // blobs - this could be more efficient, so might fix later.
   if( numBlobs > 1 )
-	{
+  {
     //cout << "Sorting " << numBlobs << " blobs." << endl;
     int change = true;
     ColorBlob tmp;
-	  
+
     while( change )
     {
       change = false;
-	      
+
       for( int b=0; b<numBlobs-1; b++ )
       {
         // if the channels are in the wrong order
@@ -374,75 +375,57 @@ size_t CVisionDevice::UpdateACTS()
           memcpy( &tmp, &(blobs[b]), sizeof( ColorBlob ) );
           memcpy( &(blobs[b]), &(blobs[b+1]), sizeof( ColorBlob ) );
           memcpy( &(blobs[b+1]), &tmp, sizeof( ColorBlob ) );
-		      
+
           change = true;
         }
       }
     }
-	}
-      
+  }
+
   // now run through the blobs, packing them into the ACTS buffer
   // counting the number of blobs in each channel and making entries
-      
   // in the acts header
-      
-  int index = ACTS_HEADER_SIZE;
-      
+
   for( int b=0; b<numBlobs; b++ )
-	{
+  {
     // I'm not sure the ACTS-area is really just the area of the
     // bounding box, or if it is in fact the pixel count of the
     // actual blob. Here it's just the rectangular area.
-	  
+
     // RTV - blobs[b].area is already set above
-    int blob_area = blobs[b].area;
-	  
-    // encode the area in ACTS's 3 bytes, 6-bits-per-byte
-    for (int tt=3; tt>=0; --tt) 
-    {  
-      actsBuf[ index + tt] = (blob_area & 63);
-      blob_area = blob_area >> 6;
-      //cout << "byte:" << (int)(actsBuf[ index + tt]) << endl;
-    }
-	  
+    actsBuf.blobs[b].area = htonl(blobs[b].area);
+
     // useful debug
-    //cout << "blob "
-    //<< " area: " <<  blobs[b].area
-    //<< " left: " <<  blobs[b].left
-    //<< " right: " <<  blobs[b].right
-    //<< " top: " <<  blobs[b].top
-    //<< " bottom: " <<  blobs[b].bottom
-    //<< endl;
-	  
-    actsBuf[ index + 4 ] = blobs[b].x;
-    actsBuf[ index + 5 ] = blobs[b].y;
-    actsBuf[ index + 6 ] = blobs[b].left;
-    actsBuf[ index + 7 ] = blobs[b].right;
-    actsBuf[ index + 8 ] = blobs[b].top;
-    actsBuf[ index + 9 ] = blobs[b].bottom;
-	  
-    index += ACTS_BLOB_SIZE;
-	  
-    // increment the count for this channel
-    actsBuf[ blobs[b].channel * 2 +1 ]++;
-	}
-      
+    /*
+    cout << "blob "
+    << " area: " <<  blobs[b].area
+    << " left: " <<  blobs[b].left
+    << " right: " <<  blobs[b].right
+    << " top: " <<  blobs[b].top
+    << " bottom: " <<  blobs[b].bottom
+    << endl;
+    */
+
+    actsBuf.blobs[b].x = htons(blobs[b].x);
+    actsBuf.blobs[b].y = htons(blobs[b].y);
+    actsBuf.blobs[b].left = htons(blobs[b].left);
+    actsBuf.blobs[b].right = htons(blobs[b].right);
+    actsBuf.blobs[b].top = htons(blobs[b].top);
+    actsBuf.blobs[b].bottom = htons(blobs[b].bottom);
+
+
+    // increment the count for this channel (and byte-swap)
+    actsBuf.header[blobs[b].channel].num = 
+            htons(ntohs(actsBuf.header[blobs[b].channel].num)+1);
+  }
+
   // now we finish the header by setting the blob indexes.
   int pos = 0;
-  for( int ch=0; ch<ACTS_NUM_CHANNELS; ch++ )
-	{
-    actsBuf[ ch*2 ] = pos;
-    pos += actsBuf[ ch*2 +1 ];
-	}
-      
-  // add 1 to every byte in the acts buffer.
-  // no overflow should be possible, so don't check
-  //cout << "ActsBuf: ";
-  for( int c=0; c<buflen; c++ )
-	{
-	  //cout << (int)actsBuf[c] << ' ';  
-	  actsBuf[c]++;
-	}
+  for( int ch=0; ch<VISION_NUM_CHANNELS; ch++ )
+  {
+    actsBuf.header[ch].index = htons(pos);
+    pos += actsBuf.header[ch].num;
+  }
 
   // finally, we're done.
   //cout << endl;

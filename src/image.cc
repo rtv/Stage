@@ -2,11 +2,10 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.12 2002-01-15 03:38:14 rtv Exp $
+ * $Id: image.cc,v 1.13 2002-01-24 21:46:50 gerkey Exp $
  ************************************************************************/
 
 #include <math.h>
-#include <iostream.h>
 #include <assert.h>
 
 #include <iostream>
@@ -186,7 +185,7 @@ void Nimage::load_raw(char* fname)
 bool Nimage::load_pnm(const char* fname)
 {
   char magicNumber[10];
-  char comment[512];
+  //char comment[512];
   int whiteNum;
 
   ifstream source( fname );
@@ -216,7 +215,7 @@ bool Nimage::load_pnm(const char* fname)
   if (data) delete[] data;
   data = new unsigned char[ numPixels ];
   
-  source.read( data, numPixels );
+  source.read( (char*)data, numPixels );
 
   // check that we read the right amount of data
   assert( source.gcount() == numPixels );

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Author: gerkey $
+//  $Revision: 1.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -82,7 +82,7 @@ bool CFixedObstacle::Load(CWorldFile *worldfile, int section)
   if( this->filename[0] != '/' && this->filename[0] != '~' )
     {
       // store the current filename
-      char* tmp = new char[ PATH_MAX ];
+      //char* tmp = new char[ PATH_MAX ];
       //strncpy( tmp, this->filename, PATH_MAX ); 
 
       char* fullpath = new char[ PATH_MAX ];

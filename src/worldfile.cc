@@ -5,7 +5,7 @@
 // Date: 15 Nov 2001
 // Desc: A property handling class
 //
-// $Id: worldfile.cc,v 1.3 2001-12-31 17:21:27 inspectorg Exp $
+// $Id: worldfile.cc,v 1.4 2002-01-24 21:46:50 gerkey Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -50,13 +50,28 @@ CWorldFile::~CWorldFile()
     CItem *pitem = this->items + item;
     if (pitem->name)
       free(pitem->name);
+    /*
     for (int index = 0; index < pitem->value_count; index++)
     {
       if (pitem->values[index])
         free(pitem->values[index]);
-      if (pitem->values)
-        delete[] pitem->values;
     }
+    if (pitem->values)
+      delete[] pitem->values;
+    */
+    
+    /* i think that the following code is a sufficient replacement for
+     * the above loop and subsequent delete[].  pitem->values was created
+     * by the following with a single new:
+     *
+     *   char **tmp = new char*[tmpsize];
+     *   ...
+     *   pitem->values = tmp;
+     *
+     * thus, we can just use a single delete to free pitem->values
+     */
+    if (pitem->values)
+      delete pitem->values;
   }
 
   if (this->filename)

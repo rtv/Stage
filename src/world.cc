@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.72 $
+//  $Author: gerkey $
+//  $Revision: 1.73 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -554,7 +554,8 @@ void CWorld::Shutdown()
   unlink( clockName );
 
   // Shutdown the wall
-  this->wall->Shutdown();
+  if(this->wall)
+    this->wall->Shutdown();
 
   // delete the device directory
   if( rmdir( m_device_dir ) != 0 )

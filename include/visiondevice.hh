@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visiondevice.hh,v $
-//  $Author: inspectorg $
-//  $Revision: 1.13 $
+//  $Author: gerkey $
+//  $Revision: 1.14 $
 //
 // Usage:
 //  (empty)
@@ -68,7 +68,7 @@ class CVisionDevice : public CEntity
   private: double m_pan, m_tilt, m_zoom;
 
   // channel to color map array
-  private: StageColor channel[ ACTS_NUM_CHANNELS ];
+  private: StageColor channel[ VISION_NUM_CHANNELS ];
   
   // Camera properties
   private: int cameraImageWidth, cameraImageHeight;
@@ -82,7 +82,8 @@ class CVisionDevice : public CEntity
   // Detected blob data
   private: int numBlobs;
   private: ColorBlob blobs[MAXBLOBS];
-  private: unsigned char actsBuf[ACTS_TOTAL_MAX_SIZE];
+  //private: unsigned char actsBuf[ACTS_TOTAL_MAX_SIZE];
+  private: player_vision_data_t actsBuf;
 
 #ifdef INCLUDE_RTK
   // Process GUI update messages
