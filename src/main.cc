@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.4 2003-02-03 03:07:26 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.5 2003-02-03 07:10:37 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -36,7 +36,71 @@
 #include <stdio.h>
 #include <unistd.h> /* for exit(2) */
 
-#include "server.h"
+#include "stageio.h"
+#include "entity.hh"
+#include "root.hh"
+
+/*
+#include "models/bitmap.hh"
+#include "models/box.hh"
+#include "models/bumperdevice.hh"
+#include "models/broadcastdevice.hh"
+#include "models/gpsdevice.hh"
+#include "models/gripperdevice.hh"
+#include "models/idardevice.hh"
+#include "models/idarturretdevice.hh"
+#include "models/fiducialfinderdevice.hh"
+#include "models/laserdevice.hh"
+#include "models/motedevice.hh"
+#include "models/positiondevice.hh"
+#include "models/powerdevice.hh"
+#include "models/ptzdevice.hh"
+#include "models/puck.hh"
+#include "models/sonardevice.hh"
+#include "models/truthdevice.hh"
+#include "models/visiondevice.hh"
+#include "models/regularmcldevice.hh"
+//#include "models/bpsdevice.hh"
+*/
+
+
+// this array defines the models that are available to Stage. New
+// devices must be added here.
+
+libitem_t library_items[] = { 
+  { "root", "black", (CFP)CRootDevice::Creator},
+  { "box", "blue", (CFP)CEntity::Creator},
+  /*
+  { "bitmap", "black", (CFP)CBitmap::Creator},
+  { "laser", "blue", (CFP)CLaserDevice::Creator},
+  { "position", "red", (CFP)CPositionDevice::Creator},
+  { "sonar", "green", (CFP)CSonarDevice::Creator},
+  { "box", "yellow", (CFP)CBox::Creator},
+  { "gps", "gray", (CFP)CGpsDevice::Creator},
+  { "gripper", "blue", (CFP)CGripperDevice::Creator},
+  { "idar", "DarkRed", (CFP)CIdarDevice::Creator},
+  { "idarturret", "DarkRed", (CFP)CIdarTurretDevice::Creator},
+  { "lbd", "gray", (CFP)CFiducialFinder::Creator},
+  { "fiducialfinder", "gray", (CFP)CFiducialFinder::Creator},
+  { "mote", "orange", (CFP)CMoteDevice::Creator},
+  { "power", "wheat", (CFP)CPowerDevice::Creator},
+  { "ptz", "magenta", (CFP)CPtzDevice::Creator},
+  { "puck", "green", (CFP)CPuck::Creator},
+  { "truth", "purple", (CFP)CTruthDevice::Creator},
+  { "vision", "gray", (CFP)CVisionDevice::Creator},
+  { "blobfinder", "gray", (CFP)CVisionDevice::Creator},
+  { "broadcast", "brown", (CFP)CBroadcastDevice::Creator},
+  { "bumper", "LightBlue", (CFP)CBumperDevice::Creator},
+  { "regularmcl", "blue", (CFP)CRegularMCLDevice::Creator},
+  // { "bps", BpsType, (CFP)CBpsDevice::Creator},
+  */
+
+  {NULL, NULL, NULL } // marks the end of the array
+};  
+
+
+// statically allocate a libray filled with the entries above
+Library model_library( library_items );
 
 ///////////////////////////////////////////////////////////////////////////
 // Global vars
@@ -106,7 +170,36 @@ void sig_quit(int signum)
   quit = 1;
 }
 
-  
+int HandleModel( stage_model_t* model )
+{
+  // create an entity. return success on getting a valid pointer
+  return( model_library.CreateEntity( model ) ? 0 : -1);
+}
+
+int HandleProperty( stage_property_t* prop )
+{
+
+  return 0; //success
+}
+
+int HandleCommand( stage_cmd_t* cmd )
+{
+  switch( *cmd ) // 
+    {
+    case STG_CMD_SAVE:
+    case STG_CMD_LOAD:
+    case STG_CMD_PAUSE:
+    case STG_CMD_UNPAUSE:     
+      PRINT_WARN1( "command %d not implemented\n", *cmd );
+      break;
+      
+    default:
+      PRINT_WARN1( "Unknown command (%d) not handled", *cmd);
+      break;
+    }
+
+  return 0; //success
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Program entry
@@ -118,7 +211,7 @@ int main(int argc, char **argv)
 
   fflush( stdout );
 
-  if( InitServer( argc, argv ) == -1 )
+  if( SIOInitServer( argc, argv ) == -1 )
     {
       printf( "\n Server failed to initialize. Quitting." );
       quit = 1;
@@ -146,17 +239,21 @@ int main(int argc, char **argv)
       printf( "cycle %d\n", c++ );
 
       // set up new clients
-      if( AcceptConnections() == -1 ) break;
+      if( SIOAcceptConnections() == -1 ) break;
       
       // receive commands, property changes and subscriptions from
       // each client. will block until something is read.  if the
       // server receives 'update' commands from all clients, it'll
       // update the world
-      if( ServiceConnections() == -1 ) break;
-
-     
+      if( SIOServiceConnections( &HandleCommand, 
+			      &HandleModel, 
+			      &HandleProperty ) == -1 ) break;
+      
+      // update the simulation model
+      if( CEntity::root ) CEntity::root->Update( CEntity::simtime+=0.1 );
+      
       // write out any changed, subscribed properties
-      if( ReportResults( UpdateSimulation() ) == -1 ) break;
+      if( SIOReportResults( CEntity::simtime, NULL, 0 ) == -1 ) break;
 
       sleep( 1 ); // just stop the powerbook getting hot :)
     }

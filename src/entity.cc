@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.3 2003-02-01 23:19:51 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.4 2003-02-03 07:10:36 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -61,6 +61,7 @@ double CEntity::ppm = 100;
 CMatrix* CEntity::matrix = NULL;
 bool CEntity::enable_gui = true;
 CEntity* CEntity::root = NULL;
+double CEntity::simtime = 0.0; // start the clock at zero time
 
 ///////////////////////////////////////////////////////////////////////////
 // main constructor

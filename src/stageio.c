@@ -1,7 +1,4 @@
 
-#if HAVE_CONFIG_H
-  #include <config.h>
-#endif
 #if HAVE_STRINGS_H
   #include <strings.h>
 #endif
@@ -71,14 +68,6 @@ void CatchSigPipe( int signo )
   puts( "** SIGPIPE! **" );
 #endif
   exit( -1 );
-}
-
-
-void ClientCatchSigPipe( int signo )
-{
-#ifdef VERBOSE
-  puts( "** SIGPIPE! **" );
-#endif
 }
 
 void TimeStamp( stage_header_t* hdr, double simtime )
@@ -312,7 +301,7 @@ int WriteProperties( int fd, double simtime, char* data, size_t data_len )
 }
 
 
-int ReadModels( int fd, int num )
+int ReadModels( int fd, int num, model_callback_t callback )
 {
   size_t bytes_expected = num * sizeof(stage_model_t);
   stage_model_t* models =  (stage_model_t*)malloc(bytes_expected);
@@ -334,6 +323,10 @@ int ReadModels( int fd, int num )
       printf( "Creating model %d %s parent %d\n",
 	      models[m].id, models[m].token, models[m].parent_id );
       
+      // CALL THE CALLBACK WITH THIS SINGLE PROPERTY
+      if( callback )
+	(*callback)( &(models[m]) );
+
       //if( CreateEntityFromLibrary( &(models[m])) == -1 )
       //printf( "enitity create failed!\n" );
       
@@ -345,7 +338,7 @@ int ReadModels( int fd, int num )
 
 // read a buffer len bytes long from fd, then call the property handling callback
 // for each property packed into the buffer
-int ReadProperties( int fd, size_t len )
+int ReadProperties( int fd, size_t len, property_callback_t callback )
 {
   // allocate space for the data
   char* prop_buf = malloc( len );
@@ -371,7 +364,9 @@ int ReadProperties( int fd, size_t len )
       PRINT_DEBUG2( "Read property id %d len %d\n", prop->id, prop->len );
       
       // CALL THE CALLBACK WITH THIS SINGLE PROPERTY
-      
+      if( callback )
+	(*callback)( prop );
+
       // move the pointer past this record in the buffer
       prop_header += sizeof(stage_property_t) + prop->len;
     }
@@ -380,101 +375,12 @@ int ReadProperties( int fd, size_t len )
 }
 
 
-// returns a file descriptor attatched to the Stage server
-int InitStageClient( int argc, char** argv )
-{
-  int a;
-  // parse out the hostname - that's all we need just here
-  // (the parent stageio object gets the port)
-  for( a=1; a<argc; a++ )
-  {
-    // get the hostname, overriding the default
-    if( strcmp( argv[a], "-c" ) == 0 )
-    {
-      // if -c is the last argument the cmd line is bad
-      if( a == argc-1 )
-	{
-	  SIOPrintUsage();
-	  return -1;
-	}
-     
-      // the next argument is the hostname
-      strncpy( server_host, argv[a+1], STG_HOSTNAME_MAX);
-      
-      a++;
-    }
-    
-  }
-  
-  // reassuring console output
-  printf( "[Connecting to %s:%d]", server_host, server_port );
-  puts( "" );
-
-  // connect to the remote server and download the world data
-  
-  // get the IP of our host
-  struct hostent* info = gethostbyname( server_host );
-  
-  if( info )
-    { // make sure this looks like a regular internet address
-      assert( info->h_length == 4 );
-      assert( info->h_addrtype == AF_INET );
-    }
-  else
-    {
-      PRINT_ERR1( "failed to resolve IP for remote host\"%s\"\n", 
-		  server_host );
-      return -1;
-    }
-  struct sockaddr_in servaddr;
-  
-  /* open socket for network I/O */
-  connection_polls[0].fd = socket(AF_INET, SOCK_STREAM, 0);
-  connection_polls[0].events = POLLIN; // notify me when data is available
-  
-  //  printf( "POLLFD = %d\n", m_pose_connections[0].fd );
-  
-  if( connection_polls[0].fd < 0 )
-    {
-      printf( "Error opening network socket\n" );
-      fflush( stdout );
-      return -1;
-    }
-  
-  /* setup our server address (type, IP address and port) */
-  bzero(&servaddr, sizeof(servaddr)); /* initialize */
-  servaddr.sin_family = AF_INET;   /* internet address space */
-  servaddr.sin_port = htons( server_port ); /*our command port */ 
-  memcpy(&(servaddr.sin_addr), info->h_addr_list[0], info->h_length);
-  
-  if( connect( connection_polls[0].fd, 
-               (struct sockaddr*)&servaddr, sizeof( servaddr) ) == -1 )
-  {
-    printf( "Can't find a Stage server on %s. Quitting.\n", 
-            info->h_addr_list[0] ); 
-    perror( "" );
-    fflush( stdout );
-    return -1;
-  }
-  // send the connection type byte - we want an asynchronous connection
-  
-  char c = STAGE_SYNC;
-  int r;
-  if( (r = write( connection_polls[0].fd, &c, 1 )) < 1 )
-    {
-      printf( "XS: failed to write STAGE_SYNC byte to Stage. Quitting\n" );
-    if( r < 0 ) perror( "error on write" );
-    return -1;
-  }
-  
-  // a client has just the one connection (for now)
-  connection_count = 1;
-
-  return connection_polls[0].fd;
-}  
+			  
 
 
-int ServiceConnections( void )
+int ServiceConnections(   command_callback_t cmd_callback, 
+			  model_callback_t model_callback,
+			  property_callback_t prop_callback )
 {
   // read stuff until we get a continue message on each channel
 #ifdef VERBOSE
@@ -535,46 +441,31 @@ int ServiceConnections( void )
 			case STG_HDR_MODELS:
 			  PRINT_DEBUG2( "Header: STG_HDR_MODELS (%d) on %d", 
 					hdr.data, confd );
-			  ReadModels( confd, hdr.data );
+			  ReadModels( confd, hdr.data, model_callback );
 			  break;
 			  
 			case STG_HDR_PROPS: // some poses are coming in 
 			  PRINT_DEBUG2( "Header: STG_HDR_PROPS (%d) on %d", 
 					hdr.data, confd );
-			  ReadProperties( confd, hdr.data );
+			  ReadProperties( confd, hdr.data, prop_callback );
 			  break;
 			  
 			case STG_HDR_CMD:
 			  PRINT_DEBUG2( "Header: STG_HDR_CMD (%d) on %d",
 					hdr.data, confd );
-			  
-			  switch( hdr.data ) // contains the command type
-			    {
-			      // client is ready for Stage to do an update
-			    case STG_CMD_CONTINUE: 
-			      PRINT_DEBUG2( "Command: STG_CMD_CONTINUE (%d) on %d", 
-					    hdr.data, confd );
-			      syncs++;
-			      
-			      printf( "received %d of %d required continues\n",
-				      syncs, connection_count );
-			      break;
-
-			    case STG_CMD_SAVE:
-			    case STG_CMD_LOAD:
-			    case STG_CMD_PAUSE:
-			    case STG_CMD_UNPAUSE:
-			      PRINT_WARN2( "Command (%d) not yet implemented "
-					   "on connection %d",
-					   hdr.data, t );
-			      break;
-						      
-			    default:
-			      PRINT_WARN2( "Unknown command (%d) on connection %d",
-					   hdr.data, t );
-			      break;
-			    }
+			  if( cmd_callback )
+			    (*cmd_callback)( &(hdr.data) );
 			  break;			  
+			  
+			case STG_HDR_CONTINUE: 
+			  PRINT_DEBUG1( "Header: STG_HDR_CONTINUE on %d", 
+					confd );
+			  syncs++;
+			  
+			  printf( "received %d of %d required continues\n",
+				  syncs, connection_count );
+			  break;
+			  
 			  
 			default:
 			  PRINT_WARN2( "Unknown header type (%d) on %d",
@@ -797,17 +688,270 @@ void DestroyConnection( int con )
   PRINT_DEBUG1( "remaining connections %d", connection_count );
 }
 
-int ReportResults( double simtime )
+int Continue( int fd, double simtime )
+{
+  stage_header_t hdr;
+  hdr.type = STG_HDR_CONTINUE;
+  
+  TimeStamp( &hdr, simtime );
+  
+  return( WriteHeader( fd, &hdr ) );
+}
+
+
+int ReportResults( double simtime, char* data, size_t len )
 {
   int t;
   for( t=0; t<connection_count; t++ )// all the connections
     {      
       // TODO figure out how many dirty props are on this connection, buffer them
-      // together, and write 'em out (instead of NULL here)
-      if( WriteProperties( connection_polls[t].fd, simtime, NULL, 0 ) == -1 )
+      // together, and write 'em out.
+      // for now we'll just send all the props on all connections
+      if( WriteProperties( connection_polls[t].fd, simtime, data, len ) == -1 )
 	return -1; // fail
+
+      // send a continue so the client knows we're done
+      if( Continue( connection_polls[t].fd, simtime ) == -1 )
+	return -1;
     }
   
   return 0; // success
+}
+
+// returns a file descriptor attatched to the Stage server
+int InitStageClient( int argc, char** argv )
+{
+  int a;
+  // parse out the hostname - that's all we need just here
+  // (the parent stageio object gets the port)
+  for( a=1; a<argc; a++ )
+  {
+    // get the hostname, overriding the default
+    if( strcmp( argv[a], "-c" ) == 0 )
+    {
+      // if -c is the last argument the cmd line is bad
+      if( a == argc-1 )
+	{
+	  SIOPrintUsage();
+	  return -1;
+	}
+     
+      // the next argument is the hostname
+      strncpy( server_host, argv[a+1], STG_HOSTNAME_MAX);
+      
+      a++;
+    }
+    
+  }
+  
+  // reassuring console output
+  printf( "[Connecting to %s:%d]", server_host, server_port );
+  puts( "" );
+
+  // connect to the remote server and download the world data
+  
+  // get the IP of our host
+  struct hostent* info = gethostbyname( server_host );
+  
+  if( info )
+    { // make sure this looks like a regular internet address
+      assert( info->h_length == 4 );
+      assert( info->h_addrtype == AF_INET );
+    }
+  else
+    {
+      PRINT_ERR1( "failed to resolve IP for remote host\"%s\"\n", 
+		  server_host );
+      return -1;
+    }
+  struct sockaddr_in servaddr;
+  
+  /* open socket for network I/O */
+  connection_polls[0].fd = socket(AF_INET, SOCK_STREAM, 0);
+  connection_polls[0].events = POLLIN; // notify me when data is available
+  
+  //  printf( "POLLFD = %d\n", m_pose_connections[0].fd );
+  
+  if( connection_polls[0].fd < 0 )
+    {
+      printf( "Error opening network socket\n" );
+      fflush( stdout );
+      return -1;
+    }
+  
+  /* setup our server address (type, IP address and port) */
+  bzero(&servaddr, sizeof(servaddr)); /* initialize */
+  servaddr.sin_family = AF_INET;   /* internet address space */
+  servaddr.sin_port = htons( server_port ); /*our command port */ 
+  memcpy(&(servaddr.sin_addr), info->h_addr_list[0], info->h_length);
+  
+  if( connect( connection_polls[0].fd, 
+               (struct sockaddr*)&servaddr, sizeof( servaddr) ) == -1 )
+  {
+    printf( "Can't find a Stage server on %s. Quitting.\n", 
+            info->h_addr_list[0] ); 
+    perror( "" );
+    fflush( stdout );
+    return -1;
+  }
+  // send the connection type byte - we want an asynchronous connection
+  
+  char c = STAGE_SYNC;
+  int r;
+  if( (r = write( connection_polls[0].fd, &c, 1 )) < 1 )
+    {
+      printf( "XS: failed to write STAGE_SYNC byte to Stage. Quitting\n" );
+    if( r < 0 ) perror( "error on write" );
+    return -1;
+  }
+  
+  // a client has just the one connection (for now)
+  connection_count = 1;
+
+  return connection_polls[0].fd;
+}  
+
+int InitStageServer( int argc, char** argv )
+{ 
+  PRINT_DEBUG( "Start" );
+  
+  PRINT_DEBUG( "Resolving hostname" );
+
+  //////////////////////////////////////////////////////////////////////
+  // FIGURE OUT THE DEFAULT FULL HOST NAME & ADDRESS
+  
+  // maintain a connection to the nameserver - speeds up lookups
+  sethostent( TRUE );
+  
+  PRINT_DEBUG( "Getting host information for localhost" );
+  struct hostent* info = gethostbyname( "localhost" );
+  assert( info );
+  struct in_addr current_hostaddr;
+  
+  // make sure this looks like a regular internet address
+  assert( info->h_length == 4 );
+  assert( info->h_addrtype == AF_INET );
+  
+  // copy the address out
+  memcpy( &current_hostaddr.s_addr, info->h_addr_list[0], 4 ); 
+
+  ////////////////////////////////////////////////////////////////////
+  PRINT_DEBUG( "Setting up connection server" );
+
+  listen_poll.fd = socket(AF_INET, SOCK_STREAM, 0);
+  listen_poll.events = POLLIN; // notify me when a connection request happens
+  
+  struct sockaddr_in servaddr;  
+  bzero(&servaddr, sizeof(servaddr));
+  
+  servaddr.sin_family      = AF_INET;
+  servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  servaddr.sin_port        = htons(server_port);
+  
+  // switch on the re-use-address option
+  const char on = 1;
+  setsockopt( listen_poll.fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on) );
+  
+  if( bind(listen_poll.fd, (struct sockaddr*) &servaddr, sizeof(servaddr) )  < 0 )
+  {
+    perror("failed bind");
+
+    printf( "Port %d is in use. Quitting (but try again in a few seconds).", 
+	    server_port );
+    return -1; // fail
+  }
+  
+  // catch signals generated by socket closures
+  signal( SIGPIPE, CatchSigPipe );
+  
+  // listen for requests on this socket
+  // we poll it in ListenForPoseConnections()
+  assert( listen( listen_poll.fd, STG_LISTENQ) == 0 );
+
+
+  PRINT_DEBUG( "End" );
+
+  return 0; //success
+}
+
+
+int AcceptConnections( void )
+{
+  int readable = 0;
+  int retval = 0; // 0: success, -1: failure
+  
+  // poll for connection requests with a very fast timeout
+  if((readable = poll( &listen_poll, 1, 0 )) == -1)
+    {
+      if( errno != EINTR ) // timer interrupts are OK
+	{ 
+	  perror( "Stage warning: poll error (not EINTR)");
+	  return -1; // fail
+	}
+    }
+  
+  // if the socket had a request
+  if( readable && (listen_poll.revents & POLLIN ) ) 
+    {
+      // set up a socket for this connection
+      struct sockaddr_in cliaddr;  
+      bzero(&cliaddr, sizeof(cliaddr));
+#if PLAYER_SOLARIS
+      int clilen;
+#else
+      socklen_t clilen;
+#endif
+      
+      clilen  = sizeof(cliaddr);
+      int connfd = 0;
+      
+      connfd = accept( listen_poll.fd, (struct sockaddr*) &cliaddr, &clilen);
+      
+      
+      // set the dirty flag for all entities on this connection
+      //DirtyEntities( m_pose_connection_count );
+      
+      
+      // determine the type of connection, sync or async, by reading
+      // the first byte
+      char b = 0;
+      int r = 0;
+      
+      if( (r = read( connfd, &b, 1 )) < 1 ) 
+	{
+	  puts( "failed to read sync type byte. Quitting\n" );
+	  if( r < 0 ) perror( "read error" );
+	  return -1; // fail
+	}
+      
+      // if this is a syncronized connection, increase the sync counter 
+      switch( b )
+	{
+	case STAGE_SYNC: 
+#ifdef VERBOSE      
+	  printf( "\nStage: connection accepted (id: %d fd: %d)\n", 
+		  connection_count, connfd );
+	  fflush( stdout );
+#endif            
+	  retval = 0; //success
+	  break;
+	  
+	default: printf( "Stage: unknown sync on %d. Closing connection\n",
+			 connfd  );
+	  close( connfd );
+	  retval = -1; // fail
+	  break;
+	}
+      
+   
+      if( retval != -1 ) // if successful
+	{
+	  connection_polls[ connection_count ].fd = connfd;
+	  connection_polls[ connection_count ].events = POLLIN;
+	  connection_count++;
+	}
+    }
+
+  return retval;
 }
 

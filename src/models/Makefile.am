@@ -55,12 +55,8 @@ libstgmodels_a_SOURCES = \
                    visiondevice.cc \
                    visiondevice.hh \
 		   regularmcldevice.hh \
-		   regularmcldevice.cc 
+		   regularmcldevice.cc
+
 
 # currently broken
 # bpsdevice.cc 
-
-# REMOVE
-#                   positiondevice.cc \
-#                   positiondevice.hh \
-

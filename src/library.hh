@@ -16,6 +16,8 @@ typedef CEntity*(*CreatorFunctionPtr)( LibraryItem *libit,
 				       int id, 
 				       CEntity *parent );
 
+typedef CreatorFunctionPtr CFP;
+
 typedef struct libitem
 {
   const char* token;

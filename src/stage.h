@@ -132,10 +132,21 @@ typedef struct
 typedef int stage_id_t;
 
 // the server reads a header to discover which type of data follows...
-typedef enum { STG_HDR_MODELS, 
-	       STG_HDR_PROPS, 
-	       STG_HDR_CMD,
+typedef enum { 
+  STG_HDR_CONTINUE, 
+  STG_HDR_MODELS, 
+  STG_HDR_PROPS, 
+  STG_HDR_CMD,
 } stage_header_type_t;
+
+// COMMANDS - no packet follows; the header's data field is set to one
+// of these
+typedef enum {
+  STG_CMD_SAVE, 
+  STG_CMD_LOAD, 
+  STG_CMD_PAUSE, 
+  STG_CMD_UNPAUSE, 
+} stage_cmd_t;
 
 
 // returned by BufferPacket()
@@ -144,7 +155,6 @@ typedef struct
   char* data;
   size_t len;
 } stage_buffer_t;
-
 
 typedef struct
 {
@@ -160,15 +170,6 @@ typedef struct
 
   uint32_t data;   
 } __attribute ((packed)) stage_header_t;
-
-// COMMANDS - no packet follows; the header's data field is set to one
-// of these
-typedef enum { STG_CMD_CONTINUE = 1, 
-	       STG_CMD_SAVE, 
-	       STG_CMD_LOAD, 
-	       STG_CMD_PAUSE, 
-	       STG_CMD_UNPAUSE, 
-} stage_cmd_t;
 
 // this allows us to set a property for an entity
 // pretty much any data member of an entity can be set
@@ -257,21 +258,21 @@ typedef struct
 #define ASSERT(m) assert(m)
 
 // Error macros
-#define PRINT_ERR(m)         printf("\nstage error : %s : "m"\n", \
+#define PRINT_ERR(m)         printf("\n\033[41mstage error\033[0m : %s : "m"\n", \
                                     __FILE__)
-#define PRINT_ERR1(m, a)     printf("\nstage error : %s : "m"\n", \
+#define PRINT_ERR1(m, a)     printf("\n\033[41mstage error\033[0m : %s : "m"\n", \
                                     __FILE__, a)
-#define PRINT_ERR2(m, a, b)  printf("\nstage error : %s : "m"\n", \
+#define PRINT_ERR2(m, a, b)  printf("\n\033[41mstage error\033[0m : %s : "m"\n", \
                                     __FILE__, a, b)
 
 // Warning macros
-#define PRINT_WARN(m)         printf("\nstage warning : %s %s "m"\n", \
+#define PRINT_WARN(m)         printf("\n\033[44mstage warning\033[0m : %s %s "m"\n", \
                                      __FILE__, __FUNCTION__)
-#define PRINT_WARN1(m, a)     printf("\nstage warning : %s %s "m"\n", \
+#define PRINT_WARN1(m, a)     printf("\n\033[44mstage warning\033[0m : %s %s "m"\n", \
                                      __FILE__, __FUNCTION__, a)
-#define PRINT_WARN2(m, a, b)  printf("\nstage warning : %s %s "m"\n", \
+#define PRINT_WARN2(m, a, b)  printf("\n\033[44mstage warning\033[0m : %s %s "m"\n", \
                                      __FILE__, __FUNCTION__, a, b)
-#define PRINT_WARN3(m, a, b, c) printf("\nstage warning : %s %s "m"\n", \
+#define PRINT_WARN3(m, a, b, c) printf("\n\033[44mstage warning\033[0m : %s %s "m"\n", \
                                      __FILE__, __FUNCTION__, a, b, c)
 
 // Message macros
@@ -281,15 +282,15 @@ typedef struct
 
 // DEBUG macros
 #ifdef DEBUG
-#define PRINT_DEBUG(m)         printf("\rstage debug : %s %s\n  "m"\n", \
+#define PRINT_DEBUG(m)         printf("\r\033[42mstage debug\033[0m : %s %s\n  "m"\n", \
                                      __FILE__, __FUNCTION__)
-#define PRINT_DEBUG1(m, a)     printf("\rstage debug : %s %s\n  "m"\n", \
+#define PRINT_DEBUG1(m, a)     printf("\r\033[42mstage debug\033[0m : %s %s\n  "m"\n", \
                                      __FILE__, __FUNCTION__, a)
-#define PRINT_DEBUG2(m, a, b)  printf("\rstage debug : %s %s\n  "m"\n", \
+#define PRINT_DEBUG2(m, a, b)  printf("\r\033[42mstage debug\033[0m : %s %s\n  "m"\n", \
                                      __FILE__, __FUNCTION__, a, b)
-#define PRINT_DEBUG3(m, a, b, c) printf("\rstage debug : %s %s\n  "m"\n", \
+#define PRINT_DEBUG3(m, a, b, c) printf("\r\033[42mstage debug\033[0m : %s %s\n  "m"\n", \
                                      __FILE__, __FUNCTION__, a, b, c)
-#define PRINT_DEBUG4(m, a, b, c, d) printf("\rstage debug : %s %s\n  "m"\n", \
+#define PRINT_DEBUG4(m, a, b, c, d) printf("\r\033[42mstage debug\033[0m : %s %s\n  "m"\n", \
                                      __FILE__, __FUNCTION__, a, b, c, d)
 #else
 #define PRINT_DEBUG(m)

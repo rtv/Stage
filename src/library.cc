@@ -24,76 +24,12 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.13.4.3 2003-02-03 03:07:26 rtv Exp $
+ * CVS info: $Id: library.cc,v 1.13.4.4 2003-02-03 07:10:36 rtv Exp $
  */
 
 #include "library.hh"
 #include "entity.hh"
-#include "cwrapper.h"
-
 #include "root.hh"
-/*
-#include "models/bitmap.hh"
-#include "models/box.hh"
-#include "models/bumperdevice.hh"
-#include "models/broadcastdevice.hh"
-#include "models/gpsdevice.hh"
-#include "models/gripperdevice.hh"
-#include "models/idardevice.hh"
-#include "models/idarturretdevice.hh"
-#include "models/fiducialfinderdevice.hh"
-#include "models/laserdevice.hh"
-#include "models/motedevice.hh"
-#include "models/positiondevice.hh"
-#include "models/powerdevice.hh"
-#include "models/ptzdevice.hh"
-#include "models/puck.hh"
-#include "models/sonardevice.hh"
-#include "models/truthdevice.hh"
-#include "models/visiondevice.hh"
-#include "models/regularmcldevice.hh"
-//#include "models/bpsdevice.hh"
-*/
-
-typedef CreatorFunctionPtr CFP;
-
-// this array defines the models that are available to Stage. New
-// devices must be added here.
-
-libitem_t library_items[] = { 
-  { "root", "black", (CFP)CRootDevice::Creator},
-  { "box", "blue", (CFP)CEntity::Creator},
-  /*
-  { "bitmap", "black", (CFP)CBitmap::Creator},
-  { "laser", "blue", (CFP)CLaserDevice::Creator},
-  { "position", "red", (CFP)CPositionDevice::Creator},
-  { "sonar", "green", (CFP)CSonarDevice::Creator},
-  { "box", "yellow", (CFP)CBox::Creator},
-  { "gps", "gray", (CFP)CGpsDevice::Creator},
-  { "gripper", "blue", (CFP)CGripperDevice::Creator},
-  { "idar", "DarkRed", (CFP)CIdarDevice::Creator},
-  { "idarturret", "DarkRed", (CFP)CIdarTurretDevice::Creator},
-  { "lbd", "gray", (CFP)CFiducialFinder::Creator},
-  { "fiducialfinder", "gray", (CFP)CFiducialFinder::Creator},
-  { "mote", "orange", (CFP)CMoteDevice::Creator},
-  { "power", "wheat", (CFP)CPowerDevice::Creator},
-  { "ptz", "magenta", (CFP)CPtzDevice::Creator},
-  { "puck", "green", (CFP)CPuck::Creator},
-  { "truth", "purple", (CFP)CTruthDevice::Creator},
-  { "vision", "gray", (CFP)CVisionDevice::Creator},
-  { "blobfinder", "gray", (CFP)CVisionDevice::Creator},
-  { "broadcast", "brown", (CFP)CBroadcastDevice::Creator},
-  { "bumper", "LightBlue", (CFP)CBumperDevice::Creator},
-  { "regularmcl", "blue", (CFP)CRegularMCLDevice::Creator},
-  // { "bps", BpsType, (CFP)CBpsDevice::Creator},
-  */
-
-  {NULL, NULL, NULL } // marks the end of the array
-};  
-
-
-// statically allocate a libray filled with the entries above
-Library model_library( library_items );
 
 //#define DEBUG
 
@@ -312,22 +248,4 @@ void Library::Print( void )
   
   puts( "]" );
 }
-
-// C wrapper 
-int CreateEntityFromLibrary( stage_model_t* model )
-{
-  // create an entity. return success on getting a valid pointer
-  return( model_library.CreateEntity( model ) ? 0 : -1);
-}
-
-double UpdateSimulation( void )
-{
-  static double simtime = 0.0;
-
-  if( CEntity::root )
-    CEntity::root->Update( simtime+=0.1 );
-  
-  return simtime;
-}
-
 

@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15.2.3 2003-02-01 23:19:51 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.4 2003-02-03 07:10:36 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -77,10 +77,15 @@ public: CEntity* next;
 protected:  void AddChild( CEntity* child );
 
 
+
   // everyone shares these vars 
+protected:
   static double ppm; 
   static CMatrix* matrix;
   static bool enable_gui;
+
+public: 
+  static double simtime; // the simulation time in seconds
 
 public:
   static CEntity* root; // global reference to the base object
