@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.12 2002-11-09 02:32:34 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.12.2.1 2003-04-17 23:40:10 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -167,7 +167,7 @@ public: void GetBoundingBox( double &xmin, double &ymin,
 			     double &xmax, double &ymax );
   
   // See if the given entity is one of our descendents
-  public: bool IsDescendent(CEntity *entity);
+  //public: bool IsDescendent(CEntity *entity);
 
   // subscribe to / unsubscribe from the device
   // these don't do anything by default, but are overridden by CPlayerEntity  
@@ -196,6 +196,10 @@ public: virtual void FamilyUnsubscribe();
 
   // get the parent
   public: CEntity* GetParent( void ){ return( this->m_parent_entity ); };
+
+  // returns true if this object is a child of ancestor, or a child
+  // of a child of ancestor, etc, recursively.
+public: bool IsDescendent( CEntity* ancestor );
 
   // The section in the world file that describes this entity
   public: int worldfile_section;

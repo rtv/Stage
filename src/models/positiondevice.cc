@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.2.2.3 2003-03-08 18:32:20 gerkey Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.2.2.4 2003-04-17 23:40:10 rtv Exp $
  */
 
 //#define DEBUG
@@ -91,7 +91,10 @@ CPositionDevice::CPositionDevice(  LibraryItem *libit,
   this->shape = ShapeRect;
   this->size_x = 0.440;
   this->size_y = 0.380;
-  
+
+  // Pioneer-like behavior by default
+  this->reset_odom_on_disconnect = true;
+
   // took this out - now use the 'offset [X Y]' worldfile setting - rtv.
   // pioneer.inc now defines a pioneer as a positiondevice with a 4cm offset
   //this->origin_x = -0.04; 
@@ -143,7 +146,9 @@ void CPositionDevice::Update( double sim_time )
       // the device is not subscribed,
       // reset to default settings.
       // also set speeds to zero
-      this->odo_px = this->odo_py = this->odo_pth = 0;
+      if( reset_odom_on_disconnect )
+	this->odo_px = this->odo_py = this->odo_pth = 0;
+
       this->com_vr = this->com_vth = 0;
     }
   }
@@ -175,7 +180,7 @@ int CPositionDevice::Move()
   {
     this->stall = 1;
   }
-  else
+   else
   {
     // set pose now takes care of marking us dirty
     SetPose(qx, qy, qth);
@@ -327,6 +332,28 @@ void CPositionDevice::UpdateData()
   PutData(&this->data, sizeof(this->data));     
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Load the entity from the world file
+bool CPositionDevice::Load(CWorldFile *worldfile, int section)
+{
+  if (!CPlayerEntity::Load(worldfile, section))
+    return false;
+
+  const char *rvalue;
+  
+  // Obstacle return values
+  if (this->reset_odom_on_disconnect )
+    rvalue = "reset";
+  else
+    rvalue = "keep";
+  rvalue = worldfile->ReadString(section, "odometry", rvalue);
+  if (strcmp(rvalue, "keep") == 0)
+    this->reset_odom_on_disconnect = false;
+  else
+    this->reset_odom_on_disconnect = true;
+
+  return true;
+}
 
 
 #ifdef INCLUDE_RTK2

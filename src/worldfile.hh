@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.hh,v 1.1 2002-08-23 00:19:39 rtv Exp $
+ * CVS info: $Id: worldfile.hh,v 1.1.4.1 2003-04-17 23:40:10 rtv Exp $
  */
 
 #ifndef WORLDFILE_HH
@@ -38,6 +38,10 @@ class CWorldFile
   // Standard constructors/destructors
   public: CWorldFile();
   public: ~CWorldFile();
+
+  // replacement for fopen() that checks STAGEPATH dirs for the named file
+  // (thanks to  Douglas S. Blank <dblank@brynmawr.edu>)
+protected: FILE* FileOpen(const char *filename, const char* method);
 
   // Load world from file
   public: bool Load(const char *filename);

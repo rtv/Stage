@@ -2,10 +2,10 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.25 2002-11-02 02:00:52 inspectorg Exp $
+# $Id: Makefile.am,v 1.25.2.1 2003-04-17 23:40:09 rtv Exp $
 
 
-SUBDIRS = models rtkstage gnome2
+SUBDIRS = models rtkstage
 
 # we need extra flags as long as RTK code is embedded in the main simulator source
 if WITH_RTK

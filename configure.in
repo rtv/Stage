@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.28.2.3 2003-03-08 21:03:13 gerkey Exp $
+dnl $Id: configure.in,v 1.28.2.4 2003-04-17 23:40:09 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -69,33 +69,19 @@ AC_CHECK_LIB(z, gzopen)
 AC_CHECK_LIB(nsl, gethostbyname)
 AC_CHECK_LIB(socket, connect)
 
-dnl if the GNOME2 GUI was requested, we use that
-AC_ARG_WITH(gnome2,    [   --with-gnome2         Compile in the experimental GNOME2 GUI instead of RTK2],,with_gnome2=no)
-
-dnl otherwise use the RTK GUI unless it is explicitly refused
 dnl where's RTK?
 AC_ARG_WITH(rtk, [   --with-rtk=dir      Location of RTK],
 RTK_DIR=$with_rtk,
 RTK_DIR="${HOME}/librtk-2.1")
 AC_SUBST(RTK_DIR)
 
-if test "x$with_gnome2" = "xyes"; then
-  AC_DEFINE(USE_GNOME2,1,[include the GNOME2 GUI])
-  GUI_DIR=gnome2
-  GUI_LIB=libgnomestage.a
-  GUI_LINK="-Lgnome2 -lgnomestage `pkg-config --libs libgnomecanvas-2.0 libgnomeui-2.0`"
-
-   AM_CONDITIONAL(WITH_RTK, test x$with_rtk = xno)
-else
-
-  dnl RTK2 uses libjpeg to export images.
-  AC_CHECK_HEADER(jpeglib.h,
-    AC_DEFINE(HAVE_JPEGLIB_H,1,[include jpeg support])
-    LIBJPEG="-ljpeg",,)
-
-  if test -f $RTK_DIR/include/rtk.h; then
+if test -f $RTK_DIR/include/rtk.h; then
     with_rtk=yes
     AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
+    dnl RTK2 uses libjpeg to export images.
+    AC_CHECK_HEADER(jpeglib.h,
+    AC_DEFINE(HAVE_JPEGLIB_H,1,[include jpeg support])
+    LIBJPEG="-ljpeg",,)
     GUI_DIR=rtkstage
     GUI_LIB=librtkstage.a
     GUI_LINK="-L$RTK_DIR/lib -Lrtkstage -lrtkstage -lrtk $LIBJPEG `gtk-config --libs gtk gthread`"
@@ -107,18 +93,13 @@ else
     AC_MSG_WARN([If you have RTK installed, try --with-rtk=path])
     AC_MSG_WARN([***************************************************])
   fi
-  AM_CONDITIONAL(WITH_RTK, test x$with_rtk = xyes)
-fi
+
+AM_CONDITIONAL(WITH_RTK, test x$with_rtk = xyes)
 
 # define the paths, libs and deps for the GUI
 AC_SUBST(GUI_LINK)
 AC_SUBST(GUI_DIR)
 AC_SUBST(GUI_LIB)
-
-# set vars depending on the GUI tests
-AM_CONDITIONAL(WITH_GNOME2, test x$with_gnome2 = xyes)
-AM_CONDITIONAL(WITH_GUI, test x$with_gui = xyes)
-
 
 dnl where's player?
 AC_ARG_WITH(player, [   --with-player=dir      Location of Player (installation or source)],
@@ -149,8 +130,28 @@ AM_CONDITIONAL(WITH_TESTS, test x$with_tests = xyes)
 AC_OUTPUT(Makefile 
           src/Makefile 
 	  src/models/Makefile	
-          src/gnome2/Makefile 
 	  src/rtkstage/Makefile
           worlds/Makefile 
           tools/Makefile)
 
+dnl should use AC_MSG_NOTICE(), but that's apparently not defined in
+dnl autoconf 2.13.
+AC_MSG_RESULT([])
+AC_MSG_RESULT([*************************************************************])
+AC_MSG_RESULT([])
+AC_MSG_RESULT([Stage will be built on a $build system to run])
+AC_MSG_RESULT([on a $host system, with the following tools:])
+AC_MSG_RESULT([    C   compiler: $CC $CFLAGS])
+AC_MSG_RESULT([    C++ compiler: $CXX $CXXFLAGS])
+AC_MSG_RESULT([])
+AC_MSG_RESULT([Found Player at               $PLAYER_DIR])
+
+if test $with_rtk != no; then
+  AC_MSG_RESULT([Found RTK at                  $RTK_DIR])
+fi
+
+AC_MSG_RESULT([Stage will be installed in    $prefix])
+AC_MSG_RESULT([])
+AC_MSG_RESULT([If you're happy with the configuration, do 'make install'])
+AC_MSG_RESULT([to build and install Stage.])
+AC_MSG_RESULT([])

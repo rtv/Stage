@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.hh,v 1.2 2002-11-01 19:12:32 rtv Exp $
+ * CVS info: $Id: positiondevice.hh,v 1.2.2.1 2003-04-17 23:40:10 rtv Exp $
  */
 
 #ifndef POSITIONDEVICE_H
@@ -76,6 +76,14 @@ public: static CPositionDevice* Creator(  LibraryItem *libit,
 
   // Odometric pose
   protected: double odo_px, odo_py, odo_pth;
+
+  // controls whether the odometry estimate is zeroed when we have no
+  // subscriptions. can be set in the world file with "reset_odometry" token
+  protected: bool reset_odom_on_disconnect;
+
+  // overload Load() to read the  reset_odom_on_disconnect setting 
+  // from the worldfile
+  public: bool Load(CWorldFile *worldfile, int section);
 
   // Stall flag set if robot is in collision
   protected: unsigned char stall;

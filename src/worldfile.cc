@@ -19,9 +19,12 @@
  */
 /*
  * Desc: A class for reading in the world file.
- * Author: Andrew Howard
+ * Authors: Andrew Howard <ahoward@usc.edu>
+ *          Richard Vaughan <vaughan@hrl.com>
+ *          Douglas S. Blank <dblank@brynmawr.edu>
+ *
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.25 2002-11-11 04:46:06 inspectorg Exp $
+ * CVS info: $Id: worldfile.cc,v 1.25.4.1 2003-04-17 23:40:10 rtv Exp $
  */
 
 #include <assert.h>
@@ -95,6 +98,41 @@ CWorldFile::~CWorldFile()
     free(this->filename);
 }
 
+FILE *CWorldFile::FileOpen(const char *filename, const char* method)
+{
+   FILE *fp = fopen(filename, method);
+   // if this opens, then we will go with it:
+   if (fp) {
+     PRINT_DEBUG1( "Loading: %s", filename);
+     return fp;
+   }
+   // else, search other places, and set this->filename
+   // accordingly if found:
+   char *stagepath = getenv("STAGEPATH");
+   char *token = strtok(stagepath, ":");
+   char *fullpath = (char*) malloc(PATH_MAX);
+   char *tmp = strdup(filename);
+   char *base = basename(tmp);
+   while (token != NULL) {
+     // for each part of the path, try it:
+     memset( fullpath, 0, PATH_MAX);
+     strcat( fullpath, token);
+     strcat( fullpath, "/" );
+     strcat( fullpath, base);
+     assert(strlen(fullpath) + 1 < PATH_MAX);
+     fp = fopen(fullpath, method);
+     if (fp) {
+       this->filename = fullpath;
+       PRINT_DEBUG1( "Loading: %s", filename);
+       free(tmp);
+       return fp;
+     }
+     token = strtok(NULL, ":");
+   }
+   free(tmp);
+   return NULL;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Load world from file
@@ -106,7 +144,8 @@ bool CWorldFile::Load(const char *filename)
   this->filename = strdup(filename);
 
   // Open the file
-  FILE *file = fopen(this->filename, "r");
+  //FILE *file = fopen(this->filename, "r");
+  FILE *file = FileOpen(this->filename, "r");
   if (!file)
   {
     PRINT_ERR2("unable to open world file %s : %s",
@@ -173,7 +212,8 @@ bool CWorldFile::Save(const char *filename)
     filename = this->filename;
 
   // Open file
-  FILE *file = fopen(filename, "w+");
+  //FILE *file = fopen(filename, "w+");
+  FILE *file = FileOpen(filename, "w+");
   if (!file)
   {
     PRINT_ERR2("unable to open world file %s : %s",
@@ -458,8 +498,11 @@ bool CWorldFile::LoadTokenInclude(FILE *file, int *line, int include)
     free(tmp);
   }
 
+  printf( "[Include %s]", filename );
+  fflush( stdout );
+
   // Open the include file
-  FILE *infile = fopen(fullpath, "r");
+  FILE *infile = FileOpen(fullpath, "r");
   if (!infile)
   {
     PRINT_ERR2("unable to open include file %s : %s",

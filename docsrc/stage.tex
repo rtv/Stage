@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.5.2.1 2002-12-06 01:01:38 rtv Exp $
+% CVS: $Id: stage.tex,v 1.5.2.2 2003-04-17 23:40:09 rtv Exp $
 
 \documentclass[11pt,twoside]{report}
 
@@ -39,7 +39,7 @@
 
  \begin{tabular}{lcr}
    \begin{tabular}{c}
- 	Player/Stage project\\
+        Player/Stage project\\
          \includegraphics{notext_ps_logo}
     \end{tabular}
    &
@@ -57,7 +57,7 @@
  \end{tabular}
 
 
-  \vspace{5cm}	
+  \vspace{5cm}  
   \centerline{ \Huge{Stage}}
   \vspace{0.5cm}
   \centerline{\large{Version \VERSION\ User Manual}}
@@ -122,7 +122,7 @@
 
    The main resource for Player/Stage is the project
     homepage:\\\\ \indent \HOMEPAGE\\
-	
+        
    \noindent Access to source code releases, access to the CVS
    development tree, bug tracking, user mailing lists, etc.~ is
    available from the Sourceforge project management page:\\\\\indent
@@ -132,7 +132,7 @@
  Stage-<version>.src.tgz at:\\\\ \indent
  http://sourceforge.net/project/showfiles.php?group\_id=42445\\
 
-	Previous versions were significantly different; this manual
+        Previous versions were significantly different; this manual
    does not apply to them.
 
   \section{What's in the Package?}
@@ -155,10 +155,10 @@
     Optional (but highly recommended): 
     \begin{itemize}
       \item libRTK [\HOMEPAGE]
-	\begin{itemize}
-	  \item X11R6, GTK++.
+        \begin{itemize}
+          \item X11R6, GTK++.
 \end{itemize}
-	\end{itemize}
+        \end{itemize}
 
     Stage was developed and tested under Linux kernel 2.4,
     glibc-2.2.  Code is reasonable ANSII/POSIX so it should compile
@@ -180,8 +180,8 @@
       \item[] Jakob Fredslund [jakobf@robotics.usc.edu]
       \end{itemize}
 
-	See your name here by contributing devices, superior
-	algorithms, bugfixes, examples, etc.
+        See your name here by contributing devices, superior
+        algorithms, bugfixes, examples, etc.
 
   \section{Bugs and feedback}
   
@@ -206,12 +206,12 @@
     problem solved.
 
   \section{What happened to...?}
-	
-	Previous releases contained some supplementary programs which
-	have been removed during development of
-	Stage-\VERSION. 'RTKStage' has been folded into Stage. Stage
-	client mode makes 'XS' redundant. Stage server makes 'manager'
-	redundant. Don't worry; things are better now.
+        
+        Previous releases contained some supplementary programs which
+        have been removed during development of
+        Stage-\VERSION. 'RTKStage' has been folded into Stage. Stage
+        client mode makes 'XS' redundant. Stage server makes 'manager'
+        redundant. Don't worry; things are better now.
 
 \section{Citations}
 If you find Player and Stage useful in your work, we would greatly
@@ -278,12 +278,12 @@ tools can be found on the website.
  with an interactive GUI, which is highly recommended, you must
  install libRTK before building Stage. Player and libRTK are availabe
  from the Player/Stage files page:
-	\begin{verbatim}
-	http://sourceforge.net/project/showfiles.php?group_id=42445
-	\end{verbatim}
-	\noindent Build and install Player and libRTK following the
-	instructions in the packages' README and INSTALL files. Now
-	download thew Stage tarball and unpack it with:
+        \begin{verbatim}
+        http://sourceforge.net/project/showfiles.php?group_id=42445
+        \end{verbatim}
+        \noindent Build and install Player and libRTK following the
+        instructions in the packages' README and INSTALL files. Now
+        download thew Stage tarball and unpack it with:
       \begin{verbatim}
       $ tar xzvf Stage-1.2.tgz
       \end{verbatim}
@@ -323,13 +323,13 @@ tools can be found on the website.
     standard output, so a sample invocation and start up would look
     like this:
 
-	\begin{verbatim} 
-	$ stage worlds/everything.world
+        \begin{verbatim} 
+        $ stage worlds/everything.world
 
-	 ** Stage  v1.3 ** 
-	[World worlds/everything.world]
-	[Server localhost:6601]
-	** Player v1.3 ** [Stage /tmp/stageIO.username.0]
+         ** Stage  v1.3 ** 
+        [World worlds/everything.world]
+        [Server localhost:6601]
+        ** Player v1.3 ** [Stage /tmp/stageIO.username.0]
       \end{verbatim}
 
     At this point you should be able to interact with objects in the
@@ -411,7 +411,7 @@ tools can be found on the website.
 %%     client/server.  \end{xarg}
 
 %%     \begin{xarg}{-cl}Client mode, server on localhost - equivalent to '-c localhost' 
-%% 	 \end{xarg}
+%%       \end{xarg}
 
 %%     \begin{xarg}{-p <port num>}
 %%     Set the port number for the Stage server to accept connections. Default is 6601.
@@ -583,6 +583,25 @@ previous versions. The script \verb+tools/worldfileconv.tcl+ will
 attempt to convert your old (pre Stage-1.2) world files to the new
 format.
 
+The worldfile is given as the last argument when invoking Stage: \verb+$ stage <worldfile>+.
+Stage searches for the specified file in these directories, in this order:
+
+\begin{enumerate}
+\item the current directory
+\item the directory that contains the current world file
+\item the directories listed in the STAGEPATH environment variable
+\end{enumerate}
+
+STAGEPATH works like the PATH variable of most shells. It is a list of directories to be searched, separated by colons. An example of how to set STAGEPATH in the BASH shell:
+
+\begin{verbatim}
+$ export STAGEPATH=$HOME/robotdev/worlds:$HOME/build/stage-1.3/worlds
+$ echo $STAGEPATH
+/home/vaughan/robotdev/worlds:/home/vaughan/build/stage-1.3/worlds
+\end{verbatim}
+
+With the
+
 \section{Basic Syntax}
 
 A simple world file might look like this:
@@ -715,8 +734,14 @@ myrobot ( name "robot1" port 6665 pose [1 1 0] )
 myrobot ( name "robot2" port 6666 pose [2 1 0] )
 \end{verbatim}
 \end{quote}
-The definitions are included using the \verb'include "filename"'
-statement.
+The definitions are included using the \verb'include "<filename>"'
+statement. Stage searches for <filename> in these directories, in this order:
+
+\begin{enumerate}
+\item the current directory
+\item the directory that contains the current world file
+\item the directories listed in the STAGEPATH environment variable
+\end{enumerate}
 
 \section{Units}
 

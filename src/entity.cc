@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.96 2002-11-11 03:09:46 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.96.2.1 2003-04-17 23:40:10 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -172,6 +172,23 @@ void CEntity::AddChild( CEntity* child )
   
   STAGE_LIST_APPEND( this->child_list, child ); 
 }
+
+// returns true if this object is a child of ancestor, or a child
+// of a child of ancestor, etc, recursively.
+/*
+bool CEntity::IsDescendent( CEntity* ancestor )
+{
+  if( m_parent_entity == NULL )
+    return false;
+  
+  if( m_parent_entity == ancestor )
+    return true;
+  
+  // recurse
+  return( m_parent_entity->IsDescendent( ancestor ) );
+}
+*/
+
 
 void CEntity::GetBoundingBox( double &xmin, double &ymin,
 			      double &xmax, double &ymax )
@@ -549,7 +566,7 @@ CEntity *CEntity::TestCollision(double px, double py, double pth)
       CEntity* ent;
       while( (ent = rit.GetNextEntity()) )
       {
-        if( ent != this && ent->obstacle_return )
+        if( ent != this && ent->obstacle_return && !IsDescendent(ent) )
 	    return ent;
       }
       return NULL;
@@ -561,7 +578,7 @@ CEntity *CEntity::TestCollision(double px, double py, double pth)
       CEntity* ent;
       while( (ent = rit.GetNextEntity()) )
       {
-        if( ent != this && ent->obstacle_return )
+        if( ent != this && ent->obstacle_return && !IsDescendent(ent))
 	    return ent;
       }
       return NULL;
@@ -593,7 +610,7 @@ CEntity *CEntity::TestCollision(double px, double py, double pth,
       CEntity* ent;
       while( (ent = rit.GetNextEntity()) )
       {
-        if( ent != this && ent->obstacle_return )
+        if( ent != this && ent->obstacle_return && !IsDescendent(ent))
         {
           rit.GetPos( hitx, hity );
           return ent;
@@ -608,7 +625,7 @@ CEntity *CEntity::TestCollision(double px, double py, double pth,
       CEntity* ent;
       while( (ent = rit.GetNextEntity()) )
       {
-        if( ent != this && ent->obstacle_return )
+        if( ent != this && ent->obstacle_return && !IsDescendent(ent))
         {
           rit.GetPos( hitx, hity );
           return ent;

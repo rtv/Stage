@@ -21,7 +21,7 @@
  * Desc: Some useful color routines
  * Author: Andrew Howard, Richard Vaughan
  * Date: 8 Jun 2002
- * CVS info: $Id: colors.cc,v 1.2 2002-06-10 05:00:10 gerkey Exp $
+ * CVS info: $Id: colors.cc,v 1.2.8.1 2003-04-17 23:40:10 rtv Exp $
  */
 
 #include <errno.h>
@@ -41,7 +41,7 @@ StageColor LookupColor(const char *name)
   file = fopen(filename, "r");
   if (!file)
   {
-    PRINT_ERR2("unable to open color database %s : %s",
+    PRINT_ERR2("unable to open the X11 color database %s : %s",
                filename, strerror(errno));
     fclose(file);
     return 0xFFFFFF;
