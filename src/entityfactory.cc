@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.29.4.1 $
+//  $Author: gerkey $
+//  $Revision: 1.29.4.2 $
 //
 // Usage:
 //  (empty)
@@ -80,6 +80,7 @@ char* CWorld::StringFromType( StageType t )
     case LaserBeaconType: return "laserbeacon"; 
     case LBDType: return "lbd"; 
       //REMOVE case VisionBeaconType: return "vision_beacon"; 
+    case OmniPositionType: return "omniposition";
     case GripperType: return "gripper"; 
     case AudioType: return "audio"; 
     case BroadcastType: return "broadcast"; 
