@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.71 $
+//  $Author: rtv $
+//  $Revision: 1.72 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -85,8 +85,6 @@ CWorld::CWorld()
   srand48( time(NULL) );
 
   // Initialise configuration variables
-  // REMOVE this->size_x = 10;
-  // REMOVE this->size_y = 10;
   this->ppm = 20;
   this->wall = NULL;
   
@@ -108,9 +106,6 @@ CWorld::CWorld()
 
   m_log_output = false;
   m_console_output = true;
-
-  //m_realtime_mode = true;
-  // defaults time steps can be tweaked by command line or config file
     
   // real time mode by default
   // if real_timestep is zero, we run as fast as possible

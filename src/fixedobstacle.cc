@@ -8,9 +8,11 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
+
+#include <libgen.h> // for dirname(3)
 
 #include "image.hh"
 #include "world.hh"
@@ -71,10 +73,37 @@ bool CFixedObstacle::Load(CWorldFile *worldfile, int section)
     return false;
   }
 
-  // TODO
-  // if the image filename is not a full path
-  // prepend the path of the world file - have to make sure the world file
-  // path is handled properly first - rtv
+  // the image file is specified either as an absolute path, in which
+  // case we've got the whole thing already, or as a path relative to
+  // the world file. if this is the case we have to prepend the world
+  // file's path onto the filename to find it. (this allows us to be
+  // in a different working directory)
+
+  if( this->filename[0] != '/' && this->filename[0] != '~' )
+    {
+      // store the current filename
+      char* tmp = new char[ PATH_MAX ];
+      //strncpy( tmp, this->filename, PATH_MAX ); 
+
+      char* fullpath = new char[ PATH_MAX ];
+      
+      strncpy( fullpath, dirname( worldfile->Filename() ), PATH_MAX );
+      
+      // lookout for buffer overrun
+      if( strlen( fullpath ) + 1 + strlen( this->filename ) < PATH_MAX )
+	{
+	  strcat( fullpath, "/" );
+	  strcat( fullpath, this->filename ); 
+	}
+      else
+	{
+	  perror( "Stage: image filename buffer overrun" );
+	  return false;
+	}
+
+      delete[] this->filename;
+      this->filename = fullpath;
+    }
 
   // Get the scale of the image;
   // i.e. the width/length of each pixel in m.

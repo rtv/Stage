@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.27 $
+//  $Author: rtv $
+//  $Revision: 1.28 $
 //
 // Usage:
 //  (empty)
@@ -114,11 +114,38 @@ int main(int argc, char **argv)
   
   // Load the world - the filename is the last argument
   // this may produce more startup output
-  if (!world->Load( argv[ argc-1 ] ))
+
+  // we want the full path of the file later, so if the filename
+  // does NOT start with '/' then we prepend the current path 
+  char* pathbuf = new char[ PATH_MAX ];
+  
+  assert( pathbuf );
+
+  if( (argv[ argc-1 ])[0] != '/' && (argv[ argc-1 ])[0] != '~')
+    {
+      // get the current working directory
+      if( getcwd( pathbuf, PATH_MAX ) == 0 )
+	perror( "Stage: Failed to get current working directory." );
+
+      int len = strlen( pathbuf );
+
+      pathbuf[len++] = '/'; // directory seperator
+
+      // copy the filename onto the end of the current path
+      strncpy( pathbuf + len, argv[ argc-1 ], PATH_MAX - len );
+
+    }   
+  else // it's already a full path, so we take it as-is  
+    strcpy( pathbuf, argv[ argc-1 ] );
+  
+  
+  if (!world->Load( pathbuf ))
   {
     printf("Stage: failed load\n");
     StageQuit();
   }
+
+  delete pathbuf;
 
   // override default and config file values with command line options.
   // any options set will produce console output for reassurance
