@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.cc - all the graphics and X management
  * RTV
- * $Id: win.cc,v 1.6 2000-12-04 05:19:44 vaughan Exp $
+ * $Id: win.cc,v 1.7 2000-12-06 02:29:13 vaughan Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -322,6 +322,9 @@ void CWorldWin::HandleEvent( void )
 	      if( dragging  ) 
 		{ // stopped dragging
 		  dragging = NULL;
+
+		  // redraw the walls
+		  world->Draw();
 		} 
 	      else
 		{  // find nearest robot and drag it
