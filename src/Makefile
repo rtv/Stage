@@ -119,6 +119,7 @@ boxobstacle..o: /usr/include/string.h /usr/include/sys/cdefs.h
 boxobstacle..o: /usr/include/sys/select.h /usr/include/sys/sysmacros.h
 boxobstacle..o: /usr/include/sys/types.h /usr/include/time.h
 boxobstacle..o: /usr/include/wchar.h /usr/include/xlocale.h
+boxobstacle..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 boxobstacle..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 boxobstacle..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
 broadcastdevice..o: ../include/broadcastdevice.hh ../include/entity.hh
@@ -152,6 +153,7 @@ broadcastdevice..o: /usr/include/string.h /usr/include/sys/cdefs.h
 broadcastdevice..o: /usr/include/sys/select.h /usr/include/sys/sysmacros.h
 broadcastdevice..o: /usr/include/sys/types.h /usr/include/time.h
 broadcastdevice..o: /usr/include/wchar.h /usr/include/xlocale.h
+broadcastdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 broadcastdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/limits.h
 broadcastdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 broadcastdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
@@ -169,6 +171,7 @@ entityfactory..o: /usr/include/bits/nan.h /usr/include/endian.h
 entityfactory..o: /usr/include/features.h /usr/include/gnu/stubs.h
 entityfactory..o: /usr/include/math.h /usr/include/string.h
 entityfactory..o: /usr/include/sys/cdefs.h /usr/include/xlocale.h
+entityfactory..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 entityfactory..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
 entity..o: ../include/entity.hh ../include/stage_types.hh
 entity..o: /usr/include/alloca.h /usr/include/assert.h
@@ -177,35 +180,66 @@ entity..o: /usr/include/bits/mathcalls.h /usr/include/bits/mathdef.h
 entity..o: /usr/include/bits/nan.h /usr/include/bits/pthreadtypes.h
 entity..o: /usr/include/bits/sched.h /usr/include/bits/select.h
 entity..o: /usr/include/bits/sigset.h /usr/include/bits/stdio_lim.h
-entity..o: /usr/include/bits/time.h /usr/include/bits/types.h
-entity..o: /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h
-entity..o: /usr/include/bits/wchar.h /usr/include/endian.h
-entity..o: /usr/include/features.h /usr/include/_G_config.h
-entity..o: /usr/include/gconv.h /usr/include/gnu/stubs.h /usr/include/libio.h
-entity..o: /usr/include/math.h /usr/include/stdio.h /usr/include/stdlib.h
-entity..o: /usr/include/string.h /usr/include/sys/cdefs.h
-entity..o: /usr/include/sys/select.h /usr/include/sys/sysmacros.h
-entity..o: /usr/include/sys/types.h /usr/include/time.h /usr/include/wchar.h
-entity..o: /usr/include/xlocale.h
+entity..o: /usr/include/bits/types.h /usr/include/bits/waitflags.h
+entity..o: /usr/include/bits/waitstatus.h /usr/include/bits/wchar.h
+entity..o: /usr/include/endian.h /usr/include/features.h
+entity..o: /usr/include/_G_config.h /usr/include/gconv.h
+entity..o: /usr/include/gnu/stubs.h /usr/include/libio.h /usr/include/math.h
+entity..o: /usr/include/stdio.h /usr/include/stdlib.h /usr/include/string.h
+entity..o: /usr/include/sys/cdefs.h /usr/include/sys/select.h
+entity..o: /usr/include/sys/sysmacros.h /usr/include/sys/types.h
+entity..o: /usr/include/time.h /usr/include/wchar.h /usr/include/xlocale.h
+entity..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 entity..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 entity..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
+gui_main..o: ../include/entity.hh ../include/image.h ../include/stage_types.hh
+gui_main..o: ../include/world.hh /usr/include/alloca.h
+gui_main..o: /usr/include/asm/sigcontext.h /usr/include/assert.h
+gui_main..o: /usr/include/bits/confname.h /usr/include/bits/endian.h
+gui_main..o: /usr/include/bits/environments.h /usr/include/bits/huge_val.h
+gui_main..o: /usr/include/bits/initspin.h /usr/include/bits/mathcalls.h
+gui_main..o: /usr/include/bits/mathdef.h /usr/include/bits/nan.h
+gui_main..o: /usr/include/bits/posix_opt.h /usr/include/bits/pthreadtypes.h
+gui_main..o: /usr/include/bits/sched.h /usr/include/bits/select.h
+gui_main..o: /usr/include/bits/sigaction.h /usr/include/bits/sigcontext.h
+gui_main..o: /usr/include/bits/siginfo.h /usr/include/bits/signum.h
+gui_main..o: /usr/include/bits/sigset.h /usr/include/bits/sigstack.h
+gui_main..o: /usr/include/bits/sigthread.h /usr/include/bits/stdio_lim.h
+gui_main..o: /usr/include/bits/time.h /usr/include/bits/types.h
+gui_main..o: /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h
+gui_main..o: /usr/include/bits/wchar.h /usr/include/bits/wordsize.h
+gui_main..o: /usr/include/endian.h /usr/include/features.h
+gui_main..o: /usr/include/_G_config.h /usr/include/gconv.h
+gui_main..o: /usr/include/getopt.h /usr/include/gnu/stubs.h
+gui_main..o: /usr/include/libio.h /usr/include/math.h /usr/include/pthread.h
+gui_main..o: /usr/include/sched.h /usr/include/signal.h /usr/include/stdint.h
+gui_main..o: /usr/include/stdio.h /usr/include/stdlib.h /usr/include/string.h
+gui_main..o: /usr/include/sys/cdefs.h /usr/include/sys/select.h
+gui_main..o: /usr/include/sys/sysmacros.h /usr/include/sys/types.h
+gui_main..o: /usr/include/sys/ucontext.h /usr/include/time.h
+gui_main..o: /usr/include/ucontext.h /usr/include/unistd.h
+gui_main..o: /usr/include/wchar.h /usr/include/xlocale.h
+gui_main..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
+gui_main..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
+gui_main..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
+gui_main..o: ../VERSION
 image..o: ../include/image.h /usr/include/alloca.h /usr/include/bits/endian.h
 image..o: /usr/include/bits/huge_val.h /usr/include/bits/mathcalls.h
 image..o: /usr/include/bits/mathdef.h /usr/include/bits/nan.h
 image..o: /usr/include/bits/pthreadtypes.h /usr/include/bits/sched.h
 image..o: /usr/include/bits/select.h /usr/include/bits/sigset.h
-image..o: /usr/include/bits/stdio_lim.h /usr/include/bits/time.h
-image..o: /usr/include/bits/types.h /usr/include/bits/waitflags.h
-image..o: /usr/include/bits/waitstatus.h /usr/include/bits/wchar.h
-image..o: /usr/include/endian.h /usr/include/features.h
-image..o: /usr/include/g++-3/fstream.h /usr/include/g++-3/iostream.h
-image..o: /usr/include/g++-3/streambuf.h /usr/include/_G_config.h
-image..o: /usr/include/gconv.h /usr/include/gnu/stubs.h /usr/include/libio.h
-image..o: /usr/include/math.h /usr/include/stdio.h /usr/include/stdlib.h
-image..o: /usr/include/string.h /usr/include/sys/cdefs.h
-image..o: /usr/include/sys/select.h /usr/include/sys/sysmacros.h
-image..o: /usr/include/sys/types.h /usr/include/time.h /usr/include/wchar.h
-image..o: /usr/include/xlocale.h
+image..o: /usr/include/bits/stdio_lim.h /usr/include/bits/types.h
+image..o: /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h
+image..o: /usr/include/bits/wchar.h /usr/include/endian.h
+image..o: /usr/include/features.h /usr/include/g++-3/fstream.h
+image..o: /usr/include/g++-3/iostream.h /usr/include/g++-3/streambuf.h
+image..o: /usr/include/_G_config.h /usr/include/gconv.h
+image..o: /usr/include/gnu/stubs.h /usr/include/libio.h /usr/include/math.h
+image..o: /usr/include/stdio.h /usr/include/stdlib.h /usr/include/string.h
+image..o: /usr/include/sys/cdefs.h /usr/include/sys/select.h
+image..o: /usr/include/sys/sysmacros.h /usr/include/sys/types.h
+image..o: /usr/include/time.h /usr/include/wchar.h /usr/include/xlocale.h
+image..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 image..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 image..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
 laserbeacondevice..o: ../include/entity.hh ../include/image.h
@@ -243,6 +277,7 @@ laserbeacondevice..o: /usr/include/sys/cdefs.h /usr/include/sys/select.h
 laserbeacondevice..o: /usr/include/sys/sysmacros.h /usr/include/sys/types.h
 laserbeacondevice..o: /usr/include/time.h /usr/include/wchar.h
 laserbeacondevice..o: /usr/include/xlocale.h
+laserbeacondevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 laserbeacondevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/limits.h
 laserbeacondevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 laserbeacondevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
@@ -273,6 +308,7 @@ laserbeacon..o: /usr/include/string.h /usr/include/sys/cdefs.h
 laserbeacon..o: /usr/include/sys/select.h /usr/include/sys/sysmacros.h
 laserbeacon..o: /usr/include/sys/types.h /usr/include/time.h
 laserbeacon..o: /usr/include/wchar.h /usr/include/xlocale.h
+laserbeacon..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 laserbeacon..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 laserbeacon..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
 laserdevice..o: ../include/entity.hh ../include/image.h
@@ -294,7 +330,8 @@ laserdevice..o: /usr/include/bits/time.h /usr/include/bits/types.h
 laserdevice..o: /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h
 laserdevice..o: /usr/include/bits/wchar.h /usr/include/bits/wordsize.h
 laserdevice..o: /usr/include/bits/xopen_lim.h /usr/include/endian.h
-laserdevice..o: /usr/include/features.h /usr/include/_G_config.h
+laserdevice..o: /usr/include/features.h /usr/include/g++-3/iostream.h
+laserdevice..o: /usr/include/g++-3/streambuf.h /usr/include/_G_config.h
 laserdevice..o: /usr/include/gconv.h /usr/include/gnu/stubs.h
 laserdevice..o: /usr/include/libio.h /usr/include/limits.h
 laserdevice..o: /usr/include/linux/limits.h /usr/include/math.h
@@ -306,6 +343,7 @@ laserdevice..o: /usr/include/sys/cdefs.h /usr/include/sys/select.h
 laserdevice..o: /usr/include/sys/sysmacros.h /usr/include/sys/types.h
 laserdevice..o: /usr/include/time.h /usr/include/wchar.h
 laserdevice..o: /usr/include/xlocale.h
+laserdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 laserdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/limits.h
 laserdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 laserdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
@@ -339,6 +377,7 @@ main..o: /usr/include/sys/select.h /usr/include/sys/sysmacros.h
 main..o: /usr/include/sys/types.h /usr/include/sys/ucontext.h
 main..o: /usr/include/time.h /usr/include/ucontext.h /usr/include/unistd.h
 main..o: /usr/include/wchar.h /usr/include/xlocale.h
+main..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 main..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 main..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h ../VERSION
 miscdevice..o: ../include/entity.hh ../include/image.h
@@ -371,6 +410,7 @@ miscdevice..o: /usr/include/string.h /usr/include/sys/cdefs.h
 miscdevice..o: /usr/include/sys/select.h /usr/include/sys/sysmacros.h
 miscdevice..o: /usr/include/sys/types.h /usr/include/time.h
 miscdevice..o: /usr/include/wchar.h /usr/include/xlocale.h
+miscdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 miscdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/limits.h
 miscdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 miscdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
@@ -378,6 +418,25 @@ miscdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/syslimits.h
 miscdevice..o: /usr/local/player1.1.1beta/include/messages.h
 miscdevice..o: /usr/local/player1.1.1beta/include/playercommon.h
 miscdevice..o: /usr/local/player1.1.1beta/include/stage.h
+object..o: ../include/object.hh ../include/stage_types.hh
+object..o: /usr/include/alloca.h /usr/include/assert.h
+object..o: /usr/include/bits/endian.h /usr/include/bits/huge_val.h
+object..o: /usr/include/bits/mathcalls.h /usr/include/bits/mathdef.h
+object..o: /usr/include/bits/nan.h /usr/include/bits/pthreadtypes.h
+object..o: /usr/include/bits/sched.h /usr/include/bits/select.h
+object..o: /usr/include/bits/sigset.h /usr/include/bits/stdio_lim.h
+object..o: /usr/include/bits/types.h /usr/include/bits/waitflags.h
+object..o: /usr/include/bits/waitstatus.h /usr/include/bits/wchar.h
+object..o: /usr/include/endian.h /usr/include/features.h
+object..o: /usr/include/_G_config.h /usr/include/gconv.h
+object..o: /usr/include/gnu/stubs.h /usr/include/libio.h /usr/include/math.h
+object..o: /usr/include/stdio.h /usr/include/stdlib.h /usr/include/string.h
+object..o: /usr/include/sys/cdefs.h /usr/include/sys/select.h
+object..o: /usr/include/sys/sysmacros.h /usr/include/sys/types.h
+object..o: /usr/include/time.h /usr/include/wchar.h /usr/include/xlocale.h
+object..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
+object..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
+object..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
 pioneermobiledevice..o: ../include/entity.hh ../include/image.h
 pioneermobiledevice..o: ../include/pioneermobiledevice.hh
 pioneermobiledevice..o: ../include/playerdevice.hh ../include/stage_types.hh
@@ -416,6 +475,7 @@ pioneermobiledevice..o: /usr/include/sys/cdefs.h /usr/include/sys/select.h
 pioneermobiledevice..o: /usr/include/sys/sysmacros.h /usr/include/sys/types.h
 pioneermobiledevice..o: /usr/include/time.h /usr/include/wchar.h
 pioneermobiledevice..o: /usr/include/xlocale.h
+pioneermobiledevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 pioneermobiledevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/limits.h
 pioneermobiledevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 pioneermobiledevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
@@ -454,6 +514,7 @@ playerdevice..o: /usr/include/sys/cdefs.h /usr/include/sys/select.h
 playerdevice..o: /usr/include/sys/sysmacros.h /usr/include/sys/time.h
 playerdevice..o: /usr/include/sys/types.h /usr/include/time.h
 playerdevice..o: /usr/include/wchar.h /usr/include/xlocale.h
+playerdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 playerdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/limits.h
 playerdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 playerdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
@@ -461,6 +522,62 @@ playerdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/syslimits.h
 playerdevice..o: /usr/local/player1.1.1beta/include/messages.h
 playerdevice..o: /usr/local/player1.1.1beta/include/playercommon.h
 playerdevice..o: /usr/local/player1.1.1beta/include/stage.h
+playerrobot..o: ../include/entity.hh ../include/image.h
+playerrobot..o: ../include/stage_types.hh ../include/world.hh
+playerrobot..o: /usr/include/alloca.h /usr/include/asm/errno.h
+playerrobot..o: /usr/include/asm/sigcontext.h /usr/include/asm/socket.h
+playerrobot..o: /usr/include/asm/sockios.h /usr/include/assert.h
+playerrobot..o: /usr/include/bits/byteswap.h /usr/include/bits/confname.h
+playerrobot..o: /usr/include/bits/endian.h /usr/include/bits/environments.h
+playerrobot..o: /usr/include/bits/errno.h /usr/include/bits/fcntl.h
+playerrobot..o: /usr/include/bits/huge_val.h /usr/include/bits/in.h
+playerrobot..o: /usr/include/bits/initspin.h /usr/include/bits/ipc.h
+playerrobot..o: /usr/include/bits/local_lim.h /usr/include/bits/mathcalls.h
+playerrobot..o: /usr/include/bits/mathdef.h /usr/include/bits/mman.h
+playerrobot..o: /usr/include/bits/nan.h /usr/include/bits/posix1_lim.h
+playerrobot..o: /usr/include/bits/posix2_lim.h /usr/include/bits/posix_opt.h
+playerrobot..o: /usr/include/bits/pthreadtypes.h /usr/include/bits/sched.h
+playerrobot..o: /usr/include/bits/select.h /usr/include/bits/sem.h
+playerrobot..o: /usr/include/bits/sigaction.h /usr/include/bits/sigcontext.h
+playerrobot..o: /usr/include/bits/siginfo.h /usr/include/bits/signum.h
+playerrobot..o: /usr/include/bits/sigset.h /usr/include/bits/sigstack.h
+playerrobot..o: /usr/include/bits/sigthread.h /usr/include/bits/sockaddr.h
+playerrobot..o: /usr/include/bits/socket.h /usr/include/bits/stat.h
+playerrobot..o: /usr/include/bits/stdio_lim.h /usr/include/bits/termios.h
+playerrobot..o: /usr/include/bits/time.h /usr/include/bits/types.h
+playerrobot..o: /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h
+playerrobot..o: /usr/include/bits/wchar.h /usr/include/bits/wordsize.h
+playerrobot..o: /usr/include/bits/xopen_lim.h /usr/include/endian.h
+playerrobot..o: /usr/include/errno.h /usr/include/fcntl.h
+playerrobot..o: /usr/include/features.h /usr/include/g++-3/iomanip.h
+playerrobot..o: /usr/include/g++-3/iostream.h /usr/include/g++-3/streambuf.h
+playerrobot..o: /usr/include/g++-3/strfile.h /usr/include/g++-3/strstream.h
+playerrobot..o: /usr/include/_G_config.h /usr/include/gconv.h
+playerrobot..o: /usr/include/getopt.h /usr/include/gnu/stubs.h
+playerrobot..o: /usr/include/libio.h /usr/include/limits.h
+playerrobot..o: /usr/include/linux/errno.h /usr/include/linux/limits.h
+playerrobot..o: /usr/include/math.h /usr/include/netinet/in.h
+playerrobot..o: /usr/include/pthread.h /usr/include/sched.h
+playerrobot..o: /usr/include/signal.h /usr/include/stdint.h
+playerrobot..o: /usr/include/stdio.h /usr/include/stdlib.h
+playerrobot..o: /usr/include/string.h /usr/include/sys/cdefs.h
+playerrobot..o: /usr/include/sys/ipc.h /usr/include/sys/mman.h
+playerrobot..o: /usr/include/sys/select.h /usr/include/sys/sem.h
+playerrobot..o: /usr/include/sys/socket.h /usr/include/sys/stat.h
+playerrobot..o: /usr/include/sys/sysmacros.h /usr/include/sys/ttydefaults.h
+playerrobot..o: /usr/include/sys/types.h /usr/include/sys/ucontext.h
+playerrobot..o: /usr/include/sys/wait.h /usr/include/termios.h
+playerrobot..o: /usr/include/time.h /usr/include/ucontext.h
+playerrobot..o: /usr/include/unistd.h /usr/include/wchar.h
+playerrobot..o: /usr/include/xlocale.h
+playerrobot..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
+playerrobot..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/limits.h
+playerrobot..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
+playerrobot..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
+playerrobot..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/syslimits.h
+playerrobot..o: /usr/local/player1.1.1beta/include/messages.h
+playerrobot..o: /usr/local/player1.1.1beta/include/playercommon.h
+playerrobot..o: /usr/local/player1.1.1beta/include/stage.h
 playerserver..o: ../include/entity.hh ../include/image.h
 playerserver..o: ../include/playerserver.hh ../include/stage_types.hh
 playerserver..o: ../include/world.hh /usr/include/alloca.h
@@ -476,16 +593,15 @@ playerserver..o: /usr/include/bits/mathcalls.h /usr/include/bits/mathdef.h
 playerserver..o: /usr/include/bits/mman.h /usr/include/bits/nan.h
 playerserver..o: /usr/include/bits/posix1_lim.h /usr/include/bits/posix2_lim.h
 playerserver..o: /usr/include/bits/posix_opt.h
-playerserver..o: /usr/include/bits/pthreadtypes.h /usr/include/bits/resource.h
-playerserver..o: /usr/include/bits/sched.h /usr/include/bits/select.h
-playerserver..o: /usr/include/bits/sem.h /usr/include/bits/sigaction.h
-playerserver..o: /usr/include/bits/sigcontext.h /usr/include/bits/siginfo.h
-playerserver..o: /usr/include/bits/signum.h /usr/include/bits/sigset.h
-playerserver..o: /usr/include/bits/sigstack.h /usr/include/bits/sigthread.h
-playerserver..o: /usr/include/bits/sockaddr.h /usr/include/bits/socket.h
-playerserver..o: /usr/include/bits/stat.h /usr/include/bits/stdio_lim.h
-playerserver..o: /usr/include/bits/termios.h /usr/include/bits/time.h
-playerserver..o: /usr/include/bits/types.h /usr/include/bits/uio.h
+playerserver..o: /usr/include/bits/pthreadtypes.h /usr/include/bits/sched.h
+playerserver..o: /usr/include/bits/select.h /usr/include/bits/sem.h
+playerserver..o: /usr/include/bits/sigaction.h /usr/include/bits/sigcontext.h
+playerserver..o: /usr/include/bits/siginfo.h /usr/include/bits/signum.h
+playerserver..o: /usr/include/bits/sigset.h /usr/include/bits/sigstack.h
+playerserver..o: /usr/include/bits/sigthread.h /usr/include/bits/sockaddr.h
+playerserver..o: /usr/include/bits/socket.h /usr/include/bits/stat.h
+playerserver..o: /usr/include/bits/stdio_lim.h /usr/include/bits/termios.h
+playerserver..o: /usr/include/bits/time.h /usr/include/bits/types.h
 playerserver..o: /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h
 playerserver..o: /usr/include/bits/wchar.h /usr/include/bits/wordsize.h
 playerserver..o: /usr/include/bits/xopen_lim.h /usr/include/endian.h
@@ -503,15 +619,15 @@ playerserver..o: /usr/include/signal.h /usr/include/stdint.h
 playerserver..o: /usr/include/stdio.h /usr/include/stdlib.h
 playerserver..o: /usr/include/string.h /usr/include/sys/cdefs.h
 playerserver..o: /usr/include/sys/ipc.h /usr/include/sys/mman.h
-playerserver..o: /usr/include/sys/resource.h /usr/include/sys/select.h
-playerserver..o: /usr/include/sys/sem.h /usr/include/sys/socket.h
-playerserver..o: /usr/include/sys/stat.h /usr/include/sys/sysmacros.h
-playerserver..o: /usr/include/sys/ttydefaults.h /usr/include/sys/types.h
-playerserver..o: /usr/include/sys/ucontext.h /usr/include/sys/uio.h
+playerserver..o: /usr/include/sys/select.h /usr/include/sys/sem.h
+playerserver..o: /usr/include/sys/socket.h /usr/include/sys/stat.h
+playerserver..o: /usr/include/sys/sysmacros.h /usr/include/sys/ttydefaults.h
+playerserver..o: /usr/include/sys/types.h /usr/include/sys/ucontext.h
 playerserver..o: /usr/include/sys/wait.h /usr/include/termios.h
 playerserver..o: /usr/include/time.h /usr/include/ucontext.h
 playerserver..o: /usr/include/unistd.h /usr/include/wchar.h
 playerserver..o: /usr/include/xlocale.h
+playerserver..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 playerserver..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/limits.h
 playerserver..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 playerserver..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
@@ -538,11 +654,10 @@ posreader..o: /usr/include/bits/sigset.h /usr/include/bits/sigstack.h
 posreader..o: /usr/include/bits/sigthread.h /usr/include/bits/sockaddr.h
 posreader..o: /usr/include/bits/socket.h /usr/include/bits/stat.h
 posreader..o: /usr/include/bits/stdio_lim.h /usr/include/bits/time.h
-posreader..o: /usr/include/bits/types.h /usr/include/bits/uio.h
-posreader..o: /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h
-posreader..o: /usr/include/bits/wchar.h /usr/include/bits/wordsize.h
-posreader..o: /usr/include/bits/xopen_lim.h /usr/include/endian.h
-posreader..o: /usr/include/errno.h /usr/include/fcntl.h
+posreader..o: /usr/include/bits/types.h /usr/include/bits/waitflags.h
+posreader..o: /usr/include/bits/waitstatus.h /usr/include/bits/wchar.h
+posreader..o: /usr/include/bits/wordsize.h /usr/include/bits/xopen_lim.h
+posreader..o: /usr/include/endian.h /usr/include/errno.h /usr/include/fcntl.h
 posreader..o: /usr/include/features.h /usr/include/g++-3/iostream.h
 posreader..o: /usr/include/g++-3/streambuf.h /usr/include/_G_config.h
 posreader..o: /usr/include/gconv.h /usr/include/getopt.h
@@ -556,9 +671,8 @@ posreader..o: /usr/include/sys/cdefs.h /usr/include/sys/select.h
 posreader..o: /usr/include/sys/socket.h /usr/include/sys/stat.h
 posreader..o: /usr/include/sys/sysmacros.h /usr/include/sys/time.h
 posreader..o: /usr/include/sys/types.h /usr/include/sys/ucontext.h
-posreader..o: /usr/include/sys/uio.h /usr/include/time.h
-posreader..o: /usr/include/ucontext.h /usr/include/unistd.h
-posreader..o: /usr/include/values.h /usr/include/wchar.h
+posreader..o: /usr/include/time.h /usr/include/ucontext.h
+posreader..o: /usr/include/unistd.h /usr/include/values.h /usr/include/wchar.h
 posreader..o: /usr/include/xlocale.h
 posreader..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 posreader..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/limits.h
@@ -594,6 +708,7 @@ ptzdevice..o: /usr/include/stdlib.h /usr/include/string.h
 ptzdevice..o: /usr/include/sys/cdefs.h /usr/include/sys/select.h
 ptzdevice..o: /usr/include/sys/sysmacros.h /usr/include/sys/types.h
 ptzdevice..o: /usr/include/time.h /usr/include/wchar.h /usr/include/xlocale.h
+ptzdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 ptzdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/limits.h
 ptzdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 ptzdevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
@@ -621,6 +736,7 @@ rtk_main..o: /usr/include/string.h /usr/include/sys/cdefs.h
 rtk_main..o: /usr/include/sys/select.h /usr/include/sys/sysmacros.h
 rtk_main..o: /usr/include/sys/types.h /usr/include/time.h /usr/include/wchar.h
 rtk_main..o: /usr/include/xlocale.h
+rtk_main..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 rtk_main..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 rtk_main..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
 rtk_main..o: ../VERSION
@@ -646,15 +762,15 @@ server..o: /usr/include/bits/sigthread.h /usr/include/bits/sockaddr.h
 server..o: /usr/include/bits/socket.h /usr/include/bits/stat.h
 server..o: /usr/include/bits/stdio_lim.h /usr/include/bits/termios.h
 server..o: /usr/include/bits/time.h /usr/include/bits/types.h
-server..o: /usr/include/bits/uio.h /usr/include/bits/waitflags.h
-server..o: /usr/include/bits/waitstatus.h /usr/include/bits/wchar.h
-server..o: /usr/include/bits/wordsize.h /usr/include/bits/xopen_lim.h
-server..o: /usr/include/endian.h /usr/include/errno.h /usr/include/fcntl.h
-server..o: /usr/include/features.h /usr/include/g++-3/iomanip.h
-server..o: /usr/include/g++-3/iostream.h /usr/include/g++-3/streambuf.h
-server..o: /usr/include/g++-3/strfile.h /usr/include/g++-3/strstream.h
-server..o: /usr/include/_G_config.h /usr/include/gconv.h /usr/include/getopt.h
-server..o: /usr/include/gnu/stubs.h /usr/include/libio.h /usr/include/limits.h
+server..o: /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h
+server..o: /usr/include/bits/wchar.h /usr/include/bits/wordsize.h
+server..o: /usr/include/bits/xopen_lim.h /usr/include/endian.h
+server..o: /usr/include/errno.h /usr/include/fcntl.h /usr/include/features.h
+server..o: /usr/include/g++-3/iomanip.h /usr/include/g++-3/iostream.h
+server..o: /usr/include/g++-3/streambuf.h /usr/include/g++-3/strfile.h
+server..o: /usr/include/g++-3/strstream.h /usr/include/_G_config.h
+server..o: /usr/include/gconv.h /usr/include/getopt.h /usr/include/gnu/stubs.h
+server..o: /usr/include/libio.h /usr/include/limits.h
 server..o: /usr/include/linux/errno.h /usr/include/linux/limits.h
 server..o: /usr/include/math.h /usr/include/netdb.h /usr/include/netinet/in.h
 server..o: /usr/include/pthread.h /usr/include/rpc/netdb.h
@@ -664,10 +780,9 @@ server..o: /usr/include/sys/cdefs.h /usr/include/sys/select.h
 server..o: /usr/include/sys/socket.h /usr/include/sys/stat.h
 server..o: /usr/include/sys/sysmacros.h /usr/include/sys/time.h
 server..o: /usr/include/sys/ttydefaults.h /usr/include/sys/types.h
-server..o: /usr/include/sys/ucontext.h /usr/include/sys/uio.h
-server..o: /usr/include/termios.h /usr/include/time.h /usr/include/ucontext.h
-server..o: /usr/include/unistd.h /usr/include/values.h /usr/include/wchar.h
-server..o: /usr/include/xlocale.h
+server..o: /usr/include/sys/ucontext.h /usr/include/termios.h
+server..o: /usr/include/time.h /usr/include/ucontext.h /usr/include/unistd.h
+server..o: /usr/include/values.h /usr/include/wchar.h /usr/include/xlocale.h
 server..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 server..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/limits.h
 server..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
@@ -692,7 +807,8 @@ sonardevice..o: /usr/include/bits/time.h /usr/include/bits/types.h
 sonardevice..o: /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h
 sonardevice..o: /usr/include/bits/wchar.h /usr/include/bits/wordsize.h
 sonardevice..o: /usr/include/bits/xopen_lim.h /usr/include/endian.h
-sonardevice..o: /usr/include/features.h /usr/include/_G_config.h
+sonardevice..o: /usr/include/features.h /usr/include/g++-3/iostream.h
+sonardevice..o: /usr/include/g++-3/streambuf.h /usr/include/_G_config.h
 sonardevice..o: /usr/include/gconv.h /usr/include/gnu/stubs.h
 sonardevice..o: /usr/include/libio.h /usr/include/limits.h
 sonardevice..o: /usr/include/linux/limits.h /usr/include/math.h
@@ -704,6 +820,7 @@ sonardevice..o: /usr/include/sys/cdefs.h /usr/include/sys/select.h
 sonardevice..o: /usr/include/sys/sysmacros.h /usr/include/sys/types.h
 sonardevice..o: /usr/include/time.h /usr/include/wchar.h
 sonardevice..o: /usr/include/xlocale.h
+sonardevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 sonardevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/limits.h
 sonardevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 sonardevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
@@ -746,6 +863,7 @@ usc_pioneer..o: /usr/include/sys/cdefs.h /usr/include/sys/select.h
 usc_pioneer..o: /usr/include/sys/sysmacros.h /usr/include/sys/types.h
 usc_pioneer..o: /usr/include/time.h /usr/include/wchar.h
 usc_pioneer..o: /usr/include/xlocale.h
+usc_pioneer..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 usc_pioneer..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/limits.h
 usc_pioneer..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 usc_pioneer..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
@@ -776,6 +894,7 @@ visionbeacon..o: /usr/include/string.h /usr/include/sys/cdefs.h
 visionbeacon..o: /usr/include/sys/select.h /usr/include/sys/sysmacros.h
 visionbeacon..o: /usr/include/sys/types.h /usr/include/time.h
 visionbeacon..o: /usr/include/wchar.h /usr/include/xlocale.h
+visionbeacon..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 visionbeacon..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 visionbeacon..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
 visiondevice..o: ../include/entity.hh ../include/image.h
@@ -809,6 +928,7 @@ visiondevice..o: /usr/include/sys/cdefs.h /usr/include/sys/select.h
 visiondevice..o: /usr/include/sys/sysmacros.h /usr/include/sys/types.h
 visiondevice..o: /usr/include/time.h /usr/include/wchar.h
 visiondevice..o: /usr/include/xlocale.h
+visiondevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 visiondevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/limits.h
 visiondevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 visiondevice..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
@@ -880,6 +1000,7 @@ world_load..o: /usr/include/string.h /usr/include/sys/cdefs.h
 world_load..o: /usr/include/sys/select.h /usr/include/sys/sysmacros.h
 world_load..o: /usr/include/sys/types.h /usr/include/time.h
 world_load..o: /usr/include/wchar.h /usr/include/xlocale.h
+world_load..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 world_load..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 world_load..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
 world..o: ../include/entity.hh ../include/image.h ../include/stage_types.hh
@@ -909,6 +1030,7 @@ world..o: /usr/include/sys/time.h /usr/include/sys/types.h
 world..o: /usr/include/sys/ucontext.h /usr/include/time.h
 world..o: /usr/include/ucontext.h /usr/include/unistd.h /usr/include/wchar.h
 world..o: /usr/include/xlocale.h
+world..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/float.h
 world..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 world..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
 world..o: /usr/local/player1.1.1beta/include/messages.h
@@ -958,3 +1080,6 @@ xgui..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/limits.h
 xgui..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stdarg.h
 xgui..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/stddef.h
 xgui..o: /usr/lib/gcc-lib/i386-redhat-linux/2.96/include/syslimits.h
+xgui..o: /usr/local/player1.1.1beta/include/messages.h
+xgui..o: /usr/local/player1.1.1beta/include/playercommon.h
+xgui..o: /usr/local/player1.1.1beta/include/stage.h

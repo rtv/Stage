@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.2.2.14 $
+//  $Author: vaughan $
+//  $Revision: 1.2.2.15 $
 //
 // Usage:
 //  (empty)
@@ -57,6 +57,12 @@ CLaserBeaconDevice::CLaserBeaconDevice(CWorld *world, CEntity *parent,
     m_max_anon_range = 4.0;
     m_max_id_range = 1.5;
 
+#ifdef INCLUDE_XGUI
+    exp.objectId = this;
+    exp.objectType = laserbeacondetector_o;
+    exp.data = (char*)&expBeacon;
+    expBeacon.beaconCount = 0;
+#endif  
     
 }
 
@@ -70,6 +76,7 @@ void CLaserBeaconDevice::Update()
     ASSERT(m_world != NULL);
     ASSERT(m_laser != NULL);
     
+   
     // Get the laser range data
     //
     uint32_t time_sec, time_usec;
@@ -81,6 +88,10 @@ void CLaserBeaconDevice::Update()
     //
     if (time_sec == m_time_sec && time_usec == m_time_usec)
         return;
+
+#ifdef INCLUDE_XGUI
+    expBeacon.beaconCount = 0; // initialise the count in the export structure
+#endif
 
     // Do some byte swapping on the laser data
     //
@@ -109,7 +120,7 @@ void CLaserBeaconDevice::Update()
     //
     player_laserbeacon_data_t beacon;
     beacon.count = 0;
-
+   
     // Search for beacons in the list
     // Is quicker than searching the bitmap!
     //
@@ -144,6 +155,15 @@ void CLaserBeaconDevice::Update()
             continue;
         if (r > m_max_id_range * DTOR(0.50) / scan_res)
             id = 0;
+
+#ifdef INCLUDE_XGUI
+	// pack the beacon data into the export structure
+	expBeacon.beacons[ expBeacon.beaconCount ].x = px;
+	expBeacon.beacons[ expBeacon.beaconCount ].y = py;
+	expBeacon.beacons[ expBeacon.beaconCount ].th = pth;
+	expBeacon.beacons[ expBeacon.beaconCount ].id = id;
+	expBeacon.beaconCount++;
+#endif
 
         // Record beacons
         //
@@ -189,7 +209,28 @@ void CLaserBeaconDevice::OnUiUpdate(RtkUiDrawData *pData)
 
 #endif
 
+#ifdef INCLUDE_XGUI
+////////////////////////////////////////////////////////////////////////////
+// compose and return the export data structure for external rendering
+// return null if we're not exporting data right now.
+ExportData* CLaserBeaconDevice::ImportExportData( ImportData* imp )
+{
+  //Beacon detectors can't be dragged independent of their camera
+  // so we don't have the usual import position code
+  //if( imp ) // if there is some imported data
+  // SetGlobalPose( imp->x, imp->y, imp->th ); // move to the suggested place
+  
+  if( !exporting ) return 0;
 
+  // fill in the exp structure
+  // exp.type, exp.id are set in the constructor
+  GetGlobalPose( exp.x, exp.y, exp.th );
+
+  // beacon locations are stored in expBeacon during Update()
+  return &exp;
+}
+
+#endif
 
 
 

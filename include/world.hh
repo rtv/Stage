@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.1.2.25 $
+//  $Author: vaughan $
+//  $Revision: 1.1.2.26 $
 //
 // Usage:
 //  (empty)
@@ -321,7 +321,7 @@ class CWorld
 public:
   CXGui* win;
   Nimage* GetBackgroundImage( void ){ return m_bimg; };
-  Nimage* GetForegroundImage( void ){ return m_img; };
+  Nimage* GetForegroundImage( void ){ return m_obs_img; };
   Nimage* GetLaserImage( void ){ return m_laser_img; };
   Nimage* GetVisionImage( void ){ return m_vision_img; };
 #endif

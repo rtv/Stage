@@ -1,7 +1,7 @@
 /*************************************************************************
- * win.cc - all the graphics and X management
+ * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xgui.cc,v 1.1.2.3 2001-05-24 01:55:31 ahoward Exp $
+ * $Id: xgui.cc,v 1.1.2.4 2001-05-25 04:26:56 vaughan Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -22,21 +22,23 @@
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
 
-#define DEBUG
-#define VERBOSE
+//#define DEBUG
+//#define VERBOSE
+//#define VERYVERBOSE
+//#define LABELS
 
-#define LUI long unsigned int
+#define ULI unsigned long int
+#define USI unsigned short int
+
+// size of a static array - yuk! will make dynamic sooner or later
+#define MAX_OBJECTS 10000
 
 XPoint* backgroundPts;
 int backgroundPtsCount;
 
-// temporary hack to set these values
-#define SONARSAMPLES 16
-#define LASERSAMPLES 361
-
-const double TWOPI = 6.283185307;
-const int numPts = SONARSAMPLES;
-const int laserSamples = LASERSAMPLES;
+//const double TWOPI = 6.283185307;
+//const int sonarSamples = SONARSAMPLES;
+//const int laserSamples = LASERSAMPLES;
 
 const float maxAngularError =  -0.1; // percent error on turning odometry
 
@@ -46,6 +48,18 @@ unsigned int RGB( int r, int g, int b );
 
 int coords = false;
 
+//  ExportLaserData::ExportLaserData( void )// default constuctor 
+//                  :ExportData(); 
+//  {
+//  };
+
+//  ExportLaserData::ExportLaserData( ExportLaserData& copy ) // copy constructor
+//                  :ExportData( copy )
+//  {
+//    //cout << "ExportLaserData copy constructor" << endl;
+//    memcpy( hitPts, copy.hitPts, sizeof( DPoint ) * LASERSAMPLES );
+//    hitCount = copy.hitCount;
+//  };
 
 
 CXGui::CXGui( CWorld* wworld )//,  char* initFile )
@@ -56,7 +70,8 @@ CXGui::CXGui( CWorld* wworld )//,  char* initFile )
 
   world = wworld;
 
-  database = new ExportData[ MAX_OBJECTS ];
+  database = new ExportData*[ MAX_OBJECTS ];
+
   numObjects = 0;
 
   char* title = "Stage";
@@ -128,9 +143,9 @@ CXGui::CXGui( CWorld* wworld )//,  char* initFile )
 		   (char**)NULL, 0, 
 		   &sz, (XWMHints*)NULL, (XClassHint*)NULL );
   
-  gc = XCreateGC(display, win, (unsigned long)0, NULL );
+  gc = XCreateGC(display, win, (ULI)0, NULL );
 
-  const unsigned long int mask = 0xFFFFFFFF;
+  //const unsigned long int mask = 0xFFFFFFFF;
   
 #ifdef DEBUG
   cout << "Screen Depth: " << DefaultDepth( display, screen ) 
@@ -145,6 +160,13 @@ CXGui::CXGui( CWorld* wworld )//,  char* initFile )
   cout << "ok." << endl;
 #endif
 }
+
+// destructor
+CXGui::~CXGui( void )
+{
+  delete [] database;
+}
+
 
 int CXGui::LoadVars( char* filename )
 {
@@ -255,27 +277,18 @@ void CXGui::BoundsCheck( void )
 void CXGui::HandleEvent( void )
 {    
   XEvent reportEvent;
-  int r;
   KeySym key;
   int drawnRobots = false;
-  static int sw = 0, sh = 0;
-
+  
   // used for inverting Y between world and X coordinates
   int imgHeight= world->GetBackgroundImage()->height;
   double wppm = world->ppm; // scale between world and X coordinates
-  ImportData imp; // data structure for updating world objects
- 
-  unsigned int motionMask;
-  // we only want mouse motion messages when we're dragging
-  //dragging ? motionMask = PointerMotionHintMask : motionMask = 0;
-
-  motionMask = PointerMotionHintMask;
-
+  
   while( XCheckWindowEvent( display, win,
 			    StructureNotifyMask 
 			    | ButtonPressMask | ButtonReleaseMask 
 			    | ExposureMask | KeyPressMask 
-			    | motionMask, 
+			    |  PointerMotionHintMask, 
 			    &reportEvent ) )
   
     switch( reportEvent.type ) // there was an event waiting, so handle it...
@@ -302,7 +315,6 @@ void CXGui::HandleEvent( void )
 	  
 	  DrawBackground(); // black backround and draw walls
 	  RefreshObjects();
-	  //drawnRobots = true;
 	}
 	break;
 
@@ -318,7 +330,7 @@ void CXGui::HandleEvent( void )
 			(imgHeight-reportEvent.xmotion.y) / wppm - panx,
 			theta );
 
-	    HighlightObject( dragging );
+	    //HighlightObject( dragging );
 	  }
 	else // highlight the nearest object? dunno if i want this,
 	  {  // but this is the place to do it.
@@ -332,10 +344,11 @@ void CXGui::HandleEvent( void )
 	    near->GetGlobalPose( x2, y2, dummy );
 
 	    // if the object is close, highlight it
-	    if( hypot( x1-x2, y1-y2 ) < 1.0 ) 
+	    if( hypot( x1-x2, y1-y2 ) > 1.0 ) near = 0; 
 	      HighlightObject( near ); 
-	    else // it's not close enough - don't grab it
-	      near = 0;
+	      //else // it's not close enough - don't grab it
+	      //{
+	      //near = 0;
 	  }
 	break;
 	
@@ -350,25 +363,31 @@ void CXGui::HandleEvent( void )
 	      if( dragging  ) 
   		{ // stopped dragging
   		  dragging = NULL;
-		  
+		
+		  // undraw the object to erase it and i
   		  //redraw the walls
   		  //world->Draw();
   		} 
   	      else if( near )
   		{  // find nearest robot and drag it
-  		  dragging = near;
-		  //world->NearestObject(reportEvent.xbutton.x 
-		  //		 / wppm + panx, 
-		  //		 (imgHeight-reportEvent.xbutton.y)
-		  //		 / wppm + pany ); 
-		  
-		  double dummy, theta;
-		  dragging->GetGlobalPose( dummy, dummy, theta );
-		  
-		  MoveObject( dragging, 
-			      reportEvent.xbutton.x / wppm + panx,
-			      (imgHeight-reportEvent.xbutton.y) / wppm - panx,
-			      theta );
+		  // but only if it is moveable - ie. it is 
+		  // a parentless object
+		  if( near->m_parent_object == 0 )
+		    {
+		      dragging = near;
+		      //world->NearestObject(reportEvent.xbutton.x 
+		      //		 / wppm + panx, 
+		      //		 (imgHeight-reportEvent.xbutton.y)
+		      //		 / wppm + pany ); 
+		      
+		      double dummy, theta;
+		      dragging->GetGlobalPose( dummy, dummy, theta );
+		      
+		      MoveObject( dragging, 
+				  reportEvent.xbutton.x / wppm + panx,
+				  (imgHeight-reportEvent.xbutton.y)/wppm-panx,
+				  theta );
+		    }
 		}	      
 	      break;
 	      
@@ -436,7 +455,7 @@ void CXGui::HandleEvent( void )
 
 	int oldPanx = panx;
 	int oldPany = pany;
-	double oldXscale = xscale;
+	//double oldXscale = xscale;
 
 	if( key == XK_Left )
 	  panx -= width/5;
@@ -455,25 +474,12 @@ void CXGui::HandleEvent( void )
 	    ScanBackground();
 	    DrawBackground();
 	    RefreshObjects();
-	    //DrawRobots();
-	    //drawnRobots = true;
-	    
 	  }
 	break;
       }
 
-  // if we haven't already refreshed the robots on screen, do it
-  if( !drawnRobots )
-    {
-
-      //RefreshRobots();
-      //DrawRobotIfMoved( r );
-     
-    }
-
   // try to sync the display to avoid flicker
   XSync( display, false );
-
 }
 
 
@@ -490,7 +496,8 @@ void CXGui::ScanBackground( void )
 
   Nimage* img = world->GetBackgroundImage();
 
-  int sx, sy, px, py;
+  //int sx, sy,
+    int px, py;
   for( px=0; px < width; px++ )
     for( py=0; py < height; py++ )
       if( img->get_pixel( px+panx, py+pany ) != 0 )
@@ -545,6 +552,22 @@ void CXGui::DrawPolygon( DPoint* pts, int numPts )
   delete[] pPts;
 }
 
+
+void CXGui::DrawString( double x, double y, char* str, int len )
+{ 
+  if( str )
+    {
+      int imgHeight= world->GetBackgroundImage()->height;
+      
+      XDrawString( display,win,gc, 
+		   (ULI)(x * world->ppm - panx),
+		   (ULI)( (imgHeight-pany) - ((int)( y*world->ppm ))),
+		   str, len );
+    }
+  else
+    cout << "Warning: XGUI::DrawString was passed a null pointer" << endl;
+}
+
 void CXGui::DrawLines( DPoint* dpts, int numPts )
 {
   //SetDrawMode( GXcopy );
@@ -593,9 +616,9 @@ void CXGui::DrawCircle( double x, double y, double r )
   int imgHeight= world->GetBackgroundImage()->height;
 
   XDrawArc( display, win, gc, 
-	    (LUI)((x-r) * world->ppm -panx), 
-	    (LUI)((imgHeight-pany)-((y+r) * world->ppm)), 
-	    (LUI)(2.0*r*world->ppm), (LUI)(2.0*r*world->ppm), 0, 23040 );
+	    (ULI)((x-r) * world->ppm -panx), 
+	    (ULI)((imgHeight-pany)-((y+r) * world->ppm)), 
+	    (ULI)(2.0*r*world->ppm), (ULI)(2.0*r*world->ppm), 0, 23040 );
 }
 
 void CXGui::DrawWallsInRect( int xx, int yy, int ww, int hh )
@@ -616,13 +639,7 @@ void CXGui::RefreshObjects( void )
   SetDrawMode( GXxor );
  
   for( int o=0; o<numObjects; o++ )     
-    RenderObject( &database[o] );
-
- 
-  // hide the CRobot reference
-
-  //  for( CRobot* r = world->bots; r; r = r->next ) 
-  //  r->GUIDraw();
+    RenderObject( database[o], true );
   
   SetDrawMode( GXcopy );
 }
@@ -689,97 +706,361 @@ void CXGui::DrawBox( double px, double py, double boxdelta )
 ExportData* CXGui::GetLastMatchingExport( ExportData* exp )
 {
   for( int o=0; o<numObjects; o++ )     
-    if( database[o].objectId == exp->objectId  )
-      return &database[o]; // found it!
+    if( database[o]->objectId == exp->objectId  )
+      return database[o]; // found it!
 
   return 0; // didn't find it
 }
 
+size_t CXGui::DataSize( ExportData* exp )
+{
+  size_t sz = 0;
+
+  // check the object type to find the size of the type-specific data
+  switch( exp->objectType )
+    {
+    case laserturret_o: sz = sizeof( ExportLaserData );
+      break;
+    case misc_o: sz = sizeof( player_misc_data_t );
+      break;
+    case sonar_o: sz = sizeof( ExportSonarData );
+      break;
+    case laserbeacondetector_o:  
+      sz = sizeof( ExportLaserBeaconDetectorData );
+      break;
+    case ptz_o: sz = sizeof( ExportPtzData );
+      break;  
+    case vision_o: break;
+    case uscpioneer_o: break;
+    case pioneer_o: break;
+    case laserbeacon_o: break;
+    case box_o: break;
+    case player_o: break;
+    }	
+  
+  return sz;
+}
+
+
 void CXGui::ImportExportData( ExportData* exp )
 {
   if( exp == 0 ) return; // do nothing if the pointer is null
-
-  // lookup the object in the database 
-
-  ExportData* lastExp = GetLastMatchingExport( exp );
-
-  SetDrawMode( GXxor );
   
-  if( lastExp ) // we've drawn this before
-    {
-      if( memcmp( lastExp, exp, sizeof( ExportData ) ) != 0 )
-      {
-      // data has changed since the last time
-	 RenderObject( lastExp ); // erase old image
-	 memcpy( lastExp, exp, sizeof( ExportData ) ); // store this data
-	 // do the new drawing
-	 RenderObject( exp ); // draw new image
-      }	  
-    }
-  else
-    {
-      cout << "\nadding a new object, type " << exp->objectType 
-	   << " ID " << exp->objectId << endl;
-      // add this new object
-      memcpy( &database[numObjects], exp, sizeof( ExportData ) );
-      numObjects++;     
+  // lookup the object in the database 
+  
+  ExportData* lastExp = GetLastMatchingExport( exp );
+  
+  SetDrawMode( GXxor );
 
+
+  if( lastExp ) // we've drawn this before
+    {	  
+      bool renderExtended = true;
+      bool genericChanged = false;
+      bool specificChanged = false;
+      
+      // see if the generic object data has changed
+      // i.e. the object has moved or changed type
+      if( IsDiffGenericExportData( lastExp, exp ) )
+	genericChanged = true;
+      
+ 
+      // see if the type-specific data has changed
+      // i.e. the sensor data has been updated
+      if( IsDiffSpecificExportData( lastExp, exp ) )
+	specificChanged = true;
+      else
+	// we don't need to render the type-specific data
+	// so we'll temporarily disable the data pointer.
+	// the rendering functions will test for a valid data ptr
+	// before interpreting it 
+	//lastExp->data = 0;
+	renderExtended = false;
+      
+      if( genericChanged || specificChanged )
+	{
+	  RenderObject( lastExp, renderExtended ); // undraw
+	  
+	  // update the database entry with imported data
+	  if( specificChanged ) CopySpecificExportData( lastExp, exp );
+	  if( genericChanged )  CopyGenericExportData( lastExp, exp );	  
+	  
+	  RenderObject( lastExp, renderExtended ); // draw
+	}
+    }
+  else // we haven't seen this before - add it to the database
+    {
+
+#ifdef VERYVERBOSE
+      char buf[30];
+      GetObjectType( exp, buf, 29 );
+      cout << "Adding " << exp->objectId << " " << buf <<  endl;
+#endif
+
+      database[numObjects] = new ExportData();
+      memcpy( database[numObjects], exp, sizeof( ExportData ) );
+      
+      // check the object type and create the type-specific data
+      switch( exp->objectType )
+	{
+	case laserturret_o: 
+	  database[numObjects]->data = (char*)new ExportLaserData();
+	  memcpy( database[numObjects]->data, exp->data, 
+		  sizeof( ExportLaserData ) );
+	  break;
+	case misc_o:	
+	  database[numObjects]->data = (char*)new player_misc_data_t();
+	  memcpy( database[numObjects]->data, exp->data, 
+		  sizeof( player_misc_data_t ) );
+	  break;
+	case sonar_o: 	
+	  database[numObjects]->data = (char*)new ExportSonarData();
+	  memcpy( database[numObjects]->data, exp->data, 
+		  sizeof( ExportSonarData ) );
+	  break;
+	case laserbeacondetector_o: 
+	  database[numObjects]->data = 
+	    (char*)new ExportLaserBeaconDetectorData();
+	  memcpy( database[numObjects]->data, exp->data, 
+		  sizeof( ExportLaserBeaconDetectorData ) );
+	  break;
+	case vision_o: break;
+	case ptz_o: 	 
+	  database[numObjects]->data = (char*)new ExportPtzData();
+	  memcpy( database[numObjects]->data, exp->data, 
+		  sizeof( ExportPtzData ) );
+	  break;  
+	case uscpioneer_o: break;
+	case pioneer_o: break;
+	case laserbeacon_o: break;
+	case box_o: break;
+	case player_o: break;
+	  
+	}
+      numObjects++; 
+      
       // do the new drawing
-      RenderObject( exp ); // draw new image
+      RenderObject( exp, true ); // draw new image
     }
   
   SetDrawMode( GXcopy );
 }
 
-void CXGui::RenderObject( ExportData* exp )
+void CXGui::RenderObject( ExportData* exp, bool extended )
 {
-  //cout << "Rendering " << exp->objectId << endl;
+#ifdef VERYVERBOSE
+  char buf[30];
+  GetObjectType( exp, buf, 29 );
+  cout << "Rendering " << exp->objectId << " " << buf <<  endl;
+#endif
 
   // check the object type and call the appropriate render function 
   switch( exp->objectType )
     {
-    case generic_o: RenderGenericObject( exp ); break;
-    case pioneer_o: RenderPioneer( exp ); break;
-    case uscpioneer_o: RenderUSCPioneer( exp ); break;
-    case laserturret_o: RenderLaserTurret( exp ); break;
-    case laserbeacon_o: RenderLaserBeacon( exp ); break;
-    case box_o: RenderBox( exp ); break;
-    default: printf( "XGui asked to render unknown object type\n" );
+     case pioneer_o: RenderPioneer( exp, extended ); break;
+      case uscpioneer_o: RenderUSCPioneer( exp, extended ); break;
+      case laserturret_o: RenderLaserTurret( exp, extended ); break;
+      case laserbeacon_o: RenderLaserBeacon( exp, extended ); break;
+      case box_o: RenderBox( exp, extended ); break;
+      case player_o: RenderPlayer( exp, extended ); break;
+      case misc_o: RenderMisc( exp , extended); break;
+      case sonar_o: RenderSonar( exp, extended ); break;
+      case laserbeacondetector_o: 
+        RenderLaserBeaconDetector( exp, extended ); break;
+      case vision_o: RenderVision( exp, extended ); break;
+      case ptz_o: RenderPTZ( exp, extended ); break;  
+      
+      case generic_o: RenderGenericObject( exp ); 
+        cout << "Warning: GUI asked to render a GENERIC object" << endl;
+        break;
+    default: cout << "XGui: unknown object type " << exp->objectType << endl;
+    }
+}
+
+void CXGui::RenderObjectLabel( ExportData* exp, char* str, int len )
+{
+  SetForeground( RGB(255,255,255) );
+  DrawString( exp->x + 0.8, exp->y - (0.5 + exp->objectType * 0.5) , str, len );
+}
+
+void CXGui::RenderGenericObject( ExportData* exp )
+{
+#ifdef LABELS
+  RenderObjectLabel( exp, "Generic object", 14 );
+#endif
+
+  SetForeground( RGB(255,255,255) );
+  DrawBox( exp->x, exp->y, 0.9 );
+
+  char buf[64];
+
+  sprintf( buf, "Generic @ %d", (int)(exp->objectId) );
+  RenderObjectLabel( exp, buf, strlen(buf) );
+}
+
+//void CXGui::RenderPlayer
+
+void CXGui::RenderLaserTurret( ExportData* exp, bool extended )
+{ 
+#ifdef LABELS
+  RenderObjectLabel( exp, "SICK LMS200", 11 );
+#endif
+
+  SetForeground( RGB(0,0,255) );
+
+  DPoint pts[4];
+  GetRect( exp->x, exp->y, 0.1, 0.1, exp->th, pts );
+  DrawPolygon( pts, 4 );
+
+  //cout << "trying to render " << exp->hitCount << " points" << endl;
+
+  if( extended && exp->data )
+    {
+      ExportLaserData* ld = (ExportLaserData*) exp->data;
+      DrawPolygon( ld->hitPts, ld->hitCount );
+    }
+}
+
+void CXGui::RenderLaserBeaconDetector( ExportData* exp, bool extended )
+{ 
+#ifdef LABELS
+  RenderObjectLabel( exp, "Detector", 8 );
+#endif
+  
+  if( extended && exp->data )
+    {
+      DPoint pts[4];
+      char buf[20];
+      
+      SetForeground( RGB( 255, 0, 255 ) );
+      
+      ExportLaserBeaconDetectorData* p = 
+	(ExportLaserBeaconDetectorData*)exp->data;
+      
+      if( p->beaconCount > 0 ) for( int b=0; b < p->beaconCount; b ++ )
+	{
+	  GetRect( p->beacons[ b ].x, p->beacons[ b ].y, 
+		   0.2, 0.25, p->beacons[ b ].th, pts );
+	  
+	  // don't close the rectangle 
+	  // so the open box visually indicates heading of the beacon
+	  DrawLines( pts, 4 ); 
+	  
+	  // render the beacon id as text
+	  sprintf( buf, "%d", p->beacons[ b ].id );
+	  DrawString( p->beacons[ b ].x + 0.3, p->beacons[ b ].y + 0.3, 
+		      buf, strlen( buf ) );
+	}
+    }
+}
+
+void CXGui::RenderPTZ( ExportData* exp, bool extended )
+{ 
+#ifdef LABELS
+  RenderObjectLabel( exp, "PTZ Camera", 10 );
+#endif
+
+  SetForeground( RGB(200,200,200 ) );
+
+  DPoint pts[4];
+  GetRect( exp->x, exp->y, 0.05, 0.05, exp->th, pts );
+  DrawPolygon( pts, 4 );
+  
+  
+  if( 0 )
+  //if( extended && exp->data ) 
+    {
+
+      ExportPtzData* p = (ExportPtzData*)exp->data;
+      
+      //DPoint pts[4];
+      //GetRect( exp->x, exp->y, 0.4, 0.4, exp->th, pts );
+      //DrawPolygon( pts, 4 );
+      
+      double len = 0.2; // meters
+      // have to figure out the zoom with Andrew
+      // for now i have a fixed width triangle
+      //double startAngle =  exp->th + p->pan - p->zoom/2.0;
+      //double stopAngle  =  startAngle + p->zoom;
+      double startAngle =  exp->th + p->pan - DTOR( 30 );
+      double stopAngle  =  startAngle + DTOR( 60 );
+      
+      pts[0].x = exp->x;
+      pts[0].y = exp->y;
+      
+      pts[1].x = exp->x + len * cos( startAngle );  
+      pts[1].y = exp->y + len * sin( startAngle );  
+      
+      pts[2].x = exp->x + len * cos( stopAngle );  
+      pts[2].y = exp->y + len * sin( stopAngle );  
+      
+      DrawPolygon( pts, 3 );
+    }
+}
+
+void CXGui::RenderSonar( ExportData* exp, bool extended )
+{ 
+#ifdef LABELS
+  RenderObjectLabel( exp, "Sonar", 5 );
+#endif
+  if( extended && exp->data )
+    {
+      ExportSonarData* p = (ExportSonarData*)exp->data;
+      SetForeground( RGB(0,255,255) );
+      DrawPolygon( p->hitPts, p->hitCount );
+    }
+}
+
+void CXGui::RenderVision( ExportData* exp, bool extended )
+{ 
+#ifdef LABELS
+  RenderObjectLabel( exp, "Vision", 6 );
+#endif
+}
+
+void CXGui::RenderPlayer( ExportData* exp, bool extended )
+{ 
+#ifdef LABELS
+  RenderObjectLabel( exp, "Player", 6 );
+#endif
+}
+
+void CXGui::RenderMisc( ExportData* exp, bool extended )
+{
+#ifdef LABELS
+  RenderObjectLabel( exp, "Misc", 4 );
+#endif
+ 
+  if( 0 ) // disable for now
+  //if( extended && exp->data )
+    {
+      SetForeground( RGB(255,0,0) ); // red to match Pioneer base
+      
+      char buf[20];
+      
+      player_misc_data_t* p = (player_misc_data_t*)exp->data;
+      
+      // support bumpers eventually
+      //p->rearbumpers;
+      //p->frontbumpers;
+      
+      float v = p->voltage / 10.0;
+      sprintf( buf, "%.1fV", v );
+      DrawString( exp->x + 1.0, exp->y + 1.0, buf, strlen( buf ) ); 
     }
 }
 
 
-
-void CXGui::RenderGenericObject( ExportData* exp )
-{
-  SetForeground( RGB(255,255,255) );
-  DrawBox( exp->x, exp->y, 0.2 );
-}
-
-void CXGui::RenderLaserTurret( ExportData* exp )
+void CXGui::RenderPioneer( ExportData* exp, bool extended )
 { 
-  SetForeground( RGB(0,255,0) );
-  DrawBox( exp->x, exp->y, 0.2 );
-
-  DrawLines( (DPoint*)exp->data, 361 );
-}
-
-void CXGui::RenderPioneer( ExportData* exp )
-{ 
-  SetForeground( RGB(255,0,0) );
-
-  DPoint pts[4];
-  GetRect( exp->x, exp->y, exp->width/2.0, exp->height/2.0, exp->th, pts );
-
-  DrawPolygon( pts, 4 );
-}
-
-void CXGui::RenderUSCPioneer( ExportData* exp )
-{ 
-  SetForeground( RGB(255,0,255) );
+#ifdef LABELS
+  RenderObjectLabel( exp, "Pioneer base", 12 );
+#endif
+  
+  SetForeground( RGB(255,0,0) ); // red Pioneer base color
 
   DPoint pts[7];
-  GetRect( exp->x, exp->y, -exp->width/2.0, exp->height/2.0, exp->th, pts );
+  GetRect( exp->x, exp->y, exp->width/2.0, exp->height/2.0, exp->th, pts );
 
   pts[4].x = pts[0].x;
   pts[4].y = pts[0].y;
@@ -790,18 +1071,25 @@ void CXGui::RenderUSCPioneer( ExportData* exp )
   pts[6].x = pts[3].x;
   pts[6].y = pts[3].y;
 
+  DrawCircle( pts[1].x, pts[1].y, 0.3 );
+
   DrawLines( pts, 7 );
 }
 
-void CXGui::RenderPTZ( ExportData* exp )
+void CXGui::RenderUSCPioneer( ExportData* exp, bool extended )
 { 
-  SetForeground( RGB(255,255,0) );
-  DrawBox( exp->x, exp->y, 0.1 );
+#ifdef LABELS
+  RenderObjectLabel( exp, "USC Pioneer", 11 );
+#endif
 }
 
-void CXGui::RenderBox( ExportData* exp )
+void CXGui::RenderBox( ExportData* exp, bool extended )
 { 
-  SetForeground( RGB(0,0,255) );
+#ifdef LABELS
+  RenderObjectLabel( exp, "Box", 3 );
+#endif
+  
+  SetForeground( RGB(200,200,200) );
 
   DPoint pts[4];
   GetRect( exp->x, exp->y, exp->width/2.0, exp->height/2.0, exp->th, pts );
@@ -809,8 +1097,12 @@ void CXGui::RenderBox( ExportData* exp )
   DrawPolygon( pts, 4 );
 }
 
-void CXGui::RenderLaserBeacon( ExportData* exp )
+void CXGui::RenderLaserBeacon( ExportData* exp, bool extended )
 { 
+#ifdef LABELS
+  RenderObjectLabel( exp, "Beacon", 6 );
+#endif
+  
   SetForeground( RGB(0,255,0) );
   //DrawBox( exp->x, exp->y, 0.1 );
   //DrawCircle( exp->x, exp->y, 0.2 );
@@ -843,29 +1135,105 @@ void CXGui::GetRect( double x, double y, double dx, double dy,
 
 void CXGui::HighlightObject( CEntity* obj )
 {
-  static double x, y, th;
-  //static double lx, ly, lth;
 
-  static CEntity* lastObj;
+  //  RenderObject( obj );
 
-  //if( obj != lastObj )//|| lastObj == 0 )
-    {
-      SetForeground( white );
-      XSetLineAttributes( display, gc, 0, LineOnOffDash, CapRound, JoinRound );
-      SetDrawMode( GXxor );
+	  //static CEntity* lastObj;
 
-      // undraw the last one
-      if( lastObj != 0 ) 
-	DrawCircle( x, y, 0.6 );
+
+//    //if( obj != lastObj )//|| lastObj == 0 )
+//        // undraw the last one
+//    if( lastObj != 0  && obj ) 
+//      {
+//        SetForeground( white );
+//        XSetLineAttributes( display, gc, 0, LineOnOffDash, CapRound, JoinRound );
+//        SetDrawMode( GXxor );
+
+//        DrawCircle( x, y, 0.6 );
       
-      obj->GetGlobalPose( x,y,th );
-
-      DrawCircle( x,y, 0.6 );
-      SetDrawMode( GXcopy );
-      XSetLineAttributes( display, gc, 0, LineSolid, CapRound, JoinRound );
-    }
+//        obj->GetGlobalPose( x,y,th );
+//        DrawCircle( x,y, 0.6 );
+      
+//        SetDrawMode( GXcopy );
+//        XSetLineAttributes( display, gc, 0, LineSolid, CapRound, JoinRound );
+//      }
+//  //    else if( lastObj )
+//  //      {
+//  //        SetForeground( white );
+//  //        XSetLineAttributes( display, gc, 0, LineOnOffDash, CapRound, JoinRound );
+//  //        SetDrawMode( GXxor );
+//  //        lastObj->GetGlobalPose( x,y,th );
+//  //        DrawCircle( x, y, 0.6 );
+//  //        SetDrawMode( GXcopy );
+//  //        XSetLineAttributes( display, gc, 0, LineSolid, CapRound, JoinRound );
+//  //     }
   
-  lastObj = obj;
-  //  lx = x; ly = y; lth = th;
+//    lastObj = obj;
+//    //  lx = x; ly = y; lth = th;
+}
+
+bool CXGui::GetObjectType( ExportData* exp, char* buf, size_t maxlen )
+{
+  char* str = 0;
+
+  switch( exp->objectType )
+    {
+    case laserturret_o: str = "laser turret"; break;
+    case misc_o:  str = "misc"; break;
+    case sonar_o:  str = "sonar"; break;
+    case laserbeacondetector_o:  str = "laser beacon detector"; break;
+    case ptz_o:  str = "PTZ camera"; break;
+    case vision_o:  str = "vision"; break;
+    case uscpioneer_o:  str = "USC pioneer"; break;
+    case pioneer_o:  str = "pioneer base"; break;
+    case laserbeacon_o: str = "laser beacon"; break;
+    case box_o:  str = "box"; break;
+    case player_o:  str = "Player"; break;
+    }	
+  
+  if( str == 0 ) return( false ); // didn't find the type
+  if( strlen( str ) > maxlen ) return( false ); // not enough space
+
+  strcpy( buf, str ); // fill in the string
+  
+  return( true );
+}
+
+bool CXGui::IsDiffGenericExportData( ExportData* exp1, ExportData* exp2 )
+{
+  if( exp1->objectType != exp2->objectType ) return true;
+  if( exp1->objectId != exp2->objectId ) return true;
+  if( exp1->x != exp2->x ) return true;
+  if( exp1->y != exp2->y ) return true;
+  if( exp1->th != exp2->th ) return true;
+  if( exp1->width != exp2->width ) return true;
+  if( exp1->height != exp2->height ) return true;
+
+  // else
+  return false;
+}
+
+bool CXGui::IsDiffSpecificExportData( ExportData* exp1, ExportData* exp2 )
+{
+  if( memcmp( exp1->data, exp2->data, DataSize( exp2 ) ) != 0) 
+      return true;
+  // else
+  return false;
+}
+
+void CXGui::CopyGenericExportData( ExportData* dest, ExportData* src )
+{
+  dest->objectType = src->objectType;
+  dest->objectId = src->objectId;
+  dest->x = src->x;
+  dest->y = src->y;
+  dest->th = src->th;
+  dest->width = src->width;
+  dest->height = src->height;
+}
+
+void CXGui::CopySpecificExportData( ExportData* dest, ExportData* src )
+{
+  memcpy( dest->data, src->data, DataSize( src ) ); 
 }
 

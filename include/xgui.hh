@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xgui.hh,v 1.1.2.2 2001-05-24 01:55:26 ahoward Exp $
+ * $Id: xgui.hh,v 1.1.2.3 2001-05-25 04:26:52 vaughan Exp $
  ************************************************************************/
 
 #ifndef WIN_H
@@ -9,51 +9,98 @@
 
 #include <X11/Xlib.h>
 
-//#include "world.hh"
+#include <stage.h> // for some player data types and sizes
+#include <string.h>
+#include <iostream.h>
 
 // forward definition
 class CWorld;
 class CEntity;
 
+#define SONARSAMPLES PLAYER_NUM_SONAR_SAMPLES 
+#define LASERSAMPLES PLAYER_NUM_LASER_SAMPLES 
+
+#define MAXBEACONS 100
+
+#define MAXEXPORTOBJECTS 10000;
+
 // for now i have a MAX_OBJECTS maximum to the number of objects
 // that can be processed by the GUI. should make this dynamic one day
-static int MAX_OBJECTS = 1000;
+//static int MAX_OBJECTS = 1000;
+
+enum ExportObjectType 
+{ 
+  player_o,
+  sonar_o,
+  misc_o,
+  laserbeacondetector_o,
+  vision_o,
+  ptz_o, 
+  generic_o, 
+  laserturret_o, 
+  pioneer_o, 
+  uscpioneer_o,		  
+  box_o, 
+  laserbeacon_o
+};
 
 typedef struct  
 {
   double x, y;
 } DPoint;
 
+typedef struct  
+{
+  double x, y, th;
+} DTriple;
+
 typedef struct
 {
   double toplx, toply, toprx, topry, botlx, botly, botrx, botry;
 } DRect;
 
-enum ObjectType 
-{ 
-  generic_o, 
-  laserturret_o, 
-  ptz_o, 
-  pioneer_o, 
-  uscpioneer_o,		  
-  box_o, 
-  laserbeacon_o 
-};
+typedef struct  
+{
+  double x, y, th;
+  int id;
+} BeaconData;
+
 
 // structure to hold an object's exportable data
 // i.e. sufficient to render it in an external GUI
 // each CObject (CThing) has one of these when XGui is enabled.
-class ExportData
+typedef struct
 {
-public:
   int objectType;
-  //int objectId;
   CEntity* objectId;
   double x, y, th;
   double width, height;
-  int dataSize;
-  unsigned char* data;
-};
+  char* data;
+} ExportData;
+
+typedef struct
+{
+  DPoint hitPts[LASERSAMPLES];
+  int hitCount;
+} ExportLaserData;
+
+typedef struct
+{
+  DPoint hitPts[SONARSAMPLES];
+  int hitCount;
+} ExportSonarData;
+
+typedef struct
+{
+  BeaconData beacons[MAXBEACONS];
+  int beaconCount;
+} ExportLaserBeaconDetectorData;
+
+typedef struct
+{
+  double pan, tilt, zoom;
+} ExportPtzData;
+
 
 // for now the import type can be the same as the export type.
 // might need to change this later, so i'll declare a type for it.
@@ -64,15 +111,19 @@ class CXGui
 public:
   // constructor
   CXGui( CWorld* wworld );
-  //CXGui( CWorld* wworld, char* initFile );
   
+  // destructor
+  CXGui::~CXGui( void );
+
   Window win;
   GC gc, bgc, wgc;
   
   Display* display;
   int screen;
 
-  ExportData* database;
+  // an array of pointers to ExportData objects
+  ExportData** database;
+
   int numObjects;
 
   unsigned long red, green, blue, yellow, magenta, cyan, white, black; 
@@ -127,18 +178,26 @@ public:
   void DrawPoints( DPoint* pts, int numPts );
   void DrawPolygon( DPoint* pts, int numPts );
   void DrawCircle( double x, double y, double r );
+  void DrawString( double x, double y, char* str, int len );
 
   void SetDrawMode( int mode );
 
   void DrawBox( double px, double py, double boxdelta );
 
+  void RenderObjectLabel( ExportData* exp, char* str, int len );
   void RenderGenericObject( ExportData* exp );
-  void RenderLaserTurret( ExportData* exp );
-  void RenderPioneer( ExportData* exp );
-  void RenderUSCPioneer( ExportData* exp );
-  void RenderPTZ( ExportData* exp );
-  void RenderBox( ExportData* exp );
-  void RenderLaserBeacon( ExportData* exp );
+
+  void RenderLaserTurret( ExportData* exp, bool extended  );
+  void RenderPioneer( ExportData* exp, bool extended  );
+  void RenderUSCPioneer( ExportData* exp, bool extended  );
+  void RenderPTZ( ExportData* exp, bool extended  );
+  void RenderBox( ExportData* exp, bool extended  );
+  void RenderLaserBeacon( ExportData* exp, bool extended  );
+  void RenderMisc( ExportData* exp, bool extended  );
+  void RenderSonar( ExportData* exp, bool extended  );
+  void RenderPlayer( ExportData* exp, bool extended  );
+  void RenderLaserBeaconDetector( ExportData* exp, bool extended  );
+  void RenderVision( ExportData* exp, bool extended  );
 
   void GetRect( double x, double y, double dx, double dy, 
 	       double rotateAngle, DPoint* pts );
@@ -146,8 +205,16 @@ public:
   void HighlightObject( CEntity* obj );
 
   ExportData* GetLastMatchingExport( ExportData* exp );
-  void RenderObject( ExportData* exp );
+  void RenderObject( ExportData* exp, bool extended );
   void ImportExportData( ExportData* exp );
+  size_t DataSize( ExportData* exp );
+  bool GetObjectType( ExportData* exp, char* buf, size_t maxlen );
+  bool IsDiffGenericExportData(ExportData* exp1, ExportData* exp2 );
+  bool IsDiffSpecificExportData(ExportData* exp1, ExportData* exp2 );
+  void CopyGenericExportData( ExportData* dest, ExportData* src );
+  void CopySpecificExportData( ExportData* dest, ExportData* src );
+ 
 };
+
 
 #endif

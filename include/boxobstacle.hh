@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/boxobstacle.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.1.2.8 $
+//  $Author: vaughan $
+//  $Revision: 1.1.2.9 $
 //
 // Usage:
 //  (empty)
@@ -58,7 +58,7 @@ class CBoxObstacle : public CEntity
 #ifdef INCLUDE_XGUI
     // compose and return the export data structure
     //
-    ExportData* GetExportData( void );
+    virtual ExportData* ImportExportData( ImportData* imp );
 #endif
 
 #ifdef INCLUDE_RTK

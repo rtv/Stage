@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/usc_pioneer.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.1.2.15 $
+//  $Author: vaughan $
+//  $Revision: 1.1.2.16 $
 //
 // Usage:
 //  (empty)
@@ -72,8 +72,8 @@ CUscPioneer::CUscPioneer(CWorld *world, CEntity *parent)
     
 #ifdef INCLUDE_XGUI
     exp.objectType = uscpioneer_o;
-    exp.width = 0.45; //m
-    exp.height = 0.45; //m   
+    exp.width = 0.99; //m
+    exp.height = 0.99; //m   
 #endif
 
     m_ptz->SetPose(0.09, 0, 0);
@@ -241,13 +241,18 @@ void CUscPioneer::OnUiProperty(RtkUiPropertyData *data)
 ////////////////////////////////////////////////////////////////////////////
 // compose and return the export data structure for external rendering
 // return null if we're not exporting data right now.
-ExportData* CUscPioneer::GetExportData( void )
-{
+ExportData* CUscPioneer::ImportExportData( ImportData* imp )
+{ 
+
+  if( imp ) // if there is some imported data
+   SetGlobalPose( imp->x, imp->y, imp->th ); // move to the suggested place
+
   if( !exporting ) return 0;
 
   // fill in the exp structure
-  // exp.type, exp.id, exp.dataSize are set in the constructor
-  m_pioneer->GetGlobalPose( exp.x, exp.y, exp.th );
+ // fill in the exp structure  
+  //exp.width = m_size_x;
+  //exp.height = m_size_y;
 
   return &exp;
 }

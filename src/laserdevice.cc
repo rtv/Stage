@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.11.2.26 $
+//  $Author: vaughan $
+//  $Revision: 1.11.2.27 $
 //
 // Usage:
 //  (empty)
@@ -24,6 +24,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
+#include <iostream.h>
 #include <stage.h>
 #include <math.h>
 #include "world.hh"
@@ -41,31 +42,33 @@ CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent, CPlayerServer* server
                         LASER_COMMAND_BUFFER_SIZE,
                         LASER_CONFIG_BUFFER_SIZE)
 {
-    // Laser update rate (readings/sec)
-    //
-    m_update_rate = 360 / 0.200;
-    m_last_update = 0;
-
-    m_scan_res = DTOR(0.50);
-    m_scan_min = DTOR(-90);
-    m_scan_max = DTOR(+90);
-    m_scan_count = 361;
-    m_intensity = true;
+  // Laser update rate (readings/sec)
+  //
+  m_update_rate = 360 / 0.200; // 5Hz
+  m_last_update = 0;
   
-    m_max_range = 8.0;
-
-    // Dimensions of laser
-    //
-    m_map_dx = 0.155;
-    m_map_dy = 0.155;
-
-#ifdef INCLUDE_XGUI
-    exp.objectType = laserturret_o;
-    hitCount = 0;
+  m_scan_res = DTOR(0.50);
+  m_scan_min = DTOR(-90);
+  m_scan_max = DTOR(+90);
+  m_scan_count = 361;
+  m_intensity = false;
+  
+  m_max_range = 8.0;
+  
+  // Dimensions of laser
+  //
+  m_map_dx = 0.155;
+  m_map_dy = 0.155;
+  
+#ifdef INCLUDE_XGUI    
+  exporting = true; 
+  exp.objectId = this; // used both as ptr and as a unique ID
+  exp.objectType = laserturret_o;
+  exp.data = (char*)&expLaser;
 #endif
-
+  
 #ifdef INCLUDE_RTK 
-    m_hit_count = 0;
+  m_hit_count = 0;
 #endif
 }
 
@@ -81,6 +84,8 @@ void CLaserDevice::Update()
     // Undraw ourselves from the world
     //
     Map(false);
+
+    //expLaser.hitCount = 0;
 
     // Dont update anything if we are not subscribed
     //
@@ -102,10 +107,12 @@ void CLaserDevice::Update()
             player_laser_data_t data;
             GenerateScanData(&data);
             PutData(&data, sizeof(data));
+
+	    //exporting = true; // ready to send data to a GUI 
         }
     }
     else
-    {
+      {
         // If not subscribed,
         // reset configuration to default.
         //
@@ -114,7 +121,12 @@ void CLaserDevice::Update()
         m_scan_max = DTOR(+90);
         m_scan_count = 361;
         m_intensity = true;
-    }
+	
+#ifdef INCLUDE_XGUI
+	// have to invalidate the exported scan data so it gets undrawn
+	memset( &expLaser, 0, expLaser.hitCount * sizeof( DPoint ) );
+#endif
+      }
 
     // Redraw outselves in the world
     //
@@ -183,6 +195,10 @@ bool CLaserDevice::CheckConfig()
 //
 bool CLaserDevice::GenerateScanData(player_laser_data_t *data)
 {    
+
+#ifdef INCLUDE_XGUI
+    expLaser.hitCount = 0;
+#endif
     // Get the pose of the laser in the global cs
     //
     double ox, oy, oth;
@@ -207,9 +223,6 @@ bool CLaserDevice::GenerateScanData(player_laser_data_t *data)
     m_hit_count = 0;
 #endif
 
-#ifdef INCLUDE_XGUI
-    hitCount = 0;
-#endif
 
     // Set the header part of the data packet
     //
@@ -292,9 +305,9 @@ bool CLaserDevice::GenerateScanData(player_laser_data_t *data)
 #endif
 
 #ifdef INCLUDE_XGUI
-	hitPts[hitCount].x = px;
-	hitPts[hitCount].y = py;
-	hitCount++;
+	expLaser.hitPts[expLaser.hitCount].x = px;// * m_world->ppm;
+	expLaser.hitPts[expLaser.hitCount].y = py;// * m_world->ppm;
+	expLaser.hitCount++;
 #endif
 
     }    
@@ -337,17 +350,19 @@ void CLaserDevice::Map(bool render)
 ////////////////////////////////////////////////////////////////////////////
 // compose and return the export data structure for external rendering
 // return null if we're not exporting data right now.
-ExportData* CLaserDevice::GetExportData( void )
+ExportData* CLaserDevice::ImportExportData( ImportData* imp )
 {
+ if( imp ) // if there is some imported data
+      SetGlobalPose( imp->x, imp->y, imp->th ); // move to the suggested place
+
   if( !exporting ) return 0;
 
   // fill in the exp structure
-  // exp.type, exp.id, exp.dataSize are set in the constructor
+  // exp.type, exp.id are set in the constructor
   GetGlobalPose( exp.x, exp.y, exp.th );
 
-  exp.dataSize = 361 * sizeof( DPoint );
-  exp.data = (unsigned char*)hitPts;
-  
+  // expLaser has been filled in Update() when we updated the laser scan
+
   return &exp;
 }
 

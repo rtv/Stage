@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.1.2.13 $
+//  $Author: vaughan $
+//  $Revision: 1.1.2.14 $
 //
 // Usage:
 //  (empty)
@@ -141,14 +141,14 @@ void CBoxObstacle::Update()
 ////////////////////////////////////////////////////////////////////////////
 // compose and return the export data structure for external rendering
 // return null if we're not exporting data right now.
-ExportData* CBoxObstacle::GetExportData( void )
+ExportData* CBoxObstacle::ImportExportData( ImportData* imp  )
 {
+ if( imp ) // if there is some imported data
+   SetGlobalPose( imp->x, imp->y, imp->th ); // move to the suggested place
+
   if( !exporting ) return 0;
 
-  // fill in the exp structure
-  // exp.type, exp.id, exp.dataSize are set in the constructor
-  GetGlobalPose( exp.x, exp.y, exp.th );
-  
+  // fill in the exp structure  
   exp.width = m_size_x;
   exp.height = m_size_y;
   

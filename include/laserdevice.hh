@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.9.2.14 $
+//  $Author: vaughan $
+//  $Revision: 1.9.2.15 $
 //
 // Usage:
 //  (empty)
@@ -79,11 +79,10 @@ class CLaserDevice : public CPlayerDevice
 #ifdef INCLUDE_XGUI
     // draw/undraw in X gui
     //
-    public: ExportData* GetExportData( void );
+    public: virtual ExportData* ImportExportData( ImportData* imp );
 
-  // storage for the laser hit points
-    private: DPoint hitPts[512];
-    private: int hitCount;
+    // export the laser hit points
+   private: ExportLaserData expLaser;
 #endif
 
 #ifdef INCLUDE_RTK

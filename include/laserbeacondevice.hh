@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacondevice.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.1.2.7 $
+//  $Author: vaughan $
+//  $Revision: 1.1.2.8 $
 //
 // Usage:
 //  (empty)
@@ -64,7 +64,17 @@ class CLaserBeaconDevice : public CPlayerDevice
     //
     public: virtual void OnUiUpdate(RtkUiDrawData *pData);
 
-#endif    
+#endif
+
+#ifdef INCLUDE_XGUI
+    // draw/undraw in X gui
+    //
+    public: virtual ExportData* ImportExportData( ImportData* imp );
+
+    private:  ExportLaserBeaconDetectorData expBeacon; // hides CObject's exp
+#endif
+
+
 };
 
 #endif

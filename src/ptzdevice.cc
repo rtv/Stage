@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.4.2.16 $
+//  $Author: vaughan $
+//  $Revision: 1.4.2.17 $
 //
 // Usage:
 //  (empty)
@@ -66,6 +66,12 @@ CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent, CPlayerServer* server)
     m_fov_max = DTOR(10);
 
     m_pan = m_tilt = m_zoom = 0;
+
+#ifdef INCLUDE_XGUI
+    exporting = true;
+    exp.objectType = ptz_o;
+    exp.data = (char*)&expPtz;
+#endif
 }
 
 
@@ -104,6 +110,12 @@ void CPtzDevice::Update()
         PRINT_MSG("command buffer has incorrect length -- ignored");
         return;
     }
+
+    // Parse the command string
+    //
+    double pan = (short) ntohs(cmd.pan);
+    double tilt = (short) ntohs(cmd.tilt);
+    double zoom = (unsigned short) ntohs(cmd.zoom);
 
     // Parse the command string (if there is one)
     //
@@ -182,5 +194,32 @@ void CPtzDevice::OnUiMouse(RtkUiMouseData *pData)
 
 #endif
 
+#ifdef INCLUDE_XGUI
+////////////////////////////////////////////////////////////////////////////
+// compose and return the export data structure for external rendering
+// return null if we're not exporting data right now.
+ExportData* CPtzDevice::ImportExportData( ImportData* imp )
+{
+  //CObject::ImportExportData( imp );
+ if( imp ) // if there is some imported data
+    SetGlobalPose( imp->x, imp->y, imp->th ); // move to the suggested place
+  
+  if( !exporting ) return 0;
 
+  // fill in the exp structure
+  // exp.type, exp.id are set in the constructor
+  GetGlobalPose( exp.x, exp.y, exp.th );
+  
+  //exp.width = m_size_x;
+  //exp.height = m_size_y;
+
+  //exp.data = (char*)&expPtz;
+  expPtz.pan = m_pan;
+  expPtz.tilt = m_tilt;
+  expPtz.zoom = m_zoom;
+ 
+  return &exp;
+}
+
+#endif
 

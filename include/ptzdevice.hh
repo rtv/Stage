@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/ptzdevice.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.2.2.8 $
+//  $Author: vaughan $
+//  $Revision: 1.2.2.9 $
 //
 // Usage:
 //  (empty)
@@ -61,6 +61,14 @@ class CPtzDevice : public CPlayerDevice
     // Current camera settings
     //
     private: double m_pan, m_tilt, m_zoom;
+  
+#ifdef INCLUDE_XGUI
+    // draw/undraw in X gui
+    //
+    public: virtual ExportData* ImportExportData( ImportData* imp );
+    private: ExportPtzData expPtz;
+ 
+#endif
 
 #ifdef INCLUDE_RTK
     

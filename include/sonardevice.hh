@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/sonardevice.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Author: vaughan $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -29,7 +29,7 @@
 
 #include "playerdevice.hh"
 
-#define SONARSAMPLES 16
+#define SONARSAMPLES PLAYER_NUM_SONAR_SAMPLES
 
 class CSonarDevice : public CPlayerDevice
 {
@@ -63,7 +63,14 @@ class CSonarDevice : public CPlayerDevice
     // Array holding the sonar data
     //
     private: unsigned short m_range[SONARSAMPLES];
-    
+
+#ifdef INCLUDE_XGUI
+    // draw/undraw in X gui
+    //
+public: virtual ExportData* ImportExportData( ImportData* imp );
+private: ExportSonarData expSonar; 
+#endif
+
 #ifdef INCLUDE_RTK
     
     // Process GUI update messages
@@ -87,3 +94,4 @@ class CSonarDevice : public CPlayerDevice
 };
 
 #endif
+

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.4.2.36 $
+//  $Author: vaughan $
+//  $Revision: 1.4.2.37 $
 //
 // Usage:
 //  (empty)
@@ -223,9 +223,9 @@ void* CWorld::Main(void *arg)
 
     // Initialise the GUI
     //
-    #ifdef INCLUDE_RTK
+ #ifdef INCLUDE_RTK
     double ui_time = 0;
-    #endif
+ #endif
     
     while (true)
     {
@@ -306,6 +306,7 @@ void CWorld::Update()
     // must be before the first 
 #ifdef INCLUDE_XGUI
     if( win ) win->HandleEvent();
+    static double xgui_time = 0;
 #endif
 
     // Do the actual work -- update the objects
@@ -316,9 +317,14 @@ void CWorld::Update()
      m_object[i]->Update();
 
 #ifdef INCLUDE_XGUI
-     // GetExportData() returns null if the object is not subscribed
-     // RenderExportData() returns immediately if it gets a null pointer.
-     win->ImportExportData( m_object[i]->ImportExportData( 0 ) );    
+     double tm = GetRealTime();
+     if ( tm - xgui_time > 0.05 ) // update GUI at 20Hz
+	  {
+            xgui_time = GetRealTime();
+	    
+	    for (int i = 0; i < m_object_count; i++)
+	      win->ImportExportData( m_object[i]->ImportExportData( 0 ) );    
+	  }
 #endif   
    }
   
