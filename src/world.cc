@@ -1,7 +1,7 @@
 /*************************************************************************
  * world.cc - top level class that contains and updates robots
  * RTV
- * $Id: world.cc,v 1.4.2.3 2000-12-06 05:13:42 ahoward Exp $
+ * $Id: world.cc,v 1.4.2.4 2000-12-06 21:48:32 ahoward Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -20,14 +20,15 @@
 #define ENABLE_TRACE 1
 
 #include "world.hh"
-#include "win.h"
 #include "offsets.h"
+
+#ifndef INCLUDE_RTK
+#include "win.h"
+#endif
 
 //#undef DEBUG
 //#define DEBUG
 //#define VERBOSE
-
-#define SEMKEY 2000;
 
 const double MILLION = 1000000.0;
 const double TWOPI = 6.283185307;
@@ -112,7 +113,7 @@ CWorld::CWorld( char* initFile)
   cout << "Creating " << population << " robots... " << flush;
 #endif
 
-  CRobot* lastRobot = NULL;
+  CPlayerRobot* lastRobot = NULL;
 
 #ifdef VERBOSE
   cout << "Making the robots... " << flush;
@@ -137,7 +138,7 @@ CWorld::CWorld( char* initFile)
 
 
 
-      CRobot* baby = (CRobot*)new CRobot( this, 
+      CPlayerRobot* baby = (CPlayerRobot*)new CPlayerRobot( this, 
 					  currentPopulation + 1,
 					  pioneerWidth, 
 					  pioneerLength,
@@ -158,41 +159,6 @@ CWorld::CWorld( char* initFile)
   
 #ifdef VERBOSE
   cout << "done." << endl;
-#endif
-
-  // --------------------------------------------------------------------
-  // create a single semaphore to sync access to the shared memory segments
-
-#ifdef DEBUG  
-  cout << "Obtaining semaphore... " << flush;
-#endif
-
-  semKey = SEMKEY;
-
-  union semun
-    {
-      int val;
-      struct semid_ds *buf;
-      ushort *array;
-  } argument;
-
-  argument.val = 0; // initial semaphore value
-
-  semid = semget( semKey, 1, 0666 | IPC_CREAT );
-
-  if( semid < 0 ) // semget failed
-    {
-      perror( "Unable to create semaphore" );
-      exit( -1 );
-    }
-
-  if( semctl( semid, 0, SETVAL, argument ) < 0 )
-    {
-      perror( "Failed to set semaphore value" );
-    }
-#ifdef DEBUG
-  else
-    cout << "ok" << endl;
 #endif
 
   // ----------------------------------------------------------------------
@@ -433,56 +399,17 @@ void CWorld::SetRectangle(double px, double py, double pth,
             break;
     }
 }
-  
-
-int CWorld::LockShmem( void )
-{
-  struct sembuf ops[1];
-
-  ops[0].sem_num = 0;
-  ops[0].sem_op = 1;
-  ops[0].sem_flg = 0;
-
-  int retval = semop( semid, ops, 1 );
-
-#ifdef DEBUG
-  if( retval == 0 )
-    puts( "successful lock" );
-  else
-    puts( "failed lock" );
-#endif
-
-  return true;
-}
-
-
-int CWorld::UnlockShmem( void )
-{
-  struct sembuf ops[1];
-
-  ops[0].sem_num = 0;
-  ops[0].sem_op = -1;
-  ops[0].sem_flg = 0;
-
-  int retval = semop( semid, ops, 1 );
-
-
-#ifdef DEBUG
-  if( retval == 0 )
-    puts( "successful unlock" );
-  else
-    puts( "failed unlock" );
-#endif
-
-  return true;
-}
 
 void CWorld::SavePos( void )
 {
   ofstream out( posFile );
 
-  for( CRobot* r = bots; r; r = r->next )
-    out <<  r->x/ppm <<  '\t' << r->y/ppm << '\t' << r->a << endl;
+  for( CPlayerRobot* r = bots; r; r = r->next )
+  {
+    double px, py, pth;
+    r->GetGlobalPose(px, py, pth);
+    out <<  px <<  '\t' << py << '\t' << pth << endl;
+  }
 }
 
 float diff( float a, float b )
@@ -577,12 +504,12 @@ int CWorld::LoadVars( char* filename )
 #ifndef INCLUDE_RTK
 
 
-CRobot* CWorld::NearestRobot( float x, float y )
+CPlayerRobot* CWorld::NearestRobot( float x, float y )
 {
-  CRobot* nearest;
+  CPlayerRobot* nearest;
   float dist, far = 999999.9;
   
-  for( CRobot* r = bots; r; r = r->next )
+  for( CPlayerRobot* r = bots; r; r = r->next )
   {
     dist = hypot( r->x -  x, r->y -  y );
     

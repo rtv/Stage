@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.3 $
+//  $Revision: 1.9.2.4 $
 //
 // Usage:
 //  (empty)
@@ -29,7 +29,7 @@
 #include <math.h>
 
 #include "world.hh"
-#include "robot.h"
+#include "playerrobot.hh"
 #include "pioneermobiledevice.hh"
 
 const double TWOPI = 6.283185307;
@@ -38,37 +38,37 @@ const double TWOPI = 6.283185307;
 ///////////////////////////////////////////////////////////////////////////
 // Constructor
 //
-CPioneerMobileDevice::CPioneerMobileDevice( CRobot* robot, 
-					    double wwidth, double llength,
-					    void *buffer, 
-					    size_t data_len, 
-					    size_t command_len, 
-					    size_t config_len)
-        : CPlayerDevice(robot, buffer, data_len, command_len, config_len)
+CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CObject *parent,
+                                           CPlayerRobot* robot, 
+                                           void *buffer, size_t buffer_len)
+        : CPlayerDevice(world, parent, robot,
+                        buffer, SPOSITION_TOTAL_BUFFER_SIZE,
+                        SPOSITION_DATA_BUFFER_SIZE,
+                        SPOSITION_COMMAND_BUFFER_SIZE,
+                        SPOSITION_CONFIG_BUFFER_SIZE)
 {    
-    // Default pose
-    //
-    SetPose(0.0, 0.0, 0);
-
     m_com_vr = m_com_vth = 0;
     m_map_px = m_map_py = m_map_pth = 0;
     
-  m_update_interval = 0.01; // update me very fast indeed
+    m_update_interval = 0.01; // update me very fast indeed
 
-  width = wwidth;
-  length = llength;
+    width = 0.6 * m_world->ppm;
+    length = 0.6 * m_world->ppm;
 
-  halfWidth = width / 2.0;   // the halves are used often in calculations
-  halfLength = length / 2.0;
+    halfWidth = width / 2.0;   // the halves are used often in calculations
+    halfLength = length / 2.0;
 
-  xodom = yodom = aodom = 0;
+    xodom = yodom = aodom = 0;
 
-  stall = 0;
+    stall = 0;
 
-  memset( &rect, 0, sizeof( rect ) );
-  memset( &oldRect, 0, sizeof( rect ) );
-
-  CalculateRect();
+    #ifndef INCLUDE_RTK
+        memset( &rect, 0, sizeof( rect ) );
+        memset( &oldRect, 0, sizeof( rect ) );
+        CalculateRect();
+    #else
+        m_drag_radius = 0.5;
+    #endif
 }
 
 
@@ -94,6 +94,10 @@ void CPioneerMobileDevice::Update()
 
     ComposeData();     // report the new state of things
     PutData( &m_data, sizeof(m_data)  );     // generic device call
+
+    // Update our children
+    //
+    CPlayerDevice::Update();
 }
 
 
@@ -104,7 +108,7 @@ int CPioneerMobileDevice::Move()
     // Get the current robot pose
     //
     double px, py, pth;
-    m_robot->GetPose(px, py, pth);
+    GetPose(px, py, pth);
 
     // Compute a new pose
     // This is a zero-th order approximation
@@ -121,7 +125,7 @@ int CPioneerMobileDevice::Move()
     // and accept the new pose if ok
     //
     if (!InCollision(qx, qy, qth))
-        m_robot->SetPose(qx, qy, qth);
+        SetPose(qx, qy, qth);
 
     return true;
   
@@ -239,9 +243,15 @@ void CPioneerMobileDevice::ComposeData()
     double px = xodom * 1000.0;// output in mm
     double py = -yodom * 1000.0;// output in mm
     double pth = TWOPI - fmod(aodom + TWOPI, TWOPI);
+
+    // Get actual global pose
+    //
+    double gx, gy, gth;
+    GetGlobalPose(gx, gy, gth);
     
     // normalized compass heading
-    float comHeading = fmod( m_robot->a + M_PI/2.0 + TWOPI, TWOPI ); 
+    //
+    double compass = fmod( gth + M_PI/2.0 + TWOPI, TWOPI ); 
   
     // Construct the data packet
     // Basically just changes byte orders and some units
@@ -253,7 +263,7 @@ void CPioneerMobileDevice::ComposeData()
 
     m_data.vr = htons((unsigned short) (m_com_vr * 1000.0));
     m_data.vth = htons((short) RTOD(m_com_vth));  
-    m_data.compass = htons((unsigned short)(RTOD(comHeading)));
+    m_data.compass = htons((unsigned short)(RTOD(compass)));
     m_data.stall = stall;
 }
 
@@ -300,10 +310,8 @@ bool CPioneerMobileDevice::Map(bool render)
     return true;
 }
 
-void CPioneerMobileDevice::Stop( void )
-{
-    // *** REMOVE speed = turnRate = 0;
-}
+
+#ifndef INCLUDE_RTK
 
 void CPioneerMobileDevice::StoreRect( void )
 {
@@ -334,8 +342,6 @@ void CPioneerMobileDevice::CalculateRect( float x, float y, float a )
   centerx = (int)x;
   centery = (int)y;
 }
-
-#ifndef INCLUDE_RTK
 
 bool CPioneerMobileDevice::GUIUnDraw()
 {
@@ -409,31 +415,30 @@ void CPioneerMobileDevice::OnUiMouse(RtkUiMouseData *pData)
 //
 void CPioneerMobileDevice::DrawChassis(RtkUiDrawData *pData)
 {
-    #define ROBOT_COLOR RGB(255, 0, 192)
+    #define ROBOT_COLOR RTK_RGB(255, 0, 192)
     
     pData->SetColor(ROBOT_COLOR);
 
+    // Robot dimensions
+    //
+    double dx = (double) length / m_world->ppm;
+    double dy = (double) width / m_world->ppm;
+
+    // Get global pose
+    //
+    double gx, gy, gth;
+    GetGlobalPose(gx, gy, gth);
+    
     // Draw the outline of the robot
     //
-    for (int i = 0; i < 5; i++)
-    {
-        double px = (double) length / m_world->ppm / 2 * cos(DTOR(i * 90 + 45));
-        double py = (double) width / m_world->ppm / 2 * sin(DTOR(i * 90 + 45));
-        double pth = 0;
-        LocalToGlobal(px, py, pth);
-        
-        if (i == 0)
-            pData->MoveTo(px, py);
-        else
-            pData->LineTo(px, py);
-    }
-
+    pData->ExRectangle(gx, gy, gth, dx, dy); 
+    
     // Draw the direction indicator
     //
     for (int i = 0; i < 3; i++)
     {
-        double px = (double) length / m_world->ppm / 2 * cos(DTOR(i * 45 - 45));
-        double py = (double) width / m_world->ppm / 2 * sin(DTOR(i * 45 - 45));
+        double px = dx / 2 * cos(DTOR(i * 45 - 45));
+        double py = dx / 2 * sin(DTOR(i * 45 - 45));
         double pth = 0;
 
         // This is ugly, but it works

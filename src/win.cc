@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.cc - all the graphics and X management
  * RTV
- * $Id: win.cc,v 1.6.2.1 2000-12-05 23:17:34 ahoward Exp $
+ * $Id: win.cc,v 1.6.2.2 2000-12-06 21:48:32 ahoward Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -304,7 +304,7 @@ void CWorldWin::HandleEvent( void )
 	  // draw robots in XOR mode
 	  SetDrawMode( GXxor );
 	  
-	  for( CRobot* r = world->bots; r; r = r->next )  r->GUIDraw();
+	  for( CPlayerRobot* r = world->bots; r; r = r->next )  r->GUIDraw();
 	  
 	  SetDrawMode( GXcopy );
 	  
@@ -341,7 +341,7 @@ void CWorldWin::HandleEvent( void )
 		}
 	      else
 		{
-		  CRobot* near = 
+		  CPlayerRobot* near = 
 		    world->NearestRobot((float)reportEvent.xbutton.x / xscale 
 					+ panx, 
 					(float)reportEvent.xbutton.y / yscale 
@@ -374,7 +374,7 @@ void CWorldWin::HandleEvent( void )
 		  // draw robots in XOR mode
 		  SetDrawMode( GXxor );
 		  
-		  for( CRobot* r = world->bots; r; r = r->next )  r->GUIDraw();
+		  for( CPlayerRobot* r = world->bots; r; r = r->next )  r->GUIDraw();
 		  
 		  SetDrawMode( GXcopy );
 		  
@@ -400,7 +400,7 @@ void CWorldWin::HandleEvent( void )
 		  // draw robots in XOR mode
 		  SetDrawMode( GXxor );
 		  
-		  for( CRobot* r = world->bots; r; r = r->next )  r->GUIDraw();
+		  for( CPlayerRobot* r = world->bots; r; r = r->next )  r->GUIDraw();
 		  
 		  SetDrawMode( GXcopy );
 		  
@@ -437,7 +437,7 @@ void CWorldWin::HandleEvent( void )
 	    // draw robots in XOR mode
 	    SetDrawMode( GXxor );
 
-	    for( CRobot* r = world->bots; r; r = r->next )  r->GUIDraw();
+	    for( CPlayerRobot* r = world->bots; r; r = r->next )  r->GUIDraw();
 
 	    SetDrawMode( GXcopy );
 	    
@@ -622,13 +622,13 @@ void CWorldWin::DrawWallsInRect( int xx, int yy, int ww, int hh )
 void CWorldWin::DrawRobotsInRect( int xx, int yy, int ww, int hh )
 {
   // do bounds checking here sometime - no big deal
-  for( CRobot* r = world->bots; r; r = r->next )
+  for( CPlayerRobot* r = world->bots; r; r = r->next )
     {
       DrawRobot( r );
     }
 }
 
-void CWorldWin::DrawRobot( CRobot* r )
+void CWorldWin::DrawRobot( CPlayerRobot* r )
 {
   r->GUIUnDraw();
   r->GUIDraw();
@@ -636,18 +636,18 @@ void CWorldWin::DrawRobot( CRobot* r )
 
 void CWorldWin::DrawRobots( void )
 {
-  for( CRobot* r = world->bots; r; r = r->next )
+  for( CPlayerRobot* r = world->bots; r; r = r->next )
     {
       DrawRobot( r );
     }
 }
 
-void CWorldWin::DrawRobotIfMoved( CRobot* r )
+void CWorldWin::DrawRobotIfMoved( CPlayerRobot* r )
 {
   if( r->HasMoved() ) DrawRobot( r );
 }
 
-unsigned long CWorldWin::RobotDrawColor( CRobot* r )
+unsigned long CWorldWin::RobotDrawColor( CPlayerRobot* r )
 { 
   unsigned long color;
   switch( r->channel % 6 )
@@ -669,13 +669,13 @@ void CWorldWin::SetForeground( unsigned long col )
 }
 
 
-void CWorldWin::DrawInRobotColor( CRobot* r )
+void CWorldWin::DrawInRobotColor( CPlayerRobot* r )
 { 
   XSetForeground( display, gc, RobotDrawColor( r ) );
 }
 
 
-//  void CWorldWin::DrawSonar( CRobot* r )
+//  void CWorldWin::DrawSonar( CPlayerRobot* r )
 //  {
 //    XSetFunction( display, gc, GXxor );
 //    XSetForeground( display, gc, white );
@@ -690,7 +690,7 @@ void CWorldWin::DrawInRobotColor( CRobot* r )
 //    r->redrawSonar = false;  
 //  }
 
-//  void CWorldWin::DrawLaser( CRobot* r )
+//  void CWorldWin::DrawLaser( CPlayerRobot* r )
 //  {
 //    XSetFunction( display, gc, GXxor );
 //    XSetForeground( display, gc, white );

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.2 $
+//  $Revision: 1.2.2.3 $
 //
 // Usage:
 //  (empty)
@@ -28,14 +28,14 @@
 
 #include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
 #include "world.hh"
-#include "robot.h"
+#include "playerrobot.hh"
 #include "laserbeacondevice.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CLaserBeaconDevice::CLaserBeaconDevice(CRobot *robot, double dx, double dy)
+CLaserBeaconDevice::CLaserBeaconDevice(CPlayerRobot *robot, double dx, double dy)
         : CDevice(robot)
 {
     // Position relative to parent object

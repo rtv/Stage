@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/ptzdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.2 $
+//  $Revision: 1.2.2.3 $
 //
 // Usage:
 //  (empty)
@@ -35,7 +35,7 @@ class CPtzDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CPtzDevice(CRobot* robot,
+    public: CPtzDevice(CPlayerRobot* robot,
                        void *buffer, size_t data_len, 
                        size_t command_len, size_t config_len);
     

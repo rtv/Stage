@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/object.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  (empty)
@@ -45,7 +45,7 @@ CObject::CObject(CWorld *world, CObject *parent)
 
 #ifdef INCLUDE_RTK
     m_dragging = false;
-    m_drag_radius = 0.1;
+    m_drag_radius = 0;
 #endif
 }
 
@@ -164,18 +164,30 @@ void CObject::AddChild(CObject *child)
 }
 
 
+/////////////////////////////////////////////////////////////////////////
+// Get the first ancestor of the given run-time type
+// Note: will return ourself if the type matches.
+//
+CObject* CObject::FindAncestor(const type_info &type)
+{
+    if (typeid(*this) == type)
+        return this;
+    else if (m_parent)
+        return m_parent->FindAncestor(type);
+    else
+        return NULL;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////
 // Convert local to global coords
 //
 void CObject::LocalToGlobal(double &px, double &py, double &pth)
 {
-    // Get the parent's global pose
+    // Get the pose of our origin wrt global cs
     //
-    double ox = 0;
-    double oy = 0;
-    double oth = 0;
-    if (m_parent)
-        m_parent->GetGlobalPose(ox, oy, oth);
+    double ox, oy, oth;
+    GetGlobalPose(ox, oy, oth);
 
     // Compute pose based on the parent's pose
     //
@@ -190,17 +202,50 @@ void CObject::LocalToGlobal(double &px, double &py, double &pth)
 
 
 ///////////////////////////////////////////////////////////////////////////
+// Convert global to local coords
+//
+void CObject::GlobalToLocal(double &px, double &py, double &pth)
+{
+    // Get the pose of our origin wrt global cs
+    //
+    double ox, oy, oth;
+    GetGlobalPose(ox, oy, oth);
+
+    // Compute pose based on the parent's pose
+    //
+    double sx =  (px - ox) * cos(oth) + (py - oy) * sin(oth);
+    double sy = -(px - ox) * sin(oth) + (py - oy) * cos(oth);
+    double sth = pth - oth;
+
+    px = sx;
+    py = sy;
+    pth = sth;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // Set the objects pose in the parent cs
 //
 void CObject::SetPose(double px, double py, double pth)
 {
+    // Set our pose wrt our parent
+    //
     m_lx = px;
     m_ly = py;
     m_lth = pth;
 
-    // Mark ourselves and all our childen as dirty
+    // Set our global pose
     //
-    SetGlobalDirty();
+    if (m_parent)
+        m_parent->LocalToGlobal(px, py, pth);
+    m_gx = px;
+    m_gy = py;
+    m_gth = pth;
+
+    // Update all our children
+    //
+    for (int i = 0; i < m_child_count; i++)
+        m_child[i]->SetPose(m_child[i]->m_lx, m_child[i]->m_ly, m_child[i]->m_lth);
 }
 
 
@@ -220,8 +265,14 @@ void CObject::GetPose(double &px, double &py, double &pth)
 //
 void CObject::SetGlobalPose(double px, double py, double pth)
 {
-    // *** HACK not yet implemented
-    ASSERT(false);
+    // Convert to local cs
+    //
+    if (m_parent)
+        m_parent->GlobalToLocal(px, py, pth);
+
+    // Set local pose
+    //
+    SetPose(px, py, pth);
 }
 
 
@@ -230,36 +281,11 @@ void CObject::SetGlobalPose(double px, double py, double pth)
 //
 void CObject::GetGlobalPose(double &px, double &py, double &pth)
 {
-    // If the global pose is out-of-date, recompute it
-    //
-    if (m_global_dirty)
-    {
-        double ox = m_lx;
-        double oy = m_ly;
-        double oth = m_lth;
-        LocalToGlobal(ox, oy, oth);
-
-        m_gx = ox;
-        m_gy = oy;
-        m_gth = oth;
-        m_global_dirty = false;
-    }
-
     px = m_gx;
     py = m_gy;
     pth = m_gth;
 }
 
-/////////////////////////////////////////////////////////////////////////
-// Mark ourselves and all our children as dirty
-//
-void CObject::SetGlobalDirty()
-{
-    m_global_dirty = true;
-
-    for (int i = 0; i < m_child_count; i++)
-        m_child[i]->SetGlobalDirty();
-}
 
 #ifdef INCLUDE_RTK
 
@@ -303,13 +329,18 @@ void CObject::OnUiMouse(RtkUiMouseData *pData)
     // Default process for any "move" modes
     // If we are a top-level object, 
     //
-    if (pData->UseMouseMode("move") && m_parent == (CObject*) m_world)
+    if (m_drag_radius > 0 && pData->UseMouseMode("move"))
     {
+        // Get current pose
+        //
+        double px, py, pth;
+        GetGlobalPose(px, py, pth);
+        
         // *** WARNING -- mouse should be made consistent with draw
         //
-        double px = (double) pData->GetPoint().x / 1000;
-        double py = (double) pData->GetPoint().y / 1000;
-            
+        px = (double) pData->GetPoint().x / 1000;
+        py = (double) pData->GetPoint().y / 1000;
+          
         if (pData->IsButtonDown())
         {
             double dx = px - m_gx;
@@ -324,13 +355,9 @@ void CObject::OnUiMouse(RtkUiMouseData *pData)
 
         if (m_dragging)
         {
-            // Set both local and global position, since they are the
-            // same coord system
+            // Set the pose
             //
-            m_lx = px;
-            m_ly = py;
-            m_gx = px;
-            m_gy = py;
+            SetGlobalPose(px, py, pth);
         }
     }
 

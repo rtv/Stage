@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11.2.3 $
+//  $Revision: 1.11.2.4 $
 //
 // Usage:
 //  (empty)
@@ -28,22 +28,21 @@
 
 #include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
 #include "world.hh"
-#include "robot.h"
+#include "playerrobot.hh"
 #include "laserdevice.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CLaserDevice::CLaserDevice(CRobot* robot, void *buffer, size_t data_len, 
-                           size_t command_len, size_t config_len)
-        : CPlayerDevice(robot, buffer, data_len, command_len, config_len)
+CLaserDevice::CLaserDevice(CWorld *world, CObject *parent,
+                           CPlayerRobot* robot, void *buffer, size_t buffer_len)
+        : CPlayerDevice(world, parent,
+                        robot, buffer, buffer_len,
+                        LASER_DATA_BUFFER_SIZE,
+                        LASER_COMMAND_BUFFER_SIZE,
+                        LASER_CONFIG_BUFFER_SIZE)
 {
-
-    // Default to the origin of our parent
-    //
-    SetPose(0, 0, 0);
-
     // *** HACK -- should measure the interval properly
     //
     m_update_interval = 0.2;
@@ -62,9 +61,11 @@ CLaserDevice::CLaserDevice(CRobot* robot, void *buffer, size_t data_len,
     //
     m_map_dx = 0.20;
     m_map_dy = 0.20;
-
+    
     #ifndef INCLUDE_RTK 
-    undrawRequired = false;
+        undrawRequired = false;
+    #else
+        m_hit_count = 0;
     #endif
 }
 
@@ -150,6 +151,12 @@ bool CLaserDevice::UpdateScanData()
     double dr = 1.0 / m_world->ppm;
     double max_range = m_max_range;
 
+    // Initialise gui data
+    //
+    #ifdef INCLUDE_RTK
+        m_hit_count = 0;
+    #endif
+
     // Make sure the data buffer is big enough
     //
     ASSERT(m_samples <= ARRAYSIZE(m_data));
@@ -190,12 +197,20 @@ bool CLaserDevice::UpdateScanData()
             if (cell != 0)
             {
                 if (cell > 1)
-                    intensity = 1;
+                    intensity = 1;                
                 break;
             }
             px += dx;
             py += dy;
         }
+
+        // Update the gui data
+        //
+        #ifdef INCLUDE_RTK
+            m_hit[m_hit_count][0] = px;
+            m_hit[m_hit_count][1] = py;
+            m_hit_count++;
+        #endif
 
         // set laser value, scaled to current ppm
         // and converted to mm
@@ -279,6 +294,84 @@ bool CLaserDevice::GUIUnDraw()
   }   
   return true; 
 };
+
+#else
+
+///////////////////////////////////////////////////////////////////////////
+// Process GUI update messages
+//
+void CLaserDevice::OnUiUpdate(RtkUiDrawData *pData)
+{
+    // Draw our children
+    //
+    CObject::OnUiUpdate(pData);
+    
+    // Draw ourself
+    //
+    pData->BeginSection("global", "laser");
+    
+    if (pData->DrawLayer("turret", true))
+        DrawTurret(pData);
+    if (pData->DrawLayer("scan", true))
+        DrawScan(pData);
+    
+    pData->EndSection();
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Process GUI mouse messages
+//
+void CLaserDevice::OnUiMouse(RtkUiMouseData *pData)
+{
+    CObject::OnUiMouse(pData);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Draw the laser turret
+//
+void CLaserDevice::DrawTurret(RtkUiDrawData *pData)
+{
+    #define TURRET_COLOR RTK_RGB(0, 0, 255)
+    
+    pData->SetColor(TURRET_COLOR);
+
+    // Turret dimensions
+    //
+    double dx = m_map_dx;
+    double dy = m_map_dy;
+
+    // Get global pose
+    //
+    double gx, gy, gth;
+    GetGlobalPose(gx, gy, gth);
+    
+    // Draw the outline of the turret
+    //
+    pData->ExRectangle(gx, gy, gth, dx, dy); 
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Draw the laser scan
+//
+void CLaserDevice::DrawScan(RtkUiDrawData *pData)
+{
+    #define SCAN_COLOR RTK_RGB(0, 0, 255)
+    
+    pData->SetColor(SCAN_COLOR);
+
+    // Get global pose
+    //
+    double gx, gy, gth;
+    GetGlobalPose(gx, gy, gth);
+
+    pData->MoveTo(gx, gy);
+    for (int i = 0; i < m_hit_count; i++)
+        pData->LineTo(m_hit[i][0], m_hit[i][1]);
+    pData->LineTo(gx, gy);
+}
 
 #endif
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.2 $
+//  $Revision: 1.4.2.3 $
 //
 // Usage:
 //  (empty)
@@ -28,7 +28,7 @@
 
 #include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
 #include "world.hh"
-#include "robot.h"
+#include "playerrobot.hh"
 #include "visiondevice.hh"
 #include "ptzdevice.hh"
 
@@ -36,7 +36,7 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CVisionDevice::CVisionDevice(CRobot *robot, CPtzDevice *ptz_device,
+CVisionDevice::CVisionDevice(CPlayerRobot *robot, CPtzDevice *ptz_device,
                              void *buffer, size_t data_len,
                              size_t command_len, size_t config_len)
         : CPlayerDevice(robot, buffer, data_len, command_len, config_len)
@@ -69,7 +69,7 @@ void CVisionDevice::Update()
     
     ASSERT(m_robot != NULL);
     ASSERT(m_world != NULL);
-     
+    
     // Get pointers to the various bitmaps
     //
     Nimage *img = m_world->img;
@@ -81,9 +81,14 @@ void CVisionDevice::Update()
         return;
     m_last_update = m_world->timeNow;
     TRACE0("generating new data");
-    
+           
     unsigned char* colors = new unsigned char[ cameraImageWidth ];
     float* ranges = new float[ cameraImageWidth ];
+
+    // Get the camera's global pose
+    //
+    double gx, gy, gth;
+    GetGlobalPose(gx, gy, gth);
 
     // Get the ptz settings
     //
@@ -92,7 +97,7 @@ void CVisionDevice::Update()
     m_ptz_device->GetPTZ(pan, tilt, zoom);
     
     // ray trace the 1d color / range image
-    float startAngle = (m_robot->a + pan) - (zoom / 2.0);
+    float startAngle = (gth + pan) - (zoom / 2.0);
     float xRadsPerPixel = zoom / cameraImageWidth;
     float yRadsPerPixel = zoom / cameraImageHeight;
     unsigned char pixel = 0;
@@ -112,12 +117,12 @@ void CVisionDevice::Update()
         dx = cos( angle );
         dy = sin( angle );
 	  
-        xx = m_robot->x; // assume for now that the camera is at the middle
-        yy = m_robot->y; // of the robot - easy to change this
+        xx = gx;
+        yy = gy;
         rng = 0;
 	  
         pixel = img->get_pixel( (int)xx, (int)yy );
-	  
+
         // no need for bounds checking - get_pixel() does that internally
         while( rng < maxRange && ( pixel == 0 || pixel == m_robot->color ) )
 	    {
@@ -183,10 +188,10 @@ void CVisionDevice::Update()
             blobs[numBlobs].right = blobright * 2;
             blobs[numBlobs].bottom = blobbottom * 2;
             blobs[numBlobs].area = (blobtop - blobbottom) * (blobleft-blobright) * 4;
-	      
+
             // set the blob color - look up the robot with this
             // bitmap color and translate that to a visible channel no.
-            for( CRobot* r = m_world->bots; r; r = r->next )
+            for( CPlayerRobot* r = m_world->bots; r; r = r->next )
             {
                 if( r->color == blobcol )
                 {

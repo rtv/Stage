@@ -1,15 +1,15 @@
-// $Id: sonardevice.cc,v 1.5.2.3 2000-12-06 05:13:42 ahoward Exp $
+// $Id: sonardevice.cc,v 1.5.2.4 2000-12-06 21:48:32 ahoward Exp $
 #include <math.h>
 
 #include "world.hh"
-#include "robot.h"
+#include "playerrobot.hh"
 #include "sonardevice.h"
 
 const double TWOPI = 6.283185307;
 
 // constructor
 
-CSonarDevice::CSonarDevice( CRobot* rr, 
+CSonarDevice::CSonarDevice( CPlayerRobot* rr, 
 			      void *buffer, 
 			      size_t data_len, 
 			      size_t command_len, 
@@ -39,6 +39,11 @@ void CSonarDevice::Update()
   if( m_robot->m_world->timeNow - lastUpdate > updateInterval )
     {
       lastUpdate = m_robot->m_world->timeNow;
+
+      // Get the actual global pose
+      //
+      double gx, gy, gth;
+      GetGlobalPose(gx, gy, gth);
       
       float ppm = m_robot->m_world->ppm;
       
@@ -49,10 +54,9 @@ void CSonarDevice::Update()
       for( int s=0; s < SONARSAMPLES; s++ )
 	{
 	  float dx, dy, angle;
-	  float xx = m_robot->x;
-	  float yy = m_robot->y;
-	  
-	  float a = m_robot->a;
+	  float xx = gx;
+	  float yy = gy;
+	  float a = gth;
 
 	  switch( s )
 	    {

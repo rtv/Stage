@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/object.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  (empty)
@@ -33,6 +33,10 @@
 #endif
 
 #include "rtk-types.hh"
+
+// We need run-time type info
+//
+#include <typeinfo>
 
 // Forward declare the world class
 //
@@ -71,9 +75,18 @@ class CObject
     //
     public: void AddChild(CObject *child);
 
+    // Get the first ancestor of the given run-time type
+    // Note: will return ourself if the type matches.
+    //
+    public: CObject* FindAncestor(const type_info &type); 
+
     // Convert local to global coords
     //
     public: void LocalToGlobal(double &px, double &py, double &pth);
+
+    // Convert global to local coords
+    //
+    public: void GlobalToLocal(double &px, double &py, double &pth);
 
     // Set the objects pose in the parent cs
     //
@@ -90,10 +103,6 @@ class CObject
     // Get the objects pose in the global cs
     //
     public: void GetGlobalPose(double &px, double &py, double &pth);
-
-    // Mark ourselves and all our children as dirty
-    //
-    private: void SetGlobalDirty();
 
     // Id of this object
     //

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacondevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -34,7 +34,7 @@ class CLaserBeaconDevice : public CDevice
     // Default constructor
     // Requires the position of the beacon relative to the parent object
     //
-    public: CLaserBeaconDevice(CRobot* robot, double dx, double dy);
+    public: CLaserBeaconDevice(CPlayerRobot* robot, double dx, double dy);
     
     // Update the device
     //

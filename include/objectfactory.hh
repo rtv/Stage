@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/objectfactory.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -32,15 +32,10 @@
 //
 class CObject;
 class CWorld;
-class CRobot;
 
 // Create an object given a type
+// Additional arguments can be passed in through argv.
 //
 CObject* CreateObject(const char *type, CWorld *world, CObject *parent);
-
-// Create a device given a type
-//
-CObject* CreateDevice(const char *type, CWorld *world, CRobot *robot);
-
 
 #endif

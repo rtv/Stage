@@ -1,7 +1,7 @@
 /*************************************************************************
  * server.cc - implements the position & GUI servers, plus signal handling
  * RTV
- * $Id: server.cc,v 1.2.2.1 2000-12-06 03:57:22 ahoward Exp $
+ * $Id: server.cc,v 1.2.2.2 2000-12-06 21:48:32 ahoward Exp $
  ************************************************************************/
 
 // YUK this file is all in C and implements the PositionServer and GuiServer
@@ -115,7 +115,7 @@ void CatchSigInt( int signo )
 #endif
   // BPG
   //  collect the bot pointers before deleting them
-  CRobot* tmpbots[256];
+  CPlayerRobot* tmpbots[256];
   tmpbots[0] = world->bots;
   for(int i=1; i < world->population; i++)
     tmpbots[i] = tmpbots[i-1]->next;
@@ -275,9 +275,9 @@ static void * PositionWriter( void* connfd )
       // compile a string containing the positions of all the robots
       int len = 0;
       
-      for( CRobot* r=world->bots; r; r=r->next )
+      for( CPlayerRobot* r=world->bots; r; r=r->next )
 	{
-	  *(CRobot**)(sendline+len) = r;
+	  *(CPlayerRobot**)(sendline+len) = r;
 	  *(float*)(sendline+len+4)   = (float)r->x/world->ppm;
 	  *(float*)(sendline+len+8) = (float)r->y/world->ppm;
 	  *(float*)(sendline+len+12) = (float)r->a;
@@ -317,7 +317,7 @@ static void* PositionServer( void* )
   // GPB
   
   
-  CRobot* r;
+  CPlayerRobot* r;
   int listenfd;
 
   int* connfd = new int(0);

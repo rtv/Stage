@@ -1,7 +1,7 @@
 /*************************************************************************
  * main.cc   
  * RTV
- * $Id: main.cc,v 1.2.2.3 2000-12-06 05:13:42 ahoward Exp $
+ * $Id: main.cc,v 1.2.2.4 2000-12-06 21:48:32 ahoward Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -23,11 +23,12 @@
 #include <time.h>
 
 #include "world.hh" 
-#include "win.h"
 
-// For RTK user interface
+// For user interface
 //
-#ifdef INCLUDE_RTK
+#ifndef INCLUDE_RTK
+#include "win.h"
+#else
 #include "rtkmain.hh"
 #endif
 

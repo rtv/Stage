@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.3 $
+//  $Revision: 1.4.2.4 $
 //
 // Usage:
 //  (empty)
@@ -28,14 +28,14 @@
 
 #include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
 #include "world.hh"
-#include "robot.h"
+#include "playerrobot.hh"
 #include "ptzdevice.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CPtzDevice::CPtzDevice(CRobot *robot,
+CPtzDevice::CPtzDevice(CPlayerRobot *robot,
                        void *buffer, size_t data_len, 
                        size_t command_len, size_t config_len)
         : CPlayerDevice(robot, buffer, data_len, command_len, config_len)

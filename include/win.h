@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: win.h,v 1.3.2.1 2000-12-06 03:57:16 ahoward Exp $
+ * $Id: win.h,v 1.3.2.2 2000-12-06 21:48:32 ahoward Exp $
  ************************************************************************/
 
 #ifndef WIN_H
@@ -45,11 +45,11 @@ public:
 
  // data
   CWorld* world;
-  CRobot* dragging;
+  CPlayerRobot* dragging;
 
   // methods  
 
-  //void CheckSubscriptions( CRobot* r );
+  //void CheckSubscriptions( CPlayerRobot* r );
   void BoundsCheck( void );
   int LoadVars( char* initFile );
   void HandleEvent( void );
@@ -59,8 +59,8 @@ public:
   void PrintCoords( void );
   
   void Draw( void );
-  void DrawRobotIfMoved( CRobot* r );
-  void DrawRobot( CRobot* r );
+  void DrawRobotIfMoved( CPlayerRobot* r );
+  void DrawRobot( CPlayerRobot* r );
 
   void DrawRobotsInRect( int xx, int yy, int ww, int hh );
   void DrawRobots( void );
@@ -71,8 +71,8 @@ public:
   void ScanBackground( void );
 
   void MoveSize(void);
-  void DrawInRobotColor( CRobot* r );
-  unsigned long  RobotDrawColor( CRobot* r );
+  void DrawInRobotColor( CPlayerRobot* r );
+  unsigned long  RobotDrawColor( CPlayerRobot* r );
   void SetForeground( unsigned long color );
   void DrawLines( XPoint* pts, int numPts );
   void DrawPoints( XPoint* pts, int numPts );

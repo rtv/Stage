@@ -1,4 +1,4 @@
-/* 	$Id: pioneermobiledevice.hh,v 1.1.2.2 2000-12-06 05:13:42 ahoward Exp $	 */
+/* 	$Id: pioneermobiledevice.hh,v 1.1.2.3 2000-12-06 21:48:32 ahoward Exp $	 */
 // this device implements a differential-steer mobility base for the robot
 
 #ifndef PIONEERMOBILEDEVICE_H
@@ -12,9 +12,15 @@
 
 class CPioneerMobileDevice : public CPlayerDevice
 {
-    public: CPioneerMobileDevice( CRobot* robot, double wwidth, double llength,
-                                  void *buffer, size_t data_len, 
-                                  size_t command_len, size_t config_len);
+    // Minimal constructor
+    //
+    public: CPioneerMobileDevice(CWorld *world, CObject *parent,
+                                 CPlayerRobot* robot, 
+                                 void *buffer, size_t buffer_len);
+
+    // Update the device
+    //
+    public: virtual void Update();
 
     // Extract command from the command buffer
     //
@@ -32,13 +38,23 @@ class CPioneerMobileDevice : public CPlayerDevice
     //
     private: bool Map(bool render);
 
+    // Timings
+    //
+    private: double m_update_interval, m_last_update;
+
+    // Current command and data buffers
+    //
+    private: PlayerPositionCommand m_command;
+    private: PlayerPositionData m_data;
+    
     // Commanded robot speed
     //
     private: double m_com_vr, m_com_vth;
 
-    // Last map pose
+    // Last map pose (for unmapping)
     //
     private: double m_map_px, m_map_py, m_map_pth;
+
     
   public:
   unsigned char stall;
@@ -50,29 +66,18 @@ class CPioneerMobileDevice : public CPlayerDevice
   // center pixel positions are used to draw the direction indicator 
   int centerx, oldCenterx, centery, oldCentery;
   
-  void Update( void );
+    // *** REMOVE ahoward void HitObstacle( void );  
   
-  void Stop( void );
-  void HitObstacle( void );  
-  
-  void CalculateRect( float x, float y, float a );
-  void CalculateRect( void )
-    { CalculateRect( m_robot->x, m_robot->y, m_robot->a ); };
-  void StoreRect( void );
-
   int Move();
   
  private:
 
-  PlayerPositionCommand m_command;
-  PlayerPositionData m_data;
-
-  double m_update_interval, m_last_update;
-
-  // RTK interface
-  //
 #ifndef INCLUDE_RTK
-    
+
+  void CalculateRect( float x, float y, float a );
+  void CalculateRect( void )
+    { CalculateRect( m_robot->x, m_robot->y, m_robot->a ); };
+  void StoreRect( void );
   XPoint undrawPts[7];
   virtual bool GUIDraw( void );
   virtual bool GUIUnDraw( void );

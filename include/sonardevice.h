@@ -1,11 +1,11 @@
 // sonardevice.h - RTV
-// $Id: sonardevice.h,v 1.4.2.2 2000-12-06 05:13:42 ahoward Exp $
+// $Id: sonardevice.h,v 1.4.2.3 2000-12-06 21:48:32 ahoward Exp $
 
 #ifndef SONARDEVICE_HH
 #define SONARDEVICE_HH
 
 #include "playerdevice.hh"
-#include "robot.h"
+#include "playerrobot.hh"
 #include <X11/Xlib.h> // for XPoint
 
 #define SONARSAMPLES 16
@@ -14,7 +14,7 @@ class CSonarDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CSonarDevice(CRobot* rr, void *buffer, size_t data_len, 
+    public: CSonarDevice(CPlayerRobot* rr, void *buffer, size_t data_len, 
 			 size_t command_len, size_t config_len);
     
     // Update the device

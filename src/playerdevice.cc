@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.3 $
+//  $Revision: 1.2.2.4 $
 //
 // Usage:
 //  (empty)
@@ -31,7 +31,36 @@
 ///////////////////////////////////////////////////////////////////////////
 // Minimal constructor
 //
-CPlayerDevice::CPlayerDevice(CRobot *robot, void *buffer,
+CPlayerDevice::CPlayerDevice(CWorld *world, CObject *parent,
+                             CPlayerRobot *robot, void *buffer, size_t buffer_len,
+                             size_t data_len, size_t command_len, size_t config_len)
+        : CObject(world, parent)
+{
+    m_robot = robot;
+
+    ASSERT(data_len + command_len + config_len <= buffer_len);
+    
+    m_info_buffer = (BYTE*) buffer;
+    m_info_len = INFO_BUFFER_SIZE;
+    
+    m_data_buffer = (BYTE*) m_info_buffer + m_info_len;
+    m_data_len = data_len;
+
+    m_command_buffer = (BYTE*) m_data_buffer + data_len;
+    m_command_len = command_len;
+
+    m_config_buffer = (BYTE*) m_command_buffer + command_len;
+    m_config_len = config_len;
+
+    TRACE4("creating player device at addr: %p %p %p %p", m_info_buffer, m_data_buffer,
+         m_command_buffer, m_config_buffer);
+}
+
+///////////////////////////////////////////////////////////////////////////
+// *** RETIRE ahoward
+// Minimal constructor
+//
+CPlayerDevice::CPlayerDevice(CPlayerRobot *robot, void *buffer,
                              size_t data_len, size_t command_len, size_t config_len)
         : CObject(robot->m_world, robot)
 {
@@ -79,9 +108,9 @@ void CPlayerDevice::Shutdown()
 //
 bool CPlayerDevice::IsSubscribed()
 {
-    m_world->LockShmem();
+    m_robot->LockShmem();
     bool subscribed = m_info_buffer[INFO_SUBSCRIBE_FLAG];
-    m_world->UnlockShmem();
+    m_robot->UnlockShmem();
 
     return subscribed;
 }
@@ -96,7 +125,7 @@ size_t CPlayerDevice::PutData(void *data, size_t len)
     //    MSG2("data len (%d) > buffer len (%d)", (int) len, (int) m_data_len);
     //ASSERT(len <= m_data_len);
 
-    m_world->LockShmem();
+    m_robot->LockShmem();
 
     // Take the smallest number of bytes
     // This avoids an overflow of either buffer
@@ -111,7 +140,7 @@ size_t CPlayerDevice::PutData(void *data, size_t len)
     //
     m_info_buffer[INFO_DATA_FLAG] = 1;
     
-    m_world->UnlockShmem();
+    m_robot->UnlockShmem();
     return len;
 }
 
@@ -125,7 +154,7 @@ size_t CPlayerDevice::GetCommand(void *data, size_t len)
     //    MSG2("buffer len (%d) < command len (%d)", (int) len, (int) m_command_len);
     //ASSERT(len >= m_command_len);
     
-    m_world->LockShmem();
+    m_robot->LockShmem();
 
     // See if there is any command info available
     //
@@ -147,7 +176,7 @@ size_t CPlayerDevice::GetCommand(void *data, size_t len)
         len = 0;
     }
     
-    m_world->UnlockShmem();
+    m_robot->UnlockShmem();
     return len;
 }
 
@@ -161,7 +190,7 @@ size_t CPlayerDevice::GetConfig(void *data, size_t len)
     //    MSG2("buffer len (%d) < config len (%d)", (int) len, (int) m_config_len);
     //ASSERT(len >= m_config_len);
     
-    m_world->LockShmem();
+    m_robot->LockShmem();
 
     // See if there is any configuration info available
     //
@@ -187,7 +216,7 @@ size_t CPlayerDevice::GetConfig(void *data, size_t len)
         len = 0;
     }
     
-    m_world->UnlockShmem();
+    m_robot->UnlockShmem();
     return len;
 }
 

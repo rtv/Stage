@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.2 $
+//  $Revision: 1.9.2.3 $
 //
 // Usage:
 //  (empty)
@@ -39,8 +39,8 @@ class CLaserDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CLaserDevice(CRobot* robot, void *buffer, size_t data_len, 
-			 size_t command_len, size_t config_len);
+    public: CLaserDevice(CWorld *world, CObject *parent,
+                         CPlayerRobot* robot, void *buffer, size_t buffer_len);
     
     // Update the device
     //
@@ -96,11 +96,36 @@ class CLaserDevice : public CPlayerDevice
     private: XPoint hitPts[ LASERSAMPLES + 1 ];
     private: XPoint oldHitPts[ LASERSAMPLES + 1];
     private: int undrawRequired;
+
+#else
+    
+    // Process GUI update messages
+    //
+    public: virtual void OnUiUpdate(RtkUiDrawData *pData);
+
+    // Process GUI mouse messages
+    //
+    public: virtual void OnUiMouse(RtkUiMouseData *pData);
+
+    // Draw the laser turret
+    //
+    private: void DrawTurret(RtkUiDrawData *pData);
+
+    // Draw the laser scan
+    //
+    private: void DrawScan(RtkUiDrawData *pData);
+
+    // Laser scan outline
+    //
+    private: int m_hit_count;
+    private: double m_hit[LASERSAMPLES][2];
     
 #endif    
 };
 
 #endif
+
+
 
 
 

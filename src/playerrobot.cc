@@ -1,8 +1,28 @@
-/*************************************************************************
- * robot.cc - most of the action is here
- * RTV
- * $Id: robot.cc,v 1.13.2.3 2000-12-06 05:13:42 ahoward Exp $
- ************************************************************************/
+///////////////////////////////////////////////////////////////////////////
+//
+// File: playerrobot.cc
+// Author: Richard Vaughan, Andrew Howard
+// Date: 6 Dec 2000
+// Desc: Provides interface to Player.
+//
+// CVS info:
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerrobot.cc,v $
+//  $Author: ahoward $
+//  $Revision: 1.1.2.1 $
+//
+// Usage:
+//  (empty)
+//
+// Theory of operation:
+//  (empty)
+//
+// Known bugs:
+//  (empty)
+//
+// Possible enhancements:
+//  (empty)
+//
+///////////////////////////////////////////////////////////////////////////
 
 #include <errno.h>
 #include <fcntl.h>
@@ -24,10 +44,11 @@
 #include <iomanip.h>
 #include <sys/mman.h>
 
-// BPG
 #include <signal.h>
 #include <sys/wait.h>
-// GPB
+
+#include <sys/ipc.h>
+#include <sys/sem.h>
 
 #include <offsets.h> // from Player's include directory
 
@@ -50,6 +71,8 @@
 #include "laserbeacondevice.hh"
 
 
+#define SEMKEY 2000;
+
 extern int errno;
 
 const double TWOPI = 6.283185307;
@@ -62,12 +85,12 @@ unsigned char f = 0xFF;
 const int numPts = SONARSAMPLES;
 
 
-CRobot::CRobot(CWorld *world, CObject *parent)
+CPlayerRobot::CPlayerRobot(CWorld *world, CObject *parent)
         : CObject(world, parent)
 {
 }
 
-CRobot::~CRobot( void )
+CPlayerRobot::~CPlayerRobot( void )
 {
 }
 
@@ -75,7 +98,7 @@ CRobot::~CRobot( void )
 ///////////////////////////////////////////////////////////////////////////
 // Start all the devices
 //
-bool CRobot::Startup(RtkCfgFile *cfg)
+bool CPlayerRobot::Startup(RtkCfgFile *cfg)
 {
     TRACE0("starting devices");
     
@@ -86,13 +109,19 @@ bool CRobot::Startup(RtkCfgFile *cfg)
     int port = cfg->ReadInt("port", 6666, "");
     
     cfg->EndSection();
+
+    // Create the lock object for the shared mem
+    //
+    if (!CreateShmemLock())
+        return false;
     
     // Startup player
     // This will generate the memory map, so it must be done first
     //
     if (!StartupPlayer(port))
         return false;
-    
+
+    /* *** REMOVE
     // Create pioneer device    
     //
     AddChild(new CPioneerMobileDevice(this, 
@@ -102,13 +131,15 @@ bool CRobot::Startup(RtkCfgFile *cfg)
                                       SPOSITION_DATA_BUFFER_SIZE,
                                       SPOSITION_COMMAND_BUFFER_SIZE,
                                       SPOSITION_CONFIG_BUFFER_SIZE));
-
+    */
+                                      
+    /* *** REMOVE ahoward
     // Create laser device
     //
-    AddChild(new CLaserDevice(this, playerIO + LASER_DATA_START,
-                              LASER_DATA_BUFFER_SIZE,
-                              LASER_COMMAND_BUFFER_SIZE,
-                              LASER_CONFIG_BUFFER_SIZE));
+    AddChild(new CLaserDevice(m_world, this, this,
+                              playerIO + LASER_DATA_START,
+                              LASER_TOTAL_BUFFER_SIZE));
+    */
                               
     // Start any child objects
     //
@@ -172,7 +203,7 @@ bool CRobot::Startup(RtkCfgFile *cfg)
     {
         if (!m_device[i]->Startup(RtkCfgFile *cfg) )
         {
-            perror("CRobot::Startup: failed to open device; device unavailable");
+            perror("CPlayerRobot::Startup: failed to open device; device unavailable");
             m_device[i] = NULL;
         }
     }
@@ -185,7 +216,7 @@ bool CRobot::Startup(RtkCfgFile *cfg)
 ///////////////////////////////////////////////////////////////////////////
 // Shutdown the devices
 //
-void CRobot::Shutdown()
+void CPlayerRobot::Shutdown()
 {
     TRACE0("shutting down devices");
 
@@ -202,7 +233,7 @@ void CRobot::Shutdown()
 ///////////////////////////////////////////////////////////////////////////
 // Update the robot 
 //
-void CRobot::Update()
+void CPlayerRobot::Update()
 {
     CObject::Update();
 }
@@ -211,7 +242,7 @@ void CRobot::Update()
 ///////////////////////////////////////////////////////////////////////////
 // Start player instance
 //
-bool CRobot::StartupPlayer(int port)
+bool CPlayerRobot::StartupPlayer(int port)
 {
     TRACE0("starting player");
     
@@ -289,15 +320,15 @@ bool CRobot::StartupPlayer(int port)
 ///////////////////////////////////////////////////////////////////////////
 // Stop player instance
 //
-void CRobot::ShutdownPlayer()
+void CPlayerRobot::ShutdownPlayer()
 {
     TRACE0("stopping player");
     
     // BPG
     if(kill(player_pid,SIGINT))
-        perror("CRobot::~CRobot(): kill() failed sending SIGINT to Player");
+        perror("CPlayerRobot::~CPlayerRobot(): kill() failed sending SIGINT to Player");
     if(waitpid(player_pid,NULL,0) == -1)
-        perror("CRobot::~CRobot(): waitpid() returned an error");
+        perror("CPlayerRobot::~CPlayerRobot(): waitpid() returned an error");
     // GPB
 
     // delete the playerIO.xxxxxx file
@@ -305,12 +336,82 @@ void CRobot::ShutdownPlayer()
 }
 
 
+///////////////////////////////////////////////////////////////////////////
+// Create a single semaphore to sync access to the shared memory segments
+//
+bool CPlayerRobot::CreateShmemLock()
+{
+    TRACE0("making semaphore");
+
+    semKey = SEMKEY;
+
+    union semun
+    {
+        int val;
+        struct semid_ds *buf;
+        ushort *array;
+    } argument;
+
+    argument.val = 0; // initial semaphore value
+    semid = semget( semKey, 1, 0666 | IPC_CREAT );
+
+    if( semid < 0 ) // semget failed
+    {
+        MSG( "Unable to create semaphore" );
+        return false;
+    }
+    if( semctl( semid, 0, SETVAL, argument ) < 0 )
+    {
+        MSG( "Failed to set semaphore value" );
+        return false;
+    }
+    return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Lock the shared mem
+//
+bool CPlayerRobot::LockShmem( void )
+{
+  struct sembuf ops[1];
+
+  ops[0].sem_num = 0;
+  ops[0].sem_op = 1;
+  ops[0].sem_flg = 0;
+
+  int retval = semop( semid, ops, 1 );
+  if (retval != 0)
+      MSG1("lock failed return value = %d", (int) retval);
+
+  return (retval == 0);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Unlock the shared mem
+//
+bool CPlayerRobot::UnlockShmem( void )
+{
+  struct sembuf ops[1];
+
+  ops[0].sem_num = 0;
+  ops[0].sem_op = -1;
+  ops[0].sem_flg = 0;
+
+  int retval = semop( semid, ops, 1 );
+  if (retval != 0)
+      MSG1("unlock failed return value = %d", (int) retval);
+
+  return (retval == 0);
+}
+
 #ifdef INCLUDE_RTK
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
 //
-void CRobot::OnUiUpdate(RtkUiDrawData *pData)
+void CPlayerRobot::OnUiUpdate(RtkUiDrawData *pData)
 {
     // Draw our children
     //
@@ -321,7 +422,7 @@ void CRobot::OnUiUpdate(RtkUiDrawData *pData)
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI mouse messages
 //
-void CRobot::OnUiMouse(RtkUiMouseData *pData)
+void CPlayerRobot::OnUiMouse(RtkUiMouseData *pData)
 {
     CObject::OnUiMouse(pData);
 }

@@ -1,7 +1,7 @@
 /*************************************************************************
  * world.h - most of the header action is here 
  * RTV
- * $Id: world.hh,v 1.1.2.2 2000-12-06 05:13:42 ahoward Exp $
+ * $Id: world.hh,v 1.1.2.3 2000-12-06 21:48:32 ahoward Exp $
  ************************************************************************/
 
 #ifndef WORLD_HH
@@ -23,11 +23,12 @@
 #include <unistd.h>
 #include <fstream.h>
 
-#include "robot.h"
+#include "playerrobot.hh"
 #include "image.h"
-#include "win.h"
 
-#ifdef INCLUDE_RTK
+#ifndef INCLUDE_RTK
+#include "win.h"
+#else INCLUDE_RTK
 #include "rtk-ui.hh"
 #endif
 
@@ -55,11 +56,6 @@ public:
   CWorld( char* initFile );
   virtual ~CWorld();
 
-  int semKey, semid; // semaphore access for shared mem locking
-
-  int LockShmem( void ); // protect shared mem areas
-  int UnlockShmem( void );
-
   // data
   Nimage* bimg; // background image 
   Nimage* img; //foreground img;
@@ -71,7 +67,7 @@ public:
   char posFile[64];
   char bgFile[64];
 
-  CRobot* bots;
+  CPlayerRobot* bots;
   float pioneerWidth, pioneerLength;
   float localizationNoise;
   float sonarNoise;
@@ -97,7 +93,7 @@ public:
   void DumpOdometry( void );
   void GetUpdate( void );  
 
-  CRobot* NearestRobot( float x, float y );
+  CPlayerRobot* NearestRobot( float x, float y );
 
     ///////////////////////////////////////////////////////
     // Added new stuff here -- ahoward
