@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.3 2003-01-09 02:40:23 rtv Exp $
+ * $Id: image.cc,v 1.4 2003-01-09 22:01:29 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -290,7 +290,7 @@ bool Nimage::load_pnm_gz(const char* fname)
   gzgets(file, line, sizeof(line));
   sscanf(line, "%d", &whiteNum);
 
-  printf(  " W %d H %d White %d\n", width, height, whiteNum );
+  //printf(  " W %d H %d White %d\n", width, height, whiteNum );
 
   if (data)
     delete[] data;

@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: playerdevice.hh,v 1.13 2002-12-03 18:22:33 inspectorg Exp $
+ * CVS info: $Id: playerdevice.hh,v 1.14 2003-01-09 22:01:27 rtv Exp $
  */
 
 #ifndef PLAYERENTITY_HH
@@ -159,8 +159,8 @@ public: virtual void GetStatusString( char* buf, int buflen );
 public: virtual void FamilySubscribe();
 public: virtual void FamilyUnsubscribe();
 
-  // packages and sends data via rtp
-  protected: void AnnounceDataViaRTP( void* data, size_t len );
+  // fork a copy of playerv to inspect this object
+  protected: bool SpawnPlayerv( void );
 
   // Pointers into shared mmap for the IO structures
   // the io buffer is allocated by the World 

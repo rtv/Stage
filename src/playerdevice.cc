@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.54 2002-12-05 04:01:11 rtv Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.55 2003-01-09 22:01:24 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -41,7 +41,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/file.h>
-
+#include <signal.h>
 #include <iomanip>
 #include <iostream>
 
@@ -834,6 +834,42 @@ PositionGetCommand( double* xpos, double* ypos, double* yaw,
   return true;
 };
 
+///////////////////////////////////////////////////////////////////////////
+// spawn an external viewer program for this entity
+bool CPlayerEntity::SpawnPlayerv( void )
+{
+  int pid;
+
+  PRINT_DEBUG( "** SPAWNING PLAYERV **" );
+
+  // ----------------------------------------------------------------------
+  // fork off a player process to handle robot I/O
+  if( (pid = fork()) < 0 )
+  {
+    PRINT_ERR1("error forking for player: [%s]", strerror(errno));
+    return false;
+  }
+
+  // If we are the nmew child process...
+  if (pid == 0)
+  {
+    char portstr[64];
+    sprintf( portstr, "%d", this->m_player.port );
+
+    // Playerv must be in the current path
+    if( execlp( "playerv", "playerv",
+                "-p", portstr, NULL) < 0 )
+    {
+      PRINT_ERR1("error executing playerv: [%s]\n"
+                 "Make sure playerv is in your path.", strerror(errno));
+    }
+  }
+  
+  //PRINT_DEBUG( "** STARTUP PLAYER DONE **" );
+  return true;
+}
+
+
 #ifdef INCLUDE_RTK2
 
 // Initialise the rtk gui
@@ -872,6 +908,20 @@ void CPlayerEntity::RtkOnMouse(rtk_fig_t *fig, int event, int mode)
 {
   switch (event)
   {
+  case RTK_EVENT_PRESS:
+    
+    // if the CTRL key is held down, launch playerv
+    // rtk doesn't support modifiers directly so we use this
+    // backdoor route which may not sync perfectly with the click
+    // itself over a delayed network, but it should work pretty well.
+    int x, y;
+    GdkModifierType modifiers;
+    gdk_window_get_pointer(m_world->canvas->canvas->window, 
+			   &x, &y, &modifiers);
+    
+    if( modifiers & GDK_CONTROL_MASK ) SpawnPlayerv();
+    break;
+
     // Handle case when mouse is moved over the figure
     case RTK_EVENT_MOUSE_OVER:
       this->FamilySubscribe();
