@@ -99,8 +99,6 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   
   win->bg = rtk_fig_create( win->canvas, NULL, 0 );
   
-
-
   double major = 1.0;
   double minor = 0.2;
   double origin_x = 0.0;
@@ -133,10 +131,8 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   
   win->poses = rtk_fig_create( win->canvas, NULL, 0 );
   
-  // start in the center, zoomed out
-  // why doesn't 1.0/width exactly fill the window? 0.75 is a hack
-  rtk_canvas_scale( win->canvas, 0.75/width, 0.75/width );
-  //rtk_canvas_scale( win->canvas, 1.0/xdim, 1.0/ );
+  // start in the center, fully zoomed out
+  rtk_canvas_scale( win->canvas, 1.1*width/xdim, 1.1*width/xdim );
   rtk_canvas_origin( win->canvas, width/2.0, height/2.0 );
 
   gui_window_create_menus( win );
@@ -604,7 +600,7 @@ void gui_model_rects( stg_model_t* mod )
       //printf( "(%d - %.2f %.2f %.2f    %.2f %.2f) ",
       //      r, x, y, a, w, h );
       
-      rtk_fig_rectangle( fig, rx,ry,ra,w,h, 0 ); 
+      rtk_fig_rectangle( fig, rx,ry,ra,w,h, 1 ); 
     }
 }
 

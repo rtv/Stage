@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.49 2004-04-05 03:05:20 rtv Exp $
+dnl $Id: configure.in,v 1.50 2004-04-14 08:50:34 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -10,9 +10,10 @@ dnl determine system type.  this is used in a couple of places to infer the
 dnl types of arguments to some networking library functions.  if/when we 
 dnl upgrade to newer Autotools, this can probably go away.
 AC_CANONICAL_SYSTEM
-case $host in
+case $host in	
 *-*-solaris*) AC_DEFINE(PLAYER_SOLARIS,1,[building for Solaris]);;
 *-*-linux*) AC_DEFINE(PLAYER_LINUX,1,[building for Linux]);;
+*-*-darwin*) AC_DEFINE(PLAYER_DARWIN,1,[building for Darwin]);;
 esac
 
 dnl Need AC_PROG_MAKE_SET for recursive building
@@ -59,7 +60,7 @@ AC_TRY_COMPILE(
      [socklen_t len = 42; return len;],
         [AC_MSG_RESULT(yes)],
          [AC_MSG_RESULT(no)
-          AC_DEFINE(socklen_t, int, must define this on BSD-based platforms)])
+          AC_DEFINE(socklen_t, int, required on some BSD-based platforms)])
 
 dnl Checks for library functions.
 AC_CHECK_LIB(z, gzopen)
@@ -108,3 +109,22 @@ AC_OUTPUT(Makefile
           tools/Makefile
 	  stage.pc
 	  stagecpp.pc)
+
+dnl should use AC_MSG_NOTICE(), but that's apparently not defined in
+dnl autoconf 2.13.
+AC_MSG_RESULT([])
+AC_MSG_RESULT([*************************************************************])
+AC_MSG_RESULT([])
+AC_MSG_RESULT([Stage will be built for a $host system, with the following tools and options:])
+AC_MSG_RESULT([  C   compiler: $CC $CFLAGS])
+AC_MSG_RESULT([  C++ compiler: $CXX $CXXFLAGS])
+AC_MSG_RESULT([])
+
+AC_MSG_RESULT([Stage will be installed in:])
+AC_MSG_RESULT([    $prefix/])
+AC_MSG_RESULT([])
+AC_MSG_RESULT([To see the configuration options, do:])
+AC_MSG_RESULT([    ./configure --help])
+AC_MSG_RESULT([])
+AC_MSG_RESULT([When you're satisfied with the configuration, type 'make install'. ])
+AC_MSG_RESULT([])

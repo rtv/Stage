@@ -75,7 +75,7 @@ stg_server_t* server_create( int port )
       return NULL; // fail
     }
   
-  PRINT_DEBUG1( "server fd %d", fd );
+  //PRINT_DEBUG1( "server fd %d", fd );
 
   // listen for requests on this socket
   g_assert( listen( fd, STG_LISTENQ) == 0 );

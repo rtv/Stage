@@ -13,11 +13,12 @@ guchar* pb_get_pixel( GdkPixbuf* pb, int x, int y )
 
 void pb_zero_pixel( GdkPixbuf* pb, int x, int y )
 {
+  // bounds checking
   int width = gdk_pixbuf_get_width(pb);
   int height = gdk_pixbuf_get_height(pb);
-
   if( x >=0 && x < width && y >= 0 && y < height )
     {
+      // zeroing
       guchar* pix = pb_get_pixel( pb, x, y );
       int bytes_per_sample = gdk_pixbuf_get_bits_per_sample (pb) / 8;
       int num_samples = gdk_pixbuf_get_n_channels(pb);
@@ -26,6 +27,16 @@ void pb_zero_pixel( GdkPixbuf* pb, int x, int y )
   else
     PRINT_WARN4( "zero pixel %d,%d out of range (image dimensions %d by %d)", x, y, width, height );
 }
+
+// zero all the pixels in a rectangle 
+void pb_zero_rect( GdkPixbuf* pb, int x, int y, int width, int height )
+{
+  //todo - this could be faster - improve it if it gets used a lot)
+  int a, b;
+  for( a = y; a < y+height; a++ )
+    for( b = x; b < x+width; b++ )
+      pb_zero_pixel( pb,b,a );
+}  
 
 // returns TRUE if any channel in the pixel is non-zero
 gboolean pb_pixel_is_set( GdkPixbuf* pb, int x, int y )
@@ -55,6 +66,7 @@ int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count
       return 1; // error
     }
 
+#ifdef DEBUG
   printf( "image \"%s\" channels:%d bits:%d alpha:%d "
 	  "width:%d height:%d rowstride:%d pixels:%p\n",
 	  
@@ -66,12 +78,23 @@ int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count
 	  gdk_pixbuf_get_height(pb),
 	  gdk_pixbuf_get_rowstride(pb),
 	  gdk_pixbuf_get_pixels(pb) );
-  
+#endif
+
   *rect_count = 0;
   *rects = NULL;
   
   int img_width = gdk_pixbuf_get_width(pb);
   int img_height = gdk_pixbuf_get_height(pb);
+  
+  // flip the image so we're using conventional coordinates rather
+  // than graphics coords (this is slower but easier than changing the
+  // algorithm below to process the image bottom-to-top)
+
+  
+  //int row;
+  //for(row = 0; row < img_height/2; row++ )
+    
+
   
   int y, x;
   for(y = 0; y < img_height; y++)
@@ -84,7 +107,7 @@ int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count
 	  
 	  // a rectangle starts from this point
 	  int startx = x;
-	  int starty = img_height - y;
+	  int starty = y;
 	  int height = img_height; // assume full height for starters
 	  
 	  // grow the width - scan along the line until we hit an empty pixel
@@ -106,6 +129,7 @@ int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count
 		  
 		  yy++; 
 		} 	      
+
 	      // now yy is the depth of a line of non-zero pixels
 	      // downward we store the smallest depth - that'll be the
 	      // height of the rectangle
@@ -113,10 +137,7 @@ int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count
 	    } 
 	  
 	  // delete the pixels we have used in this rect
-	  int a, b;
-	  for( a = y; a < y - height; a++ )
-	    for( b = startx; b < x; b++ )
-	      pb_zero_pixel( pb,a,b );
+	  pb_zero_rect( pb, startx, starty, x-startx, height );
 	  
 	  // add this rectangle to the array
 	  (*rect_count)++;
@@ -128,7 +149,7 @@ int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count
 	  latest->y = starty;
 	  latest->a = 0.0;
 	  latest->w = x - startx;
-	  latest->h = -height;
+	  latest->h = height;
 	  
 	  //printf( "rect %d (%.2f %.2f %.2f %.2f %.2f\n", 
 	  //  *rect_count, 
@@ -136,6 +157,9 @@ int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count
 	  
 	}
     }
+  
+  // free the image data
+  gdk_pixbuf_unref( pb );
 
   return 0; // ok
 }

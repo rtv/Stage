@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: simple.world,v 1.14 2004-04-05 03:04:06 rtv Exp $
+# CVS: $Id: simple.world,v 1.15 2004-04-14 08:50:34 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 #
@@ -14,48 +14,7 @@ include "pioneer.inc"
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-bitmap "worlds/cave.png"
+bitmap "worlds/autolab.png"
 
   # GUI settings
   #
@@ -79,7 +38,7 @@ bitmap "worlds/cave.png"
   #
   pioneer
   (
-     pose [2.331 5.589 -2533.989]
+     pose [8.979 2.764 -2702.381]
      #laser()
    
      nose 1
@@ -91,4 +50,4 @@ bitmap "worlds/cave.png"
      size [2.0 1.0] 
   )
 
-  budgie( size [ 0.6 0.4 ] pose [2.068 1.003 -1366.829] color "magenta" )
+  budgie( size [ 0.6 0.4 ] pose [4.282 6.068 -1089.197] color "magenta" )
