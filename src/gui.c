@@ -241,8 +241,9 @@ void gui_world_matrix( stg_world_t* world, gui_window_t* win )
 
 void gui_pose( rtk_fig_t* fig, stg_model_t* mod )
 {
-  stg_pose_t* pose = stg_model_get_pose( mod );
-  rtk_fig_arrow_ex( fig, 0,0, pose->x, pose->y, 0.05 );
+  stg_pose_t pose;
+  stg_model_get_pose( mod, &pose );
+  rtk_fig_arrow_ex( fig, 0,0, pose.x, pose.y, 0.05 );
 }
 
 
@@ -269,7 +270,7 @@ int gui_world_update( stg_world_t* world )
   if( win->show_matrix ) gui_world_matrix( world, win );
   
   char clock[256];
-  snprintf( clock, 255, "Time: %lu:%lu:%2lu:%2lu.%3lu\t(sim:%3d real:%3d ratio:%2.2f)",
+  snprintf( clock, 255, "Time: %lu:%lu:%2lu:%2lu.%2lu\t(sim:%3d real:%3d ratio:%2.2f)",
 	    world->sim_time / (24*3600000), // days
 	    world->sim_time / 3600000, // hours
 	    (world->sim_time % 3600000) / 60000, // minutes
@@ -313,14 +314,15 @@ const char* gui_model_describe(  stg_model_t* mod )
 {
   static char txt[256];
   
-  stg_pose_t* pose = stg_model_get_pose( mod );
+  stg_pose_t pose;
+  stg_model_get_pose( mod, &pose );
 
   snprintf(txt, sizeof(txt), "%s \"%s\" (%d:%d) pose: [%.2f,%.2f,%.2f]",  
 	   stg_model_type_string(mod->type), 
 	   mod->token, 
 	   mod->world->id, 
 	   mod->id,  
-	   pose->x, pose->y, pose->a  );
+	   pose.x, pose.y, pose.a  );
   
   return txt;
 }
@@ -373,7 +375,7 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
       
     case RTK_EVENT_PRESS:
       // store the velocity at which we grabbed the model
-      memcpy( &capture_vel, stg_model_get_velocity(mod), sizeof(capture_vel) );
+      stg_model_get_velocity(mod, &capture_vel );
       stg_model_set_velocity( mod, &zero_vel );
       // DELIBERATE NO-BREAK      
 
@@ -455,37 +457,41 @@ void gui_model_destroy( stg_model_t* model )
 // add a nose  indicating heading  
 void gui_model_features( stg_model_t* mod )
 {
-  stg_guifeatures_t* gf = stg_model_get_guifeatures( mod );
+  stg_guifeatures_t gf;
+  stg_model_get_guifeatures( mod, &gf );
 
   
   PRINT_DEBUG4( "model %d gui features grid %d nose %d boundary mask %d",
-		(int)gf->grid, (int)gf->nose, (int)gf->boundary, (int)gf->movemask );
+		(int)gf.grid, (int)gf.nose, (int)gf.boundary, (int)gf.movemask );
 
-  
+  stg_geom_t geom;
+  stg_model_get_geom(mod, &geom);
+    
   gui_window_t* win = mod->world->win;
   
   // if we need a nose, draw one
-  if( gf->nose )
+  if( gf.nose )
     { 
       rtk_fig_t* fig = gui_model_figs(mod)->top;      
-      rtk_fig_color_rgb32( fig, stg_model_get_color(mod) );
-      
-      stg_geom_t* geom = stg_model_get_geom(mod);
-      
+
+      stg_color_t col;
+      stg_model_get_color( mod, &col);
+      rtk_fig_color_rgb32( fig,col );
+            
       // draw an arrow from the center to the front of the model
-      rtk_fig_arrow( fig, geom->pose.x, geom->pose.y, geom->pose.a, 
-		     geom->size.x/2.0, 0.05 );
+      rtk_fig_arrow( fig, geom.pose.x, geom.pose.y, geom.pose.a, 
+		     geom.size.x/2.0, 0.05 );
     }
 
-  rtk_fig_movemask( gui_model_figs(mod)->top, gf->movemask);  
+  rtk_fig_movemask( gui_model_figs(mod)->top, gf.movemask);  
   
   // only install a mouse handler if the object needs one
   //(TODO can we remove mouse handlers dynamically?)
-  if( gf->movemask )    
+  if( gf.movemask )    
     rtk_fig_add_mouse_handler( gui_model_figs(mod)->top, gui_model_mouse );
   
   // if we need a grid and don't have one, make one
-  if( gf->grid && gui_model_figs(mod)->grid == NULL )
+  if( gf.grid && gui_model_figs(mod)->grid == NULL )
     {
       gui_model_figs(mod)->grid = 
 	rtk_fig_create( win->canvas, gui_model_figs(mod)->top, STG_LAYER_GRID);
@@ -493,32 +499,28 @@ void gui_model_features( stg_model_t* mod )
       rtk_fig_color_rgb32( gui_model_figs(mod)->grid, 
 			   stg_lookup_color(STG_GRID_MAJOR_COLOR ) );
       
-      stg_geom_t* geom = stg_model_get_geom(mod);
-      
       rtk_fig_grid( gui_model_figs(mod)->grid, 
-		    geom->pose.x, geom->pose.y, 
-		    geom->size.x, geom->size.y, 1.0  ) ;
+		    geom.pose.x, geom.pose.y, 
+		    geom.size.x, geom.size.y, 1.0  ) ;
     }
 
   
   // if we have a grid and don't need one, destroy it
-  if( !gf->grid && gui_model_figs(mod)->grid )
+  if( !gf.grid && gui_model_figs(mod)->grid )
     {
       rtk_fig_destroy( gui_model_figs(mod)->grid );
       gui_model_figs(mod)->grid == NULL;
     }
 
   
-  if( gf->boundary )
+  if( gf.boundary )
     {
-      stg_geom_t* geom = stg_model_get_geom(mod);
-      
       rtk_fig_rectangle( gui_model_figs(mod)->top, 
-			 geom->pose.x, geom->pose.y, geom->pose.a, 
-			 geom->size.x, geom->size.y, 0 ); 
+			 geom.pose.x, geom.pose.y, geom.pose.a, 
+			 geom.size.x, geom.size.y, 0 ); 
 			 
       //rtk_fig_rectangle( gui_model_figs(mod)->top, 
-      //		 geom->pose.x, geom->pose.y, geom->pose.a, 
+      //		 geom.pose.x, geom.pose.y, geom.pose.a, 
       //		 20, 20, 1 );
     }
 }
@@ -545,9 +547,9 @@ void gui_model_features( stg_model_t* mod )
       
 /*       stg_geom_t* geom = stg_model_get_geom(mod); */
       
-/*       double localx = geom->pose.x; */
-/*       double localy = geom->pose.y; */
-/*       double locala = geom->pose.a; */
+/*       double localx = geom.pose.x; */
+/*       double localy = geom.pose.y; */
+/*       double locala = geom.pose.a; */
       
 /*       double cosla = cos(locala); */
 /*       double sinla = sin(locala); */
@@ -577,12 +579,15 @@ void stg_model_render_polygons( stg_model_t* mod )
   //if( mod->geom.size.x == 0 && mod->geom.size.y == 0 )
   //return;
   
-  rtk_fig_color_rgb32( fig, stg_model_get_color(mod) );
+  stg_color_t col;
+  stg_model_get_color( mod, &col ); 
+  rtk_fig_color_rgb32( fig, col );
 
   size_t count=0;
   stg_polygon_t* polys = stg_model_get_polygons(mod,&count);
 
-  stg_geom_t* geom = stg_model_get_geom(mod);
+  stg_geom_t geom;
+  stg_model_get_geom(mod, &geom);
 
   if( polys )
     {
@@ -591,9 +596,9 @@ void stg_model_render_polygons( stg_model_t* mod )
       int p;
       for( p=0; p<count; p++ )
 	rtk_fig_polygon( fig,
-			 geom->pose.x,
-			 geom->pose.y,
-			 geom->pose.a,
+			 geom.pose.x,
+			 geom.pose.y,
+			 geom.pose.a,
 			 polys[p].points->len,
 			 polys[p].points->data,
 			 mod->world->win->fill_polygons );
@@ -602,8 +607,8 @@ void stg_model_render_polygons( stg_model_t* mod )
   if( mod->guifeatures.boundary )
     {      
       rtk_fig_rectangle( gui_model_figs(mod)->top, 
-			 geom->pose.x, geom->pose.y, geom->pose.a, 
-			 geom->size.x, geom->size.y, 0 ); 
+			 geom.pose.x, geom.pose.y, geom.pose.a, 
+			 geom.size.x, geom.size.y, 0 ); 
     }
 
 

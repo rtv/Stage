@@ -96,6 +96,36 @@ stg_polygon_t* unit_polygon_create( void )
   return poly;
 }
 
+/// grow a model by adding [sz] bytes to the end of its struct
+stg_model_t* stg_model_extend( stg_model_t* mod, size_t sz )
+{
+  // grow the model to allow for our type-specific extensions
+  mod = realloc( mod, sizeof(stg_model_t)+sz );
+
+  // hack! repair our model callback pointer following the realloc
+  mod->gui.top->userdata = mod;
+
+  // zero our extension data
+  memset( mod->extend, 0, sz );
+
+  return mod;
+}
+
+
+/// create a model with [extra_len] bytes allocated at the end of the
+/// struct, accessible via the 'extend' field.
+stg_model_t* stg_model_create_extended( stg_world_t* world, 
+					stg_model_t* parent,
+					stg_id_t id, 
+					stg_model_type_t type,
+					char* token,
+					size_t extra_len )
+{
+  return stg_model_extend( stg_model_create( world, parent, 
+					     id, type, token ),
+			   extra_len );
+}
+
 
 /// create a new model
 stg_model_t* stg_model_create( stg_world_t* world, 
@@ -194,9 +224,12 @@ stg_model_t* stg_model_create( stg_world_t* world,
   stg_polygon_t* poly = stg_polygon_create();
   stg_polygon_set_points( poly, pts, 4 );
   stg_model_set_polygons( mod, poly, 1 );
-		
+  
+  // init the arbitrary datalist structure
+  g_datalist_init( &mod->props);
+	
   // initialize odometry
-  memset( &mod->odom, 0, sizeof(mod->odom));
+  //memset( &mod->odom, 0, sizeof(mod->odom));
   
   // install the default functions
   mod->f_startup = _model_startup;
@@ -236,6 +269,16 @@ stg_model_t* stg_model_create( stg_world_t* world,
 		mod->world->id, mod->id, 
 		mod->token, stg_model_type_string(mod->type) );
   return mod;
+}
+
+void* stg_model_get_prop( stg_model_t* mod, char* name )
+{
+  return g_datalist_get_data( mod->props, name );
+}
+
+void stg_model_set_prop( stg_model_t* mod, char* name, void* data )
+{
+  return g_datalist_set_data( mod->props, name, data );
 }
 
 /// free the memory allocated for a model

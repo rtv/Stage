@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.39 $
+//  $Revision: 1.40 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -173,7 +173,8 @@ void ranger_render_cfg( stg_model_t* mod, void* data, size_t len )
 {
   //PRINT_DEBUG( "drawing rangers" );
   
-  stg_geom_t* geom = stg_model_get_geom(mod);
+  stg_geom_t geom;
+  stg_model_get_geom(mod,&geom);
   
   
   //if(  mod->gui.geom  )
@@ -194,7 +195,7 @@ void ranger_render_cfg( stg_model_t* mod, void* data, size_t len )
   
   rtk_fig_t* fig = mod->gui.cfg; 
   
-  rtk_fig_origin( fig, geom->pose.x, geom->pose.y, geom->pose.a );  
+  rtk_fig_origin( fig, geom.pose.x, geom.pose.y, geom.pose.a );  
   
   stg_ranger_config_t* cfg = (stg_ranger_config_t*)data;
 
@@ -279,10 +280,11 @@ void ranger_render_data( stg_model_t* mod, void* data, size_t len )
   // should be ok by now!
   if( rcount > 0 && samples )
     {
-      stg_geom_t *geom = stg_model_get_geom(mod);
+      stg_geom_t geom;
+      stg_model_get_geom(mod,&geom);
       
       rtk_fig_color_rgb32(fig, stg_lookup_color(STG_RANGER_COLOR) );
-      rtk_fig_origin( fig, geom->pose.x, geom->pose.y, geom->pose.a );	  
+      rtk_fig_origin( fig, geom.pose.x, geom.pose.y, geom.pose.a );	  
       // draw the range  beams
       int s;
       for( s=0; s<rcount; s++ )

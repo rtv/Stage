@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.28 $
+//  $Revision: 1.29 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -153,14 +153,15 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
   // if it was him, we can see him
   if( hitmod == him )
     {
-      stg_geom_t* hisgeom = stg_model_get_geom(him);
+      stg_geom_t hisgeom;
+      stg_model_get_geom(him,&hisgeom);
 
       // record where we saw him and what he looked like
       stg_fiducial_t fid;      
       fid.range = range;
       fid.bearing = NORMALIZE( hisbearing - mfb->pose.a);
-      fid.geom.x = hisgeom->size.x;
-      fid.geom.y = hisgeom->size.y;
+      fid.geom.x = hisgeom.size.x;
+      fid.geom.y = hisgeom.size.y;
       fid.geom.a = NORMALIZE( hispose.a - mfb->pose.a);
       
       // if he's within ID range, get his fiducial.return value, else

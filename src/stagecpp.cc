@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.72 2004-12-13 05:52:04 rtv Exp $
+// $Id: stagecpp.cc,v 1.73 2004-12-29 06:39:32 rtv Exp $
 
 //#define DEBUG
 
@@ -729,24 +729,25 @@ void configure_position( stg_model_t* mod, int section )
   odom.x = wf.ReadTupleLength(section, "odom", 0, 0.0 );
   odom.y = wf.ReadTupleLength(section, "odom", 1, 0.0 );
   odom.a = wf.ReadTupleAngle(section, "odom", 2, 0.0 );
-  stg_model_set_odom( mod, &odom );
+  stg_model_position_set_odom( mod, &odom );
 }
 
 
 void stg_model_save( stg_model_t* model, CWorldFile* worldfile )
 {
-  stg_pose_t* pose = stg_model_get_pose(model);
+  stg_pose_t pose;
+  stg_model_get_pose(model, &pose);
   
   PRINT_DEBUG4( "saving model %s pose %.2f %.2f %.2f",
 		model->token,
-		pose->x,
-		pose->y,
-		pose->a );
+		pose.x,
+		pose.y,
+		pose.a );
 
   // right now we only save poses
-  worldfile->WriteTupleLength( model->id, "pose", 0, pose->x);
-  worldfile->WriteTupleLength( model->id, "pose", 1, pose->y);
-  worldfile->WriteTupleAngle( model->id, "pose", 2, pose->a);
+  worldfile->WriteTupleLength( model->id, "pose", 0, pose.x);
+  worldfile->WriteTupleLength( model->id, "pose", 1, pose.y);
+  worldfile->WriteTupleAngle( model->id, "pose", 2, pose.a);
 }
 
 void stg_model_save_cb( gpointer key, gpointer data, gpointer user )

@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.115 2004-12-13 05:52:04 rtv Exp $
+ * CVS: $Id: stage.h,v 1.116 2004-12-29 06:39:32 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -396,11 +396,13 @@ extern "C" {
       LaserVisible, ///< detected by laser with a reflected intensity of 0 
       LaserBright  ////< detected by laser with a reflected intensity of 1 
     } stg_laser_return_t;
-
-
+  
+  typedef int stg_obstacle_return_t;
+  typedef int stg_blob_return_t;
+  
   /// the default value
 #define STG_DEFAULT_LASERRETURN LaserVisible
-
+  
   ///laser data structure
   typedef struct
   {
@@ -670,7 +672,8 @@ extern "C" {
     // todo - thread-safe version
     // allow exclusive access to this model
     
-    // the generic buffers used by specialized model types
+    // the generic buffers used by specialized model types.
+    // For speed, these are implemented directly, rather than by datalist.
     void *data, *cmd, *cfg;
     size_t data_len, cmd_len, cfg_len;
     pthread_mutex_t data_mutex, cmd_mutex, cfg_mutex;
@@ -680,12 +683,12 @@ extern "C" {
     GArray* polygons;
     
     // basic model properties
-    stg_bool_t blob_return; 
+    stg_blob_return_t blob_return; 
     stg_laser_return_t laser_return; // value returned to a laser sensor
-    stg_bool_t obstacle_return; // if TRUE, we are included in obstacle detection
+    stg_obstacle_return_t obstacle_return; // if non-zero, we are included in obstacle detection
     stg_fiducial_return_t fiducial_return; // value returned to a fiducial finder
     stg_pose_t pose; // current pose in parent's CS
-    stg_pose_t odom; // accumulate odometric pose estimate
+    //stg_pose_t odom; // accumulate odometric pose estimate
     stg_velocity_t velocity; // current velocity
     stg_bool_t stall; // true IFF we hit an obstacle
     stg_geom_t geom; // pose and size in local CS
@@ -702,6 +705,24 @@ extern "C" {
     func_render_t f_render_cmd;
     func_render_t f_render_cfg;
 
+    // a datalist can contain arbitrary named data items. Used by
+    // derived model types to store properties, and for user code to
+    // associate arbitrary items with a model.
+    GData* props;
+
+    /// if set, this callback is run when we do model_put_data() -
+    /// it's used by the player plugin to notify Player that data is
+    /// ready.
+    func_data_notify_t data_notify;
+    void* data_notify_arg;
+
+    // todo - remove all this?
+
+    // todo - add this as a property?
+    // stg_joules_t energy_consumed;
+    // stg_energy_config_t energy_config;   // these are a little strange
+    // stg_energy_data_t energy_data;
+    // double friction; // units? our model doesn't have a direct physical value
     // pulled these out as I never use them
     //func_set_data_t f_set_data;
     //func_get_data_t f_get_data;
@@ -709,18 +730,8 @@ extern "C" {
     //func_get_command_t f_get_command;
     //func_set_config_t f_set_config;
     //func_get_config_t f_get_config;
-    
-    /// if set, this callback is run when we do model_put_data() -
-    /// it's used by the player plugin to notify Player that data is
-    /// ready.
-    func_data_notify_t data_notify;
-    void* data_notify_arg;
 
-    // todo - add this as a property?
-    // stg_joules_t energy_consumed;
-    // stg_energy_config_t energy_config;   // these are a little strange
-    // stg_energy_data_t energy_data;
-    // double friction; // units? our model doesn't have a direct physical value
+    char extend[0]; // this must be the last field!
 
   } stg_model_t;  
   
@@ -765,6 +776,14 @@ itl_mode_t;
 				  stg_model_type_t type,
 				  char* token );
 
+  /// create a new model with [extra_len] bytes on the end of the struct.
+  stg_model_t* stg_model_create_extended( stg_world_t* world, 
+					  stg_model_t* parent,
+					  stg_id_t id, 
+					  stg_model_type_t type,
+					  char* token,
+					  size_t extra_len );
+    
   /** destroy a model, freeing its memory */
   void stg_model_destroy( stg_model_t* mod );
 
@@ -798,7 +817,7 @@ itl_mode_t;
   int stg_model_set_global_pose( stg_model_t* mod, stg_pose_t* gpose );
   
   /** set a model's odometry */
-  int stg_model_set_odom( stg_model_t* mod, stg_pose_t* pose );
+  //int stg_model_set_odom( stg_model_t* mod, stg_pose_t* pose );
 
   /** set a model's velocity in it's parent's coordinate system */
   int stg_model_set_velocity( stg_model_t* mod, stg_velocity_t* vel );
@@ -833,7 +852,7 @@ itl_mode_t;
   stg_polygon_t* stg_model_get_polygons( stg_model_t* mod, size_t* count);
   
   /** set a model's obstacle return value */
-  int stg_model_set_obstaclereturn( stg_model_t* mod, stg_bool_t* ret );
+  int stg_model_set_obstaclereturn( stg_model_t* mod, stg_obstacle_return_t* ret );
 
   /** set a model's laser return value */
   int stg_model_set_laserreturn( stg_model_t* mod, stg_laser_return_t* val );
@@ -842,20 +861,21 @@ itl_mode_t;
   int stg_model_set_fiducialreturn( stg_model_t* mod, stg_fiducial_return_t* val );
 
   /** set a model's friction*/
-  int stg_model_set_friction( stg_model_t* mod, stg_friction_t* fricp );
+  // int stg_model_set_friction( stg_model_t* mod, stg_friction_t* fricp );
 
   // GET properties - use these to get props - don't get them directly
-  stg_velocity_t*        stg_model_get_velocity( stg_model_t* mod );
-  stg_geom_t*            stg_model_get_geom( stg_model_t* mod );
-  stg_color_t            stg_model_get_color( stg_model_t* mod );
-  stg_pose_t*            stg_model_get_pose( stg_model_t* mod );
-  stg_pose_t*            stg_model_get_odom( stg_model_t* mod );
-  stg_kg_t*              stg_model_get_mass( stg_model_t* mod );
-  stg_guifeatures_t*     stg_model_get_guifeatures( stg_model_t* mod );
-  stg_bool_t             stg_model_get_obstaclereturn( stg_model_t* mod );
-  stg_laser_return_t     stg_model_get_laserreturn( stg_model_t* mod );
-  stg_fiducial_return_t*  stg_model_get_fiducialreturn( stg_model_t* mod );
-  stg_friction_t*        stg_model_get_friction( stg_model_t* mod );
+
+  // todo - make all of these copy data into a buffer!
+  void stg_model_get_velocity( stg_model_t* mod, stg_velocity_t* dest );
+  void stg_model_get_geom( stg_model_t* mod, stg_geom_t* dest );
+  void stg_model_get_color( stg_model_t* mod, stg_color_t* dest );
+  void stg_model_get_pose( stg_model_t* mod, stg_pose_t* dest );
+  void stg_model_get_mass( stg_model_t* mod, stg_kg_t* dest );
+  void stg_model_get_guifeatures( stg_model_t* mod, stg_guifeatures_t* dest );
+  void stg_model_get_obstaclereturn( stg_model_t* mod, stg_obstacle_return_t* dest  );
+  void stg_model_get_laserreturn( stg_model_t* mod, stg_laser_return_t* dest );
+  void stg_model_get_fiducialreturn( stg_model_t* mod,stg_fiducial_return_t* dest );
+  //void stg_model_get_friction( stg_model_t* mod,stg_friction_t* dest );
 
   //stg_energy_data_t*     stg_model_get_energy_data( stg_model_t* mod );
   //stg_energy_config_t*   stg_model_get_energy_config( stg_model_t* mod );
@@ -867,7 +887,12 @@ itl_mode_t;
   int stg_model_get_command( stg_model_t* mod, void* dest, size_t len );
   int stg_model_get_data( stg_model_t* mod, void* dest, size_t len );
   int stg_model_get_config( stg_model_t* mod, void* dest, size_t len );
-  
+
+  /// associate an arbitrary data item with this model, referenced by the string 'name'.
+  void  stg_model_set_prop( stg_model_t* mod, char* name, void* data );
+  /// retrieve a data item from the model, referenced by the string "name".
+  void* stg_model_get_prop( stg_model_t* mod, char* name );
+
   // generic versions that can be overridden
   //void* _model_get_data( stg_model_t* mod, size_t* len );
   //void* _model_get_cmd( stg_model_t* mod, size_t* len );
@@ -920,6 +945,8 @@ itl_mode_t;
 
   /**@}*/
 
+  /// type-specific property get and set  
+  void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom );
 
   // SOME DEFAULT VALUES FOR PROPERTIES -----------------------------------
 

@@ -24,7 +24,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: stg_driver.cc,v 1.16 2004-12-13 09:54:54 rtv Exp $
+ * CVS: $Id: stg_driver.cc,v 1.17 2004-12-29 06:39:32 rtv Exp $
  */
 
 // DOCUMENTATION ---------------------------------------------------------------------
@@ -720,17 +720,17 @@ void StgDriver::HandleConfigPosition( device_record_t* device, void* client, voi
     {  
     case PLAYER_POSITION_GET_GEOM_REQ:
       {
-	stg_geom_t* geom = stg_model_get_geom( device->mod );
-	assert(geom);
+	stg_geom_t geom;
+	stg_model_get_geom( device->mod,&geom );
 
 	// fill in the geometry data formatted player-like
 	player_position_geom_t pgeom;
-	pgeom.pose[0] = ntohs((uint16_t)(1000.0 * geom->pose.x));
-	pgeom.pose[1] = ntohs((uint16_t)(1000.0 * geom->pose.y));
-	pgeom.pose[2] = ntohs((uint16_t)RTOD(geom->pose.a));
+	pgeom.pose[0] = ntohs((uint16_t)(1000.0 * geom.pose.x));
+	pgeom.pose[1] = ntohs((uint16_t)(1000.0 * geom.pose.y));
+	pgeom.pose[2] = ntohs((uint16_t)RTOD(geom.pose.a));
 	
-	pgeom.size[0] = ntohs((uint16_t)(1000.0 * geom->size.x)); 
-	pgeom.size[1] = ntohs((uint16_t)(1000.0 * geom->size.y)); 
+	pgeom.size[0] = ntohs((uint16_t)(1000.0 * geom.size.x)); 
+	pgeom.size[1] = ntohs((uint16_t)(1000.0 * geom.size.y)); 
 	
 	this->PutReply( device->id, client, 
 		  PLAYER_MSGTYPE_RESP_ACK, 
@@ -744,7 +744,7 @@ void StgDriver::HandleConfigPosition( device_record_t* device, void* client, voi
 	
 	stg_pose_t origin;
 	memset(&origin,0,sizeof(origin));
-	stg_model_set_odom( device->mod, &origin );
+	stg_model_position_set_odom( device->mod, &origin );
 	
 	this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_ACK, NULL );
       }
@@ -765,7 +765,7 @@ void StgDriver::HandleConfigPosition( device_record_t* device, void* client, voi
 	pose.y = ((double)(int32_t)ntohl(req->y)) / 1000.0;
 	pose.a = DTOR( (double)(int32_t)ntohl(req->theta) );
 
-	stg_model_set_odom( device->mod, &pose );
+	stg_model_position_set_odom( device->mod, &pose );
 	
 	PRINT_DEBUG3( "set odometry to (%.2f,%.2f,%.2f)",
 		      pose.x,
@@ -818,17 +818,17 @@ void StgDriver::HandleConfigFiducial( device_record_t* device, void* client, voi
       {	
 	// just get the model's geom - Stage doesn't have separate
 	// fiducial geom (yet)
-	stg_geom_t* geom = stg_model_get_geom(device->mod);
-	assert(geom);
+	stg_geom_t geom;
+	stg_model_get_geom(device->mod,&geom);
 	
 	// fill in the geometry data formatted player-like
 	player_fiducial_geom_t pgeom;
-	pgeom.pose[0] = htons((uint16_t)(1000.0 * geom->pose.x));
-	pgeom.pose[1] = htons((uint16_t)(1000.0 * geom->pose.y));
-	pgeom.pose[2] = htons((uint16_t)RTOD( geom->pose.a));
+	pgeom.pose[0] = htons((uint16_t)(1000.0 * geom.pose.x));
+	pgeom.pose[1] = htons((uint16_t)(1000.0 * geom.pose.y));
+	pgeom.pose[2] = htons((uint16_t)RTOD( geom.pose.a));
 	
-	pgeom.size[0] = htons((uint16_t)(1000.0 * geom->size.x)); 
-	pgeom.size[1] = htons((uint16_t)(1000.0 * geom->size.y)); 
+	pgeom.size[0] = htons((uint16_t)(1000.0 * geom.size.x)); 
+	pgeom.size[1] = htons((uint16_t)(1000.0 * geom.size.y)); 
 	
 	pgeom.fiducial_size[0] = ntohs((uint16_t)100); // TODO - get this info
 	pgeom.fiducial_size[1] = ntohs((uint16_t)100);
@@ -899,11 +899,12 @@ void StgDriver::HandleConfigFiducial( device_record_t* device, void* client, voi
 
   case PLAYER_FIDUCIAL_GET_ID:
       {
-	stg_fiducial_return_t* ret = stg_model_get_fiducialreturn(device->mod); 
+	stg_fiducial_return_t ret;
+	stg_model_get_fiducialreturn(device->mod,&ret); 
 
 	// fill in the data formatted player-like
 	player_fiducial_id_t pid;
-	pid.id = htonl((int)*ret);
+	pid.id = htonl((int)ret);
 	
 	if( PutReply(  device->id, client, PLAYER_MSGTYPE_RESP_ACK, 
 		      &pid, sizeof(pid), NULL ) != 0 )
@@ -1030,7 +1031,7 @@ void StgDriver::HandleConfigLaser( device_record_t* device, void* client, void* 
     case PLAYER_LASER_GET_GEOM:
       {	
 	stg_geom_t geom;
-	memcpy( &geom, stg_model_get_geom( device->mod ), sizeof(stg_geom_t));
+	stg_model_get_geom( device->mod, &geom );
 	
 	PRINT_DEBUG5( "received laser geom: %.2f %.2f %.2f -  %.2f %.2f",
 		      geom.pose.x, 

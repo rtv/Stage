@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.18 $
+//  $Revision: 1.19 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -34,14 +34,29 @@ int position_startup( stg_model_t* mod );
 int position_shutdown( stg_model_t* mod );
 int position_update( stg_model_t* mod );
 
+typedef struct
+{
+  stg_pose_t odom_origin; // odometry origin
+  stg_pose_t odom; // current odom value
+  double x_error, y_error, a_error; // params for odom error model (not yet implemented)
+} stg_model_position_t;
+
+
 stg_model_t* stg_position_create( stg_world_t* world, 
 				  stg_model_t* parent, 
 				  stg_id_t id, 
 				  char* token )
 {
   PRINT_DEBUG( "created position model" );
-
-  stg_model_t* mod = stg_model_create( world, parent, id, STG_MODEL_POSITION, token );
+  
+  stg_model_t* mod = stg_model_create_extended( world, 
+						parent, 
+						id,		
+						STG_MODEL_POSITION, 
+						token,
+						sizeof(stg_model_position_t) );  
+  // get the type-sepecific extension we added to the end of the model
+  stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
   
   // override the default methods
   mod->f_startup = position_startup;
@@ -77,7 +92,13 @@ stg_model_t* stg_position_create( stg_world_t* world,
 }
 
 int position_update( stg_model_t* mod )
-{   
+{ 
+  // get the type-sepecific extension we added to the end of the model
+  stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
+  
+  //stg_model_position_t pp;
+  //stg_model_position_t* pos = &pp;
+
   PRINT_DEBUG1( "[%lu] position update", mod->world->sim_time );
 
   if( mod->subs )   // no driving if noone is subscribed
@@ -142,9 +163,9 @@ int position_update( stg_model_t* mod )
 	  {
 	    PRINT_DEBUG( "position control mode" );
 	    
-	    double x_error = cmd.x - mod->odom.x;
-	    double y_error = cmd.y - mod->odom.y;
-	    double a_error = NORMALIZE( cmd.a - mod->odom.a );
+	    double x_error = cmd.x - pos->odom.x;
+	    double y_error = cmd.y - pos->odom.y;
+	    double a_error = NORMALIZE( cmd.a - pos->odom.a );
 	    
 	    PRINT_DEBUG3( "errors: %.2f %.2f %.2f\n", x_error, y_error, a_error );
 	    
@@ -197,7 +218,7 @@ int position_update( stg_model_t* mod )
 		      double goal_angle = atan2( y_error, x_error );
 		      double goal_distance = hypot( y_error, x_error );
 		      
-		      a_error = NORMALIZE( goal_angle - mod->odom.a );
+		      a_error = NORMALIZE( goal_angle - pos->odom.a );
 		      calc.a = MIN( a_error, max_speed_a );
 		      calc.a = MAX( a_error, -max_speed_a );
 		      
@@ -244,7 +265,7 @@ int position_update( stg_model_t* mod )
       
       // set the data here
       stg_position_data_t data;
-      memcpy( &data.pose, &mod->odom, sizeof(stg_pose_t));  
+      memcpy( &data.pose, &pos->odom, sizeof(stg_pose_t));  
       memcpy( &data.velocity, &mod->velocity, sizeof(stg_velocity_t));
       
       data.stall = mod->stall;
@@ -258,15 +279,40 @@ int position_update( stg_model_t* mod )
       //pthread_mutex_unlock( mod->mutex );
     }
   
+
+  // store our postion before moving
+  stg_pose_t before;
+  stg_model_get_pose( mod, &before );
+
   // now  inherit the normal update - this does the actual moving
   _model_update( mod );
 
+  // record the movement as odometry
+  stg_pose_t after;
+  stg_model_get_pose( mod, &after );
+  
+  double a = pos->odom.a;
+  
+  double dx = after.x - before.x;;
+  double dy = after.y - before.y;
+  double da = after.a - before.a;
+  
+  pos->odom.x -= dx * cos(pos->odom_origin.a) - dy * sin(pos->odom_origin.a);
+  pos->odom.y -= dx * sin(pos->odom_origin.a) + dy * cos(pos->odom_origin.a);
+  pos->odom.a += da;
+  pos->odom.a = NORMALIZE(pos->odom.a);
+  
   return 0; //ok
 }
 
 int position_startup( stg_model_t* mod )
 {
   PRINT_DEBUG( "position startup" );
+
+  // set the starting pose as my initial odom position
+  stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
+  stg_model_get_pose( mod, &pos->odom_origin );
+
   return 0; // ok
 }
 
@@ -284,4 +330,12 @@ int position_shutdown( stg_model_t* mod )
 
   return 0; // ok
 }
+
+void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom )
+{
+  // get the type-sepecific extension we added to the end of the model
+  stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
+  memcpy( &pos->odom, odom, sizeof(stg_pose_t));
+}
+
 

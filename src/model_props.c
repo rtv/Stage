@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.31 $
+//  $Revision: 1.32 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -183,46 +183,6 @@ int _model_shutdown( stg_model_t* mod )
   return 0; //ok
 }
 
-/* These functions are wrappers that implement the polymorphic hooks
-   for derived model type
-*/
-
-/* int stg_model_set_data( stg_model_t* mod, void* data, size_t len ) */
-/* { */
-/*   assert( mod->f_set_data ); */
-/*   return mod->f_set_data(mod, data, len); */
-/* } */
-
-/* int stg_model_set_command( stg_model_t* mod, void* cmd, size_t len ) */
-/* { */
-/*   assert( mod->f_set_command );   */
-/*   return mod->f_set_command(mod, cmd, len);  */
-/* } */
-
-/* int stg_model_set_config( stg_model_t* mod, void* config, size_t len ) */
-/* { */
-/*   assert( mod->f_set_config );x */
-/*   return mod->f_set_config(mod, config, len); */
-/* } */
-
-/* void* stg_model_get_data( stg_model_t* mod, size_t* len ) */
-/* { */
-/*   assert( mod->f_get_data ); */
-/*   return mod->f_get_data( mod, len ); */
-/* } */
-
-/* void* stg_model_get_command( stg_model_t* mod, size_t* len ) */
-/* { */
-/*   assert( mod->f_get_command ); */
-/*   return mod->f_get_command( mod, len ); */
-/* } */
-
-/* void* stg_model_get_config( stg_model_t* mod, size_t* len ) */
-/* { */
-/*   assert( mod->f_get_config ); */
-/*   return mod->f_get_config( mod, len ); */
-/* } */
-
 int stg_model_update( stg_model_t* mod )
 {
   assert( mod->f_update );
@@ -248,55 +208,93 @@ int stg_model_shutdown( stg_model_t* mod )
 //------------------------------------------------------------------------
 // basic model properties
 
-stg_bool_t stg_model_get_obstaclereturn( stg_model_t* mod   )
+void stg_model_get_pose( stg_model_t* model, stg_pose_t* pose )
 {
-  return mod->obstacle_return;
+  assert(model);
+  assert(pose);
+  memcpy( pose, &model->pose, sizeof(stg_pose_t));
 }
 
-int stg_model_set_obstaclereturn( stg_model_t* mod, stg_bool_t* val )
+void stg_model_get_velocity( stg_model_t* mod, stg_velocity_t* dest )
 {
-  mod->obstacle_return = *val;
-  return 0;
+  assert(mod);
+  assert(dest);
+  memcpy( dest, &mod->velocity, sizeof(mod->velocity));
 }
 
-stg_bool_t stg_model_get_blobreturn( stg_model_t* mod   )
+void stg_model_get_geom( stg_model_t* mod, stg_geom_t* dest )
 {
-  return mod->blob_return;
+  assert(mod);
+  assert(dest);
+  memcpy( dest, &mod->geom, sizeof(mod->geom));
 }
 
-int stg_model_set_blobreturn( stg_model_t* mod, stg_bool_t val )
+void stg_model_get_color( stg_model_t* mod, stg_color_t* dest )
 {
-  mod->blob_return = val;
-  return 0;
+  assert(mod);
+  assert(dest);
+  memcpy( dest, &mod->color, sizeof(mod->color));
 }
 
-stg_pose_t* stg_model_get_odom( stg_model_t* model )
+void stg_model_get_mass( stg_model_t* mod, stg_kg_t* dest )
 {
-  return &model->odom;
+  assert(mod);
+  assert(dest);
+  memcpy( dest, &mod->obstacle_return, sizeof(mod->obstacle_return));
 }
 
-int stg_model_set_odom( stg_model_t* mod, stg_pose_t* pose )
+void stg_model_get_guifeatures( stg_model_t* mod, stg_guifeatures_t* dest )
 {
-  memcpy( &mod->odom, pose, sizeof(stg_pose_t) );
-  return 0;
-}// background (used e.g for laser scan fill)
-
-/* int stg_model_set_friction( stg_model_t* mod, stg_friction_t* fricp ) */
-/* { */
-/*   mod->friction = *fricp; */
-/*   return 0; */
-/* } */
-
-/* stg_friction_t* stg_model_get_friction( stg_model_t* mod ) */
-/* { */
-/*   return &mod->friction; */
-/* } */
-
-
-stg_pose_t* stg_model_get_pose( stg_model_t* model )
-{
-  return &model->pose;
+  assert(mod);
+  assert(dest);
+  memcpy( dest, &mod->guifeatures, sizeof(mod->guifeatures));
 }
+
+void stg_model_get_laserreturn( stg_model_t* mod, stg_laser_return_t* dest )
+{
+  assert(mod);
+  assert(dest);
+  memcpy( dest, &mod->laser_return, sizeof(mod->laser_return));
+}
+
+void stg_model_get_fiducialreturn( stg_model_t* mod,stg_fiducial_return_t* dest )
+{
+  assert(mod);
+  assert(dest);
+  memcpy( dest, &mod->fiducial_return, sizeof(mod->fiducial_return));
+}
+
+//void stg_model_get_friction( stg_model_t* mod,stg_friction_t* dest )
+//{
+//assert(mod);
+//assert(dest);
+//memcpy( dest, &mod->friction, sizeof(mod->friction));
+//}
+
+
+void stg_model_get_obstaclereturn( stg_model_t* mod, stg_obstacle_return_t* dest )
+{
+  assert(mod);
+  assert(dest);
+  memcpy( dest, &mod->obstacle_return, sizeof(mod->obstacle_return));
+}
+
+
+void stg_model_get_blobreturn( stg_model_t* mod, stg_blob_return_t* dest )
+{
+  assert(mod);
+  assert(dest);
+  memcpy( dest, &mod->blob_return, sizeof(mod->blob_return));
+}
+
+stg_polygon_t* stg_model_get_polygons( stg_model_t* mod, size_t* poly_count )
+{
+  *poly_count = mod->polygons->len;
+  return (stg_polygon_t*)mod->polygons->data;
+}
+
+/* SET basic model properties
+
 
 /** set the pose of a model in its parent's CS */
 int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
@@ -343,12 +341,6 @@ int stg_model_set_global_pose( stg_model_t* mod, stg_pose_t* gpose )
   return 0; //ok
 }
 
-
-stg_geom_t* stg_model_get_geom( stg_model_t* mod )
-{
-  return &mod->geom;
-}
-
 int stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom )
 { 
   // unrender from the matrix
@@ -372,12 +364,6 @@ int stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom )
   return 0;
 }
 
-
-stg_polygon_t* stg_model_get_polygons( stg_model_t* mod, size_t* poly_count )
-{
-  *poly_count = mod->polygons->len;
-  return (stg_polygon_t*)mod->polygons->data;
-}
 
 int stg_model_set_polygons( stg_model_t* mod, stg_polygon_t* polys, size_t poly_count )
 {
@@ -414,28 +400,28 @@ int stg_model_set_polygons( stg_model_t* mod, stg_polygon_t* polys, size_t poly_
 
 int stg_model_set_laserreturn( stg_model_t* mod, stg_laser_return_t* val )
 {
-  mod->laser_return = *val;
+  memcpy( &mod->laser_return, val, sizeof(mod->laser_return));
+  return 0;
+}
+
+int stg_model_set_obstaclereturn( stg_model_t* mod, stg_obstacle_return_t* val )
+{
+  memcpy( &mod->obstacle_return, val, sizeof(mod->obstacle_return));
   return 0;
 }
 
 
-stg_velocity_t* stg_model_get_velocity( stg_model_t* mod )
+int stg_model_set_velocity( stg_model_t* mod, stg_velocity_t* val )
 {
-  return &mod->velocity;
-}
-
-int stg_model_set_velocity( stg_model_t* mod, stg_velocity_t* vel )
-{
-  memcpy( &mod->velocity, vel, sizeof(mod->velocity) );
+  memcpy( &mod->velocity, val, sizeof(mod->velocity) );
   return 0;
 }
 
-
-stg_color_t stg_model_get_color( stg_model_t* mod )
+int stg_model_set_blobreturn( stg_model_t* mod, stg_blob_return_t* val )
 {
-  return mod->color;
+  memcpy( &mod->blob_return, val, sizeof(mod->blob_return) );
+  return 0;
 }
-
 
 int stg_model_set_color( stg_model_t* mod, stg_color_t* col )
 {
@@ -447,20 +433,10 @@ int stg_model_set_color( stg_model_t* mod, stg_color_t* col )
   return 0; // OK
 }
 
-stg_kg_t* stg_model_get_mass( stg_model_t* mod )
-{
-  return &mod->mass;
-}
-
 int stg_model_set_mass( stg_model_t* mod, stg_kg_t* mass )
 {
   memcpy( &mod->mass, mass, sizeof(mod->mass) );
   return 0;
-}
-
-stg_guifeatures_t* stg_model_get_guifeatures( stg_model_t* mod )
-{
-  return &mod->guifeatures;
 }
 
 
@@ -476,12 +452,6 @@ int stg_model_set_guifeatures( stg_model_t* mod, stg_guifeatures_t* gf )
   gui_model_features( mod );
 
   return 0;
-}
-
-
-stg_fiducial_return_t* stg_model_get_fiducialreturn( stg_model_t* mod )
-{
-  return &mod->fiducial_return;
 }
 
 int stg_model_set_fiducialreturn( stg_model_t* mod, stg_fiducial_return_t* val )     

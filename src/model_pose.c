@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.43 $
+//  $Revision: 1.44 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -123,8 +123,8 @@ int stg_model_update_pose( stg_model_t* mod )
   stg_model_get_global_pose( mod, &gpose );
 
   // store the old pose for odom calculation
-  stg_pose_t old_pose;
-  memcpy( &old_pose, &gpose, sizeof(gpose));
+  //stg_pose_t old_pose;
+  //memcpy( &old_pose, &gpose, sizeof(gpose));
 
   // convert msec to sec
   double interval = (double)mod->world->sim_interval / 1000.0;
@@ -164,6 +164,11 @@ int stg_model_update_pose( stg_model_t* mod )
 	{
 	  PRINT_DEBUG( "HIT something immovable!" );
 	  mod->stall = 1;
+
+	  // set velocity to zero
+	  stg_velocity_t zero_v;
+	  memset( &zero_v, 9, sizeof(zero_v));
+	  stg_model_set_velocity( mod, &zero_v );
 	}
       /*
 	  else
@@ -214,11 +219,16 @@ int stg_model_update_pose( stg_model_t* mod )
       stg_model_set_global_pose( mod, &gpose );
 
 
-      // accumulate changes in position
-      mod->odom.x += gpose.x - old_pose.x;
-      mod->odom.y += gpose.y - old_pose.y;
-      mod->odom.a += gpose.a - old_pose.a;
-      mod->odom.a = NORMALIZE( mod->odom.a );
+      // calculate change in position in world coords
+      //double dx = gpose.x - old_pose.x;
+      //double dy = gpose.y - old_pose.y;
+      //double da = gpose.a - old_pose.a;
+
+      // s
+      //mod->odom.x += gpose.x - old_pose.x;
+      //mod->odom.y += gpose.y - old_pose.y;
+      //mod->odom.a += gpose.a - old_pose.a;
+      //mod->odom.a = NORMALIZE( mod->odom.a );
   
       // ignore acceleration in energy model for now, we just pay
       // something to move.	

@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.41 2004-12-13 09:54:55 rtv Exp $
+# CVS: $Id: test.world,v 1.42 2004-12-29 06:39:32 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -10,7 +10,7 @@ resolution     0.02
 #resolution_low  1.0
 
 interval_sim 100  # milliseconds per update step
-interval_real 33 # real-time milliseconds per update step
+interval_real 100 # real-time milliseconds per update step
 
 # defines Pioneer-like robots
 include "pioneer.inc"
@@ -63,7 +63,7 @@ define laserpioneer pioneer2dx
 laserpioneer
 (
   name "p0"
-  pose [-9.085 2.168 -348.743]
+  pose [-10 2 90]
 )
 
 laserpioneer
@@ -137,21 +137,21 @@ laserpioneer
 )
 laserpioneer
 (
-  color "darkred"
+  color "DarkRed"
   name "p11"
   pose [-10.049 -2.875 -135.449]
 )
 
 laserpioneer
 (
-  color "darkblue"
+  color "DarkBlue"
   name "p12"
   pose [-2.638 5.434 -107.986]
 )
 
 laserpioneer
 (
-  color "lightblue"
+  color "LightBlue"
   name "p13"
   pose [-4.129 -3.192 -135.449]
 )
