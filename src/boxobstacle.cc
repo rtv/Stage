@@ -1,30 +1,28 @@
-///////////////////////////////////////////////////////////////////////////
-//
-// File: boxobstacle.cc
-// Author: Andrew Howard
-// Date: 18 Dec 2000
-// Desc: Simulates box obstacles
-//
-// CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.19 $
-//
-// Usage:
-//  (empty)
-//
-// Theory of operation:
-//  (empty)
-//
-// Known bugs:
-//  (empty)
-//
-// Possible enhancements:
-//  (empty)
-//
-///////////////////////////////////////////////////////////////////////////
-
-#define ENABLE_RTK_TRACE 1
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/*
+ * Desc: Simulates a simple box obstacle
+ * Author: Andrew Howard
+ * Date: 7 Dec 2000
+ * CVS info: $Id: boxobstacle.cc,v 1.20 2002-06-10 17:14:29 inspectorg Exp $
+ */
 
 #include "world.hh"
 #include "boxobstacle.hh"
@@ -32,7 +30,6 @@
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
-//
 CBoxObstacle::CBoxObstacle(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {
@@ -52,7 +49,6 @@ CBoxObstacle::CBoxObstacle(CWorld *world, CEntity *parent)
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the laser data
-//
 void CBoxObstacle::Update( double simtime )
 {
   CEntity::Update(simtime);

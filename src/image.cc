@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.16 2002-03-15 18:39:50 gerkey Exp $
+ * $Id: image.cc,v 1.17 2002-06-10 17:14:30 inspectorg Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -17,6 +17,7 @@ using namespace std;
 #include <zlib.h>
 #endif
 
+#include "stage_types.hh"
 #include "image.hh"
 
 //#define DEBUG
@@ -181,7 +182,7 @@ void Nimage::load_raw(char* fname)
 }
 
 
-
+// Load a pnm image.
 bool Nimage::load_pnm(const char* fname)
 {
   char magicNumber[10];
@@ -190,17 +191,20 @@ bool Nimage::load_pnm(const char* fname)
 
   ifstream source( fname );
 
-  if( !source ) // open failed!
+  if( !source )
+  {
+    PRINT_ERR1("unable to open image file [%s]", fname);
     return false;
+  }
 
   source >> magicNumber;
 
   if( strcmp(magicNumber, "P5" ) != 0 )
-    {
-      printf("image file is of incorrect type:"
-	     " should be pnm, binary, monochrome (magic number P5)\n");
-      return false; 
-    }
+  {
+    PRINT_ERR("image file is of incorrect type:"
+              " should be pnm, binary, monochrome (magic number P5)");
+    return false; 
+  }
   
   // ignore the end of this line and the following comment-line
   source.ignore( 1024, '\n' );
@@ -230,7 +234,6 @@ bool Nimage::load_pnm(const char* fname)
 
 
 // Load a gzipped pnm file
-//
 bool Nimage::load_pnm_gz(const char* fname)
 {
 #ifndef INCLUDE_ZLIB
@@ -251,8 +254,8 @@ bool Nimage::load_pnm_gz(const char* fname)
   gzFile file = gzopen(fname, "r");
   if (file == NULL)
   {
-      printf("unable to open image file\n");
-      return false;
+    PRINT_ERR1("unable to open image file [%s]", fname);
+    return false;
   }
 
   // Extremely crude and ugly file parsing! Fix sometime.  Andrew.
@@ -265,8 +268,8 @@ bool Nimage::load_pnm_gz(const char* fname)
   gzgets(file, magicNumber, sizeof(magicNumber));
   if (strcmp(magicNumber, "P5\n") != 0)
   {
-    printf("image file is of incorrect type:"
-	   " should be pnm, binary, monochrome (maginc number P5)\n");
+    PRINT_ERR("image file is of incorrect type:"
+              " should be pnm, binary, monochrome (magic number P5)");
     return false;
   }
   
@@ -278,18 +281,18 @@ bool Nimage::load_pnm_gz(const char* fname)
   sscanf(line, "%d", &whiteNum);
 
   if (data)
-      delete[] data;
+    delete[] data;
   data = new unsigned char[ width * height ];
   
   for(int n=0; n<height; n++ )
   {
-      for(int m=0; m<width; m++ )
-      {
-          unsigned char a = gzgetc(file);
-          if (a > 0)
-              a = 1;
-          set_pixel( m,n, a );
-      }
+    for(int m=0; m<width; m++ )
+    {
+      unsigned char a = gzgetc(file);
+      if (a > 0)
+        a = 1;
+      set_pixel( m,n, a );
+    }
   }
 
   gzclose(file);

@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.14 2002-06-10 04:57:49 rtv Exp $
+ * CVS info: $Id: server.cc,v 1.15 2002-06-10 17:14:30 inspectorg Exp $
  */
 
 #include <arpa/inet.h>
@@ -192,7 +192,6 @@ CStageServer::~CStageServer( void )
 // Load the world file and create all of the relevant entities.
 bool CStageServer::LoadFile( char* filename )
 {
-  
   //////////////////////////////////////////////////////////////////////
   // FIGURE OUT THE WORLD FILE NAME
   
@@ -250,7 +249,7 @@ bool CStageServer::LoadFile( char* filename )
   // Load the settings for this entity
   if (!this->wall->Load(&this->worldfile, section))
   {
-    PRINT_ERR( "Failed to load background settings" );
+    PRINT_ERR( "failed to load environment" );
     return false;
   }
   

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.13 $
+//  $Author: inspectorg $
+//  $Revision: 1.14 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -93,7 +93,7 @@ bool CFixedObstacle::Load(CWorldFile *worldfile, int section)
   int len = strlen(this->filename);
   if (strcmp(&(this->filename[len - 4]), ".fig") == 0)
   {
-    /* REINSTATE
+    /* REINSTATE someday
        if (!img.load_fig(this->filename, this->ppm, this->scale))
        return false;
     */
@@ -104,12 +104,9 @@ bool CFixedObstacle::Load(CWorldFile *worldfile, int section)
     if (!this->image->load_pnm_gz(this->filename))
       return false;
   }
-  else if (!this->image->load_pnm(this->filename))
+  else 
   {
-    char zipname[128];
-    strcpy(zipname, this->filename);
-    strcat(zipname, ".gz");
-    if (!this->image->load_pnm_gz(zipname))
+    if (!this->image->load_pnm(this->filename))
       return false;
   }
 

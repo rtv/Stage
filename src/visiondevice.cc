@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.cc,v 1.30 2002-06-10 02:28:21 gerkey Exp $
+ * CVS info: $Id: visiondevice.cc,v 1.31 2002-06-10 17:14:30 inspectorg Exp $
  */
 
 #include <math.h>
@@ -419,7 +419,9 @@ void CVisionDevice::RtkStartup()
   CEntity::RtkStartup();
   
   // Create a figure representing this object
-  this->vision_fig = rtk_fig_create(m_world->canvas, NULL, 49);
+  this->vision_fig = rtk_fig_create(m_world->canvas, this->fig, 99);
+  rtk_fig_origin(this->vision_fig, -0.75, +0.75, 0.0);
+  rtk_fig_movemask(this->vision_fig, RTK_MOVE_TRANS);
 }
 
 
@@ -440,14 +442,15 @@ void CVisionDevice::RtkUpdate()
 {
   CEntity::RtkUpdate();
  
-  // Get global pose
-  double gx, gy, gth;
-  GetGlobalPose(gx, gy, gth);
-
-  int style = 0;
-
   rtk_fig_clear(this->vision_fig);
-  rtk_fig_origin(this->vision_fig, gx-0.75, gy+0.75, 0.0 );
+
+  // The vision figure is attached to the entity, but we dont want
+  // it to rotate.  Fix the rotation here.
+  double gx, gy, gth;
+  double nx, ny, nth;
+  GetGlobalPose(gx, gy, gth);
+  rtk_fig_get_origin(this->vision_fig, &nx, &ny, &nth);
+  rtk_fig_origin(this->vision_fig, nx, ny, -gth);
   
   player_vision_data_t data;
 
@@ -459,16 +462,16 @@ void CVisionDevice::RtkUpdate()
     {  
       double scale = 0.007; // shrink from pixels to meters for display
 	
-      rtk_fig_color( this->vision_fig, 0.8, 0.8, 0.8 ); // Grey
-	
       short width = ntohs(data.width);
       short height = ntohs(data.height);
       double mwidth = width * scale;
       double mheight = height * scale;
 	
       // the view outline rectangle
-      rtk_fig_rectangle(this->vision_fig, 0.0, 0.0, 0.0, 
-                        mwidth,  mheight, 1 ); 
+      rtk_fig_color_rgb32(this->vision_fig, 0xFFFFFF);
+      rtk_fig_rectangle(this->vision_fig, 0.0, 0.0, 0.0, mwidth,  mheight, 1 ); 
+      rtk_fig_color_rgb32(this->vision_fig, 0x000000);
+      rtk_fig_rectangle(this->vision_fig, 0.0, 0.0, 0.0, mwidth,  mheight, 0); 
 
       for( int c=0; c<VISION_NUM_CHANNELS;c++)
       {
