@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.40 $
+//  $Revision: 1.41 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -15,7 +15,7 @@
 
 //#define DEBUG
 
-#include "stage.h"
+#include "stage_internal.h"
 #include "gui.h"
 
 extern rtk_fig_t* fig_debug_rays; 
@@ -120,7 +120,7 @@ int stg_model_update_pose( stg_model_t* mod )
   stg_model_global_velocity( mod, &gvel );
       
   stg_velocity_t gpose;
-  stg_model_global_pose( mod, &gpose );
+  stg_model_get_global_pose( mod, &gpose );
 
   // convert msec to sec
   double interval = (double)mod->world->sim_interval / 1000.0;

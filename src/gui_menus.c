@@ -1,7 +1,7 @@
 #define DEBUG
 
 #include <stdlib.h>
-#include "stage.h"
+#include "stage_internal.h"
 #include "gui.h"
 
 extern rtk_fig_t* fig_debug_geom;

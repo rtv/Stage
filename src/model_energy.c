@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.11 $
+//  $Revision: 1.12 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -99,7 +99,7 @@ int stg_model_energy_data_service( stg_model_t* mod )
   if( cfg->probe_range > 0 )
     {
       stg_pose_t pose;
-      stg_model_global_pose( mod, &pose );
+      stg_model_get_global_pose( mod, &pose );
       
       itl_t* itl = itl_create( pose.x, pose.y, pose.a, cfg->probe_range, 
 			       mod->world->matrix, 
@@ -168,7 +168,7 @@ void stg_model_energy_data_render( stg_model_t* mod )
     {
       // place the visualization a little away from the device
       //stg_pose_t pose;
-      //model_global_pose( mod, &pose );
+      //model_get_global_pose( mod, &pose );
   
       //pose.x += 0.0;
       //pose.y -= 0.5;

@@ -41,7 +41,7 @@
 #include "player/drivertable.h"
 
 
-#include "stage.h"
+#include "stage_internal.h"
 
 class Stage1p4 : public Driver
 {

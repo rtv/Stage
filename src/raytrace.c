@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "stage.h"
+#include "stage_internal.h"
 
 extern rtk_fig_t* fig_debug_rays;
 

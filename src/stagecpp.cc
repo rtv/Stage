@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.69 2004-12-02 01:25:32 rtv Exp $
+// $Id: stagecpp.cc,v 1.70 2004-12-02 18:51:11 rtv Exp $
 
 //#define DEBUG
 
@@ -16,7 +16,7 @@
 // TODO - get this from a system header?
 #define MAXPATHLEN 256
 
-#include "stage.h"
+#include "stage_internal.h"
 #include "gui.h"
 #include "worldfile.hh"
 

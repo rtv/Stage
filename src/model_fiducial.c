@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.26 $
+//  $Revision: 1.27 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -21,7 +21,7 @@ The fiducialfinder model simulates a fiducial-detecting device.
 //#define DEBUG
 
 #include <math.h>
-#include "stage.h"
+#include "stage_internal.h"
 #include "gui.h"
 
 extern rtk_fig_t* fig_debug_rays;
@@ -102,7 +102,7 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
     return; 
 
   stg_pose_t hispose;
-  stg_model_global_pose( him, &hispose );
+  stg_model_get_global_pose( him, &hispose );
   
   double dx = hispose.x - mfb->pose.x;
   double dy = hispose.y - mfb->pose.y;
@@ -197,7 +197,7 @@ int fiducial_update( stg_model_t* mod )
   assert(len==sizeof(stg_fiducial_config_t));
 
   mfb.fiducials = g_array_new( FALSE, TRUE, sizeof(stg_fiducial_t) );
-  stg_model_global_pose( mod, &mfb.pose );
+  stg_model_get_global_pose( mod, &mfb.pose );
   
   // for all the objects in the world
   g_hash_table_foreach( mod->world->models, model_fiducial_check_neighbor, &mfb );

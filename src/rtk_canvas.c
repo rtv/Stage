@@ -21,7 +21,7 @@
 /*
  * Desc: Rtk canvas functions
  * Author: Andrew Howard, Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.9 2004-12-02 01:25:31 rtv Exp $
+ * CVS: $Id: rtk_canvas.c,v 1.10 2004-12-02 18:51:10 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -876,7 +876,12 @@ void rtk_on_configure(GtkWidget *widget, GdkEventConfigure *event, rtk_canvas_t 
 // Process expose events
 void rtk_on_expose(GtkWidget *widget, GdkEventExpose *event, rtk_canvas_t *canvas)
 {
-  // do nothing
+ if (canvas->fg_pixmap)
+  {
+    // Copy foreground pixmap to screen
+    gdk_draw_pixmap(canvas->canvas->window, canvas->gc, canvas->fg_pixmap,
+                    0, 0, 0, 0, canvas->sizex, canvas->sizey);
+  }
 }
 
 

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.57 $
+//  $Revision: 1.58 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -24,7 +24,7 @@ The laser model simulates a scanning laser rangefinder
 
 //#define DEBUG
 
-#include "stage.h"
+#include "stage_internal.h"
 extern rtk_fig_t* fig_debug_rays;
 
 #define TIMING 0
@@ -206,7 +206,7 @@ void laser_render_data(  stg_model_t* mod, void* data, size_t len )
     }
   
   stg_pose_t pose;
-  stg_model_global_pose( mod, &pose );
+  stg_model_get_global_pose( mod, &pose );
   
   rtk_fig_origin( mod->gui.data, pose.x, pose.y, pose.a );  
   

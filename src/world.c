@@ -10,7 +10,7 @@ Implements a world - a collection of models and a matrix.
 
 //#define DEBUG
 
-#include "stage.h"
+#include "stage_internal.h"
 
 
 

@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.81 2004-11-21 19:09:04 rtv Exp $
+# $Id: Makefile.am,v 1.82 2004-12-02 18:51:09 rtv Exp $
 
 # install these headers
 include_HEADERS = stage.h 
@@ -42,7 +42,6 @@ libstage_la_SOURCES = \
 	stg_sonar.cc \
 	stg_time.cc \
 	stg_time.h \
-	token.c \
 	world.c \
 	worldfile.cc \
 	worldfile.hh \
@@ -60,3 +59,4 @@ libstage_la_LIBADD = @GTK_LIBS@
 
 
 #	model_energy.c
+#	token.c 

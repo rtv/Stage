@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.37 $
+//  $Revision: 1.38 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -22,7 +22,7 @@ The ranger model simulates an array of sonar or infra-red (IR) range sensors.
 //#define DEBUG
 
 
-#include "stage.h"
+#include "stage_internal.h"
 #include "gui.h"
 
 extern rtk_fig_t* fig_debug_rays;

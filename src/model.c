@@ -25,7 +25,7 @@ void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose )
 
   // get model's global pose
   stg_pose_t org;
-  stg_model_global_pose( mod, &org );
+  stg_model_get_global_pose( mod, &org );
 
   //printf( "g2l global origin %.2f %.2f %.2f\n",
   //  org.x, org.y, org.a );
@@ -287,7 +287,7 @@ int stg_model_is_related( stg_model_t* mod1, stg_model_t* mod2 )
 void stg_model_global_velocity( stg_model_t* mod, stg_velocity_t* gvel )
 {
   stg_pose_t gpose;
-  stg_model_global_pose( mod, &gpose );
+  stg_model_get_global_pose( mod, &gpose );
 
   double cosa = cos( gpose.a );
   double sina = sin( gpose.a );
@@ -317,14 +317,14 @@ void stg_model_set_global_velocity( stg_model_t* mod, stg_velocity_t* gvel )
 }
 
 /// get the model's position in the global frame
-void  stg_model_global_pose( stg_model_t* mod, stg_pose_t* gpose )
+void  stg_model_get_global_pose( stg_model_t* mod, stg_pose_t* gpose )
 { 
   stg_pose_t parent_pose;
   
   // find my parent's pose
   if( mod->parent )
     {
-      stg_model_global_pose( mod->parent, &parent_pose );
+      stg_model_get_global_pose( mod->parent, &parent_pose );
       
       gpose->x = parent_pose.x + mod->pose.x * cos(parent_pose.a) 
 	- mod->pose.y * sin(parent_pose.a);
@@ -344,7 +344,7 @@ void  stg_model_global_pose( stg_model_t* mod, stg_pose_t* gpose )
 void stg_model_local_to_global( stg_model_t* mod, stg_pose_t* pose )
 {  
   stg_pose_t origin;   
-  stg_model_global_pose( mod, &origin );
+  stg_model_get_global_pose( mod, &origin );
   stg_pose_sum( pose, &origin, pose );
 }
 
@@ -379,8 +379,6 @@ void stg_model_map( stg_model_t* mod, gboolean render )
       stg_pose_t org;
       memcpy( &org, &mod->geom.pose, sizeof(org));
       stg_model_local_to_global( mod, &org );
-      
-      //stg_model_global_pose( mod, &org );
       
       stg_matrix_polygons( mod->world->matrix, 
 			   org.x, org.y, org.a,

@@ -14,7 +14,7 @@ Code for the Stage user interface window.
 //#define DEBUG
 //#undef DEBUG
 
-#include "stage.h"
+#include "stage_internal.h"
 #include "gui.h"
 
 // models that have fewer rectangles than this get matrix rendered when dragged
@@ -600,7 +600,7 @@ void stg_model_render_polygons( stg_model_t* mod )
 void gui_model_render_geom_global( stg_model_t* mod, rtk_fig_t* fig )
 {
   stg_pose_t glob;
-  stg_model_global_pose( mod, &glob );
+  stg_model_get_global_pose( mod, &glob );
   
   rtk_fig_color_rgb32( fig, 0x0000FF ); // blue
   //rtk_fig_line( fig, 0, 0, glob.x, glob.y );
@@ -609,7 +609,7 @@ void gui_model_render_geom_global( stg_model_t* mod, rtk_fig_t* fig )
   if( mod->parent )
     {
       stg_pose_t parentpose;
-      stg_model_global_pose( mod->parent, &parentpose );
+      stg_model_get_global_pose( mod->parent, &parentpose );
       rtk_fig_line( fig, parentpose.x, parentpose.y, glob.x, glob.y );
     }
   else
