@@ -1,6 +1,6 @@
 
 /*
-  $Id
+  $Id: test.c,v 1.1.2.2 2003-02-03 07:12:48 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
