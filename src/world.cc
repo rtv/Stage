@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.14 $
+//  $Revision: 1.15 $
 //
 // Usage:
 //  (empty)
@@ -719,6 +719,38 @@ CPlayerServer *CWorld::FindServer(int port)
             return m_servers[i].m_server;
     }
     return NULL;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise puck representation
+//
+void CWorld::InitPuck()
+{
+    m_puck_count = 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Add a puck to the world
+// Returns an index for puck
+//
+int CWorld::AddPuck(CEntity* puck)
+{
+    assert(m_puck_count < ARRAYSIZE(m_puck));
+    int index = m_puck_count++;
+    m_puck[index].puck = puck;
+    return index;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Get the pointer to a puck
+//
+CEntity* CWorld::GetPuck(int index)
+{
+    if (index < 0 || index >= m_puck_count)
+        return NULL;
+    return(m_puck[index].puck);
 }
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/gripperdevice.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -82,6 +82,17 @@ class CGripperDevice : public CPlayerDevice
                   m_gripper_error, m_lift_up, m_lift_down,
                   m_lift_moving, m_lift_error;
                    
+    // this is the range at which the gripper will actually pick
+    // up a puck
+    private: double m_gripper_range;
+
+    // this is the maximum number of pucks that we can carry
+    private: int m_puck_capacity;
+    
+    // these are the pucks we're carrying right now
+    private: int m_puck_count;
+    private: CEntity* m_pucks[1000];
+
     // structure for exporting Gripper-specific data to a GUI
     private: ExportGripperData expGripper; 
 

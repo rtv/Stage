@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.19 $
+//  $Revision: 1.20 $
 //
 // Usage:
 //  (empty)
@@ -27,7 +27,6 @@
 #define ENABLE_RTK_TRACE 1
 
 #include <math.h>
-#include <values.h>   // for MAXDOUBLE
 
 #include "world.hh"
 #include "pioneermobiledevice.hh"
@@ -75,9 +74,13 @@ CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CEntity *parent, CPlay
     m_draggable = true;
 #endif
 
+    // gui export stuff
     exp.objectType = pioneer_o;
     exp.width = m_size_x;
     exp.height = m_size_y;
+    expPosition.shape = m_shape;
+    expPosition.radius = m_radius;
+    exp.data = (char*)&expPosition;
     strcpy( exp.label, "Pioneer" );
 }
 
@@ -272,6 +275,7 @@ bool CPioneerMobileDevice::InCollision(double px, double py, double pth)
 void CPioneerMobileDevice::SetShape(pioneer_shape_t shape)
 {
   m_shape = shape;
+  expPosition.shape = (int)shape;
   exp.width = exp.height = m_radius;
 }
 

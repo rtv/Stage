@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/pioneermobiledevice.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.7 $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -84,6 +84,9 @@ class CPioneerMobileDevice : public CPlayerDevice
 
     // Circular robot:
     private: double m_radius;
+    
+    // structure for exporting pioneer-specific data to a GUI
+    private: ExportPositionData expPosition; 
 
     public: double GetRadius() { return(m_radius); }
 

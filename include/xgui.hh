@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xgui.hh,v 1.4 2001-07-06 01:23:05 gerkey Exp $
+ * $Id: xgui.hh,v 1.5 2001-07-11 02:09:14 gerkey Exp $
  ************************************************************************/
 
 #ifndef WIN_H
@@ -105,6 +105,7 @@ public:
   void RenderBox( ExportData* exp, bool extended  );
   void RenderLaserBeacon( ExportData* exp, bool extended  );
   void RenderPuck( ExportData* exp, bool extended  );
+  void RenderGripper( ExportData* exp, bool extended  );
   void RenderMisc( ExportData* exp, bool extended  );
   void RenderSonar( ExportData* exp, bool extended  );
   void RenderPlayer( ExportData* exp, bool extended  );

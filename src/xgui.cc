@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xgui.cc,v 1.4 2001-07-06 01:23:06 gerkey Exp $
+ * $Id: xgui.cc,v 1.5 2001-07-11 02:09:15 gerkey Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -15,7 +15,7 @@
 
 #include "xgui.hh"
 #include "world.hh"
-#include "pioneermobiledevice.hh"
+#include "pioneermobiledevice.hh" // for pioneer_shape_t
 
 #include <X11/keysym.h> 
 #include <X11/keysymdef.h> 
@@ -888,6 +888,7 @@ void CXGui::RenderObject( ExportData* exp, bool extended )
         RenderLaserBeaconDetector( exp, extended ); break;
       case vision_o: RenderVision( exp, extended ); break;
       case ptz_o: RenderPTZ( exp, extended ); break;  
+      case gripper_o: RenderGripper( exp, extended ); break;  
       
       case generic_o: RenderGenericObject( exp ); 
         cout << "Warning: GUI asked to render a GENERIC object" << endl;
@@ -1086,9 +1087,11 @@ void CXGui::RenderPioneer( ExportData* exp, bool extended )
   //SetForeground( RGB(255,0,0) ); // red Pioneer base color
   SetForeground( RGB(255,100,100) ); // red Pioneer base color
 
-  CPioneerMobileDevice* pioneer = (CPioneerMobileDevice*)(exp->objectId);
-
-  if(pioneer->GetShape() == rectangle)
+  //CPioneerMobileDevice* pioneer = (CPioneerMobileDevice*)(exp->objectId);
+  ExportPositionData* pioneer_data = (ExportPositionData*)(exp->data);
+  pioneer_shape_t shape = (pioneer_shape_t)(pioneer_data->shape);
+  
+  if(shape == rectangle)
   {
     DPoint pts[7];
     GetRect( exp->x, exp->y, exp->width/2.0, exp->height/2.0, exp->th, pts );
@@ -1104,11 +1107,11 @@ void CXGui::RenderPioneer( ExportData* exp, bool extended )
 
     DrawLines( pts, 7 );
   }
-  else if(pioneer->GetShape() == circle)
+  else if(shape == circle)
   {
     DPoint pts[3];
 
-    double radius = pioneer->GetRadius();
+    double radius = pioneer_data->radius;
     
     // draw the chassis
     DrawCircle(exp->x, exp->y, radius);
@@ -1165,6 +1168,54 @@ void CXGui::RenderLaserBeacon( ExportData* exp, bool extended )
   GetRect( exp->x, exp->y, exp->width/2.0, exp->height/2.0, exp->th, pts );
 
   DrawPolygon( pts, 4 );
+}
+
+void CXGui::RenderGripper( ExportData* exp, bool extended )
+{
+  /*
+  ExportGripperData* expGripper = (ExportGripperData*)(exp->data);
+  SetForeground(RGB(0, 255, 0));
+  
+  // Draw the gripper
+  DPoint pts[4];
+  GetRect( exp->x, exp->y, exp->width/2.0, exp->height/2.0, exp->th, pts );
+  DrawPolygon( pts, 4 );
+  
+  printf("paddles_open: %d\n", expGripper->paddles_open);
+  // Draw the paddles
+  if(expGripper->paddles_open)
+  {
+    GetRect( exp->x+(exp->width/2.0)+(expGripper->paddle_width/2.0), 
+             exp->y+(exp->height/2.0)-(expGripper->paddle_height/2.0), 
+             expGripper->paddle_width/2.0, 
+             expGripper->paddle_height/2.0, 
+             exp->th, pts );
+    DrawPolygon( pts, 4 );
+
+    GetRect( exp->x+(exp->width/2.0)+(expGripper->paddle_width/2.0), 
+             exp->y-(exp->height/2.0)+(expGripper->paddle_height/2.0), 
+             expGripper->paddle_width/2.0, 
+             expGripper->paddle_height/2.0, 
+             exp->th, pts );
+    DrawPolygon( pts, 4 );
+  }
+  else
+  {
+    GetRect( exp->x+(exp->width/2.0)+(expGripper->paddle_width/2.0), 
+             exp->y+(expGripper->paddle_height/2.0), 
+             expGripper->paddle_width/2.0, 
+             expGripper->paddle_height/2.0, 
+             exp->th, pts );
+    DrawPolygon( pts, 4 );
+
+    GetRect( exp->x+(exp->width/2.0)+(expGripper->paddle_width/2.0), 
+             exp->y-(expGripper->paddle_height/2.0), 
+             expGripper->paddle_width/2.0, 
+             expGripper->paddle_height/2.0, 
+             exp->th, pts );
+    DrawPolygon( pts, 4 );
+  }
+  */
 }
 
 void CXGui::RenderPuck( ExportData* exp, bool extended )

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -97,6 +97,8 @@ bool CPuck::Startup()
 
     // assume puck is 200g
     m_mass = .2;
+
+    m_index = m_world->AddPuck(this);
     
     //m_index = m_world->AddPuck(this);
     return CEntity::Startup();

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/puck.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -79,6 +79,10 @@ class CPuck : public CEntity
     //
     public: double GetDiameter() { return(exp.width); }
 
+    // puck index in the world rep
+    //
+    private: int m_index;
+    
     // Current mapped pose
     //
     private: double m_map_px, m_map_py, m_map_pth;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -144,6 +144,9 @@ class CEntity
 
     // struct that holds data for external GUI rendering
     //
+    // i made this public so that an object can get another object's
+    // type - BPG
+    //protected: ExportData exp;
     public: ExportData exp;
    
     // compose and return the export data structure

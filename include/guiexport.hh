@@ -1,12 +1,14 @@
 /*************************************************************************
  * guiexport.hh - data types for exporting data to an external GUI
  * RTV
- * $Id: guiexport.hh,v 1.4 2001-07-10 03:10:15 gerkey Exp $
+ * $Id: guiexport.hh,v 1.5 2001-07-11 02:09:14 gerkey Exp $
  ************************************************************************/
 #ifndef GUIEXPORT_H
 #define GUIEXPORT_H
 
 #include <stage.h> // for some player data types and sizes
+
+//#include "pioneermobiledevice.hh" // for definition of pioneer_shape_t
 
 #define LABELSIZE 64
 #define SONARSAMPLES PLAYER_NUM_SONAR_SAMPLES 
@@ -103,7 +105,16 @@ typedef struct
   bool paddles_closed;
   bool lift_up;
   bool lift_down;
+  double paddle_width;
+  double paddle_height;
 } ExportGripperData;
+
+typedef struct
+{
+  int shape;
+  double radius;
+} ExportPositionData;
+
 
 
 // for now the import type can be the same as the export type.

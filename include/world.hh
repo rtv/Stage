@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.7 $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -59,7 +59,6 @@ enum EWorldLayer
     layer_vision = 2,
     layer_puck = 3,
 };
-
 
 // World class
 //
@@ -191,6 +190,34 @@ class CWorld
     private: int m_server_count;
     private: struct {int m_port; CPlayerServer *m_server;} m_servers[512];
 
+    
+    ///////////////////////////////////////////////////////////////////////////
+    // Puck stuff
+
+    // Initialise puck representation
+    //
+    private: void InitPuck();
+
+    // Add a puck to the world
+    // Returns an index for the puck
+    //
+    public: int AddPuck(CEntity* puck);
+    
+    // Set the position of a puck
+    //
+    //public: void SetPuck(int index, double px, double py, double pth);
+
+    // Get the pointer to a puck
+    //
+    public: CEntity* GetPuck(int index);
+
+    // Array of pucks
+    //
+    private: int m_puck_count;
+    private: struct
+    {
+      CEntity* puck;
+    } m_puck[1000];
     
     ///////////////////////////////////////////////////////////////////////////
     // Laser beacon device stuff
