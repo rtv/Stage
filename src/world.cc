@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.55 $
+//  $Revision: 1.56 $
 //
 // Usage:
 //  (empty)
@@ -41,6 +41,8 @@
 extern int g_interval, g_timestep; // from main.cc
 extern int  g_instance; //from main.cc
 extern char* g_host_id;
+
+extern bool g_wait_for_env_server;
 
 //#include <stage.h>
 #include "world.hh"
@@ -338,7 +340,9 @@ bool CWorld::Startup()
   if( m_run_truth_server )  SetupTruthServer();
   
   // spawn an XS process, unless we disabled it (rtkstage disables xs by default)
-  if( !global_no_gui && m_run_xs && m_run_truth_server && m_run_environment_server ) SpawnXS();
+  if( !global_no_gui && m_run_xs 
+      && m_run_truth_server && m_run_environment_server ) 
+    SpawnXS();
   
   // Startup all the objects
   // this lets them calculate how much shared memory they'll need
