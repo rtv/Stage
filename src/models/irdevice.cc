@@ -21,11 +21,11 @@
  * Desc: Simulates a noisy IR ring
  * Author: John Sweeney, adapted from sonardevice.cc
  * Date: 22 Aug 2002
- * CVS info: $Id: irdevice.cc,v 1.2 2003-06-17 19:15:26 rtv Exp $
+ * CVS info: $Id: irdevice.cc,v 1.3 2003-06-19 17:07:55 gerkey Exp $
  */
 
-#include <iostream>
 #include <math.h>
+#include <iostream>
 #include "world.hh"
 #include "irdevice.hh"
 #include "raytrace.hh"
