@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.25 2001-09-25 18:20:18 vaughan Exp $
+ * $Id: xs.cc,v 1.26 2001-09-25 22:40:34 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -51,7 +51,7 @@ Display* display = 0;
 int screen = 0;
 
 const char* versionStr = "0.3";
-const char* titleStr = "XS    ";
+const char* titleStr = "XS";
 
 #define USAGE  "\nUSAGE: xs [-h <host>] [-tp <port>] [-ep <port>]\n\t[-geometry <geometry string>] [-zoom <factor>]\n\t[-pan <X\%xY\%>]\nDESCRIPTIONS:\n-h <host>: connect to Stage on this host (default `localhost')\n-tp <port>: connect to Stage's Truth server on this TCP port (default `6601')\n-ep <port>: connect to Stage's Environment server on this TCP port (default `6602')\n-geometry <string>*: standard X geometry specification\n-zoom <factor>*: floating point zoom multiplier\n-pan <X\%xY\%>*: pan initial view X percent of maximum by Y percent of maximum\n"
 
@@ -779,7 +779,16 @@ CXGui::CXGui( int argc, char** argv, environment_t* anenv )
 
   draw_all_devices = false;
 
-  sprintf( window_title,  "%s v.%s", titleStr, versionStr );
+  char hostname[64];
+
+  gethostname( hostname, 64 );
+  
+  /* now, strip down to just the hostname */
+  char* first_dot;
+  if( (first_dot = strchr(hostname,'.') ))
+    *first_dot = '\0';
+  
+  sprintf( window_title,  "%s@%s", titleStr, hostname );
 
   num_proxies = 0;
 
