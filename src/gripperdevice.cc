@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.8.2.4 $
+//  $Revision: 1.8.2.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -31,7 +31,7 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
   m_config_len  = 0;
   
   m_size_x = 0.08;
-  m_size_y = 0.2;
+  m_size_y = 0.20;
 
   m_player_type = PLAYER_GRIPPER_CODE;
   m_stage_type = GripperType;
@@ -57,7 +57,8 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
   // these are initial values
   m_paddles_open = true;
   m_paddles_closed = false;
-  
+
+  // this is deprecated stuff - should get rid of the exp stuff eventually
   // gui export stuff
   exp.objectType = gripper_o;
   exp.width = .08;
@@ -209,6 +210,55 @@ void CGripperDevice::Update( double sim_time )
     //
     PutData(&data, sizeof(data));
 }
+
+bool CGripperDevice::BreakBeam( int beam )
+{
+  double px, py, pth;
+  GetGlobalPose( px, py, pth );
+
+  double xoffset, yoffset;
+  
+  assert( beam < 2 );
+  
+  double costh = cos( pth );
+  double sinth = sin( pth );
+
+  // the break beams run two-thirds the length of the gripper
+  // ignoring the open/closed state for now.
+
+  double xdist;
+  double ydist = m_size_y/3.0;
+
+  switch( beam )
+    {
+    case 0: xdist = m_size_x;  break;
+    case 1: xdist = m_size_x/2.0;  break;
+    default: printf( "uknown gripper break beam number %d\n", beam );
+    }
+  
+  xoffset = xdist * costh - xdist * sinth;
+  yoffset = ydist * sinth + ydist * costh;
+    
+  CEntity* ent = 0;
+
+  CLineIterator lit( px+xoffset, py+yoffset, pth - M_PI/2.0, m_size_y * 0.66, 
+		     m_world->ppm, m_world->matrix, PointToBearingRange ); 
+  
+  while( (ent = lit.GetNextEntity()) )
+    {
+      //puts( "I SEE SOMETHING!" );
+      
+      // grippers only perceive pucks right now.
+      if( ent->m_stage_type == PuckType )
+	{
+	  //puts( "its a PUCK!" );
+	  return true;
+	}
+    }
+
+  return false;
+}
+
     
 // Package up the gripper's state in the right format
 //
@@ -221,9 +271,12 @@ void CGripperDevice::MakeData(player_gripper_data_t* data, size_t len)
     return;
   }
 
-  // break beams are sort of implemented
-  //   both beams are broken when we're holding a puck
+  // break beams are now implemented
   data->beams = 0;
+  data->beams |=  BreakBeam( 0 ) ? 0x04 : 0x00;
+  data->beams |=  BreakBeam( 1 ) ? 0x08 : 0x00;
+  
+  //   both beams are broken when we're holding a puck
   data->beams |= (m_puck_count&&!m_gripper_consume) ? 0x04 : 0x00;
   data->beams |= (m_puck_count&&!m_gripper_consume) ? 0x08 : 0x00;
 
@@ -290,9 +343,6 @@ void CGripperDevice::PickupObject()
   CRectangleIterator rit( px+m_size_x, py, pth, m_size_x, m_size_y, 
   		  m_world->ppm, m_world->matrix ); 
 
-  //CRectangleIterator rit( 1.0, 1.0, 0, 1.0, 1.0,
-  //		  m_world->ppm, m_world->matrix ); 
-  
   
   CEntity* ent = 0;
 
