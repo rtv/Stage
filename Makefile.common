@@ -3,7 +3,7 @@
 # stage/Makefile.common - build and installation configurations
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile.common,v 1.54 2002-06-11 07:34:34 gerkey Exp $
+# $Id: Makefile.common,v 1.55 2002-06-15 00:28:19 rtv Exp $
 #
 # Notes: All user-configurable paths and build options should be specified 
 #        here. This file is included by Makefile and src/Makefile. 
@@ -27,21 +27,14 @@ PLAYER_DIR = $(HOME)/player-$(PLAYER_VERSION)
 ##############################################################################
 # INSTALLATION CONFIGURATION (required for 'make install')
 
-# Stage will be installed under the directory INSTALL_BASE-VERSION.
+# Stage will be installed under the directory $(INSTALL_BASE)-$(VERSION).
 # Change INSTALL_BASE if you want to install somewhere else.
 # You can also specify the INSTALL_BASE from the make command line, eg:
 # make install -e INSTALL_BASE=~/playerstage/stage
 
-# By default, stage is installed in ~/stage
+# By default, stage is installed in ~/stage-$(VERSION)
 INSTALL_BASE = $(HOME)/stage
 INSTALL_DIR = $(INSTALL_BASE)-$(VERSION)
-
-# Rtk configuration files will be installed here
-INSTALL_ETC = /usr/local/etc/rtk
-
-SRC_DIST_NAME = Stage-$(VERSION)-src
-SRC_DIST_BLEEDING_NAME = Stage-Bleeding-src
-BIN_DIST_NAME = Stage-$(VERSION)-i386
 
 INSTALL_BIN = $(INSTALL_DIR)/bin
 
@@ -54,11 +47,11 @@ INSTALL_TOOLS = $(INSTALL_DIR)/tools
 #############################################################################
 # 
 # rtkstage needs the path to the rtk2 source tree - these defaults
-# should work fine, as we now distribute rtk2 with stage
+# should work fine, as we distribute rtk2 with stage
 
 RTK_DIR = rtk2
-RTK_INC = $(RTK_DIR) #/include
-RTK_LIB = $(RTK_DIR) #/lib
+RTK_INC = $(RTK_DIR)
+RTK_LIB = $(RTK_DIR)
 
 ##############################################################################
 # X COLOR DATABASE CONFIGURATION (required)
@@ -135,10 +128,20 @@ CC = g++
 # use the same tool to link
 LINKER = $(CC)
 
+## MOST USERS DON'T NEED TO CHANGE ANYTHING BEYOND HERE ####################
+
 #############################################################################
 # Other useful definitions used throughout the build process
 #
 MAKEDEP=makedepend
+
+#############################################################################
+#
+# these are used for creating distributions
+
+SRC_DIST_NAME = Stage-$(VERSION)-src
+SRC_DIST_BLEEDING_NAME = Stage-Bleeding-src
+BIN_DIST_NAME = Stage-$(VERSION)-i386
 
 #############################################################################
 # CONFIGURATION FOR HRL PROPRIETARY CODE 
@@ -147,3 +150,4 @@ MAKEDEP=makedepend
 #HRL_DIR = ../hrl
 #HRL_FLAGS = -DHRL_HEADERS -I$(HRL_DIR)
 #HRL_LINK = -L$(HRL_DIR) -lhrlstage 
+
