@@ -10,7 +10,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <signal.h>
-
+#include <locale.h>
 #include <glib.h>
 
 //#define DEBUG
@@ -22,6 +22,9 @@
 
 #define STARTMESSAGE "* Stage-"VERSION" *"
 #define STOPMESSAGE  "Stage finished."
+
+// from library.c
+int library_create( void );
 
 // Signal catchers ---------------------------------------------------
 
@@ -91,6 +94,10 @@ int install_signal_catchers( void )
 
 int main( int argc, char* argv[] )
 {
+  if(!setlocale(LC_ALL,"POSIX"))
+    fputs("Warning: failed to setlocale() to POSIX; file parsing may fail or behave "
+	  "strangely if your locale is set to something other than POSIX.\n", stderr);
+  
   printf( "%s ", STARTMESSAGE ); fflush(stdout);
 
   int server_port = STG_DEFAULT_SERVER_PORT;
