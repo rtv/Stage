@@ -64,7 +64,7 @@ described on the manual page for each model type.
 // create a world containing a passel of Stage models based on the
 // worldfile
 
-stg_world_t* stg_world_create_from_file( char* worldfile_path )
+stg_world_t* stg_world_create_from_file( const char* worldfile_path )
 {
   wf_load( worldfile_path );
   

@@ -490,6 +490,7 @@ extern "C" {
   int wf_section_count( void );
   const char* wf_get_section_type( int section );
   int wf_get_parent_section( int section );
+  const char* wf_get_filename( void);
 
   /** @} */
 

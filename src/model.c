@@ -1,6 +1,7 @@
 
 #define PACKPOSE(P,X,Y,A) {P->x=X; P->y=Y; P->a=A;}
 
+#include <limits.h> // for PATH_MAX
 #include <assert.h>
 #include <math.h>
 
@@ -1295,15 +1296,25 @@ void stg_model_load( stg_model_t* mod )
       stg_rotrect_t* rects = NULL;
       int num_rects = 0;
       
+      int image_width=0, image_height=0;
+      
+      char full[PATH_MAX];
+      
+      if( bitmapfile[0] == '/' )
+	strcpy( full, bitmapfile );
+      else
+	{
+	  char *tmp = strdup(wf_get_filename());
+	  snprintf( full, PATH_MAX,
+		    "%s/%s",  dirname(tmp), bitmapfile );
+	}
+      
 #ifdef DEBUG
-      char buf[MAXPATHLEN];
-      char* path = getcwd( buf, MAXPATHLEN );
-      PRINT_DEBUG2( "in %s attempting to load %s",
-		    path, bitmapfile );
+      printf( "attempting to load image %s\n",
+	      full );
 #endif
       
-      int image_width=0, image_height=0;
-      if( stg_load_image( bitmapfile, &rects, &num_rects, 
+      if( stg_load_image( full, &rects, &num_rects, 
 			  &image_width, &image_height ) )
 	exit( -1 );
       

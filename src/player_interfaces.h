@@ -54,16 +54,16 @@ class StgDriver : public Driver
   // todo - faster lookup with a better data structure
   struct device_record* LookupDevice( player_device_id_t id );
   
-  // SIMULATION INTERFACE
-  int InitSimulation( struct device_record* device,
-		      ConfigFile* cf, 
-		      int section );
-
-  int InitModel( struct device_record* device, 
-		 ConfigFile* cf,
-		 int section,
-		 stg_model_type_t mod_type );
-
+  // simulation iterface
+  int CreateDeviceSimulation( player_device_id_t player_id, 
+			      ConfigFile* cf, int section );
+  // all other interfaces
+  int CreateDeviceModel( player_device_id_t player_id,
+			 ConfigFile* cf, int section );
+  
+  stg_model_t* LocateModel( const char* basename, 
+			    stg_model_type_t mod_type );
+  
   /// an array of pointers to device_record_t structs, defined below
   GPtrArray* devices;
   
@@ -80,7 +80,7 @@ typedef struct device_record
   player_device_id_t id;
   stg_model_t* mod;
 
-  const char* model_name;
+  //const char* model_name;
 
   size_t data_len;
   

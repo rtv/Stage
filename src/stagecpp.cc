@@ -1,6 +1,6 @@
 // Thin-as-possible C Wrappers for C++ worldfile calls, using a single static worldfile.
 // This is a hacky use of the old C++ worldfile code.
-// $Id: stagecpp.cc,v 1.76 2005-01-04 19:12:47 gerkey Exp $
+// $Id: stagecpp.cc,v 1.77 2005-02-28 00:13:19 rtv Exp $
 
 #include "stage_internal.h"
 #include "gui.h"
@@ -129,3 +129,7 @@ int wf_get_parent_section( int section )
   return wf.GetEntityParent( section );
 }
 
+const char* wf_get_filename( )
+{
+  return( (const char*)wf.filename );
+}

@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.126 2005-02-26 08:39:46 rtv Exp $
+ * CVS: $Id: stage.h,v 1.127 2005-02-28 00:13:19 rtv Exp $
  */
 
 
@@ -453,7 +453,7 @@ extern "C" {
   
   /** Create a new world as described in the worldfile [worldfile_path] 
    */
-  stg_world_t* stg_world_create_from_file( char* worldfile_path );
+  stg_world_t* stg_world_create_from_file( const char* worldfile_path );
 
   /** Destroy a world and everything it contains
    */
