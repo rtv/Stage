@@ -1,8 +1,94 @@
+///////////////////////////////////////////////////////////////////////////
+//
+// File: model_pose.c
+// Author: Richard Vaughan
+// Date: 10 June 2004
+//
+// CVS info:
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
+//  $Author: rtv $
+//  $Revision: 1.10 $
+//
+///////////////////////////////////////////////////////////////////////////
 
 #include <math.h>
 
+//#define DEBUG
+
 #include "stage.h"
 #include "raytrace.h"
+#include "gui.h"
+
+int model_pose_update( model_t* model );
+int model_pose_set( model_t* mod, void* data, size_t len );
+void model_pose_init( model_t* mod );
+void model_obstacle_return_init( model_t* mod );
+
+void model_pose_register(void)
+{ 
+  PRINT_DEBUG( "POSE INIT" );
+  
+  model_register_init( STG_PROP_OBSTACLERETURN, model_obstacle_return_init );
+
+  model_register_init( STG_PROP_POSE, model_pose_init );
+  model_register_update( STG_PROP_POSE, model_pose_update );
+  model_register_set( STG_PROP_POSE, model_pose_set );
+}
+
+
+void model_pose_init( model_t* mod )
+{
+  // install a default pose
+  stg_pose_t newpose;
+  newpose.x = 0;
+  newpose.y = 0;
+  newpose.a = 0; 
+  model_set_prop_generic( mod, STG_PROP_POSE, &newpose, sizeof(newpose) );
+}
+
+void model_obstacle_return_init( model_t* mod )
+{
+  stg_bool_t val = TRUE;
+  model_set_prop_generic( mod, STG_PROP_OBSTACLERETURN, &val, sizeof(val) );
+}
+
+// convencience
+stg_bool_t model_obstacle_get( model_t* model )
+{
+  stg_bool_t* obs = model_get_prop_data_generic( model, STG_PROP_OBSTACLERETURN );
+  assert(obs);
+  return *obs;
+}
+
+int model_pose_set( model_t* mod, void*data, size_t len )
+{
+  if( len != sizeof(stg_pose_t) )
+    {
+      PRINT_WARN2( "received wrong size pose (%d/%d)",
+		  len, sizeof(stg_pose_t) );
+      return 1; // error
+    }
+  
+  // if the new pose is different
+  stg_pose_t* current_pose  = model_pose_get( mod );
+  
+  if( memcmp( current_pose, data, sizeof(stg_pose_t) ))
+    {
+      model_map( mod, 0 );
+      
+      // receive the new pose
+      model_set_prop_generic( mod, STG_PROP_POSE, data, len );
+      
+      model_map( mod, 1 );
+      
+    // move the rtk figure to match
+      gui_model_pose( mod );
+    }
+  
+  return 0; // OK
+}
+
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Check to see if the given pose will yield a collision with obstacles.
@@ -17,15 +103,18 @@ model_t* model_test_collision( model_t* mod, double* hitx, double* hity )
   // raytrace along all our rectangles. expensive, but most vehicles
   // will just be a single rect, grippers 3 rects, etc. not too bad.
   
+  int count=0;
+  stg_line_t* lines = model_lines_get(mod, &count);
+
   // no body? no collision
-  if( mod->lines->len < 1 )
+  if( count < 1 )
     return NULL;
 
   int l;
-  for( l=0; l<(int)mod->lines->len; l++ )
+  for( l=0; l<count; l++ )
     {
       // find the global coords of this line
-      stg_line_t* line = &g_array_index( mod->lines, stg_line_t, l );
+      stg_line_t* line = &lines[l];
 
       stg_pose_t p1;
       p1.x = line->x1;
@@ -47,7 +136,7 @@ model_t* model_test_collision( model_t* mod, double* hitx, double* hity )
       model_t* hitmod;
       while( (hitmod = itl_next( itl )) ) 
 	{
-	  if( hitmod != mod && hitmod->obstacle_return ) //&& !IsDescendent(ent) &&
+	  if( hitmod != mod && model_obstacle_get(hitmod) ) //&& !IsDescendent(ent) &&
 	    //if( ent != this && ent->obstacle_return )
 	    {
 	      if( hitx || hity ) // if the caller needs to know hit points
@@ -66,11 +155,20 @@ model_t* model_test_collision( model_t* mod, double* hitx, double* hity )
 }
 
 
-void model_update_pose( model_t* model )
-{  
-  stg_velocity_t* vel = &model->velocity;
-  stg_pose_t* pose = &model->pose;
-  //stg_energy_t* en = &model->energy;
+// convencience - get the model's pose.
+stg_pose_t* model_pose_get( model_t* model )
+{
+  stg_pose_t* pose = model_get_prop_data_generic( model, STG_PROP_POSE );
+  assert(pose);
+  return pose;
+}
+
+int model_pose_update( model_t* model )
+{ 
+  PRINT_DEBUG1( "pose update method model %d", model->id );
+ 
+  stg_velocity_t* vel = model_velocity_get(model);  
+  stg_pose_t* pose = model_pose_get( model );
   
   if( vel->x || vel->y || vel->a )
   {
@@ -104,7 +202,8 @@ void model_update_pose( model_t* model )
 	
 	// ignore acceleration in energy model for now, we just pay
 	// something to move.	
-	model_energy_consume( model, STG_ENERGY_COST_MOTIONKG * model->mass );
+	stg_kg_t mass = *model_mass_get( model );
+	model_energy_consume( model, STG_ENERGY_COST_MOTIONKG * mass );
 
       }
     else // reset the old pose
@@ -112,3 +211,10 @@ void model_update_pose( model_t* model )
   }
 }
 
+void gui_model_pose( model_t* mod )
+{ 
+  stg_pose_t* pose = model_pose_get( mod );
+  //PRINT_DEBUG( "gui model pose" );
+  rtk_fig_origin( gui_model_figs(mod)->top, 
+		  pose->x, pose->y, pose->a );
+}

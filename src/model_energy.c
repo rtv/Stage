@@ -1,5 +1,20 @@
+///////////////////////////////////////////////////////////////////////////
+//
+// File: model_energy.c
+// Author: Richard Vaughan
+// Date: 10 June 2004
+//
+// CVS info:
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
+//  $Author: rtv $
+//  $Revision: 1.2 $
+//
+///////////////////////////////////////////////////////////////////////////
+
 #include <sys/time.h>
 #include <math.h>
+
+//#define DEBUG
 
 #include "stage.h"
 #include "raytrace.h"
@@ -11,19 +26,109 @@ extern rtk_fig_t* fig_debug;
 #define TIMING 0
 #define ENERGY_FILLED 1
 
+void model_energy_config_init( model_t* mod );
+int model_energy_config_set( model_t* mod, void* config, size_t len );
 
-void model_energy_shutdown( model_t* mod )
-{
-  //model_set_prop_generic( mod, STG_PROP_ENERGYDATA, NULL, 0 );
+void model_energy_data_init( model_t* mod );
+int model_energy_data_shutdown( model_t* mod );
+int model_energy_data_service( model_t* mod );
+int model_energy_data_set( model_t* mod, void* data, size_t len );
+
+void model_energy_data_render( model_t* mod );
+void model_energy_config_render( model_t* mod );
+
+void model_energy_register(void)
+{ 
+  PRINT_DEBUG( "ENERGY INIT" );  
+  
+  model_register_init( STG_PROP_ENERGYCONFIG, model_energy_config_init );
+  model_register_set( STG_PROP_ENERGYCONFIG, model_energy_config_set );
+
+  model_register_init( STG_PROP_ENERGYDATA, model_energy_data_init );
+  model_register_set( STG_PROP_ENERGYDATA, model_energy_data_set );
+  model_register_shutdown( STG_PROP_ENERGYDATA, model_energy_data_shutdown );
+  model_register_service( STG_PROP_ENERGYDATA, model_energy_data_service );
 }
 
-void model_energy_consume( model_t* mod, stg_watts_t rate )
+stg_energy_config_t* model_energy_config_get( model_t* mod )
+{
+  stg_energy_config_t* cfg = 
+    model_get_prop_data_generic( mod, STG_PROP_ENERGYCONFIG );
+  assert(cfg);
+  return cfg;
+}
+
+stg_energy_data_t* model_energy_data_get( model_t* mod )
 {
   stg_energy_data_t* data = (stg_energy_data_t*)
     model_get_prop_data_generic( mod, STG_PROP_ENERGYDATA );
+  assert(data);
+  return data;
+}
 
-  stg_energy_config_t* cfg = (stg_energy_config_t*)
-    model_get_prop_data_generic( mod, STG_PROP_ENERGYCONFIG );
+void model_energy_config_init( model_t* mod )
+{
+  stg_energy_config_t cfg;
+  memset(&cfg,0,sizeof(cfg));
+
+  cfg.capacity = STG_DEFAULT_ENERGY_CAPACITY;
+  cfg.give_rate = STG_DEFAULT_ENERGY_GIVERATE;
+  cfg.probe_range = STG_DEFAULT_ENERGY_PROBERANGE;      
+
+  model_set_prop( mod, STG_PROP_ENERGYCONFIG, &cfg,sizeof(cfg) );
+}
+
+void model_energy_data_init( model_t* mod )
+{
+  stg_energy_config_t* cfg = model_energy_config_get(mod);
+  
+  stg_energy_data_t data;
+  memset(&data,0,sizeof(data));
+
+  data.joules = cfg->capacity;
+  data.watts = 0;
+  data.charging = FALSE;
+  data.range = cfg->probe_range;
+  
+  model_set_prop( mod, STG_PROP_ENERGYDATA, &data,sizeof(data) );
+}
+
+int model_energy_data_set( model_t* mod, void* data, size_t len )
+{  
+  // store the data
+  model_set_prop_generic( mod, STG_PROP_ENERGYDATA, data, len );
+  
+  // and redraw it
+  model_energy_data_render( mod );
+
+  return 0; //OK
+}
+ 
+int model_energy_config_set( model_t* mod, void* config, size_t len )
+{  
+  // store the config
+  model_set_prop_generic( mod, STG_PROP_ENERGYCONFIG, config, len );
+  
+  // and redraw it
+  model_energy_config_render( mod);
+
+  return 0; //OK
+}
+
+
+int model_energy_data_shutdown( model_t* mod )
+{
+  PRINT_DEBUG( "energy shutdown" );  
+  // and redraw it
+  model_energy_data_render( mod );
+  return 0;
+}
+
+
+void model_energy_consume( model_t* mod, stg_watts_t rate )
+{
+  stg_energy_data_t* data = model_energy_data_get(mod);
+  stg_energy_config_t* cfg = model_energy_config_get(mod);
   
   if( data && cfg && cfg->capacity > 0 )
     {
@@ -34,12 +139,9 @@ void model_energy_consume( model_t* mod, stg_watts_t rate )
 
 void model_energy_absorb( model_t* mod, stg_watts_t rate )
 {
-  stg_energy_data_t* data = (stg_energy_data_t*)
-    model_get_prop_data_generic( mod, STG_PROP_ENERGYDATA );
-  
-  stg_energy_config_t* cfg = (stg_energy_config_t*)
-    model_get_prop_data_generic( mod, STG_PROP_ENERGYCONFIG );
-  
+  stg_energy_data_t* data = model_energy_data_get(mod);
+  stg_energy_config_t* cfg = model_energy_config_get(mod);
+
   if( data && cfg && cfg->capacity > 0 )
     {
       data->joules +=  rate / (double)mod->world->sim_interval;
@@ -48,28 +150,13 @@ void model_energy_absorb( model_t* mod, stg_watts_t rate )
 }
 
 
-void model_energy_update( model_t* mod )
+int model_energy_data_service( model_t* mod )
 {     
-  PRINT_DEBUG( "energy update" );  
+  PRINT_DEBUG1( "energy service model %d", mod->id  );  
+  
+  stg_energy_config_t* cfg = model_energy_config_get(mod);
+  stg_energy_data_t* data = model_energy_data_get(mod);
 
-  stg_energy_config_t* cfg = (stg_energy_config_t*)
-    model_get_prop_data_generic( mod, STG_PROP_ENERGYCONFIG );
-  
-  if( cfg == NULL )
-    {
-      PRINT_ERR( "no energy config available" );
-      return;
-    }
-  
-  stg_energy_data_t* data = (stg_energy_data_t*)
-    model_get_prop_data_generic( mod, STG_PROP_ENERGYDATA );
-  
-  if( data == NULL )
-    {
-      PRINT_ERR( "no energy data available" );
-      return;
-    }
-  
   data->charging = FALSE;
 
   if( cfg->probe_range > 0 )
@@ -87,17 +174,8 @@ void model_energy_update( model_t* mod )
 	  // if we hit something
 	  if( him != mod )
 	    {
-	      stg_energy_config_t* hiscfg = 
-		model_get_prop_data_generic( him, STG_PROP_ENERGYCONFIG );
-
-	      if( hiscfg == NULL )
-		break;
-	      
-	      stg_energy_data_t* hisdata = 
-		model_get_prop_data_generic( him, STG_PROP_ENERGYDATA );
-	      
-	      if( hisdata == NULL )
-		break;
+	      stg_energy_config_t* hiscfg =  model_energy_config_get(him);
+	      stg_energy_data_t* hisdata =  model_energy_data_get(him);
 	      
 	      printf( "inspecting mod %d to see if he will give me juice\n",
 		      him->id );
@@ -124,13 +202,15 @@ void model_energy_update( model_t* mod )
   stg_energy_data_t nrg;
   memcpy(&nrg,data,sizeof(nrg));
 
-  model_set_prop_generic( mod, STG_PROP_ENERGYDATA, &nrg, sizeof(nrg) );
+  model_set_prop( mod, STG_PROP_ENERGYDATA, &nrg, sizeof(nrg) );
+
+  return 0; // ok
 }
 
 
-void model_energy_render( model_t* mod )
+void model_energy_data_render( model_t* mod )
 {
-  PRINT_DEBUG( "energy render" );
+  PRINT_DEBUG( "energy data render" );
 
   rtk_fig_t* fig = mod->gui.propdata[STG_PROP_ENERGYDATA];  
   
@@ -147,34 +227,17 @@ void model_energy_render( model_t* mod )
   // and some data, we'll draw the data
   if(  mod->subs[STG_PROP_ENERGYDATA] )
     {
-      //rtk_fig_origin( fig, mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.a );  
-
       // place the visualization a little away from the device
       //stg_pose_t pose;
       //model_global_pose( mod, &pose );
   
       //pose.x += 0.0;
-      //pose.y += 0.5;
+      //pose.y -= 0.5;
       //pose.a = 0.0;
       //rtk_fig_origin( fig, pose.x, pose.y, pose.a );
 
-      stg_energy_data_t* data = (stg_energy_data_t*)
-	model_get_prop_data_generic( mod, STG_PROP_ENERGYDATA );
-      
-      if( data == NULL )
-	{
-	  PRINT_WARN( "no energy data available" );
-	  return;
-	}
-
-      stg_energy_config_t* cfg = (stg_energy_config_t*)
-	model_get_prop_data_generic( mod, STG_PROP_ENERGYCONFIG );
-      
-      if( cfg == NULL )
-	{
-	  PRINT_WARN( "no energy config available" );
-	  return;
-	}
+      stg_energy_data_t* data = model_energy_data_get(mod);
+      stg_energy_config_t* cfg = model_energy_config_get(mod);
       
       /*  char buf[256];
       snprintf( buf, 256, "%.2f/%.2fJ %.2fW %s", 
@@ -195,7 +258,7 @@ void model_energy_render( model_t* mod )
 		    data->joules, 
 		    data->charging ? "charging" : "" );
 	  
-	  rtk_fig_text( fig, 0,0,0, buf ); 
+	  rtk_fig_text( fig, 0.0,0.0,0, buf ); 
 	}
       else
 	{
@@ -227,8 +290,7 @@ void model_energy_config_render( model_t* mod )
       rtk_fig_color_rgb32( fig, stg_lookup_color( STG_ENERGY_CFG_COLOR ));
     }
   
-  stg_energy_config_t* cfg = (stg_energy_config_t*) 
-    model_get_prop_data_generic( mod, STG_PROP_ENERGYCONFIG );
+  stg_energy_config_t* cfg = model_energy_config_get(mod);
   
   if( cfg && cfg->give_rate > 0 )
     {  

@@ -110,8 +110,6 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
   pose.a = 0.0;
   stg_model_prop_with_data( root, STG_PROP_POSE, &pose, sizeof(pose) );
       
-  stg_movemask_t mm = 0;
-  stg_model_prop_with_data( root, STG_PROP_MOVEMASK, &mm, sizeof(mm) ); 
       
   const char* colorstr = wf.ReadString(section, "color", "black" );
   stg_color_t color = stg_lookup_color( colorstr );
@@ -137,13 +135,13 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       free( lines );
     }
       
-  stg_bool_t boundary;
-  boundary = wf.ReadInt(section, "boundary", 1 );
-  stg_model_prop_with_data(root, STG_PROP_BOUNDARY, &boundary,sizeof(boundary));
+  stg_guifeatures_t gf;
+  gf.boundary = wf.ReadInt(section, "gui.boundary", 1 );
+  gf.nose = wf.ReadInt(section, "gui.nose", 0 );
+  gf.grid = wf.ReadInt(section, "gui.grid", 1 );
+  gf.movemask = wf.ReadInt(section, "gui.movemask", 0 );
+  stg_model_prop_with_data(root, STG_PROP_GUIFEATURES, &gf, sizeof(gf));
       
-  stg_bool_t grid;
-  grid = wf.ReadInt(section, "grid", 1 );
-  stg_model_prop_with_data(root, STG_PROP_GRID, &grid, sizeof(grid) );
   
   stg_energy_config_t ecfg;
   memset(&ecfg,0,sizeof(ecfg));
@@ -191,32 +189,24 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       if( obstacle != STG_DEFAULT_OBSTACLERETURN ) 
 	stg_model_prop_with_data( mod, STG_PROP_OBSTACLERETURN, &obstacle, sizeof(obstacle) );
       
-      stg_bool_t nose;
-      nose = wf.ReadInt( section, "nose", STG_DEFAULT_NOSE );
-      if( nose != STG_DEFAULT_NOSE )
-	stg_model_prop_with_data( mod, STG_PROP_NOSE, &nose, sizeof(nose) );
-      
-      stg_bool_t grid;
-      grid = wf.ReadInt( section, "grid", STG_DEFAULT_GRID );
-      if( grid != STG_DEFAULT_GRID )
-	stg_model_prop_with_data( mod, STG_PROP_GRID, &grid, sizeof(grid) );
-      
-      stg_bool_t boundary;
-      boundary = wf.ReadInt( section, "boundary", STG_DEFAULT_BOUNDARY );
-      if( boundary != STG_DEFAULT_BOUNDARY )
-	stg_model_prop_with_data( mod, STG_PROP_BOUNDARY, &boundary,sizeof(boundary));
+      stg_guifeatures_t gf;
+      gf.boundary = wf.ReadInt(section, "gui.boundary", STG_DEFAULT_BOUNDARY );
+      gf.nose = wf.ReadInt(section, "gui.nose", STG_DEFAULT_NOSE );
+      gf.grid = wf.ReadInt(section, "gui.grid", STG_DEFAULT_GRID );
+      gf.movemask = wf.ReadInt(section, "gui.movemask", STG_DEFAULT_MOVEMASK );
+      stg_model_prop_with_data(mod, STG_PROP_GUIFEATURES, &gf, sizeof(gf));
       
       stg_laser_config_t lconf;
       memset( &lconf, 0, sizeof(lconf) );
-      lconf.geom.pose.x = wf.ReadTupleLength(section, "laser_geom", 0, -9999.0 );
-      lconf.geom.pose.y = wf.ReadTupleLength(section, "laser_geom", 1, 0);
-      lconf.geom.pose.a = wf.ReadTupleAngle(section, "laser_geom", 2, 0);
-      lconf.geom.size.x = wf.ReadTupleLength(section, "laser_geom", 3, 0);
-      lconf.geom.size.y = wf.ReadTupleLength(section, "laser_geom", 4, 0);
-      lconf.range_min = wf.ReadTupleLength(section, "laser", 0, 0);
-      lconf.range_max = wf.ReadTupleLength(section, "laser", 1, 0);
-      lconf.fov = wf.ReadTupleAngle(section, "laser", 2, 0);
-      lconf.samples = (int)wf.ReadTupleFloat(section, "laser", 3, 0);
+      lconf.geom.pose.x = wf.ReadTupleLength(section, "laser.pose", 0, -9999.0 );
+      lconf.geom.pose.y = wf.ReadTupleLength(section, "laser.pose", 1, 0);
+      lconf.geom.pose.a = wf.ReadTupleAngle(section, "laser.pose", 2, 0);
+      lconf.geom.size.x = wf.ReadTupleLength(section, "laser.size", 0, STG_DEFAULT_LASER_SIZEX);
+      lconf.geom.size.y = wf.ReadTupleLength(section, "laser.size", 1, STG_DEFAULT_LASER_SIZEY);
+      lconf.range_min   = wf.ReadTupleLength(section, "laser.view", 0, STG_DEFAULT_LASER_MINRANGE);
+      lconf.range_max   = wf.ReadTupleLength(section, "laser.view", 1, STG_DEFAULT_LASER_MAXRANGE);
+      lconf.fov         = wf.ReadTupleAngle(section, "laser.view", 2, 0);
+      lconf.samples = wf.ReadInt(section, "laser.samples", STG_DEFAULT_LASER_SAMPLES);
 
       if( lconf.geom.pose.x != -9999.0 )
 	stg_model_prop_with_data( mod, STG_PROP_LASERCONFIG, &lconf,sizeof(lconf));
@@ -224,20 +214,24 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       
       stg_blobfinder_config_t bcfg;
       memset( &bcfg, 0, sizeof(bcfg) );
-      bcfg.channel_count = (int)wf.ReadTupleFloat(section, "blobfinder", 0, -1 );
-      bcfg.scan_width = (int)wf.ReadTupleFloat(section, "blobfinder", 1, -1 );
-      bcfg.scan_height = (int)wf.ReadTupleFloat(section, "blobfinder", 2, -1 );
-      bcfg.range_max = wf.ReadTupleLength(section, "blobfinder", 3, -1 );
-      bcfg.pan = wf.ReadTupleAngle(section, "blobfinder", 4, -1 );
-      bcfg.tilt = wf.ReadTupleAngle(section, "blobfinder", 5, -1 );
-      bcfg.zoom =  wf.ReadTupleAngle(section, "blobfinder", 6, -1 );
+      bcfg.channel_count = 
+	wf.ReadInt(section, "blob.count", STG_DEFAULT_BLOB_CHANNELCOUNT);
+      
+      bcfg.scan_width = (int)wf.ReadTupleFloat(section, "blobf.image", 0, STG_DEFAULT_BLOB_SCANWIDTH );
+      bcfg.scan_height = (int)wf.ReadTupleFloat(section, "blob.image", 1, STG_DEFAULT_BLOB_SCANHEIGHT );
+
+      bcfg.range_max = wf.ReadLength(section, "blob.range", STG_DEFAULT_BLOB_RANGEMAX );
+
+      bcfg.pan = wf.ReadTupleAngle(section, "blob.ptz", 0, STG_DEFAULT_BLOB_PAN );
+      bcfg.tilt = wf.ReadTupleAngle(section, "blob.ptz", 1, STG_DEFAULT_BLOB_TILT );
+      bcfg.zoom =  wf.ReadTupleAngle(section, "blob.ptz", 2, STG_DEFAULT_BLOB_ZOOM );
       
       if( bcfg.channel_count > STG_BLOBFINDER_CHANNELS_MAX )
 	bcfg.channel_count = STG_BLOBFINDER_CHANNELS_MAX;
       
       for( int ch = 0; ch<bcfg.channel_count; ch++ )
 	bcfg.channels[ch] = 
-	  stg_lookup_color( wf.ReadTupleString(section, "blobchannels", ch, "red" )); 
+	  stg_lookup_color( wf.ReadTupleString(section, "blob.channels", ch, "red" )); 
       
       if( bcfg.channel_count != -1 )
 	stg_model_prop_with_data( mod, STG_PROP_BLOBCONFIG, &bcfg,sizeof(bcfg));
@@ -274,7 +268,7 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 	}
 
       // Load the geometry of a ranger array
-      int scount = wf.ReadInt( section, "scount", 0);
+      int scount = wf.ReadInt( section, "ranger.count", 0);
       if (scount > 0)
 	{
 	  char key[256];
@@ -284,23 +278,22 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 	  int i;
 	  for(i = 0; i < scount; i++)
 	    {
-	      snprintf(key, sizeof(key), "spose[%d]", i);
+	      snprintf(key, sizeof(key), "ranger.pose[%d]", i);
 	      configs[i].pose.x = wf.ReadTupleLength(section, key, 0, 0);
 	      configs[i].pose.y = wf.ReadTupleLength(section, key, 1, 0);
 	      configs[i].pose.a = wf.ReadTupleAngle(section, key, 2, 0);
 
-	      snprintf(key, sizeof(key), "ssize[%d]", i);
+	      snprintf(key, sizeof(key), "ranger.size[%d]", i);
 	      configs[i].size.x = wf.ReadTupleLength(section, key, 0, 0.01);
 	      configs[i].size.y = wf.ReadTupleLength(section, key, 1, 0.05);
 
-	      snprintf(key, sizeof(key), "sbounds[%d]", i);
+	      snprintf(key, sizeof(key), "ranger.view[%d]", i);
 	      configs[i].bounds_range.min = 
 		wf.ReadTupleLength(section, key, 0, 0);
 	      configs[i].bounds_range.max = 
 		wf.ReadTupleLength(section, key, 1, 5.0);
-
-	      snprintf(key, sizeof(key), "sfov[%d]", i);
-	      configs[i].fov = wf.ReadAngle(section, key, 30 );
+	      configs[i].fov 
+		= wf.ReadTupleAngle(section, key, 2, 30.0 );
 	    }
 	  
 	  PRINT_DEBUG1( "loaded %d ranger configs", scount );	  
@@ -311,7 +304,7 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 	}
       
       
-      int linecount = wf.ReadInt( section, "line_count", 0 );
+      int linecount = wf.ReadInt( section, "lines.count", 0 );
       if( linecount > 0 )
 	{
 	  char key[256];
@@ -319,7 +312,7 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 	  int l;
 	  for(l=0; l<linecount; l++ )
 	    {
-	      snprintf(key, sizeof(key), "line[%d]", l);
+	      snprintf(key, sizeof(key), "lines.points[%d]", l);
 
 	      lines[l].x1 = wf.ReadTupleLength(section, key, 0, 0);
 	      lines[l].y1 = wf.ReadTupleLength(section, key, 1, 0);
@@ -346,33 +339,28 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 	stg_model_prop_with_data( mod, STG_PROP_VELOCITY, &vel, sizeof(vel) );
       
       stg_fiducial_config_t fcfg;
-      fcfg.min_range = wf.ReadTupleLength(section, "fiducial", 0, -9999.0 );
-      fcfg.max_range_anon = wf.ReadTupleLength(section, "fiducial", 1, 0);
-      fcfg.max_range_id = wf.ReadTupleLength(section, "fiducial", 2, 0);
-      fcfg.fov = wf.ReadTupleAngle(section, "fiducial", 3, 0);
-
+      fcfg.min_range = wf.ReadTupleLength(section, "fiducial.view", 0, -9999.0 );
+      fcfg.max_range_anon = wf.ReadTupleLength(section, "fiducial.view", 1, 0);
+      fcfg.fov = wf.ReadTupleAngle(section, "fiducial.view", 2, 0);
+      fcfg.max_range_id = wf.ReadLength(section, "fiducial.id_limit", -1);
+      
       if( fcfg.min_range != -9999.0 )
 	stg_model_prop_with_data( mod, STG_PROP_FIDUCIALCONFIG, &fcfg, sizeof(fcfg) );
       
       stg_energy_config_t ecfg;
       ecfg.capacity 
-	= wf.ReadFloat(section, "energy_capacity", -9999 );
+	= wf.ReadFloat(section, "energy.capacity", STG_DEFAULT_ENERGY_CAPACITY );
+      
       ecfg.probe_range 
-	= wf.ReadFloat(section, "energy_probe_range", STG_DEFAULT_ENERGYPROBERANGE );
+	= wf.ReadFloat(section, "energy.range", STG_DEFAULT_ENERGY_PROBERANGE );
+      
       ecfg.give_rate 
-	= wf.ReadFloat(section, "energy_charge_rate", STG_DEFAULT_ENERGYGIVERATE );
+	= wf.ReadFloat(section, "energy.return", STG_DEFAULT_ENERGY_GIVERATE );
       
-      if( ecfg.capacity != -9999 )
-	{
-	  stg_model_prop_with_data( mod, STG_PROP_ENERGYCONFIG, &ecfg, sizeof(ecfg) );   
-
-	  stg_energy_data_t edata;
-	  memset(&edata,0,sizeof(edata));
-	  edata.joules = ecfg.capacity;
-	  stg_model_prop_with_data( mod, STG_PROP_ENERGYDATA, &edata, sizeof(edata) );   
-	}
-
-      
+      if( ecfg.capacity != STG_DEFAULT_ENERGY_CAPACITY ||
+	  ecfg.probe_range != STG_DEFAULT_ENERGY_PROBERANGE ||
+	  ecfg.give_rate != STG_DEFAULT_ENERGY_GIVERATE )
+	stg_model_prop_with_data( mod, STG_PROP_ENERGYCONFIG, &ecfg, sizeof(ecfg) );         
       stg_kg_t mass;
       mass = wf.ReadFloat(section, "mass", STG_DEFAULT_MASS );
       if( mass != STG_DEFAULT_MASS )

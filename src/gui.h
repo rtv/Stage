@@ -86,17 +86,11 @@ typedef struct _gui_window
   GtkStatusbar* statusbar;
   GtkLabel* timelabel;
 
-  //GHashTable* guimods;
-
   rtk_fig_t* bg; // background
   rtk_fig_t* matrix;
   rtk_fig_t* poses;
 
   gboolean show_matrix;
-  gboolean show_grid;
-  gboolean show_rects;
-  gboolean show_nose;
-  gboolean show_geom;
   
   gboolean movie_exporting;
   int movie_speed;
@@ -147,6 +141,8 @@ gui_model_t* gui_model_figs( model_t* model );
 
 void gui_window_menus_create( gui_window_t* win );
 void gui_window_menus_destroy( gui_window_t* win );
+
+   void gui_model_mouse(rtk_fig_t *fig, int event, int mode);
 
 #ifdef __cplusplus
   }

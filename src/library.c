@@ -1,161 +1,25 @@
 
 #include "model.h"
 
-#define VERBOSE 1
+lib_entry_t library[STG_PROP_COUNT];
 
-void model_ranger_shutdown( model_t* mod );
-void model_ranger_update( model_t* mod );
-void model_ranger_render( model_t* mod );
-void model_ranger_config_render( model_t* mod );
-
-void model_laser_shutdown( model_t* mod );
-void model_laser_update( model_t* mod );
-void model_laser_render( model_t* mod );
-void model_laser_config_render( model_t* mod );
-
-void model_blobfinder_init( model_t* mod );
-void model_blobfinder_startup( model_t* mod );
-void model_blobfinder_shutdown( model_t* mod );
-void model_blobfinder_update( model_t* mod );
-void model_blobfinder_render( model_t* mod );
-
-void model_blobfinder_config_render( model_t* mod );
-
-void model_fiducial_init( model_t* mod );
-void model_fiducial_shutdown( model_t* mod );
-void model_fiducial_update( model_t* mod );
-void model_fiducial_render( model_t* mod );
-void model_fiducial_config_render( model_t* mod );
-
-//void model_energy_init( model_t* mod );
-void model_energy_shutdown( model_t* mod );
-void model_energy_update( model_t* mod );
-void model_energy_render( model_t* mod );
-void model_energy_config_render( model_t* mod );
-
-libitem_t items[] = 
-  {
-    { STG_PROP_RANGERDATA,
-      "ranger",
-      NULL,
-      NULL,
-      model_ranger_shutdown,
-      model_ranger_update,
-      model_ranger_render
-    },
-
-    { STG_PROP_RANGERCONFIG,
-      "rangerconfig",
-      NULL,
-      NULL,
-      NULL,
-      NULL,      
-      model_ranger_config_render
-    },
-    
-    { STG_PROP_BLOBDATA,
-      "blob",
-      NULL,
-      model_blobfinder_startup,
-      model_blobfinder_shutdown,
-      model_blobfinder_update,
-      model_blobfinder_render
-    },
-
-    { STG_PROP_BLOBCONFIG,
-      "blobconfig",
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      model_blobfinder_config_render
-    },
-    
-    { STG_PROP_LASERDATA, 
-      "laser",
-      NULL, 
-      NULL,
-      model_laser_shutdown, 
-      model_laser_update,
-      model_laser_render
-    },
-    
-    { STG_PROP_LASERCONFIG, 
-      "laserconfig",
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      model_laser_config_render 
-    },
-
-    { STG_PROP_FIDUCIALDATA,
-      "fiducial",
-      NULL,
-      NULL,
-      model_fiducial_shutdown,
-      model_fiducial_update,
-      model_fiducial_render
-    },
-
-    
-    { STG_PROP_FIDUCIALCONFIG,
-      "fiducialconfig",
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      model_fiducial_config_render
-    },
-    
-    { STG_PROP_ENERGYDATA,
-      "energy",
-      NULL,
-      NULL,
-      model_energy_shutdown,
-      model_energy_update,
-      model_energy_render
-    },
-
-    
-    { STG_PROP_ENERGYCONFIG,
-      "energyconfig",
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      model_energy_config_render
-    },
-    
-    { 0,NULL,NULL,NULL,NULL,NULL}
-  };
-
-// the table above gets sorted by ID and stashed in here
-libitem_t library[STG_PROP_COUNT];
-
-int library_create( void )
+void library_create( void )
 {
-  memset( library, 0, sizeof(libitem_t) * STG_PROP_COUNT );
+  memset( library, 0, sizeof(library[0]) * STG_PROP_COUNT );
   
-  libitem_t* item = items;
-  
-#if VERBOSE
-  printf( "[Models: " );
-#endif  
-
-  while( item->id  )
-    {
-#if VERBOSE
-      printf( "%s ", item->name ); 
-#endif
-
-      memcpy( &library[item->id], item, sizeof(libitem_t) );
-      item++;
-    }
-  
-#if VERBSOSE
-  printf( "\b] " );
-  fflush( stdout );
-#endif
-  
+  // add your registration function here
+  model_pose_register(); 
+  model_geom_register();
+  model_mass_register(); 
+  model_lines_register();
+  model_color_register();
+  model_velocity_register();
+  model_laser_register();
+  model_guifeatures_register();
+  model_ranger_register();
+  model_fiducial_register();
+  model_blobfinder_register();
+  model_energy_register();
 }
+
+

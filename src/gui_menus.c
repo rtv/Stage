@@ -70,6 +70,39 @@ void gui_menu_exit( rtk_menuitem_t *item )
 }
 
 
+void gui_menu_file_image_jpg( rtk_menuitem_t *item )
+{
+  static int index=0;
+
+  PRINT_DEBUG( "File/Image/Jpg menu item" );
+  
+  //snprintf(filename, sizeof(filename), "stage-%03d-%04d.jpg",
+  //   this->stills_series, this->stills_count++);
+  
+  char filename[128];
+  snprintf(filename, sizeof(filename), "stage-%03d.jpg", index++);
+  printf("saving [%s]\n", filename);
+  
+  rtk_canvas_export_image(item->menu->canvas, filename, RTK_IMAGE_FORMAT_JPEG);
+}
+
+void gui_menu_file_image_ppm( rtk_menuitem_t *item )
+{
+  static int index=0;
+
+  PRINT_DEBUG( "File/Image/Jpg menu item" );
+  
+  //snprintf(filename, sizeof(filename), "stage-%03d-%04d.jpg",
+  //   this->stills_series, this->stills_count++);
+  
+  char filename[128];
+  snprintf(filename, sizeof(filename), "stage-%03d.ppm", index++);
+  printf("saving [%s]\n", filename);
+  
+  rtk_canvas_export_image(item->menu->canvas, filename, RTK_IMAGE_FORMAT_PPM);
+}
+
+
 // toggle movie exports
 void gui_menu_movie_speed( rtk_menuitem_t *item )
 {
@@ -208,45 +241,6 @@ void gui_menu_debug( rtk_menuitem_t *item )
 }
 
 
-/* void clear_figs( gui_model_t* mod, int type ) */
-/* { */
-/*   switch( type ) */
-/*     { */
-/*       //case STG_FIGS_LASER: rtk_fig_clear( mod->laser_data ); break; */
-/*       //case STG_FIGS_RANGER: rtk_fig_clear( mod->ranger_data ); break; */
-/*     default: PRINT_WARN1( "uknown figure type %d", type ); break; */
-/*     } */
-/* } */
-
-/* void clear_figs_cb( gpointer key, gpointer value, gpointer user ) */
-/* { */
-/*   clear_figs( (gui_model_t*)value, (int)user ); */
-/* } */
-
-/* void gui_menu_view_data_laser( rtk_menuitem_t *item ) */
-/* { */
-/*   PRINT_DEBUG1( "menu selected %s.", */
-/* 	       rtk_menuitem_ischecked( item ) ? "<checked>" : "<unchecked>" ); */
-
-/*   gui_window_t* win = (gui_window_t*)item->menu->canvas->userdata; */
-/*   win->show_laserdata = rtk_menuitem_ischecked( item ); */
-  
-/*   // clear all laserdata figs in this window */
-/*   g_hash_table_foreach( win->guimods, clear_figs_cb, STG_FIGS_LASER ); */
-/* } */
-
-/* void gui_menu_view_data_ranger( rtk_menuitem_t *item ) */
-/* { */
-/*   PRINT_DEBUG1( "menu selected %s.", */
-/* 	       rtk_menuitem_ischecked( item ) ? "<checked>" : "<unchecked>" ); */
-
-/*   gui_window_t* win = (gui_window_t*)item->menu->canvas->userdata; */
-/*   win->show_rangerdata = rtk_menuitem_ischecked( item ); */
-  
-/*   // clear all rangerdata figs in this window */
-/*   g_hash_table_foreach( win->guimods, clear_figs_cb, (gpointer)STG_FIGS_RANGER ); */
-/* } */
- 
 void gui_window_menus_create( gui_window_t* win )
 {
   win->menu_count = STG_MENU_COUNT;
@@ -274,6 +268,11 @@ void gui_window_menus_create( gui_window_t* win )
     rtk_menuitem_create(win->menus[STG_MENU_FILE_IMAGE], "JPEG format", 1);
   win->mitems[STG_MITEM_FILE_IMAGE_PPM] = 
     rtk_menuitem_create(win->menus[STG_MENU_FILE_IMAGE], "PPM format", 1);
+  
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_IMAGE_JPG], 
+			     gui_menu_file_image_jpg );
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_IMAGE_PPM], 
+			     gui_menu_file_image_ppm );
 
   // init the stills data
   //win->stills_series = 0;

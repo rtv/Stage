@@ -1,40 +1,117 @@
+///////////////////////////////////////////////////////////////////////////
+//
+// File: model_ranger.c
+// Author: Richard Vaughan
+// Date: 10 June 2004
+//
+// CVS info:
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
+//  $Author: rtv $
+//  $Revision: 1.13 $
+//
+///////////////////////////////////////////////////////////////////////////
 
 #include <math.h>
+
+//#define DEBUG
+
 #include "stage.h"
 #include "raytrace.h"
-
-
 #include "gui.h"
 extern rtk_fig_t* fig_debug;
 
+void model_ranger_config_init( model_t* mod );
+int model_ranger_config_set( model_t* mod, void* config, size_t len );
+int model_ranger_data_shutdown( model_t* mod );
+int model_ranger_data_service( model_t* mod );
+int model_ranger_data_set( model_t* mod, void* data, size_t len );
+void model_ranger_return_init( model_t* mod );
 
-void model_ranger_shutdown( model_t* mod )
+void model_ranger_register(void)
 { 
-  model_remove_prop_generic( mod, STG_PROP_RANGERDATA );
+  PRINT_DEBUG( "RANGER INIT" );  
+
+  model_register_init( STG_PROP_RANGERCONFIG, model_ranger_config_init );
+  model_register_set( STG_PROP_RANGERCONFIG, model_ranger_config_set );
+
+  model_register_set( STG_PROP_RANGERDATA, model_ranger_data_set );
+  model_register_shutdown( STG_PROP_RANGERDATA, model_ranger_data_shutdown );
+  model_register_service( STG_PROP_RANGERDATA, model_ranger_data_service );
+
+  model_register_init( STG_PROP_RANGERRETURN, model_ranger_return_init );
+
 }
 
-void model_ranger_update( model_t* mod )
+void model_ranger_return_init( model_t* mod )
+{
+  stg_bool_t val = TRUE;
+  model_set_prop_generic( mod, STG_PROP_RANGERRETURN, &val, sizeof(val) );
+}
+
+
+void model_ranger_config_init( model_t* mod )
+{
+  model_set_prop_generic( mod, STG_PROP_RANGERCONFIG, NULL, 0 );
+}
+
+stg_bool_t model_ranger_return( model_t* mod )
+{
+  stg_bool_t* val = model_get_prop_data_generic( mod, STG_PROP_RANGERRETURN );
+  assert(val);
+  return *val;
+}
+
+
+stg_ranger_config_t* model_ranger_config_get( model_t* mod, int* count )
+{
+  stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_RANGERCONFIG );
+  assert(prop);
+  
+  stg_ranger_config_t* cfgs = prop->data;
+  *count = prop->len / sizeof(stg_ranger_config_t);
+  return cfgs;
+}
+
+int model_ranger_data_set( model_t* mod, void* data, size_t len )
+{  
+  // store the data
+  model_set_prop_generic( mod, STG_PROP_RANGERDATA, data, len );
+  
+  // and redraw it
+  model_ranger_data_render( mod );
+
+  return 0; //OK
+}
+
+int model_ranger_config_set( model_t* mod, void* config, size_t len )
+{  
+  // store the config
+  model_set_prop_generic( mod, STG_PROP_RANGERCONFIG, config, len );
+  
+  // and redraw it
+  model_ranger_config_render( mod);
+
+  return 0; //OK
+}
+
+
+int model_ranger_data_shutdown( model_t* mod )
+{ 
+  // undraw the data
+  model_ranger_data_render(mod);
+
+  //model_remove_prop_generic( mod, STG_PROP_RANGERDATA );
+
+  return 0;
+}
+
+int model_ranger_data_service( model_t* mod )
 {   
   //PRINT_DEBUG1( "[%.3f] updating rangers", mod->world->sim_time );
   
-  stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_RANGERCONFIG );
-  
-  if( prop == NULL ) // no rangers to update!
-    return;
-  //else
-  
-  stg_ranger_config_t* cfg = (stg_ranger_config_t*)prop->data;
-  
-  if( cfg == NULL )
-    return;
-  
-  int rcount = prop->len / sizeof( stg_ranger_config_t );
-  
-  if( rcount < 1 )
-    return;
-  
-  //PRINT_WARN1( "wierd! %d rangers", rcount);
-  
+  int rcount=0;
+  stg_ranger_config_t* cfg = model_ranger_config_get(mod, &rcount);
+    
   stg_ranger_sample_t* ranges = (stg_ranger_sample_t*)
     calloc( sizeof(stg_ranger_sample_t), rcount );
   
@@ -71,7 +148,7 @@ void model_ranger_update( model_t* mod )
 	    continue;
 	  
 	  // Stop looking when we see something
-	  if( hitmod->ranger_return != LaserTransparent) 
+	  if( model_ranger_return(hitmod) != LaserTransparent) 
 	    {
 	      range = itl->range;
 	      break;
@@ -87,15 +164,18 @@ void model_ranger_update( model_t* mod )
       itl_destroy( itl );
     }
   
-  model_set_prop_generic( mod, STG_PROP_RANGERDATA,
-			  ranges, sizeof(stg_ranger_sample_t) * rcount );
-  
+  model_set_prop( mod, STG_PROP_RANGERDATA,
+		  ranges, sizeof(stg_ranger_sample_t) * rcount );
+
+  return 0;
 }
 
 void model_ranger_config_render( model_t* mod )
 {
   //PRINT_DEBUG( "drawing rangers" );
 
+  stg_geom_t* geom = model_geom_get(mod);
+  
   rtk_fig_t* fig = mod->gui.propgeom[STG_PROP_RANGERCONFIG];  
   
   if( fig  )
@@ -105,7 +185,7 @@ void model_ranger_config_render( model_t* mod )
 				 mod->gui.top, STG_LAYER_RANGERGEOM );
   
   rtk_fig_color_rgb32( fig, stg_lookup_color(STG_RANGER_GEOM_COLOR) );  
-  rtk_fig_origin( fig, mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.a );  
+  rtk_fig_origin( fig, geom->pose.x, geom->pose.y, geom->pose.a );  
   
   rtk_fig_t* cfgfig = mod->gui.propdata[STG_PROP_RANGERCONFIG];  
   if( cfgfig  )
@@ -113,9 +193,9 @@ void model_ranger_config_render( model_t* mod )
   else // create the figure, store it in the model and keep a local pointer
     cfgfig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_RANGERCONFIG,
 				 mod->gui.top, STG_LAYER_RANGERCONFIG );
-  
+
   rtk_fig_color_rgb32( cfgfig, stg_lookup_color(STG_RANGER_CONFIG_COLOR) );  
-  rtk_fig_origin( cfgfig, mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.a );  
+  rtk_fig_origin( cfgfig, geom->pose.x, geom->pose.y, geom->pose.a );  
   
   stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_RANGERCONFIG );
   
@@ -170,7 +250,7 @@ void model_ranger_config_render( model_t* mod )
     }
 }
 
-void model_ranger_render( model_t* mod )
+void model_ranger_data_render( model_t* mod )
 { 
   gui_window_t* win = mod->world->win;
   
@@ -201,9 +281,10 @@ void model_ranger_render( model_t* mod )
       
       if( rcount > 0 && cfg && samples )
 	{
+	  stg_geom_t *geom = model_geom_get(mod);
+
 	  rtk_fig_color_rgb32(fig, stg_lookup_color(STG_RANGER_COLOR) );
-	  rtk_fig_origin( fig, 
-			  mod->geom.pose.x, mod->geom.pose.y, mod->geom.pose.a );	  
+	  rtk_fig_origin( fig, geom->pose.x, geom->pose.y, geom->pose.a );	  
 	  // draw the range  beams
 	  int s;
 	  for( s=0; s<rcount; s++ )

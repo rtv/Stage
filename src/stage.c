@@ -26,28 +26,29 @@ const char* stg_property_string( stg_id_t id )
 {
   switch( id )
     {
+      //case STG_PROP_BOUNDARY: return "boundary";break;
       //case STG_PROP_CHILDREN: return "children"; break;
+      //case STG_PROP_GRID: return "grid";break;
+      //case STG_PROP_LOSMSG: return "los_msg";break;
+      //case STG_PROP_LOSMSGCONSUME: return "los_msg_consume";break;
+      //case STG_PROP_MOVEMASK: return "movemask";break;
+      //case STG_PROP_NOSE: return "nose";break;
     case STG_PROP_BLINKENLIGHT: return "blinkenlight";break;
     case STG_PROP_BLOBCONFIG: return "blobconfig";break;
     case STG_PROP_BLOBDATA: return "blobdata";break;
-    case STG_PROP_BOUNDARY: return "boundary";break;
     case STG_PROP_COLOR: return "color"; break;
     case STG_PROP_ENERGYCONFIG: return "energyconfig"; break; 
     case STG_PROP_ENERGYDATA: return "energydata"; break;
+    case STG_PROP_FIDUCIALRETURN: return "fiducialreturn";break;
     case STG_PROP_FIDUCIALCONFIG: return "fiducialconfig";break;
     case STG_PROP_FIDUCIALDATA: return "fiducialdata";break;
     case STG_PROP_GEOM: return "geom"; break;
-    case STG_PROP_GRID: return "grid";break;
     case STG_PROP_LASERCONFIG: return "laserconfig";break;
     case STG_PROP_LASERDATA: return "laserdata";break;
     case STG_PROP_LASERRETURN: return "laser_return"; break;
     case STG_PROP_LINES: return "lines"; break;
-    case STG_PROP_LOSMSG: return "los_msg";break;
-    case STG_PROP_LOSMSGCONSUME: return "los_msg_consume";break;
     case STG_PROP_MATRIXRENDER: return "matrix_render";break;
-    case STG_PROP_MOVEMASK: return "movemask";break;
     case STG_PROP_NAME: return "name"; break;
-    case STG_PROP_NOSE: return "nose";break;
     case STG_PROP_OBSTACLERETURN: return "obstacle_return";break;
     case STG_PROP_PARENT: return "parent"; break;
     case STG_PROP_PLAYERID: return "player_id"; break;
@@ -60,11 +61,29 @@ const char* stg_property_string( stg_id_t id )
     case STG_PROP_TIME: return "time"; break;
     case STG_PROP_VELOCITY: return "velocity"; break;
     case STG_PROP_VISIONRETURN: return "vision_return"; break;
+    case STG_PROP_GUIFEATURES: return "guifeatures"; break;
 
     default:
       break;
     }
   return "<unknown>";
+}
+
+
+const char* stg_event_string( stg_event_t event )
+{
+  switch( event )
+    {
+    case STG_EVENT_STARTUP: return "startup";
+    case STG_EVENT_SHUTDOWN: return "shutdown";
+    case STG_EVENT_UPDATE: return "update";
+    case STG_EVENT_SERVICE: return "service";
+    case STG_EVENT_GET: return "get";
+    case STG_EVENT_SET: return "set";
+    default: 
+    }
+
+  return "<unknown>"; 
 }
 
 

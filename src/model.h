@@ -23,60 +23,46 @@ typedef struct _model
   world_t* world;
   
   char* token;
-    
-  stg_pose_t pose;
-  stg_geom_t geom; // origin and size in one
-  stg_color_t color;
-  stg_velocity_t velocity;
-  
-  GArray* lines; // array of point-pairs specifying lines in our body
-  // GArray* arcs; // TODO?
 
-  // GUI features
-  gboolean nose;
-  gboolean grid;
-  stg_movemask_t movemask;
-
-  stg_bool_t boundary;
-
+  // todo
   struct _model *parent;
   
-  int ranger_return;
-  int laser_return;
-  int fiducial_return;
-  int obstacle_return;
+  // the number of subscriptions to each property
+  int subs[STG_PROP_COUNT]; 
   
-  stg_kg_t mass;
-
-  stg_joules_t energy_consumed;
-
-  //stg_watts_t watts; // energy consumption this timestep. Devices may
-  //	     // add their energy consumption in Watts to this
-  ///	     // and it will be reported by the energy model
-
-  gboolean subs[STG_PROP_COUNT]; // flags used to control updates
-    
-  // store the time that each property was last calculated
+  // the time that each property was last calculated
   stg_msec_t update_times[STG_PROP_COUNT];
   
   GHashTable* props; // table of stg_property_t's indexed by property id
   
-  gui_model_t gui; // all the gui stuff
+  gui_model_t gui; // all the gui stuff - this should be a property too!
+
+  // todo - add this as a property?
+  stg_joules_t energy_consumed;
   
 } model_t;  
 
-typedef void(*init_func_t)(model_t*);
+
+typedef void(*func_init_t)(model_t*);
+typedef int(*func_set_t)(model_t*,void*,size_t);
+typedef void*(*func_get_t)(model_t*,size_t*);
+typedef int(*func_update_t)(model_t*);
+typedef int(*func_service_t)(model_t*);
+typedef int(*func_startup_t)(model_t*);
+typedef int(*func_shutdown_t)(model_t*);
 
 typedef struct
 {
-  stg_id_t id;
-  const char* name;
-  init_func_t init;
-  init_func_t startup;
-  init_func_t shutdown;
-  init_func_t update;
-  init_func_t render;
-} libitem_t;
+  func_init_t init;
+  func_startup_t startup;
+  func_shutdown_t shutdown;
+  func_update_t update;
+  func_service_t service;
+  func_get_t get;
+  func_set_t set;
+
+} lib_entry_t;
+
 
 
 // MODEL
@@ -89,9 +75,9 @@ int model_set_prop( model_t* mod, stg_id_t propid, void* data, size_t len );
 int model_get_prop( model_t* model, stg_id_t propid, 
 		    void** data, size_t* size );
 
-void model_set_prop_generic( model_t* mod, stg_id_t propid, void* data, size_t len );
+int model_set_prop_generic( model_t* mod, stg_id_t propid, void* data, size_t len );
 stg_property_t* model_get_prop_generic( model_t* mod, stg_id_t propid );
-void model_remove_prop_generic( model_t* mod, stg_id_t propid );
+int model_remove_prop_generic( model_t* mod, stg_id_t propid );
 void* model_get_prop_data_generic( model_t* mod, stg_id_t propid );
 
 int model_update_prop( model_t* mod, stg_id_t propid );
@@ -106,7 +92,7 @@ void model_set_velocity( model_t* mod, stg_velocity_t* vel );
 void model_set_size( model_t* mod, stg_size_t* sz );
 void model_set_color( model_t* mod, stg_color_t* col );
 
-void model_update( model_t* model );
+int model_update( model_t* model );
 void model_update_cb( gpointer key, gpointer value, gpointer user );
 void model_update_velocity( model_t* model );
 void model_update_pose( model_t* model );
@@ -123,5 +109,25 @@ void model_fiducial_init( model_t* mod );
 void model_fiducial_update( model_t* mod );
 
 void model_energy_consume( model_t* mod, stg_watts_t rate );
+
+stg_velocity_t* model_velocity_get( model_t* mod );
+stg_geom_t* model_geom_get( model_t* mod );
+stg_color_t model_color_get( model_t* mod );
+stg_pose_t* model_pose_get( model_t* mod );
+stg_kg_t* model_mass_get( model_t* mod );
+stg_line_t* model_lines_get( model_t* mod, size_t* count );
+
+stg_energy_data_t* model_energy_get( model_t* mod );
+stg_energy_config_t* model_energy_config_get( model_t* mod );
+
+void model_lines_render( model_t* mod );
+
+void model_register_init( stg_id_t pid, func_init_t func );
+void model_register_startup( stg_id_t pid, func_startup_t func );
+void model_register_shutdown( stg_id_t pid, func_shutdown_t func );
+void model_register_update( stg_id_t pid, func_update_t func );
+void model_register_service( stg_id_t pid, func_service_t func );
+void model_register_set( stg_id_t pid, func_set_t func );
+void model_register_get( stg_id_t pid, func_get_t func );
 
 #endif

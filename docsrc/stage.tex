@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.15 2004-06-19 22:59:05 rtv Exp $
+% CVS: $Id: stage.tex,v 1.16 2004-06-27 23:59:02 rtv Exp $
 
 \documentclass[letter,11pt,twoside]{report}
 
@@ -753,13 +753,23 @@ device.\\
 \verb'pose' & \verb'[x y a]' & Set the pose ([x,y] position and
 orientation [a] in the parent's coordinate system).\\
 
-\verb'local_pose' & \verb'[x y a]' & Set the pose ([x,y] position and
-orientation [a] in the model's own coordinate system (e.g. to offset a
-robot's center of rotation from center of mass).\\
+\verb'origin' & \verb'[x y a]' & Set the model's pose ([x,y] position
+and orientation [a] in the its own local coordinate system (e.g. to
+offset a robot's center of rotation from center of mass).\\
 
 \verb'size' & \verb'[sizex sizey]' & Entity dimensions.\\ 
 
 \verb'mass'& \verb'float' & mass in KG.\\
+
+\verb'lines.count'& \verb'integer' & number of lines that make up this
+model's body.\\
+
+\verb'lines.points[i]' & \verb'[x1 y1 x2 y2]' & specifies the start
+and end points of the line \verb'i'. These lines are normalized to fit
+inside the rectangle defined by the \verb'size' property.\
+
+\verb'nose'& \verb'integer' & if non-zero, the model is drawn with a
+'nose', indicating its heading.\\
 
 \verb'velocity'& \verb'[vx vy va]' & forward (vx), sideways (vy)
 and rotational (va) velocity.\\
@@ -767,6 +777,12 @@ and rotational (va) velocity.\\
 \verb'color' & \verb'string' & Descriptive color (e.g. \verb'"red"' or
 \verb'"blue"'); only colors listed in the X11 color database should be used
 (look for \verb'rgb.txt' in your X installation).\\
+
+\verb'bitmap' & \verb'filename' & load the named image file (various
+formats are supported) and convert it into a list of line
+segments. The model's \verb'lines' property will be set with the
+lines.\\
+
 
 \\
 \hline
@@ -808,7 +824,7 @@ in the laser).\\
 
 \verb'laser.size'  & \verb'[x y]' & size of the laser sensor. \\
 
-\verb'laser.bounds' & \verb'[min max fov]' & minimum and maximum range
+\verb'laser.view' & \verb'[min max fov]' & minimum and maximum range
 of the laser sensor, and field of view in radians. \\
 
 \verb'laser.samples' & \verb'integer' & the number of samples returned
@@ -839,7 +855,7 @@ inspected by a fidicual finder. Set to zero to be invisible (so the
 sensor can't see you or the things behind you), or -1 to be
 transparent (so the sensor can see right through you).\\
 
-\verb'fiducial.bounds' & \verb'[min max fov]' & the minimum and
+\verb'fiducial.view' & \verb'[min max fov]' & the minimum and
 maximum range of the sensor in meters, and its field of view in
 radians.\\
 
@@ -891,11 +907,18 @@ Name & Values & Description \\
 \verb'"invisible"'} & Specifies whether or not this entity will be
 detected by ranger sensors.\\
 
-\verb'ranger.count' & \verb'integer' & The number of ranger transducers.\\
-\verb'ranger[i].pose' & \verb'[x y a]' & The pose of transducer \verb'i' in
-local coordinates.\\
-\verb'ranger[i].bounds' & \verb'[min max]' & The minimum and maximum
-range of transducer \verb'i'.\\
+\verb'ranger.count' & \verb'integer' & The number of ranger
+transducers.\\ 
+
+\verb'ranger.pose[i]' & \verb'[x y a]' & The pose of transducer
+\verb'i' in local coordinates.\\ 
+
+\verb'ranger.size[i]' & \verb'[x y]' & The size of transducer \verb'i'.\\
+
+\verb'ranger.view[i]' & \verb'[min max fov]' & The minimum and maximum
+range (in meters) and the field of view (in radians) of transducer
+\verb'i'.\\
+
 \hline
 \end{tabularx}
 
@@ -919,6 +942,15 @@ property.\\
 
 \verb'blob.count' & \verb'integer' & the number of color channels to
 track.\\
+
+\verb'blob.range' & \verb'float' & the maximum range of the blobfinder.\\
+track.\\
+
+\verb'blob.image' & \verb'[width height]' & the width and height of
+the blobfinder's virtual image in pixels.\\
+
+\verb'blob.ptz' & \verb'[pan tilt zoom]' & the pan and tilt of the
+camera, and the field of view, all in radians.\\
 
 \verb'blob.channels' & \verb'["color0" "color1" ...]' & The
 color detected by each channel.  Descriptive

@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.58 2004-06-18 06:59:59 rtv Exp $
+ * CVS: $Id: stage.h,v 1.59 2004-06-27 23:59:03 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -100,26 +100,43 @@ typedef enum
     STG_PROP_OBSTACLERETURN,
     STG_PROP_VISIONRETURN,
     STG_PROP_RANGERRETURN, 
-    STG_PROP_NEIGHBORRETURN,
+    STG_PROP_FIDUCIALRETURN,
     STG_PROP_RANGERDATA,
     STG_PROP_RANGERCONFIG,
     STG_PROP_FIDUCIALCONFIG,
     STG_PROP_FIDUCIALDATA,
     STG_PROP_BLOBCONFIG,
     STG_PROP_BLOBDATA,
+    //STG_PROP_BLOBRETURN,
     STG_PROP_LASERDATA,
     STG_PROP_LASERCONFIG,
     STG_PROP_BLINKENLIGHT,  // light blinking rate
-    STG_PROP_NOSE,
-    STG_PROP_GRID,
-    STG_PROP_LOSMSG,
-    STG_PROP_LOSMSGCONSUME,
-    STG_PROP_MOVEMASK,
-    STG_PROP_BOUNDARY,        // if non-zero, add a bounding rectangle
+    STG_PROP_GUIFEATURES,
+    //STG_PROP_LOSMSG,
+    //STG_PROP_LOSMSGCONSUME,
+    //STG_PROP_MOVEMASK,
     STG_PROP_MATRIXRENDER, // if non-zero, render in the matrix
 
-    STG_PROP_COUNT // this must be the last entry
+    STG_PROP_COUNT // this must be the last entry (it's not a real
+		   // property - it just counts 'em).
 } stg_prop_type_t;
+
+
+   // These events can happen regarding a property. Callback functions
+   // can be installed to handle each event.
+typedef enum
+{
+  STG_EVENT_STARTUP, // going from 0 to 1 subscription
+  STG_EVENT_SHUTDOWN, // going from 1 to 0 subscriptions
+  STG_EVENT_UPDATE, // called every simulation cycle
+  STG_EVENT_SERVICE, // called when a subscription needs new data,
+		     // before it generates a GET
+  STG_EVENT_GET, // when someone requests the data 
+  STG_EVENT_SET, // when someone sets the data
+
+  STG_EVENT_COUNT // this must be the last entry (it's not a real
+		  // event - it justs counts 'em).
+} stg_event_t;
 
    
 typedef uint16_t stg_msg_type_t;
@@ -189,7 +206,6 @@ typedef uint16_t stg_msg_type_t;
 #define NTOH_SEC(s) ntohl(s)
 #define HTON_SEC(s) htonl(s) // byte ordering for SECONDS
 #define NTOH_SEC(s) ntohl(s)
-
 
 
 
@@ -337,7 +353,7 @@ typedef enum
 stg_position_steer_mode_t;
 
 
-// energy --------------------------------------------------------------
+//  --------------------------------------------------------------
 
 // standard energy consumption of some devices in mW.
 //
@@ -452,6 +468,14 @@ typedef struct
    
 typedef int stg_movemask_t;
 
+typedef struct
+{
+  uint8_t nose;
+  uint8_t grid;
+  uint8_t boundary;
+  stg_movemask_t movemask;
+} stg_guifeatures_t;
+
 
 // GUI -------------------------------------------------------------------
 
@@ -493,13 +517,6 @@ typedef struct
   stg_meters_t range_min;
   int samples;
 } stg_laser_config_t;
-
-
-//typedef struct
-///{
-// stg_laser_config_t cfg;
-//stg_laser_sample_t samples[0]; // there follows cfg->samples structures
-//} stg_laser_data_t;
 
 
 // print human-readable version of the struct
@@ -597,13 +614,30 @@ typedef struct
 #define STG_DEFAULT_NOSE TRUE
 #define STG_DEFAULT_GRID FALSE
 #define STG_DEFAULT_BOUNDARY FALSE
-#define STG_DEFAULT_ENERGYCAPACITY 1000.0
-#define STG_DEFAULT_ENERGYCHARGEENABLE 1
-#define STG_DEFAULT_ENERGYPROBERANGE 0.0
-#define STG_DEFAULT_ENERGYGIVERATE 0.0
 
+#define STG_DEFAULT_ENERGY_CAPACITY 1000.0
+#define STG_DEFAULT_ENERGY_CHARGEENABLE 1
+#define STG_DEFAULT_ENERGY_PROBERANGE 0.0
+#define STG_DEFAULT_ENERGY_GIVERATE 0.0
 
+#define STG_DEFAULT_LASER_POSEX 0.0
+#define STG_DEFAULT_LASER_POSEY 0.0
+#define STG_DEFAULT_LASER_POSEA 0.0
+#define STG_DEFAULT_LASER_SIZEX 0.15
+#define STG_DEFAULT_LASER_SIZEY 0.15
+#define STG_DEFAULT_LASER_MINRANGE 0.0
+#define STG_DEFAULT_LASER_MAXRANGE 8.0
+#define STG_DEFAULT_LASER_FOV M_PI
+#define STG_DEFAULT_LASER_SAMPLES 180
 
+#define STG_DEFAULT_BLOB_CHANNELCOUNT 6
+#define STG_DEFAULT_BLOB_SCANWIDTH 80
+#define STG_DEFAULT_BLOB_SCANHEIGHT 60 
+#define STG_DEFAULT_BLOB_RANGEMAX 8.0 
+#define STG_DEFAULT_BLOB_PAN 0.0
+#define STG_DEFAULT_BLOB_TILT 0.0
+#define STG_DEFAULT_BLOB_ZOOM DTOR(60)
+ 
 //  FUNCTION DEFINITIONS
 
 

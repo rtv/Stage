@@ -21,41 +21,125 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.8 2004-06-15 23:27:38 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.9 2004-06-27 23:59:03 rtv Exp $
  */
 
 #include <math.h>
 
+//#define DEBUG
+
 #include "model.h"
 #include "raytrace.h"
-
-//#define DEBUG
 
 #include "gui.h"
 extern rtk_fig_t* fig_debug;
 
+void model_blobfinder_config_init( model_t* mod );
+int model_blobfinder_config_set( model_t* mod, void* config, size_t len );
+int model_blobfinder_data_shutdown( model_t* mod );
+int model_blobfinder_data_service( model_t* mod );
+int model_blobfinder_data_set( model_t* mod, void* data, size_t len );
 
-void model_blobfinder_startup( model_t* mod )
-{
-  PRINT_DEBUG( "blobfinder startup" );
+void model_blobfinder_register(void)
+{ 
+  PRINT_DEBUG( "BLOBFINDER INIT" );  
+
+  model_register_init( STG_PROP_BLOBCONFIG, model_blobfinder_config_init );
+  model_register_set( STG_PROP_BLOBCONFIG, model_blobfinder_config_set );
+
+  model_register_set( STG_PROP_BLOBDATA, model_blobfinder_data_set );
+  model_register_shutdown( STG_PROP_BLOBDATA, model_blobfinder_data_shutdown );
+  model_register_service( STG_PROP_BLOBDATA, model_blobfinder_data_service );
+
+  //model_register_init( STG_PROP_BLOBRETURN, model_blobfinder_return_init );
 
 }
 
-void model_blobfinder_shutdown( model_t* mod )
+stg_blobfinder_config_t* model_blobfinder_config_get( model_t* mod )
+{
+  stg_blobfinder_config_t* cfg = 
+    model_get_prop_data_generic( mod, STG_PROP_BLOBCONFIG );
+  assert(cfg);
+  return cfg;
+}
+
+stg_blobfinder_blob_t* model_blobfinder_data_get( model_t* mod, int* count )
+{
+  stg_property_t* prop = 
+    model_get_prop_generic( mod, STG_PROP_BLOBDATA );
+
+  if( prop )
+    {
+      stg_blobfinder_blob_t* blobs = prop->data;
+      *count = prop->len / sizeof(stg_blobfinder_blob_t);      
+      if( *count > 0 ) assert(blobs);  
+      return blobs;
+    }
+  
+  *count = 0;
+  return NULL;
+}
+
+void model_blobfinder_config_init( model_t* mod )
+{
+  stg_blobfinder_config_t cfg;
+  memset(&cfg,0,sizeof(cfg));
+  
+  cfg.channel_count = STG_DEFAULT_BLOB_CHANNELCOUNT;
+  cfg.scan_width = STG_DEFAULT_BLOB_SCANWIDTH;
+  cfg.scan_height = STG_DEFAULT_BLOB_SCANHEIGHT;  
+  cfg.range_max = STG_DEFAULT_BLOB_RANGEMAX;  
+  cfg.pan = STG_DEFAULT_BLOB_PAN;
+  cfg.tilt =STG_DEFAULT_BLOB_TILT;
+  cfg.zoom = STG_DEFAULT_BLOB_ZOOM;
+ 
+  cfg.channels[0] = stg_lookup_color( "red" );
+  cfg.channels[1] = stg_lookup_color( "green" );
+  cfg.channels[2] = stg_lookup_color( "blue" );
+  cfg.channels[3] = stg_lookup_color( "cyan" );
+  cfg.channels[4] = stg_lookup_color( "yellow" );
+  cfg.channels[6] = stg_lookup_color( "magenta" );
+  
+  model_set_prop_generic( mod, STG_PROP_BLOBCONFIG, &cfg,sizeof(cfg) );
+}
+
+int model_blobfinder_data_set( model_t* mod, void* data, size_t len )
+{  
+  // store the data
+  model_set_prop_generic( mod, STG_PROP_BLOBDATA, data, len );
+  
+  // and redraw it
+  model_blobfinder_data_render( mod );
+
+  return 0; //OK
+}
+ 
+int model_blobfinder_config_set( model_t* mod, void* config, size_t len )
+{  
+  // store the config
+  model_set_prop_generic( mod, STG_PROP_BLOBCONFIG, config, len );
+  
+  // and redraw it
+  model_blobfinder_config_render( mod);
+
+  return 0; //OK
+}
+
+
+int model_blobfinder_data_shutdown( model_t* mod )
 {
   PRINT_DEBUG( "blobfinder shutdown" );  
-  model_remove_prop_generic( mod, STG_PROP_BLOBDATA );
+  //model_remove_prop_generic( mod, STG_PROP_BLOBDATA );
+  model_blobfinder_data_render(mod);
+  return 0;
 }
 
 
-void model_blobfinder_update( model_t* mod )
+int model_blobfinder_data_service( model_t* mod )
 {
-  PRINT_DEBUG( "blobfinder update" );  
-
-  stg_blobfinder_config_t* cfg = (stg_blobfinder_config_t*)
-    model_get_prop_data_generic( mod, STG_PROP_BLOBCONFIG );
+  PRINT_DEBUG( "blobfinder data service" );  
   
-  assert( cfg );
+  stg_blobfinder_config_t* cfg = model_blobfinder_config_get(mod);
 
   // Generate the scan-line image
 
@@ -78,6 +162,8 @@ void model_blobfinder_update( model_t* mod )
   // Make sure the data buffer is big enough
   //ASSERT((size_t)m_scan_width<=sizeof(m_scan_channel)/sizeof(m_scan_channel[0]));
   
+  //printf( "scan width %d\n", cfg->scan_width );
+
   // record the color of every ray we project
   stg_color_t* colarray = 
     (stg_color_t*)calloc( sizeof(stg_color_t),cfg->scan_width); 
@@ -130,9 +216,10 @@ void model_blobfinder_update( model_t* mod )
 	  //  continue;
 
 	  range = itl->range; // it's this far away
-
+	  
 	  // get the color of the entity
-	  memcpy( &col, &(ent->color), sizeof( stg_color_t ) );
+	  stg_color_t hiscol = model_color_get(ent);
+	  memcpy( &col, &hiscol, sizeof( stg_color_t ) );
 	  
 	  break;
 	}
@@ -176,8 +263,6 @@ void model_blobfinder_update( model_t* mod )
   int blobtop = 0, blobbottom = 0;
   
   GArray* blobs = g_array_new( FALSE, TRUE, sizeof(stg_blobfinder_blob_t) );
-  
-  //printf( "scanning for blobs\n" );
   
   // scan through the samples looking for color blobs
   for( s=0; s < cfg->scan_width; s++ )
@@ -247,13 +332,17 @@ void model_blobfinder_update( model_t* mod )
 	}
     }
 
-  model_set_prop_generic( mod, STG_PROP_BLOBDATA,
-			  blobs->data, blobs->len * sizeof(stg_blobfinder_blob_t) );
+  model_set_prop( mod, STG_PROP_BLOBDATA,
+		  blobs->data, blobs->len * sizeof(stg_blobfinder_blob_t) );
   
   g_array_free( blobs, TRUE );
+
+  PRINT_DEBUG( "blobfinder data service done" );  
+
+  return 0; //OK
 }
 
-void model_blobfinder_render( model_t* mod )
+void model_blobfinder_data_render( model_t* mod )
 { 
   PRINT_DEBUG( "blobfinder render" );  
 
@@ -281,15 +370,13 @@ void model_blobfinder_render( model_t* mod )
 
       double scale = 0.01; // shrink from pixels to meters for display
   
-      stg_blobfinder_config_t* cfg = (stg_blobfinder_config_t*) 
-	model_get_prop_data_generic( mod, STG_PROP_BLOBCONFIG );
-      assert(cfg);
-  
-      stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_BLOBDATA );
-  
-      if( prop == NULL )
+      stg_blobfinder_config_t* cfg = model_blobfinder_config_get(mod);      
+      int num_blobs=0;
+      stg_blobfinder_blob_t* blobs =  model_blobfinder_data_get(mod,&num_blobs);
+
+      if( blobs == NULL )
 	return; // no data to render yet
-  
+      
       short width = cfg->scan_width;
       short height = cfg->scan_height;
       double mwidth = width * scale;
@@ -300,15 +387,7 @@ void model_blobfinder_render( model_t* mod )
       rtk_fig_rectangle(fig, 0.0, 0.0, 0.0, mwidth,  mheight, 1 ); 
       rtk_fig_color_rgb32(fig, 0x000000);
       rtk_fig_rectangle(fig, 0.0, 0.0, 0.0, mwidth,  mheight, 0); 
-  
-      stg_blobfinder_blob_t* blobs = (stg_blobfinder_blob_t*)prop->data;
-      if( blobs == NULL )
-	return; // no data to render yet
-  
-      int num_blobs = prop->len / sizeof(stg_blobfinder_blob_t);
-      if( num_blobs < 1 )
-	return; // no data to render yet
-  
+    
       int c;
       for( c=0; c<num_blobs; c++)
 	{
@@ -353,12 +432,11 @@ void model_blobfinder_config_render( model_t* mod )
     fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_BLOBCONFIG,
 				 mod->gui.top, STG_LAYER_BLOBCONFIG );
 
-
+  
   rtk_fig_color_rgb32( fig, stg_lookup_color( STG_BLOB_CFG_COLOR ));
   
-  stg_blobfinder_config_t* cfg = (stg_blobfinder_config_t*) 
-    model_get_prop_data_generic( mod, STG_PROP_BLOBCONFIG );
-      
+  stg_blobfinder_config_t* cfg = model_blobfinder_config_get(mod);
+  
   if( cfg )
     {  
       // Get the camera's global pose
