@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.14.2.2 $
+//  $Revision: 1.14.2.3 $
 //
 // Usage:
 //  (empty)
@@ -450,6 +450,10 @@ public:
   double GetHeight( void )
   { if( m_bimg ) return m_bimg->height; else return 0; };
 
+public: CEntity** RayTrace( double &px, double &py, double pth, 
+			    double &remaining_range);
+  
+public: char* CWorld::StringType( StageType t );
 
   // the truth server queues up any truth updates here, ready to be imported
   // in the main thread

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.21.2.3 $
+//  $Revision: 1.21.2.4 $
 //
 // Usage:
 //  (empty)
@@ -634,8 +634,7 @@ bool CWorld::InitGrids(const char *env_file)
 
   wall = new CEntity( this, 0 );
   
-  wall->m_stage_type = NullType;
-
+  wall->m_stage_type = WallType;
   wall->laser_return = 1;
   wall->sonar_return = 1;
   wall->obstacle_return = 1;
@@ -1404,9 +1403,83 @@ void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
 
 
 
+CEntity** CWorld::RayTrace( double &px, double &py, double pth, 
+			    double &remaining_range )
+{
+  int range = 0;
+  
+  //printf( "Ray from %.2f,%.2f angle: %.2f remaining_range %.2f\n", 
+  //  px, py, RTOD(pth), remaining_range );
+  
+  // hops along each axis
+  double cospth = cos( pth );
+  double sinpth = sin( pth );
+  
+  // start at the scan origin (pixel coords for speed)
+  double cellx = px * ppm;
+  double celly = py * ppm;
+  
+  CEntity** ent = 0;
 
+  // Look along scan line for obstacles
+  for( range = 0; range < remaining_range; range++ )
+    {
+      cellx += cospth;
+      celly += sinpth;
+      
+      // skip this ray if we're out of bounds
+      if( cellx < 0 || cellx >= matrix->width ) break;
+      if( celly < 0 || celly >= matrix->height ) break;
 
+      ent = matrix->get_cell( (int)cellx,(int)celly );
+      if( !ent[0] ) ent = matrix->get_cell( (int)cellx+1,(int)celly );
+      
+      if( ent[0] ) break;// we hit something!
+    }
 
-
-
+  px = cellx / ppm; // we got to here
+  py = celly / ppm; //
+  remaining_range -= range; // we have this much left to go
+  
+  //if( ent && ent[0] )
+  //printf( "hit %p (%s) at %.2f,%.2f with %.2f to go\n", 
+  //ent[0], StringType( ent[0]->m_stage_type ), 
+  //  px, py, remaining_range );
+  //else
+  //printf( "hit nothing. remaining range = %.2f\n", remaining_range );
+  //fflush( stdout );
+  
+  return ent; // we hit these entities
+}
+  
+char* CWorld::StringType( StageType t )
+{
+  switch( t )
+    {
+    case NullType: return "None"; 
+    case WallType: return "Wall"; break;
+    case PlayerType: return "Player"; 
+    case MiscType: return "Misc"; 
+    case RectRobotType: return "RectRobot"; 
+    case RoundRobotType: return "RoundRobot"; 
+    case SonarType: return "Sonar"; 
+    case LaserTurretType: return "Laser"; 
+    case VisionType: return "Vision"; 
+    case PtzType: return "PTZ"; 
+    case BoxType: return "Box"; 
+    case LaserBeaconType: return "LaserBcn"; 
+    case LBDType: return "LBD"; 
+    case VisionBeaconType: return "VisionBcn"; 
+    case GripperType: return "Gripper"; 
+    case AudioType: return "Audio"; 
+    case BroadcastType: return "Bcast"; 
+    case SpeechType: return "Speech"; 
+    case TruthType: return "Truth"; 
+    case GpsType: return "GPS"; 
+    case PuckType: return "Puck"; 
+    case OccupancyType: return "Occupancy"; 
+    }	 
+  return( "unknown" );
+}
+  
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.7.2.3 $
+//  $Revision: 1.7.2.4 $
 //
 // Usage:
 //  (empty)
@@ -54,6 +54,8 @@ CBoxObstacle::CBoxObstacle(CWorld *world, CEntity *parent)
   
 
   laser_return = 1;
+  sonar_return = 1;
+  obstacle_return = 1;
 
   // Set the initial map pose
   //

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.9 $
+//  $Author: vaughan $
+//  $Revision: 1.9.2.1 $
 //
 // Usage:
 //  (empty)
@@ -45,8 +45,12 @@ CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent )
 
   m_sonar_count = SONARSAMPLES;
     m_min_range = 0.20;
-    m_max_range = 8.0;
-    
+    m_max_range = 5.0;
+
+    sonar_return = 0;
+    laser_return = 0;
+    obstacle_return = 0;
+
     // Initialise the sonar poses
     //
     for (int i = 0; i < m_sonar_count; i++)
@@ -79,13 +83,6 @@ void CSonarDevice::Update( double sim_time )
   m_hit_count = 0;
 #endif
   
-  // Compute fov, range, etc
-  //
-  double dr = 1.0 / m_world->ppm;
-  double max_range = m_max_range;
-  double min_range = m_min_range;
-  
-  
   // Check bounds
   //
   ASSERT((size_t) m_sonar_count <= sizeof(m_data.ranges) 
@@ -95,42 +92,45 @@ void CSonarDevice::Update( double sim_time )
   //
   for (int s = 0; s < m_sonar_count; s++)
     {
-        // Compute parameters of scan line
-      //
+      // Compute parameters of scan line
       double ox = m_sonar[s][0];
       double oy = m_sonar[s][1];
       double oth = m_sonar[s][2];
       LocalToGlobal(ox, oy, oth);
       
-      double px = ox;
-      double py = oy;
-      double pth = oth;
-      
-      // Compute the step for simple ray-tracing
-      //
-      double dx = dr * cos(pth);
-      double dy = dr * sin(pth);
+      double max_range = m_max_range * m_world->ppm;
+      double remaining_range = max_range;
 
-      // Look along scan line for obstacles
-      // Could make this an int again for a slight speed-up.
-      //
-      double range;
-      for (range = 0; range < max_range; range += dr)
-        {
-	  // Look in the laser layer for obstacles
-	  //
-	  uint8_t cell = m_world->GetCell(px, py, layer_obstacle);
-	  if (range > min_range && cell != 0)           
-	    break;
-	  px += dx;
-	  py += dy;
-        }
+      while( remaining_range > 0 )
+	{
+	  CEntity** ent = m_world->RayTrace( ox, oy, oth, remaining_range );
+
+	  if( ent == 0 ) // if we hit nothing
+	    break; // we're done with this ray
+	
+	  // we hit something!
+	  int retval = 0;
+	  int s = 0;
+	  while( ent[s] ) // scan the entity array
+	    {
+	      if( (ent[s] != this) && (ent[s] != m_parent_object) ) 
+		retval = ent[s]->sonar_return;
+	      
+	      if( retval > 0 ) break; // stop scanning the array   
+	      s++;
+	    }
+	  
+	  if( retval > 0 ) break;
+	}
+      
+      uint16_t v = (uint16_t)
+	(1000.0 * ((double)(max_range-remaining_range)/m_world->ppm));
       
       // Store range in mm in network byte order
       //
-      m_data.ranges[s] = htons((uint16_t) (range * 1000));
-      
-      // Update the gui data
+      m_data.ranges[s] = htons(v);
+			      
+       // Update the gui data
       //
 #ifdef INCLUDE_RTK
       m_hit[m_hit_count][0][0] = ox;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.10.2.1 $
+//  $Revision: 1.10.2.2 $
 //
 // Usage:
 //  (empty)
@@ -177,8 +177,13 @@ void CLBDDevice::Update( double sim_time )
     // Search for beacons in the list
     // Is quicker than searching the bitmap!
     //
-    for (int i = 0; true; i++)
-    {
+    for( LaserBeaconList::iterator it = m_laser->m_visible_beacons.begin();
+	 it != m_laser->m_visible_beacons.end(); 
+	 it++ )
+      {
+
+	//for (int i = 0; true; i++)
+	//{
         // Get the position of the laser beacon (global coords)
         //
       //int id;
@@ -188,12 +193,10 @@ void CLBDDevice::Update( double sim_time )
 
 	// ray trace to find laser beacons
 
-      if( !m_laser->beacons[i] ) break; // no more beacons
-      
-      int id;
+       int id;
       double px, py, pth;
       
-      m_laser->beacons[i]->GetGlobalPose( px, py, pth );
+      ((CLaserBeacon*)*it)->GetGlobalPose( px, py, pth );
 
 	//printf( "beacon at: %.2f %.2f %.2f\n", px, py, pth );
 	//fflush( stdout );

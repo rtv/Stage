@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/stage_types.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.6 $
+//  $Revision: 1.6.2.1 $
 //
 // Usage:
 //  (empty)
@@ -69,6 +69,7 @@
 // can appear to stage as identical position devices, for example.
 enum StageType {
 NullType = 0,
+WallType,
 PlayerType, 
 MiscType, 
 RectRobotType,

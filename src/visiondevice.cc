@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.13 $
+//  $Revision: 1.13.2.1 $
 //
 // Usage:
 //  (empty)
@@ -100,39 +100,39 @@ CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent)
 //
 void CVisionDevice::Update( double sim_time )
 {
+#ifdef DEBUG
   CEntity::Update( sim_time ); // inherit debug output
+#endif
 
-    //RTK_TRACE0("updating vision data");
-    
-    // Dont update anything if we are not subscribed
-    //
+  ASSERT(m_world != NULL);
+
+  // Dont update anything if we are not subscribed
+  //
   if( Subscribed() < 1 )
     return;
   
-  ASSERT(m_world != NULL);
+  // See if its time to recalculate vision
+  //
+  if( sim_time - m_last_update < m_interval )
+    return;
+  
+  m_last_update = sim_time;
+  
+  //RTK_TRACE0("generating new data");
+  
+  // Generate the scan-line image
+  //
+  UpdateScan();
+  
+  // Generate ACTS data
+  //
+  size_t len = UpdateACTS();
 
-    // See if its time to recalculate vision
-    //
-    if( sim_time - m_last_update < m_interval )
-        return;
-
-    m_last_update = sim_time;
-
-    //RTK_TRACE0("generating new data");
-
-    // Generate the scan-line image
-    //
-    UpdateScan();
-
-    // Generate ACTS data
-    //
-    size_t len = UpdateACTS();
-
-    // Copy data to the output buffer
-    // no need to byteswap - this is single-byte data
-    //
-    if (len > 0)
-        PutData(actsBuf, len);
+  // Copy data to the output buffer
+  // no need to byteswap - this is single-byte data
+  //
+  if (len > 0)
+    PutData(actsBuf, len);
 }
 
 

@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 //
 // File: laserdevice.cc
 // Author: Andrew Howard
@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.23.2.3 $
+//  $Revision: 1.23.2.4 $
 //
 // Usage:
 //  (empty)
@@ -51,6 +51,7 @@ CLaserDevice::CLaserDevice(CWorld *world,
   m_stage_type = LaserTurretType;
 
   laser_return = 1;
+  sonar_return = 0;
   //obstacle_return = 1;
    
   // Laser update rate (readings/sec)
@@ -255,8 +256,8 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 
     // Get the pose of the laser in the global cs
     //
-    double ox, oy, oth;
-    GetGlobalPose(ox, oy, oth);
+    double x, y, th;
+    GetGlobalPose(x, y, th);
 
     // Compute laser fov, range, etc
     //
@@ -296,63 +297,55 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
     //
     for (int s = 0; s < m_scan_count;)
       {
+	double ox = x;
+	double oy = y;
+	double oth = th;
+
 	int intensity = 0;
-	int range = 0;
+	//int range = 0;
 	
 	double bearing = s * m_scan_res + m_scan_min;
 	
 	// Compute parameters of scan line
 	double pth = oth + bearing;
 	
-	//printf( "Ray: %d angle: %.2f\n", s, RTOD(pth) );
+	double remaining_range = max_range;
 
-	// MOVED THIS BACK TO MAINLY INTEGER MATH, DID PIXEL/M SCALING
-	// OUTSIDE THE LOOP AND ELIMINATED A FUNCTION CALL (yay!)
-	// - RTV 8/20/01
+	// loop until we reach max_range, or we hit something interesting
+	while( remaining_range > 0 )
+	  {
+	    CEntity** ent = m_world->RayTrace( ox, oy, pth, remaining_range );
+	   
+	    if( ent == 0 ) // if we hit nothing
+	      break; // we're done with this ray
 
-	// hops along each axis
-	double cospth = cos( pth );
-	double sinpth = sin( pth );
- 
-	// start at the scan origin (pixel coords for speed)
-	double cellx = (int)(ox * m_world->ppm);
-	double celly = (int)(oy * m_world->ppm);
-	
-        // Look along scan line for obstacles
-        for( range = 0; range < max_range; range++ ) // increase range 1 pixel at a time
-        {
-	  cellx += cospth;
-	  celly += sinpth;
- 
-	  CEntity **ent = m_world->matrix->get_cell( (int)cellx, (int)celly );
-	  if( !ent[0] ) ent = m_world->matrix->get_cell( (int)cellx+1, (int)celly );
-	  
-	  uint8_t retval = 0;
-	  // see if any of the entities (other than this one) intercept the laser beam
-	  // and store the first non-negative laser_return value
-	  int s=0;
-	  while( ent[s] ) // scan the pointer list
-	    {
-	      if( ent[s]->m_stage_type == LaserBeaconType )// we see a beacon		  
-		{
-		  CEntityPointer lbp;
-		  lbp.ptr = ent[s];
-		  m_visible_beacons.push_back( lbp ); // add it to the list
-		}
-
-	      if( ent[s] != this ) retval = ent[s]->laser_return;
-	      if( retval > 0 ) break; // stop scanning the pointer list	      
-	      s++;
-	    }
-
-	  if( retval > 0 ) break; // end the ray trace
-        }
-	
+	    //printf( "laser hit %p (%s laser_return: %d) at %.2f,%.2f\n", 
+	    //    ent[0], m_world->StringType( ent[0]->m_stage_type ),
+	    //    ent[0]->laser_return, ox, oy );
+	    
+	    // see if any of the entities (other than this one)
+	    // intercept the laser beam and store the first
+	    // non-negative laser_return value
+	    uint8_t retval = 0;
+	    int s=0;
+	    while( ent[s] ) // scan the pointer array
+	      {
+		if( ent[s]->m_stage_type == LaserBeaconType ) // a beacon!
+  		  m_visible_beacons.push_front( (int)(ent[s]) ); 
+		
+		if( ent[s] != this ) retval = ent[s]->laser_return;
+		if( retval > 0 ) break; // stop scanning the pointer list	      
+		s++;
+	      }
+	    
+	    if( retval > 0 ) break; // end the ray trace 
+	  }
 	//cout << s << ' ' << range << endl;
 
         // set laser value in mm
         //
-        uint16_t v = (uint16_t) (1000.0 * ((double)range/m_world->ppm));
+        uint16_t v = (uint16_t) 
+	  (1000.0 * ((double)(max_range-remaining_range)/m_world->ppm));
 
         // Add in the intensity values in the top 3 bits
         //
