@@ -24,7 +24,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: stg_driver.cc,v 1.20 2004-12-30 07:08:00 rtv Exp $
+ * CVS: $Id: stg_driver.cc,v 1.21 2004-12-30 23:21:08 rtv Exp $
  */
 
 // DOCUMENTATION ---------------------------------------------------------------------
@@ -723,7 +723,7 @@ void StgDriver::CheckConfig()
 	      // we don't recognize this interface at all, but we'll send
 	      // a NACK as a minimum reply
 	      if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
-		PLAYER_ERROR("PutReply() failed");	  
+		DRIVER_ERROR("PutReply() failed");	  
 	    }      
 	}      
     }
@@ -735,7 +735,7 @@ void StgDriver::HandleConfigSimulation( device_record_t* device, void* client, v
   printf("got simulation request\n");
   
   if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
-    PLAYER_ERROR("PutReply() failed");  
+    DRIVER_ERROR("PutReply() failed");  
 }
 
 void StgDriver::HandleConfigBlobfinder( device_record_t* device, void* client, void* buffer, size_t len )
@@ -743,7 +743,7 @@ void StgDriver::HandleConfigBlobfinder( device_record_t* device, void* client, v
   printf("got blobfinder request\n");
   
   if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
-    PLAYER_ERROR("PutReply() failed");  
+    DRIVER_ERROR("PutReply() failed");  
 }
 
 void StgDriver::HandleConfigPosition( device_record_t* device, void* client, void* buffer, size_t len  )
@@ -838,9 +838,6 @@ void StgDriver::HandleConfigPosition( device_record_t* device, void* client, voi
         break;
       }
     }
-  
-  //if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
-  //PLAYER_ERROR("PutReply() failed");  
 }
 
 void StgDriver::HandleConfigFiducial( device_record_t* device, void* client, void* src, size_t len  )
@@ -952,18 +949,13 @@ void StgDriver::HandleConfigFiducial( device_record_t* device, void* client, voi
 
     default:
       {
-	printf( "Warning: stg_fiducial doesn't support config id %d\n", buf[0] );
+	PRINT_WARN1( "Warning: stg_fiducial doesn't support config id %d\n", buf[0] );
         if (PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0) 
           DRIVER_ERROR("PutReply() failed");
       }
-    }
-  
-  //if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
-  //PLAYER_ERROR("PutReply() failed");  
+    }  
 }
 
- //if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
-  // PLAYER_ERROR("PutReply() failed");  
 
 void StgDriver::HandleConfigLaser( device_record_t* device, void* client, void* buffer, size_t len )
 {
@@ -1182,10 +1174,6 @@ void StgDriver::HandleConfigSonar( device_record_t* device, void* client, void* 
       }
       
     }
-  
-
-  //if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
-  //PLAYER_ERROR("PutReply() failed");  
 }
 
 
@@ -1215,7 +1203,7 @@ void StgDriver::CheckCommands()
 	      break;
 
 	    default:
-	      PLAYER_WARN1( "Stage received a command for a device of type %d. Ignoring.",
+	      PRINT_WARN1( "Stage received a command for a device of type %d. Ignoring.",
 			    device->id.code );
 	    }
 	}
