@@ -2,11 +2,12 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.1.4.1 2003-01-02 22:36:34 rtv Exp $
+ * $Id: image.cc,v 1.1.4.1.2.1 2004-02-17 17:19:49 gerkey Exp $
  ************************************************************************/
 
 #include <math.h>
 #include <assert.h>
+#include <ctype.h>
 
 #include <iostream>
 #include <fstream>
@@ -287,7 +288,7 @@ bool Nimage::load_pnm_gz(const char* fname)
   
   do{
     gzgets(file, line, sizeof(line)); 
-  } while( line[0] == '#' );
+  } while(!isdigit(line[0]));
       
   sscanf(line, "%d %d", &width, &height );
 
