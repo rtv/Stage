@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.79 $
+//  $Author: rtv $
+//  $Revision: 1.80 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -21,8 +21,9 @@
 #include <iostream.h>
 #include <unistd.h>
 #include <sys/mman.h>
-#include <sys/ipc.h>
-#include <sys/sem.h>
+//#include <sys/ipc.h>
+//#include <sys/sem.h>
+#include <semaphore.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -147,12 +148,11 @@ CWorld::CWorld()
   // default color database file
   strcpy( m_color_database_filename, COLOR_DATABASE );
     
-#ifdef INCLUDE_RTK
-  // disable XS by default in rtkstage
-  m_run_xs = false;
-#else
   // enable XS by default in stage
-  m_run_xs = true; 
+m_run_xs = true; 
+
+#ifdef INCLUDE_RTK2
+ m_run_xs = false;
 #endif
 
   // Initialise world filename
@@ -496,6 +496,8 @@ bool CWorld::Startup()
   // Create the device directory and clock 
   CreateClockDevice();
   
+  puts( "BACK IN CWORLD::STARTUP" );
+
   // Startup all the objects
   // Devices will create and initialize their device files
   for (int i = 0; i < m_object_count; i++)
@@ -507,9 +509,13 @@ bool CWorld::Startup()
     }
   }
   
+  puts( "STARTING PLAYER" );
+  
   // exec and set up Player
   StartupPlayer();
   
+  puts( "DONE STARTING PLAYER" );
+
   // spawn an XS process, unless we disabled it (rtkstage disables xs by default)
   if( m_run_xs && m_run_pose_server && m_run_environment_server ) 
     SpawnXS();
@@ -522,14 +528,6 @@ bool CWorld::Startup()
   // start the real-time interrupts going
   StartTimer( m_real_timestep );
   
-#ifdef INCLUDE_RTK
-  // Initialise the message router
-  m_router->add_sink(RTK_UI_DRAW, (void (*) (void*, void*)) &OnUiDraw, this);
-  m_router->add_sink(RTK_UI_MOUSE, (void (*) (void*, void*)) &OnUiMouse, this);
-  m_router->add_sink(RTK_UI_PROPERTY, (void (*) (void*, void*)) &OnUiProperty, this);
-  m_router->add_sink(RTK_UI_BUTTON, (void (*) (void*, void*)) &OnUiButton, this);
-#endif
- 
   //PRINT_DEBUG( "** STARTUP DONE **" );
   return true;
 }
@@ -688,7 +686,7 @@ bool CWorld::CreateClockDevice( void )
 
   // create the time device
 
-  size_t clocksize = sizeof( struct timeval );
+  size_t clocksize = sizeof( stage_clock_t );
   
   sprintf( clockName, "%s/clock", m_device_dir );
   //sprintf( clockName, "/tmp/clock");
@@ -718,28 +716,37 @@ bool CWorld::CreateClockDevice( void )
   if( (r = write( tfd, &m_sim_timeval, sizeof( m_sim_timeval ))) < 0 )
     perror( "failed to write time into clock device" );
   
-  m_time_io = (struct timeval*)mmap( NULL, clocksize, 
-                                     PROT_READ | PROT_WRITE, MAP_SHARED,
-                                     tfd, (off_t) 0);
-  if (m_time_io == MAP_FAILED )
+
+  void *map = mmap( NULL, clocksize, 
+		    PROT_READ | PROT_WRITE, MAP_SHARED,
+		    tfd, (off_t) 0);
+
+  if (map == MAP_FAILED )
   {
     perror( "Failed to map memory" );
     return false;
   }
+
+  // Initialise space
+  //
+  memset( map, 0, clocksize );
+
+  // store the pointer to the clock
+  m_clock = (stage_clock_t*)map;
+
+  // init the clock's semaphore
+  if( sem_init( &m_clock->lock, 0, 1 ) < 0 )
+    perror( "sem_init failed" );
   
   close( tfd ); // can close fd once mapped
   
-  // Initialise space
-  //
-  memset( m_time_io, 0, clocksize );
-  
   // Create the lock object for the shared mem
   //
-  if ( !CreateShmemLock() )
-  {
-    perror( "failed to create lock for shared memory" );
-    return false;
-  }
+  //if ( !CreateShmemLock() )
+  //{
+  //perror( "failed to create lock for shared memory" );
+  //return false;
+  //}
   
 #ifdef DEBUG
   cout << "Successfully mapped clock device." << endl;  
@@ -789,11 +796,6 @@ void CWorld::Main(void)
   
   static double loop_start = GetRealTime();
 
-#ifdef INCLUDE_RTK
-  // RTV - moved this init - nasty to rtkstage?
-  double ui_time = 0;
-#endif
-  
   //while (true)
   // {
   // Set the timer flag depending on the current mode.
@@ -844,15 +846,6 @@ void CWorld::Main(void)
   //world->matrix->dump();
   //getchar();	
 
-  // Update the GUI every 100ms
-  //
-#ifdef INCLUDE_RTK
-  if (GetRealTime() - ui_time > 0.050)
-  {
-	  ui_time = GetRealTime();
-	  m_router->send_message(RTK_UI_FORCE_UPDATE, NULL);
-  }
-#endif
   // }
 }
 
@@ -872,9 +865,10 @@ void CWorld::Update()
 
   // copy the timeval into the player io buffer
   // use the first object's info
-  LockShmem();
-  *m_time_io = m_sim_timeval;
-  UnlockShmem();
+  
+  sem_wait( &m_clock->lock );
+  m_clock->time = m_sim_timeval;
+  sem_post( &m_clock->lock );
 
   // Do the actual work -- update the objects 
   for (int i = 0; i < m_object_count; i++)
@@ -985,311 +979,6 @@ void CWorld::AddObject(CEntity *object)
   m_object[m_object_count++] = object;
 }
 
-
-///////////////////////////////////////////////////////////////////////////
-// lock the shared mem
-// Returns true on success
-//
-bool CWorld::LockShmem( void )
-{
-  struct sembuf ops[1];
-
-  ops[0].sem_num = 0;
-  ops[0].sem_op = 1;
-  ops[0].sem_flg = 0;
-
-#ifdef DEBUG
-  // printf( "Lock semaphore: %d %d\n" , semKey, semid );
-  //fflush( stdout );
-#endif
-
-  int retval = semop( semid, ops, 1 );
-  if (retval != 0)
-  {
-      PRINT_ERR1("lock failed return value = %d\n", (int) retval);
-      return false;
-  }
-  return true;
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Create a single semaphore to sync access to the shared memory segments
-//
-bool CWorld::CreateShmemLock()
-{
-  semKey = SEMKEY;
-
-  union semun
-  {
-    int val;
-    struct semid_ds *buf;
-    ushort *array;
-  } argument;
-
-  argument.val = 0; // initial semaphore value
-  semid = semget( semKey, 1, 0666 | IPC_CREAT );
-
-  if( semid < 0 ) // semget failed
-  {
-    PRINT_ERR( "unable to create semaphore\n" );
-    return false;
-  }
-  if( semctl( semid, 0, SETVAL, argument ) < 0 )
-  {
-    PRINT_ERR( "failed to set semaphore value\n" );
-    return false;
-  }
-
-#ifdef DEBUG
-  printf( "Stage: Create semaphore: semkey=%d semid=%d\n", semKey, semid );
-    
-#endif
-
-  return true;
-}
-
-///////////////////////////////////////////////////////////////////////////
-// unlock the shared mem
-//
-void CWorld::UnlockShmem( void )
-{
-  struct sembuf ops[1];
-
-  ops[0].sem_num = 0;
-  ops[0].sem_op = -1;
-  ops[0].sem_flg = 0;
-
-#ifdef DEBUG
-  //printf( "Unlock semaphore: %d %d\n", semKey, semid );
-  // fflush( stdout );
-#endif
-
-  int retval = semop( semid, ops, 1 );
-  if (retval != 0)
-      printf("Stage: unlock failed return value = %d\n", (int) retval);
-}
-
-
-#ifdef INCLUDE_RTK
-
-/////////////////////////////////////////////////////////////////////////
-// Initialise rtk
-//
-void CWorld::InitRtk(RtkMsgRouter *router)
-{
-    m_router = router;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI update messages
-//
-void CWorld::OnUiDraw(CWorld *world, RtkUiDrawData *data)
-{
-    // Draw the background
-    //
-    if (data->draw_back("global"))
-        world->DrawBackground(data);
-
-    // Draw grid layers (for debugging)
-    //
-    data->begin_section("global", "debugging");
-
-    if (data->draw_layer("obstacle", false))
-        world->DrawDebug(data, DBG_OBSTACLES);        
-
-    if (data->draw_layer("puck", false))
-        world->DrawDebug(data, DBG_PUCKS);
-
-    if (data->draw_layer("laser", false))
-        world->DrawDebug(data, DBG_LASER);
-
-    if (data->draw_layer("vision", false))
-        world->DrawDebug(data, DBG_VISION);
-
-    if (data->draw_layer("sonar", false))
-        world->DrawDebug(data, DBG_SONAR);
-    
-    data->end_section();
-
-    // Draw the children
-    //
-    for (int i = 0; i < world->m_object_count; i++)
-        world->m_object[i]->OnUiUpdate(data);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI mouse messages
-//
-void CWorld::OnUiMouse(CWorld *world, RtkUiMouseData *data)
-{
-    data->begin_section("global", "move");
-
-    // Create a mouse mode (used by objects)
-    //
-    data->mouse_mode("object");
-    
-    data->end_section();
-
-    // Update the children
-    //
-    for (int i = 0; i < world->m_object_count; i++)
-        world->m_object[i]->OnUiMouse(data);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// UI property message handler
-//
-void CWorld::OnUiProperty(CWorld *world, RtkUiPropertyData* data)
-{
-    RtkString value;
-
-    data->begin_section("default", "world");
-    
-    RtkFormat1(value, "%7.3f", (double) world->GetTime());
-    data->add_item_text("Simulation time (s)", CSTR(value), "");
-    
-    RtkFormat1(value, "%7.3f", (double) world->GetRealTime());
-    data->add_item_text("Real time (s)", CSTR(value), "");
-
-    RtkFormat1(value, "%7.3f", (double) world->m_update_ratio);
-    data->add_item_text("Sim/real time", CSTR(value), ""); 
-    
-    RtkFormat1(value, "%7.3f", (double) world->m_update_rate);
-    data->add_item_text("Update rate (Hz)", CSTR(value), "");
-
-    data->end_section();
-
-    // Update the children
-    //
-    for (int i = 0; i < world->m_object_count; i++)
-        world->m_object[i]->OnUiProperty(data);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// UI button message handler
-//
-void CWorld::OnUiButton(CWorld *world, RtkUiButtonData* data)
-{
-    data->begin_section("default", "world");
-
-    if (data->check_button("enable", world->m_enable))
-        world->m_enable = !world->m_enable;
-
-    if (data->push_button("save"))
-        world->Save(world->m_filename);
-    
-    data->end_section();
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Draw the background; i.e. things that dont move
-//
-void CWorld::DrawBackground(RtkUiDrawData *data)
-{
-  RTK_TRACE0("drawing background");
-
-  data->set_color(RGB(0, 0, 0));
-    
-  // Loop through the image and draw points individually.
-  // Yeah, it's slow, but only happens once.
-  //
-  for (int y = 0; y < matrix->height; y++)
-  {
-    for (int x = 0; x < matrix->width; x++)
-    {
-      if( matrix->is_type(x, y, WallType ) )
-      {
-	      double px = (double) x / ppm;
-	      double py = (double)  y / ppm;
-	      double s = 1.0 / ppm;
-	      data->rectangle(px, py, px + s, py + s);
-      }
-    }
-  }
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Draw the various layers
-//
-void CWorld::DrawDebug(RtkUiDrawData *data, int options)
-{
-  data->set_color(RTK_RGB(0, 0, 255));
-    
-  // Loop through the image and draw points individually.
-  // Yeah, it's slow, but only happens for debugging
-  //
-  for (int y = 0; y < matrix->get_height(); y++)
-  {
-    for (int x = 0; x < matrix->get_width(); x++)
-    {
-      CEntity **entity = matrix->get_cell(x, y);
-
-      for (int i = 0; entity[i] != NULL; i++)
-      {
-        double px = (double) x / ppm;
-        double py = (double) y / ppm;
-        double s = 1.0 / ppm;
-
-        if (options == DBG_OBSTACLES)
-          if (entity[i]->obstacle_return)
-            data->rectangle(px, py, px + s, py + s);
-        if (options == DBG_PUCKS)
-          if (entity[i]->puck_return)
-            data->rectangle(px, py, px + s, py + s);
-        if (options == DBG_LASER)
-          if (entity[i]->laser_return)
-            data->rectangle(px, py, px + s, py + s);
-        if (options == DBG_VISION)
-          if (entity[i]->channel_return)
-            data->rectangle(px, py, px + s, py + s);
-        if (options == DBG_SONAR)
-          if (entity[i]->sonar_return)
-            data->rectangle(px, py, px + s, py + s);
-      }
-    }
-  }
-}
-
-#endif // INCLUDE_RTK
-  
-char* CWorld::StringType( StageType t )
-{
-  switch( t )
-  {
-    case NullType: return "None"; 
-    case WallType: return "Wall"; break;
-    case PlayerType: return "Player"; 
-    case MiscType: return "Misc"; 
-    case RectRobotType: return "RectRobot"; 
-    case RoundRobotType: return "RoundRobot"; 
-    case SonarType: return "Sonar"; 
-    case LaserTurretType: return "Laser"; 
-    case VisionType: return "Vision"; 
-    case PtzType: return "PTZ"; 
-    case BoxType: return "Box"; 
-    case LaserBeaconType: return "LaserBcn"; 
-    case LBDType: return "LBD"; 
-    case VisionBeaconType: return "VisionBcn"; 
-    case GripperType: return "Gripper"; 
-    case AudioType: return "Audio"; 
-    case BroadcastType: return "Bcast"; 
-    case SpeechType: return "Speech"; 
-    case TruthType: return "Truth"; 
-    case GpsType: return "GPS"; 
-    case PuckType: return "Puck"; 
-    case OccupancyType: return "Occupancy"; 
-    case IDARType: return "IDAR";
-  }	 
-  return( "unknown" );
-}
-  
-// attempts to spawn an XS process. No harm done if it fails
 void CWorld::SpawnXS( void )
 {
   int pid = 0;
@@ -1541,6 +1230,37 @@ void CWorld::LogOutputHeader( void )
            m_object_count );
       
   write( m_log_fd, line, strlen(line) );
+}
+
+char* CWorld::StringType( StageType t )
+{
+  switch( t )
+  {
+    case NullType: return "None"; 
+    case WallType: return "Wall"; break;
+    case PlayerType: return "Player"; 
+    case MiscType: return "Misc"; 
+    case RectRobotType: return "RectRobot"; 
+    case RoundRobotType: return "RoundRobot"; 
+    case SonarType: return "Sonar"; 
+    case LaserTurretType: return "Laser"; 
+    case VisionType: return "Vision"; 
+    case PtzType: return "PTZ"; 
+    case BoxType: return "Box"; 
+    case LaserBeaconType: return "LaserBcn"; 
+    case LBDType: return "LBD"; 
+    case VisionBeaconType: return "VisionBcn"; 
+    case GripperType: return "Gripper"; 
+    case AudioType: return "Audio"; 
+    case BroadcastType: return "Bcast"; 
+    case SpeechType: return "Speech"; 
+    case TruthType: return "Truth"; 
+    case GpsType: return "GPS"; 
+    case PuckType: return "Puck"; 
+    case OccupancyType: return "Occupancy"; 
+    case IDARType: return "IDAR";
+  }	 
+  return( "unknown" );
 }
 
 #ifdef INCLUDE_RTK2

@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.37 2002-01-31 02:43:27 inspectorg Exp $
+//  $Id: entity.cc,v 1.38 2002-02-02 01:23:44 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -28,8 +28,9 @@
 #include "world.hh"
 #include "worldfile.hh"
 
-//#define DEBUG
-#undef DEBUG
+#define DEBUG
+#define VERBOSE
+//#undef DEBUG
 //#undef VERBOSE
 
 
@@ -38,6 +39,12 @@
 // Requires a pointer to the parent and a pointer to the world.
 CEntity::CEntity(CWorld *world, CEntity *parent_object )
 {
+#ifdef DEBUG
+  puts( "CEntity::CEntity()" );
+#endif
+
+  m_lock = NULL;
+
   m_world = world; 
   m_parent_object = parent_object;
   m_default_object = this;
@@ -217,6 +224,8 @@ bool CEntity::Startup( void )
   RtkStartup();
 #endif
 
+  puts( "STARTUP" );
+
   // if this is not a player device, we bail right here
   if( m_player_type == 0 )
     return true;
@@ -240,14 +249,17 @@ bool CEntity::Startup( void )
     return false;
   }
   
-  caddr_t playerIO = (caddr_t)mmap( NULL, mem, PROT_READ | PROT_WRITE, 
-                                    MAP_SHARED, tfd, (off_t) 0);
+  // it's a little larger than a player_stage_info_t, but that's the 
+  // first part of the buffer, so we'll call it that
+  player_stage_info_t* playerIO = 
+    (player_stage_info_t*)mmap( NULL, mem, PROT_READ | PROT_WRITE, 
+				MAP_SHARED, tfd, (off_t) 0);
   
   if (playerIO == MAP_FAILED )
-  {
-    PRINT_ERR1( "Failed to map memory: %s", strerror(errno) );
-    return false;
-  }
+    {
+      PRINT_ERR1( "Failed to map memory: %s", strerror(errno) );
+      return false;
+    }
   
   close( tfd ); // can close fd once mapped
   
@@ -255,69 +267,40 @@ bool CEntity::Startup( void )
   memset(playerIO, 0, mem);
   PRINT_DEBUG("successfully mapped shared memory");
   
-  // Setup IO for all the objects - MUST DO THIS AFTER MAPPING SHARING MEMORY
-  // each is passed a pointer to the start of its space in shared memory
-  int entityOffset = 0;
-  if( !SetupIOPointers( playerIO + entityOffset  ) )
-  {
-    PRINT_ERR("failed to setup entity IO pointers.");
-    return false;
-  }
-     
-  return true;
-}
+  printf( "S: mmapped %d bytes at %p\n", mem, playerIO );
 
-
-///////////////////////////////////////////////////////////////////////////
-// Shutdown routine
-void CEntity::Shutdown()
-{
-#ifdef INCLUDE_RTK2
-  // Finalize the rtk gui
-  RtkShutdown();
-#endif
-
-  // if this is not a player device, we bail right here
-  if( m_player_type == 0 )
-    return;
-
-  // remove our name in the filesystem
-  if (m_device_filename[0])
-    unlink( m_device_filename );
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Setup  routine
-// set up the IO pointers (data, command, config, truth)
-// this has to be done before we can GetX or SetX
-// but Startup() must be called before this to set the io sizes correctly  
-bool CEntity::SetupIOPointers( char* io )
-{
-  //  puts( "CEntity::SetupIOPointers()" );
-
-  ASSERT( io  ); //io pointer must be good
-   
-  m_world->LockShmem();
-
+  // we use the lock field in the player_stage_info_t structure to
+  // control access with a semaphore.
+  
+  // store the address 
+  m_lock = &playerIO->lock;
+  
+  // initialise the semaphore
+  if( sem_init( m_lock, 0, 1 ) < 0 )
+    perror( "sem_init failed" );
+  
+  printf( "Stage: device lock at %p\n", m_lock );
+  
+  // try a lock
+  assert( Lock() );
+  
   // set the pointers into the shared memory region
-  m_info_io    = (player_stage_info_t*)io; // info is the first record
+  m_info_io    = playerIO; // info is the first record
   m_data_io    = (uint8_t*)m_info_io + m_info_len;
   m_command_io = (uint8_t*)m_data_io + m_data_len; 
   m_config_io  = (uint8_t*)m_command_io + m_command_len;
-
+  
   m_info_io->len = SharedMemorySize(); // total size of all the shared data
-
+  
   // set the lengths in the info structure
-
   m_info_io->data_len    =  (uint32_t)m_data_len;
   m_info_io->command_len =  (uint32_t)m_command_len;
   m_info_io->config_len  =  (uint32_t)m_config_len;
-
+  
   m_info_io->data_avail    =  0;
   m_info_io->command_avail =  0;
   m_info_io->config_avail  =  0;
-
+  
   m_info_io->player_id.port = m_player_port;
   m_info_io->player_id.index = m_player_index;
   m_info_io->player_id.type = m_player_type;
@@ -340,17 +323,35 @@ bool CEntity::SetupIOPointers( char* io )
   fflush( stdout );
 #endif
 
-  m_world->UnlockShmem();
-
-  // Put some initial data in the shared memory for Player to read when
+  // try  an unlock
+  assert( Unlock() );
+  
+  // Put some initial dummy data in the shared memory for Player to read when
   // it starts up.
-
-  // publish some dummy data - all zeroed for now
   unsigned char dummy_data[ m_data_len ];
   memset( dummy_data, 0, m_data_len );
   PutData( dummy_data, m_data_len );
 
   return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Shutdown routine
+void CEntity::Shutdown()
+{
+#ifdef INCLUDE_RTK2
+  // Clean up the figure we created
+  rtk_fig_destroy(this->fig);
+#endif
+
+  // if this is not a player device, we bail right here
+  if( m_player_type == 0 )
+    return;
+
+  // remove our name in the filesystem
+  if (m_device_filename[0])
+    unlink( m_device_filename );
 }
 
 
@@ -366,6 +367,8 @@ int CEntity::SharedMemorySize( void )
 // Update the object's representation
 void CEntity::Update( double sim_time )
 {
+  puts( "UPDATE" );
+
 #ifdef INCLUDE_RTK2
   // Update the rtk gui
   RtkUpdate();
@@ -672,7 +675,7 @@ bool CEntity::IsDescendent(CEntity *entity)
 //
 size_t CEntity::PutData( void* data, size_t len )
 {
-  m_world->LockShmem();
+  Lock();
   
 #ifdef DEBUG  
   //  printf( "S: Entity::PutData() (%d,%d,%d) at %p\n", 
@@ -703,7 +706,7 @@ size_t CEntity::PutData( void* data, size_t len )
     fflush( stdout );
   }
   
-  m_world->UnlockShmem();
+  Unlock();
   
   return len;
 }
@@ -719,7 +722,7 @@ size_t CEntity::GetData( void* data, size_t len )
   fflush( stdout );
 #endif
 
-  m_world->LockShmem();
+  Lock();
 
   // the data must be the right size!
   if( len <= m_info_io->data_avail )
@@ -734,7 +737,7 @@ size_t CEntity::GetData( void* data, size_t len )
     len = 0; // set the return value to indicate failure 
   }
   
-  m_world->UnlockShmem();
+  Unlock();
   
   return len;
 }
@@ -752,7 +755,7 @@ size_t CEntity::GetCommand( void* cmd, size_t len )
     fflush( stdout );
 #endif
 
-  m_world->LockShmem();
+  Lock();
 
   // the command must be the right size!
   if( len == m_info_io->command_len && len == m_info_io->command_avail )
@@ -767,7 +770,7 @@ size_t CEntity::GetCommand( void* cmd, size_t len )
       len = 0; // set the return value to indicate failure 
     }
   
-  m_world->UnlockShmem();
+  Unlock();
   
   return len;
 }
@@ -778,29 +781,31 @@ size_t CEntity::GetCommand( void* cmd, size_t len )
 // this is a little trickier 'cos configs are consumed
 size_t CEntity::GetConfig( void* config, size_t len )
 {  
-  m_world->LockShmem();
+//    Lock();
 
-  // the config data must be the right size!
-  if( len == m_info_io->config_len && len == m_info_io->config_avail )
-    memcpy( config, m_config_io, len); // import device-specific data
-  else
-    {
-#ifdef DEBUG
-      printf( "GetConfig() found no config (requested %d bytes;"
-	      " io buffer is %d bytes; %d bytes are available)\n", 
-	      len, m_info_io->config_len, m_info_io->config_avail );
-      fflush( stdout );
-#endif
-      len = 0; // set the return value to indicate failure 
-    }
+//    // the config data must be the right size!
+//    if( len == m_info_io->config_len && len == m_info_io->config_avail )
+//      memcpy( config, m_config_io, len); // import device-specific data
+//    else
+//      {
+//        //#ifdef DEBUG
+//        //printf( "GetConfig() found no config (requested %d bytes;"
+//        //      " io buffer is %d bytes; %d bytes are available)\n", 
+//        //      len, m_info_io->config_len, m_info_io->config_avail );
+//        //fflush( stdout );
+//        //#endif
+//        len = 0; // set the return value to indicate failure 
+//      }
   
-  // reset the available size in the info structure to show that 
-  // we consumed the message
-  m_info_io->config_avail = 0;    
+//    // reset the available size in the info structure to show that 
+//    // we consumed the message
+//    m_info_io->config_avail = 0;    
   
-  m_world->UnlockShmem();
+//    Unlock();
   
-  return len;
+  //  return len;
+
+  return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -809,9 +814,9 @@ int CEntity::Subscribed()
 {
   //return true;
 
-  m_world->LockShmem();
+  Lock();
   int subscribed = m_info_io->subscribed;
-  m_world->UnlockShmem();
+  Unlock();
   
   return( subscribed );
 }
@@ -900,6 +905,44 @@ void CEntity::MakeDirtyIfPixelChanged( void )
   m_last_pixel_y = y;
   m_last_degree = degree;
 };
+
+
+///////////////////////////////////////////////////////////////////////////
+// lock the shared mem
+// Returns true on success
+//
+bool CEntity::Lock( void )
+{
+  assert( m_lock );
+
+  printf( "S: LOCK %p\n", m_lock );
+
+  if( sem_wait( m_lock ) < 0 )
+    {
+      perror( "sem_wait failed" );
+      return false;
+    }
+
+  return true;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// unlock the shared mem
+//
+bool CEntity::Unlock( void )
+{
+  assert( m_lock );
+
+  printf( "S: UNLOCK %p\n", m_lock );
+
+  if( sem_post( m_lock ) < 0 )
+    {
+      perror( "sem_post failed" );
+      return false;
+    }
+
+  return true;
+}
 
 #ifdef INCLUDE_RTK2
 
@@ -1021,3 +1064,7 @@ const char *CEntity::RtkGetStageType()
 }
 
 #endif
+
+
+
+

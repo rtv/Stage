@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
-//  $Author: inspectorg $
-//  $Revision: 1.32 $
+//  $Author: rtv $
+//  $Revision: 1.33 $
 //
 // Usage:
 //  (empty)
@@ -35,6 +35,8 @@
 
 #include "guiexport.hh" // relic!
 //#include "messages.h"
+
+#include <semaphore.h>
 
 #ifdef INCLUDE_RTK
 #include "rtk_ui.hh"
@@ -73,11 +75,14 @@ class CEntity
   // Finalize object
   public: virtual void Shutdown();
 
-  // Set the io pointers correctly
-  private: bool SetupIOPointers( char* io );
-
   // Get the shared memory size
   private: int SharedMemorySize( void );
+
+  // set and unset the semaphore that protects this entity's shared memory 
+protected: bool CEntity::Lock( void );
+protected: bool CEntity::Unlock( void );
+  // pointer to the  semaphore in the shared memory
+private: sem_t* m_lock; 
 
   // Update the object's device-specific representation
   public: virtual void Update( double sim_time );

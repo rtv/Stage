@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.74 2002-01-29 02:33:38 rtv Exp $
+# $Id: Makefile,v 1.75 2002-02-02 01:23:44 rtv Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -19,7 +19,7 @@ PLAYER_LIB = $(PLAYER_DIR)/lib
 
 # Flags common to stage and rtkstage
 INCLUDES = -I../include -I$(PLAYER_INC)
-CCFLAGS += -Wall -DREENTRANT $(ZLIB_FLAGS) $(INCLUDES) 
+CCFLAGS += -Wall -DREENTRANT $(ZLIB_FLAGS) $(INCLUDES) $(PLAYER_PLATFORM)
 CCFLAGS += -DVERSION=\"$(VERSION)\" -DCOLOR_DATABASE=\"$(COLOR_DATABASE)\"
 
 # production/debug link

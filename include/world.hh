@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: inspectorg $
-//  $Revision: 1.40 $
+//  $Author: rtv $
+//  $Revision: 1.41 $
 //
 // Usage:
 //  (empty)
@@ -307,10 +307,12 @@ class CWorld
   
   private: bool CreateClockDevice( void );
   // export the time in this buffer
-  public: struct timeval* m_time_io;
-  
-  private: key_t semKey;
-  private: int semid; // semaphore access for shared mem locking
+  //public: struct timeval* m_time_io;
+
+public: stage_clock_t* m_clock; // a timeval and a semaphore lock
+
+  //private: key_t semKey;
+  //private: int semid; // semaphore access for shared mem locking
 
 
   //////////////////////////////////////////////////////////////////
@@ -320,16 +322,16 @@ class CWorld
   public: char* CWorld::StringType( StageType t );
   
   // Create a single semaphore to sync access to the shared memory segments
-  private: bool CreateShmemLock();
+  //private: bool CreateShmemLock();
 
   // Get a pointer to shared mem area
   //public: void* GetShmem() {return playerIO;};
     
   // lock the shared mem area
-  public: bool LockShmem( void );
+  //public: bool LockShmem( void );
 
   // Unlock the shared mem area
-  public: void UnlockShmem( void );
+  //public: void UnlockShmem( void );
   
   public: CEntity* GetEntityByID( int port, int type, int index );
   
