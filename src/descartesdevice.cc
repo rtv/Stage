@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/descartesdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -225,7 +225,9 @@ CEntity* CDescartesDevice::TestCollision(double px, double py, double pth)
 	    }
 	  return NULL;
 	}
-      }
+    case ShapeNone:
+      return NULL;
+    }
   return NULL;
 }
 

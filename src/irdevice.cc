@@ -13,7 +13,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/irdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 #include <math.h>
@@ -118,9 +118,19 @@ void CIDARDevice::Update( double sim_time )
   player_idar_config_t cfg;
 
   // Get config
-  int res = 0;
-  if( (res = GetConfig( &client, &cfg, sizeof(cfg))) == sizeof(cfg) )
-    {
+  int res = GetConfig( &client, &cfg, sizeof(cfg));
+
+  switch( res )
+    { 
+    case 0:
+      // nothing available - nothing to do
+      break;
+
+    case -1: // error
+      PRINT_ERR( "get config failed" );
+      break;
+      
+    case sizeof(cfg): // the size we expect
       // what does the client want us to do?
       switch( cfg.instruction )
 	{
@@ -145,10 +155,11 @@ void CIDARDevice::Update( double sim_time )
 	  printf( "STAGE warning: unknown idar config instruction %d\n",
 		  cfg.instruction );
 	}
-    }
-  else
-    {
-      printf( "Stage: idar config short bytes" );
+      break;
+      
+    default: // a bad value
+      PRINT_ERR1( "wierd: idar config returned %d ", res );
+      break;
     }
   
   // NOTE unlike most devices, live data is not published here - that's

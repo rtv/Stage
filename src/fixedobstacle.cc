@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.17 $
+//  $Revision: 1.18 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -208,8 +208,6 @@ bool CFixedObstacle::Startup()
   // we optionally print it out below
   // long int rects = 0;
 
-#if 0
-  
 #ifdef INCLUDE_RTK2
   
   rtk_fig_clear(this->fig);
@@ -231,7 +229,7 @@ bool CFixedObstacle::Startup()
 	  int height = this->image->height; // assume full height for starters
 	  
 	  // grow the width - scan along the line until we hit an empty pixel
-	  for( x;  this->image->get_pixel( x, y ) > 0; x++ )
+	  for( ;  this->image->get_pixel( x, y ) > 0; x++ )
 	    {
 	      // handle horizontal cropping
 	      double ppx = x * sx; 
@@ -277,8 +275,6 @@ bool CFixedObstacle::Startup()
 	}
     }
 
-#endif
-  
   //printf( "rects = %ld\n", rects );
   
 
