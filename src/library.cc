@@ -24,7 +24,7 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.20 2003-06-10 03:29:21 jazzfunk Exp $
+ * CVS info: $Id: library.cc,v 1.21 2003-08-18 17:44:27 reed Exp $
  */
 
 //#define DEBUG
@@ -56,6 +56,7 @@
 #include "models/irdevice.hh"
 #include "models/rebpositiondevice.hh"
 //#include "models/bpsdevice.hh"
+#include "models/serviceadvdevice.hh"
 
 typedef CreatorFunctionPtr CFP;
 
@@ -90,6 +91,7 @@ libitem_t library_items[] = {
   { "reb_ir", "green", (CFP)CIRDevice::Creator},
   { "reb_position", "purple", (CFP)CREBPositionDevice::Creator},
   // { "bps", BpsType, (CFP)CBpsDevice::Creator},
+  { "service_adv", "purple", (CFP)CServiceAdvDevice::Creator},
   {NULL, NULL, NULL } // marks the end of the array
 };  
 

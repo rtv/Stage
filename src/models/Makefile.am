@@ -56,7 +56,8 @@ libstgmodels_a_SOURCES = \
 		   amcldevice.hh \
 		   amcldevice.cc \
 		   irdevice.cc irdevice.hh \
-		   rebpositiondevice.cc rebpositiondevice.hh
+		   rebpositiondevice.cc rebpositiondevice.hh \
+            serviceadvdevice.cc serviceadvdevice.hh
 
 # currently broken
 # bpsdevice.cc 
