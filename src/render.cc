@@ -43,8 +43,6 @@ void CXGui::RenderObject( truth_t &truth )
       case PtzType: RenderPTZ( &truth, extended ); break;  
       case VisionBeaconType: RenderVisionBeacon( &truth, extended ); break;  
       case BroadcastType: RenderBroadcast( &truth, extended ); break;  
-      case BroadcastType: RenderBroadcast( &truth, extended ); break;  
-      case BroadcastType: RenderBroadcast( &truth, extended ); break;  
 	
 	// deprecated
 	//case PLAYER_TRUTH_CODE: RenderTruth(&truth,extended); break;  
