@@ -1,6 +1,6 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: energy.world,v 1.2 2005-02-13 07:37:43 rtv Exp $
+# CVS: $Id: energy.world,v 1.3 2005-02-28 08:06:45 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
@@ -35,19 +35,22 @@ pioneer2dx_battery
   name "robot"
   pose [1.975 3.000 0.000]
   laser()
+  fiducialfinder()
 )
 
 pioneer2dx_battery
 (
   name "robot2"
   pose [4.000 1.000 180.000]
-  laser()
+  laser( )
+  fiducialfinder()
 )
 
 energy
 (
+  fiducial_return 99
   pose [ 3.000 3.000 0.000 ]
-  size [ 0.5 0.5 ]
+  size [ 0.1 0.1 ]
   give 200
   take 0
   capacity 1000 # infinite

@@ -24,6 +24,7 @@ extern "C" {
     rtk_fig_t* geom;
     rtk_fig_t* grid;
     rtk_fig_t* data;
+    rtk_fig_t* data_extra; // a bit of a hack, but some models need another fig
     rtk_fig_t* cmd;
     rtk_fig_t* cfg;
     rtk_fig_t* data_bg; // background (used e.g for laser scan fill)

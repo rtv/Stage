@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.127 2005-02-28 00:13:19 rtv Exp $
+ * CVS: $Id: stage.h,v 1.128 2005-02-28 08:06:44 rtv Exp $
  */
 
 
@@ -223,6 +223,7 @@ extern "C" {
     uint8_t nose;
     uint8_t grid;
     uint8_t boundary;
+    uint8_t outline;
     stg_movemask_t movemask;
   } stg_guifeatures_t;
 

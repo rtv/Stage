@@ -318,6 +318,7 @@ stg_model_t* stg_model_create( stg_world_t* world,
   gf.boundary =  STG_DEFAULT_GUI_BOUNDARY;
   gf.nose =  STG_DEFAULT_GUI_NOSE;
   gf.grid = STG_DEFAULT_GUI_GRID;
+  gf.outline = 1;
   gf.movemask = STG_DEFAULT_GUI_MOVEMASK;  
   stg_model_set_guifeatures( mod, &gf );
 
@@ -1217,37 +1218,30 @@ int stg_model_update_pose( stg_model_t* mod )
 
 void stg_model_load( stg_model_t* mod )
 {
-  stg_pose_t pose, pose_default;
-  stg_get_default_pose( &pose_default );
-
-  pose.x = wf_read_tuple_length(mod->id, "pose", 0, pose_default.x );
-  pose.y = wf_read_tuple_length(mod->id, "pose", 1, pose_default.y ); 
-  pose.a = wf_read_tuple_angle(mod->id, "pose", 2,  pose_default.a );
-
-  if( memcmp( &pose, &pose_default, sizeof(pose))) // if different to default
-    stg_model_set_pose( mod, &pose );
+  stg_pose_t pose;
+  pose.x = wf_read_tuple_length(mod->id, "pose", 0, mod->pose.x );
+  pose.y = wf_read_tuple_length(mod->id, "pose", 1, mod->pose.y ); 
+  pose.a = wf_read_tuple_angle(mod->id, "pose", 2,  mod->pose.a );
+  stg_model_set_pose( mod, &pose );
   
-  stg_geom_t geom, geom_default;
-  stg_get_default_geom( &geom_default );
-  
-  geom.pose.x = wf_read_tuple_length(mod->id, "origin", 0, geom_default.pose.x );
-  geom.pose.y = wf_read_tuple_length(mod->id, "origin", 1, geom_default.pose.y );
-  geom.pose.a = wf_read_tuple_length(mod->id, "origin", 2, geom_default.pose.a );
-  geom.size.x = wf_read_tuple_length(mod->id, "size", 0, geom_default.size.x );
-  geom.size.y = wf_read_tuple_length(mod->id, "size", 1, geom_default.size.x );
-  
-  if( memcmp( &geom, &geom_default, sizeof(geom))) // if different to default
-    stg_model_set_geom( mod, &geom );
+  stg_geom_t geom;
+  geom.pose.x = wf_read_tuple_length(mod->id, "origin", 0, mod->geom.pose.x );
+  geom.pose.y = wf_read_tuple_length(mod->id, "origin", 1, mod->geom.pose.y );
+  geom.pose.a = wf_read_tuple_length(mod->id, "origin", 2, mod->geom.pose.a );
+  geom.size.x = wf_read_tuple_length(mod->id, "size", 0, mod->geom.size.x );
+  geom.size.y = wf_read_tuple_length(mod->id, "size", 1, mod->geom.size.y );
+  stg_model_set_geom( mod, &geom );
   
   stg_bool_t obstacle;
-  obstacle = wf_read_int( mod->id, "obstacle_return", STG_DEFAULT_OBSTACLERETURN );    
+  obstacle = wf_read_int( mod->id, "obstacle_return", mod->obstacle_return );    
   stg_model_set_obstaclereturn( mod, &obstacle );
   
   stg_guifeatures_t gf;
-  gf.boundary = wf_read_int(mod->id, "gui_boundary", STG_DEFAULT_GUI_BOUNDARY );
-  gf.nose = wf_read_int(mod->id, "gui_nose", STG_DEFAULT_GUI_NOSE );
-  gf.grid = wf_read_int(mod->id, "gui_grid", STG_DEFAULT_GUI_GRID );
-  gf.movemask = wf_read_int(mod->id, "gui_movemask", STG_DEFAULT_GUI_MOVEMASK );
+  gf.boundary = wf_read_int(mod->id, "gui_boundary", mod->guifeatures.boundary );
+  gf.nose = wf_read_int(mod->id, "gui_nose", mod->guifeatures.nose );
+  gf.grid = wf_read_int(mod->id, "gui_grid", mod->guifeatures.grid );
+  gf.movemask = wf_read_int(mod->id, "gui_movemask", mod->guifeatures.movemask );
+  gf.outline = wf_read_int(mod->id, "gui_outline", mod->guifeatures.outline );
   stg_model_set_guifeatures( mod, &gf );
   
   //stg_friction_t friction;
@@ -1256,7 +1250,7 @@ void stg_model_load( stg_model_t* mod )
 
   // laser visibility
   stg_laser_return_t laservis = 
-    wf_read_int(mod->id, "laser_return", STG_DEFAULT_LASERRETURN );      
+    wf_read_int(mod->id, "laser_return", mod->laser_return );      
   stg_model_set_laserreturn( mod, &laservis );
   
   // blob visibility
@@ -1378,16 +1372,6 @@ void stg_model_load( stg_model_t* mod )
   vel.a = wf_read_tuple_angle(mod->id, "velocity", 2, 0 );      
   stg_model_set_velocity( mod, &vel );
     
-//   stg_energy_config_t ecfg;
-//   ecfg.capacity 
-//     = wf_read_float(mod->id, "energy_capacity", STG_DEFAULT_ENERGY_CAPACITY );
-//   ecfg.probe_range 
-//     = wf_read_float(mod->id, "energy_range", STG_DEFAULT_ENERGY_PROBERANGE );      
-//   ecfg.give_rate 
-//     = wf_read_float(mod->id, "energy_return", STG_DEFAULT_ENERGY_GIVERATE );
-//   ecfg.trickle_rate 
-//     = wf_read_float(mod->id, "energy_trickle", STG_DEFAULT_ENERGY_TRICKLERATE );
-//   stg_model_set_energy_config( mod, &ecfg );
 
   stg_kg_t mass;
   mass = wf_read_float(mod->id, "mass", STG_DEFAULT_MASS );

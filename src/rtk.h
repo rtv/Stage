@@ -22,7 +22,7 @@
  * Desc: Combined Rtk functions
  * Author: Andrew Howard, Richard Vaughan
 
- * CVS: $Id: rtk.h,v 1.5 2004-12-02 01:25:31 rtv Exp $
+ * CVS: $Id: rtk.h,v 1.6 2005-02-28 08:06:44 rtv Exp $
  */
 
 #ifndef RTK_H
@@ -519,6 +519,10 @@ void rtk_fig_arrow(rtk_fig_t *fig, double ox, double oy, double oa,
 // Draw an arrow between points (ax, ay) and (bx, by).
 void rtk_fig_arrow_ex(rtk_fig_t *fig, double ax, double ay,
                       double bx, double by, double head);
+
+// create a fancy arrow that can be filled
+void rtk_fig_arrow_fancy(rtk_fig_t *fig, double ox, double oy, double oa,
+			 double len, double head, double thickness, int filled );
 
 // Draw single or multiple lines of text.  Lines are deliminted with
 // '\n'.

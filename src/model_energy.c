@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.16 $
+//  $Revision: 1.17 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -142,7 +142,7 @@ void energy_load( stg_model_t* mod )
   stg_model_get_config( mod, &cfg, sizeof(cfg));
   
   cfg.capacity = wf_read_float( mod->id, "capacity", cfg.capacity );
-  cfg.probe_range = wf_read_length( mod->id, "probe_range", cfg.probe_range );
+  cfg.probe_range = wf_read_length( mod->id, "range", cfg.probe_range );
   cfg.give = wf_read_float( mod->id, "give", cfg.give );
   cfg.take = wf_read_float( mod->id, "take", cfg.take );
 
@@ -314,44 +314,81 @@ void energy_render_data( stg_model_t* mod )
   else // create the figure, store it in the model and keep a local pointer
     {
       mod->gui.data = rtk_fig_create( mod->world->win->canvas, 
-				      mod->gui.top, STG_LAYER_ENERGYDATA );
-      
-      rtk_fig_color_rgb32(mod->gui.data, stg_lookup_color(STG_ENERGY_COLOR) );
+				      mod->gui.top, 
+				      //NULL,
+				      STG_LAYER_ENERGYDATA );      
     }
   
-  rtk_fig_t* fig = mod->gui.data;  
+  if( mod->gui.data_extra  )
+    rtk_fig_clear(mod->gui.data_extra);
+  else // create the figure, store it in the model and keep a local pointer
+    {
+      mod->gui.data_extra = rtk_fig_create( mod->world->win->canvas, 
+					    NULL,
+					    STG_LAYER_ENERGYDATA );      
+    }
+  
+  //rtk_fig_t* fig = mod->gui.data;  
   
   // if this model has a energy subscription
   // and some data, we'll draw the data
   //if(  mod->subs )
   if(  1 )
-    {
+    {  
+
+      // place the visualization a little away from the device
+      stg_pose_t pose;
+      stg_model_get_global_pose( mod, &pose );
+      rtk_fig_origin( mod->gui.data_extra, pose.x-0.3, pose.y-0.3, 0 );
+      
       stg_energy_data_t* data = (stg_energy_data_t*)mod->data;
       stg_energy_config_t* cfg = (stg_energy_config_t*)mod->cfg;;
       
-      double bar_height = data->stored / cfg->capacity;
+      double box_offset_x = -0.3;
+      double box_offset_y = -0.3;
+      double box_height = 0.5; 
+      double box_width = 0.1;
+      double fraction = data->stored / cfg->capacity;
+      double bar_height = box_height * fraction;
+      double bar_width = box_width;
 
-     
-      if( bar_height > 0.5 )
-	rtk_fig_color_rgb32(mod->gui.data, 0x00FF00 ); // green
-      else if( bar_height > 0.1 )
-	rtk_fig_color_rgb32(mod->gui.data, 0xFFFF00 ); // yellow
+      rtk_fig_color_rgb32(mod->gui.data_extra, 0xFFFFFF ); // white
+
+      rtk_fig_rectangle( mod->gui.data_extra, 
+			 0,0,0, 
+			 box_width, box_height,
+			 TRUE );
+      
+      if( fraction > 0.5 )
+	rtk_fig_color_rgb32(mod->gui.data_extra, 0x00FF00 ); // green
+      else if( fraction > 0.1 )
+	rtk_fig_color_rgb32(mod->gui.data_extra, 0xFFFF00 ); // yellow
       else
-	rtk_fig_color_rgb32(mod->gui.data, 0xFF0000 ); // red      
+	rtk_fig_color_rgb32(mod->gui.data_extra, 0xFF0000 ); // red      
 
-      rtk_fig_rectangle( mod->gui.data, 0,0,0, 
-			 mod->geom.size.x * 0.5,
-			 mod->geom.size.y * 0.8,
+      rtk_fig_rectangle( mod->gui.data_extra, 
+			 0,
+			 bar_height/2.0 - box_height/2.0,
+			 0, 
+			 bar_width,
+			 bar_height,
+			 TRUE );
+
+      rtk_fig_color_rgb32(mod->gui.data_extra, 0x0 ); // black
+
+      rtk_fig_rectangle( mod->gui.data_extra, 
+			 0,
+			 bar_height/2.0 - box_height/2.0,
+			 0, 
+			 bar_width,
+			 bar_height,
 			 FALSE );
 
-      double ylen = mod->geom.size.y * bar_height * 0.8; 
-      rtk_fig_rectangle( mod->gui.data, 
-			 0,
-			 mod->geom.size.y/2 *0.8 - ylen/2,
-			 0, 
-			 mod->geom.size.x * 0.5,
-			 ylen,
-			 TRUE );
+      rtk_fig_rectangle( mod->gui.data_extra, 
+			 0,0,0, 
+			 box_width,
+			 box_height,
+			 FALSE );
 
       // place the visualization a little away from the device
       //stg_pose_t pose;
@@ -362,11 +399,18 @@ void energy_render_data( stg_model_t* mod )
       //pose.a = 0.0;
       //rtk_fig_origin( fig, pose.x, pose.y, pose.a );
 
-      rtk_fig_color_rgb32(mod->gui.data, stg_lookup_color(STG_ENERGY_COLOR) );
+      //rtk_fig_color_rgb32(mod->gui.data, stg_lookup_color(STG_ENERGY_COLOR) );
 
       if( data->charging ) 
-	rtk_fig_arrow( fig, 0,0,0, data->range, 0.3 );
+	{
+	  rtk_fig_color_rgb32(mod->gui.data, 0x00BB00 ); // green
+	  rtk_fig_arrow_fancy( mod->gui.data, 0,0,0, data->range, 0.25, 0.10, 1 );
 
+	  //rtk_fig_color_rgb32(mod->gui.data, 0 ); // black
+	  //rtk_fig_arrow_fancy( mod->gui.data, 0,0,0, data->range, 0.25, 0.10, 0 );
+	}
+
+      if( 0 )
       //if( cfg->capacity > 0 )
 	{
 	  char buf[256];
@@ -380,7 +424,7 @@ void energy_render_data( stg_model_t* mod )
 		    data->input_joules,
 		    data->charging ? "charging" : "" );
 	  
-	  rtk_fig_text( fig, 0.6,0.0,0, buf ); 
+	  //rtk_fig_text( mod->gui.data, 0.6,0.0,0, buf ); 
 	}
 	//else
 	//{
@@ -414,10 +458,9 @@ void energy_render_config( stg_model_t* mod )
   stg_model_get_config(mod, &cfg, sizeof(cfg) );
 
   if( cfg.take > 0 )
-    {  
-
-      rtk_fig_arrow( mod->gui.cfg, 0,0,0, cfg.probe_range, 0.10 );
-    }
+    //rtk_fig_arrow_fancy( mod->gui.cfg, 0,0,0, cfg.probe_range, 0.25, 0.10, 1 );
+    rtk_fig_arrow( mod->gui.cfg, 0,0,0, cfg.probe_range, 0.25  );
+  
 }
 
 

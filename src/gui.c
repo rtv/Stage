@@ -750,7 +750,6 @@ void stg_model_render_polygons( stg_model_t* mod )
   
   stg_color_t col;
   stg_model_get_color( mod, &col ); 
-  rtk_fig_color_rgb32( fig, col );
 
   size_t count=0;
   stg_polygon_t* polys = stg_model_get_polygons(mod,&count);
@@ -758,19 +757,51 @@ void stg_model_render_polygons( stg_model_t* mod )
   stg_geom_t geom;
   stg_model_get_geom(mod, &geom);
 
+
   if( polys )
     {
-      PRINT_DEBUG1( "rendering %d polygons", (int)count );
-      
-      int p;
-      for( p=0; p<count; p++ )
-	rtk_fig_polygon( fig,
-			 geom.pose.x,
-			 geom.pose.y,
-			 geom.pose.a,
-			 polys[p].points->len,
-			 polys[p].points->data,
-			 mod->world->win->fill_polygons );
+      if( ! mod->world->win->fill_polygons )
+	{
+	  rtk_fig_color_rgb32( fig, col );
+	  
+	  int p;
+	  for( p=0; p<count; p++ )
+	    rtk_fig_polygon( fig,
+			     geom.pose.x,
+			     geom.pose.y,
+			     geom.pose.a,
+			     polys[p].points->len,
+			     polys[p].points->data,
+			     0 );
+	}
+      else
+	{
+	  rtk_fig_color_rgb32( fig, col );
+	  
+	  int p;
+	  for( p=0; p<count; p++ )
+	    rtk_fig_polygon( fig,
+			     geom.pose.x,
+			     geom.pose.y,
+			     geom.pose.a,
+			     polys[p].points->len,
+			     polys[p].points->data,
+			     1 );
+	  
+	  if( mod->guifeatures.outline )
+	    {
+	      rtk_fig_color_rgb32( fig, 0 ); // black
+	      
+	      for( p=0; p<count; p++ )
+		rtk_fig_polygon( fig,
+				 geom.pose.x,
+				 geom.pose.y,
+				 geom.pose.a,
+				 polys[p].points->len,
+				 polys[p].points->data,
+				 0 );
+	    }
+	}
     }
   
   if( mod->guifeatures.boundary )

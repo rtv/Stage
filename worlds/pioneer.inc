@@ -2,7 +2,7 @@
 # Desc: Device definitions for Activemedia robots.
 # Author: Andrew Howard, Richard Vaughan
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.17 2005-02-13 07:37:43 rtv Exp $
+# CVS: $Id: pioneer.inc,v 1.18 2005-02-28 08:06:45 rtv Exp $
 
 
 # The Pioneer2DX sonar array
@@ -29,40 +29,10 @@ define p2dx_sonar ranger
   spose[15] [ -0.155 0.130 90 ]	
 		
   # define the field of view of each transducer [range_min range_max view_angle]
-  sview[0] [0 5.0 15]
-  sview[1] [0 5.0 15]
-  sview[2] [0 5.0 15]
-  sview[3] [0 5.0 15]
-  sview[4] [0 5.0 15]
-  sview[5] [0 5.0 15]
-  sview[6] [0 5.0 15]
-  sview[7] [0 5.0 15]
-  sview[8] [0 5.0 15]
-  sview[9] [0 5.0 15]
-  sview[10] [0 5.0 15]
-  sview[11] [0 5.0 15]
-  sview[12] [0 5.0 15]
-  sview[13] [0 5.0 15]
-  sview[14] [0 5.0 15]
-  sview[15] [0 5.0 15]
+  sview [0 5.0 15]
 
   # define the size of each transducer [xsize ysize] in meters
-  ssize[0] [0.01 0.05]
-  ssize[1] [0.01 0.05]
-  ssize[2] [0.01 0.05]
-  ssize[3] [0.01 0.05]
-  ssize[4] [0.01 0.05]
-  ssize[5] [0.01 0.05]
-  ssize[6] [0.01 0.05]
-  ssize[7] [0.01 0.05]
-  ssize[8] [0.01 0.05]
-  ssize[9] [0.01 0.05]
-  ssize[10] [0.01 0.05]
-  ssize[11] [0.01 0.05]
-  ssize[12] [0.01 0.05]
-  ssize[13] [0.01 0.05]
-  ssize[14] [0.01 0.05]
-  ssize[15] [0.01 0.05]
+  ssize [0.01 0.05]
 )
 
 # a Pioneer 2 or 3 in standard configuration
@@ -103,7 +73,7 @@ define pioneer2dx position
 
 define pioneer2dx_battery pioneer2dx
 (
-  energy( pose [-0.14 0 0] capacity 5000 range 1.0  give 0 take 100 )
+  energy( pose [-0.14 0 0] capacity 4000 range 0.5  give 0 take 100 )
 )
 
 # The AmigoBot sonar array

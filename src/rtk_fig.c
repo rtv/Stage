@@ -22,7 +22,7 @@
  * Desc: Rtk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.5 2004-11-21 10:53:02 rtv Exp $
+ * CVS: $Id: rtk_fig.c,v 1.6 2005-02-28 08:06:44 rtv Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
@@ -710,6 +710,33 @@ void rtk_fig_line_ex(rtk_fig_t *fig, double ox, double oy, double oa, double siz
 }
 
 
+// create a fancy arrow that can be filled
+void rtk_fig_arrow_fancy(rtk_fig_t *fig, double ox, double oy, double oa,
+			 double len, double head, double thickness, int filled )
+{
+  rtk_point_t points[5];
+  
+  double t = thickness/2.0;
+
+  points[0].x = 0;
+  points[0].y = t;
+  points[1].x = len - head;
+  points[1].y = t;
+  points[2].x = len - head;
+  points[2].y = head * sin(0.8*M_PI);
+  points[3].x = len;
+  points[3].y = 0;
+  points[4].x = len - head;
+  points[4].y = head * -sin(0.8*M_PI);
+  points[5].x = len - head;
+  points[5].y = -t;
+  points[6].x = 0;
+  points[6].y = -t;
+
+  rtk_fig_polygon_alloc(fig, ox, oy, oa, 1, filled, 7, points);
+  return;
+}
+
 // Create an arrow
 void rtk_fig_arrow(rtk_fig_t *fig, double ox, double oy, double oa,
                    double len, double head)
@@ -824,7 +851,7 @@ void rtk_fig_polygon(rtk_fig_t *fig, double ox, double oy, double oa,
     //printf( "(%.2f,%.2f) ", npoints[i].x, npoints[i].y );
   }
 
-  //puts("");
+  //
 
   rtk_fig_polygon_alloc(fig, ox, oy, oa, 1, filled, point_count, npoints);
   free(npoints);
