@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.1 2002-10-27 23:12:28 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.2 2002-10-30 01:45:39 gerkey Exp $
  */
 
 
@@ -434,7 +434,8 @@ void CWorld::RtkUpdate()
   
   // Update the display
   for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
-    rtk_canvas_render(canvas, FALSE, NULL);
+    rtk_canvas_render(canvas);
+    //rtk_canvas_render(canvas, FALSE, NULL);
   
   //struct timeval tv;
   //gettimeofday( &tv, NULL );
