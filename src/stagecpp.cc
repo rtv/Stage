@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.57 2004-09-27 00:58:01 rtv Exp $
+// $Id: stagecpp.cc,v 1.58 2004-09-27 01:20:05 rtv Exp $
 
 //#define DEBUG
 
@@ -21,10 +21,28 @@ This is the worldfile description. It goes here!
 #define MAXPATHLEN 256
 
 #include "stage.h"
+#include "gui.h"
 #include "worldfile.hh"
 
-
 static CWorldFile wf;
+
+void configure_gui( gui_window_t* win, int section )
+{
+  int window_width = 
+    (int)wf.ReadTupleFloat(section, "window_size", 0, STG_DEFAULT_WINDOW_WIDTH);
+  int window_height = 
+    (int)wf.ReadTupleFloat(section, "window_size", 1, STG_DEFAULT_WINDOW_HEIGHT);
+  
+  PRINT_WARN2( "window width %d height %d", window_width, window_height );
+  
+  double window_center_x = 
+    wf.ReadTupleFloat(section, "window_center", 0, 0.0 );
+  double window_center_y = 
+    wf.ReadTupleFloat(section, "window_center", 1, 0.0 );
+  
+  PRINT_WARN2( "window center (%.2f,%.2f)", window_center_x, window_center_y );
+
+}
 
 void configure_model( stg_model_t* mod, int section )
 {
@@ -50,10 +68,10 @@ void configure_model( stg_model_t* mod, int section )
   stg_model_set_obstaclereturn( mod, &obstacle );
   
   stg_guifeatures_t gf;
-  gf.boundary = wf.ReadInt(section, "gui.boundary", STG_DEFAULT_GUI_BOUNDARY );
-  gf.nose = wf.ReadInt(section, "gui.nose", STG_DEFAULT_GUI_NOSE );
-  gf.grid = wf.ReadInt(section, "gui.grid", STG_DEFAULT_GUI_GRID );
-  gf.movemask = wf.ReadInt(section, "gui.movemask", STG_DEFAULT_GUI_MOVEMASK );
+  gf.boundary = wf.ReadInt(section, "gui_boundary", STG_DEFAULT_GUI_BOUNDARY );
+  gf.nose = wf.ReadInt(section, "gui_nose", STG_DEFAULT_GUI_NOSE );
+  gf.grid = wf.ReadInt(section, "gui_grid", STG_DEFAULT_GUI_GRID );
+  gf.movemask = wf.ReadInt(section, "gui_movemask", STG_DEFAULT_GUI_MOVEMASK );
   stg_model_set_guifeatures( mod, &gf );
   
   // laser visibility
@@ -447,106 +465,112 @@ stg_world_t* stg_world_create_from_file( char* worldfile_path )
   // Iterate through sections and create client-side models
   for (int section = 1; section < wf.GetEntityCount(); section++)
     {
-      char *typestr = (char*)wf.GetEntityType(section);      
-
-      int parent_section = wf.GetEntityParent( section );
-      
-      PRINT_DEBUG2( "section %d parent section %d\n", 
-		    section, parent_section );
-      
-      stg_model_t* parent = NULL;
-      
-      parent = (stg_model_t*)
-	g_hash_table_lookup( world->models, &parent_section );
-      
-      // select model type based on the worldfile token
-      stg_model_type_t type;
-      
-      if( strcmp( typestr, "model" ) == 0 ) // basic model
-	type = STG_MODEL_BASIC;
-      else if( strcmp( typestr, "test" ) == 0 ) // specialized models
-	type = STG_MODEL_TEST;
-      else if( strcmp( typestr, "laser" ) == 0 )
-	type = STG_MODEL_LASER;
-      else if( strcmp( typestr, "ranger" ) == 0 )
-	type = STG_MODEL_RANGER;
-      else if( strcmp( typestr, "position" ) == 0 )
-	type = STG_MODEL_POSITION;
-      else if( strcmp( typestr, "blobfinder" ) == 0 )
-	type = STG_MODEL_BLOB;
-      else if( strcmp( typestr, "fiducialfinder" ) == 0 )
-	type = STG_MODEL_FIDUCIAL;
-      else 
+      if( strcmp( wf.GetEntityType(section), "gui") == 0 )
 	{
-	  PRINT_ERR1( "unknown model type \"%s\". Model has not been created.",
-		      typestr ); 
-	  continue;
+	  configure_gui( world->win, section ); 
 	}
-      
-      //PRINT_WARN3( "creating model token %s type %d instance %d", 
-      //	    typestr, 
-      //	    type,
-      //	    parent ? parent->child_type_count[type] : world->child_type_count[type] );
-      
-      // generate a name and count this type in its parent (or world,
-      // if it's a top-level object)
-      char namebuf[STG_TOKEN_MAX];  
-      if( parent == NULL )
-	snprintf( namebuf, STG_TOKEN_MAX, "%s:%d", 
-		  typestr, 
-		  world->child_type_count[type]++);
       else
-	snprintf( namebuf, STG_TOKEN_MAX, "%s.%s:%d", 
-		  parent->token,
-		  typestr, 
-		  parent->child_type_count[type]++ );
-      
-      //PRINT_WARN1( "generated name %s", namebuf );
-      
-      // having done all that, allow the user to specify a name instead
-      char *namestr = (char*)wf.ReadString(section, "name", namebuf );
-
-      //PRINT_WARN2( "loading model name %s for type %s", namebuf, typestr );
-      
-      PRINT_DEBUG2( "creating model from section %d parent section %d",
-		    section, parent_section );
-
-      stg_model_t* mod = 
-	//stg_world_createmodel( world, parent, section, type, namestr );
-	stg_world_model_create( world, section, parent_section, type, namestr );
-      
-      // load all the generic specs from this section.
-      configure_model( mod, section );
-      
-      
-      // load type-specific configs from this section
-      switch( type )
 	{
-	case STG_MODEL_LASER:
-	  configure_laser( mod, section );
-	  break;
-
-	case STG_MODEL_RANGER:
-	  configure_ranger( mod, section );
-	  break;
-
-	case STG_MODEL_BLOB:
-	  configure_blobfinder( mod, section );
-	  break;
+	  char *typestr = (char*)wf.GetEntityType(section);      
 	  
-	case STG_MODEL_FIDUCIAL:
-	  configure_fiducial( mod, section );
-	  break;
+	  int parent_section = wf.GetEntityParent( section );
 	  
-	case STG_MODEL_POSITION:
-	  configure_position( mod, section );
-	  break;
+	  PRINT_DEBUG2( "section %d parent section %d\n", 
+			section, parent_section );
 	  
-	default:
-	  PRINT_DEBUG1( "don't know how to configure type %d", type );
+	  stg_model_t* parent = NULL;
+	  
+	  parent = (stg_model_t*)
+	    g_hash_table_lookup( world->models, &parent_section );
+	  
+	  // select model type based on the worldfile token
+	  stg_model_type_t type;
+	  
+	  if( strcmp( typestr, "model" ) == 0 ) // basic model
+	    type = STG_MODEL_BASIC;
+	  else if( strcmp( typestr, "test" ) == 0 ) // specialized models
+	    type = STG_MODEL_TEST;
+	  else if( strcmp( typestr, "laser" ) == 0 )
+	    type = STG_MODEL_LASER;
+	  else if( strcmp( typestr, "ranger" ) == 0 )
+	    type = STG_MODEL_RANGER;
+	  else if( strcmp( typestr, "position" ) == 0 )
+	    type = STG_MODEL_POSITION;
+	  else if( strcmp( typestr, "blobfinder" ) == 0 )
+	    type = STG_MODEL_BLOB;
+	  else if( strcmp( typestr, "fiducialfinder" ) == 0 )
+	    type = STG_MODEL_FIDUCIAL;
+	  else 
+	    {
+	      PRINT_ERR1( "unknown model type \"%s\". Model has not been created.",
+			  typestr ); 
+	      continue;
+	    }
+	  
+	  //PRINT_WARN3( "creating model token %s type %d instance %d", 
+	  //	    typestr, 
+	  //	    type,
+	  //	    parent ? parent->child_type_count[type] : world->child_type_count[type] );
+	  
+	  // generate a name and count this type in its parent (or world,
+	  // if it's a top-level object)
+	  char namebuf[STG_TOKEN_MAX];  
+	  if( parent == NULL )
+	    snprintf( namebuf, STG_TOKEN_MAX, "%s:%d", 
+		      typestr, 
+		      world->child_type_count[type]++);
+	  else
+	    snprintf( namebuf, STG_TOKEN_MAX, "%s.%s:%d", 
+		      parent->token,
+		      typestr, 
+		      parent->child_type_count[type]++ );
+	  
+	  //PRINT_WARN1( "generated name %s", namebuf );
+	  
+	  // having done all that, allow the user to specify a name instead
+	  char *namestr = (char*)wf.ReadString(section, "name", namebuf );
+	  
+	  //PRINT_WARN2( "loading model name %s for type %s", namebuf, typestr );
+	  
+	  PRINT_DEBUG2( "creating model from section %d parent section %d",
+			section, parent_section );
+	  
+	  stg_model_t* mod = 
+	    //stg_world_createmodel( world, parent, section, type, namestr );
+	    stg_world_model_create( world, section, parent_section, type, namestr );
+	  
+	  // load all the generic specs from this section.
+	  configure_model( mod, section );
+	  
+	  
+	  // load type-specific configs from this section
+	  switch( type )
+	    {
+	    case STG_MODEL_LASER:
+	      configure_laser( mod, section );
+	      break;
+	      
+	    case STG_MODEL_RANGER:
+	      configure_ranger( mod, section );
+	      break;
+	      
+	    case STG_MODEL_BLOB:
+	      configure_blobfinder( mod, section );
+	      break;
+	      
+	    case STG_MODEL_FIDUCIAL:
+	      configure_fiducial( mod, section );
+	      break;
+	      
+	    case STG_MODEL_POSITION:
+	      configure_position( mod, section );
+	      break;
+	      
+	    default:
+	      PRINT_DEBUG1( "don't know how to configure type %d", type );
+	    }
 	}
     }
-
   return world;
 }
 

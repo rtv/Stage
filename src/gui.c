@@ -495,6 +495,10 @@ void model_render_lines( stg_model_t* mod )
   
   rtk_fig_clear( fig );
 
+  // don't draw objects with no size 
+  if( mod->geom.size.x == 0 && mod->geom.size.y == 0 )
+    return;
+  
   rtk_fig_color_rgb32( fig, stg_model_get_color(mod) );
 
   size_t count=0;
@@ -544,10 +548,6 @@ void gui_render_geom( stg_model_t* mod )
 
   rtk_fig_t* fig = gui_model_figs(mod)->geom;
   rtk_fig_clear( fig );
-
-  // don't draw objects with no size 
-  if( geom->size.x == 0 && geom->size.y == 0 )
-    return;
 
   rtk_fig_color_rgb32( fig, 0 );
   
