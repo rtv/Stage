@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.12 $
+//  $Revision: 1.13 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -96,8 +96,10 @@ int position_update( stg_model_t* mod )
 	  {
 	  case STG_POSITION_STEER_DIFFERENTIAL:
 	    // differential-steering model, like a Pioneer
-	    vel.x = (cmd->x * cos(mod->pose.a) - cmd->y * sin(mod->pose.a));
-	    vel.y = (cmd->x * sin(mod->pose.a) + cmd->y * cos(mod->pose.a));
+	    //vel.x = (cmd->x * cos(mod->pose.a) - cmd->y * sin(mod->pose.a));
+	    //vel.y = (cmd->x * sin(mod->pose.a) + cmd->y * cos(mod->pose.a));
+	    vel.x = cmd->x;
+	    vel.y = 0;
 	    vel.a = cmd->a;
 	    break;
 
@@ -189,8 +191,10 @@ int position_update( stg_model_t* mod )
 
 	      // now set the underlying velocities using the normal
 	      // diff-steer model
-	      vel.x = (calc.x * cos(mod->pose.a) - calc.y * sin(mod->pose.a));
-	      vel.y = (calc.x * sin(mod->pose.a) + calc.y * cos(mod->pose.a));
+	      //vel.x = (calc.x * cos(mod->pose.a) - calc.y * sin(mod->pose.a));
+	      //vel.y = (calc.x * sin(mod->pose.a) + calc.y * cos(mod->pose.a));
+	      vel.x = calc.x;
+	      vel.y = 0;
 	      vel.a = calc.a;
 	    }
 	    break;

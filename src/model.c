@@ -5,6 +5,8 @@ Implements a model - the basic object of Stage simulation
 
 */
 
+#define PACKPOSE(P,X,Y,A) {P->x=X; P->y=Y; P->a=A;}
+
 #include <assert.h>
 #include <math.h>
 
@@ -14,6 +16,31 @@ Implements a model - the basic object of Stage simulation
 #include "stage.h"
 //#include "gui.h"
 //#include "raytrace.h"
+
+/** convert a global pose into the model's local coordinate system */
+void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose )
+{
+  printf( "g2l global pose %.2f %.2f %.2f\n",
+	  pose->x, pose->y, pose->a );
+
+  // get model's global pose
+  stg_pose_t org;
+  stg_model_global_pose( mod, &org );
+
+  printf( "g2l global origin %.2f %.2f %.2f\n",
+	  org.x, org.y, org.a );
+
+  // compute global pose in local coords
+  double sx =  (pose->x - org.x) * cos(org.a) + (pose->y - org.y) * sin(org.a);
+  double sy = -(pose->x - org.x) * sin(org.a) + (pose->y - org.y) * cos(org.a);
+  double sa = pose->a - org.a;
+
+  PACKPOSE(pose,sx,sy,sa);
+
+  printf( "g2l local pose %.2f %.2f %.2f\n",
+	  pose->x, pose->y, pose->a );
+}
+
 
 int stg_model_create_name( stg_model_t* mod )
 {
@@ -245,6 +272,38 @@ int stg_model_is_related( stg_model_t* mod1, stg_model_t* mod2 )
   return stg_model_is_descendent( t, mod2 );
 }
 
+
+void stg_model_global_velocity( stg_model_t* mod, stg_velocity_t* gvel )
+{
+  stg_pose_t gpose;
+  stg_model_global_pose( mod, &gpose );
+
+  double cosa = cos( gpose.a );
+  double sina = sin( gpose.a );
+  
+  gvel->x = mod->velocity.x * cosa - mod->velocity.y * sina;
+  gvel->y = mod->velocity.x * sina + mod->velocity.y * cosa;
+  gvel->a = mod->velocity.a;
+
+  //printf( "local velocity %.2f %.2f %.2f\nglobal velocity %.2f %.2f %.2f\n",
+  //  mod->velocity.x, mod->velocity.y, mod->velocity.a,
+  //  gvel->x, gvel->y, gvel->a );
+}
+
+void stg_model_set_global_velocity( stg_model_t* mod, stg_velocity_t* gvel )
+{
+  // TODO - do this properly
+
+  //stg_pose_t gpose;
+  
+  stg_velocity_t lvel;
+  lvel.x = gvel->x;
+  lvel.y = gvel->y;
+  lvel.a = gvel->a;
+
+  stg_model_set_velocity( mod, &lvel );
+}
+
 void  stg_model_global_pose( stg_model_t* mod, stg_pose_t* gpose )
 { 
   stg_pose_t parent_pose;
@@ -261,14 +320,15 @@ void  stg_model_global_pose( stg_model_t* mod, stg_pose_t* gpose )
 }
 
 // should one day do all this with affine transforms for neatness
+
+/** convert a pose in this model's local coordinates into global
+    coordinates */
 void stg_model_local_to_global( stg_model_t* mod, stg_pose_t* pose )
 {  
   stg_pose_t origin;   
-  //stg_pose_sum( &origin, &mod->pose, &mod->origin );
   stg_model_global_pose( mod, &origin );
   
   stg_geom_t* geom = stg_model_get_geom(mod); 
-
   stg_pose_sum( &origin, &origin, &geom->pose );
   stg_pose_sum( pose, &origin, pose );
 }
@@ -354,8 +414,9 @@ int stg_model_update( stg_model_t* mod )
     mod->lib->update(mod);
   
   // now move the model if it has any velocity
-  stg_model_update_pose( mod );
-
+  if( (mod->velocity.x || mod->velocity.y || mod->velocity.a ) )
+    stg_model_update_pose( mod );
+  
   return 0;
 }
 

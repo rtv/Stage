@@ -1,20 +1,20 @@
 
 
-<hr>
+</ul>
+</li>
+<li><a href="credits.html">Credits</a><br>
+</ul>
+</div>
 
-
-<table bgcolor="#858585">
-<tr><td><a href="http://sourceforge.net"><img border=0 src="http://sourceforge.net/sflogo.php?group_id=42445&type=1"></a>
-<tr><td><a href="http://playerstage.sourceforge.net">Homepage</a>
-<tr><td><a href="http://sourceforge.net/projects/playerstage">Project</a>
-<tr><td><a href="http://sourceforge.net/project/showfiles.php?group_id=42445">Download</a>
-<tr><td><a href="http://sourceforge.net/tracker/?group_id=42445">Bugs</a>
-<tr><td><a href="http://sourceforge.net/mail/?group_id=42445">Mailing lists</a></table>
-</td>
-
-</td></tr>
-</table>
-
+<div class=box>
+<!-- <a href="http://sourceforge.net"><img border=0 src="http://sourceforge.net/sflogo.php?group_id=42445&type=1"></a> -->
+<div class="title">Online</div>
+<a href="http://playerstage.sourceforge.net">Homepage</a><br>
+<a href="http://sourceforge.net/project/showfiles.php?group_id=42445">Download</a><br>
+<a href="http://sourceforge.net/projects/playerstage">Project</a><br>
+<a href="http://sourceforge.net/tracker/?group_id=42445">Bugs</a><br>
+<a href="http://sourceforge.net/mail/?group_id=42445">Help</a>
+</div>
 
 </div>
 

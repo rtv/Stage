@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.25 2004-10-11 22:34:08 rtv Exp $
+# CVS: $Id: test.world,v 1.26 2004-10-19 07:11:36 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -17,8 +17,10 @@ include "pioneer.inc"
 
 
 
+
 # defines 'map' object used for floorplans
 include "map.inc"
+
 
 
 
@@ -42,7 +44,7 @@ define sicklaser laser
   fov 180.0
   samples 180
 
-  color "blue"
+  color "LightBlue"
   size [ 0.14 0.14 ]	
 )
 
@@ -61,23 +63,25 @@ define laserpioneer pioneer2dx
 laserpioneer
 (
   name "p0"
-  pose [1.814 -0.466 49.154]
+  pose [-0.688 0.740 130.299]
 )
 
 laserpioneer
 (
   name "p1"
-  pose [-0.908 1.547 92.000]
+  pose [-0.962 1.403 292.509]
 )
 
 laserpioneer
 (
+  color "green"
   name "p2"
-  pose [-2.186 0.589 -143.443]
+  pose [-2.024 0.535 -51.322]
 )
 
 laserpioneer
 (
+  color "blue"
   name "p3"
   pose [-2.634 1.248 119.600]
 )
@@ -99,6 +103,8 @@ position(
   # loads a bitmap and converts it to lines
   #bitmap "bitmaps/submarine.png"
   gui_nose 1
+
+  #position( name "boo" color "purple" size [0.2 0.2] pose [0.2 0 45] )
   
   fiducial_id 22
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 OUTPUT=header.html
-PAGEDIR=user/html
+PAGEDIR=stage
 
 cat header_top.src > $OUTPUT
 
@@ -12,7 +12,11 @@ for PAGE in `ls $PAGEDIR/group__model*.html` ; do
    STRIPPED=${STRIPEND#$PAGEDIR/group__model__}
    
    echo "Adding link for " $STRIPPED
-   echo "<a href=\"" $PAGENAME "\">" $STRIPPED "</a><br>" >> $OUTPUT
+   echo "<li><a href=\""$PAGENAME"\">"$STRIPPED"</a></li>" >> $OUTPUT
 done
 
 cat header_bottom.src >> $OUTPUT
+
+
+
+# <li><a href=" group__model__basic.html "> basic</a></li>

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.19 $
+//  $Revision: 1.20 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -236,7 +236,7 @@ stg_pose_t* stg_model_get_pose( stg_model_t* model )
   return &model->pose;
 }
 
-
+/** set the pose of a model in its parent's CS */
 int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
 {
   // if the new pose is different
@@ -256,6 +256,27 @@ int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose )
     }
   
   return 0; // OK
+}
+
+/** set the pose of model in global coordinates */
+int stg_model_set_global_pose( stg_model_t* mod, stg_pose_t* gpose )
+{
+
+  if( mod->parent == NULL )
+    {
+      //printf( "setting pose directly\n");
+      stg_model_set_pose( mod, gpose );
+    }  
+  else
+    {
+      stg_pose_t lpose;
+      memcpy( &lpose, gpose, sizeof(lpose) );
+      stg_model_global_to_local( mod->parent, &lpose );
+      stg_model_set_pose( mod, &lpose );
+    }
+
+  //printf( "setting global pose %.2f %.2f %.2f = local pose %.2f %.2f %.2f\n",
+  //      gpose->x, gpose->y, gpose->a, lpose.x, lpose.y, lpose.a );
 }
 
 

@@ -7,8 +7,8 @@ userman: ../src/stagecpp.cc help.txt build.sh stage.dox
 	./build.sh
 	doxygen stage.dox
 
-devman: ../src/*.c ../src/*.h ../src/*.cc help.txt stage_dev.dox
-	doxygen stage_dev.dox
+devman: ../src/*.c ../src/*.h ../src/*.cc help.txt libstage.dox
+	doxygen libstage.dox
 
 
 clean:

@@ -2,7 +2,7 @@
    "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
-<!-- $Id: header_top.src,v 1.1 2004-10-11 04:59:02 rtv Exp $ -->
+<!-- $Id: header_top.src,v 1.2 2004-10-19 07:11:35 rtv Exp $ -->
 
 <HEAD>
 
@@ -16,17 +16,11 @@
 
 body {
   font-family: sans-serif;
-  width: 98%;
-  margin-left: 1%;
+  #font-family: Geneva, Verdana, Helvetica, Arial, sans-serif;
   background-color: #FFF;
   color:#000;
 }
 
-.main {
-  background-color: #EEE;
-  color: #000;
-  width: 100%;
-}
 
 a:link { 
 	color: #A00;
@@ -39,32 +33,6 @@ a:visited {
 a { text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-#sidebar {
-  background-color: #666;
-  color: #FFF;
-}
-
-#sidebar a:link {
-  color: #FFF;
-}
-
-#sidebar a:visited {
-  color: #DDD;
-}
-
-
-#content {
- background-color: #EEE;
-}
-
-.sourceforge {
-   background-color: #999;
-}
-
-.jump {
- background-color: #DDF;
- text-align:center;
-}
 
 .timestamp { text-align:right; background-color: #DDD; font-size:75%;}
 
@@ -94,6 +62,26 @@ img {
   border: 0;
 }
 
+ul { 
+    position:relative;
+    left:-1.6em;
+    margin-bottom:0px;
+    margin-top:0px;
+}
+
+ul.menu { 
+    position:relative;
+    left:-2.5em;
+    margin-bottom:0px;
+    margin-top:0px;
+}
+
+li { 
+    list-style-type: none;
+    position:relative;
+    #left:-0.5em;
+}
+
 DIV.fragment {
 	width: 95%;
 	border: 1px solid #000000;
@@ -103,29 +91,46 @@ DIV.fragment {
 }
 
 
-#sidebar { position: absolute; left:5px; top:5px; width:97px; border: 1px solid #000000; padding:6px; }
+#sidebar { position: absolute; left:0px; top:0em; width:9em;}
 
-#content { position: absolute; left:120px; top:5px; border: 1px solid #000000; padding:10px; 
+#content { position: absolute; left:9em; top:0em; padding:0px; margin-top:0px; margin-right:3em;}
 
-margin-top:0px; margin-right:5px; }
+div.box { background-color:#EEE; border: 1px solid #000; padding: 0.5ex 0.6em 0.5ex 0.6em; margin:1em;  }
+div.title { font-weight:bold; background-color:#eee; margin-bottom:2px;}
 
+div.topbar { position: absolute; top:0px; left:9em; margin:1em; }
+
+div.stage { font-size:120% }
 </style>
 
 <TITLE>Stage Manual</TITLE>
 
 </HEAD>
 
+<!--
+<div class="topbar">
+Stage User Manual v2.0
+</div>
+-->
+
 <div id="sidebar"> 
 
-<P>Stage<br>User Manual</p>
-<hr>
-
-<p>
-<a href="index.html">Introduction</a><br>
-<a href="install.html">Installation</a><br>
-<a href="useage.html">Usage</a><br>
-<a href="credits.html">Credits</a><br>
+<h2 align=center><div class=stage>Stage</div>User Guide<br>v2.0</h2>
 
 
-<hr>
+<div class="box">
+<div class=title>Manual</div>
 
+<ul class=menu>
+<li><a href="index.html">Introduction</a><br>
+<li><a href="install.html">Installation</a><br>
+<li><a href="devices.html">Devices</a>
+    <ul>
+    <li><a href="dev_simulation.html">simulation</a></li>
+    </ul>
+</li>
+    
+
+<li><a href="models.html">Models</a></li>
+
+<ul>

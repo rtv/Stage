@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.99 2004-10-11 22:34:08 rtv Exp $
+ * CVS: $Id: stage.h,v 1.100 2004-10-19 07:11:36 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -854,6 +854,13 @@ stg_model_t* itl_first_matching( itl_t* itl,
   void stg_model_destroy( stg_model_t* mod );
   void model_destroy_cb( gpointer mod );
   void stg_model_global_pose( stg_model_t* mod, stg_pose_t* pose );
+
+  /** get the velocity of a model in the global coordinate system */
+  void stg_model_global_velocity( stg_model_t* mod, stg_velocity_t* gvel );
+
+  /** set the velocity of a model in the global coordinate system */
+  void stg_model_set_global_velocity( stg_model_t* mod, stg_velocity_t* gvel );
+
   void stg_model_subscribe( stg_model_t* mod );
   void stg_model_unsubscribe( stg_model_t* mod );
 
@@ -862,20 +869,53 @@ stg_model_t* itl_first_matching( itl_t* itl,
   int stg_model_get_prop( stg_model_t* mod, stg_id_t pid, void** data, size_t* len );
 
   // SET properties - use these to set props, don't set them directly
+
+  /** set the pose of a model in its parent's coordinate system */
   int stg_model_set_pose( stg_model_t* mod, stg_pose_t* pose );
+  
+  /** set the pose of model in global coordinates */
+  int stg_model_set_global_pose( stg_model_t* mod, stg_pose_t* gpose );
+  
+  /** set a model's odometry */
   int stg_model_set_odom( stg_model_t* mod, stg_pose_t* pose );
+
+  /** set a model's velocity in it's parent's coordinate system */
   int stg_model_set_velocity( stg_model_t* mod, stg_velocity_t* vel );
+  
+  /** set a model's size */
   int stg_model_set_size( stg_model_t* mod, stg_size_t* sz );
+
+  /** set a model's  */
   int stg_model_set_color( stg_model_t* mod, stg_color_t* col );
+
+  /** set a model's geometry */
   int stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom );
+
+  /** set a model's mass */
   int stg_model_set_mass( stg_model_t* mod, stg_kg_t* mass );
+
+  /** set a model's GUI features */
   int stg_model_set_guifeatures( stg_model_t* mod, stg_guifeatures_t* gf );
+
+  /** set a model's energy configuration */
   int stg_model_set_energy_config( stg_model_t* mod, stg_energy_config_t* gf );
+
+  /** set a model's energy data*/
   int stg_model_set_energy_data( stg_model_t* mod, stg_energy_data_t* gf );
+
+  /** set a model's line array*/
   int stg_model_set_lines( stg_model_t* mod, stg_line_t* lines, size_t lines_count );
+
+  /** set a model's obstacle return value */
   int stg_model_set_obstaclereturn( stg_model_t* mod, stg_bool_t* ret );
+
+  /** set a model's laser return value */
   int stg_model_set_laserreturn( stg_model_t* mod, stg_laser_return_t* val );
+
+  /** set a model's fiducial return value */
   int stg_model_set_fiducialreturn( stg_model_t* mod, stg_fiducial_return_t* val );
+
+  /** set a model's friction*/
   int stg_model_set_friction( stg_model_t* mod, stg_friction_t* fricp );
 
   // GET properties - use these to get props - don't get them directly
@@ -907,6 +947,9 @@ stg_model_t* itl_first_matching( itl_t* itl,
   void* stg_model_get_data( stg_model_t* mod, size_t* len );
   void* stg_model_get_config( stg_model_t* mod, size_t* len );
 
+  /** convert a global pose into the model's local coordinate system */
+  void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose );
+  
   int stg_model_update( stg_model_t* model );
   void model_update_cb( gpointer key, gpointer value, gpointer user );
   void stg_model_update_velocity( stg_model_t* model );

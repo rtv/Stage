@@ -1,6 +1,6 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: stage.txt,v 1.1 2004-10-11 04:59:02 rtv Exp $
+ * $Id: stage.txt,v 1.2 2004-10-19 07:11:35 rtv Exp $
 */
 
 /**
@@ -54,11 +54,6 @@ Some models from previous versions may not yet be available in this
 release, but we're working on them. Let us know which ones you need.
 </i>
 
-<hr>
-<small>
-Richard Vaughan <tt>(vaughan@sfu.ca)</tt> $Id: stage.txt,v 1.1 2004-10-11 04:59:02 rtv Exp $
-</small>
-
 <hr> <small> 
 <p><b>References</b>
 
@@ -81,6 +76,10 @@ Robotics, Coimbra, Portugal (ICAR'03).
 Noise Hypothesis", Adaptive Behavior XX XX 
 
 [5] Stuart Wilson "Knowledge Growth in an Artificial Animal", XX XXX XX
+
+<hr>
+Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: stage.txt,v 1.2 2004-10-19 07:11:35 rtv Exp $
+
 </small>
 
 */
@@ -93,7 +92,22 @@ Installing Stage....
 */
 
 /** 
-@page useage Using Stage
+@page devices Devices
 
+Devices..
+
+*/
+
+/** 
+@page dev_simulation Simulation Device
+
+The simulation device...
+
+*/
+
+/** 
+@page models Models
+
+Introduction to models...
 
 */
