@@ -2,12 +2,13 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.9 2001-09-29 00:47:12 vaughan Exp $
+ * $Id: image.cc,v 1.10 2002-01-13 07:54:50 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
 #include <iostream.h>
 #include <fstream.h>
+#include <assert.h>
 
 #if INCLUDE_ZLIB
 #include <zlib.h>
@@ -176,60 +177,58 @@ void Nimage::load_raw(char* fname)
   fclose(stream);
 }
 
+
+
 bool Nimage::load_pnm(const char* fname)
 {
-  char line[1024];
   char magicNumber[10];
-  char comment[256];
-  int whiteNum; 
+  char comment[512];
+  int whiteNum;
 
-#ifdef DEBUG
-  printf("opening %s\n", fname);
-#endif
+  ifstream source( fname );
 
-  FILE *file = fopen(fname, "r");
-  if (file == NULL)
-  {
-#ifdef DEBUG
-      printf("unable to open image file\n");
-#endif
+  source >> magicNumber;
+
+  cout << magicNumber;
+
+  if (strcmp(magicNumber, "P5") != 0)
+    {
+      printf("image file is of incorrect type:"
+	     " should be pnm, binary, monochrome (magic number P5)\n");
       return false;
-  }
-
-  // Extremely crude and ugly file parsing! Fix sometime.  Andrew.
-
-  // Read an check the magic number
-  //
-  fgets(magicNumber, sizeof(magicNumber), file);
-  if (strcmp(magicNumber, "P5\n") != 0)
-  {
-      printf("image file is of incorrect type: should be pnm, binary, monochrome\n");
-      return false;
-  }
+    }
   
-  fgets(comment, sizeof(comment), file);
-  fgets(line, sizeof(line), file);
-  sscanf(line, "%d %d\n%d", &width, &height, &whiteNum);
-
-  if (data)
-      delete[] data;
-  data = new unsigned char[ width * height ];
+  // ignore the end of this line and the next whole line - it's a comment
+  source.ignore( 1024, '\n' );
+  source.ignore( 1024, '\n' );
   
-  for(int n=0; n<height; n++ )
-  {
-      for(int m=0; m<width; m++ )
-      {
-          unsigned char a = fgetc(file);
-          if (a > 0)
-              a = 1;
-          set_pixel( m,n, a );
-      }
-  }
+  // get the width, height and white value  
+  source >> width >> height >> whiteNum;
 
-  fclose(file);
+  // skip to the end of the line again
+  source.ignore( 1024, '\n' );
+
+  //cout << endl << width << " " << height << endl;
+  //cout << whiteNum << endl;
+
+  int numPixels = width * height;
+
+  // make space for the pixels
+  if (data) delete[] data;
+  data = new unsigned char[ numPixels ];
+  
+  source.read( data, numPixels );
+
+  cout << "READ: " << source.gcount() << endl;
+
+  // check that we read the right amount of data
+  assert( source.gcount() == numPixels );
+
+  source.close();
 
   return true;
 }
+
 
 // Load a gzipped pnm file
 //
@@ -258,19 +257,26 @@ bool Nimage::load_pnm_gz(const char* fname)
   }
 
   // Extremely crude and ugly file parsing! Fix sometime.  Andrew.
+  // yeah - and it had a yukky bug. fixed that but it's still a crude
+  // parser - still the format definition for PNMs is strict, so we're
+  // almost certainly OK. - rtv
 
-  // Read an check the magic number
+  // Read and check the magic number
   //
   gzgets(file, magicNumber, sizeof(magicNumber));
   if (strcmp(magicNumber, "P5\n") != 0)
   {
-      printf("image file is of incorrect type: should be pnm, binary, monochrome\n");
-      return false;
+    printf("image file is of incorrect type:"
+	   " should be pnm, binary, monochrome (maginc number P5)\n");
+    return false;
   }
   
   gzgets(file, comment, sizeof(comment));
   gzgets(file, line, sizeof(line));
-  sscanf(line, "%d %d\n%d", &width, &height, &whiteNum);
+  sscanf(line, "%d %d", &width, &height );
+
+  gzgets(file, line, sizeof(line));
+  sscanf(line, "%d", &whiteNum);
 
   if (data)
       delete[] data;

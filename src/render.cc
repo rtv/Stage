@@ -118,9 +118,10 @@ void CXGui::RenderObject( xstruth_t &orig_truth )
 	RenderIDAR( &truth, extended ); break;	
 #endif
 
-      default: cout << "XS: unknown object type " 
-		    << truth.id.type << endl;
-
+      default: 
+	RenderRoundRobot( &truth, extended ); break;
+	cout << "XS: unknown object type " << truth.id.type << endl;
+	
       PrintMetricTruthVerbose( 0, truth );
       break;
       }
