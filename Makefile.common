@@ -3,7 +3,7 @@
 # stage/Makefile.common - build and installation configurations
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile.common,v 1.42 2002-03-15 02:52:16 rtv Exp $
+# $Id: Makefile.common,v 1.43 2002-03-15 04:01:29 gsibley Exp $
 #
 # Notes: All user-configurable paths and build options should be specified 
 #        here. This file is included by Makefile and src/Makefile. 
@@ -50,7 +50,7 @@ INSTALL_EXAMPLES = $(INSTALL_DIR)/examples
 INSTALL_LIB = $(INSTALL_DIR)/lib
 
 #############################################################################
-# RTK CONFIGURATION (required for rtkstage)
+# 
 # rtkstage needs the path to the rtk2 source tree - these defaults
 # should work fine, as we now distribute rtk2 with stage
 

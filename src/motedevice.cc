@@ -21,14 +21,15 @@ slist<CMoteDevice*> m_mote_list;
 CMoteDevice::CMoteDevice(CWorld *world, CEntity *parent )
   : CEntity(world, parent)
 {
-  m_data_len    = sizeof( player_mote_data_t );
+  m_data_len    = MAX_MOTE_Q_LEN * sizeof( player_mote_data_t );
   m_command_len = sizeof( player_mote_data_t );
   m_config_len  = sizeof( player_mote_config_t );
   
   m_player_type = PLAYER_MOTE_CODE;
   m_stage_type = MoteType;
-  m_interval = 0.01;
 
+
+  m_interval = 0.01;
   m_graph_update_interval = 0.2;
 
   /* get global pose*/
@@ -36,6 +37,8 @@ CMoteDevice::CMoteDevice(CWorld *world, CEntity *parent )
 
   /* signal strength defaults to 100 */
   m_strength = 25;
+
+  q_size = 0; /* no messeges to send */
 
   m_last_graph_update = 0.0;
 
@@ -54,10 +57,6 @@ CMoteDevice::CMoteDevice(CWorld *world, CEntity *parent )
 //
 bool CMoteDevice::Load(CWorldFile *worldfile, int section)
 {
-  /* have frequency default to 50 Hz when you use motes */
-  //m_world->m_sim_timestep = 0.02;
-  //m_world->m_real_timestep = 0.02;
-  
   if (!CEntity::Load(worldfile, section))
     return false;
   return true; 
@@ -96,20 +95,43 @@ void CMoteDevice::Update( double sim_time )
   if( m_info_io->command_avail ){
     if(GetCommand(&m_data, sizeof(player_mote_data_t)) == 
        sizeof(player_mote_data_t)){
-      /* copy the messege to the adjacent nodes */
+      /* copy the messege to the adjacent nodes msg queues*/
       for(slist<CMoteDevice*>::iterator it=adj.begin();it != adj.end();it++){
 #ifdef DEBUG
-	printf("%d sending to %d\n", m_player_index, (*it)->m_player_index);
+	char dbg[32];
+	memcpy(dbg, m_data.buf, 32);
+	dbg[1] = 0;
+	printf("%d sending %s to %d\n", 
+	       m_player_index, dbg, (*it)->m_player_index);
 #endif
 	m_data.rssi = RSSI(((CMoteDevice*)*it));
-	(*it)->m_info_io->data_avail = sizeof(m_data);
-	memcpy((void*)&(*it)->m_data, (void*)&m_data, sizeof(m_data));
-	(*it)->PutData(&m_data, sizeof(m_data));
+	(*it)->EnqueueMsg(&m_data);
       }
     }
     /* show that we comsumed the messege */
     m_info_io->command_avail = 0;
   }
+  /* send the queued messeges */
+  if(q_size){
+    PutData((void*)msg_q, MAX_MOTE_Q_LEN * sizeof(player_mote_data_t));
+    q_size = 0;
+  }
+#ifdef INCLUDE_RTK2
+  RtkUpdate();
+#endif
+}
+
+///////////////////////////////////////////////////////////////////////////
+
+int CMoteDevice::EnqueueMsg(player_mote_data_t* msg)
+{
+  if(q_size >= MAX_MOTE_Q_LEN){ /* error, q overflow */
+    return -1;
+  }
+  memcpy((void*)&msg_q[q_size++], msg,  sizeof(player_mote_data_t));
+  m_info_io->data_avail = MAX_MOTE_Q_LEN * sizeof(player_mote_data_t);
+  msg_q[q_size].len = 0; /* end of the q */
+  return 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -205,3 +227,14 @@ void CMoteDevice::OnUiUpdate(RtkUiDrawData *data)
   data->end_section();
 }
 #endif
+
+//////////////////////////////////////////////////////////////////////////
+
+#ifdef INCLUDE_RTK2
+void CMoteDevice::RtkUpdate()
+{
+
+}
+
+#endif
+

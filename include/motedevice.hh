@@ -27,13 +27,15 @@ class CMoteDevice : public CEntity
     // Update the device
     //
     public: virtual void Update(double sim_time );
+   
+    public: int EnqueueMsg(player_mote_data_t *msg);
 
     public: int id;
 
     public: bool Load(CWorldFile *worldfile, int section);
 
     // Check to see if the configuration has changed
-  //    private: bool GetConfig();
+    // private: bool GetConfig();
 
     // function to compute signal coverage
     public: inline double SignalCoverage(void);
@@ -49,6 +51,9 @@ class CMoteDevice : public CEntity
     private: player_mote_config_t m_config;
     private: player_mote_data_t m_data;
 
+    private: player_mote_data_t msg_q[MAX_MOTE_Q_LEN];
+    private: uint8_t q_size;
+  
     /* list of neighbors stuff */
     public: slist<CMoteDevice*> adj;
 
@@ -60,6 +65,10 @@ class CMoteDevice : public CEntity
 
 #ifdef INCLUDE_RTK
     private: void OnUiUpdate(RtkUiDrawData *data);
+#endif 
+
+#ifdef INCLUDE_RTK2
+    private: void RtkUpdate();
 #endif 
 };
 
