@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.5.2.17 $
+//  $Revision: 1.5.2.18 $
 //
 // Usage:
 //  (empty)
@@ -26,15 +26,14 @@
 
 #include <math.h>
 #include "world.hh"
-#include "playerrobot.hh"
 #include "sonardevice.hh"
 
 const double TWOPI = 6.283185307;
 
 // constructor
 
-CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent, CPlayerRobot* robot)
-        : CPlayerDevice(world, parent, robot,
+CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent, CPlayerServer *server)
+        : CPlayerDevice(world, parent, server,
                         SONAR_DATA_START,
                         SONAR_TOTAL_BUFFER_SIZE,
                         SONAR_DATA_BUFFER_SIZE,

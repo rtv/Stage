@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.13 $
+//  $Revision: 1.1.2.14 $
 //
 // Usage:
 //  (empty)
@@ -40,6 +40,10 @@
 //
 #include <stage.h>
 
+// Forward declarations
+//
+class CPlayerServer;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Base class for all player devices
@@ -51,7 +55,7 @@ class CPlayerDevice : public CEntity
     // buffer points to a single buffer containing the data, command and configuration buffers.
     //
     protected: CPlayerDevice(CWorld *world, CEntity *parent, 
-                             CPlayerRobot *robot, size_t offset, size_t buffer_len,
+                             CPlayerServer *server, size_t offset, size_t buffer_len,
                              size_t data_len, size_t command_len, size_t config_len);
     
     // Initialise the device
@@ -90,7 +94,7 @@ class CPlayerDevice : public CEntity
 
     // Pointer to player robot
     //
-    protected: CPlayerRobot *m_robot;
+    protected: CPlayerServer *m_server;
 
     // Offset info shared memory
     //

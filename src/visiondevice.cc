@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.17 $
+//  $Revision: 1.4.2.18 $
 //
 // Usage:
 //  (empty)
@@ -26,7 +26,6 @@
 
 #include <math.h>
 #include "world.hh"
-#include "playerrobot.hh"
 #include "visiondevice.hh"
 #include "ptzdevice.hh"
 
@@ -34,9 +33,9 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CVisionDevice::CVisionDevice(CWorld *world, CEntity *parent, CPlayerRobot* robot,
+CVisionDevice::CVisionDevice(CWorld *world, CEntity *parent, CPlayerServer* server,
                              CPtzDevice *ptz_device)
-        : CPlayerDevice(world, parent, robot,
+        : CPlayerDevice(world, parent, server,
                         ACTS_DATA_START,
                         ACTS_TOTAL_BUFFER_SIZE,
                         ACTS_DATA_BUFFER_SIZE,
@@ -87,7 +86,7 @@ void CVisionDevice::Update()
     if (!IsSubscribed())
         return;
     
-    ASSERT(m_robot != NULL);
+    ASSERT(m_server != NULL);
     ASSERT(m_world != NULL);
 
     // See if its time to recalculate vision

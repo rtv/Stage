@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.22 $
+//  $Revision: 1.1.2.23 $
 //
 // Usage:
 //  (empty)
@@ -31,8 +31,8 @@
 #include <pthread.h>
 #include <stdint.h>
 
-#include "playerrobot.hh"
 #include "image.h"
+#include "entity.hh"
 
 #if INCLUDE_RTK
 #include "rtk_ui.hh"

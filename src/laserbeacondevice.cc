@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.13 $
+//  $Revision: 1.2.2.14 $
 //
 // Usage:
 //  (empty)
@@ -27,7 +27,6 @@
 #include <math.h>
 #include <stage.h>
 #include "world.hh"
-#include "playerrobot.hh"
 #include "laserdevice.hh"
 #include "laserbeacondevice.hh"
 
@@ -36,8 +35,8 @@
 // Default constructor
 //
 CLaserBeaconDevice::CLaserBeaconDevice(CWorld *world, CEntity *parent,
-                             CPlayerRobot *robot, CLaserDevice *laser)
-        : CPlayerDevice(world, parent, robot,
+                             CPlayerServer *server, CLaserDevice *laser)
+        : CPlayerDevice(world, parent, server,
                         LASERBEACON_DATA_START,
                         LASERBEACON_TOTAL_BUFFER_SIZE,
                         LASERBEACON_DATA_BUFFER_SIZE,
@@ -67,7 +66,7 @@ CLaserBeaconDevice::CLaserBeaconDevice(CWorld *world, CEntity *parent,
 //
 void CLaserBeaconDevice::Update()
 {
-    ASSERT(m_robot != NULL);
+    ASSERT(m_server != NULL);
     ASSERT(m_world != NULL);
     ASSERT(m_laser != NULL);
     

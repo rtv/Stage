@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11.2.24 $
+//  $Revision: 1.11.2.25 $
 //
 // Usage:
 //  (empty)
@@ -29,15 +29,14 @@
 #include <stage.h>
 #include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
 #include "world.hh"
-#include "playerrobot.hh"
 #include "laserdevice.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent, CPlayerRobot* robot)
-        : CPlayerDevice(world, parent, robot,
+CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent, CPlayerServer* server)
+        : CPlayerDevice(world, parent, server,
                         LASER_DATA_START,
                         LASER_TOTAL_BUFFER_SIZE,
                         LASER_DATA_BUFFER_SIZE,
@@ -78,7 +77,7 @@ CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent, CPlayerRobot* robot)
 //
 void CLaserDevice::Update()
 {
-    ASSERT(m_robot != NULL);
+    ASSERT(m_server != NULL);
     ASSERT(m_world != NULL);
 
     // Undraw ourselves from the world

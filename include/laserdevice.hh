@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.13 $
+//  $Revision: 1.9.2.14 $
 //
 // Usage:
 //  (empty)
@@ -33,7 +33,7 @@ class CLaserDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CLaserDevice(CWorld *world, CEntity *parent, CPlayerRobot* robot);
+    public: CLaserDevice(CWorld *world, CEntity *parent, CPlayerServer* server);
 
     // Update the device
     //

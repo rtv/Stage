@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/usc_pioneer.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.9 $
+//  $Revision: 1.1.2.10 $
 //
 // Usage:
 //  (empty)
@@ -33,7 +33,7 @@
 
 // Forward declare object classes so we dont need to include headers.
 //
-class CPlayerRobot;
+class CPlayerServer;
 class CPioneerMobileDevice;
 class CMiscDevice;
 class CSonarDevice;
@@ -77,7 +77,7 @@ class CUscPioneer : public CEntity
     
     // Child objects/devices
     //
-    private: CPlayerRobot *m_player;
+    private: CPlayerServer *m_player;
     private: CPioneerMobileDevice *m_pioneer;
     private: CMiscDevice *m_misc;
     private: CSonarDevice *m_sonar;

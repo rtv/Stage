@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/broadcastdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.7 $
+//  $Revision: 1.1.2.8 $
 //
 // Usage:
 //  (empty)
@@ -24,19 +24,16 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define RTK_ENABLE_TRACE 1
-
 #include <stage.h>
 #include "world.hh"
-#include "playerrobot.hh"
 #include "broadcastdevice.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CBroadcastDevice::CBroadcastDevice(CWorld *world, CEntity *parent, CPlayerRobot *robot)
-        : CPlayerDevice(world, parent, robot,
+CBroadcastDevice::CBroadcastDevice(CWorld *world, CEntity *parent, CPlayerServer *server)
+        : CPlayerDevice(world, parent, server,
                         BROADCAST_DATA_START,
                         BROADCAST_TOTAL_BUFFER_SIZE,
                         BROADCAST_DATA_BUFFER_SIZE,
@@ -81,7 +78,7 @@ void CBroadcastDevice::Shutdown()
 //
 void CBroadcastDevice::Update()
 {
-    ASSERT(m_robot != NULL);
+    ASSERT(m_server != NULL);
     ASSERT(m_world != NULL);
     
     // Check to see if it is time to update the laser

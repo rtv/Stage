@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/miscdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -33,7 +33,7 @@ class CMiscDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CMiscDevice(CWorld *world, CEntity *parent, CPlayerRobot *robot);
+    public: CMiscDevice(CWorld *world, CEntity *parent, CPlayerServer *server);
     
     // Update the device
     //

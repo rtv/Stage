@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: playerrobot.cc
+// File: playerserver.cc
 // Author: Richard Vaughan, Andrew Howard
 // Date: 6 Dec 2000
 // Desc: Provides interface to Player.
 //
 // CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerrobot.cc,v $
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerserver.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.12 $
+//  $Revision: 1.1.2.1 $
 //
 // Usage:
 //  (empty)
@@ -49,11 +49,9 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 
-#define RTK_ENABLE_TRACE 0
-
 #include <stage.h>
 #include "world.hh"
-
+#include "playerserver.hh"
 
 ///////////////////////////////////////////////////////////////////////////
 // Macros
@@ -64,7 +62,7 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CPlayerRobot::CPlayerRobot(CWorld *world, CEntity *parent)
+CPlayerServer::CPlayerServer(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {
     m_port = 6665;
@@ -75,7 +73,7 @@ CPlayerRobot::CPlayerRobot(CWorld *world, CEntity *parent)
 ///////////////////////////////////////////////////////////////////////////
 // Destructor
 //
-CPlayerRobot::~CPlayerRobot( void )
+CPlayerServer::~CPlayerServer( void )
 {
 }
 
@@ -83,7 +81,7 @@ CPlayerRobot::~CPlayerRobot( void )
 ///////////////////////////////////////////////////////////////////////////
 // Start all the devices
 //
-bool CPlayerRobot::Startup()
+bool CPlayerServer::Startup()
 {
     if (!CEntity::Startup())
         return false;
@@ -106,7 +104,7 @@ bool CPlayerRobot::Startup()
 ///////////////////////////////////////////////////////////////////////////
 // Shutdown the devices
 //
-void CPlayerRobot::Shutdown()
+void CPlayerServer::Shutdown()
 {
     // Shutdown player
     //
@@ -119,7 +117,7 @@ void CPlayerRobot::Shutdown()
 ///////////////////////////////////////////////////////////////////////////
 // Update the robot 
 //
-void CPlayerRobot::Update()
+void CPlayerServer::Update()
 {
     CEntity::Update();
 }
@@ -128,7 +126,7 @@ void CPlayerRobot::Update()
 ///////////////////////////////////////////////////////////////////////////
 // Start player instance
 //
-bool CPlayerRobot::StartupPlayer(int port)
+bool CPlayerServer::StartupPlayer(int port)
 {
     // -- create the memory map for IPC with Player --------------------------
 
@@ -211,13 +209,13 @@ bool CPlayerRobot::StartupPlayer(int port)
 ///////////////////////////////////////////////////////////////////////////
 // Stop player instance
 //
-void CPlayerRobot::ShutdownPlayer()
+void CPlayerServer::ShutdownPlayer()
 {
     // BPG
     if(kill(player_pid,SIGINT))
-        perror("CPlayerRobot::~CPlayerRobot(): kill() failed sending SIGINT to Player");
+        perror("CPlayerServer::~CPlayerServer(): kill() failed sending SIGINT to Player");
     if(waitpid(player_pid,NULL,0) == -1)
-        perror("CPlayerRobot::~CPlayerRobot(): waitpid() returned an error");
+        perror("CPlayerServer::~CPlayerServer(): waitpid() returned an error");
     // GPB
 
     // delete the playerIO.xxxxxx file
@@ -228,7 +226,7 @@ void CPlayerRobot::ShutdownPlayer()
 ///////////////////////////////////////////////////////////////////////////
 // Create a single semaphore to sync access to the shared memory segments
 //
-bool CPlayerRobot::CreateShmemLock()
+bool CPlayerServer::CreateShmemLock()
 {
     semKey = SEMKEY;
 
@@ -260,7 +258,7 @@ bool CPlayerRobot::CreateShmemLock()
 // lock the shared mem
 // Returns a pointer to the memory
 //
-bool CPlayerRobot::LockShmem( void )
+bool CPlayerServer::LockShmem( void )
 {
   struct sembuf ops[1];
 
@@ -281,7 +279,7 @@ bool CPlayerRobot::LockShmem( void )
 ///////////////////////////////////////////////////////////////////////////
 // unlock the shared mem
 //
-void CPlayerRobot::UnlockShmem( void )
+void CPlayerServer::UnlockShmem( void )
 {
   struct sembuf ops[1];
 
@@ -299,7 +297,7 @@ void CPlayerRobot::UnlockShmem( void )
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
 //
-void CPlayerRobot::OnUiUpdate(RtkUiDrawData *pData)
+void CPlayerServer::OnUiUpdate(RtkUiDrawData *pData)
 {
     CEntity::OnUiUpdate(pData);
 }
@@ -308,7 +306,7 @@ void CPlayerRobot::OnUiUpdate(RtkUiDrawData *pData)
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI mouse messages
 //
-void CPlayerRobot::OnUiMouse(RtkUiMouseData *pData)
+void CPlayerServer::OnUiMouse(RtkUiMouseData *pData)
 {
     CEntity::OnUiMouse(pData);;
 }

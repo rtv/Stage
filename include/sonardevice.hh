@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/sonardevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  (empty)
@@ -35,7 +35,7 @@ class CSonarDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CSonarDevice(CWorld *world, CEntity *parent, CPlayerRobot* robot);
+    public: CSonarDevice(CWorld *world, CEntity *parent, CPlayerServer *server);
     
     // Update the device
     //

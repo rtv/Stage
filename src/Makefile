@@ -37,7 +37,7 @@ RTK_LIB = $(RTK_DIR)/lib
 #
 OBJS = world.o world_load.o image.o \
 		entity.o entityfactory.o \
-		playerrobot.o playerdevice.o \
+		playerserver.o playerdevice.o \
 		pioneermobiledevice.o laserdevice.o \
 		visiondevice.o ptzdevice.o sonardevice.o \
 		laserbeacondevice.o broadcastdevice.o miscdevice.o \

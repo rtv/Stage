@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.16 $
+//  $Revision: 1.2.2.17 $
 //
 // Usage:
 //  (empty)
@@ -28,6 +28,7 @@
 
 #include <sys/time.h>
 #include "world.hh"
+#include "playerserver.hh"
 #include "playerdevice.hh"
 
 
@@ -35,11 +36,11 @@
 // Minimal constructor
 //
 CPlayerDevice::CPlayerDevice(CWorld *world, CEntity *parent,
-                             CPlayerRobot *robot, size_t offset, size_t buffer_len,
+                             CPlayerServer *server, size_t offset, size_t buffer_len,
                              size_t data_len, size_t command_len, size_t config_len)
         : CEntity(world, parent)
 {
-    m_robot = robot;
+    m_server = server;
 
     ASSERT(data_len + command_len + config_len <= buffer_len);
 
@@ -66,7 +67,7 @@ bool CPlayerDevice::Startup()
 
     // Get a pointer to the shared memory area
     //
-    uint8_t *buffer = (uint8_t*) m_robot->GetShmem();
+    uint8_t *buffer = (uint8_t*) m_server->GetShmem();
     if (buffer == NULL)
     {
         printf("shared memory pointer == NULL; cannot start device\n");
@@ -85,9 +86,9 @@ bool CPlayerDevice::Startup()
     
     // Mark this device as available
     //
-    m_robot->LockShmem();
+    m_server->LockShmem();
     m_info->available = 1;
-    m_robot->UnlockShmem();
+    m_server->UnlockShmem();
     
     return true;
 }
@@ -100,9 +101,9 @@ void CPlayerDevice::Shutdown()
 {
     // Mark this device as unavailable
     //
-    m_robot->LockShmem();
+    m_server->LockShmem();
     m_info->available = 0;
-    m_robot->UnlockShmem();
+    m_server->UnlockShmem();
     
     CEntity::Shutdown();
 }
@@ -113,9 +114,9 @@ void CPlayerDevice::Shutdown()
 //
 bool CPlayerDevice::IsSubscribed()
 {
-    m_robot->LockShmem();
+    m_server->LockShmem();
     bool subscribed = m_info->subscribed;
-    m_robot->UnlockShmem();
+    m_server->UnlockShmem();
     return subscribed;
 }
 
@@ -130,7 +131,7 @@ size_t CPlayerDevice::PutData(void *data, size_t len,
     //    RTK_MSG2("data len (%d) > buffer len (%d)", (int) len, (int) m_data_len);
     //ASSERT(len <= m_data_len);
 
-    m_robot->LockShmem();
+    m_server->LockShmem();
     
     // Take the smallest number of bytes
     // This avoids an overflow of either buffer
@@ -160,7 +161,7 @@ size_t CPlayerDevice::PutData(void *data, size_t len,
     //
     m_info->data_len = len;
 
-    m_robot->UnlockShmem();
+    m_server->UnlockShmem();
     
     return len;
 }
@@ -173,7 +174,7 @@ size_t CPlayerDevice::PutData(void *data, size_t len,
 size_t CPlayerDevice::GetData(void *data, size_t len,
                               uint32_t *time_sec, uint32_t *time_usec)
 {
-    m_robot->LockShmem();
+    m_server->LockShmem();
     
     // Take the smallest number of bytes
     // This avoids an overflow of either buffer
@@ -191,7 +192,7 @@ size_t CPlayerDevice::GetData(void *data, size_t len,
     if (time_usec != NULL)
         *time_usec = m_info->data_timestamp_usec;
 
-    m_robot->UnlockShmem();
+    m_server->UnlockShmem();
     
     return len;
 }
@@ -206,7 +207,7 @@ size_t CPlayerDevice::GetCommand(void *data, size_t len)
     //    RTK_MSG2("buffer len (%d) < command len (%d)", (int) len, (int) m_command_len);
     //ASSERT(len >= m_command_len);
     
-    m_robot->LockShmem();
+    m_server->LockShmem();
 
     // See if there is a command
     //
@@ -222,7 +223,7 @@ size_t CPlayerDevice::GetCommand(void *data, size_t len)
     //
     memcpy(data, m_command_buffer, len);
     
-    m_robot->UnlockShmem();
+    m_server->UnlockShmem();
     return len;
 }
 
@@ -236,7 +237,7 @@ size_t CPlayerDevice::GetConfig(void *data, size_t len)
     //    RTK_MSG2("buffer len (%d) < config len (%d)", (int) len, (int) m_config_len);
     //ASSERT(len >= m_config_len);
     
-    m_robot->LockShmem();
+    m_server->LockShmem();
 
     // See if there is a config
     //
@@ -256,7 +257,7 @@ size_t CPlayerDevice::GetConfig(void *data, size_t len)
     //
     m_info->config_len = 0;
     
-    m_robot->UnlockShmem();
+    m_server->UnlockShmem();
     return len;
 }
 

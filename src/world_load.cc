@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  (empty)
@@ -24,6 +24,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
+#include "stage_types.hh"
 #include "world.hh"
 #include "entityfactory.hh"
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/usc_pioneer.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.14 $
+//  $Revision: 1.1.2.15 $
 //
 // Usage:
 //  (empty)
@@ -26,7 +26,7 @@
 
 #include "world.hh"
 #include "usc_pioneer.hh"
-#include "playerrobot.hh"
+#include "playerserver.hh"
 #include "pioneermobiledevice.hh"
 #include "miscdevice.hh"
 #include "sonardevice.hh"
@@ -42,7 +42,7 @@
 CUscPioneer::CUscPioneer(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {
-    m_player = new CPlayerRobot(world, this);
+    m_player = new CPlayerServer(world, this);
     m_pioneer = new CPioneerMobileDevice(world, parent, m_player);
     m_misc = new CMiscDevice(world, m_pioneer, m_player);
     m_sonar = new CSonarDevice(world, m_pioneer, m_player);

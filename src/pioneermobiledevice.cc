@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.20 $
+//  $Revision: 1.9.2.21 $
 //
 // Usage:
 //  (empty)
@@ -29,7 +29,6 @@
 #include <math.h>
 
 #include "world.hh"
-#include "playerrobot.hh"
 #include "pioneermobiledevice.hh"
 
 const double TWOPI = 6.283185307;
@@ -38,8 +37,8 @@ const double TWOPI = 6.283185307;
 ///////////////////////////////////////////////////////////////////////////
 // Constructor
 //
-CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CEntity *parent, CPlayerRobot* robot)
-        : CPlayerDevice(world, parent, robot,
+CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CEntity *parent, CPlayerServer* server)
+        : CPlayerDevice(world, parent, server,
                         POSITION_DATA_START,
                         POSITION_TOTAL_BUFFER_SIZE,
                         POSITION_DATA_BUFFER_SIZE,

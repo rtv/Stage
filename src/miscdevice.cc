@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/miscdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -26,15 +26,14 @@
 
 #include <stage.h>
 #include "world.hh"
-#include "playerrobot.hh"
 #include "miscdevice.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CMiscDevice::CMiscDevice(CWorld *world, CEntity *parent, CPlayerRobot *robot)
-        : CPlayerDevice(world, parent, robot,
+CMiscDevice::CMiscDevice(CWorld *world, CEntity *parent, CPlayerServer *server)
+        : CPlayerDevice(world, parent, server,
                         MISC_DATA_START,
                         MISC_TOTAL_BUFFER_SIZE,
                         MISC_DATA_BUFFER_SIZE,
@@ -49,7 +48,7 @@ CMiscDevice::CMiscDevice(CWorld *world, CEntity *parent, CPlayerRobot *robot)
 //
 void CMiscDevice::Update()
 {
-    ASSERT(m_robot != NULL);
+    ASSERT(m_server != NULL);
     ASSERT(m_world != NULL);
     
     m_data.frontbumpers = 0;

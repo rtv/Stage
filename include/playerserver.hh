@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: playerplayerrobot.hhh
+// File: playerserver.hh
 // Author: Richard Vaughan, Andrew Howard
 // Date: 6 Dec 2000
-// Desc: Provides interface to Player.
+// Desc: Provides interface to Player server.
 //
 // CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerrobot.hh,v $
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerserver.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.9 $
+//  $Revision: 1.1.2.1 $
 //
 // Usage:
 //  (empty)
@@ -36,10 +36,10 @@ class CDevice;
 class CWorld;
 
 
-class CPlayerRobot : public CEntity
+class CPlayerServer : public CEntity
 {
-    public: CPlayerRobot( CWorld* world, CEntity *parent);
-    public: ~CPlayerRobot( void );
+    public: CPlayerServer( CWorld* world, CEntity *parent);
+    public: ~CPlayerServer( void );
     
     // Start all the devices
     //

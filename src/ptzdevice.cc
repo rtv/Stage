@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.15 $
+//  $Revision: 1.4.2.16 $
 //
 // Usage:
 //  (empty)
@@ -28,15 +28,14 @@
 
 #include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
 #include "world.hh"
-#include "playerrobot.hh"
 #include "ptzdevice.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent, CPlayerRobot* robot)
-        : CPlayerDevice(world, parent, robot,
+CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent, CPlayerServer* server)
+        : CPlayerDevice(world, parent, server,
                         PTZ_DATA_START,
                         PTZ_TOTAL_BUFFER_SIZE,
                         PTZ_DATA_BUFFER_SIZE,
@@ -87,7 +86,7 @@ void CPtzDevice::Update()
         return;
     //RTK_TRACE0("is subscribed");
     
-    ASSERT(m_robot != NULL);
+    ASSERT(m_server != NULL);
     ASSERT(m_world != NULL);
     
     // if its time to recalculate ptz
