@@ -21,16 +21,16 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.1.2.9 2003-02-12 08:48:48 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.1.2.10 2003-02-14 03:36:33 rtv Exp $
  */
 
 //
 // all this GUI stuff should be unravelled from the CWorld class eventually - rtv
 //
 
-//#undef DEBUG
-//#undef VERBOSE
-#define DEBUG 
+#undef DEBUG
+#undef VERBOSE
+//#define DEBUG 
 //#define VERBOSE
 
 #include <errno.h>

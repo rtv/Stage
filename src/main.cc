@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.27 2003-02-13 02:26:07 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.28 2003-02-14 03:36:33 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -508,14 +508,14 @@ int WaitForWallClock()
   //printf( "time %.4f freq %.2f interval %.4f avg %.4f\n", 
   //	outputtime, freq, interval, avg_interval );
 
-  PRINT_MSG2( "time %.4f freq %.2fHz", timenow, freq );
+  //PRINT_MSG2( "time %.4f freq %.2fHz", timenow, freq );
   
   // if we have spare time, go to sleep
   double spare_time = update_interval - avg_interval;
   
   if( spare_time > min_sleep_time )
     {
-      printf( "sleeping for %.6f seconds\n", spare_time );
+      //printf( "sleeping for %.6f seconds\n", spare_time );
       ts.tv_sec = (time_t)spare_time;
       ts.tv_nsec = (long)(fmod( spare_time, 1.0 ) * BILLION );
       

@@ -126,15 +126,16 @@ void CEntity::RtkStartup()
   int r;
   for( r=0; r<this->rect_count; r++ )
     {
-      double x, y, a, w, h;
+      stage_rotrect_t* src = &this->rects[r];
+      double x,y,a,w,h;
       
-      x = ((this->rects[r].x + this->rects[r].w/2.0) * scalex) - size_x/2.0;
-      y = ((this->rects[r].y + this->rects[r].h/2.0)* scaley) - size_y/2.0;
-      a = this->rects[r].a;
-      w = this->rects[r].w * scalex;
-      h = this->rects[r].h * scaley;
+      x = ((src->x + src->w/2.0) * scalex) - size_x/2.0 + origin_x;
+      y = ((src->y + src->h/2.0) * scaley) - size_y/2.0 + origin_y;
+      a = src->a;
+      w = src->w * scalex;
+      h = src->h * scaley;
       
-      rtk_fig_rectangle(this->fig, x, y, a, w, h, 0 ); 
+      rtk_fig_rectangle(this->fig, x,y,a,w,h, 0 ); 
     }
 
   // draw a boundary rectangle around the root device

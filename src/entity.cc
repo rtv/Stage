@@ -21,11 +21,18 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.17 2003-02-13 02:26:07 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.18 2003-02-14 03:36:32 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
 #endif
+
+
+//#define DEBUG
+//#define VERBOSE
+//#define RENDER_INITIAL_BOUNDING_BOXES
+#undef DEBUG
+#undef VERBOSE
 
 #include <math.h>
 #include <string.h>
@@ -43,16 +50,11 @@
 
 #include <iostream>
 
-//#define DEBUG
-//#define VERBOSE
-#undef DEBUG
-#undef VERBOSE
-//#define RENDER_INITIAL_BOUNDING_BOXES
-
 #include "sio.h" // for SIOPropString()
 #include "entity.hh"
 #include "raytrace.hh"
 #include "gui.hh"
+
 
 // init the static vars shared by all entities
  // everyone shares these vars 
@@ -452,14 +454,15 @@ void CEntity::MapEx(double px, double py, double pth, bool render)
 }
 
 // convert the rotated rectangle into global coords, taking into account
-// the entities pose and the rectangle scaling
+// the entities pose and offset and the rectangle scaling
 void CEntity::GetGlobalRect( stage_rotrect_t* dest, stage_rotrect_t* src )
 {
   double scalex = size_x / rects_max_x;
   double scaley = size_y / rects_max_y;
   
-  dest->x = ((src->x + src->w/2.0) * scalex) - size_x/2.0;
-  dest->y = ((src->y + src->h/2.0) * scaley) - size_y/2.0;
+  dest->x = ((src->x + src->w/2.0) * scalex) - size_x/2.0 + origin_x;
+  dest->y = ((src->y + src->h/2.0) * scaley) - size_y/2.0 + origin_y;
+      
   dest->a = src->a;
   dest->w = src->w * scalex;
   dest->h = src->h * scaley;

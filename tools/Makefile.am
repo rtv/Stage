@@ -4,8 +4,8 @@ toolsdir = $(prefix)/tools
 tools_PROGRAMS =
 
 CPPFLAGS = -I@PLAYER_DIR@/include -I@PLAYER_DIR@/client_libs/c -I@PLAYER_DIR@/client_libs/c++ -I@PLAYER_DIR@/server
-autoplace_SOURCES = autoplace.cc
-autoplace_LDADD = -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/client_libs/c++ -lplayerclient
+#autoplace_SOURCES = autoplace.cc
+#autoplace_LDADD = -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/client_libs/c++ -lplayerclient
 
 
 
