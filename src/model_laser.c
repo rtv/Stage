@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.60 $
+//  $Revision: 1.61 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -25,6 +25,56 @@ extern rtk_fig_t* fig_debug_rays;
 #define LASER_FILLED 1
 
 #define STG_LASER_SAMPLES_MAX 1024
+
+
+/** 
+@defgroup model_laser Laser model 
+The laser model simulates a scanning laser rangefinder
+
+<h2>Worldfile properties</h2>
+
+@par Summary and default values
+
+@verbatim
+laser
+(
+  # laser properties
+  samples 180
+  range_min 0.0
+  range_max 8.0
+  fov 180.0
+
+  # model properties
+  size [0.1 0.1]
+  color "blue"
+)
+@endverbatim
+
+@par Details
+- samples int
+  - the number of laser samples per scan
+- range_min float
+  -  the minimum range reported by the scanner, in meters. The scanner will detect objects closer than this, but report their range as the minimum.
+- range_max float
+  - the maximum range reported by the scanner, in meters. The scanner will not detect objects beyond this range.
+- fov float
+  - the angular field of view of the scanner, in degrees. 
+
+*/
+
+void laser_load( stg_model_t* mod, int section )
+{
+  puts( "laser load" );
+  stg_laser_config_t lconf;
+  memset( &lconf, 0, sizeof(lconf) );
+  
+  lconf.samples = wf_read_int( section, "samples", STG_DEFAULT_LASER_SAMPLES);
+  lconf.range_min = wf_read_length( section, "range_min", STG_DEFAULT_LASER_MINRANGE);
+  lconf.range_max = wf_read_length( section, "range_max", STG_DEFAULT_LASER_MAXRANGE);
+  lconf.fov = wf_read_angle( section, "fov", STG_DEFAULT_LASER_FOV);
+
+  stg_model_set_config( mod, &lconf, sizeof(lconf));
+}
 
 int laser_update( stg_model_t* mod );
 int laser_shutdown( stg_model_t* mod );
@@ -44,6 +94,7 @@ stg_model_t* stg_laser_create( stg_world_t* world,
   mod->f_update = laser_update;
   mod->f_render_data = laser_render_data;
   mod->f_render_cfg = laser_render_cfg;
+  mod->f_load = laser_load;
 
   // sensible laser defaults
   stg_geom_t geom;
@@ -313,3 +364,4 @@ int laser_shutdown( stg_model_t* mod )
   stg_model_set_data( mod, NULL, 0 );
   return 0; // ok
 }
+

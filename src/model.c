@@ -10,6 +10,112 @@
 #include "stage_internal.h"
 #include "gui.h"
 
+
+/** @defgroup model_basic Basic model
+    
+The basic model simulates an object with basic properties; position,
+size, velocity, color, visibility to various sensors, etc. The basic
+model also has a body made up of a list of lines. Internally, the
+basic model is used base class for all other model types. You can use
+the basic model to simulate environmental objects.
+
+<h2>Worldfile properties</h2>
+
+@par Summary and default values
+
+@verbatim
+model
+(
+  pose [0 0 0]
+  size [0 0]
+  origin [0 0 0]
+  velocity [0 0 0]
+
+  color "red" # body colorx
+
+  # determine how the model appears in various sensors
+  obstacle_return 1
+  laser_return 1
+  ranger_return 1
+  blobfinder_return 1
+  fiducial_return 1
+
+  # GUI properties
+  gui_nose 0
+  gui_grid 0
+  gui_boundary 0
+  gui_movemask ?
+
+  # body shape
+  line_count 4
+  line[0][0 0 1 0]
+  line[1][1 0 1 1]
+  line[2][1 1 0 1]
+  line[3][0 1 0 0]
+
+  bitmap ""
+  bitmap_resolution 0
+)
+@endverbatim
+
+@par Details
+- pose [float float float]
+  - [x_position y_position heading_angle]
+  - specify the pose of the model in its parent's coordinate system
+- size [float float]
+  - [x_size y_size]
+  - specify the size of the model
+- origin [float float float]
+  - [x_position y_position heading_angle]
+  - specify the position of the object's center, relative to its pose
+- velocity [float float float]
+  - [x_speed y_speed rotation_speed]
+  - specify the initial velocity of the model. Not that if the model hits an obstacle, its velocity will be set to zero.
+- color string
+  - specify the color of the object using a color name from the X11 database (rgb.txt)
+- line_count int
+  - specify the number of lines that make up the model's body
+- line[index] [float float float float]
+  - [x1 y1 x2 y2]
+  - creates a line from (x1,y1) to (x2,y2). A set of line_count lines defines the robot's body for the purposes of collision detection and rendering in the GUI window.
+- bitmap string
+  - filename
+  - alternative way to set the model's line_count and lines. The file must be a bitmap recognized by libgtkpixbuf (most popular formats are supported). The file is opened and parsed into a set of lines. Unless the bitmap_resolution option is used, the lines are scaled to fit inside the rectangle defined by the model's current size.
+- bitmap_resolution float
+  - alternative way to set the model's size. Used with the bitmap option, this sets the model's size according to the size of the bitmap file, by multiplying the width and height of the bitmap, measured in pixels, by this scaling factor. 
+- gui_nose bool
+  - if 1, draw a nose on the model showing its heading (positive X axis)
+- gui_grid bool
+  - if 1, draw a scaling grid over the model
+- gui_movemask bool
+  - define how the model can be moved by the mouse in the GUI window
+- gui_boundary bool
+  - if 1, draw a bounding box around the model, indicating its size
+- obstacle_return bool
+  - if 1, this model can collide with other models that have this property set
+- blob_return bool
+  - if 1, this model can be detected in the blob_finder (depending on its color)
+- ranger_return bool
+  - if 1, this model can be detected by ranger sensors
+- laser_return int
+  - if 0, this model is not detected by laser sensors. if 1, the model shows up in a laser sensor with normal (0) reflectance. If 2, it shows up with high (1) reflectance.
+- fiducial_return int
+  - if non-zero, this model is detected by fiducialfinder sensors. The value is used as the fiducial ID.
+
+*/
+
+/*
+TODO
+
+- friction float
+  - [WARNING: Friction model is not yet implemented; details may change] if > 0 the model can be pushed around by other moving objects. The value determines the proportion of velocity lost per second. For example, 0.1 would mean that the object would lose 10% of its speed due to friction per second. A value of zero (the default) means this model can not be pushed around (infinite friction). 
+*/
+
+
+  
+
+
+
 /// convert a global pose into the model's local coordinate system
 void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose )
 {
@@ -1111,5 +1217,210 @@ int stg_model_update_pose( stg_model_t* mod )
     }      
   
   return 0; // ok
+}
+
+
+void stg_model_load( stg_model_t* mod )
+{
+  stg_pose_t pose, pose_default;
+  stg_get_default_pose( &pose_default );
+
+  pose.x = wf_read_tuple_length(mod->id, "pose", 0, pose_default.x );
+  pose.y = wf_read_tuple_length(mod->id, "pose", 1, pose_default.y ); 
+  pose.a = wf_read_tuple_angle(mod->id, "pose", 2,  pose_default.a );
+
+  if( memcmp( &pose, &pose_default, sizeof(pose))) // if different to default
+    stg_model_set_pose( mod, &pose );
+  
+  stg_geom_t geom, geom_default;
+  stg_get_default_geom( &geom_default );
+  
+  geom.pose.x = wf_read_tuple_length(mod->id, "origin", 0, geom_default.pose.x );
+  geom.pose.y = wf_read_tuple_length(mod->id, "origin", 1, geom_default.pose.y );
+  geom.pose.a = wf_read_tuple_length(mod->id, "origin", 2, geom_default.pose.a );
+  geom.size.x = wf_read_tuple_length(mod->id, "size", 0, geom_default.size.x );
+  geom.size.y = wf_read_tuple_length(mod->id, "size", 1, geom_default.size.x );
+  
+  if( memcmp( &geom, &geom_default, sizeof(geom))) // if different to default
+    stg_model_set_geom( mod, &geom );
+  
+  stg_bool_t obstacle;
+  obstacle = wf_read_int( mod->id, "obstacle_return", STG_DEFAULT_OBSTACLERETURN );    
+  stg_model_set_obstaclereturn( mod, &obstacle );
+  
+  stg_guifeatures_t gf;
+  gf.boundary = wf_read_int(mod->id, "gui_boundary", STG_DEFAULT_GUI_BOUNDARY );
+  gf.nose = wf_read_int(mod->id, "gui_nose", STG_DEFAULT_GUI_NOSE );
+  gf.grid = wf_read_int(mod->id, "gui_grid", STG_DEFAULT_GUI_GRID );
+  gf.movemask = wf_read_int(mod->id, "gui_movemask", STG_DEFAULT_GUI_MOVEMASK );
+  stg_model_set_guifeatures( mod, &gf );
+  
+  //stg_friction_t friction;
+  //friction = wf_read_float(mod->id, "friction", 0.0 );
+  //stg_model_set_friction(mod, &friction );
+
+  // laser visibility
+  int laservis = 
+    wf_read_int(mod->id, "laser_return", STG_DEFAULT_LASERRETURN );      
+  stg_model_set_laserreturn( mod, (stg_laser_return_t*)&laservis );
+  
+  // blob visibility
+  //int blobvis = 
+  //wf_read_int(mod->id, "blob_return", STG_DEFAULT_BLOBRETURN );      
+ 
+  // TODO
+  //stg_model_set_blobreturn( mod, &blobvis );
+  
+  // ranger visibility
+  stg_bool_t rangervis = 
+   wf_read_int( mod->id, "ranger_return", STG_DEFAULT_RANGERRETURN );
+  
+  // TODO
+  //odel_set_ra
+
+  // fiducial visibility
+  int fid_return = wf_read_int( mod->id, "fiducial_return", FiducialNone );  
+  stg_model_set_fiducialreturn( mod, &fid_return );
+
+  const char* colorstr = wf_read_string( mod->id, "color", NULL );
+  if( colorstr )
+    {
+      stg_color_t color = stg_lookup_color( colorstr );
+      PRINT_DEBUG2( "stage color %s = %X", colorstr, color );
+	  
+      //if( color != STG_DEFAULT_COLOR )
+      //stg_model_prop_with_data( mod, STG_PROP_COLOR, &color,sizeof(color));
+
+      stg_model_set_color( mod, &color );
+    }
+
+
+  const char* bitmapfile = wf_read_string( mod->id, "bitmap", NULL );
+  if( bitmapfile )
+    {
+      stg_rotrect_t* rects = NULL;
+      int num_rects = 0;
+      
+#ifdef DEBUG
+      char buf[MAXPATHLEN];
+      char* path = getcwd( buf, MAXPATHLEN );
+      PRINT_DEBUG2( "in %s attempting to load %s",
+		    path, bitmapfile );
+#endif
+      
+      int image_width=0, image_height=0;
+      if( stg_load_image( bitmapfile, &rects, &num_rects, 
+			  &image_width, &image_height ) )
+	exit( -1 );
+      
+      double bitmap_resolution = 
+	wf_read_float( mod->id, "bitmap_resolution", 0 );
+      
+      // if a bitmap resolution was specified, we override the object
+      // geometry
+      if( bitmap_resolution )
+	{
+	  geom.size.x = image_width *  bitmap_resolution;
+	  geom.size.y = image_height *  bitmap_resolution; 	    
+	  stg_model_set_geom( mod, &geom );	  
+	}
+	  
+      // convert rects to an array of lines and upload the lines
+      //int num_lines = 4 * num_rects;
+      //stg_line_t* lines = stg_rects_to_lines( rects, num_rects );
+      //stg_normalize_lines( lines, num_lines );
+      //stg_scale_lines( lines, num_lines, geom.size.x, geom.size.y );
+      //stg_translate_lines( lines, num_lines, -geom.size.x/2.0, -geom.size.y/2.0 );     
+      //stg_model_set_lines( mod, lines, num_lines );
+      
+      // convert rects to an array of polygons and upload the polygons
+      stg_polygon_t* polys = stg_rects_to_polygons( rects, num_rects );
+      //stg_normalize_polygons( polys, num_rects, geom.size.x, geom.size.y );
+      stg_model_set_polygons( mod, polys, num_rects );
+
+     
+      //free( lines );
+    }
+      
+  int polycount = wf_read_int( mod->id, "polygons", 0 );
+  if( polycount > 0 )
+    {
+      //printf( "expecting %d polygons\n", polycount );
+      
+      char key[256];
+      stg_polygon_t* polys = stg_polygons_create( polycount );
+      int l;
+      for(l=0; l<polycount; l++ )
+	{	  	  
+	  snprintf(key, sizeof(key), "polygon[%d].points", l);
+	  int pointcount = wf_read_int(mod->id,key,0);
+	  
+	  //printf( "expecting %d points in polygon %d\n",
+	  //  pointcount, l );
+	  
+	  int p;
+	  for( p=0; p<pointcount; p++ )
+	    {
+	      snprintf(key, sizeof(key), "polygon[%d].point[%d]", l, p );
+	      
+	      stg_point_t pt;	      
+	      pt.x = wf_read_tuple_length(mod->id, key, 0, 0);
+	      pt.y = wf_read_tuple_length(mod->id, key, 1, 0);
+
+	      //printf( "key %s x: %.2f y: %.2f\n",
+	      //      key, pt.x, pt.y );
+	      
+	      // append the point to the polygon
+	      stg_polygon_append_points( &polys[l], &pt, 1 );
+	    }
+	}
+      
+      stg_model_set_polygons( mod, polys, polycount );
+    }
+
+
+  stg_velocity_t vel;
+  vel.x = wf_read_tuple_length(mod->id, "velocity", 0, 0 );
+  vel.y = wf_read_tuple_length(mod->id, "velocity", 1, 0 );
+  vel.a = wf_read_tuple_angle(mod->id, "velocity", 2, 0 );      
+  stg_model_set_velocity( mod, &vel );
+    
+//   stg_energy_config_t ecfg;
+//   ecfg.capacity 
+//     = wf_read_float(mod->id, "energy_capacity", STG_DEFAULT_ENERGY_CAPACITY );
+//   ecfg.probe_range 
+//     = wf_read_float(mod->id, "energy_range", STG_DEFAULT_ENERGY_PROBERANGE );      
+//   ecfg.give_rate 
+//     = wf_read_float(mod->id, "energy_return", STG_DEFAULT_ENERGY_GIVERATE );
+//   ecfg.trickle_rate 
+//     = wf_read_float(mod->id, "energy_trickle", STG_DEFAULT_ENERGY_TRICKLERATE );
+//   stg_model_set_energy_config( mod, &ecfg );
+
+  stg_kg_t mass;
+  mass = wf_read_float(mod->id, "mass", STG_DEFAULT_MASS );
+  stg_model_set_mass( mod, &mass );
+
+
+  // if a type-specific load callback has been set
+  if( mod->f_load )
+    mod->f_load( mod ); // call the load function
+}
+
+
+void stg_model_save( stg_model_t* model )
+{
+  stg_pose_t pose;
+  stg_model_get_pose(model, &pose);
+  
+  PRINT_DEBUG4( "saving model %s pose %.2f %.2f %.2f",
+		model->token,
+		pose.x,
+		pose.y,
+		pose.a );
+  
+  // right now we only save poses
+  wf_write_tuple_length( model->id, "pose", 0, pose.x);
+  wf_write_tuple_length( model->id, "pose", 1, pose.y);
+  wf_write_tuple_angle( model->id, "pose", 2, pose.a);
 }
 

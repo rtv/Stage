@@ -162,9 +162,23 @@ extern "C" {
   void stg_world_save( stg_world_t* world );
   int gui_world_update( stg_world_t* world );
   void stg_world_add_model( stg_world_t* world, stg_model_t* mod  );
-  /// render the geometry of all models
+
+  void gui_load( gui_window_t* win, int section );
+  void gui_save( gui_window_t* win );
+
+  /// render the geometry of all models in the world
   void gui_world_geom( stg_world_t* world );
 
+  /// render the data of all models in the world
+  void gui_world_render_data( stg_world_t* world );
+
+  /// render the configuration of all models in the world
+  void gui_world_render_cfg( stg_world_t* world );
+
+  /// render the commands of all models in the world
+  void gui_world_render_cmd( stg_world_t* world );
+  
+  /// get the structure containing all this model's figures
   gui_model_t* gui_model_figs( stg_model_t* model );
 
   void gui_model_create( stg_model_t* model );
@@ -207,6 +221,9 @@ extern "C" {
 
   typedef void(*func_render_t)(struct _stg_model*);
 
+  typedef void(*func_load_t)(struct _stg_model*);
+  typedef void(*func_save_t)(struct _stg_model*);
+
   struct _stg_model
   {
     stg_id_t id; // used as hash table key
@@ -227,6 +244,8 @@ extern "C" {
     stg_msec_t interval; // time between updates in ms
     stg_msec_t interval_elapsed; // time since last update in ms
   
+    //int section; // worldfile section number
+
     // todo - thread-safe version
     // allow exclusive access to this model
     
@@ -261,6 +280,8 @@ extern "C" {
     func_render_t f_render_data;
     func_render_t f_render_cmd;
     func_render_t f_render_cfg;
+    func_load_t f_load;
+    func_save_t f_save;
 
     // a datalist can contain arbitrary named data items. Used by
     // derived model types to store properties, and for user code to
@@ -522,7 +543,39 @@ extern "C" {
 				   stg_model_t* finder );
   /** @} */  
   
+  /** @defgroup worldfile worldfile C wrappers
+      @{
+  */
   
+  // C wrappers for C++ worldfile functions
+  int wf_read_int( int section, char* token, int def );
+  double wf_read_length( int section, char* token, double def );
+  double wf_read_angle( int section, char* token, double def );
+  double wf_read_float( int section, char* token, double def );
+  char* wf_read_tuple_string( int section, char* token, int index, char* def );
+  double wf_read_tuple_float( int section, char* token, int index, double def );
+  double wf_read_tuple_length( int section, char* token, int index, double def );
+  double wf_read_tuple_angle( int section, char* token, int index, double def );
+  char* wf_read_string( int section, char* token, char* def );
+
+  void wf_write_int( int section, char* token, int value );
+  void wf_write_length( int section, char* token, double value );
+  void wf_write_angle( int section, char* token, double value );
+  void wf_write_float( int section, char* token, double value );
+  void wf_write_tuple_string( int section, char* token, int index, char* value );
+  void wf_write_tuple_float( int section, char* token, int index, double value );
+  void wf_write_tuple_length( int section, char* token, int index, double value );
+  void wf_write_tuple_angle( int section, char* token, int index, double value );
+  void wf_write_string( int section, char* token, char* value );
+
+  void wf_save( void );
+  void wf_load( char* path );
+  int wf_section_count( void );
+  const char* wf_get_section_type( int section );
+  int wf_get_parent_section( int section );
+
+  /** @} */
+
   // CALLBACK WRAPPERS ------------------------------------------------------------
 
   /** @defgroup stg_callbacks Callback wrappers
@@ -586,10 +639,6 @@ extern "C" {
 #define PRINT_DEBUG4(m,a,b,c,d)
 #define PRINT_DEBUG5(m,a,b,c,d,e)
 #endif
-
-#ifdef __cplusplus
-}
-#endif 
 
 
 // end documentation group stage
@@ -660,60 +709,70 @@ extern "C" {
 /*   // token stuff for parsing worldfiles - this may one day replace
 the worldfile c++ code */
 
-/* #define CFG_OPEN '(' */
-/* #define CFG_CLOSE ')' */
-/* #define STR_OPEN '\"' */
-/* #define STR_CLOSE '\"' */
-/* #define TPL_OPEN '[' */
-/* #define TPL_CLOSE ']' */
+#define CFG_OPEN '('
+#define CFG_CLOSE ')'
+#define STR_OPEN '\"'
+#define STR_CLOSE '\"'
+#define TPL_OPEN '['
+#define TPL_CLOSE ']'
 
-/*   typedef enum { */
-/*     STG_T_NUM = 0, */
-/*     STG_T_BOOLEAN, */
-/*     STG_T_MODELPROP, */
-/*     STG_T_WORLDPROP, */
-/*     STG_T_NAME, */
-/*     STG_T_STRING, */
-/*     STG_T_KEYWORD, */
-/*     STG_T_CFG_OPEN, */
-/*     STG_T_CFG_CLOSE, */
-/*     STG_T_TPL_OPEN, */
-/*     STG_T_TPL_CLOSE, */
-/*   } stg_token_type_t; */
+  typedef enum {
+    STG_T_NUM = 0,
+    STG_T_BOOLEAN,
+    STG_T_MODELPROP,
+    STG_T_WORLDPROP,
+    STG_T_NAME,
+    STG_T_STRING,
+    STG_T_KEYWORD,
+    STG_T_CFG_OPEN,
+    STG_T_CFG_CLOSE,
+    STG_T_TPL_OPEN,
+    STG_T_TPL_CLOSE,
+  } stg_token_type_t;
 
 
-/*   typedef struct _stg_token { */
-/*     char* token; // the text of the token  */
-/*     stg_token_type_t type; */
-/*     unsigned int line; // the line on which the token appears  */
+
+
+typedef struct stg_token 
+{
+  char* token; ///< the text of the token
+  stg_token_type_t type; ///< the type of the token
+  unsigned int line; ///< the line on which the token appears
   
-/*     struct _stg_token* next; // linked list support */
-/*     struct _stg_token* child; // tree support */
+  struct stg_token* next; ///< linked list support
+  struct stg_token* child; ///< tree support
   
-/*   } stg_token_t; */
+} stg_token_t;
 
-/*   stg_token_t* stg_token_next( stg_token_t* tokens ); */
-/*   // print <token> formatted for a human reader, with a string <prefix> */
-/*   void stg_token_print( char* prefix,  stg_token_t* token ); */
-/*   // print a token array suitable for human reader */
-/*   void stg_tokens_print( stg_token_t* tokens ); */
-/*   void stg_tokens_free( stg_token_t* tokens ); */
+  stg_token_t* stg_token_next( stg_token_t* tokens );
+  /// print [token] formatted for a human reader, with a string [prefix]
+  void stg_token_print( char* prefix,  stg_token_t* token );
 
-/*   // create a new token structure from the arguments */
-/*   stg_token_t* stg_token_create( const char* token, stg_token_type_t type, int line ); */
+  /// print a token array suitable for human reader
+  void stg_tokens_print( stg_token_t* tokens );
+  void stg_tokens_free( stg_token_t* tokens );
+  
+  /// create a new token structure from the arguments
+  stg_token_t* stg_token_create( const char* token, stg_token_type_t type, int line );
 
-/*   // add a token to a list */
-/*   stg_token_t* stg_token_append( stg_token_t* head,  */
-/* 				 char* token, stg_token_type_t type, int line ); */
+  /// add a token to a list
+  stg_token_t* stg_token_append( stg_token_t* head,
+				 char* token, stg_token_type_t type, int line );
 
-/*   const char* stg_token_type_string( stg_token_type_t type ); */
+  const char* stg_token_type_string( stg_token_type_t type );
 
-/*   const char* stg_model_type_string( stg_model_type_t type ); */
+  const char* stg_model_type_string( stg_model_type_t type );
+  
+  //  functions for parsing worldfiles
+  stg_token_t* stg_tokenize( FILE* wf );
+  //stg_world_t* sc_load_worldblock( stg_client_t* cli, stg_token_t** tokensptr );
+  //stg_model_t* sc_load_modelblock( stg_world_t* world, stg_model_t* parent,
+  //			   stg_token_t** tokensptr );
 
-/* //  functions for parsing worldfiles  */
-/*   stg_token_t* stg_tokenize( FILE* wf ); */
-/*   stg_world_t* sc_load_worldblock( stg_client_t* cli, stg_token_t** tokensptr ); */
-/*   stg_model_t* sc_load_modelblock( stg_world_t* world, stg_model_t* parent,  */
-/*   				stg_token_t** tokensptr ); */
 
+
+
+#ifdef __cplusplus
+}
+#endif 
 

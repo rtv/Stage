@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.33 2005-01-02 07:10:50 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.34 2005-01-03 04:28:22 rtv Exp $
  */
 
 #include <math.h>
@@ -33,12 +33,105 @@
 
 extern rtk_fig_t* fig_debug_rays;
 
+/** @defgroup model_blobfinder Blobfinder model
+
+The blobfinder model simulates a color-blob-finding vision device,
+like a CMUCAM2, or the ACTS image processing software. It can track
+areas of color in a simulated 2D image, giving the location and size
+of the color 'blobs'. Multiple colors can be tracked at once; they are
+separated into channels, so that e.g. all red objects are tracked as
+channel one, blue objects in channel two, etc. The color associated
+with each channel is configurable.
+
+<h2>Worldfile properties</h2>
+
+@par Summary and default values
+
+@verbatim
+blobfinder
+(
+  # blobfinder properties
+  channel_count 6
+  channels ["red" "green" "blue" "cyan" "yellow" "magenta" ]
+  range_max 8.0
+  ptz[0 0 60.0]
+  image[80 60]
+
+  # model properties
+  size [0.01 0.01]
+)
+@endverbatim
+
+@par Details
+- channel_count int
+  - number of channels; i.e. the number of discrete colors detected
+- channels [ string ... ]
+  - define the colors detected in each channel, using color names from the X11 database 
+   (rgb.txt). The number of strings should match channel_count.
+- image [int int]
+  - [width height]
+  - dimensions of the image in pixels. This determines the blobfinder's 
+    resolution
+- ptz [float float float]
+   - [pan_angle tilt_angle zoom_angle] 
+   - control the panning, tilt and zoom angle (fov) of the blobfinder. Tilt angle currently has no effect.
+- range_max float
+   - maximum range of the sensor in meters.
+
+*/
+
+
+void blobfinder_load( stg_model_t* mod, int section )
+{
+  stg_blobfinder_config_t bcfg;
+  memset( &bcfg, 0, sizeof(bcfg) );
+  
+  bcfg.channel_count = 
+    wf_read_int(mod->id, "channel_count", 6 );
+  
+  bcfg.scan_width = (int)
+    wf_read_tuple_float(mod->id, "image", 0, STG_DEFAULT_BLOB_SCANWIDTH);
+  bcfg.scan_height = (int)
+    wf_read_tuple_float(mod->id, "image", 1, STG_DEFAULT_BLOB_SCANHEIGHT );	    
+  bcfg.range_max = 
+    wf_read_length(mod->id, "range_max", STG_DEFAULT_BLOB_RANGEMAX );
+  bcfg.pan = 
+    wf_read_tuple_angle(mod->id, "ptz", 0, STG_DEFAULT_BLOB_PAN );
+  bcfg.tilt = 
+    wf_read_tuple_angle(mod->id, "ptz", 1, STG_DEFAULT_BLOB_TILT );
+  bcfg.zoom =  
+    wf_read_tuple_angle(mod->id, "ptz", 2, STG_DEFAULT_BLOB_ZOOM );
+  
+  if( bcfg.channel_count > STG_BLOB_CHANNELS_MAX )
+    bcfg.channel_count = STG_BLOB_CHANNELS_MAX;
+  
+  int ch;
+  for( ch = 0; ch<bcfg.channel_count; ch++ )
+    {
+      stg_color_t col = 0xFF0000; //red
+      
+      switch( ch%6 )
+      {
+      case 0:  bcfg.channels[ch] = stg_lookup_color( "red" ); break;
+      case 1:  bcfg.channels[ch] = stg_lookup_color( "green" ); break;
+      case 2:  bcfg.channels[ch] = stg_lookup_color( "blue" ); break;
+      case 3:  bcfg.channels[ch] = stg_lookup_color( "cyan" ); break;
+      case 4:  bcfg.channels[ch] = stg_lookup_color( "yellow" ); break;
+      case 5:  bcfg.channels[ch] = stg_lookup_color( "magenta" ); break;
+      }
+    }    
+  
+  stg_model_set_config( mod, &bcfg, sizeof(bcfg));
+}
+
+
 void blobfinder_init( stg_model_t* mod );
 int blobfinder_startup( stg_model_t* mod );
 int blobfinder_shutdown( stg_model_t* mod );
 int blobfinder_update( stg_model_t* mod );
 void blobfinder_render_cfg( stg_model_t* mod );
 void blobfinder_render_data( stg_model_t* mod );
+
 
 stg_model_t* stg_blobfinder_create( stg_world_t* world, 
 				    stg_model_t* parent, 
@@ -53,6 +146,7 @@ stg_model_t* stg_blobfinder_create( stg_world_t* world,
   mod->f_update = blobfinder_update;
   mod->f_render_data = blobfinder_render_data;
   mod->f_render_cfg = blobfinder_render_cfg;
+  mod->f_load = blobfinder_load;
 
   // sensible blobfinder defaults
   stg_geom_t geom;

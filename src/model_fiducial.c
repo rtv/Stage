@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.31 $
+//  $Revision: 1.32 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -21,6 +21,54 @@
 extern rtk_fig_t* fig_debug_rays;
 
 #define STG_FIDUCIALS_MAX 64
+
+
+/** @defgroup model_fiducial Fiducial detector
+The fiducial model simulates a fiducial-detecting device.
+
+<h2>Worldfile properties</h2>
+
+@par Summary and default values
+
+@verbatim
+fiducialfinder
+(
+  # fiducialfinder properties
+  range_min 0.0
+  range_max 8.0
+  range_max_id 5.0
+  fov 180.0
+
+  # model properties
+  size [0 0]
+)
+@endverbatim
+
+@par Details
+- range_min float
+  - the minimum range reported by the sensor, in meters. The sensor will detect objects closer than this, but report their range as the minimum.
+- range_max float
+  - the maximum range at which the sensor can detect a fiducial, in meters. The sensor may not be able to uinquely identify the fiducial, depending on the value of range_max_id.
+- range_max_id float
+  - the maximum range at which the sensor can detect the ID of a fiducial, in meters.
+- fov float
+  - the angular field of view of the scanner, in degrees. 
+
+*/
+
+void fiducial_load( stg_model_t* mod )
+{
+  puts( "fiducial load" );
+
+  stg_fiducial_config_t fcfg;
+
+  fcfg.min_range = wf_read_length(mod->id, "range_min", STG_DEFAULT_FIDUCIAL_RANGEMIN );
+  fcfg.max_range_anon = wf_read_length(mod->id, "range_max", STG_DEFAULT_FIDUCIAL_RANGEMAXANON );
+  fcfg.fov = wf_read_angle(mod->id, "fov", STG_DEFAULT_FIDUCIAL_FOV );
+  fcfg.max_range_id = wf_read_length(mod->id, "range_max_id", STG_DEFAULT_FIDUCIAL_RANGEMAXID );
+  
+  stg_model_set_config( mod, &fcfg, sizeof(fcfg));
+}
 
 int fiducial_shutdown( stg_model_t* mod );
 int fiducial_update( stg_model_t* mod );
@@ -39,7 +87,8 @@ stg_model_t* stg_fiducial_create( stg_world_t* world,
   mod->f_update = fiducial_update;
   mod->f_render_data = fiducial_render_data;
   mod->f_render_cfg = fiducial_render_cfg;
-  
+  mod->f_load = fiducial_load;
+
   // a fraction smaller than a laser by default
   stg_geom_t geom;
   memset( &geom, 0, sizeof(geom));

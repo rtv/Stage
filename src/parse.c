@@ -11,12 +11,10 @@
 
 #define DEBUG
 
-//#include "config.h"
-#include "stage.h"
+#include "stage_internal.h"
 
 // the maximum size of a single token
 #define TOKEN_MAX 256
-
 
 static char* s_keywords[] = { "define", "include", "bitmap", NULL };
 static char* s_modelprops[] = { "rects", "color", "size", "pose",  
@@ -28,52 +26,6 @@ static char* s_modelprops[] = { "rects", "color", "size", "pose",
 
 static char* s_worldprops[] = { "resolution", "showgrid",
 				NULL }; 
-
-// returns a human readable desciption of the property type [id]
-const char* stg_property_string( stg_id_t id )
-{
-  switch( id )
-    {
-    case STG_PROP_COLOR: return "color"; break;
-    case STG_PROP_COMMAND: return "command"; break;
-    case STG_PROP_CONFIG: return "config"; break;
-    case STG_PROP_DATA: return "data"; break;
-    case STG_PROP_ENERGYCONFIG: return "energyconfig"; break; 
-    case STG_PROP_ENERGYDATA: return "energydata"; break;
-    case STG_PROP_GEOM: return "geom"; break;
-    case STG_PROP_GUIFEATURES: return "guifeatures"; break;
-    case STG_PROP_LASERRETURN: return "laser_return"; break;
-    case STG_PROP_LINES: return "lines"; break;
-    case STG_PROP_MASS: return "mass";break;
-    case STG_PROP_NAME: return "name"; break;
-    case STG_PROP_OBSTACLERETURN: return "obstacle_return";break;
-    case STG_PROP_PARENT: return "parent"; break;
-    case STG_PROP_PLAYERID: return "player_id"; break;
-    case STG_PROP_POSE: return "pose"; break;
-    case STG_PROP_PUCKRETURN: return "puck_return"; break;
-    case STG_PROP_RANGERRETURN: return "ranger_return"; break;
-    case STG_PROP_TIME: return "time"; break;
-    case STG_PROP_VELOCITY: return "velocity"; break;
-    case STG_PROP_VISIONRETURN: return "vision_return"; break;
-    case STG_PROP_FIDUCIALRETURN: return "fiducial_id";break;
-    case STG_PROP_BLOBRETURN: return "blob_return";break;
-
-      //case STG_PROP_BLINKENLIGHT: return "blinkenlight";break;
-      //case STG_PROP_BLOBCONFIG: return "blobconfig";break;
-      //case STG_PROP_BLOBDATA: return "blobdata";break;
-      //case STG_PROP_FIDUCIALCONFIG: return "fiducialconfig";break;
-      //case STG_PROP_FIDUCIALDATA: return "fiducialdata";break;
-      //case STG_PROP_LASERCONFIG: return "laserconfig";break;
-      //case STG_PROP_LASERDATA: return "laserdata";break;
-      //case STG_PROP_MATRIXRENDER: return "matrix_render";break;
-      //case STG_PROP_POWER: return "sonar_power"; break;
-      //case STG_PROP_RANGERCONFIG: return "rangerconfig";break;
-      //case STG_PROP_RANGERDATA: return "rangerdata";break;
-    default:
-      break;
-    }
-  return "<unknown property>";
-}
 
 
 const char* stg_token_type_string( stg_token_type_t type )
@@ -270,7 +222,23 @@ stg_token_t* stg_tokenize( FILE* wf )
 }
 
 
+int stg_token_to_int( stg_token_t* token )
+{
+  return( atoi( token->token ) );
+}
 
+double stg_token_to_float(  stg_token_t* token )
+{
+  return( strtod( token->token, NULL ) );
+}
+
+// caller must free the returned string!
+char* stg_token_to_string( stg_token_t* token )
+{
+  return( strdup( token->token ) );
+}
+
+/*
 sc_prop_t* stg_load_data( sc_prop_t* prop, stg_token_t** tokenptr )
 {
   stg_token_t* tokens = *tokenptr;
@@ -279,18 +247,11 @@ sc_prop_t* stg_load_data( sc_prop_t* prop, stg_token_t** tokenptr )
     {
     case STG_T_BOOLEAN:
       {
-	int boo = atoi( tokens->token );
-	printf( "appending int (bool) %d (size %d)\n ", boo, (int)sizeof(boo) );
-	
-	sc_prop_data_append( prop, STG_T_BOOLEAN, &boo, sizeof(boo) );
-	
-	tokens = stg_token_next(tokens);
       }
       break;
 
     case STG_T_NUM:
       {
-	double num = strtod( tokens->token, NULL );
 
 	printf( "%.3f ", num ); fflush(stdout);
 
@@ -331,343 +292,346 @@ sc_prop_t* stg_load_data( sc_prop_t* prop, stg_token_t** tokenptr )
   return prop;
 }
 
-stg_token_t* sc_model_load( sc_model_t* model, stg_token_t* tokens )
-{
-  printf( "configuring model: %d.", model->id_client );
+*/
 
-  int ptype = 0;
-  for( ptype=0; ptype<STG_PROP_COUNT; ptype++ )
-    if( strcmp( tokens->token, stg_property_string(ptype) ) == 0 )
-      {
-	printf( "%s: ", stg_property_string(ptype) ); 
-	break;
-      }
+
+/* stg_token_t* sc_model_load( sc_model_t* model, stg_token_t* tokens ) */
+/* { */
+/*   printf( "configuring model: %d.", model->id_client ); */
+
+/*   //int ptype = 0; */
+/*   //for( ptype=0; ptype<STG_PROP_COUNT; ptype++ ) */
+/*   //if( strcmp( tokens->token, stg_property_string(ptype) ) == 0 ) */
+/*   //  { */
+/*   //printf( "%s: ", stg_property_string(ptype) );  */
+/*   //break; */
+/*   //  } */
   
-  // create a new property
-  sc_prop_t* prop = sc_prop_create();
-  prop->id = ptype;
-  prop->token = tokens;
+/*   // create a new property */
+/*   sc_prop_t* prop = sc_prop_create(); */
+/*   prop->id = ptype; */
+/*   prop->token = tokens; */
 
-  tokens = stg_token_next(tokens);
+/*   tokens = stg_token_next(tokens); */
 
-  switch( tokens->type )
-    {
-    case STG_T_KEYWORD:
-      PRINT_WARN1( "KEYWORD: %s", tokens->token );
-      break;
+/*   switch( tokens->type ) */
+/*     { */
+/*     case STG_T_KEYWORD: */
+/*       PRINT_WARN1( "KEYWORD: %s", tokens->token ); */
+/*       break; */
 
-    case STG_T_TPL_OPEN:
-      tokens = stg_token_next(tokens);
-      while( tokens->type != STG_T_TPL_CLOSE )
-	{       
-	  prop = stg_load_data( prop, &tokens );
-	  //printf( "skipping %s\n", tokens->token );
-	  //tokens = stg_token_next(tokens); // consume the tuple closing brace
-	}
+/*     case STG_T_TPL_OPEN: */
+/*       tokens = stg_token_next(tokens); */
+/*       while( tokens->type != STG_T_TPL_CLOSE ) */
+/* 	{        */
+/* 	  prop = stg_load_data( prop, &tokens ); */
+/* 	  //printf( "skipping %s\n", tokens->token ); */
+/* 	  //tokens = stg_token_next(tokens); // consume the tuple closing brace */
+/* 	} */
 
-      tokens = stg_token_next(tokens); // consume the tuple closing brace
-      break;
+/*       tokens = stg_token_next(tokens); // consume the tuple closing brace */
+/*       break; */
 
-    default:
-      prop = stg_load_data( prop, &tokens );
-    }
+/*     default: */
+/*       prop = stg_load_data( prop, &tokens ); */
+/*     } */
 
-  // install the new property data in the model
-  sc_model_attach_prop( model, prop );
+/*   // install the new property data in the model */
+/*   sc_model_attach_prop( model, prop ); */
 
-  puts( "" );
+/*   puts( "" ); */
 
-  return tokens;
-}
+/*   return tokens; */
+/* } */
 
-stg_token_t* sc_world_load_config( sc_world_t* world, stg_token_t* tokens )
-{
-  printf( "world: %d.", world->id_client );
+/* stg_token_t* sc_world_load_config( sc_world_t* world, stg_token_t* tokens ) */
+/* { */
+/*   printf( "world: %d.", world->id_client ); */
 
-  int ptype = 0;
+/*   int ptype = 0; */
 
-  if( strcmp( tokens->token, s_worldprops[0] ) == 0 )
-    ptype = 1;
-  else if( strcmp( tokens->token, s_worldprops[1] ) == 0 )
-    ptype = 2;
+/*   if( strcmp( tokens->token, s_worldprops[0] ) == 0 ) */
+/*     ptype = 1; */
+/*   else if( strcmp( tokens->token, s_worldprops[1] ) == 0 ) */
+/*     ptype = 2; */
 
-  // create a new property
-  sc_prop_t* prop = sc_prop_create();
-  prop->id = ptype;
-  prop->token = tokens;
+/*   // create a new property */
+/*   sc_prop_t* prop = sc_prop_create(); */
+/*   prop->id = ptype; */
+/*   prop->token = tokens; */
 
-  tokens = stg_token_next(tokens);
+/*   tokens = stg_token_next(tokens); */
 
-  switch( tokens->type )
-    {
-    case STG_T_TPL_OPEN:
-      tokens = stg_token_next(tokens);
-      while( tokens->type != STG_T_TPL_CLOSE )
-	{       
-	  prop = stg_load_data( prop, &tokens );
-	  //printf( "skipping %s\n", tokens->token );
-	  tokens = stg_token_next(tokens); // consume the tuple closing brace
-	}
+/*   switch( tokens->type ) */
+/*     { */
+/*     case STG_T_TPL_OPEN: */
+/*       tokens = stg_token_next(tokens); */
+/*       while( tokens->type != STG_T_TPL_CLOSE ) */
+/* 	{        */
+/* 	  prop = stg_load_data( prop, &tokens ); */
+/* 	  //printf( "skipping %s\n", tokens->token ); */
+/* 	  tokens = stg_token_next(tokens); // consume the tuple closing brace */
+/* 	} */
 
-      tokens = stg_token_next(tokens); // consume the tuple closing brace
-      break;
+/*       tokens = stg_token_next(tokens); // consume the tuple closing brace */
+/*       break; */
 
-    default:
-      prop = stg_load_data( prop, &tokens );
-      break;
-    }
+/*     default: */
+/*       prop = stg_load_data( prop, &tokens ); */
+/*       break; */
+/*     } */
 
-  // install the new property data in the model
-  g_ptr_array_add( world->props, prop );
+/*   // install the new property data in the model */
+/*   g_ptr_array_add( world->props, prop ); */
 
-  puts( "" );
+/*   puts( "" ); */
 
-  return tokens;
-}
+/*   return tokens; */
+/* } */
 
-stg_token_t* stg_load_keyword( stg_token_t* tokens )
-{
-  if( strcmp( tokens->token, "include" ) == 0 )
-    {
-      tokens = stg_token_next(tokens);
+/* stg_token_t* stg_load_keyword( stg_token_t* tokens ) */
+/* { */
+/*   if( strcmp( tokens->token, "include" ) == 0 ) */
+/*     { */
+/*       tokens = stg_token_next(tokens); */
 
-      if( tokens->type != STG_T_STRING )
-	{
-	  printf( "syntax error line %d: "
-		  "\"include\" directives must be followed by a string. "
-		  "Found \"%s\" of type %s.",
-		  tokens->line,
-		  tokens->token, 
-		  stg_token_type_string(tokens->type) ); 
-	  return NULL; 
-	}
+/*       if( tokens->type != STG_T_STRING ) */
+/* 	{ */
+/* 	  printf( "syntax error line %d: " */
+/* 		  "\"include\" directives must be followed by a string. " */
+/* 		  "Found \"%s\" of type %s.", */
+/* 		  tokens->line, */
+/* 		  tokens->token,  */
+/* 		  stg_token_type_string(tokens->type) );  */
+/* 	  return NULL;  */
+/* 	} */
       
-      PRINT_WARN2( "include file \"%s\" on line %d: INCLUDE IS NOT YET IMPLEMENTED", 
-		   tokens->token, tokens->line );
+/*       PRINT_WARN2( "include file \"%s\" on line %d: INCLUDE IS NOT YET IMPLEMENTED",  */
+/* 		   tokens->token, tokens->line ); */
       
-      tokens = stg_token_next(tokens);
-    }
+/*       tokens = stg_token_next(tokens); */
+/*     } */
   
-  else if( strcmp( tokens->token, "define" ) == 0 )
-    {
-      PRINT_WARN2( "define macro \"%s\" on line %d: DEFINE IS NOT YET IMPLEMENTED.", 
-		   tokens->token, tokens->line );
+/*   else if( strcmp( tokens->token, "define" ) == 0 ) */
+/*     { */
+/*       PRINT_WARN2( "define macro \"%s\" on line %d: DEFINE IS NOT YET IMPLEMENTED.",  */
+/* 		   tokens->token, tokens->line ); */
       
-      tokens = stg_token_next(tokens); // skip the define token & macro name
-      tokens = stg_token_next(tokens); // skip the define token & macro name
-    }
+/*       tokens = stg_token_next(tokens); // skip the define token & macro name */
+/*       tokens = stg_token_next(tokens); // skip the define token & macro name */
+/*     } */
 
-  return tokens;
-}
+/*   return tokens; */
+/* } */
 
 
-stg_token_t* sc_model_bitmap_load( sc_model_t* mod, stg_token_t* tokens )
-{
-  tokens = stg_token_next( tokens );
+/* stg_token_t* sc_model_bitmap_load( sc_model_t* mod, stg_token_t* tokens ) */
+/* { */
+/*   tokens = stg_token_next( tokens ); */
   
-  PRINT_DEBUG1( "loading bitmap file \"%s\"", tokens->token );
+/*   PRINT_DEBUG1( "loading bitmap file \"%s\"", tokens->token ); */
   
-  // load the bitmap and convert it to a bunch of rectangles
-  stg_rotrect_t* rects;
-  int num_rects = 0;
-  stg_load_image( tokens->token, &rects, &num_rects );
+/*   // load the bitmap and convert it to a bunch of rectangles */
+/*   stg_rotrect_t* rects; */
+/*   int num_rects = 0; */
+/*   stg_load_image( tokens->token, &rects, &num_rects ); */
   
-  // add the rectangles to the model as a rects property
-  PRINT_DEBUG1( "loaded %d rects", num_rects );
+/*   // add the rectangles to the model as a rects property */
+/*   PRINT_DEBUG1( "loaded %d rects", num_rects ); */
   
-  // create a new property
-  sc_prop_t* prop = sc_prop_create();
-  prop->id = STG_PROP_RECTS;
-  prop->token = tokens;
+/*   // create a new property */
+/*   sc_prop_t* prop = sc_prop_create(); */
+/*   prop->id = STG_PROP_RECTS; */
+/*   prop->token = tokens; */
   
-  // stick the rect data in the property
-  sc_prop_data_append( prop, 0, rects, num_rects * sizeof(stg_rotrect_t) );
+/*   // stick the rect data in the property */
+/*   sc_prop_data_append( prop, 0, rects, num_rects * sizeof(stg_rotrect_t) ); */
   
-  free( rects );
+/*   free( rects ); */
 
-  // install the new property data in the model
-  g_ptr_array_add( mod->props, prop );
+/*   // install the new property data in the model */
+/*   g_ptr_array_add( mod->props, prop ); */
 
-  tokens = stg_token_next( tokens );
-  return tokens;
-}
+/*   tokens = stg_token_next( tokens ); */
+/*   return tokens; */
+/* } */
 
 // recursively loads and configures models from the token array
-sc_model_t*  sc_world_load_model( sc_world_t* world, sc_model_t* parent, 
-				  stg_token_t** tokensptr )
-{
-  stg_token_t* tokens = *tokensptr;
+/* sc_model_t*  sc_world_load_model( sc_world_t* world, sc_model_t* parent,  */
+/* 				  stg_token_t** tokensptr ) */
+/* { */
+/*   stg_token_t* tokens = *tokensptr; */
   
-  printf( "load model name %s line %d\n", tokens->token, tokens->line );
-  if( tokens->type != STG_T_NAME )
-    {
-      printf( "syntax error line %d: "
-	      "expecting a world or model name. "
-	      "Found \"%s\" of type %s\n", 
-	      tokens->line,
-	      tokens->token,
-	      stg_token_type_string( tokens->type ));
-      return NULL;
-    }
+/*   printf( "load model name %s line %d\n", tokens->token, tokens->line ); */
+/*   if( tokens->type != STG_T_NAME ) */
+/*     { */
+/*       printf( "syntax error line %d: " */
+/* 	      "expecting a world or model name. " */
+/* 	      "Found \"%s\" of type %s\n",  */
+/* 	      tokens->line, */
+/* 	      tokens->token, */
+/* 	      stg_token_type_string( tokens->type )); */
+/*       return NULL; */
+/*     } */
   
-  // create a new model structure
-  sc_model_t* model = sc_model_create( world, parent, tokens ) ;  
-  // and add it to the world
-  sc_world_addmodel( world, model );
+/*   // create a new model structure */
+/*   sc_model_t* model = sc_model_create( world, parent, tokens ) ;   */
+/*   // and add it to the world */
+/*   sc_world_addmodel( world, model ); */
 
-  // now load other properties from the file
-  tokens = stg_token_next(tokens);
+/*   // now load other properties from the file */
+/*   tokens = stg_token_next(tokens); */
   
-  if( tokens->type != STG_T_CFG_OPEN )
-    { 
-      printf( "syntax error line %d: "
-	      "expecting a block opening \"(\" to follow model name \"%s\". "
-	      "Found \"%s\" of type %s instead.\n", 
-	      tokens->line,
-	      model->token->token,
-	      tokens->token,
-	      stg_token_type_string( tokens->type ) );
-      return NULL;
-    }
+/*   if( tokens->type != STG_T_CFG_OPEN ) */
+/*     {  */
+/*       printf( "syntax error line %d: " */
+/* 	      "expecting a block opening \"(\" to follow model name \"%s\". " */
+/* 	      "Found \"%s\" of type %s instead.\n",  */
+/* 	      tokens->line, */
+/* 	      model->token->token, */
+/* 	      tokens->token, */
+/* 	      stg_token_type_string( tokens->type ) ); */
+/*       return NULL; */
+/*     } */
   
-  tokens = stg_token_next(tokens);
+/*   tokens = stg_token_next(tokens); */
   
-  printf( "creating \"%s\" line %d\n", 
-	  model->token->token, model->token->line );
+/*   printf( "creating \"%s\" line %d\n",  */
+/* 	  model->token->token, model->token->line ); */
   
-  // parse the body of the block
-  while( tokens && tokens->type != STG_T_CFG_CLOSE )
-    {
-      switch( tokens->type )
-	{
-	case STG_T_NAME: 
-	  printf( "creating %s as child of %s\n", 
-		  tokens->token, model->token->token );
-	  // recurse here, adding the created child to the current model
-	  sc_model_t* child = sc_world_load_model( world, model, &tokens );	  
+/*   // parse the body of the block */
+/*   while( tokens && tokens->type != STG_T_CFG_CLOSE ) */
+/*     { */
+/*       switch( tokens->type ) */
+/* 	{ */
+/* 	case STG_T_NAME:  */
+/* 	  printf( "creating %s as child of %s\n",  */
+/* 		  tokens->token, model->token->token ); */
+/* 	  // recurse here, adding the created child to the current model */
+/* 	  sc_model_t* child = sc_world_load_model( world, model, &tokens );	   */
 
-	  if( child == NULL )
-	    exit(0);
-	  break;
+/* 	  if( child == NULL ) */
+/* 	    exit(0); */
+/* 	  break; */
 	  
-	case STG_T_KEYWORD:
-	  if( strcmp( tokens->token, "bitmap" ) == 0 )
-	    tokens = sc_model_bitmap_load( model, tokens );
-	  else
-	    {
-	      printf( "syntax error line %d. Keyword %d can not be used in a model",
-		      tokens->line, tokens->token );
-	      exit(-1);
-	    }
-	  break;
+/* 	case STG_T_KEYWORD: */
+/* 	  if( strcmp( tokens->token, "bitmap" ) == 0 ) */
+/* 	    tokens = sc_model_bitmap_load( model, tokens ); */
+/* 	  else */
+/* 	    { */
+/* 	      printf( "syntax error line %d. Keyword %d can not be used in a model", */
+/* 		      tokens->line, tokens->token ); */
+/* 	      exit(-1); */
+/* 	    } */
+/* 	  break; */
 	  
-	case STG_T_MODELPROP:
-	  tokens = sc_model_load( model, tokens );
-	  break;
+/* 	case STG_T_MODELPROP: */
+/* 	  tokens = sc_model_load( model, tokens ); */
+/* 	  break; */
 	  
-	default:
-	  printf( "syntax error line %d: expecting a property or model name,"
-		  " or a model keyword."
-		  "Found \"%s\" of type %s.\n", 
-		  tokens->line,
-		  tokens->token,
-		  stg_token_type_string( tokens->type ) ); 
+/* 	default: */
+/* 	  printf( "syntax error line %d: expecting a property or model name," */
+/* 		  " or a model keyword." */
+/* 		  "Found \"%s\" of type %s.\n",  */
+/* 		  tokens->line, */
+/* 		  tokens->token, */
+/* 		  stg_token_type_string( tokens->type ) );  */
 	  
-	  exit(-1);
-	}
-    }
+/* 	  exit(-1); */
+/* 	} */
+/*     } */
   
-  tokens = stg_token_next(tokens); // consume the model close brace
+/*   tokens = stg_token_next(tokens); // consume the model close brace */
   
-  printf( "finished \"%s\"\n", model->token->token );  
+/*   printf( "finished \"%s\"\n", model->token->token );   */
   
-  //if( tokens )
-  //printf( "next token \"%s\"\n", tokens->token );
+/*   //if( tokens ) */
+/*   //printf( "next token \"%s\"\n", tokens->token ); */
   
-  *tokensptr = tokens; // poke the new token location into the argument
-  return model; // return the newly created and configured model
+/*   *tokensptr = tokens; // poke the new token location into the argument */
+/*   return model; // return the newly created and configured model */
   
-}
+/* } */
 
-// recursively loads and configures wlds from the token array
-sc_world_t*  sc_load_worldblock( sc_t* cli, stg_token_t** tokensptr)
-{
-  stg_token_t* tokens = *tokensptr;
+/* // recursively loads and configures wlds from the token array */
+/* sc_world_t*  sc_load_worldblock( sc_t* cli, stg_token_t** tokensptr) */
+/* { */
+/*   stg_token_t* tokens = *tokensptr; */
 
-  // eat up any keywords before the world starts
-  while( tokens && tokens->type == STG_T_KEYWORD )
-    tokens = stg_load_keyword( tokens );
+/*   // eat up any keywords before the world starts */
+/*   while( tokens && tokens->type == STG_T_KEYWORD ) */
+/*     tokens = stg_load_keyword( tokens ); */
 
-  printf( "load world name %s line %d\n", tokens->token, tokens->line );
-  if( tokens->type != STG_T_NAME )
-    {
-      printf( "syntax error line %d: "
-	      "expecting a world name. "
-	      "Found \"%s\" of type %s\n", 
-	      tokens->line,
-	      tokens->token,
-	      stg_token_type_string( tokens->type ));
-      return NULL;
-    }
+/*   printf( "load world name %s line %d\n", tokens->token, tokens->line ); */
+/*   if( tokens->type != STG_T_NAME ) */
+/*     { */
+/*       printf( "syntax error line %d: " */
+/* 	      "expecting a world name. " */
+/* 	      "Found \"%s\" of type %s\n",  */
+/* 	      tokens->line, */
+/* 	      tokens->token, */
+/* 	      stg_token_type_string( tokens->type )); */
+/*       return NULL; */
+/*     } */
    
-  // create a new world
-  sc_world_t* wld = sc_world_create( tokens );  
-  // and add it to the client
-  sc_addworld( cli, wld );
+/*   // create a new world */
+/*   sc_world_t* wld = sc_world_create( tokens );   */
+/*   // and add it to the client */
+/*   sc_addworld( cli, wld ); */
   
-  // now load other properties from the file
-  tokens = stg_token_next(tokens);
+/*   // now load other properties from the file */
+/*   tokens = stg_token_next(tokens); */
 
-  if( tokens->type != STG_T_CFG_OPEN )
-    { 
-      printf( "syntax error line %d: "
-	      "expecting a block opening \"(\" to follow wld name \"%s\". "
-	      "Found \"%s\" of type %s instead.\n", 
-	      tokens->line,
-	      wld->token->token,
-	      tokens->token,
-	      stg_token_type_string( tokens->type ) );
-      return NULL;
-    }
+/*   if( tokens->type != STG_T_CFG_OPEN ) */
+/*     {  */
+/*       printf( "syntax error line %d: " */
+/* 	      "expecting a block opening \"(\" to follow wld name \"%s\". " */
+/* 	      "Found \"%s\" of type %s instead.\n",  */
+/* 	      tokens->line, */
+/* 	      wld->token->token, */
+/* 	      tokens->token, */
+/* 	      stg_token_type_string( tokens->type ) ); */
+/*       return NULL; */
+/*     } */
 
-  tokens = stg_token_next(tokens);
+/*   tokens = stg_token_next(tokens); */
 
-  // parse the body of the block
-  while( tokens && tokens->type != STG_T_CFG_CLOSE )
-    {
-      switch( tokens->type )
-	{
-	case STG_T_NAME: 
-	  printf( "creating model %s as child of %s\n", 
-		  tokens->token, wld->token->token );
+/*   // parse the body of the block */
+/*   while( tokens && tokens->type != STG_T_CFG_CLOSE ) */
+/*     { */
+/*       switch( tokens->type ) */
+/* 	{ */
+/* 	case STG_T_NAME:  */
+/* 	  printf( "creating model %s as child of %s\n",  */
+/* 		  tokens->token, wld->token->token ); */
 	  
-	  sc_model_t* mod = sc_world_load_model( wld, NULL, &tokens );
-	  if( mod == NULL )
-	    exit(0);
-	  break;
+/* 	  sc_model_t* mod = sc_world_load_model( wld, NULL, &tokens ); */
+/* 	  if( mod == NULL ) */
+/* 	    exit(0); */
+/* 	  break; */
 
-	case STG_T_WORLDPROP:
-	  tokens = sc_world_load_config( wld, tokens );
-	  break;
+/* 	case STG_T_WORLDPROP: */
+/* 	  tokens = sc_world_load_config( wld, tokens ); */
+/* 	  break; */
 
-	default:
-	  printf( "syntax error line %d: expecting a world property or model name. "
-		  "Found \"%s\" of type %s.\n", 
-		  tokens->line,
-		  tokens->token,
-		  stg_token_type_string( tokens->type ) ); 
+/* 	default: */
+/* 	  printf( "syntax error line %d: expecting a world property or model name. " */
+/* 		  "Found \"%s\" of type %s.\n",  */
+/* 		  tokens->line, */
+/* 		  tokens->token, */
+/* 		  stg_token_type_string( tokens->type ) );  */
 
-	  exit(-1);
-	}
-    }
+/* 	  exit(-1); */
+/* 	} */
+/*     } */
 
-  tokens = stg_token_next(tokens); // consume the model close brace
+/*   tokens = stg_token_next(tokens); // consume the model close brace */
 
-  printf( "finished \"%s\"\n", wld->token->token );  
+/*   printf( "finished \"%s\"\n", wld->token->token );   */
 
-  //if( tokens )
-  //printf( "next token \"%s\"\n", tokens->token );
+/*   //if( tokens ) */
+/*   //printf( "next token \"%s\"\n", tokens->token ); */
 
-  *tokensptr = tokens; // poke the new token location into the argument
-  return wld; // return the newly created and configured model
-}
+/*   *tokensptr = tokens; // poke the new token location into the argument */
+/*   return wld; // return the newly created and configured model */
+/* } */

@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.118 2004-12-30 04:44:11 rtv Exp $
+ * CVS: $Id: stage.h,v 1.119 2005-01-03 04:28:22 rtv Exp $
  */
 
 
@@ -407,6 +407,12 @@ extern "C" {
    */
   int stg_world_update( stg_world_t* world, int sleepflag );
 
+  /** configure the world by reading from the current world file */
+  void stg_world_load( stg_world_t* mod );
+
+  /** save the state of the world to the current world file */
+  void stg_world_save( stg_world_t* mod );
+
   /** print human-readable information about the world on stdout 
    */
   void stg_world_print( stg_world_t* world );
@@ -464,6 +470,12 @@ extern "C" {
 
   /** unsubscribe from a model's data */
   void stg_model_unsubscribe( stg_model_t* mod );
+
+  /** configure a model by reading from the current world file */
+  void stg_model_load( stg_model_t* mod );
+
+  /** save the state of the model to the current world file */
+  void stg_model_save( stg_model_t* mod );
 
   // SET properties - use these to set props, don't set them directly
 

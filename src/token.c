@@ -1,7 +1,10 @@
 
-#include "stage.h"
+#include "stage_internal.h"
 
 // TODO - proper destruction for these things to avoid memory leaks
+
+
+char* token_type_str[] = { "double", "boolean", "modelprop", "worldprop", "name", "string", "keyword", "cfg_open", "cfg_close", "tuple_open", "tuple_close" };
 
 stg_token_t* stg_token_next( stg_token_t* tokens )
 {
@@ -13,7 +16,7 @@ void stg_token_print( char* prefix,  stg_token_t* token )
 {
   printf( "%s %s \t%s\t%d\n", 
 	  prefix, 
-	  "fix me", //stg_token_type_string(token->type), 
+	  token_type_str[ token->type ],
 	  token->token,
 	  token->line );
 }

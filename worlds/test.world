@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.42 2004-12-29 06:39:32 rtv Exp $
+# CVS: $Id: test.world,v 1.43 2005-01-03 04:28:22 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -17,12 +17,35 @@ include "pioneer.inc"
 
 
 
+
+
 # defines 'map' object used for floorplans
 include "map.inc"
 
 
 
-window( size [ 924.000 482.000 ] center [-0.077 -0.476] scale 0.038 )
+
+
+window( 
+  size [ 1137.000 923.000 ] 
+  center [0.289 -6.219] 
+  scale 0.033 
+
+  show_grid 0
+  fill_polygons 1
+
+  # control what data gets drawn in the window
+  laser_data 1
+  ranger_data 1
+  fiducial_data 0
+  blobfinder_data 0
+
+  # control what configurations get drawn in the window
+  laser_config 0
+  ranger_config 0
+  blobfinder_config 0
+  fiducial_config 0
+)
 
 map(
   #size [15.5 11.4]
@@ -34,6 +57,7 @@ map(
 
   bitmap_resolution 0.03
   #boundary 0
+
 )
 
 
@@ -63,7 +87,7 @@ define laserpioneer pioneer2dx
 laserpioneer
 (
   name "p0"
-  pose [-10 2 90]
+  pose [-10.000 2.000 90.000]
 )
 
 laserpioneer
@@ -119,7 +143,7 @@ laserpioneer
 (
   color "wheat"
   name "p8"
-  pose [-3.248 -0.295 -135.449]
+  pose [-3.644 0.134 -135.449]
 )
 
 laserpioneer
@@ -139,14 +163,14 @@ laserpioneer
 (
   color "DarkRed"
   name "p11"
-  pose [-10.049 -2.875 -135.449]
+  pose [-3.298 0.527 -135.449]
 )
 
 laserpioneer
 (
   color "DarkBlue"
   name "p12"
-  pose [-2.638 5.434 -107.986]
+  pose [-8.991 -0.957 -107.986]
 )
 
 laserpioneer

@@ -22,6 +22,105 @@ static rtk_app_t *app = NULL;
 rtk_fig_t* fig_debug_rays = NULL;
 rtk_fig_t* fig_debug_geom = NULL;
 
+
+/** @defgroup model_window GUI Window
+
+<h2>Worldfile Properties</h2>
+
+@par Summary and default values
+
+@verbatim
+window
+(
+  # gui properties
+  center [0 0]
+  size [? ?]
+  scale ?
+
+  # model properties do not apply to the gui window
+)
+@endverbatim
+
+@par Details
+- size [int int]
+  - [width height] 
+  - size of the window in pixels
+- center [float float]
+  - [x y] 
+  - location of the center of the window in world coordinates (meters)
+- scale
+  - ratio of world to pixel coordinates (window zoom)
+
+*/
+
+void gui_load( gui_window_t* win, int section )
+{
+  // remember the section for saving later
+  win->wf_section = section;
+
+  int window_width = 
+    (int)wf_read_tuple_float(section, "size", 0, STG_DEFAULT_WINDOW_WIDTH);
+  int window_height = 
+    (int)wf_read_tuple_float(section, "size", 1, STG_DEFAULT_WINDOW_HEIGHT);
+  
+  double window_center_x = 
+    wf_read_tuple_float(section, "center", 0, 0.0 );
+  double window_center_y = 
+    wf_read_tuple_float(section, "center", 1, 0.0 );
+  
+  double window_scale = 
+    wf_read_float(section, "scale", 1.0 );
+  
+  win->fill_polygons = wf_read_int(section, "fill_polygons", 1 );
+  //win->show_grid = wf_read_int(section, "show_grid", 1 );
+  
+  PRINT_DEBUG2( "window width %d height %d", window_width, window_height );
+  PRINT_DEBUG2( "window center (%.2f,%.2f)", window_center_x, window_center_y );
+  PRINT_DEBUG1( "window scale %.2f", window_scale );
+  
+  // ask the canvas to comply
+  gtk_window_resize( GTK_WINDOW(win->canvas->frame), window_width, window_height );
+  rtk_canvas_scale( win->canvas, window_scale, window_scale );
+  rtk_canvas_origin( win->canvas, window_center_x, window_center_y );
+
+  // load the flags that control showing of data and configs
+  win->render_data_flag[STG_MODEL_LASER] = wf_read_int(section, "laser_data", 1 );
+  win->render_cfg_flag[STG_MODEL_LASER] = wf_read_int(section, "laser_config", 0 );
+  win->render_data_flag[STG_MODEL_RANGER] = wf_read_int(section, "ranger_data", 1 );
+  win->render_cfg_flag[STG_MODEL_RANGER] = wf_read_int(section, "ranger_config", 0 );
+  win->render_data_flag[STG_MODEL_FIDUCIAL] = wf_read_int(section, "fiducial_data", 1 );
+  win->render_cfg_flag[STG_MODEL_FIDUCIAL] = wf_read_int(section, "fiducial_config", 0 );  
+  win->render_data_flag[STG_MODEL_BLOB] = wf_read_int(section, "blobfinder_data", 1 );
+  win->render_cfg_flag[STG_MODEL_BLOB] = wf_read_int(section, "blobfinder_config", 0 );
+}
+
+void gui_save( gui_window_t* win )
+{
+  int width, height;
+  gtk_window_get_size(  GTK_WINDOW(win->canvas->frame), &width, &height );
+  
+  wf_write_tuple_float( win->wf_section, "size", 0, width );
+  wf_write_tuple_float( win->wf_section, "size", 1, height );
+
+  wf_write_tuple_float( win->wf_section, "center", 0, win->canvas->ox );
+  wf_write_tuple_float( win->wf_section, "center", 1, win->canvas->oy );
+
+  wf_write_float( win->wf_section, "scale", win->canvas->sx );
+
+  wf_write_int( win->wf_section, "fill_polygons", win->fill_polygons );
+  //wf_write_int( win->wf_section, "show_grid", win->show_grid );
+
+  // save the flags that control visibility of data and configs
+  wf_write_int(win->wf_section, "laser_data", win->render_data_flag[STG_MODEL_LASER]);
+  wf_write_int(win->wf_section, "laser_config", win->render_cfg_flag[STG_MODEL_LASER]);
+  wf_write_int(win->wf_section, "ranger_data", win->render_data_flag[STG_MODEL_RANGER]);
+  wf_write_int(win->wf_section, "ranger_config", win->render_cfg_flag[STG_MODEL_RANGER]);
+  wf_write_int(win->wf_section, "fiducial_data", win->render_data_flag[STG_MODEL_FIDUCIAL]);
+  wf_write_int(win->wf_section, "fiducial_config", win->render_cfg_flag[STG_MODEL_FIDUCIAL]);
+  wf_write_int(win->wf_section, "blobfinder_data", win->render_data_flag[STG_MODEL_BLOB]);
+  wf_write_int(win->wf_section, "blobfinder_config", win->render_cfg_flag[STG_MODEL_BLOB]);
+}
+
 void gui_startup( int* argc, char** argv[] )
 {
   PRINT_DEBUG( "gui startup" );

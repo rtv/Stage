@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.43 $
+//  $Revision: 1.44 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -23,6 +23,126 @@
 extern rtk_fig_t* fig_debug_rays;
 
 #define STG_RANGER_DATA_MAX 64
+
+/**
+@defgroup model_ranger Ranger model 
+The ranger model simulates an array of sonar or infra-red (IR) range sensors.
+
+<h2>Worldfile properties</h2>
+
+@par Summary and default values
+
+@verbatim
+ranger
+(
+  # ranger properties
+  scount 16
+  spose[0] [? ? ?]
+  spose[1] [? ? ?]
+  spose[2] [? ? ?]
+  spose[3] [? ? ?]
+  spose[4] [? ? ?]
+  spose[5] [? ? ?]
+  spose[6] [? ? ?]
+  spose[7] [? ? ?]
+  spose[8] [? ? ?]
+  spose[9] [? ? ?]
+  spose[10] [? ? ?]
+  spose[11] [? ? ?]
+  spose[12] [? ? ?]
+  spose[13] [? ? ?]
+  spose[14] [? ? ?]
+  spose[15] [? ? ?]
+   
+  ssize [0.01 0.03]
+  sview [? ? ?]
+
+  # model properties
+)
+@endverbatim
+
+@par Notes
+
+The ranger model allows configuration of the pose, size and view parameters of each transducer seperately (using spose[index], ssize[index] and sview[index]). However, most users will set a common size and view (using ssize and sview), and just specify individual transducer poses.
+
+@par Details
+- scount int 
+  - the number of range transducers
+- spose[\<transducer index\>] [float float float]
+  - [x y theta] 
+  - pose of the transducer relative to its parent.
+- ssize [float float]
+  - [x y] 
+  - size in meters. Has no effect on the data, but controls how the sensor looks in the Stage window.
+- ssize[\<transducer index\>] [float float]
+  - per-transducer version of the ssize property. Overrides the common setting.
+- sview [float float float]
+   - [range_min range_max fov] 
+   - minimum range and maximum range in meters, field of view angle in degrees. Currently fov has no effect on the sensor model, other than being shown in the confgiuration graphic for the ranger device.
+- sview[\<transducer index\>] [float float float]
+  - per-transducer version of the sview property. Overrides the common setting.
+
+*/
+
+
+
+void ranger_load( stg_model_t* mod )
+{
+  // Load the geometry of a ranger array
+  int scount = wf_read_int( mod->id, "scount", 0);
+  if (scount > 0)
+    {
+      char key[256];
+      stg_ranger_config_t* configs = (stg_ranger_config_t*)
+	calloc( sizeof(stg_ranger_config_t), scount );
+      
+      stg_size_t common_size;
+      common_size.x = wf_read_tuple_length(mod->id, "ssize", 0, 0.01 );
+      common_size.y = wf_read_tuple_length(mod->id, "ssize", 1, 0.03 );
+      
+      double common_min = wf_read_tuple_length(mod->id, "sview", 0, 0.0);
+      double common_max = wf_read_tuple_length(mod->id, "sview", 1, 5.0);
+      double common_fov = wf_read_tuple_angle(mod->id, "sview", 2, 5.0);
+
+      // set all transducers with the common settings
+      int i;
+      for(i = 0; i < scount; i++)
+	{
+	  configs[i].size.x = common_size.x;
+	  configs[i].size.y = common_size.y;
+	  configs[i].bounds_range.min = common_min;
+	  configs[i].bounds_range.max = common_max;
+	  configs[i].fov = common_fov;
+	}
+
+      // allow individual configuration of transducers
+      for(i = 0; i < scount; i++)
+	{
+	  snprintf(key, sizeof(key), "spose[%d]", i);
+	  configs[i].pose.x = wf_read_tuple_length(mod->id, key, 0, 0);
+	  configs[i].pose.y = wf_read_tuple_length(mod->id, key, 1, 0);
+	  configs[i].pose.a = wf_read_tuple_angle(mod->id, key, 2, 0);
+	  
+	  snprintf(key, sizeof(key), "ssize[%d]", i);
+	  configs[i].size.x = wf_read_tuple_length(mod->id, key, 0, 0.01);
+	  configs[i].size.y = wf_read_tuple_length(mod->id, key, 1, 0.05);
+	  
+	  snprintf(key, sizeof(key), "sview[%d]", i);
+	  configs[i].bounds_range.min = 
+	    wf_read_tuple_length(mod->id, key, 0, 0);
+	  configs[i].bounds_range.max = 
+	    wf_read_tuple_length(mod->id, key, 1, 5.0);
+	  configs[i].fov 
+	    = DTOR(wf_read_tuple_angle(mod->id, key, 2, 5.0 ));
+	}
+      
+      PRINT_DEBUG1( "loaded %d ranger configs", scount );	  
+
+      stg_model_set_config( mod, configs, scount * sizeof(stg_ranger_config_t) );
+
+      free( configs );
+    }
+}
 
 void ranger_render_cfg( stg_model_t* mod );
 void ranger_render_data( stg_model_t* mod ) ;
@@ -41,7 +161,8 @@ stg_model_t* stg_ranger_create( stg_world_t* world,
   mod->f_update = ranger_update;
   mod->f_render_data = ranger_render_data;
   mod->f_render_cfg = ranger_render_cfg;
-
+  mod->f_load = ranger_load;
+  
   // set up sensible defaults
   stg_geom_t geom;
   geom.size.x = 0.05;

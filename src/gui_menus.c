@@ -124,28 +124,43 @@ void gui_model_render_config_cb( gpointer key, gpointer value, gpointer user )
 }
 
 
+void gui_world_render_data( stg_world_t* world )
+{
+  g_hash_table_foreach( world->models, gui_model_render_data_cb, NULL );   
+}
+
+void gui_world_render_cfg( stg_world_t* world )
+{
+  g_hash_table_foreach( world->models, gui_model_render_config_cb, NULL );   
+}
+
+void gui_world_render_cmd( stg_world_t* world )
+{
+  g_hash_table_foreach( world->models, gui_model_render_config_cb, NULL );   
+}
+
 void gui_menu_view_data( gpointer data, guint action, GtkWidget* mitem )
 {
   ((gui_window_t*)data)->render_data_flag[action] = 
     GTK_CHECK_MENU_ITEM(mitem)->active;
-  g_hash_table_foreach( ((gui_window_t*)data)->world->models, 
-			gui_model_render_data_cb, NULL );   
+
+  gui_world_render_data( ((gui_window_t*)data)->world );
 }
 
 void gui_menu_view_cfg( gpointer data, guint action, GtkWidget* mitem )
 {
   ((gui_window_t*)data)->render_cfg_flag[action] = 
     GTK_CHECK_MENU_ITEM(mitem)->active;
-  g_hash_table_foreach( ((gui_window_t*)data)->world->models, 
-			gui_model_render_config_cb, NULL );   
+  
+  gui_world_render_cfg( ((gui_window_t*)data)->world );
 }
 
 void gui_menu_view_cmd( gpointer data, guint action, GtkWidget* mitem )
 {
   ((gui_window_t*)data)->render_cmd_flag[action] = 
     GTK_CHECK_MENU_ITEM(mitem)->active;
-  g_hash_table_foreach( ((gui_window_t*)data)->world->models, 
-			gui_model_render_command_cb, NULL );   
+
+  gui_world_render_cmd( ((gui_window_t*)data)->world );
 }
 
 

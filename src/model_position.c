@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.20 $
+//  $Revision: 1.21 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -21,6 +21,62 @@
 #include "gui.h"
 
 //extern rtk_fig_t* fig_debug_rays;
+
+/** 
+@defgroup model_position Position model 
+The position model simulates a mobile robot base. It can drive in one
+of two modes; either <i>differential</i> like a Pioneer robot, or
+<i>omnidirectional</i>.
+
+<h2>Worldfile properties</h2>
+
+@par Summary and default values
+
+@verbatim
+position
+(
+  # position properties
+  drive "diff"
+
+  # model properties
+)
+@endverbatim
+
+@par Details
+- drive "diff" or "omni"
+  - select differential-steer mode (like a Pioneer) or omnidirectional mode.
+
+*/
+
+
+void position_load( stg_model_t* mod )
+{
+  stg_position_cfg_t cfg;
+  memset(&cfg,0,sizeof(cfg));
+  
+  const char* mode_str =  wf_read_string( mod->id, "drive", "diff" );
+  
+  if( strcmp( mode_str, "diff" ) == 0 )
+    cfg.steer_mode = STG_POSITION_STEER_DIFFERENTIAL;
+  else if( strcmp( mode_str, "omni" ) == 0 )
+    cfg.steer_mode = STG_POSITION_STEER_INDEPENDENT;
+  else
+    {
+      PRINT_ERR1( "invalid position drive mode specified: \"%s\" - should be one of: \"diff\", \"omni\". Using \"diff\" as default.", mode_str );
+      
+      cfg.steer_mode = STG_POSITION_STEER_DIFFERENTIAL;
+    }
+  stg_model_set_config( mod, &cfg, sizeof(cfg) ); 
+  
+
+  stg_pose_t odom;
+  odom.x = wf_read_tuple_length(mod->id, "odom", 0, 0.0 );
+  odom.y = wf_read_tuple_length(mod->id, "odom", 1, 0.0 );
+  odom.a = wf_read_tuple_angle(mod->id, "odom", 2, 0.0 );
+  stg_model_position_set_odom( mod, &odom );
+}
+
+
 
 int position_startup( stg_model_t* mod );
 int position_shutdown( stg_model_t* mod );
@@ -46,6 +102,7 @@ stg_model_t* stg_position_create( stg_world_t* world,
   mod->f_startup = position_startup;
   mod->f_shutdown = position_shutdown;
   mod->f_update = position_update;
+  mod->f_load = position_load;
 
   // sensible position defaults
   stg_velocity_t vel;
