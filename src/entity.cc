@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.2 2003-02-01 02:14:29 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.3 2003-02-01 23:19:51 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -73,13 +73,13 @@ CEntity::CEntity( LibraryItem* libit, int id, CEntity* parent )
   this->color = LookupColor( "red" );
 
   // attach to my parent
-  //if( m_parent_entity )
-  // m_parent_entity->AddChild( this );
-  //else
-  //PRINT_DEBUG1( "ROOT ENTITY %p\n", this );
+  if( m_parent_entity )
+    m_parent_entity->AddChild( this );
+  else
+    PRINT_DEBUG1( "ROOT ENTITY %p\n", this );
   
-  // register with the world to receive our unique id
-  this->stage_id = id;//0;//m_world->RegisterEntity( this );
+  this->stage_id = id;
+  this->lib_entry = libit; // from here we can find our file token and type number
 
   // init the child list data
   this->child_list = this->prev = this->next = NULL;

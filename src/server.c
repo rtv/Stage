@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.c,v 1.1.2.3 2003-02-01 02:14:30 rtv Exp $
+ * CVS info: $Id: server.c,v 1.1.2.4 2003-02-01 23:19:51 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -42,8 +42,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <sys/mman.h>
-#include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -51,6 +51,8 @@
 #include <sys/wait.h>
 #include <termios.h>
 #include <unistd.h>
+
+#include "replace.h"
 
 #include "stageio.h"
 #include "server.h"
@@ -311,20 +313,46 @@ int HandleModel( int fd, int num )
   
   int m;
   for( m=0; m<num; m++ )
-  {
-    printf( "Creating model %d %s parent %d\n",
-	    models[m].id, models[m].token, models[m].parent );
-    
-    if( CreateEntityFromLibrary( models[m].token, models[m].id, 0 ) == -1 )
-      printf( "enitity create failed!\n" );
-
+    {
+      printf( "Creating model %d %s parent %d\n",
+	      models[m].id, models[m].token, models[m].parent_id );
+      
+      if( CreateEntityFromLibrary( &(models[m])) == -1 )
+	  printf( "enitity create failed!\n" );
+	  
   }
-
-  Startup();
-  Update( 0.1 );
-
   return 0;
 }
+
+int ReportResults( void )
+{
+  double simtime = 0.0;
+
+  stage_report_header_t res;
+  
+  double seconds = floor( simtime );
+  double usec = (simtime - seconds) * MILLION; 
+
+  //res.step = simstep;
+  res.sec = (int)seconds;
+  res.usec = (int)usec;
+  res.len = 0;
+  
+  int t;
+  for( t=0; t<connection_count; t++ )// all the connections
+    {
+
+      // buffer the header
+      BufferPacket( (char*)&res, sizeof(res) );
+      
+      // here we'll assemble buffers full of dirty properties
+      
+      // write and clear the buffer onto this connection's fd
+      WriteBuffer(  connection_polls[t].fd,  1 ); 
+    }
+
+}
+
 
 int ServiceConnections( void )
 {

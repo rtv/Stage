@@ -24,7 +24,7 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.13.4.1 2003-02-01 02:14:30 rtv Exp $
+ * CVS info: $Id: library.cc,v 1.13.4.2 2003-02-01 23:19:51 rtv Exp $
  */
 
 #include "library.hh"
@@ -62,6 +62,7 @@ typedef CreatorFunctionPtr CFP;
 
 libitem_t library_items[] = { 
   { "root", "black", (CFP)CRootDevice::Creator},
+  { "box", "blue", (CFP)CEntity::Creator},
   /*
   { "bitmap", "black", (CFP)CBitmap::Creator},
   { "laser", "blue", (CFP)CLaserDevice::Creator},
@@ -171,6 +172,8 @@ const char* LibraryItem::FindTokenFromCreator( CreatorFunctionPtr cfp )
 // constructor
 Library::Library( void )
 {
+  // TODO - fix this with dynamic allocation
+  memset( entPtrs, 0, 10000 * sizeof(CEntity*) );
 }
 
 // constructor from null-terminated array
@@ -207,30 +210,68 @@ void Library::AddDevice( const char* token, const char* colorstr, CreatorFunctio
   STAGE_LIST_APPEND( liblist, item );
 }
 
+void Library::StoreEntPtr( int id, CEntity* ent )
+{
+  // TODO - extend this with dynamic storage
+  // store the pointer in our array
+  entPtrs[id] = ent;
+}   
 
 // create an instance of an entity given a worldfile token
-CEntity* Library::CreateEntity( char* token, int id, CEntity* parent_ptr )
+CEntity* Library::CreateEntity( stage_model_t* model )
 {
-  assert( token );
+  assert( model );
+
+  // if an entity exists with this id, we zap the old one.
+  if( CEntity* extant = entPtrs[model->id] )
+    {  
+      PRINT_DEBUG3(  "Removing extant model with ID %d (%s) at %p",
+		     extant->stage_id, extant->lib_entry->token, extant );
+      extant->Shutdown();
+      delete extant;
+      entPtrs[model->id] = NULL;
+    }
   
+  // now we create the replacement.
+
   // look up this token in the library
-  LibraryItem* libit = liblist->FindLibraryItemFromToken( token );
+  LibraryItem* libit = liblist->FindLibraryItemFromToken( model->token );
 
   CEntity* ent;
   
   if( libit )
     {
       assert( libit->creator_func );
+      
+      // if it has a valid parent, look up the parent's address
+      CEntity* parentPtr = NULL;
+      if( model->parent_id != -1 ) parentPtr = entPtrs[model->parent_id]; 
+      
       // create an entity through the creator callback fucntion  
-      ent = (*libit->creator_func)( libit, id, parent_ptr ); 
+      // which calls the constructor
+      ent = (*libit->creator_func)( libit, model->id, parentPtr ); 
+     
+      // need to do some startup outside the constructor to allow for
+      // full polymorphism
+      if( !ent->Startup() ) // if startup fails
+	{
+	  PRINT_WARN3( "Startup failed for model %d (%s) at %p",
+		      model->id, model->token, ent );
+	  delete ent;
+	  ent = NULL;
+	}
+
+      PRINT_DEBUG3(  "Startup successful for model %d (%s) at %p",
+		     model->id, model->token, ent );
     }
   else
     {
       PRINT_WARN1( "Client requested model '%s' is not in the library",
-		   token );
+		   model->token );
       ent = NULL;
     }
   
+  StoreEntPtr( model->id, ent );
   return ent; // NULL if failed
 } 
   
@@ -273,20 +314,10 @@ void Library::Print( void )
 }
 
 // C wrapper 
-int CreateEntityFromLibrary( char* token, int id, int parent_id )
+int CreateEntityFromLibrary( stage_model_t* model )
 {
-  // TODO - lookup the parent here
-  CEntity* ent = model_library.CreateEntity( token, id, NULL );
-
-  if( ent ) return 0; //success
-  
-  return -1; // fail
-}
-
-
-int Startup()
-{
-  return( CEntity::root->Startup() ?  0 :  -1 );
+  // create an entity. return success on getting a valid pointer
+  return( model_library.CreateEntity( model ) ? 0 : -1);
 }
 
 int Update( double simtime )

@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.29.4.2 2003-02-01 02:14:29 rtv Exp $
+# $Id: Makefile.am,v 1.29.4.3 2003-02-01 23:19:51 rtv Exp $
 
 
 #SUBDIRS = models rtkstage gnome2
@@ -40,32 +40,12 @@ stage_SOURCES = \
 	matrix.hh \
         library.cc \
         library.hh \
+        replace.h \
 	nogui.cc \
 	root.cc \
 	root.hh
 
-
-#         client.cc \
-#         entity.cc \
-#         entity.hh \
-#         gui.hh \
-#         main.cc \
-#         matrix.cc \
-#         matrix.hh \
-#         nogui.cc \
-#         playerdevice.cc \
-#         playerdevice.hh \
- #        replace.h \
- #        server.cc \
- #        server.hh \
- #        stageio.cc \
- #        stage_types.hh \
- #        world.cc \
- #         worldfile.cc \
- #        worldfile.hh \
- #        world.hh
-
 stage_LDFLAGS =
-stage_LDADD = @GUI_LINK@ -lm -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -L@PLAYER_DIR@/client_libs/libplayerpacket -lplayerqueue -lplayerpacket -L$(top_builddir)/replace -lreplace
+stage_LDADD = @GUI_LINK@ -lm -L$(top_builddir)/replace -lreplace
 #stage_LDADD = 	-lm -Lmodels -lstgmodels -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -L@PLAYER_DIR@/client_libs/libplayerpacket -lplayerqueue -lplayerpacket @GUI_LINK@ -L$(top_builddir)/replace -lreplace
 

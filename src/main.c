@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.c,v 1.1.2.2 2003-01-31 22:35:15 rtv Exp $
+ * CVS: $Id: main.c,v 1.1.2.3 2003-02-01 23:19:51 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -149,8 +149,8 @@ int main(int argc, char **argv)
       // update the world
       if( ServiceConnections() == -1 ) break;
 
-      // write out any changed, subscribed properties
-      //server->WriteToClients();
+      // for now, just to stop my powerbook getting hot :)
+      usleep( 5000 );      
     }
   
   // clean up and exit

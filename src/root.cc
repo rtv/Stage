@@ -21,7 +21,7 @@
  * Desc: A root device model - replaces the CWorld class
  * Author: Richard Vaughan
  * Date: 31 Jan 2003
- * CVS info: $Id: root.cc,v 1.1.2.1 2003-02-01 02:17:53 rtv Exp $
+ * CVS info: $Id: root.cc,v 1.1.2.2 2003-02-01 23:19:51 rtv Exp $
  */
 
 
@@ -37,7 +37,6 @@
 CRootDevice::CRootDevice( LibraryItem* libit )
   : CEntity( libit, 0, NULL )    
 {
-  puts( "FOOO" );
   PRINT_DEBUG( "Creating root model" );
   
   CEntity::ppm = 100; // default 1cm world resolution
@@ -59,7 +58,6 @@ CRootDevice::CRootDevice( LibraryItem* libit )
 //
 bool CRootDevice::Startup()
 {
-  puts( "BAR" );
   PRINT_DEBUG( "Startup root model" );
 
   // create the matrix for everyone to play in
@@ -84,7 +82,8 @@ bool CRootDevice::Startup()
 	       w, h, ppm );
   
   assert( matrix = new CMatrix(w, h, 1) );
-  
+
+  //if( CEntity::enable_gui ) GuiInit();
  
   if (!CEntity::Startup())
     return false;

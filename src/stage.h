@@ -24,13 +24,13 @@
 #define STG_HOSTNAME_MAX  128
 #define STG_LISTENQ  128
 #define STG_MAX_CONNECTIONS 128
-
+   
 // (currently) static memory allocation for getting and setting properties
 //const int MAX_NUM_PROPERTIES = 30;
 #define MAX_PROPERTY_DATA_LEN  20000
-
+   
 #define ENTITY_FIRST_PROPERTY 1
-
+   
 enum EntityProperty
 {
   PropParent = ENTITY_FIRST_PROPERTY, 
@@ -175,7 +175,7 @@ typedef struct
 typedef struct
 {
   int32_t id;
-  int32_t parent;
+  int32_t parent_id;
   char token[ STAGE_TOKEN_MAX ]; // a string from the library to
  // identify the type of model
 } __attribute ((packed)) stage_model_t;
@@ -194,6 +194,16 @@ typedef struct
   int32_t sizey;
   double scale;
 } __attribute ((packed)) stage_background_t;
+
+
+typedef struct
+{
+  //uint32_t step; // at this timestep
+  uint32_t sec; // at this many seconds
+  uint32_t usec; // plus this many microseconds
+  uint32_t len; // this many bytes of data follows (zero to many properties)
+} stage_report_header_t;
+
 
 // pose changes are so common that we have a special message for them,
 // rather than setting the [x,y,th] properties seperately. i've taken

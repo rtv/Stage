@@ -2,8 +2,10 @@
 extern "C" {
 #endif
   
+  #include "stage.h"
+
   // C wrappers to access the library
-  int CreateEntityFromLibrary( char* token, int id, int parent_id );
+  int CreateEntityFromLibrary( stage_model_t* model );
   int Startup( void );
   int Update( double simtime );
 

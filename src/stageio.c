@@ -29,9 +29,9 @@
 #include <sys/time.h>
 #include <termios.h>
 #include <unistd.h>
-#include <sys/poll.h>
 #include <assert.h>
 
+#include "replace.h"
 #include "stage.h"
 
 

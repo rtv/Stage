@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.15.2.1 2003-02-01 02:14:30 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.15.2.2 2003-02-01 23:19:51 rtv Exp $
  */
 
 //
@@ -172,8 +172,11 @@ bool ShowDeviceBody( int devtype )
 
 // Initialise the GUI
 // TODO: fix this for client/server operation.
-bool RtkLoad(CWorldFile *worldfile)
+bool RtkStartupRoot( CEntity* root )
 {
+  // make sure we have the right device
+  assert( root == CEntity::root );
+
   int sx, sy;
   double scale = 0.01;
   double dx, dy;
@@ -562,11 +565,12 @@ void RtkUpdateMovieMenu()
 // this functionality was previously in CEntity::SetProperty - this is
 // a lot cleaner, though I didn't want to shoehorn it into the world
 // class so it's sitting out here as a regular function. - rtv
-void RtkEntityPropertyChange( CEntity* ent, EntityProperty prop )
+void RtkEntityPropertyChange( int id, EntityProperty prop )
 {
-  assert( ent );
   assert( prop > 0 );
   assert( prop < ENTITY_LAST_PROPERTY );
+
+  
   
   if( !ent->fig )
     return; 

@@ -75,10 +75,16 @@ public:
   Library( void );
   Library( const libitem_t items[] );
   
-  void AddDevice( const char* token, const char* colorstr, CreatorFunctionPtr creator );
+  // TODO - make this length adaptive
+  CEntity* entPtrs[ 10000 ];
+  void StoreEntPtr( int id, CEntity* ent );
 
-  // create an instance of an entity given a worldfile token
-  CEntity* CreateEntity( char* token, int id, CEntity* parent_ptr );
+  void AddDevice( const char* token, const char* colorstr, CreatorFunctionPtr creator );
+  
+  // create an instance of an entity given a request
+  // returns a unique id for the entity, which happens to also be valid pointer to the
+  // entity object
+  CEntity* CreateEntity( stage_model_t* model );
   
   const char* TokenFromCreator( CreatorFunctionPtr cfp );
 

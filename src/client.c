@@ -21,14 +21,26 @@ int main( int argc, char** argv )
     {
       stage_model_t ent[5];
 
-      int m;
-      for( m=0; m<1; m++)
-	{
-	  ent[m].id = m;
-	  ent[m].parent = 0;
-	  strcpy( ent[m].token, "root" );
-	}
+      ent[0].id = 0;
+      ent[0].parent_id = -1; // only the root can have no parent
+      strcpy( ent[0].token, "root" );
+
+      ent[1].id = 1;
+      ent[1].parent_id = 0;
+      strcpy( ent[1].token, "box" );
+
+      ent[2].id = 2;
+      ent[2].parent_id = 0;
+      strcpy( ent[2].token, "box" );
+
+
       
-      printf( "result %d\n", CreateModels( stage_fd, ent, 1 ) );
+      printf( "result %d\n", CreateModels( stage_fd, ent, 3 ) );
+
+
+      //stage_report_header_t rep;
+      //ReadPacket
+
+
   }
 }

@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.2 2003-02-01 02:14:30 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.3 2003-02-01 23:19:51 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -122,6 +122,8 @@ int main(int argc, char **argv)
       printf( "\n Server failed to initialize. Quitting." );
       quit = 1;
     }
+
+  GuiInit( argc, argv );
   
   puts( "" ); // end the startup output line
   
