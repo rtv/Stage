@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.18 2002-06-11 03:31:18 inspectorg Exp $
+ * CVS info: $Id: server.cc,v 1.19 2002-06-11 05:47:33 inspectorg Exp $
  */
 
 #include <arpa/inet.h>
@@ -252,10 +252,10 @@ bool CStageServer::LoadFile( char* filename )
     return false;
   }
   
-  // Get the resolution of the environment (meters per pixel in the file)
-  this->ppm = 1.0 / this->worldfile.ReadLength( section, 
-                                                "resolution", 
-                                                1.0 / this->ppm );
+  // Get the resolution of the environment (meters per pixel in the file).
+  // Defaults to the scale specified for the background image.
+  this->ppm = 1.0 / this->worldfile.ReadLength( section, "scale", 1.0 / this->ppm );
+  this->ppm = 1.0 / this->worldfile.ReadLength( section, "resolution", 1.0 / this->ppm );
   
   // Initialise the matrix, now that we know its size
   int w = (int) ceil(this->wall->size_x * this->ppm);

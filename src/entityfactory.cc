@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.28 $
+//  $Author: inspectorg $
+//  $Revision: 1.29 $
 //
 // Usage:
 //  (empty)
@@ -77,9 +77,9 @@ char* CWorld::StringFromType( StageType t )
     case VisionType: return "vision"; 
     case PtzType: return "ptz"; 
     case BoxType: return "box"; 
-    case LaserBeaconType: return "laser_beacon"; 
+    case LaserBeaconType: return "laserbeacon"; 
     case LBDType: return "lbd"; 
-    case VisionBeaconType: return "vision_beacon"; 
+      //REMOVE case VisionBeaconType: return "vision_beacon"; 
     case GripperType: return "gripper"; 
     case AudioType: return "audio"; 
     case BroadcastType: return "broadcast"; 
@@ -127,8 +127,8 @@ CEntity* CWorld::CreateEntity( StageType type, CEntity *parent)
       return new CLaserBeacon(this, parent);
     case LBDType:
       return new CLBDDevice(this, (CLaserDevice*)parent );
-    case VisionBeaconType:
-      return new CVisionBeacon(this, parent);
+      //REMOVE case VisionBeaconType:
+      //return new CVisionBeacon(this, parent);
     case GripperType:
       return new CGripperDevice(this, parent);
     case GpsType:

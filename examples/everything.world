@@ -2,14 +2,16 @@
 # Desc: Test world file containing examples of everything.
 # Author: Andrew Howard, Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.18 2002-06-11 03:31:18 inspectorg Exp $
+# CVS: $Id: everything.world,v 1.19 2002-06-11 05:47:33 inspectorg Exp $
+
+define visionbeacon box (shape "circle" size [0.2 0.2] color "red")
 
 environment
 (
   file "cave.pnm.gz"
   #file "hospital.pnm.gz"
   scale 0.03
-  resolution 0.03
+  #resolution 0.03
 )
 
 gui
@@ -52,12 +54,12 @@ position
   )
 )
 
-laser_beacon( pose [6.420 3.600 216.861] id 5 )
-laser_beacon( pose [3.040 4.260 -88.274] id 7 )
+laserbeacon( pose [6.420 3.600 216.861] id 5 )
+laserbeacon( pose [3.040 4.260 -88.274] id 7 )
 
-vision_beacon( pose [6.010 1.442 0.000] color "green" )
-vision_beacon( pose [6.012 1.006 0.000] color "blue" )
-vision_beacon( pose [6.022 1.862 0.000] color "red" )
+visionbeacon( pose [6.010 1.442 0.000] color "green" )
+visionbeacon( pose [6.012 1.006 0.000] color "blue" )
+visionbeacon( pose [6.022 1.862 0.000] color "red" )
 
 puck( pose [8.910 1.712 0.000] color "red" )
 puck( pose [8.072 1.306 0.000] color "red" )
