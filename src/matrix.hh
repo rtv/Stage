@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.hh,v 1.1 2002-08-23 00:19:39 rtv Exp $
+// $Id: matrix.hh,v 1.2 2002-09-07 02:05:24 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -95,9 +95,11 @@ class CMatrix
 // utilities for visualizing the matrix
   void dump( void );
 
+#ifdef INCLUDE_RTK2
   rtk_fig_t* fig;
   void render( CWorld* world );
   void unrender( void );
+#endif
 
   void PrintCell( int cell );
   void CheckCell( int cell );

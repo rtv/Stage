@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/miscdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.12 $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  (empty)
@@ -30,7 +30,7 @@
 
 
 // register this device type with the Library
-CEntity misc_bootstrap( string("misc"), 
+CEntity misc_bootstrap( "misc", 
 		       MiscType, 
 		       (void*)&CMiscDevice::Creator ); 
 

@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: playerdevice.hh,v 1.2 2002-08-30 18:17:28 rtv Exp $
+ * CVS info: $Id: playerdevice.hh,v 1.3 2002-09-07 02:05:25 rtv Exp $
  */
 
 #ifndef PLAYERENTITY_HH
@@ -145,12 +145,12 @@ public: virtual void Update( double sim_time );
   // subscribe to / unsubscribe from the device
   // these are used when one device (e.g., lbd) depends on another (e.g.,
   // laser)
-  public: void Subscribe();
-  public: void Unsubscribe();
+  public: virtual void Subscribe();
+  public: virtual void Unsubscribe();
   
   // these versions sub/unsub to this device and all its decendants
-public: void FamilySubscribe();
-public: void FamilyUnsubscribe();
+public: virtual void FamilySubscribe();
+public: virtual void FamilyUnsubscribe();
 
   // packages and sends data via rtp
   protected: void AnnounceDataViaRTP( void* data, size_t len );
@@ -195,7 +195,7 @@ public: void FamilyUnsubscribe();
   // Initialise the rtk gui
   protected: virtual void RtkStartup();
 #endif
- 
+
 };
 
 #endif

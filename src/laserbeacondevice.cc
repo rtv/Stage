@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.37 $
+//  $Author: rtv $
+//  $Revision: 1.38 $
 //
 // Usage:
 //  (empty)
@@ -33,7 +33,7 @@
 #include "laserbeacondevice.hh"
 
 // register this device type with the Library
-CEntity lbd_bootstrap( string("lbd"), 
+CEntity lbd_bootstrap( "lbd", 
 		       LBDType, 
 		       (void*)&CLBDDevice::Creator ); 
 

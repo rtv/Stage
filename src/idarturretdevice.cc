@@ -21,7 +21,7 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/idarturretdevice.cc,v $
 * $Author: rtv $
-* $Revision: 1.10 $
+* $Revision: 1.11 $
 ******************************************************************************/
 
 #include <math.h>
@@ -38,7 +38,7 @@
 //#undef DEBUG
 
 // register this device type with the Library
-CEntity idarturret_bootstrap( string("idarturret"), 
+CEntity idarturret_bootstrap( "idarturret", 
 			      IDARTurretType, 
 			      (void*)&CIdarTurretDevice::Creator ); 
 

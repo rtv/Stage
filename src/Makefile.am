@@ -8,7 +8,21 @@ RTKLDADD    =
 RTKLDFLAGS  =
 endif
 
-AM_CPPFLAGS = -Wall -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/server/drivers/stage $(RTKCPPFLAGS)
+if WITH_RTVG
+RTVGCPPFLAGS = -DNEED_GNOMESUPPORT_H -I/usr/lib/gnome-libs/include \
+		-I/usr/include/gtk-1.2 -I/usr/include/glib-1.2 \
+		-I/usr/lib/glib/include -I/usr/X11R6/include
+#RTVGCPPFLAGS = `gnome-config --cflags gnome gnomeui`
+RTVGLDADD    =
+RTVGLDFLAGS  = `gnome-config --libs gnome gnomeui` 
+else
+RTVGCPPFLAGS =
+RTVGLDADD    =
+RTVGLDFLAGS  =
+endif
+
+
+AM_CPPFLAGS = -Wall -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/server/drivers/stage $(RTKCPPFLAGS) $(RTVGCPPFLAGS)
 
 bin_PROGRAMS = stage
 
@@ -26,6 +40,7 @@ stage_SOURCES = \
 		descartesdevice.hh		\
 		entity.cc			\
 		entity.hh			\
+                gnomegui.cc                     \
 		gpsdevice.cc			\
 		gpsdevice.hh			\
 		gripperdevice.cc		\
@@ -61,6 +76,7 @@ stage_SOURCES = \
 		puck.hh				\
 		raytrace.cc			\
 		raytrace.hh			\
+                rtkgui.cc                       \
 		rtp.cc				\
 		rtp.h				\
 		server.cc			\
@@ -85,6 +101,6 @@ stage_SOURCES = \
              #miscdevice.hh
 
 
-stage_LDADD = -lm -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -lplayerqueue $(RTKLDADD) 
+stage_LDADD = -lm -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -lplayerqueue $(RTKLDADD) $(RTVGLDADD)
 
-stage_LDFLAGS = $(RTKLDFLAGS)
+stage_LDFLAGS =  $(RTKLDFLAGS) $(RTVGLDFLAGS)

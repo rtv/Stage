@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.3 2002-08-30 18:17:28 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.4 2002-09-07 02:05:25 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -34,8 +34,6 @@
 #include <sys/ipc.h>
 #include <sys/poll.h>
 #include <limits.h>
-
-#include <vector>
 
 #include "player.h" //from player
 #include "image.hh"
@@ -53,6 +51,10 @@ class Library;
 
 #if INCLUDE_RTK2
 #include "rtk.h"
+#endif
+
+#ifdef RTVG
+#include <gnome.h>
 #endif
 
 // World class
@@ -173,20 +175,29 @@ class CWorld
   
   // this is the root of the entity tree - all entities are children
   // of root
-  protected: CEntity* root;
+  public: static CEntity* root;
   public: CEntity* GetRoot( void ){ return root; };
 
-  // pointers to all entities are also stored in a vector so they can
+  // pointers to all entities are also stored in a flat array
   // be found by number without having to search the tree
-  protected: vector<CEntity*> child_vector;
+  // TODO - could put this back as an array for faster index-lookup
+  // in client/server mode
+  protected: CEntity** entities;
+  // the number of entities stored in the array
+  protected: int entity_count; 
   
-  // the number of entities we've stored in the vector
-  private: int entity_count;
+  // the capacity of the currently allocated array
+  private: int entities_size;
+
+  // return a pointer to an entity with matching id
+  public: CEntity* GetEntity( int i );
+  
   public: int GetEntityCount( void ){ return this->entity_count; };
   
-   // adds the pointer to the child_vector for retrieval by nummber
-  // and increments entity_count
-   public: void RegisterEntity( CEntity *entity);
+  // adds the pointer to the flat child_list and increments
+  // entity_count, returning the entity's position in the list to use
+  // as a unique id
+   public: stage_id_t RegisterEntity( CEntity *entity);
   
   // Authentication key
   public: char m_auth_key[PLAYER_KEYLEN];
@@ -269,17 +280,16 @@ class CWorld
   double GetHeight( void )
     { if( matrix ) return matrix->height; else return 0; };
   
-  
-  CEntity* GetEntity( int i )
-  { 
-    assert( i>=0 ); 
-    assert( i<this->entity_count ); 
-    return( this->child_vector[i] ); 
-  }
-    
   // returns true if the given hostname matches our hostname, false otherwise
   //bool CheckHostname(char* host);
 
+  // return the entity nearest the specified point, but not more than range m away,
+  // that has the specified parent 
+  CEntity* GetNearestChildWithinRange( double x, double y, double range, 
+				       CEntity* parent );
+  
+  // return the entity nearest the specified point, but not more than range m away
+  CEntity* GetNearestEntityWithinRange( double x, double y, double range );
 
   // RTK STUFF ----------------------------------------------------------------
 #ifdef INCLUDE_RTK2
@@ -326,7 +336,6 @@ private: rtk_menuitem_t* subscribedonly_item;
 private: rtk_menuitem_t* autosubscribe_item;
 public: static int autosubscribe;
 
-
   typedef struct 
   {
     rtk_menu_t *menu;
@@ -351,7 +360,26 @@ public: static int autosubscribe;
   // Number of exported images
   private: int export_count;
 #endif
-  
+
+#ifdef RTVG
+public:
+  GnomeApp* g_app; // application
+  GnomeCanvas* g_canvas; //main drawing window
+  GtkMenuBar* g_menubar; // menu bar
+  GnomeAppBar* g_appbar; // status bar
+  void GuiStartup( void );
+
+  // CALLBACKS
+  static gint GuiEvent(GnomeCanvasItem *item, 
+		       GdkEvent *event, 
+		       gpointer data);
+
+  static void GuiAboutBox(GtkWidget *widget, gpointer data);
+  static void GuiSubscribeToAll(GtkWidget *widget, gpointer data);
+  static void GuiSubscribeInvert(GtkWidget *widget, gpointer data);
+           
+#endif
+
 };
 
 #endif

@@ -21,11 +21,11 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.2 2002-08-30 18:17:28 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.3 2002-09-07 02:05:23 rtv Exp $
  */
 
-#ifndef ENTITY_HH
-#define ENTITY_HH
+#ifndef _ENTITY_HH
+#define _ENTITY_HH
 
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -45,6 +45,10 @@
 
 #ifdef INCLUDE_RTK2
 #include "rtk.h"
+#endif
+
+#ifdef RTVG
+#include <gnome.h>
 #endif
 
 #include "library.hh"
@@ -99,7 +103,7 @@ class CEntity
   // constructor performs library registration.
   // designed to be used by new devices to register themselves
   // by creating a global static instance
-public: CEntity( string token,  StageType type, void* creator ) 
+public: CEntity( char* token,  StageType type, void* creator ) 
   {
     // the first entity to be created initializes the global library
     if( lib == NULL )
@@ -114,6 +118,10 @@ public: CEntity* prev;
 public: CEntity* next;
 protected:  void AddChild( CEntity* child );
 
+
+  // this is unique for each object, and is equal to its position in
+  // the world's child list
+public: stage_id_t stage_id;
 
   public: void Print( char* prefix );
   // Destructor
@@ -202,6 +210,15 @@ public: void GetBoundingBox( double &xmin, double &ymin,
   
   // See if the given entity is one of our descendents
   public: bool IsDescendent(CEntity *entity);
+
+  // subscribe to / unsubscribe from the device
+  // these don't do anything by default, but are overridden by CPlayerEntity
+public: virtual void Subscribe();
+public: virtual void Unsubscribe();
+  
+  // these versions sub/unsub to this device and all its decendants
+public: virtual void FamilySubscribe();
+public: virtual void FamilyUnsubscribe();
 
   // Pointer to world
   public: CWorld *m_world;
@@ -331,6 +348,22 @@ public: void GetBoundingBox( double &xmin, double &ymin,
   static void staticSelect( void* ent );
   static void staticUnselect( void* ent );
 #endif
+
+#ifdef RTVG
+public: 
+  GnomeCanvasGroup* g_origin; // sets our location on the canvas
+  GnomeCanvasGroup* g_group; // inside g_origin - contains our body figure g_fig
+  GnomeCanvasItem* g_data; // inside g_group - contains our data figures if any
+  GnomeCanvasItem* g_body; // inside g_group - contains our body figures if any
+  bool click_subscribed;
+  
+  virtual void GuiStartup( void );
+  virtual void GuiSelect( void );
+  virtual void GuiUnselect( void );
+  virtual void GuiStatus( void );
+
+  virtual void GuiRenderGrid( double spacing, StageColor color );
+#endif
 };
 
 
@@ -339,52 +372,7 @@ public: void GetBoundingBox( double &xmin, double &ymin,
 for( CEntity* ch = this->child_list; ch; ch = ch->next )
     
 
-// Append an item to a linked list
-#define STAGE_LIST_APPEND(head, item) \
-item->prev = head;\
-item->next = NULL;\
-if (head == NULL)\
-    head = item;\
-else\
-{\
-    while (item->prev->next)\
-       item->prev = item->prev->next;\
-    item->prev->next = item;\
-}
-
-// Remove an item from a linked list
-#define STAGE_LIST_REMOVE(head, item) \
-if (item->prev)\
-    item->prev->next = item->next;\
-if (item->next)\
-    item->next->prev = item->prev;\
-if (item == head)\
-    head = item->next;
-
-// Append an item to a linked list
-#define RTK_LIST_APPENDX(head, list, item) \
-item->list##_##prev = head;\
-item->list##_##next = NULL;\
-if (head == NULL)\
-    head = item;\
-else\
-{\
-    while (item->list##_##prev->list##_##next)\
-       item->list##_##prev = item->list##_##prev->list##_##next;\
-    item->list##_##prev->list##_##next = item;\
-}
-
-// Remove an item from a linked list
-#define RTK_LIST_REMOVEX(head, list, item) \
-if (item->list##_##prev)\
-    item->list##_##prev->list##_##next = item->list##_##next;\
-if (item->list##_##next)\
-    item->list##_##next->list##_##prev = item->list##_##prev;\
-if (item == head)\
-    head = item->list##_##next;
-
 #endif
-
 
 
 

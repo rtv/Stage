@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.14 2002-08-22 02:04:38 rtv Exp $
+ * $Id: matrix.cc,v 1.15 2002-09-07 02:05:24 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -25,19 +25,21 @@ CMatrix::CMatrix(int w, int h, int default_buf_size)
   assert( data 	= new CEntity**[width*height] );
   assert( used_slots = new unsigned char[ width*height ] );
   assert( available_slots = new unsigned char[ width*height ] );
-
-  this->fig = NULL;
-
+  
   for( int p=0; p< width * height; p++ )
-  {
-    // create the pointer "strings"
-    assert( data[p] = new CEntity*[ default_buf_size + 1] );
-    // zero them out
-    memset( data[p], 0, (default_buf_size + 1) * sizeof( CEntity* ) );
-
-    used_slots[p] = 0;
-    available_slots[p] = default_buf_size;
-  }
+    {
+      // create the pointer "strings"
+      assert( data[p] = new CEntity*[ default_buf_size + 1] );
+      // zero them out
+      memset( data[p], 0, (default_buf_size + 1) * sizeof( CEntity* ) );
+      
+      used_slots[p] = 0;
+      available_slots[p] = default_buf_size;
+    }
+  
+#ifdef INCLUDE_RTK2
+  this->fig = NULL;
+#endif
 }
 
 
@@ -90,6 +92,7 @@ void CMatrix::dump( void )
 }
 
 
+#ifdef INCLUDE_RTK2
 // useful debug function allows plotting the world externally
 void CMatrix::render( CWorld* world )
 {
@@ -117,6 +120,8 @@ void CMatrix::unrender()
       this->fig = NULL;
     }
 }
+
+#endif
 
 // Draw a rectangle
 void CMatrix::draw_rect( const Rect& t, CEntity* ent, bool add)

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/bitmap.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -18,7 +18,7 @@
 #include "bitmap.hh"
 
 // register this device type with the Library
-CEntity fixedobstacle_bootstrap( string("bitmap"), 
+CEntity fixedobstacle_bootstrap( "bitmap", 
 				 WallType, 
 				 (void*)&CBitmap::Creator ); 
 
@@ -279,8 +279,6 @@ bool CBitmap::Startup()
 	  double pw = width * sx;
 	  double ph = height * sy;
 	  
-	  
-#ifdef INCLUDE_RTK2	
 	  // store the rectangles for drawing into the GUI later
 	  bitmap_rectangle_t r;
 	  r.x = px;
@@ -288,7 +286,6 @@ bool CBitmap::Startup()
 	  r.w = pw;
 	  r.h = ph;
 	  bitmap_rects.push_back( r );
-#endif
 	  
 	  // create a matrix rectangle in global coordinates
 	  this->LocalToGlobal( px, py, pth );
@@ -322,11 +319,81 @@ void CBitmap::RtkStartup()
   
   // add the figure we pre-computed in Startup() above  
   for(
-      vector<bitmap_rectangle_t>::iterator it = bitmap_rects.begin();
+      std::vector<bitmap_rectangle_t>::iterator it = bitmap_rects.begin();
       it != bitmap_rects.end();
       it++ )  
     rtk_fig_rectangle(this->fig, it->x, it->y, 0, it->w, it->h, true ); 
 }
+
 #endif
 
 
+#ifdef RTVG
+
+void CBitmap::GuiStartup( void )
+{
+  CEntity::GuiStartup();  
+  
+  assert( g_group );
+  
+  // add the figure we pre-computed in Startup() above  
+  for(
+      std::vector<bitmap_rectangle_t>::iterator it = bitmap_rects.begin();
+      it != bitmap_rects.end();
+      it++ )  
+    {
+      // find the bounding box
+      double x = it->x - it->w/2.0;
+      double y = it->y - it->h/2.0;
+      double a = x + it->w;
+      double b = y + it->h;
+      
+      // add the rectangle
+      gnome_canvas_item_new (g_group,
+			     gnome_canvas_rect_get_type(),
+			     "x1", x,
+			     "y1", y,
+			      "x2", a,
+			     "y2", b,
+			     // alpha blending is slow...
+			     //"fill_color_rgba", (color << 8)+128,
+			     //"fill_color_rgba", (color << 8)+255,
+			     "fill_color", "black",
+			     "outline_color", NULL,
+			     "width_pixels", 1,
+			     NULL );            
+    }
+  
+  this->g_select_item = 
+    gnome_canvas_item_new ( this->g_group, 
+			    gnome_canvas_rect_get_type(),
+			    "x1", -size_x/2.0,
+			    "y1", -size_y/2.0,
+			    "x2", +size_x/2.0,
+			    "y2", +size_y/2.0,
+			    "fill_color", NULL,
+			    "outline_color_rgba", 0xFFFF00FFL,
+			    "width_pixels", 2,
+			    NULL );      
+  
+  // the selction item is only shown when we're selected - it's
+  // initially hidden
+  gnome_canvas_item_hide(  this->g_select_item );
+  
+     
+}
+
+void CBitmap::GuiSelect( void )
+{
+  CEntity::GuiSelect(); 
+  gnome_canvas_item_show(  this->g_select_item );
+
+}
+
+void CBitmap::GuiUnselect( void )
+{
+  CEntity::GuiUnselect();
+  gnome_canvas_item_hide(  this->g_select_item );
+}
+
+#endif

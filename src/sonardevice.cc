@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.33 2002-08-27 17:50:48 gerkey Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.34 2002-09-07 02:05:25 rtv Exp $
  */
 
 #include <math.h>
@@ -32,7 +32,7 @@
 #include "world.hh"
 
 // register this device type with the library
-CEntity sonar_bootstrap( string("sonar"), 
+CEntity sonar_bootstrap( "sonar", 
 			 SonarType, 
 			 (void*)CSonarDevice::Creator );
 

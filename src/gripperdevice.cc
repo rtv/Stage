@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.26 $
+//  $Revision: 1.27 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -21,7 +21,7 @@
 #include "raytrace.hh"
 
 // register this device type with the Library
-CEntity gripper_bootstrap( string("gripper"), 
+CEntity gripper_bootstrap( "gripper", 
 			   GripperType, 
 			   (void*)&CGripperDevice::Creator ); 
 

@@ -22,7 +22,7 @@ MotePtrList m_mote_list;
 //#define VERBOSE
 
 // register this device type with the Library
-CEntity mote_bootstrap( string("mote"), 
+CEntity mote_bootstrap( "mote", 
 			MoteType, 
 			(void*)&CMoteDevice::Creator ); 
 

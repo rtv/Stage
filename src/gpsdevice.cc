@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gpsdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.15 $
+//  $Revision: 1.16 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -18,7 +18,7 @@
 
 
 // register this device type with the Library
-CEntity gps_bootstrap( string("gps"), 
+CEntity gps_bootstrap( "gps", 
 		       GpsType, 
 		       (void*)&CGpsDevice::Creator ); 
 

@@ -8,18 +8,23 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/bitmap.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 #ifndef BITMAP_HH
 #define BITMAP_HH
 
-#include "entity.hh"
 #include <vector>
+#include "entity.hh"
 
 // Some forward declarations
 class Nimage;
+
+typedef struct
+{
+  double x, y, w, h;
+} bitmap_rectangle_t;
 
 class CBitmap : public CEntity
 {
@@ -56,18 +61,25 @@ class CBitmap : public CEntity
   // The image representing the environment
   public: Nimage *image;
 
-#ifdef INCLUDE_RTK2
-  typedef struct
-  {
-    double x, y, w, h;
-  } bitmap_rectangle_t;
-  
-  vector<bitmap_rectangle_t> bitmap_rects;
+  std::vector<bitmap_rectangle_t> bitmap_rects;
 
+#ifdef INCLUDE_RTK2  
   void RtkStartup();
+  void BuildQuadTree( uint8_t color, int x1, int y1, int x2, int y2 );
 #endif
 
-  void BuildQuadTree( uint8_t color, int x1, int y1, int x2, int y2 );
+  
+#ifdef RTVG
+public: 
+  virtual void GuiStartup ();
+  virtual void GuiSelect( void );
+  virtual void GuiUnselect( void );
+  
+private:
+  GnomeCanvasItem* g_select_item;
+  //std::vector<GnomeCanvasItem*> canvas_items;
+#endif
+
 };
 
 #endif

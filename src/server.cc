@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.28 2002-08-30 18:17:28 rtv Exp $
+ * CVS info: $Id: server.cc,v 1.29 2002-09-07 02:05:25 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -57,7 +57,7 @@
 #include <iomanip>
 
 //using namespace std;
-//#define DEBUG
+#define DEBUG
 //#define VERBOSE
 
 #include "server.hh"
@@ -175,10 +175,11 @@ CStageServer::CStageServer( int argc, char** argv, Library* lib )
 
   // just to be reassuring, print the host details
   printf( "[Server %s:%d]",  m_hostname, m_port );
-  puts( "" ); // end the startup line, flush stdout before starting player
 
   ////////////////////////////////////////////////////////////////////
   // STARTUP PLAYER
+
+  puts( "" ); // end the startup line, flush stdout before starting player
   if( m_run_player && !StartupPlayer() )
   {
     PRINT_ERR("Player startup failed");
@@ -270,8 +271,6 @@ bool CStageServer::LoadFile( char* filename )
     const char *type = this->worldfile.GetEntityType(section);
     int line = this->worldfile.ReadInt(section, "line", -1);
 
-    PRINT_DEBUG1( "LOADING SECTION TYPE %s\n", type );
-
     // Ignore some types, since we already have dealt will deal with them
     if (strcmp(type, "gui") == 0)
       continue;
@@ -329,18 +328,17 @@ bool CStageServer::LoadFile( char* filename )
     // otherwise it's a device so we handle those...
 
     // Find the parent entity
-    CEntity *parent = NULL;
-    int psection = this->worldfile.GetEntityParent(section);
-    parent = root->FindSectionEntity( psection );
-
+    CEntity *parent = root->FindSectionEntity( this->worldfile.GetEntityParent(section) );
     
     // Work out whether or not its a local device if any if this
     // device's host IPs match this computer's IP, it's local
     bool local = m_hostaddr.s_addr == current_hostaddr.s_addr;
 
     // Create the entity - it attaches itself to its parent's child_list
-    CEntity *entity = lib->CreateEntity( string(type), this, parent );
-
+    CEntity *entity = NULL;
+    
+    assert( (entity = lib->CreateEntity( (char*)type, this, parent )) );
+ 
     if (entity != NULL)
     {      
       // these pokes should really be in the entities, but it's a loooooot
@@ -351,13 +349,14 @@ bool CStageServer::LoadFile( char* filename )
       
       // if true, this instance of stage will update this entity
       entity->m_local = local;
-      
+
       //printf( "ent: %p host: %s local: %d\n",
       //    entity, inet_ntoa(entity->m_hostaddr), entity->m_local );
       
       // Store which section it came from (so we know where to
       // save it to later).
       entity->worldfile_section = section;
+ 
       // Let the entity load itself
       if (!entity->Load(&this->worldfile, section))
       {
@@ -365,11 +364,6 @@ bool CStageServer::LoadFile( char* filename )
                     GetEntityCount() ); 
         return false;
       }
-
-      //      if( parent )
-      //AddEntity( parent, entity );
-      //else
-      //AddEntity( this, entity );
     }
     else
       PRINT_ERR2("line %d : unrecognized type [%s]", line, type);
@@ -409,6 +403,8 @@ bool CStageServer::LoadFile( char* filename )
   r.botry = h-1;
 
   matrix->draw_rect( r, root, true );
+
+  root->Print( "" );
 
   return true;
 }
@@ -539,24 +535,6 @@ bool CStageServer::ParseCmdLine( int argc, char** argv )
 bool CStageServer::StartupPlayer( void )
 {
   PRINT_DEBUG( "** STARTUP PLAYER **" );
-
-  // startup any player devices - no longer hacky! - RTV
-  // we need to have fixed up all the shared memory and pointers already
-
-  /* REMOVE? Dont think we need this anymore.
-  // count the number of Players on this host
-  int player_count = 0;
-  for (int i = 0; i < GetEntityCount(); i++)
-    if( GetEntity(i)->stage_type == PlayerType && GetEntity(i)->m_local ) 
-      player_count++;
-  
-  //printf( "DETECTED %d players on this host\n", player_count );
-
-  // if there is at least 1 player device, we start a copy of Player
-  // running.
-  if (player_count == 0)
-    return true;
-  */
 
   // ----------------------------------------------------------------------
   // fork off a player process to handle robot I/O

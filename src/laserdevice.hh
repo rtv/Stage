@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.hh,v 1.1 2002-08-23 00:19:39 rtv Exp $
+ * CVS info: $Id: laserdevice.hh,v 1.2 2002-09-07 02:05:24 rtv Exp $
  */
 
 #ifndef LASERDEVICE_HH
@@ -59,6 +59,9 @@ public: static CLaserDevice* Creator( CWorld *world, CEntity *parent )
 
   // Generate scan data
   private: bool GenerateScanData(player_laser_data_t *data);
+
+   protected: size_t PutData( player_laser_data_t* data, size_t len );
+
 
   // Laser scan rate in samples/sec
   private: double scan_rate;

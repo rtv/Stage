@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.35 2002-08-30 18:17:28 rtv Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.36 2002-09-07 02:05:25 rtv Exp $
  */
 
 #include <math.h>
@@ -53,24 +53,21 @@
 
 #include "library.hh"
 
+#ifdef INCLUDE_RTK2
 // static methods used as callbacks in the rtk gui
 void CEntity::staticSelect( void* ent )
 {
   //puts( "SELECT" );
-
-  if( CWorld::autosubscribe )
-    //dynamic_cast<CPlayerEntity*>(ent)->FamilySubscribe();
-    ((CPlayerEntity*)(ent))->FamilySubscribe();
+  ((CPlayerEntity*)(ent))->FamilySubscribe();
 }
 
 void CEntity::staticUnselect( void* ent )
 {
   //puts( "UNSELECT" );
-  if( CWorld::autosubscribe )
-    //dynamic_cast<CPlayerEntity*>(ent)->FamilyUnsubscribe();
-    ((CPlayerEntity*)(ent))->FamilyUnsubscribe();
+  
+  ((CPlayerEntity*)(ent))->FamilyUnsubscribe();
 }
-
+#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // Minimal constructor
@@ -145,7 +142,7 @@ bool CPlayerEntity::Load(CWorldFile *worldfile, int section)
 
   if( m_player.port == 0 )
     printf( "\nWarning: Player device (%s:%d:%d) has zero port. Missing 'port' property in world file?\n",
-	    m_world->GetLibrary()->StringFromType( this->stage_type), m_player.port, m_player.index );
+	    m_world->GetLibrary()->TokenFromType( this->stage_type), m_player.port, m_player.index );
 
   return true;
 }
@@ -513,24 +510,23 @@ int CPlayerEntity::Subscribed()
       Unlock();
     }
   
+
   return( subscribed );
 }
 
 void CPlayerEntity::FamilySubscribe()
 {
   CHILDLOOP( ch )
-    if( RTTI_ISPLAYERP( ch ) )
-      dynamic_cast<CPlayerEntity*>(ch)->FamilySubscribe();
-  
+    ch->FamilySubscribe();
+
   this->Subscribe();
 }
 
 void CPlayerEntity::FamilyUnsubscribe()
 {
   CHILDLOOP( ch )
-    if( RTTI_ISPLAYERP( ch ) )
-      dynamic_cast<CPlayerEntity*>(ch)->FamilyUnsubscribe();
-  
+    ch->FamilyUnsubscribe();
+
   this->Unsubscribe();
 }
 
@@ -538,20 +534,35 @@ void CPlayerEntity::FamilyUnsubscribe()
 //// subscribe to the device (used by other devices that depend on this one)
 void CPlayerEntity::Subscribe() 
 {
-  //puts( "SUB" );
+  //puts( "PSUB" );
+
+  
   Lock();
   m_info_io->subscribed++;
-  Unlock();
+
+  printf( "player %d.%d.%d subs %d\n", 
+	  this->m_player.port,  
+	  this->m_player.code,  
+	  this->m_player.index,
+	  m_info_io->subscribed );
+  
+  
+  Unlock(); 
+  
+  CEntity::Subscribe();
 }
 
 ///////////////////////////////////////////////////////////////////////////
 // unsubscribe from the device (used by other devices that depend on this one)
 void CPlayerEntity::Unsubscribe()
 { 
-  //puts( "UNSUB" );
+  //puts( "PUNSUB" );
+  
   Lock();
   m_info_io->subscribed--;
   Unlock();
+  
+  CEntity::Unsubscribe();
 } 
 
 
@@ -794,7 +805,7 @@ void CPlayerEntity::RtkStartup()
   label[0] = 0;
   snprintf(tmp, sizeof(tmp), "%s %s", 
 	   this->name,
-	   this->m_world->lib->StringFromType( this->stage_type ) );
+	   this->m_world->lib->TokenFromType( this->stage_type ) );
   strncat(label, tmp, sizeof(label));
   if (m_player.port > 0)
   {
@@ -812,5 +823,4 @@ void CPlayerEntity::RtkStartup()
 
 
 #endif
-
 

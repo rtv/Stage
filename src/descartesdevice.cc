@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/descartesdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -34,7 +34,7 @@
 #include "raytrace.hh"
 
 // register this device type with the Library
-CEntity descartes_bootstrap( string("descartes"), 
+CEntity descartes_bootstrap( "descartes", 
 			     DescartesType, 
 			     (void*)&CDescartesDevice::Creator ); 
 

@@ -22,19 +22,25 @@
  * devices here.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 8 Jun 2002
- * CVS info: $Id: colors.hh,v 1.1 2002-08-23 00:19:39 rtv Exp $
+ * CVS info: $Id: colors.hh,v 1.2 2002-09-07 02:05:23 rtv Exp $
  */
 
 #ifndef _STAGECOLORS_H
 #define _STAGECOLORS_H 
 
 //#include <stdint.h>
+#include "stage_types.hh"
+
+// RTV - moved the typedef to stage_types.hh to avoid recompiling
+// everything if you change this file
 
 // Color type
-typedef uint32_t StageColor;
+//typedef uint32_t StageColor;
 
+#define GRID_MAJOR_COLOR "gray60"
+#define GRID_MINOR_COLOR "gray90"
 #define MATRIX_COLOR "dark green"
-#define BACKGROUND_COLOR "light gray"
+#define BACKGROUND_COLOR "ivory"
 #define GRIPPER_COLOR "blue"
 #define POSITION_COLOR "dark red"
 #define LASER_COLOR  "blue"

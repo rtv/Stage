@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.33 2002-08-30 18:17:28 rtv Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.34 2002-09-07 02:05:25 rtv Exp $
  */
 
 //#define DEBUG
@@ -30,7 +30,7 @@
 #include "world.hh"
 #include "positiondevice.hh"
 
-CEntity position_bootstrap( string("position"), 
+CEntity position_bootstrap( "position", 
 			    PositionType, 
 			    (void*)&CPositionDevice::Creator );
 

@@ -21,7 +21,7 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/idardevice.cc,v $
 * $Author: rtv $
-* $Revision: 1.4 $
+* $Revision: 1.5 $
 ******************************************************************************/
 
 
@@ -59,7 +59,7 @@
 
 
 // register this device type with the Library
-CEntity idar_bootstrap( string("idar"), 
+CEntity idar_bootstrap( "idar", 
 			IDARType, 
 			(void*)&CIdarDevice::Creator ); 
 

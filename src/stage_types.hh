@@ -19,9 +19,9 @@
  */
 /*
  * Desc: Shared types, constants, etc
- * Author: Andrew Howard
+ * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: stage_types.hh,v 1.1 2002-08-23 00:19:39 rtv Exp $
+ * CVS: $Id: stage_types.hh,v 1.2 2002-09-07 02:05:25 rtv Exp $
  */
 
 #ifndef STAGE_TYPES_HH
@@ -39,18 +39,28 @@
 #include "player.h" 
 
 ///////////////////////////////////////////////////////////////////////////
-// CONSTANTS
+// CONSTANTS - please don't use #defines here!
+
+// this is the default port bound by Stage's server
 const int DEFAULT_POSE_PORT = 6601;
 
 // we usually use 1 or 2, so this should be plenty
+// TODO - make this dynamic
 const int MAX_POSE_CONNECTIONS = 100; 
 
 // this is the root filename for stage devices
 // this is appended with the user name and instance number
 // so in practice you get something like /tmp/stageIO.vaughan.0
-// currently only the zero instance is supported in player
+// currently only the zero instance is supported
+
+// this line causes the compiler to complain about multiple
+// definitions of IOFILENAME. why? - rtv 
+// const char* IOFILENAME = "/tmp/stageIO";
+// i'll stick to the macro...
 #define IOFILENAME "/tmp/stageIO"
 
+// the max size of an entity's worldfile token
+const int STAGE_MAX_TOKEN_LEN = 128;
 
 ///////////////////////////////////////////////////////////////////////////
 // Global variables
@@ -59,6 +69,80 @@ const int MAX_POSE_CONNECTIONS = 100;
 // exception throwing would be better style...
 extern bool quit;
 
+
+
+///////////////////////////////////////////////////////////////////////////
+// Useful stage types
+
+// ENTITY TYPE DEFINITIONS /////////////////////////////////////////////////////////
+
+// a unique id for each entity equal to its position in the world's array
+typedef int stage_id_t;
+
+// Color type
+typedef uint32_t StageColor;
+
+// definition of stage object type codes
+// similar to player types, but not exactly, as different robots
+// can appear to stage as identical position devices, for example.
+// YOU MUST ADD YOUR NEW DEVICE HERE
+enum StageType
+{
+  NullType = 0,
+  WallType,
+  PlayerType, 
+  MiscType, 
+  PositionType,
+  SonarType,
+  LaserTurretType,
+  VisionType,
+  PtzType,
+  BoxType,
+  LaserBeaconType,
+  LBDType, // Laser Beacon Detector
+  VisionBeaconType,
+  GripperType, 
+  GpsType,
+  PuckType,
+  BroadcastType,
+  AudioType,
+  SpeechType,
+  TruthType,
+  OccupancyType,
+  IDARType, // HRL's Infrared Data And Ranging turret
+  DescartesType, // HRL's customized Descartes robot platform
+  OmniPositionType,
+  MoteType,
+  BpsType,
+  IDARTurretType,
+  NUMBER_OF_STAGE_TYPES // THIS MUST BE LAST - put yours before this.
+};
+
+// PROPERTY DEFINITIONS ///////////////////////////////////////////////
+
+// Shapes for entities
+enum StageShape
+{
+  ShapeNone = 0,
+  ShapeCircle,
+  ShapeRect
+};
+
+// Possible laser return values
+enum LaserReturn
+{
+  LaserTransparent = 0,
+  LaserVisible, 
+  LaserBright,
+};
+
+// Possible IDAR return values
+enum IDARReturn
+{
+  IDARTransparent=0,
+  IDARReflect,
+  IDARReceive
+};
 
 ///////////////////////////////////////////////////////////////////////////
 // Some useful macros
@@ -138,69 +222,28 @@ extern bool quit;
 #endif
 
 
-///////////////////////////////////////////////////////////////////////////
-// Useful stage types
+// these are lifted from ahoward's rtk2 library code
+// Append an item to a linked list
+#define STAGE_LIST_APPEND(head, item) \
+item->prev = head;\
+item->next = NULL;\
+if (head == NULL)\
+    head = item;\
+else\
+{\
+    while (item->prev->next)\
+       item->prev = item->prev->next;\
+    item->prev->next = item;\
+}
 
-// Shapes for entities
-enum StageShape
-{
-  ShapeNone = 0,
-  ShapeCircle,
-  ShapeRect
-};
-
-// definition of stage object type codes
-// similar to player types, but not exactly, as different robots
-// can appear to stage as identical position devices, for example.
-enum StageType
-{
-  NullType = 0,
-  WallType,
-  PlayerType, 
-  MiscType, 
-  PositionType,
-  SonarType,
-  LaserTurretType,
-  VisionType,
-  PtzType,
-  BoxType,
-  LaserBeaconType,
-  LBDType, // Laser Beacon Detector
-  VisionBeaconType,
-  GripperType, 
-  GpsType,
-  PuckType,
-  BroadcastType,
-  AudioType,
-  SpeechType,
-  TruthType,
-  OccupancyType,
-  IDARType, // HRL's Infrared Data And Ranging turret
-  DescartesType, // HRL's customized Descartes robot platform
-  OmniPositionType,
-  MoteType,
-  BpsType,
-  IDARTurretType,
-  NUMBER_OF_STAGE_TYPES // THIS MUST BE LAST - put yours before this.
-};
-
-
-// Possible laser return values
-enum LaserReturn
-{
-  LaserTransparent = 0,
-  LaserVisible, 
-  LaserBright,
-};
-
-
-// Possible IDAR return values
-enum IDARReturn
-{
-  IDARTransparent=0,
-  IDARReflect,
-  IDARReceive
-};
+// Remove an item from a linked list
+#define STAGE_LIST_REMOVE(head, item) \
+if (item->prev)\
+    item->prev->next = item->next;\
+if (item->next)\
+    item->next->prev = item->prev;\
+if (item == head)\
+    head = item->next;
 
 #endif
 

@@ -394,36 +394,27 @@ int CStageIO::WriteEntity( int fd, stage_entity_t* ent )
 
 int CStageIO::WriteEntities( int fd )
 {
+  stage_entity_t sent;
+  
   int num_obs =  GetEntityCount();
   // announce that a load of entities are on their way
   WriteHeader( fd,  EntityPackets, num_obs );
   
-  for( int n=0; n< num_obs; n++ )
-  {
-    CEntity* obj =  GetEntity(n);
-
-    stage_entity_t ent;
-    ent.id = n;
-    ent.type = obj->stage_type;
-
-    if( obj->m_parent_entity )
+  for( int c=0; c<this->entity_count; c++ )
     {
-      int m = 0;
-      // figure out the parent's index
-      while( GetEntity(m) != obj->m_parent_entity)
-        m++;
-	  
-      if( m >= num_obs )
-        puts( "Stage warning: parent index is out of range" );
-	  
-      ent.parent = m; // this is the parent's index
-    }
-    else
-      ent.parent = -1; // no parent
+      CEntity* ent = this->entities[c];
       
-    WriteEntity( fd, &ent );
-  }
-
+      sent.type = ent->stage_type;      
+      sent.id = ent->stage_id;
+      
+      if(  ent->m_parent_entity )
+	sent.parent = ent->m_parent_entity->stage_id; // valid parent
+      else
+	sent.parent = -1; // no parent
+      
+      WriteEntity( fd, &sent );
+    }
+  
   return 0;
 }
 
@@ -526,18 +517,23 @@ int CStageIO::CountDirtyOnConnection( int con )
 
   //puts( "Counting dirty properties" );
   // count the number of dirty properties on this connection 
-  for( int i=0; i < GetEntityCount(); i++ )
-    for( int p=0; p < ENTITY_LAST_PROPERTY; p++ )
-      {  
-	// is the entity marked dirty for this connection & property?
-	if( GetEntity(i)->m_dirty[con][p] ) 
-	  {
-	    // if this property has any data  
-	    if( GetEntity(i)->GetProperty( (EntityProperty)p, dummydata ) > 0 )
-	      count++; // we count it as dirty
-	  }
-      }
 
+  for( int c=0; c<this->entity_count; c++ )
+    {
+      CEntity* ent = this->entities[c];
+      
+      for( int p=0; p < ENTITY_LAST_PROPERTY; p++ )
+	{ 
+	  // is the entity marked dirty for this connection & property?
+	  if( ent->m_dirty[con][p] ) 
+	    {
+	      // if this property has any data  
+	      if( ent->GetProperty( (EntityProperty)p, dummydata ) > 0 )
+		count++; // we count it as dirty
+	    }
+	}
+    }
+  
   return count;
 }
 

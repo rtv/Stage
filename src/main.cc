@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.51 2002-08-22 02:04:38 rtv Exp $
+ * CVS: $Id: main.cc,v 1.52 2002-09-07 02:05:24 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -125,6 +125,13 @@ int main(int argc, char **argv)
   // Initialise rtk if we are using it
   rtk_init(&argc, &argv);
 #endif
+
+#ifdef RTVG
+  // Initialise rtk if we are using it
+  gnome_init( "Stage", (char*)VERSION,  argc, argv);
+#endif
+
+
   
   // CStageServer and CStageClient are subclasses of CStageIO and CWorld
   // constructing them does most of the startup work.
@@ -172,6 +179,8 @@ int main(int argc, char **argv)
   // update the simulation - stop when the quit flag is raised
   while( !quit ) world->Update(); 
   
+  //gtk_main();
+
   // clean up and exit
   StageQuit();
 }

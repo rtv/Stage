@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.24 $
+//  $Revision: 1.25 $
 //
 // Usage:
 //  (empty)
@@ -31,7 +31,7 @@
 #include "ptzdevice.hh"
 
 // register this device type with the Library
-CEntity ptz_bootstrap( string("ptz"), 
+CEntity ptz_bootstrap( "ptz", 
 		       PtzType, 
 		       (void*)&CPtzDevice::Creator ); 
 

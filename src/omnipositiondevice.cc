@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/omnipositiondevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.14 $
+//  $Revision: 1.15 $
 //
 // Usage:
 //  (empty)
@@ -33,7 +33,7 @@
 
 
 // register this device type with the Library
-CEntity omnipos_bootstrap( string("omnipos"), 
+CEntity omnipos_bootstrap( "omnipos", 
 			   OmniPositionType, 
 			   (void*)&COmniPositionDevice::Creator ); 
 

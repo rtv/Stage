@@ -22,14 +22,14 @@
  *       the work is done by Player).
  * Author: Andrew Howard
  * Date: 5 Dec 2000
- * CVS info: $Id: broadcastdevice.cc,v 1.15 2002-08-22 02:04:38 rtv Exp $
+ * CVS info: $Id: broadcastdevice.cc,v 1.16 2002-09-07 02:05:23 rtv Exp $
  */
 
 #include <stage.h>
 #include "broadcastdevice.hh"
 
 // register this device type with the Library
-CEntity broadcast_bootstrap( string("broadcast"), 
+CEntity broadcast_bootstrap( "broadcast", 
 			     BroadcastType, 
 			     (void*)&CBroadcastDevice::Creator ); 
 

@@ -56,6 +56,14 @@ if test "x$with_gui" = "xyes"; then
 fi
 AM_CONDITIONAL(WITH_GUI, test x$with_gui = xyes)
 
+dnl should we include the GNOME GUI?
+AC_ARG_WITH(rtvg,    [   --without-rtvg         Don't include the experimental GNOME GUI],,
+with_rtvg=yes)
+if test "x$with_rtvg" = "xyes"; then
+  AC_DEFINE(RTVG,1,[include the RTVG GUI])
+fi
+AM_CONDITIONAL(WITH_RTVG, test x$with_rtvg = xyes)
+
 dnl where's player?
 AC_ARG_WITH(player, [   --with-player=dir      Location of Player (installation or source)],
 PLAYER_DIR=$with_player,

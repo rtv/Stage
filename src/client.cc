@@ -28,12 +28,6 @@
 #include <termios.h>
 #include <unistd.h>
 
-//#include <sstream>
-#include <iomanip>
-#include <iostream>
-
-using namespace std;
-
 #define DEBUG
 #define VERBOSE
 //#undef DEBUG
@@ -45,9 +39,8 @@ void PrintUsage(); // defined in main.cc
 void ClientCatchSigPipe( int signo )
 {
 #ifdef VERBOSE
-  cout << "** SIGPIPE! **" << endl;
+  puts( "** SIGPIPE! **" );
 #endif
-
 }
 
 CStageClient::CStageClient( int argc, char** argv, Library* lib )

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.30 $
+//  $Revision: 1.31 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -17,7 +17,7 @@
 #include "raytrace.hh"
 
 // register this device type with the Library
-CEntity puck_bootstrap( string("puck"), 
+CEntity puck_bootstrap( "puck", 
 		       PuckType, 
 		       (void*)&CPuck::Creator ); 
 

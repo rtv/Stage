@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.cc,v 1.39 2002-08-22 02:04:38 rtv Exp $
+ * CVS info: $Id: visiondevice.cc,v 1.40 2002-09-07 02:05:25 rtv Exp $
  */
 
 #include <math.h>
@@ -34,7 +34,7 @@
 #include "raytrace.hh"
 
 // register this device type with the Library
-CEntity vision_bootstrap( string("vision"), 
+CEntity vision_bootstrap( "vision", 
 		       VisionType, 
 		       (void*)&CVisionDevice::Creator ); 
 

@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.80 2002-08-30 18:17:28 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.81 2002-09-07 02:05:23 rtv Exp $
  */
 
 #include <math.h>
@@ -74,24 +74,21 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
   m_world = world; 
   m_parent_entity = parent_entity;
   m_default_entity = this;
-
+  
   // attach to my parent
   if( m_parent_entity )
     m_parent_entity->AddChild( this );
   else
     PRINT_DEBUG1( "ROOT ENTITY %p\n", this );
   
-  // register with the world
-  m_world->RegisterEntity( this );
+  // register with the world to receive our unique id
+  this->stage_id = m_world->RegisterEntity( this );
 
   // init the child list data
   this->child_list = this->prev = this->next = NULL;
 
   // Set our default type (will be reset by subclass).
   this->stage_type = NullType;
-
-  // Set the filename used for this device's mmap
-  //this->device_filename[0] = 0;
 
   // Set our default name
   this->name[0] = 0;
@@ -112,6 +109,9 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
 
   // Set the default color
   this->color = 0xFF0000;
+
+  // set the default worldfile section to be 0 (top-level)
+  this->worldfile_section = 0;
 
   m_local = false; 
   
@@ -145,6 +145,13 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
   // By default, we can both translate and rotate the entity.
   this->movemask = RTK_MOVE_TRANS | RTK_MOVE_ROT;
 #endif
+
+#ifdef RTVG
+  this->g_origin = NULL;
+  this->g_group = NULL;
+  this->g_data = NULL;
+  this->g_body= NULL;
+#endif
 }
 
 
@@ -152,11 +159,12 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
 // Destructor
 CEntity::~CEntity()
 {
-  //close( m_fd ); 
 }
 
 void CEntity::AddChild( CEntity* child )
 {
+  //printf( "appending entity %p to parent %p\n", child, this );
+  
   STAGE_LIST_APPEND( this->child_list, child ); 
 }
 
@@ -211,7 +219,6 @@ void CEntity::GetBoundingBox( double &xmin, double &ymin,
   //printf( "before children: %.2f %.2f %.2f %.2f\n",
   //  xmin, ymin, xmax, ymax );
 
-
   CHILDLOOP( ch )
     ch->GetBoundingBox(xmin, ymin, xmax, ymax ); 
 
@@ -233,20 +240,24 @@ void CEntity::Sync()
 // return a pointer to this or a child if it matches the worldfile section
 CEntity* CEntity::FindSectionEntity( int section )
 {
-  PRINT_DEBUG2( "find section %d. my section %d\n", 
-		section, this->worldfile_section );
+  //PRINT_DEBUG2( "find section %d. my section %d\n", 
+  //	section, this->worldfile_section );
 
-  if( section == this->worldfile_section )
-    return this;
-  
   CEntity* found = NULL;
-
+  
+  if( section == this->worldfile_section )
+    found  = this;
+  
+  //int f=0;
   // otherwise, recursively check our children
-  CHILDLOOP( ch )
+  if( found == NULL ) CHILDLOOP( ch )
     {
+      //printf( "looking in child %d\n", f++ ); 
       found = ch->FindSectionEntity( section ); 
       if( found ) break;
     }
+  
+  //printf( "found %s\n", found ? "true" : "false" );
   
   return found;
   
@@ -374,9 +385,9 @@ bool CEntity::Save(CWorldFile *worldfile, int section)
 // everything has been loaded.
 bool CEntity::Startup( void )
 {
-  PRINT_DEBUG2("STARTUP %s %s", 
-	       this->m_world->lib->StringFromType( this->stage_type ),
-	       m_parent_entity ? "" : "- ROOT" );
+  //PRINT_DEBUG2("STARTUP %s %s", 
+  //       this->m_world->lib->TokenFromType( this->stage_type ),
+  //       m_parent_entity ? "" : "- ROOT" );
   
  CHILDLOOP( ch )
     ch->Startup();
@@ -386,7 +397,7 @@ bool CEntity::Startup( void )
  //RtkStartup();
 #endif
 
-  PRINT_DEBUG( "STARTUP DONE" );
+ //PRINT_DEBUG( "STARTUP DONE" );
 
   return true;
 }
@@ -396,7 +407,7 @@ bool CEntity::Startup( void )
 // Shutdown routine
 void CEntity::Shutdown()
 {
-  PRINT_DEBUG( "entity shutting down" );
+  //PRINT_DEBUG( "entity shutting down" );
   
   // recursively shutdown our children
   CHILDLOOP( ch ) ch->Shutdown();
@@ -884,6 +895,23 @@ int CEntity::SetProperty( int con, EntityProperty property,
     rtk_fig_origin(this->fig, local_px, local_py, local_pth );
 #endif 
 
+#ifdef RTVG 
+  if( move_figure ) // move the figure to the new location and redraw
+    {
+      double rotate[6], translate[6];
+      art_affine_translate( translate, local_px, local_py );
+      art_affine_rotate( rotate, RTOD(local_pth) );
+      
+      if( this->g_origin ) // move the origin
+	gnome_canvas_item_affine_absolute( GNOME_CANVAS_ITEM(g_origin), translate);
+      
+      if( this->g_group ) // rotate the group about the origin
+	gnome_canvas_item_affine_absolute( GNOME_CANVAS_ITEM(g_group), rotate);
+
+      this->GuiStatus();
+    }
+#endif
+
   return 0;
 }
 
@@ -988,7 +1016,7 @@ void CEntity::Print( char* prefix )
   printf( "%s type: %s global: [%.2f,%.2f,%.2f]"
 	  " local: [%.2f,%.2f,%.2f] )", 
 	  prefix,
-	  m_world->lib->StringFromType( this->stage_type ),
+	  m_world->lib->TokenFromType( this->stage_type ),
 	  ox, oy, oth,
 	  local_px, local_py, local_pth );
 	  
@@ -1007,6 +1035,39 @@ void CEntity::Print( char* prefix )
 }
 
 
+// subscribe to / unsubscribe from the device
+// these don't do anything by default, but are overridden by CPlayerEntity
+void CEntity::Subscribe()
+{ 
+  //puts( "SUB" );
+};
+
+void CEntity::Unsubscribe()
+{ 
+  //puts( "UNSUB" );
+
+#ifdef RTVG
+  // destroy any data graphics
+  if( this->g_data ) 
+    {
+      gtk_object_destroy( GTK_OBJECT(this->g_data) );
+      this->g_data = NULL;
+    }
+#endif
+};
+  
+// these versions sub/unsub to this device and all its decendants
+void CEntity::FamilySubscribe()
+{ 
+  CHILDLOOP( ch ) ch->FamilySubscribe(); 
+};
+
+void CEntity::FamilyUnsubscribe()
+{ 
+  CHILDLOOP( ch ) ch->FamilyUnsubscribe(); 
+};
+
+
 #ifdef INCLUDE_RTK2
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1014,7 +1075,7 @@ void CEntity::Print( char* prefix )
 void CEntity::RtkStartup()
 {
   PRINT_DEBUG2("RTK STARTUP %s %s",
-	       this->m_world->lib->StringFromType( this->stage_type ),
+	       this->m_world->lib->TokenFromType( this->stage_type ),
 	       m_parent_entity ? "" : " - ROOT" );
 
   // Create a figure representing this entity
@@ -1091,7 +1152,7 @@ void CEntity::RtkStartup()
       
       label[0] = 0;
       snprintf(tmp, sizeof(tmp), "%s %s", 
-	       this->name, this->m_world->lib->StringFromType( this->stage_type ) );
+	       this->name, this->m_world->lib->TokenFromType( this->stage_type ) );
       strncat(label, tmp, sizeof(label));
       
       rtk_fig_color_rgb32(this->fig, this->color);
