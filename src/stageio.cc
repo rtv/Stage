@@ -57,9 +57,10 @@ CStageIO::~CStageIO( void )
 void CStageIO::Update( void )
 {
   Read(); // synchronize world state
-    
-  CWorld::Update();
-
+  
+  //if( m_pose_connection_count > 0 ) 
+    CWorld::Update();
+  
   Write(); // export world state
 }
 

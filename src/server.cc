@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.19 2002-06-11 05:47:33 inspectorg Exp $
+ * CVS info: $Id: server.cc,v 1.20 2002-06-11 06:48:15 rtv Exp $
  */
 
 #include <arpa/inet.h>
@@ -179,6 +179,7 @@ CStageServer::CStageServer( int argc, char** argv )
     return;
   }
   
+  m_enable = true;  
 }
 
 CStageServer::~CStageServer( void )
@@ -643,7 +644,6 @@ void CStageServer::ListenForConnections( void )
       
 
     // set the dirty flag for all entities on this connection
-    //for( int i=0; i < world->GetEntityCount(); i++ )
     DirtyEntities( m_pose_connection_count );
 
 

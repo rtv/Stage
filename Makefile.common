@@ -3,7 +3,7 @@
 # stage/Makefile.common - build and installation configurations
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile.common,v 1.50 2002-06-11 02:16:52 gerkey Exp $
+# $Id: Makefile.common,v 1.51 2002-06-11 06:48:15 rtv Exp $
 #
 # Notes: All user-configurable paths and build options should be specified 
 #        here. This file is included by Makefile and src/Makefile. 
@@ -82,15 +82,15 @@ ZLIB_LINK = -lz
 # warnings always on
 CCFLAGS = -Wall
 # production 
-CCFLAGS += -O2 
+#CCFLAGS += -O2 
 # debug
-#CCFLAGS += -g3
+CCFLAGS += -g3
 # debug + profile + warnings - ideal for development
-#CCFLAGS += -pg -g3
+CCFLAGS += -pg -g3
 
 # you need this link option to get profiling data
 # it can be commented out for production compiles
-#PROFILE_LINK = -pg
+PROFILE_LINK = -pg
 
 #############################################################################
 # Platform selection

@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.42 2002-06-11 01:30:15 gerkey Exp $
+ * CVS: $Id: main.cc,v 1.43 2002-06-11 06:48:15 rtv Exp $
  */
 
 #include <unistd.h>
@@ -56,17 +56,16 @@ void PrintUsage( void )
 {
   printf("\nUsage: stage [options] <worldfile>\n"
 	 "Options: <argument> [default]\n"
-	 " -s\t\tRun as a Stage server (default)\n"
 	 " -p <portnum>\tSet the server port [6601]\n"
 	 " -c <hostname>\tRun as a client to a Stage server on hostname\n"
 	 " -cl\t\tRun as a client to a Stage server on localhost\n"
 	 " -g\t\tDo not start the X11 GUI\n"
 	 " -n \t\tDo not start Player\n"
 	 " -q\t\tDisable console status output\n"
-	 " -l <filename>\tLog the position of all objects into <filename>.\n"
 	 " -v <float>\tSet the simulated time increment per cycle [0.1sec].\n"
 	 " -u <float>\tSet the desired real time per cycle [0.1 sec].\n"
 	 " -f \t\tRun as fast as possible; don't try to match real time\n"
+	 " -l <filename>\tLog some timing and throughput statistics into <filename>.<incremental suffix>\n"
 	 //" -r <IP:port>\tSend sensor data to this address in RTP format\n"
 	 //#ifdef HRL_HEADERS
 	 //" -i\t\tSend IDAR messages to XS (hrlstage only)\n"

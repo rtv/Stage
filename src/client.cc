@@ -41,6 +41,9 @@ void ClientCatchSigPipe( int signo )
 CStageClient::CStageClient( int argc, char** argv )
   : CStageIO( argc, argv )
 {
+  // start paused 
+  m_enable = false;
+
   // parse out the hostname - that's all we need just here
   // (the parent stageio object gets the port)
   for( int a=1; a<argc; a++ )

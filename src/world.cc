@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.103 2002-06-11 01:39:34 gerkey Exp $
+ * CVS info: $Id: world.cc,v 1.104 2002-06-11 06:48:15 rtv Exp $
  */
 
 //#undef DEBUG
@@ -116,9 +116,9 @@ CWorld::CWorld( int argc, char** argv )
   m_sim_timestep = 0.1; //seconds; - 10Hz default rate 
   m_step_num = 0;
 
-  // Allow the simulation to run
+  // start paused
   //
-  m_enable = true;
+  m_enable = false;
 
   if( gethostname( m_hostname, sizeof(m_hostname)) == -1)
   {
@@ -229,26 +229,26 @@ bool CWorld::ParseCmdLine(int argc, char **argv)
     }
       
     // LOGGING
-    if( strcmp( argv[a], "-l" ) == 0 )
-    {
-      m_log_output = true;
-      strncpy( m_log_filename, argv[a+1], 255 );
-      printf( "[Logfile %s]", m_log_filename );
+      if( strcmp( argv[a], "-l" ) == 0 )
+      {
+        m_log_output = true;
+        strncpy( m_log_filename, argv[a+1], 255 );
+        printf( "[Logfile %s]", m_log_filename );
 	  
-      //store the command line for logging later
-      memset( m_cmdline, 0, sizeof(m_cmdline) );
+        //store the command line for logging later
+        memset( m_cmdline, 0, sizeof(m_cmdline) );
 	  
-      for( int g=0; g<argc; g++ )
-	    {
-	      strcat( m_cmdline, argv[g] );
-	      strcat( m_cmdline, " " );
-	    }
+        for( int g=0; g<argc; g++ )
+  	    {
+  	      strcat( m_cmdline, argv[g] );
+  	      strcat( m_cmdline, " " );
+  	    }
 	  
-      a++;
+        a++;
 	  
-      // open the log file and write out a header
-      LogOutputHeader();
-    }
+        // open the log file and write out a header
+        LogOutputHeader();
+      }
       
     // DIS/ENABLE GUI
     if( strcmp( argv[a], "-g" ) == 0 )
@@ -294,14 +294,14 @@ bool CWorld::ParseCmdLine(int argc, char **argv)
     // SWITCH ON SYNCHRONIZED (distributed) MODE
     // if this option is given, Stage will only run when connected
     // to an external synchronous pose connection
-    else if( strcmp( argv[a], "-s" ) == 0 )
-    {
-      m_external_sync_required = true; 
-      m_enable = false; // don't run until we have a sync connection
-      printf( "[External Sync]");
-    }      
+    //else if( strcmp( argv[a], "-s" ) == 0 )
+    //{
+    //m_external_sync_required = true; 
+    //m_enable = false; // don't run until we have a sync connection
+    //printf( "[External Sync]");
+    //}      
 
-    else if(!strcmp(argv[a], "-time"))
+    else if(!strcmp(argv[a], "-t"))
     {
       m_stoptime = atoi(argv[++a]);
       printf("setting time to: %d\n",m_stoptime);
@@ -455,7 +455,7 @@ void CWorld::Update(void)
 
     if( m_clock ) // if we're managing a clock
     {
-      // TODO - turn the player clock back on - move this into the server?
+      // TODO - move this into the server?
       sem_wait( &m_clock->lock );
       m_clock->time = m_sim_timeval;
       sem_post( &m_clock->lock );
@@ -486,10 +486,7 @@ void CWorld::Update(void)
       RtkUpdate();      
 #endif
 
-    // now we pause() in the main loop (main.cc) waiting for timer signal
-    //
-    //PRINT_DEBUG( "SLEEPING - DISABLED" );
-    //usleep( 100000 ); // stops us hogging the machine while we're paused
+    PRINT_DEBUG( "SLEEPING - DISABLED" );
   }
   
   // for logging statistics

@@ -8,7 +8,7 @@
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
 #  $Author: rtv $
-#  $Revision: 1.38 $
+#  $Revision: 1.39 $
 #
 # Note: All normal user configurations are in Makefile.common - you
 # probably don't need to change this file
@@ -46,6 +46,7 @@ clean_dep:
 install:
 	mkdir -p $(INSTALL_DIR)/bin
 	install -m 755 $(INSTALL_BIN_FILES) $(INSTALL_BIN)
+
 	mkdir -p $(INSTALL_LIB)
 	#install -m 644 src/*.a $(INSTALL_LIB)
 	mkdir -p $(INSTALL_EXAMPLES)
