@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.2.2.5.2.2 2004-05-31 23:36:33 gerkey Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.2.2.5.2.3 2004-07-13 20:30:24 gerkey Exp $
  */
 
 //#define DEBUG
@@ -34,9 +34,9 @@
 // MACROS for packing Player buffers (borrowed from libplayerpacket)
 
 // convert meters to Player mm in NBO in various sizes
-#define MM_32(A)  (htonl((int32_t)(A * 1000.0)))
-#define MM_16(A)  (htons((int16_t)(A * 1000.0)))
-#define MM_U16(A) (htons((uint16_t)(A * 1000.0)))
+#define MM_32(A)  (htonl((int32_t)rint(A * 1000.0)))
+#define MM_16(A)  (htons((int16_t)rint(A * 1000.0)))
+#define MM_U16(A) (htons((uint16_t)rint(A * 1000.0)))
 
 // convert mm of various sizes in NBO to local meters
 #define M_32(A)  ((int)ntohl((int32_t)A) / 1000.0)
@@ -44,9 +44,9 @@
 #define M_U16(A) ((unsigned short)ntohs((uint16_t)A) / 1000.0)
 
 // convert local radians to Player degrees in various sizes
-#define Deg_32(A) (htonl((int32_t)(RTOD(A))))
-#define Deg_16(A) (htons((int16_t)(RTOD(A))))
-#define Deg_U16(A) (htons((uint16_t)(RTOD(A))))
+#define Deg_32(A) (htonl((int32_t)rint(RTOD(A))))
+#define Deg_16(A) (htons((int16_t)rint(RTOD(A))))
+#define Deg_U16(A) (htons((uint16_t)rint(RTOD(A))))
 
 // convert Player degrees in various sizes to local radians
 #define Rad_32(A) (DTOR((int)ntohl((int32_t)A)))

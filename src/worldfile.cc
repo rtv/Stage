@@ -24,7 +24,7 @@
  *          Douglas S. Blank <dblank@brynmawr.edu>
  *
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.25.4.1.2.1 2004-06-16 05:56:25 gerkey Exp $
+ * CVS info: $Id: worldfile.cc,v 1.25.4.1.2.2 2004-07-13 20:30:24 gerkey Exp $
  */
 
 #include <assert.h>
@@ -116,7 +116,11 @@ FILE *CWorldFile::FileOpen(const char *filename, const char* method)
    char *token = strtok(stagepath, ":");
    char *fullpath = (char*) malloc(PATH_MAX);
    char *tmp = strdup(filename);
+#ifdef __CYGWIN__
+   char *base = mp_basename(tmp);
+#else
    char *base = basename(tmp);
+#endif
    while (token != NULL) {
      // for each part of the path, try it:
      memset( fullpath, 0, PATH_MAX);

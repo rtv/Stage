@@ -21,12 +21,16 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.hh,v 1.1.4.1 2003-04-17 23:40:10 rtv Exp $
+ * CVS info: $Id: worldfile.hh,v 1.1.4.1.2.1 2004-07-13 20:30:24 gerkey Exp $
  */
 
 #ifndef WORLDFILE_HH
 #define WORLDFILE_HH
 
+
+#ifdef __CYGWIN__
+   #define mp_basename(s) (strrchr(s,'/')==NULL?(char*)s:(strrchr(s,'/')+1))
+#endif
 
 // Class for loading/saving world file.  This class hides the syntax
 // of the world file and provides an 'entity.property = value' style
