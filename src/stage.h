@@ -19,10 +19,10 @@
 #define DEBUG
 
 // global stage configs
-#define STAGE_TOKEN_MAX 64
+#define STG_TOKEN_MAX 64
+#define STG_LISTENQ  128
 #define STG_DEFAULT_SERVER_PORT 6601  // move to configure.in?
 #define STG_HOSTNAME_MAX  128
-#define STG_LISTENQ  128
 #define STG_MAX_CONNECTIONS 128
    
 // (currently) static memory allocation for getting and setting properties
@@ -186,7 +186,7 @@ typedef struct
 {
   int32_t id;
   int32_t parent_id;
-  char token[ STAGE_TOKEN_MAX ]; // a string from the library to
+  char token[ STG_TOKEN_MAX ]; // a string from the library to
  // identify the type of model
 } __attribute ((packed)) stage_model_t;
 

@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15.2.4 2003-02-03 07:10:36 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.5 2003-02-03 18:47:24 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -208,7 +208,7 @@ public: virtual void FamilyUnsubscribe();
 
   // the worldfile token that caused this entity to be created
   // it is set in the constructor (which is called by the library) 
-  protected: char token[STAGE_TOKEN_MAX]; 
+  protected: char token[STG_TOKEN_MAX]; 
 
   // this is the library's entry for this device, which contains the
   // object's type number, worldfile token, etc.  this can also be
