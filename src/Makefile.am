@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.29.4.5 2003-02-03 07:10:36 rtv Exp $
+# $Id: Makefile.am,v 1.29.4.6 2003-02-03 18:39:43 rtv Exp $
 
 
 #SUBDIRS = models rtkstage gnome2
@@ -22,7 +22,7 @@ stage_DEPENDENCIES = stageio/libstageio.a $(top_srcdir)/replace/libreplace.a  $(
 
 AM_CPPFLAGS = 	-Wall -Istageio -I$(top_builddir)/replace $(RTKCPPFLAGS)
 
-bin_PROGRAMS = stage
+bin_PROGRAMS = stage stest
 
 stage_SOURCES = \
 	entity.cc \
@@ -42,6 +42,13 @@ stage_SOURCES = \
 
 stage_LDFLAGS = 
 stage_LDADD = @GUI_LINK@ -lm -Lstageio -lstageio -L$(top_builddir)/replace -lreplace
+
+
+# build Stage's test program - a simple client
+#	
+stest_DEPENDENCIES = stageio/libstageio.a $(top_srcdir)/replace/libreplace.a
+stest_SOURCES = stest.c 
+stest_LDADD = -Lstageio -lstageio -L$(top_builddir)/replace -lreplace
 
 #stage_LDADD = 	-lm -Lmodels -lstgmodels -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -L@PLAYER_DIR@/client_libs/libplayerpacket -lplayerqueue -lplayerpacket @GUI_LINK@ -L$(top_builddir)/replace -lreplace
 
