@@ -26,6 +26,7 @@ CCFLAGS += -DVERSION=\"$(VERSION)\"
 LINKFLAGS = -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
 # profile link
 #LINKFLAGS = -pg -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
+LINKFLAGS += $(OLDLIBS)
 
 
 ##############################################################################
@@ -77,5 +78,3 @@ clean_dep:
 	${CC} ${CCFLAGS} -c $< -o $@
 
 # Dependancies (make dep)
-
-
