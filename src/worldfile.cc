@@ -1,15 +1,31 @@
-///////////////////////////////////////////////////////////////////////////
-//
-// File: worldfile.cc
-// Author: Andrew Howard
-// Date: 15 Nov 2001
-// Desc: A property handling class
-//
-// $Id: worldfile.cc,v 1.8 2002-02-07 00:45:38 rtv Exp $
-//
-///////////////////////////////////////////////////////////////////////////
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/*
+ * Desc: A class for reading in the world file.
+ * Author: Andrew Howard
+ * Date: 15 Nov 2001
+ * CVS info: $Id: worldfile.cc,v 1.9 2002-06-05 07:58:20 inspectorg Exp $
+ */
 
 #include <assert.h>
+#include <ctype.h>
 #include <errno.h>
 #include <libgen.h> // for dirname(3)
 #include <limits.h> // for PATH_MAX
@@ -23,21 +39,32 @@
 #include "stage_types.hh"
 #include "worldfile.hh"
 
+
+///////////////////////////////////////////////////////////////////////////
+// Useful macros for dumping parser errors
+#define TOKEN_ERR(z, l) \
+  PRINT_ERR2("world file %s:%d : " z, this->filename, l)
+#define PARSE_ERR(z, l) \
+  PRINT_ERR2("world file %s:%d : " z, this->filename, l)
+
+
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 CWorldFile::CWorldFile() 
 {
   this->filename = NULL;
 
-  // Create list to store section info
+  this->token_size = 0;
+  this->token_count = 0;
+  this->tokens = NULL;
+
   this->section_count = 0;
-  this->section_size = sizeof(this->sections) / sizeof(this->sections[0]);
-  memset(this->sections, 0, sizeof(this->sections));
-  
-  // Create list to store item info
+  this->section_size = 0;
+  this->sections = NULL;
+
   this->item_count = 0;
-  this->item_size = sizeof(this->items) / sizeof(this->items[0]);
-  memset(this->items, 0, sizeof(this->items));
+  this->item_size = 0;
+  this->items = NULL;
 
   // Set defaults units
   this->unit_length = 1.0;
@@ -49,15 +76,7 @@ CWorldFile::CWorldFile()
 // Destructor
 CWorldFile::~CWorldFile()
 {
-  // Delete values stored in the item list
-  for (int item = 0; item < this->item_count; item++)
-  {
-    CItem *pitem = this->items + item;
-    if (pitem->name)
-      free(pitem->name);
-    if (pitem->values)
-      delete pitem->values;
-  }
+  // TODO : clean up lists
 
   if (this->filename)
     free(this->filename);
@@ -109,58 +128,20 @@ bool CWorldFile::Load(const char *filename)
     return false;
   }
 
-  // Create a buffer to store the file
-  int buff_len = 0;
-  int buff_size = 0x1000000;
-  char *buff = new char[buff_size];
-
-  // Read the whole thing in;
-  // what the hell, memory is cheap!
-  fread(buff, buff_size, 1, file);
-  if (ferror(file))
-  {
-    PRINT_ERR2("error reading world file %s : %s",
-               this->filename, strerror(errno));
-    fclose(file);
+  // Read tokens from the file
+  if (!LoadTokens(file))
     return false;
-  }
-  else if (!feof(file))
-  {
-    PRINT_ERR2("world file %s is too large (> %dKB)",
-               this->filename, buff_size/1024);
-    fclose(file);
-    return false;
-  }
-  buff_len = ftell(file);
-  fclose(file);
 
-  // Create a list to put the tokens into
-  int token_count = 0;
-  int token_size = 65536;
-  char **tokens = new char*[token_size];
-
-  // Tokenize the buffer
-  if (!Tokenize(buff, buff_len, &token_count, token_size, tokens))
+  // Parse the tokens to identify sections
+  if (!ParseTokens())
   {
-    delete[] tokens;
-    delete[] buff;
+    DumpSections();
+    DumpItems();
     return false;
   }
 
-  // Parse the assembled tokens
-  if (!Parse(token_count, tokens))
-  {
-    delete[] tokens;
-    delete[] buff;
-    return false;
-  }
-
-  // Clean-up
-  delete[] tokens;
-  delete[] buff;
-
-  // Debugging
-  //DumpItems();
+  DumpSections();
+  DumpItems();
   
   // Work out what the length units are
   const char *unit = ReadString(0, "unit_length", "m");
@@ -186,6 +167,7 @@ bool CWorldFile::Load(const char *filename)
 // Save world to file
 bool CWorldFile::Save(const char *filename)
 {
+  /* TO DO
   // Debugging
   //DumpItems();
   
@@ -265,6 +247,7 @@ bool CWorldFile::Save(const char *filename)
   }
 
   fclose(file);
+  */
   return true;
 }
 
@@ -277,7 +260,7 @@ bool CWorldFile::WarnUnused()
   for (int item = 0; item < this->item_count; item++)
   {
     CItem *pitem = this->items + item;
-    if (pitem->property && !pitem->used)
+    if (!pitem->used)
     {
       unused = true;
       PRINT_WARN3("worldfile %s:%d : property [%s] is defined but not used",
@@ -289,231 +272,540 @@ bool CWorldFile::WarnUnused()
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Tokenize a line
-// Tokens are delimited by spaces.
-// Tuples are delimted by parentheses.
-// Eg "foo bar (1 2 3)" yields tokens "foo", "bar", "(" "1" "2" "3" ")".
-bool CWorldFile::Tokenize(char *buff, int buff_len,
-                          int *token_count, int token_size, char **tokens)
-
+// Load tokens from a file.
+bool CWorldFile::LoadTokens(FILE *file)
 {
-  int linecount = 1;
-  bool comment = false;
+  int ch;
+  int line;
+  char token[256];
   
-  assert(*token_count < token_size);
-  tokens[*token_count] = buff;
+  this->line_count = 1;
 
-  for (int i = 0; i < buff_len; i++)
+  while (true)
   {
-    assert(*token_count < token_size);
-
-    if (strchr(" \t\r", buff[i]))
+    ch = fgetc(file);
+    if (ch == EOF)
+      break;
+    
+    if ((char) ch == '#')
     {
-      if (!comment)
-      {
-        buff[i] = 0;
-        if (tokens[*token_count][0] != 0)
-          (*token_count)++;
-        tokens[*token_count] = buff + i;
-      }
+      ungetc(ch, file);
+      if (!LoadTokenComment(file))
+        return false;
     }
-    else if (strchr("\n", buff[i]))
+    else if (isalpha(ch))
     {
-      buff[i] = 0;
-      if (tokens[*token_count][0] != 0)
-        (*token_count)++;
-      tokens[*token_count] = "\n";
-      (*token_count)++;
-      tokens[*token_count] = buff + i;
-      comment = false;
+      ungetc(ch, file);
+      if (!LoadTokenWord(file))
+        return false;
     }
-    else if (strchr("#", buff[i]))
+    else if (strchr("+-.0123456789", ch))
     {
-      if (!comment)
-      {
-        buff[i] = 0;
-        if (tokens[*token_count][0] != 0)
-          (*token_count)++;
-        tokens[*token_count] = "#";
-        (*token_count)++;
-        if (i + 1 < buff_len)
-          tokens[*token_count] = buff + i + 1;
-        comment = true;
-      }
+      ungetc(ch, file);
+      if (!LoadTokenNum(file))
+        return false;
     }
-    else if (strchr("(", buff[i]))
+    else if (isblank(ch))
     {
-      if (!comment)
-      {
-        buff[i] = 0;
-        if (tokens[*token_count][0] != 0)
-          (*token_count)++;
-        tokens[*token_count] = "(";
-        (*token_count)++;
-        tokens[*token_count] = buff + i;
-      }
+      ungetc(ch, file);
+      if (!LoadTokenSpace(file))
+        return false;
     }
-    else if (strchr(")", buff[i]))
+    else if (ch == '"')
     {
-      if (!comment)
-      {
-        buff[i] = 0;
-        linecount++;
-        if (tokens[*token_count][0] != 0)
-          (*token_count)++;
-        tokens[*token_count] = ")";
-        (*token_count)++;
-        tokens[*token_count] = buff + i;
-      }
+      ungetc(ch, file);
+      if (!LoadTokenString(file))
+        return false;
     }
-    else if (tokens[*token_count][0] == 0)
-      tokens[*token_count] = buff + i;
+    else if (strchr("{", ch))
+    {
+      token[0] = ch;
+      token[1] = 0;
+      AddToken(TokenOpenSection, token);
+    }
+    else if (strchr("}", ch))
+    {
+      token[0] = ch;
+      token[1] = 0;
+      AddToken(TokenCloseSection, token);
+    }
+    else if (strchr("[", ch))
+    {
+      token[0] = ch;
+      token[1] = 0;
+      AddToken(TokenOpenTuple, token);
+    }
+    else if (strchr("]", ch))
+    {
+      token[0] = ch;
+      token[1] = 0;
+      AddToken(TokenCloseTuple, token);
+    }
+    else if (ch == '\n')
+    {
+      this->line_count++;
+      AddToken(TokenEOL, "\n");
+    }
   }
 
-  if (tokens[*token_count][0] != 0)
-    (*token_count)++;
-  
-  /* Dont remove!
   // Dump a token list for debugging
-  for (int i = 0; i < *token_count; i++)
+  DumpTokens();
+  
+  return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Read in a comment token
+bool CWorldFile::LoadTokenComment(FILE *file)
+{
+  char token[256];
+  int len;
+  int ch;
+
+  len = 0;
+  memset(token, 0, sizeof(token));
+  
+  while (true)
   {
-    if (tokens[i][0] == '\n')
-      printf("[\\n]\n");
+    ch = fgetc(file);
+
+    if (ch == EOF)
+    {
+      AddToken(TokenComment, token);
+      return true;
+    }
+    else if (ch == '\n')
+    {
+      ungetc(ch, file);
+      AddToken(TokenComment, token);
+      return true;
+    }
     else
-      printf("[%s] ", tokens[i]);
+      token[len++] = ch;
+  }
+  return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Read in a word token
+bool CWorldFile::LoadTokenWord(FILE *file)
+{
+  char token[256];
+  int len;
+  int ch;
+  
+  len = 0;
+  memset(token, 0, sizeof(token));
+  
+  while (true)
+  {
+    ch = fgetc(file);
+
+    if (ch == EOF)
+    {
+      AddToken(TokenWord, token);
+      return true;
+    }
+    else if (isalpha(ch) || isdigit(ch) || strchr("_", ch))
+    {
+      token[len++] = ch;
+    }
+    else
+    {
+      AddToken(TokenWord, token);
+      ungetc(ch, file);
+      return true;
+    }
+  }
+  assert(false);
+  return false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Read in a number token
+bool CWorldFile::LoadTokenNum(FILE *file)
+{
+  char token[256];
+  int len;
+  int ch;
+  
+  len = 0;
+  memset(token, 0, sizeof(token));
+  
+  while (true)
+  {
+    ch = fgetc(file);
+
+    if (ch == EOF)
+    {
+      AddToken(TokenNum, token);
+      return true;
+    }
+    else if (strchr("+-.0123456789", ch))
+    {
+      token[len++] = ch;
+    }
+    else
+    {
+      AddToken(TokenNum, token);
+      ungetc(ch, file);
+      return true;
+    }
+  }
+  assert(false);
+  return false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Read in a string token
+bool CWorldFile::LoadTokenString(FILE *file)
+{
+  int ch;
+  int len;
+  char token[256];
+  
+  len = 0;
+  memset(token, 0, sizeof(token));
+
+  ch = fgetc(file);
+      
+  while (true)
+  {
+    ch = fgetc(file);
+
+    if (ch == EOF || ch == '\n')
+    {
+      TOKEN_ERR("unterminated string constant", this->line_count);
+      return false;
+    }
+    else if (ch == '"')
+    {
+      AddToken(TokenString, token);
+      return true;
+    }
+    else
+    {
+      token[len++] = ch;
+    }
+  }
+  assert(false);
+  return false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Read in a whitespace token
+bool CWorldFile::LoadTokenSpace(FILE *file)
+{
+  int ch;
+  int len;
+  char token[256];
+  
+  len = 0;
+  memset(token, 0, sizeof(token));
+  
+  while (true)
+  {
+    ch = fgetc(file);
+
+    if (ch == EOF)
+    {
+      AddToken(TokenSpace, token);
+      return true;
+    }
+    else if (isblank(ch))
+    {
+      token[len++] = ch;
+    }
+    else
+    {
+      AddToken(TokenSpace, token);
+      ungetc(ch, file);
+      return true;
+    }
+  }
+  assert(false);
+  return false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Add a token to the token list
+bool CWorldFile::AddToken(int type, const char *value)
+{
+  if (this->token_count >= this->token_size)
+  {
+    this->token_size += 1000;
+    this->tokens = (CToken*) realloc(this->tokens, this->token_size * sizeof(this->tokens[0]));
+  }
+
+  this->tokens[this->token_count].type = type;
+  this->tokens[this->token_count].value = strdup(value);
+  this->token_count++;
+  
+  return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Set a token value in the token list
+bool CWorldFile::SetTokenValue(int index, const char *value)
+{
+  assert(index >= 0 && index < this->token_count);
+
+  free(this->tokens[index].value);
+  this->tokens[index].value = strdup(value);
+  
+  return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Get the value of a token
+const char *CWorldFile::GetTokenValue(int index)
+{
+  assert(index >= 0 && index < this->token_count);
+
+  return this->tokens[index].value;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Dump the token list (for debugging).
+void CWorldFile::DumpTokens()
+{
+  int line;
+
+  line = 1;
+  printf("\n%4d : ", line);
+  for (int i = 0; i < this->token_count; i++)
+  {
+    if (this->tokens[i].value[0] == '\n')
+      printf("[\\n]\n%4d : ", ++line);
+    else
+      printf("[%s] ", this->tokens[i].value);
   }
   printf("\n");
-  */
-
-  return token_count;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// A useful macro for dumping parser errors
-#define PARSE_ERR(z) \
-{\
-  PRINT_ERR2("world file %s:%d : " z, this->filename, linecount);\
-  return false;\
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Parse tokens
-bool CWorldFile::Parse(int token_count, char **tokens)
+// Parse tokens into sections and items.
+bool CWorldFile::ParseTokens()
 {
-  int linecount = 1;
-  int lineitems = 0;
-  int item = -1;
-  int indent = 0;
-  int section = AddSection(-1, indent);
-    
-  for (int i = 0; i < token_count;)
+  int i;
+  CToken *token;
+
+  // Add in the "global" section.
+  AddSection(-1, "");
+  
+  this->line_count = 1;
+  
+  for (i = 0; i < this->token_count; i++)
   {
-    // End-of-line
-    // We preserve blank lines,
-    // and check that there is only one item on each line.
-    if (tokens[i][0] == '\n')
+    token = this->tokens + i;
+
+    switch (token->type)
     {
-      if (lineitems == 0)
-        item = AddItem(linecount, section, tokens[i], false);
-      else if (lineitems > 1)
-        PARSE_ERR("garbage at end of line");
-      linecount++;
-      lineitems = 0;
-      i++;
-    }
-
-    // Comment
-    else if (tokens[i][0] == '#')
-    {
-      lineitems++;
-      item = AddItem(linecount, section, tokens[i++], false);
-      if (i < token_count)
-        SetItemValue(item, 0, tokens[i++]);
-    }
-
-    // Begin-block
-    else if (strcmp(tokens[i], "begin") == 0)
-    {
-      lineitems++;
-      indent++;
-      section = AddSection(section, indent);
-      item = AddItem(linecount, section, tokens[i++], false);
-      if (i >= token_count)
-        PARSE_ERR("missing type specifier");
-      char *type = tokens[i++];
-      SetItemValue(item, 0, type);
-    }
-
-    // End-block
-    else if (strcmp(tokens[i], "end") == 0)
-    {
-      lineitems++;
-      indent--;
-      item = AddItem(linecount, section, tokens[i++], false);
-      section = GetSectionParent(section);
-      if (section < 0)
-        PARSE_ERR("misplaced 'end'");
-    }
-
-    // Everything else is a <name> <value> pair
-    else
-    {
-      lineitems++;
-      char *name = tokens[i++];
-      item = AddItem(linecount, section, name, true);
-
-      if (i >= token_count)
-        PARSE_ERR("incomplete statement");
-      char *value = tokens[i++];
-
-      // If the value not a tuple,
-      // Just add a simple item.
-      if (strcmp(value, "(") != 0)
-      {
-        if (strcmp(value, ")") == 0)
-          PARSE_ERR("misplaced ')'");
-        if (strcmp(value, "\n") == 0 || strcmp(value, "#") == 0)
-          PARSE_ERR("incomplete statement");
-        SetItemValue(item, 0, value);
-      }
-
-      // Otherwise add a tuple
-      // This means reading up to and including the close paren.
-      else
-      {
-        int index = 0;
-        while (i < token_count)
-        {
-          value = tokens[i++];
-          if (strcmp(value, ")") == 0)
-            break;
-          if (strcmp(value, "(") == 0)
-            PARSE_ERR("nested '(' is not allowed");
-          if (strcmp(value, "\n") == 0 || strcmp(value, "#") == 0)
-            PARSE_ERR("incomplete statement");
-          SetItemValue(item, index++, value);
-        }
-      }     
+      case TokenWord:
+        if (!ParseTokenWord(0, &i))
+          return false;
+      case TokenComment:
+        break;
+      case TokenSpace:
+        break;
+      case TokenEOL:
+        this->line_count++;
+        break;
+      default:
+        printf("%d %s\n", token->type, token->value);
+        PARSE_ERR("syntax error 1", this->line_count);
+        return false;
     }
   }
-    
+  return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Parse something starting with a word; could be a section or an item.
+bool CWorldFile::ParseTokenWord(int section, int *index)
+{
+  int i;
+  CToken *token;
+
+  for (i = *index + 1; i < this->token_count; i++)
+  {
+    token = this->tokens + i;
+
+    switch (token->type)
+    {
+      case TokenComment:
+        break;
+      case TokenSpace:
+        break;
+      case TokenEOL:
+        this->line_count++;
+        break;
+      case TokenOpenSection:
+        return ParseTokenSection(section, index);
+      case TokenNum:
+      case TokenString:
+      case TokenOpenTuple:
+        return ParseTokenItem(section, index);
+      default:
+        printf("%d %s\n", token->type, token->value);
+        PARSE_ERR("syntax error 2", this->line_count);
+        return false;
+    }
+  }
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Parse a section from the token list.
+bool CWorldFile::ParseTokenSection(int section, int *index)
+{
+  int i;
+  int name;
+  CToken *token;
+
+  name = *index;
+  
+  for (i = *index + 1; i < this->token_count; i++)
+  {
+    token = this->tokens + i;
+
+    switch (token->type)
+    {
+      case TokenOpenSection:
+        section = AddSection(section, GetTokenValue(name));
+        break;
+      case TokenWord:
+        if (!ParseTokenWord(section, &i))
+          return false;
+        break;
+      case TokenCloseSection:
+        *index = i;
+        return true;
+      case TokenComment:
+        break;
+      case TokenSpace:
+        break;
+      case TokenEOL:
+        this->line_count++;
+        break;
+      default:
+        printf("%d %s\n", token->type, token->value);
+        PARSE_ERR("syntax error 3", this->line_count);
+        return false;
+    }
+  }
+  return false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Parse an item from the token list.
+bool CWorldFile::ParseTokenItem(int section, int *index)
+{
+  int i, item;
+  int name, value, count;
+  CToken *token;
+
+  name = *index;
+  value = -1;
+  count = 0;
+  
+  for (i = *index + 1; i < this->token_count; i++)
+  {
+    token = this->tokens + i;
+
+    switch (token->type)
+    {
+      case TokenNum:
+        item = AddItem(section, GetTokenValue(name));
+        AddItemValue(item, 0, i);
+        *index = i;
+        return true;
+      case TokenString:
+        item = AddItem(section, GetTokenValue(name));
+        AddItemValue(item, 0, i);
+        *index = i;
+        return true;
+      case TokenOpenTuple:
+        item = AddItem(section, GetTokenValue(name));
+        if (!ParseTokenTuple(section, item, &i))
+          return false;
+        *index = i;
+        return true;
+      case TokenSpace:
+        break;
+      default:
+        PARSE_ERR("syntax error 4", this->line_count);
+        return false;
+    }
+  }
+  return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Parse a tuple.
+bool CWorldFile::ParseTokenTuple(int section, int item, int *index)
+{
+  int i, count;
+  CToken *token;
+
+  count = 0;
+  
+  for (i = *index + 1; i < this->token_count; i++)
+  {
+    token = this->tokens + i;
+
+    switch (token->type)
+    {
+      case TokenNum:
+        AddItemValue(item, count++, i);
+        *index = i;
+        break;
+      case TokenString:
+        AddItemValue(item, count++, i);
+        *index = i;
+        break;
+      case TokenCloseTuple:
+        *index = i;
+        return true;
+      case TokenSpace:
+        break;
+      default:
+        PARSE_ERR("syntax error 5", this->line_count);
+        return false;
+    }
+  }
   return true;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Add a section
-int CWorldFile::AddSection(int parent, int indent)
+int CWorldFile::AddSection(int parent, const char *name)
 {
-  assert(this->section_count < this->section_size);
+  if (this->section_count >= this->section_size)
+  {
+    this->section_size += 100;
+    this->sections = (CSection*)
+      realloc(this->sections, this->section_size * sizeof(this->sections[0]));
+  }
 
-  // Add into section list
-  int section = this->section_count++;
-  CSection *psection = this->sections + section;
-  psection->parent = parent;
-  psection->indent = indent;
+  int section = this->section_count;
+  this->sections[section].parent = parent;
+  this->sections[section].name = name;
+  this->section_count++;
 
   return section;
 }
@@ -543,7 +835,8 @@ const char *CWorldFile::GetSectionType(int section)
 {
   if (section < 0 || section >= this->section_count)
     return NULL;
-  return ReadString(section, "begin", "");
+
+  return this->sections[section].name;
 }
 
 
@@ -562,29 +855,68 @@ int CWorldFile::LookupSection(const char *type)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Add an item
-int CWorldFile::AddItem(int line, int section, const char *name, bool property)
+// Dump the section list for debugging
+void CWorldFile::DumpSections()
 {
-  assert(this->item_count < this->item_size);
-  int item = this->item_count;
+  printf("section list:\n");
+  for (int i = 0; i < this->section_count; i++)
+  {
+    CSection *section = this->sections + i;
 
-  CItem *pitem = this->items + item;
-  memset(pitem, 0, sizeof(CItem));
-  pitem->line = line;
-  pitem->property = property;
-  pitem->used = false;
-  pitem->section = section;
-  pitem->name = strdup(name);
-  pitem->value_count = 0;
-  pitem->value_size = 0;
-  pitem->values = NULL;
-
-  this->item_count++;
-
-  return item;
+    printf("[%d][%d]", i, section->parent);
+    printf("[%s]\n", section->name);
+  }
 }
 
 
+///////////////////////////////////////////////////////////////////////////
+// Add an item
+int CWorldFile::AddItem(int section, const char *name)
+{
+  if (this->item_count >= this->item_size)
+  {
+    this->item_size += 100;
+    this->items = (CItem*)
+      realloc(this->items, this->item_size * sizeof(this->items[0]));
+  }
+
+  int i = this->item_count;
+
+  CItem *item = this->items + i;
+  memset(item, 0, sizeof(CItem));
+  item->section = section;
+  item->name = name;
+  item->value_count = 0;
+  item->values = NULL;
+  //TODO item->line = line;
+  item->used = false;
+
+  this->item_count++;
+
+  return i;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Add an item value
+void CWorldFile::AddItemValue(int item, int index, int value_token)
+{
+  assert(item >= 0);
+  CItem *pitem = this->items + item;
+
+  // Expand the array if it's too small
+  if (index >= pitem->value_count)
+  {
+    pitem->value_count = index + 1;
+    pitem->values = (int*) realloc(pitem->values, pitem->value_count * sizeof(int));
+  }
+
+  // Set the relevant value
+  pitem->values[index] = value_token;
+}
+
+
+/* REMOVE?
 ///////////////////////////////////////////////////////////////////////////
 // Insert an item
 int CWorldFile::InsertItem(int section, const char *name)
@@ -622,18 +954,21 @@ int CWorldFile::InsertItem(int section, const char *name)
 
   return item;
 }
+*/
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Get an item 
 int CWorldFile::GetItem(int section, const char *name)
 {
-  // First see if we can find an instance of this item
-  for (int item = 0; item < this->item_count; item++)
+  // Find first instance of item
+  for (int i = 0; i < this->item_count; i++)
   {
-    CItem *pitem = this->items + item;
-    if (pitem->section == section && strcmp(pitem->name, name) == 0)
-        return item;
+    CItem *item = this->items + i;
+    if (item->section != section)
+      continue;
+    if (strcmp(item->name, name) == 0)
+      return i;
   }
   return -1;
 }
@@ -643,31 +978,12 @@ int CWorldFile::GetItem(int section, const char *name)
 // Set the value of an item
 void CWorldFile::SetItemValue(int item, int index, const char *value)
 {
-  assert(item >= 0);
+  assert(item >= 0 && item < this->item_count);
   CItem *pitem = this->items + item;
-
-  // Expand the array if it's too small
-  if (index >= pitem->value_size)
-  {
-    int tmpsize = pitem->value_size + 2;
-    char **tmp = new char*[tmpsize];
-    memset(tmp, 0, tmpsize * sizeof(pitem->values[0]));
-    if (pitem->values)
-    {
-      memmove(tmp, pitem->values, pitem->value_count * sizeof(pitem->values[0]));
-      delete[] pitem->values;
-    }
-    pitem->values = tmp;
-    pitem->value_size = tmpsize;
-  }
+  assert(index >= 0 && index < pitem->value_count);
 
   // Set the relevant value
-  assert(index < pitem->value_size);
-  if (index >= pitem->value_count)
-    pitem->value_count = index + 1;
-  if (pitem->values[index])
-    free(pitem->values[index]);
-  pitem->values[index] = strdup(value);  
+  SetTokenValue(pitem->values[index], value);
 }
 
 
@@ -677,9 +993,9 @@ const char *CWorldFile::GetItemValue(int item, int index)
 {
   assert(item >= 0);
   CItem *pitem = this->items + item;
-  assert(index < pitem->value_size);
+  assert(index < pitem->value_count);
   pitem->used = true;
-  return pitem->values[index];
+  return GetTokenValue(pitem->values[index]);
 }
 
 
@@ -687,26 +1003,18 @@ const char *CWorldFile::GetItemValue(int item, int index)
 // Dump the item list for debugging
 void CWorldFile::DumpItems()
 {
-  for (int item = 0; item < this->item_count; item++)
+  printf("item list:\n");
+  for (int i = 0; i < this->item_count; i++)
   {
-    CItem *pitem = this->items + item;
-
-    printf("[%d][%d]", pitem->section, GetSectionParent(pitem->section));
-    if (pitem->name[0] == '\n')
-      printf("[\\n][");
-    else
-      printf("[%s][", pitem->name);
-
-    for (int index = 0; index < pitem->value_count; index++)
-    {
-      if (index > 0)
-        printf(" ");
-      if (pitem->values[index][0] == '\n')
-        printf("\\n");
-      else
-        printf("%s", pitem->values[index]);
-    }
-    printf("]\n");
+    CItem *item = this->items + i;
+    CSection *section = this->sections + item->section;
+    
+    printf("[%d]", item->section);
+    printf("[%s]", section->name);
+    printf("[%s]", item->name);
+    for (int j = 0; j < item->value_count; j++)
+      printf("[%s]", GetTokenValue(item->values[j]));
+    printf("\n");
   }
 }
 
@@ -727,8 +1035,10 @@ const char *CWorldFile::ReadString(int section, const char *name, const char *va
 void CWorldFile::WriteString(int section, const char *name, const char *value)
 {
   int item = GetItem(section, name);
+  /* TODO
   if (item < 0)
     item = InsertItem(section, name);
+  */
   SetItemValue(item, 0, value);  
 }
 
@@ -859,8 +1169,10 @@ void CWorldFile::WriteTupleString(int section, const char *name,
                                   int index, const char *value)
 {
   int item = GetItem(section, name);
+  /* TODO
   if (item < 0)
     item = InsertItem(section, name);
+  */
   SetItemValue(item, index, value);  
 }
 
