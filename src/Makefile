@@ -27,7 +27,9 @@ PLAYER_INC = $(PLAYER_DIR)/include
 PLAYER_LIB = $(PLAYER_DIR)/lib
 RTK_DIR = ../rtk
 RTK_INC = $(RTK_DIR)/include
-RTK_LIB = $(RTK_DIR)/lib
+# added src because lib doesn't get included in the distro
+#	BPG
+RTK_LIB = $(RTK_DIR)/lib $(RTK_LIB)/src
 
 
 ##############################################################################
