@@ -5,7 +5,7 @@
 // Date: 15 Nov 2001
 // Desc: Class for handling world files
 //
-// $Id: worldfile.hh,v 1.5 2002-01-16 20:22:07 gerkey Exp $
+// $Id: worldfile.hh,v 1.6 2002-01-29 00:46:54 gerkey Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -165,12 +165,13 @@ public: char *Filename( void ) { return( filename ); };
   // Section list
   private: int section_size;
   private: int section_count;
-  private: CSection sections[1000];
+  private: CSection sections[2500];
 
   // Item list
   private: int item_size;
   private: int item_count;
-  private: CItem items[4000];
+  //private: CItem items[4000];
+  private: CItem items[10000];
 
   // Conversion units
   private: double unit_length;
