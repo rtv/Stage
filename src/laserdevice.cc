@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.1 $
+//  $Author: vaughan $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -24,11 +24,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
+#include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
 
 #include "world.h"
 #include "robot.h"
 #include "laserdevice.hh"
-
 
 
 ///////////////////////////////////////////////////////////////////////////
