@@ -358,6 +358,7 @@ void model_update_cb( gpointer key, gpointer value, gpointer user )
   model_update( (model_t*)value );
 }
 
+/*
 int model_service( model_t* mod )
 {
   PRINT_DEBUG1( "default service method mod %d", mod->id );
@@ -368,6 +369,7 @@ int model_service( model_t* mod )
 
   return 0;
 }
+*/
 
 int model_startup( model_t* mod )
 {

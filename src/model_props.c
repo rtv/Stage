@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -160,13 +160,13 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
       *len = sizeof(stg_geom_t);
       break;
     case STG_PROP_DATA: 
-      assert( model_get_data( mod, data, len ) == 0 );
+      *data = model_get_data( mod, len );
       break;
     case STG_PROP_COMMAND: 
-      assert( model_get_command( mod, data, len ) == 0 );
+      *data = model_get_command( mod, len );
       break;
     case STG_PROP_CONFIG: 
-      assert( model_get_config( mod, data, len ) == 0 );
+      *data = model_get_config( mod, len );
       break;      
       
       // TODO -  more props here
@@ -193,24 +193,6 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
 //
 
 
-
-int model_get_data( model_t* mod, void** data, size_t* len )
-{
-  // if this type of model has a getdata function, call it.
-  if( derived[ mod->type ].getdata )
-    {
-      derived[ mod->type ].getdata(mod, data, len);
-      PRINT_DEBUG1( "used special getdata, returned %d bytes", (int)*len );
-    }
-  else
-    { // we do a generic data copy
-      *data = mod->data;
-      *len = mod->data_len; 
-      PRINT_DEBUG3( "model %d(%s) generic getdata, returned %d bytes", 
-		   mod->id, mod->token, (int)*len );
-    }
-  return 0; //ok
-}
 
 int _set_data( model_t* mod, void* data, size_t len )
 {
@@ -247,11 +229,11 @@ int _set_cfg( model_t* mod, void* cfg, size_t len )
 
 int model_set_data( model_t* mod, void* data, size_t len )
 {
-  // if this type of model has a putdata function, call it.
-  if( derived[ mod->type ].putdata )
+  // if this type of model has a set_data function, call it.
+  if( derived[ mod->type ].set_data )
     {
-      derived[ mod->type ].putdata(mod, data, len);
-      PRINT_DEBUG1( "used special putdata returned %d bytes", (int)len );
+      derived[ mod->type ].set_data(mod, data, len);
+      PRINT_DEBUG1( "used special set_data returned %d bytes", (int)len );
     }
   else
     _set_data( mod, data, len );
@@ -262,10 +244,10 @@ int model_set_data( model_t* mod, void* data, size_t len )
 int model_set_command( model_t* mod, void* cmd, size_t len )
 {
   // if this type of model has a putcommand function, call it.
-  if( derived[ mod->type ].putcommand )
+  if( derived[ mod->type ].set_command )
     {
-      derived[ mod->type ].putcommand(mod, cmd, len);
-      PRINT_DEBUG1( "used special putcommand, put %d bytes", (int)len );
+      derived[ mod->type ].set_command(mod, cmd, len);
+      PRINT_DEBUG1( "used special set_command, put %d bytes", (int)len );
     }
   else
     _set_cmd( mod, cmd, len );    
@@ -276,9 +258,9 @@ int model_set_command( model_t* mod, void* cmd, size_t len )
 int model_set_config( model_t* mod, void* config, size_t len )
 {
   // if this type of model has a putconfig function, call it.
-  if( derived[ mod->type ].putconfig )
+  if( derived[ mod->type ].set_config )
     {
-      derived[ mod->type ].putconfig(mod, config, len);
+      derived[ mod->type ].set_config(mod, config, len);
       PRINT_DEBUG1( "used special putconfig returned %d bytes", (int)len );
     }
   else
@@ -288,40 +270,68 @@ int model_set_config( model_t* mod, void* config, size_t len )
 }
 
 
-int model_get_command( model_t* mod, void** command, size_t* len )
+void* model_get_data( model_t* mod, size_t* len )
 {
-  // if this type of model has a getcommand function, call it.
-  if( derived[ mod->type ].getcommand )
-    {
-      derived[ mod->type ].getcommand(mod, command, len);
-      PRINT_DEBUG1( "used special getcommand, returned %d bytes", (int)*len );
-    }
-  else
-    { // we do a generic command copy
-      *command = mod->cmd;
-      *len = mod->cmd_len; 
-      PRINT_DEBUG1( "used generic getcommand, returned %d bytes", (int)*len );
-    }
-  return 0; //ok
-}
+  void* data = NULL; 
 
-
-int model_get_config( model_t* mod, void** config, size_t* len )
-{
-  // if this type of model has an getconfig function, call it.
-  if( derived[ mod->type ].getconfig )
+  // if this type of model has a getdata function, call it.
+  if( derived[ mod->type ].get_data )
     {
-      derived[ mod->type ].getconfig(mod, config, len);
-      PRINT_DEBUG1( "used special getconfig returned %d bytes", (int)*len );
+      data = derived[ mod->type ].get_data(mod, len);
+      PRINT_DEBUG1( "used special get_data, returned %d bytes", (int)*len );
     }
   else
     { // we do a generic data copy
-      *config = mod->cfg;
-      *len = mod->cfg_len; 
-      PRINT_DEBUG3( "model %d(%s) generic getconfig, returned %d bytes", 
+      data = mod->data;
+      *len = mod->data_len; 
+      PRINT_DEBUG3( "model %d(%s) generic get_data, returned %d bytes", 
 		   mod->id, mod->token, (int)*len );
     }
-  return 0; //ok
+
+  return data;
+}
+
+
+void* model_get_command( model_t* mod, size_t* len )
+{
+  void* command = NULL;
+  
+  // if this type of model has a getcommand function, call it.
+  if( derived[ mod->type ].get_command )
+    {
+      command = derived[ mod->type ].get_command(mod, len);
+      PRINT_DEBUG1( "used special get_command, returned %d bytes", (int)*len );
+    }
+  else
+    { // we do a generic command copy
+      command = mod->cmd;
+      *len = mod->cmd_len; 
+      PRINT_DEBUG1( "used generic get_command, returned %d bytes", (int)*len );
+    }
+
+  return command; 
+}
+
+
+void* model_get_config( model_t* mod, size_t* len )
+{
+  void* config = NULL;
+  
+  // if this type of model has an getconfig function, call it.
+  if( derived[ mod->type ].get_config )
+    {
+      config = derived[ mod->type ].get_config(mod, len);
+      PRINT_DEBUG1( "used special get_config returned %d bytes", (int)*len );
+    }
+  else
+    { // we do a generic data copy
+      config = mod->cfg;
+      *len = mod->cfg_len; 
+      PRINT_DEBUG3( "model %d(%s) generic get_config, returned %d bytes", 
+		   mod->id, mod->token, (int)*len );
+    }
+
+  return config; 
 }
 
 //------------------------------------------------------------------------

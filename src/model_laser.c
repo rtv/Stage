@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.33 $
+//  $Revision: 1.34 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -292,7 +292,7 @@ void laser_render_config( model_t* mod, stg_laser_config_t* cfg )
 		       mina, maxa );      
 }
 
-int laser_putdata( model_t* mod, void* data, size_t len )
+int laser_set_data( model_t* mod, void* data, size_t len )
 {
   PRINT_DEBUG( "laser putdata" );
   
@@ -303,7 +303,7 @@ int laser_putdata( model_t* mod, void* data, size_t len )
   laser_render_data( mod, data, len );
 }
 
-int laser_putconfig( model_t* mod, void* cfg, size_t len )
+int laser_set_config( model_t* mod, void* cfg, size_t len )
 {
   PRINT_DEBUG( "laser putconfig" );
   
@@ -328,13 +328,10 @@ int laser_shutdown( model_t* mod )
 int register_laser( void )
 {
   register_init( STG_MODEL_LASER, laser_init );
-
-  register_putdata( STG_MODEL_LASER, laser_putdata );
-  //register_startup( STG_MODEL_LASER, laser_startup );
-  register_shutdown( STG_MODEL_LASER, laser_shutdown );
-  //register_getdata( STG_MODEL_LASER, laser_getdata );
-  register_putconfig( STG_MODEL_LASER, laser_putconfig );
   register_update( STG_MODEL_LASER, laser_update );
+  register_shutdown( STG_MODEL_LASER, laser_shutdown );
+  register_set_config( STG_MODEL_LASER, laser_set_config );
+  register_set_data( STG_MODEL_LASER, laser_set_data );
 
   return 0; //ok
 } 

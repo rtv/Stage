@@ -63,6 +63,6 @@ int register_test( void )
   register_startup( STG_MODEL_TEST, test_startup );
   register_shutdown( STG_MODEL_TEST, test_shutdown );
   //register_getdata( STG_MODEL_TEST, test_getdata );
-  register_putcommand( STG_MODEL_TEST, test_putcommand );
+  register_set_command( STG_MODEL_TEST, test_putcommand );
   register_update( STG_MODEL_TEST, test_update );
 } 

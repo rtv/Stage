@@ -43,35 +43,35 @@ void register_update( stg_model_type_t type, func_update_t func )
   derived[type].update = func;
 }
 
-void register_getdata( stg_model_type_t type, func_getdata_t func )
+void register_get_data( stg_model_type_t type, func_get_data_t func )
 {
-  derived[type].getdata = func;
+  derived[type].get_data = func;
 }
 
-void register_putdata( stg_model_type_t type, func_putdata_t func )
+void register_set_data( stg_model_type_t type, func_set_data_t func )
 {
-  derived[type].putdata = func;
-}
-
-
-void register_getcommand( stg_model_type_t type, func_getcommand_t func )
-{
-  derived[type].getcommand = func;
-}
-
-void register_putcommand( stg_model_type_t type, func_putcommand_t func )
-{
-  derived[type].putcommand = func;
+  derived[type].set_data = func;
 }
 
 
-void register_putconfig( stg_model_type_t type, func_putconfig_t func )
+void register_get_command( stg_model_type_t type, func_get_command_t func )
 {
-  derived[type].putconfig = func;
+  derived[type].get_command = func;
 }
 
-void register_getconfig( stg_model_type_t type, func_getconfig_t func )
+void register_set_command( stg_model_type_t type, func_set_command_t func )
 {
-  derived[type].getconfig = func;
+  derived[type].set_command = func;
+}
+
+
+void register_set_config( stg_model_type_t type, func_set_config_t func )
+{
+  derived[type].set_config = func;
+}
+
+void register_get_config( stg_model_type_t type, func_get_config_t func )
+{
+  derived[type].get_config = func;
 }
 

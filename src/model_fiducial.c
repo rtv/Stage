@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.12 $
+//  $Revision: 1.13 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -29,10 +29,10 @@ void fiducial_init( model_t* mod )
   model_set_data( mod, NULL, 0 );
 
   stg_fiducial_config_t newfc; // init a basic config
-  newfc.min_range = 0.0;
-  newfc.max_range_anon = 5.0;
-  newfc.max_range_id = 5.0;
-  newfc.fov = M_PI;
+  newfc.min_range = STG_DEFAULT_FIDUCIAL_RANGEMIN;
+  newfc.max_range_anon = STG_DEFAULT_FIDUCIAL_RANGEMAXANON;
+  newfc.max_range_id = STG_DEFAULT_FIDUCIAL_RANGEMAXID;
+  newfc.fov = STG_DEFAULT_FIDUCIAL_FOV;
   
   model_set_config( mod, &newfc, sizeof(newfc) );
 }
@@ -66,6 +66,11 @@ int fiducial_set_config( model_t* mod, void* config, size_t len )
   return 0; //OK
 }
  
+int fiducial_shutdown( model_t* mod )
+{
+  // this will undrender the data
+  model_set_data( mod, NULL, 0 );
+}
 
 
 typedef struct 
@@ -179,7 +184,8 @@ int fiducial_update( model_t* mod )
   mfb.mod = mod;
   
   size_t len;
-  model_get_config( mod, (void**)&mfb.cfg, &len );
+  mfb.cfg = model_get_config( mod, &len );
+  assert(len==sizeof(stg_fiducial_config_t));
 
   mfb.fiducials = g_array_new( FALSE, TRUE, sizeof(stg_fiducial_t) );
   model_global_pose( mod, &mfb.pose );
@@ -217,9 +223,7 @@ void fiducial_render_data( model_t* mod )
   rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_COLOR ) );
   
   size_t len;
-  stg_fiducial_t* fids = NULL;
-  
-  model_get_data(mod, (void**)&fids, &len);
+  stg_fiducial_t* fids = model_get_data(mod, &len);
   
   int bcount = len / sizeof(stg_fiducial_t);
   
@@ -263,9 +267,7 @@ void fiducial_render_config( model_t* mod )
   rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_CFG_COLOR ));
   
   size_t len;
-  stg_fiducial_config_t* cfg;
-  
-  model_get_config(mod,(void**)&cfg,&len);
+  stg_fiducial_config_t* cfg = model_get_config(mod,&len);
   
   if( cfg )
     { 
@@ -301,9 +303,10 @@ void fiducial_render_config( model_t* mod )
 int register_fiducial( void )
 {
   register_init( STG_MODEL_FIDUCIAL, fiducial_init );
-  register_putdata( STG_MODEL_FIDUCIAL, fiducial_set_data );
-  register_putconfig( STG_MODEL_FIDUCIAL, fiducial_set_config );
+  register_set_data( STG_MODEL_FIDUCIAL, fiducial_set_data );
+  register_set_config( STG_MODEL_FIDUCIAL, fiducial_set_config );
   register_update( STG_MODEL_FIDUCIAL, fiducial_update );
+  register_shutdown( STG_MODEL_FIDUCIAL, fiducial_shutdown );
 
   return 0; //ok
 } 

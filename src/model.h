@@ -84,22 +84,22 @@ typedef struct _model
 
 
 typedef void(*func_init_t)(model_t*);
-typedef int(*func_set_t)(model_t*,void*,size_t);
-typedef void*(*func_get_t)(model_t*,size_t*);
 typedef int(*func_update_t)(model_t*);
-typedef int(*func_service_t)(model_t*);
 typedef int(*func_startup_t)(model_t*);
 typedef int(*func_shutdown_t)(model_t*);
 
-typedef int(*func_putcommand_t)(model_t*,void*,size_t);
-typedef int(*func_putdata_t)(model_t*,void*,size_t);
-typedef int(*func_putconfig_t)(model_t*,void*,size_t);
+typedef int(*func_set_command_t)(model_t*,void*,size_t);
+typedef int(*func_set_data_t)(model_t*,void*,size_t);
+typedef int(*func_set_config_t)(model_t*,void*,size_t);
 
-typedef int(*func_getcommand_t)(model_t*,void**,size_t*);
-typedef int(*func_getdata_t)(model_t*,void**,size_t*);
-typedef int(*func_getconfig_t)(model_t*,void**,size_t*);
+typedef void*(*func_get_command_t)(model_t*,size_t*);
+typedef void*(*func_get_data_t)(model_t*,size_t*);
+typedef void*(*func_get_config_t)(model_t*,size_t*);
 
-typedef int(*func_request_t)(model_t*);
+//typedef int(*func_set_t)(model_t*,void*,size_t);
+//typedef void*(*func_get_t)(model_t*,size_t*);
+//typedef int(*func_service_t)(model_t*);
+//typedef int(*func_request_t)(model_t*);
 
 typedef struct
 {
@@ -107,18 +107,18 @@ typedef struct
   func_startup_t startup;
   func_shutdown_t shutdown;
   func_update_t update;
-  func_service_t service;
-  func_get_t get;
-  func_set_t set;
 
-  func_getdata_t getdata;
-  func_putdata_t putdata;
-  func_putcommand_t putcommand;
-  func_getcommand_t getcommand;
-  func_putconfig_t putconfig;
-  func_getconfig_t getconfig;
+  func_get_data_t get_data;
+  func_set_data_t set_data;
+  func_set_command_t set_command;
+  func_get_command_t get_command;
+  func_set_config_t set_config;
+  func_get_config_t get_config;
 
-  func_request_t request;
+  //func_service_t service;
+  //func_get_t get;
+  //func_set_t set;
+  //func_request_t request;
 } lib_entry_t;
 
 
@@ -173,10 +173,9 @@ int _set_data( model_t* mod, void* data, size_t len );
 int _set_cmd( model_t* mod, void* cmd, size_t len );
 int _set_cfg( model_t* mod, void* cfg, size_t len );
 
-int model_get_command( model_t* mod, void** cmd, size_t* len );
-int model_get_data( model_t* mod, void** data, size_t* len );
-int model_get_config( model_t* mod, void** cmd, size_t* len );
-
+void* model_get_command( model_t* mod, size_t* len );
+void* model_get_data( model_t* mod, size_t* len );
+void* model_get_config( model_t* mod, size_t* len );
 
 int model_update( model_t* model );
 void model_update_cb( gpointer key, gpointer value, gpointer user );
@@ -199,15 +198,16 @@ void register_init( stg_model_type_t type, func_init_t func );
 void register_startup( stg_model_type_t type, func_startup_t func );
 void register_shutdown( stg_model_type_t type, func_shutdown_t func );
 void register_update( stg_model_type_t type, func_update_t func );
-void register_service( stg_model_type_t type, func_service_t func );
 
-void register_putdata( stg_model_type_t type, func_putdata_t func );
-void register_putcommand( stg_model_type_t type, func_putcommand_t func );
-void register_putconfig( stg_model_type_t type, func_putconfig_t func );
+//void register_service( stg_model_type_t type, func_service_t func );
 
-void register_getdata( stg_model_type_t type, func_getdata_t func );
-void register_getcommand( stg_model_type_t type, func_getcommand_t func );
-void register_getconfig( stg_model_type_t type, func_getconfig_t func );
+void register_set_data( stg_model_type_t type, func_set_data_t func );
+void register_set_command( stg_model_type_t type, func_set_command_t func );
+void register_set_config( stg_model_type_t type, func_set_config_t func );
+
+void register_get_data( stg_model_type_t type, func_get_data_t func );
+void register_get_command( stg_model_type_t type, func_get_command_t func );
+void register_get_config( stg_model_type_t type, func_get_config_t func );
 
 
 void model_map( model_t* mod, gboolean render );
