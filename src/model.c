@@ -11,8 +11,8 @@
 //#undef DEBUG
 
 model_t* model_create(  world_t* world, 
-			    stg_id_t id, 
-			    char* token )
+			stg_id_t id, 
+			char* token )
 {
   PRINT_DEBUG3( "creating model %d:%d (%s)", world->id, id, token  );
 
@@ -33,6 +33,8 @@ model_t* model_create(  world_t* world,
   mod->size.x = 0.4;
   mod->size.y = 0.4;
   
+  mod->obstacle_return = 1;
+
   mod->color = stg_lookup_color( "red" );
   
   // define a unit rectangle from 4 lines
@@ -72,6 +74,7 @@ model_t* model_create(  world_t* world,
   model_ranger_init( mod );
   model_laser_init( mod );
   model_blobfinder_init( mod );
+  model_fiducial_init( mod );
 
   gui_model_create( mod );
 
@@ -228,6 +231,11 @@ int model_update_prop( model_t* mod, stg_id_t propid )
       gui_model_blobfinder_data( mod );
       break;
 
+    case STG_PROP_FIDUCIALDATA:
+      model_fiducial_update( mod );
+      gui_model_fiducial_data( mod );
+      break;
+
     default:
       //PRINT_DEBUG1( "no update function for property type %s", 
       //	    stg_property_string(propid) );
@@ -352,7 +360,23 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
       *data = &mod->laser_geom;
       *len = sizeof(stg_geom_t);
       break;
-     
+      
+    case STG_PROP_FIDUCIALDATA:
+      {
+	stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_FIDUCIALDATA );
+	if( prop )
+	  {
+	    *data = prop->data;
+	    *len = prop->len;
+	  }
+	else
+	  {
+	    *data = NULL;
+	    *len = 0;
+	  }
+      }
+      break;
+      
     default:
       // todo - add random props to a model
       // g_hash_table_lookup( model->props, &pid );
@@ -368,6 +392,41 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
 
   return 0; //ok
 }
+
+void model_set_prop_generic( model_t* mod, stg_id_t propid, void* data, size_t len )
+{
+  assert( mod );
+  assert( mod->props );
+  if( len > 0 ) assert( data );
+  
+  stg_property_t* prop = calloc( sizeof(stg_property_t), 1 );
+  assert(prop);
+  prop->id = propid;
+  prop->data = data;
+  prop->len = len;
+  
+  //printf( "setting %p %d:%d(%s) with %d bytes\n", 
+  //  mod->props, mod->id, propid, stg_property_string(propid), (int)len );
+  
+  g_hash_table_replace( mod->props, &prop->id, prop );
+}
+
+stg_property_t* model_get_prop_generic( model_t* mod, stg_id_t propid )
+{
+  //printf( "getting %p %d:%d(%s)\n", 
+  //  mod->props, mod->id, propid, stg_property_string(propid) );
+  
+  stg_property_t* prop = 
+    (stg_property_t*)g_hash_table_lookup( mod->props, &propid );
+  
+  //if( prop )
+  //printf( "found %d bytes\n", (int)prop->len );
+  //else
+  //puts( "not found" );  
+
+  return prop;
+}
+
 
 int model_set_prop( model_t* mod, 
 		     stg_id_t propid, 

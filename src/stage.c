@@ -55,6 +55,8 @@ const char* stg_property_string( stg_id_t id )
     case STG_PROP_VOLTAGE: return "voltage"; break;
     case STG_PROP_RANGERDATA: return "rangerdata";break;
     case STG_PROP_RANGERCONFIG: return "rangerconfig";break;
+    case STG_PROP_FIDUCIALCONFIG: return "fiducialconfig";break;
+    case STG_PROP_FIDUCIALDATA: return "fiducialdata";break;
     case STG_PROP_LASERDATA: return "laserdata";break;
     case STG_PROP_LASERCONFIG: return "laserconfig";break;
     case STG_PROP_LASERGEOM: return "lasergeom";break;

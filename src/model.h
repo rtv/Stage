@@ -41,6 +41,9 @@ typedef struct _model
   GArray* laser_data;
   int laser_return;
 
+  int fiducial_return;
+  int obstacle_return;
+
   gboolean subs[STG_PROP_COUNT]; // flags used to control updates
   
   stg_blobfinder_config_t blob_cfg;
@@ -68,6 +71,9 @@ int model_set_prop( model_t* mod, stg_id_t propid, void* data, size_t len );
 int model_get_prop( model_t* model, stg_id_t propid, 
 		    void** data, size_t* size );
 
+void model_set_prop_generic( model_t* mod, stg_id_t propid, void* data, size_t len );
+stg_property_t* model_get_prop_generic( model_t* mod, stg_id_t propid );
+
 int model_update_prop( model_t* mod, stg_id_t propid );
 void model_update_rangers( model_t* mod );
 void model_update_laser( model_t* mod );
@@ -92,5 +98,8 @@ void model_local_to_global( model_t* mod, stg_pose_t* pose );
 
 void model_blobfinder_init( model_t* mod );
 void model_blobfinder_update( model_t* mod );
+
+void model_fiducial_init( model_t* mod );
+void model_fiducial_update( model_t* mod );
 
 #endif

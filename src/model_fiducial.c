@@ -1,60 +1,38 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: fiducialfinderdevice.cc
+// File: model_fiducial.c
 // Author: Richard Vaughan
-// Date: 12 Jan 2000
-// Desc: Simulates the laser-based beacon detector
+// Date: 10 June 2004
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
-//
-// Usage: detects objects that were laser bright and had non-zero
-// ficucial_return
-//
-// Theory of operation:
-//  (empty)
-//
-// Known bugs:
-//  (empty)
-//
-// Possible enhancements:
-//  (empty)
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 //#define DEBUG
 
 #include <math.h>
-#include <stage1p3.h>
-#include "world.hh"
-#include "laserdevice.hh"
-#include "fiducialfinderdevice.hh"
+#include "model.h"
+#include "raytrace.h"
 
-void model_add_prop( model_t* mod, stg_id_t propid, void* data, size_t len )
-{
-  g_hash_table_replace( mod->props, &propid, data, len );
-}
+#include "gui.h"
+extern rtk_fig_t* fig_debug;
 
 void model_fiducial_init( model_t* mod )
 {
   stg_fiducial_config_t* fid = calloc( sizeof(stg_fiducial_config_t), 1 );
-  
-  // add this property to the model
-  model_add_prop( mod, STG_PROP_FIDUCIALCONFIG, fid,  sizeof(stg_fiducial_config_t);
-
-
   memset( fid, 0, sizeof(stg_fiducial_config_t) );
-  
   fid->max_range_anon = 4.0;
   fid->max_range_id = 1.5;
   
-  // fill in the default values for these fake parameters
-  //fid->m_bit_count = 8;
-  //fid->m_bit_size = 50;
-	  //fid->m_zero_thresh = m_one_thresh = 60;
+  // a sensible default fiducial return value is the model's id
+  mod->fiducial_return = mod->id;
   
+  // add this property to the model
+  model_set_prop_generic( mod, STG_PROP_FIDUCIALCONFIG, 
+			  fid, sizeof(stg_fiducial_config_t) );
   
   /*
     mod->max_range_anon = worldfile->ReadLength(0, "lbd_range_anon",
@@ -69,13 +47,102 @@ void model_fiducial_init( model_t* mod )
 }
 
 
+typedef struct 
+{
+  model_t* mod;
+  stg_pose_t pose;
+  stg_fiducial_config_t* cfg;
+  GArray* fiducials;
+} model_fiducial_buffer_t;
+
+void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user )
+{
+  model_fiducial_buffer_t* mfb = (model_fiducial_buffer_t*)user;
+  model_t* him = (model_t*)value;
+  
+  // dont' compare a model with itself, and don't consider models with
+  // fiducial returns less than 1
+  if( him == mfb->mod || him->fiducial_return < 1 ) return; 
+
+  stg_pose_t hispose;
+  model_global_pose( him, &hispose );
+  
+  double dx = mfb->pose.x - hispose.x;
+  double dy = mfb->pose.y - hispose.y;
+  
+  // are we within range?
+  double range = hypot( dy, dx );
+  
+  //printf( "range = %fm\n", range );
+  
+  if( range < mfb->cfg->max_range_anon )
+    {
+      //printf( "in range!\n" );
+
+      // now check if we have line-of-sight
+      itl_t *itl = itl_create( mfb->pose.x, mfb->pose.y,
+			       hispose.x, hispose.y, 
+			       him->world->matrix, PointToPoint );
+      
+      // iterate until we hit something solid
+      model_t* hitmod;
+      while( (hitmod = itl_next( itl )) ) 
+	{
+	  if( hitmod != mfb->mod && hitmod->obstacle_return ) 
+	    break;
+	}
+      
+      // if it was him, we can see him
+      if( hitmod == him )
+	{
+	  stg_fiducial_t fid;      
+	  fid.range = range;
+	  fid.bearing = NORMALIZE(M_PI + atan2( dy, dx ) - mfb->pose.a);
+	  fid.id = him->id;
+	  fid.geom.x = him->size.x;
+	  fid.geom.y = him->size.y;
+	  fid.geom.a = NORMALIZE(him->pose.a - mfb->pose.a);
+	  
+	  g_array_append_val( mfb->fiducials, fid );
+	}
+    }
+  //else
+  //printf( "out of range\n" );
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // Update the beacon data
 //
 void model_fiducial_update( model_t* mod )
 {
-  stg_fiducial_config_t* fid = mod->fid_config;
+  // first clear ny old data
+  model_set_prop_generic( mod, STG_PROP_FIDUCIALDATA, 
+			  NULL, 0 );
+  
+  if( fig_debug ) rtk_fig_clear( fig_debug );
 
-  UpdateConfig();
-
+  stg_property_t* prop = 
+    model_get_prop_generic( mod, STG_PROP_FIDUCIALCONFIG ); 
+  
+  assert( prop );
+  assert( prop->len == sizeof(stg_fiducial_config_t) );
+  
+  model_fiducial_buffer_t mfb;
+  mfb.mod = mod;
+  mfb.cfg = (stg_fiducial_config_t*)prop->data;
+  mfb.fiducials = g_array_new( FALSE, TRUE, sizeof(stg_fiducial_t) );
+  model_global_pose( mod, &mfb.pose );
+    
+  // for all the objects in the world
+  g_hash_table_foreach( mod->world->models, model_fiducial_check_neighbor, &mfb );
+  
+  if( mfb.fiducials->len > 0 )
+    {
+      //printf( "storing %d fiducials\n", mfb.fiducials->len );
+      model_set_prop_generic( mod, STG_PROP_FIDUCIALDATA, 
+			      mfb.fiducials->data, 
+			      mfb.fiducials->len * sizeof(stg_fiducial_t) );
+      
+      g_array_free( mfb.fiducials, TRUE );
+    }
 }

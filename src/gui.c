@@ -433,6 +433,7 @@ void gui_model_create( model_t* model )
 #endif
 
   gmod->blob_data = rtk_fig_create( win->canvas, parent_fig, STG_LAYER_DATA);
+  gmod->fiducial_data = rtk_fig_create( win->canvas, parent_fig, STG_LAYER_BACKGROUND);
   
   gmod->grid = NULL;
   
@@ -720,6 +721,51 @@ void gui_model_laser_data( model_t* mod )
       free( points );
     }
 }
+
+
+void gui_model_fiducial_data( model_t* mod )
+{ 
+  static char text[128];
+
+  gui_window_t* win = g_hash_table_lookup( wins, &mod->world->id );  
+  
+  rtk_fig_t* fig = gui_model_figs(mod)->fiducial_data;  
+  if( fig ) rtk_fig_clear( fig ); 
+  
+  stg_pose_t pose;
+  model_global_pose( mod, &pose );  
+  rtk_fig_origin( fig, pose.x, pose.y, pose.a ); 
+
+  stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_FIDUCIALDATA );
+  
+  if( prop )
+    {
+      int bcount = prop->len / sizeof(stg_fiducial_t);
+      
+      stg_fiducial_t* fids = (stg_fiducial_t*)prop->data;
+
+      int b;
+      for( b=0; b < bcount; b++ )
+	{
+	  double pa = fids[b].bearing;
+	  double px = fids[b].range * cos(pa); 
+	  double py = fids[b].range * sin(pa);
+	  
+	  rtk_fig_line( fig, 0, 0, px, py );	
+	  
+	  // TODO: use the configuration info to determine beacon size
+	  // for now we use these canned values
+	  double wx = 0.05;
+	  double wy = 0.40;
+	  
+	  rtk_fig_rectangle(fig, px, py, pa, wx, wy, 0);
+	  rtk_fig_arrow(fig, px, py, pa, wy, 0.10);
+	  snprintf(text, sizeof(text), "  %d", fids[b].id);
+	  rtk_fig_text(fig, px, py, pa, text);
+	}  
+    }
+}
+
 
 void gui_model_lines( model_t* mod )
 {
