@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.11 2003-02-07 05:30:34 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.12 2003-02-07 07:47:00 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -40,8 +40,7 @@
 #include "entity.hh"
 #include "root.hh"
 
-#include "models/box.hh"
-#include "models/bitmap.hh"
+#include "models/puck.hh"
 /*
 #include "models/bumperdevice.hh"
 #include "models/broadcastdevice.hh"
@@ -55,7 +54,6 @@
 #include "models/positiondevice.hh"
 #include "models/powerdevice.hh"
 #include "models/ptzdevice.hh"
-#include "models/puck.hh"
 #include "models/sonardevice.hh"
 #include "models/truthdevice.hh"
 #include "models/visiondevice.hh"
@@ -70,6 +68,7 @@
 
 libitem_t library_items[] = { 
   { "box", "black", (CFP)CEntity::Creator},
+  { "puck", "green", (CFP)CPuck::Creator},
   /*
   { "bitmap", "blue", (CFP)CBitmap::Creator},
   { "laser", "blue", (CFP)CLaserDevice::Creator},
@@ -85,7 +84,6 @@ libitem_t library_items[] = {
   { "mote", "orange", (CFP)CMoteDevice::Creator},
   { "power", "wheat", (CFP)CPowerDevice::Creator},
   { "ptz", "magenta", (CFP)CPtzDevice::Creator},
-  { "puck", "green", (CFP)CPuck::Creator},
   { "truth", "purple", (CFP)CTruthDevice::Creator},
   { "vision", "gray", (CFP)CVisionDevice::Creator},
   { "blobfinder", "gray", (CFP)CVisionDevice::Creator},
@@ -377,13 +375,7 @@ int GuiEntityShutdown( CEntity* ent )
 	{
 	  PRINT_WARN1( "Gui destroy model failed on GUI %d\n", g );
 	  return -1;
-	}
-      
-      // shutdown the children too!
-      CEntity* ch;
-      for( ch = ent->child_list; ch; ch = ch->next )
-	if( GuiEntityShutdown( ch ) == -1 )
-	  return -1;
+	}      
     }
 
   return 0;

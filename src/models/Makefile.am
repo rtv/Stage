@@ -14,11 +14,9 @@ AM_CPPFLAGS = 	-Wall -I$(top_builddir)/src  -I$(top_builddir)/replace $(RTKCPPFL
 noinst_LIBRARIES = libmodels.a 
 
 libmodels_a_SOURCES = \
-	bitmap.cc \   #remove this once we have some files in here
-	bitmap.hh
+                   puck.cc \
+                   puck.hh 
 
-#	box.cc \
-#	box.hh \
 #	positiondevice.cc \
 #	positiondevice.hh
 #                   broadcastdevice.cc \
@@ -35,8 +33,6 @@ libmodels_a_SOURCES = \
 #                   idardevice.hh \
 #                   idarturretdevice.cc \
 #                   idarturretdevice.hh \
-#                   image.cc \
-#                   image.hh \
 #                   laserdevice.cc \
 #                   laserdevice.hh \
 #                   motedevice.cc \
@@ -45,8 +41,6 @@ libmodels_a_SOURCES = \
 #                   powerdevice.hh \
 #                   ptzdevice.cc \
 #                   ptzdevice.hh \
-#                   puck.cc \
-#                   puck.hh \
 #                   sonardevice.cc \
 #                   sonardevice.hh \
 #                   truthdevice.cc \

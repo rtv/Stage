@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/positiondevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.7.2.1 $
+//  $Revision: 1.7.2.2 $
 //
 // Usage:
 //  (empty)
@@ -39,7 +39,7 @@ CPositionDevice::CPositionDevice(LibraryItem* libit, int id, CEntity *parent)
   : CPlayerEntity( libit, id, parent )
 {    
   // setup our Player interface for a POSITION device interface
-  PositionInit();
+  //PositionInit();
   
   // set up our sensor response
   this->laser_return = LaserTransparent;
@@ -91,7 +91,7 @@ bool CPositionDevice::Startup()
 void CPositionDevice::Update( double sim_time )
 {  
   // Do some default processing
-  CPlayerEntity::Update(sim_time);
+  CEntity::Update(sim_time);
 
   // Dont do anything if its not time yet
   if (sim_time - m_last_update <  m_interval)

@@ -1,26 +1,25 @@
 ///////////////////////////////////////////////////////////////////////////
 //
 // File: puck.cc
-// Author: brian gerkey
+// Author: brian gerkey, Richard Vaughan
 // Date: 4 Dec 2000
 // Desc: Simulates the pucks
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/puck.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Revision: 1.3.6.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#include "world.hh"
 #include "puck.hh"
 #include "raytrace.hh"
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CPuck::CPuck(LibraryItem* libit,CWorld *world, CEntity *parent)
-        : CEntity(libit,world, parent)
+CPuck::CPuck(LibraryItem* libit, int id, CEntity *parent)
+        : CEntity(libit, id, parent)
 {
   this->vision_return = true;
   this->vision_return_held = false;
@@ -29,8 +28,7 @@ CPuck::CPuck(LibraryItem* libit,CWorld *world, CEntity *parent)
   this->obstacle_return = false; // we don't stop robots
   this->puck_return = true; // yes! we interact with pucks!
  
-  // Set default shape and geometry
-  this->shape = ShapeCircle;
+  // Set default geometry
   this->size_x = 0.08;
   this->size_y = 0.08;
 
@@ -41,57 +39,24 @@ CPuck::CPuck(LibraryItem* libit,CWorld *world, CEntity *parent)
   this->mass = 0.2;
 }
 
-
-///////////////////////////////////////////////////////////////////////////
-// Load the entity from the worldfile 
-bool CPuck::Load(CWorldFile *worldfile, int section)
-{
-  if (!CEntity::Load(worldfile, section))
-    return false;
-
-  // Puck friction parameter
-  m_friction = worldfile->ReadFloat(0, "puck_friction", m_friction);
-  m_friction = worldfile->ReadFloat(section, "friction", m_friction);
-
-  // Get vision held/not held values
-  // TODO
-
-  return true;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Startup routine
-bool CPuck::Startup()
-{
-  assert(m_world != NULL);
-    
-  // REMOVE m_com_vr = 0;
-
-  return CEntity::Startup();
-}
-
-
 ///////////////////////////////////////////////////////////////////////////
 // Update the puck
 void CPuck::Update( double sim_time )
 {
-  ASSERT(m_world != NULL);
-
   CEntity::Update(sim_time);
 
   assert( m_parent_entity ); // everyone has a parent these days
 
   // have we been picked up?  then make ourselves transparent so the vision
   // doesn't see us in the gripper. otherwise make ourselves visible.
-  if(m_parent_entity != m_world->root ) // root is the top-level entity
+  if(m_parent_entity != CEntity::root ) // root is the top-level entity
     this->vision_return = this->vision_return_held;
   else
     this->vision_return = this->vision_return_notheld;
 
   // if its time to recalculate state and we're on the ground
   //
-  if( (sim_time - m_last_update > m_interval) && (m_parent_entity == m_world->root) )
+  if( (sim_time - m_last_update > m_interval) && (m_parent_entity == CEntity::root) )
   {	
     m_last_update = sim_time;
 	
@@ -109,17 +74,17 @@ void CPuck::Update( double sim_time )
 // Move the puck
 void CPuck::Move()
 {
-  double step_time = m_world->m_sim_timestep;
-
+  // TODO - FIX THIS
+  double step_time = 0.1;//CEntity::timestep;
+  
   // don't move if we've been picked up
-  if(m_parent_entity != m_world->root ) return;
+  if(m_parent_entity != CEntity::root ) return;
     
   // Get the current puck pose
   double px, py, pth;
   GetGlobalPose(px, py, pth);
     
-  CCircleIterator cit( px, py, this->size_x/2.0, 
-                       m_world->ppm, m_world->matrix );
+  CCircleIterator cit( px, py, this->size_x/2.0, CEntity::matrix );
   CEntity* ent;
 
   while( (ent = cit.GetNextEntity()) )

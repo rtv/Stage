@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.8 2003-02-07 05:30:34 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.9 2003-02-07 07:47:00 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -53,9 +53,6 @@
 #include "raytrace.hh"
 #include "gui.hh"
 #include "library.hh"
-
-extern rtk_canvas_t* canvas;
-extern rtk_app_t* app;
 
 // init the static vars shared by all entities
  // everyone shares these vars 
@@ -1088,7 +1085,8 @@ void CEntity::RenderRects( bool render )
 
 
 
-#ifdef INCLUDE_RTK2
+#if 0 
+//#ifdef INCLUDE_RTK2
 
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the rtk gui
@@ -1224,7 +1222,9 @@ void CEntity::RtkStartup()
 		       size_x, size_y, 0 );
   
   // do our children after we're set
-  //CHILDLOOP( child ) child->RtkStartup();
+  CHILDLOOP( child ) 
+    child->RtkStartup();
+
   PRINT_DEBUG( "RTK STARTUP DONE" );
 }
 
@@ -1237,7 +1237,8 @@ void CEntity::RtkShutdown()
   PRINT_DEBUG1( "RTK SHUTDOWN %d", this->stage_id );
   
   // do our children first
-  //CHILDLOOP( child ) GuiShutdown (child->RtkStartup();
+  CHILDLOOP( child )
+    child->RtkShutdown();
 
   // Clean up the figure we created
   if( this->fig ) rtk_fig_destroy(this->fig);

@@ -196,6 +196,15 @@ typedef struct
   double x, y;
 } stage_size_t;
 
+typedef struct
+{
+  double x, y, a;
+  double xdot, ydot, adot;
+  // double xdotdot, ydotdot, adotdot; // useful?
+  char mask; // each of the first 6 bits controls which of the commands we are using
+} stage_position_data_t;
+
+
 ///////////////////////////////////////////////////////////////////////////
 // Some useful macros
 

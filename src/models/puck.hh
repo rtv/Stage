@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/puck.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.2.6.1 $
 //
 // Usage:
 //  (empty)
@@ -32,21 +32,16 @@
 class CPuck : public CEntity
 {
   // Default constructor
-  public: CPuck( LibraryItem *libit, CWorld *world, CEntity *parent);
+  public: CPuck( LibraryItem *libit, int id, CEntity *parent);
 
   // a static named constructor - a pointer to this function is given
   // to the Library object and paired with a string.  When the string
   // is seen in the worldfile, this function is called to create an
   // instance of this entity
-public: static CPuck* Creator(  LibraryItem *libit, CWorld *world, CEntity *parent )
-  { return( new CPuck( libit, world, parent ) ); }
+public: static CPuck* Creator(  LibraryItem *libit, int id, CEntity *parent )
+  { return( new CPuck( libit, id, parent ) ); }
 
-  // Load the entity from the worldfile
-  public: virtual bool Load(CWorldFile *worldfile, int section);
 
-  // Startup routine
-  public: virtual bool Startup();
-    
   // Update the device
   public: virtual void Update( double sim_time );
 
@@ -66,18 +61,6 @@ public: static CPuck* Creator(  LibraryItem *libit, CWorld *world, CEntity *pare
   // Vision return value when we are not being held
   private: int vision_return_held;
   private: int vision_return_notheld;
-
-#ifdef INCLUDE_RTK
-    
-  // Process GUI update messages
-  //
-  public: virtual void OnUiUpdate(RtkUiDrawData *pData);
-
-  // Process GUI mouse messages
-  //
-  public: virtual void OnUiMouse(RtkUiMouseData *pData);
-
-#endif
 };
 
 #endif
