@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.43 $
+//  $Revision: 1.44 $
 //
 // Usage:
 //  (empty)
@@ -52,7 +52,7 @@
 // allocate chunks of 32 pointers for entity storage
 const int OBJECT_ALLOC_SIZE = 32;
 
-#define WATCH_RATES
+//#define WATCH_RATES
 //#define DEBUG 
 //#define VERBOSE
 #undef DEBUG 
@@ -576,20 +576,20 @@ void CWorld::Update()
 	input_queue.pop(); // remove the front object
 
 //  #ifdef DEBUG
-  	printf( "De-queued Truth: "
-  		"[%d] (%s:%d,%d,%d) parent (%d,%d,%d) [%d,%d,%d] echo %d\n", 
-  		truth.stage_id,
-		truth.hostname,
-		truth.id.port, 
-  		truth.id.type, 
-  		truth.id.index,
-  		truth.parent.port, 
-  		truth.parent.type, 
-  		truth.parent.index,
-  		truth.x, truth.y, truth.th,
-		truth.echo_request);
+//    	printf( "De-queued Truth: "
+//    		"[%d] (%s:%d,%d,%d) parent (%d,%d,%d) [%d,%d,%d] echo %d\n", 
+//    		truth.stage_id,
+//  		truth.hostname,
+//  		truth.id.port, 
+//    		truth.id.type, 
+//    		truth.id.index,
+//    		truth.parent.port, 
+//    		truth.parent.type, 
+//    		truth.parent.index,
+//    		truth.x, truth.y, truth.th,
+//  		truth.echo_request);
 
-  	fflush( stdout );
+//    	fflush( stdout );
 //  #endif
 
 	// see if this is a stage directive 

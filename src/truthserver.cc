@@ -60,7 +60,10 @@ typedef struct
 
 void PrintTruth( stage_truth_t &truth )
 {
-  printf( "ID: (%d,%d,%d)\tPID:(%d,%d,%d)\tpose: [%d,%d,%d]\tsize: [%d,%d]\n", 
+  printf( "[%d] %s ID:(%s:%d,%d,%d)\tPID:(%d,%d,%d)\tpose: [%d,%d,%d]\tsize: [%d,%d]\techo: %d\n",
+	  truth.stage_id,
+	  world->StringType( truth.stage_type ),
+	  truth.hostname,
 	  truth.id.port, 
 	  truth.id.type, 
 	  truth.id.index,
@@ -68,7 +71,8 @@ void PrintTruth( stage_truth_t &truth )
 	  truth.parent.type, 
 	  truth.parent.index,
 	  truth.x, truth.y, truth.th,
-	  truth.w, truth.h );
+	  truth.w, truth.h,
+	  truth.echo_request );
   
   fflush( stdout );
 }
@@ -110,6 +114,11 @@ static void* TruthReader( void* arg )
 	  //printf( "Recv: " );
 	  //PrintTruth( truth );
 	  //#endif
+	  if( r < (int)sizeof( truth ) )
+	    printf( "Stage: warning short byte count (%d/%d) reading truth\n",
+		    r, sizeof(truth) );
+
+	  PrintTruth( truth );
 	  
 	  // if we don't want an echo
 	  if( !truth.echo_request )
