@@ -98,13 +98,6 @@ typedef struct
 
 } stg_gui_window_t;
 
-
-/*typedef enum
-  {
-  STG_FIG_BODY = 0,
-  STG_FIG_NUM_TYPES; //must be last in this enum
-  }*/
-
 typedef struct
 {
   CEntity* ent;
@@ -113,7 +106,7 @@ typedef struct
   bool grid_enable;
   double grid_major, grid_minor;
   
-  rtk_fig_t *fig, *fig_rects, *fig_grid, *fig_user, *fig_rangers, 
+  rtk_fig_t *fig, *fig_grid, *fig_user, *fig_rangers, 
     *fig_light, *fig_nose;  
 
   int movemask;

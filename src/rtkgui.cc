@@ -21,17 +21,17 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.17 2003-08-28 17:48:24 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.18 2003-08-28 20:38:23 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
 #  include <config.h>
 #endif
 
-// this should go when I get the autoconf set up properly
+// determined by config.h, built by autoconf
 #ifdef INCLUDE_RTK2
 
-#define DEBUG 
+//#define DEBUG 
 //#define VERBOSE
 //#undef DEBUG
 //#undef VERBOSE
@@ -87,7 +87,7 @@ bool enable_data = TRUE;
 // the menu-selectable window refresh rates
 int intervals[] = {25, 50, 100, 200, 500, 1000};
 int num_intervals = 6;  
-int default_interval = 1; // xth entry in the above array
+int default_interval = 2; // xth entry in the above array
 
 // single static application visible to all funcs in this file
 static rtk_app_t *app = NULL; 
@@ -194,6 +194,9 @@ void stg_gui_exit( rtk_menuitem_t *item )
 
 void stg_gui_menu_interval_callback( rtk_menuitem_t *item )
 {
+  // todo - cope with repeated selections of the same item. currently
+  // the check mark disappears.
+
   stg_gui_window_t* win = (stg_gui_window_t*)item->userdata;
 
   if( rtk_menuitem_ischecked( item ) )
@@ -528,7 +531,8 @@ void stg_gui_model_rangers( CEntity* ent )
       mod->fig_rangers = 
 	rtk_fig_create( mod->win->canvas, mod->fig, STG_LAYER_SENSORS);
       
-      rtk_fig_color_rgb32( mod->fig_rangers, stg_lookup_color("darkred") );
+      rtk_fig_color_rgb32( mod->fig_rangers, 
+			   stg_lookup_color(STG_RANGER_COLOR) );
     }
   else
     rtk_fig_clear( mod->fig_rangers );
@@ -608,8 +612,6 @@ void stg_gui_model_nose( CEntity* ent )
 
 void stg_gui_model_mouse_mode( CEntity* ent )
 {
-  PRINT_DEBUG1( "setting mouse mode to %d", ent->mouseable );
-  
   g_assert(ent);
   g_assert(ent->guimod);
 
@@ -650,18 +652,18 @@ stg_gui_model_t* stg_gui_model_create(  CEntity* ent )
 
   g_assert( win );
   g_assert( win->canvas );
-
+  
+  // calloc zeros the structure
   stg_gui_model_t* mod = (stg_gui_model_t*)calloc( 1,sizeof(stg_gui_model_t));
   
-  mod->ent = ent;
-  mod->win = win; // use the world window
+  // associate the window and entity with thois figure
+  mod->ent = ent; 
+  mod->win = win; 
   
   rtk_fig_t* parent_fig = NULL;
   
-  // we can only manipulate top-level figures
-  if( g_node_depth( ent->node ) == 2 )
-    parent_fig = NULL;
-  else if( g_node_depth( ent->node ) > 2 )
+  // children of top-level entities are attached to their parent's figure
+  if( g_node_depth( ent->node ) > 2 )
     parent_fig = stg_ent_parent(ent)->guimod->fig;      
   
   mod->grid_enable = false;
@@ -669,75 +671,33 @@ stg_gui_model_t* stg_gui_model_create(  CEntity* ent )
   mod->grid_minor = 0.2;
   
   // Create a figure representing this entity
-  // rtk head
-  //mod->fig = rtk_fig_create_ex( mod->win->canvas, parent_fig, 
-  //			STG_LAYER_BODY, ent);
+  assert( (mod->fig = 
+	   rtk_fig_create( mod->win->canvas, parent_fig, STG_LAYER_BODY )));
   
-  // rtk 2.2
-  mod->fig = rtk_fig_create( mod->win->canvas, parent_fig, 
-			      STG_LAYER_BODY );
+  // associate the figure with the entity, too.
   mod->fig->userdata = (void*)ent;
-  // end rtk 2.2
-
-  assert( mod->fig );
   
-  // put the figure's origin at the entity's position
+  // move the figure to the entity's pose
   stg_pose_t pose;
   ent->GetPose( &pose );
   rtk_fig_origin( mod->fig, pose.x, pose.y, pose.a );
 
-  // visible by default
-  rtk_fig_show( mod->fig, true );
-
-  // Set the color
-  rtk_fig_color_rgb32( mod->fig, ent->color);
-            
- 
-  //ent->guimod = mod;
-
-  //stg_gui_model_grid( ent );
-  //stg_gui_model_rects( ent );
-
-  // if we created a window for this model, scale the window to fit
-  // nicely around the figure and shift the origin to the bottom left
-  // corner
+  rtk_fig_show( mod->fig, true ); 
+  rtk_fig_color_rgb32( mod->fig, ent->color);   
 
   return mod;
 }
 
 void stg_gui_model_destroy( stg_gui_model_t* mod )
 {
+  // clean up the sub-figures
+  if( mod->fig_grid ) rtk_fig_destroy( mod->fig_grid );
   if( mod->fig_user ) rtk_fig_destroy( mod->fig_user );
   if( mod->fig_light ) rtk_fig_destroy( mod->fig_light );
   if( mod->fig_rangers ) rtk_fig_destroy( mod->fig_rangers );
   if( mod->fig_nose ) rtk_fig_destroy( mod->fig_nose );
-
+  
   if( mod->fig ) rtk_fig_destroy( mod->fig );
-}
-
-rtk_fig_t* stg_gui_label_create( rtk_canvas_t* canvas, CEntity* ent )
-{
-  //rtk_fig_t* label = rtk_fig_create_ex( canvas, NULL, 51, ent);
-  rtk_fig_t* label = rtk_fig_create( canvas, NULL, 51 );
-  label->userdata = (void*)ent;
-  rtk_fig_show(label, 1); 
-  rtk_fig_movemask(label, 0);
-      
-  char labelstr[1024];
-  
-  snprintf(labelstr, sizeof(labelstr), "(%d) %s", 
-	     ent->id, ent->name->str );
-    
-  //rtk_fig_color_rgb32(mod->fig, ent->color);
-  //rtk_fig_origin( mod->fig_label, 0.05, 1.0, 0 );
-  rtk_fig_text(label, 0,0,0, labelstr);
-  
-  // attach the label to the main figure
-  // rtk will draw the label when the mouse goes over the figure
-  // TODO: FIX
-  //mod->fig->mouseover_fig = fig_label;
-  
-  return label;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1021,6 +981,7 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
     case STG_PROP_BORDER:      
     case STG_PROP_SIZE:
     case STG_PROP_COLOR:
+    case STG_PROP_ORIGIN: // could this one be faster?
       stg_gui_model_rects( ent );
       stg_gui_model_nose( ent );
       break;
@@ -1045,8 +1006,6 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
       stg_gui_model_mouse_mode( ent );
       break;
 
-      // todo!
-      //case STG_PROP_ORIGIN:
 
       // do nothing for these things
     case STG_PROP_LASERRETURN:

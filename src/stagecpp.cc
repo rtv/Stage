@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.12 2003-08-28 17:48:24 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.13 2003-08-28 20:38:23 rtv Exp $
  */
 
 #include <assert.h>
@@ -802,8 +802,6 @@ bool CWorldFile::ParseTokenDefine(int *index, int *line)
   {
     token = this->tokens + i;
     
-    printf( "token %s  index %i\n", token->value, i); 
-
     switch (token->type)
     {
       case TokenWord:
@@ -846,8 +844,10 @@ bool CWorldFile::ParseTokenDefine(int *index, int *line)
       count--;
       if (count == 0)
         {
-	  printf( "adding macro %s (line %d starttoken %d i %d)\n",
-		  macroname, *line, starttoken, i );
+#ifdef VERBOSE
+	  PRINT_DEBUG4( "adding macro %s (line %d starttoken %d i %d)",
+			macroname, *line, starttoken, i );
+#endif
           AddMacro(macroname, entityname, *line, starttoken, i);
           *index = i;
           return true;
@@ -1786,7 +1786,7 @@ int stg_instances_of_string( char* token )
   
   if( t == num_tokens ) // if we didn't find this token
     {
-      printf( "adding new token \"%s\"\n", token );
+      //printf( "adding new token \"%s\"\n", token );
       
       tokens = (stg_token_counter_t*)
 	realloc( tokens, sizeof(stg_token_counter_t) * (num_tokens+1) );
@@ -1977,14 +1977,16 @@ int CWorldFile::Upload( stg_client_t* cli,
 		  this->ReadTupleFloat(section, key, 8, 0.0);
 	      }		
 
+#ifdef VERBOSE
 	    for( int j=0; j<rcount; j++)
 	      {
+		stg_ranger_t* r = &rangers[j];
 		printf( "loading ranger %d (%.2f,%.2f,%.2f)[%.2f %.2f]\n",
 			j, 
-			rangers[j].pose.x, rangers[j].pose.y, rangers[j].pose.a,
-			rangers[j].size.x, rangers[j].size.y );
+			r->pose.x, r->pose.y, r->pose.a,
+			r->size.x, r->size.y );
 	      }
-	    
+#endif
 	    stg_model_set_rangers( cli, anid, rangers, rcount );
 	    free(rangers);
 	  }
@@ -2008,19 +2010,20 @@ int CWorldFile::Upload( stg_client_t* cli,
 	
 	    tuple **data = pnm_readpam(bitmap, &inpam, sizeof(inpam));
 
-	    printf( "read image \"%s\"%dx%dx%d\n",
-		    bitmapfile,    
-		    inpam.width, 
-		    inpam.height, 
-		    inpam.depth );
-
+#ifdef VERBOSE	    
+	    PRINT_DEBUG4( "read image \"%s\"%dx%dx%d\n",
+			  bitmapfile,    
+			  inpam.width, 
+			  inpam.height, 
+			  inpam.depth );
+#endif
 	    stg_rotrect_t* rects;
 	    int rect_count;
 	    
 	    assert( stg_pam_to_rects( &inpam, data, &rects, &rect_count ) == 0 );
-	    
-	    printf( "Found %d rects\n", rect_count );
-
+#ifdef VERBOSE	    
+	    PRINT_DEBUG1f( "Found %d rects", rect_count );
+#endif
 	    stg_model_set_rects( cli, anid, rects, rect_count );
 
 	    // convert the bitmap to rects and poke them into the model

@@ -21,7 +21,7 @@
  * Desc: A world device model - replaces the CWorld class
  * Author: Richard Vaughan
  * Date: 31 Jan 2003
- * CVS info: $Id: world.cc,v 1.142 2003-08-27 02:07:06 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.143 2003-08-28 20:38:23 rtv Exp $
  */
 
 
@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#define DEBUG
+//#define DEBUG
 
 #include "stage.h"
 #include "world.hh"
@@ -37,8 +37,6 @@
 
 extern GHashTable* global_hash_table;
 extern int global_next_available_id;
-
-
 
 stg_world_t* stg_world_create( GIOChannel* channel, stg_world_create_t* rc )
 {
@@ -50,7 +48,6 @@ stg_world_t* stg_world_create( GIOChannel* channel, stg_world_create_t* rc )
   world->name = g_string_new( rc->name );
   WORLD_DEBUG( world, "construction" );
 
-  
   world->width = rc->width;
   world->height = rc->height;
   world->ppm = 1.0/rc->resolution;
@@ -72,19 +69,24 @@ stg_world_t* stg_world_create( GIOChannel* channel, stg_world_create_t* rc )
   
   WORLD_DEBUG( world, "world construction complete" );
 
+  // console output
+  PRINT_MSG1( "Created world \"%s\".", world->name->str ); 
+
   return world;
 }
 
 int stg_world_destroy( stg_world_t* world )
 {
   WORLD_DEBUG( world, "world destruction" );
-
+ 
   // must shut everything down before destroying the matrix
   // as children will try to undrender themselves
   if( world->running ) stg_world_shutdown( world );
   //  if( world->matrix ) delete matrix;
 
   WORLD_DEBUG( world, "world destruction complete" );
+
+  PRINT_MSG1( "Destroyed world \"%s\".", world->name->str );
 
   return 0; //ok
 }

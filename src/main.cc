@@ -23,7 +23,7 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan
  * Date: 3 July 2003
- * CVS: $Id: main.cc,v 1.66 2003-08-26 18:59:58 rtv Exp $
+ * CVS: $Id: main.cc,v 1.67 2003-08-28 20:38:23 rtv Exp $
  */
 
 
@@ -116,7 +116,7 @@ gboolean StgClientRead( GIOChannel* channel,
   
   if( prop == NULL )
     {
-      PRINT_MSG1( "read failed on fd %d. Shutting it down.",  
+      PRINT_MSG1( "Failed to read from client (fd %d). Shutting it down.",  
 		  g_io_channel_unix_get_fd(channel) );
       
       g_io_channel_shutdown( channel, TRUE, NULL ); // zap this connection 
@@ -406,7 +406,7 @@ gboolean StgServiceWellKnownPort( GIOChannel* channel,
     case G_IO_ERR:  PRINT_WARN( "ERROR" ); break;
     case G_IO_HUP:  PRINT_WARN( "HUP" ); break;
     case G_IO_NVAL: PRINT_WARN( "NVAL" ); break;
-    default: printf( "unknown channel condition %d\n", condition );
+    default: PRINT_WARN1( "unknown channel condition %d", condition );
     }
  
   return TRUE;

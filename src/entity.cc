@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.113 2003-08-28 17:48:24 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.114 2003-08-28 20:38:23 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -29,8 +29,7 @@
 
 //#define DEBUG
 //#define VERBOSE
-//#define RENDER_INITIAL_BOUNDING_BOXES
-#undef DEBUG
+//#undef DEBUG
 //#undef VERBOSE
 
 #include <math.h>
@@ -348,6 +347,9 @@ void CEntity::GetBoundingBox( double &xmin, double &ymin,
 // everything has been loaded.
 int CEntity::Startup( void )
 {
+  // must do this before setting the default rectangle, or we'll never see it.
+  this->guimod = stg_gui_model_create( this );
+  
   ENT_DEBUG( "entity startup" );
   
   // by default, all entities have a single rectangle that is
@@ -356,24 +358,22 @@ int CEntity::Startup( void )
   rect.x = 0.0;
   rect.y = 0.0;
   rect.a = 0.0;
-  rect.w = 1.0; // this unit is multiples of my body width, not a fixed sizex
+  rect.w = 1.0; // this unit is multiples of my body width, not a fixed size
   rect.h = 1.0; // ditto
+    
+  this->SetProperty( STG_PROP_RECTS, &rect, sizeof(rect) );
+
+  Map(); // render in matrix
+
+  /* the LAST THING WE DO is to request callbacks into this object */
   
-  this->SetRects( &rect, 1 );
-
-  /* request callbacks into this object */
-  // real time
-
+  // todo - real time vs. non-real time
   if( this->interval > 0 )
     {
       guint ms_interval = (guint)(this->interval * 1000.0);
       update_tag = g_timeout_add(ms_interval,CEntity::stg_update_signal, this);
-    }  // non-real time
+    } 
   
-  Map(); // render in matrix
-  
-  this->guimod = stg_gui_model_create( this );
-
   ENT_DEBUG( "entity startup complete" );
   return 0;
 }
@@ -774,7 +774,7 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
       {
 	// we infer the number of rects from the data size
 	int rect_count = len / sizeof(stg_rotrect_t);
-	// squeeze all this rects inside my body rectangle
+	// squeeze all these rects into a unit square
 	this->NormalizeRects( (stg_rotrect_t*)data, rect_count );
 	// and accept them as my personal rectangles
 	this->SetRects( (stg_rotrect_t*)data, rect_count );

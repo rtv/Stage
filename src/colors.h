@@ -21,6 +21,7 @@
 #define STG_WALL_COLOR "dark blue"
 #define STG_SONAR_COLOR "gray70"
 #define STG_FIDUCIAL_COLOR "goldenrod2"
+#define STG_RANGER_COLOR "DarkRed" 
 
 
 #endif

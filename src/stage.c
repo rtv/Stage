@@ -264,9 +264,10 @@ stg_property_t* stg_property_read_fd( int fd )
 {
   stg_property_t* prop = stg_property_create();
 
+#ifdef DEBUG
   size_t propsize = sizeof(stg_property_t);
-  
   PRINT_DEBUG1( "reading a property header of %d bytes", propsize );
+#endif
 
   // read a header
   size_t result = stg_packet_read_fd( fd, prop, sizeof(*prop) );
@@ -294,13 +295,12 @@ stg_property_t* stg_property_read_fd( int fd )
     } 
   else
     {
-      PRINT_ERR2( "short read of property header (%d/%d bytes)", 
-		  result, propsize );
+      PRINT_DEBUG2( "short read of property header (%d/%d bytes)", 
+		    result, propsize );
       
       stg_property_free(prop);
       prop = NULL; // indicates failure
     }
-
   return prop; 
 }
 
