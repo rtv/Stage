@@ -1,5 +1,5 @@
 // sonardevice.h - RTV
-// $Id: sonardevice.h,v 1.3 2000-12-02 03:25:58 vaughan Exp $
+// $Id: sonardevice.h,v 1.4 2000-12-04 02:11:31 vaughan Exp $
 
 #ifndef SONARDEVICE_HH
 #define SONARDEVICE_HH
@@ -40,8 +40,9 @@ class CSonarDevice : public CPlayerDevice
 
     // store the sonar hit points if we want to render them in the
     // GUI window
-    private: XPoint hitPts[ SONARSAMPLES ];
-    private: XPoint oldHitPts[ SONARSAMPLES ];
+    private: XPoint hitPts[ SONARSAMPLES+1 ];
+    private: XPoint oldHitPts[ SONARSAMPLES+1 ];
+    private: int undrawRequired;
     
     // is GUI drawing enabled for this device?
     //private: bool GUIrender; 

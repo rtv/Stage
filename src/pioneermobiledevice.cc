@@ -1,4 +1,4 @@
-// $Id: pioneermobiledevice.cc,v 1.6 2000-12-02 03:54:53 ahoward Exp $	
+// $Id: pioneermobiledevice.cc,v 1.7 2000-12-04 02:11:31 vaughan Exp $	
 #include <math.h>
 
 #include "world.h"
@@ -254,7 +254,7 @@ void CPioneerMobileDevice::ParseCommandBuffer()
 
 bool CPioneerMobileDevice::GUIUnDraw()
 {
-  m_world->win->SetForeground( 0 );
+  m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
   m_world->win->DrawLines( undrawPts, 7 );
 
   return true;

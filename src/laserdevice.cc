@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.9 $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -49,6 +49,8 @@ CLaserDevice::CLaserDevice(CRobot* rr, void *buffer, size_t data_len,
     m_samples = 361;
     m_max_range = 8.0; // meters - this could be dynamic one day
                      // but this matches the default laser setup.
+
+    undrawRequired = false;
 }
 
 
@@ -218,22 +220,29 @@ bool CLaserDevice::GUIDraw()
   // dump out if noone is subscribed
   if( !IsSubscribed() ) return true;
 
-  m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
-  m_world->win->DrawLines( hitPts, LASERSAMPLES );
+  // replicate the first point at the end in order to draw a closed polygon
+  hitPts[LASERSAMPLES].x = hitPts[0].x;
+  hitPts[LASERSAMPLES].y = hitPts[0].y;
 
-  memcpy( oldHitPts, hitPts, sizeof( XPoint ) * LASERSAMPLES );
+  m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
+  m_world->win->DrawLines( hitPts, LASERSAMPLES+1 );
+    
+  memcpy( oldHitPts, hitPts, sizeof( XPoint ) * (LASERSAMPLES+1) );
+  
+  undrawRequired = true;
 
   return true; 
 };  
 
 bool CLaserDevice::GUIUnDraw()
 { 
-// dump out if noone is subscribed
-  if( !IsSubscribed() ) return true;
+  if( undrawRequired )
+  {
+    m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
+    m_world->win->DrawLines( oldHitPts, LASERSAMPLES+1 );
 
-  m_world->win->SetForeground( 0 );
-  m_world->win->DrawLines( oldHitPts, LASERSAMPLES );
-  
+    undrawRequired = false;
+  }   
   return true; 
 };
 

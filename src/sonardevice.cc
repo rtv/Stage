@@ -1,4 +1,4 @@
-// $Id: sonardevice.cc,v 1.3 2000-12-02 03:25:58 vaughan Exp $
+// $Id: sonardevice.cc,v 1.4 2000-12-04 02:11:31 vaughan Exp $
 #include <math.h>
 
 #include "world.h"
@@ -21,6 +21,8 @@ CSonarDevice::CSonarDevice( CRobot* rr,
   
   // zero the data
    memset( sonar, 0, sizeof( unsigned short ) * SONARSAMPLES );
+
+    undrawRequired = false;
 }
 
 bool CSonarDevice::GUIDraw()
@@ -28,10 +30,16 @@ bool CSonarDevice::GUIDraw()
   // dump out if noone is subscribed
   if( !IsSubscribed() ) return true;
   
-  m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
-  m_world->win->DrawLines( hitPts, SONARSAMPLES );
+  // copy first to last hit point to draw a closed polygon
+  hitPts[SONARSAMPLES].x = hitPts[0].x;
+  hitPts[SONARSAMPLES].y = hitPts[0].y;
 
-  memcpy( oldHitPts, hitPts, sizeof( XPoint ) * SONARSAMPLES );
+  m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
+  m_world->win->DrawLines( hitPts, SONARSAMPLES+1 );
+
+  memcpy( oldHitPts, hitPts, sizeof( XPoint ) * (SONARSAMPLES+1) );
+
+  undrawRequired = true;
 
   return true; 
 };  
@@ -39,11 +47,14 @@ bool CSonarDevice::GUIDraw()
 bool CSonarDevice::GUIUnDraw()
 { 
   // dump out if noone is subscribed
-  if( !IsSubscribed() ) return true;
-
-  m_world->win->SetForeground( 0 );
-  m_world->win->DrawLines( oldHitPts, SONARSAMPLES );
-  
+  if( undrawRequired )
+    {
+      m_world->win->SetForeground( m_world->win->RobotDrawColor( m_robot) );
+      m_world->win->DrawLines( oldHitPts, SONARSAMPLES+1 );
+      
+      undrawRequired = false;
+    }
+      
   return true; 
 };
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.8 $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -72,8 +72,9 @@ class CLaserDevice : public CPlayerDevice
     virtual bool GUIUnDraw();
     
     // storage for the GUI rendering
-     private: XPoint hitPts[ LASERSAMPLES ];
-     private: XPoint oldHitPts[ LASERSAMPLES ];
+     private: XPoint hitPts[ LASERSAMPLES + 1 ];
+     private: XPoint oldHitPts[ LASERSAMPLES + 1];
+     private: int undrawRequired;
 };
 
 #endif

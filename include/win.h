@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: win.h,v 1.2 2000-12-01 00:20:52 vaughan Exp $
+ * $Id: win.h,v 1.3 2000-12-04 02:11:31 vaughan Exp $
  ************************************************************************/
 
 #ifndef WIN_H
@@ -57,16 +57,11 @@ public:
   void DragRobot( void );
   
   void PrintCoords( void );
-  //void DrawSonar( CRobot* r );
-  //void DrawLaser( CRobot* r );
   
   void Draw( void );
-  //void DrawZones( void );
-  //void DrawCrum( CCrum* aCrum );
-  //void DrawCrums( void );
   void DrawRobotIfMoved( CRobot* r );
   void DrawRobot( CRobot* r );
-  //void DrawRobotWithScaling( CRobot* r );
+
   void DrawRobotsInRect( int xx, int yy, int ww, int hh );
   void DrawRobots( void );
   void DrawWalls( void );
@@ -74,12 +69,16 @@ public:
   void BlackBackgroundInRect(int xx, int yy, int ww, int hh  );
   void DrawWallsInRect( int xx, int yy, int ww, int hh );
   void ScanBackground( void );
-  //void ScanBackgroundWithScaling( void );
+
   void MoveSize(void);
   void DrawInRobotColor( CRobot* r );
   unsigned long  RobotDrawColor( CRobot* r );
   void SetForeground( unsigned long color );
   void DrawLines( XPoint* pts, int numPts );
+  void DrawPoints( XPoint* pts, int numPts );
+  //void DrawPolygon( XPoint* pts, int numPts );
+
+  void SetDrawMode( int mode );
 };
 
 #endif
