@@ -1,3 +1,908 @@
+2003-05-24 18:24  gerkey
+
+	* Makefile.am: took out documentation uninstall
+
+2003-05-24 18:13  gerkey
+
+	* configure.in, src/Makefile.am: fixed no-gui build
+
+2003-05-24 18:10  gerkey
+
+	* configure.in: changed prefix default to /usr/local
+
+2003-05-24 17:19  gerkey
+
+	* Makefile.am: changed doc install location to prefix/share/doc
+
+2003-05-24 17:17  gerkey
+
+	* tools/: Makefile.am: changed install location for tools to be in
+	bin
+
+2003-05-24 17:13  gerkey
+
+	* worlds/: Makefile.am: changed install location for example worlds
+	to be in share
+
+2003-05-24 16:10  gerkey
+
+	* configure.in: made RTK_CHECK verify that you've got version 2.2
+	of librtk
+
+2003-05-24 15:33  gerkey
+
+	* configure.in, src/Makefile.am, src/nogui.cc,
+	src/models/Makefile.am, src/rtkstage/Makefile.am,
+	tools/Makefile.am: fixed up build so that the packages can find
+	each other
+
+2003-05-24 14:27  gerkey
+
+	* configure.in: small fixes for Solaris
+
+2003-05-24 14:08  gerkey
+
+	* configure.in, src/Makefile.am, src/nogui.cc,
+	src/models/Makefile.am, src/rtkstage/Makefile.am,
+	tools/Makefile.am: fixed build so that each package can find the
+	others
+
+2003-05-23 18:59  inspectorg
+
+	* src/Makefile.am: Darwin fixes
+
+2003-05-23 18:11  inspectorg
+
+	* configure.in, src/entity.cc, src/entity.hh, src/playerdevice.cc,
+	src/playerdevice.hh: Tweaks for rtk2.2
+
+2003-05-23 10:06  inspectorg
+
+	* src/models/: positiondevice.cc, positiondevice.hh: Added odometry
+	bias
+
+2003-05-09 14:26  gerkey
+
+	* src/gnome2/.cvsignore: foo
+
+2003-05-08 17:16  rtv
+
+	* src/models/truthdevice.cc: added little hack to place objects on
+	t he root using the truth device
+
+2003-05-07 17:35  rtv
+
+	* src/models/fiducialfinderdevice.cc: fixed failed assert when
+	fiducialfinder sees more beacons than will fit in player's beacon
+	interface.
+
+2003-04-28 16:49  gerkey
+
+	* configure.in, src/server.cc: changed the way that the X11-style
+	color database is found
+
+2003-04-26 22:25  gerkey
+
+	* src/playerdevice.cc, worlds/everything.world: added warning about
+	null name; needs a little tweaking yet
+
+2003-04-26 21:48  gerkey
+
+	* src/playerdevice.cc, src/playerdevice.hh, src/server.cc,
+	src/server.hh, src/stage_types.hh, src/world.hh, src/worldfile.cc,
+	tools/autoplace.cc, worlds/everything.world, worlds/pherobot.world:
+	Added support to exploit Player's new auto-assigning of ports.	Put
+	"base_port <num>" in the .world file to try it out.
+	
+	Also removed the -pp flag to Stage, since it doesn't make sense.
+
+2003-04-18 17:46  gerkey
+
+	* src/models/positiondevice.cc: fixed unit conversions in set odom
+	request
+
+2003-04-17 16:40  rtv
+
+	* configure.in, docsrc/stage.tex, src/Makefile.am, src/colors.cc,
+	src/entity.cc, src/entity.hh, src/worldfile.cc, src/worldfile.hh,
+	src/gnome2/.cvsignore, src/gnome2/Makefile.am,
+	src/gnome2/gnomedevices.cc, src/gnome2/gnomegui.cc,
+	src/gnome2/gnomegui.hh, src/models/bitmap.cc,
+	src/models/positiondevice.cc, src/models/positiondevice.hh: fixed a
+	few bugs, removed gnome2 gui
+
+2003-04-16 18:22  gerkey
+
+	* worlds/table.world: small fixes
+
+2003-04-08 19:04  rtv
+
+	* docsrc/stage.tex: more foofinder mode notes
+
+2003-04-07 12:12  rtv
+
+	* README, src/library.cc, src/models/truthdevice.cc,
+	worlds/everything.world, worlds/simple.world,
+	worlds/usc_pioneer.inc: added get/set fiducial id to truth device
+
+2003-03-31 16:20  rtv
+
+	* configure.in, docsrc/stage.tex, src/entity.cc, src/entity.hh,
+	src/library.cc, src/stage_types.hh, src/worldfile.cc,
+	src/worldfile.hh, src/models/Makefile.am,
+	src/models/fiducialfinderdevice.hh, src/models/foofinderdevice.cc,
+	src/models/foofinderdevice.hh, src/models/laserdevice.cc,
+	src/models/positiondevice.cc, src/models/sonardevice.cc,
+	worlds/foofinder.world, worlds/hospital.pnm.gz: added foofinder
+	device
+
+2003-03-24 18:12  rtv
+
+	* configure.in, src/Makefile.am, src/entity.cc, src/stest.c:
+	changed config to use PREFIX
+
+2003-03-11 18:38  rtv
+
+	* README: updated install instructions
+
+2003-03-11 18:31  rtv
+
+	* configure.in: switched default install to /usr/local
+
+2003-03-11 16:29  rtv
+
+	* configure.in, demo/darpatech.world, src/library.cc,
+	src/playerdevice.cc, src/world.cc, src/models/Makefile.am,
+	src/models/descartesdevice.cc, src/models/descartesdevice.hh,
+	src/models/idardevice.cc, src/models/laserdevice.cc,
+	src/models/positiondevice.hh, worlds/pherobot.world,
+	worlds/simple.world: revived the descartes device - needed at HRL.
+	moved version number to 1.4
+
+2003-03-08 13:14  inspectorg
+
+	* configure.in, src/models/positiondevice.cc: Changed RTK version
+
+2003-03-08 13:03  gerkey
+
+	* configure.in: increment version numbers, ahead of a new minor
+	release
+
+2003-03-08 12:55  gerkey
+
+	* src/models/laserdevice.cc: removed debug output from laserdevice
+
+2003-03-08 11:33  gerkey
+
+	* src/models/laserdevice.cc: fixed long-range laser visualization
+	problem
+
+2003-03-08 11:02  gerkey
+
+	* src/models/: gripperdevice.cc: made Jason's fix to the gripper's
+	DropObject, to set a dropped puck's parent to be the world
+
+2003-03-08 10:58  gerkey
+
+	* src/models/: fiducialfinderdevice.cc, fiducialfinderdevice.hh:
+	slight fix to fiducialfinder
+
+2003-03-08 10:32  gerkey
+
+	* src/library.cc, src/models/Makefile.am, src/models/mcomdevice.cc,
+	src/models/mcomdevice.hh, src/models/positiondevice.cc,
+	worlds/everything.world: added mcom device support
+
+2003-03-08 00:41  gerkey
+
+	* src/library.cc, src/models/Makefile.am, src/models/mcomdevice.cc,
+	src/models/mcomdevice.hh, src/models/positiondevice.cc,
+	worlds/everything.world: applied Reed's patch, adding mcom support
+
+2003-03-06 23:31  gerkey
+
+	* src/models/laserdevice.cc: small typo
+
+2003-03-06 23:31  gerkey
+
+	* src/models/laserdevice.cc: applied Dylan's patch to allow
+	360-degree FOV lasers
+
+2003-03-06 23:28  gerkey
+
+	* src/models/laserdevice.cc: applied Dylan's patch to allow
+	360-degree FOV lasers
+
+2003-03-06 20:37  rtv
+
+	* src/models/idar.cc: file idar.cc was initially added on branch
+	stage-dynamic-server.
+
+2003-03-06 20:37  rtv
+
+	* src/models/idar.hh: file idar.hh was initially added on branch
+	stage-dynamic-server.
+
+2003-03-06 20:37  rtv
+
+	* src/models/: idar.cc, idar.hh: idar work
+
+2003-02-26 18:10  rtv
+
+	* src/: entity.cc, entity.hh, library.cc, library.hh, main.cc,
+	property.cc, root.cc, stage.h, stest.c, models/position.cc,
+	models/position.hh: position device working better. now working on
+	dynamically removing entities
+
+2003-02-25 17:57  rtv
+
+	* src/models/position.cc: file position.cc was initially added on
+	branch stage-dynamic-server.
+
+2003-02-25 17:57  rtv
+
+	* src/models/position.hh: file position.hh was initially added on
+	branch stage-dynamic-server.
+
+2003-02-25 17:57  rtv
+
+	* src/: entity.cc, entity.hh, main.cc, property.cc, stage.h,
+	stest.c, models/Makefile.am, models/position.cc,
+	models/position.hh, models/sonar.cc, models/sonar.hh: more on the
+	idar, plus positionmodel in progress
+
+2003-02-24 18:19  rtv
+
+	* src/: entity.cc, entity.hh, property.cc, stest.c,
+	models/sonar.cc: fixed up IDAR and tweaked RTK to allow flashers
+	(briefly visible figs)
+
+2003-02-23 20:47  rtv
+
+	* src/: Makefile.am, entity.cc, entity.hh, library.cc, library.hh,
+	main.cc, property.cc, root.cc, root.hh, stage.h, stest.c,
+	models/Makefile.am, models/sonar.cc, models/sonar.hh: much progress
+	on request/reply, model creation and idar
+
+2003-02-23 00:01  rtv
+
+	* src/property.cc: file property.cc was initially added on branch
+	stage-dynamic-server.
+
+2003-02-23 00:01  rtv
+
+	* src/: Makefile.am, entity.cc, entity.hh, library.cc, main.cc,
+	property.cc, root.cc, stage.h, stest.c, models/Makefile.am,
+	models/idardevice.cc, models/idardevice.hh, models/sonar.cc,
+	models/sonar.hh: lots og progress on request/reply
+
+2003-02-15 20:49  rtv
+
+	* src/entity.cc: tweaking rtkgui behavior
+
+2003-02-15 13:15  rtv
+
+	* src/: entity.cc, entity.hh, main.cc, stest.c: fixed bugs in
+	bitmap loading. now rects are normalized to a unit square
+
+2003-02-13 19:36  rtv
+
+	* configure.in, src/Makefile.am, src/entity.cc, src/main.cc,
+	src/stest.c, src/models/image.cc, src/models/image.hh,
+	tools/Makefile.am: bitmap loading seems to work perfectly
+
+2003-02-12 18:26  rtv
+
+	* src/: Makefile.am, entity.cc, entity.hh, main.cc, stage.h,
+	stest.c: loading pnms almost works, a little buggy, but uses libpnm
+	to great effect. timing is broken somehow.
+
+2003-02-12 16:41  rtv
+
+	* src/: entity.cc, entity.hh, models/sonar.cc: improved rects
+	handling
+
+2003-02-12 16:14  rtv
+
+	* src/: entity.cc, entity.hh, stest.c: fixed collision detection
+
+2003-02-12 10:58  inspectorg
+
+	* src/models/: amcldevice.cc, amcldevice.hh: Added config info
+
+2003-02-12 00:48  rtv
+
+	* src/: entity.cc, entity.hh, main.cc, models/laserdevice.cc:
+	little rtk tweaks and ideas for rect-based collision detection
+
+2003-02-11 19:02  rtv
+
+	* src/: main.cc, stest.c, models/sonar.cc: timing looks ok
+
+2003-02-11 17:57  rtv
+
+	* configure.in, src/main.cc, tools/Makefile.am: timing ok on mac
+
+2003-02-11 17:39  rtv
+
+	* src/main.cc: more speriments
+
+2003-02-11 17:10  rtv
+
+	* src/: main.cc, stest.c: experimenting with timing
+
+2003-02-11 17:03  inspectorg
+
+	* src/models/laserdevice.cc: Fixed laser rendering problem for
+	ranges > 8 m
+
+2003-02-09 18:16  gerkey
+
+	* src/main.cc: added header
+
+2003-02-09 18:14  rtv
+
+	* src/: entity.cc, main.cc, stage.h, stest.c: real time
+
+2003-02-09 17:08  gerkey
+
+	* src/: library.cc, main.cc: added some headers
+
+2003-02-09 17:02  rtv
+
+	* src/: entity.cc, entity.hh, library.cc, library.hh, main.cc,
+	stest.c, models/sonar.cc: working on timing
+
+2003-02-09 14:51  rtv
+
+	* src/: main.cc, stage.h, stest.c: object creation now returns id
+	to client
+
+2003-02-09 13:39  gerkey
+
+	* src/: library.cc, main.cc: added string.h
+
+2003-02-08 16:32  rtv
+
+	* src/: entity.cc, entity.hh, library.cc, library.hh, main.cc,
+	matrix.cc, raytrace.cc, stage.h, stest.c, models/puck.cc,
+	models/puck.hh, models/sonar.cc, models/sonar.hh: dirty properties
+	now exported to clients; some hacks in place while working on this;
+	must fix
+
+2003-02-07 23:54  inspectorg
+
+	* src/: library.cc, models/Makefile.am, models/amcldevice.cc,
+	models/amcldevice.hh, models/bitmap.cc, models/regularmcldevice.cc,
+	models/regularmcldevice.hh: Added Adpative MCL dummy device
+
+2003-02-07 17:21  rtv
+
+	* src/models/: sonardevice.cc, sonardevice.hh: moved sonardevice.*
+	to sonar.*
+
+2003-02-07 17:20  rtv
+
+	* src/: entity.cc, entity.hh, main.cc, stage.h, stest.c,
+	models/Makefile.am, models/puck.cc, models/puck.hh,
+	models/sonar.cc, models/sonar.hh: added data/command/config
+	interface. sonar model gathers data
+
+2003-02-07 17:20  rtv
+
+	* src/models/sonar.cc: file sonar.cc was initially added on branch
+	stage-dynamic-server.
+
+2003-02-07 17:20  rtv
+
+	* src/models/sonar.hh: file sonar.hh was initially added on branch
+	stage-dynamic-server.
+
+2003-02-06 23:47  rtv
+
+	* src/: Makefile.am, entity.cc, main.cc, stage.h,
+	models/Makefile.am, models/bitmap.cc, models/bitmap.hh,
+	models/box.cc, models/box.hh, models/positiondevice.cc,
+	models/puck.cc, models/puck.hh: resurrected the puck
+
+2003-02-06 21:30  rtv
+
+	* src/: Makefile.am, entity.cc, entity.hh, main.cc, matrix.cc,
+	matrix.hh, raytrace.cc, raytrace.hh, root.cc, root.hh, stage.h,
+	stest.c, models/Makefile.am, models/bitmap.cc, models/bitmap.hh,
+	models/box.cc: moved bitmap and box functionality in base entity.
+	very cool.
+
+2003-02-05 22:37  rtv
+
+	* src/: Makefile.am, playerdevice.hh: tidying up
+
+2003-02-05 22:09  rtv
+
+	* configure.in, src/Makefile.am, src/main.cc, src/stest.c: renamed
+	stageio library sio
+
+2003-02-05 19:55  rtv
+
+	* src/stest.c: gui can be reconfigured on the fly
+
+2003-02-05 19:47  rtv
+
+	* src/: stage.h, stest.c, models/bitmap.cc: tweaks
+
+2003-02-05 19:36  rtv
+
+	* src/: Makefile.am, entity.cc, entity.hh, main.cc, matrix.cc,
+	nogui.cc, playerdevice.cc, root.cc, root.hh, stage.h, stest.c,
+	models/Makefile.am, models/bitmap.cc, models/bitmap.hh: bitmap
+	device works. gui pretty good now.
+
+2003-02-04 20:07  rtv
+
+	* configure.in: tidying up
+
+2003-02-04 20:03  rtv
+
+	* src/gnome2/: .cvsignore, Makefile.am, gnomedevices.cc,
+	gnomegui.cc, gnomegui.hh: moved gnome2 to gnomegui
+
+2003-02-04 19:59  rtv
+
+	* src/: Makefile.am, entity.cc, entity.hh, gui.hh, library.cc,
+	main.cc, matrix.cc, matrix.hh, root.cc, stage.h, stest.c,
+	models/Makefile.am, models/box.cc, models/box.hh,
+	models/positiondevice.cc, models/positiondevice.hh,
+	rtkstage/.cvsignore, rtkstage/Makefile.am, rtkstage/rtkgui.cc: GUI
+	callbacks almost working now
+
+2003-02-04 19:01  gerkey
+
+	* src/: playerdevice.cc, server.cc, models/positiondevice.cc:
+	finished single-port mods; libplayerc and tclplayer are variously
+	broken
+
+2003-02-04 13:50  gerkey
+
+	* src/: playerdevice.cc, server.cc, server.hh: many changes to move
+	to single-port Player interface
+
+2003-02-03 19:35  rtv
+
+	* configure.in, src/Makefile.am, src/client.c, src/client.cc,
+	src/entity.cc, src/entity.hh, src/gui.hh, src/library.hh,
+	src/main.cc, src/nogui.cc, src/root.hh, src/stage.h, src/stest.c:
+	server in better shape
+
+2003-02-03 10:54  rtv
+
+	* src/.cvsignore: added cvsignore for this subdir
+
+2003-02-03 10:52  rtv
+
+	* src/stest.c: adding test client
+
+2003-02-03 10:52  rtv
+
+	* src/stest.c: file stest.c was initially added on branch
+	stage-dynamic-server.
+
+2003-02-03 10:51  rtv
+
+	* src/: cwrapper.h, server.c, server.cc, server.h, server.hh,
+	stage_types.hh, world.cc, world.hh, worldfile.cc, worldfile.hh:
+	removing old files
+
+2003-02-03 10:47  rtv
+
+	* src/: Makefile.am, dirname.c, entity.hh, poll.c, replace.h,
+	stage.h: removed redundant replace files
+
+2003-02-03 10:39  rtv
+
+	* src/: Makefile.am, stageio.c, stageio.cc, stageio.h: moved test
+	program into src for easier dependency checking and to reduce
+	directory proliferation
+
+2003-02-03 10:31  rtv
+
+	* src/main.c: removed  main.c
+
+2003-02-02 23:19  rtv
+
+	* configure.in, src/main.cc, tools/Makefile.am: server in
+	reasonable shape. next thing is timing
+
+2003-02-02 23:10  rtv
+
+	* src/: Makefile.am, entity.cc, entity.hh, library.cc, library.hh,
+	main.cc, stage.h, stageio.c, models/Makefile.am: starting to make a
+	test program as i develop the new server
+
+2003-02-02 19:07  rtv
+
+	* src/: Makefile.am, client.c, cwrapper.h, library.cc, main.cc,
+	replace.h, server.c, server.h, stage.h, stageio.c, stageio.h: all
+	network func moved to stageio
+
+2003-02-01 15:19  rtv
+
+	* src/: Makefile.am, client.c, cwrapper.h, entity.cc, entity.hh,
+	library.cc, library.hh, main.c, main.cc, root.cc, server.c,
+	stage.h, stageio.c, rtkstage/rtkgui.cc: models create and start-up
+	ok. working on reporting properties
+
+2003-01-31 18:17  rtv
+
+	* src/cwrapper.h: file cwrapper.h was initially added on branch
+	stage-dynamic-server.
+
+2003-01-31 18:17  rtv
+
+	* src/root.cc: file root.cc was initially added on branch
+	stage-dynamic-server.
+
+2003-01-31 18:17  rtv
+
+	* src/root.hh: file root.hh was initially added on branch
+	stage-dynamic-server.
+
+2003-01-31 18:17  rtv
+
+	* src/: cwrapper.h, root.cc, root.hh: root device replaces world
+
+2003-01-31 18:14  rtv
+
+	* src/: Makefile.am, client.c, colors.cc, colors.hh, entity.cc,
+	entity.hh, gui.hh, library.cc, library.hh, main.cc, matrix.cc,
+	matrix.hh, nogui.cc, raytrace.cc, raytrace.hh, server.c, server.cc,
+	server.h, stage.h, stage_types.hh, stageio.c, stageio.h,
+	gnome2/gnomegui.cc, rtkstage/rtkgui.cc: root entity creates matrix
+
+2003-01-31 14:35  rtv
+
+	* configure.in, src/client.c, src/entity.cc, src/entity.hh,
+	src/main.c, src/server.c, src/server.h, src/server.hh, src/stage.h,
+	src/stage_macros.h, src/stageio.c, src/stageio.cc, src/stageio.h:
+	server and io functions taking shape
+
+2003-01-30 17:39  rtv
+
+	* src/server.h: file server.h was initially added on branch
+	stage-dynamic-server.
+
+2003-01-30 17:39  rtv
+
+	* src/stage.h: file stage.h was initially added on branch
+	stage-dynamic-server.
+
+2003-01-30 17:39  rtv
+
+	* src/stage_macros.h: file stage_macros.h was initially added on
+	branch stage-dynamic-server.
+
+2003-01-30 17:39  rtv
+
+	* src/stageio.c: file stageio.c was initially added on branch
+	stage-dynamic-server.
+
+2003-01-30 17:39  rtv
+
+	* src/stageio.h: file stageio.h was initially added on branch
+	stage-dynamic-server.
+
+2003-01-30 17:39  rtv
+
+	* src/client.c: file client.c was initially added on branch
+	stage-dynamic-server.
+
+2003-01-30 17:39  rtv
+
+	* src/main.c: file main.c was initially added on branch
+	stage-dynamic-server.
+
+2003-01-30 17:39  rtv
+
+	* src/server.c: file server.c was initially added on branch
+	stage-dynamic-server.
+
+2003-01-30 17:39  rtv
+
+	* src/: Makefile.am, client.c, main.c, main.cc, matrix.hh,
+	server.c, server.cc, server.h, stage.h, stage_macros.h,
+	stage_types.hh, stageio.c, stageio.h, world.hh,
+	models/laserdevice.hh: started to create new server and client
+	library in C
+
+2003-01-21 15:07  inspectorg
+
+	* src/models/laserdevice.cc: Fixed bug with num range readings
+
+2003-01-09 19:58  rtv
+
+	* src/main.cc: removing commented code lines
+
+2003-01-09 19:46  rtv
+
+	* src/: rtkstage/rtkgui.cc, entity.cc, gui.hh: unwrapped rtk code
+	from CEntity::SetProperty
+
+2003-01-09 19:45  rtv
+
+	* src/gnome2/: gnomedevices.cc, gnomegui.cc, gnomegui.hh: added
+	blobfinder visualization
+
+2003-01-09 16:17  rtv
+
+	* src/entity.hh, worlds/everything.world: added new box thingie to
+	everything.world
+
+2003-01-09 14:01  rtv
+
+	* src/: playerdevice.cc, playerdevice.hh, models/image.cc: added
+	spawning of playerv by ctrl-click
+
+2003-01-09 11:31  inspectorg
+
+	* src/models/: laserdevice.cc: Added laser configuration params
+
+2003-01-09 08:41  inspectorg
+
+	* src/entity.cc: Modified collision test to ignore descendents
+
+2003-01-08 18:54  rtv
+
+	* worlds/everything.world: tidied up
+
+2003-01-08 18:54  rtv
+
+	* src/models/fiducialfinderdevice.cc, worlds/everything.world:
+	fixed error that caused persistent fiducials to be detected
+
+2003-01-08 18:40  rtv
+
+	* src/models/: fiducialfinderdevice.cc, fiducialfinderdevice.hh,
+	image.cc: changed fiducialfinder to use libplayerpacket functions
+
+2003-01-08 16:40  rtv
+
+	* src/models/: fiducialfinderdevice.cc, fiducialfinderdevice.hh,
+	image.cc: added request for geometry to fiducialfinder and fixed
+	bug loading compressed pnms
+
+2003-01-07 14:21  gerkey
+
+	* src/models/omnipositiondevice.cc: fixed dumb byte-swapping bug
+
+2003-01-06 17:24  inspectorg
+
+	* src/models/positiondevice.cc: Fixed omni-drive, too
+
+2003-01-06 17:23  inspectorg
+
+	* src/models/positiondevice.cc: Fixed odometry
+
+2003-01-02 14:36  rtv
+
+	* src/models/image.cc: fixed image.cc to allow for 0 to many
+	comment lines in pnm files
+
+2002-12-16 14:24  gerkey
+
+	* src/models/regularmcldevice.hh: fixes for FreeBSD build
+
+2002-12-09 18:35  boyoon
+
+	* src/models/: regularmcldevice.cc, regularmcldevice.hh: fixed the
+	problem that the command buffer is not comsumed ever; stage-side
+	wrapper over-write the command field to mark "processed".
+
+2002-12-09 16:33  rtv
+
+	* README, src/stage_types.hh, src/models/laserdevice.cc: fixed
+	reference to Makefile.common in README
+
+2002-12-09 16:28  rtv
+
+	* src/: stage_types.hh, world.cc, models/laserdevice.cc: fixed bug
+	in laserdevice that found duplicate fiducials
+
+2002-12-07 18:43  boyoon
+
+	* src/models/Makefile.am, src/models/regularmcldevice.cc,
+	src/models/regularmcldevice.hh,
+	src/models/regularmcldevice_action.cc,
+	src/models/regularmcldevice_clustering.cc,
+	src/models/regularmcldevice_sensor.cc,
+	src/models/regularmcldevice_world.cc, worlds/mcl.world: Now all
+	computations for the MCL device is done in Player side. The MCL
+	device in Stage is nothing but a simple wrapper for visualization.
+
+2002-12-05 17:01  rtv
+
+	* docsrc/stage.tex: release-1-3-1
+
+2002-12-05 13:48  boyoon
+
+	* src/models/: regularmcldevice.hh, regularmcldevice_clustering.cc:
+	got rid of isinf() function calls
+
+2002-12-04 20:55  rtv
+
+	* src/models/regularmcldevice.hh: that last hack works OK. now we
+	have clean OS X support out of the box.
+
+2002-12-04 20:50  rtv
+
+	* configure.in, src/models/regularmcldevice.hh: trying another hack
+	to get the MCL device to work on OS X and Linux
+
+2002-12-04 20:34  rtv
+
+	* src/models/: regularmcldevice.cc, regularmcldevice.hh,
+	regularmcldevice_clustering.cc: repaired missing isinf() on Darwin
+	- perhaps move this to configure.in?
+
+2002-12-04 20:01  rtv
+
+	* Makefile.am, configure.in, src/Makefile.am, src/entity.cc,
+	src/library.cc, src/playerdevice.cc, src/models/Makefile.am,
+	src/models/gripperdevice.cc, src/models/regularmcldevice.cc,
+	src/rtkstage/Makefile.am: still tweaking cross-platform goodness
+
+2002-12-04 19:09  rtv
+
+	* Makefile.am, configure.in, src/Makefile.am, src/library.cc,
+	src/models/Makefile.am, src/models/regularmcldevice.cc,
+	src/models/regularmcldevice_clustering.cc: finalized OS X support -
+	now compiles clean out of the box. temporarily disabled boyoon's
+	MCL devices as they don't quite compile under OSX  - I'm sure
+	Boyoon can find a fix quickly
+
+2002-12-04 17:50  rtv
+
+	* configure.in, src/models/regularmcldevice_clustering.cc: added
+	replacements for missing system/library calls
+
+2002-12-04 14:44  rtv
+
+	* configure.in, src/Makefile.am: now compiles under OS X
+
+2002-12-04 13:29  boyoon
+
+	* src/models/: regularmcldevice_action.cc,
+	regularmcldevice_clustering.cc: fixed a bug in the action model
+
+2002-12-03 19:53  rtv
+
+	* configure.in: just testing
+
+2002-12-03 19:45  rtv
+
+	* src/models/positiondevice.cc: removed debug output
+
+2002-12-03 19:45  rtv
+
+	* configure.in: added support for major.minor compat modes in
+	configure.in
+
+2002-12-03 19:30  rtv
+
+	* src/models/positiondevice.cc: fixed bug in positiondevice
+
+2002-12-03 17:50  rtv
+
+	* configure.in: did nothing
+
+2002-12-03 17:35  rtv
+
+	* src/: playerpacket.c, playerpacket.h: borrowed code from
+	libplayerpacket for the time being on this branch
+
+2002-12-03 17:35  rtv
+
+	* src/playerpacket.c: file playerpacket.c was initially added on
+	branch release-1-3-patches.
+
+2002-12-03 17:35  rtv
+
+	* src/playerpacket.h: file playerpacket.h was initially added on
+	branch release-1-3-patches.
+
+2002-12-03 17:33  rtv
+
+	* configure.in, src/Makefile.am, src/models/Makefile.am,
+	src/models/positiondevice.cc: major.minor compatibility changes in
+	configure.in, plus cosmetic tweaks
+
+2002-12-03 10:22  inspectorg
+
+	* src/entity.cc, src/entity.hh, src/playerdevice.cc,
+	src/playerdevice.hh, src/models/sonardevice.cc,
+	worlds/usc_pioneer.inc: Tweaked to work with nothreads rtk changes
+
+2002-12-02 23:09  boyoon
+
+	* src/library.cc, src/models/Makefile.am,
+	src/models/regularmcldevice.cc, src/models/regularmcldevice.hh,
+	src/models/regularmcldevice_action.cc,
+	src/models/regularmcldevice_clustering.cc,
+	src/models/regularmcldevice_sensor.cc,
+	src/models/regularmcldevice_world.cc, worlds/Makefile.am,
+	worlds/mcl.pnm.gz, worlds/mcl.world, worlds/mcl_map.pnm.gz: added a
+	localization device
+
+2002-11-20 13:34  rtv
+
+	* docsrc/stage.tex, src/library.cc, src/playerdevice.cc,
+	src/playerdevice.hh: updated manual with new position device info
+
+2002-11-20 13:33  rtv
+
+	* src/models/: Makefile.am, omnipositiondevice.cc,
+	omnipositiondevice.hh, positiondevice.cc, positiondevice.hh:
+	renamed omnipositiondevice to positiondevice. this device now
+	supports both differential and omnidirectional drive, and Player IO
+	bugs from v1.3 are fixed
+
+2002-11-19 13:14  jazzfunk
+
+	* src/main.cc: added "-s" flag to help message
+
+2002-11-18 20:27  rtv
+
+	* src/Makefile.am, src/library.cc, src/playerdevice.cc,
+	src/playerdevice.hh, src/stage_types.hh, src/models/Makefile.am,
+	src/models/omnipositiondevice.cc, src/models/omnipositiondevice.hh,
+	src/models/sonardevice.cc, src/rtkstage/Makefile.am,
+	worlds/simple.world: moving to libplayerpacket for player buffer
+	handling
+
+2002-11-14 19:07  jazzfunk
+
+	* src/main.cc: now takes the -h or --help command line option to
+	print out the usage options that someone spent so much time writing
+	up...
+
+2002-11-14 11:17  rtv
+
+	* src/models/: positiondevice.cc, positiondevice.hh: removed
+	positiondevice. omnipositiondevice does the job
+
+2002-11-14 11:17  rtv
+
+	* src/models/omnipositiondevice.cc: initialized stall value.
+	removed debug output
+
+2002-11-13 19:56  rtv
+
+	* demo/darpatech.world, src/library.cc, src/models/Makefile.am,
+	src/models/bitmap.cc, src/models/omnipositiondevice.cc,
+	src/models/omnipositiondevice.hh, src/models/positiondevice.cc,
+	worlds/usc_pioneer.inc: removed positiondevice from build. merge
+	functionality with omnipositiondevice. working on position control
+	for omnipositiondevice
+
+2002-11-11 22:42  gerkey
+
+	* src/entity.hh: foo
+
+2002-11-11 22:29  gerkey
+
+	* configure.in: slight tweak
+
+2002-11-11 22:22  gerkey
+
+	* configure.in, src/client.cc, src/server.cc, src/world.cc: tweaked
+	config/build setup
+
+2002-11-11 01:57  rtv
+
+	* README: release 1.2 attempt 2
+
+2002-11-11 01:42  rtv
+
+	* ChangeLog, Makefile.am, README: notes for 1.3 release
+
 2002-11-11 01:22  rtv
 
 	* worlds/multi-bitmap.world: renamed from multi-eviroment.world
@@ -105,7 +1010,7 @@
 
 2002-11-01 18:34  inspectorg
 
-	* src/rtkstage/: rtkgui.cc, rtkgui.cc: Menu tweaks
+	* src/rtkstage/: rtkgui.cc: Menu tweaks
 
 2002-11-01 18:26  gerkey
 
@@ -233,7 +1138,7 @@
 
 2002-10-30 16:13  gerkey
 
-	* acinclude.m4, acinclude.m4: foo
+	* acinclude.m4: foo
 
 2002-10-30 16:06  gerkey
 
@@ -1888,7 +2793,7 @@
 
 2001-09-28 17:48  vaughan
 
-	* Makefile.common, src/Makefile, src/Makefile: makefile clean again
+	* Makefile.common, src/Makefile: makefile clean again
 
 2001-09-28 17:47  vaughan
 
@@ -2308,13 +3213,13 @@
 
 2001-08-31 09:40  vaughan
 
-	* src/raytrace.cc: file raytrace.cc was initially added on branch
-	matrix.
+	* src/raytrace.cc: added file raytrace.cc - moved functionality
+	from matrix.cc
 
 2001-08-31 09:40  vaughan
 
-	* src/raytrace.cc: added file raytrace.cc - moved functionality
-	from matrix.cc
+	* src/raytrace.cc: file raytrace.cc was initially added on branch
+	matrix.
 
 2001-08-30 19:00  vaughan
 
@@ -2994,13 +3899,13 @@
 
 2001-04-30 11:55  ahoward
 
-	* README.RTK: file README.RTK was initially added on branch
-	rel-0-8-advanced.
+	* README.RTK, src/laserbeacon.cc, src/pioneermobiledevice.cc,
+	src/usc_pioneer.cc: Added note on installing RTK
 
 2001-04-30 11:55  ahoward
 
-	* README.RTK, src/laserbeacon.cc, src/pioneermobiledevice.cc,
-	src/usc_pioneer.cc: Added note on installing RTK
+	* README.RTK: file README.RTK was initially added on branch
+	rel-0-8-advanced.
 
 2001-04-29 23:38  ahoward
 
@@ -3259,8 +4164,7 @@
 	* src/visiondevice.cc: :removed superfluous delete[]'s from end of
 	update.  i'm kind of surprised these didn't cause seg faults! - RTV
 	
-	-------------------------------------------------------------------
-	---
+	----------------------------------------------------------------------
 
 2000-12-07 14:17  ahoward
 
@@ -3327,8 +4231,7 @@
 
 2000-12-05 21:14  ahoward
 
-	* src/rtksimagent.cc: file rtksimagent.cc was initially added on
-	branch rel-0-8-advanced.
+	* src/: rtkmain.cc, rtksimagent.cc: Added rtk files
 
 2000-12-05 21:14  ahoward
 
@@ -3337,7 +4240,8 @@
 
 2000-12-05 21:14  ahoward
 
-	* src/: rtkmain.cc, rtksimagent.cc: Added rtk files
+	* src/rtksimagent.cc: file rtksimagent.cc was initially added on
+	branch rel-0-8-advanced.
 
 2000-12-05 21:13  ahoward
 
@@ -3532,11 +4436,11 @@
 
 	* Makefile, README.stage, src/Makefile, src/image.cc, src/main.cc,
 	src/posreader.cc, src/robot.cc, src/server.cc, src/win.cc,
-	src/world.cc: Initial revision
+	src/world.cc: Initial import
 
 2000-11-28 16:16  ahoward
 
 	* Makefile, README.stage, src/Makefile, src/image.cc, src/main.cc,
 	src/posreader.cc, src/robot.cc, src/server.cc, src/win.cc,
-	src/world.cc: Initial import
+	src/world.cc: Initial revision
 
