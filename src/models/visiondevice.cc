@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.cc,v 1.2 2002-11-01 19:12:32 rtv Exp $
+ * CVS info: $Id: visiondevice.cc,v 1.3 2002-11-11 08:21:40 rtv Exp $
  */
 
 #include <math.h>
@@ -544,8 +544,8 @@ void CVisionDevice::RtkUpdate()
 	      }
       }
     }
-    else
-      PRINT_WARN( "no vision data available" );
+    //else
+    //PRINT_WARN( "no vision data available" );
   }
 }
 

@@ -21,7 +21,7 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/idarturretdevice.cc,v $
 * $Author: rtv $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 ******************************************************************************/
 
 #include <math.h>
@@ -240,8 +240,8 @@ void CIdarTurretDevice::RtkUpdate()
 {
   CPlayerEntity::RtkUpdate();
    
-  // for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
-  //idars[i]->RtkUpdate();
+  for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
+    idars[i]->RtkUpdate();
 }
 
 #endif

@@ -22,7 +22,7 @@
  *        useful as bumpers or whiskers.
  * Author: Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: bumperdevice.cc,v 1.2 2002-11-02 02:00:52 inspectorg Exp $
+ * CVS info: $Id: bumperdevice.cc,v 1.3 2002-11-11 08:21:39 rtv Exp $
  */
 
 #include <math.h>
@@ -354,8 +354,8 @@ void CBumperDevice::RtkUpdate()
           this->RtkRenderBumper( this->scan_fig, s );
 	    }
     }
-    else
-      PRINT_WARN2( "GET DATA RETURNED WRONG AMOUNT (%d/%d bytes)", res, sizeof(data) );
+    //else
+    //PRINT_WARN2( "GET DATA RETURNED WRONG AMOUNT (%d/%d bytes)", res, sizeof(data) );
   }  
 }
 

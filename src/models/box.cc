@@ -21,7 +21,7 @@
  * Desc: Simulates a simple box 
  * Author: Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: box.cc,v 1.2 2002-11-01 19:12:32 rtv Exp $
+ * CVS info: $Id: box.cc,v 1.3 2002-11-11 08:21:39 rtv Exp $
  */
 
 #include "world.hh"
@@ -45,6 +45,7 @@ CBox::CBox(LibraryItem* libit, CWorld *world, CEntity *parent)
   laser_return = LaserVisible;
   sonar_return = true;
   obstacle_return = true;
+  idar_return = IDARReflect;
 }
 
 

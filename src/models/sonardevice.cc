@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.2 2002-11-01 19:12:32 rtv Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.3 2002-11-11 08:21:40 rtv Exp $
  */
 
 #include <math.h>
@@ -298,8 +298,8 @@ void CSonarDevice::RtkUpdate()
 	  }
       }
     }
-    else
-      PRINT_WARN2( "GET DATA RETURNED WRONG AMOUNT (%d/%d bytes)", res, sizeof(data) );
+    //else
+    //PRINT_WARN2( "GET DATA RETURNED WRONG AMOUNT (%d/%d bytes)", res, sizeof(data) );
   }  
 }
 

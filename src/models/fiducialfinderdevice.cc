@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/fiducialfinderdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 // Usage: detects objects that were laser bright and had non-zero
 // ficucial_return
@@ -199,7 +199,7 @@ void CFiducialFinder::Update( double sim_time )
   player_laser_data_t laser;
   if (this->laser->GetData(&laser, sizeof(laser) ) == 0)
   {
-    puts( "Stage warning: LBD device found no laser data" );
+    //puts( "Stage warning: LBD device found no laser data" );
     return;
   }
 

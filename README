@@ -1,7 +1,7 @@
 ****************************************************************************
-* README.stage  - Richard Vaughan - Stage-1.2       
+* README.stage  - Richard Vaughan - Stage-1.3       
 *                                                                          
-* $Id: README,v 1.1 2002-06-11 06:48:15 rtv Exp $    
+* $Id: README,v 1.2 2002-11-11 08:21:39 rtv Exp $    
 ****************************************************************************
 
 This README provides a quick-start guide to building and running
@@ -12,14 +12,14 @@ Stage.  Consult the Stage User Manual for full details.
 Stage simulates mobile robots and sensors in a two-dimensional
 bitmapped environment containing a variety of objects. Robots are
 controlled through Player. Player provides a powerful, flexible
-interface to ActivMedia Pioneer 2; Stage provides virtual devices for
-Player. Various sensor models are provided, including sonar, scanning
-laser rangefinder, color blob tracking from a pan-tilt-zoom camera and
-odometry. Several controllers designed in Stage have been demonstrated
-to work on real robots.
+interface to a variety of robot hardware; Stage provides virtual
+devices for Player. Various sensor models are provided, including
+sonar, scanning laser rangefinder, color blob tracking from a
+pan-tilt-zoom camera and odometry. Several controllers designed in
+Stage have been demonstrated to work on real robots.
 
-It was designed at the USC Robotics Research Labs to support research
-into multi-agent intelligent autonomous systems.
+Stage is developed at USC Robotics Research Lab and HRL Laboratories
+to support research into multi-agent intelligent autonomous systems.
 
 -- How to get Stage -----------------------------------------------------
 
@@ -44,8 +44,7 @@ Boyoon Jung
 Jakob Fredslund
 
 Stage's development is supported at the University of Southern
-California by DARPA's TMR & MARS programs, and by an NSF grant.
-Richard Vaughan now works for HRL Laboratories, Malibu, CA.
+California and HRL Laboratories LLC by DARPA IPTO.
 
 -- Whats here? ------------------------------------------------------------
 
@@ -56,9 +55,9 @@ manual and this bootstrap documentation
 
 -- Requirements ------------------------------------------------------------ 
 
-Developed and tested under Linux kernel 2.4.2, glibc-2.2.4.  Written
-in reasonable ANSII/POSIX so should compile elsewhere. No promises,
-but people have found it to work on a variety of set-ups.
+Developed and tested under Linux kernel 2.4, glibc-2.  Written in
+reasonable ANSII/POSIX so should compile elsewhere. No promises, but
+people have found it to work on a variety of set-ups.
 
 Requires: Player [http://playerstage.sourceforge.net], X11R6, GTK.
 
@@ -78,16 +77,17 @@ check these settings.
 
 3) compile stage:
 
-$ cd stage
-$ make 
+$ cd stage-<version>
+$ configure
+$ make
 
-will make the executable src/stage.
+will build the binary src/stage.
 
 Optionally, as you can do:
  
 $ make install
 
-this will install the executables in $HOME/Stage-<version>/bin/stage
+this will install the executables in $HOME/stage-<version>/bin/
 (unless you otherwise configured the installation target in
 Makefile.common)
 
@@ -108,7 +108,7 @@ $ stage -?
 To try out Stage with an example world, change to the installation
 directory and do:
 
-$ bin/stage examples/simple.world 
+$ bin/stage worlds/simple.world
 
 -- Configuration file ----------------------------------------------------
 
@@ -120,7 +120,8 @@ you can get the idea from looking at the examples.
 
 Enjoy, and let us know what you do with Stage.
 
- -- The Player/Stage team.
+ - Richard Vaughan, Andrew Howard, Brian Gerkey
+
 
 
 
