@@ -17,12 +17,14 @@
 #include <sys/time.h>
 #include <iostream.h>
 #include <values.h>
+#include <netdb.h>     /* for gethostbyname(3) */
+#include <sys/poll.h>
 
 #include "truthserver.hh"
 
-#define VERBOSE
+#define VERSION "0.1"
 
-#define STAGE_IP "127.0.0.1"
+#define VERBOSE
 
 void PrintStageTruth( stage_truth_t &truth, double seconds )
 {
@@ -42,7 +44,7 @@ void PrintStageTruth( stage_truth_t &truth, double seconds )
 }
 
 int stages = 0;
-int* servers = 0;
+struct pollfd* servers = 0;
 
 
 void Activity( void )
@@ -61,30 +63,30 @@ void Activity( void )
       break;
     }    
      
-  printf( " %c\r", c ); fflush( stdout );
+  printf( "\rActivity: %c ", c ); fflush( stdout );
 }
 
 int main(int argc, char **argv)
 {
-  /* client vars */
-  int b, r, w; /* return values of various system calls */ 
-  struct sockaddr_in me; /* this client's net address structure */
+  // hello world
+  printf("** Manager v%s ** ", (char*) VERSION);
 
-  int v; // used for various return values;;
+  /* client vars */
+  int v, b, r, w; /* return values of various system calls */ 
 
   stages = argc - 1;
 
   // one fd for each stage
-  servers = new int[ stages ];
+  servers = new struct pollfd[ stages ];
       
-  
   for( int s=0; s<stages; s++ )
     {
-      
+
       /* open socket for network I/O */
-      servers[s] = socket(AF_INET, SOCK_STREAM, 0);
+      servers[s].fd = socket(AF_INET, SOCK_STREAM, 0);
+      servers[s].events = POLLIN; // notify me when data arrives
       
-      if( servers[s] < 0 )
+      if( servers[s].fd < 0 )
 	{
 	  printf( "Error opening network socket. Exiting\n" );
 	  fflush( stdout );
@@ -93,39 +95,42 @@ int main(int argc, char **argv)
       
       struct sockaddr_in servaddr;
       
+      char* hostname = argv[s+1];
+
+      printf( "\nConnecting to %s on port %d... ", hostname, TRUTH_SERVER_PORT );
+
+      struct hostent* entp;
+      if( (entp = gethostbyname( hostname )) == NULL)
+	{
+	  fprintf(stderr, "unknown host \"%s\" (argument %s). Quitting\n",
+		  hostname );
+	  return(-1);
+	}
+
       char* ip = argv[s+1];
       
       /* setup our server address (type, IP address and port) */
       bzero(&servaddr, sizeof(servaddr)); /* initialize */
       servaddr.sin_family = AF_INET;   /* internet address space */
       servaddr.sin_port = htons( TRUTH_SERVER_PORT ); /*our command port */ 
-      inet_pton(AF_INET, ip, &servaddr.sin_addr); /* the arena IP */
-      
-      v = connect( servers[s], (sockaddr*)&servaddr, sizeof( servaddr) );
+      // hostname
+      memcpy(&(servaddr.sin_addr), entp->h_addr_list[0], entp->h_length);
+
+      v = connect( servers[s].fd, (sockaddr*)&servaddr, sizeof( servaddr) );
       
       if( v < 0 )
 	{
-	  printf( "Can't find a Stage truth server on %s. Quitting.\n", 
+	  printf( "\nCan't find a Stage truth server on %s. Quitting.\n", 
 		  ip ); 
 	  fflush( stdout );
 	  exit( -1 );
 	}
-#ifdef VERBOSE
       else
-	puts( " OK." );
-#endif
+	printf( " OK." );
     }
 
+  puts( "" );
 
-  /*-----------------------------------------------------------*/
-      
-    /* report good setup and go into receive loop */
-#ifdef VERBOSE
-  puts( " OK." );    
-  puts( "Running " );
-  fflush( stdout );
-#endif
-  
   stage_truth_t truth;
 
   struct timeval start_tv, tv;
@@ -134,35 +139,49 @@ int main(int argc, char **argv)
   double seconds;
 
   while( 1 )
-    {	      
-      /* read will block until it has some bytes to return */
-      r = read( servers[0], &truth, sizeof(truth) );
+    {
+
+      int num_to_read = 0;
       
-      if( r > 0 )
+      // let's try this poll(2) thing (with no timeout)
+      if((num_to_read = poll( servers, stages, -1)) == -1)
 	{
-	  //gettimeofday( &tv, 0 );
-	  
-	  //seconds = tv.tv_sec - start_tv.tv_sec;
-	  //seconds += (tv.tv_usec - start_tv.tv_usec) / 1000000.0;
-	  
-	  //PrintStageTruth( truth, seconds );
-	  //fflush( stdout );
-
-	  Activity();
-
-	  // send the packet to the other servers 
-	  v = write( servers[1], &truth, sizeof(truth) );
+	  perror( "poll failed");
+	  return(-1);
 	}
-      else
+ 
+      //printf("poll returned %d to-read\n", num_to_read);
+      // call the corresponding Read() for each one that's ready
+      
+      if( num_to_read > 0 ) for(int i=0; i<stages; i++)
 	{
-	  cout << "Read error (Arena dead?). quitting. " << endl;
-	  exit( -1 );
-	}
+	  // is this one ready to read?
+	  if(servers[i].revents & POLLIN)
+	    {
+	      
+	      //printf("reading from: %d 0x%x\n", i,servers[i].events);
+
+	      r = read( servers[i].fd, &truth, sizeof(truth) );
+	      
+	      if( r > 0 )
+		{
+		  Activity();
+		  
+		  // foward the packet to the other servers 
+		  for(int j=0; j<stages; j++)
+		    if( j != i ) 
+		      v = write( servers[j].fd, &truth, sizeof(truth) );
+		}
+	      else
+		{
+		  cout << "Read error (Arena dead?). quitting. " << endl;
+		  exit( -1 );
+		}
+	    }
+	  
+	}     
     }
-    
-    exit(0);
 }
-
 
 
 

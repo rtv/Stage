@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.15 $
+//  $Revision: 1.16 $
 //
 // Usage:
 //  (empty)
@@ -40,6 +40,8 @@
 #include "rtk_ui.hh"
 #endif
 
+#define HOSTNAME_SIZE 64
+
 // Forward declare the world class
 //
 class CWorld;
@@ -55,10 +57,12 @@ class CEntity
     // Requires a pointer to the parent and a pointer to the world.
     //
     public: CEntity(CWorld *world, CEntity *parent_object);
+
+
+  // this flag is set if another Stage is managing this entity
+public: bool ignored; 
   
     StageType m_stage_type; // distinct from the player types found in messages.h
-
-    //uint32_t renderMask, senseMask;
 
     // Sensor return values
     bool obstacle_return;
@@ -193,6 +197,9 @@ class CEntity
     public: int m_player_port; // N
     public: int m_player_index; // M
     public: int m_player_type; // one of the device types from messages.h
+
+  // this is the name of the computer responsible for updating this object
+public: char m_hostname[ HOSTNAME_SIZE ];
   
     public: int SharedMemorySize( void );
 

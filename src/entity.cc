@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.12 $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  (empty)
@@ -74,7 +74,10 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
     m_player_index = 0; // these are all set in load() 
     m_player_port = global_current_player_port;
     m_player_type = 0;
-       
+    
+    // the default mananger of this entity is this computer
+    strcpy( m_hostname, "localhost" );
+    
     // init all the sizes
     m_lx = m_ly = m_lth = 0;
     m_size_x = 0; m_size_y = 0;
@@ -140,6 +143,7 @@ bool CEntity::Load(int argc, char **argv)
             i += 2;
         }
         
+
         // Extract pose from the argument list
         //
         else if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)

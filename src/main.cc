@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.12 $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  (empty)
@@ -43,6 +43,7 @@ bool quit = false;
 CWorld *world = 0;
 
 bool global_no_gui = false;
+char global_node_name[64];
 
 ///////////////////////////////////////////////////////////////////////////
 // Handle quit signals
@@ -63,38 +64,39 @@ bool parse_cmdline(int argc, char **argv)
 
   bool usage = false;
 
-    // Extract the name of the file describing the world
-    // - it's the last argument
-  if( argc == 2 )
-    world_file = argv[1];
-  else if( argc == 3 )
+  for( int a=1; a<argc-1; a++ )
     {
-      world_file = argv[2];
-      
-      if( strcmp( argv[1], "-xs" ) == 0 )
+      if( strcmp( argv[a], "-xs" ) == 0 )
 	{
 	  global_no_gui = true;
 	  printf( "[No GUI]" );
 	}
-      else if( strcmp( argv[1], "+xs" ) == 0 )
+      else if( strcmp( argv[a], "+xs" ) == 0 )
 	{
 	  global_no_gui = false;
 	  printf( "[GUI]" );
 	}
-	else
-	  usage = true;
+      //       else if( strcmp( argv[a], "-node" ) == 0 )
+      //  	{
+      //  	  strncpy( global_node_name, argv[a+1], 64 );
+      //  	  printf( "[Node %s]", global_node_name );
+      //  	}
+      else
+	usage = true;
     }
-  else
-    usage = true;
-    
 
-      if( usage )
-	{
-	  printf("\nUsage: stage [+/-xs] WORLDFILE\nOptions:\n"
-		 " +/-xs\tEnable the XS Graphical User Interface (xs must be in the $PATH)\n" );
-	  return false;
-	}
-    
+  if( usage )
+    {
+      printf("\nUsage: stage [+/-xs] WORLDFILE\nOptions:\n"
+	     " +/-xs\tEnable the XS Graphical User Interface (xs must be in the $PATH)\n" );
+      return false;
+    }
+  
+      // Extract the name of the file describing the world
+      // - it's the last argument
+      world_file = argv[ argc-1 ];
+      
+
     printf( "[%s]", world_file );
     return true;
 }
@@ -107,6 +109,8 @@ int main(int argc, char **argv)
 {
   // hello world
   printf("** Stage  v%s ** ", (char*) VERSION);
+
+  memset( global_node_name, 0, 64 ); //zero out the node name
   
   // Parse the command line
   // this may produce more startup output on the first line

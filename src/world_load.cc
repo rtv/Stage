@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.15 $
+//  $Revision: 1.16 $
 //
 // Usage:
 //  (empty)
@@ -64,68 +64,74 @@ bool CWorld::Load(const char *filename)
     PRINT_MSG1("loading world file [%s]", filename);
 #endif
    
-    // TODO: if we have any object's already, kill 'em, clear grids, etc.  
+    char m_current_hostname[ HOSTNAME_SIZE ];
 
+    // the default hostname is this host's name
+    strcpy( m_current_hostname, m_hostname );
+ 
+    
+    // TODO: if we have any objects already, kill 'em, clear grids, etc.  
+    
     FILE *file = NULL;
     
     // if the filename ends in ".m4", then run it through m4
     // and parse the result
     if(!strcmp(filename+strlen(filename)-3, ".m4"))
-    {
-      char bare_filename[256];
-      char system_command_string[512];
-      int retval;
-
-      strncpy(bare_filename,filename,strlen(filename)-3);
-      bare_filename[strlen(filename)-3] = '\0';
-      sprintf(system_command_string, "m4 -E %s > %s",
-              filename, bare_filename);
-
-      PRINT_MSG1("running m4: %s",system_command_string);
-      retval = system(system_command_string);
-      //if(retval == 127 || retval == -1)
-      if(retval)
       {
-        PRINT_MSG("Error while running m4 on world file");
-        return false;
-      }
+	char bare_filename[256];
+	char system_command_string[512];
+	int retval;
+	
+	strncpy(bare_filename,filename,strlen(filename)-3);
+	bare_filename[strlen(filename)-3] = '\0';
+	sprintf(system_command_string, "m4 -E %s > %s",
+		filename, bare_filename);
 
-      if(!(file = fopen(bare_filename, "r")))
-      {
-        printf("unable to open world file %s; ignoring\n", 
-               (char*)bare_filename);
-        return false;
-      }
+	PRINT_MSG1("running m4: %s",system_command_string);
+	retval = system(system_command_string);
+	//if(retval == 127 || retval == -1)
+	if(retval)
+	  {
+	    PRINT_MSG("Error while running m4 on world file");
+	    return false;
+	  }
+
+	if(!(file = fopen(bare_filename, "r")))
+	  {
+	    printf("unable to open world file %s; ignoring\n", 
+		   (char*)bare_filename);
+	    return false;
+	  }
      
-      // Keep this file name: we will need it again when we save.
-      //
-      // 
-      strcpy(m_filename, bare_filename);
-    }
-    else
-    {
-      // normal world file; just open it
-      if(!(file = fopen(filename, "r")))
-      {
-        printf("unable to open world file %s; ignoring\n", (char*) filename);
-        return false;
+	// Keep this file name: we will need it again when we save.
+	//
+	// 
+	strcpy(m_filename, bare_filename);
       }
-      // Keep this file name: we will need it again when we save.
-      //
-      // 
-      strcpy(m_filename, filename);
-    }
+    else
+      {
+	// normal world file; just open it
+	if(!(file = fopen(filename, "r")))
+	  {
+	    printf("unable to open world file %s; ignoring\n", (char*) filename);
+	    return false;
+	  }
+	// Keep this file name: we will need it again when we save.
+	//
+	// 
+	strcpy(m_filename, filename);
+      }
 
     int linecount = 0;
     CEntity *parent_object = NULL;
     
     while (true)
-    {
+      {
         // Get a line
         //
         char line[1024];
         if (fgets(line, sizeof(line), file) == NULL)
-            break;
+	  break;
         linecount++;
 
         // Make a copy of the line an tokenize it
@@ -138,38 +144,38 @@ bool CWorld::Load(const char *filename)
         // Skip blank lines
         //
         if (argc == 0)
-            continue;
+	  continue;
         
         // Ignore comment lines
         //
         if (argv[0][0] == '#')
-            continue;
+	  continue;
 
         // Look for open block tokens
         //
         if (strcmp(argv[0], "{") == 0)
-        {
+	  {
             if (m_object_count > 0)
-                parent_object = m_object[m_object_count - 1]->m_default_object;
+	      parent_object = m_object[m_object_count - 1]->m_default_object;
             else
-                printf("line %d : misplaced '{'\n", (int) linecount);
-        }
+	      printf("line %d : misplaced '{'\n", (int) linecount);
+	  }
 
         // Look for close block tokens
         //
         else if (strcmp(argv[0], "}") == 0)
-        {
+	  {
             if (parent_object != NULL)
-                parent_object = parent_object->m_parent_object;
+	      parent_object = parent_object->m_parent_object;
             else
-                printf("line %d : extra '}'\n", (int) linecount);
-        }
+	      printf("line %d : extra '}'\n", (int) linecount);
+	  }
 
         // Parse "set" command
         // set <variable> = <value>
         //
-         else if (argc == 4 && strcmp(argv[0], "set") == 0 && strcmp(argv[2], "=") == 0)
-        {
+	else if (argc == 4 && strcmp(argv[0], "set") == 0 && strcmp(argv[2], "=") == 0)
+	  {
             // Get the number of pixels per meter
             if (strcmp(argv[1], "pixels_per_meter") == 0)
               this->ppm = atof(argv[3]);
@@ -181,54 +187,54 @@ bool CWorld::Load(const char *filename)
             // For fig-based environment files, we need to know both the
             // ppm and the scale before loading the environment.
             else if (strcmp(argv[1], "environment_file") == 0)
-            {
-              strcpy(m_env_file, argv[3]);
-            }
+	      {
+		strcpy(m_env_file, argv[3]);
+	      }
             // the authorization key; it is passed on to Player
             else if (strcmp(argv[1], "auth_key") == 0)
-            {
-              strncpy(m_auth_key, argv[3],sizeof(m_auth_key));
-              m_auth_key[sizeof(m_auth_key)-1] = '\0';
-            }
+	      {
+		strncpy(m_auth_key, argv[3],sizeof(m_auth_key));
+		m_auth_key[sizeof(m_auth_key)-1] = '\0';
+	      }
             else if (strcmp(argv[1], "laser_res") == 0)
               m_laser_res = DTOR(atof(argv[3]));
             else if (strcmp(argv[1], "vision_res") == 0)
               m_vision_res = DTOR(atof(argv[3]));
             // get the unit specifier
             else if (strcmp(argv[1], "units") == 0)
-            {
-              // case-insensitive
-              if(!strcasecmp(argv[3],"m"))
-                unit_multiplier = 1.0;
-              else if(!strcasecmp(argv[3],"dm"))
-                unit_multiplier = 0.1;
-              else if(!strcasecmp(argv[3],"cm"))
-                unit_multiplier = 0.01;
-              else if(!strcasecmp(argv[3],"mm"))
-                unit_multiplier = 0.001;
-              else
-              {
-                printf("\nline %d : unknown unit specifier \"%s\". "
-                       "defaulting to meters.",
-                     (int) linecount, (char*) argv[3]);  
-                unit_multiplier = 1.0;
-              }
-            }
+	      {
+		// case-insensitive
+		if(!strcasecmp(argv[3],"m"))
+		  unit_multiplier = 1.0;
+		else if(!strcasecmp(argv[3],"dm"))
+		  unit_multiplier = 0.1;
+		else if(!strcasecmp(argv[3],"cm"))
+		  unit_multiplier = 0.01;
+		else if(!strcasecmp(argv[3],"mm"))
+		  unit_multiplier = 0.001;
+		else
+		  {
+		    printf("\nline %d : unknown unit specifier \"%s\". "
+			   "defaulting to meters.",
+			   (int) linecount, (char*) argv[3]);  
+		    unit_multiplier = 1.0;
+		  }
+	      }
             else if (strcmp(argv[1], "angles") == 0)
-            {
-              // case-insensitive
-              if(!strcasecmp(argv[3],"degrees"))
-                angle_multiplier = M_PI/180.0;
-              else if(!strcasecmp(argv[3],"radians"))
-                angle_multiplier = 1.0;
-              else
-              {
-                printf("\nline %d : unknown angle specifier \"%s\". "
-                       "defaulting to degrees.",
-                     (int) linecount, (char*) argv[3]);  
-                angle_multiplier = M_PI/180.0;
-              }
-            }
+	      {
+		// case-insensitive
+		if(!strcasecmp(argv[3],"degrees"))
+		  angle_multiplier = M_PI/180.0;
+		else if(!strcasecmp(argv[3],"radians"))
+		  angle_multiplier = 1.0;
+		else
+		  {
+		    printf("\nline %d : unknown angle specifier \"%s\". "
+			   "defaulting to degrees.",
+			   (int) linecount, (char*) argv[3]);  
+		    angle_multiplier = M_PI/180.0;
+		  }
+	      }
 	    // case-insensitive
             else if (strcasecmp(argv[1], "channel") == 0)
 	      {
@@ -245,125 +251,130 @@ bool CWorld::Load(const char *filename)
 		printf( "\nsetting channel %d to %s.", channel_num, color_name );
 #endif
               }
-            else
-              printf("\nline %d : variable %s is not defined",
-                     (int) linecount, (char*) argv[1]);  
-        }
-
-        // Parse "enable" command
-        // switch on optional sevices
-        //
-        else if (argc >= 2 && strcmp(argv[0], "enable") == 0)
-        {
-            if( strcmp( argv[1], "truth_server" ) == 0 )
-            {
-                // see if we should run on a non-standard port
-                if(argc >= 4 && !strcmp(argv[2],"port"))
-                  global_truth_port = atoi(argv[3]);
-
-		m_run_truth_server = true;
-
-                printf( "[Truth %d]", global_truth_port );
-                fflush ( stdout );
-            }
-            else if( strcmp( argv[1], "environment_server" ) == 0 )
-            {
-                // see if we should run on a non-standard port
-                if(argc >= 4 && !strcmp(argv[2],"port"))
-                  global_environment_port = atoi(argv[3]);
-
-		m_run_environment_server = true;
+	    // change the current hostname context
+            else if (strcasecmp(argv[1], "host") == 0)
+	      {
+		strncpy( m_current_hostname, argv[3], HOSTNAME_SIZE );
 		
-                printf( "[Env %d]", global_environment_port );
-                fflush ( stdout );
+		printf( "\nHost context: %s\n", m_current_hostname );
+              }
+	  }
+	    // Parse "enable" command
+	    // switch on optional sevices
+	    //
+	    else if (argc >= 2 && strcmp(argv[0], "enable") == 0)
+	      {
+		if( strcmp( argv[1], "truth_server" ) == 0 )
+		  {
+		    // see if we should run on a non-standard port
+		    if(argc >= 4 && !strcmp(argv[2],"port"))
+		      global_truth_port = atoi(argv[3]);
 
-            }
-            else if( strcmp( argv[1], "xs" ) == 0 )
-            {
-		m_run_xs = true;
+		    m_run_truth_server = true;
+
+		    printf( "[Truth %d]", global_truth_port );
+		    fflush ( stdout );
+		  }
+		else if( strcmp( argv[1], "environment_server" ) == 0 )
+		  {
+		    // see if we should run on a non-standard port
+		    if(argc >= 4 && !strcmp(argv[2],"port"))
+		      global_environment_port = atoi(argv[3]);
+
+		    m_run_environment_server = true;
 		
-                printf( "[XS]" );
-                fflush ( stdout );
-            }
-            else
-                printf("%s line %d : service %s is not defined\n",
-                       filename, (int) linecount, (char*) argv[1]);
-        }
+		    printf( "[Env %d]", global_environment_port );
+		    fflush ( stdout );
+
+		  }
+		else if( strcmp( argv[1], "xs" ) == 0 )
+		  {
+		    m_run_xs = true;
+		
+		    printf( "[XS]" );
+		    fflush ( stdout );
+		  }
+		else
+		  printf("%s line %d : service %s is not defined\n",
+			 filename, (int) linecount, (char*) argv[1]);
+	      }
         
-        // Parse "disnable" command
-        // disable optional sevices
-        //
-        else if (argc >= 2 && strcmp(argv[0], "disable") == 0)
-        {
-            if( strcmp( argv[1], "truth_server" ) == 0 )
-            {
-		m_run_truth_server = false;
+	    // Parse "disnable" command
+	    // disable optional sevices
+	    //
+	    else if (argc >= 2 && strcmp(argv[0], "disable") == 0)
+	      {
+		if( strcmp( argv[1], "truth_server" ) == 0 )
+		  {
+		    m_run_truth_server = false;
 
-                printf( "[Truth disabled]" );
-                fflush ( stdout );
-            }
-            else if( strcmp( argv[1], "environment_server" ) == 0 )
-            {
-		m_run_environment_server = false;
+		    printf( "[Truth disabled]" );
+		    fflush ( stdout );
+		  }
+		else if( strcmp( argv[1], "environment_server" ) == 0 )
+		  {
+		    m_run_environment_server = false;
 		
-                printf( "[Env disabled]" );
-                fflush ( stdout );
-            }
-            else if( strcmp( argv[1], "xs" ) == 0 )
-            {
-		m_run_xs = false;
+		    printf( "[Env disabled]" );
+		    fflush ( stdout );
+		  }
+		else if( strcmp( argv[1], "xs" ) == 0 )
+		  {
+		    m_run_xs = false;
 		
-                printf( "[XS disabled]" );
-                fflush ( stdout );
-            }
-            else
-                printf("\nStage warning: %s line %d : service %s is not defined\n",
-                       filename, (int) linecount, (char*) argv[1]);
-        }
+		    printf( "[XS disabled]" );
+		    fflush ( stdout );
+		  }
+		else
+		  printf("\nStage warning: %s line %d : service %s is not defined\n",
+			 filename, (int) linecount, (char*) argv[1]);
+	      }
         
 
-        // Parse "create" command
-        // create <type> ...
-        //
-        else if (argc >= 2 && strcmp(argv[0], "create") == 0)
-        {
-            // Create the object
-            //
-            CEntity *object = CreateObject(argv[1], parent_object);
-            if (object != NULL)
-            {
-                // Set some properties we will need later
-                // We need the line number so we can to work out how to save this object.
-                //
-                object->m_line = linecount;
-                object->m_column = strspn(line, " \t");
-                strcpy(object->m_type, argv[1]);
+	    // Parse "create" command
+	    // create <type> ...
+	    //
+	    else if (argc >= 2 && strcmp(argv[0], "create") == 0)
+	      {
+		// Create the object
+		//
+		CEntity *object = CreateObject(argv[1], parent_object);
+		if (object != NULL)
+		  {
+		    // Set some properties we will need later
+		    // We need the line number so we can to work out how to save this object.
+		    //
+		    object->m_line = linecount;
+		    object->m_column = strspn(line, " \t");
+		    strcpy(object->m_type, argv[1]);
                 
-                // Let the object load itself
-                //
-                if (!object->Load(argc, argv))
-                {
-                    fclose(file);
-                    return false;
-                }
+		    strncpy( object->m_hostname, m_current_hostname, HOSTNAME_SIZE );
 
-                // Add to list of objects
-                //
-                AddObject(object);
-            }
-            else
-                printf("line %d : object type %s is not defined\n",
-                       (int) linecount, (char*) argv[1]);
-        }
-    }
+		    // Let the object load itself
+		    //
+		    if (!object->Load(argc, argv))
+		      {
+			fclose(file);
+			return false;
+		      }
 
+		    // Add to list of objects
+		    //
+		    AddObject(object);
+		  }
+		else
+		  printf("line %d : object type %s is not defined\n",
+			 (int) linecount, (char*) argv[1]);
+	      }
+	  }
+      
     // Now load the environment file
     printf( "[%s LOADING]", m_env_file );
     fflush( stdout );
     if( !InitGrids(m_env_file) )
-        printf( "Stage warning: "
-                "error loading environment bitmap %s\n", 
-                m_env_file );
+      printf( "Stage warning: "
+	      "error loading environment bitmap %s\n", 
+	      m_env_file );
     printf( "\b\b\b\b\b\b\b\b\b" ); // erase load indicator
     printf( "         " ); // erase load indicator
     printf( "\b\b\b\b\b\b\b\b\b]" ); // erase load indicator
@@ -374,7 +385,7 @@ bool CWorld::Load(const char *filename)
 }
 
 
-///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
 // Save objects to a file
 //
 bool CWorld::Save(const char *filename)

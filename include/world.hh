@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.21 $
+//  $Revision: 1.22 $
 //
 // Usage:
 //  (empty)
@@ -87,6 +87,9 @@ private: pthread_t m_thread;
   
   // Enable flag -- world only updates while this is set
 private: bool m_enable;
+  
+  // the hostname of this computer
+private: char m_hostname[ HOSTNAME_SIZE ];
   
   // Timing
   // Real time at which simulation started.

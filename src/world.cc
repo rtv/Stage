@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.34 $
+//  $Revision: 1.35 $
 //
 // Usage:
 //  (empty)
@@ -85,6 +85,20 @@ CWorld::CWorld()
     //
     m_enable = true;
 
+    // name this computer
+    if( gethostname( m_hostname, sizeof(m_hostname)) == -1)
+      {
+	perror( "XS: couldn't get hostname. Quitting." );
+	exit( -1 );
+      }
+    
+    /* now, strip down to just the hostname */
+    char* first_dot;
+    if( (first_dot = strchr(m_hostname,'.') ))
+      *first_dot = '\0';
+    
+    printf( "[Host %s]", m_hostname );
+    
     // enable external services by default
     m_run_environment_server = true;
     m_run_truth_server = true;
@@ -579,8 +593,9 @@ void CWorld::Update()
     // Do the actual work -- update the objects 
     for (int i = 0; i < m_object_count; i++)
       {
-	// update
-	m_object[i]->Update( m_sim_time ); 
+	// if this host manages this object
+	if( strcmp( m_hostname, m_object[i]->m_hostname ) == 0 )
+	    m_object[i]->Update( m_sim_time ); // update it 
       }
 }
 
