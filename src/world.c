@@ -145,7 +145,9 @@ int world_model_create( world_t* world, stg_createmodel_t* cm )
   
   PRINT_DEBUG3( "creating model %d:%d (%s)", world->id, candidate, token  );
   
-  model_t* mod = model_create( world, candidate, token ); 
+  model_t* parent = g_hash_table_lookup( world->models, &cm->parent );
+
+  model_t* mod = model_create( world, parent, candidate, token ); 
   
   g_hash_table_replace( world->models, &mod->id, mod );
 

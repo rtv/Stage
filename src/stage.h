@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.63 2004-07-22 21:55:35 rtv Exp $
+ * CVS: $Id: stage.h,v 1.64 2004-07-23 01:05:13 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -258,6 +258,7 @@ typedef struct
 typedef struct
 {
   stg_id_t world;
+  stg_id_t parent; // server-side ID of the parent
   char token[ STG_TOKEN_MAX ];
 } stg_createmodel_t;
 
@@ -868,6 +869,7 @@ typedef struct
   GHashTable* models_id_server;
   GHashTable* models_id;   // the models index by client-side id
   GHashTable* models_name; // the models indexed by name
+  GHashTable* models_section; // the models indexed by worldfile section
 } stg_world_t;
 
 typedef struct _stg_model

@@ -403,6 +403,7 @@ stg_world_t* stg_client_createworld( stg_client_t* client,
   w->models_id = g_hash_table_new( g_int_hash, g_int_equal );
   w->models_id_server = g_hash_table_new( g_int_hash, g_int_equal );
   w->models_name = g_hash_table_new( g_str_hash, g_str_equal );
+  w->models_section = g_hash_table_new( g_int_hash, g_int_equal );
   
   PRINT_DEBUG2( "created world %d \"%s\"", 
 		w->id_client, w->token->token );
@@ -446,6 +447,7 @@ stg_model_t* stg_world_createmodel( stg_world_t* world,
   // index this new model in it's world
   g_hash_table_replace( world->models_id, &mod->id_client, mod );
   g_hash_table_replace( world->models_name, mod->token->token, mod );
+  g_hash_table_replace( world->models_section, &mod->section, mod );
 
   // server id is useless at this stage
   //g_hash_table_replace( world->models_id_server, &model->id_server, model );
@@ -483,6 +485,7 @@ void stg_world_destroy( stg_world_t* world )
   if( world->models_id ) g_hash_table_destroy( world->models_id );
   if( world->models_id_server ) g_hash_table_destroy( world->models_id_server );
   if( world->models_name ) g_hash_table_destroy( world->models_name );
+  if( world->models_section ) g_hash_table_destroy( world->models_section );
   free( world);
 }
 
@@ -819,10 +822,12 @@ int stg_client_property_set( stg_client_t* cli, stg_id_t world, stg_id_t model,
 
 stg_id_t stg_client_model_new(  stg_client_t* cli, 
 				stg_id_t world,
+				stg_id_t parent,
 				char* token )
 {
   stg_createmodel_t mod;
   mod.world = world;
+  mod.parent = parent;
   strncpy( mod.token, token, STG_TOKEN_MAX );
   
   //printf( "creating model %s in world %d\n",  mod.token, mod.world );
@@ -973,6 +978,7 @@ void stg_model_push( stg_model_t* mod )
   
   mod->id_server = stg_client_model_new(  mod->world->client,
 					  mod->world->id_server,
+					  mod->parent ? mod->parent->id_server : 0,
 					  mod->token->token );
 
   PRINT_DEBUG( " done" );

@@ -29,18 +29,26 @@ void prop_free_cb( gpointer gp )
 }
 
 model_t* model_create(  world_t* world, 
+			model_t* parent,
 			stg_id_t id, 
 			char* token )
 {
-  PRINT_DEBUG3( "creating model %d:%d (%s)", world->id, id, token  );
+  PRINT_DEBUG3( "creating model %d:%d (%s)", world->id, id, token );
 
+  if( parent )
+    {
+      PRINT_DEBUG2( "   a child of %d(%s)", parent->id, parent->token );
+    }
+  
   // calloc zeros the whole structure
   model_t* mod = calloc( sizeof(model_t),1 );
 
   mod->id = id;
   mod->token = strdup(token);
   mod->world = world;
-  
+  mod->parent = NULL;//parent; // TODO - fix parent stuff from here
+		     //onwards - mainly geometry for matrix rendering
+
   // models store data in here, indexed by property id
   mod->props = g_hash_table_new_full( g_int_hash, g_int_equal, NULL, prop_free_cb );
   

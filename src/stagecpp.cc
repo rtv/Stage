@@ -50,13 +50,15 @@ void stg_client_save( stg_client_t* cli, stg_id_t world_id )
   wf.Save(NULL);
 }  
   
-  void stg_client_load( stg_client_t* cli, stg_id_t world_id )
-    {
-      if( cli->callback_load )(*cli->callback_load)();
-      
-      PRINT_WARN( "LOAD NOT YET IMPLEMENTED" );
-      //wf.Load();
-    }  
+void stg_client_load( stg_client_t* cli, stg_id_t world_id )
+{
+  if( cli->callback_load )(*cli->callback_load)();
+  
+  PRINT_WARN( "LOAD NOT YET IMPLEMENTED" );
+  //wf.Load();
+}  
+
+
 
 
 // create a world containing a passel of Stage models based on the
@@ -94,6 +96,7 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
   
   // create a special model for the background
   stg_token_t* token = stg_token_create( "root", STG_T_NUM, 99 );
+
   stg_model_t* root = stg_world_createmodel( world, NULL, 0, token );
       
   stg_geom_t geom;
@@ -157,8 +160,19 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       const char *default_namestr = wf.GetEntityType(section);      
       const char *namestr = wf.ReadString(section, "name", default_namestr);
       stg_token_t* token = stg_token_create( namestr, STG_T_NUM, 99 );
-      stg_model_t* mod = stg_world_createmodel( world, NULL, section, token );
-      //stg_world_addmodel( world, mod );
+
+      int parent_section = wf.GetEntityParent( section );
+      printf( "section is %d parent section is %d\n", section, parent_section );
+
+      stg_model_t* parent = 
+	(stg_model_t*)g_hash_table_lookup( world->models_section, &parent_section );
+
+      if( parent )
+	printf( "parent has id %d name %s\n", parent->id_client, parent->token->token );
+      else
+	printf( "no parent\n" );
+
+      stg_model_t* mod = stg_world_createmodel( world, parent, section, token );
 
       stg_pose_t pose;
       pose.x = wf.ReadTupleLength(section, "pose", 0, STG_DEFAULT_POSEX );

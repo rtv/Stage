@@ -66,7 +66,7 @@ typedef struct
 
 
 // MODEL
-model_t* model_create(  world_t* world, stg_id_t id, char* token );
+model_t* model_create(  world_t* world, model_t* parent, stg_id_t id, char* token );
 void model_destroy( model_t* mod );
 void model_destroy_cb( gpointer mod );
 void model_handle_msg( model_t* model, int fd, stg_msg_t* msg );
