@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_interfaces.cc,v 1.1 2005-02-26 03:03:10 rtv Exp $
+ * CVS: $Id: player_interfaces.cc,v 1.2 2005-03-01 08:01:22 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -81,7 +81,7 @@ void SimulationConfig(  device_record_t* device,
 	// look up the named model
 	
 	stg_model_t* mod = 
-	  stg_world_model_name_lookup( device->mod->world, req->name );
+	  stg_world_model_name_lookup( StgDriver::world, req->name );
  	
 	if( mod )
 	  {

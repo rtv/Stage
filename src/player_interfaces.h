@@ -49,6 +49,9 @@ class StgDriver : public Driver
 			void* src, size_t len,
 			struct timeval* timestamp);
   
+  /// all player devices share the same Stage world
+  static stg_world_t* world;
+
  protected: 
   /// find the device record with this Player id
   // todo - faster lookup with a better data structure
@@ -70,8 +73,6 @@ class StgDriver : public Driver
   /// used as a callback when a model has new data
   static void RefreshDataCallback( void* user, void* data, size_t len );
   
-  /// all player devices share the same Stage world
-  static stg_world_t* world;
 };
 
 
