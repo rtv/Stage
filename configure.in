@@ -24,10 +24,9 @@ AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_RANLIB
 
-dnl do we have zlib support?
-AC_CHECK_LIB(z, gzopen)
 
 dnl Checks for header files.
+AC_CHECK_HEADERS(stdint.h sys/types.h strings.h)
 #AC_HEADER_STDC
 #AC_HEADER_SYS_WAIT
 #AC_CHECK_HEADERS(fcntl.h limits.h sys/file.h sys/time.h unistd.h)
@@ -39,6 +38,11 @@ dnl Checks for typedefs, structures, and compiler characteristics.
 #AC_HEADER_TIME
 
 dnl Checks for library functions.
+AC_CHECK_LIB(z, gzopen)
+AC_CHECK_LIB(nsl, gethostbyname)
+AC_CHECK_LIB(socket, connect)
+AC_CHECK_LIB(rt, sem_wait)
+AC_CHECK_FUNCS(inet_aton)
 #AC_FUNC_MMAP
 #AC_FUNC_SETPGRP
 #AC_TYPE_SIGNAL
@@ -63,4 +67,9 @@ AC_ARG_WITH(color, [   --with-color=file      Location of X11-style color file],
 CDB=$with_color, CDB="\"/usr/X11R6/lib/X11/rgb.txt\"")
 AC_DEFINE_UNQUOTED(COLOR_DATABASE,$CDB,[the X11-style color database])
 
-AC_OUTPUT(Makefile src/Makefile rtk2/Makefile worlds/Makefile tools/Makefile)
+AC_OUTPUT(Makefile 
+          src/Makefile 
+          src/replace/Makefile 
+          rtk2/Makefile 
+          worlds/Makefile 
+          tools/Makefile)

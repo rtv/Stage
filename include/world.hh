@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.64 2002-08-15 17:10:51 gerkey Exp $
+ * CVS info: $Id: world.hh,v 1.65 2002-08-21 21:54:48 gerkey Exp $
  */
 
 #ifndef WORLD_HH
@@ -29,12 +29,11 @@
 
 #include <stddef.h>
 #include <netinet/in.h>
-#include <pthread.h>
-#include <stdint.h>
-#include <sys/types.h>
+//#include <pthread.h>
 #include <sys/sem.h>
 #include <sys/ipc.h>
 #include <sys/poll.h>
+#include <limits.h>
 
 #include "player.h" //from player
 #include "image.hh"

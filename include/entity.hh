@@ -21,13 +21,22 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.56 2002-07-29 17:25:33 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.57 2002-08-21 21:54:48 gerkey Exp $
  */
 
 #ifndef ENTITY_HH
 #define ENTITY_HH
 
-#include <stdint.h>
+#if HAVE_CONFIG_H
+  #include <config.h>
+#endif
+#if HAVE_STDINT_H
+  #include <stdint.h>
+#endif
+#if HAVE_SYS_TYPES_H
+  #include <sys/types.h>
+#endif
+
 
 #include "stage.h"
 #include "stage_types.hh"

@@ -22,13 +22,13 @@
  * devices here.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 8 Jun 2002
- * CVS info: $Id: colors.hh,v 1.11 2002-07-09 02:59:51 rtv Exp $
+ * CVS info: $Id: colors.hh,v 1.12 2002-08-21 21:54:48 gerkey Exp $
  */
 
 #ifndef _STAGECOLORS_H
 #define _STAGECOLORS_H 
 
-#include <stdint.h>
+//#include <stdint.h>
 
 // Color type
 typedef uint32_t StageColor;

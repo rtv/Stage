@@ -48,6 +48,6 @@ stage_SOURCES = boxobstacle.cc \
                 worldfile.cc
                 #bpsdevice.cc
 
-stage_LDADD = -lm -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -lplayerqueue -lpthread $(RTKLDADD)
+stage_LDADD = -lm -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -lplayerqueue $(RTKLDADD) 
 
 stage_LDFLAGS = $(RTKLDFLAGS)

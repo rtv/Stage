@@ -1,3 +1,9 @@
+#if HAVE_CONFIG_H
+  #include <config.h>
+#endif
+#if HAVE_STRINGS_H
+  #include <strings.h>
+#endif
 
 #include <string.h>
 #include <sys/time.h>
@@ -31,7 +37,9 @@ CRTPPlayer::CRTPPlayer( char* address )
   //printf( "PORTSTR: %s\n", portstr );
 
   struct in_addr ip;
+#if HAVE_INET_ATON
   inet_aton( ipstr, &ip );
+#endif
 
   int port = atoi( portstr );
   

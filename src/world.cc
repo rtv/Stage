@@ -21,8 +21,15 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.113 2002-07-29 15:59:24 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.114 2002-08-21 21:54:48 gerkey Exp $
  */
+#if HAVE_CONFIG_H
+  #include <config.h>
+#endif
+#if HAVE_STRINGS_H
+  #include <strings.h>
+#endif
+
 
 #undef DEBUG
 //#undef VERBOSE
@@ -75,6 +82,14 @@ void TimerHandler( int val )
 {
   //puts( "TIMER HANDLER" );
   g_timer_events++;
+
+  // re-install signal handler for timing
+  if( signal( SIGALRM, &TimerHandler ) == SIG_ERR )
+    {
+      PRINT_ERR("failed to install signal handler");
+      exit( -1 );
+    }
+
   //printf( "\ng_timer_expired: %d\n", g_timer_expired );
 }  
 

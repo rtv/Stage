@@ -1,13 +1,23 @@
 
 #include "server.hh"
 
+#if HAVE_CONFIG_H
+  #include <config.h>
+#endif
+#if HAVE_STRINGS_H
+  #include <strings.h>
+#endif
+#if HAVE_SYS_TYPES_H
+  #include <sys/types.h>
+#endif
+
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <math.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <pthread.h>
+//#include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,11 +25,10 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
 
-#include <sstream>
+//#include <sstream>
 #include <iomanip>
 #include <iostream>
 

@@ -21,8 +21,14 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.23 2002-08-15 17:10:52 gerkey Exp $
+ * CVS info: $Id: server.cc,v 1.24 2002-08-21 21:54:48 gerkey Exp $
  */
+#if HAVE_CONFIG_H
+  #include <config.h>
+#endif
+#if HAVE_STRINGS_H
+  #include <strings.h>
+#endif
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -30,7 +36,7 @@
 #include <math.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <pthread.h>
+//#include <pthread.h>
 #include <pwd.h>
 #include <signal.h>
 #include <stdio.h>
@@ -47,7 +53,7 @@
 
 #include <fstream>
 #include <iostream>
-#include <sstream>
+//#include <sstream>
 #include <iomanip>
 
 //using namespace std;

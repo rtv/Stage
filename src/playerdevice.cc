@@ -21,14 +21,14 @@
  * Desc: Player device; doesnt do much anymore.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.32 2002-07-04 01:06:02 rtv Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.33 2002-08-21 21:54:48 gerkey Exp $
  */
 
 #include <errno.h>
 #include <fcntl.h>
 #include <math.h>
 #include <netinet/in.h>
-#include <pthread.h>
+//#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,7 +44,7 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 
-#include <sstream>
+//#include <sstream>
 #include <iomanip>
 #include <iostream>
 
