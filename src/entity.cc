@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.51 2002-03-16 02:57:31 rtv Exp $
+//  $Id: entity.cc,v 1.51.2.1 2002-05-01 00:54:01 gerkey Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -695,13 +695,10 @@ size_t CEntity::PutData( void* data, size_t len )
 	  m_info_io->player_id.port, 
 	  m_info_io->player_id.type, 
 	  m_info_io->player_id.index, data);
-  */
+   */
 
   // the data mustn't be too big!
-  //if( len <= m_info_io->data_len )
-
-  // RTV - the data must be EXACTLY the right size!
-  if( len == m_info_io->data_len )
+  if( len <= m_info_io->data_len )
   {
     // indicate that some data is available
     // and update the timestamp
