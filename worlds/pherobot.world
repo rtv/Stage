@@ -1,6 +1,8 @@
 
-# Desc: 1 robot with player, sonar and gps
-# CVS: $Id: pherobot.world,v 1.2 2002-07-10 02:00:34 rtv Exp $
+# Desc: world defines a descartes base with 8 idars	
+# CVS: $Id: pherobot.world,v 1.3 2002-07-10 02:03:32 rtv Exp $
+
+
 
 environment
 (
