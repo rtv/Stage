@@ -1,4 +1,4 @@
-// $Id: pioneermobiledevice.cc,v 1.11 2001-01-13 02:47:01 gerkey Exp $
+// $Id: pioneermobiledevice.cc,v 1.12 2001-02-02 00:01:50 gerkey Exp $
 
 //#define ENABLE_TRACE 1
 
@@ -177,7 +177,7 @@ void CPioneerMobileDevice::ComposeData()
     // Construct the data packet
     // Basically just changes byte orders and some units
     //
-    m_data.time = htonl((int)((m_world->timeNow - m_world->timeBegan)*1000.0));
+    //m_data.time = htonl((int)((m_world->timeNow - m_world->timeBegan)*1000.0));
     m_data.x = htonl((int) px);
     m_data.y = htonl((int) py);
     m_data.theta = htons((unsigned short) RTOD(pth));
