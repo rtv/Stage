@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.35 $
+//  $Author: ahoward $
+//  $Revision: 1.35.2.1 $
 //
 // Usage:
 //  (empty)
@@ -43,6 +43,7 @@
 #include "truthserver.hh"
 #include "playercommon.h"
 #include "matrix.hh"
+#include "worldfile.hh"
 
 // standard template library container
 // This *must* be loaded after everything else, otherwise
@@ -65,7 +66,7 @@ class CBroadcastDevice;
 //
 class CWorld
 {
-public: 
+  public: 
   
   // Default constructor
   CWorld();
@@ -79,7 +80,10 @@ public:
   // a general-purpose obstacle entity, used as a brick in the wall
   CEntity* wall;
 
-public:
+  // Object encapsulating world description file
+  private: CWorldFile worldfile;
+
+  public:
   // timing
   //bool m_realtime_mode;
   double m_real_timestep; // the time between wake-up signals in msec
@@ -89,20 +93,20 @@ public:
   uint32_t m_step_num; // the number of cycles executed, from 0
 
   // Thread control
-private: pthread_t m_thread;
+  private: pthread_t m_thread;
 
   // when to shutdown (in seconds)
-private: int m_stoptime;
+  private: int m_stoptime;
   
   // Enable flag -- world only updates while this is set
-private: bool m_enable;
+  private: bool m_enable;
   
   // the hostname of this computer
-public: char m_hostname[ HOSTNAME_SIZE ];
-public: char m_hostname_short[ HOSTNAME_SIZE ];  // same thing, w/out domain
+  public: char m_hostname[ HOSTNAME_SIZE ];
+  public: char m_hostname_short[ HOSTNAME_SIZE ];  // same thing, w/out domain
   
   // pose server stuff ---------------------------------------------
-private:
+  private:
   
   // data for the server-server's listening socket
   struct pollfd m_pose_listen;
@@ -128,16 +132,16 @@ private:
   void LogOutputHeader( void );
 
   void LogOutput( double freq,
-		  double loop_duration, double sleep_duration,
-		  double avg_loop_duration, double avg_sleep_duration,
-		  unsigned int bytes_in, unsigned int bytes_out,
-		  unsigned int total_bytes_in, unsigned int total_bytes_out );
+                  double loop_duration, double sleep_duration,
+                  double avg_loop_duration, double avg_sleep_duration,
+                  unsigned int bytes_in, unsigned int bytes_out,
+                  unsigned int total_bytes_in, unsigned int total_bytes_out );
 
   void ConsoleOutput( double freq,
-		      double loop_duration, double sleep_duration,
-		      double avg_loop_duration, double avg_sleep_duration,
-		      unsigned int bytes_in, unsigned int bytes_out,
-		      double avg_data );
+                      double loop_duration, double sleep_duration,
+                      double avg_loop_duration, double avg_sleep_duration,
+                      unsigned int bytes_in, unsigned int bytes_out,
+                      double avg_data );
     
   void StartTimer(double interval);
   bool ReadHeader( stage_header_t *hdr, int con );
@@ -156,12 +160,12 @@ private:
   // Timing
   // Real time at which simulation started.
   // The time according to the simulator (m_sim_time <= m_start_time).
-private: double m_start_time, m_last_time;
-private: double m_sim_time;
-// the same as m_sim_time but in timeval format
-public: struct timeval m_sim_timeval; 
+  private: double m_start_time, m_last_time;
+  private: double m_sim_time;
+  // the same as m_sim_time but in timeval format
+  public: struct timeval m_sim_timeval; 
   
-public: bool m_log_output, m_console_output;
+  public: bool m_log_output, m_console_output;
 
   int m_log_fd; // logging file descriptor
   char m_log_filename[256]; // path to the log file
@@ -170,26 +174,25 @@ public: bool m_log_output, m_console_output;
   //private: double m_max_timestep;
   
   // Update rate (just for diagnostics)
-private: double m_update_ratio;
-private: double m_update_rate;
+  private: double m_update_ratio;
+  private: double m_update_rate;
   
   // Name of the file the world was loaded from
-private: char m_filename[256];
+  private: char m_filename[256];
     
   // Name of environment bitmap
-private: char m_env_file[256];
+  private: char m_env_file[256];
 
   // color definitions
-private: char m_color_database_filename[256];
+  private: char m_color_database_filename[256];
 
   // Object list
-private: int m_object_count;
-private: int m_object_alloc;
-private: CEntity **m_object;
+  private: int m_object_count;
+  private: int m_object_alloc;
+  private: CEntity **m_object;
 
   // Authentication key
-public: char m_auth_key[PLAYER_KEYLEN];
-
+  public: char m_auth_key[PLAYER_KEYLEN];
 
   // if the user is running more than one copy of stage, this number
   // identifies this instance uniquely
@@ -199,178 +202,151 @@ public: char m_auth_key[PLAYER_KEYLEN];
   ///////////////////////////////////////////////////////////////////////////
   // Configuration variables
 
-  // Resolution at which to generate laser data
-public: double m_laser_res;
-public: double m_vision_res; // NYI
+  // Resolution at which to generate vision data
+  public: double m_vision_res; // NYI
 
   // flags that control servers
-public: bool m_env_server_ready;
-private: bool m_run_environment_server;
-private: bool m_run_pose_server;
+  public: bool m_env_server_ready;
+  private: bool m_run_environment_server;
+  private: bool m_run_pose_server;
  
-private: bool m_external_sync_required;
+  private: bool m_external_sync_required;
   
-
   // flag that controls spawning of xs
-private: bool m_run_xs;
+  private: bool m_run_xs;
     
   // *** HACK -- this should be made private.  ahoward
-public: float ppm;
+  public: float ppm;
 
-  // these are set in CWorld::Load() by the 
-  //    "set units = {m|dm|cm|mm}"
-  //    "set angles = {degrees|radians}" 
-  // commands, and are referened in CEntity::Load() to set poses accordingly.
-public: float unit_multiplier;
-public: float angle_multiplier;
-  
   // Scale of fig-based world file
-    private: double scale;
+  private: double scale;
 
   // the pose server port
-public: int m_pose_port;
+  public: int m_pose_port;
 
   // the environment server port
-public: int m_env_port;
+  public: int m_env_port;
 
   // an array that maps vision device channels to colors.
   // gets given to the visiondevice constructor which makes a copy
   // the channels are set to defaults
   // which can be overridden in the .world file
-  StageColor channel[ ACTS_NUM_CHANNELS ];
+  // MOVE?  StageColor channel[ ACTS_NUM_CHANNELS ];
 
 
-public: bool ParseCmdline( int argv, char* argv[] );
-    // Load the world
-public:  bool Load(const char *filename);
-public:  bool Load(){ return Load(m_filename); };
+  public: bool ParseCmdline( int argv, char* argv[] );
+  // Load the world
+  public:  bool Load(const char *filename);
+  public:  bool Load(){ return Load(m_filename); };
   
   // Save the world
   //
-public: bool Save(const char *filename);
-public: bool Save() {return Save(m_filename);};
+  public: bool Save(const char *filename);
+  public: bool Save() {return Save(m_filename);};
   
   // Initialise the world
-public: bool Startup();
+  public: bool Startup();
   
   // Shutdown the world
-public: void Shutdown();
+  public: void Shutdown();
   
   // Start world thread (will call Main)
-public: bool StartThread();
+  public: bool StartThread();
   
   // Stop world thread
-public: void StopThread();
+  public: void StopThread();
   
   // Thread entry point for the world
-public: static void* Main(void *arg);
+  public: static void* Main(void *arg);
 
   // Update everything
-private: void Update();
+  private: void Update();
 
   // Add an object to the world
-public: void AddObject(CEntity *object);
+  public: void AddObject(CEntity *object);
 
   // attempt to spawn an XS process
-private: void SpawnXS( void );
+  private: void SpawnXS( void );
 
-// fill the Stagecolor structure by looking up the color name in the database
+  // fill the Stagecolor structure by looking up the color name in the database
   // return false if failed
-public: int ColorFromString( StageColor* color, char* colorString );
+  public: int ColorFromString( StageColor* color, const char* colorString );
 
 
   //////////////////////////////////////////////////////////////////////////
   // Time functions
     
   // Get the simulation time - Returns time in sec since simulation started
-public: double GetTime();
+  public: double GetTime();
 
   // Get the real time - Returns time in sec since simulation started
-public: double GetRealTime();
+  public: double GetRealTime();
 
   ///////////////////////////////////////////////////////////////////////////
   // matrix-based world functions
   
   // Initialise the matrix - loading the bitmap world description
-private: bool InitGrids(const char *env_file);
+  private: bool InitGrids(const char *env_file);
   
-public: void SetRectangle(double px, double py, double pth,
-			  double dx, double dy, CEntity* ent );
+  public: void SetRectangle(double px, double py, double pth,
+                            double dx, double dy, CEntity* ent );
   
-public: void SetCircle(double px, double py, double pr,
-		       CEntity* ent );
+  public: void SetCircle(double px, double py, double pr,
+                         CEntity* ent );
   
-  ///////////////////////////////////////////////////////////////////////////
-  // Broadcast device functions
-  
-  // Initialise the broadcast device list
-public: void InitBroadcast();
-  
-  // Add a broadcast device to the list
-public: void AddBroadcastDevice(CBroadcastDevice *device);
-  
-  // Remove a broadcast device from the list
-public: void RemoveBroadcastDevice(CBroadcastDevice *device);
-
-  // Get a broadcast device from the list
-public: CBroadcastDevice* GetBroadcastDevice(int i);
-
-  // Private list of devices
-private: int m_broadcast_count;
-private: CBroadcastDevice *m_broadcast[256];
   
   ////////////////////////////////////////////////////////////////
   // shared memory management for interfacing with Player
 
-private: char tmpName[ 512 ]; // path of mmap node in filesystem
-public: char* PlayerIOFilename( void ){ return tmpName; };
+  private: char tmpName[ 512 ]; // path of mmap node in filesystem
+  public: char* PlayerIOFilename( void ){ return tmpName; };
   
-private: caddr_t playerIO;  
-private: bool InitSharedMemoryIO( void );
+  private: caddr_t playerIO;  
+  private: bool InitSharedMemoryIO( void );
   // points to a slot at the end of the io buffer where we'll set the time
-public: struct timeval* m_time_io;
+  public: struct timeval* m_time_io;
   
-private: key_t semKey;
-private: int semid; // semaphore access for shared mem locking
+  private: key_t semKey;
+  private: int semid; // semaphore access for shared mem locking
 
 
   //////////////////////////////////////////////////////////////////
   // methods
 
   // return a string that names this type of object
-public: char* CWorld::StringType( StageType t );
+  public: char* CWorld::StringType( StageType t );
   
   // Create a single semaphore to sync access to the shared memory segments
-private: bool CreateShmemLock();
+  private: bool CreateShmemLock();
 
   // Get a pointer to shared mem area
-public: void* GetShmem() {return playerIO;};
+  public: void* GetShmem() {return playerIO;};
     
   // lock the shared mem area
-public: bool LockShmem( void );
+  public: bool LockShmem( void );
 
   // Unlock the shared mem area
-public: void UnlockShmem( void );
+  public: void UnlockShmem( void );
   
-public: CEntity* GetEntityByID( int port, int type, int index );
+  public: CEntity* GetEntityByID( int port, int type, int index );
   
-private: CEntity* CreateObject(const char *type, CEntity *parent);
+  private: CEntity* CreateObject(const char *type, CEntity *parent);
 
   /////////////////////////////////////////////////////////////////////////////
   // access methods
   
-public:
+  public:
   double GetWidth( void )
-  { if( matrix ) return matrix->width; else return 0; };
+    { if( matrix ) return matrix->width; else return 0; };
   
   double GetHeight( void )
-  { if( matrix ) return matrix->height; else return 0; };
+    { if( matrix ) return matrix->height; else return 0; };
   
   int GetObjectCount( void )
-  { return m_object_count; };
+    { return m_object_count; };
   
   CEntity* GetObject( int i )
-  { if( i < m_object_count ) return (m_object[i]); else  return 0; }; 
+    { if( i < m_object_count ) return (m_object[i]); else  return 0; }; 
 
   // returns true if the given hostname matches our hostname, false otherwise
   bool CheckHostname(char* host);
@@ -381,43 +357,43 @@ public:
 
   // Initialise rtk
   //
-public: void InitRtk(RtkMsgRouter *router);
+  public: void InitRtk(RtkMsgRouter *router);
 
   // Process GUI update messages
   //
-public: static void OnUiDraw(CWorld *world, RtkUiDrawData *data);
+  public: static void OnUiDraw(CWorld *world, RtkUiDrawData *data);
 
   // Process GUI mouse messages
   //
-public: static void OnUiMouse(CWorld *world, RtkUiMouseData *data);
+  public: static void OnUiMouse(CWorld *world, RtkUiMouseData *data);
 
   // UI property message handler
   //
-public: static void OnUiProperty(CWorld *world, RtkUiPropertyData* data);
+  public: static void OnUiProperty(CWorld *world, RtkUiPropertyData* data);
 
   // UI button message handler
   //
-public: static void OnUiButton(CWorld *world, RtkUiButtonData* data);
+  public: static void OnUiButton(CWorld *world, RtkUiButtonData* data);
     
   // Draw the background; i.e. things that dont move
   //
-private: void DrawBackground(RtkUiDrawData *data);
+  private: void DrawBackground(RtkUiDrawData *data);
 
   // Draw the debugging info
   //
-private: void DrawDebug(RtkUiDrawData *data, int options);
+  private: void DrawDebug(RtkUiDrawData *data, int options);
 
   // Move an object using the mouse
   //
-private: void MouseMove(RtkUiMouseData *data);
+  private: void MouseMove(RtkUiMouseData *data);
 
   // Debugging options
   //
-private: enum {DBG_OBSTACLES, DBG_PUCKS, DBG_LASER, DBG_SONAR, DBG_VISION};
+  private: enum {DBG_OBSTACLES, DBG_PUCKS, DBG_LASER, DBG_SONAR, DBG_VISION};
     
   // RTK message router
   //
-private: RtkMsgRouter *m_router;
+  private: RtkMsgRouter *m_router;
   
 #endif
 };

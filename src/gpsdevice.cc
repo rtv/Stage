@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gpsdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.6 $
+//  $Author: ahoward $
+//  $Revision: 1.6.2.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -30,7 +30,7 @@ CGpsDevice::CGpsDevice(CWorld *world, CEntity *parent )
   m_size_x = 0.1;
   m_size_y = 0.1;
 
-  strcpy( m_color_desc, GPS_COLOR );
+  m_color_desc = GPS_COLOR;
 
   m_player_type = PLAYER_GPS_CODE;
   m_stage_type = GpsType;

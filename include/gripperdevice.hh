@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/gripperdevice.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.7 $
+//  $Author: ahoward $
+//  $Revision: 1.7.2.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -41,12 +41,6 @@
 
 class CGripperDevice : public CEntity
 {
-    // Hackety hack hack...
-    //  this number, if greater than 0, restricts the color of puck
-    //  that the gripper will pick up.  you can set it with the auxillary
-    //  argument in the gripper command.  shh; it's a secret.
-    private: char m_puck_channel;
-
     // Default constructor
     //
     public: CGripperDevice(CWorld *world, CEntity *parent ); 
@@ -102,7 +96,13 @@ class CGripperDevice : public CEntity
     // a vacuum  cleaner); if we do not consume, then we only hold one puck
     // at a time and it can be dropped
     private: bool m_gripper_consume;
-    
+
+    // Hackety hack hack...
+    //  this number, if greater than 0, restricts the color of puck
+    //  that the gripper will pick up.  you can set it with the auxillary
+    //  argument in the gripper command.  shh; it's a secret.
+    private: char m_puck_channel;
+  
     // these are the pucks we're carrying right now
     private: int m_puck_count;
     private: CEntity* m_pucks[MAXGRIPPERCAPACITY];

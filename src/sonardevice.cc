@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.14 $
+//  $Author: ahoward $
+//  $Revision: 1.14.2.1 $
 //
 // Usage:
 //  (empty)
@@ -42,7 +42,7 @@ CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent )
   m_player_type = PLAYER_SONAR_CODE; // from player's messages.h
   m_stage_type = SonarType;
   
-  strcpy( m_color_desc, SONAR_COLOR );
+  m_color_desc =  SONAR_COLOR;
 
   m_sonar_count = SONARSAMPLES;
   m_min_range = 0.20;

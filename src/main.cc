@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.25 $
+//  $Author: ahoward $
+//  $Revision: 1.25.2.1 $
 //
 // Usage:
 //  (empty)
@@ -25,6 +25,7 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include "world.hh"
+#include <errno.h>
 #include <unistd.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -118,10 +119,10 @@ int main(int argc, char **argv)
   // record our pid in the filesystem 
   FILE* pidfile;
   if((pidfile = fopen(PIDFILENAME, "w+")))
-    {
-      fprintf(pidfile,"%d\n", getpid());
-      fclose(pidfile);
-    }
+  {
+    fprintf(pidfile,"%d\n", getpid());
+    fclose(pidfile);
+  }
   
   // Create the world
   //
@@ -130,31 +131,33 @@ int main(int argc, char **argv)
   // check to see if the world file exists
   int fd = open( argv[argc-1], O_RDONLY );
   if( fd < 1 )
-    {
-      perror( "Stage: failed to open configuration file" );
-      PrintUsage();
-      exit( -1 );
-    }
+  {
+    PRINT_ERR1("failed to open world file [%s]", strerror(errno));
+    PrintUsage();
+    exit( -1 );
+  }
   
   close( fd );
 
-  printf( "argv[argc-1]: %s\n", argv[ argc-1 ] );
+  //printf( "argv[argc-1]: %s\n", argv[ argc-1 ] );
 
   // Load the world - the filename is the last argument
   // this may produce more startup output
   if (!world->Load( argv[ argc-1 ] ))
-    {
-      printf("Stage: failed load\n");
-      StageQuit();
-    }
+  {
+    PRINT_ERR("load failed; exiting");
+    StageQuit();
+    exit(-1);
+  }
 
   // override default and config file values with command line options.
   // any options set will produce console output for reassurance
   if (!world->ParseCmdline(argc, argv))
-    {
-      printf("Stage: failed to parse command line\n");
-      StageQuit();
-    }
+  {
+    PRINT_ERR("failed to parse command line; exiting");
+    StageQuit();
+    exit(-1);
+  }
   
   puts( "" ); // end the startup output line
   fflush( stdout );
@@ -162,10 +165,11 @@ int main(int argc, char **argv)
   // Start the world
   //  this splits of another thread which runs the simulation
   if (!world->Startup())
-    {
-      printf("Stage: failed startup\n");
-      StageQuit();
-    }
+  {
+    PRINT_ERR("startup failed; exiting");
+    StageQuit();
+    exit(-1);
+  }
   
   // Register callback for quit (^C,^\) events
   //
@@ -178,10 +182,11 @@ int main(int argc, char **argv)
   
   // register callback for any call of exit(3) 
   if( atexit( StageQuit ) == -1 )
-    {
-      printf("Stage: failed to register exit callback\n");
-      StageQuit();
-    }
+  {
+    PRINT_ERR("failed to register exit callback; exiting");
+    StageQuit();
+    exit(-1);
+  }
   
   // Wait for a signal
   //

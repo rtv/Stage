@@ -355,9 +355,45 @@ Los Angeles, USA\\
     %copies of Stage distributed over multiple hosts. 
     %\end{xarg}
 
+\chapter{XS -- an external viewer program}
+
+  [To do : xs documentation]
+
+\chapter{RtkStage -- an internal viewer program}
+
+  [To do: rtk documentation]
+
+
 \chapter{The World File}
   
   \section{Organization}
+
+    The world file lists and describes the attributes of
+    all of the objects in the simulated enviroment.
+    Consider the following example:
+      \begin{verbatim}
+      world_size (10 10)
+      world_res  0.01      
+
+      begin background
+        pose (0 0 0)
+        size 
+      end
+
+      # A simple robot with player interface and a laser
+      begin position_device
+        pose (4 4 0)
+        shape circle
+        port 6665
+        begin player_device
+          pose (0 0 0)
+        end
+        begin laser_device
+          pose (0 0 0)
+        end
+      end
+      
+      \end{verbatim}
 
   \section{General Options}
 

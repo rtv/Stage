@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.15 $
+//  $Revision: 1.15.2.1 $
 //
 // Usage:
 //  (empty)
@@ -34,25 +34,25 @@
 CVisionBeacon::CVisionBeacon(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {   
-    m_stage_type = VisionBeaconType;
+  m_stage_type = VisionBeaconType;
 
-    // set the Player IO sizes correctly for this type of Entity
-    m_data_len    = 0;
-    m_command_len = 0;
-    m_config_len  = 0;
+  // set the Player IO sizes correctly for this type of Entity
+  m_data_len    = 0;
+  m_command_len = 0;
+  m_config_len  = 0;
 
-    channel_return = 0; // visible by default on ACTS ch.0
-    laser_return = 1;
-    obstacle_return = 1;
-    sonar_return = 1;
+  vision_return = true;
+  laser_return = LaserSomething;
+  obstacle_return = true;
+  sonar_return = true;
 
-    m_player_port = 0; // not a player device
-    m_player_type = 0;
-    m_player_index = 0;
+  m_player_port = 0; // not a player device
+  m_player_type = 0;
+  m_player_index = 0;
     
-    m_radius = 0.1; // our beacons are 10cm radius
-    m_size_x = m_radius * 2.0;
-    m_size_y = m_radius * 2.0;
+  m_radius = 0.1; // our beacons are 10cm radius
+  m_size_x = m_radius * 2.0;
+  m_size_y = m_radius * 2.0;
 
   // Set the initial map pose
   //
@@ -65,38 +65,33 @@ CVisionBeacon::CVisionBeacon(CWorld *world, CEntity *parent)
 //
 bool CVisionBeacon::Load(int argc, char **argv)
 {
-    if (!CEntity::Load(argc, argv))
-        return false;
+  if (!CEntity::Load(argc, argv))
+    return false;
 
-    //printf( "beacon %p channel: %d\n", this, channel_return );
+  //printf( "beacon %p channel: %d\n", this, channel_return );
 
-    for (int i = 0; i < argc;)
+  for (int i = 0; i < argc;)
+  {
+    // Extract radius
+    //
+    if (strcmp(argv[i], "radius") == 0 && i + 1 < argc)
     {
-        // Extract radius
-        //
-        if (strcmp(argv[i], "radius") == 0 && i + 1 < argc)
-        {
-            m_radius = atof(argv[i + 1]);
-            i += 2;
+      m_radius = atof(argv[i + 1]);
+      i += 2;
 
 	    m_size_x = m_size_y = 2.0 * m_radius;
-        }
-
-	// RTV - this'd report error before any subclass had a chance
-        // Syntax error
-        else
-        {
-	  PLAYER_MSG1("unrecognized token [%s]", argv[i]);
-	  i += 1;
-        }
     }
 
-#ifdef INCLUDE_RTK
-    m_mouse_radius = (m_parent_object == NULL ? 1.414 * m_radius : 0.0);
-    m_draggable = (m_parent_object == NULL);
-#endif
-        
-    return true;
+    // RTV - this'd report error before any subclass had a chance
+    // Syntax error
+    else
+    {
+      PLAYER_MSG1("unrecognized token [%s]", argv[i]);
+      i += 1;
+    }
+  }
+
+  return true;
 }
 
 
@@ -124,30 +119,30 @@ bool CVisionBeacon::Save(int &argc, char **argv)
 //
 void CVisionBeacon::Update( double sim_time )
 {
-    ASSERT(m_world != NULL);
+  ASSERT(m_world != NULL);
     
-    double x, y, th;
-    GetGlobalPose( x,y,th );
+  double x, y, th;
+  GetGlobalPose( x,y,th );
     
-    // if we've moved 
-    //if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
-      {
-	m_last_update = sim_time;
+  // if we've moved 
+  //if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
+  {
+    m_last_update = sim_time;
 	
-	// Undraw our old representation
-	//
-	m_world->matrix->mode = mode_unset;
-	m_world->SetCircle(m_map_px, m_map_py, m_radius, this );
+    // Undraw our old representation
+    //
+    m_world->matrix->mode = mode_unset;
+    m_world->SetCircle(m_map_px, m_map_py, m_radius, this );
 	
-	m_map_px = x;
-	m_map_py = y;
-	m_map_pth = th;
+    m_map_px = x;
+    m_map_py = y;
+    m_map_pth = th;
 	
-	// Draw our new representation
-	//
-	m_world->matrix->mode = mode_set;
-	m_world->SetCircle(m_map_px, m_map_py, m_radius, this );
-      }
+    // Draw our new representation
+    //
+    m_world->matrix->mode = mode_set;
+    m_world->SetCircle(m_map_px, m_map_py, m_radius, this );
+  }
 }
 
 

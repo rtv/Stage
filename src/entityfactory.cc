@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.14 $
+//  $Revision: 1.14.2.1 $
 //
 // Usage:
 //  (empty)
@@ -85,9 +85,8 @@ CEntity* CWorld::CreateObject(const char *type, CEntity *parent)
     if (strcmp(type, "lbd_device") == 0)
       return new CLBDDevice(this, (CLaserDevice*)parent );
 
-    // the channel-to-color mapping array is set up in the config file
     if (strcmp(type, "vision_device") == 0)
-      return new CVisionDevice(this, (CPtzDevice*)parent, channel );
+      return new CVisionDevice(this, (CPtzDevice*)parent);
         
     if (strcmp(type, "vision_beacon") == 0)
       return new CVisionBeacon(this, parent);

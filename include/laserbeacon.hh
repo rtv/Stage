@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacon.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.8 $
+//  $Revision: 1.8.2.1 $
 //
 // Usage:
 //  (empty)
@@ -31,43 +31,25 @@
 
 class CLaserBeacon : public CEntity
 {
-    // Default constructor
-    //
-    public: CLaserBeacon(CWorld *world, CEntity *parent);
+  // Default constructor
+  public: CLaserBeacon(CWorld *world, CEntity *parent);
 
-    // Load the object from an argument list
-    //
-    public: virtual bool Load(int argc, char **argv);
+  // Load the entity from the worldfile
+  public: virtual bool Load(CWorldFile *worldfile, int section);
 
-    // Save the object to an argument list
-    //
-    public: virtual bool Save(int &argc, char **argv);
+  // Update the device
+  public: virtual void Update( double sim_time );
 
-    // Update the device
-    //
-    public: virtual void Update( double sim_time );
-
-    // Beacon id
-    //
-    public: int m_beacon_id;
-
-    // Set this flag to make the beacon transparent to lasers
-    //
-    private: bool m_transparent;
-    
-    // Beacon index in the world rep
-    //
-    private: int m_index;
+  // Beacon id
+  public: int id;
 
 #ifdef INCLUDE_RTK
     
-    // Process GUI update messages
-    //
-    public: virtual void OnUiUpdate(RtkUiDrawData *pData);
+  // Process GUI update messages
+  public: virtual void OnUiUpdate(RtkUiDrawData *data);
 
-    // Process GUI mouse messages
-    //
-    public: virtual void OnUiMouse(RtkUiMouseData *pData);
+  // Process GUI mouse messages
+  public: virtual void OnUiMouse(RtkUiMouseData *data);
 
 #endif
 };

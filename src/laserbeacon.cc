@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.16 $
+//  $Author: ahoward $
+//  $Revision: 1.16.2.1 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -38,93 +38,41 @@
 CLaserBeacon::CLaserBeacon(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {
-    // set the Player IO sizes correctly for this type of Entity
-    m_data_len    = 0;
-    m_command_len = 0;
-    m_config_len  = 0;
+  // set the Player IO sizes correctly for this type of Entity
+  m_data_len    = 0;
+  m_command_len = 0;
+  m_config_len  = 0;
 
-    m_player_port = 0; // not a player device
-    m_player_index = 0;
-    m_player_type = 0;
+  // This is not a player device
+  m_player_port = 0; 
+  m_player_index = 0;
+  m_player_type = 0;
 
-  strcpy( m_color_desc, LASERBEACON_COLOR );
-    m_stage_type = LaserBeaconType;
-  
-    m_beacon_id = 0;
-    m_index = -1;
-
-  m_beacon_id = 0;
-  m_index = -1;
-  
-  m_interval = 0.2; // 5Hz update
-  
-  laser_return = LaserBright1;
-  
-  // Set this flag to make the beacon transparent to lasesr
-  //
-  m_transparent = false;
-  
   m_size_x = 0.05; // very thin!   
   m_size_y = 0.3;     
-}
 
-
-///////////////////////////////////////////////////////////////////////////
-// Load the object from an argument list
-//
-bool CLaserBeacon::Load(int argc, char **argv)
-{
-    if (!CEntity::Load(argc, argv))
-        return false;
-
-    for (int i = 0; i < argc;)
-    {
-        // Extract id
-        //
-        if (strcmp(argv[i], "id") == 0 && i + 1 < argc)
-        {
-            if (m_name[0] == 0)
-                strcpy(m_name, argv[i + 1]);
-            m_beacon_id = atoi(argv[i + 1]);
-            i += 2;
-        }
-        else if (strcmp(argv[i], "transparent") == 0)
-        {
-	  laser_return = 0;
-	  i += 1;
-        }
-        else
-            i++;
-    }
-
-#ifdef INCLUDE_RTK
-    m_mouse_radius = (m_parent_object == NULL ? 0.2 : 0.0);
-    m_draggable = (m_parent_object == NULL);
-#endif
-        
-    return true;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Save the object
-//
-bool CLaserBeacon::Save(int &argc, char **argv)
-{
-    if (!CEntity::Save(argc, argv))
-        return false;
-
-    // Save id
-    //
-    char id[32];
-    snprintf(id, sizeof(id), "%d", (int) m_beacon_id);
-    argv[argc++] = strdup("id");
-    argv[argc++] = strdup(id);
-
-    if (m_transparent)
-        argv[argc++] = strdup("transparent");
+  m_color_desc = LASERBEACON_COLOR;
+  m_stage_type = LaserBeaconType;
+  
+  this->id = 0;
     
-    return true;
+  // This object is visible to lasers
+  // and is reflective
+  this->laser_return = LaserBright1;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Load the entity from the worldfile
+bool CLaserBeacon::Load(CWorldFile *worldfile, int section)
+{
+  if (!CEntity::Load(worldfile, section))
+    return false;
+
+  // Read the beacon id
+  this->id = worldfile->ReadInt(section, "id", 0);
+  
+  return true;
 }
 
 
@@ -133,46 +81,30 @@ bool CLaserBeacon::Save(int &argc, char **argv)
 //
 void CLaserBeacon::Update( double sim_time )
 {
-    ASSERT(m_world != NULL);
-
-    // See if its time to update beacons
-    //
-
-    //if( sim_time - m_last_update < m_interval )
-    //return;
+  ASSERT(m_world != NULL);
     
-    double x, y, th;
-    GetGlobalPose( x,y,th );
+  double x, y, th;
+  GetGlobalPose( x,y,th );
     
-    // if we've moved 
-    if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
-      {
-	m_last_update = sim_time;
+  // if we've moved 
+  if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
+  {
+    m_last_update = sim_time;
 	
-	// Undraw our old representation
-	//
-	if (!m_transparent)
-	  {
-	    m_world->matrix->mode = mode_unset;
-	    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
-				   m_size_x, m_size_y, this );
-	  }
+    // Undraw our old representation
+    m_world->matrix->mode = mode_unset;
+    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
+                             m_size_x, m_size_y, this );
 	
-	m_map_px = x;
-	m_map_py = y;
-	m_map_pth = th;
+    m_map_px = x;
+    m_map_py = y;
+    m_map_pth = th;
 	
-	// Draw our new representation
-	//
-	if (!m_transparent)
-	  {
-	    m_world->matrix->mode = mode_set;
-	    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
-				   m_size_x, m_size_y, this );
-	  }
-	// CHOP THIS!
-	//m_world->SetLaserBeacon(m_index, m_map_px, m_map_py, m_map_pth);
-      }
+    // Draw our new representation
+    m_world->matrix->mode = mode_set;
+    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
+                           m_size_x, m_size_y, this );
+  }
 }
 
 
@@ -193,7 +125,7 @@ void CLaserBeacon::OnUiUpdate(RtkUiDrawData *data)
         double sy = m_size_y;        
         double ox, oy, oth;
         GetGlobalPose(ox, oy, oth);
-        data->set_color(m_rtk_color); 
+        data->set_color(RTK_RGB(m_color.red, m_color.green, m_color.blue));
         data->ex_rectangle(ox, oy, oth, sx, sy);
 
         // Draw in a little arrow showing our orientation

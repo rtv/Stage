@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.hh,v 1.4 2001-09-28 21:55:42 gerkey Exp $
+// $Id: matrix.hh,v 1.4.2.1 2001-11-21 01:38:10 ahoward Exp $
 // RTV
 // ==================================================================
 
@@ -20,7 +20,7 @@ enum MatrixMode { mode_set, mode_unset };
 
 class CMatrix
 {
-public:
+  public:
   int	width;
   int	height;
   
@@ -49,43 +49,43 @@ public:
 
   // get a pixel color by its x,y coordinate
   inline CEntity** get_cell(int x, int y)
-  { 
-    if (x<0 || x>=width || y<0 || y>=height) 
-    {
-      //fputs("Stage: WARNING: CEntity::get_cell(int,int) out-of-bounds\n",
-            //stderr);
-      return 0;
-    }
+    { 
+      if (x<0 || x>=width || y<0 || y>=height) 
+      {
+        //fputs("Stage: WARNING: CEntity::get_cell(int,int) out-of-bounds\n",
+        //stderr);
+        return 0;
+      }
       
-    return data[x+(y*width)]; 
-  }
+      return data[x+(y*width)]; 
+    }
   
   // get a pixel color by its position in the array
   inline CEntity** get_cell( int i)
-  { 
-    if( i<0 || i > width*height ) 
-    {
-      //fputs("Stage: WARNING: CEntity::get_cell(int) out-of-bounds\n",stderr);
-      return 0;
+    { 
+      if( i<0 || i > width*height ) 
+      {
+        //fputs("Stage: WARNING: CEntity::get_cell(int) out-of-bounds\n",stderr);
+        return 0;
+      }
+      return data[i]; 
     }
-    return data[i]; 
-  }
   
   // is there an object of this type here?
   inline bool is_type( int x, int y, StageType type )
-  { 
-    //if( i<0 || i > width*height ) return 0;
+    { 
+      //if( i<0 || i > width*height ) return 0;
     
-    CEntity** cell = data[x+(y*width)];
+      CEntity** cell = data[x+(y*width)];
     
-    while( *cell )
+      while( *cell )
       {
-	if( (*cell)->m_stage_type == type ) return true;
-	cell++;
+        if( (*cell)->m_stage_type == type ) return true;
+        cell++;
       }
     
-    return false;
-  }
+      return false;
+    }
   
 
   inline void set_cell(int x, int y, CEntity* ent );

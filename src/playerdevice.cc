@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.23 $
+//  $Author: ahoward $
+//  $Revision: 1.23.2.1 $
 //
 // Usage:
 //  (empty)
@@ -75,7 +75,7 @@ CPlayerDevice::CPlayerDevice(CWorld *world, CEntity *parent )
      
   m_player_type = PLAYER_PLAYER_CODE; // from player's messages.h
   m_stage_type = PlayerType;
-  strcpy( m_color_desc, PLAYER_COLOR );
+  m_color_desc = PLAYER_COLOR;
 
   m_size_x = 0.12; // estimated USC PlayerBox ("whitebox") size
   m_size_y = 0.12;

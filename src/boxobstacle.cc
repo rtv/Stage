@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.13 $
+//  $Author: ahoward $
+//  $Revision: 1.13.2.1 $
 //
 // Usage:
 //  (empty)
@@ -48,14 +48,14 @@ CBoxObstacle::CBoxObstacle(CWorld *world, CEntity *parent)
   m_size_x = 1.0;
   m_size_y = 1.0;
   
-  strcpy( m_color_desc, BOX_COLOR );
+  m_color_desc = BOX_COLOR;
   
   m_stage_type = BoxType;
 
-  channel_return = 0; 
-  laser_return = 1;
-  sonar_return = 1;
-  obstacle_return = 1;
+  vision_return = true; 
+  laser_return = LaserSomething;
+  sonar_return = true;
+  obstacle_return = true;
 
   // Set the initial map pose
   //
@@ -85,11 +85,6 @@ bool CBoxObstacle::Load(int argc, char **argv)
             i++;
     }
 
-#ifdef INCLUDE_RTK
-    m_mouse_radius = (m_size_x > m_size_y ? m_size_x : m_size_y) * 0.6;
-    m_draggable = (m_parent_object == NULL);
-#endif
-    
     return true;
 }
 
@@ -159,31 +154,30 @@ void CBoxObstacle::Update( double simtime )
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
-//
-void CBoxObstacle::OnUiUpdate(RtkUiDrawData *pData)
+void CBoxObstacle::OnUiUpdate(RtkUiDrawData *data)
 {
-    CEntity::OnUiUpdate(pData);
+    CEntity::OnUiUpdate(data);
 
-    pData->begin_section("global", "");
+    data->begin_section("global", "");
     
-    if (pData->draw_layer("box_obstacle", true))
+    if (data->draw_layer("box_obstacle", true))
     {
         double ox, oy, oth;
         GetGlobalPose(ox, oy, oth);
-        pData->set_color(m_rtk_color);
-        pData->ex_rectangle(ox, oy, oth, m_size_x, m_size_y);
+        data->set_color(RTK_RGB(m_color.red, m_color.green, m_color.blue));
+        data->ex_rectangle(ox, oy, oth, m_size_x, m_size_y);
     }
 
-    pData->end_section();
+    data->end_section();
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI mouse messages
 //
-void CBoxObstacle::OnUiMouse(RtkUiMouseData *pData)
+void CBoxObstacle::OnUiMouse(RtkUiMouseData *data)
 {
-    CEntity::OnUiMouse(pData);
+    CEntity::OnUiMouse(data);
 }
 
 #endif

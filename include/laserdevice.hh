@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.19 $
+//  $Revision: 1.19.2.1 $
 
 //
 // Usage:
@@ -37,62 +37,62 @@ typedef std::slist< int > LaserBeaconList;
 
 class CLaserDevice : public CEntity
 {
-    // Default constructor
-    public: CLaserDevice(CWorld *world, CEntity *parent );
+  // Default constructor
+  public: CLaserDevice(CWorld *world, CEntity *parent );
 
-    // Load the object from an argument list
-    public: virtual bool Load(int argc, char **argv);
+  // Load the entity from the worldfile
+  public: virtual bool Load(CWorldFile *worldfile, int section);
+  
+  // Update the device
+  public: virtual void Update( double sim_time );
 
-    // Save the object to an argument list
-    public: virtual bool Save(int &argc, char **argv);
+  // Check to see if the configuration has changed
+  private: bool CheckConfig();
 
-    // Update the device
-    public: virtual void Update( double sim_time );
+  // Generate scan data
+  private: bool GenerateScanData(player_laser_data_t *data);
 
-    // Check to see if the configuration has changed
-    private: bool CheckConfig();
+  // Laser update rate in samples/sec
+  private: double update_rate;
 
-    // Generate scan data
-    private: bool GenerateScanData(player_laser_data_t *data);
+  // Minimum resolution in degrees
+  private: double min_res;
+  
+  // Maximum range of sample in meters
+  private: double max_range;
 
-    // Laser timing settings
-    private: double m_update_rate;
-    
-    // Maximum range of sample in meters
-    private: double m_max_range;
+  // Laser configuration parameters
+  private: double scan_res;
+  private: double scan_min;
+  private: double scan_max;
+  private: int scan_count;
+  private: bool intensity;
 
-    // Laser configuration parameters
-    private: double m_scan_res;
-    private: double m_scan_min;
-    private: double m_scan_max;
-    private: int m_scan_count;
-    private: bool m_intensity;
-
-    // List of beacons detected in last scan
-    public: LaserBeaconList m_visible_beacons;
+  // List of beacons detected in last scan
+  public: LaserBeaconList m_visible_beacons;
     
 #ifdef INCLUDE_RTK
     
-    // Process GUI update messages
-    //
-    public: virtual void OnUiUpdate(RtkUiDrawData *data);
+  // Process GUI update messages
+  //
+  public: virtual void OnUiUpdate(RtkUiDrawData *data);
 
-    // Process GUI mouse messages
-    //
-    public: virtual void OnUiMouse(RtkUiMouseData *data);
+  // Process GUI mouse messages
+  //
+  public: virtual void OnUiMouse(RtkUiMouseData *data);
 
-    // Draw the laser turret
-    //
-    private: void DrawTurret(RtkUiDrawData *data);
+  // Draw the laser turret
+  //
+  private: void DrawTurret(RtkUiDrawData *data);
 
-    // Draw the laser scan
-    //
-    private: void DrawScan(RtkUiDrawData *data);
+  // Draw the laser scan
+  //
+  private: void DrawScan(RtkUiDrawData *data);
 
-    // Laser scan outline
-    //
-    private: int m_hit_count;
-    private: double m_hit[512][2];
+  // Laser scan outline
+  //
+  private: int hit_count;
+  private: double hit[512][2];
     
 #endif    
 };

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/irdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.1 $
+//  $Author: ahoward $
+//  $Revision: 1.1.2.1 $
 //
 // Usage:
 //  (empty)
@@ -39,9 +39,9 @@ CIDARDevice::CIDARDevice(CWorld *world, CEntity *parent )
   m_stage_type = IDARType;
 
   // we're invisible except to other IDARs
-  laser_return = 0;
-  sonar_return = 0;
-  obstacle_return = 0;
+  laser_return = LaserNothing;
+  sonar_return = false;
+  obstacle_return = false;
   idar_return = IDAR_TRANSMIT;
 
   // set the Player IO sizes correctly for this type of Entity
@@ -51,7 +51,7 @@ CIDARDevice::CIDARDevice(CWorld *world, CEntity *parent )
   
   m_player_type = PLAYER_IDAR_CODE; // from player's messages.h
     
-  strcpy( m_color_desc, IDAR_COLOR );
+  m_color_desc = IDAR_COLOR;
 
   m_max_range = 2.0;
     

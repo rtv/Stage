@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.29 2001-11-07 22:50:33 ahoward Exp $
+//  $Id: entity.cc,v 1.29.2.1 2001-11-21 01:38:10 ahoward Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -25,85 +25,82 @@
 #undef DEBUG
 //#undef VERBOSE
 
-// entities use this port until the config file
-// changes global_player_port
-int global_current_player_port = PLAYER_PORTNUM;
 
 ///////////////////////////////////////////////////////////////////////////
 // Minimal constructor
 // Requires a pointer to the parent and a pointer to the world.
-//
 CEntity::CEntity(CWorld *world, CEntity *parent_object )
 {
-    m_world = world;
-    m_parent_object = parent_object;
-    m_default_object = this;
+  m_world = world;
+  m_parent_object = parent_object;
+  m_default_object = this;
 
-    m_stage_type = NullType; // overwritten by subclasses
-  
-    m_line = -1;
-    m_type[0] = 0;
-    m_name[0] = 0;
+  m_name = NULL;
+  m_stage_type = NullType; // overwritten by subclasses
     
-    // all truth connections should send this truth
-    memset( &m_dirty, true, sizeof(bool) * MAX_POSE_CONNECTIONS );
-    m_last_pixel_x = m_last_pixel_y = m_last_degree = 0;
+  // Set the initial map pose
+  m_lx = m_ly = m_lth = 0;
+  m_map_px = m_map_py = m_map_pth = 0;
 
-    // by default, entities don't show up in any sensors
-    // these must be enabled explicitly in each subclass
-    laser_return = LaserNothing;
-    sonar_return = false;
-    obstacle_return = false;
-    puck_return = false;
-    channel_return = -1; // transparent
+  // init all the sizes
+  m_size_x = 0; m_size_y = 0;
+  m_offset_x = m_offset_y = 0;
 
-    m_dependent_attached = false;
+  // Set global velocity to stopped
+  this->vx = this->vy = this->vth = 0;
 
-    m_player_index = 0; // these are all set in load() 
-    m_player_port = global_current_player_port;
-    m_player_type = 0;
+  // unmoveably MASSIVE! by default
+  m_mass = 1000.0;
     
-    // the default mananger of this entity is this computer
-    strcpy( m_hostname, "localhost" );
+  // Set the default shape
+  this->shape_desc = "rect";
+  this->shape = ShapeRect;
     
-    // init all the sizes
-    m_lx = m_ly = m_lth = 0;
-    m_size_x = 0; m_size_y = 0;
-    m_offset_x = m_offset_y = 0;
+  // initialize color description and values
+  m_color_desc = "red";
+  m_color.red = 255;
+  m_color.green = 0;
+  m_color.blue = 0;
 
-    // Set the initial map pose
-    //
-    m_map_px = m_map_py = m_map_pth = 0;
+  // by default, entities don't show up in any sensors
+  // these must be enabled explicitly in each subclass
+  obstacle_return = false;
+  sonar_return = false;
+  puck_return = false;
+  vision_return = false;
+  idar_return = false;
+  laser_return = LaserNothing;
 
-    // initialize color description and values
-    strcpy(m_color_desc, "red");
-    m_color.red = 255;
-    m_color.green = 0;
-    m_color.blue = 0;
+  m_dependent_attached = false;
 
-    m_com_vr = 0; // doesn't move
+  m_player_index = 0; // these are all set in load() 
+  m_player_port = -1;
+  m_player_type = 0;
     
-    m_mass = 1000.0; // unmoveably MASSIVE! by default
+  // the default mananger of this entity is this computer
+  strcpy( m_hostname, "localhost" );
 
-    m_interval = 0.1; // update interval in seconds 
-    m_last_update = -MAXFLOAT; // initialized 
+  // all truth connections should send this truth
+  memset( &m_dirty, true, sizeof(bool) * MAX_POSE_CONNECTIONS );
+  m_last_pixel_x = m_last_pixel_y = m_last_degree = 0;
 
-    m_info_len    = sizeof( player_stage_info_t ); // same size for all types
-    m_data_len    = 0; // type specific - set in subclasses
-    m_command_len = 0; // ditto
-    m_config_len  = 0; // ditto
 
-    m_info_io     = NULL; // instance specific pointers into mmap
-    m_data_io     = NULL; 
-    m_command_io  = NULL;
-    m_config_io   = NULL;
+  m_interval = 0.1; // update interval in seconds 
+  m_last_update = -MAXFLOAT; // initialized 
+
+  m_info_len    = sizeof( player_stage_info_t ); // same size for all types
+  m_data_len    = 0; // type specific - set in subclasses
+  m_command_len = 0; // ditto
+  m_config_len  = 0; // ditto
+
+  m_info_io     = NULL; // instance specific pointers into mmap
+  m_data_io     = NULL; 
+  m_command_io  = NULL;
+  m_config_io   = NULL;
 
 #ifdef INCLUDE_RTK
-    m_draggable = false; 
-    m_mouse_radius = 0;
-    m_mouse_ready = false;
-    m_dragging = false;
-    m_rtk_color = RTK_RGB(0, 0, 0);
+  m_mouse_ready = false;
+  m_dragging = false;
 #endif
 
 }
@@ -116,142 +113,221 @@ CEntity::~CEntity()
 {
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+// Load the entity from the world file
+bool CEntity::Load(CWorldFile *worldfile, int section)
+{
+  // Read the name
+  m_name = worldfile->ReadString(section, "name", "");
+      
+  // Read the pose
+  double px = worldfile->ReadTupleLength(section, "pose", 0, 0);
+  double py = worldfile->ReadTupleLength(section, "pose", 1, 0);
+  double pa = worldfile->ReadTupleAngle(section, "pose", 2, 0);
+  SetPose(px, py, pa);
+
+  // Read the shape
+  this->shape_desc = worldfile->ReadString(section, "shape", this->shape_desc);
+  if (strcmp(this->shape_desc, "rect") == 0)
+    this->shape = ShapeRect;
+  else if (strcmp(this->shape_desc, "circle") == 0)
+    this->shape = ShapeCircle;
+
+  // Read the size
+  m_size_x = worldfile->ReadTupleLength(section, "size", 0, m_size_x);
+  m_size_y = worldfile->ReadTupleLength(section, "size", 1, m_size_y);
+
+  // Read the object color
+  m_color_desc = worldfile->ReadString(section, "color", "red");
+  if( !m_world->ColorFromString( &m_color, m_color_desc ) )
+    PRINT_WARN1("invalid color name %s; using default", m_color_desc );
+
+  // Read the sensor flags
+  this->obstacle_return = worldfile->ReadBool(section, "obstacle",
+                                              this->obstacle_return);
+  this->sonar_return = worldfile->ReadBool(section, "sonar",
+                                           this->sonar_return);
+  this->vision_return = worldfile->ReadBool(section, "vision",
+                                            this->vision_return);
+  //this->laser_return = worldfile->ReadBool(section, "laser",
+  //                                         this->laser_return);
+  
+  // Read the player port
+  // Default to the parent's port
+  m_player_port = worldfile->ReadInt(section, "port", -1);
+  if (m_player_port < 0)
+  {
+    if (m_parent_object)
+      m_player_port = m_parent_object->m_player_port;
+    else
+    {
+      m_player_port = 0; //PLAYER_PORTNUM;
+      PRINT_WARN1("no port number specified; using default value %d",
+                  m_player_port);
+    }
+  }
+
+  // Read the player index
+  m_player_index = worldfile->ReadInt(section, "index", 0);
+
+
+  return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Save the entity to the world file
+bool CEntity::Save(CWorldFile *worldfile, int section)
+{
+  // Write the pose
+  double px, py, pa;
+  GetPose(px, py, pa);
+  worldfile->WriteTupleLength(section, "pose", 0, px);
+  worldfile->WriteTupleLength(section, "pose", 1, py);
+  worldfile->WriteTupleAngle(section, "pose", 2, pa);
+
+  return true;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////
 // Load the object from an argument list
 //
 bool CEntity::Load(int argc, char **argv)
 {
-    for (int i = 0; i < argc;)
+  /*
+  for (int i = 0; i < argc;)
+  {
+    // Extract a name
+    //
+    if (strcmp(argv[i], "name") == 0 && i + 1 < argc)
     {
-        // Extract a name
-        //
-        if (strcmp(argv[i], "name") == 0 && i + 1 < argc)
-        {
-            strncpy(m_name, argv[i + 1], sizeof(m_name) - 1);
-            i += 2;
-        }
+      strncpy(m_name, argv[i + 1], sizeof(m_name) - 1);
+      i += 2;
+    }
         
 
-        // Extract pose from the argument list
-        //
-        else if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
-        {
-            double px = atof(argv[i + 1]) * m_world->unit_multiplier;
-            double py = atof(argv[i + 2]) * m_world->unit_multiplier;
-            double pa = atof(argv[i + 3]) * m_world->angle_multiplier;
-            SetPose(px, py, pa);
-            i += 4;
-        }
-
-        // set obstacle flag
-        //
-        else if (strcmp(argv[i], "obstacle") == 0 && i + 1 < argc)
-	  {
-            if (strcmp(argv[i + 1], "true") == 0)
-	      obstacle_return = true;
-            else if (strcmp(argv[i + 1], "false") == 0)
-	      obstacle_return = false;
-            else
-	      PLAYER_MSG2("unrecognized token [%s %s]", argv[i], argv[i + 1]);
-	    i+=2;
-	  }
-	    
-        // set sonar flag
-        //
-        else if (strcmp(argv[i], "sonar") == 0 && i + 1 < argc)
-	  {
-            if (strcmp(argv[i + 1], "true") == 0)
-	      sonar_return = true;
-            else if (strcmp(argv[i + 1], "false") == 0)
-	      sonar_return = false;
-            else
-	      PLAYER_MSG2("unrecognized token [%s %s]", argv[i], argv[i + 1]);
-	    i+=2;
-	  }
-	    
-        // set laser return
-        //
-        else if (strcmp(argv[i], "laser") == 0 && i + 1 < argc)
-	  {
-            if (strcmp(argv[i + 1], "true") == 0)
-	      laser_return = LaserSomething;
-            else if (strcmp(argv[i + 1], "false") == 0)
-	      laser_return = LaserNothing;
-            else if (strcmp(argv[i + 1], "bright1") == 0)
-	      laser_return = LaserBright1;
-            else if (strcmp(argv[i + 1], "bright2") == 0)
-	      laser_return = LaserBright2;
-            else if (strcmp(argv[i + 1], "bright3") == 0)
-	      laser_return = LaserBright3;
-            else if (strcmp(argv[i + 1], "bright4") == 0)
-	      laser_return = LaserBright4;
-            else
-	      PLAYER_MSG2("unrecognized token [%s %s]", argv[i], argv[i + 1]);
-	    i+=2;
-	  }
-	    
-        // Extract color
-        //
-        else if (strcmp(argv[i], "color") == 0 && i + 1 < argc)
-        {
-            strcpy(m_color_desc, argv[i + 1]);
-            i += 2;
-        }
-
-        // Extract size
-        //
-        else if (strcmp(argv[i], "size") == 0 && i + 2 < argc)
-        {
-            m_size_x = atof(argv[i + 1]);
-            m_size_y = atof(argv[i + 2]);
-            i += 3;
-        }
-    
-        // extract port number
-        // one day we'll inherit our parent's port by default.
-	// for now this becomes the current global port
-	// i.e. everything takes this port until we specify another one
-        else if (strcmp(argv[i], "port") == 0 && i + 1 < argc)
-        {
-            m_player_port = atoi(argv[i + 1]);
-            i += 2;
-
-	    global_current_player_port = m_player_port;
-        }
-
-        // extract index number
-        else if (strcmp(argv[i], "index") == 0 && i + 1 < argc)
-        {
-            m_player_index = atoi(argv[i + 1]);
-            i += 2;
-        }
-
-        else
-        {
-            PLAYER_MSG1("unrecognized token [%s]", argv[i]);
-            i += 1;
-        }
+    // Extract pose from the argument list
+    //
+    else if (strcmp(argv[i], "pose") == 0 && i + 3 < argc)
+    {
+      double px = atof(argv[i + 1]) * m_world->unit_multiplier;
+      double py = atof(argv[i + 2]) * m_world->unit_multiplier;
+      double pa = atof(argv[i + 3]) * m_world->angle_multiplier;
+      SetPose(px, py, pa);
+      i += 4;
     }
 
-    // don;t bother looking up red colors - the default m_color is red
-    if( strcmp( m_color_desc, "red" ) != 0 )
-      {
-	// resolve the RGB value of the color name
-	if( !m_world->ColorFromString( &m_color, m_color_desc ) )
+    // set obstacle flag
+    //
+    else if (strcmp(argv[i], "obstacle") == 0 && i + 1 < argc)
+	  {
+      if (strcmp(argv[i + 1], "true") == 0)
+	      obstacle_return = true;
+      else if (strcmp(argv[i + 1], "false") == 0)
+	      obstacle_return = false;
+      else
+	      PLAYER_MSG2("unrecognized token [%s %s]", argv[i], argv[i + 1]);
+	    i+=2;
+	  }
+	    
+    // set sonar flag
+    //
+    else if (strcmp(argv[i], "sonar") == 0 && i + 1 < argc)
+	  {
+      if (strcmp(argv[i + 1], "true") == 0)
+	      sonar_return = true;
+      else if (strcmp(argv[i + 1], "false") == 0)
+	      sonar_return = false;
+      else
+	      PLAYER_MSG2("unrecognized token [%s %s]", argv[i], argv[i + 1]);
+	    i+=2;
+	  }
+	    
+    // set laser return
+    //
+    else if (strcmp(argv[i], "laser") == 0 && i + 1 < argc)
+	  {
+      if (strcmp(argv[i + 1], "true") == 0)
+	      laser_return = LaserSomething;
+      else if (strcmp(argv[i + 1], "false") == 0)
+	      laser_return = LaserNothing;
+      else if (strcmp(argv[i + 1], "bright1") == 0)
+	      laser_return = LaserBright1;
+      else if (strcmp(argv[i + 1], "bright2") == 0)
+	      laser_return = LaserBright2;
+      else if (strcmp(argv[i + 1], "bright3") == 0)
+	      laser_return = LaserBright3;
+      else if (strcmp(argv[i + 1], "bright4") == 0)
+	      laser_return = LaserBright4;
+      else
+	      PLAYER_MSG2("unrecognized token [%s %s]", argv[i], argv[i + 1]);
+	    i+=2;
+	  }
+	    
+    // Extract color
+    //
+    else if (strcmp(argv[i], "color") == 0 && i + 1 < argc)
+    {
+      strcpy(m_color_desc, argv[i + 1]);
+      i += 2;
+    }
+
+    // Extract size
+    //
+    else if (strcmp(argv[i], "size") == 0 && i + 2 < argc)
+    {
+      m_size_x = atof(argv[i + 1]);
+      m_size_y = atof(argv[i + 2]);
+      i += 3;
+    }
+    
+    // extract port number
+    // one day we'll inherit our parent's port by default.
+    // for now this becomes the current global port
+    // i.e. everything takes this port until we specify another one
+    else if (strcmp(argv[i], "port") == 0 && i + 1 < argc)
+    {
+      m_player_port = atoi(argv[i + 1]);
+      i += 2;
+
+	    global_current_player_port = m_player_port;
+    }
+
+    // extract index number
+    else if (strcmp(argv[i], "index") == 0 && i + 1 < argc)
+    {
+      m_player_index = atoi(argv[i + 1]);
+      i += 2;
+    }
+
+    else
+    {
+      PLAYER_MSG1("unrecognized token [%s]", argv[i]);
+      i += 1;
+    }
+  }
+
+  // don;t bother looking up red colors - the default m_color is red
+  if( strcmp( m_color_desc, "red" ) != 0 )
+  {
+    // resolve the RGB value of the color name
+    if( !m_world->ColorFromString( &m_color, m_color_desc ) )
 	  {
 	    printf( "warning: invalid color name %s; using default red instead\n", 
-		    m_color_desc );
+              m_color_desc );
 	    
 	    m_color.red = 255;
 	    m_color.green = m_color.blue = 0;
 	  }
-      }
+  }
 
 #ifdef INCLUDE_RTK
-    m_rtk_color = rtk_color_lookup(m_color_desc);
+  m_rtk_color = rtk_color_lookup(m_color_desc);
 #endif
-        
-    return true;
+  */
+  return true;
 } 
 
 
@@ -260,6 +336,7 @@ bool CEntity::Load(int argc, char **argv)
 //
 bool CEntity::Save(int &argc, char **argv)
 {
+  /*
     // Get the robot pose (relative to parent)
     //
     double px, py, pa;
@@ -290,8 +367,8 @@ bool CEntity::Save(int &argc, char **argv)
     //
     if (m_name[0] != 0)
     {
-        argv[argc++] = strdup("name");
-        argv[argc++] = strdup(m_name);
+    argv[argc++] = strdup("name");
+    argv[argc++] = strdup(m_name);
     }
     
     // Save player port
@@ -311,30 +388,30 @@ bool CEntity::Save(int &argc, char **argv)
     //
     argv[argc++] = strdup("obstacle");    
     obstacle_return ? 
-      argv[argc++] = strdup("true") : argv[argc++] = strdup("false"); 
+    argv[argc++] = strdup("true") : argv[argc++] = strdup("false"); 
     
     argv[argc++] = strdup("sonar");    
     sonar_return ? 
-      argv[argc++] = strdup("true") : argv[argc++] = strdup("false");
+    argv[argc++] = strdup("true") : argv[argc++] = strdup("false");
     
     argv[argc++] = strdup("laser");    
     switch( laser_return )
-      {
-      case LaserNothing: 
-	argv[argc++] = strdup("false"); break;
-      case LaserSomething: 
-	argv[argc++] = strdup("true"); break;
-      case LaserBright1: 
-	argv[argc++] = strdup("bright1"); break;
-      case LaserBright2: 
-	argv[argc++] = strdup("bright2"); break;
-      case LaserBright3: 
-	argv[argc++] = strdup("bright3"); break;
-      case LaserBright4: 
-	argv[argc++] = strdup("bright4"); break;
-      }
-	
-    return true;
+    {
+    case LaserNothing: 
+    argv[argc++] = strdup("false"); break;
+    case LaserSomething: 
+    argv[argc++] = strdup("true"); break;
+    case LaserBright1: 
+    argv[argc++] = strdup("bright1"); break;
+    case LaserBright2: 
+    argv[argc++] = strdup("bright2"); break;
+    case LaserBright3: 
+    argv[argc++] = strdup("bright3"); break;
+    case LaserBright4: 
+    argv[argc++] = strdup("bright4"); break;
+    }
+  */
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -553,6 +630,26 @@ void CEntity::GetGlobalPose(double &px, double &py, double &pth)
     px = ox + m_lx * cos(oth) - m_ly * sin(oth);
     py = oy + m_lx * sin(oth) + m_ly * cos(oth);
     pth = oth + m_lth;
+}
+
+
+////////////////////////////////////////////////////////////////////////////
+// Set the objects velocity in the global cs
+void CEntity::SetGlobalVel(double vx, double vy, double vth)
+{
+  this->vx = vx;
+  this->vy = vy;
+  this->vth = vth;
+}
+
+
+////////////////////////////////////////////////////////////////////////////
+// Get the objects velocity in the global cs
+void CEntity::GetGlobalVel(double &vx, double &vy, double &vth)
+{
+  vx = this->vx;
+  vy = this->vy;
+  vth = this->vth;
 }
 
 
@@ -811,114 +908,113 @@ void CEntity::MakeDirtyIfPixelChanged( void )
 
 ///////////////////////////////////////////////////////////////////////////
 // UI property message handler
-//
-void CEntity::OnUiProperty(RtkUiPropertyData* pData)
+void CEntity::OnUiProperty(RtkUiPropertyData* data)
 {
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
-//
-void CEntity::OnUiUpdate(RtkUiDrawData *pData)
+void CEntity::OnUiUpdate(RtkUiDrawData *data)
 {
-    pData->begin_section("global", "");
+  data->begin_section("global", "");
 
-    // Draw a marker to show we are being dragged
-    //
-    if (pData->draw_layer("focus", true))
+  // Draw a marker to show we have focus
+  if (data->draw_layer("focus", true))
+  {
+    if (m_mouse_ready || m_dragging)
     {
-        if (m_mouse_ready && m_draggable)
-        {
-            if (m_mouse_ready)
-                pData->set_color(RTK_RGB(128, 128, 255));
-            if (m_dragging)
-                pData->set_color(RTK_RGB(0, 0, 255));
-            
-            double ox, oy, oth;
-            GetGlobalPose(ox, oy, oth);
-            
-            pData->ellipse(ox - m_mouse_radius, oy - m_mouse_radius,
-                           ox + m_mouse_radius, oy + m_mouse_radius);
-            if (m_name[0] != 0)
-                pData->draw_text(ox + m_mouse_radius, oy + m_mouse_radius, m_name);
-        }
-    }
+      if (m_mouse_ready)
+        data->set_color(RTK_RGB(128, 128, 255));
+      if (m_dragging)
+        data->set_color(RTK_RGB(0, 0, 255));
 
-    pData->end_section();
+      // Get position and size of object
+      double ox, oy, oth;
+      GetGlobalPose(ox, oy, oth);
+      double dr = 1.3 * max(m_size_x, m_size_y) / 2;
+      
+      data->ellipse(ox - dr, oy - dr, ox + dr, oy + dr);
+      if (strlen(m_name) > 0)
+        data->draw_text(ox + dr, oy + dr, m_name);
+    }
+  }
+
+  data->end_section();
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI mouse messages
-//
-void CEntity::OnUiMouse(RtkUiMouseData *pData)
+void CEntity::OnUiMouse(RtkUiMouseData *data)
 {
-    pData->begin_section("global", "move");
+  data->begin_section("global", "move");
 
-    if (pData->use_mouse_mode("object"))
-    {
-        if (MouseMove(pData))
-            pData->reset_button();
-    }
+  if (data->use_mouse_mode("object"))
+  {
+    if (MouseMove(data))
+      data->reset_button();
+  }
     
-    pData->end_section();
+  data->end_section();
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Move object with the mouse
-//
-bool CEntity::MouseMove(RtkUiMouseData *pData)
+bool CEntity::MouseMove(RtkUiMouseData *data)
 {
-    // Get current pose
-    //
-    double px, py, pth;
-    GetGlobalPose(px, py, pth);
-    
-    // Get the mouse position
-    //
-    double mx, my;
-    pData->get_point(mx, my);
-    double mth = pth;
-    
-    double dx = mx - px;
-    double dy = my - py;
-    double dist = sqrt(dx * dx + dy * dy);
-    
-    // See of we are within range
-    //
-    m_mouse_ready = (dist < m_mouse_radius);
-    
-    // If the mouse is within range and we are draggable...
-    //
-    if (m_mouse_ready && m_draggable)
-    {
-        if (pData->is_button_down())
-        {
-            // Drag on left
-            //
-            if (pData->which_button() == 1)
-                m_dragging = true;
-            
-            // Rotate on right
-            //
-            else if (pData->which_button() == 3)
-            {
-                m_dragging = true;
-                mth += M_PI / 8;
-            }
-        }
-        else if (pData->is_button_up())
-            m_dragging = false;
-    }   
-    
-    // If we are dragging, set the pose
-    //
-    if (m_dragging)
-        SetGlobalPose(mx, my, mth);
+  // Only top level objects can be dragged
+  if (m_parent_object != NULL)
+    return false;
 
-    return (m_mouse_ready);
+  // Get current pose
+  double px, py, pth;
+  GetGlobalPose(px, py, pth);
+    
+  // Get the mouse position
+  double mx, my;
+  data->get_point(mx, my);
+  double mth = pth;
+
+  // Convert mouse position to object-local coords
+  // and see if we are clicking inside the object
+  double nx = mx;
+  double ny = my;
+  double nth = mth;
+  GlobalToLocal(nx, ny, nth);
+
+  if (fabs(nx) < m_size_x/2 && fabs(ny) < m_size_y/2)
+    m_mouse_ready = true;
+  else
+    m_mouse_ready = false;
+    
+  // If the mouse is within range and we are draggable...
+  if (m_mouse_ready)
+  {
+    if (data->is_button_down())
+    {
+      // Drag on left
+      if (data->which_button() == 1)
+        m_dragging = true;
+            
+      // Rotate on right
+      else if (data->which_button() == 3)
+      {
+        m_dragging = true;
+        mth += M_PI / 8;
+      }
+    }
+    else if (data->is_button_up())
+      m_dragging = false;
+  }   
+    
+  // If we are dragging, set the pose
+  if (m_dragging)
+    SetGlobalPose(mx, my, mth);
+
+  return (m_mouse_ready);
 }
 
 #endif
+
