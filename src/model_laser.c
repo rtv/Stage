@@ -11,28 +11,6 @@ extern rtk_fig_t* fig_debug;
 #define TIMING 0
 #define LASER_FILLED 1
 
-/* void model_laser_init( model_t* mod ) */
-/* {      */
-/*   PRINT_DEBUG( "laser init" ); */
-
-/*   // configure the laser to sensible defaults   */
-/*   stg_laser_config_t lcfg; */
-/*   memset(&lcfg,0,sizeof(lcfg)); */
-/*   lcfg.range_min= 0.0; */
-/*   lcfg.range_max = 8.0; */
-/*   lcfg.samples = 180; */
-/*   lcfg.fov = M_PI; */
-  
-/*   model_set_prop_generic( mod, STG_PROP_LASERCONFIG,  */
-/* 			  &lcfg, sizeof(lcfg) ); */
-  
-/*   // start off with a full set of zeroed data */
-/*   stg_laser_sample_t* scan = calloc( sizeof(stg_laser_sample_t), lcfg.samples ); */
-/*   model_set_prop_generic( mod, STG_PROP_LASERDATA,  */
-/* 			  scan, sizeof(stg_laser_sample_t) * lcfg.samples ); */
-/*   free(scan); */
-/* } */
-
 
 void model_laser_shutdown( model_t* mod )
 {
@@ -263,12 +241,8 @@ void model_laser_config_render( model_t* mod )
       memcpy( &pose, &geom->pose, sizeof(pose) );
       model_local_to_global( mod, &pose );
       
-      printf( "%d x %.2f y %.2f a %.2f w %.2f h %.2f fov %.2f min %.2f max %.2f\n",
-	      mod->id, geom->pose.x, geom->pose.y, geom->pose.a, geom->size.x, geom->size.y, cfg->fov, cfg->range_min, cfg->range_max );
-      
-      
       // first draw the sensor body
-      rtk_fig_color_rgb32(geomfig, stg_lookup_color(STG_LASER_TRANSDUCER_COLOR) );
+      rtk_fig_color_rgb32(geomfig, stg_lookup_color(STG_LASER_GEOM_COLOR) );
       
       rtk_fig_rectangle( geomfig, 
 			 geom->pose.x, 

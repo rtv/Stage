@@ -564,11 +564,7 @@ void server_handle_msg( server_t* server, int fd, stg_msg_t* msg )
 					    (stg_createworld_t*)msg->payload );
 
 	// add this world to this client's list of owned worlds
-	stg_connection_world_own( con, wid );
-	
-	printf( "replying with world id %d (%d bytes)\n",
-		wid, sizeof(wid) );
-	
+	stg_connection_world_own( con, wid );	
 	stg_fd_msg_write( fd, STG_MSG_CLIENT_REPLY, &wid, sizeof(wid) );
       }
       break;

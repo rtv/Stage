@@ -434,14 +434,13 @@ void gui_model_render( model_t* model )
 
 void gui_model_destroy( model_t* model )
 {
-  //PRINT_DEBUG( "gui model destroy" );
-  //gui_window_t* win = model->world->win;
-  //g_hash_table_remove( win->guimods, &model->id );
+  PRINT_DEBUG( "gui model destroy" );
+
+  // TODO - It's too late to kill the figs - the canvas is gone! fix this?
 
   if( model->gui.top ) rtk_fig_destroy( model->gui.top );
   if( model->gui.grid ) rtk_fig_destroy( model->gui.grid );
   if( model->gui.geom ) rtk_fig_destroy( model->gui.geom );
-  
   // todo - erase the property figs
 }
 

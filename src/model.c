@@ -112,10 +112,6 @@ void model_destroy( model_t* mod )
   gui_model_destroy( mod );
   
   if( mod->token ) free( mod->token );
-  //if( mod->ranger_config ) g_array_free( mod->ranger_config, TRUE );
-  //if( mod->ranger_data ) g_array_free( mod->ranger_data, TRUE );
-  //if( mod->laser_data ) g_array_free( mod->laser_data, TRUE );
-
   free( mod );
 }
 

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define DEBUG
+//#define DEBUG
 
 #include "stage.h"
 #include "gui.h"
@@ -46,12 +46,14 @@ void world_destroy( world_t* world )
   
   PRINT_DEBUG1( "destroying world %d", world->id );
   
-  gui_world_destroy( world );
   
   stg_matrix_destroy( world->matrix );
 
   free( world->token );
   g_hash_table_destroy( world->models );
+
+  gui_world_destroy( world );
+
   free( world );
 }
 
@@ -78,13 +80,16 @@ void world_update( world_t* world )
   if( timenow - world->wall_last_update > world->wall_interval )
     {
       stg_msec_t real_interval = timenow - world->wall_last_update;
-      printf( "[%d %lu] sim:%lu real:%lu  ratio:%.2f\n",
+
+      printf( " [%d %lu] sim:%lu real:%lu  ratio:%.2f\r",
 	      world->id, 
 	      world->sim_time,
 	      world->sim_interval,
 	      real_interval,
 	      (double)world->sim_interval / (double)real_interval  );
       
+      fflush(stdout);
+
       //fflush( stdout );
       
       g_hash_table_foreach( world->models, model_update_cb, world );
@@ -173,8 +178,8 @@ void world_handle_msg( world_t* world, int fd, stg_msg_t* msg )
       {   
 	stg_id_t mid = world_model_create( world, (stg_createmodel_t*)msg->payload );
 	
-	printf( "writing reply (model id %d, %d bytes) on fd %d\n", 
-		mid, sizeof(mid), fd );
+	//printf( "writing reply (model id %d, %d bytes) on fd %d\n", 
+	//mid, sizeof(mid), fd );
 
 	stg_fd_msg_write( fd,STG_MSG_CLIENT_REPLY,  &mid, sizeof(mid) );
       }

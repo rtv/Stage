@@ -23,10 +23,11 @@
 // model color defaults
 #define STG_GENERIC_COLOR "black"
 #define STG_POSITION_COLOR "red"
-#define STG_LASER_TRANSDUCER_COLOR "blue"
+
 #define STG_LASER_COLOR "light blue"
+#define STG_LASER_GEOM_COLOR "blue"
 #define STG_LASER_CFG_COLOR "light steel blue"
-#define STG_WALL_COLOR "dark blue"
+
 #define STG_FIDUCIAL_COLOR "lime green"
 #define STG_FIDUCIAL_CFG_COLOR "green"
 

@@ -1,7 +1,7 @@
 
 #include "model.h"
 
-#define VERBOSE 1
+#define VERBOSE 0
 
 void model_ranger_shutdown( model_t* mod );
 void model_ranger_update( model_t* mod );
