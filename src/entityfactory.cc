@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.21 $
+//  $Author: gerkey $
+//  $Revision: 1.22 $
 //
 // Usage:
 //  (empty)
@@ -177,8 +177,8 @@ CEntity* CWorld::CreateObject(const char *type, CEntity *parent )
   if (strcmp(type, "laser_beacon") == 0)
     return new CLaserBeacon(this, parent);
    
-  //if (strcmp(type, "lbd_device") == 0)
-  //return new CLBDDevice(this, (CLaserDevice*)parent );
+  if (strcmp(type, "lbd_device") == 0)
+    return new CLBDDevice(this, (CLaserDevice*)parent );
 
   if (strcmp(type, "vision_device") == 0)
     return new CVisionDevice(this, (CPtzDevice*)parent);

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.46 $
+//  $Revision: 1.47 $
 //
 // Usage:
 //  (empty)
@@ -338,11 +338,11 @@ public: player_device_id_t m_player;
   //private int player_subs;
    public: int Subscribed();
 
-  // subscribe to the device
-  //public: void Subscribe();
-
-  // unsubscribe from the device
-  //public: void Unsubscribe();
+  // subscribe to / unsubscribe from the device
+  // these are used when one device (e.g., lbd) depends on another (e.g.,
+  // laser)
+  public: void Subscribe();
+  public: void Unsubscribe();
 
   // packages and sends data via rtp
   protected: void AnnounceDataViaRTP( void* data, size_t len );

@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.58 2002-06-04 23:15:38 gerkey Exp $
+//  $Id: entity.cc,v 1.59 2002-06-05 00:05:02 gerkey Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -958,6 +958,25 @@ int CEntity::Subscribed()
   
   return( subscribed );
 }
+
+///////////////////////////////////////////////////////////////////////////
+//// subscribe to the device (used by other devices that depend on this one)
+void CEntity::Subscribe() 
+{
+  Lock();
+  m_info_io->subscribed++;
+  Unlock();
+}
+
+///////////////////////////////////////////////////////////////////////////
+// unsubscribe from the device (used by other devices that depend on this one)
+void CEntity::Unsubscribe()
+{ 
+  Lock();
+  m_info_io->subscribed--;
+  Unlock();
+} 
+
 
 ///////////////////////////////////////////////////////////////////////////
 // lock the shared mem
