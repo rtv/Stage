@@ -9,8 +9,13 @@
 #include "truthserver.hh"
 #include "xs.hh"
 
+#include "laserproxy.h"
+#include "sonarproxy.h"
+#include "gpsproxy.h"
+#include "visionproxy.h"
+#include "ptzproxy.h"
 
-void CXGui::RenderObject( truth_t &truth )
+void CXGui::RenderObject( xstruth_t &truth )
   {
 #ifdef DEBUG
     //    char buf[30]
@@ -64,7 +69,7 @@ void CXGui::RenderObject( truth_t &truth )
     
   }
 
-void CXGui::HeadingStick( truth_t* exp )
+void CXGui::HeadingStick( xstruth_t* exp )
 {
   double len = 0.5;
 
@@ -84,7 +89,7 @@ void CXGui::HeadingStick( truth_t* exp )
 }
 
 
-void CXGui::RenderObjectLabel( truth_t* exp, char* str, int len )
+void CXGui::RenderObjectLabel( xstruth_t* exp, char* str, int len )
 {
   if( str && strlen(str) > 0 )
     {
@@ -94,11 +99,16 @@ void CXGui::RenderObjectLabel( truth_t* exp, char* str, int len )
     }
 }
 
-void CXGui::RenderLaserTurret( truth_t* exp, bool extended )
+void CXGui::RenderLaserTurret( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );  
   DrawNoseBox( exp->x, exp->y, exp->w/2.0, exp->h/2.0, exp->th );
+}
 
+void CXGui::RenderLaserProxy( LaserProxy* prox )
+{
+  prox->Print();
+  
   //if( extended && exp->data )
   //      {
   //        SetForeground( RGB(70,70,70) );
@@ -107,7 +117,28 @@ void CXGui::RenderLaserTurret( truth_t* exp, bool extended )
   //      }
 }
 
-void CXGui::RenderLaserBeaconDetector( truth_t* exp, bool extended )
+void CXGui::RenderSonarProxy( SonarProxy* prox )
+{
+  prox->Print();
+}
+
+void CXGui::RenderGpsProxy( GpsProxy* prox )
+{
+  prox->Print();
+}
+
+void CXGui::RenderPtzProxy( PtzProxy* prox )
+{
+  prox->Print();
+}
+
+void CXGui::RenderVisionProxy( VisionProxy* prox )
+{
+  prox->Print();
+}
+
+
+void CXGui::RenderLaserBeaconDetector( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );
   DrawCircle( exp->x, exp->y, exp->w/2.0 );
@@ -141,19 +172,19 @@ void CXGui::RenderLaserBeaconDetector( truth_t* exp, bool extended )
 //      }
 }
 
-void CXGui::RenderTruth( truth_t* exp, bool extended )
+void CXGui::RenderTruth( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );
   DrawString( exp->x, exp->y, "Truth", 5 );
 }
 
-void CXGui::RenderOccupancy( truth_t* exp, bool extended )
+void CXGui::RenderOccupancy( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );
   DrawString( exp->x, exp->y, "Occupancy", 9 ); 
 }
 
-void CXGui::RenderPTZ( truth_t* exp, bool extended )
+void CXGui::RenderPTZ( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );    
   DrawNoseBox( exp->x, exp->y, exp->w/2.0, exp->h/2.0, exp->th );
@@ -197,7 +228,7 @@ void CXGui::RenderPTZ( truth_t* exp, bool extended )
 //      }
  }
 
-void CXGui::RenderSonar( truth_t* exp, bool extended )
+void CXGui::RenderSonar( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );
   //    if( extended && exp->data )
@@ -213,13 +244,13 @@ void CXGui::RenderSonar( truth_t* exp, bool extended )
   //DrawString( exp->x, exp->y, "Sonar", 1 );
 }
 
-void CXGui::RenderVision( truth_t* exp, bool extended )
+void CXGui::RenderVision( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );
   DrawCircle( exp->x, exp->y, exp->w/2.0 );
 }
 
-void CXGui::RenderPlayer( truth_t* exp, bool extended )
+void CXGui::RenderPlayer( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );
 
@@ -233,7 +264,7 @@ void CXGui::RenderPlayer( truth_t* exp, bool extended )
   DrawLine( pts[1], pts[3] );
 }
 
-void CXGui::RenderMisc( truth_t* exp, bool extended )
+void CXGui::RenderMisc( xstruth_t* exp, bool extended )
 {
   //    if( 0 ) // disable for now
 //    //if( extended && exp->data )
@@ -255,7 +286,7 @@ void CXGui::RenderMisc( truth_t* exp, bool extended )
 }
 
 
-void CXGui::RenderRectRobot( truth_t* exp, bool extended )
+void CXGui::RenderRectRobot( xstruth_t* exp, bool extended )
  { 
    SelectColor( exp );
    
@@ -281,13 +312,13 @@ void CXGui::RenderRectRobot( truth_t* exp, bool extended )
     DrawLines( pts, 7 );
  }
 
-void CXGui::RenderLaserBeacon( truth_t* exp, bool extended )
+void CXGui::RenderLaserBeacon( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );  
   DrawNoseBox( exp->x, exp->y, exp->w/2.0, exp->h/2.0, exp->th );
 }
 
-void CXGui::RenderGripper( truth_t* exp, bool extended )
+void CXGui::RenderGripper( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );  
   DrawRect( exp->x, exp->y, exp->w/2.0, exp->h/2.0, exp->th );
@@ -324,7 +355,7 @@ void CXGui::RenderGripper( truth_t* exp, bool extended )
 	     pw, ph, oth );
 }
 
-void CXGui::RenderRoundRobot( truth_t* exp, bool extended )
+void CXGui::RenderRoundRobot( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );
   DrawCircle( exp->x, exp->y, exp->w/2.0 );
@@ -333,20 +364,20 @@ void CXGui::RenderRoundRobot( truth_t* exp, bool extended )
   DrawNose( exp->x, exp->y, exp->w/2.0, exp->th + 0.6 );
 }
 
-void CXGui::RenderVisionBeacon( truth_t* exp, bool extended )
+void CXGui::RenderVisionBeacon( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );
   DrawCircle( exp->x, exp->y, exp->w/2.0 );
   FillCircle( exp->x, exp->y, exp->w/3.0 );
 }
 
-void CXGui::RenderBroadcast( truth_t* exp, bool extended )
+void CXGui::RenderBroadcast( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );
   DrawCircle( exp->x, exp->y, exp->w/2.0 );
 }
 
-void CXGui::RenderPuck( truth_t* exp, bool extended )
+void CXGui::RenderPuck( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );
   FillCircle( exp->x, exp->y, exp->w/2.0 );
@@ -355,20 +386,20 @@ void CXGui::RenderPuck( truth_t* exp, bool extended )
   //DrawNose( exp->x, exp->y, exp->w/2.0, exp->th );
 }
 
-void CXGui::RenderGps( truth_t* exp, bool extended )
+void CXGui::RenderGps( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );
   DrawCircle( exp->x, exp->y, exp->w/2.0 );
 }
 
 
-void CXGui::RenderBox( truth_t* exp, bool extended )
+void CXGui::RenderBox( xstruth_t* exp, bool extended )
 { 
   SelectColor( exp );
   DrawRect( exp->x, exp->y, exp->w/2.0, exp->h/2.0, exp->th );
 }
 
-void CXGui::SelectColor( truth_t* exp )
+void CXGui::SelectColor( xstruth_t* exp )
 {
   XSetForeground( display, gc, exp->pixel_color );
 }

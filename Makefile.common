@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.common,v 1.13 2001-09-19 23:13:20 vaughan Exp $ 
+# $Id: Makefile.common,v 1.14 2001-09-21 02:04:39 vaughan Exp $ 
 #
 
 # INSTALL PLAYER BEFORE BUILDING STAGE!
@@ -69,6 +69,7 @@ ZLIB_LIBS = -lz
 
 ####################### DO NOT CHANGE BELOW HERE #############################
 PLAYER_INC = $(PLAYER_DIR)/include
+PLAYER_LIB = $(PLAYER_DIR)/lib
 
 # Standard tools
 #

@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.15 2001-09-20 18:29:24 vaughan Exp $
+ * $Id: xs.cc,v 1.16 2001-09-21 02:04:40 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -50,7 +50,7 @@
 Display* display = 0; 
 int screen = 0;
 
-const char* versionStr = "0.1.1";
+const char* versionStr = "0.2";
 const char* titleStr = "XS";
 
 //#define LABELS
@@ -81,8 +81,8 @@ std::queue<stage_truth_t> outgoing_queue;
 //pthread_mutex_t outgoing_mutex;
 
 // an associative array, indexed by player ID (neat!)
-//typedef map< CPlayerID, truth_t > TruthMap;
-typedef std::map< int, truth_t > TruthMap;
+//typedef map< CPlayerID, xstruth_t > TruthMap;
+typedef std::map< int, xstruth_t > TruthMap;
 TruthMap truth_map; 
 
 int truthfd = 0;
@@ -129,7 +129,7 @@ char* CXGui::PlayerNameOf( const player_id_t& ent )
     return "Unknown"; 
   } 
 
-char* CXGui::StageNameOf( const truth_t& truth ) 
+char* CXGui::StageNameOf( const xstruth_t& truth ) 
   { 
     switch( truth.stage_type ) 
       { 
@@ -176,7 +176,7 @@ void PrintStageTruth( stage_truth_t &truth )
   fflush( stdout );
 }
 
-void CXGui::PrintMetricTruth( int stage_id, truth_t &truth )
+void CXGui::PrintMetricTruth( int stage_id, xstruth_t &truth )
 {
   printf( "%p:%s\t(%4d,%d,%d)\t(%4d,%d,%d)\t[%.2f,%.2f,%.2f]\t[%.2f,%.2f]\n",
 	  (int*)stage_id,
@@ -193,7 +193,7 @@ void CXGui::PrintMetricTruth( int stage_id, truth_t &truth )
   fflush( stdout );
 }
 
-void CXGui::PrintMetricTruthVerbose( int stage_id, truth_t &truth )
+void CXGui::PrintMetricTruthVerbose( int stage_id, xstruth_t &truth )
 {
   printf( "stage: %p:%s\tplayer: (%4d,%s:%d)\tparent(%4d,%s:%d)"
 	  "\tpose: [%.2f,%.2f,%.2f]\tsize: [%.2f,%.2f]\t\tColor: [%d,%d,%d]\n", 
@@ -654,10 +654,11 @@ int main(int argc, char **argv)
   // we're set up, so go into the read/handle loop
   while( true )
   {
+    //win->HandlePlayers();
     win->HandleXEvent();
     win->HandleIncomingQueue();
     // snooze to avoid hogging the processor
-    usleep( 100000 ); // 0.05 seconds 
+    usleep( 50000 ); // 0.05 seconds 
   }
 }
 
@@ -676,7 +677,7 @@ void CXGui::HandleIncomingQueue( void )
       stage_truth_t struth = incoming_queue.front();
       incoming_queue.pop();
 
-      truth_t truth;
+      xstruth_t truth;
 
       int stage_id = truth.stage_id = struth.stage_id; // this is the map key
 
@@ -727,7 +728,7 @@ void CXGui::HandleIncomingQueue( void )
       truth.rotdy = (double)(struth.rotdy / 1000.0);
 
       //int presize = truth_map.size();
-      truth_t old = truth_map[ stage_id ]; // get any old data
+      xstruth_t old = truth_map[ stage_id ]; // get any old data
       //int postsize = truth_map.size();
 
       //if( presize != postsize )
@@ -775,6 +776,7 @@ CXGui::CXGui( int argc, char** argv, environment_t* anenv )
 
   sprintf( window_title,  "%s v.%s", titleStr, versionStr );
 
+  num_proxies = 0;
 
 //  LoadVars( initFile ); // read the window parameters from the initfile
 
@@ -944,7 +946,7 @@ CXGui::~CXGui( void )
 //  }
 
 
-void CXGui::MoveObject( truth_t* exp, double x, double y, double th )
+void CXGui::MoveObject( xstruth_t* exp, double x, double y, double th )
 {    
   // compose the structure
   stage_truth_t output;
@@ -1241,12 +1243,12 @@ void CXGui::RefreshObjects( void )
   SetDrawMode( GXcopy );
 }
 
-truth_t* CXGui::NearestEntity( double x, double y )
+xstruth_t* CXGui::NearestEntity( double x, double y )
 {
   //puts( "NEAREST" ); fflush( stdout );
 
   double dist, nearDist = 99999999.9;
-  truth_t* close = 0;
+  xstruth_t* close = 0;
 
   for( TruthMap::iterator it = truth_map.begin(); it != truth_map.end(); it++ )
     {
@@ -1342,7 +1344,7 @@ void CXGui::GetRect( double x, double y, double dx, double dy,
 }
 
 
-void CXGui::HighlightObject( truth_t* exp,  bool undraw )
+void CXGui::HighlightObject( xstruth_t* exp,  bool undraw )
 {
   static double x = -1000.0, y = -1000.0, r = -1000.0, th = -1000.0;
   static char info[256];
@@ -1489,10 +1491,10 @@ void CXGui::StartDragging( XEvent& reportEvent )
 		 GrabModeAsync, GrabModeAsync, win, blank_cursor, CurrentTime);
    
   // make a new local device for dragging around
-  dragging = new truth_t();
+  dragging = new xstruth_t();
   
     
-  truth_t* nearest = NearestEntity( (reportEvent.xmotion.x+panx)/ppm,
+  xstruth_t* nearest = NearestEntity( (reportEvent.xmotion.x+panx)/ppm,
 			 ((iheight-pany)/ppm)-reportEvent.xmotion.y/ppm );
   // copy the details of the nearest device
   if(!nearest)
@@ -1501,7 +1503,7 @@ void CXGui::StartDragging( XEvent& reportEvent )
     XUngrabPointer( display, CurrentTime );
     return;
   }
-  memcpy( dragging,  nearest, sizeof( truth_t ) );
+  memcpy( dragging,  nearest, sizeof( xstruth_t ) );
   
   //assert( dragging );
   
@@ -1539,7 +1541,17 @@ void CXGui::HandleButtonPressEvent( XEvent& reportEvent )
       if( dragging )
 	MoveObject( dragging,dragging->x, dragging->y, 
 		    NORMALIZE(dragging->th + M_PI/10.0) );
-	      break;
+      else
+	{ // switch on visualization for this device
+	  xstruth_t* nearest = 
+	    NearestEntity( (reportEvent.xbutton.x+panx)/ppm,
+			   ((iheight-pany)/ppm)-reportEvent.xbutton.y/ppm );
+	  
+	  assert( nearest );
+	  AddClient( nearest );	  
+	}
+      break;
+	      
     case Button3: //cout << "BUTTON 3" << endl;
       if( dragging )
 	{  			  
@@ -1770,4 +1782,132 @@ void CXGui::HandleConfigureEvent( XEvent &reportEvent )
   //  width, height, iwidth, iheight, ppm, panx, pany );
   //fflush( stdout );
 } 
+  
+void CXGui::HandlePlayers( void )
+{
+  if( num_proxies ) // if we're connected to any players
+    {
+      playerClients.Read();
+      
+      for( int p=0; p<num_proxies; p++ )
+	if( playerProxies[p]->client->fresh )	    
+	  switch( playerProxies[p]->device )
+	    {
+	    case PLAYER_LASER_CODE: 
+	      RenderLaserProxy( (LaserProxy*)(playerProxies[p]) );
+	      break;
+	    case PLAYER_SONAR_CODE: 
+	      RenderSonarProxy( (SonarProxy*)(playerProxies[p]) );
+	      break;
+	    case PLAYER_GPS_CODE: 
+	      RenderGpsProxy( (GpsProxy*)(playerProxies[p]) );
+	      break;
+	    case PLAYER_VISION_CODE: 
+	      RenderVisionProxy( (VisionProxy*)(playerProxies[p]) );
+	      break;
+	    case PLAYER_PTZ_CODE: 
+	      RenderPtzProxy( (PtzProxy*)(playerProxies[p]) );
+		break;
+	    }
+    }
+}
+
+
+void CXGui::AddClient( xstruth_t* ent )
+{
+  // if this is a player-controlled object and we're not connected already,
+  // try to connect to it
+  if( ent->id.port )
+    {
+      PlayerClient* cli = playerClients.GetClient( stage_host, ent->id.port );
+      
+      // if we're connected already 
+      if( cli ) 
+	{
+	  // should delete all the orphaned proxies here
+	  for( int n=0; n<num_proxies; n++ )	    
+	    {
+	      // if this proxy needs the doomed client
+	      if( playerProxies[n]->client == cli )
+		{
+		  // remove the link in the client
+		  // probably redundant as the client is doomed anyway
+		  cli->RemoveProxy( playerProxies[n] );
+		  
+		  printf( "deleting proxy %d\n", n );
+		 
+		  delete playerProxies[n]; // zap it
+		  
+		  // shift the array down to fill this hole
+		  for( int z=n; z<num_proxies; z++ )
+		    playerProxies[z] = playerProxies[z+1];
+		  
+		  n = 0; // reset the loop counter 
+		  num_proxies--;
+		}
+	    }
+	  
+	  puts( "removing client\n" );
+	  playerClients.RemoveClient( cli );
+
+	  puts( "deleting client\n" );
+	  delete cli;
+	}
+      else
+      {
+	cli = new PlayerClient( stage_host, ent->id.port );
+	  
+	if( cli ) // if successful, attach this client to the multiclient
+	  {
+
+	    printf( "adding player client on %s port %d\n", stage_host, ent->id.port );
+	  
+	    playerClients.AddClient( cli );
+
+	    xstruth_t sibling;
+	    // now create proxies for all supported devices on the same port
+	    for( TruthMap::iterator it = truth_map.begin(); it != truth_map.end(); it++ )
+	      {	      
+		sibling = it->second;
+	      
+		if( sibling.id.port == ent->id.port ) // the port matches
+		  {
+		    printf( "added proxy on %s (%d:%d:%d)\n", stage_host, 
+			    sibling.id.port, sibling.id.type, sibling.id.index );
+	  
+		    switch( sibling.id.type )
+		      {
+		      case PLAYER_LASER_CODE: 
+			playerProxies[num_proxies++] = 
+			  new LaserProxy( cli, sibling.id.index, 'r' );
+			break;
+		      case PLAYER_SONAR_CODE: 
+			playerProxies[num_proxies++] = 
+			  new SonarProxy( cli, sibling.id.index, 'r' );   
+			break;
+		      case PLAYER_GPS_CODE: 
+			playerProxies[num_proxies++] = 
+			  new GpsProxy( cli, sibling.id.index, 'r' );
+			break;
+		      case PLAYER_VISION_CODE: 
+			playerProxies[num_proxies++] = 
+			  new VisionProxy( cli, sibling.id.index, 'r' );
+			break;
+		      case PLAYER_PTZ_CODE: 
+			playerProxies[num_proxies++] = 
+			  new PtzProxy( cli, sibling.id.index, 'r' );
+			break;
+		      default: 
+			printf( "XS: no proxy for device %d supported\n", 
+				sibling.id.type ); 
+		      }
+		  }
+	      }
+
+	    printf( "added %d proxies\n", num_proxies );
+	  }
+      }
+    }
+} 
+
   

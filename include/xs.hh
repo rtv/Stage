@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xs.hh,v 1.6 2001-09-19 21:52:57 vaughan Exp $
+ * $Id: xs.hh,v 1.7 2001-09-21 02:04:39 vaughan Exp $
  ************************************************************************/
 
 #ifndef _WIN_H
@@ -12,6 +12,9 @@
 #include <iostream.h>
 
 #include <messages.h> // player data types
+#include <playermulticlient.h>
+
+const int NUM_PROXIES = 64;
 
 typedef struct
 {
@@ -25,7 +28,7 @@ typedef struct
   double x, y, th, w, h; // pose and extents
   double rotdx, rotdy; // center of rotation offsets
   int subtype; 
-} truth_t;
+} xstruth_t;
 
 
 typedef struct  
@@ -67,6 +70,12 @@ public:
 
   char* window_title;
 
+  /* create a multiclient to poll my Player reading */
+  PlayerMultiClient playerClients;
+  
+  ClientProxy* playerProxies[NUM_PROXIES];
+  int num_proxies;
+
   environment_t* env;
   Window win;
   GC gc, bgc, wgc;
@@ -76,7 +85,7 @@ public:
 
   bool draw_all_devices;
 
-  truth_t* dragging;
+  xstruth_t* dragging;
 
   unsigned int requestPointerMoveEvents;
   unsigned long channel_colors[ 32 ];
@@ -99,19 +108,22 @@ public:
     return (((r << 8) | g) << 8) | b;
   };
 
+  void HandlePlayers( void );
+  void AddClient( xstruth_t* ent );
+
   void BoundsCheck( void );
   int LoadVars( char* initFile );
   void HandleXEvent( void );
   void Update( void );
-  void MoveObject( truth_t *obj, double x, double y, double th );
+  void MoveObject( xstruth_t *obj, double x, double y, double th );
 
-  void HeadingStick( truth_t* truth );
+  void HeadingStick( xstruth_t* truth );
 
   void PrintCoords( void );
-  char* StageNameOf( const truth_t& truth ); 
+  char* StageNameOf( const xstruth_t& truth ); 
   char* PlayerNameOf( const player_id_t& ent ); 
-  void PrintMetricTruth( int stage_id, truth_t &truth );
-  void PrintMetricTruthVerbose( int stage_id, truth_t &truth );
+  void PrintMetricTruth( int stage_id, xstruth_t &truth );
+  void PrintMetricTruthVerbose( int stage_id, xstruth_t &truth );
 
   void DrawBackground( void );
   void RefreshObjects( void );
@@ -140,39 +152,46 @@ public:
   void DrawBox( double px, double py, double boxdelta );
 
 
-  void RenderObject( truth_t &truth ); 
+  void RenderObject( xstruth_t &truth ); 
 
-  void RenderObjectLabel( truth_t* exp, char* str, int len );
-  void RenderGenericObject( truth_t* exp );
+  void RenderObjectLabel( xstruth_t* exp, char* str, int len );
+  void RenderGenericObject( xstruth_t* exp );
 
-  void RenderLaserTurret( truth_t* exp, bool extended  );
-  void RenderRectRobot( truth_t* exp, bool extended  );
-  void RenderRoundRobot( truth_t* exp, bool extended  );
-  void RenderUSCPioneer( truth_t* exp, bool extended  );
-  void RenderPTZ( truth_t* exp, bool extended  );
-  void RenderBox( truth_t* exp, bool extended  );
-  void RenderLaserBeacon( truth_t* exp, bool extended  );
-  void RenderMisc( truth_t* exp, bool extended  );
-  void RenderSonar( truth_t* exp, bool extended  );
-  void RenderPlayer( truth_t* exp, bool extended  );
-  void RenderLaserBeaconDetector( truth_t* exp, bool extended  );
-  void RenderBroadcast( truth_t* exp, bool extended  );
-  void RenderVision( truth_t* exp, bool extended  ); 
-  void RenderVisionBeacon( truth_t* exp, bool extended  );
-  void RenderTruth( truth_t* exp, bool extended  );
-  void RenderOccupancy( truth_t* exp, bool extended );
-  void RenderGripper( truth_t* exp, bool extended );
-  void RenderGps( truth_t* exp, bool extended );
-  void RenderPuck( truth_t* exp, bool extended );
+  void RenderLaserTurret( xstruth_t* exp, bool extended  );
+  void RenderRectRobot( xstruth_t* exp, bool extended  );
+  void RenderRoundRobot( xstruth_t* exp, bool extended  );
+  void RenderUSCPioneer( xstruth_t* exp, bool extended  );
+  void RenderPTZ( xstruth_t* exp, bool extended  );
+  void RenderBox( xstruth_t* exp, bool extended  );
+  void RenderLaserBeacon( xstruth_t* exp, bool extended  );
+  void RenderMisc( xstruth_t* exp, bool extended  );
+  void RenderSonar( xstruth_t* exp, bool extended  );
+  void RenderPlayer( xstruth_t* exp, bool extended  );
+  void RenderLaserBeaconDetector( xstruth_t* exp, bool extended  );
+  void RenderBroadcast( xstruth_t* exp, bool extended  );
+  void RenderVision( xstruth_t* exp, bool extended  ); 
+  void RenderVisionBeacon( xstruth_t* exp, bool extended  );
+  void RenderTruth( xstruth_t* exp, bool extended  );
+  void RenderOccupancy( xstruth_t* exp, bool extended );
+  void RenderGripper( xstruth_t* exp, bool extended );
+  void RenderGps( xstruth_t* exp, bool extended );
+  void RenderPuck( xstruth_t* exp, bool extended );
   void RenderOccupancyGrid( void );
-  truth_t* NearestEntity( double x, double y );
+
+  void RenderLaserProxy( LaserProxy* prox );
+  void RenderSonarProxy( SonarProxy* prox );
+  void RenderGpsProxy( GpsProxy* prox );
+  void RenderPtzProxy( PtzProxy* prox );
+  void RenderVisionProxy( VisionProxy* prox );
+
+  xstruth_t* NearestEntity( double x, double y );
 
   void GetRect( double x, double y, double dx, double dy, 
 	       double rotateAngle, DPoint* pts );
 
-  void GetRect( truth_t* exp );
+  void GetRect( xstruth_t* exp );
 
-  void HighlightObject( truth_t* exp, bool undraw );
+  void HighlightObject( xstruth_t* exp, bool undraw );
 
   void HandleIncomingQueue( void );
 
@@ -189,7 +208,7 @@ public:
   void HandleButtonPressEvent( XEvent& reportEvent );
   void HandleMotionEvent( XEvent& reportEvent );
 
-  void SelectColor( truth_t* exp );
+  void SelectColor( xstruth_t* exp );
 
   void SetupZoom( char* );
   void SetupPan( char* );
