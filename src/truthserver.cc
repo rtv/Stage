@@ -152,6 +152,8 @@ void CWorld::TruthRead( void )
 		  ent->SetGlobalPose( truth.x/1000.0, truth.y/1000.0, 
 				      DTOR(truth.th) );
 		  
+		  ent->Update( m_sim_time );
+
 		  // this ent is now dirty to all channels 
 		  ent->MakeDirty();
 		  
@@ -164,18 +166,6 @@ void CWorld::TruthRead( void )
       
     }
 }
-
-//  // here we make the children of dirty parents dirty themselves
-//  void CWorld::InheritDirty( void )
-//  {
-//    for( i=0; i < m_object_count; i++ )
-//      {  
-//        // inherit dirty labels from your parents
-//        if( m_object[i]->m_parent_object )
-//  	for( int c=0; c<m_truth_connections; c++ )
-//  	  m_object[i]->m_dirty[c] &=  m_object[i]->m_parent_object->m_dirty[c];
-//      }
-//  }
 
 // recursive function that ORs an ent's dirty array with those of
 // all it's ancestors 
