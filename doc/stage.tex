@@ -1,0 +1,262 @@
+\documentclass[11pt]{report}
+% this one apparently fixes the < and > chars
+\usepackage[T1]{fontenc}
+\usepackage{subfigure}
+\usepackage{times}
+\usepackage{tabularx}
+% why did we need this?
+%\usepackage{verbatim}
+% make all captions small and slanted
+\usepackage[small,sl]{caption}
+\usepackage{fullpage}
+%\usepackage{epsf}
+\usepackage{epsfig}
+% add nifty DRAFT watermark thingy in PS
+%\usepackage{draftcopy}
+
+\def\VERSION {1.0 (Bleeding)}
+
+\begin{document}
+\setcounter{page}{0}
+\pagenumbering{roman}
+
+\titlepage
+
+\begin{flushright}
+\begin{tabular}{r}
+{\bf USC Robotics Labs}\\
+University of Southern California\\
+Los Angeles, USA\\
+\end{tabular}
+\end{flushright}
+
+\vspace{6cm}
+\centerline{\huge{Stage}}
+\vspace{0.5cm}
+\centerline{\large{Version \VERSION\ User Manual}}
+\vspace{2cm}
+
+\centerline{\large Andrew Howard \\ Richard T. Vaughan}
+\vspace{1cm}
+
+\centerline{This document may not contain the most current documentation on}
+\centerline{Stage.  For the latest documentation, consult the Player/Stage homepage:}
+\centerline{{\tt http://robotics.usc.edu/player}}
+
+\vspace{4cm}
+
+\centerline{\today}
+
+%\tableofcontents
+%\newpage
+%\listoffigures
+%\newpage
+%\listoftables
+%\newpage
+
+% reset page number to start with 1
+\setcounter{page}{0}
+\pagenumbering{arabic}
+
+
+\chapter{Introduction}
+
+  \section{What is Stage?}
+
+    Stage simulates mobile robots and sensors in a two-dimensional
+    bitmapped environment containing a variety of objects. Robots are
+    controlled through Player. Player provides a powerful, flexible
+    interface to the robots; Stage provides virtual devices for
+    Player.  Various sensors and actuators are provided, including
+    sonar, scanning laser rangefinders, vision (color blob detection),
+    odometry, and both differential and omni-drive platforms.
+
+    Stage was created at the USC Robotics Research Labs to support
+    research into multi-agent intelligent autonomous systems.
+
+
+  \section{How to get Stage}
+
+    The primary source for Player and Stage is:
+      \begin{verbatim}
+      http://robotics.usc.edu/player
+      \end{verbatim}
+    The downloads page contains source tarballs for both
+    stable and unstable (bleeding edge) releases.
+
+
+  \section{What's in the distribution?}
+
+    In the tarball you will find:
+      \begin{itemize}    
+      \item stage    - the simulation engine.
+      \item xs       - an X GUI for Stage
+      \item rtkstage - a version of Stage with a built-in GUI based on the RTK library
+      %\item manager  - a program for synchronizing several Stages distributed across
+      %      multiple hosts. Experimental.
+      %\item truthlog - a utility for logging the positions of all Stage's objects
+      %	    (currently broken).
+      \item Some example environments and setup files.
+      \end{itemize}
+
+  \section{Requirements}
+
+    Stage was developed and tested under Linux kernel 2.4.2,
+    glibc-2.2.2.  Written in reasonable ANSII/POSIX so should compile
+    elsewhere. No promises, but people have found it to work on a
+    variety of set-ups.
+
+    Requires: Player [http://robotics.usc.edu/player/]
+              TCP/IP, POSIX threads, X11R6
+
+
+  \section{Ownership}
+
+    Stage is released under the GNU Public License.
+
+    Stage programs, images, examples, source code and documentation are
+    copyright (c) University of Southern California 1998-2001.
+
+    Stage was written by:
+      \begin{itemize}
+      \item[] Richard Vaughan
+      \item[] Andrew Howard
+      \item[] Brian Gerkey
+      \item[] Kasper Stoy
+      \item[] Boyoon Jung
+      \item[] Jakob Fredslund
+      \end{itemize}
+
+
+  \section{Acknowledgements}
+
+    Stage's development is supported at the University of Southern
+    California by DARPA's TMR and MARS programs, and by an NSF grant.
+    Richard Vaughan now works for HRL Laboratories, Malibu, CA.
+
+
+\chapter{Running Stage}
+
+  \section{Building and Installing Stage}
+
+    {\bf You must install Player {\sl before} installing Stage.} 
+    See:
+      \begin{verbatim}
+      http://robotics.usc.edu/player
+      \end{verbatim}
+    Once you've downloaded, built and installed Player, download
+    the Stage tarball and unpack it with:
+      \begin{verbatim}
+      tar xzvf Stage-<version>.tgz
+      \end{verbatim}
+    Now follow the instructions in the top-level README file.
+
+
+  \section{Running Stage}
+
+    Before running stage, first make sure the Player executable can be
+    found in your path (Stage will automatically start one or more
+    instances of Player, so it needs to know where to find the Player
+    executable).
+    For example, try:
+      \begin{verbatim}
+      which player
+      \end{verbatim}
+    and make sure it returns a valid Player executable path, such as
+      \begin{verbatim}
+      /usr/local/player/bin/player
+      \end{verbatim}
+    If not, set your PATH variable to include the Player binary directory. 
+    For example, in BASH do:
+      \begin{verbatim}  
+      export PATH=$PATH:/usr/local/player/bin
+      \end{verbatim}  
+    You should also make sure that the external viewer program XS
+    can be found in your path.
+    For example, try:
+      \begin{verbatim}
+      which xs
+      \end{verbatim}
+    and make sure it returns a valid executable path, such as
+      \begin{verbatim}
+      /usr/local/stage/bin/xs
+      \end{verbatim}
+    If not, set your PATH variable to include the XS binary directory;
+    in BASH:
+      \begin{verbatim}  
+      export PATH=$PATH:/usr/local/stage/bin
+      \end{verbatim}  
+    To run stage itself do: 
+      \begin{verbatim} 
+      stage [options] <filename.world> 
+      \end{verbatim} 
+    The `.world' file specifies what stage must simulate. The
+    command-line options are described below. If all is well, Stage
+    will start up, load the world file, and spawn an instance of XS
+    and Player. Each step causes a message on standard output, so a
+    sample invocation and start up would look like this:
+      \begin{verbatim}
+      cd /usr/local/stage/examples
+      stage simple.world 
+ 
+      ** Stage v1.0 ** [World simple.world][./simple.pnm]        
+      ** XS v0.4 ** [Env 6602][Truth 6601]
+      ** Player v1.0 **
+      \end{verbatim}
+    Stage also outputs a status line on stdout at every cycle.  At
+    this point you should be able to interact with objects in the
+    world through XS and access sensors and actuators through
+    Player. 
+
+    %If it didn't work, the first things to check are the
+    %settings in Makefile.common and your Player build.
+  
+  \section{Running RTKStage}
+
+    RTKStage is a version of Stage compiled with a built-in X11 GUI
+    using Andrew Howard's RTK toolkit. The RTK source is provided in
+    the distribution (stage/rtk). This GUI provides some powerful
+    features not found in XS.  Once you have setr up your paths
+    as described above, you can start RTKStage using:
+      \begin{verbatim} 
+      rtkstage [options] <filename.world> 
+      \end{verbatim} 
+    RTKStage uses the same world files and command line options,
+    but provides an alternative interface to the simulation.
+    See Chapter \ref{sec:rtkstage} for more information on using
+    RTKStage.
+
+
+  \section{The World File}
+
+    The world file is a description of the world that Stage
+    must simulate.  It describes robots, sensors, actuators,
+    moveable and immovable objects.  The world file can also
+    be used to control many aspects of the simulation engine,
+    such as its speed and fidelity.  
+    See Chapter \ref{sec:world} for a complete description of
+    the world file format.  Sample world files can also be
+    found in the examples directory.
+
+
+  \section{Command Line Arguments}
+
+
+
+\chapter{The World File}
+  
+  \section{Syntax}
+
+  \section{General Options}
+
+  \section{Device Summary}
+
+  \section{Device Details}
+
+\appendix
+
+\chapter{Advanced world file options : M4}
+
+  Put M4 stuff in here.
+
+\end{document}
