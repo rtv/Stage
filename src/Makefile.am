@@ -8,46 +8,81 @@ RTKLDADD    =
 RTKLDFLAGS  =
 endif
 
-AM_CPPFLAGS = -Wall -I$(top_srcdir)/include -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/server/drivers/stage $(RTKCPPFLAGS)
+AM_CPPFLAGS = -Wall -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/server/drivers/stage $(RTKCPPFLAGS)
 
 bin_PROGRAMS = stage
 
-stage_SOURCES = boxobstacle.cc \
-                broadcastdevice.cc \
-                client.cc \
-                colors.cc \
-                descartesdevice.cc \
-                entity.cc \
-                fixedobstacle.cc \
-                gpsdevice.cc \
-                gripperdevice.cc \
-                idarturretdevice.cc \
-                image.cc \
-                irdevice.cc \
-                laserbeacon.cc \
-                laserbeacondevice.cc \
-                laserdevice.cc \
-                library.cc \
-                main.cc \
-                matrix.cc \
-                motedevice.cc \
-                omnipositiondevice.cc \
-                playerdevice.cc \
-                positiondevice.cc \
-                ptzdevice.cc \
-                puck.cc \
-                raytrace.cc \
-                rtp.cc \
-                server.cc \
-                sonardevice.cc \
-                stageio.cc \
-                truthdevice.cc \
-                visionbeacon.cc \
-                visiondevice.cc \
-                world.cc \
-                worldfile.cc
+stage_SOURCES = boxobstacle.cc			\
+		boxobstacle.hh			\
+		broadcastdevice.cc		\
+		broadcastdevice.hh		\
+		client.cc			\
+		colors.cc			\
+		colors.hh			\
+		descartesdevice.cc		\
+		descartesdevice.hh		\
+		entity.cc			\
+		entity.hh			\
+		fixedobstacle.cc		\
+		fixedobstacle.hh		\
+		gpsdevice.cc			\
+		gpsdevice.hh			\
+		gripperdevice.cc		\
+		gripperdevice.hh		\
+		idarturretdevice.cc		\
+		idarturretdevice.hh		\
+		image.cc			\
+		image.hh			\
+		irdevice.cc			\
+		irdevice.hh			\
+		laserbeacon.cc			\
+		laserbeacon.hh			\
+		laserbeacondevice.cc		\
+		laserbeacondevice.hh		\
+		laserdevice.cc			\
+		laserdevice.hh			\
+		library.cc			\
+		library.hh			\
+		main.cc				\
+		matrix.cc			\
+		matrix.hh			\
+		motedevice.cc			\
+		motedevice.hh			\
+		omnipositiondevice.cc		\
+		omnipositiondevice.hh		\
+		playerdevice.cc			\
+		playerdevice.hh			\
+		positiondevice.cc		\
+		positiondevice.hh		\
+		ptzdevice.cc			\
+		ptzdevice.hh			\
+		puck.cc				\
+		puck.hh				\
+		raytrace.cc			\
+		raytrace.hh			\
+		rtp.cc				\
+		rtp.h				\
+		server.cc			\
+		server.hh			\
+		sonardevice.cc			\
+		sonardevice.hh			\
+		stage_types.hh			\
+		stageio.cc			\
+		truthdevice.cc			\
+		truthdevice.hh			\
+		visionbeacon.cc			\
+		visionbeacon.hh			\
+		visiondevice.cc			\
+		visiondevice.hh			\
+		world.cc			\
+		world.hh			\
+		worldfile.cc			\
+		worldfile.hh 
                 #bpsdevice.cc
                 #entityfactory.cc 
+             #bpsdevice.hh
+             #miscdevice.hh
+
 
 stage_LDADD = -lm -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -lplayerqueue $(RTKLDADD) 
 
