@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.common,v 1.2 2001-08-10 19:16:15 vaughan Exp $ 
+# $Id: Makefile.common,v 1.3 2001-08-10 23:05:08 gerkey Exp $ 
 #
 
 # INSTALL PLAYER BEFORE BUILDING STAGE!
@@ -30,16 +30,6 @@ PLAYERVERSION = $(VERSION)
 # PLAYER_DIR = /usr/local/player
 
 PLAYER_DIR = /usr/local/player-$(PLAYERVERSION)
-
-##############################################################################
-# RTK location (required for rtkstage)
-# set the absolute path of your RTK installation or source tree
-# 
-# this is RTK's default location
-# RTK_DIR = /usr/local/rtk
-
-RTK_DIR = /usr/local/rtk
-
 
 ##############################################################################
 # INSTALLATION OPTIONS

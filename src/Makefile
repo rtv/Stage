@@ -10,6 +10,7 @@ include ../Makefile.common
 
 PLAYER_INC = $(PLAYER_DIR)/include
 
+RTK_DIR = ../rtk
 # rtkstage needs RTK installed and these paths set correctly
 # RTK headers
 RTK_INC = $(RTK_DIR)/include

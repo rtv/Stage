@@ -7,15 +7,14 @@
 #
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
-#  $Author: vaughan $
-#  $Revision: 1.14 $
+#  $Author: gerkey $
+#  $Revision: 1.15 $
 #
 ###########################################################################
 
 include Makefile.common
 
-# INSTALL PLAYER BEFORE BUILDING STAGE!
-# INSTALL PLAYER AND RTK BEFORE BUILDING RTKSTAGE!
+# INSTALL PLAYER BEFORE BUILDING STAGE OR RTKSTAGE!
 
 ##############################################################################
 # Top level targets
