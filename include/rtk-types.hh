@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/rtk-types.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1 $
+//  $Revision: 1.1.2.1 $
 //
 // Usage:
 //  (empty)
@@ -48,15 +48,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Define length-specific data types
 //
-#define BYTE unsigned char
+#define uint8_t unsigned char
 #define UINT16 unsigned short
 
-#define LOBYTE(w) ((BYTE) (w & 0xFF))
-#define HIBYTE(w) ((BYTE) ((w >> 8) & 0xFF))
+#define LOuint8_t(w) ((uint8_t) (w & 0xFF))
+#define HIuint8_t(w) ((uint8_t) ((w >> 8) & 0xFF))
 #define MAKEUINT16(lo, hi) ((((UINT16) (hi)) << 8) | ((UINT16) (lo)))
 
-#ifndef BOOL
-	#define BOOL int
+#ifndef bool
+	#define bool int
 #endif
 
 #ifndef TRUE

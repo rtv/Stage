@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.9 $
+//  $Revision: 1.2.2.10 $
 //
 // Usage:
 //  (empty)
@@ -24,8 +24,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 0
+#define ENABLE_RTK_TRACE 0
 
+#include <sys/time.h>
 #include "world.hh"
 #include "playerdevice.hh"
 
@@ -64,21 +65,21 @@ bool CPlayerDevice::Startup(RtkCfgFile *cfg)
 
     // Get a pointer to the shared memory area
     //
-    BYTE *buffer = (BYTE*) m_robot->GetShmem();
+    uint8_t *buffer = (uint8_t*) m_robot->GetShmem();
     if (buffer == NULL)
     {
-        ERROR("shared memory pointer == NULL; cannot start device");
+        RTK_ERROR("shared memory pointer == NULL; cannot start device");
         return false;
     }
     
     // Initialise pointer to buffers
     //
-    m_info = (PlayerStageInfo*) (buffer + m_offset);
-    m_data_buffer = (BYTE*) m_info + m_info_len;
-    m_command_buffer = (BYTE*) m_data_buffer + m_data_len;
-    m_config_buffer = (BYTE*) m_command_buffer + m_command_len;
+    m_info = (player_stage_info_t*) (buffer + m_offset);
+    m_data_buffer = (uint8_t*) m_info + m_info_len;
+    m_command_buffer = (uint8_t*) m_data_buffer + m_data_len;
+    m_config_buffer = (uint8_t*) m_command_buffer + m_command_len;
 
-    TRACE4("creating player device at addr: %p %p %p %p", m_info, m_data_buffer,
+    RTK_TRACE4("creating player device at addr: %p %p %p %p", m_info, m_data_buffer,
          m_command_buffer, m_config_buffer);
     
     /* *** TODO -- this doesnt work right now
@@ -119,7 +120,7 @@ bool CPlayerDevice::IsSubscribed()
 size_t CPlayerDevice::PutData(void *data, size_t len)
 {
     //if (len > m_data_len)
-    //    MSG2("data len (%d) > buffer len (%d)", (int) len, (int) m_data_len);
+    //    RTK_MSG2("data len (%d) > buffer len (%d)", (int) len, (int) m_data_len);
     //ASSERT(len <= m_data_len);
 
     m_robot->LockShmem();
@@ -133,6 +134,13 @@ size_t CPlayerDevice::PutData(void *data, size_t len)
     //
     memcpy(m_data_buffer, data, len);
 
+    // Set the timestamp
+    //
+    timeval curr;
+    gettimeofday(&curr, NULL);
+    uint64_t timestamp =  (((uint64_t) curr.tv_sec) * 1000000 + (uint64_t) curr.tv_usec);
+    m_info->data_timestamp = htonll(timestamp);
+    
     // Set data flag to indicate data is available
     //
     m_info->data_len = len;
@@ -172,7 +180,7 @@ size_t CPlayerDevice::GetData(void *data, size_t len)
 size_t CPlayerDevice::GetCommand(void *data, size_t len)
 {   
     //if (len < m_command_len)
-    //    MSG2("buffer len (%d) < command len (%d)", (int) len, (int) m_command_len);
+    //    RTK_MSG2("buffer len (%d) < command len (%d)", (int) len, (int) m_command_len);
     //ASSERT(len >= m_command_len);
     
     m_robot->LockShmem();
@@ -202,7 +210,7 @@ size_t CPlayerDevice::GetCommand(void *data, size_t len)
 size_t CPlayerDevice::GetConfig(void *data, size_t len)
 {
     //if (len < m_config_len)
-    //    MSG2("buffer len (%d) < config len (%d)", (int) len, (int) m_config_len);
+    //    RTK_MSG2("buffer len (%d) < config len (%d)", (int) len, (int) m_config_len);
     //ASSERT(len >= m_config_len);
     
     m_robot->LockShmem();

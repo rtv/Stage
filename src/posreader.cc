@@ -1,7 +1,7 @@
 /*************************************************************************
  * posreader.cc - a demo client for the position server
  * RTV
- * $Id: posreader.cc,v 1.1.1.1 2000-11-29 00:16:53 ahoward Exp $
+ * $Id: posreader.cc,v 1.1.1.1.2.1 2001-02-06 03:42:51 ahoward Exp $
  ************************************************************************/
 
 
@@ -80,14 +80,14 @@ int main(int argc, char **argv)
 #endif
  
  
-  char* buffer = new char[MAXMSG];
+  char* buffer = new char[MAXRTK_MSG];
   float xpos, ypos, heading;
   int* id;
 
   while( 1 )
     {	      
       /* read will block until it has some bytes to return */
-      r = read( sockfd, buffer, MAXMSG );
+      r = read( sockfd, buffer, MAXRTK_MSG );
       
       if( r > 0 )
 	{

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/rtksimagent.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -52,7 +52,7 @@ class RtkSimAgent :
 
 	// Cfgtialisation
 	//
-	public: virtual BOOL Open(RtkCfgFile *pCfgFile);
+	public: virtual bool Open(RtkCfgFile *pCfgFile);
 
 	// Close function
 	//
@@ -64,11 +64,11 @@ class RtkSimAgent :
 
     // Start any threads/timers for this module
 	//
-	public: virtual BOOL Start();
+	public: virtual bool Start();
 	
 	// Stop any threads/timers for this module
 	//
-	public: virtual BOOL Stop();
+	public: virtual bool Stop();
 
     // Main agent loop
     //

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/pioneermobiledevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.6 $
+//  $Revision: 1.1.2.7 $
 //
 // Usage:
 //  (empty)
@@ -27,7 +27,7 @@
 #ifndef PIONEERMOBILEDEVICE_H
 #define PIONEERMOBILEDEVICE_H
 
-#include "offsets.h"
+#include "stage.h"
 #include "playerdevice.hh"
 
 
@@ -67,8 +67,8 @@ class CPioneerMobileDevice : public CPlayerDevice
 
     // Current command and data buffers
     //
-    private: PlayerPositionCommand m_command;
-    private: PlayerPositionData m_data;
+    private: player_position_cmd_t m_command;
+    private: player_position_data_t m_data;
     
     // Commanded robot speed
     //

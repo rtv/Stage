@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.9 $
+//  $Revision: 1.1.2.10 $
 //
 // Usage:
 //  (empty)
@@ -95,16 +95,16 @@ class CWorld : public CObject
   
     // Get a cell from the world grid
     //
-    public: BYTE GetCell(double px, double py, EWorldLayer layer);
+    public: uint8_t GetCell(double px, double py, EWorldLayer layer);
 
     // Set a cell in the world grid
     //
-    public: void SetCell(double px, double py, EWorldLayer layer, BYTE value);
+    public: void SetCell(double px, double py, EWorldLayer layer, uint8_t value);
 
     // Set a rectangle in the world grid
     //
     public: void SetRectangle(double px, double py, double pth,
-                              double dx, double dy, EWorldLayer layer, BYTE value);
+                              double dx, double dy, EWorldLayer layer, uint8_t value);
 
     //
     ///////////////////////////////////////////////////////////////////////////
@@ -119,17 +119,17 @@ class CWorld : public CObject
 
     // Add a packet to the broadcast queue
     //
-    public: void PutBroadcast(BYTE *buffer, size_t bufflen);
+    public: void PutBroadcast(uint8_t *buffer, size_t bufflen);
 
     // Get a packet from the broadcast queue
     //
-    public: size_t GetBroadcast(int *index, BYTE *buffer, size_t bufflen);
+    public: size_t GetBroadcast(int *index, uint8_t *buffer, size_t bufflen);
 
     // The broadcast queue
     //
     private: int m_broadcast_first, m_broadcast_last, m_broadcast_size;
     private: size_t m_broadcast_len[128];
-    private: BYTE m_broadcast_data[128][4096];
+    private: uint8_t m_broadcast_data[128][4096];
     
     //
     ///////////////////////////////////////////////////////////////////////////

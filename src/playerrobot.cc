@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerrobot.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.6 $
 //
 // Usage:
 //  (empty)
@@ -25,7 +25,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 0
+#define ENABLE_RTK_TRACE 0
 
 #include <errno.h>
 #include <fcntl.h>
@@ -51,7 +51,7 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 
-#include <offsets.h>
+#include <stage.h>
 #include "world.hh"
 
 
@@ -90,7 +90,7 @@ CPlayerRobot::~CPlayerRobot( void )
 //
 bool CPlayerRobot::Startup(RtkCfgFile *cfg)
 {
-    TRACE0("starting devices");
+    RTK_TRACE0("starting devices");
 
     if (!CObject::Startup(cfg))
         return false;
@@ -123,7 +123,7 @@ bool CPlayerRobot::Startup(RtkCfgFile *cfg)
 //
 void CPlayerRobot::Shutdown()
 {
-    TRACE0("shutting down devices");
+    RTK_TRACE0("shutting down devices");
 
     // Shutdown player
     //
@@ -147,7 +147,7 @@ void CPlayerRobot::Update()
 //
 bool CPlayerRobot::StartupPlayer(int port)
 {
-    TRACE0("starting player");
+    RTK_TRACE0("starting player");
     
     // -- create the memory map for IPC with Player --------------------------
 
@@ -225,7 +225,7 @@ bool CPlayerRobot::StartupPlayer(int port)
 //
 void CPlayerRobot::ShutdownPlayer()
 {
-    TRACE0("stopping player");
+    RTK_TRACE0("stopping player");
     
     // BPG
     if(kill(player_pid,SIGINT))
@@ -244,7 +244,7 @@ void CPlayerRobot::ShutdownPlayer()
 //
 bool CPlayerRobot::CreateShmemLock()
 {
-    TRACE0("making semaphore");
+    RTK_TRACE0("making semaphore");
 
     semKey = SEMKEY;
 
@@ -260,12 +260,12 @@ bool CPlayerRobot::CreateShmemLock()
 
     if( semid < 0 ) // semget failed
     {
-        MSG( "Unable to create semaphore" );
+        RTK_MSG0( "Unable to create semaphore" );
         return false;
     }
     if( semctl( semid, 0, SETVAL, argument ) < 0 )
     {
-        MSG( "Failed to set semaphore value" );
+        RTK_MSG0( "Failed to set semaphore value" );
         return false;
     }
     return true;
@@ -287,7 +287,7 @@ bool CPlayerRobot::LockShmem( void )
   int retval = semop( semid, ops, 1 );
   if (retval != 0)
   {
-      MSG1("lock failed return value = %d", (int) retval);
+      RTK_MSG1("lock failed return value = %d", (int) retval);
       return false;
   }
   return true;
@@ -307,7 +307,7 @@ void CPlayerRobot::UnlockShmem( void )
 
   int retval = semop( semid, ops, 1 );
   if (retval != 0)
-      MSG1("unlock failed return value = %d", (int) retval);
+      RTK_MSG1("unlock failed return value = %d", (int) retval);
 }
 
 #ifdef INCLUDE_RTK
@@ -341,7 +341,7 @@ void CPlayerRobot::OnUiMouse(RtkUiMouseData *pData)
             if (pData->IsButtonDown() && pData->WhichButton() == 2)
             {
                 m_show_sensors = !m_show_sensors;
-                TRACE1("sensors %d", (int) m_show_sensors);
+                RTK_TRACE1("sensors %d", (int) m_show_sensors);
             }
         }
     }

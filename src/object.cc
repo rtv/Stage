@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/object.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.7 $
+//  $Revision: 1.1.2.8 $
 //
 // Usage:
 //  (empty)
@@ -24,7 +24,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 1
+#define ENABLE_RTK_TRACE 1
 
 #include <math.h>
 #include "object.hh"
@@ -145,7 +145,7 @@ bool CObject::CreateChildren(RtkCfgFile *cfg)
 { 
     // Read in the objects from the configuration file
     //
-    for (int i = 0; i < ARRAYSIZE(m_child); i++)
+    for (int i = 0; i < RTK_ARRAYSIZE(m_child); i++)
     {
         RtkString key; RtkFormat1(key, "child[%d]", (int) i);
 
@@ -192,7 +192,7 @@ bool CObject::CreateChildren(RtkCfgFile *cfg)
 //
 void CObject::AddChild(CObject *child)
 {
-    ASSERT_INDEX(m_child_count, m_child);
+    RTK_ASSERT_INDEX(m_child_count, m_child);
     m_child[m_child_count++] = child;
 }
 

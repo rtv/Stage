@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -24,7 +24,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 1
+#define ENABLE_RTK_TRACE 1
 
 #include "world.hh"
 #include "boxobstacle.hh"
@@ -74,7 +74,7 @@ bool CBoxObstacle::Startup(RtkCfgFile *cfg)
 //
 void CBoxObstacle::Update()
 {
-    //TRACE0("updating laser beacon");
+    //RTK_TRACE0("updating laser beacon");
     ASSERT(m_world != NULL);
 
     // Undraw our old representation

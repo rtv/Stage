@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -25,7 +25,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 1
+#define ENABLE_RTK_TRACE 1
 
 #include "world.hh"
 #include "laserbeacon.hh"
@@ -75,7 +75,7 @@ bool CLaserBeacon::Startup(RtkCfgFile *cfg)
 //
 void CLaserBeacon::Update()
 {
-    //TRACE0("updating laser beacon");
+    //RTK_TRACE0("updating laser beacon");
     ASSERT(m_world != NULL);
 
     // Undraw our old representation

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtksimagent.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.6 $
 //
 // Usage:
 //  (empty)
@@ -24,7 +24,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 1
+#define ENABLE_RTK_TRACE 1
 
 #include <math.h>
 #include "world.hh"
@@ -52,7 +52,7 @@ RtkSimAgent::~RtkSimAgent()
 ///////////////////////////////////////////////////////////////////////////
 // Cfgtialisation
 //
-BOOL RtkSimAgent::Open(RtkCfgFile* pCfgFile)
+bool RtkSimAgent::Open(RtkCfgFile* pCfgFile)
 {
     if (!RtkAgent::Open(pCfgFile))
         return FALSE;
@@ -114,7 +114,7 @@ void RtkSimAgent::Save(RtkCfgFile* pCfgFile)
 ///////////////////////////////////////////////////////////////////////////
 // Start any threads/timers for this module
 //
-BOOL RtkSimAgent::Start()
+bool RtkSimAgent::Start()
 {
 	// Start the module thread
 	//
@@ -126,7 +126,7 @@ BOOL RtkSimAgent::Start()
 ///////////////////////////////////////////////////////////////////////////
 // Stop any threads/timers for this module
 //
-BOOL RtkSimAgent::Stop()
+bool RtkSimAgent::Stop()
 {	
 	// Stop the module thread
 	//
@@ -140,7 +140,7 @@ BOOL RtkSimAgent::Stop()
 //
 void RtkSimAgent::Main()
 {
-    //TRACE("RtkSimAgent::Main\n");
+    //RTK_TRACE("RtkSimAgent::Main\n");
   
     // Update the GUI now.
     //
@@ -159,7 +159,7 @@ void RtkSimAgent::Main()
             m_pWorld->UpdateChildren();
         }
 
-        //TRACE1("time %d", (int) GetTime());
+        //RTK_TRACE1("time %d", (int) GetTime());
         
         // Update the GUI now
         //

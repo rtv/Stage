@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/objectfactory.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.10 $
+//  $Revision: 1.1.2.11 $
 //
 // Usage:
 //  (empty)
@@ -43,8 +43,8 @@
 #include "laserdevice.hh"
 #include "ptzdevice.hh"
 #include "visiondevice.hh"
-#include "beacondevice.hh"
-#include "broadcastdevice.hh"
+// *** #include "beacondevice.hh"
+// *** #include "broadcastdevice.hh"
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -54,7 +54,7 @@
                             parent->FindAncestor(typeid(CPlayerRobot)); \
                             if (robot == NULL) \
                             { \
-                                MSG("player device does not have player robot as ancestor;" \
+                                RTK_MSG0("player device does not have player robot as ancestor;" \
                                     "device ignored"); \
                                 return NULL; \
                             } 
@@ -125,12 +125,13 @@ CObject* CreateObject(const char *type, CWorld *world, CObject *parent)
         CPtzDevice *ptz = (CPtzDevice*) parent->FindAncestor(typeid(CPtzDevice));
         if (ptz == NULL)
         {
-            MSG("vision device requires ptz camera as ancestor; ignoring");
+            RTK_MSG0("vision device requires ptz camera as ancestor; ignoring");
             return NULL;
         }
         return new CVisionDevice(world, parent, robot, ptz);
     }
-    
+
+    /*
     // Create beacon detector device
     //
     if (strcmp(type, "beacon") == 0)
@@ -139,7 +140,7 @@ CObject* CreateObject(const char *type, CWorld *world, CObject *parent)
         CLaserDevice *laser = (CLaserDevice*) parent->FindAncestor(typeid(CLaserDevice));
         if (laser == NULL)
         {
-            MSG("beacon device requires laser as ancestor; ignoring");
+            RTK_MSG0("beacon device requires laser as ancestor; ignoring");
             return NULL;
         }      
         return new CBeaconDevice(world, parent, robot, laser);
@@ -152,6 +153,7 @@ CObject* CreateObject(const char *type, CWorld *world, CObject *parent)
         FIND_PLAYER_ROBOT();
         return new CBroadcastDevice(world, parent, robot);
     }
+    */
 
     return NULL;
 }

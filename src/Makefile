@@ -1,7 +1,7 @@
 #*************************************************************************
 # src/Makefile - makes the sources
 # RTV
-# $Id: Makefile,v 1.9.2.12 2001-02-06 03:06:33 ahoward Exp $
+# $Id: Makefile,v 1.9.2.13 2001-02-06 03:42:49 ahoward Exp $
 # ************************************************************************/
 
 .SUFFIXES: .cc .o
@@ -14,8 +14,8 @@ CFLAGS = -I../include -I$(PLAYERSRC)/include -I/usr/lib/g++-include -I/usr/X11R6
 OBS = world.o image.o \
 		object.o objectfactory.o \
 		playerrobot.o playerdevice.o \
-		pioneermobiledevice.o laserdevice.o beacondevice.o \
-		visiondevice.o ptzdevice.o sonardevice.o broadcastdevice.o \
+		pioneermobiledevice.o laserdevice.o \
+		visiondevice.o ptzdevice.o sonardevice.o \
 		boxobstacle.o \
 		laserbeacon.o visionbeacon.o
 WIN_OBS = main.o win.o server.o
@@ -52,7 +52,7 @@ RTK_LIB = $(RTK_SRC)/lib
 
 RTK_OBJS = $(OBS) rtkmain.o rtksimagent.o
 RTK_CCFLAGS = 	-DINCLUDE_RTK \
-				-O3 -Wall \
+				-g3 -Wall \
 				-I../include \
 				-I$(PLAYER_INC) \
 				-I$(RTK_INC) `gtk-config --cflags`
@@ -72,13 +72,21 @@ rtk-stage:  $(RTK_OBJS)
 
 # DO NOT DELETE.  FOLLOWING IS FROM MAKEDEPEND
 
+beacondevice.o: ../include/world.hh ../include/playerrobot.hh
+beacondevice.o: ../include/object.hh ../include/rtk-types.hh
+beacondevice.o: ../include/image.h ../include/laserdevice.hh
+beacondevice.o: ../include/playerdevice.hh ../include/beacondevice.hh
+boxobstacle.o: ../include/world.hh ../include/playerrobot.hh
+boxobstacle.o: ../include/object.hh ../include/rtk-types.hh
+boxobstacle.o: ../include/image.h ../include/boxobstacle.hh
+broadcastdevice.o: ../include/world.hh ../include/playerrobot.hh
+broadcastdevice.o: ../include/object.hh ../include/rtk-types.hh
+broadcastdevice.o: ../include/image.h ../include/broadcastdevice.hh
+broadcastdevice.o: ../include/playerdevice.hh
 image.o: ../include/image.h
 laserbeacon.o: ../include/world.hh ../include/playerrobot.hh
 laserbeacon.o: ../include/object.hh ../include/rtk-types.hh
 laserbeacon.o: ../include/image.h ../include/laserbeacon.hh
-laserbeacondevice.o: ../include/world.hh ../include/playerrobot.hh
-laserbeacondevice.o: ../include/object.hh ../include/rtk-types.hh
-laserbeacondevice.o: ../include/image.h ../include/laserbeacondevice.hh
 laserdevice.o: ../include/world.hh ../include/playerrobot.hh
 laserdevice.o: ../include/object.hh ../include/rtk-types.hh
 laserdevice.o: ../include/image.h ../include/laserdevice.hh
@@ -87,12 +95,14 @@ main.o: ../include/world.hh ../include/playerrobot.hh ../include/object.hh
 main.o: ../include/rtk-types.hh ../include/image.h ../include/win.h
 object.o: ../include/object.hh ../include/rtk-types.hh
 object.o: ../include/objectfactory.hh
-objectfactory.o: ../include/objectfactory.hh ../include/laserbeacon.hh
+objectfactory.o: ../include/objectfactory.hh ../include/boxobstacle.hh
 objectfactory.o: ../include/object.hh ../include/rtk-types.hh
-objectfactory.o: ../include/visionbeacon.hh ../include/playerrobot.hh
-objectfactory.o: ../include/pioneermobiledevice.hh ../include/playerdevice.hh
+objectfactory.o: ../include/laserbeacon.hh ../include/visionbeacon.hh
+objectfactory.o: ../include/playerrobot.hh ../include/pioneermobiledevice.hh
+objectfactory.o: ../include/playerdevice.hh ../include/sonardevice.hh
 objectfactory.o: ../include/laserdevice.hh ../include/ptzdevice.hh
-objectfactory.o: ../include/visiondevice.hh ../include/sonardevice.hh
+objectfactory.o: ../include/visiondevice.hh ../include/beacondevice.hh
+objectfactory.o: ../include/broadcastdevice.hh
 pioneermobiledevice.o: ../include/world.hh ../include/playerrobot.hh
 pioneermobiledevice.o: ../include/object.hh ../include/rtk-types.hh
 pioneermobiledevice.o: ../include/image.h ../include/pioneermobiledevice.hh
@@ -103,6 +113,7 @@ playerdevice.o: ../include/image.h ../include/playerdevice.hh
 playerrobot.o: ../include/world.hh ../include/playerrobot.hh
 playerrobot.o: ../include/object.hh ../include/rtk-types.hh
 playerrobot.o: ../include/image.h
+posreader.o: ../include/ports.h
 ptzdevice.o: ../include/world.hh ../include/playerrobot.hh
 ptzdevice.o: ../include/object.hh ../include/rtk-types.hh ../include/image.h
 ptzdevice.o: ../include/ptzdevice.hh ../include/playerdevice.hh
@@ -113,7 +124,7 @@ rtksimagent.o: ../include/world.hh ../include/playerrobot.hh
 rtksimagent.o: ../include/object.hh ../include/rtk-types.hh
 rtksimagent.o: ../include/image.h ../include/rtksimagent.hh
 server.o: ../include/world.hh ../include/playerrobot.hh ../include/object.hh
-server.o: ../include/rtk-types.hh ../include/image.h
+server.o: ../include/rtk-types.hh ../include/image.h ../include/ports.h
 sonardevice.o: ../include/world.hh ../include/playerrobot.hh
 sonardevice.o: ../include/object.hh ../include/rtk-types.hh
 sonardevice.o: ../include/image.h ../include/sonardevice.hh

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.5 $
+//  $Revision: 1.9.2.6 $
 //
 // Usage:
 //  (empty)
@@ -80,7 +80,7 @@ class CLaserDevice : public CPlayerDevice
 
     // Array holding the laser data
     //
-    private: UINT16 m_data[512];
+    private: uint16_t m_data[512];
 
     // Size of laser in laser rep
     //

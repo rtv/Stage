@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.8 $
+//  $Revision: 1.9.2.9 $
 //
 // Usage:
 //  (empty)
@@ -24,7 +24,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 1
+#define ENABLE_RTK_TRACE 1
 
 #include <math.h>
 
@@ -40,11 +40,11 @@ const double TWOPI = 6.283185307;
 //
 CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
         : CPlayerDevice(world, parent, robot,
-                        SPOSITION_DATA_START,
-                        SPOSITION_TOTAL_BUFFER_SIZE,
-                        SPOSITION_DATA_BUFFER_SIZE,
-                        SPOSITION_COMMAND_BUFFER_SIZE,
-                        SPOSITION_CONFIG_BUFFER_SIZE)
+                        POSITION_DATA_START,
+                        POSITION_TOTAL_BUFFER_SIZE,
+                        POSITION_DATA_BUFFER_SIZE,
+                        POSITION_COMMAND_BUFFER_SIZE,
+                        POSITION_CONFIG_BUFFER_SIZE)
 {    
     m_com_vr = m_com_vth = 0;
     m_map_px = m_map_py = m_map_pth = 0;
@@ -72,7 +72,7 @@ CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CObject *parent, CPlay
 //
 void CPioneerMobileDevice::Update()
 {
-    //TRACE0("updating CPioneerMobileDevice");
+    //RTK_TRACE0("updating CPioneerMobileDevice");
     
     // Get the latest command
     //
@@ -235,8 +235,8 @@ int CPioneerMobileDevice::Move()
 //
 void CPioneerMobileDevice::ParseCommandBuffer()
 {
-    double fv = (short) ntohs(m_command.vr);
-    double fw = (short) ntohs(m_command.vth);
+    double fv = (short) ntohs(m_command.speed);
+    double fw = (short) ntohs(m_command.turnrate);
 
     // Store commanded speed
     // Linear is in m/s
@@ -271,15 +271,15 @@ void CPioneerMobileDevice::ComposeData()
     // Construct the data packet
     // Basically just changes byte orders and some units
     //
-    m_data.time = htonl((int)((m_world->GetTime())*1000.0));
-    m_data.px = htonl((int) px);
-    m_data.py = htonl((int) py);
-    m_data.pth = htons((unsigned short) pth);
+    // *** REMOVE m_data.time = htonl((int)((m_world->GetTime())*1000.0));
+    m_data.xpos = htonl((int) px);
+    m_data.ypos = htonl((int) py);
+    m_data.theta = htons((unsigned short) pth);
 
-    m_data.vr = htons((unsigned short) (m_com_vr * 1000.0));
-    m_data.vth = htons((short) RTOD(m_com_vth));  
+    m_data.speed = htons((unsigned short) (m_com_vr * 1000.0));
+    m_data.turnrate = htons((short) RTOD(m_com_vth));  
     m_data.compass = htons((unsigned short)(RTOD(compass)));
-    m_data.stall = stall;
+    m_data.stalls = stall;
 }
 
 

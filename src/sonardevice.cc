@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.5.2.10 $
+//  $Revision: 1.5.2.11 $
 //
 // Usage:
 //  (empty)
@@ -35,11 +35,11 @@ const double TWOPI = 6.283185307;
 
 CSonarDevice::CSonarDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
         : CPlayerDevice(world, parent, robot,
-                        SSONAR_DATA_START,
-                        SSONAR_TOTAL_BUFFER_SIZE,
-                        SSONAR_DATA_BUFFER_SIZE,
-                        SSONAR_COMMAND_BUFFER_SIZE,
-                        SSONAR_CONFIG_BUFFER_SIZE)
+                        SONAR_DATA_START,
+                        SONAR_TOTAL_BUFFER_SIZE,
+                        SONAR_DATA_BUFFER_SIZE,
+                        SONAR_COMMAND_BUFFER_SIZE,
+                        SONAR_CONFIG_BUFFER_SIZE)
 {
     updateInterval = 0.1; //seconds
     lastUpdate = 0;
@@ -89,7 +89,7 @@ void CSonarDevice::Update()
 
     // Check bounds
     //
-    ASSERT(m_sonar_count <= ARRAYSIZE(m_range));
+    ASSERT(m_sonar_count <= RTK_ARRAYSIZE(m_range));
     
     // Do each sonar
     //
@@ -119,7 +119,7 @@ void CSonarDevice::Update()
         {
             // Look in the laser layer for obstacles
             //
-            BYTE cell = m_world->GetCell(px, py, layer_obstacle);
+            uint8_t cell = m_world->GetCell(px, py, layer_obstacle);
             if (range > min_range && cell != 0)           
                 break;
             px += dx;
@@ -128,7 +128,7 @@ void CSonarDevice::Update()
 
         // Store range in mm in network byte order
         //
-        m_range[s] = htons((UINT16) (range * 1000));
+        m_range[s] = htons((uint16_t) (range * 1000));
 
         // Update the gui data
         //

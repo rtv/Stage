@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11.2.10 $
+//  $Revision: 1.11.2.11 $
 //
 // Usage:
 //  (empty)
@@ -24,9 +24,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 1
+#define ENABLE_RTK_TRACE 1
 
-#include <offsets.h>
+#include <stage.h>
 #include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
 #include "world.hh"
 #include "playerrobot.hh"
@@ -95,7 +95,7 @@ bool CLaserDevice::Startup(RtkCfgFile *cfg)
 //
 void CLaserDevice::Update()
 {
-    //TRACE0("updating laser data");
+    //RTK_TRACE0("updating laser data");
     ASSERT(m_robot != NULL);
     ASSERT(m_world != NULL);
 
@@ -114,7 +114,7 @@ void CLaserDevice::Update()
         // Generate new scan data and copy to data buffer
         //
         if (UpdateScanData())
-            PutData(m_data, m_samples * sizeof(UINT16));
+            PutData(m_data, m_samples * sizeof(uint16_t));
     }
 
     // Redraw outselves in the world
@@ -128,15 +128,15 @@ void CLaserDevice::Update()
 //
 bool CLaserDevice::CheckConfig()
 {
-    BYTE config[5];
+    uint8_t config[5];
 
     if (GetConfig(config, sizeof(config)) == 0)
         return false;  
     
-    m_min_segment = ntohs(MAKEUINT16(config[0], config[1]));
-    m_max_segment = ntohs(MAKEUINT16(config[2], config[3]));
+    m_min_segment = ntohs(RTK_MAKEUINT16(config[0], config[1]));
+    m_max_segment = ntohs(RTK_MAKEUINT16(config[2], config[3]));
     m_intensity = (bool) config[4];
-    MSG3("new scan range [%d %d], intensity [%d]",
+    RTK_MSG3("new scan range [%d %d], intensity [%d]",
          (int) m_min_segment, (int) m_max_segment, (int) m_intensity);
 
     // *** HACK -- change the update rate based on the scan size
@@ -179,7 +179,7 @@ bool CLaserDevice::UpdateScanData()
 
     // Make sure the data buffer is big enough
     //
-    ASSERT(m_samples <= ARRAYSIZE(m_data));
+    ASSERT(m_samples <= RTK_ARRAYSIZE(m_data));
 
     // Do each scan
     //
@@ -218,7 +218,7 @@ bool CLaserDevice::UpdateScanData()
             {
                 // Look in the laser layer for obstacles
                 //
-                BYTE cell = m_world->GetCell(px, py, layer_laser);
+                uint8_t cell = m_world->GetCell(px, py, layer_laser);
                 if (cell != 0)
                 {
                     if (cell > 1)
@@ -241,18 +241,18 @@ bool CLaserDevice::UpdateScanData()
         // set laser value, scaled to current ppm
         // and converted to mm
         //
-        UINT16 v = (UINT16) (1000.0 * range);
+        uint16_t v = (uint16_t) (1000.0 * range);
 
         // Add in the intensity values in the top 3 bits
         //
         if (m_intensity)
-            v = v | (((UINT16) intensity) << 13);
+            v = v | (((uint16_t) intensity) << 13);
         
         // Set the range
         // Swap the bytes while we're at it,
         // and allow for sparse sampling.
         //
-        for (int i = s; i < s + m_sample_density && i < ARRAYSIZE(m_data); i++)
+        for (int i = s; i < s + m_sample_density && i < RTK_ARRAYSIZE(m_data); i++)
             m_data[i] = htons(v);
     }
     return true;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/beacondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  (empty)
@@ -24,9 +24,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 1
+#define ENABLE_RTK_TRACE 1
 
-#include <offsets.h>
+#include <stage.h>
 #include "world.hh"
 #include "playerrobot.hh"
 #include "laserdevice.hh"
@@ -143,7 +143,7 @@ void CBeaconDevice::Update()
 
         // Check for data buffer overrun
         //
-        if (data.count >= ARRAYSIZE(data.beacon))
+        if (data.count >= RTK_ARRAYSIZE(data.beacon))
             break;
 
         // Update data buffer
@@ -158,7 +158,7 @@ void CBeaconDevice::Update()
 
         // Update the gui
         //
-        if (m_hit_count < ARRAYSIZE(m_hit))
+        if (m_hit_count < RTK_ARRAYSIZE(m_hit))
         {
             m_id[m_hit_count] = id;
             m_hit[m_hit_count][0] = px;

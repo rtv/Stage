@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/broadcastdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -24,9 +24,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 1
+#define ENABLE_RTK_TRACE 1
 
-#include <offsets.h>
+#include <stage.h>
 #include "world.hh"
 #include "playerrobot.hh"
 #include "broadcastdevice.hh"
@@ -67,11 +67,11 @@ void CBroadcastDevice::Update()
     //
     size_t send_len = GetCommand(&m_cmd, sizeof(m_cmd));
     if (send_len > 0)
-        m_world->PutBroadcast((BYTE*) &m_cmd, send_len);
+        m_world->PutBroadcast((uint8_t*) &m_cmd, send_len);
 
     // See if there is any data to read
     //
-    size_t recv_len = m_world->GetBroadcast(&m_last_packet, (BYTE*) &m_data, sizeof(m_data));
+    size_t recv_len = m_world->GetBroadcast(&m_last_packet, (uint8_t*) &m_data, sizeof(m_data));
     if (recv_len > 0)
         PutData(&m_data, sizeof(m_data));
 }

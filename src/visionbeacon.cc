@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  (empty)
@@ -24,7 +24,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 1
+#define ENABLE_RTK_TRACE 1
 
 #include "world.hh"
 #include "visionbeacon.hh"
@@ -81,7 +81,7 @@ bool CVisionBeacon::Startup(RtkCfgFile *cfg)
 //
 void CVisionBeacon::Update()
 {
-    //TRACE0("updating laser beacon");
+    //RTK_TRACE0("updating laser beacon");
     ASSERT(m_world != NULL);
 
     // Undraw our old representation

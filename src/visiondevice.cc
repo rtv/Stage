@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.8 $
+//  $Revision: 1.4.2.9 $
 //
 // Usage:
 //  (empty)
@@ -24,7 +24,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 0
+#define ENABLE_RTK_TRACE 0
 
 #include <math.h>
 #include "world.hh"
@@ -78,7 +78,7 @@ CVisionDevice::CVisionDevice(CWorld *world, CObject *parent, CPlayerRobot* robot
 //
 void CVisionDevice::Update()
 {
-    //TRACE0("updating vision data");
+    //RTK_TRACE0("updating vision data");
     
     // Update children
     //
@@ -97,7 +97,7 @@ void CVisionDevice::Update()
     if( m_world->GetTime() - m_last_update < m_update_interval )
         return;
     m_last_update = m_world->GetTime();
-    TRACE0("generating new data");
+    RTK_TRACE0("generating new data");
 
     // Generate the scan-line image
     //
@@ -147,7 +147,7 @@ void CVisionDevice::UpdateScan()
 
     // Make sure the data buffer is big enough
     //
-    ASSERT(m_scan_width <= ARRAYSIZE(m_scan_channel));
+    ASSERT(m_scan_width <= RTK_ARRAYSIZE(m_scan_channel));
 
     // Do each scan
     //
@@ -174,7 +174,7 @@ void CVisionDevice::UpdateScan()
         {
             // Look in the laser layer for obstacles
             //
-            BYTE cell = m_world->GetCell(px, py, layer_vision);
+            uint8_t cell = m_world->GetCell(px, py, layer_vision);
             if (cell != 0)
             {
                 color = cell;
@@ -366,7 +366,7 @@ size_t CVisionDevice::UpdateACTS()
     // finally, we're done.
     //cout << endl;
 
-    TRACE1("Found %d blobs", (int) numBlobs);
+    RTK_TRACE1("Found %d blobs", (int) numBlobs);
 
     return buflen;
 }

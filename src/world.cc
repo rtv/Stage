@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.13 $
+//  $Revision: 1.4.2.14 $
 //
 // Usage:
 //  (empty)
@@ -24,11 +24,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 0
+#define ENABLE_RTK_TRACE 0
 
 #include <sys/time.h>
 #include "world.hh"
-#include "offsets.h"
+#include "stage.h"
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -168,7 +168,7 @@ void CWorld::Update()
     double simtimestep = timestep;
     if (timestep > m_max_timestep)
     {
-        TRACE2("MAX TIMESTEP EXCEEDED %f > %f", (double) simtimestep, (double) m_max_timestep);
+        RTK_TRACE2("MAX TIMESTEP EXCEEDED %f > %f", (double) simtimestep, (double) m_max_timestep);
         simtimestep = m_max_timestep;
     }
 
@@ -228,7 +228,7 @@ double CWorld::GetRealTime()
 //
 bool CWorld::InitGrids(const char *env_file)
 {
-    TRACE0("initialising grids");
+    RTK_TRACE0("initialising grids");
 
     // create a new background image from the pnm file
     m_bimg = new Nimage( env_file );
@@ -276,7 +276,7 @@ bool CWorld::InitGrids(const char *env_file)
 ///////////////////////////////////////////////////////////////////////////
 // Get a cell from the world grid
 //
-BYTE CWorld::GetCell(double px, double py, EWorldLayer layer)
+uint8_t CWorld::GetCell(double px, double py, EWorldLayer layer)
 {
     // Convert from world to image coords
     //
@@ -303,7 +303,7 @@ BYTE CWorld::GetCell(double px, double py, EWorldLayer layer)
 ///////////////////////////////////////////////////////////////////////////
 // Set a cell in the world grid
 //
-void CWorld::SetCell(double px, double py, EWorldLayer layer, BYTE value)
+void CWorld::SetCell(double px, double py, EWorldLayer layer, uint8_t value)
 {
     // Convert from world to image coords
     //
@@ -334,7 +334,7 @@ void CWorld::SetCell(double px, double py, EWorldLayer layer, BYTE value)
 // Set a rectangle in the world grid
 //
 void CWorld::SetRectangle(double px, double py, double pth,
-                          double dx, double dy, EWorldLayer layer, BYTE value)
+                          double dx, double dy, EWorldLayer layer, uint8_t value)
 {
     Rect rect;
     double tx, ty;
@@ -396,7 +396,7 @@ void CWorld::InitBroadcast()
 {
     m_broadcast_first = 0;
     m_broadcast_last = -1;
-    m_broadcast_size = ARRAYSIZE(m_broadcast_data);
+    m_broadcast_size = RTK_ARRAYSIZE(m_broadcast_data);
 
     memset(m_broadcast_len, 0, sizeof(m_broadcast_len));
     memset(m_broadcast_data, 0, sizeof(m_broadcast_data));
@@ -406,7 +406,7 @@ void CWorld::InitBroadcast()
 ///////////////////////////////////////////////////////////////////////////
 // Add a packet to the broadcast queue
 //
-void CWorld::PutBroadcast(BYTE *buffer, size_t bufflen)
+void CWorld::PutBroadcast(uint8_t *buffer, size_t bufflen)
 {
     int index = m_broadcast_last++;
 
@@ -416,16 +416,16 @@ void CWorld::PutBroadcast(BYTE *buffer, size_t bufflen)
         m_broadcast_first++;
     ASSERT(m_broadcast_last - m_broadcast_first + 1 <= m_broadcast_size);
     
-    BYTE *packet = m_broadcast_data[index % m_broadcast_size];
+    uint8_t *packet = m_broadcast_data[index % m_broadcast_size];
     size_t *packetlen = &m_broadcast_len[index % m_broadcast_size];
     
     // Check for buffer overflow
     //
     *packetlen = bufflen;
-    if (*packetlen > ARRAYSIZE(m_broadcast_data[0]))
+    if (*packetlen > RTK_ARRAYSIZE(m_broadcast_data[0]))
     {
-        *packetlen = ARRAYSIZE(m_broadcast_data[0]);
-        TRACE0("warning : data buffer too large; data has been truncated");
+        *packetlen = RTK_ARRAYSIZE(m_broadcast_data[0]);
+        RTK_TRACE0("warning : data buffer too large; data has been truncated");
     }
    
     // Copy the data
@@ -437,7 +437,7 @@ void CWorld::PutBroadcast(BYTE *buffer, size_t bufflen)
 ///////////////////////////////////////////////////////////////////////////
 // Get a packet from the broadcast queue
 //
-size_t CWorld::GetBroadcast(int *index, BYTE *buffer, size_t bufflen)
+size_t CWorld::GetBroadcast(int *index, uint8_t *buffer, size_t bufflen)
 {
     if (*index < m_broadcast_first)
         *index = m_broadcast_first;
@@ -449,7 +449,7 @@ size_t CWorld::GetBroadcast(int *index, BYTE *buffer, size_t bufflen)
     if (m_broadcast_last - m_broadcast_first + 1 == 0)
         return 0;
 
-    BYTE *packet = m_broadcast_data[(*index) % m_broadcast_size];
+    uint8_t *packet = m_broadcast_data[(*index) % m_broadcast_size];
     size_t packetlen = m_broadcast_len[(*index) % m_broadcast_size];
 
     // Check for buffer overflow
@@ -457,7 +457,7 @@ size_t CWorld::GetBroadcast(int *index, BYTE *buffer, size_t bufflen)
     if (packetlen > bufflen)
     {
         packetlen = bufflen;
-        TRACE0("warning : data buffer too small; data has been truncated");
+        RTK_TRACE0("warning : data buffer too small; data has been truncated");
     }
 
     // Copy the data
@@ -540,7 +540,7 @@ void CWorld::OnUiMouse(RtkUiMouseData *pData)
 //
 void CWorld::DrawBackground(RtkUiDrawData *pData)
 {
-    TRACE0("drawing background");
+    RTK_TRACE0("drawing background");
 
     pData->SetColor(RGB(0, 0, 0));
     

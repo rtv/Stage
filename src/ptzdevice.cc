@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.8 $
+//  $Revision: 1.4.2.9 $
 //
 // Usage:
 //  (empty)
@@ -24,7 +24,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-//#define ENABLE_TRACE 1
+//#define ENABLE_RTK_TRACE 1
 
 #include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
 #include "world.hh"
@@ -79,7 +79,7 @@ CPtzDevice::CPtzDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
 //
 void CPtzDevice::Update()
 {
-    //TRACE0("updating");
+    //RTK_TRACE0("updating");
 
     // Update children
     //
@@ -89,7 +89,7 @@ void CPtzDevice::Update()
     //
     if (!IsSubscribed())
         return;
-    //TRACE0("is subscribed");
+    //RTK_TRACE0("is subscribed");
     
     ASSERT(m_robot != NULL);
     ASSERT(m_world != NULL);
@@ -102,11 +102,11 @@ void CPtzDevice::Update()
 
     // Get the command string
     //
-    //TRACE0("getting command");
+    //RTK_TRACE0("getting command");
     short command[3];
     if (GetCommand(command, sizeof(command)) != sizeof(command))
     {
-        TRACE0("command buffer has incorrect length -- ignored");
+        RTK_TRACE0("command buffer has incorrect length -- ignored");
         return;
     }
 
@@ -142,11 +142,11 @@ void CPtzDevice::Update()
     data[1] = htons((short) m_tilt);
     data[2] = htons((unsigned short) m_zoom);
 
-    //TRACE3("ptz %d %d %d", (int) m_pan, (int) m_tilt, (int) m_zoom);
+    //RTK_TRACE3("ptz %d %d %d", (int) m_pan, (int) m_tilt, (int) m_zoom);
 
     // Pass back the data
     //
-    //TRACE0("returning data");
+    //RTK_TRACE0("returning data");
     PutData(data, sizeof(data));
 }
 
