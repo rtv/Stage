@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.126 2003-10-22 19:51:01 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.127 2004-04-05 03:00:24 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -45,8 +45,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/file.h>
-
-#include <iostream>
+#include <assert.h>
 
 #include "world.hh" 
 #include "entity.hh"

@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.31 2003-10-22 19:51:02 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.32 2004-04-05 03:00:26 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -50,9 +50,7 @@
 #include <pwd.h>
 #include <stdio.h>
 #include <netdb.h>
-
-#include <fstream>
-#include <iostream>
+#include <assert.h>
 
 #include "rtk.h"
 #include "matrix.hh"
@@ -82,7 +80,7 @@ extern int global_num_clients;
 #define STG_LAYER_LIGHT 70
 #define STG_LAYER_SENSOR 48
 #define STG_LAYER_GRID 45
-#define STG_LAYER_USER 99
+#define STG_LAYER_USER 99\
 
 #define GUI_COUNTDOWN_INTERVAL_MS 200
 #define GUI_COUNTDOWN_TIME_DATA 500

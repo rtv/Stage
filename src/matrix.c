@@ -1,11 +1,12 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.1 2004-02-29 04:06:33 rtv Exp $
+ * $Id: matrix.c,v 1.2 2004-04-05 03:00:26 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <string.h> // for memcpy(3)
 
 #include "matrix.h"
 
@@ -17,29 +18,45 @@ void draw_line( stg_matrix_t* matrix,
 //void draw_rect( const stg_rect_t& t, void* object, int add );
 //void draw_circle(int x, int y, int r, void* object, int add);
 
+void matrix_key_destroy( gpointer key )
+{
+  free( key );
+}
 
+void matrix_value_destroy( gpointer value )
+{
+  g_ptr_array_free( (GPtrArray*)value, TRUE );
+}
 
-stg_matrix_t* stg_matrix_create( int width, int height, double ppm )
+// compress the two coordinates into the two halves of a single guint
+guint matrix_hash( gconstpointer key )
+{
+  stg_matrix_coord_t* coord = (stg_matrix_coord_t*)key;
+  
+  gushort x = (gushort)coord->x; // ignore overflow
+  gushort y = (gushort)coord->y; // ignore overflow
+  
+  //printf( " %d %d hash %d\n", x, y, ( (x << 16) | y ) );
+
+  return( (x << 16) | y );
+}
+
+// returns TRUE if the two coordinates are the same, else FALSE
+gboolean matrix_equal( gconstpointer c1, gconstpointer c2 )
+{
+  stg_matrix_coord_t* mc1 = (stg_matrix_coord_t*)c1;
+  stg_matrix_coord_t* mc2 = (stg_matrix_coord_t*)c2;
+  
+  return( mc1->x == mc2->x && mc1->y == mc2->y );  
+}
+
+stg_matrix_t* stg_matrix_create( double ppm )
 {
   stg_matrix_t* matrix = (stg_matrix_t*)calloc(1,sizeof(stg_matrix_t));
-
+  
+  matrix->table = g_hash_table_new_full( matrix_hash, matrix_equal,
+					 matrix_key_destroy, matrix_value_destroy );  
   matrix->ppm = ppm;
-  
-  matrix->width = width / ppm;
-  matrix->height = height / ppm;
-  
-  matrix->cell_count = width*height;
-
-
-    // the matrix is an array of (width*height) cells each containing a
-  // pointer to a GPtrArray.
-  matrix->data = g_ptr_array_sized_new( width*height );
-  
-  // create a pointer array at each pixel in the matrix
-  int c;
-  for( c=0; c<width*height; c++ )
-    g_ptr_array_add( matrix->data, g_ptr_array_new() );
-
   return matrix;
 }
 
@@ -47,78 +64,106 @@ stg_matrix_t* stg_matrix_create( int width, int height, double ppm )
 // cell array.
 void stg_matrix_destroy( stg_matrix_t* matrix )
 {
-  int c;
-  for( c=0; c<matrix->width*matrix->height; c++ )
-    g_ptr_array_free( g_ptr_array_index(matrix->data,c), 0 );
-  
-  g_ptr_array_free( matrix->data, 0 );
+  g_hash_table_destroy( matrix->table );
   free( matrix );
 }
 
 // removes all pointers from every cell in the matrix
 void stg_matrix_clear( stg_matrix_t* matrix )
-{  int c;
- for( c=0; c<matrix->width*matrix->height; c++ )
-   g_ptr_array_set_size( g_ptr_array_index(matrix->data,c), 0 ); 
+{  
+  g_hash_table_destroy( matrix->table );
+  matrix->table = g_hash_table_new_full( matrix_hash, matrix_equal,
+					 matrix_key_destroy, matrix_value_destroy );
 }
 
 // get the array of pointers in cell y*width+x
-GPtrArray* stg_matrix_cell( stg_matrix_t* matrix, int x, int y)
+GPtrArray* stg_matrix_cell( stg_matrix_t* matrix, gulong x, gulong y)
 {
-  return( g_ptr_array_index( matrix->data, x+matrix->width*y ) );
+  stg_matrix_coord_t coord;
+  coord.x = x;
+  coord.y = y;
+   
+  return g_hash_table_lookup( matrix->table, &coord );
+}
+
+// get the array of pointers in cell y*width+x, specified in meters
+GPtrArray* stg_matrix_cell_m( stg_matrix_t* matrix, double x, double y)
+{
+  stg_matrix_coord_t coord;
+  coord.x = (gulong)(x * matrix->ppm);
+  coord.y = (gulong)(y * matrix->ppm);
+   
+  //printf( "inspecting %d,%d contents %p\n", 
+  //  coord.x, coord.y,  g_hash_table_lookup( matrix->table, &coord ) );
+  
+  return g_hash_table_lookup( matrix->table, &coord );
+}
+
+
+void stg_matrix_cell_append_m( stg_matrix_t* matrix, 
+			       double x, double y, void* object )
+{
+  stg_matrix_cell_append( matrix, 
+			  (gulong)(x*matrix->ppm),
+			  (gulong)(y*matrix->ppm), 
+			  object );
 }
 
 // append the pointer <object> to the pointer array at the cell
 void stg_matrix_cell_append(  stg_matrix_t* matrix, 
-			      int x, int y, void* object )
+			      gulong x, gulong y, void* object )
 {
-  int index = x+matrix->width*y;
+  GPtrArray* cell = stg_matrix_cell( matrix, x, y );
   
-  if( index < 0 )
+  if( cell == NULL )
     {
-      printf( "matrix index OOB < 0 %d\n", index );
-      return;
+      stg_matrix_coord_t* coord = calloc( sizeof(stg_matrix_coord_t), 1 );
+      coord->x = x;
+      coord->y = y;
+
+      cell = g_ptr_array_new();
+      g_hash_table_insert( matrix->table, coord, cell );
     }
+  else // make sure we're only in the cell once 
+    g_ptr_array_remove_fast( cell, object );
   
-  if( index >= matrix->data->len ) 
-    { 
-      printf( "matrix index OOB >= %d %d\n", 
-	      matrix->data->len, index );
-      
-      return;
-    }
+  g_ptr_array_add( cell, object );  
   
-  GPtrArray** par =  &g_ptr_array_index( matrix->data, x+matrix->width*y );
-  
-  if( *par == NULL )
-    *par = g_ptr_array_new();
-  
-  g_ptr_array_add( *par, object );
+  //printf( "appending %p to matrix at %d %d. %d pointers now cell\n", 
+  //  object, (int)x, (int)y, cell->len );
+}
+
+void stg_matrix_cell_remove_m( stg_matrix_t* matrix, 
+			       double x, double y, void* object )
+{
+  stg_matrix_cell_remove( matrix, 
+			  (gulong)(x*matrix->ppm),
+			  (gulong)(y*matrix->ppm), 
+			  object );
 }
 
 // if <object> appears in the cell's array, remove it
 void stg_matrix_cell_remove(  stg_matrix_t* matrix,
-			      int x, int y, void* object )
+			      gulong x, gulong y, void* object )
 { 
-  int index = x+matrix->width*y;
+  GPtrArray* cell = stg_matrix_cell( matrix, x, y );
   
-  if( index < 0 )
+  if( cell )
     {
-      printf( "matrix index OOB < 0 %d\n", index );
-      return;
+      //printf( "removing %p from %d,%d. %d pointers remain here\n", 
+      //      object, x, y, cell->len );
+
+      g_ptr_array_remove_fast( cell, object );
+
+      if( cell->len == 0 )
+	{
+	  stg_matrix_coord_t coord;
+	  coord.x = x;
+	  coord.y = y;
+	  
+	  g_hash_table_remove( matrix->table, &coord );
+	}
     }
-  
-  if( index >= matrix->data->len ) 
-    { 
-      printf( "matrix index OOB >= %d %d\n", 
-	      matrix->data->len, index );
-      
-      return;
-    }
-  
-  g_ptr_array_remove_fast( g_ptr_array_index(matrix->data, 
-					     x + y*matrix->width), 
-			   object );
 }
 
 

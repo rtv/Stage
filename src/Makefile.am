@@ -2,42 +2,60 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.31 2003-08-19 22:09:52 rtv Exp $
+# $Id: Makefile.am,v 1.32 2004-04-05 03:00:24 rtv Exp $
 
 stage_DEPENDENCIES = libstage.a $(top_srcdir)/replace/libreplace.a
 
 AM_CPPFLAGS = -Wall -I$(top_builddir)/replace @RTK_CFLAGS@
 
-lib_LIBRARIES = libstage.a libstagecpp.a 
-bin_PROGRAMS = stage
+lib_LIBRARIES = libstage.a 
+
+bin_PROGRAMS = stage stest
 
 # install these headers
-include_HEADERS = stage.h stagecpp.hh
+include_HEADERS = stage.h stageclient.h token.h bitmap.h
 
 #
-# stage
+# stage program
 #
 stage_SOURCES = \
-	entity.cc \
-	entity.hh \
-	matrix.cc \
-	matrix.hh \
-	raytrace.cc \
-	raytrace.hh \
-	rtkgui.cc \
-	rtkgui.hh \
-	stage.h\
-	world.cc \
-	world.hh \
-	main.cc 
+	connection.c \
+	connection.h \
+	gui.c \
+	gui.h \
+	gui_menus.c \
+	main.c \
+	matrix.c \
+	matrix.h \
+	model.c \
+	model_laser.c \
+	model_pose.c \
+	model_ranger.c \
+	raytrace.c \
+	raytrace.h \
+	server.c \
+	stage.c \
+	stage.h \
+	subscription.c \
+	subscription.h \
+	world.c \
+	world.h
 
 stage_LDFLAGS =
-stage_LDADD =  @RTK_LIBS@  @LIBJPEG@ -L. -lstage 
-#-lefence
+stage_LDADD =  -L. @RTK_LIBS@ 
 
-# these libraries are useful for clients such as Player's stage1p4 driver
-# you should use either the C libray OR the C++ library
-# the C library has all the Stage server IO stuff
+#
+# test program
+#
+stest_SOURCES = test2.cc stage.c stage.h stageclient.c stageclient.h	\
+bitmap.c bitmap.h token.c token.h worldfile.cc worldfile.hh
+
+stest_LDFLAGS =
+stest_LDADD = -L. @RTK_LIBS@
+
+#
+# libstage.a
+# this library is useful for clients such as Player's stage1p4 driver
+#
 libstage_a_SOURCES = stage.h stage.c
-# the C++ library has the same, plus some extra stuff for handling worldfiles  
-libstagecpp_a_SOURCES = stage.h stage.c stagecpp.cc stagecpp.hh
+

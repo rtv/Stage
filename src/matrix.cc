@@ -1,9 +1,12 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.16 2003-08-19 22:09:52 rtv Exp $
+ * $Id: matrix.cc,v 1.17 2004-04-05 03:00:26 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
+#include <assert.h>
+
+// TODO - get rid of these C++-isms
 #include <iostream>
 #include <fstream>
 

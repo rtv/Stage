@@ -21,12 +21,12 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.23 2003-10-22 19:51:02 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.24 2004-04-05 03:00:26 rtv Exp $
  */
 
 //#undef DEBUG
 #define DEBUG
-#define VERBOSE
+//#define VERBOSE
 
 #include <assert.h>
 #include <ctype.h>
@@ -1849,7 +1849,6 @@ int CWorldFile::Upload( stg_client_t* cli )
 		    &world_cfg, 
 		    sizeof(world_cfg) );
   
-  
   PRINT_DEBUG( "waiting for a reply" );
 
   stg_header_t* hdr = stg_fd_msg_read( cli->pollfd.fd );
@@ -1891,6 +1890,7 @@ int CWorldFile::Upload( stg_client_t* cli )
   assert( cli->world );
   cli->world->id = reply->id;
   cli->world->key = reply->key;
+
   strncpy( cli->world->name, filename, STG_TOKEN_MAX );
     
   PRINT_DEBUG2( "created world %d (%s)", 
@@ -1909,13 +1909,13 @@ int CWorldFile::Upload( stg_client_t* cli )
 	}
       else
 	{
-	  PRINT_WARN2( "reading section %d \"%s\"\n",
-		      section, this->GetEntityType(section) );
-
+	  PRINT_DEBUG2( "reading section %d \"%s\"",
+			section, this->GetEntityType(section) );
+	  
 	  //const int line = this->ReadInt(section, "line", -1);
-
+	  
 	  int parent_section = this->GetEntityParent(section);
-
+	  
 	  stg_model_t* parent_model = NULL;
 	  
 	  if( parent_section > 0 )
@@ -2006,6 +2006,7 @@ int CWorldFile::Upload( stg_client_t* cli )
 	
 	  stg_header_t* hdr = stg_fd_msg_read( cli->pollfd.fd );
 	  
+
 	  if( hdr == NULL )
 	    {
 	      PRINT_ERR( "failed to read a message in reply" );
@@ -2036,7 +2037,7 @@ int CWorldFile::Upload( stg_client_t* cli )
 			  reply->key, model_cfg.key );
 	      exit(-1);
 	    }
-  	  
+
 	  // ok the model creation reply looks good
 	  
 	  // make a new model
@@ -2067,6 +2068,7 @@ int CWorldFile::Upload( stg_client_t* cli )
 	  
 	  char* token = NULL;
 	  
+#ifdef VERBOSE
 	  // print the model array
 	  printf( "model array with %d elements: \n", cli->model_count );
 	  for( int p=0; p<cli->model_count; p++ )
@@ -2078,10 +2080,11 @@ int CWorldFile::Upload( stg_client_t* cli )
 		      cli->models[p]->section, 
 		      cli->models[p]->key ); 
 	    }
-	  
+#endif
+
 	  // make sure the property array is zeroed
 	  memset( mod->props, 0, sizeof(stg_property_t*)*STG_MOD_PROP_COUNT);
-	  
+
 	  PRINT_DEBUG1( "configuring model %d", mod->id ); 
 	  
 	  token = "matrix_render";
@@ -2290,8 +2293,11 @@ int CWorldFile::Upload( stg_client_t* cli )
 	      // free the bitmap  and rectangles
 	      pnm_freepamarray( data, &inpam );
 	      free( rects );
+	     
+	  
+ 
+	      }
 	      
-	    }
       }
 
 

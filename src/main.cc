@@ -23,7 +23,7 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan
  * Date: 3 July 2003
- * CVS: $Id: main.cc,v 1.81 2003-10-22 19:51:02 rtv Exp $
+ * CVS: $Id: main.cc,v 1.82 2004-04-05 03:00:26 rtv Exp $
  */
 
 /* NOTES this file is only C++ because it must create CEntity
@@ -33,7 +33,7 @@
 #include <signal.h>
 #include <netinet/in.h>
 
-#define DEBUG
+//#define DEBUG
 
 //#include "stage.h"
 #include "world.hh"
@@ -86,28 +86,30 @@ void PrintModelTree( CEntity* ent, gpointer _prefix )
   
 ///////////////////////////////////////////////////////////////////////////
 
-// write a stg_property_t on the channel returns TRUE on success, else FALSE
-gboolean PropertyWrite( GIOChannel* channel, stg_property_t* prop )
+// write a stg_property_t on the channel. return 0 on success, else a
+// positive error code.
+int PropertyWrite( GIOChannel* channel, stg_property_t* prop )
 {
-  gboolean failed = FALSE;
-
-  ssize_t result = 
-    stg_fd_msg_write( g_io_channel_unix_get_fd(channel), 
-		      STG_MSG_PROPERTY, 
-		      prop, 
-		      sizeof(stg_property_t) + prop->len );
+  int result = stg_fd_msg_write( g_io_channel_unix_get_fd(channel), 
+				 STG_MSG_PROPERTY, 
+				 prop, 
+				 sizeof(stg_property_t) + prop->len );
   
-  if( result < 0 )
+  if( result > 0 )
     {
-      PRINT_MSG1( "closing connection (fd %d)", 
+      PRINT_ERR2( "failed to write header (error %d), "
+		  "closing connection (fd %d)", 
+		  result,
 		  g_io_channel_unix_get_fd(channel) );
       
       /* zap this connection */
       g_io_channel_shutdown( channel, TRUE, NULL );
       g_io_channel_unref( channel );
+
+      return 1; // fail
     }      
   
-  return( !failed );
+  return 0; // success
 }
 
 ss_client_t* stg_sub_client_create( GIOChannel* channel )
@@ -124,6 +126,7 @@ ss_client_t* stg_sub_client_create( GIOChannel* channel )
   cli->source_hup = g_io_add_watch( channel, G_IO_HUP, ClientHup, cli );
   cli->subs = NULL;
   cli->worlds = NULL;
+  cli->paused = 1; // start out paused.
   
   // add this client to the list of subscribers to this world
   global_sub_clients = g_list_append( global_sub_clients, cli );
@@ -470,6 +473,21 @@ stg_property_t* SetProperty( stg_property_t* prop )
   return reply;
 }
 
+/*
+int HandlePropertyBundle( ss_client_t* cli, stg_property_t* props, size_t len )
+{
+  char** end = (char*)props + len;
+  while( props < end )
+    {
+      HandleProperty( cli, props );
+      props = sizeof(stg_propert
+
+
+
+}
+
+*/
+
 int HandleProperty( ss_client_t* cli, stg_property_t* prop  )
 {
   PRINT_DEBUG( "handling a property" );
@@ -594,6 +612,11 @@ gboolean SubClientRead( GIOChannel* channel,
 	PRINT_ERR1( "Failed to handle a subscription on fd %d.", fd );
       break;
       
+    case STG_MSG_CONFIG:
+      if( (result = HandlePropertyBundle( cli, (stg_property_t*)hdr->payload )) )
+	PRINT_ERR1( "Failed to handle a property bundle on fd %d.", fd );
+      break;
+
     case STG_MSG_PROPERTY:
       // properties can be variable length 
       g_assert( hdr->len >= sizeof(stg_property_t) );
@@ -759,7 +782,7 @@ gboolean ServiceWellKnownPort( GIOChannel* channel,
   return TRUE;
 }
 
-GIOChannel* ServerCreate( void )
+GIOChannel* ServerCreate( int server_port )
 { 
   // ignore SIGPIPE - we'll respond to the HUP instead
   if( signal( SIGPIPE, SIG_IGN ) == SIG_ERR )
@@ -774,7 +797,6 @@ GIOChannel* ServerCreate( void )
   struct sockaddr_in servaddr;  
   bzero(&servaddr, sizeof(servaddr));
   
-  int server_port = STG_DEFAULT_SERVER_PORT;
   servaddr.sin_family      = AF_INET;
   servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
   servaddr.sin_port        = htons(server_port);
@@ -792,8 +814,6 @@ GIOChannel* ServerCreate( void )
   
   // listen for requests on this socket
   g_assert( listen( fd, STG_LISTENQ) == 0 );
-  
-  printf( " [port %d]", server_port );
   
   return( g_io_channel_unix_new( fd ) );
 }
@@ -901,6 +921,18 @@ void client_update(  gpointer data, gpointer userdata )
       g_list_foreach( cli->worlds, world_update, cli );
       // and all my subscriptions
       g_list_foreach( cli->subs, client_sub_update, cli );
+      
+      PRINT_DEBUG("sending SYNC" );
+      
+      cli->paused = 1; // pause after every update. 
+      
+      // tell the client that this cycle is done. when we get a sync back,
+      // we'll turn the pause off.
+      stg_fd_msg_write( g_io_channel_unix_get_fd(cli->channel),
+			STG_MSG_SYNC, NULL, 0 );
+
+      // force the output, er... out.
+      g_io_channel_flush( cli->channel, NULL );
     }
 }
 
@@ -917,6 +949,27 @@ int main( int argc, char** argv )
   
   atexit( catch_exit );
   
+  int fast_mode = 0;
+  int server_port = STG_DEFAULT_SERVER_PORT;
+
+  // parse args
+  for( int a=1; a<argc; a++ )
+    {
+      if( strcmp( "-f", argv[a] ) == 0 )
+	{
+	  printf( " [fast]" ); fflush(stdout);
+	  fast_mode = 1;
+	  continue;
+	}
+      
+      if( strcmp( "-p", argv[a] ) == 0 )
+	{
+	  server_port = atoi( argv[++a] );
+	  printf( " [port %d]", server_port );
+	  continue;
+	}
+    }
+ 
  if( signal( SIGINT, catch_interrupt ) == SIG_ERR )
     {
       PRINT_ERR( "error setting interrupt signal catcher" );
@@ -931,11 +984,20 @@ int main( int argc, char** argv )
  
   gui_init( &argc, &argv );
 
-  // call server_update() at the right interval
-  g_timeout_add( 100, server_update, NULL );
-
+  if( fast_mode )
+    {
+      // call server update whenever there is nothing else to do
+      g_idle_add_full( G_PRIORITY_LOW, server_update, NULL, NULL );
+      //g_timeout_add( 10, server_update, NULL );
+    }
+  else
+    {
+      // call server_update() at the right interval
+      g_timeout_add( 100, server_update, NULL );
+    }
+  
   // create a socket bound to Stage's well-known-port
-  GIOChannel* channel = ServerCreate();
+  GIOChannel* channel = ServerCreate( server_port );
   g_assert( channel );
   
   // watch for these events on the well-known-port

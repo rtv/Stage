@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.h,v 1.1 2004-02-29 04:06:33 rtv Exp $
+// $Id: matrix.h,v 1.2 2004-04-05 03:00:26 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -9,27 +9,31 @@
 #define _MATRIX
 
 #ifdef __cplusplus
- extern "C" {
+extern "C" {
 #endif 
-
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <string.h>
-
+  
+  //#include <stdio.h>
+  //#include <stdlib.h>
+  //#include <string.h>
+  
 #include <glib.h>
-
+  
 //#include "stage.h"
-
-
+   
 typedef struct 
 {
-  int width, height;
-  double ppm;
-  GPtrArray* data;
+  double ppm; // pixels per meter (1/resolution)
+  GHashTable* table;
 } stg_matrix_t;
+  
+typedef struct
+{
+  gulong x; // address a very large space of cells
+  gulong y;
+} stg_matrix_coord_t;
 
 
-stg_matrix_t* stg_matrix_create( int width, int height, double ppm );
+stg_matrix_t* stg_matrix_create( double ppm );
 
 // frees all memory allocated by the matrix; first the cells, then the
 // cell array.
@@ -39,19 +43,25 @@ void stg_matrix_destroy( stg_matrix_t* matrix );
 void stg_matrix_clear( stg_matrix_t* matrix );
 
 // get the array of pointers in cell y*width+x
-GPtrArray* stg_matrix_cell( stg_matrix_t* matrix, int x, int y);
+GPtrArray* stg_matrix_cell( stg_matrix_t* matrix, gulong x, gulong y);
+GPtrArray* stg_matrix_cell_m( stg_matrix_t* matrix, double x, double y);
 
-// append the pointer <object> to the pointer array at the cell
+// append the [object] to the pointer array at the cell
 void stg_matrix_cell_append(  stg_matrix_t* matrix, 
-			      int x, int y, void* object );
+			      gulong x, gulong y, void* object );
+void stg_matrix_cell_append_m(  stg_matrix_t* matrix, 
+				double x, double y, void* object );
 
-// if <object> appears in the cell's array, remove it
+// if [object] appears in the cell's array, remove it
 void stg_matrix_cell_remove(  stg_matrix_t* matrix,
-			      int x, int y, void* object );
+			      gulong x, gulong y, void* object );
 
-// these append to the <object> pointer to the cells on the edge of a
-// shape. shapes are described in meters about a center point. They
-// use the matrix.ppm value to scale from meters to matrix pixels.
+void stg_matrix_cell_remove_m(  stg_matrix_t* matrix,
+				double x, double y, void* object );
+
+   // these append to the [object] pointer to the cells on the edge of a
+   // shape. shapes are described in meters about a center point. They
+   // use the matrix.ppm value to scale from meters to matrix pixels.
 void stg_matrix_rectangle( stg_matrix_t* matrix,
 			   double px, double py, double pth,
 			   double dx, double dy, 
