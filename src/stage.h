@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@hrl.com 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.18 2003-09-20 22:13:42 rtv Exp $
+ * CVS: $Id: stage.h,v 1.19 2003-10-12 19:30:32 rtv Exp $
  */
 
 #ifdef __cplusplus
@@ -46,8 +46,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdint.h> // for portable int types eg. uint32_t
-#include <sys/poll.h> // for struct pollfd
 #include <sys/types.h>
+#include <sys/time.h>
+
+#include "replace.h"
 
 typedef struct timeval stg_timeval_t;
    
@@ -61,7 +63,13 @@ typedef struct timeval stg_timeval_t;
 #define STG_SERVER_GREETING 42   
 #define STG_CLIENT_GREETING 142
 
-
+   // client specifies type-of-service when connecting to the server
+   typedef enum
+     {
+       STG_TOS_REQUESTREPLY=0,
+       STG_TOS_SUBSCRIPTION
+     } stg_tos_t;
+   
    // all models have a unique type number
    typedef enum
      {
@@ -367,12 +375,24 @@ typedef struct
 
 typedef stg_position_data_t stg_position_cmd_t;
 
+typedef struct
+{
+  int id; // the object we're subscribing to
+  stg_prop_id_t prop; // the property we're subscribing to
+} stg_subscription_t;
+
+typedef enum
+  {
+    STG_NACK=0,
+    STG_ACK
+  } stg_ack_t;
 
 typedef struct {
   char host[STG_HOSTNAME_MAX];
   int port;
   stg_timeval_t time;
   struct pollfd pollfd;
+  stg_tos_t tos;
 } stg_client_t;
 
 typedef struct
@@ -380,6 +400,9 @@ typedef struct
   stg_id_t stage_id;
   char name[STG_TOKEN_MAX];
 } stg_name_id_t;  
+
+
+
 
 //////////////////////////////////////////////////////////////////////////
 /*
@@ -394,7 +417,7 @@ stg_property_t* stg_property_attach_data( stg_property_t* prop, void* data, size
 void stg_property_free( stg_property_t* prop );
 void stg_property_fprint( FILE* fp, stg_property_t* prop );
 
-stg_client_t* stg_client_create( char* host, int port );
+stg_client_t* stg_client_create( char* host, int port, stg_tos_t tos );
 
 void stg_client_free( stg_client_t* cli );
 size_t stg_packet_read_fd( int fd, void* buf, size_t len );
@@ -406,6 +429,9 @@ const char* stg_model_string( stg_model_type_t id );
 stg_model_type_t stg_model_type_from_string( char* str );
 stg_id_t stg_model_create( stg_client_t* cli, stg_entity_create_t* ent );
 int stg_model_destroy( stg_client_t* cli, stg_id_t id );
+
+int stg_property_subscribe( stg_client_t* cli, stg_subscription_t* sub );
+
 
 
 // set a property of the model with the given id. 

@@ -26,7 +26,7 @@
  * Author: Richard Vaughan vaughan@hrl.com 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.c,v 1.19 2003-09-20 22:13:42 rtv Exp $
+ * CVS: $Id: stage.c,v 1.20 2003-10-12 19:30:32 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -38,9 +38,12 @@
   #include <config.h>
 #endif
 
-//#define DEBUG
+#define DEBUG
 #include "stage.h"
+//#include <sys/types.h>
+//#include <sys/socket.h>
 
+#include <netinet/in.h>
 
 const char* stg_model_string( stg_model_type_t mod )
 {
@@ -112,33 +115,6 @@ const char* stg_property_string( stg_prop_id_t id )
     }
   return "unknown";
 }
-
-stg_model_type_t
-stg_model_type_from_string( char* str )
-{
-  stg_model_type_t mod;
- 
-  if( strcmp( stg_model_string(STG_MODEL_POSITION), str )==0)
-    mod = STG_MODEL_POSITION;
-  
-  else if( strcmp( stg_model_string(STG_MODEL_WALL), str )==0)
-    mod = STG_MODEL_WALL;
-  
-  else if( strcmp( stg_model_string(STG_MODEL_LASER), str )==0)
-    mod = STG_MODEL_LASER;
-  
-  //else if( strcmp( stg_model_string(STG_MODEL_SONAR), str )==0)
-  //mod = STG_MODEL_SONAR;
-  
-  else
-    { 
-      PRINT_WARN1( "non-specific model created from token \"%s\"", str );
-      mod = STG_MODEL_GENERIC;
-    }
-
-  return mod;
-}
-
 
 stg_property_t* stg_property_create( void )
 {
@@ -376,7 +352,7 @@ void stg_client_free( stg_client_t* cli )
 
 // returns a pointer to an allocated poll structure attached to the
 // Stage server - use stg_destroy_client() to free the connection
-stg_client_t* stg_client_create( char* host, int port )
+stg_client_t* stg_client_create( char* host, int port, stg_tos_t tos )
 {
   if( host == NULL )
     host = "localhost";
@@ -452,6 +428,14 @@ stg_client_t* stg_client_create( char* host, int port )
   if( (r = write( cli->pollfd.fd, &greeting, sizeof(greeting) )) < 1 )
     {
       PRINT_ERR( "failed to write STG_SERVER_GREETING to server.\n" );
+      if( r < 0 ) perror( "error on write" );
+      return NULL;
+    }
+
+  //stg_tos_t tos;
+  if( (r = write( cli->pollfd.fd, &tos, sizeof(tos) )) < 1 )
+    {
+      PRINT_ERR( "failed to write type-of-service specifier to server.\n" );
       if( r < 0 ) perror( "error on write" );
       return NULL;
     }
@@ -635,6 +619,29 @@ stg_id_t stg_world_create( stg_client_t* cli, stg_world_create_t* world )
   
   return returned_id;
 }
+
+
+int stg_property_subscribe( stg_client_t* cli, 
+			    stg_subscription_t* sub )
+{
+  assert( cli );
+  assert( sub );
+
+  ssize_t res = write( cli->pollfd.fd, sub, sizeof(stg_subscription_t)); 
+  
+  if( res < 0 ) 
+    perror("write subscription failed");
+  if( res < sizeof(stg_subscription_t)) 
+    PRINT_ERR2("write subscription wrote %d/%d bytes", 
+	       res, sizeof(stg_subscription_t) );
+  
+  return 0;//ok
+}
+
+
+
+
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Look up the color in a data based (transform color name -> color value).

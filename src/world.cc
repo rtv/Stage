@@ -21,7 +21,7 @@
  * Desc: A world device model - replaces the CWorld class
  * Author: Richard Vaughan
  * Date: 31 Jan 2003
- * CVS info: $Id: world.cc,v 1.148 2003-09-20 22:13:42 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.149 2003-10-12 19:30:32 rtv Exp $
  */
 
 
@@ -34,6 +34,11 @@
 #include "stage.h"
 #include "world.hh"
 #include "matrix.hh"
+
+// declare a function from main.cc for use here
+// write a stg_property_t on the channel returns TRUE on success, else FALSE
+gboolean StgPropertyWrite( GIOChannel* channel, stg_property_t* prop );
+
 
 stg_world_t* stg_world_create( stg_client_data_t* client, 
 			       stg_id_t id,
@@ -76,7 +81,7 @@ stg_world_t* stg_world_create( stg_client_data_t* client,
   WORLD_DEBUG( world, "world startup complete" );
 
   // console output
-  PRINT_MSG1( "Created world \"%s\".", world->name->str ); 
+  PRINT_MSG2( "Created world \"%s\" (%d).", world->name->str, world->id ); 
 
   world->interval = 0.1; 
   world->clock_tag = g_timeout_add( (int)(world->interval * 1000.0), 
@@ -101,6 +106,27 @@ void stg_update_entity( GNode* node, void* data )
     ent->Update();
 }
 
+void stg_world_send_time( gpointer data, gpointer userdata )
+{
+  puts( "sending time" );
+  stg_client_data_t* subscriber = (stg_client_data_t*)data;
+  stg_world_t* world = (stg_world_t*)userdata;
+
+
+  printf( "client %p df %d\n", subscriber, g_io_channel_unix_get_fd(subscriber->channel) );
+
+  int a = 5;
+
+  stg_property_t* prop = stg_property_create();
+
+  prop->id = 6;
+  prop->property = (stg_prop_id_t)8;
+
+  StgPropertyWrite( subscriber->channel, prop );
+
+  stg_property_free( prop );
+}
+
 
 gboolean stg_world_clock_tick( void* data )
 {
@@ -112,7 +138,11 @@ gboolean stg_world_clock_tick( void* data )
   // update my entities 
   g_node_children_foreach( world->node, G_TRAVERSE_ALL,
 			   stg_update_entity, world );
-  
+ 
+  puts( "foreach subscriber" );
+  //send the time to all our subscribers
+  g_list_foreach( world->subscribers, stg_world_send_time, world );
+
   //usleep( 5000 );
 
   return TRUE; // keep calling me

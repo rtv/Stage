@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.18 2003-09-20 22:13:42 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.19 2003-10-12 19:30:32 rtv Exp $
  */
 
 #include <assert.h>
@@ -1806,7 +1806,8 @@ int stg_instances_of_string( char* token )
 //
 // Create a world in the Stage server based on the current data.
 int CWorldFile::Upload( stg_client_t* cli, 
-			stg_name_id_t** models, int* model_count )
+			stg_name_id_t** models, int* model_count, 
+			stg_id_t* world_id )
 {
   // first create a world
   stg_world_create_t world_cfg;
@@ -1814,7 +1815,7 @@ int CWorldFile::Upload( stg_client_t* cli,
   world_cfg.width =  this->ReadTupleFloat( 0, "size", 0, 10.0 );
   world_cfg.height =  this->ReadTupleFloat( 0, "size", 1, 10.0 );
   world_cfg.resolution = this->ReadFloat( 0, "resolution", 0.1 );
-  stg_id_t root = stg_world_create( cli, &world_cfg );
+  *world_id = stg_world_create( cli, &world_cfg );
   
   // for every worldfile section, we may need to store a model ID in
   // order to resolve parents
@@ -1825,7 +1826,7 @@ int CWorldFile::Upload( stg_client_t* cli,
   // the default parent of every model is root
   for( int m=0; m<created_models_count; m++ )
     {
-      created_models[m].stage_id = root;
+      created_models[m].stage_id = *world_id;
       strncpy( created_models[m].name, "root", STG_TOKEN_MAX );
     }
       

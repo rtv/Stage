@@ -23,7 +23,7 @@
  * the basic C library, but right now we only have a C++ implementation.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.hh,v 1.5 2003-08-28 00:14:21 rtv Exp $
+ * CVS info: $Id: stagecpp.hh,v 1.6 2003-10-12 19:30:32 rtv Exp $
  */
 
 #ifndef STAGECPP_HH
@@ -58,10 +58,12 @@ class CWorldFile
   public: bool Save(const char *filename);
 
   // upload the current data into a Stage server.  on exit [models] is
-  // an array mapping [model_count] device names to Stage ids
+  // an array mapping [model_count] device names to Stage
+  // ids. [world_id] is Stage's identifier for the world we created.
 public: int Upload( stg_client_t* cli, 
-		    stg_name_id_t** models, int* model_count );
-
+		    stg_name_id_t** models, 
+		    int* model_count,
+		    stg_id_t* world_id );
   
 public: int DownloadAndSave( stg_client_t* cli,
 			     stg_name_id_t* models, int model_count );

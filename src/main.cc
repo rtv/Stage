@@ -23,12 +23,13 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan
  * Date: 3 July 2003
- * CVS: $Id: main.cc,v 1.73 2003-09-20 22:13:42 rtv Exp $
+ * CVS: $Id: main.cc,v 1.74 2003-10-12 19:30:32 rtv Exp $
  */
 
 
 #include <stdlib.h>
 #include <signal.h>
+#include <netinet/in.h>
 
 //#define DEBUG
 
@@ -46,9 +47,15 @@ int quit = 0; // set true by the GUI when it wants to quit
 GHashTable* global_model_table = g_hash_table_new(g_int_hash, g_int_equal);
 int global_next_available_id = 1;
 int global_num_clients = 0; // might be interesting to know?
+//GList* global_sub_clients = NULL; // list of subscription-based clients
+
 
 // forward declare
 gboolean StgClientRead( GIOChannel* channel, 
+			GIOCondition condition, 
+			gpointer data );
+
+gboolean StgSubClientRead( GIOChannel* channel, 
 			GIOCondition condition, 
 			gpointer data );
 
@@ -105,7 +112,7 @@ gboolean StgPropertyWrite( GIOChannel* channel, stg_property_t* prop )
   return( !failed );
 }
 
-stg_client_data_t* stg_client_create( pid_t pid, GIOChannel* channel )
+stg_client_data_t* stg_rr_client_create( pid_t pid, GIOChannel* channel )
 {
   // store the client's PID to we can send it signals 
   stg_client_data_t* cli = 
@@ -118,6 +125,28 @@ stg_client_data_t* stg_client_create( pid_t pid, GIOChannel* channel )
   cli->channel = channel;  
   cli->source_in  = g_io_add_watch( channel, G_IO_IN, StgClientRead, cli );
   cli->source_hup = g_io_add_watch( channel, G_IO_HUP, StgClientHup, cli );
+  
+  global_num_clients++; 
+  
+  return cli;
+}
+
+stg_client_data_t* stg_sub_client_create( pid_t pid, GIOChannel* channel )
+{
+  // store the client's PID to we can send it signals 
+  stg_client_data_t* cli = 
+    (stg_client_data_t*)calloc(1,sizeof(stg_client_data_t) );
+  
+  g_assert( cli );
+  
+  // set up this client
+  cli->pid = pid;
+  cli->channel = channel;  
+  cli->source_in  = g_io_add_watch( channel, G_IO_IN, StgSubClientRead, cli );
+  cli->source_hup = g_io_add_watch( channel, G_IO_HUP, StgClientHup, cli );
+  
+  // add this client to the list of subscribers to this world
+  //global_sub_clients = g_list_append( global_sub_clients, cli );
   
   global_num_clients++; 
   
@@ -336,6 +365,68 @@ gboolean StgClientRead( GIOChannel* channel,
 }
 
 
+// read from a subscription-based client
+gboolean StgSubClientRead( GIOChannel* channel, 
+		
+
+	   GIOCondition condition, 
+			   gpointer data )
+{
+  PRINT_DEBUG( "sub client read" );
+  g_assert(channel);
+  g_assert(data);
+  
+  // the data tells us which client number this is
+  stg_client_data_t *cli = (stg_client_data_t*)data;
+  
+  // read a subscription request
+  stg_subscription_t sub;
+  size_t bytes_read = 0;
+  if(  g_io_channel_read_chars( channel, 
+				(char*)&sub, sizeof(sub),
+				&bytes_read, NULL )
+       != G_IO_STATUS_NORMAL ) 
+    {
+      PRINT_DEBUG1( "abnormal read of %d bytes", bytes_read );
+      perror( "read error" );
+      return FALSE; // fail
+    }
+  
+  PRINT_WARN2( "received subscription of %d:%d", 
+	       sub.id, sub.prop );
+
+
+  // lookup the world id
+  GNode* node = 
+    (GNode*)g_hash_table_lookup( global_model_table, &sub.id );
+
+  stg_world_t* world = (stg_world_t*)node->data;
+
+  world->subscribers = g_list_append( world->subscribers, cli );
+
+  printf( "added subscriber client %p fd %d\n", 
+	  cli, g_io_channel_unix_get_fd(cli->channel) );
+
+  
+  /* 
+     PRINT_WARN( "sending ack" );
+
+  stg_ack_t ack = STG_ACK;
+  size_t bytes_written = 0;
+  g_io_channel_write_chars( channel, 
+			    (char*)&ack, (gssize)sizeof(ack),
+			    &bytes_written, NULL );
+  
+  g_assert( bytes_written == sizeof(ack) );
+  g_io_channel_flush( channel, NULL );
+  
+  PRINT_WARN( "ack sent" );
+  */
+
+  return TRUE;
+}
+
+
 gboolean StgClientHup( GIOChannel* channel, 
 		    GIOCondition condition, 
 		    gpointer data )
@@ -393,7 +484,35 @@ gboolean StgClientAcceptConnection( GIOChannel* channel, GHashTable* table )
       return FALSE; // fail
     }
   
-  
+  // read the type of service requested
+  stg_tos_t tos;
+   if(  g_io_channel_read_chars( client, 
+				(char*)&tos, sizeof(tos),
+				&bytes_read, NULL )
+       != G_IO_STATUS_NORMAL ) 
+    {
+       PRINT_DEBUG1( "abnormal read of %d bytes", bytes_read );
+       perror( "read error" );
+       return FALSE; // fail
+    }
+
+   switch( tos )
+     {
+     case STG_TOS_REQUESTREPLY:
+       PRINT_MSG( "Request/reply connection requested" );
+       g_assert( stg_rr_client_create( greet.pid, client ) );
+       break;
+     case STG_TOS_SUBSCRIPTION:
+       PRINT_MSG( "Subscription connection requested" );
+       g_assert( stg_sub_client_create( greet.pid, client ) );
+       break;
+     default:
+       PRINT_ERR1( "unknown connection type (%d) requested", 
+		   tos );
+       return FALSE; // fail
+       break;
+     }
+
   // write the reply
   reply.code = STG_CLIENT_GREETING;
   reply.pid = getpid(); // reply with my PID in case that's useful
@@ -404,9 +523,6 @@ gboolean StgClientAcceptConnection( GIOChannel* channel, GHashTable* table )
   
   g_assert( bytes_written == sizeof(reply) );
   g_io_channel_flush( client, NULL );
-
-  stg_client_data_t* cli = stg_client_create( greet.pid, client );
-  g_assert( cli );
 
   return TRUE; // success
 }      

@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.12 2003-07-18 21:02:16 reed Exp $
+% CVS: $Id: stage.tex,v 1.13 2003-10-12 19:30:31 rtv Exp $
 
 \documentclass[11pt,twoside]{report}
 
@@ -26,7 +26,7 @@
 % A nice environment for displaying command line args (AH)
 \newenvironment{xarg}[1]{\noindent{\tt #1}\\\hspace*{2em}\begin{minipage}[t]{5in}}{\end{minipage}\vspace*{1em}}
 
-\def\VERSION {1.3}
+\def\VERSION {1.4}
 \def\HOMEPAGE {{\tt http://playerstage.sourceforge.net}}
 \def\SFPAGE {{\tt http://sourceforge.net/projects/playerstage/}}
 
@@ -88,35 +88,34 @@
 
 \chapter{Introduction}
 
-  \section{What is Stage?}
+  %\section{What is Stage?}
+\section{ Stage and the Player/Stage Project}
 
-    Stage is a product of the Player/Stage Project, a collection of
-    software tools to support research in autonomous robotics and
-    intelligent sensor systems.  Stage simulates a population of
-    mobile robots, sensors and objects in a two-dimensional bitmapped
-    environment. Stage is designed with multi-agent systems in mind,
-    so it provides fairly simple, computationally cheap models of lots
-    of devices rather than attempting to emulate any device with great
-    fidelity. We have found this to be a useful approach.
+The Player/Stage Project produces software tools to support research
+in autonomous robotics and intelligent sensor systems. Stage is a
+robot simulator. Stage models a population of mobile robots, sensors
+and objects in a two-dimensional bitmapped environment. Stage is
+designed with multi-agent systems in mind, so it provides fairly
+simple, computationally cheap models of lots of devices rather than
+attempting to emulate any device with great fidelity. We have found
+this to be a useful approach.
 
-    Stage devices are usually controlled through \emph{Player}; a
-    networked robot server. Player provides a convenient interface to
-    a set of device drivers for real robots and sensors. Stage
-    simulates a population of devices and makes them available thorugh
-    Player. Users
-    write robot controllers and sensor algorithms as `clients' to the
-    Player `server'. Typically, clients cannot tell the difference
-    between the real robot devices and their simulated Stage
-    equivalents (unless they try very hard). We have found that
-    clients developed using Stage will work with little or no
-    modification with the real robots and vice versa. Thus Stage
-    allows rapid prototyping of controllers destined for real
-    robots. Stage also allows experiments with realistic robot devices
-    you don't happen to have.
+Stage devices are usually controlled through \emph{Player}; a
+networked robot server. Player provides a convenient interface to a
+set of device drivers for real robots and sensors. Stage simulates a
+population of devices and makes them available thorugh Player. Users
+write robot controllers and sensor algorithms as `clients' to the
+Player `server'. Typically, clients cannot tell the difference between
+the real robot devices and their simulated Stage equivalents (unless
+they try very hard). We have found that clients developed using Stage
+will work with little or no modification with the real robots and vice
+versa. Thus Stage allows rapid prototyping of controllers destined for
+real robots. Stage also allows experiments with realistic robot
+devices you don't happen to have.
   
-    Various sensors and actuators are provided, including sonar,
-    scanning laser rangefinder, color-blob vision, odometry, grippers,
-    bumpers/whiskers and mobile robot bases.
+Various sensors and actuators are provided, including sonar, scanning
+laser rangefinder, color-blob tracking, odometry, grippers,
+bumpers/whiskers and mobile robot bases.
 
   \section{How to get Stage and related software}
 
@@ -138,8 +137,9 @@
   \section{What's in the Package?}
 
     In the release tarball you will find:
-      \begin{itemize}    
-      \item C++ source code for 'stage' the simulation engine.
+      \begin{itemize}
+      \item C code for the stage communications library.    
+      \item C and C++ source code for 'stage' the simulation engine.
       \item Example environments and setup files.
       \end{itemize}
 
@@ -148,22 +148,25 @@
   \section{Requirements}
 
     \begin{itemize}
-    \item Player [\HOMEPAGE]
     \item libstdc++
+    \item glib
+    \item libRTK2 [the Player/Stage GUI toolkit \HOMEPAGE] 
+        \begin{itemize}
+          \item GTK+, X11R6.
+	\end{itemize}
     \end{itemize}
     
-    Optional (but highly recommended): 
+    Optional (but very useful, and recommended if you ever want to use
+    controller code on real robots):
     \begin{itemize}
-      \item libRTK [\HOMEPAGE]
-        \begin{itemize}
-          \item X11R6, GTK++.
-\end{itemize}
+    \item Player [\HOMEPAGE]
         \end{itemize}
 
     Stage was developed and tested under Linux kernel 2.4,
-    glibc-2.2.  Code is reasonable ANSII/POSIX so it should compile
-    elsewhere. No promises, but people have found it to work on a
-    variety of set-ups.
+    glibc-2.2. It is also, but less frequently, tested on OS X.3. Code
+    is reasonable ANSII/POSIX so it often compiles elsewhere. No
+    promises, but people have found it to work on a variety of
+    set-ups. 
   
   \section{Ownership}
 
@@ -190,7 +193,7 @@
     something that appears to be a bug, or if some aspect of Stage's
     behavior seems wrong or non-intuitive, let us know. If you have a
     problem, please check the website and bug tracking logs. If you
-    can't find an answer there, use the bug tracker to tell us about
+    can't find an answer there,{\emph use the bug tracker} to tell us about
     the problem. Better still, fix it and send us the patch. To stay
     in touch with the developers and other users, join the mailing
     lists.
@@ -208,10 +211,10 @@
   \section{What happened to...?}
         
         Previous releases contained some supplementary programs which
-        have been removed during development of
-        Stage-\VERSION. 'RTKStage' has been folded into Stage. Stage
-        client mode makes 'XS' redundant. Stage server makes 'manager'
-        redundant. Don't worry; things are better now.
+        have been removed. For example, 'RTKStage' has been folded
+        into Stage. Stage client mode makes 'XS' redundant. Stage
+        server makes 'manager' redundant. Don't worry; things are
+        better now.
 
 \section{Citations}
 If you find Player and Stage useful in your work, we would greatly
@@ -248,8 +251,9 @@ If you have space (and are feeling generous), you can also insert a footnote
 similar to the following:
 \begin{quote}
 Player and Stage were developed jointly at the USC Robotics Research
-Lab and HRL Labs and are freely available under the GNU General Public
-License from http://playerstage.sourceforge.net.
+Lab, HRL Labs and Stanford University Robotics Lab. All Player/Stage
+software is freely available under the GNU General Public License from
+http://playerstage.sourceforge.net.
 \end{quote}
 By including such acknowledgements, you do more than feed our egos and
 further our careers.  You spread the word about the Player/Stage
@@ -283,7 +287,7 @@ tools can be found on the website.
  from the Player/Stage files page:
         \begin{verbatim}
         http://sourceforge.net/project/showfiles.php?group_id=42445
-        \end{verbatim}
+       \end{verbatim}
         \noindent Build and install Player and libRTK following the
         instructions in the packages' README and INSTALL files. Now
         download thew Stage tarball and unpack it with:
@@ -292,6 +296,23 @@ tools can be found on the website.
       \end{verbatim}
    \noindent Now follow the instructions for your release in the
     top-level README and INSTALL files.
+
+    \subsection{Notes on specific build targets}
+\subsubsection{Darwin/OS X}
+Stage requires several libraries that are not provided in a default OS
+X installation, for example libpnm and glib. The easiest way to get
+these libraries is probably via the excellent ``Fink'' ports system
+(ADDRESS).
+
+You must tell the compiler where to find the Fink-installed headers
+and libraries using the standard environment variables CPPFLAGS and
+LIBRARY_PATH. For example, if your Fink base directory is /sw (the
+default):
+
+\begin{verbatim}
+   $ export CPPFLAGS=-I/sw/include
+   $ export LIBRARY_PATH=/sw/lib
+\end{verbatim}
 
   \section{Running Stage}
 

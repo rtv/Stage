@@ -21,7 +21,7 @@
  * Desc: a container for models 
  * Author: Richard Vaughan
  * Date: 24 July 2003
- * CVS info: $Id: world.hh,v 1.30 2003-09-20 22:13:43 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.31 2003-10-12 19:30:33 rtv Exp $
  */
 
 #ifndef _WORLD_HH
@@ -58,6 +58,8 @@ typedef struct stg_world
   //double timestep; // the duration of one update in seconds
   stg_gui_window_t* win;   // each world has a GUI window of it's own
   stg_client_data_t* client; // the client that created this world
+  GList* subscribers; // list of stg_client_data_t* clients that want
+		      // data pushed to them when this world is updated
 } stg_world_t;
 
 
