@@ -22,7 +22,7 @@
  * Desc: Stk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.9 2005-03-11 21:56:57 rtv Exp $
+ * CVS: $Id: rtk_fig.c,v 1.10 2005-04-06 21:14:18 rtv Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
@@ -711,10 +711,12 @@ void stg_rtk_fig_line_ex(stg_rtk_fig_t *fig, double ox, double oy, double oa, do
 
 
 // create a fancy arrow that can be filled
-void stg_rtk_fig_arrow_fancy(stg_rtk_fig_t *fig, double ox, double oy, double oa,
-			 double len, double head, double thickness, int filled )
+void stg_rtk_fig_arrow_fancy(stg_rtk_fig_t *fig, 
+			     double ox, double oy, double oa,
+			     double len, double head, double thickness, 
+			     int filled )
 {
-  stg_rtk_point_t points[5];
+  stg_rtk_point_t points[7];
   
   double t = thickness/2.0;
 
