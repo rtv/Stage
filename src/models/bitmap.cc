@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/bitmap.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Author: inspectorg $
+//  $Revision: 1.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -65,7 +65,6 @@ bool CBitmap::Load(CWorldFile *worldfile, int section)
     return false;
   }
 
-
   // Get the scale of the image;
   // i.e. the width/length of each pixel in m.
   // If no scale is specified, use the world resolution.
@@ -73,7 +72,7 @@ bool CBitmap::Load(CWorldFile *worldfile, int section)
   
   if( this->scale != 0 )
     PRINT_WARN("worldfile bitmap keyword 'scale' is deprecated,"
-		" please use 'resolution <meters per pixel>' instead");
+               " please use 'resolution <meters per pixel>' instead");
   
   // Get the scale of the image;
   // i.e. the width/length of each pixel in m.
@@ -125,13 +124,13 @@ bool CBitmap::Load(CWorldFile *worldfile, int section)
   // is the pose explicitly set?
   // if the pose was NOT set in the worldfile
   if( (worldfile->ReadTupleLength( section, "pose", 0, DBL_MAX ) == DBL_MAX) )
-    {
-      // we shift so the global origin is at the bottom left corner of the image
-      this->SetGlobalPose( this->size_x/2.0, size_y/2.0, 0);    
+  {
+    // we shift so the global origin is at the bottom left corner of the image
+    this->SetGlobalPose( this->size_x/2.0, size_y/2.0, 0);    
 
-      // record this position as the initial pose se we don't try to save it later
-      this->GetPose( init_px, init_py, init_pth );
-    }
+    // record this position as the initial pose se we don't try to save it later
+    this->GetPose( init_px, init_py, init_pth );
+  }
 
   // draw a border around the image
   //this->image->draw_box(0,0,this->image->width-1, this->image->height-1, 255 );
@@ -150,69 +149,69 @@ bool CBitmap::Load(CWorldFile *worldfile, int section)
   // fast and redraws waaaaaay faster. yay!
   
   for (int y = 0; y < this->image->height; y++)
+  {
+    for (int x = 0; x < this->image->width; x++)
     {
-      for (int x = 0; x < this->image->width; x++)
-	{
-	  //m_world->Ticker();
+      //m_world->Ticker();
 
-	  if (this->image->get_pixel(x, y) == 0)
-	    continue;
+      if (this->image->get_pixel(x, y) == 0)
+        continue;
 	  
-	  // a rectangle starts from this point
-	  int startx = x;
-	  int starty = this->image->height - y;
-	  int height = this->image->height; // assume full height for starters
+      // a rectangle starts from this point
+      int startx = x;
+      int starty = this->image->height - y;
+      int height = this->image->height; // assume full height for starters
 	  
-	  // grow the width - scan along the line until we hit an empty pixel
-	  for( ;  this->image->get_pixel( x, y ) > 0; x++ )
+      // grow the width - scan along the line until we hit an empty pixel
+      for( ;  this->image->get_pixel( x, y ) > 0; x++ )
 	    {
 	      // handle horizontal cropping
 	      double ppx = x * sx; 
 	      if (ppx < this->crop_ax || ppx > this->crop_bx)
-		continue;
+          continue;
 	      
 	      // look down to see how large a rectangle below we can make
 	      int yy  = y;
 	      while( (this->image->get_pixel( x, yy ) > 0 ) 
-		     && (yy < this->image->height) )
-		{ 
-		  // handle vertical cropping
-		  double ppy = (this->image->height - yy) * sy;
-		  if (ppy < this->crop_ay || ppy > this->crop_by)
-		    continue;
+               && (yy < this->image->height) )
+        { 
+          // handle vertical cropping
+          double ppy = (this->image->height - yy) * sy;
+          if (ppy < this->crop_ay || ppy > this->crop_by)
+            continue;
 		  
-		  yy++; 
-		} 	      
+          yy++; 
+        } 	      
 	      // now yy is the depth of a line of non-zero pixels
 	      // downward we store the smallest depth - that'll be the
 	      // height of the rectangle
 	      if( yy-y < height ) height = yy-y; // shrink the height to fit
 	    } 
 	  
-	  int width = x - startx;
+      int width = x - startx;
 	  
-	  // delete the pixels we have used in this rect
-	  this->image->fast_fill_rect( startx, y, width, height, 0 );
+      // delete the pixels we have used in this rect
+      this->image->fast_fill_rect( startx, y, width, height, 0 );
 	  
-	  double px = ((startx + (width/2.0) + 0.5 ) * sx) - size_x/2.0;
-	  double py = ((starty - (height/2.0) - 0.5 ) * sy) - size_y/2.0;
-	  //double pth = 0;
-	  double pw = width * sx;
-	  double ph = height * sy;
+      double px = ((startx + (width/2.0) + 0.5 ) * sx) - size_x/2.0;
+      double py = ((starty - (height/2.0) - 0.5 ) * sy) - size_y/2.0;
+      //double pth = 0;
+      double pw = width * sx;
+      double ph = height * sy;
 	  
-	  // store the rectangles for drawing into the GUI later
-	  bitmap_rectangle_t r;
-	  r.x = px;
-	  r.y = py;
-	  r.w = pw;
-	  r.h = ph;
-	  bitmap_rects.push_back( r );
+      // store the rectangles for drawing into the GUI later
+      bitmap_rectangle_t r;
+      r.x = px;
+      r.y = py;
+      r.w = pw;
+      r.h = ph;
+      bitmap_rects.push_back( r );
 	  
-	  // create a matrix rectangle in global coordinates
-	  //this->LocalToGlobal( px, py, pth );
-	  //m_world->SetRectangle( px, py, pth, pw, ph, this, true);
-	}
+      // create a matrix rectangle in global coordinates
+      //this->LocalToGlobal( px, py, pth );
+      //m_world->SetRectangle( px, py, pth, pw, ph, this, true);
     }
+  }
 
   return true;
 }

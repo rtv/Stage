@@ -21,7 +21,7 @@
  * Desc: the regular MCL (Monte-Carlo Localization) device.
  * Author: Boyoon Jung
  * Date: 22 Nov 2002
- * $Id: regularmcldevice.cc,v 1.6 2002-12-10 02:35:40 boyoon Exp $
+ * $Id: regularmcldevice.cc,v 1.7 2003-02-08 07:54:42 inspectorg Exp $
  */
 
 #include "regularmcldevice.hh"
@@ -45,7 +45,7 @@ CRegularMCLDevice::CRegularMCLDevice(LibraryItem* libit, CWorld *world, CEntity 
     m_reply_len = 0;
 
     // set the device code
-    m_player.code = PLAYER_LOCALIZATION_CODE;	// from player's <player.h>
+    m_player.code = PLAYER_LOCALIZE_CODE;	// from player's <player.h>
 
     // This is not a real object, so by default we dont see it
     this->obstacle_return = false;

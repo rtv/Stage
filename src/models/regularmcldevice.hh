@@ -21,7 +21,7 @@
  * Desc: Device to perform the regular MCL (Monte-Carlo Localization).
  * Author: Boyoon Jung
  * Date: 22 Nov 2002
- * $Id: regularmcldevice.hh,v 1.8 2002-12-16 22:24:56 gerkey Exp $
+ * $Id: regularmcldevice.hh,v 1.9 2003-02-08 07:54:42 inspectorg Exp $
  */
 
 #ifndef REGULARMCLDEVICE_HH
@@ -134,7 +134,7 @@ typedef struct mcl_data
 {
     int command;			// is a request message ?
     uint32_t num_hypothesis;
-    mcl_hypothesis_t hypothesis[PLAYER_LOCALIZATION_MAX_HYPOTHESIS];
+    mcl_hypothesis_t hypothesis[PLAYER_LOCALIZE_MAX_HYPOTHS];
     uint32_t num_particles;
     particle_t particles[MCL_MAX_PARTICLES];
 } __attribute__ ((packed)) mcl_data_t;
@@ -172,7 +172,7 @@ inline bool operator != (const pose_t& p, const pose_t& q) {
 
 
 /*****************************************************************************
- * CRegularMCLDevice class : the mcl (Monte-Carlo Localization) class
+ * CRegularMCLDevice class : the mcl (Monte-Carlo Localize) class
  *****************************************************************************/
 /*
  *  This device implements the regular MCL only. Other extensions
