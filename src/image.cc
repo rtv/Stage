@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.4 2001-06-01 21:25:51 ahoward Exp $
+ * $Id: image.cc,v 1.5 2001-06-06 22:29:47 ahoward Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -220,6 +220,8 @@ bool Nimage::load_pnm(const char* fname)
       for(int m=0; m<width; m++ )
       {
           unsigned char a = fgetc(file);
+          if (a > 0)
+              a = 1;
           set_pixel( m,n, a );
       }
   }
@@ -277,6 +279,8 @@ bool Nimage::load_pnm_gz(const char* fname)
       for(int m=0; m<width; m++ )
       {
           unsigned char a = gzgetc(file);
+          if (a > 0)
+              a = 1;
           set_pixel( m,n, a );
       }
   }

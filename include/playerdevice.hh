@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -57,6 +57,14 @@ class CPlayerDevice : public CEntity
     protected: CPlayerDevice(CWorld *world, CEntity *parent, 
                              CPlayerServer *server, size_t offset, size_t buffer_len,
                              size_t data_len, size_t command_len, size_t config_len);
+
+    // Load the object from an argument list
+    //
+    public: virtual bool Load(int argc, char **argv);
+
+    // Save the object to an argument list
+    //
+    public: virtual bool Save(int &argc, char **argv);
     
     // Initialise the device
     //
@@ -65,7 +73,7 @@ class CPlayerDevice : public CEntity
     // Close the device
     //
     public: virtual void Shutdown();
-   
+
     // See if the device is subscribed
     //
     protected: bool IsSubscribed();
@@ -96,6 +104,7 @@ class CPlayerDevice : public CEntity
 
     // Pointer to player robot
     //
+    protected: int m_port;
     protected: CPlayerServer *m_server;
 
     // Offset info shared memory

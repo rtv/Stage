@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -96,9 +96,11 @@ bool CEntity::Load(int argc, char **argv)
             strcpy(m_color_desc, argv[i + 1]);
             i += 2;
         }
-
         else
-            i++;
+        {
+            PLAYER_MSG1("unrecognized token [%s]", argv[i]);
+            i += 1;
+        }
     }
 
 #ifdef INCLUDE_RTK

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerserver.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -75,6 +75,62 @@ CPlayerServer::CPlayerServer(CWorld *world, CEntity *parent)
 //
 CPlayerServer::~CPlayerServer( void )
 {
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Load the object from an argument list
+//
+bool CPlayerServer::Load(int argc, char **argv)
+{
+    if (!CEntity::Load(argc, argv))
+        return false;
+
+    // Set the default port number
+    // We take our parents port number by default.
+    //
+    // *** TODO
+
+    for (int i = 0; i < argc;)
+    {
+        if (strcmp(argv[i], "port") == 0 && i + 1 < argc)
+        {
+            m_port = atoi(argv[i + 1]);
+            i += 2;
+        }
+        else
+        {
+            PLAYER_MSG1("unrecognized token [%s]", argv[i]);
+            i += 1;
+        }
+    }
+
+    // Now that we have a port number,
+    // add ourselves to the world so that
+    // player devices can find us.
+    //
+    m_world->AddServer(m_port, this);
+    
+    return true;
+}
+
+
+/////////////////////////////////////////////////////////////////////////
+// Save the object
+//
+bool CPlayerServer::Save(int &argc, char **argv)
+{
+    if (!CEntity::Save(argc, argv))
+        return false;
+
+    // Save port
+    //
+    char port[32];
+    snprintf(port, sizeof(port), "%d", m_port);
+    argv[argc++] = strdup("port");
+    argv[argc++] = strdup(port);
+
+    return true;
 }
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerserver.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -41,6 +41,14 @@ class CPlayerServer : public CEntity
     public: CPlayerServer( CWorld* world, CEntity *parent);
     public: ~CPlayerServer( void );
     
+    // Load the object from an argument list
+    //
+    public: virtual bool Load(int argc, char **argv);
+
+    // Save the object to an argument list
+    //
+    public: virtual bool Save(int &argc, char **argv);
+
     // Start all the devices
     //
     public: virtual bool Startup();

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.8 $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -40,6 +40,7 @@ CPlayerDevice::CPlayerDevice(CWorld *world, CEntity *parent,
                              size_t data_len, size_t command_len, size_t config_len)
         : CEntity(world, parent)
 {
+    m_port = -1;
     m_server = server;
 
     ASSERT(data_len + command_len + config_len <= buffer_len);
@@ -58,12 +59,73 @@ CPlayerDevice::CPlayerDevice(CWorld *world, CEntity *parent,
 
 
 ///////////////////////////////////////////////////////////////////////////
+// Load the object from an argument list
+//
+bool CPlayerDevice::Load(int argc, char **argv)
+{
+    if (!CEntity::Load(argc, argv))
+        return false;
+
+    // Set the default port number
+    // We take our parents port number by default.
+    //
+    // *** TODO
+
+    for (int i = 0; i < argc;)
+    {
+        if (strcmp(argv[i], "port") == 0 && i + 1 < argc)
+        {
+            m_port = atoi(argv[i + 1]);
+            i += 2;
+        }
+        else
+        {
+            PLAYER_MSG1("unrecognized token [%s]", argv[i]);
+            i += 1;
+        }
+    }
+    return true;
+}
+
+
+/////////////////////////////////////////////////////////////////////////
+// Save the object
+//
+bool CPlayerDevice::Save(int &argc, char **argv)
+{
+    if (!CEntity::Save(argc, argv))
+        return false;
+
+    // Save port
+    //
+    char port[32];
+    snprintf(port, sizeof(port), "%d", m_port);
+    argv[argc++] = strdup("port");
+    argv[argc++] = strdup(port);
+
+    return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // Default startup -- doesnt do much
 //
 bool CPlayerDevice::Startup()
 {
     if (!CEntity::Startup())
         return false;
+
+    // Find our server based on the port number
+    //
+    if (m_server == NULL)
+    {
+        m_server = m_world->FindServer(m_port);
+        if (m_server == NULL)
+        {
+            printf("player server [%d] not found; cannot start device\n", (int) m_port);
+            return false;
+        }
+    }
 
     // Get a pointer to the shared memory area
     //

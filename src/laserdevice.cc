@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.16 $
+//  $Revision: 1.17 $
 //
 // Usage:
 //  (empty)
@@ -57,6 +57,11 @@ CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent, CPlayerServer* server
   //
   m_map_dx = 0.155;
   m_map_dy = 0.155;
+
+#ifdef INCLUDE_RTK
+  m_draggable = true; 
+  m_mouse_radius = sqrt(m_map_dx * m_map_dx + m_map_dy * m_map_dy);
+#endif
   
   // GUI export setup
   exporting = true; 
@@ -144,7 +149,6 @@ bool CLaserDevice::CheckConfig()
     config.resolution = ntohs(config.resolution);
     config.min_angle = ntohs(config.min_angle);
     config.max_angle = ntohs(config.max_angle);
-    config.intensity = ntohs(config.intensity);
 
     // Emulate behaviour of SICK laser range finder
     //
@@ -264,7 +268,10 @@ bool CLaserDevice::GenerateScanData(player_laser_data_t *data)
             cell |= m_world->GetCell(px, py + dr, layer_laser);
             if (cell != 0)
             {
-                if (cell > 1)
+                // Check for reflections
+                // (ignore the sticky bit).
+                //
+                if ((cell & 0x8F) == 2)
                     intensity = 1;                
                 break;
             }

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -46,6 +46,7 @@
 //
 class CXGui;
 class CEntity;
+class CPlayerServer;
 class CBroadcastDevice;
 
 
@@ -162,6 +163,28 @@ class CWorld
     //
     public: void SetRectangle(double px, double py, double pth,
                               double dx, double dy, EWorldLayer layer, uint8_t value);
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Player server functions
+
+    // Initialise the player server list
+    //
+    private: void InitServer();
+    
+    // Register a server by its port number
+    // Returns false if the number is alread taken
+    //
+    public: bool AddServer(int port, CPlayerServer *server);
+    
+    // Lookup a server using its port number
+    //
+    public: CPlayerServer *FindServer(int port);
+
+    // List of player servers
+    //
+    private: int m_server_count;
+    private: struct {int m_port; CPlayerServer *m_server;} m_servers[512];
 
     
     ///////////////////////////////////////////////////////////////////////////

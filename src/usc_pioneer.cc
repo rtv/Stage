@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/usc_pioneer.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -131,7 +131,7 @@ bool CUscPioneer::Load(int argc, char **argv)
 } 
 
 
-///////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
 // Save the object
 //
 bool CUscPioneer::Save(int &argc, char **argv)

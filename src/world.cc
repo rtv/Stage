@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.9 $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -68,6 +68,11 @@ CWorld::CWorld()
     m_laser_res = 0;
     
     memset(m_env_file, 0, sizeof(m_env_file));
+
+    // Initialise the server list
+    // Note that this should NOT be dont in StartUp
+    //
+    InitServer();
 }
 
 
@@ -96,7 +101,7 @@ bool CWorld::Startup()
     //
     if (!InitGrids(m_env_file))
         return false;
-
+    
     // Initialise the laser beacon rep
     //
     InitLaserBeacon();
@@ -454,7 +459,6 @@ uint8_t CWorld::GetCell(double px, double py, EWorldLayer layer)
     return 0;
 }
 
-  // ----------------------------------------------------------------------
 
 ///////////////////////////////////////////////////////////////////////////
 // Set a cell in the world grid
@@ -627,6 +631,47 @@ CEntity* CWorld::NearestObject( double x, double y )
     }
   
   return nearest;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise the player server list
+//
+void CWorld::InitServer()
+{
+    m_server_count = 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Register a server by its port number
+// Returns false if the number is alread taken
+//
+bool CWorld::AddServer(int port, CPlayerServer *server)
+{
+    if (m_server_count >= ARRAYSIZE(m_servers))
+        return false;
+    if (FindServer(port) != NULL)
+        return false;
+
+    m_servers[m_server_count].m_port = port;
+    m_servers[m_server_count].m_server = server;
+    m_server_count++;
+    return true;
+}
+    
+
+///////////////////////////////////////////////////////////////////////////
+// Lookup a server using its port number
+//
+CPlayerServer *CWorld::FindServer(int port)
+{
+    for (int i = 0; i < m_server_count; i++)
+    {
+        if (m_servers[i].m_port == port)
+            return m_servers[i].m_server;
+    }
+    return NULL;
 }
 
 
