@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.88 2002-06-05 00:05:02 gerkey Exp $
+# $Id: Makefile,v 1.89 2002-06-05 00:29:45 rtv Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -76,7 +76,7 @@ libtrapdoor.a: trapdoor.cc
 # SRC TO OBJECT RULES #######################################################
 
 %.o : %.cc
-	${CC} ${STAGEFLAGS} ${STAGEFLAGS} -c $< -o $@
+	${CC} ${STAGEFLAGS} -c $< -o $@
 
 # ADMIN #######################################################################
 
