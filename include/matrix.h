@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.h,v 1.2.2.3 2001-08-23 02:59:42 vaughan Exp $
+// $Id: matrix.h,v 1.2.2.4 2001-08-24 03:42:14 vaughan Exp $
 // RTV
 // ==================================================================
 
@@ -108,7 +108,7 @@ class CLineIterator
   CMatrix* m_matrix;
 
  public:
-  CLineIterator( double x, double y, double th, double range, 
+  CLineIterator( double x, double y, double a, double b, 
 		 double ppm, CMatrix* matrix, LineIteratorMode pmode );
   
   CEntity* GetNextEntity( void );
@@ -119,9 +119,9 @@ class CLineIterator
       y = m_y / m_ppm;
     };
   
-  inline void GetRange( double& r )
+  inline double GetRange( void )
     {
-      r = (m_max_range - m_remaining_range) / m_ppm;
+      return( (m_max_range - m_remaining_range) / m_ppm );
     };
 
   inline CEntity** RayTrace( double &px, double &py, double pth, 
@@ -130,6 +130,22 @@ class CLineIterator
 
   void PrintArray( CEntity** ent );
   
+};
+
+class CRectangleIterator
+{
+ private:
+  CLineIterator* lits[4];
+  
+  double corners[4][2];
+  
+ public:
+
+  CRectangleIterator( double x, double y, double th,
+		      double w, double h,  
+		      double ppm, CMatrix* matrix );
+  
+  CEntity* GetNextEntity( void );  
 };
 
 

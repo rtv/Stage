@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.6.2.3 $
+//  $Revision: 1.6.2.4 $
 //
 // Usage:
 //  (empty)
@@ -56,14 +56,15 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
     m_type[0] = 0;
     m_id[0] = 0;
 
-    // by default, entities show up in some sensors
-    laser_return = 1;
-    sonar_return = 1;
-    obstacle_return = 1;
+    // by default, entities don't show up in any sensors
+    // these must be enabled explicitly in each subclass
+    laser_return = LaserNothing;
+    sonar_return = false;
+    obstacle_return = false;
+    puck_return = false;
+    channel_return = -1; // transparent
 
     m_dependent_attached = false;
-
-    m_channel = -1;// we don't show up as an acts color channel by default
 
     m_player_index = 0; // these are all set in load() 
     m_player_port = 0;
@@ -129,6 +130,39 @@ bool CEntity::Load(int argc, char **argv)
             i += 4;
         }
 
+        // set sensor sensibility (!) 
+        //
+        else if (strcmp(argv[i], "invisible") == 0 && i + 1 < argc)
+	  {
+            if (strcmp(argv[i + 1], "obstacle") == 0)
+	      obstacle_return = false;
+            else if (strcmp(argv[i + 1], "laser") == 0)
+	      laser_return = 0;
+            else if (strcmp(argv[i + 1], "sonar") == 0)
+	      sonar_return = false;
+            else
+	      PLAYER_MSG2("unrecognized token [%s %s]", argv[i], argv[i + 1]);
+            i += 2;
+	  }
+
+        // set sensor sensibility (!) 
+        //
+        else if (strcmp(argv[i], "visible") == 0 && i + 1 < argc)
+	  {
+            if (strcmp(argv[i + 1], "obstacle") == 0)
+	      obstacle_return = true;
+            else if (strcmp(argv[i + 1], "laser") == 0)
+	      laser_return = 1;
+            else if (strcmp(argv[i + 1], "laserbright") == 0)
+	      laser_return = 2;
+            else if (strcmp(argv[i + 1], "sonar") == 0)
+	      sonar_return = true;
+            else
+	      PLAYER_MSG2("unrecognized token [%s %s]", argv[i], argv[i + 1]);
+            i += 2;
+	  }
+	
+
         // Extract color
         //
         else if (strcmp(argv[i], "color") == 0 && i + 1 < argc)
@@ -150,7 +184,7 @@ bool CEntity::Load(int argc, char **argv)
         //
         else if (strcmp(argv[i], "channel") == 0 && i + 1 < argc)
         {
-            m_channel = atoi(argv[i + 1]);
+            channel_return = atoi(argv[i + 1]) + 1;
             i += 2;
         }
 
@@ -218,7 +252,7 @@ bool CEntity::Save(int &argc, char **argv)
     // Save channel
     //
     char z[128];
-    snprintf(z, sizeof(z), "%d", (int) m_channel);
+    snprintf(z, sizeof(z), "%d", (int) channel_return-1);
     argv[argc++] = strdup("channel");
     argv[argc++] = strdup(z);
 
@@ -235,6 +269,44 @@ bool CEntity::Save(int &argc, char **argv)
     argv[argc++] = strdup("index");
     argv[argc++] = strdup(index);
         
+    // Save render settings
+    //
+    if ( obstacle_return == 0 )
+    {
+        argv[argc++] = strdup("invisible");
+        argv[argc++] = strdup("obstacle");
+    }
+    if ( laser_return == 0 )
+    {
+        argv[argc++] = strdup("invisible");
+        argv[argc++] = strdup("laser");
+    }
+    if ( sonar_return == 0 )
+    {
+        argv[argc++] = strdup("invisible");
+        argv[argc++] = strdup("sonar");
+    }
+    if ( obstacle_return == 1 )
+    {
+        argv[argc++] = strdup("visible");
+        argv[argc++] = strdup("obstacle");
+    }
+    if ( laser_return == 1 )
+    {
+        argv[argc++] = strdup("visible");
+        argv[argc++] = strdup("laser");
+    }
+    if ( laser_return == 2 )
+    {
+        argv[argc++] = strdup("visible");
+        argv[argc++] = strdup("laserbright");
+    }
+    if ( sonar_return == 1 )
+    {
+        argv[argc++] = strdup("visible");
+        argv[argc++] = strdup("sonar");
+    }
+
 
     return true;
 }
@@ -602,13 +674,6 @@ int CEntity::Subscribed()
   m_world->LockShmem();
   int subscribed = m_info_io->subscribed;
   m_world->UnlockShmem();
-
-  // returns > 0 if we have subs or dependents or we've been poked
-  // and cancels the poke flag
-  //return(  subscribed || m_dependent_attached || truth_poked-- ); 
-  //int retval = subscribed || truth_poked;
-  //if(truth_poked)
-  //truth_poked = !truth_poked;
   
   return( subscribed );
 }
@@ -626,7 +691,10 @@ void CEntity::ComposeTruth( stage_truth_t* truth )
 
   truth->stage_type = m_stage_type;
 
-  truth->channel = m_channel;
+  if( channel_return < 1 )
+    truth->channel = -1;
+  else
+    truth->channel = channel_return-1;
 
   if( m_parent_object )
     {
@@ -786,11 +854,7 @@ bool CEntity::MouseMove(RtkUiMouseData *pData)
     // If we are dragging, set the pose
     //
     if (m_dragging)
-    {
         SetGlobalPose(mx, my, mth);
-        // also poke the truth so the underlying representation changes
-        truth_poked = 1;
-    }
 
     return (m_mouse_ready);
 }

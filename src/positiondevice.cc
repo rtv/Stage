@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.5.2.5 $
+//  $Revision: 1.5.2.6 $
 //
 // Usage:
 //  (empty)
@@ -49,15 +49,12 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
   
   m_stage_type = RectRobotType;
 
-  // we show up in these sensors
-  laser_return = 0;
-  sonar_return = 1;
-  obstacle_return = 1;
+  // set up our sensor response
+  laser_return = LaserNothing;
+  sonar_return = true;
+  obstacle_return = true;
+  puck_return = true;
   
-  uint64_t foo = 1;
-  
-  foo ++;
-
   m_com_vr = m_com_vth = 0;
   m_map_px = m_map_py = m_map_pth = 0;
   
@@ -301,98 +298,22 @@ void CPositionDevice::ComposeData()
 
 bool CPositionDevice::InCollision(double px, double py, double pth)
 {
-  // case circle:
-  //  ents = m_world->GetRectangle(px, py, pth, m_size_x, m_size_x );  // CIRCLE! 
-  //  break;
+  double qx, qy;
 
-  switch( GetShape() )
-    {
-    case rectangle:
-      {
-	double qx = px + m_offset_x * cos(pth);
-	double qy = py + m_offset_x * sin(pth);
-	double sx = m_size_x;
-	double sy = m_size_y;
-	
-	//ents = m_world->GetRectangle(qx, qy, pth, sx, sy  );
-      }
-      break;
+  //switch( GetShape() ) - don't handle circles yet!
+    
+  qx = px + m_offset_x * cos(pth);
+  qy = py + m_offset_x * sin(pth);
 
+  CEntity* ent;
+
+  CRectangleIterator rit( px, px, pth, m_size_x, m_size_y, 
+			  m_world->ppm, m_world->matrix );
+
+  while( (ent = rit.GetNextEntity()) ) 
+    if( ent != this && ent->obstacle_return )
+      return true;
       
-    default:  
-      PRINT_MSG("CPositionDevice::InCollision(): unknown shape!");       
-    }
-  
-  // calculate the corners of our body
-
-  double corners[4][2];
-
-  double cx = (m_size_x/2.0) * cos(pth);
-  double cy = (m_size_y/2.0) * cos(pth);
-  double sx = (m_size_x/2.0) * sin(pth);
-  double sy = (m_size_y/2.0) * sin(pth);
-  
-  corners[0][0] = px + cx - sy;
-  corners[0][1] = py + sx + cy;
-    
-  corners[1][0] = px - cx - sy;
-  corners[1][1] = py - sx + cy;
-    
-  corners[2][0] = px - cx + sy;
-  corners[2][1] = py - sx - cy;
-   
-  corners[3][0] = px + cx + sy;
-  corners[3][1] = py + sx - cy;
-  
-  // now ray-trace along each edge to see if we've hit anything
-
-
-    CEntity* ent = 0;
-    
-    CLineIterator lit0( corners[0][0], corners[0][1], 
-			corners[1][0], corners[1][1],
-			m_world->ppm, m_world->matrix, PointToPoint );
-    
-    while( (ent = lit0.GetNextEntity()) ) 
-      if( ent != this && ent->obstacle_return )
-	{
-	  //double x,y,r;
-	  //lit.GetPos( x, y );
-	  //lit.GetRange( r );
-	  
-	  //printf( "ent: %p (%s) at %.2f,%.2f - %.2fm\n", 
-	  //  ent, m_world->StringType( ent->m_stage_type ),
-	  //  x, y, r );
-	  
-	  return true;
-	}
-    
-    
-    //CLineIterator lit1( corners[1][0], corners[1][1], pth - M_PI/2.0, m_size_y, 
-    //	m_world->ppm, m_world->matrix, PointToPoint );
-    
-//while( (ent = lit1.GetNextEntity()) ) 
-//    if( ent != this && ent->obstacle_return )
-//return true;
-
-    //CLineIterator lit2( corners[2][0], corners[2][1], pth, m_size_x, 
-    //		m_world->ppm, m_world->matrix, PointToPoint );
-    
-    //while( (ent = lit2.GetNextEntity()) ) 
-    //if( ent != this && ent->obstacle_return )
-    //return true;
-
-    //CLineIterator lit3( corners[3][0], corners[3][1], pth + M_PI/2.0, m_size_y, 
-    //		m_world->ppm, m_world->matrix, PointToPoint );
-    
-    //while( (ent = lit3.GetNextEntity()) ) 
-    //if( ent != this && ent->obstacle_return )
-    //return true;
-    
-    
-
-
-
   return false;
 }
 

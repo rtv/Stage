@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.21.2.6 $
+//  $Revision: 1.21.2.7 $
 //
 // Usage:
 //  (empty)
@@ -75,10 +75,6 @@ CWorld::CWorld()
     // Initialise grids
     //
     m_bimg = NULL;
-    m_obs_img = NULL;
-    m_laser_img = NULL;
-    m_vision_img = NULL;
-    m_puck_img = NULL;
 
     // Initialise clocks
     //
@@ -106,19 +102,13 @@ CWorld::~CWorld()
 {
     if (m_bimg)
         delete m_bimg;
-    if (m_obs_img)
-        delete m_obs_img;
-    if (m_laser_img)
-        delete m_laser_img;
-    if (m_vision_img)
-        delete m_vision_img;
-    if (m_puck_img)
-        delete m_puck_img;
-    
+
+    if( matrix )
+      delete matrix;
+
     // zap the mmap IO point in the filesystem
     // XX fix this to test success later
     unlink( tmpName );
-
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -586,49 +576,15 @@ bool CWorld::InitGrids(const char *env_file)
   // draw an outline around the background image
   m_bimg->draw_box( 0,0,width-1,height-1, 0xFF );
   
-  // Clear obstacle image
-  //
-  m_obs_img = new Nimage(width, height);
-  m_obs_img->clear(0);
-    
-  // Clear laser image
-  //
-  m_laser_img = new Nimage(width, height);
-  m_laser_img->clear(0);
-  
-  // Copy fixed obstacles into laser rep
-  //
-  for (int y = 0; y < m_bimg->height; y++)
-    {
-        for (int x = 0; x < m_bimg->width; x++)
-        {
-            if (m_bimg->get_pixel(x, y) != 0)
-            {
-                m_obs_img->set_pixel(x, y, 0xFF);
-                m_laser_img->set_pixel(x, y, 0xFF);
-            }
-        }
-    }
-
-  // Clear vision image
-  //
-  m_vision_img = new Nimage(width, height);
-  m_vision_img->clear(0);
-    
-  // Clear puck image
-  //
-  m_puck_img = new Nimage(width, height);
-  m_puck_img->clear(0);
-                
-
   matrix = new CMatrix( width, height );
 
   wall = new CEntity( this, 0 );
   
   wall->m_stage_type = WallType;
-  wall->laser_return = 1;
-  wall->sonar_return = 1;
-  wall->obstacle_return = 1;
+  wall->laser_return = LaserSomething;
+  wall->sonar_return = true;
+  wall->obstacle_return = true;
+  wall->channel_return = 0; // opaque!
 
   // Copy fixed obstacles into matrix
   //
@@ -703,119 +659,6 @@ void CWorld::SetEntityAtCell( CEntity* ent, int ix, int iy )
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// Get a cell from the world grid
-//
-uint8_t CWorld::GetCell(double px, double py, EWorldLayer layer)
-{
-    // Convert from world to image coords
-    //
-    int ix = (int) (px * ppm);
-    int iy = (int) (py * ppm);
-
-    // This could be cleaned up by having an array of images
-    //
-    switch (layer)
-    {
-        case layer_obstacle:
-            return m_obs_img->get_pixel(ix, iy);
-        case layer_laser:
-            return m_laser_img->get_pixel(ix, iy);
-        case layer_vision:
-            return m_vision_img->get_pixel(ix, iy);
-        case layer_puck:
-            return m_puck_img->get_pixel(ix, iy);
-    }
-    return 0;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Set a cell in the world grid
-//
-void CWorld::SetCell(double px, double py, EWorldLayer layer, uint8_t value)
-{
-    // Convert from world to image coords
-    //
-    int ix = (int) (px * ppm);
-    int iy = (int) (py * ppm);
-
-    // This could be cleaned up by having an array of images
-    //
-    switch (layer)
-    {
-        case layer_obstacle:
-            m_obs_img->set_pixel(ix, iy, value);
-            break;
-        case layer_laser:
-            m_laser_img->set_pixel(ix, iy, value);
-            break;
-        case layer_vision:
-            m_vision_img->set_pixel(ix, iy, value);
-            break;
-        case layer_puck:
-            m_puck_img->set_pixel(ix, iy, value);
-            break;
-    }
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Get a rectangle in the world grid
-//
-uint8_t CWorld::GetRectangle(double px, double py, double pth,
-                             double dx, double dy, EWorldLayer layer)
-{
-    Rect rect;
-    double tx, ty;
-
-    dx /= 2;
-    dy /= 2;
-
-    double cx = dx * cos(pth);
-    double cy = dy * cos(pth);
-    double sx = dx * sin(pth);
-    double sy = dy * sin(pth);
-    
-    // This could be faster
-    //
-    tx = px + cx - sy;
-    ty = py + sx + cy;
-    rect.toplx = (int) (tx * ppm);
-    rect.toply = (int) (ty * ppm);
-
-    tx = px - cx - sy;
-    ty = py - sx + cy;
-    rect.toprx = (int) (tx * ppm);
-    rect.topry = (int) (ty * ppm);
-
-    tx = px - cx + sy;
-    ty = py - sx - cy;
-    rect.botlx = (int) (tx * ppm);
-    rect.botly = (int) (ty * ppm);
-
-    tx = px + cx + sy;
-    ty = py + sx - cy;
-    rect.botrx = (int) (tx * ppm);
-    rect.botry = (int) (ty * ppm);
-    
-    // This could be cleaned up by having an array of images
-    //
-    switch (layer)
-    {
-        case layer_obstacle:
-            return m_obs_img->rect_detect(rect);
-        case layer_laser:
-            return m_laser_img->rect_detect(rect);
-        case layer_vision:
-            return m_vision_img->rect_detect(rect);
-        case layer_puck:
-            return m_puck_img->rect_detect(rect);
-    }
-    return 0;
-}
-
-
 void CWorld::SetRectangle(double px, double py, double pth,
                           double dx, double dy, CEntity* ent )
 {
@@ -853,95 +696,6 @@ void CWorld::SetRectangle(double px, double py, double pth,
     rect.botry = (int) (ty * ppm);
     
     matrix->draw_rect( rect, ent );
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Set a rectangle in the world grid
-//
-void CWorld::SetRectangle(double px, double py, double pth,
-                          double dx, double dy, EWorldLayer layer, uint8_t value)
-{
-    Rect rect;
-    double tx, ty;
-
-    dx /= 2;
-    dy /= 2;
-
-    double cx = dx * cos(pth);
-    double cy = dy * cos(pth);
-    double sx = dx * sin(pth);
-    double sy = dy * sin(pth);
-    
-    // This could be faster
-    //
-    tx = px + cx - sy;
-    ty = py + sx + cy;
-    rect.toplx = (int) (tx * ppm);
-    rect.toply = (int) (ty * ppm);
-
-    tx = px - cx - sy;
-    ty = py - sx + cy;
-    rect.toprx = (int) (tx * ppm);
-    rect.topry = (int) (ty * ppm);
-
-    tx = px - cx + sy;
-    ty = py - sx - cy;
-    rect.botlx = (int) (tx * ppm);
-    rect.botly = (int) (ty * ppm);
-
-    tx = px + cx + sy;
-    ty = py + sx - cy;
-    rect.botrx = (int) (tx * ppm);
-    rect.botry = (int) (ty * ppm);
-    
-    // This could be cleaned up by having an array of images
-    //
-    switch (layer)
-    {
-        case layer_obstacle:
-            m_obs_img->draw_rect(rect, value);
-            break;
-        case layer_laser:
-            m_laser_img->draw_rect(rect, value);
-            break;
-        case layer_vision:
-            m_vision_img->draw_rect(rect, value);
-            break;
-        case layer_puck:
-            m_puck_img->draw_rect(rect, value);
-            break;
-    }
-}
-    
-///////////////////////////////////////////////////////////////////////////
-// Set a circle in the world grid
-//
-void CWorld::SetCircle(double px, double py, double pr,
-                       EWorldLayer layer, uint8_t value)
-{
-    // Convert from world to image coords
-    //
-    int x = (int) (px * ppm);
-    int y = (int) (py * ppm);
-    int r = (int) (pr * ppm);
-    
-    // This could be cleaned up by having an array of images
-    //
-    switch (layer)
-    {
-        case layer_obstacle:
-            m_obs_img->draw_circle(x,y,r,value);
-            break;
-        case layer_laser:
-            m_laser_img->draw_circle(x,y,r,value);
-            break;
-        case layer_vision:
-            m_vision_img->draw_circle(x,y,r,value);
-            break;
-        case layer_puck:
-            m_puck_img->draw_circle(x,y,r,value);
-            break;
-    }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1002,52 +756,6 @@ void CWorld::InitLaserBeacon()
     m_laserbeacon_count = 0;
 }
 
-
-///////////////////////////////////////////////////////////////////////////
-// Add a laser beacon to the world
-// Returns an index for the beacon
-//
-int CWorld::AddLaserBeacon(int id)
-{
-  //puts( "ADDING A LASER BEACON" );
-
-    assert(m_laserbeacon_count < ARRAYSIZE(m_laserbeacon));
-    int index = m_laserbeacon_count++;
-    m_laserbeacon[index].m_id = id;
-
-    //printf( "now have %d beacons\n", index );
-    return index;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Set the position of a laser beacon
-//
-void CWorld::SetLaserBeacon(int index, double px, double py, double pth)
-{
-  //  printf( "SETTING BEACON POS %.2f %.2f %.2f\n", 
-  //  px, py, pth );
- 
-  ASSERT(index >= 0 && index < m_laserbeacon_count);
-    m_laserbeacon[index].m_px = px;
-    m_laserbeacon[index].m_py = py;
-    m_laserbeacon[index].m_pth = pth;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Get the position of a laser beacon
-//
-bool CWorld::GetLaserBeacon(int index, int *id, double *px, double *py, double *pth)
-{
-     if (index < 0 || index >= m_laserbeacon_count)
-        return false;
-    *id = m_laserbeacon[index].m_id;
-    *px = m_laserbeacon[index].m_px;
-    *py = m_laserbeacon[index].m_py;
-    *pth = m_laserbeacon[index].m_pth;
-    return true;
-}
 
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the broadcast queue
@@ -1353,12 +1061,12 @@ void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
     //
     switch (layer)
     {
-        case layer_obstacle:
-            img = m_obs_img;
-            break;
-        case layer_laser:
-            img = m_laser_img;
-            break;
+      //        case layer_obstacle:
+      //    img = m_obs_img;
+      //    break;
+      //case layer_laser:
+      //    img = m_laser_img;
+      //    break;
         case layer_vision:
             img = m_vision_img;
             break;            

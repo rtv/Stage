@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.14.2.5 $
+//  $Revision: 1.14.2.6 $
 //
 // Usage:
 //  (empty)
@@ -36,7 +36,6 @@
 #include <sys/sem.h>
 #include <sys/ipc.h>
 #include <queue> // standard template library container
-#include <slist>
 
 #include "image.h"
 #include "entity.hh"
@@ -44,8 +43,6 @@
 #include "playercommon.h"
 
 #include "matrix.h"
-
-
 
 #define DEBUG
 
@@ -399,6 +396,7 @@ public: bool m_truth_is_current;
     // Resolution at which to generate laser data
     //
     public: double m_laser_res;
+    public: double m_vision_res;
     
     // *** HACK -- this should be made private.  ahoward
     //

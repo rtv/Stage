@@ -17,14 +17,25 @@ create position_device pose 1.0 3.0 0.0 port 6665
   {
 	create lbd_device port 6665	
   } 
+
+  create ptz_device  pose 0.08 0.0 0.0 port 6665
+  {
+	create vision_device port 6665	
+  } 
 }
 
-create position_device pose 4.0 3.0 0.0 
-{
-  create laser_beacon
-  create box pose 0.0 1.0 0.0 size 0.4 0.4
-}
+#create position_device pose 4.0 3.0 0.0 
+#{
+#  create laser_beacon
+#  create box pose 0.0 1.0 0.0 size 0.4 0.4
+#}
 
-create box pose 4.0 4.0 0.0 size 1.0 1.0
+create vision_beacon pose 1.0 1.0 0 radius 0.2 channel 0 invisible laser
+create vision_beacon pose 1.2 1.0 0 radius 0.2 channel 1
+create vision_beacon pose 1.4 1.0 0 radius 0.2 channel 2 invisible sonar
+create vision_beacon pose 1.6 1.0 0 radius 0.2 channel 3
+
+
+create box pose 4.0 4.0 0.0 size 0.1 0.1 visible laser
 
 

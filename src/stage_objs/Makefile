@@ -25,7 +25,7 @@ OBJS =  world.o world_load.o truthserver.o envserver.o image.o \
 # debug
 #CCFLAGS = -g3 
 # debug + profile
-CCFLAGS = -pg -g3 
+CCFLAGS = -pg -g3
 
 # Flags common to all targets
 #

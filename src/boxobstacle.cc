@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.7.2.4 $
+//  $Revision: 1.7.2.5 $
 //
 // Usage:
 //  (empty)
@@ -45,14 +45,13 @@ CBoxObstacle::CBoxObstacle(CWorld *world, CEntity *parent)
   m_player_type = 0;
   m_player_index = 0;
   
-  m_stage_type = BoxType;
-
-  m_channel = 0; // default to visible on ACTS channel 0
-
   m_size_x = 1.0;
   m_size_y = 1.0;
   
+  
+  m_stage_type = BoxType;
 
+  channel_return = 0; // default to visible on ACTS channel 0
   laser_return = 1;
   sonar_return = 1;
   obstacle_return = 1;
@@ -133,12 +132,12 @@ void CBoxObstacle::Update( double simtime )
     
   double x, y, th;
   GetGlobalPose( x,y,th );
+
+  m_last_update = simtime;
   
   // if we've moved 
   if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
-    {
-      m_last_update = simtime;
-      
+    {    
       // Undraw our old representation
       m_world->matrix->SetMode( mode_unset );
       m_world->SetRectangle( m_map_px, m_map_py, m_map_pth,

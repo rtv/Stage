@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.14 $
+//  $Revision: 1.14.2.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -26,26 +26,28 @@ CPuck::CPuck(CWorld *world, CEntity *parent)
 {
   m_stage_type = PuckType;
 
-  m_channel = 0; // default to visible on ACTS channel 0
+  channel_return = 0; // default to visible on ACTS channel 0
 
   m_size_x = 0.1;
   m_size_y = 0.1;
 
   m_interval = 0.05; // update fast!
-    
-    
-    m_friction = 0.05;
-    // assume puck is 200g
-    m_mass = 0.2;
-    
-    // Set the initial map pose
-    //
-    m_map_px = m_map_py = m_map_pth = 0;
 
-    exp.objectType = puck_o;
-    exp.width = m_size_x;
-    exp.height = m_size_y;
-    strcpy( exp.label, "Puck" );
+  puck_return = true; // yes! we interact with pucks!
+  
+  m_friction = 0.05;
+  // assume puck is 200g
+  m_mass = 0.2;
+  
+  // Set the initial map pose
+  //
+  m_map_px = m_map_py = m_map_pth = 0;
+  
+  exp.objectType = puck_o;
+  exp.width = m_size_x;
+  exp.height = m_size_y;
+  strcpy( exp.label, "Puck" );
+
 }
 
 
@@ -123,60 +125,35 @@ bool CPuck::Startup()
 //
 void CPuck::Update( double sim_time )
 {
-  // RTV - took out the rendering in puck layer - it doesn't DO anything yet!
-
-    static bool undrawn = false;
-
     ASSERT(m_world != NULL);
-  
-    // if its time to recalculate state
+
+    // if its time to recalculate state and we're on the ground
     //
-    if( sim_time - m_last_update < m_interval )
-      return;
-    
-    m_last_update = sim_time;
-       
-    // if we've been picked up by a gripper, then undraw once
-    // and don't do anything else
-    //
-    if(m_parent_object)
-    {
-      if(!undrawn)
-      {
-        // Undraw our old representation
-        //
-        //m_world->SetCircle(m_map_px, m_map_py, 
-	//                     exp.width / 2.0, layer_puck, 0);
-	m_world->SetCircle(m_map_px, m_map_py, 
-			   exp.width / 2.0, layer_vision, 0);
-      
-        // should be able to set this flag and avoid constant undraws,
-        // but it doesn't seem to work for some reason; pucks get left in 
-        // the both the vision and puck layers...
-    ////undrawn = true;
+    if( (sim_time - m_last_update > m_interval) && (!m_parent_object) )
+      {	
+	m_last_update = sim_time;
+	
+	Move();      
       }
-
-      return;
+    
+    double x, y, th;
+    GetGlobalPose( x,y,th );
+    
+    // if we've moved 
+    if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
+      {
+	// Undraw our old representation
+	m_world->matrix->SetMode( mode_unset );
+	m_world->SetCircle( m_map_px, m_map_py, m_size_x/2.0, this );
+	
+	m_map_px = x; // update the render positions
+	m_map_py = y;
+	m_map_pth = th;
+	
+	// Draw our new representation
+	m_world->matrix->SetMode( mode_set );
+	m_world->SetCircle( m_map_px, m_map_py, m_size_x/2.0, this );
     }
-
-    undrawn = false;
-
-    Move();      
-
-    // Undraw our old representation
-    //
-    //m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_puck, 0);
-    m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_vision, 0);
-    
-    // Grab our new global pose
-    //
-    GetGlobalPose(m_map_px, m_map_py, m_map_pth);
-    
-    // Draw our new representation
-    //
-    //m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_puck, 1);
-    m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, 
-		       layer_vision, m_channel+1 );
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -185,11 +162,17 @@ void CPuck::Update( double sim_time )
 // To save time, we'll do bounding box detection
 bool CPuck::InCollision(double px, double py, double pth)
 {
-    if (m_world->GetRectangle(px, py, pth, .8*exp.width, .8*exp.width, 
-                              layer_obstacle) > 0)
-        return true;
-    
-    return false;
+  CEntity* ent;
+  
+  CRectangleIterator rit( px, px, pth, m_size_x, m_size_y, 
+			  m_world->ppm, m_world->matrix );
+  
+  while( (ent = rit.GetNextEntity()) ) 
+    if( ent != this && ent->puck_return )
+      return true;
+  
+  return false;
+
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -262,7 +245,7 @@ void CPuck::Move()
     m_last_time += step_time;
 
     // don't move if we've been picked up
-    if(m_parent_object) return;
+    //if(m_parent_object) return;
     
     // lower bound on velocity
     if(m_com_vr < 0.01) m_com_vr = 0;

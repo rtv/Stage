@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.16.2.4 $
+//  $Revision: 1.16.2.5 $
 
 //
 // Usage:
@@ -33,13 +33,7 @@
 
 #include <slist.h> // STL
 
-
 typedef std::slist< int > LaserBeaconList; 
-
-// if laser gives a value > reflector, it's a beacon
-enum LaserReturn { laser_nothing=0, laser_object, laser_reflector, laser_beacon };
-
-
 
 class CLaserDevice : public CEntity
 {

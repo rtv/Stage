@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.8.2.3 $
+//  $Revision: 1.8.2.4 $
 //
 // Usage:
 //  (empty)
@@ -43,6 +43,7 @@
 //
 class CWorld;
 
+enum LaserReturn { LaserNothing=0, LaserSomething, LaserBright };
 
 ///////////////////////////////////////////////////////////////////////////
 // The basic object class
@@ -58,11 +59,12 @@ class CEntity
 
   //uint32_t renderMask, senseMask;
 
-  int sonar_return;  
+  bool obstacle_return;
+  bool sonar_return;  
+  bool puck_return;
   int laser_return;
-  int obstacle_return;
-  //int puck_return;
-  
+  int channel_return; // -1 is transparent, 0 is opaque, 1 is ACTS Ch.0, etc.
+ 
     // Destructor
     //
     public: virtual ~CEntity();
@@ -173,9 +175,6 @@ class CEntity
     //
     private: char m_color_desc[128];
 
-  // the apparent color of this robot to a vision system like ACTS 
-    // (not yet implemented - get to it!)
-    public: int m_channel; 
 
     // how often to update this device, in seconds
     // all devices check this before updating their data

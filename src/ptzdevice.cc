@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.9.2.1 $
+//  $Revision: 1.9.2.2 $
 //
 // Usage:
 //  (empty)
@@ -50,29 +50,28 @@ CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent )
     
   m_size_x = 0.165;
   m_size_y = 0.145;
+
+  // these pans are the right numbers for our PTZ - RTV
+  m_pan_min = -100;
+  m_pan_max = +100;
   
-
-    // these pans are the right numbers for our PTZ - RTV
-    m_pan_min = -100;
-    m_pan_max = +100;
-
-    // and it's probably just as well to disable tilt for the moment. - RTV
-    m_tilt_max = 0;
-    m_tilt_min = 0;
-
-    m_zoom_min = 0;
-    m_zoom_max = 1024;
-
-    // Field of view (for scaling zoom values)
-    //
-    // should look in the Sony manual to get these numbers right,
-    // but they'll change with the lens, and we have 2 lenses
-    // eventually all this stuff'll come from config files
-    //
-    m_fov_min = DTOR(100);
-    m_fov_max = DTOR(10);
-
-    m_pan = m_tilt = m_zoom = 0;
+  // and it's probably just as well to disable tilt for the moment. - RTV
+  m_tilt_max = 0;
+  m_tilt_min = 0;
+  
+  m_zoom_min = 0;
+  m_zoom_max = 1024;
+  
+  // Field of view (for scaling zoom values)
+  //
+  // should look in the Sony manual to get these numbers right,
+  // but they'll change with the lens, and we have 2 lenses
+  // eventually all this stuff'll come from config files
+  //
+  m_fov_min = DTOR(100);
+  m_fov_max = DTOR(10);
+  
+  m_pan = m_tilt = m_zoom = 0;
 }
 
 

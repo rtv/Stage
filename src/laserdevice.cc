@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.23.2.5 $
+//  $Revision: 1.23.2.6 $
 //
 // Usage:
 //  (empty)
@@ -52,7 +52,7 @@ CLaserDevice::CLaserDevice(CWorld *world,
 
   laser_return = 1;
   sonar_return = 0;
-  //obstacle_return = 1;
+  obstacle_return = 0;
    
   // Laser update rate (readings/sec)
   //
@@ -307,22 +307,26 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 	
 	CEntity* ent;
 
+	int intensity = LaserNothing;
+	
 	while( (ent = lit.GetNextEntity()) ) 
 	  {
 	    if( ent->m_stage_type == LaserBeaconType )
 	      m_visible_beacons.push_front( (int)ent );
-
-	    if( ent != this && ent->laser_return ) 
-	    {
-	      lit.GetRange( range );
-	      break;
-	    }	
+	    
+	    if( ent != this && (intensity = ent->laser_return) ) 
+	      {
+		range = lit.GetRange();
+		break;
+	      }	
 	  }
-
+	
 	uint16_t v = (uint16_t)(1000.0 * range);
-
-	//  v = v | (((uint16_t) intensity) << 13);
-        
+	
+	// TODO: FIX THIS!
+	//if( intensity == LaserBright ) // ie. we hit something shiny
+	//v = v | (((uint16_t)1) << 13);
+	
         // Set the range
         //
         data->ranges[s++] = htons(v);
@@ -330,8 +334,8 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
         // Skip some values to save time
         //
         for (int i = 0; i < skip && s < m_scan_count; i++)
-            data->ranges[s++] = htons(v);
-
+	  data->ranges[s++] = htons(v);
+	
 #ifdef INCLUDE_RTK
         // Update the gui data
         //

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.9.2.2 $
+//  $Revision: 1.9.2.3 $
 //
 // Usage:
 //  (empty)
@@ -41,23 +41,19 @@ CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent )
   m_config_len  = 0;//sizeof( player_sonar_config_t );
   
   m_player_type = PLAYER_SONAR_CODE; // from player's messages.h
-   m_stage_type = SonarType;
-
+  m_stage_type = SonarType;
+  
   m_sonar_count = SONARSAMPLES;
-    m_min_range = 0.20;
-    m_max_range = 5.0;
-
-    sonar_return = 0;
-    laser_return = 0;
-    obstacle_return = 0;
-
-    // Initialise the sonar poses
-    //
-    for (int i = 0; i < m_sonar_count; i++)
-        GetSonarPose(i, m_sonar[i][0], m_sonar[i][1], m_sonar[i][2]);
+  m_min_range = 0.20;
+  m_max_range = 5.0;
     
-    // zero the data
-    memset( &m_data, 0, sizeof(m_data) );
+  // Initialise the sonar poses
+  //
+  for (int i = 0; i < m_sonar_count; i++)
+    GetSonarPose(i, m_sonar[i][0], m_sonar[i][1], m_sonar[i][2]);
+  
+  // zero the data
+  memset( &m_data, 0, sizeof(m_data) );
 }
 
 
@@ -107,7 +103,7 @@ void CSonarDevice::Update( double sim_time )
       while( (ent = lit.GetNextEntity()) ) 
 	if( ent != this && ent != m_parent_object && ent->sonar_return ) 
 	  {
-	    lit.GetRange( range );
+	    range = lit.GetRange();
 	    break;
 	  }	
       

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.9.2.2 $
+//  $Revision: 1.9.2.3 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -49,19 +49,19 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CEntity *parent)
 
   m_stage_type = LaserBeaconType;
 
-    m_beacon_id = 0;
-    m_index = -1;
-
-    m_interval = 0.2; // 5Hz update
-
-    laser_return = 1; // extra bright! normal objects return 1
-
-    // Set this flag to make the beacon transparent to lasesr
-    //
-    m_transparent = false;
-    
-    m_size_x = 0.05; // very thin!   
-    m_size_y = 0.3;     
+  m_beacon_id = 0;
+  m_index = -1;
+  
+  m_interval = 0.2; // 5Hz update
+  
+  laser_return = LaserBright;
+  
+  // Set this flag to make the beacon transparent to lasesr
+  //
+  m_transparent = false;
+  
+  m_size_x = 0.05; // very thin!   
+  m_size_y = 0.3;     
 }
 
 
@@ -124,17 +124,6 @@ bool CLaserBeacon::Save(int &argc, char **argv)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Startup routine
-//
-bool CLaserBeacon::Startup()
-{
-    assert(m_world != NULL);
-    m_index = m_world->AddLaserBeacon(m_beacon_id);
-    return CEntity::Startup();
-}
-
-
-///////////////////////////////////////////////////////////////////////////
 // Update the laser data
 //
 void CLaserBeacon::Update( double sim_time )
@@ -177,7 +166,7 @@ void CLaserBeacon::Update( double sim_time )
 				   m_size_x, m_size_y, this );
 	  }
 	// CHOP THIS!
-	m_world->SetLaserBeacon(m_index, m_map_px, m_map_py, m_map_pth);
+	//m_world->SetLaserBeacon(m_index, m_map_px, m_map_py, m_map_pth);
       }
 }
 

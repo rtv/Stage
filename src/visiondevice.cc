@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.13.2.1 $
+//  $Revision: 1.13.2.2 $
 //
 // Usage:
 //  (empty)
@@ -48,8 +48,8 @@ CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent)
   m_size_x = 0.9 * parent->m_size_x;
   m_size_y = 0.9 * parent->m_size_y;
 
-  m_interval = 0.2; // 5Hz
-  //m_interval = 0.1; // 10Hz - the real cam is around this
+  //m_interval = 0.2; // 5Hz
+  m_interval = 0.1; // 10Hz - the real cam is around this
 
   // ACTS must be associated with a physical camera
   // so parent must be a PTZ device
@@ -158,12 +158,6 @@ void CVisionDevice::UpdateScan()
     // Compute fov, range, etc
     //
     double dth = m_zoom / m_scan_width;
-    double dr = 1.0 / m_world->ppm;
-
-    // Ignore obstacles closer than this range
-    // (so we dont see ourself as a obstacle)
-    //
-    double min_range = 0.20;
 
     // Initialise gui data
     //
@@ -173,66 +167,52 @@ void CVisionDevice::UpdateScan()
 
     // Make sure the data buffer is big enough
     //
-    ASSERT((size_t) m_scan_width <= sizeof(m_scan_channel) / sizeof(m_scan_channel[0]));
+    ASSERT((size_t)m_scan_width<=sizeof(m_scan_channel)/sizeof(m_scan_channel[0]));
+
+    // TODO
+    //int skip = (int) (m_world->m_vision_res / m_scan_res - 0.5);
 
     // Do each scan
     // Note that the scan is taken *clockwise*
     //
+
     for (int s = 0; s < m_scan_width; s++)
     {
-        // Compute parameters of scan line
-        //
-        double px = ox;
-        double py = oy;
-        double pth = oth - s * dth;
+      int channel = 0;
+      double range = m_max_range;
+      
+      // Compute parameters of scan line
+      //
+      double px = ox;
+      double py = oy;
+      double pth = oth - s * dth;
+      
+	CLineIterator lit( px, py, pth, m_max_range, 
+			   m_world->ppm, m_world->matrix, PointToBearingRange );
+	
+	CEntity* ent;
+	
+	while( (ent = lit.GetNextEntity()) ) 
+	  {
 
-        // Compute the step for simple ray-tracing
-        //
-        double dx = dr * cos(pth);
-        double dy = dr * sin(pth);
-
-        double range;
-        int channel = 0;
-        
-        // Look along scan line for beacons
-        // Could make this an int again for a slight speed-up.
-        //
-        for (range = 0; range < m_max_range; range += dr)
-        {            
-            // Look in the vision layer for beacons.
-            // Also look at the two cells to the right and above
-            // so we dont sneak through gaps.
-            //
-            uint8_t cell = 0;
-            cell = m_world->GetCell(px, py, layer_vision);
-            if (cell == 0)
-                cell = m_world->GetCell(px + dr, py, layer_vision);
-            //if (cell == 0)
-	    //  cell = m_world->GetCell(px, py + dr, layer_vision);
-
-            if (cell != 0)
-            {
-                channel = cell;
-                break;
-            }
-            
-            // Look in the laser layer for obstacles.
-            // Also look at the two cells to the right and above
-            // so we dont sneak through gaps.
-            //
-            if (range > min_range)
-            {
-                if (m_world->GetCell(px, py, layer_laser) > 0)
-                    break;
-                if (m_world->GetCell(px + dr, py, layer_laser) > 0)
-                    break;
-                //if (m_world->GetCell(px, py + dr, layer_laser) > 0)
-		//  break;
-            }
-            
-            px += dx;
-            py += dy;
-        }
+	    if( ent != this // me
+		&& ent != m_parent_object // parent PTZ
+		&& ent != m_parent_object->m_parent_object // grandpa robot!
+		&& ent->channel_return != -1  )// transparent
+		
+	      {  
+		//printf( "i see %p (%s)\n", 
+		//ent, m_world->StringType( ent->m_stage_type ) );
+		
+		range = lit.GetRange(); // it's this far away
+		channel = ent->channel_return; // it's this color
+		
+		break;
+	      }
+	  }
+	
+	//printf( "ray: %d channel: %d\n", s, channel );
+	//fflush( stdout );
 
         // Set the channel
         //
