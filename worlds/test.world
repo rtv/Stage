@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.9 2004-08-30 05:58:58 rtv Exp $
+# CVS: $Id: test.world,v 1.10 2004-08-31 04:35:46 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution 0.02 
@@ -32,6 +32,7 @@ define laserpioneer pioneer2dx
 )
 
 
+#laser( pose [3 3 0] )
 
 laserpioneer
 (
@@ -41,7 +42,7 @@ laserpioneer
 
   blobfinder(
     ### TODO - problem parsing this line?
-    blob.channels [ "red" "green" "blue" "cyan" "yellow" "magenta" ] 
+   # blob.channels [ "red" "green" "blue" "cyan" "yellow" "magenta" ] 
   )	
 )
 

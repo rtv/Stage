@@ -217,12 +217,31 @@ void gui_menu_layer( rtk_menuitem_t *item )
   // invalidate the whole canvas - how?
 }
 
+void model_refresh( model_t* mod )
+{
+  // re-set the current data, config & lines to force redraws
+  size_t len = 0;
+  void* p = model_get_data( mod, &len );  
+  model_set_data( mod, p, len );
+  p = model_get_config( mod, &len );
+  model_set_config( mod, p, len );  
+  model_set_lines( mod, mod->lines, mod->lines_count );
+}
+
+void refresh_cb( gpointer key, gpointer value, gpointer user )
+{
+  model_refresh( (model_t*)value );
+}
+
 void gui_menu_polygons( rtk_menuitem_t *item )
 {
   gui_window_t* win = (gui_window_t*)item->menu->canvas->userdata;
   win->fill_polygons = !win->fill_polygons;
 
   //PRINT_WARN1( "TOGGLE FILL POLYGONS - state now %d", win->fill_polygons );
+
+  // redraw everything in this world to see the polygons change
+  g_hash_table_foreach( win->world->models, refresh_cb, NULL ); 
 }
 
 void gui_menu_matrix( rtk_menuitem_t *item )

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.7 $
+//  $Revision: 1.8 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -495,6 +495,9 @@ int model_set_lines( model_t* mod, stg_line_t* lines, size_t lines_count )
 
   if( mod->lines_count > 1 )
     {
+      // TODO - make multiple polygons from sets of lines
+      // or extend models to have polygons AND lines
+
       // attempt to make a polygon from the lines
       int is_polygon = 1;
       

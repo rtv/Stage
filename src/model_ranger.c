@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.22 $
+//  $Revision: 1.23 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -57,7 +57,7 @@ void ranger_init( model_t* mod )
     }
   
   ranger_set_config( mod, cfg, cfglen );
-  ranger_set_data( mod, data, datalen );
+  //ranger_set_data( mod, data, datalen );
 }
 
 int ranger_set_data( model_t* mod, void* data, size_t len )

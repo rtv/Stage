@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.37 $
+//  $Revision: 1.38 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -179,7 +179,7 @@ void laser_render_data(  model_t* mod, void* data, size_t len )
 
   stg_laser_sample_t* samples = (stg_laser_sample_t*)data;
   
-  if( samples == NULL )
+  if( samples == NULL || len < sizeof(stg_laser_sample_t) )
     {
       PRINT_WARN( "no laser data available" );
       return;
