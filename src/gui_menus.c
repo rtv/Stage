@@ -1,4 +1,4 @@
-#define DEBUG
+//#define DEBUG
 
 #include "gui.h"
 #include "stdlib.h"
@@ -54,22 +54,10 @@ const int STG_MOVIE_SPEED_COUNT = 7; // must match the static array length
 // send a USR2 signal to the client process that created this menuitem
 void gui_menu_save( rtk_menuitem_t *item )
 {
-  //PRINT_DEBUG( "Save menu item" );
+  PRINT_DEBUG( "Save menu item" );
 
   world_t* world = (world_t*)item->userdata;
-
-  //PRINT_DEBUG1( "need to save world \"%s\"", world->token );
-
-  printf( "value %d %X\n", STG_MSG_CLIENT_SAVE,STG_MSG_CLIENT_SAVE );
-
   stg_connection_write_msg( world->con, STG_MSG_CLIENT_SAVE, NULL, 0 ); 
-  //stg_connection_write_msg( NULL, STG_MSG_CLIENT_SAVE, NULL, 0 ); 
-
-  //int foo=5;
-  //stg_connection_write_msg( world->con, 404, &foo, sizeof(foo) ); 
-
-  //printf( "foo: %d\n", foo );
-
 }
 
 void gui_menu_exit( rtk_menuitem_t *item )

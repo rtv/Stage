@@ -1074,11 +1074,11 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
   switch( msg->type )
     {
     case STG_MSG_CLIENT_SAVE:
-      PRINT_WARN( "Stage told me to SAVE, but it's not yet implemented." );      
+      if( cli->callback_save )(*cli->callback_save)();
       break;
       
     case STG_MSG_CLIENT_LOAD:
-      PRINT_WARN( "Stage told me to LOAD, but it's not yet implemented." );      
+      if( cli->callback_load )(*cli->callback_load)();
       break;
 
     case STG_MSG_CLIENT_REPLY:
@@ -1227,3 +1227,15 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
       break;
     }
 }
+
+
+void stg_client_install_save( stg_client_t* cli, stg_client_callback_t cb )
+{
+  cli->callback_save = cb;
+}
+
+void stg_client_install_load( stg_client_t* cli, stg_client_callback_t cb )
+{
+  cli->callback_load = cb;
+}
+

@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.45 2004-05-31 06:49:35 rtv Exp $
+ * CVS: $Id: stage.h,v 1.46 2004-06-01 23:11:25 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -661,6 +661,7 @@ int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count
 
 #define STG_DEFAULT_WORLDFILE "default.world"
 
+typedef void (*stg_client_callback_t)(void);
 
 typedef struct
 {
@@ -688,6 +689,10 @@ typedef struct
   // buffer to hold the reply of a request/reply sequence
   GByteArray* reply;
   int reply_ready;
+
+  stg_client_callback_t callback_save;
+  stg_client_callback_t callback_load;
+  
 
 } stg_client_t;
 
@@ -748,6 +753,10 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg );
 
 // remove all our objects from from the server
 void stg_client_pull( stg_client_t* client );
+
+void stg_client_install_save( stg_client_t* cli, stg_client_callback_t cb );
+void stg_client_install_load( stg_client_t* cli, stg_client_callback_t cb );
+
 
 // destroy a Stage client
 void stg_client_destroy( stg_client_t* client );
