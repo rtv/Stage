@@ -7,16 +7,10 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.58 $
+//  $Revision: 1.59 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
-/** 
-@defgroup model_laser Laser model
- 
-The laser model simulates a scanning laser rangefinder
-
-*/
 
 #include <sys/time.h>
 #include <math.h>

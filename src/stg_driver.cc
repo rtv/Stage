@@ -24,14 +24,14 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: stg_driver.cc,v 1.17 2004-12-29 06:39:32 rtv Exp $
+ * CVS: $Id: stg_driver.cc,v 1.18 2004-12-30 04:39:25 rtv Exp $
  */
 
 // DOCUMENTATION ---------------------------------------------------------------------
 
 /** @defgroup driver_stage Stage plugin driver for Player
 
-This driver gives Player access to Stage's models.
+This driver gives Player access to Stage's models.x
 
 @par Provides
 
@@ -98,6 +98,74 @@ driver
 )
 @endverbatim
 
+
+@par Example Player config (.cfg) file:
+
+In this example we create three sonar devices, demonstrating the
+explicit and implicit model-naming schemes.
+
+@verbatim
+driver
+(
+  name "stg_sonar"
+  provides ["sonar:0" ]
+
+  # identify a model with an explicit, user-defined name
+  model "myranger"
+)
+
+driver
+(
+  name "stg_sonar"
+  provides ["sonar:1" ]
+
+  # identify the first ranger attached the the model named "green_robot"
+  model "green_robot:ranger:0" 
+)
+
+driver
+(
+  name "stg_sonar"
+  provides ["sonar:2" ]
+
+  # identify the first ranger attached to the third position device
+  model "position:2.ranger:0" 
+)
+
+@endverbatim
+
+@par Example Stage world (.world) file:
+
+@verbatim
+
+# create position and ranger models with explicit names
+position
+(
+  name "red_robot"
+  pose [ 1 1 0 ]
+  color "red"
+  ranger( name "myranger" ) # this model is explicitly named "myranger"
+)
+
+# create position and ranger models, naming just the position (parent) model
+position
+(
+  name "green_robot"
+  pose [ 3 1 0 ]
+  color "green"
+  ranger() # this model is implicity named "green_robot.ranger:0"
+)
+
+# create position and ranger models without naming them explicitly
+position
+(
+  pose [ 2 1 0 ]
+  color "blue"
+  ranger() # this model is implicitly named "position:2.ranger:0"
+)
+
+@endverbatim
+
 @par Authors
 
 Richard Vaughan
@@ -131,6 +199,15 @@ Richard Vaughan
 extern PlayerTime* GlobalTime;
 extern int global_argc;
 extern char** global_argv;
+
+//#define HTON_M(m) htonl(m)   // byte ordering for METERS
+//#define NTOH_M(m) ntohl(m)
+//#define HTON_RAD(r) htonl(r) // byte ordering for RADIANS
+//#define NTOH_RAD(r) ntohl(r)
+//#define HTON_SEC(s) htonl(s) // byte ordering for SECONDS
+//#define NTOH_SEC(s) ntohl(s)
+//#define HTON_SEC(s) htonl(s) // byte ordering for SECONDS
+//#define NTOH_SEC(s) ntohl(s)
 
 #define STG_DEFAULT_WORLDFILE "default.world"
 #define DRIVER_ERROR(X) printf( "Stage driver error: %s\n", X )

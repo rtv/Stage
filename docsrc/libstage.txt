@@ -1,24 +1,22 @@
-
-
-
+ 
 
 /**
-@mainpage The Stage Library (libstage)
+@mainpage libstage Reference Manual
 
-The Stage Library (libstage) provides a code library for simulating a
-population of robots. It is designed to be used by robotics
-researchers for building custom simulations, and as the simulation
-engine for Stage, the plugin driver for Player.
+libstage (The Stage Library) provides a C code library for simulating
+a population of mobile robots and sensors. It is usually used as a
+plugin driver for <a
+href="http://playerstage.sf.net/player/player.html">Player</a>, but it
+can also be used directly to build custom simulations.
 
-Libstage is modular and fairly simple to use. The following code is
-enough to get a complete
+libstage is modular and fairly simple to use. The following code is
+enough to get a complete robot simulation running:
 
 @verbatim
 #include "stage.h"
 
 int main( int argc, char* argv[] )
 { 
-  // initialize libstage
   stg_init( argc, argv );
 
   stg_world_t* world = stg_world_create_from_file( argv[1] );
@@ -28,13 +26,16 @@ int main( int argc, char* argv[] )
   
   stg_world_destroy( world );
   
-  exit( 0 );
+  return 0;
 }
 @endverbatim
 
-TODO: Describe the basic use of the Stage Library
+@par Contact and support
+
+For help with libstage, please use the mailing list playerstage_users@lists.sourceforge.net. 
 
 */
+
 
 
 /**

@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.11 2004-11-21 02:55:03 rtv Exp $
+ * $Id: matrix.c,v 1.12 2004-12-30 04:39:24 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -8,8 +8,7 @@
 #include <math.h>
 #include <string.h> // for memcpy(3)
 
-#include "stage.h"
-
+#include "stage_internal.h"
 
 //#define DEBUG
 
@@ -292,7 +291,7 @@ void stg_matrix_lines( stg_matrix_t* matrix,
 		     object, add );
 }
 
-/// render a polygon into [matrix] with origin [x,y,a]
+// render a polygon into [matrix] with origin [x,y,a]
 void stg_matrix_polygon( stg_matrix_t* matrix,
 			 double x, double y, double a,
 			 stg_polygon_t* poly,
@@ -323,7 +322,7 @@ void stg_matrix_polygon( stg_matrix_t* matrix,
     PRINT_WARN( "attempted to matrix render a polygon with less than 3 points" ); 
 }     
 
-/// render an array of [num_polys] polygons
+// render an array of [num_polys] polygons
 void stg_matrix_polygons( stg_matrix_t* matrix,
 			  double x, double y, double a,
 			  stg_polygon_t* polys, int num_polys,

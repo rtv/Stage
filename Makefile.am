@@ -1,24 +1,23 @@
 SUBDIRS = replace src worlds tools
 
 DOCSRC = $(top_srcdir)/docsrc
-DOCDIST = $(distdir)/docsrc
+DOCDIST = $(distdir)/doc
 DOCINST = $(DESTDIR)$(prefix)/doc
 
 # create the pkg-config entries
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = stage.pc
 
-#dist-hook:
-#	cd $(DOCSRC) && make 
-#	mkdir -p $(DOCDIST)
-#	cp -r -p $(DOCSRC)/stage_developer $(DOCDIST)
-#	cp -r -p $(DOCSRC)/stage_user $(DOCDIST)
+dist-hook:
+	cd $(DOCSRC) && make 
+	mkdir -p $(DOCDIST)
+	cp -r -p $(DOCSRC)/stage_reference $(DOCDIST)
+	cp -r -p $(DOCSRC)/stage_user $(DOCDIST)
 
-#install-data-hook:
-#	mkdir -p $(DOCINST)
-#	mkdir -p $(DOCINST)/stage
-#	cp -r -p $(DOCSRC)/stage_user $(DOCINST)
-#	cp -r -p $(DOCSRC)/stage_developer $(DOCINST)
+install-data-hook:
+	mkdir -p $(DOCINST)
+	cp -r -p $(DOCSRC)/stage_user $(DOCINST)
+	cp -r -p $(DOCSRC)/stage_reference $(DOCINST)
 
 uninstall-local:
 	rm -f $(DOCINST)/*

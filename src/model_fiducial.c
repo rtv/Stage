@@ -7,16 +7,9 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.29 $
+//  $Revision: 1.30 $
 //
 ///////////////////////////////////////////////////////////////////////////
-
-
-/** 
-@defgroup model_fiducial Fiducialfinder model
- 
-The fiducialfinder model simulates a fiducial-detecting device.
-*/
 
 //#define DEBUG
 

@@ -21,21 +21,8 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.30 2004-12-29 06:39:32 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.31 2004-12-30 04:39:25 rtv Exp $
  */
-
-/** 
-@defgroup model_blobfinder Blobfinder model
- 
-The blobfinder model simulates a color-blob-finding vision device,
-like a CMUCAM2, or the ACTS image processing software. It can track
-areas of color in a simulated 2D image, giving the location and size
-of the color 'blobs'. Multiple colors can be tracked at once; they are
-separated into channels, so that e.g. all red objects are tracked as
-channel one, blue objects in channel two, etc. The color associated
-with each channel is configurable.
-
-*/
 
 #include <math.h>
 

@@ -1,11 +1,4 @@
 
-/** 
-@defgroup stg_gui 
-
-Code for the Stage user interface window.
-
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>

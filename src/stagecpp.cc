@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.73 2004-12-29 06:39:32 rtv Exp $
+// $Id: stagecpp.cc,v 1.74 2004-12-30 04:39:25 rtv Exp $
 
 //#define DEBUG
 
@@ -15,6 +15,7 @@
 
 // TODO - get this from a system header?
 #define MAXPATHLEN 256
+#define STG_TOKEN_MAX 64
 
 #include "stage_internal.h"
 #include "gui.h"
@@ -22,17 +23,7 @@
 
 static CWorldFile wf;
 
-// todo = move these into stage.h
-extern "C"
-{
-  stg_model_t* stg_blobfinder_create( stg_world_t* world,	stg_model_t* parent, stg_id_t id,  char* token ); 
-  stg_model_t* stg_laser_create( stg_world_t* world, stg_model_t* parent, stg_id_t id, char* token );
-  stg_model_t* stg_fiducial_create( stg_world_t* world,  stg_model_t* parent,  stg_id_t id, char* token );
-  stg_model_t* stg_position_create( stg_world_t* world,  stg_model_t* parent,  stg_id_t id, char* token );
-  stg_model_t* stg_ranger_create( stg_world_t* world,  stg_model_t* parent,  stg_id_t id, char* token );
-}
-
-  /** @defgroup model_window GUI Window
+/** @defgroup model_window GUI Window
 
 <h2>Worldfile Properties</h2>
 
@@ -104,9 +95,14 @@ void save_gui( gui_window_t* win )
   wf.WriteFloat( win->wf_section, "scale", win->canvas->sx );
 }
 
-/** 
-@addtogroup model_basic Basic model
- 
+/** @defgroup model_basic Basic model
+    
+The basic model simulates an object with basic properties; position,
+size, velocity, color, visibility to various sensors, etc. The basic
+model also has a body made up of a list of lines. Internally, the
+basic model is used base class for all other model types. You can use
+the basic model to simulate environmental objects.
+
 <h2>Worldfile properties</h2>
 
 @par Summary and default values
@@ -382,7 +378,10 @@ void configure_model( stg_model_t* mod, int section )
   stg_model_set_mass( mod, &mass );
 }
 
-/** @addtogroup model_laser Laser model
+
+/** 
+@defgroup model_laser Laser model 
+The laser model simulates a scanning laser rangefinder
 
 <h2>Worldfile properties</h2>
 
@@ -432,7 +431,8 @@ void configure_laser( stg_model_t* mod, int section )
   stg_model_set_config( mod, &lconf, sizeof(lconf));
 }
 
-/** @addtogroup model_fiducial Fiducial model
+/** @defgroup model_fiducial Fiducial detector
+The fiducial model simulates a fiducial-detecting device.
 
 <h2>Worldfile properties</h2>
 
@@ -483,7 +483,15 @@ void configure_fiducial( stg_model_t* mod, int section )
   stg_model_set_config( mod, &fcfg, sizeof(fcfg));
 }
 
-/** @addtogroup model_blobfinder Blobfinder model
+/** @defgroup model_blobfinder Blobfinder model
+
+The blobfinder model simulates a color-blob-finding vision device,
+like a CMUCAM2, or the ACTS image processing software. It can track
+areas of color in a simulated 2D image, giving the location and size
+of the color 'blobs'. Multiple colors can be tracked at once; they are
+separated into channels, so that e.g. all red objects are tracked as
+channel one, blue objects in channel two, etc. The color associated
+with each channel is configurable.
 
 <h2>Worldfile properties</h2>
 
@@ -564,7 +572,9 @@ void configure_blobfinder( stg_model_t* mod, int section )
   stg_model_set_config( mod, &bcfg, sizeof(bcfg));
 }
 
-/** @addtogroup model_ranger Ranger model
+/**
+@defgroup model_ranger Ranger model 
+The ranger model simulates an array of sonar or infra-red (IR) range sensors.
 
 <h2>Worldfile properties</h2>
 
@@ -682,7 +692,11 @@ void configure_ranger( stg_model_t* mod, int section )
     }
 }
 
-/** @addtogroup model_position Position model
+/** 
+@defgroup model_position Position model 
+The position model simulates a mobile robot base. It can drive in one
+of two modes; either <i>differential</i> like a Pioneer robot, or
+<i>omnidirectional</i>.
 
 <h2>Worldfile properties</h2>
 

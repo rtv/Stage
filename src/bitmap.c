@@ -1,7 +1,7 @@
 
 #include <stdlib.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
-#include "stage.h"
+#include "stage_internal.h"
 
 // pb_* functions are only used inside this file
 

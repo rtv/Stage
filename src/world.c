@@ -1,9 +1,3 @@
-/**
-@defgroup stg_world 
-
-Implements a world - a collection of models and a matrix.
-
-*/
 
 #include <stdlib.h>
 #include <assert.h>
@@ -59,9 +53,6 @@ void stg_world_dimensions( stg_world_t* world,
 {
   *min_x = *min_y =  MILLION;
   *max_x = *max_y = -MILLION;
-  
-  
-
 }
 
 

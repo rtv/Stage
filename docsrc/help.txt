@@ -1,43 +1,51 @@
-
+/* Stage plugin documentation file - parsed by Doxygen for the user
+ * manual 
+ * $Id: help.txt,v 1.4 2004-12-30 04:39:24 rtv Exp $
+*/
 
 /**
-@page intro Introduction to Stage (libstageplugin)
+@mainpage Stage - a robot simulator plugin for Player
 
-Stage is a plugin driver for the Player robot server. It provides a
-population of mobile robots, sensors and environmental objects in a
-two-dimensional world. Stage is designed with multi-agent systems in
-mind, so it provides fairly simple, computationally cheap models of
-lots of devices rather than attempting to emulate any device with
-great fidelity. This design is intended to be useful compromise
-between conventional high-fidelity robot simulations, the minimal
-simulations described by Jakobi\cite{jakobi:radical}, and the
-grid-world simulations common in artificial life
-research\cite{wilson:animat}. We intend Stage to be just realistic
-enough to enable users to move controllers between Stage robots and
-real robots, while still being fast enough to simulate large
-populations. We also intend Stage to be comprehensible to
-undergraduate students, yet sophisticated enough for professional
-reseachers.
+Stage is a robot simulator that works with the Player robot server. It
+provides a virtual world populated by mobile robots and sensors, along
+with various objects for the robots to sense and manipulate. 
 
-Access to the robots and sensors simulated in Stage is provided by
-Player. Users write robot controllers and sensor algorithms as
-`clients' to the Player `server'. Typically, clients cannot tell the
-difference between the real robot devices and their simulated Stage
-equivalents (unless they try very hard). We have found that robot
-controllers developed as Player clients controlling Stage robots will
-work with little or no modification with the real robots and vice
-versa. With a little care, the same binary program can often control
-Stage or real robots without even being recompiled. Thus the
-Player/Stage system allows rapid prototyping of controllers destined
-for real robots. Stage can also be very useful by simulating
-populations of realistic robot devices you don't happen to own.
+<h2>Design</h2>
+
+<p>Stage robots and sensors work like any other Player device: users
+write robot controllers and sensor algorithms as `clients' to the
+Player `server'. Typically, clients cannot tell the difference between
+the real robot devices and their simulated Stage equivalents (unless
+they try very hard). We have found that robot controllers developed as
+Player clients controlling Stage robots will work with little or no
+modification with the real robots and vice versa[1]. With a little care,
+the same binary program can often control Stage or real robots without
+even being recompiled[2]. Thus the Player/Stage system allows rapid
+prototyping of controllers destined for real robots. Stage can also be
+very useful by simulating populations of realistic robot devices you
+don't happen to own[3].
+
+<p>Stage was designed with multi-agent systems in mind, so it provides
+fairly simple, computationally cheap models of lots of devices rather
+than attempting to emulate any device with great fidelity. This design
+is intended to be useful compromise between conventional high-fidelity
+robot simulations, the minimal simulations described by Jakobi[4], and
+the grid-world simulations common in artificial life research[5]. We
+intend Stage to be just realistic enough to enable users to move
+controllers between Stage robots and real robots, while still being
+fast enough to simulate large populations. We also intend Stage to be
+comprehensible to undergraduate students, yet sophisticated enough for
+professional reseachers.
+
   
-Player also contains several useful 'virtual devices'; including some
+<p>Player also contains several useful 'virtual devices'; including some
 sensor pre-processing or sensor-integration algorithms. These were
 tricky to use with previous versions of Stage, but this release makes
 it simple to take full advantage of Player.
 
-Stage provides several sensor and actuator models, including sonar or
+<h2>Models</h2>
+
+<p>Stage provides several sensor and actuator models, including sonar or
 infrared rangers, scanning laser rangefinder, color-blob tracking,
 fiducial tracking and mobile robot bases with odometry. 
 
@@ -46,21 +54,300 @@ Some models from previous versions may not yet be available in this
 release, but we're working on them. Let us know which ones you need.
 </i>
 
+[@ref refs]
+
 <hr>
 <small>
-Richard Vaughan <tt>(vaughan@sfu.ca)</tt> 
+Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: help.txt,v 1.4 2004-12-30 04:39:24 rtv Exp $
 </small>
+
+*/
+
+/**
+@page refs References
+
+[1] Brian Gerkey, Richard Vaughan, Kasper Stoy, Andrew Howard, Gaurav
+Sukhatme, Maja Mataric (2001) "Most Valuable Player: A Robot Device
+Server for Distributed Control", Proc. IEEE Int. Conf. Intelligent
+Robotic Systems, Maui, Hawaii. (IROS'01)
+
+[2] Richard Vaughan, Brian Gerkey, Andrew Howard (2003) "On device
+abstractions for portable, resuable robot code", IEEE/RSJ
+International Conference on Intelligent Robot Systems, Las Vegas,
+Nevada, USA.  (IROS2003)
+
+[3] Brian Gerkey, Richard Vaughan, Andrew Howard (2003) "The
+Player/Stage Project: Tools for Multi-Robot and Distributed Sensor
+Systems", 11th International Conference on Advanced Robotics, Coimbra,
+Portugal (ICAR'03).
+
+[4] Nick Jakobi (1997) "Evolutionary Robotics and the Radical Envelope
+of Noise Hypothesis", Adaptive Behavior Volume 6, Issue 2. pp.325 -
+368 .
+
+[5] Stuart Wilson (1985) "Knowledge Growth in an Artificial Animal",
+Proceedings of the First International Conference on Genetic Agorithms
+and Their Applications.  Hillsdale, New Jersey. pp.16-23.
+
 */
 
 /**
 @page install Installation
 
-Installing Stage....
+<b>Important: Stage is an extension to Player; Player must be properly
+installed before you can install Stage.</b>
+
+<h2>Quick start</h2>
+
+Install Player first, then Stage, using the standard GNU autotools
+build system: download and extract the tarballs, then <tt>./configure
+; make install</tt>.
+
+<h2>Standard install procedure</h2>
+
+<p>To install Stage in the default location, follow these steps:
+
+<ol>
+
+<li>Make sure Player is installed and working. See the Player
+ documentation for instructions.
+
+<li>Download the latest Stage source tarball (stage-src-\<version\>.tgz)
+from <a href=http:playerstage.sf.net>http://playerstage.sf.net</a>
+
+<li>Uncompress and expand the tarball: <br>
+    <tt>$ tar xzvf stage-src-\<version\>.tgz</tt>
+
+<li>`cd' into Stage's source directory:<br>
+     <tt>$ cd stage-\<version\></tt>
+ 
+<li>To configure Stage with default settings:<br>
+<tt>$ ./configure</tt><br>
+
+<li>Compile Stage:<br>
+<tt>$ make</tt>
+
+<li>Install Stage. By default, Stage will be installed in
+<tt>/usr/local</tt> so you need to become root for this step. Remember
+to return to your normal user ID afterwards. <br> 
+<tt>$ make install</tt>
+
+</ol>
+
+<h2>Customized installations</h2>
+
+<p>Stage follows the standard GUN autotools conventions for build and
+install options. To see a list of all the available configuration
+options, do this:
+
+<p><tt>./configure --help</tt>
+
+<p>The most important option is <tt>--prefix</tt>, used
+to change the installation directory from the default (which varies
+from system to system, but is usually <tt>/usr/local</tt>). In
+general, Stage should get the same prefix you used to install Player. Prefixes must be absolute paths, i.e. a complete path starting with a '/'.
+
+<p>For example, you might want to install Stage your home directory
+because you don't have root access:
+
+<p><tt>$./configure --prefix=/home/harrison/PS</tt>
+
+<p><b>Remember: these instructions assume that Player was configured with the
+same prefix.</b> The command line to do this is probably the same, but you
+should check the Player instructions just in case.
+
+*/
+
+
+/**
+@page release Release Notes
+
+This release of Stage is the first after a major rewrite. There are
+bound to be bugs and teething troubles, but the <a
+href=http://www.cs.sfu.ca/research/groups/autonomy>Autonomy Lab</a>
+has been using this code for serious work for a few months now and we
+think it's useful and usable.
+
+<h3>Significant changes visible to the user</h3>
+
+<ol>
+
+<li>Stage is now a Player plugin, instead of an executable. The key
+benefit of this is that <b>all Player drivers are now available for
+use directly with Stage</b>, including sophisticated drivers like
+AMCL, without needing passthrough drivers.
+
+<li>Worldfile syntax has a changed, so you need to edit your existing
+worlds to get them to work. Look at the example worlds in <tt>(stage
+src)/worlds</tt> to get the idea.
+
+<li>Any object can now have its shape specified by a bitmap file
+
+<li>Many, many, bitmap file formats are supported. Load maps and robot
+bodies from JPG, PNG, etc. No more PNM troubles.
+
+<li>Worlds can now be very large (thousands of meters square).
+
+<li>Several models are missing from this release - notably the gripper
+and puck. These will be available soon. Meanwhile, enjoy the full
+power of Player with the basic laser, sonar, position, fiducial and
+blobfinder models.
+
+<li>Stage no longer depends on libRTK.
+
+</ol>
+
+<h3>Significant changes under the hood</h3>
+
+<ol>
+
+<li>Stage is now mostly written in C. A simple object-oriented system
+allows one-level of inheritance for writing polymorphic model code.
+
+<li>The underlying occupancy grid model has changed from a simple
+fixed-size array to a sparse array of (almost) unlimited size
+(implemented with a hash table). To compensate for the performance hit
+of raytracing in the hash table, a three-level multiple-resolution
+approach is used. Raytracing is now usually <i>much</i> faster than in
+Stage-1.3. To get an idea how this works, select the
+View/Debug/Raytrace menu item while a laser or ranger is producing
+data.
+
+<li>Most home-rolled data structures have been replaced by glib
+versions.
+
+</ol>
+
+
+*/
+
+/**
+@page worlds Worlds
+
+Stage simulates a 'world' composed of models, defined in a 'world
+file'. 
+
+This section will become very informative. Meanwhile look at the
+example world files in <tt>(stage src)/worlds</tt> along with
+the worldfile properties described on the manual page for each model
+type.
+
+*/
+
+/**
+@page window Using the Stage window
+
+The Stage window consists of a menu bar, a view of the simulated
+world, and a status bar.
+
+The world view shows part of the simulated world. You can zoom the
+view in and out, and scroll it to see more of the world. Simulated
+robot devices, obstacles, etc., are rendered as colored polygons. The
+world view can also show visualizations of the data and configuration
+of various sensor and actuator models. The View menu has options to
+control which data and configurations are rendered.
+
+<h3>Scrolling the view</h3>
+
+<p>Left-click and drag on the background to move your view of the world.
+
+<h3>Zooming the view</h3>
+
+<p>Right-click and drag on the background to zoom your view of the
+world. When you press the right mouse button, a circle appears. Moving
+the mouse adjusts the size of the circle; the current view is scaled
+with the circle.
+
+<h3>Saving the world</h3>
+
+<P>You can save the current pose of everything in the world, using the
+File/Save menu item. <b>Warning: the saved poses overwrite the current
+world file.</b> Make a copy of your world file before saving if you
+want to keep the old poses.
+
+
+<h3>Saving a screenshot</h3>
+
+<p> The File/Export menu allows you to export a screenshot of the
+current world view in JPEG or PNG format. The frame is saved in the
+current directory with filename in the format "stage-(frame
+number).(jpg/png)". 
+
+ You can also save sequences of screen shots. To start saving a
+sequence, select the desired time interval from the same menu, then
+select File/Export/Sequence of frames. The frames are saved in the
+current directory with filenames in the format "stage-(sequence
+number)-(frame number).(jpg/png)".
+
+The frame and sequence numbers are reset to zero every time you run
+Stage, so be careful to rename important frames before they are
+overwritten.
+
+<h3>Pausing and resuming the clock</h3>
+
+<p>The Clock/Pause menu item allows you to stop the simulation clock,
+freezing the world. Selecting this item again re-starts the clock.
+
+
+<h3>View options</h3>
+
+<p>The View menu allows you to toggle rendering of a 1m grid, to help
+you line up objects (View/Grid). You can control whether polygons are
+filled (View/Fill polygons); turning this off slightly improves
+graphics performance. The rest of the view menu contains options for
+rendering of data and configuration for each type of model, and a
+debug menu that enables visualization of some of the innards of Stage.
+
+
+*/
+
+
+/**
+@page credits Credits
+
+Stage was written by:
+
+<ul>
+<li>Richard Vaughan <tt>(vaughan@sfu.ca)</tt>
+<li>Andrew Howard  <tt>(ahoward@robotics.usc.edu)</tt>
+<li>Brian Gerkey <tt>(gerkey@robotics.stanford.edu)</tt>
+</ul>
+
+Stage is part of the <a
+href="http://playerstage.sourceforge.net">Player/Stage Project</a>, a
+community effort to develop Free Software tools for robotics research.
+
+Funding for Stage has been provided in part by:
+<ul>
+ <li>NSERC (Canada)
+ <li>Simon Fraser University (Canada)
+ <li>DARPA (USA)
+ <li>NASA (USA)
+ <li>NSF (USA)
+</ul>
+
+*/
+
+
+/** 
+@page dev_simulation Simulation Device
+
+The simulation device...
+
+*/
+
+
+/** 
+@page devices Devices
+
+Devices..
 
 */
 
 /** 
-@page useage Using Stage
+@page models Models
 
+Introduction to models...
 
 */
+

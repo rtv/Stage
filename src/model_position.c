@@ -7,25 +7,17 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.19 $
+//  $Revision: 1.20 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
-/** 
-@defgroup model_position Position model
- 
-The position model simulates a mobile robot base. It can drive in one
-of two modes; either <i>differential</i> like a Pioneer robot, or
-<i>omnidirectional</i>.
-
-*/
 
 #include <sys/time.h>
 #include <math.h>
 
 //#define DEBUG
 
-#include "stage.h"
+#include "stage_internal.h"
 #include "gui.h"
 
 //extern rtk_fig_t* fig_debug_rays;
@@ -33,14 +25,6 @@ of two modes; either <i>differential</i> like a Pioneer robot, or
 int position_startup( stg_model_t* mod );
 int position_shutdown( stg_model_t* mod );
 int position_update( stg_model_t* mod );
-
-typedef struct
-{
-  stg_pose_t odom_origin; // odometry origin
-  stg_pose_t odom; // current odom value
-  double x_error, y_error, a_error; // params for odom error model (not yet implemented)
-} stg_model_position_t;
-
 
 stg_model_t* stg_position_create( stg_world_t* world, 
 				  stg_model_t* parent, 

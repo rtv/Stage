@@ -1,13 +1,3 @@
-/**
-@defgroup model_basic Basic model
- 
-The basic model simulates an object with basic properties; position,
-size, velocity, color, visibility to various sensors, etc. The basic
-model also has a body made up of a list of lines. Internally, the
-basic model is used base class for all other model types. You can use
-the basic model to simulate environmental objects
-
-*/
 
 #define PACKPOSE(P,X,Y,A) {P->x=X; P->y=Y; P->a=A;}
 
@@ -20,6 +10,7 @@ the basic model to simulate environmental objects
 #include "stage_internal.h"
 //#include "gui.h"
 //#include "raytrace.h"
+
 
 /// convert a global pose into the model's local coordinate system
 void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose )
@@ -373,22 +364,22 @@ void stg_model_global_velocity( stg_model_t* mod, stg_velocity_t* gvel )
   //  gvel->x, gvel->y, gvel->a );
 }
 
-/// set the model's velocity in the global frame
-void stg_model_set_global_velocity( stg_model_t* mod, stg_velocity_t* gvel )
-{
-  // TODO - do this properly
+// set the model's velocity in the global frame
+/* void stg_model_set_global_velocity( stg_model_t* mod, stg_velocity_t* gvel ) */
+/* { */
+/*   // TODO - do this properly */
 
-  //stg_pose_t gpose;
+/*   //stg_pose_t gpose; */
   
-  stg_velocity_t lvel;
-  lvel.x = gvel->x;
-  lvel.y = gvel->y;
-  lvel.a = gvel->a;
+/*   stg_velocity_t lvel; */
+/*   lvel.x = gvel->x; */
+/*   lvel.y = gvel->y; */
+/*   lvel.a = gvel->a; */
 
-  stg_model_set_velocity( mod, &lvel );
-}
+/*   stg_model_set_velocity( mod, &lvel ); */
+/* } */
 
-/// get the model's position in the global frame
+// get the model's position in the global frame
 void  stg_model_get_global_pose( stg_model_t* mod, stg_pose_t* gpose )
 { 
   stg_pose_t parent_pose;

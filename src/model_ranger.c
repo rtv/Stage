@@ -7,15 +7,10 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.40 $
+//  $Revision: 1.41 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
-/**
-@defgroup model_ranger Ranger model
- 
-The ranger model simulates an array of sonar or infra-red (IR) range sensors.
-*/
 
 #include <math.h>
 
