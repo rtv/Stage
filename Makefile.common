@@ -3,7 +3,7 @@
 # stage/Makefile.common - build and installation configurations
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile.common,v 1.57 2002-07-17 00:21:44 rtv Exp $
+# $Id: Makefile.common,v 1.58 2002-07-23 18:19:23 gerkey Exp $
 #
 # Notes: All user-configurable paths and build options should be specified 
 #        here. This file is included by Makefile and src/Makefile. 
@@ -90,11 +90,11 @@ CCFLAGS = -Wall
 # debug
 CCFLAGS += -g3
 # profile
-CCFLAGS += -pg 
+#CCFLAGS += -pg 
 
 # you need this link option to get profiling data
 # it can be commented out for production compiles
-PROFILE_LINK = -pg
+#PROFILE_LINK = -pg
 
 #############################################################################
 # Platform selection
