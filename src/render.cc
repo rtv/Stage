@@ -9,7 +9,7 @@
 #include "truthserver.hh"
 #include "xs.hh"
 
-bool CXGui::PoseFromId( int port, int device, int index, 
+bool CXGui::PoseFromId( char* host, int port, int device, int index, 
 			double& x, double& y, double& th, unsigned long& col )
 {
   TruthMap::iterator it;
@@ -17,7 +17,8 @@ bool CXGui::PoseFromId( int port, int device, int index,
   for( it = truth_map.begin(); it != truth_map.end(); it++ )
     if( it->second.id.port == port &&  
   	it->second.id.type == device &&
-  	it->second.id.index == index )
+  	it->second.id.index == index &&
+	(strcmp( it->second.hostname, host ) == 0 ) )
       {
 	// record the position of this object
 	x = it->second.x;
@@ -361,7 +362,7 @@ void CGraphicLaserProxy::ProcessData( void )
   // find the pose and color of the matching truth
   double x,y,th;
   
-  if( !win->PoseFromId( client->port, device, index, x, y, th, pixel ) )
+  if( !win->PoseFromId( client->hostname, client->port, device, index, x, y, th, pixel ) )
     {
       printf( "XS Warning: couldn't find object (%d:%d:%d)"
 	      " so abandoned render\n", 
@@ -397,7 +398,7 @@ void CGraphicSonarProxy::ProcessData( void )
   // figure out where to draw this data
   double x,y,th;
 
-  if( !win->PoseFromId( client->port, device, index, x, y, th, pixel ) )
+  if( !win->PoseFromId( client->hostname,  client->port, device, index, x, y, th, pixel ) )
     {
       printf( "XS Warning: couldn't find object (%d:%d:%d)"
 	      " so abandoned render\n", 
@@ -427,7 +428,7 @@ void CGraphicGpsProxy::ProcessData( void )
   // figure out where to draw this data
   double dummyth;
   
-  if( !win->PoseFromId( client->port, device, index, drawx, drawy, dummyth, pixel ) )
+  if( !win->PoseFromId(  client->hostname, client->port, device, index, drawx, drawy, dummyth, pixel ) )
     {
       printf( "XS Warning: couldn't find object (%d:%d:%d)"
 	      " so abandoned render\n", 
@@ -444,7 +445,7 @@ void CGraphicPtzProxy::ProcessData( void )
   // figure out where to draw this data
   double x,y,th;
   
-  if( !win->PoseFromId( client->port, device, index, x, y, th, pixel ) )
+  if( !win->PoseFromId(  client->hostname, client->port, device, index, x, y, th, pixel ) )
     {
       printf( "XS Warning: couldn't find object (%d:%d:%d)"
 	      " so abandoned render\n", 
@@ -474,7 +475,7 @@ void CGraphicLaserBeaconProxy::ProcessData( void )
   // figure out where to draw this data
   double x,y,th;
   
-  if( !win->PoseFromId( client->port, device, index, x, y, th, pixel ) )
+  if( !win->PoseFromId(  client->hostname, client->port, device, index, x, y, th, pixel ) )
     {
       printf( "XS Warning: couldn't find object (%d:%d:%d)"
 	      " so abandoned render\n", 
