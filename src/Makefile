@@ -57,8 +57,8 @@ LINKFLAGS = -lm -lstdc++ -lpthread  -L$(PLAYER_LIB) -lplayerclient $(ZLIB_LIBS)
 #
 CC := g++
 LINKER = gcc
-#MAKEDEP = makedepend
-MAKEDEP = /home/gerkey/holding/Xbin/bin/makedepend
+MAKEDEP = makedepend
+#MAKEDEP = /home/gerkey/holding/Xbin/bin/makedepend
 
 .SUFFIXES: .cc .o
 
