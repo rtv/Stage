@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.62 $
+//  $Revision: 1.63 $
 //
 // Usage:
 //  (empty)
@@ -107,8 +107,11 @@ CWorld::CWorld()
     m_object_count = 0;
 
     // defaults time steps can be tweaked by command line or config file
-    m_timer_interval = 50; //ms
-    m_timestep = 50; //ms; 
+    //m_timer_interval = 50; //ms
+    //m_timestep = 50; //ms; 
+    m_timer_interval = 100; //ms
+    m_timestep = 100; //ms; 
+
 
     // Allow the simulation to run
     //
