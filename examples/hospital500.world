@@ -3311,8 +3311,8 @@ create position_device pose 128.73 62.75 186 color red port 40298 index 0 invisi
 create position_device pose 137.86 81.85 188 color red port 40299 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40299 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40299 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40299 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40299 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40299 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 
@@ -3325,8 +3325,8 @@ set host = phat
 create position_device pose 112.51 63.34 90 color red port 40300 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40300 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40300 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40300 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40300 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40300 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3336,8 +3336,8 @@ create position_device pose 112.51 63.34 90 color red port 40300 index 0 invisib
 create position_device pose 129.66 70.20 78 color red port 40301 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40301 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40301 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40301 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40301 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40301 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3347,8 +3347,8 @@ create position_device pose 129.66 70.20 78 color red port 40301 index 0 invisib
 create position_device pose 116.05 87.18 47 color red port 40302 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40302 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40302 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40302 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40302 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40302 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3358,8 +3358,8 @@ create position_device pose 116.05 87.18 47 color red port 40302 index 0 invisib
 create position_device pose 136.77 50.17 170 color red port 40303 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40303 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40303 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40303 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40303 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40303 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3369,8 +3369,8 @@ create position_device pose 136.77 50.17 170 color red port 40303 index 0 invisi
 create position_device pose 118.44 79.63 262 color red port 40304 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40304 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40304 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40304 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40304 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40304 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3380,8 +3380,8 @@ create position_device pose 118.44 79.63 262 color red port 40304 index 0 invisi
 create position_device pose 115.39 56.07 160 color red port 40305 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40305 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40305 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40305 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40305 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40305 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3391,8 +3391,8 @@ create position_device pose 115.39 56.07 160 color red port 40305 index 0 invisi
 create position_device pose 131.27 67.15 268 color red port 40306 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40306 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40306 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40306 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40306 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40306 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3402,8 +3402,8 @@ create position_device pose 131.27 67.15 268 color red port 40306 index 0 invisi
 create position_device pose 133.39 60.33 22 color red port 40307 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40307 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40307 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40307 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40307 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40307 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3413,8 +3413,8 @@ create position_device pose 133.39 60.33 22 color red port 40307 index 0 invisib
 create position_device pose 110.51 72.86 262 color red port 40308 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40308 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40308 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40308 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40308 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40308 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3424,8 +3424,8 @@ create position_device pose 110.51 72.86 262 color red port 40308 index 0 invisi
 create position_device pose 134.97 75.81 177 color red port 40309 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40309 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40309 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40309 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40309 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40309 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3435,8 +3435,8 @@ create position_device pose 134.97 75.81 177 color red port 40309 index 0 invisi
 create position_device pose 131.63 51.74 57 color red port 40310 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40310 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40310 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40310 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40310 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40310 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3446,8 +3446,8 @@ create position_device pose 131.63 51.74 57 color red port 40310 index 0 invisib
 create position_device pose 113.08 83.76 188 color red port 40311 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40311 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40311 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40311 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40311 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40311 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3457,8 +3457,8 @@ create position_device pose 113.08 83.76 188 color red port 40311 index 0 invisi
 create position_device pose 122.83 84.88 265 color red port 40312 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40312 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40312 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40312 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40312 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40312 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3468,8 +3468,8 @@ create position_device pose 122.83 84.88 265 color red port 40312 index 0 invisi
 create position_device pose 124.06 73.31 205 color red port 40313 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40313 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40313 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40313 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40313 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40313 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3479,8 +3479,8 @@ create position_device pose 124.06 73.31 205 color red port 40313 index 0 invisi
 create position_device pose 128.59 71.28 4 color red port 40314 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40314 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40314 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40314 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40314 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40314 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3490,8 +3490,8 @@ create position_device pose 128.59 71.28 4 color red port 40314 index 0 invisibl
 create position_device pose 115.25 49.41 35 color red port 40315 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40315 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40315 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40315 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40315 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40315 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3501,8 +3501,8 @@ create position_device pose 115.25 49.41 35 color red port 40315 index 0 invisib
 create position_device pose 137.43 56.55 29 color red port 40316 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40316 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40316 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40316 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40316 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40316 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3512,8 +3512,8 @@ create position_device pose 137.43 56.55 29 color red port 40316 index 0 invisib
 create position_device pose 124.06 46.74 162 color red port 40317 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40317 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40317 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40317 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40317 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40317 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3523,8 +3523,8 @@ create position_device pose 124.06 46.74 162 color red port 40317 index 0 invisi
 create position_device pose 137.46 51.55 309 color red port 40318 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40318 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40318 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40318 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40318 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40318 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3534,8 +3534,8 @@ create position_device pose 137.46 51.55 309 color red port 40318 index 0 invisi
 create position_device pose 113.28 55.32 176 color red port 40319 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40319 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40319 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40319 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40319 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40319 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3545,8 +3545,8 @@ create position_device pose 113.28 55.32 176 color red port 40319 index 0 invisi
 create position_device pose 120.32 80.40 225 color red port 40320 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40320 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40320 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40320 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40320 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40320 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3556,8 +3556,8 @@ create position_device pose 120.32 80.40 225 color red port 40320 index 0 invisi
 create position_device pose 133.97 72.70 97 color red port 40321 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40321 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40321 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40321 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40321 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40321 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3567,8 +3567,8 @@ create position_device pose 133.97 72.70 97 color red port 40321 index 0 invisib
 create position_device pose 124.01 82.19 337 color red port 40322 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40322 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40322 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40322 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40322 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40322 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3578,8 +3578,8 @@ create position_device pose 124.01 82.19 337 color red port 40322 index 0 invisi
 create position_device pose 124.33 58.78 42 color red port 40323 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40323 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40323 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40323 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40323 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40323 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3589,8 +3589,8 @@ create position_device pose 124.33 58.78 42 color red port 40323 index 0 invisib
 create position_device pose 115.76 87.22 185 color red port 40324 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40324 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40324 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40324 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40324 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40324 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3600,8 +3600,8 @@ create position_device pose 115.76 87.22 185 color red port 40324 index 0 invisi
 create position_device pose 117.44 49.23 243 color red port 40325 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40325 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40325 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40325 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40325 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40325 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3611,8 +3611,8 @@ create position_device pose 117.44 49.23 243 color red port 40325 index 0 invisi
 create position_device pose 137.48 61.06 82 color red port 40326 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40326 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40326 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40326 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40326 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40326 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3622,8 +3622,8 @@ create position_device pose 137.48 61.06 82 color red port 40326 index 0 invisib
 create position_device pose 110.03 47.64 263 color red port 40327 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40327 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40327 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40327 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40327 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40327 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3633,8 +3633,8 @@ create position_device pose 110.03 47.64 263 color red port 40327 index 0 invisi
 create position_device pose 114.13 87.75 202 color red port 40328 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40328 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40328 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40328 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40328 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40328 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3644,8 +3644,8 @@ create position_device pose 114.13 87.75 202 color red port 40328 index 0 invisi
 create position_device pose 132.66 68.39 201 color red port 40329 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40329 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40329 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40329 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40329 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40329 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3655,8 +3655,8 @@ create position_device pose 132.66 68.39 201 color red port 40329 index 0 invisi
 create position_device pose 123.36 50.11 355 color red port 40330 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40330 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40330 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40330 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40330 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40330 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3666,8 +3666,8 @@ create position_device pose 123.36 50.11 355 color red port 40330 index 0 invisi
 create position_device pose 129.74 78.11 22 color red port 40331 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40331 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40331 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40331 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40331 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40331 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3677,8 +3677,8 @@ create position_device pose 129.74 78.11 22 color red port 40331 index 0 invisib
 create position_device pose 123.45 73.89 91 color red port 40332 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40332 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40332 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40332 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40332 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40332 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3688,8 +3688,8 @@ create position_device pose 123.45 73.89 91 color red port 40332 index 0 invisib
 create position_device pose 120.30 46.90 209 color red port 40333 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40333 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40333 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40333 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40333 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40333 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3699,8 +3699,8 @@ create position_device pose 120.30 46.90 209 color red port 40333 index 0 invisi
 create position_device pose 112.87 89.32 152 color red port 40334 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40334 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40334 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40334 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40334 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40334 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3710,8 +3710,8 @@ create position_device pose 112.87 89.32 152 color red port 40334 index 0 invisi
 create position_device pose 130.71 57.68 115 color red port 40335 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40335 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40335 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40335 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40335 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40335 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3721,8 +3721,8 @@ create position_device pose 130.71 57.68 115 color red port 40335 index 0 invisi
 create position_device pose 117.52 47.82 166 color red port 40336 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40336 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40336 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40336 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40336 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40336 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3732,8 +3732,8 @@ create position_device pose 117.52 47.82 166 color red port 40336 index 0 invisi
 create position_device pose 127.26 70.23 64 color red port 40337 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40337 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40337 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40337 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40337 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40337 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3743,8 +3743,8 @@ create position_device pose 127.26 70.23 64 color red port 40337 index 0 invisib
 create position_device pose 122.80 62.87 87 color red port 40338 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40338 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40338 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40338 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40338 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40338 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3754,8 +3754,8 @@ create position_device pose 122.80 62.87 87 color red port 40338 index 0 invisib
 create position_device pose 128.27 63.44 99 color red port 40339 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40339 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40339 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40339 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40339 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40339 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3765,8 +3765,8 @@ create position_device pose 128.27 63.44 99 color red port 40339 index 0 invisib
 create position_device pose 130.85 84.36 219 color red port 40340 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40340 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40340 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40340 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40340 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40340 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3776,8 +3776,8 @@ create position_device pose 130.85 84.36 219 color red port 40340 index 0 invisi
 create position_device pose 119.15 63.64 268 color red port 40341 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40341 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40341 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40341 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40341 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40341 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3787,8 +3787,8 @@ create position_device pose 119.15 63.64 268 color red port 40341 index 0 invisi
 create position_device pose 107.95 80.51 289 color red port 40342 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40342 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40342 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40342 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40342 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40342 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3798,8 +3798,8 @@ create position_device pose 107.95 80.51 289 color red port 40342 index 0 invisi
 create position_device pose 104.47 79.73 83 color red port 40343 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40343 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40343 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40343 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40343 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40343 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3809,8 +3809,8 @@ create position_device pose 104.47 79.73 83 color red port 40343 index 0 invisib
 create position_device pose 128.03 79.08 162 color red port 40344 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40344 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40344 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40344 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40344 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40344 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3820,8 +3820,8 @@ create position_device pose 128.03 79.08 162 color red port 40344 index 0 invisi
 create position_device pose 112.40 67.40 343 color red port 40345 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40345 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40345 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40345 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40345 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40345 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3831,8 +3831,8 @@ create position_device pose 112.40 67.40 343 color red port 40345 index 0 invisi
 create position_device pose 108.97 53.36 52 color red port 40346 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40346 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40346 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40346 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40346 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40346 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3842,8 +3842,8 @@ create position_device pose 108.97 53.36 52 color red port 40346 index 0 invisib
 create position_device pose 123.63 83.14 78 color red port 40347 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40347 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40347 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40347 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40347 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40347 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3853,8 +3853,8 @@ create position_device pose 123.63 83.14 78 color red port 40347 index 0 invisib
 create position_device pose 114.72 90.17 218 color red port 40348 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40348 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40348 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40348 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40348 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40348 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3864,8 +3864,8 @@ create position_device pose 114.72 90.17 218 color red port 40348 index 0 invisi
 create position_device pose 119.74 86.66 314 color red port 40349 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40349 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40349 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40349 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40349 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40349 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3875,8 +3875,8 @@ create position_device pose 119.74 86.66 314 color red port 40349 index 0 invisi
 create position_device pose 111.04 61.03 322 color red port 40350 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40350 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40350 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40350 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40350 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40350 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3886,8 +3886,8 @@ create position_device pose 111.04 61.03 322 color red port 40350 index 0 invisi
 create position_device pose 109.37 87.22 6 color red port 40351 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40351 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40351 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40351 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40351 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40351 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3897,8 +3897,8 @@ create position_device pose 109.37 87.22 6 color red port 40351 index 0 invisibl
 create position_device pose 117.22 50.04 3 color red port 40352 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40352 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40352 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40352 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40352 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40352 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3908,8 +3908,8 @@ create position_device pose 117.22 50.04 3 color red port 40352 index 0 invisibl
 create position_device pose 138.46 84.39 350 color red port 40353 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40353 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40353 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40353 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40353 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40353 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3919,8 +3919,8 @@ create position_device pose 138.46 84.39 350 color red port 40353 index 0 invisi
 create position_device pose 108.12 74.77 178 color red port 40354 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40354 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40354 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40354 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40354 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40354 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3930,8 +3930,8 @@ create position_device pose 108.12 74.77 178 color red port 40354 index 0 invisi
 create position_device pose 129.96 70.47 253 color red port 40355 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40355 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40355 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40355 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40355 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40355 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3941,8 +3941,8 @@ create position_device pose 129.96 70.47 253 color red port 40355 index 0 invisi
 create position_device pose 108.06 87.33 246 color red port 40356 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40356 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40356 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40356 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40356 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40356 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3952,8 +3952,8 @@ create position_device pose 108.06 87.33 246 color red port 40356 index 0 invisi
 create position_device pose 128.03 60.49 22 color red port 40357 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40357 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40357 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40357 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40357 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40357 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3963,8 +3963,8 @@ create position_device pose 128.03 60.49 22 color red port 40357 index 0 invisib
 create position_device pose 111.52 88.31 60 color red port 40358 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40358 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40358 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40358 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40358 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40358 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3974,8 +3974,8 @@ create position_device pose 111.52 88.31 60 color red port 40358 index 0 invisib
 create position_device pose 106.30 51.94 227 color red port 40359 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40359 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40359 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40359 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40359 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40359 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3985,8 +3985,8 @@ create position_device pose 106.30 51.94 227 color red port 40359 index 0 invisi
 create position_device pose 105.00 86.36 16 color red port 40360 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40360 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40360 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40360 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40360 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40360 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -3996,8 +3996,8 @@ create position_device pose 105.00 86.36 16 color red port 40360 index 0 invisib
 create position_device pose 132.94 92.80 209 color red port 40361 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40361 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40361 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40361 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40361 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40361 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -4007,8 +4007,8 @@ create position_device pose 132.94 92.80 209 color red port 40361 index 0 invisi
 create position_device pose 137.44 72.31 66 color red port 40362 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40362 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40362 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40362 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40362 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40362 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -4018,8 +4018,8 @@ create position_device pose 137.44 72.31 66 color red port 40362 index 0 invisib
 create position_device pose 130.03 61.55 317 color red port 40363 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40363 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40363 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40363 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40363 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40363 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -4029,8 +4029,8 @@ create position_device pose 130.03 61.55 317 color red port 40363 index 0 invisi
 create position_device pose 112.56 46.25 247 color red port 40364 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40364 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40364 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40364 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40364 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40364 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -4040,8 +4040,8 @@ create position_device pose 112.56 46.25 247 color red port 40364 index 0 invisi
 create position_device pose 112.44 48.56 224 color red port 40365 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40365 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40365 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40365 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40365 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40365 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -4051,8 +4051,8 @@ create position_device pose 112.44 48.56 224 color red port 40365 index 0 invisi
 create position_device pose 133.15 52.34 113 color red port 40366 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40366 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40366 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40366 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40366 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40366 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -4062,8 +4062,8 @@ create position_device pose 133.15 52.34 113 color red port 40366 index 0 invisi
 create position_device pose 112.36 89.07 124 color red port 40367 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40367 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40367 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40367 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40367 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40367 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -4073,8 +4073,8 @@ create position_device pose 112.36 89.07 124 color red port 40367 index 0 invisi
 create position_device pose 105.25 90.14 158 color red port 40368 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40368 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40368 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40368 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40368 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40368 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -4084,8 +4084,8 @@ create position_device pose 105.25 90.14 158 color red port 40368 index 0 invisi
 create position_device pose 119.78 50.90 347 color red port 40369 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40369 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40369 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40369 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40369 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40369 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -4095,8 +4095,8 @@ create position_device pose 119.78 50.90 347 color red port 40369 index 0 invisi
 create position_device pose 122.62 93.14 150 color red port 40370 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40370 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40370 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40370 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40370 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40370 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -4106,8 +4106,8 @@ create position_device pose 122.62 93.14 150 color red port 40370 index 0 invisi
 create position_device pose 108.15 70.41 293 color red port 40371 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40371 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40371 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40371 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40371 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40371 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -4117,8 +4117,8 @@ create position_device pose 108.15 70.41 293 color red port 40371 index 0 invisi
 create position_device pose 118.15 50.36 147 color red port 40372 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40372 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40372 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40372 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40372 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40372 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
 # Robot Expansion
@@ -4128,11 +4128,10 @@ create position_device pose 118.15 50.36 147 color red port 40372 index 0 invisi
 create position_device pose 112.79 51.61 217 color red port 40373 index 0 invisible laser visible obstacle visible sonar shape circle 
 {
   create player_device pose 0.00 0.00 0 color white port 40373 index 0 invisible obstacle invisible laser invisible sonar 
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40373 index 0 invisible obstacle invisible laser invisible sonar 
-  create gps_device pose 0.00 0.00 0 color gray port 40373 index 0 invisible obstacle invisible laser invisible sonar 
+          create sonar_device pose 0.00 0.00 0 color blue3 port 40373 index 0 invisible obstacle invisible laser invisible sonar 
+          create gps_device pose 0.00 0.00 0 color gray port 40373 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
-set host = servalan
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
@@ -4145,6 +4144,7 @@ create position_device pose 130.45 85.16 93 color red port 40374 index 0 invisib
   create gps_device pose 0.00 0.00 0 color gray port 40374 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
+set host = servalan
 
 
 # Robot Expansion
@@ -4950,7 +4950,6 @@ create position_device pose 116.71 77.85 34 color red port 40447 index 0 invisib
   create gps_device pose 0.00 0.00 0 color gray port 40447 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
-set host = sal218
 
 # Robot Expansion
 #   The following code was expanded from the macro call:
@@ -4974,6 +4973,7 @@ create position_device pose 134.12 50.65 151 color red port 40449 index 0 invisi
   create gps_device pose 0.00 0.00 0 color gray port 40449 index 0 invisible obstacle invisible laser invisible sonar 
 }
 
+set host = sal218
 
 
 # Robot Expansion
