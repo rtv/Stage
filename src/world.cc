@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.88.2.2 $
+//  $Revision: 1.88.2.2.2.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -1429,7 +1429,6 @@ bool CWorld::LoadGUI(CWorldFile *worldfile)
   double oy = worldfile->ReadTupleLength(section, "origin", 1, dy / 2);
 
   this->app = rtk_app_create();
-  rtk_app_size(this->app, 100, 100);
   rtk_app_refresh_rate(this->app, 10);
   
   this->canvas = rtk_canvas_create(this->app);
@@ -1438,8 +1437,9 @@ bool CWorld::LoadGUI(CWorldFile *worldfile)
   rtk_canvas_origin(this->canvas, ox, oy);
 
   // Add some menu items
-  this->save_menuitem = rtk_menuitem_create(this->canvas, "Save");
-  this->export_menuitem = rtk_menuitem_create(this->canvas, "Export");
+  this->file_menu = rtk_menu_create(this->canvas, "File");
+  this->save_menuitem = rtk_menuitem_create(this->file_menu, "Save", 0);
+  this->export_menuitem = rtk_menuitem_create(this->file_menu, "Export", 0);
   this->export_count = 0;
 
   // Grid spacing
@@ -1507,11 +1507,11 @@ void CWorld::ShutdownGUI()
 void CWorld::UpdateGUI()
 {
   // Handle save menu item
-  if (rtk_menuitem_selected(this->save_menuitem))
+  if (rtk_menuitem_isactivated(this->save_menuitem))
     Save(this->worldfilename);
 
   // Handle export menu item
-  if (rtk_menuitem_selected(this->export_menuitem))
+  if (rtk_menuitem_isactivated(this->export_menuitem))
   {
     char filename[128];
     snprintf(filename, sizeof(filename), "rtkstage-%04d.fig", this->export_count++);
