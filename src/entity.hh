@@ -21,7 +21,7 @@
  * Desc: Simulated robot with various sensors
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.23 2003-08-28 00:14:21 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.24 2003-08-28 03:37:09 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -145,11 +145,6 @@ protected: void Map( stg_pose_t* pose );
   // protected: void ReMap(double px, double py, double pth);
   protected: void ReMap( stg_pose_t* pose);
 
-  // maps myself and my children, recursively
-  protected: void MapFamily(void);
-  // unmaps myself and my children, recursively
-  protected: void UnMapFamily(void);
- 
   // Primitive rendering function using internally
   private: void MapEx( stg_pose_t* pose, bool render);
 

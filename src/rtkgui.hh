@@ -71,6 +71,9 @@ typedef struct
   rtk_menuitem_t *lights_item;
   rtk_menuitem_t *sensors_item;
 
+  rtk_menu_t *refresh_menu;
+  rtk_menuitem_t *refresh_items[5];
+
   // The action menu
   rtk_menu_t* action_menu;
   rtk_menuitem_t* subscribedonly_item;
@@ -110,7 +113,9 @@ typedef struct
   bool grid_enable;
   double grid_major, grid_minor;
   
-  rtk_fig_t *fig, *fig_rects, *fig_grid, *fig_user, *fig_sensors, *fig_light;  
+  rtk_fig_t *fig, *fig_rects, *fig_grid, *fig_user, *fig_rangers, 
+    *fig_light, *fig_nose;  
+
   int movemask;
   
   //int type; // the model type
@@ -134,6 +139,7 @@ void stg_gui_rangers_render( CEntity* ent );
 // render the entity's laser data
 void stg_gui_laser_render( CEntity* ent );
 void stg_gui_neighbor_render( CEntity* ent, GArray* neighbors );
+void stg_gui_model_rangers( CEntity* ent );
 
 // MISC
 rtk_fig_t* stg_gui_grid_create( rtk_canvas_t* canvas, rtk_fig_t* parent, 

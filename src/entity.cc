@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.111 2003-08-27 02:07:05 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.112 2003-08-28 03:37:09 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -231,22 +231,6 @@ CEntity::CEntity( stg_entity_create_t* init )
   if( parent ) ENT_DEBUG2( "has parent %d:%s",  parent->id, parent->name->str );
 #endif  
 
-  //this->model_type = init->type; 
-  // do type-specific inits
-  /*  switch( this->model_type )
-      {
-      case STG_MODEL_WALL:
-      this->InitWall();
-      break;
-      
-      case STG_MODEL_POSITION:
-      this->InitPosition();
-      break;
-      
-      default:
-      break;
-  */
-
   // zero the pointer to our gui data
   this->guimod = NULL;
 
@@ -355,23 +339,6 @@ void CEntity::GetBoundingBox( double &xmin, double &ymin,
   //  xmin, ymin, xmax, ymax );
 
 }
-
-void CEntity::MapFamily()
-{
-  Map();
-  
-  //CHILDLOOP( ch )
-  //ch->MapFamily();
-}
-
-void CEntity::UnMapFamily()
-{
-  UnMap();
-  
-  //CHILDLOOP( ch )
-  //ch->UnMapFamily();
-}
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Startup routine
@@ -1146,9 +1113,17 @@ void CEntity::SetPose( stg_pose_t* pose )
   // if the new position is different, call SetProperty to make the change.
   if( memcmp( &this->pose_local, pose, sizeof( stg_pose_t)) != 0 )
     {
+      for( CEntity* child = stg_ent_first_child( this ); child; 
+	   child = stg_ent_next_sibling(child))
+	child->UnMap();
+      
       this->UnMap();
       memcpy( &this->pose_local, pose, sizeof(stg_pose_t) );
       this->Map();
+
+      for( CEntity* child = stg_ent_first_child( this ); child; 
+	   child = stg_ent_next_sibling(child))
+	child->Map();
     }
 }
 
@@ -1161,9 +1136,17 @@ void CEntity::SetOrigin( stg_pose_t* pose )
   // if the new position is different, call SetProperty to make the change.
   if( memcmp( &this->pose_origin, pose, sizeof( stg_pose_t)) != 0 )
     {
+      for( CEntity* child = stg_ent_first_child( this ); child; 
+	   child = stg_ent_next_sibling(child))
+	child->UnMap();
+
       this->UnMap();
       memcpy( &this->pose_origin, pose, sizeof(stg_pose_t) );
       this->Map();
+
+      for( CEntity* child = stg_ent_first_child( this ); child; 
+	   child = stg_ent_next_sibling(child))
+	child->Map();
     }
 }
 
@@ -1314,9 +1297,6 @@ void CEntity::SetRects( stg_rotrect_t* new_rects, int new_rect_count  )
       this->rect_array = NULL;
     } 
   
-  //this->rect_array = g_array_sized_new( FALSE, TRUE, 
-  //				sizeof(stg_rotrect_t), 
-  //				new_rect_count );
   this->rect_array = g_array_new( FALSE, TRUE, 
 				  sizeof(stg_rotrect_t) );
   
@@ -1339,11 +1319,10 @@ void CEntity::SetRects( stg_rotrect_t* new_rects, int new_rect_count  )
   // if we asked for a border, add a unit rectangle outline
   if( this->border )
     {
-      ENT_DEBUG( "drawing BORDER" );
+      //ENT_DEBUG( "drawing BORDER" );
 
-      stg_rotrect_t brect;
-      
       // set the first rect as a unit square
+      stg_rotrect_t brect;
       brect.x = 0.0;
       brect.y = 0.0;
       brect.a = 0.0;

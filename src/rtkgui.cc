@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.15 2003-08-28 00:14:21 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.16 2003-08-28 03:37:09 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -31,10 +31,10 @@
 // this should go when I get the autoconf set up properly
 #ifdef INCLUDE_RTK2
 
-//#define DEBUG 
+#define DEBUG 
 //#define VERBOSE
-#undef DEBUG
-#undef VERBOSE
+//#undef DEBUG
+//#undef VERBOSE
 
 #include <errno.h>
 #include <sys/time.h>
@@ -64,7 +64,7 @@ extern GArray* global_client_pids;
 
 // defaults
 
-#define STG_CANVAS_RENDER_INTERVAL 100
+#define STG_CANVAS_RENDER_INTERVAL 50
 
 #define STG_DEFAULT_WINDOW_WIDTH 600
 #define STG_DEFAULT_WINDOW_HEIGHT 600
@@ -85,6 +85,11 @@ extern GArray* global_client_pids;
 
 bool enable_matrix = FALSE;
 bool enable_data = TRUE;
+
+// the menu-selectable window refresh rates
+int intervals[] = {25, 50, 100, 200, 500, 1000};
+int num_intervals = 6;  
+int default_interval = 1; // xth entry in the above array
 
 // single static application visible to all funcs in this file
 static rtk_app_t *app = NULL; 
@@ -177,7 +182,7 @@ void stg_gui_menu_toggle_data( rtk_menuitem_t *item )
 // send a USR2 signal to all clients
 void stg_gui_save( rtk_menuitem_t *item )
 {
-  for( int p=0; p<global_client_pids->len; p++ )
+  for( int p=0; p<(int)global_client_pids->len; p++ )
     kill( g_array_index( global_client_pids, pid_t, p ), SIGUSR2 );
 }
 
@@ -187,6 +192,34 @@ void stg_gui_exit( rtk_menuitem_t *item )
   puts( "Exit menu item. Destroying world" );
 
   stg_world_destroy( (stg_world_t*)item->userdata );
+}
+
+void rtk_gui_menu_interval_callback( rtk_menuitem_t *item )
+{
+  stg_gui_window_t* win = (stg_gui_window_t*)item->userdata;
+
+  if( rtk_menuitem_ischecked( item ) )
+    {
+      
+      // we're going to change the update interval for the window
+      PRINT_DEBUG1( "removing source %d",  win->source_tag );
+      g_source_remove( win->source_tag );
+      
+      // figure out which menuitem this was
+      for( int i=0; i<num_intervals; i++ )
+	{
+	  if( win->refresh_items[i] == item ) 
+	    {
+	      PRINT_DEBUG1( "refresh rate set to %d ms", intervals[i] );
+	      win->source_tag = g_timeout_add( intervals[i], 
+					       stg_gui_window_callback, win );
+	      PRINT_DEBUG1( "added source %d",  win->source_tag );
+	    }
+	  else
+	    // uncheck the other choices
+	    rtk_menuitem_check( win->refresh_items[i], 0 );
+	}
+    }
 }
 
 // build a simulation window
@@ -283,6 +316,29 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
   // sensors start out hidden - they'ye visual clutter
   rtk_canvas_layer_show( win->canvas, STG_LAYER_SENSORS, 0 ); 
 
+  // add the refresh rate menu ---------------------------------------------
+  win->refresh_menu = rtk_menu_create_sub( win->view_menu, "Refresh rate");
+  
+  for( int i=0; i<num_intervals; i++ )
+    {
+      char label[64];
+      int interval = intervals[i];
+      snprintf( label, 64, "%d ms", interval );
+      win->refresh_items[i] = rtk_menuitem_create(win->refresh_menu, label, 1);       win->refresh_items[i]->userdata = win;
+      rtk_menuitem_set_callback( win->refresh_items[i], 
+				 rtk_gui_menu_interval_callback );
+    }
+  
+  // we'll start the clock
+  rtk_menuitem_check(  win->refresh_items[default_interval], 1 );
+  
+  // update this window every few ms
+  win->source_tag = g_timeout_add( intervals[default_interval], 
+				   stg_gui_window_callback, win );
+  PRINT_DEBUG1( "added source %d",  win->source_tag );
+  
+  // refresh menu done ---------------------------------------------------
+
   // create the action menu
   /*
     win->action_menu = rtk_menu_create(win->canvas, "Action");
@@ -309,10 +365,6 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
   // each device adds itself to the correct view menus in its rtkstartup()
   */
 
-  // update this window every few ms
-  win->source_tag = g_timeout_add( STG_CANVAS_RENDER_INTERVAL, 
-				   stg_gui_window_callback, win );
-  
   // TODO - fix this behavior in rtk - I have to fall back on GTK here.
   PRINT_DEBUG2( "resizing window to %d %d", width, height );
   //rtk_canvas_size( mod->win->canvas, 700, 700 );   
@@ -365,15 +417,20 @@ int stg_gui_window_update( stg_world_t* world, stg_prop_id_t prop )
 
 void stg_gui_window_destroy( stg_gui_window_t* win )
 {
+  PRINT_DEBUG1( "destroying window %p", win );
+
   if( win == NULL )
     {
       PRINT_WARN( "requested destruction of NULL window" );
       return;
     }
   
+  PRINT_DEBUG1( "removing source %d",  win->source_tag );
   // cancel the callback for this window
   g_source_remove( win->source_tag );
   
+  // cancel all flashers before we destroy the canvas
+
   if( win->fig_grid ) rtk_fig_destroy( win->fig_grid );
   if( win->fig_matrix ) rtk_fig_destroy( win->fig_matrix );
   
@@ -406,36 +463,187 @@ rtk_fig_t* stg_gui_grid_create( rtk_canvas_t* canvas, rtk_fig_t* parent,
 }
 
 
-void stg_gui_model_blinkenlight( stg_gui_model_t* mod )
+void stg_gui_model_blinkenlight( CEntity* ent )
 {
-  g_assert( mod );
-  g_assert( mod->fig );
-  g_assert( mod->fig->canvas );
-  g_assert( mod->ent );
-
-  rtk_canvas_t* canvas = mod->fig->canvas;
+  g_assert(ent);
+  g_assert(ent->guimod);
   
-  if( mod->fig_light )
+  stg_gui_model_t* mod = ent->guimod;
+  
+  if( mod->fig_light == NULL )
     {
-      rtk_fig_destroy( mod->fig_light );
-      mod->fig_light = NULL;
+      mod->fig_light = 
+	rtk_fig_create( mod->win->canvas, mod->fig, STG_LAYER_SENSORS);
+      
+      rtk_fig_color_rgb32( mod->fig_light, mod->ent->color );
     }
-  
+  else
+    rtk_fig_clear( mod->fig_light );
+
   // nothing to see here
-  if( mod->ent->blinkenlight == STG_LIGHT_OFF )
+  if( ent->blinkenlight == STG_LIGHT_OFF )
     return;
   
-  mod->fig_light = rtk_fig_create( canvas, mod->fig, STG_LAYER_LIGHTS);  
-  rtk_fig_color_rgb32( mod->fig_light, mod->ent->color ); 
-  rtk_fig_ellipse( mod->fig_light, 0,0,0, 
-		   mod->ent->size.x,  
-		   mod->ent->size.y, 1 );
+  rtk_fig_ellipse( mod->fig_light, 0,0,0,  ent->size.x, ent->size.y, 1 );
   
   // start the light blinking if it's not stuck on
-  if( mod->ent->blinkenlight != STG_LIGHT_ON )    
-    rtk_fig_blink( mod->fig_light, mod->ent->blinkenlight, 1 );  
+  if( ent->blinkenlight != STG_LIGHT_ON )    
+    rtk_fig_blink( mod->fig_light, ent->blinkenlight, 1 );  
 }
 
+void stg_gui_model_rects( CEntity* ent )
+{
+  g_assert(ent);
+  g_assert(ent->guimod);
+  
+  stg_gui_model_t* mod = ent->guimod;
+
+  rtk_fig_clear( mod->fig );
+  rtk_fig_color_rgb32( mod->fig, ent->color );
+  
+  int r;
+  int rmax = ent->GetNumRects();
+  
+  PRINT_DEBUG1( "rendering %d rectangles", rmax);
+  
+  for( r=0; r<rmax; r++ )
+    {
+      stg_rotrect_t* src = ent->GetRect(r);
+      double x,y,a,w,h;
+      
+      x = ((src->x + src->w/2.0) * ent->size.x) 
+	- ent->size.x/2.0 + ent->pose_origin.x;
+      y = ((src->y + src->h/2.0) * ent->size.y) 
+	- ent->size.y/2.0 + ent->pose_origin.y;
+      a = src->a;
+      w = src->w * ent->size.x;
+      h = src->h * ent->size.y;
+      
+      rtk_fig_rectangle( mod->fig, x,y,a,w,h, 0 ); 
+    }
+}
+
+void stg_gui_model_rangers( CEntity* ent )
+{
+  g_assert(ent);
+  g_assert(ent->guimod);
+
+  stg_gui_model_t* mod = ent->guimod;
+  
+  if( mod->fig_rangers == NULL )
+    {
+      mod->fig_rangers = 
+	rtk_fig_create( mod->win->canvas, mod->fig, STG_LAYER_SENSORS);
+      
+      rtk_fig_color_rgb32( mod->fig_rangers, stg_lookup_color("darkred") );
+    }
+  else
+    rtk_fig_clear( mod->fig_rangers );
+  
+  // add rects showing ranger positions
+  if( ent->rangers )
+    for( int s=0; s< (int)ent->rangers->len; s++ )
+      {
+	stg_ranger_t* rngr = &g_array_index( ent->rangers, 
+					     stg_ranger_t, s );
+	
+	//printf( "drawing a ranger rect (%.2f,%.2f,%.2f)[%.2f %.2f]\n",
+	//  rngr->pose.x, rngr->pose.y, rngr->pose.a,
+	//  rngr->size.x, rngr->size.y );
+	
+	rtk_fig_rectangle( mod->fig_rangers, 
+			   rngr->pose.x, rngr->pose.y, rngr->pose.a,
+			   rngr->size.x, rngr->size.y, 0 ); 
+	
+	// show the FOV too
+	double sidelen = rngr->size.x/2.0;
+	
+	double x1= rngr->pose.x + sidelen*cos(rngr->pose.a - rngr->fov/2.0 );
+	double y1= rngr->pose.y + sidelen*sin(rngr->pose.a - rngr->fov/2.0 );
+	double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + rngr->fov/2.0 );
+	double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + rngr->fov/2.0 );
+	
+	rtk_fig_line( mod->fig_rangers, rngr->pose.x, rngr->pose.y, x1, y1 );
+	rtk_fig_line( mod->fig_rangers, rngr->pose.x, rngr->pose.y, x2, y2 );
+      }
+}
+
+void stg_gui_model_grid( CEntity* ent )
+{
+  g_assert(ent);
+  g_assert(ent->guimod);
+  
+  stg_gui_model_t* mod = ent->guimod; 
+  
+  if( mod->fig_grid )
+    {
+      rtk_fig_destroy( mod->fig_grid );
+      mod->fig_grid = NULL;
+    }
+  
+  if( mod->grid_enable )
+    mod->fig_grid = stg_gui_grid_create( mod->win->canvas, mod->fig, 0,0,0, 
+					 ent->size.x, ent->size.y, 1.0, 0.1);
+}
+
+void stg_gui_model_nose( CEntity* ent )
+{
+  g_assert(ent);
+  g_assert(ent->guimod);
+ 
+  stg_gui_model_t* mod = ent->guimod;
+  
+  if( mod->fig_nose == NULL )
+    {
+      mod->fig_nose = 
+	rtk_fig_create( mod->win->canvas, mod->fig, STG_LAYER_BODY);
+      rtk_fig_color_rgb32( mod->fig_nose, ent->color );
+    }
+  else
+    rtk_fig_clear( mod->fig_nose );
+  
+  // add a nose-line to position models
+  if( ent->draw_nose )
+    {
+      stg_pose_t origin;
+      ent->GetOrigin( &origin );
+      stg_size_t size;
+      ent->GetSize( &size );
+      rtk_fig_line( mod->fig_nose, origin.x, origin.y, size.x/2.0, origin.y );
+    }
+}
+
+void stg_gui_model_mouse_mode( CEntity* ent )
+{
+  PRINT_DEBUG1( "setting mouse mode to %d", ent->mouseable );
+  
+  g_assert(ent);
+  g_assert(ent->guimod);
+
+  stg_gui_model_t* mod = ent->guimod;
+  
+  // we can only manipulate top-level figures
+  if( g_node_depth( ent->node ) == 2 )
+    {
+      if( ent->mouseable )
+	mod->movemask = RTK_MOVE_TRANS | RTK_MOVE_ROT;
+      else
+	mod->movemask = 0;
+    }
+  else if( g_node_depth( ent->node ) > 2 )
+    {
+      mod->movemask = 0;
+    }
+
+  if( mod->movemask )
+    {
+      // figure gets the same movemask as the model
+      rtk_fig_movemask( mod->fig, mod->movemask);  
+      
+      // Set the mouse handler
+      rtk_fig_add_mouse_handler(mod->fig, RtkOnMouse);
+    }
+}
 
 // Initialise the GUI
 stg_gui_model_t* stg_gui_model_create(  CEntity* ent )
@@ -454,26 +662,15 @@ stg_gui_model_t* stg_gui_model_create(  CEntity* ent )
   
   mod->ent = ent;
   mod->win = win; // use the world window
-
   
   rtk_fig_t* parent_fig = NULL;
   
   // we can only manipulate top-level figures
   if( g_node_depth( ent->node ) == 2 )
-    {
-      if( ent->mouseable )
-	mod->movemask = RTK_MOVE_TRANS | RTK_MOVE_ROT;
-      else
-	mod->movemask = 0;
-      
-      parent_fig = NULL;
-    }
+    parent_fig = NULL;
   else if( g_node_depth( ent->node ) > 2 )
-    {
-      parent_fig = stg_ent_parent(ent)->guimod->fig;      
-      mod->movemask = 0;
-    }
-
+    parent_fig = stg_ent_parent(ent)->guimod->fig;      
+  
   mod->grid_enable = false;
   mod->grid_major = 1.0;
   mod->grid_minor = 0.2;
@@ -496,117 +693,17 @@ stg_gui_model_t* stg_gui_model_create(  CEntity* ent )
   ent->GetPose( &pose );
   rtk_fig_origin( mod->fig, pose.x, pose.y, pose.a );
 
-  // figure gets the same movemask as the model
-  rtk_fig_movemask(mod->fig, mod->movemask);  
-
-  // Set the mouse handler
-  rtk_fig_add_mouse_handler(mod->fig, RtkOnMouse);
-
   // visible by default
   rtk_fig_show( mod->fig, true );
 
   // Set the color
   rtk_fig_color_rgb32( mod->fig, ent->color);
-  
-#ifdef RENDER_INITIAL_BOUNDING_BOXES
-  double xmin, ymin, xmax, ymax;
-  xmin = ymin = 999999.9;
-  xmax = ymax = 0.0;
-  ent->GetBoundingBox( xmin, ymin, xmax, ymax );
-  
-  //rtk_fig_t* boundaries = rtk_fig_create_ex( mod->win->canvas, NULL, 99, ent);
-  rtk_fig_t* boundaries = rtk_fig_create( mod->win->canvas, NULL, 99 );
-  boundaries->userdata = (void*)ent;
+            
+ 
+  //ent->guimod = mod;
 
-  double width = xmax - xmin;
-  double height = ymax - ymin;
-  double xcenter = xmin + width/2.0;
-  double ycenter = ymin + height/2.0;
-
-  rtk_fig_rectangle( boundaries, xcenter, ycenter, 0, width, height, 0 ); 
-
-   
-#endif
-   
-          
-  if( mod->grid_enable )
-    {
-      mod->fig_grid = stg_gui_grid_create( mod->win->canvas, mod->fig, 0,0,0, 
-					   ent->size.x, ent->size.y, 1.0, 0.1 );
-      rtk_fig_show( mod->fig_grid, 1);
-    }
-  else
-    mod->fig_grid = NULL;
-  
-
-  PRINT_DEBUG1( "rendering %d rectangles", ent->GetNumRects() );
-  
-  // now create GUI rects
-  int r;
-  int rmax = ent->GetNumRects();
-  for( r=0; r<rmax; r++ )
-    {
-      stg_rotrect_t* src = ent->GetRect(r);
-      double x,y,a,w,h;
-      
-      x = ((src->x + src->w/2.0) * ent->size.x) - ent->size.x/2.0 + ent->pose_origin.x;
-      y = ((src->y + src->h/2.0) * ent->size.y) - ent->size.y/2.0 + ent->pose_origin.y;
-      a = src->a;
-      w = src->w * ent->size.x;
-      h = src->h * ent->size.y;
-      
-      //if( ent->m_parent_entity == NULL )
-      //rtk_fig_rectangle(mod->fig, x,y,a,w,h, 1 ); 
-      //else
-      rtk_fig_rectangle(mod->fig, x,y,a,w,h, 0 ); 
-    }
-  
-
-
-  // add a nose-line to position models
-  if( ent->draw_nose )
-    {
-      stg_pose_t origin;
-      ent->GetOrigin( &origin );
-      stg_size_t size;
-      ent->GetSize( &size );
-      rtk_fig_line( mod->fig, origin.x, origin.y, size.x/2.0, origin.y );
-    }
-
-  // add rects showing ranger positions
-  if( ent->rangers )
-    {
-      mod->fig_sensors = 
-	rtk_fig_create( mod->win->canvas, mod->fig, STG_LAYER_SENSORS );
-      
-      for( int s=0; s< (int)ent->rangers->len; s++ )
-	{
-	  stg_ranger_t* rngr = &g_array_index( ent->rangers, 
-					       stg_ranger_t, s );
-	  
-	  //printf( "drawing a ranger rect (%.2f,%.2f,%.2f)[%.2f %.2f]\n",
-	  //  rngr->pose.x, rngr->pose.y, rngr->pose.a,
-	  //  rngr->size.x, rngr->size.y );
-	  
-	  rtk_fig_rectangle( mod->fig_sensors, 
-			     rngr->pose.x, rngr->pose.y, rngr->pose.a,
-			     rngr->size.x, rngr->size.y, 0 ); 
-	  
-	  // show the FOV too
-	  double sidelen = rngr->size.x/2.0;
-	  
-	  double x1= rngr->pose.x + sidelen*cos(rngr->pose.a - rngr->fov/2.0 );
-	  double y1= rngr->pose.y + sidelen*sin(rngr->pose.a - rngr->fov/2.0 );
-	  double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + rngr->fov/2.0 );
-	  double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + rngr->fov/2.0 );
-	  
-	  rtk_fig_line(mod->fig_sensors, rngr->pose.x, rngr->pose.y, x1, y1 );
-	  rtk_fig_line(mod->fig_sensors, rngr->pose.x, rngr->pose.y, x2, y2 );
-	}
-    }
-  
-  // conditionally add blinking bits
-  stg_gui_model_blinkenlight( mod );
+  //stg_gui_model_grid( ent );
+  //stg_gui_model_rects( ent );
 
   // if we created a window for this model, scale the window to fit
   // nicely around the figure and shift the origin to the bottom left
@@ -617,10 +714,11 @@ stg_gui_model_t* stg_gui_model_create(  CEntity* ent )
 
 void stg_gui_model_destroy( stg_gui_model_t* mod )
 {
-  if( mod->fig_rects ) rtk_fig_destroy( mod->fig_rects );
   if( mod->fig_user ) rtk_fig_destroy( mod->fig_user );
   if( mod->fig_light ) rtk_fig_destroy( mod->fig_light );
-  if( mod->fig_sensors ) rtk_fig_destroy( mod->fig_sensors );
+  if( mod->fig_rangers ) rtk_fig_destroy( mod->fig_rangers );
+  if( mod->fig_nose ) rtk_fig_destroy( mod->fig_nose );
+
   if( mod->fig ) rtk_fig_destroy( mod->fig );
 }
 
@@ -899,8 +997,8 @@ int stg_gui_los_msg_recv( CEntity* receiver, CEntity* sender,
 
 int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
 {
-  PRINT_DEBUG3( "gui update for %d:%s prop %s", 
-		ent->id, ent->name->str, stg_property_string(prop) );
+  //PRINT_DEBUG3( "gui update for %d:%s prop %s", 
+  //	ent->id, ent->name->str, stg_property_string(prop) );
   
   assert( ent );
   assert( prop > 0 );
@@ -915,40 +1013,39 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
       {
 	stg_pose_t pose;
 	ent->GetPose( &pose );
-	//PRINT_DEBUG3( "moving figure to %.2f %.2f %.2f", px,py,pa );
 	rtk_fig_origin( model->fig, pose.x, pose.y, pose.a );
-
-	// if things get too laggy you can remove this render and the
-	// canvas will be redrawn in a few ms. mousing feels MUCH more
-	// smooth with this here, though, at least with a small
-	// population.
-
-	// if the matrix is not visible, and we're haven't got a lot
-	// of rectangles, we can probably afford to redraw things here	
-	if( !ent->GetWorld()->win->fig_matrix->show )
-	  //&& ent->GetNumRects() < 30 )
-	  rtk_canvas_render( model->fig->canvas );
       }
       break;
 
-      // these all need us to totally redraw the object 
-      // (for now - this could be optimized quite a bit)
-    case STG_PROP_ORIGIN:
+    case STG_PROP_BORDER:      
     case STG_PROP_SIZE:
-    case STG_PROP_PARENT:
-    case STG_PROP_NAME:
     case STG_PROP_COLOR:
-    case STG_PROP_RECTS:
-    case STG_PROP_CIRCLES:
-    case STG_PROP_RANGERS:
-    case STG_PROP_NOSE:
-    case STG_PROP_BLINKENLIGHT:
-    case STG_PROP_MOUSE_MODE:
-    case STG_PROP_BORDER:
-      
-      stg_gui_model_destroy( ent->guimod );
-      ent->guimod = stg_gui_model_create( ent );
+      stg_gui_model_rects( ent );
+      stg_gui_model_nose( ent );
       break;
+
+    case STG_PROP_RECTS:
+      stg_gui_model_rects( ent );
+      break;
+
+    case STG_PROP_RANGERS:
+      stg_gui_model_rangers( ent );
+      break;
+
+    case STG_PROP_NOSE:
+      stg_gui_model_nose( ent );
+      break;
+
+    case STG_PROP_BLINKENLIGHT:
+      stg_gui_model_blinkenlight( ent );
+      break;
+
+    case STG_PROP_MOUSE_MODE:
+      stg_gui_model_mouse_mode( ent );
+      break;
+
+      // todo!
+      //case STG_PROP_ORIGIN:
 
       // do nothing for these things
     case STG_PROP_LASERRETURN:
@@ -957,13 +1054,18 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
     case STG_PROP_OBSTACLERETURN:
     case STG_PROP_VISIONRETURN:
     case STG_PROP_PUCKRETURN:
-    case STG_PROP_PLAYERID:
     case STG_PROP_VELOCITY:
     case STG_PROP_NEIGHBORBOUNDS:
     case STG_PROP_NEIGHBORRETURN:
     case STG_PROP_LOS_MSG:
+    case STG_PROP_NAME:
       break;
 
+      // these aren't yet exposed to the outside
+      //case STG_PROP_PARENT:
+      //case STG_PROP_CIRCLES:
+      //case STG_PROP_PLAYERID:
+      
     default:
       PRINT_WARN1( "property change %d unhandled by gui", prop ); 
       break;
