@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.2.2.1 2002-12-04 03:30:08 rtv Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.2.2.2 2002-12-04 03:45:34 rtv Exp $
  */
 
 //#define DEBUG
@@ -274,12 +274,9 @@ void CPositionDevice::UpdateCommand()
     // everything else
     this->com_vr = M_32(this->cmd.xspeed);
     this->com_vth = Rad_32(this->cmd.yawspeed);
-    //this->com_vth = (int)ntohl(this->cmd.yawspeed);
-    
-    printf( "vr %.2f vth %.2f\n", com_vr, com_vth );
-
+        
     // normalize yaw +-PI
-    //this->com_vth = atan2(sin(this->com_vth), cos(this->com_vth));
+    this->com_vth = atan2(sin(this->com_vth), cos(this->com_vth));
 
     //printf( "vr %.2f vth %.2f * \n", com_vr, com_vth );
 
