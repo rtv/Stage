@@ -1,6 +1,6 @@
 /*##########################################################################
 # manager.cc - implements the Stage Manager for syncing distributed Stages
-# $Id: manager.cc,v 1.14 2001-10-06 02:10:16 vaughan Exp $
+# $Id: manager.cc,v 1.15 2001-10-09 00:49:07 gerkey Exp $
 *#########################################################################*/
 
 #include <sys/types.h>	/* basic system data types */
@@ -351,6 +351,9 @@ int main(int argc, char **argv)
 		  
 		      // forward the whole buffer
 		      ForwardData( i, buf, bufsize ); 
+
+                      // get rid of the buffer
+                      delete buf;
 		    }
 	      
 		}
