@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.hh,v 1.11 2002-06-07 23:53:05 inspectorg Exp $
+ * CVS info: $Id: worldfile.hh,v 1.12 2002-06-08 20:52:54 inspectorg Exp $
  */
 
 #ifndef WORLDFILE_HH
@@ -181,7 +181,7 @@ class CWorldFile
   private: bool ParseTokens();
 
   // Parse a macro definition
-  private: bool ParseTokenMacro(int section, int *index, int *line);
+  private: bool ParseTokenDefine(int *index, int *line);
 
   // Parse an word (could be a section or an item) from the token list.
   private: bool ParseTokenWord(int section, int *index, int *line);
@@ -194,6 +194,20 @@ class CWorldFile
 
   // Parse a tuple.
   private: bool ParseTokenTuple(int section, int item, int *index, int *line);
+
+  // Clear the macro list
+  private: void ClearMacros();
+
+  // Add a macro
+  private: int AddMacro(const char *macroname, const char *entityname,
+                        int line, int starttoken, int endtoken);
+
+  // Lookup a macro by name
+  // Returns -1 if there is no macro with this name.
+  private: int LookupMacro(const char *macroname);
+
+  // Dump the macro list for debugging
+  private: void DumpMacros();
 
   // Clear the section list
   private: void ClearSections();
@@ -250,6 +264,27 @@ class CWorldFile
   private: int token_size, token_count;
   private: CToken *tokens;
 
+  // Private macro class
+  private: struct CMacro
+  {
+    // Name of macro
+    const char *macroname;
+
+    // Name of entity
+    const char *entityname;
+
+    // Line the macro definition starts on.
+    int line;
+    
+    // Range of tokens in the body of the macro definition.
+    int starttoken, endtoken;
+  };
+
+  // Macro list
+  private: int macro_size;
+  private: int macro_count;
+  private: CMacro *macros;
+  
   // Private section class
   private: struct CSection
   {

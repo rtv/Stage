@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.12 2002-06-07 23:53:06 inspectorg Exp $
+ * CVS info: $Id: worldfile.cc,v 1.13 2002-06-08 20:52:54 inspectorg Exp $
  */
 
 #include <assert.h>
@@ -58,6 +58,10 @@ CWorldFile::CWorldFile()
   this->token_count = 0;
   this->tokens = NULL;
 
+  this->macro_count = 0;
+  this->macro_size = 0;
+  this->macros = NULL;
+
   this->section_count = 0;
   this->section_size = 0;
   this->sections = NULL;
@@ -77,6 +81,7 @@ CWorldFile::CWorldFile()
 CWorldFile::~CWorldFile()
 {
   ClearItems();
+  ClearMacros();
   ClearSections();
   ClearTokens();
 
@@ -148,6 +153,7 @@ bool CWorldFile::Load(const char *filename)
   {
     PRINT_ERR("this is a test file; quitting");
     DumpTokens();
+    DumpMacros();
     DumpSections();
     DumpItems();
     return false;
@@ -596,6 +602,7 @@ void CWorldFile::DumpTokens()
 bool CWorldFile::ParseTokens()
 {
   int i;
+  int section;
   int line;
   CToken *token;
 
@@ -603,8 +610,7 @@ bool CWorldFile::ParseTokens()
   ClearItems();
   
   // Add in the "global" section.
-  AddSection(-1, "");
-  
+  section = AddSection(-1, "");
   line = 1;
   
   for (i = 0; i < this->token_count; i++)
@@ -616,12 +622,12 @@ bool CWorldFile::ParseTokens()
       case TokenWord:
         if (strcmp(token->value, "define") == 0)
         {
-          if (!ParseTokenMacro(0, &i, &line))
+          if (!ParseTokenDefine(&i, &line))
             return false;
         }
         else
         {
-          if (!ParseTokenWord(0, &i, &line))
+          if (!ParseTokenWord(section, &i, &line))
             return false;
         }
         break;
@@ -638,6 +644,83 @@ bool CWorldFile::ParseTokens()
     }
   }
   return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Parse a macro definition
+bool CWorldFile::ParseTokenDefine(int *index, int *line)
+{
+  int i;
+  int count;
+  const char *macroname, *entityname;
+  int starttoken;
+  CToken *token;
+
+  count = 0;
+  macroname = NULL;
+  entityname = NULL;
+  starttoken;
+
+  for (i = *index + 1; i < this->token_count; i++)
+  {
+    token = this->tokens + i;
+
+    switch (token->type)
+    {
+      case TokenWord:
+        if (count == 0)
+        {
+          if (macroname == NULL)
+            macroname = GetTokenValue(i);
+          else if (entityname == NULL)
+          {
+            entityname = GetTokenValue(i);
+            starttoken = i;
+          }
+          else
+          {
+            PARSE_ERR("extra tokens in macro definition", *line);
+            return false;
+          }
+        }
+        else
+        {
+          if (macroname == NULL)
+          {
+            PARSE_ERR("missing name in macro definition", *line);
+            return false;
+          }
+          if (entityname == NULL)
+          {
+            PARSE_ERR("missing name in macro definition", *line);
+            return false;
+          }
+        }
+        break;
+      case TokenOpenSection:
+        count++;
+        break;
+      case TokenCloseSection:
+        count--;
+        if (count == 0)
+        {
+          AddMacro(macroname, entityname, *line, starttoken, i);
+          *index = i;
+          return true;
+        }
+        if (count < 0)
+        {
+          PARSE_ERR("misplaced ')'", *line);
+          return false;
+        }
+        break;
+      default:
+        break;
+    }
+  }
+  PARSE_ERR("missing ')'", *line);
+  return false;
 }
 
 
@@ -676,62 +759,91 @@ bool CWorldFile::ParseTokenWord(int section, int *index, int *line)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Parse a macro definition
-bool CWorldFile::ParseTokenMacro(int section, int *index, int *line)
-{
-  int i;
-  CToken *token;
-
-  for (i = *index + 1; i < this->token_count; i++)
-  {
-    token = this->tokens + i;
-
-    switch (token->type)
-    {
-    }
-  }
-}
-
-
-///////////////////////////////////////////////////////////////////////////
 // Parse a section from the token list.
 bool CWorldFile::ParseTokenSection(int section, int *index, int *line)
 {
   int i;
+  int macro;
   int name;
   CToken *token;
 
   name = *index;
+  macro = LookupMacro(GetTokenValue(name));
   
-  for (i = *index + 1; i < this->token_count; i++)
+  // If the section name is a macro...
+  if (macro >= 0)
   {
-    token = this->tokens + i;
+    // This is a bit of a hack
+    int nsection = this->section_count;
+    int mindex = this->macros[macro].starttoken;
+    int mline = this->macros[macro].line;
+    if (!ParseTokenSection(section, &mindex, &mline))
+      return false;
+    section = nsection;
 
-    switch (token->type)
+    for (i = *index + 1; i < this->token_count; i++)
     {
-      case TokenOpenSection:
-        section = AddSection(section, GetTokenValue(name));
-        break;
-      case TokenWord:
-        if (!ParseTokenWord(section, &i, line))
+      token = this->tokens + i;
+
+      switch (token->type)
+      {
+        case TokenOpenSection:
+          break;
+        case TokenWord:
+          if (!ParseTokenWord(section, &i, line))
+            return false;
+          break;
+        case TokenCloseSection:
+          *index = i;
+          return true;
+        case TokenComment:
+          break;
+        case TokenSpace:
+          break;
+        case TokenEOL:
+          (*line)++;
+          break;
+        default:
+          PARSE_ERR("syntax error 3", *line);
           return false;
-        break;
-      case TokenCloseSection:
-        *index = i;
-        return true;
-      case TokenComment:
-        break;
-      case TokenSpace:
-        break;
-      case TokenEOL:
-        (*line)++;
-        break;
-      default:
-        PARSE_ERR("syntax error 3", *line);
-        return false;
+      }
     }
+    PARSE_ERR("missing ')'", *line);
   }
-  PARSE_ERR("missing ')'", *line);  
+  
+  // If the section name is not a macro...
+  else
+  {
+    for (i = *index + 1; i < this->token_count; i++)
+    {
+      token = this->tokens + i;
+
+      switch (token->type)
+      {
+        case TokenOpenSection:
+          section = AddSection(section, GetTokenValue(name));
+          break;
+        case TokenWord:
+          if (!ParseTokenWord(section, &i, line))
+            return false;
+          break;
+        case TokenCloseSection:
+          *index = i;
+          return true;
+        case TokenComment:
+          break;
+        case TokenSpace:
+          break;
+        case TokenEOL:
+          (*line)++;
+          break;
+        default:
+          PARSE_ERR("syntax error 3", *line);
+          return false;
+      }
+    }
+    PARSE_ERR("missing ')'", *line);
+  }
   return false;
 }
 
@@ -819,6 +931,82 @@ bool CWorldFile::ParseTokenTuple(int section, int item, int *index, int *line)
 
 
 ///////////////////////////////////////////////////////////////////////////
+// Clear the macro list
+void CWorldFile::ClearMacros()
+{
+  free(this->macros);
+  this->macros = NULL;
+  this->macro_size = 0;
+  this->macro_count = 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Add a macro
+int CWorldFile::AddMacro(const char *macroname, const char *entityname,
+                         int line, int starttoken, int endtoken)
+{
+  if (this->macro_count >= this->macro_size)
+  {
+    this->macro_size += 100;
+    this->macros = (CMacro*)
+      realloc(this->macros, this->macro_size * sizeof(this->macros[0]));
+  }
+
+  int macro = this->macro_count;
+  this->macros[macro].macroname = macroname;
+  this->macros[macro].entityname = entityname;
+  this->macros[macro].line = line;
+  this->macros[macro].starttoken = starttoken;
+  this->macros[macro].endtoken = endtoken;
+  this->macro_count++;
+  
+  return macro;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Lookup a macro by name
+// Returns -1 if there is no macro with this name.
+int CWorldFile::LookupMacro(const char *macroname)
+{
+  int i;
+  CMacro *macro;
+  
+  for (i = 0; i < this->macro_count; i++)
+  {
+    macro = this->macros + i;
+    if (strcmp(macro->macroname, macroname) == 0)
+      return i;
+  }
+  return -1;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Dump the macro list for debugging
+void CWorldFile::DumpMacros()
+{
+  printf("\n## begin macros\n");
+  for (int i = 0; i < this->macro_count; i++)
+  {
+    CMacro *macro = this->macros + i;
+
+    printf("## [%s][%s]", macro->macroname, macro->entityname);
+    for (int j = macro->starttoken; j <= macro->endtoken; j++)
+    {
+      if (this->tokens[j].type == TokenEOL)
+        printf("[\\n]");
+      else
+        printf("[%s]", GetTokenValue(j));
+    }
+    printf("\n");
+  }
+  printf("## end macros\n");
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // Clear the section list
 void CWorldFile::ClearSections()
 {
@@ -880,7 +1068,7 @@ const char *CWorldFile::GetSectionType(int section)
 
 ///////////////////////////////////////////////////////////////////////////
 // Lookup a section number by type name
-// Returns -1 if there is section with this type
+// Returns -1 if there is no section with this type
 int CWorldFile::LookupSection(const char *type)
 {
   for (int section = 0; section < GetSectionCount(); section++)
