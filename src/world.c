@@ -35,7 +35,7 @@ world_t* world_create( server_t* server, connection_t* con,
 
   world->paused = TRUE; // start paused.
   
-  gui_world_create( world );
+  world->win = gui_world_create( world );
 
   return world;
 }

@@ -177,15 +177,15 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       boundary = wf.ReadInt( section, "boundary", 0 );
       stg_model_prop_with_data( mod, STG_PROP_BOUNDARY, &boundary,sizeof(boundary));
       
-      stg_geom_t lgeom;
-      lgeom.pose.x = wf.ReadTupleLength(section, "laser_geom", 0, 0);
-      lgeom.pose.y = wf.ReadTupleLength(section, "laser_geom", 1, 0);
-      lgeom.pose.a = wf.ReadTupleAngle(section, "laser_geom", 2, 0);
-      lgeom.size.x = wf.ReadTupleLength(section, "laser_geom", 3, 0);
-      lgeom.size.y = wf.ReadTupleLength(section, "laser_geom", 4, 0);
-      stg_model_prop_with_data( mod, STG_PROP_LASERGEOM, &lgeom,sizeof(lgeom));
-
       stg_laser_config_t lconf;
+      memset( &lconf, 0, sizeof(lconf) );
+      lconf.geom.pose.x = wf.ReadTupleLength(section, "laser_geom", 0, 0);
+      lconf.geom.pose.y = wf.ReadTupleLength(section, "laser_geom", 1, 0);
+      lconf.geom.pose.a = wf.ReadTupleAngle(section, "laser_geom", 2, 0);
+      lconf.geom.size.x = wf.ReadTupleLength(section, "laser_geom", 3, 0);
+      lconf.geom.size.y = wf.ReadTupleLength(section, "laser_geom", 4, 0);
+      //stg_model_prop_with_data( mod, STG_PROP_LASERGEOM, &lgeom,sizeof(lgeom));
+
       lconf.range_min = wf.ReadTupleLength(section, "laser", 0, 0);
       lconf.range_max = wf.ReadTupleLength(section, "laser", 1, 8);
       lconf.fov = wf.ReadTupleAngle(section, "laser", 2, 180);

@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.54 2004-06-13 04:21:29 rtv Exp $
+ * CVS: $Id: stage.h,v 1.55 2004-06-13 07:27:55 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -114,9 +114,9 @@ typedef enum
     STG_PROP_BLOBDATA,
     STG_PROP_LASERDATA,
     STG_PROP_LASERCONFIG,
-    STG_PROP_LASERGEOM,
-    STG_PROP_NEIGHBORS,
-    STG_PROP_NEIGHBORBOUNDS, // range bounds of neighbor sensor
+    //STG_PROP_LASERGEOM,
+    //STG_PROP_NEIGHBORS,
+    //STG_PROP_NEIGHBORBOUNDS, // range bounds of neighbor sensor
     STG_PROP_BLINKENLIGHT,  // light blinking rate
     STG_PROP_NOSE,
     STG_PROP_GRID,
@@ -509,6 +509,7 @@ typedef struct
 
 typedef struct
 {
+  stg_geom_t geom;
   stg_radians_t fov;
   stg_meters_t range_max;
   stg_meters_t range_min;

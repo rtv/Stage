@@ -5,6 +5,9 @@
 #include "server.h"
 #include "matrix.h"
 #include "connection.h"
+//#include "gui.h"
+
+struct _gui_window;
 
 typedef struct _world
  {
@@ -31,6 +34,8 @@ typedef struct _world
    int paused; // the world only updates when this is zero
    
    connection_t* con; // the connection that created this world
+
+   struct _gui_window* win; // the gui window associated with this world
 
  } world_t;
 

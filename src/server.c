@@ -456,7 +456,7 @@ int server_unsubscribe( server_t* server,
   int i;
   int len = client->subs->len;
 
-  printf( "checking subscriptions" );
+  //printf( "checking subscriptions" );
 
   stg_target_t target;
   target.world = unsub->world;

@@ -25,11 +25,13 @@
 #define STG_POSITION_COLOR "red"
 #define STG_LASER_TRANSDUCER_COLOR "blue"
 #define STG_LASER_COLOR "light blue"
+#define STG_LASER_CFG_COLOR "light steel blue"
 #define STG_WALL_COLOR "dark blue"
 #define STG_FIDUCIAL_COLOR "lime green"
 #define STG_RANGER_COLOR "gray90" 
 #define STG_RANGER_TRANSDUCER_COLOR "orange"
 #define STG_DEBUG_COLOR "green"
+#define STG_BLOB_CFG_COLOR "gray75"
 
 #define STG_LAYER_BACKGROUND 10
 #define STG_LAYER_BODY 30
@@ -57,12 +59,15 @@ typedef struct
   rtk_fig_t* geom;
   rtk_fig_t* laser;
   rtk_fig_t* laser_data;
-  rtk_fig_t* blob_data;
+  rtk_fig_t* laser_cfg;
+  rtk_fig_t* blob_cfg;
+  rtk_fig_t* blob_data;  
+  rtk_fig_t* fiducial_cfg;
   rtk_fig_t* fiducial_data;
   rtk_fig_t* grid;
 } gui_model_t;
 
-typedef struct
+typedef struct _gui_window
 {
   rtk_canvas_t* canvas;
   
@@ -86,9 +91,12 @@ typedef struct
   gboolean show_nose;
   gboolean show_geom;
   gboolean show_laser;
+  gboolean show_lasercfg;
   gboolean show_laserdata;
   gboolean show_fiducialdata;
+  gboolean show_fiducialcfg;
   gboolean show_blobdata;
+  gboolean show_blobcfg;
 
   gboolean movie_exporting;
   int movie_speed;
@@ -109,7 +117,7 @@ void gui_startup( int* argc, char** argv[] );
 void gui_poll( void );
 void gui_shutdown( void );
 
-void gui_world_create( world_t* world );
+gui_window_t* gui_world_create( world_t* world );
 void gui_world_destroy( world_t* world );
 void gui_world_update( world_t* world );
 

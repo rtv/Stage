@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.h,v 1.4 2004-06-09 02:32:08 rtv Exp $
+// $Id: matrix.h,v 1.5 2004-06-13 07:27:55 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -55,6 +55,7 @@ void stg_matrix_clear( stg_matrix_t* matrix );
 
 GPtrArray* stg_matrix_cell_get( stg_matrix_t* matrix, double x, double y);
 GPtrArray* stg_matrix_bigcell_get( stg_matrix_t* matrix, double x, double y);
+GPtrArray* stg_matrix_medcell_get( stg_matrix_t* matrix, double x, double y);
 
 // append the [object] to the pointer array at the cell
 //void stg_matrix_cell_append(  stg_matrix_t* matrix, 

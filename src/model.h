@@ -28,15 +28,11 @@ typedef struct _model
   gboolean grid;
   stg_movemask_t movemask;
 
+  stg_bool_t boundary;
+
   struct _model *parent;
   
   stg_energy_t energy;
-
-  //GArray* ranger_config; // sonars, IRs, etc.
-  //Array* ranger_data; 
-  //stg_geom_t laser_geom;
-  //stg_laser_config_t laser_config;
-  //GArray* laser_data;
 
   int ranger_return;
   int laser_return;
@@ -44,19 +40,12 @@ typedef struct _model
   int obstacle_return;
 
   gboolean subs[STG_PROP_COUNT]; // flags used to control updates
-  
-  //stg_blobfinder_config_t blob_cfg;
-  //GArray* blobs;
-  
-  stg_bool_t boundary;
-  
+    
   // store the time that each property was last calculated
   stg_msec_t update_times[STG_PROP_COUNT];
   
-  GHashTable* props;
+  GHashTable* props; // table of stg_property_t's indexed by property id
 
-  // todo - random user properties
-  //GHashTable* props;  
 } model_t;  
 
 typedef void(*init_func_t)(model_t*);

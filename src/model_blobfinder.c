@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.3 2004-06-13 02:37:18 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.4 2004-06-13 07:27:55 rtv Exp $
  */
 
 #include <math.h>
@@ -31,7 +31,7 @@
 
 #define DEBUG
 
-#include "rtk.h"
+#include "gui.h"
 extern rtk_fig_t* fig_debug;
 
 
@@ -63,13 +63,13 @@ void model_blobfinder_init( model_t* mod )
 
 void model_blobfinder_startup( model_t* mod )
 {
-  PRINT_WARN( "blobfinder startup" );
+  PRINT_DEBUG( "blobfinder startup" );
 
 }
 
 void model_blobfinder_shutdown( model_t* mod )
 {
-  PRINT_WARN( "blobfinder shutdown" );  
+  PRINT_DEBUG( "blobfinder shutdown" );  
 }
 
 
@@ -198,7 +198,7 @@ void model_blobfinder_update( model_t* mod )
   
   GArray* blobs = g_array_new( FALSE, TRUE, sizeof(stg_blobfinder_blob_t) );
   
-  printf( "scanning for blobs\n" );
+  //printf( "scanning for blobs\n" );
   
   // scan through the samples looking for color blobs
   for( s=0; s < cfg->scan_width; s++ )
@@ -273,4 +273,126 @@ void model_blobfinder_update( model_t* mod )
   
   g_array_free( blobs, TRUE );
 }
+
+void model_blobfinder_render( model_t* mod )
+{ 
+  gui_window_t* win = mod->world->win;
+  rtk_fig_t* fig = gui_model_figs(mod)->blob_data;  
+  rtk_fig_clear(fig);
+
+  if( win->show_blobdata && mod->subs[STG_PROP_BLOBDATA] )
+    {
+      // place the visualization a little away from the device
+      stg_pose_t pose;
+      pose.x = pose.y = pose.a = 0.0;
+  
+      model_local_to_global( mod, &pose );
+  
+      pose.x += 1.0;
+      pose.y += 1.0;
+      pose.a = 0.0;
+      rtk_fig_origin( fig, pose.x, pose.y, pose.a );
+
+      double scale = 0.007; // shrink from pixels to meters for display
+  
+      stg_blobfinder_config_t* cfg = (stg_blobfinder_config_t*) 
+	model_get_prop_data_generic( mod, STG_PROP_BLOBCONFIG );
+      assert(cfg);
+  
+      stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_BLOBDATA );
+  
+      if( prop == NULL )
+	return; // no data to render yet
+  
+      stg_blobfinder_blob_t* blobs = (stg_blobfinder_blob_t*)prop->data;
+      if( blobs == NULL )
+	return; // no data to render yet
+  
+      int num_blobs = prop->len / sizeof(stg_blobfinder_blob_t);
+      if( num_blobs < 1 )
+	return; // no data to render yet
+  
+      short width = cfg->scan_width;
+      short height = cfg->scan_height;
+      double mwidth = width * scale;
+      double mheight = height * scale;
+  
+      // the view outline rectangle
+      rtk_fig_color_rgb32(fig, 0xFFFFFF);
+      rtk_fig_rectangle(fig, 0.0, 0.0, 0.0, mwidth,  mheight, 1 ); 
+      rtk_fig_color_rgb32(fig, 0x000000);
+      rtk_fig_rectangle(fig, 0.0, 0.0, 0.0, mwidth,  mheight, 0); 
+  
+      int c;
+      for( c=0; c<num_blobs; c++)
+	{
+	  stg_blobfinder_blob_t* blob = &blobs[c];
+      
+	  // set the color from the blob data
+	  rtk_fig_color_rgb32( fig, blob->color ); 
+      
+	  short top =   blob->top;
+	  short bot =   blob->bottom;
+	  short left =   blob->left;
+	  short right =   blob->right;
+      
+	  double mtop = top * scale;
+	  double mbot = bot * scale;
+	  double mleft = left * scale;
+	  double mright = right * scale;
+      
+	  // get the range in meters
+	  //double range = (double)ntohs(data.blobs[index+b].range) / 1000.0; 
+      
+	  rtk_fig_rectangle(fig, 
+			    -mwidth/2.0 + (mleft+mright)/2.0, 
+			    -mheight/2.0 +  (mtop+mbot)/2.0,
+			    0.0, 
+			    mright-mleft, 
+			    mbot-mtop, 
+			    1 );
+	}
+    }
+}
+
+void model_blobfinder_config_render( model_t* mod )
+{ 
+  gui_window_t* win = mod->world->win;
+
+  rtk_fig_t* fig = gui_model_figs(mod)->blob_cfg;  
+  rtk_fig_clear(fig);
+  rtk_fig_color_rgb32( fig, stg_lookup_color( STG_BLOB_CFG_COLOR ));
+  
+  if( win->show_blobcfg )
+    {
+      stg_blobfinder_config_t* cfg = (stg_blobfinder_config_t*) 
+	model_get_prop_data_generic( mod, STG_PROP_BLOBCONFIG );
+      
+      if( cfg )
+	{  
+	  // Get the camera's global pose
+	  stg_pose_t pose;
+	  pose.x = pose.y = pose.a = 0.0;
+	  model_local_to_global( mod, &pose );
+	  
+	  double ox = pose.x;
+	  double oy = pose.y;
+	  double mina = pose.a + (cfg->pan + cfg->zoom / 2.0);
+	  double maxa = pose.a - (cfg->pan + cfg->zoom / 2.0);
+	  
+	  double dx = cfg->range_max * cos(mina);
+	  double dy = cfg->range_max * sin(mina);
+	  double ddx = cfg->range_max * cos(maxa);
+	  double ddy = cfg->range_max * sin(maxa);
+	  
+	  rtk_fig_line( fig, ox,oy, dx, dy );
+	  rtk_fig_line( fig, ox,oy, ddx, ddy );
+	  rtk_fig_ellipse_arc( fig, 0,0,0,
+			       2.0*cfg->range_max,
+			       2.0*cfg->range_max, 
+			       mina, maxa );      
+	}
+    }
+}
+
 

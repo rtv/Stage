@@ -89,7 +89,7 @@ model_t* model_create(  world_t* world,
   for( prop=0; prop< STG_PROP_COUNT; prop++ )
     if( library[prop].init )
       {
-	printf( "calling init for %s\n", stg_property_string(prop) );
+	//printf( "calling init for %s\n", stg_property_string(prop) );
 	library[prop].init(mod);
       }
 
@@ -231,8 +231,8 @@ int model_update_prop( model_t* mod, stg_id_t propid )
 {
   if( library[ propid ].update )
     {
-      printf( "Calling update for %p %s\n", 
-	      mod, stg_property_string(propid) );
+      //printf( "Calling update for %p %s\n", 
+      //      mod, stg_property_string(propid) );
       
       library[ propid ].update( mod );
     }
@@ -246,16 +246,29 @@ int model_update_prop( model_t* mod, stg_id_t propid )
 void model_subscribe( model_t* mod, stg_id_t pid )
 {
   mod->subs[pid]++;
+  
+  // if this is the first sub, call startup & render if there is one
+  if( mod->subs[pid] == 1 )
+    {
+      if( library[pid].startup ) library[pid].startup(mod);  
+      if( library[pid].render)   library[pid].render(mod);  
+    }
+  
   gui_model_render( mod );
 }
 
 void model_unsubscribe( model_t* mod, stg_id_t pid )
 {
   mod->subs[pid]--;
-  gui_model_render( mod );
   
-  if( library[pid].render )
-    library[pid].render(mod);
+  // if that was the last sub, call shutdown and render (to unrender)
+  if( mod->subs[pid] < 1 && library[pid].shutdown )
+    {
+      if( library[pid].render)   library[pid].render(mod);  
+      if( library[pid].shutdown ) library[pid].shutdown(mod);        
+    }
+
+  gui_model_render( mod );
 }
 
 int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
@@ -349,8 +362,8 @@ void model_set_prop_generic( model_t* mod, stg_id_t propid, void* data, size_t l
   
   if( library[ propid ].render )
     {
-      printf( "Calling render for %p %s\n", 
-	      mod, stg_property_string(propid) );
+      //printf( "Calling render for %p %s\n", 
+      //      mod, stg_property_string(propid) );
       
       library[ propid ].render( mod );
     }

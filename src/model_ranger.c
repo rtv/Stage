@@ -1,8 +1,10 @@
 #include "stage.h"
 #include "raytrace.h"
 
+
 #include "gui.h"
 extern rtk_fig_t* fig_debug;
+
 
 void model_ranger_init( model_t* mod )
 {
@@ -99,3 +101,99 @@ void model_ranger_update( model_t* mod )
 			  ranges, sizeof(stg_ranger_sample_t) * rcount );
   
 }
+
+void gui_model_rangers( model_t* mod )
+{
+  //PRINT_DEBUG( "drawing rangers" );
+
+  rtk_fig_t* fig = gui_model_figs(mod)->rangers;
+  
+  rtk_fig_color_rgb32(fig, stg_lookup_color("orange") );
+  //rtk_fig_color_rgb32( fig, stg_lookup_color(STG_RANGER_COLOR) );
+  
+  rtk_fig_origin( fig, mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );  
+  rtk_fig_clear( fig ); 
+  
+
+  stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_RANGERCONFIG );
+  
+  if( prop == NULL ) // no rangers to update!
+    return;
+  //else
+  
+  stg_ranger_config_t* cfg = (stg_ranger_config_t*)prop->data;
+  assert( cfg );
+
+  int rcount = prop->len / sizeof( stg_ranger_config_t );
+  
+  if( rcount < 1 )
+    return;
+
+
+  // add rects showing ranger positions
+  int s;
+  for( s=0; s<rcount; s++ )
+    {
+      stg_ranger_config_t* rngr = &cfg[s];
+      //printf( "drawing a ranger rect (%.2f,%.2f,%.2f)[%.2f %.2f]\n",
+      //  rngr->pose.x, rngr->pose.y, rngr->pose.a,
+      //  rngr->size.x, rngr->size.y );
+      
+      rtk_fig_rectangle( fig, 
+			 rngr->pose.x, rngr->pose.y, rngr->pose.a,
+			 rngr->size.x, rngr->size.y, 0 ); 
+      
+      // show the FOV too
+      double sidelen = rngr->size.x/2.0;
+      
+      double x1= rngr->pose.x + sidelen*cos(rngr->pose.a - rngr->fov/2.0 );
+      double y1= rngr->pose.y + sidelen*sin(rngr->pose.a - rngr->fov/2.0 );
+      double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + rngr->fov/2.0 );
+      double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + rngr->fov/2.0 );
+      
+      rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x1, y1 );
+      rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x2, y2 );	
+    }
+}
+
+void model_ranger_render( model_t* mod )
+{ 
+  gui_window_t* win = mod->world->win;
+  
+  rtk_fig_t* fig = gui_model_figs(mod)->ranger_data;  
+  if( fig ) rtk_fig_clear( fig );   
+  
+  if( win->show_rangerdata && mod->subs[STG_PROP_RANGERDATA] )
+    {
+      
+      stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_RANGERCONFIG );
+      
+      if( prop == NULL ) // no rangers to update!
+	return;
+      
+      stg_ranger_config_t* cfg = (stg_ranger_config_t*)prop->data;  
+      int rcount = prop->len / sizeof( stg_ranger_config_t );
+      
+      stg_ranger_sample_t* samples = (stg_ranger_sample_t*)
+	model_get_prop_data_generic( mod, STG_PROP_RANGERDATA );
+      
+      if( rcount > 0 && cfg && samples )
+	{
+	  rtk_fig_color_rgb32(fig, stg_lookup_color(STG_RANGER_COLOR) );
+	  rtk_fig_origin( fig, 
+			  mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );	  
+	  // draw the range  beams
+	  int s;
+	  for( s=0; s<rcount; s++ )
+	    {
+	      if( samples[s].range > 0.0 )
+		{
+		  stg_ranger_config_t* rngr = &cfg[s];
+		  
+		  rtk_fig_arrow( fig, rngr->pose.x, rngr->pose.y, rngr->pose.a, 			       samples[s].range, 0.02 );
+		}
+	    }
+	}
+    }
+}
+

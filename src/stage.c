@@ -47,9 +47,6 @@ const char* stg_property_string( stg_id_t id )
     case STG_PROP_LINES: return "lines"; break;
     case STG_PROP_SIZE: return "size"; break;
     case STG_PROP_SONARRETURN: return "sonar_return"; break;
-    case STG_PROP_NEIGHBORRETURN: return "neighbor_return"; break;
-    case STG_PROP_NEIGHBORBOUNDS: return "neighbor_bounds"; break;
-    case STG_PROP_NEIGHBORS: return "neighbors"; break;
     case STG_PROP_VELOCITY: return "velocity"; break;
     case STG_PROP_VISIONRETURN: return "vision_return"; break;
     case STG_PROP_VOLTAGE: return "voltage"; break;
@@ -59,7 +56,6 @@ const char* stg_property_string( stg_id_t id )
     case STG_PROP_FIDUCIALDATA: return "fiducialdata";break;
     case STG_PROP_LASERDATA: return "laserdata";break;
     case STG_PROP_LASERCONFIG: return "laserconfig";break;
-    case STG_PROP_LASERGEOM: return "lasergeom";break;
     case STG_PROP_BLINKENLIGHT: return "blinkenlight";break;
     case STG_PROP_NOSE: return "nose";break;
     case STG_PROP_GRID: return "grid";break;
@@ -74,6 +70,11 @@ const char* stg_property_string( stg_id_t id )
 
     default:
       break;
+
+      //case STG_PROP_LASERGEOM: return "lasergeom";break;
+      //case STG_PROP_NEIGHBORRETURN: return "neighbor_return"; break;
+      //case STG_PROP_NEIGHBORBOUNDS: return "neighbor_bounds"; break;
+      //case STG_PROP_NEIGHBORS: return "neighbors"; break;
     }
   return "<unknown>";
 }
