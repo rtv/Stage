@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.38 $
+//  $Revision: 1.39 $
 //
 // Usage:
 //  (empty)
@@ -58,7 +58,6 @@ CLaserDevice::CLaserDevice(CWorld *world,
   obstacle_return = 0;
    
   // Laser update rate (readings/sec)
-  //
   m_update_rate = 360 / 0.200; // 5Hz
 
   m_last_update = 0;
@@ -70,12 +69,7 @@ CLaserDevice::CLaserDevice(CWorld *world,
   
   m_max_range = 8.0;
 
-  // Set this flag to make the laser transparent to other lasers
-  //
-  m_transparent = false;
-  
   // Dimensions of laser
-  //
   m_size_x = 0.155;
   m_size_y = 0.155;
   
@@ -94,17 +88,6 @@ bool CLaserDevice::Load(int argc, char **argv)
 {
     if (!CEntity::Load(argc, argv))
         return false;
-
-    for (int i = 0; i < argc;)
-    {
-        if (strcmp(argv[i], "transparent") == 0)
-        {
-            m_transparent = true;
-            i += 1;
-        }
-        else
-            i++;
-    }
     return true;
 }
 
@@ -113,11 +96,7 @@ bool CLaserDevice::Load(int argc, char **argv)
 bool CLaserDevice::Save(int &argc, char **argv)
 {
     if (!CEntity::Save(argc, argv))
-        return false;
-
-    if (m_transparent)
-        argv[argc++] = strdup("transparent");
-    
+        return false;    
     return true;
 }
 
@@ -139,26 +118,18 @@ void CLaserDevice::Update( double sim_time )
     if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
     {
         // Undraw ourselves from the world
-        //
-        if (!m_transparent) // should replace m_transparent with laser_return
-        {
-            m_world->matrix->mode = mode_unset;
-            m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
-                                   m_size_x, m_size_y, this );
-        }
+        m_world->matrix->mode = mode_unset;
+        m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
+                               m_size_x, m_size_y, this );
 	
         m_map_px = x; // update our render position
         m_map_py = y;
         m_map_pth = th;
 	
         // Redraw outselves in the world
-        //
-        if (!m_transparent )
-        {
-            m_world->matrix->mode = mode_set;
-            m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
-                                   m_size_x, m_size_y, this );
-        } 
+        m_world->matrix->mode = mode_set;
+        m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
+                               m_size_x, m_size_y, this );
     }
     
     // UPDATE OUR SENSOR DATA
@@ -172,14 +143,11 @@ void CLaserDevice::Update( double sim_time )
 	
         if( Subscribed() )
         {
-	  //puts( "LASER" );
-
             // Check to see if the configuration has changed
             //
             CheckConfig();
 
             // Generate new scan data and copy to data buffer
-            //
             player_laser_data_t scan_data;
             GenerateScanData( &scan_data );
             PutData( &scan_data, sizeof( scan_data) );
@@ -188,15 +156,14 @@ void CLaserDevice::Update( double sim_time )
         {
             // If not subscribed,
             // reset configuration to default.
-            //
             m_scan_res = DTOR(0.50);
             m_scan_min = DTOR(-90);
             m_scan_max = DTOR(+90);
             m_scan_count = 361;
             m_intensity = false;
 
-	    // empty the laser beacon list
-	    m_visible_beacons.clear();
+            // empty the laser beacon list
+            m_visible_beacons.clear();
         }
     }
 }
@@ -259,8 +226,6 @@ bool CLaserDevice::CheckConfig()
 //
 bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 {    
-  // i put much of this back to integer, a
-
     // Get the pose of the laser in the global cs
     //
     double x, y, th;
@@ -271,7 +236,6 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
     // generate a scan with lower resolution and interpolate
     // the intermediate values.
     // We will interpolate <skip> out of <skip+1> readings.
-    //
     int skip = (int) (m_world->m_laser_res / m_scan_res - 0.5);
 
 #ifdef INCLUDE_RTK
@@ -301,27 +265,24 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
         double ox = x;
         double oy = y;
         double oth = th;
-	
-        double bearing = s * m_scan_res + m_scan_min;
-	
-        // Compute parameters of scan line
-        double pth = oth + bearing;
-	
-        double range = m_max_range;
 
+        // Compute parameters of scan line
+        double bearing = s * m_scan_res + m_scan_min;
+        double pth = oth + bearing;
         CLineIterator lit( ox, oy, pth, m_max_range, 
                            m_world->ppm, m_world->matrix, PointToBearingRange );
 	
         CEntity* ent;
-
+        double range = m_max_range;
         int intensity = LaserNothing;
 	
         while( (ent = lit.GetNextEntity()) ) 
         {
-            // Ignore ourself and things which are attached to us
-            // The latter is useful if you want to have stack beacons
-            // on the laser
-            if (ent == this || this->IsChild(ent))
+            // Ignore ourself, things which are attached to us,
+            // and things that we are attached to.
+            // The latter is useful if you want to stack beacons
+            // on the laser or the laser on somethine else.
+            if (ent == this || this->IsDescendent(ent) || ent->IsDescendent(this))
                 continue;
 
             // Construct a list of beacons we have seen
@@ -335,31 +296,31 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
             }	
         }
 	
+        // Construct the return value for the laser
         uint16_t v = (uint16_t)(1000.0 * range);
-	
-	if( ent )
-	  switch( ent->laser_return )
-	    {
-	    case LaserBright1:
-	      v = v | (((uint16_t)1) << 13); // set the shiny bits to 1
-	      break;
-	    case LaserBright2:
-	      v = v | (((uint16_t)2) << 13); // set the shiny bits to 2
-	      break;
-	    case LaserBright3:
-	      v = v | (((uint16_t)3) << 13); // set the shiny bits to 1
-	      break;
-	    case LaserBright4:
-	      v = v | (((uint16_t)4) << 13); // set the shiny bits to 1
-	      break;
-	    }
+        if( ent )
+        {
+            switch( ent->laser_return )
+            {
+                case LaserBright1:
+                    v = v | (((uint16_t)1) << 13); // set the shiny bits to 1
+                    break;
+                case LaserBright2:
+                    v = v | (((uint16_t)2) << 13); // set the shiny bits to 2
+                    break;
+                case LaserBright3:
+                    v = v | (((uint16_t)3) << 13); // set the shiny bits to 1
+                    break;
+                case LaserBright4:
+                    v = v | (((uint16_t)4) << 13); // set the shiny bits to 1
+                    break;
+            }
+        }
 
         // Set the range
-        //
         data->ranges[s++] = htons(v);
 
         // Skip some values to save time
-        //
         for (int i = 0; i < skip && s < m_scan_count; i++)
             data->ranges[s++] = htons(v);
 	
@@ -387,11 +348,9 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 void CLaserDevice::OnUiUpdate(RtkUiDrawData *event)
 {
     // Draw our children
-    //
     CEntity::OnUiUpdate(event);
     
     // Draw ourself
-    //
     event->begin_section("global", "laser");
     
     if (event->draw_layer("", true))
@@ -399,12 +358,13 @@ void CLaserDevice::OnUiUpdate(RtkUiDrawData *event)
 
     if (event->draw_layer("data", false))
     {
-      if(Subscribed())
-      {
-        DrawScan(event);
-        // call Update(), because we may have stolen the truth_poked
-        Update(m_world->GetTime());
-      }
+        if(Subscribed())
+        {
+            DrawScan(event);
+            // call Update(), because we may have stolen the truth_poked
+            // URGHH!  There must be a better way of doing this.  AH
+            Update(m_world->GetTime());
+        }
     }
     
     event->end_section();

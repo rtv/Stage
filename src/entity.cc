@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.28 2001-10-25 22:17:42 ahoward Exp $
+//  $Id: entity.cc,v 1.29 2001-11-07 22:50:33 ahoward Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -557,9 +557,8 @@ void CEntity::GetGlobalPose(double &px, double &py, double &pth)
 
 
 ////////////////////////////////////////////////////////////////////////////
-// See if the given entity is one of our children
-//
-bool CEntity::IsChild(CEntity *entity)
+// See if the given entity is one of our descendents
+bool CEntity::IsDescendent(CEntity *entity)
 {
     while (entity)
     {

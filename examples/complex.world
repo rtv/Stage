@@ -7,41 +7,41 @@ set laser_res = 1
 #####################################################################
 # Populate the world with some interesting objects (non-player devices)
 
-create laser_beacon pose 4.0 4.0 0.0 id 1
-create laser_beacon pose 3.0 4.0 0.0 id 2
+create laser_beacon pose 4.00 4.00 0 color cyan name 1 port 0 index 0 obstacle false sonar false laser bright1 id 1 
+create laser_beacon pose 3.00 4.00 0 color cyan name 2 port 0 index 0 obstacle false sonar false laser bright1 id 2 
 
-create puck pose 2.3 2.0 0 
-create puck pose 2.0 2.0 0 
-create puck pose 2.1 2.0 0 
-create puck pose 2.2 2.0 0 
+create puck pose 2.44 1.62 0 color green port 0 index 0 obstacle false sonar false laser false radius 0.05 
+create puck pose 2.71 1.61 0 color green port 0 index 0 obstacle false sonar false laser false radius 0.05 
+create puck pose 2.70 1.81 0 color green port 0 index 0 obstacle false sonar false laser false radius 0.05 
+create puck pose 2.14 1.65 0 color green port 0 index 0 obstacle false sonar false laser false radius 0.05 
 
-create vision_beacon pose 2.0 2.5 0.0 color red
-create vision_beacon pose 3.0 2.5 0.0 color green
-create vision_beacon pose 4.0 2.5 0.0 color blue
+create vision_beacon pose 1.78 2.74 0 color red port 0 index 0 obstacle true sonar true laser true radius 0.10 
+create vision_beacon pose 1.57 2.44 0 color green port 0 index 0 obstacle true sonar true laser true radius 0.10 
+create vision_beacon pose 1.65 2.05 0 color blue port 0 index 0 obstacle true sonar true laser true radius 0.10 
 
-create box pose 3.0 3.0 0.0 size 0.8 0.5 channel 4
+create box pose 3.00 3.00 0 color yellow port 0 index 0 obstacle true sonar true laser true size 0.80 0.50 
 
 #####################################################################
 # a tricked-out robot with a Player on the default port
 
-create position_device pose 1.0 3.0 0.0 port 6665 
+create position_device pose 0.77 2.38 0 color red port 6665 index 0 obstacle true sonar true laser false shape rectangle 
 {
-  create player_device size 0.05 0.05 pose -0.1 0.0 0.0 port 6665
-  create sonar_device  port 6665
-  create misc_device port 6665
-  create gripper_device pose 0.15 0 0 port 6665
+  create player_device pose -0.10 0.00 0 color white port 6665 index 0 obstacle false sonar false laser false 
+  create sonar_device pose 0.00 0.00 0 color blue3 port 6665 index 0 obstacle false sonar false laser false 
+  create misc_device pose 0.00 0.00 0 color gray port 6665 index 0 obstacle false sonar false laser false 
+  create gripper_device pose 0.15 0.00 0 color gray port 6665 index 0 obstacle false sonar false laser false 
 
-  create laser_device  pose 0.08 0.0 0.0 port 6665
+  create laser_device pose 0.08 0.00 0 color blue port 6665 index 0 obstacle false sonar false laser true 
   {
     ## LBD (Laser Beacon Detector) devices MUST be
     ## children of laser devices 
-    create lbd_device port 6665
+    create lbd_device pose 0.00 0.00 0 color gray port 6665 index 0 obstacle false sonar false laser false range 1.50 
   }  
    
-  create ptz_device pose 0.07 0.0 0.0 port 6665
+  create ptz_device pose 0.07 0.00 0 color magenta port 6665 index 0 obstacle false sonar false laser false 
   {
      # vision devices MUST be children of cameras
-     create vision_device pose 0.0 0.0 0.0 port 6665
+     create vision_device pose 0.00 0.00 0 color red port 6665 index 0 obstacle false sonar false laser false 
   } 
 }
 
@@ -49,9 +49,9 @@ create position_device pose 1.0 3.0 0.0 port 6665
 #####################################################################
 # this is a laser placed in the world, without a robot
 
-create laser_device pose 4.0 1.0 0.0 port 6667 index 0
+create laser_device pose 4.00 1.00 0 color blue port 6667 index 0 obstacle false sonar false laser true 
 {
-  create player_device pose 0 0 0 size 0.05 0.05 port 6667
+  create player_device pose 0.00 0.00 0 color white port 6667 index 0 obstacle false sonar false laser false 
 }
 
 

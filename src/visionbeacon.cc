@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.14 $
+//  $Author: ahoward $
+//  $Revision: 1.15 $
 //
 // Usage:
 //  (empty)
@@ -164,7 +164,7 @@ void CVisionBeacon::OnUiUpdate(RtkUiDrawData *data)
     
     if (data->draw_layer("vision_beacon", true))
     {
-      data->set_color(m_rtk_color);
+      data->set_color(RTK_RGB(m_color.red, m_color.green, m_color.blue));
       data->ellipse(m_map_px-m_radius, m_map_py-m_radius, 
                     m_map_px+m_radius,m_map_py+m_radius);
     }

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visiondevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.11 $
+//  $Author: ahoward $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -110,7 +110,7 @@ class CVisionDevice : public CEntity
     // Laser scan outline
     //
     private: int m_hit_count;
-    private: double m_hit[256][3];
+    private: double m_hit[256][6];
     
 #endif  
 };

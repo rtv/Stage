@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.17 $
+//  $Author: ahoward $
+//  $Revision: 1.18 $
 //
 // Usage:
 //  (empty)
@@ -172,76 +172,73 @@ void CVisionDevice::UpdateScan()
 
     for (int s = 0; s < m_scan_width; s++)
     {
-      bzero(&col,sizeof(col));
-
-      double range = m_max_range;
+        bzero(&col,sizeof(col));
       
-      // Compute parameters of scan line
-      //
-      double px = ox;
-      double py = oy;
-      double pth = oth - s * dth;
+        // Compute parameters of scan line
+        double px = ox;
+        double py = oy;
+        double pth = oth - s * dth;
       
-	CLineIterator lit( px, py, pth, m_max_range, 
-			   m_world->ppm, m_world->matrix, PointToBearingRange );
+        CLineIterator lit( px, py, pth, m_max_range, 
+                           m_world->ppm, m_world->matrix, PointToBearingRange );
 	
-	CEntity* ent;
+        CEntity* ent;
+        double range = m_max_range;
 	
-	while( (ent = lit.GetNextEntity()) ) 
-	  {
+        while( (ent = lit.GetNextEntity()) ) 
+        {
+            // Ignore ourself, our ancestors and our descendents
+            if( ent == this || this->IsDescendent(ent) || ent->IsDescendent(this))
+                continue;
 
-	    if( ent != this // me
-		&& ent != m_parent_object // parent PTZ
-		&& ent != m_parent_object->m_parent_object // grandpa robot!
-		&& ent->channel_return != -1  )// transparent
+            // Ignore transparent things
+            if (ent->channel_return == -1  )
+                continue;
 		
-	      {  
-		//printf( "i see %p (%s)\n", 
-                        //ent, m_world->StringType( ent->m_stage_type ) );
+            range = lit.GetRange(); // it's this far away
+            //channel = ent->channel_return; // it's this color
 		
-		range = lit.GetRange(); // it's this far away
-		//channel = ent->channel_return; // it's this color
-		
-		// get the color of the entity
-		memcpy( &col, &(ent->m_color), sizeof( StageColor ) );
-
-		break;
-	      }
-	  }
+            // get the color of the entity
+            memcpy( &col, &(ent->m_color), sizeof( StageColor ) );
+            
+            break;
+        }
 	
-	//printf( "ray: %d channel: %d\n", s, channel );
-	//fflush( stdout );
+        //printf( "ray: %d channel: %d\n", s, channel );
+        //fflush( stdout );
 
-	// initialize the reading 
-	m_scan_channel[s] = 0; // channel 0 is no-blob
-	m_scan_range[s] = 0;
+        // initialize the reading 
+        m_scan_channel[s] = 0; // channel 0 is no-blob
+        m_scan_range[s] = 0;
 	
         // look up this color in the color/channel mapping array
-        //
-	for( int c=0; c<ACTS_NUM_CHANNELS; c++ )
-	  if( channel[c].red == col.red &&
-	      channel[c].green == col.green &&
-	      channel[c].blue == col.blue  )
-	    {
-              //printf("m_scan_channel[%d] = %d\n", s, c+1);
-	      m_scan_channel[s] = c + 1; // channel 0 is no-blob
-	      m_scan_range[s] = range;
-	      break;
-	    }
+        for( int c=0; c<ACTS_NUM_CHANNELS; c++ )
+        {
+            if( channel[c].red == col.red &&
+                channel[c].green == col.green &&
+                channel[c].blue == col.blue  )
+            {
+                //printf("m_scan_channel[%d] = %d\n", s, c+1);
+                m_scan_channel[s] = c + 1; // channel 0 is no-blob
+                m_scan_range[s] = range;
+                break;
+            }
+        }
 	
         // Update the gui data
         //
 #ifdef INCLUDE_RTK
-        /* this doesn't compile right now... BPG */
-#if 0
-        if (m_scan_channel > 0)
+        if (m_scan_channel[s] > 0)
         {
-            m_hit[m_hit_count][0] = px;
-            m_hit[m_hit_count][1] = py;
-            m_hit[m_hit_count][2] = m_scan_channel;
+            assert((unsigned) m_hit_count < sizeof(m_hit) / sizeof(m_hit[0]));
+            m_hit[m_hit_count][0] = px + range * cos(pth);
+            m_hit[m_hit_count][1] = py + range * sin(pth);
+            m_hit[m_hit_count][2] = m_scan_channel[s];            
+            m_hit[m_hit_count][3] = col.red;
+            m_hit[m_hit_count][4] = col.green;
+            m_hit[m_hit_count][5] = col.blue;
             m_hit_count++;
         }
-#endif
 #endif
     }   
 }
@@ -495,30 +492,22 @@ void CVisionDevice::DrawFOV(RtkUiDrawData *data)
 void CVisionDevice::DrawScan(RtkUiDrawData *data)
 {    
     // Get global pose
-    //
     double gx, gy, gth;
     GetGlobalPose(gx, gy, gth);
 
-    // *** Can we get colors from channels?
-    //
-    int color = RTK_RGB(0, 192, 0);
-    data->set_color(color);
-
-    double ox, oy;
-    
+    // Draw colored rays to show objects
+    double ch = -1000;
     for (int i = 0; i < m_hit_count; i++)
     {
-        int channel = (int) m_hit[i][2];
-        if (channel == 0)
-            continue;
-
-        if (i > 0)
-            data->line(ox, oy, m_hit[i][0], m_hit[i][1]);
-        ox = m_hit[i][0];
-        oy = m_hit[i][1];
+        if (m_hit[i][2] != ch)
+            data->set_color(RTK_RGB(m_hit[i][3], m_hit[i][4], m_hit[i][5]));
+        else
+            data->line(gx, gy, m_hit[i][0], m_hit[i][1]);
+        ch = m_hit[i][2];
     }
 }
 
 #endif
+
 
 
