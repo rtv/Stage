@@ -1,0 +1,52 @@
+
+# Desc: 1 robot with player, laser, sonar and gps
+# CVS: $Id: test.world,v 1.1 2004-07-19 22:33:48 rtv Exp $
+
+# the resolution of Stage's raytrace model in meters
+#
+
+include "pioneer.inc"
+
+
+
+size [15.5 11.4]
+bitmap "autolab.png"
+
+resolution 0.02  # meters per pixel
+
+interval_sim 100  # milliseconds per update step
+interval_real 100 # real-time milliseconds per update step
+
+# extend the pioneer2dx definition from pioneer.inc
+#
+define testrobot pioneer2dx
+(
+  # add a laser scanner	
+  # laser view vector - format: [ minrange maxrange fov ]
+  laser.view [ 0.0 8.0 180.0 ]
+  laser.pose [ 0 0 0 ]
+  laser.size [ 0.15 0.15 ]
+  laser.samples 180
+	
+  # fiducialfinder view vector - format [ minrange maxrange fov ]
+  fiducial.view [ 0.0 5.0 180.0 ]  
+  fiducial.id_limit 4.0
+
+  # blobfinder configuration 
+  # blob view vector - format [minrange maxrange fov]	
+  blob.view [ 0 7.0 60 ]	
+  blob.count 6
+  blob.screen [ 80 60 ]
+  blob.channels [ "red" "green" "blue" "cyan" "yellow" "magenta" ]	
+
+  #energy configuration
+  energy.capacity 3000.0
+  energy.range 1.0
+  energy.return 0 # we don't give charge
+)
+
+testrobot( name "r0" pose [3.022 5.962 7290.846] fiducial.return 33 )
+testrobot( name "r1" pose [2.408 7.217 -20.084] fiducial.return 34 color "green" laser.return 2 )
+testrobot( name "r2" pose [3.128 7.154 -71.250] fiducial.return 35 color "blue" 
+laser.return 0 ranger.return 0 )
+
