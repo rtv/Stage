@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.9.2.18 $
+//  $Author: vaughan $
+//  $Revision: 1.9.2.19 $
 //
 // Usage:
 //  (empty)
@@ -65,6 +65,10 @@ CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CObject *parent, CPlay
     m_mouse_radius = 0.400;
     m_draggable = true;
 #endif
+
+#ifdef INCLUDE_XGUI
+    exp.objectType = pioneer_o;
+#endif;
 }
 
 
@@ -81,7 +85,7 @@ void CPioneerMobileDevice::Update()
     {
         ParseCommandBuffer();    // find out what to do    
     }
-  
+ 
     Map(false); // erase myself
    
     Move();      // do things
@@ -310,6 +314,9 @@ bool CPioneerMobileDevice::Map(bool render)
         double sx = m_size_x;
         double sy = m_size_y;
         m_world->SetRectangle(qx, qy, pa, sx, sy, layer_obstacle, 0);
+
+	//#ifdef INCLUDE_XGUI
+	//if( win ) win->
     }
     else
     {
@@ -332,6 +339,7 @@ bool CPioneerMobileDevice::Map(bool render)
     }
     return true;
 }
+
 
 
 #ifdef INCLUDE_RTK

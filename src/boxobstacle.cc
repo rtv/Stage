@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.1.2.11 $
+//  $Author: vaughan $
+//  $Revision: 1.1.2.12 $
 //
 // Usage:
 //  (empty)
@@ -42,6 +42,12 @@ CBoxObstacle::CBoxObstacle(CWorld *world, CObject *parent)
     // Set the initial map pose
     //
     m_map_px = m_map_py = m_map_pth = 0;
+
+#ifdef INCLUDE_XGUI
+    exp.objectType = box_o;
+    exp.width = m_size_x;
+    exp.height = m_size_y;
+#endif
 }
 
 
@@ -129,6 +135,27 @@ void CBoxObstacle::Update()
 
 }
 
+
+#ifdef INCLUDE_XGUI
+
+////////////////////////////////////////////////////////////////////////////
+// compose and return the export data structure for external rendering
+// return null if we're not exporting data right now.
+ExportData* CBoxObstacle::GetExportData( void )
+{
+  if( !exporting ) return 0;
+
+  // fill in the exp structure
+  // exp.type, exp.id, exp.dataSize are set in the constructor
+  GetGlobalPose( exp.x, exp.y, exp.th );
+  
+  exp.width = m_size_x;
+  exp.height = m_size_y;
+  
+  return &exp;
+}
+
+#endif
 
 #ifdef INCLUDE_RTK
 

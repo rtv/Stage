@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.2.2.11 $
+//  $Author: vaughan $
+//  $Revision: 1.2.2.12 $
 //
 // Usage:
 //  (empty)
@@ -57,6 +57,8 @@ CLaserBeaconDevice::CLaserBeaconDevice(CWorld *world, CObject *parent,
     //
     m_max_anon_range = 4.0;
     m_max_id_range = 1.5;
+
+    
 }
 
 

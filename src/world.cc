@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.4.2.29 $
+//  $Author: vaughan $
+//  $Revision: 1.4.2.30 $
 //
 // Usage:
 //  (empty)
@@ -31,6 +31,9 @@
 #include "stage.h"
 #include "world.hh"
 
+#ifdef INCLUDE_XGUI
+#include "xgui.hh"
+#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
@@ -122,6 +125,16 @@ bool CWorld::Startup()
     m_router->add_sink(RTK_UI_PROPERTY, (void (*) (void*, void*)) &OnUiProperty, this);
     m_router->add_sink(RTK_UI_BUTTON, (void (*) (void*, void*)) &OnUiButton, this);
 #endif
+
+#ifdef INCLUDE_XGUI
+    win = new CXGui( this );
+    assert( win );
+
+    // must call this at least once before the world is updated so that
+    // things are drawn correctly in the first place
+    if( win ) win->HandleEvent();
+#endif
+
 
     // Start all the objects
     //
@@ -233,13 +246,13 @@ void* CWorld::Main(void *arg)
         
         // Update the GUI every 100ms
         //
-        #ifdef INCLUDE_RTK
+#ifdef INCLUDE_RTK
         if (world->GetRealTime() - ui_time > 0.050)
         {
             ui_time = world->GetRealTime();
             world->m_router->send_message(RTK_UI_FORCE_UPDATE, NULL);
         }
-        #endif
+#endif
     }
 }
 
@@ -283,10 +296,28 @@ void CWorld::Update()
     //
     m_update_rate = (1 - a) * m_update_rate + a * (1 / timestep);
 
+
+    // might move this elsewhere and call it less often
+    // - will test for responsiveness.
+    // must be before the first 
+#ifdef INCLUDE_XGUI
+    if( win ) win->HandleEvent();
+#endif
+
     // Do the actual work -- update the objects
     //
     for (int i = 0; i < m_object_count; i++)
-        m_object[i]->Update();
+   {
+
+     m_object[i]->Update();
+
+#ifdef INCLUDE_XGUI
+     // GetExportData() returns null if the object is not subscribed
+     // RenderExportData() returns immediately if it gets a null pointer.
+     win->ImportExportData( m_object[i]->ImportExportData( 0 ) );    
+#endif   
+   }
+  
 }
 
 
@@ -471,6 +502,32 @@ void CWorld::SetRectangle(double px, double py, double pth,
             m_vision_img->draw_rect(rect, value);
             break;
     }
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Find the object nearest to the mouse
+//
+CObject* CWorld::NearestObject( double x, double y )
+{
+  CObject* nearest;
+  double dist, far = 9999999.9;
+
+  double ox, oy, oth;
+
+  for (int i = 0; i < m_object_count; i++)
+    {
+      m_object[i]->GetGlobalPose( ox, oy, oth );;
+      
+      dist = hypot( ox-x, oy-y );
+      
+      if( dist < far ) 
+	{
+	  nearest = m_object[i];
+	  far = dist;
+	}
+    }
+  
+  return nearest;
 }
 
 

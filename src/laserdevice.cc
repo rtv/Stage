@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.11.2.22 $
+//  $Author: vaughan $
+//  $Revision: 1.11.2.23 $
 //
 // Usage:
 //  (empty)
@@ -61,7 +61,12 @@ CLaserDevice::CLaserDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
     //
     m_map_dx = 0.155;
     m_map_dy = 0.155;
-    
+
+#ifdef INCLUDE_XGUI
+    exp.objectType = laserturret_o;
+    hitCount = 0;
+#endif
+
 #ifdef INCLUDE_RTK 
     m_hit_count = 0;
 #endif
@@ -186,6 +191,10 @@ bool CLaserDevice::GenerateScanData(player_laser_data_t *data)
     m_hit_count = 0;
 #endif
 
+#ifdef INCLUDE_XGUI
+    hitCount = 0;
+#endif
+
     // Set the header part of the data packet
     //
     data->range_count = htons(m_scan_count);
@@ -260,6 +269,13 @@ bool CLaserDevice::GenerateScanData(player_laser_data_t *data)
         m_hit[m_hit_count][1] = py;
         m_hit_count++;
 #endif
+
+#ifdef INCLUDE_XGUI
+	hitPts[hitCount].x = px;
+	hitPts[hitCount].y = py;
+	hitCount++;
+#endif
+
     }    
     return true;
 }
@@ -295,6 +311,26 @@ void CLaserDevice::Map(bool render)
     }
 }
 
+#ifdef INCLUDE_XGUI
+
+////////////////////////////////////////////////////////////////////////////
+// compose and return the export data structure for external rendering
+// return null if we're not exporting data right now.
+ExportData* CLaserDevice::GetExportData( void )
+{
+  if( !exporting ) return 0;
+
+  // fill in the exp structure
+  // exp.type, exp.id, exp.dataSize are set in the constructor
+  GetGlobalPose( exp.x, exp.y, exp.th );
+
+  exp.dataSize = 361 * sizeof( DPoint );
+  exp.data = (unsigned char*)hitPts;
+  
+  return &exp;
+}
+
+#endif
 
 #ifdef INCLUDE_RTK
 

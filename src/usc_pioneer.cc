@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/usc_pioneer.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.1.2.11 $
+//  $Author: vaughan $
+//  $Revision: 1.1.2.12 $
 //
 // Usage:
 //  (empty)
@@ -70,6 +70,13 @@ CUscPioneer::CUscPioneer(CWorld *world, CObject *parent)
     // Set the default pose of some key devices
     //
     m_laser->SetPose(0.09, 0, 0);
+    
+#ifdef INCLUDE_XGUI
+    exp.objectType = uscpioneer_o;
+    exp.width = 0.45; //m
+    exp.height = 0.45; //m   
+#endif
+
     m_ptz->SetPose(0.09, 0, 0);
 }
 
@@ -247,6 +254,24 @@ void CUscPioneer::OnUiProperty(RtkUiPropertyData *data)
         m_child[i]->OnUiProperty(data);  
     
     CObject::OnUiProperty(data);
+}
+
+#endif
+
+#ifdef INCLUDE_XGUI
+
+////////////////////////////////////////////////////////////////////////////
+// compose and return the export data structure for external rendering
+// return null if we're not exporting data right now.
+ExportData* CUscPioneer::GetExportData( void )
+{
+  if( !exporting ) return 0;
+
+  // fill in the exp structure
+  // exp.type, exp.id, exp.dataSize are set in the constructor
+  m_pioneer->GetGlobalPose( exp.x, exp.y, exp.th );
+
+  return &exp;
 }
 
 #endif

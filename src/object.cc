@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/object.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.1.2.17 $
+//  $Author: vaughan $
+//  $Revision: 1.1.2.18 $
 //
 // Usage:
 //  (empty)
@@ -54,6 +54,14 @@ CObject::CObject(CWorld *world, CObject *parent_object)
     m_mouse_ready = false;
     m_dragging = false;
     m_color = RTK_RGB(0, 0, 0);
+#endif
+
+#ifdef INCLUDE_XGUI
+    exporting = true;
+    exp.objectId = this; // used both as ptr and as a unique ID
+    exp.objectType = 0; 
+    exp.dataSize = 0;
+    exp.data = 0; // NULL char*
 #endif
 }
 
@@ -272,6 +280,27 @@ void CObject::GetGlobalPose(double &px, double &py, double &pth)
     pth = oth + m_lth;
 }
 
+#ifdef INCLUDE_XGUI
+
+////////////////////////////////////////////////////////////////////////////
+// import changes to this object - typically called by a GUI
+// then compose and return the export data structure for external rendering
+// return null if we're not exporting data right now.
+ExportData* CObject::ImportExportData( const ImportData* inp )
+{
+  if( inp ) // if there is some imported data
+    SetGlobalPose( inp->x, inp->y, inp->th ); // move to the suggested place
+  
+  if( !exporting ) return 0;
+
+  // fill in the exp structure
+  // exp.type, exp.id, exp.dataSize are set in the constructor
+  GetGlobalPose( exp.x, exp.y, exp.th );
+
+  return &exp;
+}
+
+#endif
 
 #ifdef INCLUDE_RTK
 

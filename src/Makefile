@@ -66,6 +66,14 @@ stage : OBJS += main.o
 stage : $(OBJS) main.o 
 	${LINKER} $(OBJS) $(LINKFLAGS) -o stage
 
+# Target stage with Xlib GUI
+#
+xstage : CCFLAGS += -DINCLUDE_XGUI -I/usr/X11R6/include
+xstage : OBJS += main.o xgui.o
+xstage : $(OBJS) main.o xgui.o 
+	${LINKER} $(OBJS) $(LINKFLAGS) -L/usr/X11R6/lib -lX11 -o xstage
+
+
 # Target stage with RTK GUI
 #
 rtkstage : OBJS += rtk_main.o
