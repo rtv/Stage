@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.28.2.4 2003-04-17 23:40:09 rtv Exp $
+dnl $Id: configure.in,v 1.28.2.5 2003-05-24 01:11:19 inspectorg Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -72,7 +72,7 @@ AC_CHECK_LIB(socket, connect)
 dnl where's RTK?
 AC_ARG_WITH(rtk, [   --with-rtk=dir      Location of RTK],
 RTK_DIR=$with_rtk,
-RTK_DIR="${HOME}/librtk-2.1")
+RTK_DIR=$prefix)
 AC_SUBST(RTK_DIR)
 
 if test -f $RTK_DIR/include/rtk.h; then
@@ -104,12 +104,17 @@ AC_SUBST(GUI_LIB)
 dnl where's player?
 AC_ARG_WITH(player, [   --with-player=dir      Location of Player (installation or source)],
 PLAYER_DIR=$with_player,
-PLAYER_DIR="${HOME}/player-PS_VERSION")
+PLAYER_DIR=$prefix)
+AC_MSG_CHECKING(for player.h)
 if test ! -f $PLAYER_DIR/include/player.h; then
   if test ! -f $PLAYER_DIR/server/player.h; then
-    AC_MSG_ERROR("Could not find player.h.  Player is required to build Stage.")
+    AC_MSG_RESULT([Could not find player.h.  Player is required to build Stage.])
+    AC_MSG_RESULT([You can specify a path to Player like this:])
+    AC_MSG_RESULT([    ./configure --with-player=<Player prefix dir>])
+    AC_MSG_ERROR("Configuration aborted. Fix the Player path.")
   fi
 fi
+AC_MSG_RESULT(yes)
 AC_SUBST(PLAYER_DIR)
 
 dnl where's the X11-style color database?

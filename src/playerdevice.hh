@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: playerdevice.hh,v 1.10 2002-11-01 19:12:29 rtv Exp $
+ * CVS info: $Id: playerdevice.hh,v 1.10.2.1 2003-05-24 01:11:19 inspectorg Exp $
  */
 
 #ifndef PLAYERENTITY_HH
@@ -199,6 +199,9 @@ public: virtual void FamilyUnsubscribe();
 #ifdef INCLUDE_RTK2
   // Initialise the rtk gui
   protected: virtual void RtkStartup();
+
+  // Process mouse events
+  protected: virtual void RtkOnMouse(rtk_fig_t *fig, int event, int mode);
 #endif
 
 };

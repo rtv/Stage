@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.12.2.1 2003-04-17 23:40:10 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.12.2.2 2003-05-24 01:11:19 inspectorg Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -310,22 +310,23 @@ public: bool IsDescendent( CEntity* ancestor );
   // Update the rtk gui
   public: virtual void RtkUpdate();
 
+  // Process mouse events
+  public: virtual void RtkOnMouse(rtk_fig_t *fig, int event, int mode);
+  
+  // Process mouse events (static callback)
+  protected: static void StaticRtkOnMouse(rtk_fig_t *fig, int event, int mode);
+
   // Default figure handle
   public: rtk_fig_t *fig, *fig_label;
 
   // Default movement mask
   protected: int movemask;
 
-  // callbacks - we ask the rtk figures call these when things happen to 'em.
-  static void staticSetGlobalPose( void* ent, double x, double y, double th );
-  static void staticSelect( void* ent );
-  static void staticUnselect( void* ent );
 #endif
   
   // calls the GUI hook to startup this object, then recusively calls
   // the children's GuiStartup()
-public: virtual void GuiStartup( void );
-
+  public: virtual void GuiStartup( void );
 
   //#ifdef ENTITY_GUI_DATA_TYPE
   // allow the GUI to attach some data to an object if it needs to.
@@ -334,7 +335,7 @@ public: virtual void GuiStartup( void );
   // and this member doesn't exist. value is NULLed in the constuctor.
   //public: ENTITY_GUI_DATA_TYPE *gui_data; 
   //#endif
-public: void *gui_data; 
+  public: void *gui_data; 
 
 };
 

@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.50 2002-11-11 09:21:21 rtv Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.50.2.1 2003-05-24 01:11:19 inspectorg Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -59,21 +59,6 @@
 
 #include "library.hh"
 
-#ifdef INCLUDE_RTK2
-// static methods used as callbacks in the rtk gui
-void CEntity::staticSelect( void* ent )
-{
-  //puts( "SELECT" );
-  ((CPlayerEntity*)(ent))->FamilySubscribe();
-}
-
-void CEntity::staticUnselect( void* ent )
-{
-  //puts( "UNSELECT" );
-  
-  ((CPlayerEntity*)(ent))->FamilyUnsubscribe();
-}
-#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // Minimal constructor
@@ -789,11 +774,47 @@ void CPlayerEntity::RtkStartup()
   rtk_fig_clear(this->fig_label );
   rtk_fig_text(this->fig_label,  0.75 * size_x,  0.75 * size_y, 0, label);
 
-  // add the callbacks 
-  this->fig->select_callback = staticSelect;
-  this->fig->unselect_callback = staticUnselect;
+  return;
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+// Process mouse events
+void CPlayerEntity::RtkOnMouse(rtk_fig_t *fig, int event, int mode)
+{
+  switch (event)
+  {
+    case RTK_EVENT_PRESS:
+    
+      // if the CTRL key is held down, launch playerv
+      // rtk doesn't support modifiers directly so we use this
+      // backdoor route which may not sync perfectly with the click
+      // itself over a delayed network, but it should work pretty well.
+      int x, y;
+      GdkModifierType modifiers;
+      gdk_window_get_pointer(m_world->canvas->canvas->window, 
+                             &x, &y, &modifiers);
+    
+      //if( modifiers & GDK_CONTROL_MASK ) SpawnPlayerv();
+      break;
+
+      // Handle case when mouse is moved over the figure
+    case RTK_EVENT_MOUSE_OVER:
+      this->FamilySubscribe();
+      break;
+      
+      // Handle case when mouse is moved away from the figure
+    case RTK_EVENT_MOUSE_NOT_OVER:
+      this->FamilyUnsubscribe();
+      break;
+      
+    default:
+      break;
+  }
+  
+  CEntity::RtkOnMouse(fig, event, mode);
+  return;
+}
 
 #endif
 

@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.96.2.1 2003-04-17 23:40:10 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.96.2.2 2003-05-24 01:11:19 inspectorg Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -33,9 +33,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
-#if HAVE_VALUES_H
-  #include <values.h>  // for MAXFLOAT
-#endif
+#include <float.h> // for FLT_MAX
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -59,16 +57,6 @@
 #include "gui.hh"
 #include "library.hh"
 
-#ifdef INCLUDE_RTK2
-// CALLBACK FUNCTION WRAPPERS ////////////////////////////////////////////
-// called by rtk to tweak Stage devices
-
-void CEntity::staticSetGlobalPose( void* ent, double x, double y, double th )
-{
-  ((CEntity*)ent)->SetGlobalPose( x, y, th );
-}
-
-#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // main constructor
@@ -143,7 +131,7 @@ CEntity::CEntity(LibraryItem* libit, CWorld *world, CEntity *parent_entity )
   m_last_pixel_x = m_last_pixel_y = m_last_degree = 0;
 
   m_interval = 0.1; // update interval in seconds 
-  m_last_update = -MAXFLOAT; // initialized 
+  m_last_update = -FLT_MAX; // initialized 
 
   // init the ptr to GUI-specific data
   this->gui_data = NULL;
@@ -1148,11 +1136,16 @@ void CEntity::RtkStartup()
 
   assert( this->fig );
 
+  /* REMOVE
   this->fig->thing = (void*)this;
   this->fig->origin_callback = staticSetGlobalPose;
   this->fig->select_callback = NULL;
   this->fig->unselect_callback = NULL;
+  */
 
+  // Set the mouse handler
+  this->fig->userdata = this;
+  rtk_fig_add_mouse_handler(this->fig, StaticRtkOnMouse);
 
   // add this device to the world's device menu 
   this->m_world->AddToDeviceMenu( this, true); 
@@ -1224,7 +1217,8 @@ void CEntity::RtkStartup()
       
     // attach the label to the main figure
     // rtk will draw the label when the mouse goes over the figure
-    this->fig->mouseover_fig = fig_label;
+    // TODO: FIX
+    //this->fig->mouseover_fig = fig_label;
       
     // we can be moved only if we are on the root node
     if (m_parent_entity != this->m_world->GetRoot() )
@@ -1269,5 +1263,40 @@ void CEntity::RtkUpdate()
     rtk_fig_show( this->fig, true );
   }
 }
+
+
+///////////////////////////////////////////////////////////////////////////
+// Process mouse events
+void CEntity::RtkOnMouse(rtk_fig_t *fig, int event, int mode)
+{
+  double px, py, pth;
+
+  switch (event)
+  {
+    case RTK_EVENT_PRESS:
+    case RTK_EVENT_MOTION:
+    case RTK_EVENT_RELEASE:
+      rtk_fig_get_origin(fig, &px, &py, &pth);
+      this->SetGlobalPose(px, py, pth);
+      break;
+
+    default:
+      break;
+  }
+
+  return;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Process mouse events (static callback)
+void CEntity::StaticRtkOnMouse(rtk_fig_t *fig, int event, int mode)
+{
+  CEntity *entity;
+  entity = (CEntity*) fig->userdata;
+  entity->RtkOnMouse(fig, event, mode);
+  return;
+}
+
 #endif
 
