@@ -7,7 +7,9 @@ environment
    resolution 0.0125
 )
 
-puck ( friction 0.035 pose [7.27665042946 2.72334957055 0] )
+define redpuck puck ( color "red" )
+
+redpuck ( friction 0.035 pose [7.27665042946 2.72334957055 0] )
 
 position
 (
@@ -29,23 +31,23 @@ position
 
 )
 
-puck ( friction 0.035 pose [7.27665042946 4.24111652352 0] )
+redpuck ( friction 0.035 pose [7.27665042946 4.24111652352 0] )
 
-puck ( friction 0.035 pose [2.72334957055 7.27665042946 0] )
+redpuck ( friction 0.035 pose [2.72334957055 7.27665042946 0] )
 
-puck ( friction 0.035 pose [7.27665042946 5.75888347649 0] )
+redpuck ( friction 0.035 pose [7.27665042946 5.75888347649 0] )
 
-puck ( pose [2.72334957055 4.24111652352 0] friction 0.035 )
+redpuck ( pose [2.72334957055 4.24111652352 0] friction 0.035 )
 
-puck ( pose [2.72334957055 5.75888347649 0] friction 0.035 )
+redpuck ( pose [2.72334957055 5.75888347649 0] friction 0.035 )
 
-puck ( pose [4.24111652352 7.27665042946 0] friction 0.035 )
+redpuck ( pose [4.24111652352 7.27665042946 0] friction 0.035 )
 
-puck ( friction 0.035 pose [2.72334957055 2.72334957055 0] )
+redpuck ( friction 0.035 pose [2.72334957055 2.72334957055 0] )
 
-puck ( friction 0.035 pose [4.24111652352 4.24111652352 0] )
+redpuck ( friction 0.035 pose [4.24111652352 4.24111652352 0] )
 
-puck ( friction 0.035 pose [4.24111652352 5.75888347649 0] )
+redpuck ( friction 0.035 pose [4.24111652352 5.75888347649 0] )
 
 position
 (
@@ -67,7 +69,7 @@ position
 
 )
 
-puck ( friction 0.035 pose [5.75888347649 7.27665042946 0] )
+redpuck ( friction 0.035 pose [5.75888347649 7.27665042946 0] )
 
 position
 (
@@ -89,11 +91,11 @@ position
 
 )
 
-puck ( friction 0.035 pose [5.75888347649 2.72334957055 0] )
+redpuck ( friction 0.035 pose [5.75888347649 2.72334957055 0] )
 
-puck ( friction 0.035 pose [4.24111652352 2.72334957055 0] )
+redpuck ( friction 0.035 pose [4.24111652352 2.72334957055 0] )
 
-puck ( pose [5.75888347649 4.24111652352 0] friction 0.035 )
+redpuck ( pose [5.75888347649 4.24111652352 0] friction 0.035 )
 
 position
 (
@@ -115,7 +117,7 @@ position
 
 )
 
-puck ( pose [5.75888347649 5.75888347649 0] friction 0.035 )
+redpuck ( pose [5.75888347649 5.75888347649 0] friction 0.035 )
 
-puck ( pose [7.27665042946 7.27665042946 0] friction 0.035 )
+redpuck ( pose [7.27665042946 7.27665042946 0] friction 0.035 )
 
