@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.7 $
+//  $Revision: 1.9.2.8 $
 //
 // Usage:
 //  (empty)
@@ -52,7 +52,7 @@ CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CObject *parent, CPlay
     m_width = 0.6;
     m_length = 0.6;
 
-    xodom = yodom = aodom = 0;
+    m_odo_px = m_odo_py = m_odo_pth = 0;
 
     stall = 0;
 
@@ -129,6 +129,19 @@ int CPioneerMobileDevice::Move()
     if (!InCollision(qx, qy, qth))
         m_robot->SetPose(qx, qy, qth);
 
+    // Compute the new odometric pose
+    // Uses a first-order integration approximation
+    //
+    double dr = m_com_vr * step_time;
+    double dth = m_com_vth * step_time;
+    m_odo_px += dr * cos(m_odo_pth + dth / 2);
+    m_odo_py += dr * sin(m_odo_pth + dth / 2);
+    m_odo_pth += dth;
+
+    // Normalise the odometric angle
+    //
+    m_odo_pth = fmod(m_odo_pth + TWOPI, TWOPI);
+    
     return true;
   
     /* *** RETIRE ahoward
@@ -240,11 +253,11 @@ void CPioneerMobileDevice::ParseCommandBuffer()
 void CPioneerMobileDevice::ComposeData()
 {
     // Compute odometric pose
-    // Convert to a bottom-left coord system
+    // Convert mm and degrees (0 - 360)
     //
-    double px = xodom * 1000.0;// output in mm
-    double py = -yodom * 1000.0;// output in mm
-    double pth = TWOPI - fmod(aodom + TWOPI, TWOPI);
+    double px = m_odo_px * 1000.0;
+    double py = m_odo_py * 1000.0;
+    double pth = RTOD(fmod(m_odo_pth + TWOPI, TWOPI));
 
     // Get actual global pose
     //
@@ -261,7 +274,7 @@ void CPioneerMobileDevice::ComposeData()
     m_data.time = htonl((int)((m_world->GetTime())*1000.0));
     m_data.px = htonl((int) px);
     m_data.py = htonl((int) py);
-    m_data.pth = htons((unsigned short) RTOD(pth));
+    m_data.pth = htons((unsigned short) pth);
 
     m_data.vr = htons((unsigned short) (m_com_vr * 1000.0));
     m_data.vth = htons((short) RTOD(m_com_vth));  

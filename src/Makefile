@@ -1,7 +1,7 @@
 #*************************************************************************
 # src/Makefile - makes the sources
 # RTV
-# $Id: Makefile,v 1.9.2.7 2000-12-08 01:31:43 ahoward Exp $
+# $Id: Makefile,v 1.9.2.8 2000-12-13 03:08:38 ahoward Exp $
 # ************************************************************************/
 
 .SUFFIXES: .cc .o
@@ -43,8 +43,8 @@ posreader: posreader.cc
 # Use these targets to build with RTK
 
 PLAYER_INC = $(PLAYERSRC)/include
-RTK_INC = ../rtk/include
-RTK_LIB = ../rtk/lib
+RTK_INC = /usr/local/rtk/include
+RTK_LIB = /usr/local/rtk/lib
 
 RTK_OBJS = $(OBS) rtkmain.o rtksimagent.o
 RTK_CCFLAGS = 	-DINCLUDE_RTK \

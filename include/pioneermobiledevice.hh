@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/pioneermobiledevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.6 $
 //
 // Usage:
 //  (empty)
@@ -74,6 +74,10 @@ class CPioneerMobileDevice : public CPlayerDevice
     //
     private: double m_com_vr, m_com_vth;
 
+    // Odometric pose
+    //
+    private: double m_odo_px, m_odo_py, m_odo_pth;
+
     // Last map pose (for unmapping)
     //
     private: double m_map_px, m_map_py, m_map_pth;
@@ -81,8 +85,6 @@ class CPioneerMobileDevice : public CPlayerDevice
     
   public:
   unsigned char stall;
-
-  double xodom, yodom, aodom; 
 
   int Move();
   
