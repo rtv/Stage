@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.24 2003-09-09 21:44:39 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.25 2003-09-18 01:16:45 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -151,8 +151,12 @@ void stg_gui_menuitem_show_layer( rtk_menuitem_t *item )
 void stg_gui_save( rtk_menuitem_t *item )
 {
   stg_client_data_t* client = 
-    ((stg_world_t*)item->menu->canvas->userdata)->client;
-  if( client ) kill( client->pid, SIGUSR2 );
+    ((stg_gui_window_t*)item->menu->canvas->userdata)->world->client;
+  if( client )
+    {
+      PRINT_DEBUG1( "signal USR2 to pid %d", client->pid );
+      kill( client->pid, SIGUSR2 );
+    }
 }
 
 void stg_gui_exit( rtk_menuitem_t *item )
@@ -160,9 +164,7 @@ void stg_gui_exit( rtk_menuitem_t *item )
   //quit = TRUE;
   puts( "Exit menu item. Destroying world" );
   
-  stg_world_t* world = (stg_world_t*)item->menu->canvas->userdata;
-  //stg_client_data_t* client = world->client; 
-
+  stg_world_t* world = ((stg_gui_window_t*)item->menu->canvas->userdata)->world;
   stg_world_destroy( world );
 
   // if the client has no worlds left, shut it down
@@ -189,7 +191,7 @@ void stg_gui_menu_interval_callback( rtk_menuitem_t *item )
       PRINT_DEBUG1( "refresh rate set to %d ms", interval );
       win->tag_refresh = g_timeout_add(interval,stg_gui_window_callback,win);
       PRINT_DEBUG2( "added source %d at interval %d",  
-		    win->tag_refresh, intervals[i] );
+		    win->tag_refresh, interval );
 
       // uncheck all the other options
       if( win->mitems[STG_MITEM_VIEW_REFRESH_25] != item )
@@ -217,6 +219,9 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
  
   win->canvas = rtk_canvas_create(app);
   win->canvas->userdata = (void*)win;
+
+  //PRINT_DEBUG2( "created window %p with canvas %p and client %p", 
+  //	win, win->canvas 
 
   win->fig_grid = stg_gui_grid_create( win->canvas, NULL, 
 				       world->width/2.0,world->height/2.0,0, 
@@ -328,6 +333,8 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
     
 
   // add the userdata for callbacks that need it
+  //win->mitems[STG_MITEM_FILE_SAVE]->userdata = (void*)world->client;
+
   win->mitems[STG_MITEM_VIEW_OBJECT_BODY]->userdata = (void*)STG_LAYER_BODY;
   win->mitems[STG_MITEM_VIEW_OBJECT_SENSOR]->userdata =(void*)STG_LAYER_SENSOR;
   win->mitems[STG_MITEM_VIEW_OBJECT_LIGHT]->userdata = (void*)STG_LAYER_LIGHT;

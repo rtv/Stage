@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.16 2003-09-03 02:04:15 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.17 2003-09-18 01:16:45 rtv Exp $
  */
 
 #include <assert.h>
@@ -1860,13 +1860,15 @@ int CWorldFile::Upload( stg_client_t* cli,
 	  
 	  //printf( "type name \"%s\"\n", child.name );
 
-	  // then we add an instance number onto the end, by counting
-	  // how many times this name has appeared.
+	  // if we have more than a single instance of this name, we
+	  // add an instance number onto the end
 	  int instance = stg_instances_of_string( child.name );
-	  
-	  char instance_str[64];
-	  snprintf( instance_str, 64, "%d", instance );
-	  strncat( child.name, instance_str, STG_TOKEN_MAX );
+	  if( instance > 0 )
+	    {
+	      char instance_str[64];
+	      snprintf( instance_str, 64, "%d", instance );
+	      strncat( child.name, instance_str, STG_TOKEN_MAX );
+	    }
 
 	  //printf( "type name with instance \"%s\"\n", child.name );
 

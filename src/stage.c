@@ -26,7 +26,7 @@
  * Author: Richard Vaughan vaughan@hrl.com 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.c,v 1.17 2003-09-09 23:45:01 gerkey Exp $
+ * CVS: $Id: stage.c,v 1.18 2003-09-18 01:16:45 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -341,7 +341,14 @@ stg_property_t* stg_property_read_fd( int fd )
 // property. On failure the channel is closed and NULL returned.
 stg_property_t* stg_property_read( stg_client_t* cli )
 {
-  return stg_property_read_fd( cli->pollfd.fd );
+  stg_property_t* prop = stg_property_read_fd( cli->pollfd.fd );
+
+  // the property contains the latest Stage time - poke it into
+  // the client
+  if( prop )
+    memcpy( &cli->time, &prop->timestamp, sizeof(stg_timeval_t) );
+  
+  return prop;
 }
 
 // returns 0 on success, else -1
@@ -484,7 +491,7 @@ stg_property_t* stg_send_property( stg_client_t* cli,
   stg_property_write( cli, prop );
   stg_property_free( prop );
 
-  return( stg_property_read( cli ) );  
+  return( stg_property_read( cli ));  
 }  
 
 int stg_exchange_property( stg_client_t* cli,

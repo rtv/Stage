@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@hrl.com 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.16 2003-09-09 23:45:01 gerkey Exp $
+ * CVS: $Id: stage.h,v 1.17 2003-09-18 01:16:45 rtv Exp $
  */
 
 #ifdef __cplusplus
@@ -49,7 +49,7 @@
 #include <sys/poll.h> // for struct pollfd
 #include <sys/types.h>
 
-   typedef struct timeval stg_timeval_t;
+typedef struct timeval stg_timeval_t;
    
    // global stage configs
 #define STG_TOKEN_MAX 32
@@ -296,57 +296,10 @@ typedef struct
   double x, y, a, w, h;
 } stg_rotrect_t; // rotated rectangle
 
-/*
-typedef struct
-{
-  stg_rect_t* rects;
-  int rect_count;
-} stg_rect_array_t;
-
-typedef struct
-{
-  stg_rotrect_t* rects;
-  int rect_count;
-} stg_rotrect_array_t;
-*/
-
 typedef struct
 {
   int toplx, toply, toprx, topry, botlx, botly, botrx, botry;
 } stg_corners_t;
-
-// the server reads a header to discover which type of data follows...
-typedef enum { 
-  STG_HDR_CONTINUE,  // marks the end of a  transaction
-  STG_HDR_PROPS, // model property settings follow
-  STG_HDR_CMD, // a command to the server (save, load, pause, quit, etc)
-} stg_header_type_t;
-
-// COMMANDS - no packet follows; the header's data field is set to one
-// of these
-typedef enum {
-  STG_CMD_SAVE, 
-  STG_CMD_LOAD, 
-  STG_CMD_PAUSE, 
-  STG_CMD_UNPAUSE, 
-  STG_CMD_QUIT,
-} stg_cmd_t;
-
-
-// returned by BufferPacket()
-typedef struct
-{
-  char* data;
-  size_t len;
-} stg_buffer_t;
-
-typedef struct
-{
-  stg_header_type_t type; // see enum above
-  double timestamp;
-  size_t len; // this many bytes of data follow (for CMDs this is
- // actually the command number instead)
-} stg_header_t;
 
 // used for loading and saving GUI state
 // prefer to expand this single packet with new fields rather
@@ -417,6 +370,7 @@ typedef stg_position_data_t stg_position_cmd_t;
 typedef struct {
   char host[STG_HOSTNAME_MAX];
   int port;
+  stg_timeval_t time;
   struct pollfd pollfd;
 } stg_client_t;
 

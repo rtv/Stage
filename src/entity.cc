@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.119 2003-09-09 21:44:39 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.120 2003-09-18 01:16:45 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -550,6 +550,8 @@ void CEntity::GetGlobalRect( stg_rotrect_t* dest, stg_rotrect_t* src )
 // This function is useful for writing position devices.
 CEntity *CEntity::TestCollision( double* hitx, double* hity )
 {
+  //return NULL;
+  
   // raytrace along all our rectangles. expensive, but most vehicles
   // will just be a single rect, grippers 3 rects, etc. not too bad.
   
