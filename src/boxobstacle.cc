@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.9 $
+//  $Author: ahoward $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -85,7 +85,7 @@ bool CBoxObstacle::Load(int argc, char **argv)
     }
 
 #ifdef INCLUDE_RTK
-    m_mouse_radius = max(m_size_x, m_size_y) * 0.6;
+    m_mouse_radius = (m_size_x > m_size_y ? m_size_x : m_size_y) * 0.6;
     m_draggable = (m_parent_object == NULL);
 #endif
     

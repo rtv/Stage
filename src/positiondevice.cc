@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.7 $
+//  $Author: ahoward $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -482,8 +482,8 @@ void CPositionDevice::DrawChassis(RtkUiDrawData *data)
       //
       for (int i = 0; i < 3; i++)
       {
-        double px = min(sx, sy) / 2 * cos(DTOR(i * 45 - 45));
-        double py = min(sx, sy) / 2 * sin(DTOR(i * 45 - 45));
+        double px = (sx < sy ? sx : sy) / 2 * cos(DTOR(i * 45 - 45));
+        double py = (sx < sy ? sx : sy) / 2 * sin(DTOR(i * 45 - 45));
         double pth = 0;
 
         // This is ugly, but it works

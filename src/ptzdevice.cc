@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.10 $
+//  $Author: ahoward $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -126,14 +126,14 @@ void CPtzDevice::Update( double sim_time )
       
       // Threshold
       //
-      pan = min(pan, m_pan_max);
-      pan = max(pan, m_pan_min);
+      pan = (pan < m_pan_max ? pan : m_pan_max);
+      pan = (pan > m_pan_min ? pan : m_pan_min);
       
-      tilt = min(tilt, m_tilt_max);
-      tilt = max(tilt, m_tilt_min);
+      tilt = (tilt < m_tilt_max ? tilt : m_tilt_max);
+      tilt = (tilt > m_tilt_min ? tilt : m_tilt_min);
       
-      zoom = min(zoom, m_zoom_max);
-      zoom = max(zoom, m_zoom_min);
+      zoom = (zoom < m_zoom_max ? zoom : m_zoom_max);
+      zoom = (zoom > m_zoom_min ? zoom : m_zoom_min);
       
       // Set the current values
       // This basically assumes instantaneous changes
