@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.38 $
+//  $Revision: 1.39 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -54,49 +54,55 @@ stg_model_t* stg_model_test_collision_at_pose( stg_model_t* mod,
     return NULL;
 
   if( fig_debug_rays ) rtk_fig_clear( fig_debug_rays );
-  
-  // TODO - loop over polygons for collision detection
-  stg_polygon_t* poly = &polys[0];
-  
-  int point_count = poly->points->len;
-  int p;
-  for( p=0; p<point_count; p++ )
+
+  // loop over all polygons
+  int q;
+  for( q=0; q<count; q++ )
     {
-      stg_point_t* pt1 = &g_array_index( poly->points, stg_point_t, p );	  
-      stg_point_t* pt2 = &g_array_index( poly->points, stg_point_t, (p+1) % point_count);
+      stg_polygon_t* poly = &polys[q];
       
-      stg_pose_t pp1;
-      pp1.x = pt1->x;
-      pp1.y = pt1->y;
-      pp1.a = 0;
-      
-      stg_pose_t pp2;
-      pp2.x = pt2->x;
-      pp2.y = pt2->y;
-      pp2.a = 0;
-      
-      stg_pose_t p1;
-      stg_pose_t p2;
-      
-      // shift the line points into the global coordinate system
-      stg_pose_sum( &p1, pose, &pp1 );
-      stg_pose_sum( &p2, pose, &pp2 );
-      
-      //printf( "tracing %.2f %.2f   %.2f %.2f\n",  p1.x, p1.y, p2.x, p2.y );
-      
-      itl_t* itl = itl_create( p1.x, p1.y, p2.x, p2.y, 
-			       mod->world->matrix, 
-			       PointToPoint );
-      
-      stg_model_t* hitmod = itl_first_matching( itl, lines_raytrace_match, mod );
-      
-      itl_destroy( itl );
-      
-      if( hitmod )
+      int point_count = poly->points->len;
+
+      // loop over all points in this polygon
+      int p;
+      for( p=0; p<point_count; p++ )
 	{
-	  if( hitx ) *hitx = itl->x; // report them
-	  if( hity ) *hity = itl->y;	  
-	  return hitmod; // we hit this object! stop raytracing
+	  stg_point_t* pt1 = &g_array_index( poly->points, stg_point_t, p );	  
+	  stg_point_t* pt2 = &g_array_index( poly->points, stg_point_t, (p+1) % point_count);
+	  
+	  stg_pose_t pp1;
+	  pp1.x = pt1->x;
+	  pp1.y = pt1->y;
+	  pp1.a = 0;
+	  
+	  stg_pose_t pp2;
+	  pp2.x = pt2->x;
+	  pp2.y = pt2->y;
+	  pp2.a = 0;
+	  
+	  stg_pose_t p1;
+	  stg_pose_t p2;
+	  
+	  // shift the line points into the global coordinate system
+	  stg_pose_sum( &p1, pose, &pp1 );
+	  stg_pose_sum( &p2, pose, &pp2 );
+	  
+	  //printf( "tracing %.2f %.2f   %.2f %.2f\n",  p1.x, p1.y, p2.x, p2.y );
+	  
+	  itl_t* itl = itl_create( p1.x, p1.y, p2.x, p2.y, 
+				   mod->world->matrix, 
+				   PointToPoint );
+	  
+	  stg_model_t* hitmod = itl_first_matching( itl, lines_raytrace_match, mod );
+	  
+	  itl_destroy( itl );
+	  
+	  if( hitmod )
+	    {
+	      if( hitx ) *hitx = itl->x; // report them
+	      if( hity ) *hity = itl->y;	  
+	      return hitmod; // we hit this object! stop raytracing
+	    }
 	}
     }
 

@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.34 2004-11-21 19:09:05 rtv Exp $
+# CVS: $Id: test.world,v 1.35 2004-11-21 22:03:47 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -18,15 +18,21 @@ include "pioneer.inc"
 
 
 
+
+
+
 # defines 'map' object used for floorplans
 include "map.inc"
 
 
 
 
+
+
+
 # window_size doesn't work, thanks to broken rtk_canvas_size()
 #
-window( size [ 824.000 595.000 ] center [-8.049 1.161] scale 0.021 )
+window( size [ 846.000 698.000 ] center [-10.139 1.699] scale 0.015 )
 
 map(
   #size [15.5 11.4]
@@ -73,35 +79,35 @@ laserpioneer
 (
   color "red"
   name "p1"
-  pose [-5.127 2.584 -162.098]
+  pose [-5.353 2.515 -162.098]
 )
 
 laserpioneer
 (
   color "blue"
   name "p2"
-  pose [-4.717 1.938 -194.220]
+  pose [-5.325 2.025 -194.220]
 )
 
 laserpioneer
 (
   color "green"
   name "p3"
-  pose [-4.717 1.938 -194.220]
+  pose [-5.707 1.599 -199.781]
 )
 
 laserpioneer
 (
   color "cyan"
   name "p4"
-  pose [-7.090 3.240 -491.732]
+  pose [-6.795 3.223 -458.929]
 )
 
 laserpioneer
 (
   color "yellow"
   name "p5"
-  pose [-6.334 3.156 -110.414]
+  pose [-6.247 3.130 -110.414]
 )
 
 laserpioneer
@@ -112,14 +118,26 @@ laserpioneer
 )
 
 # a silly object to look at
-#position( 	
-#  name "sub" 
-#  size [2 1]
-#  pose [-6.343 2.200 0.000] 
-#  color "red"  
-#  # loads a bitmap for the model's body
-#  bitmap "bitmaps/submarine.png"
-#  fiducial_return 22
-#  velocity [0 0 10]
-#  laser_return 2
-#)
+position( 	
+  name "invader" 
+  size [0.3 0.3]
+  pose [-14.489 2.461 0.000] 
+  color "red"  
+  # loads a bitmap for the model's body
+  bitmap "bitmaps/space_invader.png"
+  fiducial_return 22
+  velocity [0.2 0 0]
+  laser_return 2
+)
+
+position( 	
+  name "ghost" 
+  size [0.3 0.3 ]
+  pose [-9.495 -2.575 0.000] 
+  color "blue"  
+  # loads a bitmap for the model's body
+  bitmap "bitmaps/ghost.tiff"
+  fiducial_return 22
+  velocity [0 0.2 0]
+  laser_return 2
+)

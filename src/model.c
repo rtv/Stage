@@ -20,15 +20,15 @@ Implements a model - the basic object of Stage simulation
 /// convert a global pose into the model's local coordinate system
 void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose )
 {
-  printf( "g2l global pose %.2f %.2f %.2f\n",
-	  pose->x, pose->y, pose->a );
+  //printf( "g2l global pose %.2f %.2f %.2f\n",
+  //  pose->x, pose->y, pose->a );
 
   // get model's global pose
   stg_pose_t org;
   stg_model_global_pose( mod, &org );
 
-  printf( "g2l global origin %.2f %.2f %.2f\n",
-	  org.x, org.y, org.a );
+  //printf( "g2l global origin %.2f %.2f %.2f\n",
+  //  org.x, org.y, org.a );
 
   // compute global pose in local coords
   double sx =  (pose->x - org.x) * cos(org.a) + (pose->y - org.y) * sin(org.a);
@@ -37,8 +37,8 @@ void stg_model_global_to_local( stg_model_t* mod, stg_pose_t* pose )
 
   PACKPOSE(pose,sx,sy,sa);
 
-  printf( "g2l local pose %.2f %.2f %.2f\n",
-	  pose->x, pose->y, pose->a );
+  //printf( "g2l local pose %.2f %.2f %.2f\n",
+  //  pose->x, pose->y, pose->a );
 }
 
 
