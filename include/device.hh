@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/device.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -73,8 +73,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Define length-specific data types
 //
-#define BYTE unsigned short
-#define WORD16 unsigned short
+#define BYTE unsigned char
+#define UINT16 unsigned short
+
+#define LOBYTE(w) ((BYTE) (w & 0xFF))
+#define HIBYTE(w) ((BYTE) ((w >> 8) & 0xFF))
+#define MAKEUINT16(lo, hi) ((((UINT16) (hi)) << 8) | ((UINT16) (lo)))
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,6 +128,10 @@ class CDevice
     //
     public: virtual bool Update() = 0;
 
+    // See if the device is subscribed
+    //
+    public: bool IsSubscribed();
+    
     // Write to the data buffer
     // Returns the number of bytes copied
     //
