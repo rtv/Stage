@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: playerdevice.hh,v 1.8 2002-10-10 02:45:25 gerkey Exp $
+ * CVS info: $Id: playerdevice.hh,v 1.9 2002-10-27 21:55:37 rtv Exp $
  */
 
 #ifndef PLAYERENTITY_HH
@@ -76,10 +76,6 @@ public: virtual void Update( double sim_time );
 
   // writes a description of this device into the buffer
 public: virtual void GetStatusString( char* buf, int buflen );
-
-  ///////////////////////////////////////////////////////////////////////
-  // RTP stuff
-  CRTPPlayer* rtp_p;
 
   // Get the shared memory size
   private: int SharedMemorySize( void );

@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.hh,v 1.2 2002-09-07 02:05:24 rtv Exp $
+// $Id: matrix.hh,v 1.3 2002-10-27 21:55:37 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "image.hh" // for Rect
 #include "entity.hh"
 
 class CMatrix

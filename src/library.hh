@@ -11,10 +11,6 @@
 class CWorld;
 class CEntity;
 
-// pointer to a function that returns a new  entity
-// given a world and a parent
-typedef CEntity*(*CreatorFunctionPtr)( CWorld* world, CEntity* parent );
-
 
 // ADDING A DEVICE TO THE LIBRARY
 //
@@ -58,6 +54,7 @@ private:
 public:
   // constructor
   Library( void );
+  Library( const libitem_t items[] );
   
   void AddDeviceType( char* token, StageType type, void* creator );
 

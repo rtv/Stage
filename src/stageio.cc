@@ -4,7 +4,7 @@
 #include "server.hh"
 #include "entity.hh"
 #include "world.hh"
-#include "bitmap.hh"
+//#include "bitmap.hh"
 #include "library.hh"
 
 #include <unistd.h>
@@ -276,14 +276,15 @@ int CStageIO::ReadBackground( int fd )
   
   int res = ReadPacket( fd, (char*)&w, sizeof(w) );
   
+
   if( res == sizeof(w) )
   {
     // Construct a single fixed obstacle representing
     // the environment.
-    assert( this->root = (CEntity*)new CBitmap(this, NULL ) );
+    //assert( this->root = (CEntity*)new CBitmap(this, NULL ) );
     
     // poke the scale in from the data packet(ugly!)
-    ((CBitmap*)this->root)->scale = w.scale;
+    //((CBitmap*)this->root)->scale = w.scale;
     
     assert(this->matrix); // gotta have it before we can load the wall
       
@@ -300,8 +301,8 @@ int CStageIO::ReadBackground( int fd )
     if( res2 == num_pixels )
     {
       // create an image from the data
-      assert( ((CBitmap*)this->root)->image = 
-	      new Nimage( pixels, w.sizex, w.sizey ) );            
+      //assert( ((CBitmap*)this->root)->image = 
+      //      new Nimage( pixels, w.sizex, w.sizey ) );            
     }
     else
     {
@@ -319,6 +320,7 @@ int CStageIO::WriteBackground( int fd )
 {
   PRINT_DEBUG( "" );
 
+  /*
   CBitmap* fix = dynamic_cast<CBitmap*>(this->root);
   
   assert( fix );
@@ -350,7 +352,9 @@ int CStageIO::WriteBackground( int fd )
 			  num_pixels );
 
   assert( res2 == num_pixels );
+  */
 
+  int res = 0;
   return res;
 }
 

@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.89 2002-10-25 22:48:09 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.90 2002-10-27 21:55:37 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -57,7 +57,7 @@
 #include "world.hh"
 #include "worldfile.hh"
 #include "gui.hh"
-
+#include "library.hh"
 
 #ifdef INCLUDE_RTK2
 // CALLBACK FUNCTION WRAPPERS ////////////////////////////////////////////

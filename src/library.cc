@@ -1,4 +1,91 @@
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/*
+ * Desc: The library knows how to create devices. All device models
+ * must register a worldfile token, type number and a creator function
+ * (usually a static wrapper for a constructor) with the library. Just
+ * add your device to the static table below.
+ *
+ * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
+ * CVS info: $Id: library.cc,v 1.3 2002-10-27 21:55:37 rtv Exp $
+ */
+
 #include "library.hh"
+
+#include "models/bitmap.hh"
+#include "models/box.hh"
+#include "models/bpsdevice.hh"
+#include "models/broadcastdevice.hh"
+#include "models/descartesdevice.hh"
+#include "models/gpsdevice.hh"
+#include "models/gripperdevice.hh"
+#include "models/idardevice.hh"
+#include "models/idarturretdevice.hh"
+#include "models/laserbeacondevice.hh"
+#include "models/laserbeacon.hh"
+#include "models/laserdevice.hh"
+#include "models/motedevice.hh"
+#include "models/omnipositiondevice.hh"
+#include "models/positiondevice.hh"
+#include "models/powerdevice.hh"
+#include "models/ptzdevice.hh"
+#include "models/puck.hh"
+#include "models/sonardevice.hh"
+#include "models/truthdevice.hh"
+#include "models/visionbeacon.hh"
+#include "models/visiondevice.hh"
+
+typedef CreatorFunctionPtr CFP;
+
+// this array defines the models that are available to Stage. New
+// devices must be added here.
+
+libitem_t library_items[] = { 
+  { "bitmap", BitmapType, (CFP)CBitmap::Creator},
+  { "box", BoxType, (CFP)CBox::Creator},
+  { "descartes", DescartesType, (CFP)CDescartesDevice::Creator},
+  { "gps", GpsType, (CFP)CGpsDevice::Creator},
+  { "gripper", GripperType, (CFP)CGripperDevice::Creator},
+  { "idar", IdarType, (CFP)CIdarDevice::Creator},
+  { "idarturret", IdarTurretType, (CFP)CIdarTurretDevice::Creator},
+  { "laser", LaserTurretType,(CFP)CLaserDevice::Creator},
+  { "laserbeacon",LaserBeaconType, (CFP)CLaserBeacon::Creator},
+  { "lbd", LbdType, (CFP)CLBDDevice::Creator},
+  { "mote", MoteType, (CFP)CMoteDevice::Creator},
+  { "omniposition", OmniPositionType, (CFP)COmniPositionDevice::Creator},
+  { "position", PositionType, (CFP)CPositionDevice::Creator},
+  { "power", PowerType, (CFP)CPowerDevice::Creator},
+  { "ptz", PtzType, (CFP)CPtzDevice::Creator},
+  { "puck", PuckType, (CFP)CPuck::Creator},
+  { "sonar", SonarType, (CFP)CSonarDevice::Creator},
+  { "truth", TruthType, (CFP)CTruthDevice::Creator},
+  { "vision", VisionType, (CFP)CVisionDevice::Creator},
+  { "broadcast", BroadcastType, (CFP)CBroadcastDevice::Creator},
+  // { "visionbeacon", VisionBeaconType, (CFP)CVisionBeacon::Creator},
+  // { "bps", BpsType, (CFP)CBpsDevice::Creator},
+  {NULL, NUMBER_OF_STAGE_TYPES, NULL } // marks the end of the array
+};  
+
+
+// statically allocate a libray filled with the entries above
+Library model_library( library_items );
 
 #define DEBUG
 
@@ -75,6 +162,23 @@ Library::Library( void )
 {
 }
 
+// constructor from null-terminated array
+Library::Library( const libitem_t item_array[] )
+{
+  printf( "Building libray from array\n" );
+  //PRINT_DEBUG( "Building libray from array\n" );
+
+  for( libitem_t* item = (libitem_t*)&(item_array[0]);
+       item->token; 
+       item++ )
+    {
+      printf( "%s %d %p\n", item->token, item->type, item->fp );
+      //PRINT_DEBUG3( "%s %d %p\n", item->token, item->type, item->fp );
+      this->AddDeviceType( (char*)item->token, item->type, (void*)item->fp );
+    }
+}
+
+
 // add a device type to the library
 void Library::AddDeviceType( char* token, StageType type, void* creator )
 {
@@ -138,6 +242,8 @@ CEntity* Library::CreateEntity( CreatorFunctionPtr cfp, CWorld* world_ptr, CEnti
   
 const char* Library::TokenFromType( StageType t )
 { 
+  printf( "token from type %d\n", t );
+
   assert( liblist );
   assert( t > 0 );
   assert( t < NUMBER_OF_STAGE_TYPES );

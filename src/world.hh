@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.12 2002-10-25 22:48:09 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.13 2002-10-27 21:55:38 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -38,14 +38,10 @@
 
 #include "replace.h" // for poll(2)
 #include "player.h" //from player
-#include "image.hh"
 #include "entity.hh"
 #include "playercommon.h"
 #include "matrix.hh"
 #include "worldfile.hh"
-
-#include "rtp.h"
-//#include "library.hh"
 
 class Library;
 
@@ -65,7 +61,7 @@ class CWorld
   virtual ~CWorld();
   
   // experimental - rtv
-  public: CRTPPlayer* rtp_player;
+  //public: CRTPPlayer* rtp_player;
   
   // the Library class knows how to create entities given a worldfile
   // token, and can find the token given a StageType number

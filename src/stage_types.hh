@@ -21,7 +21,7 @@
  * Desc: Shared types, constants, etc
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: stage_types.hh,v 1.5 2002-10-26 00:52:38 rtv Exp $
+ * CVS: $Id: stage_types.hh,v 1.6 2002-10-27 21:55:37 rtv Exp $
  */
 
 #ifndef STAGE_TYPES_HH
@@ -91,7 +91,7 @@ typedef uint32_t StageColor;
 enum StageType
 {
   NullType = 0,
-  WallType,
+  BitmapType,
   PlayerType, 
   MiscType, 
   PositionType,
@@ -101,7 +101,7 @@ enum StageType
   PtzType,
   BoxType,
   LaserBeaconType,
-  LBDType, // Laser Beacon Detector
+  LbdType, // Laser Beacon Detector
   VisionBeaconType,
   GripperType, 
   GpsType,
@@ -111,15 +111,29 @@ enum StageType
   SpeechType,
   TruthType,
   OccupancyType,
-  IDARType, // HRL's Infrared Data And Ranging turret
+  IdarType, // HRL's Infrared Data And Ranging turret
   DescartesType, // HRL's customized Descartes robot platform
   OmniPositionType,
   MoteType,
   BpsType,
-  IDARTurretType,
+  IdarTurretType,
   PowerType,
   NUMBER_OF_STAGE_TYPES // THIS MUST BE LAST - put yours before this.
 };
+
+class CEntity;
+class CWorld;
+// pointer to a function that returns a new  entity
+// given a world and a parent
+typedef CEntity*(*CreatorFunctionPtr)( CWorld* world, CEntity* parent );
+
+typedef struct libitem
+{
+  const char* token;
+  StageType type;
+  CreatorFunctionPtr fp;
+} libitem_t;
+
 
 // PROPERTY DEFINITIONS ///////////////////////////////////////////////
 
@@ -146,6 +160,21 @@ enum IDARReturn
   IDARReflect,
   IDARReceive
 };
+
+// image types ////////////////////////////////////////////////////////
+
+unsigned int RGB( int r, int g, int b );
+
+typedef struct Point
+{
+  int x, y;
+};
+
+typedef struct Rect
+{
+  int toplx, toply, toprx, topry, botlx, botly, botrx, botry;
+};
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Some useful macros

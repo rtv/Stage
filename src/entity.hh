@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.8 2002-10-25 22:48:09 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.9 2002-10-27 21:55:37 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -41,14 +41,16 @@
 #include "stage.h"
 #include "stage_types.hh"
 #include "colors.hh"
-#include "rtp.h"
+//#include "rtp.h"
+
+#include <netdb.h>
 
 #ifdef INCLUDE_RTK2
 #include "rtk.h"
 #endif
 
-#include "library.hh"
-extern Library* lib;
+//#include "library.hh"
+//extern Library* lib;
 
 // Forward declare the world class
 class CWorld;
@@ -96,18 +98,6 @@ class CEntity
   // Requires a pointer to the parent and a pointer to the world.
   public: CEntity(CWorld *world, CEntity *parent_entity );
   
-  // constructor performs library registration.
-  // designed to be used by new devices to register themselves
-  // by creating a global static instance
-public: CEntity( char* token,  StageType type, void* creator ) 
-  {
-    // the first entity to be created initializes the global library
-    if( lib == NULL )
-      assert( lib = new Library() );
-    
-    lib->AddDeviceType( token, type, creator );
-  }
-
   // a linked list of other entities attached to this one
 public: CEntity* child_list;
 public: CEntity* prev;

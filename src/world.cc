@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.129 2002-10-25 22:48:09 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.130 2002-10-27 21:55:37 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -57,7 +57,7 @@
 #include "playerdevice.hh"
 #include "library.hh"
 #include "gui.hh"
-#include "bitmap.hh"
+#include "models/bitmap.hh"
 
 bool usage = false;
 
@@ -127,8 +127,6 @@ CWorld::CWorld( int argc, char** argv, Library* lib )
   this->entities = NULL;
   this->entity_count = 0;
   this->entities_size = 0;
-
-  rtp_player = NULL;
 
   m_log_output = false; // enable with -l <filename>
   m_console_output = false; // enable with -o
@@ -288,19 +286,6 @@ bool CWorld::ParseCmdLine(int argc, char **argv)
 	  printf("[Stop time: %d]",m_stoptime);
 	}
 
-      // ENABLE RTP - sensor data is sent in rtp format
-      if( (strcmp( argv[a], "-r" ) == 0 ) || 
-	  ( strcmp( argv[a], "--rtp" ) == 0 ))
-	{
-	  assert( rtp_player = new CRTPPlayer( argv[a+1] ) );
-	
-	  //printf( "World rtp player @ %p\n", rtp_player );
-	  
-      	  printf( "[RTP %s]", argv[a+1] );
-      	  a++;
-	  
-
-	}
       //else if( strcmp( argv[a], "-id" ) == 0 )
       //{
       //  memset( m_hostname, 0, 64 );

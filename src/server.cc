@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.36 2002-10-25 22:48:09 rtv Exp $
+ * CVS info: $Id: server.cc,v 1.37 2002-10-27 21:55:37 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -61,7 +61,7 @@
 //#define VERBOSE
 
 #include "server.hh"
-#include "boxobstacle.hh"
+//#include "boxobstacle.hh"
 #include "playerdevice.hh"
 //#include "library.hh"
 //extern Library* lib;
@@ -673,6 +673,8 @@ void CStageServer::ListenForConnections( void )
 
 bool CStageServer::Shutdown()
 {
+  int res = CWorld::Shutdown();
+
   PRINT_DEBUG( "server shutting down" );
 
   ShutdownPlayer();
@@ -687,7 +689,7 @@ bool CStageServer::Shutdown()
                 m_device_dir,
                 strerror(errno));
 
-  return CWorld::Shutdown();
+  return res;
 }
 
 //////////////////////////////////////////////////////////////////////////

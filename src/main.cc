@@ -19,9 +19,9 @@
  */
 /*
  * Desc: Program Entry point
- * Author: Andrew Howard
+ * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.55 2002-10-25 22:48:09 rtv Exp $
+ * CVS: $Id: main.cc,v 1.56 2002-10-27 21:55:37 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -38,19 +38,17 @@
 #include "server.hh"
 #include "library.hh"
 
-Library* lib; // global static ptr - initialized by CEntity
-// before first use
+// defined in library.cc
+extern Library model_library; 
 
 //#define DEBUG
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Global vars
 
 // Quit signal
 bool quit = false;
-
-///////////////////////////////////////////////////////////////////////////
-// Local vars
 
 // Pointer to the one-and-only instance of the world
 // This really should be static
@@ -128,12 +126,12 @@ int main(int argc, char **argv)
     PRINT_DEBUG2( "argv[%d] = %s\n", a, argv[a] );
       
     if( strcmp( argv[a], "-c" ) == 0 ||  strcmp( argv[a], "-cl" ) == 0)
-      assert( world = new CStageClient( argc, argv, lib ) );
+      assert( world = new CStageClient( argc, argv, &model_library ) );
   }
   
   // if we're not a client, we must be a server
   if( world == NULL )
-    assert( world = new CStageServer( argc, argv, lib ) );
+    assert( world = new CStageServer( argc, argv, &model_library ) );
   
   // a world constructor may have raised the quit flag
   // (this would be more elegantly implemented with an exception..)
