@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.24 $
+//  $Revision: 1.25 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -24,7 +24,7 @@ The fiducialfinder model simulates a fiducial-detecting device.
 #include "stage.h"
 #include "gui.h"
 
-extern rtk_fig_t* fig_debug;
+extern rtk_fig_t* fig_debug_rays;
 
 
 void fiducial_init( stg_model_t* mod )
@@ -173,7 +173,7 @@ int fiducial_update( stg_model_t* mod )
   if( mod->subs < 1 )
     return 0;
 
-  if( fig_debug ) rtk_fig_clear( fig_debug );
+  if( fig_debug_rays ) rtk_fig_clear( fig_debug_rays );
   
   model_fiducial_buffer_t mfb;
   memset( &mfb, 0, sizeof(mfb) );

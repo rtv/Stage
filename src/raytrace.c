@@ -3,7 +3,7 @@
 
 #include "stage.h"
 
-extern rtk_fig_t* fig_debug;
+extern rtk_fig_t* fig_debug_rays;
 
 void itl_destroy( itl_t* itl )
 {
@@ -121,8 +121,8 @@ stg_model_t* itl_first_matching( itl_t* itl,
       
       //printf( "MATCH in the big cell at %.2f %.2f\n", itl->x, itl->y );
 	
-      if( fig_debug ) // draw the big rectangle
-	rtk_fig_rectangle( fig_debug, 
+      if( fig_debug_rays ) // draw the big rectangle
+	rtk_fig_rectangle( fig_debug_rays, 
 			   itl->x-fmod(itl->x,itl->big_incr)+itl->big_incr/2.0,
 			   itl->y-fmod(itl->y,itl->big_incr)+itl->big_incr/2.0,
 			   0, 
@@ -151,8 +151,8 @@ stg_model_t* itl_first_matching( itl_t* itl,
 	  continue;
 	}
 
-      if( fig_debug ) // draw the big rectangle
-	rtk_fig_rectangle( fig_debug, 
+      if( fig_debug_rays ) // draw the big rectangle
+	rtk_fig_rectangle( fig_debug_rays, 
 			   itl->x-fmod(itl->x,itl->med_incr)+itl->med_incr/2.0,
 			   itl->y-fmod(itl->y,itl->med_incr)+itl->med_incr/2.0,
 			   0, 
@@ -173,8 +173,8 @@ stg_model_t* itl_first_matching( itl_t* itl,
       // if there's anything matching in the small cell
       if( (found = array_first_matching( itl->models, func, finder )) )
 	{
-	  if( fig_debug ) // draw the small rectangle
-	    rtk_fig_rectangle( fig_debug, 
+	  if( fig_debug_rays ) // draw the small rectangle
+	    rtk_fig_rectangle( fig_debug_rays, 
 			   itl->x-fmod(itl->x,itl->small_incr)+itl->small_incr/2.0,
 			   itl->y-fmod(itl->y,itl->small_incr)+itl->small_incr/2.0,
 			   0, 
@@ -234,8 +234,8 @@ void itl_raytrace( itl_t* itl )
     {
       itl->models = stg_matrix_bigcell_get( itl->matrix, itl->x, itl->y );
      
-      if( fig_debug ) // draw the big rectangle
-	rtk_fig_rectangle( fig_debug, 
+      if( fig_debug_rays ) // draw the big rectangle
+	rtk_fig_rectangle( fig_debug_rays, 
 			   itl->x-fmod(itl->x,itl->big_incr)+itl->big_incr/2.0,
 			   itl->y-fmod(itl->y,itl->big_incr)+itl->big_incr/2.0,
 			   0, 
@@ -262,8 +262,8 @@ void itl_raytrace( itl_t* itl )
       // check a medium cell
       itl->models = stg_matrix_medcell_get( itl->matrix, itl->x, itl->y );
      
-      if( fig_debug ) // draw the big rectangle
-	rtk_fig_rectangle( fig_debug, 
+      if( fig_debug_rays ) // draw the big rectangle
+	rtk_fig_rectangle( fig_debug_rays, 
 			   itl->x-fmod(itl->x,itl->med_incr)+itl->med_incr/2.0,
 			   itl->y-fmod(itl->y,itl->med_incr)+itl->med_incr/2.0,
 			   0, 
@@ -293,8 +293,8 @@ void itl_raytrace( itl_t* itl )
 	itl->models = 
 	  stg_matrix_cell_get( itl->matrix, itl->x+itl->small_incr, itl->y );
 
-      if( fig_debug ) // draw the small rectangle
-	rtk_fig_rectangle( fig_debug, 
+      if( fig_debug_rays ) // draw the small rectangle
+	rtk_fig_rectangle( fig_debug_rays, 
 			   itl->x-fmod(itl->x,itl->small_incr)+itl->small_incr/2.0,
 			   itl->y-fmod(itl->y,itl->small_incr)+itl->small_incr/2.0,
 			   0, 

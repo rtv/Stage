@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.53 $
+//  $Revision: 1.54 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -26,7 +26,7 @@ The laser model simulates a scanning laser rangefinder
 //#define DEBUG
 
 #include "stage.h"
-extern rtk_fig_t* fig_debug;
+extern rtk_fig_t* fig_debug_rays;
 
 #define TIMING 0
 #define LASER_FILLED 1
@@ -99,7 +99,7 @@ int laser_update( stg_model_t* mod )
   gettimeofday( &tv1, NULL );
 #endif
       
-  if( fig_debug ) rtk_fig_clear( fig_debug );
+  if( fig_debug_rays ) rtk_fig_clear( fig_debug_rays );
 
   // make a scan buffer (static for speed, so we only have to allocate
   // memory when the number of samples changes).

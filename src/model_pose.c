@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.34 $
+//  $Revision: 1.35 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -18,7 +18,7 @@
 #include "stage.h"
 #include "gui.h"
 
-extern rtk_fig_t* fig_debug; 
+extern rtk_fig_t* fig_debug_rays; 
 
 int lines_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
 {
@@ -53,7 +53,7 @@ stg_model_t* stg_model_test_collision_at_pose( stg_model_t* mod,
   if( count < 1 )
     return NULL;
 
-  if( fig_debug ) rtk_fig_clear( fig_debug );
+  if( fig_debug_rays ) rtk_fig_clear( fig_debug_rays );
 
   int l;
   for( l=0; l<count; l++ )

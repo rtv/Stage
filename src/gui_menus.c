@@ -4,7 +4,8 @@
 #include "stage.h"
 #include "gui.h"
 
-extern rtk_fig_t* fig_debug;
+extern rtk_fig_t* fig_debug_geom;
+extern rtk_fig_t* fig_debug_rays;
 extern int _stg_quit;
 
 enum {
@@ -78,13 +79,15 @@ static GtkItemFactoryEntry menu_table[] = {
   { "/View/Matrix", "<CTRL>M",   gui_menu_matrix_cb, 1, "<CheckItem>" },
   { "/View/Fill polygons", "<CTRL>P", gui_menu_polygons_cb, 1, "<CheckItem>" },
   { "/View/Grid", "<CTRL>G",   gui_menu_layer_cb, STG_LAYER_GRID, "<CheckItem>" },
-  { "/View/Debug", "<CTRL>D", gui_menu_debug_cb, 1, "<CheckItem>" },
+  { "/View/Debug", NULL, NULL, 1, "<Branch>" },
+  { "/View/Debug/Raytrace", NULL, gui_menu_debug_cb, 1, "<CheckItem>" },
+  { "/View/Debug/Geometry", NULL, gui_menu_debug_cb, 2, "<CheckItem>" },
   { "/_Clock",         NULL,      NULL, 0, "<Branch>" },
   { "/Clock/tear1",    NULL,      NULL, 0, "<Tearoff>" },
   { "/Clock/Pause", NULL, gui_menu_clock_pause_cb, 1, "<CheckItem>" }
 };
 
-static const int menu_table_count = 43;
+static const int menu_table_count = 45;
 
 /* void gui_menu_file_about( void ) */
 /* { */
@@ -285,19 +288,33 @@ void gui_menu_debug_cb( gpointer data, guint action, GtkWidget* mitem )
 {
   gui_window_t* win = (gui_window_t*)data;
 
-  // fig_debug is global
-
-  if(GTK_CHECK_MENU_ITEM(mitem)->active)
+  switch( action )
     {
-      fig_debug = rtk_fig_create( win->canvas, NULL, STG_LAYER_DEBUG );
-      rtk_fig_color_rgb32( fig_debug, stg_lookup_color(STG_DEBUG_COLOR) );
+    case 1: // raytrace
+      if(GTK_CHECK_MENU_ITEM(mitem)->active)
+	{
+	  fig_debug_rays = rtk_fig_create( win->canvas, NULL, STG_LAYER_DEBUG );
+	  rtk_fig_color_rgb32( fig_debug_rays, stg_lookup_color(STG_DEBUG_COLOR) );
+	}
+      else if( fig_debug_rays )
+	{ 
+	  rtk_fig_destroy( fig_debug_rays );
+	  fig_debug_rays = NULL;
+	}
+      break;
+    case 2: // geometry
+      if(GTK_CHECK_MENU_ITEM(mitem)->active)
+	{
+	  fig_debug_geom = rtk_fig_create( win->canvas, NULL, STG_LAYER_DEBUG );
+	  rtk_fig_color_rgb32( fig_debug_geom, stg_lookup_color(STG_DEBUG_COLOR) );
+	}
+      else if( fig_debug_geom )
+	{ 
+	  rtk_fig_destroy( fig_debug_geom );
+	  fig_debug_geom = NULL;
+	}
+      break;
     }
-  else if( fig_debug )
-    { 
-      rtk_fig_destroy( fig_debug );
-      fig_debug = NULL;
-    }
-
 }
 
 

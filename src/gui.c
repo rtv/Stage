@@ -25,8 +25,9 @@ Code for the Stage user interface window.
 // single static application visible to all funcs in this file
 static rtk_app_t *app = NULL; 
 
-// here's a figure anyone can draw in for debug purposes
-rtk_fig_t* fig_debug = NULL;
+// some global figures anyone can draw in for debug purposes
+rtk_fig_t* fig_debug_rays = NULL;
+rtk_fig_t* fig_debug_geom = NULL;
 
 void gui_startup( int* argc, char** argv[] )
 {
@@ -580,22 +581,18 @@ void model_render_lines( stg_model_t* mod )
 }
 
 
-rtk_fig_t *global_geom_fig = NULL;
+//rtk_fig_t *global_geom_fig = NULL;
 
 /// render a model's global pose vector
-void gui_model_render_geom_global( stg_model_t* mod )
+void gui_model_render_geom_global( stg_model_t* mod, rtk_fig_t* fig )
 {
   stg_pose_t glob;
   stg_model_global_pose( mod, &glob );
   
-  if( global_geom_fig == NULL )
-    global_geom_fig = rtk_fig_create( mod->world->win->canvas, NULL, 99 );
-  
-  rtk_fig_t* fig = global_geom_fig;
   rtk_fig_color_rgb32( fig, 0x0000FF ); // blue
   //rtk_fig_line( fig, 0, 0, glob.x, glob.y );
   rtk_fig_arrow( fig, glob.x, glob.y, glob.a, 0.15, 0.05 );  
-
+  
   if( mod->parent )
     {
       stg_pose_t parentpose;
@@ -604,7 +601,7 @@ void gui_model_render_geom_global( stg_model_t* mod )
     }
   else
     rtk_fig_line( fig, 0, 0, glob.x, glob.y );
-
+  
   stg_pose_t localpose;
   memcpy( &localpose, &mod->geom.pose, sizeof(localpose));
   stg_model_local_to_global( mod, &localpose );
@@ -613,7 +610,7 @@ void gui_model_render_geom_global( stg_model_t* mod )
   rtk_fig_line( fig, 
 		glob.x, glob.y, 
 		localpose.x, localpose.y );
-
+  
   // draw the bounding box
   stg_pose_t bbox_pose;
   memcpy( &bbox_pose, &mod->geom.pose, sizeof(bbox_pose));
@@ -621,29 +618,24 @@ void gui_model_render_geom_global( stg_model_t* mod )
   rtk_fig_rectangle( fig, 
 		     bbox_pose.x, bbox_pose.y, bbox_pose.a, 
 		     mod->geom.size.x,
-		     mod->geom.size.y, 0 );
-
+		     mod->geom.size.y, 0 );  
 }
 
-
+/// move a model's figure to the model's current location
 void gui_render_pose( stg_model_t* mod )
 { 
-  stg_pose_t* pose = stg_model_get_pose( mod );
-  //PRINT_DEBUG( "gui model pose" );
   rtk_fig_origin( gui_model_figs(mod)->top, 
-		  pose->x, pose->y, pose->a );
-
-  // debug
+		  mod->pose.x, mod->pose.y, mod->pose.a ); 
 }
 
+///  render a model's geometry if geom viewing is enabled
 void gui_model_render_geom( stg_model_t* mod )
 {
-  rtk_fig_clear( mod->gui.geom );
-  gui_model_render_geom_global( mod ); 
-  //gui_model_render_geom_parent( mod );
-  //gui_model_render_geom_local( mod );
+  if( fig_debug_geom )
+    gui_model_render_geom_global( mod, fig_debug_geom ); 
 }
 
+/// wrapper for gui_model_render_geom for use in callbacks
 void gui_model_render_geom_cb( gpointer key, gpointer value, gpointer user )
 {
   gui_model_render_geom( (stg_model_t*)value );
@@ -652,8 +644,9 @@ void gui_model_render_geom_cb( gpointer key, gpointer value, gpointer user )
 /// render the geometry of all models
 void gui_world_geom( stg_world_t* world )
 {
-  if( global_geom_fig )
-    rtk_fig_clear( global_geom_fig );
-
-  g_hash_table_foreach( world->models, gui_model_render_geom_cb, NULL ); 
+  if( fig_debug_geom )
+    {
+      rtk_fig_clear( fig_debug_geom );
+      g_hash_table_foreach( world->models, gui_model_render_geom_cb, NULL ); 
+    }
 }

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.13 $
+//  $Revision: 1.14 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -28,7 +28,7 @@ of two modes; either <i>differential</i> like a Pioneer robot, or
 #include "stage.h"
 #include "gui.h"
 
-extern rtk_fig_t* fig_debug;
+//extern rtk_fig_t* fig_debug_rays;
   
 void position_init( stg_model_t* mod )
 {

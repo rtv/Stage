@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.34 $
+//  $Revision: 1.35 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -24,7 +24,7 @@ The ranger model simulates an array of sonar or infra-red (IR) range sensors.
 #include "stage.h"
 #include "gui.h"
 
-extern rtk_fig_t* fig_debug;
+extern rtk_fig_t* fig_debug_rays;
 
 void ranger_init( stg_model_t* mod )
 {
@@ -89,7 +89,7 @@ int ranger_update( stg_model_t* mod )
   stg_ranger_sample_t* ranges = (stg_ranger_sample_t*)
     calloc( sizeof(stg_ranger_sample_t), rcount );
   
-  if( fig_debug ) rtk_fig_clear( fig_debug );
+  if( fig_debug_rays ) rtk_fig_clear( fig_debug_rays );
 
   int t;
   for( t=0; t<rcount; t++ )
