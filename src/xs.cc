@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.3 2001-08-11 01:49:01 vaughan Exp $
+ * $Id: xs.cc,v 1.4 2001-08-11 01:50:15 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -864,6 +864,9 @@ CXGui::CXGui( int argc, char** argv, environment_t* anenv )
     switch( attrib.depth )
       {
       case 32: // no problem
+	break;
+
+      case 24: // no problem
 	break;
 	
       case 16:
