@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.7 $
+//  $Author: ahoward $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -24,8 +24,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
+#define ENABLE_TRACE 1
 
+#include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
 #include "world.h"
 #include "robot.h"
 #include "laserdevice.hh"
@@ -36,7 +37,7 @@
 //
 CLaserDevice::CLaserDevice(CRobot* rr, void *buffer, size_t data_len, 
 			   size_t command_len, size_t config_len)
-        : CDevice(rr, buffer, data_len, command_len, config_len)
+        : CPlayerDevice(rr, buffer, data_len, command_len, config_len)
 {
     m_update_interval = 0.2; // RTV - speed to match the real laser
     m_last_update = 0;
@@ -59,10 +60,19 @@ bool CLaserDevice::Update()
     //TRACE0("updating laser data");
     ASSERT(m_robot != NULL);
     ASSERT(m_world != NULL);
+
+    // Dont update anything if we are not subscribed
+    //
+    if (!IsSubscribed())
+        return true;
     
-    // Get a pointer to the bitmap
+    // Get pointers to the various bitmaps
     //
     Nimage *img = m_world->img;
+    Nimage *laser_img = m_world->m_laser_img;
+
+    ASSERT(img != NULL);
+    ASSERT(laser_img != NULL);
 
     // Check to see if it is time to update the laser
     //
@@ -91,12 +101,10 @@ bool CLaserDevice::Update()
 
     double robotx = m_robot->x;
     double roboty = m_robot->y;
-
-    float v = 0; // computed range value
  
     double dist, dx, dy, angle, pixelx, pixely;
     
-    BYTE pixel, sidePixel;
+    BYTE occupied, intensity;
 
     // Generate a complete set of samples
     //
@@ -119,33 +127,50 @@ bool CLaserDevice::Update()
         pixelx = robotx;
         pixely = roboty;
 
-        rng = pixel = sidePixel = 0;
-
-        // no need for bounds checking - get_pixel() does that internally
+        // Scan through the entire allowed range
         //
-        while( rng < maxRange 
-	       && ( pixel == 0 || pixel == myColor ) 
-	       && ( sidePixel == 0 || sidePixel == myColor ) )
+        for (rng = 0; rng < maxRange; rng++)
         {
-	    // we have to check 2 pixels to prevent sliding through
-	    // 1-pixel gaps in jaggies
-            pixel = img->get_pixel( (int)pixelx, (int)pixely );
-	    sidePixel = img->get_pixel( (int)pixelx + 1, (int)pixely );
+            // Look for laser beacons
+            //
+            if (m_intensity)
+            {
+                intensity = laser_img->get_pixel((int) pixelx, (int) pixely);
+                if (intensity != 0)
+                    break;
+            }
 
+            // Look for occupied cells
+            // we have to check 2 pixels to prevent sliding through
+            // 1-pixel gaps in jaggies
+            //
+            occupied = img->get_pixel( (int)pixelx, (int)pixely );
+            if (occupied != 0 && occupied != myColor)
+                break;
+            occupied = img->get_pixel( (int)pixelx + 1, (int)pixely );
+            if (occupied != 0 && occupied != myColor)
+                break;
+
+            // Compute the next pixel to inspect
+            //
             pixelx += dx;
             pixely += dy;
-            rng++;            
         }
-        
+                
         // set laser value, scaled to current ppm
         // and converted to mm
         //
-        v = 1000.0 * rng / ppm;
+        UINT16 v = (UINT16) (1000.0 * rng / ppm);
+
+        // Add in the intensity values in the top 3 bits
+        //
+        if (m_intensity)
+            v = v | (((UINT16) intensity) << 13);
         
         // Set the range
         // Swap the bytes while we're at it
         //
-        m_data[s] = htons((UINT16) v);
+        m_data[s] = htons(v);
     }
     
     // Copy the laser data to the data buffer

@@ -1,7 +1,7 @@
 /*************************************************************************
  * world.cc - top level class that contains and updates robots
  * RTV
- * $Id: world.cc,v 1.3 2000-12-01 00:20:52 vaughan Exp $
+ * $Id: world.cc,v 1.4 2000-12-01 03:13:32 ahoward Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -64,7 +64,7 @@ CWorld::CWorld( char* initFile )
   if( population > 254 )
     {
       puts( "more than 254 robots requested. no can do. exiting." );
-      exit( -1 );
+      exit( -1 ); // *** Exiting from a constructor is a BAD THING.  ahoward
     }
 
   //scale pioneer size to fit world - user specifies it in metres
@@ -95,6 +95,15 @@ CWorld::CWorld( char* initFile )
   
   // create a new forground image copied from the background
   img = new Nimage( bimg );
+
+  // Extra data layers
+  // Ultimately, these should go into a startup routine,
+  // or else get created by the devices themselves when they
+  // are subscribed.  This would save some memory.
+  // ahoward
+  //
+  m_laser_img = new Nimage(width, height);
+  m_laser_img->clear(0);
 
   refreshBackground = false;
 
@@ -203,6 +212,20 @@ CWorld::CWorld( char* initFile )
   timeNow = timeBegan = tv.tv_sec + (tv.tv_usec/MILLION);
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+// Destructor
+//
+CWorld::~CWorld()
+{
+    // *** WARNING There are lots of things that should be delete here!!
+    //
+    // ahoward
+
+    delete m_laser_img;
+}
+
+
 int CWorld::LockShmem( void )
 {
   struct sembuf ops[1];
@@ -222,6 +245,7 @@ int CWorld::LockShmem( void )
 
   return true;
 }
+
 
 int CWorld::UnlockShmem( void )
 {

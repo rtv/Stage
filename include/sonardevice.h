@@ -1,16 +1,16 @@
 // sonardevice.h - RTV
-// $Id: sonardevice.h,v 1.1 2000-12-01 02:57:18 vaughan Exp $
+// $Id: sonardevice.h,v 1.2 2000-12-01 03:13:32 ahoward Exp $
 
 #ifndef SONARDEVICE_HH
 #define SONARDEVICE_HH
 
-#include "device.hh"
+#include "playerdevice.hh"
 #include "robot.h"
 
 // forward decl.
 //class CWorld;
 
-class CSonarDevice : public CDevice
+class CSonarDevice : public CPlayerDevice
 {
     // Default constructor
     //

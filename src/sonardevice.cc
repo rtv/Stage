@@ -1,4 +1,4 @@
-// $Id: sonardevice.cc,v 1.1 2000-12-01 02:57:55 vaughan Exp $
+// $Id: sonardevice.cc,v 1.2 2000-12-01 03:13:32 ahoward Exp $
 #include <math.h>
 
 #include "world.h"
@@ -14,7 +14,7 @@ CSonarDevice::CSonarDevice( CRobot* rr,
 			      size_t data_len, 
 			      size_t command_len, 
 			      size_t config_len)
-  : CDevice(rr, buffer, data_len, command_len, config_len)
+  : CPlayerDevice(rr, buffer, data_len, command_len, config_len)
 {
   updateInterval = 0.1; //seconds
   lastUpdate = 0;

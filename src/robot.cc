@@ -1,7 +1,7 @@
 /*************************************************************************
  * robot.cc - most of the action is here
  * RTV
- * $Id: robot.cc,v 1.8 2000-12-01 02:50:36 vaughan Exp $
+ * $Id: robot.cc,v 1.9 2000-12-01 03:13:32 ahoward Exp $
  ************************************************************************/
 
 #include <errno.h>
@@ -35,13 +35,21 @@
 #include "win.h"
 #include "ports.h"
 
-// Devices
+// Active (player) devices
 //
-#include "laserdevice.hh"
-#include "sonardevice.h"
 #include "pioneermobiledevice.h"
+#include "sonardevice.h"
+#include "laserdevice.hh"
+#include "visiondevice.hh"
+
+// Passive devices
+//
+#include "laserbeacondevice.hh"
+
 
 extern int errno;
+
+const double TWOPI = 6.283185307;
 
 //extern CWorld* world;
 extern CWorldWin* win;
@@ -69,20 +77,9 @@ CRobot::CRobot( CWorld* ww, int col,
   // from here...
   channel = 0; // vision system color channel - default 0
 
-  cameraAngleMax = 2.0 * M_PI / 3.0; // 120 degrees
-  cameraAngleMin = 0.2 * M_PI / 3.0; // 12 degrees
-
-  cameraFOV = cameraAngleMax;
-
-  cameraImageWidth = 160 / 2;
-  cameraImageHeight = 120 / 2;
-
-  cameraPan = 0.0;
-  cameraPanMax = 100.0; // degrees
-  cameraPanMin = -cameraPanMax;
-
-  numBlobs = 0;
-  memset( blobs, 0, MAXBLOBS * sizeof( ColorBlob ) );
+  redrawSonar = false;
+  redrawLaser = false;
+  leaveTrail = false;
 
   // ...to here
 
@@ -185,49 +182,65 @@ CRobot::~CRobot( void )
 //
 bool CRobot::Startup()
 {
-  //TRACE0("starting devices");
-  
-  m_device_count = 0;
-  
-  // Create laser device
-  //
-  m_device[m_device_count++] 
-    = new CPioneerMobileDevice( this, 
+    TRACE0("starting devices");
+
+    m_device_count = 0;
+
+    // Create pioneer device    
+    //
+    ASSERT_INDEX(m_device_count, m_device);
+    m_device[m_device_count++] = new CPioneerMobileDevice( this, 
 				world->pioneerWidth, 
 				world->pioneerLength,
 				playerIO + P2OS_DATA_START,
 				P2OS_DATA_BUFFER_SIZE,
 				P2OS_COMMAND_BUFFER_SIZE,
 				P2OS_CONFIG_BUFFER_SIZE);
-  
-  
-  m_device[m_device_count++] 
-    = new CLaserDevice( this,
-			playerIO + LASER_DATA_START,
-			LASER_DATA_BUFFER_SIZE,
-			LASER_COMMAND_BUFFER_SIZE,
-			LASER_CONFIG_BUFFER_SIZE);
-  
+
+    // Sonar device
+    //
     m_device[m_device_count++] 
     = new CSonarDevice( this,
 			playerIO + SSONAR_DATA_START,
 			SSONAR_DATA_BUFFER_SIZE,
 			SSONAR_COMMAND_BUFFER_SIZE,
 			SSONAR_CONFIG_BUFFER_SIZE);
-  
+    
+    // Create laser device
+    //
+    ASSERT_INDEX(m_device_count, m_device);
+    m_device[m_device_count++] = new CLaserDevice(this, playerIO + LASER_DATA_START,
+                                                  LASER_DATA_BUFFER_SIZE,
+                                                  LASER_COMMAND_BUFFER_SIZE,
+                                                  LASER_CONFIG_BUFFER_SIZE);
 
-  // Start all the devices
-  //
-  for (int i = 0; i < m_device_count; i++)
+    // *** HACK -- this should be read from config file
+    // Create laser beacon device
+    //
+    ASSERT_INDEX(m_device_count, m_device);
+    m_device[m_device_count++] = new CLaserBeaconDevice(this, -0.10, +0.4);
+    m_device[m_device_count++] = new CLaserBeaconDevice(this, -0.10, -0.4);
+
+    // Create vision device
+    //
+    ASSERT_INDEX(m_device_count, m_device);
+    m_device[m_device_count++] = new CVisionDevice(this, playerIO + ACTS_DATA_START,
+                                                  ACTS_DATA_BUFFER_SIZE,
+                                                  ACTS_COMMAND_BUFFER_SIZE,
+                                                  ACTS_CONFIG_BUFFER_SIZE);
+    
+    // Start all the devices
+    //
+    for (int i = 0; i < m_device_count; i++)
     {
-      if (!m_device[i]->Startup() )
-	{
-	  perror("CRobot::Startup: failed to open device; device unavailable");
-	  m_device[i] = NULL;
-	}
+        if (!m_device[i]->Startup() )
+        {
+            perror("CRobot::Startup: failed to open device; device unavailable");
+            m_device[i] = NULL;
+        }
     }
   
-  return true;
+    return true;
 }
 
 
@@ -309,30 +322,22 @@ int CRobot::UpdateAndPublishPtz( void )
 
 void CRobot::Update()
 {
+    // legacy devices
+    if( playerIO[ SUB_PTZ ] ) UpdateAndPublishPtz();
 
-  // legacy devices
-  //if( playerIO[ SUB_SONAR  ] && UpdateSonar( world->img ) ) PublishSonar();  
-  //if( playerIO[ SUB_VISION ] && UpdateVision( world->img ) ) PublishVision();
-  //if( playerIO[ SUB_PTZ ] ) UpdateAndPublishPtz();
-
-  // Update all devices
-  //
-  for (int i = 0; i < m_device_count; i++)
+    // Update all devices
+    //
+    for (int i = 0; i < m_device_count; i++)
     {
-      // update subscribed devices, 
-      if (m_device[i]->IsSubscribed() 
-	  || ( world->win && world->win->dragging == this) )
-	
-	  m_device[i]->Update();
+        // update subscribed devices, 
+        // *** remove ?? ahoward if (world->win && world->win->dragging == this) )
+        m_device[i]->Update();
     }
-
 }
 
 bool CRobot::HasMoved( void )
 {
-  if( x != oldx || y != oldy || a != olda )
-    return true;
-  else
+    // *** WARNING -- I lost something in the merge here -- ahoward
     return false;
 }
 

@@ -1,4 +1,4 @@
-// $Id: pioneermobiledevice.cc,v 1.2 2000-12-01 00:20:52 vaughan Exp $	
+// $Id: pioneermobiledevice.cc,v 1.3 2000-12-01 03:13:32 ahoward Exp $	
 #include <math.h>
 
 #include "world.h"
@@ -15,7 +15,7 @@ CPioneerMobileDevice::CPioneerMobileDevice( CRobot* rr,
 					    size_t data_len, 
 					    size_t command_len, 
 					    size_t config_len)
-        : CDevice(rr, buffer, data_len, command_len, config_len)
+        : CPlayerDevice(rr, buffer, data_len, command_len, config_len)
 {
   m_robot = rr;
   m_world = m_robot->world;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -35,8 +35,9 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CVisionDevice::CVisionDevice(void *buffer, size_t data_len, size_t command_len, size_t config_len)
-        : CPlayerDevice(buffer, data_len, command_len, config_len)
+CVisionDevice::CVisionDevice(CRobot *robot, void *buffer, size_t data_len,
+                             size_t command_len, size_t config_len)
+        : CPlayerDevice(robot, buffer, data_len, command_len, config_len)
 {
     m_update_interval = 0.1;
     m_last_update = 0;

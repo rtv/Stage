@@ -1,19 +1,19 @@
-/* 	$Id: pioneermobiledevice.h,v 1.2 2000-12-01 00:20:52 vaughan Exp $	 */
+/* 	$Id: pioneermobiledevice.h,v 1.3 2000-12-01 03:13:32 ahoward Exp $	 */
 // this device implements a differential-steer mobility base for the robot
 
 #ifndef PIONEERMOBILEDEVICE_H
 #define PIONEERMOBILEDEVICE_H
 
-#include "device.hh"
+#include "playerdevice.hh"
 #include "robot.h"
 #include "world.h"
 #include "win.h"
 
-class CPioneerMobileDevice : public CDevice
+class CPioneerMobileDevice : public CPlayerDevice
 {
  public:
   
-  CPioneerMobileDevice( CRobot* rr, double wwidth, double llength,
+  CPioneerMobileDevice( CRobot* robot, double wwidth, double llength,
 			void *buffer, size_t data_len, 
 			size_t command_len, size_t config_len);
   

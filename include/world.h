@@ -1,7 +1,7 @@
 /*************************************************************************
  * world.h - most of the header action is here 
  * RTV
- * $Id: world.h,v 1.2 2000-12-01 00:20:52 vaughan Exp $
+ * $Id: world.h,v 1.3 2000-12-01 03:13:32 ahoward Exp $
  ************************************************************************/
 
 #ifndef WORLD_H
@@ -38,6 +38,7 @@ class CWorld
 {
 public:
   CWorld( char* initFile );
+  ~CWorld();
 
   CWorldWin* win;
 
@@ -49,6 +50,11 @@ public:
   // data
   Nimage* bimg; // background image 
   Nimage* img; //foreground img;
+
+  // Laser image
+  // Store laser intensity data (beacons)
+  //
+  Nimage *m_laser_img;
 
   int width, height, depth; 
   int paused;
