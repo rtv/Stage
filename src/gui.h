@@ -101,7 +101,8 @@ typedef struct _gui_window
   gboolean movie_exporting;
   int movie_speed;
   int movie_count;
-  
+  int movie_tag;
+
   rtk_menu_t** menus;
   rtk_menuitem_t** mitems;
   int menu_count;

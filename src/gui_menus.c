@@ -96,7 +96,12 @@ void gui_menu_movie_speed( rtk_menuitem_t *item )
     }
 }
 
-
+gboolean gui_movie_frame_callback( gpointer data )
+{
+  rtk_canvas_movie_frame( (rtk_canvas_t*)data );
+  //gui_poll();
+  return TRUE;
+}
 
 // toggle movie exports
 void gui_menu_movie_stop( rtk_menuitem_t *item )
@@ -106,7 +111,7 @@ void gui_menu_movie_stop( rtk_menuitem_t *item )
   gui_window_t* win = (gui_window_t*)item->menu->canvas->userdata;
   
   // stop the frame callback
-  //g_source_remove(win->movie_tag);
+  g_source_remove(win->movie_tag);
   
   rtk_canvas_movie_stop(win->canvas);
   win->movie_exporting = FALSE;
@@ -137,9 +142,16 @@ void gui_menu_movie_start( rtk_menuitem_t *item )
   
   rtk_canvas_movie_start( win->canvas, filename, 10, win->movie_speed );
   
+  int interval_ms = win->movie_speed * win->world->wall_interval;
+
+  printf( "starting movie with frame interval %d\n", interval_ms );
+
   // TODO!
-  //win->movie_tag = 
-  //g_timeout_add( 100, gui_movie_frame_callback, win->canvas );
+  win->movie_tag = 
+    g_timeout_add( interval_ms,
+		   gui_movie_frame_callback, 
+		   win->canvas );
+
   // disable the speed menu items
   // careful: this assumes the movie speed mitems are contiguous in the enum.
 
