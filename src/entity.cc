@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.31 2001-12-31 17:21:27 inspectorg Exp $
+//  $Id: entity.cc,v 1.32 2002-01-03 18:34:37 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -20,6 +20,8 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <errno.h>
+#include <sys/stat.h>
 
 #include "entity.hh"
 #include "world.hh"
