@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.19 $
+//  $Revision: 1.20 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -118,7 +118,7 @@ stg_model_t* stg_energy_create( stg_world_t* world,
 // add sink to source's list of power connections
 void energy_connect( stg_model_t* source, stg_model_t* sink )
 {
-  printf( "connecting %s to %s\n", sink->token, source->token );
+  //printf( "connecting %s to %s\n", sink->token, source->token );
 
   GPtrArray* a = NULL;
   assert( (a = stg_model_get_prop( source, "connections" )) );
@@ -128,7 +128,7 @@ void energy_connect( stg_model_t* source, stg_model_t* sink )
 // remove sink from source's list of power connections
 void energy_disconnect( stg_model_t* source, stg_model_t* sink )
 {
-  printf( "disconnecting %s to %s\n", sink->token, source->token );
+  //printf( "disconnecting %s to %s\n", sink->token, source->token );
 
   GPtrArray* a = NULL;
   assert( (a = stg_model_get_prop( source, "connections" )) );
@@ -226,7 +226,7 @@ int energy_update( stg_model_t* mod )
       GPtrArray* a = NULL;
       assert( (a = stg_model_get_prop( mod, "connections" )) );
       
-      printf( "Energy model %s\n", mod->token );
+      //printf( "Energy model %s\n", mod->token );
       
       // add all the locally connected devices
       int added = stg_model_tree_to_ptr_array( stg_model_root(mod),
@@ -262,8 +262,8 @@ int energy_update( stg_model_t* mod )
 	  if( con == mod ) // skip myself
 	    continue;
 	  
-	  printf( "\tsupplying %s with %.2fW", 
-		  con->token, con->watts );
+	  //printf( "\tsupplying %s with %.2fW", 
+	  //  con->token, con->watts );
 	  
 	  // if the connected unit is an energy device, we poke some
 	  // energy into it. if it's not an energy device, the energy just
@@ -282,10 +282,10 @@ int energy_update( stg_model_t* mod )
 	      assert( (accum = stg_model_get_prop( con, "inputwatts" )));
 	      *accum += watts;
 	      
-	      printf( " (stored %.2fW)", watts );
+	      //printf( " (stored %.2fW)", watts );
 	    }
 	  
-	  puts( "" );
+	  //puts( "" );
 	}
       
       // now disconnect everyone the fast way
