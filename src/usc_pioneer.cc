@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/usc_pioneer.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.3 $
+//  $Author: gerkey $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -107,6 +107,21 @@ bool CUscPioneer::Load(int argc, char **argv)
             double pth = DTOR(atof(argv[i + 3]));
             m_pioneer->SetPose(px, py, pth);
             i += 4;
+        }
+        
+        // Extract shape
+        // This as a bit of a hack -- we want the pioneer base to get the shape
+        //
+        if (strcmp(argv[i], "shape") == 0 && i + 1 < argc)
+        {
+          if(!strcmp(argv[i+1],"rectangle"))
+            m_pioneer->SetShape(rectangle);
+          else if(!strcmp(argv[i+1],"circle"))
+            m_pioneer->SetShape(circle);
+          else
+            PRINT_MSG1("usc_pioneer: unknown shape \"%s\"; "
+                       "defaulting to rectangle", argv[i+1]);
+          i += 2;
         }
 
         // Extract the robot name

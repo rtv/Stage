@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/pioneermobiledevice.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -29,6 +29,12 @@
 
 #include "stage.h"
 #include "playerdevice.hh"
+
+enum pioneer_shape_t
+{
+  rectangle,
+  circle
+};
 
 
 class CPioneerMobileDevice : public CPlayerDevice
@@ -63,6 +69,10 @@ class CPioneerMobileDevice : public CPlayerDevice
     //
     private: void MovePuck(double px, double py, double pth);
 
+    // Get and set shape parameter
+    public: pioneer_shape_t GetShape() { return(m_shape); };
+    public: void SetShape(pioneer_shape_t shape) { m_shape = shape; };
+
     // Render the object in the world rep
     //
     private: bool Map(bool render);
@@ -71,15 +81,28 @@ class CPioneerMobileDevice : public CPlayerDevice
     //
     private: double m_last_time;
 
+    ////////////////////////
     // Robot dimensions
-    //
+
+    // Rectangular robot:
     private: double m_size_x, m_size_y, m_offset_x;
+
+    // Circular robot:
+    private: double m_radius;
+
+    ////////////////////////
+
+    // Rectangular robot:
 
     // Current command and data buffers
     //
     private: player_position_cmd_t m_command;
     private: player_position_data_t m_data;
     
+    // Our shape
+    //
+    private: pioneer_shape_t m_shape;
+
     // Commanded robot speed
     //
     private: double m_com_vr, m_com_vth;

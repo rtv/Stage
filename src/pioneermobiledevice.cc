@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.15 $
+//  $Revision: 1.16 $
 //
 // Usage:
 //  (empty)
@@ -49,6 +49,9 @@ CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CEntity *parent, CPlay
     m_com_vr = m_com_vth = 0;
     m_map_px = m_map_py = m_map_pth = 0;
 
+    // Set the default shape
+    m_shape = rectangle;
+    
     // Set the robot dimensions
     // Due to the unusual shape of the pioneer,
     // it is modelled as a rectangle offset from the origin
@@ -56,6 +59,8 @@ CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CEntity *parent, CPlay
     m_size_x = 0.440;
     m_size_y = 0.380;
     m_offset_x = -0.04;
+
+    m_radius = 0.2;
     
     m_odo_px = m_odo_py = m_odo_pth = 0;
 
@@ -223,6 +228,8 @@ void CPioneerMobileDevice::ComposeData()
 //
 bool CPioneerMobileDevice::InCollision(double px, double py, double pth)
 {
+  if(GetShape() == rectangle)
+  {
     double qx = px + m_offset_x * cos(pth);
     double qy = py + m_offset_x * sin(pth);
     double sx = m_size_x;
@@ -231,7 +238,20 @@ bool CPioneerMobileDevice::InCollision(double px, double py, double pth)
     if (m_world->GetRectangle(qx, qy, pth, sx, sy, layer_obstacle) > 0)
         return true;
     
-    return false;
+  }
+  else if(GetShape() == circle)
+  {
+    double qx = px;
+    double qy = py;
+    double sx = m_radius;
+    double sy = m_radius;
+
+    if (m_world->GetRectangle(qx, qy, pth, sx, sy, layer_obstacle) > 0)
+        return true;
+  }
+  else
+    PRINT_MSG("CPioneerMobileDevice::InCollision(): unknown shape!");
+  return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -333,36 +353,53 @@ bool CPioneerMobileDevice::Map(bool render)
 {
     if (!render)
     {
-        // Remove ourself from the obstacle map
-        //
-        double px = m_map_px;
-        double py = m_map_py;
-        double pa = m_map_pth;
+        if(GetShape() == rectangle)
+        {
+          // Remove ourself from the obstacle map
+          //
+          double px = m_map_px;
+          double py = m_map_py;
+          double pa = m_map_pth;
 
-        double qx = px + m_offset_x * cos(pa);
-        double qy = py + m_offset_x * sin(pa);
-        double sx = m_size_x;
-        double sy = m_size_y;
-        m_world->SetRectangle(qx, qy, pa, sx, sy, layer_obstacle, 0);
+          double qx = px + m_offset_x * cos(pa);
+          double qy = py + m_offset_x * sin(pa);
+          double sx = m_size_x;
+          double sy = m_size_y;
+          m_world->SetRectangle(qx, qy, pa, sx, sy, layer_obstacle, 0);
+        }
+        else if(GetShape() == circle)
+        {
+          m_world->SetCircle(m_map_px,m_map_py,m_radius,layer_obstacle,0);
+        }
+        else
+          PRINT_MSG("CPioneerMobileDevice::Map(): unknown shape!");
     }
     else
     {
-        // Add ourself to the obstacle map
-        //
-        double px, py, pa;
-        GetGlobalPose(px, py, pa);
-
+      // Add ourself to the obstacle map
+      //
+      double px, py, pa;
+      GetGlobalPose(px, py, pa);
+      if(GetShape() == rectangle)
+      {
         double qx = px + m_offset_x * cos(pa);
         double qy = py + m_offset_x * sin(pa);
         double sx = m_size_x;
         double sy = m_size_y;
         m_world->SetRectangle(qx, qy, pa, sx, sy, layer_obstacle, 1);
-        
-        // Store the place we added ourself
-        //
-        m_map_px = px;
-        m_map_py = py;
-        m_map_pth = pa;
+      }
+      else if(GetShape() == circle)
+      {
+          m_world->SetCircle(px,py,m_radius,layer_obstacle,1);
+      }
+      else
+        PRINT_MSG("CPioneerMobileDevice::Map(): unknown shape!");
+
+      // Store the place we added ourself
+      //
+      m_map_px = px;
+      m_map_py = py;
+      m_map_pth = pa;
     }
     return true;
 }

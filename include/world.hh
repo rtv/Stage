@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -33,6 +33,7 @@
 
 #include "image.h"
 #include "entity.hh"
+
 #include "puck.hh" // need this for definition of CPuck to be kept in array
 
 #if INCLUDE_RTK
@@ -166,6 +167,10 @@ class CWorld
     public: void SetRectangle(double px, double py, double pth,
                               double dx, double dy, EWorldLayer layer, uint8_t value);
 
+    // Set a circle in the world grid
+    //
+    public: void SetCircle(double px, double py, double pr,
+                              EWorldLayer layer, uint8_t value);
 
     ///////////////////////////////////////////////////////////////////////////
     // Player server functions

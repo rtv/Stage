@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -123,7 +123,8 @@ void CPuck::Update()
 
     // Undraw our old representation
     //
-    m_world->SetCell(m_map_px, m_map_py, layer_puck, 0);
+    //m_world->SetCell(m_map_px, m_map_py, layer_puck, 0);
+    m_world->SetCircle(m_map_px, m_map_py, exp.width, layer_puck, 0);
 
     // move, if necessary
     Move();      
@@ -135,7 +136,8 @@ void CPuck::Update()
     
     // Draw our new representation
     //
-    m_world->SetCell(m_map_px, m_map_py, layer_puck, 2);
+    //m_world->SetCell(m_map_px, m_map_py, layer_puck, 2);
+    m_world->SetCircle(m_map_px, m_map_py, exp.width, layer_puck, 2);
     
     // write back into world array
     m_world->SetPuck(m_index, m_map_px, m_map_py, m_map_pth);

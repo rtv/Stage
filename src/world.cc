@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.11 $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -613,7 +613,37 @@ void CWorld::SetRectangle(double px, double py, double pth,
             break;
     }
 }
-
+    
+///////////////////////////////////////////////////////////////////////////
+// Set a circle in the world grid
+//
+void CWorld::SetCircle(double px, double py, double pr,
+                       EWorldLayer layer, uint8_t value)
+{
+    // Convert from world to image coords
+    //
+    int x = (int) (px * ppm);
+    int y = height - (int) (py * ppm);
+    int r = (int) (pr * ppm);
+    
+    // This could be cleaned up by having an array of images
+    //
+    switch (layer)
+    {
+        case layer_obstacle:
+            m_obs_img->draw_circle(x,y,r,value);
+            break;
+        case layer_laser:
+            m_laser_img->draw_circle(x,y,r,value);
+            break;
+        case layer_vision:
+            m_vision_img->draw_circle(x,y,r,value);
+            break;
+        case layer_puck:
+            m_puck_img->draw_circle(x,y,r,value);
+            break;
+    }
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Add an object to the world
