@@ -5,7 +5,7 @@
 // Date: 15 Nov 2001
 // Desc: A property handling class
 //
-// $Id: worldfile.cc,v 1.4 2002-01-24 21:46:50 gerkey Exp $
+// $Id: worldfile.cc,v 1.5 2002-01-29 00:42:22 gerkey Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -88,6 +88,34 @@ bool CWorldFile::Load(const char *filename)
   assert(this->filename == NULL);
   this->filename = strdup(filename);
 
+  // if the extension is 'm4', then run it through m4 first
+  //printf("checking %s for .m4 extension\n", this->filename);
+  if(strlen(this->filename) > 3 && 
+     !strncmp(this->filename+(strlen(this->filename)-3),".m4",3))
+  {
+    //puts("it is m4");
+    char* newfilename = strdup(this->filename);
+    assert(newfilename);
+    newfilename[strlen(newfilename)-3] = '\0';
+
+    char* execstr = 
+            (char*)(malloc(strlen(this->filename)+strlen(newfilename)+8));
+    assert(execstr);
+
+    sprintf(execstr,"m4 -E %s > %s", this->filename, newfilename);
+
+    //printf("calling system() with \"%s\"\n", execstr);
+    if(system(execstr) < 0)
+    {
+      PRINT_ERR1("unable to invoke m4 on world file %s", this->filename);
+      return false;
+    }
+
+    strcpy(this->filename, newfilename);
+  }
+  //else
+    //puts("it is not m4");
+
   // Open the file
   FILE *file = fopen(this->filename, "r");
   if (!file)
@@ -99,7 +127,8 @@ bool CWorldFile::Load(const char *filename)
 
   // Create a buffer to store the file
   int buff_len = 0;
-  int buff_size = 0x10000L;
+  //int buff_size = 0x10000;
+  int buff_size = 0x1000000;
   char *buff = new char[buff_size];
 
   // Read the whole thing in;
@@ -114,8 +143,8 @@ bool CWorldFile::Load(const char *filename)
   }
   else if (!feof(file))
   {
-    PRINT_ERR2("world file %s is too large (%dKb)",
-               this->filename, buff_len);
+    PRINT_ERR2("world file %s is too large (> %dKB)",
+               this->filename, buff_size/1024);
     fclose(file);
     return false;
   }
@@ -124,7 +153,8 @@ bool CWorldFile::Load(const char *filename)
 
   // Create a list to put the tokens into
   int token_count = 0;
-  int token_size = 8192;
+  //int token_size = 8192;
+  int token_size = 65536;
   char **tokens = new char*[token_size];
 
   // Tokenize the buffer
@@ -406,7 +436,7 @@ bool CWorldFile::Parse(int token_count, char **tokens)
       if (lineitems == 0)
         item = AddItem(linecount, section, tokens[i], false);
       else if (lineitems > 1)
-        PARSE_ERR("garbarge at end of line");
+        PARSE_ERR("garbage at end of line");
       linecount++;
       lineitems = 0;
       i++;
