@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.35.4.8 2003-03-25 02:12:37 rtv Exp $
+dnl $Id: configure.in,v 1.35.4.9 2003-08-09 01:28:02 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -26,7 +26,7 @@ dnl Define this so that we can refer to it twice below
 dnl PS_VERSION is the major.minor version that is common for Player and
 dnl Stage. All revisions with this major.minor version must be forwards 
 dnl and backwards compatible. This number is used for the install directories.
-define(PS_VERSION,2.0)
+define(PS_VERSION,1.4)
 
 dnl STAGE_VERSION is major.minor.revision - unique to this release and 
 dnl independent of Player's revision number - 'dev' should be appended for 
@@ -37,16 +37,13 @@ dnl Initialize automake with name and version of package to be built.
 dnl PACKAGE and VERSION will be so defined in <config.h>.
 AM_INIT_AUTOMAKE(stage,STAGE_VERSION)
 
-dnl Change default installation prefix from /usr/local to user's home
-dnl AC_PREFIX_DEFAULT(${HOME}/PS-PS_VERSION)
-
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_RANLIB
 
-dnl Checks for header files (removed deprecated values.h from here)
+dnl Checks for header files of required libraries
 AC_CHECK_HEADERS(stdint.h strings.h)
 
 dnl Check for types that are not defined on some systems
@@ -72,67 +69,21 @@ dnl build mplementations of these in libreplace.a if these are
 dnl missing
 AC_REPLACE_FUNCS(poll dirname scandir)
 
-dnl if the GNOME2 GUI was requested, we use that
-AC_ARG_WITH(gnome2,    [   --with-gnome2         Compile in the experimental GNOME2 GUI instead of RTK2],,with_gnome2=no)
+dnl PKG_CHECK_MODULES(RTVRTK, gtk+, AC_MSG_WARN([GTK+ found]),AC_MSG_WARN([GTK+ not found])
+PKG_CHECK_MODULES(RTK, librtk2-gtk2 >= 2.2,
+dnl PKG_CHECK_MODULES(RTK, librtk2 >= 2.2,
+AC_DEFINE(INCLUDE_RTK2,1,[building RTK GUI]),
+AC_MSG_WARN([no suitable RTK was found. ])
+)
 
-dnl otherwise use the RTK GUI unless it is explicitly refused
-dnl where's RTK?
-AC_ARG_WITH(rtk, [   --with-rtk=dir      Location of RTK],
-RTK_DIR=$with_rtk,
-RTK_DIR="${HOME}/librtk-2.1")
-AC_SUBST(RTK_DIR)
-
-if test "x$with_gnome2" = "xyes"; then
-  AC_DEFINE(USE_GNOME2,1,[include the GNOME2 GUI])
-  GUI_DIR=gnome2
-  GUI_LIB=libgnomestage.a
-  GUI_LINK="-Lgnome2 -lgnomestage `pkg-config --libs libgnomecanvas-2.0 libgnomeui-2.0`"
-
-   AM_CONDITIONAL(WITH_RTK, test x$with_rtk = xno)
-else
-
-  dnl RTK2 uses libjpeg to export images.
-  AC_CHECK_HEADER(jpeglib.h,
-    AC_DEFINE(HAVE_JPEGLIB_H,1,[include jpeg support])
-    LIBJPEG="-ljpeg",,)
-
-  if test -f $RTK_DIR/include/rtk.h; then
-    with_rtk=yes
-    AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
-    GUI_DIR=rtkgui
-    GUI_LIB=librtkgui.a
-    GUI_LINK="-L$RTK_DIR/lib -Lrtkgui -lrtkgui -lrtk $LIBJPEG `gtk-config --libs gtk gthread`"
-  else
-    with_rtk=no
-    AC_MSG_WARN([*** WARNING ***************************************])
-    AC_MSG_WARN([Couldn't find RTK, so I won't build RTK-based GUIs])
-    AC_MSG_WARN([Maybe you should download and install RTK?])
-    AC_MSG_WARN([If you have RTK installed, try --with-rtk=<path>])
-    AC_MSG_WARN([***************************************************])
-  fi
-  AM_CONDITIONAL(WITH_RTK, test x$with_rtk = xyes)
-fi
-
-# define the paths, libs and deps for the GUI
-AC_SUBST(GUI_LINK)
-AC_SUBST(GUI_DIR)
-AC_SUBST(GUI_LIB)
-
-# set vars depending on the GUI tests
-AM_CONDITIONAL(WITH_GNOME2, test x$with_gnome2 = xyes)
-AM_CONDITIONAL(WITH_GUI, test x$with_gui = xyes)
+dnl RTK2 uses libjpeg to export images.
+AC_CHECK_HEADER(jpeglib.h,
+  AC_DEFINE(HAVE_JPEGLIB_H,1,[include jpeg support])
+  LIBJPEG="-ljpeg",,)
+AC_SUBST(LIBJPEG)
 
 
-dnl where's player?
-dnl AC_ARG_WITH(player, [   --with-player=dir      Location of Player (installation or source)],
-dnl PLAYER_DIR=$with_player,
-dnl PLAYER_DIR="${HOME}/player-PS_VERSION")
-dnl if test ! -f $PLAYER_DIR/include/player.h; then
-dnl  if test ! -f $PLAYER_DIR/server/player.h; then
-dnl    AC_MSG_ERROR("Could not find player.h.  Player is required to build Stage.")
-dnl  fi
-dnl fi
-dnl AC_SUBST(PLAYER_DIR)
+
 
 dnl where's the X11-style color database?
 AC_CHECK_FILE([/usr/X11R6/lib/X11/rgb.txt],
@@ -150,11 +101,12 @@ with_tests=yes)
 AM_CONDITIONAL(WITH_TESTS, test x$with_tests = xyes)
 
 AC_OUTPUT(Makefile 
-          replace/Makefile
           src/Makefile 
-	  src/models/Makefile	
-          src/gnomegui/Makefile 
-	  src/rtkgui/Makefile
-	  src/sio/Makefile
           worlds/Makefile 
+          replace/Makefile
           tools/Makefile)
+
+#          src/gnomegui/Makefile 
+#	  src/models/Makefile	
+#	  src/rtkgui/Makefile
+#	  src/sio/Makefile
