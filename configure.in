@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.26 2002-11-03 06:18:00 gerkey Exp $
+dnl $Id: configure.in,v 1.27 2002-11-03 07:04:36 inspectorg Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -83,7 +83,7 @@ else
   dnl where's RTK?
   AC_ARG_WITH(rtk, [   --with-rtk=dir      Location of RTK],
   RTK_DIR=$with_rtk,
-  RTK_DIR="${HOME}/rtk-2.1")
+  RTK_DIR="${HOME}/librtk-2.1")
   AC_SUBST(RTK_DIR)
 
   dnl RTK2 uses libjpeg to export images.
