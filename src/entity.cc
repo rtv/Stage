@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.116 2003-09-02 05:17:25 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.117 2003-09-03 02:04:14 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -163,7 +163,7 @@ CEntity::CEntity( stg_entity_create_t* init, stg_id_t id )
   
   // reasonable neighbor detection bounds
   this->bounds_neighbor.min = 0.00;
-  this->bounds_neighbor.max = 4.00;
+  this->bounds_neighbor.max = 1.5 ;
   
   
   // TODO? = inherit our parent's color by default?
@@ -221,9 +221,9 @@ CEntity::CEntity( stg_entity_create_t* init, stg_id_t id )
   // a null array of range sensors
   this->rangers = NULL;
   
-  // no visible light
-  this->blinkenlight = 0;
-
+  // indicator light off
+  memset( &this->blinkenlight, 0, sizeof(this->blinkenlight) );
+  
   //m_dependent_attached = false;
   
   this->mouseable = true;
@@ -677,9 +677,9 @@ void CEntity::GlobalToLocal( stg_pose_t* pose )
 
 int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
 {
-  //ENT_DEBUG3( "Setting prop %s (%d) with %d bytes", 
-  //     stg_property_string(ptype), ptype, len );
-
+  ENT_DEBUG3( "Setting prop %s (%d) with %d bytes", 
+	      stg_property_string(ptype), ptype, len );
+  
   switch( ptype )
     {      
     case STG_PROP_MATRIX_RENDER:
@@ -701,7 +701,7 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
       
     case STG_PROP_ORIGIN:
       g_assert( (len == sizeof(stg_pose_t)) );	
-      this->SetOrigin(  (stg_pose_t*)data );
+      this->SetOrigin((stg_pose_t*)data );
       break;
 
     case STG_PROP_VELOCITY:
@@ -720,10 +720,10 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
       break;
 
     case STG_PROP_BLINKENLIGHT:
-      g_assert( (len == sizeof(stg_interval_ms_t)) );	
-      this->blinkenlight = *(stg_interval_ms_t*)data;
+      g_assert( (len == sizeof(stg_blinkenlight_t) ));	
+      memcpy( &this->blinkenlight, data, sizeof(this->blinkenlight) );
       break;      
-
+      
     case STG_PROP_NOSE:
       g_assert( (len == sizeof(stg_nose_t)) );	
       this->draw_nose = *(stg_nose_t*)data;
@@ -806,12 +806,9 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
 
 stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
 {    
-  //ENT_DEBUG2( "Getting prop %s (%d)", 
-  //      stg_property_string(ptype), ptype );
+  ENT_DEBUG2( "Getting prop %s (%d)", 
+        stg_property_string(ptype), ptype );
 
-  printf( "Getting prop %s (%d)\n", 
-	  stg_property_string(ptype), ptype );
-  
   stg_property_t* prop = stg_property_create();
   prop->id = this->id;
   prop->property = ptype;
@@ -894,10 +891,8 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
       break;
       
     case STG_PROP_LOS_MSG:
-      puts( "getting los msg" );
       if( this->received_msgs->len > 0 )
 	{
-	  puts( "getting head" );
 	  // return just the FIRST ITEM in the message array
 	  prop = stg_property_attach_data( prop, 
 					   this->received_msgs->data,
@@ -906,27 +901,15 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
       break;
  
     case STG_PROP_LOS_MSG_CONSUME:
-      puts( "getting los msg consume" );
-
-      printf( "message array contains %d messages\n", 
-	      this->received_msgs->len );
-
       if( this->received_msgs->len > 0 )
 	{
-	  puts( "getting head" );
 	  // return just the FIRST ITEM in the message array
 	  prop = stg_property_attach_data( prop, 
 					   this->received_msgs->data,
 					   sizeof(stg_los_msg_t) );
-	  
-	  puts( "attached message" );
-	  
+	  // and consume the item
 	  this->received_msgs = g_array_remove_index(this->received_msgs, 0);
-
-	  puts( "consumed message" );
 	}
-      else
-	puts( "received messages too small!" );
       break;
       
     case STG_PROP_MOUSE_MODE:
@@ -997,7 +980,7 @@ void CEntity::SendLosMessage( stg_los_msg_t* msg )
   g_assert( msg );
   g_assert( msg->len < STG_LOS_MSG_MAX_LEN );
   
-  stg_los_msg_print( msg );
+  //stg_los_msg_print( msg );
 
   stg_gui_los_msg_send( this, msg );
 
@@ -1036,12 +1019,9 @@ void CEntity::SendLosMessage( stg_los_msg_t* msg )
       target->received_msgs = 
 	g_array_append_vals( target->received_msgs, &recv, 1 );
       
-      printf( "target %d received message\n", msg->id ); 
-
-      puts( "target's message array:" );
-      for( int i=0; i<(int)target->received_msgs->len; i++ )
-	stg_los_msg_print( &g_array_index( target->received_msgs, 
-					   stg_los_msg_t, i ) );
+      //for( int i=0; i<(int)target->received_msgs->len; i++ )
+      //stg_los_msg_print( &g_array_index( target->received_msgs, 
+      //				   stg_los_msg_t, i ) );
       
       stg_gui_los_msg_recv( target, this, msg );
     }
@@ -1087,12 +1067,11 @@ void CEntity::SendLosMessage( stg_los_msg_t* msg )
 	  recv.id = this->id;
 	  g_array_append_vals( target->received_msgs, &recv, 1 );
 	  
-	  printf( "target %d received message\n", msg->id ); 
-
-	  puts( "target's message array:" );
-	  for( int i=0; i<(int)target->received_msgs->len; i++ )
-	    stg_los_msg_print( &g_array_index( target->received_msgs, 
-					       stg_los_msg_t, i ) );
+	  //printf( "target %d received message\n", msg->id ); 
+	  //puts( "target's message array:" );
+	  //for( int i=0; i<(int)target->received_msgs->len; i++ )
+	  // stg_los_msg_print( &g_array_index( target->received_msgs, 
+	  //			       stg_los_msg_t, i ) );
 	  
 	  stg_gui_los_msg_recv( target, this, msg );	  
 	}

@@ -1,5 +1,35 @@
 #ifndef STG_H
 #define STG_H
+/*
+ *  Stage : a multi-robot simulator.  
+ * 
+ *  Copyright (C) 2001-2003 Richard Vaughan, Andrew Howard and Brian
+ *  Gerkey for the Player/Stage Project
+ *  http://playerstage.sourceforge.net
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+/* File: stage.h
+ * Desc: packet types and functions for interfacing with the Stage server
+ * Author: Richard Vaughan vaughan@hrl.com 
+ * Date: 1 June 2003
+ *
+ * CVS: $Id: stage.h,v 1.15 2003-09-03 02:04:15 rtv Exp $
+ */
 
 #ifdef __cplusplus
  extern "C" {
@@ -148,7 +178,14 @@ typedef enum
 // a number of milliseconds, used for example as the blinkenlight interval
 #define STG_LIGHT_ON UINT_MAX
 #define STG_LIGHT_OFF 0
-typedef uint32_t stg_interval_ms_t;
+
+typedef int stg_interval_ms_t;
+
+typedef struct
+{
+  int enable;
+  stg_interval_ms_t period_ms;
+} stg_blinkenlight_t;
 
 // Possible Gripper return values
 typedef enum 
@@ -180,7 +217,7 @@ typedef struct
   char bytes[STG_LOS_MSG_MAX_LEN];
   size_t len;
   int power;
-  int consume;
+  //  int consume;
 } stg_los_msg_t;
 
 typedef struct
@@ -415,18 +452,6 @@ stg_model_type_t stg_model_type_from_string( char* str );
 stg_id_t stg_model_create( stg_client_t* cli, stg_entity_create_t* ent );
 int stg_model_destroy( stg_client_t* cli, stg_id_t id );
 
-//stg_rotrect_array_t* stg_rotrect_array_create( void );
-//void stg_rotrect_array_free( stg_rotrect_array_t* r );
-// add a rectangle to the end of the array, allocating memory 
-//stg_rotrect_array_t* stg_rotrect_array_append( stg_rotrect_array_t* array, 
-//				 stg_rotrect_t* rect );
-
-stg_property_t* stg_send_property( stg_client_t* cli,
-				   int id, 
-				   stg_prop_id_t type,
-				   stg_prop_action_t action,
-				   void* data, 
-				   size_t len );
 
 // set a property of the model with the given id. 
 // returns 0 on success, else -1.
@@ -445,10 +470,37 @@ int stg_get_property( stg_client_t* cli,
 		      void **data, 
 		      size_t *len );
 
+// sets a property, then gets the same property. This is effectively
+// an atomic operation in stage.
+int stg_setget_property( stg_client_t* cli,
+			 int id, 
+			 stg_prop_id_t type,
+			 void *set_data,
+			 size_t set_len,
+			 void **get_data, 
+			 size_t *get_len );
+
+// gets a property, then sets the same property
+// (useful if you want to reset the property to it's initial state later).
+int stg_getset_property( stg_client_t* cli,
+			 int id, 
+			 stg_prop_id_t type,
+			 void *set_data,
+			 size_t set_len,
+			 void **get_data, 
+			 size_t *get_len );
+
+
 stg_id_t stg_model_create( stg_client_t* cli, stg_entity_create_t* ent );
 int stg_model_destroy( stg_client_t* cli, stg_id_t id );
 stg_id_t stg_world_create( stg_client_t* cli, stg_world_create_t* world );
 
+stg_property_t* stg_send_property( stg_client_t* cli,
+				   int id, 
+				   stg_prop_id_t type,
+				   stg_prop_action_t action,
+				   void* data, 
+				   size_t len );
 
 // SET/GET PROPERTIES
 typedef int stg_nose_t;
@@ -456,17 +508,8 @@ typedef int stg_border_t;
 typedef int stg_mouse_mode_t;
 typedef int stg_matrix_render_t;
 
+// print the values in a message packet
 void stg_los_msg_print( stg_los_msg_t* msg );
-
-int stg_model_send_los_msg(  stg_client_t* cli, stg_id_t id, 
-			     stg_los_msg_t *msg );
-
-int stg_model_exchange_los_msg(  stg_client_t* cli, stg_id_t id, 
-			     stg_los_msg_t *msg );
-
-//int stg_model_get_rects(  stg_client_t* cli, stg_id_t id, 
-//		  stg_rotrect_array_t* rects );
-
 
 // Look up the color in a database.  (i.e. transform color name to
 // color value).  If the color is not found in the database, a bright
@@ -507,10 +550,10 @@ stg_color_t stg_lookup_color(const char *name);
 #define STG_HELLO 'S'
 
 // Convert radians to degrees
-#define RTOD(r) ((r) * 180 / M_PI)
+#define RTOD(r) ((r) * 180.0 / M_PI)
 
 // Convert degrees to radians
-#define DTOR(d) ((d) * M_PI / 180)
+#define DTOR(d) ((d) * M_PI / 180.0)
 
 // Normalize angle to domain -pi, pi
 #define NORMALIZE(z) atan2(sin(z), cos(z))

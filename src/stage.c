@@ -1,3 +1,34 @@
+/*
+ *  Stage : a multi-robot simulator.  
+ * 
+ *  Copyright (C) 2001-2003 Richard Vaughan, Andrew Howard and Brian
+ *  Gerkey for the Player/Stage Project
+ *  http://playerstage.sourceforge.net
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+/* File: stage.cc
+ * Desc: functions for interfacing with the Stage server
+ * Author: Richard Vaughan vaughan@hrl.com 
+ * Date: 1 June 2003
+ *
+ * CVS: $Id: stage.c,v 1.16 2003-09-03 02:04:15 rtv Exp $
+ */
+
 #include <stdlib.h>
 #include <assert.h>
 #include <errno.h>
@@ -455,6 +486,41 @@ stg_property_t* stg_send_property( stg_client_t* cli,
   return( stg_property_read( cli ) );  
 }  
 
+int stg_exchange_property( stg_client_t* cli,
+			   int id, 
+			   stg_prop_id_t type,
+			   stg_prop_action_t action,
+			   void *set_data,
+			   size_t set_len,
+			   void **get_data, 
+			   size_t *get_len )
+{
+  stg_property_t* reply = 
+    stg_send_property( cli, id, type, action, set_data, set_len );
+  
+  // initially zero the reply data
+  if( get_data && get_len )
+    {
+      *get_data = NULL;
+      *get_len = 0;
+    }
+  
+  if( reply == NULL ) // fail
+      return -1;
+  
+  // if some data was contained in the reply, allocate space for it
+  // and return it in the get_data pointer
+  if( reply->len > 0 && get_data && get_len )
+    {
+      *get_data = calloc( reply->len, 1 );
+      memcpy( *get_data, reply->data, reply->len );
+      *get_len = reply->len;
+    }
+
+  stg_property_free(reply);
+  return 0;
+}
+
 // set a property of the model with the given id. 
 // returns 0 on success, else -1.
 int stg_set_property( stg_client_t* cli,
@@ -463,14 +529,8 @@ int stg_set_property( stg_client_t* cli,
 		      void* data, 
 		      size_t len )
 {
-  stg_property_t* reply = 
-    stg_send_property( cli, id, type, STG_SET, data, len );
-  
-  if( reply == NULL )
-    return -1;
- 
-  stg_property_free( reply );
-  return 0; //ok
+  return stg_exchange_property( cli, id, type, STG_SET, 
+				data, len, NULL, NULL );
 }
 
 // gets the requested data from the server, allocating memory for the packet.
@@ -482,26 +542,39 @@ int stg_get_property( stg_client_t* cli,
 		      void **data, 
 		      size_t *len )
 {
-  stg_property_t* reply = 
-    stg_send_property( cli, id, type, STG_GET, NULL, 0 );
-  
-  if( reply == NULL ) // fail
-    {
-      *data = NULL;
-      *len = 0;
-      return -1;
-    }
-
-  // success
-  *data = calloc( reply->len, 1 );
-  memcpy( *data, reply->data, reply->len );
-  *len = reply->len;
-
-  stg_property_free(reply);
-  return 0;
+  return stg_exchange_property( cli, id, type, STG_GET, 
+				NULL, 0, data, len );
 }
 
+// sends the set_data packet and gets the get_data packet requested
+// data from the server, allocating memory for the packet.  caller
+// must free() the get_data. returns 0 on success, else -1.
+int stg_setget_property( stg_client_t* cli,
+			 int id, 
+			 stg_prop_id_t type,
+			 void *set_data,
+			 size_t set_len,
+			 void **get_data, 
+			 size_t *get_len )
+{
+  return stg_exchange_property( cli, id, type, STG_SETGET, 
+				set_data, set_len, get_data, get_len );
+}
 
+// sends the set_data packet and gets the get_data packet requested
+// data from the server, allocating memory for the packet.  caller
+// must free() the get_data. returns 0 on success, else -1.
+int stg_getset_property( stg_client_t* cli,
+			 int id, 
+			 stg_prop_id_t type,
+			 void *set_data,
+			 size_t set_len,
+			 void **get_data, 
+			 size_t *get_len )
+{
+  return stg_exchange_property( cli, id, type, STG_GETSET, 
+				set_data, set_len, get_data, get_len );
+}
 
 stg_id_t stg_model_create( stg_client_t* cli, stg_entity_create_t* ent )
 {
@@ -536,49 +609,10 @@ int stg_model_destroy( stg_client_t* cli, stg_id_t id )
 
 void stg_los_msg_print( stg_los_msg_t* msg )
 {
-  printf( "Mesg - id: %d power: %d consume: %d len: %d bytes: %s\n",
-	  msg->id, msg->power, msg->consume, msg->len, msg->bytes );
+  printf( "Mesg - id: %d power: %d len: %d bytes: %s\n",
+	  msg->id, msg->power, msg->len, msg->bytes );
 }
 
-
-int stg_model_send_los_msg(  stg_client_t* cli, stg_id_t id, 
-			     stg_los_msg_t *msg )
-{
-  stg_prop_id_t propid;
-
-  if( msg->consume )
-    propid = STG_PROP_LOS_MSG_CONSUME;
-  else
-    propid = STG_PROP_LOS_MSG;
-
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     propid,
-					     STG_SETGET,
-					     msg,sizeof(stg_los_msg_t));
-  
-  if( reply == NULL )
-    return -1;
-
-  memcpy( msg, reply->data, sizeof(stg_los_msg_t) );
-  stg_property_free( reply );
-  return 0;
-}
-
-int stg_model_exchange_los_msg(  stg_client_t* cli, stg_id_t id, 
-				 stg_los_msg_t *msg )
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_LOS_MSG,
-					     STG_SETGET,
-					     msg,sizeof(stg_los_msg_t));
-  
-  if( reply == NULL )
-    return -1;
-
-  memcpy( msg, reply->data, sizeof(stg_los_msg_t) );
-  stg_property_free( reply );
-  return 0;
-}
 
 stg_id_t stg_world_create( stg_client_t* cli, stg_world_create_t* world )
 {

@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.21 2003-09-02 05:17:25 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.22 2003-09-03 02:04:15 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -591,16 +591,18 @@ void stg_gui_model_blinkenlight( CEntity* ent )
     }
   else
     rtk_fig_clear( mod->fig_light );
+  
+  //PRINT_WARN2( "blinkenlight drawing for ent %p (%s)", ent, ent->name->str );
 
   // nothing to see here
-  if( ent->blinkenlight == STG_LIGHT_OFF )
+  if( !ent->blinkenlight.enable )
     return;
   
   rtk_fig_ellipse( mod->fig_light, 0,0,0,  ent->size.x, ent->size.y, 1 );
   
-  // start the light blinking if it's not stuck on
-  if( ent->blinkenlight != STG_LIGHT_ON )    
-    rtk_fig_blink( mod->fig_light, ent->blinkenlight, 1 );  
+  // start the light blinking if it's not stuck on (ie. period 0)
+  if( ent->blinkenlight.period_ms != 0 )    
+    rtk_fig_blink( mod->fig_light, ent->blinkenlight.period_ms/2, 1 );  
 }
 
 void stg_gui_model_rects( CEntity* ent )

@@ -21,7 +21,7 @@
  * Desc: Simulated robot with various sensors
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.27 2003-09-02 05:17:25 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.28 2003-09-03 02:04:14 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -257,7 +257,7 @@ public: stg_gripper_return_t gripper_return;
 public: int fiducial_return; 
 public: int neighbor_return;
 
-public: stg_interval_ms_t blinkenlight;  
+public: stg_blinkenlight_t blinkenlight;  
   
   // flag is set when a dependent device is  attached to this device
   //public: bool m_dependent_attached;

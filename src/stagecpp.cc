@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.15 2003-08-30 21:02:22 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.16 2003-09-03 02:04:15 rtv Exp $
  */
 
 #include <assert.h>
@@ -1953,11 +1953,12 @@ int CWorldFile::Upload( stg_client_t* cli,
 			      &nbounds, sizeof(nbounds) ) < 0 )  
 	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 
-	token = "light_interval";
-	stg_interval_ms_t li;
-	li = this->ReadInt( section, token, STG_LIGHT_OFF );
+	token = "light";
+	stg_blinkenlight_t bl;
+	bl.enable = this->ReadTupleInt( section, token, 0, 0 );
+	bl.period_ms = this->ReadTupleInt( section, token, 1, 400 );
 	if( stg_set_property( cli, anid, STG_PROP_BLINKENLIGHT,
-			      &li, sizeof(li) ) < 0 )  
+			      &bl, sizeof(bl) ) < 0 )  
 	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 
 	token = "mouseable";
