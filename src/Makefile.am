@@ -2,52 +2,39 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.29.4.19 2003-03-25 02:12:37 rtv Exp $
+# $Id: Makefile.am,v 1.29.4.20 2003-08-09 00:58:34 rtv Exp $
 
-SUBDIRS = sio rtkgui models
-# gnome2
+stage_DEPENDENCIES = libstage.a $(top_srcdir)/replace/libreplace.a
 
-# we need extra flags as long as RTK code is embedded in the main
-# simulator source
-if WITH_RTK
-RTKCPPFLAGS = -I@RTK_DIR@/include `gtk-config --cflags`
-endif
+AM_CPPFLAGS = -Wall -I$(top_builddir)/replace @RTK_CFLAGS@
 
-stage_DEPENDENCIES = models/libmodels.a sio/libsio.a $(top_srcdir)/replace/libreplace.a  @GUI_DIR@/@GUI_LIB@ 
-
-AM_CPPFLAGS = -Wall -Isio -I$(top_builddir)/replace $(RTKCPPFLAGS)
-
-bin_PROGRAMS = stage stest
-
-stage_SOURCES = \
-	colors.cc \
-	colors.hh \
-	entity.cc \
-	entity.hh \
-	gui.h \
-	library.cc \
-	library.hh \
-	main.cc \
-	matrix.cc \
-	matrix.hh \
-	property.cc \
-	raytrace.cc \
-	raytrace.hh \
-	raytrace.hh \
-	root.cc \
-	root.hh \
-	stage.h
-
-stage_LDFLAGS = 
-stage_LDADD = @GUI_LINK@ -lm -Lmodels -lmodels -Lsio -lsio -L$(top_builddir)/replace -lreplace 
+lib_LIBRARIES = libstage.a libstageworldfile.a 
+bin_PROGRAMS = stage
 
 # install these headers
 include_HEADERS = stage.h
 
+#
+# stage
+#
+stage_SOURCES = \
+	entity.cc \
+	entity.hh \
+	matrix.cc \
+	matrix.hh \
+	raytrace.cc \
+	raytrace.hh \
+	rtkgui.cc \
+	rtkgui.hh \
+	stage.h\
+	world.cc \
+	world.hh \
+	main.cc 
 
-# build Stage's test program - a simple client
-#	
-stest_SOURCES = stest.c 
-stest_DEPENDENCIES = sio/libsio.a $(top_srcdir)/replace/libreplace.a
-stest_LDADD = -lpnm -lm -Lsio -lsio -L$(top_builddir)/replace -lreplace 
-stest_CFLAGS = -g2
+stage_LDFLAGS =
+stage_LDADD =  @RTK_LIBS@ -L. -lstage 
+#-lefence
+
+# these libraries are useful for clients such as Player's stage1p4 driver
+libstage_a_SOURCES = stage.h stage.c
+libstageworldfile_a_SOURCES = worldfile.cc worldfile.hh stage.h

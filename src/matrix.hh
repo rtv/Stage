@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.hh,v 1.4.6.4 2003-02-07 05:30:34 rtv Exp $
+// $Id: matrix.hh,v 1.4.6.5 2003-08-09 00:58:34 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "stage.h"
 #include "entity.hh"
 
 class CMatrix
@@ -53,7 +54,7 @@ class CMatrix
   void	copy_from(CMatrix* img);
 
   void	draw_line(int x1, int y1, int x2, int y2, CEntity* ent, bool add);
-  void	draw_rect( const stage_rect_t& t, CEntity* ent, bool add );
+  void	draw_rect( const stg_rect_t& t, CEntity* ent, bool add );
   void	draw_circle(int x, int y, int r, CEntity* ent, bool add);
   
   void	clear( void );

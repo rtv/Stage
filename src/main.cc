@@ -21,578 +21,476 @@
  */
 /*
  * Desc: Program Entry point
- * Author: Richard Vaughan, Andrew Howard
- * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.33 2003-02-27 02:10:14 rtv Exp $
+ * Author: Richard Vaughan
+ * Date: 3 July 2003
+ * CVS: $Id: main.cc,v 1.61.2.34 2003-08-09 00:58:34 rtv Exp $
  */
 
-#if HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
-#define DEBUG
-#undef VERBOSE
 
 #include <stdlib.h>
-#include <assert.h>
-#include <string.h>
 #include <signal.h>
-#include <time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <sys/time.h>
-#include <unistd.h> /* for exit(2) */
-#include <math.h>
 
-#include "sio.h"
+//#define DEBUG
+
+//#include "stage.h"
+#include "world.hh"
 #include "entity.hh"
-#include "root.hh"
-
-#include "models/puck.hh"
-#include "models/sonar.hh"
-#include "models/idar.hh"
-#include "models/position.hh"
-
-/*
-#include "models/bumperdevice.hh"
-#include "models/broadcastdevice.hh"
-#include "models/gpsdevice.hh"
-#include "models/gripperdevice.hh"
-#include "models/idarturretdevice.hh"
-#include "models/fiducialfinderdevice.hh"
-#include "models/laserdevice.hh"
-#include "models/motedevice.hh"
-#include "models/powerdevice.hh"
-#include "models/ptzdevice.hh"
-#include "models/truthdevice.hh"
-#include "models/visiondevice.hh"
-#include "models/regularmcldevice.hh"
-//#include "models/bpsdevice.hh"
-*/
-
-// MODEL INSTALLATION --------------------------------------------
-//
-// this array defines the models that are available to Stage. New
-// devices must be added here.
-
-stage_libitem_t library_items[] = { 
-  { "box", "black", (CFP)CEntity::Creator},
-  { "puck", "green", (CFP)CPuck::Creator},
-  { "sonar", "red", (CFP)CSonarModel::Creator},
-  { "idar", "blue", (CFP)CIdarModel::Creator },
-  { "position", "purple", (CFP)CPositionModel::Creator },
-  /*
-    { "bitmap", "blue", (CFP)CBitmap::Creator},
-  { "laser", "blue", (CFP)CLaserDevice::Creator},
-  { "position", "red", (CFP)CPositionDevice::Creator},
-  { "box", "yellow", (CFP)CBox::Creator},
-  { "gps", "gray", (CFP)CGpsDevice::Creator},
-  { "gripper", "blue", (CFP)CGripperDevice::Creator},
-  { "idar", "DarkRed", (CFP)CIdarDevice::Creator},
-  { "idarturret", "DarkRed", (CFP)CIdarTurretDevice::Creator},
-  { "lbd", "gray", (CFP)CFiducialFinder::Creator},
-  { "fiducialfinder", "gray", (CFP)CFiducialFinder::Creator},
-  { "mote", "orange", (CFP)CMoteDevice::Creator},
-  { "power", "wheat", (CFP)CPowerDevice::Creator},
-  { "ptz", "magenta", (CFP)CPtzDevice::Creator},
-  { "truth", "purple", (CFP)CTruthDevice::Creator},
-  { "vision", "gray", (CFP)CVisionDevice::Creator},
-  { "blobfinder", "gray", (CFP)CVisionDevice::Creator},
-  { "broadcast", "brown", (CFP)CBroadcastDevice::Creator},
-  { "bumper", "LightBlue", (CFP)CBumperDevice::Creator},
-  { "regularmcl", "blue", (CFP)CRegularMCLDevice::Creator},
-  // { "bps", BpsType, (CFP)CBpsDevice::Creator},
-  */
-
-  {NULL, NULL, NULL } // marks the end of the array
-};  
+#include "rtkgui.hh" // for rtk_init()
 
 
-// statically allocate a libray filled with the entries above
-Library model_library( library_items );
 
-// GUI INSTALLATION -----------------------------------------------------
-//
-// Stage handles multiple GUI libraries. Add your library functions
-// here and set the counter correctly
+#define HELLOWORLD "** Stage "VERSION" **"
 
-#ifdef INCLUDE_RTK2
-#include "rtkgui/rtkgui.hh"
-#endif
+int quit = 0; // set true by the GUI when it wants to quit 
 
-stage_gui_library_item_t gui_library[] = {
-#ifdef INCLUDE_RTK2
-  { "rtk", 
-    RtkGuiInit, RtkGuiLoad, RtkGuiUpdate, 
-    RtkGuiEntityStartup, RtkGuiEntityShutdown, RtkGuiEntityPropertyChange 
-  },
-#endif
-  { "", NULL,NULL,NULL,NULL,NULL,NULL} // marks the end of the array
-};
+static GSList* worlds = NULL; 
 
-// this is set in GuiInit by counting the entries above
-int gui_count = 0;
-///////////////////////////////////////////////////////////////////////////
-// Global vars
+// globals
+GHashTable* global_hash_table = g_hash_table_new(g_int_hash, g_int_equal);
+int global_next_available_id = 1;
 
-double update_interval = 0.01; // seconds
+// MODEL CREATION FUNCTIONS ////////////////////////////////////////////
+CEntity* CreatePosition( stg_entity_create_t* spec );
+CEntity* CreateWall( stg_entity_create_t* spec );
+//////////////////////////////////////////////////////////////////////
 
-// Quit signal
-int quit = 0;
-int paused = 0;
-
-// catch SIGUSR1 to toggle pause
-void CatchSigUsr1( int signo )
+// prints the object tree on stdout
+void StgPrintTree( GNode* treenode, gpointer _prefix )
 {
-  paused = !paused; 
-  paused ? PRINT_MSG("CLOCK STARTED" ) : PRINT_MSG( "CLOCK STOPPED" );
-}
+  GString* prefix = (GString*)_prefix;
 
-///////////////////////////////////////////////////////////////////////////
-// Print the usage string
-void PrintUsage( void )
-{
-  printf("\nUsage: stage [options] <worldfile>\n"
-	 "Options: <argument> [default]\n"
-	 " -h\t\tPrint this message\n" 
-	 " -g\t\tDo not start the X11 GUI\n"
-	 " -n \t\tDo not start Player\n"
-	 " -o\t\tEnable console status output\n"
-	 " -v <float>\tSet the simulated time increment per cycle [0.1sec].\n"
-	 " -u <float>\tSet the desired real time per cycle [0.1 sec].\n"
-	 " -f \t\tRun as fast as possible; don't try to match real time\n"
-	 " -s\t\tStart stage with the clock stopped (send SIGUSR1 to toggle clock)\n"
-	 "\nSwitches for experimental/undocumented features:\n"
-	 " -p <portnum>\tSet the server port [6601]\n"
-	 " -c <hostname>\tRun as a client to a Stage server on hostname\n"
-	 " -cl\t\tRun as a client to a Stage server on localhost\n"
-	 " -l <filename>\tLog some timing and throughput statistics into <filename>.<incremental suffix>\n"
-	 "\nCommand-line options override any configuration file equivalents.\n"
-	 "See the Stage manual for details.\n"
-	 "\nPart of the Player/Stage Project [http://playerstage.sourceforge.net].\n"
-	 "Copyright 2000-2003 Richard Vaughan, Andrew Howard, Brian Gerkey and contributors\n"
-	 "Released under the GNU General Public License"
-	 " [http://www.gnu.org/copyleft/gpl.html].\n"
-	 "\n"
-	 );
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Clean up and quit
-void StageQuit( void )
-{  
-  // reset the color of the console text and say 'bye.
-  PRINT_MSG( "closing all connections" );
-
-  for( int c=0; c<SIOGetConnectionCount(); c++ )
-    SIODestroyConnection( c );
+  CEntity* foo = (CEntity*)(treenode->data);  
+  g_assert( foo );
   
-  puts( "\033[00m** Stage quitting **" );
-  exit( 0 );
-}
+  GString* pp = NULL;
 
+  if( prefix )
+    pp = g_string_new( prefix->str );
+  else
+    pp = g_string_new( "" );
+  
+  printf( "%s%d:%s\n", pp->str, foo->id, foo->name->str );
+
+  pp = g_string_prepend( pp, "  " );
+   
+  g_node_children_foreach( treenode, G_TRAVERSE_ALL, StgPrintTree, pp ) ;
+
+  g_string_free( pp, TRUE );
+}
+  
 ///////////////////////////////////////////////////////////////////////////
-// Handle quit signals
-void sig_quit(int signum)
-{
-  PRINT_DEBUG1( "SIGNAL %d", signum );
-  //quit = 1;
-  StageQuit();
-}
 
-double TimevalSeconds( struct timeval *tv )
-{
-  return( (double)(tv->tv_sec) + (double)(tv->tv_usec) / (double)MILLION );
-}
 
-///////////////////////////////////////////////////////////////////////////
-// Get the real time
-// Returns time in sec since the first call of this function
-double GetRealTime()
+// write a stg_property_t on the channel returns TRUE on success, else FALSE
+gboolean StgPropertyWrite( GIOChannel* channel, stg_property_t* prop )
 {
-  static double start_time;
-  static bool init = true;
-  struct timeval tv;
- 
-  if( init )
+  gboolean failed = FALSE;
+
+  guint propsize = sizeof(stg_property_t) + prop->len;
+  gsize sz = 0;
+
+  PRINT_DEBUG1( "writing a property of %d bytes", propsize );
+
+  stg_property_write_fd( g_io_channel_unix_get_fd(channel), prop );
+
+  ssize_t result = 0;
+  //g_io_channel_write_chars( channel, (gchar*)prop, propsize, &sz, NULL );
+  
+  if( result < 0 )
     {
-      gettimeofday( &tv, NULL );
-      start_time = TimevalSeconds( &tv );
-      init = false;
-      PRINT_DEBUG1( "start time %.4f", start_time );
+      PRINT_MSG1( "closing connection (fd %d)", 
+		  g_io_channel_unix_get_fd(channel) );
+      
+      /* zap this connection */
+      g_io_channel_shutdown( channel, TRUE, NULL );
+      g_io_channel_unref( channel );
+    }      
+  
+  PRINT_DEBUG( "done" );
+
+  return( !failed );
+}
+
+void StgPropertyFree( stg_property_t* prop )
+{
+  stg_property_free( prop );
+}
+
+
+gboolean StgClientRead( GIOChannel* channel, 
+		     GIOCondition condition, 
+		     gpointer table )
+{
+  PRINT_DEBUG( "client read" );
+  g_assert(channel);
+  g_assert(table);
+  
+  // store associations between channels and worlds
+  static GHashTable* channel_world_map = g_hash_table_new(NULL,NULL);
+  
+  //stg_property_t* prop = StgPropertyRead( channel );
+  stg_property_t* prop = 
+    stg_property_read_fd( g_io_channel_unix_get_fd(channel) );
+  
+  if( prop == NULL )
+    {
+      PRINT_MSG1( "read failed on fd %d. Shutting it down.",  
+		  g_io_channel_unix_get_fd(channel) );
+      
+      g_io_channel_shutdown( channel, TRUE, NULL ); // zap this connection 
+      g_io_channel_unref( channel );
+      
+      PRINT_DEBUG1( "Destroying worlds associated with channel %p",
+		    channel );
+      
+      // find the list of worlds created on this channel
+      GList* doomed_list = 
+	(GList*)g_hash_table_lookup( channel_world_map, channel );
+      
+      if( doomed_list )
+	{
+	  // delete all the worlds in the list
+	  for( GList* lel = doomed_list; lel; lel = g_list_next(lel) )
+	    {
+	      PRINT_DEBUG2( "destroying world %p (node %p)", lel->data, lel);
+	      delete (CWorld*)lel->data;
+	    }
+	  
+	  g_list_free( doomed_list );
+	}
+      
+      // remove the channel from the static map
+      g_hash_table_remove( channel_world_map, channel );
+      
+      return FALSE; // cancel this callback
     }
-  
-  gettimeofday( &tv, NULL );
-  return( TimevalSeconds( &tv ) - start_time );
-}
-
-int HandleLostConnection( int connection )
-{
-  // clears subscription data on this connection for all models
-  if( CEntity::root )
-    CEntity::root->DestroyConnection( connection );
-
-  return 0; // success
-}
-
-int HandleProperty( int connection, 
-		    double timestamp,  
-		    void* data, size_t len,
-		    stage_buffer_t* replies )
-{
-  //PRINT_DEBUG3( "Received %d byte property request "
-  //	"(of which header is %d bytes ) on connection %d", 
-  //	(int)len, (int)sizeof(stage_property_t), connection );
-  
-  assert( len >= sizeof(stage_property_t) );
-  stage_property_t* prop = (stage_property_t*)data;
-  
-  PRINT_DEBUG3( "Received property %s (%d) on connection %d", 
-		SIOPropString(prop->property), prop->property, connection );
-  
-
-  // get a pointer to the object with this id
-  CEntity* ent = model_library.GetEntFromId( prop->id );
-
-  if( !ent )
-    PRINT_WARN3( "Received property %s (%d) for non-existent model %d", 
-		 SIOPropString(prop->property), prop->property, prop->id );
   else
     {
-      // pass the property data to the entity to absorb
-      ent->Property( connection, // the connection number 
-		     prop->property, // the property id
-		     ((char*)data)+sizeof(stage_property_t), // the raw data
-		     prop->len, // the length of the raw data      
-		     replies ); // a buffer to store replies in
-    }
-
-  // send the replies back
-
-
-  return 0; //success
-}
-
-int HandleCommand(  int connection, double timestamp, 
-		    void* data, size_t len, 
-		    stage_buffer_t* replies )
-{
-  assert( len == sizeof(stage_cmd_t) );
-  stage_cmd_t* cmd = (stage_cmd_t*)data;
-  
-  PRINT_DEBUG2( "Received command %d on connection %d", *cmd, connection );
-  
-  switch( *cmd ) // 
-    {
-    case STG_CMD_SAVE:
-    case STG_CMD_LOAD:
-    case STG_CMD_PAUSE:
-    case STG_CMD_UNPAUSE:     
-      PRINT_WARN1( "command %d not implemented\n", *cmd );
-      break;
+      PRINT_DEBUG1( "got a property with id %d", prop->id );  
       
-    default:
-      PRINT_WARN1( "Unknown command (%d) not handled", *cmd);
-      break;
-    }
-  
-  return 0; //success
-}
-
-int GuiInit( int argc, char** argv )
-{
-  // count and initialize the registered GUIs
-  gui_count = 0;
-  for( stage_gui_library_item_t* gui = gui_library; 
-       strlen(gui->token) > 0;
-       gui++ )
-    {
-      PRINT_DEBUG2( "counting gui library item %d : %s", 
-		    gui_count, gui->token );      
-      
-      PRINT_DEBUG2( "init of gui %d (%s)", gui_count, gui->token );
-      if( (gui->init_func)(argc, argv) == -1 )
+      if( prop->action == STG_NOOP )
 	{
-	  PRINT_WARN2( "Gui initialization failed on GUI %d (%s)\n", 
-		       gui_count, gui->token );
-	}  
-      gui_count++;
-    }
-  return 0; // success
-}
-
-
-int GuiEntityStartup( CEntity* ent )
-{
-  assert(ent);
-  
-  int g;
-  for( g=0; g<gui_count; g++ )
-    {
-      //PRINT_DEBUG2( "gui startup for ent %d on GUI %d", ent->stage_id, g );
-      
-      if( (*gui_library[g].createmodel_func)(ent) == -1 )
-	{
-	  PRINT_WARN1( "Gui create model failed on GUI %d", g );
-	  return -1;
+	  PRINT_WARN1( "ignoring a NOOP property for model %d", prop->id );
 	}
-      
-      // start the children too!
-      CEntity* ch;
-      for( ch = ent->child_list; ch; ch = ch->next )
-	if( GuiEntityStartup( ch ) == -1 )
-	  return -1;
-    }
-  return 0;
-}
-
-int GuiUpdate( void )
-{
-  int g;
-  for( g=0; g<gui_count; g++ )
-    {
-      //PRINT_DEBUG2( "GUI Update on GUI %d (%s)", g, gui_library[g].token );
-      
-       if( (*gui_library[g].update_func)() == -1 )
+      else
 	{
-	  PRINT_WARN1( "Gui update failed on GUI %d", g );
-	  return -1;
-	}
-    }
-  return 0;
-}
+	  stg_property_t* reply = NULL;
+	  // indicates whether we need to free the reply's memory
+	  bool free_reply = FALSE; 
+	  
+	  switch( prop->property )
+	    {
+	    case STG_PROP_WORLD_CREATE:
+	      {
+		// check that we have the right size data
+		g_assert( (prop->len == sizeof(stg_world_create_t)) );
+		
+		CWorld* aworld = NULL;
+		// create a world object
+		g_assert( (aworld = new CWorld( channel, (stg_world_create_t*)prop->data)));
+		aworld->Startup();
+		
+		prop->id = aworld->id; // fill in the id of the created object
 
-int GuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
-{
-  assert(ent);
-  
-  int g;
-  for( g=0; g<gui_count; g++ )
-    {
-      //PRINT_DEBUG3( "gui prop change for ent %d on GUI %d prop %d", 
-      //	    ent->stage_id, g, prop );
-      
-      if( (*gui_library[g].tweakmodel_func)(ent, prop) == -1 )
-	{
-	  PRINT_WARN1( "Gui property change failed on GUI %d", g );
-	  return -1;
-	}
-    }
-  return 0;
-}
-
-int GuiEntityShutdown( CEntity* ent )
-{
-  assert(ent);
-  
-  int g;
-  for( g=0; g<gui_count; g++ )
-    {
-      //PRINT_DEBUG2( "gui shutdown for ent %d on GUI %d", ent->stage_id, g );
-
-      if( (*gui_library[g].destroymodel_func)(ent) == -1 )
-	{
-	  PRINT_WARN1( "Gui destroy model failed on GUI %d", g );
-	  return -1;
-	}      
-    }
-
-  // stop the children too!
-  CEntity* ch;
-  for( ch = ent->child_list; ch; ch = ch->next )
-    if( GuiEntityShutdown( ch ) == -1 )
-      return -1;
-  
-  return 0;
-}
-
-int PublishDirty()
-{
-  // TODO = fix this!
-  char* propdata = (char*)new char[100000];
-  
-  for( int con=0; con < SIOGetConnectionCount(); con++ )
-    {
-      stage_buffer_t *dirty = SIOCreateBuffer();
-      int dirty_prop_count = 0;
-      
-      for( int ent=0; ent< model_library.model_count; ent++ )
-	{
-	  if( CEntity *entp = model_library.GetEntFromId(ent) )
-	    {	      
-	      int p;
-	      for( p=0; p<STG_PROPERTY_COUNT; p++ )
-		if( entp->subscriptions[con][p].subscribed &&
-		    entp->subscriptions[con][p].dirty )
+		// and reply with the completed request
+		reply = prop;
+		
+		PRINT_DEBUG2( "Associating world %p with channel %p",
+			      aworld, channel );
+		
+		// find the list of worlds created on this channel (possibly NULL)
+		GList* world_list = 
+		  (GList*)g_hash_table_lookup( channel_world_map, channel );
+		
+		// add the new world to the list
+		world_list = g_list_append( world_list, aworld );
+		
+		// stash the new list in the hash table
+		g_hash_table_insert( channel_world_map, channel, world_list );
+	      }
+	      break;
+	      
+	    case STG_PROP_ENTITY_CREATE:
+	      {
+		// check that we have the right size data
+		g_assert( (prop->len == sizeof(stg_entity_create_t)) );
+		
+		stg_entity_create_t* create = (stg_entity_create_t*)prop->data;
+		PRINT_DEBUG3( "creating model name \"%s\" token \"%s\ parent %d",
+			      create->name, create->token, create->parent_id );
+		
+		// create a new entity
+		CEntity* ent = NULL;	    
+		g_assert((ent = new CEntity((stg_entity_create_t*)prop->data)));
+		ent->Startup();
+		
+		prop->id = ent->id; // fill in the id of the created entity
+		// and reply with the completed request
+		reply = prop;		
+	      }
+	      break;
+	      
+	      
+	    default: // all other props we need to look up an existing object
+	      {	    
+		GNode* node = 
+		  (GNode*)g_hash_table_lookup( global_hash_table, &prop->id );
+		
+		if( node == NULL )
 		  {
-		    stage_prop_id_t propid = (stage_prop_id_t)p;
+		    PRINT_WARN1( "Failed to handle message for unknown model"
+				 " id (%d).", prop->id );
 		    
-		    PRINT_DEBUG3( "ent: %d con: %d prop: %s needs exported",
-				 ent, con, SIOPropString(propid) );
-		    
-		    // add the dirty property to the dirty buffer
-		    assert( entp->Property( con, propid, NULL, 0, dirty ) 
-			    != -1 );
-
-		    entp->subscriptions[con][propid].dirty = 0;
-		    dirty_prop_count++;
+		    // if a reply was required, we send the original
+		    // request back with an id of -1 to indicate failure
+		    if( prop->action == STG_SETGET || 
+			prop->action == STG_GETSET || 
+			prop->action == STG_GET )
+		      {
+			PRINT_WARN( "Replying with invalid model id" );
+			prop->id = -1;
+			reply = prop;
+		      }
 		  }
+		else 
+		  switch( prop->property )		    
+		    {
+		    case STG_PROP_WORLD_DESTROY: // deliberate 2-case switch
+		    case STG_PROP_ENTITY_DESTROY:
+		      delete (CWorld*)node->data;
+		      // invalidate the id and reply with the original request
+		      prop->id = -1; 
+		      reply = prop;
+		      break;
+		      
+		    default: // it must be a model. 
+		      {
+			CEntity* ent = (CEntity*)node->data;
+			
+			switch( prop->action )
+			  {
+			  case STG_SET:
+			    ent->SetProperty( prop->property,
+					      prop->data, prop->len );
+			    break;
+			  case STG_GET:
+			    reply = ent->GetProperty( prop->property );
+			    free_reply = TRUE;
+			    break;
+			  case STG_SETGET:
+			    ent->SetProperty( prop->property, 
+					      prop->data, prop->len );
+			    reply = ent->GetProperty( prop->property );
+			    free_reply = TRUE;
+			    break;
+			  case STG_GETSET:
+			    reply = ent->GetProperty( prop->property );
+			    free_reply = TRUE;
+			    ent->SetProperty( prop->property, 
+					      prop->data, prop->len );
+			    break;
+			    
+			  default: PRINT_WARN1( "unrecognized prop action (%d)",
+						prop->action );
+			    break;
+			  }
+		      }
+		      break;
+		    }
+	      }
 	    }
+	  
+	  if( reply )
+	    {
+	      // write reply
+	      StgPropertyWrite( channel, reply );  
+	      if( free_reply ) StgPropertyFree( reply );
+	    }      
 	}
-      
-      if( dirty_prop_count > 0 )
-	{
-	  PRINT_DEBUG2( "writing %d dirty properties on con %d", dirty_prop_count, con );
-	  SIOWriteMessage( con, CEntity::simtime, 
-			   STG_HDR_PROPS, dirty->data, dirty->len );
-	}
-      
-      SIOFreeBuffer( dirty );
-   }
-  
-  delete[] propdata;
-		    
-  return 0; // success
-}
-
-
-
-double TimespecSeconds( struct timespec *ts )
-{
-  return( (double)(ts->tv_sec) + (double)(ts->tv_nsec) / (double)BILLION);
-}
-
-
-void PackTimespec( struct timespec *ts, double seconds )
-{
-  ts->tv_sec = (time_t)seconds;
-  ts->tv_nsec = (long)(fmod(seconds, 1.0 ) * BILLION );
-}
-
-
-int WaitForWallClock()
-{
-  static double min_sleep_time = 0.0;
-  static double avg_interval = 0.01;
-
-  struct timespec ts;
-  
-  static double last_time = 0.0;
-  
-  double timenow = GetRealTime();
-  double interval = timenow - last_time;
-  
-  last_time += interval;
-  
-  avg_interval = 0.9 * avg_interval + 0.1 * interval;
-  
-  double freq = 1.0 / avg_interval;
-  
-  double outputtime =  GetRealTime();
-  //PRINT_DEBUG4( "time %.4f freq %.2f interval %.4f avg %.4f", 
-  //	outputtime, freq, interval, avg_interval );
-  //printf( "time %.4f freq %.2f interval %.4f avg %.4f\n", 
-  //	outputtime, freq, interval, avg_interval );
-
-  //PRINT_MSG2( "time %.4f freq %.2fHz", timenow, freq );
-  
-  // if we have spare time, go to sleep
-  double spare_time = update_interval - avg_interval;
-  
-  if( spare_time > min_sleep_time )
-    {
-      //printf( "sleeping for %.6f seconds\n", spare_time );
-      ts.tv_sec = (time_t)spare_time;
-      ts.tv_nsec = (long)(fmod( spare_time, 1.0 ) * BILLION );
-      
-      nanosleep( &ts, NULL ); // just stop the powerbook getting hot :)
-    }
-  //else
-  //printf( "not sleeping\n" );
-  
-  return 0; // success
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Program entry
-//
-int main(int argc, char **argv)
-{  
-  // hello world
-  printf("\n** Stage  v%s ** ", (char*) VERSION);
-
-  fflush( stdout );
-
-  if( SIOInitServer( argc, argv ) == -1 )
-    {
-      puts( "" );
-      PRINT_ERR( "Server failed to initialize. Quitting." );
-      quit = 1;
     }
   
-  GuiInit( argc, argv );
-  
-  puts( "" ); // end the startup output line
-  
-  // Register callback for quit (^C,^\) events
-  // - sig_quit function raises the quit flag 
-  signal(SIGINT, sig_quit );
-  signal(SIGQUIT, sig_quit );
-  signal(SIGTERM, sig_quit );
-  signal(SIGHUP, sig_quit );
-
-  // catch clock start/stop commands
-  signal(SIGUSR1, CatchSigUsr1 );
-  
-  //int c = 0;
-  
-  // create the root object
-  CRootEntity root;
-  GuiEntityStartup( &root );
-
-  // the main loop
-  while( !quit ) 
-    {
-      //printf( "cycle %d\n", c++ );
-
-      // set up new clients
-      if( SIOAcceptConnections() == -1 ) break;
-      
-      // receive commands, property changes and subscriptions from
-      // each client. will block until something is read.  if the
-      // server receives 'update' commands from all clients, it'll
-      // update the world
-      if( SIOServiceConnections( &HandleLostConnection,
-				 &HandleCommand, 
-				 &HandleProperty ) == -1 ) break;
-      
-      // update the simulation model
-      if( CEntity::root && !paused  ) 
-	{
-	  //PRINT_WARN( "update root" );
-	  CEntity::root->Update();
-	  CEntity::simtime += update_interval; 
-	}
-      
-      // find all the dirty properties and write them out to subscribers
-      if( PublishDirty() == -1 ) break;
-      
-      // send a continue to all clients so they know we're done talking
-      // -1 means ALL CONNECTIONS
-      if( SIOWriteMessage( -1, CEntity::simtime, 
-			   STG_HDR_CONTINUE, NULL, 0 ) == -1 ) break;
-      
-      if( GuiUpdate() == -1 ) break;
-      
-      // if( real_time_mode )
-      WaitForWallClock();
-      
-    }
-  // clean up and exit
-  StageQuit();
-  
-  return 0; 
+  stg_property_free( prop );    
+  return TRUE;
 }
 
 
+gboolean StgClientHup( GIOChannel* channel, 
+		    GIOCondition condition, 
+		    gpointer data )
+{
+  PRINT_MSG( "client HUP. Closing connection." );
+
+  g_io_channel_shutdown( channel, TRUE, NULL );
+  g_io_channel_unref( channel );
+  
+  return FALSE; // cancels this callback
+}
+
+gboolean StgClientAcceptConnection( GIOChannel* channel, GHashTable* table )
+{
+  // set up a socket for this connection
+  struct sockaddr_in cliaddr;  
+  bzero(&cliaddr, sizeof(cliaddr));
+  socklen_t clilen;
+  clilen  = sizeof(cliaddr);
+  int connfd = accept( g_io_channel_unix_get_fd(channel), 
+		       (struct sockaddr*) &cliaddr, 
+		       &clilen);
+  
+  g_assert( connfd > 0 );
+  
+  GIOChannel* client = g_io_channel_unix_new( connfd );
+  g_io_channel_set_encoding( client, NULL, NULL );
+  
+  
+  // look for a well-formed greeting
+  int greet, reply;
+  gsize bytes_read, bytes_written;
+
+  PRINT_DEBUG2( "expecting %d byte greeting on %d", 
+		sizeof(greet), g_io_channel_unix_get_fd( client ) );
+
+  if(  g_io_channel_read_chars( client, 
+				(char*)&greet, sizeof(greet),
+				&bytes_read, NULL )
+       != G_IO_STATUS_NORMAL ) 
+    {
+       PRINT_DEBUG1( "abnormal read of %d bytes", bytes_read );
+       perror( "read error" );
+       return FALSE; // fail
+    }
+
+  PRINT_DEBUG1( "read %d bytes", bytes_read );
+  
+  // check to make sure we have the right greeting code
+  if( greet != STG_SERVER_GREETING )
+    {
+      PRINT_ERR1( "bad greeting from client (%d)", greet);
+      g_io_channel_shutdown( channel, TRUE, NULL );
+      g_io_channel_unref( channel );
+      return FALSE; // fail
+    }
+
+  // write the reply
+  reply = STG_CLIENT_GREETING;
+  
+  g_io_channel_write_chars( client, 
+			    (char*)&reply, (gssize)sizeof(reply),
+			    &bytes_written, NULL );
+  
+  g_assert( bytes_written == sizeof(reply) );
+  g_io_channel_flush( client, NULL );
+  
+  // request data from this channel
+  g_io_add_watch( client, G_IO_IN, StgClientRead, table );
+  g_io_add_watch( client, G_IO_HUP, StgClientHup, table );
+  
+  return TRUE; // success
+}      
+
+gboolean StgServiceWellKnownPort( GIOChannel* channel, 
+			       GIOCondition condition, 
+			       gpointer table )
+{
+  switch( condition )
+    {
+    case G_IO_IN: PRINT_DEBUG( "CONNECT" ); 
+      if( StgClientAcceptConnection( channel, (GHashTable*)table ) == -1 )
+	PRINT_WARN( "Connection rejected" );
+      else
+	PRINT_MSG( "Connection accepted" );
+      break;
+      
+    case G_IO_ERR:  PRINT_WARN( "ERROR" ); break;
+    case G_IO_HUP:  PRINT_WARN( "HUP" ); break;
+    case G_IO_NVAL: PRINT_WARN( "NVAL" ); break;
+    default: printf( "unknown channel condition %d\n", condition );
+    }
+ 
+  return TRUE;
+}
+
+GIOChannel* StgServerCreate( void )
+{ 
+  // ignore SIGPIPE - we'll respond to the HUP instead
+  if( signal( SIGPIPE, SIG_IGN ) == SIG_ERR )
+    {
+      PRINT_ERR( "error setting pipe signal catcher" );
+      exit( -1 );
+    }
+
+  int fd = socket(AF_INET, SOCK_STREAM, 0);
+  g_assert( fd > 0 );
+  
+  struct sockaddr_in servaddr;  
+  bzero(&servaddr, sizeof(servaddr));
+  
+  int server_port = STG_DEFAULT_SERVER_PORT;
+  servaddr.sin_family      = AF_INET;
+  servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+  servaddr.sin_port        = htons(server_port);
+  
+  // switch on the re-use-address option
+  const int on = 1;
+  setsockopt( fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on) );
+  
+  if( bind(fd, (struct sockaddr*) &servaddr, sizeof(servaddr) )  < 0 )
+    {
+      perror("failed to bind server socket");      
+      printf( "Stage: Port %d is probably in use\n", server_port );
+      return NULL; // fail
+    }
+  
+  // listen for requests on this socket
+  g_assert( listen( fd, STG_LISTENQ) == 0 );
+
+  return( g_io_channel_unix_new( fd ) );
+}
+
+void catch_interrupt(int signum)
+{
+  puts( "received SIGINT. Exiting." );
+  exit(0);
+}
+
+void catch_quit(int signum)
+{
+  puts( "received SIGQUIT. Exiting." );
+  exit(0);
+}
+
+int main( int argc, char** argv )
+{
+  puts( HELLOWORLD );
+
+ if( signal( SIGINT, catch_interrupt ) == SIG_ERR )
+    {
+      PRINT_ERR( "error setting interrupt signal catcher" );
+      exit( -1 );
+    }
+
+ if( signal( SIGQUIT, catch_quit ) == SIG_ERR )
+    {
+      PRINT_ERR( "error setting quit signal catcher" );
+      exit( -1 );
+    }
+ 
+  stg_gui_init( &argc, &argv );
+  
+  GMainLoop* mainloop = g_main_loop_new( NULL, TRUE );
+  
+  // create a socket bound to Stage's well-known-port
+  GIOChannel* channel = StgServerCreate();
+  g_assert( channel );
+  
+  // watch for these events on the well-known-port
+  g_io_add_watch( channel, G_IO_IN, StgServiceWellKnownPort, global_hash_table );
+  
+  g_main_loop_run( mainloop );
+
+  exit(0);
+}
+
+
+
+  

@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.15.6.5 2003-02-09 00:32:16 rtv Exp $
+ * $Id: matrix.cc,v 1.15.6.6 2003-08-09 00:58:34 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -12,7 +12,7 @@
 //#endif
 
 #include "matrix.hh"
-#include "library.hh"
+//#include "library.hh"
 
 const int BUFFER_ALLOC_SIZE = 1;
 
@@ -172,17 +172,6 @@ void CMatrix::dump( void )
 
   puts( "DUMPED" );
 }
-
-
-// Draw a rectangle
-void CMatrix::draw_rect( const stage_rect_t& t, CEntity* ent, bool add)
-{
-  draw_line( t.toplx, t.toply, t.toprx, t.topry, ent, add);
-  draw_line( t.toprx, t.topry, t.botrx, t.botry, ent, add);
-  draw_line( t.botrx, t.botry, t.botlx, t.botly, ent, add);
-  draw_line( t.botlx, t.botly, t.toplx, t.toply, ent, add);
-}
-
 
 // draws (2*PI)/0.1 = 62 little lines to form a circle
 void CMatrix::draw_circle(int x,int y,int r, CEntity* ent, bool add)
@@ -456,7 +445,7 @@ void CMatrix::SetRectangle(double px, double py, double pth,
 			   double dx, double dy, 
 			   CEntity* ent, bool add)
 {
-  stage_rect_t rect;
+  stg_rect_t rect;
 
   dx /= 2.0;
   dy /= 2.0;
@@ -466,25 +455,30 @@ void CMatrix::SetRectangle(double px, double py, double pth,
   double sx = dx * sin(pth);
   double sy = dy * sin(pth);
     
-  rect.toplx = (int) ((px + cx - sy) * ppm);
-  rect.toply = (int) ((py + sx + cy) * ppm);
+  int toplx = (int) ((px + cx - sy) * ppm);
+  int toply = (int) ((py + sx + cy) * ppm);
 
-  rect.toprx = (int) ((px + cx + sy) * ppm);
-  rect.topry = (int) ((py + sx - cy) * ppm);
+  int toprx = (int) ((px + cx + sy) * ppm);
+  int topry = (int) ((py + sx - cy) * ppm);
 
-  rect.botlx = (int) ((px - cx - sy) * ppm);
-  rect.botly = (int) ((py - sx + cy) * ppm);
+  int botlx = (int) ((px - cx - sy) * ppm);
+  int botly = (int) ((py - sx + cy) * ppm);
 
-  rect.botrx = (int) ((px - cx + sy) * ppm);
-  rect.botry = (int) ((py - sx - cy) * ppm);
+  int botrx = (int) ((px - cx + sy) * ppm);
+  int botry = (int) ((py - sx - cy) * ppm);
     
-  //printf( "draw_rect %d,%d %d,%d %d,%d %d,%d\n",
-  //  rect.toplx, rect.toply,
-  //  rect.toprx, rect.topry,
-  //  rect.botlx, rect.botly,
-  //  rect.botrx, rect.botry );
 
-  draw_rect( rect, ent, add );
+  draw_line( toplx, toply, toprx, topry, ent, add);
+  draw_line( toprx, topry, botrx, botry, ent, add);
+  draw_line( botrx, botry, botlx, botly, ent, add);
+  draw_line( botlx, botly, toplx, toply, ent, add);
+
+
+  //printf( "SetRectangle drawing %d,%d %d,%d %d,%d %d,%d\n",
+  //  toplx, toply,
+  //  toprx, topry,
+  //  botlx, botly,
+  //  botrx, botry );
 }
 
 
