@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.13 $
+//  $Revision: 1.14 $
 //
 // Usage:
 //  (empty)
@@ -31,7 +31,7 @@
 #include "stage.h"
 #include "stage_types.hh"
 #include "truthserver.hh"
-
+#include "colors.hh"
 #include "guiexport.hh" // relic!
 //#include "messages.h"
 
@@ -174,7 +174,7 @@ class CEntity
 
     // Object color description
     //
-    private: char m_color_desc[128];
+    protected: char m_color_desc[128];
     private: StageColor m_color;
 
     // how often to update this device, in seconds

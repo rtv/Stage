@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.14 $
+//  $Revision: 1.15 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -47,6 +47,7 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CEntity *parent)
     m_player_index = 0;
     m_player_type = 0;
 
+  strcpy( m_color_desc, LASERBEACON_COLOR );
     m_stage_type = LaserBeaconType;
   
     m_beacon_id = 0;

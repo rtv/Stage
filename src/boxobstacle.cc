@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.11 $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -48,6 +48,7 @@ CBoxObstacle::CBoxObstacle(CWorld *world, CEntity *parent)
   m_size_x = 1.0;
   m_size_y = 1.0;
   
+  strcpy( m_color_desc, BOX_COLOR );
   
   m_stage_type = BoxType;
 

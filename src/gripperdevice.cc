@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.9 $
+//  $Revision: 1.10 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -37,6 +37,8 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
   m_stage_type = GripperType;
 
   m_interval = 0.1; 
+
+  strcpy( m_color_desc, GRIPPER_COLOR );
 
   puck_return = true; // we interact with pucks and nothing else
 

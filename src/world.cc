@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.30 $
+//  $Revision: 1.31 $
 //
 // Usage:
 //  (empty)
@@ -60,7 +60,7 @@ const int OBJECT_ALLOC_SIZE = 32;
 // eventually we'll be able to run multiple stages, each with a different
 // suffix - for now its IOFILENAME.$USER
 #define IOFILENAME "/tmp/stageIO"
-
+//#define COLOR_DATABASE "/usr/X11R6/lib/X11/rgb.txt"
 // main.cc calls constructor, then Load(), then Startup(), then starts thread
 // at CWorld::Main();
 
@@ -85,10 +85,9 @@ CWorld::CWorld()
     // enable external services by default
     m_run_environment_server = true;
     m_run_truth_server = true;
-
+    
     // default color database file
-    strcpy( m_color_database_filename, "/usr/X11R6/lib/X11/rgb.txt" );
-    //strcpy( m_color_database_filename, "foo.foo.foo" );
+    strcpy( m_color_database_filename, COLOR_DATABASE );
 
 #ifdef INCLUDE_RTK
     // disable XS by default in rtkstage
@@ -274,7 +273,7 @@ bool CWorld::Startup()
     }
   
   // spawn an XS process, unless we disabled it (rtkstage disables xs by default)
-  if( m_run_xs ) SpawnXS();
+  if( m_run_xs && m_run_truth_server && m_run_environment_server ) SpawnXS();
   
   // Startup all the objects
   // this lets them calculate how much shared memory they'll need
@@ -1173,7 +1172,7 @@ int CWorld::ColorFromString( StageColor* color, char* colorString )
     {
       char c;
       char line[255];
-      char name[255];
+      //char name[255];
       
       db.get( line, 255, '\n' ); // read in a description string
       
@@ -1184,9 +1183,13 @@ int CWorld::ColorFromString( StageColor* color, char* colorString )
       
       if( line[0] == '!' ) continue; // it's a macro line - ignore the line
 
-      sscanf( line, "%d %d %d %s", &red, &green, &blue, name );
+      int chars_matched = 0;
+      sscanf( line, "%d %d %d %n", &red, &green, &blue, &chars_matched );
       
-      //printf( "Parsed: %d %d %d %s\n", red, green, blue, name );
+      // name points to the rest of the line, after we've matched out the colors
+      char* name = line + chars_matched;
+
+      //printf( "Parsed: %d %d %d :%s\n", red, green, blue, name );
       //fflush( stdout );
 
       if( strcmp( name, colorString ) == 0 ) // the name matches!

@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.common,v 1.12 2001-09-07 17:17:52 ahoward Exp $ 
+# $Id: Makefile.common,v 1.13 2001-09-19 23:13:20 vaughan Exp $ 
 #
 
 # INSTALL PLAYER BEFORE BUILDING STAGE!
@@ -34,6 +34,12 @@ PLAYER_BASE = /usr/local/player
 PLAYER_DIR = $(PLAYER_BASE)-$(PLAYERVERSION)
 #PLAYER_DIR = $(HOME)/code/player
 
+##############################################################################
+# Color datbase configuration (required)
+# set the path to a X11-format color database, usually rgb.txt from X distro
+
+# this is a good guess on Linux systems
+COLOR_DATABASE = /usr/X11R6/lib/X11/rgb.txt
 
 ##############################################################################
 # INSTALLATION OPTIONS

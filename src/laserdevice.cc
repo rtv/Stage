@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.29 $
+//  $Author: vaughan $
+//  $Revision: 1.30 $
 //
 // Usage:
 //  (empty)
@@ -48,6 +48,8 @@ CLaserDevice::CLaserDevice(CWorld *world,
   m_config_len  = sizeof( player_laser_config_t );
   
   m_player_type = PLAYER_LASER_CODE; // from player's messages.h
+
+  strcpy( m_color_desc, LASER_COLOR );
 
   m_stage_type = LaserTurretType;
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.16 $
+//  $Revision: 1.17 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -25,6 +25,7 @@ CPuck::CPuck(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {
   m_stage_type = PuckType;
+  strcpy( m_color_desc, PUCK_COLOR );
 
   channel_return = 0; // default to visible on ACTS channel 0
 

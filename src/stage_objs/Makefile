@@ -27,10 +27,10 @@ CCFLAGS = -g3
 # debug + profile
 #CCFLAGS = -pg -g3
 
-# Flags common to all targets
+# Compile flags 
 #
 CCFLAGS += -Wall -DREENTRANT -I../../include -I$(PLAYER_INC) $(ZLIB_FLAGS) 
-CCFLAGS += -DVERSION=\"$(VERSION)\"
+CCFLAGS += -DVERSION=\"$(VERSION)\" -DCOLOR_DATABASE=\"$(COLOR_DATABASE)\"
 
 # production/debug link
 LINKFLAGS = -lm -lstdc++ -lpthread  $(ZLIB_LIBS)

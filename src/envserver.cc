@@ -59,17 +59,19 @@ static void * EnvWriter( void* arg )
 
   player_occupancy_data_t og;
 
-  og.width = (uint16_t)world->m_bimg->width;
-  og.height = (uint16_t)world->m_bimg->height;
+  og.width = (uint16_t)world->matrix->width;
+  og.height = (uint16_t)world->matrix->height;
   og.ppm = (uint16_t)world->ppm;
   og.num_pixels = 0; // we'll count them below
 
   // count the filled pixels
-  unsigned int total_pixels = world->m_bimg->width * world->m_bimg->height;
+  unsigned int total_pixels = world->matrix->width * world->matrix->height;
   
-  for( unsigned int index = 0; index < total_pixels; index++ )
-    if( world->m_bimg->get_pixel( index) != 0 )
-      og.num_pixels++;
+  //for( unsigned int index = 0; index < total_pixels; index++ )
+  //if( (CEntity** c = world->matrix->get_cell( index)  )
+  //  while( og.num_pixels++;
+
+  og.num_pixels = 100000; // HACK for now!
 
   int errorretval = -1;
 

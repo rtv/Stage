@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.13 $
+//  $Revision: 1.14 $
 //
 // Usage:
 //  (empty)
@@ -275,18 +275,18 @@ bool CWorld::Load(const char *filename)
             {
 		m_run_truth_server = false;
 
-                puts( "[Truth disabled]" );
+                printf( "[Truth disabled]" );
                 fflush ( stdout );
             }
             else if( strcmp( argv[1], "environment_server" ) == 0 )
             {
 		m_run_environment_server = false;
 		
-                puts( "[Env disabled]" );
+                printf( "[Env disabled]" );
                 fflush ( stdout );
             }
             else
-                printf("%s line %d : service %s is not defined\n",
+                printf("\nStage warning: %s line %d : service %s is not defined\n",
                        filename, (int) linecount, (char*) argv[1]);
         }
         

@@ -42,6 +42,7 @@ CCFLAGS = -g3
 CCFLAGS += -Wall -DREENTRANT -I../../include -I$(PLAYER_INC) $(ZLIB_FLAGS) 
 CCFLAGS += -DVERSION=\"$(VERSION)\"
 CCFLAGS += -DINCLUDE_RTK -I$(RTK_INC) `gtk-config --cflags`
+CCFLAGS += -DCOLOR_DATABASE=\"$(COLOR_DATABASE)\"
 
 # production/debug link
 LINKFLAGS = -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
