@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.32 $
+//  $Author: vaughan $
+//  $Revision: 1.33 $
 //
 // Usage:
 //  (empty)
@@ -81,9 +81,11 @@ public:
 
 public:
   // timing
-  int m_timer_interval; // the goal real-time interval between stage updates
-  int m_timestep; // the sim clock is incremented this much each cycle
+  double m_real_timestep; // the time between wake-up signals in msec
+  double m_sim_timestep; // the sim time increment in seconds
   // change ratio of these to run stage faster or slower than real time.
+
+  uint32_t m_step_num; // the number of cycles executed, from 0
 
   // Thread control
 private: pthread_t m_thread;
@@ -102,16 +104,29 @@ private:
   struct pollfd m_pose_listen;
   // data for each pose connection
   struct pollfd m_pose_connections[ MAX_POSE_CONNECTIONS ];
+  // more data for each pose connection
+  //int m_connection_continue[ MAX_POSE_CONNECTIONS ];
+  
   // the number of pose connections
   int m_pose_connection_count;
-  
+  // the number of synchronous pose connections
+  int m_sync_counter; 
+  // record the type of each connection (sync/async) 
+  char m_conn_type[ MAX_POSE_CONNECTIONS ];
+
   void ListenForPoseConnections( void );
   void SetupPoseServer( void );
   void DestroyConnection( int con );
 
-  void PoseRead();
+  void PoseRead( void );
+  
+  void Output( double loop_duration, double sleep_duration );
+  void OutputHeader( void );
+
+  bool ReadHeader( stage_header_t *hdr, int con );
   void PoseWrite();
-  void InputPose( stage_pose_t &pose );
+  void ReadPosePacket( uint32_t num_poses, int con ); 
+  void InputPose( stage_pose_t &pose, int connection );
   void PrintPose( stage_pose_t &pose );
   void PrintSendBuffer( char* send_buf, size_t len );
   
@@ -126,7 +141,7 @@ private: double m_sim_time;
 // the same as m_sim_time but in timeval format
 public: struct timeval m_sim_timeval; 
 
-private: double m_max_timestep;
+  //private: double m_max_timestep;
   
   // Update rate (just for diagnostics)
 private: double m_update_ratio;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.34 $
+//  $Revision: 1.35 $
 //
 // Usage:
 //  (empty)
@@ -151,8 +151,6 @@ void CLaserDevice::Update( double sim_time )
         m_map_py = y;
         m_map_pth = th;
 	
-	//MakeDirty(); // ready to retransmit truth
-
         // Redraw outselves in the world
         //
         if (!m_transparent )
@@ -330,11 +328,23 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 	
         uint16_t v = (uint16_t)(1000.0 * range);
 	
-       
-        // if we hit something shiny
-	if( ent && ent->laser_return == LaserBright )
-	  v = v | (((uint16_t)1) << 13); // set the shiny bits to 1
-	
+	if( ent )
+	  switch( ent->laser_return )
+	    {
+	    case LaserBright1:
+	      v = v | (((uint16_t)1) << 13); // set the shiny bits to 1
+	      break;
+	    case LaserBright2:
+	      v = v | (((uint16_t)2) << 13); // set the shiny bits to 1
+	      break;
+	    case LaserBright3:
+	      v = v | (((uint16_t)3) << 13); // set the shiny bits to 1
+	      break;
+	    case LaserBright4:
+	      v = v | (((uint16_t)4) << 13); // set the shiny bits to 1
+	      break;
+	    }
+
         // Set the range
         //
         data->ranges[s++] = htons(v);

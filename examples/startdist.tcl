@@ -109,29 +109,36 @@ if {$send} {
   exec rm multirandom
 }
 
-puts "\nStarting stage on:"
-foreach host $hosts {
-  puts "* $host"
-  exec ssh -n -1 -l $username $host "cd $dirname; export PATH=$dirname; ./stage -xs -l log $worldfile" > /dev/null &
-  #sleep 2
-}
+puts "\nDistributed the files.\n"
 
-puts "Waiting for Stages to start..."
-sleep 20
-puts "\nStarting clients on:"
-foreach host $hosts {
-  puts "* $host"
-  exec ssh -n -1 -l $username $host "cd $dirname; export PATH=$dirname; ./multirandom localhost $baseport($host) $numrobots($host) >! occ_grid.0 2>! poslog.0" > /dev/null &
-  #sleep 2
-}
+#puts "\nStarting stage on:"
+#foreach host $hosts {
+#  puts "* $host"
+#  exec ssh -n -1 -l $username $host "cd $dirname; export PATH=$dirname; ./stage -xs -l log $worldfile" > /dev/null &
+#  #sleep 2
+#}
 
-puts "\nStarting Stage manager"
-eval exec $managerbinary $hosts >@ stdout &
+#puts "Waiting for Stages to start..."
+#sleep 20
+#puts "\nStarting clients on:"
+#foreach host $hosts {
+##  puts "* $host"
+#  exec ssh -n -1 -l $username $host "cd $dirname; export PATH=$dirname; ./multirandom localhost $baseport($host) $numrobots($host) >! occ_grid.0 2>! poslog.0" > /dev/null &
+#  #sleep 2
+#}
 
-signal unblock SIGINT
-signal trap SIGINT killplayers
+#puts "\nStarting Stage manager"
+#eval exec $managerbinary $hosts >@ stdout &
 
-while {1} {
-  sleep 5
-}
+#signal unblock SIGINT
+#signal trap SIGINT killplayers
+
+#while {1} {
+#  sleep 5
+#}
+
+
+
+
+
 

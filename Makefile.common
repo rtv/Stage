@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.common,v 1.23 2001-09-29 00:48:27 vaughan Exp $ 
+# $Id: Makefile.common,v 1.24 2001-10-06 02:10:15 vaughan Exp $ 
 #
 
 # INSTALL PLAYER BEFORE BUILDING STAGE!
@@ -32,8 +32,8 @@ PLAYERVERSION = $(VERSION)
 
 PLAYER_BASE = /usr/local/player
 #PLAYER_DIR = $(PLAYER_BASE)-$(PLAYERVERSION)
-PLAYER_DIR = $(HOME)/code/player
-#PLAYER_DIR = $(HOME)/PS/player
+#PLAYER_DIR = $(HOME)/code/player
+PLAYER_DIR = $(HOME)/PS/player
 
 ##############################################################################
 # Color datbase configuration (required)

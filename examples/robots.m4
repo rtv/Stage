@@ -30,20 +30,16 @@ create position_device pose $1 $2 $3 port $4 shape circle
 }
 ')
 
-#  args are (<x>,<y>,<th>,<port>)
-define(`lasergpsrobot',`
+#  args are (<x>,<y>,<th>,<port>,<shape>,<color>)
+define(`laserrobot',`
 # Robot Expansion
 #   The following code was expanded from the macro call:
 #        $0($*)
 
-create position_device pose $1 $2 $3 port $4 shape circle
+create position_device pose $1 $2 $3 port $4 shape $5 color $6
 {
-  create player_device
-  create laser_device
- {
-   create lbd_device
- }
-  create gps_device
+  create player_device color $6
+  create laser_device color $6
 }
 ')
 

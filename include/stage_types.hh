@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/stage_types.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.11 $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -48,6 +48,8 @@
 	#define M_PI        3.14159265358979323846
 #endif
 
+#define STAGE_SYNC 0
+#define STAGE_ASYNC 1
 
 // Convert radians to degrees
 //
@@ -68,7 +70,6 @@
 #define PRINT_MSG(m) printf("stage msg : %s :\n  "m"\n", __FILE__)
 #define PRINT_MSG1(m, a) printf("stage msg : %s :\n  "m"\n", __FILE__, a)
 #define PRINT_MSG2(m, a, b) printf("stage msg : %s :\n  "m"\n", __FILE__, a, b)
-
 
 // color type
 typedef struct

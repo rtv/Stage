@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.20 $
+//  $Revision: 1.21 $
 //
 // Usage:
 //  (empty)
@@ -52,7 +52,7 @@ char g_cmdline[256];
 
 // the parameters controlling stage's update frequency
 // and simulator timestep respectively (milliseconds)
-int g_interval = 0, g_timestep = 0;
+double g_interval = 0, g_timestep = 0;
 
 int g_pose_port = 0, g_env_port = 0;
 // the number of stages running
@@ -110,13 +110,13 @@ bool parse_cmdline(int argc, char **argv)
 	}
       else if( strcmp( argv[a], "-u" ) == 0 )
 	{
-	  g_interval = (int)((1.0/atof(argv[a+1])) * 1000);
+	  g_interval = (1.0/atof(argv[a+1]));
 	  printf( "[Update %s Hz]", argv[a+1] );
 	  a++;
 	}
       else if( strcmp( argv[a], "-v" ) == 0 )
 	{
-	  g_timestep = (int)( g_interval * atof(argv[a+1]) );
+	  g_timestep = ( g_interval * atof(argv[a+1]) );
 	  printf( "[Virtual time %.2f]", atof(argv[a+1]) );
 	  a++;
 	}
@@ -218,11 +218,16 @@ printf("\n** Stage  v%s ** ", (char*) VERSION);
   if( g_env_port )
     world->m_env_port = g_env_port;
   
-  if( g_interval )
-    world->m_timer_interval = g_interval;
-  
+
+  if( g_interval > 0 )
+    {
+      assert( world );
+      world->m_real_timestep = g_interval;
+      printf( "SETTING STEP: %f\n", world->m_real_timestep );
+    }
+
   if( g_timestep )
-    world->m_timestep = g_timestep;
+    world->m_sim_timestep = g_timestep;
   
 
   puts( "" ); // end the startup output line

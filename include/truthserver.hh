@@ -18,12 +18,22 @@ extern int global_environment_port;
 
 typedef	struct sockaddr SA; // useful abbreviation
 
+enum MessageType { PosePacket, Continue, ContinueTime, Command };
+
+
+typedef struct
+{
+  MessageType type;
+  uint32_t data;
+} __attribute ((packed)) stage_header_t;
+
+
 typedef struct
 {
   uint16_t width, height, ppm;
   uint32_t num_pixels;
   uint16_t num_objects;
-} __attribute ((packed)) stage_header_t;
+} __attribute ((packed)) stage_env_header_t;
 
 typedef struct
 {

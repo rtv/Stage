@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.23 $
+//  $Author: vaughan $
+//  $Revision: 1.24 $
 //
 // Usage:
 //  (empty)
@@ -207,25 +207,25 @@ bool CWorld::Load(const char *filename)
             // the real update interval in milliseconds
             else if (strcmp(argv[1], "real_timestep_ms") == 0)
 	      {
-		m_timer_interval = (int)atof(argv[3]);
+		m_real_timestep = (int)atof(argv[3]);
 	      }
 
             // the simulated update rate in milliseconds
             else if (strcmp(argv[1], "virtual_timestep_ms") == 0)
 	      {
-		m_timestep = (int)atof(argv[3]);
+		m_sim_timestep = (int)atof(argv[3]);
 	      }
 
             // the real update frequency in Hz (alternative to the above)
             else if (strcmp(argv[1], "update_frequency") == 0)
 	      {
-		m_timer_interval = (int)((1.0/atof(argv[3])) * 1000.0);
+		m_real_timestep = (int)((1.0/atof(argv[3])) * 1000.0);
 	      }
 
             // the update frequency in Hz (alternative to the above)
             else if (strcmp(argv[1], "virtual_time_scaling") == 0)
 	      {
-		m_timestep = (int)(m_timer_interval * atof(argv[3]));
+		m_sim_timestep = (int)(m_real_timestep * atof(argv[3]));
 	      }
 
 	    //////////////////////////////////////////////////////////////

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.24 $
+//  $Author: vaughan $
+//  $Revision: 1.25 $
 //
 // Usage:
 //  (empty)
@@ -62,6 +62,7 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
     
     // all truth connections should send this truth
     memset( &m_dirty, true, sizeof(bool) * MAX_POSE_CONNECTIONS );
+    m_last_pixel_x = m_last_pixel_y = m_last_degree = 0;
 
     // by default, entities don't show up in any sensors
     // these must be enabled explicitly in each subclass
@@ -179,9 +180,15 @@ bool CEntity::Load(int argc, char **argv)
             if (strcmp(argv[i + 1], "obstacle") == 0)
 	      obstacle_return = true;
             else if (strcmp(argv[i + 1], "laser") == 0)
-	      laser_return = 1;
-            else if (strcmp(argv[i + 1], "laserbright") == 0)
-	      laser_return = 2;
+	      laser_return = LaserSomething;
+            else if (strcmp(argv[i + 1], "laserbright1") == 0)
+	      laser_return = LaserBright1;
+            else if (strcmp(argv[i + 1], "laserbright2") == 0)
+	      laser_return = LaserBright2;
+            else if (strcmp(argv[i + 1], "laserbright3") == 0)
+	      laser_return = LaserBright3;
+            else if (strcmp(argv[i + 1], "laserbright4") == 0)
+	      laser_return = LaserBright4;
             else if (strcmp(argv[i + 1], "sonar") == 0)
 	      sonar_return = true;
             else
@@ -786,6 +793,32 @@ void CEntity::ComposeTruth( stage_truth_t* truth, int index )
 
   truth->th = (uint16_t)degrees;  
 }
+
+void CEntity::MakeDirtyIfPixelChanged( void )
+{
+  double px, py, pth;
+  GetGlobalPose( px, py, pth );
+  
+  // calculate the pixel we're at:
+  int x = (int) (px * m_world->ppm);
+  int y = (int) (py * m_world->ppm);
+  int degree = (int)RTOD( NORMALIZE(pth) );
+  
+  // if we've moved pixel or 1 degree, then we should mark dirty to
+  // update external clients (GUI or distributed stage siblings)
+  if( m_last_pixel_x != x || m_last_pixel_y != y ||
+    m_last_degree != degree )
+    {
+      memset( m_dirty, true, sizeof(m_dirty[0]) * MAX_POSE_CONNECTIONS );
+     
+      //puts( "dirty!" );
+    }
+
+  // store these quantized locations for next time
+  m_last_pixel_x = x;
+  m_last_pixel_y = y;
+  m_last_degree = degree;
+};
 
 
 #ifdef INCLUDE_RTK

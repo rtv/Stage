@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.63 $
+//  $Author: vaughan $
+//  $Revision: 1.64 $
 //
 // Usage:
 //  (empty)
@@ -44,12 +44,16 @@ extern char* g_host_id;
 
 extern bool g_wait_for_env_server;
 extern bool g_log_output;
+
+bool g_log_continue = false;
 extern char g_log_filename[];
 extern char g_cmdline[];
 
 extern long g_bytes_input, g_bytes_output;
 
 int g_log_fd = -1; // logging file descriptor
+
+int g_timer_expired = 0;
 
 //#include <stage.h>
 #include "world.hh"
@@ -84,12 +88,12 @@ extern bool global_no_gui;
 // dummy timer signal func
 void TimerHandler( int val )
 {
-  // do nothing! just wake from sleep
-  //cout << "WAKE!" << flush;
+  g_timer_expired++;
+  //printf( "g_timer_expired: %d\n", g_timer_expired );
 }  
 
 
-// main.cc calls constructor, then Load(), then Startup(), then starts thread
+// Main.cc calls constructor, then Load(), then Startup(), then starts thread
 // at CWorld::Main();
 
 ///////////////////////////////////////////////////////////////////////////
@@ -107,11 +111,9 @@ CWorld::CWorld()
     m_object_count = 0;
 
     // defaults time steps can be tweaked by command line or config file
-    //m_timer_interval = 50; //ms
-    //m_timestep = 50; //ms; 
-    m_timer_interval = 100; //ms
-    m_timestep = 100; //ms; 
-
+    m_real_timestep = 0.1; //msec
+    m_sim_timestep = 0.1; //seconds; - 10Hz default rate 
+    m_step_num = 0;
 
     // Allow the simulation to run
     //
@@ -123,7 +125,11 @@ CWorld::CWorld()
     
     // init the pose server data structures
     m_pose_connection_count = 0;
-    memset( m_pose_connections, 0, sizeof(struct pollfd) * MAX_POSE_CONNECTIONS );
+    memset( m_pose_connections, 0, 
+	    sizeof(struct pollfd) * MAX_POSE_CONNECTIONS );
+    memset( m_conn_type, 0, sizeof(char) * MAX_POSE_CONNECTIONS );
+    
+    m_sync_counter = 0;
 
     // if we gave Stage an id on the command line, use that
     //if( g_host_id && strlen( g_host_id ) > 0)
@@ -173,14 +179,18 @@ CWorld::CWorld()
     
     // Initialise clocks
     //
-    gettimeofday( &m_sim_timeval, 0 );
+    //gettimeofday( &m_sim_timeval, 0 );
     
     //m_sim_timeval.tv_sec = 90;
     //m_sim_timeval.tv_usec = 210;
 
-    m_start_time = m_sim_time = 
-      (double)m_sim_timeval.tv_sec + 
-      (double)(m_sim_timeval.tv_usec / (double)MILLION);
+    // zero all clocks
+    m_start_time = m_sim_time = 0;
+    memset( &m_sim_timeval, 0, sizeof( struct timeval ) );
+    
+    //m_start_time = m_sim_time = 
+    //(double)m_sim_timeval.tv_sec + 
+    //(double)(m_sim_timeval.tv_usec / (double)MILLION);
 
     // Initialise object list
     //
@@ -535,6 +545,10 @@ void* CWorld::Main(void *arg)
   double ui_time = 0;
 #endif
 
+  if( g_log_output ) world->OutputHeader();
+    
+  // set up the interval timer
+  //
   // set a timer to go off every few ms. we'll sleep in
   // between if there's nothing else to do
   // sleep will return (almost) immediately if the
@@ -551,82 +565,57 @@ void* CWorld::Main(void *arg)
   struct itimerval tick;
   // seconds
   tick.it_value.tv_sec = tick.it_interval.tv_sec = 
-    world->m_timer_interval / 1000;
+    (long)floor(world->m_real_timestep);
   // microseconds
   tick.it_value.tv_usec = tick.it_interval.tv_usec = 
-    world->m_timer_interval * 1000; 
+    (long)fmod( world->m_real_timestep * 1000000, 1000000); 
   
   if( setitimer( ITIMER_REAL, &tick, 0 ) == -1 )
     {
       cout << "failed to set timer" << endl;;
       exit( -1 );
     }
-  
-  if( g_log_output )
-    {
-      //for( int f=0; f<10; f++ )
-      //puts( g_log_filename );
-      
-      int log_instance = 0;
-      while( g_log_fd < 0 )
-	{
-	  char fname[256];
-	  sprintf( fname, "%s.%d", g_log_filename, log_instance++ );
-	  g_log_fd = open( fname, O_CREAT | O_EXCL | O_WRONLY, 
-			   S_IREAD | S_IWRITE );
-	}
 
-      struct timeval t;
-      gettimeofday( &t, 0 );
-      
-      // count the locally managed objects
-      int m=0;
-      for( int c=0; c<world->m_object_count; c++ )
-	if( world->m_object[c]->m_local ) m++;
-      
-      char* tmstr = ctime( &t.tv_sec);
-      tmstr[ strlen(tmstr)-1 ] = 0; // delete the newline
-      
+  printf( "TIMESTEP %f\n", world->m_real_timestep );
 
-      
-      char line[512];
-      sprintf( line,
-	       "# Stage output log\n#\n"
-	       "# Command:\t%s\n"
-	       "# Date:\t\t%s\n"
-	       "# Host:\t\t%s\n"
-	       "# Bitmap:\t%s\n"
-	       "# Objects:\t%d of %d\n#\n"
-	       "#STEP\t\tTIME(s)\t\tCYCLE(msec)\tRATIO"
-	       "\tINPUT\tOUTPUT\tITOTAL\tOTOTAL\n",
-	       g_cmdline, 
-	       tmstr, 
-	       world->m_hostname, 
-	       world->m_filename,
-	       m, 
-	       world->m_object_count );
-
-      write( g_log_fd, line, strlen(line) );
-    }
-  
-    
   while (true)
     {
-      // Check for thread cancellation
-      //
-      pthread_testcancel();
+      double loop_start = world->GetRealTime();
 
+      // reset the timer flag
+      g_timer_expired = 0;
+
+      // Check for thread cancellation
+      pthread_testcancel();
+      
       // look for new connections to the poseserver
       world->ListenForPoseConnections();
 
-      world->PoseRead();
-      
-      // Update the world
-      //
+      // calculate new world state
       if (world->m_enable) world->Update();
 
-      world->PoseWrite();
+      double update_time = world->GetRealTime();
 
+      if( world->m_pose_connection_count == 0 )
+	{      
+	  world->m_step_num++;
+
+	  // if we have spare time, sleep until it runs out
+	  if( g_timer_expired < 1 ) 
+	    sleep( 100 ); 
+	}
+      else // handle the connections
+	{
+	  world->PoseWrite(); // writes out anything that is dirty
+	  world->PoseRead();
+	}
+      
+      double loop_end = world->GetRealTime(); 
+      double loop_time = loop_end - loop_start;
+      double sleep_time = loop_end - update_time;
+      
+      if( g_log_output && g_log_continue ) 
+	world->Output( loop_time, sleep_time );
 
       // dump the contents of the matrix to a file
       //world->matrix->dump();
@@ -647,8 +636,6 @@ void* CWorld::Main(void *arg)
 	  world->m_router->send_message(RTK_UI_FORCE_UPDATE, NULL);
         }
 #endif
-      // go to sleep until a signal occurs (or a whole second goes by (no way!))
-      sleep( 1 ); 
     }
 }
 
@@ -657,78 +644,13 @@ void* CWorld::Main(void *arg)
 // Update the world
 //
 void CWorld::Update()
-{
-
-  // this much simulated time has passed since the last update
-  //
-  //STEP TIME
-  //double timestep = m_timestep / 1000.0;
-  
-  // REAL TIME
-  static double last_time = 0;
-  double timestep = GetRealTime() - last_time;
-  last_time += timestep;
-  
+{  
   // Update the simulation time (in both formats)
   //
-  m_sim_time += timestep;
+  m_sim_time = m_step_num * m_sim_timestep;
   m_sim_timeval.tv_sec = (long)floor(m_sim_time);
   m_sim_timeval.tv_usec = (long)((m_sim_time - floor(m_sim_time)) * MILLION); 
 
-    // Keep track of the sim/real time ratio
-    // This is done as a moving window filter so we can see
-    // the change over time.
-  //
-#ifdef WATCH_RATES
-  
-  static double last_real_time = 0;
-  double real_timestep = GetRealTime() - last_real_time;
-  
-  last_real_time += real_timestep;
-  
-  if( g_log_output && g_log_fd >= 0 )
-    {
-      static long cycle = 0;
-      static long last_input = 0;
-      static long last_output = 0;
-
-      char line[512];
-      sprintf( line,
-	       "%ld\t\t%.3f\t\t%d\t\t%.3f\t%ld\t%ld\t%ld\t%ld\n", 
-	       cycle++, GetRealTime(), 
-	       //(int)(real_timestep * 1000.0), timestep / real_timestep );
-	       (int)(timestep * 1000.0), timestep / (m_timestep/1000.0), 
-	       g_bytes_input - last_input,
-	       g_bytes_output - last_output,
-	       g_bytes_input, 
-	       g_bytes_output);
-
-      last_input = g_bytes_input;
-      last_output = g_bytes_output;
-
-      write( g_log_fd, line, strlen(line) );
-    }
-  else
-    {
-      static int period = 0;
-      double a = 0.05;
-      m_update_ratio = (1 - a) * m_update_ratio + a * ( timestep / real_timestep );
-      
-      // Keep track of the update rate
-      // This is done as a moving window filter so we can see
-      // the change over time.
-      // Note that we must use the *real* timestep to get sensible results.
-      //
-      m_update_rate = (1 - a) * m_update_rate + a * (1.0 / real_timestep);
-      
-      if( (++period %= 20)  == 0 )
-	{
-	  printf( " %4.0f Hz (%2.1f)\r", m_update_rate,  m_update_ratio );
-	  fflush( stdout );
-	}
-#endif
-    }
-      
   // copy the timeval into the player io buffer
   // use the first object's info
   LockShmem();
@@ -739,9 +661,9 @@ void CWorld::Update()
   for (int i = 0; i < m_object_count; i++)
     {
       // if this host manages this object
-      if( m_object[i]->m_local )
+      //if( m_object[i]->m_local )
 	m_object[i]->Update( m_sim_time ); // update it 
-    }
+    };
 }
 
 
@@ -1387,3 +1309,113 @@ bool CWorld::CheckHostname(char* host)
   else
     return false;
 }
+
+
+void CWorld::Output( double loop_duration, double sleep_duration )
+{
+  
+  // time taken
+  double gain = 0.05;
+  static double avg_loop_duration = m_real_timestep;
+  static double avg_sleep_duration = m_real_timestep;
+  avg_loop_duration = (1.0-gain)*avg_loop_duration + gain*loop_duration;
+  avg_sleep_duration = (1.0-gain)*avg_sleep_duration + gain*sleep_duration;
+  
+  // comms used
+  static unsigned long last_input = 0;
+  static unsigned long last_output = 0;
+  unsigned int bytesIn = g_bytes_input - last_input;
+  unsigned int bytesOut = g_bytes_output - last_output;
+
+
+    if( g_log_output && g_log_fd >= 0 )
+      {
+        char line[512];
+        sprintf( line,
+		 "%u\t\t%.3f\t\t%.6f\t%.6f\t%.6f\t%ld\t%ld\t%ld\t%ld\n", 
+		 m_step_num, m_sim_time, // step and time
+		 loop_duration, // real cycle time in ms
+		 sleep_duration, // real sleep time in ms
+		 m_sim_timestep / loop_duration, // ratio
+		 g_bytes_input - last_input, // bytes in this cycle
+		 g_bytes_output - last_output, // bytes out this cycle
+		 g_bytes_input,  // total bytes in
+		 g_bytes_output); // total bytes out
+	
+        write( g_log_fd, line, strlen(line) );
+      }
+  
+#ifdef WATCH_RATES
+  
+  
+      // display every cycle
+      printf( " %8.1f - [%3.0f/%3.0f] [%3.0f/%3.0f] [%u/%u] %.2f b/sec    \r", 
+	      m_sim_time, 
+	      loop_duration * 1000.0, 
+	      sleep_duration * 1000.0, 
+	      avg_loop_duration * 1000.0, 
+	      avg_sleep_duration * 1000.0,  
+	      bytesIn, bytesOut, 
+	      (double)(bytesIn + bytesOut) / (double)loop_duration );
+      
+      fflush( stdout );
+#endif
+
+      last_input = g_bytes_input;
+      last_output = g_bytes_output;
+}
+
+
+void CWorld::OutputHeader( void )
+  
+{
+  //for( int f=0; f<10; f++ )
+      //puts( g_log_filename );
+      
+      int log_instance = 0;
+      while( g_log_fd < 0 )
+	{
+	  char fname[256];
+	  sprintf( fname, "%s.%d", g_log_filename, log_instance++ );
+	  g_log_fd = open( fname, O_CREAT | O_EXCL | O_WRONLY, 
+			   S_IREAD | S_IWRITE );
+	}
+
+      struct timeval t;
+      gettimeofday( &t, 0 );
+      
+      // count the locally managed objects
+      int m=0;
+      for( int c=0; c<m_object_count; c++ )
+	if( m_object[c]->m_local ) m++;
+      
+      char* tmstr = ctime( &t.tv_sec);
+      tmstr[ strlen(tmstr)-1 ] = 0; // delete the newline
+      
+      char line[512];
+      sprintf( line,
+	       "# Stage output log\n#\n"
+	       "# Command:\t%s\n"
+	       "# Date:\t\t%s\n"
+	       "# Host:\t\t%s\n"
+	       "# Bitmap:\t%s\n"
+	       "# Timestep(ms):\t%d\n"
+	       "# Objects:\t%d of %d\n#\n"
+	       "#STEP\t\tSIMTIME(s)\tINTERVAL(s)\tSLEEP(s)\tRATIO\t"
+	       "\tINPUT\tOUTPUT\tITOTAL\tOTOTAL\n",
+	       g_cmdline, 
+	       tmstr, 
+	       m_hostname, 
+	       m_filename,
+	       (int)(m_sim_timestep * 1000.0),
+	       m, 
+	       m_object_count );
+      
+      write( g_log_fd, line, strlen(line) );
+}
+
+
+
+
+
+

@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.36 2001-09-29 00:47:12 vaughan Exp $
+ * $Id: xs.cc,v 1.37 2001-10-06 02:10:16 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -170,14 +170,14 @@ void PrintStagePose( stage_pose_t &pose )
 void PrintSendBuffer( char* send_buf, size_t len )
 {
   printf( "Send Buffer at %p is %d bytes and contains %d records:\n", 
-	  send_buf, len, (uint16_t)send_buf[0] );
+	  send_buf, len, ((stage_header_t*)send_buf)->data );
 
-  for( int t=0; t< (uint16_t)send_buf[0]; t++ )
+  for( size_t t=0; t< ((stage_header_t*)send_buf)->data; t++ )
     {
       printf( "[%d] ", t );
 
       stage_pose_t pose;
-      memcpy( &pose, (send_buf+sizeof(uint16_t)+sizeof(stage_pose_t)*t),
+      memcpy( &pose, (send_buf+sizeof(stage_header_t)+sizeof(stage_pose_t)*t),
 	      sizeof( stage_pose_t ) );
 
       PrintStagePose( pose );
@@ -251,16 +251,16 @@ static void* TruthReader( void*)
   while( 1 )
     {	      
       // read the first two bytes to see how many poses are coming
-      size_t packetlen = sizeof(uint16_t);
+      stage_header_t hdr;
+      size_t packetlen = sizeof(hdr);
       size_t recv = 0;
-     
-      uint16_t num_poses;
+      
       while( recv < packetlen )
       {
         //printf( "Reading on %d\n", ffd ); fflush( stdout );
 
         /* read will block until it has some bytes to return */
-        r = read( ffd, ((char*)&num_poses)+recv,  packetlen - recv );
+        r = read( ffd, ((char*)&hdr)+recv,  packetlen - recv );
 	
         if( r < 0 )
           perror( "TruthReader(): read error" );
@@ -272,9 +272,9 @@ static void* TruthReader( void*)
 
       // now read in all the poses
 
-      stage_pose_t* poses = new stage_pose_t[ num_poses ]; 
+      stage_pose_t* poses = new stage_pose_t[ hdr.data ]; 
       
-      packetlen = sizeof(stage_pose_t) * num_poses;
+      packetlen = sizeof(stage_pose_t) * hdr.data;
       recv = 0;
      
       // read the first two bytes to see how many poses are coming
@@ -292,32 +292,28 @@ static void* TruthReader( void*)
         //printf( "Read %d/%d bytes on %d\n",recv,packetlen,ffd ); 
       }
 
-      //PrintStagePose( pose );
-
-      //if( pose.echo_request )
-      ///{
-      //printf( "\nXS: warning - received an echo request in this pose: " );
-      //PrintStagePose( pose );
-      //}
-
       //printf( "XS: received %d poses: \n", num_poses );
       
-      for( int p=0; p<num_poses; p++ )
+      for( size_t p=0; p<hdr.data; p++ )
 	{  
 	  stage_pose_t pose;
 	  
 	  memcpy( &pose, &(poses[p]), sizeof(stage_pose_t) );
 
-	  //printf( "#%d ", p );
 	  //PrintStagePose( pose );
 
-	  //pthread_mutex_lock( &incoming_mutex );
 	  incoming_queue.push( pose );
-	  //pthread_mutex_unlock( &incoming_mutex );
 	}
+
     }
 }
 
+// dummy timer signal func
+void TimerHandler( int val )
+{
+  // do nothing! just wake from sleep
+  //cout << "WAKE!" << flush;
+}  
 
 static void* TruthWriter( void* )
 {
@@ -326,58 +322,102 @@ static void* TruthWriter( void* )
   //printf( "WRITING on %d\n", ffd );
   //fflush( stdout );
   
-  /* create default mutex type (NULL) which is fast */
-  //pthread_mutex_init( &outgoing_mutex, NULL );
-
+  //install signal handler for timing
+  if( signal( SIGALRM, &TimerHandler ) == SIG_ERR )
+    {
+      cout << "Failed to install signal handler" << endl;
+      exit( -1 );
+    }
+  
+  //start timer with chosen interval (specified in milliseconds)
+  struct itimerval tick;
+  // seconds
+  tick.it_value.tv_sec = tick.it_interval.tv_sec = 0;
+  // microseconds
+  tick.it_value.tv_usec = tick.it_interval.tv_usec = 100000;
+  
+  if( setitimer( ITIMER_REAL, &tick, 0 ) == -1 )
+    {
+      cout << "failed to set timer" << endl;;
+      exit( -1 );
+    }
+  
   pthread_detach(pthread_self());
-
-  //puts( "TRUTH WRITER" );
-  //fflush( stdout );
 
   // write out anything we find on the output queue
   
-  // create space for 20 poses + count header
-  char* sendbuf = new char[ sizeof(uint16_t)+sizeof(stage_pose_t)*20 ]; 
-
-  
+  // create space for 100 poses + header
+  char* sendbuf = new char[ sizeof(stage_header_t)+sizeof(stage_pose_t)*100 ]; 
+ 
   while( 1 )
     {
-      stage_pose_t *next_entry = (stage_pose_t*)( sendbuf + sizeof(uint16_t) );
-      uint16_t pose_count = 0;
+      usleep( 50000 ); // chill for a little while
 
-      while( !outgoing_queue.empty() && (int)pose_count < 20 )
+      stage_pose_t *next_entry = 
+	(stage_pose_t*)( sendbuf+sizeof(stage_header_t) );
+      
+      uint32_t pose_count = 0;
+      
+      // copy all the poses on the output queue into a buffer
+      while( !outgoing_queue.empty() && pose_count < 100 )
 	{
+	  bool duplicate = false;
+	  
 	  stage_pose_t pose = outgoing_queue.front();
 	  outgoing_queue.pop();
 	  
-	  //printf( "WRITING %d bytes on %d - ", sizeof(pose), ffd );
-	  //PrintStagePose( pose );
-	  //fflush( stdout );
-	  
 	  // please send this truth back to us for redisplay
 	  pose.echo_request = true;
+	
+	  // if we've already queued up a move request for this
+	  // object
+	  for( int g=0; g<(int)pose_count; g++ )
+	    {
+	      stage_pose_t* ps = (stage_pose_t*)
+		(sendbuf+sizeof(stage_header_t)+(g*sizeof(stage_pose_t)));
+	      
+	      if( ps->stage_id == pose.stage_id )
+		{
+		  // change the existing request instead of adding a new one
+		  duplicate = true;
+		  memcpy( ps, &pose, sizeof(pose) );
+		}
+	    }
 	  
-	  memcpy( next_entry, &pose, sizeof(pose) );
-	  
-	  pose_count++;
-	  next_entry++;
+	  // if we didn't find an existing request, add a new request
+	  if( !duplicate )
+	    {
+	      memcpy( next_entry, &pose, sizeof(pose) );
+	      
+	      pose_count++;
+	      next_entry++;
+	    }
 	}
-
+      
+      // now send the data we've buffered
       if( pose_count > 0 )
-	{
-	  *((uint16_t*)sendbuf) = pose_count;
+	{      
+	  stage_header_t hdr;
 	  
+	  hdr.type = PosePacket;
+	  hdr.data = pose_count;
+	  
+	  //printf( "[HDR (%d:%u)]", hdr.type, hdr.data );
+	  //printf( "[PLD %d]", pose_count );
+	  
+	  // copy in the header
+	  memcpy( sendbuf, &hdr, sizeof(hdr) );
 	  
 	  size_t writecnt = 0;
 	  int thiswritecnt;
 	  
 	  size_t packet_len = 
-	    sizeof(uint16_t) + pose_count * sizeof(stage_pose_t);
+	    sizeof(stage_header_t) + pose_count * sizeof(stage_pose_t);
 	  
 	  //printf( "XS: writing %d poses (%d bytes)\n", pose_count, packet_len );
 	  
 	  //PrintSendBuffer( sendbuf, packet_len );
-
+	  
 	  while(writecnt < packet_len )
 	    {
 	      thiswritecnt = write( ffd, ((char*)sendbuf)+writecnt, 
@@ -386,9 +426,20 @@ static void* TruthWriter( void* )
 	      
 	      writecnt += (size_t)thiswritecnt;
 	    }
-	}      
+	}
+
+      //stage_header_t ack;
+      //ack.type = Continue;
+      //ack.data = 0xFFFFFFFF;
       
-      usleep( 1000 );
+      // send an ACK
+      //puts( "XS: sending ACK" );
+      //if( write( ffd, &ack, sizeof(ack) ) < 1 )
+      //perror( "XS: Failed to write ACK" );
+      
+      //printf( "[ACK (%d:%x)]\n", ack.type, ack.data );
+                  
+      //sleep( 1 ); // sleep until the timer goes off in max.100ms time
     }
 }
 
@@ -428,6 +479,17 @@ bool ConnectToTruth( void )
   //else
   //puts( " OK." );
   //#endif
+
+  // send the connection type byte - we want an asynchronous connection
+
+  char c = STAGE_ASYNC;
+  int r;
+  if( (r = write( truthfd, &c, 1 )) < 1 )
+    {
+      printf( "XS: failed to write ASYNC byte to Stage. Quitting\n" );
+      if( r < 0 ) perror( "error on write" );
+      exit( -1 );
+    }
 
 /*-----------------------------------------------------------*/
       
@@ -476,7 +538,7 @@ bool CXGui::DownloadEnvironment( void )
       return false; // connect failed - boo.
     }
 
-  stage_header_t header;
+  stage_env_header_t header;
   int len = sizeof( header );
   int recv = 0;
   int r = 0;
@@ -950,7 +1012,8 @@ void CXGui::Startup(int argc, char** argv )
   if( (first_dot = strchr(hostname,'.') ))
     *first_dot = '\0';
   
-  sprintf( window_title,  "%s@%s", titleStr, hostname );
+  
+  sprintf( window_title,  "%s@%s", titleStr, stage_host );
   
   num_proxies = 0;
   

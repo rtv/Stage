@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.19 $
+//  $Revision: 1.20 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -164,7 +164,7 @@ void CPuck::Update( double sim_time )
 // 
 void CPuck::Move()
 {
-  double step_time = m_world->m_timestep / 1000.0;
+  double step_time = m_world->m_sim_timestep;
 
     // don't move if we've been picked up
     if(m_parent_object) return;
@@ -208,7 +208,7 @@ void CPuck::Move()
 	    }
   	  else if( ent->obstacle_return )
   	    {
-  	      m_com_vr = 0; // a collision! stop moving
+  	      m_com_vr = -0; // a collision! stop moving
   	      return; // don;t move at all
   	    }
 	}
@@ -226,7 +226,7 @@ void CPuck::Move()
 
 	// if we moved, we mark ourselves dirty
 	if( (px!=qx) || (py!=qy) || (pth!=qth) )
-	  MakeDirty();
+	  MakeDirtyIfPixelChanged();
       }    
     
     // compute a new velocity, based on "friction"

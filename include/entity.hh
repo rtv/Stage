@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.22 $
+//  $Revision: 1.23 $
 //
 // Usage:
 //  (empty)
@@ -44,7 +44,8 @@
 //
 class CWorld;
 
-enum LaserReturn { LaserNothing=0, LaserSomething, LaserBright };
+enum LaserReturn { LaserNothing=0, LaserSomething, 
+		   LaserBright1, LaserBright2, LaserBright3, LaserBright4 };
 
 ///////////////////////////////////////////////////////////////////////////
 // The basic object class
@@ -186,6 +187,10 @@ class CEntity
   //public: stage_truth_t truth, old_truth;
 public: bool m_dirty[ MAX_POSE_CONNECTIONS ];
 
+  // if we've moved at least 1 pixel or 1 degree, then set the dirty
+  // flag
+public: void MakeDirtyIfPixelChanged( void );
+
 public: void MakeDirty( void )
   {
     memset( m_dirty, true, sizeof(m_dirty[0]) * MAX_POSE_CONNECTIONS );
@@ -195,7 +200,12 @@ public: void MakeClean( void )
   {
     memset( m_dirty, false, sizeof(m_dirty[0]) * MAX_POSE_CONNECTIONS );
   };
-
+  
+  // these store the last pose we sent out from the pose server
+  // to be tested when setting the dirty flag to see if we really
+  // need to send a new pose
+public: int m_last_pixel_x, m_last_pixel_y, m_last_degree;
+  
 // recursive function that ORs an ent's dirty array with those of
 // all it's ancestors 
 public: void InheritDirtyFromParent( int con_count );

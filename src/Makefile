@@ -11,9 +11,9 @@ include ../Makefile.common
 # choose one of these that suits your build (debug/profile/production)
 
 # production
-#CCFLAGS = -O2 
+CCFLAGS = -O2 
 # debug
-CCFLAGS = -g3 
+#CCFLAGS = -g3 
 # debug + profile
 #CCFLAGS = -pg -g3 
 
@@ -78,3 +78,14 @@ clean_dep:
 	${CC} ${CCFLAGS} -c $< -o $@
 
 # Dependancies (make dep)
+
+truthlog.o: ../include/truthserver.hh
+truthlog.o: /home/vaughan/PS/player/include/messages.h
+truthlog.o: /home/vaughan/PS/player/include/playercommon.h
+truthlog.o: ../include/stage_types.hh
+xs.o: ../include/stage_types.hh ../include/truthserver.hh
+xs.o: /home/vaughan/PS/player/include/messages.h
+xs.o: /home/vaughan/PS/player/include/playercommon.h ../include/xs.hh
+render.o: ../include/stage_types.hh ../include/truthserver.hh
+render.o: /home/vaughan/PS/player/include/messages.h
+render.o: /home/vaughan/PS/player/include/playercommon.h ../include/xs.hh

@@ -55,7 +55,7 @@ static void * EnvWriter( void* arg )
 
   pthread_detach(pthread_self());
 
-  stage_header_t hdr;
+  stage_env_header_t hdr;
 
   hdr.width = (uint16_t)world->matrix->width;
   hdr.height = (uint16_t)world->matrix->height;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.15 $
+//  $Revision: 1.16 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -58,7 +58,7 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CEntity *parent)
   
   m_interval = 0.2; // 5Hz update
   
-  laser_return = LaserBright;
+  laser_return = LaserBright1;
   
   // Set this flag to make the beacon transparent to lasesr
   //

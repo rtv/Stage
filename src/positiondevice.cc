@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.11 $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -197,7 +197,7 @@ void CPositionDevice::Update( double sim_time )
 
 int CPositionDevice::Move()
 {
-  double step_time = m_world->m_timestep / 1000.0;
+  double step = m_world->m_sim_timestep;
 
     // Get the current robot pose
     //
@@ -207,9 +207,9 @@ int CPositionDevice::Move()
     // Compute a new pose
     // This is a zero-th order approximation
     //
-    double qx = px + m_com_vr * step_time * cos(pth);
-    double qy = py + m_com_vr * step_time * sin(pth);
-    double qth = pth + m_com_vth * step_time;
+    double qx = px + m_com_vr * step * cos(pth);
+    double qy = py + m_com_vr * step * sin(pth);
+    double qth = pth + m_com_vth * step;
 
     // Check for collisions
     // and accept the new pose if ok
@@ -225,14 +225,14 @@ int CPositionDevice::Move()
 
 	// if we moved, we mark ourselves dirty
 	if( (px!=qx) || (py!=qy) || (pth!=qth) )
-	  MakeDirty();
+	  MakeDirtyIfPixelChanged();
     }
         
     // Compute the new odometric pose
     // Uses a first-order integration approximation
     //
-    double dr = m_com_vr * step_time;
-    double dth = m_com_vth * step_time;
+    double dr = m_com_vr * step;
+    double dth = m_com_vth * step;
     m_odo_px += dr * cos(m_odo_pth + dth / 2);
     m_odo_py += dr * sin(m_odo_pth + dth / 2);
     m_odo_pth += dth;

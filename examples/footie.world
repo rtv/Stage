@@ -1,0 +1,119 @@
+#  args are (<x>,<y>,<th>,<port>)
+
+
+#  args are (<x>,<y>,<th>,<port>)
+
+
+#  args are (<x>,<y>,<th>,<port>,<shape>,<color>)
+
+
+
+
+
+set environment_file = rink.pnm
+set pixels_per_meter = 80
+set laser_res = 1
+
+set host = deckard
+
+# a football that shows up in laser scans
+
+create movable_object pose 5.20 4.93 19 color green port 6672 index 0 visible laserbright2 radius 0.20 
+
+
+
+# Robot Expansion
+#   The following code was expanded from the macro call:
+#        laserrobot(3.48223304703,3.48223304703,0,6665,circle,blue)
+
+create position_device pose 1.38 5.05 -7 color blue port 6665 index 0 invisible laser visible obstacle visible sonar shape circle 
+{
+  create player_device pose 0.00 0.00 0 color blue port 6665 index 0 invisible obstacle invisible laser invisible sonar 
+  create laser_device pose 0.00 0.00 0 color blue port 6665 index 0 invisible obstacle invisible sonar visible laser 
+}
+
+
+# Robot Expansion
+#   The following code was expanded from the macro call:
+#        laserrobot(3.48223304703,3.48223304703,0,6666,circle,blue)
+
+create position_device pose 0.94 5.49 0 color blue port 6666 index 0 invisible laser visible obstacle visible sonar shape circle 
+{
+  create player_device pose 0.00 0.00 0 color blue port 6666 index 0 invisible obstacle invisible laser invisible sonar 
+  create laser_device pose 0.00 0.00 0 color blue port 6666 index 0 invisible obstacle invisible sonar visible laser 
+}
+
+
+set host = rover
+
+
+# Robot Expansion
+#   The following code was expanded from the macro call:
+#        laserrobot(3.48223304703,3.48223304703,0,6667,circle,blue)
+
+create position_device pose 0.96 4.63 0 color blue port 6667 index 0 invisible laser visible obstacle visible sonar shape circle 
+{
+  create player_device pose 0.00 0.00 0 color blue port 6667 index 0 invisible obstacle invisible laser invisible sonar 
+  create laser_device pose 0.00 0.00 0 color blue port 6667 index 0 invisible obstacle invisible sonar visible laser 
+}
+
+
+# Robot Expansion
+#   The following code was expanded from the macro call:
+#        laserrobot(3.48223304703,3.48223304703,0,6668,circle,blue)
+
+create position_device pose 0.52 5.07 0 color blue port 6668 index 0 invisible laser visible obstacle visible sonar shape circle 
+{
+  create player_device pose 0.00 0.00 0 color blue port 6668 index 0 invisible obstacle invisible laser invisible sonar 
+  create laser_device pose 0.00 0.00 0 color blue port 6668 index 0 invisible obstacle invisible sonar visible laser 
+}
+
+set host = fnord
+
+
+# Robot Expansion
+#   The following code was expanded from the macro call:
+#        laserrobot(3.48223304703,3.48223304703,0,6669,circle,red)
+
+create position_device pose 9.37 5.45 180 color red port 6669 index 0 invisible laser visible obstacle visible sonar shape circle 
+{
+  create player_device pose 0.00 0.00 0 color red port 6669 index 0 invisible obstacle invisible laser invisible sonar 
+  create laser_device pose 0.00 0.00 0 color red port 6669 index 0 invisible obstacle invisible sonar visible laser 
+}
+
+
+# Robot Expansion
+#   The following code was expanded from the macro call:
+#        laserrobot(3.48223304703,3.48223304703,0,6670,circle,red)
+
+create position_device pose 9.02 5.01 180 color red port 6670 index 0 invisible laser visible obstacle visible sonar shape circle 
+{
+  create player_device pose 0.00 0.00 0 color red port 6670 index 0 invisible obstacle invisible laser invisible sonar 
+  create laser_device pose 0.00 0.00 0 color red port 6670 index 0 invisible obstacle invisible sonar visible laser 
+}
+
+
+# Robot Expansion
+#   The following code was expanded from the macro call:
+#        laserrobot(3.48223304703,3.48223304703,0,6671,circle,red)
+
+create position_device pose 9.71 5.01 179 color red port 6671 index 0 invisible laser visible obstacle visible sonar shape circle 
+{
+  create player_device pose 0.00 0.00 0 color red port 6671 index 0 invisible obstacle invisible laser invisible sonar 
+  create laser_device pose 0.00 0.00 0 color red port 6671 index 0 invisible obstacle invisible sonar visible laser 
+}
+
+
+# Robot Expansion
+#   The following code was expanded from the macro call:
+#        laserrobot(3.48223304703,3.48223304703,0,6672,circle,red)
+
+create position_device pose 9.35 4.53 180 color red port 6672 index 0 invisible laser visible obstacle visible sonar shape circle 
+{
+  create player_device pose 0.00 0.00 0 color red port 6672 index 0 invisible obstacle invisible laser invisible sonar 
+  create laser_device pose 0.00 0.00 0 color red port 6672 index 0 invisible obstacle invisible sonar visible laser 
+}
+
+
+
+
