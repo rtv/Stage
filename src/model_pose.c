@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.45 $
+//  $Revision: 1.46 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -95,14 +95,16 @@ stg_model_t* stg_model_test_collision_at_pose( stg_model_t* mod,
 	  
 	  stg_model_t* hitmod = itl_first_matching( itl, lines_raytrace_match, mod );
 	  
-	  itl_destroy( itl );
 	  
 	  if( hitmod )
 	    {
 	      if( hitx ) *hitx = itl->x; // report them
 	      if( hity ) *hity = itl->y;	  
+	      itl_destroy( itl );
 	      return hitmod; // we hit this object! stop raytracing
 	    }
+
+	  itl_destroy( itl );
 	}
     }
 
