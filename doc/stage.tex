@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.11 2002-06-11 05:29:12 inspectorg Exp $
+% CVS: $Id: stage.tex,v 1.12 2002-06-11 06:34:06 rtv Exp $
 
 \documentclass[11pt]{report}
 
@@ -37,36 +37,25 @@
 
 \titlepage
 
-% \begin{tabular}{lcr}
-%   \begin{tabular}{c}
-% 	Player/Stage project\\
-%         \includegraphics{notext_ps_logo}
-%    \end{tabular}
-%   &
-%   \hspace{5cm}
-%   &
-%   \begin{tabular}{r}
-%     {\bf USC Robotics Laboratory}\\
-%     University of Southern California\\
-%     Los Angeles, California, USA\\
-%     \vspace*{2em}\\
-%     {\bf Information Sciences Laboratory}\\
-%     HRL Laboratories\\
-%     Malibu, California, USA\\
-%   \end{tabular}
-% \end{tabular}
-
-\begin{flushright}
+ \begin{tabular}{lcr}
+   \begin{tabular}{c}
+ 	Player/Stage project\\
+         \includegraphics{notext_ps_logo}
+    \end{tabular}
+   &
+   \hspace{5cm}
+   &
    \begin{tabular}{r}
      {\bf USC Robotics Laboratory}\\
      University of Southern California\\
      Los Angeles, California, USA\\
      \vspace*{2em}\\
-    {\bf Information Sciences Laboratory}\\
+     {\bf Information Sciences Laboratory}\\
      HRL Laboratories\\
      Malibu, California, USA\\
    \end{tabular}
-\end{flushright}
+ \end{tabular}
+
 
   \vspace{5cm}	
   \centerline{ \Huge{Stage}}
@@ -106,8 +95,7 @@
     support research into multi-agent autonomous systems, so it
     provides fairly simple, computationally cheap models of lots of
     devices rather than attempting to emulate any device with great
-    fidelity. Several researchers have found this to be a useful
-    approach.
+    fidelity. We have found this to be a useful approach.
 
     Stage devices are usually controlled through \emph{Player}; a
     networked robot server. Player comes with a collection of device
@@ -131,15 +119,17 @@
     The primary source for all things Player and Stage is the project
     homepage:\\\\ \indent \HOMEPAGE\\	
 	
-   \noindent Official source releases, access to the CVS development
-   tree, bug tracking, user mailing lists, etc.~ is available from the
-   Sourceforge project management page:\\\\\indent \SFPAGE\\
+   \noindent Access to source code releases, access to the CVS
+   development tree, bug tracking, user mailing lists, etc.~ is
+   available from the Sourceforge project management page:\\\\\indent
+   \SFPAGE\\
 
-   \noindent The current release is Stage-\VERSION. A tarball {\tt Stage-\VERSION.src.tgz} should be available at:\\\\ \indent http://sourceforge.net/project/showfiles.php?group\_id=42445\\
+   \noindent The current release is available as the source tarball
+ Stage-<version>.src.tgz at:\\\\ \indent
+ http://sourceforge.net/project/showfiles.php?group\_id=42445\\
 
-	Previous versions were significantly different and this manual
+	Previous versions were significantly different; this manual
    does not apply to them.
-
 
   \section{What's in the Package?}
 
@@ -148,6 +138,8 @@
       \item C++ source code for 'stage' the simulation engine.
       \item Example environments and setup files.
       \end{itemize}
+
+
 
   \section{Requirements}
 
@@ -179,17 +171,18 @@
 	See your name here by contributing devices, superior
 	algorithms, bugfixes, examples, etc.
 
-  \section{Bugs}
+  \section{Bugs and feedback}
   
-    This is research software and it is constantly evolving.  As such,
-    it is bound to contain bugs, despite our diligent testing.  If you
-    manage to break something, or if some aspect of Stage's behavior
-    seems wrong or non-intuitive, let us know. If you have a problem,
-    please check the website, bug tracking logs and mailing lists. If
-    you can't find an answer there, use the bug tracker to tell us
-    about the problem.
+    This is constantly evolving research software. It is bound to
+    contain bugs, despite our diligent testing.  If you manage to
+    break something, or if some aspect of Stage's behavior seems wrong
+    or non-intuitive, let us know. If you have a problem, please check
+    the website and bug tracking logs. If you can't find an answer
+    there, use the bug tracker to tell us about the problem. Better
+    still, fix it and send us the patch. To stay in touch with the
+    developers and other users, join the mailing lists.
 
-When submitting bugs, include as much information as possible,
+    When submitting bugs, include as much information as possible,
     including the Stage version, OS type and version, and any output
     messages.  A detailed description of what happened will enable us
     (hopefully) to repeat and analyze the problem.  Of course, there
@@ -197,39 +190,13 @@ When submitting bugs, include as much information as possible,
     your problem.  But we use Stage for our research and we want it to
     work properly, so we will do our best.
 
-  \section{Names}
-    
-    From {\sl As You Like It} Act II, Scene 7:
-    \begin{quote}
-    ``All the world's a stage, \\
-    And all the men and women merely players: \\
-    They have their exits and their entrances; \\
-    And one man in his time plays many parts,''\\
-    \end{quote}
-
-    From {\sl Macbeth} Act V, Scene 5:
-    \begin{quote}
-    ``Life's but a walking shadow, a poor player \\
-    That struts and frets his hour upon the stage \\
-    And then is heard no more: it is a tale \\
-    Told by an idiot, full of sound and fury, \\
-    Signifying nothing.''\\
-    \end{quote}
-
-  \section{Acknowledgements}
-
-Stage originated at the University of Southern California Robotics
-    Labs. Support at USC has come from DARPA grant DABT63-99-1-0015
-    (MARS), NSF grant ANI-9979457 (SCOWR), DARPA contract
-    DAAE07-98-C-L028 (TMR), ONR Grants N00014-00-1-0140 and
-    N0014-99-1-0162, and JPL Contract No. 1216961. Development at HRL
-    Laboratories is supported by a DARPA contract (SDR).
-
-We thank those in the USC Robotics Lab and elsewhere who have
-contributed to the development of the Player server and associated
-utilities and tools: Esben \O{}sterg\aa{}rd, Jakob Fredslund, Boyoon
-Jung, Jason K. Douglas, Kim Jinsuck, Gabe Sibley, and Dave
-Naffin. Contributed tools can be found on the website.
+  \section{What happened to...?}
+	
+	Previous releases contained some supplementary programs which
+	have been removed during development of
+	Stage-\VERSION. 'RTKStage' has been folded into Stage. Stage
+	client mode makes 'XS' redundant. Stage server makes 'manager'
+	redundant. Don't worry; things are better now.
 
 \section{Citations}
 If you find Player useful in your work, we would greatly appreciate your
@@ -256,6 +223,22 @@ our academic careers.  You spread the word about Player, which will bring more
 users and developers, as well as please our funders, ensuring that we will
 continue to be allowed to hack on the software.
 
+  \section{Acknowledgements}
+
+Stage originated at the University of Southern California Robotics
+    Labs. Support at USC has come from DARPA grant DABT63-99-1-0015
+    (MARS), NSF grant ANI-9979457 (SCOWR), DARPA contract
+    DAAE07-98-C-L028 (TMR), ONR Grants N00014-00-1-0140 and
+    N0014-99-1-0162, and JPL Contract No. 1216961. Development at HRL
+    Laboratories is supported by a DARPA contract (SDR).
+
+Thanks to our contributors and users, particularly the USC Robotics
+Lab students and alumni who have been generous with their advice, bug
+fixes, and contributions. These fine people have contributed code:
+Esben \O{}sterg\aa{}rd, Jakob Fredslund, Boyoon Jung, Jason
+K. Douglas, Kim Jinsuck, Gabe Sibley, and Dave Naffin. Contributed
+tools can be found on the website.
+
 %////////////////////////////////////////////////////////////////////////////
 \chapter{Running Stage}
   \section{Building and Installing Stage}
@@ -269,7 +252,7 @@ continue to be allowed to hack on the software.
     \noindent Once you've downloaded, built and installed Player, download
     the Stage tarball and unpack it with:
       \begin{verbatim}
-      tar xzvf Stage-1.2.tgz
+      $ tar xzvf Stage-1.2.tgz
       \end{verbatim}
     Now follow the instructions in the top-level README file.
 
@@ -279,7 +262,7 @@ continue to be allowed to hack on the software.
     found in your path (by default, Stage will automatically start an instance of Player, so it needs to know where to find the Player executable).
     For example, try:
       \begin{verbatim}
-      which player
+      $ which player
       \end{verbatim}
     and make sure it returns a valid Player executable path, such as
       \begin{verbatim}
@@ -288,7 +271,7 @@ continue to be allowed to hack on the software.
     If not, set your PATH variable to include the Player binary directory. 
     For example, in BASH do:
       \begin{verbatim}  
-      export PATH=$PATH:$HOME/player-1.2/bin
+      $ export PATH=$PATH:$HOME/player-1.2/bin
       \end{verbatim}  
 
     To run stage do: 
@@ -306,7 +289,7 @@ continue to be allowed to hack on the software.
     like this:
 
 	\begin{verbatim} 
-	stage examples/simple.world
+	$ stage examples/simple.world
 
 	 ** Stage  v1.2 ** 
 	[World examples/simple.world]
@@ -341,12 +324,6 @@ continue to be allowed to hack on the software.
     Stage takes the following command-line options. Where an option
     can also be set in the configuration file, the command line option
     takes precedence.
-
-    \begin{xarg}{-l <logfile>}
-    Enables logging of device positions into the named file. This is
-    useful for gathering experimental results, etc. The log file has a
-    header that records information about the run.
-    \end{xarg}
 
     \begin{xarg}{-n} No Player - do not spawn a Player. You can run
     Player manually in Stage mode with
@@ -399,6 +376,25 @@ continue to be allowed to hack on the software.
     Set the port number for the Stage server to accept connections. Default is 6601.
     \end{xarg}
 
+    \begin{xarg}{-l <logfile>} Enables logging of timing and
+    throughput measurements into <logfile>. The file has a header that
+    records information about the run, and explains the format.
+    \end{xarg}
+
+\section{Controlling the robots}
+
+The virtual robots in Stage are controlled through the Player.  Demo
+controllers in various languages (currently C++, C, TCL \& LISP) are
+included in the Player distribution.
+
+Try using the Player example client
+\verb+<player_root>/utils/playerv/playerv+ to check that you can control
+Stage robots and read from their sensors. playerv is a very useful
+tool for testing and debugging your controller code.
+
+Client libraries in other languages including Java and Python are also
+available. Check the website for the latest resources.
+
 \section{Stage Server and Clients}
 Internally, Stage consists of an environment and a collection of
 devices. Together these comprise a world model. Stage also contains a
@@ -407,7 +403,7 @@ manipulate objects. This is all that many users need to use. However,
 Stage also contains a network server that allows external client
 programs to obtain complete information about the world. Eventually,
 Stage will be capable of distributing compute load across multiple
-clients (imagine a Beowulf cluster of those, etc.). For now, Stage can
+clients (``imagine a Beowulf cluster of those'', etc.). For now, Stage can
 act as a client to itself. This is great as an external networked
 viewer (it replaces the old program XS). For example, you can run
 Stage on one machine without a gui:
@@ -512,6 +508,7 @@ Device data menu & toggle visualizations of data generated by devices\\
 
 %////////////////////////////////////////////////////////////////////////////
 \chapter{The World File}
+\label{sec:world}
 
 The world file is used to describe the particular set of robots,
 sensors and objects to be simulated by Stage.  Stage reads the world
