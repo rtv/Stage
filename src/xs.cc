@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.37 2001-10-06 02:10:16 vaughan Exp $
+ * $Id: xs.cc,v 1.38 2001-10-08 03:55:39 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -2042,9 +2042,6 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
       // if we're connected already 
       if( cli ) 
 	{ // delete the client's proxies, then the client itself
-
-	  puts( "EXISTING CLIENT" );
-
 	  int n = 0;
 	  while( n<num_proxies )
 	    {

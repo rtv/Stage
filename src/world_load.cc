@@ -3,24 +3,9 @@
 // File: world_load.cc
 // Author: Andrew Howard
 // Date: 14 May 2001
-// Desc: Load/save routines for the world can be found here
+// Desc: Load/save routines & command line processing for the world 
 //
-// CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.24 $
-//
-// Usage:
-//  (empty)
-//
-// Theory of operation:
-//  (empty)
-//
-// Known bugs:
-//  (empty)
-//
-// Possible enhancements:
-//  (empty)
+// $Id: world_load.cc,v 1.25 2001-10-08 03:55:39 vaughan Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -528,6 +513,133 @@ bool CWorld::Save(const char *filename)
 }
 
 
+///////////////////////////////////////////////////////////////////////////
+// Parse the command line
+//
+bool CWorld::ParseCmdline(int argc, char **argv)
+{
+  bool usage = false;
+
+
+  for( int a=1; a<argc-1; a++ )
+    {
+      // LOGGING
+      if( strcmp( argv[a], "-l" ) == 0 )
+	{
+	  m_log_output = true;
+	  strncpy( m_log_filename, argv[a+1], 255 );
+	  printf( "[Logfile %s]", m_log_filename );
+
+	  //store the command line for logging later
+	  memset( m_cmdline, 0, sizeof(m_cmdline) );
+	  
+	  for( int g=0; g<argc; g++ )
+	    {
+	      strcat( m_cmdline, argv[g] );
+	      strcat( m_cmdline, " " );
+	    }
+
+	  a++;
+	  
+	  // open the log file and write out a header
+	  LogOutputHeader();
+	}
+      
+      // FAST MODE - run as fast as possible - don't attempt t match real time
+      if( strcmp( argv[a], "-fast" ) == 0 )
+	{
+	  m_real_timestep = 0.0;
+	  printf( "[Fast]" );
+	}
+
+      // DIS/ENABLE XS
+      if( strcmp( argv[a], "-xs" ) == 0 )
+	{
+	  m_run_xs = false;
+	  printf( "[No GUI]" );
+	}
+      else if( strcmp( argv[a], "+xs" ) == 0 )
+	{
+	  m_run_xs = true;
+	  printf( "[GUI]" );
+	}
+
+      // SET GOAL REAL CYCLE TIME
+      // Stage will attempt to update at this speed
+      else if( strcmp( argv[a], "-u" ) == 0 )
+	{
+	  m_real_timestep = atof(argv[a+1]);
+	  printf( "[Real time per cycle %f sec]", m_real_timestep );
+	  a++;
+	}
+
+      // SET SIMULATED UPDATE CYCLE
+      // one cycle simulates this much time
+      else if( strcmp( argv[a], "-v" ) == 0 )
+	{
+	  m_sim_timestep = atof(argv[a+1]);
+	  printf( "[Simulated time per cycle %f sec]", m_sim_timestep );
+	  a++;
+	}
+
+      // change the pose port 
+      else if( strcmp( argv[a], "-tp" ) == 0 )
+	{
+	  m_pose_port = atoi(argv[a+1]);
+	  printf( "[Pose %d]", m_pose_port );
+	  a++;
+	}
+
+      // change the environment port
+      else if( strcmp( argv[a], "-ep" ) == 0 )
+	{
+	  m_env_port = atoi(argv[a+1]);
+	  printf( "[Env %d]", m_env_port );
+	  a++;
+	}
+
+      // SWITCH ON SYNCHRONIZED (distributed) MODE
+      // if this option is given, Stage will only run when connected
+      // to an external synchronous pose connection
+      else if( strcmp( argv[a], "-s" ) == 0 )
+	{
+	  m_external_sync_required = true; 
+	  m_enable = false; // don't run until we have a sync connection
+	  printf( "[External Sync]");
+	}
+      //else if( strcmp( argv[a], "-id" ) == 0 )
+      //{
+      //  memset( m_hostname, 0, 64 );
+      //  strncpy( m_hostname, argv[a+1], 64 );
+      //  printf( "[ID %s]", m_hostname ); fflush( stdout );
+      //  a++;
+      //}
+    }
+
+  if( usage )
+    {
+
+#ifdef INCLUDE_RTK
+      printf("\nUsage: rtkstage [options] WORLDFILE\n"
+	     "Options:\n"
+	     " +xs\t\tExec the XS Graphical User Interface\n"
+	     " -u <float>\tSet the update frequency in Hz. Default: 20\n"
+	     " -v <float>\tSet ratio of simulated to real time. Default: 1.0\n"
+	     );
+#else
+      printf("\nUsage: stage [options] WORLDFILE\n"
+	     "Options:\n"
+	     " -xs\t\tDon't start the XS Graphical User Interface\n"
+	     " -u <float>\tSet the update frequency in Hz. Default: 20.0\n"
+	     " -v <float>\tSet ratio of simulated to real time. Default: 1.0\n"
+	     );
+#endif
+
+      return false;
+    }
+  
+    return true;
+}
 
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.35 $
+//  $Revision: 1.36 $
 //
 // Usage:
 //  (empty)
@@ -172,6 +172,8 @@ void CLaserDevice::Update( double sim_time )
 	
         if( Subscribed() )
         {
+	  //puts( "LASER" );
+
             // Check to see if the configuration has changed
             //
             CheckConfig();

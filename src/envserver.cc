@@ -36,8 +36,6 @@ extern  CWorld* world;
 const int LISTENQ = 128;
 //const long int MILLION = 1000000L;
 
-bool g_wait_for_env_server = true;
-
 extern void CatchSigPipe( int signo );
 
 static void * EnvWriter( void* arg )
@@ -214,7 +212,8 @@ void* EnvServer( void* )
  
   listen(listenfd, LISTENQ);
 
-  g_wait_for_env_server = false;
+  // we're ready - flag the world to proceed 
+  world->m_env_server_ready = true;
   
   pthread_t tid_dummy;
   

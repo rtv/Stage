@@ -5,22 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-// CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.25 $
-//
-// Usage:
-//  (empty)
-//
-// Theory of operation:
-//  (empty)
-//
-// Known bugs:
-//  (empty)
-//
-// Possible enhancements:
-//  (empty)
+//  $Id: entity.cc,v 1.26 2001-10-08 03:55:39 vaughan Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -758,6 +743,10 @@ void CEntity::ComposeTruth( stage_truth_t* truth, int index )
    }
   else
     truth->parent_id = -1;
+
+  assert( m_hostname );
+
+  //printf( "hostname: %s\n", m_hostname );
 
   strncpy( truth->hostname, m_hostname, HOSTNAME_SIZE );
 

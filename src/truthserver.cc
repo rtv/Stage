@@ -24,12 +24,12 @@
 #include <unistd.h>
 
 //#define DEBUG
-#define VERBOSE
+//#define VERBOSE
 #undef DEBUG
 
 #include "world.hh"
 #include "truthserver.hh"
-extern bool g_log_continue;
+//extern bool g_log_continue;
 
 long int g_bytes_output = 0;
 long int g_bytes_input = 0;
@@ -92,7 +92,9 @@ void CWorld::PrintSendBuffer( char* send_buf, size_t len )
 
 void CWorld::DestroyConnection( int con )
 {
+#ifdef VERBOSE
   printf( "\nStage: Closing connection %d\n", con );
+#endif
 
   close( m_pose_connections[con].fd );
   
@@ -115,9 +117,9 @@ void CWorld::DestroyConnection( int con )
 	      sizeof( char ) );
     }      
   
-  if( m_pose_connection_count < 1 )
-    g_log_continue = false;
-
+  if( m_sync_counter < 1 && m_external_sync_required )
+    m_enable = false;
+  
   //printf( "Stage: remaining connections %d\n", m_pose_connection_count );
 }
 
@@ -158,6 +160,8 @@ void CWorld::ReadPosePacket( uint32_t num_poses, int con )
   // update the model with these new poses
   for( int g=0; g<(int)num_poses; g++ )
     InputPose( poses[g], con );
+
+  delete[] poses;
 }
 
 bool CWorld::ReadHeader( stage_header_t *hdr, int con )
@@ -190,21 +194,31 @@ void CWorld::PoseRead( void )
 {
   int readable = 0;
   int syncs = 0;  
-  
+  int timeout;
+
   // if we have nothing to set the time, just increment it
   if( m_sync_counter == 0 ) m_step_num++;
 
-  // we loop on this poll until the time runs out AND we have the syncs
+  // in real time-mode, poll blocks until it is interrupted by
+  // a timer signal, so we give it a time-out of -1. Otherwise,
+  // we give it a zero time-out so it returns quickly.
+  m_real_timestep > 0 ? timeout = -1 : timeout = 0;
+  
+  // we loop on this poll until have the syncs. in realtime mode we
+  // ALSO wait for the timer to run out
   while( 1 )
     {
+      //printf( "polling with timeout: %d\n", timeout );
       // use poll to see which pose connections have data
       if((readable = 
 	  poll( m_pose_connections,
 		m_pose_connection_count,
-		-1 )) == -1) // poll blocks until interrupted or data avail
+		timeout )) == -1) 
 	{
-	  if( errno == EINTR ) // interrupted by the timer
+	  if( errno == EINTR ) // interrupted by the real-time timer
 	    {
+	      //printf( "EINTR: syncs %d / %d\n",
+	      //      syncs, m_sync_counter );
 	      // if we have all our syncs, we;re done
 	      if( syncs >= m_sync_counter )
 		return;
@@ -216,6 +230,8 @@ void CWorld::PoseRead( void )
 	    }
 	}
       
+      //printf( "polled %d readable\n", readable );
+
       if( readable > 0 ) // if something was available
 	for( int t=0; t<m_pose_connection_count; t++ )// all the connections
 	  {
@@ -224,7 +240,7 @@ void CWorld::PoseRead( void )
 	    // if poll reported some badness on this fd
 	    if( revents & POLLHUP || revents & POLLNVAL || revents & POLLERR )
 	      {
-		printf( "connection %d seems bad\n", t );
+		//printf( "connection %d seems bad\n", t );
 		DestroyConnection( t ); // zap this connection
 		
 		// if we're out of connections, we'll never get an ACK!
@@ -260,6 +276,10 @@ void CWorld::PoseRead( void )
 		
 	      }
 	  }
+      // if we're not realtime we can bail now...
+      if( m_real_timestep == 0 ) break;
+      
+      //printf( "end\n" );
     } 
 }
 
@@ -446,6 +466,8 @@ void CWorld::PoseWrite( void )
 	  // record the total bytes output
 	  g_bytes_output += thiswritecnt;
 	}
+
+      delete[] send_buf;
     }
 }
  
@@ -489,8 +511,11 @@ void CWorld::ListenForPoseConnections( void )
   // poll for connection requests with a very fast timeout
   if((readable = poll( &m_pose_listen, 1, 0 )) == -1)
     {
-      perror( "poll interrupted!");
-      return;
+      if( errno != EINTR ) // timer interrupts are OK
+	{ 
+	  perror( "Stage warning: poll error (not EINTR)");
+	  return;
+	}
     }
   
   // if the socket had a request
@@ -537,7 +562,7 @@ void CWorld::ListenForPoseConnections( void )
 		  m_pose_connection_count, connfd );
 	  fflush( stdout );
 #endif            
-	  g_log_continue = true;
+	  if( m_external_sync_required ) m_enable = true;
 
 	  break;
 	case STAGE_ASYNC:
@@ -563,3 +588,12 @@ void CWorld::ListenForPoseConnections( void )
 
 }
 
+void CWorld::HandlePoseConnections( void )
+{
+  // look for new connections 
+  ListenForPoseConnections();
+  // write out anything that is dirty
+  PoseWrite(); 
+  // read in and import new poses, waiting for timers and sync messages
+  PoseRead();
+}

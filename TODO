@@ -1,6 +1,6 @@
 ####################################################################################
 # TODO 
-# $Id: TODO,v 1.14 2001-09-28 21:55:42 gerkey Exp $
+# $Id: TODO,v 1.15 2001-10-08 03:55:38 vaughan Exp $
 ####################################################################################
 
 ## IN PROGRESS #####################################################################
@@ -22,6 +22,13 @@
      the path to the world file
 
 ## FIXED/DONE ######################################################################
+
+RTV 10/7/01
+ - added fast mode (-fast) and external sync mode (-s) for large and/or 
+   fast experiments.
+ - improved logging
+ - moved command-line handling into CWorld, cleaning up a bunch of global
+   variables in the process
 
 RTV 9/26/01
   - player shows hostnames of connecting clients

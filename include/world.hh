@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.33 $
+//  $Revision: 1.34 $
 //
 // Usage:
 //  (empty)
@@ -81,6 +81,7 @@ public:
 
 public:
   // timing
+  //bool m_realtime_mode;
   double m_real_timestep; // the time between wake-up signals in msec
   double m_sim_timestep; // the sim time increment in seconds
   // change ratio of these to run stage faster or slower than real time.
@@ -121,8 +122,21 @@ private:
   void PoseRead( void );
   
   void Output( double loop_duration, double sleep_duration );
-  void OutputHeader( void );
+  void LogOutputHeader( void );
 
+  void LogOutput( double freq,
+		  double loop_duration, double sleep_duration,
+		  double avg_loop_duration, double avg_sleep_duration,
+		  unsigned int bytes_in, unsigned int bytes_out,
+		  unsigned int total_bytes_in, unsigned int total_bytes_out );
+
+  void ConsoleOutput( double freq,
+		      double loop_duration, double sleep_duration,
+		      double avg_loop_duration, double avg_sleep_duration,
+		      unsigned int bytes_in, unsigned int bytes_out,
+		      double avg_data );
+    
+  void StartTimer(double interval);
   bool ReadHeader( stage_header_t *hdr, int con );
   void PoseWrite();
   void ReadPosePacket( uint32_t num_poses, int con ); 
@@ -132,6 +146,9 @@ private:
   
   void PrintTruth( stage_truth_t &truth );
 
+  bool StartupPlayer( void );
+  void HandlePoseConnections( void );
+
   //-----------------------------------------------------------------------
   // Timing
   // Real time at which simulation started.
@@ -140,6 +157,12 @@ private: double m_start_time, m_last_time;
 private: double m_sim_time;
 // the same as m_sim_time but in timeval format
 public: struct timeval m_sim_timeval; 
+  
+public: bool m_log_output, m_console_output;
+
+  int m_log_fd; // logging file descriptor
+  char m_log_filename[256]; // path to the log file
+  char m_cmdline[512]; // a string copy of the command line that started stage
 
   //private: double m_max_timestep;
   
@@ -164,6 +187,12 @@ private: CEntity **m_object;
   // Authentication key
 public: char m_auth_key[PLAYER_KEYLEN];
 
+
+  // if the user is running more than one copy of stage, this number
+  // identifies this instance uniquely
+  int m_instance; 
+
+
   ///////////////////////////////////////////////////////////////////////////
   // Configuration variables
 
@@ -171,9 +200,13 @@ public: char m_auth_key[PLAYER_KEYLEN];
 public: double m_laser_res;
 public: double m_vision_res; // NYI
 
-  // flags that control servers 
+  // flags that control servers
+public: bool m_env_server_ready;
 private: bool m_run_environment_server;
 private: bool m_run_pose_server;
+ 
+private: bool m_external_sync_required;
+  
 
   // flag that controls spawning of xs
 private: bool m_run_xs;
@@ -203,6 +236,8 @@ public: int m_env_port;
   // which can be overridden in the .world file
   StageColor channel[ ACTS_NUM_CHANNELS ];
 
+
+public: bool ParseCmdline( int argv, char* argv[] );
     // Load the world
 public:  bool Load(const char *filename);
 public:  bool Load(){ return Load(m_filename); };
