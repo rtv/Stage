@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.117 2002-08-23 20:03:21 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.118 2002-08-30 18:17:28 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -31,12 +31,10 @@
 #endif
 
 
-#undef DEBUG
+//#undef DEBUG
 //#undef VERBOSE
 //#define DEBUG 
 //#define VERBOSE
-
-//#define RENDER_INITIAL_BOUNDING_BOXES
 
 #include <errno.h>
 #include <sys/time.h>
@@ -121,11 +119,10 @@ CWorld::CWorld( int argc, char** argv, Library* lib )
   m_external_sync_required = false;
   m_instance = 0;
 
-  // AddEntity() handles allocation of storage for entities
   // just initialize stuff here
-  m_entity = NULL;
-  m_entity_alloc = 0;
-  m_entity_count = 0;
+  this->root = NULL;
+
+  this->entity_count = 0;
 
   rtp_player = NULL;
 
@@ -171,9 +168,6 @@ CWorld::CWorld( int argc, char** argv, Library* lib )
 		  m_hostname );
     }
   
-  
-  m_send_idar_packets = false;
-
   // Run the gui by default
   this->enable_gui = true;
 
@@ -185,7 +179,7 @@ CWorld::CWorld( int argc, char** argv, Library* lib )
   memset( &m_sim_timeval, 0, sizeof( struct timeval ) );
     
   // Initialise entity list
-  m_entity_count = 0;
+  this->entity_count = 0;
   
   // start with no key
   bzero(m_auth_key,sizeof(m_auth_key));
@@ -207,30 +201,8 @@ CWorld::~CWorld()
   if( matrix )
     delete matrix;
 
-  for( int m=0; m < m_entity_count; m++ )
-    delete m_entity[m];
-}
-
-int CWorld::CountDirtyOnConnection( int con )
-{
-  char dummydata[MAX_PROPERTY_DATA_LEN];
-  int count = 0;
-
-  //puts( "Counting dirty properties" );
-  // count the number of dirty properties on this connection 
-  for( int i=0; i < GetEntityCount(); i++ )
-    for( int p=0; p < ENTITY_LAST_PROPERTY; p++ )
-      {  
-	// is the entity marked dirty for this connection & property?
-	if( GetEntity(i)->m_dirty[con][p] ) 
-	  {
-	    // if this property has any data  
-	    if( GetEntity(i)->GetProperty( (EntityProperty)p, dummydata ) > 0 )
-	      count++; // we count it as dirty
-	  }
-      }
-
-  return count;
+  if( root )
+    delete root;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -340,7 +312,7 @@ bool CWorld::Startup()
   PRINT_DEBUG( "** STARTUP **" );
   
   // we must have at least one entity to play with!
-  if( m_entity_count < 1 )
+  if( this->entity_count < 1 )
     {
       puts( "\nStage: No entities defined in world file. Nothing to simulate!" );
       return false;
@@ -362,6 +334,10 @@ bool CWorld::Startup()
   if( m_real_timestep > 0.0 ) // if we're in real-time mode
     StartTimer( m_real_timestep ); // start the real-time interrupts going
   
+#ifdef DEBUG
+  root->Print( "" );
+#endif
+
   PRINT_DEBUG( "** STARTUP DONE **" );
   return true;
 }
@@ -381,11 +357,7 @@ void CWorld::Shutdown()
 
   // Shutdown all the entities
   // Devices will unlink their device files
-  for (int i = 0; i < m_entity_count; i++)
-    {
-      if(m_entity[i])
-	m_entity[i]->Shutdown();
-    }
+  root->Shutdown(); 
 }
 
 
@@ -450,8 +422,7 @@ void CWorld::Update(void)
       // otherwise we're running - calculate new world state
       
       // let the entities do anything they want to do between clock increments
-      for (int i = 0; i < m_entity_count; i++ )
-	if( m_entity[i]->m_local ) m_entity[i]->Sync(); 
+      root->Sync(); 
       
       // if the timer has gone off recently or we're in fast mode
       // we increment the clock and do the time-based updates
@@ -472,13 +443,8 @@ void CWorld::Update(void)
 	      sem_post( &m_clock->lock );
 	    }
 	  
-	  // update the entities at this time 
-	  for (int i = 0; i < m_entity_count; i++)
-	    {
-	      // if this host manages this entity, update it
-	      if( m_entity[i]->m_local )
-		m_entity[i]->Update( m_sim_time ); 	      
-	    } 
+	  // update the entities managed by this host at this time 
+	  root->Update( m_sim_time );	  
 	  
 #ifdef INCLUDE_RTK2   
 	  // also update the gui at this rate
@@ -582,29 +548,11 @@ void CWorld::SetCircle(double px, double py, double pr, CEntity* ent,
 ///////////////////////////////////////////////////////////////////////////
 // Add an entity to the world
 //
-void CWorld::AddEntity(CEntity *entity)
+void CWorld::RegisterEntity( CEntity *entity)
 {
-  // if we've run out of space (or we never allocated any)
-  if( (!m_entity) || (!( m_entity_count < m_entity_alloc )) )
-    {
-      // allocate some more
-      CEntity** more_space = new CEntity*[ m_entity_alloc + OBJECT_ALLOC_SIZE ];
-      
-    // copy the old data into the new space
-      memcpy( more_space, m_entity, m_entity_count * sizeof( CEntity* ) );
-     
-      // delete the original
-      if( m_entity ) delete [] m_entity;
-      
-      // bring in the new
-      m_entity = more_space;
- 
-      // record the total amount of space
-      m_entity_alloc += OBJECT_ALLOC_SIZE;
-    }
-  
-  // insert the entity and increment the count
-  m_entity[m_entity_count++] = entity;
+  // store the pointer at the current index in the vector
+  child_vector.push_back( entity );
+  this->entity_count++;
 }
 
 
@@ -745,8 +693,7 @@ void CWorld::LogOutputHeader( void )
       
   // count the locally managed entities
   int m=0;
-  for( int c=0; c<m_entity_count; c++ )
-    if( m_entity[c]->m_local ) m++;
+  //CHILDLOOP( ent ) if( ent->m_local ) m++;
       
   char* tmstr = ctime( &t.tv_sec);
   tmstr[ strlen(tmstr)-1 ] = 0; // delete the newline
@@ -768,13 +715,64 @@ void CWorld::LogOutputHeader( void )
            //worldfilename,
            (int)(m_sim_timestep * 1000.0),
            m, 
-           m_entity_count );
+           this->entity_count );
       
   write( m_log_fd, line, strlen(line) );
 }
 
 
 #ifdef INCLUDE_RTK2
+
+
+void CWorld::AddToMenu( stage_menu_t* menu, CEntity* ent, int check )
+{
+  assert( menu );
+  assert( ent );
+
+  // if there's no menu item for this type yet
+  if( menu->items[ ent->stage_type ] == NULL )
+    // create a new menu item
+    assert( menu->items[ ent->stage_type ] =  
+	    rtk_menuitem_create( menu->menu, 
+				 this->lib->
+				 StringFromType(ent->stage_type),1));
+  
+  
+  rtk_menuitem_check( menu->items[ ent->stage_type ], check );
+}
+
+void CWorld::AddToDataMenu(  CEntity* ent, int check )
+{
+  assert( ent );
+  AddToMenu( &this->data_menu, ent, check );
+}
+
+void CWorld::AddToDeviceMenu(  CEntity* ent, int check )
+{
+  assert( ent );
+  AddToMenu( &this->device_menu, ent, check );
+}
+
+  // devices check this to see if they should display their data
+bool CWorld::ShowDeviceData( StageType devtype )
+{ 
+  rtk_menuitem_t* menu_item = data_menu.items[ devtype ];
+  
+  if( menu_item )
+    return( rtk_menuitem_ischecked( menu_item ) );  
+  else // if there's no option in the menu, display this data
+    return true;
+}
+
+bool CWorld::ShowDeviceBody( StageType devtype )
+{
+  rtk_menuitem_t* menu_item = device_menu.items[ devtype ];
+  
+  if( menu_item )
+    return( rtk_menuitem_ischecked( menu_item ) );  
+  else // if there's no option in the menu, display this data
+    return true;    
+}
 
 // Initialise the GUI
 // TODO: fix this for client/server operation.
@@ -908,54 +906,22 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
 						    "Subscribe to selection", 1);
   rtk_menuitem_check(this->autosubscribe_item, 0 );
 
-  // Set the initial view menu states
+
+  //zero the view menus
+  memset( &device_menu,0,sizeof(stage_menu_t));
+  memset( &data_menu,0,sizeof(stage_menu_t));
 
   // Create the view/device sub menu
-  this->data_menu = rtk_menu_create_sub(this->view_menu, "Data");
+  assert( this->data_menu.menu = 
+	  rtk_menu_create_sub(this->view_menu, "Data"));
 
   // Create the view/data sub menu
-  this->device_menu = rtk_menu_create_sub(this->view_menu, "Object");
+  assert( this->device_menu.menu = 
+	  rtk_menu_create_sub(this->view_menu, "Object"));
 
-
-  // create a menu item for each device
-  // start with all sensor visualizations enabled - might re-think
-  // this and turn some or all of these off later, but this is good
-  // for debugging
-
-  //zero the array of device menu item ptrs
-  memset( &device_menu_items, 0, NUMBER_OF_STAGE_TYPES*sizeof(rtk_menuitem_t*));
-  memset( &data_menu_items, 0, NUMBER_OF_STAGE_TYPES*sizeof(rtk_menuitem_t*));
+  // each device adds itself to the correct view menus in its rtkstartup()
   
-  // create a view/device menu entry for each type of player-enabled device
-  // we are using
-  for( int d = 0; d<GetEntityCount(); d++ )
-    {
-      CEntity* ent = GetEntity(d);
-
-      // if it's a player device and we haven't got an item already
-      //if( ent->m_player.code && !this->data_menu_items[ ent->stage_type ] ) 
-      // a little nasty run-time type-information (RTTI) required here
-      if( ISPLAYER(*ent) && !this->data_menu_items[ ent->stage_type ] ) 
-	{
-	  // add a data menu item 
-	  assert( this->data_menu_items[ ent->stage_type ] =  
-		  rtk_menuitem_create(this->data_menu, 
-				      this->lib->StringFromType( ent->stage_type), 1) );  
-      
-	  rtk_menuitem_check(this->data_menu_items[ ent->stage_type ], 1);
-	}
-
-      if( !this->device_menu_items[ ent->stage_type ] ) 
-	{
-	  // add a device menu item 
-	  assert( this->device_menu_items[ ent->stage_type ] =  
-		  rtk_menuitem_create(this->device_menu, 
-				      this->lib->StringFromType( ent->stage_type), 1) );  
-	
-	  rtk_menuitem_check(this->device_menu_items[ ent->stage_type ], 1);
-	}
-    }
-
+  
   // Create the grid
   this->fig_grid = rtk_fig_create(this->canvas, NULL, -49);
   if (minor > 0)
@@ -970,20 +936,6 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
     }
   rtk_fig_show(this->fig_grid, showgrid);
   
-#ifdef RENDER_INITIAL_BOUNDING_BOXES
-  for( int i=0; i < GetEntityCount(); i++ )
-    {
-      double xmin, ymin, xmax, ymax;
-      GetEntity(i)->GetGlobalBoundingBox( xmin, ymin, xmax, ymax );
-      
-      rtk_fig_t* boundaries = rtk_fig_create( this->canvas, NULL, -48);
-      rtk_fig_rectangle( boundaries, xmin, ymin, 0, 0.1, 0.1, 0 ); 
-      rtk_fig_rectangle( boundaries, xmin, ymax, 0, 0.1, 0.1, 0 ); 
-      rtk_fig_rectangle( boundaries, xmax, ymax, 0, 0.1, 0.1, 0 ); 
-      rtk_fig_rectangle( boundaries, xmax, ymin, 0, 0.1, 0.1, 0 ); 
-    }	  
-#endif
-
   return true;
 }
 
@@ -1033,13 +985,17 @@ bool CWorld::RtkStartup()
   // create the main objects here
   rtk_canvas_t *canvas;
   rtk_table_t *table;
+
+  // this rtkstarts all entities
+  root->RtkStartup();
   
   // Display everything
   for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
     gtk_widget_show_all(canvas->frame);
   for (table = app->table; table != NULL; table = table->next)
     gtk_widget_show_all(table->frame);
-  
+
+
   return true;
 }
 
@@ -1057,54 +1013,52 @@ void CWorld::RtkUpdate()
   RtkMenuHandling();      
 
   // this is from rtk_on_app_timer
-  {
-    rtk_canvas_t *canvas;
-    rtk_table_t *table;
-    
-    // Quit the app if we have been told we should
-    // We first destroy in windows that are still open.
-    if (app->must_quit)
-      {
-	for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
-	  if (!canvas->destroyed)
-	    gtk_widget_destroy(canvas->frame);
-	for (table = app->table; table != NULL; table = table->next)
-	  if (!table->destroyed)
-	    gtk_widget_destroy(table->frame);
-	gtk_main_quit();
-      }
-    
-    
-    // Update the display
-    for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
-      rtk_canvas_render(canvas, FALSE, NULL);
-  }
+  rtk_canvas_t *canvas;
+  rtk_table_t *table;
+  
+  // Quit the app if we have been told we should
+  // We first destroy in windows that are still open.
+  if (app->must_quit)
+    {
+      for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
+	if (!canvas->destroyed)
+	  gtk_widget_destroy(canvas->frame);
+      for (table = app->table; table != NULL; table = table->next)
+	if (!table->destroyed)
+	  gtk_widget_destroy(table->frame);
+      gtk_main_quit();
+    }
+  
+  // update the object tree
+  root->RtkUpdate();
+  
+  
+  // Update the display
+  for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
+    rtk_canvas_render(canvas, FALSE, NULL);
   
   //struct timeval tv;
   //gettimeofday( &tv, NULL );
   //double start = tv.tv_sec + tv.tv_usec / 1000000.0;
-
+  
   // allow gtk to do some work
   while( gtk_events_pending () )
     gtk_main_iteration ();
-
+  
   //gettimeofday( &tv, NULL );
 
    //double duration = (tv.tv_sec + tv.tv_usec / 1000000.0) - start;
 
   //printf( "gtkloop: %.4f\n", duration );
-  
-  //gtk_main_iteration_do( false );
-  //  rtk_app_on_timer(rtk_app_t *app);
-  for (int i=0; i<m_entity_count; i++)
-    m_entity[i]->RtkUpdate();
-
-
 }
 
 // Update the GUI
 void CWorld::RtkMenuHandling()
 {
+  // right now we have to check the state of all the menu items each
+  // time around the loop. this is pretty unsatisfactory - callbacks
+  // would be much better
+
   // See if we need to quit the program
   if (rtk_menuitem_isactivated(this->exit_menuitem))
     ::quit = 1;
@@ -1116,7 +1070,7 @@ void CWorld::RtkMenuHandling()
     SaveFile(NULL);
 
   // Handle export menu item
-  // TODO - fold in XS's postscript and pnm export here
+  // TODO - fold in XS's postscript and pnm export here or in rtk2
   if (rtk_menuitem_isactivated(this->export_menuitem))
     {
       char filename[128];
@@ -1145,20 +1099,24 @@ void CWorld::RtkMenuHandling()
   static bool lasttime = rtk_menuitem_ischecked(this->subscribedonly_item);
   bool thistime = rtk_menuitem_ischecked(this->subscribedonly_item);
 
-  // if the menu item changed
+  // for now i check if the menu item changed
   if( thistime != lasttime )
     {
       if( thistime )  // change the subscription counts of any player-capable ent
 	{
-	  for (int i = 0; i < m_entity_count; i++)
-	    if( RTTI_ISPLAYERP(m_entity[i]) ) 
-	      dynamic_cast<CPlayerEntity*>(m_entity[i])->Subscribe();
+	  for( vector<CEntity*>::iterator it= child_vector.begin();
+	       it != child_vector.end();
+	       it++ )
+	    if( RTTI_ISPLAYERP( *it ) ) 
+	      dynamic_cast<CPlayerEntity*>(*it)->Subscribe();
 	}
       else
 	{
-	  for (int i = 0; i < m_entity_count; i++)
-	    if( RTTI_ISPLAYERP(m_entity[i]) ) 
-	      dynamic_cast<CPlayerEntity*>(m_entity[i])->Unsubscribe();
+	  for( vector<CEntity*>::iterator it= child_vector.begin();
+	       it != child_vector.end();
+	       it++ )
+	    if( RTTI_ISPLAYERP( *it ) ) 
+	      dynamic_cast<CPlayerEntity*>(*it)->Unsubscribe();
 	}
       // remember this state
       lasttime = thistime;

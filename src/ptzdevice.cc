@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.23 $
+//  $Revision: 1.24 $
 //
 // Usage:
 //  (empty)
@@ -124,13 +124,10 @@ bool CPtzDevice::Load(CWorldFile *worldfile, int section)
 //
 void CPtzDevice::Update( double sim_time )
 {
-#ifdef DEBUG
-  CPlayerEntity::Update( sim_time ); // inherit debug output
-#endif
+  CPlayerEntity::Update( sim_time );
   
   ASSERT(m_world != NULL);
-  
-  
+    
   // if its time to recalculate ptz
   //
   if( sim_time - m_last_update < m_interval )  return;
@@ -216,29 +213,6 @@ void CPtzDevice::GetPTZ(double &pan, double &tilt, double &zoom)
         (m_fov_max - m_fov_min) / (m_zoom_max - m_zoom_min);
 }
 
-
-
-#ifdef INCLUDE_RTK
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI update messages
-//
-void CPtzDevice::OnUiUpdate(RtkUiDrawData *pData)
-{
-    CPlayerEntity::OnUiUpdate(pData);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI mouse messages
-//
-void CPtzDevice::OnUiMouse(RtkUiMouseData *pData)
-{
-    CPlayerEntity::OnUiMouse(pData);
-}
-
-
-#endif
 
 #ifdef INCLUDE_RTK2
 

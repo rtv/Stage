@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.hh,v 1.1 2002-08-23 00:19:39 rtv Exp $
+ * CVS info: $Id: positiondevice.hh,v 1.2 2002-08-30 18:17:28 rtv Exp $
  */
 
 #ifndef POSITIONDEVICE_H
@@ -74,6 +74,12 @@ public: static CPositionDevice* Creator( CWorld *world, CEntity *parent )
 
   // Stall flag set if robot is in collision
   protected: unsigned char stall;
+
+#ifdef INCLUDE_RTK2
+  // Initialise the rtk gui
+  protected: virtual void RtkStartup();
+#endif
+
 };
 
 #endif

@@ -58,11 +58,8 @@ CStageIO::~CStageIO( void )
 // hey, it's StageIO, right?
 void CStageIO::Update( void )
 {
-  Read(); // synchronize world state
-  
-  //if( m_pose_connection_count > 0 ) 
-    CWorld::Update();
-  
+  Read(); // import world state
+  CWorld::Update(); // change the world
   Write(); // export world state
 }
 
@@ -254,8 +251,6 @@ int CStageIO::ReadEntities( int fd, int num )
 	else
 	  assert( obj = lib->CreateEntity( ent.type, this,
 				      GetEntity(ent.parent)));
-	
-	AddEntity( obj );
       }
     else
       PRINT_WARN1( "entity type %d out of range\n", ent.type );
@@ -268,9 +263,6 @@ int CStageIO::ReadEntities( int fd, int num )
 
 int CStageIO::ReadBackground( int fd )
 {
-  if( this->wall )
-    delete this->wall;
-  
   stage_background_t w;
   
   int res = ReadPacket( fd, (char*)&w, sizeof(w) );
@@ -279,11 +271,11 @@ int CStageIO::ReadBackground( int fd )
   {
     // Construct a single fixed obstacle representing
     // the environment.
-    assert( this->wall = new CFixedObstacle(this, NULL ) );
-      
+    assert( this->root = (CEntity*)new CBitmap(this, NULL ) );
+    
     // poke the scale in from the data packet(ugly!)
-    ((CFixedObstacle*)this->wall)->scale = w.scale;
-      
+    ((CBitmap*)this->root)->scale = w.scale;
+    
     assert(this->matrix); // gotta have it before we can load the wall
       
     // read in the pixel array
@@ -299,9 +291,9 @@ int CStageIO::ReadBackground( int fd )
     if( res2 == num_pixels )
     {
       // create an image from the data
-      assert( ((CFixedObstacle*)this->wall)->image = 
-              new Nimage( pixels, w.sizex, w.sizey ) );      
-
+      assert( ((CBitmap*)this->root)->image = 
+	      new Nimage( pixels, w.sizex, w.sizey ) );      
+      
       // wall->Startup is called at the end of the constructor
     }
     else
@@ -318,7 +310,7 @@ int CStageIO::ReadBackground( int fd )
 
 int CStageIO::WriteBackground( int fd )
 {
-  CFixedObstacle* fix = (CFixedObstacle*)this->wall;
+  CBitmap* fix = (CBitmap*)this->root;
   
   assert( fix );
   assert( fix->image );
@@ -526,6 +518,29 @@ void CStageIO::Write( void )
       }
     }      
 }
+
+int CStageIO::CountDirtyOnConnection( int con )
+{
+  char dummydata[MAX_PROPERTY_DATA_LEN];
+  int count = 0;
+
+  //puts( "Counting dirty properties" );
+  // count the number of dirty properties on this connection 
+  for( int i=0; i < GetEntityCount(); i++ )
+    for( int p=0; p < ENTITY_LAST_PROPERTY; p++ )
+      {  
+	// is the entity marked dirty for this connection & property?
+	if( GetEntity(i)->m_dirty[con][p] ) 
+	  {
+	    // if this property has any data  
+	    if( GetEntity(i)->GetProperty( (EntityProperty)p, dummydata ) > 0 )
+	      count++; // we count it as dirty
+	  }
+      }
+
+  return count;
+}
+
 
 void CStageIO::DestroyConnection( int con )
 {

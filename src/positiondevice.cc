@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.32 2002-08-27 17:50:48 gerkey Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.33 2002-08-30 18:17:28 rtv Exp $
  */
 
 //#define DEBUG
@@ -75,6 +75,7 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent)
   // took this out - now use the 'offset [X Y]' worldfile setting - rtv.
   // pioneer.inc now defines a pioneer as a positiondevice with a 4cm offset
   //this->origin_x = -0.04; 
+
   this->origin_x = 0;
   this->origin_y = 0;
 }
@@ -281,3 +282,21 @@ void CPositionDevice::UpdateData()
 }
 
 
+
+#ifdef INCLUDE_RTK2
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise the rtk gui
+void CPositionDevice::RtkStartup()
+{
+  CPlayerEntity::RtkStartup();
+  
+  // add a 'nose line' indicating forward to the entity's normal
+  // rectangle or circle. draw from the center of rotation to the front.
+  rtk_fig_line( this->fig, 
+		this->origin_x, this->origin_y, 
+		this->size_x/2.0, this->origin_y );
+}
+
+
+#endif

@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.1 2002-08-23 00:19:39 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.2 2002-08-30 18:17:28 rtv Exp $
  */
 
 #ifndef ENTITY_HH
@@ -108,6 +108,14 @@ public: CEntity( string token,  StageType type, void* creator )
     lib->AddDeviceType( token, type, creator );
   }
 
+  // a linked list of other entities attached to this one
+public: CEntity* child_list;
+public: CEntity* prev;
+public: CEntity* next;
+protected:  void AddChild( CEntity* child );
+
+
+  public: void Print( char* prefix );
   // Destructor
   public: virtual ~CEntity();
 
@@ -136,10 +144,7 @@ public: CEntity( string token,  StageType type, void* creator )
   // this is called very rapidly from the main loop
   // it allows the entity to perform some actions between clock increments
   // (such handling config requests to increase synchronous IO performance)
-  public: virtual void Sync()
-  { 
-    // default - do nothing 
-  };
+public: virtual void Sync();
 
   // Render the entity into the world
   protected: void Map(double px, double py, double pth);
@@ -192,8 +197,8 @@ public: CEntity( string token,  StageType type, void* creator )
   // Get the entity mass
   public: double GetMass() { return (this->mass); }
 
-public: void GetGlobalBoundingBox( double &xmin, double &ymin,
-				   double &xmax, double &ymax );
+public: void GetBoundingBox( double &xmin, double &ymin,
+			     double &xmax, double &ymax );
   
   // See if the given entity is one of our descendents
   public: bool IsDescendent(CEntity *entity);
@@ -219,6 +224,9 @@ public: void GetGlobalBoundingBox( double &xmin, double &ymin,
   // The section in the world file that describes this entity
   public: int worldfile_section;
 
+  // return a pointer to this or a child if it matches the worldfile section
+  CEntity* FindSectionEntity( int section );
+    
   // Type of this entity
   public: StageType stage_type; 
 
@@ -304,10 +312,10 @@ public: void GetGlobalBoundingBox( double &xmin, double &ymin,
   // functions for drawing this entity in GUIs
 #ifdef INCLUDE_RTK2
   // Initialise the rtk gui
-  protected: virtual void RtkStartup();
+  public: virtual void RtkStartup();
 
   // Finalise the rtk gui
-  protected: virtual void RtkShutdown();
+  public: virtual void RtkShutdown();
 
   // Update the rtk gui
   public: virtual void RtkUpdate();
@@ -325,6 +333,55 @@ public: void GetGlobalBoundingBox( double &xmin, double &ymin,
 #endif
 };
 
+
+// macro loops over the children
+#define CHILDLOOP( ch )\
+for( CEntity* ch = this->child_list; ch; ch = ch->next )
+    
+
+// Append an item to a linked list
+#define STAGE_LIST_APPEND(head, item) \
+item->prev = head;\
+item->next = NULL;\
+if (head == NULL)\
+    head = item;\
+else\
+{\
+    while (item->prev->next)\
+       item->prev = item->prev->next;\
+    item->prev->next = item;\
+}
+
+// Remove an item from a linked list
+#define STAGE_LIST_REMOVE(head, item) \
+if (item->prev)\
+    item->prev->next = item->next;\
+if (item->next)\
+    item->next->prev = item->prev;\
+if (item == head)\
+    head = item->next;
+
+// Append an item to a linked list
+#define RTK_LIST_APPENDX(head, list, item) \
+item->list##_##prev = head;\
+item->list##_##next = NULL;\
+if (head == NULL)\
+    head = item;\
+else\
+{\
+    while (item->list##_##prev->list##_##next)\
+       item->list##_##prev = item->list##_##prev->list##_##next;\
+    item->list##_##prev->list##_##next = item;\
+}
+
+// Remove an item from a linked list
+#define RTK_LIST_REMOVEX(head, list, item) \
+if (item->list##_##prev)\
+    item->list##_##prev->list##_##next = item->list##_##next;\
+if (item->list##_##next)\
+    item->list##_##next->list##_##prev = item->list##_##prev;\
+if (item == head)\
+    head = item->list##_##next;
 
 #endif
 

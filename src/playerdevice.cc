@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.34 2002-08-22 02:04:38 rtv Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.35 2002-08-30 18:17:28 rtv Exp $
  */
 
 #include <math.h>
@@ -109,6 +109,14 @@ CPlayerEntity::CPlayerEntity(CWorld *world, CEntity *parent_entity )
 // Destructor
 CPlayerEntity::~CPlayerEntity()
 {
+}
+
+
+void CPlayerEntity::Update( double sim_time )
+{
+  PRINT_DEBUG1( "subs: %d\n", this->subscribed );
+
+  CEntity::Update( sim_time );
 }
 
 
@@ -510,20 +518,18 @@ int CPlayerEntity::Subscribed()
 
 void CPlayerEntity::FamilySubscribe()
 {
-  for( int i=0; i<m_world->GetEntityCount(); i++ )
-    if( RTTI_ISPLAYERP( m_world->GetEntity(i) ) &&
-	m_world->GetEntity(i)->m_parent_entity == this )
-      dynamic_cast<CPlayerEntity*>(m_world->GetEntity(i))->FamilySubscribe();
+  CHILDLOOP( ch )
+    if( RTTI_ISPLAYERP( ch ) )
+      dynamic_cast<CPlayerEntity*>(ch)->FamilySubscribe();
   
   this->Subscribe();
 }
 
 void CPlayerEntity::FamilyUnsubscribe()
 {
-  for( int i=0; i<m_world->GetEntityCount(); i++ )
-    if( RTTI_ISPLAYERP(  m_world->GetEntity(i) ) &&
-	m_world->GetEntity(i)->m_parent_entity == this )
-      dynamic_cast<CPlayerEntity*>(m_world->GetEntity(i))->FamilyUnsubscribe();
+  CHILDLOOP( ch )
+    if( RTTI_ISPLAYERP( ch ) )
+      dynamic_cast<CPlayerEntity*>(ch)->FamilyUnsubscribe();
   
   this->Unsubscribe();
 }
@@ -778,12 +784,17 @@ void CPlayerEntity::RtkStartup()
 {
   CEntity::RtkStartup();
 
+  // add this device to the world's data menu 
+  this->m_world->AddToDataMenu( this, true); 
+
   // add the player ID string to the label figure
   char label[1024];
   char tmp[1024];
    
   label[0] = 0;
-  snprintf(tmp, sizeof(tmp), "%s", this->name);
+  snprintf(tmp, sizeof(tmp), "%s %s", 
+	   this->name,
+	   this->m_world->lib->StringFromType( this->stage_type ) );
   strncat(label, tmp, sizeof(label));
   if (m_player.port > 0)
   {
@@ -791,6 +802,7 @@ void CPlayerEntity::RtkStartup()
     strncat(label, tmp, sizeof(label));
   }
    
+  rtk_fig_clear(this->fig_label );
   rtk_fig_text(this->fig_label,  0.75 * size_x,  0.75 * size_y, 0, label);
 
   // add the callbacks 

@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: playerdevice.hh,v 1.1 2002-08-23 00:19:39 rtv Exp $
+ * CVS info: $Id: playerdevice.hh,v 1.2 2002-08-30 18:17:28 rtv Exp $
  */
 
 #ifndef PLAYERENTITY_HH
@@ -32,19 +32,17 @@
 #include "entity.hh"
 
 
-// (a little hacky - might engineer out of his one day - rtv)
+// (a little hacky - might engineer out of this one day - rtv)
 class CPlayerEntity;
 #include <typeinfo>
+
+#define RTTI_ISTYPE(className, pObj) \
+		(NULL != dynamic_cast<className> (pObj))
+
 // macro is true if object X is a CPlayerEntity 
-#define ISPLAYER(X) typeid(X) == typeid(CPlayerEntity)
-#define ISPLAYERP(X) typeid(X) == typeid(CPlayerEntity*)
-
-
-#define RTTI_ISKINDOF(className, pObj) \
-		(NULL != dynamic_cast<className*> (pObj))
-
-#define RTTI_ISPLAYER(obj) (NULL != dynamic_cast<CPlayerEntity>(obj))
-#define RTTI_ISPLAYERP(pobj) (NULL != dynamic_cast<CPlayerEntity*>(pobj))
+#define RTTI_ISPLAYER(obj) RTTI_ISTYPE( CPlayerEntity, obj)
+// macro is true if object X is a CPlayerEntity*
+#define RTTI_ISPLAYERP(pobj) RTTI_ISTYPE( CPlayerEntity*, pobj)
 
 
 class CPlayerEntity : public CEntity
@@ -73,6 +71,8 @@ class CPlayerEntity : public CEntity
                                    EntityProperty property, void* value, size_t len );
   public: virtual int GetProperty( EntityProperty property, void* value );
   
+public: virtual void Update( double sim_time );
+
 
   ///////////////////////////////////////////////////////////////////////
   // RTP stuff

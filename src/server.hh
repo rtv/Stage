@@ -5,7 +5,7 @@
 // Class provides a network server for Stage internals
 // used by external GUIs (XS) and distributed Stage modules
 //
-// $Id: server.hh,v 1.1 2002-08-23 00:19:39 rtv Exp $
+// $Id: server.hh,v 1.2 2002-08-30 18:17:28 rtv Exp $
 
 #ifndef _SERVER_H
 #define _SERVER_H
@@ -64,7 +64,6 @@ typedef struct
 } __attribute ((packed)) stage_property_t;
 
 // a client that receives this packet should create a new entity
-// using the CWorld::EntityFactory()
 typedef struct
 {
   int32_t id;
@@ -72,12 +71,14 @@ typedef struct
   StageType type;
 } __attribute ((packed)) stage_entity_t;
 
+// a client that receives this packet should create a matrix
 typedef struct
 {
   int32_t sizex;
   int32_t sizey;
 } __attribute ((packed)) stage_matrix_t;
 
+//TODO - this is out of date now
 typedef struct
 {
   int32_t sizex;
@@ -96,28 +97,10 @@ typedef struct
   // local coords -BPG
   int32_t x, y; // mm, mm 
   int16_t th; // degrees
-  //char echo_request;
-  //int16_t parent_id;
 } __attribute ((packed)) stage_pose_t;
 
-// XX might have some more special messages to cut down on the property changes
+// TODO-  some more special messages to cut down on the property changes
 //
-//  // describe the background image (CFixedObstacle)
-//  // might kill this and just use the properties instead...
-//  typedef struct
-//  {
-//    uint16_t width, height, ppm;
-//    //uint16_t num_objects;
-//  } __attribute ((packed)) stage_env_t;
-
-//  // set a pixel in the CFixedObstacle
-//  // might have to extend this 
-//  typedef struct
-//  {
-//    uint16_t x, y;
-//  } __attribute ((packed)) stage_pixel_t;
-
-
 // this class extends CWorld with a bunch of read/write functions.
 // it is never instantiated, but subclassed by Client and Server
 class CStageIO : public CWorld
@@ -158,6 +141,24 @@ protected:
   
   // the number of pose connections
   int m_pose_connection_count;
+
+  protected: int CountDirtyOnConnection( int con );
+  
+  // sets the dirty flag on all entities
+  public: void DirtyEntities( void )
+    { root->SetDirty( 1 ); }
+
+  // unsets the dirty flag on all entities
+  public: void CleanEntities( void )
+    { root->SetDirty( 0 ); }
+
+  // dirty all entities for a particular connection
+  public: void DirtyEntities( int con )
+    { root->SetDirty( con, 1 ); }
+
+  // clan all entities for a particulat connection
+  public: void CleanEntities( int con )
+    { root->SetDirty( con, 0 ); }
 
   // called when a connection's fd looks bad - closes the
   // fd and tidies up the connection arrays
@@ -286,10 +287,6 @@ class CStageServer : public CStageIO
 
   // Unlock the shared mem area
   //public: void UnlockShmem( void );
-
-  ///////////////////////////////////////////////////////////////////
-  // RTV - I'm working on RTP functionality
-  //CRTPPlayer* rtp_player;
 };
 
 class CStageClient : public CStageIO

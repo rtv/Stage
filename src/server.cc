@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.27 2002-08-23 20:03:21 rtv Exp $
+ * CVS info: $Id: server.cc,v 1.28 2002-08-30 18:17:28 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -90,6 +90,11 @@ CStageServer::CStageServer( int argc, char** argv, Library* lib )
   //  one of our parent's constructors may have failed and set this flag
   if( quit ) return;
   
+
+  // Construct a fixed obstacle representing the boundary of the 
+  // the environment - this the root for all other entities
+  assert( root = (CEntity*)new CBitmap(this, NULL) );
+  
   ///////////////////////////////////////////////////////////////////////
   // Set and load the worldfile, creating entitys as we go
   if( !LoadFile(  argv[argc-1] ) )
@@ -152,16 +157,14 @@ CStageServer::CStageServer( int argc, char** argv, Library* lib )
   
   // Startup all the entities
   // Devices will create and initialize their device files
-  for (int i = 0; i < GetEntityCount(); i++)
-  {
-    if( !GetEntity(i)->Startup() )
+
+  if( !root->Startup() )
     {
-      PRINT_ERR1("Entity %d  startup failed", i);
+      PRINT_ERR("Root Entity startup failed" );
       quit = true;
       return;
     }
-  }
-
+  
   //////////////////////////////////////////////////////////////////////
   // SET UP THE SERVER TO ACCEPT INCOMING CONNECTIONS
   if( !SetupConnectionServer() )
@@ -196,6 +199,9 @@ CStageServer::~CStageServer( void )
 // Load the world file and create all of the relevant entities.
 bool CStageServer::LoadFile( char* filename )
 {
+  assert( filename );
+  assert( root );
+
   //////////////////////////////////////////////////////////////////////
   // FIGURE OUT THE WORLD FILE NAME
   
@@ -241,31 +247,8 @@ bool CStageServer::LoadFile( char* filename )
   if (!this->worldfile.Load(worldfilename))
     return false;
   
- 
-
-  // Make sure there is an "environment" section
-  //int section = this->worldfile.LookupEntity("environment");
-  //if (section < 0)
-  //{
-  //PRINT_ERR("no environment specified");
-  //return false;
-  // }
- 
-  //
-  // Load the settings for this entity
-    //if (!this->wall->Load(&this->worldfile, section))
-    //{
-    // PRINT_ERR( "failed to load environment" );
-    //return false;
-    // }
-  
-  // Get the resolution of the environment (meters per pixel in the file).
-  // Defaults to the scale specified for the background image.
-  //this->ppm = 1.0 / this->worldfile.ReadLength( section, "scale", 1.0 / this->ppm );
-  //this->ppm = 1.0 / this->worldfile.ReadLength( section, "resolution", 1.0 / this->ppm );
-  //this->ppm = 1.0 / this->worldfile.ReadLength( 0, "scale", 1.0 / this->ppm );
+  // set the top-level matrix resolution
   this->ppm = 1.0 / this->worldfile.ReadLength( 0, "resolution", 1.0 / this->ppm );
-  
   
   // Get the authorization key to pass to player
   const char *authkey = this->worldfile.ReadString(0, "auth_key", "");
@@ -287,9 +270,9 @@ bool CStageServer::LoadFile( char* filename )
     const char *type = this->worldfile.GetEntityType(section);
     int line = this->worldfile.ReadInt(section, "line", -1);
 
+    PRINT_DEBUG1( "LOADING SECTION TYPE %s\n", type );
+
     // Ignore some types, since we already have dealt will deal with them
-    //if (strcmp(type, "environment") == 0)
-    //continue;
     if (strcmp(type, "gui") == 0)
       continue;
 
@@ -348,28 +331,20 @@ bool CStageServer::LoadFile( char* filename )
     // Find the parent entity
     CEntity *parent = NULL;
     int psection = this->worldfile.GetEntityParent(section);
-    for (int i = 0; i < GetEntityCount(); i++)
-    {
-      CEntity *entity = GetEntity(i);
-      if (GetEntity(i)->worldfile_section == psection)
-        parent = entity;
-    }
+    parent = root->FindSectionEntity( psection );
 
+    
     // Work out whether or not its a local device if any if this
     // device's host IPs match this computer's IP, it's local
     bool local = m_hostaddr.s_addr == current_hostaddr.s_addr;
 
-    // Create the entity
+    // Create the entity - it attaches itself to its parent's child_list
     CEntity *entity = lib->CreateEntity( string(type), this, parent );
 
     if (entity != NULL)
     {      
       // these pokes should really be in the entities, but it's a loooooot
       // of editing to change each constructor...
-
-      // Store which section it came from (so we know where to
-      // save it to later).
-      entity->worldfile_section = section;
 
       // store the IP of the computer responsible for updating this
       memcpy( &entity->m_hostaddr, &current_hostaddr,sizeof(current_hostaddr));
@@ -380,6 +355,9 @@ bool CStageServer::LoadFile( char* filename )
       //printf( "ent: %p host: %s local: %d\n",
       //    entity, inet_ntoa(entity->m_hostaddr), entity->m_local );
       
+      // Store which section it came from (so we know where to
+      // save it to later).
+      entity->worldfile_section = section;
       // Let the entity load itself
       if (!entity->Load(&this->worldfile, section))
       {
@@ -387,9 +365,11 @@ bool CStageServer::LoadFile( char* filename )
                     GetEntityCount() ); 
         return false;
       }
-      
-      // Add to list of entities
-      AddEntity(entity);
+
+      //      if( parent )
+      //AddEntity( parent, entity );
+      //else
+      //AddEntity( this, entity );
     }
     else
       PRINT_ERR2("line %d : unrecognized type [%s]", line, type);
@@ -405,30 +385,18 @@ bool CStageServer::LoadFile( char* filename )
   // find the maximum dimensions of all objects and grow the
   // world size if anything starts out of bounds
   
-  for( int i=0; i < GetEntityCount(); i++ )
-    {
-      double xmin, ymin, xmax, ymax;
-      GetEntity(i)->GetGlobalBoundingBox( xmin, ymin, xmax, ymax );
-      
-      if( xmax > global_maxx )
-	global_maxx = xmax;
-      
-      if( ymax > global_maxy )
-	global_maxy = ymax;
-    }	  
+  double xmin, ymin;
+  // the bounding box routine stretches the given dimensions to fit
+  // the entity and its children
+  xmin = ymin = 999999.9;
+  root->GetBoundingBox( xmin, ymin, global_maxx, global_maxy );
   
   // Initialise the matrix, now that we know how big it has to be
   int w = (int) ceil( global_maxx * this->ppm);
   int h = (int) ceil( global_maxy * this->ppm);
   
   assert( this->matrix = new CMatrix(w, h, 1) );
-  
-  // Construct a fixed obstacle representing the boundary of the 
-  // the environment.
-  CFixedObstacle* boundary;
-  assert( boundary = new CFixedObstacle(this, NULL) );
-  //AddEntity( boundary );
-  
+    
   // draw a rectangle of boundary pixels around the outside of the matrix  
   Rect r;
   r.toplx = 0;
@@ -440,7 +408,7 @@ bool CStageServer::LoadFile( char* filename )
   r.botrx = w-1;
   r.botry = h-1;
 
-  matrix->draw_rect( r, boundary, true );
+  matrix->draw_rect( r, root, true );
 
   return true;
 }
@@ -461,13 +429,9 @@ bool CStageServer::SaveFile( char* filename )
   PRINT_MSG1("saving world to [%s]", this->worldfilename);
   
   // Let each entity save itself
-  for (int i = 0; i < GetEntityCount(); i++)
-  {
-    CEntity *entity = GetEntity(i);
-    if (!entity->Save(&this->worldfile, entity->worldfile_section))
-      return false;
-  }
-
+  if (!root->Save(&this->worldfile, root->worldfile_section))
+    return false;
+  
 #ifdef INCLUDE_RTK2
   // Let the gui save itself
   if (!RtkSave(&this->worldfile))
@@ -829,21 +793,22 @@ void CStageServer::Write( void )
     init = false;
   }
   
-  for( int i=0; i < GetEntityCount(); i++ )
+      // TODO - FIX THIS
+  /*
+    // manage subscriptions only for CPlayerEntity
+    if( RTTI_ISTYPE( CPlayerEntity*, ent ) ) 
     {
-      if( ISPLAYER( GetEntity(i) ) ) // manage subscriptions only for CPlayerEntity
-	{
-	  CPlayerEntity* pent = (CPlayerEntity*)GetEntity(i);
-	  
-	  //PRINT_DEBUG1( "checking subscription for entity %d", i );
-	  
-	  int currently_subscribed =  pent->Subscribed();
-	  
-	  //PRINT_DEBUG3( "Entity %d subscriptions: %d last time: %d\n", 
-	  //	    i, currently_subscribed, subscribed_last_time[i] );
-	  
-	  // if the current subscription state is different from the last time
-	  if( currently_subscribed != subscribed_last_time[i] )
+    CPlayerEntity* pent = (CPlayerEntity*)ent;
+    
+    //PRINT_DEBUG1( "checking subscription for entity %d", i );
+    
+    int currently_subscribed =  pent->Subscribed();
+    
+      //PRINT_DEBUG3( "Entity %d subscriptions: %d last time: %d\n", 
+      //	    i, currently_subscribed, subscribed_last_time[i] );
+      
+      // if the current subscription state is different from the last time
+      if( currently_subscribed != ent->subscribed_last_time[i] )
 	    {
 	      
 	      PRINT_DEBUG2( "Entity %d subscription change (%d subs)\n", 
@@ -856,9 +821,11 @@ void CStageServer::Write( void )
 	      // below
 	      pent->SetDirty( PropPlayerSubscriptions , 1);
 	    }
+	  
 	}
     }
-  
+  */  
+
   CStageIO::Write();
 }
 

@@ -21,7 +21,7 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/idarturretdevice.cc,v $
 * $Author: rtv $
-* $Revision: 1.9 $
+* $Revision: 1.10 $
 ******************************************************************************/
 
 #include <math.h>
@@ -100,7 +100,7 @@ CIdarTurretDevice::CIdarTurretDevice(CWorld *world, CEntity *parent )
 
 void CIdarTurretDevice::Sync( void ) 
 {
-  //  puts( "SYNC" );
+  CPlayerEntity::Sync();
 
   void *client;
   player_idarturret_config_t cfg;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/bitmap.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -20,11 +20,11 @@
 // register this device type with the Library
 CEntity fixedobstacle_bootstrap( string("bitmap"), 
 				 WallType, 
-				 (void*)&CFixedObstacle::Creator ); 
+				 (void*)&CBitmap::Creator ); 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
-CFixedObstacle::CFixedObstacle(CWorld *world, CEntity *parent)
+CBitmap::CBitmap(CWorld *world, CEntity *parent)
     : CEntity(world, parent)
 {
   this->stage_type = WallType;
@@ -33,8 +33,6 @@ CFixedObstacle::CFixedObstacle(CWorld *world, CEntity *parent)
   vision_return = true;
   laser_return = LaserVisible;
   sonar_return = true;
-  //laser_return = LaserTransparent;
-  //sonar_return = false;
   obstacle_return = true;
   puck_return = false; // we trade velocities with pucks
   idar_return = IDARReflect;
@@ -49,14 +47,16 @@ CFixedObstacle::CFixedObstacle(CWorld *world, CEntity *parent)
   this->image = NULL;
 
 #ifdef INCLUDE_RTK2
-  // We cant move fixed obstacles
-  this->movemask = 0; 
+  // We cant move fixed obstacles (yet!)
+  this->movemask = 0;
+  // TODO - add Update() method so we can move bitmaps around
+  //this->movemask = RTK_MOVE_TRANS | RTK_MOVE_ROT;
 #endif
 }
 
 ///////////////////////////////////////////////////////////////////////////
 // Load the entity from the worldfile
-bool CFixedObstacle::Load(CWorldFile *worldfile, int section)
+bool CBitmap::Load(CWorldFile *worldfile, int section)
 {
   if (!CEntity::Load(worldfile, section))
     return false;
@@ -157,7 +157,7 @@ bool ColorInRectangle( Nimage* image, uint8_t color, int x1, int y1, int x2, int
 
 #ifdef INCLUDE_RTK2
 
-void CFixedObstacle::BuildQuadTree( uint8_t color, int x1, int y1, int x2, int y2 )
+void CBitmap::BuildQuadTree( uint8_t color, int x1, int y1, int x2, int y2 )
 {
   //printf( "QT: %d  %d,%d %d,%d\n", color, x1,y1,x2,y2 );
   
@@ -201,12 +201,20 @@ void CFixedObstacle::BuildQuadTree( uint8_t color, int x1, int y1, int x2, int y
 
 ///////////////////////////////////////////////////////////////////////////
 // Initialise object by Copying image into matrix
-bool CFixedObstacle::Startup()
+bool CBitmap::Startup()
 {
   if (!CEntity::Startup())
-    return false;
+    {
+      PRINT_DEBUG( "CEntity::Startup() failed" );
+      return false;
+    }
 
-  assert(this->image);  
+  if( !this->image )
+    {
+      PRINT_DEBUG( "bitmap has no image" );
+      //rtk_fig_clear( this->fig );
+      return true;
+    }
     
   double sx = this->scale;
   double sy = this->scale;
@@ -219,14 +227,6 @@ bool CFixedObstacle::Startup()
   // lines - such as most worlds. Also combined matrix & gui
   // rendering loops.  hospital.pnm.gz now loads more than twice as
   // fast and redraws waaaaaay faster. yay!
-
-#ifdef INCLUDE_RTK2
-
-  //rtk_fig_destroy(this->fig);
-  //this->fig = rtk_fig_create(m_world->canvas, NULL, -48);
-  rtk_fig_origin( this->fig, local_px, local_py, local_pth );
-  rtk_fig_color_rgb32(this->fig, this->color);
-#endif
   
   for (int y = 0; y < this->image->height; y++)
     {
@@ -281,13 +281,18 @@ bool CFixedObstacle::Startup()
 	  
 	  
 #ifdef INCLUDE_RTK2	
-	  // create a figure  rectangle in local coordinates
-	  rtk_fig_rectangle(this->fig, px, py, 0, pw, ph, true ); 
+	  // store the rectangles for drawing into the GUI later
+	  bitmap_rectangle_t r;
+	  r.x = px;
+	  r.y = py;
+	  r.w = pw;
+	  r.h = ph;
+	  bitmap_rects.push_back( r );
 #endif
 	  
 	  // create a matrix rectangle in global coordinates
 	  this->LocalToGlobal( px, py, pth );
-	m_world->SetRectangle( px, py, pth, pw, ph, this, true);
+	  m_world->SetRectangle( px, py, pth, pw, ph, this, true);
 	}
     }
   // new: don't delete the image so we can download it to clients - rtv
@@ -297,12 +302,31 @@ bool CFixedObstacle::Startup()
 
 ///////////////////////////////////////////////////////////////////////////
 // Finalize object
-void CFixedObstacle::Shutdown()
+void CBitmap::Shutdown()
 {
   CEntity::Shutdown();
 }
 
 
+#ifdef INCLUDE_RTK2
 
+void CBitmap::RtkStartup()
+{
+  CEntity::RtkStartup();
+
+  // bitmaps don't need labels
+  //rtk_fig_clear( this->label );
+ 
+  rtk_fig_origin( this->fig, local_px, local_py, local_pth );
+  rtk_fig_color_rgb32(this->fig, this->color);
+  
+  // add the figure we pre-computed in Startup() above  
+  for(
+      vector<bitmap_rectangle_t>::iterator it = bitmap_rects.begin();
+      it != bitmap_rects.end();
+      it++ )  
+    rtk_fig_rectangle(this->fig, it->x, it->y, 0, it->w, it->h, true ); 
+}
+#endif
 
 

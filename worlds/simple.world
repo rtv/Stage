@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: simple.world,v 1.5 2002-08-22 02:04:38 rtv Exp $
+# CVS: $Id: simple.world,v 1.6 2002-08-30 18:17:28 rtv Exp $
 
 include "pioneer.inc"
 
@@ -30,7 +30,10 @@ bitmap
 position
 (
  port 6665 
- pose [0.366 0.370 36.871] 
- p2dx_sonar( port 6665 )
+ pose [1.0 1.0 20]
+
+ laser()
+
+ #p2dx_sonar( port 6665 )
 ) 
 

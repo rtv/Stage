@@ -21,7 +21,7 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/idardevice.cc,v $
 * $Author: rtv $
-* $Revision: 1.3 $
+* $Revision: 1.4 $
 ******************************************************************************/
 
 
@@ -109,6 +109,9 @@ CIdarDevice::CIdarDevice(CWorld *world, CEntity *parent )
 
 void CIdarDevice::Sync( void )
 {
+  // sync our children
+  CPlayerEntity::Sync();
+
   void *client;
   player_idar_config_t cfg;
   

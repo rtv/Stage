@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.79 2002-08-23 02:18:24 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.80 2002-08-30 18:17:28 rtv Exp $
  */
 
 #include <math.h>
@@ -45,6 +45,7 @@
 //#define VERBOSE
 //#undef DEBUG
 //#undef VERBOSE
+//#define RENDER_INITIAL_BOUNDING_BOXES
 
 #include "entity.hh"
 #include "raytrace.hh"
@@ -68,9 +69,23 @@ void CEntity::staticSetGlobalPose( void* ent, double x, double y, double th )
 // Requires a pointer to the parent and a pointer to the world.
 CEntity::CEntity(CWorld *world, CEntity *parent_entity )
 {
+  assert( world );
+  
   m_world = world; 
   m_parent_entity = parent_entity;
   m_default_entity = this;
+
+  // attach to my parent
+  if( m_parent_entity )
+    m_parent_entity->AddChild( this );
+  else
+    PRINT_DEBUG1( "ROOT ENTITY %p\n", this );
+  
+  // register with the world
+  m_world->RegisterEntity( this );
+
+  // init the child list data
+  this->child_list = this->prev = this->next = NULL;
 
   // Set our default type (will be reset by subclass).
   this->stage_type = NullType;
@@ -140,8 +155,13 @@ CEntity::~CEntity()
   //close( m_fd ); 
 }
 
-void CEntity::GetGlobalBoundingBox( double &xmin, double &ymin,
-				   double &xmax, double &ymax )
+void CEntity::AddChild( CEntity* child )
+{
+  STAGE_LIST_APPEND( this->child_list, child ); 
+}
+
+void CEntity::GetBoundingBox( double &xmin, double &ymin,
+			      double &xmax, double &ymax )
 {
   double x[4];
   double y[4];
@@ -149,42 +169,87 @@ void CEntity::GetGlobalBoundingBox( double &xmin, double &ymin,
   double dx = size_x / 2.0;
   double dy = size_y / 2.0;
   double dummy = 0.0;
-
-  x[0] = + dx;
-  y[0] = + dy;
+  
+  x[0] = origin_x + dx;
+  y[0] = origin_y + dy;
   this->LocalToGlobal( x[0], y[0], dummy );
 
-  x[1] = + dx;
-  y[1] = - dy;
+  x[1] = origin_x + dx;
+  y[1] = origin_y - dy;
   this->LocalToGlobal( x[1], y[1], dummy );
 
-  x[2] = - dx;
-  y[2] = + dy;
+  x[2] = origin_x - dx;
+  y[2] = origin_y + dy;
   this->LocalToGlobal( x[2], y[2], dummy );
 
-  x[3] = - dx;
-  y[3] = - dy;
+  x[3] = origin_x - dx;
+  y[3] = origin_y - dy;
   this->LocalToGlobal( x[3], y[3], dummy );
 
+  //double ox, oy, oth;
+  //GetGlobalPose( ox, oy, oth );
   //printf( "origin: %.2f,%.2f,%.2f \n", ox, oy, oth );
   //printf( "corners: \n" );
   //for( int c=0; c<4; c++ )
   //printf( "\t%.2f,%.2f\n", x[c], y[c] );
-
+  
   // find the smallest values and we're done
-  xmin = xmax = x[0];
-  for( int c=1; c<4; c++ )
+  //xmin = xmax = x[0];
+  for( int c=0; c<4; c++ )
     {
       if( x[c] < xmin ) xmin = x[c];
       if( x[c] > xmax ) xmax = x[c];
     }
 
-  ymin = ymax = y[0];
-  for( int c=1; c<4; c++ )
+  //ymin = ymax = y[0];
+  for( int c=0; c<4; c++ )
     {
       if( y[c] < ymin ) ymin = y[c];
       if( y[c] > ymax ) ymax = y[c];
     } 
+
+  //printf( "before children: %.2f %.2f %.2f %.2f\n",
+  //  xmin, ymin, xmax, ymax );
+
+
+  CHILDLOOP( ch )
+    ch->GetBoundingBox(xmin, ymin, xmax, ymax ); 
+
+  //printf( "after children: %.2f %.2f %.2f %.2f\n",
+  //  xmin, ymin, xmax, ymax );
+
+}
+
+// this is called very rapidly from the main loop
+// it allows the entity to perform some actions between clock increments
+// (such handling config requests to increase synchronous IO performance)
+void CEntity::Sync()
+{ 
+  // default - do nothing but call the children
+  CHILDLOOP( ch ) ch->Sync();  
+};
+
+
+// return a pointer to this or a child if it matches the worldfile section
+CEntity* CEntity::FindSectionEntity( int section )
+{
+  PRINT_DEBUG2( "find section %d. my section %d\n", 
+		section, this->worldfile_section );
+
+  if( section == this->worldfile_section )
+    return this;
+  
+  CEntity* found = NULL;
+
+  // otherwise, recursively check our children
+  CHILDLOOP( ch )
+    {
+      found = ch->FindSectionEntity( section ); 
+      if( found ) break;
+    }
+  
+  return found;
+  
 }
 
 
@@ -296,20 +361,32 @@ bool CEntity::Save(CWorldFile *worldfile, int section)
     worldfile->WriteTupleLength(section, "pose", 1, py);
     worldfile->WriteTupleAngle(section, "pose", 2, pth);
   }
+
+  CHILDLOOP( ch ) ch->Save( worldfile, ch->worldfile_section );
+  
   return true;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Startup routine
-// A virtual function that lets entitys do some initialization after
+// A virtual function that lets entities do some initialization after
 // everything has been loaded.
 bool CEntity::Startup( void )
 {
+  PRINT_DEBUG2("STARTUP %s %s", 
+	       this->m_world->lib->StringFromType( this->stage_type ),
+	       m_parent_entity ? "" : "- ROOT" );
+  
+ CHILDLOOP( ch )
+    ch->Startup();
+
 #ifdef INCLUDE_RTK2
   // Initialise the rtk gui
-  RtkStartup();
+ //RtkStartup();
 #endif
+
+  PRINT_DEBUG( "STARTUP DONE" );
 
   return true;
 }
@@ -320,6 +397,10 @@ bool CEntity::Startup( void )
 void CEntity::Shutdown()
 {
   PRINT_DEBUG( "entity shutting down" );
+  
+  // recursively shutdown our children
+  CHILDLOOP( ch ) ch->Shutdown();
+
 
 #ifdef INCLUDE_RTK2
   // Clean up the figure we created
@@ -335,8 +416,9 @@ void CEntity::Shutdown()
 void CEntity::Update( double sim_time )
 {
   //PRINT_DEBUG( "UPDATE" );
- 
-  //PRINT_DEBUG1( "subs: %d\n", m_info_io->subscribed );
+
+  // recursively update our children
+  CHILDLOOP( ch ) ch->Update( sim_time );  
 }
 
 
@@ -706,8 +788,9 @@ int CEntity::SetProperty( int con, EntityProperty property,
   switch( property )
   {
     case PropParent:
+      // TODO - fix this
       // get a pointer to the (*value)'th entity - that's our new parent
-      this->m_parent_entity = m_world->GetEntity( *(int*)value );     
+      //this->m_parent_entity = m_world->GetEntity( *(int*)value );     
       break;
     case PropSizeX:
       memcpy( &size_x, (double*)value, sizeof(size_x) );
@@ -815,11 +898,12 @@ int CEntity::GetProperty( EntityProperty property, void* value )
   switch( property )
   {
     case PropParent:
+      // TODO - fix
       // find the parent's position in the world's entity array
       // if parent pointer is null or otherwise invalid, index is -1 
-    { int parent_index = m_world->GetEntityIndex( m_parent_entity );
-    memcpy( value, &parent_index, sizeof(parent_index) );
-    retval = sizeof(parent_index); }
+      //{ int parent_index = m_world->GetEntityIndex( m_parent_entity );
+      //memcpy( value, &parent_index, sizeof(parent_index) );
+      //retval = sizeof(parent_index); }
     break;
     case PropSizeX:
       memcpy( value, &size_x, sizeof(size_x) );
@@ -895,6 +979,33 @@ int CEntity::GetProperty( EntityProperty property, void* value )
   return retval;
 }
 
+// write the entity tree onto the console
+void CEntity::Print( char* prefix )
+{
+  double ox, oy, oth;
+  this->GetGlobalPose( ox, oy, oth );
+
+  printf( "%s type: %s global: [%.2f,%.2f,%.2f]"
+	  " local: [%.2f,%.2f,%.2f] )", 
+	  prefix,
+	  m_world->lib->StringFromType( this->stage_type ),
+	  ox, oy, oth,
+	  local_px, local_py, local_pth );
+	  
+  if( this->m_parent_entity == NULL )
+    puts( " - ROOT" );
+  else
+    puts( "" );
+
+  // add an indent to the prefix
+  
+  char* buf = new char[ strlen(prefix) + 1 ];
+  sprintf( buf, "\t%s", prefix );
+
+  CHILDLOOP( ch )
+    ch->Print( buf );
+}
+
 
 #ifdef INCLUDE_RTK2
 
@@ -902,19 +1013,25 @@ int CEntity::GetProperty( EntityProperty property, void* value )
 // Initialise the rtk gui
 void CEntity::RtkStartup()
 {
-  //puts ("RTK STARTUP" );
+  PRINT_DEBUG2("RTK STARTUP %s %s",
+	       this->m_world->lib->StringFromType( this->stage_type ),
+	       m_parent_entity ? "" : " - ROOT" );
 
   // Create a figure representing this entity
   if( m_parent_entity == NULL )
     this->fig = rtk_fig_create(m_world->canvas, NULL, 50);
   else
     this->fig = rtk_fig_create(m_world->canvas, m_parent_entity->fig, 50);
-
+  
   this->fig->thing = (void*)this;
   this->fig->origin_callback = staticSetGlobalPose;
   this->fig->select_callback = NULL;
   this->fig->unselect_callback = NULL;
 
+
+  // add this device to the world's device menu 
+  this->m_world->AddToDeviceMenu( this, true); 
+    
   // visible by default
   rtk_fig_show( this->fig, true );
 
@@ -923,6 +1040,24 @@ void CEntity::RtkStartup()
 
   // put the figure's origin at the entity's position
   rtk_fig_origin( this->fig, local_px, local_py, local_pth );
+
+
+#ifdef RENDER_INITIAL_BOUNDING_BOXES
+  double xmin, ymin, xmax, ymax;
+  xmin = ymin = 999999.9;
+  xmax = ymax = 0.0;
+  this->GetBoundingBox( xmin, ymin, xmax, ymax );
+  
+  rtk_fig_t* boundaries = rtk_fig_create( m_world->canvas, NULL, 99);
+   double width = xmax - xmin;
+  double height = ymax - ymin;
+  double xcenter = xmin + width/2.0;
+  double ycenter = ymin + height/2.0;
+
+  rtk_fig_rectangle( boundaries, xcenter, ycenter, 0, width, height, 0 ); 
+
+   
+#endif
    
   // draw the shape using the center of rotation offsets
   switch (this->shape)
@@ -940,33 +1075,44 @@ void CEntity::RtkStartup()
     case ShapeNone: // no shape
       break;
   }
-   
-  // Create the label
-  // By default, the label is not shown
-  this->fig_label = rtk_fig_create(m_world->canvas, this->fig, 51);
-  rtk_fig_show(this->fig_label, false);    
-  rtk_fig_movemask(this->fig_label, 0);
-   
-  char label[1024];
-  char tmp[1024];
-   
-  label[0] = 0;
-  snprintf(tmp, sizeof(tmp), "%s", this->name);
-  strncat(label, tmp, sizeof(label));
-   
-  rtk_fig_color_rgb32(this->fig, this->color);
-  rtk_fig_text(this->fig_label,  0.75 * size_x,  0.75 * size_y, 0, label);
-   
-  // attach the label to the main figure
-  // rtk will draw the label when the mouse goes over the figure
-  this->fig->mouseover_fig = fig_label;
-   
-  // we can be moved if we have no parent
-  if (m_parent_entity != NULL)
-    rtk_fig_movemask(this->fig, 0);
-  else
-    rtk_fig_movemask(this->fig, this->movemask);  
+  
+
+  // everything except the root object has a label
+  if( m_parent_entity )
+    {
+      // Create the label
+      // By default, the label is not shown
+      this->fig_label = rtk_fig_create(m_world->canvas, this->fig, 51);
+      rtk_fig_show(this->fig_label, false);    
+      rtk_fig_movemask(this->fig_label, 0);
+      
+      char label[1024];
+      char tmp[1024];
+      
+      label[0] = 0;
+      snprintf(tmp, sizeof(tmp), "%s %s", 
+	       this->name, this->m_world->lib->StringFromType( this->stage_type ) );
+      strncat(label, tmp, sizeof(label));
+      
+      rtk_fig_color_rgb32(this->fig, this->color);
+      rtk_fig_text(this->fig_label,  0.75 * size_x,  0.75 * size_y, 0, label);
+      
+      // attach the label to the main figure
+      // rtk will draw the label when the mouse goes over the figure
+      this->fig->mouseover_fig = fig_label;
+      
+      // we can be moved only if we are on the root node
+      if (m_parent_entity != this->m_world->GetRoot() )
+	rtk_fig_movemask(this->fig, 0);
+      else
+	rtk_fig_movemask(this->fig, this->movemask);  
+    }
+
+  // do our children after we're set
+  CHILDLOOP( child ) child->RtkStartup();
+  PRINT_DEBUG( "RTK STARTUP DONE" );
 }
+
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -983,8 +1129,10 @@ void CEntity::RtkShutdown()
 // Update the rtk gui
 void CEntity::RtkUpdate()
 {
+  CHILDLOOP( child ) child->RtkUpdate();
+
   // TODO this is nasty and inefficient - figure out a better way to
-  // do this
+  // do this  
 
   // if we're not looking at this device, hide it 
   if( !m_world->ShowDeviceBody( this->stage_type) )
