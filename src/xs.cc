@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.44 2002-01-29 02:33:38 rtv Exp $
+ * $Id: xs.cc,v 1.45 2002-02-07 00:45:38 rtv Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -55,7 +55,7 @@ CXGui* win = 0;
 Display* display = 0; 
 int screen = 0;
 
-const char* versionStr = "0.4";
+const char* versionStr = "0.4"; 
 const char* titleStr = "XS";
 
 #define USAGE  "\nUSAGE: xs [-h <host>] [-tp <port>] [-ep <port>]\n\t[-geometry <geometry string>] [-zoom <factor>]\n\t[-pan <X\%xY\%>]\nDESCRIPTIONS:\n-h <host>: connect to Stage on this host (default `localhost')\n-tp <port>: connect to Stage's Truth server on this TCP port (default `6601')\n-ep <port>: connect to Stage's Environment server on this TCP port (default `6602')\n-geometry <string>*: standard X geometry specification\n-zoom <factor>*: floating point zoom multiplier\n-pan <X\%xY\%>*: pan initial view X percent of maximum by Y percent of maximum\n"
@@ -801,7 +801,7 @@ void parse_args(int argc, char** argv)
 
 int main(int argc, char **argv)
 {
-  printf( "** XS v%s ** ", versionStr );
+  printf( "** %s     v%s ** ", titleStr, versionStr );
   fflush( stdout );
 
   // register the exit function - deletes the mutexs

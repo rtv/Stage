@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.30 $
+//  $Author: rtv $
+//  $Revision: 1.31 $
 //
 // Usage:
 //  (empty)
@@ -33,8 +33,6 @@
 //#define DEBUG
 #include "world.hh"
 
-//#define PIDFILENAME "stage.pid"
-
 ///////////////////////////////////////////////////////////////////////////
 // Local vars
 
@@ -51,10 +49,13 @@ void PrintUsage( void )
 {
   printf("\nUsage: stage [options] WORLDFILE\n"
 	 "Options:\n"
-	 " -xs\t\tDon't start the XS Graphical User Interface\n"
-	 " -u <float>\tSet the desired real time per cycle. Default: 0.1\n"
+	 " -xs\t\tDo not start the XS Graphical User Interface\n"
+	 " +xs\t\tDo start the XS Graphical User Interface\n"
+	 " -p\t\tDo not start Player\n"
+	 " +p\t\tDo start Player\n"
 	 " -v <float>\tSet the simulated time increment per cycle."
-	 " Default: 0.1\n"
+	 " -u <float>\tSet the desired real time per cycle. Default: 0.1 sec\n"
+	 " Default: 0.1 sec\n"
 	 " -l <filename>\tLog the position of all objects into the"
 	 " named file.\n"
 	 " -tp <portnum>\tSet the truth server port\n"
@@ -79,9 +80,6 @@ void StageQuit( void )
   // Destroy the world
   delete world;
 
-  //  unlink(PIDFILENAME);
-  //puts( "...done." );
-
   exit( 0 );
 }
 
@@ -102,14 +100,6 @@ int main(int argc, char **argv)
   // hello world
   printf("\n** Stage  v%s ** ", (char*) VERSION);
   
-  // record our pid in the filesystem 
-  //  FILE* pidfile;
-  //if((pidfile = fopen(PIDFILENAME, "w+")))
-  // {
-  //fprintf(pidfile,"%d\n", getpid());
-  //fclose(pidfile);
-  //}
-
   // Create the world
   world = new CWorld();
   
@@ -153,16 +143,18 @@ int main(int argc, char **argv)
   signal(SIGTERM, sig_quit );
   signal(SIGHUP, sig_quit );
 
-  printf("running\n");
+  //printf("running\n");
 
   // the main loop - it'll be interrupted by a signal
   while( !quit )
     world->Main();
 
-  printf("quiting\n");
+  //printf("quiting\n");
   
   // clean up and exit
   StageQuit();
 }
+
+
 
 

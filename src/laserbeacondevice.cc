@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.22 $
+//  $Author: rtv $
+//  $Revision: 1.23 $
 //
 // Usage:
 //  (empty)
@@ -24,7 +24,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define DEBUG
+//#define DEBUG
 
 #include <math.h>
 #include <stage.h>

@@ -7,10 +7,15 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.81 $
+//  $Author: rtv $
+//  $Revision: 1.82 $
 //
 ///////////////////////////////////////////////////////////////////////////
+
+#undef DEBUG
+#undef VERBOSE
+//#define DEBUG 
+//#define VERBOSE
 
 #include <errno.h>
 #include <sys/time.h>
@@ -37,9 +42,6 @@ void PrintUsage(); // defined in main.cc
 extern long g_bytes_input, g_bytes_output;
 
 int g_timer_expired = 0;
-
-//#define DEBUG 
-//#define VERBOSE
 
 #include "world.hh"
 #include "playerdevice.hh" // for the definition of CPlayerDevice, used to treat them specially
@@ -93,7 +95,7 @@ CWorld::CWorld()
   m_log_fd = -1;
 
   m_external_sync_required = false;
-  m_env_server_ready = false;
+  //m_env_server_ready = false;
   m_instance = 0;
 
   // AddObject() handles allocation of storage for entities
@@ -144,16 +146,16 @@ CWorld::CWorld()
   // enable external services by default
   m_run_environment_server = true;
   m_run_pose_server = true;
-    
-  // default color database file
-  strcpy( m_color_database_filename, COLOR_DATABASE );
-    
-  // enable XS by default in stage
+  m_run_player = true;    
   m_run_xs = true; 
 
 #ifdef INCLUDE_RTK2
-  m_run_xs = false;
+  m_run_xs = false; // disable xs in rtkstage
 #endif
+
+  // default color database file
+  strcpy( m_color_database_filename, COLOR_DATABASE );
+
 
   // Initialise world filename
   //
@@ -244,6 +246,18 @@ bool CWorld::ParseCmdline(int argc, char **argv)
     {
       m_run_xs = true;
       printf( "[GUI]" );
+    }
+
+    // DIS/ENABLE Player
+    if( strcmp( argv[a], "-p" ) == 0 )
+    {
+      m_run_player = false;
+      printf( "[No Player]" );
+    }
+    else if( strcmp( argv[a], "+p" ) == 0 )
+    {
+      m_run_player = true;
+      printf( "[Player]" );
     }
 
     // SET GOAL REAL CYCLE TIME
@@ -484,14 +498,17 @@ bool CWorld::Startup()
     SetupPoseServer();
   
   if( m_run_environment_server )
-  {
-    pthread_t tid_dummy;
-    pthread_create(&tid_dummy, NULL, &EnvServer, (void *)NULL );  
+    SetupEnvServer();
+
+//    if( m_run_environment_server )
+//    {
+//      pthread_t tid_dummy;
+//      pthread_create(&tid_dummy, NULL, &EnvServer, (void *)NULL );  
       
-    // env server sets this flag when it's ready
-    while( !m_env_server_ready )
-      usleep( 100000 );
-  }
+//      // env server sets this flag when it's ready
+//      while( !m_env_server_ready )
+//        usleep( 100000 );
+//    }
   
   // Create the device directory and clock 
   CreateClockDevice();
@@ -509,12 +526,14 @@ bool CWorld::Startup()
     }
   }
   
-  PRINT_DEBUG( "STARTING PLAYER" );
-  
+
   // exec and set up Player
-  StartupPlayer();
-  
-  PRINT_DEBUG( "DONE STARTING PLAYER" );
+  if( m_run_player )
+    {
+      PRINT_DEBUG( "STARTING PLAYER" );
+      StartupPlayer();    
+      PRINT_DEBUG( "DONE STARTING PLAYER" );
+    }
 
   // spawn an XS process, unless we disabled it (rtkstage disables xs by default)
   if( m_run_xs && m_run_pose_server && m_run_environment_server ) 
@@ -691,10 +710,6 @@ bool CWorld::CreateClockDevice( void )
   sprintf( clockName, "%s/clock", m_device_dir );
   //sprintf( clockName, "/tmp/clock");
   
-#ifdef DEBUG
-  cout << "Creating clock device at " << clockName << endl;
-#endif
-
   int tfd=-1;
   if( (tfd = open( clockName, O_RDWR | O_CREAT | O_TRUNC, 
                    S_IRUSR | S_IWUSR )) < 0 )
@@ -740,17 +755,7 @@ bool CWorld::CreateClockDevice( void )
   
   close( tfd ); // can close fd once mapped
   
-  // Create the lock object for the shared mem
-  //
-  //if ( !CreateShmemLock() )
-  //{
-  //perror( "failed to create lock for shared memory" );
-  //return false;
-  //}
-  
-#ifdef DEBUG
-  cout << "Successfully mapped clock device." << endl;  
-#endif  
+  PRINT_DEBUG( "Successfully mapped clock device." );
   
   return true;
 }
@@ -796,18 +801,16 @@ void CWorld::Main(void)
   
   static double loop_start = GetRealTime();
 
-  //while (true)
-  // {
   // Set the timer flag depending on the current mode.
   // If we're NOT in realtime mode, the timer is ALWAYS expired
   // so we run as fast as possible
   m_real_timestep > 0.0 ? g_timer_expired = 0 : g_timer_expired = 1;
-      
-  // Check for thread cancellation
-  //pthread_testcancel();
-      
+            
   // look for new connections to the poseserver
   ListenForPoseConnections();
+  
+  // look for new connections to the envserver
+  ListenForEnvConnections();
 
   // calculate new world state
   if (m_enable) 
@@ -845,8 +848,6 @@ void CWorld::Main(void)
   // dump the contents of the matrix to a file
   //world->matrix->dump();
   //getchar();	
-
-  // }
 }
 
 

@@ -387,7 +387,6 @@ void CWorld::PoseWrite( void )
       stage_pose_t* next_entry = 
 	(stage_pose_t*)(send_buf+sizeof(stage_header_t));
 
-
       // now we'll count the objects that really need sending
       send_count  = 0;
 
@@ -515,7 +514,7 @@ void CWorld::SetupPoseServer( void )
  
   // listen for requests on this socket
   // we poll it in ListenForPoseConnections()
-  listen( m_pose_listen.fd, LISTENQ);
+   assert( listen( m_pose_listen.fd, LISTENQ) == 0 );
 }
 
 

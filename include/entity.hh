@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
-//  $Author: inspectorg $
-//  $Revision: 1.34 $
+//  $Author: rtv $
+//  $Revision: 1.35 $
 //
 // Usage:
 //  (empty)
@@ -184,7 +184,10 @@ private: sem_t* m_lock;
 
   // the full path name of this device in the filesystem
   public: char m_device_filename[256]; 
-  
+
+  // a filedescriptor for this device's file, used for locking
+  private: int m_fd;
+
   // flag is set when a dependent device is  attached to this device
   public: bool m_dependent_attached;
 

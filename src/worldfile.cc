@@ -5,7 +5,7 @@
 // Date: 15 Nov 2001
 // Desc: A property handling class
 //
-// $Id: worldfile.cc,v 1.7 2002-01-30 03:33:43 inspectorg Exp $
+// $Id: worldfile.cc,v 1.8 2002-02-07 00:45:38 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -18,7 +18,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define DEBUG
+//#define DEBUG
 
 #include "stage_types.hh"
 #include "worldfile.hh"

@@ -8,7 +8,7 @@
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
 #  $Author: rtv $
-#  $Revision: 1.29 $
+#  $Revision: 1.30 $
 #
 # Note: All normal user configurations are in Makefile.common - you
 # probably don't need to change this file
@@ -25,7 +25,7 @@ include Makefile.common
 all:	stage rtkstage xs manager
 
 stage: 	
-	cd src && ${MAKE} all PLAYER_DIR=$(PLAYER_DIR) \
+	cd src && ${MAKE} stage PLAYER_DIR=$(PLAYER_DIR) \
 	&& cp stage ../bin
 
 rtkstage: 	

@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.14 2002-01-25 23:10:52 rtv Exp $
+ * $Id: image.cc,v 1.15 2002-02-07 00:45:38 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -212,7 +212,7 @@ bool Nimage::load_pnm(const char* fname)
   // skip to the end of the line again
   source.ignore( 1024, '\n' );
 
-  int numPixels = width * height;
+  unsigned int numPixels = width * height;
 
   // make space for the pixels
   if (data) delete[] data;

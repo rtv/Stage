@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.75 2002-02-02 01:23:44 rtv Exp $
+# $Id: Makefile,v 1.76 2002-02-07 00:45:38 rtv Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -23,10 +23,10 @@ CCFLAGS += -Wall -DREENTRANT $(ZLIB_FLAGS) $(INCLUDES) $(PLAYER_PLATFORM)
 CCFLAGS += -DVERSION=\"$(VERSION)\" -DCOLOR_DATABASE=\"$(COLOR_DATABASE)\"
 
 # production/debug link
-LINKFLAGS = -lm -lstdc++ -lpthread $(ZLIB_LIBS)
+#LINKFLAGS = -lm -lstdc++ -pthread $(ZLIB_LIBS)
 
 # profile link
-#LINKFLAGS = -pg -lm -lstdc++ -lpthread  $(ZLIB_LIBS)
+LINKFLAGS = -pg -lm -lstdc++ -pthread $(ZLIB_LIBS)
 
 # add the libc5 libaries if they were specified in Makefile.commin
 LINKFLAGS += $(OLDLIBS)

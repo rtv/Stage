@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.41 $
+//  $Revision: 1.42 $
 //
 // Usage:
 //  (empty)
@@ -122,6 +122,9 @@ class CWorld
   private:
   
   // data for the server-server's listening socket
+  struct pollfd m_env_listen;
+
+  // data for the server-server's listening socket
   struct pollfd m_pose_listen;
   // data for each pose connection
   struct pollfd m_pose_connections[ MAX_POSE_CONNECTIONS ];
@@ -134,6 +137,10 @@ class CWorld
   int m_sync_counter; 
   // record the type of each connection (sync/async) 
   char m_conn_type[ MAX_POSE_CONNECTIONS ];
+
+  void ListenForEnvConnections( void );
+  void SetupEnvServer( void );
+  void EnvWriter( int connfd );
 
   void ListenForPoseConnections( void );
   void SetupPoseServer( void );
@@ -215,10 +222,11 @@ class CWorld
   // Configuration variables
 
   // flags that control servers
-  public: bool m_env_server_ready;
-  private: bool m_run_environment_server;
-  private: bool m_run_pose_server;
- 
+public: bool m_env_server_ready;
+private: bool m_run_environment_server;
+private: bool m_run_pose_server;
+private: bool m_run_player;
+  
   private: bool m_external_sync_required;
   
 

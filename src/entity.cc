@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.40 2002-02-05 22:50:40 rtv Exp $
+//  $Id: entity.cc,v 1.41 2002-02-07 00:45:38 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <sys/file.h>
 
 //#define DEBUG
 //#define VERBOSE
@@ -238,10 +239,12 @@ bool CEntity::Startup( void )
             m_world->m_device_dir, m_player_port, m_player_type, m_player_index );
   PRINT_DEBUG1("creating device %s", m_device_filename);
 
-  int tfd = open( m_device_filename, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR );
+  // we store the filedescriptor so we can lock the file to control
+  // access to the data
+  m_fd = open( m_device_filename, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR );
     
   // make the file the right size
-  if( ftruncate( tfd, mem ) < 0 )
+  if( ftruncate( m_fd, mem ) < 0 )
   {
     PRINT_ERR1( "failed to set file size: %s", strerror(errno) );
     return false;
@@ -251,7 +254,7 @@ bool CEntity::Startup( void )
   // first part of the buffer, so we'll call it that
   player_stage_info_t* playerIO = 
     (player_stage_info_t*)mmap( NULL, mem, PROT_READ | PROT_WRITE, 
-				MAP_SHARED, tfd, (off_t) 0);
+				MAP_SHARED, m_fd, (off_t) 0);
   
   if (playerIO == MAP_FAILED )
     {
@@ -259,7 +262,7 @@ bool CEntity::Startup( void )
       return false;
     }
   
-  close( tfd ); // can close fd once mapped
+  //close( tfd ); // can close fd once mapped
   
   // Initialise entire space
   memset(playerIO, 0, mem);
@@ -270,12 +273,20 @@ bool CEntity::Startup( void )
   // we use the lock field in the player_stage_info_t structure to
   // control access with a semaphore.
   
-  // store the address 
-  m_lock = &playerIO->lock;
   
-  // initialise the semaphore
-  if( sem_init( m_lock, 0, 1 ) < 0 )
-    perror( "sem_init failed" );
+  // initialise a POSIX semaphore
+  //
+  // we'd use this to create a semaphore that is shared across
+  // processes if only linux supported it.  hopefully it'll show up in
+  // the next kernel, so keep this around.  this should work on
+  // BSD,Solaris, etc. (conditional compilation?)
+  // 
+  //m_lock = &playerIO->lock;
+  //if( sem_init( m_lock, 1, 1 ) < 0 )
+  //perror( "sem_init failed" );
+
+  // we'll do file locking instead
+
   
   PRINT_DEBUG1( "Stage: device lock at %p\n", m_lock );
   
@@ -304,20 +315,20 @@ bool CEntity::Startup( void )
   m_info_io->player_id.type = m_player_type;
   m_info_io->subscribed = 0;
 
-#ifdef DEBUG
-  printf( "\t\t(%p) (%d,%d,%d) IO at %p\n"
-	  "\t\ttotal: %d\tinfo: %d\tdata: %d (%d)\tcommand: %d (%d)\tconfig: %d (%d)\n ",
-	  this,
-	  m_info_io->player_id.port,
-	  m_info_io->player_id.type,
-	  m_info_io->player_id.index,
-	  m_info_io,
-	  m_info_len + m_data_len + m_command_len + m_config_len,
-	  m_info_len,
-	  m_info_io->data_len, m_data_len,
-	  m_info_io->command_len, m_command_len,
-	  m_info_io->config_len, m_config_len );
-#endif  
+//  #ifdef DEBUG
+//    printf( "\t\t(%p) (%d,%d,%d) IO at %p\n"
+//  	  "\t\ttotal: %d\tinfo: %d\tdata: %d (%d)\tcommand: %d (%d)\tconfig: %d (%d)\n ",
+//  	  this,
+//  	  m_info_io->player_id.port,
+//  	  m_info_io->player_id.type,
+//  	  m_info_io->player_id.index,
+//  	  m_info_io,
+//  	  m_info_len + m_data_len + m_command_len + m_config_len,
+//  	  m_info_len,
+//  	  m_info_io->data_len, m_data_len,
+//  	  m_info_io->command_len, m_command_len,
+//  	  m_info_io->config_len, m_config_len );
+//  #endif  
 
   // try  an unlock
   assert( Unlock() );
@@ -679,7 +690,10 @@ size_t CEntity::PutData( void* data, size_t len )
   //  m_info_io->player_id.index, data);
  
   // the data mustn't be too big!
-  if( len <= m_info_io->data_len )
+  //if( len <= m_info_io->data_len )
+
+  // RTV - the data must be EXACTLY the right size!
+  if( len == m_info_io->data_len )
   {
     // indicate that some data is available
     // and update the timestamp
@@ -717,7 +731,10 @@ size_t CEntity::GetData( void* data, size_t len )
   Lock();
 
   // the data must be the right size!
-  if( len <= m_info_io->data_avail )
+  //if( len <= m_info_io->data_avail )
+  
+  // RTV - the data must be EXACTLY the right size!
+  if( len == m_info_io->data_avail )
     memcpy( data, m_data_io, len); // copy the data
   else
   {
@@ -744,7 +761,7 @@ size_t CEntity::GetCommand( void* cmd, size_t len )
   
   Lock();
 
-  // the command must be the right size!
+  // the command must be EXACTLY the right size!
   if( len == m_info_io->command_len && len == m_info_io->command_avail )
     memcpy( cmd, m_command_io, len); // import device-specific data
   else
@@ -907,15 +924,20 @@ void CEntity::MakeDirtyIfPixelChanged( void )
 //
 bool CEntity::Lock( void )
 {
-  assert( m_lock );
+  PRINT_DEBUG1( "%p", m_lock );
 
-  PRINT_DEBUG1( "S: LOCK %p\n", m_lock );
+  // BSD file locking method
+  // block until we can get an exclusive lock on this file
+  if( flock( m_fd, LOCK_EX ) != 0 )
+    perror( "flock() LOCK failed" );
 
-  if( sem_wait( m_lock ) < 0 )
-  {
-    PRINT_ERR( "sem_wait failed" );
-    return false;
-  }
+  // POSIX semaphore method
+  //assert( m_lock );
+  //if( sem_wait( m_lock ) < 0 )
+  //{
+  //PRINT_ERR( "sem_wait failed" );
+  //return false;
+  //}
 
   return true;
 }
@@ -925,15 +947,20 @@ bool CEntity::Lock( void )
 //
 bool CEntity::Unlock( void )
 {
-  assert( m_lock );
+  PRINT_DEBUG1( "%p", m_lock );
 
-  PRINT_DEBUG1( "S: UNLOCK %p\n", m_lock );
+  // BSD file locking method
+  // block until we can get an exclusive lock on this file
+  if( flock( m_fd, LOCK_UN ) != 0 )
+    perror( "flock() UNLOCK failed" );
 
-  if( sem_post( m_lock ) < 0 )
-  {
-    PRINT_ERR( "sem_post failed" );
-    return false;
-  }
+  // POSIX semaphore method
+  //assert( m_lock );
+  //if( sem_post( m_lock ) < 0 )
+  //{
+  //PRINT_ERR( "sem_post failed" );
+  //return false;
+  //}
 
   return true;
 }
