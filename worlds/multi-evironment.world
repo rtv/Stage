@@ -1,5 +1,5 @@
 # Desc: demonstrates loading multiple bitmaps 
-# CVS: $Id: multi-evironment.world,v 1.1 2002-08-22 02:04:38 rtv Exp $
+# CVS: $Id: multi-evironment.world,v 1.2 2002-08-22 19:31:29 rtv Exp $
 
 include "pioneer.inc"
 
@@ -7,13 +7,13 @@ gui
 (
   size [400.000 400.000]
   origin [4.964 4.972]
-  scale 0.026
+  resolution 0.026
 )
 
 define cave bitmap
 (
   file "cave.pnm.gz" 
-  scale 0.01
+  resolution 0.01
 )
 
 cave( pose [ 2.5 2.5 0.0 ] color "red" )
