@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.34 2004-04-26 03:12:09 rtv Exp $
+# $Id: Makefile.am,v 1.35 2004-04-26 04:37:49 rtv Exp $
 
 stage_DEPENDENCIES = libstage.a $(top_srcdir)/replace/libreplace.a
 
@@ -47,11 +47,10 @@ stage_LDADD =  -L. @RTK_LIBS@
 #
 # test program
 #
-stest_SOURCES = test2.cc stage.c stage.h stageclient.c stageclient.h	\
-bitmap.c bitmap.h token.c token.h worldfile.cc worldfile.hh
+stest_SOURCES = test2.cc worldfile.cc worldfile.hh
 
 stest_LDFLAGS =
-stest_LDADD = -L. @RTK_LIBS@
+stest_LDADD = -L. @RTK_LIBS@ -lstage
 
 #
 # libstage.a

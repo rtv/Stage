@@ -1,11 +1,12 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: simple.world,v 1.25 2004-04-26 03:12:09 rtv Exp $
+# CVS: $Id: simple.world,v 1.26 2004-04-26 04:37:49 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 #
 
 include "pioneer.inc"
+
 
 
 

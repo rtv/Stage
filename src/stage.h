@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.30 2004-04-26 03:12:09 rtv Exp $
+ * CVS: $Id: stage.h,v 1.31 2004-04-26 04:37:49 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -563,9 +563,6 @@ void stg_property_destroy( gpointer prop );
 #define TPL_OPEN '['
 #define TPL_CLOSE ']'
 
-#ifdef __cplusplus
- extern "C" {
-#endif 
 
 typedef enum {
   STG_T_NUM = 0,
