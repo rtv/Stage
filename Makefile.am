@@ -16,6 +16,7 @@ install-data-hook:
 	cp -p $(top_srcdir)/doc/stage.ps $(DOCINST)
 	cp -p $(top_srcdir)/doc/stage.pdf $(DOCINST)
 
-uninstall-local:
-	rm -f $(DOCINST)/*
+# need to figure out safe way to do this
+#uninstall-local:
+#	rm -f $(DOCINST)/*
 
