@@ -3,7 +3,7 @@
 # stage/Makefile.common - build and installation configurations
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile.common,v 1.33 2002-01-29 02:33:37 rtv Exp $
+# $Id: Makefile.common,v 1.34 2002-01-29 02:43:37 rtv Exp $
 #
 # Notes: All user-configurable paths and build options should be specified 
 #        here. This file is included by Makefile and src/Makefile. 
@@ -73,13 +73,6 @@ COLOR_DATABASE = /usr/X11R6/lib/X11/rgb.txt
 ZLIB_FLAGS = -DINCLUDE_ZLIB
 ZLIB_LIBS = -lz
 
-#############################################################################
-# CONFIGURATION FOR HRL PROPRIETARY CODE - you probably don't want this
-
-#HRL = $(HOME)/work/LINPHERO/pr_c++/com/hrl/pr
-#HRL_HEADERS = -I../HRL -I$(HRL)/pherobot -I$(HRL)/abstractrobot 
-#HRL_LIB =  -L../HRL -lhrlstage
-
 ##############################################################################
 # Build type 
 # choose one of these that suits your build (debug/profile/production)
@@ -117,5 +110,13 @@ CC = g++
 # use the same tool to link
 LINKER = $(CC)
 
+#############################################################################
+# CONFIGURATION FOR HRL PROPRIETARY CODE 
+# you probably don't need this, but it doesn't hurt to leave it here
+# 'cos I use it all the time - RTV
+
+HRL = $(HOME)/work/LINPHERO/pr_c++/com/hrl/pr
+HRL_HEADERS = -I../hrlstage -I$(HRL)/pherobot -I$(HRL)/abstractrobot 
+HRL_LIB =  -L../hrlstage -lhrlstage
 
 
