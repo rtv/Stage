@@ -21,7 +21,7 @@
  * Desc: Gnome GUI world components (all methods begin with 'Gui')
  * Author: Richard Vaughan
  * Date: 7 Dec 2000
- * CVS info: $Id: gnomegui.cc,v 1.7 2002-09-26 01:22:16 rtv Exp $
+ * CVS info: $Id: gnomegui.cc,v 1.8 2002-09-26 02:24:39 rtv Exp $
  */
 
 
@@ -57,7 +57,7 @@ const char* stage_authors[] = {"Richard Vaughan <vaughan@hrl.com>",
 			       "Brian Gerkey <gerkey@usc.edu>", 
 			       "",
 			       "Supported by:",
-			       "\tDARPA",
+			       "\tDARPA IPTO",
 			       "\tThe University of Southern California",
 			       "\tHRL Laboratories LLC", 
 			       NULL };
@@ -118,6 +118,14 @@ static GnomeUIInfo main_menu[] = {
 };
 
 
+static GnomeUIInfo toolbar [] = {
+	GNOMEUIINFO_ITEM_STOCK("Run", "Run the simulation",
+			      NULL, GNOME_STOCK_PIXMAP_FORWARD),
+	GNOMEUIINFO_ITEM_STOCK("Stop", "Stop the simulation",
+			      NULL, GNOME_STOCK_PIXMAP_STOP),
+	GNOMEUIINFO_END
+};
+
 // CWORLD ////////////////////////////////////////////////////////////////////////////////
 
 /* a callback for the about menu item, it will display a simple "About"                 
@@ -153,12 +161,8 @@ void CWorld::GuiStartup( void )
   // create the app
   this->g_app = GNOME_APP(gnome_app_new( "stage", "Stage" ));
 
+  // make user-resizable
   gtk_window_set_policy(GTK_WINDOW(g_app), FALSE, TRUE, FALSE);
-  gtk_window_set_default_size(GTK_WINDOW(g_app), 500, 500);
-
-
-  // create a top-level window
-  //GtkWidget frame = gtk_frame_new(NULL);
 
   // add menus  
   gnome_app_create_menus( this->g_app, main_menu );
@@ -168,20 +172,32 @@ void CWorld::GuiStartup( void )
   assert( g_appbar );
   gnome_appbar_set_default(  this->g_appbar, "No selection" );
   gtk_progress_bar_set_text( gnome_appbar_get_progress( this->g_appbar ), "time" );
-  
   gnome_app_set_statusbar(GNOME_APP(this->g_app), GTK_WIDGET(this->g_appbar));
   
+  
+  gnome_app_create_toolbar(GNOME_APP(this->g_app), toolbar);
+
   // add menu hints to appbar
   //gnome_app_install_menu_hints(GNOME_APP(this->g_app), main_menumenubar);
   
   // create a canvas
   gtk_widget_push_visual(gdk_rgb_get_visual());
   gtk_widget_push_colormap(gdk_rgb_get_cmap());
-  // TODO - read which type to use from world file
+  // TODO - read which type to use from world file & menus
   //this->g_canvas = GNOME_CANVAS(gnome_canvas_new()); // Xlib - fast
   this->g_canvas = GNOME_CANVAS(gnome_canvas_new_aa()); //  anti-aliased, slow
   gtk_widget_pop_colormap();
   gtk_widget_pop_visual();
+
+  // set the starting size - just a quick hack for starters
+  int initwidth = this->matrix->get_width() + 40;
+  int initheight = this->matrix->get_height() + 70;
+
+  // sensible bounds check
+  if( initwidth > gdk_screen_width() ) initwidth = gdk_screen_width();
+  if( initheight > gdk_screen_height() ) initheight = gdk_screen_height();
+  
+  gtk_window_set_default_size(GTK_WINDOW(g_app), initwidth, initheight );
 
   
   // connect a signal handler for button events

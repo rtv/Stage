@@ -1,14 +1,10 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: simple.world,v 1.7 2002-09-07 02:05:25 rtv Exp $
-
-include "pioneer.inc"
+# CVS: $Id: simple.world,v 1.8 2002-09-26 02:24:39 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 #
 resolution 0.02
-
-size [ 20 20 ]
 
 # GUI settings
 #
@@ -19,7 +15,7 @@ gui
   scale 0.021 # the size of each bitmap pixel in meters
 )
 
-# load a bitmapped environment
+# load a bitmapped environment from a file
 #
 bitmap
 (
@@ -28,7 +24,8 @@ bitmap
 )
 
 
-# create a robot
+# create a robot, setting its start position and Player port, 
+# and equipping it with a laser range scanner
 #
 position
 (
@@ -36,7 +33,5 @@ position
  pose [1.0 1.0 20]
 
  laser( port 6665 )
-
- #p2dx_sonar( port 6665 )
 ) 
 
