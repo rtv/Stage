@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.17 $
+//  $Revision: 1.18 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -79,9 +79,9 @@ int _set_cfg( stg_model_t* mod, void* cfg, size_t len )
 int stg_model_set_data( stg_model_t* mod, void* data, size_t len )
 {
   // if this type of model has a set_data function, call it.
-  if( mod->world->library[ mod->type ].set_data )
+  if( mod->lib->set_data )
     {
-      mod->world->library[ mod->type ].set_data(mod, data, len);
+      mod->lib->set_data(mod, data, len);
       PRINT_DEBUG1( "used special set_data returned %d bytes", (int)len );
     }
   else
@@ -93,9 +93,9 @@ int stg_model_set_data( stg_model_t* mod, void* data, size_t len )
 int stg_model_set_command( stg_model_t* mod, void* cmd, size_t len )
 {
   // if this type of model has a putcommand function, call it.
-  if( mod->world->library[ mod->type ].set_command )
+  if( mod->lib->set_command )
     {
-      mod->world->library[ mod->type ].set_command(mod, cmd, len);
+      mod->lib->set_command(mod, cmd, len);
       PRINT_DEBUG1( "used special set_command, put %d bytes", (int)len );
     }
   else
@@ -107,9 +107,9 @@ int stg_model_set_command( stg_model_t* mod, void* cmd, size_t len )
 int stg_model_set_config( stg_model_t* mod, void* config, size_t len )
 {
   // if this type of model has a putconfig function, call it.
-  if( mod->world->library[ mod->type ].set_config )
+  if( mod->lib->set_config )
     {
-      mod->world->library[ mod->type ].set_config(mod, config, len);
+      mod->lib->set_config(mod, config, len);
       PRINT_DEBUG1( "used special putconfig returned %d bytes", (int)len );
     }
   else
@@ -124,9 +124,9 @@ void* stg_model_get_data( stg_model_t* mod, size_t* len )
   void* data = NULL; 
 
   // if this type of model has a getdata function, call it.
-  if( mod->world->library[ mod->type ].get_data )
+  if( mod->lib->get_data )
     {
-      data = mod->world->library[ mod->type ].get_data(mod, len);
+      data = mod->lib->get_data(mod, len);
       PRINT_DEBUG1( "used special get_data, returned %d bytes", (int)*len );
     }
   else
@@ -146,9 +146,9 @@ void* stg_model_get_command( stg_model_t* mod, size_t* len )
   void* command = NULL;
   
   // if this type of model has a getcommand function, call it.
-  if( mod->world->library[ mod->type ].get_command )
+  if( mod->lib->get_command )
     {
-      command = mod->world->library[ mod->type ].get_command(mod, len);
+      command = mod->lib->get_command(mod, len);
       PRINT_DEBUG1( "used special get_command, returned %d bytes", (int)*len );
     }
   else
@@ -167,9 +167,9 @@ void* stg_model_get_config( stg_model_t* mod, size_t* len )
   void* config = NULL;
   
   // if this type of model has an getconfig function, call it.
-  if( mod->world->library[ mod->type ].get_config )
+  if( mod->lib->get_config )
     {
-      config = mod->world->library[ mod->type ].get_config(mod, len);
+      config = mod->lib->get_config(mod, len);
       PRINT_DEBUG1( "used special get_config returned %d bytes", (int)*len );
     }
   else

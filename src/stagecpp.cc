@@ -3,19 +3,11 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.60 2004-09-28 05:28:43 rtv Exp $
+// $Id: stagecpp.cc,v 1.61 2004-10-01 02:03:58 rtv Exp $
 
 //#define DEBUG
 
-/** @defgroup worldfile WorldFile tags */
-/** @{ 
-
-This is the worldfile description. It goes here! 
-
-@} */
-
-/** @addtogroup worldfile */
-/** foo bar bash bang bat */
+/** @defgroup worldfile WorldFile Properties */
 
 // TODO - get this from a system header?
 #define MAXPATHLEN 256
@@ -26,23 +18,54 @@ This is the worldfile description. It goes here!
 
 static CWorldFile wf;
 
+extern stg_lib_entry_t model_entry, laser_entry, position_entry, ranger_entry, blobfinder_entry, fiducial_entry;
+
+/** @addtogroup worldfile */
+/** @{ */
+/** @defgroup worldfilewindow Window
+
+@par Summary and default values
+@verbatim
+window
+(
+  # gui properties
+  center [0 0]
+  size [? ?]
+  scale ?
+
+  # model properties do not apply to the gui window
+)
+@endverbatim
+
+@par Properties
+- size [int int]
+  - [width height] 
+  - size of the window in pixels
+- center [float float]
+  - [x y] 
+  - location of the center of the window in world coordinates (meters)
+- scale
+  - ratio of world to pixel coordinates (window zoom)
+*/
+/** @} */
+
 void configure_gui( gui_window_t* win, int section )
 {
   // remember the section for saving later
   win->wf_section = section;
 
   int window_width = 
-    (int)wf.ReadTupleFloat(section, "window_size", 0, STG_DEFAULT_WINDOW_WIDTH);
+    (int)wf.ReadTupleFloat(section, "size", 0, STG_DEFAULT_WINDOW_WIDTH);
   int window_height = 
-    (int)wf.ReadTupleFloat(section, "window_size", 1, STG_DEFAULT_WINDOW_HEIGHT);
+    (int)wf.ReadTupleFloat(section, "size", 1, STG_DEFAULT_WINDOW_HEIGHT);
   
   double window_center_x = 
-    wf.ReadTupleFloat(section, "window_center", 0, 0.0 );
+    wf.ReadTupleFloat(section, "center", 0, 0.0 );
   double window_center_y = 
-    wf.ReadTupleFloat(section, "window_center", 1, 0.0 );
+    wf.ReadTupleFloat(section, "center", 1, 0.0 );
   
   double window_scale = 
-    wf.ReadFloat(section, "window_scale", 1.0 );
+    wf.ReadFloat(section, "scale", 1.0 );
   
   PRINT_DEBUG2( "window width %d height %d", window_width, window_height );
   PRINT_DEBUG2( "window center (%.2f,%.2f)", window_center_x, window_center_y );
@@ -59,14 +82,61 @@ void save_gui( gui_window_t* win )
   int width, height;
   gtk_window_get_size(  GTK_WINDOW(win->canvas->frame), &width, &height );
   
-  wf.WriteTupleFloat( win->wf_section, "window_size", 0, width );
-  wf.WriteTupleFloat( win->wf_section, "window_size", 1, height );
+  wf.WriteTupleFloat( win->wf_section, "size", 0, width );
+  wf.WriteTupleFloat( win->wf_section, "size", 1, height );
 
-  wf.WriteTupleFloat( win->wf_section, "window_center", 0, win->canvas->ox );
-  wf.WriteTupleFloat( win->wf_section, "window_center", 1, win->canvas->oy );
+  wf.WriteTupleFloat( win->wf_section, "center", 0, win->canvas->ox );
+  wf.WriteTupleFloat( win->wf_section, "center", 1, win->canvas->oy );
 
-  wf.WriteFloat( win->wf_section, "window_scale", win->canvas->sx );
+  wf.WriteFloat( win->wf_section, "scale", win->canvas->sx );
 }
+
+
+/** @addtogroup worldfile */
+/** @{ */
+/** @defgroup worldfilemodel Model (basic object)
+
+@par Summary and default values
+@verbatim
+model
+(
+  pose [0 0 0]
+  size [0 0]
+  origin [0 0 0]
+  velocity [0 0 0]
+
+  color "red"
+
+  # how do I show up in sensors?
+  obstacle_return 1
+  laser_return 1
+  ranger_return 1
+  blobfinder_return 1
+  fiducial_return 1
+
+  # body shape
+  line_count 4
+  line[0][? ? ? ?]
+  line[1][? ? ? ?]
+  line[2][? ? ? ?]
+  line[3][? ? ? ?]
+  line[4][? ? ? ?]
+
+ # GUI properties
+ gui_nose 0
+ gui_grid 0
+ gui_boundary 0
+ gui_movemask ?
+
+ bitmap ""
+ bitmap_resolution 0
+)
+@endverbatim
+
+@par Properties
+
+*/
+/** @} */
 
 void configure_model( stg_model_t* mod, int section )
 {
@@ -228,14 +298,35 @@ void configure_model( stg_model_t* mod, int section )
 
 /** @addtogroup worldfile */
 /** @{ */
-/** @defgroup worldfilelaser Laser model properties
- - samples
- - range_min
- - range_max
- - fov
+/** @defgroup worldfilelaser Laser
+
+@par Summary and default values
+@verbatim
+laser
+(
+  # laser properties
+  samples 180
+  range_min 0.0
+  range_max 8.0
+  fov 180.0
+
+  # model properties
+  size [0.1 0.1]
+  color "blue"
+)
+@endverbatim
+
+@par Properties
+- samples int
+  - the number of laser samples per scan
+- range_min float
+  -  the minimum range reported by the scanner, in meters. The scanner will detect objects closer than this, but report their range as the minimum.
+- range_max float
+  - the maximum range reported by the scanner, in meters. The scanner will not detect objects beyond this range.
+- fov float
+  - the angular field of view of the scanner, in degrees. 
 */
 /** @} */
-
 
 void configure_laser( stg_model_t* mod, int section )
 {
@@ -256,11 +347,33 @@ void configure_laser( stg_model_t* mod, int section )
 
 /** @addtogroup worldfile */
 /** @{ */
-/** @defgroup worldfilefiducial Fiducial model properties
- - range_min
- - range_max_anon
- - range_max_id
- - fov
+/** @defgroup worldfilefiducial FiducialFinder
+
+@par Summary and default values
+@verbatim
+fiducialfinder
+(
+  # fiducialfinder properties
+  range_min 0.0
+  range_max 8.0
+  range_max_id 5.0
+  fov 180.0
+
+  # model properties
+  size [0 0]
+)
+@endverbatim
+
+@par Properties
+- range_min float
+  - the minimum range reported by the sensor, in meters. The sensor will detect objects closer than this, but report their range as the minimum.
+- range_max float
+  - the maximum range at which the sensor can detect a fiducial, in meters. The sensor may not be able to uinquely identify the fiducial, depending on the value of range_max_id.
+- range_max_id float
+  - the maximum range at which the sensor can detect the ID of a fiducial, in meters.
+- fov float
+  - the angular field of view of the scanner, in degrees. 
+
 */
 /** @} */
 
@@ -285,10 +398,38 @@ void configure_fiducial( stg_model_t* mod, int section )
 
 /** @addtogroup worldfile */
 /** @{ */
-/** @defgroup worldfileblobfinder Blobfinder model properties
- - channel_count
- - image [xdim_pixels ydim_pixels]
- - ptz [pan_angle tilt_angle zoom_angle] 
+/** @defgroup worldfileblobfinder BlobFinder
+@par Summary and default values
+@verbatim
+blobfinder
+(
+  # blobfinder properties
+  channel_count 1
+  channels ["red"]
+  range_max 8.0
+  ptz[0 0 60.0]
+  image[?? ??]
+
+  # model properties
+  size [0 0]
+)
+@endverbatim
+
+@par Properties
+- channel_count int
+  - number of channels; i.e. the number of discrete colors detected
+- channels [ string ... ]
+  - define the colors detected in each channel, using color names from the X11 database 
+   (rgb.txt). The number of strings should match channel_counnt.
+- image [int int]
+  - [width height]
+  - dimensions of the image in pixels. This determines the blobfinder's 
+    resolution
+- ptz [float float float]
+   - [pan_angle tilt_angle zoom_angle] 
+   - control the panning, tilt and zoom angle (fov) of the blobfinder. Tilt angle currently has no effect.
+- range_max float
+   - maximum range of the sensor in meters.
 */
 /** @} */
 
@@ -327,11 +468,58 @@ void configure_blobfinder( stg_model_t* mod, int section )
 
 /** @addtogroup worldfile */
 /** @{ */
-/** @defgroup worldfileranger Ranger model properties
- - ranger.count int (number of transducers)
- - ranger.pose[\<transducer number\>] [x y theta]
- - ranger.size[\<transducer number\>] [x y]
- - ranger.view[\<transducer number\>] [range_min range_max fov]
+/** @defgroup worldfileranger Ranger
+
+@par Summary and default values
+@verbatim
+ranger
+(
+  # ranger properties
+  scount 16
+  spose[0] [? ? ?]
+  spose[1] [? ? ?]
+  spose[2] [? ? ?]
+  spose[3] [? ? ?]
+  spose[4] [? ? ?]
+  spose[5] [? ? ?]
+  spose[6] [? ? ?]
+  spose[7] [? ? ?]
+  spose[8] [? ? ?]
+  spose[9] [? ? ?]
+  spose[10] [? ? ?]
+  spose[11] [? ? ?]
+  spose[12] [? ? ?]
+  spose[13] [? ? ?]
+  spose[14] [? ? ?]
+  spose[15] [? ? ?]
+   
+  ssize [0.01 0.03]
+  sview [? ? ?]
+
+  # model properties
+)
+@endverbatim
+
+@par Notes
+
+The ranger model allows configuration of the pose, size and view parameters of each transducer seperately (using spose[index], ssize[index] and sview[index]). However, most users will set a common size and view (using ssize and sview), and just specify individual transducer poses.
+
+@par Properties
+- scount int 
+  - the number of range transducers
+- spose[\<transducer index\>] [float float float]
+  - [x y theta] 
+  - pose of the transducer relative to its parent.
+- ssize [float float]
+  - [x y] 
+  - size in meters. Has no effect on the data, but controls how the sensor looks in the Stage window.
+- ssize[\<transducer index\>] [float float]
+  - per-transducer version of the ssize property. Overrides the common setting.
+- sview [float float float]
+   - [range_min range_max fov] 
+   - minimum range and maximum range in meters, field of view angle in degrees. Currently fov has no effect on the sensor model, other than being shown in the confgiuration graphic for the ranger device.
+- sview[\<transducer index\>] [float float float]
+  - per-transducer version of the sview property. Overrides the common setting.
 */
 /** @} */
 
@@ -347,7 +535,26 @@ void configure_ranger( stg_model_t* mod, int section )
       stg_ranger_config_t* configs = (stg_ranger_config_t*)
 	calloc( sizeof(stg_ranger_config_t), scount );
       
+      stg_size_t common_size;
+      common_size.x = wf.ReadTupleLength(section, "ssize", 0, 0.01 );
+      common_size.y = wf.ReadTupleLength(section, "ssize", 1, 0.03 );
+      
+      double common_min = wf.ReadTupleLength(section, "sview", 0, 0.0);
+      double common_max = wf.ReadTupleLength(section, "sview", 1, 5.0);
+      double common_fov = wf.ReadTupleAngle(section, "sview", 2, 5.0);
+
+      // set all transducers with the common settings
       int i;
+      for(i = 0; i < scount; i++)
+	{
+	  configs[i].size.x = common_size.x;
+	  configs[i].size.y = common_size.y;
+	  configs[i].bounds_range.min = common_min;
+	  configs[i].bounds_range.max = common_max;
+	  configs[i].fov = common_fov;
+	}
+
+      // allow individual configuration of transducers
       for(i = 0; i < scount; i++)
 	{
 	  snprintf(key, sizeof(key), "spose[%d]", i);
@@ -378,8 +585,21 @@ void configure_ranger( stg_model_t* mod, int section )
 
 /** @addtogroup worldfile */
 /** @{ */
-/** @defgroup worldfileposition Position model properties
- - none
+/** @defgroup worldfileposition Position
+@par Summary and default values
+@verbatim
+position
+(
+  # position properties
+  drive "diff"
+
+  # model properties
+)
+@endverbatim
+
+@par Properties
+- drive "diff" or "omni"
+  - select differential-steer mode (like a Pioneer) or omnidirectional mode.
 */
 /** @} */
 
@@ -494,7 +714,7 @@ stg_world_t* stg_world_create_from_file( char* worldfile_path )
   // Iterate through sections and create client-side models
   for (int section = 1; section < wf.GetEntityCount(); section++)
     {
-      if( strcmp( wf.GetEntityType(section), "gui") == 0 )
+      if( strcmp( wf.GetEntityType(section), "window") == 0 )
 	{
 	  configure_gui( world->win, section ); 
 	}
@@ -561,37 +781,48 @@ stg_world_t* stg_world_create_from_file( char* worldfile_path )
 	  
 	  //PRINT_WARN2( "loading model name %s for type %s", namebuf, typestr );
 	  
+	  
 	  PRINT_DEBUG2( "creating model from section %d parent section %d",
 			section, parent_section );
 	  
-	  stg_model_t* mod = 
-	    //stg_world_createmodel( world, parent, section, type, namestr );
-	    stg_world_model_create( world, section, parent_section, type, namestr );
-	  
-	  // load all the generic specs from this section.
-	  configure_model( mod, section );
-	  
+	  stg_model_t* mod = NULL;
 	  
 	  // load type-specific configs from this section
 	  switch( type )
 	    {
+	    case STG_MODEL_BASIC:
+	      mod = stg_world_model_create( world, section, parent_section, type, &model_entry, namestr );
+	      configure_model( mod, section );	  
+	      configure_laser( mod, section );
+	      break;
+
 	    case STG_MODEL_LASER:
+	      mod = stg_world_model_create( world, section, parent_section, type, &laser_entry, namestr );
+	      configure_model( mod, section );	  
 	      configure_laser( mod, section );
 	      break;
 	      
 	    case STG_MODEL_RANGER:
+	      mod = stg_world_model_create( world, section, parent_section, type, &ranger_entry, namestr );
+	      configure_model( mod, section );	  
 	      configure_ranger( mod, section );
 	      break;
 	      
 	    case STG_MODEL_BLOB:
+	      mod = stg_world_model_create( world, section, parent_section, type, &blobfinder_entry, namestr );
+	      configure_model( mod, section );	  
 	      configure_blobfinder( mod, section );
 	      break;
 	      
 	    case STG_MODEL_FIDUCIAL:
+	      mod = stg_world_model_create( world, section, parent_section, type, &fiducial_entry, namestr );
+	      configure_model( mod, section );	  
 	      configure_fiducial( mod, section );
 	      break;
 	      
 	    case STG_MODEL_POSITION:
+	      mod = stg_world_model_create( world, section, parent_section, type, &position_entry, namestr );
+	      configure_model( mod, section );	  
 	      configure_position( mod, section );
 	      break;
 	      

@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.20 2004-09-30 02:26:38 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.21 2004-10-01 02:03:49 rtv Exp $
  */
 
 #include <math.h>
@@ -477,16 +477,16 @@ void blobfinder_render_config( stg_model_t* mod )
 }
 
 
-int register_blobfinder( lib_entry_t* lib )
-{ 
-  assert(lib);
-  
-  lib[STG_MODEL_BLOB].init = blobfinder_init;
-  lib[STG_MODEL_BLOB].update = blobfinder_update;
-  lib[STG_MODEL_BLOB].startup = blobfinder_startup;
-  lib[STG_MODEL_BLOB].shutdown = blobfinder_shutdown;
-  lib[STG_MODEL_BLOB].set_config = blobfinder_set_config;
-  lib[STG_MODEL_BLOB].set_data = blobfinder_set_data;
+stg_lib_entry_t blobfinder_entry = { 
+  blobfinder_init,     // init
+  blobfinder_startup,  // startup
+  blobfinder_shutdown, // shutdown
+  blobfinder_update,   // update
+  blobfinder_set_data,     // set data
+  NULL,              // get data
+  NULL,              // set command
+  NULL,              // get command
+  blobfinder_set_config,   // set config
+  NULL               // get config
+};
 
-  return 0; //ok
-} 

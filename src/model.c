@@ -38,10 +38,11 @@ int stg_model_create_name( stg_model_t* mod )
 }
 
 stg_model_t* stg_model_create( stg_world_t* world, 
-			stg_model_t* parent,
-			stg_id_t id, 
-			stg_model_type_t type,
-			char* token )
+			       stg_model_t* parent,
+			       stg_id_t id, 
+			       stg_model_type_t type,
+			       stg_lib_entry_t* lib,       
+			       char* token )
 {  
   stg_model_t* mod = calloc( sizeof(stg_model_t),1 );
 
@@ -50,6 +51,7 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->world = world;
   mod->parent = parent; 
   mod->type = type;
+  mod->lib = lib;
   mod->token = strdup(token); // this will be immediately replaced by
 			      // model_create_name  
   // create a default name for the model that's derived from its
@@ -152,10 +154,10 @@ stg_model_t* stg_model_create( stg_world_t* world,
 		
   // initialize odometry
   memset( &mod->odom, 0, sizeof(mod->odom));
-
-  // if this type of model has an init function, call it.
-  if( world->library[ mod->type ].init )
-    world->library[ mod->type ].init(mod);
+  
+  // if model has an init function, call it.
+  if( mod->lib->init )
+    mod->lib->init(mod);
   
   PRINT_DEBUG4( "finished model %d.%d(%s) type %s", 
 		mod->world->id, mod->id, 
@@ -233,21 +235,6 @@ int stg_model_is_related( stg_model_t* mod1, stg_model_t* mod2 )
   // now seek mod2 below t
   return stg_model_is_descendent( t, mod2 );
 }
-
-/* rtk_fig_t* model_prop_fig_create( stg_model_t* mod,  */
-/* 				  rtk_fig_t* array[], */
-/* 				  stg_id_t propid,  */
-/* 				  rtk_fig_t* parent, */
-/* 				  int layer ) */
-/* { */
-/*   rtk_fig_t* fig =  rtk_fig_create( mod->world->win->canvas,  */
-/* 				    parent,  */
-/* 				    layer );  */
-/*   array[propid] = fig; */
-  
-/*   return fig; */
-/* } */
-
 
 void  stg_model_global_pose( stg_model_t* mod, stg_pose_t* gpose )
 { 
@@ -354,8 +341,8 @@ int stg_model_update( stg_model_t* mod )
   mod->interval_elapsed = 0;
 
   // if this type of model has an update function, call it.
-  if( mod->world->library[ mod->type ].update )
-    mod->world->library[ mod->type ].update(mod);
+  if( mod->lib->update )
+    mod->lib->update(mod);
   
   // now move the model if it has any velocity
   stg_model_update_pose( mod );
@@ -368,26 +355,13 @@ void model_update_cb( gpointer key, gpointer value, gpointer user )
   stg_model_update( (stg_model_t*)value );
 }
 
-/*
-int model_service( stg_model_t* mod )
-{
-  PRINT_DEBUG1( "default service method mod %d", mod->id );
-
-  // if this type of model has an service function, call it.
-  if(mod->world->library[ mod->type ].service )
-   mod->world->library[ mod->type ].service(mod);
-
-  return 0;
-}
-*/
-
 int stg_model_startup( stg_model_t* mod )
 {
   PRINT_DEBUG1( "default startup method mod %d", mod->id );
   
   // if this type of model has a startup function, call it.
-  if(mod->world->library[ mod->type ].startup )
-   return mod->world->library[ mod->type ].startup(mod);
+  if(mod->lib->startup )
+   return mod->lib->startup(mod);
   
   return 0;
 }
@@ -397,8 +371,8 @@ int stg_model_shutdown( stg_model_t* mod )
   PRINT_DEBUG1( "default shutdown method mod %d", mod->id );
   
   // if this type of model has a shutdown function, call it.
-  if(mod->world->library[ mod->type ].shutdown )
-    return mod->world->library[ mod->type ].shutdown(mod);
+  if(mod->lib->shutdown )
+    return mod->lib->shutdown(mod);
   
   return 0;
 }
@@ -438,3 +412,16 @@ void model_print_cb( gpointer key, gpointer value, gpointer user )
   stg_model_print( (stg_model_t*)value );
 }
 
+
+stg_lib_entry_t model_entry = { 
+  NULL,  // init
+  NULL,  // startup
+  NULL,  // shutdown
+  NULL,  // update
+  NULL,  // set data
+  NULL,  // get data
+  NULL,  // set command
+  NULL,  // get command
+  NULL,  // set config
+  NULL   // get config
+};

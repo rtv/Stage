@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.49 $
+//  $Revision: 1.50 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -17,9 +17,6 @@
  
 The laser model simulates a scanning laser rangefinder
 
-@par Worldfile Properties
-
-some properties here
 
 */
 /** @} */
@@ -340,16 +337,15 @@ int laser_shutdown( stg_model_t* mod )
   return 0; // ok
 }
 
-
-int register_laser( lib_entry_t* lib )
-{ 
-  assert(lib);
-  
-  lib[STG_MODEL_LASER].init = laser_init;
-  lib[STG_MODEL_LASER].update = laser_update;
-  lib[STG_MODEL_LASER].shutdown = laser_shutdown;
-  lib[STG_MODEL_LASER].set_config = laser_set_config;
-  lib[STG_MODEL_LASER].set_data = laser_set_data;
-
-  return 0; //ok
-} 
+stg_lib_entry_t laser_entry = { 
+  laser_init,        // init
+  NULL,              // startup
+  laser_shutdown,    // shutdown
+  laser_update,      // update
+  laser_set_data,    // set data
+  NULL,              // get data
+  NULL,              // set command
+  NULL,              // get command
+  laser_set_config,  // set config
+  NULL               // get config
+};

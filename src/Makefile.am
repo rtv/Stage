@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.69 2004-09-28 05:28:29 rtv Exp $
+# $Id: Makefile.am,v 1.70 2004-10-01 02:03:48 rtv Exp $
 
 # we don't need these right now, but I'll keep this commented out just
 # in case.  
@@ -24,7 +24,6 @@ libstage_la_SOURCES = \
 	gui.c \
 	gui.h \
 	gui_menus.c \
-	library.c \
 	matrix.c \
 	matrix.h \
 	model.c \

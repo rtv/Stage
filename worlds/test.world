@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.22 2004-09-30 02:26:38 rtv Exp $
+# CVS: $Id: test.world,v 1.23 2004-10-01 02:03:59 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -22,7 +22,7 @@ include "map.inc"
 
 # window_size doesn't work, thanks to broken rtk_canvas_size()
 #
-gui( window_size [ 700.000 686.000 ] window_center [0.240 -0.315] window_scale 0.039 )
+window( size [ 700.000 686.000 ] center [0.240 -0.315] scale 0.039 )
 
 map(
   #size [15.5 11.4]

@@ -6,6 +6,8 @@
 
 #include "stage.h"
 
+
+
 extern int _stg_quit; // quit flag is returned by stg_world_update()
 
 stg_world_t* stg_world_create( stg_id_t id, 
@@ -20,8 +22,8 @@ stg_world_t* stg_world_create( stg_id_t id,
   
   stg_world_t* world = calloc( sizeof(stg_world_t),1 );
   
-  world->library = stg_library_create();
-  assert(world->library);
+  //world->library = global_library; //stg_library_create();
+  //assert(world->library);
   world->id = id;
   world->token = strdup( token );
   world->models = g_hash_table_new_full( g_int_hash, g_int_equal,
@@ -180,10 +182,11 @@ stg_model_t* stg_world_get_model( stg_world_t* world, stg_id_t mid )
 //stg_model_t* world_model_create( stg_world_t* world, stg_createstg_model_t* cm )
 
 stg_model_t* stg_world_model_create( stg_world_t* world, 
-			     stg_id_t id, 
-			     stg_id_t parent_id, 
-			     stg_model_type_t type, 
-			     char* token )
+				     stg_id_t id, 
+				     stg_id_t parent_id, 
+				     stg_model_type_t type, 
+				     stg_lib_entry_t* lib,
+				     char* token )
 {
   stg_model_t* parent = g_hash_table_lookup( world->models, &parent_id );
   
@@ -193,8 +196,8 @@ stg_model_t* stg_world_model_create( stg_world_t* world,
   
   PRINT_DEBUG4( "creating model %d:%d (%s) parent %d", world->id, id, token, parent_id  );
   
-
-  stg_model_t* mod = stg_model_create( world, parent, id, type, token ); 
+  
+  stg_model_t* mod = stg_model_create( world, parent, id, type, lib, token ); 
   
   g_hash_table_replace( world->models, &mod->id, mod );
   g_hash_table_replace( world->models_by_name, mod->token, mod );

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.21 $
+//  $Revision: 1.22 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -317,15 +317,28 @@ void fiducial_render_config( stg_model_t* mod )
   	       mina, maxa );      
 }
 
-int register_fiducial( lib_entry_t* lib )
-{ 
-  assert(lib);
+/* int register_fiducial( lib_entry_t* lib ) */
+/* {  */
+/*   assert(lib); */
   
-  lib[STG_MODEL_FIDUCIAL].init = fiducial_init;
-  lib[STG_MODEL_FIDUCIAL].update = fiducial_update;
-  lib[STG_MODEL_FIDUCIAL].shutdown = fiducial_shutdown;
-  lib[STG_MODEL_FIDUCIAL].set_config = fiducial_set_config;
-  lib[STG_MODEL_FIDUCIAL].set_data = fiducial_set_data;
+/*   lib[STG_MODEL_FIDUCIAL].init = fiducial_init; */
+/*   lib[STG_MODEL_FIDUCIAL].update = fiducial_update; */
+/*   lib[STG_MODEL_FIDUCIAL].shutdown = fiducial_shutdown; */
+/*   lib[STG_MODEL_FIDUCIAL].set_config = fiducial_set_config; */
+/*   lib[STG_MODEL_FIDUCIAL].set_data = fiducial_set_data; */
 
-  return 0; //ok
-} 
+/*   return 0; //ok */
+/* }  */
+
+stg_lib_entry_t fiducial_entry = { 
+  fiducial_init,     // init
+  NULL,              // startup
+  fiducial_shutdown, // shutdown
+  fiducial_update,   // update
+  fiducial_set_data, // set data
+  NULL,              // get data
+  NULL,              // set command
+  NULL,              // get command
+  fiducial_set_config, // set config
+  NULL               // get config
+};

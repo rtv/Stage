@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.96 2004-09-28 05:28:43 rtv Exp $
+ * CVS: $Id: stage.h,v 1.97 2004-10-01 02:03:49 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -564,21 +564,13 @@ extern "C" {
     func_startup_t startup;
     func_shutdown_t shutdown;
     func_update_t update;
-
-    func_get_data_t get_data;
     func_set_data_t set_data;
+    func_get_data_t get_data;
     func_set_command_t set_command;
     func_get_command_t get_command;
     func_set_config_t set_config;
     func_get_config_t get_config;
-
-    //func_handle_message_t handle_message;
-
-    //func_service_t service;
-    //func_get_t get;
-    //func_set_t set;
-    //func_request_t request;
-  } lib_entry_t;
+  } stg_lib_entry_t;
 
   /// defines a simulated world
   typedef struct _stg_world
@@ -616,7 +608,7 @@ extern "C" {
    
     gboolean destroy;
 
-    lib_entry_t* library;
+    //stg_lib_entry_t** library;
 
     gui_window_t* win; // the gui window associated with this world
    
@@ -634,6 +626,7 @@ extern "C" {
     stg_world_t* world; // pointer to the world in which this model exists
     char* token; // automatically-generated unique ID string
     int type; // what kind of a model am I?
+    stg_lib_entry_t* lib; // these are the pointers to my specialized functions
 
     struct _stg_model *parent; // the model that owns this one, possibly NULL
 
@@ -816,10 +809,11 @@ stg_model_t* itl_first_matching( itl_t* itl,
 
   /// create a new model  
   stg_model_t*  stg_world_model_create( stg_world_t* world, 
-				    stg_id_t id, 
-				    stg_id_t parent_id, 
-				    stg_model_type_t type, 
-				    char* token );
+					stg_id_t id, 
+					stg_id_t parent_id, 
+					stg_model_type_t type, 
+					stg_lib_entry_t* lib,
+					char* token );
 
   /// get a model pointer from its ID
   stg_model_t* stg_world_get_model( stg_world_t* world, stg_id_t mid );
@@ -830,7 +824,13 @@ stg_model_t* itl_first_matching( itl_t* itl,
   // functions on stg_model_t structs
   //
 
-  stg_model_t* stg_model_create(  stg_world_t* world, stg_model_t* parent, stg_id_t id, stg_model_type_t type, char* token );
+  stg_model_t* stg_model_create(  stg_world_t* world,
+				  stg_model_t* parent, 
+				  stg_id_t id, 
+				  stg_model_type_t type,
+				  stg_lib_entry_t* lib, 
+				  char* token );
+
   void stg_model_destroy( stg_model_t* mod );
   void model_destroy_cb( gpointer mod );
   void stg_model_global_pose( stg_model_t* mod, stg_pose_t* pose );
@@ -914,8 +914,8 @@ stg_model_t* itl_first_matching( itl_t* itl,
   void stg_model_render_pose( stg_model_t* mod );
 
 
-  lib_entry_t* stg_library_create( void );
-  void stg_library_destroy( lib_entry_t* lib );
+  //lib_entry_t* stg_library_create( void );
+  //void stg_library_destroy( lib_entry_t* lib );
   /** These are the model's property types */
  
 
