@@ -26,13 +26,6 @@ const char* stg_property_string( stg_id_t id )
 {
   switch( id )
     {
-      //case STG_PROP_BOUNDARY: return "boundary";break;
-      //case STG_PROP_CHILDREN: return "children"; break;
-      //case STG_PROP_GRID: return "grid";break;
-      //case STG_PROP_LOSMSG: return "los_msg";break;
-      //case STG_PROP_LOSMSGCONSUME: return "los_msg_consume";break;
-      //case STG_PROP_MOVEMASK: return "movemask";break;
-      //case STG_PROP_NOSE: return "nose";break;
     case STG_PROP_BLINKENLIGHT: return "blinkenlight";break;
     case STG_PROP_BLOBCONFIG: return "blobconfig";break;
     case STG_PROP_BLOBDATA: return "blobdata";break;
@@ -81,6 +74,7 @@ const char* stg_event_string( stg_event_t event )
     case STG_EVENT_GET: return "get";
     case STG_EVENT_SET: return "set";
     default: 
+      break;
     }
 
   return "<unknown>"; 

@@ -70,4 +70,7 @@ stg_id_t server_world_create( server_t* server,
 			      struct _connection* con, 
 			      stg_createworld_t* cw );
 
+int server_world_destroy( server_t* server, stg_id_t id );
+
+
 #endif

@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.9 2004-06-27 23:59:03 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.10 2004-07-02 01:37:29 rtv Exp $
  */
 
 #include <math.h>
@@ -39,6 +39,8 @@ int model_blobfinder_config_set( model_t* mod, void* config, size_t len );
 int model_blobfinder_data_shutdown( model_t* mod );
 int model_blobfinder_data_service( model_t* mod );
 int model_blobfinder_data_set( model_t* mod, void* data, size_t len );
+void model_blobfinder_data_render( model_t* mod );
+void model_blobfinder_config_render( model_t* mod );
 
 void model_blobfinder_register(void)
 { 
@@ -176,7 +178,7 @@ int model_blobfinder_data_service( model_t* mod )
   // Note that the scan is taken *clockwise*
   // i'm scanning this as half-resolution for a significant speed-up
 
-  int num_blobs = 0;
+  //int num_blobs = 0;
   stg_color_t col;
 
   if( fig_debug ) rtk_fig_clear( fig_debug );

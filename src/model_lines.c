@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_lines.c,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -15,6 +15,7 @@
 
 #include "model.h"
 #include "gui.h"
+#include <math.h>
 
 void model_lines_init( model_t* mod );
 int model_lines_set( model_t* mod, void*data, size_t len );
@@ -107,7 +108,7 @@ void model_lines_render( model_t* mod )
 
   rtk_fig_color_rgb32( fig, model_color_get(mod) );
 
-  int count=0;
+  size_t count=0;
   stg_line_t* lines = model_lines_get(mod,&count);
 
   PRINT_DEBUG1( "rendering %d lines", count );

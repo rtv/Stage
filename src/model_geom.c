@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_geom.c,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -57,7 +57,7 @@ int model_geom_set( model_t* mod, void* data, size_t len )
   if( len != sizeof(stg_geom_t) )
     {
       PRINT_WARN2( "received wrong size pose (%d/%d)",
-		   len, sizeof(stg_pose_t) );
+		   (int)len, (int)sizeof(stg_pose_t) );
       return 1; // error
     }
   
@@ -67,7 +67,7 @@ int model_geom_set( model_t* mod, void* data, size_t len )
   // store the geom
   model_set_prop_generic( mod, STG_PROP_GEOM, geom, len );
 
-  int count=0;
+  size_t count=0;
   stg_line_t* lines = model_lines_get( mod, &count );
   
   // force the body lines to fit inside this new rectangle
@@ -88,8 +88,6 @@ int model_geom_set( model_t* mod, void* data, size_t len )
 void gui_model_geom( model_t* mod )
 {
   rtk_fig_t* fig = gui_model_figs(mod)->geom;
-  gui_window_t* win = mod->world->win;
-
   rtk_fig_clear( fig );
 
   rtk_fig_color_rgb32( fig, 0 );

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.20 $
+//  $Revision: 1.21 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -30,6 +30,9 @@ int model_laser_data_shutdown( model_t* mod );
 int model_laser_data_service( model_t* mod );
 int model_laser_data_set( model_t* mod, void* data, size_t len );
 void model_laser_return_init( model_t* mod );
+void model_laser_config_render( model_t* mod );
+void model_laser_data_render( model_t* mod );
+
 
 void model_laser_register(void)
 { 
@@ -190,19 +193,6 @@ int model_laser_data_service( model_t* mod )
   return 0; //ok
 }
 
-rtk_fig_t* model_prop_fig_create( model_t* mod, 
-				  rtk_fig_t* array[],
-				  stg_id_t propid, 
-				  rtk_fig_t* parent,
-				  int layer )
-{
-  rtk_fig_t* fig =  rtk_fig_create( mod->world->win->canvas, 
-				    parent, 
-				    layer ); 
-  array[propid] = fig;
-  
-  return fig;
-}
 
 int model_laser_data_set( model_t* mod, void* data, size_t len )
 {  
@@ -266,8 +256,6 @@ void model_laser_data_render( model_t* mod )
 
       double sample_incr = cfg->fov / cfg->samples;
       double bearing = cfg->geom.pose.a - cfg->fov/2.0;
-      stg_laser_sample_t* sample = NULL;
-      
       stg_point_t* points = calloc( sizeof(stg_point_t), cfg->samples + 1 );
 
       int s;

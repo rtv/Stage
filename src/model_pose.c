@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.10 $
+//  $Revision: 1.11 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -65,7 +65,7 @@ int model_pose_set( model_t* mod, void*data, size_t len )
   if( len != sizeof(stg_pose_t) )
     {
       PRINT_WARN2( "received wrong size pose (%d/%d)",
-		  len, sizeof(stg_pose_t) );
+		  (int)len, (int)sizeof(stg_pose_t) );
       return 1; // error
     }
   
@@ -103,7 +103,7 @@ model_t* model_test_collision( model_t* mod, double* hitx, double* hity )
   // raytrace along all our rectangles. expensive, but most vehicles
   // will just be a single rect, grippers 3 rects, etc. not too bad.
   
-  int count=0;
+  size_t count=0;
   stg_line_t* lines = model_lines_get(mod, &count);
 
   // no body? no collision
@@ -209,6 +209,8 @@ int model_pose_update( model_t* model )
     else // reset the old pose
       memcpy( pose, &oldpose, sizeof(oldpose) );
   }
+
+  return 0; // ok
 }
 
 void gui_model_pose( model_t* mod )

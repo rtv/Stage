@@ -1,45 +1,13 @@
+subdirs = bitmaps
 worldsdir = $(prefix)/share/stage/worlds
 
-worlds_DATA = everything.world			\
-	      hospital100.world			\
-              multi-bitmap.world		\
-              pherobot.world			\
-              puck.world			\
-              simple.world			\
-              table.world			\
+worlds_DATA = test.world                        \
               objects.inc			\
               pioneer.inc			\
-              beacons.inc			\
-              usc_pioneer.inc			\
-              cave.pnm.gz			\
-              hospital.pnm.gz			\
-              hospital_section.png		\
-              rink.pnm.gz			\
-              sal2.pnm.gz			\
-              table.pnm.gz			\
-	      mcl.world				\
-	      mcl.pnm.gz			\
-	      mcl_map.pnm.gz                    \
-              submarine.png
+              beacons.inc			
 
-EXTRA_DIST =  everything.world			\
-              hospital100.world			\
-              multi-bitmap.world		\
-              pherobot.world			\
-              puck.world			\
-              simple.world			\
-              table.world			\
+EXTRA_DIST =  test.world                        \
               objects.inc			\
               pioneer.inc			\
-              beacons.inc			\
-              usc_pioneer.inc			\
-              cave.pnm.gz			\
-              hospital.pnm.gz			\
-              hospital_section.png		\
-              rink.pnm.gz			\
-              sal2.pnm.gz			\
-              table.pnm.gz			\
-	      mcl.world				\
-	      mcl.pnm.gz			\
-	      mcl_map.pnm.gz                    \
-              submarine.png
+              beacons.inc			
+

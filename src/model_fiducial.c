@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.9 $
+//  $Revision: 1.10 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -26,6 +26,9 @@ int model_fiducial_data_shutdown( model_t* mod );
 int model_fiducial_data_service( model_t* mod );
 int model_fiducial_data_set( model_t* mod, void* data, size_t len );
 void model_fiducial_return_init( model_t* mod );
+void model_fiducial_data_render( model_t* mod );
+void model_fiducial_config_render( model_t* mod );
+
 
 void model_fiducial_register(void)
 { 

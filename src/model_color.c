@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_color.c,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -48,7 +48,7 @@ int model_color_set( model_t* mod, void*data, size_t len )
   if( len != sizeof(stg_color_t) )
     {
       PRINT_WARN2( "received wrong size color (%d/%d)",
-		  len, sizeof(stg_color_t) );
+		  (int)len, (int)sizeof(stg_color_t) );
       return 1; // error
     }
   

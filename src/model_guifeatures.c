@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_guifeatures.c,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -19,6 +19,9 @@
 int model_guifeatures_update( model_t* model );
 int model_guifeatures_set( model_t* mod, void* data, size_t len );
 void model_guifeatures_init( model_t* mod );
+void gui_model_features( model_t* mod );
+
+
 
 void model_guifeatures_register(void)
 { 
@@ -54,7 +57,7 @@ int model_guifeatures_set( model_t* mod, void* data, size_t len )
   if( len != sizeof(stg_guifeatures_t) )
     {
       PRINT_WARN2( "received wrong size guifeatures (%d/%d)",
-		   len, sizeof(stg_guifeatures_t) );
+		   (int)len, (int)sizeof(stg_guifeatures_t) );
       return 1; // error
     }
   

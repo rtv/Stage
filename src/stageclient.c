@@ -575,7 +575,7 @@ int stg_client_request_reply_fixed( stg_client_t* client,
   if( client->reply->len != reply_len )
     {
       PRINT_ERR2( "reply is unexpected size (%d/%d bytes)",
-		  client->reply->len, reply_len );
+		  (int)client->reply->len, (int)reply_len );
       return 1; // fail
     }
   
@@ -737,7 +737,7 @@ stg_package_t* stg_client_read_package( stg_client_t* cli,
 	  return NULL;
 	}
       
-      double sec = pkg->timestamp.tv_sec + (double)pkg->timestamp.tv_usec / 1e6; 
+      //double sec = pkg->timestamp.tv_sec + (double)pkg->timestamp.tv_usec / 1e6; 
       //printf( "package key:%d timestamp:%.3f len:%d\n",
       //      pkg->key, sec, pkg->payload_len );
       
@@ -1089,7 +1089,7 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 	}
       else
 	PRINT_WARN2( "Received malformed SAVE message (%d/%d bytes)",
-		    msg->payload_len, sizeof(stg_id_t) );
+		    (int)msg->payload_len, (int)sizeof(stg_id_t) );
       
       break;
       

@@ -1,7 +1,7 @@
 ****************************************************************************
 * README.stage  - Richard Vaughan - Stage-1.5       
 *                                                                          
-* $Id: README,v 1.9 2004-06-18 06:59:59 rtv Exp $    
+* $Id: README,v 1.10 2004-07-02 01:37:29 rtv Exp $    
 ****************************************************************************
 
 ** Release notes **
@@ -18,7 +18,34 @@ Help is available in several places:
   - from the web site you can access manuals, FAQ and mailing lists
 
 
+* WARNINGS FOR USERS OF PREVIOUS VERSIONS*
+
+This release of Stage is very different to previous releases. Many new
+features have been added but not all the old features have yet been
+implemented (e.g. grippers, pucks, position-control mode, placing
+models on top of each other). This version is very usable and solves
+some crucial problems with previous releases, so we decided it was
+about time to make a release, even with some things missing.
+
+Before deciding to upgrade your existing Stage installation you should
+check the docs and code to see if the features you use exist in this
+release. If you don't see it listed in the manual, chances are it's
+not here yet. Many of the missing features will be added over time if
+there is a need for them. If you miss something, you can submit a
+request on the P/S SourceForge pages.
+
+Also, the worldfile syntax has changed. You'll need to update your
+syntax by hand. Stage is much more configurable than it used to be.
+
+We recommend new users start with this release, unless they absolutely
+require a feature from a previous version and can't wait for it to
+show up here (or do the port themselves).
+
 Summary of new features:
+
++ Access to more Player goodness: previous versions did not permit the
+use of Player's meta-devices. Now you can compose your Player config
+file as you wish.
 
 + Dynamic creation, deletion and modification of worlds, robots,
 and environmental features.
@@ -64,10 +91,7 @@ greater time-cost in checking and setting matrix cells. This made
 ray-tracing very slow. To compensate, I implemented multi-resolution
 ray tracing, reducing the number of matrix lookups by a factor of a
 few hundred in typical use. The result is faster ray-tracing
-performance overall compared to previous versions. The moral of this
-story is to pay attention in your CS classes and optimize algorithms
-and data structures, not code!
-
+performance overall compared to previous versions.
 
 ** README ***
 
@@ -103,7 +127,7 @@ Stage is released under the GNU General Public License.
 Stage programs, images, examples, source code and documentation are
 copyright (c) the authors.
 
-These fine people worked on Stage:
+These authors have worked on Stage over the years:
 
 Richard Vaughan
 Andrew Howard
@@ -205,27 +229,39 @@ librtk.
 
 -- Running ---------------------------------------------------------------
 
-To run stage, first make sure the Player executable can be found in
-your path.
+To test the Stage you just built do:
 
-The syntax for running Stage is generally:
+$ src/stage
 
- stage [options] <worldfile>
+You should see the following output:
 
-e.g. from the top build directory, you can try
+* Stage-1.4.dev * [localhost:6600]  
+* Ready.
 
-$ src/stage worlds/everything.world
+Note that Stage doesn't do anything interesting until a client
+connects and requests simulation session. Player is a suitable client.
 
-The .world file specifies what stage must simulate. The command-line
-options are described in the manual, and can be listed by doing:
 
-$ stage --help
+-- Using Stage ----------------------------------------------------
 
--- Configuration file ----------------------------------------------------
+You must use a client program to access Stage, just as you must use a
+browser to access a web server, or a Player client to access
+Player. The latest releases of Player contain the stageclient driver
+that allows Player to be a Stage client. See the documentation for the
+stageclient driver.
 
-The user defines a world to simulate in Stage's configuration
-(*.world) file. The world file format is documented in the manual, but
-you can get the idea from looking at the examples.
+The stageclient driver uses the libStage C library that comes with
+Stage. You can use this library to write your own client quite
+simply. The libStage API will eventually be documented in the Stage
+manual. 
+
+-- Worldfiles ----------------------------------------------------
+
+The Stage client library libStage can create worlds based on a text
+decription called a "worldfile". This file is not loaded directly by
+Stage, as was the case in previous releases. The worldfile format is
+documented in the Stage manual, but you can get the idea from looking
+at the examples in the <stage>/worlds directory.
 
 --------------------------------------------------------------------------
 

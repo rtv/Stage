@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.14 $
+//  $Revision: 1.15 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -26,6 +26,8 @@ int model_ranger_data_shutdown( model_t* mod );
 int model_ranger_data_service( model_t* mod );
 int model_ranger_data_set( model_t* mod, void* data, size_t len );
 void model_ranger_return_init( model_t* mod );
+void model_ranger_data_render( model_t* mod );
+void model_ranger_config_render( model_t* mod );
 
 void model_ranger_register(void)
 { 
@@ -252,11 +254,6 @@ void model_ranger_config_render( model_t* mod )
 
 void model_ranger_data_render( model_t* mod )
 { 
-  gui_window_t* win = mod->world->win;
-  
-  //rtk_fig_t* fig = gui_model_figs(mod)->ranger_data;  
-  //if( fig ) rtk_fig_clear( fig );   
-
    rtk_fig_t* fig = mod->gui.propdata[STG_PROP_RANGERDATA];  
   
   if( fig  )

@@ -12,6 +12,7 @@
 
 extern lib_entry_t library[];
 
+
 void prop_free( stg_property_t* prop )
 {
   if( prop )
@@ -22,6 +23,10 @@ void prop_free( stg_property_t* prop )
     }
 }
 
+void prop_free_cb( gpointer gp )
+{
+  prop_free( (stg_property_t*)gp);
+}
 
 model_t* model_create(  world_t* world, 
 			stg_id_t id, 
@@ -37,7 +42,7 @@ model_t* model_create(  world_t* world,
   mod->world = world;
   
   // models store data in here, indexed by property id
-  mod->props = g_hash_table_new_full( g_int_hash, g_int_equal, NULL, prop_free );
+  mod->props = g_hash_table_new_full( g_int_hash, g_int_equal, NULL, prop_free_cb );
   
   gui_model_create( mod );
 
@@ -83,6 +88,21 @@ void pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )
   result->y = ty;
   result->a = ta;
 }
+
+rtk_fig_t* model_prop_fig_create( model_t* mod, 
+				  rtk_fig_t* array[],
+				  stg_id_t propid, 
+				  rtk_fig_t* parent,
+				  int layer )
+{
+  rtk_fig_t* fig =  rtk_fig_create( mod->world->win->canvas, 
+				    parent, 
+				    layer ); 
+  array[propid] = fig;
+  
+  return fig;
+}
+
 
 void model_global_pose( model_t* mod, stg_pose_t* pose )
 { 
@@ -142,7 +162,7 @@ void model_map( model_t* mod, gboolean render )
 {
   assert( mod );
   
-  int count=0;
+  size_t count=0;
   stg_line_t* lines = model_lines_get(mod, &count);
 
   // todo - speed this up by processing all points in a single function call
@@ -387,7 +407,7 @@ int model_set_prop( model_t* mod,
       PRINT_WARN3( "Ignoring attempt to set time for %d:%d(%s).", 	
 		   mod->world->id, mod->id, mod->token );
       
-      return;
+      return 0;
     }
   
   // else

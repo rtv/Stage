@@ -75,6 +75,8 @@ int model_set_prop( model_t* mod, stg_id_t propid, void* data, size_t len );
 int model_get_prop( model_t* model, stg_id_t propid, 
 		    void** data, size_t* size );
 
+void model_global_pose( model_t* mod, stg_pose_t* pose );
+
 int model_set_prop_generic( model_t* mod, stg_id_t propid, void* data, size_t len );
 stg_property_t* model_get_prop_generic( model_t* mod, stg_id_t propid );
 int model_remove_prop_generic( model_t* mod, stg_id_t propid );
@@ -129,5 +131,17 @@ void model_register_update( stg_id_t pid, func_update_t func );
 void model_register_service( stg_id_t pid, func_service_t func );
 void model_register_set( stg_id_t pid, func_set_t func );
 void model_register_get( stg_id_t pid, func_get_t func );
+
+stg_bool_t model_obstacle_get( model_t* model );
+
+void model_map( model_t* mod, gboolean render );
+
+
+rtk_fig_t* model_prop_fig_create( model_t* mod, 
+				  rtk_fig_t* array[],
+				  stg_id_t propid, 
+				  rtk_fig_t* parent,
+				  int layer );
+
 
 #endif

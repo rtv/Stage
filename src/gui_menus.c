@@ -231,7 +231,7 @@ void gui_menu_debug( rtk_menuitem_t *item )
   if(rtk_menuitem_ischecked( item ) )
     {
       fig_debug = rtk_fig_create(item->menu->canvas, NULL, STG_LAYER_DEBUG );
-      rtk_fig_color_rgb32( fig_debug, STG_DEBUG_COLOR );
+      rtk_fig_color_rgb32( fig_debug, stg_lookup_color(STG_DEBUG_COLOR) );
     }
   else if( fig_debug )
     { 
@@ -314,7 +314,7 @@ void gui_window_menus_create( gui_window_t* win )
 
   // create the VIEW menu items
   win->mitems[STG_MITEM_VIEW_OBJECT] = 
-    rtk_menuitem_create(win->menus[STG_MENU_VIEW], "Objects", 1);
+    rtk_menuitem_create(win->menus[STG_MENU_VIEW], "Models", 1);
 
   // create the VIEW sub-menus
   win->menus[STG_MENU_VIEW_DATA] = 

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -18,7 +18,7 @@
 
 #include "stage.h"
 #include "raytrace.h"
-
+#include "model.h"
 
 #include "gui.h"
 extern rtk_fig_t* fig_debug;
@@ -175,7 +175,7 @@ int model_energy_data_service( model_t* mod )
 	  if( him != mod )
 	    {
 	      stg_energy_config_t* hiscfg =  model_energy_config_get(him);
-	      stg_energy_data_t* hisdata =  model_energy_data_get(him);
+	      //stg_energy_data_t* hisdata =  model_energy_data_get(him);
 	      
 	      printf( "inspecting mod %d to see if he will give me juice\n",
 		      him->id );
