@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gpsdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.6.2.1 $
+//  $Revision: 1.6.2.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -35,7 +35,7 @@ CGpsDevice::CGpsDevice(CWorld *world, CEntity *parent )
   m_player_type = PLAYER_GPS_CODE;
   m_stage_type = GpsType;
 
-  m_interval = 0.05;
+  m_interval = 0.05; 
 }
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/omnipositiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -275,6 +275,9 @@ void COmniPositionDevice::DrawChassis(RtkUiDrawData *data)
   double px, py, pa;
   GetGlobalPose(px, py, pa);
 
+  // *** TESTING, REMOVE
+  data->set_line_style(2);
+  
   data->ellipse(px - m_size_x/2.0, py - m_size_x/2.0, 
                 px + m_size_x/2.0, py + m_size_x/2.0);
       
@@ -298,6 +301,8 @@ void COmniPositionDevice::DrawChassis(RtkUiDrawData *data)
     px = qx;
     py = qy;
   }
+
+  data->set_line_style(1);
 }
 
 #endif

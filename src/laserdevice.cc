@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.39.2.2 $
+//  $Revision: 1.39.2.3 $
 //
 // Usage:
 //  (empty)
@@ -92,6 +92,10 @@ bool CLaserDevice::Load(CWorldFile *worldfile, int section)
   this->min_res = worldfile->ReadAngle(0, "laser_min_res", this->min_res);
   this->min_res = worldfile->ReadAngle(section, "min_res", this->min_res);
 
+  // Maximum laser resolution
+  this->max_range = worldfile->ReadLength(0, "laser_max_range", this->max_range);
+  this->max_range = worldfile->ReadLength(section, "max_range", this->max_range);
+  
   // Laser scan rate (samples/sec)
   this->scan_rate = worldfile->ReadFloat(0, "laser_scan_rate", this->scan_rate);
   this->scan_rate = worldfile->ReadFloat(section, "scan_rate", this->scan_rate);
@@ -308,7 +312,6 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 	
 #ifdef INCLUDE_RTK
     // Update the gui data
-    //
     this->hit[this->hit_count][0] = ox + range * cos(pth);
     this->hit[this->hit_count][1] = oy + range * sin(pth);
     this->hit_count++;
@@ -329,16 +332,14 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 //
 void CLaserDevice::OnUiUpdate(RtkUiDrawData *event)
 {
-    // Draw our children
     CEntity::OnUiUpdate(event);
-    
-    // Draw ourself
+
     event->begin_section("global", "laser");
     
     if (event->draw_layer("", true))
         DrawTurret(event);
 
-    if (event->draw_layer("data", false))
+    if (event->draw_layer("data", false, 49))
     {
         if(Subscribed())
         {
@@ -392,12 +393,11 @@ void CLaserDevice::DrawTurret(RtkUiDrawData *event)
 //
 void CLaserDevice::DrawScan(RtkUiDrawData *event)
 {
-    #define SCAN_COLOR RTK_RGB(0, 0, 255)
+#define SCAN_COLOR RTK_RGB(0, 0, 255)
     
     event->set_color(SCAN_COLOR);
 
     // Get global pose
-    //
     double gx, gy, gth;
     GetGlobalPose(gx, gy, gth);
 
@@ -414,6 +414,15 @@ void CLaserDevice::DrawScan(RtkUiDrawData *event)
         qy = py;
     }
     event->line(qx, qy, gx, gy);
+
+    // HACK - just to generate animation
+    event->set_line_style(4);
+    for (int i = 0; i < this->hit_count; i++)
+    {
+        double px = this->hit[i][0];
+        double py = this->hit[i][1];
+        event->line(gx, gy, px, py);
+    }
 }
 
 #endif
