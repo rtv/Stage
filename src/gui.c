@@ -380,10 +380,6 @@ void gui_model_create( model_t* model )
   if( model->parent )
     parent_fig = model->parent->gui.top;
   
-
-  //gui_model_t* gmod = calloc( sizeof(gui_model_t),1 );
-  //g_hash_table_replace( win->guimods, &model->id, gmod );
-  
   gui_model_t* gmod = &model->gui;
   memset( gmod, 0, sizeof(gui_model_t) );
   
@@ -395,9 +391,6 @@ void gui_model_create( model_t* model )
   gmod->geom = 
     rtk_fig_create( model->world->win->canvas, parent_fig, STG_LAYER_GEOM );
 
-  //gmod->top = 
-  //rtk_fig_create( model->world->win->canvas, parent_fig, STG_LAYER_BODY );
-  
   gmod->top->userdata = model;
 
   rtk_fig_movemask( gmod->top, model->movemask );
@@ -409,8 +402,6 @@ void gui_model_create( model_t* model )
 gui_model_t* gui_model_figs( model_t* model )
 {
   return &model->gui;
-  //gui_window_t* win = model->world->win;
-  //return (gui_model_t*)g_hash_table_lookup( win->guimods, &model->id );
 }
 
 // draw a model from scratch

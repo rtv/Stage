@@ -43,7 +43,6 @@ model_t* model_create(  world_t* world,
   // models store data in here, indexed by property id
   mod->props = g_hash_table_new_full( g_int_hash, g_int_equal, NULL, prop_free );
   
-  
   mod->laser_return = LaserVisible;
   // a sensible default fiducial return value is the model's id
   mod->fiducial_return = mod->id;

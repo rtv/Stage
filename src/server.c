@@ -333,6 +333,7 @@ int server_poll( server_t* server )
 		      else
 			{
 			  error = 4; // shouldn't get this error at all
+			  free(pkg);
 			  break;
 			}
 		      

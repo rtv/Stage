@@ -121,9 +121,10 @@ int subscription_update( subscription_t* sub )
 	  //stg_fd_msg_write( sub->client->fd, msg );	  
 
 	  stg_buffer_append_msg( sub->client->outbuf, msg );
-	  free( msg );
 
 	  free( mp );
+
+	  stg_msg_destroy( msg );
 
 	  return 1; // we sent a message
 	}

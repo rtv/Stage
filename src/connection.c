@@ -111,6 +111,8 @@ ssize_t stg_connection_write_msg( connection_t* con,
 
   g_byte_array_free( buf, TRUE );
 
+  stg_msg_destroy(msg);
+
   return retval;
 }
 
