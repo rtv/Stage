@@ -21,7 +21,7 @@
  * Desc: Shared types, constants, etc
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: stage_types.hh,v 1.11 2002-12-10 00:34:52 rtv Exp $
+ * CVS: $Id: stage_types.hh,v 1.11.4.1 2003-01-31 01:39:33 rtv Exp $
  */
 
 #ifndef STAGE_TYPES_HH
@@ -38,43 +38,6 @@
 // get player's message structures
 #include "player.h" 
 
-///////////////////////////////////////////////////////////////////////////
-// CONSTANTS - please don't use #defines here!
-
-// this is the default port bound by Stage's server
-const int DEFAULT_POSE_PORT = 6601;
-
-// we usually use 1 or 2, so this should be plenty
-// TODO - make this dynamic
-const int MAX_POSE_CONNECTIONS = 100; 
-
-// this is the root filename for stage devices
-// this is appended with the user name and instance number
-// so in practice you get something like /tmp/stageIO.vaughan.0
-// currently only the zero instance is supported
-
-// this line causes the compiler to complain about multiple
-// definitions of IOFILENAME. why? - rtv 
-// const char* IOFILENAME = "/tmp/stageIO";
-// i'll stick to the macro...
-#define IOFILENAME "/tmp/stageIO"
-
-// the max size of an entity's worldfile token
-const size_t STAGE_TOKEN_MAX = 48;
-
-const size_t STAGE_WORLD_FILENAME_MAX = 512;
-
-///////////////////////////////////////////////////////////////////////////
-// Global variables
-
-// raising this causes Stage to exit the main loop and die nicely
-// exception throwing would be better style...
-extern bool quit;
-
-
-
-///////////////////////////////////////////////////////////////////////////
-// Useful stage types
 
 // ENTITY TYPE DEFINITIONS /////////////////////////////////////////////////////////
 
@@ -118,6 +81,23 @@ enum EntityProperty
   ENTITY_LAST_PROPERTY // this must be the final property - we use it
  // as a count of the number of properties.
 };
+
+/*
+ 
+  const int PROP_GENERIC = 1 << 16;
+  const int PROP_LASER = 2 << 16;
+  const int PROP_SONAR = 3 << 16;
+  const int PROP_ = 1 << 16;
+  const int PROP_LASER = 1 << 16;
+  const int PROP_LASER = 1 << 16;
+
+
+  PropLaserFov = PROP_LASER & 1
+  PropLaserRes = PROP_LASER & 2
+
+
+
+ */
 
 // (currently) static memory allocation for getting and setting properties
 //const int MAX_NUM_PROPERTIES = 30;
@@ -198,8 +178,7 @@ typedef struct Rect
 #define ARRAYSIZE(x) (int) (sizeof(x) / sizeof(x[0]))
 #endif
 
-// size of char arrays for hostnames
-#define HOSTNAME_SIZE 256
+
 #define MILLION 1000000L
 
 #ifndef M_PI

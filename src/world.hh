@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.22 2002-11-11 03:09:46 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.22.6.1 2003-01-31 01:39:33 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -71,25 +71,12 @@ class CWorld
 
   // the main world-model data structure
   public: CMatrix *matrix;
-  
-  // these do nothing in the base CWorld class, but are overridden in
-  // CServer to control access to shared memory
-  virtual bool LockByte( int offset );
-  virtual bool UnlockByte( int offset );
-
-  // TODO - this should move to the server
-  public: char m_device_dir[PATH_MAX]; //device  directory name 
-  
+    
   // Properties of the underlying matrix representation
   // for the world.
   // The resolution is specified in pixels-per-meter.
   public: double ppm;
 
-
-  // Object encapsulating world description file (null if there is no file)
-  public: CWorldFile* worldfile;
-
-  // access func
 
   // timing
   //bool m_realtime_mode;

@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.hh,v 1.4 2002-11-01 19:12:29 rtv Exp $
+// $Id: matrix.hh,v 1.4.6.1 2003-01-31 01:39:32 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -85,9 +85,6 @@ class CMatrix
   void	draw_line(int x1, int y1, int x2, int y2, CEntity* ent, bool add);
   void	draw_rect( const Rect& t, CEntity* ent, bool add );
   void	draw_circle(int x, int y, int r, CEntity* ent, bool add);
-  
-  CEntity** line_detect(int x1,int y1,int x2,int y2);
-  CEntity** rect_detect( const Rect& r);
   
   void	clear( void );
 
