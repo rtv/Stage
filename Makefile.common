@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.common,v 1.15 2001-09-26 02:37:43 gerkey Exp $ 
+# $Id: Makefile.common,v 1.16 2001-09-26 02:46:06 gerkey Exp $ 
 #
 
 # INSTALL PLAYER BEFORE BUILDING STAGE!
@@ -83,14 +83,10 @@ ZLIB_LIBS = -lz
 #     compat-egcs-c++-6.2-1.1.2.14
 #     compat-libstdc++-6.2-2.9.0.14
 #     compat-egcs-6.2-1.1.2.14
-CPP = g++
-#CPP = i386-glibc21-linux-g++
+CC = g++
 #CC = i386-glibc21-linux-g++
 # need this in order to link properly with X
 #OLDLIBS = -L/usr/i386-glibc21-linux/lib
-
-#CC = gcc
-#CC = i386-glibc21-linux-gcc
 
 ####################### DO NOT CHANGE BELOW HERE #############################
 PLAYER_INC = $(PLAYER_DIR)/include
