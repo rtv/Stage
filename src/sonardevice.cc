@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.27 2002-06-11 01:30:15 gerkey Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.28 2002-06-11 06:06:29 inspectorg Exp $
  */
 
 #include <math.h>
@@ -181,8 +181,8 @@ void CSonarDevice::UpdateConfig()
         geom.pose_count = htons(this->sonar_count);
         for (s = 0; s < this->sonar_count; s++)
         {
-          geom.poses[s][0] = htons((short) (this->sonars[s][0]));
-          geom.poses[s][1] = htons((short) (this->sonars[s][1]));
+          geom.poses[s][0] = htons((short) (this->sonars[s][0] * 1000));
+          geom.poses[s][1] = htons((short) (this->sonars[s][1] * 1000));
           geom.poses[s][2] = htons((short) (this->sonars[s][2] * 180 / M_PI));
         }
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &geom, sizeof(geom));
