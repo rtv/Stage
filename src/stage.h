@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.27 2004-04-22 07:03:20 rtv Exp $
+ * CVS: $Id: stage.h,v 1.28 2004-04-23 06:58:53 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -112,6 +112,7 @@ typedef enum
     STG_PROP_NEIGHBORBOUNDS, // range bounds of neighbor sensor
     STG_PROP_BLINKENLIGHT,  // light blinking rate
     STG_PROP_NOSE,
+    STG_PROP_GRID,
     STG_PROP_LOSMSG,
     STG_PROP_LOSMSGCONSUME,
     STG_PROP_MOVEMASK,

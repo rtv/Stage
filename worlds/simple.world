@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: simple.world,v 1.19 2004-04-23 05:03:53 rtv Exp $
+# CVS: $Id: simple.world,v 1.20 2004-04-23 06:58:53 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 #
@@ -10,14 +10,27 @@ include "pioneer.inc"
 
 
 
+
+
+
+
+
+
+
+
+
+
 #size [120 45]
 #bitmap "worlds/hospital.png"
 
-#size [20 20]
-#bitmap "worlds/autolab.png"
+size [20 20]
+bitmap "worlds/autolab.png"
 
-size [10 10]
-bitmap "worlds/cave.png"
+
+#size [10 10]
+
+# load a bitmapped environment from a file
+#bitmap "worlds/cave.png" 
 
 
   # GUI settings
@@ -29,8 +42,6 @@ bitmap "worlds/cave.png"
     #scale 0.021 # the size of each bitmap pixel in meters
   #)
 
-  # load a bitmapped environment from a file
-  #
 
   #file "cave.pnm.gz" 
   #resolution 0.02
@@ -44,7 +55,7 @@ bitmap "worlds/cave.png"
   (
     name "budgie"	
     size [2.0 1.0] 
-    pose [8.090 8.917 -13934.370]
+    pose [6.249 2.245 -22183.695]
     velocity [0 0 -20]
     nose 1
 
@@ -52,16 +63,16 @@ bitmap "worlds/cave.png"
     color "blue"
   )
 
-pioneer2dx( name "r0" size [ 0.6 0.4 ] pose [5.702 0.815 -50.498] )
-pioneer2dx( name "r1" size [ 0.6 0.4 ] pose [1.449 3.189 -20.084] )
-pioneer2dx( name "r2" size [ 0.6 0.4 ] pose [1.449 3.189 -20.084] )
-pioneer2dx( name "r3" size [ 0.6 0.4 ] pose [1.449 3.189 -20.084] )
-pioneer2dx( name "r4" size [ 0.6 0.4 ] pose [1.449 3.189 -20.084] )
-pioneer2dx( name "r5" size [ 0.6 0.4 ] pose [1.449 3.189 -20.084] )
-pioneer2dx( name "r6" size [ 0.6 0.4 ] pose [1.449 3.189 -20.084] )
-pioneer2dx( name "r7" size [ 0.6 0.4 ] pose [1.449 3.189 -20.084] )
-pioneer2dx( name "r8" size [ 0.6 0.4 ] pose [1.449 3.189 -20.084] )
-pioneer2dx( name "r9" size [ 0.6 0.4 ] pose [1.449 3.189 -20.084] )
+pioneer2dx( name "r0" pose [8.478 6.238 242.408] velocity [ 0.2 0.02 5 ] )
+pioneer2dx( name "r1" pose [1.449 3.189 -20.084] )
+#pioneer2dx( name "r2" pose [1.449 3.189 -20.084] )
+#pioneer2dx( name "r3" pose [1.449 3.189 -20.084] )
+#pioneer2dx( name "r4" pose [1.449 3.189 -20.084] )
+#pioneer2dx( name "r5" pose [1.449 3.189 -20.084] )
+#pioneer2dx( name "r6" pose [1.449 3.189 -20.084] )
+#pioneer2dx( name "r7" pose [1.449 3.189 -20.084] )
+#pioneer2dx( name "r8" pose [1.449 3.189 -20.084] )
+#pioneer2dx( name "r9" pose [1.449 3.189 -20.084] )
 
 
-model( name "foo" pose [1.000 1.000 0.000] )
+#model( name "foo" pose [1.000 1.000 0.000] )

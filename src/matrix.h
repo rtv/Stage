@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.h,v 1.2 2004-04-05 03:00:26 rtv Exp $
+// $Id: matrix.h,v 1.3 2004-04-23 06:58:53 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -18,8 +18,9 @@ extern "C" {
   
 #include <glib.h>
   
-//#include "stage.h"
+#include "stage.h"
    
+
 typedef struct 
 {
   double ppm; // pixels per meter (1/resolution)
@@ -70,6 +71,10 @@ void stg_matrix_rectangle( stg_matrix_t* matrix,
 void stg_matrix_line( stg_matrix_t* matrix, 
 		      double x1, double y1, 
 		      double x2, double y2,
+		       void* object, int add );
+
+void stg_matrix_lines( stg_matrix_t* matrix, 
+		       stg_line_t* lines, int num_lines,
 		       void* object, int add );
 
 //void stg_matrix_circle( stg_matrix_t* matrix,

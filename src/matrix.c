@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.2 2004-04-05 03:00:26 rtv Exp $
+ * $Id: matrix.c,v 1.3 2004-04-23 06:58:53 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -307,6 +307,21 @@ void stg_matrix_line( stg_matrix_t* matrix,
 	     (int)(x1*matrix->ppm), (int)(y1*matrix->ppm),
 	     (int)(x2*matrix->ppm), (int)(y2*matrix->ppm),
 	     object, add );
+}
+
+
+void stg_matrix_lines( stg_matrix_t* matrix, 
+		       stg_line_t* lines, int num_lines,
+		       void* object, int add )
+{
+  int l;
+  for( l=0; l<num_lines; l++ )
+    {
+      draw_line( matrix, 
+		 (int)(lines[l].x1*matrix->ppm), (int)(lines[l].y1*matrix->ppm), 
+		 (int)(lines[l].x2*matrix->ppm), (int)(lines[l].y2*matrix->ppm), 
+		 object, add );
+    }
 }
 
 void stg_matrix_rectangle( stg_matrix_t* matrix, 

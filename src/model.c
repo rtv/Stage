@@ -166,6 +166,7 @@ void model_global_rect( stg_model_t* mod, stg_rotrect_t* glob, stg_rotrect_t* lo
 
 void model_map( stg_model_t* mod, gboolean render )
 {
+  // todo - speed this up by transforming all points in a single function call
   int l;
   for( l=0; l<mod->lines->len; l++ )
     {
@@ -272,6 +273,10 @@ int model_get_prop( stg_model_t* mod, stg_id_t pid, void** data, size_t* len )
     case STG_PROP_NOSE:
       *data = &mod->nose;
       *len = sizeof(mod->nose);
+      break;
+    case STG_PROP_GRID:
+      *data = &mod->grid;
+      *len = sizeof(mod->grid);
       break;
     case STG_PROP_MOVEMASK:
       *data = &mod->movemask;
@@ -425,6 +430,13 @@ int model_set_prop( stg_model_t* mod,
       if( len == sizeof(stg_bool_t) )
 	mod->nose = *(stg_bool_t*)data;
       else PRINT_WARN2( "ignoring bad nose data (%d/%d bytes)", 
+			(int)len, (int)sizeof(stg_bool_t) );
+      break;
+
+    case STG_PROP_GRID:
+      if( len == sizeof(stg_bool_t) )
+	mod->grid = *(stg_bool_t*)data;
+      else PRINT_WARN2( "ignoring bad grid data (%d/%d bytes)", 
 			(int)len, (int)sizeof(stg_bool_t) );
       break;
       

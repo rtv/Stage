@@ -12,6 +12,8 @@
 // models that have fewer rectangles than this get matrix rendered when dragged
 #define STG_LINE_THRESHOLD 40
 
+#define LASER_FILLED 1
+
 // single static application visible to all funcs in this file
 static rtk_app_t *app = NULL; 
 
@@ -372,7 +374,11 @@ void gui_model_create( stg_model_t* model )
   gmod->rangers = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_SENSOR );
   gmod->ranger_data = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_DATA);
   gmod->laser = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_SENSOR );
+#ifdef LASER_FILLED
+  gmod->laser_data = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_BACKGROUND);
+#else
   gmod->laser_data = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_DATA);
+#endif
   gmod->grid = NULL;
   
   gmod->top->userdata = model;
@@ -422,8 +428,8 @@ void gui_model_render( stg_model_t* model )
   if( win->show_laser ) 
     gui_model_laser( model );
 
-  //if( win->show_grid )
-  gui_model_grid( model );
+  if( win->show_grid && model->grid )
+    gui_model_grid( model );
 }
 
 void gui_model_destroy( stg_model_t* model )
@@ -573,7 +579,7 @@ void gui_model_laser_data( stg_model_t* mod )
 	  bearing += sample_incr;
 	}
 
-      rtk_fig_polygon( fig, 0,0,0, cfg->samples+1, points, 0 );      
+      rtk_fig_polygon( fig, 0,0,0, cfg->samples+1, points, LASER_FILLED );      
 
       free( points );
     }
@@ -712,6 +718,7 @@ void gui_model_update( stg_model_t* mod, stg_prop_type_t prop )
     case STG_PROP_ORIGIN: // could this one be faster?
     case STG_PROP_MOVEMASK:
     case STG_PROP_RANGERCONFIG:
+    case STG_PROP_GRID:
       gui_model_render( mod );
       gui_model_movemask( mod );
       break;

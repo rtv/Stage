@@ -327,9 +327,13 @@ int main( int argc, char* argv[] )
     }
 
   stg_bool_t boundary;
-  boundary = worldfile->ReadInt(0, "boundary", 1 );
+  boundary = worldfile->ReadInt(root, "boundary", 1 );
   sc_model_prop_with_data(root, STG_PROP_BOUNDARY, &boundary,sizeof(boundary));
- 
+
+  stg_bool_t grid;
+  grid = worldfile->ReadInt( root, "grid", 1 );
+  sc_model_prop_with_data( root, STG_PROP_GRID, &grid, sizeof(grid) );
+    
 
   // Iterate through sections and create client-side models
   for (int section = 1; section < worldfile->GetEntityCount(); section++)
@@ -358,6 +362,10 @@ int main( int argc, char* argv[] )
       stg_bool_t nose;
       nose = worldfile->ReadInt( section, "nose", 0 );
       sc_model_prop_with_data( mod, STG_PROP_NOSE, &nose, sizeof(nose) );
+
+      stg_bool_t grid;
+      grid = worldfile->ReadInt( section, "grid", 0 );
+      sc_model_prop_with_data( mod, STG_PROP_GRID, &grid, sizeof(grid) );
       
       stg_bool_t boundary;
       boundary = worldfile->ReadInt( section, "boundary", 0 );
@@ -457,7 +465,7 @@ int main( int argc, char* argv[] )
 
       stg_velocity_t vel;
       vel.x = worldfile->ReadTupleLength(section, "velocity", 0, 0);
-      vel.y = worldfile->ReadTupleLength(section, "velocit", 1, 0);
+      vel.y = worldfile->ReadTupleLength(section, "velocity", 1, 0);
       vel.a = worldfile->ReadTupleAngle(section, "velocity", 2, 0);      
       sc_model_prop_with_data( mod, STG_PROP_VELOCITY, &vel, sizeof(vel) );
 
@@ -478,7 +486,7 @@ int main( int argc, char* argv[] )
   if( mod )
     {
       sc_model_subscribe( client, mod, STG_PROP_RANGERDATA, 0.1 );
-      sc_model_subscribe( client, mod, STG_PROP_LASERDATA, 0.2 );
+      sc_model_subscribe( client, mod, STG_PROP_LASERDATA, 0.1 );
       sc_model_subscribe( client, mod, STG_PROP_POSE, 1.0 );
     }
   else

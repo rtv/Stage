@@ -26,6 +26,7 @@ typedef struct _stg_model
 
   // GUI features
   gboolean nose;
+  gboolean grid;
   stg_movemask_t movemask;
 
   struct _stg_model *parent;

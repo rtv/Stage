@@ -19,13 +19,13 @@
 #define STG_GENERIC_COLOR "black"
 #define STG_POSITION_COLOR "red"
 #define STG_LASER_COLOR "blue"
-#define STG_LASER_DATA_COLOR "powder blue"
+#define STG_LASER_DATA_COLOR "light blue"
 #define STG_WALL_COLOR "dark blue"
 #define STG_SONAR_COLOR "gray70"
 #define STG_FIDUCIAL_COLOR "goldenrod2"
 #define STG_RANGER_COLOR "gray90" 
 
-#define STG_LAYER_BACKGROUND 20
+#define STG_LAYER_BACKGROUND 10
 #define STG_LAYER_BODY 30
 #define STG_LAYER_DATA 60
 #define STG_LAYER_LIGHT 70
