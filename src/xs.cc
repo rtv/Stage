@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.24 2001-09-23 20:32:40 vaughan Exp $
+ * $Id: xs.cc,v 1.25 2001-09-25 18:20:18 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -51,10 +51,7 @@ Display* display = 0;
 int screen = 0;
 
 const char* versionStr = "0.3";
-const char* titleStr = "XS";
-
-//#define LABELS
-//typedef void (*callback_t)(truth_t*);
+const char* titleStr = "XS    ";
 
 #define USAGE  "\nUSAGE: xs [-h <host>] [-tp <port>] [-ep <port>]\n\t[-geometry <geometry string>] [-zoom <factor>]\n\t[-pan <X\%xY\%>]\nDESCRIPTIONS:\n-h <host>: connect to Stage on this host (default `localhost')\n-tp <port>: connect to Stage's Truth server on this TCP port (default `6601')\n-ep <port>: connect to Stage's Environment server on this TCP port (default `6602')\n-geometry <string>*: standard X geometry specification\n-zoom <factor>*: floating point zoom multiplier\n-pan <X\%xY\%>*: pan initial view X percent of maximum by Y percent of maximum\n"
 
@@ -809,7 +806,9 @@ CXGui::CXGui( int argc, char** argv, environment_t* anenv )
     magenta = col.pixel;
     XAllocNamedColor( display, default_cmap, "yellow", &col, &rcol ); 
     yellow = col.pixel;
-  
+    XAllocNamedColor( display, default_cmap, "dark grey", &col, &rcol ); 
+    grey = col.pixel;
+
     black = BlackPixel( display, screen );
     white = WhitePixel( display, screen );
    
@@ -1577,7 +1576,9 @@ void CXGui::HandleKeyPressEvent( XEvent& reportEvent )
 
   if( key == XK_q || key == XK_Q )
     {
+#ifdef VERBOSE
       cout << "QUIT" << endl;
+#endif
       exit( 0 );
     }
   
@@ -1686,35 +1687,23 @@ void CXGui::HandleKeyPressEvent( XEvent& reportEvent )
       //RefreshObjects();
     }
 
-//    if( key == XK_g || key == XK_G )
-//      {
+  // draw/undraw a 1m grid on the window
+  if( key == XK_g || key == XK_G )
+    {
+      SetDrawMode( GXxor );
+      XSetForeground( display, gc, grey );
+      XSetLineAttributes( display, gc, 0, LineOnOffDash, CapRound, JoinRound );
       
-//        XSetForeground( display, gc, white );
-//        XSetLineAttributes( display, gc, 0, LineOnOffDash, CapRound, JoinRound );
+      for( int i=0; i <= width; i += (int)ppm  )
+	{
+	  XDrawLine( display,win,gc, 0,i,width,i );
+	  XDrawLine( display,win,gc, i,0,i,height );
+	}
       
-//        DPoint pts[2];
-//        for( int i=0; i * ppm  < width ; i++ )
-//  	{
-//  	  pts[0].x = 0;
-//  	  pts[0].y = i;
-	  
-//  	  pts[1].x = width;
-//  	  pts[1].y = i; 
-	  
-//  	  DrawLine( pts[0], pts[1] );
-	  
-//  	  pts[0].y = 0;
-//  	  pts[0].x = i;
-	  
-//  	  pts[1].y = width;
-//  	  pts[1].x = i; 
-	  
-//  	  DrawLine( pts[0], pts[1] );
-//  	}
+      XSetLineAttributes( display, gc, 0, LineSolid, CapRound, JoinRound );
+      SetDrawMode( GXcopy );
+    }
   
-//        XSetLineAttributes( display, gc, 0, LineSolid, CapRound, JoinRound );
-//      }
-
 }  
 
 void CXGui::HandleExposeEvent( XEvent &reportEvent )

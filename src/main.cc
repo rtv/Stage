@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.14 $
+//  $Author: vaughan $
+//  $Revision: 1.15 $
 //
 // Usage:
 //  (empty)
@@ -45,6 +45,10 @@ CWorld *world = 0;
 bool global_no_gui = false;
 char global_node_name[64];
 
+// the parameters controlling stage's update frequency
+// and simulator timestep respectively (milliseconds)
+int g_interval = 50, g_timestep = 50;
+
 ///////////////////////////////////////////////////////////////////////////
 // Handle quit signals
 //
@@ -76,6 +80,19 @@ bool parse_cmdline(int argc, char **argv)
 	  global_no_gui = false;
 	  printf( "[GUI]" );
 	}
+      else if( strcmp( argv[a], "-u" ) == 0 )
+	{
+	  g_interval = (int)((1.0/atof(argv[a+1])) * 1000);
+	  printf( "[Update %s Hz]", argv[a+1] );
+	  a++;
+	}
+      else if( strcmp( argv[a], "-v" ) == 0 )
+	{
+	  g_timestep = (int)( g_interval * atof(argv[a+1]) );
+	  printf( "[Virtual time %.2f]", atof(argv[a+1]) );
+	  a++;
+	}
+      // arbitary node naming stuff
       //       else if( strcmp( argv[a], "-node" ) == 0 )
       //  	{
       //  	  strncpy( global_node_name, argv[a+1], 64 );
@@ -87,8 +104,23 @@ bool parse_cmdline(int argc, char **argv)
 
   if( usage )
     {
-      printf("\nUsage: stage [+/-xs] WORLDFILE\nOptions:\n"
-	     " +/-xs\tEnable the XS Graphical User Interface (xs must be in the $PATH)\n" );
+
+#ifdef INCLUDE_RTK
+      printf("\nUsage: rtkstage [options] WORLDFILE\n"
+	     "Options:\n"
+	     " +xs\t\tExec the XS Graphical User Interface\n"
+	     " -u <float>\tSet the update frequency in Hz. Default: 20\n"
+	     " -v <float>\tSet ratio of simulated to real time. Default: 1.0\n"
+	     );
+#else
+      printf("\nUsage: stage [options] WORLDFILE\n"
+	     "Options:\n"
+	     " -xs\t\tDon't start the XS Graphical User Interface\n"
+	     " -u <float>\tSet the update frequency in Hz. Default: 20.0\n"
+	     " -v <float>\tSet ratio of simulated to real time. Default: 1.0\n"
+	     );
+#endif
+
       return false;
     }
   
@@ -96,7 +128,6 @@ bool parse_cmdline(int argc, char **argv)
       // - it's the last argument
       world_file = argv[ argc-1 ];
       
-
     printf( "[%s]", world_file );
     return true;
 }
@@ -119,7 +150,7 @@ int main(int argc, char **argv)
   
     // Create the world
     //
-    world = new CWorld;
+    world = new CWorld();
     
     // Load the world
     // this may produce more startup output
@@ -133,33 +164,30 @@ int main(int argc, char **argv)
     //
     if (!world->Startup())
     {
-        printf("aborting\n");
-        // SUPER-HACK! the truthserver and envserver threads are not
-        // dying on their own and i can't be bothered to find out why.
-        // this is linux specific...  BPG
-        pthread_kill_other_threads_np();
-        world->Shutdown();
+        printf("Stage: aborting\n");
+	world->Shutdown();
         return 1;
     }
 
+
     // Register callback for quit (^C,^\) events
     //
-    signal(SIGINT, sig_quit);
-    signal(SIGQUIT, sig_quit);
-    signal(SIGHUP, sig_quit);
+      signal(SIGINT, sig_quit);
+      signal(SIGQUIT, sig_quit);
+      signal(SIGHUP, sig_quit);
 
-    // Wait for a signal
-    //
-    while (!quit)
-      pause();
+      // Wait for a signal
+      //
+      while (!quit)
+        pause();
 
-    // Stop the world
-    //
-    world->Shutdown();
+      // Stop the world
+      //
+      world->Shutdown();
 
-    // Destroy the world
-    //
-    delete world;
+      // Destroy the world
+      //
+      delete world;
 
     return 0;
 }

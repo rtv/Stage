@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.10 $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -197,8 +197,7 @@ void CPositionDevice::Update( double sim_time )
 
 int CPositionDevice::Move()
 {
-    double step_time = m_world->GetTime() - m_last_time;
-    m_last_time += step_time;
+  double step_time = m_world->m_timestep / 1000.0;
 
     // Get the current robot pose
     //

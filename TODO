@@ -1,17 +1,14 @@
 ####################################################################################
 # TODO 
-# $Id: TODO,v 1.9 2001-09-25 02:54:13 vaughan Exp $
+# $Id: TODO,v 1.10 2001-09-25 18:20:17 vaughan Exp $
 ####################################################################################
 
 ## IN PROGRESS #####################################################################
 
- - stage documentation
- - xs documentation
-
 ## URGENT ##########################################################################
 
- - Stage: sync issues when distributed 
- - LBD bug: IDs intermitently visible
+ - stage documentation
+ - xs documentation
 
 ## NICE ############################################################################
 
@@ -21,11 +18,21 @@
 
 ## FIXED/DONE ######################################################################
 
+RTV 9/23/01
+ - LBD bug: IDs intermitently visible
+   fixed a bug whereby the laser was keeping an old list of beacons
+   around when it was unsubscribed, meaning that beacon occlusion didn't
+   work properly. removed some buggy code that was probably meant to solve this
+   problem.
+ - after discussion, changed timing model in main loop to have fixed time
+   steps and real-time intervals. added configuration code to manage this.
+   this lets us vary the sim/real time ratio nicely and should make the 
+   sim more deterministic.
+ - fixed truth server bug.
+
 RTV 9/22/01
  - re-implemented signal-based timing in world's update loop, so it'll
    use as much processor as it needs to try to keep at 50Hz
-
-RTV 9/22/01
  - XS: hangs when creating a Player client for a non-existent Player  
  - Stage/XS: added support for distributed processing
  - added manager program for multiplexing truth servers

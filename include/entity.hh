@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.20 $
+//  $Revision: 1.21 $
 //
 // Usage:
 //  (empty)
@@ -212,7 +212,10 @@ public: void InheritDirtyFromParent( int con_count );
 
   // this is the name of the computer responsible for updating this object
 public: char m_hostname[ HOSTNAME_SIZE ];
-  
+
+// flag is true iff this entity is updated by this host
+public: bool m_local; 
+
     public: int SharedMemorySize( void );
 
     // Write to the data buffer

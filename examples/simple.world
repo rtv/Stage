@@ -1,12 +1,11 @@
 set environment_file = simple.pnm
 set pixels_per_meter =  100
 
-set host = robot
-
 create position_device pose 3.47 2.03 144 port 6665  
 {
   create player_device
   create sonar_device 
+  create misc_device
   create laser_device pose 0.08 0.00 0 
   {
      create lbd_device 	

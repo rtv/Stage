@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.31 $
+//  $Revision: 1.32 $
 //
 // Usage:
 //  (empty)
@@ -194,6 +194,9 @@ void CLaserDevice::Update( double sim_time )
             m_scan_max = DTOR(+90);
             m_scan_count = 361;
             m_intensity = false;
+
+	    // empty the laser beacon list
+	    m_visible_beacons.clear();
         }
     }
 }

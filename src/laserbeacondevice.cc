@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.15 $
+//  $Revision: 1.16 $
 //
 // Usage:
 //  (empty)
@@ -126,7 +126,7 @@ void CLBDDevice::Update( double sim_time )
   if(!Subscribed())
     return;
   
-  // if its time to recalculate gripper state
+  // if its time to recalculate 
   //
   if( sim_time - m_last_update < m_interval )
     return;
@@ -196,13 +196,20 @@ void CLBDDevice::Update( double sim_time )
         double b = NORMALIZE(atan2(dy, dx) - oth);
         double o = NORMALIZE(pth - oth);
 
+
+	// RTV took this out as it is redundant and doesn't work
+	// properly anyway. The laser scanner builds the list of
+	// beacons in the first place!  i fixed a bug that left the
+	// list full when the laser was unsubscribed, so occlusion is
+	// handled properly now.
+
         // See if it is in the laser scan
         //
-        int bi = (int) ((b - scan_min) / scan_res);
-        if (bi < 0 || bi >= laser.range_count)
-            continue;
-        if (r > (laser.ranges[bi] & 0x1FFF) / 1000.0 + tolerance)
-            continue;
+        //int bi = (int) ((b - scan_min) / scan_res);
+        //if (bi < 0 || bi >= laser.range_count)
+	//  continue;
+        //if (r > (laser.ranges[bi] & 0x1FFF) / 1000.0 + tolerance)
+	//  continue;
 
         // Now see if it is within detection range
         //

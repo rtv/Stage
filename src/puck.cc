@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.18 $
+//  $Revision: 1.19 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -115,7 +115,7 @@ bool CPuck::Save(int &argc, char **argv)
 bool CPuck::Startup()
 {
     assert(m_world != NULL);
-    m_last_time = 0;
+    
     m_com_vr = 0;
 
     return CEntity::Startup();
@@ -164,12 +164,10 @@ void CPuck::Update( double sim_time )
 // 
 void CPuck::Move()
 {
-    double step_time = m_world->GetTime() - m_last_time;
-    m_last_time += step_time;
+  double step_time = m_world->m_timestep / 1000.0;
 
     // don't move if we've been picked up
     if(m_parent_object) return;
-    
     
     // Get the current puck pose
     //

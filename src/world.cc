@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.49 $
+//  $Revision: 1.50 $
 //
 // Usage:
 //  (empty)
@@ -38,6 +38,7 @@
 #include <fcntl.h>
 #include <pwd.h>
 
+extern int g_interval, g_timestep; // from main.cc
 
 //#include <stage.h>
 #include "world.hh"
@@ -94,8 +95,9 @@ CWorld::CWorld()
     m_object_alloc = 0;
     m_object_count = 0;
 
-    m_real_timeslice_ms = 50; // 20Hz default
-    m_stage_timeslice_ms = m_real_timeslice_ms; // approx real-time default
+    // defaults at top of main.cc can be tweaked by command line
+    m_timer_interval = g_interval; 
+    m_timestep = g_timestep; 
 
 
     // Allow the simulation to run
@@ -118,7 +120,7 @@ CWorld::CWorld()
     if( (first_dot = strchr(m_hostname,'.') ))
       *first_dot = '\0';
     
-    printf( "[Host %s]", m_hostname );
+    //printf( "[Host %s]", m_hostname );
     
     // enable external services by default
     m_run_environment_server = true;
@@ -208,10 +210,7 @@ bool CWorld::InitSharedMemoryIO( void )
        << " (" << mem << ")" << endl;
 #endif
 
-  // HMMM, WE REALLY SHOULD THINK ABOUT ALLOWING STAGE TO RUN MORE
-  // THAN ONE COPY PER MACHINE! REQUIRES SOME INTELLIGENT PORT# HANDLING
-
-  // make a filename for mmapped IO from a base name and the user's name
+    // make a filename for mmapped IO from a base name and the user's name
   struct passwd* user_info = getpwuid( getuid() );
   sprintf( tmpName, "%s.%s", IOFILENAME, user_info->pw_name );
 
@@ -274,8 +273,7 @@ bool CWorld::Startup()
   //
   m_start_time = 0;
   m_start_time = GetRealTime();
-  m_last_time = 0;
-  
+    
   // Initialise the simulator clock
   //
   m_sim_time = 0;
@@ -285,7 +283,6 @@ bool CWorld::Startup()
   //
   m_update_ratio = 1;
   m_update_rate = 0;
-  
   
   // Initialise the message router
   //
@@ -304,12 +301,7 @@ bool CWorld::Startup()
       pthread_create(&tid_dummy, NULL, &EnvServer, (void *)NULL );  
     }
   
-  if( m_run_truth_server )
-    {
-      SetupTruthServer();
-      //pthread_t tid_dummy;
-      //pthread_create(&tid_dummy, NULL, &TruthServer, (void *)NULL );  
-    }
+  if( m_run_truth_server )  SetupTruthServer();
   
   // spawn an XS process, unless we disabled it (rtkstage disables xs by default)
   if( !global_no_gui && m_run_xs && m_run_truth_server && m_run_environment_server ) SpawnXS();
@@ -415,8 +407,9 @@ bool CWorld::Startup()
   // Start the world thread
   //
   if (!StartThread())  
-    return false;
+  return false;
   
+  //Main( this );
     
   return true;
 }
@@ -492,12 +485,10 @@ void* CWorld::Main(void *arg)
   double ui_time = 0;
 #endif
 
-  // set a timer to go off every 20ms. we'll sleep in
+  // set a timer to go off every few ms. we'll sleep in
   // between if there's nothing else to do
   // sleep will return (almost) immediately if the
-  // timer has already gone off. this should limit
-  // the refresh rate but still allows us to use the processor
-  // if we need it. i.e. it's better than a simple usleep()
+  // timer has already gone off. 
 
   //install signal handler for timing
   if( signal( SIGALRM, &TimerHandler ) == SIG_ERR )
@@ -506,11 +497,14 @@ void* CWorld::Main(void *arg)
       exit( -1 );
     }
     
-  //start timer
+  //start timer with chosen interval (specified in milliseconds)
   struct itimerval tick;
+  // seconds
   tick.it_value.tv_sec = tick.it_interval.tv_sec = 0;
-  //tick.it_value.tv_usec = tick.it_interval.tv_usec = 20000; // 0.02 seconds
-  tick.it_value.tv_usec = tick.it_interval.tv_usec = world->m_real_timeslice_ms * 1000; 
+  //    world->m_timer_interval / 1000;
+  // microseconds
+  tick.it_value.tv_usec = tick.it_interval.tv_usec = 
+    world->m_timer_interval * 1000; 
      
   if( setitimer( ITIMER_REAL, &tick, 0 ) == -1 )
     {
@@ -568,53 +562,49 @@ void CWorld::Update()
 {
   // this much simulated time has passed since the last update
   //
-  double timestep = m_stage_timeslice_ms / 1000.0;
+  double timestep = m_timestep / 1000.0;
   
   // Update the simulation time
   //
   m_sim_time += timestep;
-  m_last_time += timestep; // TODO: get rid of this! it's used in a couple of ents
   
 #ifdef WATCH_RATES
     // Keep track of the sim/real time ratio
     // This is done as a moving window filter so we can see
     // the change over time.
-    //
-
-  static double last_real_time;
+  //
   
-  double realtimestep = GetRealTime() - last_real_time;
-    
-
-    last_real_time += realtimestep;
-
-    double a = 0.05;
-    m_update_ratio = (1 - a) * m_update_ratio + a * ( timestep / realtimestep );
-    
-    // Keep track of the update rate
-    // This is done as a moving window filter so we can see
-    // the change over time.
-    // Note that we must use the *real* timestep to get sensible results.
-    //
-    m_update_rate = (1 - a) * m_update_rate + a * (1.0 / realtimestep);
-
-    static int period = 0;
-    if( (++period %= 20)  == 0 )
-      {
-	//printf( "Real: %4.0f Hz (%3.1f%%)\r", m_update_rate, (100.0 * m_update_ratio) );
-	printf( " %4.0f Hz (%2.1f)\r", m_update_rate,  m_update_ratio );
-	fflush( stdout );
-      }
+  static double last_real_time;
+  double real_timestep = GetRealTime() - last_real_time;
+  
+  
+  last_real_time += real_timestep;
+  
+  double a = 0.05;
+  m_update_ratio = (1 - a) * m_update_ratio + a * ( timestep / real_timestep );
+  
+  // Keep track of the update rate
+  // This is done as a moving window filter so we can see
+  // the change over time.
+  // Note that we must use the *real* timestep to get sensible results.
+  //
+  m_update_rate = (1 - a) * m_update_rate + a * (1.0 / real_timestep);
+  
+  static int period = 0;
+  if( (++period %= 20)  == 0 )
+    {
+      printf( " %4.0f Hz (%2.1f)\r", m_update_rate,  m_update_ratio );
+      fflush( stdout );
+    }
 #endif
-
-    // Do the actual work -- update the objects 
-    for (int i = 0; i < m_object_count; i++)
-      {
-	// if this host manages this object
-	// (should make a more efficient check here)
-	if( strcmp( m_hostname, m_object[i]->m_hostname ) == 0 )
-	    m_object[i]->Update( m_sim_time ); // update it 
-      }
+  
+  // Do the actual work -- update the objects 
+  for (int i = 0; i < m_object_count; i++)
+    {
+      // if this host manages this object
+      if( m_object[i]->m_local )
+	m_object[i]->Update( m_sim_time ); // update it 
+    }
 }
 
 

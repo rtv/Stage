@@ -24,7 +24,7 @@
 #include <unistd.h>
 
 //#define DEBUG
-#define VERBOSE
+//#define VERBOSE
 #undef DEBUG
 
 #include "world.hh"
