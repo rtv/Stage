@@ -11,7 +11,7 @@ RTKCPPFLAGS = -I@RTK_DIR@/include `gtk-config --cflags`
 endif
 
 
-AM_CPPFLAGS = 	-Wall -I$(top_srcdir)/src -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/server/drivers/stage  -I@PLAYER_DIR@/client_libs/libplayerpacket $(RTKCPPFLAGS)
+AM_CPPFLAGS = 	-Wall -I$(top_srcdir)/src -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/server/drivers/stage $(RTKCPPFLAGS)
 
 noinst_LIBRARIES = libstgmodels.a 
 
@@ -63,8 +63,3 @@ libstgmodels_a_SOURCES = \
 
 # currently broken
 # bpsdevice.cc 
-
-# REMOVE
-#                   positiondevice.cc \
-#                   positiondevice.hh \
-
