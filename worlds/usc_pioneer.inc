@@ -2,7 +2,7 @@
 # Desc: Device definitions for typical USC robot configurations
 # Author: Richard Vaughan, Andrew Howard
 # Date: 3 July 2002
-# CVS: $Id: usc_pioneer.inc,v 1.8 2002-11-09 02:32:34 rtv Exp $
+# CVS: $Id: usc_pioneer.inc,v 1.8.4.1 2004-11-11 19:27:25 gerkey Exp $
 
 # use the ActivMedia Pioneer definitions
 #
@@ -11,9 +11,6 @@ include "pioneer.inc"
 define usc_pioneer pioneer2dx
 (
   name "usc_pioneer"
-  # bps device disabled for now
-  #  bps()
-  broadcast()
   laser 
   (
     fiducialfinder() 

@@ -5,7 +5,7 @@
 # 
 # (PLAYER_DIR)/examples/c++/startmany.tcl pherobot 100
 #
-# CVS: $Id: pherobot.world,v 1.11 2002-11-01 19:12:32 rtv Exp $
+# CVS: $Id: pherobot.world,v 1.11.8.1 2004-11-11 19:27:25 gerkey Exp $
 
 
 resolution 0.02
@@ -32,7 +32,7 @@ define pherobot position
  shape "circle"
  size [0.12 0.12]
  
- idarturret() 
+ #idarturret() 
 
  # 2 almost semi-circular bumpers, left and right, overlapping
  # slightly in front with a dead spot behind

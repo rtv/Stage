@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/omnipositiondevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.2.2.1 $
+//  $Revision: 1.2.2.1.2.1 $
 //
 // Usage:
 //  (empty)
@@ -49,6 +49,7 @@ COmniPositionDevice::COmniPositionDevice(LibraryItem* libit,CWorld *world, CEnti
   this->sonar_return = true;
   this->obstacle_return = true;
   this->puck_return = true;
+  this->vision_return = true;
 
   // Set default shape and geometry
   this->shape = ShapeCircle;
