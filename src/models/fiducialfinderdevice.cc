@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/fiducialfinderdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.2.4.1 $
+//  $Author: rtv $
+//  $Revision: 1.2.4.2 $
 //
 // Usage: detects objects that were laser bright and had non-zero
 // ficucial_return
@@ -248,7 +248,32 @@ void CFiducialFinder::Update( double sim_time )
 
     // Record beacons
     //
-    assert(beacon.count < ARRAYSIZE(beacon.fiducials));
+    if( beacon.count >=  ARRAYSIZE(beacon.fiducials) )
+      {
+	static bool print_warning = true;
+
+	if( print_warning )
+	  {
+	    PRINT_WARN3( "FiducialFinder sees more beacons than will "
+			 "fit in the player_fiducial_data_t structure "
+			 "(%d beacons, space for %d records). The first "
+			 "%d beacons will be returned, the rest ignored.\n"
+			 "If you need to see more beacons, you can change "
+			 "the size of the beacons array "
+			 "(see player/server/player.h). Be wanred that "
+			 "This will break "
+			 "compatibility with P/S code compiled against "
+			 "the standard player.h. \n\nThis message will "
+			 "only appear once.", 
+			 beacon.count, 
+			 ARRAYSIZE(beacon.fiducials), 
+			 ARRAYSIZE(beacon.fiducials) );
+
+	    print_warning = false;
+	  }
+	beacon.count = ARRAYSIZE(beacon.fiducials);
+      }
+    
     beacon.fiducials[beacon.count].id = id;
     beacon.fiducials[beacon.count].pose[0] = (int) (r * 1000);
     beacon.fiducials[beacon.count].pose[1] = (int) RTOD(b);
