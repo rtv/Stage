@@ -23,14 +23,14 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan
  * Date: 3 July 2003
- * CVS: $Id: main.cc,v 1.68 2003-08-30 02:00:37 rtv Exp $
+ * CVS: $Id: main.cc,v 1.69 2003-08-30 21:02:22 rtv Exp $
  */
 
 
 #include <stdlib.h>
 #include <signal.h>
 
-#define DEBUG
+//#define DEBUG
 
 //#include "stage.h"
 #include "world.hh"
@@ -230,8 +230,8 @@ gboolean StgClientRead( GIOChannel* channel,
 		
 #ifdef DEBUG
 		stg_entity_create_t* create = (stg_entity_create_t*)prop->data;
-		PRINT_DEBUG3( "creating model name \"%s\" token \"%s\" parent %d",
-			      create->name, create->token, create->parent_id );
+		PRINT_DEBUG2( "creating model name \"%s\" xparent %d",
+			      create->name, create->parent_id );
 #endif
 		// create a new entity
 		CEntity* ent = NULL;	    

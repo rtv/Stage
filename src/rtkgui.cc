@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.19 2003-08-30 02:00:37 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.20 2003-08-30 21:02:22 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -247,13 +247,13 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
       
   // Add some menu items 
   win->file_menu = rtk_menu_create(win->canvas, "File");
-  win->save_menuitem = rtk_menuitem_create(win->file_menu, "Save", 0);
-  win->save_menuitem->userdata = (void*)world->client;
-  rtk_menuitem_set_callback( win->save_menuitem, stg_gui_save );
+  win->save_item = rtk_menuitem_create(win->file_menu, "Save", 0);
+  win->save_item->userdata = (void*)world->client;
+  rtk_menuitem_set_callback( win->save_item, stg_gui_save );
   
-  win->exit_menuitem = rtk_menuitem_create(win->file_menu, "Exit", 0);
-  win->exit_menuitem->userdata = (void*)world;
-  rtk_menuitem_set_callback( win->exit_menuitem, stg_gui_exit );
+  win->exit_item = rtk_menuitem_create(win->file_menu, "Exit", 0);
+  win->exit_item->userdata = (void*)world;
+  rtk_menuitem_set_callback( win->exit_item, stg_gui_exit );
 
   /*
   win->stills_menu = rtk_menu_create_sub(win->file_menu, "Capture stills");
@@ -403,6 +403,19 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
   return win;
 }
 
+const char* stg_gui_model_describe(  stg_gui_model_t* mod )
+{
+  static char txt[256];
+  
+  double x, y, a;
+  rtk_fig_get_origin(mod->fig, &x, &y, &a );
+  
+  // display the pose
+  snprintf(txt, sizeof(txt), "\"%s\" (%d) pose: [%.2f,%.2f,%.2f]",  
+	   mod->ent->name->str, mod->ent->id, x,y,a  );
+  
+  return txt;
+}
 
 // this gets called periodically from a callback installed in
 // stg_gui_window_create() or stg_gui_menu_interval_callback()
@@ -420,6 +433,28 @@ gboolean stg_gui_window_callback( gpointer data )
   // redraw anything that needs it
   rtk_canvas_render( win->canvas );
 
+  // put a description of the selected model in the status bar
+
+  static rtk_fig_t* fig = NULL;
+  if( win->canvas->mouse_over_fig != fig ) //if the mouseover fig has changed
+    {
+      fig = win->canvas->mouse_over_fig;
+      
+      // remove the old status bar entry
+      guint cid = 
+	gtk_statusbar_get_context_id( win->statusbar, "window_callback" );
+      gtk_statusbar_pop( win->statusbar, cid ); 
+      
+      if( fig ) // if there is a figure under the mouse, describe it
+	{
+	  CEntity* ent = (CEntity*)win->canvas->mouse_over_fig->userdata;
+	  char txt[256];
+	  snprintf( txt, sizeof(txt), "Selection: %s",
+		    stg_gui_model_describe(ent->guimod) ); 
+	  gtk_statusbar_push( win->statusbar, cid, txt ); 
+	}
+    }
+  
   return TRUE;
 }
 
@@ -439,6 +474,31 @@ void stg_gui_window_destroy( stg_gui_window_t* win )
   
   if( win->fig_grid ) rtk_fig_destroy( win->fig_grid );
   if( win->fig_matrix ) rtk_fig_destroy( win->fig_matrix );
+
+  // zap all the menuitems (tedious!)
+  rtk_menuitem_destroy( win->save_item );
+  rtk_menuitem_destroy( win->exit_item );
+  rtk_menuitem_destroy( win->grid_item );
+  rtk_menuitem_destroy( win->walls_item );
+  rtk_menuitem_destroy( win->matrix_item );
+  rtk_menuitem_destroy( win->objects_item );
+  rtk_menuitem_destroy( win->lights_item );
+  rtk_menuitem_destroy( win->sensors_item );
+  rtk_menuitem_destroy( win->data_item );
+
+  for( int i=0; i<num_intervals; i++ )
+    rtk_menuitem_destroy( win->refresh_items[i] );
+
+  rtk_menu_destroy( win->refresh_menu );
+  rtk_menu_destroy( win->view_menu );
+  rtk_menu_destroy( win->file_menu );
+
+  // The action menu
+  rtk_menu_t* action_menu;
+  rtk_menuitem_t* subscribedonly_item;
+  rtk_menuitem_t* autosubscribe_item;
+  int autosubscribe;
+
 
   // must delete the canvas after the figures
   rtk_canvas_destroy( win->canvas );
@@ -708,6 +768,8 @@ void stg_gui_model_destroy( stg_gui_model_t* mod )
   if( mod->fig_nose ) rtk_fig_destroy( mod->fig_nose );
   
   if( mod->fig ) rtk_fig_destroy( mod->fig );
+
+  free( mod );
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -729,7 +791,7 @@ void RtkOnMouse(rtk_fig_t *fig, int event, int mode)
   //double px, py, pth;
   stg_pose_t pose;
   guint cid; // statusbar context id
-  char txt[100];
+  char txt[256];
 
   switch (event)
     {
@@ -752,10 +814,7 @@ void RtkOnMouse(rtk_fig_t *fig, int event, int mode)
       entity->SetProperty( STG_PROP_POSE, &pose, sizeof(pose) );
       
       // display the pose
-      snprintf(txt, sizeof(txt), "Selection: \"%s\" (%d) pose: [%.2f,%.2f,%.2f]",  
-	       entity->name->str, entity->id, 
-	       pose.x,pose.y,pose.a  );
-
+      snprintf(txt, sizeof(txt), "Dragging: %s", stg_gui_model_describe(mod)); 
       cid = gtk_statusbar_get_context_id( mod->win->statusbar, "on_mouse" );
       gtk_statusbar_pop( mod->win->statusbar, cid ); 
       gtk_statusbar_push( mod->win->statusbar, cid, txt ); 

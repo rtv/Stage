@@ -41,13 +41,13 @@ typedef struct
 
   // The file menu
   rtk_menu_t *file_menu;
-  rtk_menuitem_t *save_menuitem;
-  rtk_menuitem_t *exit_menuitem;
+  rtk_menuitem_t *save_item;
+  rtk_menuitem_t *exit_item;
   
   // The stills menu
   rtk_menu_t *stills_menu;
-  rtk_menuitem_t *stills_jpeg_menuitem;
-  rtk_menuitem_t *stills_ppm_menuitem;
+  rtk_menuitem_t *stills_jpeg_item;
+  rtk_menuitem_t *stills_ppm_item;
   
   // Export stills info
   int stills_series;

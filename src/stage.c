@@ -110,15 +110,13 @@ stg_property_t* stg_property_create( void )
 {
   stg_property_t* prop;
   
-  prop = (stg_property_t*)malloc(sizeof(stg_property_t));
+  prop = (stg_property_t*)calloc(sizeof(stg_property_t),1);
 
   assert( prop );
   
-  memset( prop, 0, sizeof(stg_property_t) ); 
-  
   //PRINT_WARN1( "created property at %p", prop );
 
-  // todo - fix this
+  // todo - insert the actual time in here
   prop->timestamp = 100.0;
 
   return prop;
@@ -140,18 +138,18 @@ stg_property_t* stg_property_attach_data( stg_property_t* prop,
   //stg_property_print( prop );
 
   if( data && len > 0 )
-    {  size_t totalsize = sizeof(stg_property_t)+len;
-    
-    PRINT_DEBUG1( "attaching %d bytes of data", len );
-    
-    prop = (stg_property_t*)realloc(prop,totalsize);
-    assert( prop );
-    
-    /* record the amount of extra data allocated */
-    prop->len = len;
-    
-    /* copy in the data */
-    memcpy( prop->data, data, len );
+    {  
+      size_t totalsize = sizeof(stg_property_t)+len;
+      
+      PRINT_DEBUG1( "attaching %d bytes of data", len );
+      
+      assert( prop = (stg_property_t*)realloc(prop,totalsize) );
+      
+      /* record the amount of extra data allocated */
+      prop->len = len;
+      
+      /* copy in the data */
+      memcpy( prop->data, data, len );
     }
   else
     PRINT_DEBUG( "no data or zero length" );
@@ -249,8 +247,6 @@ ssize_t stg_packet_write_fd( int fd, void* data, size_t len )
     writecnt += thiswritecnt;
   }
   
-  
-
   PRINT_DEBUG2( "wrote %d/%d packet bytes\n", writecnt, len );
   
   return len; //success
@@ -283,8 +279,8 @@ stg_property_t* stg_property_read_fd( int fd )
       // see if the property has any data to follow
       if( prop->len > 0 )
 	{
-	  char* data = NULL;
-	  assert( data = (char*)malloc(prop->len) );
+	  void* data = NULL;
+	  assert( data = malloc(prop->len) );
 	  
 	  // read all the data
 	  result = stg_packet_read_fd( fd, data, prop->len );
@@ -294,6 +290,8 @@ stg_property_t* stg_property_read_fd( int fd )
 
 	  // copy the data into the property
 	  prop = stg_property_attach_data( prop, data, prop->len );
+
+	  free( data );
 	}
     } 
   else
@@ -451,6 +449,8 @@ stg_property_t* stg_send_property( stg_client_t* cli,
   
   prop = stg_property_attach_data( prop, data, len);  
   stg_property_write( cli, prop );
+  stg_property_free( prop );
+
   return( stg_property_read( cli ) );  
 }  
 
@@ -492,8 +492,11 @@ int stg_get_property( stg_client_t* cli,
     }
 
   // success
-  *data = reply->data;
+  *data = calloc( reply->len, 1 );
+  memcpy( *data, reply->data, reply->len );
   *len = reply->len;
+
+  stg_property_free(reply);
   return 0;
 }
 
@@ -529,246 +532,6 @@ int stg_model_destroy( stg_client_t* cli, stg_id_t id )
   return( returned_id == -1 ?  0 : -1 );
 }
 
-int stg_model_set_size( stg_client_t* cli, stg_id_t id, stg_size_t* sz )
-{
-  stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_SIZE, 
-					     STG_SETGET,
-					     sz, sizeof(stg_size_t) );
-  if( reply == NULL )
-    return -1;
-
-  memcpy( sz, reply->data, sizeof(stg_size_t) );
-  stg_property_free( reply );
-  
-  return 0;
-}
-
-int stg_model_get_size( stg_client_t* cli, stg_id_t id, stg_size_t* sz )
-{
-  stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_SIZE, 
-					     STG_GET,
-					     NULL, 0 );
-  if( reply == NULL )
-    return -1;
-
-  memcpy( sz, reply->data, sizeof(stg_size_t) );
-  stg_property_free( reply );
-  
-  return 0;
-}
-  
-int stg_model_set_velocity( stg_client_t* cli, stg_id_t id, stg_velocity_t* sz )
-{
-  stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_VELOCITY, 
-					     STG_SETGET,
-					     sz, sizeof(stg_velocity_t) );
-  if( reply == NULL )
-    return -1;
-
-  memcpy( sz, reply->data, sizeof(stg_velocity_t) );
-  stg_property_free( reply );
-  
-  return 0;
-}
-
-int stg_model_get_velocity( stg_client_t* cli, stg_id_t id, stg_velocity_t* sz )
-{
-  stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_VELOCITY, 
-					     STG_GET,
-					     NULL, 0 );
-  if( reply == NULL )
-    return -1;
-
-  memcpy( sz, reply->data, sizeof(stg_velocity_t) );
-  stg_property_free( reply );
-  
-  return 0;
-}
-
-int stg_model_set_pose( stg_client_t* cli, stg_id_t id, stg_pose_t* sz )
-{
-  stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_POSE, 
-					     STG_SETGET,
-					     sz, sizeof(stg_pose_t) );
-  if( reply == NULL )
-    return -1;
-
-  memcpy( sz, reply->data, sizeof(stg_pose_t) );
-  stg_property_free( reply );
-  
-  return 0;
-}
-
-int stg_model_get_pose( stg_client_t* cli, stg_id_t id, stg_pose_t* sz )
-{
-  stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_POSE, 
-					     STG_GET,
-					     NULL, 0 );
-  
-  if( reply == NULL )
-    return -1;
-
-  memcpy( sz, reply->data, sizeof(stg_pose_t) );
-  stg_property_free( reply );
-  
-  return 0;
-}
-
-int stg_model_set_origin( stg_client_t* cli, stg_id_t id, stg_pose_t* org )
-{
-  stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_ORIGIN, 
-					     STG_SETGET,
-					     org, sizeof(stg_pose_t) );
-  
-  if( reply == NULL )
-    return -1;
-
-  memcpy( org, reply->data, sizeof(stg_pose_t) );
-  stg_property_free( reply );
-  
-  return 0;
-}
-
-int stg_model_get_origin( stg_client_t* cli, stg_id_t id, stg_pose_t* org )
-{
-  stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_ORIGIN, 
-					     STG_GET,
-					     NULL, 0 );
-  
-  if( reply == NULL )
-    return -1;
-
-  memcpy( org, reply->data, sizeof(stg_pose_t) );
-  stg_property_free( reply );
-  
-  return 0;
-}
-
-int stg_model_set_rects(  stg_client_t* cli, stg_id_t id, 
-			  stg_rotrect_t* rects, int count )
-{
-  stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_RECTS, 
-					     STG_SETGET,
-					     rects, 
-					     count*sizeof(stg_rotrect_t) );
-
-  if( reply == NULL )
-    return -1;
-
-  // todo - do something with the return data?
-  // infer the number of rectangles in the data from the size in bytes
-  //memcpy( rects->rects, reply->data, reply->len );
-  //rects->rect_count = reply->len / sizeof(stg_rotrect_t);
-  stg_property_free( reply );
-  
-  return 0;
-}
-  
-
-int stg_model_set_rangers( stg_client_t* cli, stg_id_t id, 
-			       stg_ranger_t* trans, int count )
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_RANGERS, 
-					     STG_SETGET,
-					     trans, 
-					     count *
-					     sizeof(stg_ranger_t) );
-  
-  if( reply == NULL )
-    return -1;
-
-  stg_property_free( reply );
-  return 0;
-}
-
-int stg_model_get_rangers( stg_client_t* cli, stg_id_t id, 
-			       stg_ranger_t** trans, int* count )
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_RANGERS, 
-					     STG_GET,
-					     NULL, 0 ); 
-  
-  if( reply == NULL )
-    return -1;
-
-  // infer the number of rangers from the data len
-  *count = reply->len / sizeof(stg_ranger_t);
-  *trans = (stg_ranger_t*)malloc( reply->len ); 
-  memcpy( *trans, reply->data, reply->len );
-  stg_property_free( reply );
-  return 0;
-}
-
-int stg_model_set_neighbor_return( stg_client_t* cli, stg_id_t id, 
-				   stg_neighbor_return_t *val )
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_NEIGHBORRETURN, 
-					     STG_SETGET,
-					     val, sizeof(int) ); 
-  if( reply == NULL )
-    return -1;
-  
-  memcpy( val, reply->data, sizeof(int) );
-  stg_property_free( reply );
-  return 0;
-}
-
-int stg_model_get_neighbor_return( stg_client_t* cli, stg_id_t id, 
-				   stg_neighbor_return_t *val )
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_NEIGHBORRETURN, 
-					     STG_GET,
-					     NULL, 0 ); 
-  if( reply == NULL )
-    return -1;
-  
-  memcpy( val, reply->data, sizeof(int) );
-  stg_property_free( reply );
-  return 0;   
-}
-
-int stg_model_set_mouse_mode( stg_client_t* cli, stg_id_t id, 
-			      stg_mouse_mode_t *mouse )
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_MOUSE_MODE, 
-					     STG_SETGET,
-					     mouse, sizeof(stg_mouse_mode_t)); 
-  if( reply == NULL )
-    return -1;
-  
-  memcpy( mouse, reply->data, sizeof(stg_mouse_mode_t) );
-  stg_property_free( reply );
-  return 0;
-}
-
-int stg_model_get_mouse_mode( stg_client_t* cli, stg_id_t id, 
-			      stg_mouse_mode_t *mouse )
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_MOUSE_MODE, 
-					     STG_GET,
-					     NULL, 0 ); 
-  if( reply == NULL )
-    return -1;
-  
-  memcpy( mouse, reply->data, sizeof(stg_mouse_mode_t) );
-  stg_property_free( reply );
-  return 0;
-}
 
 void stg_los_msg_print( stg_los_msg_t* msg )
 {
@@ -809,234 +572,16 @@ int stg_model_exchange_los_msg(  stg_client_t* cli, stg_id_t id,
   return 0;
 }
 
-
-int stg_model_set_light( stg_client_t* cli, stg_id_t id, 
-			 stg_interval_ms_t *val)
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_BLINKENLIGHT,
-					     STG_SETGET,
-					     val,sizeof(stg_interval_ms_t));
-  
-  if( reply == NULL )
-    return -1;
-
-  memcpy( val, reply->data, sizeof(stg_interval_ms_t) );
-  stg_property_free( reply );
-  return 0;
-}
-
-int stg_model_get_light( stg_client_t* cli, stg_id_t id, 
-			 stg_interval_ms_t *val)
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_BLINKENLIGHT,
-					     STG_GET,
-					     NULL, 0 );
-  if( reply == NULL )
-    return -1;
- 
-  memcpy( val, reply->data, sizeof(stg_interval_ms_t) );
-  stg_property_free( reply );
-  return 0;
-}
-
-int stg_model_set_nose( stg_client_t* cli, stg_id_t id, 
-			 stg_nose_t *val)
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_NOSE,
-					     STG_SETGET,
-					     val,sizeof(stg_nose_t));
-  if( reply == NULL )
-    return -1;
- 
-  memcpy( val, reply->data, sizeof(stg_nose_t) );
-  stg_property_free( reply );
-  return 0;
-}
-
-int stg_model_get_nose( stg_client_t* cli, stg_id_t id, 
-			 stg_nose_t *val)
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_NOSE,
-					     STG_GET,
-					     NULL, 0 );
-  if( reply == NULL )
-    return -1;
- 
-  memcpy( val, reply->data, sizeof(stg_nose_t) );
-  stg_property_free( reply );
-  return 0;
-}
-
-int stg_model_set_border( stg_client_t* cli, stg_id_t id, 
-			 stg_border_t *val)
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_BORDER,
-					     STG_SETGET,
-					     val,sizeof(stg_border_t));
-  if( reply == NULL )
-    return -1;
- 
-  memcpy( val, reply->data, sizeof(stg_border_t) );
-  stg_property_free( reply );
-  return 0;
-}
-
-int stg_model_get_border( stg_client_t* cli, stg_id_t id, 
-			  stg_border_t *val)
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_BORDER,
-					     STG_GET,
-					     NULL, 0 );
-  if( reply == NULL )
-    return -1;
-  
-  memcpy( val, reply->data, sizeof(stg_border_t) );
-  stg_property_free( reply );
-  return 0;
-}
-
-int stg_model_set_laser_return( stg_client_t* cli, stg_id_t id, 
-				stg_laser_return_t *val)
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_LASERRETURN, 
-					     STG_SETGET,
-					     val, sizeof(stg_laser_return_t) ); 
-  if( reply == NULL )
-    return -1;
-  
-  memcpy( val, reply->data, sizeof(stg_laser_return_t) );
-  stg_property_free( reply );
-  return 0;
-}
-
-int stg_model_set_laser_data( stg_client_t* cli, stg_id_t id, 
-			      stg_laser_data_t* data )
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_LASER_DATA, 
-					     STG_GET,
-					     data, sizeof(stg_laser_data_t) ); 
-  if( reply == NULL )
-    return -1;
-  
-  memcpy( data, reply->data, sizeof(stg_laser_data_t) );
-  stg_property_free( reply );
-  return 0;
-}
-
-int stg_model_get_laser_data( stg_client_t* cli, stg_id_t id, 
-			      stg_laser_data_t* data )
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_LASER_DATA, 
-					     STG_GET,
-					     NULL, 0 ); 
-  if( reply == NULL )
-    return -1;
-  
-  memcpy( data, reply->data, sizeof(stg_laser_data_t) );
-  stg_property_free( reply );
-  return 0;
-}
-
-int stg_model_set_neighbor_bounds( stg_client_t* cli, stg_id_t id, 
-				   stg_bounds_t* data )
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_NEIGHBORBOUNDS, 
-					     STG_SETGET,
-					     data, sizeof(stg_bounds_t) ); 
-  if( reply == NULL )
-    return -1;
-  
-  memcpy( data, reply->data, sizeof(stg_bounds_t) );
-  stg_property_free( reply );
-  return 0;
-}
-
-int stg_model_get_neighbor_bounds( stg_client_t* cli, stg_id_t id, 
-				   stg_bounds_t* data )
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_NEIGHBORBOUNDS, 
-					     STG_GET,
-					     NULL, 0 ); 
-  if( reply == NULL )
-    return -1;
-  
-  memcpy( data, reply->data, sizeof(stg_bounds_t) );
-  stg_property_free( reply );
-  return 0;
-}
-
-int stg_model_set_matrix_render( stg_client_t* cli, stg_id_t id, 
-				 stg_matrix_render_t *mrender )
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_MATRIX_RENDER, 
-					     STG_SETGET,
-					     mrender, 
-					     sizeof(stg_matrix_render_t) ); 
-  if( reply == NULL )
-    return -1;
-  
-  memcpy( mrender, reply->data, sizeof(stg_matrix_render_t) );
-  stg_property_free( reply );
-  return 0;
-}
-
-
-int stg_model_get_matrix_render( stg_client_t* cli, stg_id_t id, 
-				 stg_matrix_render_t *mrender )
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_MATRIX_RENDER, 
-					     STG_GET,
-					     NULL, 0 ); 
-  if( reply == NULL )
-    return -1;
-  
-  memcpy( mrender, reply->data, sizeof(stg_matrix_render_t) );
-  stg_property_free( reply );
-  return 0;
-}
-
-// returns an array of neighbors. user must free the array after use
-int stg_model_get_neighbors( stg_client_t* cli, stg_id_t id, 
-			     stg_neighbor_t** neighbors, int *neighbor_count )
-{
-  stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_NEIGHBORS, 
-					     STG_GET,
-					     NULL, 0 ); 
-  
-  if( reply == NULL )
-    return -1;
-
-  *neighbors = (stg_neighbor_t*)malloc( reply->len );
-  memcpy( *neighbors, reply->data, reply->len);
-  *neighbor_count = reply->len / sizeof(stg_neighbor_t);
-  
-  stg_property_free( reply );
-  return 0;
-}
-
 stg_id_t stg_world_create( stg_client_t* cli, stg_world_create_t* world )
 {
   stg_property_t* reply = stg_send_property( cli, -1,
 					     STG_PROP_CREATE_WORLD, 
 					     STG_SETGET,
-					     world, sizeof(stg_world_create_t) );  
+					     world, 
+					     sizeof(stg_world_create_t));  
   if( reply == NULL )
     return -1;
-
+  
   stg_id_t returned_id = reply->id;
   stg_property_free( reply );
   
@@ -1099,76 +644,3 @@ stg_color_t stg_lookup_color(const char *name)
   fclose(file);
   return 0xFF0000;
 }
-
-// RECTANGLES /////////////////////////////////////////////////////////
-/*
-stg_rect_array_t* stg_rect_array_create( void )
-{
-  stg_rect_array_t *r = (stg_rect_array_t*)calloc(sizeof(stg_rect_array_t),1);
-  assert(r);
-  return r;
-}
-
-// add a rectangle to the end of the array, allocating memory 
-stg_rect_array_t* stg_rect_array_append( stg_rect_array_t* array, 
-					 stg_rect_t* rect )
-{
-  if( array == NULL ) return NULL;
-  if( rect == NULL ) return array;
-  
-  // grow the array by 1 rect
-  array->rect_count++;
-  array = (stg_rect_array_t*)realloc( array->rects, 
-				      array->rect_count * sizeof(stg_rect_t) );
-  
-  // copy the new rect into the end of the array
-  memcpy( array->rects + array->rect_count-1 * sizeof(stg_rect_t), 
-	  rect, 
-	  sizeof(stg_rect_t) );
-  
-  return array;
-}
-    
-void stg_rect_array_free( stg_rect_array_t* r )
-{
-  free( r->rects );
-  free( r );
-}
-
-
-// ROTATED ROTRECTANGLES ///////////////////////////////////////////////
-
-stg_rotrect__t* stg_rotrect_array_create( void )
-{
-  stg_rotrect_array_t *r = (stg_rotrect_array_t*)calloc(sizeof(stg_rotrect_array_t),1);
-  assert(r);
-  return r;
-}
-
-// add a rotrectangle to the end of the array, allocating memory 
-stg_rotrect_array_t* stg_rotrect_array_append( stg_rotrect_array_t* array, 
-					       stg_rotrect_t* rotrect )
-{
-  if( rotrect == NULL ) return array;
-  
-  if( array == NULL )
-    array = stg_rotrect_array_create();
-  
-  // grow the array by 1 rotrect
-  int numrects = array->rect_count + 1;
-  array->rects = (stg_rotrect_t*)realloc( array->rects, 
-					  numrects * sizeof(stg_rotrect_t) );
-  
-  array->rect_count = numrects;
-  // copy the new rotrect into the end of the array
-  memcpy( &array->rects[numrects-1], rotrect, sizeof(stg_rotrect_t) );
-  
-  return array;
-}
-    
-void stg_rotrect_array_free( stg_rotrect_array_t* r )
-{
-  free( r->rects );
-  free( r );
-}
-*/

@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.14 2003-08-30 02:00:38 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.15 2003-08-30 21:02:22 rtv Exp $
  */
 
 #include <assert.h>
@@ -1872,9 +1872,9 @@ int CWorldFile::Upload( stg_client_t* cli,
 
 	  // alternatively, the "name" keyword can be used to override
 	  // the automatic name
-	  strncpy(child.name, this->ReadString(section,"name", 
-					       child.name ), 
-		  STG_TOKEN_MAX);	
+	  const char* override_name = this->ReadString(section,"name", NULL);
+	  if( override_name )
+	    strncpy(child.name, override_name, STG_TOKEN_MAX);	
 	
 	  strncpy(child.color, this->ReadString(section,"color","red"), 
 		  STG_TOKEN_MAX);
@@ -2023,7 +2023,7 @@ int CWorldFile::Upload( stg_client_t* cli,
 	      }
 #endif
 	    if( stg_set_property( cli, anid, STG_PROP_RANGERS,
-				  &rangers, rcount * sizeof(stg_ranger_t) ) 
+				  rangers, rcount * sizeof(stg_ranger_t) ) 
 		< 0 )  
 	      PRINT_ERR2( "attempt to set %s[%s] failed", 
 			  child.name, "ranger array" );
@@ -2047,9 +2047,9 @@ int CWorldFile::Upload( stg_client_t* cli,
 	      }
 	    
 	    struct pam inpam;
-	    //pnm_readpaminit(bitmap, &inpam, sizeof(inpam)); 
-	
 	    tuple **data = pnm_readpam(bitmap, &inpam, sizeof(inpam));
+
+	    fclose( bitmap );
 
 #ifdef VERBOSE	    
 	    PRINT_DEBUG4( "read image \"%s\"%dx%dx%d\n",
@@ -2065,20 +2065,14 @@ int CWorldFile::Upload( stg_client_t* cli,
 #ifdef VERBOSE	    
 	    PRINT_DEBUG1f( "Found %d rects", rect_count );
 #endif
-	    //stg_model_set_rects( cli, anid, rects, rect_count );
-	    
-	    if( stg_set_property( cli, anid, STG_PROP_RECTS,
-				  rects, rect_count * sizeof(stg_rotrect_t) ) 
-		< 0 )  
+	    if( stg_set_property(cli, anid, STG_PROP_RECTS,
+				 rects, rect_count*sizeof(stg_rotrect_t)) < 0)  
 	      PRINT_ERR2( "attempt to set %s[%s] failed", 
 			  child.name, token );
-	    // convert the bitmap to rects and poke them into the model
-	    // TODO - insert this code
-	    
-	    // free the bitmap 
-	    for( int i=0; i<inpam.height; i++ )
-	      pnm_freepamrow( data[i] );
-	    
+
+	    // free the bitmap  and rectangles
+	    pnm_freepamarray( data, &inpam );
+	    free( rects );
 	  }
       }
   }

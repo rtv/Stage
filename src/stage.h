@@ -352,7 +352,7 @@ typedef struct
   stg_id_t id; // Stage chooses an ID on SET and returns it in GET
   stg_id_t parent_id;
   char name[STG_TOKEN_MAX]; // a decsriptive name
-  char token[STG_TOKEN_MAX]; // the token used in the world file
+  //  char token[STG_TOKEN_MAX]; // the token used in the world file
   char color[STG_TOKEN_MAX];
 } stg_entity_create_t;
 

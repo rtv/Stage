@@ -21,7 +21,7 @@
  * Desc: A world device model - replaces the CWorld class
  * Author: Richard Vaughan
  * Date: 31 Jan 2003
- * CVS info: $Id: world.cc,v 1.144 2003-08-30 02:00:38 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.145 2003-08-30 21:02:22 rtv Exp $
  */
 
 
@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#define DEBUG
+//#define DEBUG
 
 #include "stage.h"
 #include "world.hh"
