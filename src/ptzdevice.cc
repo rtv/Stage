@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.4 $
+//  $Author: gerkey $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -102,36 +102,46 @@ bool CPtzDevice::Update()
     //
     //TRACE0("getting command");
     short command[3];
-    if (GetCommand(command, sizeof(command)) != sizeof(command))
+    //
+    // NOTE: there was a check here for exact command buffer size.
+    //       it broke when the buffer size is zero, which happens if
+    //       the client never writes a command.  i've changed it
+    //       to match the logic i found in pioneermobiledevice.cc:
+    //       it only does anything with the command if it's the right
+    //       length, and doesn't complain otherwise.
+    //          - BPG
+    //if(GetCommand(command, sizeof(command)) != sizeof(command))
+    //{
+        //TRACE0("command buffer has incorrect length -- ignored");
+        //return false;
+    //}
+    if(GetCommand(command, sizeof(command)) == sizeof(command))
     {
-        TRACE0("command buffer has incorrect length -- ignored");
-        return false;
+      // Parse the command string
+      //
+      double pan = (short) ntohs(command[0]);
+      double tilt = (short) ntohs(command[1]);
+      double zoom = (unsigned short) ntohs(command[2]);
+
+      // Threshold
+      //
+      pan = min(pan, m_pan_max);
+      pan = max(pan, m_pan_min);
+
+      tilt = min(tilt, m_tilt_max);
+      tilt = max(tilt, m_tilt_min);
+
+      zoom = min(zoom, m_zoom_max);
+      zoom = max(zoom, m_zoom_min);
+
+      // Set the current values
+      // This basically assumes instantaneous changes
+      // We could add a velocity in here later. ahoward
+      //
+      m_pan = pan;
+      m_tilt = tilt;
+      m_zoom = zoom;
     }
-
-    // Parse the command string
-    //
-    double pan = (short) ntohs(command[0]);
-    double tilt = (short) ntohs(command[1]);
-    double zoom = (unsigned short) ntohs(command[2]);
-
-    // Threshold
-    //
-    pan = min(pan, m_pan_max);
-    pan = max(pan, m_pan_min);
-
-    tilt = min(tilt, m_tilt_max);
-    tilt = max(tilt, m_tilt_min);
-
-    zoom = min(zoom, m_zoom_max);
-    zoom = max(zoom, m_zoom_min);
-
-    // Set the current values
-    // This basically assumes instantaneous changes
-    // We could add a velocity in here later. ahoward
-    //
-    m_pan = pan;
-    m_tilt = tilt;
-    m_zoom = zoom;
 
     // Construct the return data buffer
     //
@@ -162,7 +172,7 @@ void CPtzDevice::GetPTZ(double &pan, double &tilt, double &zoom)
     tilt = DTOR(m_tilt);
     zoom = m_fov_min + (m_zoom - m_zoom_min) *
         (m_fov_max - m_fov_min) / (m_zoom_max - m_zoom_min);
-};
+}
 
 
 

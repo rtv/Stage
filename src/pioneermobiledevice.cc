@@ -1,4 +1,4 @@
-// $Id: pioneermobiledevice.cc,v 1.10 2000-12-08 09:08:11 vaughan Exp $
+// $Id: pioneermobiledevice.cc,v 1.11 2001-01-13 02:47:01 gerkey Exp $
 
 //#define ENABLE_TRACE 1
 
@@ -178,14 +178,14 @@ void CPioneerMobileDevice::ComposeData()
     // Basically just changes byte orders and some units
     //
     m_data.time = htonl((int)((m_world->timeNow - m_world->timeBegan)*1000.0));
-    m_data.px = htonl((int) px);
-    m_data.py = htonl((int) py);
-    m_data.pth = htons((unsigned short) RTOD(pth));
+    m_data.x = htonl((int) px);
+    m_data.y = htonl((int) py);
+    m_data.theta = htons((unsigned short) RTOD(pth));
 
-    m_data.vr = htons((unsigned short) (speed * 1000.0));
+    m_data.speed = htons((unsigned short) (speed * 1000.0));
     // *** HACK -- Why do I need to negate this? ahoward 
     // because of the reversed y-axis on the screen - RTV
-    m_data.vth = htons((short) RTOD(-turnRate));  
+    m_data.turnrate = htons((short) RTOD(-turnRate));  
     m_data.compass = htons((unsigned short)(RTOD(comHeading)));
     m_data.stall = stall;
 }
@@ -245,8 +245,8 @@ void CPioneerMobileDevice::CalculateRect( double x, double y, double a )
 
 void CPioneerMobileDevice::ParseCommandBuffer()
 {
-    double fv = (double) (short) ntohs(m_command.vr);
-    double fw = (double) (short) ntohs(m_command.vth);
+    double fv = (double) (short) ntohs(m_command.speed);
+    double fw = (double) (short) ntohs(m_command.turnrate);
     
     // set speeds unless we're being dragged
     if( m_world->win->dragging != m_robot )

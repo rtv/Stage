@@ -1,7 +1,7 @@
 #*************************************************************************
 # src/Makefile - makes the sources
 # RTV
-# $Id: Makefile,v 1.11 2000-12-08 09:08:11 vaughan Exp $
+# $Id: Makefile,v 1.12 2001-01-13 02:47:01 gerkey Exp $
 # ************************************************************************/
 
 .SUFFIXES: .cc .o
@@ -38,47 +38,43 @@ posreader: posreader.cc
 # DO NOT DELETE.  FOLLOWING IS FROM MAKEDEPEND
 
 device.o: ../include/world.h ../include/robot.h ../include/image.h
-device.o: ../include/win.h ../include/device.hh ../include/rtk-types.hh
+device.o: ../include/win.h ../include/device.hh
 image.o: ../include/image.h ../include/world.h ../include/robot.h
 image.o: ../include/win.h
 laserbeacondevice.o: ../include/world.h ../include/robot.h ../include/image.h
 laserbeacondevice.o: ../include/win.h ../include/laserbeacondevice.hh
-laserbeacondevice.o: ../include/device.hh ../include/rtk-types.hh
+laserbeacondevice.o: ../include/device.hh
 laserdevice.o: ../include/world.h ../include/robot.h ../include/image.h
 laserdevice.o: ../include/win.h ../include/laserdevice.hh
 laserdevice.o: ../include/playerdevice.hh ../include/device.hh
-laserdevice.o: ../include/rtk-types.hh
 main.o: ../include/world.h ../include/robot.h ../include/image.h
 main.o: ../include/win.h
 pioneermobiledevice.o: ../include/world.h ../include/robot.h
 pioneermobiledevice.o: ../include/image.h ../include/win.h
 pioneermobiledevice.o: ../include/pioneermobiledevice.h
 pioneermobiledevice.o: ../include/playerdevice.hh ../include/device.hh
-pioneermobiledevice.o: ../include/rtk-types.hh
 playerdevice.o: ../include/world.h ../include/robot.h ../include/image.h
 playerdevice.o: ../include/win.h ../include/playerdevice.hh
-playerdevice.o: ../include/device.hh ../include/rtk-types.hh
+playerdevice.o: ../include/device.hh
 posreader.o: ../include/ports.h
 ptzdevice.o: ../include/world.h ../include/robot.h ../include/image.h
 ptzdevice.o: ../include/win.h ../include/ptzdevice.hh
 ptzdevice.o: ../include/playerdevice.hh ../include/device.hh
-ptzdevice.o: ../include/rtk-types.hh ../include/visiondevice.hh
 robot.o: ../include/world.h ../include/robot.h ../include/image.h
 robot.o: ../include/win.h ../include/ports.h ../include/pioneermobiledevice.h
 robot.o: ../include/playerdevice.hh ../include/device.hh
-robot.o: ../include/rtk-types.hh ../include/sonardevice.h
-robot.o: ../include/laserdevice.hh ../include/visiondevice.hh
-robot.o: ../include/ptzdevice.hh ../include/laserbeacondevice.hh
+robot.o: ../include/sonardevice.h ../include/laserdevice.hh
+robot.o: ../include/visiondevice.hh ../include/ptzdevice.hh
+robot.o: ../include/laserbeacondevice.hh
 server.o: ../include/world.h ../include/robot.h ../include/image.h
 server.o: ../include/win.h ../include/ports.h
 sonardevice.o: ../include/world.h ../include/robot.h ../include/image.h
 sonardevice.o: ../include/win.h ../include/sonardevice.h
 sonardevice.o: ../include/playerdevice.hh ../include/device.hh
-sonardevice.o: ../include/rtk-types.hh
 visiondevice.o: ../include/world.h ../include/robot.h ../include/image.h
 visiondevice.o: ../include/win.h ../include/visiondevice.hh
 visiondevice.o: ../include/playerdevice.hh ../include/device.hh
-visiondevice.o: ../include/rtk-types.hh
+visiondevice.o: ../include/ptzdevice.hh
 win.o: ../include/win.h ../include/world.h ../include/robot.h
 win.o: ../include/image.h
 world.o: ../include/world.h ../include/robot.h ../include/image.h

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.13 $
+//  $Author: gerkey $
+//  $Revision: 1.14 $
 //
 // Usage:
 //  (empty)
@@ -104,7 +104,7 @@ bool CLaserDevice::Update()
     int rng = 0;
 
     //look up a couple of indrect variables to avoid doing it in the loop
-    BYTE myColor = m_robot->color;
+    uint8_t myColor = m_robot->color;
     double ppm = m_world->ppm; // pixels per metre
 
     double robotx = m_robot->x;
@@ -112,7 +112,7 @@ bool CLaserDevice::Update()
  
     double dist, dx, dy, angle, pixelx, pixely;
     
-    BYTE occupied, intensity;
+    uint8_t occupied, intensity;
 
     // Generate a complete set of samples
     //
@@ -168,12 +168,12 @@ bool CLaserDevice::Update()
         // set laser value, scaled to current ppm
         // and converted to mm
         //
-        UINT16 v = (UINT16) (1000.0 * rng / ppm);
+        uint16_t v = (uint16_t) (1000.0 * rng / ppm);
 
         // Add in the intensity values in the top 3 bits
         //
         if (m_intensity)
-            v = v | (((UINT16) intensity) << 13);
+            v = v | (((uint16_t) intensity) << 13);
         
         // Set the range
         // Swap the bytes while we're at it
@@ -209,7 +209,7 @@ bool CLaserDevice::Update()
     
     // Copy the laser data to the data buffer
     //
-    PutData(m_data, m_samples * sizeof(UINT16));
+    PutData(m_data, m_samples * sizeof(uint16_t));
 
     return true;
 }
@@ -220,7 +220,7 @@ bool CLaserDevice::Update()
 //
 bool CLaserDevice::CheckConfig()
 {
-    BYTE config[5];
+    uint8_t config[5];
 
     if (GetConfig(config, sizeof(config)) == 0)
         return false;  

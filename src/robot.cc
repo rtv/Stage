@@ -1,7 +1,7 @@
 /*************************************************************************
  * robot.cc - most of the action is here
  * RTV
- * $Id: robot.cc,v 1.14 2000-12-08 09:08:11 vaughan Exp $
+ * $Id: robot.cc,v 1.15 2001-01-13 02:47:02 gerkey Exp $
  ************************************************************************/
 
 #include <errno.h>
@@ -29,7 +29,8 @@
 #include <sys/wait.h>
 // GPB
 
-#include <offsets.h> // from Player's include directory
+//#include <offsets.h> // from Player's include directory
+#include <stage.h> // from Player's include directory
 
 #include "world.h"
 #include "win.h"
@@ -191,19 +192,19 @@ bool CRobot::Startup()
     m_device[m_device_count++] = new CPioneerMobileDevice( this, 
 				world->pioneerWidth, 
 				world->pioneerLength,
-				playerIO + SPOSITION_DATA_START,
-				SPOSITION_DATA_BUFFER_SIZE,
-				SPOSITION_COMMAND_BUFFER_SIZE,
-				SPOSITION_CONFIG_BUFFER_SIZE);
+				playerIO + POSITION_DATA_START,
+				POSITION_DATA_BUFFER_SIZE,
+				POSITION_COMMAND_BUFFER_SIZE,
+				POSITION_CONFIG_BUFFER_SIZE);
 
     // Sonar device
     //
     m_device[m_device_count++] 
     = new CSonarDevice( this,
-			playerIO + SSONAR_DATA_START,
-			SSONAR_DATA_BUFFER_SIZE,
-			SSONAR_COMMAND_BUFFER_SIZE,
-			SSONAR_CONFIG_BUFFER_SIZE);
+			playerIO + SONAR_DATA_START,
+			SONAR_DATA_BUFFER_SIZE,
+			SONAR_COMMAND_BUFFER_SIZE,
+			SONAR_CONFIG_BUFFER_SIZE);
     
     // Create laser device
     //

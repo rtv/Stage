@@ -1,7 +1,7 @@
 /*************************************************************************
  * world.cc - top level class that contains and updates robots
  * RTV
- * $Id: world.cc,v 1.7 2000-12-08 09:08:11 vaughan Exp $
+ * $Id: world.cc,v 1.8 2001-01-13 02:47:02 gerkey Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -19,7 +19,8 @@
 
 #include "world.h"
 #include "win.h"
-#include "offsets.h"
+//#include "offsets.h"
+#include "stage.h"
 
 //#undef DEBUG
 //#define DEBUG

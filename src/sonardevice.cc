@@ -1,4 +1,4 @@
-// $Id: sonardevice.cc,v 1.5 2000-12-04 05:19:44 vaughan Exp $
+// $Id: sonardevice.cc,v 1.6 2001-01-13 02:47:02 gerkey Exp $
 #include <math.h>
 
 #include "world.h"
@@ -199,7 +199,7 @@ bool CSonarDevice::Update()
 	  
 	  // set sonar value, scaled to current ppm in mm 
 	  // and switched to network byte order
-	  sonar[s] = htons((UINT16) ( (rng / ppm) * 1000.0 ));
+	  sonar[s] = htons((uint16_t) ( (rng / ppm) * 1000.0 ));
 
 	  // store the hit points if we need to draw them on the GUI
 	  //if( GUIrender )
