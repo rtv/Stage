@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.8 2001-08-14 00:36:08 gerkey Exp $
+ * $Id: xs.cc,v 1.9 2001-08-14 00:41:39 gerkey Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -1441,7 +1441,9 @@ void CXGui::Zoom( double ratio )
   //if( iheight < height ) height = iheight;
 
   Size();
-
+  CalcPPM();
+  DrawBackground();
+  RefreshObjects();
 
 }
 
