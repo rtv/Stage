@@ -75,7 +75,7 @@ void CXGui::RenderObject( xstruth_t &truth )
 	RenderGps( &truth, extended ); break;
 
       default: cout << "XS: unknown object type " 
-		    << truth.stage_type << endl;
+		    << truth.id.type << endl;
 
       PrintMetricTruthVerbose( 0, truth );
       break;
