@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/broadcastdevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Author: vaughan $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -32,16 +32,22 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CBroadcastDevice::CBroadcastDevice(CWorld *world, CEntity *parent, CPlayerServer *server)
-        : CPlayerDevice(world, parent, server,
-                        BROADCAST_DATA_START,
-                        BROADCAST_TOTAL_BUFFER_SIZE,
-                        BROADCAST_DATA_BUFFER_SIZE,
-                        BROADCAST_COMMAND_BUFFER_SIZE,
-                        BROADCAST_CONFIG_BUFFER_SIZE)
+CBroadcastDevice::CBroadcastDevice(CWorld *world, CEntity *parent )
+  : CEntity(world, parent )
 {
-    m_last_update = 0;
-    m_update_interval = 0.050;
+  // set the Player IO sizes correctly for this type of Entity
+  m_data_len    = sizeof( player_broadcast_data_t ); 
+  m_command_len = sizeof( player_broadcast_cmd_t );
+  m_config_len  = 0;//sizeof( player_broadcast_config_t );
+ 
+  m_player_type = PLAYER_BROADCAST_CODE;
+  m_stage_type= BroadcastType;
+
+  m_last_update = 0;
+  m_interval = 0.050;
+
+  m_size_x = 0.1;
+  m_size_y = 0.1;
 }
 
 
@@ -76,17 +82,18 @@ void CBroadcastDevice::Shutdown()
 ///////////////////////////////////////////////////////////////////////////
 // Update the broadcast data
 //
-void CBroadcastDevice::Update()
+void CBroadcastDevice::Update( double sim_time )
 {
-    ASSERT(m_server != NULL);
     ASSERT(m_world != NULL);
     
-    // Check to see if it is time to update the laser
+    // See if its time to update
     //
-    if (m_world->GetTime() - m_last_update <= m_update_interval)
+    if( sim_time - m_last_update < m_interval )
         return;
-    m_last_update = m_world->GetTime();
-    
+
+    m_last_update = sim_time;
+
+
     // See if there is any data to send
     //
     m_cmd_len = GetCommand(&m_cmd, sizeof(m_cmd));

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.3 $
+//  $Author: vaughan $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -28,25 +28,61 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "entity.hh"
+#include <sys/time.h>
+#include <unistd.h>
+#include <iostream.h>
 
+#include "entity.hh"
+#include "world.hh"
+
+//#define DEBUG
+#undef DEBUG
+//#undef VERBOSE
 
 ///////////////////////////////////////////////////////////////////////////
 // Minimal constructor
 // Requires a pointer to the parent and a pointer to the world.
 //
-CEntity::CEntity(CWorld *world, CEntity *parent_object)
+CEntity::CEntity(CWorld *world, CEntity *parent_object )
 {
     m_world = world;
     m_parent_object = parent_object;
     m_default_object = this;
 
+    m_stage_type = NullType; // overwritten by subclasses
+  
     m_line = -1;
     m_type[0] = 0;
     m_id[0] = 0;
-    
+
+    m_dependent_attached = false;
+
+    m_channel = -1;// we don't show up as an acts color channel by default
+
+    m_player_index = 0; // these are all set in load() 
+    m_player_port = 0;
+    m_player_type = 0;
+       
     m_lx = m_ly = m_lth = 0;
+    m_size_x = 0; m_size_y = 0;
+    m_offset_x = m_offset_y = 0;
+
     strcpy(m_color_desc, "black");
+
+    m_interval = 0.1; // update interval in seconds 
+    m_last_update = 0; // initialized 
+
+    m_info_len    = sizeof( player_stage_info_t ); // same size for all types
+    m_data_len    = 0; // type specific - set in subclasses
+    m_command_len = 0; // ditto
+    m_config_len  = 0; // ditto
+
+    m_info_io     = NULL; // instance specific pointers into mmap
+    m_data_io     = NULL; 
+    m_command_io  = NULL;
+    m_config_io   = NULL;
+
+    truth_poked = 1;
 
 #ifdef INCLUDE_RTK
     m_draggable = false; 
@@ -56,10 +92,6 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object)
     m_color = RTK_RGB(0, 0, 0);
 #endif
 
-    exporting = true;
-    exp.objectId = this; // used both as ptr and as a unique ID
-    exp.objectType = 0; 
-    exp.data = 0; // NULL char*
 }
 
 
@@ -69,7 +101,6 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object)
 CEntity::~CEntity()
 {
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Load the object from an argument list
@@ -96,6 +127,39 @@ bool CEntity::Load(int argc, char **argv)
             strcpy(m_color_desc, argv[i + 1]);
             i += 2;
         }
+
+        // Extract size
+        //
+        else if (strcmp(argv[i], "size") == 0 && i + 2 < argc)
+	  {
+            m_size_x = atof(argv[i + 1]);
+            m_size_y = atof(argv[i + 2]);
+            i += 3;
+	  }
+    
+	// Extract channel
+        //
+        else if (strcmp(argv[i], "channel") == 0 && i + 1 < argc)
+        {
+            m_channel = atoi(argv[i + 1]);
+            i += 2;
+        }
+
+	// extract port number
+	// one day we'll inherit our parent's port by default.
+        else if (strcmp(argv[i], "port") == 0 && i + 1 < argc)
+        {
+            m_player_port = atoi(argv[i + 1]);
+            i += 2;
+        }
+
+	// extract index number
+        else if (strcmp(argv[i], "index") == 0 && i + 1 < argc)
+        {
+            m_player_index = atoi(argv[i + 1]);
+            i += 2;
+        }
+
         else
         {
             PLAYER_MSG1("unrecognized token [%s]", argv[i]);
@@ -141,22 +205,119 @@ bool CEntity::Save(int &argc, char **argv)
     //
     argv[argc++] = strdup("color");
     argv[argc++] = strdup(m_color_desc);
+
+    // Save channel
+    //
+    char z[128];
+    snprintf(z, sizeof(z), "%d", (int) m_channel);
+    argv[argc++] = strdup("channel");
+    argv[argc++] = strdup(z);
+
+    // Save player port
+    //
+    char port[32];
+    snprintf(port, sizeof(port), "%d", m_player_port);
+    argv[argc++] = strdup("port");
+    argv[argc++] = strdup(port);
+
+    // save player index
+    char index[32];
+    snprintf(index, sizeof(index), "%d", m_player_index);
+    argv[argc++] = strdup("index");
+    argv[argc++] = strdup(index);
         
+
     return true;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////
 // Startup routine
-//
-bool CEntity::Startup()
+// a virtual function that lets some objects calculate the amount
+// of shared memory space they'll need. (they may peek at other objects 
+// or into the world, os we must do this after everything is created)
+bool CEntity::Startup( void )
 {
-    return true;
+#ifdef DEBUG
+  cout << "CEntity::Startup()" << endl;
+#endif
+
+  return true;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Setup  routine
+// set up the IO pointers (data, command, config, truth)
+// this has to be done before we can GetX or SetX
+// but Startup() must be called before this to set the io sizes correctly  
+bool CEntity::SetupIOPointers( char* io )
+{
+  //  puts( "CEntity::SetupIOPointers()" );
+
+  ASSERT( io  ); //io pointer must be good
+   
+  m_world->LockShmem();
+
+  // set the pointers into the shared memory region
+  m_info_io    = (player_stage_info_t*)io; // info is the first record
+  m_data_io    = (uint8_t*)m_info_io + m_info_len;
+  m_command_io = (uint8_t*)m_data_io + m_data_len; 
+  m_config_io  = (uint8_t*)m_command_io + m_command_len;
+
+  m_info_io->len = SharedMemorySize(); // total size of all the shared data
+
+  // set the lengths in the info structure
+
+  m_info_io->data_len    =  (uint32_t)m_data_len;
+  m_info_io->command_len =  (uint32_t)m_command_len;
+  m_info_io->config_len  =  (uint32_t)m_config_len;
+
+  m_info_io->data_avail    =  0;
+  m_info_io->command_avail =  0;
+  m_info_io->config_avail  =  0;
+
+  m_info_io->player_id.port = m_player_port;
+  m_info_io->player_id.index = m_player_index;
+  m_info_io->player_id.type = m_player_type;
+  m_info_io->subscribed = 0;
+
+#ifdef DEBUG
+  printf( "\t\t(%p) (%d,%d,%d) IO at %p\n"
+	  "\t\ttotal: %d\tinfo: %d\tdata: %d (%d)\tcommand: %d (%d)\tconfig: %d (%d)\n ",
+	  this,
+	  m_info_io->player_id.port,
+	  m_info_io->player_id.type,
+	  m_info_io->player_id.index,
+	  m_info_io,
+	  m_info_len + m_data_len + m_command_len + m_config_len,
+	  m_info_len,
+	  m_info_io->data_len, m_data_len,
+	  m_info_io->command_len, m_command_len,
+	  m_info_io->config_len, m_config_len );
+
+  fflush( stdout );
+#endif
+
+  m_world->UnlockShmem();
+
+  // Put some initial data in the shared memory for Player to read when
+  // it starts up.
+
+  // publish some dummy data - all zeroed for now
+  unsigned char dummy_data[ m_data_len ];
+  memset( dummy_data, 0, m_data_len );
+  PutData( dummy_data, m_data_len );
+
+  return true;
+}
+
+int CEntity::SharedMemorySize( void )
+{
+  return( m_info_len + m_data_len + m_command_len + m_config_len );
 }
 
 ///////////////////////////////////////////////////////////////////////////
 // Shutdown routine
-//
+// 
 void CEntity::Shutdown()
 {
 }
@@ -165,8 +326,13 @@ void CEntity::Shutdown()
 ///////////////////////////////////////////////////////////////////////////
 // Update the object's representation
 //
-void CEntity::Update()
+void CEntity::Update( double sim_time )
 {
+#ifdef DEBUG
+  //    printf( "S: Entity::Update() (%d,%d,%d) %d subs at %.2f\n",  
+  //  m_player_port, m_player_type, m_player_index, 
+  //    Subscribed(), sim_time ); 
+#endif 
 }
 
 
@@ -280,22 +446,226 @@ void CEntity::GetGlobalPose(double &px, double &py, double &pth)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-// import changes to this object - typically called by a GUI
-// then compose and return the export data structure for external rendering
-// return null if we're not exporting data right now.
-ExportData* CEntity::ImportExportData( const ImportData* inp )
+// Copy the device data and info into the shared memory segment
+//
+size_t CEntity::PutData( void* data, size_t len )
 {
-  if( inp ) // if there is some imported data
-    SetGlobalPose( inp->x, inp->y, inp->th ); // move to the suggested place
+  // get the time for the timestamp
+  //
+  struct timeval curr;
+  gettimeofday(&curr,NULL);
   
-  if( !exporting ) return 0;
-
-  // fill in the exp structure
-  // exp.type, exp.id, exp.dataSize are set in the constructor
-  GetGlobalPose( exp.x, exp.y, exp.th );
-
-  return &exp;
+  m_world->LockShmem();
+  
+#ifdef DEBUG  
+  //  printf( "S: Entity::PutData() (%d,%d,%d) at %p\n", 
+  //  m_info_io->player_id.port, 
+  //  m_info_io->player_id.type, 
+  //  m_info_io->player_id.index, data);
+#endif  
+  
+  // the data mustn't be too big!
+  if( len <= m_info_io->data_len )
+    {
+      // indicate that some data is available
+      // and update the timestamp
+      m_info_io->data_avail = len;
+      m_info_io->data_timestamp_sec = curr.tv_sec;
+      m_info_io->data_timestamp_usec = curr.tv_usec;
+      
+      memcpy( m_data_io, data, len); // export data
+    }
+  else
+    {
+      printf( "PutData() failed trying to put %d bytes; io buffer is "
+	      "%d bytes.)\n", 
+	      len, m_info_io->data_len  );
+      fflush( stdout );
+    }
+  
+  m_world->UnlockShmem();
+  
+  return len;
 }
+
+///////////////////////////////////////////////////////////////////////////
+// Copy data from the shared memory segment
+//
+size_t CEntity::GetData( void* data, size_t len )
+{   
+#ifdef DEBUG
+  printf( "S: getting type %d data at %p - ", 
+	    m_player_type, m_data_io );
+    fflush( stdout );
+#endif
+
+  m_world->LockShmem();
+
+  // the data must be the right size!
+  if( len <= m_info_io->data_avail )
+    memcpy( data, m_data_io, len); // copy the data
+  else
+    {
+#ifdef DEBUG
+      printf( "error: requested %d data (%d bytes available)\n", 
+	      len, m_info_io->data_avail );
+      fflush( stdout );
+#endif
+      len = 0; // set the return value to indicate failure 
+    }
+  
+  m_world->UnlockShmem();
+  
+  return len;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+// Copy a command from the shared memory segment
+//
+size_t CEntity::GetCommand( void* cmd, size_t len )
+{   
+#ifdef DEBUG
+  printf( "S: getting type %d cmd at %p - ", 
+	    m_player_type, m_command_io );
+    fflush( stdout );
+#endif
+
+  m_world->LockShmem();
+
+  // the command must be the right size!
+  if( len == m_info_io->command_len && len == m_info_io->command_avail )
+    memcpy( cmd, m_command_io, len); // import device-specific data
+  else
+    {
+#ifdef DEBUG
+      printf( "no command found (%d bytes available)\n", 
+	      m_info_io->command_avail );
+      fflush( stdout );
+#endif
+      len = 0; // set the return value to indicate failure 
+    }
+  
+  m_world->UnlockShmem();
+  
+  return len;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Read a configuration from the shared memory
+// this is a little trickier 'cos configs are consumed
+size_t CEntity::GetConfig( void* config, size_t len )
+{  
+  m_world->LockShmem();
+
+  // the config data must be the right size!
+  if( len == m_info_io->config_len && len == m_info_io->config_avail )
+    memcpy( config, m_config_io, len); // import device-specific data
+  else
+    {
+#ifdef DEBUG
+      printf( "GetConfig() found no config (requested %d bytes;"
+	      " io buffer is %d bytes; %d bytes are available)\n", 
+	      len, m_info_io->config_len, m_info_io->config_avail );
+      fflush( stdout );
+#endif
+      len = 0; // set the return value to indicate failure 
+    }
+  
+  // reset the available size in the info structure to show that 
+  // we consumed the message
+  m_info_io->config_avail = 0;    
+  
+  m_world->UnlockShmem();
+  
+  return len;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// See if the PlayerDevice is subscribed
+//
+int CEntity::Subscribed() 
+{
+  //return true;
+
+  m_world->LockShmem();
+  int subscribed = m_info_io->subscribed;
+  m_world->UnlockShmem();
+
+  // returns > 0 if we have subs or dependents or we've been poked
+  // and cancels the poke flag
+  //return(  subscribed || m_dependent_attached || truth_poked-- ); 
+  bool retval = subscribed || truth_poked;
+  if(truth_poked)
+    truth_poked = !truth_poked;
+  return(retval);
+}
+
+void CEntity::ComposeTruth( stage_truth_t* truth )
+{
+  // compose a truth packet
+  memset( truth, 0, sizeof(stage_truth_t) ); // just in case
+  
+  truth->stage_id = (int)this;
+
+  truth->id.port = m_player_port;
+  truth->id.type = m_player_type;
+  truth->id.index = m_player_index;
+
+  truth->stage_type = m_stage_type;
+
+  truth->channel = m_channel;
+
+  if( m_parent_object )
+    {
+      truth->parent.port = m_parent_object->m_player_port;
+      truth->parent.type = m_parent_object->m_player_type;
+      truth->parent.index = m_parent_object->m_player_index;
+    }
+  else
+    {
+      truth->parent.port = 0;
+      truth->parent.type = 0;
+      truth->parent.index = 0;
+    }
+  
+  double x, y, th;
+  GetGlobalPose( x,y,th );
+  
+  // position and extents
+  truth->x = (uint32_t)( x * 1000.0 );
+  truth->y = (uint32_t)( y * 1000.0 );
+  truth->w = (uint16_t)( m_size_x * 1000.0 );
+  truth->h = (uint16_t)( m_size_y * 1000.0 );
+ 
+  // center of rotation offsets
+  truth->rotdx = (int16_t)( m_offset_x * 1000.0 );
+  truth->rotdy = (int16_t)( m_offset_y * 1000.0 );
+
+  // normalize degrees 0-360 (th is -/+PI)
+  int degrees = (int)RTOD( th );
+  if( degrees < 0 ) degrees += 360;
+
+  truth->th = (uint16_t)degrees;  
+   
+#ifdef VERBOSE
+  //    printf( "Compose Truth: "
+  //  "(%d,%d,%d) parent (%d,%d,%d) [%d,%d,%d]\n", 
+  //  truth->id.port, 
+  //  truth->id.type, 
+  //  truth->id.index,
+  //  truth->parent.port, 
+  //  truth->parent.type, 
+  //  truth->parent.index,
+  //  truth->x, truth->y, truth->th );
+  
+  //fflush( stdout );
+#endif
+}
+
+
 
 #ifdef INCLUDE_RTK
 

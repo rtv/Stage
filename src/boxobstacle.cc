@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Author: vaughan $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -36,19 +36,23 @@
 CBoxObstacle::CBoxObstacle(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {
-    m_size_x = 1;
-    m_size_y = 1;
-        
-    // Set the initial map pose
-    //
-    m_map_px = m_map_py = m_map_pth = 0;
+  // set the Player IO sizes correctly for this type of Entity
+  m_data_len    = 0;
+  m_command_len = 0;
+  m_config_len  = 0;
+  
+  m_player_port = 0; // not a player device
+  m_player_type = 0;
+  m_player_index = 0;
+  
+  m_stage_type = BoxType;
 
-    // GUI export setup
-    exporting = true;
-    exp.objectType = box_o;
-    exp.width = m_size_x;
-    exp.height = m_size_y;
-    strcpy( exp.label, "Box" );
+  m_size_x = 1.0;
+  m_size_y = 1.0;
+  
+  // Set the initial map pose
+  //
+  m_map_px = m_map_py = m_map_pth = 0;
 }
 
 
@@ -66,8 +70,8 @@ bool CBoxObstacle::Load(int argc, char **argv)
         //
         if (strcmp(argv[i], "size") == 0 && i + 2 < argc)
         {
-            exp.width = m_size_x = atof(argv[i + 1]);
-            exp.height = m_size_y = atof(argv[i + 2]);
+            m_size_x = atof(argv[i + 1]);
+            m_size_y = atof(argv[i + 2]);
             i += 3;
         }
         else
@@ -111,29 +115,31 @@ bool CBoxObstacle::Save(int &argc, char **argv)
 ///////////////////////////////////////////////////////////////////////////
 // Update the laser data
 //
-void CBoxObstacle::Update()
+void CBoxObstacle::Update( double simtime )
 {
-    //RTK_TRACE0("updating laser beacon");
-    ASSERT(m_world != NULL);
-
-    // Undraw our old representation
-    //
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                          m_size_x, m_size_y, layer_obstacle, 0);
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                          m_size_x, m_size_y, layer_laser, 0);
-    
-    // Update our global pose
-    //
-    GetGlobalPose(m_map_px, m_map_py, m_map_pth);
-    
-    // Draw our new representation
-    //
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                          m_size_x, m_size_y, layer_obstacle, 1);
-    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+  //cout << "UPDATE BOX" << endl;
+  if( Subscribed() ) // i.e. our truth has been poked
+    {
+      ASSERT(m_world);
+      
+      // Undraw our old representation
+      //
+      m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+			    m_size_x, m_size_y, layer_obstacle, 0);
+      m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+			    m_size_x, m_size_y, layer_laser, 0);
+      
+      // Update our global pose
+      //
+      GetGlobalPose(m_map_px, m_map_py, m_map_pth);
+      
+      // Draw our new representation
+      //
+      m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+			    m_size_x, m_size_y, layer_obstacle, 1);
+      m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
                           m_size_x, m_size_y, layer_laser, 1);
-
+    }
 }
 
 #ifdef INCLUDE_RTK

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/boxobstacle.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.4 $
+//  $Author: vaughan $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -43,14 +43,11 @@ class CBoxObstacle : public CEntity
     //
     public: virtual bool Save(int &argc, char **argv);
     
-    // Update the device
-    //
-    public: virtual void Update();
-
-    // Box dimensions
-    //
-    private: double m_size_x, m_size_y;
-    
+  // Update the device
+  //
+  //public: virtual void Update();
+  public: virtual void Update( double sim_time );
+  
     // Current pose
     //
     private: double m_map_px, m_map_py, m_map_pth;

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/puck.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.6 $
+//  $Author: vaughan $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -49,7 +49,7 @@ class CPuck : public CEntity
     
     // Update the device
     //
-    public: virtual void Update();
+    public: virtual void Update( double sim_time );
 
     // Set the puck's speed
     // 
@@ -71,18 +71,10 @@ class CPuck : public CEntity
                                                double py, 
                                                double pth);
     
-    // puck channel (corresponds to ACTS channel)
+  // Return diameter of puck
     //
-    private: int m_channel;
+    public: double GetDiameter() { return(m_size_x); }
 
-    // Return diameter of puck
-    //
-    public: double GetDiameter() { return(exp.width); }
-
-    // puck index in the world rep
-    //
-    private: int m_index;
-    
     // Current mapped pose
     //
     private: double m_map_px, m_map_py, m_map_pth;

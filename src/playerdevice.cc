@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: playerdevice.cc
-// Author: Andrew Howard
-// Date: 28 Nov 2000
-// Desc: Base class for all player devices
+// File: playerserver.cc
+// Author: Richard Vaughan, Andrew Howard
+// Date: 6 Dec 2000
+// Desc: Provides interface to Player.
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.11 $
+//  $Author: vaughan $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -17,44 +17,77 @@
 //  (empty)
 //
 // Known bugs:
-//  (empty)
+//  - All robots are creating a semaphore with the same key.  This doesnt
+//    appear to be a problem, but should be investigates. ahoward
 //
 // Possible enhancements:
 //  (empty)
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_RTK_TRACE 0
+#include <errno.h>
+#include <fcntl.h>
+#include <iomanip.h>
+#include <iostream.h>
+#include <math.h>
+#include <netinet/in.h>
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strstream.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <termios.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <iomanip.h>
+#include <sys/mman.h>
+#include <signal.h>
+#include <sys/wait.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
 
-#include <sys/time.h>
+#include <stage.h>
 #include "world.hh"
-#include "playerserver.hh"
 #include "playerdevice.hh"
+
+///////////////////////////////////////////////////////////////////////////
+// Macros
+//
+//#define DEBUG
+#undef DEBUG
+#undef VERBOSE
+
+//#define NO_PLAYER_SPAWN
+
+///////////////////////////////////////////////////////////////////////////
+// Default constructor
+//
+CPlayerDevice::CPlayerDevice(CWorld *world, CEntity *parent )
+        : CEntity(world, parent)
+{
+  // set the Player IO sizes correctly for this type of Entity
+  m_data_len    = sizeof( int ); //PLAYER_DATA_SIZE;
+  m_command_len = 0; //PLAYER_COMMAND_SIZE;
+  m_config_len  = 0; //PLAYER_CONFIG_SIZE;
+     
+  m_player_type = PLAYER_PLAYER_CODE; // from player's messages.h
+  m_stage_type = PlayerType;
+
+  m_size_x = 0.12; // estimated USC PlayerBox ("whitebox") size
+  m_size_y = 0.12;
+
+  m_interval = 1.0;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Minimal constructor
+// Destructor
 //
-CPlayerDevice::CPlayerDevice(CWorld *world, CEntity *parent,
-                             CPlayerServer *server, size_t offset, size_t buffer_len,
-                             size_t data_len, size_t command_len, size_t config_len)
-        : CEntity(world, parent)
+CPlayerDevice::~CPlayerDevice( void )
 {
-    m_port = -1;
-    m_server = server;
-
-    ASSERT(data_len + command_len + config_len <= buffer_len);
-
-    m_info = NULL;
-    m_data_buffer = NULL;
-    m_command_buffer = NULL;
-    m_config_buffer = NULL;
-
-    m_offset = offset;
-    m_info_len = INFO_BUFFER_SIZE;
-    m_data_len = data_len;
-    m_command_len = command_len;
-    m_config_len = config_len;
 }
 
 
@@ -75,7 +108,7 @@ bool CPlayerDevice::Load(int argc, char **argv)
     {
         if (strcmp(argv[i], "port") == 0 && i + 1 < argc)
         {
-            m_port = atoi(argv[i + 1]);
+            m_player_port = atoi(argv[i + 1]);
             i += 2;
         }
         else
@@ -84,6 +117,7 @@ bool CPlayerDevice::Load(int argc, char **argv)
             i += 1;
         }
     }
+
     return true;
 }
 
@@ -99,7 +133,7 @@ bool CPlayerDevice::Save(int &argc, char **argv)
     // Save port
     //
     char port[32];
-    snprintf(port, sizeof(port), "%d", m_port);
+    snprintf(port, sizeof(port), "%d", m_player_port);
     argv[argc++] = strdup("port");
     argv[argc++] = strdup(port);
 
@@ -108,227 +142,142 @@ bool CPlayerDevice::Save(int &argc, char **argv)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Default startup -- doesnt do much
+// Start the device
 //
-bool CPlayerDevice::Startup()
+bool CPlayerDevice::SetupIOPointers( char* io )
 {
-    if (!CEntity::Startup())
+  if( !CEntity::SetupIOPointers( io ) )
+    return false;
+  
+    // Startup player
+   //
+  if (!StartupPlayer( m_player_port )) return false;
+  
+  return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Shutdown the devices
+//
+void CPlayerDevice::Shutdown()
+{
+    CEntity::Shutdown();
+    // Shutdown player
+    //
+    ShutdownPlayer();
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Update the robot 
+//
+void CPlayerDevice::Update( double sim_time )
+{
+#ifdef DEBUG
+  CEntity::Update( sim_time ); // inherit debug output
+#endif
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Start player instance
+//
+bool CPlayerDevice::StartupPlayer(int port)
+{
+#ifdef DEBUG
+  cout << "StartupPlayer()" << endl;
+#endif
+
+#ifndef NO_PLAYER_SPAWN
+    // ----------------------------------------------------------------------
+    // fork off a player process to handle robot I/O
+  if( (player_pid = fork()) < 0 )
+    {
+        cerr << "fork error creating robots" << flush;
         return false;
 
-    // Find our server based on the port number
-    //
-    if (m_server == NULL)
+	// RTV - dunno what this does, so casually chopped it out :)
+	//
+      // don't use system time; use simulated time.
+      //timeval curr;
+      //gettimeofday(&curr, NULL);
+	//m_info->data_timestamp_sec = (uint32_t)floor(m_world->GetTime());
+	//m_info->data_timestamp_usec = 
+	//    (uint32_t)rint((m_world->GetTime()-
+	//                    m_info->data_timestamp_sec)*1000000.0);
+    }
+    else
     {
-        m_server = m_world->FindServer(m_port);
-        if (m_server == NULL)
+        if( player_pid == 0 ) // new child process
         {
-            printf("player server [%d] not found; cannot start device\n", (int) m_port);
-            return false;
+            // create player port number for command line
+            char portBuf[32];
+            sprintf( portBuf, "%d", (int) port );
+
+            // BPG
+            // release controlling tty so Player doesn't get signals
+            setpgrp();
+            // GPB
+
+            // we assume Player is in the current path
+            if( execlp( "player", "player",
+                        "-gp", portBuf, 
+			"-stage", m_world->PlayerIOFilename(), 
+			(char*) 0) < 0 )
+            {
+                cerr << "execlp failed: make sure Player can be found"
+                    " in the current path."
+                     << endl;
+                return false;
+            }
         }
-    }
+#ifdef DEBUG
+        else
+	  printf("forked player with pid: %d\n", player_pid);
+#endif
 
-    // Get a pointer to the shared memory area
-    //
-    uint8_t *buffer = (uint8_t*) m_server->GetShmem();
-    if (buffer == NULL)
-    {
-        printf("shared memory pointer == NULL; cannot start device\n");
-        return false;
     }
-    
-    // Initialise pointer to buffers
-    //
-    m_info = (player_stage_info_t*) (buffer + m_offset);
-    m_data_buffer = (uint8_t*) m_info + m_info_len;
-    m_command_buffer = (uint8_t*) m_data_buffer + m_data_len;
-    m_config_buffer = (uint8_t*) m_command_buffer + m_command_len;
+#endif
 
-    //printf("creating player device at addr: %p %p %p %p\n", m_info, m_data_buffer,
-    //       m_command_buffer, m_config_buffer);
-    
-    // Mark this device as available
-    //
-    m_server->LockShmem();
-    m_info->available = 1;
-    m_server->UnlockShmem();
-    
+#ifdef DEBUG
+  cout << "StartupPlayer() done" << endl;
+#endif
     return true;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Default shutdown -- doesnt do much
+// Stop player instance
 //
-void CPlayerDevice::Shutdown()
+void CPlayerDevice::ShutdownPlayer()
 {
-  // Mark this device as unavailable
-  //
-  // but only if our server actually exists - BPG
-  if(m_server)
-  {
-    m_server->LockShmem();
-    m_info->available = 0;
-    m_server->UnlockShmem();
-  }
-    
-    CEntity::Shutdown();
+    // BPG
+    if(kill(player_pid,SIGINT))
+        perror("CPlayerDevice::~CPlayerDevice(): kill() failed sending SIGINT to Player");
+    if(waitpid(player_pid,NULL,0) == -1)
+        perror("CPlayerDevice::~CPlayerDevice(): waitpid() returned an error");
+    // GPB
+
+}
+
+#ifdef INCLUDE_RTK
+
+///////////////////////////////////////////////////////////////////////////
+// Process GUI update messages
+//
+void CPlayerDevice::OnUiUpdate(RtkUiDrawData *pData)
+{
+    CEntity::OnUiUpdate(pData);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// See if the PlayerDevice is subscribed
+// Process GUI mouse messages
 //
-bool CPlayerDevice::IsSubscribed()
+void CPlayerDevice::OnUiMouse(RtkUiMouseData *pData)
 {
-    m_server->LockShmem();
-    bool subscribed = m_info->subscribed;
-    m_server->UnlockShmem();
-    return subscribed;
+    CEntity::OnUiMouse(pData);;
 }
 
-
-///////////////////////////////////////////////////////////////////////////
-// Write to the data buffer
-//
-size_t CPlayerDevice::PutData(void *data, size_t len,
-                              uint32_t time_sec, uint32_t time_usec)
-{
-    struct timeval curr;
-    gettimeofday(&curr,NULL);
-    //if (len > m_data_len)
-    //    RTK_MSG2("data len (%d) > buffer len (%d)", (int) len, (int) m_data_len);
-    //ASSERT(len <= m_data_len);
-
-    m_server->LockShmem();
-    
-    // Take the smallest number of bytes
-    // This avoids an overflow of either buffer
-    //
-    len = min(len, m_data_len);
-
-    // Copy the data (or as much as we were given)
-    //
-    memcpy(m_data_buffer, data, len);
-
-    // Set the timestamp
-    //
-    if (time_sec == 0 && time_usec == 0)
-    {
-      // don't use system time; use simulated time.
-      //timeval curr;
-      //gettimeofday(&curr, NULL);
-      m_info->data_timestamp_sec = (uint32_t)floor(m_world->GetTime());
-      m_info->data_timestamp_usec = 
-              (uint32_t)rint((m_world->GetTime()-
-                              m_info->data_timestamp_sec)*1000000.0);
-    }
-    else
-    {
-        m_info->data_timestamp_sec = time_sec;
-        m_info->data_timestamp_usec = time_usec;
-    }
-
-    // Set data flag to indicate data is available
-    //
-    m_info->data_len = len;
-
-    m_server->UnlockShmem();
-    
-    return len;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Read from the data buffer
-// Returns the number of bytes copied
-//
-size_t CPlayerDevice::GetData(void *data, size_t len,
-                              uint32_t *time_sec, uint32_t *time_usec)
-{
-    m_server->LockShmem();
-    
-    // Take the smallest number of bytes
-    // This avoids an overflow of either buffer
-    //
-    len = min(len, m_data_len);
-
-    // Copy the data (or as much as we were given)
-    //
-    memcpy(data, m_data_buffer, len);
-
-    // Copy the timestamp
-    //
-    if (time_sec != NULL)
-        *time_sec = m_info->data_timestamp_sec;
-    if (time_usec != NULL)
-        *time_usec = m_info->data_timestamp_usec;
-
-    m_server->UnlockShmem();
-    
-    return len;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Read from the command buffer
-//
-size_t CPlayerDevice::GetCommand(void *data, size_t len)
-{   
-    //if (len < m_command_len)
-    //    RTK_MSG2("buffer len (%d) < command len (%d)", (int) len, (int) m_command_len);
-    //ASSERT(len >= m_command_len);
-    
-    m_server->LockShmem();
-
-    // See if there is a command
-    //
-    size_t command_len = m_info->command_len;
-    ASSERT(command_len <= m_command_len);
-
-    // Take the smallest number of bytes
-    // This avoids an overflow of either buffer
-    //
-    len = min(len, command_len);
-
-    // Copy the command
-    //
-    memcpy(data, m_command_buffer, len);
-    
-    m_server->UnlockShmem();
-    return len;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Read from the configuration buffer
-//
-size_t CPlayerDevice::GetConfig(void *data, size_t len)
-{
-    //if (len < m_config_len)
-    //    RTK_MSG2("buffer len (%d) < config len (%d)", (int) len, (int) m_config_len);
-    //ASSERT(len >= m_config_len);
-    
-    m_server->LockShmem();
-
-    // See if there is a config
-    //
-    size_t config_len = m_info->config_len;
-    ASSERT(config_len <= m_config_len);
-
-    // Take the smallest number of bytes
-    // This avoids an overflow of either buffer
-    //
-    len = min(len, config_len);
-
-    // Copy the command
-    //
-    memcpy(data, m_config_buffer, len);
-
-    // Reset the config len to indicate that we have consumed this message
-    //
-    m_info->config_len = 0;
-    
-    m_server->UnlockShmem();
-    return len;
-}
-
+#endif

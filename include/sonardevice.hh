@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/sonardevice.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.4 $
+//  $Author: vaughan $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -31,24 +31,19 @@
 
 #define SONARSAMPLES PLAYER_NUM_SONAR_SAMPLES
 
-class CSonarDevice : public CPlayerDevice
+class CSonarDevice : public CEntity
 {
     // Default constructor
     //
-    public: CSonarDevice(CWorld *world, CEntity *parent, CPlayerServer *server);
+    public: CSonarDevice(CWorld *world, CEntity *parent );
     
     // Update the device
     //
-    public: virtual void Update();
+    public: virtual void Update( double sim_time );
 
     // Get the pose of the sonar
     //
     private: void GetSonarPose(int s, double &px, double &py, double &pth);
-    
-    // Sonar timing settings
-    //
-    private: double updateInterval;
-    private: double lastUpdate;
     
     // Maximum range of sonar in meters
     //
@@ -62,9 +57,7 @@ class CSonarDevice : public CPlayerDevice
     
     // Array holding the sonar data
     //
-    private: unsigned short m_range[SONARSAMPLES];
-
-    private: ExportSonarData expSonar; 
+    private: player_sonar_data_t m_data;
 
 #ifdef INCLUDE_RTK
     

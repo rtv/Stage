@@ -1,7 +1,7 @@
 /*************************************************************************
  * guiexport.hh - data types for exporting data to an external GUI
  * RTV
- * $Id: guiexport.hh,v 1.9 2001-08-09 02:20:41 gerkey Exp $
+ * $Id: guiexport.hh,v 1.10 2001-08-09 08:00:07 vaughan Exp $
  ************************************************************************/
 #ifndef GUIEXPORT_H
 #define GUIEXPORT_H
@@ -124,3 +124,9 @@ typedef struct
 typedef  ExportData ImportData;
 
 #endif
+
+
+
+
+
+

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacon.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.5 $
+//  $Author: vaughan $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -49,7 +49,7 @@ class CLaserBeacon : public CEntity
     
     // Update the device
     //
-    public: virtual void Update();
+    public: virtual void Update( double sim_time );
 
     // Beacon id
     //

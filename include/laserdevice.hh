@@ -7,8 +7,9 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.15 $
+//  $Author: vaughan $
+//  $Revision: 1.16 $
+
 //
 // Usage:
 //  (empty)
@@ -29,11 +30,11 @@
 
 #include "playerdevice.hh"
 
-class CLaserDevice : public CPlayerDevice
+class CLaserDevice : public CEntity
 {
     // Default constructor
     //
-    public: CLaserDevice(CWorld *world, CEntity *parent, CPlayerServer* server);
+    public: CLaserDevice(CWorld *world, CEntity *parent );
 
     // Load the object from an argument list
     //
@@ -45,7 +46,7 @@ class CLaserDevice : public CPlayerDevice
 
     // Update the device
     //
-    public: virtual void Update();
+    public: virtual void Update( double sim_time );
 
     // Check to see if the configuration has changed
     //
@@ -57,12 +58,11 @@ class CLaserDevice : public CPlayerDevice
 
     // Draw ourselves into the world rep
     //
-    private: void Map(bool render);
+    private: virtual void Map(bool render);
     
     // Laser timing settings
     //
-    private: double m_update_rate;
-    private: double m_last_update;
+  //private: double m_update_rate;
     
     // Maximum range of sample in meters
     //
@@ -89,7 +89,7 @@ class CLaserDevice : public CPlayerDevice
     private: double m_map_px, m_map_py, m_map_pth;
 
     // storage for exporting the laser hit points
-   private: ExportLaserData expLaser;
+  //private: ExportLaserData expLaser;
 
 #ifdef INCLUDE_RTK
     
@@ -118,6 +118,15 @@ class CLaserDevice : public CPlayerDevice
 };
 
 #endif
+
+
+
+
+
+
+
+
+
 
 
 

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/gripperdevice.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.3 $
+//  $Author: vaughan $
+//  $Revision: 1.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -16,7 +16,7 @@
 #define GRIPPERDEVICE_HH
 
 
-#include "playerdevice.hh"
+#include "entity.hh"
 
 /* 
  * gripper constants
@@ -39,21 +39,19 @@
 
 #define MAXGRIPPERCAPACITY 1000
 
-class CGripperDevice : public CPlayerDevice
+class CGripperDevice : public CEntity
 {
     // Default constructor
     //
-    public: CGripperDevice(CWorld *world, 
-                           CEntity *parent, 
-                           CPlayerServer* server);
-    
+    public: CGripperDevice(CWorld *world, CEntity *parent ); 
+     
     // Load the object from an argument list
     //
     public: virtual bool Load(int argc, char **argv);
     
     // Update the device
     //
-    public: virtual void Update();
+    public: virtual void Update( double sim_time );
 
     // Package up the gripper's state in the right format
     //
@@ -67,10 +65,6 @@ class CGripperDevice : public CPlayerDevice
     //
     private: void PickupObject();
 
-    // Update times
-    //
-    private: double m_last_update, m_update_interval;
-    
     // Current gripper state
     //
     //  note that these will be folded in as bitmasks to
@@ -103,6 +97,7 @@ class CGripperDevice : public CPlayerDevice
 
     // structure for exporting Gripper-specific data to a GUI
     private: ExportGripperData expGripper; 
+    public: ExportData exp; // relic from xgui-style stuff still used by BG
 
 #ifdef INCLUDE_RTK
     

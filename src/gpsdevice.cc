@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gpsdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.1 $
+//  $Author: vaughan $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -20,31 +20,39 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CGpsDevice::CGpsDevice(CWorld *world, CEntity *parent, CPlayerServer *server)
-        : CPlayerDevice(world, parent, server,
-                        GPS_DATA_START,
-                        GPS_TOTAL_BUFFER_SIZE,
-                        GPS_DATA_BUFFER_SIZE,
-                        GPS_COMMAND_BUFFER_SIZE,
-                        GPS_CONFIG_BUFFER_SIZE)
+CGpsDevice::CGpsDevice(CWorld *world, CEntity *parent )
+  : CEntity(world, parent )
 {
+  m_data_len    = sizeof( player_gps_data_t ); 
+  m_command_len = 0;
+  m_config_len  = 0;
 
+  m_size_x = 0.1;
+  m_size_y = 0.1;
 
-  exp.objectType = gps_o;
-  exp.objectId = this;
-  exp.data = (char*)&m_data;  
-  strcpy( exp.label, "GPS" );
+  m_player_type = PLAYER_GPS_CODE;
+  m_stage_type = GpsType;
+
+  m_interval = 0.05;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the gps data
 //
-void CGpsDevice::Update()
+void CGpsDevice::Update( double sim_time )
 {
-    ASSERT(m_server != NULL);
     ASSERT(m_world != NULL);
     
+    if( Subscribed() < 1)
+      return;
+    
+    if( sim_time - m_last_update < m_interval )
+      return;
+    
+    m_last_update = sim_time;
+    
+
     double px,py,pth;
     GetGlobalPose(px,py,pth);
 

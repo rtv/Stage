@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.7 $
+//  $Author: vaughan $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -32,18 +32,18 @@ const double TWOPI = 6.283185307;
 
 // constructor
 
-CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent, CPlayerServer *server)
-        : CPlayerDevice(world, parent, server,
-                        SONAR_DATA_START,
-                        SONAR_TOTAL_BUFFER_SIZE,
-                        SONAR_DATA_BUFFER_SIZE,
-                        SONAR_COMMAND_BUFFER_SIZE,
-                        SONAR_CONFIG_BUFFER_SIZE)
+CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent )
+  : CEntity(world, parent )
 {
-    updateInterval = 0.1; //seconds
-    lastUpdate = 0;
+  // set the Player IO sizes correctly for this type of Entity
+  m_data_len    = sizeof( player_sonar_data_t );
+  m_command_len = 0;//sizeof( player_sonar_cmd_t );
+  m_config_len  = 0;//sizeof( player_sonar_config_t );
+  
+  m_player_type = PLAYER_SONAR_CODE; // from player's messages.h
+   m_stage_type = SonarType;
 
-    m_sonar_count = SONARSAMPLES;
+  m_sonar_count = SONARSAMPLES;
     m_min_range = 0.20;
     m_max_range = 8.0;
     
@@ -53,108 +53,100 @@ CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent, CPlayerServer *server
         GetSonarPose(i, m_sonar[i][0], m_sonar[i][1], m_sonar[i][2]);
     
     // zero the data
-    memset( m_range, 0, sizeof(m_range) );
-
-    exp.objectType = sonar_o; 
-    exporting = true;
-    exp.objectId = this; // used both as ptr and as a unique ID
-    exp.data = (char*)&expSonar;
-    expSonar.hitCount = 0;
+    memset( &m_data, 0, sizeof(m_data) );
 }
 
 
-void CSonarDevice::Update() 
+void CSonarDevice::Update( double sim_time ) 
 {
-    CPlayerDevice::Update();
+#ifdef DEBUG
+  CEntity::Update( sim_time ); // inherit some debug output
+#endif
 
-   
-    // dump out if noone is subscribed
-    if(!IsSubscribed())
-      {
-	// have to invalidate the exported scan data so it gets undrawn
-	memset( &expSonar, 0, expSonar.hitCount * sizeof( DPoint ) );
-        return;
-      }
+  // dump out if noone is subscribed
+  if( Subscribed() < 1 )
+    {
+      return;
+    }
 
-    // if its time to recalculate vision
-    if( m_world->GetTime() - lastUpdate <= updateInterval )
-        return;
-    lastUpdate = m_world->GetTime();
+  // Check to see if it is time to update
+  //  - if not, return right away.
+  if( sim_time - m_last_update < m_interval) return;
+  
+  m_last_update = sim_time;
 
-    expSonar.hitCount = 0;
-
-    // Initialise gui data
-    //
-    #ifdef INCLUDE_RTK
-        m_hit_count = 0;
-    #endif
-
-    // Compute fov, range, etc
-    //
-    double dr = 1.0 / m_world->ppm;
-    double max_range = m_max_range;
-    double min_range = m_min_range;
-
-
-    // Check bounds
-    //
-    ASSERT((size_t) m_sonar_count <= sizeof(m_range) / sizeof(m_range[0]));
-    
-    // Do each sonar
-    //
-    for (int s = 0; s < m_sonar_count; s++)
+  // Initialise gui data
+  //
+#ifdef INCLUDE_RTK
+  m_hit_count = 0;
+#endif
+  
+  // Compute fov, range, etc
+  //
+  double dr = 1.0 / m_world->ppm;
+  double max_range = m_max_range;
+  double min_range = m_min_range;
+  
+  
+  // Check bounds
+  //
+  ASSERT((size_t) m_sonar_count <= sizeof(m_data.ranges) 
+	 / sizeof(m_data.ranges[0]));
+  
+  // Do each sonar
+  //
+  for (int s = 0; s < m_sonar_count; s++)
     {
         // Compute parameters of scan line
-        //
-        double ox = m_sonar[s][0];
-        double oy = m_sonar[s][1];
-        double oth = m_sonar[s][2];
-        LocalToGlobal(ox, oy, oth);
+      //
+      double ox = m_sonar[s][0];
+      double oy = m_sonar[s][1];
+      double oth = m_sonar[s][2];
+      LocalToGlobal(ox, oy, oth);
+      
+      double px = ox;
+      double py = oy;
+      double pth = oth;
+      
+      // Compute the step for simple ray-tracing
+      //
+      double dx = dr * cos(pth);
+      double dy = dr * sin(pth);
 
-        double px = ox;
-        double py = oy;
-        double pth = oth;
-        
-        // Compute the step for simple ray-tracing
-        //
-        double dx = dr * cos(pth);
-        double dy = dr * sin(pth);
-
-        // Look along scan line for obstacles
-        // Could make this an int again for a slight speed-up.
-        //
-        double range;
-        for (range = 0; range < max_range; range += dr)
+      // Look along scan line for obstacles
+      // Could make this an int again for a slight speed-up.
+      //
+      double range;
+      for (range = 0; range < max_range; range += dr)
         {
-            // Look in the laser layer for obstacles
-            //
-            uint8_t cell = m_world->GetCell(px, py, layer_obstacle);
-            if (range > min_range && cell != 0)           
-                break;
-            px += dx;
-            py += dy;
+	  // Look in the laser layer for obstacles
+	  //
+	  uint8_t cell = m_world->GetCell(px, py, layer_obstacle);
+	  if (range > min_range && cell != 0)           
+	    break;
+	  px += dx;
+	  py += dy;
         }
-
-        // Store range in mm in network byte order
-        //
-        m_range[s] = htons((uint16_t) (range * 1000));
-
-        // Update the gui data
-        //
-        #ifdef INCLUDE_RTK
-            m_hit[m_hit_count][0][0] = ox;
-            m_hit[m_hit_count][0][1] = oy;
-            m_hit[m_hit_count][1][0] = px;
-            m_hit[m_hit_count][1][1] = py;
-            m_hit_count++;
-        #endif
-
-	expSonar.hitPts[expSonar.hitCount].x = px;// * m_world->ppm;
-	expSonar.hitPts[expSonar.hitCount].y = py;// * m_world->ppm;
-	expSonar.hitCount++;
+      
+      // Store range in mm in network byte order
+      //
+      m_data.ranges[s] = htons((uint16_t) (range * 1000));
+      
+      // Update the gui data
+      //
+#ifdef INCLUDE_RTK
+      m_hit[m_hit_count][0][0] = ox;
+      m_hit[m_hit_count][0][1] = oy;
+      m_hit[m_hit_count][1][0] = px;
+      m_hit[m_hit_count][1][1] = py;
+      m_hit_count++;
+#endif
+      
     }
-	
-    PutData(m_range, sizeof( unsigned short ) * SONARSAMPLES );
+  
+  PutData( &m_data, sizeof(m_data) );
+
+  return;
 }
 
 
@@ -174,7 +166,7 @@ void CSonarDevice::OnUiUpdate(RtkUiDrawData *pData)
     pData->begin_section("global", "sonar");
     
     if (pData->draw_layer("scan", true))
-        if (IsSubscribed())
+        if ( Subscribed() > 0 )
             DrawScan(pData);
     
     pData->end_section();

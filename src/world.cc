@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.16 $
+//  $Author: vaughan $
+//  $Revision: 1.17 $
 //
 // Usage:
 //  (empty)
@@ -24,13 +24,35 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#include <unistd.h>
 #include <sys/time.h>
 #include <signal.h>
 #include <math.h>
 #include <iostream.h>
-#include "stage.h"
+#include <unistd.h>
+#include <sys/mman.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <pwd.h>
+
+//#include <stage.h>
 #include "world.hh"
+
+#define SEMKEY 2000
+
+#define WATCHRATES
+//#define DEBUG 
+//#define VERBOSE
+
+// right now i have a single fixed filename for the mmapped IO with Player
+// eventually we'll be able to run multiple stages, each with a different
+// suffix - for now its IOFILENAME.$USER
+#define IOFILENAME "/tmp/stageIO"
+
+// main.cc calls constructor, then Load(), then Startup(), then starts thread
+// at CWorld::Main();
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
@@ -64,12 +86,10 @@ CWorld::CWorld()
     //
     m_laser_res = 0;
     
-    memset(m_env_file, 0, sizeof(m_env_file));
+    memset( m_env_file, 0, sizeof(m_env_file));
 
-    // Initialise the server list
-    // Note that this should NOT be dont in StartUp
-    //
-    InitServer();
+    // the current truth is unpublished
+    m_truth_is_current = false;
 }
 
 
@@ -88,19 +108,92 @@ CWorld::~CWorld()
         delete m_vision_img;
     if (m_puck_img)
         delete m_puck_img;
+    
+    // zap the mmap IO point in the filesystem
+    // XX fix this to test success later
+    unlink( tmpName );
+
 }
 
+/////////////////////////////////////////////////////////////////////////
+// -- create the memory map for IPC with Player 
+//
+bool CWorld::InitSharedMemoryIO( void )
+{ 
+  
+  int mem = 0, obmem = 0;
+  for (int i = 0; i < m_object_count; i++)
+    {
+      obmem = m_object[i]->SharedMemorySize();
+      mem += obmem;
+#ifdef DEBUG
+      printf( "m_object[%d] (%p) needs %d (subtotal %d) bytes\n",
+	      i, m_object[i], obmem, mem ); 
+#endif
+    }
+  
+  // amount of memory to reserve per robot for Player IO
+  size_t areaSize = (size_t)mem;//TOTAL_SHARED_MEMORY_BUFFER_SIZE;
+
+#ifdef DEBUG
+  cout << "Shared memory allocation: " << areaSize 
+       << " (" << mem << ")" << endl;
+#endif
+
+  // HMMM, WE REALLY SHOULD THINK ABOUT ALLOWING STAGE TO RUN MORE
+  // THAN ONE COPY PER MACHINE! REQUIRES SOME INTELLIGENT PORT# HANDLING
+
+  // make a filename for mmapped IO from a base name and the user's name
+  struct passwd* user_info = getpwuid( getuid() );
+  sprintf( tmpName, "%s.%s", IOFILENAME, user_info->pw_name );
+
+  // XX handle this better later?
+  unlink( tmpName ); // if the file exists, trash it.
+
+  int tfd = open( tmpName, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR );
+  
+  // make the file the right size
+  if( ftruncate( tfd, areaSize ) < 0 )
+    {
+      perror( "Failed to set file size" );
+      return false;
+    }
+  
+  playerIO = (caddr_t)mmap( NULL, areaSize, PROT_READ | PROT_WRITE, MAP_SHARED,
+			    tfd, (off_t) 0);
+
+  if (playerIO == MAP_FAILED )
+    {
+      perror( "Failed to map memory" );
+      return false;
+    }
+  
+  close( tfd ); // can close fd once mapped
+  
+  // Initialise entire space
+  //
+  memset(playerIO, 0, areaSize);
+  
+  // Create the lock object for the shared mem
+  //
+  if ( !CreateShmemLock() )
+    {
+      perror( "failed to create lock for shared memory" );
+      return false;
+    }
+  
+#ifdef DEBUG
+  cout << "Successfully mapped shared memory." << endl;  
+#endif  
+
+  return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Startup routine 
 //
 bool CWorld::Startup()
-{
-    // Initialise the world grids
-    //
-    if (!InitGrids(m_env_file))
-        return false;
-    
+{  
     // Initialise the laser beacon rep
     //
     InitLaserBeacon();
@@ -126,6 +219,7 @@ bool CWorld::Startup()
     m_update_ratio = 1;
     m_update_rate = 0;
     
+   
     // Initialise the message router
     //
 #ifdef INCLUDE_RTK
@@ -135,24 +229,39 @@ bool CWorld::Startup()
     m_router->add_sink(RTK_UI_BUTTON, (void (*) (void*, void*)) &OnUiButton, this);
 #endif
 
-#ifdef INCLUDE_XGUI
-    win = new CXGui( this );
-    assert( win );
-
-    // must call this at least once before the world is updated so that
-    // things are drawn correctly in the first place
-    if( win ) win->HandleEvent();
-#endif
-
-
-    // Start all the objects
-    //
+    // Startup all the objects
+    // this lets them calculate how much shared memory they'll need
     for (int i = 0; i < m_object_count; i++)
-    {
-        if (!m_object[i]->Startup())
-            return false;
-    }
+      {
+	if( !m_object[i]->Startup() )
+	{
+	  cout << "Object " << (int)(m_object[i]) 
+	       << " failed Startup()" << endl;
+	  return false;
+	}
+	fflush( stdout );
+      }
+    // Create the shared memory map
+    //
+    InitSharedMemoryIO();
 
+    // Setup IO for all the objects - MUST DO THIS AFTER MAPPING SHARING MEMORY
+    // each is passed a pointer to the start of its space in shared memory
+
+    int entityOffset = 0;
+
+    for (int i = 0; i < m_object_count; i++)
+      {
+        if (!m_object[i]->SetupIOPointers( playerIO + entityOffset ) )
+	  {
+	    cout << "Object " << (int)(m_object[i]) 
+		 << " failed SetupIOPointers()" << endl;
+	    return false;
+	  }
+	
+	entityOffset += m_object[i]->SharedMemorySize();
+      }
+    
     // Start the world thread
     //
     if (!StartThread())
@@ -243,13 +352,16 @@ void* CWorld::Main(void *arg)
 
         // Dont hog all the cycles -- sleep for 10ms
         //
-        usleep(10000);
+	// RTV - linux seems to usleep for a minimum of 10ms.
+	// so values below 10000 microseconds here don't make any difference.
+	// by usleeping at all here you get a max 50Hz update rate.
+        usleep(1000);
 
         // Update the world
         //
         if (world->m_enable)
-            world->Update();
-
+	  world->Update();
+	
         /* *** HACK -- should reinstate this somewhere ahoward
            if( !runDown ) runStart = timeNow;
            else if( (quitTime > 0) && (timeNow > (runStart + quitTime) ) )
@@ -274,8 +386,8 @@ void* CWorld::Main(void *arg)
 //
 void CWorld::Update()
 {
-    //static double last_output_time = 0;
-    
+  //static double last_output_time = 0;
+
     // Compute elapsed real time
     //
     double timestep = GetRealTime() - m_last_time;
@@ -300,7 +412,7 @@ void CWorld::Update()
     // This is done as a moving window filter so we can see
     // the change over time.
     //
-    double a = 0.1;
+    double a = 0.05;
     m_update_ratio = (1 - a) * m_update_ratio + a * (simtimestep / timestep);
     
     // Keep track of the update rate
@@ -308,46 +420,89 @@ void CWorld::Update()
     // the change over time.
     // Note that we must use the *real* timestep to get sensible results.
     //
-    m_update_rate = (1 - a) * m_update_rate + a * (1 / timestep);
+//      m_update_rate = (1 - a) * m_update_rate + a * (1 / timestep);
 
-    /*
-    if((GetRealTime() - last_output_time) >= 1.0)
-    {
-      printf("Sim time:%8.3fs Real time:%8.3fs Sim/Real:%8.3f Update:%8.3fHz\r",
-             m_sim_time, GetRealTime(), m_update_ratio, m_update_rate);
-      last_output_time = GetRealTime();
-      fflush(stdout);
-    }
-    */
+//      if((GetRealTime() - last_output_time) >= 1.0)
+//      {
+//        printf("Sim time:%8.3fs Real time:%8.3fs Sim/Real:%8.3f Update:%8.3fHz\r",
+//               m_sim_time, GetRealTime(), m_update_ratio, m_update_rate);
+//        last_output_time = GetRealTime();
+//        fflush(stdout);
+//      }
 
 
-    // might move this elsewhere and call it less often
-    // - will test for responsiveness.
-    // must be before the first 
-#ifdef INCLUDE_XGUI
-    if( win ) win->HandleEvent();
-    static double xgui_time = 0;
+#ifdef WATCH_RATES
+    static int period = 0;
+    if( (++period %= 20)  == 0 )
+      {
+	printf( "  %.2f Hz (%.2f)\r", m_update_rate, m_update_ratio );
+	fflush( stdout );
+      }
 #endif
 
-    // Do the actual work -- update the objects
-    //
+    // import any truths that were queued up by the truth server thread
+    //printf( "update_queue size: %d\n", update_queue.size() );
+
+    while( !input_queue.empty() )
+      {
+	stage_truth_t truth = input_queue.front(); // copy the front object
+	input_queue.pop(); // remove the front object
+
+//  #ifdef DEBUG
+//  	printf( "De-queued Truth: "
+//  		"(%d,%d,%d) parent (%d,%d,%d) [%d,%d,%d]\n", 
+//  		truth.id.port, 
+//  		truth.id.type, 
+//  		truth.id.index,
+//  		truth.parent.port, 
+//  		truth.parent.type, 
+//  		truth.parent.index,
+//  		truth.x, truth.y, truth.th );
+	
+//  	fflush( stdout );
+//  #endif
+
+	// find the matching entity
+	// (this implies that these ID fields cannot be changed externally)
+	
+	assert( (CEntity*)truth.stage_id ); // should be good -otherwise a bug
+
+	//printf( "PTR: %d\n", truth.stage_id ); fflush( stdout );
+
+	CEntity* ent = (CEntity*)truth.stage_id;
+ 
+	  //GetEntityByID( truth.id.port, 
+	  //      truth.id.type,
+	  //    truth.id.index );
+
+	assert( ent ); // there really ought to be one!
+	
+	//ent->Map( false );
+	
+	// update the entity with the truth
+	ent->SetGlobalPose( truth.x/1000.0, truth.y/1000.0, 
+			    DTOR(truth.th) );
+	
+	ent->truth_poked = 1;
+
+	//ent->Map( true );
+
+	// the parent may have been changed - NYI
+	//ent->parent->port = truth.parent.port;
+	//ent->parent.type = truth.parent.type;
+	//ent->parent.index = truth.parent.index;
+
+	// width and height could be changed here too if necessary
+
+	//ent->m_publish_truth = true; // re-export this new truth
+      }
+    
+    // Do the actual work -- update the objects 
     for (int i = 0; i < m_object_count; i++)
-   {
-
-     m_object[i]->Update();
-
-#ifdef INCLUDE_XGUI
-     double tm = GetRealTime();
-     if ( tm - xgui_time > 0.05 ) // update GUI at 20Hz
-	  {
-            xgui_time = GetRealTime();
-	    
-	    for (int i = 0; i < m_object_count; i++)
-	      win->ImportExportData( m_object[i]->ImportExportData( 0 ) );    
-	  }
-#endif   
-   }
-  
+      {
+	// update
+	m_object[i]->Update( m_sim_time ); 
+      }
 }
 
 
@@ -410,25 +565,25 @@ bool CWorld::InitGrids(const char *env_file)
       exit( 1 );
     }
 
-    width = m_bimg->width;
-    height = m_bimg->height;
-
-    // draw an outline around the background image
-    m_bimg->draw_box( 0,0,width-1,height-1, 0xFF );
+  int width = m_bimg->width;
+  int height = m_bimg->height;
   
-    // Clear obstacle image
-    //
-    m_obs_img = new Nimage(width, height);
-    m_obs_img->clear(0);
+  // draw an outline around the background image
+  m_bimg->draw_box( 0,0,width-1,height-1, 0xFF );
+  
+  // Clear obstacle image
+  //
+  m_obs_img = new Nimage(width, height);
+  m_obs_img->clear(0);
     
-    // Clear laser image
-    //
-    m_laser_img = new Nimage(width, height);
-    m_laser_img->clear(0);
-    
-    // Copy fixed obstacles into laser rep
-    //
-    for (int y = 0; y < m_bimg->height; y++)
+  // Clear laser image
+  //
+  m_laser_img = new Nimage(width, height);
+  m_laser_img->clear(0);
+  
+  // Copy fixed obstacles into laser rep
+  //
+  for (int y = 0; y < m_bimg->height; y++)
     {
         for (int x = 0; x < m_bimg->width; x++)
         {
@@ -440,17 +595,17 @@ bool CWorld::InitGrids(const char *env_file)
         }
     }
 
-    // Clear vision image
-    //
-    m_vision_img = new Nimage(width, height);
-    m_vision_img->clear(0);
+  // Clear vision image
+  //
+  m_vision_img = new Nimage(width, height);
+  m_vision_img->clear(0);
 
-    // Clear puck image
-    //
-    m_puck_img = new Nimage(width, height);
-    m_puck_img->clear(0);
+  // Clear puck image
+  //
+  m_puck_img = new Nimage(width, height);
+  m_puck_img->clear(0);
                 
-    return true;
+  return true;
 }
 
 
@@ -462,7 +617,7 @@ uint8_t CWorld::GetCell(double px, double py, EWorldLayer layer)
     // Convert from world to image coords
     //
     int ix = (int) (px * ppm);
-    int iy = height - (int) (py * ppm);
+    int iy = m_bimg->height - (int) (py * ppm);
 
     // This could be cleaned up by having an array of images
     //
@@ -489,7 +644,7 @@ void CWorld::SetCell(double px, double py, EWorldLayer layer, uint8_t value)
     // Convert from world to image coords
     //
     int ix = (int) (px * ppm);
-    int iy = height - (int) (py * ppm);
+    int iy = m_bimg->height - (int) (py * ppm);
 
     // This could be cleaned up by having an array of images
     //
@@ -533,22 +688,22 @@ uint8_t CWorld::GetRectangle(double px, double py, double pth,
     tx = px + cx - sy;
     ty = py + sx + cy;
     rect.toplx = (int) (tx * ppm);
-    rect.toply = height - (int) (ty * ppm);
+    rect.toply = m_bimg->height - (int) (ty * ppm);
 
     tx = px - cx - sy;
     ty = py - sx + cy;
     rect.toprx = (int) (tx * ppm);
-    rect.topry = height - (int) (ty * ppm);
+    rect.topry = m_bimg->height - (int) (ty * ppm);
 
     tx = px - cx + sy;
     ty = py - sx - cy;
     rect.botlx = (int) (tx * ppm);
-    rect.botly = height - (int) (ty * ppm);
+    rect.botly = m_bimg->height - (int) (ty * ppm);
 
     tx = px + cx + sy;
     ty = py + sx - cy;
     rect.botrx = (int) (tx * ppm);
-    rect.botry = height - (int) (ty * ppm);
+    rect.botry = m_bimg->height - (int) (ty * ppm);
     
     // This could be cleaned up by having an array of images
     //
@@ -589,22 +744,22 @@ void CWorld::SetRectangle(double px, double py, double pth,
     tx = px + cx - sy;
     ty = py + sx + cy;
     rect.toplx = (int) (tx * ppm);
-    rect.toply = height - (int) (ty * ppm);
+    rect.toply = m_bimg->height - (int) (ty * ppm);
 
     tx = px - cx - sy;
     ty = py - sx + cy;
     rect.toprx = (int) (tx * ppm);
-    rect.topry = height - (int) (ty * ppm);
+    rect.topry = m_bimg->height - (int) (ty * ppm);
 
     tx = px - cx + sy;
     ty = py - sx - cy;
     rect.botlx = (int) (tx * ppm);
-    rect.botly = height - (int) (ty * ppm);
+    rect.botly = m_bimg->height - (int) (ty * ppm);
 
     tx = px + cx + sy;
     ty = py + sx - cy;
     rect.botrx = (int) (tx * ppm);
-    rect.botry = height - (int) (ty * ppm);
+    rect.botry = m_bimg->height - (int) (ty * ppm);
     
     // This could be cleaned up by having an array of images
     //
@@ -634,7 +789,7 @@ void CWorld::SetCircle(double px, double py, double pr,
     // Convert from world to image coords
     //
     int x = (int) (px * ppm);
-    int y = height - (int) (py * ppm);
+    int y = m_bimg->height - (int) (py * ppm);
     int r = (int) (pr * ppm);
     
     // This could be cleaned up by having an array of images
@@ -692,81 +847,6 @@ CEntity* CWorld::NearestObject( double x, double y )
   return nearest;
 }
 
-
-///////////////////////////////////////////////////////////////////////////
-// Initialise the player server list
-//
-void CWorld::InitServer()
-{
-    m_server_count = 0;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Register a server by its port number
-// Returns false if the number is alread taken
-//
-bool CWorld::AddServer(int port, CPlayerServer *server)
-{
-    if (m_server_count >= ARRAYSIZE(m_servers))
-        return false;
-    if (FindServer(port) != NULL)
-        return false;
-
-    m_servers[m_server_count].m_port = port;
-    m_servers[m_server_count].m_server = server;
-    m_server_count++;
-    return true;
-}
-    
-
-///////////////////////////////////////////////////////////////////////////
-// Lookup a server using its port number
-//
-CPlayerServer *CWorld::FindServer(int port)
-{
-    for (int i = 0; i < m_server_count; i++)
-    {
-        if (m_servers[i].m_port == port)
-            return m_servers[i].m_server;
-    }
-    return NULL;
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Initialise puck representation
-//
-void CWorld::InitPuck()
-{
-    m_puck_count = 0;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Add a puck to the world
-// Returns an index for puck
-//
-int CWorld::AddPuck(CEntity* puck)
-{
-    assert(m_puck_count < ARRAYSIZE(m_puck));
-    int index = m_puck_count++;
-    m_puck[index].puck = puck;
-    return index;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Get the pointer to a puck
-//
-CEntity* CWorld::GetPuck(int index)
-{
-    if (index < 0 || index >= m_puck_count)
-        return NULL;
-    return(m_puck[index].puck);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
 // Initialise laser beacon representation
 //
 void CWorld::InitLaserBeacon()
@@ -781,9 +861,13 @@ void CWorld::InitLaserBeacon()
 //
 int CWorld::AddLaserBeacon(int id)
 {
+  //puts( "ADDING A LASER BEACON" );
+
     assert(m_laserbeacon_count < ARRAYSIZE(m_laserbeacon));
     int index = m_laserbeacon_count++;
     m_laserbeacon[index].m_id = id;
+
+    //printf( "now have %d beacons\n", index );
     return index;
 }
 
@@ -793,7 +877,10 @@ int CWorld::AddLaserBeacon(int id)
 //
 void CWorld::SetLaserBeacon(int index, double px, double py, double pth)
 {
-    ASSERT(index >= 0 && index < m_laserbeacon_count);
+  //  printf( "SETTING BEACON POS %.2f %.2f %.2f\n", 
+  //  px, py, pth );
+ 
+  ASSERT(index >= 0 && index < m_laserbeacon_count);
     m_laserbeacon[index].m_px = px;
     m_laserbeacon[index].m_py = py;
     m_laserbeacon[index].m_pth = pth;
@@ -805,7 +892,7 @@ void CWorld::SetLaserBeacon(int index, double px, double py, double pth)
 //
 bool CWorld::GetLaserBeacon(int index, int *id, double *px, double *py, double *pth)
 {
-    if (index < 0 || index >= m_laserbeacon_count)
+     if (index < 0 || index >= m_laserbeacon_count)
         return false;
     *id = m_laserbeacon[index].m_id;
     *px = m_laserbeacon[index].m_px;
@@ -864,6 +951,105 @@ CBroadcastDevice* CWorld::GetBroadcastDevice(int i)
     if (i < 0 || i >= ARRAYSIZE(m_broadcast))
         return NULL;
     return m_broadcast[i];
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// lock the shared mem
+// Returns true on success
+//
+bool CWorld::LockShmem( void )
+{
+  struct sembuf ops[1];
+
+  ops[0].sem_num = 0;
+  ops[0].sem_op = 1;
+  ops[0].sem_flg = 0;
+
+#ifdef DEBUG
+  // printf( "Lock semaphore: %d %d\n" , semKey, semid );
+  //fflush( stdout );
+#endif
+
+  int retval = semop( semid, ops, 1 );
+  if (retval != 0)
+  {
+      printf("lock failed return value = %d\n", (int) retval);
+      return false;
+  }
+  return true;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Create a single semaphore to sync access to the shared memory segments
+//
+bool CWorld::CreateShmemLock()
+{
+    semKey = SEMKEY;
+
+    union semun
+    {
+        int val;
+        struct semid_ds *buf;
+        ushort *array;
+    } argument;
+
+    argument.val = 0; // initial semaphore value
+    semid = semget( semKey, 1, 0666 | IPC_CREAT );
+
+    if( semid < 0 ) // semget failed
+    {
+        printf( "Unable to create semaphore\n" );
+        return false;
+    }
+    if( semctl( semid, 0, SETVAL, argument ) < 0 )
+    {
+        printf( "Failed to set semaphore value\n" );
+        return false;
+    }
+
+#ifdef DEBUG
+    printf( "Create semaphore: semkey=%d semid=%d\n", semKey, semid );
+    
+#endif
+
+    return true;
+}
+
+///////////////////////////////////////////////////////////////////////////
+// unlock the shared mem
+//
+void CWorld::UnlockShmem( void )
+{
+  struct sembuf ops[1];
+
+  ops[0].sem_num = 0;
+  ops[0].sem_op = -1;
+  ops[0].sem_flg = 0;
+
+#ifdef DEBUG
+  //printf( "Unlock semaphore: %d %d\n", semKey, semid );
+  // fflush( stdout );
+#endif
+
+  int retval = semop( semid, ops, 1 );
+  if (retval != 0)
+      printf("unlock failed return value = %d\n", (int) retval);
+}
+
+
+// return the matching device
+CEntity* CWorld::GetEntityByID( int port, int type, int index )
+{
+  for( int i=0; i<m_object_count; i++ )
+    {
+      if( m_object[i]->m_player_type == type &&
+	  m_object[i]->m_player_port == port &&
+	  m_object[i]->m_player_index == index )
+	  
+	return m_object[i]; // success!
+    }
+  return 0; // failed!
 }
 
 
@@ -999,7 +1185,8 @@ void CWorld::DrawBackground(RtkUiDrawData *data)
             if (m_bimg->get_pixel(x, y) != 0)
             {
                 double px = (double) x / ppm;
-                double py = (double) (height - y) / ppm;
+                //double py = (double) (height - y) / ppm;
+                double py = (double) (m_bimg->height - y) / ppm;
                 double s = 1.0 / ppm;
                 data->rectangle(px, py, px + s, py + s);
             }
@@ -1047,7 +1234,8 @@ void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
             if (img->get_pixel(x, y) != 0)
             {
                 double px = (double) x / ppm;
-                double py = (double) (height - y) / ppm;
+                //double py = (double) (height - y) / ppm;
+                double py = (double) (img->height - y) / ppm;
                 double s = 1.0 / ppm;
                 data->rectangle(px, py, px + s, py + s);
             }
@@ -1055,5 +1243,14 @@ void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
     }
 }
 
+#endif // INCLUDE_RTK
 
-#endif
+
+
+
+
+
+
+
+
+

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.10 $
+//  $Author: vaughan $
+//  $Revision: 1.11 $
 //
 // Usage:
 //  (empty)
@@ -33,35 +33,51 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CVisionDevice::CVisionDevice(CWorld *world, CEntity *parent, CPlayerServer* server,
-                             CPtzDevice *ptz_device)
-        : CPlayerDevice(world, parent, server,
-                        ACTS_DATA_START,
-                        ACTS_TOTAL_BUFFER_SIZE,
-                        ACTS_DATA_BUFFER_SIZE,
-                        ACTS_COMMAND_BUFFER_SIZE,
-                        ACTS_CONFIG_BUFFER_SIZE)
+CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent)
+        : CEntity( world, parent )
 {
-    // ACTS must be associated with a physical camera
-    //
-    // if the ptz_device is NULL we'll assume that our parent is
-    // the ptz device we're looking for
-    //ASSERT(ptz_device != NULL);
-    if(!ptz_device)
-    {
-      ASSERT(parent != NULL);
-      ptz_device = (CPtzDevice*)parent;
-    }
-    m_ptz_device = ptz_device;
-        
-    m_update_interval = 0.1;
-    m_last_update = 0;
+  // set the Player IO sizes correctly for this type of Entity
+  m_data_len    = sizeof( player_vision_data_t ); 
+  m_command_len = 0;//sizeof( player_vision_cmd_t );
+  m_config_len  = 0;//sizeof( player_vision_config_t );
+ 
+  m_player_type = PLAYER_VISION_CODE;
+  
+  m_stage_type = VisionType;
+
+  m_size_x = 0.9 * parent->m_size_x;
+  m_size_y = 0.9 * parent->m_size_y;
+
+  m_interval = 0.1; // 10Hz
+
+  // ACTS must be associated with a physical camera
+  // so parent must be a PTZ device
+  // this check isn;t bulletproof, but it's better than nothin'.
+  ASSERT( parent != NULL);
+  ASSERT( parent->m_player_type == PLAYER_PTZ_CODE );
+  
+  m_ptz_device = parent;
+  
+  cameraImageWidth = 160;
+  cameraImageHeight = 120;
+  
+  m_scan_width = 160;
+  
+  m_pan = 0;
+  m_tilt = 0;
+  m_zoom = DTOR(60);
+  
+  m_max_range = 8.0;
+  
+  numBlobs = 0;
+  memset( blobs, 0, MAXBLOBS * sizeof( ColorBlob ) );
+  
 
     cameraImageWidth = 160;
     cameraImageHeight = 120;
-
+    
     m_scan_width = 160;
-
+    
     m_pan = 0;
     m_tilt = 0;
     m_zoom = DTOR(60);
@@ -72,37 +88,34 @@ CVisionDevice::CVisionDevice(CWorld *world, CEntity *parent, CPlayerServer* serv
     memset( blobs, 0, MAXBLOBS * sizeof( ColorBlob ) );
 
 #ifdef INCLUDE_RTK
-    m_hit_count = 0;
+  m_hit_count = 0;
 #endif
 
-    exp.objectType = vision_o;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the laser data
 //
-void CVisionDevice::Update()
+void CVisionDevice::Update( double sim_time )
 {
+  CEntity::Update( sim_time ); // inherit debug output
+
     //RTK_TRACE0("updating vision data");
     
-    // Update children
-    //
-    CPlayerDevice::Update();
-
     // Dont update anything if we are not subscribed
     //
-    if (!IsSubscribed())
-        return;
-    
-    ASSERT(m_server != NULL);
-    ASSERT(m_world != NULL);
+  if( Subscribed() < 1 )
+    return;
+  
+  ASSERT(m_world != NULL);
 
     // See if its time to recalculate vision
     //
-    if( m_world->GetTime() - m_last_update < m_update_interval )
+    if( sim_time - m_last_update < m_interval )
         return;
-    m_last_update = m_world->GetTime();
+
+    m_last_update = sim_time;
 
     //RTK_TRACE0("generating new data");
 
@@ -257,55 +270,55 @@ size_t CVisionDevice::UpdateACTS()
       
     // scan through the samples looking for color blobs
     for( int s=0; s < m_scan_width; s++ )
-    {
-      if( m_scan_channel[s] != 0 && m_scan_channel[s] < ACTS_NUM_CHANNELS)
-      {
-        blobleft = s;
-        blobcol = m_scan_channel[s];
+	{
+        if( m_scan_channel[s] != 0 && m_scan_channel[s] < ACTS_NUM_CHANNELS)
+	    {
+            blobleft = s;
+            blobcol = m_scan_channel[s];
+	      
+            // loop until we hit the end of the blob
+            // there has to be a gap of >1 pixel to end a blob
+	    // this avoids getting lots of crappy little blobs
+            while( m_scan_channel[s] == blobcol || m_scan_channel[s+1] == blobcol ) s++;
+            //while( m_scan[s] == blobcol ) s++;
+	      
+            blobright = s-1;
+            double robotHeight = 0.6; // meters
+            int xCenterOfBlob = blobleft + ((blobright - blobleft )/2);
+            double rangeToBlobCenter = m_scan_range[ xCenterOfBlob ];
+            double startyangle = atan2( robotHeight/2.0, rangeToBlobCenter );
+            double endyangle = -startyangle;
+            blobtop = cameraImageHeight/2 - (int)(startyangle/yRadsPerPixel);
+            blobbottom = cameraImageHeight/2 -(int)(endyangle/yRadsPerPixel);
+            int yCenterOfBlob = blobtop +  ((blobbottom - blobtop )/2);
 
-        // loop until we hit the end of the blob
-        // there has to be a gap of >1 pixel to end a blob
-        // this avoids getting lots of crappy little blobs
-        while( m_scan_channel[s] == blobcol || m_scan_channel[s+1] == blobcol ) s++;
-        //while( m_scan[s] == blobcol ) s++;
-
-        blobright = s-1;
-        double robotHeight = 0.6; // meters
-        int xCenterOfBlob = blobleft + ((blobright - blobleft )/2);
-        double rangeToBlobCenter = m_scan_range[ xCenterOfBlob ];
-        double startyangle = atan2( robotHeight/2.0, rangeToBlobCenter );
-        double endyangle = -startyangle;
-        blobtop = cameraImageHeight/2 - (int)(startyangle/yRadsPerPixel);
-        blobbottom = cameraImageHeight/2 -(int)(endyangle/yRadsPerPixel);
-        int yCenterOfBlob = blobtop +  ((blobbottom - blobtop )/2);
-
-        if (blobtop < 0)
-          blobtop = 0;
-        if (blobbottom > cameraImageHeight - 1)
-          blobbottom = cameraImageHeight - 1;
-
-        // useful debug - keep
-        //cout << "Robot " << (int)color-1
-        //   << " sees " << (int)blobcol-1
-        //   << " start: " << blobleft
-        //   << " end: " << blobright
-        //   << endl << endl;
-
-        // fill in an arrau entry for this blob
-        //
-        blobs[numBlobs].channel = blobcol-1;
-        blobs[numBlobs].x = xCenterOfBlob;
-        blobs[numBlobs].y = yCenterOfBlob;
-        blobs[numBlobs].left = blobleft;
-        blobs[numBlobs].top = blobtop;
-        blobs[numBlobs].right = blobright;
-        blobs[numBlobs].bottom = blobbottom;
-        blobs[numBlobs].area = (blobtop - blobbottom) * (blobleft-blobright);
-
-        numBlobs++;
-      }
-    }
-
+            if (blobtop < 0)
+                blobtop = 0;
+            if (blobbottom > cameraImageHeight - 1)
+                blobbottom = cameraImageHeight - 1;
+            
+	    // useful debug - keep
+            //cout << "Robot " << this
+	    // << " sees " << (int)blobcol-1
+	    // << " start: " << blobleft
+	    // << " end: " << blobright
+	    // << endl << endl;
+	         
+            // fill in an arrau entry for this blob
+            //
+            blobs[numBlobs].channel = blobcol-1;
+            blobs[numBlobs].x = xCenterOfBlob;
+            blobs[numBlobs].y = yCenterOfBlob;
+            blobs[numBlobs].left = blobleft;
+            blobs[numBlobs].top = blobtop;
+            blobs[numBlobs].right = blobright;
+            blobs[numBlobs].bottom = blobbottom;
+            blobs[numBlobs].area = (blobtop - blobbottom) * (blobleft-blobright);
+	      
+            numBlobs++;
+	    }
+	}
+     
     int buflen = ACTS_HEADER_SIZE + numBlobs * ACTS_BLOB_SIZE;
     memset( actsBuf, 0, buflen );
             
@@ -432,11 +445,11 @@ void CVisionDevice::OnUiUpdate(RtkUiDrawData *data)
     data->begin_section("global", "vision");
 
     if (data->draw_layer("fov", true))
-        if (IsSubscribed())
+        if (Subscribed() > 0)
             DrawFOV(data);
     
     if (data->draw_layer("scan", true))
-        if (IsSubscribed())
+        if (Subscribed() > 0 )
             DrawScan(data);
     
     data->end_section();

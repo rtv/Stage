@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.7 $
+//  $Author: vaughan $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -34,17 +34,24 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent, CPlayerServer* server)
-        : CPlayerDevice(world, parent, server,
-                        PTZ_DATA_START,
-                        PTZ_TOTAL_BUFFER_SIZE,
-                        PTZ_DATA_BUFFER_SIZE,
-                        PTZ_COMMAND_BUFFER_SIZE,
-                        PTZ_CONFIG_BUFFER_SIZE)
+CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent )
+  : CEntity(world, parent )
 {   
-    m_update_interval = 0.1;
-    m_last_update = 0;
+  // set the Player IO sizes correctly for this type of Entity
+  m_data_len    = sizeof( player_ptz_data_t ); 
+  m_command_len = sizeof( player_ptz_cmd_t );
+  m_config_len  = 0;//sizeof( player_ptz_config_t );
+ 
+  m_player_type = PLAYER_PTZ_CODE;
+  m_stage_type = PtzType;
+
+  m_interval = 0.1;
+  m_last_update = 0;
     
+  m_size_x = 0.165;
+  m_size_y = 0.145;
+  
+
     // these pans are the right numbers for our PTZ - RTV
     m_pan_min = -100;
     m_pan_max = +100;
@@ -66,46 +73,40 @@ CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent, CPlayerServer* server)
     m_fov_max = DTOR(10);
 
     m_pan = m_tilt = m_zoom = 0;
-
-    exporting = true;
-    exp.objectType = ptz_o;
-    exp.data = (char*)&expPtz;
-    strcpy( exp.label, "PTZ Camera" );
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the device data
 //
-void CPtzDevice::Update()
+void CPtzDevice::Update( double sim_time )
 {
-    //RTK_TRACE0("updating");
+#ifdef DEBUG
+  CEntity::Update( sim_time ); // inherit debug output
+#endif
 
-    // Update children
-    //
-    CPlayerDevice::Update();
 
     // Dont update anything if we are not subscribed
     //
-    if (!IsSubscribed())
+    if( Subscribed() < 1 )
     {
       // reset the camera to (0,0,0) to better simulate the physical camera
-      expPtz.pan = m_pan = 0;
-      expPtz.tilt = m_tilt = 0;
-      expPtz.zoom = m_zoom = 0;
+      m_pan = 0;
+      m_tilt = 0;
+      m_zoom = 0;
       return;
     }
+
     //RTK_TRACE0("is subscribed");
     
-    ASSERT(m_server != NULL);
     ASSERT(m_world != NULL);
     
     // if its time to recalculate ptz
     //
-    if( m_world->GetTime() - m_last_update <= m_update_interval )
-        return;
-    m_last_update = m_world->GetTime();
-
+    if( sim_time - m_last_update < m_interval )  return;
+    
+    m_last_update = sim_time;
+    
     // Get the command string
     //
     player_ptz_cmd_t cmd;
@@ -139,9 +140,9 @@ void CPtzDevice::Update()
         // This basically assumes instantaneous changes
         // We could add a velocity in here later. ahoward
         //
-        expPtz.pan = m_pan = pan;
-        expPtz.tilt = m_tilt = tilt;
-        expPtz.zoom = m_zoom = zoom;
+        m_pan = pan;
+        m_tilt = tilt;
+        m_zoom = zoom;
     }
 
     // Construct the return data buffer

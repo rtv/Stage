@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.19 $
+//  $Author: vaughan $
+//  $Revision: 1.20 $
 //
 // Usage:
 //  (empty)
@@ -30,20 +30,31 @@
 #include "world.hh"
 #include "laserdevice.hh"
 
+#define DEBUG
+#undef VERBOSE
+
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent, CPlayerServer* server)
-        : CPlayerDevice(world, parent, server,
-                        LASER_DATA_START,
-                        LASER_TOTAL_BUFFER_SIZE,
-                        LASER_DATA_BUFFER_SIZE,
-                        LASER_COMMAND_BUFFER_SIZE,
-                        LASER_CONFIG_BUFFER_SIZE)
+CLaserDevice::CLaserDevice(CWorld *world, 
+			   CEntity *parent )
+        : CEntity(world, parent )
 {
+  // set the Player IO sizes correctly for this type of Entity
+  m_data_len    = sizeof( player_laser_data_t );
+  m_command_len = 0;
+  m_config_len  = 0;//sizeof( player_laser_config_t );
+  
+  m_player_type = PLAYER_LASER_CODE; // from player's messages.h
+
+  m_stage_type = LaserTurretType;
+   
   // Laser update rate (readings/sec)
   //
-  m_update_rate = 360 / 0.200; // 5Hz
+  //m_update_rate = 360 / 0.200; // 5Hz
+
+  m_interval = 0.2; 
+
   m_last_update = 0;
   m_scan_res = DTOR(0.50);
   m_scan_min = DTOR(-90);
@@ -62,21 +73,15 @@ CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent, CPlayerServer* server
   m_map_dx = 0.155;
   m_map_dy = 0.155;
 
+  m_size_x = m_map_dx;
+  m_size_y = m_map_dy;
+  
 #ifdef INCLUDE_RTK
   m_draggable = true; 
   m_mouse_radius = sqrt(m_map_dx * m_map_dx + m_map_dy * m_map_dy);
-#endif
-  
-  // GUI export setup
-  exporting = true; 
-  exp.objectId = this; // used both as ptr and as a unique ID
-  exp.objectType = laserturret_o;
-  strcpy( exp.label, "SICK LMS" );
-  exp.data = (char*)&expLaser;
-  
-#ifdef INCLUDE_RTK 
   m_hit_count = 0;
 #endif
+
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -84,7 +89,7 @@ CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent, CPlayerServer* server
 //
 bool CLaserDevice::Load(int argc, char **argv)
 {
-    if (!CPlayerDevice::Load(argc, argv))
+    if (!CEntity::Load(argc, argv))
         return false;
 
     for (int i = 0; i < argc;)
@@ -100,13 +105,11 @@ bool CLaserDevice::Load(int argc, char **argv)
     return true;
 }
 
-
-///////////////////////////////////////////////////////////////////////////
 // Save the object
 //
 bool CLaserDevice::Save(int &argc, char **argv)
 {
-    if (!CPlayerDevice::Save(argc, argv))
+    if (!CEntity::Save(argc, argv))
         return false;
 
     if (m_transparent)
@@ -119,39 +122,42 @@ bool CLaserDevice::Save(int &argc, char **argv)
 ///////////////////////////////////////////////////////////////////////////
 // Update the laser data
 //
-void CLaserDevice::Update()
+void CLaserDevice::Update( double sim_time )
 {
-    ASSERT(m_server != NULL);
+  CEntity::Update( sim_time ); // inherit useful debug output
+
     ASSERT(m_world != NULL);
     
-    // Undraw ourselves from the world
-    //
-    if (!m_transparent)
-        Map(false);
-
-    //expLaser.hitCount = 0;
 
     // Dont update anything if we are not subscribed
     //
-    if (IsSubscribed())
+    if( Subscribed() > 0 )
     {
         // Check to see if the configuration has changed
         //
         CheckConfig();
 
-        // Check to see if it is time to update the laser
+        // Check to see if it is time to update the laser scan
         //
-        double interval = m_scan_count / m_update_rate;
-        if (m_world->GetTime() - m_last_update > interval)
+        if ( sim_time - m_last_update < m_interval)
         {
-            m_last_update = m_world->GetTime();
-        
-            // Generate new scan data and copy to data buffer
-            //
-            player_laser_data_t data;
-            GenerateScanData(&data);
-            PutData(&data, sizeof(data));
-            //exporting = true; // ready to send data to a GUI 
+	  m_last_update = sim_time;
+
+	  // Undraw ourselves from the world
+	  //
+	  if (!m_transparent)
+	    Map(false);
+	  	  
+	  // Generate new scan data and copy to data buffer
+	  //
+	  player_laser_data_t scan_data;
+	  GenerateScanData( &scan_data );
+	  PutData( &scan_data, sizeof( scan_data) );
+	  	  
+	  // Redraw outselves in the world
+	  //
+	   if (!m_transparent )
+	     Map(true);
         }
     }
     else
@@ -164,15 +170,7 @@ void CLaserDevice::Update()
         m_scan_max = DTOR(+90);
         m_scan_count = 361;
         m_intensity = false;
-	
-        // have to invalidate the exported scan data
-        memset( &expLaser, 0, expLaser.hitCount * sizeof( DPoint ) );
       }
-
-    // Redraw outselves in the world
-    //
-    if (!m_transparent)
-        Map(true);
 }
 
 
@@ -182,7 +180,7 @@ void CLaserDevice::Update()
 bool CLaserDevice::CheckConfig()
 {
     player_laser_config_t config;
-    if (GetConfig(&config, sizeof(config)) == 0)
+    if (GetConfig( &config, sizeof(config) ) == 0)
         return false;  
 
     // Swap some bytes
@@ -195,10 +193,10 @@ bool CLaserDevice::CheckConfig()
     //
     if (config.resolution == 25)
     {
-        config.min_angle = max(config.min_angle, -5000);
-        config.min_angle = min(config.min_angle, +5000);
-        config.max_angle = max(config.max_angle, -5000);
-        config.max_angle = min(config.max_angle, +5000);
+        config.min_angle = max((int)(config.min_angle), -5000);
+        config.min_angle = min((int)config.min_angle, +5000);
+        config.max_angle = max((int)config.max_angle, -5000);
+        config.max_angle = min((int)config.max_angle, +5000);
         
         m_scan_res = DTOR((double) config.resolution / 100.0);
         m_scan_min = DTOR((double) config.min_angle / 100.0);
@@ -207,12 +205,6 @@ bool CLaserDevice::CheckConfig()
     }
     else if (config.resolution == 50 || config.resolution == 100)
     {
-        // *** REMOVE ahoward
-        //config.min_angle = max(config.min_angle, -9000);
-        //config.min_angle = min(config.min_angle, +9000);
-        //config.max_angle = max(config.max_angle, -9000);
-        //config.max_angle = min(config.max_angle, +9000);
-
         if (abs(config.min_angle) > 9000 || abs(config.max_angle) > 9000)
             PRINT_MSG("warning: invalid laser configuration request");
         
@@ -238,10 +230,10 @@ bool CLaserDevice::CheckConfig()
 ///////////////////////////////////////////////////////////////////////////
 // Generate scan data
 //
-bool CLaserDevice::GenerateScanData(player_laser_data_t *data)
+bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 {    
 
-    expLaser.hitCount = 0;
+  //expLaser.hitCount = 0;
 
     // Get the pose of the laser in the global cs
     //
@@ -350,10 +342,6 @@ bool CLaserDevice::GenerateScanData(player_laser_data_t *data)
         m_hit[m_hit_count][1] = py;
         m_hit_count++;
 #endif
-
-	expLaser.hitPts[expLaser.hitCount].x = px;// * m_world->ppm;
-	expLaser.hitPts[expLaser.hitCount].y = py;// * m_world->ppm;
-	expLaser.hitCount++;
     }    
     return true;
 }
@@ -375,6 +363,9 @@ void CLaserDevice::Map(bool render)
         double py = m_map_py;
         double pth = m_map_pth;
         m_world->SetRectangle(px, py, pth, dx, dy, layer_laser, 0);
+ 
+	//if( m_channel != -1 )
+	//m_world->SetRectangle(px, py, pth, dx, dy, layer_vision, 0);
     }
     else
     {
@@ -382,8 +373,13 @@ void CLaserDevice::Map(bool render)
         //
         double px, py, pth;
         GetGlobalPose(px, py, pth);
-        m_world->SetRectangle(px, py, pth, dx, dy, layer_laser, 1);
-        m_map_px = px;
+        
+	m_world->SetRectangle(px, py, pth, dx, dy, layer_laser, 1);
+	
+	//if( m_channel != -1 ) 
+	//m_world->SetRectangle(px, py, pth, dx, dy, layer_vision, 1);
+        
+	m_map_px = px;
         m_map_py = py;
         m_map_pth = pth;
     }
@@ -406,9 +402,10 @@ void CLaserDevice::OnUiUpdate(RtkUiDrawData *event)
     
     if (event->draw_layer("", true))
         DrawTurret(event);
+
     if (event->draw_layer("data", true))
-        if (IsSubscribed())
-            DrawScan(event);
+        if (Subscribed() > 0 )
+	  DrawScan(event);
     
     event->end_section();
 }

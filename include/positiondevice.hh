@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/positiondevice.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -28,7 +28,9 @@
 #define PIONEERMOBILEDEVICE_H
 
 #include "stage.h"
-#include "playerdevice.hh"
+//#include "playerdevice.hh"
+
+enum pioneer_shape_t { rectangle, circle };
 
 
 class CPositionDevice : public CEntity
@@ -43,11 +45,13 @@ class CPositionDevice : public CEntity
 
     // Extract command from the command buffer
     //
-    private: void ParseCommandBuffer(player_position_cmd_t &command );
+  //private: void ParseCommandBuffer(player_position_cmd_t &command );
+    private: void ParseCommandBuffer( void );
 				    
     // Compose the reply packet
     //
-    private: void ComposeData(player_position_data_t &position );
+  //private: void ComposeData(player_position_data_t &position );
+    private: void ComposeData( void );
 
     // Check to see if the given pose will yield a collision
     //
@@ -57,14 +61,26 @@ class CPositionDevice : public CEntity
     //
     private: virtual void Map(bool render);
 
+    // Load the object from an argument list
+    //
+    public: virtual bool Load(int argc, char **argv);
+
+    // Save the object to an argument list
+    //
+    public: virtual bool Save(int &argc, char **argv);
+
     // Timings
     //
     private: double m_last_time;
 
+private: pioneer_shape_t m_shape;
+public: pioneer_shape_t GetShape( void ){ return m_shape; };
+public: void SetShape( pioneer_shape_t );
+
     // Current command and data buffers
     //
-  //private: player_position_cmd_t m_command;
-  // private: player_position_data_t m_data;
+  private: player_position_cmd_t m_command;
+  private: player_position_data_t m_data;
     
     // Commanded robot speed
     //

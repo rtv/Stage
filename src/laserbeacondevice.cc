@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.6 $
+//  $Author: vaughan $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -30,55 +30,54 @@
 #include "laserdevice.hh"
 #include "laserbeacondevice.hh"
 
-
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CLaserBeaconDevice::CLaserBeaconDevice(CWorld *world, CEntity *parent,
-                             CPlayerServer *server, CLaserDevice *laser)
-        : CPlayerDevice(world, parent, server,
-                        LASERBEACON_DATA_START,
-                        LASERBEACON_TOTAL_BUFFER_SIZE,
-                        LASERBEACON_DATA_BUFFER_SIZE,
-                        LASERBEACON_COMMAND_BUFFER_SIZE,
-                        LASERBEACON_CONFIG_BUFFER_SIZE)
+CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
+  : CEntity(world, parent )
 {
-    if (laser == NULL)
-    {
-        // *** Should fix this somehow
-        ASSERT(strcmp(parent->m_type, "laser_device") == 0);
-        m_laser = (CLaserDevice*) parent;
-    }
-    else
-        m_laser = laser;
-    
-    m_time_sec = 0;
-    m_time_usec = 0;
-    
-    // Set detection ranges
-    // Beacons can be detected a large distance,
-    // but can only be uniquely identified close up
-    // These are the ranges for 0.5 degree resolution;
-    // ranges for other resolutions are twice or half these values.
-    //
-    m_max_anon_range = 4.0;
-    m_max_id_range = 1.5;
+  // set the Player IO sizes correctly for this type of Entity
+  m_data_len    = sizeof( player_laserbeacon_data_t );
+  m_command_len = 0; //sizeof( player_laserbeacon_command_t );
+  m_config_len  = sizeof( player_laserbeacon_config_t );
 
-    exp.objectId = this;
-    exp.objectType = laserbeacondetector_o;
-    exp.data = (char*)&expBeacon;
-    expBeacon.beaconCount = 0;
-    strcpy( exp.label, "Laser Beacon Detector" );
+  m_player_type = PLAYER_LASERBEACON_CODE;
+ 
+  m_stage_type = LBDType;
+
+  // the parent MUST be a laser device
+  ASSERT( parent );
+  ASSERT( parent->m_player_type == PLAYER_LASER_CODE );
+  
+  m_laser = parent; 
+  //m_laser->m_dependent_attached = true;
+  
+  m_size_x = 0.9 * m_laser->m_size_x;
+  m_size_y = 0.9 * m_laser->m_size_y;
+  
+  m_time_sec = 0;
+  m_time_usec = 0;
+
+  // Set detection ranges
+  // Beacons can be detected a large distance,
+  // but can only be uniquely identified close up
+    
+  // These are the ranges for 0.5 degree resolution;
+  // ranges for other resolutions are twice or half these values.
+  //
+  m_max_anon_range = 4.0;
+  m_max_id_range = 1.5;
+
+  expBeacon.beaconCount = 0; // for rtkstage
+  
 }
-
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Load the object from an argument list
 //
-bool CLaserBeaconDevice::Load(int argc, char **argv)
+bool CLBDDevice::Load(int argc, char **argv)
 {  
-    if (!CPlayerDevice::Load(argc, argv))
+    if (!CEntity::Load(argc, argv))
         return false;
 
     for (int i = 0; i < argc;)
@@ -99,9 +98,9 @@ bool CLaserBeaconDevice::Load(int argc, char **argv)
 ///////////////////////////////////////////////////////////////////////////
 // Save the object
 //
-bool CLaserBeaconDevice::Save(int &argc, char **argv)
+bool CLBDDevice::Save(int &argc, char **argv)
 {
-    if (!CPlayerDevice::Save(argc, argv))
+    if (!CEntity::Save(argc, argv))
         return false;
 
     char range[32];
@@ -112,30 +111,35 @@ bool CLaserBeaconDevice::Save(int &argc, char **argv)
     return true;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////
 // Update the beacon data
 //
-void CLaserBeaconDevice::Update()
+void CLBDDevice::Update( double sim_time )
 {
-    ASSERT(this != NULL);
-    ASSERT(m_server != NULL);
-    ASSERT(m_world != NULL);
-    ASSERT(m_laser != NULL);
-   
+  CEntity::Update( sim_time ); // inherit debug output
+
+  ASSERT(m_world != NULL );
+  ASSERT(m_laser != NULL );
+    
     // Get the laser range data
     //
     uint32_t time_sec, time_usec;
     player_laser_data_t laser;
-    if (m_laser->GetData(&laser, sizeof(laser), &time_sec, &time_usec) == 0)
+    if (m_laser->GetData(&laser, sizeof(laser) ) == 0)
         return;
+    
+    // used to check to see if we'd seen this laser data before
+    // might be good to have it back, but it's sooooo late....
+    
+    // Check to see if it is time to update
+    //  - if not, return right away.
+    if ( sim_time - m_last_update < m_interval )
+      return;
 
-    // If this is old data, do nothing
-    //
-    if (time_sec == m_time_sec && time_usec == m_time_usec)
-        return;
-
+    m_last_update = sim_time;
+	
     expBeacon.beaconCount = 0; // initialise the count in the export structure
+
 
     // Do some byte swapping on the laser data
     //
@@ -177,6 +181,9 @@ void CLaserBeaconDevice::Update()
         double px, py, pth;
         if (!m_world->GetLaserBeacon(i, &id, &px, &py, &pth))
             break;
+
+	//printf( "beacon at: %.2f %.2f %.2f\n", px, py, pth );
+	//fflush( stdout );
 
         // Compute range and bearing of beacon relative to sensor
         //
@@ -231,7 +238,7 @@ void CLaserBeaconDevice::Update()
     // Write beacon buffer to shared mem
     // Note that we apply the laser data's timestamp to this data.
     //
-    PutData(&beacon, sizeof(beacon), time_sec, time_usec);
+    PutData( &beacon, sizeof(beacon) );
     m_time_sec = time_sec;
     m_time_usec = time_usec;
 }
@@ -243,7 +250,7 @@ void CLaserBeaconDevice::Update()
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
 //
-void CLaserBeaconDevice::OnUiUpdate(RtkUiDrawData *event)
+void CLBDDevice::OnUiUpdate(RtkUiDrawData *event)
 {
     // Default draw
     //
@@ -254,7 +261,7 @@ void CLaserBeaconDevice::OnUiUpdate(RtkUiDrawData *event)
     event->begin_section("global", "laser_beacon");
     
     if (event->draw_layer("data", true))
-        if (IsSubscribed())
+        if ( Subscribed() > 0 )
             DrawData(event);
     
     event->end_section();
@@ -264,7 +271,8 @@ void CLaserBeaconDevice::OnUiUpdate(RtkUiDrawData *event)
 ///////////////////////////////////////////////////////////////////////////
 // Draw the beacon data
 //
-void CLaserBeaconDevice::DrawData(RtkUiDrawData *event)
+
+void CLBDDevice::DrawData(RtkUiDrawData *event)
 {
     #define SCAN_COLOR RTK_RGB(0, 0, 255)
     
@@ -286,5 +294,7 @@ void CLaserBeaconDevice::DrawData(RtkUiDrawData *event)
 
 
 #endif
+
+
 
 

@@ -6,9 +6,9 @@
 // Desc: Simulates the Pioneer robot base
 //
 // CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.21 $
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
+//  $Author: vaughan $
+//  $Revision: 1.1 $
 //
 // Usage:
 //  (empty)
@@ -29,7 +29,7 @@
 #include <math.h>
 
 #include "world.hh"
-#include "pioneermobiledevice.hh"
+#include "positiondevice.hh"
 
 const double TWOPI = 6.283185307;
 
@@ -37,59 +37,53 @@ const double TWOPI = 6.283185307;
 ///////////////////////////////////////////////////////////////////////////
 // Constructor
 //
-CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CEntity *parent, CPlayerServer* server)
-        : CPlayerDevice(world, parent, server,
-                        POSITION_DATA_START,
-                        POSITION_TOTAL_BUFFER_SIZE,
-                        POSITION_DATA_BUFFER_SIZE,
-                        POSITION_COMMAND_BUFFER_SIZE,
-                        POSITION_CONFIG_BUFFER_SIZE)
+CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
+  : CEntity( world, parent )
 {    
-    m_com_vr = m_com_vth = 0;
-    m_map_px = m_map_py = m_map_pth = 0;
-
+  // set the Player IO sizes correctly for this type of Entity
+  m_data_len = sizeof( player_position_data_t );
+  m_command_len = sizeof( player_position_cmd_t );
+  m_config_len = 0;// not configurable
+  
+  m_player_type = PLAYER_POSITION_CODE; // from player's messages.h
+  
+  m_stage_type = RectRobotType;
+  
+  m_com_vr = m_com_vth = 0;
+  m_map_px = m_map_py = m_map_pth = 0;
+  
+  // Set the robot dimensions
+  // Due to the unusual shape of the pioneer,
+  // it is modelled as a rectangle offset from the origin
+  //
+  m_size_x = 0.440;
+  m_size_y = 0.380;
+  m_offset_x = -0.04;
+  
+  m_odo_px = m_odo_py = m_odo_pth = 0;
+  
+  stall = 0;
+  
+  m_interval = 0.01; // update this device VERY frequently
+  
     // assume robot is 20kg
     m_mass = 20.0;
 
     // Set the default shape
     m_shape = rectangle;
     
-    // Set the robot dimensions
-    // Due to the unusual shape of the pioneer,
-    // it is modelled as a rectangle offset from the origin
-    //
-    m_size_x = 0.440;
-    m_size_y = 0.380;
-    m_offset_x = -0.04;
-
-    // for use with circular robots
-    m_radius = 0.2;
-    
-    m_odo_px = m_odo_py = m_odo_pth = 0;
-
-    stall = 0;
-
 #ifdef INCLUDE_RTK
     m_mouse_radius = 0.400;
     m_draggable = true;
 #endif
-
-    // gui export stuff
-    exp.objectType = pioneer_o;
-    exp.width = m_size_x;
-    exp.height = m_size_y;
-    expPosition.shape = m_shape;
-    expPosition.radius = m_radius;
-    exp.data = (char*)&expPosition;
-    strcpy( exp.label, "Pioneer" );
 }
 
 ///////////////////////////////////////////////////////////////////////////
 // Load the object from an argument list
 //
-bool CPioneerMobileDevice::Load(int argc, char **argv)
+bool CPositionDevice::Load(int argc, char **argv)
 {
-    if (!CPlayerDevice::Load(argc, argv))
+    if (!CEntity::Load(argc, argv))
         return false;
 
     for (int i = 0; i < argc;)
@@ -113,17 +107,56 @@ bool CPioneerMobileDevice::Load(int argc, char **argv)
     return true;
 }
 
+// Save the object
+//
+bool CPositionDevice::Save(int &argc, char **argv)
+{
+    if (!CEntity::Save(argc, argv))
+        return false;
+    
+    argv[argc++] = strdup("shape");
+    
+    switch( m_shape )
+      {
+      case circle:
+	argv[argc++] = strdup("circle");
+	break;
+      case rectangle:
+	argv[argc++] = strdup("rectangle");
+	break;
+      default:
+	printf( "Warning: wierd position device shape (%d)\n", m_shape );
+	argv[argc++] = strdup("rectangle");
+      }
+	
+    return true;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////
 // Update the position of the robot base
 //
-void CPioneerMobileDevice::Update()
+void CPositionDevice::Update( double sim_time )
 {
     // If the device is not subscribed,
     // reset to default settings.
     //
-    if (!IsSubscribed())
-        m_odo_px = m_odo_py = m_odo_pth = 0;
+  if( Subscribed() < 1)
+    {
+      m_odo_px = m_odo_py = m_odo_pth = 0;
+      return;
+    }
+  
+    ASSERT(m_world != NULL);
+  
+    // if its time to recalculate state
+    //
+    if( m_world->GetTime() - m_last_update <= m_interval )
+      return;
     
+    m_last_update = m_world->GetTime();
+
+
     // Get the latest command
     //
     if( GetCommand( &m_command, sizeof(m_command)) == sizeof(m_command))
@@ -140,13 +173,10 @@ void CPioneerMobileDevice::Update()
     ComposeData();     // report the new state of things
     PutData( &m_data, sizeof(m_data)  );     // generic device call
 
-    // Update our children
-    //
-    CPlayerDevice::Update();
 }
 
 
-int CPioneerMobileDevice::Move()
+int CPositionDevice::Move()
 {
     double step_time = m_world->GetTime() - m_last_time;
     m_last_time += step_time;
@@ -196,7 +226,7 @@ int CPioneerMobileDevice::Move()
 ///////////////////////////////////////////////////////////////////////////
 // Parse the command buffer to extract commands
 //
-void CPioneerMobileDevice::ParseCommandBuffer()
+void CPositionDevice::ParseCommandBuffer()
 {
     double fv = (short) ntohs(m_command.speed);
     double fw = (short) ntohs(m_command.turnrate);
@@ -213,7 +243,7 @@ void CPioneerMobileDevice::ParseCommandBuffer()
 ///////////////////////////////////////////////////////////////////////////
 // Compose data to send back to client
 //
-void CPioneerMobileDevice::ComposeData()
+void CPositionDevice::ComposeData()
 {
     // Compute odometric pose
     // Convert mm and degrees (0 - 360)
@@ -248,7 +278,7 @@ void CPioneerMobileDevice::ComposeData()
 ///////////////////////////////////////////////////////////////////////////
 // Check to see if the given pose will yield a collision
 //
-bool CPioneerMobileDevice::InCollision(double px, double py, double pth)
+bool CPositionDevice::InCollision(double px, double py, double pth)
 {
   if(GetShape() == rectangle)
   {
@@ -263,28 +293,28 @@ bool CPioneerMobileDevice::InCollision(double px, double py, double pth)
   }
   else if(GetShape() == circle)
   {
-    if (m_world->GetRectangle(px, py, pth, m_radius*2.0, m_radius*2.0, 
+    if (m_world->GetRectangle(px, py, pth, m_size_x, m_size_x,  // CIRCLE! 
                               layer_obstacle) > 0)
         return true;
   }
   else
-    PRINT_MSG("CPioneerMobileDevice::InCollision(): unknown shape!");
+    PRINT_MSG("CPositionDevice::InCollision(): unknown shape!");
   return false;
 }
 
-void CPioneerMobileDevice::SetShape(pioneer_shape_t shape)
+void CPositionDevice::SetShape(pioneer_shape_t shape)
 {
   m_shape = shape;
-  expPosition.shape = (int)shape;
+   
   if(shape == circle)
-    exp.width = exp.height = 2*m_radius;
+    m_size_y = m_size_x;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Render the object in the world rep
 //
-bool CPioneerMobileDevice::Map(bool render)
+void CPositionDevice::Map(bool render)
 {
     if (!render)
     {
@@ -305,11 +335,11 @@ bool CPioneerMobileDevice::Map(bool render)
         }
         else if(GetShape() == circle)
         {
-          m_world->SetCircle(m_map_px,m_map_py,m_radius,layer_obstacle,0);
-          m_world->SetCircle(m_map_px,m_map_py,m_radius,layer_puck,0);
+          m_world->SetCircle(m_map_px,m_map_py,m_size_x/2.0,layer_obstacle,0);
+          m_world->SetCircle(m_map_px,m_map_py,m_size_x/2.0,layer_puck,0);
         }
         else
-          PRINT_MSG("CPioneerMobileDevice::Map(): unknown shape!");
+          PRINT_MSG("CPositionDevice::Map(): unknown shape!");
     }
     else
     {
@@ -328,11 +358,11 @@ bool CPioneerMobileDevice::Map(bool render)
       }
       else if(GetShape() == circle)
       {
-          m_world->SetCircle(px,py,m_radius,layer_obstacle,1);
-          m_world->SetCircle(px,py,m_radius,layer_puck,1);
+          m_world->SetCircle(px,py,m_size_x/2.0,layer_obstacle,1);
+          m_world->SetCircle(px,py,m_size_x/2.0,layer_puck,1);
       }
       else
-        PRINT_MSG("CPioneerMobileDevice::Map(): unknown shape!");
+        PRINT_MSG("CPositionDevice::Map(): unknown shape!");
 
       // Store the place we added ourself
       //
@@ -340,7 +370,6 @@ bool CPioneerMobileDevice::Map(bool render)
       m_map_py = py;
       m_map_pth = pa;
     }
-    return true;
 }
 
 
@@ -350,7 +379,7 @@ bool CPioneerMobileDevice::Map(bool render)
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
 //
-void CPioneerMobileDevice::OnUiUpdate(RtkUiDrawData *data)
+void CPositionDevice::OnUiUpdate(RtkUiDrawData *data)
 {
     CEntity::OnUiUpdate(data);
     
@@ -368,7 +397,7 @@ void CPioneerMobileDevice::OnUiUpdate(RtkUiDrawData *data)
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI mouse messages
 //
-void CPioneerMobileDevice::OnUiMouse(RtkUiMouseData *data)
+void CPositionDevice::OnUiMouse(RtkUiMouseData *data)
 {
     CEntity::OnUiMouse(data);
 }
@@ -377,7 +406,7 @@ void CPioneerMobileDevice::OnUiMouse(RtkUiMouseData *data)
 ///////////////////////////////////////////////////////////////////////////
 // Draw the pioneer chassis
 //
-void CPioneerMobileDevice::DrawChassis(RtkUiDrawData *data)
+void CPositionDevice::DrawChassis(RtkUiDrawData *data)
 {
     #define ROBOT_COLOR RTK_RGB(255, 0, 192)
     
@@ -421,15 +450,15 @@ void CPioneerMobileDevice::DrawChassis(RtkUiDrawData *data)
     }
     else if(GetShape() == circle)
     {
-      data->ellipse(px - m_radius, py - m_radius, 
-                    px + m_radius, py + m_radius);
+      data->ellipse(px - m_size_x/2.0, py - m_size_x/2.0, 
+                    px + m_size_x/2.0, py + m_size_x/2.0);
       
       // Draw the direction indicator
       //
       for (int i = 0; i < 3; i++)
       {
-        double qx = m_radius * cos(DTOR(i * 45 - 45));
-        double qy = m_radius * sin(DTOR(i * 45 - 45));
+        double qx = m_size_x/2.0 * cos(DTOR(i * 45 - 45));
+        double qy = m_size_x/2.0 * sin(DTOR(i * 45 - 45));
         double qth = 0;
 
         // This is ugly, but it works
@@ -446,7 +475,7 @@ void CPioneerMobileDevice::DrawChassis(RtkUiDrawData *data)
       }
     }
     else
-      PRINT_MSG("CPioneerMobileDevice::DrawChassis(): unknown shape!");
+      PRINT_MSG("CPositionDevice::DrawChassis(): unknown shape!");
 }
 
 #endif

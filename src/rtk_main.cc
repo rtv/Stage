@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtk_main.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.3 $
+//  $Author: vaughan $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -24,7 +24,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#include "../VERSION"
 #include "world.hh"
 #include "rtk_ui.hh"
 
@@ -36,6 +35,7 @@
 //
 char *world_file;
 
+CWorld *world = 0;
 
 ///////////////////////////////////////////////////////////////////////////
 // Parse the command line

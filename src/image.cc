@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.5 2001-06-06 22:29:47 ahoward Exp $
+ * $Id: image.cc,v 1.6 2001-08-09 08:00:09 vaughan Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -246,7 +246,9 @@ bool Nimage::load_pnm_gz(const char* fname)
   char comment[256];
   int whiteNum; 
 
+#ifdef DEBUG
   printf("opening %s\n", fname);
+#endif
 
   gzFile file = gzopen(fname, "r");
   if (file == NULL)

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/stage_types.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.4 $
+//  $Author: vaughan $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -63,5 +63,33 @@
 #define PRINT_MSG(m) printf("stage msg : %s :\n  "m"\n", __FILE__)
 #define PRINT_MSG1(m, a) printf("stage msg : %s :\n  "m"\n", __FILE__, a)
 #define PRINT_MSG2(m, a, b) printf("stage msg : %s :\n  "m"\n", __FILE__, a, b)
+
+// definition of stage object type codes
+// similar to player types, but not exactly, as different robots
+// can appear to stage as identical position devices, for example.
+enum StageType {
+NullType = 0,
+PlayerType, 
+MiscType, 
+RectRobotType,
+RoundRobotType,
+SonarType,
+LaserTurretType,
+VisionType,
+PtzType,
+BoxType,
+LaserBeaconType,
+LBDType, // Laser Beacon Detector
+VisionBeaconType,
+//VBDType // Vision Beacon Detector?
+GripperType, 
+GpsType,
+PuckType,
+BroadcastType,
+//AudioType,
+//SpeechType,
+//TruthType,
+//OccupancyType
+};
 
 #endif

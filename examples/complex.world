@@ -1,0 +1,62 @@
+#set environment_file = hospital.pnm
+#set environment_file = sparse.pnm
+set environment_file = cave.pnm
+set pixels_per_meter =  100
+set laser_res = 1
+
+# these servers enable clients (e.g. xpsi) access to Stage's internal models
+enable truth_server
+enable environment_server
+
+# Objects that inhabit the world (non-player devices)
+
+#create box pose 3.0 3.0 0.0 size 0.8 0.5 index 
+
+create laser_beacon pose 4.0 4.0 id 1
+create laser_beacon pose 3.0 4.0 id 2
+
+create vision_beacon pose 2.0 2.5 0.0 channel 0 
+create vision_beacon pose 3.0 2.5 0.0 channel 1
+create vision_beacon pose 4.0 2.5 0.0 channel 2 
+
+# vision devices MUST be children of cameras
+create ptz_device pose 2.0 2.0 0.0 port 6666
+{
+  create vision_device port 6666
+  create player_device size 0.05 0.05 port 6666	
+} 
+
+create position_device pose 1.0 3.0 0.0 port 6665 
+{
+   create player_device pose -0.1 0.0 0.0 port 6665
+   create sonar_device  port 6665
+   create laser_device  pose 0.08 0.0 0.0 port 6665
+   {
+    ## LBD (Laser Beacon Detector) devices MUST be
+    ## children of laser devices 
+     create lbd_device port 6665
+   }
+  
+   create misc_device port 6665
+   #create broadcast_device port 6665
+   
+  # vision devices MUST be children of cameras
+  create ptz_device pose 0.07 0.0 0.0 port 6665
+  {
+     create vision_device pose 0.0 0.0 0.0 port 6665
+  } 
+}
+
+create position_device pose 1.0 2.0 0.0 size 0.5 0.2
+create position_device pose 1.0 1.0 0.0
+
+
+create player_device pose 2 3 0 size 0.05 0.05 port 6667
+{
+  create laser_device pose 0.1 0.0 0.0 port 6667 index 0
+}
+
+create laser_device pose 3 2 0 port 6668 index 0
+{
+  create player_device pose 0 0 0 size 0.05 0.05 port 6668
+}

@@ -7,25 +7,25 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/gpsdevice.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.1 $
+//  $Author: vaughan $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 #ifndef GPSDEVICE_HH
 #define GPSDEVICE_HH
 
-#include "playerdevice.hh"
+#include "entity.hh"
 
-class CGpsDevice : public CPlayerDevice
+class CGpsDevice : public CEntity
 {
     // Default constructor
     //
-    public: CGpsDevice(CWorld *world, CEntity *parent, CPlayerServer *server);
+    public: CGpsDevice(CWorld *world, CEntity *parent );
     
     // Update the device
     //
-    public: virtual void Update();
+    public: virtual void Update( double sim_time );
 
     // Buffers for storing data
     //

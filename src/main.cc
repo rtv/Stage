@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.9 $
+//  $Author: vaughan $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -24,7 +24,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#include "../VERSION"
 #include "world.hh"
 #include <unistd.h>
 #include <signal.h>
@@ -41,6 +40,7 @@ char *world_file;
 //
 bool quit = false;
 
+CWorld *world = 0;
 
 ///////////////////////////////////////////////////////////////////////////
 // Handle quit signals
@@ -66,6 +66,8 @@ bool parse_cmdline(int argc, char **argv)
     // Extract the name of the file describing the world
     //
     world_file = argv[1];
+
+    printf( "[%s]", world_file );
     return true;
 }
 
@@ -75,22 +77,26 @@ bool parse_cmdline(int argc, char **argv)
 //
 int main(int argc, char **argv)
 {
-    printf("** Stage v%s **\n", (char*) VERSION);
-
-    // Parse the command line
-    //
-    if (!parse_cmdline(argc, argv))
-        return 1;
-    
+  // hello world
+  printf("** Stage  v%s ** ", (char*) VERSION);
+  
+  // Parse the command line
+  // this may produce more startup output on the first line
+  if (!parse_cmdline(argc, argv))
+    return 1;
+  
     // Create the world
     //
-    CWorld *world = new CWorld;
-
+    world = new CWorld;
+    
     // Load the world
-    //
+    // this may produce more startup output
     if (!world->Load(world_file))
         return 0;
     
+    puts( "" ); // end the startup output line
+    fflush( stdout );
+
     // Start the world
     //
     if (!world->Startup())

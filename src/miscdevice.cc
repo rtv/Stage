@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/miscdevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Author: vaughan $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -32,36 +32,41 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CMiscDevice::CMiscDevice(CWorld *world, CEntity *parent, CPlayerServer *server)
-        : CPlayerDevice(world, parent, server,
-                        MISC_DATA_START,
-                        MISC_TOTAL_BUFFER_SIZE,
-                        MISC_DATA_BUFFER_SIZE,
-                        MISC_COMMAND_BUFFER_SIZE,
-                        MISC_CONFIG_BUFFER_SIZE)
+CMiscDevice::CMiscDevice(CWorld *world, CEntity *parent )
+        : CEntity(world, parent )
 {
+  // set the Player IO sizes correctly for this type of Entity
+  m_data_len    = sizeof( player_misc_data_t );
+  m_command_len = 0;//sizeof( misc_command_buffer_t );
+  m_config_len  = 0;//sizeof( misc_config_buffer_t );
+  
+  m_player_type = PLAYER_MISC_CODE;
+  m_stage_type = MiscType;
 
-
-  exp.objectType = misc_o;
-  exp.objectId = this;
-  exp.data = (char*)&m_data;  
-  strcpy( exp.label, "Pioneer Misc" );
+  m_interval = 0.1;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the misc data
 //
-void CMiscDevice::Update()
+void CMiscDevice::Update( double sim_time )
 {
-    ASSERT(m_server != NULL);
-    ASSERT(m_world != NULL);
-    
-    m_data.frontbumpers = 0;
-    m_data.rearbumpers = 0;
-    m_data.voltage = 120;
+  CEntity::Update( sim_time ); // inherit debug output
+
+  if( Subscribed() < 1 ) return;
    
-    PutData(&m_data, sizeof(m_data));
+  // Check to see if it is time to update
+  //  - if not, return right away.
+  if( sim_time - m_last_update < m_interval) return;
+  
+  m_last_update = sim_time;
+ 
+  m_data.frontbumpers = 0;
+  m_data.rearbumpers = 0;
+  m_data.voltage = 120;
+  
+  PutData( &m_data, sizeof(m_data) );
 }
 
 

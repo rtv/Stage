@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.5 $
+//  $Author: vaughan $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -37,6 +37,17 @@
 CLaserBeacon::CLaserBeacon(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {
+  // set the Player IO sizes correctly for this type of Entity
+  m_data_len    = 0;
+  m_command_len = 0;
+  m_config_len  = 0;
+
+  m_player_port = 0; // not a player device
+  m_player_index = 0;
+  m_player_type = 0;
+
+  m_stage_type = LaserBeaconType;
+
     m_beacon_id = 0;
     m_index = -1;
 
@@ -48,10 +59,11 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CEntity *parent)
     //
     m_map_px = m_map_py = m_map_pth = 0;
 
-    exp.objectType = laserbeacon_o;
-    exp.width = 0.02;
-    exp.height = 0.25;
-    strcpy( exp.label, "Beacon" );
+    // beacons aren;t rendered in the laser grid, 
+    // so these sizes are really just for external viewers
+    m_size_x = 0.05; // very thin!   
+    m_size_y = 0.3; 
+    
 }
 
 
@@ -127,10 +139,21 @@ bool CLaserBeacon::Startup()
 ///////////////////////////////////////////////////////////////////////////
 // Update the laser data
 //
-void CLaserBeacon::Update()
+void CLaserBeacon::Update( double sim_time )
 {
-    //RTK_TRACE0("updating laser beacon");
     ASSERT(m_world != NULL);
+
+    // Dont update anything if we are not subscribed
+    //
+    if( Subscribed() < 1 )
+      return;
+    
+    // See if its time to recalculate beacons
+    //
+    if( sim_time - m_last_update < m_interval )
+        return;
+
+    m_last_update = sim_time;
 
     // Undraw our old representation
     //

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.3 $
+//  $Author: vaughan $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -34,7 +34,11 @@
 CVisionBeacon::CVisionBeacon(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {
-    m_channel = 0;
+  m_radius = 0.1; // our beacons are 10cm radius
+    
+    m_stage_type = VisionBeaconType;
+
+    m_channel = 0; // visible by default on ACTS ch.0
     m_radius = 0;
 
     m_render_obstacle = true;
@@ -43,6 +47,9 @@ CVisionBeacon::CVisionBeacon(CWorld *world, CEntity *parent)
     // Set the initial map pose
     //
     m_map_px = m_map_py = m_map_pth = 0;
+
+    m_size_x = m_radius;
+    m_size_y = m_radius;
 }
 
 
@@ -54,6 +61,8 @@ bool CVisionBeacon::Load(int argc, char **argv)
     if (!CEntity::Load(argc, argv))
         return false;
 
+    //printf( "beacon %p channel: %d\n", this, m_channel );
+
     for (int i = 0; i < argc;)
     {
         // Extract radius
@@ -62,14 +71,8 @@ bool CVisionBeacon::Load(int argc, char **argv)
         {
             m_radius = atof(argv[i + 1]);
             i += 2;
-        }
-        
-        // Extract channel
-        //
-        else if (strcmp(argv[i], "channel") == 0 && i + 1 < argc)
-        {
-            m_channel = atoi(argv[i + 1]) + 1;
-            i += 2;
+
+	    m_size_x = m_size_y = m_radius;
         }
 
         // See which layers to render
@@ -85,12 +88,13 @@ bool CVisionBeacon::Load(int argc, char **argv)
             i += 2;
         }
 
+	// RTV - this'd report error before any subclass had a chance
         // Syntax error
-        else
-        {
-            PLAYER_MSG1("unrecognized token [%s]", argv[i]);
-            i += 1;
-        }
+        //else
+        //{
+	//  PLAYER_MSG1("unrecognized token [%s]", argv[i]);
+	//  i += 1;
+        //}
     }
 
 #ifdef INCLUDE_RTK
@@ -117,12 +121,6 @@ bool CVisionBeacon::Save(int &argc, char **argv)
     argv[argc++] = strdup("radius");
     argv[argc++] = strdup(z);
 
-    // Save channel
-    //
-    snprintf(z, sizeof(z), "%d", (int) m_channel - 1);
-    argv[argc++] = strdup("channel");
-    argv[argc++] = strdup(z);
-
     // Save render settings
     //
     if (!m_render_obstacle)
@@ -142,9 +140,24 @@ bool CVisionBeacon::Save(int &argc, char **argv)
 ///////////////////////////////////////////////////////////////////////////
 // Update the laser data
 //
-void CVisionBeacon::Update()
+void CVisionBeacon::Update( double sim_time )
 {
     ASSERT(m_world != NULL);
+
+    // Dont update anything if we are not subscribed
+    //
+    if( Subscribed() < 1 )
+      return;
+    
+    ASSERT(m_world != NULL);
+    
+    // See if its time to recalculate vision
+    //
+    if( sim_time - m_last_update < m_interval )
+        return;
+
+    m_last_update = sim_time;
+
 
     // Undraw our old representation
     //
@@ -178,7 +191,7 @@ void CVisionBeacon::Update()
                               2 * m_radius, 2 * m_radius, layer_laser, 1);
     }
     m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
-                          2 * m_radius, 2 * m_radius, layer_vision, m_channel);
+                          2 * m_radius, 2 * m_radius, layer_vision, m_channel+1);
 }
 
 

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.9 $
+//  $Author: vaughan $
+//  $Revision: 1.10 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -24,16 +24,24 @@
 CPuck::CPuck(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {
-    m_channel = 0;
+  m_stage_type = PuckType;
+
+  m_channel = 0; // default to visible on ACTS channel 0
+
+  m_size_x = 0.1;
+  m_size_y = 0.1;
+
     m_friction = 0.05;
+    // assume puck is 200g
+    m_mass = 0.2;
     
     // Set the initial map pose
     //
     m_map_px = m_map_py = m_map_pth = 0;
 
     exp.objectType = puck_o;
-    exp.width = 0.1;
-    exp.height = 0.1;
+    exp.width = m_size_x;
+    exp.height = m_size_y;
     strcpy( exp.label, "Puck" );
 }
 
@@ -64,6 +72,8 @@ bool CPuck::Load(int argc, char **argv)
         {
             exp.width = exp.height = 2*atof(argv[i + 1]);
             i += 2;
+
+	    m_size_x = m_size_y = exp.width;
         }
         else
           i++;
@@ -106,12 +116,6 @@ bool CPuck::Startup()
     m_last_time = 0;
     m_com_vr = 0;
 
-    // assume puck is 200g
-    m_mass = .2;
-
-    m_index = m_world->AddPuck(this);
-    
-    //m_index = m_world->AddPuck(this);
     return CEntity::Startup();
 }
 
@@ -119,12 +123,22 @@ bool CPuck::Startup()
 ///////////////////////////////////////////////////////////////////////////
 // Update the puck
 //
-void CPuck::Update()
+void CPuck::Update( double sim_time )
 {
     static bool undrawn = false;
 
-    ASSERT(m_world != NULL);
+    if( Subscribed() < 1)
+      return;
     
+    ASSERT(m_world != NULL);
+  
+    // if its time to recalculate state
+    //
+    if( m_world->GetTime() - m_last_update <= m_interval )
+      return;
+    
+    m_last_update = m_world->GetTime();
+       
     // if we've been picked up by a gripper, then undraw once
     // and don't do anything else
     //
@@ -199,7 +213,7 @@ CEntity* CPuck::InCollisionWithMovableObject(double px, double py, double pth)
       continue;
 
     // first match robots
-    if(object->exp.objectType != pioneer_o)
+    if(object->m_stage_type != ( RoundRobotType || RectRobotType ) )
       continue;
 
     // get the object's position
@@ -210,7 +224,7 @@ CEntity* CPuck::InCollisionWithMovableObject(double px, double py, double pth)
     double dist = sqrt((px-qx)*(px-qx)+(py-qy)*(py-qy));
 
     // are we colliding?
-    if(dist < ((object->exp.width/2.0) + (exp.width/2.0)))
+    if(dist < ((object->m_size_x/2.0) + (m_size_x/2.0)))
     {
       return(object);
     }
@@ -224,7 +238,7 @@ CEntity* CPuck::InCollisionWithMovableObject(double px, double py, double pth)
       continue;
 
     // now match pucks
-    if(object->exp.objectType != puck_o)
+    if(object->m_stage_type != PuckType )
       continue;
 
     // get the object's position
@@ -235,7 +249,7 @@ CEntity* CPuck::InCollisionWithMovableObject(double px, double py, double pth)
     double dist = sqrt((px-qx)*(px-qx)+(py-qy)*(py-qy));
 
     // are we colliding?
-    if(dist < ((object->exp.width/2.0) + (exp.width/2.0)))
+    if(dist < ((object->m_size_x/2.0) + (m_size_x/2.0)))
     {
       return(object);
     }
@@ -325,84 +339,6 @@ void CPuck::Move()
     // compute a new velocity, based on "friction"
     SetSpeed(max(0,m_com_vr - m_friction*m_com_vr));
 }
-
-///////////////////////////////////////////////////////////////////////////
-// Search for which puck(s) we have collided with and move them
-//
-/*
-void CPioneerMobileDevice::MovePuck(double px, double py, double pth)
-{
-    double min_range = MAXDOUBLE;
-    double close_puck_bearing = 0;
-    double close_puck_x = 0;
-    double close_puck_y = 0;
-    CPuck* close_puck = NULL;
-    int close_puck_index = -1;
-    
-    //printf("robot pose: %f %f %f\n", px,py,RTOD(pth));
-    // Search for the closest puck in the list
-    // Is quicker than searching the bitmap!
-    //
-    for (int i = 0; true; i++)
-    {
-        // Get the position of the puck (global coords)
-        //
-        double qx, qy, qth;
-        CPuck* tmp_puck;
-        if (!(tmp_puck = m_world->GetPuck(i, &qx, &qy, &qth)))
-            break;
-        
-        //printf("considering puck: %d\n", i);
-
-        // Compute range and bearing to each puck
-        //
-        double dx = qx - px;
-        double dy = qy - py;
-        double r = sqrt(dx * dx + dy * dy);
-        //printf("range: %f\n", r);
-        double b = NORMALIZE(atan2(dy, dx) - pth);
-        //double o = NORMALIZE(qth - pth);
-
-        if(r < min_range)
-        {
-          min_range = r;
-          close_puck_bearing = b;
-          close_puck_x = qx;
-          close_puck_y = qy;
-          //close_puck_orientation = o;
-          close_puck_index = i;
-          close_puck = tmp_puck;
-        }
-    }
-
-    if(close_puck_index == -1)
-    {
-      puts("couldn't find puck to move");
-      return;
-    }
-    
-    // determine the direction to move the puck.
-    // it's the robot's orientation minus the bearing from the robot
-    // to the puck (loosely models circular objects colliding)
-    double puck_th = NORMALIZE(pth-close_puck_bearing);
-
-    // set puck orientation (move it enough to get it away from the robot)
-    close_puck->SetGlobalPose(close_puck_x+
-                                2.0*(close_puck->GetDiameter())*cos(puck_th),
-                              close_puck_y+
-                                2.0*(close_puck->GetDiameter())*sin(puck_th),
-                              puck_th);
-    //close_puck->SetGlobalPose(close_puck_x,close_puck_y,puck_th);
-    //printf("new puck pose: %f %f %f\n",
-       //close_puck_x+2.0*(close_puck->GetDiameter())*cos(puck_th),
-       //close_puck_y+2.0*(close_puck->GetDiameter())*sin(puck_th),
-       //puck_th);
-
-    // transfer some "momentum" (meters/second)
-    // assume that the robot has 10 times the mass of the puck
-    close_puck->SetSpeed(10*m_com_vr);
-}
-*/
 
 #ifdef INCLUDE_RTK
 
