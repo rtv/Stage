@@ -31,9 +31,6 @@
 #define STG_CLIENT_GREETING 142
 
 
-   // each entity supports up to this many transducer poses
-#define STG_TRANSDUCERS_MAX 500
-
    // all models have a unique type number
    typedef enum
      {
@@ -74,7 +71,7 @@
        STG_PROP_ENTITY_VELOCITY,
        STG_PROP_ENTITY_VISIONRETURN,
        STG_PROP_ENTITY_VOLTAGE,
-       STG_PROP_ENTITY_TRANSDUCERS,
+       STG_PROP_ENTITY_RANGERS,
        STG_PROP_ENTITY_LASER_DATA,
        STG_PROP_ENTITY_NEIGHBORS,
        STG_PROP_ENTITY_NEIGHBORRETURN,
@@ -174,46 +171,24 @@ typedef struct
   int consume;
 } stg_los_msg_t;
 
-
-// IDAR types ////////////////////////////////////////////////////////////
-
-#define IDARBUFLEN 16   // idar message max in bytes
-#define RAYS_PER_SENSOR 5 // resolution
-
 typedef struct
 {
-  uint8_t mesg[IDARBUFLEN];
-  uint8_t len; //0-IDARBUFLEN
-  uint8_t intensity;
-} stg_idar_tx_t;
-
-typedef struct
-{
-  uint8_t mesg[IDARBUFLEN];
-  uint8_t len; //0-255
-  uint8_t intensity; //0-255
-  uint8_t reflection; // true/false
-  uint32_t timestamp_sec;
-  uint32_t timestamp_usec;
-  uint16_t range; // mm
-} stg_idar_rx_t; 
-
-// line-of-sight communications packet
-
-#define STG_MSG_MAX 32
+  double min;
+  double max;
+} stg_bounds_t;
 
 typedef struct
 {
   stg_pose_t pose;
   stg_size_t size;
-  double range_min;
-  double range_max;
+  stg_bounds_t bounds_range;
+  double fov;
   double range;
-  double intensity_send;
-  double intensity_receive;
-  unsigned char data_send[STG_MSG_MAX];
-  unsigned char data_recv[STG_MSG_MAX];
-} stg_transducer_t;
+  double error;
+} stg_ranger_t;
+
+// an individual range reading
+typedef double stg_range_t;
 
 typedef struct
 {
@@ -222,14 +197,7 @@ typedef struct
   double bearing;
   double orientation;
   stg_size_t size;
-  unsigned char msg[STG_MSG_MAX];
 } stg_neighbor_t;
-
-typedef struct
-{
-  double min;
-  double max;
-} stg_bounds_t;
 
 typedef struct
 {
@@ -479,10 +447,10 @@ int stg_model_get_neighbor_bounds( stg_client_t* cli, stg_id_t id,
 int stg_model_set_rects(  stg_client_t* cli, stg_id_t id, 
 			  stg_rotrect_array_t* rects );
 
-int stg_model_set_transducers( stg_client_t* cli, stg_id_t id, 
-			       stg_transducer_t* trans, int count );
-int stg_model_get_transducers( stg_client_t* cli, stg_id_t id, 
-			       stg_transducer_t** trans, int* count );
+int stg_model_set_rangers( stg_client_t* cli, stg_id_t id, 
+			       stg_ranger_t* trans, int count );
+int stg_model_get_rangers( stg_client_t* cli, stg_id_t id, 
+			       stg_ranger_t** trans, int* count );
 
 int stg_model_set_laser_data( stg_client_t* cli, stg_id_t id, 
 			      stg_laser_data_t* data );

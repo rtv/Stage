@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.8 2003-08-23 01:33:04 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.9 2003-08-25 00:57:19 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -534,15 +534,20 @@ stg_gui_model_t* stg_gui_model_create(  CEntity* ent )
       rtk_fig_line( mod->fig, origin.x, origin.y, size.x/2.0, origin.y );
     }
 
-  // add rects showing transducer positions
-  if( ent->transducers )
-    for( int s=0; s< (int)ent->transducers->len; s++ )
+  // add rects showing ranger positions
+  if( ent->rangers )
+    for( int s=0; s< (int)ent->rangers->len; s++ )
       {
-	stg_transducer_t* tran = &g_array_index( ent->transducers, 
-						 stg_transducer_t, s );
+	stg_ranger_t* rngr = &g_array_index( ent->rangers, 
+						 stg_ranger_t, s );
+
+	printf( "drawing a ranger rect (%.2f,%.2f,%.2f)[%.2f %.2f]\n",
+		rngr->pose.x, rngr->pose.y, rngr->pose.a,
+		rngr->size.x, rngr->size.y );
+
 	rtk_fig_rectangle( mod->fig, 
-			   tran->pose.x, tran->pose.y, tran->pose.a,
-			   tran->size.x, tran->size.y, 0 ); 
+			   rngr->pose.x, rngr->pose.y, rngr->pose.a,
+			   rngr->size.x, rngr->size.y, 0 ); 
       }
 
   // conditionally add blinking bits
@@ -672,7 +677,7 @@ void stg_gui_neighbor_render( CEntity* ent, GArray* neighbors )
   
   rtk_fig_origin( fig, pz.x, pz.y, pz.a );
   
-  char text[STG_MSG_MAX + 16];
+  char text[65];
   
   for( int n=0; n < (int)neighbors->len; n++ )
     {
@@ -692,7 +697,7 @@ void stg_gui_neighbor_render( CEntity* ent, GArray* neighbors )
       rtk_fig_line( fig, px+wx/2.0, py-wy/2.0, px-wx/2.0, py+wy/2.0 );
       rtk_fig_arrow( fig, px, py, pa, wy, 0.10);
       
-      snprintf(text, sizeof(text), "  %d", nbor->id );
+      snprintf(text, 64, "  %d", nbor->id );
       rtk_fig_text( fig, px, py, pa, text);
     }
 
@@ -750,8 +755,8 @@ void stg_gui_laser_render( CEntity* ent )
   rtk_canvas_flash( canvas, fig, 2, 1 );
 }
 
-// render the entity's transducers
-void stg_gui_transducers_render( CEntity* ent )
+// render the entity's rangers
+void stg_gui_rangers_render( CEntity* ent )
 {
    stg_gui_model_t* model = ent->guimod;
    rtk_canvas_t* canvas = model->fig->canvas;
@@ -761,17 +766,17 @@ void stg_gui_transducers_render( CEntity* ent )
    
    model->fig_trans = rtk_fig_create( canvas, NULL, STG_LAYER_DATA );
    
-   for( int t=0; t < (int)ent->transducers->len; t++ )
+   for( int t=0; t < (int)ent->rangers->len; t++ )
      {
-       stg_transducer_t* tran = &g_array_index( ent->transducers, 
-						stg_transducer_t, t );
+       stg_ranger_t* tran = &g_array_index( ent->rangers, 
+						stg_ranger_t, t );
        
        stg_pose_t pz;
        memcpy( &pz, &tran->pose, sizeof(stg_pose_t) );
        ent->LocalToGlobal( &pz );
        
-       //rtk_fig_rectangle( model->fig_data, pz.x, pz.y, pz.a, 
-       //	  tran->size.x, tran->size.y, 1 );
+       rtk_fig_rectangle( model->fig_trans, pz.x, pz.y, pz.a, 
+			  tran->size.x, tran->size.y, 1 );
        
        //PRINT_WARN1( "range %.2f", tran->range );
        //stg_pose_t hit;
@@ -878,7 +883,7 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
     case STG_PROP_ENTITY_COLOR:
     case STG_PROP_ENTITY_RECTS:
     case STG_PROP_ENTITY_CIRCLES:
-    case STG_PROP_ENTITY_TRANSDUCERS:
+    case STG_PROP_ENTITY_RANGERS:
     case STG_PROP_ENTITY_NOSE:
     case STG_PROP_ENTITY_BLINKENLIGHT:
       stg_gui_model_destroy( ent->guimod );

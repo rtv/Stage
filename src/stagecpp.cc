@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.4 2003-08-23 01:33:04 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.5 2003-08-25 00:57:19 rtv Exp $
  */
 
 #include <assert.h>
@@ -1779,6 +1779,53 @@ int CWorldFile::Upload( stg_client_t* cli,
 	PRINT_DEBUG1( "LIGHT %d", li );
 	stg_model_set_light( cli, anid, &li );
 
+	// read any ranger details
+	
+	// Load the configuration of each ranger
+	int rcount = this->ReadInt(section, "ranger_count", 0);
+	if (rcount > 0)
+	  {
+	    char key[64];
+	    
+	    stg_ranger_t* rangers = 
+	      (stg_ranger_t*)calloc(sizeof(stg_ranger_t),rcount);
+
+	    for( int i=0; i<rcount; i++)
+	      {
+		snprintf(key, sizeof(key), "ranger[%d]", i);
+		rangers[i].pose.x = 
+		  this->ReadTupleLength(section, key, 0, 0.0);
+		rangers[i].pose.y = 
+		  this->ReadTupleLength(section, key, 1, 0.0);
+		rangers[i].pose.a = 
+		  this->ReadTupleAngle(section, key, 2, 0.0);
+		rangers[i].size.x = 
+		  this->ReadTupleLength(section, key, 3, 0.0);
+		rangers[i].size.y = 
+		  this->ReadTupleLength(section, key, 4, 0.0);
+		rangers[i].bounds_range.min = 
+		  this->ReadTupleLength(section, key, 5, 0.0);
+ 		rangers[i].bounds_range.max = 
+		  this->ReadTupleLength(section, key, 6, 3.0);
+		rangers[i].fov = 
+		  this->ReadTupleAngle(section, key, 7, 22.5 );
+		rangers[i].error = 
+		  this->ReadTupleFloat(section, key, 8, 0.0);
+	      }		
+
+	    for( int j=0; j<rcount; j++)
+	      {
+		printf( "loading ranger %d (%.2f,%.2f,%.2f)[%.2f %.2f]\n",
+			j, 
+			rangers[j].pose.x, rangers[j].pose.y, rangers[j].pose.a,
+			rangers[j].size.x, rangers[j].size.y );
+	      }
+	    
+	    stg_model_set_rangers( cli, anid, rangers, rcount );
+	    free(rangers);
+	  }
+
+
 	stg_nose_t nose;
 	nose = (stg_nose_t)this->ReadBool( section, "nose", true );
 	stg_model_set_nose( cli, anid, &nose );
@@ -1803,6 +1850,7 @@ int CWorldFile::Upload( stg_client_t* cli,
 		    inpam.height, 
 		    inpam.depth );
 	    // convert the bitmap to rects and poke them into the model
+	    // TODO - insert this code
 	  }
       }
   }

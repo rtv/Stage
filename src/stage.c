@@ -57,7 +57,7 @@ const char* stg_property_string( stg_prop_id_t id )
     case STG_PROP_ENTITY_VELOCITY: return "STG_PROP_ENTITY_VELOCITY"; break;
     case STG_PROP_ENTITY_VISIONRETURN: return "STG_PROP_ENTITY_VISIONRETURN"; break;
     case STG_PROP_ENTITY_VOLTAGE: return "STG_PROP_ENTITY_VOLTAGE"; break;
-    case STG_PROP_ENTITY_TRANSDUCERS: return "STG_PROP_ENTITY_TRANSDUCERS";break;
+    case STG_PROP_ENTITY_RANGERS: return "STG_PROP_ENTITY_RANGERS";break;
     case STG_PROP_ENTITY_LASER_DATA: return "STG_PROP_ENTITY_LASER_DATA";break;
     case STG_PROP_ENTITY_BLINKENLIGHT: return "STG_PROP_ENTITY_BLINKENLIGHT";break;
  
@@ -454,6 +454,9 @@ stg_id_t stg_model_create( stg_client_t* cli, stg_entity_create_t* ent )
 					     STG_PROP_ENTITY_CREATE, 
 					     STG_SETGET,
 					     ent, sizeof(stg_entity_create_t) );
+  if( reply == NULL )
+    return -1;
+
   stg_id_t returned_id = reply->id;
   stg_property_free( reply );
   
@@ -466,6 +469,9 @@ int stg_model_destroy( stg_client_t* cli, stg_id_t id )
 					     STG_PROP_ENTITY_DESTROY, 
 					     STG_SETGET,
 					     NULL, 0 );
+  if( reply == NULL )
+    return -1;
+
   stg_id_t returned_id = reply->id;
   stg_property_free( reply );
   
@@ -478,6 +484,9 @@ int stg_model_set_size( stg_client_t* cli, stg_id_t id, stg_size_t* sz )
 					     STG_PROP_ENTITY_SIZE, 
 					     STG_SETGET,
 					     sz, sizeof(stg_size_t) );
+  if( reply == NULL )
+    return -1;
+
   memcpy( sz, reply->data, sizeof(stg_size_t) );
   stg_property_free( reply );
   
@@ -490,6 +499,9 @@ int stg_model_get_size( stg_client_t* cli, stg_id_t id, stg_size_t* sz )
 					     STG_PROP_ENTITY_SIZE, 
 					     STG_GET,
 					     NULL, 0 );
+  if( reply == NULL )
+    return -1;
+
   memcpy( sz, reply->data, sizeof(stg_size_t) );
   stg_property_free( reply );
   
@@ -502,6 +514,9 @@ int stg_model_set_velocity( stg_client_t* cli, stg_id_t id, stg_velocity_t* sz )
 					     STG_PROP_ENTITY_VELOCITY, 
 					     STG_SETGET,
 					     sz, sizeof(stg_velocity_t) );
+  if( reply == NULL )
+    return -1;
+
   memcpy( sz, reply->data, sizeof(stg_velocity_t) );
   stg_property_free( reply );
   
@@ -514,6 +529,9 @@ int stg_model_get_velocity( stg_client_t* cli, stg_id_t id, stg_velocity_t* sz )
 					     STG_PROP_ENTITY_VELOCITY, 
 					     STG_GET,
 					     NULL, 0 );
+  if( reply == NULL )
+    return -1;
+
   memcpy( sz, reply->data, sizeof(stg_velocity_t) );
   stg_property_free( reply );
   
@@ -526,6 +544,9 @@ int stg_model_set_pose( stg_client_t* cli, stg_id_t id, stg_pose_t* sz )
 					     STG_PROP_ENTITY_POSE, 
 					     STG_SETGET,
 					     sz, sizeof(stg_pose_t) );
+  if( reply == NULL )
+    return -1;
+
   memcpy( sz, reply->data, sizeof(stg_pose_t) );
   stg_property_free( reply );
   
@@ -539,6 +560,9 @@ int stg_model_get_pose( stg_client_t* cli, stg_id_t id, stg_pose_t* sz )
 					     STG_GET,
 					     NULL, 0 );
   
+  if( reply == NULL )
+    return -1;
+
   memcpy( sz, reply->data, sizeof(stg_pose_t) );
   stg_property_free( reply );
   
@@ -552,6 +576,9 @@ int stg_model_set_origin( stg_client_t* cli, stg_id_t id, stg_pose_t* org )
 					     STG_SETGET,
 					     org, sizeof(stg_pose_t) );
   
+  if( reply == NULL )
+    return -1;
+
   memcpy( org, reply->data, sizeof(stg_pose_t) );
   stg_property_free( reply );
   
@@ -565,6 +592,9 @@ int stg_model_get_origin( stg_client_t* cli, stg_id_t id, stg_pose_t* org )
 					     STG_GET,
 					     NULL, 0 );
   
+  if( reply == NULL )
+    return -1;
+
   memcpy( org, reply->data, sizeof(stg_pose_t) );
   stg_property_free( reply );
   
@@ -581,6 +611,9 @@ int stg_model_set_rects(  stg_client_t* cli, stg_id_t id,
 					     rects->rect_count*
 					     sizeof(stg_rotrect_t) );
 
+  if( reply == NULL )
+    return -1;
+
   // infer the size of rectangles in the data from the size
   memcpy( rects->rects, reply->data, reply->len );
   rects->rect_count = reply->len / sizeof(stg_rotrect_t);
@@ -590,31 +623,37 @@ int stg_model_set_rects(  stg_client_t* cli, stg_id_t id,
 }
   
 
-int stg_model_set_transducers( stg_client_t* cli, stg_id_t id, 
-			       stg_transducer_t* trans, int count )
+int stg_model_set_rangers( stg_client_t* cli, stg_id_t id, 
+			       stg_ranger_t* trans, int count )
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_ENTITY_TRANSDUCERS, 
+					     STG_PROP_ENTITY_RANGERS, 
 					     STG_SETGET,
 					     trans, 
 					     count *
-					     sizeof(stg_transducer_t) );
+					     sizeof(stg_ranger_t) );
   
+  if( reply == NULL )
+    return -1;
+
   stg_property_free( reply );
   return 0;
 }
 
-int stg_model_get_transducers( stg_client_t* cli, stg_id_t id, 
-			       stg_transducer_t** trans, int* count )
+int stg_model_get_rangers( stg_client_t* cli, stg_id_t id, 
+			       stg_ranger_t** trans, int* count )
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_ENTITY_TRANSDUCERS, 
+					     STG_PROP_ENTITY_RANGERS, 
 					     STG_GET,
 					     NULL, 0 ); 
   
-  // infer the number of transducers from the data len
-  *count = reply->len / sizeof(stg_transducer_t);
-  *trans = (stg_transducer_t*)malloc( reply->len ); 
+  if( reply == NULL )
+    return -1;
+
+  // infer the number of rangers from the data len
+  *count = reply->len / sizeof(stg_ranger_t);
+  *trans = (stg_ranger_t*)malloc( reply->len ); 
   memcpy( *trans, reply->data, reply->len );
   stg_property_free( reply );
   return 0;
@@ -627,6 +666,8 @@ int stg_model_set_neighbor_return( stg_client_t* cli, stg_id_t id,
 					     STG_PROP_ENTITY_NEIGHBORRETURN, 
 					     STG_SETGET,
 					     val, sizeof(int) ); 
+  if( reply == NULL )
+    return -1;
   
   memcpy( val, reply->data, sizeof(int) );
   stg_property_free( reply );
@@ -640,10 +681,12 @@ int stg_model_get_neighbor_return( stg_client_t* cli, stg_id_t id,
 					     STG_PROP_ENTITY_NEIGHBORRETURN, 
 					     STG_GET,
 					     NULL, 0 ); 
+  if( reply == NULL )
+    return -1;
   
   memcpy( val, reply->data, sizeof(int) );
   stg_property_free( reply );
-  return 0;
+  return 0;   
 }
 
 void stg_los_msg_print( stg_los_msg_t* msg )
@@ -661,6 +704,9 @@ int stg_model_send_los_msg(  stg_client_t* cli, stg_id_t id,
 					     STG_SETGET,
 					     msg,sizeof(stg_los_msg_t));
   
+  if( reply == NULL )
+    return -1;
+
   memcpy( msg, reply->data, sizeof(stg_los_msg_t) );
   stg_property_free( reply );
   return 0;
@@ -674,6 +720,9 @@ int stg_model_exchange_los_msg(  stg_client_t* cli, stg_id_t id,
 					     STG_SETGET,
 					     msg,sizeof(stg_los_msg_t));
   
+  if( reply == NULL )
+    return -1;
+
   memcpy( msg, reply->data, sizeof(stg_los_msg_t) );
   stg_property_free( reply );
   return 0;
@@ -688,6 +737,9 @@ int stg_model_set_light( stg_client_t* cli, stg_id_t id,
 					     STG_SETGET,
 					     val,sizeof(stg_interval_ms_t));
   
+  if( reply == NULL )
+    return -1;
+
   memcpy( val, reply->data, sizeof(stg_interval_ms_t) );
   stg_property_free( reply );
   return 0;
@@ -700,6 +752,8 @@ int stg_model_get_light( stg_client_t* cli, stg_id_t id,
 					     STG_PROP_ENTITY_BLINKENLIGHT,
 					     STG_GET,
 					     NULL, 0 );
+  if( reply == NULL )
+    return -1;
  
   memcpy( val, reply->data, sizeof(stg_interval_ms_t) );
   stg_property_free( reply );
@@ -713,6 +767,8 @@ int stg_model_set_nose( stg_client_t* cli, stg_id_t id,
 					     STG_PROP_ENTITY_NOSE,
 					     STG_SETGET,
 					     val,sizeof(stg_nose_t));
+  if( reply == NULL )
+    return -1;
  
   memcpy( val, reply->data, sizeof(stg_nose_t) );
   stg_property_free( reply );
@@ -726,6 +782,8 @@ int stg_model_get_nose( stg_client_t* cli, stg_id_t id,
 					     STG_PROP_ENTITY_NOSE,
 					     STG_GET,
 					     NULL, 0 );
+  if( reply == NULL )
+    return -1;
  
   memcpy( val, reply->data, sizeof(stg_nose_t) );
   stg_property_free( reply );
@@ -739,6 +797,8 @@ int stg_model_set_laser_return( stg_client_t* cli, stg_id_t id,
 					     STG_PROP_ENTITY_LASERRETURN, 
 					     STG_SETGET,
 					     val, sizeof(stg_laser_return_t) ); 
+  if( reply == NULL )
+    return -1;
   
   memcpy( val, reply->data, sizeof(stg_laser_return_t) );
   stg_property_free( reply );
@@ -752,6 +812,8 @@ int stg_model_set_laser_data( stg_client_t* cli, stg_id_t id,
 					     STG_PROP_ENTITY_LASER_DATA, 
 					     STG_GET,
 					     data, sizeof(stg_laser_data_t) ); 
+  if( reply == NULL )
+    return -1;
   
   memcpy( data, reply->data, sizeof(stg_laser_data_t) );
   stg_property_free( reply );
@@ -765,6 +827,8 @@ int stg_model_get_laser_data( stg_client_t* cli, stg_id_t id,
 					     STG_PROP_ENTITY_LASER_DATA, 
 					     STG_GET,
 					     NULL, 0 ); 
+  if( reply == NULL )
+    return -1;
   
   memcpy( data, reply->data, sizeof(stg_laser_data_t) );
   stg_property_free( reply );
@@ -778,6 +842,8 @@ int stg_model_set_neighbor_bounds( stg_client_t* cli, stg_id_t id,
 					     STG_PROP_ENTITY_NEIGHBORBOUNDS, 
 					     STG_SETGET,
 					     data, sizeof(stg_bounds_t) ); 
+  if( reply == NULL )
+    return -1;
   
   memcpy( data, reply->data, sizeof(stg_bounds_t) );
   stg_property_free( reply );
@@ -791,6 +857,8 @@ int stg_model_get_neighbor_bounds( stg_client_t* cli, stg_id_t id,
 					     STG_PROP_ENTITY_NEIGHBORBOUNDS, 
 					     STG_GET,
 					     NULL, 0 ); 
+  if( reply == NULL )
+    return -1;
   
   memcpy( data, reply->data, sizeof(stg_bounds_t) );
   stg_property_free( reply );
@@ -806,6 +874,9 @@ int stg_model_get_neighbors( stg_client_t* cli, stg_id_t id,
 					     STG_GET,
 					     NULL, 0 ); 
   
+  if( reply == NULL )
+    return -1;
+
   *neighbors = (stg_neighbor_t*)malloc( reply->len );
   memcpy( *neighbors, reply->data, reply->len);
   *neighbor_count = reply->len / sizeof(stg_neighbor_t);
@@ -820,6 +891,9 @@ stg_id_t stg_world_create( stg_client_t* cli, stg_world_create_t* world )
 					     STG_PROP_WORLD_CREATE, 
 					     STG_SETGET,
 					     world, sizeof(stg_world_create_t) );  
+  if( reply == NULL )
+    return -1;
+
   stg_id_t returned_id = reply->id;
   stg_property_free( reply );
   

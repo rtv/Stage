@@ -130,7 +130,7 @@ gboolean stg_gui_window_callback( gpointer win );
 stg_gui_model_t* stg_gui_model_create(CEntity* ent);
 void stg_gui_model_destroy( stg_gui_model_t* model );
 int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop );
-void stg_gui_transducers_render( CEntity* ent );
+void stg_gui_rangers_render( CEntity* ent );
 // render the entity's laser data
 void stg_gui_laser_render( CEntity* ent );
 void stg_gui_neighbor_render( CEntity* ent, GArray* neighbors );

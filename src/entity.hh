@@ -21,7 +21,7 @@
  * Desc: Simulated robot with various sensors
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.18 2003-08-23 01:33:04 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.19 2003-08-25 00:57:19 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -285,8 +285,8 @@ protected:
 public:  bool OcclusionTest(CEntity* ent );
 
   public: 
-  GArray* transducers;
-  void UpdateTransducers( void );
+  GArray* rangers;
+  void UpdateRangers( void );
 
   // this structure specifies our laser scan
   stg_laser_data_t laser_data;

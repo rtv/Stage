@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.104 2003-08-23 01:33:03 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.105 2003-08-25 00:57:19 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -149,7 +149,7 @@ CEntity::CEntity( stg_entity_create_t* init )
   g_assert( g_hash_table_lookup( global_hash_table, &this->id ) == NULL ); 
   g_hash_table_insert( global_hash_table, &this->id, this->node );
   
-  transducers = NULL;
+  rangers = NULL;
   
   // set up reasonble laser defaults
   this->laser_data.angle_min = -M_PI/2.0;
@@ -691,9 +691,9 @@ void CEntity::GlobalToLocal( stg_pose_t* pose )
 
 int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
 {
-  PRINT_DEBUG4( "Setting %d:%s prop %s with %d bytes", 
-  	this->id, this->token->str, stg_property_string(ptype), len );
-  
+  BASE_DEBUG3( "Setting prop %s (%d) with %d bytes", 
+	       stg_property_string(ptype), ptype, len );
+
   switch( ptype )
     {      
     case STG_PROP_ENTITY_POSE:
@@ -746,20 +746,29 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
       this->SendLosMessage( (stg_los_msg_t*)data );
       break;
 
-    case STG_PROP_ENTITY_TRANSDUCERS:
+    case STG_PROP_ENTITY_RANGERS:
       {
-	// kill our old transducers
-	if( this->transducers ) g_array_free( this->transducers, TRUE );
+	if( this->rangers ) g_array_free( this->rangers, TRUE );
 	
-	// we infer the number of transducers from the data size
-	int tcount = len / sizeof(stg_transducer_t);
+	// we infer the number of rangers from the data size
+	int tcount = len / sizeof(stg_ranger_t);
 	
-	this->transducers = g_array_sized_new( FALSE, TRUE, 
-					       sizeof(stg_transducer_t), 
-					       tcount );
+	for( int t=0; t<tcount; t++ )
+	  {
+	    stg_ranger_t* rgr = ((stg_ranger_t*)data) + t;
+	    
+	    printf( "setting ranger %d (%.2f,%.2f,%.2f)[%.2f %.2f]\n",
+		    t, 
+		    rgr->pose.x, rgr->pose.y, rgr->pose.a,
+		    rgr->size.x, rgr->size.y );
+	  }
+
+	this->rangers = g_array_sized_new( FALSE, TRUE, 
+					   sizeof(stg_ranger_t), 
+					   tcount );
 	
-	this->transducers = g_array_append_vals( this->transducers,
-						 data, tcount );
+	this->rangers = g_array_append_vals( this->rangers,
+					     data, tcount );
       }
       break;
 
@@ -863,19 +872,19 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
       }
       break;
       
-    case STG_PROP_ENTITY_TRANSDUCERS:
-      if( this->transducers ) 
+    case STG_PROP_ENTITY_RANGERS:
+      if( this->rangers ) 
 	{
-	  this->UpdateTransducers();
+	  this->UpdateRangers();
 	  
 	  prop = stg_property_attach_data( prop, 
-					   this->transducers->data,
-					   this->transducers->len * 
-					   sizeof(stg_transducer_t) );
+					   this->rangers->data,
+					   this->rangers->len * 
+					   sizeof(stg_ranger_t) );
 	}
       else
-	PRINT_WARN( "requested transducer data, but this model has"
-		    " no transducers" ); 
+	PRINT_WARN( "requested ranger data, but this model has"
+		    " no rangers" ); 
       break;
       
     case STG_PROP_ENTITY_RECTS:
@@ -1373,34 +1382,36 @@ void CEntity::RenderRects( bool render )
 
 ///////////////////////////////////////////////////////////////////////////
 // Generate scan data
-void CEntity::UpdateTransducers( void )
+void CEntity::UpdateRangers( void )
 {   
-  BASE_DEBUG( "updating transducers" );
+  BASE_DEBUG( "updating rangers" );
 
-  assert( this->transducers );
+  assert( this->rangers );
   
-  if( this->transducers->len < 1 )
-    PRINT_WARN1( "wierd! %d transducers", this->transducers->len );
+  if( this->rangers->len < 1 )
+    PRINT_WARN1( "wierd! %d rangers", this->rangers->len );
 
-  for( int t=0; t < (int)this->transducers->len; t++ )
+  for( int t=0; t < (int)this->rangers->len; t++ )
     {
-      stg_transducer_t* tran = &g_array_index( this->transducers, 
-					       stg_transducer_t, t );
+      stg_ranger_t* tran = &g_array_index( this->rangers, 
+					       stg_ranger_t, t );
 
       g_assert( tran );
       
-      // Get the global pose of the transducer
+      // Get the global pose of the ranger
       //
       stg_pose_t pz;
       memcpy( &pz, &tran->pose, sizeof(stg_pose_t) );
       this->LocalToGlobal( &pz );
       
-      CLineIterator lit( pz.x, pz.y, pz.a, tran->range_max, 
+      // todo - use bounds_range.min
+
+      CLineIterator lit( pz.x, pz.y, pz.a, tran->bounds_range.max, 
 			 GetWorld()->matrix, 
 			 PointToBearingRange );
       
       CEntity* ent;
-      double range = tran->range_max;
+      double range = tran->bounds_range.max;
       
       while( (ent = lit.GetNextEntity()) ) 
 	{
@@ -1422,18 +1433,18 @@ void CEntity::UpdateTransducers( void )
       
       //if( ent )
       //{
-	  // poke the scan data into the transducer
+	  // poke the scan data into the ranger
       tran->range = range;
       //tran->intensity_receive = (double)ent->laser_return;
 	  //}
       
 
       //tran->range = 0.4;
-      stg_gui_transducers_render( this ); 
+      stg_gui_rangers_render( this ); 
 
     }
 
-  BASE_DEBUG( "updating transducers complete" );
+  BASE_DEBUG( "updating rangers complete" );
 }
 
 ///////////////////////////////////////////////////////////////////////////
