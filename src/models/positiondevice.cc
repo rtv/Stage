@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/positiondevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.5 $
+//  $Author: inspectorg $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -180,26 +180,26 @@ void CPositionDevice::Update( double sim_time )
         break;
 
       switch (buffer[0])
-        {
+      {
         case PLAYER_POSITION_MOTOR_POWER_REQ:
           // motor state change request 
           // 1 = enable motors (default)
           // 0 = disable motors
-	  switch( buffer[1] )
-	    {
-	    case 0: this->motors_enabled = false;
-	      break;
-	    case 1: this->motors_enabled = true;
-	      break;
-	    default: 
-	      this->motors_enabled = false;
-	      PRINT_WARN1("Unrecognized motor state %d in"
-			  " PLAYER_POSITION_MOTOR_POWER_REQ "
-			  "(expecting 1(on) or 0(off). "
-			  "Switching off motors for safety.", 
-			  buffer[1] ); 
-	    }
-	  if( !this->motors_enabled ) SetGlobalVel( 0,0,0 );
+          switch( buffer[1] )
+          {
+            case 0: this->motors_enabled = false;
+              break;
+            case 1: this->motors_enabled = true;
+              break;
+            default: 
+              this->motors_enabled = false;
+              PRINT_WARN1("Unrecognized motor state %d in"
+                          " PLAYER_POSITION_MOTOR_POWER_REQ "
+                          "(expecting 1(on) or 0(off). "
+                          "Switching off motors for safety.", 
+                          buffer[1] ); 
+          }
+          if( !this->motors_enabled ) SetGlobalVel( 0,0,0 );
 	  
           PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
           break;
@@ -210,62 +210,62 @@ void CPositionDevice::Update( double sim_time )
           PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
           break;
 	  
-	case PLAYER_POSITION_SET_ODOM_REQ:
-	  // set my odometry estimate to the values in the packet
-	  PositionSetOdomReqUnpack( (player_position_set_odom_req_t*)buffer,
-				    &this->odo_px, 
-				    &this->odo_py, 
-				    &this->odo_pa );
+        case PLAYER_POSITION_SET_ODOM_REQ:
+          // set my odometry estimate to the values in the packet
+          PositionSetOdomReqUnpack( (player_position_set_odom_req_t*)buffer,
+                                    &this->odo_px, 
+                                    &this->odo_py, 
+                                    &this->odo_pa );
 	     
-	  PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
+          PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
           break;
 	  
         case PLAYER_POSITION_GET_GEOM_REQ:
-	  {
-	    // Return the robot geometry (rotation offsets and size)
-	    player_position_geom_t geom;	  
-	    PositionGeomPack( &geom, 
-			      this->origin_x, this->origin_y, 0,
-			      this->size_x, this->size_y );
+        {
+          // Return the robot geometry (rotation offsets and size)
+          player_position_geom_t geom;	  
+          PositionGeomPack( &geom, 
+                            this->origin_x, this->origin_y, 0,
+                            this->size_x, this->size_y );
 	    
-  	  PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &geom, sizeof(geom));
-  	}
-          break;
+          PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &geom, sizeof(geom));
+        }
+        break;
 
         case PLAYER_POSITION_POSITION_MODE_REQ:
-  	// switch between velocity and position control
-  	switch( buffer[1] )
-  	  {
-  	  case 0: this->control_mode = VELOCITY_CONTROL_MODE; 
-  	    break;
-  	  case 1: this->control_mode = POSITION_CONTROL_MODE; 
-  	    break;
-  	  default: 
-  	    PRINT_WARN2("Unrecognized mode in"
-  			" PLAYER_POSITION_POSITION_MODE_REQ (%d)."
-			"Sticking with current mode (%s)", 
-  			buffer[0], 
-			this->control_mode ? 
-			"POSITION_CONTROL_MODE" : "VELOCITY_CONTROL_MODE" ); 
-  	    break;
-  	  }
+          // switch between velocity and position control
+          switch( buffer[1] )
+          {
+            case 0: this->control_mode = VELOCITY_CONTROL_MODE; 
+              break;
+            case 1: this->control_mode = POSITION_CONTROL_MODE; 
+              break;
+            default: 
+              PRINT_WARN2("Unrecognized mode in"
+                          " PLAYER_POSITION_POSITION_MODE_REQ (%d)."
+                          "Sticking with current mode (%s)", 
+                          buffer[0], 
+                          this->control_mode ? 
+                          "POSITION_CONTROL_MODE" : "VELOCITY_CONTROL_MODE" ); 
+              break;
+          }
           PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
           break;
 
           // CONFIGS NOT IMPLEMENTED
 	
         case PLAYER_POSITION_POSITION_PID_REQ:
-  	PRINT_WARN( "PLAYER_POSITION_POSITION_PID_REQ has no effect" );
+          PRINT_WARN( "PLAYER_POSITION_POSITION_PID_REQ has no effect" );
           PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
           break;
 
         case PLAYER_POSITION_SPEED_PID_REQ:
-  	PRINT_WARN( "PLAYER_POSITION_SPEED_PID_REQ has no effect" );
+          PRINT_WARN( "PLAYER_POSITION_SPEED_PID_REQ has no effect" );
           PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
           break;
 
         case PLAYER_POSITION_SPEED_PROF_REQ:
-  	PRINT_WARN( "PLAYER_POSITION_SPEED_PROF_REQ has no effect" );
+          PRINT_WARN( "PLAYER_POSITION_SPEED_PROF_REQ has no effect" );
           PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
           break;
 
@@ -273,14 +273,14 @@ void CPositionDevice::Update( double sim_time )
           // velocity control mode:
           //   0 = direct wheel velocity control (default)
           //   1 = separate translational and rotational control
-  	PRINT_WARN( "PLAYER_POSITION_VELOCITY_MODE_REQ has no effect" );
+          PRINT_WARN( "PLAYER_POSITION_VELOCITY_MODE_REQ has no effect" );
           PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
           break;
 
-	    default:
-	      PRINT_WARN1("got unknown config request \"%c\"\n", buffer[0]);
-	      PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
-	      break;
+        default:
+          PRINT_WARN1("got unknown config request \"%c\"\n", buffer[0]);
+          PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
+          break;
 	    }
     }
   }
@@ -310,7 +310,7 @@ void CPositionDevice::Move()
   double dx=0, dy=0, da=0;
 
   switch( this->drive_mode )
-    {
+  {
     case OMNI_DRIVE_MODE: // omnidirectional - axes independent
       dx = step * vx;
       dy = step * vy;
@@ -326,7 +326,7 @@ void CPositionDevice::Move()
     default:
       PRINT_WARN1( "unknown drive mode (%d)", this->drive_mode );
       break;
-    }
+  }
   
   // compute a new pose
   double qx = px + dx;
@@ -348,9 +348,9 @@ void CPositionDevice::Move()
         
     // Compute the new odometric pose
     // we currently have PERFECT odometry. yum!
-    this->odo_px += dx;
-    this->odo_py += dy;
-    this->odo_pa += da;
+    this->odo_px += step * vx * cos(this->odo_pa) + step * vy * sin(this->odo_pa);
+    this->odo_py += step * vx * sin(this->odo_pa) + step * vy * cos(this->odo_pa);
+    this->odo_pa += step * va;
     
     this->stall = false;
   }
@@ -380,54 +380,54 @@ void CPositionDevice::PositionControl()
 
   // set the translation speeds
   if( this->drive_mode )
+  {
+    // set speeds proportional to error
+    this->com_vx = error_x;
+    this->com_vy = error_y;
+    this->com_va = error_a;
+  }
+  else // a little more complex with a diff steer robot - this
+    // controller seems to work ok
+  {
+    // find the angle to the goal
+    double error_a_goal = atan2( error_y, error_x ) - this->odo_pa;
+    // find the distance from the goal
+    double error_d_goal = hypot( error_y, error_x );
+
+    // if the goal is behind us, we'll go backwards!
+    if( error_a_goal > M_PI/2.0 || error_a_goal < -M_PI/2 )
     {
-      // set speeds proportional to error
-      this->com_vx = error_x;
-      this->com_vy = error_y;
+      //puts( "BACKWARDS" );
+      error_d_goal = -error_d_goal; // negative speed
+      error_a_goal = NORMALIZE( error_a_goal + M_PI );// invert heading
+    }
+    //else
+    //puts( "FORWARDS" );
+      
+    // if we're at the goal, turn to face the right direction
+    if( fabs(error_d_goal) < DISTANCE_THRESHOLD )
+    {
+      //puts( "turning to the right heading" );
+      this->com_vx = error_d_goal;
+      this->com_vy = 0.0;
       this->com_va = error_a;
     }
-  else // a little more complex with a diff steer robot - this
- // controller seems to work ok
-    {
-      // find the angle to the goal
-      double error_a_goal = atan2( error_y, error_x ) - this->odo_pa;
-      // find the distance from the goal
-      double error_d_goal = hypot( error_y, error_x );
-
-      // if the goal is behind us, we'll go backwards!
-      if( error_a_goal > M_PI/2.0 || error_a_goal < -M_PI/2 )
-	{
-	  //puts( "BACKWARDS" );
-	  error_d_goal = -error_d_goal; // negative speed
-	  error_a_goal = NORMALIZE( error_a_goal + M_PI );// invert heading
-	}
-      //else
-	//puts( "FORWARDS" );
-      
-      // if we're at the goal, turn to face the right direction
-      if( fabs(error_d_goal) < DISTANCE_THRESHOLD )
-	{
-	  //puts( "turning to the right heading" );
-	  this->com_vx = error_d_goal;
-	  this->com_vy = 0.0;
-	  this->com_va = error_a;
-	}
-      else // if we're pointing towards the goal, move towards it 
-  	if( fabs(error_a_goal) < ANGLE_THRESHOLD )
+    else // if we're pointing towards the goal, move towards it 
+      if( fabs(error_a_goal) < ANGLE_THRESHOLD )
   	  {
   	    //puts( "moving towards goal point" );
   	    this->com_vx = error_d_goal;
   	    this->com_vy = 0.0;
   	    this->com_va = error_a_goal; // keep turning towards the goal
   	  }
-	else // turn towards the goal
-	  {
-	    //puts( "turning towards goal point" );
-	    this->com_va = error_a_goal;
-	    this->com_vx = 0.0;
-	    this->com_vy = 0.0;
-	  }
-    }
+      else // turn towards the goal
+      {
+        //puts( "turning towards goal point" );
+        this->com_va = error_a_goal;
+        this->com_vx = 0.0;
+        this->com_vy = 0.0;
+      }
+  }
 
   // threshold speeds
   this->com_vx = THMIN(this->com_vx,  0.5);
