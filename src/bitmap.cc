@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/bitmap.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -336,6 +336,10 @@ void CBitmap::GuiStartup( void )
   
   assert( g_group );
   
+
+  GnomeCanvasPoints *gcp = gnome_canvas_points_new(5);
+  
+
   // add the figure we pre-computed in Startup() above  
   for(
       std::vector<bitmap_rectangle_t>::iterator it = bitmap_rects.begin();
@@ -343,13 +347,22 @@ void CBitmap::GuiStartup( void )
       it++ )  
     {
       // find the bounding box
-      double x = it->x - it->w/2.0;
-      double y = it->y - it->h/2.0;
-      double a = x + it->w;
-      double b = y + it->h;
-      
-      // add the rectangle
-      gnome_canvas_item_new (g_group,
+       gcp->coords[0] = it->x - it->w/2.0;
+       gcp->coords[1] = it->y - it->h/2.0;
+       gcp->coords[2] = gcp->coords[0] + it->w;
+       gcp->coords[3] = gcp->coords[1];
+       gcp->coords[4] = gcp->coords[2];
+       gcp->coords[5] = gcp->coords[1] + it->h;
+       gcp->coords[6] = gcp->coords[0];
+       gcp->coords[7] = gcp->coords[5];
+       gcp->coords[8] = gcp->coords[0];
+       gcp->coords[9] = gcp->coords[1];
+    
+
+      // add the rectangle   
+      /*
+	// use rectangle in aa mode
+	gnome_canvas_item_new (g_group,
 			     gnome_canvas_rect_get_type(),
 			     "x1", x,
 			     "y1", y,
@@ -362,38 +375,27 @@ void CBitmap::GuiStartup( void )
 			     "outline_color", NULL,
 			     "width_pixels", 1,
 			     NULL );            
+      */
+       
+       // use lines in X mode
+       gnome_canvas_item_new (g_group,
+			      gnome_canvas_line_get_type(),
+			      "points", gcp,
+			      //"fill_color", "black",
+			      "fill_color_rgba", (this->color<<8)+255,
+			      //"width_units", it->h,
+			      //"width_pixels", 1,
+			      "width_units", 0.001,
+			      NULL );//(double)THICKNESS,
     }
   
-  this->g_select_item = 
-    gnome_canvas_item_new ( this->g_group, 
-			    gnome_canvas_rect_get_type(),
-			    "x1", -size_x/2.0,
-			    "y1", -size_y/2.0,
-			    "x2", +size_x/2.0,
-			    "y2", +size_y/2.0,
-			    "fill_color", NULL,
-			    "outline_color_rgba", 0xFFFF00FFL,
-			    "width_pixels", 2,
-			    NULL );      
+  gnome_canvas_points_free(gcp);
   
   // the selction item is only shown when we're selected - it's
   // initially hidden
-  gnome_canvas_item_hide(  this->g_select_item );
+  //gnome_canvas_item_hide(  this->g_select_item );
   
      
-}
-
-void CBitmap::GuiSelect( void )
-{
-  CEntity::GuiSelect(); 
-  gnome_canvas_item_show(  this->g_select_item );
-
-}
-
-void CBitmap::GuiUnselect( void )
-{
-  CEntity::GuiUnselect();
-  gnome_canvas_item_hide(  this->g_select_item );
 }
 
 #endif

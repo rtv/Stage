@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/bitmap.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -72,12 +72,6 @@ class CBitmap : public CEntity
 #ifdef RTVG
 public: 
   virtual void GuiStartup ();
-  virtual void GuiSelect( void );
-  virtual void GuiUnselect( void );
-  
-private:
-  GnomeCanvasItem* g_select_item;
-  //std::vector<GnomeCanvasItem*> canvas_items;
 #endif
 
 };

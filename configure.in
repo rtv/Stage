@@ -24,7 +24,6 @@ AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_RANLIB
 
-
 dnl Checks for header files.
 AC_CHECK_HEADERS(stdint.h sys/types.h strings.h)
 #AC_HEADER_STDC
@@ -55,6 +54,11 @@ if test "x$with_gui" = "xyes"; then
   AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
 fi
 AM_CONDITIONAL(WITH_GUI, test x$with_gui = xyes)
+
+dnl - RTV in progress - check for presence of GNOME libs
+dnl PKG_CHECK_MODULES(GNOME2, libgnome-2.0 >= 2.0 libgnomeui-2.0 >= 2.0)
+dnl AC_SUBST(GNOME2_CFLAGS)
+dnl AC_SUBST(GNOME2_LIBS)
 
 dnl should we include the GNOME GUI?
 AC_ARG_WITH(rtvg,    [   --without-rtvg         Don't include the experimental GNOME GUI],,

@@ -22,7 +22,7 @@
  * devices here.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 8 Jun 2002
- * CVS info: $Id: colors.hh,v 1.2 2002-09-07 02:05:23 rtv Exp $
+ * CVS info: $Id: colors.hh,v 1.3 2002-09-12 02:21:51 rtv Exp $
  */
 
 #ifndef _STAGECOLORS_H
@@ -31,14 +31,14 @@
 //#include <stdint.h>
 #include "stage_types.hh"
 
-// RTV - moved the typedef to stage_types.hh to avoid recompiling
-// everything if you change this file
+// RTV - moved the typedef to stage_types.hh in an attempt to avoid recompiling
+// everything if you change this file - there's still a dependency though...
 
 // Color type
 //typedef uint32_t StageColor;
 
-#define GRID_MAJOR_COLOR "gray60"
-#define GRID_MINOR_COLOR "gray90"
+#define GRID_MAJOR_COLOR "gray85"
+#define GRID_MINOR_COLOR "gray95"
 #define MATRIX_COLOR "dark green"
 #define BACKGROUND_COLOR "ivory"
 #define GRIPPER_COLOR "blue"
