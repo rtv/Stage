@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.58 $
+//  $Revision: 1.59 $
 //
 // Usage:
 //  (empty)
@@ -654,10 +654,16 @@ void* CWorld::Main(void *arg)
 //
 void CWorld::Update()
 {
+  static double last_real_time = 0;
+
   // this much simulated time has passed since the last update
   //
-  double timestep = m_timestep / 1000.0;
+  //STEP TIME
+  //double timestep = m_timestep / 1000.0;
   
+  // REAL TIME
+  double timestep = GetRealTime() - last_real_time;
+
   // Update the simulation time (in both formats)
   //
   m_sim_time += timestep;
@@ -674,7 +680,6 @@ void CWorld::Update()
   //
 #ifdef WATCH_RATES
   
-  static double last_real_time;
   double real_timestep = GetRealTime() - last_real_time;
   
   last_real_time += real_timestep;
