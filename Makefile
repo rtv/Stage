@@ -1,7 +1,7 @@
 #
 # Makefile - the top level Makefile to build Stage
 # RTV
-# $Id: Makefile,v 1.3 2000-11-29 22:44:49 vaughan Exp $
+# $Id: Makefile,v 1.4 2000-12-06 02:31:51 vaughan Exp $
 # 
 
 # the directory of the player source
@@ -14,7 +14,7 @@ stage:
 	cd src; make -e PLAYERSRC=$(PLAYERSRC)  all; mv stage ../bin/
 
 clean:
-	rm -f *~; cd bin; rm -f stage core; cd ../src; make clean; cd ../include; make clean; cd ../examples/; make clean
+	rm -f *~ *.bak; cd bin; rm -f stage core; cd ../src; make clean; cd ../include; make clean; cd ../examples/; make clean
 
 install: stage
 	mkdir -p $(INSTALL)/bin

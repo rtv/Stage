@@ -1,7 +1,7 @@
 #*************************************************************************
 # src/Makefile - makes the sources
 # RTV
-# $Id: Makefile,v 1.9 2000-12-02 01:29:57 ahoward Exp $
+# $Id: Makefile,v 1.10 2000-12-06 02:31:51 vaughan Exp $
 # ************************************************************************/
 
 .SUFFIXES: .cc .o
@@ -18,7 +18,7 @@ OBS = main.o robot.o world.o win.o image.o server.o \
 LIBS = -L/usr/X11R6/lib -lX11 -lm -lpthread
 
 clean:
-	rm -f *.o *~ posreader stage
+	rm -f *.o *~ *.bak posreader stage
 
 all: stage posreader
 

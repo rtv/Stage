@@ -1,8 +1,8 @@
 # include/Makefile 
 #
 # RTV
-# $Id: Makefile,v 1.1.1.1 2000-11-29 00:16:53 ahoward Exp $
+# $Id: Makefile,v 1.2 2000-12-06 02:31:51 vaughan Exp $
 ###########################################################################
 
 clean:
-	rm -f *~
+	rm -f *~ *.bak

@@ -1,7 +1,7 @@
 /*************************************************************************
  * main.cc   
  * RTV
- * $Id: main.cc,v 1.2 2000-12-01 00:20:52 vaughan Exp $
+ * $Id: main.cc,v 1.3 2000-12-06 02:31:51 vaughan Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -25,7 +25,7 @@
 #include "world.h" 
 #include "win.h" 
 
-#define VERSION "0.7.2"
+#define VERSION "0.8b"
 
 //#define DEBUG
 //#define VERBOSE
