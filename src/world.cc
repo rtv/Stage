@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.102 2002-06-11 01:30:16 gerkey Exp $
+ * CVS info: $Id: world.cc,v 1.103 2002-06-11 01:39:34 gerkey Exp $
  */
 
 //#undef DEBUG
@@ -808,6 +808,9 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
     // Size of canvas in pixels
     sx = (int) worldfile->ReadTupleFloat(section, "size", 0, sx);
     sy = (int) worldfile->ReadTupleFloat(section, "size", 1, sy);
+    
+    // Scale of the pixels
+    scale = worldfile->ReadLength(section, "scale", 1 / this->ppm);
   
     // Size in meters
     dx = sx * scale;
@@ -817,8 +820,6 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
     ox = worldfile->ReadTupleLength(section, "origin", 0, dx / 2);
     oy = worldfile->ReadTupleLength(section, "origin", 1, dy / 2);
 
-    // Scale of the pixels
-    scale = worldfile->ReadLength(section, "scale", 1 / this->ppm);
 
     // Grid spacing
     minor = worldfile->ReadTupleLength(section, "grid", 0, 0.2);
@@ -844,6 +845,9 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
     if (sy > 768)
       sy = 768;
     
+    // Scale of the pixels
+    scale = ((CFixedObstacle*)this->wall)->scale;
+    
     // Size in meters
     dx = sx * scale;
     dy = sy * scale;
@@ -852,8 +856,6 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
     ox = dx / 2;
     oy = dy / 2;
 
-    // Scale of the pixels
-    scale = ((CFixedObstacle*)this->wall)->scale;
 
     // Grid spacing
     minor = 0.2;
@@ -865,7 +867,7 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   }
   
   this->app = rtk_app_create();
-  rtk_app_refresh_rate(this->app, 1);
+  rtk_app_refresh_rate(this->app, 10);
   
   this->canvas = rtk_canvas_create(this->app);
   rtk_canvas_size(this->canvas, sx, sy);
