@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.6.4.3 2003-03-07 07:31:44 gerkey Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.6.4.4 2003-03-08 19:33:23 gerkey Exp $
  */
 
 #define DEBUG
@@ -102,6 +102,7 @@ bool CLaserDevice::Load(CWorldFile *worldfile, int section)
   // Read laser settings
   this->min_res = worldfile->ReadAngle(section, "min_res", this->min_res);
   this->max_range = worldfile->ReadLength(section, "max_range", this->max_range);
+  printf("max_range:%lf\n", max_range);
   this->scan_rate = worldfile->ReadFloat(section, "scan_rate", this->scan_rate);
   
   return true;
@@ -462,7 +463,8 @@ void CLaserDevice::RtkUpdate()
       for( int i=0; i < (int)samples; i++ )
       {
         // get range, converting from mm to m
-        unsigned short range_mm = ntohs(data.ranges[i]) & 0x1FFF;
+        //unsigned short range_mm = ntohs(data.ranges[i]) & 0x1FFF;
+        unsigned short range_mm = ntohs(data.ranges[i]);
         double range_m = (double)range_mm / 1000.0;
 	  
         //if( range_m == this->max_range ) range_m = 0;
@@ -481,7 +483,7 @@ void CLaserDevice::RtkUpdate()
         ly = py;
 	    
         // add little boxes at high intensities (like in playerv)
-        if(  (unsigned char)(ntohs(data.ranges[i]) >> 13) > 0 )
+        if(data.intensity[i] > 0 )
 	      {
           rtk_fig_rectangle(this->scan_fig, px, py, 0, 0.05, 0.05, 1);
           //rtk_fig_line( this->scan_fig, 0,0,px, py );
