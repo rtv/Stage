@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.14 2002-10-31 17:59:25 inspectorg Exp $
+ * CVS info: $Id: world.hh,v 1.15 2002-11-01 03:04:32 inspectorg Exp $
  */
 
 #ifndef WORLD_HH
@@ -324,8 +324,13 @@ public: int GetStopTime( void ){ return m_stoptime; };
   // The file menu
   private: rtk_menu_t *file_menu;
   private: rtk_menuitem_t *save_menuitem;
-  private: rtk_menuitem_t *export_menuitem;
   private: rtk_menuitem_t *exit_menuitem;
+
+  // The export menu
+  private: rtk_menu_t *export_menu;
+  private: rtk_menuitem_t *export_enable_menuitem;
+  private: rtk_menuitem_t *export_jpeg_menuitem;
+  private: rtk_menuitem_t *export_ppm_menuitem;
 
   // The view menu
   public: rtk_menu_t *view_menu;
@@ -339,9 +344,9 @@ public: int GetStopTime( void ){ return m_stoptime; };
   private: rtk_menuitem_t* autosubscribe_item;
   public: static int autosubscribe;
 
-  // Export still counter
-  private: int export_series;
-  private: int export_frame;
+  // Export stills info
+  private: int export_format;
+  private: int export_frame_count;
 
   typedef struct 
   {

@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.3 2002-10-31 17:59:26 inspectorg Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.4 2002-11-01 03:04:32 inspectorg Exp $
  */
 
 
@@ -71,30 +71,34 @@ void GuiInit( int argc, char** argv )
   rtk_init(&argc, &argv);
 }
 
+
 void GuiWorldStartup( CWorld* world )
 { 
   world->RtkStartup();
+  return;
 }
+
 
 void GuiWorldShutdown( CWorld* world )
 { 
-  /* do nothing */ 
+  world->RtkShutdown();
+  return;
 }
 
-void GuiWorldUpdate( CWorld* world )
-{ 
-  world->RtkUpdate();
 
-  // allow gtk to do some work
-  while( gtk_events_pending () )
-    gtk_main_iteration();      
+void GuiWorldUpdate( CWorld* world )
+{  
+  world->RtkUpdate();
+  return;
 }
 
 
 void GuiLoad( CWorld* world )
 {
   world->RtkLoad( world->worldfile );
+  return;
 }
+
 
 void GuiSave( CWorld* world )
 {
@@ -180,8 +184,6 @@ bool CWorld::ShowDeviceBody( StageType devtype )
 // TODO: fix this for client/server operation.
 bool CWorld::RtkLoad(CWorldFile *worldfile)
 {
-  PRINT_DEBUG( "**********************************" );
-
   int sx, sy;
   double scale = 0.01;
   double dx, dy;
@@ -275,7 +277,6 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   }
   
   this->app = rtk_app_create();
-  rtk_app_refresh_rate(this->app, 10);
   
   this->canvas = rtk_canvas_create(this->app);
   rtk_canvas_size(this->canvas, sx, sy);
@@ -285,11 +286,16 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   // Add some menu items
   this->file_menu = rtk_menu_create(this->canvas, "File");
   this->save_menuitem = rtk_menuitem_create(this->file_menu, "Save", 0);
-  this->export_menuitem = rtk_menuitem_create(this->file_menu, "Export stills", 1);
+  this->export_menu = rtk_menu_create_sub(this->file_menu, "Export frames");  
   this->exit_menuitem = rtk_menuitem_create(this->file_menu, "Exit", 0);
 
-  this->export_series = 0;
-  this->export_frame = 0;
+  // Add export menu
+  this->export_enable_menuitem = rtk_menuitem_create(this->export_menu, "Enable export", 1);
+  this->export_jpeg_menuitem = rtk_menuitem_create(this->export_menu, "JPEG format", 1);
+  this->export_ppm_menuitem = rtk_menuitem_create(this->export_menu, "PPM format", 1);
+
+  this->export_format = RTK_IMAGE_FORMAT_JPEG;
+  this->export_frame_count = 0;
 
   // Create the view menu
   this->view_menu = rtk_menu_create(this->canvas, "View");
@@ -345,10 +351,10 @@ bool CWorld::RtkSave(CWorldFile *worldfile)
 {
   int section = worldfile->LookupEntity("gui");
   if (section < 0)
-    {
-      PRINT_WARN("No gui entity in the world file; gui settings have not been saved.");
-      return true;
-    }
+  {
+    PRINT_WARN("No gui entity in the world file; gui settings have not been saved.");
+    return true;
+  }
 
   // Size of canvas in pixels
   int sx, sy;
@@ -378,25 +384,12 @@ bool CWorld::RtkSave(CWorldFile *worldfile)
 // Start the GUI
 bool CWorld::RtkStartup()
 {
-  PRINT_DEBUG( "** STARTUP GUI **" );
-
-  // don't call this
-  //rtk_app_start(this->app);
-
-  // create the main objects here
-  rtk_canvas_t *canvas;
-  rtk_table_t *table;
-
+  // Initialise rtk
+  rtk_app_main_init(this->app);
+  
   // this rtkstarts all entities
   root->RtkStartup();
-
-  // Display everything
-  for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
-    gtk_widget_show_all(canvas->frame);
-  for (table = app->table; table != NULL; table = table->next)
-    gtk_widget_show_all(table->frame);
-
-
+  
   return true;
 }
 
@@ -404,54 +397,29 @@ bool CWorld::RtkStartup()
 // Stop the GUI
 void CWorld::RtkShutdown()
 {
-  rtk_app_stop(this->app);
+  // Finalize rtk
+  rtk_app_main_term(this->app);
+
+  return;
 }
 
 
 // Update the GUI
 void CWorld::RtkUpdate()
 {
+  // Process menus
   RtkMenuHandling();      
-
-  // this is from rtk_on_app_timer
-  rtk_canvas_t *canvas;
-  rtk_table_t *table;
   
-  // Quit the app if we have been told we should
-  // We first destroy in windows that are still open.
-  if (app->must_quit)
-  {
-    for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
-      if (!canvas->destroyed)
-        gtk_widget_destroy(canvas->frame);
-    for (table = app->table; table != NULL; table = table->next)
-      if (!table->destroyed)
-        gtk_widget_destroy(table->frame);
-    gtk_main_quit();
-  }
-  
-  // update the object tree
+  // Update the object tree
   root->RtkUpdate();
-  
-  
-  // Update the display
-  for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
-    rtk_canvas_render(canvas);
-  //rtk_canvas_render(canvas, FALSE, NULL);
-  
-  //struct timeval tv;
-  //gettimeofday( &tv, NULL );
-  //double start = tv.tv_sec + tv.tv_usec / 1000000.0;
-  
-  // allow gtk to do some work
-  while( gtk_events_pending () )
-    gtk_main_iteration ();
-  
-  //gettimeofday( &tv, NULL );
 
-  //double duration = (tv.tv_sec + tv.tv_usec / 1000000.0) - start;
+  // Process events
+  rtk_app_main_loop(this->app);
 
-  //printf( "gtkloop: %.4f\n", duration );
+  // Render the canvas
+  rtk_canvas_render(this->canvas);
+
+  return;
 }
 
 
@@ -471,33 +439,26 @@ void CWorld::RtkMenuHandling()
   // Save the world file
   if (rtk_menuitem_isactivated(this->save_menuitem))
     Save();
+  
+  // Set export format (jpeg)
+  if (rtk_menuitem_isactivated(this->export_jpeg_menuitem))
+    this->export_format = RTK_IMAGE_FORMAT_JPEG;
+  if (rtk_menuitem_isactivated(this->export_ppm_menuitem))
+    this->export_format = RTK_IMAGE_FORMAT_PPM;
 
-  /*
-  // Handle export menu item
-  // TODO - fold in XS's postscript and pnm export here or in rtk2
-  if (rtk_menuitem_isactivated(this->export_menuitem))
+  // Make sure the check boxes agree
+  rtk_menuitem_check(this->export_jpeg_menuitem,
+                     (this->export_format == RTK_IMAGE_FORMAT_JPEG));
+  rtk_menuitem_check(this->export_ppm_menuitem,
+                     (this->export_format == RTK_IMAGE_FORMAT_PPM));
+
+  // Start/stop export
+  if (rtk_menuitem_ischecked(this->export_enable_menuitem))
   {
     char filename[128];
-    snprintf(filename, sizeof(filename), 
-             "rtkstage-%04d.fig", this->export_count++);
-    PRINT_MSG1("exporting canvas to [%s]", filename);
-    rtk_canvas_export_ppm(this->canvas, filename);
-  }
-  */
-
-  // Export still frames
-  if (rtk_menuitem_isactivated(this->export_menuitem))
-  {
-    this->export_series++;
-    this->export_frame = 0;
-  }
-  else if (rtk_menuitem_ischecked(this->export_menuitem))
-  {
-    char filename[128];
-    snprintf(filename, sizeof(filename), "stage-%03d-%04d.jpg",
-             this->export_series, this->export_frame++);
-    printf("exporting %s\n", filename);
-    rtk_canvas_export_jpeg(this->canvas, filename);
+    snprintf(filename, sizeof(filename), "stage-%04d.jpg", this->export_frame_count++);
+    printf("saving [%s]\n", filename);
+    rtk_canvas_export_image(this->canvas, filename, this->export_format);
   }
 
   // Show or hide the grid
