@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.14.2.1 $
+//  $Revision: 1.14.2.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -31,7 +31,7 @@ CPuck::CPuck(CWorld *world, CEntity *parent)
   m_size_x = 0.1;
   m_size_y = 0.1;
 
-  m_interval = 0.05; // update fast!
+  m_interval = 0.01; // update very fast!
 
   puck_return = true; // yes! we interact with pucks!
   
@@ -200,39 +200,39 @@ CEntity* CPuck::InCollisionWithMovableObject(double px, double py, double pth)
     object->GetGlobalPose(qx,qy,qth);
     
     // find distance to its center
-    double dist = sqrt((px-qx)*(px-qx)+(py-qy)*(py-qy));
-
+    double dist = hypot( px-qx, py-qy );
+    
     // are we colliding?
     if(dist < ((object->m_size_x/2.0) + (m_size_x/2.0)))
-    {
-      return(object);
-    }
+      {
+	return(object);
+      }
   }
   for(int i =0; i < m_world->GetObjectCount(); i++)
-  {
-    CEntity* object = m_world->GetObject(i);
-    
-    // ignore ourselves
-    if(object == this)
-      continue;
-
-    // now match pucks
-    if(object->m_stage_type != PuckType )
-      continue;
-
-    // get the object's position
-    double qx, qy, qth;
-    object->GetGlobalPose(qx,qy,qth);
-    
-    // find distance to its center
-    double dist = sqrt((px-qx)*(px-qx)+(py-qy)*(py-qy));
-
-    // are we colliding?
-    if(dist < ((object->m_size_x/2.0) + (m_size_x/2.0)))
     {
-      return(object);
+      CEntity* object = m_world->GetObject(i);
+      
+      // ignore ourselves
+      if(object == this)
+	continue;
+      
+      // now match pucks
+      if(object->m_stage_type != PuckType )
+	continue;
+      
+      // get the object's position
+      double qx, qy, qth;
+      object->GetGlobalPose(qx,qy,qth);
+      
+      // find distance to its center
+      double dist = sqrt((px-qx)*(px-qx)+(py-qy)*(py-qy));
+      
+      // are we colliding?
+      if(dist < ((object->m_size_x/2.0) + (m_size_x/2.0)))
+	{
+	  return(object);
+	}
     }
-  }
   return(NULL);
 }
 

@@ -1,7 +1,6 @@
 set environment_file = cave.pnm
 set pixels_per_meter =  100
 set laser_res = 1
-set vision_res = 2
 
 #set auth_key = foobar
 

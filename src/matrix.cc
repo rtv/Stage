@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.2.2.4 2001-08-24 03:42:15 vaughan Exp $
+ * $Id: matrix.cc,v 1.2.2.5 2001-08-24 18:38:04 vaughan Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -654,3 +654,64 @@ CEntity* CRectangleIterator::GetNextEntity( void )
   return ent;
 }
 
+CCircleIterator::CCircleIterator( double x, double y, double r, 
+				  double ppm, CMatrix* matrix )
+  : CLineIterator( x, y, 0, 0, ppm, matrix, 0 )
+{   
+  m_radius = r;
+
+  m_remaining_angle = 0;
+};
+
+CEntity** CCircleIterator::ArcTrace( double x, double py, double pr, 
+				     double &angle )
+{
+ CEntity** ent = 0;
+  
+ double px, py;
+ 
+ while( angle < (M_PI * 2.0) )
+   { 
+     px = pr * cos( angle );
+     py = pr * sin( angle );
+     
+     // stop this ray if we're out of bounds
+     if( px < 0 ) 
+       { 
+	 px = 0; 
+	 remaining_range = 0.0;
+       }
+     if( px >= m_matrix->width ) 
+       { 
+	 px = m_matrix->width-1; 
+	 remaining_range = 0.0;
+       }
+     if( py < 0 ) 
+       { 
+	 py = 0; 
+	 remaining_range = 0.0;
+       }
+     if( py >= m_matrix->height ) 
+       { 
+	 py = m_matrix->height-1; 
+	 remaining_range = 0.0;
+       }
+     
+     //printf( "looking in %d,%d\n", (int)px, (int)py );
+     
+     ent = m_matrix->get_cell( (int)px,(int)py );
+     if( !ent[0] && (px+1 < m_matrix->width) ) 
+       ent = m_matrix->get_cell( (int)px+1,(int)py );
+     
+     if( ent[0] ) break;// we hit something!
+   }
+ 
+ //if( ent && ent[0] )
+  //printf( "Hit %p at %.2f,%.2f with %.2f to go\n", 
+  //    ent[0], px, py, remaining_range );
+  //else
+  //printf( "hit nothing. remaining range = %.2f\n", remaining_range );
+  // fflush( stdout );
+  
+  return ent; // we hit these entities
+}

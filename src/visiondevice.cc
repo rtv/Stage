@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.13.2.2 $
+//  $Revision: 1.13.2.3 $
 //
 // Usage:
 //  (empty)
@@ -176,6 +176,8 @@ void CVisionDevice::UpdateScan()
     // Note that the scan is taken *clockwise*
     //
 
+    // i'm scanning this as half-resolution for a significant speed-up
+
     for (int s = 0; s < m_scan_width; s++)
     {
       int channel = 0;
@@ -217,8 +219,8 @@ void CVisionDevice::UpdateScan()
         // Set the channel
         //
         m_scan_channel[s] = channel;
-        m_scan_range[s] = range;
-        
+	m_scan_range[s] = range;
+                
         // Update the gui data
         //
 #ifdef INCLUDE_RTK

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.8.2.1 $
+//  $Revision: 1.8.2.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -38,7 +38,7 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
 
   m_interval = 0.1; 
 
-  puck_return = true; // we interact with pucks
+  puck_return = true; // we interact with pucks and nothing else
 
   // default to the more common gripper
   m_gripper_consume = false;

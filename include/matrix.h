@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.h,v 1.2.2.4 2001-08-24 03:42:14 vaughan Exp $
+// $Id: matrix.h,v 1.2.2.5 2001-08-24 18:38:04 vaughan Exp $
 // RTV
 // ==================================================================
 
@@ -131,6 +131,21 @@ class CLineIterator
   void PrintArray( CEntity** ent );
   
 };
+
+class CCircleIterator : public CLineIterator
+{
+  double m_radius;
+
+ public:
+  CCircleIterator( double x, double y, double r, 
+		   double ppm, CMatrix* matrix );
+  
+  
+  inline CEntity** RayTrace( double &px, double &py, double pr, 
+			     double &remaining_angle );
+  
+  
+}
 
 class CRectangleIterator
 {

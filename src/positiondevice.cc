@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.5.2.6 $
+//  $Revision: 1.5.2.7 $
 //
 // Usage:
 //  (empty)
@@ -303,7 +303,7 @@ bool CPositionDevice::InCollision(double px, double py, double pth)
   //switch( GetShape() ) - don't handle circles yet!
     
   qx = px + m_offset_x * cos(pth);
-  qy = py + m_offset_x * sin(pth);
+  qy = py + m_offset_y * sin(pth);
 
   CEntity* ent;
 
