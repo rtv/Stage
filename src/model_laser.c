@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.22 $
+//  $Revision: 1.23 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -195,7 +195,7 @@ int model_laser_data_service( model_t* mod )
 #endif
   
   // laser costs some energy
-  model_energy_consume( mod, STG_ENERGY_COST_LASER );
+  //model_energy_consume( mod, STG_ENERGY_COST_LASER );
 
   return 0; //ok
 }

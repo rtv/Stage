@@ -1,7 +1,7 @@
 # Define a model based on the Autonomy Lab Chatterbox robot
 #
 # Author: Richard T Vaughan (rtv) 
-# $Id: chatterbox.inc,v 1.1 2004-07-19 22:33:48 rtv Exp $
+# $Id: chatterbox.inc,v 1.2 2004-07-24 00:39:51 rtv Exp $
 
 define chatterbox model
 (
@@ -25,13 +25,13 @@ define chatterbox model
   ranger.view[7] [ 0 0.5 0 ]
 
   # mass in KG
-  mass 0.5 
+  mass 0.2
 
   size [0.10 0.10]
   nose 1
 
-  energy.capacity 500.0
-  energy.range 0.6
+  energy.capacity 200.0
+  energy.range 0.8
   energy.return 0
 
   # fiducialfinder configuration

@@ -1,3 +1,4 @@
+
 ///////////////////////////////////////////////////////////////////////////
 //
 // File: model_energy.c
@@ -7,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -111,11 +112,13 @@ int model_energy_config_set( model_t* mod, void* config, size_t len )
   model_set_prop_generic( mod, STG_PROP_ENERGYCONFIG, config, len );
   
   // TODO - need to think about this a little. I'll leave it for
-  // now. - rtv set our actual energy level to be the same as the
-  // capacity //stg_energy_data_t* data = model_energy_data_get( mod
-  // ); //data->joules = ((stg_energy_config_t*)config)->capacity;
-  // //model_set_prop( mod, STG_PROP_ENERGYDATA,
-  // data,sizeof(stg_energy_data_t) );
+  // now. - rtv
+
+  //set our actual energy level to be the same as the capacity
+  ////stg_energy_data_t* data = model_energy_data_get( mod );
+  ////data->joules = ((stg_energy_config_t*)config)->capacity;
+  ////model_set_prop( mod, STG_PROP_ENERGYDATA,
+  //data,sizeof(stg_energy_data_t) );
 
   // and redraw it
   model_energy_config_render( mod);

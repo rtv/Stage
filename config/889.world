@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: 889.world,v 1.3 2004-07-22 21:55:35 rtv Exp $
+# CVS: $Id: 889.world,v 1.4 2004-07-24 00:39:51 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 #
@@ -45,16 +45,16 @@ define bigrobot pioneer2dx
 )
 
 
-bigrobot( name "r0" pose [2.899 10.896 7105.296] color "blue" )
-bigrobot( name "r1" pose [1.946 7.494 71.951] color "green")
-bigrobot( name "r2" pose [2.611 6.565 88.701] color "magenta" )
-bigrobot( name "r3" pose [34.542 9.001 -77.823] color "cyan" )
-bigrobot( name "r4" pose [33.770 7.584 113.128] color "yellow" )
-bigrobot( name "r5" pose [3.365 5.638 -263.133] color "blue" )
-bigrobot( name "r6" pose [35.345 7.847 -175.415] color "green" )
-bigrobot( name "r7" pose [27.281 5.354 6.995]  color "cyan" )
-bigrobot( name "r8" pose [27.116 7.643 30.366] color "red" )
-bigrobot( name "r9" pose [27.246 8.818 -336.023] color "red" )
+#bigrobot( name "r0" pose [2.899 10.896 7105.296] color "blue" )
+#bigrobot( name "r1" pose [1.946 7.494 71.951] color "green")
+#bigrobot( name "r2" pose [2.611 6.565 88.701] color "magenta" )
+#bigrobot( name "r3" pose [34.542 9.001 -77.823] color "cyan" )
+#bigrobot( name "r4" pose [33.770 7.584 113.128] color "yellow" )
+#bigrobot( name "r5" pose [3.365 5.638 -263.133] color "blue" )
+#bigrobot( name "r6" pose [35.345 7.847 -175.415] color "green" )
+#bigrobot( name "r7" pose [27.281 5.354 6.995]  color "cyan" )
+#bigrobot( name "r8" pose [27.116 7.643 30.366] color "red" )
+#bigrobot( name "r9" pose [27.246 8.818 -336.023] color "red" )
 
 
 define bluechatterbox chatterbox
@@ -88,6 +88,8 @@ define charger model
  energy.capacity -1.0  # infinite
  energy.return 30.0 # will transfer 30 Joules per second (Watts)
  energy.range 0.0
+
+ gui.nose 0
 
  obstacle.return 0
  ranger.return 0

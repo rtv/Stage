@@ -162,15 +162,15 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       stg_token_t* token = stg_token_create( namestr, STG_T_NUM, 99 );
 
       int parent_section = wf.GetEntityParent( section );
-      printf( "section is %d parent section is %d\n", section, parent_section );
+      //printf( "section is %d parent section is %d\n", section, parent_section );
 
       stg_model_t* parent = 
 	(stg_model_t*)g_hash_table_lookup( world->models_section, &parent_section );
 
-      if( parent )
-	printf( "parent has id %d name %s\n", parent->id_client, parent->token->token );
-      else
-	printf( "no parent\n" );
+      //if( parent )
+      //printf( "parent has id %d name %s\n", parent->id_client, parent->token->token );
+      //else
+      //printf( "no parent\n" );
 
       stg_model_t* mod = stg_world_createmodel( world, parent, section, token );
 

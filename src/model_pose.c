@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.11 $
+//  $Revision: 1.12 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -23,6 +23,7 @@ int model_pose_update( model_t* model );
 int model_pose_set( model_t* mod, void* data, size_t len );
 void model_pose_init( model_t* mod );
 void model_obstacle_return_init( model_t* mod );
+stg_energy_data_t* model_energy_data_get( model_t* mod );
 
 void model_pose_register(void)
 { 
@@ -190,7 +191,10 @@ int model_pose_update( model_t* model )
     stg_pose_t newpose; // store the new pose
     memcpy( &newpose, pose, sizeof(newpose) );
     
-    if( //model->energy.joules > 0 && 
+    stg_energy_data_t* en = model_energy_data_get( model );
+    assert(en);
+
+    if( en->joules > 0 && 
 	model_test_collision( model, NULL, NULL ) == NULL )
       {
 	// reset the old pose so that unmapping works properly

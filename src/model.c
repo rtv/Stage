@@ -166,6 +166,8 @@ void model_global_rect( model_t* mod, stg_rotrect_t* glob, stg_rotrect_t* loc )
 }
 
 
+// if render is true, render the model into the matrix, else unrender
+// the model
 void model_map( model_t* mod, gboolean render )
 {
   assert( mod );
