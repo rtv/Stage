@@ -1,2217 +1,2209 @@
-# this is a simple for loop. use it like:
-#   forloop(`i',1,10,`i ')
-
-
-
-#  args are (<x>,<y>,<th>,<port>)
-
-set environment_file = hospital.pnm
-set pixels_per_meter = 12
-
-
-
-set host = fnord.usc.edu
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40000)
-
-create position_device pose 112.92 65.79 295 color red port 40000  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40000  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40000  
-  create gps_device pose 0.00 0.00 0 color gray port 40000  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40001)
-
-create position_device pose 118.93 58.54 306 color red port 40001  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40001  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40001  
-  create gps_device pose 0.00 0.00 0 color gray port 40001  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40002)
-
-create position_device pose 125.78 91.53 62 color red port 40002  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40002  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40002  
-  create gps_device pose 0.00 0.00 0 color gray port 40002  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40003)
-
-create position_device pose 115.12 52.07 55 color red port 40003  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40003  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40003  
-  create gps_device pose 0.00 0.00 0 color gray port 40003  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40004)
-
-create position_device pose 119.93 57.80 342 color red port 40004  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40004  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40004  
-  create gps_device pose 0.00 0.00 0 color gray port 40004  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40005)
-
-create position_device pose 114.06 75.07 327 color red port 40005  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40005  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40005  
-  create gps_device pose 0.00 0.00 0 color gray port 40005  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40006)
-
-create position_device pose 120.39 56.46 211 color red port 40006  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40006  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40006  
-  create gps_device pose 0.00 0.00 0 color gray port 40006  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40007)
-
-create position_device pose 113.04 54.23 333 color red port 40007  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40007  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40007  
-  create gps_device pose 0.00 0.00 0 color gray port 40007  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40008)
-
-create position_device pose 112.42 62.92 104 color red port 40008  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40008  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40008  
-  create gps_device pose 0.00 0.00 0 color gray port 40008  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40009)
-
-create position_device pose 126.54 93.20 164 color red port 40009  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40009  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40009  
-  create gps_device pose 0.00 0.00 0 color gray port 40009  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40010)
-
-create position_device pose 114.31 54.37 173 color red port 40010  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40010  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40010  
-  create gps_device pose 0.00 0.00 0 color gray port 40010  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40011)
-
-create position_device pose 114.17 57.00 121 color red port 40011  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40011  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40011  
-  create gps_device pose 0.00 0.00 0 color gray port 40011  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40012)
-
-create position_device pose 129.85 91.73 193 color red port 40012  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40012  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40012  
-  create gps_device pose 0.00 0.00 0 color gray port 40012  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40013)
-
-create position_device pose 115.58 74.55 254 color red port 40013  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40013  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40013  
-  create gps_device pose 0.00 0.00 0 color gray port 40013  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40014)
-
-create position_device pose 130.37 49.43 284 color red port 40014  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40014  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40014  
-  create gps_device pose 0.00 0.00 0 color gray port 40014  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40015)
-
-create position_device pose 129.04 87.75 7 color red port 40015  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40015  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40015  
-  create gps_device pose 0.00 0.00 0 color gray port 40015  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40016)
-
-create position_device pose 117.81 91.28 98 color red port 40016  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40016  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40016  
-  create gps_device pose 0.00 0.00 0 color gray port 40016  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40017)
-
-create position_device pose 127.79 47.58 123 color red port 40017  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40017  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40017  
-  create gps_device pose 0.00 0.00 0 color gray port 40017  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40018)
-
-create position_device pose 127.65 86.75 199 color red port 40018  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40018  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40018  
-  create gps_device pose 0.00 0.00 0 color gray port 40018  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40019)
-
-create position_device pose 112.54 58.80 10 color red port 40019  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40019  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40019  
-  create gps_device pose 0.00 0.00 0 color gray port 40019  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40020)
-
-create position_device pose 115.32 64.49 52 color red port 40020  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40020  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40020  
-  create gps_device pose 0.00 0.00 0 color gray port 40020  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40021)
-
-create position_device pose 122.76 91.30 200 color red port 40021  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40021  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40021  
-  create gps_device pose 0.00 0.00 0 color gray port 40021  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40022)
-
-create position_device pose 116.69 50.44 59 color red port 40022  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40022  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40022  
-  create gps_device pose 0.00 0.00 0 color gray port 40022  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40023)
-
-create position_device pose 130.44 70.73 351 color red port 40023  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40023  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40023  
-  create gps_device pose 0.00 0.00 0 color gray port 40023  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40024)
-
-create position_device pose 113.12 48.10 11 color red port 40024  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40024  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40024  
-  create gps_device pose 0.00 0.00 0 color gray port 40024  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40025)
-
-create position_device pose 113.50 86.35 186 color red port 40025  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40025  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40025  
-  create gps_device pose 0.00 0.00 0 color gray port 40025  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40026)
-
-create position_device pose 129.87 51.73 269 color red port 40026  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40026  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40026  
-  create gps_device pose 0.00 0.00 0 color gray port 40026  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40027)
-
-create position_device pose 117.50 56.02 270 color red port 40027  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40027  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40027  
-  create gps_device pose 0.00 0.00 0 color gray port 40027  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40028)
-
-create position_device pose 113.34 92.15 276 color red port 40028  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40028  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40028  
-  create gps_device pose 0.00 0.00 0 color gray port 40028  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40029)
-
-create position_device pose 115.85 51.45 121 color red port 40029  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40029  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40029  
-  create gps_device pose 0.00 0.00 0 color gray port 40029  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40030)
-
-create position_device pose 119.56 86.38 88 color red port 40030  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40030  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40030  
-  create gps_device pose 0.00 0.00 0 color gray port 40030  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40031)
-
-create position_device pose 118.35 91.19 220 color red port 40031  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40031  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40031  
-  create gps_device pose 0.00 0.00 0 color gray port 40031  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40032)
-
-create position_device pose 130.91 54.99 296 color red port 40032  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40032  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40032  
-  create gps_device pose 0.00 0.00 0 color gray port 40032  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40033)
-
-create position_device pose 129.74 80.49 107 color red port 40033  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40033  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40033  
-  create gps_device pose 0.00 0.00 0 color gray port 40033  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40034)
-
-create position_device pose 130.37 51.86 16 color red port 40034  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40034  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40034  
-  create gps_device pose 0.00 0.00 0 color gray port 40034  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40035)
-
-create position_device pose 129.43 82.55 197 color red port 40035  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40035  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40035  
-  create gps_device pose 0.00 0.00 0 color gray port 40035  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40036)
-
-create position_device pose 123.23 55.27 47 color red port 40036  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40036  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40036  
-  create gps_device pose 0.00 0.00 0 color gray port 40036  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40037)
-
-create position_device pose 127.47 82.12 98 color red port 40037  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40037  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40037  
-  create gps_device pose 0.00 0.00 0 color gray port 40037  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40038)
-
-create position_device pose 113.39 58.03 37 color red port 40038  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40038  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40038  
-  create gps_device pose 0.00 0.00 0 color gray port 40038  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40039)
-
-create position_device pose 121.23 91.79 338 color red port 40039  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40039  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40039  
-  create gps_device pose 0.00 0.00 0 color gray port 40039  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40040)
-
-create position_device pose 128.93 93.53 56 color red port 40040  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40040  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40040  
-  create gps_device pose 0.00 0.00 0 color gray port 40040  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40041)
-
-create position_device pose 120.61 92.54 86 color red port 40041  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40041  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40041  
-  create gps_device pose 0.00 0.00 0 color gray port 40041  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40042)
-
-create position_device pose 120.84 88.90 58 color red port 40042  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40042  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40042  
-  create gps_device pose 0.00 0.00 0 color gray port 40042  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40043)
-
-create position_device pose 120.13 60.69 249 color red port 40043  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40043  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40043  
-  create gps_device pose 0.00 0.00 0 color gray port 40043  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40044)
-
-create position_device pose 117.92 55.92 36 color red port 40044  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40044  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40044  
-  create gps_device pose 0.00 0.00 0 color gray port 40044  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40045)
-
-create position_device pose 115.32 89.74 150 color red port 40045  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40045  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40045  
-  create gps_device pose 0.00 0.00 0 color gray port 40045  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40046)
-
-create position_device pose 117.18 56.49 59 color red port 40046  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40046  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40046  
-  create gps_device pose 0.00 0.00 0 color gray port 40046  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40047)
-
-create position_device pose 130.59 71.50 299 color red port 40047  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40047  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40047  
-  create gps_device pose 0.00 0.00 0 color gray port 40047  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40048)
-
-create position_device pose 123.95 83.79 309 color red port 40048  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40048  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40048  
-  create gps_device pose 0.00 0.00 0 color gray port 40048  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40049)
-
-create position_device pose 115.08 50.54 224 color red port 40049  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40049  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40049  
-  create gps_device pose 0.00 0.00 0 color gray port 40049  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40050)
-
-create position_device pose 113.20 73.51 315 color red port 40050  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40050  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40050  
-  create gps_device pose 0.00 0.00 0 color gray port 40050  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40051)
-
-create position_device pose 123.80 78.35 131 color red port 40051  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40051  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40051  
-  create gps_device pose 0.00 0.00 0 color gray port 40051  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40052)
-
-create position_device pose 130.62 85.83 59 color red port 40052  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40052  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40052  
-  create gps_device pose 0.00 0.00 0 color gray port 40052  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40053)
-
-create position_device pose 126.34 57.75 248 color red port 40053  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40053  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40053  
-  create gps_device pose 0.00 0.00 0 color gray port 40053  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40054)
-
-create position_device pose 127.34 57.42 71 color red port 40054  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40054  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40054  
-  create gps_device pose 0.00 0.00 0 color gray port 40054  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40055)
-
-create position_device pose 128.81 65.61 241 color red port 40055  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40055  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40055  
-  create gps_device pose 0.00 0.00 0 color gray port 40055  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40056)
-
-create position_device pose 129.66 87.73 358 color red port 40056  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40056  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40056  
-  create gps_device pose 0.00 0.00 0 color gray port 40056  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40057)
-
-create position_device pose 127.31 59.32 296 color red port 40057  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40057  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40057  
-  create gps_device pose 0.00 0.00 0 color gray port 40057  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40058)
-
-create position_device pose 129.47 72.71 136 color red port 40058  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40058  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40058  
-  create gps_device pose 0.00 0.00 0 color gray port 40058  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40059)
-
-create position_device pose 125.64 80.06 104 color red port 40059  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40059  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40059  
-  create gps_device pose 0.00 0.00 0 color gray port 40059  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40060)
-
-create position_device pose 130.60 82.04 332 color red port 40060  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40060  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40060  
-  create gps_device pose 0.00 0.00 0 color gray port 40060  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40061)
-
-create position_device pose 120.47 88.07 213 color red port 40061  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40061  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40061  
-  create gps_device pose 0.00 0.00 0 color gray port 40061  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40062)
-
-create position_device pose 116.93 51.89 340 color red port 40062  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40062  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40062  
-  create gps_device pose 0.00 0.00 0 color gray port 40062  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40063)
-
-create position_device pose 129.90 51.00 39 color red port 40063  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40063  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40063  
-  create gps_device pose 0.00 0.00 0 color gray port 40063  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40064)
-
-create position_device pose 127.19 63.09 326 color red port 40064  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40064  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40064  
-  create gps_device pose 0.00 0.00 0 color gray port 40064  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40065)
-
-create position_device pose 114.47 75.08 60 color red port 40065  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40065  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40065  
-  create gps_device pose 0.00 0.00 0 color gray port 40065  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40066)
-
-create position_device pose 115.09 93.68 216 color red port 40066  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40066  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40066  
-  create gps_device pose 0.00 0.00 0 color gray port 40066  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40067)
-
-create position_device pose 128.54 73.94 67 color red port 40067  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40067  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40067  
-  create gps_device pose 0.00 0.00 0 color gray port 40067  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40068)
-
-create position_device pose 123.42 88.89 92 color red port 40068  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40068  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40068  
-  create gps_device pose 0.00 0.00 0 color gray port 40068  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40069)
-
-create position_device pose 113.35 70.17 219 color red port 40069  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40069  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40069  
-  create gps_device pose 0.00 0.00 0 color gray port 40069  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40070)
-
-create position_device pose 113.32 47.26 179 color red port 40070  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40070  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40070  
-  create gps_device pose 0.00 0.00 0 color gray port 40070  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40071)
-
-create position_device pose 115.60 75.72 344 color red port 40071  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40071  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40071  
-  create gps_device pose 0.00 0.00 0 color gray port 40071  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40072)
-
-create position_device pose 128.94 49.81 20 color red port 40072  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40072  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40072  
-  create gps_device pose 0.00 0.00 0 color gray port 40072  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40073)
-
-create position_device pose 116.67 93.70 348 color red port 40073  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40073  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40073  
-  create gps_device pose 0.00 0.00 0 color gray port 40073  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40074)
-
-create position_device pose 112.13 75.15 264 color red port 40074  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40074  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40074  
-  create gps_device pose 0.00 0.00 0 color gray port 40074  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40075)
-
-create position_device pose 130.66 89.92 304 color red port 40075  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40075  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40075  
-  create gps_device pose 0.00 0.00 0 color gray port 40075  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40076)
-
-create position_device pose 127.08 91.63 164 color red port 40076  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40076  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40076  
-  create gps_device pose 0.00 0.00 0 color gray port 40076  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40077)
-
-create position_device pose 129.29 73.97 152 color red port 40077  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40077  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40077  
-  create gps_device pose 0.00 0.00 0 color gray port 40077  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40078)
-
-create position_device pose 128.85 85.62 225 color red port 40078  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40078  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40078  
-  create gps_device pose 0.00 0.00 0 color gray port 40078  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40079)
-
-create position_device pose 124.22 57.30 160 color red port 40079  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40079  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40079  
-  create gps_device pose 0.00 0.00 0 color gray port 40079  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40080)
-
-create position_device pose 114.04 53.90 113 color red port 40080  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40080  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40080  
-  create gps_device pose 0.00 0.00 0 color gray port 40080  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40081)
-
-create position_device pose 122.30 86.19 84 color red port 40081  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40081  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40081  
-  create gps_device pose 0.00 0.00 0 color gray port 40081  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40082)
-
-create position_device pose 129.59 46.21 21 color red port 40082  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40082  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40082  
-  create gps_device pose 0.00 0.00 0 color gray port 40082  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40083)
-
-create position_device pose 116.82 89.34 12 color red port 40083  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40083  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40083  
-  create gps_device pose 0.00 0.00 0 color gray port 40083  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40084)
-
-create position_device pose 121.38 92.77 33 color red port 40084  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40084  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40084  
-  create gps_device pose 0.00 0.00 0 color gray port 40084  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40085)
-
-create position_device pose 120.86 58.14 179 color red port 40085  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40085  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40085  
-  create gps_device pose 0.00 0.00 0 color gray port 40085  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40086)
-
-create position_device pose 117.88 83.99 85 color red port 40086  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40086  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40086  
-  create gps_device pose 0.00 0.00 0 color gray port 40086  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40087)
-
-create position_device pose 114.62 77.57 344 color red port 40087  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40087  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40087  
-  create gps_device pose 0.00 0.00 0 color gray port 40087  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40088)
-
-create position_device pose 129.33 48.26 184 color red port 40088  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40088  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40088  
-  create gps_device pose 0.00 0.00 0 color gray port 40088  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40089)
-
-create position_device pose 120.87 59.91 78 color red port 40089  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40089  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40089  
-  create gps_device pose 0.00 0.00 0 color gray port 40089  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40090)
-
-create position_device pose 127.50 70.04 48 color red port 40090  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40090  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40090  
-  create gps_device pose 0.00 0.00 0 color gray port 40090  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40091)
-
-create position_device pose 115.75 76.25 303 color red port 40091  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40091  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40091  
-  create gps_device pose 0.00 0.00 0 color gray port 40091  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40092)
-
-create position_device pose 127.33 58.13 8 color red port 40092  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40092  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40092  
-  create gps_device pose 0.00 0.00 0 color gray port 40092  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40093)
-
-create position_device pose 113.89 93.75 127 color red port 40093  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40093  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40093  
-  create gps_device pose 0.00 0.00 0 color gray port 40093  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40094)
-
-create position_device pose 114.50 60.05 228 color red port 40094  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40094  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40094  
-  create gps_device pose 0.00 0.00 0 color gray port 40094  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40095)
-
-create position_device pose 112.80 72.25 190 color red port 40095  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40095  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40095  
-  create gps_device pose 0.00 0.00 0 color gray port 40095  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40096)
-
-create position_device pose 114.30 65.03 123 color red port 40096  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40096  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40096  
-  create gps_device pose 0.00 0.00 0 color gray port 40096  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40097)
-
-create position_device pose 129.50 92.25 292 color red port 40097  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40097  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40097  
-  create gps_device pose 0.00 0.00 0 color gray port 40097  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40098)
-
-create position_device pose 128.69 77.12 152 color red port 40098  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40098  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40098  
-  create gps_device pose 0.00 0.00 0 color gray port 40098  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40099)
-
-create position_device pose 125.00 59.98 308 color red port 40099  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40099  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40099  
-  create gps_device pose 0.00 0.00 0 color gray port 40099  
-}
-
-set host = phat.usc.edu
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40100)
-
-create position_device pose 119.46 56.30 188 color red port 40100  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40100  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40100  
-  create gps_device pose 0.00 0.00 0 color gray port 40100  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40101)
-
-create position_device pose 113.56 58.90 314 color red port 40101  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40101  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40101  
-  create gps_device pose 0.00 0.00 0 color gray port 40101  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40102)
-
-create position_device pose 123.70 80.70 163 color red port 40102  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40102  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40102  
-  create gps_device pose 0.00 0.00 0 color gray port 40102  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40103)
-
-create position_device pose 129.04 58.00 228 color red port 40103  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40103  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40103  
-  create gps_device pose 0.00 0.00 0 color gray port 40103  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40104)
-
-create position_device pose 115.40 70.50 161 color red port 40104  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40104  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40104  
-  create gps_device pose 0.00 0.00 0 color gray port 40104  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40105)
-
-create position_device pose 125.15 56.53 14 color red port 40105  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40105  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40105  
-  create gps_device pose 0.00 0.00 0 color gray port 40105  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40106)
-
-create position_device pose 116.34 73.69 255 color red port 40106  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40106  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40106  
-  create gps_device pose 0.00 0.00 0 color gray port 40106  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40107)
-
-create position_device pose 120.18 80.90 358 color red port 40107  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40107  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40107  
-  create gps_device pose 0.00 0.00 0 color gray port 40107  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40108)
-
-create position_device pose 120.83 56.39 282 color red port 40108  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40108  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40108  
-  create gps_device pose 0.00 0.00 0 color gray port 40108  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40109)
-
-create position_device pose 114.04 88.36 117 color red port 40109  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40109  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40109  
-  create gps_device pose 0.00 0.00 0 color gray port 40109  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40110)
-
-create position_device pose 130.02 88.76 201 color red port 40110  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40110  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40110  
-  create gps_device pose 0.00 0.00 0 color gray port 40110  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40111)
-
-create position_device pose 127.31 69.19 105 color red port 40111  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40111  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40111  
-  create gps_device pose 0.00 0.00 0 color gray port 40111  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40112)
-
-create position_device pose 116.23 64.69 346 color red port 40112  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40112  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40112  
-  create gps_device pose 0.00 0.00 0 color gray port 40112  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40113)
-
-create position_device pose 113.31 81.39 220 color red port 40113  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40113  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40113  
-  create gps_device pose 0.00 0.00 0 color gray port 40113  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40114)
-
-create position_device pose 115.53 78.95 10 color red port 40114  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40114  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40114  
-  create gps_device pose 0.00 0.00 0 color gray port 40114  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40115)
-
-create position_device pose 124.65 58.97 51 color red port 40115  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40115  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40115  
-  create gps_device pose 0.00 0.00 0 color gray port 40115  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40116)
-
-create position_device pose 126.08 53.63 73 color red port 40116  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40116  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40116  
-  create gps_device pose 0.00 0.00 0 color gray port 40116  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40117)
-
-create position_device pose 126.86 80.63 272 color red port 40117  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40117  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40117  
-  create gps_device pose 0.00 0.00 0 color gray port 40117  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40118)
-
-create position_device pose 119.89 93.21 115 color red port 40118  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40118  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40118  
-  create gps_device pose 0.00 0.00 0 color gray port 40118  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40119)
-
-create position_device pose 124.48 83.61 169 color red port 40119  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40119  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40119  
-  create gps_device pose 0.00 0.00 0 color gray port 40119  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40120)
-
-create position_device pose 120.19 86.27 155 color red port 40120  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40120  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40120  
-  create gps_device pose 0.00 0.00 0 color gray port 40120  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40121)
-
-create position_device pose 115.64 58.62 33 color red port 40121  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40121  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40121  
-  create gps_device pose 0.00 0.00 0 color gray port 40121  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40122)
-
-create position_device pose 130.57 93.77 124 color red port 40122  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40122  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40122  
-  create gps_device pose 0.00 0.00 0 color gray port 40122  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40123)
-
-create position_device pose 113.86 76.42 6 color red port 40123  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40123  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40123  
-  create gps_device pose 0.00 0.00 0 color gray port 40123  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40124)
-
-create position_device pose 117.26 83.85 197 color red port 40124  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40124  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40124  
-  create gps_device pose 0.00 0.00 0 color gray port 40124  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40125)
-
-create position_device pose 116.20 63.06 17 color red port 40125  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40125  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40125  
-  create gps_device pose 0.00 0.00 0 color gray port 40125  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40126)
-
-create position_device pose 121.87 58.46 233 color red port 40126  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40126  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40126  
-  create gps_device pose 0.00 0.00 0 color gray port 40126  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40127)
-
-create position_device pose 113.61 72.48 237 color red port 40127  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40127  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40127  
-  create gps_device pose 0.00 0.00 0 color gray port 40127  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40128)
-
-create position_device pose 113.31 76.47 249 color red port 40128  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40128  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40128  
-  create gps_device pose 0.00 0.00 0 color gray port 40128  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40129)
-
-create position_device pose 129.44 80.03 228 color red port 40129  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40129  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40129  
-  create gps_device pose 0.00 0.00 0 color gray port 40129  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40130)
-
-create position_device pose 115.07 61.23 37 color red port 40130  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40130  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40130  
-  create gps_device pose 0.00 0.00 0 color gray port 40130  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40131)
-
-create position_device pose 113.68 57.49 198 color red port 40131  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40131  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40131  
-  create gps_device pose 0.00 0.00 0 color gray port 40131  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40132)
-
-create position_device pose 112.84 49.57 43 color red port 40132  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40132  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40132  
-  create gps_device pose 0.00 0.00 0 color gray port 40132  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40133)
-
-create position_device pose 112.85 50.43 262 color red port 40133  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40133  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40133  
-  create gps_device pose 0.00 0.00 0 color gray port 40133  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40134)
-
-create position_device pose 121.68 57.39 332 color red port 40134  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40134  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40134  
-  create gps_device pose 0.00 0.00 0 color gray port 40134  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40135)
-
-create position_device pose 116.52 74.16 214 color red port 40135  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40135  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40135  
-  create gps_device pose 0.00 0.00 0 color gray port 40135  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40136)
-
-create position_device pose 114.23 89.02 17 color red port 40136  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40136  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40136  
-  create gps_device pose 0.00 0.00 0 color gray port 40136  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40137)
-
-create position_device pose 127.74 91.05 350 color red port 40137  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40137  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40137  
-  create gps_device pose 0.00 0.00 0 color gray port 40137  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40138)
-
-create position_device pose 122.10 89.33 121 color red port 40138  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40138  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40138  
-  create gps_device pose 0.00 0.00 0 color gray port 40138  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40139)
-
-create position_device pose 122.52 83.52 322 color red port 40139  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40139  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40139  
-  create gps_device pose 0.00 0.00 0 color gray port 40139  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40140)
-
-create position_device pose 128.23 48.14 116 color red port 40140  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40140  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40140  
-  create gps_device pose 0.00 0.00 0 color gray port 40140  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40141)
-
-create position_device pose 122.22 85.02 210 color red port 40141  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40141  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40141  
-  create gps_device pose 0.00 0.00 0 color gray port 40141  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40142)
-
-create position_device pose 113.86 54.81 219 color red port 40142  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40142  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40142  
-  create gps_device pose 0.00 0.00 0 color gray port 40142  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40143)
-
-create position_device pose 120.98 82.69 176 color red port 40143  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40143  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40143  
-  create gps_device pose 0.00 0.00 0 color gray port 40143  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40144)
-
-create position_device pose 127.90 74.18 3 color red port 40144  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40144  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40144  
-  create gps_device pose 0.00 0.00 0 color gray port 40144  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40145)
-
-create position_device pose 115.21 53.76 57 color red port 40145  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40145  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40145  
-  create gps_device pose 0.00 0.00 0 color gray port 40145  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40146)
-
-create position_device pose 128.13 69.95 236 color red port 40146  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40146  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40146  
-  create gps_device pose 0.00 0.00 0 color gray port 40146  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40147)
-
-create position_device pose 116.56 53.82 65 color red port 40147  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40147  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40147  
-  create gps_device pose 0.00 0.00 0 color gray port 40147  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40148)
-
-create position_device pose 129.07 77.81 33 color red port 40148  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40148  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40148  
-  create gps_device pose 0.00 0.00 0 color gray port 40148  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40149)
-
-create position_device pose 112.02 86.35 155 color red port 40149  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40149  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40149  
-  create gps_device pose 0.00 0.00 0 color gray port 40149  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40150)
-
-create position_device pose 129.14 63.69 73 color red port 40150  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40150  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40150  
-  create gps_device pose 0.00 0.00 0 color gray port 40150  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40151)
-
-create position_device pose 125.94 80.57 128 color red port 40151  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40151  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40151  
-  create gps_device pose 0.00 0.00 0 color gray port 40151  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40152)
-
-create position_device pose 114.92 47.29 110 color red port 40152  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40152  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40152  
-  create gps_device pose 0.00 0.00 0 color gray port 40152  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40153)
-
-create position_device pose 119.02 91.22 36 color red port 40153  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40153  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40153  
-  create gps_device pose 0.00 0.00 0 color gray port 40153  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40154)
-
-create position_device pose 115.86 48.13 24 color red port 40154  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40154  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40154  
-  create gps_device pose 0.00 0.00 0 color gray port 40154  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40155)
-
-create position_device pose 121.60 90.85 245 color red port 40155  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40155  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40155  
-  create gps_device pose 0.00 0.00 0 color gray port 40155  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40156)
-
-create position_device pose 129.97 62.23 163 color red port 40156  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40156  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40156  
-  create gps_device pose 0.00 0.00 0 color gray port 40156  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40157)
-
-create position_device pose 128.68 80.60 261 color red port 40157  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40157  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40157  
-  create gps_device pose 0.00 0.00 0 color gray port 40157  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40158)
-
-create position_device pose 116.21 88.34 212 color red port 40158  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40158  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40158  
-  create gps_device pose 0.00 0.00 0 color gray port 40158  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40159)
-
-create position_device pose 115.28 72.07 358 color red port 40159  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40159  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40159  
-  create gps_device pose 0.00 0.00 0 color gray port 40159  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40160)
-
-create position_device pose 114.83 51.06 107 color red port 40160  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40160  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40160  
-  create gps_device pose 0.00 0.00 0 color gray port 40160  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40161)
-
-create position_device pose 115.71 60.06 162 color red port 40161  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40161  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40161  
-  create gps_device pose 0.00 0.00 0 color gray port 40161  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40162)
-
-create position_device pose 125.44 69.23 244 color red port 40162  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40162  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40162  
-  create gps_device pose 0.00 0.00 0 color gray port 40162  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40163)
-
-create position_device pose 115.95 68.44 338 color red port 40163  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40163  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40163  
-  create gps_device pose 0.00 0.00 0 color gray port 40163  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40164)
-
-create position_device pose 115.16 56.26 342 color red port 40164  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40164  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40164  
-  create gps_device pose 0.00 0.00 0 color gray port 40164  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40165)
-
-create position_device pose 129.68 79.04 88 color red port 40165  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40165  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40165  
-  create gps_device pose 0.00 0.00 0 color gray port 40165  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40166)
-
-create position_device pose 113.72 54.32 352 color red port 40166  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40166  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40166  
-  create gps_device pose 0.00 0.00 0 color gray port 40166  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40167)
-
-create position_device pose 117.82 47.46 285 color red port 40167  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40167  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40167  
-  create gps_device pose 0.00 0.00 0 color gray port 40167  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40168)
-
-create position_device pose 116.75 53.17 296 color red port 40168  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40168  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40168  
-  create gps_device pose 0.00 0.00 0 color gray port 40168  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40169)
-
-create position_device pose 112.81 81.80 120 color red port 40169  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40169  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40169  
-  create gps_device pose 0.00 0.00 0 color gray port 40169  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40170)
-
-create position_device pose 129.08 47.31 294 color red port 40170  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40170  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40170  
-  create gps_device pose 0.00 0.00 0 color gray port 40170  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40171)
-
-create position_device pose 126.90 50.72 132 color red port 40171  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40171  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40171  
-  create gps_device pose 0.00 0.00 0 color gray port 40171  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40172)
-
-create position_device pose 129.17 64.19 359 color red port 40172  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40172  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40172  
-  create gps_device pose 0.00 0.00 0 color gray port 40172  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40173)
-
-create position_device pose 126.51 48.01 16 color red port 40173  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40173  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40173  
-  create gps_device pose 0.00 0.00 0 color gray port 40173  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40174)
-
-create position_device pose 128.22 91.11 219 color red port 40174  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40174  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40174  
-  create gps_device pose 0.00 0.00 0 color gray port 40174  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40175)
-
-create position_device pose 113.00 59.38 149 color red port 40175  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40175  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40175  
-  create gps_device pose 0.00 0.00 0 color gray port 40175  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40176)
-
-create position_device pose 119.05 81.08 274 color red port 40176  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40176  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40176  
-  create gps_device pose 0.00 0.00 0 color gray port 40176  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40177)
-
-create position_device pose 117.34 91.99 306 color red port 40177  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40177  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40177  
-  create gps_device pose 0.00 0.00 0 color gray port 40177  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40178)
-
-create position_device pose 128.85 84.18 350 color red port 40178  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40178  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40178  
-  create gps_device pose 0.00 0.00 0 color gray port 40178  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40179)
-
-create position_device pose 113.25 77.35 291 color red port 40179  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40179  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40179  
-  create gps_device pose 0.00 0.00 0 color gray port 40179  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40180)
-
-create position_device pose 128.18 80.08 3 color red port 40180  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40180  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40180  
-  create gps_device pose 0.00 0.00 0 color gray port 40180  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40181)
-
-create position_device pose 116.18 63.49 335 color red port 40181  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40181  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40181  
-  create gps_device pose 0.00 0.00 0 color gray port 40181  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40182)
-
-create position_device pose 116.72 82.89 231 color red port 40182  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40182  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40182  
-  create gps_device pose 0.00 0.00 0 color gray port 40182  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40183)
-
-create position_device pose 130.30 72.03 174 color red port 40183  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40183  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40183  
-  create gps_device pose 0.00 0.00 0 color gray port 40183  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40184)
-
-create position_device pose 117.18 48.51 55 color red port 40184  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40184  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40184  
-  create gps_device pose 0.00 0.00 0 color gray port 40184  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40185)
-
-create position_device pose 114.06 81.71 195 color red port 40185  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40185  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40185  
-  create gps_device pose 0.00 0.00 0 color gray port 40185  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40186)
-
-create position_device pose 114.00 83.96 97 color red port 40186  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40186  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40186  
-  create gps_device pose 0.00 0.00 0 color gray port 40186  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40187)
-
-create position_device pose 120.48 81.78 274 color red port 40187  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40187  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40187  
-  create gps_device pose 0.00 0.00 0 color gray port 40187  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40188)
-
-create position_device pose 128.98 53.31 267 color red port 40188  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40188  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40188  
-  create gps_device pose 0.00 0.00 0 color gray port 40188  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40189)
-
-create position_device pose 130.27 87.56 220 color red port 40189  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40189  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40189  
-  create gps_device pose 0.00 0.00 0 color gray port 40189  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40190)
-
-create position_device pose 128.68 51.21 205 color red port 40190  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40190  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40190  
-  create gps_device pose 0.00 0.00 0 color gray port 40190  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40191)
-
-create position_device pose 116.09 66.28 250 color red port 40191  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40191  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40191  
-  create gps_device pose 0.00 0.00 0 color gray port 40191  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40192)
-
-create position_device pose 113.99 72.58 114 color red port 40192  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40192  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40192  
-  create gps_device pose 0.00 0.00 0 color gray port 40192  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40193)
-
-create position_device pose 123.84 87.53 90 color red port 40193  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40193  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40193  
-  create gps_device pose 0.00 0.00 0 color gray port 40193  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40194)
-
-create position_device pose 125.14 91.36 218 color red port 40194  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40194  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40194  
-  create gps_device pose 0.00 0.00 0 color gray port 40194  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40195)
-
-create position_device pose 121.64 56.34 88 color red port 40195  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40195  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40195  
-  create gps_device pose 0.00 0.00 0 color gray port 40195  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40196)
-
-create position_device pose 130.96 80.89 65 color red port 40196  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40196  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40196  
-  create gps_device pose 0.00 0.00 0 color gray port 40196  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40197)
-
-create position_device pose 112.85 50.01 122 color red port 40197  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40197  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40197  
-  create gps_device pose 0.00 0.00 0 color gray port 40197  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40198)
-
-create position_device pose 112.27 72.07 171 color red port 40198  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40198  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40198  
-  create gps_device pose 0.00 0.00 0 color gray port 40198  
-}
-
-# Robot Expansion
-#   The following code was expanded from the macro call:
-#        simplerobot(14,14,0,40199)
-
-create position_device pose 123.64 58.40 48 color red port 40199  shape circle 
-{
-  create player_device pose 0.00 0.00 0 color white port 40199  
-  create sonar_device pose 0.00 0.00 0 color blue3 port 40199  
-  create gps_device pose 0.00 0.00 0 color gray port 40199  
-}
+# This file autogenerated by the Stage worldfile converter
 
+environment
+(
+   file "hospital.pnm.gz"
+   scale 0.0833333333333
+   resolution 0.0833333333333
+)
+
+position
+(
+  color "red" shape "circle" pose [125.00 49.98 308] port 40099 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40099 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40099 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40099 )
+
+)
+
+position
+(
+  pose [113.61 62.48 237] port 40127 color "red" shape "circle" 
+  gps ( color "gray" pose [0.00 -10.0 0] port 40127 )
+
+  player ( pose [0.00 -10.0 0] port 40127 color "white" )
+
+  sonar ( pose [0.00 -10.0 0] port 40127 color "blue3" )
+
+)
+
+position
+(
+  pose [119.56 76.38 88] port 40030 color "red" shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40030 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40030 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40030 )
+
+)
+
+position
+(
+  pose [122.30 76.19 84] port 40081 color "red" shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40081 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40081 )
+
+  gps ( pose [0.00 -10.0 0] port 40081 color "gray" )
+
+)
+
+position
+(
+  color "red" pose [112.84 39.57 43] port 40132 shape "circle" 
+  gps ( color "gray" pose [0.00 -10.0 0] port 40132 )
+
+  player ( pose [0.00 -10.0 0] port 40132 color "white" )
+
+  sonar ( pose [0.00 -10.0 0] port 40132 color "blue3" )
+
+)
+
+position
+(
+  color "red" pose [129.43 72.55 197] port 40035 shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40035 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40035 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40035 )
+
+)
+
+position
+(
+  color "red" pose [117.88 73.99 85] port 40086 shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40086 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40086 )
+
+  gps ( pose [0.00 -10.0 0] port 40086 color "gray" )
+
+)
+
+position
+(
+  color "red" pose [127.74 81.05 350] port 40137 shape "circle" 
+  gps ( color "gray" pose [0.00 -10.0 0] port 40137 )
+
+  player ( pose [0.00 -10.0 0] port 40137 color "white" )
+
+  sonar ( pose [0.00 -10.0 0] port 40137 color "blue3" )
+
+)
+
+position
+(
+  color "red" pose [128.93 83.53 56] port 40040 shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40040 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40040 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40040 )
+
+)
+
+position
+(
+  color "red" pose [115.75 66.25 303] port 40091 shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40091 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40091 )
+
+  gps ( pose [0.00 -10.0 0] port 40091 color "gray" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [113.86 44.81 219] port 40142 
+  player ( pose [0.00 -10.0 0] port 40142 color "white" )
+
+  sonar ( pose [0.00 -10.0 0] port 40142 color "blue3" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40142 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [115.32 79.74 150] port 40045 
+  player ( color "white" pose [0.00 -10.0 0] port 40045 )
+
+  gps ( pose [0.00 -10.0 0] port 40045 color "gray" )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40045 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [114.30 55.03 123] port 40096 
+  player ( color "white" pose [0.00 -10.0 0] port 40096 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40096 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40096 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [116.56 43.82 65] port 40147 
+  sonar ( pose [0.00 -10.0 0] port 40147 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40147 color "white" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40147 )
+
+)
+
+position
+(
+  pose [128.85 75.62 225] port 40078 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40078 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40078 )
+
+  sonar ( pose [0.00 -10.0 0] port 40078 color "blue3" )
+
+)
+
+position
+(
+  pose [129.44 70.03 228] port 40129 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40129 )
+
+  gps ( pose [0.00 -10.0 0] port 40129 color "gray" )
+
+  sonar ( pose [0.00 -10.0 0] port 40129 color "blue3" )
+
+)
+
+position
+(
+  pose [116.82 79.34 12] port 40083 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40083 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40083 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40083 )
+
+)
+
+position
+(
+  pose [121.68 47.39 332] port 40134 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40134 )
+
+  gps ( pose [0.00 -10.0 0] port 40134 color "gray" )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40134 )
+
+)
+
+position
+(
+  pose [129.33 38.26 184] port 40088 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40088 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40088 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40088 )
+
+)
+
+position
+(
+  color "red" pose [122.52 73.52 322] port 40139 shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40139 )
+
+  gps ( pose [0.00 -10.0 0] port 40139 color "gray" )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40139 )
+
+)
+
+position
+(
+  color "red" pose [113.89 83.75 127] port 40093 shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40093 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40093 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40093 )
+
+)
+
+position
+(
+  color "red" pose [127.90 64.18 3] port 40144 shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40144 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40144 )
+
+  gps ( pose [0.00 -10.0 0] port 40144 color "gray" )
+
+)
+
+position
+(
+  pose [130.66 79.92 304] port 40075 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40075 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40075 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40075 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [128.69 67.12 152] port 40098 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40098 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40098 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40098 )
+
+)
+
+position
+(
+  pose [121.87 48.46 233] port 40126 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40126 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40126 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40126 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [112.02 76.35 155] port 40149 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40149 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40149 )
+
+  gps ( pose [0.00 -10.0 0] port 40149 color "gray" )
+
+)
+
+position
+(
+  pose [117.34 81.99 306] port 40177 color "red" shape "circle" 
+  gps ( pose [0.00 -10.0 0] port 40177 color "gray" )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40177 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40177 )
+
+)
+
+position
+(
+  pose [114.04 43.9 113] port 40080 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40080 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40080 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40080 )
+
+)
+
+position
+(
+  pose [113.68 47.49 198] port 40131 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40131 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40131 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40131 )
+
+)
+
+position
+(
+  pose [116.72 72.89 231] port 40182 color "red" shape "circle" 
+  gps ( pose [0.00 -10.0 0] port 40182 color "gray" )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40182 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40182 )
+
+)
+
+position
+(
+  pose [120.86 48.14 179] port 40085 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40085 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40085 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40085 )
+
+)
+
+position
+(
+  pose [114.23 79.02 17] port 40136 color "red" shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40136 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40136 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40136 )
+
+)
+
+position
+(
+  pose [120.48 71.78 274] port 40187 color "red" shape "circle" 
+  gps ( color "gray" pose [0.00 -10.0 0] port 40187 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40187 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40187 )
+
+)
+
+position
+(
+  pose [127.50 60.04 48] port 40090 color "red" shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40090 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40090 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40090 )
+
+)
+
+position
+(
+  pose [122.22 75.02 210] port 40141 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40141 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40141 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40141 )
+
+)
+
+position
+(
+  color "red" pose [113.99 62.58 114] port 40192 shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40192 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40192 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40192 )
+
+)
+
+position
+(
+  color "red" pose [112.80 62.25 190] port 40095 shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40095 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40095 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40095 )
+
+)
+
+position
+(
+  color "red" pose [128.13 59.95 236] port 40146 shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40146 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40146 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40146 )
+
+)
+
+position
+(
+  color "red" pose [112.85 40.01 122] port 40197 shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40197 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40197 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40197 )
+
+)
+
+position
+(
+  pose [113.31 66.47 249] port 40128 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40128 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40128 )
+
+  sonar ( pose [0.00 -10.0 0] port 40128 color "blue3" )
+
+)
+
+position
+(
+  pose [113.25 67.35 291] port 40179 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40179 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40179 )
+
+  sonar ( pose [0.00 -10.0 0] port 40179 color "blue3" )
+
+)
+
+position
+(
+  pose [112.85 40.43 262] port 40133 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40133 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40133 )
+
+  sonar ( pose [0.00 -10.0 0] port 40133 color "blue3" )
+
+)
+
+position
+(
+  pose [117.18 38.51 55] port 40184 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40184 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40184 )
+
+  sonar ( pose [0.00 -10.0 0] port 40184 color "blue3" )
+
+)
+
+position
+(
+  pose [122.10 79.33 121] port 40138 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40138 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40138 )
+
+  sonar ( pose [0.00 -10.0 0] port 40138 color "blue3" )
+
+)
+
+position
+(
+  pose [130.27 77.56 220] port 40189 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40189 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40189 )
+
+  sonar ( pose [0.00 -10.0 0] port 40189 color "blue3" )
+
+)
+
+position
+(
+  pose [120.98 72.69 176] port 40143 color "red" shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40143 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40143 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40143 )
+
+)
+
+position
+(
+  pose [125.14 81.36 218] port 40194 color "red" shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40194 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40194 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40194 )
+
+)
+
+position
+(
+  pose [116.20 53.06 17] port 40125 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40125 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40125 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40125 )
+
+)
+
+position
+(
+  pose [129.07 67.81 33] port 40148 color "red" shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40148 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40148 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40148 )
+
+)
+
+position
+(
+  pose [119.05 71.08 274] port 40176 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40176 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40176 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40176 )
+
+)
+
+position
+(
+  color "red" pose [123.64 48.4 48] port 40199 shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40199 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40199 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40199 )
+
+)
+
+position
+(
+  pose [115.07 51.23 37] port 40130 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40130 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40130 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40130 )
+
+)
+
+position
+(
+  pose [116.18 53.49 335] port 40181 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40181 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40181 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40181 )
+
+)
+
+position
+(
+  pose [116.52 64.16 214] port 40135 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40135 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40135 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40135 )
+
+)
+
+position
+(
+  pose [114.00 73.96 97] port 40186 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40186 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40186 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40186 )
+
+)
+
+position
+(
+  pose [128.23 38.14 116] port 40140 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40140 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40140 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40140 )
+
+)
+
+position
+(
+  pose [116.09 56.28 250] port 40191 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40191 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40191 )
+
+  sonar ( pose [0.00 -10.0 0] port 40191 color "blue3" )
+
+)
+
+position
+(
+  pose [115.21 43.76 57] port 40145 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40145 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40145 )
+
+  sonar ( pose [0.00 -10.0 0] port 40145 color "blue3" )
+
+)
+
+position
+(
+  pose [130.96 70.89 65] port 40196 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40196 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40196 )
+
+  sonar ( pose [0.00 -10.0 0] port 40196 color "blue3" )
+
+)
+
+position
+(
+  pose [128.85 74.18 350] port 40178 color "red" shape "circle" 
+  player ( pose [0.00 -10.0 0] port 40178 color "white" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40178 )
+
+  sonar ( pose [0.00 -10.0 0] port 40178 color "blue3" )
+
+)
+
+position
+(
+  pose [130.30 62.03 174] port 40183 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40183 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40183 )
+
+  sonar ( pose [0.00 -10.0 0] port 40183 color "blue3" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [125.78 81.53 62] port 40002 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40002 )
+
+  gps ( pose [0.00 -10.0 0] port 40002 color "gray" )
+
+  player ( port 40002 color "white" pose [0.00 -10.0 0] )
+
+)
+
+position
+(
+  pose [128.98 43.31 267] port 40188 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40188 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40188 )
+
+  sonar ( pose [0.00 -10.0 0] port 40188 color "blue3" )
+
+)
+
+position
+(
+  pose [123.84 77.53 90] port 40193 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40193 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40193 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40193 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [113.00 49.38 149] port 40175 
+  sonar ( pose [0.00 -10.0 0] port 40175 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40175 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40175 color "gray" )
+
+)
+
+position
+(
+  pose [112.27 62.07 171] port 40198 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40198 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40198 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40198 )
+
+)
+
+position
+(
+  shape "circle" pose [130.62 75.83 59] port 40052 color "red" 
+  gps ( pose [0.00 -10.0 0] port 40052 color "gray" )
+
+  player ( pose [0.00 -10.0 0] port 40052 color "white" )
+
+  sonar ( pose [0.00 -10.0 0] port 40052 color "blue3" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [128.18 70.08 3] port 40180 
+  sonar ( pose [0.00 -10.0 0] port 40180 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40180 color "white" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40180 )
+
+)
+
+position
+(
+  pose [127.31 49.32 296] port 40057 color "red" shape "circle" 
+  gps ( pose [0.00 -10.0 0] port 40057 color "gray" )
+
+  player ( pose [0.00 -10.0 0] port 40057 color "white" )
+
+  sonar ( pose [0.00 -10.0 0] port 40057 color "blue3" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [114.06 71.71 195] port 40185 
+  sonar ( pose [0.00 -10.0 0] port 40185 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40185 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40185 )
+
+)
+
+position
+(
+  pose [116.93 41.89 340] port 40062 color "red" shape "circle" 
+  gps ( color "gray" pose [0.00 -10.0 0] port 40062 )
+
+  player ( pose [0.00 -10.0 0] port 40062 color "white" )
+
+  sonar ( pose [0.00 -10.0 0] port 40062 color "blue3" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [128.68 41.21 205] port 40190 
+  player ( color "white" pose [0.00 -10.0 0] port 40190 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40190 )
+
+  sonar ( pose [0.00 -10.0 0] port 40190 color "blue3" )
+
+)
+
+position
+(
+  pose [128.54 63.94 67] color "red" port 40067 shape "circle" 
+  gps ( color "gray" pose [0.00 -10.0 0] port 40067 )
+
+  player ( pose [0.00 -10.0 0] port 40067 color "white" )
+
+  sonar ( pose [0.00 -10.0 0] port 40067 color "blue3" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [121.64 46.34 88] port 40195 
+  player ( color "white" pose [0.00 -10.0 0] port 40195 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40195 )
+
+  sonar ( pose [0.00 -10.0 0] port 40195 color "blue3" )
+
+)
+
+position
+(
+  color "red" pose [128.94 39.81 20] port 40072 shape "circle" 
+  player ( pose [0.00 -10.0 0] port 40072 color "white" )
+
+  sonar ( pose [0.00 -10.0 0] port 40072 color "blue3" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40072 )
+
+)
+
+position
+(
+  shape "circle" pose [127.34 47.42 71] port 40054 color "red" 
+  player ( pose [0.00 -10.0 0] port 40054 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40054 color "gray" )
+
+  sonar ( pose [0.00 -10.0 0] port 40054 color "blue3" )
+
+)
+
+position
+(
+  color "red" pose [118.93 48.54 306] port 40001 shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40001 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40001 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40001 )
+
+)
+
+position
+(
+  pose [125.64 70.06 104] port 40059 color "red" shape "circle" 
+  player ( pose [0.00 -10.0 0] port 40059 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40059 color "gray" )
+
+  sonar ( pose [0.00 -10.0 0] port 40059 color "blue3" )
+
+)
+
+position
+(
+  pose [127.19 53.09 326] port 40064 color "red" shape "circle" 
+  player ( pose [0.00 -10.0 0] port 40064 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40064 color "gray" )
+
+  sonar ( pose [0.00 -10.0 0] port 40064 color "blue3" )
+
+)
+
+position
+(
+  pose [113.35 60.17 219] port 40069 color "red" shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40069 )
+
+  player ( pose [0.00 -10.0 0] port 40069 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40069 color "gray" )
+
+)
+
+position
+(
+  shape "circle" pose [123.80 68.35 131] port 40051 color "red" 
+  sonar ( pose [0.00 -10.0 0] port 40051 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40051 )
+
+  gps ( pose [0.00 -10.0 0] port 40051 color "gray" )
+
+)
+
+position
+(
+  color "red" pose [112.13 65.15 264] port 40074 shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40074 )
+
+  player ( pose [0.00 -10.0 0] port 40074 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40074 color "gray" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [123.70 70.7 163] port 40102 
+  gps ( pose [0.00 -10.0 0] port 40102 color "gray" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40102 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40102 )
+
+)
+
+position
+(
+  shape "circle" pose [129.66 77.73 358] port 40056 color "red" 
+  sonar ( pose [0.00 -10.0 0] port 40056 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40056 )
+
+  gps ( pose [0.00 -10.0 0] port 40056 color "gray" )
+
+)
+
+position
+(
+  shape "circle" pose [120.18 70.9 358] port 40107 color "red" 
+  gps ( pose [0.00 -10.0 0] port 40107 color "gray" )
+
+  player ( pose [0.00 -10.0 0] port 40107 color "white" )
+
+  sonar ( pose [0.00 -10.0 0] port 40107 color "blue3" )
+
+)
+
+position
+(
+  pose [120.47 78.07 213] port 40061 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40061 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40061 )
+
+  gps ( pose [0.00 -10.0 0] port 40061 color "gray" )
+
+)
+
+position
+(
+  pose [116.23 54.69 346] port 40112 color "red" shape "circle" 
+  gps ( pose [0.00 -10.0 0] port 40112 color "gray" )
+
+  player ( pose [0.00 -10.0 0] port 40112 color "white" )
+
+  sonar ( pose [0.00 -10.0 0] port 40112 color "blue3" )
+
+)
+
+position
+(
+  pose [115.09 83.68 216] port 40066 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40066 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40066 )
+
+  gps ( pose [0.00 -10.0 0] port 40066 color "gray" )
+
+)
+
+position
+(
+  pose [126.86 70.63 272] port 40117 color "red" shape "circle" 
+  player ( pose [0.00 -10.0 0] port 40117 color "white" )
+
+  sonar ( pose [0.00 -10.0 0] port 40117 color "blue3" )
+
+  gps ( pose [0.00 -10.0 0] port 40117 color "gray" )
+
+)
+
+position
+(
+  pose [115.60 65.72 344] port 40071 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40071 )
+
+  gps ( pose [0.00 -10.0 0] port 40071 color "gray" )
+
+  sonar ( pose [0.00 -10.0 0] port 40071 color "blue3" )
+
+)
+
+position
+(
+  pose [130.57 83.77 124] port 40122 color "red" shape "circle" 
+  player ( pose [0.00 -10.0 0] port 40122 color "white" )
+
+  sonar ( pose [0.00 -10.0 0] port 40122 color "blue3" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40122 )
+
+)
+
+position
+(
+  shape "circle" pose [126.34 47.75 248] port 40053 color "red" 
+  player ( pose [0.00 -10.0 0] port 40053 color "white" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40053 )
+
+  sonar ( pose [0.00 -10.0 0] port 40053 color "blue3" )
+
+)
+
+position
+(
+  shape "circle" pose [115.40 60.5 161] port 40104 color "red" 
+  player ( color "white" pose [0.00 -10.0 0] port 40104 )
+
+  gps ( pose [0.00 -10.0 0] port 40104 color "gray" )
+
+  sonar ( pose [0.00 -10.0 0] port 40104 color "blue3" )
+
+)
+
+position
+(
+  pose [112.92 55.79 295] port 40000 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40000 )
+
+  sonar ( pose [0.00 -10.0 0] port 40000 color "blue3" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40000 )
+
+)
+
+position
+(
+  pose [129.47 62.71 136] port 40058 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40058 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40058 )
+
+  sonar ( pose [0.00 -10.0 0] port 40058 color "blue3" )
+
+)
+
+position
+(
+  shape "circle" pose [114.04 78.36 117] port 40109 color "red" 
+  player ( color "white" pose [0.00 -10.0 0] port 40109 )
+
+  gps ( pose [0.00 -10.0 0] port 40109 color "gray" )
+
+  sonar ( pose [0.00 -10.0 0] port 40109 color "blue3" )
+
+)
+
+position
+(
+  pose [129.90 41.0 39] port 40063 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40063 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40063 )
+
+  sonar ( pose [0.00 -10.0 0] port 40063 color "blue3" )
+
+)
+
+position
+(
+  pose [115.53 68.95 10] port 40114 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40114 )
+
+  gps ( pose [0.00 -10.0 0] port 40114 color "gray" )
+
+  sonar ( pose [0.00 -10.0 0] port 40114 color "blue3" )
+
+)
+
+position
+(
+  pose [123.42 78.89 92] port 40068 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40068 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40068 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40068 )
+
+)
+
+position
+(
+  pose [124.48 73.61 169] port 40119 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40119 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40119 )
+
+  gps ( pose [0.00 -10.0 0] port 40119 color "gray" )
+
+)
+
+position
+(
+  shape "circle" pose [113.20 63.51 315] port 40050 color "red" 
+  sonar ( pose [0.00 -10.0 0] port 40050 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40050 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40050 color "gray" )
+
+)
+
+position
+(
+  pose [116.67 83.7 348] port 40073 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40073 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40073 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40073 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [113.56 48.9 314] port 40101 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40101 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40101 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40101 )
+
+)
+
+position
+(
+  pose [117.26 73.85 197] port 40124 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40124 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40124 )
+
+  gps ( pose [0.00 -10.0 0] port 40124 color "gray" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [114.92 37.29 110] port 40152 
+  gps ( color "gray" pose [0.00 -10.0 0] port 40152 )
+
+  sonar ( pose [0.00 -10.0 0] port 40152 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40152 color "white" )
+
+)
+
+position
+(
+  shape "circle" pose [128.81 55.61 241] port 40055 color "red" 
+  sonar ( pose [0.00 -10.0 0] port 40055 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40055 color "white" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40055 )
+
+)
+
+position
+(
+  shape "circle" pose [116.34 63.69 255] port 40106 color "red" 
+  sonar ( pose [0.00 -10.0 0] port 40106 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40106 color "white" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40106 )
+
+)
+
+position
+(
+  shape "circle" pose [128.68 70.6 261] port 40157 color "red" 
+  gps ( pose [0.00 -10.0 0] port 40157 color "gray" )
+
+  sonar ( pose [0.00 -10.0 0] port 40157 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40157 color "white" )
+
+)
+
+position
+(
+  pose [130.60 72.04 332] port 40060 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40060 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40060 color "white" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40060 )
+
+)
+
+position
+(
+  pose [127.31 59.19 105] port 40111 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40111 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40111 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40111 )
+
+)
+
+position
+(
+  shape "circle" pose [125.44 59.23 244] port 40162 color "red" 
+  gps ( pose [0.00 -10.0 0] port 40162 color "gray" )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40162 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40162 )
+
+)
+
+position
+(
+  pose [114.47 65.08 60] port 40065 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40065 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40065 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40065 )
+
+)
+
+position
+(
+  pose [126.08 43.63 73] port 40116 color "red" shape "circle" 
+  gps ( color "gray" pose [0.00 -10.0 0] port 40116 )
+
+  sonar ( pose [0.00 -10.0 0] port 40116 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40116 )
+
+)
+
+position
+(
+  pose [117.82 37.46 285] port 40167 color "red" shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40167 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40167 )
+
+  gps ( pose [0.00 -10.0 0] port 40167 color "gray" )
+
+)
+
+position
+(
+  pose [113.04 44.23 333] port 40007 color "red" shape "circle" 
+  gps ( pose [0.00 -10.0 0] port 40007 color "gray" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40007 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40007 )
+
+)
+
+position
+(
+  pose [113.32 37.26 179] port 40070 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40070 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40070 )
+
+  sonar ( pose [0.00 -10.0 0] port 40070 color "blue3" )
+
+)
+
+position
+(
+  pose [115.64 48.62 33] port 40121 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40121 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40121 )
+
+  sonar ( pose [0.00 -10.0 0] port 40121 color "blue3" )
+
+)
+
+position
+(
+  pose [129.17 54.19 359] port 40172 color "red" shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40172 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40172 )
+
+  gps ( pose [0.00 -10.0 0] port 40172 color "gray" )
+
+)
+
+position
+(
+  pose [129.85 81.73 193] port 40012 color "red" shape "circle" 
+  gps ( pose [0.00 -10.0 0] port 40012 color "gray" )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40012 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40012 )
+
+)
+
+position
+(
+  shape "circle" pose [129.04 48.0 228] port 40103 color "red" 
+  player ( pose [0.00 -10.0 0] port 40103 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40103 color "gray" )
+
+  sonar ( pose [0.00 -10.0 0] port 40103 color "blue3" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [115.86 38.13 24] port 40154 
+  player ( color "white" pose [0.00 -10.0 0] port 40154 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40154 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40154 )
+
+)
+
+position
+(
+  pose [127.79 37.58 123] port 40017 color "red" shape "circle" 
+  gps ( pose [0.00 -10.0 0] port 40017 color "gray" )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40017 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40017 )
+
+)
+
+position
+(
+  shape "circle" pose [120.83 46.39 282] port 40108 color "red" 
+  player ( pose [0.00 -10.0 0] port 40108 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40108 color "gray" )
+
+  sonar ( pose [0.00 -10.0 0] port 40108 color "blue3" )
+
+)
+
+position
+(
+  shape "circle" pose [115.28 62.07 358] port 40159 color "red" 
+  player ( pose [0.00 -10.0 0] port 40159 color "white" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40159 )
+
+  sonar ( pose [0.00 -10.0 0] port 40159 color "blue3" )
+
+)
+
+position
+(
+  pose [116.69 40.44 59] port 40022 color "red" shape "circle" 
+  gps ( pose [0.00 -10.0 0] port 40022 color "gray" )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40022 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40022 )
+
+)
+
+position
+(
+  pose [113.31 71.39 220] port 40113 color "red" shape "circle" 
+  player ( pose [0.00 -10.0 0] port 40113 color "white" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40113 )
+
+  sonar ( pose [0.00 -10.0 0] port 40113 color "blue3" )
+
+)
+
+position
+(
+  shape "circle" pose [115.16 46.26 342] port 40164 color "red" 
+  player ( color "white" pose [0.00 -10.0 0] port 40164 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40164 )
+
+  sonar ( pose [0.00 -10.0 0] port 40164 color "blue3" )
+
+)
+
+position
+(
+  pose [119.93 47.8 342] port 40004 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40004 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] color "white" port 40004 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40004 )
+
+)
+
+position
+(
+  pose [119.89 83.21 115] port 40118 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40118 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40118 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40118 )
+
+)
+
+position
+(
+  pose [112.81 71.8 120] port 40169 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40169 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40169 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40169 )
+
+)
+
+position
+(
+  pose [126.54 83.2 164] port 40009 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40009 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40009 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40009 )
+
+)
+
+position
+(
+  color "red" pose [119.46 46.3 188] port 40100 shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40100 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40100 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40100 )
+
+)
+
+position
+(
+  pose [113.86 66.42 6] port 40123 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40123 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40123 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40123 )
+
+)
+
+position
+(
+  color "red" pose [125.94 70.57 128] port 40151 shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40151 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40151 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40151 )
+
+)
+
+position
+(
+  pose [128.22 81.11 219] port 40174 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40174 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40174 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40174 )
+
+)
+
+position
+(
+  pose [130.37 39.43 284] port 40014 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40014 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40014 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40014 )
+
+)
+
+position
+(
+  pose [125.15 46.53 14] port 40105 shape "circle" color "red" 
+  sonar ( pose [0.00 -10.0 0] port 40105 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40105 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40105 color "gray" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [129.97 52.23 163] port 40156 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40156 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40156 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40156 )
+
+)
+
+position
+(
+  pose [112.54 48.8 10] port 40019 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40019 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40019 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40019 )
+
+)
+
+position
+(
+  shape "circle" pose [130.02 78.76 201] port 40110 color "red" 
+  sonar ( pose [0.00 -10.0 0] port 40110 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40110 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40110 color "gray" )
+
+)
+
+position
+(
+  shape "circle" pose [115.71 50.06 162] port 40161 color "red" 
+  sonar ( pose [0.00 -10.0 0] port 40161 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40161 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40161 color "gray" )
+
+)
+
+position
+(
+  pose [113.12 38.1 11] port 40024 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40024 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40024 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40024 )
+
+)
+
+position
+(
+  pose [124.65 48.97 51] port 40115 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40115 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40115 color "white" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40115 )
+
+)
+
+position
+(
+  pose [113.72 44.32 352] port 40166 color "red" shape "circle" 
+  player ( pose [0.00 -10.0 0] port 40166 color "white" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40166 )
+
+  sonar ( pose [0.00 -10.0 0] port 40166 color "blue3" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [120.39 46.46 211] port 40006 
+  sonar ( pose [0.00 -10.0 0] port 40006 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40006 color "white" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40006 )
+
+)
+
+position
+(
+  pose [120.19 76.27 155] port 40120 color "red" shape "circle" 
+  player ( pose [0.00 -10.0 0] port 40120 color "white" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40120 )
+
+  sonar ( pose [0.00 -10.0 0] port 40120 color "blue3" )
+
+)
+
+position
+(
+  pose [126.90 40.72 132] port 40171 color "red" shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40171 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40171 )
+
+  sonar ( pose [0.00 -10.0 0] port 40171 color "blue3" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [114.17 47.0 121] port 40011 
+  sonar ( pose [0.00 -10.0 0] port 40011 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40011 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40011 )
+
+)
+
+position
+(
+  color "red" pose [119.02 81.22 36] port 40153 shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40153 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40153 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40153 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [117.81 81.28 98] port 40016 
+  sonar ( pose [0.00 -10.0 0] port 40016 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40016 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40016 )
+
+)
+
+position
+(
+  pose [116.21 78.34 212] port 40158 shape "circle" color "red" 
+  player ( pose [0.00 -10.0 0] port 40158 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40158 color "gray" )
+
+  sonar ( pose [0.00 -10.0 0] port 40158 color "blue3" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [122.76 81.3 200] port 40021 
+  sonar ( pose [0.00 -10.0 0] port 40021 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40021 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40021 )
+
+)
+
+position
+(
+  shape "circle" pose [115.95 58.44 338] port 40163 color "red" 
+  player ( pose [0.00 -10.0 0] port 40163 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40163 color "gray" )
+
+  sonar ( pose [0.00 -10.0 0] port 40163 color "blue3" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [115.12 42.07 55] port 40003 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40003 )
+
+  player ( pose [0.00 -10.0 0] port 40003 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40003 color "gray" )
+
+)
+
+position
+(
+  pose [116.75 43.17 296] port 40168 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40168 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40168 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40168 color "gray" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [112.42 52.92 104] port 40008 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40008 )
+
+  player ( pose [0.00 -10.0 0] port 40008 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40008 color "gray" )
+
+)
+
+position
+(
+  pose [129.14 53.69 73] port 40150 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40150 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40150 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40150 )
+
+)
+
+position
+(
+  pose [126.51 38.01 16] port 40173 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40173 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40173 color "white" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40173 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [117.50 46.02 270] port 40027 
+  gps ( color "gray" pose [0.00 -10.0 0] port 40027 )
+
+  sonar ( pose [0.00 -10.0 0] port 40027 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40027 color "white" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [115.58 64.55 254] port 40013 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40013 )
+
+  player ( pose [0.00 -10.0 0] port 40013 color "white" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40013 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [121.60 80.85 245] port 40155 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40155 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40155 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40155 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [130.91 44.99 296] port 40032 
+  gps ( color "gray" pose [0.00 -10.0 0] port 40032 )
+
+  sonar ( pose [0.00 -10.0 0] port 40032 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40032 color "white" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [127.65 76.75 199] port 40018 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40018 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40018 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40018 )
+
+)
+
+position
+(
+  shape "circle" color "red" pose [114.83 41.06 107] port 40160 
+  sonar ( pose [0.00 -10.0 0] port 40160 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40160 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40160 color "gray" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [127.47 72.12 98] port 40037 
+  gps ( color "gray" pose [0.00 -10.0 0] port 40037 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40037 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40037 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [130.44 60.73 351] port 40023 
+  gps ( color "gray" pose [0.00 -10.0 0] port 40023 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40023 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40023 )
+
+)
+
+position
+(
+  shape "circle" color "red" pose [129.68 69.04 88] port 40165 
+  gps ( pose [0.00 -10.0 0] port 40165 color "gray" )
+
+  sonar ( pose [0.00 -10.0 0] port 40165 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40165 color "white" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [120.84 78.9 58] port 40042 
+  gps ( color "gray" pose [0.00 -10.0 0] port 40042 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40042 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40042 )
+
+)
+
+position
+(
+  color "red" pose [114.06 65.07 327] port 40005 shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40005 )
+
+  player ( pose [0.00 -10.0 0] port 40005 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40005 color "gray" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [129.08 37.31 294] port 40170 
+  player ( pose [0.00 -10.0 0] port 40170 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40170 color "gray" )
+
+  sonar ( pose [0.00 -10.0 0] port 40170 color "blue3" )
+
+)
+
+position
+(
+  shape "circle" pose [130.59 61.5 299] port 40047 color "red" 
+  player ( pose [0.00 -10.0 0] port 40047 color "white" )
+
+  sonar ( pose [0.00 -10.0 0] port 40047 color "blue3" )
+
+  gps ( pose [0.00 -10.0 0] port 40047 color "gray" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [114.31 44.37 173] port 40010 
+  gps ( pose [0.00 -10.0 0] port 40010 color "gray" )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40010 )
+
+  player ( pose [0.00 -10.0 0] port 40010 color "white" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [115.85 41.45 121] port 40029 
+  player ( pose [0.00 -10.0 0] port 40029 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40029 color "gray" )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40029 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [129.04 77.75 7] port 40015 
+  gps ( pose [0.00 -10.0 0] port 40015 color "gray" )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40015 )
+
+  player ( pose [0.00 -10.0 0] port 40015 color "white" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [130.37 41.86 16] port 40034 
+  player ( pose [0.00 -10.0 0] port 40034 color "white" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40034 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40034 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [115.32 54.49 52] port 40020 
+  gps ( color "gray" pose [0.00 -10.0 0] port 40020 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40020 )
+
+  player ( pose [0.00 -10.0 0] port 40020 color "white" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [121.23 81.79 338] port 40039 
+  player ( pose [0.00 -10.0 0] port 40039 color "white" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40039 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40039 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [117.92 45.92 36] port 40044 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40044 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40044 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40044 )
+
+)
+
+position
+(
+  color "red" pose [129.87 41.73 269] port 40026 shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40026 )
+
+  player ( pose [0.00 -10.0 0] port 40026 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40026 color "gray" )
+
+)
+
+position
+(
+  shape "circle" pose [115.08 40.54 224] port 40049 color "red" 
+  sonar ( pose [0.00 -10.0 0] port 40049 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40049 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40049 color "gray" )
+
+)
+
+position
+(
+  color "red" pose [129.29 63.97 152] port 40077 shape "circle" 
+  gps ( color "gray" pose [0.00 -10.0 0] port 40077 )
+
+  player ( pose [0.00 -10.0 0] port 40077 color "white" )
+
+  sonar ( pose [0.00 -10.0 0] port 40077 color "blue3" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [118.35 81.19 220] port 40031 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40031 )
+
+  player ( pose [0.00 -10.0 0] port 40031 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40031 color "gray" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [129.59 36.21 21] port 40082 
+  gps ( color "gray" pose [0.00 -10.0 0] port 40082 )
+
+  player ( pose [0.00 -10.0 0] port 40082 color "white" )
+
+  sonar ( pose [0.00 -10.0 0] port 40082 color "blue3" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [123.23 45.27 47] port 40036 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40036 )
+
+  player ( pose [0.00 -10.0 0] port 40036 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40036 color "gray" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [114.62 67.57 344] port 40087 
+  gps ( color "gray" pose [0.00 -10.0 0] port 40087 )
+
+  player ( pose [0.00 -10.0 0] port 40087 color "white" )
+
+  sonar ( pose [0.00 -10.0 0] port 40087 color "blue3" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [120.61 82.54 86] port 40041 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40041 )
+
+  player ( port 40041 color "white" pose [0.00 -10.0 0] )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40041 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [127.33 48.13 8] port 40092 
+  player ( pose [0.00 -10.0 0] port 40092 color "white" )
+
+  sonar ( pose [0.00 -10.0 0] port 40092 color "blue3" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40092 )
+
+)
+
+position
+(
+  shape "circle" pose [117.18 46.49 59] port 40046 color "red" 
+  player ( color "white" pose [0.00 -10.0 0] port 40046 )
+
+  gps ( pose [0.00 -10.0 0] port 40046 color "gray" )
+
+  sonar ( pose [0.00 -10.0 0] port 40046 color "blue3" )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [129.50 82.25 292] port 40097 
+  player ( color "white" pose [0.00 -10.0 0] port 40097 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40097 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40097 )
+
+)
+
+position
+(
+  color "red" pose [113.34 82.15 276] port 40028 shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40028 )
+
+  gps ( pose [0.00 -10.0 0] port 40028 color "gray" )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40028 )
+
+)
+
+position
+(
+  color "red" pose [124.22 47.3 160] port 40079 shape "circle" 
+  player ( pose [0.00 -10.0 0] port 40079 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40079 color "gray" )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40079 )
+
+)
+
+position
+(
+  color "red" pose [129.74 70.49 107] port 40033 shape "circle" 
+  player ( color "white" pose [0.00 -10.0 0] port 40033 )
+
+  gps ( pose [0.00 -10.0 0] port 40033 color "gray" )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40033 )
+
+)
+
+position
+(
+  color "red" pose [121.38 82.77 33] port 40084 shape "circle" 
+  player ( pose [0.00 -10.0 0] port 40084 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40084 color "gray" )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40084 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [113.39 48.03 37] port 40038 
+  player ( color "white" pose [0.00 -10.0 0] port 40038 )
+
+  gps ( pose [0.00 -10.0 0] port 40038 color "gray" )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40038 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [120.87 49.91 78] port 40089 
+  player ( pose [0.00 -10.0 0] port 40089 color "white" )
+
+  gps ( pose [0.00 -10.0 0] port 40089 color "gray" )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40089 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [120.13 50.69 249] port 40043 
+  player ( color "white" pose [0.00 -10.0 0] port 40043 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40043 )
+
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40043 )
+
+)
+
+position
+(
+  color "red" shape "circle" pose [114.50 50.05 228] port 40094 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40094 )
+
+  player ( pose [0.00 -10.0 0] port 40094 color "white" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40094 )
+
+)
+
+position
+(
+  pose [113.50 76.35 186] port 40025 color "red" shape "circle" 
+  sonar ( pose [0.00 -10.0 0] port 40025 color "blue3" )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40025 )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40025 )
+
+)
+
+position
+(
+  shape "circle" pose [123.95 73.79 309] port 40048 color "red" 
+  sonar ( pose [0.00 -10.0 0] port 40048 color "blue3" )
+
+  player ( pose [0.00 -10.0 0] port 40048 color "white" )
+
+  gps ( color "gray" pose [0.00 -10.0 0] port 40048 )
+
+)
+
+position
+(
+  pose [127.08 81.63 164] port 40076 color "red" shape "circle" 
+  sonar ( color "blue3" pose [0.00 -10.0 0] port 40076 )
+
+  player ( color "white" pose [0.00 -10.0 0] port 40076 )
+
+  gps ( pose [0.00 -10.0 0] port 40076 color "gray" )
+
+)
 
