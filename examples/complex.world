@@ -5,8 +5,8 @@ set laser_res = 1
 #set auth_key = foobar
 
 # these servers enable clients (e.g. xpsi) access to Stage's internal models
-enable truth_server
-enable environment_server
+enable truth_server port 6002
+enable environment_server port 6003
 
 #####################################################################
 # Populate the world with some interesting objects (non-player devices)

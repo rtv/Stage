@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.common,v 1.17 2001-09-26 18:07:09 vaughan Exp $ 
+# $Id: Makefile.common,v 1.18 2001-09-26 18:16:54 gerkey Exp $ 
 #
 
 # INSTALL PLAYER BEFORE BUILDING STAGE!
@@ -31,8 +31,8 @@ PLAYERVERSION = $(VERSION)
 # make -e PLAYER_BASE=~/playerstage/player
 
 PLAYER_BASE = /usr/local/player
-PLAYER_DIR = $(PLAYER_BASE)-$(PLAYERVERSION)
-#PLAYER_DIR = $(HOME)/code/player
+#PLAYER_DIR = $(PLAYER_BASE)-$(PLAYERVERSION)
+PLAYER_DIR = $(HOME)/code/player
 
 ##############################################################################
 # Color datbase configuration (required)
@@ -83,12 +83,10 @@ ZLIB_LIBS = -lz
 #     compat-egcs-c++-6.2-1.1.2.14
 #     compat-libstdc++-6.2-2.9.0.14
 #     compat-egcs-6.2-1.1.2.14
-
 CC = g++
 #CC = i386-glibc21-linux-g++
-
 # need this in order to link properly with X
-OLDLIBS = -L/usr/i386-glibc21-linux/lib
+#OLDLIBS = -L/usr/i386-glibc21-linux/lib
 
 ####################### DO NOT CHANGE BELOW HERE #############################
 PLAYER_INC = $(PLAYER_DIR)/include

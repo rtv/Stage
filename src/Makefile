@@ -19,7 +19,9 @@ CCFLAGS = -g3
 
 # Flags common to all targets
 #
-CCFLAGS += -Wall -DREENTRANT -I../include -I$(PLAYER_INC) $(ZLIB_FLAGS) 
+INCLUDES = -I../include -I$(PLAYER_INC) -I$(PLAYER_DIR)/client_libs/c \
+           -I$(PLAYER_DIR)/client_libs/c++
+CCFLAGS += -Wall -DREENTRANT $(ZLIB_FLAGS) $(INCLUDES)
 CCFLAGS += -DVERSION=\"$(VERSION)\"
 
 # production/debug link
@@ -42,12 +44,10 @@ rtkstage:
 
 # Target XS - the X Player/Stage Interface
 #
-LIBDIRS = -L../../client_libs/c++ -L$(INSTALL_PREFIX)/lib -L/usr/local/player/lib
-LIBS = $(LIBDIRS) -lplayerclient
-
 
 xs :CCFLAGS += -I/usr/X11R6/include 
-xs: LINKFLAGS += -L/usr/X11R6/lib -lX11 -L$(PLAYER_LIB) -lplayerclient
+xs: LINKFLAGS += -L/usr/X11R6/lib -lX11 -L$(PLAYER_LIB) \
+                  -L$(PLAYER_DIR)/client_libs/c++ -lplayerclient
 xs : xs.cc render.cc
 	$(CC) xs.cc render.cc $(CCFLAGS) $(LINKFLAGS) -o xs
 
@@ -78,5 +78,3 @@ clean_dep:
 	${CC} ${CCFLAGS} -c $< -o $@
 
 # Dependancies (make dep)
-
-
