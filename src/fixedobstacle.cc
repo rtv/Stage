@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.15.4.1 $
+//  $Author: gerkey $
+//  $Revision: 1.15.4.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -220,7 +220,7 @@ bool CFixedObstacle::Startup()
 	  rects++;
 	}
     }  
-  printf( "rects = %ld\n", rects );
+  //printf( "rects = %ld\n", rects );
 
   // new: don't delete the image so we can download it to clients - rtv
   return true;
