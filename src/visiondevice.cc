@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.cc,v 1.32 2002-06-11 01:30:16 gerkey Exp $
+ * CVS info: $Id: visiondevice.cc,v 1.33 2002-06-11 01:54:08 inspectorg Exp $
  */
 
 #include <math.h>
@@ -441,9 +441,16 @@ void CVisionDevice::RtkShutdown()
 void CVisionDevice::RtkUpdate()
 {
   CEntity::RtkUpdate();
- 
-  rtk_fig_clear(this->vision_fig);
 
+  if (Subscribed() < 1)
+  {
+    rtk_fig_show(this->vision_fig, 0);
+    return;
+  }
+  
+  rtk_fig_clear(this->vision_fig);
+  rtk_fig_show(this->vision_fig, 1);
+    
   // The vision figure is attached to the entity, but we dont want
   // it to rotate.  Fix the rotation here.
   double gx, gy, gth;

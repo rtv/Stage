@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.66 2002-06-11 01:30:15 gerkey Exp $
+ * CVS info: $Id: entity.cc,v 1.67 2002-06-11 01:54:08 inspectorg Exp $
  */
 
 #include <math.h>
@@ -1109,16 +1109,16 @@ int CEntity::SetProperty( int con, EntityProperty property,
   assert( (int)len < MAX_PROPERTY_DATA_LEN );
   
   switch( property )
-    {
+  {
     case PropPlayerSubscriptions:
       PRINT_DEBUG1( "PLAYER SUBSCRIPTIONS %d", *(int*) value);
       
       if( m_info_io )
-	{
-	  Lock();
-	  m_info_io->subscribed = *(int*)value;
-	  Unlock();
-	}      
+      {
+        Lock();
+        m_info_io->subscribed = *(int*)value;
+        Unlock();
+      }      
       break;
       
     case PropParent:
@@ -1200,21 +1200,21 @@ int CEntity::SetProperty( int con, EntityProperty property,
       PutData( value, len );
       break;
     case PropConfig: // copy the  playerqueue's external memory chunk
-      { 
-	Lock();
-	size_t len = m_config_len * sizeof(playerqueue_elt_t);
-	memcpy( m_config_io, value, len ); 
-	Unlock();
-      }
-      break;
+    { 
+      Lock();
+      size_t len = m_config_len * sizeof(playerqueue_elt_t);
+      memcpy( m_config_io, value, len ); 
+      Unlock();
+    }
+    break;
     case PropReply:
-      { 
-	Lock();
-	size_t len = m_reply_len * sizeof(playerqueue_elt_t);
-	memcpy( m_reply_io, value, len ); 
-	Unlock();
-      }
-      break;
+    { 
+      Lock();
+      size_t len = m_reply_len * sizeof(playerqueue_elt_t);
+      memcpy( m_reply_io, value, len ); 
+      Unlock();
+    }
+    break;
 
     default:
       printf( "Stage Warning: attempting to set unknown property %d\n", 
@@ -1334,23 +1334,23 @@ int CEntity::GetProperty( EntityProperty property, void* value )
       retval = GetData( value, m_data_len );
       break;
     case PropConfig:
-      { 
-	Lock();
-	size_t len = m_config_len * sizeof(playerqueue_elt_t);
-	memcpy( value, m_config_io, len );
-	retval = len; 
-	Unlock();
-      }
-      break;
+    { 
+      Lock();
+      size_t len = m_config_len * sizeof(playerqueue_elt_t);
+      memcpy( value, m_config_io, len );
+      retval = len; 
+      Unlock();
+    }
+    break;
     case PropReply:
-      { 
-	Lock();
-	size_t len = m_reply_len * sizeof(playerqueue_elt_t);
-	memcpy( value, m_reply_io, len );
-	retval = len; 
-	Unlock();
-      }
-      break;
+    { 
+      Lock();
+      size_t len = m_reply_len * sizeof(playerqueue_elt_t);
+      memcpy( value, m_reply_io, len );
+      retval = len; 
+      Unlock();
+    }
+    break;
 
     default:
       //printf( "Stage Warning: attempting to get unknown property %d\n", 
@@ -1394,21 +1394,22 @@ void CEntity::RtkStartup()
   this->fig_label = rtk_fig_create(m_world->canvas, this->fig, 51);
   rtk_fig_show(this->fig_label, false);    
   rtk_fig_movemask(this->fig_label, 0);
-
+  
   char label[1024];
   char tmp[1024];
 
   label[0] = 0;
-  snprintf(tmp, sizeof(tmp), "name: %s", this->name);
+  snprintf(tmp, sizeof(tmp), "%s", this->name);
   strncat(label, tmp, sizeof(label));
   if (m_player.port > 0)
   {
-    snprintf(tmp, sizeof(tmp), "\nplayer: %d:%d", m_player.port, m_player.index);
+    snprintf(tmp, sizeof(tmp), "\n%d:%d", m_player.port, m_player.index);
     strncat(label, tmp, sizeof(label));
   }
 
   qx = qx + 0.75 * sx;
   qy = qy + 0.75 * sy;
+  rtk_fig_color_rgb32(this->fig, this->color);
   rtk_fig_text(this->fig_label, qx, qy, 0, label);
 }
 
