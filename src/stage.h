@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.49 2004-06-09 22:15:29 rtv Exp $
+ * CVS: $Id: stage.h,v 1.50 2004-06-10 04:12:39 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -528,6 +528,7 @@ typedef struct
 
 typedef struct
 {
+  int channel;
   stg_color_t color;
   int xpos, ypos;   // all values are in pixels
   //int width, height;

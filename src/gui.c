@@ -641,6 +641,8 @@ void gui_model_blobfinder_data( model_t* mod )
   rtk_fig_color_rgb32(fig, 0x000000);
   rtk_fig_rectangle(fig, 0.0, 0.0, 0.0, mwidth,  mheight, 0); 
   
+  //stg_blobfinder_config_t* cfg = &mod->blob_cfg;
+
   int c;
   for( c=0; c<mod->blobs->len; c++)
     {
@@ -648,7 +650,7 @@ void gui_model_blobfinder_data( model_t* mod )
 	&g_array_index( mod->blobs, stg_blobfinder_blob_t, c );
 
       // set the color from the blob data
-      rtk_fig_color_rgb32( fig, blob->color); 
+      rtk_fig_color_rgb32( fig, blob->color ); 
       
       short top =   blob->top;
       short bot =   blob->bottom;
