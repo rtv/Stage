@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.33 $
+//  $Revision: 1.34 $
 //
 // Usage:
 //  (empty)
@@ -61,6 +61,9 @@ const int OBJECT_ALLOC_SIZE = 32;
 // suffix - for now its IOFILENAME.$USER
 #define IOFILENAME "/tmp/stageIO"
 
+// flag set by cmd line to disable xs
+extern bool global_no_gui;
+
 // main.cc calls constructor, then Load(), then Startup(), then starts thread
 // at CWorld::Main();
 
@@ -95,7 +98,7 @@ CWorld::CWorld()
     channel[0].red = 255;
     channel[1].green = 255;
     channel[2].blue = 255;
-    
+
 #ifdef INCLUDE_RTK
     // disable XS by default in rtkstage
     m_run_xs = false;
@@ -273,7 +276,7 @@ bool CWorld::Startup()
     }
   
   // spawn an XS process, unless we disabled it (rtkstage disables xs by default)
-  if( m_run_xs && m_run_truth_server && m_run_environment_server ) SpawnXS();
+  if( !global_no_gui && m_run_xs && m_run_truth_server && m_run_environment_server ) SpawnXS();
   
   // Startup all the objects
   // this lets them calculate how much shared memory they'll need

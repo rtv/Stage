@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.11 $
+//  $Author: vaughan $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -42,6 +42,8 @@ bool quit = false;
 
 CWorld *world = 0;
 
+bool global_no_gui = false;
+
 ///////////////////////////////////////////////////////////////////////////
 // Handle quit signals
 //
@@ -55,16 +57,44 @@ void sig_quit(int signum)
 //
 bool parse_cmdline(int argc, char **argv)
 {
-    if (argc < 2)
-    {
-        printf("Usage: stage WORLDFILE\n");
-        return false;
-    }
+  //for( int g=0; g<argc; g++ )
+  //printf( "\nargv[%d] : %s", g, argv[g] );
+  //puts( "" );
+
+  bool usage = false;
 
     // Extract the name of the file describing the world
-    //
+    // - it's the last argument
+  if( argc == 2 )
     world_file = argv[1];
+  else if( argc == 3 )
+    {
+      world_file = argv[2];
+      
+      if( strcmp( argv[1], "-xs" ) == 0 )
+	{
+	  global_no_gui = true;
+	  printf( "[No GUI]" );
+	}
+      else if( strcmp( argv[1], "+xs" ) == 0 )
+	{
+	  global_no_gui = false;
+	  printf( "[GUI]" );
+	}
+	else
+	  usage = true;
+    }
+  else
+    usage = true;
+    
 
+      if( usage )
+	{
+	  printf("\nUsage: stage [+/-xs] WORLDFILE\nOptions:\n"
+		 " +/-xs\tEnable the XS Graphical User Interface (xs must be in the $PATH)\n" );
+	  return false;
+	}
+    
     printf( "[%s]", world_file );
     return true;
 }

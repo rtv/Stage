@@ -7,8 +7,8 @@
 #
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
-#  $Author: gerkey $
-#  $Revision: 1.19 $
+#  $Author: vaughan $
+#  $Revision: 1.20 $
 #
 ###########################################################################
 
@@ -19,7 +19,7 @@ include Makefile.common
 ##############################################################################
 # Top level targets
 
-all: stage xs rtkstage truthlog
+all: stage xs rtkstage truthlog manager
 
 stage: 
 	cd src && make stage && cp stage_objs/stage ../bin/
@@ -32,6 +32,9 @@ truthlog:
 
 rtkstage:
 	cd src && make rtkstage && cp rtkstage_objs/rtkstage ../bin/
+
+manager: 
+	cd src && make manager
 
 dep:
 	cd src &&  make dep
