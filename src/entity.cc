@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.124 2003-10-16 02:05:14 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.125 2003-10-22 07:04:51 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -67,21 +67,22 @@ gboolean CEntity::stg_update_signal( gpointer ptr )
 
 ///////////////////////////////////////////////////////////////////////////
 // main constructor
-CEntity::CEntity( stg_entity_create_t* init, stg_id_t world_id, stg_id_t id )
+CEntity::CEntity( stg_model_create_t* init,  stg_id_t id )
 {
   // must set the name and token before using the ENT_DEBUG macro
   g_assert( init );
   this->id = id; // a unique id for this object
   this->name = g_string_new( init->name );
-  
-  ENT_DEBUG1( "entity construction - parent id: %d", init->parent_id );
+ 
+  ENT_DEBUG2( "entity construction - parent id: %d" world id: %d, 
+	      init->parent_id, world_id );
   
   this->running = FALSE;
 
   // look up the world id to find my world
   
-  this->world = (stg_world_t*)g_hash_table_lookup( global_world_table, 
-						   &world_id ); 
+  this->world = (ss_world_t*)g_hash_table_lookup( global_world_table, 
+						   &init->world_id ); 
   g_assert( this->world );
   
   
@@ -174,9 +175,8 @@ CEntity::CEntity( stg_entity_create_t* init, stg_id_t world_id, stg_id_t id )
   laser_return = LaserVisible;
   sonar_return = true;
   obstacle_return = true;
-  idar_return = IDARReflect;
+  //idar_return = IDARReflect;
   puck_return = false;
-  idar_return = IDARReflect;
   fiducial_return = FiducialNone; // not a recognized fiducial
   gripper_return = GripperDisabled;
   neighbor_return = 0;
@@ -779,17 +779,13 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
 
   stg_property_t* prop = stg_property_create();
   prop->id = this->id;
-  prop->property = ptype;
-  prop->timestamp = this->world->time;
+  prop->type = ptype;
+  //prop->timestamp = this->world->time;
   
-  PRINT_DEBUG1( "prop stamp: %.3f", prop->timestamp );
+  //PRINT_DEBUG1( "prop stamp: %.3f", prop->timestamp );
 
   switch( ptype )
     { 
-    case STG_MOD_TIME: // no data - caller just wants the timestamp
-      printf( "STG_MOD_TIME stamped %.3f\n", prop->timestamp );
-      break;
-
     case STG_MOD_MATRIX_RENDER:
       prop = stg_property_attach_data( prop, 
 				       &this->matrix_render, 

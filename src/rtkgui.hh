@@ -10,7 +10,7 @@
 #include <rtk.h>
 
 class CEntity;
-struct stg_world;
+struct ss_world;
 
 typedef struct 
 {
@@ -121,7 +121,7 @@ typedef struct
   guint tag_refresh;
   guint tag_countdown;
   
-  struct stg_world* world;
+  struct ss_world* world;
 
 } stg_gui_window_t;
 
@@ -151,9 +151,9 @@ typedef struct
 int stg_gui_init( int* argc, char*** argv );
 
 // WINDOWS
-stg_gui_window_t* stg_gui_window_create( struct stg_world* world, int width, int height);
+stg_gui_window_t* stg_gui_window_create( struct ss_world* world, int width, int height);
 void stg_gui_window_destroy( stg_gui_window_t* win );
-int stg_gui_window_update( struct stg_world* world, stg_prop_id_t prop );
+int stg_gui_window_update( struct ss_world* world, stg_prop_id_t prop );
 
 gboolean stg_gui_window_callback( gpointer win );
 

@@ -21,11 +21,12 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.21 2003-10-16 02:05:14 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.22 2003-10-22 07:04:55 rtv Exp $
  */
 
 //#undef DEBUG
-//#define DEBUG
+#define DEBUG
+#define VERBOSE
 
 #include <assert.h>
 #include <ctype.h>
@@ -1808,345 +1809,523 @@ int stg_instances_of_string( char* token )
 
 //
 // Create a world in the Stage server based on the current data.
-int CWorldFile::Upload( stg_client_t* cli, 
-			stg_model_t** models, int* model_count )
+int CWorldFile::Upload( stg_client_t* cli )
 {
-  *model_count = this->GetEntityCount();
-  *models = new stg_model_t[ *model_count ];
+
+  if( cli->models )
+    PRINT_WARN( "client has non-null model array" );
+
+  cli->model_count = 0;   //this->GetEntityCount();
+  cli->models = NULL;      //new stg_model_t[ cli->models_count ];
   
-  memset( *models, 0, *model_count * sizeof(stg_model_t) );
-
+  //memset( cli->models, 0, cli->models_count * sizeof(stg_model_t) );
+  
   // intialize the array with default parents
-  for( int m=0; m<*model_count; m++ )
-    {
-      (*models)[m].stage_id = -1;
-      //strncpy( (*models)[m].name, "root", STG_TOKEN_MAX );
-    }
+  //for( int m=0; m<cli->models_count; m++ )
+  //{
+  //  (cli->models)[m].stage_id = -1;
+      //strncpy( (cli->models)[m].name, "root", STG_TOKEN_MAX );
+  // }
+  
+  PRINT_DEBUG( "pausing the server" );
+  stg_fd_msg_write( cli->pollfd.fd, STG_MSG_PAUSE, NULL, 0 );
 
-  // first create a world as the zeroth model
+
+  PRINT_DEBUG( "creating a world" );
+
+  // first create a world
   stg_world_create_t world_cfg;
+  memset( &world_cfg, 0, sizeof(world_cfg ) );
+
   strncpy(world_cfg.name, this->ReadString( 0, "name", filename ), STG_TOKEN_MAX );
   world_cfg.width =  this->ReadTupleFloat( 0, "size", 0, 10.0 );
   world_cfg.height =  this->ReadTupleFloat( 0, "size", 1, 10.0 );
   world_cfg.resolution = this->ReadFloat( 0, "resolution", 0.1 );
+  world_cfg.key = 96; // a random key
   
-  stg_property_t* reply = 
-    stg_send_property( cli, -1,
-		       STG_SERVER_CREATE_WORLD, STG_COMMAND,
-		       &world_cfg, sizeof(world_cfg) );
+
+  stg_fd_msg_write( cli->pollfd.fd,
+		    STG_MSG_WORLD_CREATE, 	
+		    &world_cfg, 
+		    sizeof(world_cfg) );
   
-  if( !(reply && (reply->action == STG_ACK) ))
+  
+  PRINT_DEBUG( "waiting for a reply" );
+
+  stg_header_t* hdr = stg_fd_msg_read( cli->pollfd.fd );
+
+  if( hdr == NULL )
     {
-      PRINT_ERR( "stagecpp: world creation failed" );
+      PRINT_ERR( "failed to read a message in reply" );
       exit(-1);
     }
   
-  // remember the id of the world we created
-  (*models)[0].stage_id = reply->id; 
-  strncpy( (*models)[0].name, filename, STG_TOKEN_MAX );
-  stg_property_free( reply );
+  if( hdr->type != STG_MSG_WORLD_CREATE_REPLY )
+    {
+      PRINT_ERR2( "incorrect reply type (%s/%s",
+		  stg_message_string( hdr->type ), 
+		  stg_message_string( STG_MSG_WORLD_CREATE_REPLY) );
+      exit(-1);
+    }
   
+  if( hdr->len != sizeof( stg_world_create_reply_t ) )
+    {
+      PRINT_ERR2( "reply is wrong size (%d/%d)",
+		 hdr->len, sizeof(stg_world_create_reply_t) );
+      exit(-1);
+    }
+  
+  stg_world_create_reply_t *reply = (stg_world_create_reply_t*)hdr->payload;
+  
+  if( reply->key != world_cfg.key )
+    {
+      PRINT_ERR2( "stagecpp: world creation failed - wrong key (%d/%d)",
+		  reply->key, world_cfg.key );
+      exit(-1);
+    }
+
+  // ok, everything checks out.
+
+  // remember the details of the world we created in Stage
+  cli->world = (stg_world_t*)calloc( sizeof(stg_world_t), 1 );
+  assert( cli->world );
+  cli->world->id = reply->id;
+  cli->world->key = reply->key;
+  strncpy( cli->world->name, filename, STG_TOKEN_MAX );
+    
   PRINT_DEBUG2( "created world %d (%s)", 
-		(*models)[0].stage_id, (*models)[0].name ); 
+		cli->world->id, cli->world->name );
   
   // Iterate through sections and create entities as required
-  for (int section = 1; section < *model_count; section++)
+  for (int section = 1; section < this->GetEntityCount(); section++)
     {
       if( strcmp( "gui", this->GetEntityType(section) ) == 0 )
 	{
 	  PRINT_WARN( "gui section not implemented" );
 	}
+      else if( strcmp( "simulation", this->GetEntityType(section) ) == 0 )
+	{
+	  PRINT_WARN( "simulation section - no model created" );
+	}
       else
 	{
+	  PRINT_WARN2( "reading section %d \"%s\"\n",
+		      section, this->GetEntityType(section) );
+
 	  //const int line = this->ReadInt(section, "line", -1);
 
-	  stg_id_t parent = -1; // root
 	  int parent_section = this->GetEntityParent(section);
+
+	  stg_model_t* parent_model = NULL;
+	  
 	  if( parent_section > 0 )
-	    parent = (*models)[parent_section].stage_id;
+	    {
+	      PRINT_DEBUG1( "parent section is %d - looking up parent id",
+			    parent_section );
+	      
+	      // look up the stage id we got for the parent
+	      int i=0;
+	      for( i=0; i<cli->model_count; i++ )
+		{
+		  PRINT_DEBUG2( "model index %d is section %d",
+				i,  cli->models[i]->section );
+		  
+		  if( cli->models[i]->section == parent_section )
+		    {
+		      PRINT_DEBUG3( "entry %d (%d : \"%s\") is the parent!",
+				    i, 
+				    cli->models[i]->id,
+				    cli->models[i]->name );
+		      
+		      break;
+		    }
+		}
+
+	      if( i >= cli->model_count )
+		{
+		  PRINT_ERR( "failed to find a parent!" );
+		  exit(-1);
+		}
+
+	      parent_model = cli->models[i];
+	    }
 	  
-	  //PRINT_DEBUG1( "creating child of parent %d", parent );
 	  
-	  stg_entity_create_t child;
-	
-	  int parent_index = this->GetEntityParent(section);
+	  if( parent_model )
+	    PRINT_DEBUG2( "creating child of parent %d : %s", 
+			  parent_model->id, parent_model->name );
+	  else
+	    PRINT_DEBUG( "creating top level model" );
+
+	  stg_model_create_t model_cfg;
+	  memset( &model_cfg, 0, sizeof(model_cfg) );
+
 	  
+
 	  // the model's name is composed from it's parents' name and
 	  // it's type
-	  if( parent_index == 0 ) // top level
-	    snprintf( child.name, STG_TOKEN_MAX, "%s", 
+	  if( parent_model == NULL ) // top level
+	    snprintf( model_cfg.name, STG_TOKEN_MAX, "%s", 
 		      GetEntityType(section) );
 	  else
-	    snprintf( child.name, STG_TOKEN_MAX, "%s:%s", 
-		      (*models)[this->GetEntityParent(section)].name,
+	    snprintf( model_cfg.name, STG_TOKEN_MAX, "%s:%s", 
+		      parent_model->name,
 		      GetEntityType(section) );
 	  
 	  // if we have more than a single instance of this name, we
 	  // add an instance number onto the end
-	  int instance = stg_instances_of_string( child.name );
+	  int instance = stg_instances_of_string( model_cfg.name );
 	  if( instance > 0 )
 	    {
 	      char instance_str[64];
 	      snprintf( instance_str, 64, "%d", instance );
-	      strncat( child.name, instance_str, STG_TOKEN_MAX );
+	      strncat( model_cfg.name, instance_str, STG_TOKEN_MAX );
 	    }
 
-	  //printf( "type name with instance \"%s\"\n", child.name );
+	  //printf( "type name with instance \"%s\"\n", model_cfg.name );
 
 	  // alternatively, the "name" keyword can be used to override
 	  // the automatic name
 	  const char* override_name = this->ReadString(section,"name", NULL);
 	  if( override_name )
-	    strncpy(child.name, override_name, STG_TOKEN_MAX);	
+	    strncpy(model_cfg.name, override_name, STG_TOKEN_MAX);	
 	
-	  strncpy(child.color, this->ReadString(section,"color","red"), 
+	  strncpy(model_cfg.color, this->ReadString(section,"color","red"), 
 		  STG_TOKEN_MAX);
-	  child.parent_id = parent; // make a new entity on the root 
-	  
-	  stg_property_t* reply = 
-	    stg_send_property( cli, (*models)[0].stage_id, // world id 
-			       STG_WORLD_CREATE_MODEL, STG_COMMAND,
-			       &child, sizeof(child) );
+	 
+	  model_cfg.parent_id = parent_model ? parent_model->id : -1;
+	
+	  model_cfg.world_id = cli->world->id;
 
-	  if( !(reply && (reply->action == STG_ACK) ))
+	  model_cfg.key = 99;
+
+	  stg_fd_msg_write( cli->pollfd.fd,
+			    STG_MSG_MODEL_CREATE, 	
+			    &model_cfg, 
+			    sizeof(model_cfg) );
+	
+	  stg_header_t* hdr = stg_fd_msg_read( cli->pollfd.fd );
+	  
+	  if( hdr == NULL )
 	    {
-	      PRINT_ERR( "stagecpp: world creation failed" );
+	      PRINT_ERR( "failed to read a message in reply" );
 	      exit(-1);
 	    }
 	  
-	  stg_id_t anid = reply->id;
-	  stg_property_free( reply );
+	  if( hdr->type != STG_MSG_MODEL_CREATE_REPLY )
+	    {
+	      PRINT_ERR2( "incorrect reply type (%s/%s",
+			  stg_message_string( hdr->type ), 
+			  stg_message_string( STG_MSG_MODEL_CREATE_REPLY) );
+	      exit(-1);
+	    }
+	  
+	  if( hdr->len != sizeof( stg_model_create_reply_t ) )
+	    {
+	      PRINT_ERR2( "reply is wrong size (%d/%d)",
+			  hdr->len, sizeof(stg_model_create_reply_t) );
+	      exit(-1);
+	    }
+	  
+	  stg_model_create_reply_t *reply = 
+	    (stg_model_create_reply_t*)hdr->payload;
+	  
+	  if( reply->key != model_cfg.key )
+	    {
+	      PRINT_ERR2( "stagecpp: model creation failed - wrong key (%d/%d)",
+			  reply->key, model_cfg.key );
+	      exit(-1);
+	    }
+  	  
+	  // ok the model creation reply looks good
+	  
+	  // make a new model
+	  stg_model_t* mod = (stg_model_t*)calloc( sizeof(stg_model_t), 1);
+
+	  // grow the client's model pointer array by one pointer
+	  cli->models = 
+	    (stg_model_t**)realloc( cli->models,
+				   sizeof(stg_model_t*)*(cli->model_count+1) );
+	  
+	  // set the last pointer in the array to point to our new model
+	  cli->models[cli->model_count] = mod;
+	  
+	  // count this new model
+	  cli->model_count++;
+
+	  // configure the model
+	  mod->id = reply->id;
+	  mod->key = reply->key;
+	  mod->section = section;
+	  mod->client = cli;
 	  
 	  // associate the name 
-	  strncpy( (*models)[section].name, child.name, STG_TOKEN_MAX );
+	  strncpy( mod->name, model_cfg.name, STG_TOKEN_MAX );
 	  
-	  // remember the model id for this section
-	  (*models)[section].stage_id = anid;
+	  PRINT_DEBUG3( "created model %d (%s) at %p", 
+			mod->id, mod->name, mod ); 
 	  
-	  PRINT_DEBUG2( "created model %d (%s)", 
-			(*models)[section].stage_id, 
-			(*models)[section].name ); 
+	  char* token = NULL;
 	  
-	char* token = NULL;
-
-	token = "matrix_render";
-	stg_matrix_render_t mr = this->ReadBool( section, token, true );
-	if( stg_set_property( cli, anid, STG_MOD_MATRIX_RENDER,
-			      &mr, sizeof(mr) ) < 0 )  
-	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
-	
-	token = "size";
-	stg_size_t sz;
-	sz.x = this->ReadTupleFloat( section, token, 0, 0.5 );
-	sz.y = this->ReadTupleFloat( section, token, 1, 0.5 );
-	if( stg_set_property( cli, anid, STG_MOD_SIZE,
-			      &sz, sizeof(sz) ) < 0 )  
-	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
-	
-	token = "velocity";
-	stg_velocity_t vel;
-	vel.x = this->ReadTupleFloat( section, token, 0, 0.0 );
-	vel.y = this->ReadTupleFloat( section, token, 1, 0.0 );
-	vel.a = this->ReadTupleFloat( section, token, 2, 0.0 );
-	if( stg_set_property( cli, anid, STG_MOD_VELOCITY,
-			      &vel, sizeof(vel) ) < 0 )  
-	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
-	
-	token = "pose";
-	stg_pose_t pose;
-	pose.x = this->ReadTupleFloat( section, token, 0, 0.0 );
-	pose.y = this->ReadTupleFloat( section, token, 1, 0.0 );
-	pose.a = this->ReadTupleFloat( section, token, 2, 0.0 );
-	if( stg_set_property( cli, anid, STG_MOD_POSE,
-			      &pose, sizeof(pose) ) < 0 )  
-	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
-	
-	token = "origin";
-	stg_pose_t origin;
-	origin.x = this->ReadTupleFloat( section, token, 0, 0.0 );
-	origin.y = this->ReadTupleFloat( section, token, 1, 0.0 );
-	origin.a = this->ReadTupleFloat( section, token, 2, 0.0 );
-	if( stg_set_property( cli, anid, STG_MOD_ORIGIN,
-			      &origin, sizeof(origin) ) < 0 )  
-	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
-
-	token = "neighbor";
-	stg_neighbor_return_t nret = this->ReadInt( section, token, 0 );
-	if( stg_set_property( cli, anid, STG_MOD_NEIGHBORRETURN,
-			      &nret, sizeof(nret) ) < 0 )  
-	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
-
-	token = "neighbor_bounds";
-	stg_bounds_t nbounds;
-	nbounds.min = this->ReadTupleFloat(section, token, 0,0.0);
-	nbounds.max = this->ReadTupleFloat(section, token, 1,5.0);
-	if( stg_set_property( cli, anid, STG_MOD_NEIGHBORBOUNDS,
-			      &nbounds, sizeof(nbounds) ) < 0 )  
-	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
-
-	token = "light";
-	stg_blinkenlight_t bl;
-	bl.enable = this->ReadTupleInt( section, token, 0, 0 );
-	bl.period_ms = this->ReadTupleInt( section, token, 1, 400 );
-	if( stg_set_property( cli, anid, STG_MOD_BLINKENLIGHT,
-			      &bl, sizeof(bl) ) < 0 )  
-	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
-
-	token = "mouseable";
-	stg_mouse_mode_t mouse = this->ReadBool( section, token, true );
-	if( stg_set_property( cli, anid, STG_MOD_MOUSE_MODE,
-			      &mouse, sizeof(mouse) ) < 0 )  
-	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
-	
-	token = "nose";
-	stg_nose_t nose = this->ReadBool( section, token, true );
-	if( stg_set_property( cli, anid, STG_MOD_NOSE,
-			      &nose, sizeof(nose) ) < 0 )  
-	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
-	
-	token = "border";
-	stg_border_t border = this->ReadBool( section, token, false );
-	if( stg_set_property( cli, anid, STG_MOD_BORDER,
-			      &border, sizeof(border) ) < 0 )  
-	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
-	
-	token = "interval";
-	stg_interval_ms_t ival = 
-	  (stg_interval_ms_t)(1000.0 * this->ReadFloat( section, token, 0.1 ));
-	
-	if( stg_set_property( cli, anid, STG_MOD_INTERVAL,
-			      &ival, sizeof(ival) ) < 0 )  
-	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
-	
-
-	// read any ranger details
-	
-	// Load the configuration of each ranger
-	int rcount = this->ReadInt(section, "ranger_count", 0);
-	if (rcount > 0)
-	  {
-	    char key[64];
-	    
-	    stg_ranger_t* rangers = 
-	      (stg_ranger_t*)calloc(sizeof(stg_ranger_t),rcount);
-
-	    for( int i=0; i<rcount; i++)
-	      {
-		snprintf(key, sizeof(key), "ranger[%d]", i);
-		rangers[i].pose.x = 
-		  this->ReadTupleLength(section, key, 0, 0.0);
-		rangers[i].pose.y = 
-		  this->ReadTupleLength(section, key, 1, 0.0);
-		rangers[i].pose.a = 
-		  this->ReadTupleAngle(section, key, 2, 0.0);
-		rangers[i].size.x = 
-		  this->ReadTupleLength(section, key, 3, 0.0);
-		rangers[i].size.y = 
-		  this->ReadTupleLength(section, key, 4, 0.0);
-		rangers[i].bounds_range.min = 
-		  this->ReadTupleLength(section, key, 5, 0.0);
- 		rangers[i].bounds_range.max = 
-		  this->ReadTupleLength(section, key, 6, 3.0);
-		rangers[i].fov = 
-		  this->ReadTupleAngle(section, key, 7, 22.5 );
-		rangers[i].error = 
-		  this->ReadTupleFloat(section, key, 8, 0.0);
-	      }		
-
+	  // print the model array
+	  printf( "model array with %d elements: \n", cli->model_count );
+	  for( int p=0; p<cli->model_count; p++ )
+	    {
+	      printf( " %p -> %d : \"%s\" section %d key %d\n",
+		      cli->models[p], 
+		      cli->models[p]->id, 
+		      cli->models[p]->name, 
+		      cli->models[p]->section, 
+		      cli->models[p]->key ); 
+	    }
+	  
+	  PRINT_DEBUG1( "configuring model %d", mod->id ); 
+	  
+	  token = "matrix_render";
+	  stg_matrix_render_t mr = this->ReadBool( section, token, true );
+	  if( stg_model_property_set_ex( mod, 0.0,
+					 STG_MOD_MATRIX_RENDER, STG_PR_NONE,
+					 &mr, sizeof(mr) ) )  
+	    PRINT_ERR2( "attempt to set %s[%s] failed", mod->name, token );
+	  
+	  token = "size";
+	  stg_size_t sz;
+	  sz.x = this->ReadTupleFloat( section, token, 0, 0.5 );
+	  sz.y = this->ReadTupleFloat( section, token, 1, 0.5 );
+	  if( stg_model_property_set_ex( mod, 0.0, 
+					 STG_MOD_SIZE,  STG_PR_NONE,
+					 &sz, sizeof(sz) ) )  
+	    PRINT_ERR2( "attempt to set %s[%s] failed", mod->name, token );
+	  
+	  token = "velocity";
+	  stg_velocity_t vel;
+	  vel.x = this->ReadTupleFloat( section, token, 0, 0.0 );
+	  vel.y = this->ReadTupleFloat( section, token, 1, 0.0 );
+	  vel.a = this->ReadTupleFloat( section, token, 2, 0.0 );
+	  if( stg_model_property_set_ex( mod, 0.0, 
+					 STG_MOD_VELOCITY, STG_PR_NONE,
+					 &vel, sizeof(vel) ) )  
+	    PRINT_ERR2( "attempt to set %s[%s] failed", mod->name, token );
+	  
+	  token = "pose";
+	  stg_pose_t pose;
+	  pose.x = this->ReadTupleFloat( section, token, 0, 0.0 );
+	  pose.y = this->ReadTupleFloat( section, token, 1, 0.0 );
+	  pose.a = this->ReadTupleFloat( section, token, 2, 0.0 );
+	  if( stg_model_property_set_ex( mod, 0.0, 
+					 STG_MOD_POSE, STG_PR_NONE,
+					 &pose, sizeof(pose) ) )  
+	    PRINT_ERR2( "attempt to set %s[%s] failed", mod->name, token );
+	  
+	  token = "origin";
+	  stg_pose_t origin;
+	  origin.x = this->ReadTupleFloat( section, token, 0, 0.0 );
+	  origin.y = this->ReadTupleFloat( section, token, 1, 0.0 );
+	  origin.a = this->ReadTupleFloat( section, token, 2, 0.0 );
+	  if( stg_model_property_set_ex( mod, 0.0, 
+					 STG_MOD_ORIGIN, STG_PR_NONE,
+					 &origin, sizeof(origin) ) )  
+	    PRINT_ERR2( "attempt to set %s[%s] failed", mod->name, token );
+	  
+	  token = "neighbor";
+	  stg_neighbor_return_t nret = this->ReadInt( section, token, 0 );
+	  if( stg_model_property_set_ex( mod, 0.0,
+					 STG_MOD_NEIGHBORRETURN, STG_PR_NONE,
+					 &nret, sizeof(nret) ) )  
+	    PRINT_ERR2( "attempt to set %s[%s] failed", mod->name, token );
+	  
+	  token = "neighbor_bounds";
+	  stg_bounds_t nbounds;
+	  nbounds.min = this->ReadTupleFloat(section, token, 0,0.0);
+	  nbounds.max = this->ReadTupleFloat(section, token, 1,5.0);
+	  if( stg_model_property_set_ex( mod, 0.0,
+					 STG_MOD_NEIGHBORBOUNDS, STG_PR_NONE,
+					 &nbounds, sizeof(nbounds) ) )  
+	    PRINT_ERR2( "attempt to set %s[%s] failed", mod->name, token );
+	  
+	  token = "light";
+	  stg_blinkenlight_t bl;
+	  bl.enable = this->ReadTupleInt( section, token, 0, 0 );
+	  bl.period_ms = this->ReadTupleInt( section, token, 1, 400 );
+	  if( stg_model_property_set_ex( mod, 0.0,
+					 STG_MOD_BLINKENLIGHT, STG_PR_NONE,
+					 &bl, sizeof(bl) ) )  
+	    PRINT_ERR2( "attempt to set %s[%s] failed", mod->name, token );
+	  
+	  token = "mouseable";
+	  stg_mouse_mode_t mouse = this->ReadBool( section, token, true );
+	  if( stg_model_property_set_ex( mod, 0.0,
+					 STG_MOD_MOUSE_MODE, STG_PR_NONE,
+					 &mouse, sizeof(mouse) )  )  
+	    PRINT_ERR2( "attempt to set %s[%s] failed", mod->name, token );
+	  
+	  token = "nose";
+	  stg_nose_t nose = this->ReadBool( section, token, true );
+	  if( stg_model_property_set_ex( mod, 0.0,
+					 STG_MOD_NOSE, STG_PR_NONE,
+					 &nose, sizeof(nose) ) < 0 )  
+	    PRINT_ERR2( "attempt to set %s[%s] failed", mod->name, token );
+	  
+	  token = "border";
+	  stg_border_t border = this->ReadBool( section, token, false );
+	  if( stg_model_property_set_ex( mod, 0.0,
+					 STG_MOD_BORDER, STG_PR_NONE,
+					 &border, sizeof(border) ) )  
+	    PRINT_ERR2( "attempt to set %s[%s] failed", mod->name, token );
+	  
+	  token = "interval";
+	  stg_interval_ms_t ival = 
+	    (stg_interval_ms_t)(1000.0 * this->ReadFloat( section, token, 0.1 ));
+	  
+	  if( stg_model_property_set_ex( mod, 0.0,
+					 STG_MOD_INTERVAL, STG_PR_NONE,
+					 &ival, sizeof(ival) ) )  
+	    PRINT_ERR2( "attempt to set %s[%s] failed", mod->name, token );
+	  
+	  
+	  // read any ranger details
+	  
+	  // Load the configuration of each ranger
+	  int rcount = this->ReadInt(section, "ranger_count", 0);
+	  if (rcount > 0)
+	    {
+	      char key[64];
+	      
+	      stg_ranger_t* rangers = 
+		(stg_ranger_t*)calloc(sizeof(stg_ranger_t),rcount);
+	      
+	      for( int i=0; i<rcount; i++)
+		{
+		  snprintf(key, sizeof(key), "ranger[%d]", i);
+		  rangers[i].pose.x = 
+		    this->ReadTupleLength(section, key, 0, 0.0);
+		  rangers[i].pose.y = 
+		    this->ReadTupleLength(section, key, 1, 0.0);
+		  rangers[i].pose.a = 
+		    this->ReadTupleAngle(section, key, 2, 0.0);
+		  rangers[i].size.x = 
+		    this->ReadTupleLength(section, key, 3, 0.0);
+		  rangers[i].size.y = 
+		    this->ReadTupleLength(section, key, 4, 0.0);
+		  rangers[i].bounds_range.min = 
+		    this->ReadTupleLength(section, key, 5, 0.0);
+		  rangers[i].bounds_range.max = 
+		    this->ReadTupleLength(section, key, 6, 3.0);
+		  rangers[i].fov = 
+		    this->ReadTupleAngle(section, key, 7, 22.5 );
+		  rangers[i].error = 
+		    this->ReadTupleFloat(section, key, 8, 0.0);
+		}		
+	      
 #ifdef VERBOSE
-	    for( int j=0; j<rcount; j++)
-	      {
-		stg_ranger_t* r = &rangers[j];
-		printf( "loading ranger %d (%.2f,%.2f,%.2f)[%.2f %.2f]\n",
-			j, 
-			r->pose.x, r->pose.y, r->pose.a,
-			r->size.x, r->size.y );
-	      }
+	      for( int j=0; j<rcount; j++)
+		{
+		  stg_ranger_t* r = &rangers[j];
+		  printf( "loading ranger %d (%.2f,%.2f,%.2f)[%.2f %.2f]\n",
+			  j, 
+			  r->pose.x, r->pose.y, r->pose.a,
+			  r->size.x, r->size.y );
+		}
 #endif
-	    if( stg_set_property( cli, anid, STG_MOD_RANGERS,
-				  rangers, rcount * sizeof(stg_ranger_t) ) 
-		< 0 )  
-	      PRINT_ERR2( "attempt to set %s[%s] failed", 
-			  child.name, "ranger array" );
-
-	    free(rangers);
-	  }
-
-	//PRINT_DEBUG("Checking for bitmap file" );
-
-	token = "bitmap";
-	const char* bitmapfile = this->ReadString(section, token, "" );
-	if( strcmp( bitmapfile, "" ) != 0 )
-	  {
-	    PRINT_DEBUG1("Loading bitmap file \"%s\"", bitmapfile );
-
-	    FILE *bitmap = fopen(bitmapfile, "r" );
-	    if( bitmap == NULL )
-	      {
-		PRINT_WARN1("failed to open bitmap file \"%s\"", bitmapfile);
-		perror( "fopen error" );
-	      }
-	    
-	    struct pam inpam;
-	    tuple **data = pnm_readpam(bitmap, &inpam, sizeof(inpam));
-
-	    fclose( bitmap );
-
+	      if( stg_model_property_set_ex( mod, 0.0,
+					     STG_MOD_RANGERS, STG_PR_NONE,
+					     rangers, 
+					     rcount * sizeof(stg_ranger_t))) 
+		PRINT_ERR2( "attempt to set %s[%s] failed", 
+			    mod->name, "ranger array" );
+	      
+	      free(rangers);
+	    }
+	  
+	  //PRINT_DEBUG("Checking for bitmap file" );
+	  
+	  token = "bitmap";
+	  const char* bitmapfile = this->ReadString(section, token, "" );
+	  if( strcmp( bitmapfile, "" ) != 0 )
+	    {
+	      PRINT_DEBUG1("Loading bitmap file \"%s\"", bitmapfile );
+	      
+	      FILE *bitmap = fopen(bitmapfile, "r" );
+	      if( bitmap == NULL )
+		{
+		  PRINT_WARN1("failed to open bitmap file \"%s\"", bitmapfile);
+		  perror( "fopen error" );
+		}
+	      
+	      struct pam inpam;
+	      tuple **data = pnm_readpam(bitmap, &inpam, sizeof(inpam));
+	      
+	      fclose( bitmap );
+	      
 #ifdef VERBOSE	    
-	    PRINT_DEBUG4( "read image \"%s\"%dx%dx%d\n",
-			  bitmapfile,    
-			  inpam.width, 
-			  inpam.height, 
-			  inpam.depth );
+	      PRINT_DEBUG4( "read image \"%s\"%dx%dx%d\n",
+			    bitmapfile,    
+			    inpam.width, 
+			    inpam.height, 
+			    inpam.depth );
 #endif
-	    stg_rotrect_t* rects;
-	    int rect_count;
-	    
-	    assert( stg_pam_to_rects( &inpam, data, &rects, &rect_count ) == 0 );
+	      stg_rotrect_t* rects;
+	      int rect_count;
+	      
+	      assert( stg_pam_to_rects( &inpam, data, &rects, &rect_count ) == 0 );
 #ifdef VERBOSE	    
-	    PRINT_DEBUG1f( "Found %d rects", rect_count );
-#endif
-	    if( stg_set_property(cli, anid, STG_MOD_RECTS,
-				 rects, rect_count*sizeof(stg_rotrect_t)) < 0)  
-	      PRINT_ERR2( "attempt to set %s[%s] failed", 
-			  child.name, token );
+	      PRINT_DEBUG1( "Found %d rects", rect_count );
 
-	    // free the bitmap  and rectangles
-	    pnm_freepamarray( data, &inpam );
-	    free( rects );
-	  }
+	      PRINT_DEBUG3( "configuring model %d (%p) with rects (%p)", 
+			    mod->id, mod, rects ); 
+#endif
+	      PRINT_DEBUG2( "STG_MOD_RECTS %d  STG_PR_NONE %d",
+			    STG_MOD_RECTS, STG_PR_NONE );
+
+	      if( stg_model_property_set_ex( mod, 0.0,
+					     STG_MOD_RECTS, STG_PR_NONE,
+					     rects, 
+					     rect_count*sizeof(stg_rotrect_t)))
+		PRINT_ERR2( "attempt to set %s[%s] failed", 
+			    mod->name, token );
+	      
+	      // free the bitmap  and rectangles
+	      pnm_freepamarray( data, &inpam );
+	      free( rects );
+	      
+	    }
       }
-  }
+
+
+    }
+
+  PRINT_DEBUG( "resuming the server" );
+  stg_fd_msg_write( cli->pollfd.fd, STG_MSG_RESUME, NULL, 0 );
 
   return 0; // ok
 }
 
 
-int CWorldFile::DownloadAndSave( stg_client_t* cli, 
-				 stg_model_t* models, int model_count )
+int CWorldFile::SaveModels( stg_client_t* cli )
 {
   PRINT_WARN( "SAVE NOT FULLY IMPLEMENTED. ONLY POSES ARE SAVED." );
   
   char *token = NULL;
 
   // Iterate through sections, requesting pose data for each entity
-  for (int section = 1; section < this->GetEntityCount(); section++)
+  for (int m = 0; m < cli->model_count; m++)
     {
-      if( strcmp( "gui", this->GetEntityType(section) ) == 0 )
-	{
-	  PRINT_WARN( "save gui section not implemented" );
-	}
-      else
-	{	  
-	  stg_id_t anid = models[section].stage_id;
-	  char* name = models[section].name;
+      //if( strcmp( "gui", this->GetEntityType(section) ) == 0 )
+      //{
+      //  PRINT_WARN( "save gui section not implemented" );
+      //	}
+      //else
+	{	
+	  int section = cli->models[m]->section;
+	  stg_id_t anid = cli->models[m]->id;
+	  char* name = cli->models[m]->name;
 	  
 #ifdef DEBUG
 	  PRINT_DEBUG3( "saving pose data for model %d \"%s\" section %d\n", 
 			anid, name, section );
 #endif
-	  stg_property_t* prop = models[section].props[STG_MOD_POSE];
-
+	  stg_property_t* prop = cli->models[section]->props[STG_MOD_POSE];
+	  
 	  if( prop == NULL )
 	    {
 	      PRINT_WARN3( "no pose data available for model "

@@ -21,7 +21,7 @@
  * Desc: a container for models 
  * Author: Richard Vaughan
  * Date: 24 July 2003
- * CVS info: $Id: world.hh,v 1.34 2003-10-16 02:21:52 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.35 2003-10-22 07:04:55 rtv Exp $
  */
 
 #ifndef _WORLD_HH
@@ -36,12 +36,13 @@ typedef struct
 {
   guint source_in;
   guint source_hup;
+  int paused; // if non-zero, the clock stops ticking for this client
   GIOChannel *channel;
   GList *worlds; // list of the worlds created by this client
   GList *subs;
 } stg_client_data_t;
 
-typedef struct stg_world
+typedef struct ss_world
 {
   int id;
   bool running;
@@ -55,18 +56,19 @@ typedef struct stg_world
   double ppm; // the resolution of the world model in pixels per meter
   stg_gui_window_t* win;   // each world has a GUI window of it's own
   stg_client_data_t* client; // the client that created this world
-} stg_world_t;
+} ss_world_t;
 
 
-stg_world_t* stg_world_create( stg_client_data_t* client,
-			       stg_id_t id, 
-			       stg_world_create_t* rc );
+ss_world_t* ss_world_create(  stg_id_t id, 
+			      stg_world_create_t* rc );
 
-int stg_world_destroy( stg_world_t* world );
-CMatrix* stg_world_create_matrix( stg_world_t* world );
-void stg_world_destroy_matrix( stg_world_t* world );
-void stg_world_update( stg_world_t* world );
-void stg_world_save( stg_world_t* world );
+int ss_world_destroy( ss_world_t* world );
+CMatrix* ss_world_create_matrix( ss_world_t* world );
+void ss_world_destroy_matrix( ss_world_t* world );
+void ss_world_update( ss_world_t* world );
+void ss_world_save( ss_world_t* world );
+stg_property_t* ss_world_property_get( ss_world_t* world, stg_prop_id_t id );
+void ss_world_property_set( ss_world_t* world, stg_property_t* prop );
 
 #ifdef DEBUG
 #define WORLD_DEBUG(W,S) printf("[%d %s %p] "S" (%s %s)\n",W->id,W->name->str,W,__FILE__,__FUNCTION__);

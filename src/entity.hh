@@ -21,7 +21,7 @@
  * Desc: Simulated robot with various sensors
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.31 2003-10-13 08:37:00 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.32 2003-10-22 07:04:52 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -43,8 +43,8 @@
 CEntity* stg_ent_next_sibling( CEntity* ent );
 CEntity* stg_ent_first_child( CEntity* ent );
 CEntity* stg_ent_parent( CEntity* ent );
-stg_world_t* stg_world( CEntity* ent );
-CEntity* stg_world_first_child( stg_world_t* world );
+ss_world_t* stg_world( CEntity* ent );
+CEntity* stg_world_first_child( ss_world_t* world );
 
 // Forward declare
 class CMatrix;
@@ -55,7 +55,7 @@ class CEntity
 {
 
 public: 
-  CEntity( stg_entity_create_t* init, stg_id_t world_id, stg_id_t id );
+  CEntity( stg_model_create_t* init, stg_id_t id );
   
   stg_id_t id;
   bool running;
@@ -68,13 +68,13 @@ private:
 protected:
 
   //static int next_available_id;
-  stg_entity_create_t last_child_created;
+  stg_model_create_t last_child_created;
 
 public:
   // static stuff shared by all instances 
   static gboolean stg_update_signal( gpointer ptr );
     
-  gboolean ChildCreate( stg_entity_create_t* childdata );
+  gboolean ChildCreate( stg_model_create_t* childdata );
  
   // all the data required to render this object sensibly
   stg_gui_model_t* guimod;
@@ -86,7 +86,7 @@ public:
   // my place in the scheme of things
   GList* children;
   CEntity* parent;
-  stg_world_t* world;
+  ss_world_t* world;
 
 public: 
 
@@ -218,7 +218,7 @@ public: void GetBoundingBox( double &xmin, double &ymin,
   
 public: 
   
-  stg_world_t* GetWorld();
+  ss_world_t* GetWorld();
   CMatrix* GetMatrix();
 
   // The section in the world file that describes this entity
@@ -252,13 +252,15 @@ public: int puck_return;
 public: int sonar_return;  
 public: int vision_return;
 public: stg_laser_return_t laser_return;
-public: stg_idar_return_t idar_return;
+  //public: stg_idar_return_t idar_return;
 public: stg_gripper_return_t gripper_return;
 public: int fiducial_return; 
 public: int neighbor_return;
 
 public: stg_blinkenlight_t blinkenlight;  
   
+  stg_status_t status;
+
   // flag is set when a dependent device is  attached to this device
   //public: bool m_dependent_attached;
 

@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.29 2003-10-16 02:21:52 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.30 2003-10-22 07:04:54 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -188,7 +188,7 @@ void stg_gui_save( rtk_menuitem_t *item )
     ((stg_gui_window_t*)item->menu->canvas->userdata)->world->client;
   if( client )
     {
-      stg_world_save(((stg_gui_window_t*)item->menu->canvas->userdata)->world );
+      ss_world_save(((stg_gui_window_t*)item->menu->canvas->userdata)->world );
     }
 }
 
@@ -197,8 +197,8 @@ void stg_gui_exit( rtk_menuitem_t *item )
   //quit = TRUE;
   puts( "Exit menu item. Destroying world" );
   
-  stg_world_t* world = ((stg_gui_window_t*)item->menu->canvas->userdata)->world;
-  stg_world_destroy( world );
+  ss_world_t* world = ((stg_gui_window_t*)item->menu->canvas->userdata)->world;
+  ss_world_destroy( world );
 
   // if the client has no worlds left, shut it down
   //if( g_list_length( client->worlds ) < 1 )
@@ -243,7 +243,7 @@ void stg_gui_menu_interval_callback( rtk_menuitem_t *item )
 }
 
 // build a simulation window
-stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int height )
+stg_gui_window_t* stg_gui_window_create( ss_world_t* world, int width, int height )
 {
   stg_gui_window_t* win = (stg_gui_window_t*)calloc( 1, sizeof(stg_gui_window_t) );
  
@@ -1176,7 +1176,7 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
   
   assert( ent );
   assert( prop > 0 );
-  assert( prop < STG_MESSAGE_COUNT );
+  assert( prop < STG_MOD_PROP_COUNT );
     
   stg_gui_model_t* model = ent->guimod;
 
@@ -1223,7 +1223,6 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
       // do nothing for these things
     case STG_MOD_LASERRETURN:
     case STG_MOD_SONARRETURN:
-    case STG_MOD_IDARRETURN:
     case STG_MOD_OBSTACLERETURN:
     case STG_MOD_VISIONRETURN:
     case STG_MOD_PUCKRETURN:
@@ -1235,14 +1234,8 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
     case STG_MOD_NAME:
     case STG_MOD_INTERVAL:
     case STG_MOD_MATRIX_RENDER:
-    case STG_MOD_TIME:
       break;
 
-      // these aren't yet exposed to the outside
-      //case STG_MOD_PARENT:
-      //case STG_MOD_CIRCLES:
-      //case STG_MOD_PLAYERID:
-      
     default:
       PRINT_WARN1( "property change %d unhandled by gui", prop ); 
       break;

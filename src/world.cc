@@ -21,7 +21,7 @@
  * Desc: A world device model - replaces the CWorld class
  * Author: Richard Vaughan
  * Date: 31 Jan 2003
- * CVS info: $Id: world.cc,v 1.151 2003-10-16 02:05:14 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.152 2003-10-22 07:04:55 rtv Exp $
  */
 
 
@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-//#define DEBUG
+#define DEBUG
 
 #include "stage.h"
 #include "world.hh"
@@ -40,15 +40,11 @@
 gboolean StgPropertyWrite( GIOChannel* channel, stg_property_t* prop );
 
 
-stg_world_t* stg_world_create( stg_client_data_t* client, 
-			       stg_id_t id,
-			       stg_world_create_t* rc ) 
+ss_world_t* ss_world_create( stg_id_t id, stg_world_create_t* rc ) 
 {
-  stg_world_t* world = (stg_world_t*)calloc( sizeof(stg_world_t), 1 );
+  ss_world_t* world = (ss_world_t*)calloc( sizeof(ss_world_t), 1 );
   assert( world );
 
-  // add this world to the client's list
-  client->worlds = g_list_append( client->worlds, world ); 
   
   // must set the id, name and token before using the BASE_DEBUG macro
   world->id = id; // a unique id for this object
@@ -56,7 +52,7 @@ stg_world_t* stg_world_create( stg_client_data_t* client,
   WORLD_DEBUG( world, "construction" );
   
   
-  world->client = client; // this client created this world
+  //world->client = client; // this client created this world
   world->width = rc->width;
   world->height = rc->height;
   world->ppm = 1.0/rc->resolution;
@@ -68,7 +64,7 @@ stg_world_t* stg_world_create( stg_client_data_t* client,
 
   WORLD_DEBUG( world,"world startup");
   
-  g_assert( stg_world_create_matrix( world ) );
+  g_assert( ss_world_create_matrix( world ) );
 
   if( world->win ) PRINT_WARN( "creating window, but window pointer not NULL" );  
   world->win = stg_gui_window_create( world, 0,0 ); // use default dimensions
@@ -97,7 +93,7 @@ void stg_update_entity( GNode* node, void* data )
   
   // update this node
   //CEntity* ent = (CEntity*)node->data;
-  //stg_world_t* world = (stg_world_t*)data;
+  //ss_world_t* world = (ss_world_t*)data;
 
   //if( (world->time - ent->last_update) > (double)ent->interval / 1000.0 )
   // ent->Update();
@@ -114,31 +110,25 @@ void stg_model_update( gpointer data, gpointer userdata )
   ent->Update();
 }
 
-void stg_world_save( stg_world_t* world )
+void ss_world_save( ss_world_t* world )
 {
   PRINT_DEBUG1( "sending SAVE message to client %p", world->client );
   
-  stg_property_t* save = stg_property_create();
-  
-  save->property = STG_WORLD_SAVE;
-  save->action = STG_SET;
-
-  StgPropertyWrite( world->client->channel, save );  
-  stg_property_free( save ); 
-  
+  // send a save message with the world's id as payload
+  int fd = g_io_channel_unix_get_fd(world->client->channel);
+  stg_fd_msg_write( fd, STG_MSG_SAVE, &world->id, sizeof(world->id) );
 }
 
-void stg_world_update( stg_world_t* world  )
+void ss_world_update( ss_world_t* world  )
 {  
   world->time += world->interval;
 
   //printf( " world (%s) time: %.3f\n", 
   //  world->name->str, world->time );
-
   g_list_foreach( world->models, stg_model_update, NULL );
 }
 
-int stg_world_destroy( stg_world_t* world )
+int ss_world_destroy( ss_world_t* world )
 {
   WORLD_DEBUG( world, "world destruction" );
 
@@ -159,7 +149,7 @@ int stg_world_destroy( stg_world_t* world )
   // remove the world from the client that created it
   //world->client->worlds = g_list_remove( world->client->worlds, world ); 
 
-  if( world->matrix ) stg_world_destroy_matrix( world );
+  if( world->matrix ) ss_world_destroy_matrix( world );
 
 
   WORLD_DEBUG( world, "world destruction complete" );
@@ -171,10 +161,10 @@ int stg_world_destroy( stg_world_t* world )
 }
 
 
-CMatrix* stg_world_create_matrix( stg_world_t* world )
+CMatrix* ss_world_create_matrix( ss_world_t* world )
 {
   g_assert( world );
-  if( world->matrix ) stg_world_destroy_matrix( world );
+  if( world->matrix ) ss_world_destroy_matrix( world );
   
   WORLD_DEBUG3( world, "Creating a matrix [%.2fx%.2f]m at %.2f ppm",
 		world->width, world->height, world->ppm );
@@ -184,7 +174,7 @@ CMatrix* stg_world_create_matrix( stg_world_t* world )
   return world->matrix;
 }
 
-void stg_world_destroy_matrix( stg_world_t* world )
+void ss_world_destroy_matrix( ss_world_t* world )
 {
   g_assert( world );
   if( world->matrix == NULL )
@@ -195,3 +185,35 @@ void stg_world_destroy_matrix( stg_world_t* world )
   world->matrix = NULL;
 }
   
+stg_property_t* ss_world_property_get( ss_world_t* world, stg_prop_id_t id )
+{
+  stg_property_t* prop = NULL;
+  
+  switch( id )
+    {
+    case STG_MOD_TIME:
+      PRINT_DEBUG2( "getting world %d time %.3f", world->id, world->time );
+
+      prop = stg_property_create(); 
+      prop->id = world->id;
+      prop->type = STG_MOD_TIME;
+
+      prop = stg_property_attach_data( prop, &world->time, sizeof(world->time) );
+      PRINT_DEBUG1( "time in the prop is %.3f", *(stg_time_t*)prop->data );
+      break;
+      
+    default:
+      PRINT_WARN1( "failed to get world property %s",
+		   stg_property_string( id ) );
+      break;
+    }
+
+  return prop;
+}
+
+void ss_world_property_set( ss_world_t* world, stg_property_t* prop )
+{
+  // todo
+  PRINT_WARN1( "setting world property %s not implemented",
+	      stg_property_string(prop->type) );
+}
