@@ -5,7 +5,7 @@
 // Date: 14 May 2001
 // Desc: Load/save routines & command line processing for the world 
 //
-// $Id: world_load.cc,v 1.25 2001-10-08 03:55:39 vaughan Exp $
+// $Id: world_load.cc,v 1.26 2001-10-13 02:01:42 vaughan Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -15,10 +15,11 @@
 #include "truthserver.hh"
 #include <libgen.h>  // for dirname(3)
 
-#undef DEBUG
 //#define DEBUG
 
 extern char *world_file;
+bool usage = false;
+void PrintUsage(); // defined in main.cc
 
 ///////////////////////////////////////////////////////////////////////////
 // Tokenize a string (naked utility function)
@@ -48,9 +49,7 @@ static int Tokenize(char *buffer, int bufflen, char **argv, int maxargs)
 //
 bool CWorld::Load(const char *filename)
 {
-#ifdef DEBUG
-    PRINT_MSG1("loading world file [%s]", filename);
-#endif
+  printf( "[World %s]", filename );
    
     char m_current_hostname[ HOSTNAME_SIZE ];
 
@@ -518,13 +517,23 @@ bool CWorld::Save(const char *filename)
 //
 bool CWorld::ParseCmdline(int argc, char **argv)
 {
-  bool usage = false;
-
-
+  if( argc < 2 )
+    {
+      usage = true;
+      exit( -1 );
+    }
+  
   for( int a=1; a<argc-1; a++ )
     {
+      // USAGE
+      if( (strcmp( argv[a], "-?" ) == 0) || 
+	  (strcmp( argv[a], "--help") == 0) )
+	{
+	  PrintUsage();
+	  return false;
+	}
       // LOGGING
-      if( strcmp( argv[a], "-l" ) == 0 )
+      else if( strcmp( argv[a], "-l" ) == 0 )
 	{
 	  m_log_output = true;
 	  strncpy( m_log_filename, argv[a+1], 255 );
@@ -606,7 +615,7 @@ bool CWorld::ParseCmdline(int argc, char **argv)
 	  m_external_sync_required = true; 
 	  m_enable = false; // don't run until we have a sync connection
 	  printf( "[External Sync]");
-	}
+	}      
       //else if( strcmp( argv[a], "-id" ) == 0 )
       //{
       //  memset( m_hostname, 0, 64 );
@@ -615,34 +624,8 @@ bool CWorld::ParseCmdline(int argc, char **argv)
       //  a++;
       //}
     }
-
-  if( usage )
-    {
-
-#ifdef INCLUDE_RTK
-      printf("\nUsage: rtkstage [options] WORLDFILE\n"
-	     "Options:\n"
-	     " +xs\t\tExec the XS Graphical User Interface\n"
-	     " -u <float>\tSet the update frequency in Hz. Default: 20\n"
-	     " -v <float>\tSet ratio of simulated to real time. Default: 1.0\n"
-	     );
-#else
-      printf("\nUsage: stage [options] WORLDFILE\n"
-	     "Options:\n"
-	     " -xs\t\tDon't start the XS Graphical User Interface\n"
-	     " -u <float>\tSet the update frequency in Hz. Default: 20.0\n"
-	     " -v <float>\tSet ratio of simulated to real time. Default: 1.0\n"
-	     );
-#endif
-
-      return false;
-    }
-  
-    return true;
+    
+  return true;
 }
-
-
-
-
 
 

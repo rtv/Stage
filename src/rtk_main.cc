@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtk_main.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.6 $
+//  $Author: vaughan $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -50,9 +50,29 @@ bool parse_cmdline(int argc, char **argv)
 
     // Extract the name of the file describing the world
     //
-    world_file = argv[1];
+    world_file = argv[argc-1];
     return true;
 }
+
+void PrintUsage( void )
+{
+  printf("\nUsage: rtkstage [options] WORLDFILE\n"
+	 "Options:\n"
+	 " +xs\t\tExec the XS Graphical User Interface\n"
+	 " -u <float>\tSet the desired real time per cycle. Default: 0.1\n"
+	 " -v <float>\tSet the simulated time increment per cycle."
+	 " Default: 0.1\n"
+	 " -l <filename>\tLog the position of all objects into the"
+	 " named file.\n"
+	 " -tp <portnum>\tSet the truth server port\n"
+	 " -ep <portnum>\tSet the environment server port\n"
+	 " -fast\t\tRun as fast as possible; don't try to match real time\n"
+	 " -s\t\tSynchronize to an external client (experimental)\n"
+	 "Command-line options override any configuration file equivalents.\n"
+	 "\n"
+	 );
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Program entry
@@ -98,6 +118,12 @@ int main(int argc, char **argv)
     //
     if (!world->Load(world_file))
         return 0;
+
+    // override default and config file values with command line options.
+    // any options set will produce console output for reassurance
+    if (!world->ParseCmdline(argc, argv))
+      return 0;
+
     
     // Open and start agents
     //

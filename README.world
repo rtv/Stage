@@ -1,13 +1,43 @@
 ##########################################################################
 # README.world - documents Stage's configyration file format. 
-# $Id: README.world,v 1.1 2001-08-17 03:13:20 vaughan Exp $
+# $Id: README.world,v 1.2 2001-10-13 02:01:41 vaughan Exp $
 ##########################################################################
 
-WARNIING! this file is an incomplete work-in-progress kind of deal.
+WARNING! this file is correct but incomplete; a work-in-progress kind
+of deal.  Look at the example files (stage/examples/*.world) to get
+the idea.
 
-create <device> <generic_option> <value ... > <specific_option> <value ...>
+#------------------------------------------------------------------------
+CONFIGURATION TAGS:
 
-DEVICES:
+set environment_file = <foo.pnm>
+
+  Specifies the filename of a PNM format graphics file (binary, 8-bit
+  grayscale, black=floor, white=walls) used as the background.  GIMP and
+  Photoshop can produce PNM files. A few example environment bitmaps
+  (demo/*.pnm) are included in the distribution.
+
+set pixels_per_meter = <x>
+
+  specifies the scaling between environment pixels and meters. All
+  device configurations (size, etc) are specified in meters.
+
+set laser_res = <x>
+
+  specifies the resolution of the laser ray-tracing. Larger numbers
+  give lower resolution data, but Stage runs faster. You decide.
+
+disable truth_server
+disable environment_server
+
+  switch off the TCP servers that provide info about stage's internal
+  models to external processes. THESE SERVERS ARE REQUIRED FOR XS! If
+  XS doesn't work, you probably have these lines in the config file.
+
+#------------------------------------------------------------------------
+DEVICE TAGS:
+
+create <device> <generic_option> <value ...> <specific_option> <value ...>
 
 This device starts up and configures a Player server:
 
@@ -33,44 +63,59 @@ box               - gets in the way and can be seen by the vision_device
 
 (look in src/entityfactory.cc for the definitive list).
 
-GENERIC TAGS:
+#------------------------------------------------------------------------
+GENERIC DEVICE OPTIONS:
 
+These options allow general object configuration:
 
-DEVICE-SPECIFIC TAGS:
+pose <x> <y> <orientation>
+  
+  Specifies the position of the object relative to it's parent. If the
+  object has no parents, this specifies the position in the world. The
+  units are as specified by the units tag.
 
+port <portnum>
 
- Stage reads a configuration file wi Each The rrs to the
-ACTS color blob channel for each robot - the nth entry specifies the
-ACTS color channel of the nth robot.
+  Specifies the Player port for this object. Not meaningful for non-player
+  objects. The port setting is sticky; ie. once set, that port value is 
+  applied to all following objects until explicitly set again. Default is 6665.
 
-set environment_file = <foo.pnm>
+index <num>
 
-  Specifies the filename of a PNM format graphics file (binary, 8-bit
-  grayscale, black=floor, white=walls) used as the background.  GIMP and
-  Photoshop can produce PNM files. A few example environment bitmaps
-  (demo/*.pnm) are included in the distribution.
+  Specifies the Player index of the device. Default is 0.
+ 
+color <colorstring>
 
-set pixels_per_meter = <x>
+   The object appears as the specified color, as named in the X11
+   database, to both the vision device, and to GUIs.
+   
+name <name string>
 
-  specifies the scaling between environment pixels and meters. All
-  device configurations (size, etc) are specified in meters.
+   This name is provided for display by external GUIs
 
-set laser_res = <x>
+The following options allow you to change objects' default sensor
+behaviour:
+ 
+obstacle <true/false> 
 
-  specifies the resolution of the laser ray-tracing. Larger numbers
-  give lower resolution data, but Stage runs faster. You decide.
+  Determines whether this object is an obstacle; ie. whether position_devices 
+  will crash into them or not. For example, this is true by default for
+  position_devices and boxes, false for sonar_devices and lasers.
 
-enable truth_server
-enable environment_server
+sonar <true/false> 
 
-  switch on TCP servers that provide info about stage's internal models
-  to external processes. THESE SERVERS ARE REQUIRED FOR XS! If XS doesn't
-  work, you probably missed out these lines.
+  Determines whether the object is visible to the sonars.
 
-The .pos file specifies the starting (x, y, heading) positions for the
-robots.  Stage will load the first N entries, where N is the number of
-robots requested in the .world file. Entries indicate x y theta in
-meters, meters and radians respectively.
+laser <true/false/bright1/bright2/bright3>
+
+  Determines the visibility of objects to then laser_device. For example,
+  the default value for position_devices is false; for laser_devices, true;
+  for laser_beacons, bright1.
+
+#------------------------------------------------------------------------
+DEVICE-SPECIFIC OPTIONS:
+
+(to do! - look at the load/save functions in the code for each device)
 
 ---------------------------------------------------------------------------
 RTV

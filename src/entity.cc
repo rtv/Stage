@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.26 2001-10-08 03:55:39 vaughan Exp $
+//  $Id: entity.cc,v 1.27 2001-10-13 02:01:41 vaughan Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -143,45 +143,53 @@ bool CEntity::Load(int argc, char **argv)
             i += 4;
         }
 
-        // set sensor sensibility (!) 
+        // set obstacle flag
         //
-        else if (strcmp(argv[i], "invisible") == 0 && i + 1 < argc)
+        else if (strcmp(argv[i], "obstacle") == 0 && i + 1 < argc)
 	  {
-            if (strcmp(argv[i + 1], "obstacle") == 0)
+            if (strcmp(argv[i + 1], "true") == 0)
+	      obstacle_return = true;
+            else if (strcmp(argv[i + 1], "false") == 0)
 	      obstacle_return = false;
-            else if (strcmp(argv[i + 1], "laser") == 0)
-	      laser_return = 0;
-            else if (strcmp(argv[i + 1], "sonar") == 0)
+            else
+	      PLAYER_MSG2("unrecognized token [%s %s]", argv[i], argv[i + 1]);
+	    i+=2;
+	  }
+	    
+        // set sonar flag
+        //
+        else if (strcmp(argv[i], "sonar") == 0 && i + 1 < argc)
+	  {
+            if (strcmp(argv[i + 1], "true") == 0)
+	      sonar_return = true;
+            else if (strcmp(argv[i + 1], "false") == 0)
 	      sonar_return = false;
             else
 	      PLAYER_MSG2("unrecognized token [%s %s]", argv[i], argv[i + 1]);
-            i += 2;
+	    i+=2;
 	  }
-
-        // set sensor sensibility (!) 
+	    
+        // set laser return
         //
-        else if (strcmp(argv[i], "visible") == 0 && i + 1 < argc)
+        else if (strcmp(argv[i], "laser") == 0 && i + 1 < argc)
 	  {
-            if (strcmp(argv[i + 1], "obstacle") == 0)
-	      obstacle_return = true;
-            else if (strcmp(argv[i + 1], "laser") == 0)
+            if (strcmp(argv[i + 1], "true") == 0)
 	      laser_return = LaserSomething;
-            else if (strcmp(argv[i + 1], "laserbright1") == 0)
+            else if (strcmp(argv[i + 1], "false") == 0)
+	      laser_return = LaserNothing;
+            else if (strcmp(argv[i + 1], "bright1") == 0)
 	      laser_return = LaserBright1;
-            else if (strcmp(argv[i + 1], "laserbright2") == 0)
+            else if (strcmp(argv[i + 1], "bright2") == 0)
 	      laser_return = LaserBright2;
-            else if (strcmp(argv[i + 1], "laserbright3") == 0)
+            else if (strcmp(argv[i + 1], "bright3") == 0)
 	      laser_return = LaserBright3;
-            else if (strcmp(argv[i + 1], "laserbright4") == 0)
+            else if (strcmp(argv[i + 1], "bright4") == 0)
 	      laser_return = LaserBright4;
-            else if (strcmp(argv[i + 1], "sonar") == 0)
-	      sonar_return = true;
             else
 	      PLAYER_MSG2("unrecognized token [%s %s]", argv[i], argv[i + 1]);
-            i += 2;
+	    i+=2;
 	  }
-	
-
+	    
         // Extract color
         //
         else if (strcmp(argv[i], "color") == 0 && i + 1 < argc)
@@ -199,14 +207,6 @@ bool CEntity::Load(int argc, char **argv)
             i += 3;
         }
     
-        // Extract channel
-        //
-        //else if (strcmp(argv[i], "channel") == 0 && i + 1 < argc)
-        //{
-	//  channel_return = atoi(argv[i + 1]) + 1;
-	//  i += 2;
-        //}
-
         // extract port number
         // one day we'll inherit our parent's port by default.
 	// for now this becomes the current global port
@@ -274,14 +274,6 @@ bool CEntity::Save(int &argc, char **argv)
     char sa[32];
     snprintf(sa, sizeof(sa), "%.0f", RTOD(pa));
 
-    // Save name
-    //
-    if (m_name[0] != 0)
-    {
-        argv[argc++] = strdup("name");
-        argv[argc++] = strdup(m_name);
-    }
-    
     // Save pose
     //
     argv[argc++] = strdup("pose");
@@ -294,13 +286,14 @@ bool CEntity::Save(int &argc, char **argv)
     argv[argc++] = strdup("color");
     argv[argc++] = strdup(m_color_desc);
 
-    // Save channel
+    // Save name
     //
-    //char z[128];
-    //snprintf(z, sizeof(z), "%d", (int) channel_return-1);
-    //argv[argc++] = strdup("channel");
-    //argv[argc++] = strdup(z);
-
+    if (m_name[0] != 0)
+    {
+        argv[argc++] = strdup("name");
+        argv[argc++] = strdup(m_name);
+    }
+    
     // Save player port
     //
     char port[32];
@@ -316,43 +309,31 @@ bool CEntity::Save(int &argc, char **argv)
         
     // Save render settings
     //
-    if ( obstacle_return == 0 )
-    {
-        argv[argc++] = strdup("invisible");
-        argv[argc++] = strdup("obstacle");
-    }
-    if ( laser_return == 0 )
-    {
-        argv[argc++] = strdup("invisible");
-        argv[argc++] = strdup("laser");
-    }
-    if ( sonar_return == 0 )
-    {
-        argv[argc++] = strdup("invisible");
-        argv[argc++] = strdup("sonar");
-    }
-    if ( obstacle_return == 1 )
-    {
-        argv[argc++] = strdup("visible");
-        argv[argc++] = strdup("obstacle");
-    }
-    if ( laser_return == 1 )
-    {
-        argv[argc++] = strdup("visible");
-        argv[argc++] = strdup("laser");
-    }
-    if ( laser_return == 2 )
-    {
-        argv[argc++] = strdup("visible");
-        argv[argc++] = strdup("laserbright");
-    }
-    if ( sonar_return == 1 )
-    {
-        argv[argc++] = strdup("visible");
-        argv[argc++] = strdup("sonar");
-    }
-
-
+    argv[argc++] = strdup("obstacle");    
+    obstacle_return ? 
+      argv[argc++] = strdup("true") : argv[argc++] = strdup("false"); 
+    
+    argv[argc++] = strdup("sonar");    
+    sonar_return ? 
+      argv[argc++] = strdup("true") : argv[argc++] = strdup("false");
+    
+    argv[argc++] = strdup("laser");    
+    switch( laser_return )
+      {
+      case LaserNothing: 
+	argv[argc++] = strdup("false"); break;
+      case LaserSomething: 
+	argv[argc++] = strdup("true"); break;
+      case LaserBright1: 
+	argv[argc++] = strdup("bright1"); break;
+      case LaserBright2: 
+	argv[argc++] = strdup("bright2"); break;
+      case LaserBright3: 
+	argv[argc++] = strdup("bright3"); break;
+      case LaserBright4: 
+	argv[argc++] = strdup("bright4"); break;
+      }
+	
     return true;
 }
 

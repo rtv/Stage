@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.common,v 1.25 2001-10-11 19:36:21 gerkey Exp $ 
+# $Id: Makefile.common,v 1.26 2001-10-13 02:01:41 vaughan Exp $ 
 #
 
 # INSTALL PLAYER BEFORE BUILDING STAGE!
@@ -12,13 +12,14 @@
 
 # Define Stage's version string for the source to include (required)
 
-VERSION = 1.0-gamma
+VERSION = 1.0
 
 ##############################################################################
 # Player configuration (required)
 # set the absolute path of your Player installation or source tree
 
 # define which version of Player you will use to build from
+# this line will use the same version number as stage, which is a good guess
 # PLAYERVERSION = $(VERSION)
 
 PLAYERVERSION = $(VERSION)
@@ -31,9 +32,7 @@ PLAYERVERSION = $(VERSION)
 # make -e PLAYER_BASE=~/playerstage/player
 
 PLAYER_BASE = /usr/local/player
-#PLAYER_DIR = $(PLAYER_BASE)-$(PLAYERVERSION)
-#PLAYER_DIR = $(HOME)/code/player
-PLAYER_DIR = $(HOME)/PS/player
+PLAYER_DIR = $(PLAYER_BASE)-$(PLAYERVERSION)
 
 ##############################################################################
 # Color datbase configuration (required)

@@ -26,17 +26,13 @@
 
 void PrintStageTruth( stage_truth_t &truth, double seconds )
 {
-  printf( "Time: %.3f ID: %d (%4d,%d,%d)\tPID:(%4d,%d,%d)\tpose: [%d,%d,%d]\tsize: [%d,%d]\n", 
+  printf( "Time: %.3f ID: %d (%4d,%d,%d)\tpose: [%d,%d,%d]\n", 
 	  seconds,
 	  truth.stage_id,
 	  truth.id.port, 
 	  truth.id.type, 
 	  truth.id.index,
-	  truth.parent.port, 
-	  truth.parent.type, 
-	  truth.parent.index,
-	  truth.x, truth.y, truth.th,
-	  truth.w, truth.h );
+	  truth.x, truth.y, truth.th );
   
   fflush( stdout );
 }
@@ -67,7 +63,7 @@ int main(int argc, char **argv)
   /* setup our server address (type, IP address and port) */
   bzero(&servaddr, sizeof(servaddr)); /* initialize */
   servaddr.sin_family = AF_INET;   /* internet address space */
-  servaddr.sin_port = htons( TRUTH_SERVER_PORT ); /*our command port */ 
+  servaddr.sin_port = htons( DEFAULT_POSE_PORT ); /*our command port */ 
   inet_pton(AF_INET, STAGE_IP, &servaddr.sin_addr); /* the arena IP */
 
   v = connect( sockfd, (sockaddr*)&servaddr, sizeof( servaddr) );

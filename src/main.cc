@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.22 $
+//  $Revision: 1.23 $
 //
 // Usage:
 //  (empty)
@@ -27,6 +27,10 @@
 #include "world.hh"
 #include <unistd.h>
 #include <signal.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 
 #define PIDFILENAME "stage.pid"
 
@@ -41,6 +45,10 @@ char *world_file;
 //
 bool quit = false;
 
+//if this is true, exit() displays usage hints
+extern bool usage; // defined in world_load.cc 
+
+
 CWorld *world = 0;
 
 ///////////////////////////////////////////////////////////////////////////
@@ -53,20 +61,40 @@ void sig_quit(int signum)
   quit = true;
 }
 
+void PrintUsage( void )
+{
+  printf("\nUsage: stage [options] WORLDFILE\n"
+	 "Options:\n"
+	 " -xs\t\tDon't start the XS Graphical User Interface\n"
+	 " -u <float>\tSet the desired real time per cycle. Default: 0.1\n"
+	 " -v <float>\tSet the simulated time increment per cycle."
+	 " Default: 0.1\n"
+	 " -l <filename>\tLog the position of all objects into the"
+	 " named file.\n"
+	 " -tp <portnum>\tSet the truth server port\n"
+	 " -ep <portnum>\tSet the environment server port\n"
+	 " -fast\t\tRun as fast as possible; don't try to match real time\n"
+	 " -s\t\tSynchronize to an external client (experimental)\n"
+	 "Command-line options override any configuration file equivalents.\n"
+	 "\n"
+	 );
+}
+
 void StageQuit( void )
 {  
-  puts( "\nStage shutdown... " );
+  if( world )
+    { 
+      puts( "\nStage shutdown... " );
+      world->Shutdown();
+      delete world;
+      puts( "...done." );
+    }
   
-  // Stop the world
-  //
-  world->Shutdown();
-  
-  // Destroy the world
-  //
-  delete world;
-  
-  puts( "...done." );
+  if( usage )
+    PrintUsage();
 }
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -88,9 +116,18 @@ int main(int argc, char **argv)
   // Create the world
   //
   world = new CWorld();
+    
+  // check to see if the world file exists
+  int fd = open( argv[argc-1], O_RDONLY );
+  if( fd < 1 )
+    {
+      perror( "Stage: failed to open configuration file" );
+      PrintUsage();
+      exit( -1 );
+    }
   
-  printf( "[World %s]", argv[ argc-1 ] );
-  
+  close( fd );
+
   // Load the world - the filename is the last argument
   // this may produce more startup output
   if (!world->Load( argv[ argc-1 ] ))
@@ -140,6 +177,8 @@ int main(int argc, char **argv)
   // exit will call the StageQuit callback function
   exit( 1 );
 }
+
+
 
 
 

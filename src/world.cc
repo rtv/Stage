@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.65 $
+//  $Revision: 1.66 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -1345,14 +1345,19 @@ void CWorld::ConsoleOutput( double freq,
 			    unsigned int bytes_in, unsigned int bytes_out,
 			    double avg_data)
 {
-  printf( " Time: %8.1f - %7.1fHz - [%3.0f/%3.0f] [%3.0f/%3.0f] [%4u/%4u] %8.2f b/sec\r", 
+//    printf( " Time: %8.1f - %7.1fHz - [%3.0f/%3.0f] [%3.0f/%3.0f] [%4u/%4u] %8.2f b/sec\r", 
+//  	  m_sim_time, 
+//  	  freq,
+//  	  loop_duration * 1000.0, 
+//  	  sleep_duration * 1000.0, 
+//  	  avg_loop_duration * 1000.0, 
+//  	  avg_sleep_duration * 1000.0,  
+//  	  bytes_in, bytes_out, 
+//  	  avg_data );
+
+  printf( " Time: %8.1f - %7.1fHz - %8.2f bytes/sec                     \r", 
 	  m_sim_time, 
 	  freq,
-	  loop_duration * 1000.0, 
-	  sleep_duration * 1000.0, 
-	  avg_loop_duration * 1000.0, 
-	  avg_sleep_duration * 1000.0,  
-	  bytes_in, bytes_out, 
 	  avg_data );
   
   fflush( stdout );
