@@ -16,7 +16,10 @@ worlds_DATA = everything.world			\
               hospital_section.pnm.gz		\
               rink.pnm.gz			\
               sal2.pnm.gz			\
-              table.pnm.gz
+              table.pnm.gz			\
+	      mcl.world				\
+	      mcl.pnm.gz			\
+	      mcl_map.pnm.gz
 
 EXTRA_DIST =  everything.world			\
               hospital100.world			\
@@ -34,4 +37,7 @@ EXTRA_DIST =  everything.world			\
               hospital_section.pnm.gz		\
               rink.pnm.gz			\
               sal2.pnm.gz			\
-              table.pnm.gz
+              table.pnm.gz			\
+	      mcl.world				\
+	      mcl.pnm.gz			\
+	      mcl_map.pnm.gz
