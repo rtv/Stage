@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.42 2001-10-24 19:12:51 vaughan Exp $
+ * $Id: xs.cc,v 1.42.8.1 2002-01-08 22:23:13 rtv Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -2136,8 +2136,8 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 	  //cli->SetDataMode( 1 );
 	  
 	  // if successful, attach this client to the multiclient
-	  printf( "\nXS: Starting Player client on %s:%d\n", ent->hostname, ent->id.port );
-	  fflush( 0 );
+	  //printf( "\nXS: Starting Player client on %s:%d\n", ent->hostname, ent->id.port );
+	  //fflush( 0 );
 	  
 	  xstruth_t sibling;
 	  int previous_num_proxies = num_proxies;
