@@ -1,14 +1,25 @@
 
+##############################################################################
+# This file should be called from the top-level make file, 
+# which will set the values of the key directories
+
 
 ##############################################################################
-# These are the key paths needs for the build and install
+# These are DEFAULT values -- they will get overridden by the top-level Makefile
+# They are just here so you can compile stuff while testing new code.
+
+VERSION=$(shell awk '{print substr($$3,2,length($$3)-2);}' ../VERSION)
+PLAYER_DIR = /usr/local/player$(VERSION)
+
+
+##############################################################################
+# These are the key paths needs for the build
 
 PLAYER_INC = $(PLAYER_DIR)/include
 PLAYER_LIB = $(PLAYER_DIR)/lib
+RTK_DIR = ../rtk
 RTK_INC = $(RTK_DIR)/include
 RTK_LIB = $(RTK_DIR)/lib
-INSTALL_BIN = $(INSTALL_DIR)/bin
-INSTALL_ETC = $(INSTALL_DIR)/etc
 
 
 ##############################################################################
@@ -38,6 +49,9 @@ MAKEDEP = makedepend
 
 .SUFFIXES: .cc .o
 
+##############################################################################
+# Targets
+
 # Target stage with no GUI
 #
 stage : OBJS += main.o
@@ -46,11 +60,11 @@ stage : $(OBJS) main.o
 
 # Target stage with RTK GUI
 #
-rtk_stage : OBJS += rtk_main.o
-rtk_stage : CCFLAGS += -DINCLUDE_RTK -I$(RTK_INC) `gtk-config --cflags`
-rtk_stage : LINKFLAGS += -L$(RTK_LIB) -lrtk `gtk-config --libs gtk gthread`
-rtk_stage : $(OBJS) rtk_main.o 
-	${LINKER} $(OBJS) $(LINKFLAGS) -o rtk_stage
+rtkstage : OBJS += rtk_main.o
+rtkstage : CCFLAGS += -DINCLUDE_RTK -I$(RTK_INC) `gtk-config --cflags`
+rtkstage : LINKFLAGS += -L$(RTK_LIB) -lrtk `gtk-config --libs gtk gthread`
+rtkstage : $(OBJS) rtk_main.o 
+	${LINKER} $(OBJS) $(LINKFLAGS) -o rtkstage
 
 clean:
 	rm -f *.o *~ core
@@ -60,23 +74,6 @@ dep:
 
 %.o : %.cc
 	${CC} ${CCFLAGS} -c $< -o $@
-
-
-##############################################################################
-# Install section
-# Installs the executable in the Player bin directory
-# You may need to su root to do this
-
-INSTALL = install
-MKDIR = mkdir
-CP = cp
-
-install:
-	$(MKDIR) -p $(INSTALL_BIN)
-	$(INSTALL) -m 755 stage $(INSTALL_BIN)
-	$(INSTALL) -m 755 rtk_stage $(INSTALL_BIN)
-	$(MKDIR) -p $(INSTALL_ETC)
-	$(INSTALL) -m 755 rtk_stage.cfg $(INSTALL_ETC)
 
 
 ##############################################################################

@@ -1,46 +1,106 @@
+###########################################################################
 #
-# Makefile - the top level Makefile to build Stage
-# RTV
-# $Id: Makefile,v 1.3.2.4 2001-04-27 20:23:46 ahoward Exp $
-# 
+# File: Makefile
+# Author: Andrew Howard, Richard Vaughan
+# Date: 27 Apr 2001
+# Desc: Top-level make file for Stage
+#
+# CVS info:
+#  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
+#  $Author: ahoward $
+#  $Revision: 1.3.2.5 $
+#
+###########################################################################
 
-# the directory of the player source
-PLAYER_DIR = /usr/local/player1.1beta
-#PLAYER_DIR = ../../player
-RTK_DIR = ../../rtk
 
-# install stage in these directories
-INSTALL = /usr/local/stage
-INSTALL_BIN = $(INSTALL)/bin
-INSTALL_ETC = /usr/local/etc/rtk
-INSTALL_BIN_FILES = bin/stage bin/rtk_stage
-INSTALL_ETC_FILES = etc/rtk_stage.cfg
+##############################################################################
+# These are the key flags needs for the build and install
+
+VERSION=$(shell awk '{print substr($$3,2,length($$3)-2);}' VERSION)
+PLAYER_DIR = /usr/local/player$(VERSION)
+INSTALL_DIR = /usr/local/stage$(VERSION)
+SRC_DIST_NAME = stage-$(VERSION)-src
+BIN_DIST_NAME = stage-$(VERSION)-i386
+
+
+##############################################################################
+# Top level targets
+
+all: stage rtkstage
 
 stage: 
-	cd src; make stage -e PLAYER_DIR=$(PLAYER_DIR); cp stage ../bin/
+	cd src; make clean; make stage -e PLAYER_DIR=$(PLAYER_DIR); cp stage ../bin/
 
-rtk_stage:
-	cd src; make rtk_stage -e PLAYER_DIR=$(PLAYER_DIR) -e RTK_DIR=$(RTK_DIR); \
-	cp rtk_stage ../bin/
+rtkstage:
+	cd rtk; make all
+	cd src; make clean; make rtkstage -e PLAYER_DIR=$(PLAYER_DIR); cp rtkstage ../bin/
 
 dep:
+	cd rtk; make dep
 	cd src; make dep
 
 clean:
 	rm -f *~
-	cd bin; rm -f stage rtk_stage core
+	cd rtk; make clean
 	cd src; make clean 
 	cd include; make clean
 	cd examples; make clean
+	cd bin; rm -f stage rtkstage core
+
+
+###########################################################################
+# Install section
+
+INSTALL_BIN = $(INSTALL_DIR)/bin
+INSTALL_ETC = /usr/local/etc/rtk
+INSTALL_BIN_FILES = bin/stage bin/rtkstage
+INSTALL_ETC_FILES = etc/rtkstage.cfg
 
 install:
-	mkdir -p $(INSTALL_BIN)
+	mkdir -p $(INSTALL_DIR)/bin
 	install -m 755 $(INSTALL_BIN_FILES) $(INSTALL_BIN)
 	mkdir -p $(INSTALL_ETC)
 	install -m 755 $(INSTALL_ETC_FILES) $(INSTALL_ETC)
 
 
+###########################################################################
+# Create a source distribution
+# Do a make clean and remove extraneous files first.
+
+src_dist:
+	echo Building $(SRC_DIST_NAME)
+	cp -R . /tmp/$(SRC_DIST_NAME)
+	tar -C /tmp -cvzf $(SRC_DIST_NAME).tgz --exclude CVS --exclude '*.tgz' $(SRC_DIST_NAME)
+	rm -Rf /tmp/$(SRC_DIST_NAME)
+
+
+###########################################################################
+# Create a binary distribution
+# Do a make clean and remove extraneous files first.
+# Then do a make all
+
+BIN_DIST_FILES = \
+	$(BIN_DIST_NAME)/README.stage \
+	$(BIN_DIST_NAME)/VERSION \
+	$(BIN_DIST_NAME)/Makefile \
+	$(BIN_DIST_NAME)/bin/stage \
+	$(BIN_DIST_NAME)/bin/rtkstage \
+	$(BIN_DIST_NAME)/etc/rtkstage.cfg  
+
+bin_dist:
+	echo Building $(BIN_DIST_NAME)
+	cp -R . /tmp/$(BIN_DIST_NAME)
+	tar -C /tmp -cvzf $(BIN_DIST_NAME).tgz $(BIN_DIST_FILES)
+	rm -Rf /tmp/$(BIN_DIST_NAME)
+
 
 # DO NOT DELETE
+
+
+
+
+
+
+
 
 
