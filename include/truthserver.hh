@@ -2,7 +2,7 @@
 #ifndef _TRUTHSERVER_H
 #define _TRUTHSERVER_H
 
-#include "messages.h" // from player
+#include "player.h" // from player
 #include "stage_types.hh"
 #include <sys/poll.h>
 

@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.63 2002-07-26 23:03:39 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.64 2002-08-15 17:10:51 gerkey Exp $
  */
 
 #ifndef WORLD_HH
@@ -36,7 +36,7 @@
 #include <sys/ipc.h>
 #include <sys/poll.h>
 
-#include "messages.h" //from player
+#include "player.h" //from player
 #include "image.hh"
 #include "entity.hh"
 #include "playercommon.h"

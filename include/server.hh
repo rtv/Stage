@@ -5,7 +5,7 @@
 // Class provides a network server for Stage internals
 // used by external GUIs (XS) and distributed Stage modules
 //
-// $Id: server.hh,v 1.3 2002-06-07 01:53:34 inspectorg Exp $
+// $Id: server.hh,v 1.4 2002-08-15 17:10:51 gerkey Exp $
 
 #ifndef _SERVER_H
 #define _SERVER_H
@@ -17,7 +17,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 
-#include "messages.h" // from player
+#include "player.h" // from player
 #include "stage_types.hh"
 #include "worldfile.hh"
 #include "world.hh"
