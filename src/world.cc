@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.26 $
+//  $Revision: 1.4.2.27 $
 //
 // Usage:
 //  (empty)
@@ -53,7 +53,6 @@ CWorld::CWorld()
     m_bimg = NULL;
     m_img = NULL;
     m_laser_img = NULL;
-    m_beacon_img = NULL;
     m_vision_img = NULL;
 
     // Initialise clocks
@@ -75,8 +74,6 @@ CWorld::~CWorld()
         delete m_img;
     if (m_laser_img)
         delete m_laser_img;
-    if (m_beacon_img)
-        delete m_beacon_img;
     if (m_vision_img)
         delete m_vision_img;
 }
@@ -92,6 +89,10 @@ bool CWorld::Startup()
     if (!InitGrids(m_env_file))
         return false;
 
+    // Initialise the laser beacon rep
+    //
+    InitLaserBeacon();
+    
     // Initialise the broadcast queue
     //
     InitBroadcast();
@@ -356,11 +357,6 @@ bool CWorld::InitGrids(const char *env_file)
         }
     }
 
-    // Clear beacon image
-    //
-    m_beacon_img = new Nimage(width, height);
-    m_beacon_img->clear(0);
-    
     // Clear vision image
     //
     m_vision_img = new Nimage(width, height);
@@ -388,8 +384,6 @@ uint8_t CWorld::GetCell(double px, double py, EWorldLayer layer)
             return m_img->get_pixel(ix, iy);
         case layer_laser:
             return m_laser_img->get_pixel(ix, iy);
-        case layer_beacon:
-            return m_beacon_img->get_pixel(ix, iy);
         case layer_vision:
             return m_vision_img->get_pixel(ix, iy);
     }
@@ -416,9 +410,6 @@ void CWorld::SetCell(double px, double py, EWorldLayer layer, uint8_t value)
             break;
         case layer_laser:
             m_laser_img->set_pixel(ix, iy, value);
-            break;
-        case layer_beacon:
-            m_beacon_img->set_pixel(ix, iy, value);
             break;
         case layer_vision:
             m_vision_img->set_pixel(ix, iy, value);
@@ -476,13 +467,59 @@ void CWorld::SetRectangle(double px, double py, double pth,
         case layer_laser:
             m_laser_img->draw_rect(rect, value);
             break;
-        case layer_beacon:
-            m_beacon_img->draw_rect(rect, value);
-            break;
         case layer_vision:
             m_vision_img->draw_rect(rect, value);
             break;
     }
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise laser beacon representation
+//
+void CWorld::InitLaserBeacon()
+{
+    m_laserbeacon_count = 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Add a laser beacon to the world
+// Returns an index for the beacon
+//
+int CWorld::AddLaserBeacon(int id)
+{
+    assert(m_laserbeacon_count < ARRAYSIZE(m_laserbeacon));
+    int index = m_laserbeacon_count++;
+    m_laserbeacon[index].m_id = id;
+    return index;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Set the position of a laser beacon
+//
+void CWorld::SetLaserBeacon(int index, double px, double py, double pth)
+{
+    ASSERT(index >= 0 && index < m_laserbeacon_count);
+    m_laserbeacon[index].m_px = px;
+    m_laserbeacon[index].m_py = py;
+    m_laserbeacon[index].m_pth = pth;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Get the position of a laser beacon
+//
+bool CWorld::GetLaserBeacon(int index, int *id, double *px, double *py, double *pth)
+{
+    if (index < 0 || index >= m_laserbeacon_count)
+        return false;
+    *id = m_laserbeacon[index].m_id;
+    *px = m_laserbeacon[index].m_px;
+    *py = m_laserbeacon[index].m_py;
+    *pth = m_laserbeacon[index].m_pth;
+    return true;
 }
 
 

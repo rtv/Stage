@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacon.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.7 $
+//  $Revision: 1.1.2.8 $
 //
 // Usage:
 //  (empty)
@@ -54,6 +54,10 @@ class CLaserBeacon : public CObject
     // Beacon id
     //
     private: int m_beacon_id;
+
+    // Beacon index in the world rep
+    //
+    private: int m_index;
 
     // Current mapped pose
     //

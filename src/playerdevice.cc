@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.14 $
+//  $Revision: 1.2.2.15 $
 //
 // Usage:
 //  (empty)
@@ -123,7 +123,8 @@ bool CPlayerDevice::IsSubscribed()
 ///////////////////////////////////////////////////////////////////////////
 // Write to the data buffer
 //
-size_t CPlayerDevice::PutData(void *data, size_t len)
+size_t CPlayerDevice::PutData(void *data, size_t len,
+                              uint32_t time_sec, uint32_t time_usec)
 {
     //if (len > m_data_len)
     //    RTK_MSG2("data len (%d) > buffer len (%d)", (int) len, (int) m_data_len);
@@ -142,10 +143,18 @@ size_t CPlayerDevice::PutData(void *data, size_t len)
 
     // Set the timestamp
     //
-    timeval curr;
-    gettimeofday(&curr, NULL);
-    m_info->data_timestamp_sec = curr.tv_sec;
-    m_info->data_timestamp_usec = curr.tv_usec;
+    if (time_sec == 0 && time_usec == 0)
+    {
+        timeval curr;
+        gettimeofday(&curr, NULL);
+        m_info->data_timestamp_sec = curr.tv_sec;
+        m_info->data_timestamp_usec = curr.tv_usec;
+    }
+    else
+    {
+        m_info->data_timestamp_sec = time_sec;
+        m_info->data_timestamp_usec = time_usec;
+    }
 
     // Set data flag to indicate data is available
     //
@@ -161,7 +170,8 @@ size_t CPlayerDevice::PutData(void *data, size_t len)
 // Read from the data buffer
 // Returns the number of bytes copied
 //
-size_t CPlayerDevice::GetData(void *data, size_t len)
+size_t CPlayerDevice::GetData(void *data, size_t len,
+                              uint32_t *time_sec, uint32_t *time_usec)
 {
     m_robot->LockShmem();
     
@@ -173,6 +183,13 @@ size_t CPlayerDevice::GetData(void *data, size_t len)
     // Copy the data (or as much as we were given)
     //
     memcpy(data, m_data_buffer, len);
+
+    // Copy the timestamp
+    //
+    if (time_sec != NULL)
+        *time_sec = m_info->data_timestamp_sec;
+    if (time_usec != NULL)
+        *time_usec = m_info->data_timestamp_usec;
 
     m_robot->UnlockShmem();
     

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacondevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -39,7 +39,7 @@ class CLaserBeaconDevice : public CPlayerDevice
     // Default constructor
     //
     public: CLaserBeaconDevice(CWorld *world, CObject *parent,
-                          CPlayerRobot *robot, CLaserDevice *laser);
+                               CPlayerRobot *robot, CLaserDevice *laser);
     
     // Update the device
     //
@@ -48,11 +48,10 @@ class CLaserBeaconDevice : public CPlayerDevice
     // Pointer to laser used as souce of data
     //
     private: CLaserDevice *m_laser;
-    
-    // Beacon detector timing settings
+
+    // Time of last update
     //
-    private: double m_update_interval;
-    private: double m_last_update;
+    private: uint32_t m_time_sec, m_time_usec;
 
     // Detection parameters
     //
@@ -65,11 +64,6 @@ class CLaserBeaconDevice : public CPlayerDevice
     //
     public: virtual void OnUiUpdate(RtkUiDrawData *pData);
 
-    // List of points at which beacon was detected
-    //
-    private: int m_hit_count;
-    private: double m_hit[16][2];
-    
 #endif    
 };
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.12 $
+//  $Revision: 1.1.2.13 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -38,6 +38,7 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CObject *parent)
         : CObject(world, parent)
 {
     m_beacon_id = 0;
+    m_index = -1;
     
     // Set the initial map pose
     //
@@ -100,6 +101,8 @@ bool CLaserBeacon::Save(int &argc, char **argv)
 //
 bool CLaserBeacon::Startup()
 {
+    assert(m_world != NULL);
+    m_index = m_world->AddLaserBeacon(m_beacon_id);
     return CObject::Startup();
 }
 
@@ -115,8 +118,7 @@ void CLaserBeacon::Update()
     // Undraw our old representation
     //
     m_world->SetCell(m_map_px, m_map_py, layer_laser, 0);
-    m_world->SetCell(m_map_px, m_map_py, layer_beacon, 0);
-    
+
     // Update our global pose
     //
     GetGlobalPose(m_map_px, m_map_py, m_map_pth);
@@ -124,7 +126,7 @@ void CLaserBeacon::Update()
     // Draw our new representation
     //
     m_world->SetCell(m_map_px, m_map_py, layer_laser, 2);
-    m_world->SetCell(m_map_px, m_map_py, layer_beacon, m_beacon_id);
+    m_world->SetLaserBeacon(m_index, m_map_px, m_map_py, m_map_pth);
 }
 
 
@@ -141,11 +143,14 @@ void CLaserBeacon::OnUiUpdate(RtkUiDrawData *data)
     
     if (data->draw_layer("laser_beacon", true))
     {
-        double r = 0.05;
+        double r = 0.10;
         double ox, oy, oth;
         GetGlobalPose(ox, oy, oth);
-        data->set_color(RTK_RGB(0, 0, 255));
+        double dx = 2 * r * cos(oth);
+        double dy = 2 * r * sin(oth);
+        data->set_color(RTK_RGB(255, 0, 0));
         data->ellipse(ox - r, oy - r, ox + r, oy + r);
+        data->line(ox - dx, oy - dy, ox + dx, oy + dy);
     }
 
     data->end_section();

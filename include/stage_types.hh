@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/stage_types.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -29,6 +29,7 @@
 
 #include <stddef.h>
 #include <assert.h>
+#include <math.h>
 
 ///////////////////////////////////////////////////////////////////////////
 // Some useful macros
@@ -50,6 +51,10 @@
 // Convert degrees to radians
 //
 #define DTOR(d) ((d) * M_PI / 180)
+
+// Normalize angle to domain -pi, pi
+//
+#define NORMALIZE(z) atan2(sin(z), cos(z))
 
 #define ASSERT(m) assert(m)
 

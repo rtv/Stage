@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.18 $
+//  $Revision: 1.1.2.19 $
 //
 // Usage:
 //  (empty)
@@ -51,8 +51,7 @@ enum EWorldLayer
 {
     layer_obstacle = 0,
     layer_laser = 1,
-    layer_beacon = 2,
-    layer_vision = 3,
+    layer_vision = 2,
 };
 
 
@@ -132,6 +131,37 @@ class CWorld
     //
     public: void SetRectangle(double px, double py, double pth,
                               double dx, double dy, EWorldLayer layer, uint8_t value);
+
+    
+    ///////////////////////////////////////////////////////////////////////////
+    // Laser beacon device stuff
+
+    // Initialise laser beacon representation
+    //
+    private: void InitLaserBeacon();
+
+    // Add a laser beacon to the world
+    // Returns an index for the beacon
+    //
+    public: int AddLaserBeacon(int id);
+    
+    // Set the position of a laser beacon
+    //
+    public: void SetLaserBeacon(int index, double px, double py, double pth);
+
+    // Get the position of a laser beacon
+    //
+    public: bool GetLaserBeacon(int index, int *id, double *px, double *py, double *pth);
+
+    // Array of laser beacons
+    //
+    private: int m_laserbeacon_count;
+    private: struct
+    {
+        int m_id;
+        double m_px, m_py, m_pth;
+    } m_laserbeacon[1000];
+    
     
     ///////////////////////////////////////////////////////////////////////////
     // Broadcast device functions
@@ -204,11 +234,6 @@ class CWorld
     // Store laser data (obstacles and beacons)
     //
     private: Nimage *m_laser_img;
-
-    // Laser beacon image
-    // Stores laser beacon id's
-    //
-    private: Nimage *m_beacon_img;
 
     // Vision image
     // Stores vision data
