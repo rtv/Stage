@@ -16,10 +16,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_laser.cc,v 1.6 2004-09-30 02:26:38 rtv Exp $
+ * $Id: stg_laser.cc,v 1.7 2004-12-03 01:32:57 rtv Exp $
  */
 
-#define PLAYER_ENABLE_TRACE 1
 #define PLAYER_ENABLE_MSG 1
 
 #include <stdlib.h>
@@ -195,14 +194,15 @@ int StgLaser::PutConfig(player_device_id_t device, void* client,
 	    stg_model_set_config( this->model, &slc, sizeof(slc));
 	    
 	    if(PutReply(client, PLAYER_MSGTYPE_RESP_ACK, plc, len, NULL) != 0)
-	      PLAYER_ERROR("PutReply() failed for PLAYER_LASER_SET_CONFIG");
+	      DRIVER_ERROR("PutReply() failed for PLAYER_LASER_SET_CONFIG");
 	  }
 	else
 	  {
-	    PLAYER_ERROR2("config request len is invalid (%d != %d)", 
-			  (int)len, (int)sizeof(player_laser_config_t));
+	    PRINT_ERR2("config request len is invalid (%d != %d)", 
+		       (int)len, (int)sizeof(player_laser_config_t));
+
 	    if(PutReply( client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
-	      PLAYER_ERROR("PutReply() failed for PLAYER_LASER_SET_CONFIG");
+	      DRIVER_ERROR("PutReply() failed for PLAYER_LASER_SET_CONFIG");
 	  }
       }
       break;
@@ -240,21 +240,19 @@ int StgLaser::PutConfig(player_device_id_t device, void* client,
 
 	    if(PutReply(client, PLAYER_MSGTYPE_RESP_ACK, &plc, 
 			sizeof(plc), NULL) != 0)
-	      PLAYER_ERROR("PutReply() failed for PLAYER_LASER_GET_CONFIG");      
+	      DRIVER_ERROR("PutReply() failed for PLAYER_LASER_GET_CONFIG");      
 	  }
 	else
 	  {
-	    PLAYER_ERROR2("config request len is invalid (%d != %d)", (int)len, 1);
+	    PRINT_ERR2("config request len is invalid (%d != %d)", (int)len, 1);
 	    if(PutReply(client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
-	      PLAYER_ERROR("PutReply() failed for PLAYER_LASER_GET_CONFIG");
+	      DRIVER_ERROR("PutReply() failed for PLAYER_LASER_GET_CONFIG");
 	  }
       }
       break;
 
     case PLAYER_LASER_GET_GEOM:
       {	
-	PLAYER_TRACE0( "requesting laser geom" );
-	
 	stg_geom_t geom;
 	memcpy( &geom, stg_model_get_geom( this->model ), sizeof(stg_geom_t));
 	
@@ -276,15 +274,15 @@ int StgLaser::PutConfig(player_device_id_t device, void* client,
 	
 	if( PutReply(client, PLAYER_MSGTYPE_RESP_ACK, 
 		     &pgeom, sizeof(pgeom), NULL ) != 0 )
-	  PLAYER_ERROR("PutReply() failed for PLAYER_LASER_GET_GEOM");      
+	  DRIVER_ERROR("PutReply() failed for PLAYER_LASER_GET_GEOM");      
       }
       break;
       
     default:
       {
-	PLAYER_WARN1( "stage1p4 doesn't support config id %d", buf[0] );
+	PRINT_WARN1( "stg_laser doesn't support config id %d", buf[0] );
         if (PutReply(client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
-          PLAYER_ERROR("PutReply() failed");
+          DRIVER_ERROR("PutReply() failed");
         break;
       }
       

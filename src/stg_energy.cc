@@ -16,11 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_energy.cc,v 1.1 2004-09-16 06:54:28 rtv Exp $
+ * $Id: stg_energy.cc,v 1.2 2004-12-03 01:32:57 rtv Exp $
  */
 
-#define PLAYER_ENABLE_TRACE 0
-#define PLAYER_ENABLE_MSG 1
+//#define PLAYER_ENABLE_TRACE 0
+//#define PLAYER_ENABLE_MSG 1
 
 #include "playercommon.h"
 #include "drivertable.h"
@@ -42,7 +42,7 @@ public:
 StgEnergy::StgEnergy( ConfigFile* cf, int section ) 
   : Stage1p4( interface, cf, section, sizeof(player_energy_data_t), 0, 1, 1 )
 {
-  PLAYER_TRACE1( "constructing StgEnergy with interface %s", interface );
+  //PLAYER_TRACE1( "constructing StgEnergy with interface %s", interface );
 }
 
 Driver* StgEnergy_Init( ConfigFile* cf, int section)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_driver.cc,v 1.11 2004-11-21 11:08:01 rtv Exp $
+ * $Id: stg_driver.cc,v 1.12 2004-12-03 01:32:57 rtv Exp $
  */
 
 // STAGE-1.4 DRIVER CLASS ///////////////////////////////
@@ -61,7 +61,7 @@ Stage1p4::Stage1p4( ConfigFile* cf, int section, int interface, uint8_t access,
 		    size_t datasz, size_t cmdsz, int rqlen, int rplen) :
   Driver(cf, section, interface, access, datasz, cmdsz, rqlen, rplen )
 {
-  PLAYER_TRACE1( "Stage1p4 device created for interface %s\n", interface );
+  //PLAYER_TRACE1( "Stage1p4 device created for interface %s\n", interface );
   
   this->config = cf;
 
@@ -80,13 +80,13 @@ Stage1p4::Stage1p4( ConfigFile* cf, int section, int interface, uint8_t access,
 	      model_name  );
       
       if( model_name == NULL )
-	PLAYER_ERROR1( "device \"%s\" uses the Stage1p4 driver but has "
+	PRINT_ERR1( "device \"%s\" uses the Stage1p4 driver but has "
 		       "no \"model\" value defined. You must specify a "
 		       "model name that matches one of the models in "
 		       "the worldfile.",
 		       model_name );
       
-      PLAYER_TRACE1( "attempting to resolve Stage model \"%s\"", model_name );
+      //PLAYER_TRACE1( "attempting to resolve Stage model \"%s\"", model_name );
       
       this->model = 
 	//stg_world_model_name_lookup( Stage1p4::world, model_name );
@@ -94,7 +94,7 @@ Stage1p4::Stage1p4( ConfigFile* cf, int section, int interface, uint8_t access,
 
       if( this->model  == NULL )
 	{
-	  PLAYER_ERROR1( "Failed to find a Stage model named \"%s\"",
+	  PRINT_ERR1( "Failed to find a Stage model named \"%s\"",
 			 model_name );
 	  exit( -1 );
 	}

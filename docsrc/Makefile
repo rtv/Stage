@@ -6,10 +6,12 @@ userman: ../src/stagecpp.cc help.txt build.sh stage_user.dox
 	doxygen stage_user.dox
 	./build.sh
 	doxygen stage_user.dox
+	cp stage_snip.png stage_user
 
 devman: ../src/*.c ../src/*.h ../src/*.cc help.txt stage_developer.dox
 	doxygen stage_developer.dox
+	cp stage_snip.png stage_developer
 
 
 clean:
-	rm -rf user developer
+	rm -rf stage_user stage_developer

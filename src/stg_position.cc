@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_position.cc,v 1.3 2004-09-26 02:00:45 rtv Exp $
+ * $Id: stg_position.cc,v 1.4 2004-12-03 01:32:57 rtv Exp $
  */
 
 #define DEBUG
@@ -51,7 +51,7 @@ StgPosition::StgPosition( ConfigFile* cf, int section )
   : Stage1p4( cf, section, PLAYER_POSITION_CODE, PLAYER_ALL_MODE,
 	      sizeof(player_position_data_t), sizeof(player_position_cmd_t), 1, 1 )
 {
-  PLAYER_MSG0( "STG_POSITION CONSTRUCTOR" );
+  //PLAYER_MSG0( "STG_POSITION CONSTRUCTOR" );
 
   this->model->data_notify = StgPosition::PublishData;
   this->model->data_notify_arg = this;
@@ -59,7 +59,7 @@ StgPosition::StgPosition( ConfigFile* cf, int section )
 
 Driver* StgPosition_Init( ConfigFile* cf, int section)
 {
-  PLAYER_MSG0( "STG_POSITION INIT" );
+  //PLAYER_MSG0( "STG_POSITION INIT" );
   return((Driver*)(new StgPosition( cf, section)));
 }
 	      
@@ -125,7 +125,7 @@ void  StgPosition::PutCommand(player_device_id_t id,
       stg_model_set_command( this->model, &cmd, sizeof(cmd) ) ;
     }
   else
-    PLAYER_ERROR2( "wrong size position command packet (%d/%d bytes)",
+    PRINT_ERR2( "wrong size position command packet (%d/%d bytes)",
 		   (int)len, (int)sizeof(player_position_cmd_t) );
 }
 
@@ -216,9 +216,9 @@ int StgPosition::PutConfig( player_device_id_t id, void *client,
 
     default:
       {
-	PLAYER_WARN1( "stg_position doesn't support config id %d", buf[0] );
+	PRINT_WARN1( "stg_position doesn't support config id %d", buf[0] );
         if (PutReply(client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
-          PLAYER_ERROR("PutReply() failed");
+          DRIVER_ERROR("PutReply() failed");
         break;
       }
     }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_blobfinder.cc,v 1.5 2004-10-11 06:16:56 rtv Exp $
+ * $Id: stg_blobfinder.cc,v 1.6 2004-12-03 01:32:57 rtv Exp $
  */
 
 #define PLAYER_ENABLE_TRACE 0
@@ -47,7 +47,7 @@ StgBlobfinder::StgBlobfinder( ConfigFile* cf, int section )
   : Stage1p4( cf, section, PLAYER_BLOBFINDER_CODE, PLAYER_READ_MODE,
 	      sizeof(player_blobfinder_data_t), 0, 1, 1 )
 {
-  PLAYER_TRACE0( "constructing StgBlobfinder" ); 
+  //PLAYER_TRACE0( "constructing StgBlobfinder" ); 
   
   this->model->data_notify = StgBlobfinder::PublishData;
   this->model->data_notify_arg = (void*)this;
@@ -157,7 +157,7 @@ int StgBlobfinder::PutConfig(player_device_id_t id, void *client,
       {
 	printf( "Warning: stg_blobfinder doesn't support config id %d\n", buf[0] );
 	if (PutReply(client, PLAYER_MSGTYPE_RESP_NACK,NULL) != 0)
-	  PLAYER_ERROR("PutReply() failed");
+	  DRIVER_ERROR( "PutReply() failed" );
 	break;
       }
       

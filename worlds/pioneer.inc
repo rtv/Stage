@@ -2,7 +2,7 @@
 # Desc: Device definitions for Activemedia robots.
 # Author: Andrew Howard, Richard Vaughan
 # Date: 10 Jun 2002
-# CVS: $Id: pioneer.inc,v 1.13 2004-11-21 02:55:04 rtv Exp $
+# CVS: $Id: pioneer.inc,v 1.14 2004-12-03 01:32:57 rtv Exp $
 
 
 # The Pioneer2DX sonar array
@@ -80,17 +80,6 @@ define pioneer2dx position
   # estimated mass in KG
   mass 15.0 
 	
-  # these lines draw the approximate shape of a Pioneer
-  #lines 8
-  #line[0] [0.23 0.05 0.15 0.15]
-  #line[1] [0.15 0.15 -0.15 0.15]
-  #line[2] [-0.15 0.15 -0.23 0.05]
-  #line[3] [-0.23 0.05 -0.23 -0.05]
-  #line[4] [-0.23 -0.05 -0.15 -0.15]
-  #line[5] [-0.15 -0.15 0.15 -0.15]
-  #line[6] [0.15 -0.15 0.23 -0.05]
-  #line[7] [0.23 -0.05 0.23 0.05] 
-
   # this polygon approximates the shape of a pioneer
   polygons 1
   polygon[0].points 8
@@ -138,17 +127,18 @@ define amigobot position
 # (these angles are correct for p2dx but the offsets are approximate - RTV)
 # format: bumper[x] [x y th length radius] (zero radius gives a straight line)
 # WARNING: bumpers are not currently supported by Stage>=1.5
-define pioneer2dxbumper bumper
-( 
-  bumpers10
-  bumper[0] [  0.17 -0.22  -52  0.105 0.0 ]
-  bumper[1] [  0.24 -0.12  -19  0.105 0.0 ]
-  bumper[2] [  0.26  0.00    0  0.105 0.0 ]
-  bumper[3] [  0.24  0.12   19  0.105 0.0 ]
-  bumper[4] [  0.17  0.22   52  0.105 0.0 ]
-  bumper[5] [ -0.25  0.22  128  0.105 0.0 ]
-  bumper[6] [ -0.32  0.12  161  0.105 0.0 ]
-  bumper[7] [ -0.34  0.00  180  0.105 0.0 ]
-  bumper[8] [ -0.32 -0.12  199  0.105 0.0 ]
-  bumper[9] [ -0.25 -0.22  232  0.105 0.0 ]
-)
+# define pioneer2dxbumper bumper
+# ( 
+#   bumpers10
+#   bumper[0] [  0.17 -0.22  -52  0.105 0.0 ]
+#   bumper[1] [  0.24 -0.12  -19  0.105 0.0 ]
+#   bumper[2] [  0.26  0.00    0  0.105 0.0 ]
+#   bumper[3] [  0.24  0.12   19  0.105 0.0 ]
+#   bumper[4] [  0.17  0.22   52  0.105 0.0 ]
+#   bumper[5] [ -0.25  0.22  128  0.105 0.0 ]
+#   bumper[6] [ -0.32  0.12  161  0.105 0.0 ]
+#   bumper[7] [ -0.34  0.00  180  0.105 0.0 ]
+#   bumper[8] [ -0.32 -0.12  199  0.105 0.0 ]
+#   bumper[9] [ -0.25 -0.22  232  0.105 0.0 ]
+# )
+

@@ -2,7 +2,7 @@
    "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
-<!-- $Id: header_top.src,v 1.4 2004-11-10 08:24:54 rtv Exp $ -->
+<!-- $Id: header_top.src,v 1.5 2004-12-03 01:32:57 rtv Exp $ -->
 
 <HEAD>
 
@@ -76,7 +76,7 @@ ul.menu {
     margin-top:0px;
 }
 
-li { 
+li.menu { 
     list-style-type: none;
     position:relative;
     #left:-0.5em;
@@ -110,23 +110,31 @@ div.stage { font-size:120% }
 <div id="sidebar"> 
 
 
-<h2 align=center><div class=stage>Stage</div>v2.0</h2>
-<!-- <p align=center><img src="../notext_ps_logo.jpg" alt="P/S logo"></p> -->
-<p align=center><img src="../stage_snip.tiff" alt="P/S logo"></p>
+<h2 align=center><div class=stage>Stage</div>v1.6</h2>
+<p align=center><img src="stage_snip.png" alt="P/S logo"></p>
 
 <div class="box">
 <div class=title>User Guide</div>
 
 <ul class=menu>
-<li><a href="index.html">Introduction</a><br>
-<li><a href="install.html">Installation</a><br>
-<li><a href="devices.html">Devices</a>
+<li class=menu><a href="index.html">Introduction</a><br>
+<li class=menu><a href="release.html">Release</a><br>
+<li class=menu><a href="install.html">Installation</a><br>
+<li class=menu><a href="worlds.html">Worlds</a><br>
+<li class=menu><a href="window.html">Window</a><br>
+<li class=menu><a href="refs.html">References</a><br>
+<li class=menu><a href="credits.html">Credits</a><br>
+
+<hr>
+
+<!--
+<li class=menu>Devices
     <ul>
-    <li><a href="dev_simulation.html">simulation</a></li>
+    <li class=menu><a href="dev_simulation.html">simulation</a></li>
     </ul>
 </li>
+-->
     
-
-<li><a href="models.html">Models</a></li>
+<li class=menu>Models</li>
 
 <ul>

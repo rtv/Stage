@@ -17,18 +17,12 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_fiducial.cc,v 1.3 2004-09-26 02:00:45 rtv Exp $
+ * $Id: stg_fiducial.cc,v 1.4 2004-12-03 01:32:57 rtv Exp $
  */
 
 #include <stdlib.h>
 #include <math.h>
 
-#define PLAYER_ENABLE_TRACE 0
-#define PLAYER_ENABLE_MSG 1
-
-//#include "playercommon.h"
-//#include "drivertable.h"
-//#include "player.h"
 #include "stg_driver.h"
 
 class StgFiducial:public Stage1p4
@@ -48,8 +42,6 @@ StgFiducial::StgFiducial( ConfigFile* cf, int section )
   : Stage1p4(cf, section, PLAYER_FIDUCIAL_CODE, PLAYER_READ_MODE, 
 	     sizeof(player_fiducial_data_t), 0, 1, 1 )
 {
-  PLAYER_TRACE1( "constructing StgFiducial with interface %s", interface );
-  
   this->model->data_notify = StgFiducial::PublishData;
   this->model->data_notify_arg = this;
 }
@@ -68,9 +60,6 @@ void StgFiducial_Register(DriverTable* table)
 void StgFiducial::PublishData( void* ptr )
 {
   StgFiducial* sf = (StgFiducial*)ptr;
-
-  PLAYER_TRACE2(" STG_FIDUCIAL GETDATA section %d -> model %d",
-		sf->model->section, sf->model->id_client );
   
   player_fiducial_data_t pdata;
   memset( &pdata, 0, sizeof(pdata) );
@@ -119,8 +108,6 @@ int StgFiducial::PutConfig(player_device_id_t id, void *client,
     {  
     case PLAYER_FIDUCIAL_GET_GEOM:
       {	
-	PLAYER_TRACE0( "requesting fiducial geom" );
-
 	// just get the model's geom - Stage doesn't have separate
 	// fiducial geom (yet)
 	stg_geom_t* geom = stg_model_get_geom(this->model);
@@ -140,7 +127,7 @@ int StgFiducial::PutConfig(player_device_id_t id, void *client,
 	
 	if( PutReply( id, client, PLAYER_MSGTYPE_RESP_ACK,  
 		      &pgeom, sizeof(pgeom), NULL ) != 0 )
-	  PLAYER_ERROR("PutReply() failed for PLAYER_LASER_GET_GEOM");      
+	  DRIVER_ERROR("PutReply() failed for PLAYER_LASER_GET_GEOM");      
       }
       break;
       
@@ -164,15 +151,13 @@ int StgFiducial::PutConfig(player_device_id_t id, void *client,
 	  stg_model_set_config( this->model, &setcfg, sizeof(setcfg));
 	}    
       else
-	PLAYER_ERROR2("Incorrect packet size setting fiducial FOV (%d/%d)",
+	PRINT_ERR2("Incorrect packet size setting fiducial FOV (%d/%d)",
 		      (int)len, (int)sizeof(player_fiducial_fov_t) );      
       
       // deliberate no-break - SET_FOV needs the current FOV as a reply
       
     case PLAYER_FIDUCIAL_GET_FOV:
       {
-	PLAYER_TRACE0( "requesting fiducial FOV" );
-	
 	size_t cfglen=0;
 	stg_fiducial_config_t* cfg = (stg_fiducial_config_t*)
 	  stg_model_get_config( this->model, &cfglen );
@@ -187,7 +172,7 @@ int StgFiducial::PutConfig(player_device_id_t id, void *client,
 	
 	if( PutReply( id, client, PLAYER_MSGTYPE_RESP_ACK, 
 		      &pfov, sizeof(pfov), NULL ) != 0 )
-	  PLAYER_ERROR("PutReply() failed for "
+	  DRIVER_ERROR("PutReply() failed for "
 		       "PLAYER_FIDUCIAL_GET_FOV or PLAYER_FIDUCIAL_SET_FOV");      
       }
       break;
@@ -196,23 +181,18 @@ int StgFiducial::PutConfig(player_device_id_t id, void *client,
       
       if( len == sizeof(player_fiducial_id_t) )
 	{
-	  PLAYER_TRACE0( "setting fiducial id" );
-	  
 	  int id = ntohl(((player_fiducial_id_t*)src)->id);
 
 	  stg_model_set_fiducialreturn( this->model, &id );
 	}
       else
-	PLAYER_ERROR2("Incorrect packet size setting fiducial ID (%d/%d)",
-		      (int)len, (int)sizeof(player_fiducial_id_t) );      
+	PRINT_ERR2("Incorrect packet size setting fiducial ID (%d/%d)",
+		     (int)len, (int)sizeof(player_fiducial_id_t) );      
       
       // deliberate no-break - SET_ID needs the current ID as a reply
 
   case PLAYER_FIDUCIAL_GET_ID:
       {
-	PLAYER_TRACE0( "requesting fiducial ID" );
-	//puts( "requesting fiducial ID" );
-	
 	stg_fiducial_return_t* ret = stg_model_get_fiducialreturn(this->model); 
 
 	// fill in the data formatted player-like
@@ -221,7 +201,7 @@ int StgFiducial::PutConfig(player_device_id_t id, void *client,
 	
 	if( PutReply( client, PLAYER_MSGTYPE_RESP_ACK, 
 		      &pid, sizeof(pid), NULL ) != 0 )
-	  PLAYER_ERROR("PutReply() failed for "
+	  DRIVER_ERROR("PutReply() failed for "
 		       "PLAYER_FIDUCIAL_GET_ID or PLAYER_FIDUCIAL_SET_ID");      
       }
       break;
@@ -231,7 +211,7 @@ int StgFiducial::PutConfig(player_device_id_t id, void *client,
       {
 	printf( "Warning: stg_fiducial doesn't support config id %d\n", buf[0] );
         if (PutReply(id, client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0) 
-          PLAYER_ERROR("PutReply() failed");
+          DRIVER_ERROR("PutReply() failed");
       }
     }
   

@@ -16,10 +16,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_sonar.cc,v 1.3 2004-09-26 02:00:45 rtv Exp $
+ * $Id: stg_sonar.cc,v 1.4 2004-12-03 01:32:57 rtv Exp $
  */
 
-#define PLAYER_ENABLE_TRACE 0
 #define PLAYER_ENABLE_MSG 1
 
 #include <stdlib.h>
@@ -48,8 +47,6 @@ StgSonar::StgSonar( ConfigFile* cf, int section )
   : Stage1p4( cf, section, PLAYER_SONAR_CODE, PLAYER_READ_MODE, 
 	      sizeof(player_sonar_data_t), 0, 1, 1 )
 {
-  PLAYER_TRACE1( "constructing StgSonar with interface %s", interface );
-  
   power_on = 1; // enabled by default
 
  this->model->data_notify = StgSonar::PublishData;
@@ -80,9 +77,6 @@ void StgSonar::PublishData( void* ptr )
   if( rangers && datalen > 0 )
     {
       size_t rcount = datalen / sizeof(stg_ranger_sample_t);
-      
-      PLAYER_TRACE2( "i see %d bytes of ranger data: %d ranger readings", 
-		     (int)prop->len, (int)rcount );
       
       // limit the number of samples to Player's maximum
       if( rcount > PLAYER_SONAR_MAX_SAMPLES )
@@ -147,7 +141,7 @@ int StgSonar::PutConfig(player_device_id_t id, void *client,
 
 	  if(PutReply( id, client, PLAYER_MSGTYPE_RESP_ACK, 
 	  &pgeom, sizeof(pgeom), NULL ) )
-	  PLAYER_ERROR("failed to PutReply");
+	  DRIVER_ERROR("failed to PutReply");
       }
       break;
       
@@ -158,26 +152,26 @@ int StgSonar::PutConfig(player_device_id_t id, void *client,
 	 */
 	if( len != sizeof(player_sonar_power_config_t))
 	  {
-	    PLAYER_WARN2( "stg_sonar: arg to sonar state change "
+	    PRINT_WARN2( "stg_sonar: arg to sonar state change "
 			  "request wrong size (%d/%d bytes); ignoring",
 			  (int)len,(int)sizeof(player_sonar_power_config_t) );
 	    
 	    if(PutReply( id, client, PLAYER_MSGTYPE_RESP_NACK, NULL ))
-	      PLAYER_ERROR("failed to PutReply");
+	      DRIVER_ERROR("failed to PutReply");
 	  }
 	
 	this->power_on = ((player_sonar_power_config_t*)src)->value;
 	
 	if(PutReply( id, client, PLAYER_MSGTYPE_RESP_ACK, NULL ))
-	  PLAYER_ERROR("failed to PutReply");
+	  DRIVER_ERROR("failed to PutReply");
 	
 	break;
 	
     default:
       {
-	printf( "Warning: stg_sonar doesn't support config id %d\n", buf[0] );
+	PRINT_WARN1( "stg_sonar doesn't support config id %d\n", buf[0] );
 	if (PutReply( id, client, PLAYER_MSGTYPE_RESP_NACK, NULL) != 0)
-	  PLAYER_ERROR("PutReply() failed");
+	  DRIVER_ERROR("PutReply() failed");
 	break;
       }
       

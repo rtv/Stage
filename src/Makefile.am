@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.82 2004-12-02 18:51:09 rtv Exp $
+# $Id: Makefile.am,v 1.83 2004-12-03 01:32:57 rtv Exp $
 
 # install these headers
 include_HEADERS = stage.h 
@@ -33,6 +33,7 @@ libstage_la_SOURCES = \
 	raytrace.c \
 	stage.c \
 	stage.h \
+	stage_internal.h \
 	stagecpp.cc \
 	stg_blobfinder.cc \
 	stg_fiducial.cc \

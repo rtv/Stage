@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.60 2004-12-02 01:25:30 rtv Exp $
+dnl $Id: configure.in,v 1.61 2004-12-03 01:32:57 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl AC_INIT( package, version )
@@ -29,17 +29,6 @@ AC_SUBST(LIBTOOL_DEPS)
 dnl Generate a configuration header called <config.h> and put all the C
 dnl preprocessor defines in there
 AM_CONFIG_HEADER(config.h)
-
-dnl Define this so that we can refer to it twice below
-dnl PS_VERSION is the major.minor version that is common for Player and
-dnl Stage. All revisions with this major.minor version must be forwards 
-dnl and backwards compatible. This number is used for the install directories.
-dnl define(PS_VERSION,1.6)
-
-dnl STAGE_VERSION is major.minor.revision - unique to this release and 
-dnl independent of Player's revision number - 'dev' should be appended for 
-dnl unreleased development versions
-dnl define(STAGE_VERSION,PS_VERSION.0)
 
 dnl automake now automatically inherits PACKAGE and VERSION created by AC_INIT above
 AM_INIT_AUTOMAKE
@@ -86,23 +75,12 @@ AC_DEFINE(INCLUDE_GTK,1,[building GTK components]),
 AC_MSG_WARN([no suitable GTK was found. ])
 )
 
-dnl PKG_CHECK_MODULES(GNOMECANVAS, libgnomecanvas-2.0 >= 2.0,
-dnl AC_DEFINE(INCLUDE_GNOMECANVAS,1,[building GNOMECANVAS components]),
-dnl AC_MSG_WARN([no suitable GNOMECANVAS was found. ])
-dnl )
 
-dnl we need Player 1.5 or higher
-PKG_CHECK_MODULES( PLAYER, player >= 1.5,
+dnl we need Player 1.6 or higher
+PKG_CHECK_MODULES( PLAYER, player >= 1.6,
 AC_DEFINE(INCLUDE_PLAYER,1,[building Player plugin]),
 AC_MSG_WARN([Player was not found. ])
 )
-
-
-dnl we use libjpeg to export images.
-AC_CHECK_HEADER(jpeglib.h,
-  AC_DEFINE(HAVE_JPEGLIB_H,1,[include jpeg support])
-  LIBJPEG="-ljpeg",,)
-AC_SUBST(LIBJPEG)
 
 dnl where's the X11-style color database?
 AC_CHECK_FILE([/usr/X11R6/lib/X11/rgb.txt],
@@ -114,10 +92,24 @@ AC_ARG_WITH(color, [   --with-color=file      Location of X11-style color file],
 CDB="\"$with_color\"",)
 AC_DEFINE_UNQUOTED(COLOR_DATABASE,$CDB,[the X11-style color database])
 
+
+dnl - not currently used, but keeping around just in case - rtv
+
+dnl we use libjpeg to export images.
+dnl AC_CHECK_HEADER(jpeglib.h,
+dnl  AC_DEFINE(HAVE_JPEGLIB_H,1,[include jpeg support])
+dnl   LIBJPEG="-ljpeg",,)
+dnl AC_SUBST(LIBJPEG)
+
+dnl PKG_CHECK_MODULES(GNOMECANVAS, libgnomecanvas-2.0 >= 2.0,
+dnl AC_DEFINE(INCLUDE_GNOMECANVAS,1,[building GNOMECANVAS components]),
+dnl AC_MSG_WARN([no suitable GNOMECANVAS was found. ])
+dnl )
+
 dnl should tests (e.g., RTK) be built?
-AC_ARG_WITH(tests, [  --with-tests            Build tests],,
-with_tests=yes)
-AM_CONDITIONAL(WITH_TESTS, test x$with_tests = xyes)
+dnl AC_ARG_WITH(tests, [  --with-tests            Build tests],,
+dnl with_tests=yes)
+dnl AM_CONDITIONAL(WITH_TESTS, test x$with_tests = xyes)
 
 AC_OUTPUT(Makefile 
           src/Makefile 
@@ -125,8 +117,7 @@ AC_OUTPUT(Makefile
           worlds/bitmaps/Makefile 
           replace/Makefile
           tools/Makefile
-	  stage.pc
-          stageplugin.pc )
+	  stage.pc )
 
 dnl should use AC_MSG_NOTICE(), but that's apparently not defined in
 dnl autoconf 2.13.

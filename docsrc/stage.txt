@@ -1,6 +1,6 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: stage.txt,v 1.3 2004-11-10 08:19:34 rtv Exp $
+ * $Id: stage.txt,v 1.4 2004-12-03 01:32:57 rtv Exp $
 */
 
 /**
@@ -54,54 +54,242 @@ Some models from previous versions may not yet be available in this
 release, but we're working on them. Let us know which ones you need.
 </i>
 
-<hr> <small> 
-<p><b>References</b>
+<hr>
+<small>
+Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: stage.txt,v 1.4 2004-12-03 01:32:57 rtv Exp $
+</small>
+
+*/
+
+/**
+@page refs References
 
 [1] Brian Gerkey, Richard Vaughan, Kasper Stoy, Andrew Howard, Gaurav
 Sukhatme, Maja Mataric (2001) "Most Valuable Player: A Robot Device
 Server for Distributed Control", Proc. IEEE Int. Conf. Intelligent
 Robotic Systems, Maui, Hawaii. (IROS'01)
 
-[2] Richard Vaughan, Brian Gerkey, Andrew Howard. (2003) "On device
+[2] Richard Vaughan, Brian Gerkey, Andrew Howard (2003) "On device
 abstractions for portable, resuable robot code", IEEE/RSJ
-International Conference on Intelligent Robot Systems, Las
-Vegas, Nevada, USA.  (IROS2003)
+International Conference on Intelligent Robot Systems, Las Vegas,
+Nevada, USA.  (IROS2003)
 
-[3] Brian Gerkey, Richard Vaughan, Andrew
-Howard. (2003) "The Player/Stage Project: Tools for Multi-Robot and Distributed
-Sensor Systems",  11th International Conference on Advanced
-Robotics, Coimbra, Portugal (ICAR'03).
+[3] Brian Gerkey, Richard Vaughan, Andrew Howard (2003) "The
+Player/Stage Project: Tools for Multi-Robot and Distributed Sensor
+Systems", 11th International Conference on Advanced Robotics, Coimbra,
+Portugal (ICAR'03).
 
-[4] Nick Jakobi "Evolutionary Robotics and the Radical Envelope of
-Noise Hypothesis", Adaptive Behavior XX XX 
+[4] Nick Jakobi (1997) "Evolutionary Robotics and the Radical Envelope
+of Noise Hypothesis", Adaptive Behavior Volume 6, Issue 2. pp.325 -
+368 .
 
-[5] Stuart Wilson "Knowledge Growth in an Artificial Animal", XX XXX XX
-
-<hr>
-Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: stage.txt,v 1.3 2004-11-10 08:19:34 rtv Exp $
-
-</small>
+[5] Stuart Wilson (1985) "Knowledge Growth in an Artificial Animal",
+Proceedings of the First International Conference on Genetic Agorithms
+and Their Applications.  Hillsdale, New Jersey. pp.16-23.
 
 */
 
 /**
 @page install Installation
 
-Installing Stage....
+<b>Important: Stage is an extension to Player; Player must be properly
+installed before you can install Stage.</b>
+
+<h2>Quick start</h2>
+
+Install Player first, then Stage, using the standard GNU autotools
+build system: download and extract the tarballs, then <tt>./configure
+; make install</tt>.
+
+<h2>Detailed instructions</h2>
+
+<ol>
+
+<li>Make sure Player is installed and working. See the Player
+ documentation for instructions.
+
+<li>Download the latest Stage source tarball (stage-src-<version>.tgz)
+from <a href=http:playerstage.sf.net>http://playerstage.sf.net</a>
+
+<li>Uncompress and expand the tarball: <br>
+    <tt>$ tar xzvf stage-src-<version>.tgz</tt>
+
+<li>`cd' into Stage's source directory:<br>
+     <tt>$ cd stage-<version></tt>
+
+<li>To configure Stage with default settings:<br>
+<tt>$ ./configure</tt><br>
+
+<li>Compile Stage:<br>
+<tt>$ make</tt>
+
+<li>Install Stage. By default, Stage will be installed in
+<tt>/usr/local</tt> so you need to become root for this step. Remember
+to return to your normal user ID afterwards. <br> 
+<tt>$ make install<tt>
+
+</ol>
+
 
 */
 
-/** 
-@page devices Devices
 
-Devices..
+/**
+@page release Release Notes
+
+This release of Stage is the first after a major rewrite. There are
+bound to be bugs and teething troubles, but the <a
+href=http://www.cs.sfu.ca/research/groups/autonomy>Autonomy Lab</a>
+has been using this code for serious work for a few months now and we
+think it's useful and usable.
+
+<h3>Significant changes visible to the user</h3>
+
+<ol>
+
+<li>Stage is now a Player plugin, instead of an executable. The key
+benefit of this is that <b>all Player drivers are now available for
+use directly with Stage</b>, including sophisticated drivers like
+AMCL, without needing passthrough drivers.
+
+<li>Worldfile syntax has a changed, so you need to edit your existing
+worlds to get them to work. Look at the example worlds in <tt>(stage
+src)/worlds</tt> to get the idea.
+
+<li>Any object can now have its shape specified by a bitmap file
+
+<li>Many, many, bitmap file formats are supported. Load maps and robot
+bodies from JPG, PNG, etc. No more PNM troubles.
+
+<li>Worlds can now be very large (thousands of meters square).
+
+<li>Several models are missing from this release - notably the gripper
+and puck. These will be available soon. Meanwhile, enjoy the full
+power of Player with the basic laser, sonar, position, fiducial and
+blobfinder models.
+
+<li>Stage no longer depends on libRTK.
+
+</ol>
+
+<h3>Significant changes under the hood</h3>
+
+<ol>
+
+<li>Stage is now mostly written in C. A simple object-oriented system
+allows one-level of inheritance for writing polymorphic model code.
+
+<li>The underlying occupancy grid model has changed from a simple
+fixed-size array to a sparse array of (almost) unlimited size
+(implemented with a hash table). To compensate for the performance hit
+of raytracing in the hash table, a three-level multiple-resolution
+approach is used. Raytracing is now around 100 times faster than in
+Stage-1.3. To get an idea how this works, select the
+View/Debug/Raytrace menu item while a laser or ranger is producing
+data.
+
+<li>Most home-rolled data structures have been replaced by glib
+versions.
+
+</ol>
+
 
 */
+
+/**
+@page worlds Worlds
+
+Stage simulates a 'world' composed of models, defined in a 'world
+file'. 
+
+This section will become very informative. Meanwhile look at the
+example world files in <tt>(stage src)/worlds</tt> along with
+the worldfile properties described on the manual page for each model
+type.
+
+*/
+
+/**
+@page window Using the Stage window
+
+The Stage window consists of a menu bar, a view of the simulated
+world, and a status bar.
+
+The world view shows part of the simulated world. You can zoom the
+view in and out, and scroll it to see more of the world. Simulated
+robot devices, obstacles, etc., are rendered as colored polygons. The
+world view can also show visualizations of the data and configuration
+of various sensor and actuator models. The View menu has options to
+control which data and configurations are rendered.
+
+<h3>Scrolling the view</h3>
+
+<p>Left-click and drag on the background to move your view of the world.
+
+<h3>Zooming the view</h3>
+
+<p>Right-click and drag on the background to zoom your view of the
+world. When you press the right mouse button, a circle appears. Moving
+the mouse adjusts the size of the circle; the current view is scaled
+with the circle.
+
+<h3>Saving the world</h3>
+
+<P>You can save the current pose of everything in the world, using the
+File/Save menu item. <b>Warning: the saved poses overwrite the current
+world file.</b> Make a copy of your world file before saving if you
+want to keep the old poses.
+
+
+<h3>Saving a screenshot</h3>
+
+<p> The File/Export menu allows you to export a screenshot of the
+current world view in JPEG or PNG format. The frame is saved in the
+current directory with filename in the format "stage-(frame
+number).(jpg/png)". 
+
+ You can also save sequences of screen shots. To start saving a
+sequence, select the desired time interval from the same menu, then
+select File/Export/Sequence of frames. The frames are saved in the
+current directory with filenames in the format "stage-(sequence
+number)-(frame number).(jpg/png)".
+
+The frame and sequence numbers are reset to zero every time you run
+Stage, so be careful to rename important frames before they are
+overwritten.
+
+<h3>Pausing and resuming the clock</h3>
+
+<p>The Clock/Pause menu item allows you to stop the simulation clock,
+freezing the world. Selecting this item again re-starts the clock.
+
+
+<h3>View options</h3>
+
+<p>The View menu allows you to toggle rendering of a 1m grid, to help
+you line up objects (View/Grid). You can control whether polygons are
+filled (View/Fill polygons); turning this off slightly improves
+graphics performance. The rest of the view menu contains options for
+rendering of data and configuration for each type of model, and a
+debug menu that enables visualization of some of the innards of Stage.
+
+
+*/
+
+
 
 /** 
 @page dev_simulation Simulation Device
 
 The simulation device...
+
+*/
+
+
+/** 
+@page devices Devices
+
+Devices..
 
 */
 

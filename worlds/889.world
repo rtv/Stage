@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: 889.world,v 1.1 2004-08-29 00:25:39 rtv Exp $
+# CVS: $Id: 889.world,v 1.2 2004-12-03 01:32:57 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 #
@@ -8,8 +8,12 @@
 include "pioneer.inc"
 
 
-include "chatterbox.inc"
+#include "chatterbox.inc"
 
+define chatterbox model
+(
+  size [0.12 0.12]
+)
 
 
 size [120 45]

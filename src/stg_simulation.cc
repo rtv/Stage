@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_simulation.cc,v 1.7 2004-11-22 20:23:22 rtv Exp $
+ * $Id: stg_simulation.cc,v 1.8 2004-12-03 01:32:57 rtv Exp $
  */
 
 #include "stg_driver.h"
@@ -60,7 +60,7 @@ StgSimulation::StgSimulation( ConfigFile* cf, int section )
 	      sizeof(player_simulation_data_t), 
 	      sizeof(player_simulation_cmd_t), 1, 1 )
 {
-  PLAYER_MSG0( "constructing stg_simulation device" );
+  //PLAYER_MSG0( "constructing stg_simulation device" );
   
   // boot libstage 
   stg_init( global_argc, global_argv );
@@ -97,7 +97,7 @@ StgSimulation::StgSimulation( ConfigFile* cf, int section )
   // a little sanity testing
   if( !g_file_test( worldfile_name, G_FILE_TEST_EXISTS ) )
     {
-      PLAYER_ERROR1( "worldfile \"%s\" does not exist", worldfile_name );
+      PRINT_ERR1( "worldfile \"%s\" does not exist", worldfile_name );
       return;
     }
   
@@ -176,14 +176,13 @@ void StgSimulation::Main()
 
 int StgSimulation::Setup()
 {
-  PRINT_WARN( "stg_simulation setup" );
-
+  //PRINT_WARN( "stg_simulation setup" );
   return 0; //ok
 }
 
 int StgSimulation::Shutdown()
 {
-  PRINT_WARN( "stg_simulation shutdown" );
+  //PRINT_WARN( "stg_simulation shutdown" );
   return 0; // ok
 }
 

@@ -12,7 +12,7 @@ for PAGE in `ls $PAGEDIR/group__model*.html` ; do
    STRIPPED=${STRIPEND#$PAGEDIR/group__model__}
    
    echo "Adding link for " $STRIPPED
-   echo "<li><a href=\""$PAGENAME"\">"$STRIPPED"</a></li>" >> $OUTPUT
+   echo "<li class=menu><a href=\""$PAGENAME"\">"$STRIPPED"</a></li>" >> $OUTPUT
 done
 
 cat header_bottom.src >> $OUTPUT

@@ -1,11 +1,11 @@
 # Desc: Some useful environmental objects
 # Author: Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: objects.inc,v 1.1 2002-07-04 01:06:02 rtv Exp $
+# CVS: $Id: objects.inc,v 1.2 2004-12-03 01:32:57 rtv Exp $
 
 # a largeish colored cylinder 
 #
-define visionbeacon box 
+define visionbeacon model
 (
   shape "circle" 
   size [0.2 0.2] 

@@ -2,13 +2,8 @@ SUBDIRS = bitmaps
 
 worldsdir = $(prefix)/share/stage/worlds
 
-worlds_DATA = test.world                        \
-              objects.inc			\
-              pioneer.inc			\
-              beacons.inc			
+EXAMPLES =  test.world test.cfg simple.world simple.cfg pioneer.inc beacons.inc map.inc
 
-EXTRA_DIST =  test.world                        \
-              objects.inc			\
-              pioneer.inc			\
-              beacons.inc			
+worlds_DATA = $(EXAMPLES)
 
+EXTRA_DIST =  $(EXAMPLES)

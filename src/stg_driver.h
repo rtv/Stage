@@ -43,6 +43,8 @@
 
 #include "stage_internal.h"
 
+#define DRIVER_ERROR(X) printf( "Stage driver error: %s\n", X )
+
 class Stage1p4 : public Driver
 {
  public:
