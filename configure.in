@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.35.4.3 2003-02-04 03:35:37 rtv Exp $
+dnl $Id: configure.in,v 1.35.4.4 2003-02-05 04:07:30 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -101,15 +101,15 @@ else
   if test -f $RTK_DIR/include/rtk.h; then
     with_rtk=yes
     AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
-    GUI_DIR=rtkstage
-    GUI_LIB=librtkstage.a
-    GUI_LINK="-L$RTK_DIR/lib -Lrtkstage -lrtkstage -lrtk $LIBJPEG `gtk-config --libs gtk gthread`"
+    GUI_DIR=rtkgui
+    GUI_LIB=librtkgui.a
+    GUI_LINK="-L$RTK_DIR/lib -Lrtkgui -lrtkgui -lrtk $LIBJPEG `gtk-config --libs gtk gthread`"
   else
     with_rtk=no
-    AC_MSG_WARN([***************************************************])
+    AC_MSG_WARN([*** WARNING ***************************************])
     AC_MSG_WARN([Couldn't find RTK, so I won't build RTK-based GUIs])
     AC_MSG_WARN([Maybe you should download and install RTK?])
-    AC_MSG_WARN([If you have RTK installed, try --with-rtk=path])
+    AC_MSG_WARN([If you have RTK installed, try --with-rtk=<path>])
     AC_MSG_WARN([***************************************************])
   fi
   AM_CONDITIONAL(WITH_RTK, test x$with_rtk = xyes)
@@ -155,8 +155,8 @@ AC_OUTPUT(Makefile
           replace/Makefile
           src/Makefile 
 	  src/models/Makefile	
-          src/gnome2/Makefile 
-	  src/rtkstage/Makefile
+          src/gnomegui/Makefile 
+	  src/rtkgui/Makefile
 	  src/stageio/Makefile
           worlds/Makefile 
           tools/Makefile)
