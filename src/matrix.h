@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.h,v 1.5 2004-06-13 07:27:55 rtv Exp $
+// $Id: matrix.h,v 1.6 2004-06-15 06:54:40 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -36,8 +36,8 @@ typedef struct
   
 typedef struct
 {
-  gulong x; // address a very large space of cells
-  gulong y;
+  double x,y; // address a very large space of cells
+  double ppm; // the base resolution
 } stg_matrix_coord_t;
 
 
@@ -50,8 +50,6 @@ void stg_matrix_destroy( stg_matrix_t* matrix );
 // removes all pointers from every cell in the matrix
 void stg_matrix_clear( stg_matrix_t* matrix );
 
-// get the array of pointers in cell y*width+x
-//GPtrArray* stg_matrix_cell( stg_matrix_t* matrix, gulong x, gulong y);
 
 GPtrArray* stg_matrix_cell_get( stg_matrix_t* matrix, double x, double y);
 GPtrArray* stg_matrix_bigcell_get( stg_matrix_t* matrix, double x, double y);
@@ -59,7 +57,7 @@ GPtrArray* stg_matrix_medcell_get( stg_matrix_t* matrix, double x, double y);
 
 // append the [object] to the pointer array at the cell
 //void stg_matrix_cell_append(  stg_matrix_t* matrix, 
-//		      gulong x, gulong y, void* object );
+//		      double x, double y, void* object );
 void stg_matrix_cell_append(  stg_matrix_t* matrix, 
 			      double x, double y, void* object );
 

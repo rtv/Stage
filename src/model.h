@@ -92,6 +92,7 @@ int model_get_prop( model_t* model, stg_id_t propid,
 
 void model_set_prop_generic( model_t* mod, stg_id_t propid, void* data, size_t len );
 stg_property_t* model_get_prop_generic( model_t* mod, stg_id_t propid );
+void model_remove_prop_generic( model_t* mod, stg_id_t propid );
 void* model_get_prop_data_generic( model_t* mod, stg_id_t propid );
 
 int model_update_prop( model_t* mod, stg_id_t propid );
