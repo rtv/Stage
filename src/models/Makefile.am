@@ -42,8 +42,6 @@ libstgmodels_a_SOURCES = \
                    motedevice.hh \
                    omnipositiondevice.cc \
                    omnipositiondevice.hh \
-                   positiondevice.cc \
-                   positiondevice.hh \
                    powerdevice.cc \
                    powerdevice.hh \
                    ptzdevice.cc \
@@ -59,4 +57,8 @@ libstgmodels_a_SOURCES = \
 
 # currently broken
 # bpsdevice.cc 
+
+# REMOVE
+#                   positiondevice.cc \
+#                   positiondevice.hh \
 

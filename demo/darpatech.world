@@ -1,9 +1,6 @@
 
 # Desc: world defines a descartes base with 8 idars	
-# CVS: $Id: darpatech.world,v 1.2 2002-08-24 05:10:34 rtv Exp $
-
-
-include "usc_pioneer.inc"
+# CVS: $Id: darpatech.world,v 1.3 2002-11-14 03:56:00 rtv Exp $
 
 resolution 0.2
 
@@ -22,24 +19,6 @@ gui
   showgrid 1
 )
 
-
-define pherobot descartes
-(
-  name "HRL Pherobot"
-  idarturret()
-)
-
-define forager position
-(
-  size [0.4 0.4] 
-  shape "circle" 
-  gps ( pose [0 0 0] )
-  gripper ( consume "true" pose [0.16 0 0] )
-  sonar()
-  ptz( vision() )
-  #player( pose [-0.13 0 0] size [0.05 0.05] )
-)
-
 define vision_beacon box
 (
   shape "rect"
@@ -50,14 +29,68 @@ vision_beacon( color "cyan" pose [ 8.596 1.250 -91.673 ] )
 vision_beacon( color "yellow" pose [ 8.232 0.300 34.377 ] )
 vision_beacon( color "magenta" pose [ 7.788 0.774 -183.347 ] )
 
+define darpa_pioneer position
+(
+  name "DARPA pioneer"
 
-# generate some robots
-usc_pioneer(color "blue" port 6800 pose [5.003 0.821 0.000 ])
+  size [.440 .330]
+  offset [-0.04 0.0]
+
+  sonar
+  (
+    scount 16
+    spose[0] [ 0.115 0.130 90 ]
+    spose[1] [ 0.155 0.115 50 ]
+    spose[2] [ 0.190 0.080 30 ]
+    spose[3] [ 0.210 0.025 10 ]
+    spose[4] [ 0.210 -0.025 -10 ]
+    spose[5] [ 0.190 -0.080 -30 ]
+    spose[6] [ 0.155 -0.115 -50 ]
+    spose[7] [ 0.115 -0.130 -90 ]
+    spose[8] [ -0.115 -0.130 -90 ]
+    spose[9] [ -0.155 -0.115 -130 ]
+    spose[10] [ -0.190 -0.080 -150 ]
+    spose[11] [ -0.210 -0.025 -170 ]
+    spose[12] [ -0.210 0.025 170 ]
+    spose[13] [ -0.190 0.080 150 ]
+    spose[14] [ -0.155 0.115 130 ]
+    spose[15] [ -0.115 0.130 90 ]
+  )
+
+  power()
+  broadcast()
+  laser 
+  (
+    fiducialfinder() 
+    ptz ( lens "wide" blobfinder())
+  )
+)
+
+darpa_pioneer(color "blue" port 6800 pose [5.003 0.821 0.000 ])
 
 # generate some laser beacons
-laserbeacon( pose [6.910 1.500 270] id 5 )
-laserbeacon( pose [5.634 1.516 -88.327] id 7 )
 
+define laserbeacon box
+(
+  color "cyan"
+  name "Laser Beacon"
+  size [ 0.05 0.3 ]
+  laser_return "bright"
+)
+  
+laserbeacon( pose [6.910 1.500 270] fiducial_id 5 )
+laserbeacon( pose [5.634 1.516 -88.327] fiducial_id 7 )
+
+
+define forager position
+(
+  size [0.4 0.4] 
+  shape "circle" 
+  gps ( pose [0 0 0] )
+  gripper ( consume "true" pose [0.16 0 0] )
+  sonar()
+  ptz( vision() )
+)
 
 forager( pose [13.276 4.368 -137.510] port 6801 )
 
@@ -82,6 +115,24 @@ bluepuck (  pose [12.469 2.901 0.000] )
 bluepuck (  pose [11.451 3.295 0.000] )
 bluepuck (  pose [12.149 2.485 0.000] )
 
+
+define pherobot position
+( 
+  name "HRL Pherobot"
+
+  shape "circle"
+  size [0.12 0.12]
+ 
+  idarturret() 
+ 
+
+  bumper
+  ( 
+    bcount 2 
+    bpose[0] [ 0.0   0.01 -80 0.22 0.08 ]
+    bpose[1] [ 0.0  -0.01 +80 0.22 0.08 ]
+  ) 
+)
 
 pherobot( pose [ 0.449 6.157 0.000 ] port 6665 )
 pherobot( pose [ 1.193 5.999 0.000 ] port 6666 )

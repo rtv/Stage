@@ -24,7 +24,7 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.7 2002-11-11 03:09:46 rtv Exp $
+ * CVS info: $Id: library.cc,v 1.8 2002-11-14 03:56:00 rtv Exp $
  */
 
 #include "library.hh"
@@ -41,7 +41,6 @@
 #include "models/laserdevice.hh"
 #include "models/motedevice.hh"
 #include "models/omnipositiondevice.hh"
-#include "models/positiondevice.hh"
 #include "models/powerdevice.hh"
 #include "models/ptzdevice.hh"
 #include "models/puck.hh"
@@ -50,6 +49,7 @@
 #include "models/visiondevice.hh"
 //#include "models/bpsdevice.hh"
 //#include "models/descartesdevice.hh"
+//#include "models/positiondevice.hh"
 
 typedef CreatorFunctionPtr CFP;
 
@@ -61,7 +61,7 @@ typedef CreatorFunctionPtr CFP;
 libitem_t library_items[] = { 
   { "bitmap", "black", (CFP)CBitmap::Creator},
   { "laser", "blue", (CFP)CLaserDevice::Creator},
-  { "position", "red", (CFP)CPositionDevice::Creator},
+  { "position", "red", (CFP)COmniPositionDevice::Creator},
   { "sonar", "green", (CFP)CSonarDevice::Creator},
   { "box", "yellow", (CFP)CBox::Creator},
   { "gps", "gray", (CFP)CGpsDevice::Creator},

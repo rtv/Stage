@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/omnipositiondevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -30,6 +30,8 @@
 #include "stage.h"
 #include "playerdevice.hh"
 
+typedef enum{ VELOCITY_MODE, POSITION_MODE } stage_move_mode_t;
+
 class COmniPositionDevice : public CPlayerEntity
 {
   // Minimal constructor
@@ -48,8 +50,14 @@ public: static COmniPositionDevice* Creator(  LibraryItem *libit, CWorld *world,
   // Update the device
   public: virtual void Update( double sim_time );
 
-  // Move the device
+  // Move the device according to the current velocities
   private: void Move();
+
+  // computes velocities that'll servo towards the goal position
+  private: void PositionControl();
+
+  // Process configuration requests.
+  private: void UpdateConfig();
 
   // Extract command from the command buffer
   private: void ParseCommandBuffer( void );
@@ -57,6 +65,16 @@ public: static COmniPositionDevice* Creator(  LibraryItem *libit, CWorld *world,
   // Compose the reply packet
   private: void ComposeData( void );
 
+  // when false, Move() is never called and the robot doesn't move
+  bool motors_enabled;
+  
+  // when true x, y, a axes work independently, when false, we model a
+  // differential-steer robot (like a Pioneer 2 or a tank).
+  bool enable_omnidrive; 
+
+  // movement mode - VELOCITY_MODE or POSITION_MODE
+  stage_move_mode_t move_mode;
+  
   // Timings
   private: double last_time;
 
@@ -64,9 +82,12 @@ public: static COmniPositionDevice* Creator(  LibraryItem *libit, CWorld *world,
   private: player_position_cmd_t command;
   private: player_position_data_t data;
 
-  // Commanded velocities
+  // Commanded velocities (for velocity control)
   private: double com_vx, com_vy, com_va;
     
+  // Commanded pose (for position control)
+  private: double com_px, com_py, com_pa;
+
   // Stall flag -- set if robot is stalled
   private: int stall;
 

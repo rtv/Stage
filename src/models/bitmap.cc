@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/bitmap.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -17,14 +17,14 @@
 #include "world.hh"
 #include "bitmap.hh"
 
-#define DEBUG
+//#define DEBUG
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 CBitmap::CBitmap(LibraryItem* libit, CWorld *world, CEntity *parent)
     : CEntity(libit, world, parent)
 {
-  vision_return = false;
+  vision_return = true;
   laser_return = LaserVisible;
   sonar_return = true;
   obstacle_return = true;

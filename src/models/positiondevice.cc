@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.2 2002-11-01 19:12:32 rtv Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.3 2002-11-14 03:56:01 rtv Exp $
  */
 
 //#define DEBUG
@@ -109,9 +109,18 @@ void CPositionDevice::Update( double sim_time )
       // Get the latest command
       UpdateCommand();
 
-      // do things
-      Move();
-
+      // update the robot's position
+      switch( this->move_mode )
+	{
+	case VELOCITY_MODE: VelocityControlMove();
+	  break;
+	case POSITION_MODE: PositionControlMove();
+	  break;
+	default: STAGE_WARN1( "Unrecognized movement mode (%d)", 
+			      this->move_mode );
+	  break;
+	}
+	  
       // report the new state of things
       UpdateData();
     }
@@ -269,11 +278,6 @@ void CPositionDevice::UpdateData()
   double gx, gy, gth;
   GetGlobalPose(gx, gy, gth);
     
-  // normalized compass heading
-  double compass = NORMALIZE(gth);
-  if (compass < 0)
-    compass += TWOPI;
-  
   // Construct the data packet
   // Basically just changes byte orders and some units
   this->data.xpos = htonl((int) px);
@@ -282,7 +286,6 @@ void CPositionDevice::UpdateData()
 
   this->data.xspeed = htons((unsigned short) (this->com_vr * 1000.0));
   this->data.yawspeed = htons((short) RTOD(this->com_vth));  
-  //this->data.compass = htons((unsigned short)(RTOD(compass)));
   this->data.stall = this->stall;
 
   PutData(&this->data, sizeof(this->data));     
