@@ -20,8 +20,8 @@
 /*
  * Desc: Gnome GUI 
  * Author: Richard Vaughan
- * Date: 7 Dec 2000
- * CVS info: $Id: gnomegui.cc,v 1.1 2002-10-27 21:30:33 rtv Exp $
+ * Date: 20 Sept 2002
+ * CVS info: $Id: gnomegui.cc,v 1.2 2002-10-27 21:37:59 rtv Exp $
  */
 
 
