@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.52 $
+//  $Revision: 1.53 $
 //
 // Usage:
 //  (empty)
@@ -150,10 +150,10 @@ CWorld::CWorld()
     
     // Initialise clocks
     //
-    //gettimeofday( &m_sim_timeval, 0 );
+    gettimeofday( &m_sim_timeval, 0 );
     
-    m_sim_timeval.tv_sec = 90;
-    m_sim_timeval.tv_usec = 210;
+    //m_sim_timeval.tv_sec = 90;
+    //m_sim_timeval.tv_usec = 210;
 
     m_start_time = m_sim_time = 
       (double)m_sim_timeval.tv_sec + (double)(m_sim_timeval.tv_usec * MILLION);
@@ -572,8 +572,8 @@ void CWorld::Update()
   // Update the simulation time (in both formats)
   //
   m_sim_time += timestep;
-  //m_sim_timeval.tv_sec = (int)floor(m_sim_time);
-  //m_sim_timeval.tv_usec = (int)(m_sim_time - floor(m_sim_time)) * MILLION; 
+  m_sim_timeval.tv_sec = (int)floor(m_sim_time);
+  m_sim_timeval.tv_usec = (int)(m_sim_time - floor(m_sim_time)) * MILLION; 
 
 #ifdef WATCH_RATES
     // Keep track of the sim/real time ratio
