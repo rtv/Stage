@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visionbeacon.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.6 $
 //
 // Usage:
 //  (empty)
@@ -27,13 +27,13 @@
 #ifndef VISIONBEACON_HH
 #define VISIONBEACON_HH
 
-#include "object.hh"
+#include "entity.hh"
 
-class CVisionBeacon : public CObject
+class CVisionBeacon : public CEntity
 {
     // Default constructor
     //
-    public: CVisionBeacon(CWorld *world, CObject *parent);
+    public: CVisionBeacon(CWorld *world, CEntity *parent);
 
     // Load the object from an argument list
     //

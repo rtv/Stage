@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.12 $
+//  $Revision: 1.1.2.13 $
 //
 // Usage:
 //  (empty)
@@ -34,7 +34,7 @@
 
 // For base class
 //
-#include "object.hh"
+#include "entity.hh"
 
 // For all the lengths
 //
@@ -44,13 +44,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Base class for all player devices
 //
-class CPlayerDevice : public CObject
+class CPlayerDevice : public CEntity
 {
     // Minimal constructor
     // This is an abstract class and *cannot* be instantiated directly
     // buffer points to a single buffer containing the data, command and configuration buffers.
     //
-    protected: CPlayerDevice(CWorld *world, CObject *parent, 
+    protected: CPlayerDevice(CWorld *world, CEntity *parent, 
                              CPlayerRobot *robot, size_t offset, size_t buffer_len,
                              size_t data_len, size_t command_len, size_t config_len);
     

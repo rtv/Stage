@@ -6,9 +6,9 @@
 // Desc: Naked C functions for creating different types of objects
 //
 // CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/objectfactory.hh,v $
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entityfactory.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.1 $
 //
 // Usage:
 //  (empty)
@@ -25,17 +25,17 @@
 ///////////////////////////////////////////////////////////////////////////
 
 
-#ifndef OBJECTFACTORY_HH
-#define OBJECTFACTORY_HH
+#ifndef ENTITYFACTORY_HH
+#define ENTITYFACTORY_HH
 
 // Forward dec's
 //
-class CObject;
+class CEntity;
 class CWorld;
 
 // Create an object given a type
 // Additional arguments can be passed in through argv.
 //
-CObject* CreateObject(const char *type, CWorld *world, CObject *parent);
+CEntity* CreateObject(const char *type, CWorld *world, CEntity *parent);
 
 #endif

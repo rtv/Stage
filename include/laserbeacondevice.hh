@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacondevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.6 $
 //
 // Usage:
 //  (empty)
@@ -38,7 +38,7 @@ class CLaserBeaconDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CLaserBeaconDevice(CWorld *world, CObject *parent,
+    public: CLaserBeaconDevice(CWorld *world, CEntity *parent,
                                CPlayerRobot *robot, CLaserDevice *laser);
     
     // Update the device

@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: createobject.cc
+// File: entityfactory.cc
 // Author: Andrew Howard
 // Date: 05 Dec 2000
 // Desc: Naked function for creating different types of objects
 //
 // CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/objectfactory.cc,v $
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.14 $
+//  $Revision: 1.1.2.1 $
 //
 // Usage:
 //  (empty)
@@ -25,7 +25,7 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include <string.h>
-#include "objectfactory.hh"
+#include "entityfactory.hh"
 #include "boxobstacle.hh"
 #include "laserbeacon.hh"
 #include "visionbeacon.hh"
@@ -35,7 +35,7 @@
 /////////////////////////////////////////////////////////////////////////
 // Create an object given a type
 //
-CObject* CreateObject(const char *type, CWorld *world, CObject *parent)
+CEntity* CreateObject(const char *type, CWorld *world, CEntity *parent)
 {
     // Create box obstacle
     //

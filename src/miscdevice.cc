@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/miscdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -33,7 +33,7 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CMiscDevice::CMiscDevice(CWorld *world, CObject *parent, CPlayerRobot *robot)
+CMiscDevice::CMiscDevice(CWorld *world, CEntity *parent, CPlayerRobot *robot)
         : CPlayerDevice(world, parent, robot,
                         MISC_DATA_START,
                         MISC_TOTAL_BUFFER_SIZE,

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.31 $
+//  $Revision: 1.4.2.32 $
 //
 // Usage:
 //  (empty)
@@ -508,7 +508,7 @@ void CWorld::SetRectangle(double px, double py, double pth,
 ///////////////////////////////////////////////////////////////////////////
 // Add an object to the world
 //
-void CWorld::AddObject(CObject *object)
+void CWorld::AddObject(CEntity *object)
 {
     assert(m_object_count < ARRAYSIZE(m_object));
     m_object[m_object_count++] = object;
@@ -518,9 +518,9 @@ void CWorld::AddObject(CObject *object)
 ///////////////////////////////////////////////////////////////////////////
 // Find the object nearest to the mouse
 //
-CObject* CWorld::NearestObject( double x, double y )
+CEntity* CWorld::NearestObject( double x, double y )
 {
-  CObject* nearest;
+  CEntity* nearest;
   double dist, far = 9999999.9;
 
   double ox, oy, oth;

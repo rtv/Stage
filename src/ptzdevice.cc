@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.14 $
+//  $Revision: 1.4.2.15 $
 //
 // Usage:
 //  (empty)
@@ -35,7 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CPtzDevice::CPtzDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
+CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent, CPlayerRobot* robot)
         : CPlayerDevice(world, parent, robot,
                         PTZ_DATA_START,
                         PTZ_TOTAL_BUFFER_SIZE,
@@ -168,7 +168,7 @@ void CPtzDevice::GetPTZ(double &pan, double &tilt, double &zoom)
 //
 void CPtzDevice::OnUiUpdate(RtkUiDrawData *pData)
 {
-    CObject::OnUiUpdate(pData);
+    CEntity::OnUiUpdate(pData);
 }
 
 
@@ -177,7 +177,7 @@ void CPtzDevice::OnUiUpdate(RtkUiDrawData *pData)
 //
 void CPtzDevice::OnUiMouse(RtkUiMouseData *pData)
 {
-    CObject::OnUiMouse(pData);
+    CEntity::OnUiMouse(pData);
 }
 
 

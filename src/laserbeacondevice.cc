@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.2.2.12 $
+//  $Author: ahoward $
+//  $Revision: 1.2.2.13 $
 //
 // Usage:
 //  (empty)
@@ -35,7 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CLaserBeaconDevice::CLaserBeaconDevice(CWorld *world, CObject *parent,
+CLaserBeaconDevice::CLaserBeaconDevice(CWorld *world, CEntity *parent,
                              CPlayerRobot *robot, CLaserDevice *laser)
         : CPlayerDevice(world, parent, robot,
                         LASERBEACON_DATA_START,
@@ -185,7 +185,7 @@ void CLaserBeaconDevice::OnUiUpdate(RtkUiDrawData *pData)
 {
     // Draw our children
     //
-    CObject::OnUiUpdate(pData);    
+    CEntity::OnUiUpdate(pData);    
 }
 
 #endif

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerrobot.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.8 $
+//  $Revision: 1.1.2.9 $
 //
 // Usage:
 //  (empty)
@@ -28,7 +28,7 @@
 #define ROBOT_H
 
 #include <sys/types.h>
-#include "object.hh"
+#include "entity.hh"
 
 // Forward declare some of the classes we will use
 //
@@ -36,9 +36,9 @@ class CDevice;
 class CWorld;
 
 
-class CPlayerRobot : public CObject
+class CPlayerRobot : public CEntity
 {
-    public: CPlayerRobot( CWorld* world, CObject *parent);
+    public: CPlayerRobot( CWorld* world, CEntity *parent);
     public: ~CPlayerRobot( void );
     
     // Start all the devices

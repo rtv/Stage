@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.cc - all the graphics and X management
  * RTV
- * $Id: xgui.cc,v 1.1.2.2 2001-05-21 23:34:17 vaughan Exp $
+ * $Id: xgui.cc,v 1.1.2.3 2001-05-24 01:55:31 ahoward Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -201,7 +201,7 @@ int CXGui::LoadVars( char* filename )
 }
 
 
-void CXGui::MoveObject( CObject* obj, double x, double y, double theta )
+void CXGui::MoveObject( CEntity* obj, double x, double y, double theta )
 {    
   ImportData imp;
   
@@ -841,12 +841,12 @@ void CXGui::GetRect( double x, double y, double dx, double dy,
   pts[2].y = y + (+cxsina + cycosa);
 }
 
-void CXGui::HighlightObject( CObject* obj )
+void CXGui::HighlightObject( CEntity* obj )
 {
   static double x, y, th;
   //static double lx, ly, lth;
 
-  static CObject* lastObj;
+  static CEntity* lastObj;
 
   //if( obj != lastObj )//|| lastObj == 0 )
     {

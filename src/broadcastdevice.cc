@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/broadcastdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.6 $
+//  $Revision: 1.1.2.7 $
 //
 // Usage:
 //  (empty)
@@ -35,7 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CBroadcastDevice::CBroadcastDevice(CWorld *world, CObject *parent, CPlayerRobot *robot)
+CBroadcastDevice::CBroadcastDevice(CWorld *world, CEntity *parent, CPlayerRobot *robot)
         : CPlayerDevice(world, parent, robot,
                         BROADCAST_DATA_START,
                         BROADCAST_TOTAL_BUFFER_SIZE,

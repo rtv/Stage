@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.5.2.16 $
+//  $Revision: 1.5.2.17 $
 //
 // Usage:
 //  (empty)
@@ -33,7 +33,7 @@ const double TWOPI = 6.283185307;
 
 // constructor
 
-CSonarDevice::CSonarDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
+CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent, CPlayerRobot* robot)
         : CPlayerDevice(world, parent, robot,
                         SONAR_DATA_START,
                         SONAR_TOTAL_BUFFER_SIZE,
@@ -150,7 +150,7 @@ void CSonarDevice::OnUiUpdate(RtkUiDrawData *pData)
 {
     // Draw our children
     //
-    CObject::OnUiUpdate(pData);
+    CEntity::OnUiUpdate(pData);
     
     // Draw ourself
     //
@@ -169,7 +169,7 @@ void CSonarDevice::OnUiUpdate(RtkUiDrawData *pData)
 //
 void CSonarDevice::OnUiMouse(RtkUiMouseData *pData)
 {
-    CObject::OnUiMouse(pData);
+    CEntity::OnUiMouse(pData);
 }
 
 

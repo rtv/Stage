@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.16 $
+//  $Revision: 1.4.2.17 $
 //
 // Usage:
 //  (empty)
@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CVisionDevice::CVisionDevice(CWorld *world, CObject *parent, CPlayerRobot* robot,
+CVisionDevice::CVisionDevice(CWorld *world, CEntity *parent, CPlayerRobot* robot,
                              CPtzDevice *ptz_device)
         : CPlayerDevice(world, parent, robot,
                         ACTS_DATA_START,
@@ -417,7 +417,7 @@ void CVisionDevice::OnUiUpdate(RtkUiDrawData *data)
 {
     // Draw our children
     //
-    CObject::OnUiUpdate(data);
+    CEntity::OnUiUpdate(data);
     
     // Draw ourself
     //
@@ -440,7 +440,7 @@ void CVisionDevice::OnUiUpdate(RtkUiDrawData *data)
 //
 void CVisionDevice::OnUiMouse(RtkUiMouseData *data)
 {
-    CObject::OnUiMouse(data);
+    CEntity::OnUiMouse(data);
 }
 
 

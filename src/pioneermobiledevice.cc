@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.9.2.19 $
+//  $Author: ahoward $
+//  $Revision: 1.9.2.20 $
 //
 // Usage:
 //  (empty)
@@ -38,7 +38,7 @@ const double TWOPI = 6.283185307;
 ///////////////////////////////////////////////////////////////////////////
 // Constructor
 //
-CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
+CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CEntity *parent, CPlayerRobot* robot)
         : CPlayerDevice(world, parent, robot,
                         POSITION_DATA_START,
                         POSITION_TOTAL_BUFFER_SIZE,
@@ -68,7 +68,7 @@ CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CObject *parent, CPlay
 
 #ifdef INCLUDE_XGUI
     exp.objectType = pioneer_o;
-#endif;
+#endif
 }
 
 
@@ -349,7 +349,7 @@ bool CPioneerMobileDevice::Map(bool render)
 //
 void CPioneerMobileDevice::OnUiUpdate(RtkUiDrawData *data)
 {
-    CObject::OnUiUpdate(data);
+    CEntity::OnUiUpdate(data);
     
     // Draw ourself
     //
@@ -367,7 +367,7 @@ void CPioneerMobileDevice::OnUiUpdate(RtkUiDrawData *data)
 //
 void CPioneerMobileDevice::OnUiMouse(RtkUiMouseData *data)
 {
-    CObject::OnUiMouse(data);
+    CEntity::OnUiMouse(data);
 }
 
 

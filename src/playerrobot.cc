@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerrobot.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.11 $
+//  $Revision: 1.1.2.12 $
 //
 // Usage:
 //  (empty)
@@ -64,8 +64,8 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CPlayerRobot::CPlayerRobot(CWorld *world, CObject *parent)
-        : CObject(world, parent)
+CPlayerRobot::CPlayerRobot(CWorld *world, CEntity *parent)
+        : CEntity(world, parent)
 {
     m_port = 6665;
     playerIO = NULL;
@@ -85,7 +85,7 @@ CPlayerRobot::~CPlayerRobot( void )
 //
 bool CPlayerRobot::Startup()
 {
-    if (!CObject::Startup())
+    if (!CEntity::Startup())
         return false;
  
     // Create the lock object for the shared mem
@@ -112,7 +112,7 @@ void CPlayerRobot::Shutdown()
     //
     ShutdownPlayer();
 
-    CObject::Shutdown();
+    CEntity::Shutdown();
 }
 
 
@@ -121,7 +121,7 @@ void CPlayerRobot::Shutdown()
 //
 void CPlayerRobot::Update()
 {
-    CObject::Update();
+    CEntity::Update();
 }
 
 
@@ -301,7 +301,7 @@ void CPlayerRobot::UnlockShmem( void )
 //
 void CPlayerRobot::OnUiUpdate(RtkUiDrawData *pData)
 {
-    CObject::OnUiUpdate(pData);
+    CEntity::OnUiUpdate(pData);
 }
 
 
@@ -310,7 +310,7 @@ void CPlayerRobot::OnUiUpdate(RtkUiDrawData *pData)
 //
 void CPlayerRobot::OnUiMouse(RtkUiMouseData *pData)
 {
-    CObject::OnUiMouse(pData);;
+    CEntity::OnUiMouse(pData);;
 }
 
 #endif

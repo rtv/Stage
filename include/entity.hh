@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: object.hh
+// File: entity.hh
 // Author: Andrew Howard
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
 // CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/object.hh,v $
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.17 $
+//  $Revision: 1.1.2.1 $
 //
 // Usage:
 //  (empty)
@@ -25,8 +25,8 @@
 ///////////////////////////////////////////////////////////////////////////
 
 
-#ifndef OBJECT_HH
-#define OBJECT_HH
+#ifndef ENTITY_HH
+#define ENTITY_HH
 
 #include "stage_types.hh"
 
@@ -46,16 +46,16 @@ class CWorld;
 ///////////////////////////////////////////////////////////////////////////
 // The basic object class
 //
-class CObject
+class CEntity
 {
     // Minimal constructor
     // Requires a pointer to the parent and a pointer to the world.
     //
-    public: CObject(CWorld *world, CObject *parent_object);
+    public: CEntity(CWorld *world, CEntity *parent_object);
 
     // Destructor
     //
-    public: virtual ~CObject();
+    public: virtual ~CEntity();
 
     // Load the object from an argument list
     //
@@ -121,13 +121,13 @@ class CObject
     // Pointer to parent object
     // i.e. the object this object is attached to.
     //
-    public: CObject *m_parent_object;
+    public: CEntity *m_parent_object;
 
     // Pointer the default object
     // i.e. the object that would-be children of this object should attach to.
     // This will usually be the object itself.
     //
-    public: CObject *m_default_object;
+    public: CEntity *m_default_object;
 
     // Object pose in local cs (ie relative to parent)
     //

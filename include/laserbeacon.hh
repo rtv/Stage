@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacon.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.8 $
+//  $Revision: 1.1.2.9 $
 //
 // Usage:
 //  (empty)
@@ -27,13 +27,13 @@
 #ifndef LASERBEACON_HH
 #define LASERBEACON_HH
 
-#include "object.hh"
+#include "entity.hh"
 
-class CLaserBeacon : public CObject
+class CLaserBeacon : public CEntity
 {
     // Default constructor
     //
-    public: CLaserBeacon(CWorld *world, CObject *parent);
+    public: CLaserBeacon(CWorld *world, CEntity *parent);
 
     // Load the object from an argument list
     //

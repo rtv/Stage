@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/usc_pioneer.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.13 $
+//  $Revision: 1.1.2.14 $
 //
 // Usage:
 //  (empty)
@@ -39,8 +39,8 @@
 ///////////////////////////////////////////////////////////////////////////
 // Minimal constructor
 //
-CUscPioneer::CUscPioneer(CWorld *world, CObject *parent)
-        : CObject(world, parent)
+CUscPioneer::CUscPioneer(CWorld *world, CEntity *parent)
+        : CEntity(world, parent)
 {
     m_player = new CPlayerRobot(world, this);
     m_pioneer = new CPioneerMobileDevice(world, parent, m_player);
@@ -93,7 +93,7 @@ CUscPioneer::~CUscPioneer()
 //
 bool CUscPioneer::Load(int argc, char **argv)
 {
-    // Note that we dont call the underlying CObject load;
+    // Note that we dont call the underlying CEntity load;
     // this will load the wrong pose from the file.
     
     for (int i = 0; i < argc;)
@@ -137,7 +137,7 @@ bool CUscPioneer::Load(int argc, char **argv)
 //
 bool CUscPioneer::Save(int &argc, char **argv)
 {
-    // Note that we dont call the underlying CObject save;
+    // Note that we dont call the underlying CEntity save;
     // this will insert the wrong pose in the file
 
     // Get the pioneer base pose
@@ -182,7 +182,7 @@ bool CUscPioneer::Save(int &argc, char **argv)
 //
 bool CUscPioneer::Startup()
 {
-    if (!CObject::Startup())
+    if (!CEntity::Startup())
         return false;
     return true;
 }
@@ -193,7 +193,7 @@ bool CUscPioneer::Startup()
 //
 void CUscPioneer::Shutdown()
 {
-    CObject::Shutdown();
+    CEntity::Shutdown();
 }
 
 
@@ -202,7 +202,7 @@ void CUscPioneer::Shutdown()
 //
 void CUscPioneer::Update()
 {
-    CObject::Update();
+    CEntity::Update();
 }
 
 
@@ -213,7 +213,7 @@ void CUscPioneer::Update()
 //
 void CUscPioneer::OnUiUpdate(RtkUiDrawData *data)
 {
-    CObject::OnUiUpdate(data);
+    CEntity::OnUiUpdate(data);
 }
 
 
@@ -222,7 +222,7 @@ void CUscPioneer::OnUiUpdate(RtkUiDrawData *data)
 //
 void CUscPioneer::OnUiMouse(RtkUiMouseData *data)
 {
-    CObject::OnUiMouse(data);
+    CEntity::OnUiMouse(data);
 }
 
 
@@ -231,7 +231,7 @@ void CUscPioneer::OnUiMouse(RtkUiMouseData *data)
 //
 void CUscPioneer::OnUiProperty(RtkUiPropertyData *data)
 {
-    CObject::OnUiProperty(data);
+    CEntity::OnUiProperty(data);
 }
 
 #endif

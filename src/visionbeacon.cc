@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.9 $
+//  $Revision: 1.1.2.10 $
 //
 // Usage:
 //  (empty)
@@ -31,8 +31,8 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CVisionBeacon::CVisionBeacon(CWorld *world, CObject *parent)
-        : CObject(world, parent)
+CVisionBeacon::CVisionBeacon(CWorld *world, CEntity *parent)
+        : CEntity(world, parent)
 {
     m_channel = 0;
     m_radius = 0;
@@ -48,7 +48,7 @@ CVisionBeacon::CVisionBeacon(CWorld *world, CObject *parent)
 //
 bool CVisionBeacon::Load(int argc, char **argv)
 {
-    if (!CObject::Load(argc, argv))
+    if (!CEntity::Load(argc, argv))
         return false;
 
     for (int i = 0; i < argc;)
@@ -87,7 +87,7 @@ bool CVisionBeacon::Load(int argc, char **argv)
 //
 bool CVisionBeacon::Save(int &argc, char **argv)
 {
-    if (!CObject::Save(argc, argv))
+    if (!CEntity::Save(argc, argv))
         return false;
 
     // Save radius
@@ -145,7 +145,7 @@ void CVisionBeacon::Update()
 //
 void CVisionBeacon::OnUiUpdate(RtkUiDrawData *data)
 {
-    CObject::OnUiUpdate(data);
+    CEntity::OnUiUpdate(data);
 
     data->begin_section("global", "");
     
@@ -164,7 +164,7 @@ void CVisionBeacon::OnUiUpdate(RtkUiDrawData *data)
 //
 void CVisionBeacon::OnUiMouse(RtkUiMouseData *data)
 {
-    CObject::OnUiMouse(data);
+    CEntity::OnUiMouse(data);
 }
 
 #endif

@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xgui.hh,v 1.1.2.1 2001-05-21 23:25:47 vaughan Exp $
+ * $Id: xgui.hh,v 1.1.2.2 2001-05-24 01:55:26 ahoward Exp $
  ************************************************************************/
 
 #ifndef WIN_H
@@ -13,7 +13,7 @@
 
 // forward definition
 class CWorld;
-class CObject;
+class CEntity;
 
 // for now i have a MAX_OBJECTS maximum to the number of objects
 // that can be processed by the GUI. should make this dynamic one day
@@ -48,7 +48,7 @@ class ExportData
 public:
   int objectType;
   //int objectId;
-  CObject* objectId;
+  CEntity* objectId;
   double x, y, th;
   double width, height;
   int dataSize;
@@ -91,8 +91,8 @@ public:
 
  // data
   CWorld* world;
-  CObject* dragging;
-  CObject* near;
+  CEntity* dragging;
+  CEntity* near;
 
   // methods  
 
@@ -106,7 +106,7 @@ public:
   int LoadVars( char* initFile );
   void HandleEvent( void );
   void Update( void );
-  void MoveObject( CObject* obj, double x, double y, double theta );
+  void MoveObject( CEntity* obj, double x, double y, double theta );
   
   void PrintCoords( void );
   
@@ -143,7 +143,7 @@ public:
   void GetRect( double x, double y, double dx, double dy, 
 	       double rotateAngle, DPoint* pts );
 
-  void HighlightObject( CObject* obj );
+  void HighlightObject( CEntity* obj );
 
   ExportData* GetLastMatchingExport( ExportData* exp );
   void RenderObject( ExportData* exp );

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/boxobstacle.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.1.2.7 $
+//  $Author: ahoward $
+//  $Revision: 1.1.2.8 $
 //
 // Usage:
 //  (empty)
@@ -27,13 +27,13 @@
 #ifndef BOXOBSTACLE_HH
 #define BOXOBSTACLE_HH
 
-#include "object.hh"
+#include "entity.hh"
 
-class CBoxObstacle : public CObject
+class CBoxObstacle : public CEntity
 {
     // Default constructor
     //
-    public: CBoxObstacle(CWorld *world, CObject *parent);
+    public: CBoxObstacle(CWorld *world, CEntity *parent);
 
     // Load the object from an argument list
     //

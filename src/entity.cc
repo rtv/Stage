@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: object.cc
+// File: entity.cc
 // Author: Andrew Howard
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
 // CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/object.cc,v $
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.19 $
+//  $Revision: 1.1.2.1 $
 //
 // Usage:
 //  (empty)
@@ -28,14 +28,14 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "object.hh"
+#include "entity.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Minimal constructor
 // Requires a pointer to the parent and a pointer to the world.
 //
-CObject::CObject(CWorld *world, CObject *parent_object)
+CEntity::CEntity(CWorld *world, CEntity *parent_object)
 {
     m_world = world;
     m_parent_object = parent_object;
@@ -69,7 +69,7 @@ CObject::CObject(CWorld *world, CObject *parent_object)
 ///////////////////////////////////////////////////////////////////////////
 // Destructor
 //
-CObject::~CObject()
+CEntity::~CEntity()
 {
 }
 
@@ -77,7 +77,7 @@ CObject::~CObject()
 ///////////////////////////////////////////////////////////////////////////
 // Load the object from an argument list
 //
-bool CObject::Load(int argc, char **argv)
+bool CEntity::Load(int argc, char **argv)
 {
     for (int i = 0; i < argc;)
     {
@@ -115,7 +115,7 @@ bool CObject::Load(int argc, char **argv)
 ///////////////////////////////////////////////////////////////////////////
 // Save the object
 //
-bool CObject::Save(int &argc, char **argv)
+bool CEntity::Save(int &argc, char **argv)
 {
     // Get the robot pose (relative to parent)
     //
@@ -150,7 +150,7 @@ bool CObject::Save(int &argc, char **argv)
 ///////////////////////////////////////////////////////////////////////////
 // Startup routine
 //
-bool CObject::Startup()
+bool CEntity::Startup()
 {
     return true;
 }
@@ -158,7 +158,7 @@ bool CObject::Startup()
 ///////////////////////////////////////////////////////////////////////////
 // Shutdown routine
 //
-void CObject::Shutdown()
+void CEntity::Shutdown()
 {
 }
 
@@ -166,7 +166,7 @@ void CObject::Shutdown()
 ///////////////////////////////////////////////////////////////////////////
 // Update the object's representation
 //
-void CObject::Update()
+void CEntity::Update()
 {
 }
 
@@ -174,7 +174,7 @@ void CObject::Update()
 ///////////////////////////////////////////////////////////////////////////
 // Convert local to global coords
 //
-void CObject::LocalToGlobal(double &px, double &py, double &pth)
+void CEntity::LocalToGlobal(double &px, double &py, double &pth)
 {
     // Get the pose of our origin wrt global cs
     //
@@ -196,7 +196,7 @@ void CObject::LocalToGlobal(double &px, double &py, double &pth)
 ///////////////////////////////////////////////////////////////////////////
 // Convert global to local coords
 //
-void CObject::GlobalToLocal(double &px, double &py, double &pth)
+void CEntity::GlobalToLocal(double &px, double &py, double &pth)
 {
     // Get the pose of our origin wrt global cs
     //
@@ -218,7 +218,7 @@ void CObject::GlobalToLocal(double &px, double &py, double &pth)
 ///////////////////////////////////////////////////////////////////////////
 // Set the objects pose in the parent cs
 //
-void CObject::SetPose(double px, double py, double pth)
+void CEntity::SetPose(double px, double py, double pth)
 {
     // Set our pose wrt our parent
     //
@@ -231,7 +231,7 @@ void CObject::SetPose(double px, double py, double pth)
 ///////////////////////////////////////////////////////////////////////////
 // Get the objects pose in the parent cs
 //
-void CObject::GetPose(double &px, double &py, double &pth)
+void CEntity::GetPose(double &px, double &py, double &pth)
 {
     px = m_lx;
     py = m_ly;
@@ -242,7 +242,7 @@ void CObject::GetPose(double &px, double &py, double &pth)
 ///////////////////////////////////////////////////////////////////////////
 // Set the objects pose in the global cs
 //
-void CObject::SetGlobalPose(double px, double py, double pth)
+void CEntity::SetGlobalPose(double px, double py, double pth)
 {
     // Get the pose of our parent in the global cs
     //
@@ -263,7 +263,7 @@ void CObject::SetGlobalPose(double px, double py, double pth)
 ///////////////////////////////////////////////////////////////////////////
 // Get the objects pose in the global cs
 //
-void CObject::GetGlobalPose(double &px, double &py, double &pth)
+void CEntity::GetGlobalPose(double &px, double &py, double &pth)
 {
     // Get the pose of our parent in the global cs
     //
@@ -286,7 +286,7 @@ void CObject::GetGlobalPose(double &px, double &py, double &pth)
 // import changes to this object - typically called by a GUI
 // then compose and return the export data structure for external rendering
 // return null if we're not exporting data right now.
-ExportData* CObject::ImportExportData( const ImportData* inp )
+ExportData* CEntity::ImportExportData( const ImportData* inp )
 {
   if( inp ) // if there is some imported data
     SetGlobalPose( inp->x, inp->y, inp->th ); // move to the suggested place
@@ -308,7 +308,7 @@ ExportData* CObject::ImportExportData( const ImportData* inp )
 ///////////////////////////////////////////////////////////////////////////
 // UI property message handler
 //
-void CObject::OnUiProperty(RtkUiPropertyData* pData)
+void CEntity::OnUiProperty(RtkUiPropertyData* pData)
 {
 }
 
@@ -316,7 +316,7 @@ void CObject::OnUiProperty(RtkUiPropertyData* pData)
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
 //
-void CObject::OnUiUpdate(RtkUiDrawData *pData)
+void CEntity::OnUiUpdate(RtkUiDrawData *pData)
 {
     pData->begin_section("global", "");
 
@@ -347,7 +347,7 @@ void CObject::OnUiUpdate(RtkUiDrawData *pData)
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI mouse messages
 //
-void CObject::OnUiMouse(RtkUiMouseData *pData)
+void CEntity::OnUiMouse(RtkUiMouseData *pData)
 {
     pData->begin_section("global", "move");
 
@@ -364,7 +364,7 @@ void CObject::OnUiMouse(RtkUiMouseData *pData)
 ///////////////////////////////////////////////////////////////////////////
 // Move object with the mouse
 //
-bool CObject::MouseMove(RtkUiMouseData *pData)
+bool CEntity::MouseMove(RtkUiMouseData *pData)
 {
     // Get current pose
     //

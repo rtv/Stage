@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.1.2.12 $
+//  $Author: ahoward $
+//  $Revision: 1.1.2.13 $
 //
 // Usage:
 //  (empty)
@@ -33,8 +33,8 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CBoxObstacle::CBoxObstacle(CWorld *world, CObject *parent)
-        : CObject(world, parent)
+CBoxObstacle::CBoxObstacle(CWorld *world, CEntity *parent)
+        : CEntity(world, parent)
 {
     m_size_x = 1;
     m_size_y = 1;
@@ -56,7 +56,7 @@ CBoxObstacle::CBoxObstacle(CWorld *world, CObject *parent)
 //
 bool CBoxObstacle::Load(int argc, char **argv)
 {
-    if (!CObject::Load(argc, argv))
+    if (!CEntity::Load(argc, argv))
         return false;
 
     for (int i = 0; i < argc;)
@@ -87,7 +87,7 @@ bool CBoxObstacle::Load(int argc, char **argv)
 //
 bool CBoxObstacle::Save(int &argc, char **argv)
 {
-    if (!CObject::Save(argc, argv))
+    if (!CEntity::Save(argc, argv))
         return false;
     
     // Convert to strings
@@ -164,7 +164,7 @@ ExportData* CBoxObstacle::GetExportData( void )
 //
 void CBoxObstacle::OnUiUpdate(RtkUiDrawData *pData)
 {
-    CObject::OnUiUpdate(pData);
+    CEntity::OnUiUpdate(pData);
 
     pData->begin_section("global", "");
     
@@ -185,7 +185,7 @@ void CBoxObstacle::OnUiUpdate(RtkUiDrawData *pData)
 //
 void CBoxObstacle::OnUiMouse(RtkUiMouseData *pData)
 {
-    CObject::OnUiMouse(pData);
+    CEntity::OnUiMouse(pData);
 }
 
 #endif

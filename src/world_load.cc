@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -25,7 +25,7 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include "world.hh"
-#include "objectfactory.hh"
+#include "entityfactory.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -72,7 +72,7 @@ bool CWorld::Load(const char *filename)
     }
 
     int linecount = 0;
-    CObject *parent_object = NULL;
+    CEntity *parent_object = NULL;
     
     while (true)
     {
@@ -141,7 +141,7 @@ bool CWorld::Load(const char *filename)
         {
             // Create the object
             //
-            CObject *object = ::CreateObject(argv[1], this, parent_object);
+            CEntity *object = ::CreateObject(argv[1], this, parent_object);
             if (object != NULL)
             {
                 // Set some properties we will need later
@@ -222,7 +222,7 @@ bool CWorld::Save(const char *filename)
         //
         for (int i = 0; i < m_object_count; i++)
         {
-            CObject *object = m_object[i];
+            CEntity *object = m_object[i];
             if (object->m_line == linecount)
             {
                 // Create a token list for this object

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/broadcastdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -33,7 +33,7 @@ class CBroadcastDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CBroadcastDevice(CWorld *world, CObject *parent, CPlayerRobot *robot);
+    public: CBroadcastDevice(CWorld *world, CEntity *parent, CPlayerRobot *robot);
 
     // Startup routine
     //

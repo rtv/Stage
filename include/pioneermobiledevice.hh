@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/pioneermobiledevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.9 $
+//  $Revision: 1.1.2.10 $
 //
 // Usage:
 //  (empty)
@@ -35,7 +35,7 @@ class CPioneerMobileDevice : public CPlayerDevice
 {
     // Minimal constructor
     //
-    public: CPioneerMobileDevice(CWorld *world, CObject *parent, CPlayerRobot* robot);
+    public: CPioneerMobileDevice(CWorld *world, CEntity *parent, CPlayerRobot* robot);
 
     // Update the device
     //

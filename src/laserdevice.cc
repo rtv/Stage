@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.11.2.23 $
+//  $Author: ahoward $
+//  $Revision: 1.11.2.24 $
 //
 // Usage:
 //  (empty)
@@ -36,7 +36,7 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CLaserDevice::CLaserDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
+CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent, CPlayerRobot* robot)
         : CPlayerDevice(world, parent, robot,
                         LASER_DATA_START,
                         LASER_TOTAL_BUFFER_SIZE,
@@ -341,7 +341,7 @@ void CLaserDevice::OnUiUpdate(RtkUiDrawData *event)
 {
     // Draw our children
     //
-    CObject::OnUiUpdate(event);
+    CEntity::OnUiUpdate(event);
     
     // Draw ourself
     //
@@ -362,7 +362,7 @@ void CLaserDevice::OnUiUpdate(RtkUiDrawData *event)
 //
 void CLaserDevice::OnUiMouse(RtkUiMouseData *event)
 {
-    CObject::OnUiMouse(event);
+    CEntity::OnUiMouse(event);
 }
 
 

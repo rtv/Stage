@@ -36,7 +36,7 @@ RTK_LIB = $(RTK_DIR)/lib
 # Objects common to all targets
 #
 OBJS = world.o world_load.o image.o \
-		object.o objectfactory.o \
+		entity.o entityfactory.o \
 		playerrobot.o playerdevice.o \
 		pioneermobiledevice.o laserdevice.o \
 		visiondevice.o ptzdevice.o sonardevice.o \

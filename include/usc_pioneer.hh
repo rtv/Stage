@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/usc_pioneer.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.1.2.8 $
+//  $Author: ahoward $
+//  $Revision: 1.1.2.9 $
 //
 // Usage:
 //  (empty)
@@ -29,7 +29,7 @@
 
 // For base class
 //
-#include "object.hh"
+#include "entity.hh"
 
 // Forward declare object classes so we dont need to include headers.
 //
@@ -45,11 +45,11 @@ class CVisionDevice;
 
 // Base class for all player devices
 //
-class CUscPioneer : public CObject
+class CUscPioneer : public CEntity
 {
     // Minimal constructor
     //
-    public: CUscPioneer(CWorld *world, CObject *parent);
+    public: CUscPioneer(CWorld *world, CEntity *parent);
 
     // Destructor
     //
@@ -89,7 +89,7 @@ class CUscPioneer : public CObject
     // Anonymous list of objects/devices
     //
     private: int m_child_count;
-    private: CObject *m_child[64];
+    private: CEntity *m_child[64];
   
 #ifdef INCLUDE_XGUI
     // compose and return the export data structure

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.21 $
+//  $Revision: 1.1.2.22 $
 //
 // Usage:
 //  (empty)
@@ -45,7 +45,7 @@
 // forward declaration
 //
 class CXGui;
-class CObject;
+class CEntity;
 class CBroadcastDevice;
 
 
@@ -105,11 +105,11 @@ class CWorld
 
     // Add an object to the world
     //
-    public: void AddObject(CObject *object);
+    public: void AddObject(CEntity *object);
 
     // Return the object nearest a given position
     //
-    public: CObject* NearestObject( double x, double y );
+    public: CEntity* NearestObject( double x, double y );
 
     //////////////////////////////////////////////////////////////////////////
     // Time functions
@@ -235,7 +235,7 @@ class CWorld
     // Object list
     //
     private: int m_object_count;
-    private: CObject *m_object[1024];
+    private: CEntity *m_object[1024];
     
     // Obstacle data
     //

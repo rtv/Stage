@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.1.2.14 $
+//  $Author: ahoward $
+//  $Revision: 1.1.2.15 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -34,8 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CLaserBeacon::CLaserBeacon(CWorld *world, CObject *parent)
-        : CObject(world, parent)
+CLaserBeacon::CLaserBeacon(CWorld *world, CEntity *parent)
+        : CEntity(world, parent)
 {
     m_beacon_id = 0;
     m_index = -1;
@@ -57,7 +57,7 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CObject *parent)
 //
 bool CLaserBeacon::Load(int argc, char **argv)
 {
-    if (!CObject::Load(argc, argv))
+    if (!CEntity::Load(argc, argv))
         return false;
 
     for (int i = 0; i < argc;)
@@ -88,7 +88,7 @@ bool CLaserBeacon::Load(int argc, char **argv)
 //
 bool CLaserBeacon::Save(int &argc, char **argv)
 {
-    if (!CObject::Save(argc, argv))
+    if (!CEntity::Save(argc, argv))
         return false;
 
     // Save id
@@ -109,7 +109,7 @@ bool CLaserBeacon::Startup()
 {
     assert(m_world != NULL);
     m_index = m_world->AddLaserBeacon(m_beacon_id);
-    return CObject::Startup();
+    return CEntity::Startup();
 }
 
 
@@ -143,7 +143,7 @@ void CLaserBeacon::Update()
 //
 void CLaserBeacon::OnUiUpdate(RtkUiDrawData *data)
 {
-    CObject::OnUiUpdate(data);
+    CEntity::OnUiUpdate(data);
 
     data->begin_section("global", "");
     
@@ -168,7 +168,7 @@ void CLaserBeacon::OnUiUpdate(RtkUiDrawData *data)
 //
 void CLaserBeacon::OnUiMouse(RtkUiMouseData *data)
 {
-    CObject::OnUiMouse(data);
+    CEntity::OnUiMouse(data);
 }
 
 #endif

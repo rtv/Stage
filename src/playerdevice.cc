@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.15 $
+//  $Revision: 1.2.2.16 $
 //
 // Usage:
 //  (empty)
@@ -34,10 +34,10 @@
 ///////////////////////////////////////////////////////////////////////////
 // Minimal constructor
 //
-CPlayerDevice::CPlayerDevice(CWorld *world, CObject *parent,
+CPlayerDevice::CPlayerDevice(CWorld *world, CEntity *parent,
                              CPlayerRobot *robot, size_t offset, size_t buffer_len,
                              size_t data_len, size_t command_len, size_t config_len)
-        : CObject(world, parent)
+        : CEntity(world, parent)
 {
     m_robot = robot;
 
@@ -61,7 +61,7 @@ CPlayerDevice::CPlayerDevice(CWorld *world, CObject *parent,
 //
 bool CPlayerDevice::Startup()
 {
-    if (!CObject::Startup())
+    if (!CEntity::Startup())
         return false;
 
     // Get a pointer to the shared memory area
@@ -104,7 +104,7 @@ void CPlayerDevice::Shutdown()
     m_info->available = 0;
     m_robot->UnlockShmem();
     
-    CObject::Shutdown();
+    CEntity::Shutdown();
 }
 
 

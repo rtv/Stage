@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visiondevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.5 $
+//  $Revision: 1.4.2.6 $
 //
 // Usage:
 //  (empty)
@@ -48,7 +48,7 @@ class CVisionDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CVisionDevice(CWorld *world, CObject *parent, CPlayerRobot* robot,
+    public: CVisionDevice(CWorld *world, CEntity *parent, CPlayerRobot* robot,
                           CPtzDevice *ptz_device);
     
     // Update the device
