@@ -21,9 +21,12 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.14 2002-11-11 03:09:46 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.15 2003-01-10 03:46:23 rtv Exp $
  */
 
+//
+// all this GUI stuff should be unravelled from the CWorld class eventually - rtv
+//
 
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -61,6 +64,10 @@
 #include "world.hh"
 #include "playerdevice.hh"
 #include "library.hh"
+
+// handle changes to the entity that might make it look different
+void RtkEntityPropertyChange( CEntity* ent, EntityProperty prop );
+
 
 // TODO - unwrap RTK code from around the place and have it work
 // through the GUI hooks
@@ -124,9 +131,9 @@ void GuiEntityUpdate( CEntity* ent )
 
 void GuiEntityPropertyChange( CEntity* ent, EntityProperty prop )
 { 
-  /* do nothing */ 
+  RtkEntityPropertyChange( ent, prop );
 }
-
+ 
 ////////////////////////////////////////////
 
 void CWorld::AddToMenu( stage_menu_t* menu, CEntity* ent, int check )
@@ -580,6 +587,48 @@ void CWorld::RtkUpdateMovieMenu()
   }
   return;
 }
+
+// this functionality was previously in CEntity::SetProperty - this is
+// a lot cleaner, though I didn't want to shoehorn it into the world
+// class so it's sitting out here as a regular function. - rtv
+void RtkEntityPropertyChange( CEntity* ent, EntityProperty prop )
+{
+  assert( ent );
+  assert( prop > 0 );
+  assert( prop < ENTITY_LAST_PROPERTY );
+  
+  if( !ent->fig )
+    return; 
+  
+  double px, py, pa;
+
+  switch( prop )
+    {
+      // these require a complete redraw
+    case PropSizeX:
+    case PropSizeY:
+    case PropOriginX:
+    case PropOriginY:
+    case PropName:
+    case PropColor:
+    case PropShape:
+      ent->RtkShutdown();
+      ent->RtkStartup();
+      break;
+      
+      // these require just moving the figure
+    case PropPoseX:
+    case PropPoseY:
+    case PropPoseTh:
+      ent->GetPose( px, py, pa );
+      rtk_fig_origin(ent->fig, px, py, pa );
+      break;
+
+    default:
+      break;
+    }  
+}
+
 
 #endif
 

@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.99 2003-01-09 16:41:23 inspectorg Exp $
+ * CVS info: $Id: entity.cc,v 1.100 2003-01-10 03:46:30 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -787,9 +787,6 @@ int CEntity::SetProperty( int con, EntityProperty property,
   assert( len > 0 );
   assert( (int)len < MAX_PROPERTY_DATA_LEN );
 
-  bool refresh_figure = false;
-  bool move_figure = false;
-  
   switch( property )
   {
     case PropParent:
@@ -799,50 +796,34 @@ int CEntity::SetProperty( int con, EntityProperty property,
       break;
     case PropSizeX:
       memcpy( &size_x, (double*)value, sizeof(size_x) );
-      // force the device to re-render itself
-      refresh_figure = true;
       break;
     case PropSizeY:
       memcpy( &size_y, (double*)value, sizeof(size_y) );
-      // force the device to re-render itself
-      refresh_figure = true;
       break;
     case PropPoseX:
       memcpy( &local_px, (double*)value, sizeof(local_px) );
-      move_figure = true;
       break;
     case PropPoseY:
       memcpy( &local_py, (double*)value, sizeof(local_py) );
-      move_figure = true;
       break;
     case PropPoseTh:
       // normalize theta
       local_pth = atan2( sin(*(double*)value), cos(*(double*)value));
-      //memcpy( &local_pth, (double*)value, sizeof(local_pth) );
-      move_figure = true;
       break;
     case PropOriginX:
       memcpy( &origin_x, (double*)value, sizeof(origin_x) );
-      refresh_figure = true;
       break;
     case PropOriginY:
       memcpy( &origin_y, (double*)value, sizeof(origin_y) );
-      refresh_figure = true;
       break;
     case PropName:
       strcpy( name, (char*)value );
-      // force the device to re-render itself
-      refresh_figure = true;
       break;
     case PropColor:
       memcpy( &color, (StageColor*)value, sizeof(color) );
-      // force the device to re-render itself
-      refresh_figure = true;
       break;
     case PropShape:
       memcpy( &shape, (StageShape*)value, sizeof(shape) );
-      // force the device to re-render itself
-      refresh_figure = true;
       break;
     case PropLaserReturn:
       memcpy( &laser_return, (LaserReturn*)value, sizeof(laser_return) );
@@ -877,32 +858,6 @@ int CEntity::SetProperty( int con, EntityProperty property,
   
   if( con != -1 ) // unless this was a local change 
     this->SetDirty( con, property, 0 ); // clean on this con
-
-  if( refresh_figure )
-    {
-#ifdef INCLUDE_RTK2 
-      if( this->fig )
-	{
-	  RtkShutdown();
-	  RtkStartup();
-	}
-#endif
-    }
-  
-  if( move_figure )
-    {
-      //printf( "-- moving figure to %.2f %.2f %.2f\n",
-      //      local_px, local_py, local_pth );
-
-#ifdef INCLUDE_RTK2    
-      if( this->fig )
-	rtk_fig_origin(this->fig, local_px, local_py, local_pth );
-#endif 
-      
-      //#ifdef USE_GNOME2 
-      //this->GuiMove();
-      //#endif
-    }
 
   // update the GUI with the new property
   if( m_world->enable_gui )
