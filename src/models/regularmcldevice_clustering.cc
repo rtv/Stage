@@ -21,7 +21,7 @@
  * Desc: Clustering algorithm for grouping particles.
  * Author: Boyoon Jung
  * Date: 22 Nov 2002
- * $Id: regularmcldevice_clustering.cc,v 1.5 2002-12-05 04:34:57 rtv Exp $
+ * $Id: regularmcldevice_clustering.cc,v 1.6 2002-12-05 21:48:28 boyoon Exp $
  */
 
 #include "regularmcldevice.hh"
@@ -37,7 +37,7 @@ using std::endl;
 
 #ifdef DEBUG
 static bool m_isnan(const double m[][3]);
-static bool m_isinf(const double m[][3]);
+static bool m_finite(const double m[][3]);
 static void printMatrix(const double m[][3]);
 #endif
 
@@ -122,7 +122,7 @@ void MCLClustering::inverse(const double cov[][3], double inv[][3])
     inv[2][2] = 	    (-cov[0][0] * cov[1][1] + cov[0][1] * cov[0][1]) / n;
 #ifdef DEBUG
     if (m_isnan(inv)) cerr << "inverse: inv matrix contains NaN." << endl;
-    if (m_isinf(inv)) cerr << "inverse: inv matrix contains Inf." << endl;
+    if (!m_finite(inv)) cerr << "inverse: inv matrix contains Inf." << endl;
 #endif
 }
 
@@ -134,13 +134,13 @@ double MCLClustering::gaussian(const double x[], const double mean[], const doub
 
 #ifdef DEBUG
     if (m_isnan(cov)) cerr << "gaussian: cov matrix contains NaN." << endl;
-    if (m_isinf(cov)) cerr << "gaussian: cov matrix contains Inf." << endl;
+    if (!m_finite(cov)) cerr << "gaussian: cov matrix contains Inf." << endl;
 #endif
 
     double C2 = 1.0 / sqrt(fabs(determinant(cov)));
 #ifdef DEBUG
     if (isnan(C2)) cerr << "gaussian: C2 is NaN." << endl;
-    if (isinf(C2)) cerr << "gaussian: C2 is Inf." << endl;
+    if (!finite(C2)) cerr << "gaussian: C2 is Inf." << endl;
 #endif
 
     this->inverse(cov, inv);
@@ -157,16 +157,16 @@ double MCLClustering::gaussian(const double x[], const double mean[], const doub
     // exp() is supposed to return 0 when underflow, but gcc return -Inf.
     // The ideal solution is to link with libieee.a, but this library is
     // not available on some system. This is a simple hack to fix it.
-    if (isinf(C3)) C3 = 0.0;
+    if (!finite(C3)) C3 = 0.0;
 #ifdef DEBUG
     if (isnan(C3)) cerr << "gaussian: C3 is NaN." << endl;
-    if (isinf(C3)) cerr << "gaussian: C3 is Inf." << endl;
+    if (!finite(C3)) cerr << "gaussian: C3 is Inf." << endl;
 #endif
 
     double result = C1 * C2 * C3;
 #ifdef DEBUG
     if (isnan(result)) cerr << "gaussian: final result is NaN." << endl;
-    if (isinf(result)) cerr << "gaussian: final result is Inf." << endl;
+    if (!finite(result)) cerr << "gaussian: final result is Inf." << endl;
 #endif
     return result;
 }
@@ -349,11 +349,11 @@ static bool m_isnan(const double m[][3])
 }
 
 // [for debugging only] check if a matrix contains +/-Inf
-static bool m_isinf(const double m[][3])
+static bool m_finite(const double m[][3])
 {
-    if (isinf(m[0][0]) || isinf(m[0][1]) || isinf(m[0][2]) ||
-	isinf(m[1][0]) || isinf(m[1][1]) || isinf(m[1][2]) ||
-	isinf(m[2][0]) || isinf(m[2][1]) || isinf(m[2][2]))
+    if (finite(m[0][0]) && finite(m[0][1]) && finite(m[0][2]) &&
+	finite(m[1][0]) && finite(m[1][1]) && finite(m[1][2]) &&
+	finite(m[2][0]) && finite(m[2][1]) && finite(m[2][2]))
 	return true;
     else 
 	return false;
