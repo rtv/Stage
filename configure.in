@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.43 2003-05-24 23:11:57 gerkey Exp $
+dnl $Id: configure.in,v 1.44 2003-06-06 21:24:43 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -175,12 +175,17 @@ else
     AC_MSG_RESULT(yes)
     PLAYER_CPPFLAGS="-I$PLAYER_DIR/include"
     PLAYER_LDADD="-L$PLAYER_DIR/lib -lplayerqueue -lplayerpacket -lplayerclient"
-  elif test -f $PLAYER_DIR/server/player.h; then
-    AC_MSG_RESULT(yes)
-    PLAYER_CPPFLAGS="-I$PLAYER_DIR/server -I$PLAYER_DIR/server/drivers/stage -I$PLAYER_DIR/client_libs/libplayerpacket -I$PLAYER_DIR/client_libs/c -I$PLAYER_DIR/client_libs/c++"
-    PLAYER_LDADD="-L$PLAYER_DIR/server -lplayerqueue -L$PLAYER_DIR/client_libs/libplayerpacket -lplayerpacket -L$PLAYER_DIR/client_libs/c++ -lplayerclient"
   else
-    with_player=no
+    AC_MSG_RESULT(no)
+    AC_MSG_CHECKING(for $PLAYER_DIR/server/player.h)
+    if test -f $PLAYER_DIR/server/player.h; then
+      AC_MSG_RESULT(yes)
+      PLAYER_CPPFLAGS="-I$PLAYER_DIR/server -I$PLAYER_DIR/server/drivers/stage -I$PLAYER_DIR/client_libs/libplayerpacket -I$PLAYER_DIR/client_libs/c -I$PLAYER_DIR/client_libs/c++"
+      PLAYER_LDADD="-L$PLAYER_DIR/server -lplayerqueue -L$PLAYER_DIR/client_libs/libplayerpacket -lplayerpacket -L$PLAYER_DIR/client_libs/c++ -lplayerclient"
+    else
+      AC_MSG_RESULT(no)
+      with_player=no
+    fi
   fi
 fi
 
