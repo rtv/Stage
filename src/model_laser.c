@@ -7,14 +7,14 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.31 $
+//  $Revision: 1.32 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 #include <sys/time.h>
 #include <math.h>
 
-#define DEBUG
+//#define DEBUG
 
 #include "stage.h"
 #include "raytrace.h"
@@ -65,7 +65,7 @@ int laser_update( model_t* mod )
   memcpy( &pz, &geom->pose, sizeof(pz) ); 
   model_local_to_global( mod, &pz );
 
-  PRINT_WARN3( "laser origin %.2f %.2f %.2f", pz.x, pz.y, pz.a );
+  PRINT_DEBUG3( "laser origin %.2f %.2f %.2f", pz.x, pz.y, pz.a );
 
   double sample_incr = cfg->fov / (double)cfg->samples;
   

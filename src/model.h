@@ -36,7 +36,7 @@ typedef struct _model
   // the time that each property was last calculated
   stg_msec_t update_times[STG_PROP_COUNT];
   
-  gui_model_t gui; // all the gui stuff - this should be a property too!
+  gui_model_t gui; // all the gui stuff
 
   // todo - add this as a property?
   stg_joules_t energy_consumed;
@@ -121,11 +121,7 @@ model_t* model_create(  world_t* world, model_t* parent, stg_id_t id, stg_model_
 void model_destroy( model_t* mod );
 void model_destroy_cb( gpointer mod );
 void model_handle_msg( model_t* model, int fd, stg_msg_t* msg );
-
-
-
 void model_global_pose( model_t* mod, stg_pose_t* pose );
-
 void model_subscribe( model_t* mod, stg_id_t pid );
 void model_unsubscribe( model_t* mod, stg_id_t pid );
 
@@ -144,11 +140,8 @@ int model_set_guifeatures( model_t* mod, stg_guifeatures_t* gf );
 int model_set_energy_config( model_t* mod, stg_energy_config_t* gf );
 int model_set_energy_data( model_t* mod, stg_energy_data_t* gf );
 int model_set_lines( model_t* mod, stg_line_t* lines, size_t lines_count );
-
-// special
-int model_set_command( model_t* mod, void* cmd, size_t len );
-int model_set_data( model_t* mod, void* data, size_t len );
-int model_set_config( model_t* mod, void* cmd, size_t len );
+int model_set_obstaclereturn( model_t* mod, stg_bool_t ret );
+int model_set_laserreturn( model_t* mod, stg_laser_return_t val );
 
 // GET properties - use these to get props - don't get them directly
 stg_velocity_t*      model_get_velocity( model_t* mod );
@@ -160,8 +153,14 @@ stg_line_t*          model_get_lines( model_t* mod, size_t* count );
 stg_guifeatures_t*   model_get_guifeaturess( model_t* mod );
 stg_energy_data_t*   model_get_energy_data( model_t* mod );
 stg_energy_config_t* model_get_energy_config( model_t* mod );
+stg_bool_t           model_get_obstaclereturn( model_t* mod );
+stg_laser_return_t   model_get_laserreturn( model_t* mod );
 
 // special
+int model_set_command( model_t* mod, void* cmd, size_t len );
+int model_set_data( model_t* mod, void* data, size_t len );
+int model_set_config( model_t* mod, void* cmd, size_t len );
+
 int model_get_command( model_t* mod, void** cmd, size_t* len );
 int model_get_data( model_t* mod, void** data, size_t* len );
 int model_get_config( model_t* mod, void** cmd, size_t* len );
@@ -172,18 +171,12 @@ void model_update_cb( gpointer key, gpointer value, gpointer user );
 void model_update_velocity( model_t* model );
 int model_update_pose( model_t* model );
 
-//int model_pose_update( model_t* model );
 
 void model_print( model_t* mod );
 void model_print_cb( gpointer key, gpointer value, gpointer user );
 
 void model_local_to_global( model_t* mod, stg_pose_t* pose );
 
-void model_blobfinder_init( model_t* mod );
-void model_blobfinder_update( model_t* mod );
-
-void model_fiducial_init( model_t* mod );
-void model_fiducial_update( model_t* mod );
 
 void model_energy_consume( model_t* mod, stg_watts_t rate );
 
@@ -195,8 +188,15 @@ void register_startup( stg_model_type_t type, func_startup_t func );
 void register_shutdown( stg_model_type_t type, func_shutdown_t func );
 void register_update( stg_model_type_t type, func_update_t func );
 void register_service( stg_model_type_t type, func_service_t func );
-void register_putdata( stg_model_type_t type, func_set_t func );
-void register_get( stg_model_type_t type, func_get_t func );
+
+void register_putdata( stg_model_type_t type, func_putdata_t func );
+void register_putcommand( stg_model_type_t type, func_putcommand_t func );
+void register_putconfig( stg_model_type_t type, func_putconfig_t func );
+
+void register_getdata( stg_model_type_t type, func_getdata_t func );
+void register_getcommand( stg_model_type_t type, func_getcommand_t func );
+void register_getconfig( stg_model_type_t type, func_getconfig_t func );
+
 
 void model_map( model_t* mod, gboolean render );
 void model_map_with_children( model_t* mod, gboolean render );

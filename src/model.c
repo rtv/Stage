@@ -261,8 +261,8 @@ void model_map_with_children(  model_t* mod, gboolean render )
   // call this function for all the model's children
   int ch;
   for( ch=0; ch<mod->children->len; ch++ )
-    model_map_with_children( (model_t*)g_ptr_array_index(mod->children, ch), render );
-  
+    model_map_with_children( (model_t*)g_ptr_array_index(mod->children, ch), 
+			     render);  
   // now map the model
   model_map( mod, render );
 }
@@ -273,12 +273,18 @@ void model_map( model_t* mod, gboolean render )
 {
   assert( mod );
   
-  //stg_pose_t gpose;
-  //model_global_pose( mod, &gpose );
-
   size_t count=0;
   stg_line_t* lines = model_get_lines(mod, &count);
-
+  
+  if( count == 0 ) 
+    return;
+  
+  if( lines == NULL )
+    {
+      PRINT_ERR1( "expecting %d lines but have no data", count );
+      return;
+    }
+  
   // todo - speed this up by processing all points in a single function call
   int l;
   for( l=0; l<count; l++ )
@@ -301,11 +307,6 @@ void model_map( model_t* mod, gboolean render )
     }
 }
   
-
-
-
-/* UPDATE everything */
-
 int model_update( model_t* mod )
 {
   //PRINT_DEBUG2( "updating model %d:%s", mod->id, mod->token );
@@ -327,7 +328,7 @@ void model_update_cb( gpointer key, gpointer value, gpointer user )
   model_update( (model_t*)value );
 }
 
-int model_service_default( model_t* mod )
+int model_service( model_t* mod )
 {
   PRINT_DEBUG1( "default service method mod %d", mod->id );
 
@@ -338,14 +339,24 @@ int model_service_default( model_t* mod )
   return 0;
 }
 
-int model_startup_default( model_t* mod )
+int model_startup( model_t* mod )
 {
-  //PRINT_DEBUG( "default startup method" );
   PRINT_DEBUG1( "default startup method mod %d", mod->id );
   
   // if this type of model has a startup function, call it.
   if( derived[ mod->type ].startup )
    return  derived[ mod->type ].startup(mod);
+  
+  return 0;
+}
+
+int model_shutdown( model_t* mod )
+{
+  PRINT_DEBUG1( "default shutdown method mod %d", mod->id );
+  
+  // if this type of model has a shutdown function, call it.
+  if( derived[ mod->type ].shutdown )
+    return  derived[ mod->type ].shutdown(mod);
   
   return 0;
 }
@@ -356,23 +367,7 @@ void model_subscribe( model_t* mod, stg_id_t pid )
   
   // if this is the first sub, call startup & render if there is one
   if( mod->subs[pid] == 1 )
-    {
-      if( derived[mod->type].startup ) 
-	derived[mod->type].startup(mod);        
-      else
-	model_startup_default(mod);
-    }
-}
-
-int model_shutdown_default( model_t* mod )
-{
-  PRINT_DEBUG1( "default shutdown method mod %d", mod->id );
-
-  // if this type of model has a shutdown function, call it.
-  if( derived[ mod->type ].shutdown )
-   return  derived[ mod->type ].shutdown(mod);
-
-  return 0;
+    model_startup(mod);
 }
 
 void model_unsubscribe( model_t* mod, stg_id_t pid )
@@ -381,248 +376,12 @@ void model_unsubscribe( model_t* mod, stg_id_t pid )
   
   // if that was the last sub, call shutdown 
   if( mod->subs[pid] < 1 )
-    {
-      if( derived[mod->type].shutdown ) 
-	derived[mod->type].shutdown(mod);  
-      else
-	model_shutdown_default(mod);
-    }
-
+    model_shutdown(mod);
+  
   if( mod->subs[pid] < 0 )
     PRINT_ERR1( "subscription count has gone below zero (%d). weird.",
 		mod->subs[pid] );
 }
-
-int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
-{
-  if( pid != STG_PROP_TIME )
-    PRINT_DEBUG4( "GET PROP model %d(%s) prop %d(%s)", 
-		  mod->id, mod->token, pid, stg_property_string(pid) );
-  
-  switch( pid )
-    {
-    case STG_PROP_TIME:
-      *data = (void*)&mod->world->sim_time;
-      *len = sizeof(mod->world->sim_time);
-      break;
-    case STG_PROP_GEOM: 
-      *data = (void*)model_get_geom( mod );
-      *len = sizeof(stg_geom_t);
-      break;
-    case STG_PROP_DATA: 
-      assert( model_get_data( mod, data, len ) == 0 );
-      break;
-    case STG_PROP_COMMAND: 
-      assert( model_get_command( mod, data, len ) == 0 );
-      break;
-    case STG_PROP_CONFIG: 
-      assert( model_get_config( mod, data, len ) == 0 );
-      break;      
-      
-    default:
-      PRINT_WARN4( "model %d(%s) unhandled property get %d(%s)",
-		   mod->id, mod->token, pid, stg_property_string(pid)); 
-    }
-  
-  if( *len == 0 )
-    PRINT_WARN3( "no data available for model %d property %d(%s)",
-		 mod->id, pid, stg_property_string(pid) );
-
-  if( pid != STG_PROP_TIME )
-    PRINT_DEBUG1( "got a %d byte property", (int)*len);
-  
-  return 0; // ok
-}
-
-
-// TODO
-//stg_ms_t* model_get_time( model_t* mod )
-//{
-//return & 
-
-// ------------------------------------------------------------------
-// GET/SET funcs that don't require their own file
-
-void model_set_laserreturn( model_t* mod, stg_laser_return_t* val )
-{
-  memcpy( &mod->laser_return, val, sizeof(mod->laser_return) );
-}
-
-
-stg_velocity_t* model_get_velocity( model_t* mod )
-{
-  return &mod->velocity;
-}
-
-int model_set_velocity( model_t* mod, stg_velocity_t* vel )
-{
-  memcpy( &mod->velocity, vel, sizeof(mod->velocity) );
-  return 0;
-}
-
-
-stg_color_t model_get_color( model_t* mod )
-{
-  return mod->color;
-}
-
-
-int model_set_color( model_t* mod, stg_color_t* col )
-{
-  memcpy( &mod->color, col, sizeof(mod->color) );
-
-  // redraw my image
-  model_render_lines(mod);
-
-  return 0; // OK
-}
-
-stg_kg_t* model_get_mass( model_t* mod )
-{
-  return &mod->mass;
-}
-
-int model_set_mass( model_t* mod, stg_kg_t* mass )
-{
-  memcpy( &mod->mass, mass, sizeof(mod->mass) );
-  return 0;
-}
-
-stg_guifeatures_t* model_get_guifeatures( model_t* mod )
-{
-  return &mod->guifeatures;
-}
-
-
-int model_set_guifeatures( model_t* mod, stg_guifeatures_t* gf )
-{
-  memcpy( &mod->guifeatures, gf, sizeof(mod->guifeatures));
-  
-  // redraw the fancy features
-  gui_model_features( mod );
-
-  return 0;
-}
-
-
-
-//------------------------------------------------------------------
-
-int model_size_error( model_t* mod, stg_id_t pid, 
-		      size_t actual, size_t correct )
-{
-  PRINT_WARN5( "model %d(%s) received wrong size %s (%d/%d bytes)",
-	       mod->id, 
-	       mod->token, 
-	       stg_property_string(pid), 
-	       (int)actual, 
-	       (int)correct );
-
-  return 1; // always returns an error
-}
-
-int model_set_prop( model_t* mod, stg_id_t propid, void* data, size_t len )
-{
-  assert( mod );
-
-  if( data == NULL )
-    assert( len == 0 );
-  
-  switch( propid )
-    {
-    case STG_PROP_POSE:  
-      if( len == sizeof(stg_pose_t) ) 
-	model_set_pose( mod, (stg_pose_t*)data );
-      else
-	model_size_error( mod, propid, len, sizeof(stg_pose_t) );
-      break;
-      
-    case STG_PROP_GEOM: 
-       if( len == sizeof(stg_geom_t) ) 
-	 model_set_geom( mod, (stg_geom_t*)data );
-      else
-	model_size_error( mod, propid, len, sizeof(stg_geom_t) );
-       break;
-
-    case STG_PROP_VELOCITY:  
-      if( len == sizeof(stg_velocity_t) ) 
-	model_set_velocity( mod, (stg_velocity_t*)data );
-      else
-	model_size_error( mod, propid, len, sizeof(stg_velocity_t) );
-      break;
-
-    case STG_PROP_COLOR:  
-      if( len == sizeof(stg_color_t) ) 
-	model_set_color( mod, (stg_color_t*)data );
-      else
-	model_size_error( mod, propid, len, sizeof(stg_color_t) );
-      break;
-
-    case STG_PROP_MASS:  
-      if( len == sizeof(stg_kg_t) ) 
-	model_set_mass( mod, (stg_kg_t*)data );
-      else
-	model_size_error( mod, propid, len, sizeof(stg_kg_t) );
-      break;
-      
-    case STG_PROP_LASERRETURN: 
-      if( len == sizeof(stg_laser_return_t) ) 
-	model_set_laserreturn( mod, (stg_laser_return_t*)data ); 
-      else
-	model_size_error( mod, propid, len, sizeof(stg_laser_return_t) );      
-      break;
-
-    case STG_PROP_LINES:
-      model_set_lines( mod, (stg_line_t*)data, len / sizeof(stg_line_t) );
-      break;
-
-    case STG_PROP_GUIFEATURES: 
-      if( len == sizeof(stg_guifeatures_t) ) 
-	model_set_guifeatures( mod, (stg_guifeatures_t*)data ); 
-      else
-	model_size_error( mod, propid, len, sizeof(stg_guifeatures_t) );      
-      break;
-
-    case STG_PROP_ENERGYCONFIG: 
-      if( len == sizeof(stg_energy_config_t) ) 
-	model_set_energy_config( mod, (stg_energy_config_t*)data ); 
-      else
-	model_size_error( mod, propid, len, sizeof(stg_energy_config_t) );      
-      break;
-
-    case STG_PROP_ENERGYDATA: 
-      if( len == sizeof(stg_energy_data_t) ) 
-	model_set_energy_data( mod, (stg_energy_data_t*)data ); 
-      else
-	model_size_error( mod, propid, len, sizeof(stg_energy_data_t) );      
-      break;
-      
-    case STG_PROP_CONFIG:
-      model_set_config( mod, data, len );
-      break;
-
-    case STG_PROP_DATA:
-      model_set_data( mod, data, len );
-      break;
-
-    case STG_PROP_COMMAND:
-      model_set_command( mod, data, len );
-      break;
-      
-
-
-      // etc!
-
-    default:
-      PRINT_WARN3( "unhandled property %d(%s) of size %d bytes",
-		   propid, stg_property_string(propid), (int)len );
-      break;
-    }
-
-  return 0; // OK
-}
-
-
 
 void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
 {
@@ -654,28 +413,11 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
 	
 	stg_target_t* tgt = (stg_target_t*)msg->payload;
 	
-	void* data = NULL;
-	size_t len = 0;
-	
 	// reply with the requested property
-	model_get_prop( model, tgt->prop, &data, &len );
-	
-	//stg_prop_t* prop = 
-	//stg_prop_create(  model->world->sim_time, model->world->id,
-	//	    model->id, tgt->prop, data, len );
-	
-	//size_t prop_len = sizeof(stg_prop_t) + prop->datalen;
-	
-	//PRINT_DEBUG3( "SENDING A PROPGET REPLY, %d size prop of which "
-	//      "%d is data, %d is header",
-	//      (int)prop_len, (int)len, (int)sizeof(stg_prop_t) );	  
-	
-	stg_fd_msg_write( fd, 
-			  STG_MSG_CLIENT_REPLY, 
-			  data, 
-			  len );
-
-	//stg_prop_destroy( prop );
+	void* data = NULL;
+	size_t len = 0;	
+	model_get_prop( model, tgt->prop, &data, &len );	
+	stg_fd_msg_write( fd, STG_MSG_CLIENT_REPLY, data, len );
       }
       break;
 

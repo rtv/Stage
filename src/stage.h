@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.75 2004-08-26 22:16:08 rtv Exp $
+ * CVS: $Id: stage.h,v 1.76 2004-08-26 23:42:49 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -90,7 +90,6 @@ typedef enum
     STG_PROP_PARENT, 
     STG_PROP_PLAYERID,
     STG_PROP_POSE,
-    STG_PROP_POWER,
     STG_PROP_ENERGYCONFIG,
     STG_PROP_ENERGYDATA,
     STG_PROP_PUCKRETURN,
@@ -101,28 +100,17 @@ typedef enum
     STG_PROP_VISIONRETURN,
     STG_PROP_RANGERRETURN, 
     STG_PROP_FIDUCIALRETURN,
-    STG_PROP_RANGERDATA,
-    STG_PROP_RANGERCONFIG,
-    STG_PROP_FIDUCIALCONFIG,
-    STG_PROP_FIDUCIALDATA,
-    STG_PROP_BLOBCONFIG,
-    STG_PROP_BLOBDATA,
-    //STG_PROP_BLOBRETURN,
-    STG_PROP_LASERDATA,
-    STG_PROP_LASERCONFIG,
-    STG_PROP_BLINKENLIGHT,  // light blinking rate
     STG_PROP_GUIFEATURES,
     //STG_PROP_LOSMSG,
     //STG_PROP_LOSMSGCONSUME,
     //STG_PROP_MOVEMASK,
-    STG_PROP_MATRIXRENDER, // if non-zero, render in the matrix
-    STG_PROP_FOV, // generic sensor field of view
+    //STG_PROP_MATRIXRENDER, // if non-zero, render in the matrix
 
     STG_PROP_DATA, //generic data
     STG_PROP_CONFIG, 
     STG_PROP_COMMAND,
-    STG_PROP_REQUEST, // generic request
-    STG_PROP_REQREPLY, // generic reply
+    //STG_PROP_REQUEST, // generic request
+    //STG_PROP_REQREPLY, // generic reply
 
     STG_PROP_COUNT // this must be the last entry (it's not a real
 		   // property - it just counts 'em).

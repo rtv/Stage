@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.20 $
+//  $Revision: 1.21 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -64,21 +64,17 @@ model_t* model_test_collision_at_pose( model_t* mod,
       stg_pose_sum( &p1, pose, &pp1 );
       stg_pose_sum( &p2, pose, &pp2 );
 
-      //model_local_to_global( mod, &p1 );
-      //model_local_to_global( mod, &p2 );
-
-
       //printf( "tracing %.2f %.2f   %.2f %.2f\n",  p1.x, p1.y, p2.x, p2.y );
 
       itl_t* itl = itl_create( p1.x, p1.y, p2.x, p2.y, 
 			       mod->world->matrix, 
 			       PointToPoint );
-
       model_t* hitmod;
       while( (hitmod = itl_next( itl )) ) 
 	{
-	  if( hitmod != mod && model_get_obstaclereturn(hitmod) ) //&& !IsDescendent(ent) &&
-	    //if( ent != this && ent->obstacle_return )
+	  if( hitmod != mod && 
+	      model_get_obstaclereturn(hitmod) && 
+	      !model_is_descendent(mod,hitmod) )
 	    {
 	      if( hitx || hity ) // if the caller needs to know hit points
 		{
@@ -124,7 +120,7 @@ int model_update_pose( model_t* model )
       //pose.y += vel->y * interval;
       //pose.a += vel->a * interval;
       
-      // local mode
+      // differential-steering model
       pose.x += interval * (vel->x * cos(pose.a) - vel->y * sin(pose.a));
       pose.y += interval * (vel->x * sin(pose.a) + vel->y * cos(pose.a));
       pose.a += interval * vel->a;

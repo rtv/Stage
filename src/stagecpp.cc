@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.43 2004-08-26 05:25:52 rtv Exp $
+// $Id: stagecpp.cc,v 1.44 2004-08-26 23:42:49 rtv Exp $
 
 #include "stage.h"
 #include "worldfile.hh"
@@ -193,7 +193,7 @@ void configure_fiducial( stg_model_t* mod, int section )
     wf.ReadLength(section, "fiducial.range_max_id", 
 		  STG_DEFAULT_FIDUCIAL_RANGEMAXID );
   
-  stg_model_prop_with_data( mod, STG_PROP_FIDUCIALCONFIG, &fcfg, sizeof(fcfg));
+  stg_model_prop_with_data( mod, STG_PROP_CONFIG, &fcfg, sizeof(fcfg));
   
 }
 
@@ -227,7 +227,7 @@ void configure_blobfinder( stg_model_t* mod, int section )
 					   "blob.channels", 
 					   ch, "red" )); 
   
-  stg_model_prop_with_data( mod, STG_PROP_BLOBCONFIG, 
+  stg_model_prop_with_data( mod, STG_PROP_CONFIG, 
 			    &bcfg,sizeof(bcfg));  
 }
 
@@ -263,7 +263,7 @@ void configure_ranger( stg_model_t* mod, int section )
 	}
       
       PRINT_DEBUG1( "loaded %d ranger configs", scount );	  
-      stg_model_prop_with_data( mod, STG_PROP_RANGERCONFIG,
+      stg_model_prop_with_data( mod, STG_PROP_CONFIG,
 				configs, scount * sizeof(stg_ranger_config_t) );
       
       free( configs );
