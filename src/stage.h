@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.64 2004-07-23 01:05:13 rtv Exp $
+ * CVS: $Id: stage.h,v 1.65 2004-07-27 02:56:57 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -336,6 +336,7 @@ stg_color_t stg_lookup_color(const char *name);
 typedef struct
 {
   stg_meters_t x, y, a;
+  stg_bool_t stall;
 } stg_pose_t;
 
 typedef struct

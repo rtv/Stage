@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.12 $
+//  $Revision: 1.13 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -44,6 +44,7 @@ void model_pose_init( model_t* mod )
   newpose.x = 0;
   newpose.y = 0;
   newpose.a = 0; 
+  newpose.stall = 0;
   model_set_prop_generic( mod, STG_PROP_POSE, &newpose, sizeof(newpose) );
 }
 
@@ -97,7 +98,9 @@ int model_pose_set( model_t* mod, void*data, size_t len )
 // the location of the hit in hitx,hity (if non-null)
 // Returns NULL if not collisions.
 // This function is useful for writing position devices.
-model_t* model_test_collision( model_t* mod, double* hitx, double* hity )
+model_t* model_test_collision_at_pose( model_t* mod, 
+				       stg_pose_t* pose, 
+				       double* hitx, double* hity )
 {
   //return NULL;
   
@@ -117,18 +120,28 @@ model_t* model_test_collision( model_t* mod, double* hitx, double* hity )
       // find the global coords of this line
       stg_line_t* line = &lines[l];
 
+      stg_pose_t pp1;
+      pp1.x = line->x1;
+      pp1.y = line->y1;
+      pp1.a = 0;
+
+      stg_pose_t pp2;
+      pp2.x = line->x2;
+      pp2.y = line->y2;
+      pp2.a = 0;
+
       stg_pose_t p1;
-      p1.x = line->x1;
-      p1.y = line->y1;
-      p1.a = 0;
-
       stg_pose_t p2;
-      p2.x = line->x2;
-      p2.y = line->y2;
-      p2.a = 0;
 
-      model_local_to_global( mod, &p1 );
-      model_local_to_global( mod, &p2 );
+      // shift the line points into the global coordinate system
+      pose_sum( &p1, pose, &pp1 );
+      pose_sum( &p2, pose, &pp2 );
+
+      //model_local_to_global( mod, &p1 );
+      //model_local_to_global( mod, &p2 );
+
+
+      //printf( "tracing %.2f %.2f   %.2f %.2f\n",  p1.x, p1.y, p2.x, p2.y );
 
       itl_t* itl = itl_create( p1.x, p1.y, p2.x, p2.y, 
 			       mod->world->matrix, 
@@ -169,51 +182,58 @@ int model_pose_update( model_t* model )
   PRINT_DEBUG1( "pose update method model %d", model->id );
  
   stg_velocity_t* vel = model_velocity_get(model);  
-  stg_pose_t* pose = model_pose_get( model );
+
+
+  stg_pose_t pose;
+  memcpy( &pose, model_pose_get( model ), sizeof(pose));
   
-  if( vel->x || vel->y || vel->a )
-  {
-    stg_pose_t oldpose;
-    memcpy( &oldpose, pose, sizeof(oldpose) );
-    
-    double interval = (double)model->world->sim_interval / 1000.0;
+  stg_pose_t oldpose;
+  memcpy( &oldpose, &pose, sizeof(pose));
 
-    // global mode
-    //pose.x += vel->x * interval;
-    //pose.y += vel->y * interval;
-    //pose.a += vel->a * interval;
+  stg_energy_data_t* en = model_energy_data_get( model );
 
-    // local mode
-    pose->x += interval * (vel->x * cos(pose->a) - vel->y * sin(pose->a));
-    pose->y += interval * (vel->x * sin(pose->a) + vel->y * cos(pose->a));
-    pose->a += interval * vel->a;
-    
-    stg_pose_t newpose; // store the new pose
-    memcpy( &newpose, pose, sizeof(newpose) );
-    
-    stg_energy_data_t* en = model_energy_data_get( model );
-    assert(en);
+  //if( en->joules > 0 && (vel->x || vel->y || vel->a ) )
+  if( (vel->x || vel->y || vel->a ) )
+    {
+      
+      // convert msec to sec
+      double interval = (double)model->world->sim_interval / 1000.0;
+      
+      // global mode
+      //pose.x += vel->x * interval;
+      //pose.y += vel->y * interval;
+      //pose.a += vel->a * interval;
+      
+      // local mode
+      pose.x += interval * (vel->x * cos(pose.a) - vel->y * sin(pose.a));
+      pose.y += interval * (vel->x * sin(pose.a) + vel->y * cos(pose.a));
+      pose.a += interval * vel->a;
 
-    if( en->joules > 0 && 
-	model_test_collision( model, NULL, NULL ) == NULL )
-      {
-	// reset the old pose so that unmapping works properly
-	memcpy( pose, &oldpose, sizeof(oldpose) );
-	
-	// now set the new pose handling matrix & gui redrawing 
-	model_set_prop( model, STG_PROP_POSE, &newpose, sizeof(newpose) );
+      if( model_test_collision_at_pose( model, &pose, NULL, NULL ) )
+	{
+	  PRINT_WARN( "HIT" );
+	  // add the stall flag to the current pose
+	  if( oldpose.stall == 0 )
+	    {
+	      oldpose.stall = 1;
+	      // now set the new pose handling matrix & gui redrawing 
+	      model_set_prop( model, STG_PROP_POSE, &oldpose, sizeof(oldpose) );
+	    }	  
+	}
+      else	  
+	{
+	  pose.stall = 0;
 
-	
-	// ignore acceleration in energy model for now, we just pay
-	// something to move.	
-	stg_kg_t mass = *model_mass_get( model );
-	model_energy_consume( model, STG_ENERGY_COST_MOTIONKG * mass );
-
-      }
-    else // reset the old pose
-      memcpy( pose, &oldpose, sizeof(oldpose) );
-  }
-
+	  // now set the new pose handling matrix & gui redrawing 
+	  model_set_prop( model, STG_PROP_POSE, &pose, sizeof(pose) );
+	  
+	  // ignore acceleration in energy model for now, we just pay
+	  // something to move.	
+	  stg_kg_t mass = *model_mass_get( model );
+	  model_energy_consume( model, STG_ENERGY_COST_MOTIONKG * mass ); 
+	}      
+    }
+  
   return 0; // ok
 }
 
