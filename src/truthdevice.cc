@@ -21,7 +21,7 @@
  * Desc: A device for getting the true pose of things.
  * Author: Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: truthdevice.cc,v 1.8 2002-06-11 01:30:15 gerkey Exp $
+ * CVS info: $Id: truthdevice.cc,v 1.9 2002-06-11 01:40:02 gerkey Exp $
  */
 
 #include "world.hh"
@@ -64,7 +64,7 @@ void CTruthDevice::UpdateConfig()
   void* client;
 
   player_truth_pose_t config;
-  if (GetConfig(&client, &config, sizeof(config)) > 0)
+  if ((len = GetConfig(&client, &config, sizeof(config))) > 0)
   {
     switch (config.subtype)
     {
