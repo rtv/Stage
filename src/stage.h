@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.35 2004-05-10 04:14:33 rtv Exp $
+ * CVS: $Id: stage.h,v 1.36 2004-05-18 06:00:30 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -431,6 +431,11 @@ typedef struct
 {
   int toplx, toply, toprx, topry, botlx, botly, botrx, botry;
 } stg_corners_t;
+
+typedef struct
+{
+  double x, y;
+} stg_point_t;
 
 // MOVEMASK ---------------------------------------------------------
    

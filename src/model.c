@@ -487,13 +487,16 @@ int model_set_prop( model_t* mod,
 			(int)len, (int)sizeof(stg_laser_config_t) );
       break;
       
+    case STG_PROP_LASERGEOM:
+      if( len == sizeof(stg_geom_t) )
+	memcpy( &mod->laser_geom, data, sizeof(stg_geom_t) );
+      else PRINT_WARN2( "ignoring bad laser geometry data (%d/%d bytes)", 
+			(int)len, (int)sizeof(stg_geom_t) );
+      break;
+      
     case STG_PROP_RANGERCONFIG:
       g_array_set_size( mod->ranger_config, 0 );
       g_array_append_vals( mod->ranger_config, data, len/sizeof(stg_ranger_config_t) );
-
-      PRINT_WARN2( "configured %d (%d) rangers", 
-		   (int)(len/sizeof(stg_ranger_config_t)),
-		   (int)mod->ranger_config->len );
       break;
 
     default:

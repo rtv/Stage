@@ -18,12 +18,12 @@
 // model color defaults
 #define STG_GENERIC_COLOR "black"
 #define STG_POSITION_COLOR "red"
-#define STG_LASER_COLOR "blue"
-#define STG_LASER_DATA_COLOR "light blue"
+#define STG_LASER_TRANSDUCER_COLOR "blue"
+#define STG_LASER_COLOR "light blue"
 #define STG_WALL_COLOR "dark blue"
-#define STG_SONAR_COLOR "gray70"
 #define STG_FIDUCIAL_COLOR "goldenrod2"
 #define STG_RANGER_COLOR "gray90" 
+#define STG_RANGER_TRANSDUCER_COLOR "orange"
 
 #define STG_LAYER_BACKGROUND 10
 #define STG_LAYER_BODY 30
@@ -59,7 +59,8 @@ typedef struct
   
   // rtk doesn't support status bars, so we'll use gtk directly
   GtkStatusbar* statusbar;
-  
+  GtkLabel* timelabel;
+
   GHashTable* guimods;
 
   rtk_fig_t* bg; // background
@@ -109,7 +110,7 @@ void gui_model_update( model_t* mod, stg_prop_type_t prop );
 
 void gui_model_nose( model_t* model );
 void gui_model_pose( model_t* mod );
-//void gui_model_rects( model_t* model );
+void gui_model_geom( model_t* model );
 void gui_model_lines( model_t* model );
 void gui_model_nose( model_t* model );
 void gui_model_rangers( model_t* mod );
@@ -119,7 +120,6 @@ void gui_model_rangers_data( model_t* mod );
 void gui_model_laser_data( model_t* mod );
 void gui_model_laser( model_t* mod );
 
-//void gui_model_size( model_t* mod, stg_size_t* size );
 //void gui_model_velocity( model_t* mod, stg_velocity_t* vel );
 
 gui_model_t* gui_model_figs( model_t* model );

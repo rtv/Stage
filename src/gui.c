@@ -20,6 +20,7 @@ static rtk_app_t *app = NULL;
 // table of world-to-window mappings
 static GHashTable* wins;
 
+#include "config.h"
 #include "gui.h"
 
 void gui_startup( int* argc, char** argv[] )
@@ -74,6 +75,7 @@ rtk_fig_t* gui_grid_create( rtk_canvas_t* canvas, rtk_fig_t* parent,
   return grid;
 }
 
+
 gui_window_t* gui_window_create( world_t* world, int xdim, int ydim )
 {
   gui_window_t* win = calloc( sizeof(gui_window_t), 1 );
@@ -83,10 +85,25 @@ gui_window_t* gui_window_create( world_t* world, int xdim, int ydim )
   // enable all objects on the canvas to find our window object
   win->canvas->userdata = (void*)win; 
 
-  win->statusbar = GTK_STATUSBAR(gtk_statusbar_new());
   
-  gtk_box_pack_start(GTK_BOX(win->canvas->layout), 
+  GtkHBox* hbox = GTK_HBOX(gtk_hbox_new( TRUE, 10 ));
+  
+  win->statusbar = GTK_STATUSBAR(gtk_statusbar_new());
+  gtk_statusbar_set_has_resize_grip( win->statusbar, FALSE );
+  gtk_box_pack_start(GTK_BOX(hbox), 
 		     GTK_WIDGET(win->statusbar), FALSE, TRUE, 0);
+  
+  win->timelabel = GTK_LABEL(gtk_label_new("0:00:00"));
+  gtk_box_pack_end(GTK_BOX(hbox), 
+		   GTK_WIDGET(win->timelabel), FALSE, FALSE, 0);
+
+  gtk_box_pack_start(GTK_BOX(win->canvas->layout), 
+		     GTK_WIDGET(hbox), FALSE, TRUE, 0);
+
+
+  char txt[256];
+  snprintf( txt, 256, "Stage v%s", VERSION );
+  gtk_statusbar_push( win->statusbar, 0, txt ); 
 
   rtk_canvas_size( win->canvas, xdim, ydim );
   
@@ -101,11 +118,6 @@ gui_window_t* gui_window_create( world_t* world, int xdim, int ydim )
   
   win->bg = rtk_fig_create( win->canvas, NULL, 0 );
   
-  double major = 1.0;
-  double minor = 0.2;
-  double origin_x = 0.0;
-  double origin_y = 0.0;
-  double origin_a = 0.0;
   double width = 10;//world->size.x;
   double height = 10;//world->size.y;
 
@@ -128,12 +140,12 @@ gui_window_t* gui_window_create( world_t* world, int xdim, int ydim )
   win->movie_speed = STG_DEFAULT_MOVIE_SPEED;
   
   win->poses = rtk_fig_create( win->canvas, NULL, 0 );
-  
+
   // start in the center, fully zoomed out
   rtk_canvas_scale( win->canvas, 1.1*width/xdim, 1.1*width/xdim );
   rtk_canvas_origin( win->canvas, width/2.0, height/2.0 );
 
-  gui_window_create_menus( win );
+  gui_window_menus_create( win );
 
   return win;
 }
@@ -163,7 +175,6 @@ void gui_world_create( world_t* world )
   // show the window
   gtk_widget_show_all(win->canvas->frame);
 }
-
 
 
   
@@ -238,7 +249,19 @@ void gui_world_update( world_t* world )
   gui_world_matrix( world, win );
   //rtk_fig_clear( win->poses );
   //g_hash_table_foreach( world->models, gui_pose_cb, win->poses );    
+
   rtk_canvas_render( win->canvas );
+
+
+  char clock[256];
+  snprintf( clock, 255, "%d:%d:%.2f\n",
+	    (int)world->sim_time / 3600, // hours
+	    ((int)world->sim_time % 3600) / 60,
+	    fmod( world->sim_time, 60.0 ) );
+
+  puts( clock );
+  gtk_label_set_text( win->timelabel, clock );
+
 }
 
 void gui_world_destroy( world_t* world )
@@ -276,6 +299,7 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
   assert( mod );
 
   gui_window_t* win = g_hash_table_lookup( wins, &mod->world->id );
+  assert(win);
 
   guint cid; // statusbar context id
   char txt[256];
@@ -303,15 +327,21 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
       // TODO - if there are more motion events pending, do nothing.
       //if( !gtk_events_pending() )
 	
-      if( mod->lines->len < STG_LINE_THRESHOLD )
-	model_set_prop( mod, STG_PROP_POSE, &pose, sizeof(pose) );
+      // only update simple objects on drag
+      //if( mod->lines->len < STG_LINE_THRESHOLD )
+      model_set_prop( mod, STG_PROP_POSE, &pose, sizeof(pose) );
       
+
+      // TODO BUG
+      // -- win->statusbar points to the wrong place here. why?
+      // printf( "\n\nwin: %p\nsb: %p\n", win, win->statusbar );
+
       // display the pose
       snprintf(txt, sizeof(txt), "Dragging: %s", gui_model_describe(mod)); 
       cid = gtk_statusbar_get_context_id( win->statusbar, "on_mouse" );
       gtk_statusbar_pop( win->statusbar, cid ); 
       gtk_statusbar_push( win->statusbar, cid, txt ); 
-      
+      printf( "STATUSBAR: %s\n", txt );
       break;
       
     case RTK_EVENT_RELEASE:
@@ -411,8 +441,11 @@ void gui_model_render( model_t* model )
   // draw the bounding box
   //rtk_fig_rectangle( fig, 0,0,0, model->size.x, model->size.y, 0 );
 #endif
- 
-  gui_window_t* win = g_hash_table_lookup( wins, &model->world->id );  
+  
+  // TODO - could i just look this up once, rather than in each of
+  //the calls below?
+  
+  //gui_window_t* win = g_hash_table_lookup( wins, &model->world->id );
 
   gui_model_lines( model );
   gui_model_nose( model );
@@ -455,7 +488,7 @@ void gui_model_pose( model_t* mod )
 
 void gui_model_rangers( model_t* mod )
 {
-  PRINT_DEBUG( "drawing rangers" );
+  //PRINT_DEBUG( "drawing rangers" );
 
   rtk_fig_t* fig = gui_model_figs(mod)->rangers;
   
@@ -531,7 +564,7 @@ void gui_model_laser( model_t* mod )
       rtk_fig_t* fig = gui_model_figs(mod)->laser;  
       
       rtk_fig_clear(fig);
-      rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_COLOR) );
+      rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_TRANSDUCER_COLOR) );
       rtk_fig_origin( fig, mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );   
       rtk_fig_rectangle( fig, 
 			 mod->laser_geom.pose.x, 
@@ -553,19 +586,17 @@ void gui_model_laser_data( model_t* mod )
   // and some data, we'll draw the data
   if( win->show_laserdata && mod->subs[STG_PROP_LASERDATA] && mod->laser_data )
     {
-      rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_DATA_COLOR) );
+      rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_COLOR) );
       rtk_fig_origin( fig, mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );  
       stg_laser_config_t* cfg = &mod->laser_config;
       stg_geom_t* geom = &mod->laser_geom;
       
       double sample_incr = cfg->fov / cfg->samples;
       double bearing = geom->pose.a - cfg->fov/2.0;
-      double px, py;
       stg_laser_sample_t* sample = NULL;
       
-      double* points = calloc( 1 + sizeof(double) * 2 * cfg->samples, 1 );
-      //points[0] = points[1] = 0.0;  // this is implied by the calloc
-      
+      stg_point_t* points = calloc( sizeof(stg_point_t), cfg->samples + 1 );
+
       int s;
       for( s=0; s<cfg->samples; s++ )
 	{
@@ -574,12 +605,14 @@ void gui_model_laser_data( model_t* mod )
 	  // useful debug
 	  //rtk_fig_arrow( fig, 0, 0, bearing, (sample->range/1000.0), 0.01 );
 	  
-	  points[2+2*s] = (sample->range/1000.0) * cos(bearing);
-	  points[2+2*s+1] = (sample->range/1000.0) * sin(bearing);
+	  points[1+s].x = (sample->range/1000.0) * cos(bearing);
+	  points[1+s].y = (sample->range/1000.0) * sin(bearing);
 	  
 	  bearing += sample_incr;
 	}
 
+      // hmm, what's the right cast to get rid of the compiler warning
+      // for the points argument?
       rtk_fig_polygon( fig, 0,0,0, cfg->samples+1, points, LASER_FILLED );      
 
       free( points );
@@ -622,8 +655,6 @@ void gui_model_lines( model_t* mod )
 
 void gui_model_geom( model_t* mod )
 {
-  printf( "drawing geometry" );
-
   rtk_fig_t* fig = gui_model_figs(mod)->geom;
   gui_window_t* win = g_hash_table_lookup( wins, &mod->world->id );  
 
@@ -729,6 +760,8 @@ void gui_model_update( model_t* mod, stg_prop_type_t prop )
     case STG_PROP_MOVEMASK:
     case STG_PROP_RANGERCONFIG:
     case STG_PROP_GRID:
+    case STG_PROP_LASERCONFIG:
+    case STG_PROP_LASERGEOM:
       gui_model_render( mod );
       gui_model_movemask( mod );
       break;
@@ -770,7 +803,8 @@ void gui_model_update( model_t* mod, stg_prop_type_t prop )
       break;
 
     default:
-      PRINT_WARN1( "property change %d unhandled by gui", prop ); 
+      PRINT_WARN2( "property change %d(%s) unhandled by gui", 
+		   prop, stg_property_string(prop) ); 
       break;
     } 
 }

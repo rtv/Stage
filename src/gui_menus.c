@@ -222,7 +222,7 @@ void gui_menu_view_data_ranger( rtk_menuitem_t *item )
   g_hash_table_foreach( win->guimods, clear_figs_cb, (gpointer)STG_FIGS_RANGER );
 }
  
-void gui_window_create_menus( gui_window_t* win )
+void gui_window_menus_create( gui_window_t* win )
 {
   win->menu_count = STG_MENU_COUNT;
   win->menus = calloc( sizeof(rtk_menu_t*), win->menu_count  );
@@ -367,11 +367,7 @@ void gui_window_create_menus( gui_window_t* win )
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_DATA_LASER], 1);
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_DATA_RANGER], 1);
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_DATA_NEIGHBORS], 1);
-  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_DATA_BLOBFINDER], 1);  
-
-
-  win->statusbar = GTK_STATUSBAR(gtk_statusbar_new());
-  
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_DATA_BLOBFINDER], 1);    
 }
 
 void gui_window_menu_destroy( gui_window_t* win )
