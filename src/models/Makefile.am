@@ -5,13 +5,7 @@
 # $Id
 #
 
-# we need this while rtk code is still in the device files
-if WITH_RTK
-RTKCPPFLAGS = -I@RTK_DIR@/include `gtk-config --cflags`
-endif
-
-
-AM_CPPFLAGS = 	-Wall -I$(top_builddir)/src  -I$(top_builddir)/replace -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/server/drivers/stage  -I@PLAYER_DIR@/client_libs/libplayerpacket $(RTKCPPFLAGS)
+AM_CPPFLAGS = 	-Wall -I$(top_builddir)/src  -I$(top_builddir)/replace @PLAYER_CPPFLAGS@ $(GUI_CPPFLAGS)
 
 noinst_LIBRARIES = libstgmodels.a 
 

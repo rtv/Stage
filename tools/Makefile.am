@@ -2,9 +2,9 @@ toolsdir = $(prefix)/tools
 
 tools_PROGRAMS = autoplace
 
-CPPFLAGS = -I@PLAYER_DIR@/include -I@PLAYER_DIR@/client_libs/c -I@PLAYER_DIR@/client_libs/c++ -I@PLAYER_DIR@/server
+AM_CPPFLAGS = @PLAYER_CPPFLAGS@
 autoplace_SOURCES = autoplace.cc
-autoplace_LDADD = -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/client_libs/c++ -lplayerclient
+autoplace_LDADD = @PLAYER_LDADD@
 
 tools_SCRIPTS = worldfileconv.tcl \
                 pause

@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.40 2003-04-28 23:49:11 gerkey Exp $
+dnl $Id: configure.in,v 1.41 2003-05-24 21:08:34 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -66,72 +66,132 @@ dnl build mplementations of these in libreplace.a if these are
 dnl missing
 AC_REPLACE_FUNCS(poll dirname scandir)
 
-dnl if the GNOME2 GUI was requested, we use that
-AC_ARG_WITH(gnome2,    [   --with-gnome2         Compile in the experimental GNOME2 GUI instead of RTK2],,with_gnome2=no)
+dnl **********************************************************************
+dnl Begin GUI configuration
+dnl **********************************************************************
 
-dnl otherwise use the RTK GUI unless it is explicitly refused
+dnl This macro does all the checking for RTK, taking into account --prefix
+dnl and --with-rtk.  Please don't change this macro, unless you also change 
+dnl the version in player/m4.d/drivertests.m4.
+AC_DEFUN([RTK_CHECK],[
 dnl where's RTK?
-AC_ARG_WITH(rtk, [   --with-rtk=dir      Location of RTK],
+AC_ARG_WITH(rtk, [  --with-rtk=dir          Location of RTK],
 RTK_DIR=$with_rtk,
 RTK_DIR=$prefix)
-AC_SUBST(RTK_DIR)
 
-if test "x$with_gnome2" = "xyes"; then
-  AC_DEFINE(USE_GNOME2,1,[include the GNOME2 GUI])
-  GUI_DIR=gnome2
-  GUI_LIB=libgnomestage.a
-  GUI_LINK="-Lgnome2 -lgnomestage `pkg-config --libs libgnomecanvas-2.0 libgnomeui-2.0`"
+dnl RTK2 uses libjpeg to export images.
+AC_CHECK_HEADER(jpeglib.h,
+  AC_DEFINE(HAVE_JPEGLIB_H,1,[include jpeg support])
+  LIBJPEG="-ljpeg",,)
+AC_SUBST(LIBJPEG)
 
-   AM_CONDITIONAL(WITH_RTK, test x$with_rtk = xno)
-else
-
-  dnl RTK2 uses libjpeg to export images.
-  AC_CHECK_HEADER(jpeglib.h,
-    AC_DEFINE(HAVE_JPEGLIB_H,1,[include jpeg support])
-    LIBJPEG="-ljpeg",,)
-
-  if test -f $RTK_DIR/include/rtk.h; then
-    with_rtk=yes
-    AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
-    GUI_DIR=rtkstage
-    GUI_LIB=librtkstage.a
-    GUI_LINK="-L$RTK_DIR/lib -Lrtkstage -lrtkstage -lrtk $LIBJPEG `gtk-config --libs gtk gthread`"
-  else
-    with_rtk=no
-    AC_MSG_WARN([***************************************************])
-    AC_MSG_WARN([Couldn't find RTK, so I won't build RTK-based GUIs])
-    AC_MSG_WARN([Maybe you should download and install RTK?])
-    AC_MSG_WARN([If you have RTK installed, try --with-rtk=path])
-    AC_MSG_WARN([***************************************************])
+AC_CHECK_PROG([have_gtk], [gtk-config], [yes], [no])
+if test "x$have_gtk" = "xyes"; then
+  if test "x$RTK_DIR" = "xNONE"; then
+    AC_CHECK_LIB(rtk,rtk_init,
+                 with_rtk=yes
+                 RTK_CPPFLAGS="`gtk-config --cflags`"
+                 RTK_LDADD="-lrtk $LIBJPEG `gtk-config --libs gtk gthread`",
+                 with_rtk=no,
+                 [$LIBJPEG `gtk-config --libs gtk gthread`])
+  elif test ! "x$RTK_DIR" = "xno"; then
+    AC_MSG_CHECKING(for $RTK_DIR/lib/librtk.a)
+    if test -f $RTK_DIR/lib/librtk.a; then
+      with_rtk=yes
+      RTK_CPPFLAGS="-I$RTK_DIR/include `gtk-config --cflags`"
+      RTK_LDADD="-L$RTK_DIR/lib -lrtk $LIBJPEG `gtk-config --libs gtk gthread`"
+      AC_MSG_RESULT(yes)
+    else
+      with_rtk=no
+      AC_MSG_RESULT(no)
+    fi
   fi
-  AM_CONDITIONAL(WITH_RTK, test x$with_rtk = xyes)
+else
+  with_rtk=no
 fi
+if test "x$with_rtk" = "xno"; then
+  AC_MSG_WARN([***************************************************])
+  AC_MSG_WARN([Couldn't find RTK so I won't build RTK-based GUIs])
+  AC_MSG_WARN([Maybe you should download and install RTK?])
+  AC_MSG_WARN([If you have RTK installed, try --with-rtk=path])
+  AC_MSG_WARN([***************************************************])
+fi
+AM_CONDITIONAL(WITH_RTK, test x$with_rtk = xyes)
+AC_SUBST(RTK_CPPFLAGS)
+AC_SUBST(RTK_LDADD)
+])
 
-# define the paths, libs and deps for the GUI
-AC_SUBST(GUI_LINK)
+dnl invoke above macro
+RTK_CHECK
+
+dnl Based on which GUI we're using (assuming there are ever more than one),
+dnl set some variables that will used during the build.
+if test "x$with_rtk" = "xyes"; then
+  with_gui=yes
+  AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
+  GUI_DIR=rtkstage
+  GUI_LIB=librtkstage.a
+  GUI_LDADD=$RTK_LDADD
+  GUI_CPPFLAGS=$RTK_CPPFLAGS
+else
+  with_gui=no
+fi
 AC_SUBST(GUI_DIR)
 AC_SUBST(GUI_LIB)
+AC_SUBST(GUI_LDADD)
+AC_SUBST(GUI_CPPFLAGS)
 
-# set vars depending on the GUI tests
-AM_CONDITIONAL(WITH_GNOME2, test x$with_gnome2 = xyes)
-AM_CONDITIONAL(WITH_GUI, test x$with_gui = xyes)
+dnl **********************************************************************
+dnl End GUI configuration
+dnl **********************************************************************
 
+dnl **********************************************************************
+dnl Begin Player configuration
+dnl **********************************************************************
 
+AC_DEFUN([PLAYER_CHECK],[
 dnl where's player?
 AC_ARG_WITH(player, [   --with-player=dir      Location of Player (installation or source)],
 PLAYER_DIR=$with_player,
 PLAYER_DIR=$prefix)
-AC_MSG_CHECKING(for player.h)
-if test ! -f $PLAYER_DIR/include/player.h; then
-  if test ! -f $PLAYER_DIR/server/player.h; then
-    AC_MSG_RESULT([Could not find player.h.  Player is required to build Stage.])
-    AC_MSG_RESULT([You can specify a path to Player like this:])
-    AC_MSG_RESULT([    ./configure --with-player=<Player prefix dir>])
-    AC_MSG_ERROR("Configuration aborted. Fix the Player path.")
+
+if test "x$PLAYER_DIR" = "xNONE"; then
+  AC_CHECK_HEADER(player.h,
+                  with_player=yes
+                  PLAYER_CPPFLAGS=""
+                  PLAYER_LDADD="-lplayerpacket -lplayerqueue -lplayerclient",
+                  with_player=no)
+else
+  AC_MSG_CHECKING(for $PLAYER_DIR/include/player.h)
+  if test -f $PLAYER_DIR/include/player.h; then
+    AC_MSG_RESULT(yes)
+    PLAYER_CPPFLAGS="-I$PLAYER_DIR/include"
+    PLAYER_LDADD="-L$PLAYER_DIR/lib -lplayerqueue -lplayerpacket"
+  elif test -f $PLAYER_DIR/server/player.h; then
+    AC_MSG_RESULT(yes)
+    PLAYER_CPPFLAGS="-I$PLAYER_DIR/server -I$PLAYER_DIR/server/drivers/stage -I$PLAYER_DIR/client_libs/libplayerpacket -I$PLAYER_DIR/client_libs/c -I$PLAYER_DIR/client_libs/c++"
+    PLAYER_LDADD="-L$PLAYER_DIR/server -lplayerqueue -L$PLAYER_DIR/client_libs/libplayerpacket -lplayerpacket -L$PLAYER_DIR/client_libs/c++ -lplayerclient"
+  else
+    with_player=no
   fi
 fi
-AC_MSG_RESULT(yes)
-AC_SUBST(PLAYER_DIR)
+
+if test "x$with_player" = "xno"; then
+  AC_MSG_RESULT([Could not find player.h.  Player is required to build Stage.])
+  AC_MSG_RESULT([You can specify a path to Player like this:])
+  AC_MSG_RESULT([    ./configure --with-player=<Player prefix dir>])
+  AC_MSG_ERROR([Configuration aborted. Fix the Player path.])
+fi
+
+AC_SUBST(PLAYER_CPPFLAGS)
+AC_SUBST(PLAYER_LDADD)
+])
+
+PLAYER_CHECK
+
+dnl **********************************************************************
+dnl End Player configuration
+dnl **********************************************************************
 
 dnl where's the X11-style color database?
 case $host in
@@ -166,10 +226,10 @@ AC_OUTPUT(Makefile
           replace/Makefile
           src/Makefile 
 	  src/models/Makefile	
-          src/gnome2/Makefile 
 	  src/rtkstage/Makefile
           worlds/Makefile 
           tools/Makefile)
+#src/gnome2/Makefile 
 
 dnl should use AC_MSG_NOTICE(), but that's apparently not defined in
 dnl autoconf 2.13.
@@ -178,31 +238,26 @@ AC_MSG_RESULT([*************************************************************])
 AC_MSG_RESULT([])
 AC_MSG_RESULT([Stage will be built on a $build system to run])
 AC_MSG_RESULT([on a $host system, with the following tools:])
-AC_MSG_RESULT([    C   compiler: $CC $CFLAGS])
-AC_MSG_RESULT([    C++ compiler: $CXX $CXXFLAGS])
+AC_MSG_RESULT([  C   compiler: $CC $CFLAGS])
+AC_MSG_RESULT([  C++ compiler: $CXX $CXXFLAGS])
 AC_MSG_RESULT([])
-AC_MSG_RESULT([Stage will build against the Player installed at:])
-AC_MSG_RESULT([    $PLAYER_DIR])
+AC_MSG_RESULT([Stage will build against Player using:])
+AC_MSG_RESULT([  CPPFLAGS: $PLAYER_CPPFLAGS])
+AC_MSG_RESULT([  LDFLAGS: $PLAYER_LDADD])
 AC_MSG_RESULT([])
-if test $RTK_DIR = "NONE"; then
-  AC_MSG_RESULT([Stage will NOT build RTK-based components.])
+if test "x$with_gui" = "xno"; then
+  AC_MSG_RESULT([Stage will NOT build any GUI.])
   AC_MSG_RESULT([])	
 else
-  AC_MSG_RESULT([Stage will build RTK-based components using:])
-  AC_MSG_RESULT([    $RTK_DIR/include/rtk.h])
-  AC_MSG_RESULT([    $RTK_DIR/lib/librtk.a])
+  AC_MSG_RESULT([Stage will build a GUI using:])
+  AC_MSG_RESULT([  CPPFLAGS: $GUI_CPPFLAGS])
+  AC_MSG_RESULT([  LDFLAGS: $GUI_LDADD])
   AC_MSG_RESULT([])
 fi
 AC_MSG_RESULT([Stage will be installed in:])
 AC_MSG_RESULT([    $prefix/])
 AC_MSG_RESULT([])
-AC_MSG_RESULT([You can specify a different installation directory like this:])
-AC_MSG_RESULT([    ./configure --prefix=<install dir>])
-AC_MSG_RESULT([])
-AC_MSG_RESULT([You can specify an RTK installation like this:])
-AC_MSG_RESULT([    ./configure --with-rtk=<RTK prefix dir>])
-AC_MSG_RESULT([])
-AC_MSG_RESULT([To see the other configuration options, do:])
+AC_MSG_RESULT([To see the configuration options, do:])
 AC_MSG_RESULT([    ./configure --help])
 AC_MSG_RESULT([])
 AC_MSG_RESULT([When you're satisfied with the configuration, type 'make install'. ])
