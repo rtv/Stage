@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/laserbeacondevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Author: gerkey $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -162,6 +162,8 @@ void CLBDDevice::Update( double sim_time )
 
   // check for configuration requests
 
+  // this device don't accept config requests any more
+  /*
   // Get latest config
   player_fiducial_laserbarcode_config_t cfg;
   void* client;
@@ -192,6 +194,7 @@ void CLBDDevice::Update( double sim_time )
       PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
     }
   }
+  */
 
   // Get the laser range data
   //

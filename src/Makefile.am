@@ -2,13 +2,13 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.19 2002-10-28 23:03:50 gerkey Exp $
+# $Id: Makefile.am,v 1.20 2002-10-31 00:02:21 gerkey Exp $
 
 
 SUBDIRS = models @GUI_DIR@
 
 # we need extra flags as long as RTK code is embedded in the main simulator source
-if WITH_GUI
+if WITH_RTK_GUI
 RTKCPPFLAGS = -I$(top_srcdir)/rtk2 `gtk-config --cflags`
 endif
 

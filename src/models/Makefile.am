@@ -6,17 +6,12 @@
 #
 
 # we need this while rtk code is still in the device files
-if WITH_GUI
+if WITH_RTK_GUI
 RTKCPPFLAGS = -I$(top_srcdir)/rtk2 `gtk-config --cflags`
 endif
 
 
-AM_CPPFLAGS = 	-Wall \
-		-I$(top_srcdir)/src \
-		-I@PLAYER_DIR@/include \
-		-I@PLAYER_DIR@/server \
-		-I@PLAYER_DIR@/server/drivers/stage \
-		$(RTKCPPFLAGS)
+AM_CPPFLAGS = 	-Wall -I$(top_srcdir)/src -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/server/drivers/stage $(RTKCPPFLAGS)
 
 lib_LIBRARIES = libstgmodels.a 
 

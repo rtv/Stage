@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.18 2002-10-30 01:56:57 gerkey Exp $
+dnl $Id: configure.in,v 1.19 2002-10-31 00:02:21 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -37,10 +37,10 @@ AC_CHECK_HEADERS(stdint.h sys/types.h strings.h values.h)
 #AC_CHECK_HEADERS(fcntl.h limits.h sys/file.h sys/time.h unistd.h)
 
 dnl RTK2 uses libjpeg to export images.
-AC_CHECK_HEADER(jpeglib.h,
-  AC_DEFINE(HAVE_JPEGLIB_H,1,[include jpeg support])
-  LIBJPEG="-ljpeg",,)
-AC_SUBST(LIBJPEG)
+#AC_CHECK_HEADER(jpeglib.h,
+  #AC_DEFINE(HAVE_JPEGLIB_H,1,[include jpeg support])
+  #LIBJPEG="-ljpeg",,)
+#AC_SUBST(LIBJPEG)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 #AC_C_CONST
@@ -69,13 +69,14 @@ if test "x$with_gnome2" = "xyes"; then
   GUI_LINK="-Lgnome2 -lgnomestage `pkg-config --libs libgnomecanvas-2.0 libgnomeui-2.0`"
 else
   dnl otherwise we use the RTK GUI unless it is explicitly refused
-  AC_ARG_WITH(gui,    [   --without-gui         Don't compile in a GUI],,with_gui=yes)
-  if test "x$with_gui" = "xyes"; then
-    AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
-    GUI_DIR=rtkstage
-    GUI_LIB=librtkstage.a
-    GUI_LINK="-L../rtk2 -Lrtkstage -lrtkstage -lrtk $LIBJPEG `gtk-config --libs gtk gthread`"
-  fi
+  #AC_ARG_WITH(gui,    [   --without-gui         Don't compile in a GUI],,with_gui=yes)
+  #if test "x$with_gui" = "xyes"; then
+    #AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
+    #GUI_DIR=rtkstage
+    #GUI_LIB=librtkstage.a
+    #GUI_LINK="-L../rtk2 -Lrtkstage -lrtkstage -lrtk $LIBJPEG `gtk-config --libs gtk gthread`"
+  #fi
+  RTK2_TESTS
 fi
 
 # define the paths, libs and deps for the GUI
