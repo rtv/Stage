@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtkmain.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -30,10 +30,33 @@
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Call this function from the standard main to get an RTK interface
+// Version string
 //
-int rtkmain(int argc, char** argv, CWorld *world)
+#define VERSION "0.8.1 advanced"
+
+
+///////////////////////////////////////////////////////////////////////////
+// Naked declarations
+
+// Parse the command line
+//
+bool ParseCmdLine(int argc, char** argv);
+
+// Name of world file
+//
+char *m_world_file;
+
+
+///////////////////////////////////////////////////////////////////////////
+// Program entry
+//
+int main(int argc, char** argv)
 {
+    // Parse the command line
+    //
+    if (!ParseCmdLine(argc, argv))
+        return 1;
+    
     // Create the application
     //
     RtkUiApp *pApp = new RtkUiApp(&argc, &argv);
@@ -53,16 +76,16 @@ int rtkmain(int argc, char** argv, CWorld *world)
     RtkUiScrollView *pGlobalView = new RtkUiScrollView(pLeftPane, "global");
     RtkUiPropertyView *pPropertyView = new RtkUiPropertyView(pTopPane, "default");
     RtkUiButtonView *pButtonView = new RtkUiButtonView(pRightPane, "default");
-    
-    // Create the simulator agent
-    //
-    RtkSimAgent *pSim = new RtkSimAgent(world);
 
     // Add agents to the application
     //
     pApp->AddAgent(pGlobalView);
     pApp->AddAgent(pPropertyView);
     pApp->AddAgent(pButtonView);
+    
+    // Create the simulator agent
+    //
+    RtkSimAgent *pSim = new RtkSimAgent(m_world_file);
     pApp->AddAgent(pSim);
     
     // Open and start agents
@@ -71,7 +94,7 @@ int rtkmain(int argc, char** argv, CWorld *world)
         exit(1);
 
     // Do message loop
-    //
+    //   
     pApp->Main();
 
     // Shut everything down
@@ -82,4 +105,20 @@ int rtkmain(int argc, char** argv, CWorld *world)
 }
 
 
+///////////////////////////////////////////////////////////////////////////
+// Command line parsing
+//
+bool ParseCmdLine(int argc, char** argv)
+{
+    if (argc < 2)
+    {
+        printf("Usage: rtk-stage WORLDFILE\n");
+        return false;
+    }
+
+    // Extract the name of the file describing the world
+    //
+    m_world_file = argv[1];
+    return true;
+}
 

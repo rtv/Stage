@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtksimagent.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  (empty)
@@ -27,15 +27,17 @@
 #define ENABLE_TRACE 1
 
 #include <math.h>
+#include "world.hh"
 #include "rtksimagent.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-RtkSimAgent::RtkSimAgent(CWorld *pWorld)
+RtkSimAgent::RtkSimAgent(const char *pszWorldFile)
 {
-    m_pWorld = pWorld;
+    m_strWorldFile = pszWorldFile;
+    m_pWorld = NULL;
 }
 
 
@@ -55,11 +57,12 @@ BOOL RtkSimAgent::Open(RtkCfgFile* pCfgFile)
     if (!RtkAgent::Open(pCfgFile))
         return FALSE;
 
-    // *** HACK -- hardwired file name
+    m_pWorld = new CWorld;    
+
     // Start the world
     //
     RtkCfgFile oWorldCfg;
-    if (!oWorldCfg.Open("cave.cfg"))
+    if (!oWorldCfg.Open(CSTR(m_strWorldFile)))
         return false;
 
     // Create all the objects in the world

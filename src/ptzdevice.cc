@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.6 $
+//  $Revision: 1.4.2.7 $
 //
 // Usage:
 //  (empty)
@@ -94,11 +94,6 @@ void CPtzDevice::Update()
     ASSERT(m_robot != NULL);
     ASSERT(m_world != NULL);
     
-    // Get pointers to the various bitmaps
-    //
-    Nimage *img = m_world->img;
-    ASSERT(img != NULL);
-
     // if its time to recalculate ptz
     //
     if( m_world->timeNow - m_last_update <= m_update_interval )

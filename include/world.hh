@@ -1,38 +1,41 @@
-/*************************************************************************
- * world.h - most of the header action is here 
- * RTV
- * $Id: world.hh,v 1.1.2.4 2000-12-07 00:30:00 ahoward Exp $
- ************************************************************************/
+///////////////////////////////////////////////////////////////////////////
+//
+// File: world.hh
+// Author: Richard Vaughan, Andrew Howard
+// Date: 28 Nov 2000
+// Desc: top level class that contains everything
+//
+// CVS info:
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
+//  $Author: ahoward $
+//  $Revision: 1.1.2.5 $
+//
+// Usage:
+//  (empty)
+//
+// Theory of operation:
+//  (empty)
+//
+// Known bugs:
+//  (empty)
+//
+// Possible enhancements:
+//  (empty)
+//
+///////////////////////////////////////////////////////////////////////////
 
 #ifndef WORLD_HH
 #define WORLD_HH
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <iomanip.h>
-#include <termios.h>
-#include <strstream.h>
-#include <iostream.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fstream.h>
-
 #include "playerrobot.hh"
 #include "image.h"
 
-#ifndef INCLUDE_RTK
-#include "win.h"
-#else INCLUDE_RTK
+#if INCLUDE_RTK
 #include "rtk-ui.hh"
 #endif
 
 // forward declaration
+//
 class CWorldWin;
 class CObject;
 
@@ -47,53 +50,11 @@ enum EWorldLayer
 };
 
 
-// various c function declarations - an untidy mix of c and c++ - yuk!
-int InitNetworking( void );
-
-
+// World class
+//
 class CWorld : public CObject
 {
-    public:
-  int width, height, depth; 
-  int paused;
-
-  unsigned char channels[256];
-  char posFile[64];
-  char bgFile[64];
-
-  CPlayerRobot* bots;
-
-    /* *** REMOVE ahoward
-       float pioneerWidth, pioneerLength;
-       float localizationNoise;
-       float sonarNoise;
-
-       float maxAngularError; // percent error on turning odometry
-    */
-
-    float ppm;
-
-  int* hits;
-  int population;
-
-  double timeStep, timeNow, timeThen, timeBegan;
-
-
-  // methods
-  int LoadVars( char* initFile);
-  void SavePos( void );
-  //void LoadPos( void );
-
-  void DumpSonar( void );
-  void DumpOdometry( void );
-  void GetUpdate( void );  
-
-  CPlayerRobot* NearestRobot( float x, float y );
-
-    ///////////////////////////////////////////////////////
-    // Added new stuff here -- ahoward
-
-    // Default constructor
+        // Default constructor
     //
     public: CWorld();
 
@@ -130,11 +91,10 @@ class CWorld : public CObject
     public: void SetRectangle(double px, double py, double pth,
                               double dx, double dy, EWorldLayer layer, BYTE value);
 
-    // *** HACK -- make private
     // Obstacle data
     //
-    public: Nimage* bimg; // background image 
-    public: Nimage* img; //foreground img;
+    private: Nimage* m_bimg; // background image 
+    private: Nimage* m_img; //foreground img;
 
     // Laser image
     // Store laser data (obstacles and beacons
@@ -146,14 +106,21 @@ class CWorld : public CObject
     //
     private: Nimage *m_vision_img;
 
-#ifndef INCLUDE_RTK
+    ///////////////////////////////////////////////////////
+    // old stuff here -- ahoward
+    // some of these are no longer used.
 
-  public:
-    void Draw( void );
-    CWorldWin* win; 
-    int refreshBackground;
-    
-#else
+    public:
+    int width, height, depth; 
+    int paused;
+
+    char posFile[64];
+    char bgFile[64];
+    float ppm;
+
+    double timeStep, timeNow, timeThen, timeBegan;
+
+#ifdef INCLUDE_RTK
 
     // Process GUI update messages
     //

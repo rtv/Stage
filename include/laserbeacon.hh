@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: laerbeaconobject.hh
+// File: laerbeacon.hh
 // Author: Andrew Howard
 // Date: 4 Dec 2000
 // Desc: Simulates the laser beacons
 //
 // CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeaconobject.hh,v $
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacon.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.1 $
 //
 // Usage:
 //  (empty)
@@ -24,16 +24,16 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef LASERBEACONOBJECT_HH
-#define LASERBEACONOBJECT_HH
+#ifndef LASERBEACON_HH
+#define LASERBEACON_HH
 
 #include "object.hh"
 
-class CLaserBeaconObject : public CObject
+class CLaserBeacon : public CObject
 {
     // Default constructor
     //
-    public: CLaserBeaconObject(CWorld *world, CObject *parent);
+    public: CLaserBeacon(CWorld *world, CObject *parent);
     
     // Update the device
     //

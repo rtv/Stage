@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.6 $
+//  $Revision: 1.1.2.7 $
 //
 // Usage:
 //  (empty)
@@ -27,9 +27,10 @@
 #ifndef PLAYERDEVICE_HH
 #define PLAYERDEVICE_HH
 
-// For size_t
+// For size_t and network byte ordering
 //
 #include <stddef.h>
+#include <netinet/in.h>
 
 // For base class
 //
@@ -63,7 +64,7 @@ class CPlayerDevice : public CObject
 
     // See if the device is subscribed
     //
-    public: bool IsSubscribed();
+    protected: bool IsSubscribed();
     
     // Write to the data buffer
     // Returns the number of bytes copied

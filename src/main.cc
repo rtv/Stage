@@ -1,7 +1,7 @@
 /*************************************************************************
  * main.cc   
  * RTV
- * $Id: main.cc,v 1.2.2.6 2000-12-07 22:17:09 ahoward Exp $
+ * $Id: main.cc,v 1.2.2.7 2000-12-08 01:31:43 ahoward Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -88,8 +88,6 @@ int main( int argc, char** argv )
   // read command line args - these may override the initfile
   HandleCommandLine( argc, argv );
   
-#ifndef INCLUDE_RTK
-  
   // create the window, unless we switched off graphics
   if( showWindow ) world->win = new CWorldWin( world, initFile );
   else world->win = NULL;
@@ -139,14 +137,6 @@ int main( int argc, char** argv )
   // Stop the objects
   //
   world->Shutdown();
-
-#else
-
-  // Run the RTK interface
-  //
-  rtkmain(argc, argv, world);
-  
-#endif
 }  
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/rtksimagent.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -44,7 +44,7 @@ class RtkSimAgent :
 {
     // Default constructor
 	//
-	public: RtkSimAgent(CWorld *pWorld);
+	public: RtkSimAgent(const char *pszWorldFile);
 
 	// Destructor
 	//
@@ -89,6 +89,10 @@ class RtkSimAgent :
     // UI button message handler
 	//
 	public: virtual void OnUiButton(RtkUiButtonData *pData);
+
+    // Name of file containing world spec
+    //
+    private: RtkString m_strWorldFile;
 
     // Pointer to world
     //

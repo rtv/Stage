@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: laserbeaconobject.cc
+// File: laserbeacon.cc
 // Author: Andrew Howard
 // Date: 4 Dec 2000
 // Desc: Simulates the Player CLaserDevice (the SICK laser)
 //
 // CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeaconobject.cc,v $
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.1 $
 //
 // Usage:
 //  (empty)
@@ -28,13 +28,13 @@
 
 #include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
 #include "world.hh"
-#include "laserbeaconobject.hh"
+#include "laserbeacon.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
-CLaserBeaconObject::CLaserBeaconObject(CWorld *world, CObject *parent)
+CLaserBeacon::CLaserBeacon(CWorld *world, CObject *parent)
         : CObject(world, parent)
 {
     // Set the initial map pose
@@ -42,7 +42,8 @@ CLaserBeaconObject::CLaserBeaconObject(CWorld *world, CObject *parent)
     m_gx = m_gy = m_gth = 0;
 
     #ifdef INCLUDE_RTK
-        m_drag_radius = 0.20;
+        m_mouse_radius = (m_parent == m_world ? 0.2 : 0.0);
+        m_draggable = (m_parent == m_world);
     #endif
 }
 
@@ -50,7 +51,7 @@ CLaserBeaconObject::CLaserBeaconObject(CWorld *world, CObject *parent)
 ///////////////////////////////////////////////////////////////////////////
 // Update the laser data
 //
-void CLaserBeaconObject::Update()
+void CLaserBeacon::Update()
 {
     //TRACE0("updating laser beacon");
     ASSERT(m_world != NULL);
@@ -75,7 +76,7 @@ void CLaserBeaconObject::Update()
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
 //
-void CLaserBeaconObject::OnUiUpdate(RtkUiDrawData *pData)
+void CLaserBeacon::OnUiUpdate(RtkUiDrawData *pData)
 {
     CObject::OnUiUpdate(pData);
 
@@ -95,7 +96,7 @@ void CLaserBeaconObject::OnUiUpdate(RtkUiDrawData *pData)
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI mouse messages
 //
-void CLaserBeaconObject::OnUiMouse(RtkUiMouseData *pData)
+void CLaserBeacon::OnUiMouse(RtkUiMouseData *pData)
 {
     CObject::OnUiMouse(pData);
 }

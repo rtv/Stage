@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerrobot.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  (empty)
@@ -17,14 +17,15 @@
 //  (empty)
 //
 // Known bugs:
-//  (empty)
+//  - All robots are creating a semaphore with the same key.  This doesnt
+//    appear to be a problem, but should be investigates. ahoward
 //
 // Possible enhancements:
 //  (empty)
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 1
+#define ENABLE_TRACE 0
 
 #include <errno.h>
 #include <fcntl.h>
@@ -67,6 +68,12 @@ CPlayerRobot::CPlayerRobot(CWorld *world, CObject *parent)
         : CObject(world, parent)
 {
     playerIO = NULL;
+
+    #ifdef INCLUDE_RTK
+        m_mouse_radius = 0.6;
+        m_draggable = true;
+        m_show_sensors = false;
+    #endif
 }
 
 
@@ -310,8 +317,6 @@ void CPlayerRobot::UnlockShmem( void )
 //
 void CPlayerRobot::OnUiUpdate(RtkUiDrawData *pData)
 {
-    // Draw our children
-    //
     CObject::OnUiUpdate(pData);
 }
 
@@ -322,6 +327,26 @@ void CPlayerRobot::OnUiUpdate(RtkUiDrawData *pData)
 void CPlayerRobot::OnUiMouse(RtkUiMouseData *pData)
 {
     CObject::OnUiMouse(pData);
+
+    pData->BeginSection("global", "object");
+    
+    // Default process for any "move" modes
+    //
+    if (pData->UseMouseMode("move"))
+    {
+        if (IsMouseReady())
+        {
+            // Toggle sensor state on middle button
+            //
+            if (pData->IsButtonDown() && pData->WhichButton() == 2)
+            {
+                m_show_sensors = !m_show_sensors;
+                TRACE1("sensors %d", (int) m_show_sensors);
+            }
+        }
+    }
+
+    pData->EndSection();
 }
 
 #endif

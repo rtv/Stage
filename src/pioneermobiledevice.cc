@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.5 $
+//  $Revision: 1.9.2.6 $
 //
 // Usage:
 //  (empty)
@@ -63,7 +63,8 @@ CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CObject *parent, CPlay
         memset( &oldRect, 0, sizeof( rect ) );
         CalculateRect();
     #else
-        m_drag_radius = 0.5;
+        m_mouse_radius = 0;
+        m_draggable = false;
     #endif
 }
 
@@ -99,12 +100,18 @@ void CPioneerMobileDevice::Update()
 
 int CPioneerMobileDevice::Move()
 {
+    // Note
+    // Rather than moving this device, we actually move the robot device
+    // with which we are associated.  While it's a bit of a hack, it
+    // simplifies a lot of things in other places.
+    //     ahoward
+    
     double time_step = m_world->timeStep;
 
     // Get the current robot pose
     //
     double px, py, pth;
-    GetPose(px, py, pth);
+    m_robot->GetPose(px, py, pth);
 
     // Compute a new pose
     // This is a zero-th order approximation
@@ -121,7 +128,7 @@ int CPioneerMobileDevice::Move()
     // and accept the new pose if ok
     //
     if (!InCollision(qx, qy, qth))
-        SetPose(qx, qy, qth);
+        m_robot->SetPose(qx, qy, qth);
 
     return true;
   

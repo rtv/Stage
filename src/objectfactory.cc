@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/objectfactory.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.6 $
+//  $Revision: 1.1.2.7 $
 //
 // Usage:
 //  (empty)
@@ -25,7 +25,7 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include "objectfactory.hh"
-#include "laserbeaconobject.hh"
+#include "laserbeacon.hh"
 #include "visionbeacon.hh"
 
 // Player objects
@@ -59,7 +59,7 @@ CObject* CreateObject(const char *type, CWorld *world, CObject *parent)
     // Create laser beacon
     //
     if (strcmp(type, "laser_beacon") == 0)
-        return new CLaserBeaconObject(world, parent);
+        return new CLaserBeacon(world, parent);
 
     // Create vision beacon
     //

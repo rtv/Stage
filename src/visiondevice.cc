@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.6 $
+//  $Revision: 1.4.2.7 $
 //
 // Usage:
 //  (empty)
@@ -91,11 +91,6 @@ void CVisionDevice::Update()
     
     ASSERT(m_robot != NULL);
     ASSERT(m_world != NULL);
-    
-    // Get pointers to the various bitmaps
-    //
-    Nimage *img = m_world->img;
-    ASSERT(img != NULL);
 
     // See if its time to recalculate vision
     //
@@ -392,11 +387,13 @@ void CVisionDevice::OnUiUpdate(RtkUiDrawData *pData)
     //
     pData->BeginSection("global", "vision");
 
-    if (pData->DrawLayer("fov", true) && IsSubscribed())
-        DrawFOV(pData);
+    if (pData->DrawLayer("fov", true))
+        if (IsSubscribed() && m_robot->ShowSensors())
+            DrawFOV(pData);
     
-    if (pData->DrawLayer("scan", true) && IsSubscribed())
-        DrawScan(pData);
+    if (pData->DrawLayer("scan", true))
+        if (IsSubscribed() && m_robot->ShowSensors())
+            DrawScan(pData);
     
     pData->EndSection();
 }

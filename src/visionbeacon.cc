@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.2 $
+//  $Revision: 1.1.2.3 $
 //
 // Usage:
 //  (empty)
@@ -68,7 +68,8 @@ bool CVisionBeacon::Startup(RtkCfgFile *cfg)
     m_color = RTK_RGB(c, 255 - c, 255 - c);
 
     #ifdef INCLUDE_RTK
-        m_drag_radius = 0.20;
+        m_mouse_radius = m_radius * 1.5;
+        m_draggable = (m_parent == m_world);
     #endif
     
     return true;

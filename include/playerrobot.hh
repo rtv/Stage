@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerrobot.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.3 $
+//  $Revision: 1.1.2.4 $
 //
 // Usage:
 //  (empty)
@@ -105,10 +105,29 @@ class CPlayerRobot : public CObject
     //
     public: virtual void OnUiMouse(RtkUiMouseData *pData);
 
+    // See if we should display sensors
+    //
+    public: bool ShowSensors()
+        {
+            return m_show_sensors;
+        };
+
+    // Flag set to true to display sensors
+    //
+    protected: bool m_show_sensors;
+    
 #endif
 };
 
 #endif
+
+
+
+
+
+
+
+
 
 
 

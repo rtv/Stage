@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.5.2.6 $
+//  $Revision: 1.5.2.7 $
 //
 // Usage:
 //  (empty)
@@ -195,8 +195,9 @@ void CSonarDevice::OnUiUpdate(RtkUiDrawData *pData)
     //
     pData->BeginSection("global", "sonar");
     
-    if (pData->DrawLayer("scan", true) && IsSubscribed())
-        DrawScan(pData);
+    if (pData->DrawLayer("scan", true))
+        if (IsSubscribed() && m_robot->ShowSensors())
+            DrawScan(pData);
     
     pData->EndSection();
 }

@@ -1,39 +1,42 @@
-/*************************************************************************
- * world.cc - top level class that contains and updates robots
- * RTV
- * $Id: world.cc,v 1.4.2.6 2000-12-07 22:17:10 ahoward Exp $
- ************************************************************************/
+///////////////////////////////////////////////////////////////////////////
+//
+// File: world.cc
+// Author: Richard Vaughan, Andrew Howard
+// Date: 7 Dec 2000
+// Desc: top level class that contains everything
+//
+// CVS info:
+//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
+//  $Author: ahoward $
+//  $Revision: 1.4.2.7 $
+//
+// Usage:
+//  (empty)
+//
+// Theory of operation:
+//  (empty)
+//
+// Known bugs:
+//  (empty)
+//
+// Possible enhancements:
+//  (empty)
+//
+///////////////////////////////////////////////////////////////////////////
 
-#include <X11/Xlib.h>
-#include <assert.h>
-#include <fstream.h>
-#include <iomanip.h> 
-#include <math.h>
-#include <sys/time.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <sys/ipc.h>
-#include <sys/sem.h>
 
 #define ENABLE_TRACE 1
-
+#include <sys/time.h>
 #include "world.hh"
 #include "offsets.h"
 
-#ifndef INCLUDE_RTK
-#include "win.h"
-#endif
-
-//#undef DEBUG
-//#define DEBUG
-//#define VERBOSE
 
 const double MILLION = 1000000.0;
-const double TWOPI = 6.283185307;
 
 
+///////////////////////////////////////////////////////////////////////////
+// Default constructor
+//
 CWorld::CWorld()
         : CObject(this, NULL)
 {
@@ -41,8 +44,6 @@ CWorld::CWorld()
     // Set our id
     //
     strcpy(m_id, "world");
-
-    bots = NULL;
 
     // initialize the filenames
     bgFile[0] = 0;
@@ -55,22 +56,15 @@ CWorld::CWorld()
 
     // Initialise grids
     //
-    bimg = NULL;
-    img = NULL;
+    m_bimg = NULL;
+    m_img = NULL;
     m_laser_img = NULL;
     m_vision_img = NULL;
-
-    bots = NULL;
 
     // start the internal clock
     struct timeval tv;
     gettimeofday( &tv, NULL );
     timeNow = timeBegan = tv.tv_sec + (tv.tv_usec/MILLION);
-
-    #ifndef INCLUDE_RTK
-        refreshBackground = true;
-        Draw(); // this will draw everything properly before we start up
-    #endif
 }
 
 
@@ -79,14 +73,10 @@ CWorld::CWorld()
 //
 CWorld::~CWorld()
 {
-    // *** WARNING There are lots of things that should be delete here!!
-    //
-    // ahoward
-
-    if (bimg)
-        delete bimg;
-    if (img)
-        delete img;
+    if (m_bimg)
+        delete m_bimg;
+    if (m_img)
+        delete m_img;
     if (m_laser_img)
         delete m_laser_img;
     if (m_vision_img)
@@ -174,17 +164,17 @@ bool CWorld::StartupGrids()
     TRACE0("initialising grids");
 
     // create a new background image from the pnm file
-    bimg = new Nimage( bgFile );
+    m_bimg = new Nimage( bgFile );
     //cout << "ok." << endl;
 
-    width = bimg->width;
-    height = bimg->height;
+    width = m_bimg->width;
+    height = m_bimg->height;
 
     // draw an outline around the background image
-    bimg->draw_box( 0,0,width-1,height-1, 0xFF );
+    m_bimg->draw_box( 0,0,width-1,height-1, 0xFF );
   
     // create a new forground image copied from the background
-    img = new Nimage( bimg );
+    m_img = new Nimage( m_bimg );
     
     // Clear laser image
     //
@@ -193,11 +183,11 @@ bool CWorld::StartupGrids()
     
     // Copy fixed obstacles into laser rep
     //
-    for (int y = 0; y < img->height; y++)
+    for (int y = 0; y < m_img->height; y++)
     {
-        for (int x = 0; x < img->width; x++)
+        for (int x = 0; x < m_img->width; x++)
         {
-            if (img->get_pixel(x, y) != 0)
+            if (m_img->get_pixel(x, y) != 0)
                 m_laser_img->set_pixel(x, y, 1);
         }
     }
@@ -226,7 +216,7 @@ BYTE CWorld::GetCell(double px, double py, EWorldLayer layer)
     switch (layer)
     {
         case layer_obstacle:
-            return img->get_pixel(ix, iy);
+            return m_img->get_pixel(ix, iy);
         case layer_laser:
             return m_laser_img->get_pixel(ix, iy);
         case layer_vision:
@@ -251,7 +241,7 @@ void CWorld::SetCell(double px, double py, EWorldLayer layer, BYTE value)
     switch (layer)
     {
         case layer_obstacle:
-            img->set_pixel(ix, iy, value);
+            m_img->set_pixel(ix, iy, value);
             break;
         case layer_laser:
             m_laser_img->set_pixel(ix, iy, value);
@@ -307,7 +297,7 @@ void CWorld::SetRectangle(double px, double py, double pth,
     switch (layer)
     {
         case layer_obstacle:
-            img->draw_rect(rect, value);
+            m_img->draw_rect(rect, value);
             break;
         case layer_laser:
             m_laser_img->draw_rect(rect, value);
@@ -318,48 +308,7 @@ void CWorld::SetRectangle(double px, double py, double pth,
     }
 }
 
-
-
-#ifndef INCLUDE_RTK
-
-void CWorld::SavePos( void )
-{
-  ofstream out( posFile );
-
-  for( CPlayerRobot* r = bots; r; r = r->next )
-  {
-    double px, py, pth;
-    r->GetGlobalPose(px, py, pth);
-    out <<  px <<  '\t' << py << '\t' << pth << endl;
-  }
-}
-
-float diff( float a, float b )
-{
-  if( a > b ) return a-b;
-  return b-a;
-}
-
-CPlayerRobot* CWorld::NearestRobot( float x, float y )
-{
-  CPlayerRobot* nearest;
-  float dist, far = 999999.9;
-  
-  for( CPlayerRobot* r = bots; r; r = r->next )
-  {
-    dist = hypot( r->x -  x, r->y -  y );
-    
-    if( dist < far ) 
-      {
-	nearest = r;
-	far = dist;
-      }
-  }
-  
-  return nearest;
-}
-
-#else
+#ifdef INCLUDE_RTK
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
@@ -415,11 +364,11 @@ void CWorld::DrawBackground(RtkUiDrawData *pData)
     // Loop through the image and draw points individually.
     // Yeah, it's slow, but only happens once.
     //
-    for (int y = 0; y < img->height; y++)
+    for (int y = 0; y < m_img->height; y++)
     {
-        for (int x = 0; x < img->width; x++)
+        for (int x = 0; x < m_img->width; x++)
         {
-            if (img->get_pixel(x, y) != 0)
+            if (m_img->get_pixel(x, y) != 0)
             {
                 double px = (double) x / ppm;
                 double py = (double) (height - y) / ppm;
@@ -443,7 +392,7 @@ void CWorld::DrawLayer(RtkUiDrawData *pData, EWorldLayer layer)
     switch (layer)
     {
         case layer_obstacle:
-            img = this->img;
+            img = m_img;
             break;
         case layer_laser:
             img = m_laser_img;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/object.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.6 $
 //
 // Usage:
 //  (empty)
@@ -154,14 +154,29 @@ class CObject
     //
     public: virtual void OnUiMouse(RtkUiMouseData *pData);
 
+    // Return true if mouse is over object
+    //
+    protected: bool IsMouseReady()
+        {
+            return m_mouse_ready;
+        };
+
+    // Mouse must be withing this radius for interaction
+    //
+    protected: double m_mouse_radius;
+
+    // Flag set of object is draggable
+    //
+    protected: bool m_draggable;
+
+    // Flag set of mouse is within radius
+    //
+    private: bool m_mouse_ready;
+
     // Flag set if object is being dragged
     //
-    private: bool m_dragging;
-
-    // Drag radius for object
-    //
-    protected: double m_drag_radius;
-
+    private: bool  m_dragging;
+    
 #endif
 };
 

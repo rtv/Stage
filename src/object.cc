@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/object.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.6 $
 //
 // Usage:
 //  (empty)
@@ -23,6 +23,8 @@
 //  (empty)
 //
 ///////////////////////////////////////////////////////////////////////////
+
+#define ENABLE_TRACE 1
 
 #include <math.h>
 #include "object.hh"
@@ -44,8 +46,10 @@ CObject::CObject(CWorld *world, CObject *parent)
     m_global_dirty = true;
 
 #ifdef INCLUDE_RTK
+    m_draggable = false;
+    m_mouse_radius = 0;
+    m_mouse_ready = false;
     m_dragging = false;
-    m_drag_radius = 0;
 #endif
 }
 
@@ -325,14 +329,15 @@ void CObject::OnUiUpdate(RtkUiDrawData *pData)
 
     // Draw a marker to show we are being dragged
     //
-    if (pData->DrawLayer("focus", true))
+    if (pData->DrawLayer("focus", true, 0))
     {
-        if (m_dragging)
-        {
+        if (m_mouse_ready)
             pData->SetColor(RTK_RGB(128, 128, 255));
-            pData->Ellipse(m_gx - m_drag_radius, m_gy - m_drag_radius,
-                           m_gx + m_drag_radius, m_gy + m_drag_radius);
-        }
+        if (m_dragging)
+            pData->SetColor(RTK_RGB(0, 0, 255));
+        if (m_mouse_ready)
+            pData->Ellipse(m_gx - m_mouse_radius, m_gy - m_mouse_radius,
+                           m_gx + m_mouse_radius, m_gy + m_mouse_radius);
     }
 
     pData->EndSection();
@@ -349,43 +354,58 @@ void CObject::OnUiUpdate(RtkUiDrawData *pData)
 //
 void CObject::OnUiMouse(RtkUiMouseData *pData)
 {
-    TRACE0("start");
-    
     pData->BeginSection("global", "object");
-    
-    // Default process for any "move" modes
-    // If we are a top-level object, 
+ 
+    // Default process for any "move" modes 
     //
-    if (m_drag_radius > 0 && pData->UseMouseMode("move"))
+    if (pData->UseMouseMode("move"))
     {
         // Get current pose
         //
         double px, py, pth;
         GetGlobalPose(px, py, pth);
-        
-        // *** WARNING -- mouse should be made consistent with draw
+    
+        // Get the mouse position
         //
-        px = (double) pData->GetPoint().x / 1000;
-        py = (double) pData->GetPoint().y / 1000;
-          
-        if (pData->IsButtonDown())
+        double mx, my;
+        pData->GetPoint(mx, my);
+        double mth = pth;
+
+        double dx = mx - px;
+        double dy = my - py;
+        double dist = sqrt(dx * dx + dy * dy);
+    
+        // See of we are within range
+        //
+        m_mouse_ready = (dist < m_mouse_radius);
+
+        // If the mouse is within range and we are draggable...
+        //
+        if (m_mouse_ready && m_draggable)
         {
-            double dx = px - m_gx;
-            double dy = py - m_gy;
-            double dist = sqrt(dx * dx + dy * dy);
-
-            if (dist < m_drag_radius)
-                m_dragging = true;
+            if (pData->IsButtonDown())
+            {
+                // Drag on left
+                //
+                if (pData->WhichButton() == 1)
+                    m_dragging = true;
+                
+                // Rotate on right
+                //
+                else if (pData->WhichButton() == 3)
+                {
+                    m_dragging = true;
+                    mth += M_PI / 8;
+                }
+            }
+            else if (pData->IsButtonUp())
+                m_dragging = false;
         }
-        else if (pData->IsButtonUp())
-            m_dragging = false;
 
+        // If we are dragging, set the pose
+        //
         if (m_dragging)
-        {
-            // Set the pose
-            //
-            SetGlobalPose(px, py, pth);
-        }
+            SetGlobalPose(mx, my, mth);
     }
 
     pData->EndSection();
