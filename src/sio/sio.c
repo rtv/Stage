@@ -32,11 +32,13 @@
 #include <unistd.h>
 #include <assert.h>
 
+#undef DEBUG 
+#undef VERBOSE
+//#define DEBUG
+
 #include "replace.h"
 #include "sio.h"
 
-#undef DEBUG 
-//#define DEBUG
 
 // these vars are used only in this file (hence static)
 

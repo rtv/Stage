@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.12 2003-02-10 01:02:01 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.13 2003-02-10 02:14:04 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -44,9 +44,9 @@
 #include <iostream>
 
 //#define DEBUG
-#define VERBOSE
-//#undef DEBUG
-//#undef VERBOSE
+//#define VERBOSE
+#undef DEBUG
+#undef VERBOSE
 //#define RENDER_INITIAL_BOUNDING_BOXES
 
 #include "sio.h" // for SIOPropString()

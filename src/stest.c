@@ -1,6 +1,6 @@
 
 /*
-  $Id: stest.c,v 1.1.2.12 2003-02-10 01:02:03 rtv Exp $
+  $Id: stest.c,v 1.1.2.13 2003-02-10 02:14:04 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -59,8 +59,8 @@ int HandleProperty( int connection, char* data, size_t len )
   assert( len >= sizeof(stage_property_t) );
   stage_property_t* prop = (stage_property_t*)data;
   
-  printf( "Received %d bytes  property (%d,%s,%d) on connection %d\n",
-	  (int)len, prop->id, SIOPropString(prop->property), (int)prop->len, connection );
+  //printf( "Received %d bytes  property (%d,%s,%d) on connection %d\n",
+  //  (int)len, prop->id, SIOPropString(prop->property), (int)prop->len, connection );
   return 0; //success
 }
 
@@ -267,7 +267,7 @@ int main( int argc, char** argv )
       double x = 0;
       double  y = 0;
       double z = 0;
-      while( c < 10000000 )
+      while( c < 1000 )
 	{
 	  printf( " cycle %d\r", c++ );
 	  

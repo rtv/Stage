@@ -21,12 +21,15 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.19 2003-02-10 01:08:32 gerkey Exp $
+ * CVS: $Id: main.cc,v 1.61.2.20 2003-02-10 02:14:04 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
 #  include <config.h>
 #endif
+
+#undef DEBUG
+#undef VERBOSE
 
 #include <stdlib.h>
 #include <assert.h>
@@ -37,6 +40,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <unistd.h> /* for exit(2) */
+#include <math.h>
 
 #include "sio.h"
 #include "entity.hh"
@@ -434,6 +438,54 @@ int PublishDirty()
   return 0; // success
 }
 
+int WaitForWallClock()
+{
+  struct timeval start_time;
+  struct timeval last_time;
+
+  static bool init = true;
+  
+  // first time here, we set the start time
+  if( init )
+    {
+      gettimeofday( &start_time, NULL );
+      memcpy( &last_time, &start_time, sizeof(last_time) );
+      init = false;
+    }
+  
+  double desired_interval = 0.1; // seconds
+
+  struct timeval this_time;
+  gettimeofday( &this_time, NULL );
+  
+  double interval = (double)(this_time.tv_sec - last_time.tv_sec) 
+    + (double)(this_time.tv_usec - last_time.tv_usec ) / MILLION;
+  
+  memcpy( &last_time, &this_time, sizeof(last_time) );
+  
+  // if we have spare time, go to sleep
+  double spare_time = desired_interval - interval;
+  
+  if( spare_time > 0.01 )
+    {
+      struct timespec ts;
+      ts.tv_sec = (time_t)spare_time;
+      ts.tv_nsec = (long)(fmod( spare_time, 1.0 ) * BILLION );
+      
+      //printf( " interval: %.6f spare: %.6f (%d sec %ld nsec)\n", 
+      //  interval, spare_time, ts.tv_sec, ts.tv_nsec );
+      
+      printf( " used %d/%d ms\n", 
+	      (int)(interval * 1000.0),   
+	      (int)(desired_interval * 1000.0) );
+      
+      
+      nanosleep( &ts, NULL ); // just stop the powerbook getting hot :)
+    }
+  
+  return 0; // success
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // Program entry
 //
@@ -466,11 +518,6 @@ int main(int argc, char **argv)
   signal(SIGUSR1, CatchSigUsr1 );
   
   //int c = 0;
-  
-  struct timeval start_time;
-  struct timeval last_time;
-  gettimeofday( &start_time, NULL );
-  memcpy( &last_time, &start_time, sizeof(last_time) );
   
   // the main loop
   while( !quit ) 
@@ -507,23 +554,11 @@ int main(int argc, char **argv)
 			   STG_HDR_CONTINUE, NULL, 0 ) == -1 ) break;
       
       if( GuiUpdate() == -1 ) break;
-  
-      struct timeval this_time;
-      gettimeofday( &this_time, NULL );
       
-      double interval = (double)(this_time.tv_sec - last_time.tv_sec) 
-	+ (double)(this_time.tv_usec - last_time.tv_usec ) / MILLION;
+      // if( real_time_mode )
+      WaitForWallClock();
       
-      printf( " interval: %.6f\n", interval );
-      
-      memcpy( &last_time, &this_time, sizeof(last_time) );
-      
-      // if we have spare time, go to sleep
-      
-
-      usleep( 100000 ); // just stop the powerbook getting hot :)
     }
-  
   // clean up and exit
   StageQuit();
   
