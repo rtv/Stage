@@ -13,7 +13,6 @@ AM_CONDITIONAL(HAVE_GTK, test x$have_gtk = xyes)
 AC_ARG_WITH(rtk,    [  --without-rtk           Don't build RTK-based the GUI(s)],,
 with_rtk=yes)
 
-dnl if test "x$with_rtk" = "xyes" && "x$have_gtk" = "xyes"; then
 if test "x$with_rtk" = "xyes"; then
   if test "x$have_gtk" = "xyes"; then
     AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
@@ -22,5 +21,5 @@ if test "x$with_rtk" = "xyes"; then
     GUI_LINK="-L../rtk2 -Lrtkstage -lrtkstage -lrtk $LIBJPEG `gtk-config --libs gtk gthread`"
   fi
 fi
-AM_CONDITIONAL(WITH_RTK_GUI, test x$with_rtk = xyes)])
 
+AM_CONDITIONAL(WITH_RTK_GUI, test x$with_rtk = xyes)])

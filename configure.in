@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.19 2002-10-31 00:02:21 gerkey Exp $
+dnl $Id: configure.in,v 1.20 2002-10-31 01:32:00 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -69,13 +69,6 @@ if test "x$with_gnome2" = "xyes"; then
   GUI_LINK="-Lgnome2 -lgnomestage `pkg-config --libs libgnomecanvas-2.0 libgnomeui-2.0`"
 else
   dnl otherwise we use the RTK GUI unless it is explicitly refused
-  #AC_ARG_WITH(gui,    [   --without-gui         Don't compile in a GUI],,with_gui=yes)
-  #if test "x$with_gui" = "xyes"; then
-    #AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
-    #GUI_DIR=rtkstage
-    #GUI_LIB=librtkstage.a
-    #GUI_LINK="-L../rtk2 -Lrtkstage -lrtkstage -lrtk $LIBJPEG `gtk-config --libs gtk gthread`"
-  #fi
   RTK2_TESTS
 fi
 
