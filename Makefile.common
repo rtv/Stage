@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.common,v 1.28 2001-11-04 18:35:01 gerkey Exp $ 
+# $Id: Makefile.common,v 1.28.6.1 2001-12-21 19:38:35 inspectorg Exp $ 
 #
 
 # INSTALL PLAYER BEFORE BUILDING STAGE!
@@ -12,7 +12,7 @@
 
 # Define Stage's version string for the source to include (required)
 
-VERSION = 1.0
+VERSION = 1.1
 
 ##############################################################################
 # Player configuration (required)
@@ -50,7 +50,7 @@ COLOR_DATABASE = /usr/X11R6/lib/X11/rgb.txt
 # Stage will be installed under the directory INSTALL_BASE-VERSION.
 # Change INSTALL_BASE if you want to install somewhere else.
 # You can also specify the INSTALL_BASE from the make command line, eg:
-# make install -e INSTALL_BASE=~/playerstage/stage
+# make install -e INSTALL_BASE=~/playerstage/stage -e INSTALL_ETC=~/.rtk
 
 INSTALL_BASE = /usr/local/stage
 INSTALL_DIR = $(INSTALL_BASE)-$(VERSION)
