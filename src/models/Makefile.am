@@ -22,10 +22,6 @@ libstgmodels_a_SOURCES = \
                    fiducialfinderdevice.hh \
                    gripperdevice.cc \
                    gripperdevice.hh \
-                   idardevice.cc \
-                   idardevice.hh \
-                   idarturretdevice.cc \
-                   idarturretdevice.hh \
                    image.cc \
                    image.hh \
                    laserdevice.cc \
@@ -50,3 +46,7 @@ libstgmodels_a_SOURCES = \
 
 # currently broken
 # bpsdevice.cc 
+# idardevice.cc
+# idardevice.hh
+# idarturretdevice.cc
+# idarturretdevice.hh

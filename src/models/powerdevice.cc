@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: powerdevice.cc,v 1.2 2002-11-01 19:12:32 rtv Exp $
+ * CVS info: $Id: powerdevice.cc,v 1.2.8.1 2004-11-11 00:35:54 gerkey Exp $
  */
 
 #include <math.h>
@@ -75,8 +75,10 @@ void CPowerDevice::Update( double sim_time )
     return;
   m_last_update = sim_time;
 
+#if 0
   // Process configuration requests
   UpdateConfig();
+#endif
   
   // TODO - have a configurable power consumption model in here.
   // for now I just return the same voltage all the time
@@ -91,7 +93,7 @@ void CPowerDevice::Update( double sim_time )
   return;
 }
 
-
+#if 0
 ///////////////////////////////////////////////////////////////////////////
 // Process configuration requests.
 
@@ -127,4 +129,5 @@ void CPowerDevice::UpdateConfig()
 	}
     }
 }
+#endif
 

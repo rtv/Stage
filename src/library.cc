@@ -24,7 +24,7 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.7.2.1.2.1 2003-12-05 02:08:28 gerkey Exp $
+ * CVS info: $Id: library.cc,v 1.7.2.1.2.2 2004-11-11 00:35:53 gerkey Exp $
  */
 
 #include "library.hh"
@@ -34,8 +34,8 @@
 #include "models/bumperdevice.hh"
 #include "models/broadcastdevice.hh"
 #include "models/gripperdevice.hh"
-#include "models/idardevice.hh"
-#include "models/idarturretdevice.hh"
+//#include "models/idardevice.hh"
+//#include "models/idarturretdevice.hh"
 #include "models/fiducialfinderdevice.hh"
 #include "models/laserdevice.hh"
 #include "models/omnipositiondevice.hh"
@@ -64,8 +64,8 @@ libitem_t library_items[] = {
   { "sonar", "green", (CFP)CSonarDevice::Creator},
   { "box", "yellow", (CFP)CBox::Creator},
   { "gripper", "blue", (CFP)CGripperDevice::Creator},
-  { "idar", "DarkRed", (CFP)CIdarDevice::Creator},
-  { "idarturret", "DarkRed", (CFP)CIdarTurretDevice::Creator},
+//  { "idar", "DarkRed", (CFP)CIdarDevice::Creator},
+//  { "idarturret", "DarkRed", (CFP)CIdarTurretDevice::Creator},
   { "lbd", "gray", (CFP)CFiducialFinder::Creator},
   { "fiducialfinder", "gray", (CFP)CFiducialFinder::Creator},
   { "omniposition", "red", (CFP)COmniPositionDevice::Creator},

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/ptzdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.3.8.1 $
+//  $Revision: 1.3.8.2 $
 //
 // Usage:
 //  (empty)
@@ -155,7 +155,7 @@ void CPtzDevice::Update( double sim_time )
   // interface, so we'll NACK to all of them
   if(GetConfig(&client, buffer, sizeof(buffer)) > 0)
   {
-    PLAYER_WARN("tried to make unsupported configuration change to simulated ptz device");
+    PRINT_WARN("tried to make unsupported configuration change to simulated ptz device");
                 
     PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
   }

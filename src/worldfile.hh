@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.hh,v 1.1.4.1.2.1 2004-07-13 20:30:24 gerkey Exp $
+ * CVS info: $Id: worldfile.hh,v 1.1.4.1.2.2 2004-11-11 00:35:53 gerkey Exp $
  */
 
 #ifndef WORLDFILE_HH
@@ -31,6 +31,8 @@
 #ifdef __CYGWIN__
    #define mp_basename(s) (strrchr(s,'/')==NULL?(char*)s:(strrchr(s,'/')+1))
 #endif
+
+#include <stdio.h>
 
 // Class for loading/saving world file.  This class hides the syntax
 // of the world file and provides an 'entity.property = value' style
@@ -45,7 +47,7 @@ class CWorldFile
 
   // replacement for fopen() that checks STAGEPATH dirs for the named file
   // (thanks to  Douglas S. Blank <dblank@brynmawr.edu>)
-protected: FILE* FileOpen(const char *filename, const char* method);
+  protected: FILE* FileOpen(const char *filename, const char* method);
 
   // Load world from file
   public: bool Load(const char *filename);
