@@ -1,28 +1,29 @@
-///////////////////////////////////////////////////////////////////////////
-//
-// File: broadcastdevice.hh
-// Author: Andrew Howard
-// Date: 5 Feb 2000
-// Desc: Simulates the IP broadcast device
-//
-// CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/broadcastdevice.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.9 $
-//
-// Usage:
-//  (empty)
-//
-// Theory of operation:
-//  (empty)
-//
-// Known bugs:
-//  (empty)
-//
-// Possible enhancements:
-//  (empty)
-//
-///////////////////////////////////////////////////////////////////////////
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/*
+ * Desc: Simulates the broadcast device (just a place-holder really; most of
+ *       the work is done by Player).
+ * Author: Andrew Howard
+ * Date: 5 Dec 2000
+ * CVS info: $Id: broadcastdevice.hh,v 1.10 2002-06-07 17:29:45 inspectorg Exp $
+ */
 
 #ifndef BROADCASTDEVICE_HH
 #define BROADCASTDEVICE_HH
@@ -31,14 +32,8 @@
 
 class CBroadcastDevice : public CEntity
 {
-    // Default constructor
-    public: CBroadcastDevice(CWorld *world, CEntity *parent );
-
-    // Startup routine
-    public: virtual bool Startup();
-
-    // Update the device
-    public: virtual void Update( double sim_time );
+  // Default constructor
+  public: CBroadcastDevice(CWorld *world, CEntity *parent);
 };
 
 #endif

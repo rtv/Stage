@@ -2,7 +2,7 @@
 # Desc: Test world file containing one of everything.
 # Author: Andrew Howard
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.8 2002-06-07 06:30:51 inspectorg Exp $
+# CVS: $Id: everything.world,v 1.9 2002-06-07 17:29:44 inspectorg Exp $
 
 environment
 (
@@ -14,9 +14,10 @@ environment
 position
 (
   name "robot1" port 6665 pose [1 2 0]
-  player (port 6665) 
+  player () 
   truth ()
   sonar ()
+  broadcast ()
   laser 
   (
     lbd () 
@@ -28,12 +29,13 @@ position
 (
   name "robot2" port 6666 pose [1 3 0]
   player () 
+  truth ()
   sonar ()
+  broadcast ()
   laser 
   (
     lbd () 
     ptz (vision ())
   )
 )
-
 

@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.hh,v 1.9 2002-06-07 16:28:40 inspectorg Exp $
+ * CVS info: $Id: positiondevice.hh,v 1.10 2002-06-07 17:29:45 inspectorg Exp $
  */
 
 #ifndef POSITIONDEVICE_H
@@ -37,14 +37,14 @@ class CPositionDevice : public CEntity
   // Update the device
   public: virtual void Update( double sim_time );
 
-  // Extract command from the command buffer
-  private: void ParseCommandBuffer();
-				    
-  // Compose the reply packet
-  private: void ComposeData();
-
   // Process configuration requests.
   private: void UpdateConfig();
+
+  // Extract command from the command buffer
+  private: void UpdateCommand();
+				    
+  // Compose the reply packet
+  private: void UpdateData();
 
   // Move the robot
   protected: int Move(); 
@@ -53,7 +53,7 @@ class CPositionDevice : public CEntity
   private: double last_time;
 
   // Current command and data buffers
-  private: player_position_cmd_t command;
+  private: player_position_cmd_t cmd;
   private: player_position_data_t data;
     
   // Commanded robot speed

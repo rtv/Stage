@@ -1,29 +1,28 @@
-///////////////////////////////////////////////////////////////////////////
-//
-// File: laserdevice.hh
-// Author: Andrew Howard
-// Date: 28 Nov 2000
-// Desc: Simulates the Player CLaserDevice (the SICK laser)
-//
-// CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.22 $
-
-//
-// Usage:
-//  (empty)
-//
-// Theory of operation:
-//  (empty)
-//
-// Known bugs:
-//  (empty)
-//
-// Possible enhancements:
-//  (empty)
-//
-///////////////////////////////////////////////////////////////////////////
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/*
+ * Desc: Simulates a scanning laser range finder (SICK LMS200)
+ * Author: Andrew Howard
+ * Date: 28 Nov 2000
+ * CVS info: $Id: laserdevice.hh,v 1.23 2002-06-07 17:29:45 inspectorg Exp $
+ */
 
 #ifndef LASERDEVICE_HH
 #define LASERDEVICE_HH
@@ -69,7 +68,7 @@ class CLaserDevice : public CEntity
   private: bool intensity;
 
   // List of beacons detected in last scan
-  public: LaserBeaconList m_visible_beacons;
+  public: LaserBeaconList visible_beacons;
 
 #ifdef INCLUDE_RTK2
 

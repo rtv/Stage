@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.24 $
+//  $Author: inspectorg $
+//  $Revision: 1.25 $
 //
 // Usage:
 //  (empty)
@@ -134,7 +134,7 @@ void CVisionDevice::Update( double sim_time )
   //
   if( sim_time - m_last_update < m_interval )
     return;
-  
+
   m_last_update = sim_time;
   
   //RTK_TRACE0("generating new data");
@@ -197,6 +197,8 @@ void CVisionDevice::UpdateScan()
 
   // i'm scanning this as half-resolution for a significant speed-up
 
+  printf("1?\n");
+  
   StageColor col;
 
   for (int s = 0; s < m_scan_width; s++)
@@ -216,6 +218,8 @@ void CVisionDevice::UpdateScan()
 	
     while( (ent = lit.GetNextEntity()) ) 
     {
+      printf("2?\n");
+      
       // Ignore ourself, our ancestors and our descendents
       if( ent == this || this->IsDescendent(ent) || ent->IsDescendent(this))
         continue;
@@ -223,7 +227,7 @@ void CVisionDevice::UpdateScan()
       // Ignore transparent things
       if (!ent->vision_return)
         continue;
-		
+      
       range = lit.GetRange(); // it's this far away
       //channel = ent->channel_return; // it's this color
 		

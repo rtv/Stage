@@ -18,10 +18,10 @@
  *
  */
 /*
- * Desc: Simulates the Player CLaserDevice (the SICK laser)
+ * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.51 2002-06-05 08:30:08 inspectorg Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.52 2002-06-07 17:29:45 inspectorg Exp $
  */
 
 #define DEBUG
@@ -81,7 +81,6 @@ CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent )
 #ifdef INCLUDE_RTK2
   this->scan_fig = NULL;
 #endif
-
 }
 
 
@@ -161,7 +160,7 @@ void CLaserDevice::Update( double sim_time )
       //Unlock();
 	
       // empty the laser beacon list
-      m_visible_beacons.clear();
+      this->visible_beacons.clear();
     }
   }
 }
@@ -171,88 +170,105 @@ void CLaserDevice::Update( double sim_time )
 // This currently emulates the behaviour of SICK laser range finder.
 bool CLaserDevice::CheckConfig()
 {
+  int len;
   void* client;
+  char buffer[PLAYER_MAX_REQREP_SIZE];
   player_laser_config_t config;
+  player_laser_geom_t geom;
 
-  if (GetConfig(&client, &config, sizeof(config)) == 0)
-    return false;  
-
-  switch (config.subtype)
+  while (true)
   {
-    case PLAYER_LASER_SET_CONFIG:
-    {
-      config.resolution = ntohs(config.resolution);
-      config.min_angle = ntohs(config.min_angle);
-      config.max_angle = ntohs(config.max_angle);
+    len = GetConfig(&client, &buffer, sizeof(buffer));
+    if (len <= 0)
+      break;
 
-      if (config.resolution == 25)
-      {
-        if (abs(config.min_angle) > 5000 || abs(config.max_angle) > 5000)
+    switch (buffer[0])
+    {
+      case PLAYER_LASER_SET_CONFIG:
+
+        if (len < sizeof(config))
+        {
+          PRINT_WARN2("request has unexpected len (%d < %d)", len, sizeof(config));
+          break;
+        }
+        
+        memcpy(&config, buffer, sizeof(config));
+        config.resolution = ntohs(config.resolution);
+        config.min_angle = ntohs(config.min_angle);
+        config.max_angle = ntohs(config.max_angle);
+
+        if (config.resolution == 25)
+        {
+          if (abs(config.min_angle) > 5000 || abs(config.max_angle) > 5000)
+          {
+            PRINT_MSG("warning: invalid laser configuration request");
+            PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
+          }
+          else
+          {
+            this->scan_res = DTOR((double) config.resolution / 100.0);
+            this->scan_min = DTOR((double) config.min_angle / 100.0);
+            this->scan_max = DTOR((double) config.max_angle / 100.0);
+            this->scan_count = (int) ((this->scan_max - this->scan_min) / this->scan_res) + 1;
+            this->intensity = config.intensity;
+            PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
+          }
+        }
+        else if (config.resolution == 50 || config.resolution == 100)
+        {
+          if (abs(config.min_angle) > 9000 || abs(config.max_angle) > 9000)
+          {
+            PRINT_MSG("warning: invalid laser configuration request");
+            PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
+          }
+          else
+          {
+            this->scan_res = DTOR((double) config.resolution / 100.0);
+            this->scan_min = DTOR((double) config.min_angle / 100.0);
+            this->scan_max = DTOR((double) config.max_angle / 100.0);
+            this->scan_count = (int) ((this->scan_max - this->scan_min) / this->scan_res) + 1;
+            this->intensity = config.intensity;
+            PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
+          }
+        }
+        else
         {
           PRINT_MSG("warning: invalid laser configuration request");
           PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
         }
-        else
-        {
-          this->scan_res = DTOR((double) config.resolution / 100.0);
-          this->scan_min = DTOR((double) config.min_angle / 100.0);
-          this->scan_max = DTOR((double) config.max_angle / 100.0);
-          this->scan_count = (int) ((this->scan_max - this->scan_min) / this->scan_res) + 1;
-          this->intensity = config.intensity;
-          PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
-        }
-      }
-      else if (config.resolution == 50 || config.resolution == 100)
-      {
-        if (abs(config.min_angle) > 9000 || abs(config.max_angle) > 9000)
-        {
-          PRINT_MSG("warning: invalid laser configuration request");
-          PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
-        }
-        else
-        {
-          this->scan_res = DTOR((double) config.resolution / 100.0);
-          this->scan_min = DTOR((double) config.min_angle / 100.0);
-          this->scan_max = DTOR((double) config.max_angle / 100.0);
-          this->scan_count = (int) ((this->scan_max - this->scan_min) / this->scan_res) + 1;
-          this->intensity = config.intensity;
-          PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
-        }
-      }
-      else
-      {
-        PRINT_MSG("warning: invalid laser configuration request");
+        break;
+
+      case PLAYER_LASER_GET_CONFIG:
+        // Return the laser configuration
+        config.resolution = htons((int) (RTOD(this->scan_res) * 100));
+        config.min_angle = htons((unsigned int) (int) (RTOD(this->scan_min) * 100));
+        config.max_angle = htons((unsigned int) (int) (RTOD(this->scan_max) * 100));
+        config.intensity = this->intensity;
+        PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &config, sizeof(config));
+        break;
+
+      case PLAYER_LASER_GET_GEOM:
+        // Return the laser geometry
+        geom.pose[0] = htons((short) (this->origin_x * 1000));
+        geom.pose[1] = htons((short) (this->origin_y * 1000));
+        geom.pose[2] = 0;
+        geom.size[0] = htons((short) (this->size_x * 1000));
+        geom.size[1] = htons((short) (this->size_y * 1000));
+        PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &geom, sizeof(geom));
+        break;
+
+      default:
+        PRINT_WARN1("invalid laser configuration request [%c]", buffer[0]);
         PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
-      }
-      break;
-    }
-
-    case PLAYER_LASER_GET_CONFIG:
-    {
-      config.resolution = htons((int) (RTOD(this->scan_res) * 100));
-      config.min_angle = htons((unsigned int) (int) (RTOD(this->scan_min) * 100));
-      config.max_angle = htons((unsigned int) (int) (RTOD(this->scan_max) * 100));
-      config.intensity = this->intensity;
-      PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &config, sizeof(config));
-      break;
-    }
-
-    default:
-    {
-      // Ignore invalid request subtypes
-      PRINT_MSG("invalid laser configuration request");
-      PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
-      return false;
+        break;
     }
   }
-
   return true;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Generate scan data
-//
 bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 {    
   // Get the pose of the laser in the global cs
@@ -268,7 +284,7 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
   int skip = (int) (this->min_res / this->scan_res - 0.5);
 
   // initialise our beacon detecting array
-  m_visible_beacons.clear(); 
+  this->visible_beacons.clear(); 
 
   // Set the header part of the data packet
   data->range_count = htons(this->scan_count);
@@ -306,7 +322,7 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 
       // Construct a list of beacons we have seen
       if( ent->m_stage_type == LaserBeaconType )
-        m_visible_beacons.push_front( (int)ent );
+        this->visible_beacons.push_front( (int)ent );
 
       // Stop looking when we see something
       if(ent->laser_return != LaserTransparent) 
@@ -330,7 +346,7 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
   }
 
   // remove all duplicates from the beacon list
-  m_visible_beacons.unique(); 
+  this->visible_beacons.unique(); 
 
   return true;
 }
@@ -372,12 +388,6 @@ void CLaserDevice::RtkUpdate()
 {
   CEntity::RtkUpdate();
  
-  // Get global pose
-  double gx, gy, gth;
-  GetGlobalPose(gx, gy, gth);
-
-  int style = 0;
-
   rtk_fig_clear(this->scan_fig);
 
   // draw a figure from the data in the data buffer
@@ -390,19 +400,19 @@ void CLaserDevice::RtkUpdate()
   // device.  so even though it does use a few more flops.  i think
   // it's the Right Thing to do - RTV.
 
-  gth -= M_PI / 2.0;
-
-  player_laser_data_t data;
-
   // if a client is subscribed to this device
   if( Subscribed() > 0 )
   {
+    player_laser_data_t data;
+    
     // attempt to get the right size chunk of data from the mmapped buffer
     if( GetData( &data, sizeof(data) ) == sizeof(data) )
     { 
+      // Get global pose
+      double gx, gy, gth;
+      GetGlobalPose(gx, gy, gth);
+
       // we got it, so parse out the data and display it
-      //puts( "found some nice data avail!!!!!!!!!!!!!!" );
-	
       short min_ang_deg = ntohs(data.min_angle);
       short max_ang_deg = ntohs(data.max_angle);
       unsigned short samples = ntohs(data.range_count); 
@@ -412,32 +422,20 @@ void CLaserDevice::RtkUpdate()
 	
       double incr = (double)(max_ang_rad - min_ang_rad) / (double)samples;
 	
-      //printf( "laser samples=%d start=%.2f stop=%.2f incr=%.2f\n",
-      //     samples, min_ang_rad, max_ang_rad, incr );
-	
       for( int i=0; i < (int)samples; i++ )
       {
         // get range, converting from mm to m
         unsigned short range_mm = ntohs(data.ranges[i]);
         double range_m = (double)range_mm / 1000.0;
-	    
-        double bearing = gth + i * incr;
-	    
+
+        double bearing = gth - M_PI/2 + i * incr;
         double px = gx + range_m * cos(bearing);
         double py = gy + range_m * sin(bearing);
-	    
-        //printf( "laser sample %d\n", i );
-        //printf( "laser range = %.2f   bearing %.2f\n", 
-        //	  range, bearing );
-        //printf( "laser px = %.2f   py = %.2\n",
-        //	  px, py );
-	    
+	    	    
         rtk_fig_line(this->scan_fig, gx, gy, px, py);
       }
     }
   }
-  //else
-  //  puts( "subscribed but no data avail!!!!!!!!!!!!!!" );
 }
 
 #endif

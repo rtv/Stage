@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.10 2002-06-07 01:53:34 inspectorg Exp $
+ * CVS info: $Id: worldfile.cc,v 1.11 2002-06-07 17:29:45 inspectorg Exp $
  */
 
 #include <assert.h>
@@ -1143,7 +1143,7 @@ const char *CWorldFile::ReadFilename(int section, const char *name, const char *
 ///////////////////////////////////////////////////////////////////////////
 // Read a string from a tuple
 const char *CWorldFile::ReadTupleString(int section, const char *name,
-                                  int index, const char *value)
+                                        int index, const char *value)
 {
   int item = GetItem(section, name);
   if (item < 0)

@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.25 2002-06-07 16:28:40 inspectorg Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.26 2002-06-07 17:29:45 inspectorg Exp $
  */
 
 //#define DEBUG
@@ -33,7 +33,7 @@
 
 ///////////////////////////////////////////////////////////////////////////
 // Constructor
-CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
+CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent)
   : CEntity( world, parent )
 {    
   // set the Player IO sizes correctly for this type of Entity
@@ -42,7 +42,7 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
   m_config_len = 1; 
   m_reply_len = 1; 
   
-  m_player.code = PLAYER_POSITION_CODE; // from player's messages.h
+  m_player.code = PLAYER_POSITION_CODE;
   m_stage_type = RectRobotType;
 
   SetColor(POSITION_COLOR);
@@ -56,7 +56,7 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
 
   this->com_vr = this->com_vth = 0;
   this->odo_px = this->odo_py = this->odo_pth = 0;
-  stall = 0;
+  this->stall = 0;
 
   // update this device VERY frequently
   m_interval = 0.01; 
@@ -71,11 +71,6 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
   this->size_y = 0.380;
   this->origin_x = -0.04;
   this->origin_y = 0;
-  
-#ifdef INCLUDE_RTK
-    m_mouse_radius = 0.400;
-    m_draggable = true;
-#endif
 }
 
 
@@ -98,17 +93,13 @@ void CPositionDevice::Update( double sim_time )
       UpdateConfig();
 
       // Get the latest command
-      if( GetCommand( &this->command, sizeof(this->command)) == sizeof(this->command))
-        ParseCommandBuffer();    // find out what to do    
+      UpdateCommand();
 
       // do things
       Move();
 
       // report the new state of things
-      ComposeData();
-
-      // generic device call
-      PutData( &this->data, sizeof(this->data)  );     
+      UpdateData();
     }
     else  
     {
@@ -163,60 +154,9 @@ int CPositionDevice::Move()
     this->odo_pth += dth;
 
     // Normalise the odometric angle
-    //
     this->odo_pth = fmod(this->odo_pth + TWOPI, TWOPI);
   }
   return true;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Parse the command buffer to extract commands
-//
-void CPositionDevice::ParseCommandBuffer()
-{
-  double fv = (short) ntohs(this->command.speed);
-  double fw = (short) ntohs(this->command.turnrate);
-
-  // Store commanded speed
-  // Linear is in m/s
-  // Angular is in radians/sec
-  this->com_vr = fv / 1000;
-  this->com_vth = DTOR(fw);
-
-  //printf( "v = %.2f   w = %.2f\n", this->com_vr, this->com_vth );
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Compose data to send back to client
-void CPositionDevice::ComposeData()
-{
-  // Compute odometric pose
-  // Convert mm and degrees (0 - 360)
-  double px = this->odo_px * 1000.0;
-  double py = this->odo_py * 1000.0;
-  double pth = RTOD(fmod(this->odo_pth + TWOPI, TWOPI));
-
-  // Get actual global pose
-  double gx, gy, gth;
-  GetGlobalPose(gx, gy, gth);
-    
-  // normalized compass heading
-  double compass = NORMALIZE(gth);
-  if (gth < 0)
-    gth += TWOPI;
-  
-  // Construct the data packet
-  // Basically just changes byte orders and some units
-  this->data.xpos = htonl((int) px);
-  this->data.ypos = htonl((int) py);
-  this->data.theta = htons((unsigned short) pth);
-
-  this->data.speed = htons((unsigned short) (this->com_vr * 1000.0));
-  this->data.turnrate = htons((short) RTOD(this->com_vth));  
-  this->data.compass = htons((unsigned short)(RTOD(compass)));
-  this->data.stalls = this->stall;
 }
 
 
@@ -277,4 +217,57 @@ void CPositionDevice::UpdateConfig()
     }
   }
 }
+
+
+///////////////////////////////////////////////////////////////////////////
+// Parse the command buffer to extract commands
+void CPositionDevice::UpdateCommand()
+{
+  if (GetCommand(&this->cmd, sizeof(this->cmd)) == sizeof(this->cmd))
+  {
+    double fv = (short) ntohs(this->cmd.speed);
+    double fw = (short) ntohs(this->cmd.turnrate);
+
+    // Store commanded speed
+    // Linear is in m/s
+    // Angular is in radians/sec
+    this->com_vr = fv / 1000;
+    this->com_vth = DTOR(fw);
+  }
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Compose data to send back to client
+void CPositionDevice::UpdateData()
+{
+  // Compute odometric pose
+  // Convert mm and degrees (0 - 360)
+  double px = this->odo_px * 1000.0;
+  double py = this->odo_py * 1000.0;
+  double pth = RTOD(fmod(this->odo_pth + TWOPI, TWOPI));
+
+  // Get actual global pose
+  double gx, gy, gth;
+  GetGlobalPose(gx, gy, gth);
+    
+  // normalized compass heading
+  double compass = NORMALIZE(gth);
+  if (gth < 0)
+    gth += TWOPI;
+  
+  // Construct the data packet
+  // Basically just changes byte orders and some units
+  this->data.xpos = htonl((int) px);
+  this->data.ypos = htonl((int) py);
+  this->data.theta = htons((unsigned short) pth);
+
+  this->data.speed = htons((unsigned short) (this->com_vr * 1000.0));
+  this->data.turnrate = htons((short) RTOD(this->com_vth));  
+  this->data.compass = htons((unsigned short)(RTOD(compass)));
+  this->data.stalls = this->stall;
+
+  PutData(&this->data, sizeof(this->data));     
+}
+
 
