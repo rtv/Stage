@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.100 2002-06-10 20:59:09 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.101 2002-06-11 00:10:42 inspectorg Exp $
  */
 
 //#undef DEBUG
@@ -781,18 +781,31 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   int sx, sy;
   double scale, dx, dy;
   double ox, oy;
+  double gridx, gridy;
   double minor, major;
+  bool showgrid;
   
   if (worldfile != NULL)
   {
-    int section = worldfile->LookupEntity("rtk");
+    int section = worldfile->LookupEntity("gui");
+
+    // Size of world in pixels
+    sx = (int) this->matrix->width;
+    sy = (int) this->matrix->height;
+
+    // Grid size in meters
+    gridx = sx / this->ppm;
+    gridy = sy / this->ppm;
+
+    // Place a hard limit, just to stop it going off the screen
+    if (sx > 1024)
+      sx = 1024;
+    if (sy > 768)
+      sy = 768;
 
     // Size of canvas in pixels
-    sx = (int) worldfile->ReadTupleFloat(section, "size", 0, this->matrix->width);
-    sy = (int) worldfile->ReadTupleFloat(section, "size", 1, this->matrix->height);
-  
-    // Scale of the pixels
-    scale = worldfile->ReadLength(section, "scale", 1 / this->ppm);
+    sx = (int) worldfile->ReadTupleFloat(section, "size", 0, sx);
+    sy = (int) worldfile->ReadTupleFloat(section, "size", 1, sy);
   
     // Size in meters
     dx = sx * scale;
@@ -802,19 +815,33 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
     ox = worldfile->ReadTupleLength(section, "origin", 0, dx / 2);
     oy = worldfile->ReadTupleLength(section, "origin", 1, dy / 2);
 
+    // Scale of the pixels
+    scale = worldfile->ReadLength(section, "scale", 1 / this->ppm);
+
     // Grid spacing
     minor = worldfile->ReadTupleLength(section, "grid", 0, 0.2);
     major = worldfile->ReadTupleLength(section, "grid", 1, 1.0);
+    showgrid = worldfile->ReadInt(section, "showgrid", true);
+    
+    gridx = ceil(gridx / major) * major;
+    gridy = ceil(gridy / major) * major;
   }
   else
   {
-    // Size of canvas in pixels
-    sx = (int)this->matrix->width;
-    sy = (int)this->matrix->height;
-  
-    // Scale of the pixels
-    scale = ((CFixedObstacle*)this->wall)->scale;
-  
+    // Size of world in pixels
+    sx = (int) this->matrix->width;
+    sy = (int) this->matrix->height;
+
+    // Grid size in meters
+    gridx = sx / this->ppm;
+    gridy = sy / this->ppm;
+
+    // Place a hard limit, just to stop it going off the screen
+    if (sx > 1024)
+      sx = 1024;
+    if (sy > 768)
+      sy = 768;
+    
     // Size in meters
     dx = sx * scale;
     dy = sy * scale;
@@ -823,9 +850,16 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
     ox = dx / 2;
     oy = dy / 2;
 
+    // Scale of the pixels
+    scale = ((CFixedObstacle*)this->wall)->scale;
+
     // Grid spacing
     minor = 0.2;
     major = 1.0;
+    showgrid = true;
+
+    gridx = ceil(gridx / major) * major;
+    gridy = ceil(gridy / major) * major;
   }
   
   this->app = rtk_app_create();
@@ -848,8 +882,9 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
 
   // create the grid menu item
   this->grid_item = rtk_menuitem_create(this->view_menu, "Grid", 1);
+
   // Set the initial view menu state
-  rtk_menuitem_check(this->grid_item, 1);
+  rtk_menuitem_check(this->grid_item, showgrid);
 
   // Create the view/device sub menu
   this->device_data_menu = rtk_menu_create_sub(this->view_menu, "Device data");
@@ -865,32 +900,33 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   // create a view/device menu entry for each type of player-enabled device
   // we are using
   for( int d = 0; d<GetEntityCount(); d++ )
-    {
-      CEntity* ent = GetEntity(d);
+  {
+    CEntity* ent = GetEntity(d);
 
-      // if it's a player device and we haven't got an item already
-      if( ent->m_player.code && !this->device_menu_items[ ent->stage_type ] ) 
-	{
-	  assert( this->device_menu_items[ ent->stage_type ] =  
-		  rtk_menuitem_create(this->device_data_menu, 
-				      StringFromType( ent->stage_type), 1) );  
-	  
-	  rtk_menuitem_check(this->device_menu_items[ ent->stage_type ], 1);
-	}
+    // if it's a player device and we haven't got an item already
+    if( ent->m_player.code && !this->device_menu_items[ ent->stage_type ] ) 
+    {
+      assert( this->device_menu_items[ ent->stage_type ] =  
+              rtk_menuitem_create(this->device_data_menu, 
+                                  StringFromType( ent->stage_type), 1) );  
+
+      rtk_menuitem_check(this->device_menu_items[ ent->stage_type ], 1);
     }
-  
+  }
+
   // Create the grid
   this->fig_grid = rtk_fig_create(this->canvas, NULL, -49);
   if (minor > 0)
   {
     rtk_fig_color(this->fig_grid, 0.9, 0.9, 0.9);
-    rtk_fig_grid(this->fig_grid, ox, oy, dx, dy, minor);
+    rtk_fig_grid(this->fig_grid, gridx/2, gridy/2, gridx, gridy, minor);
   }
   if (major > 0)
   {
     rtk_fig_color(this->fig_grid, 0.75, 0.75, 0.75);
-    rtk_fig_grid(this->fig_grid, ox, oy, dx, dy, major);
+    rtk_fig_grid(this->fig_grid, gridx/2, gridy/2, gridx, gridy, major);
   }
+  rtk_fig_show(this->fig_grid, showgrid);
 
   return true;
 }
@@ -898,7 +934,12 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
 // Save the GUI
 bool CWorld::RtkSave(CWorldFile *worldfile)
 {
-  int section = worldfile->LookupEntity("rtk");
+  int section = worldfile->LookupEntity("gui");
+  if (section < 0)
+  {
+    PRINT_WARN("No gui entity in the world file; gui settings have not been saved.");
+    return true;
+  }
 
   // Size of canvas in pixels
   int sx, sy;
@@ -916,6 +957,10 @@ bool CWorld::RtkSave(CWorldFile *worldfile)
   double scale;
   rtk_canvas_get_scale(this->canvas, &scale, &scale);
   worldfile->WriteLength(section, "scale", scale);
+
+  // Grid on/off
+  int showgrid = rtk_menuitem_ischecked(this->grid_item);
+  worldfile->WriteInt(section, "showgrid", showgrid);
   
   return true;
 }

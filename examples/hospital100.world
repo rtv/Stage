@@ -3,8 +3,17 @@
 environment
 (
    file "hospital.pnm.gz"
-   scale 0.0833333333333
-   resolution 0.0833333333333
+   scale 0.0833
+   resolution 0.0833
+)
+
+gui
+(
+  size [1033.000 479.000]
+  origin [130.959 45.475]
+  scale 0.253
+  grid [1 10]
+  showgrid 1
 )
 
 position

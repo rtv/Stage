@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.18 2002-06-10 20:27:56 inspectorg Exp $
+ * CVS info: $Id: worldfile.cc,v 1.19 2002-06-11 00:10:43 inspectorg Exp $
  */
 
 #include <assert.h>
@@ -1390,6 +1390,16 @@ int CWorldFile::ReadInt(int entity, const char *name, int value)
 
 
 ///////////////////////////////////////////////////////////////////////////
+// Write an int
+void CWorldFile::WriteInt(int entity, const char *name, int value)
+{
+  char default_str[64];
+  snprintf(default_str, sizeof(default_str), "%d", value);
+  WriteString(entity, name, default_str);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // Read a float
 double CWorldFile::ReadFloat(int entity, const char *name, double value)
 {
@@ -1431,25 +1441,26 @@ double CWorldFile::ReadAngle(int entity, const char *name, double value)
   return atof(GetPropertyValue(property, 0)) * this->unit_angle;
 }
 
-
+/* REMOVE?
 ///////////////////////////////////////////////////////////////////////////
 // Read a boolean
 bool CWorldFile::ReadBool(int entity, const char *name, bool value)
 {
+//return (bool) ReadInt(entity, name, value);
   int property = GetProperty(entity, name);
   if (property < 0)
     return value;
   const char *v = GetPropertyValue(property, 0);
-  if (strcmp(v, "true") == 0)
+  if (strcmp(v, "true") == 0 || strcmp(v, "yes") == 0)
     return true;
-  else if (strcmp(v, "false") == 0)
+  else if (strcmp(v, "false") == 0 || strcmp(v, "no") == 0)
     return false;
   CProperty *pproperty = this->properties + property;
   PRINT_WARN3("worldfile %s:%d : '%s' is not a valid boolean value; assuming 'false'",
               this->filename, pproperty->line, v);
   return false;
 }
-
+*/
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a color (included text -> RGB conversion).

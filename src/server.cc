@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.15 2002-06-10 17:14:30 inspectorg Exp $
+ * CVS info: $Id: server.cc,v 1.16 2002-06-11 00:10:42 inspectorg Exp $
  */
 
 #include <arpa/inet.h>
@@ -86,13 +86,12 @@ CStageServer::CStageServer( int argc, char** argv )
   }
   
   // reassuring console output
-  printf( "[World %s]", this->worldfilename );
+  printf( "[World %s]\n", this->worldfilename );
   
   ///////////////////////////////////////////////////////////////////////
   // LOAD THE CONFIGURATION FOR THE GUI 
   // do this *after* the world has loaded, so we can configure the menus
   // correctly
-  printf("\n");
   if (!RtkLoad(&this->worldfile))
   {
     PRINT_ERR( "Failed to load worldfile" );
@@ -286,7 +285,7 @@ bool CStageServer::LoadFile( char* filename )
     // Ignore some types, since we already have dealt will deal with them
     if (strcmp(type, "environment") == 0)
       continue;
-    if (strcmp(type, "rtk") == 0)
+    if (strcmp(type, "gui") == 0)
       continue;
 
     // if this section defines the current host, we load it here
@@ -419,6 +418,10 @@ bool CStageServer::SaveFile( char* filename )
     if (!entity->Save(&this->worldfile, entity->worldfile_section))
       return false;
   }
+
+  // Let the gui save itself
+  if (!RtkSave(&this->worldfile))
+    return false;
   
   // Save everything
   if (!this->worldfile.Save(this->worldfilename))

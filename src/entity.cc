@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.64 2002-06-10 04:57:49 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.65 2002-06-11 00:10:42 inspectorg Exp $
  */
 
 #include <math.h>
@@ -185,16 +185,16 @@ bool CEntity::Load(CWorldFile *worldfile, int section)
   this->color = worldfile->ReadColor(section, "color", this->color);
   
   // Read the sensor flags
-  this->obstacle_return = worldfile->ReadBool(section, "obstacle",
-                                              this->obstacle_return);
-  this->sonar_return = worldfile->ReadBool(section, "sonar",
-                                           this->sonar_return);
-  this->vision_return = worldfile->ReadBool(section, "vision",
-                                            this->vision_return);
+  this->obstacle_return = worldfile->ReadInt(section, "obstacle",
+                                             this->obstacle_return);
+  this->sonar_return = worldfile->ReadInt(section, "sonar",
+                                          this->sonar_return);
+  this->vision_return = worldfile->ReadInt(section, "vision",
+                                           this->vision_return);
 
-  if (worldfile->ReadBool(section, "laser", this->laser_return != LaserTransparent))
+  if (worldfile->ReadInt(section, "laser", this->laser_return != LaserTransparent))
   {
-    if (worldfile->ReadBool(section, "laser_bright", this->laser_return >= LaserBright1))
+    if (worldfile->ReadInt(section, "laser_bright", this->laser_return >= LaserBright1))
       this->laser_return = LaserBright1;
     else
       this->laser_return = LaserReflect;

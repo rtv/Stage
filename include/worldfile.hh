@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.hh,v 1.14 2002-06-10 20:27:55 inspectorg Exp $
+ * CVS info: $Id: worldfile.hh,v 1.15 2002-06-11 00:10:43 inspectorg Exp $
  */
 
 #ifndef WORLDFILE_HH
@@ -77,7 +77,7 @@ class CWorldFile
   public: double ReadAngle(int entity, const char *name, double value);
 
   // Read a boolean
-  public: bool ReadBool(int entity, const char *name, bool value);
+  // REMOVE? public: bool ReadBool(int entity, const char *name, bool value);
 
   // Read a color (includes text to RGB conversion)
   public: uint32_t ReadColor(int entity, const char *name, uint32_t value);

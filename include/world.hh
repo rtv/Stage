@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.57 2002-06-10 20:59:08 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.58 2002-06-11 00:10:43 inspectorg Exp $
  */
 
 #ifndef WORLD_HH
@@ -303,19 +303,19 @@ class CWorld
   // RTK STUFF ----------------------------------------------------------------
 #ifdef INCLUDE_RTK2
   // Initialise the GUI
-  public: bool RtkLoad(CWorldFile *worldfile);
+  protected: bool RtkLoad(CWorldFile *worldfile);
   
   // Save the GUI
-  private: bool RtkSave(CWorldFile *worldfile);
+  protected: bool RtkSave(CWorldFile *worldfile);
   
   // Start the GUI
-  public: bool RtkStartup();
+  protected: bool RtkStartup();
 
   // Stop the GUI
-  public: void RtkShutdown();
+  protected: void RtkShutdown();
 
   // Update the GUI
-  public: void RtkUpdate();
+  protected: void RtkUpdate();
 
   // Basic GUI elements
   public: rtk_app_t *app;
