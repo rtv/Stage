@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.6 $
+//  $Author: gerkey $
+//  $Revision: 1.7 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -125,19 +125,18 @@ bool CGripperDevice::Load(int argc, char **argv)
 //
 void CGripperDevice::Update( double sim_time )
 {
-    //RTK_TRACE0("updating");
+  ASSERT(m_world != NULL);
 
   if( Subscribed() < 1)
     return;
   
-  ASSERT(m_world != NULL);
   
   // if its time to recalculate gripper state
   //
-  if( m_world->GetTime() - m_last_update <= m_interval )
+  if( sim_time - m_last_update <= m_interval )
     return;
   
-  m_last_update = m_world->GetTime();
+  m_last_update = sim_time;
   
   // Get the command string
     //

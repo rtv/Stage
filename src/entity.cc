@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.4 $
+//  $Author: gerkey $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -776,7 +776,11 @@ bool CEntity::MouseMove(RtkUiMouseData *pData)
     // If we are dragging, set the pose
     //
     if (m_dragging)
+    {
         SetGlobalPose(mx, my, mth);
+        // also poke the truth so the underlying representation changes
+        truth_poked = true;
+    }
 
     return (m_mouse_ready);
 }

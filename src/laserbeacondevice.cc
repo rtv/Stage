@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.7 $
+//  $Author: gerkey $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -69,7 +69,8 @@ CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
   m_max_id_range = 1.5;
 
   expBeacon.beaconCount = 0; // for rtkstage
-  
+
+  m_interval = 0.2; // matches laserdevice
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -116,10 +117,21 @@ bool CLBDDevice::Save(int &argc, char **argv)
 //
 void CLBDDevice::Update( double sim_time )
 {
-  CEntity::Update( sim_time ); // inherit debug output
+  //CEntity::Update( sim_time ); // inherit debug output
 
   ASSERT(m_world != NULL );
   ASSERT(m_laser != NULL );
+
+  if( Subscribed() < 1)
+    return;
+  
+  // if its time to recalculate gripper state
+  //
+  if( sim_time - m_last_update <= m_interval )
+    return;
+
+  m_last_update = sim_time;
+
     
     // Get the laser range data
     //
@@ -128,16 +140,6 @@ void CLBDDevice::Update( double sim_time )
     if (m_laser->GetData(&laser, sizeof(laser) ) == 0)
         return;
     
-    // used to check to see if we'd seen this laser data before
-    // might be good to have it back, but it's sooooo late....
-    
-    // Check to see if it is time to update
-    //  - if not, return right away.
-    if ( sim_time - m_last_update < m_interval )
-      return;
-
-    m_last_update = sim_time;
-	
     expBeacon.beaconCount = 0; // initialise the count in the export structure
 
 
