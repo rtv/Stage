@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.121 2005-01-03 06:09:32 rtv Exp $
+ * CVS: $Id: stage.h,v 1.122 2005-01-05 09:01:53 rtv Exp $
  */
 
 
@@ -393,7 +393,7 @@ extern "C" {
   /** Create a new world, to be configured and populated by user code
    */
   stg_world_t* stg_world_create( stg_id_t id, 
-				 char* token, 
+				 const char* token, 
 				 int sim_interval, 
 				 int real_interval,
 				 double ppm_high,

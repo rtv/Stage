@@ -70,7 +70,7 @@ stg_world_t* stg_world_create_from_file( char* worldfile_path )
   
   int section = 0;
   
-  char* world_name =
+  const char* world_name =
     wf_read_string( section, "name", worldfile_path );
   
   stg_msec_t interval_real = 
@@ -227,7 +227,7 @@ stg_world_t* stg_world_create_from_file( char* worldfile_path )
 
 
 stg_world_t* stg_world_create( stg_id_t id, 
-			       char* token, 
+			       const char* token, 
 			       int sim_interval, 
 			       int real_interval,
 			       double ppm_high,

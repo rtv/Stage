@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.21 $
+//  $Revision: 1.22 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -95,8 +95,9 @@ stg_model_t* stg_position_create( stg_world_t* world,
 						STG_MODEL_POSITION, 
 						token,
 						sizeof(stg_model_position_t) );  
+
   // get the type-sepecific extension we added to the end of the model
-  stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
+  // stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
   
   // override the default methods
   mod->f_startup = position_startup;
@@ -302,7 +303,7 @@ int position_update( stg_model_t* mod )
 		    mod->velocity.y,
 		    mod->velocity.a );
       
-      double interval = (double)mod->world->sim_interval / 1000.0;
+      //double interval = (double)mod->world->sim_interval / 1000.0;
       
       // set the data here
       stg_position_data_t data;
@@ -331,8 +332,6 @@ int position_update( stg_model_t* mod )
   // record the movement as odometry
   stg_pose_t after;
   stg_model_get_pose( mod, &after );
-  
-  double a = pos->odom.a;
   
   double dx = after.x - before.x;;
   double dy = after.y - before.y;

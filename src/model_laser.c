@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.62 $
+//  $Revision: 1.63 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -67,15 +67,15 @@ laser
 
 */
 
-void laser_load( stg_model_t* mod, int section )
+void laser_load( stg_model_t* mod )
 {
   stg_laser_config_t lconf;
   memset( &lconf, 0, sizeof(lconf) );
   
-  lconf.samples = wf_read_int( section, "samples", STG_DEFAULT_LASER_SAMPLES);
-  lconf.range_min = wf_read_length( section, "range_min", STG_DEFAULT_LASER_MINRANGE);
-  lconf.range_max = wf_read_length( section, "range_max", STG_DEFAULT_LASER_MAXRANGE);
-  lconf.fov = wf_read_angle( section, "fov", STG_DEFAULT_LASER_FOV);
+  lconf.samples = wf_read_int( mod->id, "samples", STG_DEFAULT_LASER_SAMPLES);
+  lconf.range_min = wf_read_length( mod->id, "range_min", STG_DEFAULT_LASER_MINRANGE);
+  lconf.range_max = wf_read_length( mod->id, "range_max", STG_DEFAULT_LASER_MAXRANGE);
+  lconf.fov = wf_read_angle( mod->id, "fov", STG_DEFAULT_LASER_FOV);
 
   stg_model_set_config( mod, &lconf, sizeof(lconf));
 }
@@ -296,7 +296,7 @@ void laser_render_data(  stg_model_t* mod )
     }
   
   // hmm, what's the right cast to get rid of the compiler warning
-  // for the points argument?
+  // for the points argument? the function expects a double[][2] type. 
   
   if( mod->world->win->fill_polygons )
     rtk_fig_polygon( mod->gui.data_bg, 0,0,0, sample_count+1, points, TRUE );

@@ -645,19 +645,6 @@ void stg_get_default_geom( stg_geom_t* geom )
 }
 
 
-int model_size_error( stg_model_t* mod, stg_id_t pid, 
-		      size_t actual, size_t correct )
-{
-  PRINT_WARN5( "model %d(%s) received wrong size %s (%d/%d bytes)",
-	       mod->id, 
-	       mod->token, 
-	       stg_property_string(pid), 
-	       (int)actual, 
-	       (int)correct );
-
-  return 1; // always returns an error
-}
-
 // DATA/COMMAND/CONFIG ----------------------------------------------------
 // these set and get the generic buffers for derived types
 //
@@ -928,7 +915,7 @@ int stg_model_set_geom( stg_model_t* mod, stg_geom_t* geom )
   memcpy( &mod->geom, geom, sizeof(mod->geom) );
   
   // we probably need to scale and re-render our polygons
-  stg_normalize_polygons( mod->polygons->data, mod->polygons->len, 
+  stg_normalize_polygons( (stg_polygon_t*)mod->polygons->data, mod->polygons->len, 
 			  mod->geom.size.x, mod->geom.size.y );
   
   stg_model_render_polygons( mod );
@@ -1291,8 +1278,8 @@ void stg_model_load( stg_model_t* mod )
   //stg_model_set_blobreturn( mod, &blobvis );
   
   // ranger visibility
-  stg_bool_t rangervis = 
-   wf_read_int( mod->id, "ranger_return", STG_DEFAULT_RANGERRETURN );
+  //stg_bool_t rangervis = 
+  //wf_read_int( mod->id, "ranger_return", STG_DEFAULT_RANGERRETURN );
   
   // TODO
   //odel_set_ra
@@ -1344,19 +1331,9 @@ void stg_model_load( stg_model_t* mod )
 	  stg_model_set_geom( mod, &geom );	  
 	}
 	  
-      // convert rects to an array of lines and upload the lines
-      //int num_lines = 4 * num_rects;
-      //stg_line_t* lines = stg_rects_to_lines( rects, num_rects );
-      //stg_normalize_lines( lines, num_lines );
-      //stg_scale_lines( lines, num_lines, geom.size.x, geom.size.y );
-      //stg_translate_lines( lines, num_lines, -geom.size.x/2.0, -geom.size.y/2.0 );     
-      //stg_model_set_lines( mod, lines, num_lines );
-      
       // convert rects to an array of polygons and upload the polygons
       stg_polygon_t* polys = stg_rects_to_polygons( rects, num_rects );
-      //stg_normalize_polygons( polys, num_rects, geom.size.x, geom.size.y );
       stg_model_set_polygons( mod, polys, num_rects );
-
      
       //free( lines );
     }

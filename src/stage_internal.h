@@ -621,8 +621,6 @@ extern "C" {
 /* #define STG_LIGHT_OFF 0 */
 
   //typedef int stg_interval_ms_t;
-  // returns a string that describes a property type from the enum above
-  //const char* stg_property_string( stg_id_t id );
 
 
 /*   // TOKEN ----------------------------------------------------------------------- */
