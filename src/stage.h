@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.103 2004-11-08 20:34:23 rtv Exp $
+ * CVS: $Id: stage.h,v 1.104 2004-11-08 20:55:14 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -577,9 +577,9 @@ extern "C" {
   typedef void*(*func_get_data_t)(struct _stg_model*,size_t*);
   typedef void*(*func_get_config_t)(struct _stg_model*,size_t*);
 
-  typedef void*(*func_data_notify_t)( void* );
+  typedef void(*func_data_notify_t)( void* );
 
-  typedef void*(*func_render_t)(struct _stg_model_t*,void*,size_t);
+  typedef void*(*func_render_t)(struct _stg_model*,void*,size_t);
 
   // used to create special-purpose models
   typedef struct

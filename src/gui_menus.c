@@ -262,7 +262,7 @@ void gui_menu_polygons_cb( gpointer data, guint action, GtkWidget* mitem )
 {
   gui_window_t* win = (gui_window_t*)data;
   win->fill_polygons = GTK_CHECK_MENU_ITEM(mitem)->active;
-  // redraw everything to see the polygons change
+  // redraw everything to see the polygons change gcc -Wall -o sched 300-a-3.c 
   g_hash_table_foreach( win->world->models, refresh_cb, NULL ); 
 }
   
@@ -307,7 +307,6 @@ void gui_window_menus_create( gui_window_t* win )
 
   /* Attach the new accelerator group to the window. */
   gtk_window_add_accel_group (GTK_WINDOW(win->canvas->frame), ag );
-
 
   win->canvas->menu_bar = gtk_item_factory_get_widget( fac, "<main>" );
   
