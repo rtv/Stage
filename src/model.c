@@ -21,6 +21,7 @@ void prop_free( stg_property_t* prop )
     }
 }
 
+extern libitem_t library[];
 
 model_t* model_create(  world_t* world, 
 			stg_id_t id, 
@@ -82,13 +83,15 @@ model_t* model_create(  world_t* world,
   
   mod->movemask = STG_MOVE_TRANS | STG_MOVE_ROT;
   
-  // call inits for individual model
-  model_ranger_init( mod );
-  model_laser_init( mod );
-  model_blobfinder_init( mod );
-  model_fiducial_init( mod );
-
   gui_model_create( mod );
+
+  int prop;
+  for( prop=0; prop< STG_PROP_COUNT; prop++ )
+    if( library[prop].init )
+      {
+	printf( "calling init for %s\n", stg_property_string(prop) );
+	library[prop].init(mod);
+      }
 
   return mod;
 }
@@ -226,34 +229,13 @@ void model_update_cb( gpointer key, gpointer value, gpointer user )
 
 int model_update_prop( model_t* mod, stg_id_t propid )
 {
-  switch( propid )
+  if( library[ propid ].update )
     {
-    case STG_PROP_RANGERDATA:
-      model_update_rangers( mod );
-      gui_model_rangers_data( mod );
-      break;
-
-    case STG_PROP_LASERDATA:
-      model_update_laser( mod );
-      gui_model_laser_data( mod );
-      break;
+      printf( "Calling update for %p %s\n", 
+	      mod, stg_property_string(propid) );
       
-    case STG_PROP_BLOBDATA:
-      model_blobfinder_update( mod );
-      gui_model_blobfinder_data( mod );
-      break;
-
-    case STG_PROP_FIDUCIALDATA:
-      model_fiducial_update( mod );
-      gui_model_fiducial_data( mod );
-      break;
-
-    default:
-      //PRINT_DEBUG1( "no update function for property type %s", 
-      //	    stg_property_string(propid) );
-      break;
+      library[ propid ].update( mod );
     }
-  
   
   mod->update_times[ propid ] = mod->world->sim_time;
   
@@ -271,13 +253,13 @@ void model_unsubscribe( model_t* mod, stg_id_t pid )
 {
   mod->subs[pid]--;
   gui_model_render( mod );
+  
+  if( library[pid].render )
+    library[pid].render(mod);
 }
 
 int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
 {
-  //double time_since_calc =
-  //mod->world->sim_time -  mod->update_times[pid];
-  
   switch( pid )
     {
     case STG_PROP_TIME: // no data - just fetches a timestamp
@@ -292,18 +274,6 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
       *data = &mod->size;
       *len = sizeof(mod->size);
       break;
-
-      /*    case STG_PROP_GEOM:
-      mod->geom.x = mod->pose.x;
-      mod->geom.y = mod->pose.y;
-      mod->geom.a = mod->pose.a;
-      mod->geom.w = mod->size.x;
-      mod->geom.h = mod->size.y;
-      *data = &mod->geom;
-      *len = sizeof(mod->geom);
-      break	
-      */
-
     case STG_PROP_VELOCITY:
       *data = &mod->velocity;
       *len = sizeof(mod->velocity);
@@ -332,51 +302,7 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
       *data = &mod->movemask;
       *len = sizeof(mod->movemask);
       break;
-      //case STG_PROP_RANGERCONFIG:
-      //*data = mod->ranger_config->data;
-      //*len = mod->ranger_config->len * sizeof(stg_ranger_config_t);
-      //break;
-      //case STG_PROP_RANGERDATA:
-      //*data = mod->ranger_data->data;
-      //*len = mod->ranger_data->len * sizeof(stg_ranger_sample_t);
-      //break;
 
-  /*   case STG_PROP_LASERDATA: */
-/*       { */
-/* 	// laser data packet starts with its config */
-/* 	*len = sizeof(stg_laser_config_t); */
-/* 	*data = calloc( *len, 1 ); */
-	
-/* 	stg_laser_config_t* lcfg = (stg_laser_config_t*) */
-/* 	  model_get_prop_data_generic( mod, STG_PROP_LASERCONFIG ); */
-/* 	memcpy( *data, lcfg, *len); */
-
-/* 	// and continues with the data */
-/* 	if( mod->laser_data ) */
-/* 	  { */
-/* 	    size_t ranges_len = mod->laser_data->len * sizeof(stg_laser_sample_t); */
-/* 	    *len += ranges_len; */
-/* 	    *data = realloc( *data, *len ); */
-/* 	    memcpy( *data + sizeof(stg_laser_config_t), mod->laser_data->data, ranges_len ); */
-/* 	  } */
-/*       } */
-/*       break;*/
-
- /*    case STG_PROP_BLOBS: // the data is already in an array */
-/*       *data = mod->blobs->data; */
-/*       *len = mod->blobs->len * sizeof(stg_blobfinder_blob_t); */
-/*       break; */
-
-/*     case STG_PROP_LASERGEOM: */
-/*       *data = &mod->laser_geom; */
-/*       *len = sizeof(stg_geom_t); */
-/*       break; */
-/*     case STG_PROP_LASERCONFIG: */
-/*       *data = &mod->laser_config; */
-/*       *len = sizeof(stg_laser_config_t); */
-/*       break; */
-      
-      
     default:
       {
 	stg_property_t* prop = model_get_prop_generic( mod, pid);
@@ -420,6 +346,16 @@ void model_set_prop_generic( model_t* mod, stg_id_t propid, void* data, size_t l
   //  mod->props, mod->id, propid, stg_property_string(propid), (int)len );
   
   g_hash_table_replace( mod->props, &prop->id, prop );
+  
+  if( library[ propid ].render )
+    {
+      printf( "Calling render for %p %s\n", 
+	      mod, stg_property_string(propid) );
+      
+      library[ propid ].render( mod );
+    }
+
+  //gui_model_update( mod, propid );
 }
 
 

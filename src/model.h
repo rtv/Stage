@@ -59,6 +59,19 @@ typedef struct _model
   //GHashTable* props;  
 } model_t;  
 
+typedef void(*init_func_t)(model_t*);
+
+typedef struct
+{
+  stg_id_t id;
+  const char* name;
+  init_func_t init;
+  init_func_t startup;
+  init_func_t shutdown;
+  init_func_t update;
+  init_func_t render;
+} libitem_t;
+
 
 // MODEL
 model_t* model_create(  world_t* world, stg_id_t id, char* token );
@@ -75,8 +88,8 @@ stg_property_t* model_get_prop_generic( model_t* mod, stg_id_t propid );
 void* model_get_prop_data_generic( model_t* mod, stg_id_t propid );
 
 int model_update_prop( model_t* mod, stg_id_t propid );
-void model_update_rangers( model_t* mod );
-void model_update_laser( model_t* mod );
+void model_ranger_update( model_t* mod );
+void model_laser_update( model_t* mod );
 
 void model_subscribe( model_t* mod, stg_id_t pid );
 void model_unsubscribe( model_t* mod, stg_id_t pid );

@@ -39,7 +39,7 @@ void model_laser_init( model_t* mod )
 }
 
 
-void model_update_laser( model_t* mod )
+void model_laser_update( model_t* mod )
 {   
   PRINT_DEBUG1( "[%lu] updating lasers", mod->world->sim_time );
   

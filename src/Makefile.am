@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.41 2004-06-12 02:44:02 rtv Exp $
+# $Id: Makefile.am,v 1.42 2004-06-13 04:21:21 rtv Exp $
 
 stage_DEPENDENCIES = libstage.a $(top_srcdir)/replace/libreplace.a
 
@@ -27,6 +27,7 @@ stage_SOURCES = \
 	gui.c \
 	gui.h \
 	gui_menus.c \
+        library.c \
 	main.c \
 	matrix.c \
 	matrix.h \

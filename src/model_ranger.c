@@ -17,7 +17,7 @@ void model_ranger_init( model_t* mod )
 }
 
 
-void model_update_rangers( model_t* mod )
+void model_ranger_update( model_t* mod )
 {   
   //PRINT_DEBUG1( "[%.3f] updating rangers", mod->world->sim_time );
   

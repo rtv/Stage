@@ -108,7 +108,9 @@ int main( int argc, char* argv[] )
     }
 
   install_signal_catchers();
-
+  
+  library_create();
+  
   server_t* server = NULL;
   
   if( !(server = server_create( server_port )) )

@@ -478,12 +478,13 @@ void gui_model_render( model_t* model )
   gui_model_nose( model );
   gui_model_geom( model );
   gui_model_rangers( model );
-  gui_model_rangers_data( model );
   gui_model_laser( model );
-  gui_model_laser_data( model );
   gui_model_grid( model );
-  gui_model_blobfinder_data( model );
-  gui_model_fiducial_data( model );
+
+  //gui_model_laser_data( model );
+  //gui_model_blobfinder_data( model );
+  //gui_model_fiducial_data( model );
+  //gui_model_rangers_data( model );
 
 }
 
@@ -570,7 +571,7 @@ void gui_model_rangers( model_t* mod )
     }
 }
 
-void gui_model_rangers_data( model_t* mod )
+void model_ranger_render( model_t* mod )
 { 
   gui_window_t* win = g_hash_table_lookup( wins, &mod->world->id );  
   
@@ -616,6 +617,9 @@ void gui_model_laser( model_t* mod )
   stg_geom_t* lgeom = (stg_geom_t*)
     model_get_prop_data_generic( mod, STG_PROP_LASERGEOM );
   
+  if( lgeom == NULL ) 
+    return;
+
   // only draw the laser gadget if it has a non-zero size
   if( lgeom->size.x || lgeom->size.y )
     {      
@@ -633,7 +637,7 @@ void gui_model_laser( model_t* mod )
     }
 }  
 
-void gui_model_blobfinder_data( model_t* mod )
+void model_blobfinder_render( model_t* mod )
 { 
   gui_window_t* win = g_hash_table_lookup( wins, &mod->world->id );  
   rtk_fig_t* fig = gui_model_figs(mod)->blob_data;  
@@ -725,7 +729,7 @@ void gui_model_blobfinder_data( model_t* mod )
 
 
 
-void gui_model_laser_data( model_t* mod )
+void model_laser_render( model_t* mod )
 {
   gui_window_t* win = g_hash_table_lookup( wins, &mod->world->id );  
 
@@ -773,7 +777,7 @@ void gui_model_laser_data( model_t* mod )
 }
 
 
-void gui_model_fiducial_data( model_t* mod )
+void model_fiducial_render( model_t* mod )
 { 
   char text[32];
 
@@ -974,6 +978,23 @@ void gui_model_update( model_t* mod, stg_prop_type_t prop )
       gui_model_movemask( mod );
       break;
       
+      /* case STG_PROP_BLOBDATA:
+      gui_model_blobfinder_data( mod );
+      break;
+      
+    case STG_PROP_FIDUCIALDATA:
+      gui_model_fiducial_data( mod );
+      break;
+
+    case STG_PROP_RANGERDATA:
+      gui_model_rangers_data( mod );
+      break;
+
+    case STG_PROP_LASERDATA:
+      gui_model_laser_data( mod );
+      break;
+      */
+
     case STG_PROP_POSE:
       gui_model_pose( mod );
       break;
@@ -1004,6 +1025,8 @@ void gui_model_update( model_t* mod, stg_prop_type_t prop )
     case STG_PROP_NAME:
     case STG_PROP_INTERVAL:
     case STG_PROP_MATRIXRENDER:
+    case STG_PROP_BLOBCONFIG:
+    case STG_PROP_FIDUCIALCONFIG:
       break;
 
     default:

@@ -87,9 +87,7 @@ int subscription_update( subscription_t* sub )
       sub->timestamp = timenow;
 
       // compose a message and send it out
-      
-      // TODO - buffer these messages and send in in batches for speed
-      // TODO - send only if changed
+      // TODO - send only if changed?
       
 #ifdef DEBUG           
       printf( "FOUND\n" );

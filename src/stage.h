@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.53 2004-06-13 02:37:18 rtv Exp $
+ * CVS: $Id: stage.h,v 1.54 2004-06-13 04:21:29 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -173,6 +173,7 @@ typedef uint16_t stg_msg_type_t;
 #define STG_ACK  1
 #define STG_NACK 0
 
+
 // Basic self-describing measurement types. All packets with real
 // measurements are specified in these terms so changing types here
 // should work throughout the code If you change these, be sure to
@@ -194,6 +195,8 @@ typedef uint16_t stg_msg_type_t;
 #define NTOH_SEC(s) ntohl(s)
 #define HTON_SEC(s) htonl(s) // byte ordering for SECONDS
 #define NTOH_SEC(s) ntohl(s)
+
+
 
 
 typedef struct 
