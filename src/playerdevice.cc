@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -120,11 +120,17 @@ size_t CPlayerDevice::PutData(void *data, size_t len, uint64_t timestamp)
     m_info->data_len = len;
 
     if(!timestamp)
-      m_info->data_timestamp = 
-              htonll((uint64_t)((((uint64_t)curr.tv_sec) * 1000000) + 
-                                      (uint64_t)curr.tv_usec));
+    {
+      m_info->data_timestamp_sec = htonl((uint32_t)curr.tv_sec);
+      m_info->data_timestamp_usec = htonl((uint32_t)curr.tv_usec);
+    }
+              //htonll((uint64_t)((((uint64_t)curr.tv_sec) * 1000000) + 
+                                      //(uint64_t)curr.tv_usec));
     else
-      m_info->data_timestamp = htonll(timestamp);
+    {
+      m_info->data_timestamp_sec = htonll(timestamp / 1000000);
+      m_info->data_timestamp_usec = htonll(timestamp % 1000000);
+    }
     //
     //printf("CPlayerDevice::PutData: set timestamp to: %Lu\n",
                     //ntohll(m_info->data_timestamp));
