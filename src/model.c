@@ -155,11 +155,11 @@ void model_global_rect( model_t* mod, stg_rotrect_t* glob, stg_rotrect_t* loc )
   double h = geom->size.y;
 
   // scale first
-  glob->x = ((loc->x + loc->w/2.0) * w) - w/2.0;
-  glob->y = ((loc->y + loc->h/2.0) * h) - h/2.0;
-  glob->w = loc->w * w;
-  glob->h = loc->h * h;
-  glob->a = loc->a;
+  glob->pose.x = ((loc->pose.x + loc->size.x/2.0) * w) - w/2.0;
+  glob->pose.y = ((loc->pose.y + loc->size.y/2.0) * h) - h/2.0;
+  glob->pose.a = loc->pose.a;
+  glob->size.x = loc->size.x * w;
+  glob->size.y = loc->size.y * h;
   
   // now transform into local coords
   model_local_to_global( mod, (stg_pose_t*)glob );

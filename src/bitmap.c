@@ -137,11 +137,11 @@ int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count
 	    realloc( *rects, *rect_count * sizeof(stg_rotrect_t) );
 	  
 	  stg_rotrect_t *latest = &(*rects)[(*rect_count)-1];
-	  latest->x = startx;
-	  latest->y = starty;
-	  latest->a = 0.0;
-	  latest->w = x - startx;
-	  latest->h = height;
+	  latest->pose.x = startx;
+	  latest->pose.y = starty;
+	  latest->pose.a = 0.0;
+	  latest->size.x = x - startx;
+	  latest->size.y = height;
 	  
 	  //printf( "rect %d (%.2f %.2f %.2f %.2f %.2f\n", 
 	  //  *rect_count, 
@@ -160,8 +160,8 @@ int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count
   for( r=0; r< *rect_count; r++ )
     {
       stg_rotrect_t *rect = &(*rects)[r]; 
-      rect->y = img_height - rect->y;
-      rect->h = -rect->h;
+      rect->pose.y = img_height - rect->pose.y;
+      rect->size.y = -rect->size.y;
     }
   
 

@@ -528,23 +528,23 @@ void stg_normalize_rects( stg_rotrect_t* rects, int num )
   for( r=0; r<num; r++ )
     {
       // test the origin of the rect
-      if( rects[r].x < minx ) minx = rects[r].x;
-      if( rects[r].y < miny ) miny = rects[r].y;      
-      if( rects[r].x > maxx ) maxx = rects[r].x;      
-      if( rects[r].y > maxy ) maxy = rects[r].y;
+      if( rects[r].pose.x < minx ) minx = rects[r].pose.x;
+      if( rects[r].pose.y < miny ) miny = rects[r].pose.y;      
+      if( rects[r].pose.x > maxx ) maxx = rects[r].pose.x;      
+      if( rects[r].pose.y > maxy ) maxy = rects[r].pose.y;
 
       // test the extremes of the rect
-      if( (rects[r].x+rects[r].w)  < minx ) 
-	minx = (rects[r].x+rects[r].w);
+      if( (rects[r].pose.x+rects[r].size.x)  < minx ) 
+	minx = (rects[r].pose.x+rects[r].size.x);
       
-      if( (rects[r].y+rects[r].h)  < miny ) 
-	miny = (rects[r].y+rects[r].h);
+      if( (rects[r].pose.y+rects[r].size.y)  < miny ) 
+	miny = (rects[r].pose.y+rects[r].size.y);
       
-      if( (rects[r].x+rects[r].w)  > maxx ) 
-	maxx = (rects[r].x+rects[r].w);
+      if( (rects[r].pose.x+rects[r].size.x)  > maxx ) 
+	maxx = (rects[r].pose.x+rects[r].size.x);
       
-      if( (rects[r].y+rects[r].h)  > maxy ) 
-	maxy = (rects[r].y+rects[r].h);
+      if( (rects[r].pose.y+rects[r].size.y)  > maxy ) 
+	maxy = (rects[r].pose.y+rects[r].size.y);
     }
   
   // now normalize all lengths so that the rects all fit inside
@@ -554,10 +554,10 @@ void stg_normalize_rects( stg_rotrect_t* rects, int num )
 
   for( r=0; r<num; r++ )
     { 
-      rects[r].x = (rects[r].x - minx) / scalex;
-      rects[r].y = (rects[r].y - miny) / scaley;
-      rects[r].w = rects[r].w / scalex;
-      rects[r].h = rects[r].h / scaley;
+      rects[r].pose.x = (rects[r].pose.x - minx) / scalex;
+      rects[r].pose.y = (rects[r].pose.y - miny) / scaley;
+      rects[r].size.x = rects[r].size.x / scalex;
+      rects[r].size.y = rects[r].size.y / scaley;
     }
 }	
 
@@ -571,25 +571,25 @@ stg_line_t* stg_rects_to_lines( stg_rotrect_t* rects, int num_rects )
   int r;
   for( r=0; r<num_rects; r++ )
     {
-      lines[4*r].x1 = rects[r].x;
-      lines[4*r].y1 = rects[r].y;
-      lines[4*r].x2 = rects[r].x + rects[r].w;
-      lines[4*r].y2 = rects[r].y;
+      lines[4*r].x1 = rects[r].pose.x;
+      lines[4*r].y1 = rects[r].pose.y;
+      lines[4*r].x2 = rects[r].pose.x + rects[r].size.x;
+      lines[4*r].y2 = rects[r].pose.y;
       
-      lines[4*r+1].x1 = rects[r].x + rects[r].w;;
-      lines[4*r+1].y1 = rects[r].y;
-      lines[4*r+1].x2 = rects[r].x + rects[r].w;
-      lines[4*r+1].y2 = rects[r].y + rects[r].h;
+      lines[4*r+1].x1 = rects[r].pose.x + rects[r].size.x;;
+      lines[4*r+1].y1 = rects[r].pose.y;
+      lines[4*r+1].x2 = rects[r].pose.x + rects[r].size.x;
+      lines[4*r+1].y2 = rects[r].pose.y + rects[r].size.y;
       
-      lines[4*r+2].x1 = rects[r].x + rects[r].w;;
-      lines[4*r+2].y1 = rects[r].y + rects[r].h;;
-      lines[4*r+2].x2 = rects[r].x;
-      lines[4*r+2].y2 = rects[r].y + rects[r].h;
+      lines[4*r+2].x1 = rects[r].pose.x + rects[r].size.x;;
+      lines[4*r+2].y1 = rects[r].pose.y + rects[r].size.y;;
+      lines[4*r+2].x2 = rects[r].pose.x;
+      lines[4*r+2].y2 = rects[r].pose.y + rects[r].size.y;
       
-      lines[4*r+3].x1 = rects[r].x;
-      lines[4*r+3].y1 = rects[r].y + rects[r].h;
-      lines[4*r+3].x2 = rects[r].x;
-      lines[4*r+3].y2 = rects[r].y;
+      lines[4*r+3].x1 = rects[r].pose.x;
+      lines[4*r+3].y1 = rects[r].pose.y + rects[r].size.y;
+      lines[4*r+3].x2 = rects[r].pose.x;
+      lines[4*r+3].y2 = rects[r].pose.y;
     }
   
   return lines;

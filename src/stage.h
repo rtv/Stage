@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.65 2004-07-27 02:56:57 rtv Exp $
+ * CVS: $Id: stage.h,v 1.66 2004-08-11 23:38:19 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -116,6 +116,7 @@ typedef enum
     //STG_PROP_LOSMSGCONSUME,
     //STG_PROP_MOVEMASK,
     STG_PROP_MATRIXRENDER, // if non-zero, render in the matrix
+    STG_PROP_FOV, // generic sensor field of view
 
     STG_PROP_COUNT // this must be the last entry (it's not a real
 		   // property - it just counts 'em).
@@ -428,12 +429,20 @@ typedef enum
     GripperEnabled
   } stg_gripper_return_t;
 
+
+
 // RANGER ------------------------------------------------------------
 
 typedef struct
 {
   stg_meters_t min, max;
 } stg_bounds_t;
+
+typedef struct
+{
+  stg_bounds_t range; // min and max range of sensor
+  stg_radians_t angle; // viewing angle of sensor
+} stg_fov_t;
 
 typedef struct
 {
@@ -458,9 +467,8 @@ typedef struct
 
 typedef struct
 {
-  stg_meters_t x, y;
-  stg_radians_t a;
-  stg_meters_t w, h;
+  stg_pose_t pose;
+  stg_size_t size;
 } stg_rotrect_t; // rotated rectangle
 
 // specify a line from (x1,y1) to (x2,y2), all in meters
