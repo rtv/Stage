@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.31 2002-08-22 02:04:38 rtv Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.32 2002-08-27 17:50:48 gerkey Exp $
  */
 
 //#define DEBUG
@@ -183,7 +183,7 @@ void CPositionDevice::UpdateConfig()
 
     switch (buffer[0])
     {
-      case PLAYER_P2OS_POSITION_MOTOR_POWER_REQ:
+      case PLAYER_POSITION_MOTOR_POWER_REQ:
         // motor state change request 
         // 1 = enable motors
         // 0 = disable motors
@@ -192,7 +192,7 @@ void CPositionDevice::UpdateConfig()
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
         break;
 
-      case PLAYER_P2OS_POSITION_VELOCITY_CONTROL_REQ:
+      case PLAYER_POSITION_VELOCITY_MODE_REQ:
         // velocity control mode:
         //   0 = direct wheel velocity control (default)
         //   1 = separate translational and rotational control
@@ -200,7 +200,7 @@ void CPositionDevice::UpdateConfig()
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
         break;
 
-      case PLAYER_P2OS_POSITION_RESET_ODOM_REQ:
+      case PLAYER_POSITION_RESET_ODOM_REQ:
         // reset position to 0,0,0: ignore value
         this->odo_px = this->odo_py = this->odo_pth = 0.0;
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK);

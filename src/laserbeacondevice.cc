@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.36 $
+//  $Author: gerkey $
+//  $Revision: 1.37 $
 //
 // Usage:
 //  (empty)
@@ -155,14 +155,14 @@ void CLBDDevice::Update( double sim_time )
   // check for configuration requests
 
   // Get latest config
-  player_laserbarcode_config_t cfg;
+  player_fiducial_laserbarcode_config_t cfg;
   void* client;
 
   if(GetConfig(&client, &cfg, sizeof(cfg)) > 0)
   {
     // here we pretend to accept configuration settings, and we return
     // the last set value (or default, if no setting was made)
-    if(cfg.subtype == PLAYER_LASERBARCODE_SET_CONFIG)
+    if(cfg.subtype == PLAYER_FIDUCIAL_LASERBARCODE_SET_CONFIG)
     {
       m_bit_count = cfg.bit_count;
       m_bit_size = ntohs(cfg.bit_size);
@@ -170,7 +170,7 @@ void CLBDDevice::Update( double sim_time )
       m_zero_thresh = ntohs(cfg.zero_thresh);
       PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
     }
-    else if (cfg.subtype == PLAYER_LASERBARCODE_GET_CONFIG)
+    else if (cfg.subtype == PLAYER_FIDUCIAL_LASERBARCODE_GET_CONFIG)
     {
       cfg.bit_count = m_bit_count;
       cfg.bit_size = htons(m_bit_size);

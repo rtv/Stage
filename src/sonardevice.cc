@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.32 2002-08-22 02:04:38 rtv Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.33 2002-08-27 17:50:48 gerkey Exp $
  */
 
 #include <math.h>
@@ -177,7 +177,7 @@ void CSonarDevice::UpdateConfig()
 
     switch (buffer[0])
     {
-      case PLAYER_P2OS_SONAR_POWER_REQ:
+      case PLAYER_SONAR_POWER_REQ:
         // we got a sonar power toggle - i just ignore them.
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
         break;
