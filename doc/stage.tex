@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.9 2002-06-11 03:31:18 inspectorg Exp $
+% CVS: $Id: stage.tex,v 1.10 2002-06-11 05:15:14 rtv Exp $
 
 \documentclass[11pt]{report}
 
@@ -255,9 +255,8 @@ our academic careers.  You spread the word about Player, which will bring more
 users and developers, as well as please our funders, ensuring that we will
 continue to be allowed to hack on the software.
 
-
+%////////////////////////////////////////////////////////////////////////////
 \chapter{Running Stage}
-
   \section{Building and Installing Stage}
 
     {\bf You must install Player {\sl before} installing Stage.} 
@@ -353,7 +352,7 @@ continue to be allowed to hack on the software.
     \verb+player -stage <device dir>+. Useful for debugging Player or
     if you want to use an alternative interface to Stage
     devices.
-	\end{xarg}
+    \end{xarg}
 
     \begin{xarg}{-g}Disables the Graphical User Interface.
     \end{xarg}
@@ -388,10 +387,129 @@ continue to be allowed to hack on the software.
     zero seconds (-u 0.0).  
     \end{xarg}
 
+    \begin{xarg}{-c <hostname>}Client mode - run Stage as a client to
+    a Stage server on <hostname>. See below for discussion of Stage
+    client/server.  \end{xarg}
+
+    \begin{xarg}{-cl}Client mode (on localhost) - equivalent to '-c localhost' 
+	 \end{xarg}
+
     \begin{xarg}{-p <port num>}
-    Set the port number for the server used by Stage clients (such as Stage in client mode - see below). Default is 6601.
+    Set the port number for the Stage server to accept connections. Default is 6601.
     \end{xarg}
 
+\section{Stage Server and Clients}
+Internally, Stage consists of an environment and a collection of
+devices. Together these comprise a world model. Stage also contains a
+GUI which shows the state of the world and allows the user to
+manipulate objects. This is all that many users need to use. However,
+Stage also contains a network server that allows external client
+programs to obtain complete information about the world. Eventually,
+Stage will be capable of distributing compute load across multiple
+clients (imagine a Beowulf cluster of those, etc.). For now, Stage can
+act as a client to itself. This is great as an external networked
+viewer (it replaces the old program XS). For example, you can run
+Stage on one machine without a gui:
+
+\begin{verbatim}
+batman% stage -g examples/everything.world 
+\end{verbatim}
+
+It'll start up and run as normal (actually a little faster than normal
+as it isn't working on the GUI). When you want to see what's going on, you can start up another Stage in client mode:
+
+\begin{verbatim}
+batman% stage -c localhost
+\end{verbatim}
+
+or equivalently, use the '-cl' client-to-localhost option:
+
+\begin{verbatim}
+batman% stage -cl
+\end{verbatim}
+
+The Stage client should start up, connect to the Stage server running
+on the local machine, download the world and allow you to interact
+with it as normal. When you're done, you can quit the client; the
+server keeps running. Even better, you can run the Stage client on a
+different machine and connect via the network to the server:
+
+\begin{verbatim}
+robin% stage -c batman
+\end{verbatim}
+
+Stage can handle many simultaneous clients.
+
+%////////////////////////////////////////////////////////////////////////////
+\chapter{Using the Stage GUI}
+
+Stage presents a single conventional resizable window with a menu and
+a main display area showing a view of the world.
+
+\section{World view}
+The main display area shows the world, the simulated entities (objects
+and devices), and optionally, representations of the data generated
+by devices. 
+
+\subsection{Mouse}
+The user can pan and zoom the world view and manipulate entities with
+the mouse:
+
+\subsubsection*{Clicks on the background}
+
+\begin{tabular}{|l|l|}
+\hline Mouse action & Result\\\hline
+Left-click and drag & pan the window\\
+Right-click and drag TOWARDS the center of the window & zoom in\\
+Right-click and drag AWAY FROM the center of the window & zoom out\\ 
+\hline
+\end{tabular}
+
+\subsubsection*{Clicks on entities}
+\begin{tabular}{|l|l|}
+\hline Mouse action & Result\\\hline
+Left-click and drag & move the entity\\
+Right-click and drag & rotate the entity\\
+\hline
+\end{tabular}
+
+\subsection{Keyboard}
+The world view can also be panned and zoomed with the keyboard. The
+keybindings are:
+
+\subsubsection*{Clicks on entities}
+\begin{tabular}{|l|l|}
+\hline Key & Action\\ \hline
+<arrowkeys>        & scroll the window \\
+<ctrl><arrowkeys>  & scroll the window in large increments \\
+<shift><uparrow>   & zoom in \\
+<shift><downarrow> & zoom out \\
+\hline 
+\end{tabular}
+
+\section{Menu}
+
+\subsection{File Menu}
+
+\begin{tabular}{|l|l|}
+\hline 
+Save & save current world state into worldfile\\
+Export & export a picture of world state as an xfig file (needs work)\\
+Quit & exit Stage\\
+\hline
+\end{tabular}
+
+\subsection{View Menu}
+
+\begin{tabular}{|l|l|}
+\hline 
+Grid & toggle view of a 1m grid\\
+Device data menu & toggle visualizations of data generated by devices\\
+\hline
+\end{tabular}
+
+
+%////////////////////////////////////////////////////////////////////////////
 \chapter{The World File}
 
 The world file is used to describe the particular set of robots,
