@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/objectfactory.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.7 $
+//  $Revision: 1.1.2.8 $
 //
 // Usage:
 //  (empty)
@@ -25,6 +25,13 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include "objectfactory.hh"
+
+// Obstacles
+//
+#include "boxobstacle.hh"
+
+// Beacons
+//
 #include "laserbeacon.hh"
 #include "visionbeacon.hh"
 
@@ -56,6 +63,11 @@
 //
 CObject* CreateObject(const char *type, CWorld *world, CObject *parent)
 {
+    // Create box obstacle
+    //
+    if (strcmp(type, "box_obstacle") == 0)
+        return new CBoxObstacle(world, parent);
+    
     // Create laser beacon
     //
     if (strcmp(type, "laser_beacon") == 0)

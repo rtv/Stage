@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerrobot.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -155,7 +155,7 @@ bool CPlayerRobot::StartupPlayer(int port)
     size_t areaSize = TOTAL_SHARED_MEMORY_BUFFER_SIZE;
 
     // make a unique temporary file for shared mem
-    strcpy( tmpName, "playerIO.XXXXXX" );
+    strcpy( tmpName, "/tmp/playerIO.XXXXXX" );
     int tfd = mkstemp( tmpName );
 
     // make the file the right size

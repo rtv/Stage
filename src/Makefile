@@ -1,7 +1,7 @@
 #*************************************************************************
 # src/Makefile - makes the sources
 # RTV
-# $Id: Makefile,v 1.9.2.8 2000-12-13 03:08:38 ahoward Exp $
+# $Id: Makefile,v 1.9.2.9 2000-12-19 02:01:07 ahoward Exp $
 # ************************************************************************/
 
 .SUFFIXES: .cc .o
@@ -9,13 +9,14 @@
 
 MAKEDEP = makedepend
 
-CFLAGS = -I../include -I$(PLAYERSRC)/include -I/usr/lib/g++-include -I/usr/X11R6/include -O2 -g
+CFLAGS = -I../include -I$(PLAYERSRC)/include -I/usr/lib/g++-include -I/usr/X11R6/include -O2
 
 OBS = world.o image.o \
 		object.o objectfactory.o \
 		playerrobot.o playerdevice.o \
 		pioneermobiledevice.o laserdevice.o \
 		visiondevice.o ptzdevice.o sonardevice.o \
+		boxobstacle.o \
 		laserbeacon.o visionbeacon.o
 WIN_OBS = main.o win.o server.o
 LIBS = -L/usr/X11R6/lib -lX11 -lm -lpthread
@@ -48,7 +49,7 @@ RTK_LIB = /usr/local/rtk/lib
 
 RTK_OBJS = $(OBS) rtkmain.o rtksimagent.o
 RTK_CCFLAGS = 	-DINCLUDE_RTK \
-				-g3 -Wall \
+				-O3 -Wall \
 				-I../include \
 				-I$(PLAYER_INC) \
 				-I$(RTK_INC) `gtk-config --cflags`
