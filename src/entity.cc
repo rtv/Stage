@@ -1,11 +1,11 @@
-///////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 //
 // File: entity.cc
 // Author: Andrew Howard
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.56 2002-06-04 06:35:07 rtv Exp $
+//  $Id: entity.cc,v 1.57 2002-06-04 22:36:28 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -91,10 +91,9 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
   // TODO - should create a player device subclass again :)
   memset( &m_player, 0, sizeof(m_player) );
     
-  // all truth connections should send this truth
-  //memset( &m_dirty, true, sizeof(bool) * MAX_POSE_CONNECTIONS );
-  SetDirty( 1 );
-
+  // we start out NOT dirty - no one gets deltas unless they ask for 'em.
+  SetDirty( 0 );
+  
   m_last_pixel_x = m_last_pixel_y = m_last_degree = 0;
 
   m_interval = 0.1; // update interval in seconds 
@@ -251,8 +250,10 @@ bool CEntity::Startup( void )
 		   m_device_filename, this );
       
       // make some memory to store the data
-
       playerIO = (player_stage_info_t*) new char[ mem ];
+
+      // remove the filename so we don't try to unlink it
+      m_device_filename[0] = 0;
 
       PRINT_DEBUG("successfully created client IO buffers");
 
@@ -335,6 +336,9 @@ bool CEntity::Startup( void )
   m_info_io->player_id.type = m_player.type;
   m_info_io->subscribed = 0;
 
+  // we keep a seperate copy of the subs counter.
+  //m_player_subs = 0;
+
 // create the PlayerQueue objects that we'll use to access requests and
   // replies.  pass in the chunks of memory that are already mmap()ed
   assert(m_reqqueue = new PlayerQueue(m_config_io,m_config_len));
@@ -366,6 +370,9 @@ bool CEntity::Startup( void )
 // Shutdown routine
 void CEntity::Shutdown()
 {
+  PRINT_DEBUG( "entity shutting down" );
+
+
 #ifdef INCLUDE_RTK2
   // Clean up the figure we created
   rtk_fig_destroy(this->fig);
@@ -375,9 +382,10 @@ void CEntity::Shutdown()
   if( m_player.type == 0 )
     return;
 
-  // remove our name in the filesystem
-  if (m_device_filename[0])
-    unlink( m_device_filename );
+  if( m_device_filename[0] )
+    // remove our name in the filesystem
+    if( unlink( m_device_filename ) == -1 )
+      PRINT_ERR1( "Device failed to unlink it's IO file", strerror(errno) );
 }
 
 
@@ -397,8 +405,10 @@ void CEntity::Update( double sim_time )
 {
   //PRINT_DEBUG( "UPDATE" );
  
-  //printf( "S: Entity::Update() (%d,%d,%d) at %.2f\n",  
-  //  m_player.port, m_player.type, m_player.index, sim_time ); 
+  //PRINT_DEBUG4( "(%d,%d,%d) at %.2f\n",  
+  //	m_player.port, m_player.type, m_player.index, sim_time );
+
+  //PRINT_DEBUG1( "subs: %d\n", m_info_io->subscribed );
 }
 
 
@@ -850,10 +860,12 @@ size_t CEntity::PutIOData( void* dest, size_t dest_len,
 //
 size_t CEntity::PutData( void* data, size_t len )
 {
-  PRINT_DEBUG4( "Putting %d bytes of data into device (%d,%d,%d)\n",
-		len, m_player.port, m_player.type, m_player.index );
-  
-  
+  //PRINT_DEBUG4( "Putting %d bytes of data into device (%d,%d,%d)\n",
+  //	len, m_player.port, m_player.type, m_player.index );
+
+  // tell the server to export this data to anyone that needs it
+  this->SetDirty( PropData, 1 );
+    
   // copy the data into the mmapped data buffer.
   // also set the timestamp and available fields for the data
   return PutIOData( (void*)m_data_io, m_data_len,
@@ -861,6 +873,7 @@ size_t CEntity::PutData( void* data, size_t len )
 		    &m_info_io->data_timestamp_sec,
 		    &m_info_io->data_timestamp_usec,
 		    &m_info_io->data_avail );
+
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -868,6 +881,9 @@ size_t CEntity::PutData( void* data, size_t len )
 //
 size_t CEntity::PutCommand( void* data, size_t len )
 {
+  // tell the server to export this command to anyone that needs it
+  this->SetDirty( PropCommand, 1 );
+  
   // copy the data into the mmapped command buffer.
   // also set the timestamp and available fields for the command
   return PutIOData( m_command_io, m_command_len,
@@ -875,6 +891,8 @@ size_t CEntity::PutCommand( void* data, size_t len )
 		    &m_info_io->command_timestamp_sec,
 		    &m_info_io->command_timestamp_usec,
 		    &m_info_io->command_avail );
+  
+  
 }
 
 
@@ -918,35 +936,10 @@ size_t CEntity::PutReply(void* client, unsigned short type,
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// subscribe to the device
-void CEntity::Subscribe() 
-{
-  assert( m_info_io ); // this really should be availabl
-
-  Lock();
-  m_info_io->subscribed = 1;
-  //m_info_io->subscribed++;
-  Unlock();
-}
-
-///////////////////////////////////////////////////////////////////////////
-// unsubscribe from the device
-void CEntity::Unsubscribe() 
-{
-  assert( m_info_io ); // this really should be availabl
-  
-  Lock();
-  //m_info_io->subscribed--;
-  m_info_io->subscribed = 1;
-  Unlock();
-}
-
-
-///////////////////////////////////////////////////////////////////////////
 // See if the PlayerDevice is subscribed
 int CEntity::Subscribed() 
 {
-  int subscribed = false; 
+  int subscribed = 0; 
   
   if( m_info_io ) // if we have player connection at all
     { 
@@ -1078,6 +1071,21 @@ int CEntity::SetProperty( int con, EntityProperty property,
   
   switch( property )
     {
+    case PropPlayerSubscriptions:
+      PRINT_DEBUG1( "PLAYER SUBSCRIPTIONS %d", *(int*) value);
+      
+      if( m_info_io )
+	{
+	  Lock();
+	  m_info_io->subscribed = *(int*)value;
+	  Unlock();
+	}      
+      break;
+
+    case PropParent:
+      // get a pointer to the (*value)'th object - that's our new parent
+      this->m_parent_object = m_world->GetObject( *(int*)value );     
+      break;
     case PropSizeX:
       memcpy( &size_x, (double*)value, sizeof(size_x) );
       break;
@@ -1126,6 +1134,9 @@ int CEntity::SetProperty( int con, EntityProperty property,
     case PropPuckReturn:
       memcpy( &puck_return, (bool*)value, sizeof(puck_return) );
       break;
+    case PropPlayerId:
+      memcpy( &m_player, (player_id_t*)value, sizeof(m_player) );
+      break;
       
       // these properties manipulate the player IO buffers
     case PropCommand:
@@ -1141,33 +1152,21 @@ int CEntity::SetProperty( int con, EntityProperty property,
       //PutReply( value, len );
       break;
 
-   case PropParent: 
-      // TODO 
-      break;
-    case PropPlayer:
-      // TODO
-      break;
     default:
       printf( "Stage Warning: attempting to set unknown property %d\n", 
 	      property );
       break;
     }
   
-  if( con == -1 ) // local change! dirty on all connections
-    {
-      this->SetDirty( property, 1 );
-    }
-  else
-    {  // indicate that the property is dirty on all _but_ the connection
-    // it came from - that way it gets propogated onto to other clients
-    // and everyone stays in sync. (assuming no recursive connections...)
-    
-    this->SetDirty( con, property, 0 );
-    
-    for( int p=0; p<MAX_POSE_CONNECTIONS; p++ )
-      if( p != con )
-	this->SetDirty( p, property, 1 );
-  }
+  // indicate that the property is dirty on all _but_ the connection
+  // it came from - that way it gets propogated onto to other clients
+  // and everyone stays in sync. (assuming no recursive connections...)
+  
+  this->SetDirty( property, 1 ); // dirty on all cons
+  
+  if( con != -1 ) // unless this was a local change 
+    this->SetDirty( con, property, 0 ); // clean on this con
+
   return 0;
 }
 
@@ -1180,8 +1179,18 @@ int CEntity::GetProperty( EntityProperty property, void* value )
 
   switch( property )
     {
+    case PropPlayerSubscriptions:
+      PRINT_DEBUG( "GET SUBS PROPERTY");
+      { int subs = Subscribed();
+      memcpy( value, (void*)&subs, sizeof(subs) ); 
+      retval = sizeof(subs); }
+      break;
     case PropParent:
-      // TODO
+      // find the parent's position in the world's entity array
+      // if parent pointer is null or otherwise invalid, index is -1 
+      { int parent_index = m_world->GetObjectIndex( m_parent_object );
+      memcpy( value, &parent_index, sizeof(parent_index) );
+      retval = sizeof(parent_index); }
       break;
     case PropSizeX:
       memcpy( value, &size_x, sizeof(size_x) );
@@ -1248,6 +1257,10 @@ int CEntity::GetProperty( EntityProperty property, void* value )
       memcpy( value, &puck_return, sizeof(puck_return) );
       retval = sizeof(puck_return);
       break;
+    case PropPlayerId:
+      memcpy( value, &m_player, sizeof(m_player) );
+      retval = sizeof(m_player);
+      break;
 
       // these properties manipulate the player IO buffers
     case PropCommand:
@@ -1263,9 +1276,6 @@ int CEntity::GetProperty( EntityProperty property, void* value )
       //retval = GetReply( value );
       break;
 
-    case PropPlayer:
-      // TODO
-      break;
     default:
       //printf( "Stage Warning: attempting to get unknown property %d\n", 
       //      property );

@@ -5,7 +5,7 @@
 // Class provides a network server for Stage internals
 // used by external GUIs (XS) and distributed Stage modules
 //
-// $Id: server.hh,v 1.1 2002-06-04 06:35:07 rtv Exp $
+// $Id: server.hh,v 1.2 2002-06-04 22:36:27 rtv Exp $
 
 #ifndef _SERVER_H
 #define _SERVER_H
@@ -36,9 +36,7 @@ enum HeaderType { PosePackets,
 		  Continue, 
 		  ContinueTime, 
 		  StageCommand,
-		  DownloadComplete,
-		  Subscribed,
-		  NotSubscribed
+		  DownloadComplete
 };
 
 typedef struct
@@ -168,6 +166,9 @@ protected:
   // acts on commands
   void HandleCommand( int con, cmd_t cmd );
 
+  // if player has changed the subscription count, we make the property dirty
+  void CheckForDirtyPlayerSubscriptions( void );
+
   // these are the basic IO fucntions
   int ReadPacket( int fd, char* buf, size_t len );
   int WritePacket( int fd, char* buf, size_t len );
@@ -207,7 +208,9 @@ public:
   // THIS IS THE EXTERNAL INTERFACE TO THE WORLD, SHARED BY ALL WORLD
   // DESCENDANTS
   virtual int Read( void );
-  //virtual void Write( void );
+
+  // check to seee what player has done, then inherits parent's Write()
+  virtual void Write( void );
   //virtual void Update( void );
   virtual void Shutdown( void );
 

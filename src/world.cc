@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.92 $
+//  $Revision: 1.93 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -397,6 +397,8 @@ bool CWorld::Startup()
 // Shutdown routine 
 void CWorld::Shutdown()
 {
+  PRINT_DEBUG( "world shutting down" );
+
   // Stop the GUI
   if( m_run_xs ) ShutdownGUI();
   

@@ -10,7 +10,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.50 $
+//  $Revision: 1.51 $
 //
 // Usage:
 //  (empty)
@@ -308,8 +308,18 @@ public: CEntity* CreateObject( StageType type, CEntity *parent );
     { return m_object_count; };
   
   CEntity* GetObject( int i )
-    { if( i < m_object_count ) return (m_object[i]); else  return 0; }; 
+    { if( i>=0 && i<m_object_count ) return (m_object[i]); else return 0; }; 
 
+  // get the array index of the entity (-1 if no match)
+  int GetObjectIndex( CEntity* ent )
+  { 
+    if( ent )
+      for( int e=0; e<m_object_count; e++ ) 
+	if( m_object[e] == ent ) return e; 
+    
+    return -1;
+  };
+    
   // returns true if the given hostname matches our hostname, false otherwise
   //bool CheckHostname(char* host);
 

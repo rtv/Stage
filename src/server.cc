@@ -652,6 +652,8 @@ void CStageServer::ListenForConnections( void )
 
 void CStageServer::Shutdown()
 {
+  PRINT_DEBUG( "server shutting down" );
+
   CStageIO::Shutdown();
 
   ShutdownPlayer();
@@ -700,7 +702,52 @@ bool CStageServer::CreateLockFile( void )
   return true;
 }
 
-
+void CStageServer::Write( void )
+{
+  //PRINT_DEBUG( "SERVER WRITE" );
+  
+  // if player has changed the subscription count, we make the property dirty
+  
+  // fix this - it limits the number of objects
+  // just move the memory into the entity
+  static int subscribed_last_time[ 10000 ]; 
+  static bool init = true;
+  
+  // is this necessary? can't hurt i guess.
+  // first time round, we zero the static buffer
+  if( init ) 
+    {
+      memset( subscribed_last_time, false, 10000 );
+      init = false;
+    }
+  
+  for( int i=0; i < GetObjectCount(); i++ )
+    {
+      //PRINT_DEBUG1( "checking subscription for object %d", i );
+      
+      int currently_subscribed =  GetObject(i)->Subscribed();
+      
+      //PRINT_DEBUG3( "Object %d subscriptions: %d last time: %d\n", 
+      //	    i, currently_subscribed, subscribed_last_time[i] );
+      
+      // if the current subscription state is different from the last time
+      if( currently_subscribed != subscribed_last_time[i] )
+    	{
+	  
+  	  PRINT_DEBUG2( "Object %d subscription change (%d subs)\n", 
+  			i, GetObject(i)->Subscribed() );
+	  
+    	  // remember this state for next time
+    	  subscribed_last_time[i] = currently_subscribed;
+	  
+  	  // mark the subscription property as dirty so we pick it up
+  	  // below
+  	  GetObject(i)->SetDirty( PropPlayerSubscriptions , 1);
+  	}
+    }
+  
+  CStageIO::Write();
+}
 
 /////////////////////////////////////////////////////////////////////////
 // Clock device -- create the memory map for IPC with Player 

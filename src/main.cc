@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.37 $
+//  $Revision: 1.38 $
 //
 // Usage:
 //  (empty)
@@ -84,7 +84,6 @@ void StageQuit( void )
     {
       world->Shutdown();  // Stop the world
       delete world;       // Destroy the world
-
     }
   exit( 0 );
 }

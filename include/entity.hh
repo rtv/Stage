@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.44 $
+//  $Revision: 1.45 $
 //
 // Usage:
 //  (empty)
@@ -56,8 +56,8 @@ enum EntityProperty { PropParent,
 		      PropOriginY, 
 		      PropName,
 		      PropPlayerId,
+		      PropPlayerSubscriptions,
 		      PropColor, 
-		      PropPlayer, 
 		      PropShape, 
 		      PropLaserReturn,
 		      PropSonarReturn,
@@ -331,13 +331,14 @@ public: player_id_t m_player;
 
   // See if the device is subscribed
   // returns the number of current subscriptions
-  public: int Subscribed();
+  //private int player_subs;
+   public: int Subscribed();
 
   // subscribe to the device
-  public: void Subscribe();
+  //public: void Subscribe();
 
   // unsubscribe from the device
-  public: void Unsubscribe();
+  //public: void Unsubscribe();
 
   // packages and sends data via rtp
   protected: void AnnounceDataViaRTP( void* data, size_t len );

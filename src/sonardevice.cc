@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.19 $
+//  $Revision: 1.20 $
 //
 // Usage:
 //  (empty)
@@ -131,16 +131,6 @@ void CSonarDevice::Update( double sim_time )
       // Store range in mm in network byte order
       //
       m_data.ranges[s] = htons(v);
-			      
-       // Update the gui data
-//        //
-//  #ifdef INCLUDE_RTK2
-//        hits[s][0][0] = ox;
-//        hits[s][0][1] = oy;
-//        hits[s][1][0] = ox + range * cos(oth);
-//        hits[s][1][1] = oy + range * sin(oth);
-//  #endif
-      
     }
   
   PutData( &m_data, sizeof(m_data) );
@@ -319,9 +309,11 @@ void CSonarDevice::RtkUpdate()
   // the buffer instead of storing hit points in ::Update() - RTV
   player_sonar_data_t data;
   
-  if( Subscribed() )
+  if( Subscribed() > 0 )
     {
-      if( GetData( &data, sizeof(data)) == sizeof(data) )
+      size_t res = GetData( &data, sizeof(data));
+
+      if( res == sizeof(data) )
 	for( int l=0; l < PLAYER_NUM_SONAR_SAMPLES; l++ )
 	  {
 	    double xoffset, yoffset, angle;
@@ -340,7 +332,8 @@ void CSonarDevice::RtkUpdate()
 	    rtk_fig_line(this->scan_fig, x1, y1, x2, y2 );
 	  }
       else
-	PRINT_WARN( "GET DATA RETURNED WRONG AMOUNT" );
+	PRINT_WARN2( "GET DATA RETURNED WRONG AMOUNT (%d/%d bytes)", 
+		     res, sizeof(data) );
     }  
 }
 

@@ -52,18 +52,15 @@ CStageIO::~CStageIO( void )
 //close( m_pose_connections[i].fd );
 }
 
-// Update() does the IO, then inherits the world's Update()
+// Update() does the IO, and inherits the world's Update()
+// hey, it's StageIO, right?
 void CStageIO::Update( void )
 {
-  //PRINT_DEBUG( "READ" );
-  Read();
-  //PRINT_DEBUG( "READ END" );
-
-  //PRINT_DEBUG( "WRITE" );
-  Write();
-  //PRINT_DEBUG( "WRITE END" );
+  Read(); // synchronize world state
     
   CWorld::Update();
+
+  Write(); // export world state
 }
 
 int CStageIO::WriteHeader( int fd, HeaderType type, uint32_t data )
@@ -243,7 +240,7 @@ int CStageIO::ReadEntities( int fd, int num )
     {
       ReadEntity( fd, &ent );
      
-      printf( "attempting to create entity %d.%d.%d\n",
+      printf( "attempting to create entity %d:%d:%d\n",
 	      ent.id, ent.parent, ent.type );
 
       CEntity* obj = 0;
@@ -435,58 +432,27 @@ int CStageIO::ReadHeader( int fd, stage_header_t* hdr  )
   return ReadPacket( fd, (char*)hdr, sizeof(stage_header_t) );
 }
 
-int CStageIO::WriteSubscriptions( int fd )
-{
-  for( int i=0; i < GetObjectCount(); i++ )
-    if( GetObject(i)->Subscribed() )
-      WriteHeader( fd, Subscribed, i );
+//  int CStageIO::WriteSubscriptions( int fd )
+//  #{
+//  #  for( int i=0; i < GetObjectCount(); i++ )
+//      if( GetObject(i)->Subscribed() )
+//        WriteHeader( fd, Subscribed, i );
   
-  return 0;
-}
+//    return 0;
+//  }
 
-void CStageIO::Write( void )
-{
 
   /////////////////////////////////////////////////////////////
   // check for new and cancelled subscriptions
   // and inform clients of them
-  
-  static bool subscribed_last_time[ 10000 ]; 
-  static bool init = true;
 
-  if( init ) // first time round, we zero the static buffer
-    {
-      memset( subscribed_last_time, false, 10000 );
-      init = false;
-    }
-  
-  
 
-  for( int i=0; i < GetObjectCount(); i++ )
-    {
-      bool currently_subscribed = GetObject(i)->Subscribed();
-      
-      // if the current subscription state is different from the last time
-      if( currently_subscribed != subscribed_last_time[i] )
-	{
-	  // remember this state for next time
-	  subscribed_last_time[i] = currently_subscribed;
-	  
-	  // send the subscription message on each connection (should
-	  // change this to be only those connections that care -
-	  // requires subscription counts from the clients too)
-	  
-	  for( int t=0; t< m_pose_connection_count; t++ )
-	    // sent sub or notsub depending on the current state
-	    WriteHeader( m_pose_connections[t].fd,  
-			 currently_subscribed ? Subscribed : NotSubscribed,
-			 i );
-	}
-    }
+void CStageIO::Write( void )
+{
+  //PRINT_DEBUG( "STAGIO WRITE" );
 
   /////////////////////////////////////////////////////////
   // write out any properties that are dirty
-  
   int i, p;
   
   char data[MAX_PROPERTY_DATA_LEN]; 
@@ -515,12 +481,13 @@ void CStageIO::Write( void )
 	      for( p=0; p < MAX_NUM_PROPERTIES; p++ )
 		{  
 		  //printf( "Inspecting object %d property %d connection %d\n",
-		  //      i, p, t );
+		  //  i, p, t );
 		  
 		  // is the entity marked dirty for this connection & prop?
 		  if( GetObject(i)->m_dirty[t][p] )
 		    {
-		      //printf( "DIRTY!");
+		      //printf( "PROPERTY DIRTY dev: %d prop: %d\n", t, p);
+		     
 		      int datalen = 
 			GetObject(i)->GetProperty((EntityProperty)p, data ); 
 		      
@@ -536,7 +503,8 @@ void CStageIO::Write( void )
 			  prop.id = i;
 			  prop.property = (EntityProperty)p; 
 			  prop.len = datalen;
-			  
+			
+  
 			  WriteProperty( connfd, &prop, data, datalen ); 
 			  
 			}
@@ -594,7 +562,7 @@ void CStageIO::DestroyConnection( int con )
 
 void CStageIO::HandleCommand( int con, cmd_t cmd )
 {
-  PRINT_DEBUG( "command" );
+  PRINT_DEBUG( "received command" );
 
   switch( cmd )
     {
@@ -604,9 +572,10 @@ void CStageIO::HandleCommand( int con, cmd_t cmd )
     case PAUSEc: m_enable = !m_enable; break;
 
     case SUBSCRIBEc: 
+      PRINT_DEBUG1( "Received dirty: subscription on connection %d\n", con );
       m_dirty_subscribe[con] = 1; // this connection wants to receive deltas
       // tell the client which entities are subscribed by player clients
-      WriteSubscriptions( m_pose_connections[con].fd );
+      //WriteSubscriptions( m_pose_connections[con].fd );
       break;
 
     case DOWNLOADc: 
@@ -702,48 +671,38 @@ int CStageIO::Read( void )
 		      switch( hdr.type )
 			{
 			case PropertyPackets: // some poses are coming in 
-			  //printf( "INCOMING PROPERTIES (%d) ON %d\n", 
-				//  hdr.data, m_pose_connections[t].fd );
+			  PRINT_DEBUG2( "INCOMING PROPERTIES (%d) ON %d\n", 
+					hdr.data, m_pose_connections[t].fd );
 			  ReadProperties( t, m_pose_connections[t].fd, 
 					  hdr.data );
 			  break;
 			
-			case Subscribed:
-			  PRINT_DEBUG1( "ENTITY %d SUBSCRIBED!\n", hdr.data );
-			  GetObject( hdr.data )->Subscribe();
-			  break;
-
-			case NotSubscribed:
-			  PRINT_DEBUG1( "ENTITY %d UNSUBSCRIBED!\n", hdr.data);
-			  GetObject( hdr.data )->Unsubscribe();
-			  break;
-  
 			case StageCommand:
 			  HandleCommand( t, (cmd_t)hdr.data );
 			  break;
 			
 			case DownloadComplete:
-			  // PRINT_DEBUG2( "DOWNLOAD COMPLETE (%d) on %d\n",  
-				//  hdr.data, m_pose_connections[t].fd );
+			  PRINT_DEBUG2( "DOWNLOAD COMPLETE (%d) on %d\n",  
+					hdr.data, m_pose_connections[t].fd );
 			  m_downloading = false;
 			  return 0;
 			  break;
 			  
 			case EntityPackets:
-			  // PRINT_DEBUG2( "INCOMING ENTITIES (%d) on %d\n", 
-				//  hdr.data, m_pose_connections[t].fd );
+			  PRINT_DEBUG2( "INCOMING ENTITIES (%d) on %d\n", 
+					hdr.data, m_pose_connections[t].fd );
 			  ReadEntities( m_pose_connections[t].fd, hdr.data );
 			  break;
 
 			case MatrixPacket:
-			  // PRINT_DEBUG1( "MATRIX ON %d\n", 
-				//  m_pose_connections[t].fd );
+			   PRINT_DEBUG1( "MATRIX ON %d\n", 
+				  m_pose_connections[t].fd );
 			  ReadMatrix( m_pose_connections[t].fd );
 			  break;
 
 			case BackgroundPacket:
-			  // PRINT_DEBUG1( "BACKGROUND ON %d\n", 
-				//  m_pose_connections[t].fd );
+			  PRINT_DEBUG1( "BACKGROUND ON %d\n", 
+					m_pose_connections[t].fd );
 			  
 			  ReadBackground( m_pose_connections[t].fd );
 			  break;

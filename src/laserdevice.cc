@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.48 $
+//  $Revision: 1.49 $
 //
 // Usage:
 //  (empty)
@@ -400,7 +400,7 @@ void CLaserDevice::RtkUpdate()
   player_laser_data_t data;
 
   // if a client is subscribed to this device
-  if( Subscribed() )
+  if( Subscribed() > 0 )
     // attempt to get the right size chunk of data from the mmapped buffer
     if( GetData( &data, sizeof(data) ) == sizeof(data) )
       { 
