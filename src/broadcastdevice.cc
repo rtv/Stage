@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/broadcastdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.8 $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -36,13 +36,15 @@
 CBroadcastDevice::CBroadcastDevice(CWorld *world, CEntity *parent )
   : CEntity(world, parent )
 {
-    // set the Player IO sizes correctly for this type of Entity
-    m_data_len    = sizeof( player_broadcast_data_t ); 
-    m_command_len = sizeof( player_broadcast_cmd_t );
-    m_config_len  = 0;//sizeof( player_broadcast_config_t );
- 
-    m_player_type = PLAYER_BROADCAST_CODE;
-    m_stage_type= BroadcastType;
+  // we don't need any space here, because all the messages are handled
+  // by the real broadcast device, without intervention from Stage
+  m_data_len    = 0;
+  m_command_len = 0;
+  m_config_len  = 0;
+  m_reply_len  = 0;
+
+  m_player_type = PLAYER_BROADCAST_CODE;
+  m_stage_type= BroadcastType;
 }
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.25 $
+//  $Revision: 1.26 $
 //
 // Usage:
 //  (empty)
@@ -79,6 +79,13 @@ CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
   expBeacon.beaconCount = 0; // for rtkstage
 
   m_interval = 0.2; // matches laserdevice
+
+  // fill in the default values for these fake parameters
+  m_bit_count = 8;
+  m_bit_size = 50;
+  m_zero_thresh = m_one_thresh = 60;
+
+  m_laser_subscribedp = false;
 }
 
 
@@ -113,7 +120,21 @@ void CLBDDevice::Update( double sim_time )
   ASSERT(this->laser != NULL );
 
   if(!Subscribed())
+  {
+    if(m_laser_subscribedp)
+    {
+      this->laser->Unsubscribe();
+      m_laser_subscribedp = false;
+    }
     return;
+  }
+
+  if(!m_laser_subscribedp)
+  {
+    this->laser->Subscribe();
+    m_laser_subscribedp = true;
+  }
+  
   
   // if its time to recalculate 
   //
@@ -125,14 +146,34 @@ void CLBDDevice::Update( double sim_time )
   // check for configuration requests
 
   // Get latest config
-  player_laserbeacon_setthresh_t cfg;
+  player_laserbeacon_config_t cfg;
   void* client;
 
   if(GetConfig(&client, &cfg, sizeof(cfg)) > 0)
   {
-    // we don't actually implement the laserbeacondevice's configuration
-    // requests, because they don't make sense in simulation
-    PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, NULL, 0);
+    // here we pretend to accept configuration settings, and we return
+    // the last set value (or default, if no setting was made)
+    if(cfg.subtype == PLAYER_LASERBEACON_SUBTYPE_SETCONFIG)
+    {
+      m_bit_count = cfg.bit_count;
+      m_bit_size = ntohs(cfg.bit_size);
+      m_one_thresh = ntohs(cfg.one_thresh);
+      m_zero_thresh = ntohs(cfg.zero_thresh);
+      PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, NULL, 0);
+    }
+    else if (cfg.subtype == PLAYER_LASERBEACON_SUBTYPE_GETCONFIG)
+    {
+      cfg.bit_count = m_bit_count;
+      cfg.bit_size = htons(m_bit_size);
+      cfg.one_thresh = htons(m_one_thresh);
+      cfg.zero_thresh = htons(m_zero_thresh);
+      PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &cfg, sizeof(cfg));
+    }
+    else
+    {
+      // unknown config request
+      PutReply(client, PLAYER_MSGTYPE_RESP_NACK, NULL, NULL, 0);
+    }
   }
 
   // Get the laser range data

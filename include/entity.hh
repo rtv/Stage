@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.42 $
+//  $Revision: 1.43 $
 //
 // Usage:
 //  (empty)
@@ -291,6 +291,12 @@ protected: bool CEntity::Unlock( void );
   // See if the device is subscribed
   // returns the number of current subscriptions
   protected: int Subscribed();
+
+  // subscribe to the device
+  public: void Subscribe();
+
+  // unsubscribe from the device
+  public: void Unsubscribe();
 
   // builds a truth packet for this entity
   public: void ComposeTruth( stage_truth_t* truth, int index );

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.17 $
+//  $Revision: 1.18 $
 //
 // Usage:
 //  (empty)
@@ -87,7 +87,7 @@ void CSonarDevice::Update( double sim_time )
   if(GetConfig(&client, &cmd, sizeof(cmd)) >  0)
   {
     // we got a config
-    if ( cmd == PLAYER_SONAR_POWER_REQ )
+    if((cmd & 0xFF) == PLAYER_SONAR_POWER_REQ)
     {
       // we got a sonar power toggle - i just ignore them.
       puts( "sonar power toggled" );

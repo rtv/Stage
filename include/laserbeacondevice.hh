@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacondevice.hh,v $
-//  $Author: inspectorg $
-//  $Revision: 1.9 $
+//  $Author: gerkey $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -55,6 +55,15 @@ class CLBDDevice : public CEntity
   private: double max_range_id;
     
   private:  ExportLaserBeaconDetectorData expBeacon; 
+
+  // place to keep the fake lbd parameters that we'll pass back to clients
+  // who ask for them
+  private: char m_bit_count;
+  private: short m_bit_size, m_zero_thresh, m_one_thresh;
+
+  // this one keeps track of whether or not we've already subscribed to the
+  // underlying laser device
+  private: bool m_laser_subscribedp;
 
 #ifdef INCLUDE_RTK
     

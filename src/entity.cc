@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.54 2002-05-17 06:45:25 inspectorg Exp $
+//  $Id: entity.cc,v 1.55 2002-05-29 08:28:15 gerkey Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -855,6 +855,24 @@ size_t CEntity::PutReply(void* client, unsigned short type,
   m_repqueue->Push(client, type, &curr, (unsigned char*)reply, len);
   Unlock();
   return(0);
+}
+
+///////////////////////////////////////////////////////////////////////////
+// subscribe to the device
+void CEntity::Subscribe() 
+{
+  Lock();
+  m_info_io->subscribed++;
+  Unlock();
+}
+
+///////////////////////////////////////////////////////////////////////////
+// unsubscribe from the device
+void CEntity::Unsubscribe() 
+{
+  Lock();
+  m_info_io->subscribed--;
+  Unlock();
 }
 
 
