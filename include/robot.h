@@ -2,7 +2,7 @@
  * robot.h - CRobot defintion - most of the action is here
             
  * RTV
- * $Id: robot.h,v 1.5 2000-12-01 00:20:52 vaughan Exp $
+ * $Id: robot.h,v 1.6 2000-12-01 02:50:36 vaughan Exp $
  ************************************************************************/
 
 #include "offsets.h" // for the ACTS size defines
@@ -64,7 +64,7 @@ public:
 
   ofstream* log;
 
-  float sonar[SONARSAMPLES]; 
+  //float sonar[SONARSAMPLES]; 
   //float laser[LASERSAMPLES]; 
 
   //double lastLaser, lastSonar, lastVision, lastPtz;
@@ -85,8 +85,8 @@ public:
 
   int leaveTrail;
 
-  XPoint hitPts[SONARSAMPLES];
-  XPoint oldHitPts[SONARSAMPLES];
+  //XPoint hitPts[SONARSAMPLES];
+  //XPoint oldHitPts[SONARSAMPLES];
 
   XPoint lhitPts[LASERSAMPLES];
   XPoint loldHitPts[LASERSAMPLES];
@@ -121,16 +121,16 @@ public:
   bool HasMoved( void );
 
   void Update();
-  int UpdateSonar( Nimage* img ); 
+  //int UpdateSonar( Nimage* img ); 
   //int UpdateLaser( Nimage* img ); 
-  int UpdateVision( Nimage* img ); 
+  //int UpdateVision( Nimage* img ); 
 
 
-  void PublishVision( void );
+  //void PublishVision( void );
   //void PublishLaser( void );
-  void PublishSonar( void );
-  void PublishPosition( void );
-  void GetPositionCommands( void );
+  //void PublishSonar( void );
+  //void PublishPosition( void );
+  //void GetPositionCommands( void );
 
   int UpdateAndPublishPtz( void );
 };

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/device.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -31,75 +31,19 @@
 //
 #include <stddef.h>
 
-<<<<<<< device.hh
-
-////////////////////////////////////////////////////////////////////////////////
-// Misc useful macros
-
-#define ARRAYSIZE(m) sizeof(m) / sizeof(m[0])
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Error, msg, trace macros
-
-#define ENABLE_TRACE 1
-
-#include <assert.h>
-
-#define ASSERT(m) assert(m)
-#define VERIFY(m) assert(m)
-
-#define ERROR(m)  printf("Error : %s : %s\n", __PRETTY_FUNCTION__, m)
-#define MSG(m)       printf("Msg   : %s : "m"\n", __PRETTY_FUNCTION__)
-#define MSG1(m, a)   printf("Msg   : %s : "m"\n", __PRETTY_FUNCTION__, a)
-#define MSG2(m, a, b) printf("Msg   : %s : "m"\n", __PRETTY_FUNCTION__, a, b)
-#define MSG3(m, a, b, c) printf("Msg   : %s : "m"\n", __PRETTY_FUNCTION__, a, b, c)
-#define MSG4(m, a, b, c, d) printf("Msg   : %s : "m"\n", __PRETTY_FUNCTION__, a, b, c, d)
-
-#if ENABLE_TRACE
-    #define TRACE0(m)    printf("Debug : %s : "m"\n", __PRETTY_FUNCTION__)
-    #define TRACE1(m, a) printf("Debug : %s : "m"\n", __PRETTY_FUNCTION__, a)
-    #define TRACE2(m, a, b) printf("Debug : %s : "m"\n", __PRETTY_FUNCTION__, a, b)
-    #define TRACE3(m, a, b, c) printf("Debug : %s : "m"\n", __PRETTY_FUNCTION__, a, b, c)
-    #define TRACE4(m, a, b, c, d) printf("Debug : %s : "m"\n", __PRETTY_FUNCTION__, a, b, c, d)
-#else
-    #define TRACE0(m)
-    #define TRACE1(m, a)
-    #define TRACE2(m, a, b)
-    #define TRACE3(m, a, b, c)
-    #define TRACE4(m, a, b, c, d)
-#endif
-
-
-////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 // Define length-specific data types
 // For type sizes
 #include "rtk-types.hh"
 
-////////////////////////////////////////////////////////////////////////////////
-// Define some usefull math stuff
-//
-#ifndef M_PI
-	#define M_PI        3.14159265358979323846
-#endif
 
-// Convert radians to degrees
-//
-#define RTOD(r) ((r) * 180.0 / M_PI)
-
-// Convert degrees to radians
-//
-#define DTOR(d) ((d) * M_PI / 180.0)
-
-
-////////////////////////////////////////////////////////////////////////////////
 // Forward declare the world and robot classes
 //
 class CWorld;
 class CRobot;
 class CWorldWindow;
 
-////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 // Base class for all simulated devices
 //
 class CDevice
