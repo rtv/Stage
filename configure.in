@@ -1,11 +1,21 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.20 2002-10-31 01:32:00 gerkey Exp $
+dnl $Id: configure.in,v 1.21 2002-10-31 02:15:15 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(src/main.cc)
+
+dnl determine system type.  this is used in a couple of places to infer the 
+dnl types of arguments to some networking library functions.  if/when we 
+dnl upgrade to newer Autotools, this can probably go away.
+AC_CANONICAL_SYSTEM
+case $target in
+*-*-solaris*) AC_DEFINE(PLAYER_SOLARIS,1,[building for Solaris]);;
+*-*-linux*) AC_DEFINE(PLAYER_LINUX,1,[building for Linux]);;
+esac
+
 
 dnl Need AC_PROG_MAKE_SET for recursive building
 AC_PROG_MAKE_SET
@@ -54,6 +64,7 @@ AC_CHECK_LIB(z, gzopen)
 AC_CHECK_LIB(nsl, gethostbyname)
 AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(rt, sem_wait)
+AC_CHECK_LIB(posix4, sem_wait)
 AC_CHECK_FUNCS(inet_aton srand48 lrand48)
 #AC_FUNC_MMAP
 #AC_FUNC_SETPGRP

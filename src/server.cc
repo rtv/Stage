@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.40 2002-10-31 01:38:55 gerkey Exp $
+ * CVS info: $Id: server.cc,v 1.41 2002-10-31 02:15:15 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -365,7 +365,7 @@ bool CStageServer::SetupConnectionServer( void )
   servaddr.sin_port        = htons(m_port);
   
   // switch on the re-use-address option
-  const int on = 1;
+  const char on = 1;
   setsockopt( m_pose_listen.fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on) );
   
   if( bind(m_pose_listen.fd, (SA *) &servaddr, sizeof(servaddr) )  < 0 )
