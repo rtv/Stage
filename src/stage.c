@@ -598,3 +598,9 @@ stg_line_t* stg_rects_to_lines( stg_rotrect_t* rects, int num_rects )
   return lines;
 }
 
+void stg_copybuf( void** dest, size_t* dest_len, void* src, size_t src_len )
+{
+  *dest = realloc( *dest, src_len );
+  memcpy( *dest, src, src_len );    
+  *dest_len = src_len;
+} 

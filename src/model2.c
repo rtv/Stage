@@ -10,12 +10,7 @@ extern lib_entry_t derived[];
 
 ///////////////////////////////////////////////////////////////////////////
 
-void copybuf( void** dest, size_t* dest_len, void* src, size_t src_len )
-{
-  *dest = realloc( *dest, src_len );
-  memcpy( *dest, src, src_len );    
-  *dest_len = src_len;
-} 
+
 
 int model_getdata( model_t* mod, void** data, size_t* len )
 {
@@ -45,7 +40,7 @@ int model_putdata( model_t* mod, void* data, size_t len )
     }
   else
     { // we do a generic data copy
-      copybuf( &mod->data, &mod->data_len, data, len );
+      stg_copybuf( &mod->data, &mod->data_len, data, len );
       PRINT_WARN3( "model %d(%s) put data of %d bytes",
 		   mod->id, mod->token, (int)mod->data_len);
     }
@@ -63,7 +58,7 @@ int model_putcommand( model_t* mod, void* cmd, size_t len )
     }
   else
     {
-      copybuf( &mod->cmd, &mod->cmd_len, cmd, len );
+      stg_copybuf( &mod->cmd, &mod->cmd_len, cmd, len );
       PRINT_DEBUG1( "put a command of %d bytes", (int)len);
     }
   return 0; //ok
@@ -96,7 +91,7 @@ int model_putconfig( model_t* mod, void* config, size_t len )
     }
   else
     { // we do a generic data copy
-      copybuf( &mod->cfg, &mod->cfg_len, config, len );
+      stg_copybuf( &mod->cfg, &mod->cfg_len, config, len );
       PRINT_WARN3( "model %d(%s) generic putconfig of %d bytes",
 		   mod->id, mod->token, (int)mod->cfg_len);
     }

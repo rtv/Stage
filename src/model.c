@@ -65,6 +65,8 @@ model_t* model_create(  world_t* world,
   mod->cfg = NULL;
   mod->cfg_len = 0;
 
+  mod->laser_return = LaserVisible;
+
   PRINT_WARN2( "model %d type %d", mod->id, mod->type );
 
   gui_model_create( mod );

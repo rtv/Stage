@@ -35,7 +35,6 @@ void library_create( void )
   model_lines_register();
   model_color_register();
   model_velocity_register();
-  model_laser_register();
   model_guifeatures_register();
   model_ranger_register();
   model_fiducial_register();

@@ -175,8 +175,6 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       
       stg_model_type_t type = STG_MODEL_BASIC;
       
-      PRINT_WARN1( "token %s", token->token );
-
       if( strcmp( typestr, "test" ) == 0 )
 	type = STG_MODEL_TEST;
       else if( strcmp( typestr, "laser" ) == 0 )
@@ -188,7 +186,7 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       else
 	type = STG_MODEL_BASIC;
 
-      PRINT_WARN2( "creating model token %s type %d", typestr, type );
+      PRINT_DEBUG2( "creating model token %s type %d", typestr, type );
 
       stg_model_t* mod = stg_world_createmodel( world, parent, section, 
 						type, token );
@@ -242,7 +240,7 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       lconf.samples = wf.ReadInt(section, "laser.samples", STG_DEFAULT_LASER_SAMPLES);
 
       if( lconf.geom.pose.x != -9999.0 )
-	stg_model_prop_with_data( mod, STG_PROP_LASERCONFIG, &lconf,sizeof(lconf));
+	stg_model_prop_with_data( mod, STG_PROP_CONFIG, &lconf,sizeof(lconf));
       
       // laser visibility
       int laservis = 

@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.68 2004-08-24 00:22:52 rtv Exp $
+ * CVS: $Id: stage.h,v 1.69 2004-08-24 15:46:48 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -1095,6 +1095,10 @@ stg_model_t* stg_client_get_model_serverside( stg_client_t* cli, stg_id_t wid, s
 
 
 // utility
+
+// copies src_len bytes from src to dest, realloc'ing enough space at
+// dest. Sets dest_len to be the new size of the data at dest.
+void stg_copybuf( void** dest, size_t* dest_len, void* src, size_t src_len );
 
 // Some useful macros
 

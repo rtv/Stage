@@ -978,7 +978,7 @@ void stg_model_push( stg_model_t* mod )
   // take this model out of the server-side id table
   g_hash_table_remove( mod->world->models_id_server, &mod->id_server );
 
-  PRINT_WARN2( "  pushing model \"%s\" type %d ", mod->token->token, mod->type );
+  PRINT_DEBUG2( "  pushing model \"%s\" type %d ", mod->token->token, mod->type );
   
   mod->id_server = stg_client_model_new(  mod->world->client,
 					  mod->world->id_server,

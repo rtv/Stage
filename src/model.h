@@ -55,6 +55,12 @@ typedef struct _model
   void* cfg;
   size_t cfg_len;
 
+  stg_laser_return_t laser_return;
+
+  stg_pose_t pose;
+  stg_velocity_t velocity;
+  stg_geom_t geom;
+ 
 } model_t;  
 
 
