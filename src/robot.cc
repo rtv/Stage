@@ -1,7 +1,7 @@
 /*************************************************************************
  * robot.cc - most of the action is here
  * RTV
- * $Id: robot.cc,v 1.1.1.1 2000-11-29 00:16:53 ahoward Exp $
+ * $Id: robot.cc,v 1.2 2000-11-29 00:59:16 ahoward Exp $
  ************************************************************************/
 
 #include <errno.h>
@@ -156,7 +156,7 @@ CRobot::CRobot( int iid, float w, float l,
 
  // we assume Player is in the current path
  if( execlp( "player", "player",
-      "-gp", portBuf, "-arena", tmpName, (char*) 0) < 0 )
+      "-gp", portBuf, "-stage", tmpName, (char*) 0) < 0 )
    {
      cerr << "execlp failed: make sure Player can be found"
        " in the current path."
