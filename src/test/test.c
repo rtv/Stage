@@ -1,6 +1,6 @@
 
 /*
-  $Id: test.c,v 1.1.2.2 2003-02-03 07:12:48 rtv Exp $
+  $Id: test.c,v 1.1.2.3 2003-02-03 07:23:38 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -62,7 +62,7 @@ int main( int argc, char** argv )
 
       int c;
       //while( 1 )
-      for( c=0; c<10; c++ )
+      for( c=0; c<100; c++ )
 	{
 	  printf( "cycle %d\n", c );
 	  
