@@ -21,7 +21,7 @@
  * Desc: Shared types, constants, etc
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: stage_types.hh,v 1.7 2002-11-01 19:12:30 rtv Exp $
+ * CVS: $Id: stage_types.hh,v 1.8 2002-11-07 00:02:27 rtv Exp $
  */
 
 #ifndef STAGE_TYPES_HH
@@ -87,9 +87,12 @@ typedef uint32_t StageColor;
 /* StageType is deprecated and has been removed */
 
 // these properties can be set with the SetProperty() method
+
+const int ENTITY_FIRST_PROPERTY = 1;
+
 enum EntityProperty
 {
-  PropParent = 1, 
+  PropParent = ENTITY_FIRST_PROPERTY, 
   PropSizeX, 
   PropSizeY, 
   PropPoseX, 
@@ -98,8 +101,6 @@ enum EntityProperty
   PropOriginX, 
   PropOriginY, 
   PropName,
-  PropPlayerId,
-  PropPlayerSubscriptions,
   PropColor, 
   PropShape, 
   PropLaserReturn,
@@ -108,6 +109,8 @@ enum EntityProperty
   PropObstacleReturn, 
   PropVisionReturn, 
   PropPuckReturn,
+  PropPlayerId,
+  PropPlayerSubscriptions,
   PropCommand,
   PropData,
   PropConfig,

@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.hh,v 1.2 2002-11-01 19:12:32 rtv Exp $
+ * CVS info: $Id: sonardevice.hh,v 1.3 2002-11-07 00:02:27 rtv Exp $
  */
 
 #ifndef SONARDEVICE_HH
@@ -93,11 +93,6 @@ public: static CSonarDevice* Creator( LibraryItem *libit,
   private: rtk_fig_t *scan_fig;
 #endif
 
-#ifdef USE_GNOME2
-  // cache the data between updates in this buffer. we compare the
-  // range readings to see if we need to re-render the range polygon
-  player_sonar_data_t last_data;
-#endif
 };
 
 #endif

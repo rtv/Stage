@@ -177,6 +177,8 @@ bool CStageClient::Load( void )
   while( m_downloading )
     Read();
 
+  puts( "FINISHED DOWNLOADING" );
+
   // Test to see if the required things were created...
   // TODO: MORE CHECKS HERE
   assert( this->matrix ); // make sure a matrix was created in Read();

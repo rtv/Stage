@@ -21,7 +21,7 @@
  * Desc: GNOME2 visualization code for each device
  * Author: Richard Vaughan
  * Date: 26 Oct 2002
- * CVS info: $Id: gnomedevices.cc,v 1.2 2002-10-27 21:37:58 rtv Exp $
+ * CVS info: $Id: gnomedevices.cc,v 1.3 2002-11-07 00:02:27 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -197,9 +197,6 @@ void GnomeEntityRenderDataSonar( CSonarDevice* ent )
    // }
    // store the old data for next time
    //memcpy( &last_data, data, len );
-   
-   
-
 }
 
 #endif

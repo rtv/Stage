@@ -11,6 +11,7 @@
 #include <string.h>
 #include <signal.h>
 
+#include "playerdevice.hh"
 
 //extern int g_timer_expired;
 
@@ -476,43 +477,48 @@ void CStageIO::Write( void )
 	    
         WriteHeader( connfd,  PropertyPackets, send_count );
 	    
+	CEntity* ent;
         // loop through the entities again, this time sending the properties
         for( i=0; i < GetEntityCount(); i++ )
-          for( p=0; p < ENTITY_LAST_PROPERTY; p++ )
-          {  
-            //printf( "Inspecting entity %d property %d connection %d\n",
-            //  i, p, t );
+          for( p=ENTITY_FIRST_PROPERTY; p < ENTITY_LAST_PROPERTY; p++ )
+	    {  
+	      assert( ent = this->GetEntity(i) );
+
+	      //if( RTTI_ISPLAYERP(ent) )
+	      //printf( "object %p is a player\n", ent );
+
+	      //printf( "Inspecting entity %d property %d connection %d\n",
+	      //  i, p, t );
+	      
+	      // is the entity marked dirty for this connection & prop?
+	      if( ent->m_dirty[t][p] )
+		{
+		  //printf( "PROPERTY DIRTY dev: %d prop: %d\n", t, p);
+		  int datalen = 
+		    ent->GetProperty((EntityProperty)p, (void*)data ); 
 		  
-            // is the entity marked dirty for this connection & prop?
-            if( GetEntity(i)->m_dirty[t][p] )
-            {
-              //printf( "PROPERTY DIRTY dev: %d prop: %d\n", t, p);
-		     
-              int datalen = 
-                GetEntity(i)->GetProperty((EntityProperty)p, data ); 
+		  if( datalen == 0 )
+		    {
+		      PRINT_DEBUG1( "READ EMPTY PROPERTY %d\n", p );
+		    }
+		  else
+		    {
+		      stage_property_t prop;
 		      
-              if( datalen == 0 )
-              {
-                PRINT_DEBUG1( "READ EMPTY PROPERTY %d\n", p );
-              }
-              else
-              {
-                stage_property_t prop;
-			  
-                prop.id = i;
-                prop.property = (EntityProperty)p; 
-                prop.len = datalen;
-			
-  
-                WriteProperty( connfd, &prop, data, datalen ); 
-			  
-              }
+		      prop.id = i;
+		      prop.property = (EntityProperty)p; 
+		      prop.len = datalen;
 		      
-              // mark it clean on this connection
-              // it won't get re-sent here until this flag is set again
-              GetEntity(i)->SetDirty( t, (EntityProperty)p, 0 );
-            }
-          }
+		      
+		      WriteProperty( connfd, &prop, data, datalen ); 
+		      
+		    }
+		  
+		  // mark it clean on this connection
+		  // it won't get re-sent here until this flag is set again
+		  ent->SetDirty( t, (EntityProperty)p, 0 );
+		}
+	    }
       }
     }      
 }
@@ -529,13 +535,16 @@ int CStageIO::CountDirtyOnConnection( int con )
     {
       CEntity* ent = this->entities[c];
       
-      for( int p=0; p < ENTITY_LAST_PROPERTY; p++ )
+      for( int p=ENTITY_FIRST_PROPERTY; p < ENTITY_LAST_PROPERTY; p++ )
 	{ 
 	  // is the entity marked dirty for this connection & property?
 	  if( ent->m_dirty[con][p] ) 
 	    {
+	      //if( RTTI_ISPLAYERP(ent) )
+	      //printf( "(counting dirty) object %p is a player\n", ent );
+
 	      // if this property has any data  
-	      if( ent->GetProperty( (EntityProperty)p, dummydata ) > 0 )
+	      if( ent->GetProperty( (EntityProperty)p, (void*)dummydata ) > 0 )
 		count++; // we count it as dirty
 	    }
 	}

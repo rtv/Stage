@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.92 2002-11-01 19:12:29 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.93 2002-11-07 00:02:27 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -420,16 +420,6 @@ bool CEntity::Startup( void )
  CHILDLOOP( ch )
     ch->Startup();
 
-
- //#ifdef INCLUDE_RTK2
-  // Initialise the rtk gui
- //RtkStartup();
- //#endif
-
- 
-
- //PRINT_DEBUG( "STARTUP DONE" );
-
   return true;
 }
 
@@ -443,14 +433,6 @@ void CEntity::Shutdown()
   // recursively shutdown our children
   CHILDLOOP( ch ) ch->Shutdown();
 
-
-  //#ifdef INCLUDE_RTK2
-  // Clean up the figure we created
-  //if(m_world->enable_gui)
-  //rtk_fig_destroy(this->fig);
-  //#endif
-
-  // use the generic hook
   if( m_world->enable_gui )
     GuiEntityShutdown( this );
   
@@ -475,26 +457,12 @@ void CEntity::Update( double sim_time )
 // Render the entity into the world
 void CEntity::Map(double px, double py, double pth)
 {
-  //printf( "\nMAP\t%.2f %.2f %.2f\n",
-  //  px, py, pth );
-
-  // shift the center of our image by the offset
- 
-  //printf( "map global %.2f %.2f %.2f\n",
-  //  px, py, pth );
-
   // get the pose in local coords
   this->GlobalToLocal( px, py, pth );
-
-  //printf( "map local %.2f %.2f %.2f\n",
-  //  px, py, pth );
 
   // add our center of rotation offsets
   px += origin_x;
   py += origin_y;
-
-  //printf( "map local shifted %.2f %.2f %.2f\n",
-  //  px, py, pth );
 
    // convert back to global coords
   this->LocalToGlobal( px, py, pth );
@@ -512,9 +480,6 @@ void CEntity::Map(double px, double py, double pth)
 // Remove the entity from the world
 void CEntity::UnMap()
 {
-  //printf( "UNMAP\t%.2f %.2f %.2f\n",
-  //  map_px, map_py, map_pth );
-
   MapEx(this->map_px, this->map_py, this->map_pth, false);
 }
 
@@ -539,9 +504,6 @@ void CEntity::ReMap(double px, double py, double pth)
 // Primitive rendering function
 void CEntity::MapEx(double px, double py, double pth, bool render)
 {
-  //printf( "mapex %.2f %.2f %.2f\n",
-  //  px, py, pth );
-  
   switch (this->shape)
     {
     case ShapeRect:
@@ -955,7 +917,8 @@ int CEntity::SetProperty( int con, EntityProperty property,
 
 int CEntity::GetProperty( EntityProperty property, void* value )
 {
-  PRINT_DEBUG1( "finding property %d", property );
+  //PRINT_DEBUG1( "finding property %d", property );
+  printf( "finding property %d", property );
 
   assert( value );
 
@@ -969,8 +932,16 @@ int CEntity::GetProperty( EntityProperty property, void* value )
       // find the parent's position in the world's entity array
       // if parent pointer is null or otherwise invalid, index is -1 
       //{ int parent_index = m_world->GetEntityIndex( m_parent_entity );
-      //memcpy( value, &parent_index, sizeof(parent_index) );
-      //retval = sizeof(parent_index); }
+
+      { 
+	int parent_index = -1;
+
+	if( m_parent_entity )
+	  parent_index = m_parent_entity->stage_id ;
+	
+	memcpy( value, &parent_index, sizeof(parent_index) );
+	retval = sizeof(parent_index); 
+      }
     break;
     case PropSizeX:
       memcpy( value, &size_x, sizeof(size_x) );
@@ -1038,8 +1009,8 @@ int CEntity::GetProperty( EntityProperty property, void* value )
       retval = sizeof(puck_return);
       break;
     default:
-      printf( "Stage Warning: attempting to get unknown property %d\n", 
-	      property );
+      // printf( "Stage Warning: attempting to get unknown property %d\n", 
+      //      property );
     break;
   }
 

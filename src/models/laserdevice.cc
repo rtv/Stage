@@ -19,9 +19,9 @@
  */
 /*
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
- * Author: Andrew Howard
+ * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.2 2002-11-01 19:12:32 rtv Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.3 2002-11-07 00:02:27 rtv Exp $
  */
 
 #define DEBUG
