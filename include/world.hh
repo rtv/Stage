@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.24 $
+//  $Revision: 1.1.2.25 $
 //
 // Usage:
 //  (empty)
@@ -139,6 +139,11 @@ class CWorld
     //
     public: void SetCell(double px, double py, EWorldLayer layer, uint8_t value);
 
+    // Get a rectangle in the world grid
+    //
+    public: uint8_t GetRectangle(double px, double py, double pth,
+                                 double dx, double dy, EWorldLayer layer);
+
     // Set a rectangle in the world grid
     //
     public: void SetRectangle(double px, double py, double pth,
@@ -237,13 +242,14 @@ class CWorld
     private: int m_object_count;
     private: CEntity *m_object[1024];
     
-    // Obstacle data
-    //
     private: Nimage* m_bimg; // background image 
-    private: Nimage* m_img; //foreground img;
+
+    // Obstacle image
+    //
+    private: Nimage* m_obs_img;
 
     // Laser image
-    // Store laser data (obstacles and beacons)
+    // Stores laser data (obstacles and beacons)
     //
     private: Nimage *m_laser_img;
 

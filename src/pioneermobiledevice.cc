@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.22 $
+//  $Revision: 1.9.2.23 $
 //
 // Usage:
 //  (empty)
@@ -106,12 +106,6 @@ void CPioneerMobileDevice::Update()
 
 int CPioneerMobileDevice::Move()
 {
-    // Note
-    // Rather than moving this device, we actually move the robot device
-    // with which we are associated.  While it's a bit of a hack, it
-    // simplifies a lot of things in other places.
-    //     ahoward
-    
     double step_time = m_world->GetTime() - m_last_time;
     m_last_time += step_time;
 
@@ -127,16 +121,17 @@ int CPioneerMobileDevice::Move()
     double qy = py + m_com_vr * step_time * sin(pth);
     double qth = pth + m_com_vth * step_time;
 
-    // Normalise the angle
-    //
-    // *** ? qth = fmod(qth + 2 * M_PI, 2 * M_PI);
-
     // Check for collisions
     // and accept the new pose if ok
     //
     if (!InCollision(qx, qy, qth))
+    {
         SetPose(qx, qy, qth);
-
+        this->stall = 0;
+    }
+    else
+        this->stall = 1;
+        
     // Compute the new odometric pose
     // Uses a first-order integration approximation
     //
@@ -151,90 +146,6 @@ int CPioneerMobileDevice::Move()
     m_odo_pth = fmod(m_odo_pth + TWOPI, TWOPI);
     
     return true;
-  
-    /* *** RETIRE ahoward
-  Nimage* img = m_world->img;
-
-  StoreRect(); // save my current rectangle in cased I move
-
-  int moved = false;
-
-  if( ( m_world->win && m_world->win->dragging != m_robot )  
-      &&  (speed != 0.0 || turnRate != 0.0) )
-    {
-      // record speeds now - they can be altered in another thread
-      float nowSpeed = speed;
-      float nowTurn = turnRate;
-      float nowTimeStep = m_world->timeStep;
-
-      // find the new position for the robot
-      float tx = m_robot->x 
-	+ nowSpeed * m_world->ppm * cos( m_robot->a ) * nowTimeStep;
-      
-      float ty = m_robot->y 
-	+ nowSpeed * m_world->ppm * sin( m_robot->a ) * nowTimeStep;
-      
-      float ta = m_robot->a + (nowTurn * nowTimeStep);
-      
-      ta = fmod( ta + TWOPI, TWOPI );  // normalize angle
-      
-      // calculate the rectangle for the robot's tentative new position
-      CalculateRect( tx, ty, ta );
-
-      //cout << "txya " << tx << ' ' << ty << ' ' << ta << endl;
-
-      // trace the robot's outline to see if it will hit anything
-      char hit = 0;
-      if( hit = img->rect_detect( rect, m_robot->color ) > 0 )
-	// hit! so don't do the move - just redraw the robot where it was
-	{
-	  //cout << "HIT! " << endl;
-	  // restore from the saved rect
-	  memcpy( &rect, &oldRect, sizeof( struct Rect ) );
-	  
-	  stall = 1; // motors stalled due to collision
-	}
-      else // do the move
-	{
-	  moved = true;
-	  
-	  stall = 0; // motors not stalled
-	  
-	  m_robot->x = tx; // move to the new position
-	  m_robot->y = ty;
-	  m_robot->a = ta;
-	  
-	  //update the robot's odometry estimate
-	  // don't have to scale into pixel coords, 'cos these are in meters
-	  xodom +=  nowSpeed * cos( aodom ) * nowTimeStep;
-	  yodom +=  nowSpeed * sin( aodom ) * nowTimeStep;
-	  
-	  if( m_world->maxAngularError != 0.0 ) //then introduce some error
-	    {
-	      // could make this a +/- error, instead of a pure bias
-	      // though i think the pioneer generally underestimates its turn
-	      // due to wheel slippage
-	      float error = 1.0 + ( drand48()* m_world->maxAngularError );
-	      aodom += nowTurn * nowTimeStep * error;
-	    }
-	  else
-	    aodom += nowTurn * nowTimeStep;
-	  
-	  aodom = fmod( aodom + TWOPI, TWOPI );  // normalize angle
-	 	  
-	  // update the `old' stuff
-	  memcpy( &oldRect, &rect, sizeof( struct Rect ) );
-	  oldCenterx = centerx;
-	  oldCentery = centery;
-	}
-    }
-  
-  m_robot->oldx = m_robot->x;
-  m_robot->oldy = m_robot->y;
-  m_robot->olda = m_robot->a;
-
-  return moved;
-    */
 }
 
 
@@ -286,7 +197,7 @@ void CPioneerMobileDevice::ComposeData()
     m_data.speed = htons((unsigned short) (m_com_vr * 1000.0));
     m_data.turnrate = htons((short) RTOD(m_com_vth));  
     m_data.compass = htons((unsigned short)(RTOD(compass)));
-    m_data.stalls = stall;
+    m_data.stalls = this->stall;
 }
 
 
@@ -295,6 +206,14 @@ void CPioneerMobileDevice::ComposeData()
 //
 bool CPioneerMobileDevice::InCollision(double px, double py, double pth)
 {
+    double qx = px + m_offset_x * cos(pth);
+    double qy = py + m_offset_x * sin(pth);
+    double sx = m_size_x;
+    double sy = m_size_y;
+
+    if (m_world->GetRectangle(qx, qy, pth, sx, sy, layer_obstacle) > 0)
+        return true;
+    
     return false;
 }
 
@@ -317,9 +236,6 @@ bool CPioneerMobileDevice::Map(bool render)
         double sx = m_size_x;
         double sy = m_size_y;
         m_world->SetRectangle(qx, qy, pa, sx, sy, layer_obstacle, 0);
-
-	//#ifdef INCLUDE_XGUI
-	//if( win ) win->
     }
     else
     {

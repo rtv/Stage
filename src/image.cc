@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.2.2.6 2001-05-25 01:13:54 ahoward Exp $
+ * $Id: image.cc,v 1.2.2.7 2001-05-25 02:02:10 ahoward Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -415,27 +415,26 @@ void Nimage::draw_line(int x1,int y1,int x2,int y2,unsigned char col)
     }
 }
 
-unsigned char Nimage::rect_detect( const Rect& r, unsigned char col )
+unsigned char Nimage::rect_detect( const Rect& r)
 {
   unsigned char hit;
   
-  if( (hit = line_detect( r.toplx, r.toply, r.toprx, r.topry, col )) > 0 ) 
+  if( (hit = line_detect( r.toplx, r.toply, r.toprx, r.topry)) > 0 ) 
     return hit;
   
-  if( (hit = line_detect( r.toprx, r.topry, r.botlx, r.botly, col )) > 0 )
+  if( (hit = line_detect( r.toprx, r.topry, r.botlx, r.botly)) > 0 )
     return hit;
   
-  if( (hit = line_detect( r.botlx, r.botly, r.botrx, r.botry, col )) > 0 )
+  if( (hit = line_detect( r.botlx, r.botly, r.botrx, r.botry)) > 0 )
     return hit;
   
-  if( (hit = line_detect( r.botrx, r.botry, r.toplx, r.toply, col )) > 0 )
+  if( (hit = line_detect( r.botrx, r.botry, r.toplx, r.toply)) > 0 )
     return hit;
 
   return 0;
 }
 
-unsigned char Nimage::line_detect(int x1,int y1,int x2,int y2, 
-				  unsigned char col )
+unsigned char Nimage::line_detect(int x1,int y1,int x2,int y2)
 {
   int delta_x, delta_y;
   int delta, incE, incNE;
@@ -450,7 +449,7 @@ unsigned char Nimage::line_detect(int x1,int y1,int x2,int y2,
       if (y1 > y2)	delta_y = y1 - y2;
       else		delta_y = y2 - y1;
       
-      if (delta_y <= delta_x) return( line_detect(x2, y2, x1, y1, col ));
+      if (delta_y <= delta_x) return( line_detect(x2, y2, x1, y1));
     }
   if (y1 > y2)
     {
@@ -458,7 +457,7 @@ unsigned char Nimage::line_detect(int x1,int y1,int x2,int y2,
       if (x1 > x2)	delta_x = x1 - x2;
       else		delta_x = x2 - x1;
       
-      if (delta_y > delta_x) return( line_detect(x2, y2, x1, y1, col ));
+      if (delta_y > delta_x) return( line_detect(x2, y2, x1, y1));
     }
   
   if (x1 > x2)
@@ -482,7 +481,7 @@ unsigned char Nimage::line_detect(int x1,int y1,int x2,int y2,
   
   //check to see if this pixel is an obstacle
   pixel = get_pixel( x,y );
-  if( pixel != 0 && pixel != col ) //&& pixel != CRUMB_COLOR )
+  if( pixel != 0)
    { 
      return pixel;
    }
@@ -512,7 +511,7 @@ unsigned char Nimage::line_detect(int x1,int y1,int x2,int y2,
 
 	  //check to see if this pixel is an obstacle
 	  pixel = get_pixel( x,y );
-	  if( pixel != 0 && pixel != col ) //&& pixel != CRUMB_COLOR )
+	  if( pixel != 0)
 	    { 
 	      return pixel;
 	    }
@@ -542,7 +541,7 @@ unsigned char Nimage::line_detect(int x1,int y1,int x2,int y2,
 	    }
 	  //check to see if this pixel is an obstacle
 	  pixel = get_pixel( x,y );
-	  if( pixel != 0 && pixel != col ) //&& pixel != CRUMB_COLOR)
+	  if( pixel != 0)
 	    { 
 	      return pixel;
 	    }

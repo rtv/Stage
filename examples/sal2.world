@@ -10,12 +10,12 @@ create box_obstacle pose 8.32 6.97 296 color green size 2.00 0.50
 create laser_beacon pose 9.43 8.61 0 color black id 15 
 create vision_beacon pose 11.06 9.34 22 color black radius 0.25 channel 1 
 
-create usc_pioneer pose 23.60 6.27 1172 name comet port 6665 
+create usc_pioneer pose 13.48 4.14 1172 name comet port 6665 
 {
     create laser_beacon pose -0.15 0.00 0 color black id 17 
 }
 
-create usc_pioneer pose 9.06 4.43 0 name atom port 6666 
+create usc_pioneer pose 11.14 3.80 -152 name atom port 6666 
 {
     create laser_beacon pose -0.15 0.00 0 color black id 19 
 }

@@ -11,7 +11,7 @@
 //  Modified by ahoward 24 May 2001 to make top bit 'sticky'.
 //  Once set, this bit can only be reset by 'clear'.
 //
-// $Id: image.h,v 1.2.2.3 2001-05-25 01:13:54 ahoward Exp $
+// $Id: image.h,v 1.2.2.4 2001-05-25 02:02:09 ahoward Exp $
 // RTV
 // ==================================================================
 
@@ -82,10 +82,9 @@ public:
 	void	draw_rect( const Rect t, unsigned char c);
 
 	//void	draw_line_detect(int x1,int y1,int x2,int y2,int c);	
-	unsigned char line_detect(int x1,int y1,int x2,int y2,
-				  unsigned char c );
-	unsigned char rect_detect( const Rect& r, 
-				   unsigned char c );
+	unsigned char line_detect(int x1,int y1,int x2,int y2);
+	unsigned char rect_detect( const Rect& r);
+
 	void	clear(unsigned char i);
 	void	save_image_as_ppm(char*,char*);
 	void	save_raw(char* fname);

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.34 $
+//  $Revision: 1.4.2.35 $
 //
 // Usage:
 //  (empty)
@@ -54,7 +54,7 @@ CWorld::CWorld()
     // Initialise grids
     //
     m_bimg = NULL;
-    m_img = NULL;
+    m_obs_img = NULL;
     m_laser_img = NULL;
     m_vision_img = NULL;
 
@@ -77,8 +77,8 @@ CWorld::~CWorld()
 {
     if (m_bimg)
         delete m_bimg;
-    if (m_img)
-        delete m_img;
+    if (m_obs_img)
+        delete m_obs_img;
     if (m_laser_img)
         delete m_laser_img;
     if (m_vision_img)
@@ -373,8 +373,10 @@ bool CWorld::InitGrids(const char *env_file)
     // draw an outline around the background image
     m_bimg->draw_box( 0,0,width-1,height-1, 0xFF );
   
-    // create a new forground image copied from the background
-    m_img = new Nimage( m_bimg );
+    // Clear obstacle image
+    //
+    m_obs_img = new Nimage(width, height);
+    m_obs_img->clear(0);
     
     // Clear laser image
     //
@@ -383,12 +385,15 @@ bool CWorld::InitGrids(const char *env_file)
     
     // Copy fixed obstacles into laser rep
     //
-    for (int y = 0; y < m_img->height; y++)
+    for (int y = 0; y < m_bimg->height; y++)
     {
-        for (int x = 0; x < m_img->width; x++)
+        for (int x = 0; x < m_bimg->width; x++)
         {
-            if (m_img->get_pixel(x, y) != 0)
+            if (m_bimg->get_pixel(x, y) != 0)
+            {
+                m_obs_img->set_pixel(x, y, 0xFF);
                 m_laser_img->set_pixel(x, y, 0xFF);
+            }
         }
     }
 
@@ -416,7 +421,7 @@ uint8_t CWorld::GetCell(double px, double py, EWorldLayer layer)
     switch (layer)
     {
         case layer_obstacle:
-            return m_img->get_pixel(ix, iy);
+            return m_obs_img->get_pixel(ix, iy);
         case layer_laser:
             return m_laser_img->get_pixel(ix, iy);
         case layer_vision:
@@ -441,7 +446,7 @@ void CWorld::SetCell(double px, double py, EWorldLayer layer, uint8_t value)
     switch (layer)
     {
         case layer_obstacle:
-            m_img->set_pixel(ix, iy, value);
+            m_obs_img->set_pixel(ix, iy, value);
             break;
         case layer_laser:
             m_laser_img->set_pixel(ix, iy, value);
@@ -450,6 +455,60 @@ void CWorld::SetCell(double px, double py, EWorldLayer layer, uint8_t value)
             m_vision_img->set_pixel(ix, iy, value);
             break;
     }
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Get a rectangle in the world grid
+//
+uint8_t CWorld::GetRectangle(double px, double py, double pth,
+                             double dx, double dy, EWorldLayer layer)
+{
+    Rect rect;
+    double tx, ty;
+
+    dx /= 2;
+    dy /= 2;
+
+    double cx = dx * cos(pth);
+    double cy = dy * cos(pth);
+    double sx = dx * sin(pth);
+    double sy = dy * sin(pth);
+    
+    // This could be faster
+    //
+    tx = px + cx - sy;
+    ty = py + sx + cy;
+    rect.toplx = (int) (tx * ppm);
+    rect.toply = height - (int) (ty * ppm);
+
+    tx = px - cx - sy;
+    ty = py - sx + cy;
+    rect.toprx = (int) (tx * ppm);
+    rect.topry = height - (int) (ty * ppm);
+
+    tx = px - cx + sy;
+    ty = py - sx - cy;
+    rect.botlx = (int) (tx * ppm);
+    rect.botly = height - (int) (ty * ppm);
+
+    tx = px + cx + sy;
+    ty = py + sx - cy;
+    rect.botrx = (int) (tx * ppm);
+    rect.botry = height - (int) (ty * ppm);
+    
+    // This could be cleaned up by having an array of images
+    //
+    switch (layer)
+    {
+        case layer_obstacle:
+            return m_obs_img->rect_detect(rect);
+        case layer_laser:
+            return m_laser_img->rect_detect(rect);
+        case layer_vision:
+            return m_vision_img->rect_detect(rect);
+    }
+    return 0;
 }
 
 
@@ -497,7 +556,7 @@ void CWorld::SetRectangle(double px, double py, double pth,
     switch (layer)
     {
         case layer_obstacle:
-            m_img->draw_rect(rect, value);
+            m_obs_img->draw_rect(rect, value);
             break;
         case layer_laser:
             m_laser_img->draw_rect(rect, value);
@@ -798,7 +857,7 @@ void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
     switch (layer)
     {
         case layer_obstacle:
-            img = m_img;
+            img = m_obs_img;
             break;
         case layer_laser:
             img = m_laser_img;
