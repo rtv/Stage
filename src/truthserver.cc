@@ -31,7 +31,7 @@
 #include "truthserver.hh"
 
 const int LISTENQ = 128;
-const long int MILLION = 1000000L;
+//const long int MILLION = 1000000L;
 
 // these can be modified in world_load.cc...
 int global_truth_port = TRUTH_SERVER_PORT;

@@ -1,6 +1,6 @@
 ####################################################################################
 # TODO 
-# $Id: TODO,v 1.10 2001-09-25 18:20:17 vaughan Exp $
+# $Id: TODO,v 1.11 2001-09-25 19:31:53 vaughan Exp $
 ####################################################################################
 
 ## IN PROGRESS #####################################################################
@@ -9,6 +9,8 @@
 
  - stage documentation
  - xs documentation
+ - change laser beacon detection ranges based on laser resolution
+ - remove blocking read from playermulticlient so XS doesn't block
 
 ## NICE ############################################################################
 

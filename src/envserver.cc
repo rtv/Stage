@@ -36,7 +36,7 @@
 extern  CWorld* world;
 
 const int LISTENQ = 128;
-const long int MILLION = 1000000L;
+//const long int MILLION = 1000000L;
 
 extern void CatchSigPipe( int signo );
 

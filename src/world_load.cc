@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.17 $
+//  $Revision: 1.18 $
 //
 // Usage:
 //  (empty)
@@ -199,21 +199,21 @@ bool CWorld::Load(const char *filename)
 	    /////////////////////////////////////////////////////////////////
 	    // STAGE TIMING VALUES - 2 different ways to set the params
             // the real update interval in milliseconds
-            else if (strcmp(argv[1], "real_timestep_milliseconds") == 0)
+            else if (strcmp(argv[1], "real_timestep_ms") == 0)
 	      {
 		m_timer_interval = (int)atof(argv[3]);
-	      }
-
-            // the real update frequency in Hz (alternative to the above)
-            else if (strcmp(argv[1], "update_frequency") == 0)
-	      {
-		m_timer_interval = (int)((1.0/atof(argv[3])) * 1000.0);
 	      }
 
             // the simulated update rate in milliseconds
             else if (strcmp(argv[1], "virtual_timestep_ms") == 0)
 	      {
 		m_timestep = (int)atof(argv[3]);
+	      }
+
+            // the real update frequency in Hz (alternative to the above)
+            else if (strcmp(argv[1], "update_frequency") == 0)
+	      {
+		m_timer_interval = (int)((1.0/atof(argv[3])) * 1000.0);
 	      }
 
             // the update frequency in Hz (alternative to the above)

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.16 $
+//  $Revision: 1.17 $
 //
 // Usage:
 //  (empty)
@@ -155,7 +155,7 @@ void CLBDDevice::Update( double sim_time )
     ASSERT(laser.range_count < ARRAYSIZE(laser.ranges));
     for (int i = 0; i < laser.range_count; i++)
         laser.ranges[i] = ntohs(laser.ranges[i]);
-    
+
     // Get the pose of the detector in the global cs
     //
     double ox, oy, oth;
@@ -210,6 +210,9 @@ void CLBDDevice::Update( double sim_time )
 	//  continue;
         //if (r > (laser.ranges[bi] & 0x1FFF) / 1000.0 + tolerance)
 	//  continue;
+
+
+	//SHOULD CHANGE THESE RANGES BASED ON CURRENT LASER RESOLUTION!
 
         // Now see if it is within detection range
         //

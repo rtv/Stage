@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.27 $
+//  $Revision: 1.28 $
 //
 // Usage:
 //  (empty)
@@ -118,6 +118,9 @@ private:
   // The time according to the simulator (m_sim_time <= m_start_time).
 private: double m_start_time, m_last_time;
 private: double m_sim_time;
+// the same as m_sim_time but in timeval format
+public: struct timeval m_sim_timeval; 
+
 private: double m_max_timestep;
   
   // Update rate (just for diagnostics)
@@ -267,6 +270,8 @@ public: char* PlayerIOFilename( void ){ return tmpName; };
   
 private: caddr_t playerIO;  
 private: bool InitSharedMemoryIO( void );
+  // points to a slot at the end of the io buffer where we'll set the time
+public: struct timeval* m_time_io;
   
 private: key_t semKey;
 private: int semid; // semaphore access for shared mem locking

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.50 $
+//  $Revision: 1.51 $
 //
 // Usage:
 //  (empty)
@@ -150,7 +150,10 @@ CWorld::CWorld()
     
     // Initialise clocks
     //
-    m_start_time = m_sim_time = 0;
+    gettimeofday( &m_sim_timeval, 0 );
+
+    m_start_time = m_sim_time = 
+      (double)m_sim_timeval.tv_sec + (double)(m_sim_timeval.tv_usec * MILLION);
 
     // Initialise object list
     //
@@ -203,7 +206,8 @@ bool CWorld::InitSharedMemoryIO( void )
     }
   
   // amount of memory to reserve per robot for Player IO
-  size_t areaSize = (size_t)mem;//TOTAL_SHARED_MEMORY_BUFFER_SIZE;
+  // plus a slot for the time on the end
+  size_t areaSize = (size_t)mem + sizeof( struct timeval );
 
 #ifdef DEBUG
   cout << "Shared memory allocation: " << areaSize 
@@ -235,6 +239,9 @@ bool CWorld::InitSharedMemoryIO( void )
       return false;
     }
   
+  // the time is at the end in the buffer past all the objects
+  m_time_io = (struct timeval*)(((char*)playerIO) + mem);
+
   close( tfd ); // can close fd once mapped
   
   // Initialise entire space
@@ -274,11 +281,6 @@ bool CWorld::Startup()
   m_start_time = 0;
   m_start_time = GetRealTime();
     
-  // Initialise the simulator clock
-  //
-  m_sim_time = 0;
-  m_max_timestep = 0.1;
-  
   // Initialise the rate counter
   //
   m_update_ratio = 1;
@@ -564,10 +566,12 @@ void CWorld::Update()
   //
   double timestep = m_timestep / 1000.0;
   
-  // Update the simulation time
+  // Update the simulation time (in both formats)
   //
   m_sim_time += timestep;
-  
+  m_sim_timeval.tv_sec = (int)floor(m_sim_time);
+  m_sim_timeval.tv_usec = (int)(m_sim_time - floor(m_sim_time)) * MILLION; 
+
 #ifdef WATCH_RATES
     // Keep track of the sim/real time ratio
     // This is done as a moving window filter so we can see
@@ -598,6 +602,12 @@ void CWorld::Update()
     }
 #endif
   
+  // copy the timeval into the player io buffer
+  // use the first object's info
+  LockShmem();
+  *m_time_io = m_sim_timeval;
+  UnlockShmem();
+
   // Do the actual work -- update the objects 
   for (int i = 0; i < m_object_count; i++)
     {

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.18 $
+//  $Revision: 1.19 $
 //
 // Usage:
 //  (empty)
@@ -590,11 +590,6 @@ void CEntity::GetGlobalPose(double &px, double &py, double &pth)
 //
 size_t CEntity::PutData( void* data, size_t len )
 {
-  // get the time for the timestamp
-  //
-  struct timeval curr;
-  gettimeofday(&curr,NULL);
-  
   m_world->LockShmem();
   
 #ifdef DEBUG  
@@ -603,15 +598,15 @@ size_t CEntity::PutData( void* data, size_t len )
   //  m_info_io->player_id.type, 
   //  m_info_io->player_id.index, data);
 #endif  
-  
+ 
   // the data mustn't be too big!
   if( len <= m_info_io->data_len )
     {
       // indicate that some data is available
       // and update the timestamp
       m_info_io->data_avail = len;
-      m_info_io->data_timestamp_sec = curr.tv_sec;
-      m_info_io->data_timestamp_usec = curr.tv_usec;
+      m_info_io->data_timestamp_sec = m_world->m_sim_timeval.tv_sec;
+      m_info_io->data_timestamp_usec = m_world->m_sim_timeval.tv_usec;
       
       memcpy( m_data_io, data, len); // export data
     }
