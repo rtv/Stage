@@ -1,8 +1,10 @@
 # Automake script to build Stage GNOME2 GUI Makefile
 # RTV 20021026
-# $Id: Makefile.am,v 1.2 2002-10-27 21:39:28 rtv Exp $
+# $Id: Makefile.am,v 1.3 2002-10-28 02:41:17 rtv Exp $
 
 lib_LIBRARIES = libgnomestage.a 
+
+noinst_LIBRARIES = libgnomestage.a
 
 AM_CPPFLAGS = 	-I$(top_srcdir)/src \
 		-I$(top_srcdir)/src/models \

@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.17 2002-10-27 23:32:36 rtv Exp $
+# $Id: Makefile.am,v 1.18 2002-10-28 02:41:17 rtv Exp $
 
 
 SUBDIRS = models @GUI_DIR@
@@ -49,4 +49,4 @@ stage_LDFLAGS =
 
 stage_LDADD = 	-lm -Lmodels -lstgmodels \
 		-L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -lplayerqueue \
-		@GUI_LINK@
+		@GUI_LINK@ @LIBOBJS@

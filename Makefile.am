@@ -1,15 +1,22 @@
 SUBDIRS = rtk2 src worlds tools 
 
-dist-hook:
-	mkdir -p $(top_distdir)/doc
-	cd $(srcdir)/doc && make ps
-	cp -p $(srcdir)/doc/stage.ps $(top_distdir)/doc/stage.ps
+DOCSRC = $(top_srcdir)/docsrc
+DOCDIST = $(distdir)/doc 
+DOCINST = $(DESTDIR)$(prefix)/doc
 
-docdir = $(prefix)/doc
-install-data-hook:
-	mkdir -p $(DESTDIR)$(prefix)/doc/
-	cp $(top_srcdir)/doc/* $(DESTDIR)$(prefix)/doc/
+stage_manual:
+	cd $(DOCSRC) && make 
+
+dist-hook: stage_manual
+	mkdir -p $(DOCDIST)
+	cp -p $(DOCSRC)/stage.ps $(DOCDIST)
+	cp -p $(DOCSRC)/stage.pdf $(DOCDIST)
+
+install-data-hook: stage_manual
+	mkdir -p $(DOCINST)
+	cp -p $(DOCSRC)/stage.ps $(DOCINST)
+	cp -p $(DOCSRC)/stage.pdf $(DOCINST)
 
 uninstall-local:
-	rm -f $(DESTDIR)$(docdir)/*
+	rm -f $(DOCINST)/*
 

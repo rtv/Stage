@@ -22,27 +22,27 @@ lib_LIBRARIES = libstgmodels.a
 
 libstgmodels_a_SOURCES = \
 			bitmap.cc \
-			image.cc \
 			box.cc \
-			idardevice.cc \
-			motedevice.cc \
-			sonardevice.cc \
-			idarturretdevice.cc \
-			omnipositiondevice.cc \
-			truthdevice.cc \
 			broadcastdevice.cc \
-			laserbeacon.cc \
-			positiondevice.cc \
-			visionbeacon.cc \
 			descartesdevice.cc \
-			laserbeacondevice.cc \
-			powerdevice.cc \
-			visiondevice.cc \
 			gpsdevice.cc \
-			laserdevice.cc \
-			ptzdevice.cc \
 			gripperdevice.cc \
-			puck.cc 
+			idardevice.cc \
+			idarturretdevice.cc \
+			image.cc \
+			laserbeacon.cc \
+			laserbeacondevice.cc \
+			laserdevice.cc \
+			motedevice.cc \
+			omnipositiondevice.cc \
+			positiondevice.cc \
+			powerdevice.cc \
+			ptzdevice.cc \
+			puck.cc \
+			sonardevice.cc \
+			truthdevice.cc \
+			visionbeacon.cc \
+			visiondevice.cc
 
 # currently broken
 # bpsdevice.cc 
