@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.25 2002-06-09 06:31:16 rtv Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.26 2002-06-10 06:11:27 inspectorg Exp $
  */
 
 #include <math.h>
@@ -31,7 +31,7 @@
 
 // constructor
 CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent )
-  : CEntity(world, parent )
+    : CEntity(world, parent )
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_sonar_data_t );
@@ -71,6 +71,10 @@ bool CSonarDevice::Load(CWorldFile *worldfile, int section)
   if (!CEntity::Load(worldfile, section))
     return false;
 
+  // Load sonar min and max range
+  this->min_range = worldfile->ReadLength(section, "min_range", this->min_range);
+  this->max_range = worldfile->ReadLength(section, "max_range", this->max_range);
+  
   // Load the geometry of the sonar ring
   scount = worldfile->ReadInt(section, "scount", 0);
   if (scount > 0)
