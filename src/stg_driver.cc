@@ -24,7 +24,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: stg_driver.cc,v 1.15 2004-12-13 05:52:04 rtv Exp $
+ * CVS: $Id: stg_driver.cc,v 1.16 2004-12-13 09:54:54 rtv Exp $
  */
 
 // DOCUMENTATION ---------------------------------------------------------------------
@@ -149,14 +149,9 @@ typedef struct
 
   void* cmd;
   size_t cmd_len;
-  int cmd_dirty;
+
   
 } device_record_t;
-
-// init static vars
-//ConfigFile* StgDriver::config = NULL;
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // The class for the driver
@@ -623,24 +618,24 @@ void StgDriver::Main()
     // test if we are supposed to cancel
     pthread_testcancel();
     
-    // check for any outstanding commands
-    for( int i=0; i<(int)this->devices->len; i++ )
-      {
-	device_record_t* device = (device_record_t*)g_ptr_array_index( this->devices, i );
+  //   // check for any outstanding commands
+//     for( int i=0; i<(int)this->devices->len; i++ )
+//       {
+// 	device_record_t* device = (device_record_t*)g_ptr_array_index( this->devices, i );
 	
-	if( device->cmd_dirty )
-	  {
-	    stg_model_set_command( device->mod, device->cmd, device->cmd_len );
-	    device->cmd_dirty = FALSE;
-	  }
-      }
+// 	if( device->cmd_dirty )
+// 	  {
+// 	    stg_model_set_command( device->mod, device->cmd, device->cmd_len );
+// 	    device->cmd_dirty = FALSE;
+// 	  }
+//       }
     
     // update the world - mustn't sleep inside the lock
-    if( stg_world_update( StgDriver::world, FALSE ) )
+    if( stg_world_update( StgDriver::world, TRUE ) )
       exit( 0 );
 
     // todo - sleep out here only if we can afford the time
-    //usleep( 1000 ); // 1ms
+    //usleep( 10000 ); // 1ms
   }
 }
 
