@@ -144,6 +144,11 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
   stg_bool_t grid;
   grid = wf.ReadInt(section, "grid", 1 );
   stg_model_prop_with_data(root, STG_PROP_GRID, &grid, sizeof(grid) );
+  
+  stg_energy_config_t ecfg;
+  memset(&ecfg,0,sizeof(ecfg));
+  ecfg.capacity = -1;
+  stg_model_prop_with_data( root, STG_PROP_ENERGYCONFIG, &ecfg, sizeof(ecfg) );   
 
   // Iterate through sections and create client-side models
   for (int section = 1; section < wf.GetEntityCount(); section++)
@@ -348,6 +353,31 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 
       if( fcfg.min_range != -9999.0 )
 	stg_model_prop_with_data( mod, STG_PROP_FIDUCIALCONFIG, &fcfg, sizeof(fcfg) );
+      
+      stg_energy_config_t ecfg;
+      ecfg.capacity 
+	= wf.ReadFloat(section, "energy_capacity", -9999 );
+      ecfg.probe_range 
+	= wf.ReadFloat(section, "energy_probe_range", STG_DEFAULT_ENERGYPROBERANGE );
+      ecfg.give_rate 
+	= wf.ReadFloat(section, "energy_charge_rate", STG_DEFAULT_ENERGYGIVERATE );
+      
+      if( ecfg.capacity != -9999 )
+	{
+	  stg_model_prop_with_data( mod, STG_PROP_ENERGYCONFIG, &ecfg, sizeof(ecfg) );   
+
+	  stg_energy_data_t edata;
+	  memset(&edata,0,sizeof(edata));
+	  edata.joules = ecfg.capacity;
+	  stg_model_prop_with_data( mod, STG_PROP_ENERGYDATA, &edata, sizeof(edata) );   
+	}
+
+      
+      stg_kg_t mass;
+      mass = wf.ReadFloat(section, "mass", STG_DEFAULT_MASS );
+      if( mass != STG_DEFAULT_MASS )
+	stg_model_prop_with_data( mod, STG_PROP_MASS, &mass, sizeof(mass) );  
+
     }
 
   return world;

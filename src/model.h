@@ -25,13 +25,7 @@ typedef struct _model
   char* token;
     
   stg_pose_t pose;
-
-  //stg_pose_t local_pose; // local offset from our pose
-  //stg_size_t size;
-  //stg_pose_t origin;
-
   stg_geom_t geom; // origin and size in one
-
   stg_color_t color;
   stg_velocity_t velocity;
   
@@ -47,12 +41,18 @@ typedef struct _model
 
   struct _model *parent;
   
-  stg_energy_t energy;
-
   int ranger_return;
   int laser_return;
   int fiducial_return;
   int obstacle_return;
+  
+  stg_kg_t mass;
+
+  stg_joules_t energy_consumed;
+
+  //stg_watts_t watts; // energy consumption this timestep. Devices may
+  //	     // add their energy consumption in Watts to this
+  ///	     // and it will be reported by the energy model
 
   gboolean subs[STG_PROP_COUNT]; // flags used to control updates
     
@@ -121,5 +121,7 @@ void model_blobfinder_update( model_t* mod );
 
 void model_fiducial_init( model_t* mod );
 void model_fiducial_update( model_t* mod );
+
+void model_energy_consume( model_t* mod, stg_watts_t rate );
 
 #endif

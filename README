@@ -1,26 +1,73 @@
 ****************************************************************************
-* README.stage  - Richard Vaughan - Stage-1.3       
+* README.stage  - Richard Vaughan - Stage-1.5       
 *                                                                          
-* $Id: README,v 1.8 2004-04-05 03:05:20 rtv Exp $    
+* $Id: README,v 1.9 2004-06-18 06:59:59 rtv Exp $    
 ****************************************************************************
 
 ** Release notes **
 
-End user:
-+ New devices and terminology to match Player-1.3
-+ New model configurations (AmigoBot, Pioneer bumpers, etc).
-+ Capture JPEG and PPM stills and MPEG movies of the Stage window in real time
-+ More entity properties can be set in the worldfile (see manual for details)
-+ Worldfiles can specify multiple bitmaps that respect property settings such as pose
-+ Can start with clock stopped (-s flag) - start/stop the clock with SIGUSR1
-+ Many bugfixes (e.g. fast mode works properly)
-+ Many performance improvements, particularly with the new libRTK GUI
+ You should read these notes carefully before running Stage. This is
+the first release after a substantial rewrite: plenty has changed
+under the hood, but more important for most people is that the way
+Stage is configured, launched and used has changed significantly.
 
-Developer:
-+ Autotools build environment
-+ GUI hooks simplify writing new GUIs (GNOME2 skeleton included)
-+ Simplified entity registration/creation (see src/library.cc)
-+ Builds on Solaris (GUI not tested)
+Help is available in several places:
+
++ Here. Please read this document..
++ The Player/Stage web pages at http://playerstage.sourceforge.net
+  - from the web site you can access manuals, FAQ and mailing lists
+
+
+Summary of new features:
+
++ Dynamic creation, deletion and modification of worlds, robots,
+and environmental features.
+
++ Robot geometry: robot bodies are composed from line segments, so you
+can build a robot any shape and size either by desribing the lines
+yourself, or by loading an image file using the provided
+bitmap-to-line-segment filter. 
+
++ Bitmap formats: The shape of any object, including backgrounds, can
+be loaded from bitmap files in any format understood my gdkpixmap
+(PNG,JPG,PPM,etc.). Example bitmaps are provided in PNG format. The
+days of the fussy old PNM parser are gone.
+
++ World size: worlds can now be very large indeed
+(UNSIGNED_LONG_MAX**2 pixels). For most purposes this is effectively
+infinite. You no longer need to specify a world size in the world
+file. A sparse array (hash table) is used to represent the world, so
+worlds use memory proportional to the amount of stuff in 'em,
+independent of their dimensions.
+
++ A single instance of Stage can provide multiple concurrent
+simulation sessions. Stage is now a server that provides simulation
+services, when requested by a client. The stage1p5 driver in Player is
+a client to the Stage server. Other clients are possible; in fact
+Player does not provide access to all of Stage's features (the Player
+protocol doesn't currently contain any simulation control spec, though
+this might be added in time), so you may want to write clients that
+talk directly to Stage. Of course, Player is still the first choice of
+target for your robot controller.
+
+
+Summary of new internal stuff, not apparent to the user:
+
++ Timing and synchronization with Player works properly.
+
++ Stage is now written entirely in C and makes extensive use of GLib
+data structures.
+
++ Multi-resolution ray-tracing: the cost of using a memory-friendly
+hash table for the underlying world representation (matrix) is a much
+greater time-cost in checking and setting matrix cells. This made
+ray-tracing very slow. To compensate, I implemented multi-resolution
+ray tracing, reducing the number of matrix lookups by a factor of a
+few hundred in typical use. The result is faster ray-tracing
+performance overall compared to previous versions. The moral of this
+story is to pay attention in your CS classes and optimize algorithms
+and data structures, not code!
+
 
 ** README ***
 
@@ -30,16 +77,18 @@ Stage.  Consult the Stage User Manual for full details.
 -- What is Stage? ---------------------------------------------------------
 
 Stage simulates mobile robots and sensors in a two-dimensional
-bitmapped environment containing a variety of objects. Robots are
-controlled through Player. Player provides a powerful, flexible
-interface to a variety of robot hardware; Stage provides virtual
-devices for Player. Various sensor models are provided, including
-sonar, scanning laser rangefinder, color blob tracking from a
-pan-tilt-zoom camera and odometry. Several controllers designed in
+bitmapped environment containing a variety of objects. Stage is
+designed to work well with Player. Player provides a powerful,
+flexible interface to a variety of robot hardware; Stage provides
+virtual devices for Player. Various sensor models are provided,
+including sonar, scanning laser rangefinder, color blob tracking from
+a pan-tilt-zoom camera and odometry. Several controllers designed in
 Stage have been demonstrated to work on real robots.
 
-Stage is developed at USC Robotics Research Lab and HRL Laboratories
-to support research into multi-agent intelligent autonomous systems.
+Stage is developed by the Player/Stage Project (P/S), an international
+consortium of robotics researchers. P/S is lead by Brian Gerkey
+(Stanford University), Richard Vaughan (Simon Fraser University) and
+Andrew Howard (University of Southern California).
 
 -- How to get Stage -----------------------------------------------------
 
@@ -63,8 +112,9 @@ Kasper Stoy
 Boyoon Jung
 Jakob Fredslund
 
-Stage's development is supported at the University of Southern
-California and HRL Laboratories LLC by DARPA IPTO.
+Stage's development has been supported at the University of Southern
+California and HRL Laboratories LLC by DARPA IPTO, and at Simon Fraser
+University by an NSERC Discovery Grant.
 
 -- Whats here? ------------------------------------------------------------
 
@@ -75,11 +125,15 @@ manual and this bootstrap documentation
 
 -- Requirements ------------------------------------------------------------ 
 
-Developed and tested under Linux kernel 2.4, glibc-2.  Written in
-reasonable ANSII/POSIX so should compile elsewhere. No promises, but
-people have found it to work on a variety of set-ups.
+Developed and tested under Linux kernel 2.4, glibc-2 and OS X 1.3.
+Written in reasonable ANSII/POSIX so should compile elsewhere. No
+promises, but people have found it to work on a variety of set-ups.
 
-Requires: Player [http://playerstage.sourceforge.net], X11R6, GTK.
+Requires: 
+
++ Player & RTK [http://playerstage.sourceforge.net]
++ GTK [http://www.gtk.org]
++ X11R6 [http://www.x.org]
 
 -- Mac OS X ----------------------------------------------------------------
 
@@ -91,6 +145,9 @@ sudo apt-get install gtk2 atk1 libjpeg-bin
 export PKG_CONFIG_PATH=<prefix>/lib/pkgconfig
 
 -- Compiling ---------------------------------------------------------------
+
+** TODO - WARNING - THIS SECTION IS OUT OF DATE **
+
 
 We use the standard GNU build system: download; extract; configure;
 make install. 

@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.57 2004-06-16 20:24:12 rtv Exp $
+ * CVS: $Id: stage.h,v 1.58 2004-06-18 06:59:59 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -83,7 +83,7 @@
 typedef enum
   {
     STG_PROP_TIME, // double - time since startup in seconds
-    STG_PROP_CIRCLES,
+    STG_PROP_MASS,
     STG_PROP_COLOR,
     STG_PROP_GEOM, 
     STG_PROP_NAME, // ?
@@ -91,12 +91,9 @@ typedef enum
     STG_PROP_PLAYERID,
     STG_PROP_POSE,
     STG_PROP_POWER,
-    STG_PROP_ENERGY,
-    STG_PROP_PPM,
+    STG_PROP_ENERGYCONFIG,
+    STG_PROP_ENERGYDATA,
     STG_PROP_PUCKRETURN,
-    STG_PROP_RANGEBOUNDS, 
-    STG_PROP_INTERVAL,
-    STG_PROP_RECTS,
     STG_PROP_LINES,
     STG_PROP_VELOCITY, 
     STG_PROP_LASERRETURN,
@@ -104,7 +101,6 @@ typedef enum
     STG_PROP_VISIONRETURN,
     STG_PROP_RANGERRETURN, 
     STG_PROP_NEIGHBORRETURN,
-    STG_PROP_VOLTAGE,
     STG_PROP_RANGERDATA,
     STG_PROP_RANGERCONFIG,
     STG_PROP_FIDUCIALCONFIG,
@@ -121,11 +117,7 @@ typedef enum
     STG_PROP_MOVEMASK,
     STG_PROP_BOUNDARY,        // if non-zero, add a bounding rectangle
     STG_PROP_MATRIXRENDER, // if non-zero, render in the matrix
-    //STG_PROP_SIZE,
-    //STG_PROP_ORIGIN,
-    //STG_PROP_LASERGEOM,
-    //STG_PROP_NEIGHBORS,
-    //STG_PROP_NEIGHBORBOUNDS, // range bounds of neighbor sensor
+
     STG_PROP_COUNT // this must be the last entry
 } stg_prop_type_t;
 
@@ -183,8 +175,9 @@ typedef uint16_t stg_msg_type_t;
    typedef double stg_meters_t;
    typedef double stg_radians_t;
    typedef unsigned long stg_msec_t;
-   typedef unsigned long stg_mj_t; // milli-Joules
-   typedef int stg_mjs_t; // milli-Joules per second
+   typedef double stg_kg_t; // Kilograms (mass)
+   typedef double stg_joules_t; // Joules (energy)
+   typedef double stg_watts_t; // Watts (Joules per second) (energy expenditure)
    typedef int stg_bool_t;
 
 
@@ -346,22 +339,35 @@ stg_position_steer_mode_t;
 
 // energy --------------------------------------------------------------
 
-// energy consumption of some devices in millijoules per second
-#define STG_ENERGY_COST_LASER 1000
-#define STG_ENERGY_COST_RANGER 100
-#define STG_ENERGY_COST_MOVEKG 10000 
-#define STG_ENERGY_COST_BLOB 100
-#define STG_ENERGY_COST_BUMPER 10
+// standard energy consumption of some devices in mW.
+//
+// The MOTIONKG value is a hack to approximate cost of motion, as
+// Stage does not yet have an acceleration model.
+//
+#define STG_ENERGY_COST_TRICKLE 0.1 // 100 mW just staying alive
+#define STG_ENERGY_COST_LASER 20.0 // 20 Watts! (LMS200 - from SICK web site)
+#define STG_ENERGY_COST_FIDUCIAL 10.0 // 10 Watts
+#define STG_ENERGY_COST_RANGER 0.5 // 500mW (estimate)
+#define STG_ENERGY_COST_MOTIONKG 10.0 // 10 Watts per KG when moving 
+#define STG_ENERGY_COST_BLOB 4.0 // 4W (estimate)
 
 typedef struct
 {
-  stg_mj_t joules; 
-  stg_mjs_t djoules; // current rate of change of power, in milliJoules/sec
-  stg_mj_t move_cost;
-  stg_mjs_t give_rate; // give this many Joules/sec of energy to a neighbor within range
-  stg_meters_t give_range; // a neighbor is anyone within this range
+  stg_joules_t joules; // current energy stored in Joules/1000
+  stg_watts_t watts; // current power expenditure in mW (mJoules/sec)
   stg_bool_t charging; // boolean, true if we are currently receiving energy 
-} stg_energy_t;
+  stg_meters_t range; // the range that our charging probe hit a charger
+} stg_energy_data_t;
+
+typedef struct
+{
+  stg_joules_t capacity; // maximum energy we can store (we start fully charged)
+  stg_meters_t probe_range; // the length of our recharge probe
+  //stg_pose_t probe_pose; // TODO - the origin of our probe
+
+  stg_watts_t give_rate; // give this many Watts to a probe that hits me (possibly 0)
+  
+} stg_energy_config_t;
 
 
 // VELOCITY ------------------------------------------------------------
@@ -574,6 +580,7 @@ typedef struct
 
 // SOME DEFAULT VALUES FOR PROPERTIES -----------------------------------
 
+#define STG_DEFAULT_MASS 10.0 
 #define STG_DEFAULT_POSEX 0.0
 #define STG_DEFAULT_POSEY 0.0
 #define STG_DEFAULT_POSEA 0.0
@@ -590,6 +597,12 @@ typedef struct
 #define STG_DEFAULT_NOSE TRUE
 #define STG_DEFAULT_GRID FALSE
 #define STG_DEFAULT_BOUNDARY FALSE
+#define STG_DEFAULT_ENERGYCAPACITY 1000.0
+#define STG_DEFAULT_ENERGYCHARGEENABLE 1
+#define STG_DEFAULT_ENERGYPROBERANGE 0.0
+#define STG_DEFAULT_ENERGYGIVERATE 0.0
+
+
 
 //  FUNCTION DEFINITIONS
 
@@ -1038,6 +1051,8 @@ stg_model_t* stg_client_get_model_serverside( stg_client_t* cli, stg_id_t wid, s
   #define NORMALIZE(z) atan2(sin(z), cos(z))
 #endif
 
+//#define MIN(X,Y) ( x<y ? x : y )
+//#define MAX(X,Y) ( x>y ? x : y )
 
 // Error macros
 #define PRINT_ERR(m) printf( "\033[41merr\033[0m: "m" (%s %s)\n", __FILE__, __FUNCTION__)

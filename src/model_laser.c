@@ -109,6 +109,9 @@ void model_laser_update( model_t* mod )
 	  (tv2.tv_sec + tv2.tv_usec / 1e6) - 
 	  (tv1.tv_sec + tv1.tv_usec / 1e6) );	    
 #endif
+  
+  // laser costs some energy
+  model_energy_consume( mod, STG_ENERGY_COST_LASER );
 }
 
 

@@ -27,54 +27,42 @@ const char* stg_property_string( stg_id_t id )
   switch( id )
     {
       //case STG_PROP_CHILDREN: return "children"; break;
-    case STG_PROP_TIME: return "time"; break;
-    case STG_PROP_CIRCLES: return "circles"; break;
+    case STG_PROP_BLINKENLIGHT: return "blinkenlight";break;
+    case STG_PROP_BLOBCONFIG: return "blobconfig";break;
+    case STG_PROP_BLOBDATA: return "blobdata";break;
+    case STG_PROP_BOUNDARY: return "boundary";break;
     case STG_PROP_COLOR: return "color"; break;
+    case STG_PROP_ENERGYCONFIG: return "energyconfig"; break; 
+    case STG_PROP_ENERGYDATA: return "energydata"; break;
+    case STG_PROP_FIDUCIALCONFIG: return "fiducialconfig";break;
+    case STG_PROP_FIDUCIALDATA: return "fiducialdata";break;
     case STG_PROP_GEOM: return "geom"; break;
+    case STG_PROP_GRID: return "grid";break;
+    case STG_PROP_LASERCONFIG: return "laserconfig";break;
+    case STG_PROP_LASERDATA: return "laserdata";break;
     case STG_PROP_LASERRETURN: return "laser_return"; break;
-    case STG_PROP_ENERGY: return "energy"; break;
+    case STG_PROP_LINES: return "lines"; break;
+    case STG_PROP_LOSMSG: return "los_msg";break;
+    case STG_PROP_LOSMSGCONSUME: return "los_msg_consume";break;
+    case STG_PROP_MATRIXRENDER: return "matrix_render";break;
+    case STG_PROP_MOVEMASK: return "movemask";break;
     case STG_PROP_NAME: return "name"; break;
+    case STG_PROP_NOSE: return "nose";break;
     case STG_PROP_OBSTACLERETURN: return "obstacle_return";break;
     case STG_PROP_PARENT: return "parent"; break;
     case STG_PROP_PLAYERID: return "player_id"; break;
     case STG_PROP_POSE: return "pose"; break;
     case STG_PROP_POWER: return "sonar_power"; break;
-    case STG_PROP_PPM: return "ppm"; break;
     case STG_PROP_PUCKRETURN: return "puck_return"; break;
-    case STG_PROP_RANGEBOUNDS: return "rangebounds";break;
-    case STG_PROP_RECTS: return "rects"; break; 
-    case STG_PROP_LINES: return "lines"; break;
+    case STG_PROP_RANGERCONFIG: return "rangerconfig";break;
+    case STG_PROP_RANGERDATA: return "rangerdata";break;
     case STG_PROP_RANGERRETURN: return "ranger_return"; break;
+    case STG_PROP_TIME: return "time"; break;
     case STG_PROP_VELOCITY: return "velocity"; break;
     case STG_PROP_VISIONRETURN: return "vision_return"; break;
-    case STG_PROP_VOLTAGE: return "voltage"; break;
-    case STG_PROP_RANGERDATA: return "rangerdata";break;
-    case STG_PROP_RANGERCONFIG: return "rangerconfig";break;
-    case STG_PROP_FIDUCIALCONFIG: return "fiducialconfig";break;
-    case STG_PROP_FIDUCIALDATA: return "fiducialdata";break;
-    case STG_PROP_LASERDATA: return "laserdata";break;
-    case STG_PROP_LASERCONFIG: return "laserconfig";break;
-    case STG_PROP_BLINKENLIGHT: return "blinkenlight";break;
-    case STG_PROP_NOSE: return "nose";break;
-    case STG_PROP_GRID: return "grid";break;
-    case STG_PROP_BOUNDARY: return "boundary";break;
-    case STG_PROP_LOSMSG: return "los_msg";break;
-    case STG_PROP_LOSMSGCONSUME: return "los_msg_consume";break;
-    case STG_PROP_MOVEMASK: return "movemask";break;
-    case STG_PROP_MATRIXRENDER: return "matrix_render";break;
-    case STG_PROP_INTERVAL: return "interval";break;
-    case STG_PROP_BLOBDATA: return "blobdata";break;
-    case STG_PROP_BLOBCONFIG: return "blobconfig";break;
 
     default:
       break;
-
-      //case STG_PROP_SIZE: return "size"; break;
-      //case STG_PROP_ORIGIN: return "origin"; break;
-      //case STG_PROP_LASERGEOM: return "lasergeom";break;
-      //case STG_PROP_NEIGHBORRETURN: return "neighbor_return"; break;
-      //case STG_PROP_NEIGHBORBOUNDS: return "neighbor_bounds"; break;
-      //case STG_PROP_NEIGHBORS: return "neighbors"; break;
     }
   return "<unknown>";
 }

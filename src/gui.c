@@ -581,6 +581,8 @@ void gui_model_update( model_t* mod, stg_prop_type_t prop )
       break;
       
       // do nothing for these things
+
+    case STG_PROP_MASS:
     case STG_PROP_LASERRETURN:
     case STG_PROP_RANGERRETURN:
     case STG_PROP_OBSTACLERETURN:
@@ -590,12 +592,14 @@ void gui_model_update( model_t* mod, stg_prop_type_t prop )
     case STG_PROP_LOSMSG:
     case STG_PROP_LOSMSGCONSUME:
     case STG_PROP_NAME:
-    case STG_PROP_INTERVAL:
+      //case STG_PROP_INTERVAL:
     case STG_PROP_MATRIXRENDER:
     case STG_PROP_BLOBCONFIG:
     case STG_PROP_RANGERCONFIG:
     case STG_PROP_LASERCONFIG:
     case STG_PROP_FIDUCIALCONFIG:
+    case STG_PROP_ENERGYCONFIG:
+    case STG_PROP_ENERGYDATA:
       break;
 
     default:

@@ -36,10 +36,6 @@ model_t* model_create(  world_t* world,
   mod->token = strdup(token);
   mod->world = world;
   
-  memset( &mod->energy, 0, sizeof(mod->energy) );
-  mod->energy.joules = 3600000L; // 1 Amp hour
-  mod->energy.move_cost = 1000; // one joule per move (quite high!)
-  
   // models store data in here, indexed by property id
   mod->props = g_hash_table_new_full( g_int_hash, g_int_equal, NULL, prop_free );
   
@@ -47,6 +43,8 @@ model_t* model_create(  world_t* world,
   // a sensible default fiducial return value is the model's id
   mod->fiducial_return = mod->id;
   
+  mod->mass = STG_DEFAULT_MASS;
+
   mod->pose.x = STG_DEFAULT_POSEX;
   mod->pose.y = STG_DEFAULT_POSEY;
   mod->pose.a = STG_DEFAULT_POSEA;
@@ -103,7 +101,7 @@ model_t* model_create(  world_t* world,
 	//printf( "calling init for %s\n", stg_property_string(prop) );
 	library[prop].init(mod);
       }
-
+  
   return mod;
 }
 
@@ -217,22 +215,18 @@ void model_map( model_t* mod, gboolean render )
 }
   
 
-/* UPDATE */
-  
-void model_update_velocity( model_t* model )
-{  
-
-}
 
 
 /* UPDATE everything */
+
+// TODO - fix up the library so that models get
+// subscription-independent updates then this can disappear.
 
 void model_update( model_t* model )
 {
   //PRINT_DEBUG2( "updating model %d:%s", model->id, model->token );
   
   // some things must always be calculated
-  model_update_velocity( model );
   model_update_pose( model );
 }
 
@@ -247,7 +241,6 @@ int model_update_prop( model_t* mod, stg_id_t propid )
     {
       //printf( "Calling update for %p %s\n", 
       //      mod, stg_property_string(propid) );
-      
       library[ propid ].update( mod );
     }
   
@@ -308,10 +301,6 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
     case STG_PROP_COLOR:
       *data = &mod->color;
       *len = sizeof(mod->color);
-      break;
-    case STG_PROP_ENERGY:
-      *data = &mod->energy;
-      *len = sizeof(mod->energy);
       break;
     case STG_PROP_NOSE:
       *data = &mod->nose;
@@ -477,13 +466,6 @@ int model_set_prop( model_t* mod,
 	memcpy( &mod->color, data, len );
       else PRINT_WARN2( "ignoring bad color data (%d/%d bytes)", 
 		       (int)len, (int)sizeof(mod->color) );
-      break;
-      
-    case STG_PROP_ENERGY:
-      if( len == sizeof(mod->energy) )
-	memcpy( &mod->energy, data, len );
-      else PRINT_WARN2( "ignoring bad energy data (%d/%d bytes)", 
-			(int)len, (int)sizeof(mod->energy) );
       break;
       
     case STG_PROP_MOVEMASK:

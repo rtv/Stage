@@ -70,7 +70,7 @@ void model_update_pose( model_t* model )
 {  
   stg_velocity_t* vel = &model->velocity;
   stg_pose_t* pose = &model->pose;
-  stg_energy_t* en = &model->energy;
+  //stg_energy_t* en = &model->energy;
   
   if( vel->x || vel->y || vel->a )
   {
@@ -92,7 +92,7 @@ void model_update_pose( model_t* model )
     stg_pose_t newpose; // store the new pose
     memcpy( &newpose, pose, sizeof(newpose) );
     
-    if( model->energy.joules > 0 && 
+    if( //model->energy.joules > 0 && 
 	model_test_collision( model, NULL, NULL ) == NULL )
       {
 	// reset the old pose so that unmapping works properly
@@ -101,11 +101,11 @@ void model_update_pose( model_t* model )
 	// now set the new pose handling matrix & gui redrawing 
 	model_set_prop( model, STG_PROP_POSE, &newpose, sizeof(newpose) );
 
-
+	
 	// ignore acceleration in energy model for now, we just pay
-	// something to move.
-	en->joules -= en->move_cost;
-	if( en->joules < 0 ) en->joules = 0;
+	// something to move.	
+	model_energy_consume( model, STG_ENERGY_COST_MOTIONKG * model->mass );
+
       }
     else // reset the old pose
       memcpy( pose, &oldpose, sizeof(oldpose) );

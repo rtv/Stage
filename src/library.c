@@ -1,7 +1,7 @@
 
 #include "model.h"
 
-#define VERBOSE 0
+#define VERBOSE 1
 
 void model_ranger_shutdown( model_t* mod );
 void model_ranger_update( model_t* mod );
@@ -26,6 +26,12 @@ void model_fiducial_shutdown( model_t* mod );
 void model_fiducial_update( model_t* mod );
 void model_fiducial_render( model_t* mod );
 void model_fiducial_config_render( model_t* mod );
+
+//void model_energy_init( model_t* mod );
+void model_energy_shutdown( model_t* mod );
+void model_energy_update( model_t* mod );
+void model_energy_render( model_t* mod );
+void model_energy_config_render( model_t* mod );
 
 libitem_t items[] = 
   {
@@ -100,6 +106,25 @@ libitem_t items[] =
       NULL,
       NULL,
       model_fiducial_config_render
+    },
+    
+    { STG_PROP_ENERGYDATA,
+      "energy",
+      NULL,
+      NULL,
+      model_energy_shutdown,
+      model_energy_update,
+      model_energy_render
+    },
+
+    
+    { STG_PROP_ENERGYCONFIG,
+      "energyconfig",
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      model_energy_config_render
     },
     
     { 0,NULL,NULL,NULL,NULL,NULL}
