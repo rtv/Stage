@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.11 $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -40,6 +40,10 @@
 #undef DEBUG
 //#undef VERBOSE
 
+// entities use this port until the config file
+// changes global_player_port
+int global_current_player_port = PLAYER_PORTNUM;
+
 ///////////////////////////////////////////////////////////////////////////
 // Minimal constructor
 // Requires a pointer to the parent and a pointer to the world.
@@ -68,7 +72,7 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
     m_dependent_attached = false;
 
     m_player_index = 0; // these are all set in load() 
-    m_player_port = 0;
+    m_player_port = global_current_player_port;
     m_player_type = 0;
        
     // init all the sizes
@@ -207,10 +211,14 @@ bool CEntity::Load(int argc, char **argv)
 
         // extract port number
         // one day we'll inherit our parent's port by default.
+	// for now this becomes the current global port
+	// i.e. everything takes this port until we specify another one
         else if (strcmp(argv[i], "port") == 0 && i + 1 < argc)
         {
             m_player_port = atoi(argv[i + 1]);
             i += 2;
+
+	    global_current_player_port = m_player_port;
         }
 
         // extract index number

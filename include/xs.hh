@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xs.hh,v 1.8 2001-09-22 01:51:50 vaughan Exp $
+ * $Id: xs.hh,v 1.9 2001-09-22 21:07:38 vaughan Exp $
  ************************************************************************/
 
 #ifndef _WIN_H
@@ -24,6 +24,8 @@
 
 const int NUM_PROXIES = 64;
 
+// forward declaration
+class GraphicProxy;
 
 typedef struct
 {
@@ -85,7 +87,8 @@ public:
 
   /* create a multiclient to poll my Player reading */
   PlayerMultiClient playerClients;
-  
+
+  GraphicProxy* graphicProxies[NUM_PROXIES];
   ClientProxy* playerProxies[NUM_PROXIES];
   int num_proxies;
 
@@ -99,7 +102,10 @@ public:
   bool draw_all_devices;
 
   xstruth_t* dragging;
-
+  
+  bool enableLaser, enableSonar, enablePtz, enableVision, enableGps,
+    enableLaserBeacon;
+  
   unsigned int requestPointerMoveEvents;
   unsigned long channel_colors[ 32 ];
   unsigned long red, green, blue, yellow, magenta, cyan, white, black, grey; 
@@ -233,163 +239,172 @@ public:
   Colormap default_cmap;
 };
 
-class CGraphicLaserProxy : public LaserProxy
+
+// a virtual class that holds some common functionality for proxies
+class GraphicProxy
 {
-protected:
-  DPoint pts[ PLAYER_NUM_LASER_SAMPLES ];
-  unsigned long pixel;
-  int samples;
-  CXGui* win;
-  
 public:
-  
-  CGraphicLaserProxy( CXGui* w, PlayerClient* pc, unsigned short index, 
-		      unsigned char access='c'):
-    LaserProxy(pc,index,access) 
+  unsigned long pixel;
+  CXGui* win;
+
+  GraphicProxy( CXGui* w )
   {
     win = w;
     pixel = 0;
+  }
+
+  // subclasses must provide these functions
+  virtual void Draw( void ) = 0;
+  virtual void ProcessData( void ) = 0;
+
+  void Render()
+  {
+    Draw();
+    ProcessData();
+    Draw();
+  };
+};
+
+class CGraphicLaserProxy : public LaserProxy, public GraphicProxy
+{
+protected:
+  DPoint pts[ PLAYER_NUM_LASER_SAMPLES ];
+  int samples;
+  
+public:
+  CGraphicLaserProxy( CXGui* w, PlayerClient* pc, unsigned short index, 
+		      unsigned char access='c'):
+    LaserProxy(pc,index,access), GraphicProxy( w ) 
+  {
     samples = 0;
     memset( pts, 0, PLAYER_NUM_LASER_SAMPLES * sizeof( unsigned short ) );
   };
 
-  ~CGraphicLaserProxy( void )
+  virtual void ProcessData();
+  virtual void Draw( void )
   {
-    // undraw the old data
     win->SetForeground( pixel );
     win->SetDrawMode( GXxor );
     win->DrawPolygon( pts, samples );
   };
-
-  void Render();
   
+  ~CGraphicLaserProxy( void ){ Draw(); };
+
 };
 
-class CGraphicSonarProxy : public SonarProxy
+class CGraphicSonarProxy : public SonarProxy, public GraphicProxy
 {
 protected:
-  DPoint pts[ PLAYER_NUM_SONAR_SAMPLES ];
-  unsigned long pixel;
-  CXGui* win;
+  DPoint endpts[ PLAYER_NUM_SONAR_SAMPLES ];
+  DPoint startpts[ PLAYER_NUM_SONAR_SAMPLES ];
   
 public:
-  
   CGraphicSonarProxy( CXGui* w, PlayerClient* pc, unsigned short index, 
 		      unsigned char access='c'):
-    SonarProxy(pc,index,access) 
+    SonarProxy(pc,index,access), GraphicProxy( w )
   {
-    win = w;
-    pixel = 0;
-    memset( pts, 0, PLAYER_NUM_SONAR_SAMPLES * sizeof( unsigned short ) );
+    memset( startpts, 0, PLAYER_NUM_SONAR_SAMPLES * sizeof( unsigned short ) );
+    memset( endpts, 0, PLAYER_NUM_SONAR_SAMPLES * sizeof( unsigned short ) );
   };
 
-  ~CGraphicSonarProxy( void )
+  virtual void ProcessData( void );
+  virtual void Draw( void )
   {
-    // undraw the old data
     win->SetForeground( pixel );
     win->SetDrawMode( GXxor );
-    win->DrawPolygon( pts, PLAYER_NUM_SONAR_SAMPLES );
+
+    for( int i=0; i<PLAYER_NUM_SONAR_SAMPLES; i++ )
+      win->DrawLine( startpts[i], endpts[i] );
   };
+
+  ~CGraphicSonarProxy( void ){Draw();};
   
-  void Render();
 };
 
-class CGraphicGpsProxy : public GpsProxy
+class CGraphicGpsProxy : public GpsProxy, public GraphicProxy
 {
 protected:
   char buf[64];
   double drawx, drawy;
-  
-  unsigned long pixel;
-  CXGui* win;
-  
+    
 public:
   
   CGraphicGpsProxy( CXGui* w, PlayerClient* pc, unsigned short index, 
 		    unsigned char access='c'):
-    GpsProxy(pc,index,access) 
+    GpsProxy(pc,index,access), GraphicProxy( w )
   {
-    win = w;
-    pixel = 0;
     drawx = drawy = -99999;
     memset( buf, 0, 64 );
   };
 
-  ~CGraphicGpsProxy( void )
+  virtual void ProcessData( void );
+  virtual void Draw( void ) 
   {
-    // undraw the old data
     win->SetForeground( pixel );
     win->SetDrawMode( GXxor );
     win->DrawString( drawx, drawy, buf, strlen(buf) );
   };
   
-  void Render();
+  ~CGraphicGpsProxy( void ){ Draw(); };
 };
 
-class CGraphicVisionProxy : public VisionProxy
+class CGraphicVisionProxy : public VisionProxy, public GraphicProxy
 {
-protected:
-  unsigned long pixel;
-  CXGui* win;
-  
 public:
   
   CGraphicVisionProxy( CXGui* w, PlayerClient* pc, unsigned short index, 
 		       unsigned char access='c'):
-    VisionProxy(pc,index,access) 
+    VisionProxy(pc,index,access), GraphicProxy( w ) 
   {
-    win = w;
-    pixel = 0;
+    int foo = 0;
+    foo++;
+    // nothing here
   };
   
-  ~CGraphicVisionProxy( void )
+  virtual void ProcessData( void )
   {
-    // undraw the old data
+    // do nothing!;
+  };
+  
+  virtual void Draw()
+  {
     win->SetForeground( pixel );
     win->SetDrawMode( GXxor );
+    // nothing to draw yet
   };
   
-  void Render()
-  {};
-  //  { Print(); };
-  
+  ~CGraphicVisionProxy( void ){ Draw(); };  
 };
 
-class CGraphicPtzProxy : public PtzProxy
+class CGraphicPtzProxy : public PtzProxy, public GraphicProxy
 {
 protected:
-  unsigned long pixel;
-  CXGui* win;
   DPoint pts[3];
 
 public:
   
   CGraphicPtzProxy( CXGui* w, PlayerClient* pc, unsigned short index, 
 		       unsigned char access='c'):
-    PtzProxy(pc,index,access) 
+    PtzProxy(pc,index,access), GraphicProxy( w ) 
   {
-    win = w;
-    pixel = 0;
+    memset( pts, 0, 3 * sizeof( DPoint ) );
   };
-  
-  ~CGraphicPtzProxy( void )
+
+  virtual void ProcessData( void );
+  virtual void Draw( void )
   {
-    // undraw the old data
     win->SetForeground( pixel );
     win->SetDrawMode( GXxor );
     win->DrawPolygon( pts, 3 );
   };
   
-  void Render();
+  ~CGraphicPtzProxy( void ){ Draw(); };
 };
 
 
-class CGraphicLaserBeaconProxy : public LaserbeaconProxy
+class CGraphicLaserBeaconProxy : public LaserbeaconProxy, public GraphicProxy
 {
 protected:
-  unsigned long pixel;
-  CXGui* win;
-  
   DPoint origin;
   DPoint pts[ PLAYER_MAX_LASERBEACONS ];
   int ids[ PLAYER_MAX_LASERBEACONS ];
@@ -399,15 +414,14 @@ public:
   
   CGraphicLaserBeaconProxy( CXGui* w, PlayerClient* pc, unsigned short index, 
 			    unsigned char access='c'):
-    LaserbeaconProxy(pc,index,access) 
+    LaserbeaconProxy(pc,index,access) , GraphicProxy( w )
   {
     origin.x = origin.y = 0;
-    win = w;
-    pixel = 0;
     stored = 0;
   };
-  
-  ~CGraphicLaserBeaconProxy( void )
+
+  virtual void ProcessData( void );
+  virtual void Draw( void )
   {
     // undraw the old data
     win->SetForeground( pixel );
@@ -421,15 +435,19 @@ public:
 	
 	sprintf( buf, "%d", ids[b] );
 	win->DrawString( pts[b].x + 0.1, pts[b].y, buf, strlen(buf) ); 
-	//win->DrawString( origin.x + 0.1, origin.y, buf, strlen(buf) ); 
       };
   };
-  
-  void Render();
+
+  ~CGraphicLaserBeaconProxy( void ){ Draw(); };
 };
 
 
 #endif // _WIN_H
 
  
+
+
+
+
+
 

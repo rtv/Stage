@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.17 2001-09-22 01:51:50 vaughan Exp $
+ * $Id: xs.cc,v 1.18 2001-09-22 21:07:39 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -878,7 +878,15 @@ CXGui::CXGui( int argc, char** argv, environment_t* anenv )
     cout << " Window coords: " << x << '+' << y << ':' 
 	 << width << 'x' << height << " ok." << endl;
 #endif
-  }
+
+
+    enableLaser = true;
+    enableSonar = true;
+    enableGps = true;
+    enableVision = true;
+    enablePtz = true;
+    enableLaserBeacon = true;
+}
 
 
 CXGui::~CXGui( void )
@@ -1178,6 +1186,9 @@ void CXGui::RefreshObjects( void )
        it != truth_map.end(); it++ )
     RenderObject( it->second );
 
+  for( int i=0; i<num_proxies; i++ )
+    graphicProxies[i]->Draw();
+  
   HighlightObject( dragging, false );
 
   SetDrawMode( GXcopy );
@@ -1497,12 +1508,13 @@ void CXGui::HandleButtonPressEvent( XEvent& reportEvent )
 	{  			  
 	  MoveObject( dragging, dragging->x, dragging->y, 
 			      NORMALIZE(dragging->th - M_PI/10.0) );
-	}	      
+	}	  
       break;
     }
 
   if( dragging ) HighlightObject( dragging, true );
 }
+
 
 void CXGui::HandleKeyPressEvent( XEvent& reportEvent )
 {  
@@ -1513,6 +1525,28 @@ void CXGui::HandleKeyPressEvent( XEvent& reportEvent )
 
   // handle all the non-cursor keys here
   
+  switch( key ) // toggle the display of sensor proxies here
+    {
+    case XK_1:
+      enableLaser = !enableLaser; break;
+    case XK_2:
+      enableSonar = !enableSonar; break;
+    case XK_3:
+      enablePtz = !enablePtz; break;
+    case XK_4:
+      enableVision = !enableVision; break;
+    case XK_5:
+      enableGps = !enableGps; break;
+    case XK_6:
+      enableLaserBeacon = !enableLaserBeacon; break;
+    case XK_0: // invert all
+      enableLaser = !enableLaser;
+      enableSonar = !enableSonar;
+      enablePtz = !enablePtz; 
+      enableVision = !enableVision; 
+      enableGps = !enableGps;
+      enableLaserBeacon = !enableLaserBeacon;;
+    }
   
   if( key == XK_v )
     {
@@ -1730,27 +1764,27 @@ void CXGui::HandlePlayers( void )
       playerClients.Read();
       
       for( int p=0; p<num_proxies; p++ )
-	if( playerProxies[p]->client->fresh )	    
+	if( playerProxies[p]->client->fresh )	 	  
 	  switch( playerProxies[p]->device )
 	    {
 	    case PLAYER_LASER_CODE: 
-	      ((CGraphicLaserProxy*)(playerProxies[p]))->Render();
-	      break;
+  	      ((CGraphicLaserProxy*)(playerProxies[p]))->Render();
+  	      break;
 	    case PLAYER_SONAR_CODE: 
-	      ((CGraphicSonarProxy*)(playerProxies[p]))->Render();
-	      break;
+  	      ((CGraphicSonarProxy*)(playerProxies[p]))->Render();
+  	      break;
 	    case PLAYER_GPS_CODE: 
-	      ((CGraphicGpsProxy*)(playerProxies[p]))->Render();
-	      break;
+  	      ((CGraphicGpsProxy*)(playerProxies[p]))->Render();
+  	      break;
 	    case PLAYER_VISION_CODE: 
-	      ((CGraphicVisionProxy*)(playerProxies[p]))->Render();
-	      break;
+  	      ((CGraphicVisionProxy*)(playerProxies[p]))->Render();
+  	      break;
 	    case PLAYER_PTZ_CODE: 
-	      ((CGraphicPtzProxy*)(playerProxies[p]))->Render();
-		break;
+  	      ((CGraphicPtzProxy*)(playerProxies[p]))->Render();
+	      break;
 	    case PLAYER_LASERBEACON_CODE: 
-	      ((CGraphicLaserBeaconProxy*)(playerProxies[p]))->Render();
-		break;
+  	      ((CGraphicLaserBeaconProxy*)(playerProxies[p]))->Render();
+	      break;
 	    }
     }
 }
@@ -1766,61 +1800,40 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
       
       // if we're connected already 
       if( cli ) 
-	{
+	{ // delete the client's proxies, then the client itself
 	  int n = 0;
 	  while( n<num_proxies )
 	    {
-	      //printf( "XS: playerProxies" );
-	      
-	      // print the proxy array
-	      //for( int x=0; x<num_proxies; x++ )
-	      //printf( " [%x][%p]", x, playerProxies[x] );
-	      
-	      puts( "" );
-	      
 	      // if this proxy needs the doomed client
 	      if( playerProxies[n]->client == cli )
 		{
-		  // remove the link in the client
-		  // probably redundant as the client is doomed anyway
-		  //cli->RemoveProxy( playerProxies[n] );
-		  
-		  //printf( "\nXS: deleting proxy %d\n", n );
-		 
 		  delete playerProxies[n]; // zap it
 		  
-		  // shift the array down to fill this hole
+		  // shift the arrays down to fill this hole
 		  for( int z=n; z<num_proxies; z++ )
-		    playerProxies[z] = playerProxies[z+1];
-		  
+		    {
+		      playerProxies[z] = playerProxies[z+1];
+		      graphicProxies[z] = graphicProxies[z+1];
+		    }
 		  n = 0; // reset the loop counter 
 		  num_proxies--;
 		}
 	      else
 		n++;
 	    }
-	  
-	  //puts( "XS: removing client\n" );
+	  // proxies gone. now the client...
 	  playerClients.RemoveClient( cli );
-
-	  //puts( "XS: deleting client\n" );
 	  delete cli;
-
-	  //printf( "XS: num_proxies = %d\n", num_proxies );
-	  //printf( "XS: MultiClient num_clients = %d\n", playerClients.GetNumClients() );
-	  
 	}
       else
-      {
-	cli = new PlayerClient( stage_host, ent->id.port );
+	{ // create a new client and add any supported proxies
+	  cli = new PlayerClient( stage_host, ent->id.port );
 	  
-	if( cli ) // if successful, attach this client to the multiclient
-	  {
-
-	    printf( "adding player client on %s port %d\n", stage_host, ent->id.port );
-	  
+	  if( cli ) // if successful, attach this client to the multiclient
+	    {	     
+	    printf( "XS: Starting Player client on %s port %d\n", stage_host, ent->id.port );
+	    
 	    xstruth_t sibling;
-
 	    int previous_num_proxies = num_proxies;
 	    
 	    // now create proxies for all supported devices on the same port
@@ -1836,50 +1849,73 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 		    switch( sibling.id.type )
 		      {
 		      case PLAYER_LASER_CODE: 
-			playerProxies[num_proxies++] = 
-			  new CGraphicLaserProxy( this, cli, sibling.id.index, 'r' );
-			//printf( "XS: creating LaserProxy on %s (%d:%d:%d)\n", 
-				//stage_host, 
-				//sibling.id.port, sibling.id.type, sibling.id.index );
+			if( enableLaser )
+			  {
+			    CGraphicLaserProxy* glp = 
+			      new CGraphicLaserProxy(this,cli,sibling.id.index,'r' );
+			    
+			    graphicProxies[num_proxies] = glp;
+			    playerProxies[num_proxies++] = glp;
+			  }
 			break;
-		      case PLAYER_SONAR_CODE: 
-			playerProxies[num_proxies++] = 
-			  new CGraphicSonarProxy( this, cli, sibling.id.index, 'r' );   
-		//  	printf( "XS: creating SonarProxy on %s (%d:%d:%d)\n", 
-//  				stage_host, 
-//  				sibling.id.port, sibling.id.type, sibling.id.index );
+
+  		      case PLAYER_SONAR_CODE: 
+			if( enableSonar )
+			  {
+			    CGraphicSonarProxy* gsp =
+			      new CGraphicSonarProxy( this, cli, sibling.id.index, 'r' );   
+			    
+			    graphicProxies[num_proxies] = gsp; 
+			    playerProxies[num_proxies++] = gsp;
+			  }
 			break;
-		      case PLAYER_GPS_CODE: 
-			playerProxies[num_proxies++] = 
-			  new CGraphicGpsProxy( this, cli, sibling.id.index, 'r' );
-		//  	printf( "XS: creating GpsProxy on %s (%d:%d:%d)\n", 
-//  				stage_host, 
-//  				sibling.id.port, sibling.id.type, sibling.id.index );
+			
+  		      case PLAYER_GPS_CODE: 
+			if( enableGps )
+			  {
+			    CGraphicGpsProxy* ggp = 
+			      new CGraphicGpsProxy( this, cli, sibling.id.index, 'r' );
+			    
+			    graphicProxies[num_proxies] = ggp;
+			    playerProxies[num_proxies++] = ggp;
+			  }
+  			break;
+			
+  		      case PLAYER_VISION_CODE: 
+			if( enableVision )
+			  {
+			    CGraphicVisionProxy* gvp = 
+			      new CGraphicVisionProxy( this, cli, sibling.id.index, 'r' );
+			    
+			    graphicProxies[num_proxies] = gvp;
+			    playerProxies[num_proxies++] = gvp;
+			  }
+  			break;
+			
+  		      case PLAYER_PTZ_CODE: 
+			if( enablePtz )
+			  {
+			    CGraphicPtzProxy* gpp = 
+			      new CGraphicPtzProxy( this, cli, sibling.id.index, 'r' );
+			    
+			    graphicProxies[num_proxies] = gpp;
+			    playerProxies[num_proxies++] = gpp;
+			  }
 			break;
-		      case PLAYER_VISION_CODE: 
-			playerProxies[num_proxies++] = 
-			  new CGraphicVisionProxy( this, cli, sibling.id.index, 'r' );
-		//  	printf( "XS: creating VisionProxy on %s (%d:%d:%d)\n", 
-//  				stage_host, 
-//  				sibling.id.port, sibling.id.type, sibling.id.index );
+			
+  		      case PLAYER_LASERBEACON_CODE: 
+			if( enableLaserBeacon )
+			  {
+			    CGraphicLaserBeaconProxy* glbp = 
+			      new CGraphicLaserBeaconProxy(this,cli,sibling.id.index,'r');
+			    
+			    graphicProxies[num_proxies] = glbp;
+			    playerProxies[num_proxies++] = glbp;
+			  }
 			break;
-		      case PLAYER_PTZ_CODE: 
-			playerProxies[num_proxies++] = 
-			  new CGraphicPtzProxy( this, cli, sibling.id.index, 'r' );
-		//  	printf( "XS: creating PtzProxy on %s (%d:%d:%d)\n", 
-//  				stage_host, 
-//  				sibling.id.port, sibling.id.type, sibling.id.index );
-			break;
-		      case PLAYER_LASERBEACON_CODE: 
-			playerProxies[num_proxies++] = 
-			  new CGraphicLaserBeaconProxy(this,cli,sibling.id.index,'r');
-		//  	printf( "XS: creating LaserBeaconProxy on %s (%d:%d:%d)\n", 
-//  				stage_host, 
-//  				sibling.id.port, sibling.id.type, sibling.id.index );
-			break;
-		      default: 
-			printf( "XS: no proxy for device %d supported\n", 
-				sibling.id.type ); 
+  		      default: 
+  			printf( "XS: no proxy for device %d supported\n", 
+  				sibling.id.type ); 
 		      }
 		  }
 	      }

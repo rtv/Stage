@@ -1,11 +1,12 @@
 ####################################################################################
 # TODO 
-# $Id: TODO,v 1.4 2001-09-22 01:51:50 vaughan Exp $
+# $Id: TODO,v 1.5 2001-09-22 21:07:38 vaughan Exp $
 ####################################################################################
 
 ## IN PROGRESS #####################################################################
 
- - documentation
+ - stage documentation
+ - xs documentation
 
 ## URGENT ##########################################################################
 
@@ -17,7 +18,12 @@
 	- save only relevant state
 	- inherit port by default on load
 
+ - add vision device sensor display - skeleton is in place
+
 ## FIXED/DONE ######################################################################
+
+RTV 9/22/01
+ - XS: fixed window redraws of sensor data, added selective sensor display (num keys)
 
 RTV 9/21/01
  - XS: add player interface to display sensor data

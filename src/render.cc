@@ -356,13 +356,8 @@ void CXGui::SelectColor( xstruth_t* exp )
   XSetForeground( display, gc, exp->pixel_color );
 }
 
-void CGraphicLaserProxy::Render( void )
+void CGraphicLaserProxy::ProcessData( void )
 {
-  // undraw the old data
-  win->SetForeground( pixel );
-  win->SetDrawMode( GXxor );
-  win->DrawPolygon( pts, samples );
-  
   // find the pose and color of the matching truth
   double x,y,th;
   
@@ -395,19 +390,10 @@ void CGraphicLaserProxy::Render( void )
       pts[l].x = x + range/1000.0 * cos( angle ); 
       pts[l].y = y + range/1000.0 * sin( angle );       
     }
-  
-  // setup the GC 
-  win->SetForeground( pixel );
-  win->DrawPolygon( pts, samples );
 }
 
-void CGraphicSonarProxy::Render()
+void CGraphicSonarProxy::ProcessData( void )
 {
-  // undraw the old data
-  win->SetForeground( pixel );
-  win->SetDrawMode( GXxor );
-  win->DrawPolygon( pts, PLAYER_NUM_SONAR_SAMPLES );
-  
   // figure out where to draw this data
   double x,y,th;
 
@@ -419,9 +405,6 @@ void CGraphicSonarProxy::Render()
       return;
     }
   
-  //double start_angle = th - DTOR(90);
-  //double angle_incr = M_PI / 8.0;
-          
   for( int l=0; l < PLAYER_NUM_SONAR_SAMPLES; l++ )
     {
       double xoffset, yoffset, angle;
@@ -431,25 +414,16 @@ void CGraphicSonarProxy::Render()
       
       angle += th;
 
-      double sonarx = x + xoffset * cos(th) - yoffset * sin(th);
-      double sonary = y + xoffset * sin(th) + yoffset * cos(th);
-            
-      pts[l].x = sonarx + range/1000.0 * cos( angle ); 
-      pts[l].y = sonary + range/1000.0 * sin( angle );       
+      startpts[l].x = x + xoffset * cos(th) - yoffset * sin(th);
+      startpts[l].y = y + xoffset * sin(th) + yoffset * cos(th);
+         
+      endpts[l].x = startpts[l].x + range/1000.0 * cos( angle ); 
+      endpts[l].y = startpts[l].y + range/1000.0 * sin( angle );       
     }
-  
-  // setup the GC 
-  win->SetForeground( pixel );
-  win->DrawPolygon( pts, PLAYER_NUM_SONAR_SAMPLES );
 }
 
-void CGraphicGpsProxy::Render()
+void CGraphicGpsProxy::ProcessData( void )
 {
-  // undraw the old data
-  win->SetForeground( pixel );
-  win->SetDrawMode( GXxor );
-  win->DrawString( drawx, drawy, buf, strlen(buf) );
-  
   // figure out where to draw this data
   double dummyth;
   
@@ -463,19 +437,10 @@ void CGraphicGpsProxy::Render()
 
   // fill the output string
   sprintf( buf, "GPS(%d,%d,%d)", xpos, ypos, heading );
-  
-  // setup the GC 
-  win->SetForeground( pixel );
-  win->DrawString( drawx, drawy, buf, strlen(buf) );
 }
 
-void CGraphicPtzProxy::Render()
+void CGraphicPtzProxy::ProcessData( void )
 {
-  // undraw the old data
-  win->SetForeground( pixel );
-  win->SetDrawMode( GXxor );
-  win->DrawPolygon( pts, 3 );
-
   // figure out where to draw this data
   double x,y,th;
   
@@ -502,27 +467,10 @@ void CGraphicPtzProxy::Render()
   
   pts[2].x = x + len * cos( stopAngle );  
   pts[2].y = y + len * sin( stopAngle );  
-  
-  // setup the GC 
-  win->SetForeground( pixel );
-  win->DrawPolygon( pts, 3 );
 }
 
-void CGraphicLaserBeaconProxy::Render()
+void CGraphicLaserBeaconProxy::ProcessData( void )
 {
-  char buf[16];
-
-  // undraw the old data
-  win->SetForeground( pixel );
-  win->SetDrawMode( GXxor );
-  
-  for( int b=0; b<stored; b++ )
-    {
-      win->DrawLine( origin, pts[b] );
-      sprintf( buf, "%d", ids[b] );
-      win->DrawString( pts[b].x + 0.1, pts[b].y, buf, strlen(buf) ); 
-    }
-  
   // figure out where to draw this data
   double x,y,th;
   
@@ -548,17 +496,6 @@ void CGraphicLaserBeaconProxy::Render()
     }
   
   stored = count;
-  
-  win->SetForeground( pixel );
-  win->SetDrawMode( GXxor );
-  
-  for( int b=0; b<stored; b++ )
-    {
-      win->DrawLine( origin, pts[b] );
-      sprintf( buf, "%d", ids[b] );
-      //win->DrawString( origin.x + 0.1, origin.y, buf, strlen(buf) ); 
-      win->DrawString( pts[b].x + 0.1, pts[b].y, buf, strlen(buf) ); 
-    }
 }
 
 
