@@ -22,7 +22,7 @@
  * Desc: Rtk canvas functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_canvas.c,v 1.4 2004-11-08 05:08:08 rtv Exp $
+ * CVS: $Id: rtk_canvas.c,v 1.5 2004-11-08 06:28:17 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -611,6 +611,13 @@ void rtk_canvas_export_image(rtk_canvas_t *canvas, const char *filename, int for
 
     case RTK_IMAGE_FORMAT_PPM:
       gdk_pixbuf_save( buf, filename, "ppm", NULL, NULL );
+      break;
+
+    case RTK_IMAGE_FORMAT_PNG:
+      gdk_pixbuf_save( buf, filename, "png", NULL, NULL );
+      break;
+    case RTK_IMAGE_FORMAT_PNM:
+      gdk_pixbuf_save( buf, filename, "pnm", NULL, NULL );
       break;
 
     default: 

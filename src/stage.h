@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.101 2004-11-04 20:30:18 rtv Exp $
+ * CVS: $Id: stage.h,v 1.102 2004-11-08 06:28:17 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -512,7 +512,7 @@ extern "C" {
     int frame_index;
     int frame_callback_tag;
     int frame_interval;
-
+    int frame_format;
 
     rtk_menu_t** menus;
     rtk_menuitem_t** mitems;

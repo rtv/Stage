@@ -22,7 +22,7 @@
  * Desc: Combined Rtk functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk.h,v 1.2 2004-11-08 05:08:08 rtv Exp $
+ * CVS: $Id: rtk.h,v 1.3 2004-11-08 06:28:17 rtv Exp $
  */
 
 #ifndef RTK_H
@@ -56,6 +56,8 @@ extern "C" {
 // Export image formats
 #define RTK_IMAGE_FORMAT_JPEG 0
 #define RTK_IMAGE_FORMAT_PPM  1  
+#define RTK_IMAGE_FORMAT_PNG  2  
+#define RTK_IMAGE_FORMAT_PNM  3 
 
 // Color space conversion macros
 #define RTK_RGB16(r, g, b) (((b) >> 3) | (((g) & 0xFC) << 3) | (((r) & 0xF8) << 8))
