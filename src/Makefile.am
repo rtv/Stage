@@ -2,11 +2,11 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.68 2004-09-28 00:58:32 rtv Exp $
+# $Id: Makefile.am,v 1.69 2004-09-28 05:28:29 rtv Exp $
 
-#SUBDIRS = models
-
-#stage_DEPENDENCIES = libstage.a $(top_srcdir)/replace/libreplace.a 
+# we don't need these right now, but I'll keep this commented out just
+# in case.  
+# stage_DEPENDENCIES = $(top_srcdir)/replace/libreplace.a
 
 # install these headers
 include_HEADERS = stage.h 
@@ -25,7 +25,7 @@ libstage_la_SOURCES = \
 	gui.h \
 	gui_menus.c \
 	library.c \
-	matrix_fast.c \
+	matrix.c \
 	matrix.h \
 	model.c \
 	model.h \

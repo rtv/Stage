@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_laser.cc,v 1.4 2004-09-26 02:00:45 rtv Exp $
+ * $Id: stg_laser.cc,v 1.5 2004-09-28 05:28:43 rtv Exp $
  */
 
 #define PLAYER_ENABLE_TRACE 1
@@ -114,8 +114,8 @@ void StgLaser::PublishData( void* ptr )
   
   if( sample_count != cfg->samples )
     {
-      PRINT_ERR2( "bad laser data: got %d/%d samples",
-		  sample_count, cfg->samples );
+      //PRINT_ERR2( "bad laser data: got %d/%d samples",
+      //	  sample_count, cfg->samples );
     }
   else
     {      

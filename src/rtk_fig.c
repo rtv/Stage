@@ -22,7 +22,7 @@
  * Desc: Rtk fig functions
  * Author: Andrew Howard
  * Contributors: Richard Vaughan
- * CVS: $Id: rtk_fig.c,v 1.2 2004-09-27 00:58:01 rtv Exp $
+ * CVS: $Id: rtk_fig.c,v 1.3 2004-09-28 05:28:43 rtv Exp $
  *
  * Notes:
  *   Some of this is a horrible hack, particular the xfig stuff.
@@ -900,9 +900,9 @@ void rtk_fig_grid(rtk_fig_t *fig, double ox, double oy,
     }
   
   // draw the axis origin lines
-  rtk_fig_color_rgb32( fig, 0 );
-  rtk_fig_line( fig, ox-dx/2, 0, ox+dx/2, 0 );
-  rtk_fig_line( fig, 0, oy-dy/2, 0, oy+dy/2 );
+  //rtk_fig_color_rgb32( fig, 0 );
+  //rtk_fig_line( fig, ox-dx/2, 0, ox+dx/2, 0 );
+  //rtk_fig_line( fig, 0, oy-dy/2, 0, oy+dy/2 );
 
   return;
 }
@@ -1444,7 +1444,7 @@ void rtk_fig_image_free(rtk_fig_t *fig, rtk_image_stroke_t *data)
 // Update image
 void rtk_fig_image_calc(rtk_fig_t *fig, rtk_image_stroke_t *data)
 {
-  int i, j;
+  int i;//, j;
   int minx, miny, maxx, maxy;
   int px, py;
   double dx, dy;
@@ -1505,12 +1505,12 @@ void rtk_fig_image_calc(rtk_fig_t *fig, rtk_image_stroke_t *data)
 // Render image
 void rtk_fig_image_draw(rtk_fig_t *fig, rtk_image_stroke_t *data)
 {
-  int i, j, k;
+  int i, j;//, k;
   int fill;
-  double ix, iy, px, py;
+  //double ix, iy, px, py;
   double sxx, sxy, syx, syy;
   double dxx, dxy, dyx, dyy;
-  double ox, oy, cosa, sina;
+  double ox, oy;//, cosa, sina;
   uint16_t *last_pixel, *pixel, *mask;
   double gpoints[4][2];
   GdkPoint points[4];

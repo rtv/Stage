@@ -493,7 +493,8 @@ void gui_window_menus_create( gui_window_t* win )
   // menu items to get the callback called for non-checked state
 
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_GRID], 1);
-  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_POLYGONS], 0);
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_GRID], 0);
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_POLYGONS], 1);
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_DEBUG], 1);
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_DEBUG], 0);
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_OBJECT], 1);

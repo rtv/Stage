@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.47 $
+//  $Revision: 1.48 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -63,6 +63,18 @@ void laser_init( stg_model_t* mod )
   stg_model_set_config( mod, &lconf, sizeof(lconf) );
 }
 
+int laser_raytrace_match( stg_model_t* mod, stg_model_t* hitmod )
+{
+  // Ignore myself, my children, and my ancestors.
+  if( (!stg_model_is_related(mod,hitmod))  &&  
+      hitmod->laser_return != LaserTransparent) 
+    return 1;
+  
+  // Stop looking when we see something
+  //hisreturn = hitmdmodel_laser_return(hitmod);
+  
+  return 0; // no match
+}	
 
 int laser_update( stg_model_t* mod )
 {   
@@ -116,24 +128,12 @@ int laser_update( stg_model_t* mod )
       double range = cfg->range_max;
       //stg_laser_return_t hisreturn = LaserVisible;
       
-      while( (hitmod = itl_next( itl )) ) 
-	{
-	  //printf( "model %d %p   hit model %d %p\n",
-	  //  mod->id, mod, hitmod->id, hitmod );
-	  
-	  // Ignore myself, my children, and my ancestors.
-	  if( hitmod == mod || stg_model_is_related(mod,hitmod) )
-	    continue;
-	  
-	  // Stop looking when we see something
-	  //hisreturn = hitmdmodel_laser_return(hitmod);
-	  
-	  if( hitmod->laser_return != LaserTransparent) 
-	    {
-	      range = itl->range;
-	      break;
-	    }	
-	}
+      hitmod = itl_first_matching( itl, laser_raytrace_match, mod );
+
+      if( hitmod )
+	range = itl->range;
+
+      //printf( "%d:%.2f  ", t, range );
 
       if( range < cfg->range_min )
 	range = cfg->range_min;
@@ -147,7 +147,6 @@ int laser_update( stg_model_t* mod )
 	  (hitmod && (hitmod->laser_return >= LaserBright)) ? 1 : 0;
 
       itl_destroy( itl );
-      //printf( "%d ", sample->range );
     }
   
   // new style

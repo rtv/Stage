@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix_fast.c,v 1.1 2004-09-28 00:58:36 rtv Exp $
+ * $Id: matrix_fast.c,v 1.2 2004-09-28 05:28:43 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -32,20 +32,15 @@ stg_matrix_t* stg_matrix_create( double ppm, double medppm, double bigppm )
   
   matrix->array_width = base_size;
   matrix->array_height = base_size;
-  
   size_t len = matrix->array_width * matrix->array_height;
 
-  // allocate the VAST fast array
-  matrix->array = g_ptr_array_sized_new( len );
+  matrix->array = g_ptr_array_sized_new( len );  // allocate the VAST fast array
   
   // create a pointer array at every cell in the array
   size_t i;
   for( i=0; i<len; i++ )
       g_ptr_array_add( matrix->array, g_ptr_array_new() );
     
-  matrix->medarray = NULL;
-  matrix->bigarray = NULL;
-
   matrix->ppm = ppm;
   matrix->medppm = medppm;  
   matrix->bigppm = bigppm;
@@ -111,7 +106,7 @@ GPtrArray* stg_matrix_cell_get( stg_matrix_t* matrix, double x, double y)
 
   guint index =  xcell + matrix->array_width * ycell;
   
-  printf( "returning array at index: %d\n", index );
+  //printf( "returning array at index: %d\n", index );
 
   return g_ptr_array_index( matrix->array, index );
 }
@@ -124,7 +119,7 @@ void stg_matrix_cell_append(  stg_matrix_t* matrix,
   
   if( cell  )
     {
-      printf( "adding an object to cell at (%.2f %.2f)\n", x, y );
+      //printf( "adding an object to cell at (%.2f %.2f)\n", x, y );
       
       // add us to the cell, but only once
       g_ptr_array_remove_fast( cell, object );

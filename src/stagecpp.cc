@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.59 2004-09-27 20:02:41 rtv Exp $
+// $Id: stagecpp.cc,v 1.60 2004-09-28 05:28:43 rtv Exp $
 
 //#define DEBUG
 
@@ -36,28 +36,31 @@ void configure_gui( gui_window_t* win, int section )
   int window_height = 
     (int)wf.ReadTupleFloat(section, "window_size", 1, STG_DEFAULT_WINDOW_HEIGHT);
   
-  PRINT_WARN2( "window width %d height %d", window_width, window_height );
-  
   double window_center_x = 
     wf.ReadTupleFloat(section, "window_center", 0, 0.0 );
   double window_center_y = 
     wf.ReadTupleFloat(section, "window_center", 1, 0.0 );
   
-  PRINT_WARN2( "window center (%.2f,%.2f)", window_center_x, window_center_y );
-
   double window_scale = 
     wf.ReadFloat(section, "window_scale", 1.0 );
-
+  
+  PRINT_DEBUG2( "window width %d height %d", window_width, window_height );
+  PRINT_DEBUG2( "window center (%.2f,%.2f)", window_center_x, window_center_y );
+  PRINT_DEBUG1( "window scale %.2f", window_scale );
+  
   // ask the canvas to comply
-  rtk_canvas_size( win->canvas, window_width, window_height );
+  gtk_window_resize( GTK_WINDOW(win->canvas->frame), window_width, window_height );
   rtk_canvas_scale( win->canvas, window_scale, window_scale );
   rtk_canvas_origin( win->canvas, window_center_x, window_center_y );
 }
 
 void save_gui( gui_window_t* win )
 {
-  wf.WriteTupleFloat( win->wf_section, "window_size", 0, win->canvas->sizex);
-  wf.WriteTupleFloat( win->wf_section, "window_size", 1, win->canvas->sizey );
+  int width, height;
+  gtk_window_get_size(  GTK_WINDOW(win->canvas->frame), &width, &height );
+  
+  wf.WriteTupleFloat( win->wf_section, "window_size", 0, width );
+  wf.WriteTupleFloat( win->wf_section, "window_size", 1, height );
 
   wf.WriteTupleFloat( win->wf_section, "window_center", 0, win->canvas->ox );
   wf.WriteTupleFloat( win->wf_section, "window_center", 1, win->canvas->oy );

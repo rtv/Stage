@@ -118,7 +118,7 @@ int stg_world_update( stg_world_t* world, int sleepflag )
   //fflush( stdout );
 
   if( world->paused ) // only update if we're not paused
-    return 0;
+    return _stg_quit;
 
   
   stg_msec_t timenow = stg_timenow();

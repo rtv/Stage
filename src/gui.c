@@ -231,8 +231,8 @@ void gui_world_matrix( stg_world_t* world, gui_window_t* win )
 	  if( a->len )
 	    {
 	      stg_matrix_coord_t  coord;
-	      coord.x = i % matrix->array_width;
-	      coord.y = i / matrix->array_width;
+	      coord.x = (i % matrix->array_width) - matrix->array_width/2;
+	      coord.y = (i / matrix->array_width) - matrix->array_height/2;
 	      mf.ppm = matrix->ppm;
 	      render_matrix_cell( &mf, &coord );
 	    }
@@ -263,7 +263,7 @@ int gui_world_update( stg_world_t* world )
   
   if( rtk_canvas_isclosed( win->canvas ) )
     {
-      PRINT_WARN( "window closed" );
+      puts( "<window closed>" );
       //stg_world_destroy( world );
       return 1;
     }
