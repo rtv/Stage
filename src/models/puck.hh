@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////
 //
 // File: puck.hh
-// Author: brian gerkey
+// Author: brian gerkey, richard vaughan
 // Date: 23 June 2001
 // Desc: Simulates pucks
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/puck.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.2.6.1 $
+//  $Revision: 1.2.6.2 $
 //
 // Usage:
 //  (empty)
@@ -43,10 +43,10 @@ public: static CPuck* Creator(  LibraryItem *libit, int id, CEntity *parent )
 
 
   // Update the device
-  public: virtual void Update( double sim_time );
+  public: virtual int Update();
 
   // Move the puck
-  private: void Move();
+  private: void PuckMove();
     
   // Return diameter of puck
   public: double GetDiameter() { return(this->size_x); }

@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.12 2003-02-07 07:47:00 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.13 2003-02-08 01:20:37 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -41,6 +41,7 @@
 #include "root.hh"
 
 #include "models/puck.hh"
+#include "models/sonar.hh"
 /*
 #include "models/bumperdevice.hh"
 #include "models/broadcastdevice.hh"
@@ -54,7 +55,6 @@
 #include "models/positiondevice.hh"
 #include "models/powerdevice.hh"
 #include "models/ptzdevice.hh"
-#include "models/sonardevice.hh"
 #include "models/truthdevice.hh"
 #include "models/visiondevice.hh"
 #include "models/regularmcldevice.hh"
@@ -69,11 +69,11 @@
 libitem_t library_items[] = { 
   { "box", "black", (CFP)CEntity::Creator},
   { "puck", "green", (CFP)CPuck::Creator},
+  { "sonar", "red", (CFP)CSonarModel::Creator},
   /*
   { "bitmap", "blue", (CFP)CBitmap::Creator},
   { "laser", "blue", (CFP)CLaserDevice::Creator},
   { "position", "red", (CFP)CPositionDevice::Creator},
-  { "sonar", "green", (CFP)CSonarDevice::Creator},
   { "box", "yellow", (CFP)CBox::Creator},
   { "gps", "gray", (CFP)CGpsDevice::Creator},
   { "gripper", "blue", (CFP)CGripperDevice::Creator},
@@ -433,7 +433,11 @@ int main(int argc, char **argv)
 				 &HandleGui ) == -1 ) break;
       
       // update the simulation model
-      if( CEntity::root ) CEntity::root->Update( CEntity::simtime+=0.1 );
+      if( CEntity::root ) 
+	{
+	  CEntity::root->Update();
+	  CEntity::simtime+=0.01; 
+	}
      
       //stage_property_t* props = NULL;
       //size_t props_len = 0;

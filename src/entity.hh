@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15.2.9 2003-02-07 05:30:34 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.10 2003-02-08 01:20:37 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -80,20 +80,47 @@ public:
   // the world's child list
 public: stage_id_t stage_id;
 
-  public: void Print( char* prefix );
   // Destructor
   public: virtual ~CEntity();
 
-  // Initialise entity
-  public: virtual bool Startup( void ); 
-  
-  // Finalize entity
-  public: virtual void Shutdown();
+  int Subs(){ return sub_count; };
+  int sub_count;
 
+  // SUBCLASS INTERFACE ------------------------------------------
+protected:
+  stage_buffer_t buffer_data;
+  stage_buffer_t buffer_cmd;
+  stage_buffer_t buffer_cfg;
+
+public: 
+  // Initialise entity  
+  virtual bool Startup( void ); 
+  // Finalize entity
+  virtual void Shutdown();  
+
+
+  // Update the entity's device-specific representation
+  // this is called every time the simulation clock increments
+  virtual int Update();
+  
+  // this is called very rapidly from the main loop
+  // it allows the entity to perform some actions between clock increments
+  // (such handling config requests to increase synchronous IO performance)
+  virtual int Sync();
+  
+protected: 
+  virtual int SetCommand( char* data, size_t len ); // receive command
+  virtual int SetConfig( char* data, size_t len ); // receive config
+  virtual int SetData( char* data, size_t len ); // receive data
+  virtual int GetCommand( char* data, size_t* len ); // get command data
+  virtual int GetConfig( char* data, size_t* len ); // get config data
+  virtual int GetData( char* data, size_t* len ); // get data data
+  // END ---------------------------------------------------------
+  
   // Get/set properties
-  public: virtual int SetProperty( int con,
-                                   stage_prop_id_t property, 
-				   void* value, size_t len );
+public: int SetProperty( int con,
+			 stage_prop_id_t property, 
+			 char* value, size_t len );
   
 public: virtual int GetProperty( stage_prop_id_t property, void* value );
 
@@ -109,16 +136,6 @@ protected:
   // bool controls whether rects are added to or removed from the matrix
   void RenderRects(  bool render );
   
-
-  // Update the entity's device-specific representation
-  // this is called every time the simulation clock increments
-  public: virtual void Update( double sim_time );
-
-  // this is called very rapidly from the main loop
-  // it allows the entity to perform some actions between clock increments
-  // (such handling config requests to increase synchronous IO performance)
-public: virtual void Sync();
-
   // Render the entity into the world
   protected: void Map(double px, double py, double pth);
   
@@ -143,14 +160,14 @@ public: virtual void Sync();
   // Returns a pointer to the first entity we are in collision with.
   // Returns NULL if no collisions.
   // This function is useful for writing position devices.
-  protected: virtual CEntity *TestCollision(double px, double py, double pth );
+  protected: CEntity *TestCollision(double px, double py, double pth );
   
   // same; also records the position of the hit
-  protected: virtual CEntity *TestCollision(double px, double py, double pth, 
+  protected: CEntity *TestCollision(double px, double py, double pth, 
                                             double &hitx, double &hity );
 
   // writes a description of this device into the buffer
-public: virtual void GetStatusString( char* buf, int buflen );
+public: void GetStatusString( char* buf, int buflen );
   
   // Convert local to global coords
   public: void LocalToGlobal(double &px, double &py, double &pth);
@@ -186,16 +203,10 @@ public: void GetBoundingBox( double &xmin, double &ymin,
   
   // See if the given entity is one of our descendents
   public: bool IsDescendent(CEntity *entity);
-
-  // subscribe to / unsubscribe from the device
-  // these don't do anything by default, but are overridden by CPlayerEntity  
-public: virtual int Subscribed();
-public: virtual void Subscribe();
-public: virtual void Unsubscribe();
   
   // these versions sub/unsub to this device and all its decendants
-public: virtual void FamilySubscribe();
-public: virtual void FamilyUnsubscribe();
+public: void FamilySubscribe();
+public: void FamilyUnsubscribe();
 
   // Pointer to parent entity
   // i.e. the entity this entity is attached to.
@@ -236,6 +247,9 @@ public: virtual void FamilyUnsubscribe();
   // Entity mass (for collision calculations)
   protected: double mass;
   
+  // stored charge (-1 for objects where this is silly) 
+  protected: double volts;
+
   // Sensor return values
   // Set these appropriately to have this entity 'seen' by
   // the relevant sensor.
@@ -275,6 +289,13 @@ public: virtual void FamilyUnsubscribe();
   protected: double m_interval; 
   protected: double m_last_update;
 
+  // print a tree of info about this entity on the fd
+  public: void Print( int fd, char* prefix );
+ 
+  // move using these velocities times the timestep
+  protected: int Move( double vx, double vy, double va, double timestep );
+
+private: int BufferPacket( stage_buffer_t* buf, char* data, size_t len );
 
   ///////////////////////////////////////////////////////////////////////
   // DISTRIBUTED STAGE STUFF

@@ -21,22 +21,12 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.1.2.5 2003-02-07 05:30:34 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.1.2.6 2003-02-08 01:20:37 rtv Exp $
  */
 
 //
 // all this GUI stuff should be unravelled from the CWorld class eventually - rtv
 //
-
-#if HAVE_CONFIG_H
-  #include <config.h>
-#endif
-#if HAVE_STRINGS_H
-  #include <strings.h>
-#endif
-
-// if stage was configured to use the RTK2 GUI
-#ifdef INCLUDE_RTK2
 
 //#undef DEBUG
 //#undef VERBOSE
@@ -414,8 +404,8 @@ int RtkGuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
     case STG_PROP_ENTITY_COMMAND:
     case STG_PROP_ENTITY_DATA:
     case STG_PROP_ENTITY_CONFIG:
-    case STG_PROP_ENTITY_REPLY:   
       PRINT_DEBUG1( "gui redraw command/data for %d", prop ); 
+      ent->RtkUpdate();
       break;
       
     default:
@@ -625,9 +615,6 @@ void RtkUpdateMovieMenu()
   }
   return;
 }
-
-
-#endif
 
 
 

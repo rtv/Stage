@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/puck.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.3.6.1 $
+//  $Revision: 1.3.6.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -19,7 +19,7 @@
 // Default constructor
 //
 CPuck::CPuck(LibraryItem* libit, int id, CEntity *parent)
-        : CEntity(libit, id, parent)
+  : CEntity(libit, id, parent)
 {
   this->vision_return = true;
   this->vision_return_held = false;
@@ -27,52 +27,53 @@ CPuck::CPuck(LibraryItem* libit, int id, CEntity *parent)
   this->gripper_return = GripperEnabled;
   this->obstacle_return = false; // we don't stop robots
   this->puck_return = true; // yes! we interact with pucks!
- 
+  
   // Set default geometry
   this->size_x = 0.08;
   this->size_y = 0.08;
-
+  
   this->m_interval = 0.01; // update very fast!
   this->m_friction = 0.05;
-
+  
   // assume puck is 200g
   this->mass = 0.2;
 }
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the puck
-void CPuck::Update( double sim_time )
+int CPuck::Update( void )
 {
-  CEntity::Update(sim_time);
+  CEntity::Update();
 
   assert( m_parent_entity ); // everyone has a parent these days
-
+  
   // have we been picked up?  then make ourselves transparent so the vision
   // doesn't see us in the gripper. otherwise make ourselves visible.
   if(m_parent_entity != CEntity::root ) // root is the top-level entity
     this->vision_return = this->vision_return_held;
   else
     this->vision_return = this->vision_return_notheld;
-
+  
   // if its time to recalculate state and we're on the ground
   //
-  if( (sim_time - m_last_update > m_interval) && (m_parent_entity == CEntity::root) )
-  {	
-    m_last_update = sim_time;
-	
-    Move();      
-  }
-    
-  double x, y, th;
-  GetGlobalPose( x,y,th );
-
-  ReMap(x, y, th);
+  if( (CEntity::simtime - m_last_update > m_interval) 
+      && (m_parent_entity == CEntity::root) )
+    {	
+      m_last_update = CEntity::simtime;
+      
+      PuckMove();      
+    }
+  
+  //double x, y, th;
+  //GetGlobalPose( x,y,th );
+  //ReMap(x, y, th);
+  return 0; //
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Move the puck
-void CPuck::Move()
+void CPuck::PuckMove()
 {
   // TODO - FIX THIS
   double step_time = 0.1;//CEntity::timestep;

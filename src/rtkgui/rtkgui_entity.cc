@@ -1,9 +1,4 @@
-#if HAVE_CONFIG_H
-  #include <config.h>
-#endif
-
-#ifdef INCLUDE_RTK2
-
+#include "math.h"
 #include "entity.hh"
 #include "rtkgui.hh"
 
@@ -228,5 +223,70 @@ void CEntity::StaticRtkOnMouse(rtk_fig_t *fig, int event, int mode)
   return;
 }
 
+#include "sonar.hh"
 
-#endif
+///////////////////////////////////////////////////////////////////////////
+// Initialise the rtk gui
+void CSonarModel::RtkStartup()
+{
+  CEntity::RtkStartup();
+  
+  // Create a figure representing this object
+  this->scan_fig = rtk_fig_create( canvas, NULL, 49);
+
+  // Set the color
+  rtk_fig_color_rgb32(this->scan_fig, this->color);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Finalise the rtk gui
+void CSonarModel::RtkShutdown()
+{
+  // Clean up the figure we created
+  rtk_fig_destroy(this->scan_fig);
+
+  CEntity::RtkShutdown();
+} 
+
+
+///////////////////////////////////////////////////////////////////////////
+// Update the rtk gui
+void CSonarModel::RtkUpdate()
+{
+  CEntity::RtkUpdate();
+
+  rtk_fig_clear(this->scan_fig);
+
+  double ranges[SONARSAMPLES];
+  size_t len = SONARSAMPLES * sizeof(ranges[0]);
+  
+  if( Subs() > 0 )//&& ShowDeviceData( this->lib_entry->type_num) )
+    {
+      if( this->GetData( (char*)ranges, &len ) == 0 )
+	{
+	  int range_count = len / sizeof(ranges[0]);
+	  
+	  for (int s = 0; s < range_count; s++)
+	    {
+	      // draw a line from the position of the sonar sensor...
+	      double ox = this->sonars[s][0];
+	      double oy = this->sonars[s][1];
+	      double oth = this->sonars[s][2];
+	      LocalToGlobal(ox, oy, oth);
+	      
+	      // ...out to the range indicated by the data
+	      double x1 = ox;
+	      double y1 = oy;
+	      double x2 = x1 + ranges[s] * cos(oth); 
+	      double y2 = y1 + ranges[s] * sin(oth);       
+	      
+	      //PRINT_WARN4( "line: %.2f %.2f to  %.2f %.2f",
+	      //   x1, y1, x2, y2 );
+
+	      rtk_fig_line(this->scan_fig, x1, y1, x2, y2 );
+	    }
+	}
+    }
+}
+

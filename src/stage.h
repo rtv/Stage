@@ -28,6 +28,8 @@
 #define STG_HOSTNAME_MAX  128
 #define STG_MAX_CONNECTIONS 128
    
+#define STG_SONAR_MAX_SAMPLES 32
+
    // (currently) static memory allocation for getting and setting properties
    //const int MAX_NUM_PROPERTIES = 30;
 #define MAX_PROPERTY_DATA_LEN  20000
@@ -40,10 +42,14 @@
    {
      STG_PROP_ENTITY_PARENT,
      STG_PROP_ENTITY_POSE,
+     STG_PROP_ENTITY_VELOCITY,
      STG_PROP_ENTITY_SIZE,
      STG_PROP_ENTITY_ORIGIN,
      STG_PROP_ENTITY_NAME,
      STG_PROP_ENTITY_COLOR,
+     STG_PROP_ENTITY_SUBSCRIBE,
+     STG_PROP_ENTITY_UNSUBSCRIBE,     
+     STG_PROP_ENTITY_VOLTAGE,
      STG_PROP_ENTITY_LASERRETURN,
      STG_PROP_ENTITY_SONARRETURN,
      STG_PROP_ENTITY_IDARRETURN,
@@ -51,13 +57,12 @@
      STG_PROP_ENTITY_VISIONRETURN,
      STG_PROP_ENTITY_PUCKRETURN,
      STG_PROP_ENTITY_PLAYERID,
-     STG_PROP_ENTITY_COMMAND,
-     STG_PROP_ENTITY_DATA,
-     STG_PROP_ENTITY_CONFIG,
-     STG_PROP_ENTITY_REPLY, 
      STG_PROP_ENTITY_PPM,
      STG_PROP_ENTITY_RECTS,
      STG_PROP_ENTITY_CIRCLES,
+     STG_PROP_ENTITY_COMMAND,
+     STG_PROP_ENTITY_DATA,
+     STG_PROP_ENTITY_CONFIG,
      STG_PROPERTY_COUNT // THIS MUST BE THE LAST ENTRY
    } stage_prop_id_t;
 
@@ -189,6 +194,8 @@ typedef struct
 {
   double x, y, a;
 } stage_pose_t;
+
+typedef stage_pose_t stage_velocity_t; // same thing, different name
 
 // used for rectangular sizes
 typedef struct 

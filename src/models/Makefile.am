@@ -14,8 +14,10 @@ AM_CPPFLAGS = 	-Wall -I$(top_builddir)/src  -I$(top_builddir)/replace $(RTKCPPFL
 noinst_LIBRARIES = libmodels.a 
 
 libmodels_a_SOURCES = \
-                   puck.cc \
-                   puck.hh 
+	puck.cc \
+	puck.hh \
+	sonar.cc \
+	sonar.hh
 
 #	positiondevice.cc \
 #	positiondevice.hh

@@ -661,7 +661,7 @@ int SIOInitServer( int argc, char** argv )
   {
     perror("failed bind");
 
-    PRINT_ERR1( "Port %d is in use. Quitting (but try again in a few seconds).", 
+    PRINT_ERR1( "Port %d is in use", 
 	    server_port );
     return -1; // fail
   }

@@ -1,6 +1,6 @@
 
 /*
-  $Id: stest.c,v 1.1.2.8 2003-02-07 05:30:34 rtv Exp $
+  $Id: stest.c,v 1.1.2.9 2003-02-08 01:20:37 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -29,6 +29,7 @@
 #define TESTFAIL() (1 ? printf("\033[41mfail\033[0m\n"), fflush(stdout) : 0)
 #define EVAL(result) (1 ? (result == -1) ? TESTFAIL() : TESTPASS() : 0 )
 		      
+const double timestamp = 0.0;
 
 int HandleModel( int connection, char* data, size_t len )
 {
@@ -58,6 +59,62 @@ int HandleCommand( int connection, char* data, size_t len )
 	  len, *cmd, connection );
   return 0; //success
 }
+
+
+void Resize( int con, int id, double x, double y )
+{
+  // define some properties
+  stage_buffer_t* bp = SIOCreateBuffer();
+  assert(bp);
+  
+  // set the size of the root (and hence the matrix)
+  stage_size_t sz;
+  sz.x = x;
+  sz.y = y;
+  SIOBufferProperty( bp, id, STG_PROP_ENTITY_SIZE, 
+		     (char*)&sz, sizeof(sz) );
+    
+  SIOWriteMessage( con, timestamp,
+		   STG_HDR_PROPS, bp->data, bp->len );
+  
+  SIOFreeBuffer( bp );
+}
+
+void SetResolution( int con, int id, double ppm )
+{
+  // define some properties
+  stage_buffer_t* bp = SIOCreateBuffer();
+  assert(bp);
+  
+  // set the spatial resolution of the simulator in pixels-per-meter
+  SIOBufferProperty( bp, id, STG_PROP_ENTITY_PPM, 
+		     (char*)&ppm, sizeof(ppm) );
+  
+  SIOWriteMessage( con, timestamp,
+		   STG_HDR_PROPS, bp->data, bp->len );
+  
+  SIOFreeBuffer( bp );
+}
+
+void SetVelocity( int con, int id, double vx, double vy, double va )
+{
+  stage_velocity_t vel;
+  vel.x = vx;
+  vel.y = vy;
+  vel.a = va;
+  
+  stage_buffer_t* bp = SIOCreateBuffer();
+  assert(bp);
+
+  SIOBufferProperty( bp, id, STG_PROP_ENTITY_VELOCITY, 
+		     (char*)&vel, sizeof(vel) );
+
+  SIOWriteMessage( con, timestamp,
+		   STG_HDR_PROPS, bp->data, bp->len );
+  
+  SIOFreeBuffer( bp );
+}
+
 
 int main( int argc, char** argv )
 {
@@ -97,10 +154,10 @@ int main( int argc, char** argv )
       
       EVAL(result);
       
-      const int ROOT = 0, BOX = 1, BITMAP = 2;
+      const int ROOT = 0, BOX = 1, BITMAP = 2, SONAR=3;
       
       // define some models we want to create
-      stage_model_t models[3];
+      stage_model_t models[4];
       models[0].id = ROOT;
       models[0].parent_id = -1; // only the root can have no parent
       strncpy( models[0].token, "box", STG_TOKEN_MAX );
@@ -113,9 +170,13 @@ int main( int argc, char** argv )
       models[2].parent_id = ROOT; // root
       strncpy( models[2].token, "box", STG_TOKEN_MAX );
       
+      models[3].id = SONAR;
+      models[3].parent_id = BOX;
+      strncpy( models[3].token, "sonar", STG_TOKEN_MAX );
+      
       TEST( "Sending models" );
       result = SIOWriteMessage( connection, timestamp, STG_HDR_MODELS, 
-				(char*)&models, 3*sizeof(stage_model_t) );
+				(char*)&models, 4*sizeof(stage_model_t) );
       EVAL(result);
       
       // define some properties
@@ -134,6 +195,10 @@ int main( int argc, char** argv )
       	 (char*)&pose, sizeof(pose) );
 
       
+      // subscribe to the sonar
+      SIOBufferProperty( props, SONAR, STG_PROP_ENTITY_SUBSCRIBE,
+			 NULL, 0 );
+
       // push some rectangles into the bitmap
       stage_rotrect_t rects[10];
       int r;
@@ -160,70 +225,47 @@ int main( int argc, char** argv )
 
       int c = 0;
       double x = 0;
+      double  y = 0;
+      double z = 0;
       while( 1 )
 	{
 	  printf( "cycle %d\n", c++ );
 	  
 	  SIOWriteMessage( connection, timestamp, STG_HDR_CONTINUE, NULL, 0 );
-
-	  // define some properties
-	  stage_buffer_t* bp = SIOCreateBuffer();
-	  assert(bp);
 	  
-	  // change the size of the bitmap 
-	  bitmapsize.x = 0.5 + 3.0 * fabs(sin(x));
-	  bitmapsize.y = 0.5 + 3.0 * fabs(cos(x+=0.05));
+	  Resize( connection, BITMAP,  
+		  0.5 + 3.0 * fabs(sin(x)),  0.5 + 3.0 * fabs(cos(x+=0.05)) );
 	  
-	  SIOBufferProperty( bp, BITMAP, STG_PROP_ENTITY_SIZE, 
-	       (char*)&bitmapsize, sizeof(bitmapsize) );
+	  SetVelocity( connection, BOX, 3.0 * sin(x), 2.0 * cos(x+=0.1), 2.0 );
 	  
-	  //TEST( "Sending properties" );
-	  //result = SIOWriteMessage( connection, timestamp,
-	  //	    STG_HDR_PROPS, bp->data, bp->len );
-	  //EVAL(result);
-	   SIOFreeBuffer( bp );
-	   
-	   if( c == 90 )
-	     {
-	       // define some properties
-	       stage_buffer_t* bp = SIOCreateBuffer();
-	       assert(bp);
-	       
-	       // set the size of the root (and hence the matrix)
-	       stage_size_t sz;
-	       sz.x = 7.0;
-	       sz.y = 10.0;
-	       SIOBufferProperty( props, ROOT, STG_PROP_ENTITY_SIZE, 
-	       	  (char*)&sz, sizeof(sz) );
-	       
-	       // set the spatial resolution of the simulator in pixels-per-meter
-	       double ppm = 10;
-	       //SIOBufferProperty( props, ROOT, STG_PROP_ROOT_PPM, 
-	       // (char*)&ppm, sizeof(ppm) );
-	       
-	       result = SIOWriteMessage( connection, timestamp,
-					 STG_HDR_PROPS, bp->data, bp->len );
-	       
-	       SIOFreeBuffer( bp );
-	     }
-
-	   
-	   /*if( c == 75 )
-	     {
-	       stage_gui_config_t gui;
-	       strcpy( gui.token, "rtk" );
-	       gui.width = 600;
-	       gui.height = 600;
-	       gui.ppm = 50;
-	       gui.originx = 0;
-	       gui.originy = 0;
-	       gui.showsubscribedonly = 0;
-	       gui.showgrid = 1;
-	       gui.showdata = 1;
-	       
-	       result = SIOWriteMessage( connection, timestamp, 
-					 STG_HDR_GUI, (char*)&gui, sizeof(gui) ) ;
-					 }*/
+	  if( c % 10 == 0 )
+	    {
+	      
+	      Resize( connection, ROOT, 
+		      5.0 + 5.0 * fabs(sin(z)), 
+		      5.0 + 5.0 * fabs(cos(z)) );
+	      
+	      SetResolution( connection, ROOT, 3.0 + fmod( z*10, 10) );
+	      
+	      z += 0.1;
+	    }
+	  
+	  /*if( c == 75 )
+	    {
+	    stage_gui_config_t gui;
+	    strcpy( gui.token, "rtk" );
+	    gui.width = 600;
+	    gui.height = 600;
+	    gui.ppm = 50;
+	    gui.originx = 0;
+	    gui.originy = 0;
+	    gui.showsubscribedonly = 0;
+	    gui.showgrid = 1;
+	    gui.showdata = 1;
+	    
+	    result = SIOWriteMessage( connection, timestamp, 
+	    STG_HDR_GUI, (char*)&gui, sizeof(gui) ) ;
+	    }*/
 	   
 	  SIOServiceConnections(&HandleCommand,
 				&HandleModel, 
