@@ -4,28 +4,23 @@
 set environment_file = hospital.pnm
 set pixels_per_meter =  20
 
-create position_device name comet pose 12.50 47.59 -91 port 6665
-{
-    create sonar_device
-    create player_device 
-    create laser_device pose 0.08 0.00 0 
-    {
-	create lbd_device
-    }
-    
-    create laser_beacon pose -0.15 0.00 0 id 1 name 1 
-}
+begin environment
+  file hospital.pnm 
+  scale 0.01
+  resolution 0.01 
+end 
 
+begin host
+  hostname nw1
+end
 
-create position_device name punky pose 14.50 47.59 0 port 6666 
-{
-    create sonar_device
-    create player_device 
-    create laser_device pose 0.08 0.00 0 
-    {
-	create lbd_device
-    }
-    
-    create laser_beacon pose -0.15 0.00 0 id 2 name 2 
-}
+begin position_device
+	name comet 
+	pose 12.50 47.59 -91 
+	port 6665
 
+	begin player_device
+	end
+	begin sonar_device
+	end
+end

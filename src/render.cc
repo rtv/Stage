@@ -431,6 +431,8 @@ void CGraphicSonarProxy::ProcessData( void )
       return;
     }
   
+  pixel = win->grey; // force laser data this color
+
   for( int l=0; l < PLAYER_NUM_SONAR_SAMPLES; l++ )
     {
       double xoffset, yoffset, angle;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.85 $
+//  $Revision: 1.86 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -138,7 +138,7 @@ CWorld::CWorld()
     
   // if we're not running on localhost, print the hostname
   if( strcmp( m_hostname_short, "localhost" ) != 0 )
-    printf( "[@%s]", m_hostname_short );
+    printf( "[%s]", m_hostname_short );
   
   // get the IP of our host
   struct hostent* info = gethostbyname( m_hostname );
@@ -151,9 +151,9 @@ CWorld::CWorld()
   memcpy( &m_hostaddr.s_addr, info->h_addr_list[0], 4 ); 
 
   //printf( "\nRUNNING ON HOSTNAME %s NAME %s IP %s\n", 
-  //  m_hostname,
-  //  info->h_name, 
-  //  inet_ntoa( m_hostaddr ) );
+  //m_hostname,
+  //info->h_name, 
+  //inet_ntoa( m_hostaddr ) );
   
   //printf( "\nCWorld::m_hostname: %s, m_hostname_short %s\n", 
   //    m_hostname, m_hostname_short );
@@ -492,8 +492,10 @@ bool CWorld::Load(const char *filename)
         parent = object;
     }
 
-    // Work out whether or not its a local device
-    // if this's device's host IP matches this computer's IP, it's local
+    // Work out whether or not its a local device if any if this
+    // device's host IPs match this computer's IP, it's local
+
+    //for( int t=0; t<
     bool local = m_hostaddr.s_addr == current_hostaddr.s_addr;
 
     // Create the object
@@ -515,7 +517,7 @@ bool CWorld::Load(const char *filename)
       object->m_local = local;
       
       //printf( "ent: %p host: %s local: %d\n",
-      //      object, object->m_hostname, object->m_local );
+      //    object, inet_ntoa(object->m_hostaddr), object->m_local );
       
       // Let the object load itself
       if (!object->Load(&this->worldfile, section))

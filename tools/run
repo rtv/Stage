@@ -1,4 +1,6 @@
 #!/bin/bash
 
 export PATH=~/:$PATH
-stage -xs $1
+#stage -fast -xs $1 > /dev/null
+#stage -s -fast -xs $1 > /dev/null
+stage -s $@

@@ -27,7 +27,7 @@ begin position_device
 end
 ')
 
-#  args are (<x>,<y>,<th>,<port>)
+#  args are (<x>,<y>,<th>,<port>,<color>)
 define(`simplerobot',`
 # Robot Expansion
 #   The following code was expanded from the macro call:
@@ -36,6 +36,7 @@ define(`simplerobot',`
 begin position_device 
   pose ($1 $2 $3)
   port $4 
+  color $5
   shape circle
   begin player_device
   end

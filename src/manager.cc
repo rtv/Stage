@@ -1,6 +1,6 @@
 /*##########################################################################
 # manager.cc - implements the Stage Manager for syncing distributed Stages
-# $Id: manager.cc,v 1.15 2001-10-09 00:49:07 gerkey Exp $
+# $Id: manager.cc,v 1.16 2002-03-04 20:53:46 rtv Exp $
 *#########################################################################*/
 
 #include <sys/types.h>	/* basic system data types */
@@ -232,7 +232,7 @@ int main(int argc, char **argv)
       char* hostname = argv[s+1];
 
       fprintf( stderr, 
-	       "Connecting to %s on port %d... ", 
+	       "Connecting to %s:%d... ", 
 	       hostname, DEFAULT_POSE_PORT );
 
       struct hostent* entp;

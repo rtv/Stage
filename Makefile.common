@@ -3,7 +3,7 @@
 # stage/Makefile.common - build and installation configurations
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile.common,v 1.38 2002-02-09 03:37:47 rtv Exp $
+# $Id: Makefile.common,v 1.39 2002-03-04 20:53:46 rtv Exp $
 #
 # Notes: All user-configurable paths and build options should be specified 
 #        here. This file is included by Makefile and src/Makefile. 
@@ -77,9 +77,9 @@ ZLIB_LIBS = -lz
 # choose one of these that suits your build (debug/profile/production)
 
 # production
-#CCFLAGS = -O2 
+CCFLAGS = -O2 
 # debug
-CCFLAGS = -g3 
+#CCFLAGS = -g3 
 # debug + profile
 #CCFLAGS = -pg -g3 
 

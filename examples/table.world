@@ -39,11 +39,11 @@ create position_device pose 4.42 1.95 180 port 6665 shape circle
   create sonar_device 
   create gripper_device pose 0.15 0.00 0 
 
-  create ptz_device pose 0.07 0.00 0  
-  {
-     # vision devices MUST be children of cameras
-     create vision_device 
-  } 
+  #create ptz_device pose 0.07 0.00 0  
+  #{
+   #  # vision devices MUST be children of cameras
+    # create vision_device 
+  #} 
 }
 
 

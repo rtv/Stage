@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.48 2002-02-27 22:27:27 rtv Exp $
+ * $Id: xs.cc,v 1.49 2002-03-04 20:53:47 rtv Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -45,7 +45,11 @@
 #include "stage_types.hh"
 #include "truthserver.hh"
 #include "xs.hh"
+
+
+#ifdef HRL_HEADERS
 #include "irdevice.hh"
+#endif
 
 int envfd, num_objects;
 
@@ -2347,22 +2351,23 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
   // try to connect to it
   if( ent->id.port )
     {
-      // find the name of this host
-      char* dotted = inet_ntoa( ent->hostaddr );
-
-      puts( dotted );
-      
       struct hostent* info = 
-	gethostbyaddr( dotted, strlen(dotted), AF_INET );
+	gethostbyaddr( &ent->hostaddr, 4, AF_INET );
       
       PlayerClient* cli = 0; 
 
       if( info )
-	cli = playerClients.GetClient(info->h_name,ent->id.port);
+	{
+	  //printf( "XS: looking up host %s\n", info->h_name );
+	  cli = playerClients.GetClient(info->h_name,ent->id.port);
+	}
       else
-	cli = playerClients.GetClient( "localhost", ent->id.port);
-	
-	//herror( "failed looking up player host name" );
+	{
+	  printf( "XS: warning - failed to find hostname for %s\n",
+		  inet_ntoa( ent->hostaddr ) );
+	  
+	  cli = playerClients.GetClient( "localhost", ent->id.port);
+	}
 
       // if we're connected already 
       if( cli ) 

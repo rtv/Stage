@@ -1,5 +1,5 @@
 
-HOSTS=node0:node6:node4:node3
+HOSTS=nw0:nw4
 
 IFS=:
 
@@ -7,7 +7,15 @@ IFS=:
 
 for HOST in $HOSTS
 do
-    ssh $HOST ~/run $1 &
+	ssh $HOST /usr/X11R6/bin/xterm -title Stage@$HOST -e ~/run -xs $1 &
+	#ssh $HOST /bin/bash --login ~/run $1 &
 done
 
-stage $1
+xterm -title Stage@localhost -e ~/PS/stage/tools/run $1 &
+
+
+sleep 8
+
+# fix this later
+manager localhost nw0 nw4 1> /dev/null
+

@@ -1,7 +1,7 @@
 
 #/bin/bash
 
-HOSTS=node6:node4:node3:node0
+HOSTS=nw0:nw4
 PROGS="stage player xs"
 
 # set the separator
@@ -18,3 +18,7 @@ do
     ssh $HOST /usr/bin/killall $1 $PROGS
 
 done
+
+#local kill
+echo localhost
+killall $1 stage player xs
