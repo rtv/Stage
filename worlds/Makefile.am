@@ -1,7 +1,8 @@
 worldsdir = $(prefix)/worlds
 
 worlds_DATA = everything.world			\
-              hospital100.world			\
+	      hospital100.world			\
+              multi-bitmap.world		\
               pherobot.world			\
               puck.world			\
               simple.world			\
@@ -19,6 +20,7 @@ worlds_DATA = everything.world			\
 
 EXTRA_DIST =  everything.world			\
               hospital100.world			\
+              multi-bitmap.world		\
               pherobot.world			\
               puck.world			\
               simple.world			\

@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.49 2002-11-11 04:46:06 inspectorg Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.50 2002-11-11 09:21:21 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -308,8 +308,8 @@ void CPlayerEntity::Shutdown()
   if( this->device_filename[0] )
     // remove our name in the filesystem
     if( unlink( this->device_filename ) == -1 )
-      PRINT_ERR2( "Device failed to unlink it's IO file:%s %s", 
-		  this->device_filename, strerror(errno) );
+      PRINT_DEBUG2( "Device failed to unlink it's IO file:%s %s", 
+		    this->device_filename, strerror(errno) );
 }
 
 

@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.27 2002-11-03 07:04:36 inspectorg Exp $
+dnl $Id: configure.in,v 1.28 2002-11-11 09:21:21 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -73,18 +73,22 @@ AC_CHECK_FUNCS(inet_aton srand48 lrand48)
 
 dnl if the GNOME2 GUI was requested, we use that
 AC_ARG_WITH(gnome2,    [   --with-gnome2         Compile in the experimental GNOME2 GUI instead of RTK2],,with_gnome2=no)
+
+dnl otherwise use the RTK GUI unless it is explicitly refused
+dnl where's RTK?
+AC_ARG_WITH(rtk, [   --with-rtk=dir      Location of RTK],
+RTK_DIR=$with_rtk,
+RTK_DIR="${HOME}/librtk-2.1")
+AC_SUBST(RTK_DIR)
+
 if test "x$with_gnome2" = "xyes"; then
   AC_DEFINE(USE_GNOME2,1,[include the GNOME2 GUI])
   GUI_DIR=gnome2
   GUI_LIB=libgnomestage.a
   GUI_LINK="-Lgnome2 -lgnomestage `pkg-config --libs libgnomecanvas-2.0 libgnomeui-2.0`"
+
+   AM_CONDITIONAL(WITH_RTK, test x$with_rtk = xno)
 else
-  dnl otherwise we use the RTK GUI unless it is explicitly refused
-  dnl where's RTK?
-  AC_ARG_WITH(rtk, [   --with-rtk=dir      Location of RTK],
-  RTK_DIR=$with_rtk,
-  RTK_DIR="${HOME}/librtk-2.1")
-  AC_SUBST(RTK_DIR)
 
   dnl RTK2 uses libjpeg to export images.
   AC_CHECK_HEADER(jpeglib.h,

@@ -21,7 +21,7 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/idarturretdevice.cc,v $
 * $Author: rtv $
-* $Revision: 1.3 $
+* $Revision: 1.4 $
 ******************************************************************************/
 
 #include <math.h>
@@ -73,8 +73,8 @@ CIdarTurretDevice::CIdarTurretDevice(LibraryItem* libit,CWorld *world, CEntity *
   // we don't call CEntity::Load() for our children - we'll configure them here
   for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
     {
-      idars[i] = new CIdarDevice( libit, world, this );       // create
-
+      idars[i] = new CIdarDevice( libit, world, this ); // create
+      
       // set the player
       idars[i]->m_player.index = i;
 

@@ -21,7 +21,7 @@
  * Desc: Gnome GUI 
  * Author: Richard Vaughan
  * Date: 20 Sept 2002
- * CVS info: $Id: gnomegui.cc,v 1.3 2002-11-01 19:12:31 rtv Exp $
+ * CVS info: $Id: gnomegui.cc,v 1.4 2002-11-11 09:21:22 rtv Exp $
  */
 
 
@@ -39,6 +39,7 @@
 //#define DEBUG 
 //#define VERBOSE
 
+#include "server.hh"
 #include "world.hh"
 #include "gnomegui.hh"
 #include "playerdevice.hh"
@@ -448,8 +449,8 @@ gboolean GnomeProgressTimeout( gpointer data )
 
   
   // if stage is counting down to a stop time, show the fraction of time used up
-  if( world->GetStopTime() )
-    gtk_progress_bar_set_fraction( g_pbar, world->GetTime() / world->GetStopTime() );
+  if( ((CStageServer*)world)->GetStopTime() )
+    gtk_progress_bar_set_fraction( g_pbar, world->GetTime() / ((CStageServer*)world)->GetStopTime() );
   
     /* As this is a timeout function, return TRUE so that it
    * continues to get called */
