@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: playerdevice.hh,v 1.11 2002-11-19 04:27:18 rtv Exp $
+ * CVS info: $Id: playerdevice.hh,v 1.12 2002-11-20 21:34:25 rtv Exp $
  */
 
 #ifndef PLAYERENTITY_HH
@@ -34,9 +34,6 @@
 #if HAVE_STDINT_H
 #include <stdint.h>
 #endif
-
-// mode mode for position device
-typedef enum{ VELOCITY_MODE, POSITION_MODE } stage_move_mode_t;
 
 // (a little hacky - might engineer out of this one day - rtv)
 class CPlayerEntity;

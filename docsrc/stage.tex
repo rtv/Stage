@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.5 2002-11-11 08:21:39 rtv Exp $
+% CVS: $Id: stage.tex,v 1.6 2002-11-20 21:34:25 rtv Exp $
 
 \documentclass[11pt,twoside]{report}
 
@@ -234,6 +234,9 @@ but there is a USC technical report, available at:
 \begin{quote}
 Richard T.~Vaughan. "Stage: A Multiple Robot Simulator". Technical Report IRIS-00-394, Institute for Robotics and Intelligent Systems, School of Engineering, University of Southern California, 2000.
 \end{quote}
+
+The report is out of date on the details of using Stage, but it
+explains the motivation and design, which is still relevant.
 
 These papers (and any new ones) are available at: 
 
@@ -1070,25 +1073,33 @@ number, device index, etc). \\
 
 \hline
 
+\verb'blobfinder' & \verb'device' & Vision-based color blob detector
+(formerly visiondevice.\\
+
 \verb'broadcast' & \verb'device' & Allows clients to communicate with
 one another through Stage/Player; messages sent to the broadcast
 device will be received by all other broadcast devices.\\
+
+\verb'fiducialfinder' & \verb'device' & Locate & ID fiducials (formerly Laser
+beacon detector).\\
 
 \verb'gps' & \verb'device' & GPS receiver; currently just returns the
 true pose of the GPS device.\\
 
 \verb'gripper' & \verb'device' & 1-DOF gripper (open/close).\\
 
+\verb'idar' & \verb'device' & Infrared Data and Ranging device, based
+on the HRL Labs Pherobot main sensor.\\
+
+\verb'idarturret' & \verb'device' & Array of IDARs accessed together
+for efficiency.\\
+
 \verb'laser' & \verb'device' & Scanning laser range finder.\\
 
-\verb'fiducialfinder' & \verb'device' & Find fiducials (formerly Laser
-beacon detector).\\
-
-\verb'position' & \verb'device' & A bare-bones differential-drive
-mobile robot with odometry.\\
-
-\verb'omniposition' & \verb'device' & An omnidirectional mobile robot
-with odometry.\\
+\verb'position' & \verb'device' & A mobile robot platform with
+odometric localization and stall sensor. Supports differential-steer
+(like a Pioneer) and omnidirectional drive (like a U.Melbourne
+RooBot)\\
 
 \verb'ptz' & \verb'device' & Pan-tilt-zoom camera. \\
 
@@ -1097,15 +1108,6 @@ with odometry.\\
 \verb'truth' & \verb'device' & Thee truth device can be used to get
 and set the pose of entities in the simulator; setting the pose of a
 truth device will `teleport' the device's parent to a new location.\\
-
-\verb'blobfinder' & \verb'device' & Vision-based color blob detector
-(formerly visiondevice.\\
-
-\verb'idar' & \verb'device' & Infrared Data and Ranging device, based
-on the HRL Labs Pherobot main sensor.\\
-
-\verb'idarturret' & \verb'device' & Array of IDARs accessed together
-for efficiency.\\
 
 \hline
 \end{tabularx}
@@ -1411,57 +1413,27 @@ Name & Value\\
 {\tt position}
 
 \subsubsection*{Description}
-The {\tt position} device simulates a bare-bones differential-drive
-mobile robot. 
+The {\tt position} device simulates a a mobile robot platform with
+odometric localization and stall sensor. Supports differential-steer
+(like a Pioneer) and omnidirectional drive (like a U.Melbourne
+RooBot).
 
 \subsubsection*{Properties}
 \begin{tabularx}{\columnwidth}{llX}
 \hline
 Name & Values & Description \\
 \hline
-\verb'<none>'\\
+\verb'drive' & \verb'"diff"' or \verb'"omni"' & Selects differential or omnidirectional drive\\
 \hline
 \end{tabularx}
 
 \subsubsection*{Defaults}
 \begin{tabularx}{\columnwidth}{llX}
+\hline Name & Value\\ 
 \hline
-Name & Value\\
-\hline
-\verb'<none>'\\
-\hline
-\end{tabularx}
-
-\newpage
-\subsection{The {\tt omniposition} device}
-
-\subsubsection*{Parent}
-{\tt device}
-
-\subsubsection*{Interface}
-{\tt position}
-
-\subsubsection*{Description}
-The {\tt omniposition} device simulates an omnidirectional mobile robot base.
-
-\subsubsection*{Properties}
-\begin{tabularx}{\columnwidth}{llX}
-\hline
-Name & Values & Description \\
-\hline
-\verb'<none>'\\
+\verb'drive' & \verb'"diff"'\\
 \hline
 \end{tabularx}
-
-\subsubsection*{Defaults}
-\begin{tabularx}{\columnwidth}{llX}
-\hline
-Name & Value\\
-\hline
-\verb'<none>'\\
-\hline
-\end{tabularx}
-
 
 \newpage
 \subsection{The {\tt ptz} device}

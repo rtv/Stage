@@ -24,7 +24,7 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.9 2002-11-19 04:27:18 rtv Exp $
+ * CVS info: $Id: library.cc,v 1.10 2002-11-20 21:34:25 rtv Exp $
  */
 
 #include "library.hh"
@@ -40,7 +40,7 @@
 #include "models/fiducialfinderdevice.hh"
 #include "models/laserdevice.hh"
 #include "models/motedevice.hh"
-#include "models/omnipositiondevice.hh"
+#include "models/positiondevice.hh"
 #include "models/powerdevice.hh"
 #include "models/ptzdevice.hh"
 #include "models/puck.hh"
@@ -54,13 +54,10 @@ typedef CreatorFunctionPtr CFP;
 // this array defines the models that are available to Stage. New
 // devices must be added here.
 
-// TODO - eliminate the StageType number and use either the position in this array, or the address of the creator function to ID the type.
-
 libitem_t library_items[] = { 
   { "bitmap", "black", (CFP)CBitmap::Creator},
   { "laser", "blue", (CFP)CLaserDevice::Creator},
-  { "position", "red", (CFP)COmniPositionDevice::Creator},
-  { "omniposition", "red", (CFP)COmniPositionDevice::Creator},
+  { "position", "red", (CFP)CPositionDevice::Creator},
   { "sonar", "green", (CFP)CSonarDevice::Creator},
   { "box", "yellow", (CFP)CBox::Creator},
   { "gps", "gray", (CFP)CGpsDevice::Creator},
@@ -79,7 +76,6 @@ libitem_t library_items[] = {
   { "broadcast", "brown", (CFP)CBroadcastDevice::Creator},
   { "bumper", "LightBlue", (CFP)CBumperDevice::Creator},
   // { "bps", BpsType, (CFP)CBpsDevice::Creator},
-  //{ "descartes", "DarkBlue", (CFP)CDescartesDevice::Creator},
   {NULL, NULL, NULL } // marks the end of the array
 };  
 

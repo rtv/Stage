@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.51 2002-11-19 04:27:18 rtv Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.52 2002-11-20 21:34:25 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -805,6 +805,10 @@ PositionPutData( double xpos, double ypos, double yaw,
 		 bool stall )
 {
   player_position_data_t data;
+
+  // normalize yaw 0-2PI
+  yaw = fmod( yaw + TWOPI, TWOPI );
+  
   PositionDataPack( &data, xpos, ypos, yaw,
 		    xspeed, yspeed, yawspeed, int(stall) );
 
@@ -840,6 +844,10 @@ PositionGetCommand( double* xpos, double* ypos, double* yaw,
     return false;
   
   PositionCmdUnpack( &command, xpos, ypos, yaw, xspeed, yspeed, yawspeed );
+
+  // normalize yaw +-PI
+  *yaw = atan2(sin(*yaw), cos(*yaw));
+
   return true;
 };
 
