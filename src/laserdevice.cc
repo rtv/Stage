@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.11 $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -50,6 +50,11 @@ CLaserDevice::CLaserDevice(CRobot* rr, void *buffer, size_t data_len,
     m_max_range = 8.0; // meters - this could be dynamic one day
                      // but this matches the default laser setup.
 
+    sampleIncrement = 2; // specify the degree of under-sampling
+                     // the ray tracing will only compute every sampleIncrement
+                     // sample for speed-up versus lost resolution. 
+                     // must be > 0. I reckon 2 is a good default - RTV
+    
     undrawRequired = false;
 }
 
@@ -110,7 +115,7 @@ bool CLaserDevice::Update()
 
     // Generate a complete set of samples
     //
-    for(int s = 0; s < m_samples; s++)
+    for(int s = 0; s < m_samples; s+=sampleIncrement)
     {
         // Allow for partial scans
         //
@@ -172,21 +177,39 @@ bool CLaserDevice::Update()
         // Set the range
         // Swap the bytes while we're at it
         //
-        m_data[s] = htons(v);
-
-	// store the hit points if we need to draw them on the GUI
-	  //if( GUIrender )
-	   {
-	     hitPts[s].x = (int)pixelx;
-	     hitPts[s].y = (int)pixely;
-	   }
+	if( sampleIncrement == 1 ) // we're not undersampling 
+	  {
+	    m_data[s] = htons( v );
+	    
+	    // store the hit points if we need to draw them on the GUI
+	    if( m_robot->showDeviceDetail )
+	      {
+		hitPts[s].x = (int)pixelx;
+		hitPts[s].y = (int)pixely;
+	      }
+	  }
+	else // we're undersampling so fill in intervening results too
+ 	  { 
+	    unsigned short u = htons(v);
+	    // fill in all the elements we've under-sampled
+	    for( int d=0; (d < sampleIncrement) && (s+d < m_samples); d++ )
+	      {
+		m_data[s+d] = u;
+		
+		// store the hit points if we need to draw them on the GUI
+		if( m_robot->showDeviceDetail )
+		  {
+		    hitPts[s+d].x = (int)pixelx;
+		    hitPts[s+d].y = (int)pixely;
+		  }
+	      }
+	  }
     }
     
     // Copy the laser data to the data buffer
     //
     PutData(m_data, m_samples * sizeof(UINT16));
 
-    //~redrawLaser = true;
     return true;
 }
 

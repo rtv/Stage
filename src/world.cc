@@ -1,7 +1,7 @@
 /*************************************************************************
  * world.cc - top level class that contains and updates robots
  * RTV
- * $Id: world.cc,v 1.4 2000-12-01 03:13:32 ahoward Exp $
+ * $Id: world.cc,v 1.5 2000-12-07 04:30:19 vaughan Exp $
  ************************************************************************/
 
 #include <X11/Xlib.h>
@@ -222,7 +222,13 @@ CWorld::~CWorld()
     //
     // ahoward
 
-    delete m_laser_img;
+  // yeah the robots should get nixed, but ah, the beauty of Linux's 
+  // kernel garbage collection. this code would crash windows after a 
+  // few hundred runs but here we're OK - RTV.
+
+  delete m_laser_img;
+  delete bimg;
+  delete img;
 }
 
 

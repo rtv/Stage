@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.9 $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -62,6 +62,8 @@ class CLaserDevice : public CPlayerDevice
     private: int m_max_segment;
     private: int m_samples;
     private: bool m_intensity;
+
+    private: int sampleIncrement; // controls undersampling
 
     // Array holding the laser data
     //
