@@ -5,7 +5,7 @@
 // Date: 15 Nov 2001
 // Desc: A property handling class
 //
-// $Id: worldfile.cc,v 1.2.2.2 2001-11-27 18:40:51 ahoward Exp $
+// $Id: worldfile.cc,v 1.2.2.3 2001-11-30 21:20:17 ahoward Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -109,7 +109,7 @@ bool CWorldFile::Load(const char *filename)
 
   // Create a list to put the tokens into
   int token_count = 0;
-  int token_size = 4096;
+  int token_size = 8192;
   char **tokens = new char*[token_size];
 
   // Tokenize the buffer
