@@ -21,16 +21,18 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: playerdevice.hh,v 1.3 2002-09-07 02:05:25 rtv Exp $
+ * CVS info: $Id: playerdevice.hh,v 1.4 2002-09-10 23:42:45 gerkey Exp $
  */
 
 #ifndef PLAYERENTITY_HH
 #define PLAYERENTITY_HH
 
-#include <stdint.h>
 
 #include "entity.hh"
 
+#if HAVE_STDINT_H
+#include <stdint.h>
+#endif
 
 // (a little hacky - might engineer out of this one day - rtv)
 class CPlayerEntity;
