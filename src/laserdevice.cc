@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -37,9 +37,12 @@
 CLaserDevice::CLaserDevice(void *data_buffer, size_t data_len)
         : CDevice(data_buffer, data_len)
 {
-    m_update_interval = 0.05;
-    m_last_update = 0;
-    m_samples = 361;
+  //m_update_interval = 0.05; // fast!
+  m_update_interval = 0.2; // RTV - speed to match the real laser
+  m_last_update = 0;
+  m_samples = 361;
+  m_max_range = 8.0; // meters - this could be dynamic one day
+                     // but this matches the default laser setup.
 }
 
 
@@ -60,56 +63,70 @@ bool CLaserDevice::Update()
     //
     if (m_world->timeNow - m_last_update <= m_update_interval)
         return false;
-    m_last_update = m_world->timeNow;
+    m_last_update = m_world->timeNow; 
 
     // Make sure the data buffer is big enough
     //
     ASSERT(m_samples <= ARRAYSIZE(m_data));
 
-    float startAngle = m_robot->a + M_PI / 2;
-    float increment = -M_PI / m_samples;
-    BYTE pixel = 0;
-
-    float xx, yy = m_robot->y;
-
-    int maxRange = (int)(8.0 * m_world->ppm); // 8m times pixels-per-meter
+    // calculate the angle of the first laser beam
+    double startAngle = m_robot->a + M_PI_2;
+    double increment = -M_PI / m_samples; // and the difference between beams
+    
+    int maxRange = (int)( m_max_range * m_world->ppm); //scaled and quantized
     int rng = 0;
+
+    //look up a couple of indrect variables to avoid doing it in the loop
+    BYTE myColor = m_robot->color;
+    double ppm = m_world->ppm; // pixels per metre
+
+    double robotx = m_robot->x;
+    double roboty = m_robot->y;
+
+    float v = 0; // computed range value
+ 
+    double dist, dx, dy, angle, pixelx, pixely;
+    
+    BYTE pixel, sidePixel;
 
     // Generate a complete set of samples
     //
     for(int s = 0; s < m_samples; s++)
     {
-        float dist, dx, dy, angle;
-        
         angle = startAngle + ( s * increment );
         
         dx = cos( angle );
         dy = sin( angle);
-        
-        xx = m_robot->x;
-        yy = m_robot->y;
-        rng = 0;
-        
-        pixel = img->get_pixel( (int)xx, (int)yy );
-        
+
+        // initialize variables that'll be interated over
+        pixelx = robotx;
+        pixely = roboty;
+
+        rng = pixel = sidePixel = 0;
+
         // no need for bounds checking - get_pixel() does that internally
         //
-        while( rng < maxRange && ( pixel == 0 || pixel == m_robot->color ) )
+        while( rng < maxRange 
+	       && ( pixel == 0 || pixel == myColor ) 
+	       && ( sidePixel == 0 || sidePixel == myColor ) )
         {
-            xx+=dx;
-            yy+=dy;
-            rng++;
-            
-            pixel = img->get_pixel( (int)xx, (int)yy );
+	    // we have to check 2 pixels to prevent sliding through
+	    // 1-pixel gaps in jaggies
+            pixel = img->get_pixel( (int)pixelx, (int)pixely );
+	    sidePixel = img->get_pixel( (int)pixelx + 1, (int)pixely );
+
+            pixelx += dx;
+            pixely += dy;
+            rng++;            
         }
         
         // set laser value, scaled to current ppm
         // and converted to mm
         //
-        float v = 1000 * rng / m_world->ppm;
+        v = 1000.0 * rng / ppm;
         
         // Set the range
-        // Swap the bytes while where at it
+        // Swap the bytes while we're at it
         //
         m_data[s] = htons((WORD16) v);
     }

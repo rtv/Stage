@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.cc - all the graphics and X management
  * RTV
- * $Id: win.cc,v 1.1.1.1 2000-11-29 00:16:53 ahoward Exp $
+ * $Id: win.cc,v 1.2 2000-11-29 22:44:49 vaughan Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -512,7 +512,7 @@ void CWorldWin::HandleEvent( void )
 		      }
 
 
-		  //getchar();
+		  getchar();
 		  sleep( 3 );
 		  Draw();
 		  DrawRobots();

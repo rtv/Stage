@@ -1,7 +1,7 @@
 #
 # Makefile - the top level Makefile to build Stage
 # RTV
-# $Id: Makefile,v 1.2 2000-11-29 02:28:04 ahoward Exp $
+# $Id: Makefile,v 1.3 2000-11-29 22:44:49 vaughan Exp $
 # 
 
 # the directory of the player source
@@ -27,5 +27,9 @@ install: stage
 
 
 
+
+
+
+# DO NOT DELETE
 
 

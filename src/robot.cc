@@ -1,7 +1,7 @@
 /*************************************************************************
  * robot.cc - most of the action is here
  * RTV
- * $Id: robot.cc,v 1.3 2000-11-29 04:03:51 ahoward Exp $
+ * $Id: robot.cc,v 1.4 2000-11-29 22:44:49 vaughan Exp $
  ************************************************************************/
 
 #include <errno.h>
@@ -62,6 +62,9 @@ CRobot::CRobot( int iid, float w, float l,
 
   width = w;
   length = l;
+
+  halfWidth = width / 2.0;   // the halves are used often in calculations
+  halfLength = length / 2.0;
 
   xorigin = oldx = x = startx;
   yorigin = oldy = y = starty;
@@ -261,15 +264,12 @@ void CRobot::StoreRect( void )
 void CRobot::CalculateRect( float x, float y, float a )
 {
   // fill an array of Points with the corners of the robots new position
-
-  float cx = length / 2.0;
-  float cy = width / 2.0;
   float cosa = cos( a );
   float sina = sin( a );
-  float cxcosa = cx * cosa;
-  float cycosa = cy * cosa;
-  float cxsina = cx * sina;
-  float cysina = cy * sina;
+  float cxcosa = halfLength * cosa;
+  float cycosa = halfWidth  * cosa;
+  float cxsina = halfLength * sina;
+  float cysina = halfWidth  * sina;
 
   rect.toplx = (int)(x + (-cxcosa + cysina));
   rect.toply = (int)(y + (-cxsina - cycosa));
@@ -294,6 +294,9 @@ void CRobot::GetPositionCommands( void )
   short v = *(short*)(playerIO + P2OS_COMMAND_START );
   short w = *(short*)(playerIO + P2OS_COMMAND_START + 2 );
 
+  // unlock
+  world->UnlockShmem();
+
   float fv = (float)(short)ntohs(v);//1000.0 * (float)ntohs(v);
   float fw = (float)(short)ntohs(w);//M_PI/180) * (float)ntohs(w);
 
@@ -303,8 +306,7 @@ void CRobot::GetPositionCommands( void )
       speed = 0.001 * fv;
       turnRate = -(M_PI/180.0) * fw;
     }
-  // unlock
-  world->UnlockShmem();
+
 }
 
 
@@ -376,7 +378,7 @@ void CRobot::PublishSonar( void )
   world->UnlockShmem();
 }
 
-void CRobot::PublishLaser( void )
+/*void CRobot::PublishLaser( void )
 {
   // laser device
   //  int laserDataOffset = P2OS_DATA_BUFFER_SIZE +
@@ -397,6 +399,17 @@ P2OS_COMMAND_BUFFER_SIZE;
 
   world->UnlockShmem();
 }
+
+*/
+
+//void CRobot::OrientRectangle( Rect& r1 )
+//{
+//Rect r2;
+
+  
+
+
+
 
 void CRobot::PublishVision( void )
 {
@@ -427,10 +440,14 @@ void CRobot::UnDraw( Nimage* img )
   img->draw_line( oldRect.botrx, oldRect.botry,
     oldRect.toplx, oldRect.toply, 0 );
 
-  img->draw_line( oldRect.botlx, oldRect.botly,
-    oldCenterx, oldCentery,0);
-  img->draw_line( oldRect.toprx, oldRect.topry,
-    oldCenterx, oldCentery,0);
+  // solid robot
+  //img->bgfill( centerx, centery, 0 );
+
+  // 11/29/00 RTV -  took out the direction indicator 
+  //img->draw_line( oldRect.botlx, oldRect.botly,
+  //oldCenterx, oldCentery,0);
+  //img->draw_line( oldRect.toprx, oldRect.topry,
+  //oldCenterx, oldCentery,0);
 }
 
 
@@ -446,10 +463,24 @@ void CRobot::Draw( Nimage* img )
   img->draw_line( rect.botrx, rect.botry,
     rect.toplx, rect.toply, color );
 
+  img->draw_line( rect.toplx + 3, rect.toply + 3,
+    rect.toprx -3, rect.topry + 3, color );
+  /* img->draw_line( rect.toprx, rect.topry,
+    rect.botlx, rect.botly, color );
   img->draw_line( rect.botlx, rect.botly,
-    centerx, centery, color );
-  img->draw_line( rect.toprx, rect.topry,
-    centerx, centery, color );
+    rect.botrx, rect.botry, color );
+  img->draw_line( rect.botrx, rect.botry,
+    rect.toplx, rect.toply, color );
+  */
+
+  // solid robot
+  //img->bgfill( centerx, centery, color );
+
+  // 11/29/00 RTV -  took out the direction indicator 
+  //img->draw_line( rect.botlx, rect.botly,
+  //centerx, centery, color );
+  //img->draw_line( rect.toprx, rect.topry,
+  //centerx, centery, color );
 }
 
 
@@ -601,7 +632,7 @@ int CRobot::UpdateSonar( Nimage* img  )
   return false;
 }
 
-int CRobot::UpdateLaser( Nimage* img )
+/*int CRobot::UpdateLaser( Nimage* img )
 {
   if( world->timeNow - lastLaser > world->laserInterval )
     {
@@ -668,6 +699,7 @@ int CRobot::UpdateLaser( Nimage* img )
     }
   return false;
 }
+*/
 
 int CRobot::UpdateVision( Nimage* img )
 {
@@ -949,56 +981,56 @@ int CRobot::Move( Nimage* img )
       // trace the robot's outline to see if it will hit anything
       char hit = 0;
       if( hit = img->rect_detect( rect, color ) > 0 )
- // hit! so don't do the move - just redraw the robot where it was
- {
-   //cout << "HIT! " << endl;
-   memcpy( &rect, &oldRect, sizeof( struct Rect ) );
-   Draw( img );
-
-   stall = 1; // motors stalled due to collision
- }
+	// hit! so don't do the move - just redraw the robot where it was
+	{
+	  //cout << "HIT! " << endl;
+	  memcpy( &rect, &oldRect, sizeof( struct Rect ) );
+	  Draw( img );
+	  
+	  stall = 1; // motors stalled due to collision
+	}
       else // do the move
- {
-   moved = true;
-
-   stall = 0; // motors not stalled
-
-   x = tx; // move to the new position
-   y = ty;
-   a = ta;
-
-   //update the robot's odometry estimate
-   xodom +=  nowSpeed * world->ppm * cos( aodom ) * nowTimeStep;
-   yodom +=  nowSpeed * world->ppm * sin( aodom ) * nowTimeStep;
-
-   if( world->maxAngularError != 0.0 ) //then introduce some error
-     {
-       float error = 1.0 + ( drand48()* world->maxAngularError );
-       aodom += nowTurn * nowTimeStep * error;
-     }
-   else
-     aodom += nowTurn * nowTimeStep;
-
-   aodom = fmod( aodom + TWOPI, TWOPI );  // normalize angle
-
-   // erase and redraw the robot in the world bitmap
-   UnDraw( img );
-   Draw( img );
-
-   // erase and redraw the robot on the X display
-   if( win ) win->DrawRobotIfMoved( this );
-
-   // update the `old' stuff
-   memcpy( &oldRect, &rect, sizeof( struct Rect ) );
-   oldCenterx = centerx;
-   oldCentery = centery;
- }
+	{
+	  moved = true;
+	  
+	  stall = 0; // motors not stalled
+	  
+	  x = tx; // move to the new position
+	  y = ty;
+	  a = ta;
+	  
+	  //update the robot's odometry estimate
+	  xodom +=  nowSpeed * world->ppm * cos( aodom ) * nowTimeStep;
+	  yodom +=  nowSpeed * world->ppm * sin( aodom ) * nowTimeStep;
+	  
+	  if( world->maxAngularError != 0.0 ) //then introduce some error
+	    {
+	      float error = 1.0 + ( drand48()* world->maxAngularError );
+	      aodom += nowTurn * nowTimeStep * error;
+	    }
+	  else
+	    aodom += nowTurn * nowTimeStep;
+	  
+	  aodom = fmod( aodom + TWOPI, TWOPI );  // normalize angle
+	  
+	  // erase and redraw the robot in the world bitmap
+	  UnDraw( img );
+	  Draw( img );
+	  
+	  // erase and redraw the robot on the X display
+	  if( win ) win->DrawRobotIfMoved( this );
+	  
+	  // update the `old' stuff
+	  memcpy( &oldRect, &rect, sizeof( struct Rect ) );
+	  oldCenterx = centerx;
+	  oldCentery = centery;
+	}
     }
-
+  
   oldx = x;
   oldy = y;
   olda = a;
-
+  
   return moved;
 }
 
@@ -1103,8 +1135,9 @@ void CRobot::Update( Nimage* img )
 
   // Update all devices
   //
-  for (int i = 0; i < m_device_count; i++)
-      m_device[i]->Update();
+  for (int i = 0; i < m_device_count; i++) 
+    // this subscription test is a hack for now!
+       if( playerIO[ SUB_LASER ] ) m_device[i]->Update();
 }
 
 

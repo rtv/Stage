@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.1 $
+//  $Author: vaughan $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -48,6 +48,10 @@ class CLaserDevice : public CDevice
     //
     private: int m_samples;
 
+    // Maximum range of sample in meters
+    //
+    private: double m_max_range;
+    
     // Array holding the laser data
     //
     private: WORD16 m_data[512];

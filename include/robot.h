@@ -2,7 +2,7 @@
  * robot.h - CRobot defintion - most of the action is here
             
  * RTV
- * $Id: robot.h,v 1.2 2000-11-29 04:03:51 ahoward Exp $
+ * $Id: robot.h,v 1.3 2000-11-29 22:44:49 vaughan Exp $
  ************************************************************************/
 
 #include <offsets.h> // for the ACTS size defines
@@ -51,6 +51,8 @@ public:
   
   float x, y, a, oldx, oldy, olda;  
   float width, length, speed, turnRate;
+  float halfWidth, halfLength;
+
   unsigned char color;
   unsigned char channel;
 
@@ -95,6 +97,7 @@ public:
   XPoint loldHitPts[LASERSAMPLES];
 
   Rect rect, oldRect;
+  // center pixel positions are used to draw the direction indicator 
   int centerx, oldCenterx, centery, oldCentery;
   CRobot* next;
 
@@ -122,7 +125,7 @@ public:
 
   void Update( Nimage* img );
   int UpdateSonar( Nimage* img ); 
-  int UpdateLaser( Nimage* img ); 
+  //int UpdateLaser( Nimage* img ); 
   int UpdateVision( Nimage* img ); 
 
   void CalculateRect( float x, float y, float a );
@@ -135,7 +138,7 @@ public:
   int HasMoved( void );
 
   void PublishVision( void );
-  void PublishLaser( void );
+  //void PublishLaser( void );
   void PublishSonar( void );
   void PublishPosition( void );
   void GetPositionCommands( void );
