@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonar.cc,v 1.1.2.4 2003-02-12 03:02:34 rtv Exp $
+ * CVS info: $Id: sonar.cc,v 1.1.2.5 2003-02-13 00:41:30 rtv Exp $
  */
 
 #include <assert.h>
@@ -44,9 +44,7 @@ CSonarModel::CSonarModel( int id, char* token, char* color, CEntity *parent )
   this->sonar_count = SONARSAMPLES;
   
   // we don't need a rectangle 
-  if( rects ) delete[] rects;
-  rect_count = 0;
-  this->DetectRectBounds();
+  SetRects( NULL, 0 );
   
   for (int i = 0; i < this->sonar_count; i++)
     {

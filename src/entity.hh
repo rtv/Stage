@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15.2.14 2003-02-13 00:14:47 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.15 2003-02-13 00:41:30 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -129,9 +129,15 @@ protected:
   stage_rotrect_t* rects;
   int rect_count;
   double rects_max_x, rects_max_y; // the upper bounds on rectangle positions
-  // sets our local rectangle bounds members to the extreme values
-  // of the rectangle array members
-  void DetectRectBounds(void);
+  
+  // copies the array of rects into this entity, allocating storage
+  // and setting the rects_max members correctly
+  void SetRects( stage_rotrect_t* rects, int num );
+
+  // find the extreme x and y values of an array of rectangles
+  void DetectRectBounds( stage_rotrect_t* rects, int num, 
+			 double *maxx, double* maxy);
+  
   // convert the rotated rectangle into global coords, taking into account
   // the entities pose and the rectangle scaling
   void GetGlobalRect( stage_rotrect_t* dest, stage_rotrect_t* src );

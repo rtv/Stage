@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.15 2003-02-13 00:14:47 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.16 2003-02-13 00:41:30 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -118,18 +118,16 @@ CEntity::CEntity( int id, char* token, char* color, CEntity* parent )
     {
       // rectangles - start with a single rect
       // it is automagically scaled to fit the size of the entity
-      this->rects = new stage_rotrect_t[1];
-      this->rects[0].x = 0.0;
-      this->rects[0].y = 0.0;
-      this->rects[0].a = 0.0;
-      this->rects[0].w = 1.0;
-      this->rects[0].h = 1.0;
-      this->rect_count = 1;
+      stage_rotrect_t rect;
+      rect.x = 0.0;
+      rect.y = 0.0;
+      rect.a = 0.0;
+      rect.w = 1.0;
+      rect.h = 1.0;
+
+      this->SetRects( &rect, 1 );
     }
-      
-  // sets our rect boundary members
-  this->DetectRectBounds();
-      
+    
   // the default entity is a colored box
   vision_return = true; 
   laser_return = LaserVisible;
@@ -690,19 +688,19 @@ void CEntity::SetParent(CEntity* new_parent)
 
 // sets our local rectangle bounds members to the extreme values
 // of the rectangle array members
-void CEntity::DetectRectBounds(void)
+void CEntity::DetectRectBounds(  stage_rotrect_t* rects, int num, 
+				 double* maxx, double* maxy )
 {
-  // find the bounds
-  rects_max_x = rects_max_y = 0.0;
+  *maxx = *maxy = 0.0;
   
   int r;
-  for( r=0; r<this->rect_count; r++ )
+  for( r=0; r<num; r++ )
     {
-      if( (rects[r].x+rects[r].w)  > rects_max_x ) 
-	rects_max_x = (rects[r].x+rects[r].w);
+      if( (rects[r].x+rects[r].w)  > *maxx ) 
+	*maxx = (rects[r].x+rects[r].w);
       
-      if( (rects[r].y+rects[r].h)  > rects_max_y ) 
-	rects_max_y = (rects[r].y+rects[r].h);
+      if( (rects[r].y+rects[r].h)  > *maxy ) 
+	*maxy = (rects[r].y+rects[r].h);
     }
 }
 
@@ -758,6 +756,40 @@ void CEntity::DestroyConnection( int con )
     ch->DestroyConnection( con );
 }
 
+void CEntity::SetRects( stage_rotrect_t* rects, int num )
+{
+  // delete any old rects
+  if( this->rects )
+    {
+      RenderRects( false );
+      delete[] this->rects;
+    }  
+  // we just got this many rectangles
+  this->rect_count = num;
+  
+  
+  if( num > 0 )
+    { // some rects
+      assert( rects );
+      // make space for the new rects
+      this->rects = new stage_rotrect_t[ num ];
+      
+      // copy the rects into our local storage
+      memcpy( this->rects, rects, num * sizeof(stage_rotrect_t) );
+      
+      this->DetectRectBounds( this->rects, this->rect_count,
+			      &this->rects_max_x, &this->rects_max_y );
+
+      RenderRects( true );
+    }
+  else
+    { // no rects 
+      this->rects = NULL;
+      this->rects_max_x = this->rects_max_y  = 0.0;
+    }
+     
+  //PRINT_WARN2( "bounds %.2f %.2f", rects_max_x, rects_max_y );
+}
 
 int CEntity::SetProperty( int con, stage_prop_id_t property, 
 			  char* value, size_t len )
@@ -867,27 +899,9 @@ int CEntity::SetProperty( int con, stage_prop_id_t property,
     
     case STG_PROP_ENTITY_RECTS:
       {
-	// delete any previous rectangles we might have
-	if( this->rects )
-	  {
-	    RenderRects( false ); // remove them from the matrix
-	    delete[] rects;
-	  }
-	
-	// we just got this many rectangles
-	this->rect_count = len / sizeof(stage_rotrect_t);
-	
-	// make space for the new rects
-	this->rects = new stage_rotrect_t[ this->rect_count ];
-	
-	// copy the rects into our local storage
-	memcpy( this->rects, value, len );
-	
-	DetectRectBounds();
-
-	//PRINT_WARN2( "bounds %.2f %.2f", rects_max_x, rects_max_y );
-
-	RenderRects( true );
+	this->SetRects( (stage_rotrect_t*)value, 
+			len/sizeof(stage_rotrect_t) );
+	//RenderRects( true );
       }
       break;
 
@@ -1121,8 +1135,7 @@ void CEntity::Print( int fd, char* prefix )
   else
     puts( "" );
 
-  // add an indent to the prefix
-  
+  // add an indent to the prefix 
   char* buf = new char[ strlen(prefix) + 1 ];
   sprintf( buf, "\t%s", prefix );
 
@@ -1140,25 +1153,6 @@ bool CEntity::IsSubscribed( stage_prop_id_t prop )
   return false;
 }
 
-/*
-// these versions sub/unsub to this device and all its decendants
-void CEntity::FamilySubscribe()
-{ 
-  CHILDLOOP( ch ) 
-    ch->FamilySubscribe(); 
-
-  sub_count++;
-};
-
-void CEntity::FamilyUnsubscribe()
-{ 
-  CHILDLOOP( ch ) 
-    ch->FamilyUnsubscribe(); 
-  
-  sub_count--;
-};
-*/
-
 
 void CEntity::GetStatusString( char* buf, int buflen )
 {
@@ -1166,17 +1160,17 @@ void CEntity::GetStatusString( char* buf, int buflen )
   this->GetGlobalPose( x, y, th );
   
   // check for overflow
-  assert( -1 != 
-	  snprintf( buf, buflen, 
-		    "Pose(%.2f,%.2f,%.2f) Stage(%d:%s)",
-		    x, y, th, 
-		    this->stage_id,
-		    this->token ) );
+  assert( -1 !=  snprintf( buf, buflen, 
+			   "Pose(%.2f,%.2f,%.2f) Stage(%d:%s)",
+			   x, y, th, this->stage_id, this->token ) );
 }  
 
 
 void CEntity::RenderRects( bool render )
 {
+  if( !CEntity::matrix )
+    return;
+  
   stage_rotrect_t glob;
   
   int r;
