@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.2 $
+//  $Author: ahoward $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -24,7 +24,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 1
+//#define ENABLE_TRACE 1
 
 #include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
 #include "world.h"
@@ -101,7 +101,7 @@ bool CPtzDevice::Update()
     short command[3];
     if (GetCommand(command, sizeof(command)) != sizeof(command))
     {
-        MSG("command buffer has incorrect length -- ignored");
+        TRACE0("command buffer has incorrect length -- ignored");
         return false;
     }
 
