@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtk_main.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.4 $
+//  $Author: gerkey $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
 
     // Create the world
     //
-    CWorld *world = new CWorld;
+    world = new CWorld;
 
     // Initialise the RTK interface
     //
