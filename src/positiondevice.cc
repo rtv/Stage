@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -151,11 +151,10 @@ void CPositionDevice::Update( double sim_time )
   
     // if its time to recalculate state
     //
-    if( m_world->GetTime() - m_last_update <= m_interval )
+    if( sim_time - m_last_update <  m_interval )
       return;
     
-    m_last_update = m_world->GetTime();
-
+    m_last_update = sim_time;
 
     // Get the latest command
     //

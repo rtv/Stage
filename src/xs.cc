@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.9 2001-08-14 00:41:39 gerkey Exp $
+ * $Id: xs.cc,v 1.10 2001-08-14 03:15:26 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -747,6 +747,9 @@ void CXGui::HandleIncomingQueue( void )
 	  
       RenderObject( old ); // undraw it
       RenderObject( truth ); // redraw it
+
+      XFlush( display );// reduces flicker
+
       truth_map[ stage_id ] = truth; // update the database with it
 
       //puts( "RESULT: " );
@@ -774,6 +777,8 @@ CXGui::CXGui( int argc, char** argv, environment_t* anenv )
   env = anenv;
 
   window_title = new char[256];
+
+  draw_all_devices = false;
 
   sprintf( window_title,  "%s v.%s", titleStr, versionStr );
 
@@ -1187,6 +1192,14 @@ void CXGui::DrawCircle( double x, double y, double r )
       (ULI)(2.0*r*ppm), (ULI)(2.0*r*ppm), 0, 23040 );
 }
 
+void CXGui::FillCircle( double x, double y, double r )
+{
+    XFillArc( display, win, gc, 
+      (ULI)((x-r) * ppm -panx), 
+      (ULI)((iheight-pany)-((y+r) * ppm)), 
+      (ULI)(2.0*r*ppm), (ULI)(2.0*r*ppm), 0, 23040 );
+}
+
 void CXGui::DrawArc( double x, double y, double w, double h, double th1, double th2 )
 {
     XDrawArc( display, win, gc, 
@@ -1203,6 +1216,14 @@ void CXGui::DrawNoseBox( double x, double y, double w, double h, double th )
 
   DrawNose( x, y, w, th );
 }
+
+void CXGui::DrawRect( double x, double y, double w, double h, double th )
+{
+  DPoint pts[4];
+  GetRect( x,y,w,h,th, pts );
+  DrawPolygon( pts, 4 );
+}
+
 
 void CXGui::DrawNose( double x, double y, double l, double th  )
 {
@@ -1439,12 +1460,12 @@ void CXGui::Zoom( double ratio )
   
   //if( iwidth < width ) width = iwidth;
   //if( iheight < height ) height = iheight;
+  //Size();
 
-  Size();
   CalcPPM();
-  DrawBackground();
-  RefreshObjects();
-
+  
+  DrawBackground(); // black backround and draw walls
+  RefreshObjects(); 
 }
 
 void CXGui::StartDragging( XEvent& reportEvent )
@@ -1541,6 +1562,19 @@ void CXGui::HandleKeyPressEvent( XEvent& reportEvent )
   // handle all the non-cursor keys here
   
   
+  if( key == XK_v )
+    {
+      for( TruthMap::iterator it = truth_map.begin();
+	   it != truth_map.end(); it++ )
+	RenderObject( it->second );
+      
+      draw_all_devices = !draw_all_devices;
+
+      for( TruthMap::iterator it = truth_map.begin();
+	   it != truth_map.end(); it++ )
+	RenderObject( it->second );
+    }
+
   if( key == XK_q || key == XK_Q )
     {
       cout << "QUIT" << endl;

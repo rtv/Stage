@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -62,8 +62,7 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CEntity *parent)
     // beacons aren;t rendered in the laser grid, 
     // so these sizes are really just for external viewers
     m_size_x = 0.05; // very thin!   
-    m_size_y = 0.3; 
-    
+    m_size_y = 0.3;     
 }
 
 

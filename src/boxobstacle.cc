@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -120,7 +120,7 @@ bool CBoxObstacle::Save(int &argc, char **argv)
 void CBoxObstacle::Update( double simtime )
 {
   //cout << "UPDATE BOX" << endl;
-  if( Subscribed() ) // i.e. our truth has been poked
+  if( Subscribed() > 0 ) // i.e. our truth has been poked
     {
       ASSERT(m_world);
       

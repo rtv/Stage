@@ -25,7 +25,6 @@ void CXGui::RenderObject( truth_t &truth )
 
     SetDrawMode( GXxor );
 
-
     // check the object type and call the appropriate render function 
     switch( truth.stage_type )
       {
@@ -33,29 +32,32 @@ void CXGui::RenderObject( truth_t &truth )
       case RectRobotType: RenderRectRobot( &truth, extended ); break; 
       case RoundRobotType: RenderRoundRobot( &truth, extended ); break; 
       case LaserTurretType: RenderLaserTurret( &truth, extended ); break;
-	//case PLAYER_BEACON_CODE: RenderLaserBeacon( &truth, extended ); break;
       case BoxType: RenderBox( &truth, extended ); break;
-      case PlayerType: RenderPlayer( &truth, extended ); break;
-      case MiscType: RenderMisc( &truth , extended); break;
-      case SonarType: RenderSonar( &truth, extended ); break;
       case LaserBeaconType: RenderLaserBeacon( &truth, extended ); break;
-      case LBDType: RenderLaserBeaconDetector( &truth, extended ); break;
-      case VisionType: RenderVision( &truth, extended ); break;
       case PtzType: RenderPTZ( &truth, extended ); break;  
       case VisionBeaconType: RenderVisionBeacon( &truth, extended ); break;  
-      case BroadcastType: RenderBroadcast( &truth, extended ); break;  
       case GripperType: RenderGripper( &truth, extended ); break;  
-      case GpsType: RenderGps( &truth, extended ); break;  
       case PuckType: RenderPuck( &truth, extended ); break;  
-	
-	// deprecated
-	//case PLAYER_TRUTH_CODE: RenderTruth(&truth,extended); break;  
-	//case PLAYER_OCCUPANCY_CODE: RenderOccupancy(&truth,extended); break; 
-	
+		
+      case VisionType: if( draw_all_devices )
+	RenderVision( &truth, extended ); break;
+      case PlayerType: if( draw_all_devices )
+	RenderPlayer( &truth, extended ); break;
+      case MiscType: if( draw_all_devices )
+	RenderMisc( &truth , extended); break;
+      case SonarType: if( draw_all_devices )
+	RenderSonar( &truth, extended ); break;
+      case LBDType: if( draw_all_devices )
+	RenderLaserBeaconDetector( &truth, extended ); break;
+
       default: cout << "XGui: unknown object type " 
 		    << truth.id.type << endl;
       }
-    
+
+      	// deprecated
+	//case PLAYER_TRUTH_CODE: RenderTruth(&truth,extended); break;  
+	//case PLAYER_OCCUPANCY_CODE: RenderOccupancy(&truth,extended); break; 
+
     SetDrawMode( GXcopy );
     
   }
@@ -266,7 +268,38 @@ void CXGui::RenderLaserBeacon( truth_t* exp, bool extended )
 void CXGui::RenderGripper( truth_t* exp, bool extended )
 { 
   SelectColor( exp,white );  
-  DrawNoseBox( exp->x, exp->y, exp->w/2.0, exp->h/2.0, exp->th );
+  DrawRect( exp->x, exp->y, exp->w/2.0, exp->h/2.0, exp->th );
+  
+  double x_offset, y_offset;
+  double ox = exp->x;
+  double oy = exp->y;
+  double oth = exp->th;
+  double w = exp->w/2.0;
+  double h = exp->h/2.0;
+
+  double pw = w;
+  double ph = h/6.0;
+
+  //if(expGripper.paddles_open)
+  //    {
+  x_offset = w + (pw);
+  y_offset = h - (ph);
+  //    }
+  //    else
+  //    {
+  //      x_offset = (exp.width/2.0)+(expGripper.paddle_width/2.0);
+  //      y_offset = (expGripper.paddle_height/2.0);
+  //    }
+
+  DrawRect( ox+(x_offset*cos(oth))+(y_offset*-sin(oth)),
+	     oy+(x_offset*sin(oth))+(y_offset*cos(oth)),            
+	     pw, ph, oth );
+	   
+   y_offset = -y_offset;
+
+   DrawRect( ox+(x_offset*cos(oth))+(y_offset*-sin(oth)),
+	     oy+(x_offset*sin(oth))+(y_offset*cos(oth)),
+	     pw, ph, oth );
 }
 
 void CXGui::RenderRoundRobot( truth_t* exp, bool extended )
@@ -281,7 +314,8 @@ void CXGui::RenderRoundRobot( truth_t* exp, bool extended )
 void CXGui::RenderVisionBeacon( truth_t* exp, bool extended )
 { 
   SelectColor( exp,yellow );
-  DrawCircle( exp->x, exp->y, exp->w/2.0 );
+  //DrawCircle( exp->x, exp->y, exp->w/2.0 );
+  FillCircle( exp->x, exp->y, exp->w/2.0 );
 }
 
 void CXGui::RenderBroadcast( truth_t* exp, bool extended )
@@ -306,11 +340,7 @@ void CXGui::RenderGps( truth_t* exp, bool extended )
 void CXGui::RenderBox( truth_t* exp, bool extended )
 { 
   SelectColor( exp,yellow );
-
-  DPoint pts[4];
-  GetRect( exp->x, exp->y, exp->w/2.0, exp->h/2.0, exp->th, pts );
-  
-  DrawPolygon( pts, 4 );
+  DrawRect( exp->x, exp->y, exp->w/2.0, exp->h/2.0, exp->th );
 }
 
 void CXGui::SelectColor( truth_t* exp, unsigned long def )

@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xs.hh,v 1.2 2001-08-10 20:48:38 vaughan Exp $
+ * $Id: xs.hh,v 1.3 2001-08-14 03:15:25 vaughan Exp $
  ************************************************************************/
 
 #ifndef _WIN_H
@@ -72,6 +72,8 @@ public:
   Display* display;
   int screen;
 
+  bool draw_all_devices;
+
   truth_t* dragging;
 
   unsigned int requestPointerMoveEvents;
@@ -117,8 +119,13 @@ public:
   void DrawLines( DPoint* pts, int numPts );
   void DrawPoints( DPoint* pts, int numPts );
   void DrawPolygon( DPoint* pts, int numPts );
+  void FillPolygon( DPoint* pts, int numPts );
+  void FillCircle( double x, double y, double r );
+  void DrawRect( double x, double y, double w, double h, double th );
   void DrawCircle( double x, double y, double r );
   void DrawArc( double x, double y, double w, double h, 
+		double th1, double th2 );
+  void FillArc( double x, double y, double w, double h, 
 		double th1, double th2 );
   void DrawString( double x, double y, char* str, int len );
   void DrawNoseBox( double x, double y, double w, double h, double th );

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.7 $
+//  $Author: vaughan $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -47,8 +47,8 @@ CVisionBeacon::CVisionBeacon(CWorld *world, CEntity *parent)
     //
     m_map_px = m_map_py = m_map_pth = 0;
 
-    m_size_x = m_radius;
-    m_size_y = m_radius;
+    m_size_x = m_radius * 2.0;
+    m_size_y = m_radius * 2.0;
 }
 
 
@@ -143,10 +143,9 @@ void CVisionBeacon::Update( double sim_time )
 {
     ASSERT(m_world != NULL);
 
-    // Dont update anything if we are not subscribed
-    //
-    //if( Subscribed() < 1 )
-    //return;
+  
+    if( Subscribed() < 1 ) // will be true if our truth has been poked
+     return;
     
     ASSERT(m_world != NULL);
     
