@@ -13,7 +13,7 @@ forage -p 6801 &
 
 # RUN JOYSTICK AND PLAYERV ON THE SAME ROBOT
 echo "Joystick"
-joystick -p 6800 & 
+joystick localhost:6800 & 
 
 echo "Viewer" 
 playerv '-p' 6800 --laser:0 --lbd:0 --position:0 &
