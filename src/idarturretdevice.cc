@@ -2,7 +2,7 @@
 * File: irdevice.cc
 * Author: Richard Vaughan
 * Date: 22 October 2001
-* Desc: Simulates a single sensor of HRL's Infrared Data and Ranging Device
+* Desc: Presents a single interface to multiple IDAR Devices
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/idarturretdevice.cc,v $
 * $Author: rtv $
-* $Revision: 1.7 $
+* $Revision: 1.8 $
 ******************************************************************************/
 
 #include <math.h>
@@ -40,10 +40,10 @@
 // register this device type with the Library
 CEntity idarturret_bootstrap( string("idarturret"), 
 			      IDARTurretType, 
-			      (void*)&CIDARTurretDevice::Creator ); 
+			      (void*)&CIdarTurretDevice::Creator ); 
 
 // constructor 
-CIDARTurretDevice::CIDARTurretDevice(CWorld *world, CEntity *parent )
+CIdarTurretDevice::CIdarTurretDevice(CWorld *world, CEntity *parent )
   : CPlayerEntity(world, parent )
 {
   stage_type = IDARTurretType;
@@ -82,7 +82,7 @@ CIDARTurretDevice::CIDARTurretDevice(CWorld *world, CEntity *parent )
   // we don't call CEntity::Load() for our children - we'll configure them here
   for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
     {
-      idars[i] = new CIDARDevice( world, this );       // create
+      idars[i] = new CIdarDevice( world, this );       // create
 
       // set the player
       idars[i]->m_player.index = i;
@@ -98,7 +98,7 @@ CIDARTurretDevice::CIDARTurretDevice(CWorld *world, CEntity *parent )
 
 
 #ifdef INCLUDE_RTK2
-void CIDARTurretDevice::RenderMessages( player_idarturret_reply_t* rep )
+void CIdarTurretDevice::RenderMessages( player_idarturret_reply_t* rep )
 {
   rtk_fig_clear( this->data_fig );
 
@@ -120,7 +120,7 @@ void CIDARTurretDevice::RenderMessages( player_idarturret_reply_t* rep )
 }
 #endif
 
-void CIDARTurretDevice::Sync( void ) 
+void CIdarTurretDevice::Sync( void ) 
 {
   //  puts( "SYNC" );
 
@@ -212,7 +212,7 @@ void CIDARTurretDevice::Sync( void )
     }
 }
 
-void CIDARTurretDevice::Update( double sim_time ) 
+void CIdarTurretDevice::Update( double sim_time ) 
 {
   //  puts( "UPDATE" );
 
@@ -239,7 +239,7 @@ void CIDARTurretDevice::Update( double sim_time )
 
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the rtk gui
-void CIDARTurretDevice::RtkStartup()
+void CIdarTurretDevice::RtkStartup()
 {
   CPlayerEntity::RtkStartup();
 
@@ -257,7 +257,7 @@ void CIDARTurretDevice::RtkStartup()
 
 ///////////////////////////////////////////////////////////////////////////
 // Finalise the rtk gui
-void CIDARTurretDevice::RtkShutdown()
+void CIdarTurretDevice::RtkShutdown()
 {
   for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
   idars[i]->RtkShutdown();
@@ -270,7 +270,7 @@ void CIDARTurretDevice::RtkShutdown()
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the rtk gui
-void CIDARTurretDevice::RtkUpdate()
+void CIdarTurretDevice::RtkUpdate()
 {
   CPlayerEntity::RtkUpdate();
    

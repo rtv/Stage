@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.26 2002-08-23 02:18:24 rtv Exp $
+ * CVS info: $Id: server.cc,v 1.27 2002-08-23 20:03:21 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -61,7 +61,7 @@
 //#define VERBOSE
 
 #include "server.hh"
-#include "fixedobstacle.hh"
+#include "bitmap.hh"
 #include "playerdevice.hh"
 #include "library.hh"
 extern Library* lib;

@@ -4,7 +4,7 @@
 #include "server.hh"
 #include "entity.hh"
 #include "world.hh"
-#include "fixedobstacle.hh"
+#include "bitmap.hh"
 #include "library.hh"
 
 #include <unistd.h>

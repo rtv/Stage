@@ -8,14 +8,14 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/bitmap.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 #include <float.h>
 #include "image.hh"
 #include "world.hh"
-#include "fixedobstacle.hh"
+#include "bitmap.hh"
 
 // register this device type with the Library
 CEntity fixedobstacle_bootstrap( string("bitmap"), 

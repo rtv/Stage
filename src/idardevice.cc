@@ -21,7 +21,7 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/idardevice.cc,v $
 * $Author: rtv $
-* $Revision: 1.1 $
+* $Revision: 1.2 $
 ******************************************************************************/
 
 
@@ -34,7 +34,7 @@
 #include <iostream>
 
 #include "world.hh"
-#include "irdevice.hh"
+#include "idardevice.hh"
 #include "raytrace.hh"
 
 #define DEBUG
@@ -59,7 +59,7 @@
 #define NORMALIZEDEGREES(value)  NORMALIZECIRCULAR_DOUBLE(value,360.0)
 
 // constructor 
-CIDARDevice::CIDARDevice(CWorld *world, CEntity *parent )
+CIdarDevice::CIdarDevice(CWorld *world, CEntity *parent )
   : CPlayerEntity(world, parent )
 {
   stage_type = IDARType;
@@ -102,7 +102,7 @@ CIDARDevice::CIDARDevice(CWorld *world, CEntity *parent )
 }
 
 
-void CIDARDevice::Sync( void )
+void CIdarDevice::Sync( void )
 {
   void *client;
   player_idar_config_t cfg;
@@ -167,7 +167,7 @@ void CIDARDevice::Sync( void )
 
 // NOTE unlike most devices, live data is not published here - that's
 // done in ReceiveMessage()
-void CIDARDevice::Update( double sim_time ) 
+void CIdarDevice::Update( double sim_time ) 
 {
   CPlayerEntity::Update( sim_time ); // inherit some debug output
   
@@ -190,7 +190,7 @@ void CIDARDevice::Update( double sim_time )
   m_last_update = sim_time;
 }
 
-void CIDARDevice::ClearMessage( void )
+void CIdarDevice::ClearMessage( void )
 {
   // wipe the message (zero the buffer)
   memset( &recv, 0, sizeof(recv) );
@@ -200,7 +200,7 @@ void CIDARDevice::ClearMessage( void )
 #endif
 }
 
-void CIDARDevice::TransmitMessage( idartx_t* transmit )
+void CIdarDevice::TransmitMessage( idartx_t* transmit )
 {
   // really should be a valid message here
   assert( transmit && (transmit->len > 0) );
@@ -289,7 +289,7 @@ void CIDARDevice::TransmitMessage( idartx_t* transmit )
 		  //PRINT_DEBUG1( "POKING A MESSAGE INTO %p", ent );
 
 		  if( (intensity = LookupIntensity(0,range,false)) > 0 )
-		    ((CIDARDevice*)ent)->
+		    ((CIdarDevice*)ent)->
 		      ReceiveMessage( (CEntity*)this, 
 				      transmit->mesg,
 				      transmit->len,
@@ -328,7 +328,7 @@ void CIDARDevice::TransmitMessage( idartx_t* transmit )
 }
 
 
-bool CIDARDevice::ReceiveMessage( CEntity* sender,
+bool CIdarDevice::ReceiveMessage( CEntity* sender,
 				  unsigned char* mesg, int len, 
 				  uint8_t intensity,
 				  bool reflection )
@@ -423,7 +423,7 @@ int direct_len = 30;
 
 
 // RTV - reverse lookup distance to intensity
-uint8_t CIDARDevice::LookupIntensity( uint8_t transmit_intensity,
+uint8_t CIdarDevice::LookupIntensity( uint8_t transmit_intensity,
 				      double trans_range, 
 				      bool reflection )
 {
@@ -515,7 +515,7 @@ uint8_t CIDARDevice::LookupIntensity( uint8_t transmit_intensity,
 
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the rtk gui
-void CIDARDevice::RtkStartup()
+void CIdarDevice::RtkStartup()
 {
   CPlayerEntity::RtkStartup();
   
@@ -542,7 +542,7 @@ void CIDARDevice::RtkStartup()
 
 ///////////////////////////////////////////////////////////////////////////
 // Finalise the rtk gui
-void CIDARDevice::RtkShutdown()
+void CIdarDevice::RtkShutdown()
 {
   // Clean up the figure we created
   if(this->data_fig) rtk_fig_destroy(this->data_fig);
@@ -554,7 +554,7 @@ void CIDARDevice::RtkShutdown()
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the rtk gui
-void CIDARDevice::RtkUpdate()
+void CIdarDevice::RtkUpdate()
 {
   CPlayerEntity::RtkUpdate();
    

@@ -12,7 +12,10 @@ AM_CPPFLAGS = -Wall -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/
 
 bin_PROGRAMS = stage
 
-stage_SOURCES = boxobstacle.cc			\
+stage_SOURCES = \
+		bitmap.cc			\
+		bitmap.hh			\
+		boxobstacle.cc			\
 		boxobstacle.hh			\
 		broadcastdevice.cc		\
 		broadcastdevice.hh		\
@@ -23,18 +26,16 @@ stage_SOURCES = boxobstacle.cc			\
 		descartesdevice.hh		\
 		entity.cc			\
 		entity.hh			\
-		fixedobstacle.cc		\
-		fixedobstacle.hh		\
 		gpsdevice.cc			\
 		gpsdevice.hh			\
 		gripperdevice.cc		\
 		gripperdevice.hh		\
+		idardevice.cc			\
+		idardevice.hh			\
 		idarturretdevice.cc		\
 		idarturretdevice.hh		\
 		image.cc			\
 		image.hh			\
-		irdevice.cc			\
-		irdevice.hh			\
 		laserbeacon.cc			\
 		laserbeacon.hh			\
 		laserbeacondevice.cc		\

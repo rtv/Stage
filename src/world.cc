@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.116 2002-08-22 21:13:30 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.117 2002-08-23 20:03:21 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -58,7 +58,6 @@
 #include <iostream>
 
 #include "world.hh"
-#include "fixedobstacle.hh"
 #include "playerdevice.hh"
 #include "library.hh"
 
