@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xgui.cc,v 1.1.2.8 2001-05-31 02:19:31 vaughan Exp $
+ * $Id: xgui.cc,v 1.1.2.9 2001-06-01 00:52:30 vaughan Exp $
  ************************************************************************/
 
 #include <stream.h>
@@ -314,6 +314,7 @@ void CXGui::HandleEvent( void )
 	
       case ButtonRelease:
 	//if( near ) HighlightObject( near );
+	//if( near ) near = 0;
 	break;
 	
       case ButtonPress: 
@@ -322,7 +323,6 @@ void CXGui::HandleEvent( void )
 	    case Button1: 
 	      if( dragging  ) 
   		{ // stopped dragging
-
   		  dragging = NULL;
 		  HighlightObject( NULL, true ); // erases the highlighting
 	
@@ -333,28 +333,34 @@ void CXGui::HandleEvent( void )
 			       KeyPressMask );
   		} 
   	      else 
-  		{  // find nearest robot and drag it
-		  dragging = 
-		    NearestObject((reportEvent.xmotion.x+panx )/ppm,
-				  ((imgHeight-reportEvent.xmotion.y)
-				   -pany)/ppm );
-		  
-		  // but only if it is moveable - ie. it is 
-		  // a parentless object		
-		  CEntity* ent = (CEntity*)dragging->objectId;
-		  while( ent->m_parent_object )
-		    ent = ent->m_parent_object;
+  		{  
+		  if( !dragging )
+		    {
+		      // find nearest robot and drag it
+		      dragging = 
+			NearestObject((reportEvent.xmotion.x+panx )/ppm,
+				      ((imgHeight-reportEvent.xmotion.y)
+				       -pany)/ppm );
+		      
+		      // unless i was holding down the shift key
 
-		  dragging = 0;
+		      // but only if it is moveable - ie. it is 
+		      // a parentless object		
+		      CEntity* ent = (CEntity*)dragging->objectId;
+		      while( ent->m_parent_object )
+			ent = ent->m_parent_object;
+		      
+		      dragging = 0;
+		      
+		      // get the export structure for this entity
+		      for( int o=0; o<numObjects; o++ )
+			if( database[o]->objectId == ent )
+			  {
+			    dragging = database[o];
+			    break;
+			  }
+		    }
 		  
-		  // get the export structure for this entity
-		  for( int o=0; o<numObjects; o++ )
-		    if( database[o]->objectId == ent )
-		      {
-			dragging = database[o];
-			break;
-		      }
- 		
 		  if( !dragging ) 
 		    cout << "Warning! dragging ptr: parent not found!" << endl;
 		  else
@@ -417,7 +423,20 @@ void CXGui::HandleEvent( void )
 			      dragging->th - M_PI/10.0 );
 		}	      
 	      else
-		{ // we're centering on robot[0] - redraw everything
+		{ 
+		  dragging = 
+		    NearestObject((reportEvent.xmotion.x+panx )/ppm,
+				  ((imgHeight-reportEvent.xmotion.y)
+				   -pany)/ppm );
+		  
+		  HighlightObject( dragging, true );
+		  
+		  // enable generation of pointer motion events
+		  XSelectInput(display, win, 
+			       ExposureMask | StructureNotifyMask | 
+			       ButtonPressMask | ButtonReleaseMask | 
+			       KeyPressMask | PointerMotionMask );
+		  // we're centering on robot[0] - redraw everything
 		  //panx = (int)(world->bots[0].x - width/2.0);
 		  //pany = (int)(world->bots[0].y - height/2.0);
 		  
