@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.11 2003-02-12 01:03:41 inspectorg Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.12 2003-03-07 07:31:15 gerkey Exp $
  */
 
 #define DEBUG
@@ -223,9 +223,26 @@ bool CLaserDevice::CheckConfig()
             PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
           }
         }
-        else if (config.resolution == 50 || config.resolution == 100)
+        else if (config.resolution == 50)
         {
           if (abs(config.min_angle) > 9000 || abs(config.max_angle) > 9000)
+          {
+            PRINT_MSG("warning: invalid laser configuration request");
+            PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
+          }
+          else
+          {
+            this->scan_res = DTOR((double) config.resolution / 100.0);
+            this->scan_min = DTOR((double) config.min_angle / 100.0);
+            this->scan_max = DTOR((double) config.max_angle / 100.0);
+            this->scan_count = (int) ((this->scan_max - this->scan_min) / this->scan_res) + 1;
+            this->intensity = config.intensity;
+            PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
+          }
+        }
+        else if (config.resolution == 100)
+        {
+          if (abs(config.min_angle) > 18000 || abs(config.max_angle) > 18000)
           {
             PRINT_MSG("warning: invalid laser configuration request");
             PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
