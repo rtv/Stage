@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.124 2005-02-11 07:40:22 rtv Exp $
+ * CVS: $Id: stage.h,v 1.125 2005-02-13 07:37:43 rtv Exp $
  */
 
 
@@ -149,11 +149,17 @@ extern "C" {
     /** maximum storage capacity */
     stg_joules_t capacity;
 
+    /** total joules received */
+    stg_joules_t input_joules;
+
+    /** total joules supplied */
+    stg_joules_t output_joules;
+
     /** estimate of current energy output */
-    stg_watts_t input;
+    stg_watts_t input_watts;
 
     /** estimate of current energy input */
-    stg_watts_t output;
+    stg_watts_t output_watts;
 
     /** TRUE iff the device is receiving energy from a charger */
     stg_bool_t charging;
@@ -631,6 +637,12 @@ extern "C" {
   */
   int stg_model_is_related( stg_model_t* mod1, stg_model_t* mod2 );
 
+  /** return the top-level model above mod */
+  stg_model_t* stg_model_root( stg_model_t* mod );
+
+  /** add a pointer to each model in the tree starting at root to the
+      array. Returns the number of model pointers added */
+  int stg_model_tree_to_ptr_array( stg_model_t* root, GPtrArray* array );
 
   /** initialize a model - called when a model goes from zero to one subscriptions */
   int stg_model_startup( stg_model_t* mod );

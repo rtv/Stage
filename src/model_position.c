@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.28 $
+//  $Revision: 1.29 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -22,6 +22,7 @@
 
 // move into header
 void stg_model_position_odom_reset( stg_model_t* mod );
+void stg_model_position_get_odom( stg_model_t* mod, stg_pose_t* odom );
 
 //extern rtk_fig_t* fig_debug_rays;
 
@@ -51,13 +52,19 @@ position
 
 */
 
+const double STG_POSITION_WATTS_KGMS = 5.0; // cost per kg per meter per second
+const double STG_POSITION_WATTS = 10.0; // base cost of position device
 
 void position_load( stg_model_t* mod )
 {
   stg_position_cfg_t cfg;
-  memset(&cfg,0,sizeof(cfg));
+  stg_model_get_config( mod, &cfg, sizeof(cfg));
   
-  const char* mode_str =  wf_read_string( mod->id, "drive", "diff" );
+  // load steering mode
+  const char* mode_str =  
+    wf_read_string( mod->id, "drive", 
+		    cfg.steer_mode == STG_POSITION_STEER_DIFFERENTIAL ? 
+		    "diff" : "omni" );
   
   if( strcmp( mode_str, "diff" ) == 0 )
     cfg.steer_mode = STG_POSITION_STEER_DIFFERENTIAL;
@@ -71,14 +78,16 @@ void position_load( stg_model_t* mod )
     }
   stg_model_set_config( mod, &cfg, sizeof(cfg) ); 
   
-
+  // load odometry if specified
   stg_pose_t odom;
-  odom.x = wf_read_tuple_length(mod->id, "odom", 0, 0.0 );
-  odom.y = wf_read_tuple_length(mod->id, "odom", 1, 0.0 );
-  odom.a = wf_read_tuple_angle(mod->id, "odom", 2, 0.0 );
+  stg_model_position_get_odom( mod, &odom );
+
+  odom.x = wf_read_tuple_length(mod->id, "odom", 0, odom.x );
+  odom.y = wf_read_tuple_length(mod->id, "odom", 1, odom.y );
+  odom.a = wf_read_tuple_angle(mod->id, "odom", 2, odom.a );
+
   stg_model_position_set_odom( mod, &odom );
 }
-
 
 
 int position_startup( stg_model_t* mod );
@@ -99,6 +108,9 @@ stg_model_t* stg_position_create( stg_world_t* world,
 						STG_MODEL_POSITION, 
 						token,
 						sizeof(stg_model_position_t) );  
+
+  // no power consumed until we're subscribed
+  mod->watts = 0.0; 
 
   // override the default methods
   mod->f_startup = position_startup;
@@ -131,8 +143,8 @@ stg_model_t* stg_position_create( stg_world_t* world,
    memset( &data, 0, sizeof(data) );
 
   stg_model_set_data( mod, &data, sizeof(data) );
-  
-  // (type-sepecific extension data is already zeroed)
+
+   // (type-sepecific extension data is already zeroed)
 
   return mod;
 }
@@ -293,7 +305,13 @@ int position_update( stg_model_t* mod )
 	}
       
       stg_model_set_velocity( mod, &vel );
-      
+
+      // simple model of power consumption
+      mod->watts = STG_POSITION_WATTS + 
+	fabs(vel.x) * STG_POSITION_WATTS_KGMS * mod->mass + 
+	fabs(vel.y) * STG_POSITION_WATTS_KGMS * mod->mass + 
+	fabs(vel.a) * STG_POSITION_WATTS_KGMS * mod->mass; 
+
       PRINT_DEBUG4( "model %s velocity (%.2f %.2f %.2f)",
 		    mod->token, 
 		    mod->velocity.x, 
@@ -343,6 +361,8 @@ int position_startup( stg_model_t* mod )
 {
   PRINT_DEBUG( "position startup" );
 
+  mod->watts = STG_POSITION_WATTS;
+
   // set the starting pose as my initial odom position
   //stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
   //stg_model_get_pose( mod, &pos->odom_origin );
@@ -358,6 +378,8 @@ int position_shutdown( stg_model_t* mod )
   
   // safety feature!
   //position_init(mod);
+
+  mod->watts = 0.0;
   
   stg_position_cmd_t cmd;
   memset( &cmd, 0, sizeof(cmd) ); 
@@ -367,9 +389,6 @@ int position_shutdown( stg_model_t* mod )
   stg_velocity_t vel;
   memset( &vel, 0, sizeof(vel));
   stg_model_set_velocity( mod, &vel );
-
-
-
 
   if( mod->gui.data  )
     rtk_fig_clear(mod->gui.data);
@@ -402,6 +421,14 @@ void stg_model_position_odom_reset( stg_model_t* mod )
 }
 
 
+void stg_model_position_get_odom( stg_model_t* mod, stg_pose_t* odom )
+{
+  // get the type-sepecific extension we added to the end of the model
+  stg_model_position_t* pos = (stg_model_position_t*)mod->extend;
+  
+  // copy the odom pose straight in
+  memcpy( odom, &pos->odom, sizeof(stg_pose_t));
+}
 
 void stg_model_position_set_odom( stg_model_t* mod, stg_pose_t* odom )
 {

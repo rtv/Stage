@@ -24,7 +24,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: stg_driver.cc,v 1.26 2005-02-11 07:40:22 rtv Exp $
+ * CVS: $Id: stg_driver.cc,v 1.27 2005-02-13 07:37:43 rtv Exp $
  */
 
 // DOCUMENTATION ---------------------------------------------------------------------
@@ -1536,7 +1536,7 @@ void StgDriver::RefreshDataEnergy( device_record_t* device )
       // translate stage data to player data packet
       player_energy_data_t pen;
       pen.mjoules = htonl( (int32_t)(data.stored * 1000.0));
-      pen.mwatts  = htonl( (int32_t)(data.output * 1000.0));
+      pen.mwatts  = htonl( (int32_t)(data.output_watts * 1000.0));
       pen.charging = (uint8_t)( data.charging );      
       this->PutData( device->id, &pen, sizeof(pen), NULL); 
     }

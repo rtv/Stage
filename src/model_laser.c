@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.63 $
+//  $Revision: 1.64 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -23,6 +23,8 @@ extern rtk_fig_t* fig_debug_rays;
 
 #define TIMING 0
 #define LASER_FILLED 1
+
+#define STG_LASER_WATTS 17.5 // laser power consumption
 
 #define STG_LASER_SAMPLES_MAX 1024
 #define STG_DEFAULT_LASER_SIZEX 0.15
@@ -70,17 +72,18 @@ laser
 void laser_load( stg_model_t* mod )
 {
   stg_laser_config_t lconf;
-  memset( &lconf, 0, sizeof(lconf) );
+  stg_model_get_config( mod, &lconf, sizeof(lconf));
   
-  lconf.samples = wf_read_int( mod->id, "samples", STG_DEFAULT_LASER_SAMPLES);
-  lconf.range_min = wf_read_length( mod->id, "range_min", STG_DEFAULT_LASER_MINRANGE);
-  lconf.range_max = wf_read_length( mod->id, "range_max", STG_DEFAULT_LASER_MAXRANGE);
-  lconf.fov = wf_read_angle( mod->id, "fov", STG_DEFAULT_LASER_FOV);
-
+  lconf.samples   = wf_read_int( mod->id, "samples", lconf.samples );
+  lconf.range_min = wf_read_length( mod->id, "range_min", lconf.range_min );
+  lconf.range_max = wf_read_length( mod->id, "range_max", lconf.range_max );
+  lconf.fov       = wf_read_angle( mod->id, "fov", lconf.fov );
+  
   stg_model_set_config( mod, &lconf, sizeof(lconf));
 }
 
 int laser_update( stg_model_t* mod );
+int laser_startup( stg_model_t* mod );
 int laser_shutdown( stg_model_t* mod );
 void laser_render_data(  stg_model_t* mod );
 void laser_render_cfg( stg_model_t* mod );
@@ -93,7 +96,11 @@ stg_model_t* stg_laser_create( stg_world_t* world,
   stg_model_t* mod = 
     stg_model_create( world, parent, id, STG_MODEL_LASER, token );
   
+  // we don't consume any power until subscribed
+  mod->watts = 0.0; 
+  
   // override the default methods
+  mod->f_startup = laser_startup;
   mod->f_shutdown = laser_shutdown;
   mod->f_update = laser_update;
   mod->f_render_data = laser_render_data;
@@ -362,10 +369,18 @@ void laser_render_cfg( stg_model_t* mod )
 		       mina, maxa );      
 }
 
+int laser_startup( stg_model_t* mod )
+{ 
+  mod->watts = STG_LASER_WATTS;
+
+  return 0; // ok
+}
+
 int laser_shutdown( stg_model_t* mod )
 { 
   // clear the data - this will unrender it too
   stg_model_set_data( mod, NULL, 0 );
+  mod->watts = 0.0;
   return 0; // ok
 }
 

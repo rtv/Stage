@@ -1,6 +1,6 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: help.txt,v 1.8 2005-01-03 06:09:32 rtv Exp $
+ * $Id: help.txt,v 1.9 2005-02-13 07:37:42 rtv Exp $
 */
 
 /**
@@ -18,19 +18,19 @@ Player `server'. Typically, clients cannot tell the difference between
 the real robot devices and their simulated Stage equivalents (unless
 they try very hard). We have found that robot controllers developed as
 Player clients controlling Stage robots will work with little or no
-modification with the real robots and vice versa[1]. With a little care,
-the same binary program can often control Stage or real robots without
-even being recompiled[2]. Thus the Player/Stage system allows rapid
-prototyping of controllers destined for real robots. Stage can also be
-very useful by simulating populations of realistic robot devices you
-don't happen to own[3].
+modification with the real robots and vice versa [1]. With a little
+care, the same binary program can often control Stage robots and real
+robots without even being recompiled [2]. Thus the Player/Stage system
+allows rapid prototyping of controllers destined for real
+robots. Stage can also be very useful by simulating populations of
+realistic robot devices you don't happen to own [3].
 
 <p>Stage was designed with multi-agent systems in mind, so it provides
 fairly simple, computationally cheap models of lots of devices rather
 than attempting to emulate any device with great fidelity. This design
 is intended to be useful compromise between conventional high-fidelity
-robot simulations, the minimal simulations described by Jakobi[4], and
-the grid-world simulations common in artificial life research[5]. We
+robot simulations, the minimal simulations described by Jakobi [4], and
+the grid-world simulations common in artificial life research [5]. We
 intend Stage to be just realistic enough to enable users to move
 controllers between Stage robots and real robots, while still being
 fast enough to simulate large populations. We also intend Stage to be
@@ -58,7 +58,7 @@ release (e.g. gripper & puck), but we're working on them. Let us know which ones
 
 <hr>
 <small>
-Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: help.txt,v 1.8 2005-01-03 06:09:32 rtv Exp $
+Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: help.txt,v 1.9 2005-02-13 07:37:42 rtv Exp $
 </small>
 
 */
@@ -156,7 +156,7 @@ build system: download and extract the tarballs, then <tt>./configure
 from <a href=http:playerstage.sf.net>http://playerstage.sf.net</a>
 
 <li>Uncompress and expand the tarball: <br>
-    <tt>$ tar xzvf stage-src-\<version\>.tgz</tt>
+    <tt>$ tar xzvf stage-\<version\>.tgz</tt>
 
 <li>`cd' into Stage's source directory:<br>
      <tt>$ cd stage-\<version\></tt>

@@ -364,21 +364,6 @@ stg_model_t* stg_model_create( stg_world_t* world,
   // TODO
 
   // mod->friction = 0.0;
-
-
-  /*
-    memset(&mod->energy_config,0,sizeof(mod->energy_config));
-    mod->energy_config.capacity = STG_DEFAULT_ENERGY_CAPACITY;
-    mod->energy_config.give_rate = STG_DEFAULT_ENERGY_GIVERATE;
-    mod->energy_config.probe_range = STG_DEFAULT_ENERGY_PROBERANGE;      
-    mod->energy_config.trickle_rate = STG_DEFAULT_ENERGY_TRICKLERATE;
-    
-    memset(&mod->energy_data,0,sizeof(mod->energy_data));
-    mod->energy_data.joules = mod->energy_config.capacity;
-    mod->energy_data.watts = 0;
-    mod->energy_data.charging = FALSE;
-    mod->energy_data.range = mod->energy_config.probe_range;
-  */
   
   PRINT_DEBUG4( "finished model %d.%d(%s) type %s", 
 		mod->world->id, mod->id, 
@@ -388,12 +373,12 @@ stg_model_t* stg_model_create( stg_world_t* world,
 
 void* stg_model_get_prop( stg_model_t* mod, char* name )
 {
-  return g_datalist_get_data( (gpointer)mod->props, name );
+  return g_datalist_get_data( &mod->props, name );
 }
 
 void stg_model_set_prop( stg_model_t* mod, char* name, void* data )
 {
-  return g_datalist_set_data( (gpointer)mod->props, name, data );
+  g_datalist_set_data( &mod->props, name, data );
 }
 
 /// free the memory allocated for a model
@@ -1421,3 +1406,28 @@ void stg_model_save( stg_model_t* model )
   wf_write_tuple_angle( model->id, "pose", 2, pose.a);
 }
 
+// find the top-level model above mod;
+stg_model_t* stg_model_root( stg_model_t* mod )
+{
+  while( mod->parent )
+    mod = mod->parent;
+  return mod;
+}
+
+int stg_model_tree_to_ptr_array( stg_model_t* root, GPtrArray* array )
+{
+  g_ptr_array_add( array, root );
+  
+  //printf( " added %s to array at %p\n", root->token, array );
+
+  int added = 1;
+  
+  int ch;
+  for(ch=0; ch < root->children->len; ch++ )
+    {
+      stg_model_t* child = g_ptr_array_index( root->children, ch );
+      added += stg_model_tree_to_ptr_array( child, array );
+    }
+  
+  return added;
+}

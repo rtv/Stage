@@ -8,12 +8,13 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.14 $
+//  $Revision: 1.15 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 #include <sys/time.h>
 #include <math.h>
+#include <assert.h>
 
 //#define DEBUG
 
@@ -40,6 +41,11 @@ const double STG_ENERGY_POSEY_DEFAULT = 0.0;
 const double STG_ENERGY_POSEA_DEFAULT = 0.0;
 const int STG_ENERGY_FIDUCIAL_DEFAULT = 255;
 
+typedef struct
+{
+  GPtrArray* connections;
+} stg_model_energy_t;
+
 stg_model_t* stg_energy_create( stg_world_t* world, 
 			       stg_model_t* parent, 
 			       stg_id_t id, 
@@ -47,6 +53,15 @@ stg_model_t* stg_energy_create( stg_world_t* world,
 {
   stg_model_t* mod = 
     stg_model_create( world, parent, id, STG_MODEL_ENERGY, token );
+  
+  // add a property to this model
+  GPtrArray* a = NULL;
+  assert( (a = g_ptr_array_new()) );
+  stg_model_set_prop( mod, "connections", a );
+  
+  double* d = calloc( sizeof(double), 1 );
+  *d = 0.0;
+  stg_model_set_prop( mod, "inputwatts", d );
   
   // override the default methods
   //mod->f_shutdown = energy_shutdown;
@@ -86,8 +101,10 @@ stg_model_t* stg_energy_create( stg_world_t* world,
   memset(&data, 0, sizeof(data));
   data.stored = STG_ENERGY_CAPACITY_DEFAULT;
   data.charging = FALSE;
-  data.output = 0.0;
-  data.input = 0.0;
+  data.output_joules = 0.0;
+  data.input_joules = 0.0;
+  data.output_watts = 0.0;
+  data.input_watts = 0.0;
   data.range = STG_ENERGY_PROBE_RANGE_DEFAULT;
   stg_model_set_data( mod, (void*)&data, sizeof(data));
 
@@ -98,67 +115,55 @@ stg_model_t* stg_energy_create( stg_world_t* world,
   return mod;
 }
 
- 
+// add sink to source's list of power connections
+void energy_connect( stg_model_t* source, stg_model_t* sink )
+{
+  printf( "connecting %s to %s\n", sink->token, source->token );
+
+  GPtrArray* a = NULL;
+  assert( (a = stg_model_get_prop( source, "connections" )) );
+  g_ptr_array_add( a, sink );
+}
+
+// remove sink from source's list of power connections
+void energy_disconnect( stg_model_t* source, stg_model_t* sink )
+{
+  printf( "disconnecting %s to %s\n", sink->token, source->token );
+
+  GPtrArray* a = NULL;
+  assert( (a = stg_model_get_prop( source, "connections" )) );
+  g_ptr_array_remove_fast( a, sink );
+}
+
+
 void energy_load( stg_model_t* mod )
 {
-  stg_energy_config_t econf;
-  memset( &econf, 0, sizeof(econf) );
+  stg_energy_config_t cfg;
+  stg_model_get_config( mod, &cfg, sizeof(cfg));
   
-  econf.capacity = wf_read_float( mod->id, "capacity", 10000.0 );
-  econf.probe_range = wf_read_length( mod->id, "probe_range", 1.0 );
-  econf.give = wf_read_float( mod->id, "give", 0 );
-  econf.take = wf_read_float( mod->id, "take", 100 );
+  cfg.capacity = wf_read_float( mod->id, "capacity", cfg.capacity );
+  cfg.probe_range = wf_read_length( mod->id, "probe_range", cfg.probe_range );
+  cfg.give = wf_read_float( mod->id, "give", cfg.give );
+  cfg.take = wf_read_float( mod->id, "take", cfg.take );
 
-  stg_model_set_config( mod, &econf, sizeof(econf));
-}
+  stg_model_set_config( mod, &cfg, sizeof(cfg));
 
-
-void stg_model_energy_consume( stg_model_t* mod, stg_watts_t rate )
-{
-  stg_energy_data_t* data = (stg_energy_data_t*)(mod->data);
-  stg_energy_config_t* cfg = (stg_energy_config_t*)(mod->cfg);
-  
-  if( data && cfg && cfg->capacity > 0 )
-    {
-      data->stored -=  rate * (double)mod->world->sim_interval / 1000.0;
-      data->stored = MAX( data->stored, 0 ); // not too little
-      data->stored = MIN( data->stored, cfg->capacity );// not too much
-    }
-}
-
-void stg_model_energy_absorb( stg_model_t* mod, stg_watts_t rate )
-{
-  stg_energy_data_t* data = (stg_energy_data_t*)mod->data;
-  stg_energy_config_t* cfg = (stg_energy_config_t*)mod->cfg;;
-
-  if( data && cfg && cfg->capacity > 0 )
-    {
-      data->stored +=  rate * (double)mod->world->sim_interval / 1000.0;
-
-      //printf( "joules: %.2f max: %.2f\n", data->stored, cfg->capacity );
-
-      data->stored = MIN( data->stored, cfg->capacity );
-    }
-}
-
-int stg_model_energy_available( stg_model_t* mod )
-{
-  if( mod->type == STG_MODEL_ENERGY )
-    return 1;
-  
-  return 0;
+  // refill the tank with the new capacity - we start fully gassed up
+  stg_energy_data_t data;
+  assert( stg_model_get_data( mod, &data, sizeof(data) ) == sizeof(data));
+  data.stored = cfg.capacity;
+  stg_model_set_data( mod, &data, sizeof(data));
 }
 
 int energy_match( stg_model_t* mod, stg_model_t* hitmod )
 {
   // Ignore myself, my children, and my ancestors.
   if( (!stg_model_is_related(mod,hitmod))  &&  
-      stg_model_energy_available( hitmod ) )
+      hitmod->type == STG_MODEL_ENERGY )
     return 1;
   
   return 0; // no match
 }	
-
 
 
 int energy_update( stg_model_t* mod )
@@ -171,10 +176,11 @@ int energy_update( stg_model_t* mod )
   stg_energy_config_t cfg;
   assert( stg_model_get_config( mod, &cfg, sizeof(cfg) ) == sizeof(cfg) );
 
+  // CHARGING - am I connected to something for the next timestep?
   data.charging = FALSE;
-  data.input = 0.0;
+  double joules_required = cfg.capacity - data.stored;
   
-  if( cfg.probe_range > 0 )
+  if( joules_required > 0 && cfg.probe_range > 0 )
     {
       stg_pose_t pose;
       stg_model_get_global_pose( mod, &pose );
@@ -190,28 +196,107 @@ int energy_update( stg_model_t* mod )
 	{
 	  data.range = itl->range;
 	  data.charging = TRUE;
-	  
-	  if( data.stored < cfg.capacity )
-	    {	  
-	      stg_energy_config_t hiscfg;
-	      assert( stg_model_get_config( hitmod, &hiscfg, sizeof(hiscfg)) == sizeof(hiscfg));
-	      
-	      double energy_taken = MIN( cfg.take, hiscfg.give );
-	      energy_taken = MIN( energy_taken, cfg.capacity-data.stored);
-	      data.input = energy_taken;
-	    }
-	  //printf( "hit a power source at range %.2f\n", data.range );
+	  energy_connect( hitmod, mod );
 	}
     }
-
-  // consume some energy
-  data.output = mod->watts;
   
-  // if we're plugged in, we gain energy
-  if( data.charging )
-    data.stored += data.input * mod->world->sim_interval/1000.0;
-  else
-    data.stored -= data.output * mod->world->sim_interval/1000.0;
+  // INPUT
+  // see how much power is being supplied to me by others this timestep.
+  // They will have poked it into my accumulator property
+  double* accum = NULL;
+  assert( (accum = stg_model_get_prop( mod, "inputwatts" )));
+  
+  data.input_watts = *accum;
+
+  double input_joules =  data.input_watts * mod->world->sim_interval/1000.0;
+  data.input_joules += input_joules;
+  data.stored += input_joules;
+  
+  // clear the accumulator
+  *accum = 0.0;
+
+  // OUTPUT
+  
+  // if I give output to others and I have some juice to give
+  //if( cfg.give > 0  && data.stored > 0 )
+    {
+      // add up the power required by all connected devices
+      stg_watts_t watts = 0.0;
+      
+      GPtrArray* a = NULL;
+      assert( (a = stg_model_get_prop( mod, "connections" )) );
+      
+      printf( "Energy model %s\n", mod->token );
+      
+      // add all the locally connected devices
+      int added = stg_model_tree_to_ptr_array( stg_model_root(mod),
+					       a );
+      
+      //  printf( "added %d models to connected list of %s\n",
+      //  added, mod->token );
+      
+      // find the total current required, so I can do current limiting
+      int i;
+      for( i=0; i < a->len; i++ )
+	{
+	  stg_model_t* con = (stg_model_t*)g_ptr_array_index( a, i );
+	  
+	  if( con == mod ) // skip myself
+	    continue;
+	  
+	  watts += con->watts;
+	}
+      
+      //printf( "total watts required %.2f\n", watts ); 
+      
+      // todo - current limiting on this line
+      //double watts_per_connection = watts;
+      //double joules_per_connection = 
+      //watts_per_connection * mod->world->sim_interval/1000.0;
+      
+      // feed all the connected devices
+      for( i=0; i < a->len; i++ )
+	{      
+	  stg_model_t* con = (stg_model_t*)g_ptr_array_index( a, i );
+	  
+	  if( con == mod ) // skip myself
+	    continue;
+	  
+	  printf( "\tsupplying %s with %.2fW", 
+		  con->token, con->watts );
+	  
+	  // if the connected unit is an energy device, we poke some
+	  // energy into it. if it's not an energy device, the energy just
+	  // disappears into the entropic void
+	  if( con->type == STG_MODEL_ENERGY)
+	    {
+	      // todo - current limiting
+	      stg_energy_config_t* concfg= (stg_energy_config_t*)(con->cfg);
+	      double watts = concfg->take;
+	      
+	      //stg_energy_data_t* condata = (stg_energy_data_t*)(con->data);	  
+	      //double watts = con->watts;
+	      
+	      // dump the watts in the model's accumulator
+	      double* accum = NULL;
+	      assert( (accum = stg_model_get_prop( con, "inputwatts" )));
+	      *accum += watts;
+	      
+	      printf( " (stored %.2fW)", watts );
+	    }
+	  
+	  puts( "" );
+	}
+      
+      // now disconnect everyone the fast way
+      g_ptr_array_set_size( a, 0 );
+      
+      double joules = watts * mod->world->sim_interval/1000.0;
+      joules = MIN( joules, data.stored );
+      data.output_watts = watts;
+      data.output_joules += joules;
+      data.stored -= joules;      
+    }
   
   // re-publish our data (so it gets rendered on the screen)
   stg_model_set_data( mod, &data, sizeof(data));
@@ -253,30 +338,32 @@ void energy_render_data( stg_model_t* mod )
       stg_energy_data_t* data = (stg_energy_data_t*)mod->data;
       stg_energy_config_t* cfg = (stg_energy_config_t*)mod->cfg;;
       
-      if( data->input > 0.0 ) 
+      if( data->charging ) 
 	rtk_fig_arrow( fig, 0,0,0, data->range, 0.3 );
 
-      if( cfg->capacity > 0 )
+      //if( cfg->capacity > 0 )
 	{
-	  char buf[128];
-	  snprintf( buf, 128, "%.0f/%.0fJ (%.0f%%)\noutput %.2fW\ninput %.2fW\n%s", 
+	  char buf[256];
+	  snprintf( buf, 128, "%.0f/%.0fJ (%.0f%%)\noutput %.2fW %.2fJ\ninput %.2fW %.2fJ\n%s", 
 		    data->stored, 
 		    cfg->capacity, 
 		    data->stored/cfg->capacity * 100,
-		    data->output,
-		    data->input,
-		    ( data->input > data->output ) ? "charging" : "" );
+		    data->output_watts,
+		    data->output_joules,
+		    data->input_watts,
+		    data->input_joules,
+		    data->charging ? "charging" : "" );
 	  
 	  rtk_fig_text( fig, 0.6,0.0,0, buf ); 
 	}
-      else
-	{
-	  char buf[128];
-	  snprintf( buf, 128, "mains supply\noutput %.2fW\n", 
-		    data->output );
+	//else
+	//{
+	//char buf[128];
+	//snprintf( buf, 128, "mains supply\noutput %.2fW\n", 
+	//    data->output );
 	  
-	  rtk_fig_text( fig, 0.6,0,0, buf ); 	  
-	}
+	// rtk_fig_text( fig, 0.6,0,0, buf ); 	  
+	//}
 
     }
 }
