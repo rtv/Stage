@@ -1,6 +1,6 @@
 /*##########################################################################
 # manager.cc - implements the Stage Manager for syncing distributed Stages
-# $Id: manager.cc,v 1.12 2001-09-28 21:55:42 gerkey Exp $
+# $Id: manager.cc,v 1.13 2001-10-02 00:16:19 gerkey Exp $
 *#########################################################################*/
 
 #include <sys/types.h>	/* basic system data types */
@@ -102,8 +102,6 @@ size_t ReadHeader( int s )
   
   while( recv < packetlen )
     {
-      //printf( "Reading on %d\n", ffd ); fflush( stdout );
-      
       int r = read(servers[s].fd, ((char*)&num_poses)+recv,  packetlen - recv );
       
       if( r < 0 )
@@ -148,9 +146,11 @@ int ForwardData( int sender, char* buf, size_t buflen )
 	  int thiswritecnt;
 	  while(writecnt < buflen)
 	    {
+              //printf("writing to %d\n",j);
 	      thiswritecnt = write( servers[j].fd, 
 				    buf+writecnt, 
 				    buflen-writecnt);
+              //puts("done");
 
 	      assert(thiswritecnt >= 0);
 	      writecnt += thiswritecnt;

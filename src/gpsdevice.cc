@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gpsdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.5 $
+//  $Author: gerkey $
+//  $Revision: 1.6 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -67,7 +67,10 @@ void CGpsDevice::Update( double sim_time )
         py = ntohl(config.ypos)/1000.0;
         pth = ntohl(config.heading)*M_PI/180;
         if (m_parent_object)
+        {
             m_parent_object->SetGlobalPose(px, py, pth);
+            m_parent_object->MakeDirty();
+        }
         else
             SetGlobalPose(px, py, pth);
     }

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.23 $
+//  $Author: gerkey $
+//  $Revision: 1.24 $
 //
 // Usage:
 //  (empty)
@@ -559,9 +559,6 @@ void CEntity::SetGlobalPose(double px, double py, double pth)
 
     // our position has probably changed, so we need to re-transmit our truth
     //MakeDirty();
-
-    // NEED TO DIRTY THE CHILDREN HERE TOO!
-    //if( m_child_object ) m_child_object->MakeDirty();
 }
 
 
