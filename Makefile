@@ -8,7 +8,7 @@
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
 #  $Author: gerkey $
-#  $Revision: 1.3.2.8 $
+#  $Revision: 1.3.2.9 $
 #
 ###########################################################################
 
@@ -26,7 +26,7 @@ BIN_DIST_NAME = Stage-$(VERSION)-i386
 ##############################################################################
 # Top level targets
 
-all: stage rtkstage
+all: stage rtkstage xstage
 
 stage: 
 	cd src &&  make clean &&  make stage -e PLAYER_DIR=$(PLAYER_DIR) &&  cp stage ../bin/
