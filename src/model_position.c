@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.11 $
+//  $Revision: 1.12 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -221,6 +221,9 @@ int position_update( stg_model_t* mod )
   memcpy( &data.velocity, &mod->velocity, sizeof(stg_velocity_t));
   
   data.stall = mod->stall;
+
+  //PRINT_WARN3( "data pos %.2f %.2f %.2f",
+  //       data.pose.x, data.pose.y, data.pose.a );
 
   // publish the data
   stg_model_set_data( mod, &data, sizeof(data));

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.28 $
+//  $Revision: 1.29 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -150,10 +150,10 @@ int stg_model_update_pose( stg_model_t* model )
 	  stg_model_energy_consume( model, STG_ENERGY_COST_MOTIONKG * mass ); 
 
 	  // record the movement in odometry
-	  // model->odom.x += vel->x * interval;
-	  //model->odom.y += vel->y * interval;
-	  //model->odom.a += vel->a * interval;
-	  //model->odom.a = NORMALIZE( model->odom.a );
+	  model->odom.x += vel->x * interval;
+	  model->odom.y += vel->y * interval;
+	  model->odom.a += vel->a * interval;
+	  model->odom.a = NORMALIZE( model->odom.a );
 	}      
     }
   

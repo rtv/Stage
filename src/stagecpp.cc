@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.62 2004-10-02 01:37:27 rtv Exp $
+// $Id: stagecpp.cc,v 1.63 2004-10-05 19:37:34 rtv Exp $
 
 //#define DEBUG
 
@@ -667,6 +667,13 @@ void configure_position( stg_model_t* mod, int section )
       cfg.steer_mode = STG_POSITION_STEER_DIFFERENTIAL;
     }
   stg_model_set_config( mod, &cfg, sizeof(cfg) ); 
+
+
+  stg_pose_t odom;
+  odom.x = wf.ReadTupleLength(section, "odom", 0, 0.0 );
+  odom.y = wf.ReadTupleLength(section, "odom", 1, 0.0 );
+  odom.a = wf.ReadTupleAngle(section, "odom", 2, 0.0 );
+  stg_model_set_odom( mod, &odom );
 }
 
 
