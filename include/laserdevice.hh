@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.9 $
+//  $Revision: 1.9.2.10 $
 //
 // Usage:
 //  (empty)
@@ -85,19 +85,19 @@ class CLaserDevice : public CPlayerDevice
     
     // Process GUI update messages
     //
-    public: virtual void OnUiUpdate(RtkUiDrawData *pData);
+    public: virtual void OnUiUpdate(RtkUiDrawData *data);
 
     // Process GUI mouse messages
     //
-    public: virtual void OnUiMouse(RtkUiMouseData *pData);
+    public: virtual void OnUiMouse(RtkUiMouseData *data);
 
     // Draw the laser turret
     //
-    private: void DrawTurret(RtkUiDrawData *pData);
+    private: void DrawTurret(RtkUiDrawData *data);
 
     // Draw the laser scan
     //
-    private: void DrawScan(RtkUiDrawData *pData);
+    private: void DrawScan(RtkUiDrawData *data);
 
     // Laser scan outline
     //

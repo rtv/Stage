@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/usc_pioneer.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.8 $
+//  $Revision: 1.1.2.9 $
 //
 // Usage:
 //  (empty)
@@ -60,6 +60,11 @@ CUscPioneer::CUscPioneer(CWorld *world, CObject *parent)
     m_child[m_child_count++] = m_sonar;    
     m_child[m_child_count++] = m_laser;
     m_child[m_child_count++] = m_laser_beacon;
+
+    // Set the default pose of some key devices
+    //
+    m_laser->SetPose(0.09, 0, 0);
+    
 }
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.11 $
+//  $Revision: 1.1.2.12 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -133,31 +133,31 @@ void CLaserBeacon::Update()
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
 //
-void CLaserBeacon::OnUiUpdate(RtkUiDrawData *pData)
+void CLaserBeacon::OnUiUpdate(RtkUiDrawData *data)
 {
-    CObject::OnUiUpdate(pData);
+    CObject::OnUiUpdate(data);
 
-    pData->begin_section("global", "");
+    data->begin_section("global", "");
     
-    if (pData->draw_layer("laser_beacon", true))
+    if (data->draw_layer("laser_beacon", true))
     {
         double r = 0.05;
         double ox, oy, oth;
         GetGlobalPose(ox, oy, oth);
-        pData->set_color(RTK_RGB(0, 0, 255));
-        pData->rectangle(ox - r, oy - r, ox + r, oy + r);
+        data->set_color(RTK_RGB(0, 0, 255));
+        data->ellipse(ox - r, oy - r, ox + r, oy + r);
     }
 
-    pData->end_section();
+    data->end_section();
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI mouse messages
 //
-void CLaserBeacon::OnUiMouse(RtkUiMouseData *pData)
+void CLaserBeacon::OnUiMouse(RtkUiMouseData *data)
 {
-    CObject::OnUiMouse(pData);
+    CObject::OnUiMouse(data);
 }
 
 #endif

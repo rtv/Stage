@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11.2.19 $
+//  $Revision: 1.11.2.20 $
 //
 // Usage:
 //  (empty)
@@ -58,10 +58,9 @@ CLaserDevice::CLaserDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
     m_max_range = 8.0;
 
     // Dimensions of laser
-    // *** HACK I just made these up ahoward
     //
-    m_map_dx = 0.20;
-    m_map_dy = 0.20;
+    m_map_dx = 0.155;
+    m_map_dy = 0.155;
     
 #ifdef INCLUDE_RTK 
     m_hit_count = 0;

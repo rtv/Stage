@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/pioneermobiledevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.8 $
+//  $Revision: 1.1.2.9 $
 //
 // Usage:
 //  (empty)
@@ -63,7 +63,7 @@ class CPioneerMobileDevice : public CPlayerDevice
 
     // Robot dimensions
     //
-    private: double m_width, m_length;
+    private: double m_size_x, m_size_y, m_offset_x;
 
     // Current command and data buffers
     //
@@ -89,15 +89,15 @@ class CPioneerMobileDevice : public CPlayerDevice
 
     // Process GUI update messages
     //
-    public: virtual void OnUiUpdate(RtkUiDrawData *pData);
+    public: virtual void OnUiUpdate(RtkUiDrawData *data);
 
     // Process GUI mouse messages
     //
-    public: virtual void OnUiMouse(RtkUiMouseData *pData);
+    public: virtual void OnUiMouse(RtkUiMouseData *data);
 
     // Draw the pioneer chassis
     //
-    public: void DrawChassis(RtkUiDrawData *pData);
+    public: void DrawChassis(RtkUiDrawData *data);
   
 #endif
 };
