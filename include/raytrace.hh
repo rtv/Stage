@@ -1,6 +1,6 @@
 // ==================================================================
 // Filename:	raytrace.hh
-// $Id: raytrace.hh,v 1.1.2.1 2001-08-31 16:39:54 vaughan Exp $
+// $Id: raytrace.hh,v 1.1.2.2 2001-09-04 20:36:31 vaughan Exp $
 // RTV
 // ==================================================================
 
@@ -103,7 +103,7 @@ class CRectangleIterator
 {
  private:
   CLineIterator* lits[4];
-  
+ 
   double corners[4][2];
   
  public:
@@ -111,7 +111,9 @@ class CRectangleIterator
   CRectangleIterator( double x, double y, double th,
 		      double w, double h,  
 		      double ppm, CMatrix* matrix );
-  
+
+  ~CRectangleIterator( void );
+ 
   CEntity* GetNextEntity( void );  
 };
 

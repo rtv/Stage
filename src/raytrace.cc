@@ -1,6 +1,6 @@
 // ==================================================================
 // Filename:	raytrace.cc
-// $Id: raytrace.cc,v 1.1.2.1 2001-08-31 16:40:33 vaughan Exp $
+// $Id: raytrace.cc,v 1.1.2.2 2001-09-04 20:36:31 vaughan Exp $
 // RTV
 // ==================================================================
 
@@ -204,6 +204,11 @@ CRectangleIterator::CRectangleIterator( double x, double y, double th,
   
 } 
 
+CRectangleIterator::~CRectangleIterator( void )
+{
+  for( int f=0; f<4; f++ )
+    if( lits[f] ) delete lits[f];
+}
 
 CEntity* CRectangleIterator::GetNextEntity( void )
 {
@@ -240,6 +245,7 @@ CCircleIterator::CCircleIterator( double x, double y, double r,
   //  m_center_x, m_center_y, m_radius, m_angle, m_dangle );
 
 };
+
 
 CEntity* CCircleIterator::GetNextEntity( void )
 {
