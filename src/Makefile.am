@@ -2,11 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.77 2004-11-10 06:29:05 rtv Exp $
-
-# we don't need these right now, but I'll keep this commented out just
-# in case.  
-# stage_DEPENDENCIES = $(top_srcdir)/replace/libreplace.a
+# $Id: Makefile.am,v 1.78 2004-11-20 04:49:35 rtv Exp $
 
 # install these headers
 include_HEADERS = stage.h 
