@@ -25,6 +25,7 @@
 
 #include "regularmcldevice.hh"
 
+#include <math.h>
 #include <iostream>
 #include <cstdlib>
 #include <cmath>
