@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.46 $
+//  $Author: gerkey $
+//  $Revision: 1.46.2.1 $
 //
 // Usage:
 //  (empty)
@@ -231,7 +231,7 @@ public: bool m_send_idar_packets;
 
   // flag that controls spawning of xs
   private: bool m_run_xs;
-    
+  
   // the pose server port
   public: int m_pose_port;
 

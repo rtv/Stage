@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.88 $
+//  $Author: gerkey $
+//  $Revision: 1.88.2.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -269,6 +269,13 @@ bool CWorld::ParseCmdline(int argc, char **argv)
     {
       m_run_player = true;
       printf( "[Player]" );
+    }
+
+    // DISABLE console output
+    if( strcmp( argv[a], "-q" ) == 0 )
+    {
+      m_console_output = false;
+      printf( "[Quiet]" );
     }
 
     // ENABLE IDAR packets to be sent to XS
@@ -1259,9 +1266,10 @@ void CWorld::Output( double loop_duration, double sleep_duration )
     bytes = 0;
   }
 
-  ConsoleOutput( freq, loop_duration, sleep_duration, 
-                 avg_loop_duration, avg_sleep_duration,
-                 bytes_in, bytes_out, bandw );
+  if(m_console_output)
+    ConsoleOutput( freq, loop_duration, sleep_duration, 
+                   avg_loop_duration, avg_sleep_duration,
+                   bytes_in, bytes_out, bandw );
   
   if( m_log_output ) 
     LogOutput( freq, loop_duration, sleep_duration, 
