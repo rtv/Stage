@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/puck.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -53,7 +53,7 @@ class CPuck : public CEntity
 
     // Set the puck's speed
     // 
-    public: void SetSpeed(double vr);
+    public: void SetSpeed(double vr) { m_com_vr = vr; }
 
     // Move the puck
     // 
@@ -67,7 +67,7 @@ class CPuck : public CEntity
     // Check to see if the given pose will yield a collision with a movable 
     // object (e.g., robot, puck)
     //
-    private: bool InCollisionWithMovableObject(double px, 
+    private: CEntity* InCollisionWithMovableObject(double px, 
                                                double py, 
                                                double pth);
     
@@ -82,10 +82,6 @@ class CPuck : public CEntity
     // Current mapped pose
     //
     private: double m_map_px, m_map_py, m_map_pth;
-
-    // Commanded puck speed (from collisions)
-    //
-    private: double m_com_vr;
 
     // Timings (for movement)
     //

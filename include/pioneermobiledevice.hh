@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/pioneermobiledevice.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -66,7 +66,7 @@ class CPioneerMobileDevice : public CPlayerDevice
 
     // Get and set shape parameter
     public: pioneer_shape_t GetShape() { return(m_shape); };
-    public: void SetShape(pioneer_shape_t shape) { m_shape = shape; };
+    public: void SetShape(pioneer_shape_t shape);
 
     // Render the object in the world rep
     //
@@ -100,9 +100,6 @@ class CPioneerMobileDevice : public CPlayerDevice
     //
     private: pioneer_shape_t m_shape;
 
-    // Commanded robot speed
-    //
-    private: double m_com_vr, m_com_vth;
 
     // Odometric pose
     //

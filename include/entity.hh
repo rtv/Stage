@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.2 $
+//  $Author: gerkey $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -134,9 +134,17 @@ class CEntity
     //
     private: double m_lx, m_ly, m_lth;
 
+    // Commanded speed
+    //
+    protected: double m_com_vr, m_com_vth;
+    protected: double m_mass;
+
+    public: double GetSpeed() { return(m_com_vr); }
+    public: double GetMass() { return(m_mass); }
+
     // struct that holds data for external GUI rendering
     //
-    protected: ExportData exp;
+    public: ExportData exp;
    
     // compose and return the export data structure
     //

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.18 $
+//  $Revision: 1.19 $
 //
 // Usage:
 //  (empty)
@@ -48,6 +48,9 @@ CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CEntity *parent, CPlay
 {    
     m_com_vr = m_com_vth = 0;
     m_map_px = m_map_py = m_map_pth = 0;
+
+    // assume robot is 20kg
+    m_mass = 20.0;
 
     // Set the default shape
     m_shape = rectangle;
@@ -264,6 +267,12 @@ bool CPioneerMobileDevice::InCollision(double px, double py, double pth)
   else
     PRINT_MSG("CPioneerMobileDevice::InCollision(): unknown shape!");
   return false;
+}
+
+void CPioneerMobileDevice::SetShape(pioneer_shape_t shape)
+{
+  m_shape = shape;
+  exp.width = exp.height = m_radius;
 }
 
 

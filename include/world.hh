@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -247,6 +247,9 @@ class CWorld
     private: CBroadcastDevice *m_broadcast[256];
    
 
+    public: int GetObjectCount() { return(m_object_count); }
+    public: CEntity* GetObject(int index) { return(m_object[index]); }
+
     ///////////////////////////////////////////////////////////////////////////
     // Misc vars
 
@@ -301,7 +304,6 @@ class CWorld
     private: Nimage *m_vision_img;
 
     // Puck (i.e., movable object) image
-    // Stores vision data
     //
     private: Nimage *m_puck_img;
 
