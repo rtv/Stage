@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.80 $
+//  $Author: inspectorg $
+//  $Revision: 1.81 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -149,10 +149,10 @@ CWorld::CWorld()
   strcpy( m_color_database_filename, COLOR_DATABASE );
     
   // enable XS by default in stage
-m_run_xs = true; 
+  m_run_xs = true; 
 
 #ifdef INCLUDE_RTK2
- m_run_xs = false;
+  m_run_xs = false;
 #endif
 
   // Initialise world filename
@@ -496,7 +496,7 @@ bool CWorld::Startup()
   // Create the device directory and clock 
   CreateClockDevice();
   
-  puts( "BACK IN CWORLD::STARTUP" );
+  PRINT_DEBUG( "BACK IN CWORLD::STARTUP" );
 
   // Startup all the objects
   // Devices will create and initialize their device files
@@ -509,12 +509,12 @@ bool CWorld::Startup()
     }
   }
   
-  puts( "STARTING PLAYER" );
+  PRINT_DEBUG( "STARTING PLAYER" );
   
   // exec and set up Player
   StartupPlayer();
   
-  puts( "DONE STARTING PLAYER" );
+  PRINT_DEBUG( "DONE STARTING PLAYER" );
 
   // spawn an XS process, unless we disabled it (rtkstage disables xs by default)
   if( m_run_xs && m_run_pose_server && m_run_environment_server ) 
@@ -791,7 +791,7 @@ void CWorld::StartTimer( double interval )
 //
 void CWorld::Main(void)
 {
-  //puts( "** MAIN **" );
+  //PRINT_DEBUG( "** MAIN **" );
   //assert( arg == 0 );
   
   static double loop_start = GetRealTime();
@@ -1010,7 +1010,7 @@ void CWorld::SpawnXS( void )
     }
     else
     {
-      //puts( "[XS]" );
+      //PRINT_DEBUG( "[XS]" );
       //fflush( stdout );
     }
   }
@@ -1074,12 +1074,12 @@ bool CWorld::CheckHostname(char* host)
 
   if(!strcmp(m_hostname,host) || !strcmp(m_hostname_short,host))
   {
-    //puts( "TRUE" );
+    //PRINT_DEBUG( "TRUE" );
     return true;
   }
   else
   {
-    //puts( "FALSE" );
+    //PRINT_DEBUG( "FALSE" );
     return false;
   }
 }

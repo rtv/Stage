@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.38 2002-02-02 01:23:44 rtv Exp $
+//  $Id: entity.cc,v 1.39 2002-02-02 23:43:27 inspectorg Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -23,15 +23,15 @@
 #include <errno.h>
 #include <sys/stat.h>
 
+//#define DEBUG
+//#define VERBOSE
+//#undef DEBUG
+//#undef VERBOSE
+
 #include "entity.hh"
 #include "raytrace.hh"
 #include "world.hh"
 #include "worldfile.hh"
-
-#define DEBUG
-#define VERBOSE
-//#undef DEBUG
-//#undef VERBOSE
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -39,9 +39,7 @@
 // Requires a pointer to the parent and a pointer to the world.
 CEntity::CEntity(CWorld *world, CEntity *parent_object )
 {
-#ifdef DEBUG
-  puts( "CEntity::CEntity()" );
-#endif
+  PRINT_DEBUG( "CEntity::CEntity()" );
 
   m_lock = NULL;
 
@@ -224,7 +222,7 @@ bool CEntity::Startup( void )
   RtkStartup();
 #endif
 
-  puts( "STARTUP" );
+  PRINT_DEBUG( "STARTUP" );
 
   // if this is not a player device, we bail right here
   if( m_player_type == 0 )
@@ -367,7 +365,7 @@ int CEntity::SharedMemorySize( void )
 // Update the object's representation
 void CEntity::Update( double sim_time )
 {
-  puts( "UPDATE" );
+  //PRINT_DEBUG( "UPDATE" );
 
 #ifdef INCLUDE_RTK2
   // Update the rtk gui
@@ -429,8 +427,10 @@ void CEntity::MapEx(double px, double py, double pth, bool render)
   {
     case ShapeRect:
       m_world->SetRectangle(qx, qy, qth, sx, sy, this, render);
+      break;
     case ShapeCircle:
-      m_world->SetCircle(qx, qy, sx / 2, this, render); 
+      m_world->SetCircle(qx, qy, sx / 2, this, render);
+      break;
   }
 }
 
@@ -751,8 +751,8 @@ size_t CEntity::GetCommand( void* cmd, size_t len )
 {   
 #ifdef DEBUG
   printf( "S: getting type %d cmd at %p - ", 
-	    m_player_type, m_command_io );
-    fflush( stdout );
+          m_player_type, m_command_io );
+  fflush( stdout );
 #endif
 
   Lock();
@@ -761,14 +761,14 @@ size_t CEntity::GetCommand( void* cmd, size_t len )
   if( len == m_info_io->command_len && len == m_info_io->command_avail )
     memcpy( cmd, m_command_io, len); // import device-specific data
   else
-    {
+  {
 #ifdef DEBUG
-      printf( "no command found (%d bytes available)\n", 
-	      m_info_io->command_avail );
-      fflush( stdout );
+    printf( "no command found (%d bytes available)\n", 
+            m_info_io->command_avail );
+    fflush( stdout );
 #endif
-      len = 0; // set the return value to indicate failure 
-    }
+    len = 0; // set the return value to indicate failure 
+  }
   
   Unlock();
   
@@ -778,35 +778,29 @@ size_t CEntity::GetCommand( void* cmd, size_t len )
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a configuration from the shared memory
-// this is a little trickier 'cos configs are consumed
 size_t CEntity::GetConfig( void* config, size_t len )
 {  
-//    Lock();
+  Lock();
 
-//    // the config data must be the right size!
-//    if( len == m_info_io->config_len && len == m_info_io->config_avail )
-//      memcpy( config, m_config_io, len); // import device-specific data
-//    else
-//      {
-//        //#ifdef DEBUG
-//        //printf( "GetConfig() found no config (requested %d bytes;"
-//        //      " io buffer is %d bytes; %d bytes are available)\n", 
-//        //      len, m_info_io->config_len, m_info_io->config_avail );
-//        //fflush( stdout );
-//        //#endif
-//        len = 0; // set the return value to indicate failure 
-//      }
-  
-//    // reset the available size in the info structure to show that 
-//    // we consumed the message
-//    m_info_io->config_avail = 0;    
-  
-//    Unlock();
-  
-  //  return len;
-
-  return 0;
+  if (m_info_io->config_avail > 0)
+  {
+    // Copy data out of shared memory,
+    // but check for overflow.
+    if (len >= m_info_io->config_avail)
+      memcpy(config, m_config_io, len);
+    else
+    {
+      PRINT_WARN("config buffer overflow; discarding configuration request");
+      len = 0;
+    }
+    // Consume the configuration request
+    m_info_io->config_avail = 0;
+  }
+    
+  Unlock();
+  return len;    
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
 // See if the PlayerDevice is subscribed
@@ -897,7 +891,7 @@ void CEntity::MakeDirtyIfPixelChanged( void )
   {
     memset( m_dirty, true, sizeof(m_dirty[0]) * MAX_POSE_CONNECTIONS );
      
-    //puts( "dirty!" );
+    //PRINT_DEBUG( "dirty!" );
   }
 
   // store these quantized locations for next time
@@ -915,13 +909,13 @@ bool CEntity::Lock( void )
 {
   assert( m_lock );
 
-  printf( "S: LOCK %p\n", m_lock );
+  PRINT_DEBUG1( "S: LOCK %p\n", m_lock );
 
   if( sem_wait( m_lock ) < 0 )
-    {
-      perror( "sem_wait failed" );
-      return false;
-    }
+  {
+    PRINT_ERR( "sem_wait failed" );
+    return false;
+  }
 
   return true;
 }
@@ -933,13 +927,13 @@ bool CEntity::Unlock( void )
 {
   assert( m_lock );
 
-  printf( "S: UNLOCK %p\n", m_lock );
+  PRINT_DEBUG1( "S: UNLOCK %p\n", m_lock );
 
   if( sem_post( m_lock ) < 0 )
-    {
-      perror( "sem_post failed" );
-      return false;
-    }
+  {
+    PRINT_ERR( "sem_post failed" );
+    return false;
+  }
 
   return true;
 }

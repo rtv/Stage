@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.33 $
+//  $Author: inspectorg $
+//  $Revision: 1.34 $
 //
 // Usage:
 //  (empty)
@@ -37,10 +37,6 @@
 //#include "messages.h"
 
 #include <semaphore.h>
-
-#ifdef INCLUDE_RTK
-#include "rtk_ui.hh"
-#endif
 
 #ifdef INCLUDE_RTK2
 #include "rtk.h"
