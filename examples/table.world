@@ -1,0 +1,48 @@
+set environment_file = table.pnm
+set pixels_per_meter =  80
+set laser_res = 1
+
+# these servers enable clients (e.g. xpsi) access to Stage's internal models
+enable truth_server
+enable environment_server
+
+#####################################################################
+# Populate the world with some interesting objects (non-player devices)
+
+create puck pose 2.02 1.90 90 color black channel 0 port 0 index 0 radius 0.10 
+create puck pose 1.82 1.82 94 color black channel 0 port 0 index 0 radius 0.10 
+create puck pose 2.40 2.08 151 color black channel 0 port 0 index 0 radius 0.10 
+create puck pose 1.82 1.61 65403 color black channel 0 port 0 index 0 radius 0.10 
+create puck pose 2.21 1.79 -86 color black channel 0 port 0 index 0 radius 0.10 
+create puck pose 1.84 2.24 -90 color black channel 0 port 0 index 0 radius 0.10 
+create puck pose 2.04 2.31 23 color black channel 0 port 0 index 0 radius 0.10 
+
+create puck pose 1.85 2.44 82 color black channel 1 port 0 index 0 radius 0.10 
+create puck pose 2.02 1.70 -90 color black channel 1 port 0 index 0 radius 0.10 
+create puck pose 2.02 2.10 19 color black channel 1 port 0 index 0 radius 0.10 
+create puck pose 2.59 1.99 65508 color black channel 1 port 0 index 0 radius 0.10 
+create puck pose 2.39 1.88 24 color black channel 1 port 0 index 0 radius 0.10 
+create puck pose 1.84 2.02 -94 color black channel 1 port 0 index 0 radius 0.10 
+create puck pose 2.21 2.19 90 color black channel 1 port 0 index 0 radius 0.10 
+
+create puck pose 2.20 1.98 23 color black channel 2 port 0 index 0 radius 0.10 
+
+#####################################################################
+# a tricked-out robot with a Player on the default port
+
+create position_device pose 4.42 1.95 180 color black channel -1 port 6665 index 0 shape circle 
+{
+  create player_device pose -0.10 0.00 0 color black channel -1 port 6665 index 0 
+  create sonar_device pose 0.00 0.00 0 color black channel -1 port 6665 index 0 
+  create gripper_device pose 0.15 0.00 0 color black channel -1 port 6665 index 0 
+
+  create ptz_device pose 0.07 0.00 0 color black channel -1 port 6665 index 0 
+  {
+     # vision devices MUST be children of cameras
+     create vision_device pose 0.00 0.00 0 color black channel -1 port 6665 index 0 
+  } 
+
+  create gps_device pose 0.00 0.00 0 color black channel -1 port 6665 index 0 
+}
+
+

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.11 $
+//  $Revision: 1.12 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -91,16 +91,16 @@ bool CPuck::Save(int &argc, char **argv)
 {
     if (!CEntity::Save(argc, argv))
         return false;
-
-    // TODO!
-
-    // Save id
-    //
-    //char id[32];
-    //snprintf(id, sizeof(id), "%d", (int) m_beacon_id);
-    //argv[argc++] = strdup("id");
-    //argv[argc++] = strdup(id);
     
+    // Save radius
+    //
+    char z[128];
+    snprintf(z, sizeof(z), "%0.2f", (double) m_size_x/2.0);
+    argv[argc++] = strdup("radius");
+    argv[argc++] = strdup(z);
+
+    //puts( "PUCK SAVE!" );
+
     return true;
 }
 

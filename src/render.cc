@@ -49,6 +49,8 @@ void CXGui::RenderObject( truth_t &truth )
 	RenderSonar( &truth, extended ); break;
       case LBDType: if( draw_all_devices )
 	RenderLaserBeaconDetector( &truth, extended ); break;
+      case GpsType: if( draw_all_devices )
+	RenderGps( &truth, extended ); break;
 
       default: cout << "XGui: unknown object type " 
 		    << truth.id.type << endl;
@@ -314,8 +316,8 @@ void CXGui::RenderRoundRobot( truth_t* exp, bool extended )
 void CXGui::RenderVisionBeacon( truth_t* exp, bool extended )
 { 
   SelectColor( exp,yellow );
-  //DrawCircle( exp->x, exp->y, exp->w/2.0 );
-  FillCircle( exp->x, exp->y, exp->w/2.0 );
+  DrawCircle( exp->x, exp->y, exp->w/2.0 );
+  FillCircle( exp->x, exp->y, exp->w/3.0 );
 }
 
 void CXGui::RenderBroadcast( truth_t* exp, bool extended )
@@ -327,7 +329,7 @@ void CXGui::RenderBroadcast( truth_t* exp, bool extended )
 void CXGui::RenderPuck( truth_t* exp, bool extended )
 { 
   SelectColor( exp,green );
-  DrawCircle( exp->x, exp->y, exp->w/2.0 );
+  FillCircle( exp->x, exp->y, exp->w/2.0 );
 }
 
 void CXGui::RenderGps( truth_t* exp, bool extended )
