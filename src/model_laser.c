@@ -7,12 +7,14 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.23 $
+//  $Revision: 1.24 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 #include <sys/time.h>
 #include <math.h>
+
+#define DEBUG
 
 #include "stage.h"
 #include "raytrace.h"
@@ -36,14 +38,12 @@ void model_laser_data_render( model_t* mod );
 
 void model_laser_register(void)
 { 
-  PRINT_DEBUG( "LASER INIT" );  
+  //model_register_init( STG_PROP_CONFIG, model_laser_config_init );
+  //model_register_set( STG_PROP_CONFIG, model_laser_config_set );
 
-  model_register_init( STG_PROP_LASERCONFIG, model_laser_config_init );
-  model_register_set( STG_PROP_LASERCONFIG, model_laser_config_set );
-
-  model_register_set( STG_PROP_LASERDATA, model_laser_data_set );
-  model_register_shutdown( STG_PROP_LASERDATA, model_laser_data_shutdown );
-  model_register_service( STG_PROP_LASERDATA, model_laser_data_service );
+  //model_register_set( STG_PROP_LASERDATA, model_laser_data_set );
+  //model_register_shutdown( STG_PROP_LASERDATA, model_laser_data_shutdown );
+  //model_register_service( STG_PROP_LASERDATA, model_laser_data_service );
 
   model_register_init( STG_PROP_LASERRETURN, model_laser_return_init );
 
@@ -78,13 +78,13 @@ void model_laser_config_init( model_t* mod )
   lconf.fov         = STG_DEFAULT_LASER_FOV;
   lconf.samples     = STG_DEFAULT_LASER_SAMPLES;
   
-  model_set_prop_generic( mod, STG_PROP_LASERCONFIG, &lconf,sizeof(lconf) );
+  model_set_prop_generic( mod, STG_PROP_CONFIG, &lconf,sizeof(lconf) );
 }
 
 
 stg_laser_config_t* model_laser_config_get( model_t* mod )
 {
-  stg_laser_config_t* laser = model_get_prop_data_generic( mod, STG_PROP_LASERCONFIG );
+  stg_laser_config_t* laser = model_get_prop_data_generic( mod, STG_PROP_CONFIG );
   assert(laser);
   return laser;
 }
@@ -101,13 +101,12 @@ int model_laser_data_shutdown( model_t* mod )
   return 0; // ok
 }
 
-int model_laser_data_service( model_t* mod )
+int laser_update( model_t* mod )
 {   
-  PRINT_DEBUG( "laser update" );
-
-  PRINT_DEBUG1( "[%lu] updating lasers", mod->world->sim_time );
+  PRINT_DEBUG1( "[%lu] laser update", mod->world->sim_time );
   
-  stg_laser_config_t* cfg = model_laser_config_get(mod);
+  stg_laser_config_t* cfg = mod->cfg;
+  assert(cfg);
   stg_geom_t* geom = &cfg->geom;
 
   // get the sensor's pose in global coords
@@ -185,6 +184,9 @@ int model_laser_data_service( model_t* mod )
   model_set_prop( mod, STG_PROP_LASERDATA, 
 		  scan, sizeof(stg_laser_sample_t) * cfg->samples );
   
+  // new style
+  model_putdata( mod, scan, sizeof(stg_laser_sample_t) * cfg->samples );
+  
   free( scan );
 
 #if TIMING
@@ -216,7 +218,7 @@ int model_laser_data_set( model_t* mod, void* data, size_t len )
 int model_laser_config_set( model_t* mod, void* config, size_t len )
 {  
   // store the config
-  model_set_prop_generic( mod, STG_PROP_LASERCONFIG, config, len );
+  model_set_prop_generic( mod, STG_PROP_CONFIG, config, len );
   
   // and redraw it
   model_laser_config_render( mod);
@@ -308,20 +310,20 @@ void model_laser_config_render( model_t* mod )
 { 
   PRINT_DEBUG( "laser config render" );
   
-  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_LASERCONFIG];  
+  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_CONFIG];  
   
   if( fig  )
     rtk_fig_clear(fig);
   else // create the figure, store it in the model and keep a local pointer
-    fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_LASERCONFIG,
-				 mod->gui.top, STG_LAYER_LASERCONFIG );
+    fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_CONFIG,
+				 mod->gui.top, STG_LAYER_LASERGEOM );
   
-  rtk_fig_t* geomfig = mod->gui.propgeom[STG_PROP_LASERCONFIG];  
+  rtk_fig_t* geomfig = mod->gui.propgeom[STG_PROP_CONFIG];  
   
   if( geomfig  )
     rtk_fig_clear(geomfig);
   else // create the figure, store it in the model and keep a local pointer
-    geomfig = model_prop_fig_create( mod, mod->gui.propgeom, STG_PROP_LASERCONFIG,
+    geomfig = model_prop_fig_create( mod, mod->gui.propgeom, STG_PROP_CONFIG,
 				 mod->gui.top, STG_LAYER_LASERGEOM );
 
   stg_laser_config_t* cfg = model_laser_config_get(mod);
@@ -375,3 +377,112 @@ void model_laser_config_render( model_t* mod )
 }
 
 
+void laser_init( model_t* mod )
+{
+  stg_laser_config_t lconf;
+  memset(&lconf,0,sizeof(lconf));
+  
+  lconf.geom.pose.x = STG_DEFAULT_LASER_POSEX;
+  lconf.geom.pose.y = STG_DEFAULT_LASER_POSEY;
+  lconf.geom.pose.a = STG_DEFAULT_LASER_POSEA;
+  lconf.geom.size.x = STG_DEFAULT_LASER_SIZEX;
+  lconf.geom.size.y = STG_DEFAULT_LASER_SIZEY;
+  lconf.range_min   = STG_DEFAULT_LASER_MINRANGE;
+  lconf.range_max   = STG_DEFAULT_LASER_MAXRANGE;
+  lconf.fov         = STG_DEFAULT_LASER_FOV;
+  lconf.samples     = STG_DEFAULT_LASER_SAMPLES;
+  
+  model_putconfig( mod, &lconf, sizeof(lconf) );
+}
+
+
+void laser_render_data(  model_t* mod, void* data, size_t len )
+{
+  rtk_fig_t* fig = mod->gui.propdata[STG_PROP_DATA];  
+  
+  if( fig  )
+    rtk_fig_clear(fig);
+  else // create the figure, store it in the model and keep a local pointer
+    fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_DATA,
+				 mod->gui.top, STG_LAYER_LASERDATA );
+  
+  stg_geom_t* geom = model_geom_get(mod);
+  rtk_fig_origin( fig, geom->pose.x, geom->pose.y, geom->pose.a );  
+
+  assert(mod->cfg);
+  assert(mod->cfg_len == sizeof(stg_laser_config_t));
+  
+  stg_laser_config_t* cfg = mod->cfg;
+
+  stg_laser_sample_t* samples = (stg_laser_sample_t*)data;
+  
+  if( samples == NULL )
+    {
+      PRINT_WARN( "no laser data available" );
+      return;
+    }
+  
+  double sample_incr = cfg->fov / cfg->samples;
+  double bearing = cfg->geom.pose.a - cfg->fov/2.0;
+  stg_point_t* points = calloc( sizeof(stg_point_t), cfg->samples + 1 );
+  
+  rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_BRIGHT_COLOR) );
+  
+  int s;
+  for( s=0; s<cfg->samples; s++ )
+    {
+      // useful debug
+      //rtk_fig_arrow( fig, 0, 0, bearing, (sample->range/1000.0), 0.01 );
+      
+      points[1+s].x = (samples[s].range/1000.0) * cos(bearing);
+      points[1+s].y = (samples[s].range/1000.0) * sin(bearing);
+      bearing += sample_incr;
+    }
+  
+  rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_COLOR) );
+  // hmm, what's the right cast to get rid of the compiler warning
+  // for the points argument?
+  rtk_fig_polygon( fig, 0,0,0, cfg->samples+1, points, LASER_FILLED );      
+  
+  
+  rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_BRIGHT_COLOR) );
+  
+  // loop through again, drawing bright boxes on top of the polygon
+  for( s=0; s<cfg->samples; s++ )
+    {
+      // if this hit point is bright, we draw a little box
+      if( samples[s].reflectance > 0 )
+	rtk_fig_rectangle( fig, 
+			   points[1+s].x, points[1+s].y, 0,
+			   0.04, 0.04, 1 );
+    }
+  
+  
+  
+  free( points );
+}
+
+int laser_putdata( model_t* mod, void* data, size_t len )
+{
+  PRINT_DEBUG( "laser putdata" );
+  
+  // put the data in the normal way
+  copybuf( &mod->data, &mod->data_len, data, len );
+  
+    // and render it
+  laser_render_data( mod, data, len );
+}
+
+
+
+int register_laser( lib_entry_t lib[] )
+{
+  register_init( STG_MODEL_LASER, laser_init );
+
+  register_putdata( STG_MODEL_LASER, laser_putdata );
+  //register_startup( STG_MODEL_LASER, laser_startup );
+  //register_shutdown( STG_MODEL_LASER, laser_shutdown );
+  //register_getdata( STG_MODEL_LASER, laser_getdata );
+  //register_putcommand( STG_MODEL_LASER, laser_putcommand );
+  register_update( STG_MODEL_LASER, laser_update );
+} 

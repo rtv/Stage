@@ -98,41 +98,48 @@ int subscription_update( subscription_t* sub )
       size_t len = 0;
       
       // test new stuff
-      model_getdata( mod, &data, &len );
+      // model_getdata( mod, &data, &len );
       
+
+      switch( sub->target.prop )
+	{
+	case STG_PROP_DATA: 
+	  assert( model_getdata( mod, &data, &len ) == 0 );
+	  break;
+	    
+	default:
+	  if( model_get_prop( mod, sub->target.prop, &data, &len ) )      
+	    PRINT_WARN2( "failed to service subscription for property %d(%s)",
+			 sub->target.prop, stg_property_string(sub->target.prop) );
+	}
+
       PRINT_WARN2( "got %d bytes of data from model %s", len, mod->token );
 
-      if( model_get_prop( mod, sub->target.prop, &data, &len ) )      
-	PRINT_WARN2( "failed to service subscription for property %d(%s)",
-		     sub->target.prop, stg_property_string(sub->target.prop) );
-      else
-	{
-	  size_t mplen = sizeof(stg_prop_t) + len;
-	  stg_prop_t* mp = calloc( mplen,1  );
-	  
-	  mp->timestamp = timenow;
-	  mp->world = sub->target.world;
-	  mp->model = sub->target.model;
-	  mp->prop =  sub->target.prop;
-	  mp->datalen = len;
-	  memcpy( mp->data, data, len );
-	  
-	  //printf( "timestamping prop %d(%s) at %lu ms\n",
-	  //  mp->prop, stg_property_string(mp->prop), mp->timestamp );
-	  
-	  stg_msg_t*  msg = stg_msg_create( STG_MSG_CLIENT_DELTA, 
-					    mp, mplen );
+      size_t mplen = sizeof(stg_prop_t) + len;
+      stg_prop_t* mp = calloc( mplen,1  );
+      
+      mp->timestamp = timenow;
+      mp->world = sub->target.world;
+      mp->model = sub->target.model;
+      mp->prop =  sub->target.prop;
+      mp->datalen = len;
+      memcpy( mp->data, data, len );
+      
+      //printf( "timestamping prop %d(%s) at %lu ms\n",
+      //  mp->prop, stg_property_string(mp->prop), mp->timestamp );
+      
+      stg_msg_t*  msg = stg_msg_create( STG_MSG_CLIENT_DELTA, 
+					mp, mplen );
+      
+      //stg_fd_msg_write( sub->client->fd, msg );	  
+      
+      stg_buffer_append_msg( sub->client->outbuf, msg );
+      
+      free( mp );
+      
+      stg_msg_destroy( msg );
 
-	  //stg_fd_msg_write( sub->client->fd, msg );	  
-
-	  stg_buffer_append_msg( sub->client->outbuf, msg );
-
-	  free( mp );
-
-	  stg_msg_destroy( msg );
-
-	  return 1; // we sent a message
-	}
+      return 1; // we sent a message
     }
 
   return 0; // we didn't send a message

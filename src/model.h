@@ -51,6 +51,9 @@ typedef struct _model
 
   void* cmd;
   size_t cmd_len;
+  
+  void* cfg;
+  size_t cfg_len;
 
 } model_t;  
 
@@ -64,7 +67,13 @@ typedef int(*func_startup_t)(model_t*);
 typedef int(*func_shutdown_t)(model_t*);
 
 typedef int(*func_putcommand_t)(model_t*,void*,size_t);
+typedef int(*func_putdata_t)(model_t*,void*,size_t);
+typedef int(*func_putconfig_t)(model_t*,void*,size_t);
+
+typedef int(*func_getcommand_t)(model_t*,void**,size_t*);
 typedef int(*func_getdata_t)(model_t*,void**,size_t*);
+typedef int(*func_getconfig_t)(model_t*,void**,size_t*);
+
 typedef int(*func_request_t)(model_t*);
 
 typedef struct
@@ -76,11 +85,16 @@ typedef struct
   func_service_t service;
   func_get_t get;
   func_set_t set;
+
   func_getdata_t getdata;
+  func_putdata_t putdata;
   func_putcommand_t putcommand;
+  func_getcommand_t getcommand;
+  func_putconfig_t putconfig;
+  func_getconfig_t getconfig;
+
   func_request_t request;
 } lib_entry_t;
-
 
 
 // MODEL
@@ -94,7 +108,11 @@ int model_get_prop( model_t* model, stg_id_t propid,
 		    void** data, size_t* size );
 
 int model_getdata( model_t* mod, void** data, size_t* len );
+int model_putdata( model_t* mod, void* data, size_t len );
+int model_getcommand( model_t* mod, void** cmd, size_t* len );
 int model_putcommand( model_t* mod, void* cmd, size_t len );
+int model_getconfig( model_t* mod, void** cmd, size_t* len );
+int model_putconfig( model_t* mod, void* cmd, size_t len );
 
 void model_global_pose( model_t* mod, stg_pose_t* pose );
 

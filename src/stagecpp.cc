@@ -158,8 +158,8 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       // a model has the macro name that defined it as it's name
       // unlesss a name is explicitly defined.  TODO - count instances
       // of macro names so we can autogenerate unique names
-      const char *default_namestr = wf.GetEntityType(section);      
-      const char *namestr = wf.ReadString(section, "name", default_namestr);
+      const char *typestr = wf.GetEntityType(section);      
+      const char *namestr = wf.ReadString(section, "name", typestr );
       stg_token_t* token = stg_token_create( namestr, STG_T_NUM, 99 );
 
       int parent_section = wf.GetEntityParent( section );
@@ -177,10 +177,18 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       
       PRINT_WARN1( "token %s", token->token );
 
-      if( strcmp( token->token, "special" ) == 0 )
+      if( strcmp( typestr, "test" ) == 0 )
 	type = STG_MODEL_TEST;
-      
-      PRINT_WARN2( "creating model token %s type %d", token->token, type );
+      else if( strcmp( typestr, "laser" ) == 0 )
+	type = STG_MODEL_LASER;
+      else if( strcmp( typestr, "ranger" ) == 0 )
+	type = STG_MODEL_RANGER;
+      else if( strcmp( typestr, "position" ) == 0 )
+	type = STG_MODEL_POSITION;
+      else
+	type = STG_MODEL_BASIC;
+
+      PRINT_WARN2( "creating model token %s type %d", typestr, type );
 
       stg_model_t* mod = stg_world_createmodel( world, parent, section, 
 						type, token );

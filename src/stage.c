@@ -56,6 +56,9 @@ const char* stg_property_string( stg_id_t id )
     case STG_PROP_VELOCITY: return "velocity"; break;
     case STG_PROP_VISIONRETURN: return "vision_return"; break;
     case STG_PROP_GUIFEATURES: return "guifeatures"; break;
+    case STG_PROP_DATA: return "data"; break;
+    case STG_PROP_CONFIG: return "config"; break;
+    case STG_PROP_COMMAND: return "command"; break;
 
     default:
       break;

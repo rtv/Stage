@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.67 2004-08-23 18:47:28 rtv Exp $
+ * CVS: $Id: stage.h,v 1.68 2004-08-24 00:22:52 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -131,7 +131,8 @@ typedef enum
 
 typedef enum
   {
-    STG_MODEL_BASIC,
+    STG_MODEL_BASIC=0,
+    STG_MODEL_POSITION,
     STG_MODEL_TEST,
     STG_MODEL_LASER,
     STG_MODEL_FIDUCIAL,
@@ -191,6 +192,9 @@ typedef uint16_t stg_msg_type_t;
 #define STG_MSG_MODEL_PROPSETGET        (STG_MSG_MODEL | 5) // set a prop, get post state
 #define STG_MSG_MODEL_SUBSCRIBE         (STG_MSG_MODEL | 6) // no reply
 #define STG_MSG_MODEL_UNSUBSCRIBE       (STG_MSG_MODEL | 7) // no reply
+
+//#define STG_MSG_MODEL_CMD               (STG_MSG_MODEL | 8) // set command
+//#define STG_MSG_MODEL_DATA              (STG_MSG_MODEL | 9) // get data
 
 // these types are sent from Stage to a client
 #define STG_MSG_CLIENT_DELTA            (STG_MSG_CLIENT | 1)

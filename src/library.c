@@ -16,7 +16,8 @@ void model_blobfinder_register();
 void model_energy_register();
 
 // new style registration funcs for derived models
-void register_test();
+int register_test(void);
+int register_laser(void);
 
 lib_entry_t library[STG_PROP_COUNT];
 
@@ -42,6 +43,7 @@ void library_create( void )
   model_energy_register();
 
   register_test();
+  register_laser();
 }
 
 

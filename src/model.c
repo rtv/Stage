@@ -61,6 +61,9 @@ model_t* model_create(  world_t* world,
   
   mod->cmd = NULL;
   mod->cmd_len = 0;
+  
+  mod->cfg = NULL;
+  mod->cfg_len = 0;
 
   PRINT_WARN2( "model %d type %d", mod->id, mod->type );
 
@@ -233,9 +236,9 @@ int model_update( model_t* mod )
   for( p=0; p<STG_PROP_COUNT; p++ )
     if( library[p].update )
       library[p].update(mod);
-
+  
   // if this type of model has an update function, call it.
-  if( derived[ mod->type ].update )
+  if( derived[ mod->type ].update && mod->subs[STG_PROP_DATA] > 0 )
     derived[ mod->type ].update(mod);
 
   return 0;
@@ -349,30 +352,8 @@ int model_get_prop_default( model_t* mod, stg_id_t pid, void** data, size_t* len
   return 0; //ok
 }
 
-int model_getdata( model_t* mod, void** data, size_t* len )
-{
-  // if this type of model has an getdata function, call it.
-  if( derived[ mod->type ].getdata )
-    {
-      derived[ mod->type ].getdata(mod, data, len);
-      PRINT_WARN1( "used special getdata, returned %d bytes", (int)*len );
-    }
-  else
-    { // we do a generic data copy
-      *data = mod->data;
-      *len = mod->data_len; 
-      PRINT_WARN1( "used generic getdata, returned %d bytes", (int)*len );
-    }
-  return 0; //ok
-}
 
-int model_putcommand( model_t* mod, void* cmd, size_t len )
-{
-  mod->cmd = realloc( mod->cmd, len );
-  memcpy( mod->cmd, cmd, len );
-  mod->cmd_len = len;
-  return 0; //ok
-}
+//////////////////////////////////////////////////////////////////////////
 
 int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
 {
@@ -383,6 +364,7 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
       return 0;
     }
   
+
   // else
   if( library[pid].get ) 
     {
@@ -525,36 +507,6 @@ void model_register_get( stg_id_t pid, func_get_t func )
   library[pid].get = func;
 }
 
-// new registration funcs
-void register_init( stg_model_type_t type, func_init_t func )
-{
-  derived[type].init = func;
-}
-
-void register_startup( stg_model_type_t type, func_startup_t func )
-{
-  derived[type].startup = func;
-}
-
-void register_shutdown( stg_model_type_t type, func_shutdown_t func )
-{
-  derived[type].shutdown = func;
-}
-
-void register_getdata( stg_model_type_t type, func_getdata_t func )
-{
-  derived[type].getdata = func;
-}
-
-void register_update( stg_model_type_t type, func_update_t func )
-{
-  derived[type].update = func;
-}
-
-void register_putcommand( stg_model_type_t type, func_putcommand_t func )
-{
-  derived[type].putcommand = func;
-}
 
 
 void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
@@ -580,25 +532,72 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
       }
       break;
 
+/*     case STG_MSG_MODEL_CMD: */
+/*       // commands don't need a reply */
+/*       { */
+/* 	stg_prop_t* mp = (stg_prop_t*)msg->payload; */
+	
+/* 	PRINT_DEBUG4( "command %d:%d type %d with %d bytes", */
+/* 		      mp->world, */
+/* 		      mp->model, */
+/* 		      model->type, */
+/* 		      (int)mp->datalen ); */
+	
+/* 	model_putcommand( model, mp->data, mp->datalen );  */
+/*       } */
+/*       break; */
+
+/*     case STG_MSG_MODEL_DATA: */
+/*       { */
+/* 	stg_prop_t* mp = (stg_prop_t*)msg->payload; */
+	
+/* 	PRINT_DEBUG3( "getdata request %d:%d type %d ", */
+/* 		      mp->world, */
+/* 		      mp->model, */
+/* 		      model->type ); */
+
+/* 	void* data; */
+/* 	size_t len; */
+
+/* 	if( model_getdata( model, &data, &len ) ) */
+/* 	  PRINT_WARN2( "failed to service request for data %d:%d", */
+/* 		       mp->world, mp->model ); */
+/* 	else */
+/* 	  stg_fd_msg_write( fd, STG_MSG_CLIENT_REPLY, data, len );	 */
+/*       } */
+/*       break; */
+
       // everything else needs a reply
     case STG_MSG_MODEL_PROPGET:
       {
 	PRINT_DEBUG( "RECEIVED A PROPGET REQUEST" );
-
+	
 	stg_target_t* tgt = (stg_target_t*)msg->payload;
-
+	
 	void* data;
 	size_t len;
 	
-	// reply with the requested property
-	if( model_get_prop( model, tgt->prop, &data, &len ) )      
-	  PRINT_WARN2( "failed to service request for property %d(%s)",
-		       tgt->prop, stg_property_string(tgt->prop) );
-	else
+	switch( tgt->prop )
 	  {
-	    PRINT_DEBUG( "SENDING A REPLY" );	 	    
-	    stg_fd_msg_write( fd, STG_MSG_CLIENT_REPLY, data, len );
+	  case STG_PROP_DATA: 
+	    assert( model_getdata( model, &data, &len ) == 0 );
+	    break;
+	  case STG_PROP_COMMAND: 
+	    assert( model_getcommand( model, &data, &len ) == 0 );
+	    break;
+	  case STG_PROP_CONFIG: 
+	    assert( model_getconfig( model, &data, &len ) == 0 );
+	    break;
+	    
+	  default:
+	    // reply with the requested property
+	    if( model_get_prop( model, tgt->prop, &data, &len ) )      
+	      PRINT_WARN2( "failed to service request for property %d(%s)",
+			   tgt->prop, stg_property_string(tgt->prop) );
 	  }
+	
+	PRINT_DEBUG( "SENDING A REPLY" );	 	    
+	stg_fd_msg_write( fd, STG_MSG_CLIENT_REPLY, data, len );
       }
       break;
 
