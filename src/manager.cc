@@ -1,3 +1,8 @@
+/*##########################################################################
+# manager.cc - implements the Stage Manager for syncing distributed Stages
+# $Id: manager.cc,v 1.8 2001-09-25 20:58:26 vaughan Exp $
+*#########################################################################/
+
 #include <sys/types.h>	/* basic system data types */
 #include <sys/socket.h>	/* basic socket definitions */
 #include <netinet/in.h>
