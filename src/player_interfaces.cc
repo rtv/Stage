@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_interfaces.cc,v 1.5 2005-03-11 20:12:09 rtv Exp $
+ * CVS: $Id: player_interfaces.cc,v 1.6 2005-04-05 04:18:35 gerkey Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -57,7 +57,7 @@ void SimulationConfig(  device_record_t* device,
 			void* client, 
 			void* buffer, size_t len )
 {
-  printf("got simulation request\n");
+  //printf("got simulation request\n");
   
   // switch on the config type (first byte)
   uint8_t* buf = (uint8_t*)buffer;
@@ -75,8 +75,10 @@ void SimulationConfig(  device_record_t* device,
 	pose.y = (int32_t)ntohl(req->y) / 1000.0;
 	pose.a = DTOR( ntohl(req->a) );
 	
+        /*
 	printf( "Stage: received request to move object \"%s\" to (%.2f,%.2f,%.2f)\n",
 		req->name, pose.x, pose.y, pose.a );
+                */
 	
 	// look up the named model
 	
@@ -104,7 +106,7 @@ void SimulationConfig(  device_record_t* device,
       {
 	player_simulation_pose2d_req_t* req = (player_simulation_pose2d_req_t*)buffer;
 	
-	printf( "Stage: received request for position of object \"%s\"\n", req->name );
+	//printf( "Stage: received request for position of object \"%s\"\n", req->name );
 	
 	// look up the named model	
 	stg_model_t* mod = 
@@ -115,8 +117,10 @@ void SimulationConfig(  device_record_t* device,
 	    stg_pose_t pose;
 	    stg_model_get_pose( mod, &pose );
 	    
+            /*
 	    printf( "Stage: returning location (%.2f,%.2f,%.2f)\n",
 		    pose.x, pose.y, pose.a );
+                    */
 	    
 	    player_simulation_pose2d_req_t reply;
 	    memcpy( &reply, req, sizeof(reply));
@@ -124,8 +128,10 @@ void SimulationConfig(  device_record_t* device,
 	    reply.y = htonl((int32_t)(pose.y*1000.0));
 	    reply.a = htonl((int32_t)RTOD(pose.a));
 	    
+            /*
 	    printf( "Stage: returning location (%d %d %d)\n",
 		    reply.x, reply.y, reply.a );
+                    */
 
 	    device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_ACK, 
 				      &reply, sizeof(reply),  NULL );
