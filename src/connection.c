@@ -1,6 +1,6 @@
 #include "connection.h"
 
-void stg_connection_print( stg_connection_t* cli )
+void stg_connection_print( connection_t* cli )
 {
   printf( " %s:%d fd %d subs %d ",
 	  cli->host, cli->port, cli->fd, cli->subs->len );
@@ -17,16 +17,16 @@ void stg_connection_print( stg_connection_t* cli )
 
 void stg_connection_print_cb( gpointer key, gpointer value, gpointer user )
 {
-  stg_connection_print( (stg_connection_t*)value );
+  stg_connection_print( (connection_t*)value );
 }
 
 
-stg_connection_t* stg_connection_create( void )
+connection_t* stg_connection_create( void )
 {
   PRINT_DEBUG( "creating a connection" );
 
-  stg_connection_t* con = 
-    (stg_connection_t*)calloc( sizeof(stg_connection_t), 1 );
+  connection_t* con = 
+    (connection_t*)calloc( sizeof(connection_t), 1 );
   
   con->subs = g_ptr_array_new();
   
@@ -35,7 +35,7 @@ stg_connection_t* stg_connection_create( void )
 
 
 // close the connection and free the memory allocated
-void stg_connection_destroy( stg_connection_t* con )
+void stg_connection_destroy( connection_t* con )
 {
   PRINT_DEBUG( "destroying a connection" );
 
@@ -53,22 +53,22 @@ void stg_connection_destroy( stg_connection_t* con )
 } 
 
 // wrappers 
-ssize_t stg_connection_write( stg_connection_t* con, void* data, size_t len )
+ssize_t stg_connection_write( connection_t* con, void* data, size_t len )
 {
   return stg_fd_packet_write( con->fd, data, len );
 }
 
-ssize_t stg_connection_write_msg( stg_connection_t* con, stg_msg_t* msg )
+ssize_t stg_connection_write_msg( connection_t* con, stg_msg_t* msg )
 {
   return stg_connection_write( con, msg, sizeof(stg_msg_t) + msg->payload_len );
 }
 
-size_t stg_connection_read( stg_connection_t* con, void* buf, size_t len )
+size_t stg_connection_read( connection_t* con, void* buf, size_t len )
 {
   return stg_fd_packet_read( con->fd, buf, len );
 }
 
-void stg_connection_sub_update( stg_connection_t* con )
+void stg_connection_sub_update( connection_t* con )
 { 
   // for each subscription
   int i;
@@ -78,5 +78,5 @@ void stg_connection_sub_update( stg_connection_t* con )
 
 void stg_connection_sub_update_cb( gpointer key, gpointer value, gpointer user )
 {
-  stg_connection_sub_update( (stg_connection_t*)value );
+  stg_connection_sub_update( (connection_t*)value );
 }

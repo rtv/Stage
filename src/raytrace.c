@@ -110,13 +110,13 @@ void PrintArray( GPtrArray* arr )
       printf( "model array %p len %d\n", arr, arr->len );
       int i;
       for( i=0; i<arr->len; i++ )
-	printf( " (model %s)", ((stg_model_t*)g_ptr_array_index( arr, i ))->token );
+	printf( " (model %s)", ((model_t*)g_ptr_array_index( arr, i ))->token );
     }
   else
     printf( "null array\n" );
 }
 
-stg_model_t* itl_next( itl_t* itl )
+model_t* itl_next( itl_t* itl )
 {
   //printf( "current ptr: %p index: %d\n", itl->ent[itl->index], index );
   

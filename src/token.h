@@ -48,7 +48,7 @@ void stg_tokens_print( stg_token_t* tokens );
 void stg_tokens_free( stg_token_t* tokens );
 
 // create a new token structure from the arguments
-stg_token_t* stg_token_create( char* token, stg_token_type_t type, int line );
+stg_token_t* stg_token_create( const char* token, stg_token_type_t type, int line );
 
 // add a token to a list
 stg_token_t* stg_token_append( stg_token_t* head, 

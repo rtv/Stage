@@ -1,7 +1,7 @@
 
 #include <stdlib.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
-#include <bitmap.h>
+#include "stage.h"
 
 guchar* pb_get_pixel( GdkPixbuf* pb, int x, int y )
 {

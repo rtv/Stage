@@ -107,7 +107,7 @@ int main( int argc, char* argv[] )
 
   install_signal_catchers();
 
-  stg_server_t* server = NULL;
+  server_t* server = NULL;
   
   if( !(server = server_create( server_port )) )
     stg_err( "failed to create server" );

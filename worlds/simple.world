@@ -1,11 +1,18 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: simple.world,v 1.24 2004-04-24 01:21:28 rtv Exp $
+# CVS: $Id: simple.world,v 1.25 2004-04-26 03:12:09 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 #
 
 include "pioneer.inc"
+
+
+
+
+
+
+
 
 
 
@@ -56,7 +63,7 @@ size [10 10]
     color "blue"
   )
 
-pioneer2dx( name "r0" pose [8.031 7.187 6733.655] velocity [ 0.2 0.02 5 ] )
+pioneer2dx( name "r0" pose [4.868 6.382 7080.741] velocity [ 0.2 0.02 5 ] )
 pioneer2dx( name "r1" pose [1.497 5.232 -20.084] )
 pioneer2dx( name "r2" pose [2.586 8.947 -71.250] )
 #pioneer2dx( name "r3" pose [1.449 3.189 -20.084] )

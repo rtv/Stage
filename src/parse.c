@@ -13,9 +13,6 @@
 
 //#include "config.h"
 #include "stage.h"
-#include "stageclient.h"
-#include "token.h"
-#include "bitmap.h"
 
 // the maximum size of a single token
 #define TOKEN_MAX 256

@@ -26,7 +26,7 @@ typedef struct
 itl_t* itl_create( double x, double y, double a, double b, 
 		   stg_matrix_t* matrix, itl_mode_t pmode );
 
-stg_model_t* itl_next( itl_t* itl );
+model_t* itl_next( itl_t* itl );
 
 void itl_destroy( itl_t* itl );
 void itl_raytrace( itl_t* itl );

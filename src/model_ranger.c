@@ -1,7 +1,7 @@
 #include "stage.h"
 #include "raytrace.h"
 
-void model_update_rangers( stg_model_t* mod )
+void model_update_rangers( model_t* mod )
 {   
   //PRINT_DEBUG1( "[%.3f] updating rangers", mod->world->sim_time );
   
@@ -38,7 +38,7 @@ void model_update_rangers( stg_model_t* mod )
 			       mod->world->matrix, 
 			       PointToBearingRange );
       
-      stg_model_t* hitmod;
+      model_t * hitmod;
       double range = cfg->bounds_range.max;
       
       while( (hitmod = itl_next( itl )) ) 

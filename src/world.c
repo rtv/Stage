@@ -8,11 +8,11 @@
 #include "stage.h"
 #include "gui.h"
 
-stg_world_t* world_create( stg_server_t* server, stg_id_t id, stg_createworld_t* cw )
+world_t* world_create( server_t* server, stg_id_t id, stg_createworld_t* cw )
 {
   PRINT_DEBUG2( "world creator %d (%s)", id, cw->token );
   
-  stg_world_t* world = calloc( sizeof(stg_world_t),1 );
+  world_t* world = calloc( sizeof(world_t),1 );
 
   world->id = id;
   world->token = strdup( cw->token );
@@ -37,7 +37,7 @@ stg_world_t* world_create( stg_server_t* server, stg_id_t id, stg_createworld_t*
   return world;
 }
 
-void world_destroy( stg_world_t* world )
+void world_destroy( world_t* world )
 {
   assert( world );
   
@@ -54,11 +54,11 @@ void world_destroy( stg_world_t* world )
 
 void world_destroy_cb( gpointer world )
 {
-  world_destroy( (stg_world_t*)world );
+  world_destroy( (world_t*)world );
 }
 
 
-void world_update( stg_world_t* world )
+void world_update( world_t* world )
 {
   stg_time_t timenow = stg_timenow();
   
@@ -92,17 +92,17 @@ void world_update( stg_world_t* world )
 
 void world_update_cb( gpointer key, gpointer value, gpointer user )
 {
-  world_update( (stg_world_t*)value );
+  world_update( (world_t*)value );
 }
 
-stg_model_t* world_get_model( stg_world_t* world, stg_id_t mid )
+model_t* world_get_model( world_t* world, stg_id_t mid )
 {
   return( world ? g_hash_table_lookup( (gpointer)world->models, &mid ) : NULL );
 }
 
 
 // add a model entry to the server & install its default properties
-int world_model_create( stg_world_t* world, stg_createmodel_t* cm )
+int world_model_create( world_t* world, stg_createmodel_t* cm )
 {
   char* token  = cm->token;
   
@@ -113,14 +113,14 @@ int world_model_create( stg_world_t* world, stg_createmodel_t* cm )
   
   PRINT_DEBUG3( "creating model %d:%d (%s)", world->id, candidate, token  );
   
-  stg_model_t* mod = model_create( world, candidate, token ); 
+  model_t* mod = model_create( world, candidate, token ); 
   
   g_hash_table_replace( world->models, &mod->id, mod );
 
   return candidate; // the id of the new model
 }
 
-int world_model_destroy( stg_world_t* world, stg_id_t model )
+int world_model_destroy( world_t* world, stg_id_t model )
 {
   puts( "model destroy" );
   
@@ -137,7 +137,7 @@ int world_model_destroy( stg_world_t* world, stg_id_t model )
 }
 
 
-void world_handle_msg( stg_world_t* world, int fd, stg_msg_t* msg )
+void world_handle_msg( world_t* world, int fd, stg_msg_t* msg )
 {
   assert( world );
   assert( msg );
@@ -167,7 +167,7 @@ void world_handle_msg( stg_world_t* world, int fd, stg_msg_t* msg )
     }
 }
 
-void world_print( stg_world_t* world )
+void world_print( world_t* world )
 {
   printf( " world %d:%s (%d models)\n", 
 	  world->id, 
@@ -179,6 +179,6 @@ void world_print( stg_world_t* world )
 
 void world_print_cb( gpointer key, gpointer value, gpointer user )
 {
-  world_print( (stg_world_t*)value );
+  world_print( (world_t*)value );
 }
 

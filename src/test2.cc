@@ -16,8 +16,7 @@
 #define DEBUG
 
 #include "replace.h"
-#include "stageclient.h"
-#include "bitmap.h"
+#include "stage.h"
 #include "worldfile.hh"
 
 double world_time = 0.0;
@@ -58,7 +57,7 @@ int install_signal_catchers( void )
 
 
 
-void message_dispatch( sc_t* cli, stg_msg_t* msg )
+void message_dispatch( stg_client_t* cli, stg_msg_t* msg )
 {
   //PRINT_DEBUG2( "handling message type %d len %d", 
   //	msg->type,(int)msg->len );
@@ -92,7 +91,7 @@ void message_dispatch( sc_t* cli, stg_msg_t* msg )
 	PRINT_DEBUG2( "looking up client-side model for %d:%d",
 		      prop->world, prop->model );
 	
-	sc_model_t* mod = sc_get_model_serverside( cli, prop->world, prop->model );
+	stg_model_t* mod = stg_client_get_model_serverside( cli, prop->world, prop->model );
 	
 	if( mod == NULL )
 	  {
@@ -105,7 +104,7 @@ void message_dispatch( sc_t* cli, stg_msg_t* msg )
 			  prop->prop, stg_property_string(prop->prop),
 			  (int)prop->datalen, mod->token->token );
 
-	    sc_model_prop_with_data( mod, prop->prop, prop->data, prop->datalen );
+	    stg_model_prop_with_data( mod, prop->prop, prop->data, prop->datalen );
 	  }	    
 	
 
@@ -168,7 +167,7 @@ void message_dispatch( sc_t* cli, stg_msg_t* msg )
     }
 }
 
-void model_save(  sc_model_t* model, CWorldFile* wf )
+void model_save(  stg_model_t* model, CWorldFile* wf )
 {
   PRINT_DEBUG1( "Saving model \"%s\"", model->token->token );
   
@@ -193,10 +192,10 @@ void model_save(  sc_model_t* model, CWorldFile* wf )
 
 void model_save_cb( gpointer key, gpointer value, gpointer user )
 {
-  model_save( (sc_model_t*)value, (CWorldFile*)user );
+  model_save( (stg_model_t*)value, (CWorldFile*)user );
 }
 
-void world_save(  sc_world_t* world, CWorldFile* wf )
+void world_save(  stg_world_t* world, CWorldFile* wf )
 {
   PRINT_DEBUG1( "Saving world \"%s\"", world->token->token  );
 
@@ -205,11 +204,11 @@ void world_save(  sc_world_t* world, CWorldFile* wf )
 
 void world_save_cb( gpointer key, gpointer value, gpointer user )
 {
-  world_save( (sc_world_t*)value, (CWorldFile*)user );
+  world_save( (stg_world_t*)value, (CWorldFile*)user );
 }
 
 
-void save( sc_t* cli, CWorldFile* wf )
+void save( stg_client_t* cli, CWorldFile* wf )
 {
   // get everything to write its latest data into the worldfile database
   g_hash_table_foreach( cli->worlds_id, world_save_cb, wf );
@@ -271,49 +270,48 @@ int main( int argc, char* argv[] )
   printf( "building client-side models\n" );
   
   // create a client
-  sc_t* client = sc_create();  
+  stg_client_t* client = stg_client_create();  
   
-  char* world_name = worldfile->ReadString(0, "name", "Player world" );
+  int section = 0;
+
+  const char* world_name = worldfile->ReadString(section, "name", "Player world" );
 
   double resolution = worldfile->ReadFloat(0, "resolution", 0.02 ); // 2cm default
   resolution = 1.0 / resolution; // invert res to ppm
 
-  double interval_real = worldfile->ReadFloat(0, "interval_real", 0.1 );
-  double interval_sim = worldfile->ReadFloat(0, "interval_sim", 0.1 );
+  double interval_real = worldfile->ReadFloat(section, "interval_real", 0.1 );
+  double interval_sim = worldfile->ReadFloat(section, "interval_sim", 0.1 );
 
   // create a single world
-  sc_world_t* world = 
-    sc_world_create( stg_token_create( world_name, STG_T_NUM, 99 ),
-		     resolution, interval_sim, interval_real );
-  
-  sc_addworld( client, world );
+  stg_world_t* world = 
+    stg_client_createworld( client, 
+			    0,
+			    stg_token_create( world_name, STG_T_NUM, 99 ),
+			    resolution, interval_sim, interval_real );
   
   // create a special model for the background
   stg_token_t* token = stg_token_create( "root", STG_T_NUM, 99 );
-  sc_model_t* root = sc_model_create( world, NULL, token );
-  root->section = 0;
-  sc_world_addmodel( world, root );
+  stg_model_t* root = stg_world_createmodel( world, NULL, 0, token );
   
   stg_size_t sz;
-  sz.x = worldfile->ReadTupleLength(0, "size", 0, 10.0 );
-  sz.y = worldfile->ReadTupleLength(0, "size", 1, 10.0 );
-  sc_model_prop_with_data( root, STG_PROP_SIZE, &sz, sizeof(sz) );
-
+  sz.x = worldfile->ReadTupleLength(section, "size", 0, 10.0 );
+  sz.y = worldfile->ReadTupleLength(section, "size", 1, 10.0 );
+  stg_model_prop_with_data( root, STG_PROP_SIZE, &sz, sizeof(sz) );
 
   stg_pose_t pose;
   pose.x = sz.x/2.0;
   pose.y = sz.y/2.0;
   pose.a = 0.0;
-  sc_model_prop_with_data( root, STG_PROP_POSE, &pose, sizeof(pose) );
+  stg_model_prop_with_data( root, STG_PROP_POSE, &pose, sizeof(pose) );
 
   stg_movemask_t mm = 0;
-  sc_model_prop_with_data( root, STG_PROP_MOVEMASK, &mm, sizeof(mm) ); 
+  stg_model_prop_with_data( root, STG_PROP_MOVEMASK, &mm, sizeof(mm) ); 
   
-  const char* colorstr = worldfile->ReadString(0, "color", "black" );
+  const char* colorstr = worldfile->ReadString(section, "color", "black" );
   stg_color_t color = stg_lookup_color( colorstr );
-  sc_model_prop_with_data( root, STG_PROP_COLOR, &color,sizeof(color));
+  stg_model_prop_with_data( root, STG_PROP_COLOR, &color,sizeof(color));
   
-  const char* bitmapfile = worldfile->ReadString(0, "bitmap", NULL );
+  const char* bitmapfile = worldfile->ReadString(section, "bitmap", NULL );
   if( bitmapfile )
     {
       stg_rotrect_t* rects = NULL;
@@ -327,19 +325,19 @@ int main( int argc, char* argv[] )
       stg_scale_lines( lines, num_lines, sz.x, sz.y );
       stg_translate_lines( lines, num_lines, -sz.x/2.0, -sz.y/2.0 );
       
-      sc_model_prop_with_data( root, STG_PROP_LINES, 
+      stg_model_prop_with_data( root, STG_PROP_LINES, 
 			       lines, num_lines * sizeof(stg_line_t ));
       
       free( lines );
     }
 
   stg_bool_t boundary;
-  boundary = worldfile->ReadInt(root, "boundary", 1 );
-  sc_model_prop_with_data(root, STG_PROP_BOUNDARY, &boundary,sizeof(boundary));
+  boundary = worldfile->ReadInt(section, "boundary", 1 );
+  stg_model_prop_with_data(root, STG_PROP_BOUNDARY, &boundary,sizeof(boundary));
 
   stg_bool_t grid;
-  grid = worldfile->ReadInt( root, "grid", 1 );
-  sc_model_prop_with_data( root, STG_PROP_GRID, &grid, sizeof(grid) );
+  grid = worldfile->ReadInt(section, "grid", 1 );
+  stg_model_prop_with_data(root, STG_PROP_GRID, &grid, sizeof(grid) );
     
 
   // Iterate through sections and create client-side models
@@ -349,34 +347,33 @@ int main( int argc, char* argv[] )
       // unlesss a name is explicitly defined.  TODO - count instances
       // of macro names so we can autogenerate unique names
       const char *default_namestr = worldfile->GetEntityType(section);      
-      char *namestr = worldfile->ReadString(section, "name", default_namestr );
+      const char *namestr = worldfile->ReadString(section, "name", default_namestr);
       stg_token_t* token = stg_token_create( namestr, STG_T_NUM, 99 );
-      sc_model_t* mod = sc_model_create( world, NULL, token );
-      mod->section = section;
-      sc_world_addmodel( world, mod );
+      stg_model_t* mod = stg_world_createmodel( world, NULL, section, token );
+      //stg_world_addmodel( world, mod );
 
       stg_pose_t pose;
       pose.x = worldfile->ReadTupleLength(section, "pose", 0, 0);
       pose.y = worldfile->ReadTupleLength(section, "pose", 1, 0);
       pose.a = worldfile->ReadTupleAngle(section, "pose", 2, 0);      
-      sc_model_prop_with_data( mod, STG_PROP_POSE, &pose, sizeof(pose) );
+      stg_model_prop_with_data( mod, STG_PROP_POSE, &pose, sizeof(pose) );
       
       stg_size_t sz;
       sz.x = worldfile->ReadTupleLength(section, "size", 0, 0.4 );
       sz.y = worldfile->ReadTupleLength(section, "size", 1, 0.4 );
-      sc_model_prop_with_data( mod, STG_PROP_SIZE, &sz, sizeof(sz) );
+      stg_model_prop_with_data( mod, STG_PROP_SIZE, &sz, sizeof(sz) );
       
       stg_bool_t nose;
       nose = worldfile->ReadInt( section, "nose", 0 );
-      sc_model_prop_with_data( mod, STG_PROP_NOSE, &nose, sizeof(nose) );
+      stg_model_prop_with_data( mod, STG_PROP_NOSE, &nose, sizeof(nose) );
 
       stg_bool_t grid;
       grid = worldfile->ReadInt( section, "grid", 0 );
-      sc_model_prop_with_data( mod, STG_PROP_GRID, &grid, sizeof(grid) );
+      stg_model_prop_with_data( mod, STG_PROP_GRID, &grid, sizeof(grid) );
       
       stg_bool_t boundary;
       boundary = worldfile->ReadInt( section, "boundary", 0 );
-      sc_model_prop_with_data( mod, STG_PROP_BOUNDARY, &boundary,sizeof(boundary));
+      stg_model_prop_with_data( mod, STG_PROP_BOUNDARY, &boundary,sizeof(boundary));
       
       stg_laser_config_t lconf;
       lconf.pose.x = worldfile->ReadTupleLength(section, "laser", 0, 0);
@@ -387,16 +384,16 @@ int main( int argc, char* argv[] )
       lconf.range_min = worldfile->ReadTupleLength(section, "laser", 5, 0);
       lconf.range_max = worldfile->ReadTupleLength(section, "laser", 6, 8);
       lconf.fov = worldfile->ReadTupleAngle(section, "laser", 7, 180);
-      lconf.samples = worldfile->ReadTupleLength(section, "laser", 8, 180);
+      lconf.samples = (int)worldfile->ReadTupleFloat(section, "laser", 8, 180);
       
-      sc_model_prop_with_data( mod, STG_PROP_LASERCONFIG, &lconf,sizeof(lconf));
+      stg_model_prop_with_data( mod, STG_PROP_LASERCONFIG, &lconf,sizeof(lconf));
   
       const char* colorstr = worldfile->ReadString( section, "color", "red" );
       if( colorstr )
 	{
 	  stg_color_t color = stg_lookup_color( colorstr );
 	  PRINT_DEBUG2( "stage color %s = %X", colorstr, color );
-	  sc_model_prop_with_data( mod, STG_PROP_COLOR, &color,sizeof(color));
+	  stg_model_prop_with_data( mod, STG_PROP_COLOR, &color,sizeof(color));
 	}
 
       const char* bitmapfile = worldfile->ReadString( section, "bitmap", NULL );
@@ -413,7 +410,7 @@ int main( int argc, char* argv[] )
 	  stg_scale_lines( lines, num_lines, sz.x, sz.y );
 	  stg_translate_lines( lines, num_lines, -sz.x/2.0, -sz.y/2.0 );
 	  
-	  sc_model_prop_with_data( mod, STG_PROP_LINES, 
+	  stg_model_prop_with_data( mod, STG_PROP_LINES, 
 				   lines, num_lines * sizeof(stg_line_t ));
 	  	  
 	  free( lines );
@@ -425,7 +422,9 @@ int main( int argc, char* argv[] )
       if (scount > 0)
 	{
 	  char key[256];
-	  stg_ranger_config_t* configs = calloc( sizeof(stg_ranger_config_t), scount );
+	  stg_ranger_config_t* configs = (stg_ranger_config_t*)
+	    calloc( sizeof(stg_ranger_config_t), scount );
+
 	  int i;
 	  for(i = 0; i < scount; i++)
 	    {
@@ -449,7 +448,7 @@ int main( int argc, char* argv[] )
 	    }
 	  
 	  PRINT_WARN1( "loaded %d ranger configs", scount );	  
-	  sc_model_prop_with_data( mod, STG_PROP_RANGERCONFIG,
+	  stg_model_prop_with_data( mod, STG_PROP_RANGERCONFIG,
 				   configs, scount * sizeof(stg_ranger_config_t) );
 
 	  free( configs );
@@ -477,7 +476,7 @@ int main( int argc, char* argv[] )
 		  lines[l].x1, lines[l].y1, 
 		  lines[l].x2, lines[l].y2 ); 
 	  
-	  sc_model_prop_with_data( mod, STG_PROP_LINES,
+	  stg_model_prop_with_data( mod, STG_PROP_LINES,
 				   lines, linecount * sizeof(stg_line_t) );
 	  
 	  free( lines );
@@ -487,7 +486,7 @@ int main( int argc, char* argv[] )
       vel.x = worldfile->ReadTupleLength(section, "velocity", 0, 0);
       vel.y = worldfile->ReadTupleLength(section, "velocity", 1, 0);
       vel.a = worldfile->ReadTupleAngle(section, "velocity", 2, 0);      
-      sc_model_prop_with_data( mod, STG_PROP_VELOCITY, &vel, sizeof(vel) );
+      stg_model_prop_with_data( mod, STG_PROP_VELOCITY, &vel, sizeof(vel) );
 
 
     }
@@ -495,48 +494,48 @@ int main( int argc, char* argv[] )
   printf( "building client-side models done.\n" );
 
   puts( "connecting to server" );
-  sc_connect( client, server_host, server_port );
+  stg_client_connect( client, server_host, server_port );
   puts( "connection ok" );
   
   puts( "uploading worldfile to server" );
-  sc_push( client );
+  stg_client_push( client );
   puts( "uploading done" );
   
-  sc_model_t* mod = sc_get_model( client, world_name, "r0" );
+  stg_model_t* mod = stg_client_get_model( client, world_name, "r0" );
   if( mod )
     {
-      sc_model_subscribe( client, mod, STG_PROP_RANGERDATA, 0.1 );
-      sc_model_subscribe( client, mod, STG_PROP_LASERDATA, 0.1 );
-      sc_model_subscribe( client, mod, STG_PROP_POSE, 1.0 );
+      stg_model_subscribe( mod, STG_PROP_RANGERDATA, 0.1 );
+      stg_model_subscribe( mod, STG_PROP_LASERDATA, 0.1 );
+      stg_model_subscribe( mod, STG_PROP_POSE, 1.0 );
     }
   else
     PRINT_ERR( "no such model" );
 
-  mod = sc_get_model( client, world_name, "r1" );
+  mod = stg_client_get_model( client, world_name, "r1" );
   if( mod )
     {
-      sc_model_subscribe( client, mod, STG_PROP_RANGERDATA, 0.1 );
-      sc_model_subscribe( client, mod, STG_PROP_LASERDATA, 0.1 );
-      sc_model_subscribe( client, mod, STG_PROP_POSE, 1.0 );
+      stg_model_subscribe( mod, STG_PROP_RANGERDATA, 0.1 );
+      stg_model_subscribe( mod, STG_PROP_LASERDATA, 0.1 );
+      stg_model_subscribe( mod, STG_PROP_POSE, 1.0 );
     }
   else
     PRINT_ERR( "no such model" );
 
-  mod = sc_get_model( client, world_name, "r2" );
+  mod = stg_client_get_model( client, world_name, "r2" );
   if( mod )
     {
-      sc_model_subscribe( client, mod, STG_PROP_RANGERDATA, 0.1 );
-      sc_model_subscribe( client, mod, STG_PROP_LASERDATA, 0.1 );
-      sc_model_subscribe( client, mod, STG_PROP_POSE, 1.0 );
+      stg_model_subscribe( mod, STG_PROP_RANGERDATA, 0.1 );
+      stg_model_subscribe( mod, STG_PROP_LASERDATA, 0.1 );
+      stg_model_subscribe( mod, STG_PROP_POSE, 1.0 );
     }
   else
     PRINT_ERR( "no such model" );
 
-  mod = sc_get_model( client, "Player world", "budgie" );
+  mod = stg_client_get_model( client, "Player world", "budgie" );
   if( mod )
     {
-      sc_model_subscribe( client, mod, STG_PROP_RANGERDATA, 0.1 );
-      sc_model_subscribe( client, mod, STG_PROP_POSE, 1.0 );
+      stg_model_subscribe( mod, STG_PROP_RANGERDATA, 0.1 );
+      stg_model_subscribe( mod, STG_PROP_POSE, 1.0 );
     }
   else
     PRINT_ERR( "no such model" );
@@ -626,7 +625,7 @@ int main( int argc, char* argv[] )
       stg_msg_t* msg = NULL;
 
       
-      while( (msg = sc_read( client )) )
+      while( (msg = stg_client_read( client )) )
 	{
 	  //printf( "got a message!" );
 	  //puts( "" );
@@ -678,11 +677,11 @@ int main( int argc, char* argv[] )
   
   save( client, worldfile );
 
-  sc_pull( client );
+  stg_client_pull( client );
   puts( "done");
 
   puts( "destroyling client" );
-  sc_destroy( client );
+  stg_client_destroy( client );
 
   puts( "quitting" );
 

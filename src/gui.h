@@ -96,29 +96,29 @@ void gui_startup( int* argc, char** argv[] );
 void gui_poll( void );
 void gui_shutdown( void );
 
-void gui_world_create( stg_world_t* world );
-void gui_world_destroy( stg_world_t* world );
-void gui_world_update( stg_world_t* world );
+void gui_world_create( world_t* world );
+void gui_world_destroy( world_t* world );
+void gui_world_update( world_t* world );
 
-void gui_model_create( stg_model_t* model );
-void gui_model_destroy( stg_model_t* model );
+void gui_model_create( model_t* model );
+void gui_model_destroy( model_t* model );
 
-void gui_model_render( stg_model_t* model );
+void gui_model_render( model_t* model );
 
-void gui_model_update( stg_model_t* mod, stg_prop_type_t prop );
+void gui_model_update( model_t* mod, stg_prop_type_t prop );
 
-void gui_model_nose( stg_model_t* model );
-void gui_model_pose( stg_model_t* mod );
-//void gui_model_rects( stg_model_t* model );
-void gui_model_lines( stg_model_t* model );
-void gui_model_nose( stg_model_t* model );
-void gui_model_rangers( stg_model_t* mod );
-void gui_model_rangers_data( stg_model_t* mod );
+void gui_model_nose( model_t* model );
+void gui_model_pose( model_t* mod );
+//void gui_model_rects( model_t* model );
+void gui_model_lines( model_t* model );
+void gui_model_nose( model_t* model );
+void gui_model_rangers( model_t* mod );
+void gui_model_rangers_data( model_t* mod );
 
-//void gui_model_size( stg_model_t* mod, stg_size_t* size );
-//void gui_model_velocity( stg_model_t* mod, stg_velocity_t* vel );
+//void gui_model_size( model_t* mod, stg_size_t* size );
+//void gui_model_velocity( model_t* mod, stg_velocity_t* vel );
 
-gui_model_t* gui_model_figs( stg_model_t* model );
+gui_model_t* gui_model_figs( model_t* model );
 
 void gui_window_menus_create( gui_window_t* win );
 void gui_window_menus_destroy( gui_window_t* win );

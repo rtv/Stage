@@ -7,20 +7,19 @@
 #define DEBUG
 
 #include "stage.h"
-#include "stageclient.h"
 
 static int static_next_id = 0;
 
 // function declarations for use inside this file only (mostly
 // wrappers for use as callbacks)
-void sc_world_pull_cb( gpointer key, gpointer value, gpointer user );
-void sc_world_destroy_cb( gpointer key, gpointer value, gpointer user );
+void stg_world_pull_cb( gpointer key, gpointer value, gpointer user );
+void stg_world_destroy_cb( gpointer key, gpointer value, gpointer user );
 void stg_catch_pipe( int signo );
 
 
-sc_t* sc_create( void )
+stg_client_t* stg_client_create( void )
 {
-  sc_t* client = calloc( sizeof(sc_t), 1 ); 
+  stg_client_t* client = calloc( sizeof(stg_client_t), 1 ); 
   
   assert( client );
 
@@ -37,7 +36,7 @@ sc_t* sc_create( void )
   return client;
 }
 
-void sc_destroy( sc_t* cli )
+void stg_client_destroy( stg_client_t* cli )
 {
   PRINT_DEBUG( "destroying client" );
 
@@ -48,7 +47,7 @@ void sc_destroy( sc_t* cli )
   free(cli);
 }
 
-int sc_connect( sc_t* client, char* host, int port )
+int stg_client_connect( stg_client_t* client, char* host, int port )
 {
   PRINT_DEBUG( "client connecting" );
 
@@ -160,17 +159,18 @@ int sc_connect( sc_t* client, char* host, int port )
 }
 
 
-void sc_pull( sc_t* cli )
+void stg_client_pull( stg_client_t* cli )
 {
   PRINT_DEBUG( "pulling everything from client" );
   
   // ask the server to close each of our worlds
-  g_hash_table_foreach( cli->worlds_id, sc_world_pull_cb, cli );
+  g_hash_table_foreach( cli->worlds_id, stg_world_pull_cb, cli );
 }
 
-sc_model_t* sc_get_model( sc_t* cli, char* wname, char* mname )
+stg_model_t* stg_client_get_model( stg_client_t* cli, 
+				   const char* wname, const char* mname )
 {
-  sc_world_t* world = g_hash_table_lookup( cli->worlds_name, wname );
+  stg_world_t* world = g_hash_table_lookup( cli->worlds_name, wname );
 
   if( world == NULL )
     {
@@ -178,7 +178,7 @@ sc_model_t* sc_get_model( sc_t* cli, char* wname, char* mname )
       return NULL;
     }
 
-  sc_model_t* model = g_hash_table_lookup( world->models_name, mname );
+  stg_model_t* model = g_hash_table_lookup( world->models_name, mname );
   
   if( model == NULL )
     {
@@ -189,9 +189,9 @@ sc_model_t* sc_get_model( sc_t* cli, char* wname, char* mname )
   return model;
 } 
 
-sc_model_t* sc_get_model_serverside( sc_t* cli, stg_id_t wid, stg_id_t mid )
+stg_model_t* stg_client_get_model_serverside( stg_client_t* cli, stg_id_t wid, stg_id_t mid )
 {
-  sc_world_t* world = g_hash_table_lookup( cli->worlds_id_server, &wid );
+  stg_world_t* world = g_hash_table_lookup( cli->worlds_id_server, &wid );
   
   if( world == NULL )
     {
@@ -199,7 +199,7 @@ sc_model_t* sc_get_model_serverside( sc_t* cli, stg_id_t wid, stg_id_t mid )
       return NULL;
     }
   
-  sc_model_t* model = g_hash_table_lookup( world->models_id_server, &mid );
+  stg_model_t* model = g_hash_table_lookup( world->models_id_server, &mid );
   
   if( model == NULL )
     {
@@ -212,7 +212,7 @@ sc_model_t* sc_get_model_serverside( sc_t* cli, stg_id_t wid, stg_id_t mid )
 }
 
 
-int sc_write_msg( sc_t* cli, stg_msg_type_t type, void* data, size_t datalen )
+int stg_client_write_msg( stg_client_t* cli, stg_msg_type_t type, void* data, size_t datalen )
 {
   stg_msg_t* msg = stg_msg_create( type, data, datalen );
   assert( msg );
@@ -226,38 +226,56 @@ int sc_write_msg( sc_t* cli, stg_msg_type_t type, void* data, size_t datalen )
 }
 
 
-int sc_model_subscribe( sc_t* cli, sc_model_t* mod, int prop, double interval )
+int stg_model_subscribe( stg_model_t* mod, int prop, double interval )
 {
+  assert( mod );
+  assert( mod->world );
+  assert( mod->world->client );
+  
   stg_sub_t sub;
   sub.world = mod->world->id_server;
   sub.model = mod->id_server;  
   sub.prop = prop;
   sub.interval = interval;
   
-  sc_write_msg( cli, STG_MSG_SERVER_SUBSCRIBE, &sub, sizeof(sub) );
- 
+  stg_client_write_msg( mod->world->client, STG_MSG_SERVER_SUBSCRIBE, 
+			&sub, sizeof(sub) );
+  
   return 0;
 }
 
 
-int sc_model_unsubscribe( sc_t* cli, sc_model_t* mod, int prop )
+int stg_model_unsubscribe( stg_model_t* mod, int prop )
 {
+  assert( mod );
+  assert( mod->world );
+  assert( mod->world->client );
+
   stg_unsub_t sub;
   sub.world = mod->world->id_server;
   sub.model = mod->id_server;  
   sub.prop = prop;
   
-  sc_write_msg( cli, STG_MSG_SERVER_UNSUBSCRIBE, &sub, sizeof(sub) );
+  stg_client_write_msg( mod->world->client, STG_MSG_SERVER_UNSUBSCRIBE, 
+			&sub, sizeof(sub) );
   
   return 0;
 }
 
 
-sc_world_t* sc_world_create( stg_token_t* token, 
-			     double ppm, double interval_sim, double interval_real )
+stg_world_t* stg_client_createworld( stg_client_t* client, 
+				     int section, 
+				     stg_token_t* token, 
+				     double ppm, 
+				     double interval_sim, 
+				     double interval_real )
 {
-  sc_world_t* w = calloc( sizeof(sc_world_t), 1 );
+  stg_world_t* w = calloc( sizeof(stg_world_t), 1 );
+
+  w->client = client;
   w->id_client = static_next_id++;
+  w->id_server = 0;
+  w->section = section;
   w->token = token;
   
   w->interval_sim = interval_sim;
@@ -272,19 +290,30 @@ sc_world_t* sc_world_create( stg_token_t* token,
   PRINT_DEBUG2( "created world %d \"%s\"", 
 		w->id_client, w->token->token );
   
+
+  // index this new world in the client
+  g_hash_table_replace( client->worlds_id, &w->id_client, w );
+  g_hash_table_replace( client->worlds_name, w->token->token, w );
+
+  // server id is useless right now.
+  //g_hash_table_replace( cli->worlds_id_server, &world->id_server, world );
+
   return w;
 } 
 
 
 
-sc_model_t* sc_model_create( sc_world_t* world, 
-			     sc_model_t* parent, 
-			     stg_token_t* token )
+stg_model_t* stg_world_createmodel( stg_world_t* world, 
+				    stg_model_t* parent, 
+				    int section,
+				    stg_token_t* token )
 { 
   
-  sc_model_t* mod = calloc( sizeof(sc_model_t), 1 );
+  stg_model_t* mod = calloc( sizeof(stg_model_t), 1 );
   
   mod->id_client = static_next_id++;
+  mod->id_server = 0;
+  mod->section = section;
   mod->token = token;
   mod->world = world;
   mod->parent = parent;
@@ -293,11 +322,18 @@ sc_model_t* sc_model_create( sc_world_t* world,
   PRINT_DEBUG3( "created model %d:%d \"%s\"", 
 		world->id_client, mod->id_client, mod->token->token );
 
+  // index this new model in it's world
+  g_hash_table_replace( world->models_id, &mod->id_client, mod );
+  g_hash_table_replace( world->models_name, mod->token->token, mod );
+
+  // server id is useless at this stage
+  //g_hash_table_replace( world->models_id_server, &model->id_server, model );
+
   return mod;
 }
 
 
-void sc_model_destroy( sc_model_t* mod )
+void stg_model_destroy( stg_model_t* mod )
 {
   if( mod == NULL )
     {
@@ -313,7 +349,7 @@ void sc_model_destroy( sc_model_t* mod )
   if( mod ) free( mod );
 }
 
-void sc_world_destroy( sc_world_t* world )
+void stg_world_destroy( stg_world_t* world )
 {
   PRINT_DEBUG2( "destroying world %d (%d)", world->id_client, world->id_server );
 
@@ -329,26 +365,26 @@ void sc_world_destroy( sc_world_t* world )
   free( world);
 }
 
-void sc_world_destroy_cb( gpointer key, gpointer value, gpointer user )
+void stg_world_destroy_cb( gpointer key, gpointer value, gpointer user )
 {
-  sc_world_destroy( (sc_world_t*)value );
+  stg_world_destroy( (stg_world_t*)value );
 }
 
 
-void sc_model_attach_prop( sc_model_t* mod, stg_property_t* prop )
+void stg_model_attach_prop( stg_model_t* mod, stg_property_t* prop )
 {
   // install the new property data in the model
   g_hash_table_replace( mod->props, &prop->id, prop );
 }
 
-void sc_model_prop_with_data( sc_model_t* mod, 
+void stg_model_prop_with_data( stg_model_t* mod, 
 			      stg_id_t type, void* data, size_t len )
 {
   stg_property_t* prop = prop_create( type, data, len );
-  sc_model_attach_prop( mod, prop );
+  stg_model_attach_prop( mod, prop );
 }   
 
-stg_msg_t* sc_read( sc_t* cli )
+stg_msg_t* stg_client_read( stg_client_t* cli )
 {
   //PRINT_DEBUG( "Checking for data on Stage connection" );
   
@@ -381,8 +417,8 @@ stg_msg_t* sc_read( sc_t* cli )
 }
 
 
-int stg_property_set( sc_t* cli, stg_id_t world, stg_id_t model, 
-		      stg_id_t prop, void* data, size_t len )
+int stg_client_property_set( stg_client_t* cli, stg_id_t world, stg_id_t model, 
+			     stg_id_t prop, void* data, size_t len )
 {
   size_t mplen = len + sizeof(stg_prop_t);
   stg_prop_t* mp = calloc( mplen,1  );
@@ -393,16 +429,16 @@ int stg_property_set( sc_t* cli, stg_id_t world, stg_id_t model,
   mp->datalen = len;
   memcpy( mp->data, data, len );
   
-  int retval = sc_write_msg( cli, STG_MSG_MODEL_PROPERTY, mp, mplen );
+  int retval = stg_client_write_msg( cli, STG_MSG_MODEL_PROPERTY, mp, mplen );
   
   free( mp );
   
   return retval;
 }
 
-stg_id_t stg_model_new(  sc_t* cli, 
-			 stg_id_t world,
-			 char* token )
+stg_id_t stg_client_model_new(  stg_client_t* cli, 
+				stg_id_t world,
+				char* token )
 {
   stg_createmodel_t mod;
   
@@ -412,12 +448,12 @@ stg_id_t stg_model_new(  sc_t* cli,
   
   printf( "creating model %s in world %d\n",  mod.token, mod.world );
 
-  sc_write_msg( cli, STG_MSG_WORLD_MODELCREATE, &mod, sizeof(mod) );
+  stg_client_write_msg( cli, STG_MSG_WORLD_MODELCREATE, &mod, sizeof(mod) );
   
   // read a reply - it contains the model's id
   stg_msg_t* reply = NULL;  
   
-  while( (reply = sc_read( cli )) == NULL )
+  while( (reply = stg_client_read( cli )) == NULL )
     {
       putchar( '.' ); fflush(stdout);
     }
@@ -434,8 +470,12 @@ stg_id_t stg_model_new(  sc_t* cli,
   return mid;
 }
 
-int stg_model_pull(  sc_t* cli, sc_model_t* mod ) 
+int stg_model_pull(  stg_model_t* mod ) 
 {
+  assert( mod );
+  assert( mod->world );
+  assert( mod->world->client );
+
   PRINT_DEBUG4( "pulling model %d:%d (%d:%d server-side) \n", 
 		mod->world->id_client, mod->id_client,
 		mod->world->id_server, mod->id_server );
@@ -445,14 +485,15 @@ int stg_model_pull(  sc_t* cli, sc_model_t* mod )
   doomed.world = mod->world->id_server;
   doomed.model = mod->id_server;
   
-  sc_write_msg( cli, STG_MSG_WORLD_MODELDESTROY, &doomed, sizeof(doomed) );
+  stg_client_write_msg( mod->world->client, STG_MSG_WORLD_MODELDESTROY, 
+			&doomed, sizeof(doomed) );
   
   return 0;
 }
 
-stg_id_t stg_world_new(  sc_t* cli, char* token, 
-			 double width, double height, int ppm, 
-			 double interval_sim, double interval_real  )
+stg_id_t stg_client_world_new(  stg_client_t* cli, char* token, 
+				double width, double height, int ppm, 
+				double interval_sim, double interval_real  )
 {
   stg_createworld_t wmsg;
   
@@ -467,13 +508,13 @@ stg_id_t stg_world_new(  sc_t* cli, char* token,
   printf( "creating world \"%s\" sim: %.3f real: %.3f ppm %d", 
 	  wmsg.token, wmsg.interval_sim, wmsg.interval_real, wmsg.ppm );
   
-  sc_write_msg( cli, STG_MSG_SERVER_WORLDCREATE, &wmsg, sizeof(wmsg) );
+  stg_client_write_msg( cli, STG_MSG_SERVER_WORLDCREATE, &wmsg, sizeof(wmsg) );
   
   // read a reply - it contains the world's id
   
   stg_msg_t* reply = NULL;  
   
-  while( (reply = sc_read( cli )) == NULL )
+  while( (reply = stg_client_read( cli )) == NULL )
     {
       putchar( '.' ); fflush(stdout);
     }
@@ -490,23 +531,26 @@ stg_id_t stg_world_new(  sc_t* cli, char* token,
   return wid;
 }
 
-int sc_world_pull( sc_t* cli, sc_world_t* world ) 
+int stg_world_pull( stg_world_t* world ) 
 {
+  assert( world );
+  assert( world->client );
+  
   PRINT_DEBUG2( "pulling world %d (%d)\n", 
 		world->id_client, world->id_server );
   
-  sc_write_msg( cli, STG_MSG_SERVER_WORLDDESTROY, 
-		&world->id_server, sizeof(world->id_server) );
+  stg_client_write_msg( world->client, STG_MSG_SERVER_WORLDDESTROY, 
+			&world->id_server, sizeof(world->id_server) );
   return 0;
 }
 
-void sc_world_pull_cb( gpointer key, gpointer value, gpointer user )
+void stg_world_pull_cb( gpointer key, gpointer value, gpointer user )
 {
-  sc_world_pull( (sc_t*)user, (sc_world_t*)value );
+  stg_world_pull( (stg_world_t*)value );
 }
 
 
-void sc_model_print( sc_model_t* mod )
+void stg_model_print( stg_model_t* mod )
 {
   printf( "model %d:%d(%s) parent %d props: %d\n", 
 	  mod->world->id_client, 
@@ -518,41 +562,20 @@ void sc_model_print( sc_model_t* mod )
   g_hash_table_foreach( mod->props, stg_property_print_cb, NULL );
 }
 
-void sc_model_print_cb( gpointer key, gpointer value, gpointer user )
+void stg_model_print_cb( gpointer key, gpointer value, gpointer user )
 {
-  sc_model_print( (sc_model_t*)value );
-}
-
-
-void sc_world_push( sc_t* cli, sc_world_t* world )
-{
-  // create a world
-  printf( "pushing world \"%s\"\n", world->token->token );
-  
-  world->id_server = stg_world_new( cli, world->token->token, 
-				    10, 10, 
-				    world->ppm,
-				    world->interval_sim,
-				    world->interval_real );
-  
-  // upload all the models in this world
-  g_hash_table_foreach( world->models_id, sc_model_push_cb, cli );
-}
-
-void sc_world_push_cb( gpointer key, gpointer value, gpointer user )
-{
-  sc_world_push( (sc_t*)user, (sc_world_t*)value );
+  stg_model_print( (stg_model_t*)value );
 }
 
 
 typedef struct
 {
-  sc_t* client;
+  stg_client_t* client;
   stg_id_t world_id_server;
   stg_id_t model_id_server;
-} sc_prop_target_t;
+} stg_prop_target_t;
 
-void prop_push( stg_property_t* prop, sc_prop_target_t* pt )
+void stg_prop_push( stg_property_t* prop, stg_prop_target_t* pt )
 {
   PRINT_DEBUG4( "  pushing prop %d:%d:%d(%s)\n",
 		pt->world_id_server, pt->model_id_server,
@@ -578,21 +601,25 @@ void prop_push( stg_property_t* prop, sc_prop_target_t* pt )
     }
   
   if( data && len > 0 )
-    stg_property_set(  pt->client,
-		       pt->world_id_server,
-		       pt->model_id_server,
-		       prop->id, 
-		       data, len  );
+    stg_client_property_set(  pt->client,
+			      pt->world_id_server,
+			      pt->model_id_server,
+			      prop->id, 
+			      data, len  );
 }
 
-void prop_push_cb( gpointer key, gpointer value, gpointer user )
+void stg_prop_push_cb( gpointer key, gpointer value, gpointer user )
 {
-  prop_push( (sc_t*)value, (sc_prop_target_t*)user );
+  stg_prop_push( (stg_property_t*)value, (stg_prop_target_t*)user );
 }
 
 
-void sc_model_push( sc_t* cli, sc_model_t* mod )
-{
+void stg_model_push( stg_model_t* mod )
+{ 
+  assert( mod );
+  assert( mod->world );
+  assert( mod->world->client );
+
   // create a model
   printf( "  pushing model \"%s\"\n", mod->token->token );
 
@@ -600,7 +627,7 @@ void sc_model_push( sc_t* cli, sc_model_t* mod )
   // take this model out of the server-side id table
   g_hash_table_remove( mod->world->models_id_server, &mod->id_server );
   
-  mod->id_server = stg_model_new(  cli,
+  mod->id_server = stg_client_model_new(  mod->world->client,
 				   mod->world->id_server,
 				   mod->token->token );
   
@@ -608,29 +635,55 @@ void sc_model_push( sc_t* cli, sc_model_t* mod )
   g_hash_table_replace( mod->world->models_id_server, &mod->id_server, mod );
   
   // upload each of this model's properties
-  sc_prop_target_t pt;
-  pt.client = cli;
+  stg_prop_target_t pt;
+  pt.client = mod->world->client;
   pt.world_id_server = mod->world->id_server;
   pt.model_id_server = mod->id_server;
   
-  g_hash_table_foreach( mod->props, prop_push_cb, &pt );
+  g_hash_table_foreach( mod->props, stg_prop_push_cb, &pt );
 }
   
-void sc_model_push_cb( gpointer key, gpointer value, gpointer user )
+void stg_model_push_cb( gpointer key, gpointer value, gpointer user )
 {
-  sc_model_push( (sc_t*)user, (sc_model_t*)value );
+  stg_model_push( (stg_model_t*)value );
 }
  
+
+void stg_world_push( stg_world_t* world )
+{ 
+  assert( world );
+  assert( world->client );
+  
+  // create a world
+  printf( "pushing world \"%s\"\n", world->token->token );
+  
+  world->id_server = stg_client_world_new( world->client, 
+					   world->token->token, 
+					   10, 10, 
+					   world->ppm,
+					   world->interval_sim,
+					   world->interval_real );
+  
+  // upload all the models in this world
+  g_hash_table_foreach( world->models_id, stg_model_push_cb, NULL );
+}
+
+void stg_world_push_cb( gpointer key, gpointer value, gpointer user )
+{
+  stg_world_push( (stg_world_t*)value );
+}
+
+
 // write the whole model table to the server
-void sc_push( sc_t* cli )
+void stg_client_push( stg_client_t* cli )
 {
   PRINT_DEBUG1( "pushing %d worlds", g_hash_table_size( cli->worlds_id ) );
-  g_hash_table_foreach( cli->worlds_id, sc_world_push_cb, cli );
+  g_hash_table_foreach( cli->worlds_id, stg_world_push_cb, NULL );
 }
 
 // TODO - use the functions in parse.c to replace CWorldFile
 
-/* int sc_load( sc_t* cli, char* filename ) */
+/* int stg_client_load( stg_client_t* cli, char* filename ) */
 /* { */
 /*   FILE* wf = NULL; */
 /*   if( (wf = fopen( filename, "r" )) == NULL ) */
@@ -646,12 +699,12 @@ void sc_push( sc_t* cli )
   
 /*   // create a table of models from the named file   */
 /*   while( tokens ) */
-/*     sc_load_worldblock( cli, &tokens ); */
+/*     stg_client_load_worldblock( cli, &tokens ); */
   
 /*   return 0; // ok */
 /* } */
 
-void sc_model_attach_child( sc_model_t* parent, sc_model_t* child )
+void stg_model_attach_child( stg_model_t* parent, stg_model_t* child )
 {
   // set the child's parent property (only a single parent is allowed)
   //stg_model_property_data_set( child, STG_MOD_PARENT, 
@@ -663,7 +716,7 @@ void sc_model_attach_child( sc_model_t* parent, sc_model_t* child )
 }
 
 
-void sc_world_addmodel( sc_world_t* world, sc_model_t* model )
+void stg_world_addmodel( stg_world_t* world, stg_model_t* model )
 {
   // add the model to its world
   g_hash_table_replace( world->models_id, &model->id_client, model );
@@ -672,7 +725,7 @@ void sc_world_addmodel( sc_world_t* world, sc_model_t* model )
 }
 
 // add the world to the client
-void sc_addworld( sc_t* cli, sc_world_t* world )
+void stg_client_addworld( stg_client_t* cli, stg_world_t* world )
 {
   g_hash_table_replace( cli->worlds_id, &world->id_client, world );
   g_hash_table_replace( cli->worlds_id_server, &world->id_server, world );

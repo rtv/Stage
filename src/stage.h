@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.29 2004-04-24 01:21:28 rtv Exp $
+ * CVS: $Id: stage.h,v 1.30 2004-04-26 03:12:09 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -42,8 +42,7 @@
 #include <sys/time.h>
 #include <assert.h>
 
-#include <glib.h>
-
+#include <glib.h> // we use GLib's data structures extensively
 
 #ifdef __cplusplus
  extern "C" {
@@ -238,13 +237,6 @@ typedef struct
 stg_msg_t* stg_msg_create( stg_msg_type_t type, void* data, size_t len );
 stg_msg_t* stg_msg_append( stg_msg_t* msg, void* data, size_t len );
 void stg_msg_destroy( stg_msg_t* msg );
-
-
-typedef struct
- {
-   gpointer function;
-   gpointer data; // passed into the function along with the property ptr
- } stg_callback_prop_t;
 
 
 typedef struct 
@@ -506,6 +498,9 @@ void stg_property_fprint( FILE* fp, stg_property_t* prop );
 void stg_property_print( stg_property_t* prop );
 void stg_property_print_cb( gpointer key, gpointer value, gpointer user );
 
+// read a message from the fd
+stg_msg_t* stg_read_msg( int fd );
+
 // attempt to read a packet from [fd]. returns the number of bytes
 // read, or -1 on error (and errno is set as per read(2)).
 ssize_t stg_fd_packet_read( int fd, void* buf, size_t len );
@@ -556,6 +551,209 @@ int stg_prop_set( stg_property_t* prop );
 void stg_key_free( gpointer key );
 
 void stg_property_destroy( gpointer prop );
+
+
+// TOKEN -----------------------------------------------------------------------
+// token stuff for parsing worldfiles
+
+#define CFG_OPEN '('
+#define CFG_CLOSE ')'
+#define STR_OPEN '\"'
+#define STR_CLOSE '\"'
+#define TPL_OPEN '['
+#define TPL_CLOSE ']'
+
+#ifdef __cplusplus
+ extern "C" {
+#endif 
+
+typedef enum {
+  STG_T_NUM = 0,
+  STG_T_BOOLEAN,
+  STG_T_MODELPROP,
+  STG_T_WORLDPROP,
+  STG_T_NAME,
+  STG_T_STRING,
+  STG_T_KEYWORD,
+  STG_T_CFG_OPEN,
+  STG_T_CFG_CLOSE,
+  STG_T_TPL_OPEN,
+  STG_T_TPL_CLOSE,
+} stg_token_type_t;
+
+
+typedef struct _stg_token {
+  char* token; // the text of the token 
+  stg_token_type_t type;
+  unsigned int line; // the line on which the token appears 
+  
+  struct _stg_token* next; // linked list support
+  struct _stg_token* child; // tree support
+  
+} stg_token_t;
+
+stg_token_t* stg_token_next( stg_token_t* tokens );
+// print <token> formatted for a human reader, with a string <prefix>
+void stg_token_print( char* prefix,  stg_token_t* token );
+// print a token array suitable for human reader
+void stg_tokens_print( stg_token_t* tokens );
+void stg_tokens_free( stg_token_t* tokens );
+
+// create a new token structure from the arguments
+stg_token_t* stg_token_create( const char* token, stg_token_type_t type, int line );
+
+// add a token to a list
+stg_token_t* stg_token_append( stg_token_t* head, 
+			       char* token, stg_token_type_t type, int line );
+
+const char* stg_token_type_string( stg_token_type_t type );
+
+
+// Bitmap loading -------------------------------------------------------
+
+// load <filename>, an image format understood by gdk-pixbuf, and
+// return a set of rectangles that approximate the image. Caller must
+// free the array of rectangles.
+int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count );
+
+
+// Stage Client ---------------------------------------------------------
+
+#define STG_DEFAULT_WORLDFILE "default.world"
+
+typedef struct
+{
+  char* host;
+  int port;
+  struct pollfd pfd;
+ 
+  stg_id_t next_id;
+  
+  GHashTable* worlds_id_server; // contains stg_world_ts indexed by server-side id
+  GHashTable* worlds_id; // contains stg_world_ts indexed by client-side id
+  GHashTable* worlds_name; // the worlds indexed by namex
+} stg_client_t;
+
+// Stage Client functions. Most client programs will call all of these
+// in this order.
+
+// create a Stage Client.
+stg_client_t* stg_client_create( void );
+
+
+// load a worldfile into the client
+// returns zero on success, else an error code.
+int stg_client_load( stg_client_t* client, char* worldfilename );
+
+// connect to a Stage server at [host]:[port]. If [host] and [port]
+// are not specified, client uses it's current values, which have
+// sensible defaults.  returns zero on success, else an error code.
+int stg_client_connect( stg_client_t* client, char* host, int port );
+
+// ask a connected Stage server to create simulations of all our objects
+void stg_client_push( stg_client_t* client );
+
+// read a message from the server
+stg_msg_t* stg_client_read( stg_client_t* cli );
+
+// remove all our objects from from the server
+void stg_client_pull( stg_client_t* client );
+
+// destroy a Stage client
+void stg_client_destroy( stg_client_t* client );
+
+
+typedef struct
+{
+  stg_client_t* client; // the client that created this world
+  
+  int id_client; // client-side id
+  stg_id_t id_server; // server-side id
+  stg_token_t* token;  
+  double ppm;
+  double interval_sim;
+  double interval_real;
+  
+  int section; // worldfile index
+  
+  GHashTable* models_id_server;
+  GHashTable* models_id;   // the models index by client-side id
+  GHashTable* models_name; // the models indexed by name
+} stg_world_t;
+
+typedef struct _stg_model
+{
+  int id_client; // client-side if of this object
+  stg_id_t id_server; // server-side id of this object
+  
+  struct _stg_model* parent; 
+  stg_world_t* world; 
+  
+  int section; // worldfile index
+
+  stg_token_t* token;
+
+  GHashTable* props;
+  
+} stg_model_t;
+
+// add a new world to a client, based on a token
+stg_world_t* stg_client_createworld( stg_client_t* client, 
+				     int section,
+				     stg_token_t* token,
+				     double ppm, 
+				     double interval_sim, 
+				     double interval_real  );
+
+void stg_world_destroy( stg_world_t* world );
+int stg_world_pull( stg_world_t* world );
+
+// add a new model to a world, based on a parent, section and token
+stg_model_t* stg_world_createmodel( stg_world_t* world, 
+				    stg_model_t* parent, 
+				    int section, 
+				    stg_token_t* token );
+
+void stg_model_destroy( stg_model_t* model );
+int stg_model_pull( stg_model_t* model );
+void stg_model_attach_prop( stg_model_t* mod, stg_property_t* prop );
+void stg_model_prop_with_data( stg_model_t* mod, 
+			      stg_id_t type, void* data, size_t len );
+
+int stg_model_subscribe( stg_model_t* mod, int prop, double interval );
+int stg_model_unsubscribe( stg_model_t* mod, int prop );
+
+
+void stg_world_push( stg_world_t* model );
+void stg_model_push( stg_model_t* model );
+void stg_world_push_cb( gpointer key, gpointer value, gpointer user );
+void stg_model_push_cb( gpointer key, gpointer value, gpointer user );
+
+
+stg_id_t stg_world_new(  stg_client_t* cli, char* token, 
+			 double width, double height, int ppm, 
+			 double interval_sim, double interval_real  );
+
+stg_id_t stg_model_new(  stg_client_t* cli, 
+			 stg_id_t world,
+			 char* token );
+
+int stg_client_property_set( stg_client_t* cli, stg_id_t world, stg_id_t model, 
+		      stg_id_t prop, void* data, size_t len );
+
+
+stg_model_t* stg_client_get_model( stg_client_t* cli, 
+				   const char* wname, const char* mname );
+
+stg_model_t* stg_client_get_model_serverside( stg_client_t* cli, stg_id_t wid, stg_id_t mid );
+
+// functions for parsing worldfiles 
+//stg_token_t* stg_tokenize( FILE* wf );
+//stg_world_t* sc_load_worldblock( stg_client_t* cli, stg_token_t** tokensptr );
+//stg_model_t* sc_load_modelblock( stg_world_t* world, stg_model_t* parent, 
+//				stg_token_t** tokensptr );
+
+// ---------------------------------------------------------------------------
 
 
 // utility

@@ -7,30 +7,30 @@
 #include "subscription.h"
 #include "model.h"
 
-stg_subscription_t* subscription_create( void )
+subscription_t* subscription_create( void )
 {
-  stg_subscription_t* sub = calloc( sizeof(stg_subscription_t), 1 );
+  subscription_t* sub = calloc( sizeof(subscription_t), 1 );
 
   return sub;
 }
 
-void subscription_destroy( stg_subscription_t* sub )
+void subscription_destroy( subscription_t* sub )
 {
   free( sub );
 }
 
 void subscription_destroy_cb( gpointer sub, gpointer user )
 {
-  subscription_destroy( (stg_subscription_t*)sub);
+  subscription_destroy( (subscription_t*)sub);
 }
 
 
-int subscription_due( stg_subscription_t* sub, double timenow )
+int subscription_due( subscription_t* sub, double timenow )
 {
   return( timenow - sub->timestamp > sub->interval );
 }
 
-void subscription_print( stg_subscription_t* sub, char* prefix )
+void subscription_print( subscription_t* sub, char* prefix )
 {
   printf( "%s[%d:%d:%s %.2f]",
 	  prefix ? prefix : " ", // use a space if no prefix supplied
@@ -41,10 +41,10 @@ void subscription_print( stg_subscription_t* sub, char* prefix )
 
 void subscription_print_cb( gpointer value, gpointer user )
 {
-  subscription_print( (stg_subscription_t*)value, (char*)user ); 
+  subscription_print( (subscription_t*)value, (char*)user ); 
 }
 
-void subscription_update( stg_subscription_t* sub )
+void subscription_update( subscription_t* sub )
 {
   //double timenow = stg_timenow();
   double timenow = server_world_time( sub->server, sub->target.world );
@@ -63,7 +63,7 @@ void subscription_update( stg_subscription_t* sub )
       
       // if this property is out of date, we generate new data
       
-      stg_model_t* mod = server_get_model( sub->server, 
+      model_t* mod = server_get_model( sub->server, 
 					   sub->target.world,
 					   sub->target.model );
       

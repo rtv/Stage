@@ -1,6 +1,5 @@
 
-#include "token.h"
-//#include 
+#include "stage.h"
 
 // TODO - proper destruction for these things to avoid memory leaks
 
@@ -44,7 +43,7 @@ void stg_tokens_free( stg_token_t* tokens )
 }
 
 // create a new token structure from the arguments
-stg_token_t* stg_token_create( char* token, stg_token_type_t type, int line )
+stg_token_t* stg_token_create( const char* token, stg_token_type_t type, int line )
 {
   stg_token_t* infant = (stg_token_t*)calloc(sizeof(stg_token_t),1);
 

@@ -10,7 +10,7 @@
 // the location of the hit in hitx,hity (if non-null)
 // Returns NULL if not collisions.
 // This function is useful for writing position devices.
-stg_model_t* model_test_collision( stg_model_t* mod, double* hitx, double* hity )
+model_t* model_test_collision( model_t* mod, double* hitx, double* hity )
 {
   //return NULL;
   
@@ -44,7 +44,7 @@ stg_model_t* model_test_collision( stg_model_t* mod, double* hitx, double* hity 
 			       mod->world->matrix, 
 			       PointToPoint );
 
-      stg_model_t* hitmod;
+      model_t* hitmod;
       while( (hitmod = itl_next( itl )) ) 
 	{
 	  if( hitmod != mod )//&& mod->obstacle_return ) //&& !IsDescendent(ent) &&
@@ -64,7 +64,7 @@ stg_model_t* model_test_collision( stg_model_t* mod, double* hitx, double* hity 
 }
 
 
-void model_update_pose( stg_model_t* model )
+void model_update_pose( model_t* model )
 {  
   stg_velocity_t* vel = &model->velocity;
   stg_pose_t* pose = &model->pose;

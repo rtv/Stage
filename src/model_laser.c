@@ -1,7 +1,7 @@
 #include "stage.h"
 #include "raytrace.h"
 
-void model_update_laser( stg_model_t* mod )
+void model_update_laser( model_t* mod )
 {   
   //PRINT_DEBUG1( "[%.3f] updating lasers", mod->world->sim_time );
   
@@ -33,7 +33,7 @@ void model_update_laser( stg_model_t* mod )
       
       bearing += sample_incr;
 
-      stg_model_t* hitmod;
+      model_t* hitmod;
       double range = cfg->range_max;
       
       while( (hitmod = itl_next( itl )) ) 

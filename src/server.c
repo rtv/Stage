@@ -25,12 +25,12 @@
 
 void client_destroy_cb( gpointer obj )
 {
-  stg_connection_destroy( (stg_connection_t*)obj );
+  stg_connection_destroy( (connection_t*)obj );
 }
 
-stg_server_t* server_create( int port )
+server_t* server_create( int port )
 {
-  stg_server_t* server = calloc( sizeof(stg_server_t), 1 );
+  server_t* server = calloc( sizeof(server_t), 1 );
   
   server->port = port;
   server->host = strdup( "localhost" );
@@ -95,7 +95,7 @@ stg_server_t* server_create( int port )
 }
 
 
-void server_destroy( stg_server_t* server )
+void server_destroy( server_t* server )
 {
   if( server )
     {
@@ -112,19 +112,19 @@ void server_destroy( stg_server_t* server )
     }
 }
 
-void server_update_subs( stg_server_t* server )
+void server_update_subs( server_t* server )
 {
   g_hash_table_foreach( server->clients, stg_connection_sub_update_cb, server );
 }  
 
 
-void server_update_worlds( stg_server_t* server )
+void server_update_worlds( server_t* server )
 {
   g_hash_table_foreach( server->worlds, world_update_cb, server );
 }
 
 
-int server_connection_add( stg_server_t* server, stg_connection_t* con )
+int server_connection_add( server_t* server, connection_t* con )
 {
   assert( server );
   assert( con );
@@ -137,7 +137,7 @@ int server_connection_add( stg_server_t* server, stg_connection_t* con )
   return 0; // ok
 }
 
-int server_connection_remove( stg_server_t* server, int fd )
+int server_connection_remove( server_t* server, int fd )
 {
   assert( server );
   assert( server->clients );
@@ -149,7 +149,7 @@ int server_connection_remove( stg_server_t* server, int fd )
   return 0;
 }
 
-int server_accept_connection( stg_server_t* server )
+int server_accept_connection( server_t* server )
 {
   // set up a socket for this connection
   struct sockaddr_in cliaddr;  
@@ -208,7 +208,7 @@ int server_accept_connection( stg_server_t* server )
   printf( "Accepted connection from %s\n",
 	  "<todo>" );
 
-  stg_connection_t* con = stg_connection_create();
+  connection_t* con = stg_connection_create();
   con->fd = connfd;
   con->host = strdup( "<hostname>" );
   con->port = 9000;
@@ -232,7 +232,7 @@ int server_accept_connection( stg_server_t* server )
   return 0; //ok
 }
 
-int server_poll( stg_server_t* server )
+int server_poll( server_t* server )
 {      
   //PRINT_DEBUG1( "polling all %d pollfds", server->pfds->len );
   
@@ -327,20 +327,20 @@ int server_poll( stg_server_t* server )
 }
 
 
-int server_subscribe( stg_server_t* server, int fd, stg_sub_t* sub )
+int server_subscribe( server_t* server, int fd, stg_sub_t* sub )
 {
   // find the client
-  stg_connection_t* client = g_hash_table_lookup( server->clients, &fd );
+  connection_t* client = g_hash_table_lookup( server->clients, &fd );
   assert( client );
   
   // find the model 
-  stg_world_t* world = g_hash_table_lookup( server->worlds, &sub->world );
+  world_t* world = g_hash_table_lookup( server->worlds, &sub->world );
   
   if( world == NULL )
     PRINT_WARN1( "subscription failed - no such world %d", sub->world );
   else
     {
-      stg_model_t* model = g_hash_table_lookup( world->models, &sub->model );
+      model_t* model = g_hash_table_lookup( world->models, &sub->model );
       
       if( model == NULL )
 	PRINT_WARN1( "subscription failed - no such model %d", sub->model );
@@ -349,7 +349,7 @@ int server_subscribe( stg_server_t* server, int fd, stg_sub_t* sub )
 	  // register this subscription with the model
 	  model->subs[sub->prop]++;
 	  
-	  stg_subscription_t* ssub = subscription_create();
+	  subscription_t* ssub = subscription_create();
 	  
 	  ssub->target.world = sub->world; 
 	  ssub->target.model = sub->model; 
@@ -379,7 +379,7 @@ gboolean stg_targets_match( stg_target_t* t1, stg_target_t* t2 )
   return FALSE;
 }
 
-int server_unsubscribe( stg_server_t* server, 
+int server_unsubscribe( server_t* server, 
 			int fd, stg_unsub_t* unsub )
 {
   PRINT_DEBUG4( "con %d unsubscribing from to %d:%d:%s",
@@ -389,7 +389,7 @@ int server_unsubscribe( stg_server_t* server,
 		stg_property_string(unsub->prop) );
   
   
-  stg_connection_t* client = g_hash_table_lookup( server->clients, &fd );
+  connection_t* client = g_hash_table_lookup( server->clients, &fd );
   assert( client );
   
   int i;
@@ -402,7 +402,7 @@ int server_unsubscribe( stg_server_t* server,
   target.model = unsub->model;
   target.prop = unsub->prop;
 
-  stg_model_t* mod = server_get_model( server, target.world, target.model );
+  model_t* mod = server_get_model( server, target.world, target.model );
   if( mod == NULL )
     PRINT_WARN2( "strange unsubscription: no such model %d:%d",
 		 target.world, target.model );
@@ -413,7 +413,7 @@ int server_unsubscribe( stg_server_t* server,
   for( i=0; i<len; i++ )
     {	
       //
-      stg_subscription_t* candidate = 
+      subscription_t* candidate = 
 	g_ptr_array_remove_index( client->subs, 0 );
       
       /* printf( "%d:%d:%d compared with %d:%d:%d\n",
@@ -442,7 +442,7 @@ int server_unsubscribe( stg_server_t* server,
 
 
 // add a world to the server
-stg_id_t server_world_create( stg_server_t* server, stg_createworld_t* cw )
+stg_id_t server_world_create( server_t* server, stg_createworld_t* cw )
 {
   
   //if( g_hash_table_lookup( server->worlds, &id ) )
@@ -458,7 +458,7 @@ stg_id_t server_world_create( stg_server_t* server, stg_createworld_t* cw )
 
   PRINT_DEBUG2( "creating world \"%s\" id %d", cw->token, candidate );
   
-  stg_world_t* world = world_create( server, candidate, cw );
+  world_t* world = world_create( server, candidate, cw );
   
   assert( world );
   
@@ -468,7 +468,7 @@ stg_id_t server_world_create( stg_server_t* server, stg_createworld_t* cw )
 }
 
 
-int server_world_destroy( stg_server_t* server, stg_id_t id )
+int server_world_destroy( server_t* server, stg_id_t id )
 {
   PRINT_DEBUG1( "destroying world %d", id );
   
@@ -482,7 +482,7 @@ int server_world_destroy( stg_server_t* server, stg_id_t id )
 
 
 
-void server_handle_msg( stg_server_t* server, int fd, stg_msg_t* msg )
+void server_handle_msg( server_t* server, int fd, stg_msg_t* msg )
 {
   PRINT_DEBUG( "received a message for the Stage server" );
   
@@ -542,7 +542,7 @@ void server_handle_msg( stg_server_t* server, int fd, stg_msg_t* msg )
 
 
 
-void client_remove_subs_of_model( stg_connection_t* client, stg_target_t* tgt )
+void client_remove_subs_of_model( connection_t* client, stg_target_t* tgt )
 {
   if( client == NULL )
     PRINT_WARN( "no client to remove subscriptions" );
@@ -564,7 +564,7 @@ void client_remove_subs_of_model( stg_connection_t* client, stg_target_t* tgt )
   for( i=0; i<len; i++ )
     {	
       //
-      stg_subscription_t* candidate = 
+      subscription_t* candidate = 
 	g_ptr_array_remove_index( client->subs, 0 );
       
       /* printf( "%d:%d:%d compared with %d:%d:%d\n",
@@ -589,20 +589,20 @@ void client_remove_subs_of_model( stg_connection_t* client, stg_target_t* tgt )
 
 void client_remove_subs_of_model_cb( gpointer key, gpointer value, gpointer user )
 {
-  client_remove_subs_of_model( (stg_connection_t*)value, (stg_target_t*)user );
+  client_remove_subs_of_model( (connection_t*)value, (stg_target_t*)user );
 }
   
 
-void server_remove_subs_of_model( stg_server_t* server, stg_target_t* tgt )
+void server_remove_subs_of_model( server_t* server, stg_target_t* tgt )
 {
   // delete the model's subscriptions
   g_hash_table_foreach( server->clients, 
 			client_remove_subs_of_model_cb, tgt );
 }
 
-double server_world_time( stg_server_t* server, stg_id_t wid )
+double server_world_time( server_t* server, stg_id_t wid )
 {
-  stg_world_t* wld = server_get_world( server, wid );
+  world_t* wld = server_get_world( server, wid );
   
   if( wld ) 
     {
@@ -613,14 +613,14 @@ double server_world_time( stg_server_t* server, stg_id_t wid )
     return -1.0; // indicates no-world failure
 }
 
-stg_world_t* server_get_world( stg_server_t* server, stg_id_t wid )
+world_t* server_get_world( server_t* server, stg_id_t wid )
 {
   return( server ? g_hash_table_lookup( (gpointer)server->worlds, &wid ) : NULL );
 }
 
-stg_model_t* server_get_model( stg_server_t* server, stg_id_t wid, stg_id_t mid )
+model_t* server_get_model( server_t* server, stg_id_t wid, stg_id_t mid )
 {
-  stg_world_t* world = server_get_world( server, wid );
+  world_t* world = server_get_world( server, wid );
   
   if( world == NULL )
     {
@@ -628,7 +628,7 @@ stg_model_t* server_get_model( stg_server_t* server, stg_id_t wid, stg_id_t mid 
       return NULL;
     }
 
-  stg_model_t* model = world_get_model( world, mid );
+  model_t* model = world_get_model( world, mid );
 
   if( model == NULL )
     {
@@ -641,7 +641,7 @@ stg_model_t* server_get_model( stg_server_t* server, stg_id_t wid, stg_id_t mid 
   //return( world_get_model( server_get_world( server, wid ), mid ) );
 }
 
-int server_get_prop( stg_server_t* server,
+int server_get_prop( server_t* server,
 		     stg_id_t wid, stg_id_t mid, stg_id_t pid, 
 		     void** data, size_t *len )
 {
@@ -649,7 +649,7 @@ int server_get_prop( stg_server_t* server,
 			 pid,data,len);
 }
 
-void server_print( stg_server_t* server )
+void server_print( server_t* server )
 { 
   printf( "--\nStage-%s\nClients (%d):\n", 
 	  VERSION, 
@@ -670,7 +670,7 @@ void server_print( stg_server_t* server )
   puts( "--" );
 }
 
-int server_msg_dispatch( stg_server_t* server, int fd, stg_msg_t* msg )
+int server_msg_dispatch( server_t* server, int fd, stg_msg_t* msg )
 {
   PRINT_DEBUG3( "handling message type %d.%d len %d", 
 		msg->type >> 8,
@@ -686,7 +686,7 @@ int server_msg_dispatch( stg_server_t* server, int fd, stg_msg_t* msg )
     case STG_MSG_WORLD:
       {
 	stg_target_t* tgt = (stg_target_t*)msg->payload;
-      	stg_world_t* world = server_get_world( server, tgt->world );
+      	world_t* world = server_get_world( server, tgt->world );
 	
 	if( world )
 	  world_handle_msg( world, fd, msg );
@@ -703,7 +703,7 @@ int server_msg_dispatch( stg_server_t* server, int fd, stg_msg_t* msg )
 
 	PRINT_DEBUG2( "looking up model %d:%d", tgt->world, tgt->model ); 
 
-	stg_model_t* model = server_get_model( server, 
+	model_t* model = server_get_model( server, 
 					       tgt->world,
 					       tgt->model );
 	if( model )

@@ -9,14 +9,14 @@
 #include "gui.h"
 #include "raytrace.h"
 
-stg_model_t* model_create(  stg_world_t* world, 
+model_t* model_create(  world_t* world, 
 			    stg_id_t id, 
 			    char* token )
 {
   PRINT_DEBUG3( "creating model %d:%d (%s)", world->id, id, token  );
 
   // calloc zeros the whole structure
-  stg_model_t* mod = calloc( sizeof(stg_model_t),1 );
+  model_t* mod = calloc( sizeof(model_t),1 );
 
   mod->id = id;
   mod->token = strdup(token);
@@ -86,7 +86,7 @@ stg_model_t* model_create(  stg_world_t* world,
   return mod;
 }
 
-void model_destroy( stg_model_t* mod )
+void model_destroy( model_t* mod )
 {
   assert( mod );
   
@@ -103,7 +103,7 @@ void model_destroy( stg_model_t* mod )
 
 void model_destroy_cb( gpointer mod )
 {
-  model_destroy( (stg_model_t*)mod );
+  model_destroy( (model_t*)mod );
 }
 
 
@@ -122,7 +122,7 @@ void pose_sum( stg_pose_t* result, stg_pose_t* p1, stg_pose_t* p2 )
   result->a = ta;
 }
 
-void model_global_pose( stg_model_t* mod, stg_pose_t* pose )
+void model_global_pose( model_t* mod, stg_pose_t* pose )
 { 
   stg_pose_t glob;
   
@@ -142,7 +142,7 @@ void model_global_pose( stg_model_t* mod, stg_pose_t* pose )
 }
 
 // should one day do all this with affine transforms for neatness
-void model_local_to_global( stg_model_t* mod, stg_pose_t* pose )
+void model_local_to_global( model_t* mod, stg_pose_t* pose )
 {  
   stg_pose_t origin;  
   //pose_sum( &origin, &mod->pose, &mod->origin );
@@ -152,7 +152,7 @@ void model_local_to_global( stg_model_t* mod, stg_pose_t* pose )
   pose_sum( pose, &origin, pose );
 }
 
-void model_global_rect( stg_model_t* mod, stg_rotrect_t* glob, stg_rotrect_t* loc )
+void model_global_rect( model_t* mod, stg_rotrect_t* glob, stg_rotrect_t* loc )
 {
   // scale first
   glob->x = ((loc->x + loc->w/2.0) * mod->size.x) - mod->size.x/2.0;
@@ -166,7 +166,7 @@ void model_global_rect( stg_model_t* mod, stg_rotrect_t* glob, stg_rotrect_t* lo
 }
 
 
-void model_map( stg_model_t* mod, gboolean render )
+void model_map( model_t* mod, gboolean render )
 {
   // todo - speed this up by transforming all points in a single function call
   int l;
@@ -193,7 +193,7 @@ void model_map( stg_model_t* mod, gboolean render )
 
 /* UPDATE */
   
-void model_update_velocity( stg_model_t* model )
+void model_update_velocity( model_t* model )
 {  
 
 }
@@ -201,7 +201,7 @@ void model_update_velocity( stg_model_t* model )
 
 /* UPDATE everything */
 
-void model_update( stg_model_t* model )
+void model_update( model_t* model )
 {
   //PRINT_DEBUG2( "updating model %d:%s", model->id, model->token );
   
@@ -212,10 +212,10 @@ void model_update( stg_model_t* model )
 
 void model_update_cb( gpointer key, gpointer value, gpointer user )
 {
-  model_update( (stg_model_t*)value );
+  model_update( (model_t*)value );
 }
 
-int model_update_prop( stg_model_t* mod, stg_id_t propid )
+int model_update_prop( model_t* mod, stg_id_t propid )
 {
   switch( propid )
     {
@@ -241,7 +241,7 @@ int model_update_prop( stg_model_t* mod, stg_id_t propid )
   return 0; // ok
 }
 
-int model_get_prop( stg_model_t* mod, stg_id_t pid, void** data, size_t* len )
+int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
 {
   //double time_since_calc =
   //mod->world->sim_time -  mod->update_times[pid];
@@ -325,7 +325,7 @@ int model_get_prop( stg_model_t* mod, stg_id_t pid, void** data, size_t* len )
   return 0; //ok
 }
 
-int model_set_prop( stg_model_t* mod, 
+int model_set_prop( model_t* mod, 
 		     stg_id_t propid, 
 		     void* data, 
 		     size_t len )
@@ -373,9 +373,9 @@ int model_set_prop( stg_model_t* mod,
 	  memcpy( &mod->size, data, len );
 	  
 	  // force the body lines to fit inside this new rectangle
-	  stg_normalize_lines( mod->lines->data, mod->lines->len );
-	  stg_scale_lines( mod->lines->data, mod->lines->len, mod->size.x, mod->size.y );
-	  stg_translate_lines( mod->lines->data, mod->lines->len,
+	  stg_normalize_lines( (stg_line_t*)mod->lines->data, mod->lines->len );
+	  stg_scale_lines( (stg_line_t*)mod->lines->data, mod->lines->len, mod->size.x, mod->size.y );
+	  stg_translate_lines( (stg_line_t*)mod->lines->data, mod->lines->len,
 			       -mod->size.x/2.0, -mod->size.y/2.0 );
 	  model_map( mod, 1 );
 	}
@@ -472,7 +472,7 @@ int model_set_prop( stg_model_t* mod,
   return 0; //ok
 }
 
-void model_handle_msg( stg_model_t* model, int fd, stg_msg_t* msg )
+void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
 {
   assert( model );
   assert( msg );
@@ -508,14 +508,14 @@ void pose_invert( stg_pose_t* pose )
   pose->a = pose->a;
 }
 
-void model_print( stg_model_t* mod )
+void model_print( model_t* mod )
 {
   printf( "   model %d:%d:%s\n", mod->world->id, mod->id, mod->token );
 }
 
 void model_print_cb( gpointer key, gpointer value, gpointer user )
 {
-  model_print( (stg_model_t*)value );
+  model_print( (model_t*)value );
 }
 
 

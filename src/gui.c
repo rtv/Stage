@@ -74,7 +74,7 @@ rtk_fig_t* gui_grid_create( rtk_canvas_t* canvas, rtk_fig_t* parent,
   return grid;
 }
 
-gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
+gui_window_t* gui_window_create( world_t* world, int xdim, int ydim )
 {
   gui_window_t* win = calloc( sizeof(gui_window_t), 1 );
 
@@ -149,7 +149,7 @@ void gui_window_destroy( gui_window_t* win )
   rtk_fig_destroy( win->poses );
 }
 
-void gui_world_create( stg_world_t* world )
+void gui_world_create( world_t* world )
 {
   PRINT_DEBUG( "gui world create" );
   
@@ -195,7 +195,7 @@ void render_matrix_cell_cb( gpointer key, gpointer value, gpointer user )
 
 
 // useful debug function allows plotting the matrix
-void gui_world_matrix( stg_world_t* world, gui_window_t* win )
+void gui_world_matrix( world_t* world, gui_window_t* win )
 {
   if( win->matrix == NULL )
     {
@@ -217,7 +217,7 @@ void gui_world_matrix( stg_world_t* world, gui_window_t* win )
     g_hash_table_foreach( world->matrix->table, render_matrix_cell_cb, &mf );
 }
 
-void gui_pose( rtk_fig_t* fig, stg_model_t* mod )
+void gui_pose( rtk_fig_t* fig, model_t* mod )
 {
   rtk_fig_arrow_ex( fig, 0,0, mod->pose.x, mod->pose.y, 0.05 );
 }
@@ -225,11 +225,11 @@ void gui_pose( rtk_fig_t* fig, stg_model_t* mod )
 
 void gui_pose_cb( gpointer key, gpointer value, gpointer user )
 {
-  gui_pose( (rtk_fig_t*)user, (stg_model_t*)value );
+  gui_pose( (rtk_fig_t*)user, (model_t*)value );
 }
 
 
-void gui_world_update( stg_world_t* world )
+void gui_world_update( world_t* world )
 {
   //PRINT_DEBUG( "gui world update" );
   
@@ -241,7 +241,7 @@ void gui_world_update( stg_world_t* world )
   rtk_canvas_render( win->canvas );
 }
 
-void gui_world_destroy( stg_world_t* world )
+void gui_world_destroy( world_t* world )
 {
   PRINT_DEBUG( "gui world destroy" );
 
@@ -254,7 +254,7 @@ void gui_world_destroy( stg_world_t* world )
 }
 
 
-const char* gui_model_describe(  stg_model_t* mod )
+const char* gui_model_describe(  model_t* mod )
 {
   static char txt[256];
   
@@ -272,7 +272,7 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
   //PRINT_DEBUG2( "ON MOUSE CALLED BACK for %p with userdata %p", fig, fig->userdata );
   
   // each fig links back to the Entity that owns it
-  stg_model_t* mod = (stg_model_t*)fig->userdata;
+  model_t* mod = (model_t*)fig->userdata;
   assert( mod );
 
   gui_window_t* win = g_hash_table_lookup( wins, &mod->world->id );
@@ -335,12 +335,12 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
   return;
 }
 
-void gui_model_parent( stg_model_t* model )
+void gui_model_parent( model_t* model )
 {
   
 }
 
-void gui_model_grid( stg_model_t* model )
+void gui_model_grid( model_t* model )
 {  
   gui_window_t* win = g_hash_table_lookup( wins, &model->world->id );
   gui_model_t* gmod = gui_model_figs(model);
@@ -353,7 +353,7 @@ void gui_model_grid( stg_model_t* model )
 				model->size.x, model->size.y, 1.0, 0 );
 }
   
-void gui_model_create( stg_model_t* model )
+void gui_model_create( model_t* model )
 {
   PRINT_DEBUG( "gui model create" );
   
@@ -388,14 +388,14 @@ void gui_model_create( stg_model_t* model )
   gui_model_render( model );
 }
 
-gui_model_t* gui_model_figs( stg_model_t* model )
+gui_model_t* gui_model_figs( model_t* model )
 {
   gui_window_t* win = g_hash_table_lookup( wins, &model->world->id );  
   return (gui_model_t*)g_hash_table_lookup( win->guimods, &model->id );
 }
 
 // draw a model from scratch
-void gui_model_render( stg_model_t* model )
+void gui_model_render( model_t* model )
 {
   PRINT_DEBUG( "gui model render" );
   
@@ -432,7 +432,7 @@ void gui_model_render( stg_model_t* model )
     gui_model_grid( model );
 }
 
-void gui_model_destroy( stg_model_t* model )
+void gui_model_destroy( model_t* model )
 {
   //PRINT_DEBUG( "gui model destroy" );
   
@@ -454,14 +454,14 @@ void gui_model_destroy( stg_model_t* model )
   g_hash_table_remove( win->guimods, &model->id );
 }
 
-void gui_model_pose( stg_model_t* mod )
+void gui_model_pose( model_t* mod )
 {
   //PRINT_DEBUG( "gui model pose" );
   rtk_fig_origin( gui_model_figs(mod)->top, 
 		  mod->pose.x, mod->pose.y, mod->pose.a );
 }
 
-void gui_model_rangers( stg_model_t* mod )
+void gui_model_rangers( model_t* mod )
 {
   PRINT_DEBUG( "drawing rangers" );
 
@@ -501,7 +501,7 @@ void gui_model_rangers( stg_model_t* mod )
     }
 }
 
-void gui_model_rangers_data( stg_model_t* mod )
+void gui_model_rangers_data( model_t* mod )
 { 
   gui_window_t* win = g_hash_table_lookup( wins, &mod->world->id );  
   
@@ -529,7 +529,7 @@ void gui_model_rangers_data( stg_model_t* mod )
     }
 }
 
-void gui_model_laser( stg_model_t* mod )
+void gui_model_laser( model_t* mod )
 {
   // only draw the laser gadget if it has a non-zero size
   if( mod->laser_config.size.x || mod->laser_config.size.y )
@@ -549,7 +549,7 @@ void gui_model_laser( stg_model_t* mod )
     }
 }  
 
-void gui_model_laser_data( stg_model_t* mod )
+void gui_model_laser_data( model_t* mod )
 {
   gui_window_t* win = g_hash_table_lookup( wins, &mod->world->id );  
 
@@ -590,7 +590,7 @@ void gui_model_laser_data( stg_model_t* mod )
     }
 }
 
-void gui_model_lines( stg_model_t* mod )
+void gui_model_lines( model_t* mod )
 {
   rtk_fig_t* fig = gui_model_figs(mod)->top;
   
@@ -624,7 +624,7 @@ void gui_model_lines( stg_model_t* mod )
 
 
 
-void gui_model_geom( stg_model_t* mod )
+void gui_model_geom( model_t* mod )
 {
   printf( "drawing geometry" );
 
@@ -658,7 +658,7 @@ void gui_model_geom( stg_model_t* mod )
 
 
 // add a nose  indicating heading  
-void gui_model_nose( stg_model_t* mod )
+void gui_model_nose( model_t* mod )
 {
   if( mod->nose )
     { 
@@ -687,7 +687,7 @@ void gui_model_nose( stg_model_t* mod )
     }
 }
 
-void gui_model_movemask( stg_model_t* mod )
+void gui_model_movemask( model_t* mod )
 {
   // we can only manipulate top-level figures
   //if( ent->parent == NULL )
@@ -704,7 +704,7 @@ void gui_model_movemask( stg_model_t* mod )
 }
 
 
-void gui_model_update( stg_model_t* mod, stg_prop_type_t prop )
+void gui_model_update( model_t* mod, stg_prop_type_t prop )
 {
   //PRINT_DEBUG3( "gui update for %d:%s prop %s", 
   //	ent->id, ent->name->str, stg_property_string(prop) );
