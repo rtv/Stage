@@ -827,7 +827,7 @@ int stg_model_set_border( stg_client_t* cli, stg_id_t id,
 			 stg_border_t *val)
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_NOSE,
+					     STG_PROP_BORDER,
 					     STG_SETGET,
 					     val,sizeof(stg_border_t));
   if( reply == NULL )
@@ -842,7 +842,7 @@ int stg_model_get_border( stg_client_t* cli, stg_id_t id,
 			  stg_border_t *val)
 {
   stg_property_t* reply = stg_send_property( cli, id, 
-					     STG_PROP_NOSE,
+					     STG_PROP_BORDER,
 					     STG_GET,
 					     NULL, 0 );
   if( reply == NULL )

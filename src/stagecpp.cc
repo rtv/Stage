@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.7 2003-08-26 02:26:42 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.8 2003-08-26 04:57:27 rtv Exp $
  */
 
 #include <assert.h>
@@ -1701,8 +1701,6 @@ int stg_pam_to_rects( struct pam *inpam, tuple **data,
 	  //int starty = y;
 	  int height = inpam->height; // assume full height for starters
 	  
-	  printf( "startx at %d %d\n", startx, starty );
-
 	  // grow the width - scan along the line until we hit an empty pixel
 	  for( ; x < inpam->width && data[y][x][0] > 0; x++ )
 	    {
@@ -1728,9 +1726,6 @@ int stg_pam_to_rects( struct pam *inpam, tuple **data,
 	      if( yy-y < height ) height = yy-y; // shrink the height to fit
 	    } 
 	  
-	  printf( "end width at %d %d. height %d\n", x, y, height  );
-		  
-
 	  // delete the pixels we have used in this rect
 	  for( int a = y; a < y + height; a++ )
 	    for( int b = startx; b < x; b++ )
@@ -1748,9 +1743,9 @@ int stg_pam_to_rects( struct pam *inpam, tuple **data,
 	  latest->w = x - startx;
 	  latest->h = -height;
 
-	  printf( "rect %d (%.2f %.2f %.2f %.2f %.2f\n", 
-		  *rect_count, 
-		  latest->x, latest->y, latest->a, latest->w, latest->h ); 
+	  //printf( "rect %d (%.2f %.2f %.2f %.2f %.2f\n", 
+	  //  *rect_count, 
+	  //  latest->x, latest->y, latest->a, latest->w, latest->h ); 
 
 	}
     }
@@ -1830,15 +1825,10 @@ int CWorldFile::Upload( stg_client_t* cli,
 	
 	PRINT_DEBUG1( "created model %d", anid );
 
-	// TODO - is there a nicer way to handle unspecified settings?
-	// right now i set stupid defaults and test for them
-
 	stg_size_t sz;
-	sz.x = this->ReadTupleFloat( section, "size", 0, -99.0 );
-	sz.y = this->ReadTupleFloat( section, "size", 1, -99.0 );
-
-	if( sz.x != -99 && sz.y != 99 )
-	  stg_model_set_size( cli, anid, &sz );
+	sz.x = this->ReadTupleFloat( section, "size", 0, 0.5 );
+	sz.y = this->ReadTupleFloat( section, "size", 1, 0.5 );
+	stg_model_set_size( cli, anid, &sz );
 	
 	stg_velocity_t vel;
 	vel.x = this->ReadTupleFloat( section, "velocity", 0, 0.0 );
@@ -1875,7 +1865,7 @@ int CWorldFile::Upload( stg_client_t* cli,
 	stg_model_set_nose( cli, anid, &nose );
 	
 	stg_border_t border;
-	border = this->ReadBool( section, "border", true );
+	border = this->ReadBool( section, "border", false );
 	stg_model_set_border( cli, anid, &border );
 
 	// read any ranger details

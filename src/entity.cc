@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.108 2003-08-26 02:26:42 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.109 2003-08-26 04:57:27 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -220,7 +220,8 @@ CEntity::CEntity( stg_entity_create_t* init )
   this->mouseable = true;
   this->draw_nose = true;
   this->interval = 0.01; // update interval in seconds 
-  
+  this->border = false;
+
   // STG_PROP_RANGEBOUNDS
   this->min_range = 0.5;
   this->max_range = 5.0;
@@ -693,7 +694,7 @@ void CEntity::GlobalToLocal( stg_pose_t* pose )
 int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
 {
   //ENT_DEBUG3( "Setting prop %s (%d) with %d bytes", 
-  //       stg_property_string(ptype), ptype, len );
+  //     stg_property_string(ptype), ptype, len );
 
   switch( ptype )
     {      
@@ -743,8 +744,8 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
       break;      
 
     case STG_PROP_BORDER:
-      g_assert( (len == sizeof(bool)) );	
-      this->border = *(bool*)data;
+      g_assert( (len == sizeof(stg_border_t)) );	
+      this->border = *(stg_border_t*)data;
       break;      
 
     case STG_PROP_NEIGHBORBOUNDS:
@@ -1329,31 +1330,21 @@ void CEntity::SetRects( stg_rotrect_t* new_rects, int new_rect_count  )
   */
 
   // if we asked for a border, add a unit rectangle outline
-  /*
-    if( 0 )//this->this->parent == NULL )
+  if( this->border )
     {
-    // make space for all the rects plus 1
-    stg_rotrect_t* extraone = new stg_rotrect_t[num+1];
-    
-    // set the first rect as a unit square
-    extraone[0].x = 0.0;
-    extraone[0].y = 0.0;
-    extraone[0].a = 0.0;
-    extraone[0].w = 1.0;
-    extraone[0].h = 1.0;
-    
-    // copy the other rects after the unit square
-    memcpy( &extraone[1], this->rects->rects, 
-    this->rects->rect_count * sizeof(stg_rotrect_t) );
-    
-    // free the old rects
-    delete[] this->rects->rects;
-    
-    // point to the new rects
-    this->rects = extraone;
-    this->rect_count = num+1; // remember we have 1 more now
+      ENT_DEBUG( "drawing BORDER" );
+
+      stg_rotrect_t brect;
+      
+      // set the first rect as a unit square
+      brect.x = 0.0;
+      brect.y = 0.0;
+      brect.a = 0.0;
+      brect.w = 1.0;
+      brect.h = 1.0;
+      
+      this->rect_array = g_array_append_vals( this->rect_array, &brect, 1 );
     }
-  */    
   
   RenderRects( true );
 }
