@@ -1,6 +1,6 @@
 // ==================================================================
 // Filename:	raytrace.cc
-// $Id: raytrace.cc,v 1.5 2001-12-31 17:21:27 inspectorg Exp $
+// $Id: raytrace.cc,v 1.6 2002-01-28 23:57:26 inspectorg Exp $
 // RTV
 // ==================================================================
 
@@ -304,13 +304,17 @@ CEntity* CRectangleIterator::GetNextEntity( void )
   CEntity* ent = 0;
   
   for( int i=0; i<4; i++ )
-    if( (ent = lits[i]->GetNextEntity() ) == 0 )
+  {
+    if (!lits[i])
+      continue;
+    if( (ent = lits[i]->GetNextEntity()) == 0 )
     {
       delete lits[i]; // don't need that line any more
       lits[i] = 0; // mark it as deleted
     }
     else
       break; // we'll take this entity
+  }
   
   return ent;
 }
