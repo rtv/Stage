@@ -71,7 +71,7 @@ PLAYER_DIR="${HOME}/player-STAGE_VERSION")
 AC_SUBST(PLAYER_DIR)
 
 dnl where's the X11-style color database?
-AC_CHECK_FILE([/usr/X11R6/libX11/rgb.txt],
+AC_CHECK_FILE([/usr/X11R6/lib/X11/rgb.txt],
   CDB="\"/usr/X11R6/lib/X11/rgb.txt\"",
   AC_CHECK_FILE([/usr/openwin/lib/X11/rgb.txt],
     CDB="\"/usr/openwin/lib/X11/rgb.txt\"",
