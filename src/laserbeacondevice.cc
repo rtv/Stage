@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.20 $
+//  $Revision: 1.21 $
 //
 // Usage:
 //  (empty)
@@ -23,6 +23,8 @@
 //  (empty)
 //
 ///////////////////////////////////////////////////////////////////////////
+
+#define DEBUG
 
 #include <math.h>
 #include <stage.h>
@@ -52,6 +54,14 @@ CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
   
   this->laser = parent; 
   //this->laser->m_dependent_attached = true;
+
+  // This is not a real object, so by default we dont see it
+  this->obstacle_return = false;
+  this->sonar_return = false;
+  this->puck_return = false;
+  this->vision_return = false;
+  this->idar_return = false;
+  this->laser_return = LaserTransparent;
   
   m_size_x = 0.9 * this->laser->m_size_x;
   m_size_y = 0.9 * this->laser->m_size_y;

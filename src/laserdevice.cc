@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.41 $
+//  $Revision: 1.42 $
 //
 // Usage:
 //  (empty)
@@ -24,16 +24,15 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
+#define DEBUG
+#undef VERBOSE
+
 #include <iostream.h>
 #include <stage.h>
 #include <math.h>
 #include "world.hh"
 #include "laserdevice.hh"
 #include "raytrace.hh"
-
-#define DEBUG
-#undef VERBOSE
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
@@ -289,7 +288,7 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
         m_visible_beacons.push_front( (int)ent );
 
       // Stop looking when we see something
-      if(ent->laser_return) 
+      if(ent->laser_return != LaserTransparent) 
       {
         range = lit.GetRange();
         break;

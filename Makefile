@@ -8,7 +8,7 @@
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
 #  $Author: inspectorg $
-#  $Revision: 1.25 $
+#  $Revision: 1.26 $
 #
 ###########################################################################
 
@@ -58,15 +58,12 @@ clean_dep:
 INSTALL_BIN = $(INSTALL_DIR)/bin
 INSTALL_BIN_FILES = bin/stage bin/xs bin/rtkstage bin/manager
 INSTALL_EXAMPLES = $(INSTALL_DIR)/examples
-INSTALL_ETC_FILES = etc/rtkstage.cfg
 
 install:
 	mkdir -p $(INSTALL_EXAMPLES)
 	install -m 644 examples/*.world* $(INSTALL_EXAMPLES)
 	install -m 644 examples/*.m4 $(INSTALL_EXAMPLES)
 	install -m 644 examples/*.pnm* $(INSTALL_EXAMPLES)
-	mkdir -p $(INSTALL_ETC)
-	install -m 755 $(INSTALL_ETC_FILES) $(INSTALL_ETC)
 	mkdir -p $(INSTALL_DIR)/bin
 	install -m 755 $(INSTALL_BIN_FILES) $(INSTALL_BIN)
 

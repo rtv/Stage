@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.15 $
+//  $Revision: 1.16 $
 //
 // Usage:
 //  (empty)
@@ -68,33 +68,26 @@ CBoxObstacle::CBoxObstacle(CWorld *world, CEntity *parent)
 //
 void CBoxObstacle::Update( double simtime )
 {
-  ASSERT(m_world);
+  CEntity::Update(simtime);
   
-  // See if its time to recalculate boxes
-  //
-  //if( simtime - m_last_update < m_interval )
-  //return;
-    
   double x, y, th;
   GetGlobalPose( x,y,th );
-
-  m_last_update = simtime;
   
   // if we've moved 
   if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
-    {    
-      // Undraw our old representation
-      m_world->SetRectangle( m_map_px, m_map_py, m_map_pth,
-			     m_size_x, m_size_y, this, false);
+  {    
+    // Undraw our old representation
+    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth,
+                           m_size_x, m_size_y, this, false);
       
-      m_map_px = x; // update the render positions
-      m_map_py = y;
-      m_map_pth = th;
+    m_map_px = x; // update the render positions
+    m_map_py = y;
+    m_map_pth = th;
       
-      // Draw our new representation
-      m_world->SetRectangle( m_map_px, m_map_py, m_map_pth,
-			     m_size_x, m_size_y, this, true);
-    }
+    // Draw our new representation
+    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth,
+                           m_size_x, m_size_y, this, true);
+  }
 }
 
 #ifdef INCLUDE_RTK
