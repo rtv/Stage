@@ -6,25 +6,14 @@
 extern rtk_fig_t* fig_debug;
 
 
-void model_ranger_init( model_t* mod )
-{
-  mod->ranger_return = LaserVisible;
-  
-  // start with no rangers 
-  model_set_prop_generic( mod, STG_PROP_RANGERCONFIG,
-			  NULL, 0 );
-  
-  //mod->ranger_data = g_array_new( FALSE, TRUE, sizeof(stg_ranger_sample_t));
-  //mod->ranger_config = g_array_new( FALSE, TRUE, sizeof(stg_ranger_config_t) );
+void model_ranger_shutdown( model_t* mod )
+{ 
+  model_remove_prop_generic( mod, STG_PROP_RANGERDATA );
 }
-
 
 void model_ranger_update( model_t* mod )
 {   
   //PRINT_DEBUG1( "[%.3f] updating rangers", mod->world->sim_time );
-  
-  //assert( mod->ranger_config );
-  //assert( mod->ranger_data );
   
   stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_RANGERCONFIG );
   
@@ -33,8 +22,10 @@ void model_ranger_update( model_t* mod )
   //else
   
   stg_ranger_config_t* cfg = (stg_ranger_config_t*)prop->data;
-  assert( cfg );
-
+  
+  if( cfg == NULL )
+    return;
+  
   int rcount = prop->len / sizeof( stg_ranger_config_t );
   
   if( rcount < 1 )
@@ -50,11 +41,6 @@ void model_ranger_update( model_t* mod )
   int t;
   for( t=0; t<rcount; t++ )
     {
-      //stg_ranger_config_t* cfg = &g_array_index( mod->ranger_config, 
-      //				   stg_ranger_config_t, t );
-      
-      //g_assert( cfg );
-      
       // get the sensor's pose in global coords
       stg_pose_t pz;
       memcpy( &pz, &cfg[t].pose, sizeof(pz) ); 
@@ -102,19 +88,31 @@ void model_ranger_update( model_t* mod )
   
 }
 
-void gui_model_rangers( model_t* mod )
+void model_ranger_config_render( model_t* mod )
 {
   //PRINT_DEBUG( "drawing rangers" );
 
-  rtk_fig_t* fig = gui_model_figs(mod)->rangers;
+  rtk_fig_t* fig = mod->gui.propgeom[STG_PROP_RANGERCONFIG];  
   
-  rtk_fig_color_rgb32(fig, stg_lookup_color("orange") );
-  //rtk_fig_color_rgb32( fig, stg_lookup_color(STG_RANGER_COLOR) );
+  if( fig  )
+    rtk_fig_clear(fig);
+  else // create the figure, store it in the model and keep a local pointer
+    fig = model_prop_fig_create( mod, mod->gui.propgeom, STG_PROP_RANGERCONFIG,
+				 mod->gui.top, STG_LAYER_RANGERGEOM );
   
+  rtk_fig_color_rgb32( fig, stg_lookup_color(STG_RANGER_GEOM_COLOR) );  
   rtk_fig_origin( fig, mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );  
-  rtk_fig_clear( fig ); 
   
-
+  rtk_fig_t* cfgfig = mod->gui.propdata[STG_PROP_RANGERCONFIG];  
+  if( cfgfig  )
+    rtk_fig_clear(cfgfig);
+  else // create the figure, store it in the model and keep a local pointer
+    cfgfig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_RANGERCONFIG,
+				 mod->gui.top, STG_LAYER_RANGERCONFIG );
+  
+  rtk_fig_color_rgb32( cfgfig, stg_lookup_color(STG_RANGER_CONFIG_COLOR) );  
+  rtk_fig_origin( cfgfig, mod->local_pose.x, mod->local_pose.y, mod->local_pose.a );  
+  
   stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_RANGERCONFIG );
   
   if( prop == NULL ) // no rangers to update!
@@ -130,6 +128,8 @@ void gui_model_rangers( model_t* mod )
     return;
 
 
+  //rtk_fig_t* geomfig = gui_model_figs(mod)->ranger_ge;
+
   // add rects showing ranger positions
   int s;
   for( s=0; s<rcount; s++ )
@@ -143,16 +143,27 @@ void gui_model_rangers( model_t* mod )
 			 rngr->pose.x, rngr->pose.y, rngr->pose.a,
 			 rngr->size.x, rngr->size.y, 0 ); 
       
+      // TODO - FIX THIS
+
       // show the FOV too
-      double sidelen = rngr->size.x/2.0;
+      //double sidelen = rngr->size.x/2.0;
+      double sidelen = rngr->bounds_range.max;
       
-      double x1= rngr->pose.x + sidelen*cos(rngr->pose.a - rngr->fov/2.0 );
-      double y1= rngr->pose.y + sidelen*sin(rngr->pose.a - rngr->fov/2.0 );
-      double x2= rngr->pose.x + sidelen*cos(rngr->pose.a + rngr->fov/2.0 );
-      double y2= rngr->pose.y + sidelen*sin(rngr->pose.a + rngr->fov/2.0 );
+      double x1= rngr->pose.x + sidelen*-cos(rngr->pose.a - rngr->fov/2.0 );
+      double y1= rngr->pose.y + sidelen*-sin(rngr->pose.a - rngr->fov/2.0 );
+      double x2= rngr->pose.x + sidelen*-cos(rngr->pose.a + rngr->fov/2.0 );
+      double y2= rngr->pose.y + sidelen*-sin(rngr->pose.a + rngr->fov/2.0 );
       
-      rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x1, y1 );
-      rtk_fig_line( fig, rngr->pose.x, rngr->pose.y, x2, y2 );	
+      rtk_fig_line( cfgfig, rngr->pose.x, rngr->pose.y, x1, y1 );
+      rtk_fig_line( cfgfig, rngr->pose.x, rngr->pose.y, x2, y2 );	
+   
+      double mina = rngr->fov / 2.0;
+      double maxa = -rngr->fov / 2.0;
+   
+      rtk_fig_ellipse_arc( cfgfig,0,0,0, 
+			   2.0*cfg->bounds_range.max,
+			   2.0*cfg->bounds_range.max, 
+			   mina, maxa );      
     }
 }
 
@@ -160,10 +171,18 @@ void model_ranger_render( model_t* mod )
 { 
   gui_window_t* win = mod->world->win;
   
-  rtk_fig_t* fig = gui_model_figs(mod)->ranger_data;  
-  if( fig ) rtk_fig_clear( fig );   
+  //rtk_fig_t* fig = gui_model_figs(mod)->ranger_data;  
+  //if( fig ) rtk_fig_clear( fig );   
+
+   rtk_fig_t* fig = mod->gui.propdata[STG_PROP_RANGERDATA];  
   
-  if( win->show_rangerdata && mod->subs[STG_PROP_RANGERDATA] )
+  if( fig  )
+    rtk_fig_clear(fig);
+  else // create the figure, store it in the model and keep a local pointer
+    fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_RANGERDATA,
+				 mod->gui.top, STG_LAYER_RANGERDATA );
+
+  if(  mod->subs[STG_PROP_RANGERDATA] )
     {
       
       stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_RANGERCONFIG );

@@ -16,9 +16,9 @@
 #define STG_GRID_MAJOR_COLOR "gray85"
 #define STG_GRID_MINOR_COLOR "gray95"
 #define STG_GRID_AXIS_COLOR "gray40"
-#define STG_MATRIX_COLOR "dark green"
 #define STG_BACKGROUND_COLOR "ivory"
 #define STG_BOUNDINGBOX_COLOR "magenta"
+#define STG_MATRIX_COLOR "dark green"
 
 // model color defaults
 #define STG_GENERIC_COLOR "black"
@@ -29,21 +29,37 @@
 #define STG_WALL_COLOR "dark blue"
 #define STG_FIDUCIAL_COLOR "lime green"
 #define STG_FIDUCIAL_CFG_COLOR "green"
-#define STG_RANGER_COLOR "gray90" 
-#define STG_RANGER_TRANSDUCER_COLOR "orange"
+
+#define STG_RANGER_COLOR "gray75" 
+#define STG_RANGER_GEOM_COLOR "orange"
+#define STG_RANGER_CONFIG_COLOR "gray90"
+
 #define STG_DEBUG_COLOR "green"
 #define STG_BLOB_CFG_COLOR "gray75"
 
 #define STG_LAYER_BACKGROUND 10
 #define STG_LAYER_BODY 30
-#define STG_LAYER_DATA 60
-#define STG_LAYER_LIGHT 70
-#define STG_LAYER_SENSOR 55
 #define STG_LAYER_GRID 20
 #define STG_LAYER_USER 99
 #define STG_LAYER_GEOM 80
 #define STG_LAYER_MATRIX 40
 #define STG_LAYER_DEBUG 98
+
+#define STG_LAYER_LASERGEOM 31
+#define STG_LAYER_LASERDATA 25
+#define STG_LAYER_LASERCONFIG 32
+
+#define STG_LAYER_RANGERGEOM 41
+#define STG_LAYER_RANGERCONFIG 42
+#define STG_LAYER_RANGERDATA 43
+
+#define STG_LAYER_BLOBGEOM 51
+#define STG_LAYER_BLOBCONFIG 52
+#define STG_LAYER_BLOBDATA 53
+
+#define STG_LAYER_NEIGHBORGEOM 61
+#define STG_LAYER_NEIGHBORCONFIG 62
+#define STG_LAYER_NEIGHBORDATA 63
 
 #define STG_DEFAULT_WINDOW_WIDTH 700
 #define STG_DEFAULT_WINDOW_HEIGHT 740
@@ -51,22 +67,6 @@
 #define STG_DEFAULT_SHOWGRID 1
 #define STG_DEFAULT_MOVIE_SPEED 1
 
-typedef struct
-{
-  rtk_fig_t* top;
-
-  rtk_fig_t* rangers;
-  rtk_fig_t* ranger_data;
-  rtk_fig_t* geom;
-  rtk_fig_t* laser;
-  rtk_fig_t* laser_data;
-  rtk_fig_t* laser_cfg;
-  rtk_fig_t* blob_cfg;
-  rtk_fig_t* blob_data;  
-  rtk_fig_t* fiducial_cfg;
-  rtk_fig_t* fiducial_data;
-  rtk_fig_t* grid;
-} gui_model_t;
 
 typedef struct _gui_window
 {
@@ -78,7 +78,7 @@ typedef struct _gui_window
   GtkStatusbar* statusbar;
   GtkLabel* timelabel;
 
-  GHashTable* guimods;
+  //GHashTable* guimods;
 
   rtk_fig_t* bg; // background
   rtk_fig_t* matrix;
@@ -86,19 +86,10 @@ typedef struct _gui_window
 
   gboolean show_matrix;
   gboolean show_grid;
-  gboolean show_rangerdata;
-  gboolean show_rangers;
   gboolean show_rects;
   gboolean show_nose;
   gboolean show_geom;
-  gboolean show_laser;
-  gboolean show_lasercfg;
-  gboolean show_laserdata;
-  gboolean show_fiducialdata;
-  gboolean show_fiducialcfg;
-  gboolean show_blobdata;
-  gboolean show_blobcfg;
-
+  
   gboolean movie_exporting;
   int movie_speed;
   int movie_count;

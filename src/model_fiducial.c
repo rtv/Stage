@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -201,36 +201,33 @@ void model_fiducial_config_render( model_t* mod )
   rtk_fig_clear(fig);
   rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_CFG_COLOR ));
   
-  if( win->show_fiducialcfg )
-    {
-      stg_fiducial_config_t* cfg = (stg_fiducial_config_t*) 
-	model_get_prop_data_generic( mod, STG_PROP_FIDUCIALCONFIG );
+  stg_fiducial_config_t* cfg = (stg_fiducial_config_t*) 
+    model_get_prop_data_generic( mod, STG_PROP_FIDUCIALCONFIG );
+  
+  if( cfg )
+    {  
+      double mina = -cfg->fov / 2.0;
+      double maxa = +cfg->fov / 2.0;
       
-      if( cfg )
-	{  
-	  double mina = -cfg->fov / 2.0;
-	  double maxa = +cfg->fov / 2.0;
-	  
-	  double dx =  cfg->max_range_anon * cos(mina);
-	  double dy =  cfg->max_range_anon * sin(mina);
-	  double ddx = cfg->max_range_anon * cos(maxa);
-	  double ddy = cfg->max_range_anon * sin(maxa);
-
-	  rtk_fig_line( fig, 0,0, dx, dy );
-	  rtk_fig_line( fig, 0,0, ddx, ddy );
-
-	  // max range
-	  rtk_fig_ellipse_arc( fig, 0,0,0,
-			       2.0*cfg->max_range_anon,
-			       2.0*cfg->max_range_anon, 
-			       mina, maxa );      
-	  
-	  // max range that IDs can be, er... identified	  
-	  rtk_fig_ellipse_arc( fig, 0,0,0,
-			       2.0*cfg->max_range_id,
-			       2.0*cfg->max_range_id, 
-			       mina, maxa );      
-	}
+      double dx =  cfg->max_range_anon * cos(mina);
+      double dy =  cfg->max_range_anon * sin(mina);
+      double ddx = cfg->max_range_anon * cos(maxa);
+      double ddy = cfg->max_range_anon * sin(maxa);
+      
+      rtk_fig_line( fig, 0,0, dx, dy );
+      rtk_fig_line( fig, 0,0, ddx, ddy );
+      
+      // max range
+      rtk_fig_ellipse_arc( fig, 0,0,0,
+			   2.0*cfg->max_range_anon,
+			   2.0*cfg->max_range_anon, 
+			   mina, maxa );      
+      
+      // max range that IDs can be, er... identified	  
+      rtk_fig_ellipse_arc( fig, 0,0,0,
+			   2.0*cfg->max_range_id,
+			   2.0*cfg->max_range_id, 
+			   mina, maxa );      
     }
 }
 

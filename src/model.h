@@ -2,6 +2,19 @@
 #define STG_MODEL_H
 
 #include "world.h"
+#include "rtk.h"
+
+typedef struct
+{
+  rtk_fig_t* top;
+  rtk_fig_t* geom;
+  rtk_fig_t* grid;
+  
+  // a hash table would use less space , but this is fast and easy
+  rtk_fig_t* propdata[ STG_PROP_COUNT ];
+  rtk_fig_t* propgeom[ STG_PROP_COUNT ];
+  
+} gui_model_t;
 
 typedef struct _model
 {
@@ -48,7 +61,9 @@ typedef struct _model
   stg_msec_t update_times[STG_PROP_COUNT];
   
   GHashTable* props; // table of stg_property_t's indexed by property id
-
+  
+  gui_model_t gui; // all the gui stuff
+  
 } model_t;  
 
 typedef void(*init_func_t)(model_t*);

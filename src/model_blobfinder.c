@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.5 2004-06-14 02:52:50 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.6 2004-06-14 19:21:00 rtv Exp $
  */
 
 #include <math.h>
@@ -370,35 +370,32 @@ void model_blobfinder_config_render( model_t* mod )
   rtk_fig_clear(fig);
   rtk_fig_color_rgb32( fig, stg_lookup_color( STG_BLOB_CFG_COLOR ));
   
-  if( win->show_blobcfg )
-    {
-      stg_blobfinder_config_t* cfg = (stg_blobfinder_config_t*) 
-	model_get_prop_data_generic( mod, STG_PROP_BLOBCONFIG );
+  stg_blobfinder_config_t* cfg = (stg_blobfinder_config_t*) 
+    model_get_prop_data_generic( mod, STG_PROP_BLOBCONFIG );
       
-      if( cfg )
-	{  
-	  // Get the camera's global pose
-	  stg_pose_t pose;
-	  pose.x = pose.y = pose.a = 0.0;
-	  model_local_to_global( mod, &pose );
+  if( cfg )
+    {  
+      // Get the camera's global pose
+      stg_pose_t pose;
+      pose.x = pose.y = pose.a = 0.0;
+      model_local_to_global( mod, &pose );
 	  
-	  double ox = pose.x;
-	  double oy = pose.y;
-	  double mina = pose.a + (cfg->pan + cfg->zoom / 2.0);
-	  double maxa = pose.a - (cfg->pan + cfg->zoom / 2.0);
+      double ox = pose.x;
+      double oy = pose.y;
+      double mina = pose.a + (cfg->pan + cfg->zoom / 2.0);
+      double maxa = pose.a - (cfg->pan + cfg->zoom / 2.0);
 	  
-	  double dx = cfg->range_max * cos(mina);
-	  double dy = cfg->range_max * sin(mina);
-	  double ddx = cfg->range_max * cos(maxa);
-	  double ddy = cfg->range_max * sin(maxa);
+      double dx = cfg->range_max * cos(mina);
+      double dy = cfg->range_max * sin(mina);
+      double ddx = cfg->range_max * cos(maxa);
+      double ddy = cfg->range_max * sin(maxa);
 	  
-	  rtk_fig_line( fig, ox,oy, dx, dy );
-	  rtk_fig_line( fig, ox,oy, ddx, ddy );
-	  rtk_fig_ellipse_arc( fig, 0,0,0,
-			       2.0*cfg->range_max,
-			       2.0*cfg->range_max, 
-			       mina, maxa );      
-	}
+      rtk_fig_line( fig, ox,oy, dx, dy );
+      rtk_fig_line( fig, ox,oy, ddx, ddy );
+      rtk_fig_ellipse_arc( fig, 0,0,0,
+			   2.0*cfg->range_max,
+			   2.0*cfg->range_max, 
+			   mina, maxa );      
     }
 }
 

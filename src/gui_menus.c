@@ -16,20 +16,19 @@ enum {
   STG_MITEM_VIEW_MATRIX,
   STG_MITEM_VIEW_GRID,
   STG_MITEM_VIEW_DEBUG,
-  STG_MITEM_VIEW_OBJECT_BODY,
-  STG_MITEM_VIEW_OBJECT_LIGHT,
-  STG_MITEM_VIEW_OBJECT_SENSOR,
-  STG_MITEM_VIEW_OBJECT_USER,
+  STG_MITEM_VIEW_OBJECT,
   STG_MITEM_VIEW_DATA_NEIGHBORS,
   STG_MITEM_VIEW_DATA_LASER,
   STG_MITEM_VIEW_DATA_RANGER,
-  STG_MITEM_VIEW_DATA_BLOBFINDER,
-  STG_MITEM_VIEW_REFRESH_25,
-  STG_MITEM_VIEW_REFRESH_50,
-  STG_MITEM_VIEW_REFRESH_100,
-  STG_MITEM_VIEW_REFRESH_200,
-  STG_MITEM_VIEW_REFRESH_500,
-  STG_MITEM_VIEW_REFRESH_1000,
+  STG_MITEM_VIEW_DATA_BLOB,
+  STG_MITEM_VIEW_GEOM_NEIGHBORS,
+  STG_MITEM_VIEW_GEOM_LASER,
+  STG_MITEM_VIEW_GEOM_RANGER,
+  STG_MITEM_VIEW_GEOM_BLOB,
+  STG_MITEM_VIEW_CONFIG_NEIGHBORS,
+  STG_MITEM_VIEW_CONFIG_LASER,
+  STG_MITEM_VIEW_CONFIG_RANGER,
+  STG_MITEM_VIEW_CONFIG_BLOB,
   STG_MITEM_COUNT
 };
 
@@ -39,15 +38,10 @@ enum {
   STG_MENU_FILE_IMAGE,
   STG_MENU_FILE_MOVIE,
   STG_MENU_VIEW,
-  STG_MENU_VIEW_REFRESH,
-  STG_MENU_VIEW_OBJECT,
+  STG_MENU_VIEW_GEOM,
   STG_MENU_VIEW_DATA,
+  STG_MENU_VIEW_CONFIG,
   STG_MENU_COUNT
-};
-
-enum {
-  STG_FIGS_LASER,
-  STG_FIGS_RANGER
 };
 
 // movies can be saved at these multiples of real time
@@ -165,6 +159,8 @@ void gui_menu_layer( rtk_menuitem_t *item )
   rtk_canvas_layer_show( item->menu->canvas, 
 			 (int)item->userdata, 
 			 rtk_menuitem_ischecked(item) );
+
+  // invalidate the whole canvas - how?
 }
 
 void gui_menu_matrix( rtk_menuitem_t *item )
@@ -195,44 +191,44 @@ void gui_menu_debug( rtk_menuitem_t *item )
 }
 
 
-void clear_figs( gui_model_t* mod, int type )
-{
-  switch( type )
-    {
-    case STG_FIGS_LASER: rtk_fig_clear( mod->laser_data ); break;
-    case STG_FIGS_RANGER: rtk_fig_clear( mod->ranger_data ); break;
-    default: PRINT_WARN1( "uknown figure type %d", type ); break;
-    }
-}
+/* void clear_figs( gui_model_t* mod, int type ) */
+/* { */
+/*   switch( type ) */
+/*     { */
+/*       //case STG_FIGS_LASER: rtk_fig_clear( mod->laser_data ); break; */
+/*       //case STG_FIGS_RANGER: rtk_fig_clear( mod->ranger_data ); break; */
+/*     default: PRINT_WARN1( "uknown figure type %d", type ); break; */
+/*     } */
+/* } */
 
-void clear_figs_cb( gpointer key, gpointer value, gpointer user )
-{
-  clear_figs( (gui_model_t*)value, (int)user );
-}
+/* void clear_figs_cb( gpointer key, gpointer value, gpointer user ) */
+/* { */
+/*   clear_figs( (gui_model_t*)value, (int)user ); */
+/* } */
 
-void gui_menu_view_data_laser( rtk_menuitem_t *item )
-{
-  PRINT_DEBUG1( "menu selected %s.",
-	       rtk_menuitem_ischecked( item ) ? "<checked>" : "<unchecked>" );
+/* void gui_menu_view_data_laser( rtk_menuitem_t *item ) */
+/* { */
+/*   PRINT_DEBUG1( "menu selected %s.", */
+/* 	       rtk_menuitem_ischecked( item ) ? "<checked>" : "<unchecked>" ); */
 
-  gui_window_t* win = (gui_window_t*)item->menu->canvas->userdata;
-  win->show_laserdata = rtk_menuitem_ischecked( item );
+/*   gui_window_t* win = (gui_window_t*)item->menu->canvas->userdata; */
+/*   win->show_laserdata = rtk_menuitem_ischecked( item ); */
   
-  // clear all laserdata figs in this window
-  g_hash_table_foreach( win->guimods, clear_figs_cb, STG_FIGS_LASER );
-}
+/*   // clear all laserdata figs in this window */
+/*   g_hash_table_foreach( win->guimods, clear_figs_cb, STG_FIGS_LASER ); */
+/* } */
 
-void gui_menu_view_data_ranger( rtk_menuitem_t *item )
-{
-  PRINT_DEBUG1( "menu selected %s.",
-	       rtk_menuitem_ischecked( item ) ? "<checked>" : "<unchecked>" );
+/* void gui_menu_view_data_ranger( rtk_menuitem_t *item ) */
+/* { */
+/*   PRINT_DEBUG1( "menu selected %s.", */
+/* 	       rtk_menuitem_ischecked( item ) ? "<checked>" : "<unchecked>" ); */
 
-  gui_window_t* win = (gui_window_t*)item->menu->canvas->userdata;
-  win->show_rangerdata = rtk_menuitem_ischecked( item );
+/*   gui_window_t* win = (gui_window_t*)item->menu->canvas->userdata; */
+/*   win->show_rangerdata = rtk_menuitem_ischecked( item ); */
   
-  // clear all rangerdata figs in this window
-  g_hash_table_foreach( win->guimods, clear_figs_cb, (gpointer)STG_FIGS_RANGER );
-}
+/*   // clear all rangerdata figs in this window */
+/*   g_hash_table_foreach( win->guimods, clear_figs_cb, (gpointer)STG_FIGS_RANGER ); */
+/* } */
  
 void gui_window_menus_create( gui_window_t* win )
 {
@@ -290,14 +286,6 @@ void gui_window_menus_create( gui_window_t* win )
   rtk_menuitem_check(win->mitems_mspeed[0], 1);
 
 
-  // create the VIEW sub-menus
-  win->menus[STG_MENU_VIEW_OBJECT] = 
-    rtk_menu_create_sub(win->menus[STG_MENU_VIEW], "Objects");
-  win->menus[STG_MENU_VIEW_DATA] = 
-    rtk_menu_create_sub(win->menus[STG_MENU_VIEW], "Data");
-  win->menus[STG_MENU_VIEW_REFRESH] = 
-    rtk_menu_create_sub(win->menus[STG_MENU_VIEW], "Refresh");
-
   // create the FILE menu items
   win->mitems[STG_MITEM_FILE_SAVE] = 
     rtk_menuitem_create(win->menus[STG_MENU_FILE], "Save", 0);
@@ -309,6 +297,18 @@ void gui_window_menus_create( gui_window_t* win )
   //win->mitems[STG_MITEM_FILE_QUIT]->userdata = (void*)0;
 
   // create the VIEW menu items
+  win->mitems[STG_MITEM_VIEW_OBJECT] = 
+    rtk_menuitem_create(win->menus[STG_MENU_VIEW], "Objects", 1);
+
+  // create the VIEW sub-menus
+  win->menus[STG_MENU_VIEW_DATA] = 
+    rtk_menu_create_sub(win->menus[STG_MENU_VIEW], "Data");
+  win->menus[STG_MENU_VIEW_GEOM] = 
+    rtk_menu_create_sub(win->menus[STG_MENU_VIEW], "Geometry");
+  win->menus[STG_MENU_VIEW_CONFIG] = 
+    rtk_menu_create_sub(win->menus[STG_MENU_VIEW], "Configuration");
+
+  // create the rest of the VIEW menu items
   win->mitems[STG_MITEM_VIEW_GRID] = 
     rtk_menuitem_create(win->menus[STG_MENU_VIEW], "Grid", 1);
   win->mitems[STG_MITEM_VIEW_MATRIX] = 
@@ -317,16 +317,6 @@ void gui_window_menus_create( gui_window_t* win )
     rtk_menuitem_create(win->menus[STG_MENU_VIEW], "Debug", 1);
 
 
-  // create the VIEW/OBJECTS menu items
-  win->mitems[STG_MITEM_VIEW_OBJECT_BODY] 
-    = rtk_menuitem_create(win->menus[STG_MENU_VIEW_OBJECT], "Body", 1);
-  win->mitems[STG_MITEM_VIEW_OBJECT_SENSOR] 
-    = rtk_menuitem_create(win->menus[STG_MENU_VIEW_OBJECT], "Sensor", 1);
-  win->mitems[STG_MITEM_VIEW_OBJECT_LIGHT] 
-    = rtk_menuitem_create(win->menus[STG_MENU_VIEW_OBJECT], "Light", 1);
-  win->mitems[STG_MITEM_VIEW_OBJECT_USER] 
-    = rtk_menuitem_create(win->menus[STG_MENU_VIEW_OBJECT], "User", 1);
-
   // create the VIEW/DATA menu items
   win->mitems[STG_MITEM_VIEW_DATA_LASER] 
     = rtk_menuitem_create(win->menus[STG_MENU_VIEW_DATA], "Laser", 1);
@@ -334,14 +324,46 @@ void gui_window_menus_create( gui_window_t* win )
     = rtk_menuitem_create(win->menus[STG_MENU_VIEW_DATA], "Ranger", 1);
   win->mitems[STG_MITEM_VIEW_DATA_NEIGHBORS] 
     = rtk_menuitem_create(win->menus[STG_MENU_VIEW_DATA], "Fiducial", 1);
-  win->mitems[STG_MITEM_VIEW_DATA_BLOBFINDER] 
+  win->mitems[STG_MITEM_VIEW_DATA_BLOB] 
     = rtk_menuitem_create(win->menus[STG_MENU_VIEW_DATA], "Blobfinder", 1);
+
+  win->mitems[STG_MITEM_VIEW_CONFIG_LASER] 
+    = rtk_menuitem_create(win->menus[STG_MENU_VIEW_CONFIG], "Laser", 1);
+  win->mitems[STG_MITEM_VIEW_CONFIG_RANGER] 
+    = rtk_menuitem_create(win->menus[STG_MENU_VIEW_CONFIG], "Ranger", 1);
+  win->mitems[STG_MITEM_VIEW_CONFIG_NEIGHBORS] 
+    = rtk_menuitem_create(win->menus[STG_MENU_VIEW_CONFIG], "Fiducial", 1);
+  win->mitems[STG_MITEM_VIEW_CONFIG_BLOB] 
+    = rtk_menuitem_create(win->menus[STG_MENU_VIEW_CONFIG], "Blobfinder", 1);
+
+  win->mitems[STG_MITEM_VIEW_GEOM_LASER] 
+    = rtk_menuitem_create(win->menus[STG_MENU_VIEW_GEOM], "Laser", 1);
+  win->mitems[STG_MITEM_VIEW_GEOM_RANGER] 
+    = rtk_menuitem_create(win->menus[STG_MENU_VIEW_GEOM], "Ranger", 1);
+  win->mitems[STG_MITEM_VIEW_GEOM_NEIGHBORS] 
+    = rtk_menuitem_create(win->menus[STG_MENU_VIEW_GEOM], "Fiducial", 1);
+  win->mitems[STG_MITEM_VIEW_GEOM_BLOB] 
+    = rtk_menuitem_create(win->menus[STG_MENU_VIEW_GEOM], "Blobfinder", 1);
+
   
-  win->mitems[STG_MITEM_VIEW_OBJECT_BODY]->userdata = (void*)STG_LAYER_BODY;
-  win->mitems[STG_MITEM_VIEW_OBJECT_SENSOR]->userdata =(void*)STG_LAYER_SENSOR;
-  win->mitems[STG_MITEM_VIEW_OBJECT_LIGHT]->userdata = (void*)STG_LAYER_LIGHT;
-  win->mitems[STG_MITEM_VIEW_OBJECT_USER]->userdata = (void*)STG_LAYER_USER;
+  win->mitems[STG_MITEM_VIEW_OBJECT]->userdata = (void*)STG_LAYER_BODY;
   win->mitems[STG_MITEM_VIEW_GRID]->userdata = (void*)STG_LAYER_GRID;
+
+  win->mitems[STG_MITEM_VIEW_DATA_LASER]->userdata =(void*)STG_LAYER_LASERDATA;
+  win->mitems[STG_MITEM_VIEW_DATA_RANGER]->userdata =(void*)STG_LAYER_RANGERDATA;
+  win->mitems[STG_MITEM_VIEW_DATA_BLOB]->userdata =(void*)STG_LAYER_BLOBDATA;
+  win->mitems[STG_MITEM_VIEW_DATA_NEIGHBORS]->userdata =(void*)STG_LAYER_NEIGHBORDATA;
+
+  win->mitems[STG_MITEM_VIEW_CONFIG_LASER]->userdata =(void*)STG_LAYER_LASERCONFIG;
+  win->mitems[STG_MITEM_VIEW_CONFIG_RANGER]->userdata =(void*)STG_LAYER_RANGERCONFIG;
+  win->mitems[STG_MITEM_VIEW_CONFIG_BLOB]->userdata =(void*)STG_LAYER_BLOBCONFIG;
+  win->mitems[STG_MITEM_VIEW_CONFIG_NEIGHBORS]->userdata =(void*)STG_LAYER_NEIGHBORCONFIG;
+  win->mitems[STG_MITEM_VIEW_GEOM_LASER]->userdata =(void*)STG_LAYER_LASERGEOM;
+  win->mitems[STG_MITEM_VIEW_GEOM_RANGER]->userdata =(void*)STG_LAYER_RANGERGEOM;
+  win->mitems[STG_MITEM_VIEW_GEOM_BLOB]->userdata =(void*)STG_LAYER_BLOBGEOM;
+  win->mitems[STG_MITEM_VIEW_GEOM_NEIGHBORS]->userdata =(void*)STG_LAYER_NEIGHBORGEOM;
+
+
   
   // add the callbacks   
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_MOVIE_START], 
@@ -357,14 +379,9 @@ void gui_window_menus_create( gui_window_t* win )
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_MATRIX], 
 			     gui_menu_matrix );
   
-  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_OBJECT_BODY], 
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_OBJECT], 
 			     gui_menu_layer );
-  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_OBJECT_SENSOR], 
-			     gui_menu_layer );
-  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_OBJECT_LIGHT], 
-			     gui_menu_layer );
-  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_OBJECT_USER], 
-			     gui_menu_layer );
+
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_GRID], 
 			     gui_menu_layer );
   
@@ -372,23 +389,61 @@ void gui_window_menus_create( gui_window_t* win )
 			     gui_menu_debug );
     
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_DATA_LASER], 
-			     gui_menu_view_data_laser );
+			     gui_menu_layer );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_DATA_RANGER], 
-			     gui_menu_view_data_ranger );
+			     gui_menu_layer );
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_DATA_BLOB], 
+			     gui_menu_layer );
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_DATA_NEIGHBORS], 
+			     gui_menu_layer );
+
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_GEOM_LASER], 
+			     gui_menu_layer );
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_GEOM_RANGER], 
+			     gui_menu_layer );
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_GEOM_BLOB], 
+			     gui_menu_layer );
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_GEOM_NEIGHBORS], 
+			     gui_menu_layer );
+
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_CONFIG_LASER], 
+			     gui_menu_layer );
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_CONFIG_RANGER], 
+			     gui_menu_layer );
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_CONFIG_BLOB], 
+			     gui_menu_layer );
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_CONFIG_NEIGHBORS], 
+			     gui_menu_layer );
 
   // set the default checks - the callback functions will set things
   // up properly
-  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_GRID], 0);
+
+  // NOTE: work around a curiosity of rtk - we have to check THEN uncheck
+  // menu items to get the callback called for non-checked state
+
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_GRID], 1);
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_DEBUG], 1);
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_DEBUG], 0);
-  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_OBJECT_BODY], 1);
-  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_OBJECT_LIGHT], 1);
-  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_OBJECT_SENSOR], 0);
-  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_OBJECT_LIGHT], 1);
-  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_OBJECT_USER], 1);
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_OBJECT], 1);
+
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_DATA_LASER], 1);
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_DATA_RANGER], 1);
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_DATA_NEIGHBORS], 1);
-  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_DATA_BLOBFINDER], 1);    
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_DATA_BLOB], 1);    
+
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_CONFIG_LASER], 1);
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_CONFIG_RANGER], 1);
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_CONFIG_NEIGHBORS], 1);
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_CONFIG_BLOB], 1);    
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_CONFIG_LASER], 0);
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_CONFIG_RANGER], 0);
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_CONFIG_NEIGHBORS], 0);
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_CONFIG_BLOB], 0);    
+
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_GEOM_LASER], 1);
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_GEOM_RANGER], 1);
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_GEOM_NEIGHBORS], 1);
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_GEOM_BLOB], 1);    
 }
 
 void gui_window_menu_destroy( gui_window_t* win )

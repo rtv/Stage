@@ -47,8 +47,7 @@ model_t* model_create(  world_t* world,
   mod->laser_return = LaserVisible;
   // a sensible default fiducial return value is the model's id
   mod->fiducial_return = mod->id;
-  
-
+  mod->ranger_return = LaserVisible;
 
   mod->geom.pose.x = 0;
   mod->geom.pose.y = 0;

@@ -108,7 +108,7 @@ gui_window_t* gui_window_create( world_t* world, int xdim, int ydim )
   g_string_free( titlestr, TRUE );
   
   // todo - destructors for figures
-  win->guimods = g_hash_table_new( g_int_hash, g_int_equal );
+  //win->guimods = g_hash_table_new( g_int_hash, g_int_equal );
   
   win->bg = rtk_fig_create( win->canvas, NULL, 0 );
   
@@ -122,17 +122,8 @@ gui_window_t* gui_window_create( world_t* world, int xdim, int ydim )
 
   win->show_grid = TRUE;
   win->show_matrix = FALSE;
-  win->show_rangers = TRUE;
-  win->show_rangerdata = FALSE;
   win->show_geom = FALSE;
   win->show_rects = TRUE;
-  win->show_laser = TRUE;
-  win->show_lasercfg = TRUE;
-  win->show_laserdata = TRUE;
-  win->show_blobdata = TRUE;
-  win->show_blobcfg = TRUE;
-  win->show_fiducialdata = TRUE;
-  win->show_fiducialcfg = TRUE;
 
   win->movie_exporting = FALSE;
   win->movie_count = 0;
@@ -153,7 +144,7 @@ void gui_window_destroy( gui_window_t* win )
 {
   PRINT_DEBUG( "gui window destroy" );
 
-  g_hash_table_destroy( win->guimods );
+  //g_hash_table_destroy( win->guimods );
 
   rtk_canvas_destroy( win->canvas );
   rtk_fig_destroy( win->bg );
@@ -385,32 +376,28 @@ void gui_model_create( model_t* model )
   
   // attach to our parent's fig if there is one
   if( model->parent )
-    parent_fig = gui_model_figs(model->parent)->top;
+    parent_fig = model->parent->gui.top;
   
 
-  gui_model_t* gmod = calloc( sizeof(gui_model_t),1 );
-  g_hash_table_replace( win->guimods, &model->id, gmod );
+  //gui_model_t* gmod = calloc( sizeof(gui_model_t),1 );
+  //g_hash_table_replace( win->guimods, &model->id, gmod );
   
-  gmod->top = rtk_fig_create( win->canvas, parent_fig, STG_LAYER_BODY );
-  gmod->geom =  rtk_fig_create( win->canvas, gmod->top, STG_LAYER_GEOM );
-  gmod->rangers = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_SENSOR );
-  gmod->ranger_data = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_DATA);
-  gmod->laser = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_SENSOR );
-  gmod->laser_cfg = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_GEOM );
-#ifdef LASER_FILLED
-  gmod->laser_data = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_BACKGROUND);
-#else
-  gmod->laser_data = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_DATA);
-#endif
-
-  gmod->blob_data = rtk_fig_create( win->canvas, parent_fig, STG_LAYER_DATA);
-  gmod->blob_cfg = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_GEOM);
-  gmod->fiducial_data = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_DATA);
-  gmod->fiducial_cfg = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_GEOM);
+  gui_model_t* gmod = &model->gui;
+  memset( gmod, 0, sizeof(gui_model_t) );
   
   gmod->grid = NULL;
   
+  gmod->top = 
+    rtk_fig_create( model->world->win->canvas, parent_fig, STG_LAYER_BODY );
+
+  gmod->geom = 
+    rtk_fig_create( model->world->win->canvas, parent_fig, STG_LAYER_GEOM );
+
+  //gmod->top = 
+  //rtk_fig_create( model->world->win->canvas, parent_fig, STG_LAYER_BODY );
+  
   gmod->top->userdata = model;
+
   rtk_fig_movemask( gmod->top, model->movemask );
   rtk_fig_add_mouse_handler( gmod->top, gui_model_mouse );
   
@@ -419,8 +406,9 @@ void gui_model_create( model_t* model )
 
 gui_model_t* gui_model_figs( model_t* model )
 {
-  gui_window_t* win = model->world->win;
-  return (gui_model_t*)g_hash_table_lookup( win->guimods, &model->id );
+  return &model->gui;
+  //gui_window_t* win = model->world->win;
+  //return (gui_model_t*)g_hash_table_lookup( win->guimods, &model->id );
 }
 
 // draw a model from scratch
@@ -447,8 +435,14 @@ void gui_model_render( model_t* model )
 void gui_model_destroy( model_t* model )
 {
   //PRINT_DEBUG( "gui model destroy" );
-  gui_window_t* win = model->world->win;
-  g_hash_table_remove( win->guimods, &model->id );
+  //gui_window_t* win = model->world->win;
+  //g_hash_table_remove( win->guimods, &model->id );
+
+  if( model->gui.top ) rtk_fig_destroy( model->gui.top );
+  if( model->gui.grid ) rtk_fig_destroy( model->gui.grid );
+  if( model->gui.geom ) rtk_fig_destroy( model->gui.geom );
+  
+  // todo - erase the property figs
 }
 
 void gui_model_pose( model_t* mod )

@@ -3,9 +3,10 @@
 
 #define VERBOSE 1
 
-void model_ranger_init( model_t* mod );
+void model_ranger_shutdown( model_t* mod );
 void model_ranger_update( model_t* mod );
 void model_ranger_render( model_t* mod );
+void model_ranger_config_render( model_t* mod );
 
 void model_laser_shutdown( model_t* mod );
 void model_laser_update( model_t* mod );
@@ -28,32 +29,41 @@ void model_fiducial_config_render( model_t* mod );
 
 libitem_t items[] = 
   {
-    { STG_PROP_RANGERDATA, 
+    { STG_PROP_RANGERDATA,
       "ranger",
-      model_ranger_init, 
-      NULL, 
-      NULL, 
-      model_ranger_update, 
+      NULL,
+      NULL,
+      model_ranger_shutdown,
+      model_ranger_update,
       model_ranger_render
     },
-    
-    { STG_PROP_BLOBDATA, 
-      "blob",
-      NULL,
-      model_blobfinder_startup, 
-      model_blobfinder_shutdown, 
-      model_blobfinder_update, 
-      model_blobfinder_render 
-    },
 
-    { STG_PROP_BLOBCONFIG, 
-      "blobconfig",
+    { STG_PROP_RANGERCONFIG,
+      "rangerconfig",
       NULL,
       NULL,
       NULL,
-      NULL,
-      model_blobfinder_config_render 
+      NULL,      
+      model_ranger_config_render
     },
+    
+/*     { STG_PROP_BLOBDATA, */
+/*       "blob", */
+/*       NULL, */
+/*       model_blobfinder_startup, */
+/*       model_blobfinder_shutdown, */
+/*       model_blobfinder_update, */
+/*       model_blobfinder_render */
+/*     }, */
+
+/*     { STG_PROP_BLOBCONFIG,  */
+/*       "blobconfig", */
+/*       NULL, */
+/*       NULL, */
+/*       NULL, */
+/*       NULL, */
+/*       model_blobfinder_config_render  */
+/*     }, */
     
     { STG_PROP_LASERDATA, 
       "laser",
@@ -73,24 +83,24 @@ libitem_t items[] =
       model_laser_config_render 
     },
 
-    { STG_PROP_FIDUCIALDATA, 
-      "fiducial",
-      NULL,
-      NULL, 
-      model_fiducial_shutdown,
-      model_fiducial_update,
-      model_fiducial_render
-    },
+ /*    { STG_PROP_FIDUCIALDATA,  */
+/*       "fiducial", */
+/*       NULL, */
+/*       NULL,  */
+/*       model_fiducial_shutdown, */
+/*       model_fiducial_update, */
+/*       model_fiducial_render */
+/*     }, */
 
     
-    { STG_PROP_FIDUCIALCONFIG, 
-      "fiducialconfig",
-      NULL,
-      NULL,
-      NULL, 
-      NULL,
-      model_fiducial_config_render
-    },
+/*     { STG_PROP_FIDUCIALCONFIG,  */
+/*       "fiducialconfig", */
+/*       NULL, */
+/*       NULL, */
+/*       NULL,  */
+/*       NULL, */
+/*       model_fiducial_config_render */
+/*     }, */
     
     { 0,NULL,NULL,NULL,NULL,NULL}
   };
