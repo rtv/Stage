@@ -21,7 +21,7 @@
  * Desc: A device for getting the true pose of things.
  * Author: Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: truthdevice.cc,v 1.2 2002-11-01 19:12:32 rtv Exp $
+ * CVS info: $Id: truthdevice.cc,v 1.3 2003-04-07 19:12:25 rtv Exp $
  */
 
 #include "world.hh"
@@ -70,33 +70,60 @@ void CTruthDevice::UpdateConfig()
   int len;
   double px, py, pa;
   void* client;
+ char buffer[PLAYER_MAX_REQREP_SIZE];
+  player_truth_pose_t pose_config;
+  player_truth_fiducial_id_t fid_config;
 
-  player_truth_pose_t config;
-  if ((len = GetConfig(&client, &config, sizeof(config))) > 0)
+
+  while (true)
   {
-    switch (config.subtype)
-    {
+    len = GetConfig(&client, &buffer, sizeof(buffer));
+    if (len <= 0)
+      break;
+    
+    switch (buffer[0])
+      {
       case PLAYER_TRUTH_GET_POSE:
-
+	
+        if (len < (int)sizeof(pose_config))
+	  {
+	    PRINT_WARN2("request has unexpected len (%d < %d)", 
+			len, sizeof(pose_config));
+	    break;
+	  }
+	
+	memcpy(&pose_config, buffer, sizeof(pose_config));
+	
         GetGlobalPose(px, py, pa);
-        config.px = htonl((int)(px*1000.0));
-        config.py = htonl((int)(py*1000.0));
-        config.pa = htonl((int)(NORMALIZE(pa)*180/M_PI));
-
-        PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &config, sizeof(config));
+        pose_config.px = htonl((int)(px*1000.0));
+        pose_config.py = htonl((int)(py*1000.0));
+        pose_config.pa = htonl((int)(NORMALIZE(pa)*180/M_PI));
+	
+        PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, 
+		 &pose_config, sizeof(pose_config));
         break;
-
+	
       case PLAYER_TRUTH_SET_POSE:
 
-        if (len < (int)sizeof(config))
+        if (len < (int)sizeof(pose_config))
+	  {
+	    PRINT_WARN2("request has unexpected len (%d < %d)", 
+			len, sizeof(pose_config));
+	    break;
+	  }
+
+	memcpy(&pose_config, buffer, sizeof(pose_config));
+
+        if (len < (int)sizeof(pose_config))
         {
-          PRINT_WARN2("unexpected packet len (%d < %d)", len, sizeof(config));
+          PRINT_WARN2("unexpected packet len (%d < %d)", 
+		      len, sizeof(pose_config));
           break;
         }
 
-        px = ntohl(config.px)/1000.0;
-        py = ntohl(config.py)/1000.0;
-        pa = ntohl(config.pa)*M_PI/180;
+        px = ntohl(pose_config.px)/1000.0;
+        py = ntohl(pose_config.py)/1000.0;
+        pa = ntohl(pose_config.pa)*M_PI/180;
 
         // Move our parent.  Should possibly move the top level
         // ancestor.
@@ -113,11 +140,48 @@ void CTruthDevice::UpdateConfig()
 
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
         break;
+	
+      case PLAYER_TRUTH_SET_FIDUCIAL_ID:
+	
+        if (len < (int)sizeof(fid_config))
+	  {
+	    PRINT_WARN2("request has unexpected len (%d < %d)", 
+			len, sizeof(fid_config));
+	    break;
+	  }
+	
+	memcpy(&fid_config, buffer, sizeof(fid_config));
+	
+	// change the parent's fiducial ID per the request
+	if( m_parent_entity )
+	  m_parent_entity->fiducial_return = (int16_t)ntohs( fid_config.id );
+	
+	PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
+	break;
 
+      case PLAYER_TRUTH_GET_FIDUCIAL_ID:
+	
+        if (len < (int)sizeof(fid_config))
+	  {
+	    PRINT_WARN2("request has unexpected len (%d < %d)", 
+			len, sizeof(fid_config));
+	    break;
+	  }
+	
+	memcpy(&fid_config, buffer, sizeof(fid_config));
+	
+	// return the parent's fiducial ID
+	if( m_parent_entity )
+	  fid_config.id = htons((int16_t)(m_parent_entity->fiducial_return));
+	
+	PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, 
+		 &fid_config, sizeof(fid_config));
+	break;
+	
       default:
-        PRINT_WARN1("unrecognized request [%d]", config.subtype);
+        PRINT_WARN1("unrecognized request [%d]", buffer[0] );
         break;
-    }
+      }
   }
 }
 

@@ -2,7 +2,7 @@
 # Desc: Device definitions for typical USC robot configurations
 # Author: Richard Vaughan, Andrew Howard
 # Date: 3 July 2002
-# CVS: $Id: usc_pioneer.inc,v 1.10 2002-12-03 18:22:33 inspectorg Exp $
+# CVS: $Id: usc_pioneer.inc,v 1.11 2003-04-07 19:12:27 rtv Exp $
 
 # use the ActivMedia Pioneer definitions
 #
@@ -16,7 +16,7 @@ define usc_pioneer pioneer2dx
   broadcast()
   laser 
   (
-    fiducialfinder() 
+    #fiducialfinder() 
     ptz ( lens "wide" blobfinder())
   )
 )

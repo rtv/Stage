@@ -1,7 +1,7 @@
 ****************************************************************************
 * README.stage  - Richard Vaughan - Stage-1.3       
 *                                                                          
-* $Id: README,v 1.6 2003-03-12 02:38:32 rtv Exp $    
+* $Id: README,v 1.7 2003-04-07 19:12:24 rtv Exp $    
 ****************************************************************************
 
 ** Release notes **
@@ -86,14 +86,19 @@ Requires: Player [http://playerstage.sourceforge.net], X11R6, GTK.
 We use the standard GNU build system: download; extract; configure;
 make install. 
 
-0) Obtain and install Player (http://robotics.usc.edu/player)
+0) Obtain and install these packages, on which Stage depends:
+
+- librtk-1.1 (available from http://playerstage.sourceforge.net)
+- player-1.3 (available from http://playerstage.sourceforge.net)
+
+Note that these packages will have their own dependencies, s
 
 1) unpack the Stage tarball with
 
-$ tar xzvf Stage-<version>.tgz
+$ tar xzvf stage-<version>.tgz
 
-(the OS X version of tar doesn't support the '-z' option, so you have
-to gunzip first, then 'tar xvf Stage-<version>.tar')
+The tar on some systems (such as OS X) does not support the '-z'
+option, so you have to gunzip first, then 'tar xvf stage-<version>.tar'
 
 2) configure stage:
 
@@ -102,7 +107,7 @@ directory, and to librtk and your X11 color database if you want to
 use the GUI. We use the GNU autoconf system to handle these
 configurations, plus various optional components and cross-platform
 compatibility issues. If you installed Player and librtk in their
-default locations, and you want a normal installation,
+default locations (/usr/local), and you want a normal installation,
 the defaults should work:
 
 $ cd stage-<version>
@@ -128,7 +133,9 @@ You can specify a different installation directory using:
 
 $ configure --prefix=<install dir>
 
-Which is useful if you don't have root access to your machine.
+Which is useful if you don't have root access to your machine. If you
+change the prefix, remember to set the correct path to Player and
+librtk.
 
 -- Running ---------------------------------------------------------------
 

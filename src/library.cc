@@ -24,8 +24,10 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.17 2003-04-01 00:20:55 rtv Exp $
+ * CVS info: $Id: library.cc,v 1.18 2003-04-07 19:12:24 rtv Exp $
  */
+
+//#define DEBUG
 
 #include "library.hh"
 
@@ -70,8 +72,8 @@ libitem_t library_items[] = {
   { "idar", "DarkRed", (CFP)CIdarDevice::Creator},
   { "idarturret", "DarkRed", (CFP)CIdarTurretDevice::Creator},
   { "foofinder", "purple", (CFP)CFooFinder::Creator},
-  //{ "lbd", "gray", (CFP)CFiducialFinder::Creator},
-  //  { "fiducialfinder", "gray", (CFP)CFiducialFinder::Creator},
+  //  { "lbd", "gray", (CFP)CFiducialFinder::Creator},
+  //{ "fiducialfinder", "gray", (CFP)CFiducialFinder::Creator},
   { "mote", "orange", (CFP)CMoteDevice::Creator},
   { "power", "wheat", (CFP)CPowerDevice::Creator},
   { "ptz", "magenta", (CFP)CPtzDevice::Creator},
@@ -92,8 +94,6 @@ libitem_t library_items[] = {
 
 // statically allocate a libray filled with the entries above
 Library model_library( library_items );
-
-//#define DEBUG
 
 // LibraryItem //////////////////////////////////////////////////////////////
 
