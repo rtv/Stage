@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacondevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.8 $
+//  $Author: ahoward $
+//  $Revision: 1.8.4.1 $
 //
 // Usage:
 //  (empty)
@@ -35,46 +35,34 @@
 
 class CLBDDevice : public CEntity
 {
-    // Default constructor
-    //
-    public: CLBDDevice(CWorld *world, CLaserDevice *parent );
+  // Default constructor
+  public: CLBDDevice(CWorld *world, CLaserDevice *parent );
 
-    // Update the device
-    //
-    public: virtual void Update( double sim_time );
+  // Load the entity from the worldfile
+  public: virtual bool Load(CWorldFile *worldfile, int section);
 
-    // Pointer to laser used as souce of data
-    //
-    private: CLaserDevice *m_laser;
+  // Update the device
+  public: virtual void Update( double sim_time );
 
-    // Time of last update
-    //
-    private: uint32_t m_time_sec, m_time_usec;
+  // Pointer to laser used as souce of data
+  private: CLaserDevice *laser;
 
-    // Load the object from an argument list
-    //
-    public: virtual bool Load(int argc, char **argv);
+  // Time of last update
+  private: uint32_t time_sec, time_usec;
 
-    // Save the object to an argument list
-    //
-    public: virtual bool Save(int &argc, char **argv);
-
-    // Detection parameters
-    //
-    private: double m_max_anon_range;
-    private: double m_max_id_range;
+  // Detection parameters
+  private: double max_range_anon;
+  private: double max_range_id;
     
-    private:  ExportLaserBeaconDetectorData expBeacon; 
+  private:  ExportLaserBeaconDetectorData expBeacon; 
 
 #ifdef INCLUDE_RTK
     
-    // Process GUI update messages
-    //
-    public: virtual void OnUiUpdate(RtkUiDrawData *pData);
+  // Process GUI update messages
+  public: virtual void OnUiUpdate(RtkUiDrawData *pData);
 
-    // Draw the beacon data
-    //
-    public: void DrawData(RtkUiDrawData *event);
+  // Draw the beacon data
+  public: void DrawData(RtkUiDrawData *event);
 
 #endif
 };

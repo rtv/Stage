@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacon.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.8.2.1 $
+//  $Revision: 1.8.2.2 $
 //
 // Usage:
 //  (empty)
@@ -42,6 +42,9 @@ class CLaserBeacon : public CEntity
 
   // Beacon id
   public: int id;
+
+  // TESTING
+  private: int map_px, map_py, map_pth;
 
 #ifdef INCLUDE_RTK
     

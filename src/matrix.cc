@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.9 2001-09-29 00:47:12 vaughan Exp $
+ * $Id: matrix.cc,v 1.9.2.1 2001-12-17 18:11:28 ahoward Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -16,18 +16,6 @@
 const int BUFFER_ALLOC_SIZE = 1;
 
 //#define DEBUG
-
-void CMatrix::PrintCell( int cell )
-{
-  printf( "data[ %d ] ", cell );
-  int p = 0;
-  while( data[cell][p] )
-    printf( "\t%p", data[cell][p++] );
-  
-  printf( "\t %d/%d\n", current_slot[cell], available_slots[cell] );
-  
-  fflush( stdout );
-}
     
 // construct from width / height 
 CMatrix::CMatrix(int w,int h)
@@ -39,38 +27,41 @@ CMatrix::CMatrix(int w,int h)
 
   width = w; height = h;
   data 	= new CEntity**[width*height];
-  current_slot = new unsigned char[ width*height ];
+  used_slots = new unsigned char[ width*height ];
   available_slots = new unsigned char[ width*height ];
 
   for( int p=0; p< width * height; p++ )
-    {
-      // create the pointer "strings"
-      data[p] = new CEntity*[ initial_buf_size + 1];
-      // zero them out
-      memset( data[p], 0, (initial_buf_size + 1) * sizeof( CEntity* ) );
+  {
+    // create the pointer "strings"
+    data[p] = new CEntity*[ initial_buf_size + 1];
+    // zero them out
+    memset( data[p], 0, (initial_buf_size + 1) * sizeof( CEntity* ) );
 
-      current_slot[p] = 0;
-      available_slots[p] = initial_buf_size;
-    }
-
+    used_slots[p] = 0;
+    available_slots[p] = initial_buf_size;
+  }
 }
+
 
 //destruct
 CMatrix::~CMatrix(void) 	
 {
   // if we allocated the array
   if (data)
-    {
-      // delete the storage in each cell
-      for( int p=0; p< width * height; p++ )
-	if( data[p] ) delete[] data[p];
+  {
+    // delete the storage in each cell
+    for( int p=0; p< width * height; p++ )
+      if( data[p] )
+        delete[] data[p];
       
-      // delete the main array
-      delete [] data;
-    }
+    // delete the main array
+    delete [] data;
+  }
   
-  if( available_slots )  delete [] available_slots;
-  if( current_slot )    delete [] current_slot;
+  if( available_slots )
+    delete [] available_slots;
+  if( used_slots )
+    delete [] used_slots;
 }
 
 
@@ -80,24 +71,34 @@ void CMatrix::dump( void )
   ofstream out( "world.dump" );
   
   for( int y=0; y<height; y++ )
+  {
+    for( int x=0; x<width; x++ )
     {
-      for( int x=0; x<width; x++ )
-	{
 	  
-	  CEntity** ent = get_cell( x,y );
+      CEntity** ent = get_cell( x,y );
 	  
-	  //while( *ent )
-	  if( *ent )
+      //while( *ent )
+      if( *ent )
 	    {   
 	      out << x << ' ' << y;
 	      out << ' ' << (int)*ent << endl;
 	    }
-	}
     }
+  }
 
   out.close();
 
   puts( "DUMPED" );
+}
+
+
+// Draw a rectangle
+void CMatrix::draw_rect( const Rect& t, CEntity* ent )
+{
+  draw_line( t.toplx, t.toply, t.toprx, t.topry, ent );
+  draw_line( t.toprx, t.topry, t.botrx, t.botry, ent );
+  draw_line( t.botrx, t.botry, t.botlx, t.botly, ent );
+  draw_line( t.botlx, t.botly, t.toplx, t.toply, ent );
 }
 
 
@@ -122,125 +123,135 @@ void CMatrix::draw_circle(int x,int y,int r, CEntity* ent )
 }
 
 
-void CMatrix::draw_rect( const Rect& t, CEntity* ent )
-{
-  draw_line( t.toplx, t.toply, t.toprx, t.topry, ent );
-  draw_line( t.toprx, t.topry, t.botrx, t.botry, ent );
-  draw_line( t.botrx, t.botry, t.botlx, t.botly, ent );
-  draw_line( t.botlx, t.botly, t.toplx, t.toply, ent );
-}
-
-
+// Draw a line from (x1, y1) to (x2, y2) inclusive
 void CMatrix::draw_line(int x1,int y1,int x2,int y2, CEntity* ent)
 {
-  int delta_x, delta_y;
-  int delta, incE, incNE;
+  int dx, dy;
   int x, y;
+  int incE, incNE;
+  int t, delta;
   int neg_slope = 0;
   
-  if (x1 > x2)
+  dx = x2 - x1;
+  dy = y2 - y1;
+
+  // Draw lines with slope < 45 degrees
+  if (abs(dx) > abs(dy))
+  {
+    if (x1 > x2)
     {
-      delta_x = x1 - x2;
-      if (y1 > y2)	delta_y = y1 - y2;
-      else		delta_y = y2 - y1;
-      
-      if (delta_y <= delta_x)	draw_line(x2, y2, x1, y1, ent);
+      t = x1; x1 = x2; x2 = t;
+      t = y1; y1 = y2; y2 = t;
+      dx = -dx;
+      dy = -dy;
     }
-  if (y1 > y2)
-    {
-      delta_y = y1 - y2;
-      if (x1 > x2)	delta_x = x1 - x2;
-      else		delta_x = x2 - x1;
-      
-      if (delta_y > delta_x)	draw_line(x2, y2, x1, y1, ent);
-    }
-  
-  if (x1 > x2)
+
+    if (y1 > y2)
     {
       neg_slope = 1;
-      delta_x = x1 - x2;
+      dy = -dy;
     }
+
+    delta = 2 * dy - dx;
+    incE = 2 * dy;
+    incNE = 2 * (dy - dx);
+
+    x = x1;
+    y = y1;
+    set_cell(x, y, ent);
+
+    while (x < x2)
+  	{
+  	  if (delta <= 0)
+      {
+        delta = delta + incE;
+        x++;
+      }
+  	  else
+      {
+        delta = delta + incNE;
+        x++;
+        if (neg_slope)
+          y--;
+        else
+          y++;
+      }
+  	  set_cell(x,y,ent);
+  	}
+
+    x = x2;
+    y = y2;
+    set_cell(x, y, ent);
+  }
+
+  // Draw lines with slope > 45 degrees
   else
-    delta_x = x2 - x1;
-  
-  if (y1 > y2)
+  {
+    if (y1 > y2)
+    {      t = x1; x1 = x2; x2 = t;
+      t = y1; y1 = y2; y2 = t;
+      dx = -dx;
+      dy = -dy;
+    }
+
+    if (x1 > x2)
     {
       neg_slope = 1;
-      delta_y = y1 - y2;
+      dx = -dx;
     }
-  else
-    delta_y = y2 - y1;
-  
-  x = x1;
-  y = y1;
-  
-  set_cell(x,y,ent);
-  
-  if (delta_y <= delta_x)
-    {
-      delta = 2 * delta_y - delta_x;
-      incE = 2 * delta_y;
-      incNE = 2 * (delta_y - delta_x);
-      
-      while (x < x2)
+
+    delta = 2 * dx - dy;
+    incE = 2 * dx;
+    incNE = 2 * (dx - dy);
+
+    x = x1;
+    y = y1;
+    set_cell(x, y, ent);
+
+    while (y < y2)
   	{
   	  if (delta <= 0)
-  	    {
-  	      delta = delta + incE;
-  	      x++;
-  	    }
+      {
+        delta = delta + incE;
+        y++;
+      }
   	  else
-  	    {
-  	      delta = delta + incNE;
-  	      x++;
-  	      if (neg_slope)	y--;
-  	      else		y++;
-  	    }
+      {
+        delta = delta + incNE;
+        y++;
+        if (neg_slope)
+          x--;
+        else
+          x++;
+      }
   	  set_cell(x,y,ent);
   	}
-    }
-  else
-    {
-      delta = 2 * delta_x - delta_y;
-      incE = 2 * delta_x;
-      incNE = 2 * (delta_x - delta_y);
-      
-      while (y < y2) 
-  	{
-  	  if (delta <= 0)
-  	    {
-  	      delta = delta + incE;
-  	      y++;
-  	    }
-  	  else
-  	    {
-  	      delta = delta + incNE;
-  	      y++;
-  	      if (neg_slope)	x--;
-  	      else		x++;
-  	    }
-  	  set_cell(x,y,ent);
-  	}
-    }
+
+    x = x2;
+    y = y2;
+    set_cell(x, y, ent);
+  }
 }
 
 
 void CMatrix::clear( void )
 {
   //cout << "Clear: " << data << ',' << ent << ',' << width*height << endl;
-  memset(data,0,width*height*sizeof(CEntity**));
+  memset(this->data,0,width*height*sizeof(CEntity**));
+  memset(this->used_slots,0,width*height*sizeof(this->used_slots[0])); 
 }
+
 
 inline void CMatrix::set_cell(int x, int y, CEntity* ent )
 {    
   if( mode == mode_unset ) // HACK! 
-    {
-      unset_cell( x, y, ent );
-      return;
-    }
-  
-  if( ent == 0 ) return;
+  {
+    unset_cell( x, y, ent );
+    return;
+  }
 
+  if( ent == 0 )
+    return;
   if (x<0 || x>=width || y<0 || y>=height) 
   {
     //fputs("Stage: WARNING: CMatrix::set_cell() out of bounds!\n",stderr);
@@ -248,57 +259,51 @@ inline void CMatrix::set_cell(int x, int y, CEntity* ent )
   }
   
   int cell = x + y * width;
-  int slot = current_slot[ cell ];
+  int used_slots = this->used_slots[cell];
   
-  //printf( "SET %d %p (%d)\n", cell, ent, ent->m_stage_type );
-  //printf( "before " );
-  //PrintCell( cell );
-  
-  // if it's already here do nothing
-  for( int s=0; s<=slot; s++ )
-    if( data[cell][s] == ent ) return;
-  
-  // if we're out of room. make some more space
-  if( !(slot < available_slots[ cell ]) )
-    {
-      //printf( "out of slots! cell:%d slot:%d slots:%d\n",
-      //      cell, slot, available_slots[cell] );
+  // See it we already have this entity
+  for (int slot = 0; slot < this->used_slots[cell]; slot++)
+    if (this->data[cell][slot] == ent)
+      return;
+
+  // Make sure we have room to add the entity
+  if (used_slots >= this->available_slots[cell])
+  {
+    int oldlen = this->available_slots[cell];
+    int newlen = oldlen + BUFFER_ALLOC_SIZE;
+
+    // make the new buffer - has one spare null pointer to mark the end
+    CEntity** longer = new CEntity*[ newlen + 1 ];
+
+    // zero the buffer
+    // copy the existing data into the new longer buffer
+    memset( longer, 0, (newlen+1) * sizeof( CEntity* ) );
+    memcpy( longer, this->data[cell], oldlen * sizeof( CEntity* ) );
       
-      // set the new buffer size
-      int oldlen = available_slots[cell];
-      int newlen = oldlen + BUFFER_ALLOC_SIZE;
-      //printf("resizing old:%d\tnew:%d\n", oldlen,newlen);
+    //delete the old buffer
+    delete[] this->data[cell];
       
-      // make the new buffer - has one spare null pointer to mark the end
-      CEntity** longer = new CEntity*[ newlen + 1 ];
+    // and insert the new buffer
+    this->data[cell] = longer;
       
-      // zero the buffer
-      memset( longer, 0, (newlen+1) * sizeof( CEntity* ) );
-      
-      //copy the existing data into the new longer buffer
-      memcpy( longer, data[cell], oldlen * sizeof( CEntity* ) );
-      
-      //delete the old buffer
-      delete[] data[cell];
-      
-      // and insert the new buffer
-      data[cell] = longer;
-      
-      // remember how many slots we have in this buffer
-      available_slots[ cell ] = newlen;
-    }
+    // remember how many slots we have in this buffer
+    this->available_slots[ cell ] = newlen;
+  }
 
   // do the insertion
-  data[ cell ][ slot ] = ent;
-  current_slot[ cell ]++;
- 
-  //printf( "after " );
-  //PrintCell( cell );
+  data[cell][used_slots] = ent;
+  this->used_slots[cell]++;
+
+  // Debugging
+  //CheckCell(cell);
+  return;
 }
+
 
 inline void CMatrix::unset_cell(int x, int y, CEntity* ent )
 {
-  if( ent == 0 ) return;
+  if( ent == 0 )
+    return;
   if (x<0 || x>=width || y<0 || y>=height) 
   {
     //fputs("Stage: WARNING: CMatrix::unset_cell() out of bounds!\n",stderr);
@@ -308,35 +313,56 @@ inline void CMatrix::unset_cell(int x, int y, CEntity* ent )
   }
   
   int cell = x + y * width;
+  int used_slots = this->used_slots[cell];
   
-  //printf( "UNSET %d %p (%d)\n", cell, ent, ent->m_stage_type );
-  //printf( "before " );
-  //PrintCell( cell );
-  
-  int current =  current_slot[ cell ];
-  int end = available_slots[ cell ];
+  for (int slot = 0; slot < used_slots; slot++)
+  {
+    if (this->data[cell][slot] == ent)
+    {
+      // Move everything down to eliminate this slot.
+      // Note that this assumes that there is an end-marker,
+      // so we dont need to zero anything.
+      memmove(this->data[cell] + slot, this->data[cell] + slot + 1,
+              (this->available_slots[cell] - slot) * sizeof(CEntity*));
+      this->used_slots[cell]--;
+      break;
+    }
+  }
 
-  for( int slot = 0; slot < current; slot++ )
-    if( data[cell][slot] == ent )
-      {
-	for( int s=slot; slot<end; slot++ )
-	  data[cell][s] = data[cell][s+1];
-	
-	current--; // reduce the slot count
-	
-	// zero from the current slot to the end
-	for( int h = current; h < end; h++ )
-	  data[cell][h] = NULL;
-	
-	// set current again;
-	current_slot[ cell ] = current;
-	
-	break; // dump out
-      }
-
-  
-  //printf( "after " );
-  //PrintCell( cell );  
+  // Debugging
+  //CheckCell(cell);
 }
 
 
+// Print the cell contents
+void CMatrix::PrintCell( int cell )
+{
+  printf( "data[ %d ] ", cell );
+  for (int slot = 0; slot < available_slots[cell]; slot++)
+    printf( " %p", data[cell][slot] );
+  printf( "\t %d/%d\n", used_slots[cell], available_slots[cell] );
+  
+  fflush( stdout );
+}
+
+
+// Sanity check: check that each entity is present exactly once
+void CMatrix::CheckCell( int cell )
+{
+  for (int i = 0; i < available_slots[cell]; i++)
+  {
+    if (data[cell][i] == NULL)
+      continue;
+    for (int j = i + 1; j < available_slots[cell]; j++)
+    {
+      if (data[cell][i] == data[cell][j])
+      {
+        printf("sanity check failed : dupilcate entry\n");
+        PrintCell(cell);
+      }
+    }
+  }
+  if (data[cell][used_slots[cell]] != NULL)
+    printf("sanity check failed : no end marker\n");
+
+}

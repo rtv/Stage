@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.hh,v 1.4.2.1 2001-11-21 01:38:10 ahoward Exp $
+// $Id: matrix.hh,v 1.4.2.2 2001-12-17 18:11:27 ahoward Exp $
 // RTV
 // ==================================================================
 
@@ -23,11 +23,13 @@ class CMatrix
   public:
   int	width;
   int	height;
-  
+
+  private:
   CEntity***  data;
-  unsigned char* current_slot;
+  unsigned char* used_slots;
   unsigned char* available_slots;
-  
+
+  public:
   char*	win_title;
   
   int initial_buf_size;
@@ -36,6 +38,7 @@ class CMatrix
   
   MatrixMode mode;
   void PrintCell( int cell );
+  void CheckCell( int cell );
   
   //CMatrix();
   CMatrix(int w,int h);
@@ -97,10 +100,8 @@ class CMatrix
   void	copy_from(CMatrix* img);
   
   void	draw_circle(int x,int y,int r,CEntity* ent);
-  void	draw_line(int x1,int y1,int x2,int y2,CEntity* ent);
-  
-  // new 1 Dec 2000 - RTV
   void	draw_rect( const Rect& t, CEntity* ent );
+  void	draw_line(int x1,int y1,int x2,int y2,CEntity* ent);
   
   CEntity** line_detect(int x1,int y1,int x2,int y2);
   CEntity** rect_detect( const Rect& r);

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.68.2.4 $
+//  $Revision: 1.68.2.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -714,6 +714,9 @@ bool CWorld::InitGrids(const char *env_file)
   return true;
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+// Draw (or undraw) and rectangle in the world grid
 void CWorld::SetRectangle(double px, double py, double pth,
                           double dx, double dy, CEntity* ent )
 {
@@ -738,10 +741,10 @@ void CWorld::SetRectangle(double px, double py, double pth,
 
   rect.botrx = (int) ((px - cx + sy) * ppm);
   rect.botry = (int) ((py - sx - cy) * ppm);
-
     
   matrix->draw_rect( rect, ent );
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Set a circle in the world grid
@@ -757,6 +760,7 @@ void CWorld::SetCircle(double px, double py, double pr,
     
   matrix->draw_circle( x,y,r,ent );
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Add an object to the world
