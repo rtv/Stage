@@ -371,14 +371,16 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       ecfg.capacity 
 	= wf.ReadFloat(section, "energy.capacity", STG_DEFAULT_ENERGY_CAPACITY );
       ecfg.probe_range 
-	= wf.ReadFloat(section, "energy.range", STG_DEFAULT_ENERGY_PROBERANGE );
-      
+	= wf.ReadFloat(section, "energy.range", STG_DEFAULT_ENERGY_PROBERANGE );      
       ecfg.give_rate 
 	= wf.ReadFloat(section, "energy.return", STG_DEFAULT_ENERGY_GIVERATE );
+      ecfg.trickle_rate 
+	= wf.ReadFloat(section, "energy.trickle", STG_DEFAULT_ENERGY_TRICKLERATE );
       
       if( ecfg.capacity != STG_DEFAULT_ENERGY_CAPACITY ||
 	  ecfg.probe_range != STG_DEFAULT_ENERGY_PROBERANGE ||
-	  ecfg.give_rate != STG_DEFAULT_ENERGY_GIVERATE )
+	  ecfg.give_rate != STG_DEFAULT_ENERGY_GIVERATE ||
+	  ecfg.trickle_rate != STG_DEFAULT_ENERGY_TRICKLERATE )
 	stg_model_prop_with_data( mod, STG_PROP_ENERGYCONFIG, &ecfg, sizeof(ecfg) );         
       stg_kg_t mass;
       mass = wf.ReadFloat(section, "mass", STG_DEFAULT_MASS );

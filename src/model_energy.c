@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -74,6 +74,7 @@ void model_energy_config_init( model_t* mod )
   cfg.capacity = STG_DEFAULT_ENERGY_CAPACITY;
   cfg.give_rate = STG_DEFAULT_ENERGY_GIVERATE;
   cfg.probe_range = STG_DEFAULT_ENERGY_PROBERANGE;      
+  cfg.trickle_rate = STG_DEFAULT_ENERGY_TRICKLERATE;
 
   model_set_prop( mod, STG_PROP_ENERGYCONFIG, &cfg,sizeof(cfg) );
 }
@@ -109,6 +110,13 @@ int model_energy_config_set( model_t* mod, void* config, size_t len )
   // store the config
   model_set_prop_generic( mod, STG_PROP_ENERGYCONFIG, config, len );
   
+  // TODO - need to think about this a little. I'll leave it for
+  // now. - rtv set our actual energy level to be the same as the
+  // capacity //stg_energy_data_t* data = model_energy_data_get( mod
+  // ); //data->joules = ((stg_energy_config_t*)config)->capacity;
+  // //model_set_prop( mod, STG_PROP_ENERGYDATA,
+  // data,sizeof(stg_energy_data_t) );
+
   // and redraw it
   model_energy_config_render( mod);
 
@@ -132,8 +140,9 @@ void model_energy_consume( model_t* mod, stg_watts_t rate )
   
   if( data && cfg && cfg->capacity > 0 )
     {
-      data->joules -=  rate / (double)mod->world->sim_interval;
-      data->joules = MAX( data->joules, 0 );
+      data->joules -=  rate * (double)mod->world->sim_interval / 1000.0;
+      data->joules = MAX( data->joules, 0 ); // not too little
+      data->joules = MIN( data->joules, cfg->capacity );// not too much
     }
 }
 
@@ -144,8 +153,12 @@ void model_energy_absorb( model_t* mod, stg_watts_t rate )
 
   if( data && cfg && cfg->capacity > 0 )
     {
-      data->joules +=  rate / (double)mod->world->sim_interval;
+      data->joules +=  rate * (double)mod->world->sim_interval / 1000.0;
+
+      //printf( "joules: %.2f max: %.2f\n", data->joules, cfg->capacity );
+
       data->joules = MIN( data->joules, cfg->capacity );
+
     }
 }
 
@@ -177,12 +190,12 @@ int model_energy_data_service( model_t* mod )
 	      stg_energy_config_t* hiscfg =  model_energy_config_get(him);
 	      //stg_energy_data_t* hisdata =  model_energy_data_get(him);
 	      
-	      printf( "inspecting mod %d to see if he will give me juice\n",
-		      him->id );
+	      //printf( "inspecting mod %d to see if he will give me juice\n",
+	      //      him->id );
 	      
 	      if( hiscfg->give_rate > 0 && hiscfg->capacity != 0 )
 		{
-		  puts( "TRADING ENERGY" );
+		  //puts( "TRADING ENERGY" );
 		  
 		  model_energy_absorb( mod, hiscfg->give_rate );		  
 		  model_energy_consume( him, hiscfg->give_rate );
@@ -196,7 +209,7 @@ int model_energy_data_service( model_t* mod )
 	}      
     }
 
-  model_energy_consume( mod, STG_ENERGY_COST_TRICKLE );
+  model_energy_consume( mod, cfg->trickle_rate );
 
   // re-publish our data (so it gets rendered on the screen)
   stg_energy_data_t nrg;

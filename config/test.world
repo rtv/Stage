@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.1 2004-07-19 22:33:48 rtv Exp $
+# CVS: $Id: test.world,v 1.2 2004-07-22 21:55:35 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 #
@@ -42,6 +42,7 @@ define testrobot pioneer2dx
   #energy configuration
   energy.capacity 3000.0
   energy.range 1.0
+  energy.trickle -1.0
   energy.return 0 # we don't give charge
 )
 

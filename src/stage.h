@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.62 2004-07-19 18:59:57 rtv Exp $
+ * CVS: $Id: stage.h,v 1.63 2004-07-22 21:55:35 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -361,7 +361,6 @@ stg_position_steer_mode_t;
 // The MOTIONKG value is a hack to approximate cost of motion, as
 // Stage does not yet have an acceleration model.
 //
-#define STG_ENERGY_COST_TRICKLE 0.1 // 100 mW just staying alive
 #define STG_ENERGY_COST_LASER 20.0 // 20 Watts! (LMS200 - from SICK web site)
 #define STG_ENERGY_COST_FIDUCIAL 10.0 // 10 Watts
 #define STG_ENERGY_COST_RANGER 0.5 // 500mW (estimate)
@@ -372,7 +371,9 @@ typedef struct
 {
   stg_joules_t joules; // current energy stored in Joules/1000
   stg_watts_t watts; // current power expenditure in mW (mJoules/sec)
-  stg_bool_t charging; // boolean, true if we are currently receiving energy 
+  int charging; // 1 if we are receiving energy, -1 if we are
+		// supplying energy, 0 if we are neither charging nor
+		// supplying energy.
   stg_meters_t range; // the range that our charging probe hit a charger
 } stg_energy_data_t;
 
@@ -384,6 +385,17 @@ typedef struct
 
   stg_watts_t give_rate; // give this many Watts to a probe that hits me (possibly 0)
   
+  stg_watts_t trickle_rate; // this much energy is consumed or
+			    // received by this device per second as a
+			    // baseline trickle. Positive values mean
+			    // that the device is just burning energy
+			    // stayting alive, which is appropriate
+			    // for most devices. Negative values mean
+			    // that the device is receiving energy
+			    // from the environment, simulating a
+			    // solar cell or some other ambient energy
+			    // collector
+
 } stg_energy_config_t;
 
 
@@ -622,6 +634,7 @@ typedef struct
 #define STG_DEFAULT_ENERGY_CHARGEENABLE 1
 #define STG_DEFAULT_ENERGY_PROBERANGE 0.0
 #define STG_DEFAULT_ENERGY_GIVERATE 0.0
+#define STG_DEFAULT_ENERGY_TRICKLERATE 0.1
 
 #define STG_DEFAULT_LASER_POSEX 0.0
 #define STG_DEFAULT_LASER_POSEY 0.0
