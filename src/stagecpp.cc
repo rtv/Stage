@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.64 2004-10-11 05:22:23 rtv Exp $
+// $Id: stagecpp.cc,v 1.65 2004-10-11 22:34:08 rtv Exp $
 
 //#define DEBUG
 
@@ -139,6 +139,8 @@ model
 
   bitmap ""
   bitmap_resolution 0
+
+  friction 0
 )
 @endverbatim
 
@@ -185,6 +187,8 @@ model
   - if 0, this model is not detected by laser sensors. if 1, the model shows up in a laser sensor with normal (0) reflectance. If 2, it shows up with high (1) reflectance.
 - fiducial_return int
   - if non-zero, this model is detected by fiducialfinder sensors. The value is used as the fiducial ID.
+- friction float
+  - if > 0 the model can be pushed around by other moving objects. The value determines the proportion of velocity lost per second. For example, 0.1 would mean that the object would lose 10% of its speed due to friction per second. A value of zero (the default) means this model can not be pushed around (infinite friction). 
 
 */
 
@@ -218,6 +222,10 @@ void configure_model( stg_model_t* mod, int section )
   gf.movemask = wf.ReadInt(section, "gui_movemask", STG_DEFAULT_GUI_MOVEMASK );
   stg_model_set_guifeatures( mod, &gf );
   
+  stg_friction_t friction;
+  friction = wf.ReadFloat(section, "friction", 0.0 );
+  stg_model_set_friction(mod, &friction );
+
   // laser visibility
   int laservis = 
     wf.ReadInt(section, "laser_return", STG_DEFAULT_LASERRETURN );      

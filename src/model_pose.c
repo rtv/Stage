@@ -7,13 +7,13 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.30 $
+//  $Revision: 1.31 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 #include <math.h>
 
-#define DEBUG
+//#define DEBUG
 
 #include "stage.h"
 #include "gui.h"
@@ -137,38 +137,46 @@ int stg_model_update_pose( stg_model_t* model )
       stg_model_t* hitthing = 
 	stg_model_test_collision_at_pose( model, &pose, &hitx, &hity );
       
-      
+      if( model->friction )
+	{
+	  // compute a new velocity, based on "friction"
+	  double vr = hypot( vel->x, vel->y );
+	  double va = atan2( vel->y, vel->x );
+	  vr -= vr * model->friction;
+	  vel->x = vr * cos(va);
+	  vel->y = vr * sin(va);
+	  vel->a -= vel->a * model->friction; 
+
+	  // lower bounds
+	  if( vel->x < 0.001 ) vel->x == 0.0;
+	  if( vel->y < 0.001 ) vel->y == 0.0;
+	  if( vel->a < 0.01 ) vel->a == 0.0;
+	  
+	}
 
       if( hitthing )
 	{
-	  PRINT_DEBUG( "HIT something!" );
-
-	  model->stall = 1;
-
-	  if( 0 )
+	  if( hitthing->friction == 0 ) // hit an immovable thing
 	    {
-	      puts( "hitting" );
+	      PRINT_DEBUG( "HIT something immovable!" );
+	      model->stall = 1;
+	    }
+	  else
+	    {
+	      puts( "hit something with non-zero friction" );
+
 	      // Get the velocity of the thing we hit
 	      //stg_velocity_t* vel = stg_model_get_velocity( hitthing );
 	      double impact_vel = hypot( vel->x, vel->y );
 	      
 	      // TODO - use relative mass and velocity properly
-
-	      // and mass
 	      //stg_kg_t* mass = stg_model_get_mass( hitthing );
 	     
-	      // find the position of both objects	      
-	      //stg_pose_t p;
-	      //memset(&p,0,sizeof(p));
-	      //stg_model_global_pose( model, &p );
-
-	      stg_pose_t o;
-	      memset(&o,0,sizeof(o));
-	      stg_model_global_pose( hitthing, &o );
-
-	      // Compute bearing FROM impacted ent
-	      // Align ourselves so we are facing away from this point
-	      double pth = atan2( o.y-pose.y, o.x-pose.x );
+	      // Compute bearing from my center of mass to the impact point
+	      double pth = atan2( hity-pose.y, hitx-pose.x );
+	      
+	      // Compute bearing TO impacted ent
+	      //double pth2 = atan2( o.y-pose.y, o.x-pose.x );
 	      
 	      if( impact_vel )
 		{
@@ -177,7 +185,7 @@ int stg_model_update_pose( stg_model_t* model )
 		  stg_velocity_t given;
 		  given.x = vr * cos(pth);
 		  given.y = vr * sin(pth);
-		  given.a = 0.0;
+		  given.a = 0;//vr * sin(pth2);
 		  
 		  // get some velocity from the impact
 		  //hitthing->velocity.x = vr * cos(pth);

@@ -18,8 +18,10 @@ dist-hook:
 
 install-data-hook:
 	mkdir -p $(DOCINST)
-	cp -p $(top_srcdir)/doc/stage.ps $(DOCINST)
-	cp -p $(top_srcdir)/doc/stage.pdf $(DOCINST)
+	mkdir -p $(DOCINST)/stage
+	cp -r -p $(top_srcdir)/docsrc/user $(DOCINST)/stage
+	cp -r -p $(top_srcdir)/docsrc/developer $(DOCINST)/stage
+
 
 uninstall-local:
 	rm -f $(DOCINST)/*

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.18 $
+//  $Revision: 1.19 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -216,6 +216,18 @@ stg_pose_t* stg_model_get_odom( stg_model_t* model )
 int stg_model_set_odom( stg_model_t* mod, stg_pose_t* pose )
 {
   memcpy( &mod->odom, pose, sizeof(stg_pose_t) );
+  return 0;
+}
+
+int stg_model_set_friction( stg_model_t* mod, stg_friction_t* fricp )
+{
+  mod->friction = *fricp;
+  return 0;
+}
+
+stg_friction_t* stg_model_get_friction( stg_model_t* mod )
+{
+  return &mod->friction;
 }
 
 

@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.98 2004-10-02 01:37:27 rtv Exp $
+ * CVS: $Id: stage.h,v 1.99 2004-10-11 22:34:08 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -105,7 +105,7 @@ extern "C" {
   typedef double stg_joules_t; // Joules (energy)
   typedef double stg_watts_t; // Watts (Joules per second) (energy expenditure)
   typedef int stg_bool_t;
-
+  typedef double stg_friction_t;
 
 #define HTON_M(m) htonl(m)   // byte ordering for METERS
 #define NTOH_M(m) ntohl(m)
@@ -691,6 +691,8 @@ extern "C" {
     stg_guifeatures_t guifeatures;
     stg_energy_config_t energy_config;   // these are a little strange
     stg_energy_data_t energy_data;
+
+    double friction; // units? our model doesn't have a direct physical value
   } stg_model_t;  
 
 typedef enum 
@@ -874,21 +876,23 @@ stg_model_t* itl_first_matching( itl_t* itl,
   int stg_model_set_obstaclereturn( stg_model_t* mod, stg_bool_t* ret );
   int stg_model_set_laserreturn( stg_model_t* mod, stg_laser_return_t* val );
   int stg_model_set_fiducialreturn( stg_model_t* mod, stg_fiducial_return_t* val );
+  int stg_model_set_friction( stg_model_t* mod, stg_friction_t* fricp );
 
   // GET properties - use these to get props - don't get them directly
-  stg_velocity_t*      stg_model_get_velocity( stg_model_t* mod );
-  stg_geom_t*          stg_model_get_geom( stg_model_t* mod );
-  stg_color_t          stg_model_get_color( stg_model_t* mod );
-  stg_pose_t*          stg_model_get_pose( stg_model_t* mod );
-  stg_pose_t*          stg_model_get_odom( stg_model_t* mod );
-  stg_kg_t*            stg_model_get_mass( stg_model_t* mod );
-  stg_line_t*          stg_model_get_lines( stg_model_t* mod, size_t* count );
-  stg_guifeatures_t*   stg_model_get_guifeaturess( stg_model_t* mod );
-  stg_energy_data_t*   stg_model_get_energy_data( stg_model_t* mod );
-  stg_energy_config_t* stg_model_get_energy_config( stg_model_t* mod );
-  stg_bool_t           stg_model_get_obstaclereturn( stg_model_t* mod );
-  stg_laser_return_t   stg_model_get_laserreturn( stg_model_t* mod );
+  stg_velocity_t*        stg_model_get_velocity( stg_model_t* mod );
+  stg_geom_t*            stg_model_get_geom( stg_model_t* mod );
+  stg_color_t            stg_model_get_color( stg_model_t* mod );
+  stg_pose_t*            stg_model_get_pose( stg_model_t* mod );
+  stg_pose_t*            stg_model_get_odom( stg_model_t* mod );
+  stg_kg_t*              stg_model_get_mass( stg_model_t* mod );
+  stg_line_t*            stg_model_get_lines( stg_model_t* mod, size_t* count );
+  stg_guifeatures_t*     stg_model_get_guifeaturess( stg_model_t* mod );
+  stg_energy_data_t*     stg_model_get_energy_data( stg_model_t* mod );
+  stg_energy_config_t*   stg_model_get_energy_config( stg_model_t* mod );
+  stg_bool_t             stg_model_get_obstaclereturn( stg_model_t* mod );
+  stg_laser_return_t     stg_model_get_laserreturn( stg_model_t* mod );
   stg_fiducial_return_t*  stg_model_get_fiducialreturn( stg_model_t* mod );
+  stg_friction_t*        stg_model_get_friction( stg_model_t* mod );
 
   // special
   int stg_model_set_command( stg_model_t* mod, void* cmd, size_t len );

@@ -162,6 +162,8 @@ stg_model_t* stg_model_create( stg_world_t* world,
   // initialize odometry
   memset( &mod->odom, 0, sizeof(mod->odom));
   
+  mod->friction = 0.0;
+
   // if model has an init function, call it.
   if( mod->lib->init )
     mod->lib->init(mod);
