@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.47 2003-08-21 00:41:08 rtv Exp $
+dnl $Id: configure.in,v 1.48 2003-08-26 04:49:21 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -45,6 +45,8 @@ AC_PROG_RANLIB
 
 dnl Checks for header files of required libraries
 AC_CHECK_HEADERS(stdint.h strings.h)
+
+AC_CHECK_HEADER(pam.h,[],[AC_MSG_ERROR([Couldn't find <pam.h>, which is required to build Stage.  Perhaps you should install netpbm?])])
 
 dnl Check for types that are not defined on some systems
 dnl Test for socklen_t and define it to int if it's not there.
