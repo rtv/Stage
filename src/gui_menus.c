@@ -357,19 +357,17 @@ void gui_window_menus_create( gui_window_t* win )
   gtk_check_menu_item_set_active( mitem, TRUE );
 
   // View/Config
-  //mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Config/Laser"));
-  //gtk_check_menu_item_set_active( mitem, FALSE );
-  //mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Config/Ranger"));
-  //gtk_check_menu_item_set_active( mitem, FALSE );
-  //mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Config/Fiducial"));
-  //gtk_check_menu_item_set_active( mitem, FALSE );
-  //mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Config/Blob"));
-  //gtk_check_menu_item_set_active( mitem, FALSE );
+  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Config/Laser"));
+  gtk_check_menu_item_set_active( mitem, FALSE );
+  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Config/Ranger"));
+  gtk_check_menu_item_set_active( mitem, FALSE );
+  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Config/Fiducial"));
+  gtk_check_menu_item_set_active( mitem, FALSE );
+  mitem = GTK_CHECK_MENU_ITEM(gtk_item_factory_get_item(fac, "/View/Config/Blob"));
+  gtk_check_menu_item_set_active( mitem, FALSE );
   
-  //gtk_container_add( win->canvas->layout, menu_bar );
-
   gtk_box_pack_start(GTK_BOX(win->canvas->layout), 
-		     win->canvas->menu_bar, FALSE, FALSE, 0);
+		     win->canvas->menu_bar, FALSE, TRUE, 0);
 }
 
 
