@@ -1,14 +1,15 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: omnipositiondevice.cc
-// Author: Andrew Howard
+// File: positiondevice.cc
+// Author: Andrew Howard, Richard Vaughan
 // Date: 19 Oct 2001
-// Desc: Simulates an omni robot
+// Desc: Simulates differential-steer and omnidirectional robot bases
+//       by velocity or position control
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/positiondevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.5 $
+//  $Revision: 1.5.2.1 $
 //
 // Usage:
 //  (empty)
@@ -31,6 +32,7 @@
 #include "raytrace.hh"
 #include "positiondevice.hh"
 
+// thresholding macros
 #define THMAX(A,B) (A > B ? A : B)
 #define THMIN(A,B) (A < B ? A : B)
 
@@ -95,7 +97,7 @@ bool CPositionDevice::Load(CWorldFile *worldfile, int section)
     this->drive_mode = DIFF_DRIVE_MODE;
   else
     {
-      PRINT_WARN1( "Unknown drive mode (%s)in world file. "
+      PRINT_WARN1( "Unknown drive mode (%s) in world file. "
 		   "Using differential mode.", rvalue );
       this->drive_mode = DIFF_DRIVE_MODE;
     }
@@ -448,9 +450,10 @@ void CPositionDevice::RtkStartup()
   
   // add a 'nose line' indicating forward to the entity's normal
   // rectangle or circle. draw from the center of rotation to the front.
-  rtk_fig_line( this->fig, 
-		this->origin_x, this->origin_y, 
-		this->size_x/2.0, this->origin_y );
+  rtk_fig_line( this->fig,
+		0,0,
+		//this->origin_x, this->origin_y, 
+		this->size_x/2.0 + this->origin_x, this->origin_y );
 }
 
 
