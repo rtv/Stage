@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.23 $
+//  $Author: ahoward $
+//  $Revision: 1.24 $
 //
 // Usage:
 //  (empty)
@@ -51,9 +51,7 @@ CLaserDevice::CLaserDevice(CWorld *world,
    
   // Laser update rate (readings/sec)
   //
-  //m_update_rate = 360 / 0.200; // 5Hz
-
-  m_interval = 0.2; 
+  m_update_rate = 360 / 0.200; // 5Hz
 
   m_last_update = 0;
   m_scan_res = DTOR(0.50);
@@ -128,7 +126,11 @@ void CLaserDevice::Update( double sim_time )
 
     ASSERT(m_world != NULL);
     
-
+    // Undraw ourselves from the world
+    //
+    if (!m_transparent)
+        Map(false);
+        
     // Dont update anything if we are not subscribed
     //
     if(Subscribed())
@@ -137,33 +139,25 @@ void CLaserDevice::Update( double sim_time )
         //
         CheckConfig();
 
-	//cout << " UPDATE " << endl;
+        //cout << " UPDATE " << endl;
 
         // Check to see if it is time to update the laser scan
         //
-        if( sim_time - m_last_update >= m_interval )
-	  {
-	    m_last_update = sim_time;
+        //if( sim_time - m_last_update >= m_interval )
+        double interval = m_scan_count / m_update_rate;
+        if (sim_time - m_last_update >= interval)
+        {
+            m_last_update = sim_time;
 	    
-	    // Undraw ourselves from the world
-	    //
-	    if (!m_transparent)
-	      Map(false);
-	    
-	    // Generate new scan data and copy to data buffer
-	    //
-	    player_laser_data_t scan_data;
-	    GenerateScanData( &scan_data );
-	    PutData( &scan_data, sizeof( scan_data) );
-	    
-	    // Redraw outselves in the world
-	    //
-	    if (!m_transparent )
-	      Map(true);
-	  }
+            // Generate new scan data and copy to data buffer
+            //
+            player_laser_data_t scan_data;
+            GenerateScanData( &scan_data );
+            PutData( &scan_data, sizeof( scan_data) );
+	    }
     }
     else
-      {
+    {
         // If not subscribed,
         // reset configuration to default.
         //
@@ -172,7 +166,12 @@ void CLaserDevice::Update( double sim_time )
         m_scan_max = DTOR(+90);
         m_scan_count = 361;
         m_intensity = false;
-      }
+    } 
+
+    // Redraw outselves in the world
+    //
+    if (!m_transparent )
+        Map(true);
 }
 
 

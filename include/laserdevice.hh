@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.16 $
+//  $Author: ahoward $
+//  $Revision: 1.17 $
 
 //
 // Usage:
@@ -62,7 +62,7 @@ class CLaserDevice : public CEntity
     
     // Laser timing settings
     //
-  //private: double m_update_rate;
+    private: double m_update_rate;
     
     // Maximum range of sample in meters
     //
