@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/ptzdevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.4 $
+//  $Author: gerkey $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -31,15 +31,15 @@
 #include "playerdevice.hh"
 
 
-class CPtzDevice : public CEntity
+class CPtzDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CPtzDevice(CWorld *world, CEntity *parent );
+    public: CPtzDevice(CWorld *world, CEntity *parent, CPlayerServer* server);
     
     // Update the device
     //
-    public: virtual void Update( double sim_time );
+    public: virtual void Update();
 
     // Get the pan/tilt/zoom values
     // The pan and tilt are angles (in radians)
@@ -47,6 +47,10 @@ class CPtzDevice : public CEntity
     //
     public: void GetPTZ(double &pan, double &tilt, double &zoom);
 
+    // Update times
+    //
+    private: double m_last_update, m_update_interval;
+    
     // Physical limits
     //
     private: double m_pan_min, m_pan_max;
@@ -56,7 +60,10 @@ class CPtzDevice : public CEntity
 
     // Current camera settings
     //
-    private: double m_pan, m_tilt, m_zoom;  
+    private: double m_pan, m_tilt, m_zoom;
+  
+  // structure for exporting PTZ-specific data to a GUI
+    private: ExportPtzData expPtz; 
 
 #ifdef INCLUDE_RTK
     

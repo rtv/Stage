@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visiondevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.8 $
+//  $Author: gerkey $
+//  $Revision: 1.9 $
 //
 // Usage:
 //  (empty)
@@ -27,7 +27,7 @@
 #ifndef VISIONDEVICE_HH
 #define VISIONDEVICE_HH
 
-#include "entity.hh"
+#include "playerdevice.hh"
 
 // Forward declaration for ptz device
 //
@@ -44,15 +44,16 @@ typedef struct
 } ColorBlob;
 
 
-class CVisionDevice : public CEntity
+class CVisionDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CVisionDevice(CWorld *world, CPtzDevice *parent );
+    public: CVisionDevice(CWorld *world, CEntity *parent, CPlayerServer* server,
+                          CPtzDevice *ptz_device);
     
     // Update the device
     //
-    public: virtual void Update( double sim_time );
+    public: virtual void Update();
 
     // Generate the scan-line image
     //
@@ -62,7 +63,11 @@ class CVisionDevice : public CEntity
     //
     private: size_t UpdateACTS();
 
-    // Pointer to the ptz device we attach to (same as out parent
+    // Timing properties
+    //
+    private: double m_last_update, m_update_interval;
+
+    // Pointer to the ptz device we attach to
     //
     private: CPtzDevice *m_ptz_device;
 

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacon.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.4 $
+//  $Author: gerkey $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -49,12 +49,16 @@ class CLaserBeacon : public CEntity
     
     // Update the device
     //
-    public: virtual void Update( double sim_time );
+    public: virtual void Update();
 
     // Beacon id
     //
     private: int m_beacon_id;
 
+    // Set this flag to make the beacon transparent to lasers
+    //
+    private: bool m_transparent;
+    
     // Beacon index in the world rep
     //
     private: int m_index;

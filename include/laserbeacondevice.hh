@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacondevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.6 $
+//  $Author: gerkey $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -24,23 +24,34 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-// LBD = Laser Beacon Detector!
+#ifndef LASERBEACONDEVICE_HH
+#define LASERBEACONDEVICE_HH
 
-#ifndef LBDDEVICE_HH
-#define LBDDEVICE_HH
+#include "playerdevice.hh"
 
-#include "entity.hh"
-#include "laserdevice.hh"
+// Forward declarations
+//
+class CLaserDevice;
 
-class CLBDDevice : public CEntity
+
+class CLaserBeaconDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CLBDDevice(CWorld *world, CLaserDevice *parent );
+    public: CLaserBeaconDevice(CWorld *world, CEntity *parent,
+                               CPlayerServer *server, CLaserDevice *laser);
+
+    // Load the object from an argument list
+    //
+    public: virtual bool Load(int argc, char **argv);
+
+    // Save the object to an argument list
+    //
+    public: virtual bool Save(int &argc, char **argv);
     
     // Update the device
     //
-    public: virtual void Update( double sim_time );
+    public: virtual void Update();
 
     // Pointer to laser used as souce of data
     //
@@ -54,14 +65,20 @@ class CLBDDevice : public CEntity
     //
     private: double m_max_anon_range;
     private: double m_max_id_range;
- 
+    
 #ifdef INCLUDE_RTK
     
     // Process GUI update messages
     //
     public: virtual void OnUiUpdate(RtkUiDrawData *pData);
 
+    // Draw the beacon data
+    //
+    public: void DrawData(RtkUiDrawData *event);
+
 #endif
+
+    private:  ExportLaserBeaconDetectorData expBeacon; 
 };
 
 #endif

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visionbeacon.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.4 $
+//  $Author: gerkey $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -45,12 +45,20 @@ class CVisionBeacon : public CEntity
     
     // Update the device
     //
-    public: virtual void Update( double sim_time );
+    public: virtual void Update();
 
     // Beacon radius
     //
     private: double m_radius;
+
+    // Layers to render to
+    //
+    private: bool m_render_obstacle, m_render_laser;
     
+    // Beacon channel (corresponds to ACTS channel)
+    //
+    private: int m_channel;
+
     // Current pose
     //
     private: double m_map_px, m_map_py, m_map_pth;

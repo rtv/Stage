@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.14 $
+//  $Author: gerkey $
+//  $Revision: 1.15 $
 //
 // Usage:
 //  (empty)
@@ -29,15 +29,23 @@
 
 #include "playerdevice.hh"
 
-class CLaserDevice : public CEntity
+class CLaserDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CLaserDevice(CWorld *world, CEntity *parent );
+    public: CLaserDevice(CWorld *world, CEntity *parent, CPlayerServer* server);
+
+    // Load the object from an argument list
+    //
+    public: virtual bool Load(int argc, char **argv);
+
+    // Save the object to an argument list
+    //
+    public: virtual bool Save(int &argc, char **argv);
 
     // Update the device
     //
-    public: virtual void Update( double sim_time );
+    public: virtual void Update();
 
     // Check to see if the configuration has changed
     //
@@ -49,15 +57,20 @@ class CLaserDevice : public CEntity
 
     // Draw ourselves into the world rep
     //
-    private: virtual void Map(bool render);
+    private: void Map(bool render);
     
     // Laser timing settings
     //
     private: double m_update_rate;
+    private: double m_last_update;
     
     // Maximum range of sample in meters
     //
     private: double m_max_range;
+
+    // Set this flag to make the laser transparent to other lasers
+    //
+    private: bool m_transparent;
     
     // Laser configuration parameters
     //
@@ -76,7 +89,7 @@ class CLaserDevice : public CEntity
     private: double m_map_px, m_map_py, m_map_pth;
 
     // storage for exporting the laser hit points
-  //private: ExportLaserData expLaser;
+   private: ExportLaserData expLaser;
 
 #ifdef INCLUDE_RTK
     
@@ -105,15 +118,6 @@ class CLaserDevice : public CEntity
 };
 
 #endif
-
-
-
-
-
-
-
-
-
 
 
 

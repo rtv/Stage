@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/broadcastdevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.3 $
+//  $Author: gerkey $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -29,11 +29,11 @@
 
 #include "playerdevice.hh"
 
-class CBroadcastDevice : public CEntity
+class CBroadcastDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CBroadcastDevice(CWorld *world, CEntity *parent );
+    public: CBroadcastDevice(CWorld *world, CEntity *parent, CPlayerServer *server);
 
     // Startup routine
     //
@@ -45,7 +45,12 @@ class CBroadcastDevice : public CEntity
 
     // Update the device
     //
-    public: virtual void Update( double sim_time );
+    public: virtual void Update();
+
+    // Timing parameters
+    //
+    private: double m_last_update;
+    private: double m_update_interval;
 
     // Buffers for storing data
     //

@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// File: playerserver.hh
-// Author: Richard Vaughan, Andrew Howard
-// Date: 6 Dec 2000
-// Desc: Provides interface to Player server.
+// File: playerdevice.hh
+// Author: Andrew Howard
+// Date: 28 Nov 2000
+// Desc: Base class for all devices
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.7 $
+//  $Author: gerkey $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -24,23 +24,40 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef ROBOT_H
-#define ROBOT_H
+#ifndef PLAYERDEVICE_HH
+#define PLAYERDEVICE_HH
 
-#include <sys/types.h>
+// For size_t and network byte ordering
+//
+#include <stddef.h>
+#include <netinet/in.h>
+
+// For base class
+//
 #include "entity.hh"
 
-// Forward declare some of the classes we will use
+// For all the lengths
 //
-class CDevice;
-class CWorld;
+#include <stage.h>
+
+// Forward declarations
+//
+class CPlayerServer;
 
 
+////////////////////////////////////////////////////////////////////////////////
+// Base class for all player devices
+//
 class CPlayerDevice : public CEntity
 {
-    public: CPlayerDevice( CWorld* world, CEntity *parent );
-    public: ~CPlayerDevice( void );
-    
+    // Minimal constructor
+    // This is an abstract class and *cannot* be instantiated directly
+    // buffer points to a single buffer containing the data, command and configuration buffers.
+    //
+    protected: CPlayerDevice(CWorld *world, CEntity *parent, 
+                             CPlayerServer *server, size_t offset, size_t buffer_len,
+                             size_t data_len, size_t command_len, size_t config_len);
+
     // Load the object from an argument list
     //
     public: virtual bool Load(int argc, char **argv);
@@ -48,68 +65,72 @@ class CPlayerDevice : public CEntity
     // Save the object to an argument list
     //
     public: virtual bool Save(int &argc, char **argv);
-
-    // Start all the devices
+    
+    // Initialise the device
     //
-    public: virtual bool SetupIOPointers( char* io );
+    public: virtual bool Startup();
 
-    // Shutdown the devices
+    // Close the device
     //
     public: virtual void Shutdown();
 
-    // Update robot and all its devices
+    // See if the device is subscribed
     //
-    public: virtual void Update( double sim_time );
+    protected: bool IsSubscribed();
     
-    // Start player
+    // Write to the data buffer
+    // Returns the number of bytes copied
+    // timestamp should be the time the data was created/sensed. if timestamp
+    //   is 0, then current time is used
     //
-    private: bool StartupPlayer(int port);
+    protected: size_t PutData(void *data, size_t len,
+                              uint32_t time_sec = 0, uint32_t time_usec = 0);
 
-    // Stop player
+    // Read from the data buffer
+    // Returns the number of bytes copied
     //
-    private: void ShutdownPlayer();
+    public: size_t GetData(void *data, size_t len,
+                           uint32_t *time_sec = NULL, uint32_t *time_usec = NULL);
 
-    // Stuff needed to interface with player
+    // Read from the command buffer
+    // Returns the number of bytes copied
     //
-    private: caddr_t playerIO; // ptr to shared memory for player I/O
-  //private: char tmpName[16]; // name of shared memory device in filesystem
+    protected: size_t GetCommand(void *data, size_t len);
 
-  // PID of player process spawned by this object
+    // Read from the configuration buffer
+    // Returns the number of bytes copied
     //
-    private: pid_t player_pid;
+    protected: size_t GetConfig(void *data, size_t len);
 
-#ifdef INCLUDE_RTK
+    // Pointer to player robot
+    //
+    protected: int m_port;
+    protected: CPlayerServer *m_server;
+
+    // Offset info shared memory
+    //
+    private: size_t m_offset;
     
-    // Process GUI update messages
+    // Pointer to shared info buffers
     //
-    public: virtual void OnUiUpdate(RtkUiDrawData *pData);
+    private: player_stage_info_t *m_info;
+    private: size_t m_info_len;
 
-    // Process GUI mouse messages
+    // Pointer to shared data buffers
     //
-    public: virtual void OnUiMouse(RtkUiMouseData *pData);
+    private: void *m_data_buffer;
+    private: size_t m_data_len;
 
-#endif
+    // Pointer to shared command buffers
+    //
+    private: void *m_command_buffer;
+    private: size_t m_command_len;
+
+    // Pointer to shared config buffers
+    //
+    private: void *m_config_buffer;
+    private: size_t m_config_len;
 };
 
+
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/miscdevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.3 $
+//  $Author: gerkey $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -29,15 +29,15 @@
 
 #include "playerdevice.hh"
 
-class CMiscDevice : public CEntity
+class CMiscDevice : public CPlayerDevice
 {
     // Default constructor
     //
-    public: CMiscDevice(CWorld *world, CEntity *parent );
+    public: CMiscDevice(CWorld *world, CEntity *parent, CPlayerServer *server);
     
     // Update the device
     //
-    public: virtual void Update( double sim_time );
+    public: virtual void Update();
 
     // Buffers for storing data
     //
