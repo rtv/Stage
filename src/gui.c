@@ -105,9 +105,11 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   
   win->show_matrix = FALSE;
   win->fill_polygons = FALSE;
-  win->movie_exporting = FALSE;
-  win->movie_count = 0;
-  win->movie_speed = STG_DEFAULT_MOVIE_SPEED;
+  //win->movie_exporting = FALSE;
+  //win->movie_count = 0;
+  //win->movie_speed = STG_DEFAULT_MOVIE_SPEED;
+
+  win->frame_interval = 500; // ms
   
   win->poses = rtk_fig_create( win->canvas, NULL, 0 );
 

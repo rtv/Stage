@@ -11,11 +11,12 @@ enum {
   STG_MITEM_FILE_SAVE,
   STG_MITEM_FILE_LOAD,
   STG_MITEM_FILE_QUIT,
-  STG_MITEM_FILE_IMAGE_JPG,
-  STG_MITEM_FILE_IMAGE_JPG_SEQ,
   //STG_MITEM_FILE_IMAGE_PPM,
-  //STG_MITEM_FILE_MOVIE_START,
-  //STG_MITEM_FILE_MOVIE_STOP,
+  STG_MITEM_FILE_IMAGE_SINGLE,
+  STG_MITEM_FILE_IMAGE_START,
+  STG_MITEM_FILE_IMAGE_STOP,
+  //STG_MITEM_FILE_IMAGE_JPG,
+  //STG_MITEM_FILE_IMAGE_JPG_SEQ,
   STG_MITEM_VIEW_MATRIX,
   STG_MITEM_VIEW_GRID,
   STG_MITEM_VIEW_POLYGONS,
@@ -51,9 +52,6 @@ enum {
   STG_MENU_COUNT
 };
 
-// movies can be saved at these multiples of real time
-//const int STG_MOVIE_SPEEDS[] = {1, 2, 5, 10, 20, 50, 100};
-//const int STG_MOVIE_SPEED_COUNT = 7; // must match the static array length
 
 void gui_menu_save( rtk_menuitem_t *item )
 {
@@ -64,131 +62,70 @@ void gui_menu_save( rtk_menuitem_t *item )
 
 void gui_menu_exit( rtk_menuitem_t *item )
 {
-  //quit = TRUE;
   PRINT_DEBUG( "Exit menu item" );
-
-  //stg_world_t* world = (stg_world_t*)item->userdata;
-
   _stg_quit = TRUE;
-
-  //stg_id_t wid = world->id;
-  
-  // TODO
-  // tell the client to save the world with this server-side id
-  //stg_connection_write_msg( world->con, STG_MSG_CLIENT_QUIT, &wid, sizeof(wid) ); 
 }
 
-void gui_menu_file_image_jpg( rtk_menuitem_t *item )
+// movies can be saved at these multiples of real time
+//const int STG_MOVIE_SPEEDS[] = {1, 2, 5, 10, 20, 50, 100};
+//const int STG_MOVIE_SPEED_COUNT = 7; // must match the static array length
+
+/// save a frame as a jpeg, with incremental index numbers. if series
+/// is greater than 0, its value is incorporated into the filename
+void export_window( gui_window_t* win  ) //rtk_canvas_t* canvas, int series )
 {
-  static int index=0;
-
-  PRINT_DEBUG( "File/Image/Jpg menu item" );
-  
-  //snprintf(filename, sizeof(filename), "stage-%03d-%04d.jpg",
-  //   this->stills_series, this->stills_count++);
-  
   char filename[128];
-  snprintf(filename, sizeof(filename), "stage-%03d.jpg", index++);
-  printf("saving [%s]\n", filename);
+
+  win->frame_index++;
+
+  if( win->frame_series > 0 )
+    snprintf(filename, sizeof(filename), "stage-%03d-%04d.jpg",
+	     win->frame_series, win->frame_index);
+  else
+    snprintf(filename, sizeof(filename), "stage-%03d.jpg", win->frame_index);
+
+  printf("Stage: saving [%s]\n", filename);
   
-  rtk_canvas_export_image(item->menu->canvas, filename, RTK_IMAGE_FORMAT_JPEG);
+  rtk_canvas_export_image( win->canvas, filename, RTK_IMAGE_FORMAT_JPEG);
+}
+
+void gui_menu_file_image_frame( rtk_menuitem_t *item )
+{
+  PRINT_DEBUG( "File/Image/Save frame menu item" );
+  export_window( (gui_window_t*)item->userdata );
+}
+
+gboolean frame_callback( gpointer data )
+{
+  export_window( (gui_window_t*)data );
+  return TRUE;
 }
 
 
-
-/* // toggle movie exports */
-/* void gui_menu_movie_speed( rtk_menuitem_t *item ) */
-/* { */
-/*   PRINT_DEBUG( "Movie speed menuitem" ); */
-
-
-
-/*   if( rtk_menuitem_ischecked( item ) ) */
-/*     { */
-/*       gui_window_t* win = (gui_window_t*)item->menu->canvas->userdata; */
-
-/*       int speed_index = (int)item->userdata;   */
-      
-/*       win->movie_speed = STG_MOVIE_SPEEDS[speed_index]; */
-      
-/*       // uncheck all other speeds */
-      
-/*       // GTK has menu groups that make this easier. could add this to */
-/*       // rtk... */
-/*       int i; */
-/*       for( i=0; i<win->mitems_mspeed_count; i++ ) */
-/* 	if( win->mitems_mspeed[i] != item ) */
-/* 	  rtk_menuitem_check( win->mitems_mspeed[i], 0); */
-/*     } */
-/* } */
-
-/* gboolean gui_movie_frame_callback( gpointer data ) */
-/* { */
-/*   rtk_canvas_movie_frame( (rtk_canvas_t*)data ); */
-/*   //gui_poll(); */
-/*   return TRUE; */
-/* } */
-
-/* // toggle movie exports */
-/* void gui_menu_movie_stop( rtk_menuitem_t *item ) */
-/* { */
-/*   PRINT_DEBUG( "Movie startstop menuitem" ); */
+void gui_menu_file_image_start( rtk_menuitem_t *item )
+{
+  PRINT_DEBUG( "File/Image/Save start menu item" );
   
-/*   gui_window_t* win = (gui_window_t*)item->menu->canvas->userdata; */
+  gui_window_t* win = (gui_window_t*)item->userdata;
   
-/*   // stop the frame callback */
-/*   g_source_remove(win->movie_tag); */
-  
-/*   rtk_canvas_movie_stop(win->canvas); */
-/*   win->movie_exporting = FALSE; */
-  
-/*   // disable the speed menu items */
-/*   // careful: this assumes the movie speed mitems are contiguous in the enum. */
-/*   int i; */
-/*   for( i=0; i<win->mitems_mspeed_count; i++ ) */
-/*     rtk_menuitem_enable( win->mitems_mspeed[i], TRUE ); */
-  
-/*   rtk_menuitem_enable( win->mitems[STG_MITEM_FILE_MOVIE_STOP], 0 ); */
-/*   rtk_menuitem_enable( win->mitems[STG_MITEM_FILE_MOVIE_START], 1 ); */
-/* } */
+  // advance the sequence counter - the first sequence is 1.
+  win->frame_series++;
+  win->frame_index = 0;
 
-/* // toggle movie exports */
-/* void gui_menu_movie_start( rtk_menuitem_t *item ) */
-/* { */
-/*   PRINT_DEBUG( "Movie startstop menuitem" ); */
+  win->frame_callback_tag =
+    g_timeout_add( win->frame_interval,
+		   frame_callback,
+		   (gpointer)win );
+}
 
-/*   gui_window_t* win = (gui_window_t*)item->menu->canvas->userdata; */
-  
-  
-/*   // start the movie */
-/*   win->movie_exporting = TRUE; */
-/*   char filename[256]; */
-/*   snprintf(filename, sizeof(filename), "stage-%03d-sp%02d.mpg", */
-/* 	   win->movie_count++, win->movie_speed ); */
-  
-/*   rtk_canvas_movie_start( win->canvas, filename, 10, win->movie_speed ); */
-  
-/*   int interval_ms = win->movie_speed * win->world->wall_interval; */
+void gui_menu_file_image_stop( rtk_menuitem_t *item )
+{
+  PRINT_DEBUG( "File/Image/Save stop menu item" );
 
-/*   printf( "starting movie with frame interval %d\n", interval_ms ); */
-
-/*   // TODO! */
-/*   win->movie_tag =  */
-/*     g_timeout_add( interval_ms, */
-/* 		   gui_movie_frame_callback,  */
-/* 		   win->canvas ); */
-
-/*   // disable the speed menu items */
-/*   // careful: this assumes the movie speed mitems are contiguous in the enum. */
-
-/*   int i; */
-/*   for( i=0; i< win->mitems_mspeed_count; i++ ) */
-/*     rtk_menuitem_enable( win->mitems_mspeed[i], FALSE ); */
-  
-/*   rtk_menuitem_enable( win->mitems[STG_MITEM_FILE_MOVIE_STOP], 1 ); */
-/*   rtk_menuitem_enable( win->mitems[STG_MITEM_FILE_MOVIE_START], 0 ); */
-/* } */
-
+  // stop the frame callback
+  gui_window_t* win = (gui_window_t*)item->userdata;
+  g_source_remove(win->frame_callback_tag); 
+}
 
 // shows or hides a layer
 void gui_menu_layer( rtk_menuitem_t *item )
@@ -284,15 +221,27 @@ void gui_window_menus_create( gui_window_t* win )
   //rtk_menu_create_sub(win->menus[STG_MENU_FILE], "Export movie");
 
   // create the FILE/STILLS menu items 
-  win->mitems[STG_MITEM_FILE_IMAGE_JPG] = 
-    rtk_menuitem_create(win->menus[STG_MENU_FILE_IMAGE], "JPEG", 0);
+  win->mitems[STG_MITEM_FILE_IMAGE_SINGLE] = 
+    rtk_menuitem_create(win->menus[STG_MENU_FILE_IMAGE], "Export single frame", 0);
 
-  //win->mitems[STG_MITEM_FILE_IMAGE_JPG_SEQ] = 
-  //rtk_menuitem_create(win->menus[STG_MENU_FILE_IMAGE], "JPEG sequence", 1);
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_IMAGE_SINGLE], 
+			     gui_menu_file_image_frame );
 
-    
-  rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_IMAGE_JPG], 
-			     gui_menu_file_image_jpg );
+  win->mitems[STG_MITEM_FILE_IMAGE_START] = 
+    rtk_menuitem_create(win->menus[STG_MENU_FILE_IMAGE], "Export sequence start", 0);
+
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_IMAGE_START], 
+			     gui_menu_file_image_start );
+
+  win->mitems[STG_MITEM_FILE_IMAGE_STOP] = 
+    rtk_menuitem_create(win->menus[STG_MENU_FILE_IMAGE], "Export sequence stop", 0);
+
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_IMAGE_STOP], 
+			     gui_menu_file_image_stop );
+
+  win->mitems[STG_MITEM_FILE_IMAGE_SINGLE]->userdata = (gpointer)win;
+  win->mitems[STG_MITEM_FILE_IMAGE_START]->userdata = (gpointer)win;
+  win->mitems[STG_MITEM_FILE_IMAGE_STOP]->userdata = (gpointer)win;
 
   //rtk_menuitem_set_callback( win->mitems[STG_MITEM_FILE_IMAGE_JPG_SEQ], 
   //		     gui_menu_file_image_jpg_seq );
