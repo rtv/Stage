@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.41 2004-05-26 22:13:41 rtv Exp $
+ * CVS: $Id: stage.h,v 1.42 2004-05-29 00:17:14 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -690,9 +690,17 @@ typedef struct
 
 #define STG_PACKAGE_KEY 12345
 
+typedef enum
+  {
+    STG_PKG_REQUEST=0,
+    STG_PKG_REPLY,
+    STG_PKG_DELTA
+  } stg_pkg_type_t;
+
 typedef struct
 {
   int key; // must be STG_PACKAGE_KEY
+  stg_pkg_type_t type;
   struct timeval timestamp; // real-time timestamp for performance
 			    // measurements
   size_t payload_len;
