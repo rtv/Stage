@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.15 $
+//  $Revision: 1.16 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -221,10 +221,10 @@ void model_ranger_config_render( model_t* mod )
   for( s=0; s<rcount; s++ )
     {
       stg_ranger_config_t* rngr = &cfg[s];
-      printf( "drawing a ranger rect (%.2f,%.2f,%.2f)[%.2f %.2f][%.2f %.2f %.2f]\n",
-	      rngr->pose.x, rngr->pose.y, rngr->pose.a,
-	      rngr->size.x, rngr->size.y,
-	      rngr->bounds_range.min, rngr->bounds_range.max, rngr->fov );
+      //printf( "drawing a ranger rect (%.2f,%.2f,%.2f)[%.2f %.2f][%.2f %.2f %.2f]\n",
+      //      rngr->pose.x, rngr->pose.y, rngr->pose.a,
+      //      rngr->size.x, rngr->size.y,
+      //      rngr->bounds_range.min, rngr->bounds_range.max, rngr->fov );
       
       // sensor pose
       rtk_fig_rectangle( fig, 
@@ -277,7 +277,7 @@ void model_ranger_data_render( model_t* mod )
 	model_get_prop_data_generic( mod, STG_PROP_RANGERDATA );
       
       if( rcount > 0 && cfg && samples )
-	{
+	{'
 	  stg_geom_t *geom = model_geom_get(mod);
 
 	  rtk_fig_color_rgb32(fig, stg_lookup_color(STG_RANGER_COLOR) );
