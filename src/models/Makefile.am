@@ -15,31 +15,53 @@ endif
 
 AM_CPPFLAGS = 	-Wall -I$(top_srcdir)/src -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/server/drivers/stage $(RTKCPPFLAGS)
 
-lib_LIBRARIES = libstgmodels.a 
+noinst_LIBRARIES = libstgmodels.a 
 
 libstgmodels_a_SOURCES = \
-			bitmap.cc \
-			box.cc \
-			broadcastdevice.cc \
-			descartesdevice.cc \
-			gpsdevice.cc \
-			gripperdevice.cc \
-			idardevice.cc \
-			idarturretdevice.cc \
-			image.cc \
-			laserbeacon.cc \
-			laserbeacondevice.cc \
-			laserdevice.cc \
-			motedevice.cc \
-			omnipositiondevice.cc \
-			positiondevice.cc \
-			powerdevice.cc \
-			ptzdevice.cc \
-			puck.cc \
-			sonardevice.cc \
-			truthdevice.cc \
-			visionbeacon.cc \
-			visiondevice.cc
+                   bitmap.cc \
+                   bitmap.hh \
+                   box.cc \
+                   box.hh \
+                   broadcastdevice.cc \
+                   broadcastdevice.hh \
+                   descartesdevice.cc \
+                   descartesdevice.hh \
+                   gpsdevice.cc \
+                   gpsdevice.hh \
+                   gripperdevice.cc \
+                   gripperdevice.hh \
+                   idardevice.cc \
+                   idardevice.hh \
+                   idarturretdevice.cc \
+                   idarturretdevice.hh \
+                   image.cc \
+                   image.hh \
+                   laserbeacon.cc \
+                   laserbeacondevice.cc \
+                   laserbeacondevice.hh \
+                   laserbeacon.hh \
+                   laserdevice.cc \
+                   laserdevice.hh \
+                   motedevice.cc \
+                   motedevice.hh \
+                   omnipositiondevice.cc \
+                   omnipositiondevice.hh \
+                   positiondevice.cc \
+                   positiondevice.hh \
+                   powerdevice.cc \
+                   powerdevice.hh \
+                   ptzdevice.cc \
+                   ptzdevice.hh \
+                   puck.cc \
+                   puck.hh \
+                   sonardevice.cc \
+                   sonardevice.hh \
+                   truthdevice.cc \
+                   truthdevice.hh \
+                   visionbeacon.cc \
+                   visionbeacon.hh \
+                   visiondevice.cc \
+                   visiondevice.hh
 
 # currently broken
 # bpsdevice.cc 

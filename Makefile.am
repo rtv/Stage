@@ -4,18 +4,16 @@ DOCSRC = $(top_srcdir)/docsrc
 DOCDIST = $(distdir)/doc 
 DOCINST = $(DESTDIR)$(prefix)/doc
 
-stage_manual:
+dist-hook:
 	cd $(DOCSRC) && make 
-
-dist-hook: stage_manual
 	mkdir -p $(DOCDIST)
 	cp -p $(DOCSRC)/stage.ps $(DOCDIST)
 	cp -p $(DOCSRC)/stage.pdf $(DOCDIST)
 
-install-data-hook: stage_manual
+install-data-hook:
 	mkdir -p $(DOCINST)
-	cp -p $(DOCSRC)/stage.ps $(DOCINST)
-	cp -p $(DOCSRC)/stage.pdf $(DOCINST)
+	cp -p $(top_srcdir)/doc/stage.ps $(DOCINST)
+	cp -p $(top_srcdir)/doc/stage.pdf $(DOCINST)
 
 uninstall-local:
 	rm -f $(DOCINST)/*

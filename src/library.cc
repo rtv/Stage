@@ -24,14 +24,13 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.3 2002-10-27 21:55:37 rtv Exp $
+ * CVS info: $Id: library.cc,v 1.4 2002-10-31 07:48:35 gerkey Exp $
  */
 
 #include "library.hh"
 
 #include "models/bitmap.hh"
 #include "models/box.hh"
-#include "models/bpsdevice.hh"
 #include "models/broadcastdevice.hh"
 #include "models/descartesdevice.hh"
 #include "models/gpsdevice.hh"

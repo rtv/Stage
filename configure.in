@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.21 2002-10-31 02:15:15 gerkey Exp $
+dnl $Id: configure.in,v 1.22 2002-10-31 07:48:35 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -84,9 +84,9 @@ else
 fi
 
 # define the paths, libs and deps for the GUI
+AC_SUBST(GUI_LINK)
 AC_SUBST(GUI_DIR)
 AC_SUBST(GUI_LIB)
-AC_SUBST(GUI_LINK)
 
 # set vars depending on the GUI tests
 AM_CONDITIONAL(WITH_GNOME2, test x$with_gnome2 = xyes)
