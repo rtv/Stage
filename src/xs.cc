@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.40 2001-10-15 03:30:55 gerkey Exp $
+ * $Id: xs.cc,v 1.41 2001-10-17 21:06:01 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -1972,10 +1972,10 @@ void CXGui::HandleConfigureEvent( XEvent &reportEvent )
   height = reportEvent.xconfigure.height;
   
   
-  CalcPPM();
+  //CalcPPM();
   
-  DrawBackground(); // black backround and draw walls
-  RefreshObjects(); 
+  //DrawBackground(); // black backround and draw walls
+  //RefreshObjects(); 
   
   //printf( "w: %dx%d i: %dx%d ppm: %.2f px: %d py: %d\n",
   //  width, height, iwidth, iheight, ppm, panx, pany );
