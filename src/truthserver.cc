@@ -212,10 +212,20 @@ void CWorld::TruthWrite( void )
 	      // we don't want this echoed back to us
 	      truth.echo_request = false;
 	      // send the packet to the connected client
-	      int v = write( connfd, &truth, sizeof(truth) );
+	      int writecnt = 0;
+	      int thiswritecnt;
+              while(writecnt < sizeof(truth))
+              {
+                thiswritecnt = write(connfd, ((char*)&truth)+writecnt, 
+                                     sizeof(truth)-writecnt);
+                // check for error on write
+                assert(thiswritecnt >= 0);
+
+                writecnt += thiswritecnt;
+              }
 		  
 	      // we really should have written the whole packet
-	      assert( v == (int)sizeof(truth) );
+	      assert( writecnt == (int)sizeof(truth) );
 	    }
 	}
     }

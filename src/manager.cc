@@ -1,7 +1,7 @@
 /*##########################################################################
 # manager.cc - implements the Stage Manager for syncing distributed Stages
-# $Id: manager.cc,v 1.9 2001-09-26 23:44:27 gerkey Exp $
-*#########################################################################/
+# $Id: manager.cc,v 1.10 2001-09-27 00:02:29 gerkey Exp $
+*#########################################################################*/
 
 #include <sys/types.h>	/* basic system data types */
 #include <sys/socket.h>	/* basic socket definitions */
@@ -105,7 +105,8 @@ int main(int argc, char **argv)
   printf("** Manager v%s ** ", (char*) VERSION);
 
   /* client vars */
-  int v, b, r, w; /* return values of various system calls */ 
+  int v;
+  //int b, r, w; /* return values of various system calls */ 
 
   stages = argc - 1;
 
@@ -135,8 +136,8 @@ int main(int argc, char **argv)
       struct hostent* entp;
       if( (entp = gethostbyname( hostname )) == NULL)
 	{
-	  fprintf(stderr, "unknown host \"%s\" (argument %s). Quitting\n",
-		  hostname );
+	  fprintf(stderr, "unknown host \"%s\" (argument %d). Quitting\n",
+		  hostname,s );
 	  return(-1);
 	}
 
@@ -166,10 +167,11 @@ int main(int argc, char **argv)
 
   stage_truth_t truth;
 
-  struct timeval start_tv, tv;
+  struct timeval start_tv;
+  //struct timeval tv;
   gettimeofday( &start_tv, 0 );
   
-  double seconds;
+  //double seconds;
 
   while( 1 )
     {
@@ -215,10 +217,15 @@ int main(int argc, char **argv)
               {
 		if( j != i ) 
                 {
-                  v = 0;
-                  while(v < sizeof(truth))
+                  unsigned int writecnt = 0;
+                  int thiswritecnt;
+                  while(writecnt < sizeof(truth))
                   {
-                    v += write( servers[j].fd, ((char*)&truth)+v, sizeof(truth)-v);
+                    thiswritecnt = write( servers[j].fd, 
+                                          ((char*)&truth)+writecnt, 
+                                          sizeof(truth)-writecnt);
+                    assert(thiswritecnt >= 0);
+                    writecnt += thiswritecnt;
                   }
                 }
               }

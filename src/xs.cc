@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.28 2001-09-26 23:44:27 gerkey Exp $
+ * $Id: xs.cc,v 1.29 2001-09-27 00:02:29 gerkey Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -299,14 +299,16 @@ static void* TruthWriter( void* )
 	  // please send this truth back to us for redisplay
 	  struth.echo_request = true;
 
-	  size_t b = write( ffd, &struth, sizeof( struth ) );
-	  
-	  if( b < 0 )
-	    perror( "TruthWriter: write error" );
-	  else if( b < sizeof( struth ) )
-	    printf( "TruthWriter: short write (%d/%d bytes written)\n",
-		    b, sizeof( struth ) );
-	  
+          unsigned int writecnt = 0;
+          int thiswritecnt;
+          while(writecnt < sizeof(struth))
+          {
+            thiswritecnt = write( ffd, ((char*)&struth)+writecnt, 
+                                  sizeof( struth )-writecnt);
+            assert(thiswritecnt >= 0);
+
+            writecnt += thiswritecnt;
+          }
 	}
       
       //pthread_mutex_unlock( &outgoing_mutex );	  

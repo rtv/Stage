@@ -55,7 +55,7 @@ truthlog: truthlog.cc
 	$(CC) -I../include -I$(PLAYER_INC) -lstdc++ truthlog.cc -o truthlog
 
 manager: manager.cc 
-	$(CC) -I../include -I$(PLAYER_INC) -lstdc++ manager.cc -o manager
+	$(CC) -I../include -Wall -I$(PLAYER_INC) -lstdc++ manager.cc -o manager
 
 clean:
 	rm -f *.o *~ core xs truthlog 
