@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_blobfinder.cc,v 1.4 2004-09-30 02:26:38 rtv Exp $
+ * $Id: stg_blobfinder.cc,v 1.5 2004-10-11 06:16:56 rtv Exp $
  */
 
 #define PLAYER_ENABLE_TRACE 0
@@ -80,40 +80,7 @@ void StgBlobfinder::PublishData( void* ptr )
     {
       size_t bcount = datalen / sizeof(stg_blobfinder_blob_t);
       
-      // ACTS has blobs sorted by channel (color), and by area within
-      // channel. Player has inherited this awful mess, so we'll
-      // bubble sort the blobs (This could be more efficient. Tony
-      // Hoare would spank me).
-      if( bcount > 1 )
-	{
-	  int change = true;
-	  stg_blobfinder_blob_t tmp;
-	  
-	  while( change )
-	    {
-	      change = false;
-	      
-	      unsigned int b;
-	      for( b=0; b<bcount-1; b++ )
-		{
-		  // if the channels are in the wrong order
-		  if( (blobs[b].channel > blobs[b+1].channel)
-		      // or they are the same channel but the areas are 
-		      // in the wrong order
-		      ||( (blobs[b].channel == blobs[b+1].channel) 
-			  && blobs[b].area < blobs[b+1].area ) )
-		    {		      
-		      //switch the blobs
-		      memcpy( &tmp, &(blobs[b]), sizeof(stg_blobfinder_blob_t) );
-		      memcpy( &(blobs[b]), &(blobs[b+1]), sizeof(stg_blobfinder_blob_t) );
-		      memcpy( &(blobs[b+1]), &tmp, sizeof(stg_blobfinder_blob_t) );
-		      
-		      change = true;
-		    }
-		}
-	    }
-	}      
-      
+
       // limit the number of samples to Player's maximum
       if( bcount > PLAYER_BLOBFINDER_MAX_BLOBS )
 	bcount = PLAYER_BLOBFINDER_MAX_BLOBS;      
@@ -130,8 +97,7 @@ void StgBlobfinder::PublishData( void* ptr )
       // and set the image width * height
       bfd.width = htons((uint16_t)cfg->scan_width);
       bfd.height = htons((uint16_t)cfg->scan_height);
-      
-
+      bfd.blob_count = htons((uint16_t)bcount);
 
       // now run through the blobs, packing them into the player buffer
       // counting the number of blobs in each channel and making entries
@@ -165,27 +131,15 @@ void StgBlobfinder::PublishData( void* ptr )
 	  bfd.blobs[b].color = htonl(blobs[b].color);
 	  bfd.blobs[b].area  = htonl(blobs[b].area);
 	  
-	  // increment the count for this channel
-	  bfd.header[blobs[b].channel].num++;
-	}
 
-      // now we finish the header by setting the blob indexes and byte
-      // swapping the counts.
-      int pos = 0;
-      for( int ch=0; ch<PLAYER_BLOBFINDER_MAX_CHANNELS; ch++ )
-	{
-	  bfd.header[ch].index = htons(pos);
-	  pos += bfd.header[ch].num;
-	  
-	  // byte swap the blob count for each channel
-	  PRINT_DEBUG2( "channel: %d blobs: %d\n", ch,  bfd.header[ch].num ); 
-	  bfd.header[ch].num = htons(bfd.header[ch].num);
 	}
 
       if( bf->ready )
 	{
-	  //PRINT_WARN1( "blobfinder putting %d bytes of data", sizeof(bfd) );
-	  bf->PutData( &bfd, sizeof(bfd), NULL); // time gets filled in
+	  size_t size = sizeof(bfd) - sizeof(bfd.blobs) + bcount * sizeof(bfd.blobs[0]);
+	  
+	  //PRINT_WARN1( "blobfinder putting %d bytes of data", size );
+	  bf->PutData( &bfd, size, NULL); // time gets filled in
 	}
     }
 }
