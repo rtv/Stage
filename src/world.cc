@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.132 2002-10-30 02:18:20 gerkey Exp $
+ * CVS info: $Id: world.cc,v 1.133 2002-10-31 01:38:55 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -42,6 +42,7 @@
 #include <math.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <sys/socket.h>
 #include <semaphore.h>
 #include <sys/types.h>
 #include <sys/stat.h>

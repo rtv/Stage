@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.9 2002-10-27 21:55:37 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.10 2002-10-31 01:38:54 gerkey Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -44,6 +44,8 @@
 //#include "rtp.h"
 
 #include <netdb.h>
+#include <sys/types.h>
+#include <netinet/in.h>
 
 #ifdef INCLUDE_RTK2
 #include "rtk.h"

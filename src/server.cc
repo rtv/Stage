@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.39 2002-10-30 04:05:46 gerkey Exp $
+ * CVS info: $Id: server.cc,v 1.40 2002-10-31 01:38:55 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -598,10 +598,10 @@ void CStageServer::ListenForConnections( void )
     // set up a socket for this connection
     struct sockaddr_in cliaddr;  
     bzero(&cliaddr, sizeof(cliaddr));
-#if HAVE_STDINT_H && HAVE_POLL
-    socklen_t clilen;
-#else
+#if PLAYER_SOLARIS
     int clilen;
+#else
+    socklen_t clilen;
 #endif
 
     clilen  = sizeof(cliaddr);
