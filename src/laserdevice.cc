@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.46 $
+//  $Author: inspectorg $
+//  $Revision: 1.47 $
 //
 // Usage:
 //  (empty)
@@ -138,7 +138,6 @@ void CLaserDevice::Update( double sim_time )
     if( Subscribed() )
     {
       // Check to see if the configuration has changed
-      //
       CheckConfig();
 
       // Generate new scan data and copy to data buffer
@@ -164,56 +163,83 @@ void CLaserDevice::Update( double sim_time )
 
 ///////////////////////////////////////////////////////////////////////////
 // Check to see if the configuration has changed
-//
+// This currently emulates the behaviour of SICK laser range finder.
 bool CLaserDevice::CheckConfig()
 {
-  player_laser_config_t config;
   void* client;
-  if(GetConfig(&client, &config, sizeof(config)) == 0)
+  player_laser_config_t config;
+
+  if (GetConfig(&client, &config, sizeof(config)) == 0)
     return false;  
 
-  // Swap some bytes
-  //
-  config.resolution = ntohs(config.resolution);
-  config.min_angle = ntohs(config.min_angle);
-  config.max_angle = ntohs(config.max_angle);
+  switch (config.subtype)
+  {
+    case PLAYER_LASER_SET_CONFIG:
+    {
+      config.resolution = ntohs(config.resolution);
+      config.min_angle = ntohs(config.min_angle);
+      config.max_angle = ntohs(config.max_angle);
 
-  // Emulate behaviour of SICK laser range finder
-  //
-  if (config.resolution == 25)
-  {
-    config.min_angle = max((int)(config.min_angle), -5000);
-    config.min_angle = min((int)config.min_angle, +5000);
-    config.max_angle = max((int)config.max_angle, -5000);
-    config.max_angle = min((int)config.max_angle, +5000);
-        
-    this->scan_res = DTOR((double) config.resolution / 100.0);
-    this->scan_min = DTOR((double) config.min_angle / 100.0);
-    this->scan_max = DTOR((double) config.max_angle / 100.0);
-    this->scan_count = (int) ((this->scan_max - this->scan_min) / this->scan_res) + 1;
-  }
-  else if (config.resolution == 50 || config.resolution == 100)
-  {
-    if (abs(config.min_angle) > 9000 || abs(config.max_angle) > 9000)
-      PRINT_MSG("warning: invalid laser configuration request");
-        
-    this->scan_res = DTOR((double) config.resolution / 100.0);
-    this->scan_min = DTOR((double) config.min_angle / 100.0);
-    this->scan_max = DTOR((double) config.max_angle / 100.0);
-    this->scan_count = (int) ((this->scan_max - this->scan_min) / this->scan_res) + 1;
-  }
-  else
-  {
-    // Ignore invalid configurations
-    //  
-    PutReply(client, PLAYER_MSGTYPE_RESP_NACK, NULL, NULL, 0);
-    PRINT_MSG("invalid laser configuration request");
-    return false;
-  }
-        
-  this->intensity = config.intensity;
+      if (config.resolution == 25)
+      {
+        if (abs(config.min_angle) > 5000 || abs(config.max_angle) > 5000)
+        {
+          PRINT_MSG("warning: invalid laser configuration request");
+          PutReply(client, PLAYER_MSGTYPE_RESP_NACK, NULL, NULL, 0);
+        }
+        else
+        {
+          this->scan_res = DTOR((double) config.resolution / 100.0);
+          this->scan_min = DTOR((double) config.min_angle / 100.0);
+          this->scan_max = DTOR((double) config.max_angle / 100.0);
+          this->scan_count = (int) ((this->scan_max - this->scan_min) / this->scan_res) + 1;
+          this->intensity = config.intensity;
+          PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, NULL, 0);
+        }
+      }
+      else if (config.resolution == 50 || config.resolution == 100)
+      {
+        if (abs(config.min_angle) > 9000 || abs(config.max_angle) > 9000)
+        {
+          PRINT_MSG("warning: invalid laser configuration request");
+          PutReply(client, PLAYER_MSGTYPE_RESP_NACK, NULL, NULL, 0);
+        }
+        else
+        {
+          this->scan_res = DTOR((double) config.resolution / 100.0);
+          this->scan_min = DTOR((double) config.min_angle / 100.0);
+          this->scan_max = DTOR((double) config.max_angle / 100.0);
+          this->scan_count = (int) ((this->scan_max - this->scan_min) / this->scan_res) + 1;
+          this->intensity = config.intensity;
+          PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, NULL, 0);
+        }
+      }
+      else
+      {
+        PRINT_MSG("warning: invalid laser configuration request");
+        PutReply(client, PLAYER_MSGTYPE_RESP_NACK, NULL, NULL, 0);
+      }
+      break;
+    }
 
-  PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, NULL, 0);
+    case PLAYER_LASER_GET_CONFIG:
+    {
+      config.resolution = htons((int) (RTOD(this->scan_res) * 100));
+      config.min_angle = htons((unsigned int) (int) (RTOD(this->scan_min) * 100));
+      config.max_angle = htons((unsigned int) (int) (RTOD(this->scan_max) * 100));
+      config.intensity = this->intensity;
+      PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &config, sizeof(config));
+      break;
+    }
+
+    default:
+    {
+      // Ignore invalid request subtypes
+      PRINT_MSG("invalid laser configuration request");
+      PutReply(client, PLAYER_MSGTYPE_RESP_NACK, NULL, NULL, 0);
+      return false;
+    }
+  }
 
   return true;
 }
