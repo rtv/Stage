@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.15 2002-02-07 00:45:38 rtv Exp $
+ * $Id: image.cc,v 1.16 2002-03-15 18:39:50 gerkey Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -221,7 +221,7 @@ bool Nimage::load_pnm(const char* fname)
   source.read( (char*)data, numPixels );
 
   // check that we read the right amount of data
-  assert( source.gcount() == numPixels );
+  assert( (unsigned int)(source.gcount()) == numPixels );
 
   source.close();
 

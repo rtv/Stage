@@ -3,7 +3,7 @@
 # stage/Makefile.common - build and installation configurations
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile.common,v 1.45 2002-03-15 17:41:03 gerkey Exp $
+# $Id: Makefile.common,v 1.46 2002-03-15 18:39:50 gerkey Exp $
 #
 # Notes: All user-configurable paths and build options should be specified 
 #        here. This file is included by Makefile and src/Makefile. 
@@ -130,6 +130,11 @@ CC = g++
 
 # use the same tool to link
 LINKER = $(CC)
+
+#############################################################################
+# Other useful definitions used throughout the build process
+#
+MAKEDEP=makedepend
 
 #############################################################################
 # CONFIGURATION FOR HRL PROPRIETARY CODE 

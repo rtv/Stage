@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/stage_types.hh,v $
-//  $Author: gsibley $
-//  $Revision: 1.19 $
+//  $Author: gerkey $
+//  $Revision: 1.20 $
 //
 // Usage:
 //  (empty)
@@ -49,7 +49,7 @@
 #endif
 
 #ifndef TWOPI
-	#define TWOPI        6.2831853
+        #define TWOPI 2 * M_PI
 #endif
 
 #define STAGE_SYNC 0

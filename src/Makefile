@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.81 2002-03-15 02:52:16 rtv Exp $
+# $Id: Makefile,v 1.82 2002-03-15 18:39:50 gerkey Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -94,11 +94,11 @@ xs: xs.cc render.cc
 # TOOLS ###################################################################
 
 manager: manager.cc 
-	$(CC) -I../include -Wall -I$(PLAYER_INC) -lstdc++ manager.cc -o manager
+	$(CC) -Wall $(INCLUDES) -lstdc++ manager.cc -o manager
 
 # truthlog doesn't compile... BPG 'cos it's broken... RTV
 truthlog: truthlog.cc 
-	$(CC) -I../include -I$(PLAYER_INC) -lstdc++ truthlog.cc -o truthlog
+	$(CC) $(INCLUDES) -lstdc++ truthlog.cc -o truthlog
 
 # TRAPDOOR INTERFACE ########################################################
 
@@ -115,15 +115,15 @@ libtrapdoor.a: trapdoor.o
 clean:
 	rm -f *.o *~ *.a stage rtkstage manager core xs truthlog 
 
-#dep:
-#	$(MAKEDEP) -Y -I../include -I$(PLAYER_INC) -s "# Dependancies (make dep)" truthlog.cc xs.cc render.cc 2>/dev/null
-#	$(RM) -f Makefile.bak
-#	cd stage_objs && ${MAKE} dep
-#	cd rtkstage_objs && ${MAKE} dep
-
-#dep:
-#	$(MAKEDEP) -Y -- $(CCFLAGS) -- -s "# Dependancies (make dep)" *.cc 2>/dev/null
-#	sed s/"^\.\.\/"// < Makefile > Makefile.bak && mv Makefile.bak Makefile
+# makedepend.  use it; it's your friend.  here we run 3 times in order to
+# derive the dependencies for the *_stg.o objects, the *_rtk.o objects, and 
+# the *.o objects for things like xs.  some unnecessary and unused 
+# dependencies will be added (e.g., world.o), but they're harmless - BPG
+dep:
+	$(MAKEDEP) -o_stg.o -Y $(INCLUDES) -s "# Dependancies (make dep)" $(SRCS) 2> /dev/null
+	$(MAKEDEP) -a -o_rtk.o -Y $(INCLUDES) -s "# Dependancies (make dep)" $(SRCS) 2> /dev/null
+	$(MAKEDEP) -a -o.o -Y $(INCLUDES) -s "# Dependancies (make dep)" *.cc 2> /dev/null
+	rm -f Makefile.bak
 
 
 clean_dep:
@@ -131,7 +131,3 @@ clean_dep:
 	$(RM) -f Makefile.bak
 
 # Dependancies (make dep)
-
-
-
-

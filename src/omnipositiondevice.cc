@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/omnipositiondevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.7 $
+//  $Author: gerkey $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -31,7 +31,6 @@
 #include "raytrace.hh"
 #include "omnipositiondevice.hh"
 
-#define TWOPI 2 * M_PI
 
 
 ///////////////////////////////////////////////////////////////////////////
