@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/beacondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -51,6 +51,7 @@ CBeaconDevice::CBeaconDevice(CWorld *world, CObject *parent,
     //
     m_update_interval = 0.2;
     m_last_update = 0;
+    m_max_range = 1.5;
 
     #ifdef INCLUDE_RTK
 
@@ -114,8 +115,14 @@ void CBeaconDevice::Update()
         //
         double range = (double) (ntohs(laser[i]) & 0x1FFF) / 1000;
         double bearing = DTOR((double) i / 2 - 90);
+        double orient = -oth;
         double px = ox + range * cos(oth + bearing);
         double py = oy + range * sin(oth + bearing);
+
+        // Ignore beacons that are too far away
+        //
+        if (range > m_max_range)
+            continue;
 
         // See if there is an id in the beacon layer
         //
@@ -133,6 +140,7 @@ void CBeaconDevice::Update()
         data.beacon[data.count].id = id;
         data.beacon[data.count].range = (int) (range * 1000);
         data.beacon[data.count].bearing = (int) RTOD(bearing);
+        data.beacon[data.count].orient = (int) RTOD(orient);
         data.count++;
 
         #ifdef INCLUDE_RTK
@@ -150,6 +158,16 @@ void CBeaconDevice::Update()
         #endif
     }
 
+    // Get the byte ordering correct
+    //
+    for (int i = 0; i < data.count; i++)
+    {
+        data.beacon[i].range = htons(data.beacon[i].range);
+        data.beacon[i].bearing = htons(data.beacon[i].bearing);
+        data.beacon[i].orient = htons(data.beacon[i].orient);
+    }
+    data.count = htons(data.count);
+    
     // Write data buffer to shared mem
     //
     PutData(&data, sizeof(data));

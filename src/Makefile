@@ -1,7 +1,7 @@
 #*************************************************************************
 # src/Makefile - makes the sources
 # RTV
-# $Id: Makefile,v 1.9.2.10 2001-01-16 02:10:56 ahoward Exp $
+# $Id: Makefile,v 1.9.2.11 2001-02-01 17:47:02 ahoward Exp $
 # ************************************************************************/
 
 .SUFFIXES: .cc .o
@@ -24,7 +24,7 @@ LIBS = -L/usr/X11R6/lib -lX11 -lm -lpthread
 clean:
 	rm -f *.o *~ posreader stage
 
-all: stage posreader
+all: stage rtk-stage posreader
 
 #stage:  $(OBS) $(WIN_OBS)
 #	g++ $(LIBS) $(OBS) $(WIN_OBS) -o stage

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/beacondevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.1 $
+//  $Revision: 1.1.2.2 $
 //
 // Usage:
 //  (empty)
@@ -53,6 +53,10 @@ class CBeaconDevice : public CPlayerDevice
     //
     private: double m_update_interval;
     private: double m_last_update;
+
+    // Detection parameters
+    //
+    private: double m_max_range;
  
 #ifdef INCLUDE_RTK
     
