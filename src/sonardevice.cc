@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.30 2002-08-16 06:18:35 gerkey Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.31 2002-08-19 21:48:28 gerkey Exp $
  */
 
 #include <math.h>
@@ -34,12 +34,12 @@ CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent )
     : CEntity(world, parent )
 {
   // set the Player IO sizes correctly for this type of Entity
-  m_data_len    = sizeof( player_frf_data_t );
+  m_data_len    = sizeof( player_sonar_data_t );
   m_command_len = 0;
   m_config_len  = 1;
   m_reply_len  = 1;
   
-  m_player.code = PLAYER_FRF_CODE; // from player's messages.h
+  m_player.code = PLAYER_SONAR_CODE; // from player's messages.h
   this->stage_type = SonarType;
   this->color = ::LookupColor(SONAR_COLOR);
 
@@ -160,7 +160,7 @@ void CSonarDevice::UpdateConfig()
   int s, len;
   void* client;
   char buffer[PLAYER_MAX_REQREP_SIZE];
-  player_frf_geom_t geom;
+  player_sonar_geom_t geom;
 
   while (true)
   {
@@ -175,7 +175,7 @@ void CSonarDevice::UpdateConfig()
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
         break;
 
-      case PLAYER_FRF_GET_GEOM_REQ:
+      case PLAYER_SONAR_GET_GEOM_REQ:
         // Return the sonar geometry
         assert(this->sonar_count <= ARRAYSIZE(geom.poses));
         geom.pose_count = htons(this->sonar_count);
@@ -238,7 +238,7 @@ void CSonarDevice::RtkUpdate()
 
   // see the comment in CLaserDevice for why this gets the data out of
   // the buffer instead of storing hit points in ::Update() - RTV
-  player_frf_data_t data;
+  player_sonar_data_t data;
   
   if( Subscribed() > 0 && m_world->ShowDeviceData( this->stage_type) )
   {

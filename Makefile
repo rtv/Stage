@@ -8,7 +8,7 @@
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
 #  $Author: gerkey $
-#  $Revision: 1.42 $
+#  $Revision: 1.43 $
 #
 # Note: All normal user configurations are in Makefile.common - you
 # probably don't need to change this file
@@ -38,7 +38,7 @@ clean: clean_dep
 	cd src && ${MAKE} clean
 	cd include &&  ${MAKE} clean
 	cd worlds && rm -f core
-	cd $(RTK_DIR) && ${MAKE} clean
+	cd $(RTK_DIR) && ${MAKE} -f Makefile.manual clean
 
 clean_dep:
 	cd src && ${MAKE} clean_dep

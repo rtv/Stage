@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.34 $
+//  $Revision: 1.35 $
 //
 // Usage:
 //  (empty)
@@ -50,7 +50,7 @@ CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
   
   // the parent MUST be a laser device
   ASSERT( parent );
-  ASSERT( parent->m_player.code == PLAYER_SRF_CODE );
+  ASSERT( parent->m_player.code == PLAYER_LASER_CODE );
   
   this->laser = parent; 
   //this->laser->m_dependent_attached = true;
@@ -184,7 +184,7 @@ void CLBDDevice::Update( double sim_time )
   // Get the laser range data
   //
   uint32_t time_sec=0, time_usec=0;
-  player_srf_data_t laser;
+  player_laser_data_t laser;
   if (this->laser->GetData(&laser, sizeof(laser) ) == 0)
   {
     puts( "Stage warning: LBD device found no laser data" );
@@ -267,11 +267,11 @@ void CLBDDevice::Update( double sim_time )
 
     // Record beacons
     //
-    assert(beacon.count < ARRAYSIZE(beacon.beacon));
-    beacon.beacon[beacon.count].id = id;
-    beacon.beacon[beacon.count].range = (int) (r * 1000);
-    beacon.beacon[beacon.count].bearing = (int) RTOD(b);
-    beacon.beacon[beacon.count].orient = (int) RTOD(o);
+    assert(beacon.count < ARRAYSIZE(beacon.fiducials));
+    beacon.fiducials[beacon.count].id = id;
+    beacon.fiducials[beacon.count].pose[0] = (int) (r * 1000);
+    beacon.fiducials[beacon.count].pose[1] = (int) RTOD(b);
+    beacon.fiducials[beacon.count].pose[2] = (int) RTOD(o);
     beacon.count++;
   }
 
@@ -279,9 +279,9 @@ void CLBDDevice::Update( double sim_time )
   //
   for (int i = 0; i < beacon.count; i++)
   {
-    beacon.beacon[i].range = htons(beacon.beacon[i].range);
-    beacon.beacon[i].bearing = htons(beacon.beacon[i].bearing);
-    beacon.beacon[i].orient = htons(beacon.beacon[i].orient);
+    beacon.fiducials[i].pose[0] = htons(beacon.fiducials[i].pose[0]);
+    beacon.fiducials[i].pose[1] = htons(beacon.fiducials[i].pose[1]);
+    beacon.fiducials[i].pose[2] = htons(beacon.fiducials[i].pose[2]);
   }
   beacon.count = htons(beacon.count);
     
@@ -419,10 +419,10 @@ void CLBDDevice::RtkUpdate()
       int beacon_count = (int)ntohs(data.count);
       for( int b=0; b < beacon_count; b++ )
 	{
-	  uint8_t id = data.beacon[b].id;
-	  uint16_t range_mm = ntohs(data.beacon[b].range);
-	  int16_t bearing_deg = ntohs(data.beacon[b].bearing);
-	  int16_t orient_deg = ntohs(data.beacon[b].orient);
+	  uint8_t id = data.fiducials[b].id;
+	  uint16_t range_mm = ntohs(data.fiducials[b].pose[0]);
+	  int16_t bearing_deg = ntohs(data.fiducials[b].pose[1]);
+	  int16_t orient_deg = ntohs(data.fiducials[b].pose[2]);
 
 	  double range = (double)range_mm / 1000.0;
 	  double bearing = DTOR((double)bearing_deg);

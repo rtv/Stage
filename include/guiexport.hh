@@ -1,7 +1,7 @@
 /*************************************************************************
  * guiexport.hh - data types for exporting data to an external GUI
  * RTV
- * $Id: guiexport.hh,v 1.13 2002-08-16 06:18:34 gerkey Exp $
+ * $Id: guiexport.hh,v 1.14 2002-08-19 21:48:28 gerkey Exp $
  ************************************************************************/
 
 #include <stage.h> // for some player data types and sizes
@@ -13,8 +13,8 @@
 //#include "pioneermobiledevice.hh" // for definition of pioneer_shape_t
 
 #define LABELSIZE 64
-#define SONARSAMPLES PLAYER_MAX_FRF_SAMPLES
-#define LASERSAMPLES PLAYER_MAX_SRF_SAMPLES
+#define SONARSAMPLES PLAYER_SONAR_MAX_SAMPLES
+#define LASERSAMPLES PLAYER_LASER_MAX_SAMPLES
 
 #define MAXBEACONS 100
 

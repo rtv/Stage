@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.116 2002-08-16 06:18:34 gerkey Exp $
+# $Id: Makefile,v 1.117 2002-08-19 21:48:28 gerkey Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -51,7 +51,7 @@ stage: $(OBS) rtk
 # RTK #######################################################################
 
 rtk: $(shell ls -d ../$(RTK_DIR)/*.[ch])
-	cd ../$(RTK_DIR) && ${MAKE}
+	cd ../$(RTK_DIR) && ${MAKE} -f Makefile.manual
 
 # SRC TO OBJECT RULES #######################################################
 

@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.hh,v 1.10 2002-08-16 06:18:34 gerkey Exp $
+ * CVS info: $Id: sonardevice.hh,v 1.11 2002-08-19 21:48:28 gerkey Exp $
  */
 
 #ifndef SONARDEVICE_HH
@@ -29,7 +29,7 @@
 
 #include "playerdevice.hh"
 
-#define SONARSAMPLES PLAYER_MAX_FRF_SAMPLES
+#define SONARSAMPLES PLAYER_SONAR_MAX_SAMPLES
 
 enum SonarReturn { SonarTransparent=0, SonarOpaque };
 
@@ -56,7 +56,7 @@ class CSonarDevice : public CEntity
   private: double sonars[SONARSAMPLES][3];
     
   // Structure holding the sonar data
-  private: player_frf_data_t data;
+  private: player_sonar_data_t data;
 
 #ifdef INCLUDE_RTK2
 
