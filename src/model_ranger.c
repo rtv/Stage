@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.24 $
+//  $Revision: 1.25 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -294,13 +294,15 @@ void ranger_render_data( model_t* mod )
     }
 }
 
-int register_ranger(void)
-{
-  register_init( STG_MODEL_RANGER, ranger_init );
-  register_update( STG_MODEL_RANGER, ranger_update );
-  register_shutdown( STG_MODEL_RANGER, ranger_shutdown );
-  register_set_config( STG_MODEL_RANGER, ranger_set_config );
-  register_set_data( STG_MODEL_RANGER, ranger_set_data );
+int register_ranger( lib_entry_t* lib )
+{ 
+  assert(lib);
+  
+  lib[STG_MODEL_RANGER].init = ranger_init;
+  lib[STG_MODEL_RANGER].update = ranger_update;
+  lib[STG_MODEL_RANGER].shutdown = ranger_shutdown;
+  lib[STG_MODEL_RANGER].set_config = ranger_set_config;
+  lib[STG_MODEL_RANGER].set_data = ranger_set_data;
 
   return 0; //ok
 } 

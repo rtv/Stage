@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.40 $
+//  $Revision: 1.41 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -323,13 +323,15 @@ int laser_shutdown( model_t* mod )
 }
 
 
-int register_laser( void )
-{
-  register_init( STG_MODEL_LASER, laser_init );
-  register_update( STG_MODEL_LASER, laser_update );
-  register_shutdown( STG_MODEL_LASER, laser_shutdown );
-  register_set_config( STG_MODEL_LASER, laser_set_config );
-  register_set_data( STG_MODEL_LASER, laser_set_data );
+int register_laser( lib_entry_t* lib )
+{ 
+  assert(lib);
+  
+  lib[STG_MODEL_LASER].init = laser_init;
+  lib[STG_MODEL_LASER].update = laser_update;
+  lib[STG_MODEL_LASER].shutdown = laser_shutdown;
+  lib[STG_MODEL_LASER].set_config = laser_set_config;
+  lib[STG_MODEL_LASER].set_data = laser_set_data;
 
   return 0; //ok
 } 

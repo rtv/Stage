@@ -27,6 +27,8 @@ typedef struct _server
 		       // file descriptor. each fd matches one in the
 		       // pollfd array.
 
+  lib_entry_t* library;
+  
   // maps a world id on to the client that owns it. if the client dies
   //GHashTable* client_world_map;
   

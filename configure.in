@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.55 2004-09-11 23:01:47 rtv Exp $
+dnl $Id: configure.in,v 1.56 2004-09-16 06:54:27 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -18,6 +18,11 @@ esac
 
 dnl Need AC_PROG_MAKE_SET for recursive building
 AC_PROG_MAKE_SET
+
+dnl tell libtool to enable dynamic-loadable libraries
+AC_LIBTOOL_DLOPEN
+dnl enable libtool for building shared libraries in a platform-independent way
+AC_PROG_LIBTOOL
 
 dnl Generate a configuration header called <config.h> and put all the C
 dnl preprocessor defines in there
@@ -72,16 +77,28 @@ dnl build mplementations of these in libreplace.a if these are
 dnl missing
 AC_REPLACE_FUNCS(poll dirname scandir)
 
-dnl add prefix to the pkg-config path in case RTK was installed there
+dnl add prefix to the pkg-config path in case things were installed there
 dnl and the  user didn't add it manually
 export PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$PKG_CONFIG_PATH
 
-PKG_CHECK_MODULES(RTK, librtk2 >= 2.2,
-AC_DEFINE(INCLUDE_RTK2,1,[building RTK GUI]),
-AC_MSG_WARN([no suitable RTK was found. ])
+dnl PKG_CHECK_MODULES(RTK, librtk2 >= 2.2,
+dnl AC_DEFINE(INCLUDE_RTK,1,[building RTK GUI]),
+dnl AC_MSG_WARN([no suitable RTK was found. ])
+dnl )
+
+PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.0,
+AC_DEFINE(INCLUDE_GTK,1,[building GUI]),
+AC_MSG_WARN([no suitable GTK was found. ])
 )
 
-dnl RTK2 uses libjpeg to export images.
+dnl we need Player 1.5 or higher
+PKG_CHECK_MODULES( PLAYER, player >= 1.5,
+AC_DEFINE(INCLUDE_PLAYER,1,[building Player plugin]),
+AC_MSG_WARN([Player was not found. ])
+)
+
+
+dnl we use libjpeg to export images.
 AC_CHECK_HEADER(jpeglib.h,
   AC_DEFINE(HAVE_JPEGLIB_H,1,[include jpeg support])
   LIBJPEG="-ljpeg",,)
@@ -104,12 +121,12 @@ AM_CONDITIONAL(WITH_TESTS, test x$with_tests = xyes)
 
 AC_OUTPUT(Makefile 
           src/Makefile 
-          src/models/Makefile 
           worlds/Makefile 
           worlds/bitmaps/Makefile 
           replace/Makefile
           tools/Makefile
-	  stage.pc )
+	  stage.pc
+          stageplugin.pc )
 
 dnl should use AC_MSG_NOTICE(), but that's apparently not defined in
 dnl autoconf 2.13.

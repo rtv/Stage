@@ -1,6 +1,10 @@
 #ifndef STG_MODEL_H
 #define STG_MODEL_H
 
+#ifdef __cplusplus
+ extern "C" {
+#endif 
+
 #include "world.h"
 #include "rtk.h"
 
@@ -74,49 +78,6 @@ typedef struct _model
 } model_t;  
 
 
-typedef void(*func_init_t)(model_t*);
-typedef int(*func_update_t)(model_t*);
-typedef int(*func_startup_t)(model_t*);
-typedef int(*func_shutdown_t)(model_t*);
-
-typedef int(*func_set_command_t)(model_t*,void*,size_t);
-typedef int(*func_set_data_t)(model_t*,void*,size_t);
-typedef int(*func_set_config_t)(model_t*,void*,size_t);
-
-typedef void*(*func_get_command_t)(model_t*,size_t*);
-typedef void*(*func_get_data_t)(model_t*,size_t*);
-typedef void*(*func_get_config_t)(model_t*,size_t*);
-
-typedef int(*func_handle_message_t)(model_t*, int fd, stg_msg_t* msg);
-
-//typedef int(*func_set_t)(model_t*,void*,size_t);
-//typedef void*(*func_get_t)(model_t*,size_t*);
-//typedef int(*func_service_t)(model_t*);
-//typedef int(*func_request_t)(model_t*);
-
-typedef struct
-{
-  func_init_t init;
-  func_startup_t startup;
-  func_shutdown_t shutdown;
-  func_update_t update;
-
-  func_get_data_t get_data;
-  func_set_data_t set_data;
-  func_set_command_t set_command;
-  func_get_command_t get_command;
-  func_set_config_t set_config;
-  func_get_config_t get_config;
-
-  func_handle_message_t handle_message;
-
-  //func_service_t service;
-  //func_get_t get;
-  //func_set_t set;
-  //func_request_t request;
-} lib_entry_t;
-
-
 // MODEL
 model_t* model_create(  world_t* world, model_t* parent, stg_id_t id, stg_model_type_t type, char* token );
 void model_destroy( model_t* mod );
@@ -141,8 +102,8 @@ int model_set_guifeatures( model_t* mod, stg_guifeatures_t* gf );
 int model_set_energy_config( model_t* mod, stg_energy_config_t* gf );
 int model_set_energy_data( model_t* mod, stg_energy_data_t* gf );
 int model_set_lines( model_t* mod, stg_line_t* lines, size_t lines_count );
-int model_set_obstaclereturn( model_t* mod, stg_bool_t ret );
-int model_set_laserreturn( model_t* mod, stg_laser_return_t val );
+int model_set_obstaclereturn( model_t* mod, stg_bool_t* ret );
+int model_set_laserreturn( model_t* mod, stg_laser_return_t* val );
 int model_set_fiducialreturn( model_t* mod, stg_fiducial_return_t* val );
 
 // GET properties - use these to get props - don't get them directly
@@ -189,23 +150,6 @@ void model_energy_consume( model_t* mod, stg_watts_t rate );
 
 void model_lines_render( model_t* mod );
 
-void register_init( stg_model_type_t type, func_init_t func );
-void register_startup( stg_model_type_t type, func_startup_t func );
-void register_shutdown( stg_model_type_t type, func_shutdown_t func );
-void register_update( stg_model_type_t type, func_update_t func );
-
-//void register_service( stg_model_type_t type, func_service_t func );
-
-void register_set_data( stg_model_type_t type, func_set_data_t func );
-void register_set_command( stg_model_type_t type, func_set_command_t func );
-void register_set_config( stg_model_type_t type, func_set_config_t func );
-
-void register_get_data( stg_model_type_t type, func_get_data_t func );
-void register_get_command( stg_model_type_t type, func_get_command_t func );
-void register_get_config( stg_model_type_t type, func_get_config_t func );
-
-void register_handle_message( stg_model_type_t type, func_handle_message_t func );
-
 void model_map( model_t* mod, gboolean render );
 void model_map_with_children( model_t* mod, gboolean render );
 
@@ -225,5 +169,8 @@ void model_render_geom( model_t* mod );
 void model_render_pose( model_t* mod );
 //void model_render_( model_t* mod );
 
+#ifdef __cplusplus
+ }
+#endif 
 
 #endif

@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.13 2004-08-30 05:58:57 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.14 2004-09-16 06:54:27 rtv Exp $
  */
 
 #include <math.h>
@@ -52,19 +52,6 @@ stg_blobfinder_config_t* blobfinder_get_config( model_t* mod )
   assert( cfg );
   assert( len == sizeof( stg_blobfinder_config_t ));
   return cfg;
-}
-
-
-int register_blobfinder(void)
-{ 
-  register_init( STG_MODEL_BLOB, blobfinder_init );
-  register_set_data(  STG_MODEL_BLOB, blobfinder_set_data );
-  register_set_config( STG_MODEL_BLOB, blobfinder_set_config );
-  register_startup( STG_MODEL_BLOB, blobfinder_startup );
-  register_shutdown( STG_MODEL_BLOB, blobfinder_shutdown );
-  register_update(  STG_MODEL_BLOB,blobfinder_update );
-
-  return 0;// ok
 }
 
 void blobfinder_init( model_t* mod )
@@ -486,3 +473,16 @@ void blobfinder_render_config( model_t* mod )
 }
 
 
+int register_blobfinder( lib_entry_t* lib )
+{ 
+  assert(lib);
+  
+  lib[STG_MODEL_BLOB].init = blobfinder_init;
+  lib[STG_MODEL_BLOB].update = blobfinder_update;
+  lib[STG_MODEL_BLOB].startup = blobfinder_startup;
+  lib[STG_MODEL_BLOB].shutdown = blobfinder_shutdown;
+  lib[STG_MODEL_BLOB].set_config = blobfinder_set_config;
+  lib[STG_MODEL_BLOB].set_data = blobfinder_set_data;
+
+  return 0; //ok
+} 

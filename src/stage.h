@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.85 2004-09-09 22:23:34 rtv Exp $
+ * CVS: $Id: stage.h,v 1.86 2004-09-16 06:54:27 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -243,7 +243,7 @@ typedef struct
 {
   stg_msg_type_t type;
   size_t payload_len;
-  char payload[0]; // named access to the end of the struct
+  unsigned char payload[0]; // named access to the end of the struct
 } stg_msg_t;
 
 typedef struct
@@ -253,7 +253,7 @@ typedef struct
   stg_id_t prop;
   stg_msec_t timestamp; // the time at which this property was filled
   size_t datalen; // data size
-  char data[]; // the data follows
+  unsigned char data[]; // the data follows
 } stg_prop_t;
 
 typedef struct
@@ -351,6 +351,55 @@ typedef struct
 } stg_connect_reply_t;
 
 
+struct _model;
+
+typedef void(*func_init_t)(struct _model*);
+typedef int(*func_update_t)(struct _model*);
+typedef int(*func_startup_t)(struct _model*);
+typedef int(*func_shutdown_t)(struct _model*);
+
+typedef int(*func_set_command_t)(struct _model*,void*,size_t);
+typedef int(*func_set_data_t)(struct _model*,void*,size_t);
+typedef int(*func_set_config_t)(struct _model*,void*,size_t);
+
+typedef void*(*func_get_command_t)(struct _model*,size_t*);
+typedef void*(*func_get_data_t)(struct _model*,size_t*);
+typedef void*(*func_get_config_t)(struct _model*,size_t*);
+
+typedef int(*func_handle_message_t)(struct _model*, int fd, stg_msg_t* msg);
+
+//typedef int(*func_set_t)(struct _model*,void*,size_t);
+//typedef void*(*func_get_t)(struct _model*,size_t*);
+//typedef int(*func_service_t)(struct _model*);
+//typedef int(*func_request_t)(struct _model*);
+
+
+// used to create special-purpose models
+typedef struct
+{
+  func_init_t init;
+  func_startup_t startup;
+  func_shutdown_t shutdown;
+  func_update_t update;
+
+  func_get_data_t get_data;
+  func_set_data_t set_data;
+  func_set_command_t set_command;
+  func_get_command_t get_command;
+  func_set_config_t set_config;
+  func_get_config_t get_config;
+
+  func_handle_message_t handle_message;
+
+  //func_service_t service;
+  //func_get_t get;
+  //func_set_t set;
+  //func_request_t request;
+} lib_entry_t;
+
+lib_entry_t* stg_library_create( void );
+void stg_library_destroy( lib_entry_t* lib );
+
 
 // PROPERTY-SPECIFIC DEFINITIONS -------------------------------------------
 
@@ -379,6 +428,8 @@ typedef struct
 void stg_print_geom( stg_geom_t* geom );
 
 // POSITION -------------------------------------------------------------
+
+#define STG_MM_POSITION_RESETODOM 77
 
 typedef enum
   { STG_POSITION_CONTROL_VELOCITY, STG_POSITION_CONTROL_POSITION }
@@ -1025,8 +1076,13 @@ stg_client_t* stg_client_create( void );
 
 // THESE ARE IMPLEMENTED IN STAGECPP.CC
 // because they use the C++ worldfile class (for now)
-stg_world_t* stg_client_worldfile_load( stg_client_t* client, 
-					char* worldfile_path );
+//stg_world_t* stg_client_worldfile_load( stg_client_t* client, 
+//					char* worldfile_path );
+
+struct _world;
+struct _world* stg_client_worldfile_load( char* worldfile_path );
+
+
 void stg_client_save( stg_client_t* cli, stg_id_t world_id );
 void stg_client_load( stg_client_t* cli, stg_id_t world_id );
 // END THESE

@@ -8,14 +8,17 @@
 #include "gui.h"
 #include "raytrace.h"
 
-extern lib_entry_t derived[];
-
-
 int model_create_name( model_t* mod )
 {
   assert( mod );
   assert( mod->token );
   
+  PRINT_DEBUG1( "model's default name is %s",
+		mod->token );
+  if( mod->parent )
+    PRINT_DEBUG1( "model's parent's name is %s",
+		  mod->parent->token );
+
   char buf[512];  
   if( mod->parent == NULL )
     snprintf( buf, 255, "%s:%d", 
@@ -57,6 +60,8 @@ model_t* model_create(  world_t* world,
 		mod->world->id, mod->id, 
 		mod->token, stg_model_type_string(mod->type) );
   
+  PRINT_DEBUG1( "original token: %s", token );
+
   // add this model to its parent's list of children (if any)
   if( parent) g_ptr_array_add( parent->children, mod );       
   
@@ -149,8 +154,8 @@ model_t* model_create(  world_t* world,
   memset( &mod->odom, 0, sizeof(mod->odom));
 
   // if this type of model has an init function, call it.
-  if( derived[ mod->type ].init )
-    derived[ mod->type ].init(mod);
+  if( world->library[ mod->type ].init )
+    world->library[ mod->type ].init(mod);
   
   PRINT_DEBUG4( "finished model %d.%d(%s) type %s", 
 		mod->world->id, mod->id, 
@@ -349,8 +354,8 @@ int model_update( model_t* mod )
   mod->interval_elapsed = 0;
 
   // if this type of model has an update function, call it.
-  if( derived[ mod->type ].update && mod->subs[STG_PROP_DATA] > 0 )
-    derived[ mod->type ].update(mod);
+  if( mod->world->library[ mod->type ].update && mod->subs[STG_PROP_DATA] > 0 )
+    mod->world->library[ mod->type ].update(mod);
 
   // now move the model if it has any velocity
   model_update_pose( mod );
@@ -369,8 +374,8 @@ int model_service( model_t* mod )
   PRINT_DEBUG1( "default service method mod %d", mod->id );
 
   // if this type of model has an service function, call it.
-  if( derived[ mod->type ].service )
-    derived[ mod->type ].service(mod);
+  if(mod->world->library[ mod->type ].service )
+   mod->world->library[ mod->type ].service(mod);
 
   return 0;
 }
@@ -381,8 +386,8 @@ int model_startup( model_t* mod )
   PRINT_DEBUG1( "default startup method mod %d", mod->id );
   
   // if this type of model has a startup function, call it.
-  if( derived[ mod->type ].startup )
-   return  derived[ mod->type ].startup(mod);
+  if(mod->world->library[ mod->type ].startup )
+   return mod->world->library[ mod->type ].startup(mod);
   
   return 0;
 }
@@ -392,8 +397,8 @@ int model_shutdown( model_t* mod )
   PRINT_DEBUG1( "default shutdown method mod %d", mod->id );
   
   // if this type of model has a shutdown function, call it.
-  if( derived[ mod->type ].shutdown )
-    return  derived[ mod->type ].shutdown(mod);
+  if(mod->world->library[ mod->type ].shutdown )
+    return mod->world->library[ mod->type ].shutdown(mod);
   
   return 0;
 }
@@ -486,10 +491,13 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
       break;
       
     default:
+
+      PRINT_WARN1( "received an unknown message of %d bytes", msg->payload_len );
+      
       // if this type of model has a message function, call it.
-      if( derived[ model->type ].handle_message )
+      if(model->world->library[ model->type ].handle_message )
 	{
-	  if( derived[ model->type ].handle_message(model,fd,msg) )
+	  if(model->world->library[ model->type ].handle_message(model,fd,msg) )
 	    PRINT_WARN1( "Ignoring unrecognized model message type %d.",
 			 msg->type & STG_MSG_MASK_MINOR );
 	}

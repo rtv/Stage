@@ -42,6 +42,9 @@ server_t* server_create( int port )
   
   server->quit = FALSE;
 
+  // a server needs a library to pass to each of its worlds
+  server->library = stg_library_create();
+  
   // todo = write destructor for clients
   server->clients = g_hash_table_new_full( g_int_hash, g_int_equal,
 					   NULL, client_destroy_cb );

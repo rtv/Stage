@@ -1,0 +1,8 @@
+prefix=@prefix@
+
+Name: stageplugin
+Description: Stage plugin for Player - part of the Player/Stage Project
+Version: @VERSION@
+Requires: libstage
+Libs: -L${prefix}/lib -lstageplugin
+Cflags: -I${prefix}/include

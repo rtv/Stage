@@ -8,39 +8,86 @@
 #include "stage.h"
 #include "gui.h"
 
-world_t* world_create( server_t* server, connection_t* con, 
-		       stg_id_t id, stg_createworld_t* cw )
+/* world_t* world_create( server_t* server, connection_t* con,  */
+/* 		       stg_id_t id, stg_createworld_t* cw ) */
+/* { */
+/*   PRINT_DEBUG3( "world creator %d (%s) on con %p", id, cw->token, con ); */
+  
+/*   world_t* world = calloc( sizeof(world_t),1 ); */
+  
+/*   // this is a little wierd, but we have to be compatible with the other constructor */
+/*   world->library = server->library; */
+  
+/*   world->con = con; */
+/*   world->id = id; */
+/*   world->token = strdup( cw->token ); */
+/*   world->models = g_hash_table_new_full( g_int_hash, g_int_equal, */
+/* 					 NULL, model_destroy_cb ); */
+/*   world->models_by_name = g_hash_table_new_full( g_str_hash, g_str_equal, */
+/* 						 NULL, NULL ); */
+  
+/*   world->server = server; // stash the server pointer */
+  
+/*   world->sim_time = 0.0; */
+/*   //world->sim_interval = cw->interval_sim;//STG_DEFAULT_WORLD_INTERVAL; */
+/*   world->sim_interval = STG_DEFAULT_WORLD_INTERVAL_MS; */
+/*   world->wall_interval = cw->interval_real;   */
+/*   world->wall_last_update = 0;//stg_timenow(); */
+/*   world->ppm = cw->ppm; */
+  
+/*   // todo - have the matrix resolutions fully configurable at startup */
+/*   world->matrix = stg_matrix_create( world->ppm, 5, 1 );  */
+
+/*   world->paused = TRUE; // start paused. */
+
+/*   world->destroy = FALSE; */
+  
+/*   world->win = gui_world_create( world ); */
+
+/*   return world; */
+/* } */
+
+world_t* stg_world_create( stg_id_t id, 
+			   char* token, 
+			   int sim_interval, 
+			   int real_interval,
+			   double ppm )
 {
-  PRINT_DEBUG3( "world creator %d (%s) on con %p", id, cw->token, con );
+  PRINT_DEBUG2( "alternate world creator %d (%s)", id, token );
   
   world_t* world = calloc( sizeof(world_t),1 );
-
-  world->con = con;
+  
+  world->library = stg_library_create();
+  assert(world->library);
+  //world->con = NULL;
   world->id = id;
-  world->token = strdup( cw->token );
+  world->token = strdup( token );
   world->models = g_hash_table_new_full( g_int_hash, g_int_equal,
 					 NULL, model_destroy_cb );
+  world->models_by_name = g_hash_table_new_full( g_str_hash, g_str_equal,
+						 NULL, NULL );
   
-  world->server = server; // stash the server pointer
+  //world->server = NULL; // stash the server pointer
   
   world->sim_time = 0.0;
-  //world->sim_interval = cw->interval_sim;//STG_DEFAULT_WORLD_INTERVAL;
-  world->sim_interval = STG_DEFAULT_WORLD_INTERVAL_MS;
-  world->wall_interval = cw->interval_real;  
-  world->wall_last_update = 0;//stg_timenow();
-  world->ppm = cw->ppm;
+  world->sim_interval = sim_interval;
+  world->wall_interval = real_interval;
+  world->wall_last_update = 0;
+  world->ppm = ppm;
   
   // todo - have the matrix resolutions fully configurable at startup
   world->matrix = stg_matrix_create( world->ppm, 5, 1 ); 
-
+  
   world->paused = TRUE; // start paused.
-
+  
   world->destroy = FALSE;
   
   world->win = gui_world_create( world );
 
   return world;
 }
+
+
 
 void world_destroy( world_t* world )
 {
@@ -65,11 +112,34 @@ void world_destroy_cb( gpointer world )
 }
 
 
-void world_update( world_t* world )
+int world_update( world_t* world )
 {
-  if( world->paused ) // only update if we're not paused
-    return;
+  //PRINT_WARN( "World update" );
+
+#if 0 //DEBUG
+  struct timeval tv1;
+  gettimeofday( &tv1, NULL );
+#endif
   
+  gui_world_update( world );
+  
+#if 0// DEBUG
+  struct timeval tv2;
+  gettimeofday( &tv2, NULL );
+  
+  double guitime = (tv2.tv_sec + tv2.tv_usec / 1e6) - 
+    (tv1.tv_sec + tv1.tv_usec / 1e6);
+  
+  printf( " guitime %.4f\n", guitime );
+#endif
+
+  if( world->paused ) // only update if we're not paused
+    return 0;
+
+  
+  //PRINT_WARN( "World update - not paused" );
+ 
+
   //{
   stg_msec_t timenow = stg_timenow();
   
@@ -103,23 +173,8 @@ void world_update( world_t* world )
       
     }
   //}
-  
-#if 0 //DEBUG
-  struct timeval tv1;
-  gettimeofday( &tv1, NULL );
-#endif
-  
-  gui_world_update( world );
-  
-#if 0// DEBUG
-  struct timeval tv2;
-  gettimeofday( &tv2, NULL );
-  
-  double guitime = (tv2.tv_sec + tv2.tv_usec / 1e6) - 
-    (tv1.tv_sec + tv1.tv_usec / 1e6);
-  
-  printf( " guitime %.4f\n", guitime );
-#endif
+ 
+  return 0;
 }
 
 void world_update_cb( gpointer key, gpointer value, gpointer user )
@@ -134,31 +189,29 @@ model_t* world_get_model( world_t* world, stg_id_t mid )
 
 
 // add a model entry to the server & install its default properties
-int world_model_create( world_t* world, stg_createmodel_t* cm )
+//model_t* world_model_create( world_t* world, stg_createmodel_t* cm )
+
+model_t* world_model_create( world_t* world, 
+			     stg_id_t id, 
+			     stg_id_t parent_id, 
+			     stg_model_type_t type, 
+			     char* token )
 {
-  char* token  = cm->token;
-
-  stg_model_type_t type = cm->type;  
-
-  // find the lowest integer that has not yet been assigned to a world (starting with 1)
-  stg_id_t candidate = 1;
-  while( g_hash_table_lookup( world->models, &candidate ) )
-    candidate++;
+  model_t* parent = g_hash_table_lookup( world->models, &parent_id );
   
-  model_t* parent = g_hash_table_lookup( world->models, &cm->parent );
-
-  if( cm->parent && !parent )
+  if( parent_id && !parent )
     PRINT_WARN1( "model create requested with parent id %d, but parent not found", 
-		 cm->parent );
+		 parent_id );
   
-  PRINT_DEBUG4( "creating model %d:%d (%s) parent %d", world->id, candidate, token, cm->parent  );
+  PRINT_DEBUG4( "creating model %d:%d (%s) parent %d", world->id, id, token, parent_id  );
   
 
-  model_t* mod = model_create( world, parent, candidate, type, token ); 
+  model_t* mod = model_create( world, parent, id, type, token ); 
   
   g_hash_table_replace( world->models, &mod->id, mod );
+  g_hash_table_replace( world->models_by_name, mod->token, mod );
 
-  return candidate; // the id of the new model
+  return mod; // the new model
 }
 
 int world_model_destroy( world_t* world, stg_id_t model )
@@ -169,7 +222,8 @@ int world_model_destroy( world_t* world, stg_id_t model )
   tgt.world = world->id;
   tgt.model = model;
   
-  server_remove_subs_of_model( world->server, &tgt );
+  // TODO - took this out when expanding libstage
+  //server_remove_subs_of_model( world->server, &tgt );
 
   // delete the model
   g_hash_table_remove( world->models, &model );
@@ -183,11 +237,16 @@ void world_handle_msg( world_t* world, int fd, stg_msg_t* msg )
   assert( world );
   assert( msg );
 
+  static int nextid = 0;
+
   switch( msg->type )
     {
     case STG_MSG_WORLD_MODELCREATE:
       {   
-	stg_id_t mid = world_model_create( world, (stg_createmodel_t*)msg->payload );
+	stg_createmodel_t* cm = (stg_createmodel_t*)msg->payload;
+
+	model_t* mod = world_model_create( world, nextid++, cm->parent, cm->type, cm->token );
+	stg_id_t mid = mod->id;
 	
 	//printf( "writing reply (model id %d, %d bytes) on fd %d\n", 
 	//mid, sizeof(mid), fd );
@@ -237,3 +296,7 @@ void world_print_cb( gpointer key, gpointer value, gpointer user )
   world_print( (world_t*)value );
 }
 
+model_t* world_model_name_lookup( world_t* world, const char* name )
+{
+  return (model_t*)g_hash_table_lookup( world->models_by_name, name );
+}

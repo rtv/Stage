@@ -26,7 +26,7 @@ void gui_startup( int* argc, char** argv[] )
 {
   PRINT_DEBUG( "gui startup" );
 
-  rtk_init(argc, argv);
+  rtk_initxx(argc, argv);
   
   app = rtk_app_create();
   rtk_app_main_init( app );

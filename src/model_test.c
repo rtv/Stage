@@ -57,12 +57,16 @@ int test_putcommand( model_t* mod, void* data, size_t len )
   return 0; //ok
 }
 
-int register_test( void )
-{
-  register_init( STG_MODEL_TEST, test_init );
-  register_startup( STG_MODEL_TEST, test_startup );
-  register_shutdown( STG_MODEL_TEST, test_shutdown );
-  //register_getdata( STG_MODEL_TEST, test_getdata );
-  register_set_command( STG_MODEL_TEST, test_putcommand );
-  register_update( STG_MODEL_TEST, test_update );
+int register_test( lib_entry_t* lib )
+{ 
+  assert(lib);
+  
+  lib[STG_MODEL_TEST].init = test_init;
+  lib[STG_MODEL_TEST].startup = test_startup;
+  lib[STG_MODEL_TEST].shutdown = test_shutdown;
+  lib[STG_MODEL_TEST].update = test_update;
+  lib[STG_MODEL_TEST].set_command = test_putcommand;
+
+
+  return 0; //ok
 } 

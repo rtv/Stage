@@ -641,6 +641,8 @@ int stg_model_message( stg_model_t* mod, void* data, size_t len )
   mp->datalen = len;
   memcpy( mp->data, data, len );
   
+  printf( "sending message - first byte is %d\n", (int)(((unsigned char*)data)[0]) ); 
+
   return stg_client_write_msg ( mod->world->client, 
 				STG_MSG_MODEL_MESSAGE,
 				mp, mplen );

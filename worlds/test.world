@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.12 2004-09-09 22:23:35 rtv Exp $
+# CVS: $Id: test.world,v 1.13 2004-09-16 06:54:28 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution 0.02 
@@ -36,7 +36,7 @@ define laserpioneer pioneer2dx
 
 laserpioneer
 (
-  name "myrobot"
+  name "myrobot1"
   pose [1 4 0]
   gui.nose 1 
 
@@ -47,6 +47,56 @@ laserpioneer
 
   #drive "omni"
 )
+
+
+laserpioneer
+(
+  name "myrobot2"
+  pose [1 4 0]
+  gui.nose 1 
+
+  velocity [ 0 0 45]
+
+  blobfinder(
+    ### TODO - problem parsing this line?
+   # blob.channels [ "red" "green" "blue" "cyan" "yellow" "magenta" ] 
+  )	
+
+  #drive "omni"
+)
+
+laserpioneer
+(
+  name "myrobot3"
+  pose [1 4 0]
+  gui.nose 1 
+  velocity [ 0 0 -60]
+
+  blobfinder(
+    ### TODO - problem parsing this line?
+   # blob.channels [ "red" "green" "blue" "cyan" "yellow" "magenta" ] 
+  )	
+
+  #drive "omni"
+)
+
+
+laserpioneer
+(
+  name "myrobot4"
+  pose [1 4 0]
+  gui.nose 1 
+	
+  velocity [ 0 0 90]
+
+  blobfinder(
+    ### TODO - problem parsing this line?
+   # blob.channels [ "red" "green" "blue" "cyan" "yellow" "magenta" ] 
+  )	
+
+  #drive "omni"
+)
+
 
 #laser
 #(
