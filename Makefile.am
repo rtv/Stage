@@ -1,7 +1,7 @@
 SUBDIRS = replace src worlds tools
 
 DOCSRC = $(top_srcdir)/docsrc
-DOCDIST = $(distdir)/doc
+DOCDIST = $(distdir)/docsrc
 DOCINST = $(DESTDIR)$(prefix)/doc
 
 # create the pkg-config entries
