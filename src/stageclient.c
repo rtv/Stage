@@ -4,6 +4,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 //#include <pthread.h>
+#include <signal.h>
 
 //#define DEBUG
 
@@ -194,7 +195,7 @@ int stg_client_connect( stg_client_t* client, const char* host, const int port )
     {
       PRINT_ERR1( "failed to resolve IP for remote host\"%s\"", 
 		  host );
-      return NULL;
+      return 1; // error
     }
   struct sockaddr_in servaddr;
   
@@ -209,7 +210,7 @@ int stg_client_connect( stg_client_t* client, const char* host, const int port )
   if( client->pfd.fd < 0 )
     {
       stg_err( "Error opening network socket for connection"  );
-      return NULL;
+      return 1; // error
     }
   
   /* setup our server address (type, IP address and port) */
@@ -234,7 +235,7 @@ int stg_client_connect( stg_client_t* client, const char* host, const int port )
 		  host, port ); 
       PRINT_ERR( "Did you forget to start Stage?");
       fflush( stdout );
-    return NULL;
+    return 1; // error
     }
   
   // read Stage's server string
@@ -252,7 +253,7 @@ int stg_client_connect( stg_client_t* client, const char* host, const int port )
     {
       PRINT_ERR( "failed to write STG_SERVER_GREETING to server." );
       if( r < 0 ) perror( "error on write" );
-      return NULL;
+      return 1; // error
     }
   
   stg_connect_reply_t reply;
@@ -261,7 +262,7 @@ int stg_client_connect( stg_client_t* client, const char* host, const int port )
     {
       PRINT_ERR( "failed to READ STG_CLIENT_GREETING from server." );
       if( r < 0 ) perror( "error on read" );
-      return NULL;
+      return 1; // error
     }
   
   if( reply.code != STG_CLIENT_GREETING ) 
@@ -954,6 +955,8 @@ int stg_model_property_set( stg_model_t* mod, stg_id_t prop, void* data, size_t 
 {
   stg_client_property_set( mod->world->client, mod->world->id_server, mod->id_server,
 			   prop, data, len );
+
+  return 0;
 }
 
 // create a model
@@ -1096,7 +1099,7 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
     case STG_MSG_CLIENT_QUIT:
       if( msg->payload_len == sizeof(stg_id_t) )
 	{
-	  stg_id_t wid = *(stg_id_t*)msg->payload;
+	  //stg_id_t wid = *(stg_id_t*)msg->payload;
 	  //stg_client_save(cli, wid );
 	  PRINT_WARN( "received QUIT message" );
 	  // send a ctrl-C to the app
