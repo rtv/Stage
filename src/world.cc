@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.32 $
+//  $Revision: 1.33 $
 //
 // Usage:
 //  (empty)
@@ -430,11 +430,10 @@ void* CWorld::Main(void *arg)
         //
         if (world->m_enable)
 	  world->Update();
-	
+
 	// dump the contents of the matrix to a file
 	//world->matrix->dump();
-	//getchar();
-	
+	//getchar();	
 
         /* *** HACK -- should reinstate this somewhere ahoward
            if( !runDown ) runStart = timeNow;
@@ -546,15 +545,15 @@ void CWorld::Update()
 	      continue;
 	  }
 
-	assert( (CEntity*)truth.stage_id ); // should be good -otherwise a bug
+	//assert( (CEntity*)truth.stage_id ); // should be good -otherwise a bug
 
 	//printf( "PTR: %d\n", truth.stage_id ); fflush( stdout );
 
-	CEntity* ent = (CEntity*)truth.stage_id;
- 
-	//GetEntityByID( truth.id.port, 
-	//      truth.id.type,
-	//    truth.id.index );
+	//CEntity* ent = (CEntity*)truth.stage_id;
+
+	CEntity* ent = GetEntityByID( truth.id.port, 
+				      truth.id.type,
+				      truth.id.index );
 	
 	assert( ent ); // there really ought to be one!
 	
@@ -573,7 +572,7 @@ void CWorld::Update()
 
 	//ent->m_publish_truth = true; // re-export this new truth
       }
-    
+
     // Do the actual work -- update the objects 
     for (int i = 0; i < m_object_count; i++)
       {

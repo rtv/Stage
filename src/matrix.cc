@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.5 2001-09-20 18:29:23 vaughan Exp $
+ * $Id: matrix.cc,v 1.6 2001-09-22 23:42:16 vaughan Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -32,7 +32,8 @@ void CMatrix::PrintCell( int cell )
 // construct from width / height 
 CMatrix::CMatrix(int w,int h)
 {
-  initial_buf_size = BUFFER_ALLOC_SIZE;
+  //initial_buf_size = BUFFER_ALLOC_SIZE;
+  initial_buf_size = 0;
 
   mode = mode_set;
 

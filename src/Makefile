@@ -53,6 +53,9 @@ xs : xs.cc render.cc
 truthlog: truthlog.cc 
 	$(CC) -I../include -I$(PLAYER_INC) -lstdc++ truthlog.cc -o truthlog
 
+manager: manager.cc 
+	$(CC) -I../include -I$(PLAYER_INC) -lstdc++ manager.cc -o manager
+
 clean:
 	rm -f *.o *~ core xs truthlog 
 	cd stage_objs && make clean
