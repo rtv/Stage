@@ -21,6 +21,7 @@
  * Desc: Device to perform the regular MCL (Monte-Carlo Localization).
  * Author: Boyoon Jung
  * Date: 22 Nov 2002
+ * $Id: regularmcldevice.hh,v 1.2 2002-12-05 04:34:57 rtv Exp $
  */
 
 #ifndef REGULARMCLDEVICE_HH
@@ -34,11 +35,16 @@
 #include <stdint.h>
 #include <vector>
 #include <algorithm>
-#include <cmath>
+#include <cmath> 
 
 using std::vector;
 using std::sort;
 
+// Darwin appears to undefine this math.h macro for some reason...?
+#ifndef isinf
+#define isinf( x )( ( sizeof(x) == sizeof(double) ) ?  __isinfd (x) : \
+                 ( sizeof(x) == sizeof( float) ) ? __isinff(x) : __isinf(x))
+#endif
 
 /*****************************************************************************
  * common data structures

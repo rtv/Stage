@@ -21,13 +21,14 @@
  * Desc: Clustering algorithm for grouping particles.
  * Author: Boyoon Jung
  * Date: 22 Nov 2002
+ * $Id: regularmcldevice_clustering.cc,v 1.5 2002-12-05 04:34:57 rtv Exp $
  */
 
 #include "regularmcldevice.hh"
 
 #include <iostream>
 #include <cstdlib>
-#include <cmath>
+#include <cmath> 
 
 using std::cerr;
 using std::endl;

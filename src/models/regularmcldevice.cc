@@ -21,11 +21,12 @@
  * Desc: the regular MCL (Monte-Carlo Localization) device.
  * Author: Boyoon Jung
  * Date: 22 Nov 2002
+ * $Id: regularmcldevice.cc,v 1.4 2002-12-05 04:34:57 rtv Exp $
  */
 
 #include "regularmcldevice.hh"
 
-#include <cmath>
+#include <cmath> 
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -419,7 +420,7 @@ void CRegularMCLDevice::UpdateConfig(void)
 		// check if the config request is valid
 		if (len != sizeof(player_localization_reset_t))
 		{
-		    PRINT_WARN2("config request len is invalid (%d != %u)", len, sizeof(reset));
+		    PRINT_WARN2("config request len is invalid (%d != %u)", len, (unsigned int)sizeof(reset));
 		    if (PutReply(client, PLAYER_MSGTYPE_RESP_NACK) != 0)
 			PRINT_WARN("PutReply() failed");
 		    continue;
@@ -438,7 +439,7 @@ void CRegularMCLDevice::UpdateConfig(void)
 		// check if the config request is valid
 		if (len != sizeof(config.subtype))
 		{
-		    PRINT_WARN2("config request len is invalid (%d != %u)", len, sizeof(config.subtype));
+		    PRINT_WARN2("config request len is invalid (%d != %u)", len,  (unsigned int)sizeof(config.subtype));
 		    if (PutReply(client, PLAYER_MSGTYPE_RESP_NACK) != 0)
 			PRINT_WARN("PutReply() failed");
 		    continue;
@@ -457,7 +458,7 @@ void CRegularMCLDevice::UpdateConfig(void)
 		// check if the config request is valid
 		if (len != sizeof(player_localization_config_t))
 		{
-		    PRINT_WARN2("config request len is invalid (%d != %u)", len, sizeof(config));
+		    PRINT_WARN2("config request len is invalid (%d != %u)", len,  (unsigned int)sizeof(config));
 		    if (PutReply(client, PLAYER_MSGTYPE_RESP_NACK) != 0)
 			PRINT_WARN("PutReply() failed");
 		    continue;
@@ -479,7 +480,7 @@ void CRegularMCLDevice::UpdateConfig(void)
 		// check if the config request is valid
 		if (len != sizeof(player_localization_map_header_t))
 		{
-		    PRINT_WARN2("config request len is invalid (%d != %u)", len, sizeof(map_header));
+		    PRINT_WARN2("config request len is invalid (%d != %u)", len, (unsigned int)sizeof(map_header));
 		    if (PutReply(client, PLAYER_MSGTYPE_RESP_NACK) != 0)
 			PRINT_WARN("PutReply() failed");
 		    continue;
@@ -502,7 +503,7 @@ void CRegularMCLDevice::UpdateConfig(void)
 		// check if the config request is valid
 		if (len != sizeof(player_localization_map_data_t))
 		{
-		    PRINT_WARN2("config request len is invalid (%d != %u)", len, sizeof(map_data));
+		    PRINT_WARN2("config request len is invalid (%d != %u)", len,(unsigned int)sizeof(map_data));
 		    if (PutReply(client, PLAYER_MSGTYPE_RESP_NACK) != 0)
 			PRINT_WARN("PutReply() failed");
 		    continue;
