@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.59 $
+//  $Revision: 1.60 $
 //
 // Usage:
 //  (empty)
@@ -654,7 +654,6 @@ void* CWorld::Main(void *arg)
 //
 void CWorld::Update()
 {
-  static double last_real_time = 0;
 
   // this much simulated time has passed since the last update
   //
@@ -662,17 +661,15 @@ void CWorld::Update()
   //double timestep = m_timestep / 1000.0;
   
   // REAL TIME
-  double timestep = GetRealTime() - last_real_time;
-
+  static double last_time = 0;
+  double timestep = GetRealTime() - last_time;
+  last_time += timestep;
+  
   // Update the simulation time (in both formats)
   //
   m_sim_time += timestep;
   m_sim_timeval.tv_sec = (long)floor(m_sim_time);
   m_sim_timeval.tv_usec = (long)((m_sim_time - floor(m_sim_time)) * MILLION); 
-
-  //printf( "simtime: %.3f sec: %d usec: %d\n", m_sim_time,
-  //  m_sim_timeval.tv_sec,
-  //  m_sim_timeval.tv_usec );
 
     // Keep track of the sim/real time ratio
     // This is done as a moving window filter so we can see
@@ -680,6 +677,7 @@ void CWorld::Update()
   //
 #ifdef WATCH_RATES
   
+  static double last_real_time = 0;
   double real_timestep = GetRealTime() - last_real_time;
   
   last_real_time += real_timestep;
@@ -691,7 +689,8 @@ void CWorld::Update()
       sprintf( line,
 	       "%ld\t\t%.3f\t\t%d\t\t%.3f\n", 
 	       cycle++, GetRealTime(), 
-	       (int)(real_timestep * 1000.0), timestep / real_timestep );
+	       //(int)(real_timestep * 1000.0), timestep / real_timestep );
+	       (int)(timestep * 1000.0), timestep / (m_timestep/1000.0) );
 
       write( g_log_fd, line, strlen(line) );
     }
