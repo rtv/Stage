@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.26 2002-11-19 04:27:18 rtv Exp $
+# $Id: Makefile.am,v 1.27 2002-12-04 22:44:38 rtv Exp $
 
 
 SUBDIRS = models rtkstage gnome2
@@ -12,7 +12,7 @@ if WITH_RTK
 RTKCPPFLAGS = -I@RTK_DIR@/include `gtk-config --cflags`
 endif
 
-stage_DEPENDENCIES = $(NOGUIOBJ) models/libstgmodels.a  @GUI_DIR@/@GUI_LIB@
+stage_DEPENDENCIES = $(NOGUIOBJ) models/libstgmodels.a  @GUI_DIR@/@GUI_LIB@ @LIBOBJS@
 
 AM_CPPFLAGS = 	-Wall -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/server/drivers/stage -I@PLAYER_DIR@/client_libs/libplayerpacket $(RTKCPPFLAGS)
 
@@ -47,4 +47,4 @@ stage_SOURCES = \
          world.hh
 
 stage_LDFLAGS =
-stage_LDADD = 	-lm -Lmodels -lstgmodels -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -L@PLAYER_DIR@/client_libs/libplayerpacket -lplayerqueue -lplayerpacket @GUI_LINK@ @LIBOBJS@
+stage_LDADD = 	-lm -Lmodels -lstgmodels -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -L@PLAYER_DIR@/client_libs/libplayerpacket -lplayerqueue -lplayerpacket @GUI_LINK@@LIBOBJS@
