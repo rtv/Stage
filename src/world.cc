@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.76 $
+//  $Revision: 1.77 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -456,7 +456,7 @@ bool CWorld::Save(const char *filename)
 // Startup routine 
 bool CWorld::Startup()
 {  
-  PRINT_DEBUG( "** STARTUP **" );
+  //PRINT_DEBUG( "** STARTUP **" );
 
   // we must have at least one object to play with!
   assert( m_object_count > 0 );
@@ -525,7 +525,7 @@ bool CWorld::Startup()
   m_router->add_sink(RTK_UI_BUTTON, (void (*) (void*, void*)) &OnUiButton, this);
 #endif
  
-  PRINT_DEBUG( "** STARTUP DONE **" );
+  //PRINT_DEBUG( "** STARTUP DONE **" );
   return true;
 }
     
@@ -567,7 +567,7 @@ void CWorld::Shutdown()
 // Start the single instance of player
 bool CWorld::StartupPlayer( void )
 {
-  PRINT_DEBUG( "** STARTUP PLAYER **" );
+  //PRINT_DEBUG( "** STARTUP PLAYER **" );
 
   // startup any player devices - no longer hacky! - RTV
   // we need to have fixed up all the shared memory and pointers already
@@ -622,7 +622,7 @@ bool CWorld::StartupPlayer( void )
     }
   }
   
-  PRINT_DEBUG( "** STARTUP PLAYER DONE **" );
+  //PRINT_DEBUG( "** STARTUP PLAYER DONE **" );
   return true;
 }
 
@@ -855,9 +855,8 @@ void CWorld::Main(void)
 ///////////////////////////////////////////////////////////////////////////
 // Update the world
 void CWorld::Update()
-{  
+{ 
   // Update the simulation time (in both formats)
-  //
   m_sim_time = m_step_num * m_sim_timestep;
   m_sim_timeval.tv_sec = (long)floor(m_sim_time);
   m_sim_timeval.tv_usec = (long)((m_sim_time - floor(m_sim_time)) * MILLION); 
@@ -881,8 +880,7 @@ void CWorld::Update()
   };
 
 #ifdef INCLUDE_RTK2
-  if (rtk_menuitem_selected(this->save_menuitem))
-    Save(this->worldfilename);
+  UpdateGUI();
 #endif
 }
 
@@ -1284,6 +1282,9 @@ bool CWorld::LoadGUI(CWorldFile *worldfile)
 
   // Add some menu items
   this->save_menuitem = rtk_menuitem_create(this->canvas, "Save");
+  this->export_menuitem = rtk_menuitem_create(this->canvas, "Export");
+
+  this->export_count = 0;
 
   return true;
 }
@@ -1299,6 +1300,22 @@ bool CWorld::StartupGUI()
 void CWorld::ShutdownGUI()
 {
   rtk_app_stop(this->app);
+}
+
+// Update the GUI
+void CWorld::UpdateGUI()
+{
+  if (rtk_menuitem_selected(this->save_menuitem))
+  {
+    Save(this->worldfilename);
+  }
+  if (rtk_menuitem_selected(this->export_menuitem))
+  {
+    char filename[128];
+    snprintf(filename, sizeof(filename), "rtkstage-%04d.fig", this->export_count++);
+    PRINT_MSG1("exporting canvas to [%s]", filename);
+    rtk_canvas_export(this->canvas, filename);
+  }
 }
 
 #endif

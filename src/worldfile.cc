@@ -5,18 +5,23 @@
 // Date: 15 Nov 2001
 // Desc: A property handling class
 //
-// $Id: worldfile.cc,v 1.5 2002-01-29 00:42:22 gerkey Exp $
+// $Id: worldfile.cc,v 1.6 2002-01-29 03:25:29 inspectorg Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 #include <assert.h>
 #include <errno.h>
+#include <libgen.h> // for dirname(3)
+#include <limits.h> // for PATH_MAX
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
+#define DEBUG
+
 #include "stage_types.hh"
 #include "worldfile.hh"
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
@@ -50,26 +55,6 @@ CWorldFile::~CWorldFile()
     CItem *pitem = this->items + item;
     if (pitem->name)
       free(pitem->name);
-    /*
-    for (int index = 0; index < pitem->value_count; index++)
-    {
-      if (pitem->values[index])
-        free(pitem->values[index]);
-    }
-    if (pitem->values)
-      delete[] pitem->values;
-    */
-    
-    /* i think that the following code is a sufficient replacement for
-     * the above loop and subsequent delete[].  pitem->values was created
-     * by the following with a single new:
-     *
-     *   char **tmp = new char*[tmpsize];
-     *   ...
-     *   pitem->values = tmp;
-     *
-     * thus, we can just use a single delete to free pitem->values
-     */
     if (pitem->values)
       delete pitem->values;
   }
@@ -99,7 +84,7 @@ bool CWorldFile::Load(const char *filename)
     newfilename[strlen(newfilename)-3] = '\0';
 
     char* execstr = 
-            (char*)(malloc(strlen(this->filename)+strlen(newfilename)+8));
+      (char*)(malloc(strlen(this->filename)+strlen(newfilename)+8));
     assert(execstr);
 
     sprintf(execstr,"m4 -E %s > %s", this->filename, newfilename);
@@ -113,8 +98,7 @@ bool CWorldFile::Load(const char *filename)
 
     strcpy(this->filename, newfilename);
   }
-  //else
-    //puts("it is not m4");
+  //puts("it is not m4");
 
   // Open the file
   FILE *file = fopen(this->filename, "r");
@@ -127,7 +111,6 @@ bool CWorldFile::Load(const char *filename)
 
   // Create a buffer to store the file
   int buff_len = 0;
-  //int buff_size = 0x10000;
   int buff_size = 0x1000000;
   char *buff = new char[buff_size];
 
@@ -153,7 +136,6 @@ bool CWorldFile::Load(const char *filename)
 
   // Create a list to put the tokens into
   int token_count = 0;
-  //int token_size = 8192;
   int token_size = 65536;
   char **tokens = new char*[token_size];
 
@@ -617,9 +599,7 @@ int CWorldFile::InsertItem(int section, const char *name)
     if (pitem->section == section)
       item = i;
   } 
-  if (item >= 0)
-    item++;
-  else
+  if (item < 0)
     item = this->item_count;
   
   // Move stuff up to make room for the new item
@@ -802,6 +782,41 @@ bool CWorldFile::ReadBool(int section, const char *name, bool value)
   PRINT_WARN3("worldfile %s:%d : '%s' is not a valid boolean value; assuming 'false'",
               this->filename, pitem->line, v);
   return false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Read a file name
+// Always returns an absolute path.
+// If the filename is entered as a relative path, we prepend
+// the world files path to it.
+// Known bug: will leak memory everytime it is called (but its not called often,
+// so I cant be bothered fixing it).
+const char *CWorldFile::ReadFilename(int section, const char *name, const char *value)
+{
+  int item = GetItem(section, name);
+  if (item < 0)
+    return value;
+  const char *filename = GetItemValue(item, 0);
+  
+  if( filename[0] == '/' || filename[0] == '~' )
+    return filename;
+
+  // Prepend the path
+  // Note that dirname() modifies the contents, so
+  // we need to make a copy of the filename.
+  // There's no bounds-checking, but what the heck.
+  char *tmp = strdup(this->filename);
+  char *fullpath = (char*) malloc(PATH_MAX);
+  getcwd(fullpath, PATH_MAX);
+  strcat( fullpath, "/" ); 
+  strcat( fullpath, dirname(tmp));
+  strcat( fullpath, "/" ); 
+  strcat( fullpath, filename );
+  assert(strlen(fullpath) + 1 < PATH_MAX);
+  free(tmp);
+
+  return fullpath;
 }
 
 

@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.34 2002-01-29 02:33:38 rtv Exp $
+//  $Id: entity.cc,v 1.35 2002-01-29 03:25:28 inspectorg Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -48,7 +48,7 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
   memset(m_device_filename, 0, sizeof(m_device_filename));
 
   // Set default pose
-  this->lx = this->ly = this->lth = 0;
+  this->local_px = this->local_py = this->local_pth = 0;
 
   // Set global velocity to stopped
   this->vx = this->vy = this->vth = 0;
@@ -126,10 +126,10 @@ bool CEntity::Load(CWorldFile *worldfile, int section)
   m_name = worldfile->ReadString(section, "name", "");
       
   // Read the pose
-  double px = worldfile->ReadTupleLength(section, "pose", 0, 0);
-  double py = worldfile->ReadTupleLength(section, "pose", 1, 0);
-  double pa = worldfile->ReadTupleAngle(section, "pose", 2, 0);
-  SetPose(px, py, pa);
+  this->init_px = worldfile->ReadTupleLength(section, "pose", 0, 0);
+  this->init_py = worldfile->ReadTupleLength(section, "pose", 1, 0);
+  this->init_pth = worldfile->ReadTupleAngle(section, "pose", 2, 0);
+  SetPose(this->init_px, this->init_py, this->init_pth);
 
   // Read the shape
   const char *shape_desc = worldfile->ReadString(section, "shape", NULL);
@@ -192,13 +192,15 @@ bool CEntity::Load(CWorldFile *worldfile, int section)
 // Save the entity to the world file
 bool CEntity::Save(CWorldFile *worldfile, int section)
 {
-  // Write the pose
-  double px, py, pa;
-  GetPose(px, py, pa);
-  worldfile->WriteTupleLength(section, "pose", 0, px);
-  worldfile->WriteTupleLength(section, "pose", 1, py);
-  worldfile->WriteTupleAngle(section, "pose", 2, pa);
-
+  // Write the pose (but only if it has changed)
+  double px, py, pth;
+  GetPose(px, py, pth);
+  if (px != this->init_px || py != this->init_py || pth != this->init_pth)
+  {
+    worldfile->WriteTupleLength(section, "pose", 0, px);
+    worldfile->WriteTupleLength(section, "pose", 1, py);
+    worldfile->WriteTupleAngle(section, "pose", 2, pth);
+  }
   return true;
 }
 
@@ -626,9 +628,9 @@ void CEntity::GlobalToLocal(double &px, double &py, double &pth)
 void CEntity::SetPose(double px, double py, double pth)
 {
   // Set our pose wrt our parent
-  this->lx = px;
-  this->ly = py;
-  this->lth = pth;
+  this->local_px = px;
+  this->local_py = py;
+  this->local_pth = pth;
 }
 
 
@@ -636,9 +638,9 @@ void CEntity::SetPose(double px, double py, double pth)
 // Get the objects pose in the parent cs
 void CEntity::GetPose(double &px, double &py, double &pth)
 {
-  px = this->lx;
-  py = this->ly;
-  pth = this->lth;
+  px = this->local_px;
+  py = this->local_py;
+  pth = this->local_pth;
 }
 
 
@@ -654,9 +656,9 @@ void CEntity::SetGlobalPose(double px, double py, double pth)
     m_parent_object->GetGlobalPose(ox, oy, oth);
     
   // Compute our pose in the local cs
-  this->lx =  (px - ox) * cos(oth) + (py - oy) * sin(oth);
-  this->ly = -(px - ox) * sin(oth) + (py - oy) * cos(oth);
-  this->lth = pth - oth;
+  this->local_px =  (px - ox) * cos(oth) + (py - oy) * sin(oth);
+  this->local_py = -(px - ox) * sin(oth) + (py - oy) * cos(oth);
+  this->local_pth = pth - oth;
 }
 
 
@@ -672,9 +674,9 @@ void CEntity::GetGlobalPose(double &px, double &py, double &pth)
     m_parent_object->GetGlobalPose(ox, oy, oth);
     
   // Compute our pose in the global cs
-  px = ox + this->lx * cos(oth) - this->ly * sin(oth);
-  py = oy + this->lx * sin(oth) + this->ly * cos(oth);
-  pth = oth + this->lth;
+  px = ox + this->local_px * cos(oth) - this->local_py * sin(oth);
+  py = oy + this->local_px * sin(oth) + this->local_py * cos(oth);
+  pth = oth + this->local_pth;
 }
 
 

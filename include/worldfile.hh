@@ -5,7 +5,7 @@
 // Date: 15 Nov 2001
 // Desc: Class for handling world files
 //
-// $Id: worldfile.hh,v 1.6 2002-01-29 00:46:54 gerkey Exp $
+// $Id: worldfile.hh,v 1.7 2002-01-29 03:25:28 inspectorg Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -76,6 +76,12 @@ class CWorldFile
 
   // Read a boolean
   public: bool ReadBool(int section, const char *name, bool value);
+
+  // Read a file name
+  // Always returns an absolute path.
+  // If the filename is entered as a relative path, we prepend
+  // the world files path to it.
+  public: const char *ReadFilename(int section, const char *name, const char *value);
   
   // Read a string from a tuple
   public: const char *ReadTupleString(int section, const char *name,
@@ -159,8 +165,6 @@ class CWorldFile
   
   // Name of the file we loaded
   private: char *filename;
-  // Name of the file we loaded
-public: char *Filename( void ) { return( filename ); };
 
   // Section list
   private: int section_size;

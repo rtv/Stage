@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.19 $
+//  $Author: inspectorg $
+//  $Revision: 1.20 $
 //
 // Usage:
 //  (empty)
@@ -82,14 +82,14 @@ void CPositionDevice::Update( double sim_time )
   CEntity::Update(sim_time);
 
   ASSERT(m_world != NULL);
-  
+
   // if its time to recalculate state
   if( sim_time - m_last_update >  m_interval )
   {
     m_last_update = sim_time;
       
     if( Subscribed() > 0 )
-    {  
+    {
       // Get latest config
       unsigned char cfg[m_config_len];
       int cfg_size;
@@ -98,12 +98,10 @@ void CPositionDevice::Update( double sim_time )
         switch(cfg[0])
         {
           case PLAYER_POSITION_MOTOR_POWER_REQ:
-            /* motor state change request 
-             * 1 = enable motors
-             * 0 = disable motors
-             * (default)
-             *                                  
-             */
+            // motor state change request 
+            // 1 = enable motors
+            // 0 = disable motors
+            // (default)
             if(cfg_size-1 != 1)
             {
               puts("Arg to motor state change request is wrong size; ignoring");
@@ -112,10 +110,9 @@ void CPositionDevice::Update( double sim_time )
             // right size, but who cares.
             break;
           case PLAYER_POSITION_VELOCITY_CONTROL_REQ:
-            /* velocity control mode:
-             *   0 = direct wheel velocity control (default)
-             *   1 = separate translational and rotational control
-             */
+            // velocity control mode:
+            //   0 = direct wheel velocity control (default)
+            //   1 = separate translational and rotational control
             if(cfg_size-1 != 1)
             {
               puts("Arg to velocity control mode change request is wrong "
@@ -125,7 +122,7 @@ void CPositionDevice::Update( double sim_time )
             // right size, but who cares.
             break;
           case PLAYER_POSITION_RESET_ODOM_REQ:
-            /* reset position to 0,0,0: no args */
+            // reset position to 0,0,0: no args
             if(cfg_size-1 != 0)
             {
               puts("Arg to reset position request is wrong size; ignoring");
@@ -141,16 +138,16 @@ void CPositionDevice::Update( double sim_time )
       }
 
       // Get the latest command
-      //
       if( GetCommand( &m_command, sizeof(m_command)) == sizeof(m_command))
-	    {
-	      ParseCommandBuffer();    // find out what to do    
-	    }
-	  
+        ParseCommandBuffer();    // find out what to do    
+      
       Move();      // do things
-  
-      ComposeData();     // report the new state of things
-      PutData( &m_data, sizeof(m_data)  );     // generic device call
+
+      // report the new state of things
+      ComposeData();
+
+      // generic device call
+      PutData( &m_data, sizeof(m_data)  );     
     }
     else  
     {
@@ -175,20 +172,17 @@ int CPositionDevice::Move()
   double step = m_world->m_sim_timestep;
 
   // Get the current robot pose
-  //
   double px, py, pth;
   GetPose(px, py, pth);
 
   // Compute a new pose
   // This is a zero-th order approximation
-  //
   double qx = px + m_com_vr * step * cos(pth);
   double qy = py + m_com_vr * step * sin(pth);
   double qth = pth + m_com_vth * step;
 
   // Check for collisions
   // and accept the new pose if ok
-  //
   if (TestCollision(qx, qy, qth ) != NULL)
   {
     this->stall = 1;

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.30 $
+//  $Author: inspectorg $
+//  $Revision: 1.31 $
 //
 // Usage:
 //  (empty)
@@ -188,8 +188,11 @@ protected: virtual CEntity *TestCollision(double px, double py, double pth,
   // flag is set when a dependent device is  attached to this device
   public: bool m_dependent_attached;
 
+  // Initial pose in local cs (ie relative to parent)
+  private: double init_px, init_py, init_pth;
+  
   // Pose in local cs (ie relative to parent)
-  private: double lx, ly, lth;
+  private: double local_px, local_py, local_pth;
 
   // Velocity in global cs (for coliision calculations)
   protected: double vx, vy, vth;
