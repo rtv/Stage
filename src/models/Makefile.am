@@ -55,11 +55,7 @@ libstgmodels_a_SOURCES = \
                    visiondevice.cc \
                    visiondevice.hh \
 		   regularmcldevice.hh \
-		   regularmcldevice.cc \
-		   regularmcldevice_world.cc \
-		   regularmcldevice_sensor.cc \
-		   regularmcldevice_action.cc \
-		   regularmcldevice_clustering.cc
+		   regularmcldevice.cc 
 
 # currently broken
 # bpsdevice.cc 

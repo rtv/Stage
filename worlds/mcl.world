@@ -39,7 +39,7 @@ position
     sensor_type "sonar"
     sensor_index 0
     sensor_max 5000
-    sensor_num_samples 0
+    sensor_num_ranges 0
     motion_index 0
     map "mcl_map.pnm.gz"
     map_ppm 25
