@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/object.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.16 $
+//  $Revision: 1.1.2.17 $
 //
 // Usage:
 //  (empty)
@@ -46,12 +46,14 @@ CObject::CObject(CWorld *world, CObject *parent_object)
     m_id[0] = 0;
     
     m_lx = m_ly = m_lth = 0;
+    strcpy(m_color_desc, "black");
 
 #ifdef INCLUDE_RTK
     m_draggable = false; 
     m_mouse_radius = 0;
     m_mouse_ready = false;
     m_dragging = false;
+    m_color = RTK_RGB(0, 0, 0);
 #endif
 }
 
@@ -81,9 +83,23 @@ bool CObject::Load(int argc, char **argv)
             SetPose(px, py, pa);
             i += 4;
         }
+
+        // Extract color
+        //
+        else if (strcmp(argv[i], "color") == 0 && i + 1 < argc)
+        {
+            strcpy(m_color_desc, argv[i + 1]);
+            i += 2;
+        }
+
         else
             i++;
     }
+
+#ifdef INCLUDE_RTK
+    m_color = rtk_color_lookup(m_color_desc);
+#endif
+        
     return true;
 } 
 
@@ -113,6 +129,11 @@ bool CObject::Save(int &argc, char **argv)
     argv[argc++] = strdup(sx);
     argv[argc++] = strdup(sy);
     argv[argc++] = strdup(sa);
+
+    // Save color
+    //
+    argv[argc++] = strdup("color");
+    argv[argc++] = strdup(m_color_desc);
         
     return true;
 }

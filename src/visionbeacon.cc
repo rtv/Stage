@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.7 $
+//  $Revision: 1.1.2.8 $
 //
 // Usage:
 //  (empty)
@@ -23,8 +23,6 @@
 //  (empty)
 //
 ///////////////////////////////////////////////////////////////////////////
-
-#define ENABLE_RTK_TRACE 1
 
 #include "world.hh"
 #include "visionbeacon.hh"
@@ -46,32 +44,65 @@ CVisionBeacon::CVisionBeacon(CWorld *world, CObject *parent)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Initialise object
+// Load the object from an argument list
 //
-bool CVisionBeacon::StartUp()
+bool CVisionBeacon::Load(int argc, char **argv)
 {
-    /*
-    if (!CObject::Startup(cfg))
+    if (!CObject::Load(argc, argv))
         return false;
 
-    cfg->begin_section(m_id);
+    for (int i = 0; i < argc;)
+    {
+        // Extract radius
+        //
+        if (strcmp(argv[i], "radius") == 0 && i + 1 < argc)
+        {
+            m_radius = atof(argv[i + 1]);
+            i += 2;
+        }
+        
+        // Extract channel
+        //
+        if (strcmp(argv[i], "channel") == 0 && i + 1 < argc)
+        {
+            m_channel = atoi(argv[i + 1]);
+            i += 2;
+        }
+  
+        else
+            i++;
+    }
 
-    m_channel = cfg->ReadInt("channel", 0, "");
-    m_radius = cfg->ReadDouble("radius", 0.20, "");
-    
-    cfg->end_section();
+#ifdef INCLUDE_RTK
+    m_mouse_radius = (m_parent_object == NULL ? 1.414 * m_radius : 0.0);
+    m_draggable = (m_parent_object == NULL);
+#endif
+        
+    return true;
+}
 
-    // *** HACK
-    // Assign arbitrary colors to channels
+
+///////////////////////////////////////////////////////////////////////////
+// Save the object
+//
+bool CVisionBeacon::Save(int &argc, char **argv)
+{
+    if (!CObject::Save(argc, argv))
+        return false;
+
+    // Save radius
     //
-    int c = 255 * m_channel / 32;
-    m_color = RTK_RGB(c, 255 - c, 255 - c);
+    char z[128];
+    snprintf(z, sizeof(z), "%0.2f", (double) m_radius);
+    argv[argc++] = strdup("radius");
+    argv[argc++] = strdup(z);
 
-    #ifdef INCLUDE_RTK
-        m_mouse_radius = m_radius * 1.5;
-        m_draggable = (m_parent == m_world);
-    #endif
-    */
+    // Save channel
+    //
+    snprintf(z, sizeof(z), "%d", (int) m_channel);
+    argv[argc++] = strdup("channel");
+    argv[argc++] = strdup(z);
+    
     return true;
 }
 
@@ -81,7 +112,6 @@ bool CVisionBeacon::StartUp()
 //
 void CVisionBeacon::Update()
 {
-    //RTK_TRACE0("updating laser beacon");
     ASSERT(m_world != NULL);
 
     // Undraw our old representation
@@ -113,29 +143,28 @@ void CVisionBeacon::Update()
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
 //
-void CVisionBeacon::OnUiUpdate(RtkUiDrawData *pData)
+void CVisionBeacon::OnUiUpdate(RtkUiDrawData *data)
 {
-    CObject::OnUiUpdate(pData);
+    CObject::OnUiUpdate(data);
 
-    pData->begin_section("global", "VisionBeacons");
+    data->begin_section("global", "");
     
-    if (pData->draw_layer("", TRUE))
+    if (data->draw_layer("vision_beacon", true))
     {
-        // *** HACK - color?
-        pData->set_color(RTK_RGB(255, 0, 0));
-        pData->ex_rectangle(m_map_px, m_map_py, m_map_pth, 2 * m_radius, 2 * m_radius);
+        data->set_color(m_color);
+        data->ex_rectangle(m_map_px, m_map_py, m_map_pth, 2 * m_radius, 2 * m_radius);
     }
 
-    pData->end_section();
+    data->end_section();
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI mouse messages
 //
-void CVisionBeacon::OnUiMouse(RtkUiMouseData *pData)
+void CVisionBeacon::OnUiMouse(RtkUiMouseData *data)
 {
-    CObject::OnUiMouse(pData);
+    CObject::OnUiMouse(data);
 }
 
 #endif

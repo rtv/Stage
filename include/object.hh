@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/object.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.14 $
+//  $Revision: 1.1.2.15 $
 //
 // Usage:
 //  (empty)
@@ -128,7 +128,10 @@ class CObject
     // Object pose in local cs (ie relative to parent)
     //
     private: double m_lx, m_ly, m_lth;
- 
+
+    // Object color description (for display)
+    //
+    private: char m_color_desc[128];
     
 #ifdef INCLUDE_RTK
 
@@ -167,6 +170,10 @@ class CObject
     // Flag set if object is being dragged
     //
     private: bool m_dragging;
+
+    // Object color
+    //
+    public: RTK_COLOR m_color;
     
 #endif
 };

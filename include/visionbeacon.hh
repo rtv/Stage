@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visionbeacon.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -35,9 +35,13 @@ class CVisionBeacon : public CObject
     //
     public: CVisionBeacon(CWorld *world, CObject *parent);
 
-    // Initialise object
+    // Load the object from an argument list
     //
-    public: virtual bool StartUp();
+    public: virtual bool Load(int argc, char **argv);
+
+    // Save the object to an argument list
+    //
+    public: virtual bool Save(int &argc, char **argv);
     
     // Update the device
     //
