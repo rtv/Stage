@@ -18,10 +18,10 @@
  *
  */
 /*
- * Desc: top level class that contains everything
+ * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.2 2002-10-30 01:45:39 gerkey Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.3 2002-10-31 17:59:26 inspectorg Exp $
  */
 
 
@@ -192,87 +192,87 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   bool subscribedonly;
 
   if (worldfile != NULL)
-    {
-      int section = worldfile->LookupEntity("gui");
+  {
+    int section = worldfile->LookupEntity("gui");
 
-      // Size of world in pixels
-      sx = (int) this->matrix->width;
-      sy = (int) this->matrix->height;
+    // Size of world in pixels
+    sx = (int) this->matrix->width;
+    sy = (int) this->matrix->height;
 
-      // Grid size in meters
-      gridx = sx / this->ppm;
-      gridy = sy / this->ppm;
+    // Grid size in meters
+    gridx = sx / this->ppm;
+    gridy = sy / this->ppm;
 
-      // Place a hard limit, just to stop it going off the screen
-      // (TODO - we could get the sceen size from X if we tried?)
-      if (sx > 1024)
-	sx = 1024;
-      if (sy > 768)
-	sy = 768;
+    // Place a hard limit, just to stop it going off the screen
+    // (TODO - we could get the sceen size from X if we tried?)
+    if (sx > 1024)
+      sx = 1024;
+    if (sy > 768)
+      sy = 768;
 
-      // Size of canvas in pixels
-      sx = (int) worldfile->ReadTupleFloat(section, "size", 0, sx);
-      sy = (int) worldfile->ReadTupleFloat(section, "size", 1, sy);
+    // Size of canvas in pixels
+    sx = (int) worldfile->ReadTupleFloat(section, "size", 0, sx);
+    sy = (int) worldfile->ReadTupleFloat(section, "size", 1, sy);
     
-      // Scale of the pixels
-      scale = worldfile->ReadLength(section, "scale", 1 / this->ppm);
+    // Scale of the pixels
+    scale = worldfile->ReadLength(section, "scale", 1 / this->ppm);
   
-      // Size in meters
-      dx = sx * scale;
-      dy = sy * scale;
+    // Size in meters
+    dx = sx * scale;
+    dy = sy * scale;
 
-      // Origin of the canvas
-      ox = worldfile->ReadTupleLength(section, "origin", 0, dx / 2);
-      oy = worldfile->ReadTupleLength(section, "origin", 1, dy / 2);
+    // Origin of the canvas
+    ox = worldfile->ReadTupleLength(section, "origin", 0, dx / 2);
+    oy = worldfile->ReadTupleLength(section, "origin", 1, dy / 2);
 
 
-      // Grid spacing
-      minor = worldfile->ReadTupleLength(section, "grid", 0, 0.2);
-      major = worldfile->ReadTupleLength(section, "grid", 1, 1.0);
-      showgrid = worldfile->ReadInt(section, "showgrid", true);
+    // Grid spacing
+    minor = worldfile->ReadTupleLength(section, "grid", 0, 0.2);
+    major = worldfile->ReadTupleLength(section, "grid", 1, 1.0);
+    showgrid = worldfile->ReadInt(section, "showgrid", true);
     
-      // toggle display of subscribed or all device data
-      subscribedonly = worldfile->ReadInt(section, "showsubscribed", false);
+    // toggle display of subscribed or all device data
+    subscribedonly = worldfile->ReadInt(section, "showsubscribed", false);
 
-      gridx = ceil(gridx / major) * major;
-      gridy = ceil(gridy / major) * major;
-    }
+    gridx = ceil(gridx / major) * major;
+    gridy = ceil(gridy / major) * major;
+  }
   else
-    {
-      // Size of world in pixels
-      sx = (int) this->matrix->width;
-      sy = (int) this->matrix->height;
+  {
+    // Size of world in pixels
+    sx = (int) this->matrix->width;
+    sy = (int) this->matrix->height;
 
-      // Grid size in meters
-      gridx = sx / this->ppm;
-      gridy = sy / this->ppm;
+    // Grid size in meters
+    gridx = sx / this->ppm;
+    gridy = sy / this->ppm;
 
-      // Place a hard limit, just to stop it going off the screen
-      if (sx > 1024)
-	sx = 1024;
-      if (sy > 768)
-	sy = 768;
+    // Place a hard limit, just to stop it going off the screen
+    if (sx > 1024)
+      sx = 1024;
+    if (sy > 768)
+      sy = 768;
     
-      // Size in meters
-      dx = sx * scale;
-      dy = sy * scale;
+    // Size in meters
+    dx = sx * scale;
+    dy = sy * scale;
 
-      // Origin of the canvas
-      ox = dx / 2;
-      oy = dy / 2;
+    // Origin of the canvas
+    ox = dx / 2;
+    oy = dy / 2;
 
 
-      // Grid spacing
-      minor = 0.2;
-      major = 1.0;
-      showgrid = true;
+    // Grid spacing
+    minor = 0.2;
+    major = 1.0;
+    showgrid = true;
 
-      // default
-      subscribedonly = true;
+    // default
+    subscribedonly = true;
 
-      gridx = ceil(gridx / major) * major;
-      gridy = ceil(gridy / major) * major;
-    }
+    gridx = ceil(gridx / major) * major;
+    gridy = ceil(gridy / major) * major;
+  }
   
   this->app = rtk_app_create();
   rtk_app_refresh_rate(this->app, 10);
@@ -285,9 +285,11 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   // Add some menu items
   this->file_menu = rtk_menu_create(this->canvas, "File");
   this->save_menuitem = rtk_menuitem_create(this->file_menu, "Save", 0);
-  this->export_menuitem = rtk_menuitem_create(this->file_menu, "Export", 0);
+  this->export_menuitem = rtk_menuitem_create(this->file_menu, "Export stills", 1);
   this->exit_menuitem = rtk_menuitem_create(this->file_menu, "Exit", 0);
-  this->export_count = 0;
+
+  this->export_series = 0;
+  this->export_frame = 0;
 
   // Create the view menu
   this->view_menu = rtk_menu_create(this->canvas, "View");
@@ -302,7 +304,7 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   // create the action menu
   this->action_menu = rtk_menu_create(this->canvas, "Action");
   this->subscribedonly_item = rtk_menuitem_create(this->action_menu, 
-						  "Subscribe to all", 1);
+                                                  "Subscribe to all", 1);
 
   rtk_menuitem_check(this->subscribedonly_item, subscribedonly);
 
@@ -312,11 +314,11 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
 
   // Create the view/device sub menu
   assert( this->data_menu.menu = 
-	  rtk_menu_create_sub(this->view_menu, "Data"));
+          rtk_menu_create_sub(this->view_menu, "Data"));
 
   // Create the view/data sub menu
   assert( this->device_menu.menu = 
-	  rtk_menu_create_sub(this->view_menu, "Object"));
+          rtk_menu_create_sub(this->view_menu, "Object"));
 
   // each device adds itself to the correct view menus in its rtkstartup()
   
@@ -324,15 +326,15 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   // Create the grid
   this->fig_grid = rtk_fig_create(this->canvas, NULL, -49);
   if (minor > 0)
-    {
-      rtk_fig_color(this->fig_grid, 0.9, 0.9, 0.9);
-      rtk_fig_grid(this->fig_grid, gridx/2, gridy/2, gridx, gridy, minor);
-    }
+  {
+    rtk_fig_color(this->fig_grid, 0.9, 0.9, 0.9);
+    rtk_fig_grid(this->fig_grid, gridx/2, gridy/2, gridx, gridy, minor);
+  }
   if (major > 0)
-    {
-      rtk_fig_color(this->fig_grid, 0.75, 0.75, 0.75);
-      rtk_fig_grid(this->fig_grid, gridx/2, gridy/2, gridx, gridy, major);
-    }
+  {
+    rtk_fig_color(this->fig_grid, 0.75, 0.75, 0.75);
+    rtk_fig_grid(this->fig_grid, gridx/2, gridy/2, gridx, gridy, major);
+  }
   rtk_fig_show(this->fig_grid, showgrid);
   
   return true;
@@ -418,15 +420,15 @@ void CWorld::RtkUpdate()
   // Quit the app if we have been told we should
   // We first destroy in windows that are still open.
   if (app->must_quit)
-    {
-      for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
-	if (!canvas->destroyed)
-	  gtk_widget_destroy(canvas->frame);
-      for (table = app->table; table != NULL; table = table->next)
-	if (!table->destroyed)
-	  gtk_widget_destroy(table->frame);
-      gtk_main_quit();
-    }
+  {
+    for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
+      if (!canvas->destroyed)
+        gtk_widget_destroy(canvas->frame);
+    for (table = app->table; table != NULL; table = table->next)
+      if (!table->destroyed)
+        gtk_widget_destroy(table->frame);
+    gtk_main_quit();
+  }
   
   // update the object tree
   root->RtkUpdate();
@@ -435,7 +437,7 @@ void CWorld::RtkUpdate()
   // Update the display
   for (canvas = app->canvas; canvas != NULL; canvas = canvas->next)
     rtk_canvas_render(canvas);
-    //rtk_canvas_render(canvas, FALSE, NULL);
+  //rtk_canvas_render(canvas, FALSE, NULL);
   
   //struct timeval tv;
   //gettimeofday( &tv, NULL );
@@ -447,10 +449,11 @@ void CWorld::RtkUpdate()
   
   //gettimeofday( &tv, NULL );
 
-   //double duration = (tv.tv_sec + tv.tv_usec / 1000000.0) - start;
+  //double duration = (tv.tv_sec + tv.tv_usec / 1000000.0) - start;
 
   //printf( "gtkloop: %.4f\n", duration );
 }
+
 
 // Update the GUI
 void CWorld::RtkMenuHandling()
@@ -469,6 +472,7 @@ void CWorld::RtkMenuHandling()
   if (rtk_menuitem_isactivated(this->save_menuitem))
     Save();
 
+  /*
   // Handle export menu item
   // TODO - fold in XS's postscript and pnm export here or in rtk2
   if (rtk_menuitem_isactivated(this->export_menuitem))
@@ -478,6 +482,22 @@ void CWorld::RtkMenuHandling()
              "rtkstage-%04d.fig", this->export_count++);
     PRINT_MSG1("exporting canvas to [%s]", filename);
     rtk_canvas_export_ppm(this->canvas, filename);
+  }
+  */
+
+  // Export still frames
+  if (rtk_menuitem_isactivated(this->export_menuitem))
+  {
+    this->export_series++;
+    this->export_frame = 0;
+  }
+  else if (rtk_menuitem_ischecked(this->export_menuitem))
+  {
+    char filename[128];
+    snprintf(filename, sizeof(filename), "stage-%03d-%04d.jpg",
+             this->export_series, this->export_frame++);
+    printf("exporting %s\n", filename);
+    rtk_canvas_export_jpeg(this->canvas, filename);
   }
 
   // Show or hide the grid

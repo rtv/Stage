@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.13 2002-10-27 21:55:38 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.14 2002-10-31 17:59:25 inspectorg Exp $
  */
 
 #ifndef WORLD_HH
@@ -293,6 +293,7 @@ public: int GetStopTime( void ){ return m_stoptime; };
   // return the entity nearest the specified point, but not more than range m away
   CEntity* GetNearestEntityWithinRange( double x, double y, double range );
 
+  
   // RTK STUFF ----------------------------------------------------------------
 #ifdef INCLUDE_RTK2
   // Initialise the GUI
@@ -310,7 +311,8 @@ public: int GetStopTime( void ){ return m_stoptime; };
   // Update the GUI
   public: void RtkUpdate();
 
-protected: void RtkMenuHandling();
+  // Handle menu stuff
+  protected: void RtkMenuHandling();
   
   // Basic GUI elements
   public: rtk_app_t *app;
@@ -331,12 +333,15 @@ protected: void RtkMenuHandling();
   private: rtk_menuitem_t *walls_item;
   private: rtk_menuitem_t *matrix_item;
 
-
   // The action menu
-public: rtk_menu_t* action_menu;
-private: rtk_menuitem_t* subscribedonly_item;
-private: rtk_menuitem_t* autosubscribe_item;
-public: static int autosubscribe;
+  public: rtk_menu_t* action_menu;
+  private: rtk_menuitem_t* subscribedonly_item;
+  private: rtk_menuitem_t* autosubscribe_item;
+  public: static int autosubscribe;
+
+  // Export still counter
+  private: int export_series;
+  private: int export_frame;
 
   typedef struct 
   {
@@ -350,7 +355,6 @@ public: static int autosubscribe;
   // the view/data menu
   public: stage_menu_t data_menu;
   
-  
   protected: void AddToMenu( stage_menu_t* menu, CEntity* ent, int check );
   public:  void AddToDataMenu( CEntity* ent, int check );
   public: void AddToDeviceMenu( CEntity* ent, int check );
@@ -358,9 +362,6 @@ public: static int autosubscribe;
   // devices check this to see if they should display their data
   public: bool ShowDeviceData( StageType devtype );
   public: bool ShowDeviceBody( StageType devtype );
-
-  // Number of exported images
-  private: int export_count;
 #endif
 
   //public: void GuiStartup( void );
