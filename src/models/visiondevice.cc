@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.cc,v 1.3.8.1 2004-10-07 16:47:43 gerkey Exp $
+ * CVS info: $Id: visiondevice.cc,v 1.3.8.2 2004-10-08 15:58:05 gerkey Exp $
  */
 
 #include <math.h>
@@ -263,15 +263,9 @@ size_t CVisionDevice::UpdateACTS( player_blobfinder_data_t* data )
       int yCenterOfBlob = blobtop +  ((blobbottom - blobtop )/2);
 
       if (blobtop < 0)
-      {
-        printf("blobtop was: %u\n", blobtop);
         blobtop = 0;
-      }
       if (blobbottom > cameraImageHeight - 1)
-      {
-        printf("blobbottom was: %u\n", blobbottom);
         blobbottom = cameraImageHeight - 1;
-      }
 
       // useful debug - keep
       /*
