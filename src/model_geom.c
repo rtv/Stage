@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_geom.c,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -18,63 +18,25 @@
 #include "model.h"
 #include "gui.h"
 
-int model_geom_update( model_t* model );
-int model_geom_set( model_t* mod, void* data, size_t len );
-void model_geom_init( model_t* mod );
-
-void model_geom_register(void)
-{ 
-  PRINT_DEBUG( "GEOM INIT" );
-  
-  model_register_init( STG_PROP_GEOM, model_geom_init );
-  model_register_set( STG_PROP_GEOM, model_geom_set );
+stg_geom_t* model_get_geom( model_t* mod )
+{
+  return &mod->geom;
 }
 
 
-void model_geom_init( model_t* mod )
+int model_set_geom( model_t* mod, stg_geom_t* geom )
 {
-  // install a default geom
-  stg_geom_t ageom;
-  ageom.pose.x = STG_DEFAULT_ORIGINX;
-  ageom.pose.y = STG_DEFAULT_ORIGINY;
-  ageom.pose.a = STG_DEFAULT_ORIGINA;
-  ageom.size.x = STG_DEFAULT_SIZEX;
-  ageom.size.y = STG_DEFAULT_SIZEY;
-  model_set_prop_generic( mod, STG_PROP_GEOM, &ageom,  sizeof(ageom) );
-}
-
-
-stg_geom_t* model_geom_get( model_t* mod )
-{
-  stg_geom_t* geom = model_get_prop_data_generic( mod, STG_PROP_GEOM );
-  assert(geom);
-  return geom;
-}
-
-
-int model_geom_set( model_t* mod, void* data, size_t len )
-{
-  if( len != sizeof(stg_geom_t) )
-    {
-      PRINT_WARN2( "received wrong size pose (%d/%d)",
-		   (int)len, (int)sizeof(stg_pose_t) );
-      return 1; // error
-    }
-  
-  
-  stg_geom_t* geom = (stg_geom_t*)data;
-  
   // store the geom
-  model_set_prop_generic( mod, STG_PROP_GEOM, geom, len );
+  memcpy( &mod->geom, geom, sizeof(mod->geom) );
 
   size_t count=0;
-  stg_line_t* lines = model_lines_get( mod, &count );
+  stg_line_t* lines = model_get_lines( mod, &count );
   
   // force the body lines to fit inside this new rectangle
   stg_normalize_lines( lines, count );
   stg_scale_lines(  lines, count, geom->size.x, geom->size.y );
   stg_translate_lines( lines, count, -geom->size.x/2.0, -geom->size.y/2.0 );
-    
+
   // set the new lines (this will cause redraw)
   model_set_prop( mod, STG_PROP_LINES, lines, count*sizeof(stg_line_t));
 
@@ -92,7 +54,7 @@ void gui_model_geom( model_t* mod )
 
   rtk_fig_color_rgb32( fig, 0 );
   
-  stg_geom_t* geom = model_geom_get(mod);
+  stg_geom_t* geom = model_get_geom(mod);
   
   double localx = geom->pose.x;
   double localy = geom->pose.y;

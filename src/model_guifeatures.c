@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_guifeatures.c,v $
 //  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -16,53 +16,15 @@
 #include "model.h"
 #include "gui.h"
 
-int model_guifeatures_update( model_t* model );
-int model_guifeatures_set( model_t* mod, void* data, size_t len );
-void model_guifeatures_init( model_t* mod );
-void gui_model_features( model_t* mod );
-
-
-
-void model_guifeatures_register(void)
-{ 
-  PRINT_DEBUG( "GUIFEATURES INIT" );
-  
-  model_register_init( STG_PROP_GUIFEATURES, model_guifeatures_init );
-  model_register_set( STG_PROP_GUIFEATURES, model_guifeatures_set );
+stg_guifeatures_t* model_get_guifeatures( model_t* mod )
+{
+  return &mod->guifeatures;
 }
 
 
-void model_guifeatures_init( model_t* mod )
+int model_set_guifeatures( model_t* mod, stg_guifeatures_t* gf )
 {
-  // install a default guifeatures
-  stg_guifeatures_t gf;
-  gf.boundary =  STG_DEFAULT_BOUNDARY;
-  gf.nose =  STG_DEFAULT_NOSE;
-  gf.grid = STG_DEFAULT_GRID;
-  gf.movemask = STG_DEFAULT_MOVEMASK;
-  model_set_prop_generic( mod, STG_PROP_GUIFEATURES, &gf,  sizeof(gf) );
-}
-
-
-stg_guifeatures_t* model_guifeatures_get( model_t* mod )
-{
-  stg_guifeatures_t* guifeatures = model_get_prop_data_generic( mod, STG_PROP_GUIFEATURES );
-  assert(guifeatures);
-  return guifeatures;
-}
-
-
-int model_guifeatures_set( model_t* mod, void* data, size_t len )
-{
-  if( len != sizeof(stg_guifeatures_t) )
-    {
-      PRINT_WARN2( "received wrong size guifeatures (%d/%d)",
-		   (int)len, (int)sizeof(stg_guifeatures_t) );
-      return 1; // error
-    }
-  
-  // store the guifeatures
-  model_set_prop_generic( mod, STG_PROP_GUIFEATURES, data, len );
+  memcpy( &mod->guifeatures, gf, sizeof(mod->guifeatures));
   
   // redraw the fancy features
   gui_model_features( mod );
@@ -73,7 +35,7 @@ int model_guifeatures_set( model_t* mod, void* data, size_t len )
 // add a nose  indicating heading  
 void gui_model_features( model_t* mod )
 {
-  stg_guifeatures_t* gf = model_guifeatures_get( mod );
+  stg_guifeatures_t* gf = model_get_guifeatures( mod );
 
   
   PRINT_DEBUG4( "model %d gui features grid %d nose %d boundary mask %d",
@@ -85,9 +47,9 @@ void gui_model_features( model_t* mod )
   if( gf->nose )
     { 
       rtk_fig_t* fig = gui_model_figs(mod)->top;      
-      rtk_fig_color_rgb32( fig, model_color_get(mod) );
+      rtk_fig_color_rgb32( fig, model_get_color(mod) );
       
-      stg_geom_t* geom = model_geom_get(mod);
+      stg_geom_t* geom = model_get_geom(mod);
       
       // draw a line from the center to the front of the model
       rtk_fig_line( fig, 
@@ -113,7 +75,7 @@ void gui_model_features( model_t* mod )
   if( gui_model_figs(mod)->grid )
     rtk_fig_destroy( gui_model_figs(mod)->grid );
   
-  stg_geom_t* geom = model_geom_get(mod);
+  stg_geom_t* geom = model_get_geom(mod);
 
   if( gui_model_figs(mod)->grid == NULL )
     {

@@ -202,17 +202,17 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 	stg_model_prop_with_data( mod, STG_PROP_POSE, &pose, sizeof(pose) );
       
       stg_geom_t geom;
-      geom.pose.x = wf.ReadTupleLength(section, "origin", 0, STG_DEFAULT_ORIGINX );
-      geom.pose.y = wf.ReadTupleLength(section, "origin", 1, STG_DEFAULT_ORIGINY);
-      geom.pose.a = wf.ReadTupleLength(section, "origin", 2, STG_DEFAULT_ORIGINA );
-      geom.size.x = wf.ReadTupleLength(section, "size", 0, STG_DEFAULT_SIZEX );
-      geom.size.y = wf.ReadTupleLength(section, "size", 1, STG_DEFAULT_SIZEY );
+      geom.pose.x = wf.ReadTupleLength(section, "origin", 0, STG_DEFAULT_GEOM_POSEX );
+      geom.pose.y = wf.ReadTupleLength(section, "origin", 1, STG_DEFAULT_GEOM_POSEY);
+      geom.pose.a = wf.ReadTupleLength(section, "origin", 2, STG_DEFAULT_GEOM_POSEA );
+      geom.size.x = wf.ReadTupleLength(section, "size", 0, STG_DEFAULT_GEOM_SIZEX );
+      geom.size.y = wf.ReadTupleLength(section, "size", 1, STG_DEFAULT_GEOM_SIZEY );
 
-      if( geom.pose.x != STG_DEFAULT_ORIGINX ||
-	  geom.pose.y != STG_DEFAULT_ORIGINY ||
-	  geom.pose.a != STG_DEFAULT_ORIGINA ||
- 	  geom.size.x != STG_DEFAULT_SIZEX ||
-	  geom.size.y != STG_DEFAULT_SIZEY )
+      if( geom.pose.x != STG_DEFAULT_GEOM_POSEX ||
+	  geom.pose.y != STG_DEFAULT_GEOM_POSEY ||
+	  geom.pose.a != STG_DEFAULT_GEOM_POSEA ||
+ 	  geom.size.x != STG_DEFAULT_GEOM_SIZEX ||
+	  geom.size.y != STG_DEFAULT_GEOM_SIZEY )
 	stg_model_prop_with_data( mod, STG_PROP_GEOM, &geom, sizeof(geom) );
       
       stg_bool_t obstacle;
@@ -229,18 +229,19 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       
       stg_laser_config_t lconf;
       memset( &lconf, 0, sizeof(lconf) );
-      lconf.geom.pose.x = wf.ReadTupleLength(section, "laser.pose", 0, -9999.0 );
-      lconf.geom.pose.y = wf.ReadTupleLength(section, "laser.pose", 1, 0);
-      lconf.geom.pose.a = wf.ReadTupleAngle(section, "laser.pose", 2, 0);
-      lconf.geom.size.x = wf.ReadTupleLength(section, "laser.size", 0, STG_DEFAULT_LASER_SIZEX);
-      lconf.geom.size.y = wf.ReadTupleLength(section, "laser.size", 1, STG_DEFAULT_LASER_SIZEY);
+      //lconf.geom.pose.x = wf.ReadTupleLength(section, "laser.pose", 0, -9999.0 );
+      //lconf.geom.pose.y = wf.ReadTupleLength(section, "laser.pose", 1, 0);
+      //lconf.geom.pose.a = wf.ReadTupleAngle(section, "laser.pose", 2, 0);
+      //lconf.geom.size.x = wf.ReadTupleLength(section, "laser.size", 0, STG_DEFAULT_LASER_SIZEX);
+      //lconf.geom.size.y = wf.ReadTupleLength(section, "laser.size", 1, STG_DEFAULT_LASER_SIZEY);
+
       lconf.range_min   = wf.ReadTupleLength(section, "laser.view", 0, STG_DEFAULT_LASER_MINRANGE);
       lconf.range_max   = wf.ReadTupleLength(section, "laser.view", 1, STG_DEFAULT_LASER_MAXRANGE);
       lconf.fov         = wf.ReadTupleAngle(section, "laser.view", 2, 0);
       lconf.samples = wf.ReadInt(section, "laser.samples", STG_DEFAULT_LASER_SAMPLES);
 
-      if( lconf.geom.pose.x != -9999.0 )
-	stg_model_prop_with_data( mod, STG_PROP_CONFIG, &lconf,sizeof(lconf));
+      //if( lconf.geom.pose.x != -9999.0 )
+       stg_model_prop_with_data( mod, STG_PROP_CONFIG, &lconf,sizeof(lconf));
       
       // laser visibility
       int laservis = 

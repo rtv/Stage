@@ -56,11 +56,24 @@ typedef struct _model
   size_t cfg_len;
 
   stg_laser_return_t laser_return;
+  stg_bool_t obstacle_return;
 
   stg_pose_t pose;
   stg_velocity_t velocity;
   stg_geom_t geom;
+  stg_color_t color;
+  stg_kg_t mass;
  
+  stg_line_t* lines; // this buffer is lines_count * sizeof(stg_line_t) big
+  int lines_count; // the number of lines
+
+  stg_guifeatures_t guifeatures;
+
+  // these are a little strange
+  stg_energy_config_t energy_config;
+  stg_energy_data_t energy_data;
+
+
 } model_t;  
 
 
@@ -109,10 +122,6 @@ void model_destroy( model_t* mod );
 void model_destroy_cb( gpointer mod );
 void model_handle_msg( model_t* model, int fd, stg_msg_t* msg );
 
-int model_set_prop( model_t* mod, stg_id_t propid, void* data, size_t len );
-int model_get_prop( model_t* model, stg_id_t propid, 
-		    void** data, size_t* size );
-
 int model_getdata( model_t* mod, void** data, size_t* len );
 int model_putdata( model_t* mod, void* data, size_t len );
 int model_getcommand( model_t* mod, void** cmd, size_t* len );
@@ -122,22 +131,34 @@ int model_putconfig( model_t* mod, void* cmd, size_t len );
 
 void model_global_pose( model_t* mod, stg_pose_t* pose );
 
-int model_set_prop_generic( model_t* mod, stg_id_t propid, void* data, size_t len );
-stg_property_t* model_get_prop_generic( model_t* mod, stg_id_t propid );
-int model_remove_prop_generic( model_t* mod, stg_id_t propid );
-void* model_get_prop_data_generic( model_t* mod, stg_id_t propid );
-
-int model_update_prop( model_t* mod, stg_id_t propid );
-void model_ranger_update( model_t* mod );
-void model_laser_update( model_t* mod );
-
 void model_subscribe( model_t* mod, stg_id_t pid );
 void model_unsubscribe( model_t* mod, stg_id_t pid );
 
-void model_set_pose( model_t* mod, stg_pose_t* pose );
-void model_set_velocity( model_t* mod, stg_velocity_t* vel );
-void model_set_size( model_t* mod, stg_size_t* sz );
-void model_set_color( model_t* mod, stg_color_t* col );
+// this calls one of the set property functions, according to the propid value
+int model_set_prop( model_t* mod, stg_id_t propid, void* data, size_t len );
+
+// SET properties - use these to set props, don't set them directly
+int model_set_pose( model_t* mod, stg_pose_t* pose );
+int model_set_velocity( model_t* mod, stg_velocity_t* vel );
+int model_set_size( model_t* mod, stg_size_t* sz );
+int model_set_color( model_t* mod, stg_color_t* col );
+int model_set_geom( model_t* mod, stg_geom_t* geom );
+int model_set_mass( model_t* mod, stg_kg_t* mass );
+int model_set_guifeatures( model_t* mod, stg_guifeatures_t* gf );
+int model_set_energy_config( model_t* mod, stg_energy_config_t* gf );
+int model_set_energy_data( model_t* mod, stg_energy_data_t* gf );
+
+// GET properties - use these to get props - don't get them directly
+stg_velocity_t* model_get_velocity( model_t* mod );
+stg_geom_t* model_get_geom( model_t* mod );
+stg_color_t model_get_color( model_t* mod );
+stg_pose_t* model_get_pose( model_t* mod );
+stg_kg_t* model_get_mass( model_t* mod );
+stg_line_t* model_get_lines( model_t* mod, size_t* count );
+stg_guifeatures_t* model_get_guifeaturess( model_t* mod );
+stg_energy_data_t* model_energy_data_get( model_t* mod );
+stg_energy_config_t* model_energy_config_get( model_t* mod );
+
 
 int model_update( model_t* model );
 void model_update_cb( gpointer key, gpointer value, gpointer user );
@@ -157,25 +178,8 @@ void model_fiducial_update( model_t* mod );
 
 void model_energy_consume( model_t* mod, stg_watts_t rate );
 
-stg_velocity_t* model_velocity_get( model_t* mod );
-stg_geom_t* model_geom_get( model_t* mod );
-stg_color_t model_color_get( model_t* mod );
-stg_pose_t* model_pose_get( model_t* mod );
-stg_kg_t* model_mass_get( model_t* mod );
-stg_line_t* model_lines_get( model_t* mod, size_t* count );
-
-stg_energy_data_t* model_energy_get( model_t* mod );
-stg_energy_config_t* model_energy_config_get( model_t* mod );
 
 void model_lines_render( model_t* mod );
-
-void model_register_init( stg_id_t pid, func_init_t func );
-void model_register_startup( stg_id_t pid, func_startup_t func );
-void model_register_shutdown( stg_id_t pid, func_shutdown_t func );
-void model_register_update( stg_id_t pid, func_update_t func );
-void model_register_service( stg_id_t pid, func_service_t func );
-void model_register_set( stg_id_t pid, func_set_t func );
-void model_register_get( stg_id_t pid, func_get_t func );
 
 void register_init( stg_model_type_t type, func_init_t func );
 void register_startup( stg_model_type_t type, func_startup_t func );

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.25 $
+//  $Revision: 1.26 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -29,14 +29,17 @@ extern rtk_fig_t* fig_debug;
   
 void laser_init( model_t* mod )
 {
+  // sensible laser defaults
+  mod->geom.pose.x = STG_DEFAULT_LASER_POSEX;
+  mod->geom.pose.y = STG_DEFAULT_LASER_POSEY;
+  mod->geom.pose.a = STG_DEFAULT_LASER_POSEA;
+  mod->geom.size.x = STG_DEFAULT_LASER_SIZEX;
+  mod->geom.size.y = STG_DEFAULT_LASER_SIZEY;
+
+  // set up a laser-specific config structure
   stg_laser_config_t lconf;
   memset(&lconf,0,sizeof(lconf));
   
-  lconf.geom.pose.x = STG_DEFAULT_LASER_POSEX;
-  lconf.geom.pose.y = STG_DEFAULT_LASER_POSEY;
-  lconf.geom.pose.a = STG_DEFAULT_LASER_POSEA;
-  lconf.geom.size.x = STG_DEFAULT_LASER_SIZEX;
-  lconf.geom.size.y = STG_DEFAULT_LASER_SIZEY;
   lconf.range_min   = STG_DEFAULT_LASER_MINRANGE;
   lconf.range_max   = STG_DEFAULT_LASER_MAXRANGE;
   lconf.fov         = STG_DEFAULT_LASER_FOV;
@@ -52,7 +55,7 @@ int laser_update( model_t* mod )
   
   stg_laser_config_t* cfg = mod->cfg;
   assert(cfg);
-  stg_geom_t* geom = &cfg->geom;
+  stg_geom_t* geom = &mod->geom;
 
   // get the sensor's pose in global coords
   stg_pose_t pz;
@@ -125,10 +128,6 @@ int laser_update( model_t* mod )
       //printf( "%d ", sample->range );
     }
   
-
-  // store the data
-  model_set_prop( mod, STG_PROP_LASERDATA, 
-		  scan, sizeof(stg_laser_sample_t) * cfg->samples );
   
   // new style
   model_putdata( mod, scan, sizeof(stg_laser_sample_t) * cfg->samples );
@@ -159,7 +158,7 @@ void laser_render_data(  model_t* mod, void* data, size_t len )
     fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_DATA,
 				 mod->gui.top, STG_LAYER_LASERDATA );
   
-  stg_geom_t* geom = model_geom_get(mod);
+  stg_geom_t* geom = &mod->geom;
   rtk_fig_origin( fig, geom->pose.x, geom->pose.y, geom->pose.a );  
 
   assert(mod->cfg);
@@ -176,7 +175,7 @@ void laser_render_data(  model_t* mod, void* data, size_t len )
     }
   
   double sample_incr = cfg->fov / cfg->samples;
-  double bearing = cfg->geom.pose.a - cfg->fov/2.0;
+  double bearing = geom->pose.a - cfg->fov/2.0;
   stg_point_t* points = calloc( sizeof(stg_point_t), cfg->samples + 1 );
   
   rtk_fig_color_rgb32(fig, stg_lookup_color(STG_LASER_BRIGHT_COLOR) );
@@ -235,7 +234,7 @@ void laser_render_config( model_t* mod, stg_laser_config_t* cfg )
     geomfig = model_prop_fig_create( mod, mod->gui.propgeom, STG_PROP_CONFIG,
 				 mod->gui.top, STG_LAYER_LASERGEOM );
 
-  stg_geom_t* geom = &cfg->geom;
+  stg_geom_t* geom = &mod->geom;
   
   stg_pose_t pose;
   memcpy( &pose, &geom->pose, sizeof(pose) );

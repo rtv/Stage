@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_energy.c,v $
 //  $Author: rtv $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -27,119 +27,41 @@ extern rtk_fig_t* fig_debug;
 #define TIMING 0
 #define ENERGY_FILLED 1
 
-void model_energy_config_init( model_t* mod );
-int model_energy_config_set( model_t* mod, void* config, size_t len );
-
-void model_energy_data_init( model_t* mod );
-int model_energy_data_shutdown( model_t* mod );
-int model_energy_data_service( model_t* mod );
-int model_energy_data_set( model_t* mod, void* data, size_t len );
-
-void model_energy_data_render( model_t* mod );
-void model_energy_config_render( model_t* mod );
-
-void model_energy_register(void)
-{ 
-  PRINT_DEBUG( "ENERGY INIT" );  
-  
-  model_register_init( STG_PROP_ENERGYCONFIG, model_energy_config_init );
-  model_register_set( STG_PROP_ENERGYCONFIG, model_energy_config_set );
-
-  model_register_init( STG_PROP_ENERGYDATA, model_energy_data_init );
-  model_register_set( STG_PROP_ENERGYDATA, model_energy_data_set );
-  model_register_shutdown( STG_PROP_ENERGYDATA, model_energy_data_shutdown );
-  model_register_service( STG_PROP_ENERGYDATA, model_energy_data_service );
-}
-
-stg_energy_config_t* model_energy_config_get( model_t* mod )
+stg_energy_config_t* model_get_energy_config( model_t* mod )
 {
-  stg_energy_config_t* cfg = 
-    model_get_prop_data_generic( mod, STG_PROP_ENERGYCONFIG );
-  assert(cfg);
-  return cfg;
+  return &mod->energy_config;
 }
 
-stg_energy_data_t* model_energy_data_get( model_t* mod )
+stg_energy_data_t* model_get_energy_data( model_t* mod )
 {
-  stg_energy_data_t* data = (stg_energy_data_t*)
-    model_get_prop_data_generic( mod, STG_PROP_ENERGYDATA );
-  assert(data);
-  return data;
+  return &mod->energy_data;
 }
 
-void model_energy_config_init( model_t* mod )
-{
-  stg_energy_config_t cfg;
-  memset(&cfg,0,sizeof(cfg));
-
-  cfg.capacity = STG_DEFAULT_ENERGY_CAPACITY;
-  cfg.give_rate = STG_DEFAULT_ENERGY_GIVERATE;
-  cfg.probe_range = STG_DEFAULT_ENERGY_PROBERANGE;      
-  cfg.trickle_rate = STG_DEFAULT_ENERGY_TRICKLERATE;
-
-  model_set_prop( mod, STG_PROP_ENERGYCONFIG, &cfg,sizeof(cfg) );
-}
-
-void model_energy_data_init( model_t* mod )
-{
-  stg_energy_config_t* cfg = model_energy_config_get(mod);
-  
-  stg_energy_data_t data;
-  memset(&data,0,sizeof(data));
-
-  data.joules = cfg->capacity;
-  data.watts = 0;
-  data.charging = FALSE;
-  data.range = cfg->probe_range;
-  
-  model_set_prop( mod, STG_PROP_ENERGYDATA, &data,sizeof(data) );
-}
-
-int model_energy_data_set( model_t* mod, void* data, size_t len )
+int model_set_energy_data( model_t* mod, stg_energy_data_t* data )
 {  
-  // store the data
-  model_set_prop_generic( mod, STG_PROP_ENERGYDATA, data, len );
+  memcpy( &mod->energy_data, data, sizeof(mod->energy_data));
   
   // and redraw it
   model_energy_data_render( mod );
+
+  return 0; //OK
+}
+
+int model_set_energy_config( model_t* mod, stg_energy_config_t* config )
+{  
+  memcpy( &mod->energy_config, config, sizeof(mod->energy_config));
+  
+  // and redraw it
+  model_energy_config_render( mod );
 
   return 0; //OK
 }
  
-int model_energy_config_set( model_t* mod, void* config, size_t len )
-{  
-  // store the config
-  model_set_prop_generic( mod, STG_PROP_ENERGYCONFIG, config, len );
-  
-  // TODO - need to think about this a little. I'll leave it for
-  // now. - rtv
-
-  //set our actual energy level to be the same as the capacity
-  ////stg_energy_data_t* data = model_energy_data_get( mod );
-  ////data->joules = ((stg_energy_config_t*)config)->capacity;
-  ////model_set_prop( mod, STG_PROP_ENERGYDATA,
-  //data,sizeof(stg_energy_data_t) );
-
-  // and redraw it
-  model_energy_config_render( mod);
-
-  return 0; //OK
-}
-
-
-int model_energy_data_shutdown( model_t* mod )
-{
-  PRINT_DEBUG( "energy shutdown" );  
-  // and redraw it
-  model_energy_data_render( mod );
-  return 0;
-}
-
 
 void model_energy_consume( model_t* mod, stg_watts_t rate )
 {
-  stg_energy_data_t* data = model_energy_data_get(mod);
-  stg_energy_config_t* cfg = model_energy_config_get(mod);
+  stg_energy_data_t* data = model_get_energy_data(mod);
+  stg_energy_config_t* cfg = model_get_energy_config(mod);
   
   if( data && cfg && cfg->capacity > 0 )
     {
@@ -151,8 +73,8 @@ void model_energy_consume( model_t* mod, stg_watts_t rate )
 
 void model_energy_absorb( model_t* mod, stg_watts_t rate )
 {
-  stg_energy_data_t* data = model_energy_data_get(mod);
-  stg_energy_config_t* cfg = model_energy_config_get(mod);
+  stg_energy_data_t* data = model_get_energy_data(mod);
+  stg_energy_config_t* cfg = model_get_energy_config(mod);
 
   if( data && cfg && cfg->capacity > 0 )
     {
@@ -161,7 +83,6 @@ void model_energy_absorb( model_t* mod, stg_watts_t rate )
       //printf( "joules: %.2f max: %.2f\n", data->joules, cfg->capacity );
 
       data->joules = MIN( data->joules, cfg->capacity );
-
     }
 }
 
@@ -170,8 +91,8 @@ int model_energy_data_service( model_t* mod )
 {     
   PRINT_DEBUG1( "energy service model %d", mod->id  );  
   
-  stg_energy_config_t* cfg = model_energy_config_get(mod);
-  stg_energy_data_t* data = model_energy_data_get(mod);
+  stg_energy_config_t* cfg = model_get_energy_config(mod);
+  stg_energy_data_t* data = model_get_energy_data(mod);
 
   data->charging = FALSE;
 
@@ -190,7 +111,7 @@ int model_energy_data_service( model_t* mod )
 	  // if we hit something
 	  if( him != mod )
 	    {
-	      stg_energy_config_t* hiscfg =  model_energy_config_get(him);
+	      stg_energy_config_t* hiscfg =  model_get_energy_config(him);
 	      //stg_energy_data_t* hisdata =  model_energy_data_get(him);
 	      
 	      //printf( "inspecting mod %d to see if he will give me juice\n",
@@ -252,8 +173,8 @@ void model_energy_data_render( model_t* mod )
       //pose.a = 0.0;
       //rtk_fig_origin( fig, pose.x, pose.y, pose.a );
 
-      stg_energy_data_t* data = model_energy_data_get(mod);
-      stg_energy_config_t* cfg = model_energy_config_get(mod);
+      stg_energy_data_t* data = model_get_energy_data(mod);
+      stg_energy_config_t* cfg = model_get_energy_config(mod);
       
       /*  char buf[256];
       snprintf( buf, 256, "%.2f/%.2fJ %.2fW %s", 
@@ -289,8 +210,6 @@ void model_energy_data_render( model_t* mod )
 }
 
 
-
-
 void model_energy_config_render( model_t* mod )
 { 
   PRINT_DEBUG( "energy config render" );
@@ -306,7 +225,7 @@ void model_energy_config_render( model_t* mod )
       rtk_fig_color_rgb32( fig, stg_lookup_color( STG_ENERGY_CFG_COLOR ));
     }
   
-  stg_energy_config_t* cfg = model_energy_config_get(mod);
+  stg_energy_config_t* cfg = model_get_energy_config(mod);
   
   if( cfg && cfg->give_rate > 0 )
     {  

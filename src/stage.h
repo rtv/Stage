@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.69 2004-08-24 15:46:48 rtv Exp $
+ * CVS: $Id: stage.h,v 1.70 2004-08-25 00:59:55 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -559,7 +559,7 @@ typedef struct
 
 typedef struct
 {
-  stg_geom_t geom;
+  //stg_geom_t geom;
   stg_radians_t fov;
   stg_meters_t range_max;
   stg_meters_t range_min;
@@ -649,11 +649,11 @@ typedef struct
 #define STG_DEFAULT_POSEX 0.0
 #define STG_DEFAULT_POSEY 0.0
 #define STG_DEFAULT_POSEA 0.0
-#define STG_DEFAULT_ORIGINX 0.0
-#define STG_DEFAULT_ORIGINY 0.0
-#define STG_DEFAULT_ORIGINA 0.0
-#define STG_DEFAULT_SIZEX 0.4
-#define STG_DEFAULT_SIZEY 0.4
+#define STG_DEFAULT_GEOM_POSEX 0.0
+#define STG_DEFAULT_GEOM_POSEY 0.0
+#define STG_DEFAULT_GEOM_POSEA 0.0
+#define STG_DEFAULT_GEOM_SIZEX 0.4
+#define STG_DEFAULT_GEOM_SIZEY 0.4
 #define STG_DEFAULT_OBSTACLERETURN TRUE
 #define STG_DEFAULT_LASERRETURN LaserVisible
 #define STG_DEFAULT_RANGERRETURN TRUE

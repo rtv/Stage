@@ -199,7 +199,7 @@ void gui_world_matrix( world_t* world, gui_window_t* win )
 
 void gui_pose( rtk_fig_t* fig, model_t* mod )
 {
-  stg_pose_t* pose = model_pose_get( mod );
+  stg_pose_t* pose = model_get_pose( mod );
   rtk_fig_arrow_ex( fig, 0,0, pose->x, pose->y, 0.05 );
 }
 
@@ -253,7 +253,7 @@ const char* gui_model_describe(  model_t* mod )
 {
   static char txt[256];
   
-  stg_pose_t* pose = model_pose_get( mod );
+  stg_pose_t* pose = model_get_pose( mod );
 
   snprintf(txt, sizeof(txt), "\"%s\" (%d:%d) pose: [%.2f,%.2f,%.2f]",  
 	   mod->token, mod->world->id, mod->id,  
@@ -286,8 +286,8 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
     {
     case RTK_EVENT_PRESS:
       // store the velocity at which we grabbed the model
-      memcpy( &capture_vel, model_velocity_get(mod), sizeof(capture_vel) );
-      model_set_prop( mod, STG_PROP_VELOCITY, &zero_vel, sizeof(zero_vel) );
+      memcpy( &capture_vel, model_get_velocity(mod), sizeof(capture_vel) );
+      model_set_velocity( mod, &zero_vel );
 
       // DELIBERATE NO-BREAK      
 
@@ -300,7 +300,7 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
 	
       // only update simple objects on drag
       //if( mod->lines->len < STG_LINE_THRESHOLD )
-	model_set_prop( mod, STG_PROP_POSE, &pose, sizeof(pose) );
+      model_set_pose( mod, &pose );
       
       // display the pose
       snprintf(txt, sizeof(txt), "Dragging: %s", gui_model_describe(mod)); 
@@ -313,10 +313,10 @@ void gui_model_mouse(rtk_fig_t *fig, int event, int mode)
     case RTK_EVENT_RELEASE:
       // move the entity to its final position
       rtk_fig_get_origin(fig, &pose.x, &pose.y, &pose.a );
-      model_set_prop( mod, STG_PROP_POSE, &pose, sizeof(pose) );
+      model_set_pose( mod, &pose );
       
       // and restore the velocity at which we grabbed it
-      model_set_prop( mod, STG_PROP_VELOCITY, &capture_vel, sizeof(capture_vel) );
+      model_set_velocity( mod, &capture_vel );
 
       // take the pose message from the status bar
       cid = gtk_statusbar_get_context_id( win->statusbar, "on_mouse" );
@@ -378,7 +378,7 @@ void gui_model_render( model_t* model )
   rtk_fig_t* fig = gui_model_figs(model)->top;
   rtk_fig_clear( fig );
   
-  stg_pose_t* pose = model_pose_get( model );
+  stg_pose_t* pose = model_get_pose( model );
   rtk_fig_origin( fig, pose->x, pose->y, pose->a );
 
 #if BOUNDINGBOX 

@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.13 $
+//  $Revision: 1.14 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -20,77 +20,36 @@
 #include "gui.h"
 
 int model_pose_update( model_t* model );
-int model_pose_set( model_t* mod, void* data, size_t len );
-void model_pose_init( model_t* mod );
-void model_obstacle_return_init( model_t* mod );
+
+
 stg_energy_data_t* model_energy_data_get( model_t* mod );
 
-void model_pose_register(void)
-{ 
-  PRINT_DEBUG( "POSE INIT" );
-  
-  model_register_init( STG_PROP_OBSTACLERETURN, model_obstacle_return_init );
-
-  model_register_init( STG_PROP_POSE, model_pose_init );
-  model_register_update( STG_PROP_POSE, model_pose_update );
-  model_register_set( STG_PROP_POSE, model_pose_set );
-}
-
-
-void model_pose_init( model_t* mod )
-{
-  // install a default pose
-  stg_pose_t newpose;
-  newpose.x = 0;
-  newpose.y = 0;
-  newpose.a = 0; 
-  newpose.stall = 0;
-  model_set_prop_generic( mod, STG_PROP_POSE, &newpose, sizeof(newpose) );
-}
-
-void model_obstacle_return_init( model_t* mod )
-{
-  stg_bool_t val = TRUE;
-  model_set_prop_generic( mod, STG_PROP_OBSTACLERETURN, &val, sizeof(val) );
-}
-
 // convencience
-stg_bool_t model_obstacle_get( model_t* model )
+stg_bool_t model_get_obstaclereturn( model_t* mod   )
 {
-  stg_bool_t* obs = model_get_prop_data_generic( model, STG_PROP_OBSTACLERETURN );
-  assert(obs);
-  return *obs;
+  return mod->obstacle_return;
 }
 
-int model_pose_set( model_t* mod, void*data, size_t len )
+int model_set_pose( model_t* mod, stg_pose_t* pose )
 {
-  if( len != sizeof(stg_pose_t) )
-    {
-      PRINT_WARN2( "received wrong size pose (%d/%d)",
-		  (int)len, (int)sizeof(stg_pose_t) );
-      return 1; // error
-    }
-  
   // if the new pose is different
-  stg_pose_t* current_pose  = model_pose_get( mod );
-  
-  if( memcmp( current_pose, data, sizeof(stg_pose_t) ))
+  if( memcmp( &mod->pose, pose, sizeof(stg_pose_t) ))
     {
+      // unrender from the matrix
       model_map( mod, 0 );
       
-      // receive the new pose
-      model_set_prop_generic( mod, STG_PROP_POSE, data, len );
+      // copy the new pose
+      memcpy( &mod->pose, pose, sizeof(mod->pose) );
       
+      // render in the matrix
       model_map( mod, 1 );
       
-    // move the rtk figure to match
+      // move the rtk figure to match
       gui_model_pose( mod );
     }
   
   return 0; // OK
 }
-
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Check to see if the given pose will yield a collision with obstacles.
@@ -108,7 +67,7 @@ model_t* model_test_collision_at_pose( model_t* mod,
   // will just be a single rect, grippers 3 rects, etc. not too bad.
   
   size_t count=0;
-  stg_line_t* lines = model_lines_get(mod, &count);
+  stg_line_t* lines = model_get_lines(mod, &count);
 
   // no body? no collision
   if( count < 1 )
@@ -150,7 +109,7 @@ model_t* model_test_collision_at_pose( model_t* mod,
       model_t* hitmod;
       while( (hitmod = itl_next( itl )) ) 
 	{
-	  if( hitmod != mod && model_obstacle_get(hitmod) ) //&& !IsDescendent(ent) &&
+	  if( hitmod != mod && model_get_obstaclereturn(hitmod) ) //&& !IsDescendent(ent) &&
 	    //if( ent != this && ent->obstacle_return )
 	    {
 	      if( hitx || hity ) // if the caller needs to know hit points
@@ -170,27 +129,27 @@ model_t* model_test_collision_at_pose( model_t* mod,
 
 
 // convencience - get the model's pose.
-stg_pose_t* model_pose_get( model_t* model )
+stg_pose_t* model_get_pose( model_t* model )
 {
-  stg_pose_t* pose = model_get_prop_data_generic( model, STG_PROP_POSE );
-  assert(pose);
-  return pose;
+  //stg_pose_t* pose = model_get_prop_data_generic( model, STG_PROP_POSE );
+  //assert(pose);
+  return &model->pose;
 }
 
 int model_pose_update( model_t* model )
 { 
   PRINT_DEBUG1( "pose update method model %d", model->id );
  
-  stg_velocity_t* vel = model_velocity_get(model);  
+  stg_velocity_t* vel = model_get_velocity(model);  
 
 
   stg_pose_t pose;
-  memcpy( &pose, model_pose_get( model ), sizeof(pose));
+  memcpy( &pose, model_get_pose( model ), sizeof(pose));
   
   stg_pose_t oldpose;
   memcpy( &oldpose, &pose, sizeof(pose));
 
-  stg_energy_data_t* en = model_energy_data_get( model );
+  stg_energy_data_t* en = model_get_energy_data( model );
 
   //if( en->joules > 0 && (vel->x || vel->y || vel->a ) )
   if( (vel->x || vel->y || vel->a ) )
@@ -216,8 +175,10 @@ int model_pose_update( model_t* model )
 	  if( oldpose.stall == 0 )
 	    {
 	      oldpose.stall = 1;
+
 	      // now set the new pose handling matrix & gui redrawing 
-	      model_set_prop( model, STG_PROP_POSE, &oldpose, sizeof(oldpose) );
+	      model_set_pose( model, &oldpose );
+
 	    }	  
 	}
       else	  
@@ -225,11 +186,11 @@ int model_pose_update( model_t* model )
 	  pose.stall = 0;
 
 	  // now set the new pose handling matrix & gui redrawing 
-	  model_set_prop( model, STG_PROP_POSE, &pose, sizeof(pose) );
+	  model_set_pose( model, &pose );
 	  
 	  // ignore acceleration in energy model for now, we just pay
 	  // something to move.	
-	  stg_kg_t mass = *model_mass_get( model );
+	  stg_kg_t mass = *model_get_mass( model );
 	  model_energy_consume( model, STG_ENERGY_COST_MOTIONKG * mass ); 
 	}      
     }
@@ -239,7 +200,7 @@ int model_pose_update( model_t* model )
 
 void gui_model_pose( model_t* mod )
 { 
-  stg_pose_t* pose = model_pose_get( mod );
+  stg_pose_t* pose = model_get_pose( mod );
   //PRINT_DEBUG( "gui model pose" );
   rtk_fig_origin( gui_model_figs(mod)->top, 
 		  pose->x, pose->y, pose->a );

@@ -1,5 +1,3 @@
-
-
 #include <assert.h>
 #include <math.h>
 
@@ -10,7 +8,6 @@
 #include "gui.h"
 #include "raytrace.h"
 
-extern lib_entry_t library[];
 extern lib_entry_t derived[];
 
 
@@ -66,15 +63,73 @@ model_t* model_create(  world_t* world,
   mod->cfg_len = 0;
 
   mod->laser_return = LaserVisible;
+  mod->obstacle_return = TRUE;
+
+  // sensible defaults
+  mod->pose.x = STG_DEFAULT_POSEX;
+  mod->pose.y = STG_DEFAULT_POSEY;
+  mod->pose.a = STG_DEFAULT_POSEA;
+
+  mod->geom.pose.x = STG_DEFAULT_GEOM_POSEX;
+  mod->geom.pose.y = STG_DEFAULT_GEOM_POSEY;
+  mod->geom.pose.a = STG_DEFAULT_GEOM_POSEA;
+  mod->geom.size.x = STG_DEFAULT_GEOM_SIZEX;
+  mod->geom.size.y = STG_DEFAULT_GEOM_SIZEY;
+
+  mod->guifeatures.boundary =  STG_DEFAULT_BOUNDARY;
+  mod->guifeatures.nose =  STG_DEFAULT_NOSE;
+  mod->guifeatures.grid = STG_DEFAULT_GRID;
+  mod->guifeatures.movemask = STG_DEFAULT_MOVEMASK;
+  
+  // zero velocity
+  memset( &mod->velocity, 0, sizeof(mod->velocity) );
+  
+  // define a unit rectangle from 4 lines
+  stg_line_t alines[4];
+  alines[0].x1 = 0; 
+  alines[0].y1 = 0;
+  alines[0].x2 = 1; 
+  alines[0].y2 = 0;
+  
+  alines[1].x1 = 1; 
+  alines[1].y1 = 0;
+  alines[1].x2 = 1; 
+  alines[1].y2 = 1;
+  
+  alines[2].x1 = 1; 
+  alines[2].y1 = 1;
+  alines[2].x2 = 0; 
+  alines[2].y2 = 1;
+  
+  alines[3].x1 = 0; 
+  alines[3].y1 = 1;
+  alines[3].x2 = 0; 
+  alines[3].y2 = 0;
+  
+  // fit the rectangle inside the model's size
+  stg_normalize_lines( alines, 4 );
+  stg_scale_lines( alines, 4, mod->geom.size.x, mod->geom.size.y );
+  stg_translate_lines( alines, 4, -mod->geom.size.x/2.0, -mod->geom.size.y/2.0 );  
+
+  mod->lines_count = 4;
+  assert( mod->lines = malloc( mod->lines_count * sizeof(stg_line_t)) );
+
+  memset(&mod->energy_config,0,sizeof(mod->energy_config));
+  mod->energy_config.capacity = STG_DEFAULT_ENERGY_CAPACITY;
+  mod->energy_config.give_rate = STG_DEFAULT_ENERGY_GIVERATE;
+  mod->energy_config.probe_range = STG_DEFAULT_ENERGY_PROBERANGE;      
+  mod->energy_config.trickle_rate = STG_DEFAULT_ENERGY_TRICKLERATE;
+
+  memset(&mod->energy_data,0,sizeof(mod->energy_data));
+  mod->energy_data.joules = mod->energy_config.capacity;
+  mod->energy_data.watts = 0;
+  mod->energy_data.charging = FALSE;
+  mod->energy_data.range = mod->energy_config.probe_range;
+
 
   PRINT_WARN2( "model %d type %d", mod->id, mod->type );
 
   gui_model_create( mod );
-
-  int p;
-  for( p=0; p<STG_PROP_COUNT; p++ )
-    if( library[p].init )
-      library[p].init(mod);
 
   // if this type of model has an init function, call it.
   if( derived[ mod->type ].init )
@@ -149,7 +204,7 @@ void model_global_pose( model_t* mod, stg_pose_t* pose )
     
   //pose_sum( pose, &glob, &mod->pose );
 
-  stg_pose_t* mypose = model_pose_get( mod );
+  stg_pose_t* mypose = model_get_pose( mod );
   
   memcpy( pose, mypose, sizeof(stg_pose_t) ); 
   pose->a = NORMALIZE( pose->a );
@@ -162,7 +217,7 @@ void model_local_to_global( model_t* mod, stg_pose_t* pose )
   //pose_sum( &origin, &mod->pose, &mod->origin );
   model_global_pose( mod, &origin );
   
-  stg_geom_t* geom = model_geom_get(mod); 
+  stg_geom_t* geom = model_get_geom(mod); 
 
   pose_sum( &origin, &origin, &geom->pose );
   pose_sum( pose, &origin, pose );
@@ -170,7 +225,7 @@ void model_local_to_global( model_t* mod, stg_pose_t* pose )
 
 void model_global_rect( model_t* mod, stg_rotrect_t* glob, stg_rotrect_t* loc )
 {
-  stg_geom_t* geom = model_geom_get(mod); 
+  stg_geom_t* geom = model_get_geom(mod); 
 
   double w = geom->size.x;
   double h = geom->size.y;
@@ -194,7 +249,7 @@ void model_map( model_t* mod, gboolean render )
   assert( mod );
   
   size_t count=0;
-  stg_line_t* lines = model_lines_get(mod, &count);
+  stg_line_t* lines = model_get_lines(mod, &count);
 
   // todo - speed this up by processing all points in a single function call
   int l;
@@ -223,22 +278,12 @@ void model_map( model_t* mod, gboolean render )
 
 /* UPDATE everything */
 
-// TODO - fix up the library so that models get
-// subscription-independent updates then this can disappear.
-
-
 int model_update( model_t* mod )
 {
   //PRINT_DEBUG2( "updating model %d:%s", model->id, model->token );
   
   mod->interval_elapsed = 0;
 
-  // call all registered update functions
-  int p;
-  for( p=0; p<STG_PROP_COUNT; p++ )
-    if( library[p].update )
-      library[p].update(mod);
-  
   // if this type of model has an update function, call it.
   if( derived[ mod->type ].update && mod->subs[STG_PROP_DATA] > 0 )
     derived[ mod->type ].update(mod);
@@ -264,10 +309,7 @@ int model_service_default( model_t* mod )
 
 int model_update_prop( model_t* mod, stg_id_t pid )
 {
-  if( library[pid].service )
-    library[pid].service(mod);
-  else
-    model_service_default(mod);
+  model_service_default(mod);
   
   mod->update_times[pid] = mod->world->sim_time;
   
@@ -294,8 +336,8 @@ void model_subscribe( model_t* mod, stg_id_t pid )
   // if this is the first sub, call startup & render if there is one
   if( mod->subs[pid] == 1 )
     {
-      if( library[pid].startup ) 
-	library[pid].startup(mod);        
+      if( derived[mod->type].startup ) 
+	derived[mod->type].startup(mod);        
       else
 	model_startup_default(mod);
     }
@@ -319,8 +361,8 @@ void model_unsubscribe( model_t* mod, stg_id_t pid )
   // if that was the last sub, call shutdown 
   if( mod->subs[pid] < 1 )
     {
-      if( library[pid].shutdown ) 
-	library[pid].shutdown(mod);  
+      if( derived[mod->type].shutdown ) 
+	derived[mod->type].shutdown(mod);  
       else
 	model_shutdown_default(mod);
     }
@@ -330,11 +372,11 @@ void model_unsubscribe( model_t* mod, stg_id_t pid )
 		mod->subs[pid] );
 }
 
-int model_get_prop_default( model_t* mod, stg_id_t pid, void** data, size_t* len )
+int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
 {
   PRINT_DEBUG1( "default get method mod %d", mod->id );
 
-  stg_property_t* prop = model_get_prop_generic( mod, pid);
+  stg_property_t* prop = NULL;
   if( prop )
     {
       PRINT_DEBUG3( "data found for model %d property %d(%s)",
@@ -354,48 +396,97 @@ int model_get_prop_default( model_t* mod, stg_id_t pid, void** data, size_t* len
   return 0; //ok
 }
 
+// TODO
+//stg_ms_t* model_get_time( model_t* mod )
+//{
+//return & 
 
-//////////////////////////////////////////////////////////////////////////
 
-int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
+
+void model_set_laserreturn( model_t* mod, stg_laser_return_t* val )
 {
-  if( pid == STG_PROP_TIME ) // no data - just fetches a timestamp
-    {
-      *data = NULL;
-      *len = 0;
-      return 0;
-    }
-  
-
-  // else
-  if( library[pid].get ) 
-    {
-      *data = library[pid].get(mod, len);    
-      return 0;
-    }
-
-  // else
-  return model_get_prop_default( mod, pid, data, len );
+  memcpy( &mod->laser_return, val, sizeof(mod->laser_return) );
 }
 
-
-int model_set_prop_generic( model_t* mod, stg_id_t propid, void* data, size_t len )
+int model_size_error( model_t* mod, stg_id_t pid, 
+		      size_t actual, size_t correct )
 {
-  assert( mod );
-  assert( mod->props );
-  if( len > 0 ) assert( data );
-  
-  stg_property_t* prop = calloc( sizeof(stg_property_t), 1 );
-  assert(prop);
-  prop->id = propid;
-  prop->data = calloc( len, 1 );
-  memcpy( prop->data, data, len );
-  prop->len = len;
-  
-  //printf( "setting %p %d:%d(%s) with %d bytes\n", 
-  //  mod->props, mod->id, propid, stg_property_string(propid), (int)len );
-  
-  g_hash_table_replace( mod->props, &prop->id, prop );
+  PRINT_WARN5( "model %d(%s) received wrong size %s (%d/%d bytes)",
+	       mod->id, 
+	       mod->token, 
+	       stg_property_string(pid), 
+	       (int)actual, 
+	       (int)correct );
+
+  return 1; // always returns an error
+}
+
+int model_set_prop( model_t* mod, stg_id_t propid, void* data, size_t len )
+{
+  switch( propid )
+    {
+    case STG_PROP_POSE:  
+      if( len == sizeof(stg_pose_t) ) 
+	model_set_pose( mod, (stg_pose_t*)data );
+      else
+	model_size_error( mod, propid, len, sizeof(stg_pose_t) );
+      break;
+      
+    case STG_PROP_GEOM: 
+       if( len == sizeof(stg_geom_t) ) 
+	 model_set_geom( mod, (stg_geom_t*)data );
+      else
+	model_size_error( mod, propid, len, sizeof(stg_geom_t) );
+       break;
+
+    case STG_PROP_VELOCITY:  
+      if( len == sizeof(stg_velocity_t) ) 
+	model_set_velocity( mod, (stg_velocity_t*)data );
+      else
+	model_size_error( mod, propid, len, sizeof(stg_velocity_t) );
+      break;
+
+    case STG_PROP_COLOR:  
+      if( len == sizeof(stg_color_t) ) 
+	model_set_color( mod, (stg_color_t*)data );
+      else
+	model_size_error( mod, propid, len, sizeof(stg_color_t) );
+      break;
+
+    case STG_PROP_MASS:  
+      if( len == sizeof(stg_kg_t) ) 
+	model_set_mass( mod, (stg_kg_t*)data );
+      else
+	model_size_error( mod, propid, len, sizeof(stg_kg_t) );
+      break;
+      
+    case STG_PROP_LASERRETURN: 
+      if( len == sizeof(stg_laser_return_t) ) 
+	model_set_laserreturn( mod, (stg_laser_return_t*)data ); 
+      else
+	model_size_error( mod, propid, len, sizeof(stg_laser_return_t) );      
+      break;
+
+    case STG_PROP_LINES:
+      model_set_lines( mod, (stg_line_t*)data, len / sizeof(stg_line_t) );
+      break;
+
+    case STG_PROP_GUIFEATURES: 
+      if( len == sizeof(stg_guifeatures_t) ) 
+	model_set_guifeatures( mod, (stg_guifeatures_t*)data ); 
+      else
+	model_size_error( mod, propid, len, sizeof(stg_guifeatures_t) );      
+      break;
+
+      
+      
+      // etc!
+
+    default:
+      PRINT_WARN3( "unhandled property %d(%s) of size %d bytes",
+		   propid, stg_property_string(propid), len );
+      break;
+    }
 
   return 0; // OK
 }
@@ -407,108 +498,6 @@ int model_remove_prop_generic( model_t* mod, stg_id_t propid )
   
   return 0; // OK
 }
-
-stg_property_t* model_get_prop_generic( model_t* mod, stg_id_t propid )
-{
-  //printf( "getting %p %d:%d(%s)\n", 
-  //mod->props, mod->id, propid, stg_property_string(propid) );
-  
-  stg_property_t* prop = 
-    (stg_property_t*)g_hash_table_lookup( mod->props, &propid );
-  
-  //if( prop )
-  //printf( "found %d bytes\n", (int)prop->len );
-  //else
-  //puts( "not found" );  
-  
-  if( prop == NULL )
-    PRINT_WARN3( "no property entry found for model %d property %d(%s)",
-		 mod->id, propid, stg_property_string(propid) );
-  
-  return prop;
-}
-
-// if there is data for this property, return just a pointer to the
-// data, else NULL. This is only useful if we know how large the data
-// should be (or can find out somehow)
-void* model_get_prop_data_generic( model_t* mod, stg_id_t propid )
-{
-  stg_property_t* prop = model_get_prop_generic( mod, propid );
-  
-  if( prop == NULL )
-    {
-      PRINT_WARN3( "attempted to get data for a property that was "
-		   "never created (model %p property %d(%s)",
-		   mod, propid, stg_property_string( propid ) );
-      return NULL;
-    }
-  // else  
-  return prop->data;
-}
-
-
-
-int model_set_prop( model_t* mod, 
-		     stg_id_t propid, 
-		     void* data, 
-		     size_t len )
-{
-  PRINT_DEBUG4( "setting property %d:%d:%d(%s)",
-		mod->world->id, mod->id, propid, stg_property_string(propid) );
-
-
-  if( propid == STG_PROP_TIME )
-    {
-      PRINT_WARN3( "Ignoring attempt to set time for %d:%d(%s).", 	
-		   mod->world->id, mod->id, mod->token );
-      
-      return 0;
-    }
-  
-  // else
-  if( library[propid].set )
-    return library[propid].set(mod,data,len);
-      
-  // else        
-  return model_set_prop_generic( mod, propid, data, len );            
-}
-
-
-void model_register_init( stg_id_t pid, func_init_t func )
-{
-  library[pid].init = func;
-}
-
-void model_register_startup( stg_id_t pid, func_startup_t func )
-{
-  library[pid].startup = func;
-}
-
-void model_register_shutdown( stg_id_t pid, func_shutdown_t func )
-{
-  library[pid].shutdown = func;
-}
-
-void model_register_update( stg_id_t pid, func_update_t func )
-{
-  library[pid].update = func;
-}
-
-void model_register_service( stg_id_t pid, func_service_t func )
-{
-  library[pid].service = func;
-}
-
-void model_register_set( stg_id_t pid, func_set_t func )
-{
-  library[pid].set = func;
-}
-
-void model_register_get( stg_id_t pid, func_get_t func )
-{
-  library[pid].get = func;
-}
-
 
 
 void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
