@@ -143,5 +143,7 @@ rtk_fig_t* stg_gui_grid_create( rtk_canvas_t* canvas, rtk_fig_t* parent,
 
 void RtkOnMouse(rtk_fig_t *fig, int event, int mode);
 
-
+int stg_gui_los_msg_send( CEntity* ent, stg_los_msg_t* msg );
+int stg_gui_los_msg_recv( CEntity* receiver, CEntity* sender, 
+			  stg_los_msg_t* msg );
 #endif

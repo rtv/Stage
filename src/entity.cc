@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.103 2003-08-19 23:47:29 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.104 2003-08-23 01:33:03 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -52,6 +52,8 @@
 #include "world.hh" 
 #include "entity.hh"
 #include "raytrace.hh"
+
+#include "stage.h"
 
 extern GHashTable* global_hash_table;
 extern int global_next_available_id;
@@ -211,7 +213,7 @@ CEntity::CEntity( stg_entity_create_t* init )
   neighbor_return = 0;
 
   // no visible light
-  this->blinkenlight = LightNone;
+  this->blinkenlight = 0;
 
   //m_dependent_attached = false;
   
@@ -725,8 +727,8 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
       break;
 
     case STG_PROP_ENTITY_BLINKENLIGHT:
-      g_assert( (len == sizeof(stg_blinkenlight_t)) );	
-      this->blinkenlight = *(stg_blinkenlight_t*)data;
+      g_assert( (len == sizeof(stg_interval_ms_t)) );	
+      this->blinkenlight = *(stg_interval_ms_t*)data;
       break;      
 
     case STG_PROP_ENTITY_NOSE:
@@ -737,6 +739,11 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
     case STG_PROP_ENTITY_NEIGHBORBOUNDS:
       g_assert( (len == sizeof(stg_bounds_t)) );	
       memcpy( &this->bounds_neighbor, (stg_bounds_t*)data, sizeof(stg_bounds_t));
+      break;
+      
+    case STG_PROP_ENTITY_LOS_MSG:
+      g_assert( (len == sizeof(stg_los_msg_t)) );	
+      this->SendLosMessage( (stg_los_msg_t*)data );
       break;
 
     case STG_PROP_ENTITY_TRANSDUCERS:
@@ -838,7 +845,12 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
       prop = stg_property_attach_data( prop, &this->laser_return, 
 				       sizeof(this->laser_return));
       break;
-
+      
+    case STG_PROP_ENTITY_LOS_MSG:
+      prop = stg_property_attach_data( prop, &this->last_received_msg,
+				       sizeof(this->last_received_msg));
+      break;
+      
     case STG_PROP_ENTITY_NEIGHBORS:
       {
 	GArray* array = NULL;
@@ -884,6 +896,113 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
   return prop;
 };
 
+CEntity* StgEntityFromId( stg_id_t id )
+{
+  // get the entity with this id from the global hash table   
+  GNode* node = 
+    (GNode*)g_hash_table_lookup( global_hash_table, &id );
+  
+  if( node == NULL ) return NULL;
+
+  return (CEntity*)node->data;	
+}
+
+void CEntity::SendLosMessage( stg_los_msg_t* msg )
+{
+  //memcpy( &this->last_received_msg, msg, sizeof(stg_los_msg_t) );
+
+  PRINT_WARN1( "MESSAGE LENGTH %d", msg->len );
+  
+  // sanity checking
+  g_assert( msg );
+  g_assert( msg->len < STG_LOS_MSG_MAX_LEN );
+  
+  stg_los_msg_print( msg );
+
+  stg_gui_los_msg_send( this, msg );
+
+  if( msg->id > 0 ) // we're targeting a specific entity
+    {
+      CEntity *target = StgEntityFromId( msg->id );
+      
+      if( target == NULL ) // no one to talk to
+	return;
+
+      if( !target->neighbor_return ) // not a neighbor!
+      	return;
+      
+      // compute the range the message will travel
+      stg_pose_t my_pose, target_pose;
+      this->GetGlobalPose( &my_pose );
+      target->GetGlobalPose( &target_pose );
+      
+      double dx = my_pose.x - target_pose.x;
+      double dy = my_pose.y - target_pose.y;
+      double range = sqrt( dx*dx + dy*dy);
+      
+      // Filter by detection range
+      if( range > this->bounds_neighbor.max || 
+	  range < this->bounds_neighbor.min )
+	return;
+      
+      // as a last resort (because this is so expensive) filter by LOS
+      if( OcclusionTest(target) )
+	return;
+      
+      // ok the message gets through!
+      memcpy( &target->last_received_msg, msg, sizeof(stg_los_msg_t) );
+      
+      printf( "target %d received message\n", msg->id ); 
+      stg_los_msg_print( &target->last_received_msg );
+      
+      stg_gui_los_msg_recv( target, this, msg );
+    }
+  else
+    {
+      // Search through the global device list and send the message to
+      // anything in range
+      GNode* root_node = g_node_get_root(this->node);
+      
+      // for each node in my world's tree
+      for( GNode* node = g_node_first_child(root_node);
+	   node; 
+	   node = g_node_next_sibling( node) )
+	{
+	  CEntity* target = (CEntity*)node->data;
+	  
+	  if( !target->neighbor_return ) // not a neighbor!
+	    continue;
+	  
+
+	  // compute the range the message will travel
+	  stg_pose_t my_pose, target_pose;
+	  this->GetGlobalPose( &my_pose );
+	  target->GetGlobalPose( &target_pose );
+	  
+	  double dx = my_pose.x - target_pose.x;
+	  double dy = my_pose.y - target_pose.y;
+	  double range = sqrt( dx*dx + dy*dy);
+	  
+	  // Filter by detection range
+	  if( range > this->bounds_neighbor.max || 
+	      range < this->bounds_neighbor.min )
+	    continue;
+	  
+	  // as a last resort (because this is so expensive) filter by LOS
+	  if( OcclusionTest(target) )
+	    continue;
+	  
+	  // ok the message gets through!
+	  memcpy( &target->last_received_msg, msg, sizeof(stg_los_msg_t) );
+	  
+	  printf( "target %d received message\n", msg->id ); 
+	  stg_los_msg_print( &target->last_received_msg );
+	  
+	  stg_gui_los_msg_recv( target, this, msg ); 
+	}
+    }
+}
+
 void CEntity::GetNeighbors( GArray** neighbor_array )
 {
   PRINT_DEBUG( "searching for neighbors" );
@@ -927,15 +1046,15 @@ void CEntity::GetNeighbors( GArray** neighbor_array )
       buddy.size.x = sz.x;
       buddy.size.y = sz.y;
 
-      PRINT_DEBUG3( "detected a neighbor id %d at %.2fm, %.2f degrees",
-		    buddy.id, buddy.range, buddy.bearing );
+      //PRINT_DEBUG3( "detected a neighbor id %d at %.2fm, %.2f degrees",
+      //	    buddy.id, buddy.range, buddy.bearing );
 
       // Filter by detection range
       if( buddy.range > this->bounds_neighbor.max || 
 	  buddy.range < this->bounds_neighbor.min )
 	continue;
- 
-      // Filter by view angle
+      
+      // todo - Filter by view angle
       //if( fabs(bearing) > view_angle/2.0 )
       //continue;
 

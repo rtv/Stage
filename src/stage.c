@@ -60,8 +60,10 @@ const char* stg_property_string( stg_prop_id_t id )
     case STG_PROP_ENTITY_TRANSDUCERS: return "STG_PROP_ENTITY_TRANSDUCERS";break;
     case STG_PROP_ENTITY_LASER_DATA: return "STG_PROP_ENTITY_LASER_DATA";break;
     case STG_PROP_ENTITY_BLINKENLIGHT: return "STG_PROP_ENTITY_BLINKENLIGHT";break;
+ 
     case STG_PROP_ENTITY_NOSE: return "STG_PROP_ENTITY_NOSE";break;
-
+    case   STG_PROP_ENTITY_LOS_MSG: return "STG_PROP_ENTITY_LOS_MSG";break;
+	
       // remove these
     case STG_PROP_IDAR_RX: return "STG_PROP_IDAR_RX"; break;
     case STG_PROP_IDAR_TX: return "STG_PROP_IDAR_TX"; break;
@@ -619,7 +621,7 @@ int stg_model_get_transducers( stg_client_t* cli, stg_id_t id,
 }
 
 int stg_model_set_neighbor_return( stg_client_t* cli, stg_id_t id, 
-				    stg_neighbor_return_t *val )
+				   stg_neighbor_return_t *val )
 {
   stg_property_t* reply = stg_send_property( cli, id, 
 					     STG_PROP_ENTITY_NEIGHBORRETURN, 
@@ -632,7 +634,7 @@ int stg_model_set_neighbor_return( stg_client_t* cli, stg_id_t id,
 }
 
 int stg_model_get_neighbor_return( stg_client_t* cli, stg_id_t id, 
-				    stg_neighbor_return_t *val )
+				   stg_neighbor_return_t *val )
 {
   stg_property_t* reply = stg_send_property( cli, id, 
 					     STG_PROP_ENTITY_NEIGHBORRETURN, 
@@ -644,28 +646,62 @@ int stg_model_get_neighbor_return( stg_client_t* cli, stg_id_t id,
   return 0;
 }
 
+void stg_los_msg_print( stg_los_msg_t* msg )
+{
+  printf( "Mesg - id: %d power: %d consume: %d len: %d bytes: %s\n",
+	  msg->id, msg->power, msg->consume, msg->len, msg->bytes );
+}
+
+
+int stg_model_send_los_msg(  stg_client_t* cli, stg_id_t id, 
+			     stg_los_msg_t *msg )
+{
+  stg_property_t* reply = stg_send_property( cli, id, 
+					     STG_PROP_ENTITY_LOS_MSG,
+					     STG_SETGET,
+					     msg,sizeof(stg_los_msg_t));
+  
+  memcpy( msg, reply->data, sizeof(stg_los_msg_t) );
+  stg_property_free( reply );
+  return 0;
+}
+
+int stg_model_exchange_los_msg(  stg_client_t* cli, stg_id_t id, 
+				 stg_los_msg_t *msg )
+{
+  stg_property_t* reply = stg_send_property( cli, id, 
+					     STG_PROP_ENTITY_LOS_MSG,
+					     STG_SETGET,
+					     msg,sizeof(stg_los_msg_t));
+  
+  memcpy( msg, reply->data, sizeof(stg_los_msg_t) );
+  stg_property_free( reply );
+  return 0;
+}
+
+
 int stg_model_set_light( stg_client_t* cli, stg_id_t id, 
-			 stg_blinkenlight_t *val)
+			 stg_interval_ms_t *val)
 {
   stg_property_t* reply = stg_send_property( cli, id, 
 					     STG_PROP_ENTITY_BLINKENLIGHT,
 					     STG_SETGET,
-					     val,sizeof(stg_blinkenlight_t));
- 
-  memcpy( val, reply->data, sizeof(stg_blinkenlight_t) );
+					     val,sizeof(stg_interval_ms_t));
+  
+  memcpy( val, reply->data, sizeof(stg_interval_ms_t) );
   stg_property_free( reply );
   return 0;
 }
 
 int stg_model_get_light( stg_client_t* cli, stg_id_t id, 
-			 stg_blinkenlight_t *val)
+			 stg_interval_ms_t *val)
 {
   stg_property_t* reply = stg_send_property( cli, id, 
 					     STG_PROP_ENTITY_BLINKENLIGHT,
 					     STG_GET,
 					     NULL, 0 );
  
-  memcpy( val, reply->data, sizeof(stg_blinkenlight_t) );
+  memcpy( val, reply->data, sizeof(stg_interval_ms_t) );
   stg_property_free( reply );
   return 0;
 }

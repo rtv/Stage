@@ -21,7 +21,7 @@
  * Desc: Simulated robot with various sensors
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.17 2003-08-19 22:09:52 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.18 2003-08-23 01:33:04 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -249,13 +249,17 @@ public: stg_gripper_return_t gripper_return;
 public: int fiducial_return; 
 public: int neighbor_return;
 
-public: stg_blinkenlight_t blinkenlight;  
-
+public: stg_interval_ms_t blinkenlight;  
+  
   // flag is set when a dependent device is  attached to this device
   //public: bool m_dependent_attached;
 
   // Initial pose in local cs (ie relative to parent)
 protected: stg_pose_t pose_init;
+  
+protected: stg_los_msg_t last_received_msg;
+  
+protected: void SendLosMessage( stg_los_msg_t* msg );
   
   // Pose in local cs (ie relative to parent)
 protected: stg_pose_t pose_local;
@@ -302,6 +306,12 @@ public:  bool OcclusionTest(CEntity* ent );
   bool mouseable;
   bool draw_nose;
 };
+
+// useful functions
+
+// get an entity from the hash table using it's id
+CEntity* StgEntityFromId( stg_id_t id );
+
 
 #ifdef DEBUG
 #define BASE_DEBUG(S) printf("[%d:%s (%s) %p] "S" (%s %s)\n",this->id,this->name->str,this->token->str,this,__FILE__,__FUNCTION__);

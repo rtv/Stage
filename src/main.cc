@@ -23,7 +23,7 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan
  * Date: 3 July 2003
- * CVS: $Id: main.cc,v 1.63 2003-08-19 22:09:52 rtv Exp $
+ * CVS: $Id: main.cc,v 1.64 2003-08-23 01:33:04 rtv Exp $
  */
 
 
@@ -71,7 +71,6 @@ void StgPrintTree( GNode* treenode, gpointer _prefix )
 }
   
 ///////////////////////////////////////////////////////////////////////////
-
 
 // write a stg_property_t on the channel returns TRUE on success, else FALSE
 gboolean StgPropertyWrite( GIOChannel* channel, stg_property_t* prop )

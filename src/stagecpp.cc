@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.3 2003-08-19 23:47:29 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.4 2003-08-23 01:33:04 rtv Exp $
  */
 
 #include <assert.h>
@@ -1773,31 +1773,12 @@ int CWorldFile::Upload( stg_client_t* cli,
 	nret = this->ReadInt( section, "neighbor", 0 );
 	stg_model_set_neighbor_return( cli, anid, &nret );
 	
-	stg_blinkenlight_t bl;
-	const char* blstr = NULL;
-	blstr = this->ReadString( section, "light", "none" );
+	stg_interval_ms_t li;
+	li = this->ReadInt( section, "light_interval", STG_LIGHT_OFF );
 
-	if( strcmp( blstr, "none" ) == 0 )
-	  bl = LightNone;
-	else if( strcmp( blstr, "on" ) == 0 )
-	  bl = LightOn;
-	else if( strcmp( blstr, "off" ) == 0 )
-	  bl = LightOff;
-	else if( strcmp( blstr, "blinkfast" ) == 0 )
-	  bl = LightBlinkFast;
-	else if( strcmp( blstr, "blink" ) == 0 )
-	  bl = LightBlinkMedium;
-	else if( strcmp( blstr, "blinkslow" ) == 0 )
-	  bl = LightBlinkSlow;
-	else
-	  {
-	    PRINT_WARN1( "unrecognized light state \"%s\" in worldfile."
-			" Using \"none\" instead.", blstr ); 
-	    bl = LightNone;
-	  }
-	
-	stg_model_set_light( cli, anid, &bl );
-	
+	PRINT_DEBUG1( "LIGHT %d", li );
+	stg_model_set_light( cli, anid, &li );
+
 	stg_nose_t nose;
 	nose = (stg_nose_t)this->ReadBool( section, "nose", true );
 	stg_model_set_nose( cli, anid, &nose );
@@ -1823,8 +1804,7 @@ int CWorldFile::Upload( stg_client_t* cli,
 		    inpam.depth );
 	    // convert the bitmap to rects and poke them into the model
 	  }
-
-      } 
+      }
   }
 
   // fill in the data we created so the caller can find the model ids

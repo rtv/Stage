@@ -81,6 +81,7 @@
        STG_PROP_ENTITY_NEIGHBORBOUNDS,
        STG_PROP_ENTITY_BLINKENLIGHT,
        STG_PROP_ENTITY_NOSE,
+       STG_PROP_ENTITY_LOS_MSG,
        STG_PROP_IDAR_RX, // see idar.cc
        STG_PROP_IDAR_TX,
        STG_PROP_IDAR_TXRX,
@@ -134,17 +135,11 @@ typedef enum
     IDARReceive
   } stg_idar_return_t;
 
-// Possible blinkenlight values
-typedef enum
-  {
-    LightNone = 0,
-    LightOff,
-    LightOn,
-    LightBlinkSlow,
-    LightBlinkMedium,
-    LightBlinkFast,
-    LightFlashOnce
-  } stg_blinkenlight_t;
+
+// a number of milliseconds, used for example as the blinkenlight interval
+#define STG_LIGHT_ON UINT_MAX
+#define STG_LIGHT_OFF 0
+typedef uint32_t stg_interval_ms_t;
 
 // Possible Gripper return values
 typedef enum 
@@ -165,6 +160,20 @@ typedef enum
     STG_WANTREPLY,
     STG_ISREPLY
   } stg_reply_mode_t;
+
+/* line-of-sight messaging packet */
+
+#define STG_LOS_MSG_MAX_LEN 32
+
+typedef struct
+{
+  int id;
+  char bytes[STG_LOS_MSG_MAX_LEN];
+  size_t len;
+  int power;
+  int consume;
+} stg_los_msg_t;
+
 
 // IDAR types ////////////////////////////////////////////////////////////
 
@@ -485,9 +494,9 @@ int stg_model_get_neighbors( stg_client_t* cli, stg_id_t id,
 			     stg_neighbor_t** neighbors, int *neighbor_count );
 
 int stg_model_set_light( stg_client_t* cli, stg_id_t id, 
-			 stg_blinkenlight_t *val);
+			 stg_interval_ms_t *val);
 int stg_model_get_light( stg_client_t* cli, stg_id_t id, 
-			 stg_blinkenlight_t *val);
+			 stg_interval_ms_t *val);
 
 typedef int stg_nose_t;
 
@@ -495,6 +504,14 @@ int stg_model_set_nose( stg_client_t* cli, stg_id_t id,
 			 stg_nose_t *val);
 int stg_model_get_nose( stg_client_t* cli, stg_id_t id, 
 			 stg_nose_t *val);
+
+void stg_los_msg_print( stg_los_msg_t* msg );
+
+int stg_model_send_los_msg(  stg_client_t* cli, stg_id_t id, 
+			     stg_los_msg_t *msg );
+
+int stg_model_exchange_los_msg(  stg_client_t* cli, stg_id_t id, 
+			     stg_los_msg_t *msg );
 
 //int stg_model_get_rects(  stg_client_t* cli, stg_id_t id, 
 //		  stg_rotrect_array_t* rects );
