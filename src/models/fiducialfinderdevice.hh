@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/fiducialfinderdevice.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Author: gerkey $
+//  $Revision: 1.1.4.1 $
 //
 // Usage:
 //  (empty)
@@ -67,6 +67,7 @@ public: static CFiducialFinder* Creator(  LibraryItem *libit, CWorld *world, CEn
   // Update the device
   public: virtual void Update( double sim_time );
 
+  public: virtual void UpdateConfig( void );
   // Pointer to laser used as souce of data
   private: CLaserDevice *laser;
 

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/fiducialfinderdevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Author: gerkey $
+//  $Revision: 1.2.4.1 $
 //
 // Usage: detects objects that were laser bright and had non-zero
 // ficucial_return
@@ -158,40 +158,9 @@ void CFiducialFinder::Update( double sim_time )
   m_last_update = sim_time;
 
   // check for configuration requests
+  // the client can request the geometry of all beacons
 
-  // this device don't accept config requests any more
-  /*
-  // Get latest config
-  player_fiducial_laserbarcode_config_t cfg;
-  void* client;
-
-  if(GetConfig(&client, &cfg, sizeof(cfg)) > 0)
-  {
-    // here we pretend to accept configuration settings, and we return
-    // the last set value (or default, if no setting was made)
-    if(cfg.subtype == PLAYER_FIDUCIAL_LASERBARCODE_SET_CONFIG)
-    {
-      m_bit_count = cfg.bit_count;
-      m_bit_size = ntohs(cfg.bit_size);
-      m_one_thresh = ntohs(cfg.one_thresh);
-      m_zero_thresh = ntohs(cfg.zero_thresh);
-      PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
-    }
-    else if (cfg.subtype == PLAYER_FIDUCIAL_LASERBARCODE_GET_CONFIG)
-    {
-      cfg.bit_count = m_bit_count;
-      cfg.bit_size = htons(m_bit_size);
-      cfg.one_thresh = htons(m_one_thresh);
-      cfg.zero_thresh = htons(m_zero_thresh);
-      PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &cfg, sizeof(cfg));
-    }
-    else
-    {
-      // unknown config request
-      PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
-    }
-  }
-  */
+  UpdateConfig();
 
   // Get the laser range data
   //
@@ -304,6 +273,47 @@ void CFiducialFinder::Update( double sim_time )
   PutData( &beacon, sizeof(beacon) );
   this->time_sec = time_sec;
   this->time_usec = time_usec;
+}
+
+void CFiducialFinder::UpdateConfig( void )
+{
+  int len;
+  void *client;
+  char buffer[PLAYER_MAX_REQREP_SIZE];
+  
+  while (true)
+    {
+      len = GetConfig(&client, buffer, sizeof(buffer));
+      if (len <= 0)
+        break;
+      
+      switch (buffer[0])
+        {
+	case PLAYER_FIDUCIAL_GET_GEOM: 
+	  // Return geometry of this sensor and size of most recently
+	  // seen fiducial
+	  player_fiducial_geom_t geom;	  
+
+          geom.pose[0] = htons((short)(this->origin_x*1000.0));
+          geom.pose[1] = htons((short)(this->origin_y*1000.0));
+          geom.pose[2] = htons(0);
+          geom.size[0] = htons((short)(this->size_x*1000.0));
+          geom.size[1] = htons((short)(this->size_y*1000.0));
+          // TODO: where should these dimensions come from?
+          geom.fiducial_size[0] = htons(500);
+          geom.fiducial_size[1] = htons(250);
+
+  	  PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &geom, sizeof(geom));
+	  
+	  break;
+	  
+	default:
+	  PRINT_WARN1("got unknown fiducialfinder config request \"%c\"\n", 
+		      buffer[0]);
+	  PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
+	  break;
+	}
+    }
 }
 
 #ifdef INCLUDE_RTK2
