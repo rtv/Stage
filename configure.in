@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.29 2002-11-12 06:22:18 gerkey Exp $
+dnl $Id: configure.in,v 1.30 2002-11-12 06:29:48 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -11,7 +11,7 @@ dnl determine system type.  this is used in a couple of places to infer the
 dnl types of arguments to some networking library functions.  if/when we 
 dnl upgrade to newer Autotools, this can probably go away.
 AC_CANONICAL_SYSTEM
-case $target in
+case $host in
 *-*-solaris*) AC_DEFINE(PLAYER_SOLARIS,1,[building for Solaris]);;
 *-*-linux*) AC_DEFINE(PLAYER_LINUX,1,[building for Linux]);;
 esac
