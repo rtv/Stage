@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.19 2004-07-15 16:10:47 rtv Exp $
+% CVS: $Id: stage.tex,v 1.20 2004-07-16 19:06:56 rtv Exp $
 
 \documentclass[letter,11pt,twoside]{report}
 
@@ -854,6 +854,47 @@ Name & Value\\
 \verb'origin' & \verb'[0 0 0]'\\
 \verb'color' & \verb'"black"'\\
 \verb'mass' & \verb'1000.0'\\
+\hline
+\end{tabularx}
+
+\subsection*{GUI Properties}
+
+The properties in this section (\verb'gui.*') control the appearance
+and behavior of the model in the GUI. They have no effect on the
+simulation.
+
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+
+\verb'gui.boundary'& \verb'integer' & if non-zero, the model is drawn with a
+bounding box.\\
+
+\verb'gui.grid'& \verb'integer' & if non-zero, the model is drawn
+underlayed with a regular grid.\\
+
+\verb'gui.movemask'& \verb'integer' & A bitmask that controls the
+mouse events that are sent to this model. Format: bit 0: translate,
+bit 1: rotate, bit 2: scale. For example the value '7' enables
+translation, rotation and scaling, and the value '5' enables
+translation and scaling only.\\
+
+\verb'gui.nose'& \verb'integer' & if non-zero, the model is drawn with a
+'nose', indicating its heading.\\
+\\
+\hline
+\end{tabularx}
+
+\subsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'gui.boundary' & \verb'0'\\
+\verb'gui.grid' & \verb'0'\\
+\verb'gui.movemask' & \verb'7'\\
+\verb'gui.nose' & \verb'1'\\
 \hline
 \end{tabularx}
 
