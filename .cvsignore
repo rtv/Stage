@@ -12,4 +12,5 @@ stamp-h
 Makefile
 Makefile.in
 stage.pc
-stagecpp.pc
+stageplugin.pc
+libtool
