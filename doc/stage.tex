@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.16 2002-06-11 08:29:57 rtv Exp $
+% CVS: $Id: stage.tex,v 1.16.4.1 2002-07-08 03:11:11 gerkey Exp $
 
 \documentclass[11pt,twoside]{report}
 
@@ -26,7 +26,7 @@
 % A nice environment for displaying command line args (AH)
 \newenvironment{xarg}[1]{\noindent{\tt #1}\\\hspace*{2em}\begin{minipage}[t]{5in}}{\end{minipage}\vspace*{1em}}
 
-\def\VERSION {1.2}
+\def\VERSION {1.2.3}
 \def\HOMEPAGE {{\tt http://playerstage.sourceforge.net}}
 \def\SFPAGE {{\tt http://sourceforge.net/projects/playerstage/}}
 
@@ -1073,9 +1073,11 @@ This device has the following properties.
 Name & Values & Description \\
 \hline
 
-\verb'lens' & \verb'"normal"' \verb'"wide"' & Select lens type: either
-normal ($60^\circ$ field-of-view) or wide ($120^\circ$
-field-of-view).\\
+\verb'channels' & \verb'["color0", "color1", ...]' & The
+color detected by each channel in the vision device.  Descriptive
+color names from the X11 color database should be used
+(e.g. \verb'"red"' or \verb'"blue"').  Look for \verb'rgb.txt' in your
+X installation).\\
 
 \hline
 \end{tabularx}
