@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.41 $
+//  $Revision: 1.42 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -119,8 +119,12 @@ int stg_model_update_pose( stg_model_t* mod )
   stg_velocity_t gvel;
   stg_model_global_velocity( mod, &gvel );
       
-  stg_velocity_t gpose;
+  stg_pose_t gpose;
   stg_model_get_global_pose( mod, &gpose );
+
+  // store the old pose for odom calculation
+  stg_pose_t old_pose;
+  memcpy( &old_pose, &gpose, sizeof(gpose));
 
   // convert msec to sec
   double interval = (double)mod->world->sim_interval / 1000.0;
@@ -208,17 +212,31 @@ int stg_model_update_pose( stg_model_t* mod )
 
       // now set the new pose
       stg_model_set_global_pose( mod, &gpose );
-	  
+
+
+      // accumulate changes in position
+      mod->odom.x += gpose.x - old_pose.x;
+      mod->odom.y += gpose.y - old_pose.y;
+      mod->odom.a += gpose.a - old_pose.a;
+      mod->odom.a = NORMALIZE( mod->odom.a );
+  
       // ignore acceleration in energy model for now, we just pay
       // something to move.	
       //stg_kg_t mass = *stg_model_get_mass( mod );
       //stg_model_energy_consume( mod, STG_ENERGY_COST_MOTIONKG * mass ); 
 
       // record the movement in odometry
-      mod->odom.x += mod->velocity.x * interval;
-      mod->odom.y += mod->velocity.y * interval;
-      mod->odom.a += mod->velocity.a * interval;
-      mod->odom.a = NORMALIZE( mod->odom.a );
+      //mod->odom.x += mod->velocity.x * interval;
+      //mod->odom.y += mod->velocity.y * interval;
+      //mod->odom.a += mod->velocity.a * interval;
+      //mod->odom.a = NORMALIZE( mod->odom.a );
+
+      //mod->odom.x = mod->pose.x - mod->odom_start.x;
+      //mod->odom.y = mod->pose.y - mod->odom_start.y;
+      //mod->odom.a = mod->pose.a - mod->odom_start.a;
+      //mod->odom.a = NORMALIZE( mod->odom.a );
+
+
     }      
   
   return 0; // ok
