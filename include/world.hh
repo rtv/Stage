@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.31 $
+//  $Author: gerkey $
+//  $Revision: 1.32 $
 //
 // Usage:
 //  (empty)
@@ -93,6 +93,7 @@ private: bool m_enable;
   
   // the hostname of this computer
 public: char m_hostname[ HOSTNAME_SIZE ];
+public: char m_hostname_short[ HOSTNAME_SIZE ];  // same thing, w/out domain
   
   // pose server stuff ---------------------------------------------
 private:
@@ -317,6 +318,9 @@ public:
   
   CEntity* GetObject( int i )
   { if( i < m_object_count ) return (m_object[i]); else  return 0; }; 
+
+  // returns true if the given hostname matches our hostname, false otherwise
+  bool CheckHostname(char* host);
 
 
   // RTK STUFF ----------------------------------------------------------------

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.22 $
+//  $Author: gerkey $
+//  $Revision: 1.23 $
 //
 // Usage:
 //  (empty)
@@ -388,7 +388,8 @@ bool CWorld::Load(const char *filename)
 		    // if the object has this host's name,
 		    // set the local flag to show that this computer must
 		    // update the object
-		    if( strcmp( m_hostname, object->m_hostname ) == 0 )
+                    
+		    if(CheckHostname(object->m_hostname))
 		      object->m_local = true;
 		    else
 		      object->m_local = false;

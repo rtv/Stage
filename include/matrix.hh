@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.hh,v 1.3 2001-09-20 18:29:22 vaughan Exp $
+// $Id: matrix.hh,v 1.4 2001-09-28 21:55:42 gerkey Exp $
 // RTV
 // ==================================================================
 
@@ -50,14 +50,24 @@ public:
   // get a pixel color by its x,y coordinate
   inline CEntity** get_cell(int x, int y)
   { 
-    //if (x<0 || x>=width || y<0 || y>=height) return 0;
+    if (x<0 || x>=width || y<0 || y>=height) 
+    {
+      //fputs("Stage: WARNING: CEntity::get_cell(int,int) out-of-bounds\n",
+            //stderr);
+      return 0;
+    }
+      
     return data[x+(y*width)]; 
   }
   
   // get a pixel color by its position in the array
   inline CEntity** get_cell( int i)
   { 
-    //if( i<0 || i > width*height ) return 0;
+    if( i<0 || i > width*height ) 
+    {
+      //fputs("Stage: WARNING: CEntity::get_cell(int) out-of-bounds\n",stderr);
+      return 0;
+    }
     return data[i]; 
   }
   

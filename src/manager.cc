@@ -1,6 +1,6 @@
 /*##########################################################################
 # manager.cc - implements the Stage Manager for syncing distributed Stages
-# $Id: manager.cc,v 1.11 2001-09-27 22:33:43 vaughan Exp $
+# $Id: manager.cc,v 1.12 2001-09-28 21:55:42 gerkey Exp $
 *#########################################################################*/
 
 #include <sys/types.h>	/* basic system data types */
@@ -166,6 +166,13 @@ int main(int argc, char **argv)
   // hello world
   printf("** Manager v%s ** ", (char*) VERSION);
 
+  //FILE* logfilep;
+  //if(!(logfilep = fopen("managerlog", "w+")))
+  //{
+    //perror("fopen()");
+    //exit(-1);
+  //}
+
   /* client vars */
   int v;
   //int b, r, w; /* return values of various system calls */ 
@@ -238,7 +245,8 @@ int main(int argc, char **argv)
 
       int num_to_read = 0;
       
-      // let's try this poll(2) thing (with a timeout so we can be sure it is running)
+      // let's try this poll(2) thing 
+      // (with a timeout so we can be sure it is running)
       if((num_to_read = poll( servers, stages, 100)) == -1)
 	{
 	  perror( "poll failed");
@@ -251,6 +259,8 @@ int main(int argc, char **argv)
       Activity( num_to_read );
 
 
+      //struct timeval start,end;
+      //gettimeofday(&start,NULL);
       if( num_to_read > 0 ) for(int i=0; i<stages; i++)
 	{
 	  // is this one ready to read?

@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.7 2001-09-23 07:44:51 gerkey Exp $
+ * $Id: matrix.cc,v 1.8 2001-09-28 21:55:42 gerkey Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -241,7 +241,11 @@ inline void CMatrix::set_cell(int x, int y, CEntity* ent )
   
   if( ent == 0 ) return;
 
-  if (x<0 || x>=width || y<0 || y>=height) return;
+  if (x<0 || x>=width || y<0 || y>=height) 
+  {
+    //fputs("Stage: WARNING: CMatrix::set_cell() out of bounds!\n",stderr);
+    return;
+  }
   
   int cell = x + y * width;
   int slot = current_slot[ cell ];
@@ -295,7 +299,13 @@ inline void CMatrix::set_cell(int x, int y, CEntity* ent )
 inline void CMatrix::unset_cell(int x, int y, CEntity* ent )
 {
   if( ent == 0 ) return;
-  if (x<0 || x>=width || y<0 || y>=height) return;
+  if (x<0 || x>=width || y<0 || y>=height) 
+  {
+    //fputs("Stage: WARNING: CMatrix::unset_cell() out of bounds!\n",stderr);
+    //fprintf(stderr,"Stage: WARNING: x,y: %d,%d\t w,h: %d,%d\n",
+            //x,y,width,height);
+    return;
+  }
   
   int cell = x + y * width;
   

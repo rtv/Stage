@@ -96,11 +96,7 @@ if {$send} {
 puts "\nStarting stage on:"
 foreach host $hosts {
   puts "* $host"
-  if {![string compare $host [lindex $hosts 0]]} {
-    exec ssh -n -1 -l $username $host "cd $dirname; export PATH=$dirname; ./stage -l log $worldfile" &
-  } else {
-    exec ssh -n -1 -l $username $host "cd $dirname; export PATH=$dirname; ./stage -xs -l log $worldfile" &
-  }
+  exec ssh -n -1 -l $username $host "cd $dirname; export PATH=$dirname; ./stage -xs -l log $worldfile" > /dev/null &
   #sleep 2
 }
 

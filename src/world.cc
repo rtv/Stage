@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.61 $
+//  $Author: gerkey $
+//  $Revision: 1.62 $
 //
 // Usage:
 //  (empty)
@@ -133,12 +133,11 @@ CWorld::CWorld()
 	    perror( "XS: couldn't get hostname. Quitting." );
 	    exit( -1 );
 	  }
-	
-	/* now, strip down to just the hostname */
-	char* first_dot;
-	if( (first_dot = strchr(m_hostname,'.') ))
-	  *first_dot = '\0';
-	
+        /* now strip off domain */
+        char* first_dot;
+        strncpy(m_hostname_short, m_hostname,HOSTNAME_SIZE);
+        if( (first_dot = strchr(m_hostname_short,'.') ))
+          *first_dot = '\0';
       }
     
     printf( "[Id %s]", m_hostname ); fflush( stdout );
@@ -398,8 +397,7 @@ bool CWorld::Startup()
     // this lets us know that we should start the one Player and go through
     // the next loop to give a port list...
     if(m_object[i]->m_stage_type == PlayerType && 
-       (strcmp( m_object[i]->m_hostname, m_hostname ) == 0 ) 
-      )
+       CheckHostname(m_object[i]->m_hostname))
     {
       player_count++;
       if(first_player_idx < 0)
@@ -435,7 +433,7 @@ bool CWorld::Startup()
     {
       // again, choose Player type objects managed by this host
       if(m_object[i]->m_stage_type == PlayerType &&
-	 (strcmp( m_object[i]->m_hostname, m_hostname ) == 0 ) )
+         CheckHostname(m_object[i]->m_hostname))
       {
 	//printf( "Stage: piping portnum %d to Player\n",  m_object[i]->m_player_port );
 
@@ -1378,3 +1376,11 @@ int CWorld::ColorFromString( StageColor* color, char* colorString )
       
 }  
 
+// returns true if the given hostname matches our hostname, false otherwise
+bool CWorld::CheckHostname(char* host)
+{
+  if(!strcmp(m_hostname,host) || !strcmp(m_hostname_short,host))
+    return true;
+  else
+    return false;
+}

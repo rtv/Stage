@@ -1,11 +1,13 @@
 // ==================================================================
 // Filename:	raytrace.cc
-// $Id: raytrace.cc,v 1.2 2001-09-04 23:01:13 vaughan Exp $
+// $Id: raytrace.cc,v 1.3 2001-09-28 21:55:42 gerkey Exp $
 // RTV
 // ==================================================================
 
 #include "raytrace.hh"
 
+
+CEntity* g_nullp = 0;
 
 CLineIterator::CLineIterator( double x, double y, double a, double b, 
 			      double ppm, CMatrix* matrix, LineIteratorMode pmode )
@@ -289,13 +291,19 @@ CEntity** CCircleIterator::CircleTrace( double &remaining_angle )
      
      // bounds check
      if( m_px < 0 || m_px >= m_matrix->width-1 || 
-	 m_py < 0 || m_py >= m_matrix->height ) continue;
-     
-     
-     ent = m_matrix->get_cell( (int)m_px,(int)m_py );
-     if( !ent[0] )//&& (px+1 < m_matrix->width) ) 
-       ent = m_matrix->get_cell( (int)m_px+1,(int)m_py );
-     
+	 m_py < 0 || m_py >= m_matrix->height ) 
+     {
+       // if we're out of bounds, then return a pointer to NULL,
+       // indicating free space
+       ent = &g_nullp;
+     }
+     else
+     {
+       ent = m_matrix->get_cell( (int)m_px,(int)m_py );
+       if( !ent[0] )//&& (px+1 < m_matrix->width) ) 
+         ent = m_matrix->get_cell( (int)m_px+1,(int)m_py );
+     }
+
      if( ent[0] ) break;// we hit something!
    }
  

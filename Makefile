@@ -7,8 +7,8 @@
 #
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
-#  $Author: vaughan $
-#  $Revision: 1.20 $
+#  $Author: gerkey $
+#  $Revision: 1.21 $
 #
 ###########################################################################
 
@@ -34,7 +34,7 @@ rtkstage:
 	cd src && make rtkstage && cp rtkstage_objs/rtkstage ../bin/
 
 manager: 
-	cd src && make manager
+	cd src && make manager && cp manager ../bin/
 
 dep:
 	cd src &&  make dep

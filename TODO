@@ -1,6 +1,6 @@
 ####################################################################################
 # TODO 
-# $Id: TODO,v 1.13 2001-09-28 01:47:09 vaughan Exp $
+# $Id: TODO,v 1.14 2001-09-28 21:55:42 gerkey Exp $
 ####################################################################################
 
 ## IN PROGRESS #####################################################################
@@ -18,6 +18,8 @@
  - nice up player output to show all port numbers
  - configuration file write: save only relevant state
  - add vision device sensor display - skeleton is in place
+ - make stage look for the bitmap file first in . then in the root of
+     the path to the world file
 
 ## FIXED/DONE ######################################################################
 
