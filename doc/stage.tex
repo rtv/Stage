@@ -14,6 +14,9 @@
 % add nifty DRAFT watermark thingy in PS
 %\usepackage{draftcopy}
 
+% A nice environment for displaying command line args (AH)
+\newenvironment{xarg}[1]{\noindent{\tt #1}\\\hspace*{2em}\begin{minipage}[t]{5in}}{\end{minipage}\vspace*{1em}}
+
 \def\VERSION {1.0 (Bleeding)}
 
 \begin{document}
@@ -74,7 +77,6 @@ Los Angeles, USA\\
     Stage was created at the USC Robotics Research Labs to support
     research into multi-agent intelligent autonomous systems.
 
-
   \section{How to get Stage}
 
     The primary source for Player and Stage is:
@@ -84,8 +86,7 @@ Los Angeles, USA\\
     The downloads page contains source tarballs for both
     stable and unstable (bleeding edge) releases.
 
-
-  \section{What's in the distribution?}
+  \section{What's in the Package?}
 
     In the tarball you will find:
       \begin{itemize}    
@@ -108,16 +109,31 @@ Los Angeles, USA\\
 
     Requires: Player [http://robotics.usc.edu/player/]
               TCP/IP, POSIX threads, X11R6
+  
+  \section{Related Packages}
 
+    A number of Player/Stage related packages can be found on the 
+    Player website:
+      \begin{verbatim}
+      http://robotics.usc.edu/player
+      \end{verbatim}
+    Here you will find:
+      \begin{itemize}
+      \item Player : a networked robot device server.
+      \item Stage : a multi-robot simulator.
+      \item PlayerTools : a set of useful tools for interacting with
+            Player/Stage.
+      \item Sample clients for Player in C, Java and Python.
+      \end{itemize}
 
   \section{Ownership}
 
-    Stage is released under the GNU Public License.
+    \noindent Stage is released under the GNU Public License.
 
-    Stage programs, images, examples, source code and documentation are
+    \noindent Stage programs, images, examples, source code and documentation are
     copyright (c) University of Southern California 1998-2001.
 
-    Stage was written by:
+    \noindent Stage was created by:
       \begin{itemize}
       \item[] Richard Vaughan
       \item[] Andrew Howard
@@ -127,6 +143,39 @@ Los Angeles, USA\\
       \item[] Jakob Fredslund
       \end{itemize}
 
+  \section{Bugs}
+  
+    This is research software, fresh off the presses.  As such, it is
+    bound to contain bugs, despite our diligent testing.  If you
+    manage to break something, or if some aspect of Stage's behavior
+    seems wrong or non-intuitive, let us know.  Email should be sent
+    to Richard Vaughan {\tt vaughan@hrl.com} or Andrew Howard {\tt
+    ahoward@usc.edu}.  Include as much information as possible,
+    including the Stage version, OS type and version, and any output
+    messages.  A detailed description of what happened will enable us
+    (hopefully) to repeat and analyze the problem.  Of course, there
+    is NO WARRANTY on this software, and we are not paid to maintain
+    it, so there is no guarantee that we will fix your problem.  But
+    we will try :).
+
+  \section{Names}
+    
+    From {\sl As You Like It} Act II, Scene 7:
+    \begin{quote}
+    ``All the world's a stage, \\
+    And all the men and women merely players: \\
+    They have their exits and their entrances; \\
+    And one man in his time plays many parts,''\\
+    \end{quote}
+
+    From {\sl Macbeth} Act V, Scene 5:
+    \begin{quote}
+    ``Life's but a walking shadow, a poor player \\
+    That struts and frets his hour upon the stage \\
+    And then is heard no more: it is a tale \\
+    Told by an idiot, full of sound and fury, \\
+    Signifying nothing.''\\
+    \end{quote}
 
   \section{Acknowledgements}
 
@@ -150,7 +199,6 @@ Los Angeles, USA\\
       tar xzvf Stage-<version>.tgz
       \end{verbatim}
     Now follow the instructions in the top-level README file.
-
 
   \section{Running Stage}
 
@@ -207,7 +255,16 @@ Los Angeles, USA\\
     this point you should be able to interact with objects in the
     world through XS and access sensors and actuators through
     Player. 
+    Try using the Player example client:
+      \begin{verbatim}
+      viewer.tk
+      \end{verbatim}
+    to check that you can control Stage robots and read from their
+    sensors. 
+    You can also try the player-viewer program that comes as part of the
+    PlayerTools package (available from the Player website).
 
+    %Should probably have a Help! It didnt work section. AH
     %If it didn't work, the first things to check are the
     %settings in Makefile.common and your Player build.
   
@@ -226,7 +283,6 @@ Los Angeles, USA\\
     See Chapter \ref{sec:rtkstage} for more information on using
     RTKStage.
 
-
   \section{The World File}
 
     The world file is a description of the world that Stage
@@ -238,14 +294,70 @@ Los Angeles, USA\\
     the world file format.  Sample world files can also be
     found in the examples directory.
 
-
   \section{Command Line Arguments}
 
+    Stage takes the following command-line options. Where an option
+    can also be set in the configuration file, the command line option
+    takes precedence.
 
+    \begin{xarg}{-l <logfile>}
+    Enables logging of device positions into the named file. This is
+    useful for gathering experimental results, etc. The log file has a
+    header that records information about the run.
+    \end{xarg}
+
+    \begin{xarg}{-xs}
+    Prevents Stage spawing an instance of the XS GUI. RTKStage has this
+    option enabled by default.
+    \end{xarg}
+
+    \begin{xarg}{+xs}
+    Spawn an instance of XS.
+    \end{xarg}
+
+    \begin{xarg}{-u <update period in seconds>}
+    Stage will attempt to take this much real time (wall-clock time)
+    to perform each update cycle. It does this by computing the cycle,
+    then sleeping (or polling for input) for any remaining time. If
+    the cycle's computation takes longer than the requested cycle
+    time, Stage will run slower than requested. Default is 0.1
+    seconds.
+    \end{xarg}
+
+    \begin{xarg}{-v <simulation time step in seconds>}
+    Stage will simulate the passing of this much time per update
+    cycle. Default is 0.1 seconds. By changing the ratio of real (-u)
+    and simulated (-v) time, you can make Stage run faster than,
+    slower than, or approximately at real-time.
+    \end{xarg}
+
+    \begin{xarg}{-fast}
+    Runs Stage as fast as possible. Stage will not attempt to match
+    real time. Useful for batch runs and in sync mode (see
+    below). This is slightly more efficient than setting the desired
+    update time to zero seconds (-u 0.0).
+    \end{xarg}
+
+    \begin{xarg}{-tp <port num>}
+    Set the port number for the "truth server" used by external
+    clients such as XS and truthlogger. Default is 6602.
+    \end{xarg}
+
+    \begin{xarg}{-ep <port num>}
+    Set the port number for the "enviornment server" used by external
+    clients such as XS. Default is 6601.
+    \end{xarg}
+
+    %\begin{xarg}{-s}
+    %Enable synchronized mode. If this option is given, Stage will wait
+    %between update cycles for an external sync message. The Stage Manager
+    %(bin/manager) tool uses this mode to connect and sychronize several
+    %copies of Stage distributed over multiple hosts. 
+    %\end{xarg}
 
 \chapter{The World File}
   
-  \section{Syntax}
+  \section{Organization}
 
   \section{General Options}
 
