@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.22 $
+//  $Author: rtv $
+//  $Revision: 1.23 $
 //
 // Usage:
 //  (empty)
@@ -43,7 +43,7 @@ CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent)
   m_config_len  = 0;
   m_reply_len  = 0;
  
-  m_player_type = PLAYER_VISION_CODE;
+  m_player.type = PLAYER_VISION_CODE;
   m_stage_type = VisionType;
 
   m_interval = 0.1; // 10Hz - the real cam is around this

@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.hh,v 1.6 2001-12-31 17:21:26 inspectorg Exp $
+// $Id: matrix.hh,v 1.7 2002-06-04 06:35:07 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -14,7 +14,6 @@
 
 #include "image.hh" // for Rect
 #include "entity.hh"
-
 
 class CMatrix
 {
@@ -31,9 +30,7 @@ class CMatrix
 
   CMatrix(int w, int h, int default_buf_size);
   
-  // REMOVE int initial_buf_size;
-  
-  void dump( void );
+   void dump( void );
   
   void PrintCell( int cell );
   void CheckCell( int cell );
@@ -42,7 +39,7 @@ class CMatrix
   inline int get_height(void) {return height;}
   inline int get_size(void) {return width*height;}
   
-  // MUST BE IN-BOUNDS! -- turned off checking for speed
+  // MUST BE IN-BOUNDS!
 
   // get a pixel color by its x,y coordinate
   inline CEntity** get_cell(int x, int y)

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.16 $
+//  $Author: rtv $
+//  $Revision: 1.17 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -38,7 +38,7 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
   this->size_x = 0.08;
   this->size_y = 0.20;
 
-  m_player_type = PLAYER_GRIPPER_CODE;
+  m_player.type = PLAYER_GRIPPER_CODE;
   m_stage_type = GripperType;
 
   m_interval = 0.1; 
@@ -341,7 +341,7 @@ void CGripperDevice::DropObject()
   double x_offset = (exp.width*2.0);
   m_puck_count--;
   m_pucks[m_puck_count]->m_parent_object = (CEntity*)NULL;
-  m_pucks[m_puck_count]->MakeDirty();
+  m_pucks[m_puck_count]->SetDirty(1);
   m_pucks[m_puck_count]->SetGlobalPose(px+x_offset*cos(pth),
                                        py+x_offset*sin(pth),
                                        pth);
@@ -461,7 +461,7 @@ void CGripperDevice::PickupObject()
   m_pucks[m_puck_count++]=closest_puck;
   expGripper.have_puck = true;
 
-  closest_puck->MakeDirty();
+  closest_puck->SetDirty(1);
   
   /*
     }

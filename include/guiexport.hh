@@ -1,11 +1,11 @@
 /*************************************************************************
  * guiexport.hh - data types for exporting data to an external GUI
  * RTV
- * $Id: guiexport.hh,v 1.11 2002-02-09 03:37:47 rtv Exp $
+ * $Id: guiexport.hh,v 1.12 2002-06-04 06:35:07 rtv Exp $
  ************************************************************************/
 
 #include <stage.h> // for some player data types and sizes
-#include "xs.hh"
+//#include "xs.hh"
 
 #ifndef GUIEXPORT_H
 #define GUIEXPORT_H
@@ -24,6 +24,12 @@
 
 // forward definition
 class CEntity;
+
+typedef struct  
+{
+  double x, y;
+} DPoint;
+
 
 enum ExportObjectType 
 { 

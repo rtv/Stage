@@ -7,8 +7,8 @@
 #
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
-#  $Author: gsibley $
-#  $Revision: 1.36 $
+#  $Author: rtv $
+#  $Revision: 1.37 $
 #
 # Note: All normal user configurations are in Makefile.common - you
 # probably don't need to change this file
@@ -22,34 +22,19 @@ include Makefile.common
 # Build section
 #
 
-all:	stage rtkstage xs manager
+all:	stage tools
 
 stage: 	
 	cd src && ${MAKE} stage 
 
-rtkstage: 	
-	cd src && ${MAKE} rtkstage
-
-hrlstage:
-	cd src && ${MAKE} hrlstage
-
-xs: 	
-	cd src && ${MAKE} xs 
-
-hrlxs: 	
-	cd src && ${MAKE} hrlxs 
-
-manager: 	
-	cd src && ${MAKE} manager 
-
-trapdoor:
-	cd src && ${MAKE} trapdoor
+tools:
+	cd src $$ ${MAKE} tools
 
 dep:
 	cd src && ${MAKE} dep
 
 clean: clean_dep
-	rm -f *~ gmon.out 
+	rm -f *~ gmon.out core core.*
 	cd src && ${MAKE} clean
 	cd include &&  ${MAKE} clean
 	cd examples && rm -f core
@@ -62,7 +47,7 @@ install:
 	mkdir -p $(INSTALL_DIR)/bin
 	install -m 755 $(INSTALL_BIN_FILES) $(INSTALL_BIN)
 	mkdir -p $(INSTALL_LIB)
-	install -m 644 src/*.a $(INSTALL_LIB)
+	#install -m 644 src/*.a $(INSTALL_LIB)
 	mkdir -p $(INSTALL_EXAMPLES)
 	install -m 644 examples/*.world* $(INSTALL_EXAMPLES)
 	install -m 644 examples/*.m4 $(INSTALL_EXAMPLES)

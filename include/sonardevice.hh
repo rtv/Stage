@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/sonardevice.hh,v $
-//  $Author: inspectorg $
-//  $Revision: 1.7 $
+//  $Author: rtv $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -61,26 +61,26 @@ class CSonarDevice : public CEntity
     //
     private: player_sonar_data_t m_data;
 
-#ifdef INCLUDE_RTK
-    
-    // Process GUI update messages
-    //
-    public: virtual void OnUiUpdate(RtkUiDrawData *pData);
 
-    // Process GUI mouse messages
-    //
-    public: virtual void OnUiMouse(RtkUiMouseData *pData);
+#ifdef INCLUDE_RTK2
 
-    // Draw the sonar scan
-    //
-    private: void DrawScan(RtkUiDrawData *pData);
+  // Initialise the rtk gui
+  protected: virtual void RtkStartup();
 
-    // Laser scan outline
-    //
-    private: int m_hit_count;
-    private: double m_hit[SONARSAMPLES][2][2];
-    
-#endif    
+  // Finalise the rtk gui
+  protected: virtual void RtkShutdown();
+
+  // Update the rtk gui
+  protected: virtual void RtkUpdate();
+  
+  // For drawing the sonar beams
+  private: rtk_fig_t *scan_fig;
+
+  // sonar scan lines end point   
+   private: double hits[SONARSAMPLES][2][2];
+#endif
+
+
 };
 
 #endif

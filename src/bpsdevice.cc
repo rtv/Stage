@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/bpsdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.1 $
+//  $Author: rtv $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -42,7 +42,7 @@ CBpsDevice::CBpsDevice(CWorld *world, CEntity *parent )
     m_config_len  = 1;
     m_reply_len  = 1;
  
-    m_player_type = PLAYER_BPS_CODE;
+    m_player.type = PLAYER_BPS_CODE;
     m_stage_type = BpsType;
 }
 

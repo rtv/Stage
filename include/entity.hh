@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.43 $
+//  $Author: rtv $
+//  $Revision: 1.44 $
 //
 // Usage:
 //  (empty)
@@ -28,9 +28,10 @@
 #ifndef ENTITY_HH
 #define ENTITY_HH
 
+#include <stdint.h>
+
 #include "stage.h"
 #include "stage_types.hh"
-#include "truthserver.hh"
 #include "colors.hh"
 #include "rtp.h"
 
@@ -44,11 +45,45 @@
 class CWorld;
 class CWorldFile;
 
+// these properties can be set with the SetProperty() method
+enum EntityProperty { PropParent, 
+		      PropSizeX, 
+		      PropSizeY, 
+		      PropPoseX, 
+		      PropPoseY, 
+		      PropPoseTh, 
+		      PropOriginX, 
+		      PropOriginY, 
+		      PropName,
+		      PropPlayerId,
+		      PropColor, 
+		      PropPlayer, 
+		      PropShape, 
+		      PropLaserReturn,
+		      PropSonarReturn,
+		      PropIdarReturn, 
+		      PropObstacleReturn, 
+		      PropVisionReturn, 
+		      PropPuckReturn,
+		      PropCommand,
+		      PropData,
+		      PropConfig,
+		      PropReply
+};
+
+// (currently) static memory allocation for getting and setting properties
+const int MAX_NUM_PROPERTIES = 30;
+const int MAX_PROPERTY_DATA_LEN = 20000;
 
 ///////////////////////////////////////////////////////////////////////////
 // The basic object class
 class CEntity
 {
+  public:
+  virtual int SetProperty( int con,
+			   EntityProperty property, void* value, size_t len );
+  virtual int GetProperty( EntityProperty property, void* value );
+
   // Minimal constructor
   // Requires a pointer to the parent and a pointer to the world.
 public: CEntity(CWorld *world, CEntity *parent_object );
@@ -168,7 +203,7 @@ protected: bool CEntity::Unlock( void );
   public: StageColor color;
 
   // Descriptive name for this object
-  public: const char *name;
+  public: char name[256];
 
   // Object mass (for collision calculations)
   protected: double m_mass;
@@ -211,21 +246,13 @@ protected: bool CEntity::Unlock( void );
   protected: double m_last_update;
 
   //public: stage_truth_t truth, old_truth;
-  public: bool m_dirty[ MAX_POSE_CONNECTIONS ];
+  public: char m_dirty[ MAX_POSE_CONNECTIONS ][ MAX_NUM_PROPERTIES ];
 
-  // if we've moved at least 1 pixel or 1 degree, then set the dirty
-  // flag
-  public: void MakeDirtyIfPixelChanged( void );
-
-  public: void MakeDirty( void )
-    {
-      memset( m_dirty, true, sizeof(m_dirty[0]) * MAX_POSE_CONNECTIONS );
-    };
-
-  public: void MakeClean( void )
-    {
-      memset( m_dirty, false, sizeof(m_dirty[0]) * MAX_POSE_CONNECTIONS );
-    };
+  // set the dirty flag for each property for each connection
+public: void SetDirty( char v);
+public: void SetDirty( EntityProperty prop, char v );
+public: void SetDirty( int con, char v );
+public: void SetDirty( int con, EntityProperty prop, char v );
   
   // these store the last pose we sent out from the pose server
   // to be tested when setting the dirty flag to see if we really
@@ -248,7 +275,6 @@ protected: bool CEntity::Unlock( void );
   
   ///////////////////////////////////////////////////////////////////////
   // RTP stuff
-
   CRTPPlayer* rtp_p;
 
   //////////////////////////////////////////////////////////////////////
@@ -256,9 +282,26 @@ protected: bool CEntity::Unlock( void );
   
   // Port and index numbers for player
   // identify this device as belonging to the Player on port N at index M
-  public: int m_player_port; // N
-  public: int m_player_index; // M
-  public: int m_player_type; // one of the device types from messages.h
+  //public: int m_player_port; // N
+  //public: int m_player_index; // M
+  //public: int m_player_type; // one of the device types from messages.h
+public: player_id_t m_player;
+
+  // basic external IO functions
+
+  // copies data from src to dest (if there is room), updates the
+  // timestamp with the current time, sets the availability value to
+  // the number of bytes copied
+  size_t PutIOData( void* dest, size_t dest_len,  
+		    void* src, size_t src_len,
+		    uint32_t* ts_sec, uint32_t* ts_usec, uint32_t* avail );
+  
+  // copies data from src to dest if there is room and if there is the
+  // right amount of data available
+  size_t GetIOData( void* dest, size_t dest_len,  
+		    void* src, uint32_t* avail );
+    
+  // specific external IO functions
 
   // Write to the data buffer
   // Returns the number of bytes copied
@@ -269,15 +312,13 @@ protected: bool CEntity::Unlock( void );
   // Read from the data buffer
   // Returns the number of bytes copied
   public: size_t GetData( void* data, size_t len );
-
-  // struct that holds data for external GUI rendering
-  // i made this public so that an object can get another object's
-  // type - BPG
-  //protected: ExportData exp;
-  public: ExportData exp;
    
-  // compose and return the exported data
+  // gets a command from the mmapped command buffer
+  // returns the number of bytes copied (on success, this is == len)
   protected: size_t GetCommand( void* command, size_t len);
+
+  // returns number of bytes copied
+  protected: size_t PutCommand( void* command, size_t len);
 
   // Read from the configuration buffer
   // Returns the number of bytes copied
@@ -290,7 +331,7 @@ protected: bool CEntity::Unlock( void );
 
   // See if the device is subscribed
   // returns the number of current subscriptions
-  protected: int Subscribed();
+  public: int Subscribed();
 
   // subscribe to the device
   public: void Subscribe();
@@ -298,8 +339,8 @@ protected: bool CEntity::Unlock( void );
   // unsubscribe from the device
   public: void Unsubscribe();
 
-  // builds a truth packet for this entity
-  public: void ComposeTruth( stage_truth_t* truth, int index );
+  // packages and sends data via rtp
+  protected: void AnnounceDataViaRTP( void* data, size_t len );
 
   // Pointers into shared mmap for the IO structures
   // the io buffer is allocated by the World 
@@ -324,6 +365,14 @@ protected: bool CEntity::Unlock( void );
   protected: PlayerQueue* m_reqqueue;
   protected: PlayerQueue* m_repqueue;
 
+  // we should nix this one day - RTV
+  // struct that holds data for external GUI rendering
+  // i made this public so that an object can get another object's
+  // type - BPG
+  //protected: ExportData exp;
+  public: ExportData exp;
+
+  // functions for drawing this object in GUIs
 #ifdef INCLUDE_RTK2
   // Initialise the rtk gui
   protected: virtual void RtkStartup();
@@ -332,7 +381,7 @@ protected: bool CEntity::Unlock( void );
   protected: virtual void RtkShutdown();
 
   // Update the rtk gui
-  protected: virtual void RtkUpdate();
+  public: virtual void RtkUpdate();
 
   // Get a string describing the Stage type of the entity
   private: const char *RtkGetStageType();

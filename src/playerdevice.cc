@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
-//  $Author: gsibley $
-//  $Revision: 1.27 $
+//  $Author: rtv $
+//  $Revision: 1.28 $
 //
 // Usage:
 //  (empty)
@@ -17,14 +17,7 @@
 //  (empty)
 //
 // Known bugs:
-// - All robots are creating a semaphore with the same
-//   key.  This doesnt appear to be a problem, but should be
-//   investigates. ahoward 
-// = semaphores are a limited system-wide
-//   resource; we use only one so we can scale. this might have theoretically
-//   slowed us down a bit but in practice Stage is seen to take almost
-//   100% CPU when given it's reigns so it isn't a problem. you can delete
-//   this 'known bug' if you like :) . RTV.
+
 //
 // Possible enhancements:
 //  (empty)
@@ -62,9 +55,10 @@
 ///////////////////////////////////////////////////////////////////////////
 // Macros
 //
-#define DEBUG
-//#undef DEBUG
-//#undef VERBOSE
+
+//#define DEBUG
+#undef DEBUG
+#undef VERBOSE
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -77,7 +71,7 @@ CPlayerDevice::CPlayerDevice(CWorld *world, CEntity *parent )
   m_command_len = 0; //PLAYER_COMMAND_SIZE;
   m_config_len  = 0; //PLAYER_CONFIG_SIZE;
      
-  m_player_type = PLAYER_PLAYER_CODE; // from player's messages.h
+  m_player.type = PLAYER_PLAYER_CODE; // from player's messages.h
   m_stage_type = PlayerType;
 
   SetColor(PLAYER_COLOR);

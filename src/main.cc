@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.36 $
+//  $Author: rtv $
+//  $Revision: 1.37 $
 //
 // Usage:
 //  (empty)
@@ -29,16 +29,18 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <netdb.h> // for gethostbyname(3)
 
 //#define DEBUG
 
-#include "world.hh"
+#include "server.hh"
 
 ///////////////////////////////////////////////////////////////////////////
 // Local vars
 
 // Quit signal
-static bool quit = false;
+bool quit = false;
+//static bool quit = false;
 
 // Pointer to the one-and-only instance of the world
 // This really should be static
@@ -49,41 +51,41 @@ CWorld *world = NULL;
 void PrintUsage( void )
 {
   printf("\nUsage: stage [options] WORLDFILE\n"
-	 "Options:\n"
-	 " -xs\t\tDo not start the XS Graphical User Interface\n"
-	 " +xs\t\tDo start the XS Graphical User Interface\n"
+	 "Options: <argument> [default]\n"
+	 " -s\t\tRun as a Stage server (default)"
+	 " -c\t\tRun as a client to a Stage server on localhost"
+	 " -c <hostname>\t\tRun as a client to a Stage server on hostname"
+	 " -g\t\tDo not start the X GUI\n"
+	 " +g\t\tDo start the X GUI\n"
 	 " -p\t\tDo not start Player\n"
 	 " +p\t\tDo start Player\n"
-	 " -v <float>\tSet the simulated time increment per cycle."
-	 " -u <float>\tSet the desired real time per cycle. Default: 0.1 sec\n"
-	 " Default: 0.1 sec\n"
+	 " -v <float>\tSet the simulated time increment per cycle [0.1sec].\n"
+	 " -u <float>\tSet the desired real time per cycle [0.1 sec].\n"
 	 " -l <filename>\tLog the position of all objects into the"
 	 " named file.\n"
-	 " -tp <portnum>\tSet the truth server port\n"
-	 " -ep <portnum>\tSet the environment server port\n"
-	 " -fast\t\tRun as fast as possible; don't try to match real time\n"
-	 " -s\t\tSynchronize to an external client (experimental)\n"
-#ifdef HRL_HEADERS
-	 " -i\t\tSend IDAR messages to XS (hrlstage only)\n"
-#endif
+	 " -p <portnum>\tSet the server port\n"
+	 " -f\t\tRun as fast as possible; don't try to match real time\n"
+	 //" -r <IP:port>\tSend sensor data to this address in RTP format\n"
+	 //#ifdef HRL_HEADERS
+	 //" -i\t\tSend IDAR messages to XS (hrlstage only)\n"
+	 //#endif
 	 "Command-line options override any configuration file equivalents.\n"
 	 "\n"
 	 );
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Clean up and quit
 void StageQuit( void )
 {  
   puts( "\n** Stage quitting **" );
-
-  // Stop the world
-  world->Shutdown();
   
-  // Destroy the world
-  delete world;
+  if( world )  
+    {
+      world->Shutdown();  // Stop the world
+      delete world;       // Destroy the world
 
+    }
   exit( 0 );
 }
 
@@ -91,7 +93,7 @@ void StageQuit( void )
 // Handle quit signals
 void sig_quit(int signum)
 {
-  //printf( "SIGNAL %d\n", signum );
+  PRINT_DEBUG1( "SIGNAL %d\n", signum );
   quit = true;
 }
 
@@ -100,7 +102,7 @@ void sig_quit(int signum)
 // Program entry
 //
 int main(int argc, char **argv)
-{
+{  
   // hello world
   printf("\n** Stage  v%s ** ", (char*) VERSION);
 
@@ -109,57 +111,62 @@ int main(int argc, char **argv)
   rtk_init(&argc, &argv);
 #endif
   
-  // Create the world
-  world = new CWorld();
+  world = NULL;
   
-  // Make sure we have a filename, at least
-  if (argc < 2)
-  {
-    PrintUsage();
-    exit(1);
-  }
-    
-  // Load the world - the filename is the last argument
-  // this may produce more startup output
-  if (!world->Load(argv[argc - 1]))
-  {
-    printf("Stage: failed load\n");
-    StageQuit();
-  }
-
-  // override default and config file values with command line options.
-  // any options set will produce console output for reassurance
-  if (!world->ParseCmdline(argc, argv))
-  {
-    printf("Stage: failed to parse command line\n");
-    StageQuit();
-  }
-
-  puts( "" ); // end the startup output line
-  fflush( stdout );
+  // CStageServer and CStageClient are subclasses of CStageIO and CWorld
+  // constructing them does most of the startup work.
   
-  // Start the world
+  // check the command line for the '-c' option that makes this a client
+  for( int a=1; a<argc; a++ )
+    {
+      PRINT_DEBUG2( "argv[%d] = %s\n", a, argv[a] );
+      
+      if( strcmp( argv[a], "-c" ) == 0 )
+	{
+	  printf( "[Client]" );
+	  assert( world = new CStageClient( argc, argv ) );
+	}
+    }
+  
+  // if we're not a client, we must be a server
+  if( world == NULL )
+    assert( world = new CStageServer( argc, argv ) );
+  
+  // a world constructor may have raised the quit flag
+  // (this would be more elegantly implemented with an exception..)
+  if( quit )
+    {
+      puts( "Stage: failed to create a world. Quitting." );
+      exit( 0 );
+    }
+
+  // startup is (externally) identical for client and server, but they
+  // do slightly different things inside.
+  // post-constructor startup is required to exploit object polymorphism
   if (!world->Startup())
-  {
-    printf("Stage: failed startup\n");
-    StageQuit();
-  }
-
+    {
+      puts("Stage: failed to startup world. Quitting.");
+      StageQuit();
+    }
+  
+  puts( "" ); // end the startup output line
+  
   // Register callback for quit (^C,^\) events
   // - sig_quit function raises the quit flag 
   signal(SIGINT, sig_quit );
   signal(SIGQUIT, sig_quit );
   signal(SIGTERM, sig_quit );
   signal(SIGHUP, sig_quit );
-
-  //printf("running\n");
-
+  
   // the main loop - it'll be interrupted by a signal
   while( !quit )
-    world->Main();
+    {
+      world->Update(); // update the simulation
+    
+      //sleep( 10 );
+      usleep( 500000 );
+    }
 
-  //printf("quiting\n");
-  
   // clean up and exit
   StageQuit();
 }

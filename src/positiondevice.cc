@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.22 $
+//  $Author: rtv $
+//  $Revision: 1.23 $
 //
 // Usage:
 //  (empty)
@@ -43,7 +43,7 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
   m_config_len = 1; 
   m_reply_len = 1; 
   
-  m_player_type = PLAYER_POSITION_CODE; // from player's messages.h
+  m_player.type = PLAYER_POSITION_CODE; // from player's messages.h
   m_stage_type = RectRobotType;
 
   SetColor(POSITION_COLOR);
@@ -193,13 +193,10 @@ int CPositionDevice::Move()
   }
   else
   {
+    // set pose now takes care of marking us dirty
     SetPose(qx, qy, qth);
     this->stall = 0;
 
-    // if we moved, we mark ourselves dirty
-    if( (px!=qx) || (py!=qy) || (pth!=qth) )
-      MakeDirtyIfPixelChanged();
-        
     // Compute the new odometric pose
     // Uses a first-order integration approximation
     //
@@ -230,6 +227,8 @@ void CPositionDevice::ParseCommandBuffer()
   // Angular is in radians/sec
   m_com_vr = fv / 1000;
   m_com_vth = DTOR(fw);
+
+  //printf( "v = %.2f   w = %.2f\n", m_com_vr, m_com_vth );
 }
 
 

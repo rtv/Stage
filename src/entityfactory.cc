@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.20 $
+//  $Author: rtv $
+//  $Revision: 1.21 $
 //
 // Usage:
 //  (empty)
@@ -54,6 +54,91 @@
 
 #include "world.hh"
 
+
+//  const char** object_types =
+//  { 
+//    "mote_device", 
+//    "obstacle", 
+//    "position_device", 
+//    "omni_position_device", 
+//    "player_device",
+//    "laser_device",
+//    "sonar_device",
+//    "misc_device",
+//    "ptz_device",
+//    "box",
+//    "laser_beacon",
+//    "lbd_device",
+//    "vision_device",
+//    "vision_beacon",
+//    "movable_object",
+//    "gps_device",
+//    "gripper_device", 
+//    "puck" 
+//  };
+
+/////////////////////////////////////////////////////////////////////////
+// Create an object given a type
+//
+CEntity* CWorld::CreateObject( StageType type, CEntity *parent )
+{ 
+  switch( type )
+    {
+    case NullType:
+      puts( "Stage Warning: create null device type request. Ignored." );
+      return NULL;
+    case WallType:
+      return new CFixedObstacle(this, parent);     
+    case PlayerType:
+      return new CPlayerDevice(this, parent );
+    case MiscType: 
+      return new CMiscDevice(this, parent );
+    case RectRobotType:
+    case RoundRobotType:
+      return new CPositionDevice(this, parent );
+    case SonarType:
+      return new CSonarDevice(this, parent );
+    case LaserTurretType:
+      return new CLaserDevice(this, parent );
+    case VisionType:
+      return new CVisionDevice(this, (CPtzDevice*)parent);
+    case PtzType:
+      return new CPtzDevice(this, parent );
+    case BoxType: 
+      return new CBoxObstacle(this, parent);
+    case LaserBeaconType:
+      return new CLaserBeacon(this, parent);
+      // temporarily broken
+      //case LBDType: // Laser Beacon Detector 
+      //return new CLBDDevice(this, (CLaserDevice*)parent );
+    case VisionBeaconType:
+      return new CVisionBeacon(this, parent);
+    case GripperType:
+      return new CGripperDevice(this, parent);
+    case GpsType:
+      return new CGpsDevice(this, parent);
+    case PuckType:
+      return new CPuck(this, parent);
+    case BroadcastType:
+      return new CBroadcastDevice(this, parent);
+    case OmniPositionType:
+      return new COmniPositionDevice(this, parent );
+    case MoteType:
+      return new CMoteDevice(this, parent );
+
+    default:
+      printf( "Stage Warning: CreateObject() Unknown type %d", type );
+    }
+
+  // case AudioType:
+  // case SpeechType:
+  //VBDType // Vision Beacon Detector?
+  //case IDARType, // HRL's Infrared Data And Ranging turret
+  //case DescartesType, // HRL's customized Descartes robot platform
+  //case TruthType:
+  //case OccupancyType:
+}
+
 /////////////////////////////////////////////////////////////////////////
 // Create an object given a type
 //
@@ -92,8 +177,8 @@ CEntity* CWorld::CreateObject(const char *type, CEntity *parent )
   if (strcmp(type, "laser_beacon") == 0)
     return new CLaserBeacon(this, parent);
    
-  if (strcmp(type, "lbd_device") == 0)
-    return new CLBDDevice(this, (CLaserDevice*)parent );
+  //if (strcmp(type, "lbd_device") == 0)
+  //return new CLBDDevice(this, (CLaserDevice*)parent );
 
   if (strcmp(type, "vision_device") == 0)
     return new CVisionDevice(this, (CPtzDevice*)parent);

@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 //
 // File: world.cc
 // Author: Richard Vaughan, Andrew Howard
@@ -7,15 +7,15 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.91 $
+//  $Author: rtv $
+//  $Revision: 1.92 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#undef DEBUG
-#undef VERBOSE
-//#define DEBUG 
-//#define VERBOSE
+//#undef DEBUG
+//#undef VERBOSE
+#define DEBUG 
+#define VERBOSE
 
 #include <errno.h>
 #include <sys/time.h>
@@ -34,34 +34,26 @@
 #include <fcntl.h>
 #include <pwd.h>
 #include <stdio.h>
-#include <libgen.h>  // for dirname/#define DEBUG
+#include <libgen.h>  // for dirname
 #include <netdb.h>
 
 bool usage = false;
-void PrintUsage(); // defined in main.cc
 
-extern long g_bytes_input, g_bytes_output;
+void PrintUsage(); // defined in main.cc
+void StageQuit();
+
+long int g_bytes_output = 0;
+long int g_bytes_input = 0;
 
 int g_timer_expired = 0;
 
 #include "world.hh"
-#include "playerdevice.hh" // for the definition of CPlayerDevice, used to treat them specially
-#include "truthserver.hh"
 #include "fixedobstacle.hh"
-
-// thread entry function, defined in envserver.cc
-void* EnvServer( void* );
 
 // allocate chunks of 32 pointers for entity storage
 const int OBJECT_ALLOC_SIZE = 32;
 
 #define WATCH_RATES
-
-// this is the root filename for stage devices
-// this is appended with the user name and instance number
-// so in practice you get something like /tmp/stageIO.vaughan.0
-// currently only the zero instance is supported in player
-#define IOFILENAME "/tmp/stageIO"
 
 // dummy timer signal func
 void TimerHandler( int val )
@@ -75,23 +67,26 @@ void TimerHandler( int val )
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
-CWorld::CWorld()
+CWorld::CWorld( int argc, char** argv )
 {
   // seed the random number generator
   srand48( time(NULL) );
 
   // Initialise configuration variables
   this->ppm = 20;
-  this->wall = NULL;
-  
+
+  // matrix is created by a StageIO object
+  this->matrix = NULL;
+
   // stop time of zero means run forever
   m_stoptime = 0;
+  
+  m_clock = 0;
 
   // invalid file descriptor initially
   m_log_fd = -1;
 
   m_external_sync_required = false;
-  //m_env_server_ready = false;
   m_instance = 0;
 
   // AddObject() handles allocation of storage for entities
@@ -99,6 +94,8 @@ CWorld::CWorld()
   m_object = NULL;
   m_object_alloc = 0;
   m_object_count = 0;
+
+  //rtp_player = NULL;
 
   m_log_output = false;
   m_console_output = true;
@@ -112,18 +109,6 @@ CWorld::CWorld()
   // Allow the simulation to run
   //
   m_enable = true;
-
-  // set the server ports to default values
-  m_pose_port = DEFAULT_POSE_PORT;
-  m_env_port = DEFAULT_ENV_PORT;
-    
-  // init the pose server data structures
-  m_pose_connection_count = 0;
-  memset( m_pose_connections, 0, 
-          sizeof(struct pollfd) * MAX_POSE_CONNECTIONS );
-  memset( m_conn_type, 0, sizeof(char) * MAX_POSE_CONNECTIONS );
-    
-  m_sync_counter = 0;
 
   if( gethostname( m_hostname, sizeof(m_hostname)) == -1)
   {
@@ -158,16 +143,9 @@ CWorld::CWorld()
     printf( "[Host %s(%s)]",
 	  m_hostname_short, inet_ntoa( m_hostaddr ) );
   
-  // enable external services by default
-  m_run_environment_server = true;
-  m_run_pose_server = true;
-  m_run_player = true;    
-  m_run_xs = true; 
   m_send_idar_packets = false;
 
-#ifdef INCLUDE_RTK2
-  m_run_xs = false; // disable xs in rtkstage
-#endif
+  m_run_xs = true;
 
   // default color database file
   strcpy( m_color_database_filename, COLOR_DATABASE );
@@ -178,9 +156,14 @@ CWorld::CWorld()
     
   // Initialise object list
   m_object_count = 0;
-    
+  
   // start with no key
   bzero(m_auth_key,sizeof(m_auth_key));
+
+ 
+  // give the command line a chance to override the default values
+  // we just set
+  ParseCmdline( argc, argv );
 }
 
 
@@ -198,126 +181,111 @@ CWorld::~CWorld()
     delete m_object[m];
 }
 
+int CWorld::CountDirtyOnConnection( int con )
+{
+  char dummydata[MAX_PROPERTY_DATA_LEN];
+  int count = 0;
+
+  //puts( "Counting dirty properties" );
+  // count the number of dirty properties on this connection 
+  for( int i=0; i < GetObjectCount(); i++ )
+    for( int p=0; p < MAX_NUM_PROPERTIES; p++ )
+      {  
+	// is the entity marked dirty for this connection & property?
+	if( GetObject(i)->m_dirty[con][p] ) 
+	  {
+	    // if this property has any data  
+	    if( GetObject(i)->GetProperty( (EntityProperty)p, dummydata ) 
+		> 0 )
+	      count++; // we count it as dirty
+	  }
+      }
+
+  return count;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Parse the command line
 bool CWorld::ParseCmdline(int argc, char **argv)
 {
-  if( argc < 2 )
-  {
-    usage = true;
-    exit( -1 );
-  }
-  
   for( int a=1; a<argc-1; a++ )
-  {
-    // USAGE
-    if( (strcmp( argv[a], "-?" ) == 0) || 
-        (strcmp( argv[a], "--help") == 0) )
     {
-      PrintUsage();
-      return false;
-    }
-    // LOGGING
-    else if( strcmp( argv[a], "-l" ) == 0 )
-    {
-      m_log_output = true;
-      strncpy( m_log_filename, argv[a+1], 255 );
-      printf( "[Logfile %s]", m_log_filename );
-
-      //store the command line for logging later
-      memset( m_cmdline, 0, sizeof(m_cmdline) );
+      // USAGE
+      if( (strcmp( argv[a], "-?" ) == 0) || 
+	  (strcmp( argv[a], "--help") == 0) )
+	{
+	  PrintUsage();
+	  return false;
+	}
+      
+      // LOGGING
+      if( strcmp( argv[a], "-l" ) == 0 )
+	{
+	  m_log_output = true;
+	  strncpy( m_log_filename, argv[a+1], 255 );
+	  printf( "[Logfile %s]", m_log_filename );
 	  
-      for( int g=0; g<argc; g++ )
+	  //store the command line for logging later
+	  memset( m_cmdline, 0, sizeof(m_cmdline) );
+	  
+	  for( int g=0; g<argc; g++ )
 	    {
 	      strcat( m_cmdline, argv[g] );
 	      strcat( m_cmdline, " " );
 	    }
-
-      a++;
 	  
-      // open the log file and write out a header
-      LogOutputHeader();
-    }
+	  a++;
+	  
+	  // open the log file and write out a header
+	  LogOutputHeader();
+	}
       
-    // FAST MODE - run as fast as possible - don't attempt t match real time
-    if( strcmp( argv[a], "-fast" ) == 0 )
-    {
-      m_real_timestep = 0.0;
-      printf( "[Fast]" );
-    }
+      // DIS/ENABLE GUI
+      if( strcmp( argv[a], "-g" ) == 0 )
+	{
+	  m_run_xs = false;
+	  printf( "[No GUI]" );
+	}
+      else if( strcmp( argv[a], "+g" ) == 0 )
+	{
+	  m_run_xs = true;
+	  printf( "[GUI]" );
+	}
+      
+      
+      // SET GOAL REAL CYCLE TIME
+      // Stage will attempt to update at this speed
+      else if( strcmp( argv[a], "-u" ) == 0 )
+	{
+	  m_real_timestep = atof(argv[a+1]);
+	  printf( "[Real time per cycle %f sec]", m_real_timestep );
+	  a++;
+	}
+      
+      // SET SIMULATED UPDATE CYCLE
+      // one cycle simulates this much time
+      else if( strcmp( argv[a], "-v" ) == 0 )
+	{
+	  m_sim_timestep = atof(argv[a+1]);
+	  printf( "[Simulated time per cycle %f sec]", m_sim_timestep );
+	  a++;
+	}
+      
+      // DISABLE console output
+      if( strcmp( argv[a], "-q" ) == 0 )
+	{
+	  m_console_output = false;
+	  printf( "[Quiet]" );
+	}
+      
 
-    // DIS/ENABLE XS
-    if( strcmp( argv[a], "-xs" ) == 0 )
-    {
-      m_run_xs = false;
-      printf( "[No GUI]" );
-    }
-    else if( strcmp( argv[a], "+xs" ) == 0 )
-    {
-      m_run_xs = true;
-      printf( "[GUI]" );
-    }
-
-    // DIS/ENABLE Player
-    if( strcmp( argv[a], "-p" ) == 0 )
-    {
-      m_run_player = false;
-      printf( "[No Player]" );
-    }
-    else if( strcmp( argv[a], "+p" ) == 0 )
-    {
-      m_run_player = true;
-      printf( "[Player]" );
-    }
-
-    // DISABLE console output
-    if( strcmp( argv[a], "-q" ) == 0 )
-    {
-      m_console_output = false;
-      printf( "[Quiet]" );
-    }
-
-    // ENABLE IDAR packets to be sent to XS
-    if( strcmp( argv[a], "-i" ) == 0 )
-    {
-      m_send_idar_packets = true;
-      printf( "[IDAR->XS]" );
-    }
-
-    // SET GOAL REAL CYCLE TIME
-    // Stage will attempt to update at this speed
-    else if( strcmp( argv[a], "-u" ) == 0 )
-    {
-      m_real_timestep = atof(argv[a+1]);
-      printf( "[Real time per cycle %f sec]", m_real_timestep );
-      a++;
-    }
-
-    // SET SIMULATED UPDATE CYCLE
-    // one cycle simulates this much time
-    else if( strcmp( argv[a], "-v" ) == 0 )
-    {
-      m_sim_timestep = atof(argv[a+1]);
-      printf( "[Simulated time per cycle %f sec]", m_sim_timestep );
-      a++;
-    }
-
-    // change the pose port 
-    else if( strcmp( argv[a], "-tp" ) == 0 )
-    {
-      m_pose_port = atoi(argv[a+1]);
-      printf( "[Pose %d]", m_pose_port );
-      a++;
-    }
-
-    // change the environment port
-    else if( strcmp( argv[a], "-ep" ) == 0 )
-    {
-      m_env_port = atoi(argv[a+1]);
-      printf( "[Env %d]", m_env_port );
-      a++;
-    }
+      // change the server port 
+      //else if( strcmp( argv[a], "-p" ) == 0 )
+      //{
+      //  m_pose_port = atoi(argv[a+1]);
+      //  printf( "[Port %d]", m_pose_port );
+      //  a++;
+      //}
 
     // SWITCH ON SYNCHRONIZED (distributed) MODE
     // if this option is given, Stage will only run when connected
@@ -328,11 +296,31 @@ bool CWorld::ParseCmdline(int argc, char **argv)
       m_enable = false; // don't run until we have a sync connection
       printf( "[External Sync]");
     }      
+
     else if(!strcmp(argv[a], "-time"))
     {
       m_stoptime = atoi(argv[++a]);
       printf("setting time to: %d\n",m_stoptime);
     }
+
+      // ENABLE RTP - sensor data is sent in rtp format
+      // if( (strcmp( argv[a], "-r" ) == 0 ) || 
+      // ( strcmp( argv[a], "--rtp" ) == 0 ))
+      //  	{
+      //  	  rtp_player = new CRTPPlayer( argv[a+1] );
+      
+      //  	  printf( "World rtp player @ %p\n", rtp_player );
+      
+      //  	  printf( "[RTP %s]", argv[a+1] );
+      //  	  a++;
+      //  	}
+      // ENABLE IDAR packets to be sent to XS
+      //if( strcmp( argv[a], "-i" ) == 0 )
+      //{
+      //  m_send_idar_packets = true;
+      //  printf( "[IDAR->XS]" );
+      //}
+      
 
     //else if( strcmp( argv[a], "-id" ) == 0 )
     //{
@@ -346,233 +334,31 @@ bool CWorld::ParseCmdline(int argc, char **argv)
   return true;
 }
 
-
-///////////////////////////////////////////////////////////////////////////
-// Load the world
-bool CWorld::Load(const char *filename)
-{
-  this->worldfilename = filename;
-  
-  printf( "[World %s]", this->worldfilename );
-  fflush( stdout );
-
-  // the default hostname is this host's name
-  char current_hostname[ HOSTNAME_SIZE ];
-  strncpy( current_hostname, m_hostname, HOSTNAME_SIZE );
-  
-  // maintain a connection to the nameserver - speeds up lookups
-  sethostent( true );
-
-  struct hostent* info = gethostbyname( current_hostname );
-  struct in_addr current_hostaddr;
-
-  // make sure this looks like a regular internet address
-  assert( info->h_length == 4 );
-  assert( info->h_addrtype == AF_INET );
-  
-  // copy the address out
-  memcpy( &current_hostaddr.s_addr, info->h_addr_list[0], 4 ); 
-
-  //printf( "\nHOSTNAME %s NAME %s LEN %d IP %s\n", 
-  //  current_hostname,
-  //  info->h_name, 
-  //  info->h_length, 
-  //  inet_ntoa( current_hostaddr ) );
-  
-  // Load and parse the world file
-  if (!this->worldfile.Load(filename))
-    return false;
-
-  // Make sure there is an "environment" section
-  int section = this->worldfile.LookupSection("environment");
-  if (section < 0)
-  {
-    PRINT_ERR("no environment specified");
-    return false;
-  }
-  
-  // Construct a single fixed obstacle representing
-  // the environment.
-  this->wall = new CFixedObstacle(this, NULL);
-  
-  // Load the settings for this object
-  if (!this->wall->Load(&this->worldfile, section))
-    return false;
-
-  // Get the resolution of the environment (meters per pixel in the file)
-  this->ppm = 1 / this->worldfile.ReadLength(section, "resolution", 1 / this->ppm);
-
-  // Initialise the matrix, now that we know its size
-  int w = (int) ceil(this->wall->size_x * this->ppm);
-  int h = (int) ceil(this->wall->size_y * this->ppm);
-  this->matrix = new CMatrix(w, h, 1);
-  
-  // Get the authorization key to pass to player
-  const char *authkey = this->worldfile.ReadString(0, "auth_key", "");
-  strncpy(m_auth_key, authkey, sizeof(m_auth_key));
-  m_auth_key[sizeof(m_auth_key)-1] = '\0';
-
-  // Get the real update interval
-  m_real_timestep = this->worldfile.ReadFloat(0, "real_timestep", 0.100);
-
-  // Get the simulated update interval
-  m_sim_timestep = this->worldfile.ReadFloat(0, "sim_timestep", 0.100);
-  
-  // Iterate through sections and create objects as needs be
-  for (int section = 1; section < this->worldfile.GetSectionCount(); section++)
-  {
-    // Find out what type of object this is,
-    // and what line it came from.
-    const char *type = this->worldfile.GetSectionType(section);
-    int line = this->worldfile.ReadInt(section, "line", -1);
-
-    // Ignore some types, since we already have dealt will deal with them
-    if (strcmp(type, "environment") == 0)
-      continue;
-    if (strcmp(type, "rtk") == 0)
-      continue;
-    
-    // if this section defines the current host, we load it here
-    // this breaks the context-free-ness of the syntax, but it's 
-    // a simple way to do this. - RTV
-    if( strcmp(type, "host") == 0 )
-      {
-	char candidate_hostname[ HOSTNAME_SIZE ];
-
-	strncpy( candidate_hostname, 
-		 worldfile.ReadString( section, "hostname", 0 ),
-		 HOSTNAME_SIZE );
-	
-	// if we found a name
-	if( strlen(candidate_hostname) > 0  )
-	  {
-	    struct hostent* cinfo = 0;
-	    
-	    //printf( "CHECKING HOSTNAME %s\n", candidate_hostname );
-
-	    //lookup this host's IP address:
-	    if( (cinfo = gethostbyname( candidate_hostname ) ) ) 
-	      {
-
-		// make sure this looks like a regular internet address
-		assert( cinfo->h_length == 4 );
-		assert( cinfo->h_addrtype == AF_INET );
-		
-		// looks good - we'll use this host from now on
-		strncpy( current_hostname, candidate_hostname, HOSTNAME_SIZE );
-
-		// copy the address out
-		memcpy( &current_hostaddr.s_addr, cinfo->h_addr_list[0], 4 ); 
-		
-		//printf( "LOADING HOSTNAME %s NAME %s LEN %d IP %s\n", 
-		//current_hostname,
-		//cinfo->h_name, 
-		//cinfo->h_length, 
-		//inet_ntoa( current_hostaddr ) );
-	      }
-	    else // failed lookup - stick with the last host
-	      {
-		printf( "Can't resolve hostname \"%s\" in world file."
-			" Sticking with \"%s\".\n", 
-			candidate_hostname, current_hostname );
-      	      }
-	  }
-	else
-	  puts( "No hostname specified. Ignoring." );
-
-	continue;
-      }
-    // otherwise it's a device so we handle those...
-
-    // Find the parent object
-    CEntity *parent = NULL;
-    int psection = this->worldfile.GetSectionParent(section);
-    for (int i = 0; i < GetObjectCount(); i++)
-    {
-      CEntity *object = GetObject(i);
-      if (GetObject(i)->worldfile_section == psection)
-        parent = object;
-    }
-
-    // Work out whether or not its a local device if any if this
-    // device's host IPs match this computer's IP, it's local
-
-    //for( int t=0; t<
-    bool local = m_hostaddr.s_addr == current_hostaddr.s_addr;
-
-    // Create the object
-    CEntity *object = CreateObject(type, parent );
-
-    if (object != NULL)
-    {      
-      // these pokes should really be in the objects, but it's a loooooot
-      // of editing to change each constructor...
-
-      // Store which section it came from (so we know where to
-      // save it to later).
-      object->worldfile_section = section;
-
-      // store the IP of the computer responsible for updating this
-      memcpy( &object->m_hostaddr, &current_hostaddr,sizeof(current_hostaddr));
-      
-      // if true, this instance of stage will update this entity
-      object->m_local = local;
-      
-      //printf( "ent: %p host: %s local: %d\n",
-      //    object, inet_ntoa(object->m_hostaddr), object->m_local );
-      
-      // Let the object load itself
-      if (!object->Load(&this->worldfile, section))
-        return false;
-
-      // Add to list of objects
-      AddObject(object);
-    }
-    else
-      PRINT_ERR2("line %d : unrecognized type [%s]", line, type);
-  }
-
-#ifdef INCLUDE_RTK2
-  // Initialize the GUI, but dont start it yet
-  if (!LoadGUI(&this->worldfile))
-    return false;
-#endif
-
-  // disconnect from the nameserver
-  endhostent();
-
-  // See if there was anything we didnt understand in the world file
-  this->worldfile.WarnUnused();
-  
-  return true;
-}
-
-
 ///////////////////////////////////////////////////////////////////////////
 // Save objects to a file
-bool CWorld::Save(const char *filename)
+bool CWorld::Save( void )
 {
-  PRINT_MSG1("saving world to [%s]", filename);
+//    PRINT_MSG1("saving world to [%s]", filename);
   
-  this->worldfilename = filename;
+//    this->worldfilename = filename;
 
-  // Let each object save itself
-  for (int i = 0; i < GetObjectCount(); i++)
-  {
-    CEntity *object = GetObject(i);
-    if (!object->Save(&this->worldfile, object->worldfile_section))
-      return false;
-  }
+//    // Let each object save itself
+//    for (int i = 0; i < GetObjectCount(); i++)
+//    {
+//      CEntity *object = GetObject(i);
+//      if (!object->Save(&this->worldfile, object->worldfile_section))
+//        return false;
+//    }
 
-#ifdef INCLUDE_RTK2
-  // Save changes to the GUI
-  if (!SaveGUI(&this->worldfile))
-    return false;
-#endif
+//  #ifdef INCLUDE_RTK2
+//    // Save changes to the GUI
+//    if (!SaveGUI(&this->worldfile))
+//      return false;
+//  #endif
   
-  // Save everything
-  if (!this->worldfile.Save(filename))
-    return false;
+//    // Save everything
+//    if (!this->worldfile.Save(filename))
+//      return false;
 
   return true;
 }
@@ -584,17 +370,9 @@ bool CWorld::Startup()
 {  
   PRINT_DEBUG( "** STARTUP **" );
   
-  // these inits are a little nasty 'cos most of them have side
-  // effects like setting data members. therefore the order is
-  // important (yuk!) i'll clean this up eventually
-
   // we must have at least one object to play with!
   assert( m_object_count > 0 );
-
-  // Initialise the wall object
-  if (!this->wall->Startup())
-    return false;
-    
+  
   // Initialise the real time clock
   // Note that we really do need to set the start time to zero first!
   m_start_time = 0;
@@ -603,59 +381,14 @@ bool CWorld::Startup()
   // Initialise the rate counter
   m_update_ratio = 1;
   m_update_rate = 0;
-  
-  // kick off the pose and envirnment servers, unless we disabled them earlier
-  if( m_run_pose_server )
-    SetupPoseServer();
-  
-  if( m_run_environment_server )
-    SetupEnvServer();
 
-  // Create the device directory and clock 
-  PRINT_DEBUG( "CREATING CLOCK DEVICE" );
-  CreateClockDevice();
-  
-  // Create the record lock file
-  PRINT_DEBUG( "CREATING LOCK FILE" );
-  CreateLockFile();
-
-  PRINT_DEBUG( "BACK IN CWORLD::STARTUP" );
-
-  // Startup all the objects
-  // Devices will create and initialize their device files
-  for (int i = 0; i < m_object_count; i++)
-  {
-    if( !m_object[i]->Startup() )
-    {
-      PRINT_ERR("object startup failed");
-      return false;
-    }
-  }
-  
-  // exec and set up Player
-  if( m_run_player )
-  {
-    PRINT_DEBUG( "STARTING PLAYER" );
-    StartupPlayer();    
-    PRINT_DEBUG( "DONE STARTING PLAYER" );
-  } 
-  else 
-    printf("Not starting Player; Stage I/O in %s\n", DeviceDirectory());
-
-
-  // spawn an XS process, unless we disabled it (rtkstage disables xs by default)
-  if( m_run_xs && m_run_pose_server && m_run_environment_server ) 
-    SpawnXS();
-
-#ifdef INCLUDE_RTK2
   // Start the GUI
-  StartupGUI();
-#endif
+  if( m_run_xs ) StartupGUI();
   
   // start the real-time interrupts going
   StartTimer( m_real_timestep );
   
-  //PRINT_DEBUG( "** STARTUP DONE **" );
+  PRINT_DEBUG( "** STARTUP DONE **" );
   return true;
 }
     
@@ -664,13 +397,8 @@ bool CWorld::Startup()
 // Shutdown routine 
 void CWorld::Shutdown()
 {
-#ifdef INCLUDE_RTK2
   // Stop the GUI
-  ShutdownGUI();
-#endif
-
-  // Shutdown player
-  ShutdownPlayer();
+  if( m_run_xs ) ShutdownGUI();
   
   // Shutdown all the objects
   // Devices will unlink their device files
@@ -680,226 +408,12 @@ void CWorld::Shutdown()
       m_object[i]->Shutdown();
   }
   
-  // zap the clock device and lock file 
-  unlink( clockName );
-  unlink( m_locks_name );
-
   // Shutdown the wall
   if(this->wall)
     this->wall->Shutdown();
-
-  // delete the device directory
-  if( rmdir( m_device_dir ) != 0 )
-    PRINT_WARN1("failed to delete device directory: [%s]", strerror(errno));
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// Start the single instance of player
-bool CWorld::StartupPlayer( void )
-{
-  //PRINT_DEBUG( "** STARTUP PLAYER **" );
-
-  // startup any player devices - no longer hacky! - RTV
-  // we need to have fixed up all the shared memory and pointers already
-  
-  // count the number of Players on this host
-  int player_count = 0;
-  for (int i = 0; i < m_object_count; i++)
-    if(m_object[i]->m_stage_type == PlayerType && m_object[i]->m_local ) 
-      player_count++;
-  
-  // if there is at least 1 player device, we start a copy of Player
-  // running.
-  if (player_count == 0)
-    return true;
-
-  // ----------------------------------------------------------------------
-  // fork off a player process to handle robot I/O
-  if( (this->player_pid = fork()) < 0 )
-  {
-    PRINT_ERR1("error forking for player: [%s]", strerror(errno));
-    return false;
-  }
-
-  // If we are the nmew child process...
-  if (this->player_pid == 0)
-  {
-    // pass in the number of ports player should find in the IO directory
-    // We tell it how many unique ports it should find in the
-    // io directory, just as a sanity check.
-    char portBuf[32];
-    sprintf( portBuf, "%d", (int) player_count );
-
-    // release controlling tty so Player doesn't get signals
-    setpgrp();
-
-    // Player must be in the current path
-    if( execlp( "player", "player",
-                //"-ports", portBuf, 
-                "-stage", DeviceDirectory(), 
-                (strlen(m_auth_key)) ? "-key" : NULL,
-                (strlen(m_auth_key)) ? m_auth_key : NULL,
-                NULL) < 0 )
-    {
-      PRINT_ERR1("error executing player: [%s]\n"
-                 "Make sure player is in your path.", strerror(errno));
-      if(!kill(getppid(),SIGINT))
-      {
-        PRINT_ERR1("error killing player: [%s]", strerror(errno));
-        exit(-1);
-      }
-    }
-  }
-  
-  //PRINT_DEBUG( "** STARTUP PLAYER DONE **" );
-  return true;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Stop player instance
-void CWorld::ShutdownPlayer()
-{
-  int wait_retval;
-
-  if(this->player_pid)
-  {
-    if(kill(this->player_pid,SIGTERM))
-      PRINT_ERR1("error killing player: [%s]", strerror(errno));
-    if((wait_retval = waitpid(this->player_pid,NULL,0)) == -1)
-      PRINT_ERR1("waitpid failed: [%s]", strerror(errno));
-    this->player_pid = 0;
-  }
-}
-
-//////////////////////////////////////////////////////////////////////////
-// Set up a file for record locking, 1 byte per entity
-// the contents aren't used - we just use fcntl() to lock bytes
-bool CWorld::CreateLockFile( void )
-{
-  // store the filename
-  sprintf( m_locks_name, "%s/%s", m_device_dir, STAGE_LOCK_NAME );
-
-  m_locks_fd = -1;
-
-  if( (m_locks_fd = open( m_locks_name, O_RDWR | O_CREAT | O_TRUNC, 
-                   S_IRUSR | S_IWUSR )) < 0 )
-  {
-    perror("Failed to create lock device" );
-    return false;
-  } 
-  
-  // set the file size - 1 byte per entity
-  off_t sz = m_object_count;
-  
-  if( ftruncate( m_locks_fd, sz ) < 0 )
-  {
-    perror( "Failed to set lock file size" );
-    return false;
-  }
-
-  //printf( "Created lock file %s of %d bytes (fd %d)\n", 
-  //  m_locks_name, m_object_count, m_locks_fd );
-
-  return true;
-}
-
-
-
-/////////////////////////////////////////////////////////////////////////
-// Clock device -- create the memory map for IPC with Player 
-bool CWorld::CreateClockDevice( void )
-{ 
-  // get the user's name
-  struct passwd* user_info = getpwuid( getuid() );
-
-  //int tfd = 0;
-
-  // make a device directory from a base name and the user's name
-  sprintf( m_device_dir, "%s.%s.%d", 
-           IOFILENAME, user_info->pw_name, m_instance++ );
-  
-  if( mkdir( m_device_dir, S_IRWXU | S_IRWXG | S_IRWXO ) == -1 )
-  {
-    if( errno != EEXIST )
-    {
-      perror( "Stage: failed to make device directory" );
-      exit( -1 );
-    }
-  }
-
-  char hostdir[256];
-  sprintf( hostdir, "%s", m_device_dir );
-
-  if( mkdir( hostdir, S_IRWXU | S_IRWXG | S_IRWXO ) == -1 )
-  {
-    if( errno != EEXIST )
-    {
-      perror( "Stage: failed to make host directory" );
-      exit( -1 );
-    }
-  }
-  
-  //printf( "Created directories %s\n", hostdir );
-  //printf( "[Instance %d]", m_instance-1 );
-
-  // create the time device
-
-  size_t clocksize = sizeof( stage_clock_t );
-  
-  sprintf( clockName, "%s/clock", m_device_dir );
-  //sprintf( clockName, "/tmp/clock");
-  
-  int tfd=-1;
-  if( (tfd = open( clockName, O_RDWR | O_CREAT | O_TRUNC, 
-                   S_IRUSR | S_IWUSR )) < 0 )
-  {
-    perror("Failed to create clock device" );
-    exit( -1 );
-  } 
-  
-  // make the file the right size
-  off_t sz = clocksize;
-
-  if( ftruncate( tfd, sz ) < 0 )
-  {
-    perror( "Failed to set clock file size" );
-    return false;
-  }
-  
-  int r;
-  if( (r = write( tfd, &m_sim_timeval, sizeof( m_sim_timeval ))) < 0 )
-    perror( "failed to write time into clock device" );
-  
-
-  void *map = mmap( NULL, clocksize, 
-		    PROT_READ | PROT_WRITE, MAP_SHARED,
-		    tfd, (off_t) 0);
-
-  if (map == MAP_FAILED )
-  {
-    perror( "Failed to map memory" );
-    return false;
-  }
-
-  // Initialise space
-  //
-  memset( map, 0, clocksize );
-
-  // store the pointer to the clock
-  m_clock = (stage_clock_t*)map;
-
-  // init the clock's semaphore
-  if( sem_init( &m_clock->lock, 0, 1 ) < 0 )
-    perror( "sem_init failed" );
-  
-  close( tfd ); // can close fd once mapped
-  
-  PRINT_DEBUG( "Successfully mapped clock device." );
-  
-  return true;
-}
 
 
 void CWorld::StartTimer( double interval )
@@ -933,11 +447,10 @@ void CWorld::StartTimer( double interval )
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Thread entry point for the world
-//
-void CWorld::Main(void)
+// Update the world
+void CWorld::Update(void)
 {
-  //PRINT_DEBUG( "** MAIN **" );
+  //PRINT_DEBUG( "** Update **" );
   //assert( arg == 0 );
   
   static double loop_start = GetRealTime();
@@ -947,34 +460,65 @@ void CWorld::Main(void)
   // so we run as fast as possible
   m_real_timestep > 0.0 ? g_timer_expired = 0 : g_timer_expired = 1;
             
-  // look for new connections to the poseserver
-  ListenForPoseConnections();
-  
-  // look for new connections to the envserver
-  ListenForEnvConnections();
-
-  // calculate new world state
+   // calculate new world state
   if (m_enable) 
-    Update();
-  else
-    usleep( 100000 ); // stops us hogging the machine while we're paused
+    {
+      // Update the simulation time (in both formats)
+      m_sim_time = m_step_num * m_sim_timestep;
+      m_sim_timeval.tv_sec = (long)floor(m_sim_time);
+      m_sim_timeval.tv_usec = (long)((m_sim_time - floor(m_sim_time)) * MILLION); 
+      // is it time to stop?
+      if(m_stoptime && m_sim_time >= m_stoptime)
+	system("kill `cat stage.pid`");
+      
+      // copy the timeval into the player io buffer. use the first
+      // object's info
 
+      if( m_clock ) // if we're managing a clock
+	{
+	  // TODO - turn the player clock back on - move this into the server?
+	  sem_wait( &m_clock->lock );
+	  m_clock->time = m_sim_timeval;
+	  sem_post( &m_clock->lock );
+	}
+
+      // Do the actual work -- update the objects 
+      for (int i = 0; i < m_object_count; i++)
+	{
+	  // if this host manages this object
+	  if( m_object[i]->m_local )
+	    m_object[i]->Update( m_sim_time ); // update the device model
+	  
+#ifdef INCLUDE_RTK2
+	  // update the GUI, whether we manage this device or not
+	  if( m_run_xs ) m_object[i]->RtkUpdate();
+#endif
+	};
+      
+#ifdef INCLUDE_RTK2
+      if( m_run_xs ) UpdateGUI();      
+#endif
+
+    }
+  else // the model isn't running - update the GUI and go to sleep
+    {
+
+#ifdef INCLUDE_RTK2
+      if( m_run_xs ) 
+	{
+	  //for (int i = 0; i < m_object_count; i++)
+	  // m_object[i]->RtkUpdate();
+	  
+	  UpdateGUI();      
+	}
+#endif
+
+      PRINT_DEBUG( "SLEEPING - DISABLED" );
+      usleep( 100000 ); // stops us hogging the machine while we're paused
+    }
+  
   // for logging statistics
   double update_time = GetRealTime();
-      
-  if( m_pose_connection_count == 0 )
-	{      
-	  m_step_num++;
-	  
-	  // if we have spare time, sleep until it runs out
-	  if( g_timer_expired < 1 ) sleep( 1 ); 
-	}
-  else // handle the connections
-	{
-	  PoseWrite(); // writes out anything that is dirty
-	  PoseRead();
-	}
-      
   // for logging statistics
   double loop_end = GetRealTime(); 
   double loop_time = loop_end - loop_start;
@@ -989,40 +533,6 @@ void CWorld::Main(void)
   // dump the contents of the matrix to a file
   //world->matrix->dump();
   //getchar();	
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Update the world
-void CWorld::Update()
-{ 
-  // Update the simulation time (in both formats)
-  m_sim_time = m_step_num * m_sim_timestep;
-  m_sim_timeval.tv_sec = (long)floor(m_sim_time);
-  m_sim_timeval.tv_usec = (long)((m_sim_time - floor(m_sim_time)) * MILLION); 
-
-  // is it time to stop?
-  if(m_stoptime && m_sim_time >= m_stoptime)
-    system("kill `cat stage.pid`");
-
-  // copy the timeval into the player io buffer
-  // use the first object's info
-  
-  sem_wait( &m_clock->lock );
-  m_clock->time = m_sim_timeval;
-  sem_post( &m_clock->lock );
-
-  // Do the actual work -- update the objects 
-  for (int i = 0; i < m_object_count; i++)
-  {
-    // if this host manages this object
-    //if( m_object[i]->m_local )
-    m_object[i]->Update( m_sim_time ); // update it 
-  };
-
-#ifdef INCLUDE_RTK2
-  UpdateGUI();
-#endif
 }
 
 
@@ -1119,43 +629,6 @@ void CWorld::AddObject(CEntity *object)
   
   // insert the object and increment the count
   m_object[m_object_count++] = object;
-}
-
-void CWorld::SpawnXS( void )
-{
-  int pid = 0;
-  
-  // ----------------------------------------------------------------------
-  // fork off an xs process
-  if( (pid = fork()) < 0 )
-    cerr << "fork error in SpawnXS()" << endl;
-  else
-  {
-    if( pid == 0 ) // new child process
-    {
-      char envbuf[32];
-      sprintf( envbuf, "%d", m_env_port );
-
-      char posebuf[32];
-      sprintf( posebuf, "%d", m_pose_port );
-	  
-      // we assume xs is in the current path
-      if( execlp( "xs", "xs",
-                  "-ep", envbuf,
-                  "-tp", posebuf, NULL ) < 0 )
-	    {
-	      cerr << "exec failed in SpawnXS(): make sure XS can be found"
-          " in the current path."
-             << endl;
-	      exit( -1 ); // die!
-	    }
-    }
-    else
-    {
-      //PRINT_DEBUG( "[XS]" );
-      //fflush( stdout );
-    }
-  }
 }
 
 int CWorld::ColorFromString( StageColor* color, const char* colorString )
@@ -1269,10 +742,10 @@ void CWorld::Output( double loop_duration, double sleep_duration )
     bytes = 0;
   }
 
-  if(m_console_output)
-    ConsoleOutput( freq, loop_duration, sleep_duration, 
-                   avg_loop_duration, avg_sleep_duration,
-                   bytes_in, bytes_out, bandw );
+  //ConsoleOutput( freq, loop_duration, sleep_duration, 
+  //             avg_loop_duration, avg_sleep_duration,
+  //             bytes_in, bytes_out, bandw );
+
   
   if( m_log_output ) 
     LogOutput( freq, loop_duration, sleep_duration, 
@@ -1359,7 +832,7 @@ void CWorld::LogOutputHeader( void )
            "# Command:\t%s\n"
            "# Date:\t\t%s\n"
            "# Host:\t\t%s\n"
-           "# Bitmap:\t%s\n"
+           //"# Bitmap:\t%s\n"
            "# Timestep(ms):\t%d\n"
            "# Objects:\t%d of %d\n#\n"
            "#STEP\t\tSIMTIME(s)\tINTERVAL(s)\tSLEEP(s)\tRATIO\t"
@@ -1367,7 +840,7 @@ void CWorld::LogOutputHeader( void )
            m_cmdline, 
            tmstr, 
            m_hostname, 
-           worldfilename,
+           //worldfilename,
            (int)(m_sim_timestep * 1000.0),
            m, 
            m_object_count );
@@ -1462,6 +935,58 @@ bool CWorld::LoadGUI(CWorldFile *worldfile)
   return true;
 }
 
+// Initialise the GUI
+bool CWorld::LoadGUI()
+{
+  // Size of canvas in pixels
+  int sx = (int)this->matrix->width;
+  int sy = (int)this->matrix->height;
+  
+  // Scale of the pixels
+  double scale = ((CFixedObstacle*)this->wall)->scale;
+  
+  // Size in meters
+  double dx = sx * scale;
+  double dy = sy * scale;
+
+  // Origin of the canvas
+  double ox = dx / 2;
+  double oy = dy / 2;
+
+  this->app = rtk_app_create();
+  //rtk_app_size(this->app, 100, 100);
+  rtk_app_refresh_rate(this->app, 10);
+  
+  this->canvas = rtk_canvas_create(this->app);
+  rtk_canvas_size(this->canvas, sx, sy );
+  rtk_canvas_scale(this->canvas, scale, scale);
+  rtk_canvas_origin(this->canvas, ox, oy);
+
+  // Add some menu items 
+  this->file_menu = rtk_menu_create(this->canvas, "File");
+  this->save_menuitem = rtk_menuitem_create(this->file_menu, "Save", 0);
+  this->export_menuitem = rtk_menuitem_create(this->file_menu, "Export", 0);
+  this->export_count = 0;
+
+  // Grid spacing
+  double minor = 0.2;
+  double major = 1.0;
+  
+  // Create the grid
+  this->fig_grid = rtk_fig_create(this->canvas, NULL, -49);
+  if (minor > 0)
+  {
+    rtk_fig_color(this->fig_grid, 0.9, 0.9, 0.9);
+    rtk_fig_grid(this->fig_grid, ox, oy, dx, dy, minor);
+  }
+  if (major > 0)
+  {
+    rtk_fig_color(this->fig_grid, 0.75, 0.75, 0.75);
+    rtk_fig_grid(this->fig_grid, ox, oy, dx, dy, major);
+  }
+
+  return true;
+}
 
 // Save the GUI
 bool CWorld::SaveGUI(CWorldFile *worldfile)
@@ -1492,6 +1017,8 @@ bool CWorld::SaveGUI(CWorldFile *worldfile)
 // Start the GUI
 bool CWorld::StartupGUI()
 {
+  PRINT_DEBUG( "** STARTUP GUI **" );
+
   rtk_app_start(this->app);
   return true;
 }
@@ -1507,19 +1034,27 @@ void CWorld::ShutdownGUI()
 void CWorld::UpdateGUI()
 {
   // Handle save menu item
-  if (rtk_menuitem_isactivated(this->save_menuitem))
-    Save(this->worldfilename);
+
+  // TODO - server must save the world
+  //      - client must send a save request to server
+  //      - this function will just handle the fig export
+
+  //if (rtk_menuitem_isactivated(this->save_menuitem))
+  //Save(this->worldfilename);
 
   // Handle export menu item
+
+  // TODO - fold in XS's postscript and pnm export here
   if (rtk_menuitem_isactivated(this->export_menuitem))
   {
     char filename[128];
-    snprintf(filename, sizeof(filename), "rtkstage-%04d.fig", this->export_count++);
+    snprintf(filename, sizeof(filename), 
+	     "rtkstage-%04d.fig", this->export_count++);
     PRINT_MSG1("exporting canvas to [%s]", filename);
     rtk_canvas_export(this->canvas, filename);
+    
   }
 }
-
 #endif
 
 

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.10 $
+//  $Author: rtv $
+//  $Revision: 1.11 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -28,11 +28,6 @@ CFixedObstacle::CFixedObstacle(CWorld *world, CEntity *parent)
   m_command_len = 0;
   m_config_len  = 0;
   m_reply_len  = 0;
-
-  // not a player device
-  m_player_port = 0; 
-  m_player_type = 0;
-  m_player_index = 0;
   
   m_stage_type = WallType;
   SetColor(WALL_COLOR);
@@ -44,16 +39,20 @@ CFixedObstacle::CFixedObstacle(CWorld *world, CEntity *parent)
   puck_return = false; // we trade velocities with pucks
  idar_return = IDARReflect;
 
-  this->filename = NULL;
-  this->scale = 0.0;
-  this->image = NULL;
+ this->crop_ax = -DBL_MAX;
+ this->crop_ay = -DBL_MAX;
+ this->crop_bx = +DBL_MAX;
+ this->crop_by = +DBL_MAX;
+ 
+ this->filename = NULL;
+ this->scale = 1.0 / m_world->ppm;
+ this->image = NULL;
 
 #ifdef INCLUDE_RTK2
   // We cant move fixed obstacles
   this->movemask = 0; 
 #endif
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Load the entity from the worldfile
@@ -134,6 +133,7 @@ bool CFixedObstacle::Startup()
 {
   if (!CEntity::Startup())
     return false;
+
   assert(this->image);
   
   // Copy image into matrix
@@ -184,10 +184,8 @@ bool CFixedObstacle::Startup()
   }
 #endif
 
-  // Done with the image; we can delete it now
-  delete this->image;
-  this->image = NULL;
-  
+  // new: don't delete the image so we can download it to clients - rtv
+
   return true;
 }
 

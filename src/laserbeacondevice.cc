@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.27 $
+//  $Author: rtv $
+//  $Revision: 1.28 $
 //
 // Usage:
 //  (empty)
@@ -44,7 +44,7 @@ CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
   m_config_len  = 1;
   m_reply_len  = 1;
 
-  m_player_type = PLAYER_LASERBEACON_CODE;
+  m_player.type = PLAYER_LASERBEACON_CODE;
   m_stage_type = LBDType;
   SetColor(LBD_COLOR);
   

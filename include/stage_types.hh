@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/stage_types.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.21 $
+//  $Author: rtv $
+//  $Revision: 1.22 $
 //
 // Usage:
 //  (empty)
@@ -30,6 +30,20 @@
 #include <stddef.h>
 #include <assert.h>
 #include <math.h>
+
+#include "messages.h" // get player's typedefs
+
+// CONSTANTS
+const int DEFAULT_POSE_PORT = 6601;
+
+// we usually use 1 or 2, so this should be plenty
+const int MAX_POSE_CONNECTIONS = 100; 
+
+// this is the root filename for stage devices
+// this is appended with the user name and instance number
+// so in practice you get something like /tmp/stageIO.vaughan.0
+// currently only the zero instance is supported in player
+#define IOFILENAME "/tmp/stageIO"
 
 ///////////////////////////////////////////////////////////////////////////
 // Some useful macros
@@ -102,11 +116,14 @@
                                      __FILE__, __FUNCTION__, a, b)
 #define PRINT_DEBUG3(m, a, b, c) printf("\rstage debug : %s %s\n  "m"\n", \
                                      __FILE__, __FUNCTION__, a, b, c)
+#define PRINT_DEBUG4(m, a, b, c, d) printf("\rstage debug : %s %s\n  "m"\n", \
+                                     __FILE__, __FUNCTION__, a, b, c, d)
 #else
 #define PRINT_DEBUG(m)
 #define PRINT_DEBUG1(m, a)
 #define PRINT_DEBUG2(m, a, b)
 #define PRINT_DEBUG3(m, a, b, c)
+#define PRINT_DEBUG3(m, a, b, c, d)
 #endif
 
 
@@ -116,7 +133,6 @@ typedef struct
 {
   unsigned short red, green, blue;
 } StageColor;
-
 
 // Shapes for entities
 enum StageShape
@@ -160,6 +176,7 @@ enum StageType
   MoteType,
   BpsType
 };
+
 
 
 // Possible laser return values

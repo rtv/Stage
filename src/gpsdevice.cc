@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gpsdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.9 $
+//  $Author: rtv $
+//  $Revision: 1.10 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -29,7 +29,7 @@ CGpsDevice::CGpsDevice(CWorld *world, CEntity *parent )
   m_config_len  = 1;
   m_reply_len  = 1;
 
-  m_player_type = PLAYER_GPS_CODE;
+  m_player.type = PLAYER_GPS_CODE;
   m_stage_type = GpsType;
 
   SetColor(GPS_COLOR);
@@ -68,7 +68,7 @@ void CGpsDevice::Update( double sim_time )
     if (m_parent_object)
     {
       m_parent_object->SetGlobalPose(px, py, pth);
-      m_parent_object->MakeDirty();
+      m_parent_object->SetDirty(1);
     }
     else
       SetGlobalPose(px, py, pth);

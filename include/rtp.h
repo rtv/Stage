@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/rtp.h,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -33,6 +33,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
+#include <stdio.h>
 
 /*
  * RTP packet header
@@ -61,6 +62,21 @@ typedef struct {
    //uint32_t csrc[1];          /* optional CSRC list */
 } rtp_hdr_t;
 
+
+// packet for RTP output
+typedef struct
+{
+  uint32_t id;
+  uint16_t major_type;
+  uint16_t minor_type;
+
+  double x, y, w, h; // meters 
+  double th; // radians
+
+  size_t len;
+
+} __attribute ((packed)) device_hdr_t;
+
 class CRTPPlayer
 {
  public:
@@ -69,8 +85,69 @@ class CRTPPlayer
   int sockfd;
 
   CRTPPlayer( uint32_t ip, uint16_t port );
+  CRTPPlayer( char* address );
   void SendData( uint8_t datatype, void *data, int len, uint32_t timestamp );
   void Test( void );
 };
+
+#include <string.h> // yuk - for memset in the inline methods
+
+class CDevice
+{
+public:
+
+  rtp_hdr_t rtp;
+  device_hdr_t dev;
+  char* data;
+  
+  CDevice( void )
+  {
+    // default constructor zeroes contents
+    memset( &dev, 0, sizeof(dev) );
+    memset( &rtp, 0, sizeof(rtp) );
+    data = 0;
+  }
+  
+  CDevice( rtp_hdr_t *rtpp, device_hdr_t *devp, char *datap )
+  {
+    assert( rtpp );
+    assert( devp );
+    assert( datap );
+    
+    memcpy( &rtp, rtpp, sizeof(rtp_hdr_t) );
+    memcpy( &dev, devp, sizeof(device_hdr_t) );
+    
+    //printf( "CDevice constructor: dev.len = %d\n", dev.len );
+
+    //static int a = 0;
+    if( dev.len > 0 )
+      {
+	data = new char[ dev.len ];
+	//memset( data, a++, dev.len );
+	memcpy( data, datap, dev.len );
+      }
+  }
+
+/*    // copy constructor */
+/*    CDevice( const CDevice &orig ) */
+/*      { */
+/*        assert( &orig.rtp ); */
+/*        assert( &orig.dev ); */
+       
+/*        memcpy( &rtp, &orig.rtp, sizeof(rtp_hdr_t) ); */
+/*        memcpy( &dev, &orig.dev, sizeof(device_hdr_t) ); */
+/*        memcpy( data, orig.data, orig.dev.len ); */
+/*      } */
+
+  ~CDevice( void )
+  {
+    //printf( "CDevice destructor: dev.len = %d data = %p\n", 
+    //    dev.len, data );
+
+    if( data !=0 ) delete[] data;
+  }
+  
+};
+
 
 #endif

@@ -11,7 +11,7 @@
 //  Modified by ahoward 24 May 2001 to make top bit 'sticky'.
 //  Once set, this bit can only be reset by 'clear'.
 //
-// $Id: image.hh,v 1.2 2001-09-04 23:01:12 vaughan Exp $
+// $Id: image.hh,v 1.3 2002-06-04 06:35:07 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -75,6 +75,15 @@ public:
 	  }
 	
 	inline	unsigned char *get_data(void)	{return data;}
+
+  inline int count_pixels( void )
+  {
+    int count = 0;
+    for( int p=0; p<width*height; p++ )
+      if( data[p] ) count++;
+    
+    return count;
+  }
 
 	void	copy_from(Nimage* img);
 

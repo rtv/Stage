@@ -22,14 +22,20 @@ extern int global_environment_port;
 
 typedef	struct sockaddr SA; // useful abbreviation
 
-enum MessageType { PosePacket, Continue, ContinueTime, Command };
+enum MessageType { PosePacket, TruthPacket , 
+		   Continue, ContinueTime, Command };
 
-
+// every message on the truth channel uses this header before the data packets
+// defined below 
 typedef struct
 {
   MessageType type;
-  uint32_t data;
-} __attribute ((packed)) stage_header_t;
+  // meaning of the data field varies with the message type:
+  // for XPackets types, this gives the number of packets to follow
+  // for Command types, gives the command number
+  // for Continue types, is not used.
+  uint32_t data;   
+} __attribute ((packed)) stage_truth_header_t;
 
 
 typedef struct
@@ -68,7 +74,7 @@ typedef struct
 
 
 // COMMANDS can be sent to Stage over the truth channel
-enum cmd_t { SAVEc = 1, LOADc, PAUSEc };
+enum cmd_t { SAVEc = 1, LOADc, PAUSEc, DOWNLOADc };
 
 #endif // _TRUTHSERVER_H
 

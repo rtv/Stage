@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.18 $
+//  $Author: rtv $
+//  $Revision: 1.19 $
 //
 // Usage:
 //  (empty)
@@ -40,7 +40,7 @@ CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent )
   m_config_len  = 1;
   m_reply_len  = 1;
   
-  m_player_type = PLAYER_SONAR_CODE; // from player's messages.h
+  m_player.type = PLAYER_SONAR_CODE; // from player's messages.h
   m_stage_type = SonarType;
   
   SetColor(SONAR_COLOR);
@@ -49,6 +49,8 @@ CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent )
   m_min_range = 0.20;
   m_max_range = 5.0;
     
+  size_x = size_y = 0.3;
+
   // Initialise the sonar poses
   //
   for (int i = 0; i < m_sonar_count; i++)
@@ -75,12 +77,6 @@ void CSonarDevice::Update( double sim_time )
   
   m_last_update = sim_time;
 
-  // Initialise gui data
-  //
-#ifdef INCLUDE_RTK
-  m_hit_count = 0;
-#endif
-  
   // Get configs  
   uint16_t cmd;
   void* client;
@@ -137,14 +133,13 @@ void CSonarDevice::Update( double sim_time )
       m_data.ranges[s] = htons(v);
 			      
        // Update the gui data
-      //
-#ifdef INCLUDE_RTK
-      m_hit[m_hit_count][0][0] = ox;
-      m_hit[m_hit_count][0][1] = oy;
-      m_hit[m_hit_count][1][0] = ox + range * cos(oth);
-      m_hit[m_hit_count][1][1] = oy + range * sin(oth);
-      m_hit_count++;
-#endif
+//        //
+//  #ifdef INCLUDE_RTK2
+//        hits[s][0][0] = ox;
+//        hits[s][0][1] = oy;
+//        hits[s][1][0] = ox + range * cos(oth);
+//        hits[s][1][1] = oy + range * sin(oth);
+//  #endif
       
     }
   
@@ -153,74 +148,26 @@ void CSonarDevice::Update( double sim_time )
   return;
 }
 
-
-#ifdef INCLUDE_RTK
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI update messages
-//
-void CSonarDevice::OnUiUpdate(RtkUiDrawData *pData)
-{
-    // Draw our children
-    //
-    CEntity::OnUiUpdate(pData);
-    
-    // Draw ourself
-    //
-    pData->begin_section("global", "sonar");
-    
-    if (pData->draw_layer("scan", true))
-    {
-      if(Subscribed())
-      {
-        DrawScan(pData);
-        // call Update(), because we may have stolen the truth_poked
-        Update(m_world->GetTime());
-      }
-    }
-    
-    pData->end_section();
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI mouse messages
-//
-void CSonarDevice::OnUiMouse(RtkUiMouseData *pData)
-{
-    CEntity::OnUiMouse(pData);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Draw the laser scan
-//
-void CSonarDevice::DrawScan(RtkUiDrawData *pData)
-{
-    #define SCAN_COLOR RTK_RGB(0, 255, 255)
-    
-    pData->set_color(SCAN_COLOR);
-
-    // Draw rays coming out of each sonar
-    //
-    for (int s = 0; s < m_sonar_count; s++)
-        pData->line(m_hit[s][0][0], m_hit[s][0][1], m_hit[s][1][0], m_hit[s][1][1]);
-}
-
-#endif
-
-
 ///////////////////////////////////////////////////////////////////////////
 // *** HACK -- this could be put in an array ahoward
 // Get the pose of the sonar
 //
+
+/* TODO */
+/*these are the offsets of each sonar sensor from the Pioneer 2's center
+   in meters - first array is x, second is y */
+/* const double player_sonar_offsets[PLAYER_NUM_SONAR_SAMPLES][2] = { 
+ {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 }, 
+ {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 } 
+};
+*/
 void CSonarDevice::GetSonarPose(int s, double &px, double &py, double &pth)
 {
     double xx = 0;
     double yy = 0;
     double a = 0;
     double angle, tangle;
-    
+        
 	  switch( s )
 	    {
 #ifdef PIONEER1
@@ -325,4 +272,77 @@ void CSonarDevice::GetSonarPose(int s, double &px, double &py, double &pth)
       py = -yy;
       pth = -angle;
 }
+
+#ifdef INCLUDE_RTK2
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise the rtk gui
+void CSonarDevice::RtkStartup()
+{
+  CEntity::RtkStartup();
+  
+  // Create a figure representing this object
+  this->scan_fig = rtk_fig_create(m_world->canvas, NULL, 49);
+
+  // Set the color -  blue
+  double r = 0.6;
+  double g = 1.0;
+  double b = 0.6;
+  rtk_fig_color(this->scan_fig, r, g, b);
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Finalise the rtk gui
+void CSonarDevice::RtkShutdown()
+{
+  // Clean up the figure we created
+  rtk_fig_destroy(this->scan_fig);
+
+  CEntity::RtkShutdown();
+} 
+
+
+///////////////////////////////////////////////////////////////////////////
+// Update the rtk gui
+void CSonarDevice::RtkUpdate()
+{
+  CEntity::RtkUpdate();
+   
+  // Get global pose
+  double gx, gy, gth;
+  GetGlobalPose(gx, gy, gth);
+
+  rtk_fig_clear(this->scan_fig);
+
+  // see the comment in CLaserDevice for why this gets the data out of
+  // the buffer instead of storing hit points in ::Update() - RTV
+  player_sonar_data_t data;
+  
+  if( Subscribed() )
+    {
+      if( GetData( &data, sizeof(data)) == sizeof(data) )
+	for( int l=0; l < PLAYER_NUM_SONAR_SAMPLES; l++ )
+	  {
+	    double xoffset, yoffset, angle;
+	    GetSonarPose( l, xoffset, yoffset, angle );
+	    
+	    double range = (double)ntohs(data.ranges[l]);
+	    
+	    angle += gth;
+	    
+	    double x1 = gx + xoffset * cos(gth) - yoffset * sin(gth);
+	    double y1 = gy + xoffset * sin(gth) + yoffset * cos(gth);
+	    
+	    double x2 = x1 + range/1000.0 * cos( angle ); 
+	    double y2 = y1 + range/1000.0 * sin( angle );       
+	    
+	    rtk_fig_line(this->scan_fig, x1, y1, x2, y2 );
+	  }
+      else
+	PRINT_WARN( "GET DATA RETURNED WRONG AMOUNT" );
+    }  
+}
+
+#endif
 

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.20 $
+//  $Author: rtv $
+//  $Revision: 1.21 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -38,18 +38,7 @@
 CLaserBeacon::CLaserBeacon(CWorld *world, CEntity *parent)
         : CEntity(world, parent)
 {
-  // set the Player IO sizes correctly for this type of Entity
-  m_data_len    = 0;
-  m_command_len = 0;
-  m_config_len  = 0;
-  m_reply_len  = 0;
-
-  // This is not a player device
-  m_player_port = 0; 
-  m_player_index = 0;
-  m_player_type = 0;
-
-  // Set default shape and geometry
+   // Set default shape and geometry
   this->shape = ShapeRect;
   this->size_x = 0.05; 
   this->size_y = 0.3;     
@@ -76,13 +65,8 @@ bool CLaserBeacon::Load(CWorldFile *worldfile, int section)
   this->id = worldfile->ReadInt(section, "id", 0);
 
   // Use the beacon id as a name if there is none
-  // This will leak memory, but I dont really care.
-  if (!this->name || strlen(this->name) == 0)
-  {
-    char *name = (char*) malloc(64);
-    snprintf(name, 64, "id %d", this->id);
-    this->name = name;
-  }
+  if ( strlen(this->name) == 0)
+    snprintf( this->name, 64, "id %d", this->id);
   
   return true;
 }

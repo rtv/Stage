@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.11 2001-12-31 17:21:27 inspectorg Exp $
+ * $Id: matrix.cc,v 1.12 2002-06-04 06:35:07 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -21,14 +21,14 @@ const int BUFFER_ALLOC_SIZE = 1;
 CMatrix::CMatrix(int w, int h, int default_buf_size)
 {
   width = w; height = h;
-  data 	= new CEntity**[width*height];
-  used_slots = new unsigned char[ width*height ];
-  available_slots = new unsigned char[ width*height ];
+  assert( data 	= new CEntity**[width*height] );
+  assert( used_slots = new unsigned char[ width*height ] );
+  assert( available_slots = new unsigned char[ width*height ] );
 
   for( int p=0; p< width * height; p++ )
   {
     // create the pointer "strings"
-    data[p] = new CEntity*[ default_buf_size + 1];
+    assert( data[p] = new CEntity*[ default_buf_size + 1] );
     // zero them out
     memset( data[p], 0, (default_buf_size + 1) * sizeof( CEntity* ) );
 

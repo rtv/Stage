@@ -1,6 +1,6 @@
 
 # Desc: World containing one instance of everything
-# CVS: $Id: everything.world,v 1.4 2002-03-15 02:52:16 rtv Exp $
+# CVS: $Id: everything.world,v 1.5 2002-06-04 06:35:06 rtv Exp $
 
 
 
@@ -27,6 +27,10 @@ begin laser_beacon
   pose (3.420 3.240 0.000) 
 end 
 
+begin puck
+  pose (2.0 2.0 0.0)
+end
+
 begin position_device
   name atom 
   port 6665 
@@ -39,6 +43,10 @@ begin position_device
     begin lbd_device
     end 
   end 
+  begin sonar_device
+  end 
+  begin gripper_device
+  end
 end 
 
 begin omni_position_device

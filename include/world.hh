@@ -3,12 +3,14 @@
 // File: world.hh
 // Author: Richard Vaughan, Andrew Howard
 // Date: 28 Nov 2000
-// Desc: top level class that contains everything
+// 
+// Desc: top-level class contains the matrix world model, the devices,
+// and a server
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: inspectorg $
-//  $Revision: 1.49 $
+//  $Author: rtv $
+//  $Revision: 1.50 $
 //
 // Usage:
 //  (empty)
@@ -40,7 +42,6 @@
 #include "messages.h" //from player
 #include "image.hh"
 #include "entity.hh"
-#include "truthserver.hh"
 #include "playercommon.h"
 #include "matrix.hh"
 #include "worldfile.hh"
@@ -73,19 +74,26 @@ class CWorld
   public: 
   
   // Default constructor
-  CWorld();
+  CWorld( int argc, char** argv );
   
   // Destructor
   virtual ~CWorld();
   
   // the main world-model data structure
   public: CMatrix *matrix;
-
-  // Name of worldfile
-  private: const char *worldfilename;
   
-  // Object encapsulating world description file
-  private: CWorldFile worldfile;
+  // the locks file descriptor
+  public: int m_locks_fd;
+
+public: char m_device_dir[PATH_MAX]; //device  directory name 
+  
+  // this should really be in the CStageServer, but the update is tricky there
+  // so i'll leave it here for now - RTV
+  // export the time in this buffer
+protected: stage_clock_t* m_clock; // a timeval and lock
+
+private:
+  // CStageIO* m_io; // a client or server object
 
   // Properties of the underlying matrix representation
   // for the world.
@@ -93,7 +101,7 @@ class CWorld
   public: double ppm;
 
   // Entity representing the fixed environment
-  private: CEntity *wall;
+  protected: CEntity *wall;
   
   public:
   // timing
@@ -104,14 +112,11 @@ class CWorld
 
   uint32_t m_step_num; // the number of cycles executed, from 0
 
-  // Thread control
-  private: pthread_t m_thread;
-
   // when to shutdown (in seconds)
   private: int m_stoptime;
   
   // Enable flag -- world only updates while this is set
-  private: bool m_enable;
+  protected: bool m_enable;
   
   // the hostname of this computer
   public: char m_hostname[ HOSTNAME_SIZE ];
@@ -120,35 +125,6 @@ class CWorld
   // the IP address of this computer
 public: struct in_addr m_hostaddr;
 
-  // pose server stuff ---------------------------------------------
-  private:
-  
-  // data for the server-server's listening socket
-  struct pollfd m_env_listen;
-
-  // data for the server-server's listening socket
-  struct pollfd m_pose_listen;
-  // data for each pose connection
-  struct pollfd m_pose_connections[ MAX_POSE_CONNECTIONS ];
-  // more data for each pose connection
-  //int m_connection_continue[ MAX_POSE_CONNECTIONS ];
-  
-  // the number of pose connections
-  int m_pose_connection_count;
-  // the number of synchronous pose connections
-  int m_sync_counter; 
-  // record the type of each connection (sync/async) 
-  char m_conn_type[ MAX_POSE_CONNECTIONS ];
-
-  void ListenForEnvConnections( void );
-  void SetupEnvServer( void );
-  void EnvWriter( int connfd );
-
-  void ListenForPoseConnections( void );
-  void SetupPoseServer( void );
-  void DestroyConnection( int con );
-
-  void PoseRead( void );
   
   void Output( double loop_duration, double sleep_duration );
   void LogOutputHeader( void );
@@ -166,16 +142,6 @@ public: struct in_addr m_hostaddr;
                       double avg_data );
     
   void StartTimer(double interval);
-  bool ReadHeader( stage_header_t *hdr, int con );
-  void PoseWrite();
-  void ReadPosePacket( uint32_t num_poses, int con ); 
-  void InputPose( stage_pose_t &pose, int connection );
-  void PrintPose( stage_pose_t &pose );
-  void PrintSendBuffer( char* send_buf, size_t len );
-  
-  void PrintTruth( stage_truth_t &truth );
-  void HandlePoseConnections( void );
-  
 
   //-----------------------------------------------------------------------
   // Timing
@@ -205,6 +171,36 @@ public: struct in_addr m_hostaddr;
   private: int m_object_count;
   private: int m_object_alloc;
   private: CEntity **m_object;
+  
+public: CEntity** Objects( void ){ return m_object; };
+
+protected: int CountDirtyOnConnection( int con );
+
+public: void DirtyObjects( void )
+  {
+    for( int i=0; i<m_object_count; i++ )
+      m_object[i]->SetDirty( 1 );
+  }
+
+public: void CleanObjects( void )
+  {
+    for( int i=0; i<m_object_count; i++ )
+      m_object[i]->SetDirty( 0 );
+  }
+
+  // dirty all objects for a particulat connection
+public: void DirtyObjects( int con )
+  {
+    for( int i=0; i<m_object_count; i++ )
+      m_object[i]->SetDirty( con, 1 );
+  }
+
+  // clan all objects for a particulat connection
+public: void CleanObjects( int con )
+  {
+    for( int i=0; i<m_object_count; i++ )
+      m_object[i]->SetDirty( con, 0 );
+  }
 
   // Authentication key
   public: char m_auth_key[PLAYER_KEYLEN];
@@ -213,65 +209,43 @@ public: struct in_addr m_hostaddr;
   // identifies this instance uniquely
   int m_instance;
 
-  // The PID of the one player instances
-  private: pid_t player_pid;
-
 
   ///////////////////////////////////////////////////////////////////////////
   // Configuration variables
 
   // flags that control servers
-public: bool m_env_server_ready;
-private: bool m_run_environment_server;
-private: bool m_run_pose_server;
-private: bool m_run_player;
+  //public: bool m_env_server_ready;
+  //private: bool m_run_environment_server;
+  //private: bool m_run_pose_server;
   
-  private: bool m_external_sync_required;
+  protected: bool m_external_sync_required;
 public: bool m_send_idar_packets;
 
   // flag that controls spawning of xs
   private: bool m_run_xs;
   
   // the pose server port
-  public: int m_pose_port;
-
-  // the environment server port
-  public: int m_env_port;
+  //public: int m_server_port;
 
   public: bool ParseCmdline( int argv, char* argv[] );
-  // Load the world
-  public:  bool Load(const char *filename);
-  public:  bool Load(){ return Load(worldfilename); };
-  
+
   // Save the world
-  //
-  public: bool Save(const char *filename);
-  public: bool Save() {return Save(worldfilename);};
+  public: virtual bool Save( void );
 
   
   //////////////////////////////////////////////////////////////////////
   // main methods
   
   // Initialise the world
-  public: bool Startup();
+  public: virtual bool Startup();
   
   // Shutdown the world
-  public: void Shutdown();
+  public: virtual void Shutdown();
 
-  // Start the one player instance
-  private: bool StartupPlayer( void );
-
-  // Stop the one player instance
-  private: void ShutdownPlayer( void );
-
-  // attempt to spawn an XS process
-  private: void SpawnXS( void );
   
-  // main update loop
-  public: void Main( void );
 
   // Update everything
-  private: void Update();
+  public: virtual void Update();
 
   // Add an object to the world
   public: void AddObject(CEntity *object);
@@ -303,51 +277,6 @@ public: bool m_send_idar_packets;
                          CEntity* ent, bool add );
   
   
-  ////////////////////////////////////////////////////////////////
-  // shared memory management for interfacing with Player
-
-  public: char m_device_dir[PATH_MAX]; //device  directory name 
-
-  private: char clockName[PATH_MAX]; // path of mmap node in filesystem
-  public: char* ClockFilename( void ){ return clockName; };
-  public: char* DeviceDirectory( void ){ return m_device_dir; };
-  
-  private: bool CreateClockDevice( void );
-
-  // export the time in this buffer
-  public: stage_clock_t* m_clock; // a timeval and lock
-
-
-  //////////////////////////////////////////////////////////////////////
-  // RECORD LOCKING 
-  // device IO is protected by record locking a single byte of this
-  // file for each entity
-
-  // the filename of the lock file
-  private: char m_locks_name[PATH_MAX];
-
-  // the locks file descriptor
-  public: int m_locks_fd;
-
-  // creates the file m_device_dir/devices.lock,  m_object_count bytes long
-  // stores the filename in m_locks_name and the fd in m_locks_fd
-   private: bool CreateLockFile( void );
- 
-  //////////////////////////////////////////////////////////////////
-  // WHEN LINUX SUPPORTS PROCESS-SHARED SEMAPHORES WE'LL USE THEM AND
-  // SCRUB THE RECORD LOCKING - this code will make it happen...
-
-  // Create a single semaphore to sync access to the shared memory segments
-  //private: bool CreateShmemLock();
-
-  // Get a pointer to shared mem area
-  //public: void* GetShmem() {return playerIO;};
-    
-  // lock the shared mem area
-  //public: bool LockShmem( void );
-
-  // Unlock the shared mem area
-  //public: void UnlockShmem( void );
 
   ////////////////////////////////////////////////////////////////////////
   // utility methods
@@ -361,8 +290,10 @@ public: bool m_send_idar_packets;
 
   public: CEntity* GetEntityByID( int port, int type, int index );
   
-private: CEntity* CreateObject(const char *type, CEntity *parent );
-
+  // objects can be created by type number or by string description
+public: CEntity* CreateObject(const char *type, CEntity *parent );
+public: CEntity* CreateObject( StageType type, CEntity *parent );
+  
   /////////////////////////////////////////////////////////////////////////////
   // access methods
   
@@ -430,19 +361,20 @@ private: CEntity* CreateObject(const char *type, CEntity *parent );
 
 #ifdef INCLUDE_RTK2
   // Initialise the GUI
-  private: bool LoadGUI(CWorldFile *worldfile);
-
+public: bool LoadGUI(CWorldFile *worldfile);
+public: bool LoadGUI(); // uses defaults for everything
+  
   // Save the GUI
   private: bool SaveGUI(CWorldFile *worldfile);
   
   // Start the GUI
-  private: bool StartupGUI();
+  public: bool StartupGUI();
 
   // Stop the GUI
-  private: void ShutdownGUI();
+  public: void ShutdownGUI();
 
   // Update the GUI
-  private: void UpdateGUI();
+  public: void UpdateGUI();
 
   // Basic GUI elements
   public: rtk_app_t *app;

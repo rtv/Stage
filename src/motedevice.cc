@@ -26,7 +26,7 @@ CMoteDevice::CMoteDevice(CWorld *world, CEntity *parent )
   m_config_len  = 1;
   m_reply_len  = 1;
   
-  m_player_type = PLAYER_MOTE_CODE;
+  m_player.type = PLAYER_MOTE_CODE;
   m_stage_type = MoteType;
 
 

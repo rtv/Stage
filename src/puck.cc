@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.23 $
+//  $Author: rtv $
+//  $Revision: 1.24 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -47,10 +47,6 @@ CPuck::CPuck(CWorld *world, CEntity *parent)
   exp.width = this->size_x;
   exp.height = this->size_y;
   strcpy( exp.label, "Puck" );
-
-  m_player_port = 0; // not a player device
-  m_player_type = 0;
-  m_player_index = 0;
 }
 
 
@@ -190,6 +186,7 @@ void CPuck::Move()
     double qx = px + step_time * vx;
     double qy = py + step_time * vy;
     double qth = pth;
+    // set pose now takes care of marking us dirty to clients
     SetGlobalPose( qx, qy, qth );
 
     // compute a new velocity, based on "friction"
@@ -197,10 +194,6 @@ void CPuck::Move()
     vx = vr * cos(pth);
     vy = vr * sin(pth);
     SetGlobalVel( vx, vy, vth);
-
-    // if we moved, we mark ourselves dirty
-    if( (px!=qx) || (py!=qy) || (pth!=qth) )
-      MakeDirtyIfPixelChanged();
   }    
 }
 

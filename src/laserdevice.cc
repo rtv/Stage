@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.47 $
+//  $Author: rtv $
+//  $Revision: 1.48 $
 //
 // Usage:
 //  (empty)
@@ -51,7 +51,7 @@ CLaserDevice::CLaserDevice(CWorld *world,
   m_config_len  = 1;
   m_reply_len  = 1;
   
-  m_player_type = PLAYER_LASER_CODE; // from player's messages.h
+  m_player.type = PLAYER_LASER_CODE; // from player's messages.h
   m_stage_type = LaserTurretType;
 
   SetColor(LASER_COLOR);
@@ -82,7 +82,6 @@ CLaserDevice::CLaserDevice(CWorld *world,
   
 #ifdef INCLUDE_RTK2
   this->scan_fig = NULL;
-  this->hit_count = 0;
 #endif
 
 }
@@ -126,38 +125,46 @@ void CLaserDevice::Update( double sim_time )
     
   // if we've moved
   ReMap(x, y, th);
-    
+  
   // UPDATE OUR SENSOR DATA
 
   // Check to see if it's time to update the laser scan
   double interval = this->scan_count / this->scan_rate;
+
   if( sim_time - m_last_update > interval )
   {
     m_last_update = sim_time;
 	
-    if( Subscribed() )
-    {
-      // Check to see if the configuration has changed
-      CheckConfig();
-
-      // Generate new scan data and copy to data buffer
-      player_laser_data_t scan_data;
-      GenerateScanData( &scan_data );
-      PutData( &scan_data, sizeof( scan_data) );
-    }
+    if( Subscribed() > 0 )
+      {
+	// Check to see if the configuration has changed
+	CheckConfig();
+	
+	// Generate new scan data and copy to data buffer
+	player_laser_data_t scan_data;
+	GenerateScanData( &scan_data );
+	PutData( &scan_data, sizeof( scan_data) );
+	
+	// we may need to tell clients about this data
+	SetDirty( PropData, 1 );
+      }
     else
-    {
-      // If not subscribed,
-      // reset configuration to default.
-      this->scan_res = DTOR(DEFAULT_RES);
-      this->scan_min = DTOR(DEFAULT_MIN);
-      this->scan_max = DTOR(DEFAULT_MAX);
-      this->scan_count = 361;
-      this->intensity = false;
-
-      // empty the laser beacon list
-      m_visible_beacons.clear();
-    }
+      {
+	// reset configuration to default.
+	this->scan_res = DTOR(DEFAULT_RES);
+	this->scan_min = DTOR(DEFAULT_MIN);
+	this->scan_max = DTOR(DEFAULT_MAX);
+	this->scan_count = 361;
+	this->intensity = false;
+	
+	// and indicate that the data is no longer available
+	//Lock();
+	//m_info_io->data_avail = 0;
+	//Unlock();
+	
+	// empty the laser beacon list
+	m_visible_beacons.clear();
+      }
   }
 }
 
@@ -262,11 +269,6 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
   // We will interpolate <skip> out of <skip+1> readings.
   int skip = (int) (this->min_res / this->scan_res - 0.5);
 
-#ifdef INCLUDE_RTK2
-  // Initialise gui data
-  this->hit_count = 0;
-#endif
-
   // initialise our beacon detecting array
   m_visible_beacons.clear(); 
 
@@ -330,14 +332,6 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
     // Skip some values to save time
     for (int i = 0; i < skip && s < this->scan_count; i++)
       data->ranges[s++] = htons(v);
-	
-#ifdef INCLUDE_RTK2
-    // Update the gui data
-    // Show laser just a bit short of objects
-    this->hit[this->hit_count][0] = ox + (range - 0.1) * cos(pth);
-    this->hit[this->hit_count][1] = oy + (range - 0.1) * sin(pth);
-    this->hit_count++;
-#endif
   }
 
   // remove all duplicates from the beacon list
@@ -357,6 +351,12 @@ void CLaserDevice::RtkStartup()
   
   // Create a figure representing this object
   this->scan_fig = rtk_fig_create(m_world->canvas, NULL, 49);
+
+  // Set the color - pale blue
+  double r = 0.8;
+  double g = 0.8;
+  double b = 1.0;
+  rtk_fig_color(this->scan_fig, r, g, b);
 }
 
 
@@ -376,47 +376,72 @@ void CLaserDevice::RtkShutdown()
 void CLaserDevice::RtkUpdate()
 {
   CEntity::RtkUpdate();
-  
+ 
   // Get global pose
   double gx, gy, gth;
   GetGlobalPose(gx, gy, gth);
 
-  int style = 1;
+  int style = 0;
 
   rtk_fig_clear(this->scan_fig);
-  
-  // Draw the scan outline
-  if (style == 0)
-  {
-    double qx, qy;
-    qx = gx;
-    qy = gy;
-    
-    for (int i = 0; i < this->hit_count; i++)
-    {
-      double px = this->hit[i][0];
-      double py = this->hit[i][1];
-      rtk_fig_line(this->scan_fig, qx, qy, px, py);
-      qx = px;
-      qy = py;
-    }
-    rtk_fig_line(this->scan_fig, qx, qy, gx, gy);
-  }
 
-  // Draw the dense scan coverage
-  else
-  {
-    for (int i = 0; i < this->hit_count; i++)
-    {
-      double px = this->hit[i][0];
-      double py = this->hit[i][1];
-      rtk_fig_line(this->scan_fig, gx, gy, px, py);
-    }
-  }
+  // draw a figure from the data in the data buffer
+  // we might have put it there ourselves, or another stage
+  // might have generated it
+
+  // this is a good way to see the _real_ output of Stage, rather than
+  // some intermediate values. also it allows us to view data that was
+  // generated elsewhere, without this Stage being subscribed to a
+  // device.  so even though it does use a few more flops.  i think
+  // it's the Right Thing to do - RTV.
+
+  gth -= M_PI / 2.0;
+
+  player_laser_data_t data;
+
+  // if a client is subscribed to this device
+  if( Subscribed() )
+    // attempt to get the right size chunk of data from the mmapped buffer
+    if( GetData( &data, sizeof(data) ) == sizeof(data) )
+      { 
+	// we got it, so parse out the data and display it
+	//puts( "found some nice data avail!!!!!!!!!!!!!!" );
+	
+	short min_ang_deg = ntohs(data.min_angle);
+	short max_ang_deg = ntohs(data.max_angle);
+	unsigned short samples = ntohs(data.range_count); 
+	
+	double min_ang_rad = DTOR( (double)min_ang_deg ) / 100.0;
+	double max_ang_rad = DTOR( (double)max_ang_deg ) / 100.0;
+	
+	double incr = (double)(max_ang_rad - min_ang_rad) / (double)samples;
+	
+	//printf( "laser samples=%d start=%.2f stop=%.2f incr=%.2f\n",
+	//     samples, min_ang_rad, max_ang_rad, incr );
+	
+	for( int i=0; i < (int)samples; i++ )
+	  {
+	    // get range, converting from mm to m
+	    unsigned short range_mm = ntohs(data.ranges[i]);
+	    double range_m = (double)range_mm / 1000.0;
+	    
+	    double bearing = gth + i * incr;
+	    
+	    double px = gx + range_m * cos(bearing);
+	    double py = gy + range_m * sin(bearing);
+	    
+	    //printf( "laser sample %d\n", i );
+	    //printf( "laser range = %.2f   bearing %.2f\n", 
+	    //	  range, bearing );
+	    //printf( "laser px = %.2f   py = %.2\n",
+	    //	  px, py );
+	    
+	    rtk_fig_line(this->scan_fig, gx, gy, px, py);
+	  }
+      }
+  //else
+  //  puts( "subscribed but no data avail!!!!!!!!!!!!!!" );
 }
 
 #endif
-
-
-
 

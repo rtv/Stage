@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/omnipositiondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.9 $
+//  $Author: rtv $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -44,7 +44,7 @@ COmniPositionDevice::COmniPositionDevice(CWorld *world, CEntity *parent)
   m_config_len = 0;
   m_reply_len = 0;
   
-  m_player_type = PLAYER_POSITION_CODE;
+  m_player.type = PLAYER_POSITION_CODE;
   m_stage_type = OmniPositionType;
 
   // set up our sensor response
@@ -142,13 +142,10 @@ void COmniPositionDevice::Move()
   }
   else
   {
+    // set pose now takes care of marking us dirty
     SetPose(qx, qy, qa);
     SetGlobalVel(vx, vy, va);
         
-    // if we moved, we mark ourselves dirty
-    if( (px!=qx) || (py!=qy) || (pa!=qa) )
-      MakeDirtyIfPixelChanged();
-
     // Compute the new odometric pose
     // Uses a zero-th order approximation
     this->odo_px += step * vx * cos(pa) - step * vy * sin(pa);

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
-//  $Author: inspectorg $
-//  $Revision: 1.21 $
+//  $Author: rtv $
+//  $Revision: 1.22 $
 
 //
 // Usage:
@@ -85,35 +85,8 @@ class CLaserDevice : public CEntity
   // For drawing the laser scan
   private: rtk_fig_t *scan_fig;
 
-  // Laser scan outline
-  private: int hit_count;
-  private: double hit[512][2];
 #endif
   
-#ifdef INCLUDE_RTK
-    
-  // Process GUI update messages
-  //
-  public: virtual void OnUiUpdate(RtkUiDrawData *data);
-
-  // Process GUI mouse messages
-  //
-  public: virtual void OnUiMouse(RtkUiMouseData *data);
-
-  // Draw the laser turret
-  //
-  private: void DrawTurret(RtkUiDrawData *data);
-
-  // Draw the laser scan
-  //
-  private: void DrawScan(RtkUiDrawData *data, int style);
-
-  // Laser scan outline
-  //
-  private: int hit_count;
-  private: double hit[512][2];
-    
-#endif    
 };
 
 #endif
