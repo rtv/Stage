@@ -52,11 +52,11 @@ void sc_destroy( sc_t* client );
 typedef struct
 {
   int id_client; // client-side id
-
   stg_id_t id_server; // server-side id
-  
-  stg_token_t* token;
-  GHashTable* props;
+  stg_token_t* token;  
+  double ppm;
+  double interval_sim;
+  double interval_real;
   
   int section; // worldfile index
   
@@ -82,7 +82,8 @@ typedef struct _sc_model
 } sc_model_t;
 
 // add a new world to a client, based on a token
-sc_world_t* sc_world_create( stg_token_t* token );
+sc_world_t* sc_world_create( stg_token_t* token,
+			     double ppm, double interval_sim, double interval_real  );
 void sc_world_destroy( sc_world_t* world );
 int sc_world_pull( sc_t* cli, sc_world_t* world );
 void sc_world_addmodel( sc_world_t* world, sc_model_t* model );

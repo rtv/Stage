@@ -16,21 +16,17 @@ typedef struct _stg_world
    
    stg_matrix_t* matrix;
 
-   //char name[STG_TOKEN_MAX];
-
    char* token;
 
    stg_server_t* server;
 
    stg_time_t sim_time; // the current time in this world
-
    stg_time_t sim_interval; // this much simulated time elapses each step.
    
    double wall_interval; // real-time interval between updates -
 			      // set this to zero for 'as fast as possible'
    stg_time_t wall_last_update; // the wall-clock time of the last update
 
-   stg_size_t size; // retangular size of the world
    double ppm; // the resolution of the world model in pixels per meter
 
  } stg_world_t;

@@ -275,9 +275,16 @@ int main( int argc, char* argv[] )
   
   char* world_name = worldfile->ReadString(0, "name", "Player world" );
 
+  double resolution = worldfile->ReadFloat(0, "resolution", 0.02 ); // 2cm default
+  resolution = 1.0 / resolution; // invert res to ppm
+
+  double interval_real = worldfile->ReadFloat(0, "interval_real", 0.1 );
+  double interval_sim = worldfile->ReadFloat(0, "interval_sim", 0.1 );
+
   // create a single world
   sc_world_t* world = 
-    sc_world_create( stg_token_create( world_name, STG_T_NUM, 99 ) );
+    sc_world_create( stg_token_create( world_name, STG_T_NUM, 99 ),
+		     resolution, interval_sim, interval_real );
   
   sc_addworld( client, world );
   
@@ -292,6 +299,7 @@ int main( int argc, char* argv[] )
   sz.y = worldfile->ReadTupleLength(0, "size", 1, 10.0 );
   sc_model_prop_with_data( root, STG_PROP_SIZE, &sz, sizeof(sz) );
 
+
   stg_pose_t pose;
   pose.x = sz.x/2.0;
   pose.y = sz.y/2.0;
@@ -301,10 +309,9 @@ int main( int argc, char* argv[] )
   stg_movemask_t mm = 0;
   sc_model_prop_with_data( root, STG_PROP_MOVEMASK, &mm, sizeof(mm) ); 
   
-  const char* colorstr = worldfile->ReadString(root, "color", "black" );
+  const char* colorstr = worldfile->ReadString(0, "color", "black" );
   stg_color_t color = stg_lookup_color( colorstr );
   sc_model_prop_with_data( root, STG_PROP_COLOR, &color,sizeof(color));
-  
   
   const char* bitmapfile = worldfile->ReadString(0, "bitmap", NULL );
   if( bitmapfile )

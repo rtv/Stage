@@ -106,8 +106,8 @@ gui_window_t* gui_window_create( stg_world_t* world, int xdim, int ydim )
   double origin_x = 0.0;
   double origin_y = 0.0;
   double origin_a = 0.0;
-  double width = world->size.x;
-  double height = world->size.y;
+  double width = 10;//world->size.x;
+  double height = 10;//world->size.y;
 
   // draw the axis origin lines
   //rtk_fig_color_rgb32( win->grid, stg_lookup_color(STG_GRID_AXIS_COLOR) );  

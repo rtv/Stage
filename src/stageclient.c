@@ -253,13 +253,18 @@ int sc_model_unsubscribe( sc_t* cli, sc_model_t* mod, int prop )
 }
 
 
-sc_world_t* sc_world_create( stg_token_t* token )
+sc_world_t* sc_world_create( stg_token_t* token, 
+			     double ppm, double interval_sim, double interval_real )
 {
   sc_world_t* w = calloc( sizeof(sc_world_t), 1 );
   w->id_client = static_next_id++;
   w->token = token;
   
-  w->props = g_hash_table_new( g_int_hash, g_int_equal );
+  w->interval_sim = interval_sim;
+  w->interval_real = interval_real;
+  w->ppm = ppm;
+
+  //w->props = g_hash_table_new( g_int_hash, g_int_equal );
   w->models_id = g_hash_table_new( g_int_hash, g_int_equal );
   w->models_id_server = g_hash_table_new( g_int_hash, g_int_equal );
   w->models_name = g_hash_table_new( g_str_hash, g_str_equal );
@@ -454,8 +459,8 @@ stg_id_t stg_world_new(  sc_t* cli, char* token,
   wmsg.ppm = ppm;
   wmsg.interval_sim = interval_sim;
   wmsg.interval_real = interval_real;
-  wmsg.size.x = width;
-  wmsg.size.y = height;
+  //wmsg.size.x = 0;//width;
+  //wmsg.size.y = 0;//height;
 
   strncpy( wmsg.token, token, STG_TOKEN_MAX );
   
@@ -525,7 +530,10 @@ void sc_world_push( sc_t* cli, sc_world_t* world )
   printf( "pushing world \"%s\"\n", world->token->token );
   
   world->id_server = stg_world_new( cli, world->token->token, 
-				    10.0, 10.0, 50, 0.1, 0.1 );
+				    10, 10, 
+				    world->ppm,
+				    world->interval_sim,
+				    world->interval_real );
   
   // upload all the models in this world
   g_hash_table_foreach( world->models_id, sc_model_push_cb, cli );

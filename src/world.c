@@ -26,7 +26,7 @@ stg_world_t* world_create( stg_server_t* server, stg_id_t id, stg_createworld_t*
   world->wall_interval = cw->interval_real;  
   world->wall_last_update = stg_timenow();
   
-  memcpy( &world->size, &cw->size, sizeof(world->size) );
+  //memcpy( &world->size, &cw->size, sizeof(world->size) );
 
   world->ppm = cw->ppm;
   

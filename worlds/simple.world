@@ -1,14 +1,11 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: simple.world,v 1.23 2004-04-23 19:46:56 rtv Exp $
+# CVS: $Id: simple.world,v 1.24 2004-04-24 01:21:28 rtv Exp $
 
 # the resolution of Stage's raytrace model in meters
 #
 
 include "pioneer.inc"
-
-
-
 
 
 
@@ -20,10 +17,14 @@ include "pioneer.inc"
 #bitmap "worlds/autolab.png"
 
 
-size [10 10]
+
+resolution 0.02  # meters per pixel
+interval_sim 0.1  # seconds per update step
+interval_real 0.1 # real-time seconds per update step
 
 # load a bitmapped environment from a file
 bitmap "worlds/cave.png" 
+size [10 10]
 
 
   # GUI settings
@@ -37,7 +38,6 @@ bitmap "worlds/cave.png"
 
 
   #file "cave.pnm.gz" 
-  #resolution 0.02
 
 
 
@@ -56,9 +56,9 @@ bitmap "worlds/cave.png"
     color "blue"
   )
 
-pioneer2dx( name "r0" pose [5.512 1.174 6162.224] velocity [ 0.2 0.02 5 ] )
-pioneer2dx( name "r1" pose [0.428 1.822 -20.084] )
-pioneer2dx( name "r2" pose [2.753 9.553 -71.250] )
+pioneer2dx( name "r0" pose [8.031 7.187 6733.655] velocity [ 0.2 0.02 5 ] )
+pioneer2dx( name "r1" pose [1.497 5.232 -20.084] )
+pioneer2dx( name "r2" pose [2.586 8.947 -71.250] )
 #pioneer2dx( name "r3" pose [1.449 3.189 -20.084] )
 #pioneer2dx( name "r4" pose [1.449 3.189 -20.084] )
 #pioneer2dx( name "r5" pose [1.449 3.189 -20.084] )

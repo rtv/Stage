@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.28 2004-04-23 06:58:53 rtv Exp $
+ * CVS: $Id: stage.h,v 1.29 2004-04-24 01:21:28 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -225,7 +225,7 @@ typedef struct
   stg_time_t interval_sim;
   stg_time_t interval_real;
   int ppm;
-  stg_size_t size;
+  //stg_size_t size;
 } stg_createworld_t;
 
 typedef struct
