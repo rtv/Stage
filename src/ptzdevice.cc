@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.13 $
+//  $Revision: 1.4.2.14 $
 //
 // Usage:
 //  (empty)
@@ -99,36 +99,40 @@ void CPtzDevice::Update()
     // Get the command string
     //
     player_ptz_cmd_t cmd;
-    if (GetCommand(&cmd, sizeof(cmd)) != sizeof(cmd))
+    int len = GetCommand(&cmd, sizeof(cmd));
+    if (len > 0 && len != sizeof(cmd))
     {
         PRINT_MSG("command buffer has incorrect length -- ignored");
         return;
     }
 
-    // Parse the command string
+    // Parse the command string (if there is one)
     //
-    double pan = (short) ntohs(cmd.pan);
-    double tilt = (short) ntohs(cmd.tilt);
-    double zoom = (unsigned short) ntohs(cmd.zoom);
+    if (len > 0)
+    {
+        double pan = (short) ntohs(cmd.pan);
+        double tilt = (short) ntohs(cmd.tilt);
+        double zoom = (unsigned short) ntohs(cmd.zoom);
 
-    // Threshold
-    //
-    pan = min(pan, m_pan_max);
-    pan = max(pan, m_pan_min);
+        // Threshold
+        //
+        pan = min(pan, m_pan_max);
+        pan = max(pan, m_pan_min);
 
-    tilt = min(tilt, m_tilt_max);
-    tilt = max(tilt, m_tilt_min);
+        tilt = min(tilt, m_tilt_max);
+        tilt = max(tilt, m_tilt_min);
 
-    zoom = min(zoom, m_zoom_max);
-    zoom = max(zoom, m_zoom_min);
-
-    // Set the current values
-    // This basically assumes instantaneous changes
-    // We could add a velocity in here later. ahoward
-    //
-    m_pan = pan;
-    m_tilt = tilt;
-    m_zoom = zoom;
+        zoom = min(zoom, m_zoom_max);
+        zoom = max(zoom, m_zoom_min);
+        
+        // Set the current values
+        // This basically assumes instantaneous changes
+        // We could add a velocity in here later. ahoward
+        //
+        m_pan = pan;
+        m_tilt = tilt;
+        m_zoom = zoom;
+    }
 
     // Construct the return data buffer
     //
