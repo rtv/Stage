@@ -23,7 +23,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: player_interfaces.cc,v 1.2 2005-03-01 08:01:22 rtv Exp $
+ * CVS: $Id: player_interfaces.cc,v 1.3 2005-03-05 00:20:53 rtv Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
@@ -98,9 +98,49 @@ void SimulationConfig(  device_record_t* device,
       }      
       break;
 #endif
+          // if Player has defined this config, implement it
+#ifdef PLAYER_SIMULATION_GET_POSE2D
+    case PLAYER_SIMULATION_GET_POSE2D:
+      {
+	player_simulation_pose2d_req_t* req = (player_simulation_pose2d_req_t*)buffer;
+	
+	printf( "Stage: received request for position of object \"%s\"\n", req->name );
+	
+	// look up the named model	
+	stg_model_t* mod = 
+	  stg_world_model_name_lookup( StgDriver::world, req->name );
+ 	
+	if( mod )
+	  {
+	    stg_pose_t pose;
+	    stg_model_get_pose( mod, &pose );
+	    
+	    printf( "Stage: returning location (%.2f,%.2f,%.2f)\n",
+		    pose.x, pose.y, pose.a );
+	    
+	    player_simulation_pose2d_req_t reply;
+	    memcpy( &reply, req, sizeof(reply));
+	    reply.x = htonl((int32_t)(pose.x*1000.0));
+	    reply.y = htonl((int32_t)(pose.y*1000.0));
+	    reply.a = htonl((int32_t)RTOD(pose.a));
+	    
+	    printf( "Stage: returning location (%d %d %d)\n",
+		    reply.x, reply.y, reply.a );
+
+	    device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_ACK, 
+				      &reply, sizeof(reply),  NULL );
+	  }
+	else
+	  {
+	    PRINT_WARN1( "Stage: simulation model \"%s\" not found", req->name );
+	    device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL );
+	  }
+      }      
+      break;
+#endif
       
     default:      
-      PRINT_WARN1( "Stage simulation doesn't implement config code %d.", buf[0] );
+      PRINT_WARN1( "Stage: simulation device doesn't implement config code %d.", buf[0] );
       if (device->driver->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
 	DRIVER_ERROR("PutReply() failed");  
       break;
