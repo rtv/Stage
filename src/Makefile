@@ -13,7 +13,15 @@ PLAYER_DIR = /usr/local/player$(VERSION)
 
 
 ##############################################################################
-# These are the key paths needs for the build
+# Support for gzipped images; requires zlib.
+# Comment out if you dont have/need zlib.
+
+ZLIB_FLAGS = -DINCLUDE_ZLIB
+ZLIB_LIBS = -lz
+
+
+##############################################################################
+# These are the key paths needed for the build
 
 PLAYER_INC = $(PLAYER_DIR)/include
 PLAYER_LIB = $(PLAYER_DIR)/lib
@@ -38,8 +46,8 @@ OBJS = world.o world_load.o image.o \
 
 # Flags common to all targets
 #
-CCFLAGS = -g3 -Wall -I../include -I$(PLAYER_INC)
-LINKFLAGS = -lm -lstdc++ -lpthread -L$(PLAYER_LIB) -lplayerclient
+CCFLAGS = -g3 -Wall -I../include -I$(PLAYER_INC) $(ZLIB_FLAGS)
+LINKFLAGS = -lm -lstdc++ -lpthread  -L$(PLAYER_LIB) -lplayerclient $(ZLIB_LIBS)
 
 # Standard tools
 #

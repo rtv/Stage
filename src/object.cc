@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/object.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.15 $
+//  $Revision: 1.1.2.16 $
 //
 // Usage:
 //  (empty)
@@ -101,11 +101,11 @@ bool CObject::Save(int &argc, char **argv)
     // Convert to strings
     //
     char sx[32];
-    snprintf(sx, sizeof(sx), "%.2lf", px);
+    snprintf(sx, sizeof(sx), "%.2f", px);
     char sy[32];
-    snprintf(sy, sizeof(sy), "%.2lf", py);
+    snprintf(sy, sizeof(sy), "%.2f", py);
     char sa[32];
-    snprintf(sa, sizeof(sa), "%.0lf", RTOD(pa));
+    snprintf(sa, sizeof(sa), "%.0f", RTOD(pa));
 
     // Add to argument list
     //

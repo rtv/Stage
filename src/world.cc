@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.24 $
+//  $Revision: 1.4.2.25 $
 //
 // Usage:
 //  (empty)
@@ -318,9 +318,19 @@ double CWorld::GetRealTime()
 bool CWorld::InitGrids(const char *env_file)
 {
     // create a new background image from the pnm file
-    m_bimg = new Nimage( env_file );
-    //cout << "ok." << endl;
-
+    // If we cant find it under the given name,
+    // we look for a zipped version.
+    //
+    m_bimg = new Nimage;
+    if (!m_bimg->load_pnm(env_file))
+    {
+        char zipname[128];
+        strcpy(zipname, env_file);
+        strcat(zipname, ".gz");
+        if (!m_bimg->load_pnm_gz(zipname))
+            return false;
+    }
+    
     width = m_bimg->width;
     height = m_bimg->height;
 

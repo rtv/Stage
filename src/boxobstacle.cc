@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.9 $
+//  $Revision: 1.1.2.10 $
 //
 // Usage:
 //  (empty)
@@ -87,9 +87,9 @@ bool CBoxObstacle::Save(int &argc, char **argv)
     // Convert to strings
     //
     char sx[32];
-    snprintf(sx, sizeof(sx), "%.2lf", m_size_x);
+    snprintf(sx, sizeof(sx), "%.2f", m_size_x);
     char sy[32];
-    snprintf(sy, sizeof(sy), "%.2lf", m_size_y);
+    snprintf(sy, sizeof(sy), "%.2f", m_size_y);
 
     // Add to argument list
     //

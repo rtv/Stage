@@ -8,7 +8,7 @@
 //	General image class, includes data storage, and 
 //	display of image. Also uses stuff for live capture
 //
-// $Id: image.h,v 1.2.2.1 2000-12-08 08:19:49 ahoward Exp $
+// $Id: image.h,v 1.2.2.2 2001-05-15 05:00:49 ahoward Exp $
 // RTV
 // ==================================================================
 
@@ -50,11 +50,12 @@ public:
 	
 	unsigned char*   data;
 	char*	win_title;
-	
+
+	Nimage();
 	Nimage(unsigned char* array, int w,int h);
 	Nimage(int w,int h);
 	Nimage(Nimage*);
-	Nimage(const char* fname);
+	// *** REMOVE ahoward Nimage(const char* fname);
 
 	inline	int	get_width(void)		{return width;}
 	inline	int	get_height(void)	{return height;}
@@ -96,7 +97,9 @@ public:
 	void	save_image_as_ppm(char*,char*);
 	void	save_raw(char* fname);
 	void	load_raw(char* fname);
-	void	load_pnm(char* fname);
+	bool	load_pnm(const char* fname);
+    bool	load_pnm_gz(const char* fname);
+    
 	//char*   color_name( int col );
 
 	~Nimage(void);

@@ -2,12 +2,16 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.2.2.4 2001-03-15 06:30:26 ahoward Exp $
+ * $Id: image.cc,v 1.2.2.5 2001-05-15 05:00:50 ahoward Exp $
  ************************************************************************/
 
 #include <math.h>
 #include <iostream.h>
 #include <fstream.h>
+
+#if INCLUDE_ZLIB
+#include <zlib.h>
+#endif
 
 #include "image.h"
 
@@ -35,6 +39,13 @@ void aset_pixel(unsigned char* data, int width, int height, int x, int y, unsign
   data[(x + y*width)] = c;
 }
 
+// Default constructor
+Nimage::Nimage()
+{
+    width = 0;
+    height = 0;
+    data = NULL;
+}
 
 
 // constuct by copying an existing image
@@ -71,6 +82,7 @@ Nimage::Nimage(int w,int h)
 #endif
 }
 
+/* *** REMOVE
 // construct from pnm file 
 Nimage::Nimage( const char* fname )
 {
@@ -86,6 +98,8 @@ Nimage::Nimage( const char* fname )
   cout << "loading " << fname << flush;
 #endif
 
+  data = NULL;
+  
   ifstream image( fname );
 
   char magicNumber[10];
@@ -139,6 +153,7 @@ Nimage::Nimage( const char* fname )
 #endif
   //cout << "constructed NImage" << endl;
 }
+*/
 
 
 // construct from width / height with existing data
@@ -234,49 +249,113 @@ void Nimage::load_raw(char* fname)
   fclose(stream);
 }
 
-void Nimage::load_pnm(char* fname)
+bool Nimage::load_pnm(const char* fname)
 {
-  int n, m;
-
-  ifstream image( fname );
-
+  char line[1024];
   char magicNumber[10];
   char comment[256];
+  int whiteNum; 
 
-  int whiteNum;
-  char terminator;
+  printf("opening %s\n", fname);
 
-  if( image.fail() ) cout << "image bad!" << endl;
+  FILE *file = fopen(fname, "r");
+  if (file == NULL)
+  {
+      printf("unable to open image file\n");
+      return false;
+  }
 
-  image >> magicNumber;
-  image.get( terminator );
-  image.get( comment, 255, '\n');
-  image.get( terminator );
-  image >> width >> height >> whiteNum;
+  // Extremely crude and ugly file parsing! Fix sometime.  Andrew.
+
+  // Read an check the magic number
+  //
+  fgets(magicNumber, sizeof(magicNumber), file);
+  if (strcmp(magicNumber, "P5\n") != 0)
+  {
+      printf("image file is of incorrect type: should be pnm, binary, monochrome\n");
+      return false;
+  }
   
+  fgets(comment, sizeof(comment), file);
+  fgets(line, sizeof(line), file);
+  sscanf(line, "%d %d\n%d", &width, &height, &whiteNum);
 
-#ifdef DEBUG
-  cout << "loading " << fname << flush;
-  cout << "magic: " << magicNumber << "\ncomment: " << comment 
-       << "\nwidth: " << width << " height: " << height 
-       << " white: " << whiteNum << endl; 
-#endif
-
-
-  if( data ) delete[] data;
+  if (data)
+      delete[] data;
   data = new unsigned char[ width * height ];
   
-  unsigned char a;
-   
-  for( n=0; n<height; n++ )
-    for( m=0; m<width; m++ )
+  for(int n=0; n<height; n++ )
+  {
+      for(int m=0; m<width; m++ )
       {
-	image.get( a );
-	set_pixel( m,n, a );
+          unsigned char a = fgetc(file);
+          set_pixel( m,n, a );
       }
+  }
 
-  image.close();
+  fclose(file);
+
+  return true;
 }
+
+// Load a gzipped pnm file
+//
+bool Nimage::load_pnm_gz(const char* fname)
+{
+#ifndef INCLUDE_ZLIB
+  printf("opening %s\n", fname);
+  printf("gzipped files not supported\n");
+  return false;
+#else
+    
+  char line[1024];
+  char magicNumber[10];
+  char comment[256];
+  int whiteNum; 
+
+  printf("opening %s\n", fname);
+
+  gzFile file = gzopen(fname, "r");
+  if (file == NULL)
+  {
+      printf("unable to open image file\n");
+      return false;
+  }
+
+  // Extremely crude and ugly file parsing! Fix sometime.  Andrew.
+
+  // Read an check the magic number
+  //
+  gzgets(file, magicNumber, sizeof(magicNumber));
+  if (strcmp(magicNumber, "P5\n") != 0)
+  {
+      printf("image file is of incorrect type: should be pnm, binary, monochrome\n");
+      return false;
+  }
+  
+  gzgets(file, comment, sizeof(comment));
+  gzgets(file, line, sizeof(line));
+  sscanf(line, "%d %d\n%d", &width, &height, &whiteNum);
+
+  if (data)
+      delete[] data;
+  data = new unsigned char[ width * height ];
+  
+  for(int n=0; n<height; n++ )
+  {
+      for(int m=0; m<width; m++ )
+      {
+          unsigned char a = gzgetc(file);
+          set_pixel( m,n, a );
+      }
+  }
+
+  gzclose(file);
+
+  return true;
+#endif
+}
+
 
 void Nimage::draw_big(void)
 {
