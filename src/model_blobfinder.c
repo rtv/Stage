@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.36 2005-01-05 09:01:53 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.37 2005-02-08 07:04:47 rtv Exp $
  */
 
 #include <math.h>
@@ -76,7 +76,7 @@ blobfinder
   - number of channels; i.e. the number of discrete colors detected
 - channels [ string ... ]
   - define the colors detected in each channel, using color names from the X11 database 
-   (rgb.txt). The number of strings should match channel_count.
+   (usually /usr/X11R6/lib/X11/rgb.txt). The number of strings should match channel_count.
 - image [int int]
   - [width height]
   - dimensions of the image in pixels. This determines the blobfinder's 

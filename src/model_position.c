@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.27 $
+//  $Revision: 1.28 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -38,17 +38,14 @@ of two modes; either <i>differential</i> like a Pioneer robot, or
 @verbatim
 position
 (
-  # position properties
   drive "diff"
   odom [0 0 0]
-  # model properties
 )
 @endverbatim
 
 @par Details
 - drive "diff" or "omni"
   - select differential-steer mode (like a Pioneer) or omnidirectional mode.
-
 - odom [x y theta]
   - set the initial odometry value for this device. Tip: if you set this the same as the pose, the odometry will give you the true absolute pose of the position device. 
 
