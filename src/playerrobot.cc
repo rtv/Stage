@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerrobot.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.10 $
+//  $Revision: 1.1.2.11 $
 //
 // Usage:
 //  (empty)
@@ -49,6 +49,8 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 
+#define RTK_ENABLE_TRACE 0
+
 #include <stage.h>
 #include "world.hh"
 
@@ -67,10 +69,6 @@ CPlayerRobot::CPlayerRobot(CWorld *world, CObject *parent)
 {
     m_port = 6665;
     playerIO = NULL;
-
-    #ifdef INCLUDE_RTK
-        m_show_sensors = false;
-    #endif
 }
 
 
@@ -87,15 +85,9 @@ CPlayerRobot::~CPlayerRobot( void )
 //
 bool CPlayerRobot::Startup()
 {
-    //RTK_TRACE0("starting devices");
-
     if (!CObject::Startup())
         return false;
  
-    // Get the port for this robot
-    //
-    // *** int port = cfg->ReadInt("port", 6665, "");
-
     // Create the lock object for the shared mem
     //
     if (!CreateShmemLock())
@@ -116,8 +108,6 @@ bool CPlayerRobot::Startup()
 //
 void CPlayerRobot::Shutdown()
 {
-    //RTK_TRACE0("shutting down devices");
-
     // Shutdown player
     //
     ShutdownPlayer();
@@ -140,8 +130,6 @@ void CPlayerRobot::Update()
 //
 bool CPlayerRobot::StartupPlayer(int port)
 {
-    //RTK_TRACE0("starting player");
-    
     // -- create the memory map for IPC with Player --------------------------
 
     // amount of memory to reserve per robot for Player IO
@@ -225,8 +213,6 @@ bool CPlayerRobot::StartupPlayer(int port)
 //
 void CPlayerRobot::ShutdownPlayer()
 {
-    //RTK_TRACE0("stopping player");
-    
     // BPG
     if(kill(player_pid,SIGINT))
         perror("CPlayerRobot::~CPlayerRobot(): kill() failed sending SIGINT to Player");
@@ -244,8 +230,6 @@ void CPlayerRobot::ShutdownPlayer()
 //
 bool CPlayerRobot::CreateShmemLock()
 {
-    //RTK_TRACE0("making semaphore");
-
     semKey = SEMKEY;
 
     union semun
@@ -326,27 +310,7 @@ void CPlayerRobot::OnUiUpdate(RtkUiDrawData *pData)
 //
 void CPlayerRobot::OnUiMouse(RtkUiMouseData *pData)
 {
-    CObject::OnUiMouse(pData);
-
-    pData->begin_section("global", "object");
-    
-    // Default process for any "move" modes
-    //
-    if (pData->use_mouse_mode("move"))
-    {
-        if (IsMouseReady())
-        {
-            // Toggle sensor state on middle button
-            //
-            if (pData->is_button_down() && pData->which_button() == 2)
-            {
-                m_show_sensors = !m_show_sensors;
-                RTK_TRACE1("sensors %d", (int) m_show_sensors);
-            }
-        }
-    }
-
-    pData->end_section();
+    CObject::OnUiMouse(pData);;
 }
 
 #endif

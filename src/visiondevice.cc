@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.13 $
+//  $Revision: 1.4.2.14 $
 //
 // Usage:
 //  (empty)
@@ -389,11 +389,11 @@ void CVisionDevice::OnUiUpdate(RtkUiDrawData *pData)
     pData->begin_section("global", "vision");
 
     if (pData->draw_layer("fov", true))
-        if (IsSubscribed() && m_robot->ShowSensors())
+        if (IsSubscribed())
             DrawFOV(pData);
     
     if (pData->draw_layer("scan", true))
-        if (IsSubscribed() && m_robot->ShowSensors())
+        if (IsSubscribed())
             DrawScan(pData);
     
     pData->end_section();

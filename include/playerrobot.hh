@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerrobot.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.7 $
+//  $Revision: 1.1.2.8 $
 //
 // Usage:
 //  (empty)
@@ -77,9 +77,6 @@ class CPlayerRobot : public CObject
     //
     public: void UnlockShmem( void );
 
-    // position, position at t-1, and position origin variables
-    // *** REMOVE ahoward private: float x, y, a, oldx, oldy, olda, xorigin, yorigin, aorigin;
-
     // *** HACK these should be moved. ahoward
     public: unsigned char color; // unique ID and value drawn into world bitmap
     public: unsigned char channel; // the apparent color of this robot in ACTS
@@ -108,17 +105,6 @@ class CPlayerRobot : public CObject
     //
     public: virtual void OnUiMouse(RtkUiMouseData *pData);
 
-    // See if we should display sensors
-    //
-    public: bool ShowSensors()
-        {
-            return m_show_sensors;
-        };
-
-    // Flag set to true to display sensors
-    //
-    protected: bool m_show_sensors;
-    
 #endif
 };
 

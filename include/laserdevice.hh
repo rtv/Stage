@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.8 $
+//  $Revision: 1.9.2.9 $
 //
 // Usage:
 //  (empty)
@@ -28,8 +28,6 @@
 #define LASERDEVICE_HH
 
 #include "playerdevice.hh"
-
-#define LASERSAMPLES 361
 
 
 class CLaserDevice : public CPlayerDevice
@@ -52,7 +50,7 @@ class CLaserDevice : public CPlayerDevice
 
     // Generate scan data
     //
-    private: bool UpdateScanData();
+    private: bool GenerateScanData(player_laser_data_t *data);
 
     // Draw ourselves into the world rep
     //
@@ -60,7 +58,7 @@ class CLaserDevice : public CPlayerDevice
     
     // Laser timing settings
     //
-    private: double m_update_interval;
+    private: double m_update_rate;
     private: double m_last_update;
     
     // Maximum range of sample in meters
@@ -69,15 +67,11 @@ class CLaserDevice : public CPlayerDevice
     
     // Laser configuration parameters
     //
-    private: int m_min_segment;
-    private: int m_max_segment;
-    private: int m_samples;
-    private: int m_sample_density;
+    private: double m_scan_res;
+    private: double m_scan_min;
+    private: double m_scan_max;
+    private: int m_scan_count;
     private: bool m_intensity;
-
-    // Array holding the laser data
-    //
-    private: uint16_t m_data[512];
 
     // Size of laser in laser rep
     //
@@ -108,7 +102,7 @@ class CLaserDevice : public CPlayerDevice
     // Laser scan outline
     //
     private: int m_hit_count;
-    private: double m_hit[LASERSAMPLES][2];
+    private: double m_hit[512][2];
     
 #endif    
 };

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.8 $
+//  $Revision: 1.2.2.9 $
 //
 // Usage:
 //  (empty)
@@ -203,7 +203,7 @@ void CLaserBeaconDevice::OnUiUpdate(RtkUiDrawData *pData)
   
     if (pData->draw_layer("beacons", true))
     {
-        if (IsSubscribed() && m_robot->ShowSensors())
+        if (IsSubscribed())
         {
             pData->set_color(RTK_RGB(192, 192, 255));
             
