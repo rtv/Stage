@@ -14,4 +14,4 @@ laserrobot(9.59,5.2,180,6670,circle,red)
 laserrobot(9.59,4.65,180,6671,circle,red)
 laserrobot(9.59,4.04,180,6672,circle,red)
 
-create movable_object pose 2.72334957055 2.72334957055 0 friction 0.035 radius 0.2 visible laserbright2
+create movable_object pose 2.72334957055 2.72334957055 0 friction 0.035 radius 0.2 visible laserbright1

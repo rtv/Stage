@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.12 $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  (empty)
@@ -31,9 +31,6 @@
 #include "world.hh"
 #include "positiondevice.hh"
 #include "raytrace.hh"
-
-const double TWOPI = 6.283185307;
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Constructor

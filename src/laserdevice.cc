@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.36 $
+//  $Revision: 1.37 $
 //
 // Usage:
 //  (empty)
@@ -337,13 +337,10 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 	      v = v | (((uint16_t)1) << 13); // set the shiny bits to 1
 	      break;
 	    case LaserBright2:
-	      v = v | (((uint16_t)2) << 13); // set the shiny bits to 1
+	      v = v | (((uint16_t)2) << 13); // set the shiny bits to 2
 	      break;
 	    case LaserBright3:
-	      v = v | (((uint16_t)3) << 13); // set the shiny bits to 1
-	      break;
-	    case LaserBright4:
-	      v = v | (((uint16_t)4) << 13); // set the shiny bits to 1
+	      v = v | (((uint16_t)3) << 13); // set the shiny bits to 3
 	      break;
 	    }
 

@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.41 2001-10-17 21:06:01 vaughan Exp $
+ * $Id: xs.cc,v 1.42 2001-10-24 19:12:51 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <stdlib.h>  // for atoi(3)
 #include <string.h> /* for strcpy() */
+#include <X11/cursorfont.h>
 
 #include <queue> // STL containers
 #include <map>
@@ -880,8 +881,8 @@ void CXGui::ImportTruth( stage_truth_t &struth )
   
   truth.pixel_color = xcol.pixel;
   
-  //printf( "Allocated %lu for %u,%u,%u (%d)\n", 
-  //      xcol.pixel, xcol.red, xcol.green, xcol.blue );
+  //printf( "Allocated %lu for %u,%u,%u\n", 
+  //    xcol.pixel, xcol.red, xcol.green, xcol.blue );
   
   truth.id.port = struth.id.port;
   truth.id.type = struth.id.type;
@@ -911,15 +912,7 @@ void CXGui::RenderFamily( xstruth_t &truth )
   TruthMap::iterator it;
   for( it = truth_map.begin(); it != truth_map.end(); it++ )
     if( it->second.parent_id == truth.stage_id )
-    {
-      
-      //#ifdef DEBUG
-      //puts( "RECURSE" );
-      //#endif
-      
-      // recurse to render the child 
       RenderFamily( it->second );
-    }
   
   RenderObject( truth );
 }
@@ -933,15 +926,7 @@ void CXGui::HandleIncomingQueue( void )
 
       // get the object with this id (if it exists)
       xstruth_t truth = truth_map[ pose.stage_id ]; 
-	  
-      //printf( "POSE ID %d MATCHES: ", pose.stage_id );
-      //PrintMetricTruth( pose.stage_id, truth );
 
-#ifdef DEBUG
-      puts( "undraw" );
-#endif
-
-      
       RenderFamily( truth ); // undraw it
       
       // update it
@@ -951,10 +936,6 @@ void CXGui::HandleIncomingQueue( void )
       truth.parent_id = pose.parent_id;
 
       truth_map[ pose.stage_id ] = truth; // update the database with it
-
-#ifdef DEBUG
-      puts( "\nredraw" );
-#endif
 
       RenderFamily( truth ); // redraw it
 
@@ -982,6 +963,8 @@ void CXGui::Startup(int argc, char** argv )
   
   draw_all_devices = false;
   
+  scrolling = false;
+
   char hostname[64];
   
   gethostname( hostname, 64 );
@@ -1605,6 +1588,9 @@ void CXGui::ScaleBackground( void )
     }
 }
 
+
+
+
 void CXGui::HandleCursorKeys( KeySym &key )
 {
   int oldPanx = panx;
@@ -1688,17 +1674,38 @@ void CXGui::StartDragging( XEvent& reportEvent )
 
   HighlightObject( dragging, false );
 }
-  
 
 void CXGui::StopDragging( XEvent& reportEvent )
 {
   XUngrabPointer( display, CurrentTime );
- 
+  
   // we're done with the dragging object now
   delete dragging;
   dragging = NULL; // we test the value elsewhere
   
   HighlightObject( NULL, true ); // erases the highlighting
+} 
+
+void CXGui::StartScrolling( XEvent& reportEvent )
+{   
+  Cursor scrollc = XCreateFontCursor(display, XC_fleur );
+  
+  // retain the pointer while we're dragging
+  XGrabPointer( display, win, true, 
+		 ButtonReleaseMask | ButtonPressMask | PointerMotionMask, 
+		 GrabModeAsync, GrabModeAsync, win, scrollc, CurrentTime);
+
+  scrollStartX = reportEvent.xmotion.x;
+  scrollStartY = reportEvent.xmotion.y;
+
+  scrolling = true;
+}
+  
+
+void CXGui::StopScrolling( XEvent& reportEvent )
+{
+  XUngrabPointer( display, CurrentTime );
+  scrolling = false;  
 } 
 
 void CXGui::HandleButtonPressEvent( XEvent& reportEvent )
@@ -1731,9 +1738,40 @@ void CXGui::HandleButtonPressEvent( XEvent& reportEvent )
       if( dragging )
 	{  			  
 	  MoveObject( dragging, dragging->x, dragging->y, 
-			      NORMALIZE(dragging->th - M_PI/10.0) );
+		      NORMALIZE(dragging->th - M_PI/10.0) );
 	}	  
+      else
+	{
+	  if( scrolling )
+	    StopScrolling( reportEvent );
+	  else
+	    StartScrolling( reportEvent );
+	}
       break;
+      
+      // buttons 4 & 5 are often mapped to the mouse scroll wheel 
+      // so we can zoom the window or rotate objects with the wheel. neat!
+    case Button4: //cout << "BUTTON 4" << endl;
+      if( dragging )
+	{  			  
+	  MoveObject( dragging, dragging->x, dragging->y, 
+		      NORMALIZE(dragging->th - M_PI/10.0) );
+	}	
+      else
+	Zoom( 1.2 );
+
+      break;
+    case Button5: //cout << "BUTTON 5" << endl;
+      if( dragging )
+	{  			  
+	  MoveObject( dragging, dragging->x, dragging->y, 
+		      NORMALIZE(dragging->th + M_PI/10.0) );
+	}	  
+      else
+	Zoom( 0.8 );
+      break;
+      
+
     }
 
   if( dragging ) HighlightObject( dragging, true );
@@ -1919,6 +1957,8 @@ void CXGui::HandleKeyPressEvent( XEvent& reportEvent )
 
 void CXGui::HandleExposeEvent( XEvent &reportEvent )
 {  
+  //printf( "EXPOSE %d\n", reportEvent.xexpose.count  );
+
   if( reportEvent.xexpose.count == 0 ) // on the last pending expose...
     {
       CalcPPM();
@@ -1926,6 +1966,18 @@ void CXGui::HandleExposeEvent( XEvent &reportEvent )
       RefreshObjects();
     }
 }
+
+void CXGui::HandleConfigureEvent( XEvent &reportEvent )
+{  
+  //if( width != reportEvent.xconfigure.width ||
+  //  height != reportEvent.xconfigure.height )
+  //{
+  x = reportEvent.xconfigure.x;
+  y = reportEvent.xconfigure.y;
+  width = reportEvent.xconfigure.width;
+  height = reportEvent.xconfigure.height;
+} 
+
 
 void CXGui::HandleMotionEvent( XEvent &reportEvent )
 {
@@ -1940,48 +1992,54 @@ void CXGui::HandleMotionEvent( XEvent &reportEvent )
       double xpos = xpixel / ppm;
       double ypos = ypixel / ppm; 
       
-      //printf( "iwidth %d iheight %d panx %d pany %d\n",
-      //      iwidth, iheight, panx, pany );
-
-      // printf( "xmotion %d ymotion %d\n", 
-      //      reportEvent.xmotion.x, reportEvent.xmotion.y);
-      
-      //printf( "motion: %d %d \t %.2f %.2f \n", xpixel, ypixel, xpos, ypos );
-
       MoveObject( dragging, xpos, ypos, dragging->th );
       
       HighlightObject( dragging, true );
     }
+  else if( scrolling )
+    {
+      int oldPanx = panx;
+      int oldPany = pany;
+      
+      panx += 2 * (reportEvent.xmotion.x - scrollStartX);
+      pany += 2 * (reportEvent.xmotion.y - scrollStartY);
+      
+      scrollStartX =  reportEvent.xmotion.x;
+      scrollStartY = reportEvent.xmotion.y;
+
+      // if we're at the edge of the window, scroll in big steps
+
+      int edgezone = 20; //pixels
+
+      // right side
+      if( reportEvent.xmotion.x > (width-edgezone) )
+	panx += width / 5;
+
+      // left side
+      if( reportEvent.xmotion.x < edgezone )
+	panx -= width / 5;
+
+      // top side
+      if( reportEvent.xmotion.y < edgezone )
+	pany -= height / 5;
+
+      // bottom side
+      if( reportEvent.xmotion.y > (height-edgezone) )
+	pany += height / 5;
+
+      BoundsCheck();
+      
+      // if the window has been panned, refresh everything
+      if( panx != oldPanx || pany != oldPany )
+	{
+	  CalcPPM();
+	  DrawBackground();
+	  RefreshObjects();
+	}
+    }
 }
 
-void CXGui::HandleConfigureEvent( XEvent &reportEvent )
-{
-  // ignore this if it has a count > 0
-
-  //if( reportEvent.xexpose.count > 0 )
-    //return;
-
-  //cout << "CONFIGURE NOTIFY" << endl;
-  
-  //if( width != reportEvent.xconfigure.width ||
-  //  height != reportEvent.xconfigure.height )
-  //{
-  x = reportEvent.xconfigure.x;
-  y = reportEvent.xconfigure.y;
-  width = reportEvent.xconfigure.width;
-  height = reportEvent.xconfigure.height;
-  
-  
-  //CalcPPM();
-  
-  //DrawBackground(); // black backround and draw walls
-  //RefreshObjects(); 
-  
-  //printf( "w: %dx%d i: %dx%d ppm: %.2f px: %d py: %d\n",
-  //  width, height, iwidth, iheight, ppm, panx, pany );
-  //fflush( stdout );
-} 
-  
+ 
 void CXGui::HandlePlayers( void )
 {
   if( num_proxies ) // if we're connected to any players
@@ -2073,6 +2131,9 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 	    }
 	  
 	  assert( cli ); //really should be successful by here
+
+	  // put the server into request/reply mode
+	  //cli->SetDataMode( 1 );
 	  
 	  // if successful, attach this client to the multiclient
 	  printf( "\nXS: Starting Player client on %s:%d\n", ent->hostname, ent->id.port );
@@ -2100,7 +2161,7 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 		      if( enableLaser )
 			{
 			  CGraphicLaserProxy* glp = 
-			    new CGraphicLaserProxy(this,ent->stage_id,
+			    new CGraphicLaserProxy(this,sibling.stage_id,
 						   cli,sibling.id.index,'r' );
 			
 			  graphicProxies[num_proxies] = glp;
@@ -2112,7 +2173,7 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 		      if( enableSonar )
 			{
 			  CGraphicSonarProxy* gsp =
-			    new CGraphicSonarProxy( this, ent->stage_id,
+			    new CGraphicSonarProxy( this, sibling.stage_id,
 						    cli, sibling.id.index, 'r' );   
 			  graphicProxies[num_proxies] = gsp; 
 			  playerProxies[num_proxies++] = gsp;
@@ -2123,7 +2184,7 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 		      if( enableGps )
 			{
 			  CGraphicGpsProxy* ggp = 
-			    new CGraphicGpsProxy( this, ent->stage_id,
+			    new CGraphicGpsProxy( this, sibling.stage_id,
 						  cli, sibling.id.index, 'r' );
 			    
 			  graphicProxies[num_proxies] = ggp;
@@ -2135,7 +2196,7 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 		      if( enableVision )
 			{
 			  CGraphicVisionProxy* gvp = 
-			    new CGraphicVisionProxy( this, ent->stage_id,
+			    new CGraphicVisionProxy( this, sibling.stage_id,
 						     cli, sibling.id.index, 'r' );
 			  graphicProxies[num_proxies] = gvp;
 			  playerProxies[num_proxies++] = gvp;
@@ -2146,7 +2207,7 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 		      if( enablePtz )
 			{
 			  CGraphicPtzProxy* gpp = 
-			    new CGraphicPtzProxy( this, ent->stage_id,
+			    new CGraphicPtzProxy( this, sibling.stage_id,
 						  cli, sibling.id.index, 'r' );
 			    
 			  graphicProxies[num_proxies] = gpp;
@@ -2158,7 +2219,7 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 		      if( enableLaserBeacon )
 			{
 			  CGraphicLaserBeaconProxy* glbp = 
-			    new CGraphicLaserBeaconProxy(this,ent->stage_id,
+			    new CGraphicLaserBeaconProxy(this,sibling.stage_id,
 							 cli,sibling.id.index,'r');
 			  graphicProxies[num_proxies] = glbp;
 			  playerProxies[num_proxies++] = glbp;

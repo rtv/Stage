@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.23 $
+//  $Revision: 1.24 $
 //
 // Usage:
 //  (empty)
@@ -127,6 +127,8 @@ int main(int argc, char **argv)
     }
   
   close( fd );
+
+  printf( "argv[argc-1]: %s\n", argv[ argc-1 ] );
 
   // Load the world - the filename is the last argument
   // this may produce more startup output

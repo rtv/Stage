@@ -1,6 +1,6 @@
 //-------------------------------------------------------------------------------------
 // colors.hh - define the default colors for all devices here
-// $Id: colors.hh,v 1.3 2001-09-26 02:35:46 gerkey Exp $
+// $Id: colors.hh,v 1.4 2001-10-24 19:12:49 vaughan Exp $
 //
 
 #ifndef _STAGECOLORS_H
@@ -20,5 +20,6 @@
 #define PLAYER_COLOR  "white"
 #define LASERBEACON_COLOR  "cyan"
 #define WALL_COLOR "white"
+#define IDAR_COLOR "DarkRed"
 
 #endif

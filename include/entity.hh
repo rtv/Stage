@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.23 $
+//  $Revision: 1.24 $
 //
 // Usage:
 //  (empty)
@@ -61,11 +61,12 @@ class CEntity
     StageType m_stage_type; // distinct from the player types found in messages.h
 
     // Sensor return values
-    bool obstacle_return;
-    bool sonar_return;  
-    bool puck_return;
-    int laser_return;
-    int channel_return; // -1 is transparent, 0 is opaque, 1 is ACTS Ch.0, etc.
+  bool idar_return;
+  bool obstacle_return;
+  bool sonar_return;  
+  bool puck_return;
+  int laser_return;
+  int channel_return; // -1 is transparent, 0 is opaque, 1 is ACTS Ch.0, etc.
  
     // Destructor
     //

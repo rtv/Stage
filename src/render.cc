@@ -21,6 +21,8 @@ bool CXGui::PoseFromId( int stage_id,
 	
 	col = it->second.pixel_color;
 	
+	//printf( "object %d using color %ld\n", stage_id, col );
+
 	return true;
       }
   return false;
@@ -98,6 +100,7 @@ void CXGui::RenderObject( xstruth_t &orig_truth )
       case VisionBeaconType: RenderVisionBeacon( &truth, extended ); break;  
       case GripperType: RenderGripper( &truth, extended ); break;  
       case PuckType: RenderPuck( &truth, extended ); break;  
+      case IDARType: RenderIDAR( &truth, extended ); break;
 		
       case VisionType: if( draw_all_devices )
 	RenderVision( &truth, extended ); break;
@@ -332,6 +335,11 @@ void CXGui::RenderGps( xstruth_t* exp, bool extended )
   DrawCircle( exp->x, exp->y, exp->w/2.0 );
 }
 
+void CXGui::RenderIDAR( xstruth_t* exp, bool extended )
+{ 
+  SelectColor( exp );
+  DrawCircle( exp->x, exp->y, exp->w/2.0 );
+}
 
 void CXGui::RenderBox( xstruth_t* exp, bool extended )
 { 

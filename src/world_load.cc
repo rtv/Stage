@@ -5,7 +5,7 @@
 // Date: 14 May 2001
 // Desc: Load/save routines & command line processing for the world 
 //
-// $Id: world_load.cc,v 1.27 2001-10-22 22:22:38 gerkey Exp $
+// $Id: world_load.cc,v 1.28 2001-10-24 19:12:51 vaughan Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -13,9 +13,7 @@
 #include "world.hh"
 #include "entityfactory.hh"
 #include "truthserver.hh"
-#include <libgen.h>  // for dirname(3)
-
-//#define DEBUG
+#include <libgen.h>  // for dirname/#define DEBUG
 
 extern char *world_file;
 bool usage = false;
@@ -49,7 +47,7 @@ static int Tokenize(char *buffer, int bufflen, char **argv, int maxargs)
 //
 bool CWorld::Load(const char *filename)
 {
-  printf( "[World %s]", filename );
+  printf( "[World %s]", filename ); fflush( stdout );
    
     char m_current_hostname[ HOSTNAME_SIZE ];
 
@@ -174,11 +172,12 @@ bool CWorld::Load(const char *filename)
             // For fig-based environment files, we need to know both the
             // ppm and the scale before loading the environment.
             else if (strcmp(argv[1], "environment_file") == 0)
-	      {
-                // prepend the base path of the world file.
-                sprintf(m_env_file, "%s/%s",
-                        dirname(world_file),argv[3]);
-		//strcpy(m_env_file, argv[3]);
+	      {		
+		char base[256];
+		strncpy( base, filename, 255 );
+		// prepend the base path of the world file.
+		sprintf(m_env_file, "%s/%s",
+			dirname(base),argv[3]);
 	      }
             // the authorization key; it is passed on to Player
             else if (strcmp(argv[1], "auth_key") == 0)

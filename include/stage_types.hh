@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/stage_types.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.12 $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  (empty)
@@ -46,6 +46,10 @@
 
 #ifndef M_PI
 	#define M_PI        3.14159265358979323846
+#endif
+
+#ifndef TWOPI
+	#define TWOPI        6.2831853
 #endif
 
 #define STAGE_SYNC 0
@@ -103,7 +107,8 @@ BroadcastType,
 AudioType,
 SpeechType,
 TruthType,
-OccupancyType
+OccupancyType,
+IDARType // HRL's Infrared Data And Ranging turret
 };
 
 #endif

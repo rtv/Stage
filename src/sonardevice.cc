@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.13 $
+//  $Revision: 1.14 $
 //
 // Usage:
 //  (empty)
@@ -28,8 +28,6 @@
 #include "world.hh"
 #include "sonardevice.hh"
 #include "raytrace.hh"
-
-const double TWOPI = 6.283185307;
 
 // constructor
 

@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xs.hh,v 1.15 2001-09-28 18:22:49 vaughan Exp $
+ * $Id: xs.hh,v 1.16 2001-10-24 19:12:50 vaughan Exp $
  ************************************************************************/
 
 #ifndef _WIN_H
@@ -104,6 +104,9 @@ public:
   bool draw_all_devices;
 
   xstruth_t* dragging;
+
+  bool scrolling;
+  int scrollStartX, scrollStartY;
   
   bool enableLaser, enableSonar, enablePtz, enableVision, enableGps,
     enableLaserBeacon;
@@ -209,6 +212,7 @@ public:
   void RenderOccupancy( xstruth_t* exp, bool extended );
   void RenderGripper( xstruth_t* exp, bool extended );
   void RenderGps( xstruth_t* exp, bool extended );
+  void RenderIDAR( xstruth_t* exp, bool extended );
   void RenderPuck( xstruth_t* exp, bool extended );
   void RenderOccupancyGrid( void );
 
@@ -232,6 +236,8 @@ public:
   void Zoom( double ratio );
   void StopDragging( XEvent& reportEvent );
   void StartDragging( XEvent& reportEvent );
+  void StopScrolling( XEvent& reportEvent );
+  void StartScrolling( XEvent& reportEvent );
 
   void HandleExposeEvent( XEvent& reportEvent );
   void HandleConfigureEvent( XEvent& reportEvent );
