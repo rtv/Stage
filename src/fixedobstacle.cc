@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.19 $
+//  $Author: inspectorg $
+//  $Revision: 1.20 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -208,71 +208,71 @@ bool CFixedObstacle::Startup()
   // long int rects = 0;
 
 #ifdef INCLUDE_RTK2
-  
-  rtk_fig_clear(this->fig);
-  rtk_fig_layer(this->fig, -48);
-  rtk_fig_color_rgb32(this->fig, this->color );
+
+  rtk_fig_destroy(this->fig);
+  this->fig = rtk_fig_create(m_world->canvas, NULL, -48);
+  rtk_fig_color_rgb32(this->fig, this->color);
   
 #endif
   
   for (int y = 0; y < this->image->height; y++)
+  {
+    for (int x = 0; x < this->image->width; x++)
     {
-      for (int x = 0; x < this->image->width; x++)
-	{
-	  if (this->image->get_pixel(x, y) == 0)
-	    continue;
+      if (this->image->get_pixel(x, y) == 0)
+        continue;
 	 
- 	  // a rectangle starts from this point
-	  int startx = x;
-	  int starty = this->image->height - y;
-	  int height = this->image->height; // assume full height for starters
+      // a rectangle starts from this point
+      int startx = x;
+      int starty = this->image->height - y;
+      int height = this->image->height; // assume full height for starters
 	  
-	  // grow the width - scan along the line until we hit an empty pixel
-	  for( ;  this->image->get_pixel( x, y ) > 0; x++ )
+      // grow the width - scan along the line until we hit an empty pixel
+      for( ;  this->image->get_pixel( x, y ) > 0; x++ )
 	    {
 	      // handle horizontal cropping
 	      double ppx = x * sx; 
 	      if (ppx < this->crop_ax || ppx > this->crop_bx)
-		continue;
+          continue;
 	      
 	      // look down to see how large a rectangle below we can make
 	      int yy  = y;
 	      while( (this->image->get_pixel( x, yy ) > 0 ) && (yy < this->image->height) )
-		{ 
-		  // handle vertical cropping
-		  double ppy = (this->image->height - yy) * sy;
-		  if (ppy < this->crop_ay || ppy > this->crop_by)
-		    continue;
+        { 
+          // handle vertical cropping
+          double ppy = (this->image->height - yy) * sy;
+          if (ppy < this->crop_ay || ppy > this->crop_by)
+            continue;
 		  
-		  yy++; 
-		} 
+          yy++; 
+        } 
 	      
 	      // now yy is the depth of a line of non-zero pixels downward
 	      // we store the smallest depth - that'll be the height of the rectangle
 	      if( yy-y < height ) height = yy-y; // shrink the height to fit
 	    } 
 
-	  int width = x - startx;
+      int width = x - startx;
 
-	  // delete the pixels we have used in this rect
-	  this->image->fast_fill_rect( startx, y, width, height, 0 );
+      // delete the pixels we have used in this rect
+      this->image->fast_fill_rect( startx, y, width, height, 0 );
 
-	  double px = (startx + (width/2.0) + 0.5 ) * sx;
-	  double py = (starty - (height/2.0) - 0.5 ) * sy;
-	  double pw = width * sx;
-	  double ph = height * sy;
+      double px = (startx + (width/2.0) + 0.5 ) * sx;
+      double py = (starty - (height/2.0) - 0.5 ) * sy;
+      double pw = width * sx;
+      double ph = height * sy;
 
-	  // create a matrix rectangle
-	  m_world->SetRectangle( px, py, oth, pw, ph, this, true);
+      // create a matrix rectangle
+      m_world->SetRectangle( px, py, oth, pw, ph, this, true);
 
 #ifdef INCLUDE_RTK2
-	  // create a figure  rectangle 
-	  rtk_fig_rectangle(this->fig, px, py, oth, pw, ph, true ); 
+      // create a figure  rectangle 
+      rtk_fig_rectangle(this->fig, px, py, oth, pw, ph, true ); 
 #endif
 			    
-	  //rects++;
-	}
+      //rects++;
     }
+  }
 
   //printf( "rects = %ld\n", rects );
   
