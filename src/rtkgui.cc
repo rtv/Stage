@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.12 2003-08-26 18:59:58 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.13 2003-08-27 02:07:05 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -64,7 +64,7 @@ extern GArray* global_client_pids;
 
 // defaults
 
-#define STG_CANVAS_RENDER_INTERVAL 200
+#define STG_CANVAS_RENDER_INTERVAL 100
 
 #define STG_DEFAULT_WINDOW_WIDTH 600
 #define STG_DEFAULT_WINDOW_HEIGHT 600
@@ -181,6 +181,14 @@ void stg_gui_save( rtk_menuitem_t *item )
     kill( g_array_index( global_client_pids, pid_t, p ), SIGUSR2 );
 }
 
+void stg_gui_exit( rtk_menuitem_t *item )
+{
+  //quit = TRUE;
+  puts( "Exit menu item. Destroying world" );
+
+  stg_world_destroy( (stg_world_t*)item->userdata );
+}
+
 // build a simulation window
 stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int height )
 {
@@ -191,16 +199,18 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
  
   win->canvas = rtk_canvas_create(app);
       
-  // Add some menu items
-  
+  // Add some menu items 
   win->file_menu = rtk_menu_create(win->canvas, "File");
   win->save_menuitem = rtk_menuitem_create(win->file_menu, "Save", 0);
   rtk_menuitem_set_callback( win->save_menuitem, stg_gui_save );
 
+  win->exit_menuitem = rtk_menuitem_create(win->file_menu, "Exit", 0);
+  win->exit_menuitem->userdata = (void*)world;
+  rtk_menuitem_set_callback( win->exit_menuitem, stg_gui_exit );
+
   /*
   win->stills_menu = rtk_menu_create_sub(win->file_menu, "Capture stills");
   win->movie_menu = rtk_menu_create_sub(win->file_menu, "Capture movie");
-  win->exit_menuitem = rtk_menuitem_create(win->file_menu, "Exit", 0);
   
   win->stills_jpeg_menuitem = rtk_menuitem_create(win->stills_menu, "JPEG format", 1);
   win->stills_ppm_menuitem = rtk_menuitem_create(win->stills_menu, "PPM format", 1);
@@ -312,8 +322,8 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
   rtk_canvas_scale( win->canvas, 1.1 * world->width/width, 1.1 * world->width / width );
 
   GString* titlestr = g_string_new( "Stage: " );
-  g_string_append_printf( titlestr, "%s (%s)", 
-			  world->name->str, world->token->str );
+  g_string_append_printf( titlestr, "%s", 
+			  world->name->str );
 
   rtk_canvas_title( win->canvas, titlestr->str );
   g_string_free( titlestr, TRUE );
@@ -624,13 +634,8 @@ rtk_fig_t* stg_gui_label_create( rtk_canvas_t* canvas, CEntity* ent )
       
   char labelstr[1024];
   
-  // if the name and token are the same, just print one
-  if( g_string_equal( ent->name, ent->token ) )
-    snprintf(labelstr, sizeof(labelstr), "(%d) %s", 
-	     ent->id, ent->token->str );
-  else // print them both
-    snprintf(labelstr, sizeof(labelstr), "(%d) %s (%s)", 
-	     ent->id, ent->name->str, ent->token->str );      
+  snprintf(labelstr, sizeof(labelstr), "(%d) %s", 
+	     ent->id, ent->name->str );
     
   //rtk_fig_color_rgb32(mod->fig, ent->color);
   //rtk_fig_origin( mod->fig_label, 0.05, 1.0, 0 );
@@ -678,8 +683,8 @@ void RtkOnMouse(rtk_fig_t *fig, int event, int mode)
       entity->SetProperty( STG_PROP_POSE, &pose, sizeof(pose) );
       
       // display the pose
-      snprintf(txt, sizeof(txt), "Selection: %d:%s (%s) pose: [%.2f,%.2f,%.2f]",  
-	       entity->id, entity->name->str, entity->token->str,
+      snprintf(txt, sizeof(txt), "Selection: %d:%s pose: [%.2f,%.2f,%.2f]",  
+	       entity->id, entity->name->str,
 	       pose.x,pose.y,pose.a  );
 
       cid = gtk_statusbar_get_context_id( mod->win->statusbar, "on_mouse" );
@@ -895,7 +900,7 @@ int stg_gui_los_msg_recv( CEntity* receiver, CEntity* sender,
 int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
 {
   PRINT_DEBUG3( "gui update for %d:%s prop %s", 
-		ent->id, ent->token->str, stg_property_string(prop) );
+		ent->id, ent->name->str, stg_property_string(prop) );
   
   assert( ent );
   assert( prop > 0 );
@@ -939,6 +944,7 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
     case STG_PROP_NOSE:
     case STG_PROP_BLINKENLIGHT:
     case STG_PROP_MOUSE_MODE:
+    case STG_PROP_BORDER:
       
       stg_gui_model_destroy( ent->guimod );
       ent->guimod = stg_gui_model_create( ent );

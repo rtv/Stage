@@ -21,7 +21,7 @@
  * Desc: A world device model - replaces the CWorld class
  * Author: Richard Vaughan
  * Date: 31 Jan 2003
- * CVS info: $Id: world.cc,v 1.141 2003-08-23 01:33:04 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.142 2003-08-27 02:07:06 rtv Exp $
  */
 
 
@@ -48,7 +48,6 @@ stg_world_t* stg_world_create( GIOChannel* channel, stg_world_create_t* rc )
   // must set the id, name and token before using the BASE_DEBUG macro
   world->id = global_next_available_id++; // a unique id for this object
   world->name = g_string_new( rc->name );
-  world->token = g_string_new( rc->token );
   WORLD_DEBUG( world, "construction" );
 
   

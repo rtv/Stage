@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.9 2003-08-26 18:59:58 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.10 2003-08-27 02:07:06 rtv Exp $
  */
 
 #include <assert.h>
@@ -351,7 +351,7 @@ bool CWorldFile::LoadTokenWord(FILE *file, int *line, int include)
       AddToken(TokenWord, token, include);
       return true;
     }
-    else if (isalpha(ch) || isdigit(ch) || strchr(".-_[]", ch))
+    else if (isalpha(ch) || isdigit(ch) || strchr(".-_[]:", ch))
     {
       token[len++] = ch;
     }
@@ -801,6 +801,8 @@ bool CWorldFile::ParseTokenDefine(int *index, int *line)
   for (i = *index + 1; i < this->token_count; i++)
   {
     token = this->tokens + i;
+    
+    printf( "token %s  index %i\n", token->value, i); 
 
     switch (token->type)
     {
@@ -808,51 +810,56 @@ bool CWorldFile::ParseTokenDefine(int *index, int *line)
         if (count == 0)
         {
           if (macroname == NULL)
-            macroname = GetTokenValue(i);
+	    {
+	      macroname = GetTokenValue(i);
+	    }    
           else if (entityname == NULL)
-          {
-            entityname = GetTokenValue(i);
-            starttoken = i;
-          }
+	    {
+	      entityname = GetTokenValue(i);
+	      
+	      starttoken = i;
+	    }
           else
-          {
-            PARSE_ERR("extra tokens in macro definition", *line);
-            return false;
-          }
+	    {
+	      PARSE_ERR("extra tokens in macro definition", *line);
+	      return false;
+	    }
         }
         else
-        {
-          if (macroname == NULL)
-          {
-            PARSE_ERR("missing name in macro definition", *line);
-            return false;
-          }
-          if (entityname == NULL)
-          {
-            PARSE_ERR("missing name in macro definition", *line);
-            return false;
-          }
-        }
+	  {
+	    if (macroname == NULL)
+	      {
+		PARSE_ERR("missing name in macro definition", *line);
+		return false;
+	      }
+	    if (entityname == NULL)
+	      {
+		PARSE_ERR("missing name in macro definition", *line);
+		return false;
+	      }
+	  }
         break;
-      case TokenOpenEntity:
-        count++;
-        break;
-      case TokenCloseEntity:
-        count--;
-        if (count == 0)
+    case TokenOpenEntity:
+      count++;
+      break;
+    case TokenCloseEntity:
+      count--;
+      if (count == 0)
         {
+	  printf( "adding macro %s (line %d starttoken %d i %d)\n",
+		  macroname, *line, starttoken, i );
           AddMacro(macroname, entityname, *line, starttoken, i);
           *index = i;
           return true;
         }
-        if (count < 0)
+      if (count < 0)
         {
           PARSE_ERR("misplaced ')'", *line);
           return false;
         }
-        break;
-      default:
-        break;
+      break;
+    default:
+      break;
     }
   }
   PARSE_ERR("missing ')'", *line);
@@ -906,50 +913,53 @@ bool CWorldFile::ParseTokenEntity(int entity, int *index, int *line)
   CToken *token;
 
   name = *index;
+
   macro = LookupMacro(GetTokenValue(name));
-  
+
   // If the entity name is a macro...
-  if (macro >= 0)
-  {
-    // This is a bit of a hack
-    int nentity = this->entity_count;
-    int mindex = this->macros[macro].starttoken;
-    int mline = this->macros[macro].line;
-    if (!ParseTokenEntity(entity, &mindex, &mline))
-      return false;
-    entity = nentity;
-
-    for (i = *index + 1; i < this->token_count; i++)
+  if (macro >= 0 )
     {
-      token = this->tokens + i;
-
-      switch (token->type)
-      {
-        case TokenOpenEntity:
-          break;
-        case TokenWord:
-          if (!ParseTokenWord(entity, &i, line))
-            return false;
-          break;
-        case TokenCloseEntity:
-          *index = i;
-          return true;
-        case TokenComment:
-          break;
-        case TokenSpace:
-          break;
-        case TokenEOL:
-          (*line)++;
-          break;
-        default:
-          PARSE_ERR("syntax error 3", *line);
-          return false;
-      }
+      // replace the mac
+      
+      // This is a bit of a hack
+      int nentity = this->entity_count;
+      int mindex = this->macros[macro].starttoken;
+	  int mline = this->macros[macro].line;
+	  if (!ParseTokenEntity(entity, &mindex, &mline))
+	    return false;
+	  entity = nentity;
+	  
+	  for (i = *index + 1; i < this->token_count; i++)
+	    {
+	      token = this->tokens + i;
+	      
+	      switch (token->type)
+		{
+		case TokenOpenEntity:
+		  break;
+		case TokenWord:
+		  if (!ParseTokenWord(entity, &i, line))
+		    return false;
+		  break;
+		case TokenCloseEntity:
+		  *index = i;
+		  return true;
+		case TokenComment:
+		  break;
+		case TokenSpace:
+		  break;
+		case TokenEOL:
+		  (*line)++;
+		  break;
+		default:
+		  PARSE_ERR("syntax error 3", *line);
+		  return false;
+		}
+	    }
+	  PARSE_ERR("missing ')'", *line);
     }
-    PARSE_ERR("missing ')'", *line);
-  }
-  
-  // If the entity name is not a macro...
+      
+  //  not a macro
   else
   {
     for (i = *index + 1; i < this->token_count; i++)
@@ -1110,10 +1120,10 @@ int CWorldFile::LookupMacro(const char *macroname)
 {
   int i;
   CMacro *macro;
-  
+
   for (i = 0; i < this->macro_count; i++)
   {
-    macro = this->macros + i;
+    macro = this->macros + i;    
     if (strcmp(macro->macroname, macroname) == 0)
       return i;
   }
@@ -1761,7 +1771,6 @@ int CWorldFile::Upload( stg_client_t* cli,
   // first create a world
   stg_world_create_t world_cfg;
   strncpy(world_cfg.name, this->ReadString( 0, "name", filename ), STG_TOKEN_MAX );
-  strncpy(world_cfg.token, this->filename, STG_TOKEN_MAX );
   world_cfg.width =  this->ReadTupleFloat( 0, "size", 0, 10.0 );
   world_cfg.height =  this->ReadTupleFloat( 0, "size", 1, 10.0 );
   world_cfg.resolution = this->ReadFloat( 0, "resolution", 0.1 );
@@ -1779,49 +1788,92 @@ int CWorldFile::Upload( stg_client_t* cli,
       created_models[m].stage_id = root;
       strncpy( created_models[m].name, "root", STG_TOKEN_MAX );
     }
+  
 
+  typedef struct 
+  {
+    const char* type;
+    int count;
+  } stg_type_counter_t;
+  
+  // we maintain an array of all the types of model we have seen;
+
+  stg_type_counter_t* types = NULL;
+  int num_types = 0;
+  
   // Iterate through sections and create entities as required
   for (int section = 1; section < this->GetEntityCount(); section++)
-  {
-    if( strcmp( "gui", this->GetEntityType(section) ) == 0 )
-      {
-	PRINT_WARN( "gui section not implemented" );
-      }
-    else
-      {
-	// TODO - handle the line numbers
-	const int line = this->ReadInt(section, "line", -1);
+    {
+      int t=0;
+      if( num_types > 0 ) 
+	for( t=0; t<num_types; t++ )
+	// if we've seen this type before
+	  if( strcmp( types[t].type, GetEntityType(section) ) == 0 )
+	    {
+	      types[t].count++;
+	      
+	      printf( "this is instance %d of type %s\n", 
+		      types[t].count, types[t].type );
+	      
+	      break;
+	    }
+      
+      if( t == num_types ) // if we didn't find this type
+	{
+	  printf( "adding new type \"%s\"\n", GetEntityType(section) );
+	  
+	  types = (stg_type_counter_t*)
+	    realloc( types, sizeof(stg_type_counter_t) * (num_types+1) );
+	  
+	  types[num_types].type = GetEntityType(section);
+	  types[num_types].count = 0;
+	  
+	  printf( "this is the ZEROTH instance of type %s\n", 
+		  types[num_types].type );
+	  num_types++;
+	}
 
-	stg_id_t parent = created_models[this->GetEntityParent(section)].stage_id;
+      if( strcmp( "gui", this->GetEntityType(section) ) == 0 )
+	{
+	  PRINT_WARN( "gui section not implemented" );
+	}
+      else
+	{
+	  const int line = this->ReadInt(section, "line", -1);
+	  
+	  stg_id_t parent = created_models[this->GetEntityParent(section)].stage_id;
+	  
+	  PRINT_DEBUG1( "creating child of parent %d", parent );
+	  
+	  stg_entity_create_t child;
+	  
+	  // the model's name is composed from it's token and it's
+	  // instance number
+	  snprintf( child.name, STG_TOKEN_MAX,
+		    "%s%d", types[t].type, types[t].count );
 
-	PRINT_DEBUG1( "creating child of parent %d", parent );
+	  // the "name" keyword can be used to override the automatic name
+	  strncpy(child.name, this->ReadString(section,"name", 
+					       child.name ), 
+		  STG_TOKEN_MAX);	
 	
-	stg_entity_create_t child;
-	strncpy(child.name, this->ReadString(section,"name", "" ), 
-		STG_TOKEN_MAX);
-	strncpy(child.token, this->GetEntityType(section), 
-		STG_TOKEN_MAX );
-	strncpy(child.color, this->ReadString(section,"color","red"), 
-		STG_TOKEN_MAX);
-	child.parent_id = parent; // make a new entity on the root 
-
-	// warn the user if no name was specified
-	if( strcmp( child.name, "" ) == 0 )
-	  PRINT_WARN2( "stage1p4: model %s (line %d) has no name specified. Player will not be able to access this device", child.token, line );
-	
-	stg_id_t anid = stg_model_create( cli, &child );
-	
-	// associate the name 
-	strncpy( created_models[section].name, child.name, STG_TOKEN_MAX );
-	
-	PRINT_DEBUG3( "associating section %d name %s "
-		      "with stage model %d",
-		      section, 
-		      created_models[section].name, 
-		      created_models[section].stage_id );
-	
-	// remember the model id for this section
-	created_models[section].stage_id = anid;
+	  strncpy(child.color, this->ReadString(section,"color","red"), 
+		  STG_TOKEN_MAX);
+	  child.parent_id = parent; // make a new entity on the root 
+	  
+	  stg_id_t anid = stg_model_create( cli, &child );
+	  
+	  // associate the name 
+	  strncpy( created_models[section].name, child.name, STG_TOKEN_MAX );
+	  
+	  PRINT_DEBUG3( "associating section %d name %s "
+			"with stage model %d",
+			section, 
+			created_models[section].name, 
+			created_models[section].stage_id );
+	  
+	  // remember the model id for this section
+	  created_models[section].stage_id = anid;
 	
 	PRINT_DEBUG1( "created model %d", anid );
 
@@ -1967,11 +2019,40 @@ int CWorldFile::Upload( stg_client_t* cli,
 }
 
 
-int CWorldFile::DownloadAndSave( stg_client_t* cli )
+int CWorldFile::DownloadAndSave( stg_client_t* cli, 
+				 stg_name_id_t* models, int model_count )
 {
-  puts( "DOWNLOAD AND SAVE NOT IMPLEMENTED. TODO!" );
-
-  // for all models
-  //worldfile->WriteTupleLength(section, "pose", 0, px);
+  puts( "WARNING: DOWNLOAD AND SAVE NOT FULLY IMPLEMENTED. ONLY POSES ARE SAVED." );
   
+  // Iterate through sections, downloading the data for each entity
+  for (int section = 1; section < this->GetEntityCount(); section++)
+    {
+      if( strcmp( "gui", this->GetEntityType(section) ) == 0 )
+	{
+	  PRINT_WARN( "save gui section not implemented" );
+	}
+      else
+	{
+	  stg_id_t anid = models[section].stage_id;
+	  
+#ifdef DEBUG
+	  char* name = models[section].name
+	    PRINT_DEBUG3( "saving model %d:%s section %d\n", 
+			  anid, name, section );
+#endif
+	  
+	  stg_pose_t pose;
+	  stg_model_get_pose( cli, anid, &pose );
+	  this->WriteTupleFloat( section, "pose", 0, pose.x );
+	  this->WriteTupleFloat( section, "pose", 1, pose.y );
+	  this->WriteTupleFloat( section, "pose", 2, pose.a );
+	  
+	}
+    }
+
+  // TODO - back up old world file, emacs-like
+
+  this->Save( NULL ); // save in default filename
+
+  return 0; //ok
 }

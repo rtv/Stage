@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.110 2003-08-26 19:20:57 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.111 2003-08-27 02:07:05 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -123,7 +123,6 @@ CEntity::CEntity( stg_entity_create_t* init )
   g_assert( init );
   this->id = global_next_available_id++; // a unique id for this object
   this->name = g_string_new( init->name );
-  this->token = g_string_new( init->token );
   
   ENT_DEBUG1( "entity construction - parent id: %d", init->parent_id );
   
@@ -284,7 +283,6 @@ CEntity::~CEntity()
   // actually, we still have to free up the strings that the previous
   // trace statement uses...
   if( name ) g_string_free( name, TRUE );
-  if( token ) g_string_free( token, TRUE );
 }
 
 // returns the stg_world_t object at the bottom of my node tree
@@ -826,7 +824,7 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
     {
     case STG_PROP_POSE:
       stg_pose_t pose;
-      this->GetGlobalPose(&pose);
+      this->GetPose(&pose);
       prop = stg_property_attach_data( prop, &pose, sizeof(pose) );
       break;
       
@@ -1367,12 +1365,11 @@ void CEntity::Print( int fd, char* prefix )
   stg_pose_t pose;
   this->GetGlobalPose( &pose );
 
-  printf( "%s id: %d name: %s type: %s global: [%.2f,%.2f,%.2f]"
+  printf( "%s id: %d name: %s global: [%.2f,%.2f,%.2f]"
 	  " local: [%.2f,%.2f,%.2f] vision_return %d )", 
 	  prefix,
 	  this->id,
 	  this->name->str,
-	  this->token->str,
 	  pose.x, pose.y, pose.a,
 	  pose_local.x, pose_local.y, pose_local.a,
 	  this->vision_return );
@@ -1395,7 +1392,7 @@ void CEntity::GetStatusString( char* buf, int buflen )
    // check for overflow
    assert( -1 !=  snprintf( buf, buflen, 
 			    "Pose(%.2f,%.2f,%.2f) Stage(%d:%s)",
-			    pose.x, pose.y, pose.a, this->id, this->token->str ) );
+			    pose.x, pose.y, pose.a, this->id, this->name->str ) );
 }  
 
 /////////////////////////////////////////////////////////////////////////

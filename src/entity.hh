@@ -21,7 +21,7 @@
  * Desc: Simulated robot with various sensors
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.21 2003-08-26 02:26:42 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.22 2003-08-27 02:07:05 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -317,10 +317,10 @@ CEntity* StgEntityFromId( stg_id_t id );
 
 
 #ifdef DEBUG
-#define ENT_DEBUG(S) printf("[%d:%s (%s) %p] "S" (%s %s)\n",this->id,this->name->str,this->token->str,this,__FILE__,__FUNCTION__);
-#define ENT_DEBUG1(S,A) printf("[%d:%s (%s) %p] "S" (%s %s)\n",this->id,this->name->str,this->token->str,this,A,__FILE__,__FUNCTION__);
-#define ENT_DEBUG2(S,A,B) printf("[%d:%s (%s) %p] "S" (%s %s)\n",this->id,this->name->str,this->token->str,this,A,B,__FILE__,__FUNCTION__);
-#define ENT_DEBUG3(S,A,B,C) printf("[%d:%s (%s) %p] "S" (%s %s)\n",this->id,this->name->str,this->token->str,this,A,B,C,__FILE__,__FUNCTION__);
+#define ENT_DEBUG(S) printf("[%d:%s %p] "S" (%s %s)\n",this->id,this->name->str,this,__FILE__,__FUNCTION__);
+#define ENT_DEBUG1(S,A) printf("[%d:%s %p] "S" (%s %s)\n",this->id,this->name->str,this,A,__FILE__,__FUNCTION__);
+#define ENT_DEBUG2(S,A,B) printf("[%d:%s %p] "S" (%s %s)\n",this->id,this->name->str,this,A,B,__FILE__,__FUNCTION__);
+#define ENT_DEBUG3(S,A,B,C) printf("[%d:%s %p] "S" (%s %s)\n",this->id,this->name->str,this,A,B,C,__FILE__,__FUNCTION__);
 #else
 #define ENT_DEBUG(S)
 #define ENT_DEBUG1(S,A)

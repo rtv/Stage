@@ -232,8 +232,7 @@ typedef struct
 typedef struct
 {
   int id;
-  char name[STG_TOKEN_MAX];
-  char token[STG_TOKEN_MAX];
+  char name[STG_TOKEN_MAX+6]; // extra space for an instance number
   double width, height; // the dimensions of the world in meters
   double resolution; // the size of a pixel in meters
 } stg_world_create_t;
