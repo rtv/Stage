@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.107.4.1 2002-07-08 02:36:48 rtv Exp $
+# $Id: Makefile,v 1.107.4.2 2002-07-15 20:39:15 rtv Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -38,8 +38,9 @@ OBS = main.o world.o stageio.o server.o client.o worldfile.o \
 	omnipositiondevice.o laserdevice.o sonardevice.o \
 	miscdevice.o broadcastdevice.o ptzdevice.o boxobstacle.o \
 	laserbeacon.o visiondevice.o visionbeacon.o \
-	puck.o gpsdevice.o gripperdevice.o motedevice.o bpsdevice.o \
+	puck.o gpsdevice.o gripperdevice.o bpsdevice.o \
 	laserbeacondevice.o truthdevice.o
+#motedevice.o 
 
 all: stage
 

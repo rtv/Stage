@@ -3,7 +3,7 @@
 # stage/Makefile.common - build and installation configurations
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile.common,v 1.54.2.1 2002-07-08 03:11:11 gerkey Exp $
+# $Id: Makefile.common,v 1.54.2.2 2002-07-15 20:39:14 rtv Exp $
 #
 # Notes: All user-configurable paths and build options should be specified 
 #        here. This file is included by Makefile and src/Makefile. 
@@ -32,7 +32,7 @@ PLAYER_DIR = $(HOME)/player-$(PLAYER_VERSION)
 # You can also specify the INSTALL_BASE from the make command line, eg:
 # make install -e INSTALL_BASE=~/playerstage/stage
 
-# By default, stage is installed in ~/stage
+# By default, stage is installed in ~/stage-(VERSION)
 INSTALL_BASE = $(HOME)/stage
 INSTALL_DIR = $(INSTALL_BASE)-$(VERSION)
 

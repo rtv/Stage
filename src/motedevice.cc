@@ -1,14 +1,16 @@
 /* Author: GTS */
 
 #include <stage.h>
-#include <list> 
+#include <slist.h> 
 #include <algorithm> 
 #include "world.hh"
 #include "motedevice.hh" 
 
 double m_graph_update_interval = 0.1;
 
+class CMoteDevice;
 slist<CMoteDevice*> m_mote_list;
+
 #undef DEBUG
 #undef VERBOSE
 //#define DEBUG

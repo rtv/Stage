@@ -2,7 +2,7 @@
 # Desc: Test world file containing examples of everything.
 # Author: Andrew Howard, Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.1 2002-06-11 07:03:58 gerkey Exp $
+# CVS: $Id: everything.world,v 1.1.4.1 2002-07-15 20:39:16 rtv Exp $
 
 include "pioneer.inc"
 
@@ -25,7 +25,9 @@ define usc_robot position
   laser 
   (
     lbd () 
-    ptz ( lens "wide" vision())
+    ptz ( lens "wide" 
+	vision( channels ["red" "green" "blue" "yellow" "magenta" "cyan"] )
+	)
   )
 )
 

@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.21 2002-06-11 08:34:26 inspectorg Exp $
+ * CVS info: $Id: worldfile.cc,v 1.21.4.1 2002-07-15 20:39:16 rtv Exp $
  */
 
 #include <assert.h>
@@ -1344,10 +1344,22 @@ const char *CWorldFile::GetPropertyValue(int property, int index)
 {
   assert(property >= 0);
   CProperty *pproperty = this->properties + property;
-  assert(index < pproperty->value_count);
+
+  // changed this 
+  //assert(index < pproperty->value_count);
+  // to this      
+  if( !(index < pproperty->value_count) )
+    return NULL;
+
+  // as the assert prevents us for asking for a value
+  // that does not exist in the array - it should fail nicely rather
+  // than crashing out  so we can handle variable length value lists
+  // such as the channel/color map for visiondevice
+
   pproperty->used = true;
   return GetTokenValue(pproperty->values[index]);
 }
+
 
 
 ///////////////////////////////////////////////////////////////////////////

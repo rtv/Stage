@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.29 $
+//  $Author: rtv $
+//  $Revision: 1.29.4.1 $
 //
 // Usage:
 //  (empty)
@@ -68,7 +68,7 @@ char* CWorld::StringFromType( StageType t )
   switch( t )
   {
     case NullType: return "None"; 
-    case WallType: return "wall"; break;
+    case WallType: return "wall";
     case PlayerType: return "player"; 
     case MiscType: return "misc"; 
     case PositionType: return "position"; 
@@ -127,8 +127,6 @@ CEntity* CWorld::CreateEntity( StageType type, CEntity *parent)
       return new CLaserBeacon(this, parent);
     case LBDType:
       return new CLBDDevice(this, (CLaserDevice*)parent );
-      //REMOVE case VisionBeaconType:
-      //return new CVisionBeacon(this, parent);
     case GripperType:
       return new CGripperDevice(this, parent);
     case GpsType:
@@ -139,8 +137,8 @@ CEntity* CWorld::CreateEntity( StageType type, CEntity *parent)
       return new CBroadcastDevice(this, parent);
     case OmniPositionType:
       return new COmniPositionDevice(this, parent );
-    case MoteType:
-      return new CMoteDevice(this, parent );
+      //case MoteType:
+      //return new CMoteDevice(this, parent );
     case TruthType:
       return new CTruthDevice(this, parent );
     case BpsType:
