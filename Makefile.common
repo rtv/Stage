@@ -3,7 +3,7 @@
 # stage/Makefile.common - build and installation configurations
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile.common,v 1.54.2.2 2002-07-15 20:39:14 rtv Exp $
+# $Id: Makefile.common,v 1.54.2.3 2002-11-01 03:58:26 gerkey Exp $
 #
 # Notes: All user-configurable paths and build options should be specified 
 #        here. This file is included by Makefile and src/Makefile. 
@@ -16,7 +16,7 @@
 # Define Stage's version string for the source to include.
 # Must match Player's version string
 
-VERSION = 1.2.3
+VERSION = 1.2.4
 
 ##############################################################################
 # PLAYER CONFIGURATION (required)

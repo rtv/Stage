@@ -2,7 +2,7 @@
 # Desc: Test world file containing examples of everything.
 # Author: Andrew Howard, Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.1.4.1 2002-07-15 20:39:16 rtv Exp $
+# CVS: $Id: everything.world,v 1.1.4.2 2002-11-01 03:58:27 gerkey Exp $
 
 include "pioneer.inc"
 
@@ -12,6 +12,7 @@ define visionbeacon box
   size [0.2 0.2] 
   color "red"
 )
+
 
 define usc_robot position
 (
@@ -47,7 +48,10 @@ gui
 )
 
 usc_robot (name "robot1" port 6665 pose [4.481 1.559 0])
-usc_robot (name "robot2" port 6666 pose [5.278 3.221 0.000])
+usc_robot (name "robot2" port 6675 pose [5.278 3.221 0.000])
+
+omniposition (port 6676 shape "rect" size [0.4 0.4] color "red" pose [1 1 0])
+
 
 laserbeacon( pose [6.420 3.600 216.861] id 5 )
 laserbeacon( pose [3.040 4.260 -88.274] id 7 )
