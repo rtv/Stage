@@ -7,8 +7,8 @@
 #
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
-#  $Author: vaughan $
-#  $Revision: 1.3.2.6 $
+#  $Author: ahoward $
+#  $Revision: 1.3.2.7 $
 #
 ###########################################################################
 
@@ -19,8 +19,8 @@
 VERSION=$(shell awk '{print substr($$3,2,length($$3)-2);}' VERSION)
 PLAYER_DIR = /usr/local/player$(VERSION)
 INSTALL_DIR = /usr/local/stage$(VERSION)
-SRC_DIST_NAME = stage-$(VERSION)-src
-BIN_DIST_NAME = stage-$(VERSION)-i386
+SRC_DIST_NAME = Stage-$(VERSION)-src
+BIN_DIST_NAME = Stage-$(VERSION)-i386
 
 
 ##############################################################################
