@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61.2.16 2003-02-09 22:51:49 rtv Exp $
+ * CVS: $Id: main.cc,v 1.61.2.17 2003-02-10 01:02:03 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -124,19 +124,11 @@ stage_gui_library_item_t gui_library[] = {
 int quit = 0;
 int paused = 0;
 
-// SIGUSR1 toggles pause
+// catch SIGUSR1 to toggle pause
 void CatchSigUsr1( int signo )
 {
-  /*
-    if( world )
-    {
-    world->m_enable = !world->m_enable;
-    world->m_enable ? puts( "\nCLOCK STARTED" ) : puts( "\nCLOCK STOPPED" );
-    }
-    else */
-  
-  puts( "PAUSE FAILED - NO WORLD" );
- 
+  paused = !paused; 
+  paused ? PRINT_MSG("CLOCK STARTED" ) : PRINT_MSG( "CLOCK STOPPED" );
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -173,7 +165,12 @@ void PrintUsage( void )
 void StageQuit( void )
 {  
   // reset the color of the console text and say 'bye.
-  puts( "\n\033[00m** Stage quitting **" );
+  PRINT_MSG( "closing all connections" );
+
+  for( int c=0; c<SIOGetConnectionCount(); c++ )
+    SIODestroyConnection( c );
+  
+  puts( "\033[00m** Stage quitting **" );
   exit( 0 );
 }
 
@@ -181,8 +178,9 @@ void StageQuit( void )
 // Handle quit signals
 void sig_quit(int signum)
 {
-  //PRINT_DEBUG1( "SIGNAL %d\n", signum );
-  quit = 1;
+  PRINT_DEBUG1( "SIGNAL %d", signum );
+  //quit = 1;
+  StageQuit();
 }
 
 int HandleLostConnection( int connection )
@@ -200,17 +198,8 @@ int HandleModel(  int connection, char* data, size_t len )
   stage_model_t* model = (stage_model_t*)data;
   
   PRINT_DEBUG1( "Received model on connection %d", connection );
-
-  static int model_id = 0;
-
-  // set the id of this model to the next available value and increment
-  // the value.
-  model->id = model_id++;
   
-  PRINT_DEBUG4( "creating model %p  - %d %s %d",
-		model, model->id, model->token, model->parent_id );
-  
-  // create an entity. return success on getting a valid pointer
+  // create an entity. returns a pointer to a CEntity, and sets the model.id
   if( model_library.CreateEntity( model ) == NULL )
     {
       PRINT_WARN( "failed to create an entity" );
@@ -221,7 +210,7 @@ int HandleModel(  int connection, char* data, size_t len )
   SIOWriteMessage( connection, CEntity::simtime, 
 		   STG_HDR_MODEL, 
 		   (char*)model, sizeof(stage_model_t) );
-
+  
   SIOWriteMessage( connection, CEntity::simtime, STG_HDR_CONTINUE, NULL, 0 );
 
   return 0; // success
@@ -241,7 +230,7 @@ int HandleProperty( int connection,  char* data, size_t len )
   
 
   // get a pointer to the object with this id
-  CEntity* ent = model_library.GetEntPtr( prop->id );
+  CEntity* ent = model_library.GetEntFromId( prop->id );
 
   if( !ent )
     PRINT_WARN2( "Received property %d for non-existent model %d", prop->id, prop->property );
@@ -285,27 +274,20 @@ int HandleGui( int connection, char* data, size_t len )
 {
   assert( len == sizeof(stage_gui_config_t) );
   stage_gui_config_t* cfg  = (stage_gui_config_t*)data;
+  assert( cfg );
 
   PRINT_DEBUG1( "received GUI configuraton for library %s", 
 		cfg->token );
 
-  // on first call, choose and install a GUI
-  //static int first_call = true;
-  // if( first_call )
-
-  // choose and install a GUI
-  
-  assert( cfg );
-  
   // find the library index of the GUI library with this token
   int l; 
   for( l=0; l < gui_count; l++ )
-      if( strcmp( gui_library[l].token, cfg->token ) == 0 )
+    if( strcmp( gui_library[l].token, cfg->token ) == 0 )
       // call the config function from the correct library and return
-	return( (*(gui_library[l].load_func))( cfg ) );
+      return( (*(gui_library[l].load_func))( cfg ) );
   
   PRINT_WARN1( "Received config for unknown GUI library %s", cfg->token );
-
+  
   return -1;// fail
 }
 
@@ -403,6 +385,53 @@ int GuiEntityShutdown( CEntity* ent )
   return 0;
 }
 
+int PublishDirty()
+{
+  for( int con=0; con < SIOGetConnectionCount(); con++ )
+    {
+      stage_buffer_t *dirty = SIOCreateBuffer();
+      int dirty_prop_count = 0;
+      
+      for( int ent=0; ent< model_library.model_count; ent++ )
+	{
+	  if( CEntity *entp = model_library.GetEntFromId(ent) )
+	    {	      
+	      int p;
+	      for( p=0; p<STG_PROPERTY_COUNT; p++ )
+		if( entp->subscriptions[con][p].subscribed &&
+		    entp->subscriptions[con][p].dirty )
+		  {
+		    stage_prop_id_t propid = (stage_prop_id_t)p;
+		    
+		    PRINT_WARN3( "ent: %d con: %d prop: %s needs exported",
+				 ent, con, SIOPropString(propid) );
+		    
+		    // make space for the dirty property
+		    char propdata[ STG_PROPERTY_DATA_MAX ];
+		    // fetch it out of the entity
+		    size_t len = entp->GetProperty( propid, propdata );
+		    
+		    SIOBufferProperty( dirty, ent, propid, propdata, len );
+		    
+		    // clean (con,prop,value)
+		    entp->subscriptions[con][propid].dirty = 0;
+		    dirty_prop_count++;
+		  }
+	    }
+	}
+      
+      if( dirty_prop_count > 0 )
+	{
+	  PRINT_WARN2( "writing %d dirty properties on con %d", dirty_prop_count, 0 );
+	  SIOWriteMessage( con, CEntity::simtime, 
+			   STG_HDR_PROPS, dirty->data, dirty->len );
+	}
+      
+      SIOFreeBuffer( dirty );
+   }
+  
+  return 0; // success
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // Program entry
@@ -427,17 +456,22 @@ int main(int argc, char **argv)
   
   // Register callback for quit (^C,^\) events
   // - sig_quit function raises the quit flag 
-  //signal(SIGINT, sig_quit );
-  //signal(SIGQUIT, sig_quit );
-  //signal(SIGTERM, sig_quit );
-  //signal(SIGHUP, sig_quit );
+  signal(SIGINT, sig_quit );
+  signal(SIGQUIT, sig_quit );
+  signal(SIGTERM, sig_quit );
+  signal(SIGHUP, sig_quit );
 
   // catch clock start/stop commands
-  //signal(SIGUSR1, CatchSigUsr1 );
+  signal(SIGUSR1, CatchSigUsr1 );
   
   //int c = 0;
-  // the main loop  
-  // update the simulation - stop when the quit flag is raised
+  
+  struct timeval start_time;
+  struct timeval last_time;
+  gettimeofday( &start_time, NULL );
+  memcpy( &last_time, &start_time, sizeof(last_time) );
+  
+  // the main loop
   while( !quit ) 
     {
       //printf( "cycle %d\n", c++ );
@@ -456,86 +490,42 @@ int main(int argc, char **argv)
 				 &HandleGui ) == -1 ) break;
       
       // update the simulation model
-      if( CEntity::root ) 
+      if( CEntity::root && !paused  ) 
 	{
+	  //PRINT_WARN( "update root" );
 	  CEntity::root->Update();
 	  CEntity::simtime+=0.01; 
 	}
-     
-      stage_buffer_t *dirty = SIOCreateBuffer();
-
-      int dirty_prop_count = 0;
-      int e=0;
-      for( e=0; e<100; e++ )
-	{
-	  CEntity *ent = model_library.GetEntFromId(e);
-	  
-	  if( ent )
-	    {	      
-	      int p;
-	      for( p=0; p<STG_PROPERTY_COUNT; p++ )
-		if( ent->subscriptions[0][p].subscribed &&
-		    ent->subscriptions[0][p].dirty )
-		  {
-		    stage_prop_id_t propid = (stage_prop_id_t)p;
-		    
-		    PRINT_WARN3( "ent: %d con: %d prop: %s needs exported",
-				 ent->stage_id, 0, SIOPropString(propid) );
-
-		    // make space for the dirty property
-		    char propdata[ STG_PROPERTY_DATA_MAX ];
-		    // fetch it out of the entity
-		    size_t len = ent->GetProperty( propid, propdata );
-		    
-		    SIOBufferProperty( dirty, ent->stage_id, propid, propdata, len );
-		    
-		    // clean (con,prop,value)
-		    ent->subscriptions[0][propid].dirty = 0;
-		    dirty_prop_count++;
-		  }
-	    }
-	}
       
-      if( dirty_prop_count > 0 )
-	{
-	  PRINT_WARN2( "writing %d dirty properties on con %d", dirty_prop_count, 0 );
-	  SIOWriteMessage( 0, CEntity::simtime, 
-			   STG_HDR_PROPS, dirty->data, dirty->len );
-	}
-      
-      SIOFreeBuffer( dirty );
-
-      //stage_property_t* props = NULL;
-      //size_t props_len = 0;
-      //props = CEntity::root->GetChangedProperties()
-      
-      // pass the changed props to the server, which distributes them
-      // on the appropriate connections
-      //if( SIOReportResults( CEntity::simtime, (char*)props, props_len) == -1 ) 
-      //break;
-
-      //int t;
-      //for( t=0; t<connection_count; t++ )// all the connections
-      //{      
-	  // TODO figure out how many dirty props are on this connection, buffer them
-	  // together, and write 'em out.
-      // for now we'll just send all the props on all connections
-      //if( SIOWriteMessage( t, simtime, STG_HDR_PROPS, data, len ) == -1 )
-      //return -1; // fail
+      // find all the dirty properties and write them out to subscribers
+      if( PublishDirty() == -1 ) break;
       
       // send a continue to all clients so they know we're done talking
       // -1 means ALL CONNECTIONS
       if( SIOWriteMessage( -1, CEntity::simtime, 
 			   STG_HDR_CONTINUE, NULL, 0 ) == -1 ) break;
-
-      if( GuiUpdate() == -1 ) break;
       
-      usleep( 100000 ); // just stop the powerbook getting hot :)
+      if( GuiUpdate() == -1 ) break;
+  
+      struct timeval this_time;
+      gettimeofday( &this_time, NULL );
+      
+      double interval = (double)(this_time.tv_sec - last_time.tv_sec) 
+	+ (double)(this_time.tv_usec - last_time.tv_usec ) / MILLION;
+      
+      printf( " interval: %.6f\n", interval );
+      
+      memcpy( &last_time, &this_time, sizeof(last_time) );
+      
+      // if we have spare time, go to sleep
+      
+
+      //usleep( 100000 ); // just stop the powerbook getting hot :)
     }
   
   // clean up and exit
   StageQuit();
-
+  
   return 0; 
 }
 

@@ -4,6 +4,9 @@
 
 #include "stage.h"
 
+// TODO - make this dynamic
+//#define STG_MAX_MODELS 1000
+
 class CEntity;
 
 // pointer to a function that returns a new  entity
@@ -41,14 +44,15 @@ private:
   const stage_libitem_t* items;
   int item_count;
 
-  // TODO - make this length adaptive
   // an array of pointers to entities
   // used to map id (array index) to an entity
-  CEntity* entPtrs[ 10000 ];
-
+  CEntity** entPtrs;
+  
 public:
   // constructor
   Library( const stage_libitem_t items[] );
+  
+  int model_count; //keep track of how many models we have created
   
   // print the items on stdout
   void Print(void);
@@ -62,7 +66,7 @@ public:
   { return FindItemWithToken( this->items, this->item_count, token ); };
   
   void StoreEntPtr( int id, CEntity* ent );
-  CEntity* GetEntPtr( int id ){ return( entPtrs[id] ); };
+  //CEntity* GetEntPtr( int id ){ return( entPtrs[id] ); };
   
   void AddDevice( const char* token, const char* colorstr, CreatorFunctionPtr creator );
   

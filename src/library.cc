@@ -24,7 +24,7 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.13.4.7 2003-02-09 21:39:57 gerkey Exp $
+ * CVS info: $Id: library.cc,v 1.13.4.8 2003-02-10 01:02:02 rtv Exp $
  */
 
 #include <assert.h>
@@ -39,10 +39,8 @@
 // constructor from null-terminated array
 Library::Library( const stage_libitem_t item_array[] )
 {
-  // TODO - fix this with dynamic allocation
-  memset( entPtrs, 0, 10000 * sizeof(CEntity*) );
-
-  //PRINT_DEBUG( "Building libray from array" );
+  entPtrs = NULL;
+  model_count = 0;
   
   items = item_array;
   
@@ -80,72 +78,80 @@ stage_libitem_t* Library::FindItemWithToken( const stage_libitem_t* items,
 CEntity* Library::CreateEntity( stage_model_t* model )
 {
   assert( model );
-
-  // if an entity exists with this id, we zap the old one.
-  if( CEntity* extant = entPtrs[model->id] )
-    {  
-      PRINT_DEBUG3(  "Removing extant model %d:%s at %p",
-		     extant->stage_id, extant->token, extant );
-      
-      if( GuiEntityShutdown(extant) == -1 )
-	PRINT_WARN1( "gui shutdown failed for model %d", model->id );
-      
-      if( extant->Shutdown() == -1 )
-	PRINT_WARN1( "enitity shutdown failed for mode %d", model->id );
-      
-      delete extant;
-      entPtrs[model->id] = NULL;
-    }
   
-  // now we create the replacement.
-
   // look up this token in the library
   stage_libitem_t* libit = FindItemWithToken( model->token );
   
   CEntity* ent;
   
-  if( libit )
+  if( libit == NULL )
     {
-      assert( libit->fp );
-      
-      // if it has a valid parent, look up the parent's address
-      CEntity* parentPtr = NULL;
-      if( model->parent_id != -1 ) parentPtr = entPtrs[model->parent_id]; 
-      
-      // create an entity through the creator callback fucntion  
-      // which calls the constructor
-      ent = (*libit->fp)( model->id, 
-			  (char*)model->token, 
-			  (char*)libit->colorstr, 
-			  parentPtr ); 
-      
-      // need to do some startup outside the constructor to allow for
-      // full polymorphism
-      if( ent->Startup() == -1 ) // if startup fails
-	{
-	  PRINT_WARN3( "Startup failed for model %d (%s) at %p",
-		      model->id, model->token, ent );
-	  delete ent;
-	  ent = NULL;
-	}
-
-      // now start the GUI repn for this entity
-      if( GuiEntityStartup( ent ) == -1 )
-	{
-	  PRINT_WARN3( "Gui startup failed for model %d (%s) at %p",
-		       model->id, model->token, ent );
-	  delete ent; // destructor calls CEntity::Shutdown()
-	  ent = NULL;
-	}      
-    }
-  else
-    {
-      PRINT_WARN1( "Client requested model '%s' is not in the library",
-		   model->token );
-      ent = NULL;
+      PRINT_ERR1( "requested model '%s' is not in the library", 
+		  model->token );
+      return NULL;
     }
   
-  StoreEntPtr( model->id, ent );
+  if( libit->fp == NULL )
+  {
+    PRINT_ERR1( "requested model '%s' doesn't have a creator function", 
+		model->token );
+    return NULL;
+  }
+  
+  
+  PRINT_DEBUG4( "creating model %p  - %d %s %d",
+		model, model->id, model->token, model->parent_id );
+  
+  // if it has a valid parent, look up the parent's address
+  CEntity* parentPtr = NULL;
+  if( model->parent_id != -1 ) 
+    {
+      if( (parentPtr = entPtrs[model->parent_id] ) == NULL ) 
+	{
+	  PRINT_ERR1( "parent specified (%d) but pointer not found",
+		      model->parent_id );
+	  return NULL;
+	}
+    }
+  
+  // set the id of this model to the next available value
+  model->id = model_count;
+  
+  // create an entity through the creator callback fucntion  
+  // which calls the constructor
+  ent = (*libit->fp)( model->id, 
+		      (char*)model->token, 
+		      (char*)libit->colorstr, 
+		      parentPtr ); 
+  
+  assert( ent );
+  
+  // need to do some startup outside the constructor to allow for
+  // full polymorphism
+  if( ent->Startup() == -1 ) // if startup fails
+    {
+      PRINT_WARN3( "Startup failed for model %d (%s) at %p",
+		   model->id, model->token, ent );
+      delete ent;
+      return NULL;
+    }
+  
+  // now start the GUI repn for this entity
+  if( GuiEntityStartup( ent ) == -1 )
+    {
+      PRINT_WARN3( "Gui startup failed for model %d (%s) at %p",
+		   model->id, model->token, ent );
+      delete ent; // destructor calls CEntity::Shutdown()
+      return NULL;
+    }      
+  
+  // add space for this model
+  entPtrs = (CEntity**)realloc( entPtrs, (model_count+1) * sizeof(entPtrs[0]) );
+  entPtrs[model_count] = ent;
+  model_count++;
+ 
+  for( int t=0; t<model_count; t++ )
+    printf( "entPtrs[%d] = %p\n", t, entPtrs[t] );
 
   if( ent ) PRINT_DEBUG3(  "Startup successful for model %d (%s) at %p",
 			   model->id, model->token, ent );

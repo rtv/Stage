@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.11 2003-02-09 00:32:16 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.12 2003-02-10 01:02:01 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -145,8 +145,6 @@ CEntity::CEntity( int id, char* token, char* color, CEntity* parent )
   this->map_px = this->map_py = this->map_pth = 0;
 
   m_dependent_attached = false;
-
-  m_last_pixel_x = m_last_pixel_y = m_last_degree = 0;
 
   m_interval = 0.1; // update interval in seconds 
   m_last_update = -FLT_MAX; // initialized 
@@ -775,8 +773,8 @@ void CEntity::Subscribe( int con, stage_prop_id_t* props, int prop_count )
 	PRINT_WARN( "subscribe to all properties not implemented" );
       else
 	{
-	  PRINT_WARN2( "subscribing to property %s on connection %d",
-		       SIOPropString(prop_code), con );
+	  PRINT_WARN3( "subscribing to ent %d property %s on connection %d",
+		       stage_id, SIOPropString(prop_code), con );
 	  // register the subscription on this channel, for this property
 	  subscriptions[con][prop_code].subscribed = 1;
 	  subscriptions[con][prop_code].dirty = 1;
@@ -819,8 +817,8 @@ void CEntity::DestroyConnection( int con )
 int CEntity::SetProperty( int con, stage_prop_id_t property, 
 			  char* value, size_t len )
 {
-  PRINT_DEBUG3( "setting prop %s (%d bytes) for ent %p",
-		SIOPropString(property), (int)len, this );
+  PRINT_DEBUG3( "setting prop %s (%d bytes) for ent %d",
+		SIOPropString(property), (int)len, stage_id );
 
   assert( value );
   //assert( len > 0 );

@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15.2.11 2003-02-09 00:32:16 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.12 2003-02-10 01:02:02 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -294,10 +294,6 @@ private: int BufferPacket( stage_buffer_t* buf, char* data, size_t len );
 
   ///////////////////////////////////////////////////////////////////////
   // DISTRIBUTED STAGE STUFF
-  
-  //public: char m_dirty[ STG_MAX_CONNECTIONS ][ STG_PROPERTY_COUNT ];
-
-
 public: 
   stage_subscription_t subscriptions[ STG_MAX_CONNECTIONS][STG_PROPERTY_COUNT];
   void Subscribe( int con, stage_prop_id_t *props, int prop_count );
@@ -315,11 +311,11 @@ public:
   // these store the last pose we sent out from the pose server
   // to be tested when setting the dirty flag to see if we really
   // need to send a new pose
-  public: int m_last_pixel_x, m_last_pixel_y, m_last_degree;
+  //public: int m_last_pixel_x, m_last_pixel_y, m_last_degree;
   
   // recursive function that ORs an ent's dirty array with those of
   // all it's ancestors 
-  public: void InheritDirtyFromParent( int con_count );
+  //public: void InheritDirtyFromParent( int con_count );
 
   // the IP address of the host that manages this entity
   // replaced the hostname 'cos it's smaller and faster in comparisons
