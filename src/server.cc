@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.38 2002-10-30 02:18:20 gerkey Exp $
+ * CVS info: $Id: server.cc,v 1.39 2002-10-30 04:05:46 gerkey Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -477,6 +477,12 @@ bool CStageServer::Startup( void )
 
   // just to be reassuring, print the host details
   printf( "[Server %s:%d]",  m_hostname, m_port );
+  
+  // inherit parent's method
+  CWorld::Startup();
+
+  // See if there was anything we didnt understand in the world file
+  this->worldfile->WarnUnused();
 
   ////////////////////////////////////////////////////////////////////
   // STARTUP PLAYER
@@ -490,12 +496,6 @@ bool CStageServer::Startup( void )
   }
   
   m_enable = true;  
-
-  // inherit parent's method
-  CWorld::Startup();
-
-  // See if there was anything we didnt understand in the world file
-  this->worldfile->WarnUnused();
 
   return true;
 }
