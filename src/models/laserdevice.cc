@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.8 2003-01-09 19:31:08 inspectorg Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.9 2003-01-09 19:32:01 inspectorg Exp $
  */
 
 #define DEBUG
@@ -103,10 +103,10 @@ bool CLaserDevice::Load(CWorldFile *worldfile, int section)
   this->min_res = worldfile->ReadAngle(section, "min_res", this->min_res);
   this->max_range = worldfile->ReadLength(section, "max_range", this->max_range);
 
-  this->default_scan_rate = worldfile->ReadFloat(section, "scan_rate", this->default_scan_rate);
-  this->default_scan_min = worldfile->ReadAngle(section, "scan_min", this->default_scan_min);
-  this->default_scan_max = worldfile->ReadAngle(section, "scan_max", this->default_scan_max);
-  this->default_scan_res = worldfile->ReadAngle(section, "scan_res", this->default_scan_res);
+  this->scan_rate = worldfile->ReadFloat(section, "scan_rate", this->scan_rate);
+  this->scan_min = worldfile->ReadAngle(section, "scan_min", this->scan_min);
+  this->scan_max = worldfile->ReadAngle(section, "scan_max", this->scan_max);
+  this->scan_res = worldfile->ReadAngle(section, "scan_res", this->scan_res);
     
   return true;
 }
