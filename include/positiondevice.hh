@@ -1,28 +1,28 @@
-///////////////////////////////////////////////////////////////////////////
-//
-// File: positiondevice.hh
-// Author: Richard Vaughan, Andrew Howard
-// Date: 5 Dec 2000
-// Desc: Simulates the Pioneer robot base
-//
-// CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/positiondevice.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.8 $
-//
-// Usage:
-//  (empty)
-//
-// Theory of operation:
-//  (empty)
-//
-// Known bugs:
-//  (empty)
-//
-// Possible enhancements:
-//  (empty)
-//
-///////////////////////////////////////////////////////////////////////////
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/*
+ * Desc: Simulates a differential mobile robot.
+ * Author: Andrew Howard, Richard Vaughan
+ * Date: 5 Dec 2000
+ * CVS info: $Id: positiondevice.hh,v 1.9 2002-06-07 16:28:40 inspectorg Exp $
+ */
 
 #ifndef POSITIONDEVICE_H
 #define POSITIONDEVICE_H
@@ -38,28 +38,31 @@ class CPositionDevice : public CEntity
   public: virtual void Update( double sim_time );
 
   // Extract command from the command buffer
-  //private: void ParseCommandBuffer(player_position_cmd_t &command );
-  private: void ParseCommandBuffer( void );
+  private: void ParseCommandBuffer();
 				    
   // Compose the reply packet
-  //private: void ComposeData(player_position_data_t &position );
-  private: void ComposeData( void );
+  private: void ComposeData();
+
+  // Process configuration requests.
+  private: void UpdateConfig();
 
   // Move the robot
   protected: int Move(); 
 
   // Timings
-  private: double m_last_time;
+  private: double last_time;
 
   // Current command and data buffers
-  private: player_position_cmd_t m_command;
-  private: player_position_data_t m_data;
+  private: player_position_cmd_t command;
+  private: player_position_data_t data;
     
   // Commanded robot speed
-  protected: double m_com_vr, m_com_vth;
+  protected: double com_vr, com_vth;
 
   // Odometric pose
-  protected: double m_odo_px, m_odo_py, m_odo_pth;
+  protected: double odo_px, odo_py, odo_pth;
+
+  // Stall flag set if robot is in collision
   protected: unsigned char stall;
 };
 

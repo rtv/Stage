@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.49 2002-06-07 06:30:51 inspectorg Exp $
+ * CVS info: $Id: entity.hh,v 1.50 2002-06-07 16:28:39 inspectorg Exp $
  */
 
 #ifndef ENTITY_HH
@@ -328,6 +328,7 @@ class CEntity
   // Returns 0 on success, non-zero on error.
   protected: size_t PutReply(void* client, unsigned short type,
                              struct timeval* ts, void* reply, size_t len);
+
   // A short form for zero-length replies.
   // Returns 0 on success, non-zero on error.
   protected: size_t PutReply(void* client, unsigned short type);

@@ -1,28 +1,28 @@
-///////////////////////////////////////////////////////////////////////////
-//
-// File: pioneermobiledevice.cc
-// Author: Richard Vaughan, Andrew Howard
-// Date: 5 Dec 2000
-// Desc: Simulates the Pioneer robot base
-//
-// CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.24 $
-//
-// Usage:
-//  (empty)
-//
-// Theory of operation:
-//  (empty)
-//
-// Known bugs:
-//  (empty)
-//
-// Possible enhancements:
-//  (empty)
-//
-///////////////////////////////////////////////////////////////////////////
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/*
+ * Desc: Simulates a differential mobile robot.
+ * Author: Andrew Howard, Richard Vaughan
+ * Date: 5 Dec 2000
+ * CVS info: $Id: positiondevice.cc,v 1.25 2002-06-07 16:28:40 inspectorg Exp $
+ */
 
 //#define DEBUG
 
@@ -39,7 +39,6 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
   // set the Player IO sizes correctly for this type of Entity
   m_data_len = sizeof( player_position_data_t );
   m_command_len = sizeof( player_position_cmd_t );
-  //m_config_len = sizeof( player_position_config_t ); // configurable!
   m_config_len = 1; 
   m_reply_len = 1; 
   
@@ -55,11 +54,12 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
   puck_return = true;
   idar_return = IDARTransparent;
 
-  m_com_vr = m_com_vth = 0;
-  m_odo_px = m_odo_py = m_odo_pth = 0;
+  this->com_vr = this->com_vth = 0;
+  this->odo_px = this->odo_py = this->odo_pth = 0;
   stall = 0;
-  
-  m_interval = 0.01; // update this device VERY frequently
+
+  // update this device VERY frequently
+  m_interval = 0.01; 
   
   // assume robot is 20kg
   m_mass = 20.0;
@@ -94,79 +94,35 @@ void CPositionDevice::Update( double sim_time )
       
     if( Subscribed() > 0 )
     {
-      // Get latest config
-      player_position_config_t cfg;
-      void* client;
-
-      // sanity check that things are set up correctly
-      //assert( sizeof(cfg) == m_config_len );
-
-      if(GetConfig(&client, &cfg, sizeof(cfg)) > 0)
-      {
-	PRINT_DEBUG1( "checking config type %x\n", cfg[0] );
-	
-        switch( cfg.request ) // switch on the type of request
-        {
-          case PLAYER_POSITION_MOTOR_POWER_REQ:
-            // motor state change request 
-            // 1 = enable motors
-            // 0 = disable motors
-            // (default)
-	    printf( "MOTOR POWER: %d\n", cfg.value ); 
-	    // CONFIG NOT IMPLEMENTED
-            PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
-            break;
-
-          case PLAYER_POSITION_VELOCITY_CONTROL_REQ:
-            // velocity control mode:
-            //   0 = direct wheel velocity control (default)
-            //   1 = separate translational and rotational control
-	    printf( "CONTROL MODE: %d\n", cfg.value ); 
-	    // CONFIG NOT IMPLEMENTED
-            PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
-            break;
-
-          case PLAYER_POSITION_RESET_ODOM_REQ:
-            // reset position to 0,0,0: ignore value
-	    puts( "RESET ODOMETRY"); 
-            m_odo_px = m_odo_py = m_odo_pth = 0.0;
-            PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
-            break;
-
-          default:
-            printf("Position device got unknown config request \"%c\"\n",
-                   cfg.request);
-            PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
-            break;
-        }
-      }
+      // Process configuration requests
+      UpdateConfig();
 
       // Get the latest command
-      if( GetCommand( &m_command, sizeof(m_command)) == sizeof(m_command))
+      if( GetCommand( &this->command, sizeof(this->command)) == sizeof(this->command))
         ParseCommandBuffer();    // find out what to do    
-      
-      Move();      // do things
+
+      // do things
+      Move();
 
       // report the new state of things
       ComposeData();
 
       // generic device call
-      PutData( &m_data, sizeof(m_data)  );     
+      PutData( &this->data, sizeof(this->data)  );     
     }
     else  
     {
       // the device is not subscribed,
       // reset to default settings.
-      m_odo_px = m_odo_py = m_odo_pth = 0;
       // also set speeds to zero
-      m_com_vr = m_com_vth = 0;
+      this->odo_px = this->odo_py = this->odo_pth = 0;
+      this->com_vr = this->com_vth = 0;
     }
   }
-  
-  double x, y, th;
-  GetGlobalPose( x,y,th );
 
   // Redraw ourself it we have moved
+  double x, y, th;
+  GetGlobalPose(x, y, th);
   ReMap(x, y, th);
 }
 
@@ -181,9 +137,9 @@ int CPositionDevice::Move()
 
   // Compute a new pose
   // This is a zero-th order approximation
-  double qx = px + m_com_vr * step * cos(pth);
-  double qy = py + m_com_vr * step * sin(pth);
-  double qth = pth + m_com_vth * step;
+  double qx = px + this->com_vr * step * cos(pth);
+  double qy = py + this->com_vr * step * sin(pth);
+  double qth = pth + this->com_vth * step;
 
   // Check for collisions
   // and accept the new pose if ok
@@ -200,15 +156,15 @@ int CPositionDevice::Move()
     // Compute the new odometric pose
     // Uses a first-order integration approximation
     //
-    double dr = m_com_vr * step;
-    double dth = m_com_vth * step;
-    m_odo_px += dr * cos(m_odo_pth + dth / 2);
-    m_odo_py += dr * sin(m_odo_pth + dth / 2);
-    m_odo_pth += dth;
+    double dr = this->com_vr * step;
+    double dth = this->com_vth * step;
+    this->odo_px += dr * cos(this->odo_pth + dth / 2);
+    this->odo_py += dr * sin(this->odo_pth + dth / 2);
+    this->odo_pth += dth;
 
     // Normalise the odometric angle
     //
-    m_odo_pth = fmod(m_odo_pth + TWOPI, TWOPI);
+    this->odo_pth = fmod(this->odo_pth + TWOPI, TWOPI);
   }
   return true;
 }
@@ -219,16 +175,16 @@ int CPositionDevice::Move()
 //
 void CPositionDevice::ParseCommandBuffer()
 {
-  double fv = (short) ntohs(m_command.speed);
-  double fw = (short) ntohs(m_command.turnrate);
+  double fv = (short) ntohs(this->command.speed);
+  double fw = (short) ntohs(this->command.turnrate);
 
   // Store commanded speed
   // Linear is in m/s
   // Angular is in radians/sec
-  m_com_vr = fv / 1000;
-  m_com_vth = DTOR(fw);
+  this->com_vr = fv / 1000;
+  this->com_vth = DTOR(fw);
 
-  //printf( "v = %.2f   w = %.2f\n", m_com_vr, m_com_vth );
+  //printf( "v = %.2f   w = %.2f\n", this->com_vr, this->com_vth );
 }
 
 
@@ -238,9 +194,9 @@ void CPositionDevice::ComposeData()
 {
   // Compute odometric pose
   // Convert mm and degrees (0 - 360)
-  double px = m_odo_px * 1000.0;
-  double py = m_odo_py * 1000.0;
-  double pth = RTOD(fmod(m_odo_pth + TWOPI, TWOPI));
+  double px = this->odo_px * 1000.0;
+  double py = this->odo_py * 1000.0;
+  double pth = RTOD(fmod(this->odo_pth + TWOPI, TWOPI));
 
   // Get actual global pose
   double gx, gy, gth;
@@ -253,13 +209,72 @@ void CPositionDevice::ComposeData()
   
   // Construct the data packet
   // Basically just changes byte orders and some units
-  m_data.xpos = htonl((int) px);
-  m_data.ypos = htonl((int) py);
-  m_data.theta = htons((unsigned short) pth);
+  this->data.xpos = htonl((int) px);
+  this->data.ypos = htonl((int) py);
+  this->data.theta = htons((unsigned short) pth);
 
-  m_data.speed = htons((unsigned short) (m_com_vr * 1000.0));
-  m_data.turnrate = htons((short) RTOD(m_com_vth));  
-  m_data.compass = htons((unsigned short)(RTOD(compass)));
-  m_data.stalls = this->stall;
+  this->data.speed = htons((unsigned short) (this->com_vr * 1000.0));
+  this->data.turnrate = htons((short) RTOD(this->com_vth));  
+  this->data.compass = htons((unsigned short)(RTOD(compass)));
+  this->data.stalls = this->stall;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Process configuration requests.
+void CPositionDevice::UpdateConfig()
+{
+  int len;
+  void *client;
+  char buffer[PLAYER_MAX_REQREP_SIZE];
+  player_position_geom_t geom;
+
+  while (true)
+  {
+    len = GetConfig(&client, buffer, sizeof(buffer));
+    if (len <= 0)
+      break;
+
+    switch (buffer[0])
+    {
+      case PLAYER_POSITION_MOTOR_POWER_REQ:
+        // motor state change request 
+        // 1 = enable motors
+        // 0 = disable motors
+        // (default)
+        // CONFIG NOT IMPLEMENTED
+        PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
+        break;
+
+      case PLAYER_POSITION_VELOCITY_CONTROL_REQ:
+        // velocity control mode:
+        //   0 = direct wheel velocity control (default)
+        //   1 = separate translational and rotational control
+        // CONFIG NOT IMPLEMENTED
+        PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
+        break;
+
+      case PLAYER_POSITION_RESET_ODOM_REQ:
+        // reset position to 0,0,0: ignore value
+        this->odo_px = this->odo_py = this->odo_pth = 0.0;
+        PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
+        break;
+
+      case PLAYER_POSITION_GET_GEOM_REQ:
+        // Return the robot geometry
+        geom.pose[0] = htons((short) (this->origin_x * 1000));
+        geom.pose[1] = htons((short) (this->origin_y * 1000));
+        geom.pose[2] = 0;
+        geom.size[0] = htons((short) (this->size_x * 1000));
+        geom.size[1] = htons((short) (this->size_y * 1000));
+        PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &geom, sizeof(geom));
+        break;
+
+      default:
+        PRINT_WARN1("got unknown config request \"%c\"\n", buffer[0]);
+        PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
+        break;
+    }
+  }
 }
 
