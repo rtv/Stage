@@ -1,6 +1,6 @@
 ####################################################################################
 # TODO 
-# $Id: TODO,v 1.5 2001-09-22 21:07:38 vaughan Exp $
+# $Id: TODO,v 1.6 2001-09-22 21:09:42 vaughan Exp $
 ####################################################################################
 
 ## IN PROGRESS #####################################################################
@@ -14,17 +14,15 @@
 
 ## NICE ############################################################################
 
- - improve configuration file read/write 
-	- save only relevant state
-	- inherit port by default on load
-
+ - configuration file write: save only relevant state
  - add vision device sensor display - skeleton is in place
 
 ## FIXED/DONE ######################################################################
 
 RTV 9/22/01
  - XS: fixed window redraws of sensor data, added selective sensor display (num keys)
-
+ - configuration file read: 'port' settings are sticky
+ 
 RTV 9/21/01
  - XS: add player interface to display sensor data
 
