@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.39 2003-04-01 00:20:54 rtv Exp $
+dnl $Id: configure.in,v 1.40 2003-04-28 23:49:11 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -11,11 +11,6 @@ dnl determine system type.  this is used in a couple of places to infer the
 dnl types of arguments to some networking library functions.  if/when we 
 dnl upgrade to newer Autotools, this can probably go away.
 AC_CANONICAL_SYSTEM
-case $host in
-*-*-solaris*) AC_DEFINE(PLAYER_SOLARIS,1,[building for Solaris]);;
-*-*-linux*) AC_DEFINE(PLAYER_LINUX,1,[building for Linux]);;
-esac
-
 
 dnl Need AC_PROG_MAKE_SET for recursive building
 AC_PROG_MAKE_SET
@@ -38,9 +33,6 @@ define(STAGE_VERSION,PS_VERSION.dev)
 dnl Initialize automake with name and version of package to be built. 
 dnl PACKAGE and VERSION will be so defined in <config.h>.
 AM_INIT_AUTOMAKE(stage,STAGE_VERSION)
-
-dnl Change default installation prefix from /usr/local to user's home
-dnl AC_PREFIX_DEFAULT(${HOME}/stage-PS_VERSION)
 
 dnl Checks for programs.
 AC_PROG_CC
@@ -128,8 +120,8 @@ AM_CONDITIONAL(WITH_GUI, test x$with_gui = xyes)
 dnl where's player?
 AC_ARG_WITH(player, [   --with-player=dir      Location of Player (installation or source)],
 PLAYER_DIR=$with_player,
-dnl PLAYER_DIR="${HOME}/player-PS_VERSION")
 PLAYER_DIR=$prefix)
+AC_MSG_CHECKING(for player.h)
 if test ! -f $PLAYER_DIR/include/player.h; then
   if test ! -f $PLAYER_DIR/server/player.h; then
     AC_MSG_RESULT([Could not find player.h.  Player is required to build Stage.])
@@ -138,16 +130,31 @@ if test ! -f $PLAYER_DIR/include/player.h; then
     AC_MSG_ERROR("Configuration aborted. Fix the Player path.")
   fi
 fi
+AC_MSG_RESULT(yes)
 AC_SUBST(PLAYER_DIR)
 
 dnl where's the X11-style color database?
-AC_CHECK_FILE([/usr/X11R6/lib/X11/rgb.txt],
-  CDB="\"/usr/X11R6/lib/X11/rgb.txt\"",
-  AC_CHECK_FILE([/usr/openwin/lib/X11/rgb.txt],
-    CDB="\"/usr/openwin/lib/X11/rgb.txt\"",
-    CDB="\"/usr/X11R6/lib/X11/rgb.txt\""))
+case $host in
+*-*-solaris*) defaultcolorfile=[/usr/openwin/lib/X11/rgb.txt];;
+*) defaultcolorfile=[/usr/X11R6/lib/X11/rgb.txt];;
+esac
+
 AC_ARG_WITH(color, [   --with-color=file      Location of X11-style color file],
-CDB="\"$with_color\"",)
+,with_color=$defaultcolorfile)
+AC_MSG_CHECKING(for $with_color)
+if test -f $with_color; then
+  CDB="\"$with_color\""
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+  AC_MSG_WARN([***************************************************])
+  AC_MSG_WARN([Couldn't find an X11-style color database, so colors])
+  AC_MSG_WARN([won't look right (if you can see them at all). If])
+  AC_MSG_WARN([you know where your database is (usually called rgb.txt),])
+  AC_MSG_WARN([then try --with-color=file.])
+  AC_MSG_WARN([***************************************************])
+  CDB="\"\""
+fi
 AC_DEFINE_UNQUOTED(COLOR_DATABASE,$CDB,[the X11-style color database])
 
 dnl should tests (e.g., RTK) be built?
