@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.41 2003-05-24 21:08:34 gerkey Exp $
+dnl $Id: configure.in,v 1.42 2003-05-24 21:27:22 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -166,7 +166,7 @@ else
   if test -f $PLAYER_DIR/include/player.h; then
     AC_MSG_RESULT(yes)
     PLAYER_CPPFLAGS="-I$PLAYER_DIR/include"
-    PLAYER_LDADD="-L$PLAYER_DIR/lib -lplayerqueue -lplayerpacket"
+    PLAYER_LDADD="-L$PLAYER_DIR/lib -lplayerqueue -lplayerpacket -lplayerclient"
   elif test -f $PLAYER_DIR/server/player.h; then
     AC_MSG_RESULT(yes)
     PLAYER_CPPFLAGS="-I$PLAYER_DIR/server -I$PLAYER_DIR/server/drivers/stage -I$PLAYER_DIR/client_libs/libplayerpacket -I$PLAYER_DIR/client_libs/c -I$PLAYER_DIR/client_libs/c++"
