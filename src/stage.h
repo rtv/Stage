@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.47 2004-06-02 01:03:12 rtv Exp $
+ * CVS: $Id: stage.h,v 1.48 2004-06-09 02:32:09 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -90,6 +90,7 @@ typedef enum
     STG_PROP_PLAYERID,
     STG_PROP_POSE,
     STG_PROP_POWER,
+    STG_PROP_ENERGY,
     STG_PROP_PPM,
     STG_PROP_PUCKRETURN,
     STG_PROP_RANGEBOUNDS, 
@@ -176,7 +177,11 @@ typedef uint16_t stg_msg_type_t;
    typedef double stg_meters_t;
    typedef double stg_radians_t;
    typedef unsigned long stg_msec_t;
- 
+   typedef unsigned long stg_mj_t; // milli-Joules
+   typedef int stg_mjs_t; // milli-Joules per second
+   typedef int stg_bool_t;
+
+
 #define HTON_M(m) htonl(m)   // byte ordering for METERS
 #define NTOH_M(m) ntohl(m)
 #define HTON_RAD(r) htonl(r) // byte ordering for RADIANS
@@ -331,6 +336,19 @@ typedef enum
 stg_position_steer_mode_t;
 
 
+// energy --------------------------------------------------------------
+
+typedef struct
+{
+  stg_mj_t joules; 
+  stg_mjs_t djoules; // current rate of change of power, in milliJoules/sec
+  stg_mj_t move_cost;
+  stg_mjs_t give_rate; // give this many Joules/sec of energy to a neighbor
+  stg_meters_t give_range; // a neighbor is anyone within this range
+  stg_bool_t charging; // boolean, true if we are attached to a charger  
+} stg_energy_t;
+
+
 // VELOCITY ------------------------------------------------------------
 
 typedef stg_pose_t stg_velocity_t;
@@ -446,7 +464,6 @@ typedef struct
    
 typedef int stg_movemask_t;
 
-typedef int stg_bool_t;
 
 // GUI -------------------------------------------------------------------
 
@@ -754,8 +771,8 @@ stg_client_t* stg_client_create( void );
 // because they use the C++ worldfile class (for now)
 stg_world_t* stg_client_worldfile_load( stg_client_t* client, 
 					char* worldfile_path );
-void stg_client_save( stg_client_t* cli );
-void stg_client_load( stg_client_t* cli );
+void stg_client_save( stg_client_t* cli, stg_id_t world_id );
+void stg_client_load( stg_client_t* cli, stg_id_t world_id );
 // END THESE
 
 // read a package: a complete set of Stage deltas. If no package is
@@ -860,8 +877,8 @@ int stg_model_prop_set_reply_var( stg_model_t* mod, stg_id_t propid,
 /******************/
 
 
-int stg_model_subscribe( stg_model_t* mod, int prop, stg_msec_t interval );
-int stg_model_unsubscribe( stg_model_t* mod, int prop );
+int stg_model_subscribe( stg_model_t* mod, stg_id_t prop, stg_msec_t interval );
+int stg_model_unsubscribe( stg_model_t* mod, stg_id_t prop );
 
 int stg_model_request_reply( stg_model_t* mod, void* req, size_t req_len,
 			     void** rep, size_t* rep_len );

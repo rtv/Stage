@@ -7,8 +7,8 @@
 #include "gui.h"
 #include "raytrace.h"
 
-//#define DEBUG
-#undef DEBUG
+#define DEBUG
+//#undef DEBUG
 
 model_t* model_create(  world_t* world, 
 			    stg_id_t id, 
@@ -22,6 +22,10 @@ model_t* model_create(  world_t* world,
   mod->id = id;
   mod->token = strdup(token);
   mod->world = world;
+  
+  memset( &mod->energy, 0, sizeof(mod->energy) );
+  mod->energy.joules = 3600000L; // 1 Amp hour
+  mod->energy.move_cost = 1000; // one joule per move (quite high!)
   
   //mod->props = g_hash_table_new( g_int_hash, g_int_equal );
   
@@ -168,6 +172,8 @@ void model_global_rect( model_t* mod, stg_rotrect_t* glob, stg_rotrect_t* loc )
 
 void model_map( model_t* mod, gboolean render )
 {
+  assert( mod );
+
   // todo - speed this up by transforming all points in a single function call
   int l;
   for( l=0; l<mod->lines->len; l++ )
@@ -296,6 +302,10 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
     case STG_PROP_COLOR:
       *data = &mod->color;
       *len = sizeof(mod->color);
+      break;
+    case STG_PROP_ENERGY:
+      *data = &mod->energy;
+      *len = sizeof(mod->energy);
       break;
     case STG_PROP_NOSE:
       *data = &mod->nose;
@@ -427,6 +437,13 @@ int model_set_prop( model_t* mod,
 	memcpy( &mod->color, data, len );
       else PRINT_WARN2( "ignoring bad color data (%d/%d bytes)", 
 		       (int)len, (int)sizeof(mod->color) );
+      break;
+      
+    case STG_PROP_ENERGY:
+      if( len == sizeof(mod->energy) )
+	memcpy( &mod->energy, data, len );
+      else PRINT_WARN2( "ignoring bad energy data (%d/%d bytes)", 
+			(int)len, (int)sizeof(mod->energy) );
       break;
       
     case STG_PROP_MOVEMASK:

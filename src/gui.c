@@ -21,6 +21,7 @@ static rtk_app_t *app = NULL;
 // table of world-to-window mappings
 static GHashTable* wins;
 
+rtk_fig_t* fig_debug = NULL;
 
 void gui_startup( int* argc, char** argv[] )
 {
@@ -118,6 +119,9 @@ gui_window_t* gui_window_create( world_t* world, int xdim, int ydim )
   
   win->bg = rtk_fig_create( win->canvas, NULL, 0 );
   
+  // a figure for debugging
+  //fig_debug = rtk_fig_create( win->canvas, NULL, STG_LAYER_DEBUG );
+
   double width = 10;//world->size.x;
   double height = 10;//world->size.y;
 
@@ -182,26 +186,34 @@ void gui_world_create( world_t* world )
 
 typedef struct
 {
-  stg_matrix_t* matrix;
+  //stg_matrix_t* matrix;
+  double ppm;
   rtk_fig_t* fig;
 } gui_mf_t;
 
 
 void render_matrix_cell( gui_mf_t*mf, stg_matrix_coord_t* coord )
 {
-  double pixel_size = 1.0 / mf->matrix->ppm;
+  //double pixel_size = 1.0 / mf->matrix->ppm;
+  double pixel_size = 1.0 / mf->ppm;
   
   rtk_fig_rectangle( mf->fig, 
-		     coord->x * pixel_size, coord->y*pixel_size, 0, 
+		     coord->x * pixel_size + pixel_size/2.0, 
+		     coord->y*pixel_size + pixel_size/2.0, 0, 
 		     pixel_size, pixel_size, 0 );
 }
 
 void render_matrix_cell_cb( gpointer key, gpointer value, gpointer user )
 {
-  stg_matrix_coord_t* coord = (stg_matrix_coord_t*)key;
-  gui_mf_t* mf = (gui_mf_t*)user;
-  
-  render_matrix_cell( mf, coord );
+  GPtrArray* arr = (GPtrArray*)value;
+
+  if( arr->len > 0 )
+    {  
+      stg_matrix_coord_t* coord = (stg_matrix_coord_t*)key;
+      gui_mf_t* mf = (gui_mf_t*)user;
+      
+      render_matrix_cell( mf, coord );
+    }
 }
 
 
@@ -221,11 +233,17 @@ void gui_world_matrix( world_t* world, gui_window_t* win )
   //  g_hash_table_size( world->matrix->table ) );
   
   gui_mf_t mf;
-  mf.matrix = world->matrix;
+  //mf.matrix = world->matrix;
   mf.fig = win->matrix;
 
   if( win->show_matrix )
-    g_hash_table_foreach( world->matrix->table, render_matrix_cell_cb, &mf );
+    {
+      mf.ppm = world->matrix->ppm;
+      g_hash_table_foreach( world->matrix->table, render_matrix_cell_cb, &mf );
+      
+      mf.ppm = world->matrix->bigppm;
+      g_hash_table_foreach( world->matrix->bigtable, render_matrix_cell_cb, &mf );
+    }
 }
 
 void gui_pose( rtk_fig_t* fig, model_t* mod )

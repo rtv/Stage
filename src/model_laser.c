@@ -2,6 +2,9 @@
 #include "raytrace.h"
 #include <sys/time.h>
 
+#include "rtk.h"
+extern rtk_fig_t* fig_debug;
+
 #define TIMING 0
 
 void model_update_laser( model_t* mod )
@@ -32,6 +35,8 @@ void model_update_laser( model_t* mod )
   gettimeofday( &tv1, NULL );
 #endif
       
+  if( fig_debug ) rtk_fig_clear( fig_debug );
+
   int t;
   for( t=0; t<cfg->samples; t++ )
     {

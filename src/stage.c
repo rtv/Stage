@@ -32,6 +32,7 @@ const char* stg_property_string( stg_id_t id )
     case STG_PROP_COLOR: return "color"; break;
     case STG_PROP_GEOM: return "geom"; break;
     case STG_PROP_LASERRETURN: return "laser_return"; break;
+    case STG_PROP_ENERGY: return "energy"; break;
     case STG_PROP_NAME: return "name"; break;
     case STG_PROP_OBSTACLERETURN: return "obstacle_return";break;
     case STG_PROP_ORIGIN: return "origin"; break;

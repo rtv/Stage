@@ -12,12 +12,15 @@ itl_mode_t;
 typedef struct
 {
   double x, y, a;
+  double cosa, sina;
   double range;
   double max_range;
-  
+  double big_incr;
+  double small_incr;
+  double med_incr;
+
   GPtrArray* models;
   int index;
-  
   stg_matrix_t* matrix;
 
 } itl_t;

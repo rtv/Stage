@@ -30,7 +30,8 @@ typedef struct _model
 
   struct _model *parent;
   
-  
+  stg_energy_t energy;
+
   GArray* ranger_config; // sonars, IRs, etc.
   GArray* ranger_data;
   int ranger_return;

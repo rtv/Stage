@@ -3,6 +3,9 @@
 
 #include "raytrace.h"
 
+#include "rtk.h"
+extern rtk_fig_t* fig_debug;
+
 void itl_destroy( itl_t* itl )
 {
   free( itl );
@@ -20,6 +23,10 @@ itl_t* itl_create( double x, double y, double a, double b,
   itl->index = 0;
   itl->range = 0;
   
+  itl->big_incr = 1.0 / itl->matrix->bigppm;
+  itl->med_incr = 1.0 / itl->matrix->medppm;  
+  itl->small_incr = 1.0 / itl->matrix->ppm;  
+
   switch( pmode )
     {
     case PointToBearingRange:
@@ -28,6 +35,8 @@ itl_t* itl_create( double x, double y, double a, double b,
       double bearing = a;
 	
       itl->a = bearing;
+      itl->cosa = cos( itl->a );
+      itl->sina = sin( itl->a );
       itl->max_range = range;
     }
     break;
@@ -35,10 +44,10 @@ itl_t* itl_create( double x, double y, double a, double b,
     {
       double x1 = a;
       double y1 = b;
-	
-      //printf( "From %.2f,%.2f to %.2f,%.2f\n", x,y,x1,y1 );
-      
+           
       itl->a = atan2( y1-y, x1-x );
+      itl->cosa = cos( itl->a );
+      itl->sina = sin( itl->a );
       itl->max_range = hypot( x1-x, y1-y );
     }
     break;
@@ -59,49 +68,87 @@ void itl_raytrace( itl_t* itl )
   
   itl->index = 0;
   itl->models = NULL;
-
-  // hops along each axis 1 cell at a time
-  double cosa = cos( itl->a );
-  double sina = sin( itl->a );
   
-  double incr = 1.0 / itl->matrix->ppm;
-
-  // Look along scan line for obstacles
-  while( itl->range < itl->max_range  )
+  while( itl->range < itl->max_range )
     {
-      itl->x += incr * cosa;
-      itl->y += incr * sina;
+      itl->models = stg_matrix_bigcell_get( itl->matrix, itl->x, itl->y );
+     
+      if( fig_debug ) // draw the big rectangle
+	rtk_fig_rectangle( fig_debug, 
+			   itl->x-fmod(itl->x,itl->big_incr)+itl->big_incr/2.0,
+			   itl->y-fmod(itl->y,itl->big_incr)+itl->big_incr/2.0,
+			   0, 
+			   itl->big_incr, itl->big_incr, 0 );
+
+      // if there is nothing in the big cell
+      if( !(itl->models && itl->models->len > 0) )
+	{	      
+	  int bigcell_x = (int)(itl->x * itl->matrix->bigppm);
+	  int bigcell_y = (int)(itl->y * itl->matrix->bigppm);
+	  
+	  // move forward in increments of one small cell until we
+	  // get into a new big cell
+	  while( bigcell_x == (int)(itl->x * itl->matrix->bigppm) &&
+		 bigcell_y == (int)(itl->y * itl->matrix->bigppm) )
+	    {
+	      itl->x += itl->small_incr * itl->cosa;
+	      itl->y += itl->small_incr * itl->sina;
+	      itl->range += itl->small_incr;      
+	    }	      
+	  continue;
+	}
+
+      // check a medium cell
+      itl->models = stg_matrix_medcell_get( itl->matrix, itl->x, itl->y );
+     
+      if( fig_debug ) // draw the big rectangle
+	rtk_fig_rectangle( fig_debug, 
+			   itl->x-fmod(itl->x,itl->med_incr)+itl->med_incr/2.0,
+			   itl->y-fmod(itl->y,itl->med_incr)+itl->med_incr/2.0,
+			   0, 
+			   itl->med_incr, itl->med_incr, 0 );
+
+      // if there is nothing in the big cell
+      if( !(itl->models && itl->models->len > 0) )
+	{	      
+	  int medcell_x = (int)(itl->x * itl->matrix->medppm);
+	  int medcell_y = (int)(itl->y * itl->matrix->medppm);
+	  
+	  // move forward in increments of one small cell until we
+	  // get into a new medium cell
+	  while( medcell_x == (int)(itl->x * itl->matrix->medppm) &&
+		 medcell_y == (int)(itl->y * itl->matrix->medppm) )
+	    {
+	      itl->x += itl->small_incr * itl->cosa;
+	      itl->y += itl->small_incr * itl->sina;
+	      itl->range += itl->small_incr;      
+	    }	      
+	  continue;
+	}
+
+      // check a small cell
+      itl->models = stg_matrix_cell_get( itl->matrix, itl->x, itl->y );
+      if( !(itl->models && itl->models->len>0) ) 
+	itl->models = 
+	  stg_matrix_cell_get( itl->matrix, itl->x+itl->small_incr, itl->y );
+
+      if( fig_debug ) // draw the small rectangle
+	rtk_fig_rectangle( fig_debug, 
+			   itl->x-fmod(itl->x,itl->small_incr)+itl->small_incr/2.0,
+			   itl->y-fmod(itl->y,itl->small_incr)+itl->small_incr/2.0,
+			   0, 
+			   itl->small_incr, itl->small_incr, 0 );      
+
+      itl->x += itl->small_incr * itl->cosa;// - itl->offx;
+      itl->y += itl->small_incr * itl->sina;// - itl->offy;
+      itl->range += itl->small_incr;
       
-      // stop this ray if we're out of bounds
-      if( itl->x < 0 ) 
-	{ 
-	  itl->x = 0; 
-	  itl->range = itl->max_range;
+      if( itl->models && itl->models->len > 0 )
+	{
 	  break;
 	}
-      
-      if( itl->y < 0 ) 
-	{ 
-	  itl->y = 0; 
-	  itl->range = itl->max_range;
-	  break;
-	}
-      
-      //printf( "looking in %.2f,%.2f range %.2f max_range %.2f\n", 
-      //    itl->x, itl->y, itl->range, itl->max_range );
-      
-      // TODO - use a hexagonal grid for the matrix so we can avoid this
-      // double-lookup.
-      
-      itl->models = stg_matrix_cell_m( itl->matrix, itl->x, itl->y );
-      if( !itl->models ) 
-	itl->models = stg_matrix_cell_m( itl->matrix, itl->x+incr, itl->y );
-
-      itl->range+=incr;
-
-      if( itl->models && itl->models->len > 0 ) break;// we hit something!
     }
-}; 
+}
 
 void PrintArray( GPtrArray* arr )
 {
@@ -130,12 +177,10 @@ model_t* itl_next( itl_t* itl )
       itl_raytrace( itl ); 
     }
   
-  //assert( itl->mod != 0 ); // should be a valid array, even if empty
-  
   //PrintArray( itl->ent );
   //printf( "returning %p (index: %d) at: %d %d rng: %d\n",  
   //  itl->ent[itl->index], itl->index, (int)itl->x, (int)itl->y, (int)itl->remaining_range );
   
-  return( itl->models ? g_ptr_array_index( itl->models, itl->index++ ) : NULL ); 
+  return( (itl->models && itl->models->len > 0 )? g_ptr_array_index( itl->models, itl->index++ ) : NULL ); 
 }
 

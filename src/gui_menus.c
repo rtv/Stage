@@ -3,6 +3,8 @@
 #include "gui.h"
 #include "stdlib.h"
 
+extern rtk_fig_t* fig_debug;
+
 enum {
   STG_MITEM_FILE_SAVE,
   STG_MITEM_FILE_LOAD,
@@ -13,6 +15,7 @@ enum {
   STG_MITEM_FILE_MOVIE_STOP,
   STG_MITEM_VIEW_MATRIX,
   STG_MITEM_VIEW_GRID,
+  STG_MITEM_VIEW_DEBUG,
   STG_MITEM_VIEW_OBJECT_BODY,
   STG_MITEM_VIEW_OBJECT_LIGHT,
   STG_MITEM_VIEW_OBJECT_SENSOR,
@@ -57,7 +60,10 @@ void gui_menu_save( rtk_menuitem_t *item )
   PRINT_DEBUG( "Save menu item" );
 
   world_t* world = (world_t*)item->userdata;
-  stg_connection_write_msg( world->con, STG_MSG_CLIENT_SAVE, NULL, 0 ); 
+  stg_id_t wid = world->id;
+  
+  // tell the client to save the world with this server-side id
+  stg_connection_write_msg( world->con, STG_MSG_CLIENT_SAVE, &wid, sizeof(wid) ); 
 }
 
 void gui_menu_exit( rtk_menuitem_t *item )
@@ -169,6 +175,23 @@ void gui_menu_matrix( rtk_menuitem_t *item )
   gui_window_t* win = (gui_window_t*)item->menu->canvas->userdata;
  
   win->show_matrix = rtk_menuitem_ischecked( item );
+}
+
+void gui_menu_debug( rtk_menuitem_t *item )
+{
+  PRINT_DEBUG1( "menu selected %s.",
+	       rtk_menuitem_ischecked( item ) ? "<checked>" : "<unchecked>" );
+ 
+  if(rtk_menuitem_ischecked( item ) )
+    {
+      fig_debug = rtk_fig_create(item->menu->canvas, NULL, STG_LAYER_DEBUG );
+      rtk_fig_color_rgb32( fig_debug, STG_DEBUG_COLOR );
+    }
+  else if( fig_debug )
+    { 
+      rtk_fig_destroy( fig_debug );
+      fig_debug = NULL;
+    }
 }
 
 
@@ -290,6 +313,8 @@ void gui_window_menus_create( gui_window_t* win )
     rtk_menuitem_create(win->menus[STG_MENU_VIEW], "Grid", 1);
   win->mitems[STG_MITEM_VIEW_MATRIX] = 
     rtk_menuitem_create(win->menus[STG_MENU_VIEW], "Matrix", 1);
+  win->mitems[STG_MITEM_VIEW_DEBUG] = 
+    rtk_menuitem_create(win->menus[STG_MENU_VIEW], "Debug", 1);
 
 
   // create the VIEW/OBJECTS menu items
@@ -342,8 +367,10 @@ void gui_window_menus_create( gui_window_t* win )
 			     gui_menu_layer );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_GRID], 
 			     gui_menu_layer );
+  
+  rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_DEBUG], 
+			     gui_menu_debug );
     
-
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_DATA_LASER], 
 			     gui_menu_view_data_laser );
   rtk_menuitem_set_callback( win->mitems[STG_MITEM_VIEW_DATA_RANGER], 
@@ -352,6 +379,7 @@ void gui_window_menus_create( gui_window_t* win )
   // set the default checks - the callback functions will set things
   // up properly
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_GRID], 0);
+  rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_DEBUG], 0);
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_OBJECT_BODY], 1);
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_OBJECT_LIGHT], 1);
   rtk_menuitem_check(win->mitems[STG_MITEM_VIEW_OBJECT_SENSOR], 0);

@@ -340,7 +340,7 @@ int stg_client_write_msg( stg_client_t* cli,
 }
 
 
-int stg_model_subscribe( stg_model_t* mod, int prop, stg_msec_t interval )
+int stg_model_subscribe( stg_model_t* mod, stg_id_t prop, stg_msec_t interval )
 {
   assert( mod );
   assert( mod->world );
@@ -360,12 +360,12 @@ int stg_model_subscribe( stg_model_t* mod, int prop, stg_msec_t interval )
 }
 
 
-int stg_model_unsubscribe( stg_model_t* mod, int prop )
+int stg_model_unsubscribe( stg_model_t* mod, stg_id_t prop )
 {
-  //assert( mod );
-  //assert( mod->world );
-  //assert( mod->world->client );
-
+  assert( mod );
+  assert( mod->world );
+  assert( mod->world->client );
+  
   stg_unsub_t sub;
   sub.world = mod->world->id_server;
   sub.model = mod->id_server;  
@@ -1078,11 +1078,20 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
   switch( msg->type )
     {
     case STG_MSG_CLIENT_SAVE:
-      stg_client_save(cli);
+      if( msg->payload_len == sizeof(stg_id_t) )
+	{
+	  stg_id_t wid = *(stg_id_t*)msg->payload;
+	  stg_client_save(cli, wid );
+	}
+      else
+	PRINT_WARN2( "Received malformed SAVE message (%d/%d bytes)",
+		    msg->payload_len, sizeof(stg_id_t) );
+      
       break;
       
     case STG_MSG_CLIENT_LOAD:
-      stg_client_load(cli);
+      // TODO
+      stg_client_load(cli, 0 );
       break;
 
     case STG_MSG_CLIENT_REPLY:

@@ -29,8 +29,9 @@ world_t* world_create( server_t* server, connection_t* con,
   world->wall_interval = cw->interval_real;  
   world->wall_last_update = 0;//stg_timenow();
   world->ppm = cw->ppm;
-
-  world->matrix = stg_matrix_create( world->ppm );
+  
+  // todo - have the matrix resolutions fully configurable at startup
+  world->matrix = stg_matrix_create( world->ppm, 5, 1 ); 
 
   world->paused = TRUE; // start paused.
   

@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.4 2004-04-23 19:14:40 rtv Exp $
+ * $Id: matrix.c,v 1.5 2004-06-09 02:32:08 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -10,11 +10,12 @@
 
 #include "matrix.h"
 
+
 //#define DEBUG
 
 // if this is defined, empty matrix cells are deleted, saving a little
 // memory at the cost of a little time.
-#define STG_DELETE_EMPTY_CELLS 1
+#define STG_DELETE_EMPTY_CELLS 0
 
 // basic integer drawing functions (not intended for external use)
 void draw_line( stg_matrix_t* matrix,
@@ -52,13 +53,23 @@ gboolean matrix_equal( gconstpointer c1, gconstpointer c2 )
   return( mc1->x == mc2->x && mc1->y == mc2->y );  
 }
 
-stg_matrix_t* stg_matrix_create( double ppm )
+stg_matrix_t* stg_matrix_create( double ppm, double medppm, double bigppm )
 {
   stg_matrix_t* matrix = (stg_matrix_t*)calloc(1,sizeof(stg_matrix_t));
   
   matrix->table = g_hash_table_new_full( matrix_hash, matrix_equal,
 					 matrix_key_destroy, matrix_value_destroy );  
+
+  matrix->medtable = g_hash_table_new_full( matrix_hash, matrix_equal,
+					    matrix_key_destroy, matrix_value_destroy );  
+  
+  matrix->bigtable = g_hash_table_new_full( matrix_hash, matrix_equal,
+					    matrix_key_destroy, matrix_value_destroy );
+  
   matrix->ppm = ppm;
+  matrix->medppm = medppm;  
+  matrix->bigppm = bigppm;
+
   return matrix;
 }
 
@@ -67,6 +78,8 @@ stg_matrix_t* stg_matrix_create( double ppm )
 void stg_matrix_destroy( stg_matrix_t* matrix )
 {
   g_hash_table_destroy( matrix->table );
+  g_hash_table_destroy( matrix->medtable );
+  g_hash_table_destroy( matrix->bigtable );
   free( matrix );
 }
 
@@ -78,242 +91,180 @@ void stg_matrix_clear( stg_matrix_t* matrix )
 					 matrix_key_destroy, matrix_value_destroy );
 }
 
-// get the array of pointers in cell y*width+x
-GPtrArray* stg_matrix_cell( stg_matrix_t* matrix, gulong x, gulong y)
+GPtrArray* stg_table_cell( GHashTable* table, gulong x, gulong y)
 {
   stg_matrix_coord_t coord;
   coord.x = x;
   coord.y = y;
-   
-  return g_hash_table_lookup( matrix->table, &coord );
+  
+  //printf( "table %p fetching [%d][%d]\n", table, x, y );
+  return g_hash_table_lookup( table, &coord );
+}
+
+GPtrArray* stg_matrix_table_add_cell( GHashTable* table, gulong x, gulong y )
+{
+  stg_matrix_coord_t* coord = calloc( sizeof(stg_matrix_coord_t), 1 );
+  coord->x = x;
+  coord->y = y;
+  
+  GPtrArray* cell = g_ptr_array_new();
+  g_hash_table_insert( table, coord, cell );
+  
+  return cell;
+}
+
+
+
+// get the array of pointers in cell y*width+x, specified in meters
+GPtrArray* stg_matrix_cell_get( stg_matrix_t* matrix, double x, double y)
+{
+  return stg_table_cell( matrix->table, 
+			 (gulong)(x * matrix->ppm), 
+			 (gulong)(y * matrix->ppm) );  
 }
 
 // get the array of pointers in cell y*width+x, specified in meters
-GPtrArray* stg_matrix_cell_m( stg_matrix_t* matrix, double x, double y)
+GPtrArray* stg_matrix_bigcell_get( stg_matrix_t* matrix, double x, double y)
 {
-  stg_matrix_coord_t coord;
-  coord.x = (gulong)(x * matrix->ppm);
-  coord.y = (gulong)(y * matrix->ppm);
-   
-  return g_hash_table_lookup( matrix->table, &coord );
+  return stg_table_cell( matrix->bigtable, 
+			 (gulong)(x * matrix->bigppm), 
+			 (gulong)(y * matrix->bigppm) );  
 }
 
-
-void stg_matrix_cell_append_m( stg_matrix_t* matrix, 
-			       double x, double y, void* object )
+// get the array of pointers in cell y*width+x, specified in meters
+GPtrArray* stg_matrix_medcell_get( stg_matrix_t* matrix, double x, double y)
 {
-  stg_matrix_cell_append( matrix, 
-			  (gulong)(x*matrix->ppm),
-			  (gulong)(y*matrix->ppm), 
-			  object );
+  return stg_table_cell( matrix->medtable, 
+			 (gulong)(x * matrix->medppm), 
+			 (gulong)(y * matrix->medppm) );  
 }
+
 
 // append the pointer <object> to the pointer array at the cell
 void stg_matrix_cell_append(  stg_matrix_t* matrix, 
-			      gulong x, gulong y, void* object )
+			      double x, double y, void* object )
 {
-  GPtrArray* cell = stg_matrix_cell( matrix, x, y );
+  GPtrArray* cell = stg_matrix_cell_get( matrix, x, y );
   
   // if the cell is empty we create a new ptr array for it
   if( cell == NULL )
-    {
-      stg_matrix_coord_t* coord = calloc( sizeof(stg_matrix_coord_t), 1 );
-      coord->x = x;
-      coord->y = y;
-
-      cell = g_ptr_array_new();
-      g_hash_table_insert( matrix->table, coord, cell );
-    }
+    cell = stg_matrix_table_add_cell( matrix->table, 
+				      (gulong)(x*matrix->ppm),
+				      (gulong)(y*matrix->ppm) );
   else // make sure we're only in the cell once 
     g_ptr_array_remove_fast( cell, object );
   
   g_ptr_array_add( cell, object );  
   
+
+  GPtrArray* medcell = stg_matrix_medcell_get( matrix, x, y );
+  
+  // if the cell is empty we create a new ptr array for it
+  if( medcell == NULL )
+    medcell = stg_matrix_table_add_cell( matrix->medtable, 
+					 (gulong)(x*matrix->medppm),
+					 (gulong)(y*matrix->medppm) );
+  else // make sure we're only in the cell once 
+    g_ptr_array_remove_fast( medcell, object );
+  
+  g_ptr_array_add( medcell, object );  
+  
+
+  GPtrArray* bigcell = stg_matrix_bigcell_get( matrix, x, y );
+  
+  if( bigcell == NULL )
+    bigcell = stg_matrix_table_add_cell( matrix->bigtable, 
+					 (gulong)(x*matrix->bigppm), 
+					 (gulong)(y*matrix->bigppm) );
+  else // make sure we're only in the cell once 
+    g_ptr_array_remove_fast( bigcell, object );
+  
+  g_ptr_array_add( bigcell, object );  
+
+
   //printf( "appending %p to matrix at %d %d. %d pointers now cell\n", 
   //  object, (int)x, (int)y, cell->len );
 }
 
-void stg_matrix_cell_remove_m( stg_matrix_t* matrix, 
-			       double x, double y, void* object )
-{
-  stg_matrix_cell_remove( matrix, 
-			  (gulong)(x*matrix->ppm),
-			  (gulong)(y*matrix->ppm), 
-			  object );
-}
-
 // if <object> appears in the cell's array, remove it
-void stg_matrix_cell_remove(  stg_matrix_t* matrix,
-			      gulong x, gulong y, void* object )
+void stg_matrix_cell_remove( stg_matrix_t* matrix, 
+			     double x, double y, void* object )
 { 
-  GPtrArray* cell = stg_matrix_cell( matrix, x, y );
+  GPtrArray* cell = stg_matrix_cell_get( matrix, x, y );
   
   if( cell )
     {
       //printf( "removing %p from %d,%d. %d pointers remain here\n", 
       //      object, x, y, cell->len );
-
+      
       g_ptr_array_remove_fast( cell, object );
 
-      //#if STG_DELETE_EMPTY_CELLS
+#if STG_DELETE_EMPTY_CELLS
       // if the ptr array is empty, we delete it to save memory.
       if( cell->len == 0 )
 	{
 	  stg_matrix_coord_t coord;
-	  coord.x = x;
-	  coord.y = y;
+	  coord.x = (gulong)(x*matrix->ppm);
+	  coord.y = (gulong)(y*matrix->ppm);
 	  
 	  g_hash_table_remove( matrix->table, &coord );
 	  //GPtrArray* p = stg_matrix_cell( matrix, x, y );
 	  //printf( "removed cell %d %d now %p\n", x, y, p  );
 	}
-      //#endif
+#endif
     }
-}
-
-
-// Draw a line from (x1, y1) to (x2, y2) inclusive
-void draw_line( stg_matrix_t* matrix,
-		int x1,int y1,int x2,int y2, 
-		void* object, int add )
-{
-  int dx, dy;
-  int x, y;
-  int incE, incNE;
-  int t, delta;
-  int neg_slope = 0;
   
-  dx = x2 - x1;
-  dy = y2 - y1;
+  // don't bother deleting med cells, there aren't nearly so many of 'em.
+  GPtrArray* medcell = stg_matrix_medcell_get( matrix, x, y );
+  if( medcell )
+    g_ptr_array_remove_fast( medcell, object );
 
-  // Draw lines with slope < 45 degrees
-  if (abs(dx) > abs(dy))
-  {
-    if (x1 > x2)
-    {
-      t = x1; x1 = x2; x2 = t;
-      t = y1; y1 = y2; y2 = t;
-      dx = -dx;
-      dy = -dy;
-    }
-
-    if (y1 > y2)
-    {
-      neg_slope = 1;
-      dy = -dy;
-    }
-
-    delta = 2 * dy - dx;
-    incE = 2 * dy;
-    incNE = 2 * (dy - dx);
-
-    x = x1;
-    y = y1;
-    if (add)
-      stg_matrix_cell_append( matrix, x, y, object);
-    else
-      stg_matrix_cell_remove( matrix, x, y, object);
-
-    while (x < x2)
-  	{
-  	  if (delta <= 0)
-      {
-        delta = delta + incE;
-        x++;
-      }
-  	  else
-      {
-        delta = delta + incNE;
-        x++;
-        if (neg_slope)
-          y--;
-        else
-          y++;
-      }
-      if (add)
-        stg_matrix_cell_append( matrix, x, y, object);
-      else
-        stg_matrix_cell_remove( matrix, x, y, object);
-  	}
-
-    x = x2;
-    y = y2;
-    if (add)
-      stg_matrix_cell_append( matrix, x, y, object);
-    else
-      stg_matrix_cell_remove( matrix, x, y, object);
-  }
-
-  // Draw lines with slope > 45 degrees
-  else
-  {
-    if (y1 > y2)
-    {      t = x1; x1 = x2; x2 = t;
-      t = y1; y1 = y2; y2 = t;
-      dx = -dx;
-      dy = -dy;
-    }
-
-    if (x1 > x2)
-    {
-      neg_slope = 1;
-      dx = -dx;
-    }
-
-    delta = 2 * dx - dy;
-    incE = 2 * dx;
-    incNE = 2 * (dx - dy);
-
-    x = x1;
-    y = y1;
-    if (add)
-      stg_matrix_cell_append( matrix, x, y, object);
-    else
-      stg_matrix_cell_remove( matrix, x, y, object);
-
-    while (y < y2)
-  	{
-  	  if (delta <= 0)
-      {
-        delta = delta + incE;
-        y++;
-      }
-  	  else
-      {
-        delta = delta + incNE;
-        y++;
-        if (neg_slope)
-          x--;
-        else
-          x++;
-      }
-      if (add)
-        stg_matrix_cell_append( matrix, x, y, object);
-      else
-        stg_matrix_cell_remove( matrix, x, y, object);
-  	}
-
-    x = x2;
-    y = y2;
-    if (add)
-      stg_matrix_cell_append( matrix, x, y, object);
-    else
-      stg_matrix_cell_remove( matrix, x, y, object);
-  }
+  // don't bother deleting big cells, there aren't nearly so many of 'em.
+  GPtrArray* bigcell = stg_matrix_bigcell_get( matrix, x, y );
+  if( bigcell )
+    g_ptr_array_remove_fast( bigcell, object );
 }
 
-
-void stg_matrix_line( stg_matrix_t* matrix, 
-		      double x1, double y1,
-		      double x2, double y2, 
+// draw or erase a straight line between x1,y1 and x2,y2.
+void stg_matrix_line( stg_matrix_t* matrix,
+		      double x1,double y1,double x2,double y2, 
 		      void* object, int add )
 {
-  draw_line( matrix, 
-	     (int)(x1*matrix->ppm), (int)(y1*matrix->ppm),
-	     (int)(x2*matrix->ppm), (int)(y2*matrix->ppm),
-	     object, add );
-}
+  double xdiff = x2 - x1;
+  double ydiff = y2 - y1;
 
+  double angle = atan2( ydiff, xdiff );
+  double len = hypot( ydiff, xdiff );
+
+  double cosa = cos(angle);
+  double sina = sin(angle);
+  
+  double xincr = cosa * 1.0 / matrix->ppm;
+  double yincr = sina * 1.0 / matrix->ppm;
+  
+  double xx = 0;
+  double yy = 0;
+  
+  double finalx, finaly;
+
+  while( len > hypot( yy,xx ) )
+    {
+      finalx = x1+xx;
+      finaly = y1+yy;
+      
+      // bounds check
+      if( finalx >= 0 && finaly >= 0 )
+	{
+	  if( add ) 
+	    stg_matrix_cell_append( matrix, finalx, finaly, object ); 
+	  else
+	    stg_matrix_cell_remove( matrix, finalx, finaly, object ); 
+	}
+      
+      xx += xincr;
+      yy += yincr;      
+    }
+}
 
 void stg_matrix_lines( stg_matrix_t* matrix, 
 		       stg_line_t* lines, int num_lines,
@@ -321,12 +272,10 @@ void stg_matrix_lines( stg_matrix_t* matrix,
 {
   int l;
   for( l=0; l<num_lines; l++ )
-    {
-      draw_line( matrix, 
-		 (int)(lines[l].x1*matrix->ppm), (int)(lines[l].y1*matrix->ppm), 
-		 (int)(lines[l].x2*matrix->ppm), (int)(lines[l].y2*matrix->ppm), 
-		 object, add );
-    }
+    stg_matrix_line( matrix, 
+		     lines[l].x1, lines[l].y1, 
+		     lines[l].x2, lines[l].y2, 
+		     object, add );
 }
 
 void stg_matrix_rectangle( stg_matrix_t* matrix, 

@@ -2,30 +2,65 @@
 #include "stage.h"
 #include "worldfile.hh"
 
+// this file is a hacky use of the old C++ worldfile code. It will
+// fade away as we move to a new worldfile implementation. 
+
 static CWorldFile wf;
 
-// create a world containing a passel of Stage models based on the
-// worldfile
 
-//void stg_world_save( stg_world_t* world, CWorldFile* wfp )
-//{
+void stg_model_save( stg_model_t* model, CWorldFile* worldfile )
+{
+  stg_pose_t pose;
+  if( stg_model_prop_get( model, STG_PROP_POSE, &pose,sizeof(pose)))
+    PRINT_ERR( "error requesting STG_PROP_POSE" );
+  
+  // right noe we only save poses
+  worldfile->WriteTupleLength( model->section, "pose", 0, pose.x);
+  worldfile->WriteTupleLength( model->section, "pose", 1, pose.y);
+  worldfile->WriteTupleAngle( model->section, "pose", 2, pose.a);
+}
 
-void stg_client_save( stg_client_t* cli )
+void stg_model_save_cb( gpointer key, gpointer data, gpointer user )
+{
+  stg_model_save( (stg_model_t*)data, (CWorldFile*)user );
+}
+
+void stg_world_save( stg_world_t* world, CWorldFile* wfp )
+{
+  // ask every model to save itself
+  g_hash_table_foreach( world->models_id, stg_model_save_cb, wfp );
+}
+
+
+void stg_world_save_cb( gpointer key, gpointer data, gpointer user )
+{
+  stg_world_save( (stg_world_t*)data, (CWorldFile*)user );
+}
+
+
+void stg_client_save( stg_client_t* cli, stg_id_t world_id )
 {
   if( cli->callback_save )(*cli->callback_save)();
 
   PRINT_MSG1( "Stage client: saving worldfile \"%s\"\n", wf.filename );
+
+  // ask every model in the client to save itself
+  g_hash_table_foreach( cli->worlds_id_server, stg_world_save_cb, &wf );
+
   wf.Save(NULL);
 }  
-
-void stg_client_load( stg_client_t* cli )
-{
-  if( cli->callback_load )(*cli->callback_load)();
   
-  PRINT_WARN( "LOAD NOT YET IMPLEMENTED" );
-  //wf.Load();
-}  
+  void stg_client_load( stg_client_t* cli, stg_id_t world_id )
+    {
+      if( cli->callback_load )(*cli->callback_load)();
+      
+      PRINT_WARN( "LOAD NOT YET IMPLEMENTED" );
+      //wf.Load();
+    }  
 
+
+// create a world containing a passel of Stage models based on the
+// worldfile
 
 stg_world_t* stg_client_worldfile_load( stg_client_t* client, 
 					char* worldfile_path )
