@@ -1,16 +1,17 @@
 
 # Desc: world defines a descartes base with 8 idars	
-# CVS: $Id: pherobot.world,v 1.7 2002-08-22 02:04:38 rtv Exp $
+# CVS: $Id: pherobot.world,v 1.8 2002-08-22 02:13:46 rtv Exp $
 
 
+resolution 0.02
 
-environment
+bitmap
 (
   #file "simple.pnm.gz"
   #file "cave.pnm.gz"
   file "hospital_section.pnm.gz"
   #file "blank.pnm"
-  scale 0.02
+  resolution 0.02
 ) 
 
 gui
