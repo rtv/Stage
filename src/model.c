@@ -472,7 +472,7 @@ int model_set_color( model_t* mod, stg_color_t* col )
   memcpy( &mod->color, col, sizeof(mod->color) );
 
   // redraw my image
-  model_lines_render(mod);
+  model_render_lines(mod);
 
   return 0; // OK
 }
@@ -731,5 +731,4 @@ void model_print_cb( gpointer key, gpointer value, gpointer user )
 {
   model_print( (model_t*)value );
 }
-
 

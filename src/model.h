@@ -198,20 +198,6 @@ void register_service( stg_model_type_t type, func_service_t func );
 void register_putdata( stg_model_type_t type, func_set_t func );
 void register_get( stg_model_type_t type, func_get_t func );
 
-/*int model_register_type( stg_model_type_t type, 
-			 func_init_t initf,
-			 func_startup_t startupf,
-			 func_shutdown_t shutdownf,
-			 func_service_t servicef,
-			 func_putcommand_t putcommandf,
-			 func_getdata_t getdataf,
-			 func_request_t requestf );
-*/
-
-
-
-stg_bool_t model_obstacle_get( model_t* model );
-
 void model_map( model_t* mod, gboolean render );
 void model_map_with_children( model_t* mod, gboolean render );
 
@@ -225,5 +211,11 @@ rtk_fig_t* model_prop_fig_create( model_t* mod,
 
 int model_is_antecedent( model_t* mod, model_t* testmod );
 int model_is_descendent( model_t* mod, model_t* testmod );
+
+void model_render_lines( model_t* mod );
+void model_render_geom( model_t* mod );
+void model_render_pose( model_t* mod );
+//void model_render_( model_t* mod );
+
 
 #endif

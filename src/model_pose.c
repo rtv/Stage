@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_pose.c,v $
 //  $Author: rtv $
-//  $Revision: 1.19 $
+//  $Revision: 1.20 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -16,36 +16,8 @@
 //#define DEBUG
 
 #include "raytrace.h"
-#include "gui.h"
 #include "model.h"
 
-
-// convencience
-stg_bool_t model_get_obstaclereturn( model_t* mod   )
-{
-  return mod->obstacle_return;
-}
-
-int model_set_pose( model_t* mod, stg_pose_t* pose )
-{
-  // if the new pose is different
-  if( memcmp( &mod->pose, pose, sizeof(stg_pose_t) ))
-    {
-      // unrender from the matrix
-      model_map_with_children( mod, 0 );
-      
-      // copy the new pose
-      memcpy( &mod->pose, pose, sizeof(mod->pose) );
-      
-      // render in the matrix
-      model_map_with_children( mod, 1 );
-      
-      // move the rtk figure to match
-      gui_model_pose( mod );
-    }
-  
-  return 0; // OK
-}
 
 ///////////////////////////////////////////////////////////////////////////
 // Check to see if the given pose will yield a collision with obstacles.
@@ -124,13 +96,6 @@ model_t* model_test_collision_at_pose( model_t* mod,
 }
 
 
-// convencience - get the model's pose.
-stg_pose_t* model_get_pose( model_t* model )
-{
-  //stg_pose_t* pose = model_get_prop_data_generic( model, STG_PROP_POSE );
-  //assert(pose);
-  return &model->pose;
-}
 
 int model_update_pose( model_t* model )
 { 
@@ -189,10 +154,3 @@ int model_update_pose( model_t* model )
   return 0; // ok
 }
 
-void gui_model_pose( model_t* mod )
-{ 
-  stg_pose_t* pose = model_get_pose( mod );
-  //PRINT_DEBUG( "gui model pose" );
-  rtk_fig_origin( gui_model_figs(mod)->top, 
-		  pose->x, pose->y, pose->a );
-}
