@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.70 $
+//  $Revision: 1.71 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -320,7 +320,9 @@ bool CWorld::ParseCmdline(int argc, char **argv)
 // Load the world
 bool CWorld::Load(const char *filename)
 {
-  printf( "[World %s]", filename );
+  this->worldfilename = filename;
+  
+  printf( "[World %s]", this->worldfilename );
   fflush( stdout );
 
   // the default hostname is this host's name
@@ -435,6 +437,10 @@ bool CWorld::Load(const char *filename)
 // Save objects to a file
 bool CWorld::Save(const char *filename)
 {
+  PRINT_MSG1("saving world to [%s]", filename);
+  
+  this->worldfilename = filename;
+
   // Let each object save itself
   for (int i = 0; i < GetObjectCount(); i++)
   {
@@ -877,6 +883,11 @@ void CWorld::Update()
     //if( m_object[i]->m_local )
     m_object[i]->Update( m_sim_time ); // update it 
   };
+
+#ifdef INCLUDE_RTK2
+  if (rtk_menuitem_selected(this->save_menuitem))
+    Save(this->worldfilename);
+#endif
 }
 
 
@@ -1259,7 +1270,7 @@ bool CWorld::LoadGUI(CWorldFile *worldfile)
   int sx = (int) worldfile->ReadTupleFloat(section, "size", 0, this->matrix->width);
   int sy = (int) worldfile->ReadTupleFloat(section, "size", 1, this->matrix->height);
 
-  // Scale
+  // Scale of the pixels
   double scale = worldfile->ReadLength(section, "scale", 1 / this->ppm);
   
   // Size in meters
@@ -1267,13 +1278,16 @@ bool CWorld::LoadGUI(CWorldFile *worldfile)
   double dy = sy * scale;
   
   this->app = rtk_app_create();
-  rtk_app_size(this->app, sx, sy);
+  rtk_app_size(this->app, 100, 100);
   rtk_app_refresh_rate(this->app, 10);
   
   this->canvas = rtk_canvas_create(this->app);
   rtk_canvas_size(this->canvas, sx, sy);
   rtk_canvas_scale(this->canvas, dx / sx, dy / sy);
   rtk_canvas_origin(this->canvas, dx / 2, dy / 2);
+
+  // Add some menu items
+  this->save_menuitem = rtk_menuitem_create(this->canvas, "Save");
 
   return true;
 }
@@ -1464,24 +1478,24 @@ void CWorld::Output( double loop_duration, double sleep_duration )
   bytes += bytes_in + bytes_out;
 
   if( interval > 1.0 )
-    {
-      lasttime += interval;
+  {
+    lasttime += interval;
 
-      freq = (double)updates / interval;
-      bandw = (double)bytes / interval;
+    freq = (double)updates / interval;
+    bandw = (double)bytes / interval;
       
-      updates = 0;
-      bytes = 0;
-    }
+    updates = 0;
+    bytes = 0;
+  }
 
   ConsoleOutput( freq, loop_duration, sleep_duration, 
-		 avg_loop_duration, avg_sleep_duration,
-		 bytes_in, bytes_out, bandw );
+                 avg_loop_duration, avg_sleep_duration,
+                 bytes_in, bytes_out, bandw );
   
   if( m_log_output ) 
     LogOutput( freq, loop_duration, sleep_duration, 
-	       avg_loop_duration, avg_sleep_duration,
-	       bytes_in, bytes_out, g_bytes_input, g_bytes_output );
+               avg_loop_duration, avg_sleep_duration,
+               bytes_in, bytes_out, g_bytes_input, g_bytes_output );
   
   last_input = g_bytes_input;
   last_output = g_bytes_output; 
@@ -1495,19 +1509,19 @@ void CWorld::ConsoleOutput( double freq,
 			    double avg_data)
 {
   printf( " Time: %8.1f - %7.1fHz - "
-	  "[%3.0f/%3.0f] [%3.0f/%3.0f] [%4u/%4u] %8.2f b/sec\r", 
-	  m_sim_time, 
-	  freq,
-	  loop_duration * 1000.0, 
-	  sleep_duration * 1000.0, 
-	  avg_loop_duration * 1000.0, 
-	  avg_sleep_duration * 1000.0,  
-	  bytes_in, bytes_out, 
-	  avg_data );
+          "[%3.0f/%3.0f] [%3.0f/%3.0f] [%4u/%4u] %8.2f b/sec\r", 
+          m_sim_time, 
+          freq,
+          loop_duration * 1000.0, 
+          sleep_duration * 1000.0, 
+          avg_loop_duration * 1000.0, 
+          avg_sleep_duration * 1000.0,  
+          bytes_in, bytes_out, 
+          avg_data );
   
   fflush( stdout );
   
- }
+}
 
 
 void CWorld::LogOutput( double freq,
@@ -1537,46 +1551,46 @@ void CWorld::LogOutput( double freq,
 
 void CWorld::LogOutputHeader( void )  
 {
-      int log_instance = 0;
-      while( m_log_fd < 0 )
+  int log_instance = 0;
+  while( m_log_fd < 0 )
 	{
 	  char fname[256];
 	  sprintf( fname, "%s.%d", m_log_filename, log_instance++ );
 	  m_log_fd = open( fname, O_CREAT | O_EXCL | O_WRONLY, 
-			   S_IREAD | S_IWRITE );
+                     S_IREAD | S_IWRITE );
 	}
 
-      struct timeval t;
-      gettimeofday( &t, 0 );
+  struct timeval t;
+  gettimeofday( &t, 0 );
       
-      // count the locally managed objects
-      int m=0;
-      for( int c=0; c<m_object_count; c++ )
-	if( m_object[c]->m_local ) m++;
+  // count the locally managed objects
+  int m=0;
+  for( int c=0; c<m_object_count; c++ )
+    if( m_object[c]->m_local ) m++;
       
-      char* tmstr = ctime( &t.tv_sec);
-      tmstr[ strlen(tmstr)-1 ] = 0; // delete the newline
+  char* tmstr = ctime( &t.tv_sec);
+  tmstr[ strlen(tmstr)-1 ] = 0; // delete the newline
       
-      char line[512];
-      sprintf( line,
-	       "# Stage output log\n#\n"
-	       "# Command:\t%s\n"
-	       "# Date:\t\t%s\n"
-	       "# Host:\t\t%s\n"
-	       "# Bitmap:\t%s\n"
-	       "# Timestep(ms):\t%d\n"
-	       "# Objects:\t%d of %d\n#\n"
-	       "#STEP\t\tSIMTIME(s)\tINTERVAL(s)\tSLEEP(s)\tRATIO\t"
-	       "\tINPUT\tOUTPUT\tITOTAL\tOTOTAL\n",
-	       m_cmdline, 
-	       tmstr, 
-	       m_hostname, 
-	       m_filename,
-	       (int)(m_sim_timestep * 1000.0),
-	       m, 
-	       m_object_count );
+  char line[512];
+  sprintf( line,
+           "# Stage output log\n#\n"
+           "# Command:\t%s\n"
+           "# Date:\t\t%s\n"
+           "# Host:\t\t%s\n"
+           "# Bitmap:\t%s\n"
+           "# Timestep(ms):\t%d\n"
+           "# Objects:\t%d of %d\n#\n"
+           "#STEP\t\tSIMTIME(s)\tINTERVAL(s)\tSLEEP(s)\tRATIO\t"
+           "\tINPUT\tOUTPUT\tITOTAL\tOTOTAL\n",
+           m_cmdline, 
+           tmstr, 
+           m_hostname, 
+           m_filename,
+           (int)(m_sim_timestep * 1000.0),
+           m, 
+           m_object_count );
       
-      write( m_log_fd, line, strlen(line) );
+  write( m_log_fd, line, strlen(line) );
 }
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: inspectorg $
-//  $Revision: 1.37 $
+//  $Revision: 1.38 $
 //
 // Usage:
 //  (empty)
@@ -80,7 +80,10 @@ class CWorld
   virtual ~CWorld();
   
   // the main world-model data structure
-  CMatrix *matrix;  
+  public: CMatrix *matrix;
+
+  // Name of worldfile
+  private: const char *worldfilename;
   
   // Object encapsulating world description file
   private: CWorldFile worldfile;
@@ -88,7 +91,6 @@ class CWorld
   // Properties of the underlying matrix representation
   // for the world.
   // The resolution is specified in pixels-per-meter.
-  // REMOVE public: double size_x, size_y;
   public: double ppm;
 
   // Entity representing the fixed environment
@@ -411,6 +413,9 @@ class CWorld
   // Basic GUI elements
   public: rtk_app_t *app;
   public: rtk_canvas_t *canvas;
+
+  // Some menu items
+  private: rtk_menuitem_t *save_menuitem;
 #endif
   
 };
