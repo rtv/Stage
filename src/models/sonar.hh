@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonar.hh,v 1.1.2.4 2003-02-24 04:47:13 rtv Exp $
+ * CVS info: $Id: sonar.hh,v 1.1.2.5 2003-02-26 01:57:16 rtv Exp $
  */
 
 #ifndef SONARDEVICE_HH
@@ -51,28 +51,12 @@ public: static CSonarModel* Creator( int id, char* token, char* color, CEntity *
   {
     return( new CSonarModel( id, token, color, parent ) );
   }
-    
+  
 public: 
-  // Update the device
+  // Update the device and publish data
   virtual int Update();
-  // Set and get this device's special properties
-  virtual int Property( int con, stage_prop_id_t property, 
-			void* value, size_t len, stage_buffer_t* reply );
   
-private:
-  
-  // these are the properties:
-  
-  // STG_PROP_SONAR_RANGEBOUNDS - limits of sonar range in meters 
-  double min_range, max_range;
-  
-  // STG_PROP_SONAR_GEOM - the poses of our transducers
-  int sonar_count;
-  double sonars[SONARSAMPLES][3];
-
-  // STG_PROP_SONAR_POWER - true:on, false:off
-  bool power_on;
-  
+    
 #ifdef INCLUDE_RTK2
 
   // Initialise the rtk gui

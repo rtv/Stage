@@ -47,9 +47,7 @@
    // the functions are called to service incoming requests
    int SIOServiceConnections( stg_connection_callback_t lostconnection_cb,
 			      stg_data_callback_t cmd_cb,
-			      stg_data_callback_t model_cb,
-			      stg_data_callback_t prop_cb,
-			      stg_data_callback_t gui_cb );
+			      stg_data_callback_t prop_cb );
 
    // sends a buffer full of properties and places any replies in the
    // recv buffer (if non-null)

@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.1.2.14 2003-02-25 02:20:00 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.1.2.15 2003-02-26 01:57:16 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -472,12 +472,12 @@ int RtkGuiEntityPropertyChange( CEntity* ent, stage_prop_id_t prop )
       break;      
 
     case STG_PROP_IDAR_RX:
-      PRINT_ERR1( "rtk IDAR_RX for idar %d", ent->stage_id );
+      //PRINT_ERR1( "rtk IDAR_RX for idar %d", ent->stage_id );
       ((CIdarModel*)ent)->RtkShowReceived();
       break;
       
     case STG_PROP_IDAR_TX:
-      PRINT_ERR1( "rtk IDAR_TX for idar %d", ent->stage_id );
+      //PRINT_ERR1( "rtk IDAR_TX for idar %d", ent->stage_id );
       ((CIdarModel*)ent)->RtkShowSent();
       break;
 

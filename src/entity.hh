@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.15.2.20 2003-02-25 02:20:00 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.15.2.21 2003-02-26 01:57:15 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -311,8 +311,19 @@ public:
   // flag is true iff this entity is updated by this host
   public: bool m_local; 
 
-public: int fig_count;
   
+  // STG_PROP_ENTITY_GEOM - the poses of our transducers
+  int transducer_count;
+  double transducers[STG_TRANSDUCERS_MAX][3];
+  
+  // STG_PROP_ENTITY_POWER - non-zero:on, zero:off
+  int power_on;
+  
+  // STG_PROP_ENTITY_RANGEBOUNDS - limits of sensor range in meters 
+  double min_range, max_range;
+  
+public: int fig_count;
+
   // functions for drawing this entity in GUIs
 #ifdef INCLUDE_RTK2
   // Initialise the rtk gui
@@ -340,8 +351,8 @@ public: int fig_count;
   static void staticUnselect( void* ent );
   */
 #endif
-
-public: void *gui_data; 
+  
+public: void **gui_data;
 
 };
 

@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonar.cc,v 1.1.2.8 2003-02-25 02:20:00 rtv Exp $
+ * CVS info: $Id: sonar.cc,v 1.1.2.9 2003-02-26 01:57:16 rtv Exp $
  */
 
 #include <assert.h>
@@ -37,23 +37,30 @@ CSonarModel::CSonarModel( int id, char* token, char* color, CEntity *parent )
   this->min_range = 0.20;
   this->max_range = 5.0;
 
-  this->power_on = true;
-
   this->m_interval = 0.1; // 10Hz update
-
-  // Initialise the sonar poses to default values
-  this->sonar_count = SONARSAMPLES;
   
-  // we don't need a rectangle 
+  
+  // we don't need a body rectangle 
   SetRects( NULL, 0 );
   
-  for (int i = 0; i < this->sonar_count; i++)
+  // by default we inherit the size of our parent
+  if( m_parent_entity )
     {
-      this->sonars[i][0] = 0;
-      this->sonars[i][1] = 0;
-      this->sonars[i][2] = i * 2 * M_PI / this->sonar_count;
+      this->size_x = m_parent_entity->size_x;
+      this->size_y = m_parent_entity->size_y;
     }
   
+  // Initialise the sonar poses to default values
+  this->transducer_count = 16; // a sensible default
+  
+  // arrange the transducers in a circle around the perimeter
+  for (int i = 0; i < this->transducer_count; i++)
+    {
+      double angle = i * TWOPI / this->transducer_count;
+      this->transducers[i][0] = this->size_x/2.0 * cos( angle );
+      this->transducers[i][1] = this->size_y/2.0 * sin( angle );
+      this->transducers[i][2] = angle;
+    }  
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -83,22 +90,23 @@ int CSonarModel::Update()
   m_last_update = CEntity::simtime;
   
   // place to store the ranges as we generate them
-  double ranges[SONARSAMPLES];
+  //double* ranges = new double[transducer_count];
+  double ranges[transducer_count];
   
   if( this->power_on )
     {
       //PRINT_WARN( "power on" );
       
       // Do each sonar
-      for (int s = 0; s < this->sonar_count; s++)
+      for (int s = 0; s < this->transducer_count; s++)
 	{
 	  // Compute parameters of scan line
-	  double ox = this->sonars[s][0];
-	  double oy = this->sonars[s][1];
-	  double oth = this->sonars[s][2];
+	  double ox = this->transducers[s][0];
+	  double oy = this->transducers[s][1];
+	  double oth = this->transducers[s][2];
 	  LocalToGlobal(ox, oy, oth);
 	  
-	  ranges[s] = this->max_range;
+	  ranges[s] = this->max_range; // max threshold
 	  
 	  CLineIterator lit( ox, oy, oth, this->max_range, 
 			     CEntity::matrix, PointToBearingRange );
@@ -109,6 +117,10 @@ int CSonarModel::Update()
 	      if( ent != this && ent != m_parent_entity && ent->sonar_return ) 
 		{
 		  ranges[s] = lit.GetRange();
+
+		  // min threshold
+		  if( ranges[s] < this->min_range ) 
+		    ranges[s] = this->min_range;
 		  break;
 		}
 	    }	
@@ -119,91 +131,8 @@ int CSonarModel::Update()
   
   // this is the right way to export data, so everyone else finds out about it
   Property( -1, STG_PROP_ENTITY_DATA, 
-	    (char*)ranges, sonar_count * sizeof(ranges[0]), NULL );
+	    (char*)ranges, transducer_count * sizeof(ranges[0]), NULL );
   
   return 0;
 }
 
-int CSonarModel::Property( int con, stage_prop_id_t property, 
-			   void* value, size_t len, stage_buffer_t* reply )
-{
-  PRINT_DEBUG3( "setting prop %s (%d bytes) for sonar ent %d",
-		SIOPropString(property), (int)len, stage_id );
-  
-  switch( property )
-    {
-    case STG_PROP_SONAR_POWER:
-      if( value ) // set our power state
-	{
-	  PRINT_WARN( "setting sonar power" );
-	  assert(len == sizeof(bool) );
-	  this->power_on = (bool*)value;
-	}
-      if( reply ) // reply with the current power state
-	{
-	  SIOBufferProperty( reply, this->stage_id, STG_PROP_SONAR_POWER,
-			     &this->power_on, sizeof(this->power_on), 
-			     STG_ISREPLY );
-	}
-      break;
-      
-    case STG_PROP_SONAR_GEOM:
-      if( value ) // set the poses of our transducers 
-	{
-	  PRINT_DEBUG1( "setting sonar geometry for %d", this->stage_id );
-
-	  // copy the geometry data into our array
-	  memcpy( this->sonars, value, len );
-	  // figure out how many sensors we have now
-	  this->sonar_count = len / (3*sizeof(double) );
-
-	}
-      if( reply ) // reply with our array of sonar poses
-	{
-	  SIOBufferProperty( reply, this->stage_id, STG_PROP_SONAR_GEOM,
-			     &this->sonars,
-			     sonar_count * 3 * sizeof(sonars[0][0]), 
-			     STG_ISREPLY );
-	}
-      break;
-      
-    default: 
-      break;
-    }
-  
-  
-  // inherit the 
-  CEntity::Property( con, property, value, len, reply );
-  
-  return 0; // success
-}
-
-int SonarTest( int connection )
-{
-  stage_model_t sonar;
-  sonar.parent_id = 0; // should be the root object
-  strncpy( sonar.token, "test_sonar", STG_TOKEN_MAX );
-  //assert( CreateModels( connection,  &sonar ) == 0 );
-
-
-
-  // define some properties
-  stage_buffer_t* props = SIOCreateBuffer();
-  assert(props);
-  
-  bool power = false;
-  //SIOBufferProperty( props, box.id, STG_PROP_ENTITY_SUBSCRIBE,
-  //	     subs, 1*sizeof(subs[0]) );
-  
-  
-  // turn power off
-  SIOBufferProperty( props, sonar.id, STG_PROP_SONAR_POWER,
-		     &power, sizeof(power), STG_NOREPLY );
-  
-  // turn power on
-  power = true;
-  SIOBufferProperty( props, sonar.id, STG_PROP_SONAR_POWER,
-		     &power, sizeof(power), STG_NOREPLY );
-  
-  return 0; //success
-}

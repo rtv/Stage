@@ -1,6 +1,6 @@
 
 /*
-  $Id: stest.c,v 1.1.2.22 2003-02-25 02:20:00 rtv Exp $
+  $Id: stest.c,v 1.1.2.23 2003-02-26 01:57:15 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -222,32 +222,6 @@ void SetVelocity( int con, int id, double vx, double vy, double va )
   SIOFreeBuffer( bp );
 }
 
-// requests creation of a model. fills in the model.id record with the correct
-// id returned from stage. returns -1 on failure, 0 on success
-int CreateModel( int connection, stage_model_t* model )
-{
-  // set up the request packet and local state variables for getting the reply
-  model->id = pending_id = -1; // CREATE a model
-  model->key = pending_key = rand(); //(some random integer number)
-  
-  SIOWriteMessage( connection, timestamp, STG_HDR_MODEL, 
-		   (char*)model, sizeof(stage_model_t) );
-  
-  // loop on read until we hear that our model was created
-  while( pending_id == -1 )
-    SIOServiceConnections( &HandleLostConnection,
-			   &HandleCommand,
-			   &HandleModel, 
-			   NULL, NULL );
-  
-  // now we know the id Stage gave this model
-  model->id = pending_id;
-  
-  return 0; // success
-}
-
-
-
 
 
   int main( int argc, char** argv )
@@ -277,10 +251,43 @@ int CreateModel( int connection, stage_model_t* model )
     {
       double timestamp = 0.0;
 
+      stage_buffer_t* guireq = SIOCreateBuffer();
 
-      stage_model_t boxes[4];
+      // request a GUI so we can see what we're doing
+      stage_gui_config_t gui;
+      strcpy( gui.token, "rtk" );
+      gui.width = 600;
+      gui.height = 600;
+      gui.ppm = 40;
+      gui.originx = 0;//300;
+      gui.originy = 0;//300;
+      gui.showsubscribedonly = 0;
+      gui.showgrid = 1;
+      gui.showdata = 1;
+      
+      SIOBufferProperty( guireq, 0, STG_PROP_ROOT_GUI,
+			 &gui, sizeof(gui), STG_NOREPLY );
+      
+      // no replies expected 
+      SIOPropertyUpdate( connection, timestamp, guireq, NULL );
+      
+      SIOFreeBuffer( guireq );
+  
+      //    sleep(4);
 
       int b;
+     
+      stage_model_t bases[2];
+      for( b=0; b<2; b++ )
+	{
+	  bases[b].parent_id = 0; // root!
+	  strncpy( bases[b].token, "position", STG_TOKEN_MAX );
+	}
+      
+      SIOCreateModels( connection, timestamp, bases, 2 );
+ 
+
+      stage_model_t boxes[4];
       for( b=0; b<4; b++ )
 	{
 	  boxes[b].parent_id = 0; // root!
@@ -298,79 +305,16 @@ int CreateModel( int connection, stage_model_t* model )
       stage_model_t idars[2];
       for( b=0; b<2; b++ )
 	{
-	  idars[b].parent_id = 0; // root 
+	  idars[b].parent_id = bases[b].id; // root 
 	  strncpy( idars[b].token, "idar", STG_TOKEN_MAX );
 	}
       
       SIOCreateModels( connection, timestamp, idars, 2 );
 
-      stage_model_t sonars[4];
-      for( b=0; b<4; b++ )
-	{
-	  sonars[b].parent_id = boxes[b].id; 
-	  strncpy( sonars[b].token, "sonar", STG_TOKEN_MAX );
-	}
-      
-      SIOCreateModels( connection, timestamp, sonars, 1 );
-     
 
       stage_buffer_t* props = SIOCreateBuffer();
       assert(props);
 
-
-      // set the geometry of the sonars
-      double sgeom[3][3];
-      
-      /*      
-	      spose[0] [ 0.115 0.130 90 ]
-	      spose[1] [ 0.155 0.115 50 ]
-	      spose[2] [ 0.190 0.080 30 ]
-	      spose[3] [ 0.210 0.025 10 ]
-	      spose[4] [ 0.210 -0.025 -10 ]
-	      spose[5] [ 0.190 -0.080 -30 ]
-	      spose[6] [ 0.155 -0.115 -50 ]
-	      spose[7] [ 0.115 -0.130 -90 ]
-	      spose[8] [ -0.115 -0.130 -90 ]
-	      spose[9] [ -0.155 -0.115 -130 ]
-	      spose[10] [ -0.190 -0.080 -150 ]
-	      spose[11] [ -0.210 -0.025 -170 ]
-	      spose[12] [ -0.210 0.025 170 ]
-	      spose[13] [ -0.190 0.080 150 ]
-	      spose[14] [ -0.155 0.115 130 ]
-	      spose[15] [ -0.115 0.130 90 ]
-      */
-
-      sgeom[0][0] = 0.2;
-      sgeom[0][1] = 0.0;
-      sgeom[0][2] = 0.0;
-
-      sgeom[1][0] = 0.0;
-      sgeom[1][1] = 0.2;
-      sgeom[1][2] = 1.0;
-
-      sgeom[2][0] = 0.0;
-      sgeom[2][1] = -0.2;
-      sgeom[2][2] = -1.0;
-      
-      SIOBufferProperty( props, sonars[0].id, STG_PROP_SONAR_GEOM,
-			 sgeom, 3*3*sizeof(double), STG_NOREPLY );
-      
-      
-      // request a GUI so we can see all this stuff
-      stage_gui_config_t gui;
-      strcpy( gui.token, "rtk" );
-      gui.width = 600;
-      gui.height = 600;
-      gui.ppm = 40;
-      gui.originx = 0;//300;
-      gui.originy = 0;//300;
-      gui.showsubscribedonly = 0;
-      gui.showgrid = 1;
-      gui.showdata = 1;
-      
-      SIOBufferProperty( props, 0, STG_PROP_ROOT_GUI,
-			 &gui, sizeof(gui), STG_NOREPLY );
-      
       int num_rects;
       stage_rotrect_t* rects = RectsFromPnm( &num_rects, "worlds/cave.pnm" );
       
@@ -420,7 +364,29 @@ int CreateModel( int connection, stage_model_t* model )
       SIOBufferProperty( props, boxes[3].id, STG_PROP_ENTITY_POSE, 
 			 &pose, sizeof(pose), STG_NOREPLY );
 
+
+      SIOPackPose( &pose, 2.0, 7.0, 1.5 );      
+      SIOBufferProperty( props, bases[0].id, STG_PROP_ENTITY_POSE, 
+			 &pose, sizeof(pose), STG_NOREPLY );
+
+
+      SIOPackPose( &pose, 2.0, 7.5, 1.9 );      
+      SIOBufferProperty( props, bases[1].id, STG_PROP_ENTITY_POSE, 
+			 &pose, sizeof(pose), STG_NOREPLY );
+
       
+      stage_position_cmd_t cmd;
+      cmd.xdot = 0.3;
+      cmd.ydot = 0.1;
+      cmd.adot = 0.3;
+      cmd.x = 0.0;
+      cmd.y = 0.0;
+      cmd.a = 0.0;
+      
+      SIOBufferProperty( props, bases[1].id, STG_PROP_ENTITY_COMMAND, 
+			 &cmd, sizeof(cmd), STG_NOREPLY );
+      
+
       // subscribe to each box's pose and size
       int subs[2];
       subs[0] = STG_PROP_ENTITY_POSE;
@@ -431,13 +397,6 @@ int CreateModel( int connection, stage_model_t* model )
       //		   subs, 2*sizeof(subs[0]), STG_NOREPLY );
       
       
-      // subscribe to each sonar's data
-      int sub = STG_PROP_ENTITY_DATA;
-      
-      //for( b=0; b<4; b++ ) 
-      //SIOBufferProperty( props, sonars[0].id, STG_PROP_ENTITY_SUBSCRIBE,
-      //		 &sub, sizeof(sub), STG_NOREPLY );
-      
       //rects = RectsFromPnm( &num_rects, "worlds/smiley.ppm" );
       //SIOBufferProperty( props, bitmap.id, STG_PROP_ENTITY_RECTS, 
       //	 (char*)rects, num_rects * sizeof(rects[0]),0 );
@@ -445,6 +404,52 @@ int CreateModel( int connection, stage_model_t* model )
       
       // no replies expected for these properties
       result = SIOPropertyUpdate( connection, timestamp, props, NULL );
+      
+      SIOFreeBuffer( props );
+      
+      props = SIOCreateBuffer();
+      
+      // we sized the boxes - now make some sonars
+      stage_model_t sonars[4];
+      for( b=0; b<4; b++ )
+	{
+	  sonars[b].parent_id = boxes[b].id; 
+	  strncpy( sonars[b].token, "sonar", STG_TOKEN_MAX );
+	}
+      
+      SIOCreateModels( connection, timestamp, sonars, 4 );
+     
+      // configure the sonars
+      // set the geometry of the sonars
+      double sgeom[3][3];
+      
+      sgeom[0][0] = 0.2;
+      sgeom[0][1] = 0.0;
+      sgeom[0][2] = 0.0;
+
+      sgeom[1][0] = 0.0;
+      sgeom[1][1] = 0.2;
+      sgeom[1][2] = 1.0;
+
+      sgeom[2][0] = 0.0;
+      sgeom[2][1] = -0.2;
+      sgeom[2][2] = -1.0;
+      
+      //SIOBufferProperty( props, sonars[0].id, STG_PROP_ENTITY_GEOM,
+      //		 sgeom, 3*3*sizeof(double), STG_NOREPLY );
+      
+      // subscribe to each sonar's data
+      int sub = STG_PROP_ENTITY_DATA;
+      
+      for( b=0; b<1; b++ ) 
+	SIOBufferProperty( props, sonars[b].id, STG_PROP_ENTITY_SUBSCRIBE,
+			   &sub, sizeof(sub), STG_NOREPLY );
+      
+      // no replies expected for these properties
+      result = SIOPropertyUpdate( connection, timestamp, props, NULL );
+      
+      SIOFreeBuffer( props );
+      
      
       //TEST( "Sending properties" );
 
@@ -455,7 +460,6 @@ int CreateModel( int connection, stage_model_t* model )
 
       //SIODebugBuffer( getprops );
       
-      SIOFreeBuffer( props );
 
 
       //puts( "looping" );
@@ -466,7 +470,7 @@ int CreateModel( int connection, stage_model_t* model )
       double z = 0;
       while( c < 100000 )
 	{
-	  printf( " cycle %d\r", c++ );
+	  printf( " cycle %d\r", c++ ); fflush( stdout );
 	  
 	  
 	  //Resize( connection, bitmap.id,  
@@ -474,7 +478,7 @@ int CreateModel( int connection, stage_model_t* model )
 	 
 	  //SetVelocity( connection, box.id, 3.0 * sin(x), 2.0 * cos(x+=0.1), 2.0 );
 	  
-	  if( (c > 200) && ((c % 200 ) == 0) )
+	  if(  0 )//(c > 400 ) && ((c % 20 ) == 0) ) // 5Hz
 	    {
 	      stage_buffer_t* buf = SIOCreateBuffer();
 
@@ -518,9 +522,7 @@ int CreateModel( int connection, stage_model_t* model )
 	  // don't do anything in here!
 	  SIOServiceConnections( &HandleLostConnection,
 				 &HandleCommand,
-				 NULL,//&HandleModel, 
-				 &HandleProperty,
-				 NULL );
+				 &HandleProperty );
 	}
     }
     

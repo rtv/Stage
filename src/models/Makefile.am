@@ -19,11 +19,11 @@ puck.hh \
 sonar.cc \
 sonar.hh \
 idar.cc \
-idar.hh	
+idar.hh	\
+position.cc \
+position.hh
 
 
-#	positiondevice.cc \
-#	positiondevice.hh
 #                   broadcastdevice.cc \
 #                   broadcastdevice.hh \
 #                   bumperdevice.cc \

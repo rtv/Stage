@@ -22,7 +22,7 @@
  * properties. It's one big ol'function, so it gets its own file.
  * Author: Richard Vaughan
  * Date: 22 Feb 2003
- * CVS info: $Id: property.cc,v 1.1.2.3 2003-02-25 02:20:00 rtv Exp $
+ * CVS info: $Id: property.cc,v 1.1.2.4 2003-02-26 01:57:15 rtv Exp $
  */
 
 #include <string.h>
@@ -216,7 +216,28 @@ int CEntity::Property( int con, stage_prop_id_t property,
 			     &sz, sizeof(sz), STG_ISREPLY );
 	}
       break;
-    
+      
+    case STG_PROP_ENTITY_RANGEBOUNDS:
+      if( value )
+	{
+	  assert( len == sizeof(stage_size_t) );
+	  
+	  stage_size_t* sz = (stage_size_t*)value;
+	  this->min_range = sz->x;
+	  this->max_range = sz->y; 
+	}
+      
+      if( reply )
+	{
+	  stage_size_t sz;
+	  sz.x = this->min_range;
+	  sz.y = this->max_range;
+	  
+	  SIOBufferProperty( reply, this->stage_id, STG_PROP_ENTITY_RANGEBOUNDS,
+			     &sz, sizeof(sz), STG_ISREPLY );
+	}
+      break;
+
     case STG_PROP_ENTITY_RECTS:
       if( value )
 	{
@@ -229,6 +250,44 @@ int CEntity::Property( int con, stage_prop_id_t property,
 	  SIOBufferProperty( reply, this->stage_id, STG_PROP_ENTITY_RECTS,
 			     this->rects, 
 			     this->rect_count * sizeof(stage_rotrect_t), 
+			     STG_ISREPLY );
+	}
+      break;
+      
+    case STG_PROP_ENTITY_GEOM:
+      if( value ) // set the poses of our transducers 
+	{
+	  PRINT_DEBUG1( "setting transduver geometry for %d", this->stage_id );
+	  
+	  // copy the geometry data into our array
+	  memcpy( this->transducers, value, len );
+	  // figure out how many sensors we have now
+	  this->transducer_count = len / (3*sizeof(double) );
+	  
+	}
+      if( reply ) // reply with our array of sonar poses
+	{
+	  SIOBufferProperty( reply, this->stage_id, STG_PROP_ENTITY_GEOM,
+			     this->transducers,
+			     transducer_count * 3 * sizeof(transducers[0][0]), 
+			     STG_ISREPLY );
+	}
+      break;
+      
+    case STG_PROP_ENTITY_POWER:
+      if( value ) // set our power state
+	{
+	  
+	  assert(len == sizeof(int) );
+	  this->power_on = *(int*)value;
+	  
+	  PRINT_DEBUG2( "set ent %d power state %s", 
+			this->stage_id, power_on == 0 ? "OFF" : "ON" );
+	}
+      if( reply ) // reply with the current power state
+	{
+	  SIOBufferProperty( reply, this->stage_id, STG_PROP_ENTITY_POWER,
+			     &this->power_on, sizeof(this->power_on), 
 			     STG_ISREPLY );
 	}
       break;

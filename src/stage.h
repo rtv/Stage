@@ -27,45 +27,47 @@
 #define STG_HOSTNAME_MAX  128
 #define STG_MAX_CONNECTIONS 128
    
-#define STG_SONAR_MAX_SAMPLES 32
-
-   //#define STG_PROPERTY_DATA_MAX  200000
-   //#define ENTITY_FIRST_PROPERTY 1
+   // each entity supports up to this many transducer poses
+#define STG_TRANSDUCERS_MAX 500
    
    // all properties have unique id numbers and must be listed here
    // please stick to the syntax STG_PROP_<model>_<property>
    typedef enum
      {
-       STG_PROP_ENTITY_PARENT, // see properties.cc
-       STG_PROP_ENTITY_POSE,
-       STG_PROP_ENTITY_VELOCITY,
-       STG_PROP_ENTITY_SIZE,
-       STG_PROP_ENTITY_ORIGIN,
-       STG_PROP_ENTITY_NAME,
-       STG_PROP_ENTITY_COLOR,
-       STG_PROP_ENTITY_SUBSCRIBE,
-       STG_PROP_ENTITY_UNSUBSCRIBE,     
-       STG_PROP_ENTITY_VOLTAGE,
-       STG_PROP_ENTITY_LASERRETURN,
-       STG_PROP_ENTITY_SONARRETURN,
-       STG_PROP_ENTITY_IDARRETURN,
-       STG_PROP_ENTITY_OBSTACLERETURN,
-       STG_PROP_ENTITY_VISIONRETURN,
-       STG_PROP_ENTITY_PUCKRETURN,
-       STG_PROP_ENTITY_PLAYERID,
-       STG_PROP_ENTITY_PPM,
-       STG_PROP_ENTITY_RECTS,
        STG_PROP_ENTITY_CIRCLES,
+       STG_PROP_ENTITY_COLOR,
        STG_PROP_ENTITY_COMMAND,
        STG_PROP_ENTITY_DATA,
+       STG_PROP_ENTITY_GEOM,
+       STG_PROP_ENTITY_IDARRETURN,
+       STG_PROP_ENTITY_LASERRETURN,
+       STG_PROP_ENTITY_NAME,
+       STG_PROP_ENTITY_OBSTACLERETURN,
+       STG_PROP_ENTITY_ORIGIN,
+       STG_PROP_ENTITY_PARENT, // see properties.cc
+       STG_PROP_ENTITY_PLAYERID,
+       STG_PROP_ENTITY_POSE,
+       STG_PROP_ENTITY_POWER,
+       STG_PROP_ENTITY_PPM,
+       STG_PROP_ENTITY_PUCKRETURN,
+       STG_PROP_ENTITY_RANGEBOUNDS, 
+       STG_PROP_ENTITY_RECTS,
+       STG_PROP_ENTITY_SIZE,
+       STG_PROP_ENTITY_SONARRETURN,
+       STG_PROP_ENTITY_SUBSCRIBE,
+       STG_PROP_ENTITY_UNSUBSCRIBE,     
+       STG_PROP_ENTITY_VELOCITY,
+       STG_PROP_ENTITY_VISIONRETURN,
+       STG_PROP_ENTITY_VOLTAGE,
+       STG_PROP_IDAR_RX,
+       STG_PROP_IDAR_TX,
+       STG_PROP_IDAR_TXRX,
        STG_PROP_ROOT_CREATE, // see root.cc
        STG_PROP_ROOT_GUI, 
-       STG_PROP_SONAR_RANGEBOUNDS, // see models/sonar.hh
-       STG_PROP_SONAR_GEOM,
-       STG_PROP_SONAR_POWER,
-       STG_PROP_IDAR_TXRX,
-       STG_PROP_IDAR_TX,
-       STG_PROP_IDAR_RX,
+       STG_PROP_POSITION_ORIGIN, // see position.cc
+       STG_PROP_POSITION_ODOM,
+       STG_PROP_POSITION_MODE,
+       STG_PROP_POSITION_STEER,
        STG_PROPERTY_COUNT // THIS MUST BE THE LAST ENTRY
      } stage_prop_id_t;
    
@@ -115,7 +117,7 @@ typedef struct
 {
   uint8_t mesg[IDARBUFLEN];
   uint8_t len; //0-IDARBUFLEN
-  uint8_t intensity; //0-255
+  uint8_t intensity;
 } __attribute__ ((packed)) stage_idar_tx_t;
 
 typedef struct
@@ -155,11 +157,8 @@ typedef int stage_id_t;
 // the server reads a header to discover which type of data follows...
 typedef enum { 
   STG_HDR_CONTINUE,  // marks the end of a  transaction
-  STG_HDR_MODEL, // a request for a new model follows
-  STG_HDR_MODEL_ACK, // len contains an identifier for a just-created model
   STG_HDR_PROPS, // model property settings follow
   STG_HDR_CMD, // a command to the server (save, load, pause, quit, etc)
-  STG_HDR_GUI // a GUI configuration packet follows
 } stage_header_type_t;
 
 // COMMANDS - no packet follows; the header's data field is set to one
@@ -247,6 +246,14 @@ typedef struct
   double x, y;
 } stage_size_t;
 
+typedef enum
+  { STG_POSITION_CONTROL_VELOCITY, STG_POSITION_CONTROL_POSITION }
+stage_position_control_mode_t;
+
+typedef enum
+  { STG_POSITION_STEER_DIFFERENTIAL, STG_POSITION_STEER_INDEPENDENT }
+stage_position_steer_mode_t;
+
 typedef struct
 {
   double x, y, a;
@@ -254,6 +261,8 @@ typedef struct
   // double xdotdot, ydotdot, adotdot; // useful?
   char mask; // each of the first 6 bits controls which of the commands we are using
 } stage_position_data_t;
+
+typedef stage_position_data_t stage_position_cmd_t;
 
 
 ///////////////////////////////////////////////////////////////////////////

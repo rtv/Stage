@@ -156,12 +156,15 @@ int CEntity::RtkStartup()
       rtk_fig_rectangle(this->fig, x,y,a,w,h, 0 ); 
     }
 
-  // draw a boundary rectangle around the root device
-  //if( this == CEntity::root )
-  //rtk_fig_rectangle( this->fig, size_x/2.0, size_y/2.0, 0.0, 
-  //	       size_x, size_y, 0 );
+  // add rects showing transducer positions
+  for( int s=0; s< this->transducer_count; s++ )
+    rtk_fig_rectangle( this->fig, 
+		       this->transducers[s][0], 
+		       this->transducers[s][1], 
+		       this->transducers[s][2], this->size_x/10.0, this->size_y/10.0, 0 ); 
+
   
-  // do our children after we're set
+  // we're done - now do our childre
   CHILDLOOP( child ) 
     if( child->RtkStartup() == -1 )
       {
@@ -277,24 +280,8 @@ int CSonarModel::RtkStartup()
       this->scan_fig = rtk_fig_create( canvas, this->fig, 49);
       assert( scan_fig );
 
-      //double gx, gy, ga;
-      //this->GetGlobalPose( gx, gy, ga );
-	
-      //rtk_fig_origin( this->scan_fig, gx, gy, ga );
-
-      //PRINT_DEBUG3( "global %.2f %.2f %.2f", gx, gy, ga );
-
-
-      
-      // add rects showing the beam origins
-      for( int s=0; s< this->sonar_count; s++ )
-	rtk_fig_rectangle( this->fig, 
-			   this->sonars[s][0], 
-			   this->sonars[s][1], 
-			   this->sonars[s][2], 0.05, 0.05, 1 ); 
-
       // Set the color
-      rtk_fig_color_rgb32(this->scan_fig, this->color);
+      rtk_fig_color_rgb32(this->scan_fig, 0xCCCCCC );
     }
 
   return 0; //success
@@ -324,45 +311,33 @@ int CSonarModel::RtkUpdate()
     {
       PRINT_ERR1( "model %d (sonar) base update failed", this->stage_id );
       return -1;
-    }
-
+    } 
   if( this->scan_fig )
     {
       rtk_fig_clear(this->scan_fig);
-      
-      double ranges[SONARSAMPLES];
-      size_t len = SONARSAMPLES * sizeof(ranges[0]);
-      
+ 
+      double* ranges = new double[transducer_count];
+      size_t len = transducer_count * sizeof(ranges[0]);
+      size_t gotlen = len;
+
       if( IsSubscribed( STG_PROP_ENTITY_DATA ) )//&& ShowDeviceData( this->lib_entry->type_num) )
 	{
-	  if( this->GetData( (char*)ranges, &len ) == 0 )
+	  if( this->GetData( (char*)ranges, &gotlen ) == 0 )
 	    {
-	      int range_count = len / sizeof(ranges[0]);
-	      
-	      for (int s = 0; s < range_count; s++)
+	      assert( len == gotlen );
+
+	      for (int s = 0; s < transducer_count; s++)
 		{
-		  // draw a line from the position of the sonar sensor...
-		  double ox = this->sonars[s][0];
-		  double oy = this->sonars[s][1];
-		  double oth = this->sonars[s][2];
-		  //LocalToGlobal(ox, oy, oth);
+		  // draw an arrow from the sonar transducer to it's hit point
+		  rtk_fig_arrow(this->scan_fig, 
+				this->transducers[s][0], 
+				this->transducers[s][1], 
+				this->transducers[s][2],
+				ranges[s], 0.05 );
 		  
-		  // ...out to the range indicated by the data
-		  double x1 = ox;
-		  double y1 = oy;
-		  double x2 = x1 + ranges[s] * cos(oth); 
-		  double y2 = y1 + ranges[s] * sin(oth);       
-		  
-		  //PRINT_WARN4( "line: %.2f %.2f to  %.2f %.2f",
-		  //   x1, y1, x2, y2 );
-		  
-		  rtk_fig_line(this->scan_fig, x1, y1, x2, y2 );
 		}
 	    }
 	}
-      
-      //else 
-      //if( this->scan_fig ) rtk_fig_clear( this->scan_fig ); 
     }
 
   return 0; //success
@@ -385,7 +360,7 @@ int CIdarModel::RtkStartup()
     {
       // Create a figure representing this object
       this->data_fig = rtk_fig_create( canvas, this->fig, 49);
-      this->rays_fig = rtk_fig_create( canvas, this->fig, 48);
+      this->rays_fig = rtk_fig_create( canvas, NULL, 48);
       
       rtk_fig_origin(this->data_fig, 0,0,0 );
       rtk_fig_origin(this->rays_fig, 0,0,0 );
@@ -397,21 +372,32 @@ int CIdarModel::RtkStartup()
       rtk_fig_color_rgb32(this->data_fig, this->color);
       rtk_fig_color_rgb32(this->rays_fig, LookupColor( "gray50") );      
 
+  
 
-      this->incoming_fig = rtk_fig_create( canvas, this->fig, 60 );
-      this->outgoing_fig = rtk_fig_create( canvas, this->fig, 60 );
-      
-      // draw an outgoing data arrow in green
-      rtk_fig_color_rgb32(this->outgoing_fig, 0x00AA00 );
-      rtk_fig_arrow(this->outgoing_fig, 0,0,0, 1.8*size_x, size_y );
-      rtk_fig_show( this->outgoing_fig, 0 ); // hide it
-
-      // draw an incoming data arrow in red
-      rtk_fig_color_rgb32(this->incoming_fig, 0xAA0000 );
-      rtk_fig_arrow(this->incoming_fig, 0,0,M_PI, -0.6*size_x, size_y );
-      rtk_fig_show( this->incoming_fig, 0 ); // hide it
+      // add rects showing transducer positions
+      for( int s=0; s< this->transducer_count; s++ )
+	{
+	  this->incoming_figs[s] = rtk_fig_create( canvas, this->fig, 60 );
+	  this->outgoing_figs[s] = rtk_fig_create( canvas, this->fig, 60 );
+	  
+	  // draw an outgoing data arrow in green
+	  rtk_fig_color_rgb32(this->outgoing_figs[s], 0x00AA00 );
+	  rtk_fig_arrow(this->outgoing_figs[s], 
+			this->transducers[s][0], 
+			this->transducers[s][1], 
+			this->transducers[s][2], 0.3 * size_x, 0.1 * size_y );
+	  
+	  rtk_fig_show( this->outgoing_figs[s], 0 ); // hide it
+	  
+	  // draw an incoming data arrow in red
+	  rtk_fig_color_rgb32(this->incoming_figs[s], 0xAA0000 );
+	  rtk_fig_arrow(this->incoming_figs[s], this->transducers[s][0], 
+			this->transducers[s][1], 
+			this->transducers[s][2] - M_PI, -0.1 * size_x, 0.1 * size_y );
+	  
+	  rtk_fig_show( this->incoming_figs[s], 0 ); // hide it
+	}
     }
-
   return 0;
 }
 
@@ -421,15 +407,19 @@ int CIdarModel::RtkStartup()
 void CIdarModel::RtkShutdown()
 {
   // Clean up the figure we created
-  if(this->incoming_fig) rtk_fig_destroy(this->incoming_fig);
-  if(this->outgoing_fig) rtk_fig_destroy(this->outgoing_fig);
+  for( int s=0; s< this->transducer_count; s++ )
+    {
+      if(this->incoming_figs[s]) rtk_fig_destroy(this->incoming_figs[s]);
+      if(this->outgoing_figs[s]) rtk_fig_destroy(this->outgoing_figs[s]);
+    }
+  
   if(this->data_fig) rtk_fig_destroy(this->data_fig);
   if(this->rays_fig) rtk_fig_destroy(this->rays_fig);
   
   this->data_fig = NULL;
   this->rays_fig = NULL;
-  this->outgoing_fig = NULL;
-  this->incoming_fig = NULL;
+  this->outgoing_figs[0] = NULL;
+  this->incoming_figs[0] = NULL;
   
   CEntity::RtkShutdown();
 } 
@@ -437,12 +427,14 @@ void CIdarModel::RtkShutdown()
 
 void CIdarModel::RtkShowReceived( void )
 {
-  rtk_canvas_flash( canvas, this->incoming_fig, 20 );
+  for( int s=0; s < this->transducer_count; s++ )
+    rtk_canvas_flash( canvas, this->incoming_figs[s], 30 );
 }
 
 void CIdarModel::RtkShowSent( void )
 {
-  rtk_canvas_flash( canvas, this->outgoing_fig, 20 );
+  for( int s=0; s < this->transducer_count; s++ )
+    rtk_canvas_flash( canvas, this->outgoing_figs[s], 30 );
 }
 
 

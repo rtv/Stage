@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.23 2003-02-25 02:19:59 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.24 2003-02-26 01:57:14 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -101,6 +101,9 @@ CEntity::CEntity( int id, char* token, char* color, CEntity* parent )
   // default no-voltage.
   this->volts = -1;    
 
+  // STG_PROP_ENTITY_POWER
+  this->power_on = 1;
+
   // Set the default geometry
   this->size_x = this->size_y = 1.0;
   this->origin_x = this->origin_y = 0;
@@ -172,6 +175,10 @@ CEntity::CEntity( int id, char* token, char* color, CEntity* parent )
   this->movemask = RTK_MOVE_TRANS | RTK_MOVE_ROT;
 #endif
 
+  // STG_PROP_ENTITY_RANGEBOUNDS
+  this->min_range = 0.5;
+  this->max_range = 5.0;
+  
   // attach to my parent
   if( m_parent_entity )
     m_parent_entity->AddChild( this );

@@ -186,15 +186,19 @@ const char* SIOPropString( stage_prop_id_t id )
     case STG_PROP_ENTITY_COLOR: return "STG_PROP_ENTITY_COLOR"; break;
     case STG_PROP_ENTITY_COMMAND: return "STG_PROP_ENTITY_COMMAND"; break;
     case STG_PROP_ENTITY_DATA: return "STG_PROP_ENTITY_DATA"; break;
+    case STG_PROP_ENTITY_GEOM: return "STG_PROP_ENTITY_GEOM"; break;
     case STG_PROP_ENTITY_IDARRETURN: return "STG_PROP_ENTITY_IDARRETURN"; break;
     case STG_PROP_ENTITY_LASERRETURN: return "STG_PROP_ENTITY_LASERRETURN"; break;
     case STG_PROP_ENTITY_NAME: return "STG_PROP_ENTITY_NAME"; break;
     case STG_PROP_ENTITY_OBSTACLERETURN: return "STG_PROP_ENTITY_OBSTACLERETURN";break;
     case STG_PROP_ENTITY_ORIGIN: return "STG_PROP_ENTITY_ORIGIN"; break;
+    case STG_PROP_ENTITY_PARENT: return "STG_PROP_ENTITY_PARENT"; break;
     case STG_PROP_ENTITY_PLAYERID: return "STG_PROP_ENTITY_PLAYERID"; break;
     case STG_PROP_ENTITY_POSE: return "STG_PROP_ENTITY_POSE"; break;
+    case STG_PROP_ENTITY_POWER: return "STG_PROP_SONAR_POWER"; break;
     case STG_PROP_ENTITY_PPM: return "STG_PROP_ENTITY_PPM"; break;
     case STG_PROP_ENTITY_PUCKRETURN: return "STG_PROP_ENTITY_PUCKETURN"; break;
+    case STG_PROP_ENTITY_RANGEBOUNDS: return "STG_PROP_ENTITY_RANGEBOUNDS";break;
     case STG_PROP_ENTITY_RECTS: return "STG_PROP_ENTITY_RECTS"; break;
     case STG_PROP_ENTITY_SIZE: return "STG_PROP_ENTITY_SIZE"; break;
     case STG_PROP_ENTITY_SONARRETURN: return "STG_PROP_ENTITY_SONARRETURN"; break;
@@ -203,15 +207,17 @@ const char* SIOPropString( stage_prop_id_t id )
     case STG_PROP_ENTITY_VELOCITY: return "STG_PROP_ENTITY_VELOCITY"; break;
     case STG_PROP_ENTITY_VISIONRETURN: return "STG_PROP_ENTITY_VISIONRETURN"; break;
     case STG_PROP_ENTITY_VOLTAGE: return "STG_PROP_ENTITY_VOLTAGE"; break;
+    case STG_PROP_IDAR_RX: return "STG_PROP_IDAR_RX"; break;
+    case STG_PROP_IDAR_TX: return "STG_PROP_IDAR_TX"; break;
+    case STG_PROP_IDAR_TXRX: return "STG_PROP_IDAR_TXRX"; break;
     case STG_PROP_ROOT_CREATE: return "STG_PROP_ROOT_CREATE"; break;
     case STG_PROP_ROOT_GUI: return "STG_PROP_ROOT_GUI"; break;
-    case STG_PROP_SONAR_GEOM: return "STG_PROP_SONAR_GEOM"; break;
-    case STG_PROP_SONAR_POWER: return "STG_PROP_SONAR_POWER"; break;
-    case STG_PROP_SONAR_RANGEBOUNDS: return "STG_PROP_SONAR_RANGEBOUNDS";break;
-    case STG_PROP_IDAR_TXRX: return "STG_PROP_IDAR_TXRX"; break;
-    case STG_PROP_IDAR_TX: return "STG_PROP_IDAR_TX"; break;
-    case STG_PROP_IDAR_RX: return "STG_PROP_IDAR_RX"; break;
-    case STG_PROP_ENTITY_PARENT: return "STG_PROP_ENTITY_PARENT"; break;
+
+    case STG_PROP_POSITION_ORIGIN: return "STG_PROP_POSITION_ORIGIN"; break;
+    case STG_PROP_POSITION_ODOM: return "STG_PROP_POSITION_ODOM"; break;
+    case STG_PROP_POSITION_MODE: return "STG_PROP_POSITION_MODE"; break;
+    case STG_PROP_POSITION_STEER: return "STG_PROP_POSITION_STEER"; break;
+
     default:
       break;
     }
@@ -367,10 +373,8 @@ const char* SIOHdrString( stage_header_type_t type )
   switch( type )
     {
     case STG_HDR_CONTINUE: return "STG_HDR_CONTINUE";
-    case STG_HDR_MODEL: return "STG_HDR_MODEL";
     case STG_HDR_PROPS: return "STG_HDR_PROPS";
     case STG_HDR_CMD: return "STG_HDR_CMD";
-    case STG_HDR_GUI: return "STG_HDR_GUI";
     default: return "unknown";
     }
 }
@@ -658,9 +662,7 @@ int SIOInitClient( int argc, char** argv )
 // read stuff until we get a continue message on each channel
 int SIOServiceConnections(   stg_connection_callback_t lostconnection_callback,
 			     stg_data_callback_t cmd_callback, 
-			     stg_data_callback_t model_callback,
-			     stg_data_callback_t prop_callback,
-			     stg_data_callback_t gui_callback )
+			     stg_data_callback_t prop_callback )
 {
   // we want poll to block until it is interrupted by a timer signal,
   // so we give it a time-out of -1.
@@ -717,25 +719,10 @@ int SIOServiceConnections(   stg_connection_callback_t lostconnection_callback,
 
 			switch( hdr.type )
 			  {
-			  case STG_HDR_GUI: // a gui config packet is coming in 
-			    //PRINT_DEBUG1( "STG_HDR_GUI on %d", t );
-			    SIOReadData( t, hdr.len, 
-					 sizeof(stage_gui_config_t), 
-					 gui_callback );
-			    break;
-			    
-			  case STG_HDR_MODEL:
-			    PRINT_DEBUG1( "STG_HDR_MODEL on %d", t );
-			    SIOReadData( t, hdr.len, 
-					 sizeof(stage_model_t), 
-					 model_callback );
-			    break;
-			    
 			  case STG_HDR_PROPS: // some poses are coming in 
 			    //PRINT_DEBUG1( "STG_HDR_PROPS on %d", t );
 			    SIOReadProperties( t, hdr.len, prop_callback );
 			    break;
-			    
 			    
 			  case STG_HDR_CMD:
 			    //PRINT_DEBUG1( "STG_HDR_CMD on %d", t );
