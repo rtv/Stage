@@ -24,7 +24,7 @@
  *          Douglas S. Blank <dblank@brynmawr.edu>
  *
  * Date: 15 Nov 2001
- * CVS info: $Id: worldfile.cc,v 1.25.4.1 2003-04-17 23:40:10 rtv Exp $
+ * CVS info: $Id: worldfile.cc,v 1.25.4.1.2.1 2004-06-16 05:56:25 gerkey Exp $
  */
 
 #include <assert.h>
@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <locale.h>
 
 //#define DEBUG
 
@@ -82,6 +83,9 @@ CWorldFile::CWorldFile()
   // Set defaults units
   this->unit_length = 1.0;
   this->unit_angle = M_PI / 180;
+
+  if(!setlocale(LC_ALL,"POSIX"))
+    fputs("Warning: failed to setlocale(); world file may not be parse correctly\n", stderr);
 }
 
 
