@@ -1,6 +1,6 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: stage.txt,v 1.5 2004-12-10 10:15:11 rtv Exp $
+ * $Id: stage.txt,v 1.6 2004-12-13 05:52:04 rtv Exp $
 */
 
 /**
@@ -58,7 +58,7 @@ release, but we're working on them. Let us know which ones you need.
 
 <hr>
 <small>
-Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: stage.txt,v 1.5 2004-12-10 10:15:11 rtv Exp $
+Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: stage.txt,v 1.6 2004-12-13 05:52:04 rtv Exp $
 </small>
 
 */
@@ -208,7 +208,7 @@ allows one-level of inheritance for writing polymorphic model code.
 fixed-size array to a sparse array of (almost) unlimited size
 (implemented with a hash table). To compensate for the performance hit
 of raytracing in the hash table, a three-level multiple-resolution
-approach is used. Raytracing is now around 100 times faster than in
+approach is used. Raytracing is now usually <i>much</i> faster than in
 Stage-1.3. To get an idea how this works, select the
 View/Debug/Raytrace menu item while a laser or ranger is producing
 data.

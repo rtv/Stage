@@ -22,7 +22,7 @@
 // Desc: Stage (simulator) time
 // Author: Richard Vaughan
 // Date: 7 May 2003
-// CVS: $Id: stg_time.h,v 1.2 2004-09-22 20:47:22 rtv Exp $
+// CVS: $Id: stg_time.h,v 1.3 2004-12-13 05:52:04 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -43,10 +43,7 @@ class StgTime : public PlayerTime
  // Get the simulator time
  public: int GetTime(struct timeval* time);
  
- private:
- //stg_client_t* client;
-
- stg_world_t* world;
+ private: stg_world_t* world;
 };
 
 #endif

@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: model_blobfinder.c,v 1.28 2004-12-02 18:51:10 rtv Exp $
+ * CVS info: $Id: model_blobfinder.c,v 1.29 2004-12-13 05:52:04 rtv Exp $
  */
 
 /** 
@@ -114,15 +114,11 @@ stg_model_t* stg_blobfinder_create( stg_world_t* world,
   return mod;
 }
 
-stg_blobfinder_config_t* blobfinder_get_cfg( stg_model_t* mod )
+void blobfinder_get_cfg( stg_model_t* mod, stg_blobfinder_config_t* cfg )
 {
-  size_t len = 0;
-  stg_blobfinder_config_t* cfg = 
-    (stg_blobfinder_config_t*)stg_model_get_config( mod, &len );
-  
   assert( cfg );
-  assert( len == sizeof( stg_blobfinder_config_t ));
-  return cfg;
+  assert( stg_model_get_config( mod, (void*)cfg, sizeof(stg_blobfinder_config_t) ) 
+	  == sizeof(stg_blobfinder_config_t) );
 }
 
 
@@ -162,7 +158,8 @@ int blobfinder_update( stg_model_t* mod )
     return 0; 
   
   size_t len = 0;
-  stg_blobfinder_config_t* cfg = blobfinder_get_cfg(mod);
+  stg_blobfinder_config_t cfg;
+  blobfinder_get_cfg(mod,&cfg);
   
   // Generate the scan-line image
   
@@ -175,23 +172,23 @@ int blobfinder_update( stg_model_t* mod )
   double oth = pose.a;
 
   // Compute starting angle
-  oth = oth + cfg->pan + cfg->zoom / 2.0;
+  oth = oth + cfg.pan + cfg.zoom / 2.0;
   
   // Compute fov, range, etc
-  double dth = cfg->zoom / cfg->scan_width;
+  double dth = cfg.zoom / cfg.scan_width;
 
   // Make sure the data buffer is big enough
   //ASSERT((size_t)m_scan_width<=sizeof(m_scan_channel)/sizeof(m_scan_channel[0]));
   
-  //printf( "scan width %d\n", cfg->scan_width );
+  //printf( "scan width %d\n", cfg.scan_width );
 
   // record the color of every ray we project
   stg_color_t* colarray = 
-    (stg_color_t*)calloc( sizeof(stg_color_t),cfg->scan_width); 
+    (stg_color_t*)calloc( sizeof(stg_color_t),cfg.scan_width); 
 
   // record the range of every ray we project
   double* rngarray = 
-    (double*)calloc( sizeof(double),cfg->scan_width); 
+    (double*)calloc( sizeof(double),cfg.scan_width); 
   
   // Do each scan
   // Note that the scan is taken *clockwise*
@@ -203,7 +200,7 @@ int blobfinder_update( stg_model_t* mod )
   if( fig_debug_rays ) rtk_fig_clear( fig_debug_rays );
 
   int s;
-  for( s = 0; s < cfg->scan_width; s++)
+  for( s = 0; s < cfg.scan_width; s++)
     {
       //printf( "scan %d of %d\n", s, m_scan_width );
 
@@ -216,12 +213,12 @@ int blobfinder_update( stg_model_t* mod )
       double pth = oth - s * dth;
     
       itl_t*  itl = itl_create( px, py, pth, 
-				cfg->range_max, 
+				cfg.range_max, 
 				mod->world->matrix, 
 				PointToBearingRange );
       
       stg_model_t* ent;
-      double range = cfg->range_max;
+      double range = cfg.range_max;
 
       ent = itl_first_matching( itl, blobfinder_raytrace_filter, mod );
 
@@ -246,12 +243,12 @@ int blobfinder_update( stg_model_t* mod )
 	  
 	  // look up this color in the color/channel mapping array
 	  int c;
-	  for( c=0; c < cfg->channel_count; c++ )
+	  for( c=0; c < cfg.channel_count; c++ )
 	    {
 	      //PRINT_DEBUG3( "looking up %X - channel %d is %X",
-	      //	    col, c, cfg->channels[c] );
+	      //	    col, c, cfg.channels[c] );
 
-	      if( cfg->channels[c] == col)
+	      if( cfg.channels[c] == col)
 		{
 		  //printf("color %0X is channel %d\n", col, c);
 		  
@@ -266,12 +263,12 @@ int blobfinder_update( stg_model_t* mod )
   
   //printf( "model %p colors: ", mod );
   //int g;
-  //for( g=0; g<cfg->scan_width; g++ )
+  //for( g=0; g<cfg.scan_width; g++ )
   //  printf( "%0X ", colarray[g] );
   // puts("");
 
   // now the colors and ranges are filled in - time to do blob detection
-  float yRadsPerPixel = cfg->zoom / cfg->scan_height;
+  float yRadsPerPixel = cfg.zoom / cfg.scan_height;
 
   int blobleft = 0, blobright = 0;
   unsigned char blobcol = 0;
@@ -280,7 +277,7 @@ int blobfinder_update( stg_model_t* mod )
   GArray* blobs = g_array_new( FALSE, TRUE, sizeof(stg_blobfinder_blob_t) );
   
   // scan through the samples looking for color blobs
-  for( s=0; s < cfg->scan_width; s++ )
+  for( s=0; s < cfg.scan_width; s++ )
     {
       if( colarray[s] > 0 &&
 	  colarray[s] < STG_BLOB_CHANNELS_MAX )
@@ -313,14 +310,14 @@ int blobfinder_update( stg_model_t* mod )
 	    }
 	  double startyangle = atan2( robotHeight/2.0, rangeToBlobCenter );
 	  double endyangle = -startyangle;
-	  blobtop = cfg->scan_height/2 - (int)(startyangle/yRadsPerPixel);
-	  blobbottom = cfg->scan_height/2 -(int)(endyangle/yRadsPerPixel);
+	  blobtop = cfg.scan_height/2 - (int)(startyangle/yRadsPerPixel);
+	  blobbottom = cfg.scan_height/2 -(int)(endyangle/yRadsPerPixel);
 	  int yCenterOfBlob = blobtop +  ((blobbottom - blobtop )/2);
 	  
 	  if (blobtop < 0)
 	    blobtop = 0;
-	  if (blobbottom > cfg->scan_height - 1)
-	    blobbottom = cfg->scan_height - 1;
+	  if (blobbottom > cfg.scan_height - 1)
+	    blobbottom = cfg.scan_height - 1;
 	  
 	  
 	  // fill in an array entry for this blob
@@ -329,7 +326,7 @@ int blobfinder_update( stg_model_t* mod )
 	  memset( &blob, 0, sizeof(blob) );
 	  
 	  blob.channel = blobcol-1;
-	  blob.color = cfg->channels[ blob.channel];
+	  blob.color = cfg.channels[ blob.channel];
 	  blob.xpos = xCenterOfBlob;
 	  blob.ypos = yCenterOfBlob;
 	  blob.left = blobleft;
@@ -390,13 +387,14 @@ void blobfinder_render_data( stg_model_t* mod, void* data, size_t len )
   rtk_fig_origin( fig, pose.x, pose.y, pose.a );
   
   double scale = 0.01; // shrink from pixels to meters for display
-  
-  stg_blobfinder_config_t* cfg = blobfinder_get_cfg(mod);
-  
+    
+  stg_blobfinder_config_t cfg;
+  blobfinder_get_cfg(mod,&cfg);
+
   int num_blobs = len / sizeof(stg_blobfinder_blob_t);
   
-  short width = cfg->scan_width;
-  short height = cfg->scan_height;
+  short width = cfg.scan_width;
+  short height = cfg.scan_height;
   double mwidth = width * scale;
   double mheight = height * scale;
   
@@ -453,26 +451,27 @@ void blobfinder_render_cfg( stg_model_t* mod, void* data, size_t len )
   
   rtk_fig_color_rgb32( fig, stg_lookup_color( STG_BLOB_CFG_COLOR ));
   
-  stg_blobfinder_config_t* cfg = (stg_blobfinder_config_t*)data;
+  stg_blobfinder_config_t cfg;
+  blobfinder_get_cfg(mod,&cfg);
   
   // Get the camera's global pose
   stg_pose_t* pose = stg_model_get_pose( mod );
   
   double ox = pose->x;
   double oy = pose->y;
-  double mina = pose->a + (cfg->pan + cfg->zoom / 2.0);
-  double maxa = pose->a - (cfg->pan + cfg->zoom / 2.0);
+  double mina = pose->a + (cfg.pan + cfg.zoom / 2.0);
+  double maxa = pose->a - (cfg.pan + cfg.zoom / 2.0);
   
-  double dx = cfg->range_max * cos(mina);
-  double dy = cfg->range_max * sin(mina);
-  double ddx = cfg->range_max * cos(maxa);
-  double ddy = cfg->range_max * sin(maxa);
+  double dx = cfg.range_max * cos(mina);
+  double dy = cfg.range_max * sin(mina);
+  double ddx = cfg.range_max * cos(maxa);
+  double ddy = cfg.range_max * sin(maxa);
   
   rtk_fig_line( fig, ox,oy, dx, dy );
   rtk_fig_line( fig, ox,oy, ddx, ddy );
   rtk_fig_ellipse_arc( fig, 0,0,0,
-		       2.0*cfg->range_max,
-		       2.0*cfg->range_max, 
+		       2.0*cfg.range_max,
+		       2.0*cfg.range_max, 
 		       mina, maxa );      
 }
 

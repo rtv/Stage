@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.114 2004-12-10 10:15:12 rtv Exp $
+ * CVS: $Id: stage.h,v 1.115 2004-12-13 05:52:04 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -667,10 +667,13 @@ extern "C" {
     stg_msec_t interval; // time between updates in ms
     stg_msec_t interval_elapsed; // time since last update in ms
   
-
+    // todo - thread-safe version
+    // allow exclusive access to this model
+    
     // the generic buffers used by specialized model types
     void *data, *cmd, *cfg;
     size_t data_len, cmd_len, cfg_len;
+    pthread_mutex_t data_mutex, cmd_mutex, cfg_mutex;
     
     // an array of polygons that make up the model's body. Possibly
     // zero elements.
@@ -695,15 +698,17 @@ extern "C" {
     func_startup_t f_startup;
     func_shutdown_t f_shutdown;
     func_update_t f_update;
-    func_set_data_t f_set_data;
-    func_get_data_t f_get_data;
-    func_set_command_t f_set_command;
-    func_get_command_t f_get_command;
-    func_set_config_t f_set_config;
-    func_get_config_t f_get_config;
     func_render_t f_render_data;
     func_render_t f_render_cmd;
     func_render_t f_render_cfg;
+
+    // pulled these out as I never use them
+    //func_set_data_t f_set_data;
+    //func_get_data_t f_get_data;
+    //func_set_command_t f_set_command;
+    //func_get_command_t f_get_command;
+    //func_set_config_t f_set_config;
+    //func_get_config_t f_get_config;
     
     /// if set, this callback is run when we do model_put_data() -
     /// it's used by the player plugin to notify Player that data is
@@ -859,17 +864,18 @@ itl_mode_t;
   int stg_model_set_command( stg_model_t* mod, void* cmd, size_t len );
   int stg_model_set_data( stg_model_t* mod, void* data, size_t len );
   int stg_model_set_config( stg_model_t* mod, void* cmd, size_t len );
-  void* stg_model_get_command( stg_model_t* mod, size_t* len );
-  void* stg_model_get_data( stg_model_t* mod, size_t* len );
-  void* stg_model_get_config( stg_model_t* mod, size_t* len );
+  int stg_model_get_command( stg_model_t* mod, void* dest, size_t len );
+  int stg_model_get_data( stg_model_t* mod, void* dest, size_t len );
+  int stg_model_get_config( stg_model_t* mod, void* dest, size_t len );
   
   // generic versions that can be overridden
-  void* _model_get_data( stg_model_t* mod, size_t* len );
-  void* _model_get_cmd( stg_model_t* mod, size_t* len );
-  void* _model_get_cfg( stg_model_t* mod, size_t* len );
-  int _model_set_data( stg_model_t* mod, void* data, size_t len );
-  int _model_set_cmd( stg_model_t* mod, void* cmd, size_t len );
-  int _model_set_cfg( stg_model_t* mod, void* cfg, size_t len );
+  //void* _model_get_data( stg_model_t* mod, size_t* len );
+  //void* _model_get_cmd( stg_model_t* mod, size_t* len );
+  //void* _model_get_cfg( stg_model_t* mod, size_t* len );
+  //int _model_set_data( stg_model_t* mod, void* data, size_t len );
+  //int _model_set_cmd( stg_model_t* mod, void* cmd, size_t len );
+  //int _model_set_cfg( stg_model_t* mod, void* cfg, size_t len );
+
   int _model_update( stg_model_t* mod );
   //int _model_init( stg_model_t* mod );
   int _model_startup( stg_model_t* mod );

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.30 $
+//  $Revision: 1.31 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -35,30 +35,40 @@ int model_size_error( stg_model_t* mod, stg_id_t pid,
 // these set and get the generic buffers for derived types
 //
 
-void* _model_get_data( stg_model_t* mod, size_t* len )
+int _get_something( void* dest, size_t dest_len, 
+		    void* src, size_t src_len, 
+		    pthread_mutex_t* mutex )
 {
-  *len = mod->data_len; 
-  return mod->data;
+  size_t copy_len = MIN( dest_len, src_len );
+  pthread_mutex_lock( mutex );
+  memcpy( dest, src, copy_len );
+  pthread_mutex_unlock( mutex );
+  return copy_len;
 }
 
-void* _model_get_cmd( stg_model_t* mod, size_t* len )
+int stg_model_get_data( stg_model_t* mod, void* dest, size_t len )
 {
-  *len = mod->cmd_len; 
-  return mod->cmd;
+  return _get_something( dest, len, mod->data, mod->data_len, &mod->data_mutex );
 }
 
-void* _model_get_cfg( stg_model_t* mod, size_t* len )
+int stg_model_get_command( stg_model_t* mod, void* dest, size_t len )
 {
-  *len = mod->cfg_len; 
-  return mod->cfg;
+  return _get_something( dest, len, mod->cmd, mod->cmd_len, &mod->cmd_mutex );
 }
 
-int _model_set_data( stg_model_t* mod, void* data, size_t len )
+int stg_model_get_config( stg_model_t* mod, void* dest, size_t len )
 {
+  return _get_something( dest, len, mod->cfg, mod->cfg_len, &mod->cfg_mutex );
+}
+
+int stg_model_set_data( stg_model_t* mod, void* data, size_t len )
+{
+  pthread_mutex_lock( &mod->data_mutex );
   mod->data = realloc( mod->data, len );
   memcpy( mod->data, data, len );    
   mod->data_len = len;
-  
+  pthread_mutex_unlock( &mod->data_mutex );
+
   // if a callback was registered, call it
   if( mod->data_notify )
     {
@@ -88,12 +98,14 @@ int _model_set_data( stg_model_t* mod, void* data, size_t len )
   return 0; //ok
 }
 
-int _model_set_cmd( stg_model_t* mod, void* cmd, size_t len )
+int stg_model_set_command( stg_model_t* mod, void* cmd, size_t len )
 {
+  pthread_mutex_lock( &mod->cmd_mutex );  
   mod->cmd = realloc( mod->cmd, len );
   memcpy( mod->cmd, cmd, len );    
-  mod->cmd_len = len;
-  
+  mod->cmd_len = len;  
+  pthread_mutex_unlock( &mod->cmd_mutex );
+
   // if a rendering callback was registered, and the gui wants to
   // render this type of command, call it
   if( mod->f_render_cmd && 
@@ -112,14 +124,19 @@ int _model_set_cmd( stg_model_t* mod, void* cmd, size_t len )
 
   PRINT_DEBUG3( "model %d(%s) put command of %d bytes",
 		mod->id, mod->token, (int)mod->cmd_len);
+
+  //PRINT_WARN3( "model %d(%s) put command of %d bytes",
+  //	mod->id, mod->token, (int)mod->cmd_len);
   return 0; //ok
 }
 
-int _model_set_cfg( stg_model_t* mod, void* cfg, size_t len )
-{
+int stg_model_set_config( stg_model_t* mod, void* cfg, size_t len )
+{ 
+  pthread_mutex_lock( &mod->cfg_mutex );  
   mod->cfg = realloc( mod->cfg, len );
   memcpy( mod->cfg, cfg, len );    
   mod->cfg_len = len;
+  pthread_mutex_unlock( &mod->cfg_mutex );  
   
   //printf( "setting config for model %d", mod->id );
   
@@ -167,50 +184,52 @@ int _model_shutdown( stg_model_t* mod )
 }
 
 /* These functions are wrappers that implement the polymorphic hooks
-   for derived model types
+   for derived model type
 */
 
-int stg_model_set_data( stg_model_t* mod, void* data, size_t len )
-{
-  assert( mod->f_set_data );
-  return mod->f_set_data(mod, data, len);
-}
+/* int stg_model_set_data( stg_model_t* mod, void* data, size_t len ) */
+/* { */
+/*   assert( mod->f_set_data ); */
+/*   return mod->f_set_data(mod, data, len); */
+/* } */
 
-int stg_model_set_command( stg_model_t* mod, void* cmd, size_t len )
-{
-  assert( mod->f_set_command );  
-  return mod->f_set_command(mod, cmd, len); 
-}
+/* int stg_model_set_command( stg_model_t* mod, void* cmd, size_t len ) */
+/* { */
+/*   assert( mod->f_set_command );   */
+/*   return mod->f_set_command(mod, cmd, len);  */
+/* } */
 
-int stg_model_set_config( stg_model_t* mod, void* config, size_t len )
-{
-  assert( mod->f_set_config );
-  return mod->f_set_config(mod, config, len);
-}
+/* int stg_model_set_config( stg_model_t* mod, void* config, size_t len ) */
+/* { */
+/*   assert( mod->f_set_config );x */
+/*   return mod->f_set_config(mod, config, len); */
+/* } */
 
-void* stg_model_get_data( stg_model_t* mod, size_t* len )
-{
-  assert( mod->f_get_data );
-  return mod->f_get_data( mod, len );
-}
+/* void* stg_model_get_data( stg_model_t* mod, size_t* len ) */
+/* { */
+/*   assert( mod->f_get_data ); */
+/*   return mod->f_get_data( mod, len ); */
+/* } */
 
-void* stg_model_get_command( stg_model_t* mod, size_t* len )
-{
-  assert( mod->f_get_command );
-  return mod->f_get_command( mod, len );
-}
+/* void* stg_model_get_command( stg_model_t* mod, size_t* len ) */
+/* { */
+/*   assert( mod->f_get_command ); */
+/*   return mod->f_get_command( mod, len ); */
+/* } */
 
-void* stg_model_get_config( stg_model_t* mod, size_t* len )
-{
-  assert( mod->f_get_config );
-  return mod->f_get_config( mod, len );
-}
+/* void* stg_model_get_config( stg_model_t* mod, size_t* len ) */
+/* { */
+/*   assert( mod->f_get_config ); */
+/*   return mod->f_get_config( mod, len ); */
+/* } */
 
 int stg_model_update( stg_model_t* mod )
 {
   assert( mod->f_update );
-  return mod->f_update(mod);
+  int val = mod->f_update(mod);
+  return val;
 }
+
 
 int stg_model_startup( stg_model_t* mod )
 {

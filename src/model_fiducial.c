@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_fiducial.c,v $
 //  $Author: rtv $
-//  $Revision: 1.27 $
+//  $Revision: 1.28 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -20,6 +20,7 @@ The fiducialfinder model simulates a fiducial-detecting device.
 
 //#define DEBUG
 
+#include <assert.h>
 #include <math.h>
 #include "stage_internal.h"
 #include "gui.h"
@@ -84,7 +85,7 @@ typedef struct
 {
   stg_model_t* mod;
   stg_pose_t pose;
-  stg_fiducial_config_t* cfg;
+  stg_fiducial_config_t cfg;
   GArray* fiducials;
 } model_fiducial_buffer_t;
 
@@ -109,7 +110,7 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
   
   // are we within range?
   double range = hypot( dy, dx );
-  if( range > mfb->cfg->max_range_anon )
+  if( range > mfb->cfg.max_range_anon )
     {
       //PRINT_DEBUG1( "  but model %s is outside my range", him->token);
       return;
@@ -120,7 +121,7 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
   double hisbearing = atan2( dy, dx );
   double dif = mfb->pose.a - hisbearing;
 
-  if( fabs(NORMALIZE(dif)) > mfb->cfg->fov/2.0 )
+  if( fabs(NORMALIZE(dif)) > mfb->cfg.fov/2.0 )
     {
       //PRINT_DEBUG1( "  but model %s is outside my FOV", him->token);
       return;
@@ -164,7 +165,7 @@ void model_fiducial_check_neighbor( gpointer key, gpointer value, gpointer user 
       
       // if he's within ID range, get his fiducial.return value, else
       // we see value 0
-      fid.id = range < mfb->cfg->max_range_id ? 
+      fid.id = range < mfb->cfg.max_range_id ? 
 	him->fiducial_return : 0;
 
       //PRINT_DEBUG2( "adding %s's value %d to my list of fiducials",
@@ -192,10 +193,9 @@ int fiducial_update( stg_model_t* mod )
   
   mfb.mod = mod;
   
-  size_t len;
-  mfb.cfg = stg_model_get_config( mod, &len );
-  assert(len==sizeof(stg_fiducial_config_t));
-
+  size_t len = stg_model_get_config( mod, &mfb.cfg, sizeof(mfb.cfg) );
+  assert(len==sizeof(mfb.cfg));
+	 
   mfb.fiducials = g_array_new( FALSE, TRUE, sizeof(stg_fiducial_t) );
   stg_model_get_global_pose( mod, &mfb.pose );
   

@@ -2,7 +2,7 @@
    "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
-<!-- $Id: header_top.src,v 1.6 2004-12-10 10:15:11 rtv Exp $ -->
+<!-- $Id: header_top.src,v 1.7 2004-12-13 05:52:04 rtv Exp $ -->
 
 <HEAD>
 
@@ -82,12 +82,12 @@ li.menu {
     #left:-0.5em;
 }
 
-DIV.fragment {
-	width: 95%;
+.fragment {
+	width: 85%;
 	border: 1px solid #000000;
 	background-color: #EEF;
-	padding-left: 5px;
-	margin: 10px;
+	padding: 6px;
+	margin: 15px;
 }
 
 
@@ -125,23 +125,6 @@ div.stage { font-size:120% }
 <li class=menu><a href="refs.html">References</a><br>
 <li class=menu><a href="credits.html">Credits</a><br>
 
+<!-- the lists of plugins and models come next -->
 
-<!--
-<li class=menu>Devices
-    <ul>
-    <li class=menu><a href="dev_simulation.html">simulation</a></li>
-    </ul>
-</li>
--->
 
-<hr>    
-<li class=menu>Drivers</li>
-<ul>
-  <li class=menu><a href="group__stg__sim.html">stg_sim</a></li>
-  <li class=menu><a href="group__stg__mod.html">stg_mod</a></li>
-</ul>
-
-<hr>
-<li class=menu>Models</li>
-
-<ul>

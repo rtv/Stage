@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.38 $
+//  $Revision: 1.39 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -104,9 +104,8 @@ int ranger_update( stg_model_t* mod )
 
   //PRINT_DEBUG1( "[%d] updating rangers", mod->world->sim_time );
 
-  size_t len = 0;
-  stg_ranger_config_t* cfg = 
-    (stg_ranger_config_t*)stg_model_get_config(mod,&len);
+  stg_ranger_config_t cfg[100]; 
+  size_t len = stg_model_get_config(mod,cfg,100*sizeof(cfg[0]));
 
   if( len < sizeof(stg_ranger_config_t) )
     return 0; // nothing to see here
@@ -257,9 +256,9 @@ void ranger_render_data( stg_model_t* mod, void* data, size_t len )
   
   rtk_fig_t* fig = mod->gui.data;
   
-  size_t clen = 0;
-  stg_ranger_config_t* cfg = 
-    (stg_ranger_config_t*)stg_model_get_config(mod,&clen);  
+  stg_ranger_config_t cfg[100];
+  
+  size_t clen = stg_model_get_config(mod,cfg,100*sizeof(cfg[0]));  
   
   if( clen < sizeof(stg_ranger_config_t) )
     return;
@@ -278,7 +277,7 @@ void ranger_render_data( stg_model_t* mod, void* data, size_t len )
     }
   
   // should be ok by now!
-  if( rcount > 0 && cfg && samples )
+  if( rcount > 0 && samples )
     {
       stg_geom_t *geom = stg_model_get_geom(mod);
       
@@ -294,7 +293,7 @@ void ranger_render_data( stg_model_t* mod, void* data, size_t len )
 	      
 	      rtk_fig_arrow( fig, rngr->pose.x, rngr->pose.y, rngr->pose.a, 			       samples[s].range, 0.02 );
 	    }
-	}stg_model_get_config( mod, &len );
+	}
     }
 }
 

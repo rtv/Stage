@@ -391,7 +391,7 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT = stage.txt ../src/
+INPUT = stage.txt ../src
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 
@@ -400,8 +400,8 @@ INPUT = stage.txt ../src/
 # *.c *.cc *.cxx *.cpp *.c++ *.java *.ii *.ixx *.ipp *.i++ *.inl *.h *.hh *.hxx *.hpp 
 # *.h++ *.idl *.odl *.cs *.php *.php3 *.inc
 
-#FILE_PATTERNS          = *.cc *.c *.h
-FILE_PATTERNS          = *.cc
+FILE_PATTERNS          = *.cc *.c *.h
+
 
 # The RECURSIVE tag can be used to turn specify whether or not subdirectories 
 # should be searched for input files as well. Possible values are YES and NO. 
@@ -413,7 +413,8 @@ RECURSIVE              = YES
 # excluded from the INPUT source files. This way you can easily exclude a 
 # subdirectory from a directory tree whose root is specified with the INPUT tag.
 
-EXCLUDE                = 
+# these drivers are deprecated - remove these when the files disappear
+EXCLUDE                = ../src/stg_position.cc ../src/stg_fiducial.cc ../src/stg_blobfinder.cc ../src/stg_sonar.cc
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or directories 
 # that are symbolic links (a Unix filesystem feature) are excluded from the input.

@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.71 2004-12-09 01:34:44 rtv Exp $
+// $Id: stagecpp.cc,v 1.72 2004-12-13 05:52:04 rtv Exp $
 
 //#define DEBUG
 
@@ -36,8 +36,9 @@ extern "C"
 
 <h2>Worldfile Properties</h2>
 
-  @par Summary and default values
-  @verbatim
+@par Summary and default values
+
+@verbatim
 window
 (
   # gui properties
@@ -104,17 +105,12 @@ void save_gui( gui_window_t* win )
 }
 
 /** 
-@defgroup model_basic Basic model
+@addtogroup model_basic Basic model
  
-The basic model simulates an object with basic properties; position,
-size, velocity, color, visibility to various sensors, etc. The basic
-model also has a body made up of a list of lines. Internally, the
-basic model is used base class for all other model types. You can use
-the basic model to simulate environmental objects
-
 <h2>Worldfile properties</h2>
 
 @par Summary and default values
+
 @verbatim
 model
 (
@@ -147,8 +143,6 @@ model
 
   bitmap ""
   bitmap_resolution 0
-
-  friction 0
 )
 @endverbatim
 
@@ -195,10 +189,16 @@ model
   - if 0, this model is not detected by laser sensors. if 1, the model shows up in a laser sensor with normal (0) reflectance. If 2, it shows up with high (1) reflectance.
 - fiducial_return int
   - if non-zero, this model is detected by fiducialfinder sensors. The value is used as the fiducial ID.
-- friction float
-  - [WARNING: Friction model is not yet implemented; details may change] if > 0 the model can be pushed around by other moving objects. The value determines the proportion of velocity lost per second. For example, 0.1 would mean that the object would lose 10% of its speed due to friction per second. A value of zero (the default) means this model can not be pushed around (infinite friction). 
 
 */
+
+/*
+TODO
+
+- friction float
+  - [WARNING: Friction model is not yet implemented; details may change] if > 0 the model can be pushed around by other moving objects. The value determines the proportion of velocity lost per second. For example, 0.1 would mean that the object would lose 10% of its speed due to friction per second. A value of zero (the default) means this model can not be pushed around (infinite friction). 
+*/
+
 
   
 void configure_model( stg_model_t* mod, int section )
@@ -230,8 +230,7 @@ void configure_model( stg_model_t* mod, int section )
   stg_model_set_obstaclereturn( mod, &obstacle );
   
   stg_guifeatures_t gf;
-  //gf.boundary = wf.ReadInt(section, "gui_boundary", STG_DEFAULT_GUI_BOUNDARY );
-  gf.boundary = wf.ReadInt(section, "gui_boundary", 1 );
+  gf.boundary = wf.ReadInt(section, "gui_boundary", STG_DEFAULT_GUI_BOUNDARY );
   gf.nose = wf.ReadInt(section, "gui_nose", STG_DEFAULT_GUI_NOSE );
   gf.grid = wf.ReadInt(section, "gui_grid", STG_DEFAULT_GUI_GRID );
   gf.movemask = wf.ReadInt(section, "gui_movemask", STG_DEFAULT_GUI_MOVEMASK );
@@ -383,11 +382,12 @@ void configure_model( stg_model_t* mod, int section )
   stg_model_set_mass( mod, &mass );
 }
 
-/** @defgroup model_laser Laser model
+/** @addtogroup model_laser Laser model
 
 <h2>Worldfile properties</h2>
 
 @par Summary and default values
+
 @verbatim
 laser
 (
@@ -437,6 +437,7 @@ void configure_laser( stg_model_t* mod, int section )
 <h2>Worldfile properties</h2>
 
 @par Summary and default values
+
 @verbatim
 fiducialfinder
 (
@@ -487,6 +488,7 @@ void configure_fiducial( stg_model_t* mod, int section )
 <h2>Worldfile properties</h2>
 
 @par Summary and default values
+
 @verbatim
 blobfinder
 (
@@ -567,6 +569,7 @@ void configure_blobfinder( stg_model_t* mod, int section )
 <h2>Worldfile properties</h2>
 
 @par Summary and default values
+
 @verbatim
 ranger
 (
@@ -684,6 +687,7 @@ void configure_ranger( stg_model_t* mod, int section )
 <h2>Worldfile properties</h2>
 
 @par Summary and default values
+
 @verbatim
 position
 (

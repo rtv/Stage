@@ -103,14 +103,19 @@ static const int menu_table_count = 45;
 
 void model_refresh( stg_model_t* mod )
 {
+  char buf[32767];
+
   // re-set the current data, config & geom to force redraws
   size_t len = 0;
-  void* p = stg_model_get_data( mod, &len );  
-  stg_model_set_data( mod, p, len );
-  p = stg_model_get_config( mod, &len );
-  stg_model_set_config( mod, p, len );  
-  p = stg_model_get_geom( mod );
-  stg_model_set_geom( mod, p );
+  
+  len = stg_model_get_data( mod, buf, 32767 );  
+  stg_model_set_data( mod, buf, len );
+  
+  len = stg_model_get_command( mod, buf, 32767 );  
+  stg_model_set_command( mod, buf, len );
+
+  len = stg_model_get_config( mod, buf, 32767 );  
+  stg_model_set_config( mod, buf, len );
 }
 
 void refresh_cb( gpointer key, gpointer value, gpointer user )

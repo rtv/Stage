@@ -1,7 +1,11 @@
 /**
-@defgroup stg_model 
-
-Implements a model - the basic object of Stage simulation
+@defgroup model_basic Basic model
+ 
+The basic model simulates an object with basic properties; position,
+size, velocity, color, visibility to various sensors, etc. The basic
+model also has a body made up of a list of lines. Internally, the
+basic model is used base class for all other model types. You can use
+the basic model to simulate environmental objects
 
 */
 
@@ -101,7 +105,11 @@ stg_model_t* stg_model_create( stg_world_t* world,
 			       char* token )
 {  
   stg_model_t* mod = calloc( sizeof(stg_model_t),1 );
-
+  
+  assert( pthread_mutex_init( &mod->data_mutex, NULL ) == 0 );
+  assert( pthread_mutex_init( &mod->cmd_mutex, NULL ) == 0 );
+  assert( pthread_mutex_init( &mod->cfg_mutex, NULL ) == 0 );
+  
   mod->id = id;
 
   mod->world = world;
@@ -194,15 +202,16 @@ stg_model_t* stg_model_create( stg_world_t* world,
   mod->f_startup = _model_startup;
   mod->f_shutdown = _model_shutdown;
   mod->f_update = _model_update;
-  mod->f_set_data = _model_set_data;
-  mod->f_get_data =  _model_get_data;
-  mod->f_set_command = _model_set_cmd;
-  mod->f_get_command = _model_get_cmd;
-  mod->f_set_config = _model_set_cfg;
-  mod->f_get_config = _model_get_cfg;
   mod->f_render_data = NULL;
   mod->f_render_cmd = NULL;
   mod->f_render_cfg = NULL;
+
+  //mod->f_set_data = _model_set_data;
+  //mod->f_get_data =  _model_get_data;
+  //mod->f_set_command = _model_set_cmd;
+  //mod->f_get_command = _model_get_cmd;
+  //mod->f_set_config = _model_set_cfg;
+  //mod->f_get_config = _model_get_cfg;
 
   // TODO
 

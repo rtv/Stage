@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_position.c,v $
 //  $Author: rtv $
-//  $Revision: 1.17 $
+//  $Revision: 1.18 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -82,48 +82,59 @@ int position_update( stg_model_t* mod )
 
   if( mod->subs )   // no driving if noone is subscribed
     {      
+      // prevent anyone changing this model while we work
+      // pthread_mutex_lock( mod->mutex );
+
       assert( mod->cfg ); // position_init should have filled these
       assert( mod->cmd );
       
       // set the model's velocity here according to the position command
       
-      stg_position_cmd_t* cmd = (stg_position_cmd_t*)mod->cmd;
-      stg_position_cfg_t* cfg = (stg_position_cfg_t*)mod->cfg;
+      stg_position_cmd_t cmd;
+      assert( stg_model_get_command( mod, &cmd, sizeof(cmd)) == sizeof(cmd));
       
+      stg_position_cfg_t cfg;
+      assert( stg_model_get_config( mod, &cfg, sizeof(cfg)) == sizeof(cfg));
+      
+      //stg_position_cfg_t* cfg = (stg_position_cfg_t*)mod->cfg;
+      
+      //printf( "cmd mode %d x %.2f y %.2f a %.2f\n",
+      //      cmd.mode, cmd.x, cmd.y, cmd.a );
+
       stg_velocity_t vel;
       memset( &vel, 0, sizeof(vel) );
       
-      switch( cmd->mode )
+      switch( cmd.mode )
 	{
 	case STG_POSITION_CONTROL_VELOCITY :
 	  {
 	    PRINT_DEBUG( "velocity control mode" );
 	    PRINT_DEBUG4( "model %s command(%.2f %.2f %.2f)",
 			  mod->token, 
-			  cmd->x, 
-			  cmd->y, 
-			  cmd->a );
+			  cmd.x, 
+			  cmd.y, 
+			  cmd.a );
 	    
-	    switch( cfg->steer_mode )
+	    switch( cfg.steer_mode )
 	      {
 	      case STG_POSITION_STEER_DIFFERENTIAL:
 		// differential-steering model, like a Pioneer
-		//vel.x = (cmd->x * cos(mod->pose.a) - cmd->y * sin(mod->pose.a));
-		//vel.y = (cmd->x * sin(mod->pose.a) + cmd->y * cos(mod->pose.a));
-		vel.x = cmd->x;
+		//vel.x = (cmd.x * cos(mod->pose.a) - cmd.y * sin(mod->pose.a));
+		//vel.y = (cmd.x * sin(mod->pose.a) + cmd.y * cos(mod->pose.a));
+		vel.x = cmd.x;
 		vel.y = 0;
-		vel.a = cmd->a;
+		vel.a = cmd.a;
 		break;
 		
 	      case STG_POSITION_STEER_INDEPENDENT:
 		// direct steering model, like an omnidirectional robot
-		vel.x = cmd->x;
-		vel.y = cmd->y;
-		vel.a = cmd->a;
+		vel.x = cmd.x;
+		vel.y = cmd.y;
+		vel.a = cmd.a;
 		break;
 		
 	      default:
-		PRINT_ERR1( "unknown steering mode %d", cfg->steer_mode );
+		PRINT_ERR1( "unknown steering mode %d", cfg.steer_mode );
 	      }
 	  } break;
 	  
@@ -131,9 +142,9 @@ int position_update( stg_model_t* mod )
 	  {
 	    PRINT_DEBUG( "position control mode" );
 	    
-	    double x_error = cmd->x - mod->odom.x;
-	    double y_error = cmd->y - mod->odom.y;
-	    double a_error = NORMALIZE( cmd->a - mod->odom.a );
+	    double x_error = cmd.x - mod->odom.x;
+	    double y_error = cmd.y - mod->odom.y;
+	    double a_error = NORMALIZE( cmd.a - mod->odom.a );
 	    
 	    PRINT_DEBUG3( "errors: %.2f %.2f %.2f\n", x_error, y_error, a_error );
 	    
@@ -143,7 +154,7 @@ int position_update( stg_model_t* mod )
 	    double max_speed_y = 0.5;
 	    double max_speed_a = 2.0;	      
 	    
-	    switch( cfg->steer_mode )
+	    switch( cfg.steer_mode )
 	      {
 	      case STG_POSITION_STEER_INDEPENDENT:
 		{
@@ -212,13 +223,13 @@ int position_update( stg_model_t* mod )
 		break;
 		
 	      default:
-		PRINT_ERR1( "unknown steering mode %d", cfg->steer_mode );
+		PRINT_ERR1( "unknown steering mode %d", cfg.steer_mode );
 	      }
 	  }
 	  break;
 	  
 	default:
-	  PRINT_ERR1( "unhandled position command mode %d", cmd->mode );
+	  PRINT_ERR1( "unhandled position command mode %d", cmd.mode );
 	}
       
       stg_model_set_velocity( mod, &vel );
@@ -243,6 +254,8 @@ int position_update( stg_model_t* mod )
       
       // publish the data
       stg_model_set_data( mod, &data, sizeof(data));    
+
+      //pthread_mutex_unlock( mod->mutex );
     }
   
   // now  inherit the normal update - this does the actual moving
