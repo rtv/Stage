@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.28 $
+//  $Revision: 1.29 $
 //
 // Usage:
 //  (empty)
@@ -135,61 +135,63 @@ void CLaserDevice::Update( double sim_time )
     
     // if we've moved 
     if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
-      {
-	// Undraw ourselves from the world
-	//
-	if (!m_transparent) // should replace m_transparent with laser_return
-	  {
-	    m_world->matrix->mode = mode_unset;
-	    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
-				   m_size_x, m_size_y, this );
-	  }
+    {
+        // Undraw ourselves from the world
+        //
+        if (!m_transparent) // should replace m_transparent with laser_return
+        {
+            m_world->matrix->mode = mode_unset;
+            m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
+                                   m_size_x, m_size_y, this );
+        }
 	
-	m_map_px = x; // update our render position
-	m_map_py = y;
-	m_map_pth = th;
+        m_map_px = x; // update our render position
+        m_map_py = y;
+        m_map_pth = th;
 	
-	// Redraw outselves in the world
-	//
-	if (!m_transparent )
-	  {
-	    m_world->matrix->mode = mode_set;
-	    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
-				   m_size_x, m_size_y, this );
-	  }
-      }
+        // Redraw outselves in the world
+        //
+        if (!m_transparent )
+        {
+            m_world->matrix->mode = mode_set;
+            m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
+                                   m_size_x, m_size_y, this );
+        } 
+    }
     
     // UPDATE OUR SENSOR DATA
 
     // Check to see if it's time to update the laser scan
     //
-    if( sim_time - m_last_update > m_interval )
-      {
-	m_last_update = sim_time;
+    double interval = m_scan_count / m_update_rate;
+    if( sim_time - m_last_update > interval )
+    {
+        m_last_update = sim_time;
 	
-	if( Subscribed() )
-	  {
-	    // Check to see if the configuration has changed
-	    //
-	    CheckConfig();
-	    // Generate new scan data and copy to data buffer
-	    //
-	    player_laser_data_t scan_data;
-	    GenerateScanData( &scan_data );
-	    PutData( &scan_data, sizeof( scan_data) );
-	  }
-	else
-	  {
-	    // If not subscribed,
-	    // reset configuration to default.
-	    //
-	    m_scan_res = DTOR(0.50);
-	    m_scan_min = DTOR(-90);
-	    m_scan_max = DTOR(+90);
-	    m_scan_count = 361;
-	    m_intensity = false;
-	  }
-      }
+        if( Subscribed() )
+        {
+            // Check to see if the configuration has changed
+            //
+            CheckConfig();
+
+            // Generate new scan data and copy to data buffer
+            //
+            player_laser_data_t scan_data;
+            GenerateScanData( &scan_data );
+            PutData( &scan_data, sizeof( scan_data) );
+        }
+        else
+        {
+            // If not subscribed,
+            // reset configuration to default.
+            //
+            m_scan_res = DTOR(0.50);
+            m_scan_min = DTOR(-90);
+            m_scan_max = DTOR(+90);
+            m_scan_count = 361;
+            m_intensity = false;
+        }
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////
