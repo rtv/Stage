@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/fiducialfinderdevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.1 $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -67,6 +67,7 @@ public: static CFiducialFinder* Creator(  LibraryItem *libit, CWorld *world, CEn
   // Update the device
   public: virtual void Update( double sim_time );
 
+  public: virtual void UpdateConfig( void );
   // Pointer to laser used as souce of data
   private: CLaserDevice *laser;
 
@@ -83,6 +84,12 @@ public: static CFiducialFinder* Creator(  LibraryItem *libit, CWorld *world, CEn
   // who ask for them
   private: char m_bit_count;
   private: short m_bit_size, m_zero_thresh, m_one_thresh;
+  
+  // we have a notional size of fiducial that we work with.
+  // unfortunately the player spec doesn't allow us to record the
+  // sizes of individual fiducials so we just store the size of the
+  // last one we saw, or (0,0) if we've never seen one.
+  private: double fiducial_width, fiducial_height;
 
   // this one keeps track of whether or not we've already subscribed to the
   // underlying laser device

@@ -2,7 +2,7 @@
  * image.cc - bitmap image class Nimage with processing functions
  *            originally by Neil Sumpter and others at U.Leeds, UK.
  * RTV
- * $Id: image.cc,v 1.1 2002-10-27 21:46:13 rtv Exp $
+ * $Id: image.cc,v 1.2 2003-01-09 00:40:21 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -184,6 +184,7 @@ void Nimage::load_raw(char* fname)
 }
 
 
+// should move this to use libpnm sometime - rtv
 // Load a pnm image.
 bool Nimage::load_pnm(const char* fname)
 {
@@ -208,12 +209,17 @@ bool Nimage::load_pnm(const char* fname)
     return false; 
   }
   
-  // ignore the end of this line and the following comment-line
+  // ignore the end of this line
   source.ignore( 1024, '\n' );
-  source.ignore( 1024, '\n' );
+  
+  // ignore any comment lines
+  while( source.peek() == '#' )
+    source.ignore( 1024, '\n' );
   
   // get the width, height and white value  
   source >> width >> height >> whiteNum;
+
+  printf(  " W %d H %d White %d\n", width, height, whiteNum );
 
   // skip to the end of the line again
   source.ignore( 1024, '\n' );
@@ -247,7 +253,7 @@ bool Nimage::load_pnm_gz(const char* fname)
     
   char line[1024];
   char magicNumber[10];
-  char comment[256];
+  //char comment[256];
   int whiteNum; 
 
 #ifdef DEBUG
@@ -275,13 +281,18 @@ bool Nimage::load_pnm_gz(const char* fname)
               " should be pnm, binary, monochrome (magic number P5)");
     return false;
   }
+
+  //gzgets(file, comment, sizeof(comment));
+  do{
+    gzgets(file, line, sizeof(line)); 
+  } while( line[0] == '#' );
   
-  gzgets(file, comment, sizeof(comment));
-  gzgets(file, line, sizeof(line));
   sscanf(line, "%d %d", &width, &height );
 
   gzgets(file, line, sizeof(line));
   sscanf(line, "%d", &whiteNum);
+
+  printf(  " W %d H %d White %d\n", width, height, whiteNum );
 
   if (data)
     delete[] data;
