@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.21 $
+//  $Author: inspectorg $
+//  $Revision: 1.22 $
 //
 // Usage:
 //  (empty)
@@ -119,7 +119,7 @@ void CSonarDevice::Update( double sim_time )
       
       while( (ent = lit.GetNextEntity()) )
       {
-          if( ent != this && ent != m_parent_object && ent->sonar_return ) 
+          if( ent != this && ent != m_parent_entity && ent->sonar_return ) 
           {
               range = lit.GetRange();
               break;

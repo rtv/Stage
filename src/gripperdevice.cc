@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.19 $
+//  $Revision: 1.20 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -346,7 +346,7 @@ void CGripperDevice::DropObject()
   // drop the last one we picked up
   double x_offset = (m_width*2.0);
   m_puck_count--;
-  m_pucks[m_puck_count]->m_parent_object = (CEntity*)NULL;
+  m_pucks[m_puck_count]->m_parent_entity = (CEntity*)NULL;
   m_pucks[m_puck_count]->SetDirty(1);
   m_pucks[m_puck_count]->SetGlobalPose(px+x_offset*cos(pth),
                                        py+x_offset*sin(pth),
@@ -455,7 +455,7 @@ void CGripperDevice::PickupObject()
   */
 
 // pickup the puck
-  closest_puck->m_parent_object = this;
+  closest_puck->m_parent_entity = this;
 
   // if we're consuming the puck then move it behind the gripper
   if(m_gripper_consume)

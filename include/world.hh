@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.53 2002-06-07 01:53:34 inspectorg Exp $
+ * CVS info: $Id: world.hh,v 1.54 2002-06-07 06:30:51 inspectorg Exp $
  */
 
 #ifndef WORLD_HH
@@ -43,25 +43,12 @@
 #include "matrix.hh"
 #include "worldfile.hh"
 
-// standard template library container
-// This *must* be loaded after everything else, otherwise
-// is conflicts with the string template in rtk, *if* you are
-// using GCC3.01.  ahoward
-//#include <queue> 
-
-#define DEBUG
-
 #if INCLUDE_RTK2
 #include "rtk.h"
 #endif
 
-// forward declaration
-//
-class CEntity;
-class CBroadcastDevice;
 
 // World class
-//
 class CWorld
 {
   public: 
@@ -159,39 +146,39 @@ class CWorld
   // color definitions
   private: char m_color_database_filename[PATH_MAX];
 
-  // Object list
-  private: int m_object_count;
-  private: int m_object_alloc;
-  private: CEntity **m_object;
+  // Entity list
+  private: int m_entity_count;
+  private: int m_entity_alloc;
+  private: CEntity **m_entity;
   
-  public: CEntity** Objects( void ){ return m_object; };
+  public: CEntity** Entities( void ){ return m_entity; };
 
   protected: int CountDirtyOnConnection( int con );
 
-  public: void DirtyObjects( void )
+  public: void DirtyEntities( void )
     {
-      for( int i=0; i<m_object_count; i++ )
-        m_object[i]->SetDirty( 1 );
+      for( int i=0; i<m_entity_count; i++ )
+        m_entity[i]->SetDirty( 1 );
     }
 
-  public: void CleanObjects( void )
+  public: void CleanEntities( void )
     {
-      for( int i=0; i<m_object_count; i++ )
-        m_object[i]->SetDirty( 0 );
+      for( int i=0; i<m_entity_count; i++ )
+        m_entity[i]->SetDirty( 0 );
     }
 
-  // dirty all objects for a particulat connection
-  public: void DirtyObjects( int con )
+  // dirty all entities for a particulat connection
+  public: void DirtyEntities( int con )
     {
-      for( int i=0; i<m_object_count; i++ )
-        m_object[i]->SetDirty( con, 1 );
+      for( int i=0; i<m_entity_count; i++ )
+        m_entity[i]->SetDirty( con, 1 );
     }
 
-  // clan all objects for a particulat connection
-  public: void CleanObjects( int con )
+  // clan all entities for a particulat connection
+  public: void CleanEntities( int con )
     {
-      for( int i=0; i<m_object_count; i++ )
-        m_object[i]->SetDirty( con, 0 );
+      for( int i=0; i<m_entity_count; i++ )
+        m_entity[i]->SetDirty( con, 0 );
     }
 
   // Authentication key
@@ -239,8 +226,8 @@ class CWorld
   // Update everything
   public: virtual void Update();
 
-  // Add an object to the world
-  public: void AddObject(CEntity *object);
+  // Add an entity to the world
+  public: void AddEntity(CEntity *entity);
 
 
   //////////////////////////////////////////////////////////////////////////
@@ -277,14 +264,14 @@ class CWorld
   // return false if failed
   public: int ColorFromString( StageColor* color, const char* colorString );
 
-  // return a string that names this type of object
+  // return a string that names this type of entity
   public: char* CWorld::StringType( StageType t );
 
   public: CEntity* GetEntityByID( int port, int type, int index );
   
-  // objects can be created by type number or by string description
-  public: CEntity* CreateObject(const char *type, CEntity *parent );
-  public: CEntity* CreateObject( StageType type, CEntity *parent );
+  // entities can be created by type number or by string description
+  public: CEntity* CreateEntity(const char *type, CEntity *parent );
+  public: CEntity* CreateEntity( StageType type, CEntity *parent );
   
   /////////////////////////////////////////////////////////////////////////////
   // access methods
@@ -296,18 +283,18 @@ class CWorld
   double GetHeight( void )
     { if( matrix ) return matrix->height; else return 0; };
   
-  int GetObjectCount( void )
-    { return m_object_count; };
+  int GetEntityCount( void )
+    { return m_entity_count; };
   
-  CEntity* GetObject( int i )
-    { if( i>=0 && i<m_object_count ) return (m_object[i]); else return 0; }; 
+  CEntity* GetEntity( int i )
+    { if( i>=0 && i<m_entity_count ) return (m_entity[i]); else return 0; }; 
 
   // get the array index of the entity (-1 if no match)
-  int GetObjectIndex( CEntity* ent )
+  int GetEntityIndex( CEntity* ent )
   { 
     if( ent )
-      for( int e=0; e<m_object_count; e++ ) 
-	if( m_object[e] == ent ) return e; 
+      for( int e=0; e<m_entity_count; e++ ) 
+	if( m_entity[e] == ent ) return e; 
     
     return -1;
   };

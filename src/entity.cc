@@ -1,13 +1,28 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// File: entity.cc
-// Author: Andrew Howard
-// Date: 04 Dec 2000
-// Desc: Base class for movable objects
-//
-//  $Id: entity.cc,v 1.60 2002-06-05 08:30:07 inspectorg Exp $
-//
-///////////////////////////////////////////////////////////////////////////
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/*
+ * Desc: Base class for every moveable entity.
+ * Author: Richard Vaughan, Andrew Howard
+ * Date: 7 Dec 2000
+ * CVS info: $Id: entity.cc,v 1.61 2002-06-07 06:30:51 inspectorg Exp $
+ */
 
 #include <math.h>
 #include <string.h>
@@ -24,8 +39,8 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 
-#define DEBUG
-#define VERBOSE
+//#define DEBUG
+//#define VERBOSE
 //#undef DEBUG
 //#undef VERBOSE
 
@@ -34,17 +49,18 @@
 #include "world.hh"
 #include "worldfile.hh"
 
+
 ///////////////////////////////////////////////////////////////////////////
 // Minimal constructor
 // Requires a pointer to the parent and a pointer to the world.
-CEntity::CEntity(CWorld *world, CEntity *parent_object )
+CEntity::CEntity(CWorld *world, CEntity *parent_entity )
 {
   //PRINT_DEBUG( "CEntity::CEntity()" );
-  this->lock_byte = world->GetObjectCount();
+  this->lock_byte = world->GetEntityCount();
   
   m_world = world; 
-  m_parent_object = parent_object;
-  m_default_object = this;
+  m_parent_entity = parent_entity;
+  m_default_entity = this;
 
   this->name[0] = 0;
   m_stage_type = NullType; // overwritten by subclasses
@@ -117,7 +133,7 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
 #ifdef INCLUDE_RTK2
   this->fig = NULL;
   this->fig_label = NULL;
-  // By default, we can both translate and rotate objects
+  // By default, we can both translate and rotate entitys
   this->movemask = RTK_MOVE_TRANS | RTK_MOVE_ROT;
 #endif
 }
@@ -129,6 +145,7 @@ CEntity::~CEntity()
 {
   //close( m_fd ); 
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Load the entity from the world file
@@ -159,7 +176,7 @@ bool CEntity::Load(CWorldFile *worldfile, int section)
   this->size_x = worldfile->ReadTupleLength(section, "size", 0, this->size_x);
   this->size_y = worldfile->ReadTupleLength(section, "size", 1, this->size_y);
 
-  // Read the object color
+  // Read the entity color
   const char *color_desc = worldfile->ReadString(section, "color", NULL);
   if (color_desc)
     SetColor(color_desc);
@@ -187,8 +204,8 @@ bool CEntity::Load(CWorldFile *worldfile, int section)
   
   // if the port wasn't set, default to the parent's port
   // (assuming zero is not a valid port num)
-  if (m_player.port == 0 && m_parent_object )
-    m_player.port = m_parent_object->m_player.port;
+  if (m_player.port == 0 && m_parent_entity )
+    m_player.port = m_parent_entity->m_player.port;
   
   // Read the device index
   m_player.index = worldfile->ReadInt(section, "index", 0);
@@ -216,7 +233,7 @@ bool CEntity::Save(CWorldFile *worldfile, int section)
 
 ///////////////////////////////////////////////////////////////////////////
 // Startup routine
-// A virtual function that lets objects do some initialization after
+// A virtual function that lets entitys do some initialization after
 // everything has been loaded.
 bool CEntity::Startup( void )
 {
@@ -339,7 +356,7 @@ bool CEntity::Startup( void )
   // we keep a seperate copy of the subs counter.
   //m_player_subs = 0;
 
-// create the PlayerQueue objects that we'll use to access requests and
+  // create the PlayerQueue entitys that we'll use to access requests and
   // replies.  pass in the chunks of memory that are already mmap()ed
   assert(m_reqqueue = new PlayerQueue(m_config_io,m_config_len));
   assert(m_repqueue = new PlayerQueue(m_reply_io,m_reply_len));
@@ -372,7 +389,6 @@ void CEntity::Shutdown()
 {
   PRINT_DEBUG( "entity shutting down" );
 
-
 #ifdef INCLUDE_RTK2
   // Clean up the figure we created
   rtk_fig_destroy(this->fig);
@@ -400,7 +416,7 @@ int CEntity::SharedMemorySize( void )
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Update the object's representation
+// Update the entity's representation
 void CEntity::Update( double sim_time )
 {
   //PRINT_DEBUG( "UPDATE" );
@@ -467,8 +483,6 @@ void CEntity::MapEx(double px, double py, double pth, bool render)
 }
 
 
-
-
 ///////////////////////////////////////////////////////////////////////////
 // Check to see if the given pose will yield a collision with obstacles.
 // Returns a pointer to the first entity we are in collision with, and stores
@@ -511,9 +525,10 @@ CEntity *CEntity::TestCollision(double px, double py, double pth)
     }
   }
   return NULL;
-
 }
 
+
+///////////////////////////////////////////////////////////////////////////
 // same as the above method, but stores the hit location in hitx, hity
 CEntity *CEntity::TestCollision(double px, double py, double pth, 
 				double &hitx, double &hity )
@@ -560,7 +575,6 @@ CEntity *CEntity::TestCollision(double px, double py, double pth,
   return NULL;
 
 }
-
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -612,7 +626,7 @@ void CEntity::GlobalToLocal(double &px, double &py, double &pth)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Set the objects pose in the parent cs
+// Set the entitys pose in the parent cs
 void CEntity::SetPose(double px, double py, double pth)
 {
   // if the new position is different, call SetProperty to make the change.
@@ -630,7 +644,7 @@ void CEntity::SetPose(double px, double py, double pth)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Get the objects pose in the parent cs
+// Get the entitys pose in the parent cs
 void CEntity::GetPose(double &px, double &py, double &pth)
 {
   px = this->local_px;
@@ -640,7 +654,7 @@ void CEntity::GetPose(double &px, double &py, double &pth)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Set the objects pose in the global cs
+// Set the entitys pose in the global cs
 void CEntity::SetGlobalPose(double px, double py, double pth)
 {
   // Get the pose of our parent in the global cs
@@ -648,7 +662,7 @@ void CEntity::SetGlobalPose(double px, double py, double pth)
   double oy = 0;
   double oth = 0;
   
-  if (m_parent_object) m_parent_object->GetGlobalPose(ox, oy, oth);
+  if (m_parent_entity) m_parent_entity->GetGlobalPose(ox, oy, oth);
   
   // Compute our pose in the local cs
   double new_x  =  (px - ox) * cos(oth) + (py - oy) * sin(oth);
@@ -660,15 +674,15 @@ void CEntity::SetGlobalPose(double px, double py, double pth)
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Get the objects pose in the global cs
+// Get the entitys pose in the global cs
 void CEntity::GetGlobalPose(double &px, double &py, double &pth)
 {
   // Get the pose of our parent in the global cs
   double ox = 0;
   double oy = 0;
   double oth = 0;
-  if (m_parent_object)
-    m_parent_object->GetGlobalPose(ox, oy, oth);
+  if (m_parent_entity)
+    m_parent_entity->GetGlobalPose(ox, oy, oth);
     
   // Compute our pose in the global cs
   px = ox + this->local_px * cos(oth) - this->local_py * sin(oth);
@@ -678,7 +692,7 @@ void CEntity::GetGlobalPose(double &px, double &py, double &pth)
 
 
 ////////////////////////////////////////////////////////////////////////////
-// Set the objects velocity in the global cs
+// Set the entitys velocity in the global cs
 void CEntity::SetGlobalVel(double vx, double vy, double vth)
 {
   this->vx = vx;
@@ -688,7 +702,7 @@ void CEntity::SetGlobalVel(double vx, double vy, double vth)
 
 
 ////////////////////////////////////////////////////////////////////////////
-// Get the objects velocity in the global cs
+// Get the entitys velocity in the global cs
 void CEntity::GetGlobalVel(double &vx, double &vy, double &vth)
 {
   vx = this->vx;
@@ -703,7 +717,7 @@ bool CEntity::IsDescendent(CEntity *entity)
 {
   while (entity)
   {
-    entity = entity->m_parent_object;
+    entity = entity->m_parent_entity;
     if (entity == this)
       return true;
   }
@@ -725,13 +739,16 @@ void CEntity::AnnounceDataViaRTP( void* data, size_t len )
   GetGlobalPose( x, y, th );
 
   header.id = 0;
+
   // find our world index to use as an id (yuk! - fix)
-  for( int h=0; h<m_world->GetObjectCount(); h++ )
-    if( m_world->GetObject(h) == this )
-      {
-	header.id = h; // unique id for this entity
-	break;
-      }
+  for( int h=0; h<m_world->GetEntityCount(); h++ )
+  {
+    if( m_world->GetEntity(h) == this )
+    {
+      header.id = h; // unique id for this entity
+      break;
+    }
+  }
   assert( header.id != 0 );
   
   header.x = x;
@@ -761,18 +778,17 @@ void CEntity::AnnounceDataViaRTP( void* data, size_t len )
   memcpy( buf+sizeof(header), data, len );
   
   printf( "CEntity sending %d:%d (%d) bytes\n",
-	  sizeof( device_hdr_t ), 
-	  len, buflen );
+          sizeof( device_hdr_t ), 
+          len, buflen );
   
   //m_world->rtp_player->SendData( 0, buf, buflen, ms );
   
   delete[] buf;
 }
 
+
 ///////////////////////////////////////////////////////////////////////////
 // Copy data from the shared memory segment
-//
-
 size_t CEntity::GetIOData( void* dest, size_t dest_len,  
 			   void* src, uint32_t* avail )
 {
@@ -787,14 +803,14 @@ size_t CEntity::GetIOData( void* dest, size_t dest_len,
   if( dest_len == (size_t)*avail) 
     memcpy( dest, src, dest_len ); // copy the data
   else
-    {
-      //PRINT_ERR2( "requested %d data but %d bytes available\n", 
-      //	    dest_len, *avail );  
+  {
+    //PRINT_ERR2( "requested %d data but %d bytes available\n", 
+    //	    dest_len, *avail );  
       
-      // indicate failure - caller might have to handle this, but
-      // this usually isn't an error - there was just nothing to fetch.
-      dest_len = 0; 
-    }
+    // indicate failure - caller might have to handle this, but
+    // this usually isn't an error - there was just nothing to fetch.
+    dest_len = 0; 
+  }
 
   Unlock();
 
@@ -816,7 +832,6 @@ size_t CEntity::GetCommand( void* data, size_t len )
 
 ///////////////////////////////////////////////////////////////////////////
 // Copy data into the shared memory segment
-//
 size_t CEntity::PutIOData( void* dest, size_t dest_len,  
 			   void* src, size_t src_len,
 			   uint32_t* ts_sec, uint32_t* ts_usec, 
@@ -829,35 +844,34 @@ size_t CEntity::PutIOData( void* dest, size_t dest_len,
   assert( src_len > 0 );
   assert( dest_len > 0 );
   
-  
   if( src_len == 0 )
     printf( "WIERD! attempt to write no bytes into a buffer" );
 
   if( src_len <= dest_len ) // if there is room for the data
-    {
-      memcpy( dest, src, src_len); // export the data
+  {
+    memcpy( dest, src, src_len); // export the data
 
-      // update the availability and timestamps
-      *avail    = src_len;
-      *ts_sec   = m_world->m_sim_timeval.tv_sec;
-      *ts_usec  = m_world->m_sim_timeval.tv_usec;
-    }
+    // update the availability and timestamps
+    *avail    = src_len;
+    *ts_sec   = m_world->m_sim_timeval.tv_sec;
+    *ts_usec  = m_world->m_sim_timeval.tv_usec;
+  }
   else
-    {
-      PRINT_ERR2( "failed trying to put %d bytes; io buffer is "
-		  "%d bytes.)\n", src_len, dest_len  );
+  {
+    PRINT_ERR2( "failed trying to put %d bytes; io buffer is "
+                "%d bytes.)\n", src_len, dest_len  );
       
-      src_len = 0; // indicate failure
-    }
+    src_len = 0; // indicate failure
+  }
   
   Unlock();
   
   return src_len;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////
 // Copy the data into shared memory & update the info buffer
-//
 size_t CEntity::PutData( void* data, size_t len )
 {
   //PRINT_DEBUG4( "Putting %d bytes of data into device (%d,%d,%d)\n",
@@ -869,16 +883,15 @@ size_t CEntity::PutData( void* data, size_t len )
   // copy the data into the mmapped data buffer.
   // also set the timestamp and available fields for the data
   return PutIOData( (void*)m_data_io, m_data_len,
-		    data, len,
-		    &m_info_io->data_timestamp_sec,
-		    &m_info_io->data_timestamp_usec,
-		    &m_info_io->data_avail );
+                    data, len,
+                    &m_info_io->data_timestamp_sec,
+                    &m_info_io->data_timestamp_usec,
+                    &m_info_io->data_avail );
 
 }
 
 ////////////////////////////////////////////////////////////////////////////
 // Copy the command into shared memory & update the info buffer
-//
 size_t CEntity::PutCommand( void* data, size_t len )
 {
   // tell the server to export this command to anyone that needs it
@@ -936,11 +949,14 @@ size_t CEntity::PutReply(void* client, unsigned short type,
   return(0);
 }
 
-size_t 
-CEntity::PutReply(void* client, unsigned short type)
+
+///////////////////////////////////////////////////////////////////////////
+// Put a reply back on the reply queue.
+size_t CEntity::PutReply(void* client, unsigned short type)
 {
   return(PutReply(client, type, NULL, NULL, 0));
 } 
+
 
 ///////////////////////////////////////////////////////////////////////////
 // See if the PlayerDevice is subscribed
@@ -987,37 +1003,36 @@ bool CEntity::Lock( void )
   if( m_world->m_locks_fd > 0 ) // if the world has a locking file open
   {
 
-  // POSIX RECORD LOCKING METHOD
-  struct flock cmd;
+    // POSIX RECORD LOCKING METHOD
+    struct flock cmd;
 
-  cmd.l_type = F_WRLCK; // request write lock
-  cmd.l_whence = SEEK_SET; // count bytes from start of file
-  cmd.l_start = this->lock_byte; // lock my unique byte
-  cmd.l_len = 1; // lock 1 byte
+    cmd.l_type = F_WRLCK; // request write lock
+    cmd.l_whence = SEEK_SET; // count bytes from start of file
+    cmd.l_start = this->lock_byte; // lock my unique byte
+    cmd.l_len = 1; // lock 1 byte
 
-  fcntl( m_world->m_locks_fd, F_SETLKW, &cmd );
+    fcntl( m_world->m_locks_fd, F_SETLKW, &cmd );
 
-  // DEBUG: write into the file to show which byte is locked
-  // X = locked, '_' = unlocked
-  lseek( m_world->m_locks_fd, this->lock_byte, SEEK_SET );
-  write(  m_world->m_locks_fd, "X", 1 );
+    // DEBUG: write into the file to show which byte is locked
+    // X = locked, '_' = unlocked
+    lseek( m_world->m_locks_fd, this->lock_byte, SEEK_SET );
+    write(  m_world->m_locks_fd, "X", 1 );
 
-  //////////////////////////////////////////////////////////////////
-  // BSD file locking method
-  // block until we can get an exclusive lock on this file
-  //if( flock( m_fd, LOCK_EX ) != 0 )
-  //perror( "flock() LOCK failed" );
+    //////////////////////////////////////////////////////////////////
+    // BSD file locking method
+    // block until we can get an exclusive lock on this file
+    //if( flock( m_fd, LOCK_EX ) != 0 )
+    //perror( "flock() LOCK failed" );
 
-  ///////////////////////////////////////////////////////////////////
-  // POSIX semaphore method
- //assert( m_lock );
-  //PRINT_DEBUG1( "%p", m_lock );
-  //if( sem_wait( m_lock ) < 0 )
-  //{
-  //PRINT_ERR( "sem_wait failed" );
-  //return false;
-  //}
-
+    ///////////////////////////////////////////////////////////////////
+    // POSIX semaphore method
+    //assert( m_lock );
+    //PRINT_DEBUG1( "%p", m_lock );
+    //if( sem_wait( m_lock ) < 0 )
+    //{
+    //PRINT_ERR( "sem_wait failed" );
+    //return false;
+    //}
   }
   return true;
 }
@@ -1108,8 +1123,8 @@ int CEntity::SetProperty( int con, EntityProperty property,
       break;
 
     case PropParent:
-      // get a pointer to the (*value)'th object - that's our new parent
-      this->m_parent_object = m_world->GetObject( *(int*)value );     
+      // get a pointer to the (*value)'th entity - that's our new parent
+      this->m_parent_entity = m_world->GetEntity( *(int*)value );     
       break;
     case PropSizeX:
       memcpy( &size_x, (double*)value, sizeof(size_x) );
@@ -1213,7 +1228,7 @@ int CEntity::GetProperty( EntityProperty property, void* value )
     case PropParent:
       // find the parent's position in the world's entity array
       // if parent pointer is null or otherwise invalid, index is -1 
-      { int parent_index = m_world->GetObjectIndex( m_parent_object );
+      { int parent_index = m_world->GetEntityIndex( m_parent_entity );
       memcpy( value, &parent_index, sizeof(parent_index) );
       retval = sizeof(parent_index); }
       break;
@@ -1316,7 +1331,7 @@ int CEntity::GetProperty( EntityProperty property, void* value )
 // Initialise the rtk gui
 void CEntity::RtkStartup()
 {
-  // Create a figure representing this object
+  // Create a figure representing this entity
   this->fig = rtk_fig_create(m_world->canvas, NULL, 50);
 
   // Set the color
@@ -1382,16 +1397,16 @@ void CEntity::RtkShutdown()
 void CEntity::RtkUpdate()
 {
   // We need to handle mouse dragging by the user.
-  // We can only move top-level objects.
-  // Do the test here, since some objects (eg pucks) may
+  // We can only move top-level entitys.
+  // Do the test here, since some entitys (eg pucks) may
   // change their parents.
-  if (m_parent_object != NULL)
+  if (m_parent_entity != NULL)
     rtk_fig_movemask(this->fig, 0);
   else
     rtk_fig_movemask(this->fig, this->movemask);
 
   // Make sure the entity and the figure have the same pose.
-  // Either update the pose of the object in the world,
+  // Either update the pose of the entity in the world,
   // or update the pose of the figure in the GUI.
   if (rtk_fig_mouse_selected(this->fig))
   {
@@ -1420,16 +1435,6 @@ const char *CEntity::RtkGetStageType()
 { 
   // the world has a string for each type
   return m_world->StringType( m_stage_type );
-
-  //  switch (m_stage_type)
-//    {
-//      case OmniPositionType:
-//        return "OmniPositionDev";
-//      case RectRobotType:
-//        return "RectRobotDev";
-//      default:
-//        return "Unknown";
-//    }
 }
 
 #endif

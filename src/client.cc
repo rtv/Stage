@@ -146,12 +146,14 @@ CStageClient::CStageClient( int argc, char** argv )
   
   // Startup all the objects
   // Devices will create and initialize their device files
-  for (int i = 0; i < GetObjectCount(); i++)
-    if( !GetObject(i)->Startup() )
+  for (int i = 0; i < GetEntityCount(); i++)
+  {
+    if( !GetEntity(i)->Startup() )
     {
-      PRINT_ERR("object startup failed");
+      PRINT_ERR("entity startup failed");
       return;// false;
     }
+  }
   
   // now we've set everything up, we request updates as the world changes 
   // (we MUST have downloaded and started everything before subscribing)

@@ -1,28 +1,28 @@
-///////////////////////////////////////////////////////////////////////////
-//
-// File: playerserver.cc
-// Author: Richard Vaughan, Andrew Howard
-// Date: 6 Dec 2000
-// Desc: Provides interface to Player.
-//
-// CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.29 $
-//
-// Usage:
-//  (empty)
-//
-// Theory of operation:
-//  (empty)
-//
-// Known bugs:
-
-//
-// Possible enhancements:
-//  (empty)
-//
-///////////////////////////////////////////////////////////////////////////
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/*
+ * Desc: Player device; doesnt do much anymore.
+ * Author: Richard Vaughan, Andrew Howard
+ * Date: 7 Dec 2000
+ * CVS info: $Id: playerdevice.cc,v 1.30 2002-06-07 06:30:52 inspectorg Exp $
+ */
 
 #include <errno.h>
 #include <fcntl.h>
@@ -64,10 +64,10 @@
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 CPlayerDevice::CPlayerDevice(CWorld *world, CEntity *parent )
-        : CEntity(world, parent)
+    : CEntity(world, parent)
 {
   // set the Player IO sizes correctly for this type of Entity
-  m_data_len    = sizeof( int ); //PLAYER_DATA_SIZE;
+  m_data_len = sizeof( int ); //PLAYER_DATA_SIZE;
   m_command_len = 0; //PLAYER_COMMAND_SIZE;
   m_config_len  = 0; //PLAYER_CONFIG_SIZE;
      
@@ -107,19 +107,6 @@ void CPlayerDevice::Shutdown()
 }
 
 
-/* REMOVE
-///////////////////////////////////////////////////////////////////////////
-// Start the device
-bool CPlayerDevice::SetupIOPointers( char* io )
-{
-  if( !CEntity::SetupIOPointers( io ) )
-    return false;
-  
-  return true;
-}
-*/
-
-
 ///////////////////////////////////////////////////////////////////////////
 // Update the robot 
 //
@@ -130,25 +117,4 @@ void CPlayerDevice::Update( double sim_time )
 #endif
 }
 
-
-#ifdef INCLUDE_RTK
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI update messages
-//
-void CPlayerDevice::OnUiUpdate(RtkUiDrawData *data)
-{
-    CEntity::OnUiUpdate(data);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI mouse messages
-//
-void CPlayerDevice::OnUiMouse(RtkUiMouseData *pData)
-{
-    CEntity::OnUiMouse(pData);;
-}
-
-#endif
 

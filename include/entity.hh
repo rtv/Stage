@@ -18,16 +18,10 @@
  *
  */
 /*
- * Desc: top level class that contains everything
- * Author: Richard Vaughan, Andrew Howard
- * Date: 7 Dec 2000
- * CVS info: $Id: entity.hh,v 1.48 2002-06-05 08:30:06 inspectorg Exp $
- */
-/*
- * Desc: Base class for movable objects
+ * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.48 2002-06-05 08:30:06 inspectorg Exp $
+ * CVS info: $Id: entity.hh,v 1.49 2002-06-07 06:30:51 inspectorg Exp $
  */
 
 #ifndef ENTITY_HH
@@ -81,12 +75,12 @@ const int MAX_NUM_PROPERTIES = 30;
 const int MAX_PROPERTY_DATA_LEN = 20000;
 
 ///////////////////////////////////////////////////////////////////////////
-// The basic object class
+// The basic moveable object class
 class CEntity
 {
   // Minimal constructor
   // Requires a pointer to the parent and a pointer to the world.
-  public: CEntity(CWorld *world, CEntity *parent_object );
+  public: CEntity(CWorld *world, CEntity *parent_entity );
 
   // Destructor
   public: virtual ~CEntity();
@@ -97,10 +91,10 @@ class CEntity
   // Save the entity to the worldfile
   public: virtual bool Save(CWorldFile *worldfile, int section);
   
-  // Initialise object
+  // Initialise entity
   public: virtual bool Startup( void ); 
   
-  // Finalize object
+  // Finalize entity
   public: virtual void Shutdown();
 
   // Get/set properties
@@ -122,7 +116,7 @@ class CEntity
   // on this byte in the shared lock file
   private: int lock_byte; 
 
-  // Update the object's device-specific representation
+  // Update the entity's device-specific representation
   public: virtual void Update( double sim_time );
 
   // Render the entity into the world
@@ -156,27 +150,27 @@ class CEntity
   // Convert global to local coords
   public: void GlobalToLocal(double &px, double &py, double &pth);
 
-  // Set the objects pose in the parent cs
+  // Set the entitys pose in the parent cs
   public: void SetPose(double px, double py, double pth);
 
-  // Get the objects pose in the parent cs
+  // Get the entitys pose in the parent cs
   public: void GetPose(double &px, double &py, double &pth);
 
-  // Get the objects pose in the global cs
+  // Get the entitys pose in the global cs
   public: void SetGlobalPose(double px, double py, double pth);
 
-  // Get the objects pose in the global cs
+  // Get the entitys pose in the global cs
   public: void GetGlobalPose(double &px, double &py, double &pth);
 
-  // Set the objects velocity in the global cs
+  // Set the entitys velocity in the global cs
   // (I cant be bothered implementing local velocities - AH)
   public: void SetGlobalVel(double vx, double vy, double vth);
 
-  // Get the objects velocity in the global cs
+  // Get the entitys velocity in the global cs
   // (I cant be bothered implementing local velocities - AH)
   public: void GetGlobalVel(double &vx, double &vy, double &vth);
 
-  // Get the object mass
+  // Get the entity mass
   public: double GetMass() { return(m_mass); }
   
   // See if the given entity is one of our descendents
@@ -185,19 +179,19 @@ class CEntity
   // Pointer to world
   public: CWorld *m_world;
     
-  // Pointer to parent object
-  // i.e. the object this object is attached to.
-  public: CEntity *m_parent_object;
+  // Pointer to parent entity
+  // i.e. the entity this entity is attached to.
+  public: CEntity *m_parent_entity;
 
-  // Pointer the default object
-  // i.e. the object that would-be children of this object should attach to.
-  // This will usually be the object itself.
-  public: CEntity *m_default_object;
+  // Pointer the default entity
+  // i.e. the entity that would-be children of this entity should attach to.
+  // This will usually be the entity itself.
+  public: CEntity *m_default_entity;
 
   // The section in the world file that describes this entity
   public: int worldfile_section;
 
-  // Type of this object
+  // Type of this entity
   public: StageType m_stage_type; 
 
   // Our shape and geometry
@@ -208,14 +202,14 @@ class CEntity
   // Our color
   public: StageColor color;
 
-  // Descriptive name for this object
+  // Descriptive name for this entity
   public: char name[256];
 
-  // Object mass (for collision calculations)
+  // Entity mass (for collision calculations)
   protected: double m_mass;
   
   // Sensor return values
-  // Set these to true to have this object 'seen' by
+  // Set these to true to have this entity 'seen' by
   // the relevant sensor.
   public: bool obstacle_return;
   public: bool puck_return;
@@ -272,7 +266,7 @@ class CEntity
   ///////////////////////////////////////////////////////////////////////
   // DISTRIBUTED STAGE STUFF
 
-  // the IP address of the host that manages this object
+  // the IP address of the host that manages this entity
   // replaced the hostname 'cos it's smaller and faster in comparisons
   public: struct in_addr m_hostaddr;
 
@@ -372,18 +366,11 @@ class CEntity
   protected: size_t m_reply_len;
   protected: size_t m_info_len;
 
-  // we'll use these objects to access the configuration request/reply queues
+  // we'll use these entitys to access the configuration request/reply queues
   protected: PlayerQueue* m_reqqueue;
   protected: PlayerQueue* m_repqueue;
 
-  // we should nix this one day - RTV
-  // struct that holds data for external GUI rendering
-  // i made this public so that an object can get another object's
-  // type - BPG
-  //protected: ExportData exp;
-  //REMOVE public: ExportData exp;
-
-  // functions for drawing this object in GUIs
+  // functions for drawing this entity in GUIs
 #ifdef INCLUDE_RTK2
   // Initialise the rtk gui
   protected: virtual void RtkStartup();

@@ -95,15 +95,15 @@ int CStageIO::WritePacket( int fd, char* data, size_t len )
   //printf( "attempting to write %d byte packet\n", len );
 
   while(writecnt < len )
-    {
-      thiswritecnt = write( fd, data+writecnt, len-writecnt);
+  {
+    thiswritecnt = write( fd, data+writecnt, len-writecnt);
       
-      // check for error on write
-      if( thiswritecnt == -1 )
-	return -1; // fail
+    // check for error on write
+    if( thiswritecnt == -1 )
+      return -1; // fail
       
-      writecnt += thiswritecnt;
-    }
+    writecnt += thiswritecnt;
+  }
 
   //printf( "wrote %d/%d packet bytes\n", writecnt, len );
 
@@ -120,26 +120,26 @@ int CStageIO::ReadPacket( int fd, char* buf, size_t len )
   int recv = 0;
   // read a header so we know what's coming
   while( recv < (int)len )
+  {
+    //printf( "Reading on %d\n", fd );
+      
+    /* read will block until it has some bytes to return */
+    int r = read( fd, buf+recv,  len - recv );
+      
+    if( r == -1 ) // ERROR
     {
-      //printf( "Reading on %d\n", fd );
-      
-      /* read will block until it has some bytes to return */
-      int r = read( fd, buf+recv,  len - recv );
-      
-      if( r == -1 ) // ERROR
-	{
-	  if( errno != EINTR )
+      if( errno != EINTR )
 	    {
 	      printf( "ReadPacket: read returned %d\n", r );
 	      perror( "code" );
 	      break;
 	    }
-	}
-      else if( r == 0 ) // EOF
-	break; 
-      else
-	recv += r;
-    }      
+    }
+    else if( r == 0 ) // EOF
+      break; 
+    else
+      recv += r;
+  }      
 
   //printf( "read %d/%d bytes\n", recv, len );
 
@@ -206,17 +206,17 @@ int CStageIO::ReadProperties( int con, int fd, int num )
   char data[MAX_PROPERTY_DATA_LEN]; // XX define this somewhere
   
   for( int i=0; i<num; i++ )
-    {
-      ReadProperty( fd, &prop, data, MAX_PROPERTY_DATA_LEN );
+  {
+    ReadProperty( fd, &prop, data, MAX_PROPERTY_DATA_LEN );
       
-      //printf( "attempting to set property %d of object %d"
-      //    "with %d bytes of data starting at %p\n",
-      //    prop.property, prop.id, prop.len, data );
+    //printf( "attempting to set property %d of object %d"
+    //    "with %d bytes of data starting at %p\n",
+    //    prop.property, prop.id, prop.len, data );
       
-      // set the property
-      GetObject( prop.id )->
-	SetProperty( con, prop.property, (void*)data, prop.len );
-    }
+    // set the property
+    GetEntity( prop.id )->
+      SetProperty( con, prop.property, (void*)data, prop.len );
+  }
   
   return 0;
 }
@@ -226,7 +226,7 @@ int CStageIO::ReadEntity( int fd, stage_entity_t* ent )
 {
   assert( ent );
   
- int res = ReadPacket( fd, (char*)ent, sizeof(stage_entity_t) );
+  int res = ReadPacket( fd, (char*)ent, sizeof(stage_entity_t) );
  
   return res;
 }
@@ -237,22 +237,22 @@ int CStageIO::ReadEntities( int fd, int num )
   stage_entity_t ent;
   
   for( int i=0; i<num; i++ )
-    {
-      ReadEntity( fd, &ent );
+  {
+    ReadEntity( fd, &ent );
      
-      printf( "attempting to create entity %d:%d:%d\n",
-	      ent.id, ent.parent, ent.type );
+    printf( "attempting to create entity %d:%d:%d\n",
+            ent.id, ent.parent, ent.type );
 
-      CEntity* obj = 0;
-      if( ent.parent == -1 )
-	assert( obj = CreateObject( ent.type, 0 ) );
-      else
-	assert( obj = CreateObject( ent.type, 
-					     GetObject(ent.parent)));
+    CEntity* obj = 0;
+    if( ent.parent == -1 )
+      assert( obj = CreateEntity( ent.type, 0 ) );
+    else
+      assert( obj = CreateEntity( ent.type, 
+                                  GetEntity(ent.parent)));
 		
-      AddObject( obj );
+    AddEntity( obj );
       
-    }
+  }
   
   return 0;
 }
@@ -267,40 +267,40 @@ int CStageIO::ReadBackground( int fd )
   int res = ReadPacket( fd, (char*)&w, sizeof(w) );
   
   if( res == sizeof(w) )
+  {
+    // Construct a single fixed obstacle representing
+    // the environment.
+    assert( this->wall = new CFixedObstacle(this, NULL ) );
+      
+    // poke the scale in from the data packet(ugly!)
+    ((CFixedObstacle*)this->wall)->scale = w.scale;
+      
+    assert(this->matrix); // gotta have it before we can load the wall
+      
+    // read in the pixel array
+    int num_pixels =  w.sizex * w.sizey;
+    unsigned char* pixels = 0;
+    assert( pixels = new unsigned char[ num_pixels ] );
+      
+    printf( "Attempting to read %d pixels into %p on %d\n",
+            num_pixels, &pixels, fd );
+
+    int res2 = ReadPacket( fd, (char*)pixels, num_pixels );
+      
+    if( res2 == num_pixels )
     {
-      // Construct a single fixed obstacle representing
-      // the environment.
-      assert( this->wall = new CFixedObstacle(this, NULL ) );
-      
-      // poke the scale in from the data packet(ugly!)
-      ((CFixedObstacle*)this->wall)->scale = w.scale;
-      
-      assert(this->matrix); // gotta have it before we can load the wall
-      
-      // read in the pixel array
-      int num_pixels =  w.sizex * w.sizey;
-      unsigned char* pixels = 0;
-      assert( pixels = new unsigned char[ num_pixels ] );
-      
-      printf( "Attempting to read %d pixels into %p on %d\n",
-	      num_pixels, &pixels, fd );
+      // create an image from the data
+      assert( ((CFixedObstacle*)this->wall)->image = 
+              new Nimage( pixels, w.sizex, w.sizey ) );      
 
-      int res2 = ReadPacket( fd, (char*)pixels, num_pixels );
-      
-      if( res2 == num_pixels )
-	{
-	  // create an image from the data
-	  assert( ((CFixedObstacle*)this->wall)->image = 
-		  new Nimage( pixels, w.sizex, w.sizey ) );      
-
-	  // wall->Startup is called at the end of the constructor
-	}
-      else
-	{
-	  PRINT_ERR2( "short read (%d/%d pixels)\n", res2, num_pixels );
-	  return -1;
-	}
+      // wall->Startup is called at the end of the constructor
     }
+    else
+    {
+      PRINT_ERR2( "short read (%d/%d pixels)\n", res2, num_pixels );
+      return -1;
+    }
+  }
   else
     PRINT_ERR2( "short read (%d/%d bytes)\n", res, sizeof(w) );
   
@@ -393,35 +393,35 @@ int CStageIO::WriteEntity( int fd, stage_entity_t* ent )
 
 int CStageIO::WriteEntities( int fd )
 {
-  int num_obs =  GetObjectCount();
-  // announce that a load of objects are on their way
+  int num_obs =  GetEntityCount();
+  // announce that a load of entities are on their way
   WriteHeader( fd,  EntityPackets, num_obs );
   
   for( int n=0; n< num_obs; n++ )
+  {
+    CEntity* obj =  GetEntity(n);
+
+    stage_entity_t ent;
+    ent.id = n;
+    ent.type = obj->m_stage_type;
+
+    if( obj->m_parent_entity )
     {
-      CEntity* obj =  GetObject(n);
-
-      stage_entity_t ent;
-      ent.id = n;
-      ent.type = obj->m_stage_type;
-
-      if( obj->m_parent_object )
-	{
-	  int m = 0;
-	  // figure out the parent's index
-	  while( GetObject(m) != obj->m_parent_object)
-	    m++;
+      int m = 0;
+      // figure out the parent's index
+      while( GetEntity(m) != obj->m_parent_entity)
+        m++;
 	  
-	  if( m >= num_obs )
-	    puts( "Stage warning: parent index is out of range" );
+      if( m >= num_obs )
+        puts( "Stage warning: parent index is out of range" );
 	  
-	  ent.parent = m; // this is the parent's index
-	}
-      else
-	ent.parent = -1; // no parent
-      
-      WriteEntity( fd, &ent );
+      ent.parent = m; // this is the parent's index
     }
+    else
+      ent.parent = -1; // no parent
+      
+    WriteEntity( fd, &ent );
+  }
 
   return 0;
 }
@@ -434,8 +434,8 @@ int CStageIO::ReadHeader( int fd, stage_header_t* hdr  )
 
 //  int CStageIO::WriteSubscriptions( int fd )
 //  #{
-//  #  for( int i=0; i < GetObjectCount(); i++ )
-//      if( GetObject(i)->Subscribed() )
+//  #  for( int i=0; i < GetEntityCount(); i++ )
+//      if( GetEntity(i)->Subscribed() )
 //        WriteHeader( fd, Subscribed, i );
   
 //    return 0;
@@ -457,65 +457,65 @@ void CStageIO::Write( void )
   
   char data[MAX_PROPERTY_DATA_LEN]; 
 
-    // for all the connections
-    for( int t=0; t< m_pose_connection_count; t++ )
-      if( m_dirty_subscribe[t] ) // only send data to those who subscribed
-      {
-        int connfd = m_pose_connections[t].fd;
+  // for all the connections
+  for( int t=0; t< m_pose_connection_count; t++ )
+    if( m_dirty_subscribe[t] ) // only send data to those who subscribed
+    {
+      int connfd = m_pose_connections[t].fd;
       
-        assert( connfd > 0 ); // must be good
+      assert( connfd > 0 ); // must be good
       
-        int send_count =  CountDirtyOnConnection( t );
+      int send_count =  CountDirtyOnConnection( t );
 
-	if( send_count > 0 )
-	  {	    
-	    // announce the number of packets to follow on this connection
-	    //printf( "property packets header: "
-	    //    " %d packets, connection %d, fd %d\n",
-	    //    send_count, t, connfd );
+      if( send_count > 0 )
+      {	    
+        // announce the number of packets to follow on this connection
+        //printf( "property packets header: "
+        //    " %d packets, connection %d, fd %d\n",
+        //    send_count, t, connfd );
 	    
-	    WriteHeader( connfd,  PropertyPackets, send_count );
+        WriteHeader( connfd,  PropertyPackets, send_count );
 	    
-	    // loop through the objects again, this time sending the properties
-	    for( i=0; i < GetObjectCount(); i++ )
-	      for( p=0; p < MAX_NUM_PROPERTIES; p++ )
-		{  
-		  //printf( "Inspecting object %d property %d connection %d\n",
-		  //  i, p, t );
+        // loop through the entities again, this time sending the properties
+        for( i=0; i < GetEntityCount(); i++ )
+          for( p=0; p < MAX_NUM_PROPERTIES; p++ )
+          {  
+            //printf( "Inspecting entity %d property %d connection %d\n",
+            //  i, p, t );
 		  
-		  // is the entity marked dirty for this connection & prop?
-		  if( GetObject(i)->m_dirty[t][p] )
-		    {
-		      //printf( "PROPERTY DIRTY dev: %d prop: %d\n", t, p);
+            // is the entity marked dirty for this connection & prop?
+            if( GetEntity(i)->m_dirty[t][p] )
+            {
+              //printf( "PROPERTY DIRTY dev: %d prop: %d\n", t, p);
 		     
-		      int datalen = 
-			GetObject(i)->GetProperty((EntityProperty)p, data ); 
+              int datalen = 
+                GetEntity(i)->GetProperty((EntityProperty)p, data ); 
 		      
-		      if( datalen == 0 )
-			{
-			  PRINT_DEBUG1( "READ EMPTY PROPERTY %d\n",
-				       p );
-			}
-		      else
-			{
-			  stage_property_t prop;
+              if( datalen == 0 )
+              {
+                PRINT_DEBUG1( "READ EMPTY PROPERTY %d\n",
+                              p );
+              }
+              else
+              {
+                stage_property_t prop;
 			  
-			  prop.id = i;
-			  prop.property = (EntityProperty)p; 
-			  prop.len = datalen;
+                prop.id = i;
+                prop.property = (EntityProperty)p; 
+                prop.len = datalen;
 			
   
-			  WriteProperty( connfd, &prop, data, datalen ); 
+                WriteProperty( connfd, &prop, data, datalen ); 
 			  
-			}
+              }
 		      
-		      // mark it clean on this connection
-		  // it won't get re-sent here until this flag is set again
-		      GetObject(i)->SetDirty( t, (EntityProperty)p, 0 );
-		    }
-		}
-	  }
-      }      
+              // mark it clean on this connection
+              // it won't get re-sent here until this flag is set again
+              GetEntity(i)->SetDirty( t, (EntityProperty)p, 0 );
+            }
+          }
+      }
+    }      
 }
 
 void CStageIO::DestroyConnection( int con )

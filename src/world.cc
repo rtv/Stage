@@ -21,13 +21,13 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.95 2002-06-07 01:53:34 inspectorg Exp $
+ * CVS info: $Id: world.cc,v 1.96 2002-06-07 06:30:52 inspectorg Exp $
  */
 
 //#undef DEBUG
 //#undef VERBOSE
-#define DEBUG 
-#define VERBOSE
+//#define DEBUG 
+//#define VERBOSE
 
 #include <errno.h>
 #include <sys/time.h>
@@ -38,8 +38,6 @@
 #include <iostream.h>
 #include <unistd.h>
 #include <sys/mman.h>
-//#include <sys/ipc.h>
-//#include <sys/sem.h>
 #include <semaphore.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -101,11 +99,11 @@ CWorld::CWorld( int argc, char** argv )
   m_external_sync_required = false;
   m_instance = 0;
 
-  // AddObject() handles allocation of storage for entities
+  // AddEntity() handles allocation of storage for entities
   // just initialize stuff here
-  m_object = NULL;
-  m_object_alloc = 0;
-  m_object_count = 0;
+  m_entity = NULL;
+  m_entity_alloc = 0;
+  m_entity_count = 0;
 
   //rtp_player = NULL;
 
@@ -166,8 +164,8 @@ CWorld::CWorld( int argc, char** argv )
   m_start_time = m_sim_time = 0;
   memset( &m_sim_timeval, 0, sizeof( struct timeval ) );
     
-  // Initialise object list
-  m_object_count = 0;
+  // Initialise entity list
+  m_entity_count = 0;
   
   // start with no key
   bzero(m_auth_key,sizeof(m_auth_key));
@@ -189,8 +187,8 @@ CWorld::~CWorld()
   if( matrix )
     delete matrix;
 
-  for( int m=0; m < m_object_count; m++ )
-    delete m_object[m];
+  for( int m=0; m < m_entity_count; m++ )
+    delete m_entity[m];
 }
 
 int CWorld::CountDirtyOnConnection( int con )
@@ -200,14 +198,14 @@ int CWorld::CountDirtyOnConnection( int con )
 
   //puts( "Counting dirty properties" );
   // count the number of dirty properties on this connection 
-  for( int i=0; i < GetObjectCount(); i++ )
+  for( int i=0; i < GetEntityCount(); i++ )
     for( int p=0; p < MAX_NUM_PROPERTIES; p++ )
     {  
       // is the entity marked dirty for this connection & property?
-      if( GetObject(i)->m_dirty[con][p] ) 
+      if( GetEntity(i)->m_dirty[con][p] ) 
       {
         // if this property has any data  
-        if( GetObject(i)->GetProperty( (EntityProperty)p, dummydata ) > 0 )
+        if( GetEntity(i)->GetProperty( (EntityProperty)p, dummydata ) > 0 )
           count++; // we count it as dirty
       }
     }
@@ -352,8 +350,8 @@ bool CWorld::Startup()
 {  
   PRINT_DEBUG( "** STARTUP **" );
   
-  // we must have at least one object to play with!
-  assert( m_object_count > 0 );
+  // we must have at least one entity to play with!
+  assert( m_entity_count > 0 );
   
   // Initialise the real time clock
   // Note that we really do need to set the start time to zero first!
@@ -386,12 +384,12 @@ void CWorld::Shutdown()
   if( m_run_xs )
     RtkShutdown();
   
-  // Shutdown all the objects
+  // Shutdown all the entities
   // Devices will unlink their device files
-  for (int i = 0; i < m_object_count; i++)
+  for (int i = 0; i < m_entity_count; i++)
   {
-    if(m_object[i])
-      m_object[i]->Shutdown();
+    if(m_entity[i])
+      m_entity[i]->Shutdown();
   }
   
   // Shutdown the wall
@@ -458,7 +456,7 @@ void CWorld::Update(void)
       system("kill `cat stage.pid`");
       
     // copy the timeval into the player io buffer. use the first
-    // object's info
+    // entity's info
 
     if( m_clock ) // if we're managing a clock
     {
@@ -468,17 +466,17 @@ void CWorld::Update(void)
       sem_post( &m_clock->lock );
     }
 
-    // Do the actual work -- update the objects 
-    for (int i = 0; i < m_object_count; i++)
+    // Do the actual work -- update the entities 
+    for (int i = 0; i < m_entity_count; i++)
     {
-      // if this host manages this object
-      if( m_object[i]->m_local )
-        m_object[i]->Update( m_sim_time ); // update the device model
+      // if this host manages this entity
+      if( m_entity[i]->m_local )
+        m_entity[i]->Update( m_sim_time ); // update the device model
 	  
 #ifdef INCLUDE_RTK2
       // update the GUI, whether we manage this device or not
       if( m_run_xs )
-        m_object[i]->RtkUpdate();
+        m_entity[i]->RtkUpdate();
 #endif
     };
       
@@ -494,8 +492,8 @@ void CWorld::Update(void)
 #ifdef INCLUDE_RTK2
     if( m_run_xs ) 
     {
-      //for (int i = 0; i < m_object_count; i++)
-      // m_object[i]->RtkUpdate();
+      //for (int i = 0; i < m_entity_count; i++)
+      // m_entity[i]->RtkUpdate();
 	  
       RtkUpdate();      
     }
@@ -591,31 +589,31 @@ void CWorld::SetCircle(double px, double py, double pr, CEntity* ent,
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Add an object to the world
+// Add an entity to the world
 //
-void CWorld::AddObject(CEntity *object)
+void CWorld::AddEntity(CEntity *entity)
 {
   // if we've run out of space (or we never allocated any)
-  if( (!m_object) || (!( m_object_count < m_object_alloc )) )
+  if( (!m_entity) || (!( m_entity_count < m_entity_alloc )) )
   {
     // allocate some more
-    CEntity** more_space = new CEntity*[ m_object_alloc + OBJECT_ALLOC_SIZE ];
+    CEntity** more_space = new CEntity*[ m_entity_alloc + OBJECT_ALLOC_SIZE ];
       
     // copy the old data into the new space
-    memcpy( more_space, m_object, m_object_count * sizeof( CEntity* ) );
+    memcpy( more_space, m_entity, m_entity_count * sizeof( CEntity* ) );
      
     // delete the original
-    if( m_object ) delete [] m_object;
+    if( m_entity ) delete [] m_entity;
       
     // bring in the new
-    m_object = more_space;
+    m_entity = more_space;
  
     // record the total amount of space
-    m_object_alloc += OBJECT_ALLOC_SIZE;
+    m_entity_alloc += OBJECT_ALLOC_SIZE;
   }
   
-  // insert the object and increment the count
-  m_object[m_object_count++] = object;
+  // insert the entity and increment the count
+  m_entity[m_entity_count++] = entity;
 }
 
 int CWorld::ColorFromString( StageColor* color, const char* colorString )
@@ -805,10 +803,10 @@ void CWorld::LogOutputHeader( void )
   struct timeval t;
   gettimeofday( &t, 0 );
       
-  // count the locally managed objects
+  // count the locally managed entities
   int m=0;
-  for( int c=0; c<m_object_count; c++ )
-    if( m_object[c]->m_local ) m++;
+  for( int c=0; c<m_entity_count; c++ )
+    if( m_entity[c]->m_local ) m++;
       
   char* tmstr = ctime( &t.tv_sec);
   tmstr[ strlen(tmstr)-1 ] = 0; // delete the newline
@@ -821,7 +819,7 @@ void CWorld::LogOutputHeader( void )
            "# Host:\t\t%s\n"
            //"# Bitmap:\t%s\n"
            "# Timestep(ms):\t%d\n"
-           "# Objects:\t%d of %d\n#\n"
+           "# Entities:\t%d of %d\n#\n"
            "#STEP\t\tSIMTIME(s)\tINTERVAL(s)\tSLEEP(s)\tRATIO\t"
            "\tINPUT\tOUTPUT\tITOTAL\tOTOTAL\n",
            m_cmdline, 
@@ -830,7 +828,7 @@ void CWorld::LogOutputHeader( void )
            //worldfilename,
            (int)(m_sim_timestep * 1000.0),
            m, 
-           m_object_count );
+           m_entity_count );
       
   write( m_log_fd, line, strlen(line) );
 }

@@ -1,3 +1,29 @@
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/*
+ * Desc: This class implements the server, or main, instance of Stage.
+ * Author: Richard Vaughan, Andrew Howard
+ * Date: 6 Jun 2002
+ * CVS info: $Id: server.cc,v 1.10 2002-06-07 06:30:52 inspectorg Exp $
+ */
+
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -21,9 +47,8 @@
 #include <termios.h>
 #include <unistd.h>
 
-#define DEBUG
-#define VERBOSE
-//#undef DEBUG
+//#define DEBUG
+//#define VERBOSE
 
 #include "server.hh"
 #include "fixedobstacle.hh"
@@ -36,7 +61,6 @@ const int LISTENQ = 128;
 
 void CatchSigPipe( int signo )
 {
-  
 #ifdef VERBOSE
   puts( "** SIGPIPE! **" );
 #endif
@@ -51,7 +75,7 @@ CStageServer::CStageServer( int argc, char** argv )
   m_run_player = true;    
   
   ///////////////////////////////////////////////////////////////////////
-  // Set and load the worldfile, creating objects as we go
+  // Set and load the worldfile, creating entitys as we go
   if( !LoadFile(  argv[argc-1] ) )
   {
     quit = true;
@@ -59,11 +83,10 @@ CStageServer::CStageServer( int argc, char** argv )
   }
   
   // reassuring console output
-  printf( "[World %s]", this->worldfilename );
+  printf( "[World %s]\n", this->worldfilename );
   
   // reassuring console output
   // printf( "[Host %s]", m_hostname );
-  
   
   ///////////////////////////////////////////////////////////////////////
   // LOAD THE CONFIGURATION FOR THE GUI
@@ -113,7 +136,7 @@ CStageServer::CStageServer( int argc, char** argv )
   ///////////////////////////////////////////////////////////////////////
   // STARTUP
   
-  // Initialise the wall object
+  // Initialise the wall entity
   if( !this->wall->Startup())
   {
     PRINT_ERR("Background startup failed");
@@ -121,13 +144,13 @@ CStageServer::CStageServer( int argc, char** argv )
     return;
   }
 
-  // Startup all the objects
+  // Startup all the entities
   // Devices will create and initialize their device files
-  for (int i = 0; i < GetObjectCount(); i++)
+  for (int i = 0; i < GetEntityCount(); i++)
   {
-    if( !GetObject(i)->Startup() )
+    if( !GetEntity(i)->Startup() )
     {
-      PRINT_ERR1("Object %d  startup failed", i);
+      PRINT_ERR1("Entity %d  startup failed", i);
       quit = true;
       return;
     }
@@ -199,7 +222,7 @@ bool CStageServer::LoadFile( char* filename )
   //  inet_ntoa( current_hostaddr ) );
 
   /////////////////////////////////////////////////////////////////
-  // NOW LOAD THE WORLD FILE, CREATING THE OBJECTS AS WE GO
+  // NOW LOAD THE WORLD FILE, CREATING THE ENTITIES AS WE GO
   
   // Load and parse the world file
   if (!this->worldfile.Load(worldfilename))
@@ -217,7 +240,7 @@ bool CStageServer::LoadFile( char* filename )
   // the environment.
   this->wall = new CFixedObstacle(this, NULL);
   
-  // Load the settings for this object
+  // Load the settings for this entity
   if (!this->wall->Load(&this->worldfile, section))
   {
     PRINT_ERR( "Failed to load background settings" );
@@ -246,10 +269,10 @@ bool CStageServer::LoadFile( char* filename )
   // Get the simulated update interval
   m_sim_timestep = this->worldfile.ReadFloat(0, "sim_timestep", 0.100);
   
-  // Iterate through sections and create objects as needs be
+  // Iterate through sections and create entities as needs be
   for (int section = 1; section < this->worldfile.GetSectionCount(); section++)
   {
-    // Find out what type of object this is,
+    // Find out what type of entity this is,
     // and what line it came from.
     const char *type = this->worldfile.GetSectionType(section);
     int line = this->worldfile.ReadInt(section, "line", -1);
@@ -312,51 +335,51 @@ bool CStageServer::LoadFile( char* filename )
     
     // otherwise it's a device so we handle those...
 
-    // Find the parent object
+    // Find the parent entity
     CEntity *parent = NULL;
     int psection = this->worldfile.GetSectionParent(section);
-    for (int i = 0; i < GetObjectCount(); i++)
+    for (int i = 0; i < GetEntityCount(); i++)
     {
-      CEntity *object = GetObject(i);
-      if (GetObject(i)->worldfile_section == psection)
-        parent = object;
+      CEntity *entity = GetEntity(i);
+      if (GetEntity(i)->worldfile_section == psection)
+        parent = entity;
     }
 
     // Work out whether or not its a local device if any if this
     // device's host IPs match this computer's IP, it's local
     bool local = m_hostaddr.s_addr == current_hostaddr.s_addr;
 
-    // Create the object
-    CEntity *object = CreateObject(type, parent );
+    // Create the entity
+    CEntity *entity = CreateEntity(type, parent );
 
-    if (object != NULL)
+    if (entity != NULL)
     {      
-      // these pokes should really be in the objects, but it's a loooooot
+      // these pokes should really be in the entities, but it's a loooooot
       // of editing to change each constructor...
 
       // Store which section it came from (so we know where to
       // save it to later).
-      object->worldfile_section = section;
+      entity->worldfile_section = section;
 
       // store the IP of the computer responsible for updating this
-      memcpy( &object->m_hostaddr, &current_hostaddr,sizeof(current_hostaddr));
+      memcpy( &entity->m_hostaddr, &current_hostaddr,sizeof(current_hostaddr));
       
       // if true, this instance of stage will update this entity
-      object->m_local = local;
+      entity->m_local = local;
       
       //printf( "ent: %p host: %s local: %d\n",
-      //    object, inet_ntoa(object->m_hostaddr), object->m_local );
+      //    entity, inet_ntoa(entity->m_hostaddr), entity->m_local );
       
-      // Let the object load itself
-      if (!object->Load(&this->worldfile, section))
+      // Let the entity load itself
+      if (!entity->Load(&this->worldfile, section))
       {
-        PRINT_ERR1( "Failed to load object %d from world file", 
-                    GetObjectCount() ); 
+        PRINT_ERR1( "Failed to load entity %d from world file", 
+                    GetEntityCount() ); 
         return false;
       }
       
-      // Add to list of objects
-      AddObject(object);
+      // Add to list of entities
+      AddEntity(entity);
     }
     else
       PRINT_ERR2("line %d : unrecognized type [%s]", line, type);
@@ -383,19 +406,13 @@ bool CStageServer::SaveFile( char* filename )
     assert(this->worldfilename[0] != 0);
   }
 
-  // Let each object save itself
-  for (int i = 0; i < GetObjectCount(); i++)
+  // Let each entity save itself
+  for (int i = 0; i < GetEntityCount(); i++)
   {
-      CEntity *object = GetObject(i);
-      if (!object->Save(&this->worldfile, object->worldfile_section))
-        return false;
+    CEntity *entity = GetEntity(i);
+    if (!entity->Save(&this->worldfile, entity->worldfile_section))
+      return false;
   }
-
-//  #ifdef INCLUDE_RTK2
-//    // Save changes to the GUI
-//    if (!SaveGUI(&this->worldfile))
-//      return false;
-//  #endif
   
   // Save everything
   if (!this->worldfile.Save(this->worldfilename))
@@ -424,12 +441,12 @@ bool CStageServer::SetupConnectionServer( void )
   setsockopt( m_pose_listen.fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on) );
   
   if( bind(m_pose_listen.fd, (SA *) &servaddr, sizeof(servaddr) )  < 0 )
-    {
-      cout << "Port " << m_port 
-	   << " is in use. Quitting (but try again in a few seconds)." 
-	   <<endl;
-      exit( -1 );
-    }
+  {
+    cout << "Port " << m_port 
+         << " is in use. Quitting (but try again in a few seconds)." 
+         <<endl;
+    exit( -1 );
+  }
   
   // catch signals generated by socket closures
   signal( SIGPIPE, CatchSigPipe );
@@ -454,15 +471,15 @@ bool CStageServer::CreateDeviceDirectory( void )
            IOFILENAME, user_info->pw_name, m_instance++ );
   
   if( mkdir( m_device_dir, S_IRWXU | S_IRWXG | S_IRWXO ) == -1 )
+  {
+    if( errno == EEXIST )
+      PRINT_WARN( "Device directory exists. Possible error?" );
+    else 
     {
-      if( errno == EEXIST )
-	PRINT_WARN( "Device directory exists. Possible error?" );
-      else 
-	{
-	  PRINT_ERR1( "Failed to make device directory", strerror(errno) );
-	  return false;
-	}      
-    }
+      PRINT_ERR1( "Failed to make device directory", strerror(errno) );
+      return false;
+    }      
+  }
 
   return true;
 }
@@ -507,8 +524,8 @@ bool CStageServer::StartupPlayer( void )
   
   // count the number of Players on this host
   int player_count = 0;
-  for (int i = 0; i < GetObjectCount(); i++)
-    if( GetObject(i)->m_stage_type == PlayerType && GetObject(i)->m_local ) 
+  for (int i = 0; i < GetEntityCount(); i++)
+    if( GetEntity(i)->m_stage_type == PlayerType && GetEntity(i)->m_local ) 
       player_count++;
   
   printf( "DETECTED %d players on this host\n", player_count );
@@ -596,92 +613,92 @@ void CStageServer::ListenForConnections( void )
   
   // poll for connection requests with a very fast timeout
   if((readable = poll( &m_pose_listen, 1, 0 )) == -1)
-    {
-      if( errno != EINTR ) // timer interrupts are OK
-	{ 
-	  perror( "Stage warning: poll error (not EINTR)");
-	  return;
-	}
+  {
+    if( errno != EINTR ) // timer interrupts are OK
+    { 
+      perror( "Stage warning: poll error (not EINTR)");
+      return;
     }
+  }
   
   bool success = true;
 
   // if the socket had a request
   if( readable && (m_pose_listen.revents & POLLIN ) ) 
+  {
+    // set up a socket for this connection
+    struct sockaddr_in cliaddr;  
+    bzero(&cliaddr, sizeof(cliaddr));
+    socklen_t clilen = sizeof(cliaddr);
+      
+    int connfd = 0;
+      
+    connfd = accept( m_pose_listen.fd, (SA *) &cliaddr, &clilen);
+      
+
+    // set the dirty flag for all entities on this connection
+    //for( int i=0; i < world->GetEntityCount(); i++ )
+    DirtyEntities( m_pose_connection_count );
+
+
+    // determine the type of connection, sync or async, by reading
+    // the first byte
+    char b = 0;
+    int r = 0;
+
+    if( (r = read( connfd, &b, 1 )) < 1 ) 
     {
-      // set up a socket for this connection
-      struct sockaddr_in cliaddr;  
-      bzero(&cliaddr, sizeof(cliaddr));
-      socklen_t clilen = sizeof(cliaddr);
-      
-      int connfd = 0;
-      
-      connfd = accept( m_pose_listen.fd, (SA *) &cliaddr, &clilen);
-      
-
-      // set the dirty flag for all entities on this connection
-      //for( int i=0; i < world->GetObjectCount(); i++ )
-      DirtyObjects( m_pose_connection_count );
-
-
-      // determine the type of connection, sync or async, by reading
-      // the first byte
-      char b = 0;
-      int r = 0;
-
-      if( (r = read( connfd, &b, 1 )) < 1 ) 
-	{
-	  puts( "failed to read sync type byte. Quitting\n" );
-	  if( r < 0 ) perror( "read error" );
-	  exit( -1 );
-	}
-      
-      // record the total bytes input
-      g_bytes_input += r; 
-
-
-      // if this is a syncronized connection, increase the sync counter 
-      switch( b )
-	{
-	case STAGE_SYNC: 
-	  m_sync_counter++; 
-#ifdef VERBOSE      
-	  printf( "\nStage: SYNC pose connection accepted (id: %d fd: %d)\n", 
-		  m_pose_connection_count, connfd );
-	  fflush( stdout );
-#endif            
-	  if( m_external_sync_required ) m_enable = true;
-
-	  success = true;
-	  break;
-	case STAGE_ASYNC:
-	  //default:
-#ifdef VERBOSE      
-	  printf( "\nStage: ASYNC pose connection accepted (id: %d fd: %d)\n", 
-		  m_pose_connection_count, connfd );
-	  fflush( stdout );
-#endif            
-	  success = true;
-	  break;
-	  
-	default: printf( "Stage: unknown sync on %d. Closing connection\n",
-			 connfd  );
-	  close( connfd );
-	  success = false;
-	  break;
-	}
-   
-      if( success )
-	{
-	  // add the new connection to the arrays
-	  // store the connection type to help us destroy it later
-	  m_conn_type[ m_pose_connection_count ] = b;
-	  // record the pollfd data
-	  m_pose_connections[ m_pose_connection_count ].fd = connfd;
-	  m_pose_connections[ m_pose_connection_count ].events = POLLIN;
-	  m_pose_connection_count++;
-	}
+      puts( "failed to read sync type byte. Quitting\n" );
+      if( r < 0 ) perror( "read error" );
+      exit( -1 );
     }
+      
+    // record the total bytes input
+    g_bytes_input += r; 
+
+
+    // if this is a syncronized connection, increase the sync counter 
+    switch( b )
+    {
+      case STAGE_SYNC: 
+        m_sync_counter++; 
+#ifdef VERBOSE      
+        printf( "\nStage: SYNC pose connection accepted (id: %d fd: %d)\n", 
+                m_pose_connection_count, connfd );
+        fflush( stdout );
+#endif            
+        if( m_external_sync_required ) m_enable = true;
+
+        success = true;
+        break;
+      case STAGE_ASYNC:
+        //default:
+#ifdef VERBOSE      
+        printf( "\nStage: ASYNC pose connection accepted (id: %d fd: %d)\n", 
+                m_pose_connection_count, connfd );
+        fflush( stdout );
+#endif            
+        success = true;
+        break;
+	  
+      default: printf( "Stage: unknown sync on %d. Closing connection\n",
+                       connfd  );
+        close( connfd );
+        success = false;
+        break;
+    }
+   
+    if( success )
+    {
+      // add the new connection to the arrays
+      // store the connection type to help us destroy it later
+      m_conn_type[ m_pose_connection_count ] = b;
+      // record the pollfd data
+      m_pose_connections[ m_pose_connection_count ].fd = connfd;
+      m_pose_connections[ m_pose_connection_count ].events = POLLIN;
+      m_pose_connection_count++;
+    }
+  }
 }
 
 
@@ -700,8 +717,8 @@ void CStageServer::Shutdown()
   // delete the device directory
   if( rmdir( m_device_dir ) != 0 )
     PRINT_WARN2("failed to delete device directory \"%s\" [%s]",
-		m_device_dir,
-		strerror(errno));
+                m_device_dir,
+                strerror(errno));
 
 }
 
@@ -716,14 +733,14 @@ bool CStageServer::CreateLockFile( void )
   m_locks_fd = -1;
 
   if( (m_locks_fd = open( m_locks_name, O_RDWR | O_CREAT | O_TRUNC, 
-                   S_IRUSR | S_IWUSR )) < 0 )
+                          S_IRUSR | S_IWUSR )) < 0 )
   {
     perror("Failed to create lock device" );
     return false;
   } 
   
   // set the file size - 1 byte per entity
-  off_t sz = GetObjectCount();
+  off_t sz = GetEntityCount();
   
   if( ftruncate( m_locks_fd, sz ) < 0 )
   {
@@ -732,7 +749,7 @@ bool CStageServer::CreateLockFile( void )
   }
 
   //printf( "Created lock file %s of %d bytes (fd %d)\n", 
-  //  m_locks_name, m_object_count, m_locks_fd );
+  //  m_locks_name, m_entity_count, m_locks_fd );
 
   return true;
 }
@@ -743,7 +760,7 @@ void CStageServer::Write( void )
   
   // if player has changed the subscription count, we make the property dirty
   
-  // fix this - it limits the number of objects
+  // fix this - it limits the number of entities
   // just move the memory into the entity
   static int subscribed_last_time[ 10000 ]; 
   static bool init = true;
@@ -751,35 +768,35 @@ void CStageServer::Write( void )
   // is this necessary? can't hurt i guess.
   // first time round, we zero the static buffer
   if( init ) 
-    {
-      memset( subscribed_last_time, false, 10000 );
-      init = false;
-    }
+  {
+    memset( subscribed_last_time, false, 10000 );
+    init = false;
+  }
   
-  for( int i=0; i < GetObjectCount(); i++ )
+  for( int i=0; i < GetEntityCount(); i++ )
+  {
+    //PRINT_DEBUG1( "checking subscription for entity %d", i );
+      
+    int currently_subscribed =  GetEntity(i)->Subscribed();
+      
+    //PRINT_DEBUG3( "Entity %d subscriptions: %d last time: %d\n", 
+    //	    i, currently_subscribed, subscribed_last_time[i] );
+      
+    // if the current subscription state is different from the last time
+    if( currently_subscribed != subscribed_last_time[i] )
     {
-      //PRINT_DEBUG1( "checking subscription for object %d", i );
-      
-      int currently_subscribed =  GetObject(i)->Subscribed();
-      
-      //PRINT_DEBUG3( "Object %d subscriptions: %d last time: %d\n", 
-      //	    i, currently_subscribed, subscribed_last_time[i] );
-      
-      // if the current subscription state is different from the last time
-      if( currently_subscribed != subscribed_last_time[i] )
-    	{
 	  
-  	  PRINT_DEBUG2( "Object %d subscription change (%d subs)\n", 
-  			i, GetObject(i)->Subscribed() );
+  	  PRINT_DEBUG2( "Entity %d subscription change (%d subs)\n", 
+                    i, GetEntity(i)->Subscribed() );
 	  
-    	  // remember this state for next time
-    	  subscribed_last_time[i] = currently_subscribed;
+      // remember this state for next time
+      subscribed_last_time[i] = currently_subscribed;
 	  
   	  // mark the subscription property as dirty so we pick it up
   	  // below
-  	  GetObject(i)->SetDirty( PropPlayerSubscriptions , 1);
+  	  GetEntity(i)->SetDirty( PropPlayerSubscriptions , 1);
   	}
-    }
+  }
   
   CStageIO::Write();
 }
@@ -788,7 +805,7 @@ void CStageServer::Write( void )
 // Clock device -- create the memory map for IPC with Player 
 bool CStageServer::CreateClockDevice( void )
 {   
- //   char hostdir[256];
+  //   char hostdir[256];
 //    sprintf( hostdir, "%s", m_device_dir );
 
 //    if( mkdir( hostdir, S_IRWXU | S_IRWXG | S_IRWXO ) == -1 )
@@ -827,20 +844,20 @@ bool CStageServer::CreateClockDevice( void )
   }
   
   if( write( tfd, &m_sim_timeval, sizeof(m_sim_timeval)) < 0 )
-    {
-      PRINT_ERR1( "Failed to write time into clock device", strerror(errno) );
-      return false;
-    }
+  {
+    PRINT_ERR1( "Failed to write time into clock device", strerror(errno) );
+    return false;
+  }
 
   void *map = mmap( NULL, clocksize, 
-		    PROT_READ | PROT_WRITE, MAP_SHARED,
-		    tfd, (off_t) 0);
+                    PROT_READ | PROT_WRITE, MAP_SHARED,
+                    tfd, (off_t) 0);
   
   if (map == MAP_FAILED )
-    {
-      PRINT_ERR1( "Failed to map clock device memory", strerror(errno) );
-      return false;
-    }
+  {
+    PRINT_ERR1( "Failed to map clock device memory", strerror(errno) );
+    return false;
+  }
   
   // Initialise space
   //
@@ -851,11 +868,11 @@ bool CStageServer::CreateClockDevice( void )
   
   // init the clock's semaphore
   if( sem_init( &m_clock->lock, 0, 1 ) < 0 )
-    {
-      PRINT_ERR1( "Failed to initialize record locking semaphore", 
-		  strerror(errno) );
-      return false;
-    }
+  {
+    PRINT_ERR1( "Failed to initialize record locking semaphore", 
+                strerror(errno) );
+    return false;
+  }
   
   close( tfd ); // can close fd once mapped
   

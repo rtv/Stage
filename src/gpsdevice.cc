@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gpsdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.11 $
+//  $Author: inspectorg $
+//  $Revision: 1.12 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -25,9 +25,8 @@ CGpsDevice::CGpsDevice(CWorld *world, CEntity *parent )
 {
   m_data_len    = sizeof( player_gps_data_t ); 
   m_command_len = 0;
-  //m_config_len  = sizeof( player_gps_config_t );
-  m_config_len  = 1;
-  m_reply_len  = 1;
+  m_config_len  = 0;
+  m_reply_len  = 0;
 
   m_player.code = PLAYER_GPS_CODE;
   m_stage_type = GpsType;
@@ -44,7 +43,6 @@ CGpsDevice::CGpsDevice(CWorld *world, CEntity *parent )
 void CGpsDevice::Update( double sim_time )
 {
   double px,py,pth;
-  void* client;
 
   ASSERT(m_world != NULL);
     
@@ -54,27 +52,6 @@ void CGpsDevice::Update( double sim_time )
   if( sim_time - m_last_update < m_interval )
     return;
   m_last_update = sim_time;
-
-  // Check for teleportation requests
-  // Move the devices parent, if it has one.
-  // Should probably move the top-level object that the
-  // device is attached to.
-  player_gps_config_t config;
-  if(GetConfig(&client,&config, sizeof(config)) > 0)
-  {
-    px = ntohl(config.xpos)/1000.0;
-    py = ntohl(config.ypos)/1000.0;
-    pth = ntohl(config.heading)*M_PI/180;
-    if (m_parent_object)
-    {
-      m_parent_object->SetGlobalPose(px, py, pth);
-      m_parent_object->SetDirty(1);
-    }
-    else
-      SetGlobalPose(px, py, pth);
-
-    PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
-  }
 
   // Return global pose
   GetGlobalPose(px,py,pth);

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
 //  $Author: inspectorg $
-//  $Revision: 1.23 $
+//  $Revision: 1.24 $
 //
 // Usage:
 //  (empty)
@@ -46,6 +46,7 @@
 #include "gripperdevice.hh"
 #include "gpsdevice.hh"
 #include "motedevice.hh"
+#include "truthdevice.hh"
 
 #ifdef HRL_HEADERS
 #include "irdevice.hh"
@@ -78,9 +79,8 @@
 //  };
 
 /////////////////////////////////////////////////////////////////////////
-// Create an object given a type
-//
-CEntity* CWorld::CreateObject( StageType type, CEntity *parent )
+// Create an entity given a type
+CEntity* CWorld::CreateEntity( StageType type, CEntity *parent )
 { 
   switch( type )
     {
@@ -108,9 +108,8 @@ CEntity* CWorld::CreateObject( StageType type, CEntity *parent )
       return new CBoxObstacle(this, parent);
     case LaserBeaconType:
       return new CLaserBeacon(this, parent);
-      // temporarily broken
-      //case LBDType: // Laser Beacon Detector 
-      //return new CLBDDevice(this, (CLaserDevice*)parent );
+    case LBDType:
+      return new CLBDDevice(this, (CLaserDevice*)parent );
     case VisionBeaconType:
       return new CVisionBeacon(this, parent);
     case GripperType:
@@ -125,9 +124,11 @@ CEntity* CWorld::CreateObject( StageType type, CEntity *parent )
       return new COmniPositionDevice(this, parent );
     case MoteType:
       return new CMoteDevice(this, parent );
+    case TruthType:
+      return new CTruthDevice(this, parent );
 
     default:
-      printf( "Stage Warning: CreateObject() Unknown type %d", type );
+      PRINT_WARN1("unknown type %d", type);
     }
 
   // case AudioType:
@@ -139,10 +140,10 @@ CEntity* CWorld::CreateObject( StageType type, CEntity *parent )
   //case OccupancyType:
 }
 
+
 /////////////////////////////////////////////////////////////////////////
-// Create an object given a type
-//
-CEntity* CWorld::CreateObject(const char *type, CEntity *parent )
+// Create an entity given a type
+CEntity* CWorld::CreateEntity(const char *type, CEntity *parent )
 { 
   if (strcmp(type, "mote") == 0)
     return new CMoteDevice(this, parent );
@@ -203,6 +204,9 @@ CEntity* CWorld::CreateObject(const char *type, CEntity *parent )
     
   if (strcmp(type, "puck") == 0)
     return new CPuck(this, parent);
+
+  if (strcmp(type, "truth") == 0)
+    return new CTruthDevice(this, parent);
 
 #ifdef HRL_HEADERS 
   // these the proprietary HRL devices - the device code cannot be distributed

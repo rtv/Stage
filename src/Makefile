@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.92 2002-06-07 02:54:56 gerkey Exp $
+# $Id: Makefile,v 1.93 2002-06-07 06:30:51 inspectorg Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -23,8 +23,8 @@ INCLUDES = -I../include -I$(PLAYER_INC)
 # compile flags for Stage
 STAGEFLAGS = -DREENTRANT $(ZLIB_FLAGS) $(INCLUDES) $(PLAYER_PLATFORM) \
              -DVERSION=\"$(VERSION)\" -DCOLOR_DATABASE=\"$(COLOR_DATABASE)\" \
-	     -DINCLUDE_RTK2 -I../$(RTK_INC) `gtk-config --cflags`\
-	     $(HRL_FLAGS) $(CCFLAGS)	
+				     -DINCLUDE_RTK2 -I../$(RTK_INC) `gtk-config --cflags`\
+	   				  $(HRL_FLAGS) $(CCFLAGS)	
 
 # Link flags for Stage
 # optional libraries are linked if they were defined in Makefile.common
@@ -38,7 +38,8 @@ OBS = stageio.o server.o client.o entity.o main.o world.o worldfile.o \
 	miscdevice.o broadcastdevice.o ptzdevice.o boxobstacle.o \
 	laserbeacon.o visiondevice.o visionbeacon.o \
 	puck.o gpsdevice.o gripperdevice.o motedevice.o bpsdevice.o \
-	raytrace.o matrix.o image.o rtp.o entityfactory.o laserbeacondevice.o 
+	laserbeacondevice.o truthdevice.o \
+	raytrace.o matrix.o image.o rtp.o entityfactory.o 
 
 # TARGETS  #########################################################
 all: stage #tools 
