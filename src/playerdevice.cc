@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.38 2002-09-25 02:55:55 rtv Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.39 2002-09-26 01:22:17 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -117,8 +117,19 @@ CPlayerEntity::~CPlayerEntity()
 
 void CPlayerEntity::Update( double sim_time )
 {
-  PRINT_DEBUG1( "subs: %d\n", this->subscribed );
+  //PRINT_DEBUG1( "subs: %d\n", this->subscribed );
 
+  // if we have any gui data graphics
+  if( this->g_data ) 
+    {
+      // make sure we still have a subscription
+      if( !this->Subscribed() )
+	{
+	  gtk_object_destroy( GTK_OBJECT(this->g_data) );
+	  this->g_data = NULL;
+	}
+    }
+  
   CEntity::Update( sim_time );
 }
 
@@ -566,7 +577,7 @@ void CPlayerEntity::Unsubscribe()
   Lock();
   m_info_io->subscribed--;
   Unlock();
-  
+
   CEntity::Unsubscribe();
 } 
 

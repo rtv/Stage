@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.70 2002-09-25 02:55:55 rtv Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.71 2002-09-26 01:22:16 rtv Exp $
  */
 
 #define DEBUG
@@ -233,8 +233,10 @@ size_t CLaserDevice::PutData( void* vdata, size_t len )
 				      gnome_canvas_polygon_get_type(),
 				      "points", points,
 				      "fill_color_rgba", RGBA(this->color,16),
-				      "outline_color_rgba", RGBA(this->color,255),
-				      "width_pixels", 1,
+				      "outline_color", NULL, 
+				      // TODO - optional laser scan outline
+				      //"outline_color_rgba", RGBA(this->color,255),
+				      //"width_pixels", 1,
 				      NULL ) );
       gnome_canvas_points_free(points);
     }
@@ -398,10 +400,11 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
     while( (ent = lit.GetNextEntity()) ) 
     {
       // Ignore ourself, things which are attached to us,
-      // and things that we are attached to.
+      // and things that we are attached to (except root)
       // The latter is useful if you want to stack beacons
       // on the laser or the laser on somethine else.
-      if (ent == this || this->IsDescendent(ent) || ent->IsDescendent(this))
+      if (ent == this || this->IsDescendent(ent) || 
+	  (ent != m_world->root && ent->IsDescendent(this)))
         continue;
 
       // Construct a list of beacons we have seen

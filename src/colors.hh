@@ -22,7 +22,7 @@
  * devices here.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 8 Jun 2002
- * CVS info: $Id: colors.hh,v 1.3 2002-09-12 02:21:51 rtv Exp $
+ * CVS info: $Id: colors.hh,v 1.4 2002-09-26 01:22:16 rtv Exp $
  */
 
 #ifndef _STAGECOLORS_H
@@ -44,7 +44,7 @@
 #define GRIPPER_COLOR "blue"
 #define POSITION_COLOR "dark red"
 #define LASER_COLOR  "blue"
-#define SONAR_COLOR  "gray"
+#define SONAR_COLOR  "green"
 #define PTZ_COLOR  "magenta"
 #define PUCK_COLOR  "green"
 #define BOX_COLOR  "yellow"

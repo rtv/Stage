@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.31 2002-09-16 23:44:34 gerkey Exp $
+ * CVS info: $Id: server.cc,v 1.32 2002-09-26 01:22:17 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -393,14 +393,14 @@ bool CStageServer::LoadFile( char* filename )
     
   // draw a rectangle of boundary pixels around the outside of the matrix  
   Rect r;
-  r.toplx = 0;
-  r.toply = 0;
-  r.botlx = 0;
-  r.botly = h-1;
-  r.toprx = w-1;
-  r.topry = 0;
-  r.botrx = w-1;
-  r.botry = h-1;
+  r.toplx = 1;
+  r.toply = 1;
+  r.botlx = 1;
+  r.botly = h-2;
+  r.toprx = w-2;
+  r.topry = 1;
+  r.botrx = w-2;
+  r.botry = h-2;
 
   matrix->draw_rect( r, root, true );
 

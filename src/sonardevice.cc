@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.35 2002-09-25 02:55:55 rtv Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.36 2002-09-26 01:22:17 rtv Exp $
  */
 
 #include <math.h>
@@ -103,9 +103,7 @@ bool CSonarDevice::Load(CWorldFile *worldfile, int section)
 // Update the sonar data
 void CSonarDevice::Update( double sim_time ) 
 {
-#ifdef DEBUG
-  CPlayerEntity::Update( sim_time ); // inherit some debug output
-#endif
+  CPlayerEntity::Update( sim_time );
 
   // dump out if noone is subscribed
   if(!Subscribed())
@@ -218,34 +216,59 @@ size_t CSonarDevice::PutData( void* vdata, size_t len )
   // different from last time. note that we look at the ranges
   // themselves, not just the timestamp, as we can get the same scans
   // over and over...
+
   if( memcmp( &data->ranges, &last_data.ranges, 
 	      ntohs(data->range_count) * sizeof(data->ranges[0])
 	      ) != 0 )
     {
       
-      GnomeCanvasPoints* points = gnome_canvas_points_new(this->sonar_count);
-      
-      for (int s = 0; s < this->sonar_count; s++)
-	{
-	  // convert from integer mm to double m
-	  double range = (double)ntohs(data->ranges[s]) / 1000.0;      
-	  points->coords[s*2+0] = this->sonars[s][0] + range * cos(this->sonars[s][2]); 
-	  points->coords[s*2+1] = this->sonars[s][1] + range * sin(this->sonars[s][2]);  
-	}
-      
       // kill any previous data rendering
       if( g_data ) 
 	gtk_object_destroy(GTK_OBJECT(g_data));
       
-      // construct a polygon matching the lasersweep
-      assert( g_data = 
-	      gnome_canvas_item_new ( g_group,
-				      gnome_canvas_polygon_get_type(),
-				      "points", points,
-				      "fill_color_rgba", RGBA(this->color,16),
-				      "outline_color_rgba", RGBA(this->color,255),
-				      "width_pixels", 1,
-				      NULL ) );
+      // construct a group to contain several sonar triangles
+      assert( g_data = gnome_canvas_item_new( g_group,
+					      gnome_canvas_group_get_type(),
+					      "x", 0,
+					      "y", 0,
+					      NULL) );
+      
+      GnomeCanvasPoints* points = gnome_canvas_points_new(3);
+
+      for (int s=0; s < ntohs(data->range_count); s++)
+	{	 
+	  // convert from integer mm to double m
+	  double range = (double)ntohs(data->ranges[s]) / 1000.0;      
+	  double originx = this->sonars[s][0];
+	  double originy = this->sonars[s][1];
+	  double angle = this->sonars[s][2];
+
+	  double hitx =  originx + range * cos(angle); 
+	  double hity =  originy + range * sin(angle);
+	
+	  double diverge = M_PI/40.0;
+	  double sidelen = range / cos(diverge);
+
+	  points->coords[0] = this->sonars[s][0]; // transducer origin
+	  points->coords[1] = this->sonars[s][1];
+	  points->coords[2] = originx + sidelen * cos( angle - diverge );
+	  points->coords[3] = originy + sidelen * sin( angle - diverge );
+	  points->coords[4] = originx + sidelen * cos( angle + diverge );
+	  points->coords[5] = originy + sidelen * sin( angle + diverge );
+      
+	  // construct a polygon matching the lasersweep
+	  assert( gnome_canvas_item_new ( GNOME_CANVAS_GROUP(g_data),
+					  gnome_canvas_polygon_get_type(),
+					  "points", points,
+					  "fill_color_rgba", RGBA(this->color,32),
+					  "outline_color", NULL,
+					  // TODO - optional sonar scan outline
+					  //"outline_color_rgba", RGBA(::LookupColor("green"),255),
+					  //"width_pixels", 1,
+					  NULL ) );
+	  
+	}
+
       gnome_canvas_points_free(points);
     }
   // store the old data for next time

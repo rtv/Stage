@@ -21,7 +21,7 @@
  * Desc: Gnome GUI world components (all methods begin with 'Gui')
  * Author: Richard Vaughan
  * Date: 7 Dec 2000
- * CVS info: $Id: gnomegui.cc,v 1.6 2002-09-25 20:46:58 rtv Exp $
+ * CVS info: $Id: gnomegui.cc,v 1.7 2002-09-26 01:22:16 rtv Exp $
  */
 
 
@@ -231,6 +231,9 @@ void CWorld::GuiStartup( void )
   // start a callback to display the simultion time in the status bar
   /* Add a timer callback to update the value of the progress bar */
   gtk_timeout_add (100, CWorld::GuiProgressTimeout, this );
+
+  // check every now and again for dead subscription
+  //gtk_timeout_add (1000, CWorld::GuiProgressTimeout, this );
 
   gtk_widget_show_all(GTK_WIDGET(g_app));
 }
@@ -830,7 +833,6 @@ void CPlayerEntity::GuiStatus( void )
   assert( this->m_world->g_appbar );
   gnome_appbar_set_status( this->m_world->g_appbar, buf );  
 }
-
 
                   
 void CEntity::GuiMove( void )

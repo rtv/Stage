@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.85 2002-09-25 02:55:55 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.86 2002-09-26 01:22:16 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -238,7 +238,7 @@ void CEntity::GetBoundingBox( double &xmin, double &ymin,
 void CEntity::Sync()
 { 
   // default - do nothing but call the children
-  CHILDLOOP( ch ) ch->Sync();  
+  CHILDLOOP( ch ) ch->Sync(); 
 };
 
 
@@ -435,7 +435,7 @@ void CEntity::Update( double sim_time )
   //PRINT_DEBUG( "UPDATE" );
 
   // recursively update our children
-  CHILDLOOP( ch ) ch->Update( sim_time );  
+  CHILDLOOP( ch ) ch->Update( sim_time );    
 }
 
 
@@ -1042,21 +1042,12 @@ void CEntity::Print( char* prefix )
 // these don't do anything by default, but are overridden by CPlayerEntity
 void CEntity::Subscribe()
 { 
-  //puts( "SUB" );
+  puts( "SUB" );
 };
 
 void CEntity::Unsubscribe()
 { 
-  //puts( "UNSUB" );
-
-#ifdef USE_GNOME2
-  // destroy any data graphics
-  if( this->g_data ) 
-    {
-      gtk_object_destroy( GTK_OBJECT(this->g_data) );
-      this->g_data = NULL;
-    }
-#endif
+  puts( "UNSUB" );
 };
   
 // these versions sub/unsub to this device and all its decendants
