@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/playerdevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.13 $
+//  $Author: inspectorg $
+//  $Revision: 1.14 $
 //
 // Usage:
 //  (empty)
@@ -35,55 +35,34 @@
 class CDevice;
 class CWorld;
 
-
 class CPlayerDevice : public CEntity
 {
-    public: CPlayerDevice( CWorld* world, CEntity *parent );
-    public: ~CPlayerDevice( void );
+  public: CPlayerDevice( CWorld* world, CEntity *parent );
+  public: ~CPlayerDevice( void );
     
-    // Start all the devices
-    //
-    public: virtual bool SetupIOPointers( char* io );
+  // Start all the devices
+  // REMOVE public: virtual bool SetupIOPointers( char* io );
 
-    // Shutdown the devices
-    //
-    public: virtual void Shutdown();
-
-    // Update robot and all its devices
-    //
-    public: virtual void Update( double sim_time );
+  // Update robot and all its devices
+  public: virtual void Update( double sim_time );
     
-    // Start player
-
-  // RTV - changed this to be static 'cos we only call it the once
-  // for all playerdevices. we no longer pipe port numbers to player,
-  // as player is smart enough to figure them out from the devices
-  // themselves
-
-public: static int StartupPlayer(int count);
+  // Start the device
+  public: virtual bool Startup( void ); 
   
-    // Stop player
-    //
-    private: void ShutdownPlayer();
+  // Finalize object
+  public: virtual void Shutdown();
 
-    // Stuff needed to interface with player
-    //
-    private: caddr_t playerIO; // ptr to shared memory for player I/O
-  //private: char tmpName[16]; // name of shared memory device in filesystem
-
-  // PID of player process spawned by this object
-    //
-    private: static pid_t player_pid;
+  private: caddr_t playerIO; // ptr to shared memory for player I/O
 
 #ifdef INCLUDE_RTK
     
-    // Process GUI update messages
-    //
-    public: virtual void OnUiUpdate(RtkUiDrawData *pData);
+  // Process GUI update messages
+  //
+  public: virtual void OnUiUpdate(RtkUiDrawData *pData);
 
-    // Process GUI mouse messages
-    //
-    public: virtual void OnUiMouse(RtkUiMouseData *pData);
+  // Process GUI mouse messages
+  //
+  public: virtual void OnUiMouse(RtkUiMouseData *pData);
 
 #endif
 };

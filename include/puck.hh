@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/puck.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.9 $
+//  $Author: inspectorg $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -31,57 +31,44 @@
 
 class CPuck : public CEntity
 {
-    // Default constructor
-    //
-    public: CPuck(CWorld *world, CEntity *parent);
+  // Default constructor
+  public: CPuck(CWorld *world, CEntity *parent);
 
-    // Load the object from an argument list
-    //
-    public: virtual bool Load(int argc, char **argv);
+  // Load the entity from the worldfile
+  public: virtual bool Load(CWorldFile *worldfile, int section);
 
-    // Save the object to an argument list
-    //
-    public: virtual bool Save(int &argc, char **argv);
-
-    // Startup routine
-    //
-    public: virtual bool Startup();
+  // Startup routine
+  public: virtual bool Startup();
     
-    // Update the device
-    //
-    public: virtual void Update( double sim_time );
+  // Update the device
+  public: virtual void Update( double sim_time );
 
-    // Set the puck's speed
-    // 
-    public: void SetSpeed(double vr) { m_com_vr = vr; }
-
-    // Move the puck
-    // 
-    private: void Move();
+  // Move the puck
+  private: void Move();
     
   // Return diameter of puck
-    //
-    public: double GetDiameter() { return(m_size_x); }
+  public: double GetDiameter() { return(m_size_x); }
 
-    // Timings (for movement)
-    //
-    private: double m_last_time;
+  // Timings (for movement)
+  private: double m_last_time;
 
-    // coefficient of "friction"
-    private: double m_friction;
+  // coefficient of "friction"
+  private: double m_friction;
 
-    // use this to store our real color while we're picked up
-    private: int m_tmp_channel_return;
+  // Vision return value when we are being held
+  // Vision return value when we are not being held
+  private: int vision_return_held;
+  private: int vision_return_notheld;
 
 #ifdef INCLUDE_RTK
     
-    // Process GUI update messages
-    //
-    public: virtual void OnUiUpdate(RtkUiDrawData *pData);
+  // Process GUI update messages
+  //
+  public: virtual void OnUiUpdate(RtkUiDrawData *pData);
 
-    // Process GUI mouse messages
-    //
-    public: virtual void OnUiMouse(RtkUiMouseData *pData);
+  // Process GUI mouse messages
+  //
+  public: virtual void OnUiMouse(RtkUiMouseData *pData);
 
 #endif
 };

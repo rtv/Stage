@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.12 $
+//  $Author: inspectorg $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  (empty)
@@ -48,7 +48,7 @@ CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent )
   m_interval = 0.1;
   m_last_update = 0;
     
-  strcpy( m_color_desc, PTZ_COLOR );
+  m_color_desc = PTZ_COLOR;
 
   m_size_x = 0.165;
   m_size_y = 0.145;

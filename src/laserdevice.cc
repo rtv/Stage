@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.40 $
+//  $Author: inspectorg $
+//  $Revision: 1.41 $
 //
 // Usage:
 //  (empty)
@@ -48,56 +48,59 @@ CLaserDevice::CLaserDevice(CWorld *world,
   m_config_len  = sizeof( player_laser_config_t );
   
   m_player_type = PLAYER_LASER_CODE; // from player's messages.h
-
-  strcpy( m_color_desc, LASER_COLOR );
-
+  m_color_desc = LASER_COLOR;
   m_stage_type = LaserTurretType;
+  
+  // Default visibility settings
+  this->laser_return = LaserReflect;
+  this->sonar_return = 0;
+  this->obstacle_return = 0;
+  
+  // Default laser simulation settings
+  this->scan_rate = 360 / 0.200; // 5Hz
+  this->min_res = 0.25;
+  this->max_range = 8.0;
 
-  laser_return = 1;
-  sonar_return = 0;
-  obstacle_return = 0;
-   
-  // Laser update rate (readings/sec)
-  m_update_rate = 360 / 0.200; // 5Hz
+  // Current laser data configuration
+  this->scan_res = DTOR(0.50);
+  this->scan_min = DTOR(-90);
+  this->scan_max = DTOR(+90);
+  this->scan_count = 361;
+  this->intensity = false;
 
   m_last_update = 0;
-  m_scan_res = DTOR(0.50);
-  m_scan_min = DTOR(-90);
-  m_scan_max = DTOR(+90);
-  m_scan_count = 361;
-  m_intensity = false;
   
-  m_max_range = 8.0;
-
   // Dimensions of laser
   m_size_x = 0.155;
   m_size_y = 0.155;
   
 #ifdef INCLUDE_RTK
-  m_draggable = true; 
-  m_mouse_radius = sqrt(m_size_x * m_size_x + m_size_y * m_size_y);
-  m_hit_count = 0;
+  this->hit_count = 0;
 #endif
 
 }
 
-///////////////////////////////////////////////////////////////////////////
-// Load the object from an argument list
-//
-bool CLaserDevice::Load(int argc, char **argv)
-{
-    if (!CEntity::Load(argc, argv))
-        return false;
-    return true;
-}
 
-// Save the object
-//
-bool CLaserDevice::Save(int &argc, char **argv)
+///////////////////////////////////////////////////////////////////////////
+// Load the entity from the world file
+bool CLaserDevice::Load(CWorldFile *worldfile, int section)
 {
-    if (!CEntity::Save(argc, argv))
-        return false;    
-    return true;
+  if (!CEntity::Load(worldfile, section))
+    return false;
+
+  // Minimum laser resolution
+  this->min_res = worldfile->ReadAngle(0, "laser_min_res", this->min_res);
+  this->min_res = worldfile->ReadAngle(section, "min_res", this->min_res);
+
+  // Maximum laser resolution
+  this->max_range = worldfile->ReadLength(0, "laser_max_range", this->max_range);
+  this->max_range = worldfile->ReadLength(section, "max_range", this->max_range);
+  
+  // Laser scan rate (samples/sec)
+  this->scan_rate = worldfile->ReadFloat(0, "laser_scan_rate", this->scan_rate);
+  this->scan_rate = worldfile->ReadFloat(section, "scan_rate", this->scan_rate);
+  
+  return true;
 }
 
 
@@ -106,66 +109,63 @@ bool CLaserDevice::Save(int &argc, char **argv)
 //
 void CLaserDevice::Update( double sim_time )
 {
-    CEntity::Update( sim_time ); // inherit useful debug output
+  CEntity::Update( sim_time ); // inherit useful debug output
 
-    ASSERT(m_world != NULL);
+  ASSERT(m_world != NULL);
     
-    // UPDATE OUR RENDERING
-    double x, y, th;
-    GetGlobalPose( x,y,th );
+  // UPDATE OUR RENDERING
+  double x, y, th;
+  GetGlobalPose( x,y,th );
     
-    // if we've moved 
-    if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
+  // if we've moved 
+  if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
+  {
+    // Undraw ourselves from the world
+    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
+                           m_size_x, m_size_y, this, false );
+	
+    m_map_px = x; // update our render position
+    m_map_py = y;
+    m_map_pth = th;
+	
+    // Redraw outselves in the world
+    m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
+                           m_size_x, m_size_y, this, true );
+  }
+    
+  // UPDATE OUR SENSOR DATA
+
+  // Check to see if it's time to update the laser scan
+  double interval = this->scan_count / this->scan_rate;
+  if( sim_time - m_last_update > interval )
+  {
+    m_last_update = sim_time;
+	
+    if( Subscribed() )
     {
-        // Undraw ourselves from the world
-        m_world->matrix->mode = mode_unset;
-        m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
-                               m_size_x, m_size_y, this );
-	
-        m_map_px = x; // update our render position
-        m_map_py = y;
-        m_map_pth = th;
-	
-        // Redraw outselves in the world
-        m_world->matrix->mode = mode_set;
-        m_world->SetRectangle( m_map_px, m_map_py, m_map_pth, 
-                               m_size_x, m_size_y, this );
-    }
-    
-    // UPDATE OUR SENSOR DATA
+      // Check to see if the configuration has changed
+      //
+      CheckConfig();
 
-    // Check to see if it's time to update the laser scan
-    //
-    double interval = m_scan_count / m_update_rate;
-    if( sim_time - m_last_update > interval )
+      // Generate new scan data and copy to data buffer
+      player_laser_data_t scan_data;
+      GenerateScanData( &scan_data );
+      PutData( &scan_data, sizeof( scan_data) );
+    }
+    else
     {
-        m_last_update = sim_time;
-	
-        if( Subscribed() )
-        {
-            // Check to see if the configuration has changed
-            //
-            CheckConfig();
+      // If not subscribed,
+      // reset configuration to default.
+      this->scan_res = DTOR(0.50);
+      this->scan_min = DTOR(-90);
+      this->scan_max = DTOR(+90);
+      this->scan_count = 361;
+      this->intensity = false;
 
-            // Generate new scan data and copy to data buffer
-            player_laser_data_t scan_data;
-            GenerateScanData( &scan_data );
-            PutData( &scan_data, sizeof( scan_data) );
-        }
-        else
-        {
-            // If not subscribed,
-            // reset configuration to default.
-            m_scan_res = DTOR(0.50);
-            m_scan_min = DTOR(-90);
-            m_scan_max = DTOR(+90);
-            m_scan_count = 361;
-            m_intensity = false;
-
-            // empty the laser beacon list
-            m_visible_beacons.clear();
-        }
+      // empty the laser beacon list
+      m_visible_beacons.clear();
     }
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -173,51 +173,51 @@ void CLaserDevice::Update( double sim_time )
 //
 bool CLaserDevice::CheckConfig()
 {
-    player_laser_config_t config;
-    if (GetConfig( &config, sizeof(config) ) == 0)
-        return false;  
+  player_laser_config_t config;
+  if (GetConfig( &config, sizeof(config) ) == 0)
+    return false;  
 
-    // Swap some bytes
-    //
-    config.resolution = ntohs(config.resolution);
-    config.min_angle = ntohs(config.min_angle);
-    config.max_angle = ntohs(config.max_angle);
+  // Swap some bytes
+  //
+  config.resolution = ntohs(config.resolution);
+  config.min_angle = ntohs(config.min_angle);
+  config.max_angle = ntohs(config.max_angle);
 
-    // Emulate behaviour of SICK laser range finder
-    //
-    if (config.resolution == 25)
-    {
-        config.min_angle = max((int)(config.min_angle), -5000);
-        config.min_angle = min((int)config.min_angle, +5000);
-        config.max_angle = max((int)config.max_angle, -5000);
-        config.max_angle = min((int)config.max_angle, +5000);
+  // Emulate behaviour of SICK laser range finder
+  //
+  if (config.resolution == 25)
+  {
+    config.min_angle = max((int)(config.min_angle), -5000);
+    config.min_angle = min((int)config.min_angle, +5000);
+    config.max_angle = max((int)config.max_angle, -5000);
+    config.max_angle = min((int)config.max_angle, +5000);
         
-        m_scan_res = DTOR((double) config.resolution / 100.0);
-        m_scan_min = DTOR((double) config.min_angle / 100.0);
-        m_scan_max = DTOR((double) config.max_angle / 100.0);
-        m_scan_count = (int) ((m_scan_max - m_scan_min) / m_scan_res) + 1;
-    }
-    else if (config.resolution == 50 || config.resolution == 100)
-    {
-        if (abs(config.min_angle) > 9000 || abs(config.max_angle) > 9000)
-            PRINT_MSG("warning: invalid laser configuration request");
+    this->scan_res = DTOR((double) config.resolution / 100.0);
+    this->scan_min = DTOR((double) config.min_angle / 100.0);
+    this->scan_max = DTOR((double) config.max_angle / 100.0);
+    this->scan_count = (int) ((this->scan_max - this->scan_min) / this->scan_res) + 1;
+  }
+  else if (config.resolution == 50 || config.resolution == 100)
+  {
+    if (abs(config.min_angle) > 9000 || abs(config.max_angle) > 9000)
+      PRINT_MSG("warning: invalid laser configuration request");
         
-        m_scan_res = DTOR((double) config.resolution / 100.0);
-        m_scan_min = DTOR((double) config.min_angle / 100.0);
-        m_scan_max = DTOR((double) config.max_angle / 100.0);
-        m_scan_count = (int) ((m_scan_max - m_scan_min) / m_scan_res) + 1;
-    }
-    else
-    {
-        // Ignore invalid configurations
-        //  
-        PRINT_MSG("invalid laser configuration request");
-        return false;
-    }
+    this->scan_res = DTOR((double) config.resolution / 100.0);
+    this->scan_min = DTOR((double) config.min_angle / 100.0);
+    this->scan_max = DTOR((double) config.max_angle / 100.0);
+    this->scan_count = (int) ((this->scan_max - this->scan_min) / this->scan_res) + 1;
+  }
+  else
+  {
+    // Ignore invalid configurations
+    //  
+    PRINT_MSG("invalid laser configuration request");
+    return false;
+  }
         
-    m_intensity = config.intensity;
+  this->intensity = config.intensity;
 
-    return true;
+  return true;
 }
 
 
@@ -226,119 +226,101 @@ bool CLaserDevice::CheckConfig()
 //
 bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 {    
-    // Get the pose of the laser in the global cs
-    //
-    double x, y, th;
-    GetGlobalPose(x, y, th);
+  // Get the pose of the laser in the global cs
+  //
+  double x, y, th;
+  GetGlobalPose(x, y, th);
   
-    // See how many scan readings to interpolate.
-    // To save time generating laser scans, we can
-    // generate a scan with lower resolution and interpolate
-    // the intermediate values.
-    // We will interpolate <skip> out of <skip+1> readings.
-    int skip = (int) (m_world->m_laser_res / m_scan_res - 0.5);
+  // See how many scan readings to interpolate.
+  // To save time generating laser scans, we can
+  // generate a scan with lower resolution and interpolate
+  // the intermediate values.
+  // We will interpolate <skip> out of <skip+1> readings.
+  int skip = (int) (this->min_res / this->scan_res - 0.5);
 
 #ifdef INCLUDE_RTK
-    // Initialise gui data
-    //
-    m_hit_count = 0;
+  // Initialise gui data
+  //
+  this->hit_count = 0;
 #endif
 
-    // initialise our beacon detecting array
-    m_visible_beacons.clear(); 
+  // initialise our beacon detecting array
+  m_visible_beacons.clear(); 
 
-    // Set the header part of the data packet
-    //
-    data->range_count = htons(m_scan_count);
-    data->resolution = htons((int) (100 * RTOD(m_scan_res)));
-    data->min_angle = htons((int) (100 * RTOD(m_scan_min)));
-    data->max_angle = htons((int) (100 * RTOD(m_scan_max)));
+  // Set the header part of the data packet
+  //
+  data->range_count = htons(this->scan_count);
+  data->resolution = htons((int) (100 * RTOD(this->scan_res)));
+  data->min_angle = htons((int) (100 * RTOD(this->scan_min)));
+  data->max_angle = htons((int) (100 * RTOD(this->scan_max)));
 
-    // Make sure the data buffer is big enough
-    //
-    ASSERT(m_scan_count <= ARRAYSIZE(data->ranges));
+  // Make sure the data buffer is big enough
+  //
+  ASSERT(this->scan_count <= ARRAYSIZE(data->ranges));
             
-    // Do each scan
-    //
-    for (int s = 0; s < m_scan_count;)
+  // Do each scan
+  //
+  for (int s = 0; s < this->scan_count;)
+  {
+    double ox = x;
+    double oy = y;
+    double oth = th;
+
+    // Compute parameters of scan line
+    double bearing = s * this->scan_res + this->scan_min;
+    double pth = oth + bearing;
+    CLineIterator lit( ox, oy, pth, this->max_range, 
+                       m_world->ppm, m_world->matrix, PointToBearingRange );
+	
+    CEntity* ent;
+    double range = this->max_range;
+	
+    while( (ent = lit.GetNextEntity()) ) 
     {
-        double ox = x;
-        double oy = y;
-        double oth = th;
+      // Ignore ourself, things which are attached to us,
+      // and things that we are attached to.
+      // The latter is useful if you want to stack beacons
+      // on the laser or the laser on somethine else.
+      if (ent == this || this->IsDescendent(ent) || ent->IsDescendent(this))
+        continue;
 
-        // Compute parameters of scan line
-        double bearing = s * m_scan_res + m_scan_min;
-        double pth = oth + bearing;
-        CLineIterator lit( ox, oy, pth, m_max_range, 
-                           m_world->ppm, m_world->matrix, 
-			   PointToBearingRange );
+      // Construct a list of beacons we have seen
+      if( ent->m_stage_type == LaserBeaconType )
+        m_visible_beacons.push_front( (int)ent );
+
+      // Stop looking when we see something
+      if(ent->laser_return) 
+      {
+        range = lit.GetRange();
+        break;
+      }	
+    }
 	
-        CEntity* ent;
-        double range = m_max_range;
-        int intensity = LaserTransparent;
-	
-        while( (ent = lit.GetNextEntity()) ) 
-        {
-            // Ignore ourself, things which are attached to us,
-            // and things that we are attached to.
-            // The latter is useful if you want to stack beacons
-            // on the laser or the laser on somethine else.
-            if (ent == this || this->IsDescendent(ent) || ent->IsDescendent(this))
-                continue;
+    // Construct the return value for the laser
+    uint16_t v = (uint16_t)(1000.0 * range);
+    if( ent && ent->laser_return >= LaserBright1 )
+      v = v | (((uint16_t)1) << 13); 
 
-            // Construct a list of beacons we have seen
-            if( ent->m_stage_type == LaserBeaconType )
-                m_visible_beacons.push_front( (int)ent );
-            
-            if((intensity = ent->laser_return)) 
-            {
-                range = lit.GetRange();
-                break;
-            }	
-        }
-	
-        // Construct the return value for the laser
-        uint16_t v = (uint16_t)(1000.0 * range);
+    // Set the range
+    data->ranges[s++] = htons(v);
 
-        if( ent )
-        {
-            switch( ent->laser_return )
-            {
-                case LaserBright1:
-                    v = v | (((uint16_t)1) << 13); // set the shiny bits to 1
-                    break;
-                case LaserBright2:
-                    v = v | (((uint16_t)2) << 13); // set the shiny bits to 2
-                    break;
-                case LaserBright3:
-                    v = v | (((uint16_t)3) << 13); // set the shiny bits to 1
-                    break;
-                case LaserBright4:
-                    v = v | (((uint16_t)4) << 13); // set the shiny bits to 1
-                    break;
-            }
-        }
-
-        // Set the range
-        data->ranges[s++] = htons(v);
-
-        // Skip some values to save time
-        for (int i = 0; i < skip && s < m_scan_count; i++)
-            data->ranges[s++] = htons(v);
+    // Skip some values to save time
+    for (int i = 0; i < skip && s < this->scan_count; i++)
+      data->ranges[s++] = htons(v);
 	
 #ifdef INCLUDE_RTK
-        // Update the gui data
-        //
-        m_hit[m_hit_count][0] = ox + range * cos(pth);
-        m_hit[m_hit_count][1] = oy + range * sin(pth);
-        m_hit_count++;
+    // Update the gui data
+    // Show laser just a bit short of objects
+    this->hit[this->hit_count][0] = ox + (range - 0.1) * cos(pth);
+    this->hit[this->hit_count][1] = oy + (range - 0.1) * sin(pth);
+    this->hit_count++;
 #endif
-      }
+  }
 
-    // remove all duplicates from the beacon list
-    m_visible_beacons.unique(); 
+  // remove all duplicates from the beacon list
+  m_visible_beacons.unique(); 
 
-    return true;
+  return true;
 }
 
 
@@ -347,96 +329,103 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
 //
-void CLaserDevice::OnUiUpdate(RtkUiDrawData *event)
+void CLaserDevice::OnUiUpdate(RtkUiDrawData *data)
 {
-    // Draw our children
-    CEntity::OnUiUpdate(event);
-    
-    // Draw ourself
-    event->begin_section("global", "laser");
-    
-    if (event->draw_layer("", true))
-        DrawTurret(event);
+  CEntity::OnUiUpdate(data);
 
-    if (event->draw_layer("data", false))
-    {
-        if(Subscribed())
-        {
-            DrawScan(event);
-            // call Update(), because we may have stolen the truth_poked
-            // URGHH!  There must be a better way of doing this.  AH
-            Update(m_world->GetTime());
-        }
-    }
-    
-    event->end_section();
+  data->begin_section("global", "laser");
+
+  if (data->draw_layer("", true))
+      DrawTurret(data);
+
+  if (data->draw_layer("outline", false, 49))
+  {
+    if(Subscribed())
+      DrawScan(data, 0);
+  } 
+
+  if (data->draw_layer("coverage", false, 49))
+  {
+    if(Subscribed())
+      DrawScan(data, 1);
+  }
+
+  data->end_section();
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI mouse messages
 //
-void CLaserDevice::OnUiMouse(RtkUiMouseData *event)
+void CLaserDevice::OnUiMouse(RtkUiMouseData *data)
 {
-    CEntity::OnUiMouse(event);
+    CEntity::OnUiMouse(data);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Draw the laser turret
 //
-void CLaserDevice::DrawTurret(RtkUiDrawData *event)
+void CLaserDevice::DrawTurret(RtkUiDrawData *data)
 {
-    #define TURRET_COLOR RTK_RGB(0, 0, 255)
-    
-    event->set_color(TURRET_COLOR);
+    data->set_color(RTK_RGB(m_color.red, m_color.green, m_color.blue));
 
     // Turret dimensions
-    //
     double dx = m_size_x;
     double dy = m_size_y;
 
     // Get global pose
-    //
     double gx, gy, gth;
     GetGlobalPose(gx, gy, gth);
     
     // Draw the outline of the turret
-    //
-    event->ex_rectangle(gx, gy, gth, dx, dy); 
+    data->ex_rectangle(gx, gy, gth, dx, dy); 
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Draw the laser scan
 //
-void CLaserDevice::DrawScan(RtkUiDrawData *event)
+void CLaserDevice::DrawScan(RtkUiDrawData *data, int style)
 {
-    #define SCAN_COLOR RTK_RGB(0, 0, 255)
-    
-    event->set_color(SCAN_COLOR);
+  data->set_color(RTK_RGB(m_color.red, m_color.green, m_color.blue));
+  
+  // Get global pose
+  double gx, gy, gth;
+  GetGlobalPose(gx, gy, gth);
 
-    // Get global pose
-    //
-    double gx, gy, gth;
-    GetGlobalPose(gx, gy, gth);
-
+  // Draw the scan outline
+  if (style == 0)
+  {
     double qx, qy;
     qx = gx;
     qy = gy;
     
-    for (int i = 0; i < m_hit_count; i++)
+    for (int i = 0; i < this->hit_count; i++)
     {
-        double px = m_hit[i][0];
-        double py = m_hit[i][1];
-        event->line(qx, qy, px, py);
-        qx = px;
-        qy = py;
+      double px = this->hit[i][0];
+      double py = this->hit[i][1];
+      data->line(qx, qy, px, py);
+      qx = px;
+      qy = py;
     }
-    event->line(qx, qy, gx, gy);
+    data->line(qx, qy, gx, gy);
+  }
+
+  // Draw the dense scan coverage
+  else
+  {
+    for (int i = 0; i < this->hit_count; i++)
+    {
+      double px = this->hit[i][0];
+      double py = this->hit[i][1];
+      data->line(gx, gy, px, py);
+    }
+  }
 }
 
 #endif
+
 
 
 

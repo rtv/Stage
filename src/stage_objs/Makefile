@@ -10,15 +10,15 @@ include ../../Makefile.common
 
 # Objects common to all targets
 #
-OBJS =  world.o world_load.o truthserver.o envserver.o image.o \
-	entity.o entityfactory.o playerdevice.o \
+OBJS =  world.o worldfile.o truthserver.o envserver.o image.o \
+	entity.o entityfactory.o playerdevice.o fixedobstacle.o \
 	positiondevice.o omnipositiondevice.o laserdevice.o sonardevice.o \
-	miscdevice.o \
+	miscdevice.o broadcastdevice.o \
 	ptzdevice.o boxobstacle.o \
 	laserbeacon.o laserbeacondevice.o visiondevice.o visionbeacon.o \
-	broadcastdevice.o puck.o gpsdevice.o gripperdevice.o main.o \
+	puck.o gpsdevice.o gripperdevice.o main.o \
 	matrix.o raytrace.o 
-	#irdevice.o descartesdevice.o
+#irdevice.o descartesdevice.o
 
 
 # choose one of these that suits your build (debug/profile/production)

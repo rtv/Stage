@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.13 $
+//  $Author: inspectorg $
+//  $Revision: 1.14 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -40,7 +40,7 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
 
   m_interval = 0.1; 
 
-  strcpy( m_color_desc, GRIPPER_COLOR );
+  m_color_desc = GRIPPER_COLOR;
 
   puck_return = true; // we interact with pucks and nothing else
 
@@ -87,6 +87,8 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
   strcpy( exp.label, "Gripper" );
 }
 
+
+/** Added new load fn, then REMOVE
 ///////////////////////////////////////////////////////////////////////////
 // Load the object from an argument list
 //
@@ -130,6 +132,7 @@ bool CGripperDevice::Load(int argc, char **argv)
     }
     return true;
 }
+*/
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -339,7 +342,7 @@ void CGripperDevice::DropObject()
   m_pucks[m_puck_count]->SetGlobalPose(px+x_offset*cos(pth),
                                        py+x_offset*sin(pth),
                                        pth);
-  m_pucks[m_puck_count]->SetSpeed(0.0);
+  m_pucks[m_puck_count]->SetGlobalVel(0, 0, 0);
 
   //printf("dropped puck %d at (%f,%f,%f) with speed %f\n",
          //m_pucks[m_puck_count],
@@ -368,19 +371,19 @@ void CGripperDevice::PickupObject()
   // took out all the Rectangle stuff; now rely on the breakbeams to decide
   //    BPG
   /*
-  CRectangleIterator rit( px+m_size_x, py, pth, m_size_x, m_size_y, 
-  		  m_world->ppm, m_world->matrix ); 
+    CRectangleIterator rit( px+m_size_x, py, pth, m_size_x, m_size_y, 
+    m_world->ppm, m_world->matrix ); 
 
   
-  CEntity* ent = 0;
+    CEntity* ent = 0;
 
-  while( (ent = rit.GetNextEntity()) )
-  {
+    while( (ent = rit.GetNextEntity()) )
+    {
     printf( "I SEE SOMETHING: %d\n",ent->m_stage_type );
 
     // if it's not a puck try the next one
     if( ent->m_stage_type != PuckType )
-      continue;
+    continue;
 
     puts( "I SEE A PUCK!" );
 
@@ -389,19 +392,19 @@ void CGripperDevice::PickupObject()
     int j;
     for(j=0;j<m_puck_count;j++)
     {
-      if(m_pucks[j] == ent )
-        break;
+    if(m_pucks[j] == ent )
+    break;
     }
     if(j < m_puck_count)
-      continue;
+    continue;
     ent->GetGlobalPose(ox,oy,oth);
     this_dist = sqrt((px-ox)*(px-ox)+(py-oy)*(py-oy));
     if(this_dist < closest_dist)
     {
-      closest_dist = this_dist;
-      closest_puck = ent;
+    closest_dist = this_dist;
+    closest_puck = ent;
     }
-  }
+    }
   */
 
   // first, check the inner break beam
@@ -432,32 +435,38 @@ void CGripperDevice::PickupObject()
     if(j < m_puck_count)
       closest_puck = NULL;
   }
-  
-  if(closest_puck && 
+
+  /* I broke this hack; you may want to find another. AH
+     if(closest_puck && 
      ((m_puck_channel < 0) || 
-      ((closest_puck->m_color.red == m_world->channel[m_puck_channel].red) &&
-       (closest_puck->m_color.green == m_world->channel[m_puck_channel].green) &&
-       (closest_puck->m_color.blue == m_world->channel[m_puck_channel].blue))))
+     ((closest_puck->m_color.red == m_world->channel[m_puck_channel].red) &&
+     (closest_puck->m_color.green == m_world->channel[m_puck_channel].green) &&
+     (closest_puck->m_color.blue == m_world->channel[m_puck_channel].blue))))
+     {
+  */
+
+// pickup the puck
+  closest_puck->m_parent_object = this;
+
+  // if we're consuming the puck then move it behind the gripper
+  if(m_gripper_consume)
   {
-    // pickup the puck
-    closest_puck->m_parent_object = this;
-
-    // if we're consuming the puck then move it behind the gripper
-    if(m_gripper_consume)
-    {
-      closest_puck->SetPose(-exp.width,0,0);
-    }
-    else
-      closest_puck->SetPose(exp.width/2.0+closest_puck->exp.width/2.0,0,0);
-    m_pucks[m_puck_count++]=closest_puck;
-    expGripper.have_puck = true;
-
-    closest_puck->MakeDirty();
+    closest_puck->SetPose(-exp.width,0,0);
   }
   else
-  {
+    closest_puck->SetPose(exp.width/2.0+closest_puck->exp.width/2.0,0,0);
+  m_pucks[m_puck_count++]=closest_puck;
+  expGripper.have_puck = true;
+
+  closest_puck->MakeDirty();
+  
+  /*
+    }
+    else
+    {
     //puts("no close pucks");
-  }
+    }
+  */
 }
 
 #ifdef INCLUDE_RTK

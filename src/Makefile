@@ -19,8 +19,7 @@ CCFLAGS = -g3
 
 # Flags common to all targets
 #
-INCLUDES = -I../include -I$(PLAYER_INC) -I$(PLAYER_DIR)/client_libs/c \
-           -I$(PLAYER_DIR)/client_libs/c++
+INCLUDES = -I../include -I$(PLAYER_INC)
 CCFLAGS += -Wall -DREENTRANT $(ZLIB_FLAGS) $(INCLUDES)
 CCFLAGS += -DVERSION=\"$(VERSION)\"
 
@@ -36,7 +35,7 @@ LINKFLAGS += $(OLDLIBS)
 
 # truthlog doesn't compile... BPG
 #all: stage rtkstage xs truthlog 
-all: stage xs manager 
+all: stage rtkstage xs manager 
 
 stage:
 	cd stage_objs && make stage
@@ -49,8 +48,7 @@ rtkstage:
 
 xs :CCFLAGS += -I/usr/X11R6/include 
 xs: LINKFLAGS += -L/usr/X11R6/lib -lX11 \
-		-L$(PLAYER_DIR)/client_libs/c++ \
-		 -lplayerclient
+		-L$(PLAYER_LIB) -lplayerclient
 xs : xs.cc render.cc
 	$(CC) xs.cc render.cc $(CCFLAGS) $(LINKFLAGS) -o xs
 

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.19 $
+//  $Author: inspectorg $
+//  $Revision: 1.20 $
 //
 // Usage:
 //  (empty)
@@ -30,9 +30,9 @@
 #include "laserdevice.hh"
 #include "laserbeacondevice.hh"
 
+
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
-//
 CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
   : CEntity(world, parent )
 {
@@ -43,21 +43,21 @@ CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
 
   m_player_type = PLAYER_LASERBEACON_CODE;
  
-  strcpy( m_color_desc, LBD_COLOR );
+  m_color_desc = LBD_COLOR;
   m_stage_type = LBDType;
 
   // the parent MUST be a laser device
   ASSERT( parent );
   ASSERT( parent->m_player_type == PLAYER_LASER_CODE );
   
-  m_laser = parent; 
-  //m_laser->m_dependent_attached = true;
+  this->laser = parent; 
+  //this->laser->m_dependent_attached = true;
   
-  m_size_x = 0.9 * m_laser->m_size_x;
-  m_size_y = 0.9 * m_laser->m_size_y;
+  m_size_x = 0.9 * this->laser->m_size_x;
+  m_size_y = 0.9 * this->laser->m_size_y;
   
-  m_time_sec = 0;
-  m_time_usec = 0;
+  this->time_sec = 0;
+  this->time_usec = 0;
 
   // Set detection ranges
   // Beacons can be detected a large distance,
@@ -66,52 +66,34 @@ CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
   // These are the ranges for 0.5 degree resolution;
   // ranges for other resolutions are twice or half these values.
   //
-  m_max_anon_range = 4.0;
-  m_max_id_range = 1.5;
+  this->max_range_anon = 4.0;
+  this->max_range_id = 1.5;
 
   expBeacon.beaconCount = 0; // for rtkstage
 
   m_interval = 0.2; // matches laserdevice
 }
 
-///////////////////////////////////////////////////////////////////////////
-// Load the object from an argument list
-//
-bool CLBDDevice::Load(int argc, char **argv)
-{  
-    if (!CEntity::Load(argc, argv))
-        return false;
-
-    for (int i = 0; i < argc;)
-    {
-        if (strcmp(argv[i], "range") == 0 && i + 1 < argc)
-        {
-            m_max_id_range = atof(argv[i + 1]);
-            m_max_anon_range = 2 * m_max_id_range;
-            i += 2;
-        }
-        else
-            i++;
-    }
-    return true;
-} 
-
 
 ///////////////////////////////////////////////////////////////////////////
-// Save the object
-//
-bool CLBDDevice::Save(int &argc, char **argv)
+// Load the entity from the world file
+bool CLBDDevice::Load(CWorldFile *worldfile, int section)
 {
-    if (!CEntity::Save(argc, argv))
-        return false;
+  if (!CEntity::Load(worldfile, section))
+    return false;
 
-    char range[32];
-    snprintf(range, sizeof(range), "%.2f", (double) m_max_id_range); 
-    argv[argc++] = strdup("range");
-    argv[argc++] = strdup(range);
-    
-    return true;
+  this->max_range_anon = worldfile->ReadLength(0, "lbd_range_anon",
+                                               this->max_range_anon);
+  this->max_range_anon = worldfile->ReadLength(section, "range_anon",
+                                               this->max_range_anon);
+  this->max_range_id = worldfile->ReadLength(0, "lbd_range_id",
+                                             this->max_range_id);
+  this->max_range_id = worldfile->ReadLength(section, "range_id",
+                                             this->max_range_id);
+
+  return true;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the beacon data
@@ -121,7 +103,7 @@ void CLBDDevice::Update( double sim_time )
   //CEntity::Update( sim_time ); // inherit debug output
 
   ASSERT(m_world != NULL );
-  ASSERT(m_laser != NULL );
+  ASSERT(this->laser != NULL );
 
   if(!Subscribed())
     return;
@@ -133,116 +115,116 @@ void CLBDDevice::Update( double sim_time )
 
   m_last_update = sim_time;
 
-    // Get the laser range data
-    //
-    uint32_t time_sec=0, time_usec=0;
-    player_laser_data_t laser;
-    if (m_laser->GetData(&laser, sizeof(laser) ) == 0)
-      {
-	puts( "Stage warning: LBD device found no laser data" );
-	return;
-      }
+  // Get the laser range data
+  //
+  uint32_t time_sec=0, time_usec=0;
+  player_laser_data_t laser;
+  if (this->laser->GetData(&laser, sizeof(laser) ) == 0)
+  {
+    puts( "Stage warning: LBD device found no laser data" );
+    return;
+  }
 
-    expBeacon.beaconCount = 0; // initialise the count in the export structure
+  expBeacon.beaconCount = 0; // initialise the count in the export structure
 
 
-    // Do some byte swapping on the laser data
-    //
-    laser.resolution = ntohs(laser.resolution);
-    laser.min_angle = ntohs(laser.min_angle);
-    laser.max_angle = ntohs(laser.max_angle);
-    laser.range_count = ntohs(laser.range_count);
-    ASSERT(laser.range_count < ARRAYSIZE(laser.ranges));
-    for (int i = 0; i < laser.range_count; i++)
-        laser.ranges[i] = ntohs(laser.ranges[i]);
+  // Do some byte swapping on the laser data
+  //
+  laser.resolution = ntohs(laser.resolution);
+  laser.min_angle = ntohs(laser.min_angle);
+  laser.max_angle = ntohs(laser.max_angle);
+  laser.range_count = ntohs(laser.range_count);
+  ASSERT(laser.range_count < ARRAYSIZE(laser.ranges));
+  for (int i = 0; i < laser.range_count; i++)
+    laser.ranges[i] = ntohs(laser.ranges[i]);
 
-    // Get the pose of the detector in the global cs
-    //
-    double ox, oy, oth;
-    GetGlobalPose(ox, oy, oth);
+  // Get the pose of the detector in the global cs
+  //
+  double ox, oy, oth;
+  GetGlobalPose(ox, oy, oth);
 
-    // Compute resolution of laser scan data
-    //
-    double scan_min = laser.min_angle / 100.0 * M_PI / 180.0;
-    double scan_res = laser.resolution / 100.0 * M_PI / 180.0;
+  // Compute resolution of laser scan data
+  //
+  double scan_min = laser.min_angle / 100.0 * M_PI / 180.0;
+  double scan_res = laser.resolution / 100.0 * M_PI / 180.0;
 
-    // Amount of tolerance to allow in range readings
-    //double tolerance = 3.0 / m_world->ppm; //*** 0.10;
+  // Amount of tolerance to allow in range readings
+  //double tolerance = 3.0 / m_world->ppm; //*** 0.10;
 
-    // Reset the beacon data structure
-    //
-    player_laserbeacon_data_t beacon;
-    beacon.count = 0;
+  // Reset the beacon data structure
+  //
+  player_laserbeacon_data_t beacon;
+  beacon.count = 0;
    
-    // Search for beacons in the list generated by the laser
-    // Saves us from searching the bitmap again
+  // Search for beacons in the list generated by the laser
+  // Saves us from searching the bitmap again
+  //
+  for( LaserBeaconList::iterator it = this->laser->m_visible_beacons.begin();
+       it != this->laser->m_visible_beacons.end(); it++ )
+  {
+    CLaserBeacon *nbeacon = (CLaserBeacon*) *it;        
+    int id = nbeacon->id;
+    double px, py, pth;   
+    nbeacon->GetGlobalPose( px, py, pth );
+
+    //printf( "beacon at: %.2f %.2f %.2f\n", px, py, pth );
+    //fflush( stdout );
+
+    // Compute range and bearing of beacon relative to sensor
     //
-    for( LaserBeaconList::iterator it = m_laser->m_visible_beacons.begin();
-         it != m_laser->m_visible_beacons.end(); it++ )
-    {
-        CLaserBeacon *nbeacon = (CLaserBeacon*) *it;        
-        int id = nbeacon->m_beacon_id;
-        double px, py, pth;   
-        nbeacon->GetGlobalPose( px, py, pth );
+    double dx = px - ox;
+    double dy = py - oy;
+    double r = sqrt(dx * dx + dy * dy);
+    double b = NORMALIZE(atan2(dy, dx) - oth);
+    double o = NORMALIZE(pth - oth);
 
-        //printf( "beacon at: %.2f %.2f %.2f\n", px, py, pth );
-        //fflush( stdout );
-
-        // Compute range and bearing of beacon relative to sensor
-        //
-        double dx = px - ox;
-        double dy = py - oy;
-        double r = sqrt(dx * dx + dy * dy);
-        double b = NORMALIZE(atan2(dy, dx) - oth);
-        double o = NORMALIZE(pth - oth);
-
-	// filter out very acute angles of incidence as unreadable
-	int bi = (int) ((b - scan_min) / scan_res);
-        if (bi < 0 || bi >= laser.range_count)
-	  continue;
+    // filter out very acute angles of incidence as unreadable
+    int bi = (int) ((b - scan_min) / scan_res);
+    if (bi < 0 || bi >= laser.range_count)
+      continue;
 	
-	//SHOULD CHANGE THESE RANGES BASED ON CURRENT LASER RESOLUTION!
+    //SHOULD CHANGE THESE RANGES BASED ON CURRENT LASER RESOLUTION!
 
-        // Now see if it is within detection range
-        //
-        if (r > m_max_anon_range * DTOR(0.50) / scan_res)
-            continue;
-        if (r > m_max_id_range * DTOR(0.50) / scan_res)
-            id = 0;
-
-        // pack the beacon data into the export structure
-        expBeacon.beacons[ expBeacon.beaconCount ].x = px;
-        expBeacon.beacons[ expBeacon.beaconCount ].y = py;
-        expBeacon.beacons[ expBeacon.beaconCount ].th = pth;
-        expBeacon.beacons[ expBeacon.beaconCount ].id = id;
-        expBeacon.beaconCount++;
-
-        // Record beacons
-        //
-        assert(beacon.count < ARRAYSIZE(beacon.beacon));
-        beacon.beacon[beacon.count].id = id;
-        beacon.beacon[beacon.count].range = (int) (r * 1000);
-        beacon.beacon[beacon.count].bearing = (int) RTOD(b);
-        beacon.beacon[beacon.count].orient = (int) RTOD(o);
-        beacon.count++;
-    }
-
-    // Get the byte ordering correct
+    // Now see if it is within detection range
     //
-    for (int i = 0; i < beacon.count; i++)
-    {
-        beacon.beacon[i].range = htons(beacon.beacon[i].range);
-        beacon.beacon[i].bearing = htons(beacon.beacon[i].bearing);
-        beacon.beacon[i].orient = htons(beacon.beacon[i].orient);
-    }
-    beacon.count = htons(beacon.count);
+    if (r > this->max_range_anon * DTOR(0.50) / scan_res)
+      continue;
+    if (r > this->max_range_id * DTOR(0.50) / scan_res)
+      id = 0;
+
+    // pack the beacon data into the export structure
+    expBeacon.beacons[ expBeacon.beaconCount ].x = px;
+    expBeacon.beacons[ expBeacon.beaconCount ].y = py;
+    expBeacon.beacons[ expBeacon.beaconCount ].th = pth;
+    expBeacon.beacons[ expBeacon.beaconCount ].id = id;
+    expBeacon.beaconCount++;
+
+    // Record beacons
+    //
+    assert(beacon.count < ARRAYSIZE(beacon.beacon));
+    beacon.beacon[beacon.count].id = id;
+    beacon.beacon[beacon.count].range = (int) (r * 1000);
+    beacon.beacon[beacon.count].bearing = (int) RTOD(b);
+    beacon.beacon[beacon.count].orient = (int) RTOD(o);
+    beacon.count++;
+  }
+
+  // Get the byte ordering correct
+  //
+  for (int i = 0; i < beacon.count; i++)
+  {
+    beacon.beacon[i].range = htons(beacon.beacon[i].range);
+    beacon.beacon[i].bearing = htons(beacon.beacon[i].bearing);
+    beacon.beacon[i].orient = htons(beacon.beacon[i].orient);
+  }
+  beacon.count = htons(beacon.count);
     
-    // Write beacon buffer to shared mem
-    // Note that we apply the laser data's timestamp to this data.
-    //
-    PutData( &beacon, sizeof(beacon) );
-    m_time_sec = time_sec;
-    m_time_usec = time_usec;
+  // Write beacon buffer to shared mem
+  // Note that we apply the laser data's timestamp to this data.
+  //
+  PutData( &beacon, sizeof(beacon) );
+  this->time_sec = time_sec;
+  this->time_usec = time_usec;
 }
 
 

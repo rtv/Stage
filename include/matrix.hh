@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.hh,v 1.5 2001-12-17 18:32:05 ahoward Exp $
+// $Id: matrix.hh,v 1.6 2001-12-31 17:21:26 inspectorg Exp $
 // RTV
 // ==================================================================
 
@@ -16,8 +16,6 @@
 #include "entity.hh"
 
 
-enum MatrixMode { mode_set, mode_unset };
-
 class CMatrix
 {
   public:
@@ -28,22 +26,18 @@ class CMatrix
   CEntity***  data;
   unsigned char* used_slots;
   unsigned char* available_slots;
-
-  public:
-  char*	win_title;
   
-  int initial_buf_size;
+  public:
+
+  CMatrix(int w, int h, int default_buf_size);
+  
+  // REMOVE int initial_buf_size;
   
   void dump( void );
   
-  MatrixMode mode;
   void PrintCell( int cell );
   void CheckCell( int cell );
-  
-  //CMatrix();
-  CMatrix(int w,int h);
-  //CMatrix(CMatrix*);
-  
+    
   inline int get_width(void) {return width;}
   inline int get_height(void) {return height;}
   inline int get_size(void) {return width*height;}
@@ -94,14 +88,11 @@ class CMatrix
   inline void set_cell(int x, int y, CEntity* ent );
   inline void unset_cell(int x, int y, CEntity* ent );
   
-  inline void SetMode( MatrixMode m ) { mode = m; };
-  inline MatrixMode GetMode( void ) { return mode; };
-  
   void	copy_from(CMatrix* img);
-  
-  void	draw_circle(int x,int y,int r,CEntity* ent);
-  void	draw_rect( const Rect& t, CEntity* ent );
-  void	draw_line(int x1,int y1,int x2,int y2,CEntity* ent);
+
+  void	draw_line(int x1, int y1, int x2, int y2, CEntity* ent, bool add);
+  void	draw_rect( const Rect& t, CEntity* ent, bool add );
+  void	draw_circle(int x, int y, int r, CEntity* ent, bool add);
   
   CEntity** line_detect(int x1,int y1,int x2,int y2);
   CEntity** rect_detect( const Rect& r);

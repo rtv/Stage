@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.26 $
+//  $Author: inspectorg $
+//  $Revision: 1.27 $
 //
 // Usage:
 //  (empty)
@@ -34,19 +34,17 @@
 #define PIDFILENAME "stage.pid"
 
 ///////////////////////////////////////////////////////////////////////////
-// Static vars
-
-// Name of world file
-//
-char *world_file;
+// Local vars
 
 // Quit signal
-//
-bool quit = false;
+static bool quit = false;
 
-CWorld *world = 0;
+// Pointer to the one-and-only instance of the world
+// This really should be static
+CWorld *world = NULL;
 
-
+///////////////////////////////////////////////////////////////////////////
+// Print the usage string
 void PrintUsage( void )
 {
   printf("\nUsage: stage [options] WORLDFILE\n"
@@ -69,21 +67,17 @@ void PrintUsage( void )
 
 ///////////////////////////////////////////////////////////////////////////
 // Clean up and quit
-//
 void StageQuit( void )
 {  
   puts( "\nStage shutdown... " );
-  
+
   // Stop the world
-  //
   world->Shutdown();
   
   // Destroy the world
-  //
   delete world;
 
   unlink(PIDFILENAME);
-   
   puts( "...done." );
 
   exit( 0 );
@@ -91,11 +85,9 @@ void StageQuit( void )
 
 ///////////////////////////////////////////////////////////////////////////
 // Handle quit signals
-//
 void sig_quit(int signum)
 {
   printf( "SIGNAL %d\n", signum );
-  
   quit = true;
 }
 
@@ -111,11 +103,11 @@ int main(int argc, char **argv)
   // record our pid in the filesystem 
   FILE* pidfile;
   if((pidfile = fopen(PIDFILENAME, "w+")))
-    {
-      fprintf(pidfile,"%d\n", getpid());
-      fclose(pidfile);
-    }
-  
+  {
+    fprintf(pidfile,"%d\n", getpid());
+    fclose(pidfile);
+  }
+
   // Create the world
   //
   world = new CWorld();
@@ -123,29 +115,28 @@ int main(int argc, char **argv)
   // Load the world - the filename is the last argument
   // this may produce more startup output
   if (!world->Load( argv[ argc-1 ] ))
-    {
-      printf("Stage: failed load\n");
-      StageQuit();
-    }
+  {
+    printf("Stage: failed load\n");
+    StageQuit();
+  }
 
   // override default and config file values with command line options.
   // any options set will produce console output for reassurance
   if (!world->ParseCmdline(argc, argv))
-    {
-      printf("Stage: failed to parse command line\n");
-      StageQuit();
-    }
+  {
+    printf("Stage: failed to parse command line\n");
+    StageQuit();
+  }
   
   puts( "" ); // end the startup output line
   fflush( stdout );
   
   // Start the world
-  //  this splits of another thread which runs the simulation
   if (!world->Startup())
-    {
-      printf("Stage: failed startup\n");
-      StageQuit();
-    }
+  {
+    printf("Stage: failed startup\n");
+    StageQuit();
+  }
 
   // Register callback for quit (^C,^\) events
   // - sig_quit function raises the quit flag 
@@ -153,10 +144,14 @@ int main(int argc, char **argv)
   signal(SIGQUIT, sig_quit );
   signal(SIGTERM, sig_quit );
   signal(SIGHUP, sig_quit );
-    
+
+  printf("running\n");
+
   // the main loop - it'll be interrupted by a signal
   while( !quit )
     world->Main();
+
+  printf("quiting\n");
   
   // clean up and exit
   StageQuit();

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/broadcastdevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.5 $
+//  $Author: inspectorg $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)

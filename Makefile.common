@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.common,v 1.29 2001-12-20 03:11:46 vaughan Exp $ 
+# $Id: Makefile.common,v 1.30 2001-12-31 17:21:26 inspectorg Exp $ 
 #
 
 # INSTALL PLAYER BEFORE BUILDING STAGE!
@@ -14,8 +14,9 @@
 # VERSIONS
 
 # Define Stage's version string for the source to include (required)
+# Must match Player's version string
 
-VERSION = 1.0
+VERSION = 1.2
 
 ##############################################################################
 # Player configuration (required)
@@ -34,10 +35,15 @@ PLAYERVERSION = $(VERSION)
 # You can also specify the PLAYER_BASE from the make command line, eg:
 # make -e PLAYER_BASE=~/playerstage/player
 
-#PLAYER_BASE = /usr/local/player
-#PLAYER_DIR = $(PLAYER_BASE)-$(PLAYERVERSION)
-PLAYER_BASE = $(HOME)/PS/player
-PLAYER_DIR = $(PLAYER_BASE)
+PLAYER_BASE = /usr/local/player
+PLAYER_DIR = $(PLAYER_BASE)-$(PLAYERVERSION)
+PLAYER_INC=$(PLAYER_DIR)/include
+PLAYER_LIB=$(PLAYER_DIR)/lib
+
+# Richard - do not use these : you fuck everyone else up.
+# Use this: make -e PLAYER_BASE=~/$HOME/PS/player <whatever>
+#PLAYER_BASE = $(HOME)/PS/player
+#PLAYER_DIR = $(PLAYER_BASE)
 
 ##############################################################################
 # Color datbase configuration (required)

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/visionbeacon.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.7 $
+//  $Author: inspectorg $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -35,14 +35,6 @@ class CVisionBeacon : public CEntity
     //
     public: CVisionBeacon(CWorld *world, CEntity *parent);
 
-    // Load the object from an argument list
-    //
-    public: virtual bool Load(int argc, char **argv);
-
-    // Save the object to an argument list
-    //
-    public: virtual bool Save(int &argc, char **argv);
-    
     // Update the device
     //
     public: virtual void Update( double sim_time );

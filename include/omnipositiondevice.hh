@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/omnipositiondevice.hh,v $
-//  $Author: ahoward $
-//  $Revision: 1.1 $
+//  $Author: inspectorg $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -31,62 +31,53 @@
 
 class COmniPositionDevice : public CEntity
 {
-    // Minimal constructor
-    public: COmniPositionDevice(CWorld *world, CEntity *parent);
-
-    // Load the object from an argument list
-    public: virtual bool Load(int argc, char **argv);
-
-    // Save the object to an argument list
-    public: virtual bool Save(int &argc, char **argv);
+  // Minimal constructor
+  public: COmniPositionDevice(CWorld *world, CEntity *parent);
     
-    // Update the device
-    public: virtual void Update( double sim_time );
+  // Update the device
+  public: virtual void Update( double sim_time );
 
-    // Move the device
-    private: void Move();
+  // Move the device
+  private: void Move();
 
-    // Extract command from the command buffer
-    private: void ParseCommandBuffer( void );
+  // Extract command from the command buffer
+  private: void ParseCommandBuffer( void );
 				    
-    // Compose the reply packet
-    private: void ComposeData( void );
+  // Compose the reply packet
+  private: void ComposeData( void );
 
-    // Check to see if the given pose will yield a collision
-    private: bool InCollision(double px, double py, double pa);
+  // Check to see if the given pose will yield a collision
+  private: bool InCollision(double px, double py, double pa);
 
-    // Render the object in the world rep
-    private: virtual void Map(double px, double py, double pa, bool render);
+  // Render the object in the world rep
+  private: virtual void Map(double px, double py, double pa, bool render);
 
-    // Timings
-    private: double last_time;
+  // Timings
+  private: double last_time;
 
-    // Current command and data buffers
-    private: player_position_cmd_t command;
-    private: player_position_data_t data;
+  // Current command and data buffers
+  private: player_position_cmd_t command;
+  private: player_position_data_t data;
 
-    // Robot radius
-    private: double radius;
+  // Commanded velocities
+  private: double com_vx, com_vy, com_va;
     
-    // Commanded velocities
-    private: double com_vx, com_vy, com_va;
-    
-    // Stall flag -- set if robot is stalled
-    private: int stall;
+  // Stall flag -- set if robot is stalled
+  private: int stall;
 
-    // Current odometry values
-    private: double odo_px, odo_py, odo_pa;
+  // Current odometry values
+  private: double odo_px, odo_py, odo_pa;
 
 #ifdef INCLUDE_RTK
 
-    // Process GUI update messages
-    public: virtual void OnUiUpdate(RtkUiDrawData *data);
+  // Process GUI update messages
+  public: virtual void OnUiUpdate(RtkUiDrawData *data);
 
-    // Process GUI mouse messages
-    public: virtual void OnUiMouse(RtkUiMouseData *data);
+  // Process GUI mouse messages
+  public: virtual void OnUiMouse(RtkUiMouseData *data);
 
-    // Draw the chassis
-    public: void DrawChassis(RtkUiDrawData *data);
+  // Draw the chassis
+  public: void DrawChassis(RtkUiDrawData *data);
   
 #endif
 };

@@ -1,6 +1,6 @@
 // ==================================================================
 // Filename:	raytrace.cc
-// $Id: raytrace.cc,v 1.4 2001-12-20 03:11:47 vaughan Exp $
+// $Id: raytrace.cc,v 1.5 2001-12-31 17:21:27 inspectorg Exp $
 // RTV
 // ==================================================================
 
@@ -22,30 +22,30 @@ CLineIterator::CLineIterator( double x, double y, double a, double b,
   m_index = 0;
 
   switch( pmode )
-    {
+  {
     case PointToBearingRange:
-      {
-	double range = b;
-	double bearing = a;
+    {
+      double range = b;
+      double bearing = a;
 	
-	m_angle = bearing;
-	m_max_range = m_remaining_range = range * m_ppm;
-      }
-      break;
+      m_angle = bearing;
+      m_max_range = m_remaining_range = range * m_ppm;
+    }
+    break;
     case PointToPoint:
-      {
-	double x1 = a;
-	double y1 = b;
+    {
+      double x1 = a;
+      double y1 = b;
 	
-	//printf( "From %.2f,%.2f to %.2f,%.2f\n", x,y,x1,y1 );
+      //printf( "From %.2f,%.2f to %.2f,%.2f\n", x,y,x1,y1 );
 
-	m_angle = atan2( y1-y, x1-x );
-	m_max_range = m_remaining_range = hypot( x1-x, y1-y ) * m_ppm;
-      }
-      break;
+      m_angle = atan2( y1-y, x1-x );
+      m_max_range = m_remaining_range = hypot( x1-x, y1-y ) * m_ppm;
+    }
+    break;
     default:
       puts( "Stage Warning: unknown LineIterator mode" );
-    }
+  }
 
   //printf( "angle = %.2f remaining_range = %.2f\n", m_angle, m_remaining_range );
   //fflush( stdout );
@@ -95,40 +95,40 @@ inline CEntity** CLineIterator::RayTrace( double &px, double &py, double pth,
   
   // Look along scan line for obstacles
   for( range = 0; range < remaining_range; range++ )
-    {
-      px += cospth;
-      py += sinpth;
+  {
+    px += cospth;
+    py += sinpth;
       
-      // stop this ray if we're out of bounds
-      if( px < 0 ) 
-	{ 
-	  px = 0; 
-	  remaining_range = 0.0;
-	}
-      if( px >= m_matrix->width ) 
-	{ 
-	  px = m_matrix->width-1; 
-	  remaining_range = 0.0;
-	}
-      if( py < 0 ) 
-	{ 
-	  py = 0; 
-	  remaining_range = 0.0;
-	}
-      if( py >= m_matrix->height ) 
-	{ 
-	  py = m_matrix->height-1; 
-	  remaining_range = 0.0;
-	}
+    // stop this ray if we're out of bounds
+    if( px < 0 ) 
+    { 
+      px = 0; 
+      remaining_range = 0.0;
+    }
+    if( px >= m_matrix->width ) 
+    { 
+      px = m_matrix->width-1; 
+      remaining_range = 0.0;
+    }
+    if( py < 0 ) 
+    { 
+      py = 0; 
+      remaining_range = 0.0;
+    }
+    if( py >= m_matrix->height ) 
+    { 
+      py = m_matrix->height-1; 
+      remaining_range = 0.0;
+    }
       
-      //printf( "looking in %d,%d\n", (int)px, (int)py );
+    //printf( "looking in %d,%d\n", (int)px, (int)py );
       
-      ent = m_matrix->get_cell( (int)px,(int)py );
-      if( !ent[0] && px+1 < m_matrix->width) 
-	ent = m_matrix->get_cell( (int)px+1,(int)py );
+    ent = m_matrix->get_cell( (int)px,(int)py );
+    if( !ent[0] && px+1 < m_matrix->width) 
+      ent = m_matrix->get_cell( (int)px+1,(int)py );
       
 	  if( ent[0] ) break;// we hit something!
-    }
+  }
   
   remaining_range -= (double)range+1; // we have this much left to go
   
@@ -147,10 +147,10 @@ void CLineIterator::PrintArray( CEntity** ent )
   printf( "Array: " );
   
   if( !ent ) 
-    {
-      printf( "(null)\n" ); 
-      return;
-    }
+  {
+    printf( "(null)\n" ); 
+    return;
+  }
   
   //puts( "foo" );
 
@@ -210,37 +210,37 @@ CEntity* CTriangleAreaIterator::GetNextEntity( void )
   CEntity* ent;
 
   while( m_range_so_far < m_max_range )
-    {
-      // if there's an iterator and it's still working, use it.
-      if( li && (ent = li->GetNextEntity()))
-	return ent;
+  {
+    // if there's an iterator and it's still working, use it.
+    if( li && (ent = li->GetNextEntity()))
+      return ent;
       
-      // otherwise we need to create a new iterator
-      // after deleting the old one of course
-      if( li ) delete li; 
+    // otherwise we need to create a new iterator
+    // after deleting the old one of course
+    if( li ) delete li; 
       
-      //printf( "x: %.2f y: %.2f + skip: %.2f = ", m_x, m_y, m_skip );
+    //printf( "x: %.2f y: %.2f + skip: %.2f = ", m_x, m_y, m_skip );
 
-      // move from the current position down the left edge of the triangle
-      m_x += m_skip * cos(m_bearing);
-      m_y += m_skip * sin(m_bearing);
+    // move from the current position down the left edge of the triangle
+    m_x += m_skip * cos(m_bearing);
+    m_y += m_skip * sin(m_bearing);
 
-      //printf( "x: %.2f y: %.2f ", m_x, m_y );
+    //printf( "x: %.2f y: %.2f ", m_x, m_y );
       
-      m_range_so_far += m_skip;
+    m_range_so_far += m_skip;
       
-      //printf( "range so far: %.2f\n", m_range_so_far );
+    //printf( "range so far: %.2f\n", m_range_so_far );
     
-      // figure the length of the scan line
-      double li_len = m_range_so_far * sin( m_angle );
+    // figure the length of the scan line
+    double li_len = m_range_so_far * sin( m_angle );
       
-      //printf( "new CLineIterator( %.2f, %.2f, %.2f, %.2f )\n",
-      //      m_x, m_y, m_li_angle, li_len ); 
+    //printf( "new CLineIterator( %.2f, %.2f, %.2f, %.2f )\n",
+    //      m_x, m_y, m_li_angle, li_len ); 
       
 
-      li = new CLineIterator( m_x, m_y, m_li_angle, li_len, 
-			      m_ppm, m_matrix, PointToBearingRange );
-    }
+    li = new CLineIterator( m_x, m_y, m_li_angle, li_len, 
+                            m_ppm, m_matrix, PointToBearingRange );
+  }
   return 0;
 }
 
@@ -276,20 +276,20 @@ CRectangleIterator::CRectangleIterator( double x, double y, double th,
   
   
   lits[0] = new CLineIterator( corners[0][0], corners[0][1], 
-			       corners[1][0], corners[1][1],
-			       ppm, matrix, PointToPoint );
+                               corners[1][0], corners[1][1],
+                               ppm, matrix, PointToPoint );
   
   lits[1] = new CLineIterator( corners[1][0], corners[1][1], 
-			       corners[2][0], corners[2][1],
-			       ppm, matrix, PointToPoint );
+                               corners[2][0], corners[2][1],
+                               ppm, matrix, PointToPoint );
 
   lits[2] = new CLineIterator( corners[2][0], corners[2][1], 
-			       corners[3][0], corners[3][1],
-			       ppm, matrix, PointToPoint );
+                               corners[3][0], corners[3][1],
+                               ppm, matrix, PointToPoint );
   
   lits[3] = new CLineIterator( corners[3][0], corners[3][1], 
-			       corners[0][0], corners[0][1],
-			       ppm, matrix, PointToPoint );
+                               corners[0][0], corners[0][1],
+                               ppm, matrix, PointToPoint );
   
 } 
 
@@ -305,10 +305,10 @@ CEntity* CRectangleIterator::GetNextEntity( void )
   
   for( int i=0; i<4; i++ )
     if( (ent = lits[i]->GetNextEntity() ) == 0 )
-      {
-	delete lits[i]; // don't need that line any more
-	lits[i] = 0; // mark it as deleted
-      }
+    {
+      delete lits[i]; // don't need that line any more
+      lits[i] = 0; // mark it as deleted
+    }
     else
       break; // we'll take this entity
   
@@ -319,10 +319,10 @@ void CRectangleIterator::GetPos( double& x, double& y )
 {
   for( int i=0; i<4; i++ )
     if( lits[i] != 0 ) // find the current line iterator
-      {
-	lits[i]->GetPos( x, y );
-	break;
-      }
+    {
+      lits[i]->GetPos( x, y );
+      break;
+    }
 }
 
 
@@ -360,14 +360,14 @@ CEntity* CCircleIterator::GetNextEntity( void )
   //printf( "current ptr: %p index: %d\n", m_ent[m_index], index );
 
   if( !(m_ent && m_ent[m_index]) ) // if the ent array is null or empty
-    {
-      //printf( "before %d,%d\n", (int)m_x, (int)m_y );
-      // get a new array of pointers
-      m_ent = CircleTrace( m_angle );
-      //PrintArray( m_ent );
-      //printf( "after %d,%d\n", (int)m_x, (int)m_y );
-      m_index = 0; // back to the start of the array
-    }
+  {
+    //printf( "before %d,%d\n", (int)m_x, (int)m_y );
+    // get a new array of pointers
+    m_ent = CircleTrace( m_angle );
+    //PrintArray( m_ent );
+    //printf( "after %d,%d\n", (int)m_x, (int)m_y );
+    m_index = 0; // back to the start of the array
+  }
   
   assert( m_ent != 0 ); // should be a valid array, even if empty
  
@@ -381,44 +381,44 @@ CEntity* CCircleIterator::GetNextEntity( void )
 
 CEntity** CCircleIterator::CircleTrace( double &remaining_angle )
 {
- CEntity** ent = 0;
+  CEntity** ent = 0;
    
- while( remaining_angle < (M_PI * 2.0) )
-   { 
-     m_px = m_center_x + m_radius * cos( remaining_angle );
-     m_py = m_center_y + m_radius * sin( remaining_angle );
+  while( remaining_angle < (M_PI * 2.0) )
+  { 
+    m_px = m_center_x + m_radius * cos( remaining_angle );
+    m_py = m_center_y + m_radius * sin( remaining_angle );
      
-     //printf( "looking in %d,%d  angle: %.2f\n", 
-     //     (int)px, (int)py, remaining_angle );
+    //printf( "looking in %d,%d  angle: %.2f\n", 
+    //     (int)px, (int)py, remaining_angle );
      
-     remaining_angle += m_dangle;
+    remaining_angle += m_dangle;
      
-     // bounds check
-     if( m_px < 0 || m_px >= m_matrix->width-1 || 
-	 m_py < 0 || m_py >= m_matrix->height ) 
-     {
-       // if we're out of bounds, then return a pointer to NULL,
-       // indicating free space
-       ent = &g_nullp;
-     }
-     else
-     {
-       ent = m_matrix->get_cell( (int)m_px,(int)m_py );
-       if( !ent[0] )//&& (px+1 < m_matrix->width) ) 
-         ent = m_matrix->get_cell( (int)m_px+1,(int)m_py );
-     }
+    // bounds check
+    if( m_px < 0 || m_px >= m_matrix->width-1 || 
+        m_py < 0 || m_py >= m_matrix->height ) 
+    {
+      // if we're out of bounds, then return a pointer to NULL,
+      // indicating free space
+      ent = &g_nullp;
+    }
+    else
+    {
+      ent = m_matrix->get_cell( (int)m_px,(int)m_py );
+      if( !ent[0] )//&& (px+1 < m_matrix->width) ) 
+        ent = m_matrix->get_cell( (int)m_px+1,(int)m_py );
+    }
 
-     if( ent[0] ) break;// we hit something!
-   }
+    if( ent[0] ) break;// we hit something!
+  }
  
- //if( ent && ent[0] )
- //printf( "Hit %p at %.2f,%.2f with %.2f to go\n", 
- //   ent[0], px, py, remaining_angle );
- //else
- //printf( "hit nothing. remaining angle = %.2f\n", remaining_angle );
- //fflush( stdout );
+  //if( ent && ent[0] )
+  //printf( "Hit %p at %.2f,%.2f with %.2f to go\n", 
+  //   ent[0], px, py, remaining_angle );
+  //else
+  //printf( "hit nothing. remaining angle = %.2f\n", remaining_angle );
+  //fflush( stdout );
  
- return ent; // we hit these entities
+  return ent; // we hit these entities
 }
 
 void CCircleIterator::PrintArray( CEntity** ent )
@@ -426,10 +426,10 @@ void CCircleIterator::PrintArray( CEntity** ent )
   printf( "Array: " );
   
   if( !ent ) 
-    {
-      printf( "(null)\n" ); 
-      return;
-    }
+  {
+    printf( "(null)\n" ); 
+    return;
+  }
   
   //puts( "foo" );
   

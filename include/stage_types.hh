@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/stage_types.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.14 $
+//  $Author: inspectorg $
+//  $Revision: 1.15 $
 //
 // Usage:
 //  (empty)
@@ -69,11 +69,47 @@
 
 #define ASSERT(m) assert(m)
 
+// Error macros
+#define PRINT_ERR(m)         printf("\rstage error : %s %s\n  "m"\n", \
+                                    __FILE__, __FUNCTION__)
+#define PRINT_ERR1(m, a)     printf("\rstage error : %s %s\n  "m"\n", \
+                                    __FILE__, __FUNCTION__, a)
+#define PRINT_ERR2(m, a, b)  printf("\rstage error : %s %s\n  "m"\n", \
+                                    __FILE__, __FUNCTION__, a, b)
+
+// Warning macros
+#define PRINT_WARN(m)         printf("\rstage warning : %s %s\n  "m"\n", \
+                                     __FILE__, __FUNCTION__)
+#define PRINT_WARN1(m, a)     printf("\rstage warning : %s %s\n  "m"\n", \
+                                     __FILE__, __FUNCTION__, a)
+#define PRINT_WARN2(m, a, b)  printf("\rstage warning : %s %s\n  "m"\n", \
+                                     __FILE__, __FUNCTION__, a, b)
+#define PRINT_WARN3(m, a, b, c) printf("\rstage warning : %s %s\n  "m"\n", \
+                                     __FILE__, __FUNCTION__, a, b, c)
+
 // Message macros
-//
 #define PRINT_MSG(m) printf("stage msg : %s :\n  "m"\n", __FILE__)
 #define PRINT_MSG1(m, a) printf("stage msg : %s :\n  "m"\n", __FILE__, a)
 #define PRINT_MSG2(m, a, b) printf("stage msg : %s :\n  "m"\n", __FILE__, a, b)
+
+// DEBUG macros
+#ifdef DEBUG
+#define PRINT_DEBUG(m)         printf("\rstage debug : %s %s\n  "m"\n", \
+                                     __FILE__, __FUNCTION__)
+#define PRINT_DEBUG1(m, a)     printf("\rstage debug : %s %s\n  "m"\n", \
+                                     __FILE__, __FUNCTION__, a)
+#define PRINT_DEBUG2(m, a, b)  printf("\rstage debug : %s %s\n  "m"\n", \
+                                     __FILE__, __FUNCTION__, a, b)
+#define PRINT_DEBUG3(m, a, b, c) printf("\rstage debug : %s %s\n  "m"\n", \
+                                     __FILE__, __FUNCTION__, a, b, c)
+#else
+#define PRINT_DEBUG(m)
+#define PRINT_DEBUG1(m, a)
+#define PRINT_DEBUG2(m, a, b)
+#define PRINT_DEBUG3(m, a, b, c)
+#endif
+
+
 
 // color type
 typedef struct
@@ -81,35 +117,65 @@ typedef struct
   unsigned short red, green, blue;
 } StageColor;
 
+
+// Shapes for entities
+enum StageShape
+{
+  ShapeCircle = 0,
+  ShapeRect
+};
+
 // definition of stage object type codes
 // similar to player types, but not exactly, as different robots
 // can appear to stage as identical position devices, for example.
-enum StageType {
-NullType = 0,
-WallType,
-PlayerType, 
-MiscType, 
-RectRobotType,
-RoundRobotType,
-SonarType,
-LaserTurretType,
-VisionType,
-PtzType,
-BoxType,
-LaserBeaconType,
-LBDType, // Laser Beacon Detector
-VisionBeaconType,
+enum StageType
+{
+  NullType = 0,
+  WallType,
+  PlayerType, 
+  MiscType, 
+  RectRobotType,
+  RoundRobotType,
+  SonarType,
+  LaserTurretType,
+  VisionType,
+  PtzType,
+  BoxType,
+  LaserBeaconType,
+  LBDType, // Laser Beacon Detector
+  VisionBeaconType,
 //VBDType // Vision Beacon Detector?
-GripperType, 
-GpsType,
-PuckType,
-BroadcastType,
-AudioType,
-SpeechType,
-TruthType,
-OccupancyType,
-IDARType, // HRL's Infrared Data And Ranging turret
-DescartesType // HRL's customized Descarte robot platform
+  GripperType, 
+  GpsType,
+  PuckType,
+  BroadcastType,
+  AudioType,
+  SpeechType,
+  TruthType,
+  OccupancyType,
+  IDARType, // HRL's Infrared Data And Ranging turret
+  DescartesType // HRL's customized Descarte robot platform
+};
+
+
+// Possible laser return values
+enum LaserReturn
+{
+  LaserTransparent = 0,
+  LaserReflect, 
+  LaserBright1,
+  LaserBright2,
+  LaserBright3,
+  LaserBright4
+};
+
+
+// Possible IDAR return values
+enum IDARReturn
+{
+  IDARTransparent=0,
+  IDARReflect,
+  IDARReceive
 };
 
 #endif

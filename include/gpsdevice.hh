@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/gpsdevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.2 $
+//  $Author: inspectorg $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 

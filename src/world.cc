@@ -7,12 +7,14 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.69 $
+//  $Author: inspectorg $
+//  $Revision: 1.70 $
 //
 ///////////////////////////////////////////////////////////////////////////
+
 #include <errno.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 #include <signal.h>
 #include <math.h>
 #include <fstream.h>
@@ -26,19 +28,25 @@
 #include <fcntl.h>
 #include <pwd.h>
 #include <stdio.h>
-//#include <irdevice.hh>
+#include <libgen.h>  // for dirname/#define DEBUG
+
+bool usage = false;
+void PrintUsage(); // defined in main.cc
 
 extern long g_bytes_input, g_bytes_output;
 
 int g_timer_expired = 0;
+
+#define DEBUG 
+#define VERBOSE
 
 //#include <stage.h>
 #include "world.hh"
 // for the definition of CPlayerDevice, used to treat them specially
 // below
 #include "playerdevice.hh" 
-
 #include "truthserver.hh"
+#include "fixedobstacle.hh"
 
 // thread entry function, defined in envserver.cc
 void* EnvServer( void* );
@@ -49,10 +57,7 @@ void* EnvServer( void* );
 const int OBJECT_ALLOC_SIZE = 32;
 
 #define WATCH_RATES
-//#define DEBUG 
-//#define VERBOSE
-#undef DEBUG 
-//#undef VERBOSE
+
 
 // this is the root filename for stage devices
 // this is appended with the user name and instance number
@@ -68,155 +73,579 @@ void TimerHandler( int val )
 }  
 
 
-// Main.cc calls constructor, then Load(), then Startup(), then starts thread
-// at CWorld::Main();
+// Main.cc calls constructor, then Load(), then Startup(),
+// Main(), then Shutdown()
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
-//
 CWorld::CWorld()
 {
-    // seed the random number generator
-    srand48( time(NULL) );
+  // seed the random number generator
+  srand48( time(NULL) );
 
-    // stop time of zero means run forever
-    m_stoptime = 0;
+  // Initialise configuration variables
+  // REMOVE this->size_x = 10;
+  // REMOVE this->size_y = 10;
+  this->ppm = 20;
+  this->wall = NULL;
+  
+  // stop time of zero means run forever
+  m_stoptime = 0;
 
-    // invalid file descriptor initially
-    m_log_fd = -1;
+  // invalid file descriptor initially
+  m_log_fd = -1;
 
-    m_external_sync_required = false;
-    m_env_server_ready = false;
-    m_instance = 0;
+  m_external_sync_required = false;
+  m_env_server_ready = false;
+  m_instance = 0;
 
-    // AddObject() handles allocation of storage for entities
-    // just initialize stuff here
-    m_object = NULL;
-    m_object_alloc = 0;
-    m_object_count = 0;
+  // AddObject() handles allocation of storage for entities
+  // just initialize stuff here
+  m_object = NULL;
+  m_object_alloc = 0;
+  m_object_count = 0;
 
-    m_log_output = false;
-    m_console_output = true;
+  m_log_output = false;
+  m_console_output = true;
 
-    //m_realtime_mode = true;
-    // defaults time steps can be tweaked by command line or config file
+  //m_realtime_mode = true;
+  // defaults time steps can be tweaked by command line or config file
     
-    // real time mode by default
-    // if real_timestep is zero, we run as fast as possible
-    m_real_timestep = 0.1; //seconds
-    m_sim_timestep = 0.1; //seconds; - 10Hz default rate 
-    m_step_num = 0;
+  // real time mode by default
+  // if real_timestep is zero, we run as fast as possible
+  m_real_timestep = 0.1; //seconds
+  m_sim_timestep = 0.1; //seconds; - 10Hz default rate 
+  m_step_num = 0;
 
-    // Allow the simulation to run
-    //
-    m_enable = true;
+  // Allow the simulation to run
+  //
+  m_enable = true;
 
-    // set the server ports to default values
-    m_pose_port = DEFAULT_POSE_PORT;
-    m_env_port = DEFAULT_ENV_PORT;
+  // set the server ports to default values
+  m_pose_port = DEFAULT_POSE_PORT;
+  m_env_port = DEFAULT_ENV_PORT;
     
-    // init the pose server data structures
-    m_pose_connection_count = 0;
-    memset( m_pose_connections, 0, 
-	    sizeof(struct pollfd) * MAX_POSE_CONNECTIONS );
-    memset( m_conn_type, 0, sizeof(char) * MAX_POSE_CONNECTIONS );
+  // init the pose server data structures
+  m_pose_connection_count = 0;
+  memset( m_pose_connections, 0, 
+          sizeof(struct pollfd) * MAX_POSE_CONNECTIONS );
+  memset( m_conn_type, 0, sizeof(char) * MAX_POSE_CONNECTIONS );
     
-    m_sync_counter = 0;
+  m_sync_counter = 0;
 
-    if( gethostname( m_hostname, sizeof(m_hostname)) == -1)
-      {
-	perror( "XS: couldn't get hostname. Quitting." );
-	exit( -1 );
-      }
-    /* now strip off domain */
-    char* first_dot;
-    strncpy(m_hostname_short, m_hostname,HOSTNAME_SIZE);
-    if( (first_dot = strchr(m_hostname_short,'.') ))
-      *first_dot = '\0';
+  if( gethostname( m_hostname, sizeof(m_hostname)) == -1)
+  {
+    perror( "XS: couldn't get hostname. Quitting." );
+    exit( -1 );
+  }
+  /* now strip off domain */
+  char* first_dot;
+  strncpy(m_hostname_short, m_hostname,HOSTNAME_SIZE);
+  if( (first_dot = strchr(m_hostname_short,'.') ))
+    *first_dot = '\0';
     
-    //printf( "\nCWorld::m_hostname: %s, m_hostname_short %s\n", 
-    //    m_hostname, m_hostname_short );
+  //printf( "\nCWorld::m_hostname: %s, m_hostname_short %s\n", 
+  //    m_hostname, m_hostname_short );
 
-    // enable external services by default
-    m_run_environment_server = true;
-    m_run_pose_server = true;
+  // enable external services by default
+  m_run_environment_server = true;
+  m_run_pose_server = true;
     
-    // default color database file
-    strcpy( m_color_database_filename, COLOR_DATABASE );
+  // default color database file
+  strcpy( m_color_database_filename, COLOR_DATABASE );
     
-    memset( channel, 0, sizeof(StageColor) * ACTS_NUM_CHANNELS );
-    
-    // initialize the channel mapping to something reasonable
-    channel[0].red = 255;
-    channel[1].green = 255;
-    channel[2].blue = 255;
-
 #ifdef INCLUDE_RTK
-    // disable XS by default in rtkstage
-    m_run_xs = false;
+  // disable XS by default in rtkstage
+  m_run_xs = false;
 #else
-    // enable XS by default in stage
-    m_run_xs = true; 
+  // enable XS by default in stage
+  m_run_xs = true; 
 #endif
 
-    // Initialise world filename
-    //
-    m_filename[0] = 0;
+  // Initialise world filename
+  //
+  m_filename[0] = 0;
     
-    // Initialise clocks
-    m_start_time = m_sim_time = 0;
-    memset( &m_sim_timeval, 0, sizeof( struct timeval ) );
+  // Initialise clocks
+  m_start_time = m_sim_time = 0;
+  memset( &m_sim_timeval, 0, sizeof( struct timeval ) );
     
-    // Initialise object list
-    //
-    m_object_count = 0;
+  // Initialise object list
+  m_object_count = 0;
     
-    // Initialise configuration variables
-    //
-    this->ppm = 20;
-    this->scale = 100;
-    m_laser_res = 0;
-    unit_multiplier = 1.0;  // default to meters
-    angle_multiplier = M_PI/180.0;  // default to degrees
-    
-    memset( m_env_file, 0, sizeof(m_env_file));
-
-    // start with no key
-    bzero(m_auth_key,sizeof(m_auth_key));
-
+  // start with no key
+  bzero(m_auth_key,sizeof(m_auth_key));
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Destructor
-//
 CWorld::~CWorld()
 {
-  if( matrix ) delete matrix;
+  if (wall)
+    delete wall;
+
+  if( matrix )
+    delete matrix;
+
+  for( int m=0; m < m_object_count; m++ )
+    delete m_object[m];
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Parse the command line
+bool CWorld::ParseCmdline(int argc, char **argv)
+{
+  if( argc < 2 )
+  {
+    usage = true;
+    exit( -1 );
+  }
   
-  if( wall ) delete wall;
+  for( int a=1; a<argc-1; a++ )
+  {
+    // USAGE
+    if( (strcmp( argv[a], "-?" ) == 0) || 
+        (strcmp( argv[a], "--help") == 0) )
+    {
+      PrintUsage();
+      return false;
+    }
+    // LOGGING
+    else if( strcmp( argv[a], "-l" ) == 0 )
+    {
+      m_log_output = true;
+      strncpy( m_log_filename, argv[a+1], 255 );
+      printf( "[Logfile %s]", m_log_filename );
+
+      //store the command line for logging later
+      memset( m_cmdline, 0, sizeof(m_cmdline) );
+	  
+      for( int g=0; g<argc; g++ )
+	    {
+	      strcat( m_cmdline, argv[g] );
+	      strcat( m_cmdline, " " );
+	    }
+
+      a++;
+	  
+      // open the log file and write out a header
+      LogOutputHeader();
+    }
+      
+    // FAST MODE - run as fast as possible - don't attempt t match real time
+    if( strcmp( argv[a], "-fast" ) == 0 )
+    {
+      m_real_timestep = 0.0;
+      printf( "[Fast]" );
+    }
+
+    // DIS/ENABLE XS
+    if( strcmp( argv[a], "-xs" ) == 0 )
+    {
+      m_run_xs = false;
+      printf( "[No GUI]" );
+    }
+    else if( strcmp( argv[a], "+xs" ) == 0 )
+    {
+      m_run_xs = true;
+      printf( "[GUI]" );
+    }
+
+    // SET GOAL REAL CYCLE TIME
+    // Stage will attempt to update at this speed
+    else if( strcmp( argv[a], "-u" ) == 0 )
+    {
+      m_real_timestep = atof(argv[a+1]);
+      printf( "[Real time per cycle %f sec]", m_real_timestep );
+      a++;
+    }
+
+    // SET SIMULATED UPDATE CYCLE
+    // one cycle simulates this much time
+    else if( strcmp( argv[a], "-v" ) == 0 )
+    {
+      m_sim_timestep = atof(argv[a+1]);
+      printf( "[Simulated time per cycle %f sec]", m_sim_timestep );
+      a++;
+    }
+
+    // change the pose port 
+    else if( strcmp( argv[a], "-tp" ) == 0 )
+    {
+      m_pose_port = atoi(argv[a+1]);
+      printf( "[Pose %d]", m_pose_port );
+      a++;
+    }
+
+    // change the environment port
+    else if( strcmp( argv[a], "-ep" ) == 0 )
+    {
+      m_env_port = atoi(argv[a+1]);
+      printf( "[Env %d]", m_env_port );
+      a++;
+    }
+
+    // SWITCH ON SYNCHRONIZED (distributed) MODE
+    // if this option is given, Stage will only run when connected
+    // to an external synchronous pose connection
+    else if( strcmp( argv[a], "-s" ) == 0 )
+    {
+      m_external_sync_required = true; 
+      m_enable = false; // don't run until we have a sync connection
+      printf( "[External Sync]");
+    }      
+    else if(!strcmp(argv[a], "-time"))
+    {
+      m_stoptime = atoi(argv[++a]);
+      printf("setting time to: %d\n",m_stoptime);
+    }
+
+    //else if( strcmp( argv[a], "-id" ) == 0 )
+    //{
+    //  memset( m_hostname, 0, 64 );
+    //  strncpy( m_hostname, argv[a+1], 64 );
+    //  printf( "[ID %s]", m_hostname ); fflush( stdout );
+    //  a++;
+    //}
+  }
+    
+  return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Load the world
+bool CWorld::Load(const char *filename)
+{
+  printf( "[World %s]", filename );
+  fflush( stdout );
+
+  // the default hostname is this host's name
+  char current_hostname[ HOSTNAME_SIZE ];
+  strcpy( current_hostname, m_hostname );
   
-  // must explicity delete objects so they can clean up their
-  // filesysyem entry
-  if( m_object_count )
-    for( int m=0; m<m_object_count; m++ )
-      if( m_object ) delete m_object[m];
+  // Load and parse the world file
+  if (!this->worldfile.Load(filename))
+    return false;
+
+  // Make sure there is an "environment" section
+  int section = this->worldfile.LookupSection("environment");
+  if (section < 0)
+  {
+    PRINT_ERR("no environment specified");
+    return false;
+  }
+  
+  // Construct a single fixed obstacle representing
+  // the environment.
+  this->wall = new CFixedObstacle(this, NULL);
+  
+  // Load the settings for this object
+  if (!this->wall->Load(&this->worldfile, section))
+    return false;
+
+  // Get the resolution of the environment (meters per pixel in the file)
+  this->ppm = 1 / this->worldfile.ReadLength(section, "resolution", 1 / this->ppm);
+
+  // Initialise the matrix, now that we know its size
+  int w = (int) ceil(this->wall->m_size_x * this->ppm);
+  int h = (int) ceil(this->wall->m_size_y * this->ppm);
+  this->matrix = new CMatrix(w, h, 1);
+  
+  // Get the authorization key to pass to player
+  const char *authkey = this->worldfile.ReadString(0, "auth_key", "");
+  strncpy(m_auth_key, authkey, sizeof(m_auth_key));
+  m_auth_key[sizeof(m_auth_key)-1] = '\0';
+
+  // Get the real update interval
+  m_real_timestep = this->worldfile.ReadFloat(0, "real_timestep", 0.100);
+
+  // Get the simulated update interval
+  m_sim_timestep = this->worldfile.ReadFloat(0, "sim_timestep", 0.100);
+  
+  // Iterate through sections and create objects as needs be
+  for (int section = 1; section < this->worldfile.GetSectionCount(); section++)
+  {
+    // Find out what type of object this is,
+    // and what line it came from.
+    const char *type = this->worldfile.GetSectionType(section);
+    int line = this->worldfile.ReadInt(section, "line", -1);
+
+    // Ignore some types, since we have already dealt with them
+    if (strcmp(type, "environment") == 0)
+      continue;
+
+    // Find the parent object
+    CEntity *parent = NULL;
+    int psection = this->worldfile.GetSectionParent(section);
+    for (int i = 0; i < GetObjectCount(); i++)
+    {
+      CEntity *object = GetObject(i);
+      if (GetObject(i)->worldfile_section == psection)
+        parent = object;
+    }
+
+    // Create the object
+    CEntity *object = CreateObject(type, parent);
+    if (object != NULL)
+    {      
+      // Store which section it came from (so we know where to
+      // save it to later).
+      object->worldfile_section = section;
+
+      // Work out whether or not its a local object
+      // if the object has this host's name,
+      // set the local flag to show that this computer must
+      // update the object
+      // NEEDS FIXING AH
+      strncpy( object->m_hostname, current_hostname, HOSTNAME_SIZE );
+      if(CheckHostname(object->m_hostname))
+        object->m_local = true;
+      else
+        object->m_local = false;
+      
+      // Let the object load itself
+      if (!object->Load(&this->worldfile, section))
+        return false;
+
+      // Add to list of objects
+      AddObject(object);
+    }
+    else
+      PRINT_ERR2("line %d : unrecognized type [%s]", line, type);
+  }
+
+#ifdef INCLUDE_RTK2
+  // Initialize the GUI, but dont start it yet
+  if (!LoadGUI(&this->worldfile))
+    return false;
+#endif
+
+  // See if there was anything we didnt understand in the world file
+  this->worldfile.WarnUnused();
+  
+  return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Save objects to a file
+bool CWorld::Save(const char *filename)
+{
+  // Let each object save itself
+  for (int i = 0; i < GetObjectCount(); i++)
+  {
+    CEntity *object = GetObject(i);
+    if (!object->Save(&this->worldfile, object->worldfile_section))
+      return false;
+  }
+
+  // Save everything
+  if (!this->worldfile.Save(filename))
+    return false;
+
+  return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Startup routine 
+bool CWorld::Startup()
+{  
+  PRINT_DEBUG( "** STARTUP **" );
+
+  // we must have at least one object to play with!
+  assert( m_object_count > 0 );
+
+  // Initialise the wall object
+  if (!this->wall->Startup())
+    return false;
+    
+  // Initialise the real time clock
+  // Note that we really do need to set the start time to zero first!
+  m_start_time = 0;
+  m_start_time = GetRealTime();
+    
+  // Initialise the rate counter
+  m_update_ratio = 1;
+  m_update_rate = 0;
+  
+  // kick off the pose and envirnment servers, unless we disabled them earlier
+  if( m_run_pose_server )
+    SetupPoseServer();
+  
+  if( m_run_environment_server )
+  {
+    pthread_t tid_dummy;
+    pthread_create(&tid_dummy, NULL, &EnvServer, (void *)NULL );  
+      
+    // env server sets this flag when it's ready
+    while( !m_env_server_ready )
+      usleep( 100000 );
+  }
+  
+  // Create the device directory and clock 
+  CreateClockDevice();
+  
+  // Startup all the objects
+  // Devices will create and initialize their device files
+  for (int i = 0; i < m_object_count; i++)
+  {
+    if( !m_object[i]->Startup() )
+    {
+      PRINT_ERR("object startup failed");
+      return false;
+    }
+  }
+  
+  // exec and set up Player
+  StartupPlayer();
+  
+  // spawn an XS process, unless we disabled it (rtkstage disables xs by default)
+  if( m_run_xs && m_run_pose_server && m_run_environment_server ) 
+    SpawnXS();
+
+#ifdef INCLUDE_RTK2
+  // Start the GUI
+  StartupGUI();
+#endif
+  
+  // start the real-time interrupts going
+  StartTimer( m_real_timestep );
+  
+#ifdef INCLUDE_RTK
+  // Initialise the message router
+  m_router->add_sink(RTK_UI_DRAW, (void (*) (void*, void*)) &OnUiDraw, this);
+  m_router->add_sink(RTK_UI_MOUSE, (void (*) (void*, void*)) &OnUiMouse, this);
+  m_router->add_sink(RTK_UI_PROPERTY, (void (*) (void*, void*)) &OnUiProperty, this);
+  m_router->add_sink(RTK_UI_BUTTON, (void (*) (void*, void*)) &OnUiButton, this);
+#endif
+ 
+  PRINT_DEBUG( "** STARTUP DONE **" );
+  return true;
+}
+    
+
+///////////////////////////////////////////////////////////////////////////
+// Shutdown routine 
+void CWorld::Shutdown()
+{
+#ifdef INCLUDE_RTK2
+  // Stop the GUI
+  ShutdownGUI();
+#endif
+
+  // Shutdown player
+  ShutdownPlayer();
+  
+  // Shutdown all the objects
+  // Devices will unlink their device files
+  for (int i = 0; i < m_object_count; i++)
+  {
+    if(m_object[i])
+      m_object[i]->Shutdown();
+  }
   
   // zap the clock device 
   unlink( clockName );
-  
+
+  // Shutdown the wall
+  this->wall->Shutdown();
+
   // delete the device directory
   if( rmdir( m_device_dir ) != 0 )
-    printf( "Stage warning: failed to delete device directory %s\n",
-	    m_device_dir );
+    PRINT_WARN1("failed to delete device directory: [%s]", strerror(errno));
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+// Start the single instance of player
+bool CWorld::StartupPlayer( void )
+{
+  PRINT_DEBUG( "** STARTUP PLAYER **" );
+
+  // startup any player devices - no longer hacky! - RTV
+  // we need to have fixed up all the shared memory and pointers already
+  
+  // count the number of Players on this host
+  int player_count = 0;
+  for (int i = 0; i < m_object_count; i++)
+    if(m_object[i]->m_stage_type == PlayerType && 
+       CheckHostname(m_object[i]->m_hostname))
+      player_count++;
+  
+  // if there is at least 1 player device, we start a copy of Player
+  // running.
+  if (player_count == 0)
+    return true;
+
+  // ----------------------------------------------------------------------
+  // fork off a player process to handle robot I/O
+  if( (this->player_pid = fork()) < 0 )
+  {
+    PRINT_ERR1("error forking for player: [%s]", strerror(errno));
+    return false;
+  }
+
+  // If we are the nmew child process...
+  if (this->player_pid == 0)
+  {
+    // pass in the number of ports player should find in the IO directory
+    // We tell it how many unique ports it should find in the
+    // io directory, just as a sanity check.
+    char portBuf[32];
+    sprintf( portBuf, "%d", (int) player_count );
+
+    // release controlling tty so Player doesn't get signals
+    setpgrp();
+
+    // we assume Player is in the current path
+    if( execlp( "player", "player",
+                //"-ports", portBuf, 
+                "-stage", DeviceDirectory(), 
+                (strlen(m_auth_key)) ? "-key" : NULL,
+                (strlen(m_auth_key)) ? m_auth_key : NULL,
+                NULL) < 0 )
+    {
+      PRINT_ERR1("error executing stage [%s]\n"
+                 "Make sure player is in your path.", strerror(errno));
+      if(!kill(getppid(),SIGINT))
+      {
+        PRINT_ERR1("error killing player: [%s]", strerror(errno));
+        exit(-1);
+      }
+    }
+  }
+  
+  PRINT_DEBUG( "** STARTUP PLAYER DONE **" );
+  return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Stop player instance
+void CWorld::ShutdownPlayer()
+{
+  int wait_retval;
+
+  if(this->player_pid)
+  {
+    if(kill(this->player_pid,SIGTERM))
+      PRINT_ERR1("error killing player: [%s]", strerror(errno));
+    if((wait_retval = waitpid(this->player_pid,NULL,0)) == -1)
+      PRINT_ERR1("waitpid failed: [%s]", strerror(errno));
+    this->player_pid = 0;
+  }
+}
+
+
 /////////////////////////////////////////////////////////////////////////
-// -- create the memory map for IPC with Player 
-//
+// Clock device -- create the memory map for IPC with Player 
 bool CWorld::CreateClockDevice( void )
 { 
-
   // get the user's name
   struct passwd* user_info = getpwuid( getuid() );
 
@@ -224,28 +653,28 @@ bool CWorld::CreateClockDevice( void )
 
   // make a device directory from a base name and the user's name
   sprintf( m_device_dir, "%s.%s.%d", 
-	   IOFILENAME, user_info->pw_name, m_instance++ );
+           IOFILENAME, user_info->pw_name, m_instance++ );
   
   if( mkdir( m_device_dir, S_IRWXU | S_IRWXG | S_IRWXO ) == -1 )
+  {
+    if( errno != EEXIST )
     {
-      if( errno != EEXIST )
-	{
-	  perror( "Stage: failed to make device directory" );
-	  exit( -1 );
-	}
+      perror( "Stage: failed to make device directory" );
+      exit( -1 );
     }
+  }
 
   char hostdir[256];
   sprintf( hostdir, "%s", m_device_dir );
 
   if( mkdir( hostdir, S_IRWXU | S_IRWXG | S_IRWXO ) == -1 )
+  {
+    if( errno != EEXIST )
     {
-      if( errno != EEXIST )
-	{
-	  perror( "Stage: failed to make host directory" );
-	  exit( -1 );
-	}
+      perror( "Stage: failed to make host directory" );
+      exit( -1 );
     }
+  }
   
   //printf( "Created directories %s\n", hostdir );
   //printf( "[Instance %d]", m_instance-1 );
@@ -263,33 +692,33 @@ bool CWorld::CreateClockDevice( void )
 
   int tfd=-1;
   if( (tfd = open( clockName, O_RDWR | O_CREAT | O_TRUNC, 
-		   S_IRUSR | S_IWUSR )) < 0 )
+                   S_IRUSR | S_IWUSR )) < 0 )
   {
-      perror("Failed to create clock device" );
-      exit( -1 );
-    } 
+    perror("Failed to create clock device" );
+    exit( -1 );
+  } 
   
   // make the file the right size
   off_t sz = clocksize;
 
   if( ftruncate( tfd, sz ) < 0 )
-    {
-      perror( "Failed to set clock file size" );
-      return false;
-    }
+  {
+    perror( "Failed to set clock file size" );
+    return false;
+  }
   
   int r;
   if( (r = write( tfd, &m_sim_timeval, sizeof( m_sim_timeval ))) < 0 )
     perror( "failed to write time into clock device" );
   
   m_time_io = (struct timeval*)mmap( NULL, clocksize, 
-				     PROT_READ | PROT_WRITE, MAP_SHARED,
-				     tfd, (off_t) 0);
+                                     PROT_READ | PROT_WRITE, MAP_SHARED,
+                                     tfd, (off_t) 0);
   if (m_time_io == MAP_FAILED )
-    {
-      perror( "Failed to map memory" );
-      return false;
-    }
+  {
+    perror( "Failed to map memory" );
+    return false;
+  }
   
   close( tfd ); // can close fd once mapped
   
@@ -300,10 +729,10 @@ bool CWorld::CreateClockDevice( void )
   // Create the lock object for the shared mem
   //
   if ( !CreateShmemLock() )
-    {
-      perror( "failed to create lock for shared memory" );
-      return false;
-    }
+  {
+    perror( "failed to create lock for shared memory" );
+    return false;
+  }
   
 #ifdef DEBUG
   cout << "Successfully mapped clock device." << endl;  
@@ -312,191 +741,6 @@ bool CWorld::CreateClockDevice( void )
   return true;
 }
 
-bool CWorld::StartupPlayer( void )
-{
-#ifdef VERBOSE
-  puts( "** STARTUP PLAYER **" );
-#endif
-
-  // startup any player devices - no longer hacky! - RTV
-  // we need to have fixed up all the shared memory and pointers already
-
-  // count the number of Players on this host
-  // 
-  int player_count = 0;
-  for (int i = 0; i < m_object_count; i++)
-    if(m_object[i]->m_stage_type == PlayerType && 
-       CheckHostname(m_object[i]->m_hostname))
-      player_count++;
-  
-  // if there is at least 1 player device, we start a copy of Player
-  // running. We tell it how many unique ports it should find in the
-  // io directory, just as a sanity check.
-  if( player_count > 0 && CPlayerDevice::StartupPlayer(player_count) == -1)
-    {
-      cout << "PlayerDevice failed StartupPlayer()" << endl;
-      return false;
-    }
-  
-#ifdef VERBOSE
-  puts( "** STARTUP PLAYER DONE **" );
-#endif
-
-  return true;
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Startup routine 
-//
-bool CWorld::Startup()
-{  
-#ifdef DEBUG
-  puts( "** STARTUP **" );
-#endif
-
-  // we must have at least one object to play with!
-  assert( m_object_count > 0 );
-  
-  // Initialise the broadcast queue
-  //
-  InitBroadcast();
-
-  // Initialise the real time clock
-  // Note that we really do need to set the start time to zero first!
-  //
-  m_start_time = 0;
-  m_start_time = GetRealTime();
-    
-  // Initialise the rate counter
-  //
-  m_update_ratio = 1;
-  m_update_rate = 0;
-  
-  
-  // kick off the pose and envirnment servers, unless we disabled them earlier
-  if( m_run_pose_server )  SetupPoseServer();
-  
-  if( m_run_environment_server )
-    {
-      pthread_t tid_dummy;
-      pthread_create(&tid_dummy, NULL, &EnvServer, (void *)NULL );  
-      
-      // env server sets this flag when it's ready
-      while( !m_env_server_ready )
-	usleep( 100000 );
-    }
-  
-  // spawn an XS process, unless we disabled it (rtkstage disables xs by default)
-  if( m_run_xs && m_run_pose_server && m_run_environment_server ) 
-    SpawnXS();
-  
-  // Startup all the objects
-  // this lets them calculate how much shared memory they'll need
-  for (int i = 0; i < m_object_count; i++)
-    {
-      if( !m_object[i]->Startup() )
-	{
-	  cout << "Object " << (int)(m_object[i]) 
-	       << " failed Startup()" << endl;
-	  return false;
-	}
-
-      fflush( stdout );
-    }
-  
-  // Create the device directory and clock 
-  CreateClockDevice();
-  
-  // create all the other devices
-  for (int i = 0; i < m_object_count; i++)
-    {
-      if( !m_object[i]->CreateDevice() )
-	{
-	  cout << "Object " << (int)(m_object[i]) 
-	       << " failed CreateDevice()" << endl;
-	  return false;
-	}
-      
-      fflush( stdout );
-    }
-
-  // exec and set up Player
-  StartupPlayer();
-
-  // start the real-time interrupts going
-  StartTimer( m_real_timestep );
-
-  // Initialise the GUI
-  //
-#ifdef INCLUDE_RTK
-  // Initialise the message router
-  //
-  m_router->add_sink(RTK_UI_DRAW, (void (*) (void*, void*)) &OnUiDraw, this);
-  m_router->add_sink(RTK_UI_MOUSE, (void (*) (void*, void*)) &OnUiMouse, this);
-  m_router->add_sink(RTK_UI_PROPERTY, (void (*) (void*, void*)) &OnUiProperty, this);
-  m_router->add_sink(RTK_UI_BUTTON, (void (*) (void*, void*)) &OnUiButton, this);
-
-  //double ui_time = 0;
-#endif
- 
-#ifdef DEBUG 
- puts( "** STARTUP DONE **" );
-#endif
-
-  return true;
-}
-    
-
-///////////////////////////////////////////////////////////////////////////
-// Shutdown routine 
-//
-void CWorld::Shutdown()
-{
-    // Stop the world thread
-    //
-  //StopThread();
-    
-    // Shutdown all the objects
-    //
-    for (int i = 0; i < m_object_count; i++)
-    {
-      if(m_object[i])
-        m_object[i]->Shutdown();
-    }
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Start world thread (will call Main)
-//
-//  bool CWorld::StartThread()
-//  {
-//    puts( "** START THREAD **" );
-
-//      // Start the simulator thread
-//      // 
-//      if (pthread_create(&m_thread, NULL, &Main, this) < 0)
-//          return false;
-
-//    puts( "** START THREAD OK **" );
-    
-//      return true;
-//  }
-
-
-//  ///////////////////////////////////////////////////////////////////////////
-//  // Stop world thread
-//  //
-//  void CWorld::StopThread()
-//  {
-//      // Send a cancellation request to the thread
-//      //
-//      pthread_cancel(m_thread);
-
-//      // Wait forever for thread to terminate
-//      //
-//      pthread_join(m_thread, NULL);
-//  }
 
 void CWorld::StartTimer( double interval )
 {
@@ -507,11 +751,11 @@ void CWorld::StartTimer( double interval )
 
   //install signal handler for timing
   if( signal( SIGALRM, &TimerHandler ) == SIG_ERR )
-    {
-      cout << "Failed to install signal handler" << endl;
-      exit( -1 );
-    }
-  
+  {
+    cout << "Failed to install signal handler" << endl;
+    exit( -1 );
+  }
+
   //start timer with chosen interval (specified in milliseconds)
   struct itimerval tick;
   // seconds
@@ -521,10 +765,10 @@ void CWorld::StartTimer( double interval )
     (long)fmod( interval * MILLION, MILLION); 
   
   if( setitimer( ITIMER_REAL, &tick, 0 ) == -1 )
-    {
-      cout << "failed to set timer" << endl;;
-      exit( -1 );
-    }
+  {
+    cout << "failed to set timer" << endl;;
+    exit( -1 );
+  }
 }
 
 
@@ -534,7 +778,7 @@ void CWorld::StartTimer( double interval )
 void CWorld::Main(void)
 {
   //puts( "** MAIN **" );
-   //assert( arg == 0 );
+  //assert( arg == 0 );
   
   static double loop_start = GetRealTime();
 
@@ -545,77 +789,69 @@ void CWorld::Main(void)
   
   //while (true)
   // {
-      // Set the timer flag depending on the current mode.
-      // If we're NOT in realtime mode, the timer is ALWAYS expired
-      // so we run as fast as possible
-      m_real_timestep > 0.0 ? g_timer_expired = 0 : g_timer_expired = 1;
+  // Set the timer flag depending on the current mode.
+  // If we're NOT in realtime mode, the timer is ALWAYS expired
+  // so we run as fast as possible
+  m_real_timestep > 0.0 ? g_timer_expired = 0 : g_timer_expired = 1;
       
-      // Check for thread cancellation
-      //pthread_testcancel();
+  // Check for thread cancellation
+  //pthread_testcancel();
       
-      // look for new connections to the poseserver
-      ListenForPoseConnections();
+  // look for new connections to the poseserver
+  ListenForPoseConnections();
 
-      // calculate new world state
-      if (m_enable) 
-	Update();
-      else
-	usleep( 100000 ); // stops us hogging the machine while we're paused
+  // calculate new world state
+  if (m_enable) 
+    Update();
+  else
+    usleep( 100000 ); // stops us hogging the machine while we're paused
 
-      // for logging statistics
-      double update_time = GetRealTime();
+  // for logging statistics
+  double update_time = GetRealTime();
       
-      if( m_pose_connection_count == 0 )
+  if( m_pose_connection_count == 0 )
 	{      
 	  m_step_num++;
 	  
 	  // if we have spare time, sleep until it runs out
 	  if( g_timer_expired < 1 ) sleep( 1 ); 
 	}
-      else // handle the connections
+  else // handle the connections
 	{
 	  PoseWrite(); // writes out anything that is dirty
 	  PoseRead();
 	}
       
-      // for logging statistics
-      double loop_end = GetRealTime(); 
-      double loop_time = loop_end - loop_start;
-      double sleep_time = loop_end - update_time;
+  // for logging statistics
+  double loop_end = GetRealTime(); 
+  double loop_time = loop_end - loop_start;
+  double sleep_time = loop_end - update_time;
       
-      // set this here so we're timing the output time too.
-      loop_start = GetRealTime();
+  // set this here so we're timing the output time too.
+  loop_start = GetRealTime();
       
-      // generate console and logfile output
-      if( m_enable ) Output( loop_time, sleep_time );
+  // generate console and logfile output
+  if( m_enable ) Output( loop_time, sleep_time );
 
-      // dump the contents of the matrix to a file
-      //world->matrix->dump();
-      //getchar();	
+  // dump the contents of the matrix to a file
+  //world->matrix->dump();
+  //getchar();	
 
-      /* *** HACK -- should reinstate this somewhere ahoward
-	 if( !runDown ) runStart = timeNow;
-	 else if( (quitTime > 0) && (timeNow > (runStart + quitTime) ) )
-	 exit( 0 );
-      */
-        
-      // Update the GUI every 100ms
-      //
+  // Update the GUI every 100ms
+  //
 #ifdef INCLUDE_RTK
-      if (GetRealTime() - ui_time > 0.050)
-        {
+  if (GetRealTime() - ui_time > 0.050)
+  {
 	  ui_time = GetRealTime();
 	  m_router->send_message(RTK_UI_FORCE_UPDATE, NULL);
-        }
+  }
 #endif
-      // }
+  // }
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Update the world
-//
-extern bool quit;
 void CWorld::Update()
 {  
   // Update the simulation time (in both formats)
@@ -636,114 +872,39 @@ void CWorld::Update()
 
   // Do the actual work -- update the objects 
   for (int i = 0; i < m_object_count; i++)
-    {
-      // if this host manages this object
-      //if( m_object[i]->m_local )
-	m_object[i]->Update( m_sim_time ); // update it 
-    };
+  {
+    // if this host manages this object
+    //if( m_object[i]->m_local )
+    m_object[i]->Update( m_sim_time ); // update it 
+  };
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Get the sim time
 // Returns time in sec since simulation started
-//
 double CWorld::GetTime()
 {
-    return m_sim_time;
+  return m_sim_time;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Get the real time
 // Returns time in sec since simulation started
-//
 double CWorld::GetRealTime()
 {
-    struct timeval tv;
-    gettimeofday( &tv, NULL );
-    double time = tv.tv_sec + (tv.tv_usec / 1000000.0);
-    return time - m_start_time;
+  struct timeval tv;
+  gettimeofday( &tv, NULL );
+  double time = tv.tv_sec + (tv.tv_usec / 1000000.0);
+  return time - m_start_time;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Initialise the world grids
-//
-bool CWorld::InitGrids(const char *env_file)
-{
-  // create a new background image from the pnm file
-  // If we cant find it under the given name,
-  // we look for a zipped version.
-  
-  // we use the image class just for its nice loading stuff.
-  // this could be moved into the matrix pretty easily
-  Nimage* img = new Nimage;
-
-  // Try to guess the file type from the extension
-  int len = strlen( env_file );
-  if( len > 0 )
-  {
-    if (strcmp(&(env_file[len - 4]), ".fig") == 0)
-    {
-      if (!img->load_fig(env_file, this->ppm, this->scale))
-        return false;
-    }
-    else if( strcmp( &(env_file[ len - 7 ]), ".pnm.gz" ) == 0 )
-	{
-	  if (!img->load_pnm_gz(env_file))
-	    return false;
-	}
-    else if (!img->load_pnm(env_file))
-    {
-	    char zipname[128];
-	    strcpy(zipname, env_file);
-	    strcat(zipname, ".gz");
-	    if (!img->load_pnm_gz(zipname))
-	      return false;
-    }
-  }
-  else
-  {
-    cout << "Error: no world image file supplied. Quitting." << endl;
-    exit( 1 );
-  }
-
-  int width = img->width;
-  int height = img->height;
-  
-  // draw an outline around the background image
-  img->draw_box( 0,0,width-1,height-1, 0xFF );
-  
-  matrix = new CMatrix( width, height );
-
-  wall = new CEntity( this, 0 );
-  
-  // set up the wall object, as it doesn't have a special class
-  wall->m_stage_type = WallType;
-  wall->laser_return = LaserReflect; 
-  wall->sonar_return = true;
-  wall->idar_return = IDARReflect;
-  wall->obstacle_return = true;
-  wall->channel_return = 0; // opaque!
-  wall->puck_return = false; // we trade velocities with pucks
-
-  strcpy( wall->m_color_desc, WALL_COLOR );
-  ColorFromString( &(wall->m_color), WALL_COLOR );
-  
-  // Copy fixed obstacles into matrix
-  //
-  for (int y = 0; y < img->height; y++)
-    for (int x = 0; x < img->width; x++)
-      if (img->get_pixel(x, (height-1)-y) != 0) matrix->set_cell( x,y,wall );
-
-  // kill it!
-  if( img ) delete img;
-  
-  return true;
-}
-
+// Set a rectangle in the world grid
 void CWorld::SetRectangle(double px, double py, double pth,
-                          double dx, double dy, CEntity* ent )
+                          double dx, double dy, CEntity* ent, bool add)
 {
     Rect rect;
 
@@ -766,16 +927,15 @@ void CWorld::SetRectangle(double px, double py, double pth,
 
     rect.botrx = (int) ((px - cx + sy) * ppm);
     rect.botry = (int) ((py - sx - cy) * ppm);
-
     
-    matrix->draw_rect( rect, ent );
+    matrix->draw_rect( rect, ent, add );
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Set a circle in the world grid
-//
-void CWorld::SetCircle(double px, double py, double pr,
-                       CEntity* ent )
+void CWorld::SetCircle(double px, double py, double pr, CEntity* ent,
+                       bool add )
 {
     // Convert from world to image coords
     //
@@ -783,8 +943,9 @@ void CWorld::SetCircle(double px, double py, double pr,
     int y = (int) (py * ppm);
     int r = (int) (pr * ppm);
     
-    matrix->draw_circle( x,y,r,ent );
+    matrix->draw_circle( x,y,r,ent, add);
 }
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Add an object to the world
@@ -812,59 +973,6 @@ void CWorld::AddObject(CEntity *object)
   
   // insert the object and increment the count
   m_object[m_object_count++] = object;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Initialise the broadcast queue
-//
-void CWorld::InitBroadcast()
-{
-    m_broadcast_count = 0;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Add a broadcast device to the list
-//
-void CWorld::AddBroadcastDevice(CBroadcastDevice *device)
-{
-    if (m_broadcast_count >= ARRAYSIZE(m_broadcast))
-    {
-        printf("warning -- no room in broadcast device list\n");
-        return;
-    }
-    m_broadcast[m_broadcast_count++] = device;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Remove a broadcast device from the list
-//
-void CWorld::RemoveBroadcastDevice(CBroadcastDevice *device)
-{
-    for (int i = 0; i < m_broadcast_count; i++)
-    {
-        if (m_broadcast[i] == device)
-        {
-            memmove(m_broadcast + i,
-                    m_broadcast + i + 1,
-                    (m_broadcast_count - i - 1) * sizeof(m_broadcast[0]));
-            return;
-        }
-    }
-    printf("warning -- broadcast device not found\n");
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Get a broadcast device from the list
-//
-CBroadcastDevice* CWorld::GetBroadcastDevice(int i)
-{
-    if (i < 0 || i >= ARRAYSIZE(m_broadcast))
-        return NULL;
-    return m_broadcast[i];
 }
 
 
@@ -1073,26 +1181,26 @@ void CWorld::OnUiButton(CWorld *world, RtkUiButtonData* data)
 //
 void CWorld::DrawBackground(RtkUiDrawData *data)
 {
-    RTK_TRACE0("drawing background");
+  RTK_TRACE0("drawing background");
 
-    data->set_color(RGB(0, 0, 0));
+  data->set_color(RGB(0, 0, 0));
     
-    // Loop through the image and draw points individually.
-    // Yeah, it's slow, but only happens once.
-    //
-    for (int y = 0; y < matrix->height; y++)
+  // Loop through the image and draw points individually.
+  // Yeah, it's slow, but only happens once.
+  //
+  for (int y = 0; y < matrix->height; y++)
+  {
+    for (int x = 0; x < matrix->width; x++)
     {
-        for (int x = 0; x < matrix->width; x++)
-        {
-	  if( matrix->is_type(x, y, WallType ) )
-            {
+      if( matrix->is_type(x, y, WallType ) )
+      {
 	      double px = (double) x / ppm;
 	      double py = (double)  y / ppm;
 	      double s = 1.0 / ppm;
 	      data->rectangle(px, py, px + s, py + s);
-            }
-        }
+      }
     }
+  }
 }
 
 
@@ -1101,50 +1209,95 @@ void CWorld::DrawBackground(RtkUiDrawData *data)
 //
 void CWorld::DrawDebug(RtkUiDrawData *data, int options)
 {
-    data->set_color(RTK_RGB(0, 0, 255));
+  data->set_color(RTK_RGB(0, 0, 255));
     
-    // Loop through the image and draw points individually.
-    // Yeah, it's slow, but only happens for debugging
-    //
-    for (int y = 0; y < matrix->get_height(); y++)
+  // Loop through the image and draw points individually.
+  // Yeah, it's slow, but only happens for debugging
+  //
+  for (int y = 0; y < matrix->get_height(); y++)
+  {
+    for (int x = 0; x < matrix->get_width(); x++)
     {
-        for (int x = 0; x < matrix->get_width(); x++)
-        {
-            CEntity **entity = matrix->get_cell(x, y);
+      CEntity **entity = matrix->get_cell(x, y);
 
-            for (int i = 0; entity[i] != NULL; i++)
-            {
-                double px = (double) x / ppm;
-                double py = (double) y / ppm;
-                double s = 1.0 / ppm;
+      for (int i = 0; entity[i] != NULL; i++)
+      {
+        double px = (double) x / ppm;
+        double py = (double) y / ppm;
+        double s = 1.0 / ppm;
 
-                if (options == DBG_OBSTACLES)
-                    if (entity[i]->obstacle_return)
-                        data->rectangle(px, py, px + s, py + s);
-                if (options == DBG_PUCKS)
-                    if (entity[i]->puck_return)
-                        data->rectangle(px, py, px + s, py + s);
-                if (options == DBG_LASER)
-                    if (entity[i]->laser_return)
-                        data->rectangle(px, py, px + s, py + s);
-                if (options == DBG_VISION)
-                    if (entity[i]->channel_return)
-                        data->rectangle(px, py, px + s, py + s);
-                if (options == DBG_SONAR)
-                    if (entity[i]->sonar_return)
-                        data->rectangle(px, py, px + s, py + s);
-            }
-        }
+        if (options == DBG_OBSTACLES)
+          if (entity[i]->obstacle_return)
+            data->rectangle(px, py, px + s, py + s);
+        if (options == DBG_PUCKS)
+          if (entity[i]->puck_return)
+            data->rectangle(px, py, px + s, py + s);
+        if (options == DBG_LASER)
+          if (entity[i]->laser_return)
+            data->rectangle(px, py, px + s, py + s);
+        if (options == DBG_VISION)
+          if (entity[i]->channel_return)
+            data->rectangle(px, py, px + s, py + s);
+        if (options == DBG_SONAR)
+          if (entity[i]->sonar_return)
+            data->rectangle(px, py, px + s, py + s);
+      }
     }
+  }
 }
 
 #endif // INCLUDE_RTK
+
+#ifdef INCLUDE_RTK2
+
+// Initialise the GUI
+bool CWorld::LoadGUI(CWorldFile *worldfile)
+{
+  int section = worldfile->LookupSection("rtk");
+
+  // Size in pixels
+  int sx = (int) worldfile->ReadTupleFloat(section, "size", 0, this->matrix->width);
+  int sy = (int) worldfile->ReadTupleFloat(section, "size", 1, this->matrix->height);
+
+  // Scale
+  double scale = worldfile->ReadLength(section, "scale", 1 / this->ppm);
+  
+  // Size in meters
+  double dx = sx * scale;
+  double dy = sy * scale;
+  
+  this->app = rtk_app_create();
+  rtk_app_size(this->app, sx, sy);
+  rtk_app_refresh_rate(this->app, 10);
+  
+  this->canvas = rtk_canvas_create(this->app);
+  rtk_canvas_size(this->canvas, sx, sy);
+  rtk_canvas_scale(this->canvas, dx / sx, dy / sy);
+  rtk_canvas_origin(this->canvas, dx / 2, dy / 2);
+
+  return true;
+}
+
+// Start the GUI
+bool CWorld::StartupGUI()
+{
+  rtk_app_start(this->app);
+  return true;
+}
+
+// Stop the GUI
+void CWorld::ShutdownGUI()
+{
+  rtk_app_stop(this->app);
+}
+
+#endif
 
   
 char* CWorld::StringType( StageType t )
 {
   switch( t )
-    {
+  {
     case NullType: return "None"; 
     case WallType: return "Wall"; break;
     case PlayerType: return "Player"; 
@@ -1168,7 +1321,7 @@ char* CWorld::StringType( StageType t )
     case PuckType: return "Puck"; 
     case OccupancyType: return "Occupancy"; 
     case IDARType: return "IDAR";
-    }	 
+  }	 
   return( "unknown" );
 }
   
@@ -1182,35 +1335,35 @@ void CWorld::SpawnXS( void )
   if( (pid = fork()) < 0 )
     cerr << "fork error in SpawnXS()" << endl;
   else
+  {
+    if( pid == 0 ) // new child process
     {
-      if( pid == 0 ) // new child process
-        {
-	  char envbuf[32];
-	  sprintf( envbuf, "%d", m_env_port );
+      char envbuf[32];
+      sprintf( envbuf, "%d", m_env_port );
 
-	  char posebuf[32];
-	  sprintf( posebuf, "%d", m_pose_port );
+      char posebuf[32];
+      sprintf( posebuf, "%d", m_pose_port );
 	  
-	  // we assume xs is in the current path
-	  if( execlp( "xs", "xs",
-		      "-ep", envbuf,
-		      "-tp", posebuf, NULL ) < 0 )
+      // we assume xs is in the current path
+      if( execlp( "xs", "xs",
+                  "-ep", envbuf,
+                  "-tp", posebuf, NULL ) < 0 )
 	    {
 	      cerr << "exec failed in SpawnXS(): make sure XS can be found"
-		" in the current path."
-		   << endl;
+          " in the current path."
+             << endl;
 	      exit( -1 ); // die!
 	    }
-	}
-      else
-	{
-	  //puts( "[XS]" );
-	  //fflush( stdout );
-	}
     }
+    else
+    {
+      //puts( "[XS]" );
+      //fflush( stdout );
+    }
+  }
 }
 
-int CWorld::ColorFromString( StageColor* color, char* colorString )
+int CWorld::ColorFromString( StageColor* color, const char* colorString )
 {
   ifstream db( m_color_database_filename );
   
@@ -1222,46 +1375,42 @@ int CWorld::ColorFromString( StageColor* color, char* colorString )
   //cout << "Searching for " << colorString << " in " <<  m_color_database_filename << endl; 
 
   while( !db.eof() && !db.bad() )
+  {
+    char c;
+    char line[255];
+    //char name[255];
+      
+    db.get( line, 255, '\n' ); // read in a description string
+      
+    //cout << "Read entry: " << line << endl;
+
+    if( db.get( c ) && c != '\n' )
+      cout << "Warning: line too long in color database file" << endl;
+      
+    if( line[0] == '!' || line[0] == '#' || line[0] == '%' ) 
+      continue; // it's a macro or comment line - ignore the line
+      
+    int chars_matched = 0;
+    sscanf( line, "%d %d %d %n", &red, &green, &blue, &chars_matched );
+      
+    // name points to the rest of the line, after we've matched out the colors
+    char* name = line + chars_matched;
+
+    //printf( "Parsed: %d %d %d :%s\n", red, green, blue, name );
+    //fflush( stdout );
+
+    if( strcmp( name, colorString ) == 0 ) // the name matches!
     {
-      char c;
-      char line[255];
-      //char name[255];
-      
-      db.get( line, 255, '\n' ); // read in a description string
-      
-      //cout << "Read entry: " << line << endl;
-
-      if( db.get( c ) && c != '\n' )
-	cout << "Warning: line too long in color database file" << endl;
-      
-      if( line[0] == '!' || line[0] == '#' || line[0] == '%' ) 
-	continue; // it's a macro or comment line - ignore the line
-      
-      int chars_matched = 0;
-      sscanf( line, "%d %d %d %n", &red, &green, &blue, &chars_matched );
-      
-      // name points to the rest of the line, after we've matched out the colors
-      char* name = line + chars_matched;
-
-      //printf( "Parsed: %d %d %d :%s\n", red, green, blue, name );
-      //fflush( stdout );
-
-      if( strcmp( name, colorString ) == 0 ) // the name matches!
-	{
-	  color->red = (unsigned short)red;
-	  color->green = (unsigned short)green;
-	  color->blue = (unsigned short)blue;
+      color->red = (unsigned short)red;
+      color->green = (unsigned short)green;
+      color->blue = (unsigned short)blue;
 	  
-	  db.close();
+      db.close();
 	  
-	  return true;
-	}
+      return true;
     }
-  
+  }
   return false;
-  
-  
-      
 }  
 
 // returns true if the given hostname matches our hostname, false otherwise
@@ -1271,15 +1420,15 @@ bool CWorld::CheckHostname(char* host)
   //  host, m_hostname, m_hostname_short ); 
 
   if(!strcmp(m_hostname,host) || !strcmp(m_hostname_short,host))
-    {
-      //puts( "TRUE" );
-      return true;
-    }
+  {
+    //puts( "TRUE" );
+    return true;
+  }
   else
-    {
-      //puts( "FALSE" );
-      return false;
-    }
+  {
+    //puts( "FALSE" );
+    return false;
+  }
 }
 
 

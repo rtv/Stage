@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/miscdevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.5 $
+//  $Author: inspectorg $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)

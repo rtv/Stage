@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.15 $
+//  $Author: inspectorg $
+//  $Revision: 1.16 $
 //
 // Usage:
 //  (empty)
@@ -24,17 +24,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_RTK_TRACE 1
-
 #include <math.h>
-
 #include "world.hh"
 #include "positiondevice.hh"
 #include "raytrace.hh"
 
+
 ///////////////////////////////////////////////////////////////////////////
 // Constructor
-//
 CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
   : CEntity( world, parent )
 {    
@@ -44,11 +41,8 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
   m_config_len = 1; // configurable!
   
   m_player_type = PLAYER_POSITION_CODE; // from player's messages.h
-  
   m_stage_type = RectRobotType;
-
-  strcpy( m_color_desc, POSITION_COLOR );
-
+  m_color_desc = POSITION_COLOR;
 
   // set up our sensor response
   laser_return = LaserTransparent;
@@ -80,7 +74,7 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
   m_mass = 20.0;
   
   // Set the default shape
-  m_shape = rectangle;
+  this->shape = ShapeRect;
   
 #ifdef INCLUDE_RTK
     m_mouse_radius = 0.400;
@@ -88,6 +82,8 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
 #endif
 }
 
+
+/* REMOVE
 ///////////////////////////////////////////////////////////////////////////
 // Load the object from an argument list
 //
@@ -141,6 +137,7 @@ bool CPositionDevice::Save(int &argc, char **argv)
 	
     return true;
 }
+*/
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -150,101 +147,99 @@ void CPositionDevice::Update( double sim_time )
 {
   ASSERT(m_world != NULL);
   
-  
   // if its time to recalculate state
-  //
   if( sim_time - m_last_update >  m_interval )
-    {
-      m_last_update = sim_time;
+  {
+    m_last_update = sim_time;
       
-      if( Subscribed() > 0 )
-	{  
-          // Get latest config
-          unsigned char cfg[m_config_len];
-          int cfg_size;
-          if((cfg_size = GetConfig(cfg,sizeof(cfg))))
-          {
-            switch(cfg[0])
+    if( Subscribed() > 0 )
+    {  
+      // Get latest config
+      unsigned char cfg[m_config_len];
+      int cfg_size;
+      if((cfg_size = GetConfig(cfg,sizeof(cfg))))
+      {
+        switch(cfg[0])
+        {
+          case PLAYER_POSITION_MOTOR_POWER_REQ:
+            /* motor state change request 
+             * 1 = enable motors
+             * 0 = disable motors
+             * (default)
+             *                                  
+             */
+            if(cfg_size-1 != 1)
             {
-              case PLAYER_POSITION_MOTOR_POWER_REQ:
-                /* motor state change request 
-                 * 1 = enable motors
-                 * 0 = disable motors
-                 * (default)
-                 *                                  
-                 */
-                if(cfg_size-1 != 1)
-                {
-                  puts("Arg to motor state change request is wrong size; ignoring");
-                  break;
-                }
-                // right size, but who cares.
-                break;
-              case PLAYER_POSITION_VELOCITY_CONTROL_REQ:
-                /* velocity control mode:
-                 *   0 = direct wheel velocity control (default)
-                 *   1 = separate translational and rotational control
-                 */
-                if(cfg_size-1 != 1)
-                {
-                  puts("Arg to velocity control mode change request is wrong "
-                                                   "size; ignoring");
-                  break;
-                }
-                // right size, but who cares.
-                break;
-              case PLAYER_POSITION_RESET_ODOM_REQ:
-                /* reset position to 0,0,0: no args */
-                if(cfg_size-1 != 0)
-                {
-                  puts("Arg to reset position request is wrong size; ignoring");
-                  break;
-                }
-                m_odo_px = m_odo_py = m_odo_pth = 0.0;
-                break;
-              default:
-                printf("Position device got unknown config request \"%c\"\n",
-                       cfg[0]);
-                break;
+              puts("Arg to motor state change request is wrong size; ignoring");
+              break;
             }
-          }
+            // right size, but who cares.
+            break;
+          case PLAYER_POSITION_VELOCITY_CONTROL_REQ:
+            /* velocity control mode:
+             *   0 = direct wheel velocity control (default)
+             *   1 = separate translational and rotational control
+             */
+            if(cfg_size-1 != 1)
+            {
+              puts("Arg to velocity control mode change request is wrong "
+                   "size; ignoring");
+              break;
+            }
+            // right size, but who cares.
+            break;
+          case PLAYER_POSITION_RESET_ODOM_REQ:
+            /* reset position to 0,0,0: no args */
+            if(cfg_size-1 != 0)
+            {
+              puts("Arg to reset position request is wrong size; ignoring");
+              break;
+            }
+            m_odo_px = m_odo_py = m_odo_pth = 0.0;
+            break;
+          default:
+            printf("Position device got unknown config request \"%c\"\n",
+                   cfg[0]);
+            break;
+        }
+      }
 
-	  // Get the latest command
-	  //
-	  if( GetCommand( &m_command, sizeof(m_command)) == sizeof(m_command))
+      // Get the latest command
+      //
+      if( GetCommand( &m_command, sizeof(m_command)) == sizeof(m_command))
 	    {
 	      ParseCommandBuffer();    // find out what to do    
 	    }
 	  
-	  Move();      // do things
+      Move();      // do things
   
-	  ComposeData();     // report the new state of things
-	  PutData( &m_data, sizeof(m_data)  );     // generic device call
-	}
-      else  
-	{
-	  // the device is not subscribed,
-	  // reset to default settings.
-	  m_odo_px = m_odo_py = m_odo_pth = 0;
-          // also set speeds to zero
-          m_com_vr = m_com_vth = 0;
-	}
+      ComposeData();     // report the new state of things
+      PutData( &m_data, sizeof(m_data)  );     // generic device call
     }
+    else  
+    {
+      // the device is not subscribed,
+      // reset to default settings.
+      m_odo_px = m_odo_py = m_odo_pth = 0;
+      // also set speeds to zero
+      m_com_vr = m_com_vth = 0;
+    }
+  }
   
   double x, y, th;
   GetGlobalPose( x,y,th );
     
   // if we've moved 
   if( (m_map_px != x) || (m_map_py != y) || (m_map_pth != th ) )
-    {
-      Map(false); // erase myself
+  {
+    Map(false); // erase myself
       
-      m_map_px = x; // update the render positions
-      m_map_py = y;
-      m_map_pth = th;
+    m_map_px = x; // update the render positions
+    m_map_py = y;
+    m_map_pth = th;
       
-      Map(true);   // draw myself 
-    }      
+    Map(true);   // draw myself 
+  }      
 }
 
 
@@ -252,50 +247,48 @@ int CPositionDevice::Move()
 {
   double step = m_world->m_sim_timestep;
 
-    // Get the current robot pose
-    //
-    double px, py, pth;
-    GetPose(px, py, pth);
+  // Get the current robot pose
+  //
+  double px, py, pth;
+  GetPose(px, py, pth);
 
-    // Compute a new pose
-    // This is a zero-th order approximation
-    //
-    double qx = px + m_com_vr * step * cos(pth);
-    double qy = py + m_com_vr * step * sin(pth);
-    double qth = pth + m_com_vth * step;
+  // Compute a new pose
+  // This is a zero-th order approximation
+  //
+  double qx = px + m_com_vr * step * cos(pth);
+  double qy = py + m_com_vr * step * sin(pth);
+  double qth = pth + m_com_vth * step;
 
-    // Check for collisions
-    // and accept the new pose if ok
-    //
-    if (InCollision(qx, qy, qth))
-    {
-        this->stall = 1;
-    }
-    else
-    {
-        SetPose(qx, qy, qth);
-        this->stall = 0;
+  // Check for collisions
+  // and accept the new pose if ok
+  //
+  if (InCollision(qx, qy, qth))
+  {
+    this->stall = 1;
+  }
+  else
+  {
+    SetPose(qx, qy, qth);
+    this->stall = 0;
 
-	// if we moved, we mark ourselves dirty
-	if( (px!=qx) || (py!=qy) || (pth!=qth) )
-	  MakeDirtyIfPixelChanged();
+    // if we moved, we mark ourselves dirty
+    if( (px!=qx) || (py!=qy) || (pth!=qth) )
+      MakeDirtyIfPixelChanged();
         
-        // Compute the new odometric pose
-        // Uses a first-order integration approximation
-        //
-        double dr = m_com_vr * step;
-        double dth = m_com_vth * step;
-        m_odo_px += dr * cos(m_odo_pth + dth / 2);
-        m_odo_py += dr * sin(m_odo_pth + dth / 2);
-        m_odo_pth += dth;
+    // Compute the new odometric pose
+    // Uses a first-order integration approximation
+    //
+    double dr = m_com_vr * step;
+    double dth = m_com_vth * step;
+    m_odo_px += dr * cos(m_odo_pth + dth / 2);
+    m_odo_py += dr * sin(m_odo_pth + dth / 2);
+    m_odo_pth += dth;
 
-        // Normalise the odometric angle
-        //
-        m_odo_pth = fmod(m_odo_pth + TWOPI, TWOPI);
-    }
-        
-    
-    return true;
+    // Normalise the odometric angle
+    //
+    m_odo_pth = fmod(m_odo_pth + TWOPI, TWOPI);
+  }
+  return true;
 }
 
 
@@ -304,163 +297,155 @@ int CPositionDevice::Move()
 //
 void CPositionDevice::ParseCommandBuffer()
 {
-    double fv = (short) ntohs(m_command.speed);
-    double fw = (short) ntohs(m_command.turnrate);
+  double fv = (short) ntohs(m_command.speed);
+  double fw = (short) ntohs(m_command.turnrate);
 
-    // Store commanded speed
-    // Linear is in m/s
-    // Angular is in radians/sec
-    //
-    m_com_vr = fv / 1000;
-    m_com_vth = DTOR(fw);
+  // Store commanded speed
+  // Linear is in m/s
+  // Angular is in radians/sec
+  m_com_vr = fv / 1000;
+  m_com_vth = DTOR(fw);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Compose data to send back to client
-//
 void CPositionDevice::ComposeData()
 {
-    // Compute odometric pose
-    // Convert mm and degrees (0 - 360)
-    //
-    double px = m_odo_px * 1000.0;
-    double py = m_odo_py * 1000.0;
-    double pth = RTOD(fmod(m_odo_pth + TWOPI, TWOPI));
+  // Compute odometric pose
+  // Convert mm and degrees (0 - 360)
+  double px = m_odo_px * 1000.0;
+  double py = m_odo_py * 1000.0;
+  double pth = RTOD(fmod(m_odo_pth + TWOPI, TWOPI));
 
-    // Get actual global pose
-    //
-    double gx, gy, gth;
-    GetGlobalPose(gx, gy, gth);
+  // Get actual global pose
+  double gx, gy, gth;
+  GetGlobalPose(gx, gy, gth);
     
-    // normalized compass heading
-    //
-    double compass = fmod( gth + M_PI/2.0 + TWOPI, TWOPI ); 
+  // normalized compass heading
+  double compass = NORMALIZE(gth);
+  if (gth < 0)
+    gth += TWOPI;
   
-    // Construct the data packet
-    // Basically just changes byte orders and some units
-    //
-    m_data.xpos = htonl((int) px);
-    m_data.ypos = htonl((int) py);
-    m_data.theta = htons((unsigned short) pth);
+  // Construct the data packet
+  // Basically just changes byte orders and some units
+  m_data.xpos = htonl((int) px);
+  m_data.ypos = htonl((int) py);
+  m_data.theta = htons((unsigned short) pth);
 
-    m_data.speed = htons((unsigned short) (m_com_vr * 1000.0));
-    m_data.turnrate = htons((short) RTOD(m_com_vth));  
-    m_data.compass = htons((unsigned short)(RTOD(compass)));
-    m_data.stalls = this->stall;
+  m_data.speed = htons((unsigned short) (m_com_vr * 1000.0));
+  m_data.turnrate = htons((short) RTOD(m_com_vth));  
+  m_data.compass = htons((unsigned short)(RTOD(compass)));
+  m_data.stalls = this->stall;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Check to see if the given pose will yield a collision
-//
-
-
 bool CPositionDevice::InCollision(double px, double py, double pth)
 {
-
-  switch( GetShape() ) 
+  switch( this->shape ) 
+  {
+    case ShapeRect:
     {
-    case rectangle:
+      double qx = px + m_offset_x * cos(pth);
+      double qy = py + m_offset_y * sin(pth);
+      CEntity* ent;
+      CRectangleIterator rit( qx, qy, pth, m_size_x, m_size_y, 
+                              m_world->ppm, m_world->matrix );
+	
+      while( (ent = rit.GetNextEntity()) )
       {
-	double qx = px + m_offset_x * cos(pth);
-	double qy = py + m_offset_y * sin(pth);
-	
-	CEntity* ent;
-	
-	CRectangleIterator rit( qx, qy, pth, m_size_x, m_size_y, 
-				m_world->ppm, m_world->matrix );
-	
-	while( (ent = rit.GetNextEntity()) ) 
-	  if( ent != this && ent->obstacle_return )
-	    {
-	//printf( "hit ent %p (%d)\n",
-	      //ent, ent->m_stage_type );
+        if( ent != this && ent->obstacle_return )
+        {
+          //printf( "hit ent %p (%d)\n",
+          //ent, ent->m_stage_type );
 	      
-	      return true;
-	    }
-	
-	return false;
+          return true;
+        }
       }
-    case circle:
-      {
-	CEntity* ent;
-	
-	CCircleIterator rit( px, py, m_size_x/2.0,  
-			     m_world->ppm, m_world->matrix );
-	
-	while( (ent = rit.GetNextEntity()) ) 
-	  if( ent != this && ent->obstacle_return )
-	    {
-	      //printf( "hit ent %p (%d)\n",
-	      //ent, ent->m_stage_type );
-	      
-	      return true;
-	    }
-	
-	return false;
-      }
-    default: printf( "unknown shape in positiondevice::incollision" );
-      break;
+      return false;
     }
+    case ShapeCircle:
+    {
+      CEntity* ent;
+      CCircleIterator rit( px, py, m_size_x/2.0,  
+                           m_world->ppm, m_world->matrix );
+	
+      while( (ent = rit.GetNextEntity()) )
+      {
+        if( ent != this && ent->obstacle_return )
+        {
+          //printf( "hit ent %p (%d)\n",
+          //ent, ent->m_stage_type );
+	      
+          return true;
+        }
+      }
+      return false;
+    }
+    default:
+      printf( "unknown shape in positiondevice::incollision" );
+      break;
+  }
   return false;
 }
 
 
-void CPositionDevice::SetShape(pioneer_shape_t shape)
-{
-  m_shape = shape;
-   
-  switch( m_shape )
-    {
-    case circle:  
-      m_stage_type = RoundRobotType;
-      m_size_y = m_size_x;
-      break;
-    case rectangle:
-      m_stage_type = RectRobotType;
-    }
-}
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Render the object in the world rep
-//
 void CPositionDevice::Map(bool render )
 {
-    if (!render)
-    {
-      m_world->matrix->SetMode( mode_unset );
+
+  if(this->shape == ShapeRect)
+  {
+    double px = m_map_px;
+    double py = m_map_py;
+    double pa = m_map_pth;
+	  
+    double qx = px + m_offset_x * cos(pa);
+    double qy = py + m_offset_x * sin(pa);
+    double sx = m_size_x;
+    double sy = m_size_y;
+	  
+    m_world->SetRectangle( qx, qy, pa, sx, sy, this, render );
+  }
+  else if (this->shape == ShapeCircle)
+    m_world->SetCircle( m_map_px, m_map_py, m_size_x/2.0, this, render );
+
+  /* REMOVE
+  if (!render)
+  {
+    m_world->matrix->SetMode( mode_unset );
       
-      if(GetShape() == rectangle)
-        {
-          // Remove ourself from the obstacle map
-          //
-          double px = m_map_px;
-          double py = m_map_py;
-          double pa = m_map_pth;
+    if(this->shape == ShapeRect)
+    {
+      // Remove ourself from the obstacle map
+      double px = m_map_px;
+      double py = m_map_py;
+      double pa = m_map_pth;
 	  
-          double qx = px + m_offset_x * cos(pa);
-          double qy = py + m_offset_x * sin(pa);
-          double sx = m_size_x;
-          double sy = m_size_y;
+      double qx = px + m_offset_x * cos(pa);
+      double qy = py + m_offset_x * sin(pa);
+      double sx = m_size_x;
+      double sy = m_size_y;
 	  
-	  m_world->SetRectangle( qx, qy, pa, sx, sy, this );
-        }
-      else if(GetShape() == circle)
-	m_world->SetCircle( m_map_px, m_map_py, m_size_x/2.0, this );
-      else
-	PRINT_MSG("CPositionDevice::Map(): unknown shape!");
+      m_world->SetRectangle( qx, qy, pa, sx, sy, this );
     }
+    else if(this->shape == ShapeCircle)
+      m_world->SetCircle( m_map_px, m_map_py, m_size_x/2.0, this );
     else
-      {
-	m_world->matrix->SetMode( mode_set );
+      PRINT_MSG("CPositionDevice::Map(): unknown shape!");
+  }
+  else
+  {
+    m_world->matrix->SetMode( mode_set );
   
-	// Add ourself to the obstacle map
-	//
-	double px, py, pa;
-	GetGlobalPose(px, py, pa);
-	if(GetShape() == rectangle)
+    // Add ourself to the obstacle map
+    double px, py, pa;
+    GetGlobalPose(px, py, pa);
+    if(this->shape == ShapeRect)
 	  {
 	    double qx = px + m_offset_x * cos(pa);
 	    double qy = py + m_offset_x * sin(pa);
@@ -469,20 +454,13 @@ void CPositionDevice::Map(bool render )
 
 	    m_world->SetRectangle( qx, qy, pa, sx, sy, this );
 	  }
-	else if(GetShape() == circle)
-	  m_world->SetCircle( px, py, m_size_x/2.0, this );
-	else
-	  PRINT_MSG("CPositionDevice::Map(): unknown shape!");
-	
-	// Store the place we added ourself
-	//
-	m_map_px = px;
-	m_map_py = py;
-	m_map_pth = pa;
-      }
+    else if (this->shape == ShapeCircle)
+      m_world->SetCircle( px, py, m_size_x/2.0, this );
+    else
+      PRINT_MSG("CPositionDevice::Map(): unknown shape!");
+	}
+  */
 }
-
-
 
 #ifdef INCLUDE_RTK
 

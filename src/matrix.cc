@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.10 2001-12-17 18:32:05 ahoward Exp $
+ * $Id: matrix.cc,v 1.11 2001-12-31 17:21:27 inspectorg Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -18,13 +18,8 @@ const int BUFFER_ALLOC_SIZE = 1;
 //#define DEBUG
     
 // construct from width / height 
-CMatrix::CMatrix(int w,int h)
+CMatrix::CMatrix(int w, int h, int default_buf_size)
 {
-  initial_buf_size = BUFFER_ALLOC_SIZE;
-  //initial_buf_size = 0;
-
-  mode = mode_set;
-
   width = w; height = h;
   data 	= new CEntity**[width*height];
   used_slots = new unsigned char[ width*height ];
@@ -33,12 +28,12 @@ CMatrix::CMatrix(int w,int h)
   for( int p=0; p< width * height; p++ )
   {
     // create the pointer "strings"
-    data[p] = new CEntity*[ initial_buf_size + 1];
+    data[p] = new CEntity*[ default_buf_size + 1];
     // zero them out
-    memset( data[p], 0, (initial_buf_size + 1) * sizeof( CEntity* ) );
+    memset( data[p], 0, (default_buf_size + 1) * sizeof( CEntity* ) );
 
     used_slots[p] = 0;
-    available_slots[p] = initial_buf_size;
+    available_slots[p] = default_buf_size;
   }
 }
 
@@ -93,17 +88,17 @@ void CMatrix::dump( void )
 
 
 // Draw a rectangle
-void CMatrix::draw_rect( const Rect& t, CEntity* ent )
+void CMatrix::draw_rect( const Rect& t, CEntity* ent, bool add)
 {
-  draw_line( t.toplx, t.toply, t.toprx, t.topry, ent );
-  draw_line( t.toprx, t.topry, t.botrx, t.botry, ent );
-  draw_line( t.botrx, t.botry, t.botlx, t.botly, ent );
-  draw_line( t.botlx, t.botly, t.toplx, t.toply, ent );
+  draw_line( t.toplx, t.toply, t.toprx, t.topry, ent, add);
+  draw_line( t.toprx, t.topry, t.botrx, t.botry, ent, add);
+  draw_line( t.botrx, t.botry, t.botlx, t.botly, ent, add);
+  draw_line( t.botlx, t.botly, t.toplx, t.toply, ent, add);
 }
 
 
 // draws (2*PI)/0.1 = 62 little lines to form a circle
-void CMatrix::draw_circle(int x,int y,int r, CEntity* ent )
+void CMatrix::draw_circle(int x,int y,int r, CEntity* ent, bool add)
 {
   double i,cx,cy;
   int x1,y1,x2,y2;
@@ -111,20 +106,20 @@ void CMatrix::draw_circle(int x,int y,int r, CEntity* ent )
   x1=x;y1=y+r;	
   
   for (i=0;i<2.0*M_PI;i+=0.1)
-    {
-      cx = (double) x + (double (r) * sin(i));
-      cy = (double) y + (double (r) * cos(i));
-      x2=(int)cx;y2=(int)cy;
-      draw_line(x1,y1,x2,y2,ent);
-      x1=x2;y1=y2;
-    }	
+  {
+    cx = (double) x + (double (r) * sin(i));
+    cy = (double) y + (double (r) * cos(i));
+    x2=(int)cx; y2=(int)cy;
+    draw_line(x1, y1, x2, y2, ent, add);
+    x1=x2; y1=y2;
+  }	
   
-  draw_line(x1,y1,x,y+r,ent);
+  draw_line(x1, y1, x, y+r, ent, add);
 }
 
 
 // Draw a line from (x1, y1) to (x2, y2) inclusive
-void CMatrix::draw_line(int x1,int y1,int x2,int y2, CEntity* ent)
+void CMatrix::draw_line(int x1,int y1,int x2,int y2, CEntity* ent, bool add)
 {
   int dx, dy;
   int x, y;
@@ -158,7 +153,10 @@ void CMatrix::draw_line(int x1,int y1,int x2,int y2, CEntity* ent)
 
     x = x1;
     y = y1;
-    set_cell(x, y, ent);
+    if (add)
+      set_cell(x, y, ent);
+    else
+      unset_cell(x, y, ent);
 
     while (x < x2)
   	{
@@ -176,12 +174,18 @@ void CMatrix::draw_line(int x1,int y1,int x2,int y2, CEntity* ent)
         else
           y++;
       }
-  	  set_cell(x,y,ent);
+      if (add)
+        set_cell(x, y, ent);
+      else
+        unset_cell(x, y, ent);
   	}
 
     x = x2;
     y = y2;
-    set_cell(x, y, ent);
+    if (add)
+      set_cell(x, y, ent);
+    else
+      unset_cell(x, y, ent);
   }
 
   // Draw lines with slope > 45 degrees
@@ -206,7 +210,10 @@ void CMatrix::draw_line(int x1,int y1,int x2,int y2, CEntity* ent)
 
     x = x1;
     y = y1;
-    set_cell(x, y, ent);
+    if (add)
+      set_cell(x, y, ent);
+    else
+      unset_cell(x, y, ent);
 
     while (y < y2)
   	{
@@ -224,12 +231,18 @@ void CMatrix::draw_line(int x1,int y1,int x2,int y2, CEntity* ent)
         else
           x++;
       }
-  	  set_cell(x,y,ent);
+      if (add)
+        set_cell(x, y, ent);
+      else
+        unset_cell(x, y, ent);
   	}
 
     x = x2;
     y = y2;
-    set_cell(x, y, ent);
+    if (add)
+      set_cell(x, y, ent);
+    else
+      unset_cell(x, y, ent);
   }
 }
 
@@ -243,20 +256,11 @@ void CMatrix::clear( void )
 
 
 inline void CMatrix::set_cell(int x, int y, CEntity* ent )
-{    
-  if( mode == mode_unset ) // HACK! 
-  {
-    unset_cell( x, y, ent );
-    return;
-  }
-
+{
   if( ent == 0 )
     return;
   if (x<0 || x>=width || y<0 || y>=height) 
-  {
-    //fputs("Stage: WARNING: CMatrix::set_cell() out of bounds!\n",stderr);
     return;
-  }
   
   int cell = x + y * width;
   int used_slots = this->used_slots[cell];
@@ -305,12 +309,7 @@ inline void CMatrix::unset_cell(int x, int y, CEntity* ent )
   if( ent == 0 )
     return;
   if (x<0 || x>=width || y<0 || y>=height) 
-  {
-    //fputs("Stage: WARNING: CMatrix::unset_cell() out of bounds!\n",stderr);
-    //fprintf(stderr,"Stage: WARNING: x,y: %d,%d\t w,h: %d,%d\n",
-    //      x,y,width,height);
     return;
-  }
   
   int cell = x + y * width;
   int used_slots = this->used_slots[cell];
@@ -328,7 +327,6 @@ inline void CMatrix::unset_cell(int x, int y, CEntity* ent )
       break;
     }
   }
-
   // Debugging
   //CheckCell(cell);
 }
@@ -364,5 +362,5 @@ void CMatrix::CheckCell( int cell )
   }
   if (data[cell][used_slots[cell]] != NULL)
     printf("sanity check failed : no end marker\n");
-
 }
+
