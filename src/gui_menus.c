@@ -54,27 +54,28 @@ const int STG_MOVIE_SPEED_COUNT = 7; // must match the static array length
 // send a USR2 signal to the client process that created this menuitem
 void gui_menu_save( rtk_menuitem_t *item )
 {
-  PRINT_DEBUG( "Save menu item" );
+  //PRINT_DEBUG( "Save menu item" );
 
-  //ss_client_t* client = 
-  //((gui_window_t*)item->menu->canvas->userdata)->world->client;
-  //if( client )
-  //{
-  //  ss_world_save(((gui_window_t*)item->menu->canvas->userdata)->world );
-  // }
+  world_t* world = (world_t*)item->userdata;
+
+  //PRINT_DEBUG1( "need to save world \"%s\"", world->token );
+
+  printf( "value %d %X\n", STG_MSG_CLIENT_SAVE,STG_MSG_CLIENT_SAVE );
+
+  stg_connection_write_msg( world->con, STG_MSG_CLIENT_SAVE, NULL, 0 ); 
+  //stg_connection_write_msg( NULL, STG_MSG_CLIENT_SAVE, NULL, 0 ); 
+
+  //int foo=5;
+  //stg_connection_write_msg( world->con, 404, &foo, sizeof(foo) ); 
+
+  //printf( "foo: %d\n", foo );
+
 }
 
 void gui_menu_exit( rtk_menuitem_t *item )
 {
   //quit = TRUE;
   PRINT_DEBUG( "Exit menu item" );
-  
-  //ss_world_t* world = ((gui_window_t*)item->menu->canvas->userdata)->world;
-  //ss_world_destroy( world );
-
-  // if the client has no worlds left, shut it down
-  //if( g_list_length( client->worlds ) < 1 )
-  //StgClientDestroy( client );
 }
 
 
@@ -291,6 +292,10 @@ void gui_window_menus_create( gui_window_t* win )
     rtk_menuitem_create(win->menus[STG_MENU_FILE], "Save", 0);
   win->mitems[STG_MITEM_FILE_QUIT] = 
     rtk_menuitem_create(win->menus[STG_MENU_FILE], "Quit", 0);
+
+  // attach objects to the FILE menu items
+  win->mitems[STG_MITEM_FILE_SAVE]->userdata = (void*)win->world;
+  //win->mitems[STG_MITEM_FILE_QUIT]->userdata = (void*)0;
 
   // create the VIEW menu items
   win->mitems[STG_MITEM_VIEW_GRID] = 

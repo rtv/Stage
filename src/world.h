@@ -4,6 +4,7 @@
 #include "stage.h"
 #include "server.h"
 #include "matrix.h"
+#include "connection.h"
 
 typedef struct _world
  {
@@ -28,12 +29,15 @@ typedef struct _world
    double ppm; // the resolution of the world model in pixels per meter
 
    int paused; // the world only updates when this is zero
+   
+   connection_t* con; // the connection that created this world
 
  } world_t;
 
 
 
 world_t* world_create( server_t* server, 
+		       connection_t* con,
 			   stg_id_t id, 
 			   stg_createworld_t* cw );
 

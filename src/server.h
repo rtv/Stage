@@ -2,11 +2,14 @@
 #define _SERVER_H
 
 #include "stage.h"
+#include "connection.h"
 
-struct _stg_world;
-struct _stg_model;
+//struct _stg_world;
+//struct _stg_model;
 
-typedef struct
+struct _connection;
+
+typedef struct _server
 {
   char* host;
   int port;
@@ -61,5 +64,10 @@ int stg_target_set_data( server_t* server,
 			 size_t len );
 
 int server_package_parse( server_t* server, int fd, stg_package_t* pkg );
+
+// add a world to the server
+stg_id_t server_world_create( server_t* server, 
+			      struct _connection* con, 
+			      stg_createworld_t* cw );
 
 #endif

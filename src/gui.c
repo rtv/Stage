@@ -81,10 +81,11 @@ gui_window_t* gui_window_create( world_t* world, int xdim, int ydim )
 
   win->canvas = rtk_canvas_create( app );
   
+  win->world = world;
+  
   // enable all objects on the canvas to find our window object
   win->canvas->userdata = (void*)win; 
 
-  
   GtkHBox* hbox = GTK_HBOX(gtk_hbox_new( TRUE, 10 ));
   
   win->statusbar = GTK_STATUSBAR(gtk_statusbar_new());
@@ -253,7 +254,7 @@ void gui_world_update( world_t* world )
 
 
   char clock[256];
-  snprintf( clock, 255, "%d:%2d:%2d.%3d\n",
+  snprintf( clock, 255, "%lu:%2lu:%2lu.%3lu\n",
 	    world->sim_time / 3600000, // hours
 	    (world->sim_time % 3600000) / 60000, // minutes
 	    (world->sim_time % 60000) / 1000, // seconds

@@ -85,9 +85,33 @@ ssize_t stg_connection_write( connection_t* con, void* data, size_t len )
   return stg_fd_packet_write( con->fd, data, len );
 }
 
-ssize_t stg_connection_write_msg( connection_t* con, stg_msg_t* msg )
+ssize_t stg_connection_write_msg( connection_t* con,  
+				  stg_msg_type_t type, 
+				  void* data, size_t len )
 {
-  return stg_connection_write( con, msg, sizeof(stg_msg_t) + msg->payload_len );
+  stg_msg_t* msg = stg_msg_create( type, data, len );
+
+  GByteArray* buf = g_byte_array_new();
+
+  g_byte_array_append( buf, (guint8*)msg, sizeof(stg_msg_t) + msg->payload_len );
+
+  // prepend a package header
+  stg_package_t pkg;
+  pkg.key = STG_PACKAGE_KEY;
+  pkg.payload_len = buf->len;
+  
+  // a real-time timestamp for performance measurements
+  struct timeval tv;
+  gettimeofday( &tv, NULL );
+  memcpy( &pkg.timestamp, &tv, sizeof(pkg.timestamp ) );
+  
+  stg_buffer_prepend( buf, &pkg, sizeof(pkg) );
+  
+  ssize_t retval = stg_connection_write( con, buf->data, buf->len );
+
+  g_byte_array_free( buf, TRUE );
+
+  return retval;
 }
 
 size_t stg_connection_read( connection_t* con, void* buf, size_t len )

@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.43 2004-05-30 06:41:17 rtv Exp $
+ * CVS: $Id: stage.h,v 1.44 2004-05-31 06:25:37 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -134,6 +134,7 @@ typedef uint16_t stg_msg_type_t;
 #define STG_MSG_MODEL       3 << 8
 #define STG_MSG_CLIENT      4 << 8
    
+// these messages are sent from a client to Stage
 #define STG_MSG_SERVER_SUBSCRIBE        (STG_MSG_SERVER | 1)
 #define STG_MSG_SERVER_UNSUBSCRIBE      (STG_MSG_SERVER | 2)
 #define STG_MSG_SERVER_WORLDCREATE      (STG_MSG_SERVER | 3)
@@ -148,24 +149,21 @@ typedef uint16_t stg_msg_type_t;
 #define STG_MSG_WORLD_MODELDESTROY      (STG_MSG_WORLD | 7)
 #define STG_MSG_WORLD_INTERVALSIM       (STG_MSG_WORLD | 8)
 #define STG_MSG_WORLD_INTERVALREAL      (STG_MSG_WORLD | 9)
-//#define STG_MSG_WORLD_REQUEST           (STG_MSG_MODEL | 10)
-//#define STG_MSG_WORLD_REPLY             (STG_MSG_MODEL | 11)
 
-#define STG_MSG_MODEL_DELTA             (STG_MSG_MODEL | 1) // set a property, no reply
-#define STG_MSG_MODEL_SAVE              (STG_MSG_MODEL | 2) // ACK/NACK reply
-#define STG_MSG_MODEL_LOAD              (STG_MSG_MODEL | 3) // ACK/NACK reply
-#define STG_MSG_MODEL_PROPSET           (STG_MSG_MODEL | 4) // set a property, ACK/NACK reply
-#define STG_MSG_MODEL_PROPGET           (STG_MSG_MODEL | 5) // get a property
-#define STG_MSG_MODEL_PROPGETSET        (STG_MSG_MODEL | 6) // set a prop, get the old state
-#define STG_MSG_MODEL_PROPSETGET        (STG_MSG_MODEL | 7) // set a prop, get the new state
-#define STG_MSG_MODEL_SUBSCRIBE         (STG_MSG_MODEL | 8) // no reply
-#define STG_MSG_MODEL_UNSUBSCRIBE       (STG_MSG_MODEL | 9) // no reply
+#define STG_MSG_MODEL_DELTA             (STG_MSG_MODEL | 1) // set a prop, no reply
+#define STG_MSG_MODEL_PROPSET           (STG_MSG_MODEL | 2) // set a prop, ACK/NACK reply
+#define STG_MSG_MODEL_PROPGET           (STG_MSG_MODEL | 3) // get a property
+#define STG_MSG_MODEL_PROPGETSET        (STG_MSG_MODEL | 4) // set a prop, get prior state
+#define STG_MSG_MODEL_PROPSETGET        (STG_MSG_MODEL | 5) // set a prop, get post state
+#define STG_MSG_MODEL_SUBSCRIBE         (STG_MSG_MODEL | 6) // no reply
+#define STG_MSG_MODEL_UNSUBSCRIBE       (STG_MSG_MODEL | 7) // no reply
 
+// these types are sent from Stage to a client
 #define STG_MSG_CLIENT_DELTA            (STG_MSG_CLIENT | 1)
 #define STG_MSG_CLIENT_REPLY            (STG_MSG_CLIENT | 2)
 #define STG_MSG_CLIENT_CLOCK            (STG_MSG_CLIENT | 3)
-
-   //#define STG_MSG_CLIENT_CYCLEEND         (STG_MSG_CLIENT | 5)
+#define STG_MSG_CLIENT_SAVE             (STG_MSG_CLIENT | 4)
+#define STG_MSG_CLIENT_LOAD             (STG_MSG_CLIENT | 5)
 
 #define STG_ACK  1
 #define STG_NACK 0
@@ -252,7 +250,6 @@ typedef struct
   stg_msec_t interval_sim;
   stg_msec_t interval_real;
   int ppm;
-  //stg_size_t size;
 } stg_createworld_t;
 
 typedef struct
@@ -667,13 +664,14 @@ int stg_load_image( const char* filename, stg_rotrect_t** rects, int* rect_count
 
 typedef struct
 {
-  char* host;
-  int port;
-  struct pollfd pfd;
+  char* host; // Stage is here
+  int port;   // 
+
+  struct pollfd pfd; // contains a socket connected to Stage
  
-  stg_id_t next_id;
+  stg_id_t next_id; // next available local model ID
   
-  stg_msec_t stagetime;
+  stg_msec_t stagetime; // current time in the simulator
 
   GHashTable* worlds_id_server; // contains stg_world_ts indexed by server-side id
   GHashTable* worlds_id; // contains stg_world_ts indexed by client-side id
@@ -681,27 +679,19 @@ typedef struct
   
   // mutex and condition variable used to signal that a reply has been
   // recieved to a previous request
-  pthread_mutex_t models_mutex;
-  pthread_mutex_t reply_mutex;
+  //pthread_mutex_t models_mutex;
+  //pthread_mutex_t reply_mutex;
   //sem_t reply_sem;
-  pthread_cond_t reply_cond;
-  int reply_ready;
+  //pthread_cond_t reply_cond;
+  //pthread_t* thread;
   
-
-  pthread_t* thread;
-
+  // buffer to hold the reply of a request/reply sequence
   GByteArray* reply;
+  int reply_ready;
 
 } stg_client_t;
 
 #define STG_PACKAGE_KEY 12345
-
-//typedef enum
-// {
-//  STG_PKG_REQUEST=0,
-//  STG_PKG_REPLY,
-//  STG_PKG_DELTA
-// } stg_pkg_type_t;
 
 typedef struct
 {
@@ -711,6 +701,14 @@ typedef struct
   size_t payload_len;
   char payload[0]; // named access to the end of the struct
 } stg_package_t;
+
+
+// Stage Client functions. Most client programs will call all of these
+// in this order.
+
+
+// create a Stage Client.
+stg_client_t* stg_client_create( void );
 
 // read a package: a complete set of Stage deltas. If no package is
 // available, return NULL. If an error occurred, return NULL and set
@@ -722,11 +720,11 @@ stg_package_t* stg_client_read_package( stg_client_t* cli,
 // break the package into individual messages and handle them
 int stg_client_package_parse( stg_client_t* cli, stg_package_t* pkg );
 
-// Stage Client functions. Most client programs will call all of these
-// in this order.
+//void stg_client_thread( void* data );
+//int stg_client_thread_start( stg_client_t* cli );
 
-// create a Stage Client.
-stg_client_t* stg_client_create( void );
+// read and parse a package from the server
+int stg_client_read( stg_client_t* cli, int sleeptime );
 
 
 // load a worldfile into the client
@@ -741,8 +739,6 @@ int stg_client_connect( stg_client_t* client, const char* host, const int port )
 // ask a connected Stage server to create simulations of all our objects
 void stg_client_push( stg_client_t* client );
 
-// read a message from the server
-stg_msg_t* stg_client_read( stg_client_t* cli );
 
 void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg );
 
@@ -824,9 +820,6 @@ int stg_model_prop_get_var( stg_model_t* mod, stg_id_t propid, void** data, size
 
 // set property [propid] with [len] bytes at [data]
 int stg_model_prop_set( stg_model_t* mod, stg_id_t propid, void* data, size_t len);
-
-// set property [propid] with [len] bytes at [data] and wait for an acknowledgement
-int stg_model_prop_set_ack( stg_model_t* mod, stg_id_t propid, void* data, size_t len);
 
 // set property [propid] with [len] bytes at [data], wait for a reply
 // of [reply_len] bytes and copy it into [reply].

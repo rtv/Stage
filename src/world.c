@@ -8,12 +8,14 @@
 #include "stage.h"
 #include "gui.h"
 
-world_t* world_create( server_t* server, stg_id_t id, stg_createworld_t* cw )
+world_t* world_create( server_t* server, connection_t* con, 
+		       stg_id_t id, stg_createworld_t* cw )
 {
-  PRINT_DEBUG2( "world creator %d (%s)", id, cw->token );
+  PRINT_DEBUG3( "world creator %d (%s) on con %p", id, cw->token, con );
   
   world_t* world = calloc( sizeof(world_t),1 );
 
+  world->con = con;
   world->id = id;
   world->token = strdup( cw->token );
   world->models = g_hash_table_new_full( g_int_hash, g_int_equal,

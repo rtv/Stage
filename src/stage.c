@@ -27,7 +27,6 @@ const char* stg_property_string( stg_id_t id )
   switch( id )
     {
       //case STG_PROP_CHILDREN: return "children"; break;
-      //case STG_PROP_STATUS: return "status"; break;
     case STG_PROP_TIME: return "time"; break;
     case STG_PROP_CIRCLES: return "circles"; break;
     case STG_PROP_COLOR: return "color"; break;
@@ -168,13 +167,7 @@ void stg_print_target( stg_target_t* tgt )
 	  tgt->world, tgt->model, tgt->prop, stg_property_string(tgt->prop) );
 }
 
-
-// write a message out	  
-//int stg_fd_msg_write( int fd, stg_msg_t* msg )
-//{
-// return( stg_fd_packet_write( fd, msg, sizeof(stg_msg_t) + msg->payload_len ) );
-//}
-
+// write a single message out, putting a package header on it
 int stg_fd_msg_write( int fd, 
 		      stg_msg_type_t type, 
 		      void* data, size_t datalen )
@@ -184,8 +177,7 @@ int stg_fd_msg_write( int fd,
 
   GByteArray* buf = g_byte_array_new();
   stg_buffer_append_msg( buf, msg );
-
-
+  
   // prepend a package header
   stg_package_t pkg;
   pkg.key = STG_PACKAGE_KEY;
@@ -206,8 +198,6 @@ int stg_fd_msg_write( int fd,
 
   return retval;
 }
-
-
 
 
 // operations on file descriptors ----------------------------------------
@@ -292,55 +282,6 @@ int stg_checksum( void* buf, size_t len )
   return total;
 }
 
-stg_msg_t* stg_read_msg( int fd )
-{
-  ssize_t res = 0;
-  
-  stg_msg_t* msg = calloc( sizeof(stg_msg_t), 1 );
-  
-  // read a header
-  res = stg_fd_packet_read( fd, msg, sizeof(stg_msg_t) );
-  
-  if( res < sizeof(stg_msg_t) )
-    {
-      PRINT_DEBUG1( "failed to read packet header (%d)", res );
-      return NULL;
-    }
-  
-  // add some space and read the rest of the message
-  msg = realloc( msg, sizeof(stg_msg_t) + msg->payload_len );
-  assert(msg);
-  
-  res = stg_fd_packet_read( fd, msg->payload, msg->payload_len );
-  
-  if( res < msg->payload_len )
-    {
-      PRINT_DEBUG2( "failed to read message payload (%d/%d bytes)", 
-		    res, (int)msg->payload_len );
-      return NULL;
-    }
-  
-  return msg;
-}
-
-// return true if two properties have the same identifiers, else false
-/*gboolean stg_equal( gconstpointer gp1, gconstpointer gp2 )
-{
-  assert( gp1 );
-  assert( gp2 );
-
-  stg_target_t* p1 = (stg_target_t*)gp1;
-  stg_target_t* p2 = (stg_target_t*)gp2;
-  
-  if( p1->prop == p2->prop &&      
-      p1->model == p2->model &&
-      p1->world == p2->world )
-    return TRUE;
-  
-  return FALSE;
-}
-*/
-
 stg_msec_t stg_timenow( void )
 {
   struct timeval tv;
@@ -398,30 +339,6 @@ void stg_target_message( stg_target_t* tgt, char* errstr )
 	      stg_property_string(tgt->prop) );
 }
 
-
-stg_property_t* prop_create( stg_id_t id, void* data, size_t len )
-{
-  stg_property_t* prop = calloc( sizeof(stg_property_t), 1 );
-  
-  prop->id = id;
-  prop->data = malloc(len);
-  memcpy( prop->data, data, len );
-  prop->len = len;
-  
-  //#ifdef DEBUG
-  // printf( "debug: created a prop: " );
-  //stg_property_print( prop );
-  //#endif
-
-  return prop;
-}
-
-
-void prop_destroy( stg_property_t* prop )
-{
-  free( prop->data );
-  free( prop );
-}
 
 // create a new message of [type] containing [datalen] bytes of [data]
 stg_msg_t* stg_msg_create( stg_msg_type_t type, void* data, size_t datalen )

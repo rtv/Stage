@@ -2,10 +2,15 @@
 #ifndef STG_GUI_H
 #define STG_GUI_H
 
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
 #include "stage.h"
 #include "rtk.h"
 #include "world.h"
 #include "model.h"
+
 
 // GUI colors   
 #define STG_GRID_MAJOR_COLOR "gray85"
@@ -57,6 +62,8 @@ typedef struct
 {
   rtk_canvas_t* canvas;
   
+  world_t* world; // every window shows a single world
+
   // rtk doesn't support status bars, so we'll use gtk directly
   GtkStatusbar* statusbar;
   GtkLabel* timelabel;
@@ -64,7 +71,6 @@ typedef struct
   GHashTable* guimods;
 
   rtk_fig_t* bg; // background
-  //rtk_fig_t* grid; 
   rtk_fig_t* matrix;
   rtk_fig_t* poses;
 
@@ -126,5 +132,10 @@ gui_model_t* gui_model_figs( model_t* model );
 
 void gui_window_menus_create( gui_window_t* win );
 void gui_window_menus_destroy( gui_window_t* win );
+
+#ifdef __cplusplus
+  }
+#endif 
+
 
 #endif

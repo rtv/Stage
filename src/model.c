@@ -537,6 +537,7 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
       }
       break;
 
+      // everything else needs a reply
     case STG_MSG_MODEL_PROPGET:
       {
 	PRINT_DEBUG( "RECEIVED A PROPGET REQUEST" );
@@ -546,18 +547,31 @@ void model_handle_msg( model_t* model, int fd, stg_msg_t* msg )
 	void* data;
 	size_t len;
 	
+	// reply with the requested property
 	if( model_get_prop( model, tgt->prop, &data, &len ) )      
 	  PRINT_WARN2( "failed to service request for property %d(%s)",
 		       tgt->prop, stg_property_string(tgt->prop) );
 	else
 	  {
-	    PRINT_DEBUG( "SENDING A REPLY" );
-	    
+	    PRINT_DEBUG( "SENDING A REPLY" );	 	    
 	    stg_fd_msg_write( fd, STG_MSG_CLIENT_REPLY, data, len );
 	  }
       }
       break;
 
+      // TODO
+    case STG_MSG_MODEL_PROPSET:
+      PRINT_WARN( "STG_MSG_MODEL_PROPSET not yet implemented" );
+      break;
+      
+    case STG_MSG_MODEL_PROPGETSET:
+      PRINT_WARN( "STG_MSG_MODEL_PROPGETSET not yet implemented" );
+      break;
+      
+    case STG_MSG_MODEL_PROPSETGET:
+      PRINT_WARN( "STG_MSG_MODEL_PROPSETGET not yet implemented" );
+      break;
+      
     default:
       PRINT_WARN1( "Ignoring unrecognized model message type %d.",
 		   msg->type & STG_MSG_MASK_MINOR );

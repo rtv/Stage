@@ -16,7 +16,7 @@
 #include "server.h"
 #include "world.h"
 #include "model.h"
-#include "connection.h"
+//#include "connection.h"
 #include "subscription.h"
 
 #define STG_LISTENQ 100 // max number of pending server connections
@@ -241,6 +241,7 @@ int server_poll( server_t* server )
   //PRINT_DEBUG1( "polling all %d pollfds", server->pfds->len );
   
   int poll_result = 1;
+  int error = 0; // this gets returned. nonzero indicates error
   
   // while there is any pending data to read on any fd
   while( poll_result > 0 )
@@ -248,98 +249,111 @@ int server_poll( server_t* server )
       struct pollfd* pfds = (struct pollfd*)server->pfds->data;
       int numpfds = server->pfds->len;
       
+      // poll will sleep for the minimum time
       if( (poll_result = poll( pfds, numpfds, 1 )) > 0 )
 	{	 
 	  // loop through the pollfds looking for the POLLINs
 	  int i;
 	  for( i=0; i<numpfds; i++ )
-	    if( pfds[i].revents & POLLIN )
-	      {		  
-		if( i == 0 ) // if it's the master server port
-		  {
-		    PRINT_DEBUG( "new connection poll in!" );
-		    if( server_accept_connection( server ) )
-		      stg_err( "server failed to accept a new connection" );
-		    
-		    server_print( server );
-		  }
-		else // it's a client
-		  {
-		    //PRINT_DEBUG1( "pollin on client fd %d", fd );
-		    
-		    int fd = pfds[i].fd;
-		    
-		    stg_package_t* pkg = calloc( sizeof(stg_package_t), 1 );
-		    
-		    ssize_t res = 
-		      stg_fd_packet_read( fd, pkg, sizeof(stg_package_t) );
-		    
-		    if( res != sizeof(stg_package_t) )
-		      {
-			PRINT_ERR2( "failed to read package header (%d/%d bytes)\n",
-				    res, (int)sizeof(stg_package_t) );
-			free( pkg );
-			return 1; // error
-		      }
-		    
-		    PRINT_DEBUG4( "package key:%d timestamp:%d.%d len:%d\n",
-				  pkg->key, 
-				  pkg->timestamp.tv_sec, 
-				  pkg->timestamp.tv_usec, 
-				  (int)(pkg->payload_len) );
-		    
-		    if( pkg->key != STG_PACKAGE_KEY )
-		      {
-			PRINT_ERR2( "package has incorrect key (%d not %d)\n",
-				    pkg->key, STG_PACKAGE_KEY );
-			free( pkg );
-			return 2; //error
-		      }
-
-		    // read the body of the package
-		    size_t total_size = sizeof(stg_package_t) + pkg->payload_len;
-		    pkg = realloc( pkg, total_size );
-		    
-		    res = stg_fd_packet_read( fd, 
-					      pkg->payload, 
-					      pkg->payload_len );
-		    
-		    if( res != pkg->payload_len )
-		      {
-			PRINT_ERR2( "failed to read package payload (%d/%d bytes)\n",
-				    res,(int)pkg->payload_len );
-			free( pkg );
-			return 3; //error
-		      }
-		    
-
-		    
-		    if( pkg )
-		      {
-			server_package_parse( server, fd, pkg );
-			free( pkg );
-		      }
-		    else // no valid package
-		      {
-			PRINT_DEBUG1( "read failure on fd %d. Shutting it down",
-				      fd );
-			
-			// remove this fd's entry in the poll array
-			server->pfds = g_array_remove_index_fast( server->pfds, i );
-			
-			// zap the client on this fd.
-			g_hash_table_remove( server->clients, &fd );
-			
-			server_print( server );
-			
-			// it's not safe to continue the loop on the array
-			// any more, so we'll drop out here. we'll be back
-			// very soon so it's not a problem.
-			break;
-		      }
-		  }
-	      }
-	}      
+	    {
+	      if( pfds[i].revents & POLLIN )
+		{		  
+		  if( i == 0 ) // if it's the master server port
+		    {
+		      PRINT_DEBUG( "new connection poll in!" );
+		      if( server_accept_connection( server ) )
+			stg_err( "server failed to accept a new connection" );
+		      
+		      server_print( server );
+		    }
+		  else // it's a client
+		    {
+		      //PRINT_DEBUG1( "pollin on client fd %d", fd );
+		      
+		      int fd = pfds[i].fd;
+		      
+		      stg_package_t* pkg = calloc( sizeof(stg_package_t), 1 );
+		      
+		      ssize_t res = 
+			stg_fd_packet_read( fd, pkg, sizeof(stg_package_t) );
+		      
+		      if( res != sizeof(stg_package_t) )
+			{
+			  PRINT_ERR2( "failed to read package header (%d/%d bytes)\n",
+				      res, (int)sizeof(stg_package_t) );
+			  error = 1;
+			  free( pkg );
+			  
+			  // it's not safe to continue the loop on the array
+			  // any more, so we'll drop out here. we'll be back
+			  // very soon so it's not a problem.			  
+			  break;
+			}
+		      
+		      PRINT_DEBUG4( "package key:%d timestamp:%d.%d len:%d\n",
+				    pkg->key, 
+				    pkg->timestamp.tv_sec, 
+				    pkg->timestamp.tv_usec, 
+				    (int)(pkg->payload_len) );
+		      
+		      if( pkg->key != STG_PACKAGE_KEY )
+			{
+			  PRINT_ERR2( "package has incorrect key (%d not %d)\n",
+				      pkg->key, STG_PACKAGE_KEY );
+			  error = 2;
+			  free( pkg );
+			  break;
+			}
+		      
+		      // read the body of the package
+		      size_t total_size = sizeof(stg_package_t) + pkg->payload_len;
+		      pkg = realloc( pkg, total_size );
+		      
+		      res = stg_fd_packet_read( fd, 
+						pkg->payload, 
+						pkg->payload_len );
+		      
+		      if( res != pkg->payload_len )
+			{
+			  PRINT_ERR2( "failed to read package payload (%d/%d bytes)\n",
+				      res,(int)pkg->payload_len );
+			  error = 3;
+			  free( pkg );
+			  break;
+			}
+		      
+		      if( pkg  )
+			{
+			  PRINT_DEBUG1( "parsing a package from fd %d.",
+					fd );
+			  
+			  server_package_parse( server, fd, pkg );
+			  free( pkg );
+			}
+		      else
+			{
+			  error = 4; // shouldn't get this error at all
+			  break;
+			}
+		      
+		    }
+		}
+	    }
+	  
+	  if( error )
+	    {
+	      PRINT_DEBUG1( "read failure on fd %d. Shutting it down",
+			    pfds[i].fd );
+	      
+	      // remove this fd's entry in the poll array
+	      server->pfds = g_array_remove_index_fast( server->pfds, i );
+	      
+	      // zap the client on this fd.
+	      g_hash_table_remove( server->clients, &pfds[i].fd  );
+	      
+	      server_print( server );
+	    }
+	}     
     }
   
   if( poll_result < 0 )
@@ -489,7 +503,9 @@ int server_unsubscribe( server_t* server,
 
 
 // add a world to the server
-stg_id_t server_world_create( server_t* server, stg_createworld_t* cw )
+stg_id_t server_world_create( server_t* server, 
+			      connection_t* con, 
+			      stg_createworld_t* cw )
 {
   
   //if( g_hash_table_lookup( server->worlds, &id ) )
@@ -505,7 +521,7 @@ stg_id_t server_world_create( server_t* server, stg_createworld_t* cw )
 
   PRINT_DEBUG2( "creating world \"%s\" id %d", cw->token, candidate );
   
-  world_t* world = world_create( server, candidate, cw );
+  world_t* world = world_create( server, con, candidate, cw );
   
   assert( world );
   
@@ -539,14 +555,14 @@ void server_handle_msg( server_t* server, int fd, stg_msg_t* msg )
       {
 	// create the world, fill in the resulting id and send the message back
 	
-	stg_id_t wid = server_world_create( server,
-					    (stg_createworld_t*)msg->payload );
-
 	// look up the client that created this world
 	connection_t* con = (connection_t*)g_hash_table_lookup( server->clients,
 								&fd );
 	assert(con);
 	
+	stg_id_t wid = server_world_create( server, con,
+					    (stg_createworld_t*)msg->payload );
+
 	// add this world to this client's list of owned worlds
 	stg_connection_world_own( con, wid );
 	
