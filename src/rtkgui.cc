@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.6.2.1 2003-08-09 01:31:18 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.6.2.2 2003-08-09 01:54:29 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -629,7 +629,9 @@ void stg_gui_neighbor_render( CEntity* ent, GArray* neighbors )
       double wx = nbor->size.x;
       double wy = nbor->size.y;
       
-      rtk_fig_rectangle( fig, px, py, pa, wx, wy, 0);
+      //rtk_fig_rectangle( fig, px, py, pa, wx, wy, 0);
+      rtk_fig_line( fig, px+wx/2.0, py+wy/2.0, px-wx/2.0, py-wy/2.0 );
+      rtk_fig_line( fig, px+wx/2.0, py-wy/2.0, px-wx/2.0, py+wy/2.0 );
       rtk_fig_arrow( fig, px, py, pa, wy, 0.10);
       
       snprintf(text, sizeof(text), "  %d", nbor->id );

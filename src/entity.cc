@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.100.2.29 2003-08-09 01:25:20 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.100.2.30 2003-08-09 01:54:28 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -211,8 +211,9 @@ CEntity::CEntity( stg_entity_create_t* init )
   neighbor_return = false;
 
   //m_dependent_attached = false;
-
-  this->draw_nose = false;
+  
+  this->mouseable = true;
+  this->draw_nose = true;
   this->interval = 0.01; // update interval in seconds 
   
   // STG_PROP_ENTITY_RANGEBOUNDS
