@@ -24,7 +24,7 @@
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: stg_driver.cc,v 1.21 2004-12-30 23:21:08 rtv Exp $
+ * CVS: $Id: stg_driver.cc,v 1.22 2005-02-07 02:03:33 rtv Exp $
  */
 
 // DOCUMENTATION ---------------------------------------------------------------------
@@ -203,12 +203,18 @@ class StgDriver : public Driver
   // Must implement the following methods.
   public: int Setup();
   public: int Shutdown();
+
+
+  // override the Driver method to grab configs inside the server thread
+public: virtual int PutConfig(player_device_id_t id, void *client, 
+			      void* src, size_t len,
+			      struct timeval* timestamp);
   
   // Main function for device thread.
   private: virtual void Main();
   private: virtual void Update();
 
-  private: void CheckConfig();
+  //private: void CheckConfig();
   private: void CheckCommands();
   private: void RefreshData();
 
@@ -676,58 +682,146 @@ void StgDriver::Main()
 }
 
 
-void StgDriver::CheckConfig()
+// override Device::PutConfig()
+int StgDriver::PutConfig(player_device_id_t id, void *client, 
+			 void* src, size_t len,
+			 struct timeval* timestamp)
 {  
+  puts( "StgDriver::PutConfig");
 
-  void *client;
-  unsigned char buffer[PLAYER_MAX_REQREP_SIZE];
+  if( len < 1 )
+    {
+      PRINT_WARN( "received a config of zero length. Ignoring it." );
+      return 0;
+    }
+  
+  Device *device;
+  //int retval;
+  struct timeval ts;
+  
+  if(timestamp)
+    ts = *timestamp;
+  else
+    GlobalTime->GetTime(&ts);
+  
+  // find this device:  
+  device_record_t* drec = NULL;
   
   for( int i=0; i<(int)this->devices->len; i++ )
-    {  
+    {
+      device_record_t* candidate = 
+	(device_record_t*)g_ptr_array_index( this->devices, i );
       
-      device_record_t* device = (device_record_t*)g_ptr_array_index( this->devices, i );
-      
-      size_t len = 0;
-      while( (len = this->GetConfig( device->id, &client, &buffer, sizeof(buffer), NULL)) > 0 )
+      if( candidate->id.port == id.port &&
+	  candidate->id.code == id.code &&
+	  candidate->id.index == id.index )
 	{
-	  
-	  switch( device->id.code )
-	    {
-	    case PLAYER_SIMULATION_CODE:
-	      this->HandleConfigSimulation( device, client, buffer, len );
-	      break;
-	      
-	    case PLAYER_LASER_CODE:
-	      this->HandleConfigLaser( device, client, buffer, len  );
-	      break;
-	      
-	    case PLAYER_POSITION_CODE:
-	      this->HandleConfigPosition( device, client, buffer, len  );
-	      break;
-	      
-	    case PLAYER_FIDUCIAL_CODE:
-	      this->HandleConfigFiducial( device, client, buffer, len  );
-	      break;
-	      
-	    case PLAYER_BLOBFINDER_CODE:
-	      this->HandleConfigFiducial( device, client, buffer, len  );
-	      break;
-	    case PLAYER_SONAR_CODE:
-	      this->HandleConfigSonar( device, client, buffer, len  );
-	      break;
-	      
-	    default:
-	      printf( "Stage driver error: unknown player device code (%d)\n",
-		      device->id.code );	     	      
-	      
-	      // we don't recognize this interface at all, but we'll send
-	      // a NACK as a minimum reply
-	      if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
-		DRIVER_ERROR("PutReply() failed");	  
-	    }      
-	}      
+	  drec = candidate;
+	  break;
+	}
     }
+  
+  // if the device was found, call the appropriate config handler
+  if( drec ) 
+    switch( drec->id.code )
+      {
+      case PLAYER_SIMULATION_CODE:
+	this->HandleConfigSimulation( drec, client, src, len );
+	break;
+	
+      case PLAYER_LASER_CODE:
+	this->HandleConfigLaser( drec, client, src, len  );
+	break;
+	
+      case PLAYER_POSITION_CODE:
+	this->HandleConfigPosition( drec, client, src, len  );
+	break;
+	
+      case PLAYER_FIDUCIAL_CODE:
+	this->HandleConfigFiducial( drec, client, src, len  );
+	break;
+	
+      case PLAYER_BLOBFINDER_CODE:
+	this->HandleConfigFiducial( drec, client, src, len  );
+	break;
+      case PLAYER_SONAR_CODE:
+	this->HandleConfigSonar( drec, client, src, len  );
+	break;
+	
+      default:
+	printf( "Stage driver error: unknown player device code (%d)\n",
+		device->id.code );	     	      
+	
+	// we don't recognize this interface at all, but we'll send
+	// a NACK as a minimum reply
+	if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
+	  DRIVER_ERROR("PutReply() failed");	  
+      }      
+  else
+    {
+      PRINT_WARN3( "Failed to find device id (%d:%d:%d)", 
+		   id.port, id.code, id.index );
+
+      if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
+	DRIVER_ERROR("PutReply() failed");	  
+    }
+  
+  return(0);
 }
+
+
+// void StgDriver::CheckConfig()
+// {  
+
+//   void *client;
+//   unsigned char buffer[PLAYER_MAX_REQREP_SIZE];
+  
+//   for( int i=0; i<(int)this->devices->len; i++ )
+//     {  
+      
+//       device_record_t* device = (device_record_t*)g_ptr_array_index( this->devices, i );
+      
+//       size_t len = 0;
+//       while( (len = this->GetConfig( device->id, &client, &buffer, sizeof(buffer), NULL)) > 0 )
+// 	{
+	  
+// 	  switch( device->id.code )
+// 	    {
+// 	    case PLAYER_SIMULATION_CODE:
+// 	      this->HandleConfigSimulation( device, client, buffer, len );
+// 	      break;
+	      
+// 	    case PLAYER_LASER_CODE:
+// 	      this->HandleConfigLaser( device, client, buffer, len  );
+// 	      break;
+	      
+// 	    case PLAYER_POSITION_CODE:
+// 	      this->HandleConfigPosition( device, client, buffer, len  );
+// 	      break;
+	      
+// 	    case PLAYER_FIDUCIAL_CODE:
+// 	      this->HandleConfigFiducial( device, client, buffer, len  );
+// 	      break;
+	      
+// 	    case PLAYER_BLOBFINDER_CODE:
+// 	      this->HandleConfigFiducial( device, client, buffer, len  );
+// 	      break;
+// 	    case PLAYER_SONAR_CODE:
+// 	      this->HandleConfigSonar( device, client, buffer, len  );
+// 	      break;
+	      
+// 	    default:
+// 	      printf( "Stage driver error: unknown player device code (%d)\n",
+// 		      device->id.code );	     	      
+	      
+// 	      // we don't recognize this interface at all, but we'll send
+// 	      // a NACK as a minimum reply
+// 	      if (this->PutReply( device->id, client, PLAYER_MSGTYPE_RESP_NACK, NULL, 0, NULL) != 0)
+// 		DRIVER_ERROR("PutReply() failed");	  
+// 	    }      
+// 	}      
+//     }
+// }
 
 
 void StgDriver::HandleConfigSimulation( device_record_t* device, void* client, void* buffer, size_t len )
@@ -1249,7 +1343,7 @@ void StgDriver::HandleCommandPosition( device_record_t* device, void* src, size_
 void StgDriver::Update(void)
 {
   // Check for and handle configuration requests
-  this->CheckConfig();
+  //this->CheckConfig();
   
   // Check for commands
   this->CheckCommands();
