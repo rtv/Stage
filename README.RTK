@@ -1,0 +1,16 @@
+
+Installing the RTK library
+--------------------------
+Andrew Howard ahoward@usc.edu 30 Apr 2001
+
+Player tools uses the RTK library for managing the GUI.
+If you are compiling a source distribution, the RTK library
+can be found in the "stage/rtk/" directory.
+If you are compiling a CVS snapshot, the RTK library is not
+included by default (it is a separate module in the CVS 
+repository).  You should checkout the "rtk" module, then
+put a symlink to it in the top-level directory:
+    ln -s <path to rtk> stage/rtk
+
+
+

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.8 $
+//  $Revision: 1.1.2.9 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -78,6 +78,7 @@ bool CLaserBeacon::Load(char *buffer, int bufflen)
         //
         else if (strcmp(argv[i], "id") == 0 && i + 1 < argc)
         {
+            strcpy(m_id, argv[i + 1]);
             m_beacon_id = atoi(argv[i + 1]);
             i += 2;
         }

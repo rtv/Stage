@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/usc_pioneer.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.6 $
 //
 // Usage:
 //  (empty)
@@ -32,6 +32,7 @@
 #include "miscdevice.hh"
 #include "sonardevice.hh"
 #include "laserdevice.hh"
+#include "laserbeacondevice.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -45,6 +46,7 @@ CUscPioneer::CUscPioneer(CWorld *world, CObject *parent)
     m_misc = new CMiscDevice(world, m_pioneer, m_player);
     m_sonar = new CSonarDevice(world, m_pioneer, m_player);
     m_laser = new CLaserDevice(world, m_pioneer, m_player);
+    m_laser_beacon = new CLaserBeaconDevice(world, m_pioneer, m_player, m_laser);
 
     // Make the pioneer base the default parent of any would be children
     //
@@ -58,6 +60,7 @@ CUscPioneer::CUscPioneer(CWorld *world, CObject *parent)
     m_child[m_child_count++] = m_misc;
     m_child[m_child_count++] = m_sonar;    
     m_child[m_child_count++] = m_laser;
+    m_child[m_child_count++] = m_laser_beacon;
 }
 
 

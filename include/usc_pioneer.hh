@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/usc_pioneer.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -38,6 +38,8 @@ class CPioneerMobileDevice;
 class CMiscDevice;
 class CSonarDevice;
 class CLaserDevice;
+class CLaserBeaconDevice;
+
 
 // Base class for all player devices
 //
@@ -78,6 +80,7 @@ class CUscPioneer : public CObject
     private: CMiscDevice *m_misc;
     private: CSonarDevice *m_sonar;
     private: CLaserDevice *m_laser;
+    private: CLaserBeaconDevice *m_laser_beacon;
 
     // Anonymous list of objects/devices
     //
