@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.17 $
+//  $Author: gerkey $
+//  $Revision: 1.17.2.1 $
 //
 // Usage:
 //  (empty)
@@ -40,6 +40,7 @@ CVisionBeacon::CVisionBeacon(CWorld *world, CEntity *parent)
   m_data_len    = 0;
   m_command_len = 0;
   m_config_len  = 0;
+  m_reply_len  = 0;
 
   vision_return = true;
   laser_return = LaserReflect;

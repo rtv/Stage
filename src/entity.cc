@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.51.2.1 2002-05-01 00:54:01 gerkey Exp $
+//  $Id: entity.cc,v 1.51.2.2 2002-05-17 02:18:15 gerkey Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -109,11 +109,16 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
   m_data_len    = 0; // type specific - set in subclasses
   m_command_len = 0; // ditto
   m_config_len  = 0; // ditto
+  m_reply_len   = 0; // ditto
 
   m_info_io     = NULL; // instance specific pointers into mmap
   m_data_io     = NULL; 
   m_command_io  = NULL;
   m_config_io   = NULL;
+  m_reply_io    = NULL;
+
+  m_reqqueue = NULL;
+  m_repqueue = NULL;
 
 #ifdef INCLUDE_RTK2
   this->fig = NULL;
@@ -303,6 +308,8 @@ bool CEntity::Startup( void )
   m_data_io    = (uint8_t*)m_info_io + m_info_len;
   m_command_io = (uint8_t*)m_data_io + m_data_len; 
   m_config_io  = (uint8_t*)m_command_io + m_command_len;
+  m_reply_io   = (uint8_t*)(m_config_io + 
+          (m_config_len * sizeof(playerqueue_elt_t)));
   
   m_info_io->len = SharedMemorySize(); // total size of all the shared data
   m_info_io->lockbyte = this->lock_byte; // record lock on this byte
@@ -311,6 +318,7 @@ bool CEntity::Startup( void )
   m_info_io->data_len    =  (uint32_t)m_data_len;
   m_info_io->command_len =  (uint32_t)m_command_len;
   m_info_io->config_len  =  (uint32_t)m_config_len;
+  m_info_io->reply_len   =  (uint32_t)m_reply_len;
   
   m_info_io->data_avail    =  0;
   m_info_io->command_avail =  0;
@@ -320,6 +328,11 @@ bool CEntity::Startup( void )
   m_info_io->player_id.index = m_player_index;
   m_info_io->player_id.type = m_player_type;
   m_info_io->subscribed = 0;
+
+  // create the PlayerQueue objects that we'll use to access requests and
+  // replies.  pass in the chunks of memory that are already mmap()ed
+  assert(m_reqqueue = new PlayerQueue(m_config_io,m_config_len));
+  assert(m_repqueue = new PlayerQueue(m_reply_io,m_reply_len));
 
 //  #ifdef DEBUG
 //    printf( "\t\t(%p) (%d,%d,%d) IO at %p\n"
@@ -372,7 +385,9 @@ void CEntity::Shutdown()
 // Compute the total shared memory size for the device
 int CEntity::SharedMemorySize( void )
 {
-  return( m_info_len + m_data_len + m_command_len + m_config_len );
+  return( m_info_len + m_data_len + m_command_len + 
+          (m_config_len * sizeof(playerqueue_elt_t)) +
+          (m_reply_len * sizeof(playerqueue_elt_t)));
 }
 
 
@@ -789,44 +804,57 @@ size_t CEntity::GetCommand( void* cmd, size_t len )
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a configuration from the shared memory
-size_t CEntity::GetConfig( void* config, size_t len )
-{  
+size_t CEntity::GetConfig(void** client, void* config, size_t len )
+{
+  int size;
+
   Lock();
 
-//    if (m_info_io->config_avail > 0)
-//    {
-//      // Copy data out of shared memory,
-//      // but check for overflow.
-//      if (len >= m_info_io->config_avail)
-//        memcpy(config, m_config_io, len);
-//      else
-//      {
-//        PRINT_WARN("config buffer overflow; discarding configuration request");
-//        len = 0;
-//      }
-//      // Consume the configuration request
-//      m_info_io->config_avail = 0;
-//    }
-
-  // made the config logic the same as command and data 
-  // this seems to fix the config bug - why was it different?
-
+  /*
   // the config MUST be the right size
   if (len == m_info_io->config_avail && len == m_info_io->config_len  )
-    {
-      memcpy(config, m_config_io, len);
-      // Consume the configuration request
-      m_info_io->config_avail = 0;
-    }
+  {
+    memcpy(config, m_config_io, len);
+    // Consume the configuration request
+    m_info_io->config_avail = 0;
+  }
   else
-    {
-      PRINT_DEBUG1( "no config found (%d bytes available)\n", 
-		    m_info_io->config_avail ); 
-      len = 0;
-    }
-  
+  {
+    PRINT_DEBUG1( "no config found (%d bytes available)\n", 
+                  m_info_io->config_avail ); 
+    len = 0;
+  }
+  */
+
+  if((size = m_reqqueue->Pop(client, (unsigned char*)config, len)) < 0)
+  {
+    Unlock();
+    return(0);
+  }
+
   Unlock();
-  return len;    
+  return(size);
+}
+
+size_t CEntity::PutReply(void* client, unsigned short type,
+                         struct timeval* ts, void* reply, size_t len)
+{
+  double seconds;
+  struct timeval curr;
+
+  if(ts)
+    curr = *ts;
+  else
+  {
+    seconds = m_world->GetTime();
+    curr.tv_sec = (long)seconds;
+    curr.tv_usec = (long)((seconds - curr.tv_sec)*1000000);
+  }
+
+  Lock();
+  m_repqueue->Push(client, type, &curr, (unsigned char*)reply, len);
+  Unlock();
+  return(0);
 }
 
 

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
-//  $Author: inspectorg $
-//  $Revision: 1.41 $
+//  $Author: gerkey $
+//  $Revision: 1.41.2.1 $
 //
 // Usage:
 //  (empty)
@@ -281,7 +281,12 @@ protected: bool CEntity::Unlock( void );
 
   // Read from the configuration buffer
   // Returns the number of bytes copied
-  protected: size_t GetConfig( void* config, size_t len);
+  protected: size_t GetConfig(void** client, void* config, size_t len);
+
+  // Push a configuration reply onto the outgoing queue.
+  // Returns 0 on success, non-zero on error.
+  protected: size_t PutReply(void* client, unsigned short type,
+                             struct timeval* ts, void* reply, size_t len);
 
   // See if the device is subscribed
   // returns the number of current subscriptions
@@ -300,12 +305,18 @@ protected: bool CEntity::Unlock( void );
   protected: uint8_t *m_data_io; 
   protected: uint8_t *m_command_io;
   protected: uint8_t *m_config_io;
+  protected: uint8_t *m_reply_io;
 
   // the sizes of these buffers in bytes
   protected: size_t m_data_len;
   protected: size_t m_command_len;
   protected: size_t m_config_len;
+  protected: size_t m_reply_len;
   protected: size_t m_info_len;
+
+  // we'll use these objects to access the configuration request/reply queues
+  protected: PlayerQueue* m_reqqueue;
+  protected: PlayerQueue* m_repqueue;
 
 #ifdef INCLUDE_RTK2
   // Initialise the rtk gui

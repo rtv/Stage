@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.14 $
+//  $Author: gerkey $
+//  $Revision: 1.14.2.1 $
 //
 // Usage:
 //  (empty)
@@ -40,7 +40,8 @@ CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent )
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_ptz_data_t ); 
   m_command_len = sizeof( player_ptz_cmd_t );
-  m_config_len  = 0;//sizeof( player_ptz_config_t );
+  m_config_len  = 0;
+  m_reply_len  = 0;
  
   m_player_type = PLAYER_PTZ_CODE;
   m_stage_type = PtzType;

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.19 $
+//  $Author: gerkey $
+//  $Revision: 1.19.2.1 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -42,6 +42,7 @@ CLaserBeacon::CLaserBeacon(CWorld *world, CEntity *parent)
   m_data_len    = 0;
   m_command_len = 0;
   m_config_len  = 0;
+  m_reply_len  = 0;
 
   // This is not a player device
   m_player_port = 0; 

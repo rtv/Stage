@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.88.2.1 $
+//  $Revision: 1.88.2.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -634,11 +634,14 @@ bool CWorld::Startup()
   
   // exec and set up Player
   if( m_run_player )
-    {
-      PRINT_DEBUG( "STARTING PLAYER" );
-      StartupPlayer();    
-      PRINT_DEBUG( "DONE STARTING PLAYER" );
-    }
+  {
+    PRINT_DEBUG( "STARTING PLAYER" );
+    StartupPlayer();    
+    PRINT_DEBUG( "DONE STARTING PLAYER" );
+  } 
+  else 
+    printf("Not starting Player; Stage I/O in %s\n", DeviceDirectory());
+
 
   // spawn an XS process, unless we disabled it (rtkstage disables xs by default)
   if( m_run_xs && m_run_pose_server && m_run_environment_server ) 

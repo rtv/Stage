@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/miscdevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.7 $
+//  $Author: gerkey $
+//  $Revision: 1.7.2.1 $
 //
 // Usage:
 //  (empty)
@@ -37,8 +37,9 @@ CMiscDevice::CMiscDevice(CWorld *world, CEntity *parent )
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_misc_data_t );
-  m_command_len = 0;//sizeof( misc_command_buffer_t );
-  m_config_len  = 0;//sizeof( misc_config_buffer_t );
+  m_command_len = 0;
+  m_config_len  = 0;
+  m_reply_len  = 0;
   
   m_player_type = PLAYER_MISC_CODE;
   m_stage_type = MiscType;

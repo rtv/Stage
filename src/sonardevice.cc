@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.16 $
+//  $Author: gerkey $
+//  $Revision: 1.16.2.1 $
 //
 // Usage:
 //  (empty)
@@ -37,7 +37,8 @@ CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent )
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_sonar_data_t );
   m_command_len = 0;
-  m_config_len  = sizeof( player_sonar_config_t );
+  m_config_len  = 1;
+  m_reply_len  = 1;
   
   m_player_type = PLAYER_SONAR_CODE; // from player's messages.h
   m_stage_type = SonarType;
@@ -82,15 +83,23 @@ void CSonarDevice::Update( double sim_time )
   
   // Get configs  
   uint16_t cmd;
-  if( GetConfig( &cmd, sizeof(cmd) ) !=  0 )
+  void* client;
+  if(GetConfig(&client, &cmd, sizeof(cmd)) >  0)
+  {
+    // we got a config
+    if ( cmd == PLAYER_SONAR_POWER_REQ )
     {
-      // we got a config
-      if ( cmd == PLAYER_SONAR_POWER_REQ )
-	// we got a sonar power toggle - i just ignore them.
-	puts( "sonar power toggled" );
+      // we got a sonar power toggle - i just ignore them.
+      puts( "sonar power toggled" );
+      PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, NULL, 0);
     }
+    else
+    {
+      // don't recognize this request
+      PutReply(client, PLAYER_MSGTYPE_RESP_NACK, NULL, NULL, 0);
+    }
+  }
   
-
   // Check bounds
   //
   ASSERT((size_t) m_sonar_count <= sizeof(m_data.ranges) 

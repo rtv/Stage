@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.45 $
+//  $Author: gerkey $
+//  $Revision: 1.45.2.1 $
 //
 // Usage:
 //  (empty)
@@ -48,7 +48,8 @@ CLaserDevice::CLaserDevice(CWorld *world,
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_laser_data_t );
   m_command_len = 0;
-  m_config_len  = sizeof( player_laser_config_t );
+  m_config_len  = 1;
+  m_reply_len  = 1;
   
   m_player_type = PLAYER_LASER_CODE; // from player's messages.h
   m_stage_type = LaserTurretType;
@@ -167,7 +168,8 @@ void CLaserDevice::Update( double sim_time )
 bool CLaserDevice::CheckConfig()
 {
   player_laser_config_t config;
-  if (GetConfig( &config, sizeof(config) ) == 0)
+  void* client;
+  if(GetConfig(&client, &config, sizeof(config)) == 0)
     return false;  
 
   // Swap some bytes
@@ -204,11 +206,14 @@ bool CLaserDevice::CheckConfig()
   {
     // Ignore invalid configurations
     //  
+    PutReply(client, PLAYER_MSGTYPE_RESP_NACK, NULL, NULL, 0);
     PRINT_MSG("invalid laser configuration request");
     return false;
   }
         
   this->intensity = config.intensity;
+
+  PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, NULL, 0);
 
   return true;
 }
