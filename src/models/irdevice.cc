@@ -21,9 +21,10 @@
  * Desc: Simulates a noisy IR ring
  * Author: John Sweeney, adapted from sonardevice.cc
  * Date: 22 Aug 2002
- * CVS info: $Id: irdevice.cc,v 1.1 2003-06-10 03:29:21 jazzfunk Exp $
+ * CVS info: $Id: irdevice.cc,v 1.2 2003-06-17 19:15:26 rtv Exp $
  */
 
+#include <iostream>
 #include <math.h>
 #include "world.hh"
 #include "irdevice.hh"
@@ -100,7 +101,7 @@ bool CIRDevice::Load(CWorldFile *worldfile, int section)
   // do we add noise to the readings?
   add_noise = worldfile->ReadInt(section, "add_noise", add_noise);
 
-  cout <<"IR: noise: "<<add_noise<<endl;
+  std::cout <<"IR: noise: "<<add_noise<<std::endl;
   // load noise parameters
   snprintf(key, sizeof(key), "noiseparams");
   for (i =0; i < 2; i++) {
