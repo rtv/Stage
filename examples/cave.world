@@ -1,14 +1,9 @@
-robots = 4
-robot_colors = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
-robot_width = 0.6
-robot_length = 0.6
-pixels_per_meter = 25
-environment_file = cave.pnm
-position_file = cave.pos
-window_x_pos = 0
-window_y_pos = 0
-window_width = 500
-window_height = 500
-window_x_scroll = 0
-window_y_scroll = 0
-quit_time = 0
+
+set environment_file = cave.pnm
+set pixels_per_meter =  60
+set laser_res = 2
+
+create usc_pioneer pose 1.00 2.0 0.00 name ant port 6665 
+create usc_pioneer pose 1.00 3.0 0.00 name fly port 6666 
+create usc_pioneer pose 1.00 4.0 0.00 name bee port 6667 
+
