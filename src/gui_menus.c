@@ -171,6 +171,8 @@ void gui_menu_matrix( rtk_menuitem_t *item )
   gui_window_t* win = (gui_window_t*)item->menu->canvas->userdata;
  
   win->show_matrix = rtk_menuitem_ischecked( item );
+
+  if( win->matrix ) rtk_fig_clear( win->matrix );
 }
 
 void gui_menu_debug( rtk_menuitem_t *item )

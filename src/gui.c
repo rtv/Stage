@@ -181,6 +181,8 @@ void render_matrix_cell( gui_mf_t*mf, stg_matrix_coord_t* coord )
   rtk_fig_rectangle( mf->fig, 
 		     coord->x * pixel_size + pixel_size/2.0, 
 		     coord->y * pixel_size + pixel_size/2.0, 0, 
+		     //coord->x + pixel_size/2.0, 
+		     //coord->y + pixel_size/2.0, 0, 
 		     pixel_size, pixel_size, 0 );
 }
 
@@ -241,18 +243,18 @@ void gui_world_update( world_t* world )
   
   gui_window_t* win = world->win;
   
-   if( win->show_matrix ) gui_world_matrix( world, win );
-
+  if( win->show_matrix ) gui_world_matrix( world, win );
+  
   char clock[256];
   snprintf( clock, 255, "%lu:%2lu:%2lu.%3lu\n",
 	    world->sim_time / 3600000, // hours
 	    (world->sim_time % 3600000) / 60000, // minutes
 	    (world->sim_time % 60000) / 1000, // seconds
 	    world->sim_time % 1000 ); // milliseconds
-
+  
   //puts( clock );
   gtk_label_set_text( win->timelabel, clock );
-
+   
   rtk_canvas_render( win->canvas );
 }
 
