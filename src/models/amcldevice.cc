@@ -21,10 +21,13 @@
  * Desc: Dummy adaptive MCL device (the real driver is implemented in Player)
  * Author: Andrew Howard
  * Date: 6 Feb 2003
- * $Id: amcldevice.cc,v 1.1 2003-02-08 07:54:42 inspectorg Exp $
+ * $Id: amcldevice.cc,v 1.2 2003-02-12 18:58:34 inspectorg Exp $
  */
 
+#include "stage.h"
+#include "worldfile.hh"
 #include "amcldevice.hh"
+
 
 // a static named constructor - a pointer to this function is given
 // to the Library object and paired with a string.  When the string
@@ -41,7 +44,7 @@ CAdaptiveMCLDevice::CAdaptiveMCLDevice(LibraryItem* libit, CWorld *world, CEntit
     : CPlayerEntity(libit, world, parent)
 {
     // set the Player IO sizes correctly for this type of Entity
-  m_data_len = 0;
+  m_data_len = sizeof(amcl_stage_data_t);
   m_command_len = 0;
   m_config_len = 0;
   m_reply_len = 0;
@@ -58,5 +61,32 @@ CAdaptiveMCLDevice::CAdaptiveMCLDevice(LibraryItem* libit, CWorld *world, CEntit
   this->laser_return = LaserTransparent;
 
   return;
+}
+  
+
+// Load settings from the world file
+bool CAdaptiveMCLDevice::Load(CWorldFile *worldfile, int section)
+{
+  if (!CPlayerEntity::Load(worldfile, section))
+    return false;
+
+  // Read map settings
+  strncpy(this->data.map_file, worldfile->ReadFilename(section, "map_file", ""),
+          sizeof(this->data.map_file));
+  this->data.map_scale = worldfile->ReadLength(section, "map_scale", 0.05);
+
+  return true;
+}
+
+
+// Initialise entity
+bool CAdaptiveMCLDevice::Startup(void)
+{
+  if (!CPlayerEntity::Startup())
+    return false;
+
+  PutData(&this->data, sizeof(this->data));
+    
+  return true;
 }
 

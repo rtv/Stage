@@ -21,13 +21,25 @@
  * Desc: Dummy adaptive MCL device (the real driver is implemented in Player)
  * Author: Andrew Howard
  * Date: 6 Feb 2003
- * $Id: amcldevice.hh,v 1.1 2003-02-08 07:54:42 inspectorg Exp $
+ * $Id: amcldevice.hh,v 1.2 2003-02-12 18:58:35 inspectorg Exp $
  */
 
 #ifndef ADAPTIVEMCLDEVICE_HH
 #define ADAPTIVEMCLDEVICE_HH
 
 #include "playerdevice.hh"
+
+
+// This is a god-awful hack; this structure must be duplicated in both
+// Player and Stage.
+// Shared Player/Stage configuration info
+typedef struct
+{
+  char map_file[PATH_MAX];
+  double map_scale;
+  
+} amcl_stage_data_t;
+
 
 //  Dummy device for adaptive MCL
 class CAdaptiveMCLDevice : public CPlayerEntity 
@@ -37,6 +49,15 @@ class CAdaptiveMCLDevice : public CPlayerEntity
                                              CWorld *world, CEntity *parent);
 	// Default constructor
 	public: CAdaptiveMCLDevice(LibraryItem *libit, CWorld *world, CEntity *parent);
+
+  // Load settings from the world file
+  public: bool Load(CWorldFile *worldfile, int section);
+
+  // Initialise entity
+  public: virtual bool Startup(void);
+
+  // Configuration data
+  amcl_stage_data_t data;
 };
 
 
