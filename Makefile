@@ -8,7 +8,7 @@
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
 #  $Author: gerkey $
-#  $Revision: 1.3.2.9 $
+#  $Revision: 1.3.2.10 $
 #
 ###########################################################################
 
@@ -56,7 +56,7 @@ clean:
 
 INSTALL_BIN = $(INSTALL_DIR)/bin
 INSTALL_ETC = /usr/local/etc/rtk
-INSTALL_BIN_FILES = bin/stage bin/rtkstage
+INSTALL_BIN_FILES = bin/stage bin/rtkstage bin/xstage
 INSTALL_ETC_FILES = etc/rtkstage.cfg
 
 install:
