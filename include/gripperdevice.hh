@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/gripperdevice.hh,v $
 //  $Author: gerkey $
-//  $Revision: 1.10 $
+//  $Revision: 1.11 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -79,13 +79,16 @@ class CGripperDevice : public CEntity
     m_lift_moving, m_lift_error, m_inner_break_beam,
     m_outer_break_beam;
                    
-  // this is the range at which the gripper will actually pick
-  // up a puck
-  //   ***no longer used*** now the breakbeams decide
-  //private: double m_gripper_range;
-
   // this is the maximum number of pucks that we can carry
   private: int m_puck_capacity;
+
+  // these are used both for locating break beams and for visualization
+  private: double m_paddle_width;
+  private: double m_paddle_height;
+
+  // extra colors used for drawing break beams
+  private: StageColor broken_beam_color;
+  private: StageColor clear_beam_color;
 
   // whether or not we "consume" pucks.  if we do consume, then pucks
   // are essentially eaten by the gripper and can never be dropped (like
@@ -100,24 +103,25 @@ class CGripperDevice : public CEntity
   // Load the entity from the worldfile
   public: virtual bool Load(CWorldFile *worldfile, int section);
 
-  // structure for exporting Gripper-specific data to a GUI
-  //REMOVE private: ExportGripperData expGripper; 
-  //REMOVE public: ExportData exp; // relic from xgui-style stuff still used by BG
+
 
   // Gripper dimenions
-  private: double m_width, m_height;
-  
+  //private: double m_width, m_height;
 
-#ifdef INCLUDE_RTK
+#ifdef INCLUDE_RTK2
     
-  // Process GUI update messages
-  //
-  public: virtual void OnUiUpdate(RtkUiDrawData *pData);
+  // Initialise the rtk gui
+  protected: virtual void RtkStartup();
 
-  // Process GUI mouse messages
-  //
-  public: virtual void OnUiMouse(RtkUiMouseData *pData);
-    
+  // Finalise the rtk gui
+  protected: virtual void RtkShutdown();
+
+  // Update the rtk gui
+  protected: virtual void RtkUpdate();
+
+  private: rtk_fig_t *grip_fig;
+  private: rtk_fig_t *inner_beam_fig;
+  private: rtk_fig_t *outer_beam_fig;
 #endif
 
 };

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.22 $
+//  $Revision: 1.23 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -34,7 +34,11 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
   // Set default shape and geometry
   this->shape = ShapeRect;
   this->size_x = 0.08;
-  this->size_y = 0.20;
+  this->size_y = 0.30;
+  
+  // these are used both for locating break beams and for visualization
+  this->m_paddle_width = this->size_x;
+  this->m_paddle_height = this->size_y / 5.0;
 
   m_player.code = PLAYER_GRIPPER_CODE;
   this->stage_type = GripperType;
@@ -42,10 +46,15 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
 
   m_interval = 0.1; 
 
-  puck_return = true; // we interact with pucks and nothing else
+  // we interact with pucks and obstacles
+  puck_return = true; 
+  obstacle_return = true;
 
   this->mass = 20; // same mass as a robot
 
+  // some nice colors for beams
+  clear_beam_color = ::LookupColor("light blue");
+  broken_beam_color = ::LookupColor("red");
   
   // these are never changed (for now)
   m_paddles_moving = false;
@@ -62,9 +71,6 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
   m_inner_break_beam = false;
   m_outer_break_beam = false;
 
-  m_width = .08;
-  m_height = 0.2;
-  
   m_puck_count = 0;
 }
 
@@ -195,8 +201,6 @@ CEntity* CGripperDevice::BreakBeam( int beam )
   double costh = cos( pth );
   double sinth = sin( pth );
 
-  // the break beams run two-thirds the length of the gripper
-
   // if we have a normal (non-consuming) gripper and the paddles are closed,
   // but we don't have a puck, then the beams are both clear. if we
   // have at least one puck, then both beams are broken
@@ -208,34 +212,49 @@ CEntity* CGripperDevice::BreakBeam( int beam )
       return(m_pucks[0]);
   }
 
+  double xdist, ydist;
+  ydist = (this->size_y-2*this->m_paddle_height)/2.0;
+
+  /*
   double xdist = 0;
-  double ydist = this->size_y/3.0;
+  double ydist = this->m_paddle_height;
+  */
 
   switch( beam )
   {
-    case 0: xdist = this->size_x;  break;
-    case 1: xdist = this->size_x/2.0;  break;
-    default: printf( "uknown gripper break beam number %d\n", beam );
+    case 0: 
+      xdist = this->size_x/2.0 + this->m_paddle_width;
+      break;
+    case 1: 
+      xdist = this->size_x/2.0 + this->m_paddle_width/2.0; 
+      break;
+    default:
+      printf("unknown gripper break beam number %d\n", beam);
+      return(NULL);
   }
   
-  xoffset = xdist * costh - xdist * sinth;
-  yoffset = ydist * sinth + ydist * costh;
-    
+  // transform to global coords
+  xoffset = xdist * costh - ydist * sinth;
+  yoffset = xdist * sinth + ydist * costh;
+
+  double beamlength = this->size_y-2*this->m_paddle_height;
+
   CEntity* ent = 0;
 
-  CLineIterator lit( px+xoffset, py+yoffset, pth - M_PI/2.0, this->size_y * 0.66, 
-                     m_world->ppm, m_world->matrix, PointToBearingRange ); 
+  /*
+  CLineIterator lit(px+xoffset, py+yoffset, pth - M_PI/2.0, 
+                    this->size_y * 0.66, m_world->ppm, m_world->matrix, 
+                    PointToBearingRange ); 
+   */
+  CLineIterator lit(px+xoffset, py+yoffset, pth - M_PI/2.0, 
+                    beamlength, m_world->ppm, m_world->matrix, 
+                    PointToBearingRange); 
   
   while( (ent = lit.GetNextEntity()) )
   {
-    //puts( "I SEE SOMETHING!" );
-      
     // grippers only perceive pucks right now.
     if( ent->stage_type == PuckType )
-    {
-      //puts( "its a PUCK!" );
       return ent;
-    }
   }
 
   return NULL;
@@ -287,7 +306,7 @@ void CGripperDevice::DropObject()
   GetGlobalPose(px,py,pth);
 
   // drop the last one we picked up
-  double x_offset = (m_width*2.0);
+  double x_offset = (this->size_x*2.0);
   m_puck_count--;
   m_pucks[m_puck_count]->m_parent_entity = (CEntity*)NULL;
   m_pucks[m_puck_count]->SetDirty(1);
@@ -319,45 +338,6 @@ void CGripperDevice::PickupObject()
   //double closest_dist = MAXDOUBLE;
   //double ox,oy,oth;
   //double this_dist;
-
-  // took out all the Rectangle stuff; now rely on the breakbeams to decide
-  //    BPG
-  /*
-    CRectangleIterator rit( px+m_size_x, py, pth, m_size_x, m_size_y, 
-    m_world->ppm, m_world->matrix ); 
-
-  
-    CEntity* ent = 0;
-
-    while( (ent = rit.GetNextEntity()) )
-    {
-    printf( "I SEE SOMETHING: %d\n",ent->m_stage_type );
-
-    // if it's not a puck try the next one
-    if( ent->m_stage_type != PuckType )
-    continue;
-
-    puts( "I SEE A PUCK!" );
-
-    // first make sure that we're not trying to pick up
-    // an already picked up puck
-    int j;
-    for(j=0;j<m_puck_count;j++)
-    {
-    if(m_pucks[j] == ent )
-    break;
-    }
-    if(j < m_puck_count)
-    continue;
-    ent->GetGlobalPose(ox,oy,oth);
-    this_dist = sqrt((px-ox)*(px-ox)+(py-oy)*(py-oy));
-    if(this_dist < closest_dist)
-    {
-    closest_dist = this_dist;
-    closest_puck = ent;
-    }
-    }
-  */
 
   // first, check the inner break beam
   if((closest_puck = BreakBeam(1)))
@@ -395,9 +375,9 @@ void CGripperDevice::PickupObject()
 
     // if we're consuming the puck then move it behind the gripper
     if(m_gripper_consume)
-      closest_puck->SetPose(-m_width,0,0);
+      closest_puck->SetPose(-this->size_x,0,0);
     else
-      closest_puck->SetPose(m_width/2.0+closest_puck->size_x/2.0,0,0);
+      closest_puck->SetPose(this->size_x/2.0+closest_puck->size_x/2.0,0,0);
 
     m_pucks[m_puck_count++]=closest_puck;
 
@@ -405,62 +385,131 @@ void CGripperDevice::PickupObject()
   }
 }
 
-#ifdef INCLUDE_RTK
+#ifdef INCLUDE_RTK2
+
+///////////////////////////////////////////////////////////////////////////
+// Initialise the rtk gui
+void CGripperDevice::RtkStartup()
+{
+  CEntity::RtkStartup();
+  
+  // Create a figure representing this object
+  this->grip_fig = rtk_fig_create(m_world->canvas, NULL, 49);
+  // Set the color
+  rtk_fig_color_rgb32(this->grip_fig, this->color);
+
+  // Create a figure representing the inner breakbeam
+  this->inner_beam_fig = rtk_fig_create(m_world->canvas, NULL, 49);
+  // Create a figure representing the outer breakbeam
+  this->outer_beam_fig = rtk_fig_create(m_world->canvas, NULL, 49);
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Finalise the rtk gui
+void CGripperDevice::RtkShutdown()
+{
+  // Clean up the figure we created
+  rtk_fig_destroy(this->grip_fig);
+
+  CEntity::RtkShutdown();
+} 
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
 //
-void CGripperDevice::OnUiUpdate(RtkUiDrawData *data)
+void CGripperDevice::RtkUpdate()
 {
-    CEntity::OnUiUpdate(data);
-    data->begin_section("global", "");
-    
-    if (data->draw_layer("", true))
-    {
-        double ox, oy, oth;
-        GetGlobalPose(ox, oy, oth);
-        data->set_color(RTK_RGB(0, 255, 0));
-        // Draw the gripper
-        data->ex_rectangle(ox, oy, oth, m_width,m_height);
-        // Draw the paddles
-        double x_offset;
-        double y_offset;
-        if(expGripper.paddles_open)
-        {
-          x_offset = (m_width/2.0)+(expGripper.paddle_width/2.0);
-          y_offset = (m_height/2.0)-(expGripper.paddle_height/2.0);
-        }
-        else
-        {
-          x_offset = (m_width/2.0)+(expGripper.paddle_width/2.0);
-          y_offset = (expGripper.paddle_height/2.0);
-        }
-        data->ex_rectangle(ox+(x_offset*cos(oth))+(y_offset*-sin(oth)),
-                        oy+(x_offset*sin(oth))+(y_offset*cos(oth)),
-                        oth, 
-                        expGripper.paddle_width,
-                        expGripper.paddle_height);
+  CEntity::RtkUpdate();
+  
+  // Get global pose
+  double gx, gy, gth;
+  GetGlobalPose(gx, gy, gth);
 
-        y_offset = -y_offset;
-        data->ex_rectangle(ox+(x_offset*cos(oth))+(y_offset*-sin(oth)),
-                        oy+(x_offset*sin(oth))+(y_offset*cos(oth)),
-                        oth, 
-                        expGripper.paddle_width,
-                        expGripper.paddle_height);
+  rtk_fig_clear(this->grip_fig);
+  rtk_fig_origin(this->grip_fig, gx, gy, gth );
+
+  // Draw the gripper
+  //rtk_fig_rectangle(this->grip_fig, 0, 0, 0, this->size_x, this->size_y, 
+                    //false);
+    
+  // locate the paddles
+  double x_offset;
+  double y_offset;
+  if(this->m_paddles_open)
+  {
+    x_offset = (this->size_x/2.0)+(this->m_paddle_width/2.0);
+    y_offset = (this->size_y/2.0)-(this->m_paddle_height/2.0);
+  }
+  else
+  {
+    x_offset = (this->size_x/2.0)+(this->m_paddle_width/2.0);
+    y_offset = (this->m_paddle_height/2.0);
+  }
+
+  // Draw the paddles
+  /*
+  rtk_fig_rectangle(this->grip_fig,
+                    (x_offset*cos(gth))+(y_offset*-sin(gth)),
+                    (x_offset*sin(gth))+(y_offset*cos(gth)),
+                    0, 
+                    this->m_paddle_width,
+                    this->m_paddle_height,
+                    false);
+                    */
+  rtk_fig_rectangle(this->grip_fig,
+                    x_offset, y_offset, 0,
+                    this->m_paddle_width,
+                    this->m_paddle_height,
+                    false);
+  rtk_fig_rectangle(this->grip_fig,
+                    x_offset, -y_offset, 0,
+                    this->m_paddle_width,
+                    this->m_paddle_height,
+                    false);
+
+  rtk_fig_clear(this->inner_beam_fig);
+  rtk_fig_clear(this->outer_beam_fig);
+  
+  // if a client is subscribed to this device, then draw break beams
+  if(Subscribed() > 0 && m_world->ShowDeviceData(this->stage_type) )
+  {
+    rtk_fig_origin(this->inner_beam_fig, gx, gy, gth );
+    rtk_fig_origin(this->outer_beam_fig, gx, gy, gth );
+
+    double xdist, ydist;
+    ydist = (this->size_y-2*this->m_paddle_height)/2.0;
+    
+    if(this->m_inner_break_beam)
+    {
+      // beam broken: set to red
+      rtk_fig_color_rgb32(this->inner_beam_fig, this->broken_beam_color);
+    }
+    else
+    {
+      // beam unbroken: set to pale blue
+      rtk_fig_color_rgb32(this->inner_beam_fig, this->clear_beam_color);
+    }
+   
+    // draw inner beam
+    xdist = this->size_x/2.0 + this->m_paddle_width/2.0;
+    rtk_fig_line(this->inner_beam_fig, xdist, ydist, xdist, -ydist);
+
+    if(this->m_outer_break_beam)
+    {
+      // beam broken: set to red
+      rtk_fig_color_rgb32(this->outer_beam_fig, this->broken_beam_color);
+    }
+    else
+    {
+      // beam unbroken: set to pale blue
+      rtk_fig_color_rgb32(this->outer_beam_fig, this->clear_beam_color);
     }
 
-    data->end_section();
+    // draw outer beam
+    xdist = this->size_x/2.0 + this->m_paddle_width;
+    rtk_fig_line(this->outer_beam_fig, xdist, ydist, xdist, -ydist);
+  }
 }
-
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI mouse messages
-//
-void CGripperDevice::OnUiMouse(RtkUiMouseData *pData)
-{
-    CEntity::OnUiMouse(pData);
-}
-
 
 #endif
 

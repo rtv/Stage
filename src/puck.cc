@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.28 $
+//  $Revision: 1.29 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -31,8 +31,8 @@ CPuck::CPuck(CWorld *world, CEntity *parent)
 
   // Set default shape and geometry
   this->shape = ShapeCircle;
-  this->size_x = 0.1;
-  this->size_y = 0.1;
+  this->size_x = 0.08;
+  this->size_y = 0.08;
 
   m_interval = 0.01; // update very fast!
 

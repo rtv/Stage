@@ -22,7 +22,7 @@
  * devices here.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 8 Jun 2002
- * CVS info: $Id: colors.hh,v 1.9 2002-06-10 04:57:48 rtv Exp $
+ * CVS info: $Id: colors.hh,v 1.10 2002-06-10 05:00:09 gerkey Exp $
  */
 
 #ifndef _STAGECOLORS_H
@@ -34,7 +34,7 @@
 typedef uint32_t StageColor;
 
 #define BACKGROUND_COLOR "light gray"
-#define GRIPPER_COLOR "gray"
+#define GRIPPER_COLOR "blue"
 #define POSITION_COLOR "dark red"
 #define LASER_COLOR  "blue"
 #define SONAR_COLOR  "gray"

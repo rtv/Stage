@@ -21,7 +21,7 @@
  * Desc: Some useful color routines
  * Author: Andrew Howard, Richard Vaughan
  * Date: 8 Jun 2002
- * CVS info: $Id: colors.cc,v 1.1 2002-06-09 00:33:02 inspectorg Exp $
+ * CVS info: $Id: colors.cc,v 1.2 2002-06-10 05:00:10 gerkey Exp $
  */
 
 #include <errno.h>
@@ -43,6 +43,7 @@ StageColor LookupColor(const char *name)
   {
     PRINT_ERR2("unable to open color database %s : %s",
                filename, strerror(errno));
+    fclose(file);
     return 0xFFFFFF;
   }
   
@@ -70,8 +71,12 @@ StageColor LookupColor(const char *name)
 
     // If the name matches
     if (strcmp(nname, name) == 0)
+    {
+      fclose(file);
       return ((r << 16) | (g << 8) | b);
+    }
   }
   PRINT_WARN1("unable to find color [%s]; using default (red)", name);
+  fclose(file);
   return 0xFF0000;
 }

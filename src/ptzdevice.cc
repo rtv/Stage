@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.20 $
+//  $Revision: 1.21 $
 //
 // Usage:
 //  (empty)
@@ -272,8 +272,6 @@ void CPtzDevice::RtkUpdate()
   // Get global pose
   double gx, gy, gth;
   GetGlobalPose(gx, gy, gth);
-
-  int style = 0;
 
   rtk_fig_clear(this->fov_fig);
   rtk_fig_origin(this->fov_fig, gx, gy, gth );
