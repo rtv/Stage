@@ -2,7 +2,7 @@
 % Desc: Stage user manual
 % Author: Richard Vaughan, Andrew Howard
 % Date: 10 Jun 2002
-% CVS: $Id: stage.tex,v 1.8 2003-04-09 02:04:01 rtv Exp $
+% CVS: $Id: stage.tex,v 1.9 2003-06-10 03:29:20 jazzfunk Exp $
 
 \documentclass[11pt,twoside]{report}
 
@@ -1611,6 +1611,59 @@ Name & Value\\
 The default sonar array has 8 evenly spaced beams covering 360
 degrees. The example file worlds/pioneer.inc provides sonar device
 configurations that match the Pioneer2 and AmigBot robots.
+
+\newpage
+\subsection{The {\tt reb\_ir} device}
+
+\subsubsection*{Parent}
+{\tt device}
+
+\subsubsection*{Interface}
+{\tt gps}
+
+\subsubsection*{Description}
+The {\tt reb\_ir} device simulates an array of (possibly noisy) IR range sensors.
+
+\subsubsection*{Properties}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Values & Description \\
+\hline
+\verb'ircount' & \verb'numir' & The number of IR sensors.\\
+\verb'irpose[i]' & \verb'[x y th]' & The pose of each IR sensor number {\tt i}.\\
+\verb'min_range' & \verb'r' & The minimum range in meters. \\
+\verb'max_range' & \verb'r' & The maximum range in meters. \\
+\verb'power_on' & \verb'value' & Boolean for whether IR is turned on on startup.\\
+\verb'add_noise' & \verb'value' & Boolean for whether to add noise to readings. \\
+\verb'noiseparams' & \verb'[ m b ]' & Parameters for tuning the noise. \\
+\hline
+\end{tabularx}
+
+\subsubsection*{Defaults}
+\begin{tabularx}{\columnwidth}{llX}
+\hline
+Name & Value\\
+\hline
+\verb'ircount' & \verb'8'\\
+\verb'irpose[0]' & \verb'[0 0   0]'\\
+\verb'irpose[1]' & \verb'[0 0  45]'\\
+\verb'irpose[2]' & \verb'[0 0  90]'\\
+\verb'irpose[3]' & \verb'[0 0 135]'\\
+\verb'irpose[4]' & \verb'[0 0 180]'\\
+\verb'irpose[5]' & \verb'[0 0 225]'\\
+\verb'irpose[6]' & \verb'[0 0 270]'\\
+\verb'irpose[7]' & \verb'[0 0 315]'\\
+\verb'min_range' & \verb'0.1'\\
+\verb'max_range' & \verb'0.8'\\
+\verb'add_noise' & \verb'1'\\
+\verb'noiseparams' & \verb'[1.913005560938 -7.728130591833]'\\
+\verb'power_on' & \verb'1'\\
+\hline
+\end{tabularx}
+
+\subsubsection*{Notes}
+The default IR array has 8 evenly spaced sensors, for a 360 degreee coverage. 
+The example file {\tt worlds/ubot.inc} shows a configuration of 8 IRs with noise.
 
 \newpage
 \subsection{The {\tt truth} device}

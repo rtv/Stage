@@ -5,7 +5,7 @@
 // Class provides a network server for Stage internals
 // used by external GUIs (XS) and distributed Stage modules
 //
-// $Id: server.hh,v 1.11 2003-04-27 04:48:13 gerkey Exp $
+// $Id: server.hh,v 1.12 2003-06-10 03:29:21 jazzfunk Exp $
 
 #ifndef _SERVER_H
 #define _SERVER_H
@@ -254,7 +254,9 @@ class CStageServer : public CStageIO
   // when to shutdown (in seconds)
 private: int m_stoptime;
 public: int GetStopTime( void ){ return m_stoptime; };
-  
+
+  // path to player
+private: char *player_path;
 
   /////////////////////////////////////////////////////////////////
   // Player & interface

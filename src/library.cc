@@ -24,7 +24,7 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.19 2003-06-04 00:22:30 gsibley Exp $
+ * CVS info: $Id: library.cc,v 1.20 2003-06-10 03:29:21 jazzfunk Exp $
  */
 
 //#define DEBUG
@@ -53,6 +53,8 @@
 #include "models/regularmcldevice.hh"
 #include "models/amcldevice.hh"
 #include "models/mcomdevice.hh"
+#include "models/irdevice.hh"
+#include "models/rebpositiondevice.hh"
 //#include "models/bpsdevice.hh"
 
 typedef CreatorFunctionPtr CFP;
@@ -85,6 +87,8 @@ libitem_t library_items[] = {
   { "adaptive_mcl", "blue", (CFP)CAdaptiveMCLDevice::Creator},
   { "mcom", "brown", (CFP)CMComDevice::Creator},
   { "descartes", "purple", (CFP)CDescartesDevice::Creator},
+  { "reb_ir", "green", (CFP)CIRDevice::Creator},
+  { "reb_position", "purple", (CFP)CREBPositionDevice::Creator},
   // { "bps", BpsType, (CFP)CBpsDevice::Creator},
   {NULL, NULL, NULL } // marks the end of the array
 };  

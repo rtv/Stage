@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.61 2003-01-10 03:58:51 rtv Exp $
+ * CVS: $Id: main.cc,v 1.62 2003-06-10 03:29:21 jazzfunk Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -87,6 +87,7 @@ void PrintUsage( void )
 	 " -c <hostname>\tRun as a client to a Stage server on hostname\n"
 	 " -cl\t\tRun as a client to a Stage server on localhost\n"
 	 " -l <filename>\tLog some timing and throughput statistics into <filename>.<incremental suffix>\n"
+	 " -P <player-path>\tExecute the player in this directory\n"
 	 "\nCommand-line options override any configuration file equivalents.\n"
 	 "See the Stage manual for details.\n"
 	 "\nPart of the Player/Stage Project [http://playerstage.sourceforge.net].\n"

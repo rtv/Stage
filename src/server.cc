@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.48 2003-04-28 23:49:11 gerkey Exp $
+ * CVS info: $Id: server.cc,v 1.49 2003-06-10 03:29:21 jazzfunk Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -119,6 +119,10 @@ CStageServer::CStageServer( int argc, char** argv, Library* lib )
   // this can be set true with a cmdline switch
   this->start_disabled = false;
 
+  // look for player in default path
+  this->player_path = new char[strlen("player")+1];
+  strcpy(this->player_path, "player");
+
   // create the object that loads and parses the file
   assert( worldfile = new CWorldFile() );
   if(!ParseCmdLine(argc, argv))
@@ -132,6 +136,7 @@ CStageServer::CStageServer( int argc, char** argv, Library* lib )
 CStageServer::~CStageServer( void )
 {
   // do nothing
+  delete [] this->player_path;
 }
 
   
@@ -477,6 +482,16 @@ bool CStageServer::ParseCmdLine( int argc, char** argv )
 	this->start_disabled = true;
 	printf( "[Clock stopped (start with SIGUSR1)]" );
       }
+
+    // get the path to player
+    if (!strcmp(argv[a], "-P")) {
+      delete [] this->player_path;
+      int len = strlen(argv[++a]);
+      
+      this->player_path = new char[len+strlen("/player")+1];
+      strcpy(this->player_path, argv[a]);
+      strcat(this->player_path, "/player");
+    } 
   }
   
   return true;
@@ -589,7 +604,8 @@ bool CStageServer::StartupPlayer( void )
                 NULL) < 0 )
                 */
     i=0;
-    player_argv[i++] = "player";
+    //    player_argv[i++] = "player";
+    player_argv[i++] = this->player_path;
     player_argv[i++] = "-s";
     player_argv[i++] = DeviceDirectory();
     if(strlen(m_auth_key))
@@ -605,7 +621,7 @@ bool CStageServer::StartupPlayer( void )
       player_argv[i++] = portbuf;
     }
     player_argv[i++] = NULL;
-    if(execvp("player", player_argv) < 0)
+    if(execvp(this->player_path, player_argv) < 0)
     {
       PRINT_ERR1("error executing player: [%s]\n"
                  "Make sure player is in your path.", strerror(errno));
