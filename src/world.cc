@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.86 $
+//  $Revision: 1.87 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -580,7 +580,11 @@ bool CWorld::Save(const char *filename)
 // Startup routine 
 bool CWorld::Startup()
 {  
-  //PRINT_DEBUG( "** STARTUP **" );
+  PRINT_DEBUG( "** STARTUP **" );
+  
+  // these inits are a little nasty 'cos most of them have side
+  // effects like setting data members. therefore the order is
+  // important (yuk!) i'll clean this up eventually
 
   // we must have at least one object to play with!
   assert( m_object_count > 0 );
@@ -606,8 +610,13 @@ bool CWorld::Startup()
     SetupEnvServer();
 
   // Create the device directory and clock 
+  PRINT_DEBUG( "CREATING CLOCK DEVICE" );
   CreateClockDevice();
   
+  // Create the record lock file
+  PRINT_DEBUG( "CREATING LOCK FILE" );
+  CreateLockFile();
+
   PRINT_DEBUG( "BACK IN CWORLD::STARTUP" );
 
   // Startup all the objects
@@ -621,7 +630,6 @@ bool CWorld::Startup()
     }
   }
   
-
   // exec and set up Player
   if( m_run_player )
     {
@@ -667,8 +675,9 @@ void CWorld::Shutdown()
       m_object[i]->Shutdown();
   }
   
-  // zap the clock device 
+  // zap the clock device and lock file 
   unlink( clockName );
+  unlink( m_locks_name );
 
   // Shutdown the wall
   if(this->wall)
@@ -758,6 +767,39 @@ void CWorld::ShutdownPlayer()
     this->player_pid = 0;
   }
 }
+
+//////////////////////////////////////////////////////////////////////////
+// Set up a file for record locking, 1 byte per entity
+// the contents aren't used - we just use fcntl() to lock bytes
+bool CWorld::CreateLockFile( void )
+{
+  // store the filename
+  sprintf( m_locks_name, "%s/%s", m_device_dir, STAGE_LOCK_NAME );
+
+  m_locks_fd = -1;
+
+  if( (m_locks_fd = open( m_locks_name, O_RDWR | O_CREAT | O_TRUNC, 
+                   S_IRUSR | S_IWUSR )) < 0 )
+  {
+    perror("Failed to create lock device" );
+    return false;
+  } 
+  
+  // set the file size - 1 byte per entity
+  off_t sz = m_object_count;
+  
+  if( ftruncate( m_locks_fd, sz ) < 0 )
+  {
+    perror( "Failed to set lock file size" );
+    return false;
+  }
+
+  //printf( "Created lock file %s of %d bytes (fd %d)\n", 
+  //  m_locks_name, m_object_count, m_locks_fd );
+
+  return true;
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////

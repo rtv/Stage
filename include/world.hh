@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.44 $
+//  $Revision: 1.45 $
 //
 // Usage:
 //  (empty)
@@ -189,7 +189,7 @@ public: struct in_addr m_hostaddr;
   public: bool m_log_output, m_console_output;
 
   int m_log_fd; // logging file descriptor
-  char m_log_filename[256]; // path to the log file
+  char m_log_filename[PATH_MAX]; // path to the log file
   char m_cmdline[512]; // a string copy of the command line that started stage
 
   //private: double m_max_timestep;
@@ -198,11 +198,8 @@ public: struct in_addr m_hostaddr;
   private: double m_update_ratio;
   private: double m_update_rate;
   
-  // Name of the file the world was loaded from
-  //private: char m_filename[256];
-    
   // color definitions
-  private: char m_color_database_filename[256];
+  private: char m_color_database_filename[PATH_MAX];
 
   // Object list
   private: int m_object_count;
@@ -250,6 +247,10 @@ public: bool m_send_idar_packets;
   //
   public: bool Save(const char *filename);
   public: bool Save() {return Save(worldfilename);};
+
+  
+  //////////////////////////////////////////////////////////////////////
+  // main methods
   
   // Initialise the world
   public: bool Startup();
@@ -274,10 +275,6 @@ public: bool m_send_idar_packets;
 
   // Add an object to the world
   public: void AddObject(CEntity *object);
-
-  // fill the Stagecolor structure by looking up the color name in the database
-  // return false if failed
-  public: int ColorFromString( StageColor* color, const char* colorString );
 
 
   //////////////////////////////////////////////////////////////////////////
@@ -309,28 +306,37 @@ public: bool m_send_idar_packets;
   ////////////////////////////////////////////////////////////////
   // shared memory management for interfacing with Player
 
-  public: char m_device_dir[ 512 ]; //device  directory name 
+  public: char m_device_dir[PATH_MAX]; //device  directory name 
 
-  private: char clockName[ 512 ]; // path of mmap node in filesystem
+  private: char clockName[PATH_MAX]; // path of mmap node in filesystem
   public: char* ClockFilename( void ){ return clockName; };
   public: char* DeviceDirectory( void ){ return m_device_dir; };
   
   private: bool CreateClockDevice( void );
+
   // export the time in this buffer
-  //public: struct timeval* m_time_io;
-
-public: stage_clock_t* m_clock; // a timeval and a semaphore lock
-
-  //private: key_t semKey;
-  //private: int semid; // semaphore access for shared mem locking
+  public: stage_clock_t* m_clock; // a timeval and lock
 
 
+  //////////////////////////////////////////////////////////////////////
+  // RECORD LOCKING 
+  // device IO is protected by record locking a single byte of this
+  // file for each entity
+
+  // the filename of the lock file
+  private: char m_locks_name[PATH_MAX];
+
+  // the locks file descriptor
+  public: int m_locks_fd;
+
+  // creates the file m_device_dir/devices.lock,  m_object_count bytes long
+  // stores the filename in m_locks_name and the fd in m_locks_fd
+   private: bool CreateLockFile( void );
+ 
   //////////////////////////////////////////////////////////////////
-  // methods
+  // WHEN LINUX SUPPORTS PROCESS-SHARED SEMAPHORES WE'LL USE THEM AND
+  // SCRUB THE RECORD LOCKING - this code will make it happen...
 
-  // return a string that names this type of object
-  public: char* CWorld::StringType( StageType t );
-  
   // Create a single semaphore to sync access to the shared memory segments
   //private: bool CreateShmemLock();
 
@@ -342,7 +348,17 @@ public: stage_clock_t* m_clock; // a timeval and a semaphore lock
 
   // Unlock the shared mem area
   //public: void UnlockShmem( void );
-  
+
+  ////////////////////////////////////////////////////////////////////////
+  // utility methods
+
+  // fill the Stagecolor structure by looking up the color name in the database
+  // return false if failed
+  public: int ColorFromString( StageColor* color, const char* colorString );
+
+  // return a string that names this type of object
+  public: char* CWorld::StringType( StageType t );
+
   public: CEntity* GetEntityByID( int port, int type, int index );
   
 private: CEntity* CreateObject(const char *type, CEntity *parent );

@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.47 2002-03-12 02:53:09 rtv Exp $
+//  $Id: entity.cc,v 1.48 2002-03-12 08:54:52 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -42,8 +42,10 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
 {
   PRINT_DEBUG( "CEntity::CEntity()" );
   
-  m_lock = NULL;
+  //m_lock = NULL;
 
+  this->lock_byte = world->GetObjectCount();
+  
   m_world = world; 
   m_parent_object = parent_object;
   m_default_object = this;
@@ -120,7 +122,7 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
 // Destructor
 CEntity::~CEntity()
 {
-  close( m_fd ); 
+  //close( m_fd ); 
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -237,12 +239,11 @@ bool CEntity::Startup( void )
             m_world->m_device_dir, m_player_port, m_player_type, m_player_index );
   PRINT_DEBUG1("creating device %s", m_device_filename);
 
-  // we store the filedescriptor so we can lock the file to control
-  // access to the data
-  m_fd = open( m_device_filename, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR );
+  int tfd;
+  tfd = open( m_device_filename, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR );
     
   // make the file the right size
-  if( ftruncate( m_fd, mem ) < 0 )
+  if( ftruncate( tfd, mem ) < 0 )
   {
     PRINT_ERR1( "failed to set file size: %s", strerror(errno) );
     return false;
@@ -252,7 +253,7 @@ bool CEntity::Startup( void )
   // first part of the buffer, so we'll call it that
   player_stage_info_t* playerIO = 
     (player_stage_info_t*)mmap( NULL, mem, PROT_READ | PROT_WRITE, 
-				MAP_SHARED, m_fd, (off_t) 0);
+				MAP_SHARED, tfd, (off_t) 0);
   
   if (playerIO == MAP_FAILED )
     {
@@ -286,7 +287,7 @@ bool CEntity::Startup( void )
   // we'll do file locking instead
 
   
-  PRINT_DEBUG1( "Stage: device lock at %p\n", m_lock );
+  //PRINT_DEBUG1( "Stage: device lock at %p\n", m_lock );
   
   // try a lock
   assert( Lock() );
@@ -298,7 +299,8 @@ bool CEntity::Startup( void )
   m_config_io  = (uint8_t*)m_command_io + m_command_len;
   
   m_info_io->len = SharedMemorySize(); // total size of all the shared data
-  
+  m_info_io->lockbyte = this->lock_byte; // record lock on this byte
+
   // set the lengths in the info structure
   m_info_io->data_len    =  (uint32_t)m_data_len;
   m_info_io->command_len =  (uint32_t)m_command_len;
@@ -929,15 +931,31 @@ void CEntity::MakeDirtyIfPixelChanged( void )
 //
 bool CEntity::Lock( void )
 {
-  PRINT_DEBUG1( "%p", m_lock );
+  // POSIX RECORD LOCKING METHOD
+  struct flock cmd;
 
+  cmd.l_type = F_WRLCK; // request write lock
+  cmd.l_whence = SEEK_SET; // count bytes from start of file
+  cmd.l_start = this->lock_byte; // lock my unique byte
+  cmd.l_len = 1; // lock 1 byte
+
+  fcntl( m_world->m_locks_fd, F_SETLKW, &cmd );
+
+  // DEBUG: write into the file to show which byte is locked
+  // X = locked, '_' = unlocked
+  //lseek( m_world->m_locks_fd, this->lock_byte, SEEK_SET );
+  //write(  m_world->m_locks_fd, "X", 1 );
+
+  //////////////////////////////////////////////////////////////////
   // BSD file locking method
   // block until we can get an exclusive lock on this file
-  if( flock( m_fd, LOCK_EX ) != 0 )
-    perror( "flock() LOCK failed" );
+  //if( flock( m_fd, LOCK_EX ) != 0 )
+  //perror( "flock() LOCK failed" );
 
+  ///////////////////////////////////////////////////////////////////
   // POSIX semaphore method
-  //assert( m_lock );
+ //assert( m_lock );
+  //PRINT_DEBUG1( "%p", m_lock );
   //if( sem_wait( m_lock ) < 0 )
   //{
   //PRINT_ERR( "sem_wait failed" );
@@ -952,15 +970,31 @@ bool CEntity::Lock( void )
 //
 bool CEntity::Unlock( void )
 {
-  PRINT_DEBUG1( "%p", m_lock );
+  // POSIX RECORD LOCKING METHOD
+  struct flock cmd;
 
+  cmd.l_type = F_UNLCK; // request unlock
+  cmd.l_whence = SEEK_SET; // count bytes from start of file
+  cmd.l_start = this->lock_byte; // unlock my unique byte
+  cmd.l_len = 1; // unlock 1 byte
+
+  // DEBUG: write into the file to show which byte is locked
+  // X = locked, '_' = unlocked
+  //lseek( m_world->m_locks_fd, this->lock_byte, SEEK_SET );
+  //write(  m_world->m_locks_fd, "_", 1 );
+
+  fcntl( m_world->m_locks_fd, F_SETLKW, &cmd );
+
+  ///////////////////////////////////////////////////////////////////
   // BSD file locking method
   // block until we can get an exclusive lock on this file
-  if( flock( m_fd, LOCK_UN ) != 0 )
-    perror( "flock() UNLOCK failed" );
+  //if( flock( m_fd, LOCK_UN ) != 0 )
+  //perror( "flock() UNLOCK failed" );
 
+  ////////////////////////////////////////////////////////////////
   // POSIX semaphore method
-  //assert( m_lock );
+ //assert( m_lock );
+  //PRINT_DEBUG1( "%p", m_lock );
   //if( sem_post( m_lock ) < 0 )
   //{
   //PRINT_ERR( "sem_post failed" );

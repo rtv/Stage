@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.38 $
+//  $Revision: 1.39 $
 //
 // Usage:
 //  (empty)
@@ -34,9 +34,6 @@
 #include "colors.hh"
 
 #include "guiexport.hh" // relic!
-//#include "messages.h"
-
-#include <semaphore.h>
 
 #ifdef INCLUDE_RTK2
 #include "rtk.h"
@@ -78,7 +75,11 @@ public: CEntity(CWorld *world, CEntity *parent_object );
 protected: bool CEntity::Lock( void );
 protected: bool CEntity::Unlock( void );
   // pointer to the  semaphore in the shared memory
-private: sem_t* m_lock; 
+  //private: sem_t* m_lock; 
+
+  // IO access to this device is controlled by an advisory lock 
+  // on this byte in the shared lock file
+  private: int lock_byte; 
 
   // Update the object's device-specific representation
   public: virtual void Update( double sim_time );
@@ -186,7 +187,7 @@ private: sem_t* m_lock;
   public: char m_device_filename[256]; 
 
   // a filedescriptor for this device's file, used for locking
-  private: int m_fd;
+  //private: int m_fd;
 
   // flag is set when a dependent device is  attached to this device
   public: bool m_dependent_attached;
@@ -235,6 +236,16 @@ private: sem_t* m_lock;
   // all it's ancestors 
   public: void InheritDirtyFromParent( int con_count );
 
+  ///////////////////////////////////////////////////////////////////////
+  // DISTRIBUTED STAGE STUFF
+
+  // the IP address of the host that manages this object
+  // replaced the hostname 'cos it's smaller and faster in comparisons
+  public: struct in_addr m_hostaddr;
+
+  // flag is true iff this entity is updated by this host
+  public: bool m_local; 
+
   //////////////////////////////////////////////////////////////////////
   // PLAYER IO STUFF
   
@@ -243,16 +254,6 @@ private: sem_t* m_lock;
   public: int m_player_port; // N
   public: int m_player_index; // M
   public: int m_player_type; // one of the device types from messages.h
-
-  // this is the name of the computer responsible for updating this object
-  //public: char m_hostname[ HOSTNAME_SIZE ];
-  
-  // the IP address of the host that manages this object
-  // replaces the hostname above 'cos it's smaller and faster in comparisons
-public: struct in_addr m_hostaddr;
-
-  // flag is true iff this entity is updated by this host
-  public: bool m_local; 
 
   // Write to the data buffer
   // Returns the number of bytes copied
