@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.8.2.3 $
+//  $Revision: 1.8.2.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -287,54 +287,66 @@ void CGripperDevice::PickupObject()
   double this_dist;
   //for(int i=0;(this_puck=m_world->GetPuck(i));i++)
 
-  for(int i =0; i < m_world->GetObjectCount(); i++)
-    {
-      CEntity* this_puck = m_world->GetObject(i);
+  CRectangleIterator rit( px+m_size_x, py, pth, m_size_x, m_size_y, 
+  		  m_world->ppm, m_world->matrix ); 
 
-      if( this_puck->m_stage_type != PuckType )
+  //CRectangleIterator rit( 1.0, 1.0, 0, 1.0, 1.0,
+  //		  m_world->ppm, m_world->matrix ); 
+  
+  
+  CEntity* ent = 0;
+
+  while( (ent = rit.GetNextEntity()) )
+    {
+      //puts( "I SEE SOMETHING!" );
+      
+      // if it's not a puck try the next one
+      if( ent->m_stage_type != PuckType )
 	continue;
+      
+      //puts( "I SEE A PUCK!" );
 
-    // first make sure that we're not trying to pick up
-    // an already picked up puck
-    int j;
-    for(j=0;j<m_puck_count;j++)
-    {
-      if(m_pucks[j] == this_puck)
-        break;
+      // first make sure that we're not trying to pick up
+      // an already picked up puck
+      int j;
+      for(j=0;j<m_puck_count;j++)
+	{
+	  if(m_pucks[j] == ent )
+	    break;
+       }
+      if(j < m_puck_count)
+	continue;
+      ent->GetGlobalPose(ox,oy,oth);
+      this_dist = sqrt((px-ox)*(px-ox)+(py-oy)*(py-oy));
+      if(this_dist < closest_dist)
+       {
+	 closest_dist = this_dist;
+	 closest_puck = ent;
+       }
     }
-    if(j < m_puck_count)
-      continue;
-    this_puck->GetGlobalPose(ox,oy,oth);
-    this_dist = sqrt((px-ox)*(px-ox)+(py-oy)*(py-oy));
-    if(this_dist < closest_dist)
-    {
-      closest_dist = this_dist;
-      closest_puck = this_puck;
-    }
-  }
-
+  
   if(closest_puck && closest_dist<m_gripper_range)
-  {
-    // pickup the puck
-    closest_puck->m_parent_object = this;
-    // if we're consuming the puck then draw move it inside the robot
-    if(m_gripper_consume)
     {
-      if(m_parent_object)
-        closest_puck->SetPose(-exp.width/2.0-m_parent_object->exp.width/2.0,
-                        0,0);
+      // pickup the puck
+      closest_puck->m_parent_object = this;
+      // if we're consuming the puck then draw move it inside the robot
+      if(m_gripper_consume)
+	{
+	  if(m_parent_object)
+	    closest_puck->SetPose(-exp.width/2.0-m_parent_object->exp.width/2.0,
+				  0,0);
+	  else
+	    closest_puck->SetPose(-exp.width,0,0);
+	}
       else
-        closest_puck->SetPose(-exp.width,0,0);
+	closest_puck->SetPose(exp.width/2.0+closest_puck->exp.width/2.0,0,0);
+      m_pucks[m_puck_count++]=closest_puck;
+      expGripper.have_puck = true;
     }
-    else
-      closest_puck->SetPose(exp.width/2.0+closest_puck->exp.width/2.0,0,0);
-    m_pucks[m_puck_count++]=closest_puck;
-    expGripper.have_puck = true;
-  }
   else
-  {
-    //puts("no close pucks");
-  }
+    {
+      //puts("no close pucks");
+    }
 }
 
 #ifdef INCLUDE_RTK
