@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.137 2002-11-11 03:09:46 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.137.2.1 2002-12-10 00:28:18 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -124,7 +124,7 @@ CWorld::CWorld( int argc, char** argv, Library* lib )
   //
   m_enable = false;
 
-  if( gethostname( m_hostname, sizeof(m_hostname)) == -1)
+  if( gethostname( m_hostname, HOSTNAME_SIZE ) == -1)
     {
       perror( "Stage: couldn't get hostname. Quitting." );
       exit( -1 );
