@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_props.c,v $
 //  $Author: rtv $
-//  $Revision: 1.9 $
+//  $Revision: 1.10 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -132,6 +132,13 @@ int model_set_prop( model_t* mod, stg_id_t propid, void* data, size_t len )
 	model_size_error( mod, propid, len, sizeof(stg_energy_data_t) );      
       break;
       
+      //case STG_PROP_CORNER:
+      //if( len == sizeof(stg_bool_t) )
+      //model_set_corner( mod, (stg_bool_t*)data );
+      //else
+      //model_size_error( mod, propidm len, sizeof(stg_bool_t) );
+      //break;
+
       // etc!
 
     default:
@@ -201,6 +208,11 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
       *len = sizeof(mod->blob_return);
       break;      
       
+      //case STG_PROP_CORNER:
+      //*data = (void*)&mod->corner;
+      //*len = sizeof(mod->corner);
+      //break;
+
       // TODO -  more props here
       // etc
 
@@ -425,8 +437,6 @@ stg_geom_t* model_get_geom( model_t* mod )
 
 int model_set_geom( model_t* mod, stg_geom_t* geom )
 { 
-  
-  // if the new geom is different
   if( memcmp( &mod->geom, geom, sizeof(stg_geom_t) ))
     {
       // unrender from the matrix
@@ -533,8 +543,8 @@ int model_set_lines( model_t* mod, stg_line_t* lines, size_t lines_count )
 	    mod->polypoints[2*p+1] = mod->lines[p].y1;
 	  }
 
-	  PRINT_WARN2( "model %s has a valid polygon of %d points",
-		       mod->token, mod->lines_count );
+	  //PRINT_WARN2( "model %s has a valid polygon of %d points",
+	  //       mod->token, mod->lines_count );
 	}  
     }
     

@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.83 2004-08-30 05:58:57 rtv Exp $
+ * CVS: $Id: stage.h,v 1.84 2004-09-04 00:53:12 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -940,7 +940,6 @@ typedef struct
   
   int id_client; // client-side id
   stg_id_t id_server; // server-side id
-  //stg_token_t* token;  
   char* name;
   double ppm;
   stg_msec_t interval_sim;
@@ -950,10 +949,15 @@ typedef struct
   
   int child_type_count[STG_MODEL_COUNT];
 
+  // all the models indexed in various ways for fast retrieval
   GHashTable* models_id_server;
   GHashTable* models_id;   // the models index by client-side id
   GHashTable* models_name; // the models indexed by name
-  GHashTable* models_section; // the models indexed by worldfile section
+  GHashTable* models_section; // the models indexed by worldfile section  
+
+  // the top-level models, each with its own tree of children
+  GPtrArray* children;
+ 
 } stg_world_t;
 
 typedef struct _stg_model
@@ -963,6 +967,7 @@ typedef struct _stg_model
   
   struct _stg_model* parent; 
   stg_world_t* world; 
+  GPtrArray* children; // pointers to stg_model_t
   
   int section; // worldfile index
 
@@ -974,6 +979,7 @@ typedef struct _stg_model
   GHashTable* props;
   
   int child_type_count[STG_MODEL_COUNT];
+
 
 } stg_model_t;
 

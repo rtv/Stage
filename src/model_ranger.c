@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_ranger.c,v $
 //  $Author: rtv $
-//  $Revision: 1.23 $
+//  $Revision: 1.24 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -266,10 +266,10 @@ void ranger_render_data( model_t* mod )
   
   if( len != (rcount * sizeof(stg_ranger_sample_t) ))
     {
-      PRINT_ERR3( "wrong data size %d/%d bytes in ranger %s",
-		  (int)len, 
-		  (int)(rcount * sizeof(stg_ranger_sample_t)), 
-		  mod->token );
+      PRINT_DEBUG3( "wrong data size %d/%d bytes in ranger %s",
+		    (int)len, 
+		    (int)(rcount * sizeof(stg_ranger_sample_t)), 
+		    mod->token );
       return;
     }
  

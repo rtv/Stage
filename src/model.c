@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <math.h>
 
-#define DEBUG
+//#define DEBUG
 //#undef DEBUG
 
 #include "stage.h"

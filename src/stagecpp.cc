@@ -3,7 +3,9 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.50 2004-08-30 05:58:57 rtv Exp $
+// $Id: stagecpp.cc,v 1.51 2004-09-04 00:53:12 rtv Exp $
+
+//#define DEBUG
 
 #include "stage.h"
 #include "worldfile.hh"
@@ -36,7 +38,7 @@ void configure_model( stg_model_t* mod, int section )
     stg_model_prop_with_data( mod, STG_PROP_GEOM, &geom, sizeof(geom) );
       
   stg_bool_t obstacle;
-  obstacle = wf.ReadInt( section, "obstacle.return", STG_DEFAULT_OBSTACLERETURN );
+  obstacle = wf.ReadInt( section, "obstacle_return", STG_DEFAULT_OBSTACLERETURN );
   if( obstacle != STG_DEFAULT_OBSTACLERETURN ) 
     stg_model_prop_with_data( mod, STG_PROP_OBSTACLERETURN, 
 			      &obstacle, sizeof(obstacle) );
@@ -55,21 +57,21 @@ void configure_model( stg_model_t* mod, int section )
   
   // laser visibility
   int laservis = 
-    wf.ReadInt(section, "laser.return", STG_DEFAULT_LASERRETURN );      
+    wf.ReadInt(section, "laser_return", STG_DEFAULT_LASERRETURN );      
   if( laservis != STG_DEFAULT_LASERRETURN )
     stg_model_prop_with_data(mod, STG_PROP_LASERRETURN, 
 			     &laservis, sizeof(laservis) );
       
   // blob visibility
   int blobvis = 
-    wf.ReadInt(section, "blob.return", STG_DEFAULT_BLOBRETURN );      
+    wf.ReadInt(section, "blob_return", STG_DEFAULT_BLOBRETURN );      
   if( blobvis != STG_DEFAULT_BLOBRETURN )
     stg_model_prop_with_data(mod, STG_PROP_BLOBRETURN, 
 			     &blobvis, sizeof(blobvis) );
       
   // ranger visibility
   stg_bool_t rangervis = 
-    wf.ReadInt( section, "ranger.return", STG_DEFAULT_RANGERRETURN );
+    wf.ReadInt( section, "ranger_return", STG_DEFAULT_RANGERRETURN );
   if( rangervis != STG_DEFAULT_RANGERRETURN ) 
     stg_model_prop_with_data( mod, STG_PROP_RANGERRETURN, 
 			      &rangervis, sizeof(rangervis) );
@@ -161,7 +163,7 @@ void configure_model( stg_model_t* mod, int section )
   ecfg.probe_range 
     = wf.ReadFloat(section, "energy.range", STG_DEFAULT_ENERGY_PROBERANGE );      
   ecfg.give_rate 
-    = wf.ReadFloat(section, "energy.return", STG_DEFAULT_ENERGY_GIVERATE );
+    = wf.ReadFloat(section, "energy_return", STG_DEFAULT_ENERGY_GIVERATE );
   ecfg.trickle_rate 
     = wf.ReadFloat(section, "energy.trickle", STG_DEFAULT_ENERGY_TRICKLERATE );
       

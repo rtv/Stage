@@ -147,7 +147,10 @@ int world_model_create( world_t* world, stg_createmodel_t* cm )
   
   model_t* parent = g_hash_table_lookup( world->models, &cm->parent );
 
-
+  if( cm->parent && !parent )
+    PRINT_WARN1( "model create requested with parent id %d, but parent not found", 
+		 cm->parent );
+  
   PRINT_DEBUG4( "creating model %d:%d (%s) parent %d", world->id, candidate, token, cm->parent  );
   
 

@@ -69,7 +69,6 @@ typedef struct _model
   stg_guifeatures_t guifeatures;
   stg_energy_config_t energy_config;   // these are a little strange
   stg_energy_data_t energy_data;
- 
 } model_t;  
 
 

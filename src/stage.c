@@ -12,7 +12,7 @@
 #include <math.h>
 #include <glib.h>
 
-#define DEBUG
+//#define DEBUG
 
 #include "replace.h"
 #include "stage.h"

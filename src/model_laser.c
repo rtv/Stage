@@ -7,7 +7,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/model_laser.c,v $
 //  $Author: rtv $
-//  $Revision: 1.38 $
+//  $Revision: 1.39 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -155,7 +155,7 @@ int laser_update( model_t* mod )
 }
 
 
-void laser_render_data(  model_t* mod, void* data, size_t len )
+void laser_render_data(  model_t* mod )
 {
   rtk_fig_t* fig = mod->gui.propdata[STG_PROP_DATA];  
   
@@ -177,11 +177,12 @@ void laser_render_data(  model_t* mod, void* data, size_t len )
   
   stg_laser_config_t* cfg = mod->cfg;
 
-  stg_laser_sample_t* samples = (stg_laser_sample_t*)data;
+  size_t len;
+  stg_laser_sample_t* samples = (stg_laser_sample_t*)model_get_data( mod, &len );
   
   if( samples == NULL || len < sizeof(stg_laser_sample_t) )
     {
-      PRINT_WARN( "no laser data available" );
+      PRINT_DEBUG( "no laser data available" );
       return;
     }
   
@@ -219,16 +220,25 @@ void laser_render_data(  model_t* mod, void* data, size_t len )
 			   points[1+s].x, points[1+s].y, 0,
 			   0.04, 0.04, 1 );
     }
-  
-  
-  
+ 
   free( points );
 }
 
-void laser_render_config( model_t* mod, stg_laser_config_t* cfg )
+void laser_render_config( model_t* mod )
 { 
   PRINT_DEBUG( "laser config render" );
   
+  // get the config and make sure it's the right size
+  size_t len=0;
+  stg_laser_config_t* cfg = (stg_laser_config_t*)model_get_config( mod, &len );
+  if( len != sizeof(stg_laser_config_t) )
+    {
+      PRINT_WARN2( "laser config is wrong size (%d/%d bytes). Not rendering",
+		   (int)len, (int)sizeof(stg_laser_config_t) );
+      return;
+    }
+
+
   rtk_fig_t* fig = mod->gui.propdata[STG_PROP_CONFIG];  
   
   if( fig  )
@@ -237,32 +247,7 @@ void laser_render_config( model_t* mod, stg_laser_config_t* cfg )
     fig = model_prop_fig_create( mod, mod->gui.propdata, STG_PROP_CONFIG,
 				 mod->gui.top, STG_LAYER_LASERCONFIG );
   
-  //rtk_fig_t* geomfig = mod->gui.propgeom[STG_PROP_CONFIG];  
-  
-  //if( geomfig  )
-  //rtk_fig_clear(geomfig);
-  //else // create the figure, store it in the model and keep a local pointer
-  //geomfig = model_prop_fig_create( mod, mod->gui.propgeom, STG_PROP_CONFIG,
-  //				 mod->gui.top, STG_LAYER_LASERGEOM );
-
-//stg_geom_t* geom = &mod->geom;
-  
-//stg_pose_t pose;
-//memcpy( &pose, &geom->pose, sizeof(pose) );
-//model_local_to_global( mod, &pose );
-  
-  // first draw the sensor body
-  //rtk_fig_color_rgb32(geomfig, stg_lookup_color(STG_LASER_GEOM_COLOR) );
-  
-  //rtk_fig_rectangle( geomfig, 
-  //	     geom->pose.x, 
-  //	     geom->pose.y, 
-  //	     geom->pose.a,
-  //	     geom->size.x,
-  //	     geom->size.y, 0 );
-  
-  
-  // now draw the FOV and range lines
+  // draw the FOV and range lines
   rtk_fig_color_rgb32( fig, stg_lookup_color( STG_LASER_CFG_COLOR ));
   
   double mina = cfg->fov / 2.0;
@@ -300,7 +285,7 @@ int laser_set_data( model_t* mod, void* data, size_t len )
   _set_data( mod, data, len );
   
     // and render it
-  laser_render_data( mod, data, len );
+  laser_render_data( mod );
 }
 
 int laser_set_config( model_t* mod, void* cfg, size_t len )
@@ -311,7 +296,7 @@ int laser_set_config( model_t* mod, void* cfg, size_t len )
   _set_cfg( mod, cfg, len );
   
   // and render it
-  laser_render_config( mod, (stg_laser_config_t*)cfg );
+  laser_render_config( mod );
 }
 
 int laser_shutdown( model_t* mod )

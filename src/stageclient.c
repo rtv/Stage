@@ -123,7 +123,7 @@ int stg_client_read( stg_client_t* client, int sleeptime )
 		    pkg->key, 
 		    pkg->timestamp.tv_sec, 
 		    pkg->timestamp.tv_usec,
-		    pkg->payload_len );
+		    (int)pkg->payload_len );
 	  
       // some timing stuff for performance testing
 
@@ -288,27 +288,6 @@ void stg_client_pull( stg_client_t* cli )
   g_hash_table_foreach( cli->worlds_id, stg_world_pull_cb, cli );
 }
 
-stg_model_t* stg_client_get_model( stg_client_t* cli, 
-				   const char* wname, const char* mname )
-{
-  stg_world_t* world = g_hash_table_lookup( cli->worlds_name, wname );
-
-  if( world == NULL )
-    {
-      PRINT_DEBUG1("no such world \"%s\"", wname );
-      return NULL;
-    }
-
-  stg_model_t* model = g_hash_table_lookup( world->models_name, mname );
-  
-  if( model == NULL )
-    {
-      PRINT_DEBUG2("no such model \"%s\" in world \"%s\"", mname, wname );
-      return NULL;
-    }
-  
-  return model;
-} 
 
 stg_model_t* stg_client_get_model_serverside( stg_client_t* cli, stg_id_t wid, stg_id_t mid )
 {
@@ -399,6 +378,8 @@ stg_world_t* stg_client_createworld( stg_client_t* client,
   w->interval_sim = interval_sim;
   w->interval_real = interval_real;
   w->ppm = ppm;
+  
+  w->children = g_ptr_array_new();
 
   //w->props = g_hash_table_new( g_int_hash, g_int_equal );
   w->models_id = g_hash_table_new( g_int_hash, g_int_equal );
@@ -444,6 +425,13 @@ stg_model_t* stg_world_createmodel( stg_world_t* world,
   mod->type = type;
   mod->props = g_hash_table_new( g_int_hash, g_int_equal );
 
+  mod->children = g_ptr_array_new();
+  
+  if( parent ) 
+    g_ptr_array_add( parent->children, mod );
+  else
+    g_ptr_array_add( world->children, mod );
+    
   PRINT_DEBUG4( "created model %d:%d \"%s\" section %d", 
 		world->id_client, mod->id_client, mod->name, mod->section );
 
@@ -468,6 +456,11 @@ void stg_model_destroy( stg_model_t* mod )
     }
   
   PRINT_DEBUG2( "destroying model %d (%d)", mod->id_client, mod->id_server );
+
+  // recursively delete all my children
+  int ch;
+  for( ch=0; ch < mod->children->len; ch++ )
+    stg_model_destroy( g_ptr_array_index( mod->children, ch ) );
 
   //g_hash_table_remove( mod->world->models_id, &mod->id_client );
   //g_hash_table_remove( mod->world->models_name, mod->token->token );
@@ -1005,14 +998,18 @@ void stg_model_push( stg_model_t* mod )
   pt.model_id_server = mod->id_server;
   
   g_hash_table_foreach( mod->props, stg_prop_push_cb, &pt );
+
+  // now push my children
+  int ch;
+  for( ch=0; ch < mod->children->len; ch++ )
+    stg_model_push(  (stg_model_t*)g_ptr_array_index( mod->children, ch ) );
 }
   
-void stg_model_push_cb( gpointer key, gpointer value, gpointer user )
-{
-  stg_model_push( (stg_model_t*)value );
-}
+//void stg_model_push_cb( gpointer key, gpointer value, gpointer user )
+//{
+// stg_model_push( (stg_model_t*)value );
+//}
  
-
 void stg_world_push( stg_world_t* world )
 { 
   assert( world );
@@ -1036,8 +1033,12 @@ void stg_world_push( stg_world_t* world )
   PRINT_DEBUG2( "pushed world %d and received server-side id %d", 
 		world->id_client, world->id_server );
 
+  // now push my children
+  int ch;
+  for( ch=0; ch < world->children->len; ch++ )
+    stg_model_push( (stg_model_t*)g_ptr_array_index( world->children, ch ) );
   // upload all the models in this world
-  g_hash_table_foreach( world->models_id, stg_model_push_cb, NULL );
+  //g_hash_table_foreach( world->models_id, stg_model_push_cb, NULL );
 }
 
 void stg_world_push_cb( gpointer key, gpointer value, gpointer user )
@@ -1221,45 +1222,6 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 	    }
 	    break;
 
-	  case STG_PROP_RANGERCONFIG:
-	    {
-	      stg_ranger_config_t* cfgs = (stg_ranger_config_t*)prop->data;
-	      int cfg_count = prop->datalen / sizeof(stg_ranger_config_t);	   
-	      printf( "received configs for %d rangers (", cfg_count );
-
-	      int r;
-	      for( r=0; r<cfg_count; r++ )
-		printf( "(%.2f,%.2f,%.2f) ", 
-			cfgs[r].pose.x, cfgs[r].pose.y, cfgs[r].pose.a );
-	      
-	      printf( ")\n" );
-	    }
-	    break;
-	    
-	  case STG_PROP_RANGERDATA:
-	    {
-	      stg_ranger_sample_t* rngs = (stg_ranger_sample_t*)prop->data;
-	      int rng_count = prop->datalen / sizeof(stg_ranger_sample_t);	   
-	      printf( "received data for %d rangers (", rng_count );
-
-	      int r;
-	      for( r=0; r<rng_count; r++ )
-		printf( "%.2f ", rngs[r] );
-	      
-	      printf( ")\n" );
-	    }
-	    break;
-	    
-	  case STG_PROP_LASERDATA:
-	    break;
-	    /* 	    { */
-	    /* 	      stg */
-	    /* 	      stg_laser_sample_t* samples = (stg_laser_sample_t*)prop->data; */
-	    /* 	      int ls_count = prop->datalen / sizeof(stg_laser_sample_t); */
-	    
-	    /* 	      printf( "received %d laser samples\n", ls_count ); */
-	    /* 	    } */
-	    
 	  case STG_PROP_TIME:
 	    cli->stagetime = prop->timestamp;
 	    printf( "<time packet> [%lu] ", cli->stagetime );
