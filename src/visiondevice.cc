@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.25 $
+//  $Author: gerkey $
+//  $Revision: 1.26 $
 //
 // Usage:
 //  (empty)
@@ -197,7 +197,9 @@ void CVisionDevice::UpdateScan()
 
   // i'm scanning this as half-resolution for a significant speed-up
 
+#ifdef DEBUG
   printf("1?\n");
+#endif
   
   StageColor col;
 
@@ -218,7 +220,9 @@ void CVisionDevice::UpdateScan()
 	
     while( (ent = lit.GetNextEntity()) ) 
     {
+#ifdef DEBUG
       printf("2?\n");
+#endif
       
       // Ignore ourself, our ancestors and our descendents
       if( ent == this || this->IsDescendent(ent) || ent->IsDescendent(this))
