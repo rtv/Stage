@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.1.2.2 2003-02-06 03:36:48 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.1.2.3 2003-02-06 03:47:23 rtv Exp $
  */
 
 //
@@ -242,8 +242,11 @@ int RtkGuiLoad( stage_gui_config_t* cfg )
   dy = height * scale;
   
   // Origin of the canvas
-  ox = dx / 2;
-  oy = dy / 2;
+  //ox = dx / 2;
+  //oy = dy / 2;
+
+  ox = CEntity::root->size_x / 2.0;
+  oy = CEntity::root->size_y / 2.0;
 
   rtk_update_time = 0;
   rtk_update_rate = 10;

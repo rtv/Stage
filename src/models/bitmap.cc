@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/bitmap.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.3.4.1 $
+//  $Revision: 1.3.4.2 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -99,16 +99,17 @@ int CBitmap::SetProperty( int con, stage_prop_id_t property,
 	//sz.x = maxx;
 	//sz.y = maxy;
 	//this->SetProperty( -1, STG_PROP_ENTITY_SIZE, &sz, sizeof(sz) );
+  
       }
       break;
       
-      //default: // we didn't handle it. let the entity try
-      //CEntity::SetProperty( con, property, value, len );
+    default: // we didn't handle it. let the entity try
+      break;
     }
-  
-  // let the entity do more work
-  CEntity::SetProperty( con, property, value, len );
 
+  // let the entity do some more work
+  CEntity::SetProperty( con, property, value, len );
+  
   return 0;
 }
 

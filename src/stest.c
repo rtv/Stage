@@ -1,6 +1,6 @@
 
 /*
-  $Id: stest.c,v 1.1.2.4 2003-02-06 03:36:48 rtv Exp $
+  $Id: stest.c,v 1.1.2.5 2003-02-06 03:47:23 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -85,7 +85,7 @@ int main( int argc, char** argv )
       strcpy( gui.token, "rtk" );
       gui.width = 600;
       gui.height = 600;
-      gui.ppm = 100;
+      gui.ppm = 10;
       gui.originx = 0;
       gui.originy = 0;
       gui.showsubscribedonly = 0;
