@@ -1,6 +1,6 @@
 ####################################################################################
 # TODO 
-# $Id: TODO,v 1.7 2001-09-23 04:46:33 vaughan Exp $
+# $Id: TODO,v 1.8 2001-09-23 22:36:36 vaughan Exp $
 ####################################################################################
 
 ## IN PROGRESS #####################################################################
@@ -20,10 +20,14 @@
 
 ## FIXED/DONE ######################################################################
 
+RTV 9/22/01
+ - re-implemented signal-based timing in world's update loop, so it'll
+   use as much processor as it needs to try to keep at 50Hz
 
 RTV 9/22/01
  - XS: hangs when creating a Player client for a non-existent Player  
  - Stage/XS: added support for distributed processing
+ - added manager program for multiplexing truth servers
  - XS: fixed window redraws of sensor data, added selective sensor display (num keys)
  - configuration file read: 'port' settings are sticky
  

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.44 $
+//  $Revision: 1.45 $
 //
 // Usage:
 //  (empty)
@@ -52,7 +52,7 @@
 // allocate chunks of 32 pointers for entity storage
 const int OBJECT_ALLOC_SIZE = 32;
 
-//#define WATCH_RATES
+#define WATCH_RATES
 //#define DEBUG 
 //#define VERBOSE
 #undef DEBUG 
@@ -65,6 +65,14 @@ const int OBJECT_ALLOC_SIZE = 32;
 
 // flag set by cmd line to disable xs
 extern bool global_no_gui;
+
+// dummy timer signal func
+void TimerHandler( int val )
+{
+  // do nothing! just wake from sleep
+  //cout << "WAKE!" << flush;
+}  
+
 
 // main.cc calls constructor, then Load(), then Startup(), then starts thread
 // at CWorld::Main();
@@ -456,10 +464,6 @@ void* CWorld::Main(void *arg)
 {
     CWorld *world = (CWorld*) arg;
     
-    // Make our priority real low
-    //
-    //nice(10);
-    
     // Defer cancel requests so we can handle them properly
     //
     pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
@@ -475,19 +479,37 @@ void* CWorld::Main(void *arg)
  #ifdef INCLUDE_RTK
     double ui_time = 0;
  #endif
+
+    // set a timer to go off every 20ms. we'll sleep in
+    // between if there's nothing else to do
+    // sleep will return (almost) immediately if the
+    // timer has already gone off. this should limit
+    // the refresh rate but still allows us to use the processor
+    // if we need it. i.e. it's better than a simple usleep()
+
+    //install signal handler for timing
+    if( signal( SIGALRM, &TimerHandler ) == SIG_ERR )
+      {
+	cout << "Failed to install signal handler" << endl;
+	exit( -1 );
+      }
+    
+    //start timer
+    struct itimerval tick;
+    tick.it_value.tv_sec = tick.it_interval.tv_sec = 0;
+    tick.it_value.tv_usec = tick.it_interval.tv_usec = 20000; // 0.02 seconds
+     
+    if( setitimer( ITIMER_REAL, &tick, 0 ) == -1 )
+      {
+	cout << "failed to set timer" << endl;;
+	exit( -1 );
+      }
     
     while (true)
     {
         // Check for thread cancellation
         //
       pthread_testcancel();
-
-        // Dont hog all the cycles -- sleep for 10ms
-        //
-	// RTV - linux seems to usleep for a minimum of 10ms.
-	// so values below 10000 microseconds here don't make any difference.
-	// by usleeping at all here you get a max 50Hz update rate.
-      //usleep(1000);
 
         // Update the world
         //
@@ -513,6 +535,8 @@ void* CWorld::Main(void *arg)
             world->m_router->send_message(RTK_UI_FORCE_UPDATE, NULL);
         }
 #endif
+	// go to sleep until a signal occurs (or a whole second goes by (no way!))
+	sleep( 1 ); 
     }
 }
 
@@ -562,7 +586,7 @@ void CWorld::Update()
     static int period = 0;
     if( (++period %= 20)  == 0 )
       {
-	printf( "  %.2f Hz (%.2f)\r", m_update_rate, m_update_ratio );
+	printf( "%4.0f Hz (%.2f)\r", m_update_rate, m_update_ratio );
 	fflush( stdout );
       }
 #endif

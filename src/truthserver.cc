@@ -111,8 +111,10 @@ static void* TruthReader( void* arg )
 	      connfd = 0; // forces the writer to quit
 	      pthread_exit( 0 );
 	    }
+
 	  r+=v;
 
+	  // THIS IS DEBUG OUTPUT
 	  if( v < (int)sizeof(truth) )
 	    printf( "STAGE: SHORT READ (%d/%d) r=%d\n",
 		    v, (int)sizeof(truth), r );
@@ -199,6 +201,9 @@ static void * TruthWriter( void* arg )
 	      // send the packet to the connected client
 	      v = write( connfd, &truth, sizeof(truth) );
 	      
+	      // we really should have written the whole packet
+	      assert( v == (int)sizeof(truth) );
+
 	      // and store it
 	      memcpy( &(con->database[i]), &truth, sizeof( truth ) );
 	    }
@@ -213,7 +218,9 @@ static void * TruthWriter( void* arg )
 	    }
 	  
 	} 
-      usleep( 10000 ); // give the cpu a break for 10ms 
+
+      // send truths at around 20Hz
+      usleep( 50000 ); // give the cpu a break for 50ms 
       //usleep( 100000 ); // give the cpu a break for 100ms
     }
 }
