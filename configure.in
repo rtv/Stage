@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.28.2.8 2003-05-25 01:10:45 gerkey Exp $
+dnl $Id: configure.in,v 1.28.2.9 2003-05-25 01:13:04 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -137,15 +137,15 @@ dnl set some variables that will used during the build.
 if test "x$with_rtk" = "xyes"; then
   with_gui=yes
   AC_DEFINE(INCLUDE_RTK2,1,[include the RTK GUI])
-  GUI_DIR=rtkstage
   GUI_LIB=librtkstage.a
+  GUI_LIBPATH=rtkstage/$GUI_LIB
   GUI_LDADD=$RTK_LDADD
   GUI_CPPFLAGS=$RTK_CPPFLAGS
 else
   with_gui=no
 fi
-AC_SUBST(GUI_DIR)
 AC_SUBST(GUI_LIB)
+AC_SUBST(GUI_LIBPATH)
 AC_SUBST(GUI_LDADD)
 AC_SUBST(GUI_CPPFLAGS)
 
