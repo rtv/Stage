@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.89 2002-06-05 00:29:45 rtv Exp $
+# $Id: Makefile,v 1.90 2002-06-05 08:30:07 inspectorg Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -32,16 +32,13 @@ STAGELINK =  -lm -lstdc++ -pthread -L$(PLAYER_DIR)/lib -lplayerqueue\
              $(ZLIB_LINK) $(PROFILE_LINK) $(HRL_LINK) $(OLDLIBS) \
 	     -L../$(RTK_LIB) -lrtk `gtk-config --libs gtk gthread`
 
-OBS = stageio.o server.o client.o entity.o main.o world.o\
+OBS = stageio.o server.o client.o entity.o main.o world.o worldfile.o \
 	playerdevice.o fixedobstacle.o 	positiondevice.o \
 	omnipositiondevice.o laserdevice.o sonardevice.o \
 	miscdevice.o broadcastdevice.o ptzdevice.o boxobstacle.o \
 	laserbeacon.o visiondevice.o visionbeacon.o \
 	puck.o gpsdevice.o gripperdevice.o motedevice.o bpsdevice.o \
-	worldfile.o raytrace.o matrix.o image.o rtp.o entityfactory.o \
-	laserbeacondevice.o 
-
-# temporarily broken devices
+	raytrace.o matrix.o image.o rtp.o entityfactory.o laserbeacondevice.o 
 
 # TARGETS  #########################################################
 all: stage #tools 

@@ -1,28 +1,28 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// File: laserdevice.cc
-// Author: Andrew Howard
-// Date: 28 Nov 2000
-// Desc: Simulates the Player CLaserDevice (the SICK laser)
-//
-// CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.50 $
-//
-// Usage:
-//  (empty)
-//
-// Theory of operation:
-//  (empty)
-//
-// Known bugs:
-//  (empty)
-//
-// Possible enhancements:
-//  (empty)
-//
-///////////////////////////////////////////////////////////////////////////
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/*
+ * Desc: Simulates the Player CLaserDevice (the SICK laser)
+ * Author: Andrew Howard
+ * Date: 28 Nov 2000
+ * CVS info: $Id: laserdevice.cc,v 1.51 2002-06-05 08:30:08 inspectorg Exp $
+ */
 
 #define DEBUG
 #undef VERBOSE
@@ -40,10 +40,8 @@
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
-//
-CLaserDevice::CLaserDevice(CWorld *world, 
-			   CEntity *parent )
-        : CEntity(world, parent )
+CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent )
+    : CEntity(world, parent )
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_laser_data_t );
@@ -136,35 +134,35 @@ void CLaserDevice::Update( double sim_time )
     m_last_update = sim_time;
 	
     if( Subscribed() > 0 )
-      {
-	// Check to see if the configuration has changed
-	CheckConfig();
+    {
+      // Check to see if the configuration has changed
+      CheckConfig();
 	
-	// Generate new scan data and copy to data buffer
-	player_laser_data_t scan_data;
-	GenerateScanData( &scan_data );
-	PutData( &scan_data, sizeof( scan_data) );
+      // Generate new scan data and copy to data buffer
+      player_laser_data_t scan_data;
+      GenerateScanData( &scan_data );
+      PutData( &scan_data, sizeof( scan_data) );
 	
-	// we may need to tell clients about this data
-	SetDirty( PropData, 1 );
-      }
+      // we may need to tell clients about this data
+      SetDirty( PropData, 1 );
+    }
     else
-      {
-	// reset configuration to default.
-	this->scan_res = DTOR(DEFAULT_RES);
-	this->scan_min = DTOR(DEFAULT_MIN);
-	this->scan_max = DTOR(DEFAULT_MAX);
-	this->scan_count = 361;
-	this->intensity = false;
+    {
+      // reset configuration to default.
+      this->scan_res = DTOR(DEFAULT_RES);
+      this->scan_min = DTOR(DEFAULT_MIN);
+      this->scan_max = DTOR(DEFAULT_MAX);
+      this->scan_count = 361;
+      this->intensity = false;
 	
-	// and indicate that the data is no longer available
-	//Lock();
-	//m_info_io->data_avail = 0;
-	//Unlock();
+      // and indicate that the data is no longer available
+      //Lock();
+      //m_info_io->data_avail = 0;
+      //Unlock();
 	
-	// empty the laser beacon list
-	m_visible_beacons.clear();
-      }
+      // empty the laser beacon list
+      m_visible_beacons.clear();
+    }
   }
 }
 
@@ -273,18 +271,15 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
   m_visible_beacons.clear(); 
 
   // Set the header part of the data packet
-  //
   data->range_count = htons(this->scan_count);
   data->resolution = htons((int) (100 * RTOD(this->scan_res)));
   data->min_angle = htons((int) (100 * RTOD(this->scan_min)));
   data->max_angle = htons((int) (100 * RTOD(this->scan_max)));
 
   // Make sure the data buffer is big enough
-  //
   ASSERT(this->scan_count <= ARRAYSIZE(data->ranges));
             
   // Do each scan
-  //
   for (int s = 0; s < this->scan_count;)
   {
     double ox = x;
@@ -401,44 +396,46 @@ void CLaserDevice::RtkUpdate()
 
   // if a client is subscribed to this device
   if( Subscribed() > 0 )
+  {
     // attempt to get the right size chunk of data from the mmapped buffer
     if( GetData( &data, sizeof(data) ) == sizeof(data) )
-      { 
-	// we got it, so parse out the data and display it
-	//puts( "found some nice data avail!!!!!!!!!!!!!!" );
+    { 
+      // we got it, so parse out the data and display it
+      //puts( "found some nice data avail!!!!!!!!!!!!!!" );
 	
-	short min_ang_deg = ntohs(data.min_angle);
-	short max_ang_deg = ntohs(data.max_angle);
-	unsigned short samples = ntohs(data.range_count); 
+      short min_ang_deg = ntohs(data.min_angle);
+      short max_ang_deg = ntohs(data.max_angle);
+      unsigned short samples = ntohs(data.range_count); 
 	
-	double min_ang_rad = DTOR( (double)min_ang_deg ) / 100.0;
-	double max_ang_rad = DTOR( (double)max_ang_deg ) / 100.0;
+      double min_ang_rad = DTOR( (double)min_ang_deg ) / 100.0;
+      double max_ang_rad = DTOR( (double)max_ang_deg ) / 100.0;
 	
-	double incr = (double)(max_ang_rad - min_ang_rad) / (double)samples;
+      double incr = (double)(max_ang_rad - min_ang_rad) / (double)samples;
 	
-	//printf( "laser samples=%d start=%.2f stop=%.2f incr=%.2f\n",
-	//     samples, min_ang_rad, max_ang_rad, incr );
+      //printf( "laser samples=%d start=%.2f stop=%.2f incr=%.2f\n",
+      //     samples, min_ang_rad, max_ang_rad, incr );
 	
-	for( int i=0; i < (int)samples; i++ )
-	  {
-	    // get range, converting from mm to m
-	    unsigned short range_mm = ntohs(data.ranges[i]);
-	    double range_m = (double)range_mm / 1000.0;
+      for( int i=0; i < (int)samples; i++ )
+      {
+        // get range, converting from mm to m
+        unsigned short range_mm = ntohs(data.ranges[i]);
+        double range_m = (double)range_mm / 1000.0;
 	    
-	    double bearing = gth + i * incr;
+        double bearing = gth + i * incr;
 	    
-	    double px = gx + range_m * cos(bearing);
-	    double py = gy + range_m * sin(bearing);
+        double px = gx + range_m * cos(bearing);
+        double py = gy + range_m * sin(bearing);
 	    
-	    //printf( "laser sample %d\n", i );
-	    //printf( "laser range = %.2f   bearing %.2f\n", 
-	    //	  range, bearing );
-	    //printf( "laser px = %.2f   py = %.2\n",
-	    //	  px, py );
+        //printf( "laser sample %d\n", i );
+        //printf( "laser range = %.2f   bearing %.2f\n", 
+        //	  range, bearing );
+        //printf( "laser px = %.2f   py = %.2\n",
+        //	  px, py );
 	    
-	    rtk_fig_line(this->scan_fig, gx, gy, px, py);
-	  }
+        rtk_fig_line(this->scan_fig, gx, gy, px, py);
       }
+    }
+  }
   //else
   //  puts( "subscribed but no data avail!!!!!!!!!!!!!!" );
 }

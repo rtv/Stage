@@ -1,28 +1,28 @@
-///////////////////////////////////////////////////////////////////////////
-//
-// File: stage_types.hh
-// Author: Andrew Howard
-// Date: 12 Mar 2001
-// Desc: Types and macros for stage
-//
-// CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/stage_types.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.22 $
-//
-// Usage:
-//  (empty)
-//
-// Theory of operation:
-//  (empty)
-//
-// Known bugs:
-//  (empty)
-//
-// Possible enhancements:
-//  (empty)
-//
-///////////////////////////////////////////////////////////////////////////
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/*
+ * Desc: Shared types, constants, etc
+ * Author: Andrew Howard
+ * Date: 12 Mar 2001
+ * CVS: $Id: stage_types.hh,v 1.23 2002-06-05 08:30:06 inspectorg Exp $
+ */
 
 #ifndef STAGE_TYPES_HH
 #define STAGE_TYPES_HH
@@ -31,8 +31,10 @@
 #include <assert.h>
 #include <math.h>
 
-#include "messages.h" // get player's typedefs
+// get player's message structures
+#include "player.h" 
 
+///////////////////////////////////////////////////////////////////////////
 // CONSTANTS
 const int DEFAULT_POSE_PORT = 6601;
 
@@ -45,11 +47,19 @@ const int MAX_POSE_CONNECTIONS = 100;
 // currently only the zero instance is supported in player
 #define IOFILENAME "/tmp/stageIO"
 
+
+///////////////////////////////////////////////////////////////////////////
+// Global variables
+
+// raising this causes Stage to exit the main loop and die nicely
+// exception throwing would be better style...
+extern bool quit;
+
+
 ///////////////////////////////////////////////////////////////////////////
 // Some useful macros
 
 // Determine size of array
-//
 #ifndef ARRAYSIZE
 #define ARRAYSIZE(x) (int) (sizeof(x) / sizeof(x[0]))
 #endif
@@ -59,26 +69,23 @@ const int MAX_POSE_CONNECTIONS = 100;
 #define MILLION 1000000L
 
 #ifndef M_PI
-	#define M_PI        3.14159265358979323846
+#define M_PI        3.14159265358979323846
 #endif
 
 #ifndef TWOPI
-        #define TWOPI 2 * M_PI
+#define TWOPI 2 * M_PI
 #endif
 
 #define STAGE_SYNC 0
 #define STAGE_ASYNC 1
 
 // Convert radians to degrees
-//
 #define RTOD(r) ((r) * 180 / M_PI)
 
 // Convert degrees to radians
-//
 #define DTOR(d) ((d) * M_PI / 180)
 
 // Normalize angle to domain -pi, pi
-//
 #define NORMALIZE(z) atan2(sin(z), cos(z))
 
 #define ASSERT(m) assert(m)
@@ -123,10 +130,12 @@ const int MAX_POSE_CONNECTIONS = 100;
 #define PRINT_DEBUG1(m, a)
 #define PRINT_DEBUG2(m, a, b)
 #define PRINT_DEBUG3(m, a, b, c)
-#define PRINT_DEBUG3(m, a, b, c, d)
+#define PRINT_DEBUG4(m, a, b, c, d)
 #endif
 
 
+///////////////////////////////////////////////////////////////////////////
+// Useful stage types
 
 // color type
 typedef struct
@@ -176,7 +185,6 @@ enum StageType
   MoteType,
   BpsType
 };
-
 
 
 // Possible laser return values

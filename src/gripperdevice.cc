@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.18 $
+//  $Author: inspectorg $
+//  $Revision: 1.19 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -70,14 +70,20 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
 
   // this is deprecated stuff - should get rid of the exp stuff eventually
   // gui export stuff
+  /* REMOVE
   exp.objectType = gripper_o;
   exp.width = .08;
   exp.height = .2;
+  */
+
+  m_width = .08;
+  m_height = 0.2;
   
   //m_gripper_range = 2.0*exp.width;
   m_puck_count = 0;
   
   // gripper specific gui stuff
+  /*
   expGripper.paddle_width = 0.1;
   expGripper.paddle_height = exp.height / 4.0;
   expGripper.paddles_open = m_paddles_open;
@@ -88,6 +94,7 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
 
   exp.data = (char*)&expGripper;
   strcpy( exp.label, "Gripper" );
+  */
 }
 
 
@@ -216,8 +223,7 @@ void CGripperDevice::Update( double sim_time )
       m_puck_channel = (char)cmd.arg-1;
 
     // This basically assumes instantaneous changes
-    //
-    expGripper.paddles_open = m_paddles_open;
+    //REMOVE expGripper.paddles_open = m_paddles_open;
   }
 
   m_outer_break_beam = BreakBeam(0) ? true : false;
@@ -338,7 +344,7 @@ void CGripperDevice::DropObject()
   GetGlobalPose(px,py,pth);
 
   // drop the last one we picked up
-  double x_offset = (exp.width*2.0);
+  double x_offset = (m_width*2.0);
   m_puck_count--;
   m_pucks[m_puck_count]->m_parent_object = (CEntity*)NULL;
   m_pucks[m_puck_count]->SetDirty(1);
@@ -350,8 +356,8 @@ void CGripperDevice::DropObject()
   //printf("dropped puck %d at (%f,%f,%f) with speed %f\n",
          //m_pucks[m_puck_count],
          //px,py,pth,m_pucks[m_puck_count]->GetSpeed());
-  if(!m_puck_count)
-    expGripper.have_puck = false;
+  //if(!m_puck_count)
+  //REMOVE  expGripper.have_puck = false;
 }
     
 // Try to pick up an object with the gripper
@@ -454,12 +460,13 @@ void CGripperDevice::PickupObject()
   // if we're consuming the puck then move it behind the gripper
   if(m_gripper_consume)
   {
-    closest_puck->SetPose(-exp.width,0,0);
+    closest_puck->SetPose(-m_width,0,0);
   }
   else
-    closest_puck->SetPose(exp.width/2.0+closest_puck->exp.width/2.0,0,0);
+    closest_puck->SetPose(m_width/2.0+closest_puck->size_x/2.0,0,0);
+  
   m_pucks[m_puck_count++]=closest_puck;
-  expGripper.have_puck = true;
+  //REMOVE expGripper.have_puck = true;
 
   closest_puck->SetDirty(1);
   
@@ -488,18 +495,18 @@ void CGripperDevice::OnUiUpdate(RtkUiDrawData *data)
         GetGlobalPose(ox, oy, oth);
         data->set_color(RTK_RGB(0, 255, 0));
         // Draw the gripper
-        data->ex_rectangle(ox, oy, oth, exp.width,exp.height);
+        data->ex_rectangle(ox, oy, oth, m_width,m_height);
         // Draw the paddles
         double x_offset;
         double y_offset;
         if(expGripper.paddles_open)
         {
-          x_offset = (exp.width/2.0)+(expGripper.paddle_width/2.0);
-          y_offset = (exp.height/2.0)-(expGripper.paddle_height/2.0);
+          x_offset = (m_width/2.0)+(expGripper.paddle_width/2.0);
+          y_offset = (m_height/2.0)-(expGripper.paddle_height/2.0);
         }
         else
         {
-          x_offset = (exp.width/2.0)+(expGripper.paddle_width/2.0);
+          x_offset = (m_width/2.0)+(expGripper.paddle_width/2.0);
           y_offset = (expGripper.paddle_height/2.0);
         }
         data->ex_rectangle(ox+(x_offset*cos(oth))+(y_offset*-sin(oth)),

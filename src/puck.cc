@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.24 $
+//  $Author: inspectorg $
+//  $Revision: 1.25 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -42,11 +42,13 @@ CPuck::CPuck(CWorld *world, CEntity *parent)
   m_friction = 0.05;
   // assume puck is 200g
   m_mass = 0.2;
-  
+
+  /* REMOVE?
   exp.objectType = puck_o;
   exp.width = this->size_x;
   exp.height = this->size_y;
   strcpy( exp.label, "Puck" );
+  */
 }
 
 

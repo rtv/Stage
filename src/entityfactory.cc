@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.22 $
+//  $Author: inspectorg $
+//  $Revision: 1.23 $
 //
 // Usage:
 //  (empty)
@@ -144,31 +144,31 @@ CEntity* CWorld::CreateObject( StageType type, CEntity *parent )
 //
 CEntity* CWorld::CreateObject(const char *type, CEntity *parent )
 { 
-  if (strcmp(type, "mote_device") == 0)
+  if (strcmp(type, "mote") == 0)
     return new CMoteDevice(this, parent );
 
   if (strcmp(type, "obstacle") == 0 )
     return new CFixedObstacle(this, parent);
 
-  if (strcmp(type, "position_device") == 0)
+  if (strcmp(type, "position") == 0)
     return new CPositionDevice(this, parent );
 
-  if (strcmp(type, "omni_position_device") == 0)
+  if (strcmp(type, "omni_position") == 0)
     return new COmniPositionDevice(this, parent );
 
-  if (strcmp(type, "player_device") == 0)
+  if (strcmp(type, "player") == 0)
     return new CPlayerDevice(this, parent );
 
-  if (strcmp(type, "laser_device") == 0)
+  if (strcmp(type, "laser") == 0)
     return new CLaserDevice(this, parent );
 
-  if (strcmp(type, "sonar_device") == 0)
+  if (strcmp(type, "sonar") == 0)
     return new CSonarDevice(this, parent );
 
-  if (strcmp(type, "misc_device") == 0)
+  if (strcmp(type, "misc") == 0)
     return new CMiscDevice(this, parent );
 
-  if (strcmp(type, "ptz_device") == 0)
+  if (strcmp(type, "ptz") == 0)
     return new CPtzDevice(this, parent );
   
   if (strcmp(type, "box") == 0 )
@@ -177,10 +177,10 @@ CEntity* CWorld::CreateObject(const char *type, CEntity *parent )
   if (strcmp(type, "laser_beacon") == 0)
     return new CLaserBeacon(this, parent);
    
-  if (strcmp(type, "lbd_device") == 0)
+  if (strcmp(type, "lbd") == 0)
     return new CLBDDevice(this, (CLaserDevice*)parent );
 
-  if (strcmp(type, "vision_device") == 0)
+  if (strcmp(type, "vision") == 0)
     return new CVisionDevice(this, (CPtzDevice*)parent);
         
   if (strcmp(type, "vision_beacon") == 0)
@@ -189,16 +189,16 @@ CEntity* CWorld::CreateObject(const char *type, CEntity *parent )
   if (strcmp(type, "movable_object") == 0)
     return new CPuck(this, parent);
 
-  if (strcmp(type, "gps_device") == 0)
+  if (strcmp(type, "gps") == 0)
     return new CGpsDevice(this, parent);
 
-  if (strcmp(type, "gripper_device") == 0)
+  if (strcmp(type, "gripper") == 0)
     return new CGripperDevice(this, parent);
 
-  if (strcmp(type, "broadcast_device") == 0)
+  if (strcmp(type, "broadcast") == 0)
     return new CBroadcastDevice(this, parent);
 
-  if (strcmp(type, "bps_device") == 0)
+  if (strcmp(type, "bps") == 0)
     return new CBpsDevice(this, parent);
     
   if (strcmp(type, "puck") == 0)
@@ -207,10 +207,10 @@ CEntity* CWorld::CreateObject(const char *type, CEntity *parent )
 #ifdef HRL_HEADERS 
   // these the proprietary HRL devices - the device code cannot be distributed
   // so they are implemented in an external library
-  if (strcmp(type, "idar_device") == 0)
+  if (strcmp(type, "idar") == 0)
     return new CIDARDevice(this, parent);
 
-  if (strcmp(type, "descartes_device") == 0)
+  if (strcmp(type, "descartes") == 0)
     return new CDescartesDevice(this, parent);
 #endif
 

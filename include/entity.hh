@@ -1,29 +1,34 @@
-///////////////////////////////////////////////////////////////////////////
-//
-// File: entity.hh
-// Author: Andrew Howard, Richard Vaughan
-// Date: 04 Dec 2000
-// Desc: Base class for movable objects
-//
-// CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.47 $
-//
-// Usage:
-//  (empty)
-//
-// Theory of operation:
-//  (empty)
-//
-// Known bugs:
-//  (empty)
-//
-// Possible enhancements:
-//  (empty)
-//
-///////////////////////////////////////////////////////////////////////////
-
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/*
+ * Desc: top level class that contains everything
+ * Author: Richard Vaughan, Andrew Howard
+ * Date: 7 Dec 2000
+ * CVS info: $Id: entity.hh,v 1.48 2002-06-05 08:30:06 inspectorg Exp $
+ */
+/*
+ * Desc: Base class for movable objects
+ * Author: Richard Vaughan, Andrew Howard
+ * Date: 04 Dec 2000
+ * CVS info: $Id: entity.hh,v 1.48 2002-06-05 08:30:06 inspectorg Exp $
+ */
 
 #ifndef ENTITY_HH
 #define ENTITY_HH
@@ -35,8 +40,6 @@
 #include "colors.hh"
 #include "rtp.h"
 
-#include "guiexport.hh" // relic!
-
 #ifdef INCLUDE_RTK2
 #include "rtk.h"
 #endif
@@ -46,29 +49,31 @@ class CWorld;
 class CWorldFile;
 
 // these properties can be set with the SetProperty() method
-enum EntityProperty { PropParent, 
-		      PropSizeX, 
-		      PropSizeY, 
-		      PropPoseX, 
-		      PropPoseY, 
-		      PropPoseTh, 
-		      PropOriginX, 
-		      PropOriginY, 
-		      PropName,
-		      PropPlayerId,
-		      PropPlayerSubscriptions,
-		      PropColor, 
-		      PropShape, 
-		      PropLaserReturn,
-		      PropSonarReturn,
-		      PropIdarReturn, 
-		      PropObstacleReturn, 
-		      PropVisionReturn, 
-		      PropPuckReturn,
-		      PropCommand,
-		      PropData,
-		      PropConfig,
-		      PropReply
+enum EntityProperty
+{
+  PropParent, 
+  PropSizeX, 
+  PropSizeY, 
+  PropPoseX, 
+  PropPoseY, 
+  PropPoseTh, 
+  PropOriginX, 
+  PropOriginY, 
+  PropName,
+  PropPlayerId,
+  PropPlayerSubscriptions,
+  PropColor, 
+  PropShape, 
+  PropLaserReturn,
+  PropSonarReturn,
+  PropIdarReturn, 
+  PropObstacleReturn, 
+  PropVisionReturn, 
+  PropPuckReturn,
+  PropCommand,
+  PropData,
+  PropConfig,
+  PropReply
 };
 
 // (currently) static memory allocation for getting and setting properties
@@ -79,14 +84,9 @@ const int MAX_PROPERTY_DATA_LEN = 20000;
 // The basic object class
 class CEntity
 {
-  public:
-  virtual int SetProperty( int con,
-			   EntityProperty property, void* value, size_t len );
-  virtual int GetProperty( EntityProperty property, void* value );
-
   // Minimal constructor
   // Requires a pointer to the parent and a pointer to the world.
-public: CEntity(CWorld *world, CEntity *parent_object );
+  public: CEntity(CWorld *world, CEntity *parent_object );
 
   // Destructor
   public: virtual ~CEntity();
@@ -103,12 +103,18 @@ public: CEntity(CWorld *world, CEntity *parent_object );
   // Finalize object
   public: virtual void Shutdown();
 
+  // Get/set properties
+  public: virtual int SetProperty( int con,
+                                   EntityProperty property, void* value, size_t len );
+  public: virtual int GetProperty( EntityProperty property, void* value );
+  
   // Get the shared memory size
   private: int SharedMemorySize( void );
 
   // set and unset the semaphore that protects this entity's shared memory 
-protected: bool CEntity::Lock( void );
-protected: bool CEntity::Unlock( void );
+  protected: bool Lock( void );
+  protected: bool Unlock( void );
+  
   // pointer to the  semaphore in the shared memory
   //private: sem_t* m_lock; 
 
@@ -249,10 +255,10 @@ protected: bool CEntity::Unlock( void );
   public: char m_dirty[ MAX_POSE_CONNECTIONS ][ MAX_NUM_PROPERTIES ];
 
   // set the dirty flag for each property for each connection
-public: void SetDirty( char v);
-public: void SetDirty( EntityProperty prop, char v );
-public: void SetDirty( int con, char v );
-public: void SetDirty( int con, EntityProperty prop, char v );
+  public: void SetDirty( char v);
+  public: void SetDirty( EntityProperty prop, char v );
+  public: void SetDirty( int con, char v );
+  public: void SetDirty( int con, EntityProperty prop, char v );
   
   // these store the last pose we sent out from the pose server
   // to be tested when setting the dirty flag to see if we really
@@ -285,7 +291,7 @@ public: void SetDirty( int con, EntityProperty prop, char v );
   //public: int m_player_port; // N
   //public: int m_player_index; // M
   //public: int m_player_type; // one of the device types from messages.h
-public: player_device_id_t m_player;
+  public: player_device_id_t m_player;
 
   // basic external IO functions
 
@@ -293,13 +299,13 @@ public: player_device_id_t m_player;
   // timestamp with the current time, sets the availability value to
   // the number of bytes copied
   size_t PutIOData( void* dest, size_t dest_len,  
-		    void* src, size_t src_len,
-		    uint32_t* ts_sec, uint32_t* ts_usec, uint32_t* avail );
+                    void* src, size_t src_len,
+                    uint32_t* ts_sec, uint32_t* ts_usec, uint32_t* avail );
   
   // copies data from src to dest if there is room and if there is the
   // right amount of data available
   size_t GetIOData( void* dest, size_t dest_len,  
-		    void* src, uint32_t* avail );
+                    void* src, uint32_t* avail );
     
   // specific external IO functions
 
@@ -375,7 +381,7 @@ public: player_device_id_t m_player;
   // i made this public so that an object can get another object's
   // type - BPG
   //protected: ExportData exp;
-  public: ExportData exp;
+  //REMOVE public: ExportData exp;
 
   // functions for drawing this object in GUIs
 #ifdef INCLUDE_RTK2

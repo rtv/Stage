@@ -1,16 +1,28 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// File: world.cc
-// Author: Richard Vaughan, Andrew Howard
-// Date: 7 Dec 2000
-// Desc: top level class that contains everything
-//
-// CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.93 $
-//
-///////////////////////////////////////////////////////////////////////////
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/*
+ * Desc: top level class that contains everything
+ * Author: Richard Vaughan, Andrew Howard
+ * Date: 7 Dec 2000
+ * CVS info: $Id: world.cc,v 1.94 2002-06-05 08:30:08 inspectorg Exp $
+ */
 
 //#undef DEBUG
 //#undef VERBOSE
@@ -126,22 +138,22 @@ CWorld::CWorld( int argc, char** argv )
   struct hostent* info = gethostbyname( m_hostname );
   
   if( info )
-    { // make sure this looks like a regular internet address
-      assert( info->h_length == 4 );
-      assert( info->h_addrtype == AF_INET );
+  { // make sure this looks like a regular internet address
+    assert( info->h_length == 4 );
+    assert( info->h_addrtype == AF_INET );
       
-      // copy the address out
-      memcpy( &m_hostaddr.s_addr, info->h_addr_list[0], 4 ); 
-    }
+    // copy the address out
+    memcpy( &m_hostaddr.s_addr, info->h_addr_list[0], 4 ); 
+  }
   else
-    {
-      PRINT_ERR1( "failed to resolve IP for local hostname \"%s\"\n", 
-		 m_hostname );
-    }
+  {
+    PRINT_ERR1( "failed to resolve IP for local hostname \"%s\"\n", 
+                m_hostname );
+  }
   
   // just to be reassuring, print the host details
-    printf( "[Host %s(%s)]",
-	  m_hostname_short, inet_ntoa( m_hostaddr ) );
+  printf( "[Host %s(%s)]",
+          m_hostname_short, inet_ntoa( m_hostaddr ) );
   
   m_send_idar_packets = false;
 
@@ -190,16 +202,15 @@ int CWorld::CountDirtyOnConnection( int con )
   // count the number of dirty properties on this connection 
   for( int i=0; i < GetObjectCount(); i++ )
     for( int p=0; p < MAX_NUM_PROPERTIES; p++ )
-      {  
-	// is the entity marked dirty for this connection & property?
-	if( GetObject(i)->m_dirty[con][p] ) 
-	  {
-	    // if this property has any data  
-	    if( GetObject(i)->GetProperty( (EntityProperty)p, dummydata ) 
-		> 0 )
-	      count++; // we count it as dirty
-	  }
+    {  
+      // is the entity marked dirty for this connection & property?
+      if( GetObject(i)->m_dirty[con][p] ) 
+      {
+        // if this property has any data  
+        if( GetObject(i)->GetProperty( (EntityProperty)p, dummydata ) > 0 )
+          count++; // we count it as dirty
       }
+    }
 
   return count;
 }
@@ -209,83 +220,83 @@ int CWorld::CountDirtyOnConnection( int con )
 bool CWorld::ParseCmdline(int argc, char **argv)
 {
   for( int a=1; a<argc-1; a++ )
+  {
+    // USAGE
+    if( (strcmp( argv[a], "-?" ) == 0) || 
+        (strcmp( argv[a], "--help") == 0) )
     {
-      // USAGE
-      if( (strcmp( argv[a], "-?" ) == 0) || 
-	  (strcmp( argv[a], "--help") == 0) )
-	{
-	  PrintUsage();
-	  return false;
-	}
+      PrintUsage();
+      return false;
+    }
       
-      // LOGGING
-      if( strcmp( argv[a], "-l" ) == 0 )
-	{
-	  m_log_output = true;
-	  strncpy( m_log_filename, argv[a+1], 255 );
-	  printf( "[Logfile %s]", m_log_filename );
+    // LOGGING
+    if( strcmp( argv[a], "-l" ) == 0 )
+    {
+      m_log_output = true;
+      strncpy( m_log_filename, argv[a+1], 255 );
+      printf( "[Logfile %s]", m_log_filename );
 	  
-	  //store the command line for logging later
-	  memset( m_cmdline, 0, sizeof(m_cmdline) );
+      //store the command line for logging later
+      memset( m_cmdline, 0, sizeof(m_cmdline) );
 	  
-	  for( int g=0; g<argc; g++ )
+      for( int g=0; g<argc; g++ )
 	    {
 	      strcat( m_cmdline, argv[g] );
 	      strcat( m_cmdline, " " );
 	    }
 	  
-	  a++;
+      a++;
 	  
-	  // open the log file and write out a header
-	  LogOutputHeader();
-	}
+      // open the log file and write out a header
+      LogOutputHeader();
+    }
       
-      // DIS/ENABLE GUI
-      if( strcmp( argv[a], "-g" ) == 0 )
-	{
-	  m_run_xs = false;
-	  printf( "[No GUI]" );
-	}
-      else if( strcmp( argv[a], "+g" ) == 0 )
-	{
-	  m_run_xs = true;
-	  printf( "[GUI]" );
-	}
+    // DIS/ENABLE GUI
+    if( strcmp( argv[a], "-g" ) == 0 )
+    {
+      m_run_xs = false;
+      printf( "[No GUI]" );
+    }
+    else if( strcmp( argv[a], "+g" ) == 0 )
+    {
+      m_run_xs = true;
+      printf( "[GUI]" );
+    }
       
       
-      // SET GOAL REAL CYCLE TIME
-      // Stage will attempt to update at this speed
-      else if( strcmp( argv[a], "-u" ) == 0 )
-	{
-	  m_real_timestep = atof(argv[a+1]);
-	  printf( "[Real time per cycle %f sec]", m_real_timestep );
-	  a++;
-	}
+    // SET GOAL REAL CYCLE TIME
+    // Stage will attempt to update at this speed
+    else if( strcmp( argv[a], "-u" ) == 0 )
+    {
+      m_real_timestep = atof(argv[a+1]);
+      printf( "[Real time per cycle %f sec]", m_real_timestep );
+      a++;
+    }
       
-      // SET SIMULATED UPDATE CYCLE
-      // one cycle simulates this much time
-      else if( strcmp( argv[a], "-v" ) == 0 )
-	{
-	  m_sim_timestep = atof(argv[a+1]);
-	  printf( "[Simulated time per cycle %f sec]", m_sim_timestep );
-	  a++;
-	}
+    // SET SIMULATED UPDATE CYCLE
+    // one cycle simulates this much time
+    else if( strcmp( argv[a], "-v" ) == 0 )
+    {
+      m_sim_timestep = atof(argv[a+1]);
+      printf( "[Simulated time per cycle %f sec]", m_sim_timestep );
+      a++;
+    }
       
-      // DISABLE console output
-      if( strcmp( argv[a], "-q" ) == 0 )
-	{
-	  m_console_output = false;
-	  printf( "[Quiet]" );
-	}
+    // DISABLE console output
+    if( strcmp( argv[a], "-q" ) == 0 )
+    {
+      m_console_output = false;
+      printf( "[Quiet]" );
+    }
       
 
-      // change the server port 
-      //else if( strcmp( argv[a], "-p" ) == 0 )
-      //{
-      //  m_pose_port = atoi(argv[a+1]);
-      //  printf( "[Port %d]", m_pose_port );
-      //  a++;
-      //}
+    // change the server port 
+    //else if( strcmp( argv[a], "-p" ) == 0 )
+    //{
+    //  m_pose_port = atoi(argv[a+1]);
+    //  printf( "[Port %d]", m_pose_port );
+    //  a++;
+    //}
 
     // SWITCH ON SYNCHRONIZED (distributed) MODE
     // if this option is given, Stage will only run when connected
@@ -303,23 +314,23 @@ bool CWorld::ParseCmdline(int argc, char **argv)
       printf("setting time to: %d\n",m_stoptime);
     }
 
-      // ENABLE RTP - sensor data is sent in rtp format
-      // if( (strcmp( argv[a], "-r" ) == 0 ) || 
-      // ( strcmp( argv[a], "--rtp" ) == 0 ))
-      //  	{
-      //  	  rtp_player = new CRTPPlayer( argv[a+1] );
+    // ENABLE RTP - sensor data is sent in rtp format
+    // if( (strcmp( argv[a], "-r" ) == 0 ) || 
+    // ( strcmp( argv[a], "--rtp" ) == 0 ))
+    //  	{
+    //  	  rtp_player = new CRTPPlayer( argv[a+1] );
       
-      //  	  printf( "World rtp player @ %p\n", rtp_player );
+    //  	  printf( "World rtp player @ %p\n", rtp_player );
       
-      //  	  printf( "[RTP %s]", argv[a+1] );
-      //  	  a++;
-      //  	}
-      // ENABLE IDAR packets to be sent to XS
-      //if( strcmp( argv[a], "-i" ) == 0 )
-      //{
-      //  m_send_idar_packets = true;
-      //  printf( "[IDAR->XS]" );
-      //}
+    //  	  printf( "[RTP %s]", argv[a+1] );
+    //  	  a++;
+    //  	}
+    // ENABLE IDAR packets to be sent to XS
+    //if( strcmp( argv[a], "-i" ) == 0 )
+    //{
+    //  m_send_idar_packets = true;
+    //  printf( "[IDAR->XS]" );
+    //}
       
 
     //else if( strcmp( argv[a], "-id" ) == 0 )
@@ -383,7 +394,8 @@ bool CWorld::Startup()
   m_update_rate = 0;
 
   // Start the GUI
-  if( m_run_xs ) StartupGUI();
+  if( m_run_xs )
+    RtkStartup();
   
   // start the real-time interrupts going
   StartTimer( m_real_timestep );
@@ -400,7 +412,8 @@ void CWorld::Shutdown()
   PRINT_DEBUG( "world shutting down" );
 
   // Stop the GUI
-  if( m_run_xs ) ShutdownGUI();
+  if( m_run_xs )
+    RtkShutdown();
   
   // Shutdown all the objects
   // Devices will unlink their device files
@@ -462,62 +475,64 @@ void CWorld::Update(void)
   // so we run as fast as possible
   m_real_timestep > 0.0 ? g_timer_expired = 0 : g_timer_expired = 1;
             
-   // calculate new world state
+  // calculate new world state
   if (m_enable) 
-    {
-      // Update the simulation time (in both formats)
-      m_sim_time = m_step_num * m_sim_timestep;
-      m_sim_timeval.tv_sec = (long)floor(m_sim_time);
-      m_sim_timeval.tv_usec = (long)((m_sim_time - floor(m_sim_time)) * MILLION); 
-      // is it time to stop?
-      if(m_stoptime && m_sim_time >= m_stoptime)
-	system("kill `cat stage.pid`");
+  {
+    // Update the simulation time (in both formats)
+    m_sim_time = m_step_num * m_sim_timestep;
+    m_sim_timeval.tv_sec = (long)floor(m_sim_time);
+    m_sim_timeval.tv_usec = (long)((m_sim_time - floor(m_sim_time)) * MILLION); 
+    // is it time to stop?
+    if(m_stoptime && m_sim_time >= m_stoptime)
+      system("kill `cat stage.pid`");
       
-      // copy the timeval into the player io buffer. use the first
-      // object's info
+    // copy the timeval into the player io buffer. use the first
+    // object's info
 
-      if( m_clock ) // if we're managing a clock
-	{
-	  // TODO - turn the player clock back on - move this into the server?
-	  sem_wait( &m_clock->lock );
-	  m_clock->time = m_sim_timeval;
-	  sem_post( &m_clock->lock );
-	}
+    if( m_clock ) // if we're managing a clock
+    {
+      // TODO - turn the player clock back on - move this into the server?
+      sem_wait( &m_clock->lock );
+      m_clock->time = m_sim_timeval;
+      sem_post( &m_clock->lock );
+    }
 
-      // Do the actual work -- update the objects 
-      for (int i = 0; i < m_object_count; i++)
-	{
-	  // if this host manages this object
-	  if( m_object[i]->m_local )
-	    m_object[i]->Update( m_sim_time ); // update the device model
+    // Do the actual work -- update the objects 
+    for (int i = 0; i < m_object_count; i++)
+    {
+      // if this host manages this object
+      if( m_object[i]->m_local )
+        m_object[i]->Update( m_sim_time ); // update the device model
 	  
 #ifdef INCLUDE_RTK2
-	  // update the GUI, whether we manage this device or not
-	  if( m_run_xs ) m_object[i]->RtkUpdate();
+      // update the GUI, whether we manage this device or not
+      if( m_run_xs )
+        m_object[i]->RtkUpdate();
 #endif
-	};
+    };
       
 #ifdef INCLUDE_RTK2
-      if( m_run_xs ) UpdateGUI();      
+    if( m_run_xs )
+      RtkUpdate();      
 #endif
 
-    }
+  }
   else // the model isn't running - update the GUI and go to sleep
-    {
+  {
 
 #ifdef INCLUDE_RTK2
-      if( m_run_xs ) 
-	{
-	  //for (int i = 0; i < m_object_count; i++)
-	  // m_object[i]->RtkUpdate();
+    if( m_run_xs ) 
+    {
+      //for (int i = 0; i < m_object_count; i++)
+      // m_object[i]->RtkUpdate();
 	  
-	  UpdateGUI();      
-	}
+      RtkUpdate();      
+    }
 #endif
 
-      PRINT_DEBUG( "SLEEPING - DISABLED" );
-      usleep( 100000 ); // stops us hogging the machine while we're paused
-    }
+    PRINT_DEBUG( "SLEEPING - DISABLED" );
+    usleep( 100000 ); // stops us hogging the machine while we're paused
+  }
   
   // for logging statistics
   double update_time = GetRealTime();
@@ -564,29 +579,29 @@ double CWorld::GetRealTime()
 void CWorld::SetRectangle(double px, double py, double pth,
                           double dx, double dy, CEntity* ent, bool add)
 {
-    Rect rect;
+  Rect rect;
 
-    dx /= 2.0;
-    dy /= 2.0;
+  dx /= 2.0;
+  dy /= 2.0;
 
-    double cx = dx * cos(pth);
-    double cy = dy * cos(pth);
-    double sx = dx * sin(pth);
-    double sy = dy * sin(pth);
+  double cx = dx * cos(pth);
+  double cy = dy * cos(pth);
+  double sx = dx * sin(pth);
+  double sy = dy * sin(pth);
     
-    rect.toplx = (int) ((px + cx - sy) * ppm);
-    rect.toply = (int) ((py + sx + cy) * ppm);
+  rect.toplx = (int) ((px + cx - sy) * ppm);
+  rect.toply = (int) ((py + sx + cy) * ppm);
 
-    rect.toprx = (int) ((px + cx + sy) * ppm);
-    rect.topry = (int) ((py + sx - cy) * ppm);
+  rect.toprx = (int) ((px + cx + sy) * ppm);
+  rect.topry = (int) ((py + sx - cy) * ppm);
 
-    rect.botlx = (int) ((px - cx - sy) * ppm);
-    rect.botly = (int) ((py - sx + cy) * ppm);
+  rect.botlx = (int) ((px - cx - sy) * ppm);
+  rect.botly = (int) ((py - sx + cy) * ppm);
 
-    rect.botrx = (int) ((px - cx + sy) * ppm);
-    rect.botry = (int) ((py - sx - cy) * ppm);
+  rect.botrx = (int) ((px - cx + sy) * ppm);
+  rect.botry = (int) ((py - sx - cy) * ppm);
     
-    matrix->draw_rect( rect, ent, add );
+  matrix->draw_rect( rect, ent, add );
 }
 
 
@@ -595,13 +610,12 @@ void CWorld::SetRectangle(double px, double py, double pth,
 void CWorld::SetCircle(double px, double py, double pr, CEntity* ent,
                        bool add )
 {
-    // Convert from world to image coords
-    //
-    int x = (int) (px * ppm);
-    int y = (int) (py * ppm);
-    int r = (int) (pr * ppm);
+  // Convert from world to image coords
+  int x = (int) (px * ppm);
+  int y = (int) (py * ppm);
+  int r = (int) (pr * ppm);
     
-    matrix->draw_circle( x,y,r,ent, add);
+  matrix->draw_circle( x,y,r,ent, add);
 }
 
 
@@ -612,22 +626,22 @@ void CWorld::AddObject(CEntity *object)
 {
   // if we've run out of space (or we never allocated any)
   if( (!m_object) || (!( m_object_count < m_object_alloc )) )
-    {
-      // allocate some more
-      CEntity** more_space = new CEntity*[ m_object_alloc + OBJECT_ALLOC_SIZE ];
+  {
+    // allocate some more
+    CEntity** more_space = new CEntity*[ m_object_alloc + OBJECT_ALLOC_SIZE ];
       
-      // copy the old data into the new space
-      memcpy( more_space, m_object, m_object_count * sizeof( CEntity* ) );
+    // copy the old data into the new space
+    memcpy( more_space, m_object, m_object_count * sizeof( CEntity* ) );
      
-      // delete the original
-      if( m_object ) delete [] m_object;
+    // delete the original
+    if( m_object ) delete [] m_object;
       
-      // bring in the new
-      m_object = more_space;
+    // bring in the new
+    m_object = more_space;
  
-      // record the total amount of space
-      m_object_alloc += OBJECT_ALLOC_SIZE;
-    }
+    // record the total amount of space
+    m_object_alloc += OBJECT_ALLOC_SIZE;
+  }
   
   // insert the object and increment the count
   m_object[m_object_count++] = object;
@@ -792,15 +806,15 @@ void CWorld::LogOutput( double freq,
   
   char line[512];
   sprintf( line,
-	   "%u\t\t%.3f\t\t%.6f\t%.6f\t%.6f\t%u\t%u\t%u\t%u\n", 
-	   m_step_num, m_sim_time, // step and time
-	   loop_duration, // real cycle time in ms
-	   sleep_duration, // real sleep time in ms
-	   m_sim_timestep / loop_duration, // ratio
-	   bytes_in, // bytes in this cycle
-	   bytes_out, // bytes out this cycle
-	   total_bytes_in,  // total bytes in
-	   total_bytes_out); // total bytes out
+           "%u\t\t%.3f\t\t%.6f\t%.6f\t%.6f\t%u\t%u\t%u\t%u\n", 
+           m_step_num, m_sim_time, // step and time
+           loop_duration, // real cycle time in ms
+           sleep_duration, // real sleep time in ms
+           m_sim_timestep / loop_duration, // ratio
+           bytes_in, // bytes in this cycle
+           bytes_out, // bytes out this cycle
+           total_bytes_in,  // total bytes in
+           total_bytes_out); // total bytes out
   
   write( m_log_fd, line, strlen(line) );
 }
@@ -884,25 +898,59 @@ char* CWorld::StringType( StageType t )
 #ifdef INCLUDE_RTK2
 
 // Initialise the GUI
-bool CWorld::LoadGUI(CWorldFile *worldfile)
+// TODO: fix this for client/server operation.
+bool CWorld::RtkLoad(CWorldFile *worldfile)
 {
-  int section = worldfile->LookupSection("rtk");
-
-  // Size of canvas in pixels
-  int sx = (int) worldfile->ReadTupleFloat(section, "size", 0, this->matrix->width);
-  int sy = (int) worldfile->ReadTupleFloat(section, "size", 1, this->matrix->height);
+  int sx, sy;
+  double scale, dx, dy;
+  double ox, oy;
+  double minor, major;
   
-  // Scale of the pixels
-  double scale = worldfile->ReadLength(section, "scale", 1 / this->ppm);
+  if (worldfile != NULL)
+  {
+    int section = worldfile->LookupSection("rtk");
+
+    // Size of canvas in pixels
+    sx = (int) worldfile->ReadTupleFloat(section, "size", 0, this->matrix->width);
+    sy = (int) worldfile->ReadTupleFloat(section, "size", 1, this->matrix->height);
   
-  // Size in meters
-  double dx = sx * scale;
-  double dy = sy * scale;
+    // Scale of the pixels
+    scale = worldfile->ReadLength(section, "scale", 1 / this->ppm);
+  
+    // Size in meters
+    dx = sx * scale;
+    dy = sy * scale;
 
-  // Origin of the canvas
-  double ox = worldfile->ReadTupleLength(section, "origin", 0, dx / 2);
-  double oy = worldfile->ReadTupleLength(section, "origin", 1, dy / 2);
+    // Origin of the canvas
+    ox = worldfile->ReadTupleLength(section, "origin", 0, dx / 2);
+    oy = worldfile->ReadTupleLength(section, "origin", 1, dy / 2);
 
+    // Grid spacing
+    minor = worldfile->ReadTupleLength(section, "grid", 0, 0.2);
+    major = worldfile->ReadTupleLength(section, "grid", 1, 1.0);
+  }
+  else
+  {
+    // Size of canvas in pixels
+    sx = (int)this->matrix->width;
+    sy = (int)this->matrix->height;
+  
+    // Scale of the pixels
+    scale = ((CFixedObstacle*)this->wall)->scale;
+  
+    // Size in meters
+    dx = sx * scale;
+    dy = sy * scale;
+
+    // Origin of the canvas
+    ox = dx / 2;
+    oy = dy / 2;
+
+    // Grid spacing
+    minor = 0.2;
+    major = 1.0;
+  }
+  
   this->app = rtk_app_create();
   rtk_app_refresh_rate(this->app, 10);
   
@@ -915,65 +963,16 @@ bool CWorld::LoadGUI(CWorldFile *worldfile)
   this->file_menu = rtk_menu_create(this->canvas, "File");
   this->save_menuitem = rtk_menuitem_create(this->file_menu, "Save", 0);
   this->export_menuitem = rtk_menuitem_create(this->file_menu, "Export", 0);
+  this->exit_menuitem = rtk_menuitem_create(this->file_menu, "Exit", 0);
   this->export_count = 0;
 
-  // Grid spacing
-  double minor = worldfile->ReadTupleLength(section, "grid", 0, 0.2);
-  double major = worldfile->ReadTupleLength(section, "grid", 1, 1.0);
-  
-  // Create the grid
-  this->fig_grid = rtk_fig_create(this->canvas, NULL, -49);
-  if (minor > 0)
-  {
-    rtk_fig_color(this->fig_grid, 0.9, 0.9, 0.9);
-    rtk_fig_grid(this->fig_grid, ox, oy, dx, dy, minor);
-  }
-  if (major > 0)
-  {
-    rtk_fig_color(this->fig_grid, 0.75, 0.75, 0.75);
-    rtk_fig_grid(this->fig_grid, ox, oy, dx, dy, major);
-  }
+  // Create the view menu
+  this->view_menu = rtk_menu_create(this->canvas, "View");
+  this->grid_item = rtk_menuitem_create(this->view_menu, "Grid", 1);
 
-  return true;
-}
+  // Set the initial view menu state
+  rtk_menuitem_check(this->grid_item, 1);
 
-// Initialise the GUI
-bool CWorld::LoadGUI()
-{
-  // Size of canvas in pixels
-  int sx = (int)this->matrix->width;
-  int sy = (int)this->matrix->height;
-  
-  // Scale of the pixels
-  double scale = ((CFixedObstacle*)this->wall)->scale;
-  
-  // Size in meters
-  double dx = sx * scale;
-  double dy = sy * scale;
-
-  // Origin of the canvas
-  double ox = dx / 2;
-  double oy = dy / 2;
-
-  this->app = rtk_app_create();
-  //rtk_app_size(this->app, 100, 100);
-  rtk_app_refresh_rate(this->app, 10);
-  
-  this->canvas = rtk_canvas_create(this->app);
-  rtk_canvas_size(this->canvas, sx, sy );
-  rtk_canvas_scale(this->canvas, scale, scale);
-  rtk_canvas_origin(this->canvas, ox, oy);
-
-  // Add some menu items 
-  this->file_menu = rtk_menu_create(this->canvas, "File");
-  this->save_menuitem = rtk_menuitem_create(this->file_menu, "Save", 0);
-  this->export_menuitem = rtk_menuitem_create(this->file_menu, "Export", 0);
-  this->export_count = 0;
-
-  // Grid spacing
-  double minor = 0.2;
-  double major = 1.0;
-  
   // Create the grid
   this->fig_grid = rtk_fig_create(this->canvas, NULL, -49);
   if (minor > 0)
@@ -991,7 +990,7 @@ bool CWorld::LoadGUI()
 }
 
 // Save the GUI
-bool CWorld::SaveGUI(CWorldFile *worldfile)
+bool CWorld::RtkSave(CWorldFile *worldfile)
 {
   int section = worldfile->LookupSection("rtk");
 
@@ -1017,7 +1016,7 @@ bool CWorld::SaveGUI(CWorldFile *worldfile)
 
 
 // Start the GUI
-bool CWorld::StartupGUI()
+bool CWorld::RtkStartup()
 {
   PRINT_DEBUG( "** STARTUP GUI **" );
 
@@ -1027,13 +1026,14 @@ bool CWorld::StartupGUI()
 
 
 // Stop the GUI
-void CWorld::ShutdownGUI()
+void CWorld::RtkShutdown()
 {
   rtk_app_stop(this->app);
 }
 
+
 // Update the GUI
-void CWorld::UpdateGUI()
+void CWorld::RtkUpdate()
 {
   // Handle save menu item
 
@@ -1044,18 +1044,28 @@ void CWorld::UpdateGUI()
   //if (rtk_menuitem_isactivated(this->save_menuitem))
   //Save(this->worldfilename);
 
-  // Handle export menu item
+  // See if we need to quit the program
+  if (rtk_menuitem_isactivated(this->exit_menuitem))
+    ::quit = 1;
+  if (rtk_canvas_isclosed(this->canvas))
+    ::quit = 1;
 
+  // Handle export menu item
   // TODO - fold in XS's postscript and pnm export here
   if (rtk_menuitem_isactivated(this->export_menuitem))
   {
     char filename[128];
     snprintf(filename, sizeof(filename), 
-	     "rtkstage-%04d.fig", this->export_count++);
+             "rtkstage-%04d.fig", this->export_count++);
     PRINT_MSG1("exporting canvas to [%s]", filename);
     rtk_canvas_export(this->canvas, filename);
-    
   }
+
+  // Show or hide the grid
+  if (rtk_menuitem_ischecked(this->grid_item))
+    rtk_fig_show(this->fig_grid, 1);
+  else
+    rtk_fig_show(this->fig_grid, 0);
 }
 #endif
 

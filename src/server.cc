@@ -31,10 +31,6 @@
 extern long int g_bytes_output;
 extern long int g_bytes_input;
 
-// raising this causes Stage to exit the main loop and die nicely
-// exception throwing would be better style...
-extern bool quit;
-
 const int LISTENQ = 128;
 //const long int MILLION = 1000000L;
 
@@ -57,10 +53,10 @@ CStageServer::CStageServer( int argc, char** argv )
   ///////////////////////////////////////////////////////////////////////
   // Set and load the worldfile, creating objects as we go
   if( !LoadFile(  argv[argc-1] ) )
-    {
-      quit = true;
-      return;
-    }
+  {
+    quit = true;
+    return;
+  }
   
   // reassuring console output
   printf( "[World %s]", this->worldfilename );
@@ -71,7 +67,7 @@ CStageServer::CStageServer( int argc, char** argv )
   
   ///////////////////////////////////////////////////////////////////////
   // LOAD THE CONFIGURATION FOR THE GUI
-  if (!LoadGUI(&this->worldfile))
+  if (!RtkLoad(&this->worldfile))
   {
     PRINT_ERR( "Failed to load worldfile" );
     quit = true;
@@ -84,46 +80,46 @@ CStageServer::CStageServer( int argc, char** argv )
   /////////////////////////////////////////////////////////////////////////
   // COMMAND LINE PARSING - may override world file options
   if( !ParseCmdLine( argc, argv ) )
-    {
-      PRINT_ERR( "Failed to parse command line" );
-      quit = true;
-      return;
-    }
+  {
+    PRINT_ERR( "Failed to parse command line" );
+    quit = true;
+    return;
+  }
   
   ///////////////////////////////////////////////////////////////////////////
   // Create the device directory, clock and lock devices 
 
   if( !CreateDeviceDirectory() )
-    {
-      PRINT_ERR( "Failed to create device directory" );
-      quit = true;
-      return;
-    }
+  {
+    PRINT_ERR( "Failed to create device directory" );
+    quit = true;
+    return;
+  }
 
   if( !CreateClockDevice() )
-    {
-      PRINT_ERR( "Failed to create clock device" );
-      quit = true;
-      return;
-    }
+  {
+    PRINT_ERR( "Failed to create clock device" );
+    quit = true;
+    return;
+  }
   
   if( !CreateLockFile() )
-    {
-      PRINT_ERR( "Failed to create lock file" );
-      quit = true;
-      return;
-    }
+  {
+    PRINT_ERR( "Failed to create lock file" );
+    quit = true;
+    return;
+  }
   
   ///////////////////////////////////////////////////////////////////////
   // STARTUP
   
   // Initialise the wall object
   if( !this->wall->Startup())
-   {
-      PRINT_ERR("Background startup failed");
-      quit = true;
-      return;
-   }
+  {
+    PRINT_ERR("Background startup failed");
+    quit = true;
+    return;
+  }
 
   // Startup all the objects
   // Devices will create and initialize their device files
@@ -140,19 +136,19 @@ CStageServer::CStageServer( int argc, char** argv )
   ////////////////////////////////////////////////////////////////////
   // STARTUP PLAYER
   if( m_run_player && !StartupPlayer() )
-    {
-      PRINT_ERR("Player startup failed");
-      quit = true;
-      return;
-    }
+  {
+    PRINT_ERR("Player startup failed");
+    quit = true;
+    return;
+  }
   
   //////////////////////////////////////////////////////////////////////
   // SET UP THE SERVER TO ACCEPT INCOMING CONNECTIONS
   if( !SetupConnectionServer() )
-    {
-      quit = true;
-      return;
-    }
+  {
+    quit = true;
+    return;
+  }
   
 }
 
@@ -210,10 +206,10 @@ bool CStageServer::LoadFile( char* filename )
   // Make sure there is an "environment" section
   int section = this->worldfile.LookupSection("environment");
   if (section < 0)
-    {
-      PRINT_ERR("no environment specified");
-      return false;
-    }
+  {
+    PRINT_ERR("no environment specified");
+    return false;
+  }
   
   // Construct a single fixed obstacle representing
   // the environment.
@@ -221,15 +217,15 @@ bool CStageServer::LoadFile( char* filename )
   
   // Load the settings for this object
   if (!this->wall->Load(&this->worldfile, section))
-    {
-      PRINT_ERR( "Failed to load background settings" );
-      return false;
-    }
+  {
+    PRINT_ERR( "Failed to load background settings" );
+    return false;
+  }
   
   // Get the resolution of the environment (meters per pixel in the file)
   this->ppm = 1.0 / this->worldfile.ReadLength( section, 
-					        "resolution", 
-					        1.0 / this->ppm );
+                                                "resolution", 
+                                                1.0 / this->ppm );
   
   // Initialise the matrix, now that we know its size
   int w = (int) ceil(this->wall->size_x * this->ppm);
@@ -266,51 +262,51 @@ bool CStageServer::LoadFile( char* filename )
     // this breaks the context-free-ness of the syntax, but it's 
     // a simple way to do this. - RTV
     if( strcmp(type, "host") == 0 )
-      {
-	char candidate_hostname[ HOSTNAME_SIZE ];
+    {
+      char candidate_hostname[ HOSTNAME_SIZE ];
 
-	strncpy( candidate_hostname, 
-		 worldfile.ReadString( section, "hostname", 0 ),
-		 HOSTNAME_SIZE );
+      strncpy( candidate_hostname, 
+               worldfile.ReadString( section, "hostname", 0 ),
+               HOSTNAME_SIZE );
 	
-	// if we found a name
-	if( strlen(candidate_hostname) > 0  )
-	  {
-	    struct hostent* cinfo = 0;
+      // if we found a name
+      if( strlen(candidate_hostname) > 0  )
+      {
+        struct hostent* cinfo = 0;
 	    
-	    printf( "CHECKING HOSTNAME %s\n", candidate_hostname );
+        printf( "CHECKING HOSTNAME %s\n", candidate_hostname );
 
-	    //lookup this host's IP address:
-	    if( (cinfo = gethostbyname( candidate_hostname ) ) ) 
+        //lookup this host's IP address:
+        if( (cinfo = gethostbyname( candidate_hostname ) ) ) 
 	      {
-		// make sure this looks like a regular internet address
-		assert( cinfo->h_length == 4 );
-		assert( cinfo->h_addrtype == AF_INET );
+          // make sure this looks like a regular internet address
+          assert( cinfo->h_length == 4 );
+          assert( cinfo->h_addrtype == AF_INET );
 		
-		// looks good - we'll use this host from now on
-		strncpy( current_hostname, candidate_hostname, HOSTNAME_SIZE );
+          // looks good - we'll use this host from now on
+          strncpy( current_hostname, candidate_hostname, HOSTNAME_SIZE );
 
-		// copy the address out
-		memcpy( &current_hostaddr.s_addr, cinfo->h_addr_list[0], 4 ); 
+          // copy the address out
+          memcpy( &current_hostaddr.s_addr, cinfo->h_addr_list[0], 4 ); 
 		
-		printf( "LOADING HOSTNAME %s NAME %s LEN %d IP %s\n", 
-		current_hostname,
-		cinfo->h_name, 
-		cinfo->h_length, 
-		inet_ntoa( current_hostaddr ) );
+          printf( "LOADING HOSTNAME %s NAME %s LEN %d IP %s\n", 
+                  current_hostname,
+                  cinfo->h_name, 
+                  cinfo->h_length, 
+                  inet_ntoa( current_hostaddr ) );
 	      }
-	    else // failed lookup - stick with the last host
+        else // failed lookup - stick with the last host
 	      {
-		printf( "Can't resolve hostname \"%s\" in world file."
-			" Sticking with \"%s\".\n", 
-			candidate_hostname, current_hostname );
-      	      }
-	  }
-	else
-	  puts( "No hostname specified. Ignoring." );
-
-	continue;
+          printf( "Can't resolve hostname \"%s\" in world file."
+                  " Sticking with \"%s\".\n", 
+                  candidate_hostname, current_hostname );
+        }
       }
+      else
+        puts( "No hostname specified. Ignoring." );
+
+      continue;
+    }
     
     // otherwise it's a device so we handle those...
 
@@ -351,11 +347,11 @@ bool CStageServer::LoadFile( char* filename )
       
       // Let the object load itself
       if (!object->Load(&this->worldfile, section))
-        {
-	  PRINT_ERR1( "Failed to load object %d from world file", 
-		      GetObjectCount() ); 
-	  return false;
-	}
+      {
+        PRINT_ERR1( "Failed to load object %d from world file", 
+                    GetObjectCount() ); 
+        return false;
+      }
       
       // Add to list of objects
       AddObject(object);
@@ -367,7 +363,7 @@ bool CStageServer::LoadFile( char* filename )
   // disconnect from the nameserver
   endhostent();
 
-return true;
+  return true;
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -40,23 +40,23 @@ void ClientCatchSigPipe( int signo )
 CStageClient::CStageClient( int argc, char** argv )
   : CStageIO( argc, argv )
 {
-    // parse out the hostname - that's all we need just here
+  // parse out the hostname - that's all we need just here
   // (the parent stageio object gets the port)
   for( int a=1; a<argc; a++ )
+  {
+    // get the  number, overriding the default
+    if( strcmp( argv[a], "-c" ) == 0 )
     {
-      // get the  number, overriding the default
-      if( strcmp( argv[a], "-c" ) == 0 )
-	{
-	  // if -c is the last argument, assume localhost
-	  if( a == argc-1 )
-	    strcpy( m_remotehost, "localhost" );
-	  else // copy in the next argument
-	    strcpy( m_remotehost, argv[a+1]);
+      // if -c is the last argument, assume localhost
+      if( a == argc-1 )
+        strcpy( m_remotehost, "localhost" );
+      else // copy in the next argument
+        strcpy( m_remotehost, argv[a+1]);
 	  
-	  printf( "[Client of %s]", m_remotehost );
-	  a++;
-	}
+      printf( "[Client of %s]", m_remotehost );
+      a++;
     }
+  }
 
   // clients don't use a device directory - nullify the string
   m_device_dir[0] = 0;
@@ -68,15 +68,15 @@ CStageClient::CStageClient( int argc, char** argv )
   struct hostent* info = gethostbyname( m_remotehost );
   
   if( info )
-    { // make sure this looks like a regular internet address
-      assert( info->h_length == 4 );
-      assert( info->h_addrtype == AF_INET );
-    }
+  { // make sure this looks like a regular internet address
+    assert( info->h_length == 4 );
+    assert( info->h_addrtype == AF_INET );
+  }
   else
-    {
-      PRINT_ERR1( "failed to resolve IP for remote host\"%s\"\n", 
-		  m_remotehost );
-    }
+  {
+    PRINT_ERR1( "failed to resolve IP for remote host\"%s\"\n", 
+                m_remotehost );
+  }
   struct sockaddr_in servaddr;
 
   /* open socket for network I/O */
@@ -86,11 +86,11 @@ CStageClient::CStageClient( int argc, char** argv )
   printf( "POLLFD = %d\n", m_pose_connections[0].fd );
 
   if( m_pose_connections[0].fd < 0 )
-    {
-      printf( "Error opening network socket. Exiting\n" );
-      fflush( stdout );
-      exit( -1 );
-    }
+  {
+    printf( "Error opening network socket. Exiting\n" );
+    fflush( stdout );
+    exit( -1 );
+  }
   
   /* setup our server address (type, IP address and port) */
   bzero(&servaddr, sizeof(servaddr)); /* initialize */
@@ -99,24 +99,24 @@ CStageClient::CStageClient( int argc, char** argv )
   memcpy(&(servaddr.sin_addr), info->h_addr_list[0], info->h_length);
   
   if( connect( m_pose_connections[0].fd, 
-	       (sockaddr*)&servaddr, sizeof( servaddr) ) == -1 )
-    {
-      printf( "Can't find a Stage server on %s. Quitting.\n", 
-	      info->h_addr_list[0] ); 
-      perror( "" );
-      fflush( stdout );
-      exit( -1 );
-    }
+               (sockaddr*)&servaddr, sizeof( servaddr) ) == -1 )
+  {
+    printf( "Can't find a Stage server on %s. Quitting.\n", 
+            info->h_addr_list[0] ); 
+    perror( "" );
+    fflush( stdout );
+    exit( -1 );
+  }
   // send the connection type byte - we want an asynchronous connection
   
   char c = STAGE_ASYNC;
   int r;
   if( (r = write( m_pose_connections[0].fd, &c, 1 )) < 1 )
-    {
-      printf( "XS: failed to write ASYNC byte to Stage. Quitting\n" );
-      if( r < 0 ) perror( "error on write" );
-      exit( -1 );
-    }
+  {
+    printf( "XS: failed to write ASYNC byte to Stage. Quitting\n" );
+    if( r < 0 ) perror( "error on write" );
+    exit( -1 );
+  }
 
   m_pose_connection_count = 1; // made a connection
   m_dirty_subscribe[0] = 1; // this connection needs dirty updates
@@ -140,7 +140,7 @@ CStageClient::CStageClient( int argc, char** argv )
   assert( wall );
   
   // now we have the world parameters, we can configure things
-  LoadGUI(); // uses default values for now
+  RtkLoad(NULL); // uses default values for now
   
   this->wall->Startup(); // renders the image into the matrix
   
@@ -148,10 +148,10 @@ CStageClient::CStageClient( int argc, char** argv )
   // Devices will create and initialize their device files
   for (int i = 0; i < GetObjectCount(); i++)
     if( !GetObject(i)->Startup() )
-      {
-	PRINT_ERR("object startup failed");
-	return;// false;
-      }
+    {
+      PRINT_ERR("object startup failed");
+      return;// false;
+    }
   
   // now we've set everything up, we request updates as the world changes 
   // (we MUST have downloaded and started everything before subscribing)

@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.59 2002-06-05 00:05:02 gerkey Exp $
+//  $Id: entity.cc,v 1.60 2002-06-05 08:30:07 inspectorg Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -237,54 +237,54 @@ bool CEntity::Startup( void )
   size_t mem = SharedMemorySize();
    
   snprintf( m_device_filename, sizeof(m_device_filename), "%s/%d.%d.%d", 
-	    m_world->m_device_dir, m_player.port, m_player.code, m_player.index );
+            m_world->m_device_dir, m_player.port, m_player.code, m_player.index );
   
-    PRINT_DEBUG1("creating device %s", m_device_filename);
+  PRINT_DEBUG1("creating device %s", m_device_filename);
 
   int tfd;
   if( (tfd = open( m_device_filename, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR )) == -1 )
-    {
+  {
       
-      PRINT_DEBUG2( "failed to open file %s for device at %p\n"
-		   "assuming this is a client device!\n", 
-		   m_device_filename, this );
+    PRINT_DEBUG2( "failed to open file %s for device at %p\n"
+                  "assuming this is a client device!\n", 
+                  m_device_filename, this );
       
-      // make some memory to store the data
-      playerIO = (player_stage_info_t*) new char[ mem ];
+    // make some memory to store the data
+    playerIO = (player_stage_info_t*) new char[ mem ];
 
-      // remove the filename so we don't try to unlink it
-      m_device_filename[0] = 0;
+    // remove the filename so we don't try to unlink it
+    m_device_filename[0] = 0;
 
-      PRINT_DEBUG("successfully created client IO buffers");
+    PRINT_DEBUG("successfully created client IO buffers");
 
-    }
+  }
   else
+  {
+    // make the file the right size
+    if( ftruncate( tfd, mem ) < 0 )
     {
-      // make the file the right size
-      if( ftruncate( tfd, mem ) < 0 )
-	{
-	  PRINT_ERR1( "failed to set file size: %s", strerror(errno) );
-	  return false;
-	}
-      
-      // it's a little larger than a player_stage_info_t, but that's the 
-      // first part of the buffer, so we'll call it that
-      playerIO = 
-	(player_stage_info_t*)mmap( NULL, mem, PROT_READ | PROT_WRITE, 
-				    MAP_SHARED, tfd, (off_t) 0);
-      
-      if (playerIO == MAP_FAILED )
-	{
-	  PRINT_ERR1( "Failed to map memory: %s", strerror(errno) );
-	  return false;
-	}
-      
-      //close( tfd ); // can close fd once mapped
-      
-      //PRINT_DEBUG("successfully mapped shared memory");
-      
-      //PRINT_DEBUG2( "S: mmapped %d bytes at %p\n", mem, playerIO );
+      PRINT_ERR1( "failed to set file size: %s", strerror(errno) );
+      return false;
     }
+      
+    // it's a little larger than a player_stage_info_t, but that's the 
+    // first part of the buffer, so we'll call it that
+    playerIO = 
+      (player_stage_info_t*)mmap( NULL, mem, PROT_READ | PROT_WRITE, 
+                                  MAP_SHARED, tfd, (off_t) 0);
+      
+    if (playerIO == MAP_FAILED )
+    {
+      PRINT_ERR1( "Failed to map memory: %s", strerror(errno) );
+      return false;
+    }
+      
+    //close( tfd ); // can close fd once mapped
+      
+    //PRINT_DEBUG("successfully mapped shared memory");
+      
+    //PRINT_DEBUG2( "S: mmapped %d bytes at %p\n", mem, playerIO );
+  }
   // we use the lock field in the player_stage_info_t structure to
   // control access with a semaphore.
   
@@ -316,7 +316,7 @@ bool CEntity::Startup( void )
   m_command_io = (uint8_t*)m_data_io + m_data_len; 
   m_config_io  = (uint8_t*)m_command_io + m_command_len;
   m_reply_io   = (uint8_t*)(m_config_io + 
-			    (m_config_len * sizeof(playerqueue_elt_t)));
+                            (m_config_len * sizeof(playerqueue_elt_t)));
   
   m_info_io->len = SharedMemorySize(); // total size of all the shared data
   m_info_io->lockbyte = this->lock_byte; // record lock on this byte
@@ -344,20 +344,20 @@ bool CEntity::Startup( void )
   assert(m_reqqueue = new PlayerQueue(m_config_io,m_config_len));
   assert(m_repqueue = new PlayerQueue(m_reply_io,m_reply_len));
 
-  #ifdef DEBUG
-    printf( "\t\t(%p) (%d,%d,%d) IO at %p\n"
-  	  "\t\ttotal: %d\tinfo: %d\tdata: %d (%d)\tcommand: %d (%d)\tconfig: %d (%d)\n ",
-  	  this,
-  	  m_info_io->player_id.port,
-  	  m_info_io->player_id.code,
-  	  m_info_io->player_id.index,
-  	  m_info_io,
-  	  m_info_len + m_data_len + m_command_len + m_config_len,
-  	  m_info_len,
-  	  m_info_io->data_len, m_data_len,
-  	  m_info_io->command_len, m_command_len,
-  	  m_info_io->config_len, m_config_len );
-  #endif  
+#ifdef DEBUG
+  printf( "\t\t(%p) (%d,%d,%d) IO at %p\n"
+          "\t\ttotal: %d\tinfo: %d\tdata: %d (%d)\tcommand: %d (%d)\tconfig: %d (%d)\n ",
+          this,
+          m_info_io->player_id.port,
+          m_info_io->player_id.code,
+          m_info_io->player_id.index,
+          m_info_io,
+          m_info_len + m_data_len + m_command_len + m_config_len,
+          m_info_len,
+          m_info_io->data_len, m_data_len,
+          m_info_io->command_len, m_command_len,
+          m_info_io->config_len, m_config_len );
+#endif  
 
   // try  an unlock
   assert( Unlock() );

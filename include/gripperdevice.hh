@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/gripperdevice.hh,v $
 //  $Author: inspectorg $
-//  $Revision: 1.8 $
+//  $Revision: 1.9 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -104,8 +104,12 @@ class CGripperDevice : public CEntity
   private: CEntity* m_pucks[MAXGRIPPERCAPACITY];
 
   // structure for exporting Gripper-specific data to a GUI
-  private: ExportGripperData expGripper; 
-  public: ExportData exp; // relic from xgui-style stuff still used by BG
+  //REMOVE private: ExportGripperData expGripper; 
+  //REMOVE public: ExportData exp; // relic from xgui-style stuff still used by BG
+
+  // Gripper dimenions
+  private: double m_width, m_height;
+  
 
 #ifdef INCLUDE_RTK
     

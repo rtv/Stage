@@ -1,31 +1,28 @@
-///////////////////////////////////////////////////////////////////////////
-//
-// File: world.hh
-// Author: Richard Vaughan, Andrew Howard
-// Date: 28 Nov 2000
-// 
-// Desc: top-level class contains the matrix world model, the devices,
-// and a server
-//
-// CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: rtv $
-//  $Revision: 1.51 $
-//
-// Usage:
-//  (empty)
-//
-// Theory of operation:
-//  The world object stores all simulation-wide data.  Sensors, for example,
-//  interogate the world to detect objects, robots, etc.
-//
-// Known bugs:
-//  (empty)
-//
-// Possible enhancements:
-//  (empty)
-//
-///////////////////////////////////////////////////////////////////////////
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/*
+ * Desc: top level class that contains everything
+ * Author: Richard Vaughan, Andrew Howard
+ * Date: 7 Dec 2000
+ * CVS info: $Id: world.hh,v 1.52 2002-06-05 08:30:06 inspectorg Exp $
+ */
 
 #ifndef WORLD_HH
 #define WORLD_HH
@@ -54,10 +51,6 @@
 
 #define DEBUG
 
-#if INCLUDE_RTK
-#include "rtk_ui.hh"
-#endif
-
 #if INCLUDE_RTK2
 #include "rtk.h"
 #endif
@@ -85,15 +78,14 @@ class CWorld
   // the locks file descriptor
   public: int m_locks_fd;
 
-public: char m_device_dir[PATH_MAX]; //device  directory name 
+  public: char m_device_dir[PATH_MAX]; //device  directory name 
   
   // this should really be in the CStageServer, but the update is tricky there
   // so i'll leave it here for now - RTV
   // export the time in this buffer
-protected: stage_clock_t* m_clock; // a timeval and lock
+  protected: stage_clock_t* m_clock; // a timeval and lock
 
-private:
-  // CStageIO* m_io; // a client or server object
+  //private: CStageIO* m_io; // a client or server object
 
   // Properties of the underlying matrix representation
   // for the world.
@@ -123,7 +115,7 @@ private:
   public: char m_hostname_short[ HOSTNAME_SIZE ];  // same thing, w/out domain
 
   // the IP address of this computer
-public: struct in_addr m_hostaddr;
+  public: struct in_addr m_hostaddr;
 
   
   void Output( double loop_duration, double sleep_duration );
@@ -172,35 +164,35 @@ public: struct in_addr m_hostaddr;
   private: int m_object_alloc;
   private: CEntity **m_object;
   
-public: CEntity** Objects( void ){ return m_object; };
+  public: CEntity** Objects( void ){ return m_object; };
 
-protected: int CountDirtyOnConnection( int con );
+  protected: int CountDirtyOnConnection( int con );
 
-public: void DirtyObjects( void )
-  {
-    for( int i=0; i<m_object_count; i++ )
-      m_object[i]->SetDirty( 1 );
-  }
+  public: void DirtyObjects( void )
+    {
+      for( int i=0; i<m_object_count; i++ )
+        m_object[i]->SetDirty( 1 );
+    }
 
-public: void CleanObjects( void )
-  {
-    for( int i=0; i<m_object_count; i++ )
-      m_object[i]->SetDirty( 0 );
-  }
+  public: void CleanObjects( void )
+    {
+      for( int i=0; i<m_object_count; i++ )
+        m_object[i]->SetDirty( 0 );
+    }
 
   // dirty all objects for a particulat connection
-public: void DirtyObjects( int con )
-  {
-    for( int i=0; i<m_object_count; i++ )
-      m_object[i]->SetDirty( con, 1 );
-  }
+  public: void DirtyObjects( int con )
+    {
+      for( int i=0; i<m_object_count; i++ )
+        m_object[i]->SetDirty( con, 1 );
+    }
 
   // clan all objects for a particulat connection
-public: void CleanObjects( int con )
-  {
-    for( int i=0; i<m_object_count; i++ )
-      m_object[i]->SetDirty( con, 0 );
-  }
+  public: void CleanObjects( int con )
+    {
+      for( int i=0; i<m_object_count; i++ )
+        m_object[i]->SetDirty( con, 0 );
+    }
 
   // Authentication key
   public: char m_auth_key[PLAYER_KEYLEN];
@@ -219,7 +211,7 @@ public: void CleanObjects( int con )
   //private: bool m_run_pose_server;
   
   protected: bool m_external_sync_required;
-public: bool m_send_idar_packets;
+  public: bool m_send_idar_packets;
 
   // flag that controls spawning of xs
   private: bool m_run_xs;
@@ -291,8 +283,8 @@ public: bool m_send_idar_packets;
   public: CEntity* GetEntityByID( int port, int type, int index );
   
   // objects can be created by type number or by string description
-public: CEntity* CreateObject(const char *type, CEntity *parent );
-public: CEntity* CreateObject( StageType type, CEntity *parent );
+  public: CEntity* CreateObject(const char *type, CEntity *parent );
+  public: CEntity* CreateObject( StageType type, CEntity *parent );
   
   /////////////////////////////////////////////////////////////////////////////
   // access methods
@@ -325,66 +317,21 @@ public: CEntity* CreateObject( StageType type, CEntity *parent );
 
 
   // RTK STUFF ----------------------------------------------------------------
-#ifdef INCLUDE_RTK
-
-  // Initialise rtk
-  //
-  public: void InitRtk(RtkMsgRouter *router);
-
-  // Process GUI update messages
-  //
-  public: static void OnUiDraw(CWorld *world, RtkUiDrawData *data);
-
-  // Process GUI mouse messages
-  //
-  public: static void OnUiMouse(CWorld *world, RtkUiMouseData *data);
-
-  // UI property message handler
-  //
-  public: static void OnUiProperty(CWorld *world, RtkUiPropertyData* data);
-
-  // UI button message handler
-  //
-  public: static void OnUiButton(CWorld *world, RtkUiButtonData* data);
-    
-  // Draw the background; i.e. things that dont move
-  //
-  private: void DrawBackground(RtkUiDrawData *data);
-
-  // Draw the debugging info
-  //
-  private: void DrawDebug(RtkUiDrawData *data, int options);
-
-  // Move an object using the mouse
-  //
-  private: void MouseMove(RtkUiMouseData *data);
-
-  // Debugging options
-  //
-  private: enum {DBG_OBSTACLES, DBG_PUCKS, DBG_LASER, DBG_SONAR, DBG_VISION};
-    
-  // RTK message router
-  //
-  private: RtkMsgRouter *m_router;
-  
-#endif
-
 #ifdef INCLUDE_RTK2
   // Initialise the GUI
-public: bool LoadGUI(CWorldFile *worldfile);
-public: bool LoadGUI(); // uses defaults for everything
+  public: bool RtkLoad(CWorldFile *worldfile);
   
   // Save the GUI
-  private: bool SaveGUI(CWorldFile *worldfile);
+  private: bool RtkSave(CWorldFile *worldfile);
   
   // Start the GUI
-  public: bool StartupGUI();
+  public: bool RtkStartup();
 
   // Stop the GUI
-  public: void ShutdownGUI();
+  public: void RtkShutdown();
 
   // Update the GUI
-  public: void UpdateGUI();
+  public: void RtkUpdate();
 
   // Basic GUI elements
   public: rtk_app_t *app;
@@ -393,10 +340,15 @@ public: bool LoadGUI(); // uses defaults for everything
   // Figure for the grid
   private: rtk_fig_t *fig_grid;
   
-  // Some menu items
+  // The file menu
   private: rtk_menu_t *file_menu;
   private: rtk_menuitem_t *save_menuitem;
   private: rtk_menuitem_t *export_menuitem;
+  private: rtk_menuitem_t *exit_menuitem;
+
+  // The view menu
+  public: rtk_menu_t *view_menu;
+  private: rtk_menuitem_t *grid_item;
 
   // Number of exported images
   private: int export_count;

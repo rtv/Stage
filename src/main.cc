@@ -1,28 +1,28 @@
-///////////////////////////////////////////////////////////////////////////
-//
-// File: main.cc
-// Author: Andrew Howard
-// Date: 4 Dec 2000
-// Desc: Program entry point when not using a GUI
-//
-// CVS info:
-//  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.38 $
-//
-// Usage:
-//  (empty)
-//
-// Theory of operation:
-//  (empty)
-//
-// Known bugs:
-//  (empty)
-//
-// Possible enhancements:
-//  (empty)
-//
-///////////////////////////////////////////////////////////////////////////
+/*
+ *  Stage : a multi-robot simulator.
+ *  Copyright (C) 2001, 2002 Richard Vaughan, Andrew Howard and Brian Gerkey.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+/*
+ * Desc: Program Entry point
+ * Author: Andrew Howard
+ * Date: 12 Mar 2001
+ * CVS: $Id: main.cc,v 1.39 2002-06-05 08:30:08 inspectorg Exp $
+ */
 
 #include <unistd.h>
 #include <signal.h>
@@ -32,19 +32,23 @@
 #include <netdb.h> // for gethostbyname(3)
 
 //#define DEBUG
-
 #include "server.hh"
+
+
+///////////////////////////////////////////////////////////////////////////
+// Global vars
+
+// Quit signal
+bool quit = false;
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Local vars
 
-// Quit signal
-bool quit = false;
-//static bool quit = false;
-
 // Pointer to the one-and-only instance of the world
 // This really should be static
-CWorld *world = NULL;
+static CWorld *world = NULL;
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Print the usage string
@@ -81,10 +85,10 @@ void StageQuit( void )
   puts( "\n** Stage quitting **" );
   
   if( world )  
-    {
-      world->Shutdown();  // Stop the world
-      delete world;       // Destroy the world
-    }
+  {
+    world->Shutdown();  // Stop the world
+    delete world;       // Destroy the world
+  }
   exit( 0 );
 }
 
@@ -117,15 +121,15 @@ int main(int argc, char **argv)
   
   // check the command line for the '-c' option that makes this a client
   for( int a=1; a<argc; a++ )
-    {
-      PRINT_DEBUG2( "argv[%d] = %s\n", a, argv[a] );
+  {
+    PRINT_DEBUG2( "argv[%d] = %s\n", a, argv[a] );
       
-      if( strcmp( argv[a], "-c" ) == 0 )
-	{
-	  printf( "[Client]" );
-	  assert( world = new CStageClient( argc, argv ) );
-	}
+    if( strcmp( argv[a], "-c" ) == 0 )
+    {
+      printf( "[Client]" );
+      assert( world = new CStageClient( argc, argv ) );
     }
+  }
   
   // if we're not a client, we must be a server
   if( world == NULL )
@@ -134,19 +138,19 @@ int main(int argc, char **argv)
   // a world constructor may have raised the quit flag
   // (this would be more elegantly implemented with an exception..)
   if( quit )
-    {
-      puts( "Stage: failed to create a world. Quitting." );
-      exit( 0 );
-    }
+  {
+    puts( "Stage: failed to create a world. Quitting." );
+    exit( 0 );
+  }
 
   // startup is (externally) identical for client and server, but they
   // do slightly different things inside.
   // post-constructor startup is required to exploit object polymorphism
   if (!world->Startup())
-    {
-      puts("Stage: failed to startup world. Quitting.");
-      StageQuit();
-    }
+  {
+    puts("Stage: failed to startup world. Quitting.");
+    StageQuit();
+  }
   
   puts( "" ); // end the startup output line
   
@@ -159,12 +163,12 @@ int main(int argc, char **argv)
   
   // the main loop - it'll be interrupted by a signal
   while( !quit )
-    {
-      world->Update(); // update the simulation
+  {
+    world->Update(); // update the simulation
     
-      //sleep( 10 );
-      usleep( 500000 );
-    }
+    //sleep( 10 );
+    usleep( 500000 );
+  }
 
   // clean up and exit
   StageQuit();
