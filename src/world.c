@@ -53,8 +53,8 @@ void stg_world_dimensions( stg_world_t* world,
 			   double* min_x, double * min_y,
 			   double* max_x, double * max_y )
 {
-  double min_x = min_y =  MILLION;
-  double max_x = max_y = -MILLION;
+  *min_x = *min_y =  MILLION;
+  *max_x = *max_y = -MILLION;
   
   
 

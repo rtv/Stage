@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.90 2004-09-25 02:15:00 rtv Exp $
+ * CVS: $Id: stage.h,v 1.91 2004-09-25 23:21:27 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -603,6 +603,8 @@ extern "C" {
   typedef void*(*func_get_data_t)(struct _stg_model*,size_t*);
   typedef void*(*func_get_config_t)(struct _stg_model*,size_t*);
 
+  typedef void(*func_data_notify_t)( void* );
+
   // used to create special-purpose models
   typedef struct
   {
@@ -690,7 +692,13 @@ extern "C" {
   
     // the time that each property was last calculated
     //stg_msec_t update_times[STG_PROP_COUNT];
-  
+
+    /// if set, this callback is run when we do model_put_data() -
+    /// it's used by the player plugin to notify Player that data is
+    /// ready.
+    func_data_notify_t data_notify;
+    void* data_notify_arg;
+
     gui_model_t gui; // all the gui stuff
 
     // todo - add this as a property?

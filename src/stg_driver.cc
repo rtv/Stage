@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_driver.cc,v 1.5 2004-09-25 02:15:00 rtv Exp $
+ * $Id: stg_driver.cc,v 1.6 2004-09-25 23:21:27 rtv Exp $
  */
 
 // STAGE-1.4 DRIVER CLASS ///////////////////////////////
@@ -97,6 +97,15 @@ Stage1p4::Stage1p4( ConfigFile* cf, int section, int interface, uint8_t access,
 	  exit( -1 );
 	}
     }  
+
+  // insert the data notification callback
+  //stg_model_register_data_callback( Driver::DataAvailableStatic,
+  //			    this );
+
+  // insert a data callback into our model
+  this->model->data_notify = Driver::DataAvailableStatic;
+  this->model->data_notify_arg = this;
+
 }
 
 // destructor
