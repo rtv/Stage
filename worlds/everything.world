@@ -1,107 +1,129 @@
 
-# Desc: Test world file containing examples of pretty much every entity, 
-#       showing how to include some pre-defined objects
-# Author: Andrew Howard, Richard Vaughan
-# Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.20 2004-04-05 03:04:06 rtv Exp $
+# Desc: 1 robot with player, laser, sonar and gps
+# CVS: $Id: everything.world,v 1.21 2004-12-03 05:26:21 rtv Exp $
 
-world
-(
+# the size of a pixel in Stage's underlying raytrace model in meters
+resolution     0.02 
 
-include "usc_pioneer.inc"
+# optionally tune the medium and high matrix pixel sizes
+#resolution_med  0.2
+#resolution_low  1.0
 
+interval_sim 100  # milliseconds per update step
+interval_real 100 # real-time milliseconds per update step
 
-include "beacons.inc"
+# defines Pioneer-like robots
+include "pioneer.inc"
 
-resolution 0.03
+# defines 'map' object used for floorplans
+include "map.inc"
 
-#
-# load an environmental bitmap
-#
-#bitmap
-#(
-  file "cave.pnm.gz"
-  resolution 0.03
-#)
+window( size [ 830.000 556.000 ] center [-8.109 2.708] scale 0.014 )
 
-#
-# setup the window parameters
-#
-gui
-(
-  size [600.000 580.000]
-  origin [7.538 7.464]
-  scale 0.026
-  grid [0.2 1]
-  showgrid 1
+map(
+  #size [15.5 11.4]
+  #bitmap "bitmaps/autolab.png"
+  #bitmap "bitmaps/sal2.png"
+  #bitmap "bitmaps/cave.png"
+  bitmap "bitmaps/hospital_section.png"
+
+  bitmap_resolution 0.03
+  #boundary 0
 )
 
-#
-# define a large colored cylinder object
-#
-define visionbeacon box 
+
+define sicklaser laser
 (
-  shape "circle" 
-  size [0.2 0.2] 
+  range_min 0.0
+  range_max 8.0
+  fov 180.0
+  samples 180
+
+  color "LightBlue"
+  size [ 0.14 0.14 ]	
+)
+
+# extend the pioneer2dx definition from pioneer.inc
+#
+define laserpioneer pioneer2dx
+(
+  sicklaser(  fiducialfinder( color "green" obstacle 0 ) )
+  blobfinder()
+
+  fiducial_return 42
+  blobfinder_return 1
+)
+
+
+laserpioneer
+(
+  name "p0"
+  pose [-10.302 2.039 -348.743]
+)
+
+laserpioneer
+(
   color "red"
+  name "p1"
+  pose [-5.353 2.515 -162.098]
 )
 
-laser( pose [ 2 2 0 ] port 7777 )
-laser( pose [ 3 2 0 ] port 7778 )
-
-#
-# define primary colored pucks for moving with the gripper
-#
-define red_puck puck( color "red" )
-define green_puck puck( color "green" )
-define blue_puck puck( color "blue" )
-
-
-# generate some pioneer robots in USC configuario
-usc_pioneer(color "red" name "robot0" port 6665 pose [3.195 1.237 40 ]
-            mcom())
-
-usc_pioneer_gripper( color "green" name "robot1" 
-                     port 6666 pose [3.857 7.823 0.895 ])
-
-usc_pioneer_bumper( color "blue" name "robot2" 
-                    port 6667 pose [7.404 0.965 75.599] )
-
-amigobot( color "red" name "amigo1" port 6670 pose [11.930 4.546 -135.514] )
-amigobot( color "red" name "amigo2" port 6671 pose [11.228 5.092 -121.652] )
-amigobot( color "red" name "amigo3" port 6672  pose [12.554 4.130 -126.121] )
-
-# generate some laser beacons
-laserbeacon( pose [6.420 3.600 -143.139] fiducial_id 5 )
-laserbeacon( pose [3.040 4.260 -88.274] fiducial_id 7 )
-
-# generate some of the large cylinders we defined above
-visionbeacon( pose [3.679 1.813 0.000] color "cyan" )
-visionbeacon( pose [3.949 1.542 0.000] color "magenta" )
-visionbeacon( pose [3.331 1.952 0.000] color "yellow" )
-
-# generate some pucks we defined above
-red_puck( pose [5.113 7.404 0.000] )
-red_puck( pose [4.612 7.890 0.000] )
-red_puck( pose [4.872 7.691 0.000] )
-red_puck( pose [5.345 7.694 0.000] )
-blue_puck( pose [5.328 8.232 0.000] )
-blue_puck( pose [5.103 8.475 0.000] )
-blue_puck( pose [4.869 8.197 0.000] )
-blue_puck( pose [5.058 7.898 0.000] )
-
-#
-# Create an interesting visual obstacle from boxes
-#
-#define cornercube box( size [0.2 0.2] laser_return "bright" )
-
-box( 
-     pose [9.606 1.416 -112.435] 
-     size [0.6 0.6 0.0]     
-
-     cornercube( color "red" pose [0.3 0.3 0.0] )
-     cornercube( color "green" pose [-0.3 0.3 0.0] )
-     cornercube( color "blue" pose [-0.3 -0.3 0.0] )
-     cornercube( color "magenta" pose [0.3 -0.3 0.0] )
+laserpioneer
+(
+  color "blue"
+  name "p2"
+  pose [-5.325 2.025 -194.220]
 )
+
+laserpioneer
+(
+  color "green"
+  name "p3"
+  pose [-5.707 1.599 -199.781]
+)
+
+laserpioneer
+(
+  color "cyan"
+  name "p4"
+  pose [-6.795 3.223 -458.929]
+)
+
+laserpioneer
+(
+  color "yellow"
+  name "p5"
+  pose [-6.247 3.130 -110.414]
+)
+
+laserpioneer
+(
+  color "magenta"
+  name "p6"
+  pose [-5.599 2.883 -135.449]
+)
+
+# a silly object to look at
+position( 	
+  name "invader" 
+  size [0.3 0.3]
+  pose [-15.551 -0.066 0.000] 
+  color "red"  
+  # loads a bitmap for the model's body
+  bitmap "bitmaps/space_invader.png"
+  fiducial_return 22
+  velocity [0.2 0 0]
+  laser_return 2
+)
+
+position( 	
+  name "ghost" 
+  size [0.3 0.3 ]
+  pose [-12.978 -2.980 0.000] 
+  color "blue"  
+  # loads a bitmap for the model's body
+  bitmap "bitmaps/ghost.png"
+  fiducial_return 22
+  velocity [0 0.2 0]
+  laser_return 2
 )

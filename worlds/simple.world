@@ -1,79 +1,31 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: simple.world,v 1.26 2004-04-26 04:37:49 rtv Exp $
+# CVS: $Id: simple.world,v 1.27 2004-12-03 05:26:21 rtv Exp $
 
-# the resolution of Stage's raytrace model in meters
-#
-
+# defines Pioneer-like robots
 include "pioneer.inc"
 
+# defines 'map' object used for floorplans
+include "map.inc"
 
+# set the size of a pixel in meters
+resolution 0.02
 
+# configure the GUI window
+window( size [ 662.000 654.000 ] center [0.221 -0.005] scale 0.025 )
 
+# load an environment bitmap
+map
+(
+  bitmap "bitmaps/cave.png"
+  size [15 15]
+  boundary 1
+)
 
-
-
-
-
-
-
-
-#size [120 45]
-#bitmap "worlds/hospital.png"
-
-#size [20 20]
-#bitmap "worlds/autolab.png"
-
-
-
-resolution 0.02  # meters per pixel
-interval_sim 0.1  # seconds per update step
-interval_real 0.1 # real-time seconds per update step
-
-# load a bitmapped environment from a file
-bitmap "worlds/cave.png" 
-size [10 10]
-
-
-  # GUI settings
-  #
-  #gui
-  #(
-   # size [ 502.000 506.000 ]
-    #origin [5.018 4.950 0]
-    #scale 0.021 # the size of each bitmap pixel in meters
-  #)
-
-
-  #file "cave.pnm.gz" 
-
-
-
-  # create a robot, setting its start position and Player port, 
-  # and equipping it with a laser range scanner
-  #
-  model
-  (
-    name "budgie"	
-    size [2.0 1.0] 
-    pose [8.048 2.829 -48873.273]
-    velocity [0 0 -20]
-    nose 1
-
-    bitmap "worlds/submarine.png"
-    color "blue"
-  )
-
-pioneer2dx( name "r0" pose [4.868 6.382 7080.741] velocity [ 0.2 0.02 5 ] )
-pioneer2dx( name "r1" pose [1.497 5.232 -20.084] )
-pioneer2dx( name "r2" pose [2.586 8.947 -71.250] )
-#pioneer2dx( name "r3" pose [1.449 3.189 -20.084] )
-#pioneer2dx( name "r4" pose [1.449 3.189 -20.084] )
-#pioneer2dx( name "r5" pose [1.449 3.189 -20.084] )
-#pioneer2dx( name "r6" pose [1.449 3.189 -20.084] )
-#pioneer2dx( name "r7" pose [1.449 3.189 -20.084] )
-#pioneer2dx( name "r8" pose [1.449 3.189 -20.084] )
-#pioneer2dx( name "r9" pose [1.449 3.189 -20.084] )
-
-
-model( name "foo" pose [1.000 1.000 0.000] )
+# create a robot
+pioneer2dx
+(
+  name "robot"
+  pose [-3.494 -1.478 47.400]
+  laser()
+)
