@@ -22,11 +22,11 @@
 // Desc: Stage (simulator) time
 // Author: Richard Vaughan
 // Date: 7 May 2003
-// CVS: $Id: stg_time.cc,v 1.3 2004-12-30 04:39:25 rtv Exp $
+// CVS: $Id: stg_time.cc,v 1.4 2005-02-28 22:40:00 gerkey Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
-//#define DEBUG
+#define DEBUG
 
 #include "stage_internal.h"
 #include "stg_time.h"
@@ -58,13 +58,13 @@ int StgTime::GetTime(struct timeval* time)
   if( this->world ) // get the time from the Stage client
     {
       // client->stagetime is in milliseconds
-      time->tv_sec  = world->sim_time / 1000;
-      time->tv_usec = (world->sim_time % 1000) * 1000;
+      time->tv_sec  = (int)floor(world->sim_time / 1e3);
+      time->tv_usec = (int)rint(fmod(world->sim_time,1e3) * 1e3);
     }
   else // no time data available
     memset( time, 0, sizeof(struct timeval) );
   
-  PRINT_DEBUG2( "time now %d sec %d usec", time->tv_sec, time->tv_usec );
+  PRINT_DEBUG2( "time now %ld sec %ld usec", time->tv_sec, time->tv_usec );
   
   return 0;
 }
