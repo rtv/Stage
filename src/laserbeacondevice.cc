@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.26 $
+//  $Revision: 1.27 $
 //
 // Usage:
 //  (empty)
@@ -153,7 +153,7 @@ void CLBDDevice::Update( double sim_time )
   {
     // here we pretend to accept configuration settings, and we return
     // the last set value (or default, if no setting was made)
-    if(cfg.subtype == PLAYER_LASERBEACON_SUBTYPE_SETCONFIG)
+    if(cfg.subtype == PLAYER_LASERBEACON_SET_CONFIG)
     {
       m_bit_count = cfg.bit_count;
       m_bit_size = ntohs(cfg.bit_size);
@@ -161,7 +161,7 @@ void CLBDDevice::Update( double sim_time )
       m_zero_thresh = ntohs(cfg.zero_thresh);
       PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, NULL, 0);
     }
-    else if (cfg.subtype == PLAYER_LASERBEACON_SUBTYPE_GETCONFIG)
+    else if (cfg.subtype == PLAYER_LASERBEACON_GET_CONFIG)
     {
       cfg.bit_count = m_bit_count;
       cfg.bit_size = htons(m_bit_size);
