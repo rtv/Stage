@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
-//  $Author: ahoward $
-//  $Revision: 1.3 $
+//  $Author: vaughan $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -46,7 +46,7 @@ CPtzDevice::CPtzDevice(CRobot *robot,
     // *** WARNING -- I just made these numbers up. ahoward
     //
     
-    // these are the right numbers for our PTZ - RTV
+    // these pans are the right numbers for our PTZ - RTV
     m_pan_min = -100;
     m_pan_max = +100;
 
@@ -59,8 +59,11 @@ CPtzDevice::CPtzDevice(CRobot *robot,
 
     // Field of view (for scaling zoom values)
     //
-    m_fov_min = DTOR(120);
-    m_fov_max = DTOR(12);
+    // should look in the Sony manual to get these numbers right,
+    // but they'll change with the lens, and we have 2 lenses
+    // eventually all this stuff'll come from config files 
+    m_fov_min = DTOR(100);
+    m_fov_max = DTOR(10);
 
     m_pan = m_tilt = m_zoom = 0;
 
@@ -169,12 +172,14 @@ bool CPtzDevice::GUIDraw( void )
   // dump out if noone is subscribed
   if( !IsSubscribed() || !m_robot->showDeviceDetail ) return true;
  
-  double len = 0.8 * m_robot->world->ppm;
- 
-  // hard-coded view angle for now - need to calculate a real fov
-  // in this device and have the ACTS device use it from here in future - RTV
-  double startAngle =  m_robot->a + DTOR( m_pan ) - DTOR( 20.0 );
-  double stopAngle  =  startAngle + DTOR( 40.0 );
+  // height of the cone - hard coded number is in meters
+  double len = 1.0 * m_robot->world->ppm;
+   
+  double p, t, z;
+  GetPTZ( p, t, z );
+
+  double startAngle =  m_robot->a + p - z/2.0;
+  double stopAngle  =  startAngle + z;
 
     drawPts[0].x = drawPts[3].x = (short)m_robot->x;
     drawPts[0].y = drawPts[3].y = (short)m_robot->y;
