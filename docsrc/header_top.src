@@ -2,7 +2,7 @@
    "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
-<!-- $Id: header_top.src,v 1.5 2004-12-03 01:32:57 rtv Exp $ -->
+<!-- $Id: header_top.src,v 1.6 2004-12-10 10:15:11 rtv Exp $ -->
 
 <HEAD>
 
@@ -125,7 +125,6 @@ div.stage { font-size:120% }
 <li class=menu><a href="refs.html">References</a><br>
 <li class=menu><a href="credits.html">Credits</a><br>
 
-<hr>
 
 <!--
 <li class=menu>Devices
@@ -134,7 +133,15 @@ div.stage { font-size:120% }
     </ul>
 </li>
 -->
-    
+
+<hr>    
+<li class=menu>Drivers</li>
+<ul>
+  <li class=menu><a href="group__stg__sim.html">stg_sim</a></li>
+  <li class=menu><a href="group__stg__mod.html">stg_mod</a></li>
+</ul>
+
+<hr>
 <li class=menu>Models</li>
 
 <ul>

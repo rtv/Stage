@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.113 2004-12-09 01:34:44 rtv Exp $
+ * CVS: $Id: stage.h,v 1.114 2004-12-10 10:15:12 rtv Exp $
  */
 
 /*! \file stage.h 
@@ -92,6 +92,8 @@ extern "C" {
 
     } stg_model_type_t;
 
+
+  //  const char* stg_model_type_string( stg_model_type_t t );
 
   // Basic self-describing measurement types. All packets with real
   // measurements are specified in these terms so changing types here

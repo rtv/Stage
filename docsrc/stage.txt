@@ -1,6 +1,6 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: stage.txt,v 1.4 2004-12-03 01:32:57 rtv Exp $
+ * $Id: stage.txt,v 1.5 2004-12-10 10:15:11 rtv Exp $
 */
 
 /**
@@ -54,9 +54,11 @@ Some models from previous versions may not yet be available in this
 release, but we're working on them. Let us know which ones you need.
 </i>
 
+[@ref refs]
+
 <hr>
 <small>
-Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: stage.txt,v 1.4 2004-12-03 01:32:57 rtv Exp $
+Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: stage.txt,v 1.5 2004-12-10 10:15:11 rtv Exp $
 </small>
 
 */
@@ -101,7 +103,9 @@ Install Player first, then Stage, using the standard GNU autotools
 build system: download and extract the tarballs, then <tt>./configure
 ; make install</tt>.
 
-<h2>Detailed instructions</h2>
+<h2>Standard install procedure</h2>
+
+<p>To install Stage in the default location, follow these steps:
 
 <ol>
 
@@ -112,11 +116,11 @@ build system: download and extract the tarballs, then <tt>./configure
 from <a href=http:playerstage.sf.net>http://playerstage.sf.net</a>
 
 <li>Uncompress and expand the tarball: <br>
-    <tt>$ tar xzvf stage-src-<version>.tgz</tt>
+    <tt>$ tar xzvf stage-src-\<version\>.tgz</tt>
 
 <li>`cd' into Stage's source directory:<br>
-     <tt>$ cd stage-<version></tt>
-
+     <tt>$ cd stage-\<version\></tt>
+ 
 <li>To configure Stage with default settings:<br>
 <tt>$ ./configure</tt><br>
 
@@ -126,10 +130,31 @@ from <a href=http:playerstage.sf.net>http://playerstage.sf.net</a>
 <li>Install Stage. By default, Stage will be installed in
 <tt>/usr/local</tt> so you need to become root for this step. Remember
 to return to your normal user ID afterwards. <br> 
-<tt>$ make install<tt>
+<tt>$ make install</tt>
 
 </ol>
 
+<h2>Customized installations</h2>
+
+<p>Stage follows the standard GUN autotools conventions for build and
+install options. To see a list of all the available configuration
+options, do this:
+
+<p><tt>./configure --help</tt>
+
+<p>The most important option is <tt>--prefix</tt>, used
+to change the installation directory from the default (which varies
+from system to system, but is usually <tt>/usr/local</tt>). In
+general, Stage should get the same prefix you used to install Player. Prefixes must be absolute paths, i.e. a complete path starting with a '/'.
+
+<p>For example, you might want to install Stage your home directory
+because you don't have root access:
+
+<p><tt>$./configure --prefix=/home/harrison/PS</tt>
+
+<p><b>Remember: these instructions assume that Player was configured with the
+same prefix.</b> The command line to do this is probably the same, but you
+should check the Player instructions just in case.
 
 */
 
@@ -277,6 +302,32 @@ debug menu that enables visualization of some of the innards of Stage.
 */
 
 
+/**
+@page credits Credits
+
+Stage was written by:
+
+<ul>
+<li>Richard Vaughan <tt>(vaughan@sfu.ca)</tt>
+<li>Andrew Howard  <tt>(ahoward@robotics.usc.edu)</tt>
+<li>Brian Gerkey <tt>(gerkey@robotics.stanford.edu)</tt>
+</ul>
+
+Stage is part of the <a
+href="http://playerstage.sourceforge.net">Player/Stage Project</a>, a
+community effort to develop Free Software tools for robotics research.
+
+Funding for Stage has been provided in part by:
+<ul>
+ <li>NSERC (Canada)
+ <li>Simon Fraser University (Canada)
+ <li>DARPA (USA)
+ <li>NASA (USA)
+ <li>NSF (USA)
+</ul>
+
+*/
+
 
 /** 
 @page dev_simulation Simulation Device
@@ -299,3 +350,4 @@ Devices..
 Introduction to models...
 
 */
+

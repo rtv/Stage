@@ -16,8 +16,51 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_simulation.cc,v 1.8 2004-12-03 01:32:57 rtv Exp $
+ * $Id: stg_simulation.cc,v 1.9 2004-12-10 10:15:13 rtv Exp $
  */
+
+/** @defgroup stg_sim stg_sim Player driver
+
+This driver gives Player access to Stage's simulation engine
+
+@par Provides
+
+The stg_sim driver provides the following device interfaces:
+
+- player_interface_simulation 
+ - This interface controls simulators. It is rather minimal right now: it just loads a simulation, and  accepts no commmands and produces no data. It will eventually expand to allow starting and stopping the clock, saving the state, and other generic simulation controls.
+
+@par Supported configuration requests
+
+  - none
+
+@par Player configuration file options
+
+- worldfile (string)
+  - where (string) is the filename of a Stage worldfile.
+  
+@par Player configuration (.cfg) file example:
+
+@verbatim
+driver
+( 
+  # load the stage plugin to get access to stg_sim and stg_mod
+  plugin "libstage"
+
+  # load the stg_sim driver as a simulation device
+  name "stg_sim"
+  provides ["simulation:0" ]
+
+  # options for the stg_sim driver
+  worldfile "worlds/simple.world"
+)
+@endverbatim
+
+@par Authors
+
+Richard Vaughan
+*/
+
 
 #include "stg_driver.h"
 #include "stg_time.h"
@@ -36,7 +79,7 @@ extern char** global_argv;
 
 // CLASS -------------------------------------------------------------
 
-class StgSimulation:public Stage1p4
+class StgSimulation:public StgDriver
 {
 public:
   StgSimulation( ConfigFile* cf, int section);
@@ -55,10 +98,7 @@ public:
 
 
 StgSimulation::StgSimulation( ConfigFile* cf, int section ) 
-  : Stage1p4( cf, section, 
-	      PLAYER_SIMULATION_CODE, PLAYER_ALL_MODE,
-	      sizeof(player_simulation_data_t), 
-	      sizeof(player_simulation_cmd_t), 1, 1 )
+  : StgDriver( cf, section )
 {
   //PLAYER_MSG0( "constructing stg_simulation device" );
   
@@ -101,17 +141,11 @@ StgSimulation::StgSimulation( ConfigFile* cf, int section )
       return;
     }
   
-  //printf( "    Creating Stage client..." ); fflush(stdout);
-  //Stage1p4::stage_client = stg_client_create();
-  //assert(Stage1p4::stage_client);
-  //puts( " done" );
-  
-  
   // create a passel of Stage models in the local cache based on the
   // worldfile
-  printf( "    Stage driver loading worldfile \"%s\" ", worldfile_name );      
+  printf( "  Stage driver loading worldfile \"%s\" ", worldfile_name );      
   fflush(stdout);
-  Stage1p4::world = NULL;
+  StgDriver::world = NULL;
 
   this->world = stg_world_create_from_file( worldfile_name );
   assert(this->world);
@@ -122,69 +156,41 @@ StgSimulation::StgSimulation( ConfigFile* cf, int section )
   assert( (GlobalTime = new StgTime( this->world ) ));
 
   // start the simulation
-  printf( "    Starting world clock... " ); fflush(stdout);
+  printf( "  Starting world clock... " ); fflush(stdout);
   //stg_world_resume( world );
 
   world->paused = FALSE;
   puts( "done." );
-
   
+
+  // Create simulation interface
+  player_device_id_t id;
+  if (cf->ReadDeviceId(&id, section, "provides", PLAYER_SIMULATION_CODE, 0, NULL) != 0)
+    {
+      this->SetError(-1);
+      return;
+    }  
+
+  if (this->AddInterface(id, PLAYER_ALL_MODE,
+                         sizeof(player_simulation_data_t),
+                         sizeof(player_simulation_cmd_t), 10, 10) != 0)
+    {
+      DRIVER_ERROR( "failed to add simulation interface" );
+      this->SetError(-1);    
+      return;
+    }
+  
+ 
   this->StartThread();
 
   // make Player call Update() on this device even when noone is subscribed
   //this->alwayson = TRUE;
 }
 
-StgSimulation::~StgSimulation()
-{
-  stg_world_destroy( this->world );
-}
-
-// Player registration ----------------------------------------------------
-
-Driver* StgSimulation_Init( ConfigFile* cf, int section)
-{
-  return((Driver*)(new StgSimulation( cf, section)));
-}
-
-
-void StgSimulation_Register(DriverTable* table)
-{
-  table->AddDriver("stg_simulation",  StgSimulation_Init);
-}
 
 
 void StgSimulation::Main()
 {
-
-  assert( this->world );
-
-  //puts( "<ctrl-C is disabled - close the Stage window to quit Player>" );
-
-  while(1)
-    {   
-      // test if we are supposed to cancel
-      pthread_testcancel();
-      
-      // update the world, asking it to sleep a little if it has
-      // spare  time.
-      if( stg_world_update( this->world, TRUE ) )
-	//pthread_exit(NULL);
-	exit( 0 );
-    }
-}
-
-int StgSimulation::Setup()
-{
-  //PRINT_WARN( "stg_simulation setup" );
-  return 0; //ok
-}
-
-int StgSimulation::Shutdown()
-{
-  //PRINT_WARN( "stg_simulation shutdown" );
-  return 0; // ok
-}
 
 
 

@@ -16,13 +16,111 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_sonar.cc,v 1.4 2004-12-03 01:32:57 rtv Exp $
+ * $Id: stg_sonar.cc,v 1.5 2004-12-10 10:15:13 rtv Exp $
  */
 
 #define PLAYER_ENABLE_MSG 1
 
 #include <stdlib.h>
 #include "stg_driver.h"
+
+// DOCUMENTATION ------------------------------------------------------------
+
+/** @defgroup driver_sonar stg_sonar driver
+
+This driver gives Player access to Stage's @ref model_ranger, presenting
+its range data like a sonar device.
+
+@par Provides
+
+The stg_sonar driver provides the following device interfaces:
+
+- player_interface_sonar
+  - This interface returns sonar range data data, and accepts no commands.
+
+@par Supported configuration requests
+
+  - PLAYER_SONAR_GET_GEOM_REQ
+  - PLAYER_SONAR_POWER_REQ
+
+@par Player configuration file options
+
+- model (string)
+  - where (string) is the name of a Stage position model that will be controlled by this interface.
+  
+@par Example Player config (.cfg) file:
+
+In this example we create three sonar devices, demonstrating the
+explicit and implicit model-naming schemes.
+
+@verbatim
+driver
+(
+  name "stg_sonar"
+  provides ["sonar:0" ]
+
+  # identify a model with an explicit, user-defined name
+  model "myranger"
+)
+
+driver
+(
+  name "stg_sonar"
+  provides ["sonar:1" ]
+
+  # identify the first ranger attached the the model named "green_robot"
+  model "green_robot:ranger:0" 
+)
+
+driver
+(
+  name "stg_sonar"
+  provides ["sonar:2" ]
+
+  # identify the first ranger attached to the third position device
+  model "position:2.ranger:0" 
+)
+
+@endverbatim
+
+@par Example Stage world (.world) file:
+
+@verbatim
+
+# create position and ranger models with explicit names
+position
+(
+  name "red_robot"
+  pose [ 1 1 0 ]
+  color "red"
+  ranger( name "myranger" ) # this model is explicitly named "myranger"
+)
+
+# create position and ranger models, naming just the position (parent) model
+position
+(
+  name "green_robot"
+  pose [ 3 1 0 ]
+  color "green"
+  ranger() # this model is implicity named "green_robot.ranger:0"
+)
+
+# create position and ranger models without naming them explicitly
+position
+(
+  pose [ 2 1 0 ]
+  color "blue"
+  ranger() # this model is implicitly named "position:2.ranger:0"
+)
+
+@endverbatim
+
+@pa
+
+@par Authors
+
+Richard Vaughan
+*/
 
 // DRIVER FOR SONAR INTERFACE ///////////////////////////////////////////
 

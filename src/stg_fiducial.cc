@@ -17,8 +17,65 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_fiducial.cc,v 1.4 2004-12-03 01:32:57 rtv Exp $
+ * $Id: stg_fiducial.cc,v 1.5 2004-12-10 10:15:13 rtv Exp $
  */
+
+// DOCUMENTATION ------------------------------------------------------------
+
+/** @defgroup driver_fiducial stg_fiducial driver
+
+This driver gives Player access to Stage's @ref model_fiducial
+
+@par Provides
+
+The stg_fiducial driver provides the following device interfaces:
+
+- player_interface_fiducial This interface returns fiducial ID,
+  location and geometry data, and accepts no commands.
+
+@par Supported configuration requests
+
+  - PLAYER_FIDUCIAL_GET_GEOM_REQ
+  - PLAYER_FIDUCIAL_SET_FOV_REQ
+  - PLAYER_FIDUCIAL_GET_FOV_REQ
+  - PLAYER_FIDUCIAL_SET_ID_REQ
+  - PLAYER_FIDUCIAL_GET_ID_REQ
+
+@par Player configuration file options
+
+- model (string)
+  - where (string) is the name of a Stage position model that will be controlled by this interface.
+
+@par Example:
+  
+Creating a fiducial model in a Stage world (.world) file:
+
+@verbatim
+position
+(
+  name "marvin"
+  pose [ 1 1 0 ]
+  color "red"
+  fiducial()
+)
+@endverbatim
+
+Using the stg_fiducial driver in Player config (.cfg) file:
+
+@verbatim
+driver
+(
+  name "stg_fiducial"
+  provides ["fiducial:0" ]
+  model "marvin.fiducial:0"
+)
+@endverbatim
+
+
+@par Authors
+
+Richard Vaughan
+*/
 
 #include <stdlib.h>
 #include <math.h>

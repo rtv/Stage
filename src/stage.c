@@ -20,6 +20,21 @@
 
 int _stg_quit = FALSE;
 
+/* const char* stg_model_type_string( stg_model_type_t t ) */
+/* { */
+/*   switch( t ) */
+/*     { */
+/*     case STG_MODEL_BASIC: return "basic"; */
+/*     case STG_MODEL_LASER: return "laser"; */
+/*     case STG_MODEL_RANGER: return "ranger"; */
+/*     case STG_MODEL_BLOB: return "blob"; */
+/*     case STG_MODEL_FIDUCIAL: return "fiducial"; */
+/*     case STG_MODEL_POSITION: return "position"; */
+/*     default: return NULL; */
+/*     } */
+/* } */
+
+
 int stg_init( int argc, char** argv )
 {
   gui_startup( &argc, &argv );

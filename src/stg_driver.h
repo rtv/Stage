@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stage1p4.cc,v 1.5 2003/08/02 02:
+ * $Id: StgDriver.cc,v 1.5 2003/08/02 02:
  *
 */
 
@@ -25,7 +25,7 @@
 
 /*! \file stg_driver.h 
 
-  This header file contains the class Stage1p4, derived from Player's
+  This header file contains the class StgDriver, derived from Player's
   Device class, and extended by Stage Plugin's various drivers.
 */
 
@@ -45,26 +45,18 @@
 
 #define DRIVER_ERROR(X) printf( "Stage driver error: %s\n", X )
 
-class Stage1p4 : public Driver
+class StgDriver : public Driver
 {
  public:
-  Stage1p4( ConfigFile* cf, int section, int interface, uint8_t access,
-		   size_t datasz, size_t cmdsz, int rqlen, int rplen);
-  virtual ~Stage1p4();
+  StgDriver( ConfigFile* cf, int section );
+  virtual ~StgDriver();
   
-  virtual int Setup();
-  virtual int Shutdown(); 
+  //virtual int Setup();
+  //virtual int Shutdown(); 
 
  protected:
 
   // set in startup(), unset in shutdown()
-  int ready;
+  //int ready;
 
-  static ConfigFile* config;
-
-  /// all player devices share the same Stage world
-  static stg_world_t* world;
-
-  /// points inside the shared world to our individual model data
-  stg_model_t* model; 
 };

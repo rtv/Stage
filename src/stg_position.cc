@@ -16,13 +16,66 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stg_position.cc,v 1.4 2004-12-03 01:32:57 rtv Exp $
+ * $Id: stg_position.cc,v 1.5 2004-12-10 10:15:13 rtv Exp $
  */
 
 #define DEBUG
 
 #include <stdlib.h>
 #include "stg_driver.h"
+
+/** @defgroup driver_position stg_position driver
+
+This driver gives Player access to Stage's @ref model_position .
+
+@par Provides
+
+The stg_position driver provides the following device interfaces:
+
+- player_interface_position
+  - This interface returns odometry data, and accepts velocity commands.
+
+@par Supported configuration requests
+
+  - PLAYER_POSITION_SET_ODOM_REQ
+  - PLAYER_POSITION_RESET_ODOM_REQ
+  - PLAYER_POSITION_GET_GEOM_REQ
+  - PLAYER_POSITION_MOTOR_POWER_REQ
+  - PLAYER_POSITION_VELOCITY_MODE_REQ
+
+@par Player configuration file options
+
+- model (string)
+  - where (string) is the name of a Stage position model that will be controlled by this interface.
+  
+@par Configuration file examples:
+
+Creating a @model_position in a Stage world (.world) file:
+
+@verbatim
+position
+(
+  name "marvin"
+  pose [ 1 1 0 ]
+  color "red"
+)
+@endverbatim
+
+Using the model in a Player config (.cfg) file:
+
+@verbatim
+driver
+(
+  name "stg_position"
+  provides ["position:0" ]
+  model "marvin"
+)
+@endverbatim
+
+@par Authors
+
+Richard Vaughan
+*/
 
 // CLASS FOR POSITION INTERFACE //////////////////////////////////////////
 class StgPosition:public Stage1p4

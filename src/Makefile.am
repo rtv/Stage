@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.83 2004-12-03 01:32:57 rtv Exp $
+# $Id: Makefile.am,v 1.84 2004-12-10 10:15:11 rtv Exp $
 
 # install these headers
 include_HEADERS = stage.h 
@@ -13,8 +13,9 @@ AM_CPPFLAGS = -Wall -I$(top_builddir)/replace @PLAYER_CFLAGS@ @GTK_CFLAGS@
 lib_LTLIBRARIES = libstage.la
 
 # The stage library contains everything you need to build a robot
-# simulation, including graphics and a worldfile parser. It also
-# contains hooks for Player, so you can load it as a Player plugin.
+# simulation, including graphics and a world description file
+# parser. It also contains hooks for Player, so you can load it as a
+# Player plugin.
 #
 libstage_la_SOURCES = \
 	bitmap.c \
@@ -35,12 +36,7 @@ libstage_la_SOURCES = \
 	stage.h \
 	stage_internal.h \
 	stagecpp.cc \
-	stg_blobfinder.cc \
-	stg_fiducial.cc \
-	stg_laser.cc \
-	stg_position.cc \
-	stg_simulation.cc \
-	stg_sonar.cc \
+	stg_driver.cc \
 	stg_time.cc \
 	stg_time.h \
 	world.c \
@@ -51,9 +47,7 @@ libstage_la_SOURCES = \
         rtk_canvas.c \
         rtk_fig.c \
         rtk_region.c \
-        rtkprivate.h \
-        stg_driver.cc \
-        stg_driver.h 
+        rtkprivate.h
 
 libstage_la_LDFLAGS = -export-dynamic -version-info 0:0:0 
 libstage_la_LIBADD = @GTK_LIBS@
@@ -61,3 +55,12 @@ libstage_la_LIBADD = @GTK_LIBS@
 
 #	model_energy.c
 #	token.c 
+#	stg_blobfinder.cc 
+#	stg_fiducial.cc 
+#	stg_laser.cc 
+#	stg_position.cc 
+#	stg_sonar.cc 
+#        stg_driver.cc 
+#        stg_driver.h 
+#	stg_simulation.cc 
+
