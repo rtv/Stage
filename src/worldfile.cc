@@ -5,7 +5,7 @@
 // Date: 15 Nov 2001
 // Desc: A property handling class
 //
-// $Id: worldfile.cc,v 1.1 2001-11-17 00:24:12 ahoward Exp $
+// $Id: worldfile.cc,v 1.2 2001-11-17 21:45:39 ahoward Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -136,6 +136,10 @@ bool CWorldFile::Load(const char *filename)
 // Save world to file
 bool CWorldFile::Save(const char *filename)
 {
+  // Debugging
+  DumpItems();
+  
+  // If no filename is supplied, use default
   if (!filename)
     filename = this->filename;
 
@@ -153,10 +157,15 @@ bool CWorldFile::Save(const char *filename)
   {
     CItem *pitem = this->items + item;
 
-    if (pitem->section == 0)
+    if (pitem->section < 0)
     {
       assert(pitem->value_count == 1);
-      fprintf(file, "set %s %s\n", pitem->name, pitem->values[0]);
+      fprintf(file, "%s", pitem->values[0]);
+    }
+    else if (pitem->section == 0)
+    {
+      assert(pitem->value_count == 1);
+      fprintf(file, "set %s %s", pitem->name, pitem->values[0]);
     }
     else if (strcmp(pitem->name, "type") == 0)
     {
@@ -169,14 +178,14 @@ bool CWorldFile::Save(const char *filename)
         fprintf(file, "%s %s ", pitem->name, pitem->values[0]);
       else
       {
-        fprintf(file, "(");
+        fprintf(file, "%s (", pitem->name);
         for (int i = 0; i < pitem->value_count; i++)
         {
           if (i > 0)
             fprintf(file, " ");
-          fprintf(file, "%s %s", pitem->name, pitem->values[i]);
+          fprintf(file, "%s", pitem->values[i]);
         }
-        fprintf(file, ")");
+        fprintf(file, ") ");
       }
     }
   }
@@ -196,7 +205,8 @@ bool CWorldFile::Tokenize(char *buff, int buff_len,
 
 {
   int linecount = 1;
-
+  bool comment = false;
+  
   assert(*token_count < token_size);
   tokens[*token_count] = buff;
 
@@ -206,10 +216,13 @@ bool CWorldFile::Tokenize(char *buff, int buff_len,
 
     if (strchr(" \t\r", buff[i]))
     {
-      buff[i] = 0;
-      if (tokens[*token_count][0] != 0)
-        (*token_count)++;
-      tokens[*token_count] = buff + i;
+      if (!comment)
+      {
+        buff[i] = 0;
+        if (tokens[*token_count][0] != 0)
+          (*token_count)++;
+        tokens[*token_count] = buff + i;
+      }
     }
     else if (strchr("\n", buff[i]))
     {
@@ -219,6 +232,7 @@ bool CWorldFile::Tokenize(char *buff, int buff_len,
       tokens[*token_count] = "\n";
       (*token_count)++;
       tokens[*token_count] = buff + i;
+      comment = false;
     }
     else if (strchr("#", buff[i]))
     {
@@ -227,7 +241,9 @@ bool CWorldFile::Tokenize(char *buff, int buff_len,
         (*token_count)++;
       tokens[*token_count] = "#";
       (*token_count)++;
-      tokens[*token_count] = buff + i;
+      if (i + 1 < buff_len)
+        tokens[*token_count] = buff + i + 1;
+      comment = true;
     }
     else if (strchr("(", buff[i]))
     {
@@ -252,7 +268,10 @@ bool CWorldFile::Tokenize(char *buff, int buff_len,
       tokens[*token_count] = buff + i;
   }
 
-  /* Dont remove!
+  if (tokens[*token_count][0] != 0)
+    (*token_count)++;
+  
+  ///* Dont remove!
   // Dump a token list for debugging
   for (int i = 0; i < *token_count; i++)
   {
@@ -262,7 +281,7 @@ bool CWorldFile::Tokenize(char *buff, int buff_len,
       printf("[%s] ", tokens[i]);
   }
   printf("\n");
-  */
+  //*/
 
   return token_count;
 }
@@ -280,9 +299,10 @@ bool CWorldFile::Parse(int token_count, char **tokens)
   for (int i = 0; i < token_count;)
   {
     // End-of-line
-    // Increase the line counter
+    // Add a dummy item and increment the line counter
     if (tokens[i][0] == '\n')
     {
+      AddDummyItem("\n");
       linecount++;
       i++;
     }
@@ -292,14 +312,16 @@ bool CWorldFile::Parse(int token_count, char **tokens)
     // the next end-of-line.
     else if (tokens[i][0] == '#')
     {
-      while (i < token_count && tokens[i][0] != '\n')
-        i++;
+      AddDummyItem(tokens[i++]);
+      if (i < token_count)
+        AddDummyItem(tokens[i++]);
     }
 
     // Open block tokens
     // Make the current section the parent.
     else if (tokens[i][0] == '{')
     {
+      AddDummyItem("{");
       parent = section;
       section = -1;
       i++;
@@ -311,6 +333,7 @@ bool CWorldFile::Parse(int token_count, char **tokens)
     {
       if (section > 0)
       {
+        AddDummyItem("}");
         section = parent;
         parent = GetParentSection(section);
         i++;
@@ -332,7 +355,7 @@ bool CWorldFile::Parse(int token_count, char **tokens)
 
       // TODO: Should do some syntax checking here.
       
-      AddItem(0, name, 0, value, true);
+      AddItem(0, name, 0, value);
       i += 3;
     }
 
@@ -349,7 +372,7 @@ bool CWorldFile::Parse(int token_count, char **tokens)
 
       // TODO: Should do some syntax checking here.
       
-      AddItem(section, name, 0, value, true);
+      AddItem(section, name, 0, value);
       i += 2;
     }
 
@@ -376,7 +399,7 @@ bool CWorldFile::Parse(int token_count, char **tokens)
                      this->filename, linecount);
           return false;
         }
-        AddItem(section, name, 0, value, true);
+        AddItem(section, name, 0, value);
       }
 
       // Otherwise add a tuple
@@ -401,7 +424,7 @@ bool CWorldFile::Parse(int token_count, char **tokens)
                        this->filename, linecount);
             return false;
           }
-          AddItem(section, name, index++, value, true); 
+          AddItem(section, name, index++, value); 
         }
       }
     }
@@ -413,6 +436,10 @@ bool CWorldFile::Parse(int token_count, char **tokens)
       return false;
     }
   }
+
+  // Debugging
+  DumpItems();
+  
   return true;
 }
 
@@ -452,23 +479,40 @@ int CWorldFile::GetParentSection(int section)
 
 ///////////////////////////////////////////////////////////////////////////
 // Add an item
-int CWorldFile::AddItem(int section, const char *name, int index,
-                        const char *value, bool save)
+int CWorldFile::AddItem(int section, const char *name,
+                        int index, const char *value)
 {
-  int item = GetItem(section, name, index);
+  // See of the item is in the list
+  // (ignore the index).
+  int item = GetItem(section, name, -1);
 
   // If there is no such item in the list,
-  // add the item now (re-sizing the list if necessary).
+  // add the item now.
+  // Make sure we insert items in the correct section.
   if (item < 0)
   {
     assert(this->item_count < this->item_size);
-    item = this->item_count++;
+
+    // Find the correct section
+    for (item = 0; item < this->item_count; item++)
+    {
+      CItem *pitem = this->items + item;
+      if (pitem->section > section)
+        break;
+    }
+
+    // Move stuff up to make room for the new item
+    if (item < this->item_count)
+      memmove(this->items + item + 1, this->items + item,
+              (this->item_count - item) * sizeof(this->items[0]));
+
     CItem *pitem = this->items + item;
     pitem->section = section;
     pitem->name = strdup(name);
     pitem->value_count = 0;
     pitem->value_size = sizeof(pitem->values) / sizeof(pitem->values[0]);
-    pitem->save = save;
+
+    this->item_count++;
   }
 
   // Now set the value at the matching index,
@@ -485,6 +529,23 @@ int CWorldFile::AddItem(int section, const char *name, int index,
 
 
 ///////////////////////////////////////////////////////////////////////////
+// Add a dummy item
+int CWorldFile::AddDummyItem(const char *value)
+{
+  assert(this->item_count < this->item_size);
+  int item = this->item_count++;
+  CItem *pitem = this->items + item;
+  pitem->section = -1;
+  pitem->name = "";
+  pitem->value_count = 1;
+  pitem->value_size = sizeof(pitem->values) / sizeof(pitem->values[0]);
+  pitem->values[0] = strdup(value);
+  pitem->save = true;
+  return item;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // Get an item 
 int CWorldFile::GetItem(int section, const char *name, int index)
 {
@@ -493,53 +554,69 @@ int CWorldFile::GetItem(int section, const char *name, int index)
   {
     CItem *pitem = this->items + item;
     if (pitem->section == section && strcmp(pitem->name, name) == 0)
+    {
+      if (index < 0)
+        return item;
       if (index < pitem->value_count && pitem->values[index] != NULL)
         return item;
+    }
   }
   return -1;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-// Read a string
-char *CWorldFile::ReadString(int section, const char *name, const char *defaultv)
+// Dump the item list for debugging
+void CWorldFile::DumpItems()
 {
-  // See if there is a matching item it the list
-  for (int i = 0; i < this->item_count; i++)
+  for (int item = 0; item < this->item_count; item++)
   {
-    CItem *pitem = this->items + i;
-    if (pitem->section == section && strcmp(pitem->name, name) == 0)
+    CItem *pitem = this->items + item;
+
+    printf("%d %s [", pitem->section, pitem->name);
+    for (int index = 0; index < pitem->value_count; index++)
     {
-      assert(pitem->value_count > 0);
-      return pitem->values[0];
-    }  
+      if (index > 0)
+        printf(" ");
+      if (pitem->values[index][0] == '\n')
+        printf("\\n");
+      else
+        printf("%s", pitem->values[index]);
+    }
+    printf("]\n");
   }
-   
-  // If there isnt a matching item, add one
-  int item = AddItem(section, name, 0, defaultv, false);
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Read a string
+const char *CWorldFile::ReadString(int section, const char *name, const char *value)
+{
+  int item = GetItem(section, name, 0);
+  if (item < 0)
+    return value;
   return this->items[item].values[0];
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Read an int
-int CWorldFile::ReadInt(int section, const char *name, int defaultv)
+int CWorldFile::ReadInt(int section, const char *name, int value)
 {
-  char default_str[64];
-  snprintf(default_str, sizeof(default_str), "%d", defaultv);
-  char *value = ReadString(section, name, default_str);
-  return atoi(value);
+  int item = GetItem(section, name, 0);
+  if (item < 0)
+    return value;
+  return atoi(this->items[item].values[0]);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Read a float
-double CWorldFile::ReadFloat(int section, const char *name, double defaultv)
+double CWorldFile::ReadFloat(int section, const char *name, double value)
 {
-  char default_str[64];
-  snprintf(default_str, sizeof(default_str), "%.3f", defaultv);
-  char *value = ReadString(section, name, default_str);
-  return atof(value);
+  int item = GetItem(section, name, 0);
+  if (item < 0)
+    return value;
+  return atof(this->items[item].values[0]);
 }
 
 
@@ -561,7 +638,7 @@ void CWorldFile::WriteTupleString(int section, const char *name,
                                   int index, const char *value)
 {
   // Get existing item or add one if it doesnt exist
-  int item = AddItem(section, name, index, value, true);
+  int item = AddItem(section, name, index, value);
   assert(item >= 0);
   CItem *pitem = this->items + item;
 

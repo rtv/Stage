@@ -5,7 +5,7 @@
 // Date: 15 Nov 2001
 // Desc: Class for handling world files
 //
-// $Id: worldfile.hh,v 1.1 2001-11-17 00:24:12 ahoward Exp $
+// $Id: worldfile.hh,v 1.2 2001-11-17 21:45:39 ahoward Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -41,7 +41,7 @@ class CWorldFile
   public: int GetParentSection(int section);
 
   // Read a string
-  public: char *ReadString(int section, const char *name, const char *value);
+  public: const char *ReadString(int section, const char *name, const char *value);
 
   // Write a string
   public: void WriteString(int section, const char *name, const char *value);
@@ -85,12 +85,18 @@ class CWorldFile
   private: int AddSection(int parent);
 
   // Add an item
-  private: int AddItem(int section, const char *name, int index,
-                       const char *value, bool save);
+  private: int AddItem(int section, const char *name,
+                       int index, const char *value);
+
+  // Add a dummy item
+  private: int AddDummyItem(const char *value);
 
   // Get an item
   private: int GetItem(int section, const char *name, int index);
 
+  // Dump the item list for debugging
+  private: void DumpItems();
+  
   // Private section class
   private: struct CSection
   {
