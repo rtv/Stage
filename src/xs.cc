@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.32 2001-09-28 00:18:31 vaughan Exp $
+ * $Id: xs.cc,v 1.33 2001-09-28 01:47:10 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -821,6 +821,7 @@ void CXGui::ImportTruth( stage_truth_t &struth )
   
   int stage_id = truth.stage_id = struth.stage_id; // this is the map key
   
+  truth.parent_id = struth.parent_id;
   strncpy( truth.hostname, struth.hostname, HOSTNAME_SIZE );
   
   truth.stage_type = struth.stage_type;
@@ -871,7 +872,7 @@ void CXGui::ImportTruth( stage_truth_t &struth )
   
   //RenderObject( truth ); // draw it
   
-  XFlush( display );// reduces flicker
+  //XFlush( display );// reduces flicker
   
   truth_map[ stage_id ] = truth; // update the database with it
   
@@ -887,6 +888,22 @@ void CXGui::ImportTruth( stage_truth_t &struth )
   //pthread_mutex_unlock( &incoming_mutex );
 }
 
+// recursively render this object and any of it's children
+void CXGui::RenderFamily( xstruth_t &truth )
+{
+  // if anyone has this truth as a parent
+  TruthMap::iterator it;
+  for( it = truth_map.begin(); it != truth_map.end(); it++ )
+    if( it->second.parent_id == truth.stage_id )
+      {
+	puts( "RECURSE" );
+	// recurse to render the child 
+	RenderFamily( it->second );
+      }
+  
+  RenderObject( truth );
+}
+
 void CXGui::HandleIncomingQueue( void )
 {
   while( !incoming_queue.empty() )
@@ -900,14 +917,14 @@ void CXGui::HandleIncomingQueue( void )
       //printf( "POSE ID %d MATCHES: ", pose.stage_id );
       //PrintMetricTruth( pose.stage_id, truth );
 
-      RenderObject( truth ); // undraw it
+      RenderFamily( truth ); // undraw it
       
       // update it
       truth.x = pose.x / 1000.0;
       truth.y = pose.y / 1000.0;
       truth.th = DTOR(pose.th);
 
-      RenderObject( truth ); // redraw it
+      RenderFamily( truth ); // redraw it
 
       XFlush( display );// reduces flicker
 
@@ -1354,10 +1371,13 @@ void CXGui::RefreshObjects( void )
 {
   SetDrawMode( GXxor );
 
+  // render all the top-level objects - they'll
+  // draw their own descendents
   for( TruthMap::iterator it = truth_map.begin();
        it != truth_map.end(); it++ )
-    RenderObject( it->second );
-
+    if( it->second.parent_id == -1 )
+      RenderFamily( it->second );
+  
   for( int i=0; i<num_proxies; i++ )
     graphicProxies[i]->Draw();
   
@@ -1520,7 +1540,8 @@ void CXGui::HighlightObject( xstruth_t* exp,  bool undraw )
       DrawLines( heading_stick_pts, 2 );
    
 
-      sprintf( info, "%s (%.2f,%.2f,%d)",
+      sprintf( info, "[%d:%d] %s (%.2f,%.2f,%d)",
+	       exp->stage_id, exp->parent_id,
 	       StageNameOf(*exp),
 	       exp->x, exp->y, (int)RTOD( exp->th ) );
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entity.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.21 $
+//  $Revision: 1.22 $
 //
 // Usage:
 //  (empty)
@@ -741,6 +741,19 @@ void CEntity::ComposeTruth( stage_truth_t* truth, int index )
   memset( truth, 0, sizeof(stage_truth_t) ); // just in case
   
   truth->stage_id = index;
+  
+  if( m_parent_object )
+   {
+     // find the index of our parent to use as an id
+     for( int h=0; h<m_world->GetObjectCount(); h++ )
+       if( m_world->GetObject(h) == m_parent_object )
+	 {
+	   truth->parent_id = h;
+	   break;
+	 }
+   }
+  else
+    truth->parent_id = -1;
 
   strncpy( truth->hostname, m_hostname, HOSTNAME_SIZE );
 

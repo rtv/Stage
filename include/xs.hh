@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xs.hh,v 1.13 2001-09-28 00:18:30 vaughan Exp $
+ * $Id: xs.hh,v 1.14 2001-09-28 01:47:09 vaughan Exp $
  ************************************************************************/
 
 #ifndef _WIN_H
@@ -29,7 +29,7 @@ class GraphicProxy;
 
 typedef struct
 {
-  int stage_id;
+  int stage_id, parent_id;
   StageType stage_type;
   StageColor color;
   unsigned long pixel_color;
@@ -185,6 +185,8 @@ public:
 
 
   void RenderObject( xstruth_t &truth ); 
+  // render an object and all its children
+  void RenderFamily( xstruth_t &truth );
 
   void RenderObjectLabel( xstruth_t* exp, char* str, int len );
   void RenderGenericObject( xstruth_t* exp );

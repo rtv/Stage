@@ -48,21 +48,18 @@ void CXGui::GetGlobalPose( xstruth_t &truth, double &px, double &py, double &pth
     double oth = 0;
 
     // if we have a parent
-    if( truth.parent.type != 0 )
+    if( truth.parent_id != -1 )
       {
 	// find the parent
 	TruthMap::iterator it;
-	// find this object
 	for( it = truth_map.begin(); it != truth_map.end(); it++ )
-	  if( it->second.id.port == truth.parent.port &&  
-	      it->second.id.type == truth.parent.type &&
-	      it->second.id.index == truth.parent.index )
+	  if( it->second.stage_id == truth.parent_id )
 	    {
 	      GetGlobalPose( it->second, ox, oy, oth);
 	      break;
 	    }
       }
-
+    
     // Compute our pose in the global cs
     //
     px = ox + truth.x * cos(oth) - truth.y * sin(oth);
@@ -72,14 +69,7 @@ void CXGui::GetGlobalPose( xstruth_t &truth, double &px, double &py, double &pth
 
 void CXGui::RenderObject( xstruth_t &orig_truth )
   {
-#ifdef DEBUG
-    //    char buf[30]
-    //GetObjectType( exp, buf, 29 );
-    //cout << "Rendering " << exp->objectId << " " << buf <<  endl;
-
-    //printf( "R(%d,%d,%d)\n", pid.port, pid.type, pid.index );
-    //fflush( stdout );
-#endif
+    printf( "rendering %d\n", orig_truth.stage_id );
 
     xstruth_t truth;
     
@@ -94,6 +84,10 @@ void CXGui::RenderObject( xstruth_t &orig_truth )
     truth.x = x;
     truth.y = y;
     truth.th = th;
+
+    printf( "rendering %d at %.2f %.2f %.2f\n", 
+	    truth.stage_id, truth.x, truth.y, truth.th );
+
 
     bool extended = false;
 

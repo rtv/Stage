@@ -40,6 +40,9 @@ create position_device pose $1 $2 $3 port $4 shape circle
 {
   create player_device
   create laser_device
+ {
+   create lbd_device
+ }
   create gps_device
 }
 ')
