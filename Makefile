@@ -7,8 +7,8 @@
 #
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
-#  $Author: ahoward $
-#  $Revision: 1.3.2.5 $
+#  $Author: vaughan $
+#  $Revision: 1.3.2.6 $
 #
 ###########################################################################
 
@@ -30,6 +30,9 @@ all: stage rtkstage
 
 stage: 
 	cd src; make clean; make stage -e PLAYER_DIR=$(PLAYER_DIR); cp stage ../bin/
+
+xstage:
+	cd src; make clean; make xstage -e PLAYER_DIR=$(PLAYER_DIR); cp xstage ../bin/
 
 rtkstage:
 	cd rtk; make all
