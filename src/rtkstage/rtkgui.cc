@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.6 2002-11-02 02:00:52 inspectorg Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.7 2002-11-02 02:34:14 inspectorg Exp $
  */
 
 
@@ -283,8 +283,8 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   // Add some menu items
   this->file_menu = rtk_menu_create(this->canvas, "File");
   this->save_menuitem = rtk_menuitem_create(this->file_menu, "Save", 0);
-  this->stills_menu = rtk_menu_create_sub(this->file_menu, "Capture stills");
-  this->movie_menu = rtk_menu_create_sub(this->file_menu, "Capture movie");
+  this->stills_menu = rtk_menu_create_sub(this->file_menu, "Capture /_stills");
+  this->movie_menu = rtk_menu_create_sub(this->file_menu, "Capture /_movie");
   this->exit_menuitem = rtk_menuitem_create(this->file_menu, "Exit", 0);
 
   this->stills_jpeg_menuitem = rtk_menuitem_create(this->stills_menu, "JPEG format", 1);
@@ -459,8 +459,13 @@ void CWorld::RtkMenuHandling()
   // Start/stop export (jpeg)
   if (rtk_menuitem_isactivated(this->stills_jpeg_menuitem))
   {
-      if (rtk_menuitem_ischecked(this->stills_jpeg_menuitem))
-        this->stills_series++;
+    if (rtk_menuitem_ischecked(this->stills_jpeg_menuitem))
+    {
+      this->stills_series++;
+      rtk_menuitem_enable(this->stills_ppm_menuitem, 0);
+    }
+    else
+      rtk_menuitem_enable(this->stills_ppm_menuitem, 1);      
   }
   if (rtk_menuitem_ischecked(this->stills_jpeg_menuitem))
   {
@@ -473,8 +478,13 @@ void CWorld::RtkMenuHandling()
   // Start/stop export (ppm)
   if (rtk_menuitem_isactivated(this->stills_ppm_menuitem))
   {
-      if (rtk_menuitem_ischecked(this->stills_ppm_menuitem))
-        this->stills_series++;
+    if (rtk_menuitem_ischecked(this->stills_ppm_menuitem))
+    {
+      this->stills_series++;
+      rtk_menuitem_enable(this->stills_jpeg_menuitem, 0);
+    }
+    else
+      rtk_menuitem_enable(this->stills_jpeg_menuitem, 1);      
   }
   if (rtk_menuitem_ischecked(this->stills_ppm_menuitem))
   {
@@ -491,9 +501,13 @@ void CWorld::RtkMenuHandling()
     {
       snprintf(filename, sizeof(filename), "stage-%03d.mpg", this->movie_count++);
       rtk_canvas_movie_start(this->canvas, filename, 5);
+      rtk_menuitem_enable(this->movie_fps10_menuitem, 0);
     }
     else
+    {
       rtk_canvas_movie_stop(this->canvas);
+      rtk_menuitem_enable(this->movie_fps10_menuitem, 1);
+    }
   }
   if (rtk_menuitem_ischecked(this->movie_fps5_menuitem))
     rtk_canvas_movie_frame(this->canvas);
@@ -505,13 +519,18 @@ void CWorld::RtkMenuHandling()
     {
       snprintf(filename, sizeof(filename), "stage-%03d.mpg", this->movie_count++);
       rtk_canvas_movie_start(this->canvas, "test.mpg", 10);
+      rtk_menuitem_enable(this->movie_fps5_menuitem, 0);
     }
     else
+    {
       rtk_canvas_movie_stop(this->canvas);
+      rtk_menuitem_enable(this->movie_fps5_menuitem, 1);
+    }
   }
   if (rtk_menuitem_ischecked(this->movie_fps10_menuitem))
     rtk_canvas_movie_frame(this->canvas);
 
+  
   // Show or hide the grid
   if (rtk_menuitem_ischecked(this->grid_item))
     rtk_fig_show(this->fig_grid, 1);
