@@ -1,6 +1,6 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: test.world,v 1.37 2004-12-02 01:25:32 rtv Exp $
+# CVS: $Id: test.world,v 1.38 2004-12-02 19:17:18 rtv Exp $
 
 # the size of a pixel in Stage's underlying raytrace model in meters
 resolution     0.02 
@@ -142,7 +142,7 @@ position(
   pose [-12.978 -2.980 0.000] 
   color "blue"  
   # loads a bitmap for the model's body
-  bitmap "bitmaps/ghost.tiff"
+  bitmap "bitmaps/ghost.png"
   fiducial_return 22
   velocity [0 0.2 0]
   laser_return 2
