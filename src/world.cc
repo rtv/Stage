@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.87 $
+//  $Revision: 1.88 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -130,34 +130,34 @@ CWorld::CWorld()
     perror( "Stage: couldn't get hostname. Quitting." );
     exit( -1 );
   }
+
   /* now strip off domain */
   char* first_dot;
   strncpy(m_hostname_short, m_hostname,HOSTNAME_SIZE);
   if( (first_dot = strchr(m_hostname_short,'.') ))
     *first_dot = '\0';
-    
-  // if we're not running on localhost, print the hostname
-  if( strcmp( m_hostname_short, "localhost" ) != 0 )
-    printf( "[%s]", m_hostname_short );
-  
+      
   // get the IP of our host
   struct hostent* info = gethostbyname( m_hostname );
   
-  // make sure this looks like a regular internet address
-  assert( info->h_length == 4 );
-  assert( info->h_addrtype == AF_INET );
+  if( info )
+    { // make sure this looks like a regular internet address
+      assert( info->h_length == 4 );
+      assert( info->h_addrtype == AF_INET );
+      
+      // copy the address out
+      memcpy( &m_hostaddr.s_addr, info->h_addr_list[0], 4 ); 
+    }
+  else
+    {
+      PRINT_ERR1( "failed to resolve IP for local hostname \"%s\"\n", 
+		 m_hostname );
+    }
   
-  // copy the address out
-  memcpy( &m_hostaddr.s_addr, info->h_addr_list[0], 4 ); 
-
-  //printf( "\nRUNNING ON HOSTNAME %s NAME %s IP %s\n", 
-  //m_hostname,
-  //info->h_name, 
-  //inet_ntoa( m_hostaddr ) );
+  // just to be reassuring, print the host details
+    printf( "[Host %s(%s)]",
+	  m_hostname_short, inet_ntoa( m_hostaddr ) );
   
-  //printf( "\nCWorld::m_hostname: %s, m_hostname_short %s\n", 
-  //    m_hostname, m_hostname_short );
-
   // enable external services by default
   m_run_environment_server = true;
   m_run_pose_server = true;
@@ -172,11 +172,6 @@ CWorld::CWorld()
   // default color database file
   strcpy( m_color_database_filename, COLOR_DATABASE );
 
-
-  // Initialise world filename
-  //
-  //m_filename[0] = 0;
-    
   // Initialise clocks
   m_start_time = m_sim_time = 0;
   memset( &m_sim_timeval, 0, sizeof( struct timeval ) );
@@ -1204,22 +1199,22 @@ int CWorld::ColorFromString( StageColor* color, const char* colorString )
 }  
 
 // returns true if the given hostname matches our hostname, false otherwise
-bool CWorld::CheckHostname(char* host)
-{
-  //printf( "checking %s against (%s and %s) ", 
-  //  host, m_hostname, m_hostname_short ); 
+//  bool CWorld::CheckHostname(char* host)
+//  {
+//    //printf( "checking %s against (%s and %s) ", 
+//    //  host, m_hostname, m_hostname_short ); 
 
-  if(!strcmp(m_hostname,host) || !strcmp(m_hostname_short,host))
-  {
-    //PRINT_DEBUG( "TRUE" );
-    return true;
-  }
-  else
-  {
-    //PRINT_DEBUG( "FALSE" );
-    return false;
-  }
-}
+//    if(!strcmp(m_hostname,host) || !strcmp(m_hostname_short,host))
+//    {
+//      //PRINT_DEBUG( "TRUE" );
+//      return true;
+//    }
+//    else
+//    {
+//      //PRINT_DEBUG( "FALSE" );
+//      return false;
+//    }
+//  }
 
 
 void CWorld::Output( double loop_duration, double sleep_duration )
@@ -1361,7 +1356,7 @@ void CWorld::LogOutputHeader( void )
            m_cmdline, 
            tmstr, 
            m_hostname, 
-           worldfilename,//m_filename,
+           worldfilename,
            (int)(m_sim_timestep * 1000.0),
            m, 
            m_object_count );

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.45 $
+//  $Revision: 1.46 $
 //
 // Usage:
 //  (empty)
@@ -380,7 +380,7 @@ private: CEntity* CreateObject(const char *type, CEntity *parent );
     { if( i < m_object_count ) return (m_object[i]); else  return 0; }; 
 
   // returns true if the given hostname matches our hostname, false otherwise
-  bool CheckHostname(char* host);
+  //bool CheckHostname(char* host);
 
 
   // RTK STUFF ----------------------------------------------------------------
