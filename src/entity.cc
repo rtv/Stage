@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.53 2002-05-17 03:25:15 gerkey Exp $
+//  $Id: entity.cc,v 1.54 2002-05-17 06:45:25 inspectorg Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -1067,7 +1067,7 @@ void CEntity::RtkStartup()
   // By default, the label is not shown
   this->fig_label = rtk_fig_create(m_world->canvas, this->fig, 51);
   rtk_fig_show(this->fig_label, false);    
-  rtk_fig_set_movemask(this->fig_label, 0);
+  rtk_fig_movemask(this->fig_label, 0);
 
   char label[1024];
   char tmp[1024];
@@ -1108,9 +1108,9 @@ void CEntity::RtkUpdate()
   // Do the test here, since some objects (eg pucks) may
   // change their parents.
   if (m_parent_object != NULL)
-    rtk_fig_set_movemask(this->fig, 0);
+    rtk_fig_movemask(this->fig, 0);
   else
-    rtk_fig_set_movemask(this->fig, this->movemask);
+    rtk_fig_movemask(this->fig, this->movemask);
 
   // Make sure the entity and the figure have the same pose.
   // Either update the pose of the object in the world,

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.35 $
+//  $Author: inspectorg $
+//  $Revision: 1.36 $
 //
 // Usage:
 //  (empty)
@@ -103,6 +103,11 @@ int main(int argc, char **argv)
 {
   // hello world
   printf("\n** Stage  v%s ** ", (char*) VERSION);
+
+#ifdef INCLUDE_RTK2
+  // Initialise rtk if we are using it
+  rtk_init(&argc, &argv);
+#endif
   
   // Create the world
   world = new CWorld();
