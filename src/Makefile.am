@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.90 2005-02-15 17:42:11 gerkey Exp $
+# $Id: Makefile.am,v 1.91 2005-02-26 08:39:46 rtv Exp $
 
 # install these headers
 include_HEADERS = stage.h 
@@ -29,12 +29,13 @@ libstage_la_SOURCES = \
 	model_laser.c \
 	model_position.c \
 	model_ranger.c \
+	player_driver.cc \
+	player_interfaces.cc \
 	raytrace.c \
 	stage.c \
 	stage.h \
 	stage_internal.h \
 	stagecpp.cc \
-	stg_driver.cc \
 	stg_time.cc \
 	stg_time.h \
 	world.c \
@@ -48,4 +49,7 @@ libstage_la_SOURCES = \
         rtkprivate.h
 
 libstage_la_LDFLAGS = -export-dynamic -version-info 0:0:0 
-libstage_la_LIBADD = @GTK_LIBS@
+libstage_la_LIBADD = @GTK_LIBS@ 
+
+
+#	stg_driver.cc 

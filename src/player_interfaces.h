@@ -29,21 +29,23 @@ class StgDriver : public Driver
   ~StgDriver(void);
   
   // Must implement the following methods.
-  virtual int Setup();
-  virtual int Shutdown();
+  int Setup();
+  int Shutdown();
   
-  virtual int Subscribe(player_device_id_t id);
-  virtual int Unsubscribe(player_device_id_t id);
+  //void Prepare();
+
+  int Subscribe(player_device_id_t id);
+  int Unsubscribe(player_device_id_t id);
   
   /// Main function for device thread.
-  virtual void Main();
+  void Main();
 
   /// The server thread calls this method frequently. We use it to
   /// check for new commands
-  virtual void Update();
+  void Update();
   
   // override the Driver method to grab configs inside the server thread
-  virtual int PutConfig(player_device_id_t id, void *client, 
+  int PutConfig(player_device_id_t id, void *client, 
 			void* src, size_t len,
 			struct timeval* timestamp);
   
@@ -52,15 +54,21 @@ class StgDriver : public Driver
   // todo - faster lookup with a better data structure
   struct device_record* LookupDevice( player_device_id_t id );
   
-  /// used as a callback when a model has new data
-  static void RefreshDataCallback( void* user, void* data, size_t len );
-  //static GPtrArray* all_devices;
-  
   // SIMULATION INTERFACE
-  void InitSimulation( ConfigFile* cf, int section );
-  
+  int InitSimulation( struct device_record* device,
+		      ConfigFile* cf, 
+		      int section );
+
+  int InitModel( struct device_record* device, 
+		 ConfigFile* cf,
+		 int section,
+		 stg_model_type_t mod_type );
+
   /// an array of pointers to device_record_t structs, defined below
   GPtrArray* devices;
+  
+  /// used as a callback when a model has new data
+  static void RefreshDataCallback( void* user, void* data, size_t len );
   
   /// all player devices share the same Stage world
   static stg_world_t* world;
@@ -71,6 +79,8 @@ typedef struct device_record
 {
   player_device_id_t id;
   stg_model_t* mod;
+
+  const char* model_name;
 
   size_t data_len;
   

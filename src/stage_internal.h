@@ -137,7 +137,7 @@ extern "C" {
   typedef void*(*func_get_data_t)(struct _stg_model*,size_t*);
   typedef void*(*func_get_config_t)(struct _stg_model*,size_t*);
 
-  typedef void(*func_data_notify_t)( void* );
+  typedef void(*func_data_notify_t)( void* user, void* data, size_t len );
 
   typedef void(*func_render_t)(struct _stg_model*);
 

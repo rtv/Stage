@@ -1,6 +1,6 @@
 
 # Desc: 1 pioneer robot with laser	
-# CVS: $Id: simple.world,v 1.34 2005-02-17 19:12:04 rtv Exp $
+# CVS: $Id: simple.world,v 1.35 2005-02-26 08:39:46 rtv Exp $
 
 # defines Pioneer-like robots
 include "pioneer.inc"
@@ -9,7 +9,7 @@ include "pioneer.inc"
 include "map.inc"
 
 # set the size of a pixel in meters
-resolution 0.02
+resolution 0.04
 
 # configure the GUI window
 window

@@ -29,7 +29,7 @@
  *          Andrew Howard ahowards@usc.edu
  *          Brian Gerkey gerkey@stanford.edu
  * Date: 1 June 2003
- * CVS: $Id: stage.h,v 1.125 2005-02-13 07:37:43 rtv Exp $
+ * CVS: $Id: stage.h,v 1.126 2005-02-26 08:39:46 rtv Exp $
  */
 
 
@@ -75,7 +75,8 @@ extern "C" {
 
   typedef enum
     {
-      STG_MODEL_BASIC=0,
+      STG_MODEL_SIMULATION=0,
+      STG_MODEL_BASIC,
       STG_MODEL_POSITION,
       STG_MODEL_TEST,
       STG_MODEL_LASER,

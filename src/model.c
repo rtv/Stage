@@ -673,7 +673,7 @@ int stg_model_set_data( stg_model_t* mod, void* data, size_t len )
 
   // if a callback was registered, call it
   if( mod->data_notify )
-    (*mod->data_notify)(mod->data_notify_arg);
+    (*mod->data_notify)(mod->data_notify_arg, data, len );
   
   gui_model_render_data( mod );
   
