@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.10.2.2 $
+//  $Revision: 1.10.2.3 $
 //
 // Usage:
 //  (empty)
@@ -167,7 +167,7 @@ void CLBDDevice::Update( double sim_time )
 
     // Amount of tolerance to allow in range readings
     //
-    double tolerance = 3.0 / m_world->ppm; //*** 0.10;
+    //double tolerance = 3.0 / m_world->ppm; //*** 0.10;
 
     // Reset the beacon data structure
     //
@@ -181,16 +181,6 @@ void CLBDDevice::Update( double sim_time )
 	 it != m_laser->m_visible_beacons.end(); 
 	 it++ )
       {
-
-	//for (int i = 0; true; i++)
-	//{
-        // Get the position of the laser beacon (global coords)
-        //
-      //int id;
-      // double px, py, pth;
-      //if (!m_world->GetLaserBeacon(i, &id, &px, &py, &pth))
-      //    break;
-
 	// ray trace to find laser beacons
 
        int id;

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.21.2.8 $
+//  $Revision: 1.21.2.9 $
 //
 // Usage:
 //  (empty)
@@ -42,6 +42,9 @@
 
 #define SEMKEY 2000
 
+// allocate chunks of 32 pointers for entity storage
+const int OBJECT_ALLOC_SIZE = 32;
+
 //#define WATCH_RATES
 //#define DEBUG 
 //#define VERBOSE
@@ -64,6 +67,12 @@ CWorld::CWorld()
     // seed the random number generator
     srand48( time(NULL) );
 
+    // AddObject() handles allocation of storage for entities
+    // just initialize stuff here
+    m_object = NULL;
+    m_object_alloc = 0;
+    m_object_count = 0;
+
     // Allow the simulation to run
     //
     m_enable = true;
@@ -85,9 +94,6 @@ CWorld::CWorld()
     m_laser_res = 0;
     
     memset( m_env_file, 0, sizeof(m_env_file));
-
-    // the current truth is unpublished
-    m_truth_is_current = false;
 
     // start with no key
     bzero(m_auth_key,sizeof(m_auth_key));
@@ -190,10 +196,6 @@ bool CWorld::InitSharedMemoryIO( void )
 //
 bool CWorld::Startup()
 {  
-    // Initialise the laser beacon rep
-    //
-    InitLaserBeacon();
-    
     // Initialise the broadcast queue
     //
     InitBroadcast();
@@ -542,7 +544,7 @@ bool CWorld::InitGrids(const char *env_file)
     // create a new background image from the pnm file
     // If we cant find it under the given name,
     // we look for a zipped version.
-    
+  
   m_bimg = new Nimage;
   
   int len = strlen( env_file );
@@ -593,72 +595,11 @@ bool CWorld::InitGrids(const char *env_file)
     for (int x = 0; x < m_bimg->width; x++)
       if (m_bimg->get_pixel(x, y) != 0) matrix->set_cell( x,y,wall );
 
+  // one day i'll get rid of the Nimage class - it is mostly redundant
+  // but a couple of things will need to switch to accessing the matrix
+
   return true;
 }
-
-
-///////////////////////////////////////////////////////////////////////////
-// Get a cell from the world grid
-//
-CEntity** CWorld::GetEntityAtCell(double px, double py )
-{
-  cout << "DOUBLE CALLED" << endl;
-
-  // Convert from world to image coords
-  //
-  int ix = (int) (px * ppm);
-  int iy = (int) (py * ppm);
-
-  CEntity** ent = matrix->get_cell( ix, iy );
-
-  //if( ent )
-  //printf( "reading %p at %d,%d\n", ent, ix, iy );
-
-  return ent;
-
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Get a cell from the world grid
-//
-CEntity** CWorld::GetEntityAtCell( int ix, int iy )
-{
-  //cout << endl << ix << ' ' << iy << flush;
-  CEntity** ent = matrix->get_cell( ix, iy );
-  
-  //if( ent )
-  //printf( "reading %p at %d,%d\n", ent, ix, iy );
-  
-  return ent;
-
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Get a cell from the world grid
-//
-void CWorld::SetEntityAtCell( CEntity* ent, double px, double py )
-{
-  // Convert from world to image coords
-  //
-  int ix = (int) (px * ppm);
-  int iy = (int) (py * ppm);
-  
-    matrix->set_cell( ix, iy, ent );
-    
-  printf( "setting %p at %d,%d\n", ent, ix, iy );
-
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Get a cell from the world grid
-//
-void CWorld::SetEntityAtCell( CEntity* ent, int ix, int iy )
-{
-  matrix->set_cell( ix, iy, ent );
- 
-  printf( "setting %p at %d,%d\n", ent, ix, iy );
-}
-
 
 void CWorld::SetRectangle(double px, double py, double pth,
                           double dx, double dy, CEntity* ent )
@@ -719,42 +660,27 @@ void CWorld::SetCircle(double px, double py, double pr,
 //
 void CWorld::AddObject(CEntity *object)
 {
-    assert(m_object_count < ARRAYSIZE(m_object));
-    m_object[m_object_count++] = object;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Find the object nearest to the mouse
-//
-CEntity* CWorld::NearestObject( double x, double y )
-{
-  CEntity* nearest = 0;
-  double dist, far = 9999999.9;
-
-  double ox, oy, oth;
-
-  for (int i = 0; i < m_object_count; i++)
+  // if we've run out of space (or we never allocated any)
+  if( (!m_object) || (!( m_object_count < m_object_alloc )) )
     {
-      m_object[i]->GetGlobalPose( ox, oy, oth );;
+      // allocate some more
+      CEntity** more_space = new CEntity*[ m_object_alloc + OBJECT_ALLOC_SIZE ];
       
-      dist = hypot( ox-x, oy-y );
+      // copy the old data into the new space
+      memcpy( more_space, m_object, m_object_count * sizeof( CEntity* ) );
+     
+      // delete the original
+      if( m_object ) delete [] m_object;
       
-      if( dist < far ) 
-	{
-	  nearest = m_object[i];
-	  far = dist;
-	}
+      // bring in the new
+      m_object = more_space;
+ 
+      // record the total amount of space
+      m_object_alloc += OBJECT_ALLOC_SIZE;
     }
   
-  return nearest;
-}
-
-// Initialise laser beacon representation
-//
-void CWorld::InitLaserBeacon()
-{
-    m_laserbeacon_count = 0;
+  // insert the object and increment the count
+  m_object[m_object_count++] = object;
 }
 
 

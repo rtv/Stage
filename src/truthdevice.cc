@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/truthdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.2 $
+//  $Author: vaughan $
+//  $Revision: 1.2.2.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -102,9 +102,6 @@ void CTruthDevice::Update( double sim_time )
   
   m_last_update = sim_time;
 	
-  // if nothing has changed, quit immediately
-  //if( m_world->m_truth_is_current ) return;
-
   // OK its time to update - now gather the truths from everywhere
   
   player_generic_truth_t truths[ MAX_TRUTH_EXPORT ];
@@ -153,9 +150,6 @@ void CTruthDevice::Update( double sim_time )
     }
   // publish the truth data
   PutData( &truths, t * sizeof(player_generic_truth_t) );    
-
-  // the published truth now matches the actual truth
-  m_world->m_truth_is_current = true; 
 }
 
 

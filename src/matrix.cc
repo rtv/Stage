@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.2.2.6 2001-08-31 02:00:50 vaughan Exp $
+ * $Id: matrix.cc,v 1.2.2.7 2001-09-01 01:04:23 vaughan Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -12,6 +12,8 @@
 #endif
 
 #include "matrix.hh"
+
+const int BUFFER_ALLOC_SIZE = 4;
 
 //#define DEBUG
 
@@ -28,12 +30,11 @@ void CMatrix::PrintCell( int cell )
   
   fflush( stdout );
 }
-  
-  
+    
 // construct from width / height 
 CMatrix::CMatrix(int w,int h)
 {
-  initial_buf_size = 4;
+  initial_buf_size = BUFFER_ALLOC_SIZE;
 
   mode = mode_set;
 
@@ -55,26 +56,26 @@ CMatrix::CMatrix(int w,int h)
 
 }
 
-
 //destruct
 CMatrix::~CMatrix(void) 	
 {
-	if (data) delete [] data;
-	data = NULL;
-}
-
-void CMatrix::copy_from(CMatrix* img)
-{
-  if ((width != img->width)||(height !=img->height))
+  // if we allocated the array
+  if (data)
     {
-      fprintf(stderr,"CMatrix:: mismatch in size (copy_from)\n");
-      exit(0);
+      // delete the storage in each cell
+      for( int p=0; p< width * height; p++ )
+	if( data[p] ) delete[] data[p];
+      
+      // delete the main array
+      delete [] data;
     }
   
-  memcpy(data,img->data,width*height*sizeof(CEntity*) );
+  if( available_slots )  delete [] available_slots;
+  if( current_slot )    delete [] current_slot;
 }
 
 
+// useful debug function allows plotting the world externally
 void CMatrix::dump( void )
 {
   ofstream out( "world.dump" );
@@ -92,22 +93,16 @@ void CMatrix::dump( void )
 	      out << x << ' ' << y;
 	      out << ' ' << (int)*ent << endl;
 	    }
-	  //else
-
-	  //out << ' ' << 0;
-	  
-	  //out << endl;
-	  
 	}
-      
-      //out << endl; // blank line
     }
 
   out.close();
 
-  cout << "DUMPED" << endl;
+  puts( "DUMPED" );
 }
 
+
+// draws (2*PI)/0.1 = 62 little lines to form a circle
 void CMatrix::draw_circle(int x,int y,int r, CEntity* ent )
 {
   double i,cx,cy;
@@ -189,181 +184,43 @@ void CMatrix::draw_line(int x1,int y1,int x2,int y2, CEntity* ent)
       incNE = 2 * (delta_y - delta_x);
       
       while (x < x2)
-	{
-	  if (delta <= 0)
-	    {
-	      delta = delta + incE;
-	      x++;
-	    }
-	  else
-	    {
-	      delta = delta + incNE;
-	      x++;
-	      if (neg_slope)	y--;
-	      else		y++;
-	    }
-	  set_cell(x,y,ent);
-	}
+  	{
+  	  if (delta <= 0)
+  	    {
+  	      delta = delta + incE;
+  	      x++;
+  	    }
+  	  else
+  	    {
+  	      delta = delta + incNE;
+  	      x++;
+  	      if (neg_slope)	y--;
+  	      else		y++;
+  	    }
+  	  set_cell(x,y,ent);
+  	}
     }
   else
     {
       delta = 2 * delta_x - delta_y;
       incE = 2 * delta_x;
-      incNE = 2 * (delta_x - delta_y);
-      
       while (y < y2) 
-	{
-	  if (delta <= 0)
-	    {
-	      delta = delta + incE;
-	      y++;
-	    }
-	  else
-	    {
-	      delta = delta + incNE;
-	      y++;
-	      if (neg_slope)	x--;
-	      else		x++;
-	    }
-	  set_cell(x,y,ent);
-	}
+  	{
+  	  if (delta <= 0)
+  	    {
+  	      delta = delta + incE;
+  	      y++;
+  	    }
+  	  else
+  	    {
+  	      delta = delta + incNE;
+  	      y++;
+  	      if (neg_slope)	x--;
+  	      else		x++;
+  	    }
+  	  set_cell(x,y,ent);
+  	}
     }
-}
-
-CEntity** CMatrix::rect_detect( const Rect& r)
-{
-
-  CEntity** hit;
-  
-  if( (hit = line_detect( r.toplx, r.toply, r.toprx, r.topry)) > 0 ) 
-    return hit;
-  
-  if( (hit = line_detect( r.toprx, r.topry, r.botlx, r.botly)) > 0 )
-    return hit;
-  
-  if( (hit = line_detect( r.botlx, r.botly, r.botrx, r.botry)) > 0 )
-    return hit;
-  
-  if( (hit = line_detect( r.botrx, r.botry, r.toplx, r.toply)) > 0 )
-    return hit;
-
-  return 0;
-}
-
-CEntity** CMatrix::line_detect(int x1,int y1,int x2,int y2)
-{
-  int delta_x, delta_y;
-  int delta, incE, incNE;
-  int x, y;
-  int neg_slope = 0;
-  CEntity** cell;
-  
-  if (x1 > x2)
-    {
-      delta_x = x1 - x2;
-      if (y1 > y2)	delta_y = y1 - y2;
-      else		delta_y = y2 - y1;
-      
-      if (delta_y <= delta_x) return( line_detect(x2, y2, x1, y1));
-    }
-  if (y1 > y2)
-    {
-      delta_y = y1 - y2;
-      if (x1 > x2)	delta_x = x1 - x2;
-      else		delta_x = x2 - x1;
-      
-      if (delta_y > delta_x) return( line_detect(x2, y2, x1, y1));
-    }
-  
-  if (x1 > x2)
-    {
-      neg_slope = 1;
-      delta_x = x1 - x2;
-    }
-  else
-    delta_x = x2 - x1;
-  
-  if (y1 > y2)
-    {
-      neg_slope = 1;
-      delta_y = y1 - y2;
-    }
-  else
-    delta_y = y2 - y1;
-  
-  x = x1;
-  y = y1;
-  
-  //check to see if this pixel is an obstacle
-  cell = get_cell( x,y );
-  if( cell[0] != 0)
-   { 
-     return cell;
-   }
-
-  //set_cell(x,y,col);
-  
-  if (delta_y <= delta_x)
-    {
-      delta = 2 * delta_y - delta_x;
-      incE = 2 * delta_y;
-      incNE = 2 * (delta_y - delta_x);
-      
-      while (x < x2)
-	{
-	  if (delta <= 0)
-	    {
-	      delta = delta + incE;
-	      x++;
-	    }
-	  else
-	    {
-	      delta = delta + incNE;
-	      x++;
-	      if (neg_slope)	y--;
-	      else		y++;
-	    }
-
-	  //check to see if this pixel is an obstacle
-	  cell = get_cell( x,y );
-	  if( cell[0] != 0)
-	    { 
-	      return cell;
-	    }
-	  
-	  //set_cell(x,y,col);
-	}
-    }
-  else
-    {
-      delta = 2 * delta_x - delta_y;
-      incE = 2 * delta_x;
-      incNE = 2 * (delta_x - delta_y);
-      
-      while (y < y2) 
-	{
-	  if (delta <= 0)
-	    {
-	      delta = delta + incE;
-	      y++;
-	    }
-	  else
-	    {
-	      delta = delta + incNE;
-	      y++;
-	      if (neg_slope)	x--;
-	      else		x++;
-	    }
-	  //check to see if this pixel is an obstacle
-	  cell = get_cell( x,y );
-	  if( cell[0] != 0)
-	    { 
-	      return cell;
-	    }
-	  //set_cell(x,y,col);
-	}
-    }
-  return 0;
 }
 
 
@@ -396,15 +253,39 @@ inline void CMatrix::set_cell(int x, int y, CEntity* ent )
   for( int s=0; s<=slot; s++ )
     if( data[cell][s] == ent ) return;
   
-  if( slot < available_slots[ cell ] )
+  // if we're out of room. make some more space
+  if( !(slot < available_slots[ cell ]) )
     {
-      data[ cell ][ slot ] = ent;
-      current_slot[ cell ]++;
+      //printf( "out of slots! cell:%d slot:%d slots:%d\n",
+      //      cell, slot, available_slots[cell] );
+      
+      // set the new buffer size
+      int oldlen = available_slots[cell];
+      int newlen = oldlen + BUFFER_ALLOC_SIZE;
+      
+      // make the new buffer - has one spare null pointer to mark the end
+      CEntity** longer = new CEntity*[ newlen + 1 ];
+      
+      // zero the buffer
+      memset( longer, 0, (newlen+1) * sizeof( CEntity* ) );
+      
+      //copy the existing data into the new longer buffer
+      memcpy( longer, data[cell], oldlen * sizeof( CEntity* ) );
+      
+      //delete the old buffer
+      delete[] data[cell];
+      
+      // and insert the new buffer
+      data[cell] = longer;
+      
+      // remember how many slots we have in this buffer
+      available_slots[ cell ] = newlen;
     }
-  else
-    printf( "out of slots! cell:%d slot:%d slots:%d\n",
-	    cell, slot, available_slots[cell] );
-  
+
+  // do the insertion
+  data[ cell ][ slot ] = ent;
+  current_slot[ cell ]++;
+ 
   //printf( "after " );
   //PrintCell( cell );
 }
@@ -432,7 +313,7 @@ inline void CMatrix::unset_cell(int x, int y, CEntity* ent )
 	
 	current_slot[ cell ] = slot-1; // zero the new end slot
 	
-	break;break;
+	break;break; // dump both loops
       }
   
   //printf( "after " );
