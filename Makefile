@@ -7,8 +7,8 @@
 #
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
-#  $Author: rtv $
-#  $Revision: 1.39 $
+#  $Author: gerkey $
+#  $Revision: 1.40 $
 #
 # Note: All normal user configurations are in Makefile.common - you
 # probably don't need to change this file
@@ -37,7 +37,7 @@ clean: clean_dep
 	rm -f *~ gmon.out core core.*
 	cd src && ${MAKE} clean
 	cd include &&  ${MAKE} clean
-	cd examples && rm -f core
+	cd worlds && rm -f core
 	cd $(RTK_DIR) && ${MAKE} clean
 
 clean_dep:
@@ -45,14 +45,27 @@ clean_dep:
 
 install:
 	mkdir -p $(INSTALL_DIR)/bin
-	install -m 755 $(INSTALL_BIN_FILES) $(INSTALL_BIN)
+	install -m 755 src/stage $(INSTALL_BIN)
+	mkdir -p $(INSTALL_WORLDS)
+	install -m 644 worlds/*.world $(INSTALL_WORLDS)
+	install -m 644 worlds/*.inc $(INSTALL_WORLDS)
+	install -m 644 worlds/*.pnm* $(INSTALL_WORLDS)
+	mkdir -p $(INSTALL_DOC)
+	install -m 644 doc/* $(INSTALL_DOC)
+	mkdir -p $(INSTALL_TOOLS)
+	install -m 644 tools/* $(INSTALL_TOOLS)
 
-	mkdir -p $(INSTALL_LIB)
-	#install -m 644 src/*.a $(INSTALL_LIB)
-	mkdir -p $(INSTALL_EXAMPLES)
-	install -m 644 examples/*.world* $(INSTALL_EXAMPLES)
-	install -m 644 examples/*.m4 $(INSTALL_EXAMPLES)
-	install -m 644 examples/*.pnm* $(INSTALL_EXAMPLES)
+uninstall:
+	rm -f $(INSTALL_BIN)/stage
+	rmdir --ignore-fail-on-non-empty $(INSTALL_BIN)
+	rm -f $(INSTALL_WORLDS)/*.world
+	rm -f $(INSTALL_WORLDS)/*.inc 
+	rm -f $(INSTALL_WORLDS)/*.pnm* 
+	rmdir --ignore-fail-on-non-empty $(INSTALL_WORLDS)
+	rm -f $(INSTALL_DOC)/* 
+	rmdir --ignore-fail-on-non-empty $(INSTALL_DOC)
+	rm -f $(INSTALL_TOOLS)/* 
+	rmdir --ignore-fail-on-non-empty $(INSTALL_TOOLS)
 
 fresh: clean
 	${MAKE} dep all
@@ -61,10 +74,10 @@ fresh: clean
 # Create a source distribution
 # Do a make clean and remove extraneous files first.
 
-src_dist:
+src_dist: clean
 	echo Building $(SRC_DIST_NAME)
 	cp -R . /tmp/$(SRC_DIST_NAME)
-	tar -C /tmp -cvzf $(SRC_DIST_NAME).tgz --exclude CVS --exclude '*.tgz' $(SRC_DIST_NAME)
+	tar -C /tmp -cvzf $(SRC_DIST_NAME).tgz --exclude CVS --exclude '*.tgz' --exclude "*/doc/Makefile" --exclude "*/doc/*.aux" --exclude "*/doc/*.log" --exclude "*/doc/tex" --exclude "*/doc/*.toc" --exclude "*/doc/*.eps" --exclude "*/doc/*.jpg" --exclude "*/doc/*.tex" --exclude "*/doc/*.dvi" $(SRC_DIST_NAME)
 	rm -Rf /tmp/$(SRC_DIST_NAME)
 
 src_dist_bleeding:

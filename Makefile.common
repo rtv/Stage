@@ -3,7 +3,7 @@
 # stage/Makefile.common - build and installation configurations
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile.common,v 1.53 2002-06-11 07:19:54 rtv Exp $
+# $Id: Makefile.common,v 1.54 2002-06-11 07:34:34 gerkey Exp $
 #
 # Notes: All user-configurable paths and build options should be specified 
 #        here. This file is included by Makefile and src/Makefile. 
@@ -44,10 +44,12 @@ SRC_DIST_BLEEDING_NAME = Stage-Bleeding-src
 BIN_DIST_NAME = Stage-$(VERSION)-i386
 
 INSTALL_BIN = $(INSTALL_DIR)/bin
-INSTALL_BIN_FILES = src/stage src/xs src/rtkstage src/manager
 
-INSTALL_EXAMPLES = $(INSTALL_DIR)/examples
+INSTALL_WORLDS = $(INSTALL_DIR)/worlds
 INSTALL_LIB = $(INSTALL_DIR)/lib
+
+INSTALL_DOC = $(INSTALL_DIR)/doc
+INSTALL_TOOLS = $(INSTALL_DIR)/tools
 
 #############################################################################
 # 
@@ -90,7 +92,7 @@ CCFLAGS += -O2
 
 # you need this link option to get profiling data
 # it can be commented out for production compiles
-PROFILE_LINK = -pg
+#PROFILE_LINK = -pg
 
 #############################################################################
 # Platform selection
