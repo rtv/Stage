@@ -26,7 +26,7 @@
  * Author: Richard Vaughan vaughan@hrl.com 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.c,v 1.20 2003-10-12 19:30:32 rtv Exp $
+ * CVS: $Id: stage.c,v 1.21 2003-10-13 08:37:00 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -38,77 +38,74 @@
   #include <config.h>
 #endif
 
-#define DEBUG
+//#define DEBUG
 #include "stage.h"
 //#include <sys/types.h>
 //#include <sys/socket.h>
 
 #include <netinet/in.h>
 
-const char* stg_model_string( stg_model_type_t mod )
-{
-  switch( mod )
-    {
-    case STG_MODEL_GENERIC: return "generic"; break;
-    case STG_MODEL_WALL: return "wall"; break;
-    case STG_MODEL_POSITION: return "position"; break;
-    case STG_MODEL_LASER: return "laser"; break;
-    case STG_MODEL_SONAR: return "sonar"; break;
-    default: break;
-    }
-  return "unknown"; 
-} 
 
 const char* stg_property_string( stg_prop_id_t id )
 {
   switch( id )
     {
-    case STG_PROP_CREATE_WORLD: return "STG_PROP_CREATE_WORLD"; break;
-    case STG_PROP_DESTROY_WORLD: return "STG_PROP_DESTROY_WORLD"; break;
-    case STG_PROP_CREATE_MODEL: return "STG_PROP_CREATE_MODEL"; break;
-    case STG_PROP_DESTROY_MODEL: return "STG_PROP_DESTROY_MODEL"; break;
-    case STG_PROP_CIRCLES: return "STG_PROP_CIRCLES"; break;
-    case STG_PROP_COLOR: return "STG_PROP_COLOR"; break;
-    case STG_PROP_COMMAND: return "STG_PROP_COMMAND"; break;
-    case STG_PROP_DATA: return "STG_PROP_DATA"; break;
-    case STG_PROP_GEOM: return "STG_PROP_GEOM"; break;
-    case STG_PROP_IDARRETURN: return "STG_PROP_IDARRETURN"; break;
-    case STG_PROP_LASERRETURN: return "STG_PROP_LASERRETURN"; break;
-    case STG_PROP_NAME: return "STG_PROP_NAME"; break;
-    case STG_PROP_OBSTACLERETURN: return "STG_PROP_OBSTACLERETURN";break;
-    case STG_PROP_ORIGIN: return "STG_PROP_ORIGIN"; break;
-    case STG_PROP_PARENT: return "STG_PROP_PARENT"; break;
-    case STG_PROP_PLAYERID: return "STG_PROP_PLAYERID"; break;
-    case STG_PROP_POSE: return "STG_PROP_POSE"; break;
-    case STG_PROP_POWER: return "STG_PROP_SONAR_POWER"; break;
-    case STG_PROP_PPM: return "STG_PROP_PPM"; break;
-    case STG_PROP_PUCKRETURN: return "STG_PROP_PUCKETURN"; break;
-    case STG_PROP_RANGEBOUNDS: return "STG_PROP_RANGEBOUNDS";break;
-    case STG_PROP_RECTS: return "STG_PROP_RECTS"; break;
-    case STG_PROP_SIZE: return "STG_PROP_SIZE"; break;
-    case STG_PROP_SONARRETURN: return "STG_PROP_SONARRETURN"; break;
-    case STG_PROP_NEIGHBORRETURN: return "STG_PROP_NEIGHBORRETURN"; break;
-    case STG_PROP_NEIGHBORBOUNDS: return "STG_PROP_NEIGHBORBOUNDS"; break;
-    case STG_PROP_NEIGHBORS: return "STG_PROP_NEIGHBORS"; break;
-    case STG_PROP_VELOCITY: return "STG_PROP_VELOCITY"; break;
-    case STG_PROP_VISIONRETURN: return "STG_PROP_VISIONRETURN"; break;
-    case STG_PROP_VOLTAGE: return "STG_PROP_VOLTAGE"; break;
-    case STG_PROP_RANGERS: return "STG_PROP_RANGERS";break;
-    case STG_PROP_LASER_DATA: return "STG_PROP_LASER_DATA";break;
-    case STG_PROP_BLINKENLIGHT: return "STG_PROP_BLINKENLIGHT";break;
-    case STG_PROP_NOSE: return "STG_PROP_NOSE";break;
-    case STG_PROP_BORDER: return "STG_PROP_BORDER";break;
-    case STG_PROP_LOS_MSG: return "STG_PROP_LOS_MSG";break;
-    case STG_PROP_LOS_MSG_CONSUME: return "STG_PROP_LOS_MSG_CONSUME";break;
-    case STG_PROP_MOUSE_MODE: return "STG_PROP_MOUSE_MODE";break;
-    case STG_PROP_MATRIX_RENDER: return "STG_PROP_MATRIX_RENDER";break;
-    case STG_PROP_INTERVAL: return "STG_PROP_INTERVAL";break;
-    case STG_PROP_TIME: return "STG_PROP_TIME";break;
+      // server properties
+    case STG_SERVER_TIME:  return "STG_MOD_SERVER_TIME"; break;  
+    case STG_SERVER_WORLD_COUNT: return "STG_SERVER_WORLD_COUNT"; break;  
+    case STG_SERVER_CLIENT_COUNT: return "STG_SERVER_CLIENT_COUNT"; break;  
+    case STG_SERVER_CREATE_WORLD: return "STG_SERVER_CREATE_WORLD"; break;
+
+      // world properties
+    case STG_WORLD_TIME: return "STG_WORLD_TIME"; break;  
+    case STG_WORLD_MODEL_COUNT:  return "STG_WORLD_MODEL_COUNT"; break;  
+    case STG_WORLD_CREATE_MODEL: return "STG_WORLD_CREATE_MODEL"; break;
+    case STG_WORLD_DESTROY: return "STG_WORLD_DESTROY"; break;
+      
+      // model properties
+    case STG_MOD_DESTROY: return "STG_MOD_DESTROY"; break;
+    case STG_MOD_CIRCLES: return "STG_MOD_CIRCLES"; break;
+    case STG_MOD_COLOR: return "STG_MOD_COLOR"; break;
+    case STG_MOD_COMMAND: return "STG_MOD_COMMAND"; break;
+    case STG_MOD_DATA: return "STG_MOD_DATA"; break;
+    case STG_MOD_GEOM: return "STG_MOD_GEOM"; break;
+    case STG_MOD_IDARRETURN: return "STG_MOD_IDARRETURN"; break;
+    case STG_MOD_LASERRETURN: return "STG_MOD_LASERRETURN"; break;
+    case STG_MOD_NAME: return "STG_MOD_NAME"; break;
+    case STG_MOD_OBSTACLERETURN: return "STG_MOD_OBSTACLERETURN";break;
+    case STG_MOD_ORIGIN: return "STG_MOD_ORIGIN"; break;
+    case STG_MOD_PARENT: return "STG_MOD_PARENT"; break;
+    case STG_MOD_PLAYERID: return "STG_MOD_PLAYERID"; break;
+    case STG_MOD_POSE: return "STG_MOD_POSE"; break;
+    case STG_MOD_POWER: return "STG_MOD_SONAR_POWER"; break;
+    case STG_MOD_PPM: return "STG_MOD_PPM"; break;
+    case STG_MOD_PUCKRETURN: return "STG_MOD_PUCKETURN"; break;
+    case STG_MOD_RANGEBOUNDS: return "STG_MOD_RANGEBOUNDS";break;
+    case STG_MOD_RECTS: return "STG_MOD_RECTS"; break;
+    case STG_MOD_SIZE: return "STG_MOD_SIZE"; break;
+    case STG_MOD_SONARRETURN: return "STG_MOD_SONARRETURN"; break;
+    case STG_MOD_NEIGHBORRETURN: return "STG_MOD_NEIGHBORRETURN"; break;
+    case STG_MOD_NEIGHBORBOUNDS: return "STG_MOD_NEIGHBORBOUNDS"; break;
+    case STG_MOD_NEIGHBORS: return "STG_MOD_NEIGHBORS"; break;
+    case STG_MOD_VELOCITY: return "STG_MOD_VELOCITY"; break;
+    case STG_MOD_VISIONRETURN: return "STG_MOD_VISIONRETURN"; break;
+    case STG_MOD_VOLTAGE: return "STG_MOD_VOLTAGE"; break;
+    case STG_MOD_RANGERS: return "STG_MOD_RANGERS";break;
+    case STG_MOD_LASER_DATA: return "STG_MOD_LASER_DATA";break;
+    case STG_MOD_BLINKENLIGHT: return "STG_MOD_BLINKENLIGHT";break;
+    case STG_MOD_NOSE: return "STG_MOD_NOSE";break;
+    case STG_MOD_BORDER: return "STG_MOD_BORDER";break;
+    case STG_MOD_LOS_MSG: return "STG_MOD_LOS_MSG";break;
+    case STG_MOD_LOS_MSG_CONSUME: return "STG_MOD_LOS_MSG_CONSUME";break;
+    case STG_MOD_MOUSE_MODE: return "STG_MOD_MOUSE_MODE";break;
+    case STG_MOD_MATRIX_RENDER: return "STG_MOD_MATRIX_RENDER";break;
+    case STG_MOD_INTERVAL: return "STG_MOD_INTERVAL";break;
+    case STG_MOD_TIME: return "STG_MOD_TIME";break;
 	
       // todo
-      //case STG_PROP_POSITION_ODOM: return "STG_PROP_POSITION_ODOM"; break;
-      //case STG_PROP_POSITION_MODE: return "STG_PROP_POSITION_MODE"; break;
-      //case STG_PROP_POSITION_STEER: return "STG_PROP_POSITION_STEER"; break;
+      //case STG_MOD_POSITION_ODOM: return "STG_MOD_POSITION_ODOM"; break;
+      //case STG_MOD_POSITION_MODE: return "STG_MOD_POSITION_MODE"; break;
+      //case STG_MOD_POSITION_STEER: return "STG_MOD_POSITION_STEER"; break;
 
     default:
       break;
@@ -566,37 +563,6 @@ int stg_getset_property( stg_client_t* cli,
 				set_data, set_len, get_data, get_len );
 }
 
-stg_id_t stg_model_create( stg_client_t* cli, stg_entity_create_t* ent )
-{
-  stg_property_t* reply = stg_send_property( cli, -1, 
-					     STG_PROP_CREATE_MODEL, 
-					     STG_SETGET,
-					     ent, sizeof(stg_entity_create_t) );
-  if( reply == NULL )
-    return -1;
-
-  stg_id_t returned_id = reply->id;
-  stg_property_free( reply );
-  
-  return returned_id;
-}
-
-int stg_model_destroy( stg_client_t* cli, stg_id_t id )
-{
-  stg_property_t* reply = stg_send_property( cli, id,
-					     STG_PROP_DESTROY_MODEL, 
-					     STG_SETGET,
-					     NULL, 0 );
-  if( reply == NULL )
-    return -1;
-
-  stg_id_t returned_id = reply->id;
-  stg_property_free( reply );
-  
-  return( returned_id == -1 ?  0 : -1 );
-}
-
-
 void stg_los_msg_print( stg_los_msg_t* msg )
 {
   printf( "Mesg - id: %d power: %d len: %d bytes: %s\n",
@@ -607,12 +573,16 @@ void stg_los_msg_print( stg_los_msg_t* msg )
 stg_id_t stg_world_create( stg_client_t* cli, stg_world_create_t* world )
 {
   stg_property_t* reply = stg_send_property( cli, -1,
-					     STG_PROP_CREATE_WORLD, 
-					     STG_SETGET,
+					     STG_SERVER_CREATE_WORLD, 
+					     STG_COMMAND,
 					     world, 
 					     sizeof(stg_world_create_t));  
-  if( reply == NULL )
-    return -1;
+  
+  if( !(reply && (reply->action == STG_ACK) ))
+    {
+      PRINT_ERR( "stage1p4: create world failed" );
+      exit(-1);
+    }
   
   stg_id_t returned_id = reply->id;
   stg_property_free( reply );

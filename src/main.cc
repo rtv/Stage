@@ -23,7 +23,7 @@
  * Desc: Program Entry point
  * Author: Richard Vaughan
  * Date: 3 July 2003
- * CVS: $Id: main.cc,v 1.74 2003-10-12 19:30:32 rtv Exp $
+ * CVS: $Id: main.cc,v 1.75 2003-10-13 08:37:00 rtv Exp $
  */
 
 
@@ -31,7 +31,7 @@
 #include <signal.h>
 #include <netinet/in.h>
 
-//#define DEBUG
+#define DEBUG
 
 //#include "stage.h"
 #include "world.hh"
@@ -45,9 +45,12 @@ int quit = 0; // set true by the GUI when it wants to quit
 
 // globals
 GHashTable* global_model_table = g_hash_table_new(g_int_hash, g_int_equal);
-int global_next_available_id = 1;
-int global_num_clients = 0; // might be interesting to know?
-//GList* global_sub_clients = NULL; // list of subscription-based clients
+GHashTable* global_world_table = g_hash_table_new(g_int_hash, g_int_equal);
+
+int global_next_world_id = 1;
+int global_next_model_id = 1;
+
+GList* global_sub_clients = NULL; // list of subscription-based clients
 
 
 // forward declare
@@ -64,13 +67,12 @@ gboolean StgClientHup( GIOChannel* channel,
 			gpointer data );
 
   // prints the object tree on stdout
-void StgPrintTree( GNode* treenode, gpointer _prefix )
+void StgPrintModelTree( CEntity* ent, gpointer _prefix )
 {
   GString* prefix = (GString*)_prefix;
 
-  CEntity* foo = (CEntity*)(treenode->data);  
-  g_assert( foo );
-  
+  g_assert(ent);
+
   GString* pp = NULL;
 
   if( prefix )
@@ -78,12 +80,10 @@ void StgPrintTree( GNode* treenode, gpointer _prefix )
   else
     pp = g_string_new( "" );
   
-  printf( "%s%d:%s\n", pp->str, foo->id, foo->name->str );
+  printf( "%s%d:%s\n", pp->str, ent->id, ent->name->str );
 
   pp = g_string_prepend( pp, "  " );
    
-  g_node_children_foreach( treenode, G_TRAVERSE_ALL, StgPrintTree, pp ) ;
-
   g_string_free( pp, TRUE );
 }
   
@@ -107,8 +107,6 @@ gboolean StgPropertyWrite( GIOChannel* channel, stg_property_t* prop )
       g_io_channel_unref( channel );
     }      
   
-  PRINT_DEBUG( "done" );
-
   return( !failed );
 }
 
@@ -126,7 +124,7 @@ stg_client_data_t* stg_rr_client_create( pid_t pid, GIOChannel* channel )
   cli->source_in  = g_io_add_watch( channel, G_IO_IN, StgClientRead, cli );
   cli->source_hup = g_io_add_watch( channel, G_IO_HUP, StgClientHup, cli );
   
-  global_num_clients++; 
+  //global_num_clients++; 
   
   return cli;
 }
@@ -144,17 +142,23 @@ stg_client_data_t* stg_sub_client_create( pid_t pid, GIOChannel* channel )
   cli->channel = channel;  
   cli->source_in  = g_io_add_watch( channel, G_IO_IN, StgSubClientRead, cli );
   cli->source_hup = g_io_add_watch( channel, G_IO_HUP, StgClientHup, cli );
+  cli->subs = NULL;
+  cli->worlds = NULL;
   
   // add this client to the list of subscribers to this world
-  //global_sub_clients = g_list_append( global_sub_clients, cli );
-  
-  global_num_clients++; 
+  global_sub_clients = g_list_append( global_sub_clients, cli );
+  //global_num_clients++; 
   
   return cli;
 }
 
-void stg_client_destroy( stg_client_data_t* cli )
+void foreach_free( gpointer data, gpointer userdata )
 {
+  g_free( data );
+}
+
+void stg_client_destroy( stg_client_data_t* cli )
+{ 
   // cancel watches we installed on this channel
   if( cli->source_in  ) g_source_remove( cli->source_in );
   if( cli->source_hup ) g_source_remove( cli->source_hup );
@@ -163,22 +167,35 @@ void stg_client_destroy( stg_client_data_t* cli )
   g_io_channel_shutdown( cli->channel, TRUE, NULL ); // zap this connection 
   g_io_channel_unref( cli->channel );
   
+  // remove this client from the global list
+  global_sub_clients = g_list_remove( global_sub_clients, cli );
+  
+
   // destroy any worlds that were created by this client
-  while( cli->worlds )
+  if( cli->worlds ) for( GList* l = cli->worlds; l; l=l->next )
     {
-      PRINT_DEBUG1( "destroying world %p", cli->worlds->data);
-      stg_world_destroy( (stg_world_t*)cli->worlds->data );
+      if( l->data == NULL )
+	PRINT_WARN1( "l = %p but l->data == NULL", l );
+      
+      stg_world_t* world = (stg_world_t*)l->data;
+      g_assert( g_hash_table_remove( global_world_table, &world->id));
+      PRINT_DEBUG1( "destroying world %p", world);
+      stg_world_destroy( world );
     }
   
-  PRINT_DEBUG( "finished destroying worlds" );
+  //g_list_free( cli->worlds );
 
-  // zap client
-  //kill( cli->pid, SIGINT );
+  PRINT_DEBUG( "finished destroying worlds" );
+  
+  // delete the subscription list
+  g_list_foreach( cli->subs, foreach_free, NULL );
+  g_list_free( cli->subs );
+
 
   free( cli );
   
   // one client fewer
-  global_num_clients--;
+  //global_num_clients--;
 }
 
 
@@ -222,7 +239,7 @@ gboolean StgClientRead( GIOChannel* channel,
 	  
 	  switch( prop->property )
 	    {
-	    case STG_PROP_CREATE_WORLD:
+	    case STG_SERVER_CREATE_WORLD:
 	      {
 		// check that we have the right size data
 		g_assert( (prop->len == sizeof(stg_world_create_t)) );
@@ -230,16 +247,15 @@ gboolean StgClientRead( GIOChannel* channel,
 		// create a world object
 		stg_world_t* aworld = 
 		  stg_world_create( cli, 
-				    global_next_available_id++,
+				    global_next_world_id++,
 				    (stg_world_create_t*)prop->data );
 		g_assert( aworld );
 		
 		// add the new world to the hash table with its id as
 		// the key (this ID should not already exist)
-		g_assert( g_hash_table_lookup(global_model_table, &aworld->id)
+		g_assert( g_hash_table_lookup(global_world_table, &aworld->id)
 			  == NULL ); 
-		g_hash_table_insert(global_model_table, &aworld->id, 
-				    aworld->node );  
+		g_hash_table_insert(global_world_table, &aworld->id, aworld );  
 
 		PRINT_DEBUG2( "Created world %p on channel %p",
 			      aworld, channel );
@@ -250,27 +266,29 @@ gboolean StgClientRead( GIOChannel* channel,
 	      }
 	      break;
 	      
-	    case STG_PROP_CREATE_MODEL:
+	    case STG_WORLD_CREATE_MODEL:
 	      {
 		// check that we have the right size data
 		g_assert( (prop->len == sizeof(stg_entity_create_t)) );
 		
 #ifdef DEBUG
 		stg_entity_create_t* create = (stg_entity_create_t*)prop->data;
-		PRINT_DEBUG2( "creating model name \"%s\" xparent %d",
+		PRINT_DEBUG2( "creating model name \"%s\" parent %d",
 			      create->name, create->parent_id );
 #endif
 		// create a new entity
 		CEntity* ent = NULL;	    
 		g_assert((ent = new CEntity((stg_entity_create_t*)prop->data,
-					    global_next_available_id++ )));
+					    prop->id, // world id
+					    global_next_model_id++ // ent id
+					    )));
 
 		// add the new model to the world's hash table with
 		// its id as the key (this ID should not already
 		// exist)
 		g_assert( g_hash_table_lookup( global_model_table, &ent->id ) 
 			  == NULL ); 
-		g_hash_table_insert( global_model_table, &ent->id, ent->node );
+		g_hash_table_insert( global_model_table, &ent->id, ent );
 		
 		//ent->Startup();
 
@@ -282,8 +300,8 @@ gboolean StgClientRead( GIOChannel* channel,
 	      
 	    default: // all other props we need to look up an existing object
 	      {	    
-		GNode* node = 
-		  (GNode*)g_hash_table_lookup( global_model_table, &prop->id );
+		GNode* node = NULL;
+		//(GNode*)g_hash_table_lookup( global_model_table, &prop->id );
 		
 		if( node == NULL )
 		  {
@@ -297,16 +315,15 @@ gboolean StgClientRead( GIOChannel* channel,
 		else 
 		  switch( prop->property )		    
 		    {
-		    case STG_PROP_DESTROY_WORLD: 
+		    case STG_WORLD_DESTROY: 
 		      {
 			puts( "DESTROY WORLD REQUEST" );
 			stg_world_t* world = (stg_world_t*)node->data;	      
-			g_hash_table_remove( global_model_table, &world->id );
 			stg_world_destroy( world );			
 		      }
 		      break;
 		      
-		    case STG_PROP_DESTROY_MODEL:
+		    case STG_MOD_DESTROY:
 		      {
 			CEntity* ent = (CEntity*)node->data;
 			g_hash_table_remove( global_model_table, &ent->id );
@@ -365,6 +382,13 @@ gboolean StgClientRead( GIOChannel* channel,
 }
 
 
+// returns zero if the two subscriptions match
+// used for looking up subscriptions in a GList
+gint match_sub( gconstpointer a, gconstpointer b )
+{
+  return( memcmp( a, b, sizeof(stg_subscription_t) )); 
+}
+
 // read from a subscription-based client
 gboolean StgSubClientRead( GIOChannel* channel, 
 		
@@ -378,61 +402,247 @@ gboolean StgSubClientRead( GIOChannel* channel,
   
   // the data tells us which client number this is
   stg_client_data_t *cli = (stg_client_data_t*)data;
+
+  stg_property_t* prop = 
+    stg_property_read_fd( g_io_channel_unix_get_fd(channel) );
   
-  // read a subscription request
-  stg_subscription_t sub;
-  size_t bytes_read = 0;
-  if(  g_io_channel_read_chars( channel, 
-				(char*)&sub, sizeof(sub),
-				&bytes_read, NULL )
-       != G_IO_STATUS_NORMAL ) 
+  if( prop == NULL )
     {
-      PRINT_DEBUG1( "abnormal read of %d bytes", bytes_read );
-      perror( "read error" );
-      return FALSE; // fail
+      PRINT_MSG1( "Failed to read from client (fd %d). Shutting it down.",  
+		  g_io_channel_unix_get_fd(channel) );
+      
+      stg_client_destroy( cli );      
+      return FALSE; // cancel this callback (just in case - we
+		    // probably cancelled it already in
+		    // StgClientDestroy() ).
+    }
+  else
+    {
+      PRINT_DEBUG1( "got a property with id %d", prop->id );  
+      
+      stg_property_t* reply = NULL;
+
+      switch( prop->action )
+	{
+	case STG_NOOP:
+	  PRINT_WARN1( "ignoring a NOOP property for model %d", prop->id );
+	  reply = stg_property_create();
+	  reply->action = STG_ACK;
+	  break;
+	case STG_SUBSCRIBE:
+	  {
+	    PRINT_DEBUG3( "adding subscription [%d:%s] to client %p",
+			  prop->id, 
+			  stg_property_string(prop->property), 
+			  cli );
+	    
+	    stg_subscription_t *sub = 
+	      (stg_subscription_t*)g_malloc(sizeof(stg_subscription_t));
+	    g_assert(sub);
+	    
+	    sub->id = prop->id;
+	    sub->prop = prop->property;
+	    cli->subs = g_list_append( cli->subs, sub );
+	    
+	    PRINT_MSG2( "client %p now has %d subscriptions", 
+			cli, g_list_length(cli->subs) );
+	    
+	    reply = stg_property_create();
+	    reply->action = STG_ACK;
+	  }
+	  break;
+	  
+	case STG_UNSUBSCRIBE:
+	  {
+	    PRINT_DEBUG3( "removing subscription [%d:%s] from client %p",
+			  prop->id, 
+			  stg_property_string(prop->property), 
+			  cli );
+	    // remove subscription and free its memory
+	    
+	    stg_subscription_t unsub;
+	    unsub.id = prop->id;
+	    unsub.prop = prop->property;
+	    
+	    GList* dead_link = g_list_find_custom( cli->subs, 
+						   &unsub, match_sub );
+	    
+	    cli->subs = g_list_remove_link( cli->subs, dead_link ); 
+	    
+	    g_free( dead_link->data );   
+	    
+	    reply = stg_property_create();
+	    reply->action = STG_ACK;
+	  }
+	  break;
+
+	default:
+	  PRINT_WARN3( "default action handler for action %d id %d prop %s",
+		       prop->action, 
+		       prop->id, 
+		       stg_property_string(prop->property) );
+
+	  reply = stg_property_create();
+	  reply->action = STG_NACK; // assume it will not work
+
+	  // there are some messages that behave the same whatever the action
+	  switch( prop->property )
+	    {
+	    case STG_SERVER_CREATE_WORLD:
+	      {
+		PRINT_DEBUG( "create world" );
+		
+		// check that we have the right size data
+		g_assert( (prop->len == sizeof(stg_world_create_t)) );
+		
+		// create a world object
+		stg_world_t* aworld = 
+		  stg_world_create( cli, 
+				    global_next_world_id++,
+				    (stg_world_create_t*)prop->data );
+		g_assert( aworld );
+		
+		// add the new world to the hash table with its id as
+		// the key (this ID should not already exist)
+		g_assert( g_hash_table_lookup(global_world_table, &aworld->id)
+			  == NULL ); 
+		g_hash_table_insert(global_world_table, &aworld->id, 
+				    aworld );  
+		
+		PRINT_DEBUG2( "Created world %p on channel %p",
+			      aworld, channel );
+		
+		// reply with the id of the world
+		reply->id = aworld->id; 		
+		reply->action = STG_ACK;
+	      }
+	      break;
+
+	    case STG_WORLD_DESTROY:
+	      {
+		PRINT_DEBUG1( "destroy world id %d", prop->id );
+		reply->id = prop->id;
+		
+		stg_world_t* doomed_world = (stg_world_t*)
+		  g_hash_table_lookup( global_model_table, &prop->id );
+		
+		if( doomed_world )
+		  {
+		    g_hash_table_remove( global_world_table, &prop->id );
+		    stg_world_destroy(doomed_world);	
+		    reply->action = STG_ACK;
+		  }
+	      }
+	      break;
+
+	    case STG_WORLD_CREATE_MODEL:
+	      {
+		PRINT_DEBUG1( "creating model in world %d", prop->id );
+		
+		// check that we have the right size data
+		g_assert( (prop->len == sizeof(stg_entity_create_t)) );
+		
+#ifdef DEBUG
+		stg_entity_create_t* create = (stg_entity_create_t*)prop->data;
+		PRINT_DEBUG2( "creating model name \"%s\" xparent %d",
+			      create->name, create->parent_id );
+#endif
+
+		// create a new entity
+		CEntity* ent = NULL;	    
+		g_assert((ent = new CEntity((stg_entity_create_t*)prop->data,
+					    prop->id, // world id
+					    global_next_model_id++ )));
+		
+		// add the new model to the world's hash table with
+		// its id as the key (this ID should not already
+		// exist)
+		g_assert( g_hash_table_lookup( global_model_table, &ent->id ) 
+			  == NULL ); 
+		g_hash_table_insert( global_model_table, &ent->id, ent );
+		
+		// reply with the id of the entity
+		reply->id = ent->id; 
+
+		
+		//reply->id = 99; 
+		reply->action = STG_ACK;
+	      }
+	      break;
+
+	    case STG_MOD_DESTROY:
+	      {
+		PRINT_DEBUG1( "destroying model id %d", prop->id );
+		reply->id = prop->id;
+		
+		CEntity* ent = (CEntity*)
+		  g_hash_table_lookup( global_model_table, &prop->id );
+		
+		if( ent )
+		  {		  
+		    g_hash_table_remove( global_model_table, &prop->id );
+		    delete ent;
+		    reply->action = STG_ACK;
+		  }
+	      }
+	      break;
+	      
+	    default:
+	      //PRINT_WARN1( "ignoring unrecognized command [%p]",
+	      //	   stg_property_string( prop->property ));
+	      //reply->action = STG_NACK;
+	      
+	      PRINT_WARN( "handling a property change" );
+	      
+	      CEntity* ent = (CEntity*)
+		g_hash_table_lookup( global_model_table, &prop->id );
+	      
+	      switch( prop->action )
+		{
+		case STG_SET:
+		  ent->SetProperty( prop->property,
+				    prop->data, prop->len );
+		  reply = stg_property_create();
+		  reply->id = ent->id; // indicate success 
+		  break;
+		case STG_GET:
+		  reply = ent->GetProperty( prop->property );
+		  break;
+		case STG_SETGET:
+		  ent->SetProperty( prop->property, 
+				    prop->data, prop->len );
+		  reply = ent->GetProperty( prop->property );
+		  break;
+		case STG_GETSET:
+		  reply = ent->GetProperty( prop->property );
+		  ent->SetProperty( prop->property, 
+				    prop->data, prop->len );
+		  break;
+		  
+		default: 
+		  PRINT_WARN( "unhandled!" );
+		  reply->id = -1;  // indicate failed request
+		  break;
+		}
+	      break;
+	    }
+	}
+      // reply
+      g_assert(reply);
+      StgPropertyWrite( channel, reply );  
+      stg_property_free( reply ); 
     }
   
-  PRINT_WARN2( "received subscription of %d:%d", 
-	       sub.id, sub.prop );
-
-
-  // lookup the world id
-  GNode* node = 
-    (GNode*)g_hash_table_lookup( global_model_table, &sub.id );
-
-  stg_world_t* world = (stg_world_t*)node->data;
-
-  world->subscribers = g_list_append( world->subscribers, cli );
-
-  printf( "added subscriber client %p fd %d\n", 
-	  cli, g_io_channel_unix_get_fd(cli->channel) );
-
-  
-  /* 
-     PRINT_WARN( "sending ack" );
-
-  stg_ack_t ack = STG_ACK;
-  size_t bytes_written = 0;
-  g_io_channel_write_chars( channel, 
-			    (char*)&ack, (gssize)sizeof(ack),
-			    &bytes_written, NULL );
-  
-  g_assert( bytes_written == sizeof(ack) );
-  g_io_channel_flush( channel, NULL );
-  
-  PRINT_WARN( "ack sent" );
-  */
-
   return TRUE;
 }
 
 
 gboolean StgClientHup( GIOChannel* channel, 
-		    GIOCondition condition, 
-		    gpointer data )
+		       GIOCondition condition, 
+		       gpointer data )
 {
   PRINT_MSG( "client HUP. Closing connection." );
-
+  
   g_io_channel_shutdown( channel, TRUE, NULL );
   g_io_channel_unref( channel );
   
@@ -500,6 +710,8 @@ gboolean StgClientAcceptConnection( GIOChannel* channel, GHashTable* table )
      {
      case STG_TOS_REQUESTREPLY:
        PRINT_MSG( "Request/reply connection requested" );
+       PRINT_ERR( "Request/Reply not allowed" );
+       exit(-1);
        g_assert( stg_rr_client_create( greet.pid, client ) );
        break;
      case STG_TOS_SUBSCRIPTION:
@@ -603,6 +815,121 @@ void catch_exit( void )
   puts( BYEWORLD );
 }
 
+
+stg_property_t* stg_world_get_property( stg_world_t* world, stg_prop_id_t id )
+{
+  stg_property_t* prop = NULL;
+  
+  switch( id )
+    {
+    case STG_WORLD_TIME:
+      prop = stg_property_create(); 
+      prop->id = world->id;
+      prop->property = STG_WORLD_TIME;
+      prop = stg_property_attach_data( prop, &world->time, sizeof(world->time) );
+      break;
+      
+    default:
+      break;
+    }
+
+  return prop;
+}
+
+stg_property_t* stg_server_get_property( stg_prop_id_t id )
+{
+  stg_property_t* prop = NULL;
+  
+  int time = 666;
+  
+  switch( id )
+    {
+    case STG_SERVER_TIME:
+      prop = stg_property_create();
+      prop->id = -1;
+      prop->property = STG_SERVER_TIME;
+      prop = stg_property_attach_data( prop, &time, sizeof(time) );
+      break;
+      
+    default:
+      break;
+    }
+
+  return prop;
+}
+
+void update_client_subscription(  gpointer data, gpointer userdata )
+{
+  stg_subscription_t *sub = (stg_subscription_t*)data;
+  stg_client_data_t *cli = (stg_client_data_t*)userdata;
+  
+  printf( "   updating subscription [%d:%s] for client %p\n",
+	  sub->id, stg_property_string(sub->prop), cli );
+
+  stg_property_t* prop = NULL;
+
+  switch( sub->prop )
+    {
+    case STG_WORLD_TIME:
+    case STG_WORLD_MODEL_COUNT:
+    case STG_WORLD_CREATE_MODEL:
+    case STG_WORLD_DESTROY:
+      {
+	stg_world_t* world = (stg_world_t*)g_hash_table_lookup( global_world_table, &sub->id );
+	prop = stg_world_get_property( world, sub->prop );
+      }
+      break;
+      
+    case STG_SERVER_TIME:
+    case STG_SERVER_WORLD_COUNT:
+    case STG_SERVER_CLIENT_COUNT :
+    case STG_SERVER_CREATE_WORLD:
+      prop = stg_server_get_property( sub->prop );
+      break;
+
+      // all other properties
+    default:
+      CEntity* ent = (CEntity*)g_hash_table_lookup( global_model_table, &sub->id );
+      prop = ent->GetProperty( sub->prop );
+      break;
+    }
+  
+  // if a property was created, write it out
+  if( prop )
+    {
+      StgPropertyWrite( cli->channel, prop );  
+      stg_property_free( prop );      
+    }
+}
+
+void update_client(  gpointer data, gpointer userdata )
+{
+  stg_client_data_t *cli = (stg_client_data_t*) data;
+  //printf( "  update client %p\n", cli );
+
+  g_list_foreach( cli->subs, update_client_subscription, cli );
+}
+
+void update_world( gpointer key, gpointer value, gpointer userdata )
+{
+  //printf( "  updating world %p (%s)\n", value, ((stg_world_t*)value)->name->str );
+  g_assert( value );
+  stg_world_update( (stg_world_t*)value );
+}
+
+gboolean update( gpointer dummy )
+{
+  //puts( "UPDATE" );
+  
+  //puts( " clients:" );
+  g_list_foreach( global_sub_clients, update_client, NULL );
+
+  //puts( " worlds:" );
+  g_hash_table_foreach( global_world_table, update_world, NULL );
+
+  return TRUE; // keep this callback running
+}
+
 int main( int argc, char** argv )
 {
   puts( HELLOWORLD );
@@ -622,7 +949,10 @@ int main( int argc, char** argv )
     }
  
   stg_gui_init( &argc, &argv );
-  
+
+  // start the global clock ticking
+  g_timeout_add( 100, update, NULL );
+
   // create a socket bound to Stage's well-known-port
   GIOChannel* channel = StgServerCreate();
   g_assert( channel );

@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.26 2003-09-20 22:13:42 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.27 2003-10-13 08:37:00 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -782,14 +782,14 @@ void stg_gui_model_mouse_mode( CEntity* ent )
   stg_gui_model_t* mod = ent->guimod;
   
   // we can only manipulate top-level figures
-  if( g_node_depth( ent->node ) == 2 )
+  if( ent->parent == NULL )
     {
       if( ent->mouseable )
 	mod->movemask = RTK_MOVE_TRANS | RTK_MOVE_ROT;
       else
 	mod->movemask = 0;
     }
-  else if( g_node_depth( ent->node ) > 2 )
+  else //if( g_node_depth( ent->node ) > 2 )
     {
       mod->movemask = 0;
     }
@@ -812,7 +812,7 @@ stg_gui_model_t* stg_gui_model_create(  CEntity* ent )
   PRINT_DEBUG2( "creating a stg_gui_model_t for ent %d (%s)", 
 		ent->id, ent->name->str );
   
-  stg_gui_window_t* win = ent->GetWorld()->win;
+  stg_gui_window_t* win = ent->world->win;
 
   g_assert( win );
   g_assert( win->canvas );
@@ -827,9 +827,11 @@ stg_gui_model_t* stg_gui_model_create(  CEntity* ent )
   rtk_fig_t* parent_fig = NULL;
   
   // children of top-level entities are attached to their parent's figure
-  if( g_node_depth( ent->node ) > 2 )
-    parent_fig = *stg_ent_parent(ent)->guimod->fig;      
-  
+  if( ent->parent == NULL )
+    parent_fig = NULL;//*ent->world->win->fig;      
+  else
+    parent_fig = *ent->parent->guimod->fig;
+
   // Create a figure representing this entity
   assert( (*mod->fig = 
 	   rtk_fig_create( mod->win->canvas, parent_fig, STG_LAYER_BODY )));
@@ -902,7 +904,7 @@ void RtkOnMouse(rtk_fig_t *fig, int event, int mode)
       // this is how to get some sensor data, in case we need to reinstate the 
       // showing of data when handling an object. how best to do this?
       //{
-      //stg_property_t* prop = entity->GetProperty( STG_PROP_LASER_DATA );
+      //stg_property_t* prop = entity->GetProperty( STG_MOD_LASER_DATA );
       //free(prop);
       //} 
 
@@ -913,7 +915,7 @@ void RtkOnMouse(rtk_fig_t *fig, int event, int mode)
 
       // move the object to follow the mouse
       rtk_fig_get_origin(fig, &pose.x, &pose.y, &pose.a );
-      entity->SetProperty( STG_PROP_POSE, &pose, sizeof(pose) );
+      entity->SetProperty( STG_MOD_POSE, &pose, sizeof(pose) );
       
       // display the pose
       snprintf(txt, sizeof(txt), "Dragging: %s", stg_gui_model_describe(mod)); 
@@ -926,7 +928,7 @@ void RtkOnMouse(rtk_fig_t *fig, int event, int mode)
     case RTK_EVENT_RELEASE:
       // move the entity to its final position
       rtk_fig_get_origin(fig, &pose.x, &pose.y, &pose.a );
-      entity->SetProperty( STG_PROP_POSE, &pose, sizeof(pose) );
+      entity->SetProperty( STG_MOD_POSE, &pose, sizeof(pose) );
 
       // take the pose message from the status bar
       cid = gtk_statusbar_get_context_id( mod->win->statusbar, "on_mouse" );
@@ -1175,14 +1177,14 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
   
   assert( ent );
   assert( prop > 0 );
-  assert( prop < STG_PROPERTY_COUNT );
+  assert( prop < STG_MESSAGE_COUNT );
     
   stg_gui_model_t* model = ent->guimod;
 
   switch( prop )
     {
       // these require just moving the figure
-    case STG_PROP_POSE:
+    case STG_MOD_POSE:
       {
 	stg_pose_t pose;
 	ent->GetPose( &pose );
@@ -1190,57 +1192,57 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
       }
       break;
 
-    case STG_PROP_BORDER:      
-    case STG_PROP_SIZE:
-    case STG_PROP_COLOR:
-    case STG_PROP_ORIGIN: // could this one be faster?
+    case STG_MOD_BORDER:      
+    case STG_MOD_SIZE:
+    case STG_MOD_COLOR:
+    case STG_MOD_ORIGIN: // could this one be faster?
       stg_gui_model_rects( ent );
       stg_gui_model_nose( ent );
       break;
 
-    case STG_PROP_RECTS:
+    case STG_MOD_RECTS:
       stg_gui_model_rects( ent );
       break;
 
-    case STG_PROP_RANGERS:
+    case STG_MOD_RANGERS:
       stg_gui_model_rangers( ent );
       break;
 
-    case STG_PROP_NOSE:
+    case STG_MOD_NOSE:
       stg_gui_model_nose( ent );
       break;
 
-    case STG_PROP_BLINKENLIGHT:
+    case STG_MOD_BLINKENLIGHT:
       stg_gui_model_blinkenlight( ent );
       break;
 
-    case STG_PROP_MOUSE_MODE:
+    case STG_MOD_MOUSE_MODE:
       stg_gui_model_mouse_mode( ent );
       break;
 
 
       // do nothing for these things
-    case STG_PROP_LASERRETURN:
-    case STG_PROP_SONARRETURN:
-    case STG_PROP_IDARRETURN:
-    case STG_PROP_OBSTACLERETURN:
-    case STG_PROP_VISIONRETURN:
-    case STG_PROP_PUCKRETURN:
-    case STG_PROP_VELOCITY:
-    case STG_PROP_NEIGHBORBOUNDS:
-    case STG_PROP_NEIGHBORRETURN:
-    case STG_PROP_LOS_MSG:
-    case STG_PROP_LOS_MSG_CONSUME:
-    case STG_PROP_NAME:
-    case STG_PROP_INTERVAL:
-    case STG_PROP_MATRIX_RENDER:
-    case STG_PROP_TIME:
+    case STG_MOD_LASERRETURN:
+    case STG_MOD_SONARRETURN:
+    case STG_MOD_IDARRETURN:
+    case STG_MOD_OBSTACLERETURN:
+    case STG_MOD_VISIONRETURN:
+    case STG_MOD_PUCKRETURN:
+    case STG_MOD_VELOCITY:
+    case STG_MOD_NEIGHBORBOUNDS:
+    case STG_MOD_NEIGHBORRETURN:
+    case STG_MOD_LOS_MSG:
+    case STG_MOD_LOS_MSG_CONSUME:
+    case STG_MOD_NAME:
+    case STG_MOD_INTERVAL:
+    case STG_MOD_MATRIX_RENDER:
+    case STG_MOD_TIME:
       break;
 
       // these aren't yet exposed to the outside
-      //case STG_PROP_PARENT:
-      //case STG_PROP_CIRCLES:
-      //case STG_PROP_PLAYERID:
+      //case STG_MOD_PARENT:
+      //case STG_MOD_CIRCLES:
+      //case STG_MOD_PLAYERID:
       
     default:
       PRINT_WARN1( "property change %d unhandled by gui", prop ); 

@@ -21,7 +21,7 @@
  * Desc: A world device model - replaces the CWorld class
  * Author: Richard Vaughan
  * Date: 31 Jan 2003
- * CVS info: $Id: world.cc,v 1.149 2003-10-12 19:30:32 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.150 2003-10-13 08:37:00 rtv Exp $
  */
 
 
@@ -60,12 +60,9 @@ stg_world_t* stg_world_create( stg_client_data_t* client,
   world->width = rc->width;
   world->height = rc->height;
   world->ppm = 1.0/rc->resolution;
-  world->node = NULL; // we attach a model tree here
   world->running = FALSE;  
   world->win = NULL; // gui data is attached here
-  
-  // create a root node that will contain my model tree
-  world->node = g_node_new( world );
+  world->models = NULL; // no models initially
   
   WORLD_DEBUG( world, "world construction complete" );
 
@@ -84,8 +81,8 @@ stg_world_t* stg_world_create( stg_client_data_t* client,
   PRINT_MSG2( "Created world \"%s\" (%d).", world->name->str, world->id ); 
 
   world->interval = 0.1; 
-  world->clock_tag = g_timeout_add( (int)(world->interval * 1000.0), 
-				    stg_world_clock_tick, world );
+  //world->clock_tag = g_timeout_add( (int)(world->interval * 1000.0), 
+  //			    stg_world_clock_tick, world );
   
   return world;
 }
@@ -95,72 +92,47 @@ stg_world_t* stg_world_create( stg_client_data_t* client,
 void stg_update_entity( GNode* node, void* data )
 {
   // recursively update the children of this node
-  g_node_children_foreach( node, G_TRAVERSE_ALL,
-			   stg_update_entity, data );
+  //g_node_children_foreach( node, G_TRAVERSE_ALL,
+  //		   stg_update_entity, data );
   
   // update this node
-  CEntity* ent = (CEntity*)node->data;
-  stg_world_t* world = (stg_world_t*)data;
+  //CEntity* ent = (CEntity*)node->data;
+  //stg_world_t* world = (stg_world_t*)data;
 
-  if( (world->time - ent->last_update) > (double)ent->interval / 1000.0 )
-    ent->Update();
-}
-
-void stg_world_send_time( gpointer data, gpointer userdata )
-{
-  puts( "sending time" );
-  stg_client_data_t* subscriber = (stg_client_data_t*)data;
-  stg_world_t* world = (stg_world_t*)userdata;
-
-
-  printf( "client %p df %d\n", subscriber, g_io_channel_unix_get_fd(subscriber->channel) );
-
-  int a = 5;
-
-  stg_property_t* prop = stg_property_create();
-
-  prop->id = 6;
-  prop->property = (stg_prop_id_t)8;
-
-  StgPropertyWrite( subscriber->channel, prop );
-
-  stg_property_free( prop );
+  //if( (world->time - ent->last_update) > (double)ent->interval / 1000.0 )
+  // ent->Update();
 }
 
 
-gboolean stg_world_clock_tick( void* data )
+void stg_model_update( gpointer data, gpointer userdata )
 {
-  
-  stg_world_t* world = (stg_world_t*)data;
+  CEntity* ent = (CEntity*)data;
+  // recursively update the model's children
+  g_list_foreach( ent->children, stg_model_update, NULL );
+
+  // then the model itself
+  ent->Update();
+}
+
+void stg_world_update( stg_world_t* world  )
+{  
   world->time += world->interval;
-  //printf( " time: %.3f   \n", world->time );
+  printf( " world (%s) time: %.3f   \n", world->name->str, world->time );
 
-  // update my entities 
-  g_node_children_foreach( world->node, G_TRAVERSE_ALL,
-			   stg_update_entity, world );
- 
-  puts( "foreach subscriber" );
-  //send the time to all our subscribers
-  g_list_foreach( world->subscribers, stg_world_send_time, world );
-
-  //usleep( 5000 );
-
-  return TRUE; // keep calling me
+  g_list_foreach( world->models, stg_model_update, NULL );
 }
 
 int stg_world_destroy( stg_world_t* world )
 {
   WORLD_DEBUG( world, "world destruction" );
 
-  // stop the clock
-  if( world->clock_tag )
-    g_source_remove( world->clock_tag );
-
   // recursively shutdown all the entities in the world
-  while( stg_world_first_child(world) )
-    delete stg_world_first_child(world);
+  if( world->models ) for( GList* l = world->models; l; l=l->next )
+    delete (CEntity*)l->data;
   
-
+  g_list_free( world->models );
+  world->models = NULL;
+  
   // kill this gui window
   if( world->win ) stg_gui_window_destroy( world->win );
   world->win = NULL;
@@ -169,9 +141,10 @@ int stg_world_destroy( stg_world_t* world )
   WORLD_DEBUG( world,"world shutdown complete");
   
   // remove the world from the client that created it
-  world->client->worlds = g_list_remove( world->client->worlds, world ); 
+  //world->client->worlds = g_list_remove( world->client->worlds, world ); 
 
   if( world->matrix ) stg_world_destroy_matrix( world );
+
 
   WORLD_DEBUG( world, "world destruction complete" );
 

@@ -21,7 +21,7 @@
  * Desc: a container for models 
  * Author: Richard Vaughan
  * Date: 24 July 2003
- * CVS info: $Id: world.hh,v 1.31 2003-10-12 19:30:33 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.32 2003-10-13 08:37:00 rtv Exp $
  */
 
 #ifndef _WORLD_HH
@@ -39,6 +39,7 @@ typedef struct
   guint source_hup;
   GIOChannel *channel;
   GList *worlds; // list of the worlds created by this client
+  GList *subs;
 } stg_client_data_t;
 
 
@@ -46,7 +47,7 @@ typedef struct stg_world
 {
   int id;
   bool running;
-  GNode* node;  
+  GList *models;
   GString *name, *token;  
   CMatrix* matrix;
   double time; // simulation time in seconds
@@ -54,11 +55,9 @@ typedef struct stg_world
   guint clock_tag;
   double width, height;
   double ppm; // the resolution of the world model in pixels per meter
-  double simtime; // the simulation time in seconds
-  //double timestep; // the duration of one update in seconds
   stg_gui_window_t* win;   // each world has a GUI window of it's own
   stg_client_data_t* client; // the client that created this world
-  GList* subscribers; // list of stg_client_data_t* clients that want
+  //GList* subscribers; // list of stg_client_data_t* clients that want
 		      // data pushed to them when this world is updated
 } stg_world_t;
 
@@ -70,7 +69,9 @@ stg_world_t* stg_world_create( stg_client_data_t* client,
 int stg_world_destroy( stg_world_t* world );
 CMatrix* stg_world_create_matrix( stg_world_t* world );
 void stg_world_destroy_matrix( stg_world_t* world );
-gboolean stg_world_clock_tick( void* data );
+//gboolean stg_world_clock_tick( void* data );
+void stg_world_update( stg_world_t* world );
+
 
 #ifdef DEBUG
 #define WORLD_DEBUG(W,S) printf("[%d %s %p] "S" (%s %s)\n",W->id,W->name->str,W,__FILE__,__FUNCTION__);

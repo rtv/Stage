@@ -21,13 +21,13 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.121 2003-09-20 22:13:42 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.122 2003-10-13 08:37:00 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
 #endif
 
-//#define DEBUG
+#define DEBUG
 //#define VERBOSE
 //#undef DEBUG
 //#undef VERBOSE
@@ -54,7 +54,9 @@
 #include "stage.h"
 
 extern GHashTable* global_model_table;
-extern int global_next_available_id;
+extern GHashTable* global_world_table;
+
+//extern int global_next_model_id;
 
 // static method
 gboolean CEntity::stg_update_signal( gpointer ptr )
@@ -63,70 +65,9 @@ gboolean CEntity::stg_update_signal( gpointer ptr )
   return ((CEntity*)ptr)->Update();
 }
 
-
-// plain functions for tree manipulation
-CEntity* stg_ent_next_sibling( CEntity* ent )
-{
-  g_assert( ent->node );   
-  g_assert( ent->node->data );   
-  GNode* sib_node = g_node_next_sibling( ent->node );
-  return((sib_node && sib_node->data)?(CEntity*)sib_node->data:NULL);
-}
-
-CEntity* stg_ent_first_child( CEntity* ent )
-{ 
-  g_assert( ent->node );   
-  g_assert( ent->node->data );   
-  GNode* child_node = g_node_first_child( ent->node );
-  return((child_node && child_node->data)?(CEntity*)child_node->data:NULL);
-}
-
-CEntity* stg_world_first_child( stg_world_t* world )
-{
-  g_assert( world->node );   
-  g_assert( world->node->data );   
-  GNode* child_node = g_node_first_child( world->node );
-  return((child_node && child_node->data )?(CEntity*)child_node->data:NULL);
-}
-
-// the root node of the tree is a stg_world_t
-stg_world_t* stg_world( CEntity* ent )
-{
-  g_assert( ent->node );   
-  g_assert( ent->node->data );   
-  return( (stg_world_t*)g_node_get_root( ent->node )->data );
-}
-
-CEntity* stg_ent_parent( CEntity* ent )
-{ 
-  g_assert( ent->node );       
-  g_assert( ent->node->data );   
-  
-  // if we have a parent node and it's not a root node (world)
-  if( ent->node->parent && 
-      (ent->node->parent->data != g_node_get_root(ent->node)->data) )
-    return( (CEntity*)ent->node->parent->data );
-  else
-    return NULL;
-}
-
-
-void StgPrintTree( GNode* node, gpointer _prefix = NULL );
-
-/* todo ?
-typedef struct
-{
-  //stg_prop_id_t type;
-  //const char* name;
-  void* data;
-  size_t len;
-} stg_property_entry_t;
-*/
-
-
 ///////////////////////////////////////////////////////////////////////////
 // main constructor
-CEntity::CEntity( stg_entity_create_t* init, stg_id_t id )
+CEntity::CEntity( stg_entity_create_t* init, stg_id_t world_id, stg_id_t id )
 {
   // must set the name and token before using the ENT_DEBUG macro
   g_assert( init );
@@ -137,21 +78,42 @@ CEntity::CEntity( stg_entity_create_t* init, stg_id_t id )
   
   this->running = FALSE;
 
-  // look up the parent id to find my parent's tree node
-  GNode* parent_node = NULL;
-  g_assert( (parent_node = (GNode*)g_hash_table_lookup( global_model_table, 
-							&init->parent_id )));
+  // look up the world id to find my world
   
-  // add myself to the object tree
-  g_assert( (this->node = g_node_append_data( parent_node, this )));      
+  this->world = (stg_world_t*)g_hash_table_lookup( global_world_table, 
+						   &world_id ); 
+  g_assert( this->world );
+  
+  
+  this->children = NULL;
+
+  // look up the parent id to find my parent
+  if( init->parent_id == -1 )
+    {
+      this->parent = NULL;
+      // add myself to the world's list of children
+      this->world->models = g_list_append( this->world->models, this );
+    } 
+  else
+    {
+      this->parent = (CEntity*)g_hash_table_lookup( global_model_table, 
+						    &init->parent_id ); 
+
+      if( this->parent == NULL )
+	{
+	  PRINT_ERR1( "failed to find parent (%d) in table", init->parent_id );
+	  exit(-1);
+	}
+
+      // add myself to my parent's list
+      this->parent->children = g_list_append( this->parent->children, this );
+    }
   
 #ifdef DEBUG
-  // inspect the stg_world_t object at the root of the tree I just attached to. 
-  stg_world_t* world = stg_world( this );
-  g_assert( world );
   ENT_DEBUG2( "is in world %d:%s", world->id, world->name->str );
 #endif
-    
+  
+
   // set up reasonble laser defaults
   this->laser_data.angle_min = -M_PI/2.0;
   this->laser_data.angle_max =  M_PI/2.0;
@@ -165,8 +127,8 @@ CEntity::CEntity( stg_entity_create_t* init, stg_id_t id )
   this->bounds_neighbor.min = 0.00;
   this->bounds_neighbor.max = 1.5 ;
   
-  this->last_update = 0.0;
-  
+  this->last_update = 0.0; 
+ 
   // TODO? = inherit our parent's color by default?
   if( strlen( init->color ) > 0 )
     this->color = stg_lookup_color(init->color); 
@@ -198,7 +160,7 @@ CEntity::CEntity( stg_entity_create_t* init, stg_id_t id )
   // default no-voltage.
   this->volts = -1;    
 
-  // STG_PROP_POWER
+  // STG_MOD_POWER
   this->power_on = 1;
 
   // Set the default geometry
@@ -231,14 +193,13 @@ CEntity::CEntity( stg_entity_create_t* init, stg_id_t id )
   this->draw_nose = true;
   this->border = false;
 
-  // STG_PROP_RANGEBOUNDS
+  // STG_MOD_RANGEBOUNDS
   this->min_range = 0.5;
   this->max_range = 5.0;
 
   
 #ifdef DEBUG
-  CEntity* parent = stg_ent_parent( this );
-  if( parent ) ENT_DEBUG2( "has parent %d:%s",  parent->id, parent->name->str );
+  if( this->parent ) ENT_DEBUG2( "has parent %d:%s",  parent->id, parent->name->str );
 #endif  
 
   // gui data will be attached here
@@ -260,14 +221,14 @@ CEntity::CEntity( stg_entity_create_t* init, stg_id_t id )
   rect.w = 1.0; // this unit is multiples of my body width, not a fixed size
   rect.h = 1.0; // ditto
     
-  this->SetProperty( STG_PROP_RECTS, &rect, sizeof(rect) );
+  this->SetProperty( STG_MOD_RECTS, &rect, sizeof(rect) );
 
   Map(); // render in matrix
 
   /* the LAST THING WE DO is to request callbacks into this object */
  
   this->interval = 100; // default update interval in ms
-  //this->SetProperty( STG_PROP_INTERVAL, 
+  //this->SetProperty( STG_MOD_INTERVAL, 
   //	     &this->interval, sizeof(this->interval));
  
   ENT_DEBUG( "entity startup complete" );
@@ -316,14 +277,15 @@ CEntity::~CEntity()
   // deleting a child removes it from the tree, so we can't iterate
   // safely here; instead we repeatedly delete the first child until
   // they're all gone.
-  CEntity* child = NULL;
-  while( (child = stg_ent_first_child( this ) ))
+  while( this->children ) 
     {
+      CEntity* child = (CEntity*)this->children->data;
       ENT_DEBUG2( "entity destruction - destroying child [%d:%s]",
-		   child->id, child->name->str );
-      delete child;
-      ENT_DEBUG( "entity destruction - destroying child complete" );
+		  child->id, child->name->str );
+	  delete child;
+	  ENT_DEBUG( "entity destruction - destroying child complete" );
     }
+
   ENT_DEBUG( "entity destructuion - destroying all children complete" );
 
   if( this->guimod) 
@@ -333,14 +295,17 @@ CEntity::~CEntity()
       this->guimod = NULL;
     }
   
-  ENT_DEBUG( "entity destructuion - destroying gui model complete" );
+  ENT_DEBUG( "entity destruction - destroying gui model complete" );
 
   
   g_array_free( this->received_msgs, TRUE );
 
   // detatch myself from my parent
-  g_node_unlink( this->node );
-  g_node_destroy( this->node );
+  if( this->parent )
+    {
+      this->parent->children = g_list_remove( this->parent->children, this );
+      this->parent = NULL;
+   }
   
   ENT_DEBUG("entity destruction complete");
   // actually, we still have to free up the strings that the previous
@@ -348,16 +313,10 @@ CEntity::~CEntity()
   if( name ) g_string_free( name, TRUE );
 }
 
-// returns the stg_world_t object at the bottom of my node tree
-stg_world_t* CEntity::GetWorld()
-{
-  return((stg_world_t*)g_node_get_root(this->node)->data);
-}
-
 // returns the CMatrix object we are rendering into
 CMatrix* CEntity::GetMatrix()
 {
-  return( this->GetWorld()->matrix );
+  return( this->world->matrix );
 }
 
 void CEntity::GetBoundingBox( double &xmin, double &ymin,
@@ -457,7 +416,7 @@ int CEntity::Move( stg_velocity_t* vel, stg_interval_ms_t step_ms )
       this->stall = true;
     }
   else
-    SetProperty( STG_PROP_POSE, &newpose, sizeof(newpose) );  
+    SetProperty( STG_MOD_POSE, &newpose, sizeof(newpose) );  
   
   return 0; // success
 }
@@ -471,7 +430,7 @@ gboolean CEntity::Update()
   if( this->velocity.x || this->velocity.y || this->velocity.a )
     Move( &this->velocity, this->interval );
 
-  this->last_update = stg_world(this)->time;
+  this->last_update = this->world->time;
 
   return TRUE;
 }
@@ -521,11 +480,10 @@ void CEntity::UnMap()
 // Remap ourself if we have moved
 void CEntity::ReMap( stg_pose_t* pose )
 {
-  stg_world_t* world = this->GetWorld();
-  
+    
   // if we have moved less than 1 pixel, do nothing
-  if (fabs(pose->x - this->pose_map.x) < 1.0 / world->ppm &&
-      fabs(pose->y - this->pose_map.y) < 1.0 / world->ppm &&
+  if (fabs(pose->x - this->pose_map.x) < 1.0 / this->world->ppm &&
+      fabs(pose->y - this->pose_map.y) < 1.0 / this->world->ppm &&
       pose->a == this->pose_map.a)
     return;
   
@@ -617,7 +575,9 @@ CEntity *CEntity::TestCollision( double* hitx, double* hity )
   
 bool CEntity::IsDescendent( CEntity* ent )
 {
-  return( g_node_is_ancestor( this->node, ent->node ) );
+  // TODO
+  //return( g_node_is_ancestor( this->node, ent->node ) );
+  return FALSE;
 }
 
 
@@ -685,80 +645,80 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
   
   switch( ptype )
     {      
-    case STG_PROP_MATRIX_RENDER:
+    case STG_MOD_MATRIX_RENDER:
       this->UnMap();
       g_assert( (len == sizeof(stg_matrix_render_t)) );	
       this->matrix_render = *(stg_matrix_render_t*)data;
       this->Map();
       break;
       
-    case STG_PROP_INTERVAL:
+    case STG_MOD_INTERVAL:
       g_assert( (len == sizeof(stg_interval_ms_t)));
       this->SetInterval( (stg_interval_ms_t*)data );
       break;
 
-    case STG_PROP_POSE:
+    case STG_MOD_POSE:
       g_assert( (len == sizeof(stg_pose_t)) );	
       this->SetPose( (stg_pose_t*)data );
       break;
       
-    case STG_PROP_SIZE:
+    case STG_MOD_SIZE:
       g_assert( (len == sizeof(stg_size_t)) );	
       this->SetSize(  (stg_size_t*)data );
       break;
       
-    case STG_PROP_ORIGIN:
+    case STG_MOD_ORIGIN:
       g_assert( (len == sizeof(stg_pose_t)) );	
       this->SetOrigin((stg_pose_t*)data );
       break;
 
-    case STG_PROP_VELOCITY:
+    case STG_MOD_VELOCITY:
       g_assert( (len == sizeof(stg_velocity_t)) );
       this->SetVelocity( (stg_velocity_t*)data );
       break;
       
-    case STG_PROP_NEIGHBORRETURN:
+    case STG_MOD_NEIGHBORRETURN:
       g_assert( (len == sizeof(int)) );	
       this->neighbor_return = *(int*)data;
       break;
       
-    case STG_PROP_LASERRETURN:
+    case STG_MOD_LASERRETURN:
       g_assert( (len == sizeof(stg_laser_return_t)) );	
       this->laser_return = *(stg_laser_return_t*)data;
       break;
 
-    case STG_PROP_BLINKENLIGHT:
+    case STG_MOD_BLINKENLIGHT:
       g_assert( (len == sizeof(stg_blinkenlight_t) ));	
       memcpy( &this->blinkenlight, data, sizeof(this->blinkenlight) );
       break;      
       
-    case STG_PROP_NOSE:
+    case STG_MOD_NOSE:
       g_assert( (len == sizeof(stg_nose_t)) );	
       this->draw_nose = *(stg_nose_t*)data;
       break;      
       
-    case STG_PROP_MOUSE_MODE:
+    case STG_MOD_MOUSE_MODE:
       g_assert( (len == sizeof(stg_mouse_mode_t)) );	
       this->mouseable = *(stg_mouse_mode_t*)data;
       break;      
 
-    case STG_PROP_BORDER:
+    case STG_MOD_BORDER:
       g_assert( (len == sizeof(stg_border_t)) );	
       this->border = *(stg_border_t*)data;
       break;      
 
-    case STG_PROP_NEIGHBORBOUNDS:
+    case STG_MOD_NEIGHBORBOUNDS:
       g_assert( (len == sizeof(stg_bounds_t)) );	
       memcpy( &this->bounds_neighbor, (stg_bounds_t*)data, sizeof(stg_bounds_t));
       break;
       
-    case STG_PROP_LOS_MSG:
-    case STG_PROP_LOS_MSG_CONSUME:
+    case STG_MOD_LOS_MSG:
+    case STG_MOD_LOS_MSG_CONSUME:
       g_assert( (len == sizeof(stg_los_msg_t)) );	
       this->SendLosMessage( (stg_los_msg_t*)data );
       break;
 
-    case STG_PROP_RANGERS:
+    case STG_MOD_RANGERS:
       {
 	if( this->rangers ) g_array_free( this->rangers, TRUE );
 	
@@ -790,7 +750,7 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
       }
       break;
 
-    case STG_PROP_RECTS:
+    case STG_MOD_RECTS:
       {
 	// we infer the number of rects from the data size
 	int rect_count = len / sizeof(stg_rotrect_t);
@@ -820,23 +780,23 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
   stg_property_t* prop = stg_property_create();
   prop->id = this->id;
   prop->property = ptype;
-  prop->timestamp = stg_world(this)->time;
+  prop->timestamp = this->world->time;
   
   PRINT_DEBUG1( "prop stamp: %.3f", prop->timestamp );
 
   switch( ptype )
     { 
-    case STG_PROP_TIME: // no data - caller just wants the timestamp
-      printf( "STG_PROP_TIME stamped %.3f\n", prop->timestamp );
+    case STG_MOD_TIME: // no data - caller just wants the timestamp
+      printf( "STG_MOD_TIME stamped %.3f\n", prop->timestamp );
       break;
 
-    case STG_PROP_MATRIX_RENDER:
+    case STG_MOD_MATRIX_RENDER:
       prop = stg_property_attach_data( prop, 
 				       &this->matrix_render, 
 				       sizeof(this->matrix_render) );
       break;
       
-    case STG_PROP_POSE:
+    case STG_MOD_POSE:
       stg_pose_t pose;
       this->GetPose(&pose);
       prop = stg_property_attach_data( prop, 
@@ -844,67 +804,67 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
 				       sizeof(pose) );
       break;
       
-    case STG_PROP_SIZE:
+    case STG_MOD_SIZE:
       prop = stg_property_attach_data( prop, 
 				       &this->size, 
 				       sizeof(this->size) );
       break;
       
-    case STG_PROP_ORIGIN:
+    case STG_MOD_ORIGIN:
       prop = stg_property_attach_data( prop, 
 				       &this->pose_origin, 
 				       sizeof(this->pose_origin) );
       break;
 
-    case STG_PROP_VELOCITY:
+    case STG_MOD_VELOCITY:
       prop = stg_property_attach_data( prop, 
 				       &this->velocity, 
 				       sizeof(this->velocity));
       break;
 
-    case STG_PROP_LASER_DATA:
+    case STG_MOD_LASER_DATA:
       this->UpdateLaserData( &this->laser_data );
       prop = stg_property_attach_data( prop, 
 				       &this->laser_data,
 				       sizeof(stg_laser_data_t) );
       break;
       
-    case STG_PROP_NEIGHBORRETURN:
+    case STG_MOD_NEIGHBORRETURN:
       prop = stg_property_attach_data( prop, 
 				       &this->neighbor_return, 
 				       sizeof(this->neighbor_return));
       break;
 
-    case STG_PROP_NEIGHBORBOUNDS:
+    case STG_MOD_NEIGHBORBOUNDS:
       prop = stg_property_attach_data( prop, 
 				       &this->bounds_neighbor, 
 				       sizeof(this->bounds_neighbor));
 
-    case STG_PROP_BLINKENLIGHT:
+    case STG_MOD_BLINKENLIGHT:
       prop = stg_property_attach_data( prop, 
 				       &this->blinkenlight, 
 				       sizeof(this->blinkenlight));
       break;
 
-    case STG_PROP_NOSE:
+    case STG_MOD_NOSE:
       prop = stg_property_attach_data( prop, 
 				       &this->draw_nose, 
 				       sizeof(this->draw_nose));
       break;
 
-    case STG_PROP_BORDER:
+    case STG_MOD_BORDER:
       prop = stg_property_attach_data( prop, 
 				       &this->border, 
 				       sizeof(this->border));
       break;
 
-    case STG_PROP_LASERRETURN:
+    case STG_MOD_LASERRETURN:
       prop = stg_property_attach_data( prop, 
 				       &this->laser_return, 
 				       sizeof(this->laser_return));
       break;
       
-    case STG_PROP_LOS_MSG:
+    case STG_MOD_LOS_MSG:
       if( this->received_msgs->len > 0 )
 	{
 	  // return just the FIRST ITEM in the message array
@@ -914,7 +874,7 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
 	}
       break;
  
-    case STG_PROP_LOS_MSG_CONSUME:
+    case STG_MOD_LOS_MSG_CONSUME:
       if( this->received_msgs->len > 0 )
 	{
 	  // return just the FIRST ITEM in the message array
@@ -926,13 +886,13 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
 	}
       break;
       
-    case STG_PROP_MOUSE_MODE:
+    case STG_MOD_MOUSE_MODE:
       prop = stg_property_attach_data( prop, 
 				       &this->mouseable,
 				       sizeof(this->mouseable));
       break;
       
-    case STG_PROP_NEIGHBORS:
+    case STG_MOD_NEIGHBORS:
       {
 	GArray* array = NULL;
 	this->GetNeighbors( &array );
@@ -944,7 +904,7 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
       }
       break;
       
-    case STG_PROP_RANGERS:
+    case STG_MOD_RANGERS:
       if( this->rangers ) 
 	{
 	  this->UpdateRangers();
@@ -959,7 +919,7 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
 		    " no rangers" ); 
       break;
       
-    case STG_PROP_RECTS:
+    case STG_MOD_RECTS:
       if( this->rect_array != NULL )
 	prop = stg_property_attach_data( prop, 
 					 this->rect_array->data, 
@@ -1043,14 +1003,21 @@ void CEntity::SendLosMessage( stg_los_msg_t* msg )
     {
       // Search through the global device list and send the message to
       // anything in range
-      GNode* root_node = g_node_get_root(this->node);
+      //GNode* root_node = g_node_get_root(this->node);
       
       // for each node in my world's tree
-      for( GNode* node = g_node_first_child(root_node);
-	   node; 
-	   node = g_node_next_sibling( node) )
+      //for( GNode* node = g_node_first_child(root_node);
+      //   node; 
+      //   node = g_node_next_sibling( node) )
+
+      // for each node in my world's tree
+      // TODO - recurse here!
+      
+      for( GList* l = this->world->models;
+	   l;
+	   l = l->next )
 	{
-	  CEntity* target = (CEntity*)node->data;
+	  CEntity* target = (CEntity*)l->data;
 	  
 	  if( !target->neighbor_return ) // not a neighbor!
 	    continue;
@@ -1105,15 +1072,14 @@ void CEntity::GetNeighbors( GArray** neighbor_array )
   
   // Search through the global device list looking for devices that
   // have a non-zero neighbor-return
-  GNode* root_node = g_node_get_root(this->node);
+  //GNode* root_node = g_node_get_root(this->node);
 
   // for each node in my world's tree
-  for( GNode* node = g_node_first_child(root_node);
-       node; 
-       node = g_node_next_sibling( node) )
+  // TODO - recurse here!
+  for( GList* l = this->world->models; l; l = l->next )
     {
-      CEntity* ent = (CEntity*)node->data;
-
+      CEntity* ent = (CEntity*)l->data;
+      
       if( !ent->neighbor_return ) // not a neighbor!
       	continue;
 
@@ -1171,7 +1137,7 @@ bool CEntity::OcclusionTest(CEntity* ent )
   ent->GetGlobalPose( &end );
   
   CLineIterator lit( start.x, start.y, end.x, end.y,
-		     this->GetWorld()->matrix,  PointToPoint );
+		     this->world->matrix,  PointToPoint );
   CEntity* hit;
   
   while( (hit = lit.GetNextEntity()) )
@@ -1222,9 +1188,8 @@ void CEntity::SetOrigin( stg_pose_t* pose )
 // unmap myself and all my children
 void CEntity::UnMapWithDescendents( void )
 {
-  for( CEntity* child = stg_ent_first_child( this ); child; 
-       child = stg_ent_next_sibling(child))
-    child->UnMap();
+  for( GList* l = this->children; l; l = l->next )
+    ((CEntity*)l->data)->UnMap();
   
   this->UnMap();
 }
@@ -1232,9 +1197,8 @@ void CEntity::UnMapWithDescendents( void )
 // map myself and all my children
 void CEntity::MapWithDescendents( void )
 {
-  for( CEntity* child = stg_ent_first_child( this ); child; 
-       child = stg_ent_next_sibling(child))
-    child->Map();
+  for( GList* l = this->children; l; l = l->next )
+    ((CEntity*)l->data)->Map();
   
   this->Map();
 }
@@ -1242,8 +1206,8 @@ void CEntity::MapWithDescendents( void )
 void CEntity::SetSize( stg_size_t* sz )
 {
   // if a dimension is < 0, set it to be as large as the whole world
-  if( sz->x < 0 ) sz->x = stg_world(this)->width;
-  if( sz->y < 0 ) sz->y = stg_world(this)->height;
+  if( sz->x < 0 ) sz->x = this->world->width;
+  if( sz->y < 0 ) sz->y = this->world->height;
 
   ENT_DEBUG2( "setting size to %.2f %.2f", sz->x, sz->y );
   
@@ -1297,8 +1261,8 @@ void CEntity::SetGlobalPose( stg_pose_t* pose)
   stg_pose_t origin;
   memset( &origin, 0, sizeof(stg_pose_t) );
   
-  if( stg_ent_parent(this) ) 
-    stg_ent_parent(this)->GetGlobalPose( &origin );
+  if( this->parent ) 
+    this->parent->GetGlobalPose( &origin );
   
   // Compute our pose in the local cs
   stg_pose_t lpose;
@@ -1320,8 +1284,8 @@ void CEntity::GetGlobalPose( stg_pose_t* pose )
   stg_pose_t origin;
   memset( &origin, 0, sizeof(origin) );
   
-  if( stg_ent_parent(this) ) 
-    stg_ent_parent(this)->GetGlobalPose( &origin );
+  if( this->parent ) 
+    this->parent->GetGlobalPose( &origin );
   
   // Compute our pose in the global cs
   pose->x = origin.x + this->pose_local.x * cos(origin.a) - this->pose_local.y * sin(origin.a);
@@ -1510,7 +1474,7 @@ void CEntity::UpdateRangers( void )
       // todo - use bounds_range.min
 
       CLineIterator lit( pz.x, pz.y, pz.a, tran->bounds_range.max, 
-			 GetWorld()->matrix, 
+			 world->matrix, 
 			 PointToBearingRange );
       
       CEntity* ent;
@@ -1568,7 +1532,7 @@ void  CEntity::UpdateLaserData( stg_laser_data_t* laser )
       double pth = pz.a + bearing;
       
       CLineIterator lit( pz.x, pz.y, pth, laser->range_max, 
-			 this->GetWorld()->matrix, PointToBearingRange );
+			 this->world->matrix, PointToBearingRange );
       
       CEntity* ent;
       double range = laser->range_max;

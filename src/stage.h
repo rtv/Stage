@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@hrl.com 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.19 2003-10-12 19:30:32 rtv Exp $
+ * CVS: $Id: stage.h,v 1.20 2003-10-13 08:37:00 rtv Exp $
  */
 
 #ifdef __cplusplus
@@ -70,71 +70,70 @@ typedef struct timeval stg_timeval_t;
        STG_TOS_SUBSCRIPTION
      } stg_tos_t;
    
-   // all models have a unique type number
+   
+   // all properties have unique id numbers and must be listed here
    typedef enum
      {
-       STG_MODEL_GENERIC = 0,
-       STG_MODEL_WALL,
-       STG_MODEL_POSITION,
-       STG_MODEL_LASER,
-       STG_MODEL_SONAR,
-       STG_MODEL_COUNT // THIS MUST BE THE LAST MODEL TYPE
-     } stg_model_type_t;
-
-  // all properties have unique id numbers and must be listed here
-   // please stick to the syntax STG_PROP_<model>_<property>
-   typedef enum
-     {
-       STG_PROP_CREATE_MODEL=1, 
-       STG_PROP_DESTROY_MODEL,
-       STG_PROP_TIME,
-       STG_PROP_CIRCLES,
-       STG_PROP_COLOR,
-       STG_PROP_COMMAND,
-       STG_PROP_DATA,
-       STG_PROP_GEOM,
-       STG_PROP_IDARRETURN,
-       STG_PROP_LASERRETURN,
-       STG_PROP_NAME,
-       STG_PROP_OBSTACLERETURN,
-       STG_PROP_ORIGIN,
-       STG_PROP_PARENT, 
-       STG_PROP_PLAYERID,
-       STG_PROP_POSE,
-       STG_PROP_POWER,
-       STG_PROP_PPM,
-       STG_PROP_PUCKRETURN,
-       STG_PROP_RANGEBOUNDS, 
-       STG_PROP_INTERVAL,
-       STG_PROP_RECTS,
-       STG_PROP_SIZE,
-       STG_PROP_SONARRETURN,
-       STG_PROP_VELOCITY,
-       STG_PROP_VISIONRETURN,
-       STG_PROP_VOLTAGE,
-       STG_PROP_RANGERS,
-       STG_PROP_LASER_DATA,
-       STG_PROP_NEIGHBORS,
-       STG_PROP_NEIGHBORRETURN, // if non-zero, show up in neighbor sensor
-       STG_PROP_NEIGHBORBOUNDS, // range bounds of neighbor sensor
-       STG_PROP_BLINKENLIGHT,  // light blinking rate
-       STG_PROP_NOSE,
-       STG_PROP_LOS_MSG,
-       STG_PROP_LOS_MSG_CONSUME,
-       STG_PROP_MOUSE_MODE,
-       STG_PROP_BORDER,        // if non-zero, add a bounding rectangle
-       STG_PROP_MATRIX_RENDER, // if non-zero, render in the matrix
-       STG_PROP_CREATE_WORLD,
-       STG_PROP_DESTROY_WORLD,
-       STG_PROP_WORLD_SIZE,
-       STG_PROP_WORLD_GUI, 
+       // server properties
+       STG_SERVER_TIME=1,
+       STG_SERVER_WORLD_COUNT,
+       STG_SERVER_CLIENT_COUNT,
+       STG_SERVER_CREATE_WORLD,
+       // world properties
+       STG_WORLD_TIME,
+       STG_WORLD_MODEL_COUNT,
+       STG_WORLD_CREATE_MODEL,
+       STG_WORLD_DESTROY,
+       // model properties
+       STG_MOD_DESTROY,
+       STG_MOD_TIME,
+       STG_MOD_CIRCLES,
+       STG_MOD_COLOR,
+       STG_MOD_COMMAND,
+       STG_MOD_DATA,
+       STG_MOD_GEOM,
+       STG_MOD_IDARRETURN,
+       STG_MOD_LASERRETURN,
+       STG_MOD_NAME,
+       STG_MOD_OBSTACLERETURN,
+       STG_MOD_ORIGIN,
+       STG_MOD_PARENT, 
+       STG_MOD_PLAYERID,
+       STG_MOD_POSE,
+       STG_MOD_POWER,
+       STG_MOD_PPM,
+       STG_MOD_PUCKRETURN,
+       STG_MOD_RANGEBOUNDS, 
+       STG_MOD_INTERVAL,
+       STG_MOD_RECTS,
+       STG_MOD_SIZE,
+       STG_MOD_SONARRETURN,
+       STG_MOD_VELOCITY,
+       STG_MOD_VISIONRETURN,
+       STG_MOD_VOLTAGE,
+       STG_MOD_RANGERS,
+       STG_MOD_LASER_DATA,
+       STG_MOD_NEIGHBORS,
+       STG_MOD_NEIGHBORRETURN, // if non-zero, show up in neighbor sensor
+       STG_MOD_NEIGHBORBOUNDS, // range bounds of neighbor sensor
+       STG_MOD_BLINKENLIGHT,  // light blinking rate
+       STG_MOD_NOSE,
+       STG_MOD_LOS_MSG,
+       STG_MOD_LOS_MSG_CONSUME,
+       STG_MOD_MOUSE_MODE,
+       STG_MOD_BORDER,        // if non-zero, add a bounding rectangle
+       STG_MOD_MATRIX_RENDER, // if non-zero, render in the matrix
+       STG_MOD_CREATE_WORLD,
+       STG_MOD_DESTROY_WORLD,
+       STG_MOD_WORLD_SIZE,
+       STG_MOD_WORLD_GUI, 
        // remove?
-       //STG_PROP_POSITION_ORIGIN, // see position.cc
-       //STG_PROP_POSITION_ODOM,
-       //STG_PROP_POSITION_MODE,
-       //STG_PROP_POSITION_STEER,
+       //STG_MOD_POSITION_ORIGIN, // see position.cc
+       //STG_MOD_POSITION_ODOM,
+       //STG_MOD_POSITION_MODE,
+       //STG_MOD_POSITION_STEER,
 
-       STG_PROPERTY_COUNT // THIS MUST BE THE LAST ENTRY
+       STG_MESSAGE_COUNT // THIS MUST BE THE LAST ENTRY
      } stg_prop_id_t;
   
 // PROPERTY DEFINITIONS ///////////////////////////////////////////////
@@ -325,6 +324,11 @@ typedef struct
 
 typedef enum {
   STG_NOOP = 0,
+  STG_COMMAND,
+  STG_ACK,
+  STG_NACK,
+  STG_SUBSCRIBE,
+  STG_UNSUBSCRIBE,
   STG_SET,
   STG_GET,
   STG_SETGET,
@@ -350,7 +354,7 @@ typedef struct
 typedef struct
 {
   stg_id_t id; // Stage chooses an ID on SET and returns it in GET
-  stg_id_t parent_id;
+  stg_id_t parent_id; // -1 specifies a top-level model
   char name[STG_TOKEN_MAX]; // a decsriptive name
   //  char token[STG_TOKEN_MAX]; // the token used in the world file
   char color[STG_TOKEN_MAX];
@@ -381,18 +385,15 @@ typedef struct
   stg_prop_id_t prop; // the property we're subscribing to
 } stg_subscription_t;
 
-typedef enum
-  {
-    STG_NACK=0,
-    STG_ACK
-  } stg_ack_t;
-
 typedef struct {
   char host[STG_HOSTNAME_MAX];
   int port;
   stg_timeval_t time;
   struct pollfd pollfd;
   stg_tos_t tos;
+
+  //stg_subscription_t* subs;
+  //int num_subs; 
 } stg_client_t;
 
 typedef struct
@@ -425,10 +426,6 @@ stg_property_t* stg_property_read_fd( int fd );
 ssize_t stg_property_write_fd( int fd, stg_property_t* prop );
 void stg_catch_pipe( int signo );
 const char* stg_property_string( stg_prop_id_t id );
-const char* stg_model_string( stg_model_type_t id );
-stg_model_type_t stg_model_type_from_string( char* str );
-stg_id_t stg_model_create( stg_client_t* cli, stg_entity_create_t* ent );
-int stg_model_destroy( stg_client_t* cli, stg_id_t id );
 
 int stg_property_subscribe( stg_client_t* cli, stg_subscription_t* sub );
 
@@ -471,10 +468,6 @@ int stg_getset_property( stg_client_t* cli,
 			 void **get_data, 
 			 size_t *get_len );
 
-
-stg_id_t stg_model_create( stg_client_t* cli, stg_entity_create_t* ent );
-int stg_model_destroy( stg_client_t* cli, stg_id_t id );
-stg_id_t stg_world_create( stg_client_t* cli, stg_world_create_t* world );
 
 stg_property_t* stg_send_property( stg_client_t* cli,
 				   int id, 

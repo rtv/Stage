@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.19 2003-10-12 19:30:32 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.20 2003-10-13 08:37:00 rtv Exp $
  */
 
 #include <assert.h>
@@ -1815,7 +1815,21 @@ int CWorldFile::Upload( stg_client_t* cli,
   world_cfg.width =  this->ReadTupleFloat( 0, "size", 0, 10.0 );
   world_cfg.height =  this->ReadTupleFloat( 0, "size", 1, 10.0 );
   world_cfg.resolution = this->ReadFloat( 0, "resolution", 0.1 );
-  *world_id = stg_world_create( cli, &world_cfg );
+  //  *world_id = stg_world_create( cli, &world_cfg );
+  
+  stg_property_t* reply = 
+    stg_send_property( cli, -1,
+		       STG_SERVER_CREATE_WORLD, STG_COMMAND,
+		       &world_cfg, sizeof(world_cfg) );
+  
+  if( !(reply && (reply->action == STG_ACK) ))
+    {
+      PRINT_ERR( "stagecpp: world creation failed" );
+      exit(-1);
+    }
+  
+  *world_id = reply->id; // remember the id of the world we created
+  stg_property_free( reply );
   
   // for every worldfile section, we may need to store a model ID in
   // order to resolve parents
@@ -1826,7 +1840,7 @@ int CWorldFile::Upload( stg_client_t* cli,
   // the default parent of every model is root
   for( int m=0; m<created_models_count; m++ )
     {
-      created_models[m].stage_id = *world_id;
+      created_models[m].stage_id = -1;
       strncpy( created_models[m].name, "root", STG_TOKEN_MAX );
     }
       
@@ -1883,7 +1897,19 @@ int CWorldFile::Upload( stg_client_t* cli,
 		  STG_TOKEN_MAX);
 	  child.parent_id = parent; // make a new entity on the root 
 	  
-	  stg_id_t anid = stg_model_create( cli, &child );
+	  stg_property_t* reply = 
+	    stg_send_property( cli, *world_id, 
+			       STG_WORLD_CREATE_MODEL, STG_COMMAND,
+			       &child, sizeof(child) );
+
+	  if( !(reply && (reply->action == STG_ACK) ))
+	    {
+	      PRINT_ERR( "stagecpp: world creation failed" );
+	      exit(-1);
+	    }
+	  
+	  stg_id_t anid = reply->id;
+	  stg_property_free( reply );
 	  
 	  // associate the name 
 	  strncpy( created_models[section].name, child.name, STG_TOKEN_MAX );
@@ -1903,7 +1929,7 @@ int CWorldFile::Upload( stg_client_t* cli,
 
 	token = "matrix_render";
 	stg_matrix_render_t mr = this->ReadBool( section, token, true );
-	if( stg_set_property( cli, anid, STG_PROP_MATRIX_RENDER,
+	if( stg_set_property( cli, anid, STG_MOD_MATRIX_RENDER,
 			      &mr, sizeof(mr) ) < 0 )  
 	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 	
@@ -1911,7 +1937,7 @@ int CWorldFile::Upload( stg_client_t* cli,
 	stg_size_t sz;
 	sz.x = this->ReadTupleFloat( section, token, 0, 0.5 );
 	sz.y = this->ReadTupleFloat( section, token, 1, 0.5 );
-	if( stg_set_property( cli, anid, STG_PROP_SIZE,
+	if( stg_set_property( cli, anid, STG_MOD_SIZE,
 			      &sz, sizeof(sz) ) < 0 )  
 	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 	
@@ -1920,7 +1946,7 @@ int CWorldFile::Upload( stg_client_t* cli,
 	vel.x = this->ReadTupleFloat( section, token, 0, 0.0 );
 	vel.y = this->ReadTupleFloat( section, token, 1, 0.0 );
 	vel.a = this->ReadTupleFloat( section, token, 2, 0.0 );
-	if( stg_set_property( cli, anid, STG_PROP_VELOCITY,
+	if( stg_set_property( cli, anid, STG_MOD_VELOCITY,
 			      &vel, sizeof(vel) ) < 0 )  
 	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 	
@@ -1929,7 +1955,7 @@ int CWorldFile::Upload( stg_client_t* cli,
 	pose.x = this->ReadTupleFloat( section, token, 0, 0.0 );
 	pose.y = this->ReadTupleFloat( section, token, 1, 0.0 );
 	pose.a = this->ReadTupleFloat( section, token, 2, 0.0 );
-	if( stg_set_property( cli, anid, STG_PROP_POSE,
+	if( stg_set_property( cli, anid, STG_MOD_POSE,
 			      &pose, sizeof(pose) ) < 0 )  
 	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 	
@@ -1938,13 +1964,13 @@ int CWorldFile::Upload( stg_client_t* cli,
 	origin.x = this->ReadTupleFloat( section, token, 0, 0.0 );
 	origin.y = this->ReadTupleFloat( section, token, 1, 0.0 );
 	origin.a = this->ReadTupleFloat( section, token, 2, 0.0 );
-	if( stg_set_property( cli, anid, STG_PROP_ORIGIN,
+	if( stg_set_property( cli, anid, STG_MOD_ORIGIN,
 			      &origin, sizeof(origin) ) < 0 )  
 	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 
 	token = "neighbor";
 	stg_neighbor_return_t nret = this->ReadInt( section, token, 0 );
-	if( stg_set_property( cli, anid, STG_PROP_NEIGHBORRETURN,
+	if( stg_set_property( cli, anid, STG_MOD_NEIGHBORRETURN,
 			      &nret, sizeof(nret) ) < 0 )  
 	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 
@@ -1952,7 +1978,7 @@ int CWorldFile::Upload( stg_client_t* cli,
 	stg_bounds_t nbounds;
 	nbounds.min = this->ReadTupleFloat(section, token, 0,0.0);
 	nbounds.max = this->ReadTupleFloat(section, token, 1,5.0);
-	if( stg_set_property( cli, anid, STG_PROP_NEIGHBORBOUNDS,
+	if( stg_set_property( cli, anid, STG_MOD_NEIGHBORBOUNDS,
 			      &nbounds, sizeof(nbounds) ) < 0 )  
 	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 
@@ -1960,25 +1986,25 @@ int CWorldFile::Upload( stg_client_t* cli,
 	stg_blinkenlight_t bl;
 	bl.enable = this->ReadTupleInt( section, token, 0, 0 );
 	bl.period_ms = this->ReadTupleInt( section, token, 1, 400 );
-	if( stg_set_property( cli, anid, STG_PROP_BLINKENLIGHT,
+	if( stg_set_property( cli, anid, STG_MOD_BLINKENLIGHT,
 			      &bl, sizeof(bl) ) < 0 )  
 	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 
 	token = "mouseable";
 	stg_mouse_mode_t mouse = this->ReadBool( section, token, true );
-	if( stg_set_property( cli, anid, STG_PROP_MOUSE_MODE,
+	if( stg_set_property( cli, anid, STG_MOD_MOUSE_MODE,
 			      &mouse, sizeof(mouse) ) < 0 )  
 	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 	
 	token = "nose";
 	stg_nose_t nose = this->ReadBool( section, token, true );
-	if( stg_set_property( cli, anid, STG_PROP_NOSE,
+	if( stg_set_property( cli, anid, STG_MOD_NOSE,
 			      &nose, sizeof(nose) ) < 0 )  
 	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 	
 	token = "border";
 	stg_border_t border = this->ReadBool( section, token, false );
-	if( stg_set_property( cli, anid, STG_PROP_BORDER,
+	if( stg_set_property( cli, anid, STG_MOD_BORDER,
 			      &border, sizeof(border) ) < 0 )  
 	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 	
@@ -1986,7 +2012,7 @@ int CWorldFile::Upload( stg_client_t* cli,
 	stg_interval_ms_t ival = 
 	  (stg_interval_ms_t)(1000.0 * this->ReadFloat( section, token, 0.1 ));
 	
-	if( stg_set_property( cli, anid, STG_PROP_INTERVAL,
+	if( stg_set_property( cli, anid, STG_MOD_INTERVAL,
 			      &ival, sizeof(ival) ) < 0 )  
 	  PRINT_ERR2( "attempt to set %s[%s] failed", child.name, token );
 	
@@ -2035,7 +2061,7 @@ int CWorldFile::Upload( stg_client_t* cli,
 			r->size.x, r->size.y );
 	      }
 #endif
-	    if( stg_set_property( cli, anid, STG_PROP_RANGERS,
+	    if( stg_set_property( cli, anid, STG_MOD_RANGERS,
 				  rangers, rcount * sizeof(stg_ranger_t) ) 
 		< 0 )  
 	      PRINT_ERR2( "attempt to set %s[%s] failed", 
@@ -2078,7 +2104,7 @@ int CWorldFile::Upload( stg_client_t* cli,
 #ifdef VERBOSE	    
 	    PRINT_DEBUG1f( "Found %d rects", rect_count );
 #endif
-	    if( stg_set_property(cli, anid, STG_PROP_RECTS,
+	    if( stg_set_property(cli, anid, STG_MOD_RECTS,
 				 rects, rect_count*sizeof(stg_rotrect_t)) < 0)  
 	      PRINT_ERR2( "attempt to set %s[%s] failed", 
 			  child.name, token );
@@ -2125,7 +2151,7 @@ int CWorldFile::DownloadAndSave( stg_client_t* cli,
 	  token = "pose";
 	  stg_pose_t *pose;
 	  size_t len;
-	  if( stg_get_property( cli, anid, STG_PROP_POSE, (void**)&pose, &len )
+	  if( stg_get_property( cli, anid, STG_MOD_POSE, (void**)&pose, &len )
 	      < 0 )
 	    PRINT_ERR1( "failed to get pose for model %d", anid );
 	  else
