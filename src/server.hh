@@ -5,7 +5,7 @@
 // Class provides a network server for Stage internals
 // used by external GUIs (XS) and distributed Stage modules
 //
-// $Id: server.hh,v 1.4 2002-10-15 22:13:03 rtv Exp $
+// $Id: server.hh,v 1.5 2002-10-15 22:27:54 rtv Exp $
 
 #ifndef _SERVER_H
 #define _SERVER_H
@@ -126,6 +126,7 @@ protected:
   // IO data
   int m_port; // the port number of the server server
  
+  protected: bool m_external_sync_required;
   // the number of synchronous pose connections
   int m_sync_counter; 
 
@@ -281,6 +282,8 @@ private: int clock_lock_byte; // offset into the lock file controlling
 
 // creates the file m_device_dir/devices.lock,  m_object_count bytes long
   // stores the filename in m_locks_name and the fd in m_locks_fd
+  // the locks file descriptor
+  private: int m_locks_fd;  
   private: bool CreateLockFile( void );
 
   virtual bool LockByte( int offset );

@@ -38,6 +38,7 @@ CStageIO::CStageIO( int argc, char** argv, Library* lib )
   // init the pose server data structures
   m_pose_connection_count = 0;
   m_sync_counter = 0;
+  m_external_sync_required = false;
 
   // init the arrays
   memset( &m_pose_connections, 0, sizeof(struct pollfd)*MAX_POSE_CONNECTIONS); 

@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.127 2002-10-15 22:13:03 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.128 2002-10-15 22:27:54 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -113,7 +113,6 @@ CWorld::CWorld( int argc, char** argv, Library* lib )
   // invalid file descriptor initially
   m_log_fd = -1;
 
-  m_external_sync_required = false;
   m_instance = 0;
 
   // just initialize stuff here

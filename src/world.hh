@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.10 2002-10-15 22:13:03 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.11 2002-10-15 22:27:54 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -77,11 +77,8 @@ class CWorld
   // the main world-model data structure
   public: CMatrix *matrix;
   
-  // the locks file descriptor
-  public: int m_locks_fd;
-  
   // these do nothing in the base CWorld class, but are overridden in
-  // CServer
+  // CServer to control access to shared memory
   virtual bool LockByte( int offset );
   virtual bool UnlockByte( int offset );
 
@@ -183,8 +180,6 @@ public: int GetStopTime( void ){ return m_stoptime; };
 
   // pointers to all entities are also stored in a flat array
   // be found by number without having to search the tree
-  // TODO - could put this back as an array for faster index-lookup
-  // in client/server mode
   protected: CEntity** entities;
   // the number of entities stored in the array
   protected: int entity_count; 
@@ -211,8 +206,6 @@ public: int GetStopTime( void ){ return m_stoptime; };
 
   ///////////////////////////////////////////////////////////////////////////
   // Configuration variables
-
-  protected: bool m_external_sync_required;
 
   // if true we  run the gui - a command line switch
   public: bool enable_gui;
