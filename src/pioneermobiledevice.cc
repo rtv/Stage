@@ -1,4 +1,4 @@
-// $Id: pioneermobiledevice.cc,v 1.3 2000-12-01 03:13:32 ahoward Exp $	
+// $Id: pioneermobiledevice.cc,v 1.4 2000-12-01 22:09:54 vaughan Exp $	
 #include <math.h>
 
 #include "world.h"
@@ -42,9 +42,6 @@ CPioneerMobileDevice::CPioneerMobileDevice( CRobot* rr,
   memset( &oldRect, 0, sizeof( rect ) );
 
   CalculateRect();
-  //StoreRect();
-
-  cout << "contructor done" << endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -198,18 +195,7 @@ void CPioneerMobileDevice::ComposeData()
 
 bool CPioneerMobileDevice::MapUnDraw()
 {
-  Nimage* img = m_world->img;
-
-  //undraw the robot's old rectangle
-  img->draw_line( oldRect.toplx, oldRect.toply,
-    oldRect.toprx, oldRect.topry, 0 );
-  img->draw_line( oldRect.toprx, oldRect.topry,
-    oldRect.botlx, oldRect.botly, 0 );
-  img->draw_line( oldRect.botlx, oldRect.botly,
-    oldRect.botrx, oldRect.botry, 0 );
-  img->draw_line( oldRect.botrx, oldRect.botry,
-    oldRect.toplx, oldRect.toply, 0 );
-
+  m_world->img->draw_rect( oldRect, 0 );
   return 1;
 }
 
@@ -219,17 +205,7 @@ bool CPioneerMobileDevice::MapDraw()
   // calculate my new rectangle
   CalculateRect( m_robot->x, m_robot->y, m_robot->a );
 
-  Nimage* img = m_world->img;
-
-  //draw the robot's rectangle
-  img->draw_line( rect.toplx, rect.toply,
-    rect.toprx, rect.topry, m_robot->color );
-  img->draw_line( rect.toprx, rect.topry,
-    rect.botlx, rect.botly, m_robot->color );
-  img->draw_line( rect.botlx, rect.botly,
-    rect.botrx, rect.botry, m_robot->color );
-  img->draw_line( rect.botrx, rect.botry,
-    rect.toplx, rect.toply, m_robot->color );
+  m_world->img->draw_rect( oldRect, m_robot->color );
 
   StoreRect();
   return 1;
