@@ -21,7 +21,7 @@
  * Desc: Shared types, constants, etc
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: stage_types.hh,v 1.2 2002-09-07 02:05:25 rtv Exp $
+ * CVS: $Id: stage_types.hh,v 1.3 2002-09-25 02:55:55 rtv Exp $
  */
 
 #ifndef STAGE_TYPES_HH
@@ -220,7 +220,6 @@ enum IDARReturn
 #define PRINT_DEBUG3(m, a, b, c)
 #define PRINT_DEBUG4(m, a, b, c, d)
 #endif
-
 
 // these are lifted from ahoward's rtk2 library code
 // Append an item to a linked list

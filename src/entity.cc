@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.84 2002-09-21 08:14:20 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.85 2002-09-25 02:55:55 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -151,7 +151,7 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
   this->movemask = RTK_MOVE_TRANS | RTK_MOVE_ROT;
 #endif
 
-#ifdef RTVG
+#ifdef USE_GNOME2
   this->g_origin = NULL;
   this->g_group = NULL;
   this->g_data = NULL;
@@ -876,8 +876,8 @@ int CEntity::SetProperty( int con, EntityProperty property,
       break;
 
     default:
-      printf( "Stage Warning: attempting to set unknown property %d\n", 
-              property );
+      //printf( "Stage Warning: attempting to set unknown property %d\n", 
+      //      property );
       break;
   }
   
@@ -890,34 +890,30 @@ int CEntity::SetProperty( int con, EntityProperty property,
   if( con != -1 ) // unless this was a local change 
     this->SetDirty( con, property, 0 ); // clean on this con
 
-#ifdef INCLUDE_RTK2
   if( refresh_figure )
-  {
-    RtkShutdown();
-    RtkStartup();
-  }
-  
-  if( move_figure && this->fig )
-    rtk_fig_origin(this->fig, local_px, local_py, local_pth );
-#endif 
-
-#ifdef RTVG 
-  if( move_figure ) // move the figure to the new location and redraw
     {
-      double rotate[6], translate[6];
-      art_affine_translate( translate, local_px, local_py );
-      art_affine_rotate( rotate, RTOD(local_pth) );
-      
-      if( this->g_origin ) // move the origin
-	gnome_canvas_item_affine_absolute( GNOME_CANVAS_ITEM(g_origin), translate);
-      
-      if( this->g_group ) // rotate the group about the origin
-	gnome_canvas_item_affine_absolute( GNOME_CANVAS_ITEM(g_group), rotate);
-
-      if( this->m_world->g_appbar )
-	this->GuiStatus();
-    }
+#ifdef INCLUDE_RTK2    
+      RtkShutdown();
+      RtkStartup();
 #endif
+      
+#ifdef USE_GNOME2 
+      // TODO - change properties on the fly? or just start from scratch like rtk2?
+#endif
+    }
+  
+  if( move_figure )
+    {
+#ifdef INCLUDE_RTK2    
+      if( this->fig )
+	rtk_fig_origin(this->fig, local_px, local_py, local_pth );
+#endif 
+      
+#ifdef USE_GNOME2 
+      this->GuiMove();
+#endif
+    }
+
 
   return 0;
 }
@@ -1053,7 +1049,7 @@ void CEntity::Unsubscribe()
 { 
   //puts( "UNSUB" );
 
-#ifdef RTVG
+#ifdef USE_GNOME2
   // destroy any data graphics
   if( this->g_data ) 
     {
@@ -1213,5 +1209,4 @@ void CEntity::RtkUpdate()
   }
 }
 #endif
-
 

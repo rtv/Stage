@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.6 2002-09-16 23:44:34 gerkey Exp $
+ * CVS info: $Id: world.hh,v 1.7 2002-09-25 02:55:55 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -55,7 +55,7 @@ class Library;
 #include "rtk.h"
 #endif
 
-#ifdef RTVG
+#ifdef USE_GNOME2
 #include <gnome.h>
 #endif
 
@@ -363,7 +363,7 @@ public: static int autosubscribe;
   private: int export_count;
 #endif
 
-#ifdef RTVG
+#ifdef USE_GNOME2
 public:
   GnomeApp* g_app; // application
   GnomeCanvas* g_canvas; //main drawing window

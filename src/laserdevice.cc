@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.69 2002-09-22 18:33:19 inspectorg Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.70 2002-09-25 02:55:55 rtv Exp $
  */
 
 #define DEBUG
@@ -42,10 +42,6 @@
 CEntity laser_bootstrap( "laser", 
 			 LaserTurretType, 
 			 (void*)&CLaserDevice::Creator ); 
-
-#ifdef RTVG
-#include "gnomegui.hh"
-#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
@@ -136,7 +132,7 @@ void CLaserDevice::Update( double sim_time )
     {
       // Check to see if the configuration has changed
       CheckConfig();
-	
+      
       // Generate new scan data and copy to data buffer
       player_laser_data_t scan_data;
       GenerateScanData( &scan_data );
@@ -165,19 +161,28 @@ void CLaserDevice::Update( double sim_time )
   }
 }
 
-size_t CLaserDevice::PutData( player_laser_data_t* data, size_t len )
-{
-#ifdef RTVG  
-  // if the range data is different from last time
+size_t CLaserDevice::PutData( void* vdata, size_t len )
+{  
+  // export the data right away
+  size_t retval = CPlayerEntity::PutData( vdata, len );
+
+  player_laser_data_t* data = (player_laser_data_t*)vdata;
+
+  // maybe  render the new data in a GUI
+  
+#ifdef USE_GNOME2
+  assert( data );
+  assert( len > 0 );
+  
+  // we render the data as a colored polygon, if the range data is
+  // different from last time. note that we look at the ranges
+  // themselves, not just the timestamp, as we can get the same scans
+  // over and over...
   if( memcmp( &data->ranges, &last_data.ranges, 
 	      ntohs(data->range_count) * sizeof(data->ranges[0])
 	      ) != 0 )
     {
-      // we render the data as a colored polygon
-      puts( "new laser poly" );
-
       // convert the range data to a set of cartesian points
-      // parse out the data and display it
       short min_ang_deg = ntohs(data->min_angle);
       short max_ang_deg = ntohs(data->max_angle);
       unsigned short samples = ntohs(data->range_count); 
@@ -191,8 +196,6 @@ size_t CLaserDevice::PutData( player_laser_data_t* data, size_t len )
       
       // set the start and end points of the scan as the origin;
       memset( points->coords, 0, sizeof(points->coords[0]) * 2 * (samples+2) ); 
-      //points->coords[0] =  points->coords[1] = 
-      //points->coords[2*samples] = points->coords[2*samples+1] = 0.0;
       
       double bearing = min_ang_rad;
       for( int i=0; i < (int)samples; i++ )
@@ -229,20 +232,19 @@ size_t CLaserDevice::PutData( player_laser_data_t* data, size_t len )
 	      gnome_canvas_item_new ( g_group,
 				      gnome_canvas_polygon_get_type(),
 				      "points", points,
-				      "fill_color_rgba", RGBA(this->color,32),
+				      "fill_color_rgba", RGBA(this->color,16),
 				      "outline_color_rgba", RGBA(this->color,255),
 				      "width_pixels", 1,
 				      NULL ) );
       gnome_canvas_points_free(points);
     }
-
+  
   // store the old data for next time
   memcpy( &last_data, data, sizeof(player_laser_data_t) );
-
-#endif
   
-  // and export the new data
-  return CPlayerEntity::PutData( data, len );
+#endif
+
+  return( retval );
 }
 
 

@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.4 2002-09-21 08:14:20 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.5 2002-09-25 02:55:55 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -47,8 +47,9 @@
 #include "rtk.h"
 #endif
 
-#ifdef RTVG
+#ifdef USE_GNOME2
 #include <gnome.h>
+#include "gnomegui.hh"
 #endif
 
 #include "library.hh"
@@ -349,7 +350,7 @@ public: virtual void FamilyUnsubscribe();
   static void staticUnselect( void* ent );
 #endif
 
-#ifdef RTVG
+#ifdef USE_GNOME2
 public: 
   GnomeCanvasGroup* g_origin; // sets our location on the canvas
   GnomeCanvasGroup* g_group; // inside g_origin - contains our body figure g_fig
@@ -363,7 +364,7 @@ public:
   virtual void GuiWatch( void );
   virtual void GuiUnwatch( void );
   virtual void GuiStatus( void );
-
+  virtual void GuiMove( void );
   virtual void GuiRenderGrid( double spacing, StageColor color );
 #endif
 };

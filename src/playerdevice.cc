@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.37 2002-09-16 23:44:34 gerkey Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.38 2002-09-25 02:55:55 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -412,20 +412,19 @@ size_t CPlayerEntity::PutIOData( void* dest, size_t dest_len,
 // Copy the data into shared memory & update the info buffer
 size_t CPlayerEntity::PutData( void* data, size_t len )
 {
-  //PRINT_DEBUG4( "Putting %d bytes of data into device (%d,%d,%d)\n",
-  //	len, m_player.port, m_player.type, m_player.index );
-
   // tell the server to export this data to anyone that needs it
   this->SetDirty( PropData, 1 );
-    
+  
+  //PRINT_DEBUG4( "Putting %d bytes of data into device (%d,%d,%d)\n",
+  //	len, m_player.port, m_player.type, m_player.index );
+  
   // copy the data into the mmapped data buffer.
   // also set the timestamp and available fields for the data
   return PutIOData( (void*)m_data_io, m_data_len,
-                    data, len,
-                    &m_info_io->data_timestamp_sec,
-                    &m_info_io->data_timestamp_usec,
-                    &m_info_io->data_avail );
-
+		    data, len,
+		    &m_info_io->data_timestamp_sec,
+		    &m_info_io->data_timestamp_usec,
+		    &m_info_io->data_avail );
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -664,20 +663,17 @@ int CPlayerEntity::SetProperty( int con, EntityProperty property,
   assert( len > 0 );
   assert( (int)len < MAX_PROPERTY_DATA_LEN );
 
-  bool refresh_figure = false;
-  bool move_figure = false;
-  
   switch( property )
-  {
+    {
     case PropPlayerSubscriptions:
       PRINT_DEBUG1( "PLAYER SUBSCRIPTIONS %d", *(int*) value);
       
       if( m_info_io )
-      {
-        Lock();
-        m_info_io->subscribed = *(int*)value;
-        Unlock();
-      }      
+	{
+	  Lock();
+	  m_info_io->subscribed = *(int*)value;
+	  Unlock();
+	}      
       break;
       
     case PropPlayerId:
@@ -688,53 +684,36 @@ int CPlayerEntity::SetProperty( int con, EntityProperty property,
     case PropCommand:
       PutCommand( value, len );
       break;
+      
     case PropData:
       PutData( value, len );
       break;
+      
     case PropConfig: // copy the  playerqueue's external memory chunk
-    { 
-      Lock();
-      size_t len = m_config_len * sizeof(playerqueue_elt_t);
-      memcpy( m_config_io, value, len ); 
-      Unlock();
-    }
-    break;
+      { 
+	Lock();
+	size_t len = m_config_len * sizeof(playerqueue_elt_t);
+	memcpy( m_config_io, value, len ); 
+	Unlock();
+      }
+      break;
+  
     case PropReply:
-    { 
-      Lock();
-      size_t len = m_reply_len * sizeof(playerqueue_elt_t);
-      memcpy( m_reply_io, value, len ); 
-      Unlock();
+      { 
+	Lock();
+	size_t len = m_reply_len * sizeof(playerqueue_elt_t);
+	memcpy( m_reply_io, value, len ); 
+	Unlock();
+      }
+      break;
+      
+    default: // assume it'll be handled by CEntity::SetProperty
+      break; 
     }
-    break;
 
-    default:
-      // we didn't handle it - pass it down to the CEntity and return
-      return( CEntity::SetProperty( con, property, value, len ) );
-  }
-  
-  // ok - we handled it here.
-  // indicate that the property is dirty on all _but_ the connection
-  // it came from - that way it gets propogated onto to other clients
-  // and everyone stays in sync. (assuming no recursive connections...)
-  
-  this->SetDirty( property, 1 ); // dirty on all cons
-  
-  if( con != -1 ) // unless this was a local change 
-    this->SetDirty( con, property, 0 ); // clean on this con
-
-#ifdef INCLUDE_RTK2
-  if( refresh_figure )
-  {
-    RtkShutdown();
-    RtkStartup();
-  }
-  
-  if( move_figure && this->fig )
-    rtk_fig_origin(this->fig, local_px, local_py, local_pth );
-#endif 
-
-  return 0;
+  // even if we handled it, we still call the basic SetProperty in
+  // order to set the dirty flags correctly
+  return( CEntity::SetProperty( con, property, value, len ) ); 
 }
 
 

@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.121 2002-09-16 23:44:34 gerkey Exp $
+ * CVS info: $Id: world.cc,v 1.122 2002-09-25 02:55:55 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -170,7 +170,7 @@ CWorld::CWorld( int argc, char** argv, Library* lib )
   // Run the gui by default
   this->enable_gui = true;
 
-#ifdef RTVG
+#ifdef USE_GNOME2
   g_canvas = NULL;
   g_app = NULL;
 #endif
@@ -314,7 +314,7 @@ bool CWorld::ParseCmdLine(int argc, char **argv)
     rtk_init(&argc, &argv);
 #endif
 
-#ifdef RTVG
+#ifdef USE_GNOME2
   // Initialise rtk if we are using it
   if(this->enable_gui)
     gnome_init( "Stage", (char*)VERSION,  argc, argv);
@@ -350,7 +350,7 @@ bool CWorld::Startup()
   if (this->enable_gui) RtkStartup();
 #endif
   
-#ifdef RTVG
+#ifdef USE_GNOME2
   if( this->enable_gui ) GuiStartup();
 #endif
 
@@ -485,7 +485,7 @@ void CWorld::Update(void)
 	  m_step_num++; 
 	}
       
-#ifdef RTVG
+#ifdef USE_GNOME2
       // allow gtk to do some work
       while( gtk_events_pending () )
 	gtk_main_iteration();      

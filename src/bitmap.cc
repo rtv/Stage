@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/bitmap.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -328,7 +328,7 @@ void CBitmap::RtkStartup()
 #endif
 
 
-#ifdef RTVG
+#ifdef USE_GNOME2
 
 void CBitmap::GuiStartup( void )
 {

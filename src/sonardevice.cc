@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.34 2002-09-07 02:05:25 rtv Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.35 2002-09-25 02:55:55 rtv Exp $
  */
 
 #include <math.h>
@@ -202,6 +202,61 @@ void CSonarDevice::UpdateConfig()
     }
   }
 }
+
+size_t CSonarDevice::PutData( void* vdata, size_t len )
+{
+  // export the data right away
+  size_t retval = CPlayerEntity::PutData( vdata, len );
+  
+  player_sonar_data_t* data = (player_sonar_data_t*)vdata;
+  
+#ifdef USE_GNOME2
+  // TODO - have this conditional on the view data menu
+  //if( m_world->ShowDeviceData( this->stage_type) )
+  
+  // we render the data as a colored polygon, if the range data is
+  // different from last time. note that we look at the ranges
+  // themselves, not just the timestamp, as we can get the same scans
+  // over and over...
+  if( memcmp( &data->ranges, &last_data.ranges, 
+	      ntohs(data->range_count) * sizeof(data->ranges[0])
+	      ) != 0 )
+    {
+      
+      GnomeCanvasPoints* points = gnome_canvas_points_new(this->sonar_count);
+      
+      for (int s = 0; s < this->sonar_count; s++)
+	{
+	  // convert from integer mm to double m
+	  double range = (double)ntohs(data->ranges[s]) / 1000.0;      
+	  points->coords[s*2+0] = this->sonars[s][0] + range * cos(this->sonars[s][2]); 
+	  points->coords[s*2+1] = this->sonars[s][1] + range * sin(this->sonars[s][2]);  
+	}
+      
+      // kill any previous data rendering
+      if( g_data ) 
+	gtk_object_destroy(GTK_OBJECT(g_data));
+      
+      // construct a polygon matching the lasersweep
+      assert( g_data = 
+	      gnome_canvas_item_new ( g_group,
+				      gnome_canvas_polygon_get_type(),
+				      "points", points,
+				      "fill_color_rgba", RGBA(this->color,16),
+				      "outline_color_rgba", RGBA(this->color,255),
+				      "width_pixels", 1,
+				      NULL ) );
+      gnome_canvas_points_free(points);
+    }
+  // store the old data for next time
+  memcpy( &last_data, data, len );
+
+#endif
+
+  return( retval );
+}
+
+
 
 #ifdef INCLUDE_RTK2
 

@@ -21,7 +21,7 @@
  * Desc: Gnome GUI world components (all methods begin with 'Gui')
  * Author: Richard Vaughan
  * Date: 7 Dec 2000
- * CVS info: $Id: gnomegui.cc,v 1.4 2002-09-21 08:23:37 rtv Exp $
+ * CVS info: $Id: gnomegui.cc,v 1.5 2002-09-25 02:55:55 rtv Exp $
  */
 
 
@@ -33,7 +33,7 @@
 #endif
 
 // if stage was configured to use the experimental GNOME GUI
-#ifdef RTVG
+#ifdef USE_GNOME2
 
 //#undef DEBUG
 //#undef VERBOSE
@@ -684,7 +684,7 @@ void CEntity::GuiStatus( void )
 
   // check for overflow
   assert( -1 != 
-	  sprintf( buf, buflen, 
+	  snprintf( buf, buflen, 
 		   "Type: %d pose: X: %.2f Y: %.2f TH: %.2f",
 		   this->stage_type, x, y, th ) );
 	  
@@ -718,6 +718,26 @@ void CPlayerEntity::GuiStatus( void )
 }
 
 
-                      
+                  
+void CEntity::GuiMove( void )
+{
+  // if the GUI is not up and running, do nothing
+  if( !this->m_world->g_canvas ) 
+    return; 
+  
+  assert( this->g_origin );
+  assert( this->g_group );
+  
+  double rotate[6], translate[6];
+  art_affine_translate( translate, local_px, local_py );
+  art_affine_rotate( rotate, RTOD(local_pth) );
+  
+  // translate the origin
+  gnome_canvas_item_affine_absolute( GNOME_CANVAS_ITEM(g_origin), translate);
+  
+  // rotate the group about the origin
+  gnome_canvas_item_affine_absolute( GNOME_CANVAS_ITEM(g_group), rotate);
+}
+
 #endif
 

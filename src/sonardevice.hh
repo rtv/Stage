@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.hh,v 1.1 2002-08-23 00:19:39 rtv Exp $
+ * CVS info: $Id: sonardevice.hh,v 1.2 2002-09-25 02:55:55 rtv Exp $
  */
 
 #ifndef SONARDEVICE_HH
@@ -70,6 +70,8 @@ public: static CSonarDevice* Creator( CWorld *world, CEntity *parent )
   // Structure holding the sonar data
   private: player_sonar_data_t data;
 
+protected: virtual size_t PutData( void* vdata, size_t len );
+
 #ifdef INCLUDE_RTK2
 
   // Initialise the rtk gui
@@ -83,6 +85,12 @@ public: static CSonarDevice* Creator( CWorld *world, CEntity *parent )
   
   // For drawing the sonar beams
   private: rtk_fig_t *scan_fig;
+#endif
+
+#ifdef USE_GNOME2
+  // cache the data between updates in this buffer. we compare the
+  // range readings to see if we need to re-render the range polygon
+  player_sonar_data_t last_data;
 #endif
 };
 

@@ -8,18 +8,9 @@ RTKLDADD    =
 RTKLDFLAGS  =
 endif
 
-if WITH_RTVG
-RTVGCPPFLAGS = $(GNOME2_CFLAGS)
-RTVGLDADD    =
-RTVGLDFLAGS  = $(GNOME2_LIBS)
-else
-RTVGCPPFLAGS =
-RTVGLDADD    =
-RTVGLDFLAGS  =
-endif
+# GNOME2_ macros are set in configure.in using PKG_CHECK and AC_SUBST - rtv
 
-
-AM_CPPFLAGS = -Wall -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/server/drivers/stage $(RTKCPPFLAGS) $(RTVGCPPFLAGS)
+AM_CPPFLAGS = -Wall -I@PLAYER_DIR@/include -I@PLAYER_DIR@/server -I@PLAYER_DIR@/server/drivers/stage $(RTKCPPFLAGS) $(GNOME2_CFLAGS)
 
 bin_PROGRAMS = stage
 
@@ -98,6 +89,6 @@ stage_SOURCES = \
              #miscdevice.hh
 
 
-stage_LDADD = -lm -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -lplayerqueue $(RTKLDADD) $(RTVGLDADD) @LIBOBJS@ 
+stage_LDADD = -lm -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -lplayerqueue $(RTKLDADD) @LIBOBJS@ 
 
-stage_LDFLAGS =  $(RTKLDFLAGS) $(RTVGLDFLAGS)
+stage_LDFLAGS =  $(RTKLDFLAGS) $(GNOME2_LIBS)
