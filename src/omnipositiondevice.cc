@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/omnipositiondevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.3 $
+//  $Author: rtv $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -46,6 +46,11 @@ COmniPositionDevice::COmniPositionDevice(CWorld *world, CEntity *parent)
   
   m_player_type = PLAYER_POSITION_CODE; // from player's messages.h
   
+  // andrew - should have a unique stage type for each device independent of
+  // the player type for use by external viewers/loggers - rtv
+  // constants are enumerated in stage_types.hh
+  m_stage_type = OmniPositionType;
+
   // set up our sensor response
   this->laser_return = LaserReflect;
   this->sonar_return = true;
