@@ -3,7 +3,7 @@
 // I use this I get more pissed off with it. It works but it's ugly as
 // sin. RTV.
 
-// $Id: stagecpp.cc,v 1.52 2004-09-09 22:23:35 rtv Exp $
+// $Id: stagecpp.cc,v 1.53 2004-09-16 06:57:36 rtv Exp $
 
 //#define DEBUG
 
@@ -17,23 +17,30 @@ This is the worldfile description. It goes here!
 /** @addtogroup worldfile */
 /** foo bar bash bang bat */
 
+// TODO - get this from a system header?
+#define MAXPATHLEN 256
 
 #include "stage.h"
 #include "worldfile.hh"
 
+// temporary
+#include "world.h"
+#include "model.h"
 
 static CWorldFile wf;
 
-void configure_model( stg_model_t* mod, int section )
+void configure_model( model_t* mod, int section )
 {
   stg_pose_t pose;
   pose.x = wf.ReadTupleLength(section, "pose", 0, STG_DEFAULT_POSEX );
   pose.y = wf.ReadTupleLength(section, "pose", 1, STG_DEFAULT_POSEY );
   pose.a = wf.ReadTupleAngle(section, "pose", 2, STG_DEFAULT_POSEA );      
   
-  if( pose.x || pose.y || pose.a )
-    stg_model_prop_with_data( mod, STG_PROP_POSE, &pose, sizeof(pose) );
-      
+  //if( pose.x || pose.y || pose.a )
+  //stg_model_prop_with_data( mod, STG_PROP_POSE, &pose, sizeof(pose) );
+  model_set_pose( mod, &pose );
+
+  
   /** Load the geometry */
   stg_geom_t geom;
   geom.pose.x = wf.ReadTupleLength(section, "origin", 0, STG_DEFAULT_GEOM_POSEX );
@@ -42,58 +49,49 @@ void configure_model( stg_model_t* mod, int section )
   geom.size.x = wf.ReadTupleLength(section, "size", 0, STG_DEFAULT_GEOM_SIZEX );
   geom.size.y = wf.ReadTupleLength(section, "size", 1, STG_DEFAULT_GEOM_SIZEY );
 
-  if( geom.pose.x != STG_DEFAULT_GEOM_POSEX ||
-      geom.pose.y != STG_DEFAULT_GEOM_POSEY ||
-      geom.pose.a != STG_DEFAULT_GEOM_POSEA ||
-      geom.size.x != STG_DEFAULT_GEOM_SIZEX ||
-      geom.size.y != STG_DEFAULT_GEOM_SIZEY )
-    stg_model_prop_with_data( mod, STG_PROP_GEOM, &geom, sizeof(geom) );
+//   if( geom.pose.x != STG_DEFAULT_GEOM_POSEX ||
+//       geom.pose.y != STG_DEFAULT_GEOM_POSEY ||
+//       geom.pose.a != STG_DEFAULT_GEOM_POSEA ||
+//       geom.size.x != STG_DEFAULT_GEOM_SIZEX ||
+//       geom.size.y != STG_DEFAULT_GEOM_SIZEY )
+//     stg_model_prop_with_data( mod, STG_PROP_GEOM, &geom, sizeof(geom) );
+
+  model_set_geom( mod, &geom );
+
       
   stg_bool_t obstacle;
-  obstacle = wf.ReadInt( section, "obstacle_return", STG_DEFAULT_OBSTACLERETURN );
-  if( obstacle != STG_DEFAULT_OBSTACLERETURN ) 
-    stg_model_prop_with_data( mod, STG_PROP_OBSTACLERETURN, 
-			      &obstacle, sizeof(obstacle) );
-      
+  obstacle = wf.ReadInt( section, "obstacle_return", STG_DEFAULT_OBSTACLERETURN );    
+  model_set_obstaclereturn( mod, &obstacle );
+  
   stg_guifeatures_t gf;
   gf.boundary = wf.ReadInt(section, "gui.boundary", STG_DEFAULT_GUI_BOUNDARY );
   gf.nose = wf.ReadInt(section, "gui.nose", STG_DEFAULT_GUI_NOSE );
   gf.grid = wf.ReadInt(section, "gui.grid", STG_DEFAULT_GUI_GRID );
   gf.movemask = wf.ReadInt(section, "gui.movemask", STG_DEFAULT_GUI_MOVEMASK );
-  
-  if( gf.boundary != STG_DEFAULT_GUI_BOUNDARY ||
-      gf.nose != STG_DEFAULT_GUI_NOSE ||
-      gf.grid != STG_DEFAULT_GUI_GRID ||
-      gf.movemask != STG_DEFAULT_GUI_MOVEMASK ) 	
-    stg_model_prop_with_data(mod, STG_PROP_GUIFEATURES, &gf, sizeof(gf));
+  model_set_guifeatures( mod, &gf );
   
   // laser visibility
   int laservis = 
     wf.ReadInt(section, "laser_return", STG_DEFAULT_LASERRETURN );      
-  if( laservis != STG_DEFAULT_LASERRETURN )
-    stg_model_prop_with_data(mod, STG_PROP_LASERRETURN, 
-			     &laservis, sizeof(laservis) );
-      
+  model_set_laserreturn( mod, (stg_laser_return_t*)&laservis );
+  
   // blob visibility
-  int blobvis = 
-    wf.ReadInt(section, "blob_return", STG_DEFAULT_BLOBRETURN );      
-  if( blobvis != STG_DEFAULT_BLOBRETURN )
-    stg_model_prop_with_data(mod, STG_PROP_BLOBRETURN, 
-			     &blobvis, sizeof(blobvis) );
-      
+  //int blobvis = 
+  //wf.ReadInt(section, "blob_return", STG_DEFAULT_BLOBRETURN );      
+ 
+  // TODO
+  //model_set_blobreturn( mod, &blobvis );
+  
   // ranger visibility
   stg_bool_t rangervis = 
-    wf.ReadInt( section, "ranger_return", STG_DEFAULT_RANGERRETURN );
-  if( rangervis != STG_DEFAULT_RANGERRETURN ) 
-    stg_model_prop_with_data( mod, STG_PROP_RANGERRETURN, 
-			      &rangervis, sizeof(rangervis) );
+   wf.ReadInt( section, "ranger_return", STG_DEFAULT_RANGERRETURN );
+  
+  // TODO
+  //odel_set_ra
 
   // fiducial visibility
-  int fid_return = wf.ReadInt( section, "fiducial_id", FiducialNone );
-  
-  if( fid_return != FiducialNone )
-    stg_model_prop_with_data( mod, STG_PROP_FIDUCIALRETURN, 
-			      &fid_return, sizeof(fid_return) );
+  int fid_return = wf.ReadInt( section, "fiducial_id", FiducialNone );  
+  model_set_fiducialreturn( mod, &fid_return );
 
   const char* colorstr = wf.ReadString( section, "color", NULL );
   if( colorstr )
@@ -101,8 +99,10 @@ void configure_model( stg_model_t* mod, int section )
       stg_color_t color = stg_lookup_color( colorstr );
       PRINT_DEBUG2( "stage color %s = %X", colorstr, color );
 	  
-      if( color != STG_DEFAULT_COLOR )
-	stg_model_prop_with_data( mod, STG_PROP_COLOR, &color,sizeof(color));
+      //if( color != STG_DEFAULT_COLOR )
+      //stg_model_prop_with_data( mod, STG_PROP_COLOR, &color,sizeof(color));
+
+      model_set_color( mod, &color );
     }
 
   const char* bitmapfile = wf.ReadString( section, "bitmap", NULL );
@@ -127,9 +127,10 @@ void configure_model( stg_model_t* mod, int section )
       stg_normalize_lines( lines, num_lines );
       stg_scale_lines( lines, num_lines, geom.size.x, geom.size.y );
       stg_translate_lines( lines, num_lines, -geom.size.x/2.0, -geom.size.y/2.0 );
-	  
-      stg_model_prop_with_data( mod, STG_PROP_LINES, 
-				lines, num_lines * sizeof(stg_line_t ));
+	
+      model_set_lines( mod, lines, num_lines );
+      //stg_model_prop_with_data( mod, STG_PROP_LINES, 
+      //			lines, num_lines * sizeof(stg_line_t ));
 	  	  
       free( lines );
 	  
@@ -156,9 +157,9 @@ void configure_model( stg_model_t* mod, int section )
       //      lines[l].x1, lines[l].y1, 
       //      lines[l].x2, lines[l].y2 ); 
 	  
-      stg_model_prop_with_data( mod, STG_PROP_LINES,
-				lines, linecount * sizeof(stg_line_t) );
-	  
+      //stg_model_prop_with_data( mod, STG_PROP_LINES,
+      //			lines, linecount * sizeof(stg_line_t) );
+      model_set_lines( mod, lines, linecount );
       free( lines );
     }
       
@@ -166,9 +167,8 @@ void configure_model( stg_model_t* mod, int section )
   vel.x = wf.ReadTupleLength(section, "velocity", 0, 0 );
   vel.y = wf.ReadTupleLength(section, "velocity", 1, 0 );
   vel.a = wf.ReadTupleAngle(section, "velocity", 2, 0 );      
-  if( vel.x || vel.y || vel.a )
-    stg_model_prop_with_data( mod, STG_PROP_VELOCITY, &vel, sizeof(vel) );
-        
+  model_set_velocity( mod, &vel );
+    
   stg_energy_config_t ecfg;
   ecfg.capacity 
     = wf.ReadFloat(section, "energy.capacity", STG_DEFAULT_ENERGY_CAPACITY );
@@ -178,16 +178,11 @@ void configure_model( stg_model_t* mod, int section )
     = wf.ReadFloat(section, "energy_return", STG_DEFAULT_ENERGY_GIVERATE );
   ecfg.trickle_rate 
     = wf.ReadFloat(section, "energy.trickle", STG_DEFAULT_ENERGY_TRICKLERATE );
-      
-  if( ecfg.capacity != STG_DEFAULT_ENERGY_CAPACITY ||
-      ecfg.probe_range != STG_DEFAULT_ENERGY_PROBERANGE ||
-      ecfg.give_rate != STG_DEFAULT_ENERGY_GIVERATE ||
-      ecfg.trickle_rate != STG_DEFAULT_ENERGY_TRICKLERATE )
-    stg_model_prop_with_data( mod, STG_PROP_ENERGYCONFIG, &ecfg, sizeof(ecfg) );         
+  model_set_energy_config( mod, &ecfg );
+
   stg_kg_t mass;
   mass = wf.ReadFloat(section, "mass", STG_DEFAULT_MASS );
-  if( mass != STG_DEFAULT_MASS )
-    stg_model_prop_with_data( mod, STG_PROP_MASS, &mass, sizeof(mass) );  
+  model_set_mass( mod, &mass );
 }
 
 /** @addtogroup worldfile */
@@ -201,7 +196,7 @@ void configure_model( stg_model_t* mod, int section )
 /** @} */
 
 
-void configure_laser( stg_model_t* mod, int section )
+void configure_laser( model_t* mod, int section )
 {
   stg_laser_config_t lconf;
   memset( &lconf, 0, sizeof(lconf) );
@@ -214,8 +209,8 @@ void configure_laser( stg_model_t* mod, int section )
     wf.ReadLength(section, "laser.range_max", STG_DEFAULT_LASER_MAXRANGE);
   lconf.fov = 
     wf.ReadAngle(section, "laser.fov", STG_DEFAULT_LASER_FOV);
-  
-  stg_model_prop_with_data( mod, STG_PROP_CONFIG, &lconf,sizeof(lconf));
+
+  model_set_config( mod, &lconf, sizeof(lconf));
 }
 
 /** @addtogroup worldfile */
@@ -424,15 +419,14 @@ void stg_client_load( stg_client_t* cli, stg_id_t world_id )
 // create a world containing a passel of Stage models based on the
 // worldfile
 
-stg_world_t* stg_client_worldfile_load( stg_client_t* client, 
-					char* worldfile_path )
+world_t* stg_client_worldfile_load( char* worldfile_path )
 {
   wf.Load( worldfile_path );
   
   int section = 0;
-      
+  
   char* world_name =
-    (char*)wf.ReadString(section, "name", (char*)"Player world" );
+    (char*)wf.ReadString(section, "name", worldfile_path );
   
   double resolution = 
     wf.ReadFloat(0, "resolution", STG_DEFAULT_RESOLUTION ); 
@@ -448,13 +442,13 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
   //      interval_sim, interval_real );
   
   // create a single world
-  stg_world_t* world = 
-    stg_client_createworld( client, 
-			    0,
-			    world_name, 
-			    resolution, 
-			    interval_sim, 
-			    interval_real );
+  world_t* world = 
+    stg_world_create( 0, 
+		      world_name, 
+		      interval_sim, 
+		      interval_real,
+		      resolution );
+
   if( world == NULL )
     return NULL; // failure
   
@@ -468,19 +462,11 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       PRINT_DEBUG2( "section %d parent section %d\n", 
 		    section, parent_section );
       
-      stg_model_t* parent = NULL;
+      model_t* parent = NULL;
       
-      parent = (stg_model_t*)
-	g_hash_table_lookup( world->models_section, &parent_section );
+      parent = (model_t*)
+	g_hash_table_lookup( world->models, &parent_section );
       
-#ifdef DEBUG
-      if( parent )
-	printf( "parent has id %d name %s\n", 
-		parent->id_client, parent->name );
-      else
-	printf( "no parent\n" );
-#endif
-
       // select model type based on the worldfile token
       stg_model_type_t type;
       
@@ -519,7 +505,7 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 		  world->child_type_count[type]++);
       else
 	snprintf( namebuf, STG_TOKEN_MAX, "%s.%s:%d", 
-		  parent->name,
+		  parent->token,
 		  typestr, 
 		  parent->child_type_count[type]++ );
       
@@ -530,11 +516,16 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 
       //PRINT_WARN2( "loading model name %s for type %s", namebuf, typestr );
       
-      stg_model_t* mod = 
-	stg_world_createmodel( world, parent, section, type, namestr );
+      PRINT_DEBUG2( "creating model from section %d parent section %d",
+		    section, parent_section );
+
+      model_t* mod = 
+	//stg_world_createmodel( world, parent, section, type, namestr );
+	world_model_create( world, section, parent_section, type, namestr );
       
       // load all the generic specs from this section.
       configure_model( mod, section );
+      
       
       // load type-specific configs from this section
       switch( type )
@@ -542,7 +533,7 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 	case STG_MODEL_LASER:
 	  configure_laser( mod, section );
 	  break;
-	  
+	  /*  
 	case STG_MODEL_BLOB:
 	  configure_blobfinder( mod, section );
 	  break;
@@ -558,7 +549,7 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 	case STG_MODEL_RANGER:
 	  configure_ranger( mod, section );
 	  break;
-	  
+	  */
 	default:
 	  PRINT_DEBUG1( "don't know how to configure type %d", type );
 	}

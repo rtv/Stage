@@ -2,7 +2,7 @@
 # Automake script to build Stage's Makefile
 #
 # RTV 20021026
-# $Id: Makefile.am,v 1.61 2004-09-16 06:54:27 rtv Exp $
+# $Id: Makefile.am,v 1.62 2004-09-16 06:57:36 rtv Exp $
 
 #SUBDIRS = models
 
@@ -58,7 +58,7 @@ libstage_la_SOURCES = \
 	model_test.c \
 	raytrace.c \
 	raytrace.h \
-	stagecpp2.cc \
+	stagecpp.cc \
 	stage.c \
 	stage.h \
 	stageclient.c \
