@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.2 $
+//  $Revision: 1.3 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -40,13 +40,13 @@ CGripperDevice::CGripperDevice(CWorld *world,
     m_paddles_moving = false;
     m_gripper_error = false;
     m_lift_up = false;
-    m_lift_down = false;
+    m_lift_down = true;
     m_lift_moving = false;
     m_lift_error = false;
-    m_paddles_closed = false;
     
     // these are initial values
     m_paddles_open = true;
+    m_paddles_closed = false;
     
     // gui export stuff
     exporting = true;
@@ -142,6 +142,7 @@ void CGripperDevice::Update()
           if(!m_paddles_open)
           {
             m_paddles_open = true;
+            m_paddles_closed = false;
             DropObject();
           }
           break;
@@ -149,6 +150,7 @@ void CGripperDevice::Update()
           if(m_paddles_open)
           {
             m_paddles_open = false;
+            m_paddles_closed = true;
             PickupObject();
           }
           break;
@@ -194,25 +196,43 @@ void CGripperDevice::MakeData(player_gripper_data_t* data, size_t len)
     return;
   }
 
-  // break beams are not implemented
+  // break beams are sort of implemented
+  //   both beams are broken when we're holding a puck
   data->beams = 0;
+  data->beams |= m_puck_count ? 0x04 : 0x00;
+  data->beams |= m_puck_count ? 0x08 : 0x00;
 
   // set the proper bits
   data->state = 0;
-  data->state &= m_paddles_open ? 0x01 : 0x00;
-  data->state &= m_paddles_closed ? 0x02 : 0x00;
-  data->state &= m_paddles_moving ? 0x04 : 0x00;
-  data->state &= m_gripper_error ? 0x08 : 0x00;
-  data->state &= m_lift_up ? 0x10 : 0x00;
-  data->state &= m_lift_down ? 0x20 : 0x00;
-  data->state &= m_lift_moving ? 0x40 : 0x00;
-  data->state &= m_lift_error ? 0x80 : 0x00;
+  data->state |= m_paddles_open ? 0x01 : 0x00;
+  data->state |= m_paddles_closed ? 0x02 : 0x00;
+  data->state |= m_paddles_moving ? 0x04 : 0x00;
+  data->state |= m_gripper_error ? 0x08 : 0x00;
+  data->state |= m_lift_up ? 0x10 : 0x00;
+  data->state |= m_lift_down ? 0x20 : 0x00;
+  data->state |= m_lift_moving ? 0x40 : 0x00;
+  data->state |= m_lift_error ? 0x80 : 0x00;
 }
     
 // Drop an object from the gripper (if there is one)
 //
 void CGripperDevice::DropObject()
 {
+  // if we don't have any pucks, then there are no pucks to drop
+  if(!m_puck_count)
+    return;
+
+  // find out where we are
+  double px,py,pth;
+  GetGlobalPose(px,py,pth);
+
+  // drop the last one we picked up
+  double x_offset = (exp.width*2.0);
+  m_puck_count--;
+  m_pucks[m_puck_count]->m_parent_object = (CEntity*)NULL;
+  m_pucks[m_puck_count]->SetGlobalPose(px+x_offset*cos(pth),
+                                       py+x_offset*sin(pth),
+                                       pth);
 }
     
 // Try to pick up an object with the gripper
@@ -255,14 +275,14 @@ void CGripperDevice::PickupObject()
 
   if(closest_puck && closest_dist<m_gripper_range)
   {
-    printf("picking up puck %d\n", closest_puck);
+    //printf("picking up puck %d\n", closest_puck);
     closest_puck->m_parent_object = this;
     closest_puck->SetPose(exp.width/2.0,0,0);
     m_pucks[m_puck_count++]=closest_puck;
   }
   else
   {
-    puts("no close pucks");
+    //puts("no close pucks");
   }
 }
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -110,16 +110,38 @@ bool CPuck::Startup()
 //
 void CPuck::Update()
 {
+    static bool undrawn = false;
+
     ASSERT(m_world != NULL);
+    
+    // if we've been picked up by a gripper, then undraw once
+    // and don't do anything else
+    //
+    if(m_parent_object)
+    {
+      if(!undrawn)
+      {
+        // Undraw our old representation
+        //
+        m_world->SetCircle(m_map_px, m_map_py, 
+                           exp.width / 2.0, layer_puck, 0);
+        m_world->SetCircle(m_map_px, m_map_py, 
+                           exp.width / 2.0, layer_vision, 0);
+        undrawn = true;
+      }
+
+      return;
+    }
+
+    undrawn = false;
+
+    Move();      
 
     // Undraw our old representation
     //
     m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_puck, 0);
     m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_vision, 0);
 
-    // move, if necessary (don't move if we've been picked up)
-    if(!m_parent_object)
-      Move();      
     
     // Grab our new global pose
     //

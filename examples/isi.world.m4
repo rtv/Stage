@@ -1,12 +1,12 @@
 include(robots.m4)
 
-set environment_file = cave.pnm
-set pixels_per_meter =  60
+set environment_file = rink.pnm
+set pixels_per_meter =  20
 set laser_res = 2
 
 #instantiate robots
-isi_robot(1,2,0,6665)
-isi_robot(1,3,0,6666)
+isi_robot(5,6,0,6665)
+isi_robot(4,6,0,6666)
 
 create movable_object pose 2.98 3.42 0 channel 2 
 create movable_object pose 3.40 3.47 0 channel 2 

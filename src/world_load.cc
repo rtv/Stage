@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -79,7 +79,8 @@ bool CWorld::Load(const char *filename)
 
       PRINT_MSG1("running m4: %s",system_command_string);
       retval = system(system_command_string);
-      if(retval == 127 || retval == -1)
+      //if(retval == 127 || retval == -1)
+      if(retval)
       {
         PRINT_MSG("Error while running m4 on world file");
         return false;
