@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.1.2.3 2003-02-06 03:47:23 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.1.2.4 2003-02-06 03:55:54 rtv Exp $
  */
 
 //
@@ -245,14 +245,28 @@ int RtkGuiLoad( stage_gui_config_t* cfg )
   //ox = dx / 2;
   //oy = dy / 2;
 
-  ox = CEntity::root->size_x / 2.0;
-  oy = CEntity::root->size_y / 2.0;
+  // if we have a root, we'll center it
+  if( CEntity::root )
+    {
+      ox = CEntity::root->size_x / 2.0;
+      oy = CEntity::root->size_y / 2.0;
+    }
+  else
+    {
+      ox = dx/2.0;
+      oy = dy/2.0;
+    }
 
   rtk_update_time = 0;
   rtk_update_rate = 10;
   
   if( app == NULL ) // we need to create the basic data for the app
-    RtkGuiCreateApp(); // this builds the app, canvas, menus, etc
+    {
+      RtkGuiCreateApp(); // this builds the app, canvas, menus, etc
+      // Start the gui; dont run in a separate thread and dont let it do
+      // its own updates.
+      rtk_app_main_init(app);
+    }  
   
   // configure the GUI
   rtk_canvas_size( canvas, width, height );
@@ -263,9 +277,6 @@ int RtkGuiLoad( stage_gui_config_t* cfg )
   rtk_menuitem_check(grid_item, cfg->showgrid);
   rtk_menuitem_check(subscribedonly_item, cfg->showsubscribedonly);
  
-  // Start the gui; dont run in a separate thread and dont let it do
-  // its own updates.
-  rtk_app_main_init(app);
   rtk_canvas_render( canvas );
 
   return 0; // success

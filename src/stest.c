@@ -1,6 +1,6 @@
 
 /*
-  $Id: stest.c,v 1.1.2.5 2003-02-06 03:47:23 rtv Exp $
+  $Id: stest.c,v 1.1.2.6 2003-02-06 03:55:54 rtv Exp $
 */
 
 #if HAVE_CONFIG_H
@@ -192,8 +192,24 @@ int main( int argc, char** argv )
 	  			    STG_HDR_PROPS, bp->data, bp->len );
 	  //EVAL(result);
 	   SIOFreeBuffer( bp );
-
-
+	   
+	   if( c == 75 )
+	     {
+	       stage_gui_config_t gui;
+	       strcpy( gui.token, "rtk" );
+	       gui.width = 600;
+	       gui.height = 600;
+	       gui.ppm = 50;
+	       gui.originx = 0;
+	       gui.originy = 0;
+	       gui.showsubscribedonly = 0;
+	       gui.showgrid = 1;
+	       gui.showdata = 1;
+	       
+	       result = SIOWriteMessage( connection, timestamp, 
+					 STG_HDR_GUI, (char*)&gui, sizeof(gui) ) ;
+	     }
+	   
 	  SIOServiceConnections(&HandleCommand,
 				&HandleModel, 
 				&HandleProperty,
