@@ -21,7 +21,7 @@
  * Desc: Simulated robot with various sensors
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.24 2003-08-28 03:37:09 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.25 2003-08-28 17:48:24 rtv Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -131,22 +131,35 @@ public:
   stg_rotrect_t* GetRect( int i )
   { return( this->rect_array == NULL? NULL : &g_array_index(this->rect_array, stg_rotrect_t, i)); };
   
+  // methods controlling our rendering in the matrix ------------------------
+  // these are all inlined for speed
+protected:
+  // a user-pokeable flag controlling whether we render or not
+  stg_matrix_render_t matrix_render;
+  
+  // recursively call map or unmap on myself and all my children
+  inline void UnMapWithDescendents( void );
+  inline void MapWithDescendents( void );
+
   // Render the entity into the world
   //  protected: void Map(double px, double py, double pth);
-protected: void Map( stg_pose_t* pose );
+  inline void Map( stg_pose_t* pose );
   
   // calls Map(double,double,double) with the current global pose
-  protected: void Map( void );
+  inline void Map( void );
 
   // Remove the entity from the world
-  protected: void UnMap();
+  inline void UnMap();
 
   // Remove the entity at its current pose and remap it at a new pose.
   // protected: void ReMap(double px, double py, double pth);
-  protected: void ReMap( stg_pose_t* pose);
+  inline void ReMap( stg_pose_t* pose);
 
   // Primitive rendering function using internally
-  private: void MapEx( stg_pose_t* pose, bool render);
+private: 
+  inline void MapEx( stg_pose_t* pose, bool render);
+
+  // end --------------------------------------------------------------------
 
   // Check to see if the given pose will yield a collision with obstacles.
   // Returns a pointer to the first entity we are in collision with.
@@ -158,11 +171,11 @@ protected: CEntity *TestCollision( double *hity = NULL, double* hity = NULL);
 public: void GetStatusString( char* buf, int buflen );
   
   // Convert local to global coords
-public: void LocalToGlobal( double &x, double &y, double &a );
-public: void LocalToGlobal( stg_pose_t* pose );
+public: inline void LocalToGlobal( double &x, double &y, double &a );
+public: inline void LocalToGlobal( stg_pose_t* pose );
   
   // Convert global to local coords
-public: void GlobalToLocal( stg_pose_t* pose );
+public: inline void GlobalToLocal( stg_pose_t* pose );
   
   // set the entity's dimensions
 public: void SetSize( stg_size_t* sz );

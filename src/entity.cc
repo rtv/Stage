@@ -21,16 +21,16 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.112 2003-08-28 03:37:09 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.113 2003-08-28 17:48:24 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
 #endif
 
-#define DEBUG
+//#define DEBUG
 //#define VERBOSE
 //#define RENDER_INITIAL_BOUNDING_BOXES
-//#undef DEBUG
+#undef DEBUG
 //#undef VERBOSE
 
 #include <math.h>
@@ -169,7 +169,9 @@ CEntity::CEntity( stg_entity_create_t* init )
     this->color = stg_lookup_color(init->color); 
   else
     this->color = stg_lookup_color(STG_GENERIC_COLOR); 
-  
+
+  // we DO render in the matrix by default
+  this->matrix_render = 1;
   
   // zero pose
   memset( &pose_local, 0, sizeof(pose_local) );
@@ -465,25 +467,31 @@ gboolean CEntity::Update()
 ///////////////////////////////////////////////////////////////////////////
 // Render the entity into the world
 void CEntity::Map( stg_pose_t* pose )
-{
+{  
+  if( this->matrix_render == 0 )
+    return;
+  
   // we're figuring out the mapped pose from this new pose
   memcpy( &this->pose_map, pose, sizeof(stg_pose_t) );
-
+  
   // get the pose in local coords
   this->GlobalToLocal( &this->pose_map );
-
+  
   // add our center of rotation offsets
   this->pose_map.x += pose_origin.x;
   this->pose_map.y += pose_origin.y;
 
-   // convert back to global coords
+  // convert back to global coords
   this->LocalToGlobal( &this->pose_map );
 
   MapEx( &this->pose_map, true);
 }
 
 void CEntity::Map( void )
-{
+{ 
+  if( this->matrix_render == 0 )
+    return;
+  
   stg_pose_t pose;
   GetGlobalPose( &pose );
   Map( &pose );
@@ -519,7 +527,7 @@ void CEntity::ReMap( stg_pose_t* pose )
 // Primitive rendering function
 void CEntity::MapEx( stg_pose_t* pose, bool render)
 {
-  RenderRects( render );
+    RenderRects( render );
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -663,6 +671,13 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
 
   switch( ptype )
     {      
+    case STG_PROP_MATRIX_RENDER:
+      this->UnMap();
+      g_assert( (len == sizeof(stg_matrix_render_t)) );	
+      this->matrix_render = *(stg_matrix_render_t*)data;
+      this->Map();
+      break;
+      
     case STG_PROP_POSE:
       g_assert( (len == sizeof(stg_pose_t)) );	
       this->SetPose( (stg_pose_t*)data );
@@ -779,7 +794,7 @@ int CEntity::SetProperty( stg_prop_id_t ptype, void* data, size_t len )
 
 stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
 {    
-  //ENT_DEBUG2( "Getting prop %s (%d)", 
+//ENT_DEBUG2( "Getting prop %s (%d)", 
   //       stg_property_string(ptype), ptype );
   
   stg_property_t* prop = stg_property_create();
@@ -788,23 +803,37 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
   prop->timestamp = 100.0;
   
   switch( ptype )
-    {
+    { 
+    case STG_PROP_MATRIX_RENDER:
+      prop = stg_property_attach_data( prop, 
+				       &this->matrix_render, 
+				       sizeof(this->matrix_render) );
+      break;
+      
     case STG_PROP_POSE:
       stg_pose_t pose;
       this->GetPose(&pose);
-      prop = stg_property_attach_data( prop, &pose, sizeof(pose) );
+      prop = stg_property_attach_data( prop, 
+				       &pose, 
+				       sizeof(pose) );
       break;
       
     case STG_PROP_SIZE:
-      prop = stg_property_attach_data( prop, &this->size, sizeof(this->size) );
+      prop = stg_property_attach_data( prop, 
+				       &this->size, 
+				       sizeof(this->size) );
       break;
       
     case STG_PROP_ORIGIN:
-      prop = stg_property_attach_data( prop, &this->pose_origin, sizeof(this->pose_origin) );
+      prop = stg_property_attach_data( prop, 
+				       &this->pose_origin, 
+				       sizeof(this->pose_origin) );
       break;
 
     case STG_PROP_VELOCITY:
-      prop = stg_property_attach_data( prop, &this->velocity, sizeof(this->velocity));
+      prop = stg_property_attach_data( prop, 
+				       &this->velocity, 
+				       sizeof(this->velocity));
       break;
 
     case STG_PROP_LASER_DATA:
@@ -815,41 +844,49 @@ stg_property_t* CEntity::GetProperty( stg_prop_id_t ptype )
       break;
       
     case STG_PROP_NEIGHBORRETURN:
-      prop = stg_property_attach_data( prop, &this->neighbor_return, 
+      prop = stg_property_attach_data( prop, 
+				       &this->neighbor_return, 
 				       sizeof(this->neighbor_return));
       break;
 
     case STG_PROP_NEIGHBORBOUNDS:
-      prop = stg_property_attach_data( prop, &this->bounds_neighbor, 
+      prop = stg_property_attach_data( prop, 
+				       &this->bounds_neighbor, 
 				       sizeof(this->bounds_neighbor));
 
     case STG_PROP_BLINKENLIGHT:
-      prop = stg_property_attach_data( prop, &this->blinkenlight, 
+      prop = stg_property_attach_data( prop, 
+				       &this->blinkenlight, 
 				       sizeof(this->blinkenlight));
       break;
 
     case STG_PROP_NOSE:
-      prop = stg_property_attach_data( prop, &this->draw_nose, 
+      prop = stg_property_attach_data( prop, 
+				       &this->draw_nose, 
 				       sizeof(this->draw_nose));
       break;
 
     case STG_PROP_BORDER:
-      prop = stg_property_attach_data( prop, &this->border, 
+      prop = stg_property_attach_data( prop, 
+				       &this->border, 
 				       sizeof(this->border));
       break;
 
     case STG_PROP_LASERRETURN:
-      prop = stg_property_attach_data( prop, &this->laser_return, 
+      prop = stg_property_attach_data( prop, 
+				       &this->laser_return, 
 				       sizeof(this->laser_return));
       break;
       
     case STG_PROP_LOS_MSG:
-      prop = stg_property_attach_data( prop, &this->last_received_msg,
+      prop = stg_property_attach_data( prop, 
+				       &this->last_received_msg,
 				       sizeof(this->last_received_msg));
       break;
  
     case STG_PROP_MOUSE_MODE:
-      prop = stg_property_attach_data( prop, &this->mouseable,
+      prop = stg_property_attach_data( prop, 
+				       &this->mouseable,
 				       sizeof(this->mouseable));
       break;
       
@@ -1108,22 +1145,13 @@ bool CEntity::OcclusionTest(CEntity* ent )
 // Set the entitys pose in the parent cs
 void CEntity::SetPose( stg_pose_t* pose )
 {
-  //ENT_DEBUG3( "setting pose to [%.2f %.2f %.2f]", pose->x, pose->y, pose->a );
-  
+  //ENT_DEBUG3( "setting pose to [%.2f %.2f %.2f]", pose->x, pose->y, pose->a );  
   // if the new position is different, call SetProperty to make the change.
   if( memcmp( &this->pose_local, pose, sizeof( stg_pose_t)) != 0 )
     {
-      for( CEntity* child = stg_ent_first_child( this ); child; 
-	   child = stg_ent_next_sibling(child))
-	child->UnMap();
-      
-      this->UnMap();
+      this->UnMapWithDescendents();
       memcpy( &this->pose_local, pose, sizeof(stg_pose_t) );
-      this->Map();
-
-      for( CEntity* child = stg_ent_first_child( this ); child; 
-	   child = stg_ent_next_sibling(child))
-	child->Map();
+      this->MapWithDescendents();
     }
 }
 
@@ -1131,23 +1159,34 @@ void CEntity::SetPose( stg_pose_t* pose )
 // Set the entity's origin in the parent cs
 void CEntity::SetOrigin( stg_pose_t* pose )
 {
-  ENT_DEBUG3( "setting origin to [%.2f %.2f %.2f]", pose->x, pose->y, pose->a );
-  
+  //ENT_DEBUG3( "setting origin to [%.2f %.2f %.2f]", pose->x, pose->y, pose->a );
   // if the new position is different, call SetProperty to make the change.
   if( memcmp( &this->pose_origin, pose, sizeof( stg_pose_t)) != 0 )
     {
-      for( CEntity* child = stg_ent_first_child( this ); child; 
-	   child = stg_ent_next_sibling(child))
-	child->UnMap();
-
-      this->UnMap();
+      this->UnMapWithDescendents();
       memcpy( &this->pose_origin, pose, sizeof(stg_pose_t) );
-      this->Map();
-
-      for( CEntity* child = stg_ent_first_child( this ); child; 
-	   child = stg_ent_next_sibling(child))
-	child->Map();
+      this->MapWithDescendents();
     }
+}
+
+// unmap myself and all my children
+void CEntity::UnMapWithDescendents( void )
+{
+  for( CEntity* child = stg_ent_first_child( this ); child; 
+       child = stg_ent_next_sibling(child))
+    child->UnMap();
+  
+  this->UnMap();
+}
+
+// map myself and all my children
+void CEntity::MapWithDescendents( void )
+{
+  for( CEntity* child = stg_ent_first_child( this ); child; 
+       child = stg_ent_next_sibling(child))
+    child->Map();
+  
+  this->Map();
 }
 
 void CEntity::SetSize( stg_size_t* sz )

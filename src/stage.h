@@ -75,13 +75,14 @@
        STG_PROP_RANGERS,
        STG_PROP_LASER_DATA,
        STG_PROP_NEIGHBORS,
-       STG_PROP_NEIGHBORRETURN,
-       STG_PROP_NEIGHBORBOUNDS,
-       STG_PROP_BLINKENLIGHT,
+       STG_PROP_NEIGHBORRETURN, // if non-zero, show up in neighbor sensor
+       STG_PROP_NEIGHBORBOUNDS, // range bounds of neighbor sensor
+       STG_PROP_BLINKENLIGHT,  // light blinking rate
        STG_PROP_NOSE,
        STG_PROP_LOS_MSG,
        STG_PROP_MOUSE_MODE,
-       STG_PROP_BORDER,
+       STG_PROP_BORDER,        // if non-zero, add a bounding rectangle
+       STG_PROP_MATRIX_RENDER, // if non-zero, render in the matrix
        STG_PROP_CREATE_WORLD,
        STG_PROP_DESTROY_WORLD,
        STG_PROP_WORLD_SIZE,
@@ -507,6 +508,14 @@ int stg_model_set_mouse_mode( stg_client_t* cli, stg_id_t id,
 
 int stg_model_get_mouse_mode( stg_client_t* cli, stg_id_t id, 
 			      stg_mouse_mode_t *mouse );
+
+typedef int stg_matrix_render_t;
+int stg_model_set_matrix_render( stg_client_t* cli, stg_id_t id, 
+				 stg_matrix_render_t *mrender );
+
+int stg_model_get_matrix_render( stg_client_t* cli, stg_id_t id, 
+				 stg_matrix_render_t *mrender );
+
 
 //int stg_model_get_rects(  stg_client_t* cli, stg_id_t id, 
 //		  stg_rotrect_array_t* rects );

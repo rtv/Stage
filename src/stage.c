@@ -66,12 +66,9 @@ const char* stg_property_string( stg_prop_id_t id )
     case STG_PROP_BORDER: return "STG_PROP_BORDER";break;
     case STG_PROP_LOS_MSG: return "STG_PROP_LOS_MSG";break;
     case STG_PROP_MOUSE_MODE: return "STG_PROP_MOUSE_MODE";break;
+    case STG_PROP_MATRIX_RENDER: return "STG_PROP_MATRIX_RENDER";break;
 	
-      // remove these
-      //case STG_PROP_IDAR_RX: return "STG_PROP_IDAR_RX"; break;
-      //case STG_PROP_IDAR_TX: return "STG_PROP_IDAR_TX"; break;
-      //case STG_PROP_IDAR_TXRX: return "STG_PROP_IDAR_TXRX"; break;
-      //case STG_PROP_POSITION_ORIGIN: return "STG_PROP_POSITION_ORIGIN"; break;
+      // todo
       //case STG_PROP_POSITION_ODOM: return "STG_PROP_POSITION_ODOM"; break;
       //case STG_PROP_POSITION_MODE: return "STG_PROP_POSITION_MODE"; break;
       //case STG_PROP_POSITION_STEER: return "STG_PROP_POSITION_STEER"; break;
@@ -927,6 +924,38 @@ int stg_model_get_neighbor_bounds( stg_client_t* cli, stg_id_t id,
     return -1;
   
   memcpy( data, reply->data, sizeof(stg_bounds_t) );
+  stg_property_free( reply );
+  return 0;
+}
+
+int stg_model_set_matrix_render( stg_client_t* cli, stg_id_t id, 
+				 stg_matrix_render_t *mrender )
+{
+  stg_property_t* reply = stg_send_property( cli, id, 
+					     STG_PROP_MATRIX_RENDER, 
+					     STG_SETGET,
+					     mrender, 
+					     sizeof(stg_matrix_render_t) ); 
+  if( reply == NULL )
+    return -1;
+  
+  memcpy( mrender, reply->data, sizeof(stg_matrix_render_t) );
+  stg_property_free( reply );
+  return 0;
+}
+
+
+int stg_model_get_matrix_render( stg_client_t* cli, stg_id_t id, 
+				 stg_matrix_render_t *mrender )
+{
+  stg_property_t* reply = stg_send_property( cli, id, 
+					     STG_PROP_MATRIX_RENDER, 
+					     STG_GET,
+					     NULL, 0 ); 
+  if( reply == NULL )
+    return -1;
+  
+  memcpy( mrender, reply->data, sizeof(stg_matrix_render_t) );
   stg_property_free( reply );
   return 0;
 }

@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.16 2003-08-28 03:37:09 rtv Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.17 2003-08-28 17:48:24 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -63,8 +63,6 @@ extern int quit;
 extern GArray* global_client_pids;
 
 // defaults
-
-#define STG_CANVAS_RENDER_INTERVAL 50
 
 #define STG_DEFAULT_WINDOW_WIDTH 600
 #define STG_DEFAULT_WINDOW_HEIGHT 600
@@ -194,17 +192,19 @@ void stg_gui_exit( rtk_menuitem_t *item )
   stg_world_destroy( (stg_world_t*)item->userdata );
 }
 
-void rtk_gui_menu_interval_callback( rtk_menuitem_t *item )
+void stg_gui_menu_interval_callback( rtk_menuitem_t *item )
 {
   stg_gui_window_t* win = (stg_gui_window_t*)item->userdata;
 
   if( rtk_menuitem_ischecked( item ) )
     {
       
-      // we're going to change the update interval for the window
-      PRINT_DEBUG1( "removing source %d",  win->source_tag );
-      g_source_remove( win->source_tag );
-      
+      if( win->source_tag > 0 )
+	{      
+	  PRINT_DEBUG1( "removing source %d",  win->source_tag );
+	  g_source_remove( win->source_tag );
+	}
+
       // figure out which menuitem this was
       for( int i=0; i<num_intervals; i++ )
 	{
@@ -213,7 +213,8 @@ void rtk_gui_menu_interval_callback( rtk_menuitem_t *item )
 	      PRINT_DEBUG1( "refresh rate set to %d ms", intervals[i] );
 	      win->source_tag = g_timeout_add( intervals[i], 
 					       stg_gui_window_callback, win );
-	      PRINT_DEBUG1( "added source %d",  win->source_tag );
+	      PRINT_DEBUG2( "added source %d at interval %d",  
+			    win->source_tag, intervals[i] );
 	    }
 	  else
 	    // uncheck the other choices
@@ -326,16 +327,16 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
       snprintf( label, 64, "%d ms", interval );
       win->refresh_items[i] = rtk_menuitem_create(win->refresh_menu, label, 1);       win->refresh_items[i]->userdata = win;
       rtk_menuitem_set_callback( win->refresh_items[i], 
-				 rtk_gui_menu_interval_callback );
+				 stg_gui_menu_interval_callback );
     }
   
-  // we'll start the clock
+  // this will run the callback wee just installed
   rtk_menuitem_check(  win->refresh_items[default_interval], 1 );
   
   // update this window every few ms
-  win->source_tag = g_timeout_add( intervals[default_interval], 
-				   stg_gui_window_callback, win );
-  PRINT_DEBUG1( "added source %d",  win->source_tag );
+  //win->source_tag = g_timeout_add( intervals[default_interval], 
+  //			   stg_gui_window_callback, win );
+  //PRINT_DEBUG1( "added source %d",  win->source_tag );
   
   // refresh menu done ---------------------------------------------------
 
@@ -390,29 +391,23 @@ stg_gui_window_t* stg_gui_window_create( stg_world_t* world, int width, int heig
 }
 
 
-// this gets called periodically from a callback set up in
-// stg_gui_window_create
+// this gets called periodically from a callback installed in
+// stg_gui_window_create() or stg_gui_menu_interval_callback()
 gboolean stg_gui_window_callback( gpointer data )
 {
+  //putchar( '.' ); fflush(stdout);
+
   stg_gui_window_t* win = (stg_gui_window_t*)data;
 
-  // handle menus and all that guff
-  
   if( win->fig_matrix->show )
     stg_gui_matrix_render( win->fig_matrix );
-
+  
   rtk_canvas_flash_update( win->canvas );
 
   // redraw anything that needs it
   rtk_canvas_render( win->canvas );
 
   return TRUE;
-}
-
-int stg_gui_window_update( stg_world_t* world, stg_prop_id_t prop )
-{
-  PRINT_WARN( "" );  
-  return 0;
 }
 
 void stg_gui_window_destroy( stg_gui_window_t* win )
@@ -429,11 +424,9 @@ void stg_gui_window_destroy( stg_gui_window_t* win )
   // cancel the callback for this window
   g_source_remove( win->source_tag );
   
-  // cancel all flashers before we destroy the canvas
-
   if( win->fig_grid ) rtk_fig_destroy( win->fig_grid );
   if( win->fig_matrix ) rtk_fig_destroy( win->fig_matrix );
-  
+
   // must delete the canvas after the figures
   rtk_canvas_destroy( win->canvas );
   free( win );
@@ -473,7 +466,7 @@ void stg_gui_model_blinkenlight( CEntity* ent )
   if( mod->fig_light == NULL )
     {
       mod->fig_light = 
-	rtk_fig_create( mod->win->canvas, mod->fig, STG_LAYER_SENSORS);
+	rtk_fig_create( mod->win->canvas, mod->fig, STG_LAYER_LIGHTS);
       
       rtk_fig_color_rgb32( mod->fig_light, mod->ent->color );
     }
@@ -771,6 +764,14 @@ void RtkOnMouse(rtk_fig_t *fig, int event, int mode)
   switch (event)
     {
     case RTK_EVENT_PRESS:
+      
+      // this is how to get some sensor data, in case we need to reinstate the 
+      // showing of data when handling an object. how best to do this?
+      //{
+      //stg_property_t* prop = entity->GetProperty( STG_PROP_LASER_DATA );
+      //free(prop);
+      //} 
+
       // DELIBERATE NO-BREAK      
     case RTK_EVENT_MOTION:
 
@@ -1059,6 +1060,7 @@ int stg_gui_model_update( CEntity* ent, stg_prop_id_t prop )
     case STG_PROP_NEIGHBORRETURN:
     case STG_PROP_LOS_MSG:
     case STG_PROP_NAME:
+    case STG_PROP_MATRIX_RENDER:
       break;
 
       // these aren't yet exposed to the outside

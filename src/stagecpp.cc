@@ -21,7 +21,7 @@
  * Desc: A class for reading in the world file.
  * Author: Andrew Howard
  * Date: 15 Nov 2001
- * CVS info: $Id: stagecpp.cc,v 1.11 2003-08-28 00:14:21 rtv Exp $
+ * CVS info: $Id: stagecpp.cc,v 1.12 2003-08-28 17:48:24 rtv Exp $
  */
 
 #include <assert.h>
@@ -1779,8 +1779,8 @@ int stg_instances_of_string( char* token )
 	{
 	  tokens[t].count++;
 	  
-	  printf( "this is instance %d of token %s\n", 
-		  tokens[t].count, tokens[t].token );
+	  //printf( "this is instance %d of token %s\n", 
+	  //  tokens[t].count, tokens[t].token );
 	  break;
 	}
   
@@ -1794,8 +1794,8 @@ int stg_instances_of_string( char* token )
       strncpy( tokens[num_tokens].token, token, STG_AUTONAME_MAX );      
       tokens[num_tokens].count = 0;
       
-      printf( "this is the ZEROTH instance of token %s\n", 
-	      tokens[num_tokens].token );
+      //printf( "this is the ZEROTH instance of token %s\n", 
+      //      tokens[num_tokens].token );
       num_tokens++;
     }
   
@@ -1842,7 +1842,7 @@ int CWorldFile::Upload( stg_client_t* cli,
 	  
 	  stg_id_t parent = created_models[this->GetEntityParent(section)].stage_id;
 	  
-	  PRINT_DEBUG1( "creating child of parent %d", parent );
+	  //PRINT_DEBUG1( "creating child of parent %d", parent );
 	  
 	  stg_entity_create_t child;
 	  
@@ -1858,7 +1858,7 @@ int CWorldFile::Upload( stg_client_t* cli,
 		      parent_name,
 		      GetEntityType(section) );
 	  
-	  printf( "type name \"%s\"\n", child.name );
+	  //printf( "type name \"%s\"\n", child.name );
 
 	  // then we add an instance number onto the end, by counting
 	  // how many times this name has appeared.
@@ -1868,7 +1868,7 @@ int CWorldFile::Upload( stg_client_t* cli,
 	  snprintf( instance_str, 64, "%d", instance );
 	  strncat( child.name, instance_str, STG_TOKEN_MAX );
 
-	  printf( "type name with instance \"%s\"\n", child.name );
+	  //printf( "type name with instance \"%s\"\n", child.name );
 
 	  // alternatively, the "name" keyword can be used to override
 	  // the automatic name
@@ -1895,6 +1895,10 @@ int CWorldFile::Upload( stg_client_t* cli,
 	  created_models[section].stage_id = anid;
 	
 	PRINT_DEBUG1( "created model %d", anid );
+	
+	stg_matrix_render_t mr;
+	mr = this->ReadBool( section, "matrix_render", true );
+	stg_model_set_matrix_render( cli, anid, &mr );
 
 	stg_size_t sz;
 	sz.x = this->ReadTupleFloat( section, "size", 0, 0.5 );
