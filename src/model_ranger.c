@@ -1,6 +1,9 @@
 #include "stage.h"
 #include "raytrace.h"
 
+#include "gui.h"
+extern rtk_fig_t* fig_debug;
+
 void model_ranger_init( model_t* mod )
 {
   mod->ranger_return = LaserVisible;
@@ -26,6 +29,8 @@ void model_update_rangers( model_t* mod )
   // set the data array to the right number of samples
   g_array_set_size( mod->ranger_data, rcount );
   
+  if( fig_debug ) rtk_fig_clear( fig_debug );
+
   int t;
   for( t=0; t<rcount; t++ )
     {
