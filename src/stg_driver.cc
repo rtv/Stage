@@ -1,4 +1,4 @@
-cvspl/*
+/*
  *  Player - One Hell of a Robot Server
  *  Copyright (C) 2004, 2005 Richard Vaughan
  *                      
@@ -23,7 +23,7 @@ cvspl/*
  * Desc: A plugin driver for Player that gives access to Stage devices.
  * Author: Richard Vaughan
  * Date: 10 December 2004
- * CVS: $Id: stg_driver.cc,v 1.35 2005-02-26 09:07:23 rtv Exp $
+ * CVS: $Id: stg_driver.cc,v 1.36 2005-03-09 15:59:58 gerkey Exp $
  */
 
 // DOCUMENTATION ------------------------------------------------------------
