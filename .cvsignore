@@ -12,5 +12,4 @@ stamp-h
 Makefile
 Makefile.in
 stage.pc
-stageplugin.pc
 libtool

@@ -1,6 +1,4 @@
-stage.log
-stage.aux
-stage.dvi
-stage.toc
-stage.ps
-stage.pdf
+stage_user
+stage_reference
+player.tag
+header.html
