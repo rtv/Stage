@@ -5,7 +5,7 @@
 // Date: 04 Dec 2000
 // Desc: Base class for movable objects
 //
-//  $Id: entity.cc,v 1.50 2002-03-15 04:01:29 gsibley Exp $
+//  $Id: entity.cc,v 1.51 2002-03-16 02:57:31 rtv Exp $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -34,6 +34,7 @@
 #include "world.hh"
 #include "worldfile.hh"
 
+// RTV - I'm working on RTP functionality
 // static rtp object sending to 127.0.0.1:7777
 //CRTPPlayer rtp_player( 0x7F000001, 7777 );
 
@@ -47,6 +48,8 @@ CEntity::CEntity(CWorld *world, CEntity *parent_object )
   //m_lock = NULL;
 
   this->lock_byte = world->GetObjectCount();
+ 
+  this->rtp_p = 0;
   //this->rtp_p = &rtp_player; // they all point to the same object just now
 
   m_world = world; 
@@ -719,11 +722,12 @@ size_t CEntity::PutData( void* data, size_t len )
     fflush( stdout );
   }
  
+  // if we have an rtp object we announce this data to the world
+  if( this->rtp_p ) rtp_p->SendData( 0, data, len,  m_info_io->data_timestamp_sec );
+
   Unlock();
 
-  // if we have an rtp object we announce this data to the world
-  //if( this->rtp_p ) rtp_p->SendData( data, len );
-
+  
   return len;
 }
 

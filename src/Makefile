@@ -3,7 +3,7 @@
 # stage/src/Makefile - compiles all stage targets
 # Author: Richard Vaughan, Andrew Howard
 #
-# $Id: Makefile,v 1.82 2002-03-15 18:39:50 gerkey Exp $
+# $Id: Makefile,v 1.83 2002-03-16 02:57:31 rtv Exp $
 #
 # Note: All normal user configurations are in ../Makefile.common - you
 # probably don't need to change this file
@@ -33,14 +33,14 @@ STAGELINK =  -lm -lstdc++ -pthread \
 ##############################################################################
 # Define the sources to build from
 #
-SRCS = world.cc worldfile.cc truthserver.cc envserver.cc image.cc \
+SRCS = world.cc worldfile.cc truthserver.cc envserver.cc image.cc rtp.cc\
 	entity.cc entityfactory.cc playerdevice.cc fixedobstacle.cc \
 	positiondevice.cc omnipositiondevice.cc laserdevice.cc sonardevice.cc \
 	miscdevice.cc broadcastdevice.cc \
 	ptzdevice.cc boxobstacle.cc \
 	laserbeacon.cc laserbeacondevice.cc visiondevice.cc visionbeacon.cc \
 	puck.cc gpsdevice.cc gripperdevice.cc main.cc \
-	matrix.cc raytrace.cc motedevice.cc
+	matrix.cc raytrace.cc motedevice.cc 
 
 # stage and rtkstage objects are compiled from the same sources, but rtkstage
 # defines a couple of macros to enable some optional code

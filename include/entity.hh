@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.39 $
+//  $Revision: 1.40 $
 //
 // Usage:
 //  (empty)
@@ -32,13 +32,13 @@
 #include "stage_types.hh"
 #include "truthserver.hh"
 #include "colors.hh"
+#include "rtp.h"
 
 #include "guiexport.hh" // relic!
 
 #ifdef INCLUDE_RTK2
 #include "rtk.h"
 #endif
-
 
 // Forward declare the world class
 class CWorld;
@@ -245,6 +245,11 @@ protected: bool CEntity::Unlock( void );
 
   // flag is true iff this entity is updated by this host
   public: bool m_local; 
+  
+  ///////////////////////////////////////////////////////////////////////
+  // RTP stuff
+
+  CRTPPlayer* rtp_p;
 
   //////////////////////////////////////////////////////////////////////
   // PLAYER IO STUFF
