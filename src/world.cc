@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.114 2002-08-21 21:54:48 gerkey Exp $
+ * CVS info: $Id: world.cc,v 1.115 2002-08-22 02:04:38 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -35,6 +35,8 @@
 //#undef VERBOSE
 //#define DEBUG 
 //#define VERBOSE
+
+//#define RENDER_INITIAL_BOUNDING_BOXES
 
 #include <errno.h>
 #include <sys/time.h>
@@ -55,6 +57,11 @@
 #include <fstream>
 #include <iostream>
 
+#include "world.hh"
+#include "fixedobstacle.hh"
+#include "playerdevice.hh"
+#include "library.hh"
+
 bool usage = false;
 
 void PrintUsage(); // defined in main.cc
@@ -64,10 +71,6 @@ long int g_bytes_output = 0;
 long int g_bytes_input = 0;
 
 int g_timer_events = 0;
-
-
-#include "world.hh"
-#include "fixedobstacle.hh"
 
 #ifdef INCLUDE_RTK2
 // static var accessible to callbacks
@@ -95,8 +98,10 @@ void TimerHandler( int val )
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
-CWorld::CWorld( int argc, char** argv )
+CWorld::CWorld( int argc, char** argv, Library* lib )
 {
+  this->lib = lib;
+
   // seed the random number generator
   srand48( time(NULL) );
 
@@ -200,9 +205,6 @@ CWorld::CWorld( int argc, char** argv )
 // Destructor
 CWorld::~CWorld()
 {
-  if (wall)
-    delete wall;
-
   if( matrix )
     delete matrix;
 
@@ -339,8 +341,6 @@ bool CWorld::Startup()
   PRINT_DEBUG( "** STARTUP **" );
   
   // we must have at least one entity to play with!
-  //assert( m_entity_count > 0 );
-  
   if( m_entity_count < 1 )
     {
       puts( "\nStage: No entities defined in world file. Nothing to simulate!" );
@@ -387,10 +387,6 @@ void CWorld::Shutdown()
       if(m_entity[i])
 	m_entity[i]->Shutdown();
     }
-  
-  // Shutdown the wall
-  if(this->wall)
-    this->wall->Shutdown();
 }
 
 
@@ -780,7 +776,8 @@ void CWorld::LogOutputHeader( void )
 bool CWorld::RtkLoad(CWorldFile *worldfile)
 {
   int sx, sy;
-  double scale, dx, dy;
+  double scale = 0.01;
+  double dx, dy;
   double ox, oy;
   double gridx, gridy;
   double minor, major;
@@ -800,6 +797,7 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
       gridy = sy / this->ppm;
 
       // Place a hard limit, just to stop it going off the screen
+      // (TODO - we could get the sceen size from X if we tried?)
       if (sx > 1024)
 	sx = 1024;
       if (sy > 768)
@@ -848,9 +846,6 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
       if (sy > 768)
 	sy = 768;
     
-      // Scale of the pixels
-      scale = ((CFixedObstacle*)this->wall)->scale;
-    
       // Size in meters
       dx = sx * scale;
       dy = sy * scale;
@@ -894,8 +889,8 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   this->grid_item = rtk_menuitem_create(this->view_menu, "Grid", 1);
   rtk_menuitem_check(this->grid_item, showgrid);
 
-  this->walls_item = rtk_menuitem_create(this->view_menu, "Walls", 1);
-  rtk_menuitem_check(this->walls_item, 1);
+  this->matrix_item = rtk_menuitem_create(this->view_menu, "Matrix", 1);
+  rtk_menuitem_check(this->matrix_item, 0);
 
   // create the action menu
   this->action_menu = rtk_menu_create(this->canvas, "Action");
@@ -933,12 +928,14 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
       CEntity* ent = GetEntity(d);
 
       // if it's a player device and we haven't got an item already
-      if( ent->m_player.code && !this->data_menu_items[ ent->stage_type ] ) 
+      //if( ent->m_player.code && !this->data_menu_items[ ent->stage_type ] ) 
+      // a little nasty run-time type-information (RTTI) required here
+      if( ISPLAYER(*ent) && !this->data_menu_items[ ent->stage_type ] ) 
 	{
 	  // add a data menu item 
 	  assert( this->data_menu_items[ ent->stage_type ] =  
 		  rtk_menuitem_create(this->data_menu, 
-				      StringFromType( ent->stage_type), 1) );  
+				      this->lib->StringFromType( ent->stage_type), 1) );  
       
 	  rtk_menuitem_check(this->data_menu_items[ ent->stage_type ], 1);
 	}
@@ -948,7 +945,7 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
 	  // add a device menu item 
 	  assert( this->device_menu_items[ ent->stage_type ] =  
 		  rtk_menuitem_create(this->device_menu, 
-				      StringFromType( ent->stage_type), 1) );  
+				      this->lib->StringFromType( ent->stage_type), 1) );  
 	
 	  rtk_menuitem_check(this->device_menu_items[ ent->stage_type ], 1);
 	}
@@ -967,6 +964,20 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
       rtk_fig_grid(this->fig_grid, gridx/2, gridy/2, gridx, gridy, major);
     }
   rtk_fig_show(this->fig_grid, showgrid);
+  
+#ifdef RENDER_INITIAL_BOUNDING_BOXES
+  for( int i=0; i < GetEntityCount(); i++ )
+    {
+      double xmin, ymin, xmax, ymax;
+      GetEntity(i)->GetGlobalBoundingBox( xmin, ymin, xmax, ymax );
+      
+      rtk_fig_t* boundaries = rtk_fig_create( this->canvas, NULL, -48);
+      rtk_fig_rectangle( boundaries, xmin, ymin, 0, 0.1, 0.1, 0 ); 
+      rtk_fig_rectangle( boundaries, xmin, ymax, 0, 0.1, 0.1, 0 ); 
+      rtk_fig_rectangle( boundaries, xmax, ymax, 0, 0.1, 0.1, 0 ); 
+      rtk_fig_rectangle( boundaries, xmax, ymin, 0, 0.1, 0.1, 0 ); 
+    }	  
+#endif
 
   return true;
 }
@@ -1023,8 +1034,7 @@ bool CWorld::RtkStartup()
     gtk_widget_show_all(canvas->frame);
   for (table = app->table; table != NULL; table = table->next)
     gtk_widget_show_all(table->frame);
-
-
+  
   return true;
 }
 
@@ -1083,6 +1093,8 @@ void CWorld::RtkUpdate()
   //  rtk_app_on_timer(rtk_app_t *app);
   for (int i=0; i<m_entity_count; i++)
     m_entity[i]->RtkUpdate();
+
+
 }
 
 // Update the GUI
@@ -1115,16 +1127,12 @@ void CWorld::RtkMenuHandling()
   else
     rtk_fig_show(this->fig_grid, 0);
 
-  // Show or hide the walls
-  if( this->wall && this->wall->fig )
-    {
-      if( rtk_menuitem_ischecked(this->walls_item) )
-	rtk_fig_show(this->wall->fig, 1);
-      else
-	rtk_fig_show(this->wall->fig, 0);
-    }
+  // clear any matrix rendering, then redraw if the emnu item is checked
+  this->matrix->unrender();
+  if (rtk_menuitem_ischecked(this->matrix_item))
+    this->matrix->render( this );
   
-  
+ 
   // enable/disable automatic subscription to the selected device
   CWorld::autosubscribe = rtk_menuitem_ischecked(this->autosubscribe_item);
   
@@ -1138,12 +1146,14 @@ void CWorld::RtkMenuHandling()
       if( thistime )  // change the subscription counts of any player-capable ent
 	{
 	  for (int i = 0; i < m_entity_count; i++)
-	    if( m_entity[i]->m_player.port > 0 ) m_entity[i]->Subscribe();
+	    if( RTTI_ISPLAYERP(m_entity[i]) ) 
+	      dynamic_cast<CPlayerEntity*>(m_entity[i])->Subscribe();
 	}
       else
 	{
 	  for (int i = 0; i < m_entity_count; i++)
-	    if( m_entity[i]->m_player.port > 0 ) m_entity[i]->Unsubscribe();
+	    if( RTTI_ISPLAYERP(m_entity[i]) ) 
+	      dynamic_cast<CPlayerEntity*>(m_entity[i])->Unsubscribe();
 	}
       // remember this state
       lasttime = thistime;

@@ -21,7 +21,7 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.cc,v 1.30 2002-08-16 06:18:35 gerkey Exp $
+ * CVS info: $Id: positiondevice.cc,v 1.31 2002-08-22 02:04:38 rtv Exp $
  */
 
 //#define DEBUG
@@ -30,11 +30,14 @@
 #include "world.hh"
 #include "positiondevice.hh"
 
+CEntity position_bootstrap( string("position"), 
+			    PositionType, 
+			    (void*)&CPositionDevice::Creator );
 
 ///////////////////////////////////////////////////////////////////////////
 // Constructor
 CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent)
-  : CEntity( world, parent )
+  : CPlayerEntity( world, parent )
 {    
   // set the Player IO sizes correctly for this type of Entity
   m_data_len = sizeof( player_position_data_t );
@@ -68,7 +71,11 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent)
   this->shape = ShapeRect;
   this->size_x = 0.440;
   this->size_y = 0.380;
-  this->origin_x = -0.04;
+  
+  // took this out - now use the 'offset [X Y]' worldfile setting - rtv.
+  // pioneer.inc now defines a pioneer as a positiondevice with a 4cm offset
+  //this->origin_x = -0.04; 
+  this->origin_x = 0;
   this->origin_y = 0;
 }
 
@@ -77,7 +84,7 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent)
 // Update the position of the robot base
 void CPositionDevice::Update( double sim_time )
 {
-  CEntity::Update(sim_time);
+  CPlayerEntity::Update(sim_time);
 
   ASSERT(m_world != NULL);
 

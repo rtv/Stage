@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.hh,v 1.27 2002-08-19 21:48:28 gerkey Exp $
+ * CVS info: $Id: laserdevice.hh,v 1.28 2002-08-22 02:04:38 rtv Exp $
  */
 
 #ifndef LASERDEVICE_HH
@@ -34,10 +34,19 @@
 
 typedef std::list< int > LaserBeaconList; 
 
-class CLaserDevice : public CEntity
+class CLaserDevice : public CPlayerEntity
 {
   // Default constructor
   public: CLaserDevice(CWorld *world, CEntity *parent );
+
+  // a static named constructor - a pointer to this function is given
+  // to the Library object and paired with a string.  When the string
+  // is seen in the worldfile, this function is called to create an
+  // instance of this entity
+public: static CLaserDevice* Creator( CWorld *world, CEntity *parent )
+  {
+    return( new CLaserDevice( world, parent ) );
+  }
 
   // Load the entity from the worldfile
   public: virtual bool Load(CWorldFile *worldfile, int section);

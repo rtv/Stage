@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/descartesdevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -35,6 +35,13 @@ class CDescartesDevice : public CPositionDevice
   //
  public: CDescartesDevice(CWorld *world, CEntity *parent );
  
+  // a static named constructor - a pointer to this function is given
+  // to the Library object and paired with a string.  When the string
+  // is seen in the worldfile, this function is called to create an
+  // instance of this entity
+public: static CDescartesDevice* Creator( CWorld *world, CEntity *parent )
+  { return( new CDescartesDevice( world, parent ) ); }
+
  // Control speed and turn rate to achieve desired heading and speed
  //
  public: void Servo( void );

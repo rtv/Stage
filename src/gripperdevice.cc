@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gripperdevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.25 $
+//  $Revision: 1.26 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -20,11 +20,16 @@
 #include "gripperdevice.hh"
 #include "raytrace.hh"
 
+// register this device type with the Library
+CEntity gripper_bootstrap( string("gripper"), 
+			   GripperType, 
+			   (void*)&CGripperDevice::Creator ); 
+
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
 CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
-  : CEntity(world, parent )
+  : CPlayerEntity(world, parent )
 {
   m_data_len    = sizeof( player_gripper_data_t ); 
   m_command_len = sizeof( player_gripper_cmd_t ); 
@@ -79,7 +84,7 @@ CGripperDevice::CGripperDevice(CWorld *world, CEntity *parent )
 // Load the entity from the world file
 bool CGripperDevice::Load(CWorldFile *worldfile, int section)
 {
-  if (!CEntity::Load(worldfile, section))
+  if (!CPlayerEntity::Load(worldfile, section))
     return false;
 
   if(!strcmp(worldfile->ReadString(section, "consume", "false"),"true"))
@@ -391,7 +396,7 @@ void CGripperDevice::PickupObject()
 // Initialise the rtk gui
 void CGripperDevice::RtkStartup()
 {
-  CEntity::RtkStartup();
+  CPlayerEntity::RtkStartup();
   
   // Create a figure representing this object
   this->grip_fig = rtk_fig_create(m_world->canvas, NULL, 49);
@@ -411,7 +416,7 @@ void CGripperDevice::RtkShutdown()
   // Clean up the figure we created
   rtk_fig_destroy(this->grip_fig);
 
-  CEntity::RtkShutdown();
+  CPlayerEntity::RtkShutdown();
 } 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -419,7 +424,7 @@ void CGripperDevice::RtkShutdown()
 //
 void CGripperDevice::RtkUpdate()
 {
-  CEntity::RtkUpdate();
+  CPlayerEntity::RtkUpdate();
   
   // Get global pose
   double gx, gy, gth;

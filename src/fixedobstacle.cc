@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.20 $
+//  $Author: rtv $
+//  $Revision: 1.21 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -17,18 +17,16 @@
 #include "world.hh"
 #include "fixedobstacle.hh"
 
+// register this device type with the Library
+CEntity fixedobstacle_bootstrap( string("bitmap"), 
+				 WallType, 
+				 (void*)&CFixedObstacle::Creator ); 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 CFixedObstacle::CFixedObstacle(CWorld *world, CEntity *parent)
     : CEntity(world, parent)
 {
-  // set the Player IO sizes correctly for this type of Entity
-  m_data_len    = 0;
-  m_command_len = 0;
-  m_config_len  = 0;
-  m_reply_len  = 0;
-  
   this->stage_type = WallType;
   this->color = ::LookupColor(WALL_COLOR);
 
@@ -71,16 +69,27 @@ bool CFixedObstacle::Load(CWorldFile *worldfile, int section)
     return false;
   }
 
+
   // Get the scale of the image;
   // i.e. the width/length of each pixel in m.
   // If no scale is specified, use the world resolution.
   this->scale = worldfile->ReadLength(section, "scale", 0);
+  
+  if( this->scale != 0 )
+    PRINT_WARN("worldfile bitmap keyword 'scale' is deprecated,"
+		" please use 'resolution <meters per pixel>' instead");
+  
+  // Get the scale of the image;
+  // i.e. the width/length of each pixel in m.
+  // If no scale is specified, use the world resolution.
+  this->scale = worldfile->ReadLength(section, "resolution", 0);
   if (this->scale == 0)
   {
-    PRINT_WARN1("no scale specified for image [%s]; using default",
-                this->filename);
-    this->scale = 1 / m_world->ppm;
+    this->scale = 1.0 / m_world->ppm;
+    PRINT_WARN2("\n\t- no resolution specified for image [%s]; using world default of %.2f",
+                this->filename, this->scale );
   }
+
 
   // Get the crop region;
   // i.e. the bit of the image we are interested in
@@ -116,9 +125,20 @@ bool CFixedObstacle::Load(CWorldFile *worldfile, int section)
   this->size_x = this->scale * this->image->width;
   this->size_y = this->scale * this->image->height;
 
-  // draw a border around the image
-  this->image->draw_box(0,0,this->image->width-1, this->image->height-1, 255 );
+  // is the pose explicitly set?
+  // if the pose was NOT set in the worldfile
+  if( (worldfile->ReadTupleLength( section, "pose", 0, DBL_MAX ) == DBL_MAX) )
+    {
+      // we shift so the global origin is at the bottom left corner of the image
+      this->SetGlobalPose( this->size_x/2.0, size_y/2.0, 0);    
 
+      // record this position as the initial pose se we don't try to save it later
+      this->GetPose( init_px, init_py, init_pth );
+    }
+
+  // draw a border around the image
+  //this->image->draw_box(0,0,this->image->width-1, this->image->height-1, 255 );
+ 
   return true;
 }
 
@@ -180,17 +200,14 @@ void CFixedObstacle::BuildQuadTree( uint8_t color, int x1, int y1, int x2, int y
 #endif
 
 ///////////////////////////////////////////////////////////////////////////
-// Initialise object
+// Initialise object by Copying image into matrix
 bool CFixedObstacle::Startup()
 {
   if (!CEntity::Startup())
     return false;
 
-  assert(this->image);
-  
-  // Copy image into matrix
-  double ox, oy, oth;
-  this->GetGlobalPose(ox, oy, oth);
+  assert(this->image);  
+    
   double sx = this->scale;
   double sy = this->scale;
 
@@ -203,99 +220,72 @@ bool CFixedObstacle::Startup()
   // rendering loops.  hospital.pnm.gz now loads more than twice as
   // fast and redraws waaaaaay faster. yay!
 
-  // use this to count the number of rectangles drawn
-  // we optionally print it out below
-  // long int rects = 0;
-
 #ifdef INCLUDE_RTK2
 
-  rtk_fig_destroy(this->fig);
-  this->fig = rtk_fig_create(m_world->canvas, NULL, -48);
+  //rtk_fig_destroy(this->fig);
+  //this->fig = rtk_fig_create(m_world->canvas, NULL, -48);
+  rtk_fig_origin( this->fig, local_px, local_py, local_pth );
   rtk_fig_color_rgb32(this->fig, this->color);
-  
 #endif
   
   for (int y = 0; y < this->image->height; y++)
-  {
     for (int x = 0; x < this->image->width; x++)
-    {
-      if (this->image->get_pixel(x, y) == 0)
-        continue;
-	 
-      // a rectangle starts from this point
-      int startx = x;
-      int starty = this->image->height - y;
-      int height = this->image->height; // assume full height for starters
-	  
-      // grow the width - scan along the line until we hit an empty pixel
-      for( ;  this->image->get_pixel( x, y ) > 0; x++ )
-	    {
-	      // handle horizontal cropping
-	      double ppx = x * sx; 
-	      if (ppx < this->crop_ax || ppx > this->crop_bx)
-          continue;
-	      
-	      // look down to see how large a rectangle below we can make
-	      int yy  = y;
-	      while( (this->image->get_pixel( x, yy ) > 0 ) && (yy < this->image->height) )
-        { 
-          // handle vertical cropping
-          double ppy = (this->image->height - yy) * sy;
-          if (ppy < this->crop_ay || ppy > this->crop_by)
-            continue;
-		  
-          yy++; 
-        } 
-	      
-	      // now yy is the depth of a line of non-zero pixels downward
-	      // we store the smallest depth - that'll be the height of the rectangle
-	      if( yy-y < height ) height = yy-y; // shrink the height to fit
-	    } 
-
-      int width = x - startx;
-
-      // delete the pixels we have used in this rect
-      this->image->fast_fill_rect( startx, y, width, height, 0 );
-
-      double px = (startx + (width/2.0) + 0.5 ) * sx;
-      double py = (starty - (height/2.0) - 0.5 ) * sy;
-      double pw = width * sx;
-      double ph = height * sy;
-
-      // create a matrix rectangle
-      m_world->SetRectangle( px, py, oth, pw, ph, this, true);
-
-#ifdef INCLUDE_RTK2
-      // create a figure  rectangle 
-      rtk_fig_rectangle(this->fig, px, py, oth, pw, ph, true ); 
+      {
+	if (this->image->get_pixel(x, y) == 0)
+	  continue;
+	
+	// a rectangle starts from this point
+	int startx = x;
+	int starty = this->image->height - y;
+	int height = this->image->height; // assume full height for starters
+	
+	// grow the width - scan along the line until we hit an empty pixel
+	for( ;  this->image->get_pixel( x, y ) > 0; x++ )
+	  {
+	    // handle horizontal cropping
+	    double ppx = x * sx; 
+	    if (ppx < this->crop_ax || ppx > this->crop_bx)
+	      continue;
+	    
+	    // look down to see how large a rectangle below we can make
+	    int yy  = y;
+	    while( (this->image->get_pixel( x, yy ) > 0 ) 
+		   && (yy < this->image->height) )
+	      { 
+		// handle vertical cropping
+		double ppy = (this->image->height - yy) * sy;
+		if (ppy < this->crop_ay || ppy > this->crop_by)
+		  continue;
+		
+		yy++; 
+	      } 	      
+	    // now yy is the depth of a line of non-zero pixels
+	    // downward we store the smallest depth - that'll be the
+	    // height of the rectangle
+	    if( yy-y < height ) height = yy-y; // shrink the height to fit
+	  } 
+	
+	int width = x - startx;
+	
+	// delete the pixels we have used in this rect
+	this->image->fast_fill_rect( startx, y, width, height, 0 );
+	
+	double px = ((startx + (width/2.0) + 0.5 ) * sx) - size_x/2.0;
+	double py = ((starty - (height/2.0) - 0.5 ) * sy) - size_y/2.0;
+	double pth = 0;
+	double pw = width * sx;
+	double ph = height * sy;
+	
+	
+#ifdef INCLUDE_RTK2	
+	// create a figure  rectangle in local coordinates
+	rtk_fig_rectangle(this->fig, px, py, 0, pw, ph, true ); 
 #endif
-			    
-      //rects++;
-    }
-  }
 
-  //printf( "rects = %ld\n", rects );
-  
-
-  //#ifdef INCLUDE_RTK2
-  
-  // rtv - render the image quad-tree encoded. didn't work as well as i thought it might!
-  // thought i'd keep the quad-tree code for a while in case it's useful elswhere
-
-  //    //rtk_fig_clear(this->fig);
-  //    rtk_fig_layer(this->fig, -48);
-  //    rtk_fig_color_rgb32(this->fig, RGB(0,0,255) );
-  
-  //    // start with the entire image rectangle
-  //    int x1 = 0, x2 = this->image->width; 
-  //    int y1 = 0, y2 = this->image->height; 
-  
-  //    // recursive call builds a quad tree of rectangles matching the image
-  //    BuildQuadTree( 0, x1, y1, x2, y2 );
-  
-  //    printf( "rects = %ld\n", rects );
-  
-  //  #endif
+	// create a matrix rectangle in global coordinates
+	this->LocalToGlobal( px, py, pth );
+	m_world->SetRectangle( px, py, pth, pw, ph, this, true);
+      }
 
   // new: don't delete the image so we can download it to clients - rtv
   return true;

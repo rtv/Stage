@@ -1,7 +1,7 @@
 #ifndef MOTEDEVICE_HH
 #define MOTEDEVICE_HH 
 
-#include "entity.hh"
+#include "playerdevice.hh"
 #include <list>
 
 /* useful macros */
@@ -23,11 +23,18 @@ void UpdateGraph(void);
 // update the adjacency list of node n and x
 void UpdateAdjList(CMoteDevice* n, CMoteDevice* x);
 
-class CMoteDevice : public CEntity
+class CMoteDevice : public CPlayerEntity
 {
     // Default constructor
     public: CMoteDevice(CWorld *world, CEntity *parent );
  
+  // a static named constructor - a pointer to this function is given
+  // to the Library object and paired with a string.  When the string
+  // is seen in the worldfile, this function is called to create an
+  // instance of this entity
+public: static CMoteDevice* Creator( CWorld *world, CEntity *parent )
+  { return( new CMoteDevice( world, parent ) ); }
+
     // Update the device
     //
     public: virtual void Update(double sim_time );

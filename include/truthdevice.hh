@@ -21,18 +21,25 @@
  * Desc: A device for getting the true pose of things.
  * Author: Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: truthdevice.hh,v 1.3 2002-06-09 18:37:06 inspectorg Exp $
+ * CVS info: $Id: truthdevice.hh,v 1.4 2002-08-22 02:04:38 rtv Exp $
  */
 #ifndef TRUTHDEVICE_HH
 #define TRUTHDEVICE_HH
 
-#include "entity.hh"
+#include "playerdevice.hh"
 
-class CTruthDevice : public CEntity
+class CTruthDevice : public CPlayerEntity
 {
   // Default constructor
   public: CTruthDevice(CWorld *world, CEntity *parent);
     
+  // a static named constructor - a pointer to this function is given
+  // to the Library object and paired with a string.  When the string
+  // is seen in the worldfile, this function is called to create an
+  // instance of this entity
+public: static CTruthDevice* Creator( CWorld *world, CEntity *parent )
+  { return( new CTruthDevice( world, parent ) ); }
+
   // Update the device
   public: virtual void Update(double sim_time);
 

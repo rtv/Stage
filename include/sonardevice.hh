@@ -21,23 +21,35 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.hh,v 1.11 2002-08-19 21:48:28 gerkey Exp $
+ * CVS info: $Id: sonardevice.hh,v 1.12 2002-08-22 02:04:38 rtv Exp $
  */
 
 #ifndef SONARDEVICE_HH
 #define SONARDEVICE_HH
 
 #include "playerdevice.hh"
+#include "world.hh"
+#include "library.hh"
+
 
 #define SONARSAMPLES PLAYER_SONAR_MAX_SAMPLES
 
 enum SonarReturn { SonarTransparent=0, SonarOpaque };
 
-class CSonarDevice : public CEntity
+class CSonarDevice : public CPlayerEntity
 {
   // Default constructor
   public: CSonarDevice(CWorld *world, CEntity *parent);
-
+  
+  // a static named constructor - a pointer to this function is given
+  // to the Library object and paired with a string.  When the string
+  // is seen in the worldfile, this function is called to create an
+  // instance of this entity
+public: static CSonarDevice* Creator( CWorld *world, CEntity *parent )
+  {
+    return( new CSonarDevice( world, parent ) );
+  }
+  
   // Load the entity from the world file
   public: virtual bool Load(CWorldFile *worldfile, int section);
 

@@ -20,8 +20,8 @@
 *
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/idarturretdevice.cc,v $
-* $Author: gerkey $
-* $Revision: 1.6 $
+* $Author: rtv $
+* $Revision: 1.7 $
 ******************************************************************************/
 
 #include <math.h>
@@ -37,9 +37,14 @@
 #define DEBUG
 //#undef DEBUG
 
+// register this device type with the Library
+CEntity idarturret_bootstrap( string("idarturret"), 
+			      IDARTurretType, 
+			      (void*)&CIDARTurretDevice::Creator ); 
+
 // constructor 
 CIDARTurretDevice::CIDARTurretDevice(CWorld *world, CEntity *parent )
-  : CEntity(world, parent )
+  : CPlayerEntity(world, parent )
 {
   stage_type = IDARTurretType;
   m_player.code = PLAYER_IDARTURRET_CODE; // from player's messages.h
@@ -211,7 +216,7 @@ void CIDARTurretDevice::Update( double sim_time )
 {
   //  puts( "UPDATE" );
 
-  CEntity::Update( sim_time ); // inherit some debug output
+  CPlayerEntity::Update( sim_time ); // inherit some debug output
   
   // UPDATE OUR RENDERING
   double x, y, th;
@@ -236,7 +241,7 @@ void CIDARTurretDevice::Update( double sim_time )
 // Initialise the rtk gui
 void CIDARTurretDevice::RtkStartup()
 {
-  CEntity::RtkStartup();
+  CPlayerEntity::RtkStartup();
 
   this->data_fig = rtk_fig_create(m_world->canvas, this->fig, 49);
  
@@ -259,7 +264,7 @@ void CIDARTurretDevice::RtkShutdown()
 
   if(this->data_fig) rtk_fig_destroy(this->data_fig);
   
-  CEntity::RtkShutdown();
+  CPlayerEntity::RtkShutdown();
 } 
 
 
@@ -267,7 +272,7 @@ void CIDARTurretDevice::RtkShutdown()
 // Update the rtk gui
 void CIDARTurretDevice::RtkUpdate()
 {
-  CEntity::RtkUpdate();
+  CPlayerEntity::RtkUpdate();
    
   // for( int i=0; i<PLAYER_IDARTURRET_IDAR_COUNT; i++ )
   //idars[i]->RtkUpdate();

@@ -21,12 +21,17 @@ MotePtrList m_mote_list;
 //#define DEBUG
 //#define VERBOSE
 
+// register this device type with the Library
+CEntity mote_bootstrap( string("mote"), 
+			MoteType, 
+			(void*)&CMoteDevice::Creator ); 
+
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
 
 CMoteDevice::CMoteDevice(CWorld *world, CEntity *parent )
-  : CEntity(world, parent)
+  : CPlayerEntity(world, parent)
 {
   m_data_len    = MAX_MOTE_Q_LEN * sizeof( player_mote_data_t );
   m_command_len = sizeof( player_mote_data_t );
@@ -64,7 +69,7 @@ CMoteDevice::CMoteDevice(CWorld *world, CEntity *parent )
 //
 bool CMoteDevice::Load(CWorldFile *worldfile, int section)
 {
-  if (!CEntity::Load(worldfile, section))
+  if (!CPlayerEntity::Load(worldfile, section))
     return false;
   return true; 
 }

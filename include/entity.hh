@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.57 2002-08-21 21:54:48 gerkey Exp $
+ * CVS info: $Id: entity.hh,v 1.58 2002-08-22 02:04:38 rtv Exp $
  */
 
 #ifndef ENTITY_HH
@@ -46,6 +46,9 @@
 #ifdef INCLUDE_RTK2
 #include "rtk.h"
 #endif
+
+#include "library.hh"
+extern Library* lib;
 
 // Forward declare the world class
 class CWorld;
@@ -92,6 +95,18 @@ class CEntity
   // Minimal constructor
   // Requires a pointer to the parent and a pointer to the world.
   public: CEntity(CWorld *world, CEntity *parent_entity );
+  
+  // constructor performs library registration.
+  // designed to be used by new devices to register themselves
+  // by creating a global static instance
+public: CEntity( string token,  StageType type, void* creator ) 
+  {
+    // the first entity to be created initializes the global library
+    if( lib == NULL )
+      assert( lib = new Library() );
+    
+    lib->AddDeviceType( token, type, creator );
+  }
 
   // Destructor
   public: virtual ~CEntity();
@@ -113,19 +128,6 @@ class CEntity
                                    EntityProperty property, void* value, size_t len );
   public: virtual int GetProperty( EntityProperty property, void* value );
   
-  // Get the shared memory size
-  private: int SharedMemorySize( void );
-
-  // set and unset the semaphore that protects this entity's shared memory 
-  protected: bool Lock( void );
-  protected: bool Unlock( void );
-  
-  // pointer to the  semaphore in the shared memory
-  //private: sem_t* m_lock; 
-
-  // IO access to this device is controlled by an advisory lock 
-  // on this byte in the shared lock file
-  private: int lock_byte; 
 
   // Update the entity's device-specific representation
   // this is called every time the simulation clock increments
@@ -189,6 +191,9 @@ class CEntity
 
   // Get the entity mass
   public: double GetMass() { return (this->mass); }
+
+public: void GetGlobalBoundingBox( double &xmin, double &ymin,
+				   double &xmax, double &ymax );
   
   // See if the given entity is one of our descendents
   public: bool IsDescendent(CEntity *entity);
@@ -242,7 +247,7 @@ class CEntity
   public: IDARReturn idar_return;
 
   // the full path name of this device in the filesystem
-  public: char device_filename[256]; 
+  //public: char device_filename[256]; 
 
   // a filedescriptor for this device's file, used for locking
   //private: int m_fd;
@@ -251,10 +256,10 @@ class CEntity
   public: bool m_dependent_attached;
 
   // Initial pose in local cs (ie relative to parent)
-  private: double init_px, init_py, init_pth;
+  protected: double init_px, init_py, init_pth;
   
   // Pose in local cs (ie relative to parent)
-  private: double local_px, local_py, local_pth;
+  protected: double local_px, local_py, local_pth;
 
   // Velocity in global cs (for coliision calculations)
   protected: double vx, vy, vth;
@@ -296,110 +301,6 @@ class CEntity
   // flag is true iff this entity is updated by this host
   public: bool m_local; 
   
-  ///////////////////////////////////////////////////////////////////////
-  // RTP stuff
-  CRTPPlayer* rtp_p;
-
-  //////////////////////////////////////////////////////////////////////
-  // PLAYER IO STUFF
-  
-  // Port and index numbers for player
-  // identify this device as belonging to the Player on port N at index M
-  //public: int m_player_port; // N
-  //public: int m_player_index; // M
-  //public: int m_player_type; // one of the device types from messages.h
-  public: player_device_id_t m_player;
-
-  // basic external IO functions
-
-  // copies data from src to dest (if there is room), updates the
-  // timestamp with the current time, sets the availability value to
-  // the number of bytes copied
-  size_t PutIOData( void* dest, size_t dest_len,  
-                    void* src, size_t src_len,
-                    uint32_t* ts_sec, uint32_t* ts_usec, uint32_t* avail );
-  
-  // copies data from src to dest if there is room and if there is the
-  // right amount of data available
-  size_t GetIOData( void* dest, size_t dest_len,  
-                    void* src, uint32_t* avail );
-    
-  // specific external IO functions
-
-  // Write to the data buffer
-  // Returns the number of bytes copied
-  // timestamp should be the time the data was created/sensed. if timestamp
-  //   is 0, then current time is used
-  protected: size_t PutData( void* data, size_t len );
-
-  // Read from the data buffer
-  // Returns the number of bytes copied
-  public: size_t GetData( void* data, size_t len );
-   
-  // gets a command from the mmapped command buffer
-  // returns the number of bytes copied (on success, this is == len)
-  protected: size_t GetCommand( void* command, size_t len);
-
-  // returns number of bytes copied
-  protected: size_t PutCommand( void* command, size_t len);
-
-  // Read from the configuration buffer
-  // Returns the number of bytes copied
-  protected: size_t GetConfig(void** client, void* config, size_t len);
-
-  // Push a configuration reply onto the outgoing queue.
-  // Returns 0 on success, non-zero on error.
-  protected: size_t PutReply(void* client, unsigned short type,
-                             struct timeval* ts, void* reply, size_t len);
-
-  // A short form for zero-length replies.
-  // Returns 0 on success, non-zero on error.
-  protected: size_t PutReply(void* client, unsigned short type);
-
-
-  // See if the device is subscribed
-  // returns the number of current subscriptions
-  //private int player_subs;
-
-  // this gets called a LOT, so we inline it.
-   public: int Subscribed();
-
-  // subscribe to / unsubscribe from the device
-  // these are used when one device (e.g., lbd) depends on another (e.g.,
-  // laser)
-  public: void Subscribe();
-  public: void Unsubscribe();
-  
-  // these versions sub/unsub to this device and all its decendants
-public: void FamilySubscribe();
-public: void FamilyUnsubscribe();
-
-  // packages and sends data via rtp
-  protected: void AnnounceDataViaRTP( void* data, size_t len );
-
-  // Pointers into shared mmap for the IO structures
-  // the io buffer is allocated by the World 
-  // after it has loaded all the Entities (so it knows how 
-  // much to allocate). Then the world calls Startup() to allocate 
-  // the local storage for each entity. 
-
-  protected: player_stage_info_t *m_info_io;
-  protected: uint8_t *m_data_io; 
-  protected: uint8_t *m_command_io;
-  protected: uint8_t *m_config_io;
-  protected: uint8_t *m_reply_io;
-
-  // the sizes of these buffers in bytes
-  protected: size_t m_data_len;
-  protected: size_t m_command_len;
-  protected: size_t m_config_len;
-  protected: size_t m_reply_len;
-  protected: size_t m_info_len;
-
-  // we'll use these entitys to access the configuration request/reply queues
-  protected: PlayerQueue* m_reqqueue;
-  protected: PlayerQueue* m_repqueue;
-
   // functions for drawing this entity in GUIs
 #ifdef INCLUDE_RTK2
   // Initialise the rtk gui

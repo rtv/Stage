@@ -21,13 +21,13 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.hh,v 1.18 2002-08-16 06:18:34 gerkey Exp $
+ * CVS info: $Id: visiondevice.hh,v 1.19 2002-08-22 02:04:38 rtv Exp $
  */
 
 #ifndef VISIONDEVICE_HH
 #define VISIONDEVICE_HH
 
-#include "entity.hh"
+#include "playerdevice.hh"
 
 // Forward declaration for ptz device
 class CPtzDevice;
@@ -44,10 +44,18 @@ typedef struct
 } ColorBlob;
 
 
-class CVisionDevice : public CEntity
+class CVisionDevice : public CPlayerEntity
 {
   // Default constructor
   public: CVisionDevice(CWorld *world, CPtzDevice *parent);
+
+  // a static named constructor - a pointer to this function is given
+  // to the Library object and paired with a string.  When the string
+  // is seen in the worldfile, this function is called to create an
+  // instance of this entity
+public: static CVisionDevice* Creator( CWorld *world, CEntity *parent )
+  { return( new CVisionDevice( world, (CPtzDevice*)parent ) ); }
+
 
   // Load the entity from the worldfile
   public: virtual bool Load(CWorldFile *worldfile, int section);

@@ -21,12 +21,16 @@
  * Desc: Simulates a simple box obstacle
  * Author: Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: boxobstacle.cc,v 1.21 2002-06-11 03:31:18 inspectorg Exp $
+ * CVS info: $Id: boxobstacle.cc,v 1.22 2002-08-22 02:04:38 rtv Exp $
  */
 
 #include "world.hh"
 #include "boxobstacle.hh"
 
+// register this device type with the Library
+CEntity box_bootstrap( string("box"), 
+		       BoxType, 
+		       (void*)&CBoxObstacle::Creator ); 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor

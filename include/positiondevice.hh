@@ -21,18 +21,28 @@
  * Desc: Simulates a differential mobile robot.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 5 Dec 2000
- * CVS info: $Id: positiondevice.hh,v 1.10 2002-06-07 17:29:45 inspectorg Exp $
+ * CVS info: $Id: positiondevice.hh,v 1.11 2002-08-22 02:04:38 rtv Exp $
  */
 
 #ifndef POSITIONDEVICE_H
 #define POSITIONDEVICE_H
 
 #include "stage.h"
+#include "playerdevice.hh"
 
-class CPositionDevice : public CEntity
+class CPositionDevice : public CPlayerEntity
 {
   // Minimal constructor
   public: CPositionDevice(CWorld *world, CEntity *parent );
+
+  // a static named constructor - a pointer to this function is given
+  // to the Library object and paired with a string.  When the string
+  // is seen in the worldfile, this function is called to create an
+  // instance of this entity
+public: static CPositionDevice* Creator( CWorld *world, CEntity *parent )
+  {
+    return( new CPositionDevice( world, parent ) );
+  }
 
   // Update the device
   public: virtual void Update( double sim_time );

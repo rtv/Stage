@@ -5,7 +5,7 @@
 // Class provides a network server for Stage internals
 // used by external GUIs (XS) and distributed Stage modules
 //
-// $Id: server.hh,v 1.4 2002-08-15 17:10:51 gerkey Exp $
+// $Id: server.hh,v 1.5 2002-08-22 02:04:38 rtv Exp $
 
 #ifndef _SERVER_H
 #define _SERVER_H
@@ -126,7 +126,7 @@ private:
 
 public:
   // simple constructor
-  CStageIO( int argc, char** argv );
+  CStageIO( int argc, char** argv, Library* lib );
   ~CStageIO( void );
 
   // THIS IS THE EXTERNAL INTERFACE TO THE WORLD, SHARED BY ALL WORLD
@@ -202,7 +202,7 @@ protected:
 class CStageServer : public CStageIO
 {
   public:
-  CStageServer( int argc, char** argv );
+  CStageServer( int argc, char** argv, Library* lib );
   ~CStageServer( void );
   
   // THIS IS THE EXTERNAL INTERFACE TO THE WORLD, SHARED BY ALL WORLD
@@ -295,7 +295,7 @@ class CStageServer : public CStageIO
 class CStageClient : public CStageIO
 {
 public:
-  CStageClient( int argc, char** argv );
+  CStageClient( int argc, char** argv, Library* lib );
   ~CStageClient( void );
    
   // THIS IS THE EXTERNAL INTERFACE TO THE WORLD, SHARED BY ALL WORLD

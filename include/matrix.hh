@@ -1,7 +1,7 @@
 // ==================================================================
 // Filename:	CMatrix.h
 //
-// $Id: matrix.hh,v 1.9 2002-07-09 03:31:56 rtv Exp $
+// $Id: matrix.hh,v 1.10 2002-08-22 02:04:38 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -29,11 +29,7 @@ class CMatrix
   public:
 
   CMatrix(int w, int h, int default_buf_size);
-  
-   void dump( void );
-  
-  void PrintCell( int cell );
-  void CheckCell( int cell );
+  ~CMatrix(void);
     
   inline int get_width(void) {return width;}
   inline int get_height(void) {return height;}
@@ -95,8 +91,17 @@ class CMatrix
   CEntity** rect_detect( const Rect& r);
   
   void	clear( void );
+
+// utilities for visualizing the matrix
+  void dump( void );
+
+  rtk_fig_t* fig;
+  void render( CWorld* world );
+  void unrender( void );
+
+  void PrintCell( int cell );
+  void CheckCell( int cell );
   
-  ~CMatrix(void);
 };
 
 

@@ -1,6 +1,6 @@
 
 # Desc: world defines a descartes base with 8 idars	
-# CVS: $Id: pherobot.world,v 1.6 2002-07-29 15:59:24 rtv Exp $
+# CVS: $Id: pherobot.world,v 1.7 2002-08-22 02:04:38 rtv Exp $
 
 
 
@@ -15,7 +15,7 @@ environment
 
 gui
 (
-  size [1027.000 847.000]
+  size [500.000 400.000]
   origin [4.127 3.558]
   scale 0.009
   grid [0.2 1]

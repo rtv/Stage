@@ -50,8 +50,8 @@ void ClientCatchSigPipe( int signo )
 
 }
 
-CStageClient::CStageClient( int argc, char** argv )
-  : CStageIO( argc, argv )
+CStageClient::CStageClient( int argc, char** argv, Library* lib )
+  : CStageIO( argc, argv, lib )
 {
   // start paused 
   m_enable = false;

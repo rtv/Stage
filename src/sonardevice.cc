@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.31 2002-08-19 21:48:28 gerkey Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.32 2002-08-22 02:04:38 rtv Exp $
  */
 
 #include <math.h>
@@ -29,9 +29,16 @@
 #include "sonardevice.hh"
 #include "raytrace.hh"
 
+#include "world.hh"
+
+// register this device type with the library
+CEntity sonar_bootstrap( string("sonar"), 
+			 SonarType, 
+			 (void*)CSonarDevice::Creator );
+
 // constructor
 CSonarDevice::CSonarDevice(CWorld *world, CEntity *parent )
-    : CEntity(world, parent )
+  : CPlayerEntity(world, parent )    
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_sonar_data_t );
@@ -68,7 +75,7 @@ bool CSonarDevice::Load(CWorldFile *worldfile, int section)
   int scount;
   char key[256];
   
-  if (!CEntity::Load(worldfile, section))
+  if (!CPlayerEntity::Load(worldfile, section))
     return false;
 
   // Load sonar min and max range
@@ -97,7 +104,7 @@ bool CSonarDevice::Load(CWorldFile *worldfile, int section)
 void CSonarDevice::Update( double sim_time ) 
 {
 #ifdef DEBUG
-  CEntity::Update( sim_time ); // inherit some debug output
+  CPlayerEntity::Update( sim_time ); // inherit some debug output
 #endif
 
   // dump out if noone is subscribed
@@ -202,7 +209,7 @@ void CSonarDevice::UpdateConfig()
 // Initialise the rtk gui
 void CSonarDevice::RtkStartup()
 {
-  CEntity::RtkStartup();
+  CPlayerEntity::RtkStartup();
   
   // Create a figure representing this object
   this->scan_fig = rtk_fig_create(m_world->canvas, NULL, 49);
@@ -219,7 +226,7 @@ void CSonarDevice::RtkShutdown()
   // Clean up the figure we created
   rtk_fig_destroy(this->scan_fig);
 
-  CEntity::RtkShutdown();
+  CPlayerEntity::RtkShutdown();
 } 
 
 
@@ -227,7 +234,7 @@ void CSonarDevice::RtkShutdown()
 // Update the rtk gui
 void CSonarDevice::RtkUpdate()
 {
-  CEntity::RtkUpdate();
+  CPlayerEntity::RtkUpdate();
    
   // Get global pose
   //double gx, gy, gth;

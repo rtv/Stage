@@ -2,13 +2,9 @@
 
 include "pioneer.inc"
 
-environment
-(
-   file "hospital.pnm.gz"
-#   file "cave.pnm.gz"
-   scale 0.1
-   resolution 0.1
-)
+bitmap( file "hospital.pnm.gz" )
+
+scale 0.1
 
 gui
 (
@@ -24,19 +20,13 @@ gui
 position
 (
   color "red" shape "rect" pose [125.00 49.98 308] port 40099 
-  player ( color "white" pose [0.00 0.0 0] port 40099 )
-
   sonar ( color "blue3" pose [0.00 0.0 0] port 40099 )
-
   gps ( color "gray" pose [0.00 0.0 0] port 40099 )
-
 )
 
 position
 (
   pose [126.34 47.75 248] port 40053 shape "rect" color "red" 
-  player ( pose [0.00 0.0 0] port 40053 color "white" )
-
   sonar ( color "blue3" pose [0.00 0.0 0] port 40053 )
 
   gps ( color "gray" pose [0.00 0.0 0] port 40053 )
@@ -50,14 +40,11 @@ position
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40003 )
 
-  player ( color "white" pose [0.00 0.0 0] port 40003 )
-
 )
 
 position
 (
   color "red" shape "rect" pose [119.56 76.38 88] port 40030 
-  player ( pose [0.00 0.0 0] port 40030 color "white" )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40030 )
 
@@ -72,14 +59,12 @@ position
 
   gps ( pose [0.00 0.0 0] port 40081 color "gray" )
 
-  player ( color "white" pose [0.00 0.0 0] port 40081 )
 
 )
 
 position
 (
   pose [112.92 55.79 295] port 40000 shape "rect" color "red" 
-  player ( pose [0.00 0.0 0] port 40000 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40000 color "blue3" )
 
@@ -90,7 +75,6 @@ position
 position
 (
   color "red" pose [129.47 62.71 136] port 40058 shape "rect" 
-  player ( color "white" pose [0.00 0.0 0] port 40058 )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40058 )
 
@@ -101,7 +85,6 @@ position
 position
 (
   color "red" pose [112.42 52.92 104] port 40008 shape "rect" 
-  player ( color "white" pose [0.00 0.0 0] port 40008 )
 
   gps ( color "gray" pose [0.00 0.0 0] port 40008 )
 
@@ -112,7 +95,6 @@ position
 position
 (
   shape "rect" color "red" pose [129.43 72.55 197] port 40035 
-  player ( pose [0.00 0.0 0] port 40035 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40035 color "blue3" )
 
@@ -123,7 +105,6 @@ position
 position
 (
   color "red" pose [117.88 73.99 85] port 40086 shape "rect" 
-  player ( color "white" pose [0.00 0.0 0] port 40086 )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40086 )
 
@@ -134,7 +115,6 @@ position
 position
 (
   pose [129.90 41.0 39] port 40063 shape "rect" color "red" 
-  player ( pose [0.00 0.0 0] port 40063 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40063 color "blue3" )
 
@@ -145,7 +125,6 @@ position
 position
 (
   shape "rect" color "red" pose [117.50 46.02 270] port 40027 
-  player ( pose [0.00 0.0 0] port 40027 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40027 color "blue3" )
 
@@ -156,7 +135,6 @@ position
 position
 (
   pose [115.58 64.55 254] port 40013 shape "rect" color "red" 
-  player ( pose [0.00 0.0 0] port 40013 color "white" )
 
   gps ( color "gray" pose [0.00 0.0 0] port 40013 )
 
@@ -167,7 +145,6 @@ position
 position
 (
   shape "rect" color "red" pose [128.93 83.53 56] port 40040 
-  player ( pose [0.00 0.0 0] port 40040 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40040 color "blue3" )
 
@@ -178,7 +155,6 @@ position
 position
 (
   pose [115.75 66.25 303] port 40091 shape "rect" color "red" 
-  player ( pose [0.00 0.0 0] port 40091 color "white" )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40091 )
 
@@ -189,7 +165,6 @@ position
 position
 (
   shape "rect" pose [123.42 78.89 92] port 40068 color "red" 
-  player ( pose [0.00 0.0 0] port 40068 color "white" )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40068 )
 
@@ -202,7 +177,6 @@ position
   color "red" shape "rect" pose [130.91 44.99 296] port 40032 
   gps ( color "gray" pose [0.00 0.0 0] port 40032 )
 
-  player ( color "white" pose [0.00 0.0 0] port 40032 )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40032 )
 
@@ -213,7 +187,6 @@ position
   shape "rect" pose [127.65 76.75 199] port 40018 color "red" 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40018 )
 
-  player ( color "white" pose [0.00 0.0 0] port 40018 )
 
   gps ( color "gray" pose [0.00 0.0 0] port 40018 )
 
@@ -224,7 +197,6 @@ position
   color "red" pose [125.78 81.53 62] port 40002 shape "rect" 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40002 )
 
-  player ( port 40002 color "white" pose [0.00 0.0 0] )
 
   gps ( pose [0.00 0.0 0] port 40002 color "gray" )
 
@@ -233,7 +205,6 @@ position
 position
 (
   color "red" shape "rect" pose [115.32 79.74 150] port 40045 
-  player ( color "white" pose [0.00 0.0 0] port 40045 )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40045 )
 
@@ -244,7 +215,6 @@ position
 position
 (
   color "red" pose [114.30 55.03 123] port 40096 shape "rect" 
-  player ( color "white" pose [0.00 0.0 0] port 40096 )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40096 )
 
@@ -255,7 +225,6 @@ position
 position
 (
   shape "rect" pose [113.20 63.51 315] port 40050 color "red" 
-  player ( pose [0.00 0.0 0] port 40050 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40050 color "blue3" )
 
@@ -266,7 +235,6 @@ position
 position
 (
   pose [116.67 83.7 348] port 40073 shape "rect" color "red" 
-  player ( pose [0.00 0.0 0] port 40073 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40073 color "blue3" )
 
@@ -279,7 +247,6 @@ position
   shape "rect" color "red" pose [127.47 72.12 98] port 40037 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40037 )
 
-  player ( color "white" pose [0.00 0.0 0] port 40037 )
 
   gps ( pose [0.00 0.0 0] port 40037 color "gray" )
 
@@ -292,14 +259,12 @@ position
 
   sonar ( pose [0.00 0.0 0] port 40023 color "blue3" )
 
-  player ( pose [0.00 0.0 0] port 40023 color "white" )
 
 )
 
 position
 (
   pose [128.85 75.62 225] port 40078 shape "rect" color "red" 
-  player ( pose [0.00 0.0 0] port 40078 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40078 color "blue3" )
 
@@ -310,7 +275,6 @@ position
 position
 (
   shape "rect" color "red" pose [128.81 55.61 241] port 40055 
-  player ( pose [0.00 0.0 0] port 40055 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40055 color "blue3" )
 
@@ -323,7 +287,6 @@ position
   color "red" pose [120.84 78.9 58] port 40042 shape "rect" 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40042 )
 
-  player ( color "white" pose [0.00 0.0 0] port 40042 )
 
   gps ( pose [0.00 0.0 0] port 40042 color "gray" )
 
@@ -334,7 +297,6 @@ position
   shape "rect" color "red" pose [114.06 65.07 327] port 40005 
   sonar ( pose [0.00 0.0 0] port 40005 color "blue3" )
 
-  player ( pose [0.00 0.0 0] port 40005 color "white" )
 
   gps ( color "gray" pose [0.00 0.0 0] port 40005 )
 
@@ -343,7 +305,6 @@ position
 position
 (
   pose [116.82 79.34 12] port 40083 shape "rect" color "red" 
-  player ( pose [0.00 0.0 0] port 40083 color "white" )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40083 )
 
@@ -354,7 +315,6 @@ position
 position
 (
   color "red" shape "rect" pose [130.60 72.04 332] port 40060 
-  player ( color "white" pose [0.00 0.0 0] port 40060 )
 
   sonar ( pose [0.00 0.0 0] port 40060 color "blue3" )
 
@@ -367,7 +327,6 @@ position
   shape "rect" pose [130.59 61.5 299] port 40047 color "red" 
   sonar ( pose [0.00 0.0 0] port 40047 color "blue3" )
 
-  player ( pose [0.00 0.0 0] port 40047 color "white" )
 
   gps ( pose [0.00 0.0 0] port 40047 color "gray" )
 
@@ -380,14 +339,12 @@ position
 
   sonar ( pose [0.00 0.0 0] port 40010 color "blue3" )
 
-  player ( pose [0.00 0.0 0] port 40010 color "white" )
 
 )
 
 position
 (
   shape "rect" pose [129.33 38.26 184] port 40088 color "red" 
-  player ( pose [0.00 0.0 0] port 40088 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40088 color "blue3" )
 
@@ -400,7 +357,6 @@ position
   shape "rect" pose [130.62 75.83 59] port 40052 color "red" 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40052 )
 
-  player ( color "white" pose [0.00 0.0 0] port 40052 )
 
   gps ( pose [0.00 0.0 0] port 40052 color "gray" )
 
@@ -409,7 +365,6 @@ position
 position
 (
   shape "rect" color "red" pose [114.47 65.08 60] port 40065 
-  player ( color "white" pose [0.00 0.0 0] port 40065 )
 
   sonar ( pose [0.00 0.0 0] port 40065 color "blue3" )
 
@@ -420,7 +375,6 @@ position
 position
 (
   pose [115.85 41.45 121] color "red" port 40029 shape "rect" 
-  player ( color "white" pose [0.00 0.0 0] port 40029 )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40029 )
 
@@ -435,14 +389,12 @@ position
 
   sonar ( pose [0.00 0.0 0] port 40015 color "blue3" )
 
-  player ( pose [0.00 0.0 0] port 40015 color "white" )
 
 )
 
 position
 (
   shape "rect" color "red" pose [113.89 83.75 127] port 40093 
-  player ( pose [0.00 0.0 0] port 40093 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40093 color "blue3" )
 
@@ -455,7 +407,6 @@ position
   color "red" pose [127.31 49.32 296] port 40057 shape "rect" 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40057 )
 
-  player ( color "white" pose [0.00 0.0 0] port 40057 )
 
   gps ( color "gray" pose [0.00 0.0 0] port 40057 )
 
@@ -464,7 +415,6 @@ position
 position
 (
   color "red" pose [113.32 37.26 179] port 40070 shape "rect" 
-  player ( color "white" pose [0.00 0.0 0] port 40070 )
 
   sonar ( pose [0.00 0.0 0] port 40070 color "blue3" )
 
@@ -479,14 +429,12 @@ position
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40007 )
 
-  player ( color "white" pose [0.00 0.0 0] port 40007 )
 
 )
 
 position
 (
   pose [130.37 41.86 16] port 40034 shape "rect" color "red" 
-  player ( pose [0.00 0.0 0] port 40034 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40034 color "blue3" )
 
@@ -501,14 +449,12 @@ position
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40020 )
 
-  player ( color "white" pose [0.00 0.0 0] port 40020 )
 
 )
 
 position
 (
   color "red" pose [130.66 79.92 304] port 40075 shape "rect" 
-  player ( color "white" pose [0.00 0.0 0] port 40075 )
 
   sonar ( pose [0.00 0.0 0] port 40075 color "blue3" )
 
@@ -519,7 +465,6 @@ position
 position
 (
   color "red" shape "rect" pose [128.69 67.12 152] port 40098 
-  player ( pose [0.00 0.0 0] port 40098 color "white" )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40098 )
 
@@ -532,7 +477,6 @@ position
   pose [116.93 41.89 340] port 40062 shape "rect" color "red" 
   sonar ( pose [0.00 0.0 0] port 40062 color "blue3" )
 
-  player ( pose [0.00 0.0 0] port 40062 color "white" )
 
   gps ( color "gray" pose [0.00 0.0 0] port 40062 )
 
@@ -543,7 +487,6 @@ position
   shape "rect" pose [129.85 81.73 193] port 40012 color "red" 
   gps ( pose [0.00 0.0 0] port 40012 color "gray" )
 
-  player ( color "white" pose [0.00 0.0 0] port 40012 )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40012 )
 
@@ -552,7 +495,6 @@ position
 position
 (
   shape "rect" pose [121.23 81.79 338] port 40039 color "red" 
-  player ( pose [0.00 0.0 0] port 40039 color "white" )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40039 )
 
@@ -563,7 +505,6 @@ position
 position
 (
   shape "rect" pose [114.04 43.9 113] port 40080 color "red" 
-  player ( color "white" pose [0.00 0.0 0] port 40080 )
 
   sonar ( pose [0.00 0.0 0] port 40080 color "blue3" )
 
@@ -576,7 +517,6 @@ position
   shape "rect" color "red" pose [128.54 63.94 67] port 40067 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40067 )
 
-  player ( color "white" pose [0.00 0.0 0] port 40067 )
 
   gps ( color "gray" pose [0.00 0.0 0] port 40067 )
 
@@ -587,7 +527,6 @@ position
   shape "rect" color "red" pose [127.79 37.58 123] port 40017 
   gps ( pose [0.00 0.0 0] port 40017 color "gray" )
 
-  player ( color "white" pose [0.00 0.0 0] port 40017 )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40017 )
 
@@ -596,7 +535,6 @@ position
 position
 (
   color "red" pose [117.92 45.92 36] port 40044 shape "rect" 
-  player ( color "white" pose [0.00 0.0 0] port 40044 )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40044 )
 
@@ -607,7 +545,6 @@ position
 position
 (
   color "red" pose [120.86 48.14 179] port 40085 shape "rect" 
-  player ( color "white" pose [0.00 0.0 0] port 40085 )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40085 )
 
@@ -620,7 +557,6 @@ position
   color "red" pose [128.94 39.81 20] port 40072 shape "rect" 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40072 )
 
-  player ( color "white" pose [0.00 0.0 0] port 40072 )
 
   gps ( color "gray" pose [0.00 0.0 0] port 40072 )
 
@@ -631,7 +567,6 @@ position
   color "red" pose [116.69 40.44 59] port 40022 shape "rect" 
   gps ( pose [0.00 0.0 0] port 40022 color "gray" )
 
-  player ( pose [0.00 0.0 0] port 40022 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40022 color "blue3" )
 
@@ -640,7 +575,6 @@ position
 position
 (
   shape "rect" color "red" pose [129.87 41.73 269] port 40026 
-  player ( pose [0.00 0.0 0] port 40026 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40026 color "blue3" )
 
@@ -651,7 +585,6 @@ position
 position
 (
   pose [115.08 40.54 224] port 40049 shape "rect" color "red" 
-  player ( pose [0.00 0.0 0] port 40049 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40049 color "blue3" )
 
@@ -664,7 +597,6 @@ position
   pose [129.29 63.97 152] port 40077 shape "rect" color "red" 
   sonar ( pose [0.00 0.0 0] port 40077 color "blue3" )
 
-  player ( pose [0.00 0.0 0] port 40077 color "white" )
 
   gps ( color "gray" pose [0.00 0.0 0] port 40077 )
 
@@ -673,7 +605,6 @@ position
 position
 (
   shape "rect" pose [127.50 60.04 48] port 40090 color "red" 
-  player ( pose [0.00 0.0 0] port 40090 color "white" )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40090 )
 
@@ -684,7 +615,6 @@ position
 position
 (
   pose [127.34 47.42 71] port 40054 shape "rect" color "red" 
-  player ( pose [0.00 0.0 0] port 40054 color "white" )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40054 )
 
@@ -699,14 +629,12 @@ position
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40004 )
 
-  player ( color "white" pose [0.00 0.0 0] port 40004 )
 
 )
 
 position
 (
   color "red" shape "rect" pose [118.35 81.19 220] port 40031 
-  player ( pose [0.00 0.0 0] port 40031 color "white" )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40031 )
 
@@ -719,7 +647,6 @@ position
   shape "rect" pose [129.59 36.21 21] port 40082 color "red" 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40082 )
 
-  player ( color "white" pose [0.00 0.0 0] port 40082 )
 
   gps ( color "gray" pose [0.00 0.0 0] port 40082 )
 
@@ -730,7 +657,6 @@ position
   shape "rect" color "red" pose [118.93 48.54 306] port 40001 
   gps ( color "gray" pose [0.00 0.0 0] port 40001 )
 
-  player ( pose [0.00 0.0 0] port 40001 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40001 color "blue3" )
 
@@ -739,7 +665,6 @@ position
 position
 (
   shape "rect" color "red" pose [112.80 62.25 190] port 40095 
-  player ( color "white" pose [0.00 0.0 0] port 40095 )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40095 )
 
@@ -750,7 +675,6 @@ position
 position
 (
   pose [125.64 70.06 104] port 40059 color "red" shape "rect" 
-  player ( color "white" pose [0.00 0.0 0] port 40059 )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40059 )
 
@@ -765,14 +689,12 @@ position
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40009 )
 
-  player ( color "white" pose [0.00 0.0 0] port 40009 )
 
 )
 
 position
 (
   shape "rect" color "red" pose [123.23 45.27 47] port 40036 
-  player ( pose [0.00 0.0 0] port 40036 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40036 color "blue3" )
 
@@ -785,7 +707,6 @@ position
   color "red" pose [114.62 67.57 344] port 40087 shape "rect" 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40087 )
 
-  player ( color "white" pose [0.00 0.0 0] port 40087 )
 
   gps ( pose [0.00 0.0 0] port 40087 color "gray" )
 
@@ -794,7 +715,6 @@ position
 position
 (
   pose [127.19 53.09 326] port 40064 shape "rect" color "red" 
-  player ( pose [0.00 0.0 0] port 40064 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40064 color "blue3" )
 
@@ -809,14 +729,12 @@ position
 
   sonar ( pose [0.00 0.0 0] port 40014 color "blue3" )
 
-  player ( pose [0.00 0.0 0] port 40014 color "white" )
 
 )
 
 position
 (
   shape "rect" color "red" pose [120.61 82.54 86] port 40041 
-  player ( port 40041 color "white" pose [0.00 0.0 0] )
 
   sonar ( pose [0.00 0.0 0] port 40041 color "blue3" )
 
@@ -829,7 +747,6 @@ position
   pose [127.33 48.13 8] port 40092 shape "rect" color "red" 
   sonar ( pose [0.00 0.0 0] port 40092 color "blue3" )
 
-  player ( pose [0.00 0.0 0] port 40092 color "white" )
 
   gps ( color "gray" pose [0.00 0.0 0] port 40092 )
 
@@ -838,7 +755,6 @@ position
 position
 (
   port 40069 color "red" shape "rect" pose [113.35 60.17 219] 
-  player ( pose [0.00 0.0 0] port 40069 color "white" )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40069 )
 
@@ -853,14 +769,12 @@ position
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40019 )
 
-  player ( color "white" pose [0.00 0.0 0] port 40019 )
 
 )
 
 position
 (
   shape "rect" pose [117.18 46.49 59] port 40046 color "red" 
-  player ( color "white" pose [0.00 0.0 0] port 40046 )
 
   sonar ( pose [0.00 0.0 0] port 40046 color "blue3" )
 
@@ -873,7 +787,6 @@ position
   pose [129.50 82.25 292] port 40097 color "red" shape "rect" 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40097 )
 
-  player ( color "white" pose [0.00 0.0 0] port 40097 )
 
   gps ( color "gray" pose [0.00 0.0 0] port 40097 )
 
@@ -882,7 +795,6 @@ position
 position
 (
   shape "rect" pose [123.80 68.35 131] port 40051 color "red" 
-  player ( color "white" pose [0.00 0.0 0] port 40051 )
 
   sonar ( pose [0.00 0.0 0] port 40051 color "blue3" )
 
@@ -893,7 +805,6 @@ position
 position
 (
   shape "rect" color "red" pose [112.13 65.15 264] port 40074 
-  player ( pose [0.00 0.0 0] port 40074 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40074 color "blue3" )
 
@@ -908,14 +819,12 @@ position
 
   sonar ( pose [0.00 0.0 0] port 40024 color "blue3" )
 
-  player ( pose [0.00 0.0 0] port 40024 color "white" )
 
 )
 
 position
 (
   shape "rect" color "red" pose [113.34 82.15 276] port 40028 
-  player ( color "white" pose [0.00 0.0 0] port 40028 )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40028 )
 
@@ -926,7 +835,6 @@ position
 position
 (
   shape "rect" color "red" pose [124.22 47.3 160] port 40079 
-  player ( pose [0.00 0.0 0] port 40079 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40079 color "blue3" )
 
@@ -937,7 +845,6 @@ position
 position
 (
   shape "rect" color "red" pose [129.66 77.73 358] port 40056 
-  player ( color "white" pose [0.00 0.0 0] port 40056 )
 
   sonar ( pose [0.00 0.0 0] port 40056 color "blue3" )
 
@@ -952,14 +859,12 @@ position
 
   sonar ( pose [0.00 0.0 0] port 40006 color "blue3" )
 
-  player ( port 40006 color "white" pose [0.00 0.0 0] )
 
 )
 
 position
 (
   color "red" pose [129.74 70.49 107] port 40033 shape "rect" 
-  player ( pose [0.00 0.0 0] port 40033 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40033 color "blue3" )
 
@@ -970,7 +875,6 @@ position
 position
 (
   color "red" pose [121.38 82.77 33] port 40084 shape "rect" 
-  player ( pose [0.00 0.0 0] port 40084 color "white" )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40084 )
 
@@ -981,7 +885,6 @@ position
 position
 (
   shape "rect" pose [120.47 78.07 213] port 40061 color "red" 
-  player ( pose [0.00 0.0 0] port 40061 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40061 color "blue3" )
 
@@ -996,14 +899,12 @@ position
 
   sonar ( pose [0.00 0.0 0] port 40011 color "blue3" )
 
-  player ( color "white" pose [0.00 0.0 0] port 40011 )
 
 )
 
 position
 (
   shape "rect" pose [113.39 48.03 37] port 40038 color "red" 
-  player ( pose [0.00 0.0 0] port 40038 color "white" )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40038 )
 
@@ -1014,7 +915,6 @@ position
 position
 (
   shape "rect" pose [120.87 49.91 78] port 40089 color "red" 
-  player ( pose [0.00 0.0 0] port 40089 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40089 color "blue3" )
 
@@ -1025,7 +925,6 @@ position
 position
 (
   shape "rect" color "red" pose [115.09 83.68 216] port 40066 
-  player ( color "white" pose [0.00 0.0 0] port 40066 )
 
   sonar ( pose [0.00 0.0 0] port 40066 color "blue3" )
 
@@ -1040,7 +939,6 @@ position
 
   sonar ( pose [0.00 0.0 0] port 40016 color "blue3" )
 
-  player ( color "white" pose [0.00 0.0 0] port 40016 )
 
 )
 
@@ -1049,7 +947,6 @@ position
   color "red" pose [120.13 50.69 249] port 40043 shape "rect" 
   gps ( color "gray" pose [0.00 0.0 0] port 40043 )
 
-  player ( color "white" pose [0.00 0.0 0] port 40043 )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40043 )
 
@@ -1058,7 +955,6 @@ position
 position
 (
   shape "rect" color "red" pose [114.50 50.05 228] port 40094 
-  player ( pose [0.00 0.0 0] port 40094 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40094 color "blue3" )
 
@@ -1069,7 +965,6 @@ position
 position
 (
   color "red" pose [115.60 65.72 344] port 40071 shape "rect" 
-  player ( color "white" pose [0.00 0.0 0] port 40071 )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40071 )
 
@@ -1084,14 +979,12 @@ position
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40021 )
 
-  player ( color "white" pose [0.00 0.0 0] port 40021 )
 
 )
 
 position
 (
   pose [113.50 76.35 186] port 40025 shape "rect" color "red" 
-  player ( pose [0.00 0.0 0] port 40025 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40025 color "blue3" )
 
@@ -1102,7 +995,6 @@ position
 position
 (
   pose [123.95 73.79 309] port 40048 shape "rect" color "red" 
-  player ( pose [0.00 0.0 0] port 40048 color "white" )
 
   sonar ( pose [0.00 0.0 0] port 40048 color "blue3" )
 
@@ -1113,7 +1005,6 @@ position
 position
 (
   pose [127.08 81.63 164] port 40076 shape "rect" color "red" 
-  player ( pose [0.00 0.0 0] port 40076 color "white" )
 
   sonar ( color "blue3" pose [0.00 0.0 0] port 40076 )
 

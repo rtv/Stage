@@ -21,7 +21,7 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.cc,v 1.38 2002-08-16 06:18:35 gerkey Exp $
+ * CVS info: $Id: visiondevice.cc,v 1.39 2002-08-22 02:04:38 rtv Exp $
  */
 
 #include <math.h>
@@ -33,11 +33,15 @@
 #include "ptzdevice.hh"
 #include "raytrace.hh"
 
+// register this device type with the Library
+CEntity vision_bootstrap( string("vision"), 
+		       VisionType, 
+		       (void*)&CVisionDevice::Creator ); 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent)
-        : CEntity( world, parent )
+        : CPlayerEntity( world, parent )
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_blobfinder_data_t ); 
@@ -93,7 +97,7 @@ CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent)
 // Load the entity from the worldfile
 bool CVisionDevice::Load(CWorldFile *worldfile, int section)
 {
-  if (!CEntity::Load(worldfile, section))
+  if (!CPlayerEntity::Load(worldfile, section))
     return false;
 
   // Read the vision channel/color mapping
@@ -122,7 +126,7 @@ void CVisionDevice::Update( double sim_time )
 {
   ASSERT(m_world != NULL);
 
-  CEntity::Update( sim_time );
+  CPlayerEntity::Update( sim_time );
 
   // Dont update anything if we are not subscribed
   if( Subscribed() < 1 )
@@ -424,7 +428,7 @@ size_t CVisionDevice::UpdateACTS( player_blobfinder_data_t* data )
 // Initialise the rtk gui
 void CVisionDevice::RtkStartup()
 {
-  CEntity::RtkStartup();
+  CPlayerEntity::RtkStartup();
   
   // Create a figure representing this object
   this->vision_fig = rtk_fig_create(m_world->canvas, this->fig, 99);
@@ -440,7 +444,7 @@ void CVisionDevice::RtkShutdown()
   // Clean up the figure we created
   rtk_fig_destroy(this->vision_fig);
 
-  CEntity::RtkShutdown();
+  CPlayerEntity::RtkShutdown();
 } 
 
 
@@ -448,7 +452,7 @@ void CVisionDevice::RtkShutdown()
 // Update the rtk gui
 void CVisionDevice::RtkUpdate()
 {
-  CEntity::RtkUpdate();
+  CPlayerEntity::RtkUpdate();
 
   if (Subscribed() < 1)
   {

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.35 $
+//  $Author: rtv $
+//  $Revision: 1.36 $
 //
 // Usage:
 //  (empty)
@@ -32,11 +32,15 @@
 #include "laserdevice.hh"
 #include "laserbeacondevice.hh"
 
+// register this device type with the Library
+CEntity lbd_bootstrap( string("lbd"), 
+		       LBDType, 
+		       (void*)&CLBDDevice::Creator ); 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
-  : CEntity(world, parent )
+  : CPlayerEntity(world, parent )
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_fiducial_data_t );
@@ -98,7 +102,7 @@ CLBDDevice::CLBDDevice(CWorld *world, CLaserDevice *parent )
 // Load the entity from the world file
 bool CLBDDevice::Load(CWorldFile *worldfile, int section)
 {
-  if (!CEntity::Load(worldfile, section))
+  if (!CPlayerEntity::Load(worldfile, section))
     return false;
 
   this->max_range_anon = worldfile->ReadLength(0, "lbd_range_anon",
@@ -119,7 +123,7 @@ bool CLBDDevice::Load(CWorldFile *worldfile, int section)
 //
 void CLBDDevice::Update( double sim_time )
 {
-  //CEntity::Update( sim_time ); // inherit debug output
+  CPlayerEntity::Update( sim_time ); // inherit debug output
 
   ASSERT(m_world != NULL );
   ASSERT(this->laser != NULL );
@@ -293,85 +297,13 @@ void CLBDDevice::Update( double sim_time )
   this->time_usec = time_usec;
 }
 
-
-
-#ifdef INCLUDE_RTK
-
-///////////////////////////////////////////////////////////////////////////
-// Process GUI update messages
-//
-void CLBDDevice::OnUiUpdate(RtkUiDrawData *event)
-{
-    // Default draw
-    //
-    CEntity::OnUiUpdate(event);
-
-    // Draw debugging info
-    //
-    event->begin_section("global", "laser_beacon");
-    
-    if (event->draw_layer("data", false))
-    {
-      if(Subscribed())
-      {
-        DrawData(event);
-        // call Update(), because we may have stolen the truth_poked
-        Update(m_world->GetTime());
-      }
-    }
-    
-    event->end_section();
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Draw the beacon data
-//
-
-void CLBDDevice::DrawData(RtkUiDrawData *event)
-{
-    #define BEACON_ID_COLOR RTK_RGB(0, 0, 255)
-    #define BEACON_ANON_COLOR RTK_RGB(128, 128, 255)
-    
-    // Get global pose
-    //
-    double gx, gy, gth;
-    GetGlobalPose(gx, gy, gth);
-
-    for (int i = 0; i < expBeacon.beaconCount; i++)
-    {
-        int id = expBeacon.beacons[i].id;
-        double px = expBeacon.beacons[i].x;
-        double py = expBeacon.beacons[i].y;
-
-        if (id == 0)
-            event->set_color(BEACON_ANON_COLOR);
-        else
-            event->set_color(BEACON_ID_COLOR);
-        event->ex_arrow(gx, gy, px, py, 0, 0.10);
-
-        if (id > 0)
-        {
-            char text[32];
-            snprintf(text, sizeof(text), "%d", id);
-            event->draw_text(px + 0.1, py + 0.1, text);
-        }
-    }
-}
-
-
-#endif
-
-
-
-
 #ifdef INCLUDE_RTK2
 
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the rtk gui
 void CLBDDevice::RtkStartup()
 {
-  CEntity::RtkStartup();
+  CPlayerEntity::RtkStartup();
   
   // Create a figure representing this object
   this->beacon_fig = rtk_fig_create(m_world->canvas, NULL, 49);
@@ -388,7 +320,7 @@ void CLBDDevice::RtkShutdown()
   // Clean up the figure we created
   rtk_fig_destroy(this->beacon_fig);
 
-  CEntity::RtkShutdown();
+  CPlayerEntity::RtkShutdown();
 } 
 
 
@@ -396,7 +328,7 @@ void CLBDDevice::RtkShutdown()
 // Update the rtk gui
 void CLBDDevice::RtkUpdate()
 {
-  CEntity::RtkUpdate();
+  CPlayerEntity::RtkUpdate();
  
   rtk_fig_clear(this->beacon_fig);
   

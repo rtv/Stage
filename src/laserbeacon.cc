@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.23 $
+//  $Author: rtv $
+//  $Revision: 1.24 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -31,6 +31,11 @@
 #include "laserbeacon.hh"
 #include "laserdevice.hh" // for the laser return values
 
+
+// register this device type with the Library
+CEntity laserbeacon_bootstrap( string("laserbeacon"), 
+			       LaserBeaconType, 
+			       (void*)&CLaserBeacon::Creator ); 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/bpsdevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.4 $
+//  $Author: rtv $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -29,12 +29,16 @@
 #include "world.hh"
 #include "bpsdevice.hh"
 
+// register this device type with the Library
+CEntity bps_bootstrap( string("bps"), 
+		       BpsType, 
+		       (void*)&CBpsDevice::Creator ); 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
 CBpsDevice::CBpsDevice(CWorld *world, CEntity *parent )
-  : CEntity(world, parent )
+  : CPlayerEntity(world, parent )
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_bps_data_t ); 
@@ -52,7 +56,7 @@ CBpsDevice::CBpsDevice(CWorld *world, CEntity *parent )
 //
 bool CBpsDevice::Startup()
 {
-  if (!CEntity::Startup())
+  if (!CPlayerEntity::Startup())
     return false;
   return true;
 }

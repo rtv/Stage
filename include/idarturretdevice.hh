@@ -8,8 +8,8 @@
 //
 //  CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/idarturretdevice.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.3 $
+//  $Author: rtv $
+//  $Revision: 1.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -18,7 +18,7 @@
 
 #include "irdevice.hh"
 
-class CIDARTurretDevice : public CEntity
+class CIDARTurretDevice : public CPlayerEntity
 {
 private: 
 
@@ -28,6 +28,13 @@ public:
   
   CIDARTurretDevice(CWorld *world, CEntity *parent );
  
+  // a static named constructor - a pointer to this function is given
+  // to the Library object and paired with a string.  When the string
+  // is seen in the worldfile, this function is called to create an
+  // instance of this entity
+public: static CIDARTurretDevice* Creator( CWorld *world, CEntity *parent )
+  { return( new CIDARTurretDevice( world, parent ) ); }
+
   virtual void Sync( void ); 
   virtual void Update( double sim_time );  
 

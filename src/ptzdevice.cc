@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.22 $
+//  $Author: rtv $
+//  $Revision: 1.23 $
 //
 // Usage:
 //  (empty)
@@ -30,12 +30,16 @@
 #include "world.hh"
 #include "ptzdevice.hh"
 
+// register this device type with the Library
+CEntity ptz_bootstrap( string("ptz"), 
+		       PtzType, 
+		       (void*)&CPtzDevice::Creator ); 
 
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
 CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent )
-  : CEntity(world, parent )
+  : CPlayerEntity(world, parent )
 {   
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_ptz_data_t ); 
@@ -73,7 +77,7 @@ CPtzDevice::CPtzDevice(CWorld *world, CEntity *parent )
 // Load the entity from the world file
 bool CPtzDevice::Load(CWorldFile *worldfile, int section)
 {
-  if (!CEntity::Load(worldfile, section))
+  if (!CPlayerEntity::Load(worldfile, section))
     return false;
 
   char lens_str[32];
@@ -121,7 +125,7 @@ bool CPtzDevice::Load(CWorldFile *worldfile, int section)
 void CPtzDevice::Update( double sim_time )
 {
 #ifdef DEBUG
-  CEntity::Update( sim_time ); // inherit debug output
+  CPlayerEntity::Update( sim_time ); // inherit debug output
 #endif
   
   ASSERT(m_world != NULL);
@@ -221,7 +225,7 @@ void CPtzDevice::GetPTZ(double &pan, double &tilt, double &zoom)
 //
 void CPtzDevice::OnUiUpdate(RtkUiDrawData *pData)
 {
-    CEntity::OnUiUpdate(pData);
+    CPlayerEntity::OnUiUpdate(pData);
 }
 
 
@@ -230,7 +234,7 @@ void CPtzDevice::OnUiUpdate(RtkUiDrawData *pData)
 //
 void CPtzDevice::OnUiMouse(RtkUiMouseData *pData)
 {
-    CEntity::OnUiMouse(pData);
+    CPlayerEntity::OnUiMouse(pData);
 }
 
 
@@ -242,7 +246,7 @@ void CPtzDevice::OnUiMouse(RtkUiMouseData *pData)
 // Initialise the rtk gui
 void CPtzDevice::RtkStartup()
 {
-  CEntity::RtkStartup();
+  CPlayerEntity::RtkStartup();
   
   // Create a figure representing this object
   this->fov_fig = rtk_fig_create(m_world->canvas, NULL, 49);
@@ -259,7 +263,7 @@ void CPtzDevice::RtkShutdown()
   // Clean up the figure we created
   rtk_fig_destroy(this->fov_fig);
 
-  CEntity::RtkShutdown();
+  CPlayerEntity::RtkShutdown();
 } 
 
 
@@ -267,7 +271,7 @@ void CPtzDevice::RtkShutdown()
 // Update the rtk gui
 void CPtzDevice::RtkUpdate()
 {
-  CEntity::RtkUpdate();
+  CPlayerEntity::RtkUpdate();
  
   // Get global pose
   double gx, gy, gth;

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/gripperdevice.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.11 $
+//  $Author: rtv $
+//  $Revision: 1.12 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -16,7 +16,7 @@
 #define GRIPPERDEVICE_HH
 
 
-#include "entity.hh"
+#include "playerdevice.hh"
 
 /* 
  * gripper constants
@@ -39,11 +39,18 @@
 
 #define MAXGRIPPERCAPACITY 1000
 
-class CGripperDevice : public CEntity
+class CGripperDevice : public CPlayerEntity
 {
   // Default constructor
   //
   public: CGripperDevice(CWorld *world, CEntity *parent ); 
+
+  // a static named constructor - a pointer to this function is given
+  // to the Library object and paired with a string.  When the string
+  // is seen in the worldfile, this function is called to create an
+  // instance of this entity
+public: static CGripperDevice* Creator( CWorld *world, CEntity *parent )
+  { return( new CGripperDevice( world, parent ) ); }
 
   // update the break beams with the raytrace functions
   // beam is 0 - inside or 1 - outside

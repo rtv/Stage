@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacon.hh,v $
-//  $Author: inspectorg $
-//  $Revision: 1.9 $
+//  $Author: rtv $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -33,6 +33,13 @@ class CLaserBeacon : public CEntity
 {
   // Default constructor
   public: CLaserBeacon(CWorld *world, CEntity *parent);
+
+  // a static named constructor - a pointer to this function is given
+  // to the Library object and paired with a string.  When the string
+  // is seen in the worldfile, this function is called to create an
+  // instance of this entity
+public: static CLaserBeacon* Creator( CWorld *world, CEntity *parent )
+  { return( new CLaserBeacon( world, parent ) ); }
 
   // Load the entity from the worldfile
   public: virtual bool Load(CWorldFile *worldfile, int section);

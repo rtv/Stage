@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/miscdevice.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.11 $
+//  $Author: rtv $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -29,11 +29,16 @@
 #include "miscdevice.hh"
 
 
+// register this device type with the Library
+CEntity misc_bootstrap( string("misc"), 
+		       MiscType, 
+		       (void*)&CMiscDevice::Creator ); 
+
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
 CMiscDevice::CMiscDevice(CWorld *world, CEntity *parent )
-        : CEntity(world, parent )
+        : CPlayerEntity(world, parent )
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_misc_data_t );
@@ -54,7 +59,7 @@ CMiscDevice::CMiscDevice(CWorld *world, CEntity *parent )
 //
 void CMiscDevice::Update( double sim_time )
 {
-  CEntity::Update( sim_time ); // inherit debug output
+  CPlayerEntity::Update( sim_time ); // inherit debug output
 
   if(!Subscribed()) 
     return;

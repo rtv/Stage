@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/gpsdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.14 $
+//  $Author: rtv $
+//  $Revision: 1.15 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -17,11 +17,16 @@
 #include "gpsdevice.hh"
 
 
+// register this device type with the Library
+CEntity gps_bootstrap( string("gps"), 
+		       GpsType, 
+		       (void*)&CGpsDevice::Creator ); 
+
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 //
 CGpsDevice::CGpsDevice(CWorld *world, CEntity *parent )
-  : CEntity(world, parent )
+  : CPlayerEntity(world, parent )
 {
   m_data_len    = sizeof( player_gps_data_t ); 
   m_command_len = 0;

@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.76 2002-08-21 01:45:29 gerkey Exp $
+ * CVS info: $Id: entity.cc,v 1.77 2002-08-22 02:04:38 rtv Exp $
  */
 
 #include <math.h>
@@ -61,32 +61,13 @@ void CEntity::staticSetGlobalPose( void* ent, double x, double y, double th )
   ((CEntity*)ent)->SetGlobalPose( x, y, th );
 }
 
-void CEntity::staticSelect( void* ent )
-{
-  //puts( "SELECT" );
-
-  if( CWorld::autosubscribe )
-    ((CEntity*)ent)->FamilySubscribe();
-}
-
-void CEntity::staticUnselect( void* ent )
-{
-  //puts( "UNSELECT" );
-  if( CWorld::autosubscribe )
-    ((CEntity*)ent)->FamilyUnsubscribe();
-}
-///////////////////////////////////////////////////////////////////////////
 #endif
 
-
 ///////////////////////////////////////////////////////////////////////////
-// Minimal constructor
+// main constructor
 // Requires a pointer to the parent and a pointer to the world.
 CEntity::CEntity(CWorld *world, CEntity *parent_entity )
 {
-  //PRINT_DEBUG( "CEntity::CEntity()" );
-  this->lock_byte = world->GetEntityCount();
-  
   m_world = world; 
   m_parent_entity = parent_entity;
   m_default_entity = this;
@@ -95,7 +76,7 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
   this->stage_type = NullType;
 
   // Set the filename used for this device's mmap
-  this->device_filename[0] = 0;
+  //this->device_filename[0] = 0;
 
   // Set our default name
   this->name[0] = 0;
@@ -133,12 +114,6 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
 
   m_dependent_attached = false;
 
-  // by default, we are not a player device
-  // player devices set this up sensibly in their constructor and ::Load() 
-  // TODO - should create a player device subclass again :)
-  // that would require changes in *many* device files. boo. rtv
-  memset( &m_player, 0, sizeof(m_player) );
-    
   // we start out NOT dirty - no one gets deltas unless they ask for 'em.
   SetDirty( 0 );
   
@@ -146,21 +121,6 @@ CEntity::CEntity(CWorld *world, CEntity *parent_entity )
 
   m_interval = 0.1; // update interval in seconds 
   m_last_update = -MAXFLOAT; // initialized 
-
-  m_info_len    = sizeof( player_stage_info_t ); // same size for all types
-  m_data_len    = 0; // type specific - set in subclasses
-  m_command_len = 0; // ditto
-  m_config_len  = 0; // ditto
-  m_reply_len   = 0; // ditto
-
-  m_info_io     = NULL; // instance specific pointers into mmap
-  m_data_io     = NULL; 
-  m_command_io  = NULL;
-  m_config_io   = NULL;
-  m_reply_io    = NULL;
-
-  m_reqqueue = NULL;
-  m_repqueue = NULL;
 
 #ifdef INCLUDE_RTK2
   // Default figures for drawing the entity.
@@ -179,6 +139,63 @@ CEntity::~CEntity()
 {
   //close( m_fd ); 
 }
+
+void CEntity::GetGlobalBoundingBox( double &xmin, double &ymin,
+				   double &xmax, double &ymax )
+{
+  //double ox, oy, oth;
+
+  //this->GetGlobalPose( ox, oy, oth );
+
+  // find the positions of our corners
+  //double dx = size_x/2.0 * cos(oth) - size_x/2.0 * sin(oth);
+  //double dy = size_y/2.0 * sin(oth) + size_y/2.0 * cos(oth);
+
+  double x[4];
+  double y[4];
+
+  double dx = size_x / 2.0;
+  double dy = size_y / 2.0;
+  double dummy = 0.0;
+
+  x[0] = + dx;
+  y[0] = + dy;
+  this->LocalToGlobal( x[0], y[0], dummy );
+
+  x[1] = + dx;
+  y[1] = - dy;
+  this->LocalToGlobal( x[1], y[1], dummy );
+
+  x[2] = - dx;
+  y[2] = + dy;
+  this->LocalToGlobal( x[2], y[2], dummy );
+
+  x[3] = - dx;
+  y[3] = - dy;
+  this->LocalToGlobal( x[3], y[3], dummy );
+
+  // now sort them by size
+  //printf( "origin: %.2f,%.2f,%.2f \n", ox, oy, oth );
+  //printf( "corners: \n" );
+  //for( int c=0; c<4; c++ )
+  //printf( "\t%.2f,%.2f\n", x[c], y[c] );
+
+  // find the smallest values and we're done
+  xmin = xmax = x[0];
+  for( int c=1; c<4; c++ )
+    {
+      if( x[c] < xmin ) xmin = x[c];
+      if( x[c] > xmax ) xmax = x[c];
+    }
+
+  ymin = ymax = y[0];
+  for( int c=1; c<4; c++ )
+    {
+      if( y[c] < ymin ) ymin = y[c];
+      if( y[c] > ymax ) ymax = y[c];
+    } 
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -209,6 +226,10 @@ bool CEntity::Load(CWorldFile *worldfile, int section)
   // Read the size
   this->size_x = worldfile->ReadTupleLength(section, "size", 0, this->size_x);
   this->size_y = worldfile->ReadTupleLength(section, "size", 1, this->size_y);
+
+  // Read the origin offsets (for moving center of rotation)
+  this->origin_x = worldfile->ReadTupleLength(section, "offset", 0, this->origin_x);
+  this->origin_y = worldfile->ReadTupleLength(section, "offset", 1, this->origin_y);
 
   // Read the entity color
   this->color = worldfile->ReadColor(section, "color", this->color);
@@ -262,18 +283,7 @@ bool CEntity::Load(CWorldFile *worldfile, int section)
     this->laser_return = LaserVisible;
   else
     this->laser_return = LaserTransparent;
-  
-  // Read the player port (default 0)
-  m_player.port = worldfile->ReadInt(section, "port", 0 );
-  
-  // if the port wasn't set, default to the parent's port
-  // (assuming zero is not a valid port num)
-  if (m_player.port == 0 && m_parent_entity )
-    m_player.port = m_parent_entity->m_player.port;
-  
-  // Read the device index
-  m_player.index = worldfile->ReadInt(section, "index", 0);
-  
+    
   return true;
 }
 
@@ -285,6 +295,10 @@ bool CEntity::Save(CWorldFile *worldfile, int section)
   // Write the pose (but only if it has changed)
   double px, py, pth;
   GetPose(px, py, pth);
+
+  //printf( "pose: %.2f %.2f %.2f   init:  %.2f %.2f %.2f\n",
+  //  px, py, pth, init_px, init_py, init_pth );
+
   if (px != this->init_px || py != this->init_py || pth != this->init_pth)
   {
     worldfile->WriteTupleLength(section, "pose", 0, px);
@@ -306,140 +320,6 @@ bool CEntity::Startup( void )
   RtkStartup();
 #endif
 
-  // if this is not a player device, we're done. bail right here
-  if( m_player.code == 0 )
-    return true;
-
-  // otherwise, we set up a mmapped file in the tmp filesystem to share
-  // data with player
-
-  player_stage_info_t* playerIO = 0;
-
-  size_t mem = SharedMemorySize();
-   
-  snprintf( this->device_filename, sizeof(this->device_filename), "%s/%d.%d.%d", 
-            m_world->m_device_dir, m_player.port, m_player.code, m_player.index );
-  
-  PRINT_DEBUG1("creating device %s", m_device_filename);
-
-  int tfd;
-  if( (tfd = open( this->device_filename, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR )) == -1 )
-  {
-      
-    PRINT_DEBUG2( "failed to open file %s for device at %p\n"
-                  "assuming this is a client device!\n", 
-                  this->device_filename, this );
-      
-    // make some memory to store the data
-    assert( playerIO = (player_stage_info_t*) new char[ mem ] );
-
-    // remove the filename so we don't try to unlink it
-    this->device_filename[0] = 0;
-
-    PRINT_DEBUG("successfully created client IO buffers");
-
-  }
-  else
-  {
-    // make the file the right size
-    if( ftruncate( tfd, mem ) < 0 )
-    {
-      PRINT_ERR1( "failed to set file size: %s", strerror(errno) );
-      return false;
-    }
-      
-    // it's a little larger than a player_stage_info_t, but that's the 
-    // first part of the buffer, so we'll call it that
-    playerIO = 
-      (player_stage_info_t*)mmap( NULL, mem, PROT_READ | PROT_WRITE, 
-                                  MAP_SHARED, tfd, (off_t) 0);
-      
-    if (playerIO == MAP_FAILED )
-    {
-      PRINT_ERR1( "Failed to map memory: %s", strerror(errno) );
-      return false;
-    }
-      
-    close( tfd ); // can close fd once mapped
-      
-    //PRINT_DEBUG("successfully mapped shared memory");
-      
-    //PRINT_DEBUG2( "S: mmapped %d bytes at %p\n", mem, playerIO );
-  }
-  // we use the lock field in the player_stage_info_t structure to
-  // control access with a semaphore.
-  
-  
-  // initialise a POSIX semaphore
-  //
-  // we'd use this to create a semaphore that is shared across
-  // processes if only linux supported it.  hopefully it'll show up in
-  // the next kernel, so keep this around.  this should work on
-  // BSD,Solaris, etc. (conditional compilation?)
-  // 
-  //m_lock = &playerIO->lock;
-  //if( sem_init( m_lock, 1, 1 ) < 0 )
-  //perror( "sem_init failed" );
-  
-  // we'll do file locking instead (see ::Lock() and ::Unlock())
-  
-  //PRINT_DEBUG1( "Stage: device lock at %p\n", m_lock );
-  
-  // try a lock
-  assert( Lock() );
-  
-  // Initialise entire space
-  memset(playerIO, 0, mem);
-  
-  // set the pointers into the shared memory region
-  m_info_io    = playerIO; // info is the first record
-  m_data_io    = (uint8_t*)m_info_io + m_info_len;
-  m_command_io = (uint8_t*)m_data_io + m_data_len; 
-  m_config_io  = (uint8_t*)m_command_io + m_command_len;
-  m_reply_io   = (uint8_t*)(m_config_io + 
-                            (m_config_len * sizeof(playerqueue_elt_t)));
-  
-  m_info_io->len = SharedMemorySize(); // total size of all the shared data
-  m_info_io->lockbyte = this->lock_byte; // record lock on this byte
-  
-  // set the lengths in the info structure
-  m_info_io->data_len    =  (uint32_t)m_data_len;
-  m_info_io->command_len =  (uint32_t)m_command_len;
-  m_info_io->config_len  =  (uint32_t)m_config_len;
-  m_info_io->reply_len   =  (uint32_t)m_reply_len;
-  
-  m_info_io->data_avail    =  0;
-  m_info_io->command_avail =  0;
-  m_info_io->config_avail  =  0;
-  
-  m_info_io->player_id.port = m_player.port;
-  m_info_io->player_id.index = m_player.index;
-  m_info_io->player_id.code = m_player.code;
-  m_info_io->subscribed = 0;
-
-  // create the PlayerQueue entitys that we'll use to access requests and
-  // replies.  pass in the chunks of memory that are already mmap()ed
-  assert(m_reqqueue = new PlayerQueue(m_config_io,m_config_len));
-  assert(m_repqueue = new PlayerQueue(m_reply_io,m_reply_len));
-
-#ifdef DEBUG
-  printf( "\t\t(%p) (%d,%d,%d) IO at %p\n"
-          "\t\ttotal: %d\tinfo: %d\tdata: %d (%d)\tcommand: %d (%d)\tconfig: %d (%d)\n ",
-          this,
-          m_info_io->player_id.port,
-          m_info_io->player_id.code,
-          m_info_io->player_id.index,
-          m_info_io,
-          m_info_len + m_data_len + m_command_len + m_config_len,
-          m_info_len,
-          m_info_io->data_len, m_data_len,
-          m_info_io->command_len, m_command_len,
-          m_info_io->config_len, m_config_len );
-#endif  
-
-  // try  an unlock
-  assert( Unlock() );
-  
   return true;
 }
 
@@ -455,24 +335,7 @@ void CEntity::Shutdown()
   rtk_fig_destroy(this->fig);
 #endif
 
-  // if this is not a player device, we bail right here
-  if( m_player.code == 0 )
-    return;
-
-  if( this->device_filename[0] )
-    // remove our name in the filesystem
-    if( unlink( this->device_filename ) == -1 )
-      PRINT_ERR1( "Device failed to unlink it's IO file:%s", strerror(errno) );
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Compute the total shared memory size for the device
-int CEntity::SharedMemorySize( void )
-{
-  return( m_info_len + m_data_len + m_command_len + 
-          (m_config_len * sizeof(playerqueue_elt_t)) +
-          (m_reply_len * sizeof(playerqueue_elt_t)));
+  return;
 }
 
 
@@ -482,9 +345,6 @@ void CEntity::Update( double sim_time )
 {
   //PRINT_DEBUG( "UPDATE" );
  
-  //PRINT_DEBUG4( "(%d,%d,%d) at %.2f\n",  
-  //	m_player.port, m_player.type, m_player.index, sim_time );
-
   //PRINT_DEBUG1( "subs: %d\n", m_info_io->subscribed );
 }
 
@@ -512,11 +372,13 @@ void CEntity::UnMap()
 // Remap ourself if we have moved
 void CEntity::ReMap(double px, double py, double pth)
 {
+  // if we haven't moved, do nothing
   if (fabs(px - this->map_px) < 1 / m_world->ppm &&
       fabs(py - this->map_py) < 1 / m_world->ppm &&
       pth == this->map_pth)
     return;
   
+  // otherwise erase the old render and draw a new one
   UnMap();
   Map(px, py, pth);
 }
@@ -526,19 +388,28 @@ void CEntity::ReMap(double px, double py, double pth)
 // Primitive rendering function
 void CEntity::MapEx(double px, double py, double pth, bool render)
 {
-  double qx = px + this->origin_x * cos(pth) - this->origin_y * sin(pth);
-  double qy = py + this->origin_y * sin(pth) + this->origin_y * cos(pth);
+  double qx = px;
+  double qy = py;
   double qth = pth;
-  double sx = this->size_x;
-  double sy = this->size_y;
+ 
+  // get the pose in local coords
+  this->GlobalToLocal( qx, qy, qth );
+
+  // add our center of rotation offsets
+  qx += origin_x;
+  qy += origin_y;
+
+   // convert back to global coords
+  this->LocalToGlobal( qx, qy, qth );
 
   switch (this->shape)
     {
     case ShapeRect:
-      m_world->SetRectangle(qx, qy, qth, sx, sy, this, render);
+      m_world->SetRectangle(qx, qy, qth, 
+			    this->size_x, this->size_y, this, render);
       break;
     case ShapeCircle:
-      m_world->SetCircle(qx, qy, sx / 2, this, render);
+      m_world->SetCircle(qx, qy, size_x / 2, this, render);
       break;
     case ShapeNone:
       break;
@@ -782,331 +653,6 @@ bool CEntity::IsDescendent(CEntity *entity)
   return false;
 }
 
-///////////////////////////////////////////////////////////////////////////
-// Copy data from the shared memory segment
-size_t CEntity::GetIOData( void* dest, size_t dest_len,  
-			   void* src, uint32_t* avail )
-{
-  Lock();
-
-  assert( dest ); // the caller must have somewhere to put this data
-  
-  if( src == 0 ) // this device doesn't have any data here
-    return 0; // so bail right away
-
-  // if there is enough space for the data 
-  if( dest_len >= (size_t)*avail) 
-    memcpy( dest, src, dest_len ); // copy the data
-  else
-  {
-    //PRINT_ERR2( "requested %d data but %d bytes available\n", 
-    //	    dest_len, *avail );  
-      
-    // indicate failure - caller might have to handle this, but
-    // this usually isn't an error - there was just nothing to fetch.
-    dest_len = 0; 
-  }
-
-  Unlock();
-
-  return dest_len;
-}
-
-size_t CEntity::GetData( void* data, size_t len )
-{
-  //PRINT_DEBUG( "f" );
-  return GetIOData( data, len, m_data_io, &m_info_io->data_avail );
-}
-
-size_t CEntity::GetCommand( void* data, size_t len )
-{
-  //PRINT_DEBUG( "f" );
-  return GetIOData( data, len, m_command_io, &m_info_io->command_avail );
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Copy data into the shared memory segment
-size_t CEntity::PutIOData( void* dest, size_t dest_len,  
-			   void* src, size_t src_len,
-			   uint32_t* ts_sec, uint32_t* ts_usec, 
-			   uint32_t* avail )
-{  
-  Lock();
-
-  assert( dest );
-  assert( src );
-  assert( src_len > 0 );
-  assert( dest_len > 0 );
-  
-  if( src_len == 0 )
-    printf( "WIERD! attempt to write no bytes into a buffer" );
-
-  if( src_len <= dest_len ) // if there is room for the data
-  {
-    memcpy( dest, src, src_len); // export the data
-
-    // update the availability and timestamps
-    *avail    = src_len;
-    *ts_sec   = m_world->m_sim_timeval.tv_sec;
-    *ts_usec  = m_world->m_sim_timeval.tv_usec;
-  }
-  else
-  {
-    PRINT_ERR2( "failed trying to put %d bytes; io buffer is "
-                "%d bytes.)\n", src_len, dest_len  );
-      
-    src_len = 0; // indicate failure
-  }
-  
-  Unlock();
-  
-  return src_len;
-}
-
-
-////////////////////////////////////////////////////////////////////////////
-// Copy the data into shared memory & update the info buffer
-size_t CEntity::PutData( void* data, size_t len )
-{
-  //PRINT_DEBUG4( "Putting %d bytes of data into device (%d,%d,%d)\n",
-  //	len, m_player.port, m_player.type, m_player.index );
-
-  // tell the server to export this data to anyone that needs it
-  this->SetDirty( PropData, 1 );
-    
-  // copy the data into the mmapped data buffer.
-  // also set the timestamp and available fields for the data
-  return PutIOData( (void*)m_data_io, m_data_len,
-                    data, len,
-                    &m_info_io->data_timestamp_sec,
-                    &m_info_io->data_timestamp_usec,
-                    &m_info_io->data_avail );
-
-}
-
-////////////////////////////////////////////////////////////////////////////
-// Copy the command into shared memory & update the info buffer
-size_t CEntity::PutCommand( void* data, size_t len )
-{
-  // tell the server to export this command to anyone that needs it
-  this->SetDirty( PropCommand, 1 );
-  
-  // copy the data into the mmapped command buffer.
-  // also set the timestamp and available fields for the command
-  return PutIOData( m_command_io, m_command_len,
-		    data, len,
-		    &m_info_io->command_timestamp_sec,
-		    &m_info_io->command_timestamp_usec,
-		    &m_info_io->command_avail );
-  
-  
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Read a configuration from the shared memory
-size_t CEntity::GetConfig(void** client, void* config, size_t len )
-{
-  int size;
-  player_device_id_t id;
-
-  Lock();
-
-  if((size = m_reqqueue->Pop(&id, client, (unsigned char*)config, len)) < 0)
-  {
-    Unlock();
-    return(0);
-  }
-
-  // tell the server to export this config to anyone that needs it
-  this->SetDirty( PropConfig, 1 );
-
-  Unlock();
-  return(size);
-}
-
-size_t CEntity::PutReply(void* client, unsigned short type,
-                         struct timeval* ts, void* reply, size_t len)
-{
-  double seconds;
-  struct timeval curr;
-  
-  // tell the server to export this reply to anyone that needs it
-  this->SetDirty( PropReply, 1 );
-
-  if(ts)
-    curr = *ts;
-  else
-  {
-    seconds = m_world->GetTime();
-    curr.tv_sec = (long)seconds;
-    curr.tv_usec = (long)((seconds - curr.tv_sec)*1000000);
-  }
-
-  Lock();
-  m_repqueue->Push(NULL, client, type, &curr, (unsigned char*)reply, len);
-  Unlock();
-  return(0);
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// Put a reply back on the reply queue.
-size_t CEntity::PutReply(void* client, unsigned short type)
-{
-  return(PutReply(client, type, NULL, NULL, 0));
-} 
-
-
-///////////////////////////////////////////////////////////////////////////
-// See if the PlayerDevice is subscribed
-int CEntity::Subscribed() 
-{
-  int subscribed = 0; 
-  
-  if( m_info_io ) // if we have player connection at all
-    { 
-      Lock();
-      // see if a player client is connected to this entity
-      subscribed = m_info_io->subscribed;
-      Unlock();
-    }
-  
-  return( subscribed );
-}
-
-void CEntity::FamilySubscribe()
-{
-  for( int i=0; i<m_world->GetEntityCount(); i++ )
-    if( m_world->GetEntity(i)->m_parent_entity == this )
-      m_world->GetEntity(i)->FamilySubscribe();
-
-  this->Subscribe();
-}
-
-void CEntity::FamilyUnsubscribe()
-{
-  for( int i=0; i<m_world->GetEntityCount(); i++ )
-    if( m_world->GetEntity(i)->m_parent_entity == this )
-      m_world->GetEntity(i)->FamilyUnsubscribe();
-
-  this->Unsubscribe();
-}
-
-///////////////////////////////////////////////////////////////////////////
-//// subscribe to the device (used by other devices that depend on this one)
-void CEntity::Subscribe() 
-{
-  //puts( "SUB" );
-
-  if( m_player.code == 0 ) // can't subscribe to non-player devices 
-    return;
-  
-  Lock();
-  m_info_io->subscribed++;
-  Unlock();
-}
-
-///////////////////////////////////////////////////////////////////////////
-// unsubscribe from the device (used by other devices that depend on this one)
-void CEntity::Unsubscribe()
-{ 
-  //puts( "UNSUB" );
-  if( m_player.code == 0 ) // can't subscribe to non-player devices 
-    return;
-
-  Lock();
-  m_info_io->subscribed--;
-  Unlock();
-} 
-
-
-///////////////////////////////////////////////////////////////////////////
-// lock the shared mem
-// Returns true on success
-//
-bool CEntity::Lock( void )
-{
-  if( m_world->m_locks_fd > 0 ) // if the world has a locking file open
-  {
-
-    // POSIX RECORD LOCKING METHOD
-    struct flock cmd;
-
-    cmd.l_type = F_WRLCK; // request write lock
-    cmd.l_whence = SEEK_SET; // count bytes from start of file
-    cmd.l_start = this->lock_byte; // lock my unique byte
-    cmd.l_len = 1; // lock 1 byte
-
-    fcntl( m_world->m_locks_fd, F_SETLKW, &cmd );
-
-    // DEBUG: write into the file to show which byte is locked
-    // X = locked, '_' = unlocked
-    lseek( m_world->m_locks_fd, this->lock_byte, SEEK_SET );
-    write(  m_world->m_locks_fd, "X", 1 );
-
-    //////////////////////////////////////////////////////////////////
-    // BSD file locking method
-    // block until we can get an exclusive lock on this file
-    //if( flock( m_fd, LOCK_EX ) != 0 )
-    //perror( "flock() LOCK failed" );
-
-    ///////////////////////////////////////////////////////////////////
-    // POSIX semaphore method
-    //assert( m_lock );
-    //PRINT_DEBUG1( "%p", m_lock );
-    //if( sem_wait( m_lock ) < 0 )
-    //{
-    //PRINT_ERR( "sem_wait failed" );
-    //return false;
-    //}
-  }
-  return true;
-}
-
-///////////////////////////////////////////////////////////////////////////
-// unlock the shared mem
-//
-bool CEntity::Unlock( void )
-{
-  if( m_world->m_locks_fd > 0 ) // if the world has a locking file open
-  {
-      // POSIX RECORD LOCKING METHOD
-      struct flock cmd;
-      
-      cmd.l_type = F_UNLCK; // request unlock
-      cmd.l_whence = SEEK_SET; // count bytes from start of file
-      cmd.l_start = this->lock_byte; // unlock my unique byte
-      cmd.l_len = 1; // unlock 1 byte
-      
-      // DEBUG: write into the file to show which byte is locked
-      // X = locked, '_' = unlocked
-      lseek( m_world->m_locks_fd, this->lock_byte, SEEK_SET );
-      write(  m_world->m_locks_fd, "_", 1 );
-      
-      fcntl( m_world->m_locks_fd, F_SETLKW, &cmd );
-      
-      ///////////////////////////////////////////////////////////////////
-      // BSD file locking method
-      // block until we can get an exclusive lock on this file
-      //if( flock( m_fd, LOCK_UN ) != 0 )
-      //perror( "flock() UNLOCK failed" );
-      
-      ////////////////////////////////////////////////////////////////
-      // POSIX semaphore method
-      //assert( m_lock );
-      //PRINT_DEBUG1( "%p", m_lock );
-      //if( sem_post( m_lock ) < 0 )
-      //{
-      //PRINT_ERR( "sem_post failed" );
-      //return false;
-      //}     
-  }
-
-  return true;
-}
-
 void CEntity::SetDirty( int con, char v )
 {
   for( int i=0; i< ENTITY_LAST_PROPERTY; i++ )
@@ -1130,6 +676,14 @@ void CEntity::SetDirty( char v )
 	  sizeof(char) * MAX_POSE_CONNECTIONS * ENTITY_LAST_PROPERTY );
 };
 
+///////////////////////////////////////////////////////////////////////////
+// change the parent 
+void CEntity::SetParent(CEntity* new_parent) 
+{ 
+  m_parent_entity = new_parent; 
+};
+
+
 int CEntity::SetProperty( int con, EntityProperty property, 
 			  void* value, size_t len )
 {
@@ -1142,17 +696,6 @@ int CEntity::SetProperty( int con, EntityProperty property,
   
   switch( property )
   {
-    case PropPlayerSubscriptions:
-      PRINT_DEBUG1( "PLAYER SUBSCRIPTIONS %d", *(int*) value);
-      
-      if( m_info_io )
-      {
-        Lock();
-        m_info_io->subscribed = *(int*)value;
-        Unlock();
-      }      
-      break;
-      
     case PropParent:
       // get a pointer to the (*value)'th entity - that's our new parent
       this->m_parent_entity = m_world->GetEntity( *(int*)value );     
@@ -1176,7 +719,9 @@ int CEntity::SetProperty( int con, EntityProperty property,
       move_figure = true;
       break;
     case PropPoseTh:
-      memcpy( &local_pth, (double*)value, sizeof(local_pth) );
+      // normalize theta
+      local_pth = atan2( sin(*(double*)value), cos(*(double*)value));
+      //memcpy( &local_pth, (double*)value, sizeof(local_pth) );
       move_figure = true;
       break;
     case PropOriginX:
@@ -1220,33 +765,6 @@ int CEntity::SetProperty( int con, EntityProperty property,
     case PropPuckReturn:
       memcpy( &puck_return, (bool*)value, sizeof(puck_return) );
       break;
-    case PropPlayerId:
-      memcpy( &m_player, (player_device_id_t*)value, sizeof(m_player) );
-      break;
-      
-      // these properties manipulate the player IO buffers
-    case PropCommand:
-      PutCommand( value, len );
-      break;
-    case PropData:
-      PutData( value, len );
-      break;
-    case PropConfig: // copy the  playerqueue's external memory chunk
-    { 
-      Lock();
-      size_t len = m_config_len * sizeof(playerqueue_elt_t);
-      memcpy( m_config_io, value, len ); 
-      Unlock();
-    }
-    break;
-    case PropReply:
-    { 
-      Lock();
-      size_t len = m_reply_len * sizeof(playerqueue_elt_t);
-      memcpy( m_reply_io, value, len ); 
-      Unlock();
-    }
-    break;
 
     default:
       printf( "Stage Warning: attempting to set unknown property %d\n", 
@@ -1287,12 +805,6 @@ int CEntity::GetProperty( EntityProperty property, void* value )
 
   switch( property )
   {
-    case PropPlayerSubscriptions:
-      PRINT_DEBUG( "GET SUBS PROPERTY");
-      { int subs = Subscribed();
-      memcpy( value, (void*)&subs, sizeof(subs) ); 
-      retval = sizeof(subs); }
-      break;
     case PropParent:
       // find the parent's position in the world's entity array
       // if parent pointer is null or otherwise invalid, index is -1 
@@ -1365,60 +877,13 @@ int CEntity::GetProperty( EntityProperty property, void* value )
       memcpy( value, &puck_return, sizeof(puck_return) );
       retval = sizeof(puck_return);
       break;
-    case PropPlayerId:
-      memcpy( value, &m_player, sizeof(m_player) );
-      retval = sizeof(m_player);
-      break;
-
-      // these properties manipulate the player IO buffers
-    case PropCommand:
-      retval = GetCommand( value, m_command_len );
-      break;
-    case PropData:
-      retval = GetData( value, m_data_len );
-      break;
-    case PropConfig:
-    { 
-      Lock();
-      size_t len = m_config_len * sizeof(playerqueue_elt_t);
-      memcpy( value, m_config_io, len );
-      retval = len; 
-      Unlock();
-    }
-    break;
-    case PropReply:
-    { 
-      Lock();
-      size_t len = m_reply_len * sizeof(playerqueue_elt_t);
-      memcpy( value, m_reply_io, len );
-      retval = len; 
-      Unlock();
-    }
-    break;
-
     default:
-      //printf( "Stage Warning: attempting to get unknown property %d\n", 
-      //      property );
-      break;
+      printf( "Stage Warning: attempting to get unknown property %d\n", 
+	      property );
+    break;
   }
 
   return retval;
-}
-
-
-// change the parent of this object
-// handling GUI issues
-void CEntity::SetParent( CEntity* parent )
-{
-  this->m_parent_entity = parent;
-
-#ifdef INCLUDE_RTK2
-  // if the parent changes, it might change whether we can be dragged around
-  if (m_parent_entity != NULL)
-    rtk_fig_movemask(this->fig, 0);
-  else
-    rtk_fig_movemask(this->fig, this->movemask);
-#endif
 }
 
 
@@ -1428,6 +893,8 @@ void CEntity::SetParent( CEntity* parent )
 // Initialise the rtk gui
 void CEntity::RtkStartup()
 {
+  //puts ("RTK STARTUP" );
+
   // Create a figure representing this entity
   if( m_parent_entity == NULL )
     this->fig = rtk_fig_create(m_world->canvas, NULL, 50);
@@ -1436,8 +903,8 @@ void CEntity::RtkStartup()
 
   this->fig->thing = (void*)this;
   this->fig->origin_callback = staticSetGlobalPose;
-  this->fig->select_callback = staticSelect;
-  this->fig->unselect_callback = staticUnselect;
+  this->fig->select_callback = NULL;
+  this->fig->unselect_callback = NULL;
 
   // visible by default
   rtk_fig_show( this->fig, true );
@@ -1445,17 +912,21 @@ void CEntity::RtkStartup()
   // Set the color
   rtk_fig_color_rgb32(this->fig, this->color);
 
-  // Compute geometry
-   
+  // put the figure's origin at the entity's position
   rtk_fig_origin( this->fig, local_px, local_py, local_pth );
    
+  // draw the shape using the center of rotation offsets
   switch (this->shape)
   {
     case ShapeRect:
-      rtk_fig_rectangle(this->fig, 0,0,0, size_x, size_y, false);
+      rtk_fig_rectangle(this->fig, 
+			this->origin_x, this->origin_y, 0, 
+			this->size_x, this->size_y, false);
       break;
     case ShapeCircle:
-      rtk_fig_ellipse(this->fig, 0,0,0,  size_x, size_y, false);
+      rtk_fig_ellipse(this->fig, 
+		      this->origin_x, this->origin_y, 0,  
+		      this->size_x, this->size_y, false);
       break;
     case ShapeNone: // no shape
       break;
@@ -1473,11 +944,6 @@ void CEntity::RtkStartup()
   label[0] = 0;
   snprintf(tmp, sizeof(tmp), "%s", this->name);
   strncat(label, tmp, sizeof(label));
-  if (m_player.port > 0)
-  {
-    snprintf(tmp, sizeof(tmp), "\n%d:%d", m_player.port, m_player.index);
-    strncat(label, tmp, sizeof(label));
-  }
    
   rtk_fig_color_rgb32(this->fig, this->color);
   rtk_fig_text(this->fig_label,  0.75 * size_x,  0.75 * size_y, 0, label);

@@ -21,7 +21,7 @@
  * Desc: Simulates a scanning laser range finder (SICK LMS200)
  * Author: Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: laserdevice.cc,v 1.64 2002-08-19 21:48:28 gerkey Exp $
+ * CVS info: $Id: laserdevice.cc,v 1.65 2002-08-22 02:04:38 rtv Exp $
  */
 
 #define DEBUG
@@ -38,10 +38,15 @@
 #define DEFAULT_MIN -90
 #define DEFAULT_MAX +90
 
+// register this device type with the Library
+CEntity laser_bootstrap( string("laser"), 
+			 LaserTurretType, 
+			 (void*)&CLaserDevice::Creator ); 
+
 ///////////////////////////////////////////////////////////////////////////
 // Default constructor
 CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent )
-    : CEntity(world, parent )
+    : CPlayerEntity(world, parent )
 {
   // set the Player IO sizes correctly for this type of Entity
   m_data_len    = sizeof( player_laser_data_t );
@@ -87,7 +92,7 @@ CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent )
 // Load the entity from the world file
 bool CLaserDevice::Load(CWorldFile *worldfile, int section)
 {
-  if (!CEntity::Load(worldfile, section))
+  if (!CPlayerEntity::Load(worldfile, section))
     return false;
 
   // Read laser settings
@@ -103,7 +108,7 @@ bool CLaserDevice::Load(CWorldFile *worldfile, int section)
 // Update the laser data
 void CLaserDevice::Update( double sim_time )
 {
-  CEntity::Update( sim_time );
+  CPlayerEntity::Update( sim_time );
 
   ASSERT(m_world != NULL);
     
@@ -350,7 +355,7 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
 // Initialise the rtk gui
 void CLaserDevice::RtkStartup()
 {
-  CEntity::RtkStartup();
+  CPlayerEntity::RtkStartup();
   
   // Create a figure representing this object
   this->scan_fig = rtk_fig_create(m_world->canvas, NULL, 49);
@@ -368,7 +373,7 @@ void CLaserDevice::RtkShutdown()
   // Clean up the figure we created
   rtk_fig_destroy(this->scan_fig);
 
-  CEntity::RtkShutdown();
+  CPlayerEntity::RtkShutdown();
 } 
 
 
@@ -376,7 +381,7 @@ void CLaserDevice::RtkShutdown()
 // Update the rtk gui
 void CLaserDevice::RtkUpdate()
 {
-  CEntity::RtkUpdate();
+  CPlayerEntity::RtkUpdate();
  
   rtk_fig_clear(this->scan_fig);
    

@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.50 2002-08-21 01:30:50 gerkey Exp $
+ * CVS: $Id: main.cc,v 1.51 2002-08-22 02:04:38 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -35,16 +35,19 @@
 #include <fcntl.h>
 #include <netdb.h> // for gethostbyname(3)
 
-//#define DEBUG
 #include "server.hh"
+#include "library.hh"
 
+Library* lib; // global static ptr - initialized by CEntity
+// before first use
+
+//#define DEBUG
 
 ///////////////////////////////////////////////////////////////////////////
 // Global vars
 
 // Quit signal
 bool quit = false;
-
 
 ///////////////////////////////////////////////////////////////////////////
 // Local vars
@@ -114,14 +117,14 @@ int main(int argc, char **argv)
   // hello world
   printf("\n** Stage  v%s ** ", (char*) VERSION);
 
-  // check the command line for the help request
-
+  fflush( stdout );
+ 
+  world = NULL;
+  
 #ifdef INCLUDE_RTK2
   // Initialise rtk if we are using it
   rtk_init(&argc, &argv);
 #endif
-  
-  world = NULL;
   
   // CStageServer and CStageClient are subclasses of CStageIO and CWorld
   // constructing them does most of the startup work.
@@ -131,12 +134,12 @@ int main(int argc, char **argv)
     PRINT_DEBUG2( "argv[%d] = %s\n", a, argv[a] );
       
     if( strcmp( argv[a], "-c" ) == 0 ||  strcmp( argv[a], "-cl" ) == 0)
-      assert( world = new CStageClient( argc, argv ) );
+      assert( world = new CStageClient( argc, argv, lib ) );
   }
   
   // if we're not a client, we must be a server
   if( world == NULL )
-    assert( world = new CStageServer( argc, argv ) );
+    assert( world = new CStageServer( argc, argv, lib ) );
   
   // a world constructor may have raised the quit flag
   // (this would be more elegantly implemented with an exception..)

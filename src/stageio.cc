@@ -5,17 +5,19 @@
 #include "entity.hh"
 #include "world.hh"
 #include "fixedobstacle.hh"
+#include "library.hh"
 
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
 
+
 //extern int g_timer_expired;
 
 void CatchSigPipe( int signo ); // from server.cc
 
-CStageIO::CStageIO( int argc, char** argv )
-  : CWorld( argc, argv )
+CStageIO::CStageIO( int argc, char** argv, Library* lib )
+  : CWorld( argc, argv, lib )
 {
   m_port = DEFAULT_POSE_PORT;
   
@@ -248,9 +250,9 @@ int CStageIO::ReadEntities( int fd, int num )
 	
 	CEntity* obj = 0;
 	if( ent.parent == -1 )
-	  assert( obj = CreateEntity( ent.type, 0 ) );
+	  assert( obj = lib->CreateEntity( ent.type, this, 0 ) );
 	else
-	  assert( obj = CreateEntity( ent.type, 
+	  assert( obj = lib->CreateEntity( ent.type, this,
 				      GetEntity(ent.parent)));
 	
 	AddEntity( obj );

@@ -18,7 +18,6 @@ stage_SOURCES = boxobstacle.cc \
                 colors.cc \
                 descartesdevice.cc \
                 entity.cc \
-                entityfactory.cc \
                 fixedobstacle.cc \
                 gpsdevice.cc \
                 gripperdevice.cc \
@@ -28,6 +27,7 @@ stage_SOURCES = boxobstacle.cc \
                 laserbeacon.cc \
                 laserbeacondevice.cc \
                 laserdevice.cc \
+                library.cc \
                 main.cc \
                 matrix.cc \
                 motedevice.cc \
@@ -47,6 +47,7 @@ stage_SOURCES = boxobstacle.cc \
                 world.cc \
                 worldfile.cc
                 #bpsdevice.cc
+                #entityfactory.cc 
 
 stage_LDADD = -lm -L@PLAYER_DIR@/lib -L@PLAYER_DIR@/server -lplayerqueue $(RTKLDADD) 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/fixedobstacle.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -25,9 +25,18 @@ class CFixedObstacle : public CEntity
   // Default constructor
   public: CFixedObstacle(CWorld *world, CEntity *parent);
 
+  // a static named constructor - a pointer to this function is given
+  // to the Library object and paired with a string.  When the string
+  // is seen in the worldfile, this function is called to create an
+  // instance of this entity
+  public: static CFixedObstacle* Creator( CWorld *world, CEntity *parent )
+  {
+    return( new CFixedObstacle( world, parent ) );
+  }
+
   // Load the entity from the worldfile
   public: virtual bool Load(CWorldFile *worldfile, int section);
-  
+
   // Initialise object
   public: virtual bool Startup( void ); 
   

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/bpsdevice.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.1 $
+//  $Author: rtv $
+//  $Revision: 1.2 $
 //
 // Usage:
 //  (empty)
@@ -29,10 +29,17 @@
 
 #include "playerdevice.hh"
 
-class CBpsDevice : public CEntity
+class CBpsDevice : public CPlayerEntity
 {
     // Default constructor
     public: CBpsDevice(CWorld *world, CEntity *parent );
+
+  // a static named constructor - a pointer to this function is given
+  // to the Library object and paired with a string.  When the string
+  // is seen in the worldfile, this function is called to create an
+  // instance of this entity
+public: static CBpsDevice* Creator( CWorld *world, CEntity *parent )
+  { return( new CBpsDevice( world, parent ) ); }
 
     // Startup routine
     public: virtual bool Startup();

@@ -21,7 +21,7 @@
 * CVS info:
 * $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/irdevice.cc,v $
 * $Author: rtv $
-* $Revision: 1.10 $
+* $Revision: 1.11 $
 ******************************************************************************/
 
 
@@ -45,8 +45,10 @@
 
 //#define SHOW_MSGS
 
-#define IDAR_FOV        M_PI/4.0
-#define IDAR_SCANLINES        5
+//#define IDAR_FOV        M_PI/4.0
+//#define IDAR_SCANLINES        5
+#define IDAR_FOV        0
+#define IDAR_SCANLINES        1
 #define IDAR_MAX_RANGE       1.0
 
 // handy circular normalization macros
@@ -58,7 +60,7 @@
 
 // constructor 
 CIDARDevice::CIDARDevice(CWorld *world, CEntity *parent )
-  : CEntity(world, parent )
+  : CPlayerEntity(world, parent )
 {
   stage_type = IDARType;
 
@@ -167,7 +169,7 @@ void CIDARDevice::Sync( void )
 // done in ReceiveMessage()
 void CIDARDevice::Update( double sim_time ) 
 {
-  CEntity::Update( sim_time ); // inherit some debug output
+  CPlayerEntity::Update( sim_time ); // inherit some debug output
   
   // UPDATE OUR RENDERING
   double x, y, th;
@@ -320,7 +322,7 @@ void CIDARDevice::TransmitMessage( idartx_t* transmit )
 	    }
 	}
 #ifdef INCLUDE_RTK2
-      //rtk_fig_arrow(this->rays_fig, 0,0, scanline_bearing-oth, range, 0.03);
+      rtk_fig_arrow(this->rays_fig, 0,0, scanline_bearing-oth, range, 0.03);
 #endif    
     }
 }
@@ -342,39 +344,57 @@ bool CIDARDevice::ReceiveMessage( CEntity* sender,
   // we only accept this message if it's the most intense thing we've seen
   if( intensity > recv.intensity )
     {
+      double incidence = 0.0;
+
       // store the message
+      if( sender != (CEntity*)this )
+	{
+	  double sx, sy, sa; // the sender's pose
+	  double lx, ly, la; // my pose
 
-      // copy the message into the data buffer
-      memcpy( &recv.mesg, mesg, len );
+	  sender->GetGlobalPose( sx, sy, sa );
 
-      recv.len = len;
-      recv.intensity = intensity;
-      recv.reflection = (uint8_t)reflection;
+	  lx = sx; ly = sy; la = sa;
+	  this->GlobalToLocal( lx, ly, la );
+
+	  printf( "%p G: %.2f,%.2f,%.2f   L: %.2f,%.2f,%.2f\n", 
+		  this, sx, sy, sa, lx, ly, la );
+
+	}
       
-      // record the time we received this message
-      recv.timestamp_sec = m_world->m_sim_timeval.tv_sec;
-      recv.timestamp_usec = m_world->m_sim_timeval.tv_usec;
-
+      if( fabs(incidence) > 0 )
+	{ 
+	  // copy the message into the data buffer
+	  memcpy( &recv.mesg, mesg, len );
+	  
+	  recv.len = len;
+	  recv.intensity = intensity;
+	  recv.reflection = (uint8_t)reflection;
+	  
+	  // record the time we received this message
+	  recv.timestamp_sec = m_world->m_sim_timeval.tv_sec;
+	  recv.timestamp_usec = m_world->m_sim_timeval.tv_usec;
+	  
 #ifdef INCLUDE_RTK2
 #ifdef SHOW_MSGS
-      
-      // room for the message in hex text
-      char message[ 3 * IDARBUFLEN + 6];
-
-      // print the message in hex, with a space between each char
-      for( int c=0; c<recv.len; c++ )
-	sprintf( message + 3*c, "%2X ", recv.mesg[c] );
-      message[ 3 * recv.len ] = 0; // terminate
-      
-      // add the intensity
-      sprintf( message, "%s (%d)", message, recv.intensity );
-  
-      
-      rtk_fig_text(this->data_fig, 0,0,0, message);
+	  
+	  // room for the message in hex text
+	  char message[ 3 * IDARBUFLEN + 6];
+	  
+	  // print the message in hex, with a space between each char
+	  for( int c=0; c<recv.len; c++ )
+	    sprintf( message + 3*c, "%2X ", recv.mesg[c] );
+	  message[ 3 * recv.len ] = 0; // terminate
+	  
+	  // add the intensity
+	  sprintf( message, "%s (%d)", message, recv.intensity );
+	  
+	  
+	  rtk_fig_text(this->data_fig, 0,0,0, message);
 #endif
 #endif
-      
-      return true;
+	  return true;
+	}
     }
   
   return false;
@@ -497,7 +517,7 @@ uint8_t CIDARDevice::LookupIntensity( uint8_t transmit_intensity,
 // Initialise the rtk gui
 void CIDARDevice::RtkStartup()
 {
-  CEntity::RtkStartup();
+  CPlayerEntity::RtkStartup();
   
   // Create a figure representing this object
   this->data_fig = rtk_fig_create(m_world->canvas, this->fig, 49);
@@ -528,7 +548,7 @@ void CIDARDevice::RtkShutdown()
   if(this->data_fig) rtk_fig_destroy(this->data_fig);
   if(this->rays_fig) rtk_fig_destroy(this->rays_fig);
   
-  CEntity::RtkShutdown();
+  CPlayerEntity::RtkShutdown();
 } 
 
 
@@ -536,7 +556,7 @@ void CIDARDevice::RtkShutdown()
 // Update the rtk gui
 void CIDARDevice::RtkUpdate()
 {
-  CEntity::RtkUpdate();
+  CPlayerEntity::RtkUpdate();
    
   // Get global pose
   //double gx, gy, gth;

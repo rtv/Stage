@@ -13,14 +13,14 @@
 //  CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/irdevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.6 $
+//  $Revision: 1.7 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
 #ifndef IDARDEVICE_HH
 #define IDARDEVICE_HH
 
-#include "entity.hh"
+#include "playerdevice.hh"
 
 typedef struct 
 {
@@ -32,7 +32,7 @@ typedef struct
 
 } idar_message_t;
 
-class CIDARDevice : public CEntity
+class CIDARDevice : public CPlayerEntity
 {
 private: 
 
@@ -48,6 +48,14 @@ public:
   
   CIDARDevice(CWorld *world, CEntity *parent );
   //~CIDARDevice( void );
+
+  // a static named constructor - a pointer to this function is given
+  // to the Library object and paired with a string.  When the string
+  // is seen in the worldfile, this function is called to create an
+  // instance of this entity
+public: static CIDARDevice* Creator( CWorld *world, CEntity *parent )
+  { return( new CIDARDevice( world, parent ) ); }
+
 
   // each sensor must transmit over a wide area (45 degrees on the
   // orginal robots), so we do several ray traces per sensor to make

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserbeacondevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.11 $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -29,14 +29,23 @@
 #ifndef LBDDEVICE_HH
 #define LBDDEVICE_HH
 
-#include "entity.hh"
+#include "playerdevice.hh"
 #include "laserdevice.hh"
+
+// TODO - get rid of this old export stuff
 #include "guiexport.hh"
 
-class CLBDDevice : public CEntity
+class CLBDDevice : public CPlayerEntity
 {
   // Default constructor
   public: CLBDDevice(CWorld *world, CLaserDevice *parent );
+
+  // a static named constructor - a pointer to this function is given
+  // to the Library object and paired with a string.  When the string
+  // is seen in the worldfile, this function is called to create an
+  // instance of this entity
+public: static CLBDDevice* Creator( CWorld *world, CEntity *parent )
+  { return( new CLBDDevice( world, (CLaserDevice*)parent ) ); }
 
   // Load the entity from the worldfile
   public: virtual bool Load(CWorldFile *worldfile, int section);

@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.13 2002-07-04 01:06:02 rtv Exp $
+ * $Id: matrix.cc,v 1.14 2002-08-22 02:04:38 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
@@ -12,6 +12,7 @@
 //#endif
 
 #include "matrix.hh"
+#include "world.hh"
 
 const int BUFFER_ALLOC_SIZE = 1;
 
@@ -24,6 +25,8 @@ CMatrix::CMatrix(int w, int h, int default_buf_size)
   assert( data 	= new CEntity**[width*height] );
   assert( used_slots = new unsigned char[ width*height ] );
   assert( available_slots = new unsigned char[ width*height ] );
+
+  this->fig = NULL;
 
   for( int p=0; p< width * height; p++ )
   {
@@ -86,6 +89,34 @@ void CMatrix::dump( void )
   puts( "DUMPED" );
 }
 
+
+// useful debug function allows plotting the world externally
+void CMatrix::render( CWorld* world )
+{
+ // Create a figure representing this object
+  this->fig = rtk_fig_create(world->canvas, NULL, 60);
+
+  // Set the color to black
+  rtk_fig_color_rgb32(this->fig, ::LookupColor(MATRIX_COLOR) );
+
+  double pixel_size = 1.0 / world->ppm;
+
+  // render every pixel as an unfilled rectangle
+  for( int y=0; y<height; y++ )
+    for( int x=0; x<width; x++ )
+      if( *(get_cell( x, y )) )
+	rtk_fig_rectangle( fig, x*pixel_size, y*pixel_size, 0, pixel_size, pixel_size, 0 );
+}
+
+// useful debug function allows plotting the world externally
+void CMatrix::unrender()
+{
+  if( this->fig )
+    {
+      rtk_fig_destroy( this->fig );
+      this->fig = NULL;
+    }
+}
 
 // Draw a rectangle
 void CMatrix::draw_rect( const Rect& t, CEntity* ent, bool add)

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/omnipositiondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.13 $
+//  $Author: rtv $
+//  $Revision: 1.14 $
 //
 // Usage:
 //  (empty)
@@ -32,11 +32,15 @@
 #include "omnipositiondevice.hh"
 
 
+// register this device type with the Library
+CEntity omnipos_bootstrap( string("omnipos"), 
+			   OmniPositionType, 
+			   (void*)&COmniPositionDevice::Creator ); 
 
 ///////////////////////////////////////////////////////////////////////////
 // Constructor
 COmniPositionDevice::COmniPositionDevice(CWorld *world, CEntity *parent)
-  : CEntity( world, parent )
+  : CPlayerEntity( world, parent )
 {    
   // set the Player IO sizes correctly for this type of Entity
   m_data_len = sizeof( player_position_data_t );
@@ -74,7 +78,7 @@ COmniPositionDevice::COmniPositionDevice(CWorld *world, CEntity *parent)
 void COmniPositionDevice::Update( double sim_time )
 {  
   // Do some default processing
-  CEntity::Update(sim_time);
+  CPlayerEntity::Update(sim_time);
 
   // Dont do anything if its not time yet
   if (sim_time - m_last_update <  m_interval)

@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.65 2002-08-21 21:54:48 gerkey Exp $
+ * CVS info: $Id: world.hh,v 1.66 2002-08-22 02:04:38 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -43,25 +43,40 @@
 #include "worldfile.hh"
 
 #include "rtp.h"
+//#include "library.hh"
+
+class Library;
 
 #if INCLUDE_RTK2
 #include "rtk.h"
 #define MAX_DEVICE_MENU_ITEMS 32
 #endif
 
+// TO ADD NEW DEVICES 
+// - ADD A STRING TO CWorld::StringFromType()
+// - ADD A CONSTRUCTOR CALL TO CWorld::CreateEntity()
+
+
+
+
 // World class
 class CWorld
 {
   public: 
   
-  // Default constructor
-  CWorld( int argc, char** argv );
+  // constructor
+  CWorld( int argc, char** argv, Library* lib );
   
   // Destructor
   virtual ~CWorld();
   
 public: CRTPPlayer* rtp_player;
   
+  // the Library class knows how to create entities given a worldfile
+  // token, and can find the token given a StageType number
+protected: Library* lib;
+public: inline Library* GetLibrary( void ){ return lib; }
+
   // the main world-model data structure
   public: CMatrix *matrix;
   
@@ -341,6 +356,8 @@ protected: void RtkMenuHandling();
   public: rtk_menu_t *view_menu;
   private: rtk_menuitem_t *grid_item;
   private: rtk_menuitem_t *walls_item;
+  private: rtk_menuitem_t *matrix_item;
+
 
   // The action menu
 public: rtk_menu_t* action_menu;
