@@ -1,7 +1,7 @@
 #*************************************************************************
 # src/Makefile - makes the sources
 # RTV
-# $Id: Makefile,v 1.13 2001-02-06 01:27:06 gerkey Exp $
+# $Id: Makefile,v 1.14 2001-05-11 21:18:11 gerkey Exp $
 # ************************************************************************/
 
 .SUFFIXES: .cc .o
@@ -35,87 +35,3 @@ posreader: posreader.cc
 .cc.o: 
 	g++ $(CFLAGS) -c $<
 
-# DO NOT DELETE.  FOLLOWING IS FROM MAKEDEPEND
-
-device.o: ../include/world.h ../include/robot.h
-device.o: /home/gerkey/code/player/include/stage.h
-device.o: /home/gerkey/code/player/include/messages.h
-device.o: /home/gerkey/code/player/include/playercommon.h ../include/image.h
-device.o: ../include/win.h ../include/device.hh
-image.o: ../include/image.h ../include/world.h ../include/robot.h
-image.o: /home/gerkey/code/player/include/stage.h
-image.o: /home/gerkey/code/player/include/messages.h
-image.o: /home/gerkey/code/player/include/playercommon.h ../include/win.h
-laserbeacondevice.o: ../include/world.h ../include/robot.h
-laserbeacondevice.o: /home/gerkey/code/player/include/stage.h
-laserbeacondevice.o: /home/gerkey/code/player/include/messages.h
-laserbeacondevice.o: /home/gerkey/code/player/include/playercommon.h
-laserbeacondevice.o: ../include/image.h ../include/win.h
-laserbeacondevice.o: ../include/laserbeacondevice.hh ../include/device.hh
-laserdevice.o: ../include/world.h ../include/robot.h
-laserdevice.o: /home/gerkey/code/player/include/stage.h
-laserdevice.o: /home/gerkey/code/player/include/messages.h
-laserdevice.o: /home/gerkey/code/player/include/playercommon.h
-laserdevice.o: ../include/image.h ../include/win.h ../include/laserdevice.hh
-laserdevice.o: ../include/playerdevice.hh ../include/device.hh
-main.o: ../include/world.h ../include/robot.h
-main.o: /home/gerkey/code/player/include/stage.h
-main.o: /home/gerkey/code/player/include/messages.h
-main.o: /home/gerkey/code/player/include/playercommon.h ../include/image.h
-main.o: ../include/win.h
-pioneermobiledevice.o: ../include/world.h ../include/robot.h
-pioneermobiledevice.o: /home/gerkey/code/player/include/stage.h
-pioneermobiledevice.o: /home/gerkey/code/player/include/messages.h
-pioneermobiledevice.o: /home/gerkey/code/player/include/playercommon.h
-pioneermobiledevice.o: ../include/image.h ../include/win.h
-pioneermobiledevice.o: ../include/pioneermobiledevice.h
-pioneermobiledevice.o: ../include/playerdevice.hh ../include/device.hh
-playerdevice.o: ../include/world.h ../include/robot.h
-playerdevice.o: /home/gerkey/code/player/include/stage.h
-playerdevice.o: /home/gerkey/code/player/include/messages.h
-playerdevice.o: /home/gerkey/code/player/include/playercommon.h
-playerdevice.o: ../include/image.h ../include/win.h
-playerdevice.o: ../include/playerdevice.hh ../include/device.hh
-posreader.o: ../include/ports.h
-ptzdevice.o: ../include/world.h ../include/robot.h
-ptzdevice.o: /home/gerkey/code/player/include/stage.h
-ptzdevice.o: /home/gerkey/code/player/include/messages.h
-ptzdevice.o: /home/gerkey/code/player/include/playercommon.h
-ptzdevice.o: ../include/image.h ../include/win.h ../include/ptzdevice.hh
-ptzdevice.o: ../include/playerdevice.hh ../include/device.hh
-robot.o: /home/gerkey/code/player/include/stage.h
-robot.o: /home/gerkey/code/player/include/messages.h
-robot.o: /home/gerkey/code/player/include/playercommon.h ../include/world.h
-robot.o: ../include/robot.h ../include/image.h ../include/win.h
-robot.o: ../include/ports.h ../include/pioneermobiledevice.h
-robot.o: ../include/playerdevice.hh ../include/device.hh
-robot.o: ../include/sonardevice.h ../include/laserdevice.hh
-robot.o: ../include/visiondevice.hh ../include/ptzdevice.hh
-robot.o: ../include/laserbeacondevice.hh
-server.o: ../include/world.h ../include/robot.h
-server.o: /home/gerkey/code/player/include/stage.h
-server.o: /home/gerkey/code/player/include/messages.h
-server.o: /home/gerkey/code/player/include/playercommon.h ../include/image.h
-server.o: ../include/win.h ../include/ports.h
-sonardevice.o: ../include/world.h ../include/robot.h
-sonardevice.o: /home/gerkey/code/player/include/stage.h
-sonardevice.o: /home/gerkey/code/player/include/messages.h
-sonardevice.o: /home/gerkey/code/player/include/playercommon.h
-sonardevice.o: ../include/image.h ../include/win.h ../include/sonardevice.h
-sonardevice.o: ../include/playerdevice.hh ../include/device.hh
-visiondevice.o: ../include/world.h ../include/robot.h
-visiondevice.o: /home/gerkey/code/player/include/stage.h
-visiondevice.o: /home/gerkey/code/player/include/messages.h
-visiondevice.o: /home/gerkey/code/player/include/playercommon.h
-visiondevice.o: ../include/image.h ../include/win.h
-visiondevice.o: ../include/visiondevice.hh ../include/playerdevice.hh
-visiondevice.o: ../include/device.hh ../include/ptzdevice.hh
-win.o: ../include/win.h ../include/world.h ../include/robot.h
-win.o: /home/gerkey/code/player/include/stage.h
-win.o: /home/gerkey/code/player/include/messages.h
-win.o: /home/gerkey/code/player/include/playercommon.h ../include/image.h
-world.o: ../include/world.h ../include/robot.h
-world.o: /home/gerkey/code/player/include/stage.h
-world.o: /home/gerkey/code/player/include/messages.h
-world.o: /home/gerkey/code/player/include/playercommon.h ../include/image.h
-world.o: ../include/win.h
