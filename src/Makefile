@@ -1,7 +1,7 @@
 #*************************************************************************
 # src/Makefile - makes the sources
 # RTV
-# $Id: Makefile,v 1.3 2000-11-29 22:44:49 vaughan Exp $
+# $Id: Makefile,v 1.4 2000-11-29 22:48:56 ahoward Exp $
 # ************************************************************************/
 
 .SUFFIXES: .cc .o
@@ -34,5 +34,4 @@ posreader: posreader.cc
 	g++ $(CFLAGS) -c $<
 
 # DO NOT DELETE.  FOLLOWING IS FROM MAKEDEPEND
-
 

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/laserdevice.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.2 $
+//  $Author: ahoward $
+//  $Revision: 1.3 $
 //
 // Usage:
 //  (empty)
@@ -33,7 +33,7 @@ class CLaserDevice : public CDevice
 {
     // Default constructor
     //
-    public: CLaserDevice(void *data_buffer, size_t data_len);
+    public: CLaserDevice(void *buffer, size_t data_len, size_t command_len, size_t config_len);
     
     // Update the device
     //

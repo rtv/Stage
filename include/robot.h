@@ -2,10 +2,10 @@
  * robot.h - CRobot defintion - most of the action is here
             
  * RTV
- * $Id: robot.h,v 1.3 2000-11-29 22:44:49 vaughan Exp $
+ * $Id: robot.h,v 1.4 2000-11-29 22:48:56 ahoward Exp $
  ************************************************************************/
 
-#include <offsets.h> // for the ACTS size defines
+#include "offsets.h" // for the ACTS size defines
 #include "image.h"
 
 #include <X11/Xlib.h> // for XPoint

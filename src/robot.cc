@@ -1,7 +1,7 @@
 /*************************************************************************
  * robot.cc - most of the action is here
  * RTV
- * $Id: robot.cc,v 1.4 2000-11-29 22:44:49 vaughan Exp $
+ * $Id: robot.cc,v 1.5 2000-11-29 22:48:56 ahoward Exp $
  ************************************************************************/
 
 #include <errno.h>
@@ -215,12 +215,14 @@ bool CRobot::Startup()
     // Create laser device
     //
     m_device[m_device_count++] = new CLaserDevice(playerIO + LASER_DATA_START,
-                                                  LASER_DATA_BUFFER_SIZE);
+                                                  LASER_DATA_BUFFER_SIZE,
+                                                  LASER_COMMAND_BUFFER_SIZE,
+                                                  LASER_CONFIG_BUFFER_SIZE);
     // Start all the devices
     //
     for (int i = 0; i < m_device_count; i++)
     {
-        if (!m_device[i]->Open(this, world))
+        if (!m_device[i]->Startup(this, world))
         {
             perror("CRobot::Startup: failed to open device; device unavailable");
             m_device[i] = NULL;
@@ -241,7 +243,7 @@ bool CRobot::Shutdown()
     {
         if (!m_device[i])
             continue;
-        if (!m_device[i]->Close())
+        if (!m_device[i]->Shutdown())
             perror("CRobot::Shutdown: failed to close device");
         delete m_device[i];
     }
