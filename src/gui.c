@@ -472,14 +472,9 @@ void gui_model_features( stg_model_t* mod )
       
       stg_geom_t* geom = stg_model_get_geom(mod);
       
-      // draw a line from the center to the front of the model
-      //rtk_fig_line( fig, 
-      //	    0,0,
-      //	    //geom->pose.x, 
-      //	    //geom->pose.y, 
-      //	    geom->size.x/2.0, 0 );
-      
-      rtk_fig_arrow( fig, 0,0,0, geom->size.x/2.0, 0.05 );
+      // draw an arrow from the center to the front of the model
+      rtk_fig_arrow( fig, geom->pose.x, geom->pose.y, geom->pose.a, 
+		     geom->size.x/2.0, 0.05 );
     }
 
   rtk_fig_movemask( gui_model_figs(mod)->top, gf->movemask);  
