@@ -8,7 +8,7 @@
 # CVS info:
 #  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/Makefile,v $
 #  $Author: rtv $
-#  $Revision: 1.30 $
+#  $Revision: 1.31 $
 #
 # Note: All normal user configurations are in Makefile.common - you
 # probably don't need to change this file
@@ -32,7 +32,8 @@ rtkstage:
 	cd src && ${MAKE} rtkstage PLAYER_DIR=$(PLAYER_DIR) \
 	&& cp rtkstage ../bin
 
-hrlstage: 	
+hrlstage: 
+	cd hrl && make && cd ..	
 	cd src && ${MAKE} hrlstage PLAYER_DIR=$(PLAYER_DIR) \
 	&& cp hrlstage ../bin
 
