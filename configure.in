@@ -1,7 +1,7 @@
 
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.28.2.7 2003-05-24 23:10:31 gerkey Exp $
+dnl $Id: configure.in,v 1.28.2.8 2003-05-25 01:10:45 gerkey Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -37,9 +37,6 @@ define(STAGE_VERSION,PS_VERSION.2)
 dnl Initialize automake with name and version of package to be built. 
 dnl PACKAGE and VERSION will be so defined in <config.h>.
 AM_INIT_AUTOMAKE(stage-src,STAGE_VERSION)
-
-dnl Change default installation prefix from /usr/local to user's home
-AC_PREFIX_DEFAULT(${HOME}/stage-PS_VERSION)
 
 dnl Checks for programs.
 AC_PROG_CC
