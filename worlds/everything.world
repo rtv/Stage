@@ -3,9 +3,11 @@
 #       showing how to include some pre-defined objects
 # Author: Andrew Howard, Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.6 2002-08-22 21:13:30 rtv Exp $
+# CVS: $Id: everything.world,v 1.7 2002-08-23 02:18:24 rtv Exp $
 
 include "usc_pioneer.inc"
+
+resolution 0.03
 
 #
 # load an environmental bitmap

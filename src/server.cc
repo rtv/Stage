@@ -21,7 +21,7 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.25 2002-08-22 02:04:38 rtv Exp $
+ * CVS info: $Id: server.cc,v 1.26 2002-08-23 02:18:24 rtv Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -206,7 +206,7 @@ bool CStageServer::LoadFile( char* filename )
   assert(  this->worldfilename[0] != 0 );
 
   // reassuring console output
-  printf( "[World %s]", this->worldfilename );
+  printf( "[World %s]", this->worldfilename ); fflush(stdout);
 
   //////////////////////////////////////////////////////////////////////
   // FIGURE OUT THE DEFAULT FULL HOST NAME & ADDRESS

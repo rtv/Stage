@@ -1,24 +1,23 @@
 
-# Desc: world defines a descartes base with 8 idars	
-# CVS: $Id: pherobot.world,v 1.8 2002-08-22 02:13:46 rtv Exp $
+# Desc: an environment full of pherobots
+# works well with Player's examples/c++/pherobot
+#
+# CVS: $Id: pherobot.world,v 1.9 2002-08-23 02:18:25 rtv Exp $
 
 
 resolution 0.02
 
 bitmap
 (
-  #file "simple.pnm.gz"
-  #file "cave.pnm.gz"
   file "hospital_section.pnm.gz"
-  #file "blank.pnm"
   resolution 0.02
 ) 
 
 gui
 (
-  size [500.000 400.000]
-  origin [4.127 3.558]
-  scale 0.009
+  size [997.000 416.000]
+  origin [11.012 4.440]
+  scale 0.023
   grid [0.2 1]
   showgrid 1
 )

@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.78 2002-08-22 21:13:30 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.79 2002-08-23 02:18:24 rtv Exp $
  */
 
 #include <math.h>
@@ -797,11 +797,8 @@ int CEntity::SetProperty( int con, EntityProperty property,
     RtkStartup();
   }
   
-  //double gx, gy, gth)
-  //ReMap
-
-  //if( move_figure && this->fig )
-  //rtk_fig_origin(this->fig, local_px, local_py, local_pth );
+  if( move_figure && this->fig )
+    rtk_fig_origin(this->fig, local_px, local_py, local_pth );
 #endif 
 
   return 0;
