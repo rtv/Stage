@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.3 2002-11-11 08:21:40 rtv Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.4 2002-11-19 04:27:19 rtv Exp $
  */
 
 #include <math.h>
@@ -35,13 +35,7 @@
 CSonarDevice::CSonarDevice( LibraryItem* libit, CWorld *world, CEntity *parent )
   : CPlayerEntity( libit, world, parent )    
 {
-  // set the Player IO sizes correctly for this type of Entity
-  m_data_len    = sizeof( player_sonar_data_t );
-  m_command_len = 0;
-  m_config_len  = 1;
-  m_reply_len  = 1;
-  
-  m_player.code = PLAYER_SONAR_CODE; // from player's messages.h
+  SonarInit();
 
   this->min_range = 0.20;
   this->max_range = 5.0;
@@ -57,8 +51,6 @@ CSonarDevice::CSonarDevice( LibraryItem* libit, CWorld *world, CEntity *parent )
     this->sonars[i][2] = i * 2 * M_PI / this->sonar_count;
   }
   
-  // zero the data
-  memset( &this->data, 0, sizeof(this->data) );
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -125,11 +117,10 @@ void CSonarDevice::Update( double sim_time )
 
   // Process configuration requests
   UpdateConfig();
+ 
+  // place to store the ranges as we generate them
+  double ranges[PLAYER_SONAR_MAX_SAMPLES];
   
-  // Check bounds
-  assert((size_t) this->sonar_count <= ARRAYSIZE(this->data.ranges));
-  
-
   if( this->power_on )
     // Do each sonar
     for (int s = 0; s < this->sonar_count; s++)
@@ -140,7 +131,7 @@ void CSonarDevice::Update( double sim_time )
 	double oth = this->sonars[s][2];
 	LocalToGlobal(ox, oy, oth);
 	
-	double range = this->max_range;
+	ranges[s] = this->max_range;
 	
 	CLineIterator lit( ox, oy, oth, this->max_range, 
 			   m_world->ppm, m_world->matrix, PointToBearingRange );
@@ -150,19 +141,13 @@ void CSonarDevice::Update( double sim_time )
 	  {
 	    if( ent != this && ent != m_parent_entity && ent->sonar_return ) 
 	      {
-		range = lit.GetRange();
+		ranges[s] = lit.GetRange();
 		break;
 	      }
-	  }
-	
-	uint16_t v = (uint16_t)(1000.0 * range);
-	
-	// Store range in mm in network byte order
-	this->data.range_count = htons(this->sonar_count);
-	this->data.ranges[s] = htons(v);
+	  }	
       }
 
-  PutData( &this->data, sizeof(this->data) );
+  SonarPutData( this->sonar_count, ranges );
 
   return;
 }
@@ -195,14 +180,7 @@ void CSonarDevice::UpdateConfig()
 
       case PLAYER_SONAR_GET_GEOM_REQ:
         // Return the sonar geometry
-        assert(this->sonar_count <= ARRAYSIZE(geom.poses));
-        geom.pose_count = htons(this->sonar_count);
-        for (s = 0; s < this->sonar_count; s++)
-        {
-          geom.poses[s][0] = htons((short) (this->sonars[s][0] * 1000));
-          geom.poses[s][1] = htons((short) (this->sonars[s][1] * 1000));
-          geom.poses[s][2] = htons((short) (this->sonars[s][2] * 180 / M_PI));
-        }
+	SonarGeomPack( &geom, this->sonar_count, this->sonars );
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &geom, sizeof(geom));
         break;
 
@@ -267,40 +245,31 @@ void CSonarDevice::RtkUpdate()
 
   rtk_fig_clear(this->scan_fig);
 
-  // see the comment in CLaserDevice for why this gets the data out of
-  // the buffer instead of storing hit points in ::Update() - RTV
-  player_sonar_data_t data;
+  int range_count;
+  double ranges[PLAYER_SONAR_MAX_SAMPLES];
   
   if( Subscribed() > 0 && m_world->ShowDeviceData( this->lib_entry->type_num) )
-  {
-    size_t res = GetData( &data, sizeof(data));
-
-    if( res == sizeof(data) )
     {
-      for (int s = 0; s < this->sonar_count; s++)
-      {
-        double ox = this->sonars[s][0];
-        double oy = this->sonars[s][1];
-        double oth = this->sonars[s][2];
-        LocalToGlobal(ox, oy, oth);
-        
-	// convert from integer mm to double m
-        double range = (double)ntohs(data.ranges[s]) / 1000.0;
-
-	//if( range < max_range )
-	  {
-	    double x1 = ox;
-	    double y1 = oy;
-	    double x2 = x1 + range * cos(oth); 
-	    double y2 = y1 + range * sin(oth);       
-	    
-	    rtk_fig_line(this->scan_fig, x1, y1, x2, y2 );
-	  }
-      }
+      if( SonarGetData( &range_count, ranges ) )
+	{
+	  for (int s = 0; s < range_count; s++)
+	    {
+	      // draw a line from the position of the sonar sensor...
+	      double ox = this->sonars[s][0];
+	      double oy = this->sonars[s][1];
+	      double oth = this->sonars[s][2];
+	      LocalToGlobal(ox, oy, oth);
+	      
+	      // ...out to the range indicated by the data
+	      double x1 = ox;
+	      double y1 = oy;
+	      double x2 = x1 + ranges[s] * cos(oth); 
+	      double y2 = y1 + ranges[s] * sin(oth);       
+	      
+	      rtk_fig_line(this->scan_fig, x1, y1, x2, y2 );
+	    }
+	}
     }
-    //else
-    //PRINT_WARN2( "GET DATA RETURNED WRONG AMOUNT (%d/%d bytes)", res, sizeof(data) );
-  }  
 }
 
 #endif

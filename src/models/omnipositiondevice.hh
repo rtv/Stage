@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/omnipositiondevice.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -29,8 +29,6 @@
 
 #include "stage.h"
 #include "playerdevice.hh"
-
-typedef enum{ VELOCITY_MODE, POSITION_MODE } stage_move_mode_t;
 
 class COmniPositionDevice : public CPlayerEntity
 {
@@ -60,10 +58,10 @@ public: static COmniPositionDevice* Creator(  LibraryItem *libit, CWorld *world,
   private: void UpdateConfig();
 
   // Extract command from the command buffer
-  private: void ParseCommandBuffer( void );
+  private: void ParseCommandBuffer( player_position_cmd_t* command );
 				    
   // Compose the reply packet
-  private: void ComposeData( void );
+  private: void ComposeData( player_position_data_t* data );
 
   // when false, Move() is never called and the robot doesn't move
   bool motors_enabled;
@@ -79,8 +77,8 @@ public: static COmniPositionDevice* Creator(  LibraryItem *libit, CWorld *world,
   private: double last_time;
 
   // Current command and data buffers
-  private: player_position_cmd_t command;
-  private: player_position_data_t data;
+  //private: player_position_cmd_t command;
+  //private: player_position_data_t data;
 
   // Commanded velocities (for velocity control)
   private: double com_vx, com_vy, com_va;
@@ -93,6 +91,12 @@ public: static COmniPositionDevice* Creator(  LibraryItem *libit, CWorld *world,
 
   // Current odometry values
   private: double odo_px, odo_py, odo_pa;
+
+#ifdef INCLUDE_RTK2
+  // Initialise the rtk gui
+  protected: virtual void RtkStartup();
+#endif
+
 };
 
 #endif

@@ -21,7 +21,7 @@
  * Desc: Shared types, constants, etc
  * Author: Andrew Howard, Richard Vaughan
  * Date: 12 Mar 2001
- * CVS: $Id: stage_types.hh,v 1.9 2002-11-09 02:32:34 rtv Exp $
+ * CVS: $Id: stage_types.hh,v 1.10 2002-11-19 04:27:18 rtv Exp $
  */
 
 #ifndef STAGE_TYPES_HH
@@ -138,7 +138,6 @@ typedef struct libitem
   const char* colorstr;
   CreatorFunctionPtr fp;
 } libitem_t;
-
 
 // PROPERTY DEFINITIONS ///////////////////////////////////////////////
 

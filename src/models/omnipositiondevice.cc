@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/omnipositiondevice.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.4 $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -36,14 +36,9 @@
 COmniPositionDevice::COmniPositionDevice(LibraryItem* libit,CWorld *world, CEntity *parent)
   : CPlayerEntity( libit,world, parent )
 {    
-  // set the Player IO sizes correctly for this type of Entity
-  m_data_len = sizeof( player_position_data_t );
-  m_command_len = sizeof( player_position_cmd_t );
-  m_config_len = 1;
-  m_reply_len = 1;
+  // setup our Player interface for a POSITION device interface
+  PositionInit();
   
-  m_player.code = PLAYER_POSITION_CODE;
-
   // set up our sensor response
   this->laser_return = LaserTransparent;
   this->sonar_return = true;
@@ -101,10 +96,9 @@ void COmniPositionDevice::Update( double sim_time )
   {
     // Process configuration requests
     UpdateConfig();
-    
-    // Get the latest command
-    if (GetCommand(&this->command, sizeof(this->command)) == sizeof(this->command))
-      ParseCommandBuffer();
+
+    PositionGetCommand( &this->com_px, &this->com_py, &this->com_pa, 
+			&this->com_vx, &this->com_vy, &this->com_va );
     
     // update the robot's position
     if( this->motors_enabled )
@@ -117,9 +111,9 @@ void COmniPositionDevice::Update( double sim_time )
 	Move();
       }
     
-    // Prepare data packet
-    ComposeData();     
-    PutData( &this->data, sizeof(this->data)  );
+    PositionPutData( this->odo_px, this->odo_py, this->odo_pa,
+		     this->com_vx, this->com_vy,  this->com_va, 
+		     this->stall );
   }
   else  
   {
@@ -136,117 +130,124 @@ void COmniPositionDevice::Update( double sim_time )
   ReMap(px, py, pa);
 }
 
-///////////////////////////////////////////////////////////////////////////
-// Process configuration requests.
-void COmniPositionDevice::UpdateConfig()
-{
-  int len;
-  void *client;
-  char buffer[PLAYER_MAX_REQREP_SIZE];
-
-  while (true)
+  ///////////////////////////////////////////////////////////////////////////
+  // Process configuration requests.
+  void COmniPositionDevice::UpdateConfig()
   {
-    len = GetConfig(&client, buffer, sizeof(buffer));
-    if (len <= 0)
-      break;
+    int len;
+    void *client;
+    char buffer[PLAYER_MAX_REQREP_SIZE];
 
-    switch (buffer[0])
-      {
-      case PLAYER_POSITION_MOTOR_POWER_REQ:
-        // motor state change request 
-        // 1 = enable motors (default)
-        // 0 = disable motors
-	this->motors_enabled = buffer[1];
-	if( !this->motors_enabled ) SetGlobalVel( 0,0,0 );
-
-        PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
+    while (true)
+    {
+      len = GetConfig(&client, buffer, sizeof(buffer));
+      if (len <= 0)
         break;
 
-      case PLAYER_POSITION_RESET_ODOM_REQ:
-        // reset position to 0,0,0
-        this->odo_px = this->odo_py = this->odo_pa = 0.0;
-        PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
-        break;
-
-      case PLAYER_POSITION_SET_ODOM_REQ:
-	{
-	  player_position_set_odom_req_t* set = 
-	    (player_position_set_odom_req_t*)buffer;
+      switch (buffer[0])
+        {
+        case PLAYER_POSITION_MOTOR_POWER_REQ:
+          // motor state change request 
+          // 1 = enable motors (default)
+          // 0 = disable motors
+	  switch( buffer[1] )
+	    {
+	    case 0: this->motors_enabled = false;
+	      break;
+	    case 1: this->motors_enabled = true;
+	      break;
+	    default: 
+	      this->motors_enabled = false;
+	      PRINT_WARN1("Unrecognized motor state %d in"
+			  " PLAYER_POSITION_MOTOR_POWER_REQ "
+			  "(expecting 1(on) or 0(off). "
+			  "Switching off motors for safety.", 
+			  buffer[1] ); 
+	    }
+	  if( !this->motors_enabled ) SetGlobalVel( 0,0,0 );
 	  
-	  // set odometry position to the requested values
-	  this->odo_px = ntohl(set->x) / 1000.0;
-	  this->odo_py = ntohl(set->y) / 1000.0;
-	  this->odo_pa = DTOR(ntohs(set->y));
+          PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
+          break;
 	  
+        case PLAYER_POSITION_RESET_ODOM_REQ:
+          // reset position to 0,0,0
+          this->odo_px = this->odo_py = this->odo_pa = 0.0;
+          PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
+          break;
+	  
+	case PLAYER_POSITION_SET_ODOM_REQ:
+	  // set my odometry estimate to the values in the packet
+	  PositionSetOdomReqUnpack( (player_position_set_odom_req_t*)buffer,
+				    &this->odo_px, 
+				    &this->odo_py, 
+				    &this->odo_pa );
+	     
 	  PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
-	}
-        break;
-	
-      case PLAYER_POSITION_GET_GEOM_REQ:
-	{
-	  // Return the robot geometry (rotation offsets and size)
-	  player_position_geom_t geom;
+          break;
 	  
-	  geom.pose[0] = htons((short) (this->origin_x * 1000));
-	  geom.pose[1] = htons((short) (this->origin_y * 1000));
-	  geom.pose[2] = 0;
-	  geom.size[0] = htons((short) (this->size_x * 1000));
-	  geom.size[1] = htons((short) (this->size_y * 1000));
-	  
-	  PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &geom, sizeof(geom));
-	}
-        break;
-
-      case PLAYER_POSITION_POSITION_MODE_REQ:
-	// switch between velocity and position control
-	switch( buffer[1] )
+        case PLAYER_POSITION_GET_GEOM_REQ:
 	  {
-	  case 0: this->move_mode = VELOCITY_MODE; 
-	    break;
-	  case 1: this->move_mode = POSITION_MODE; 
-	    break;
-	  default: 
-	    PRINT_WARN1("Unrecognized mode in"
-			" PLAYER_POSITION_POSITION_MODE_REQ (%d)", 
-			buffer[0] ); 
-	    break;
-	  }
+	    // Return the robot geometry (rotation offsets and size)
+	    player_position_geom_t geom;	  
+	    PositionGeomPack( &geom, 
+			      this->origin_x, this->origin_y, 0,
+			      this->size_x, this->size_y );
+	    
+  	  PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &geom, sizeof(geom));
+  	}
+          break;
+
+        case PLAYER_POSITION_POSITION_MODE_REQ:
+  	// switch between velocity and position control
+  	switch( buffer[1] )
+  	  {
+  	  case 0: this->move_mode = VELOCITY_MODE; 
+  	    break;
+  	  case 1: this->move_mode = POSITION_MODE; 
+  	    break;
+  	  default: 
+  	    PRINT_WARN2("Unrecognized mode in"
+  			" PLAYER_POSITION_POSITION_MODE_REQ (%d)."
+			"Sticking with current mode (%s)", 
+  			buffer[0], 
+			this->move_mode ? "POSITION_MODE" : "VELOCITY_MODE" ); 
+  	    break;
+  	  }
+          PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
+          break;
+
+          // CONFIGS NOT IMPLEMENTED
 	
-        PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
-        break;
+        case PLAYER_POSITION_POSITION_PID_REQ:
+  	PRINT_WARN( "PLAYER_POSITION_POSITION_PID_REQ has no effect" );
+          PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
+          break;
 
-        // CONFIGS NOT IMPLEMENTED
-	
-      case PLAYER_POSITION_POSITION_PID_REQ:
-	PRINT_WARN( "PLAYER_POSITION_POSITION_PID_REQ has no effect" );
-        PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
-        break;
+        case PLAYER_POSITION_SPEED_PID_REQ:
+  	PRINT_WARN( "PLAYER_POSITION_SPEED_PID_REQ has no effect" );
+          PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
+          break;
 
-      case PLAYER_POSITION_SPEED_PID_REQ:
-	PRINT_WARN( "PLAYER_POSITION_SPEED_PID_REQ has no effect" );
-        PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
-        break;
+        case PLAYER_POSITION_SPEED_PROF_REQ:
+  	PRINT_WARN( "PLAYER_POSITION_SPEED_PROF_REQ has no effect" );
+          PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
+          break;
 
-      case PLAYER_POSITION_SPEED_PROF_REQ:
-	PRINT_WARN( "PLAYER_POSITION_SPEED_PROF_REQ has no effect" );
-        PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
-        break;
+        case PLAYER_POSITION_VELOCITY_MODE_REQ:
+          // velocity control mode:
+          //   0 = direct wheel velocity control (default)
+          //   1 = separate translational and rotational control
+  	PRINT_WARN( "PLAYER_POSITION_VELOCITY_MODE_REQ has no effect" );
+          PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
+          break;
 
-      case PLAYER_POSITION_VELOCITY_MODE_REQ:
-        // velocity control mode:
-        //   0 = direct wheel velocity control (default)
-        //   1 = separate translational and rotational control
-	PRINT_WARN( "PLAYER_POSITION_VELOCITY_MODE_REQ has no effect" );
-        PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
-        break;
-
-      default:
-        PRINT_WARN1("got unknown config request \"%c\"\n", buffer[0]);
-        PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
-        break;
-      }
+	    default:
+	      PRINT_WARN1("got unknown config request \"%c\"\n", buffer[0]);
+	      PutReply(client, PLAYER_MSGTYPE_RESP_NACK);
+	      break;
+	    }
+    }
   }
-}
 
 ///////////////////////////////////////////////////////////////////////////
 // Compute the robots new pose
@@ -265,11 +266,16 @@ void COmniPositionDevice::Move()
   double vy = this->com_vy;
   double va = this->com_va;
     
-  // Compute a new pose
+  // Compute movement deltas
   // This is a zero-th order approximation
-  double qx = px + step * vx * cos(pa) - step * vy * sin(pa);
-  double qy = py + step * vx * sin(pa) + step * vy * cos(pa);
-  double qa = pa + step * va;
+  double dx = step * vx * cos(pa) - step * vy * sin(pa);
+  double dy = step * vx * sin(pa) + step * vy * cos(pa);
+  double da = step * va;
+  
+  // compute a new pose
+  double qx = px + dx;
+  double qy = py + dy;
+  double qa = pa + da;
 
   // Check for collisions
   // and accept the new pose if ok
@@ -286,11 +292,11 @@ void COmniPositionDevice::Move()
         
     // Compute the new odometric pose
     // Uses a zero-th order approximation
-    this->odo_px += step * vx * cos(pa) - step * vy * sin(pa);
-    this->odo_py += step * vx * sin(pa) + step * vy * cos(pa);
-    this->odo_pa += pa + step * va;
+    this->odo_px += step * vx;// * cos(pa) - step * vy * sin(pa);
+    this->odo_py += step * vy;//step * vx * sin(pa) + step * vy * cos(pa);
+    this->odo_pa += step * va;//step * va;
     this->odo_pa = fmod(this->odo_pa + TWOPI, TWOPI);
-        
+
     this->stall = false;
   }
 }
@@ -321,6 +327,7 @@ void COmniPositionDevice::PositionControl()
     error_a += 2.0 * M_PI;
   
   
+  printf( "Odo: %.2f %.2f %.2f\n", odo_px, odo_py, odo_pa );
   printf( "Errors: %.2f %.2f %.2f\n", error_x, error_y, error_a );
 
   // set the translation speeds
@@ -329,7 +336,7 @@ void COmniPositionDevice::PositionControl()
       // set speeds proportional to error
       this->com_vx = error_x;
       this->com_vy = error_y;
-      //this->com_va = 0.1 * error_a;
+      this->com_va = error_a;
     }
   else // a little more complex with a diff steer robot
     {
@@ -369,62 +376,22 @@ void COmniPositionDevice::PositionControl()
     }
 }
 
+#ifdef INCLUDE_RTK2
+
 ///////////////////////////////////////////////////////////////////////////
-// Parse the command buffer to extract commands
-void COmniPositionDevice::ParseCommandBuffer()
+// Initialise the rtk gui
+void COmniPositionDevice::RtkStartup()
 {
-  // commands for velocity control
-  double vx = (int)ntohl(this->command.xspeed);
-  double vy = (int)ntohl(this->command.yspeed);
-  double va = (int)ntohl(this->command.yawspeed);
-    
-  // commands for position control
-  double px = (int)ntohl(this->command.xpos);
-  double py = (int)ntohl(this->command.ypos);
-  double pa = (int)ntohl(this->command.yaw);
-
-  // Store commanded speed
-  // Linear is in m/s
-  // Angular is in radians/sec
-  this->com_vx = vx / 1000;
-  this->com_vy = vy / 1000;
-  this->com_va = DTOR(va);
-
-  // Store commanded position
-  // Linear is in m
-  // Angular is in radians
-  this->com_px = px / 1000;
-  this->com_py = py / 1000;
-  this->com_pa = DTOR(pa);
-
-  //printf( "command: (%.2f %.2f %.2f) [%.2f %.2f %.2f]\n", 
-  //  com_vx, com_vy, com_va,
-  //  com_px, com_py, com_pa );
+  CPlayerEntity::RtkStartup();
+  
+  // add a 'nose line' indicating forward to the entity's normal
+  // rectangle or circle. draw from the center of rotation to the front.
+  rtk_fig_line( this->fig, 
+		this->origin_x, this->origin_y, 
+		this->size_x/2.0, this->origin_y );
 }
 
 
-///////////////////////////////////////////////////////////////////////////
-// Compose data to send back to client
-void COmniPositionDevice::ComposeData()
-{
-  // Compute odometric pose
-  // Convert mm and degrees (0 - 360)
-  double px = this->odo_px * 1000.0;
-  double py = this->odo_py * 1000.0;
-  double pa = RTOD(this->odo_pa);
-
-  // Construct the data packet
-  // Basically just changes byte orders and some units
-  this->data.xpos = htonl((int) px);
-  this->data.ypos = htonl((int) py);
-  this->data.yaw = htonl((unsigned short) pa);
-
-  this->data.xspeed = htonl((unsigned short) (this->com_vx * 1000.0));
-  this->data.yspeed = htonl((unsigned short) (this->com_vy * 1000.0));
-  this->data.yawspeed = htonl((short) RTOD(this->com_va));  
-
-  this->data.stall = (uint8_t)( this->stall ? 1 : 0 );
-}
-
+#endif
 
 

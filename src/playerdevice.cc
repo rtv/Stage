@@ -20,7 +20,7 @@
  * Desc: Add player interaction to basic entity class
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.50 2002-11-11 09:21:21 rtv Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.51 2002-11-19 04:27:18 rtv Exp $
  */
 
 #if HAVE_CONFIG_H
@@ -268,11 +268,6 @@ bool CPlayerEntity::Startup( void )
   assert(m_reqqueue = new PlayerQueue(m_config_io,m_config_len));
   assert(m_repqueue = new PlayerQueue(m_reply_io,m_reply_len));
   
-  // initialize the driver name with something sensible, in case the device
-  // doesn't set it
-  strncpy((char*)(this->m_info_io->drivername), "stage_device", 
-          sizeof(this->m_info_io->drivername));
-
 #ifdef DEBUG
   printf( "\t\t(%p) (%d,%d,%d) IO at %p\n"
           "\t\ttotal: %d\tinfo: %d\tdata: %d (%d)\tcommand: %d (%d)\tconfig: %d (%d)\n ",
@@ -366,7 +361,6 @@ size_t CPlayerEntity::GetData( void* data, size_t len )
 
 size_t CPlayerEntity::GetCommand( void* data, size_t len )
 {
-  //PRINT_DEBUG( "f" );
   return GetIOData( data, len, m_command_io, &m_info_io->command_avail );
 }
 
@@ -386,7 +380,7 @@ size_t CPlayerEntity::PutIOData( void* dest, size_t dest_len,
   assert( dest_len > 0 );
   
   if( src_len == 0 )
-    printf( "WIERD! attempt to write no bytes into a buffer" );
+    PRINT_WARN( "WIERD! attempt to write no bytes into a buffer" );
 
   if( src_len <= dest_len ) // if there is room for the data
   {
@@ -761,6 +755,94 @@ void CPlayerEntity::GetStatusString( char* buf, int buflen )
  
 }
 
+void CPlayerEntity::
+SonarInit( void )
+{
+  // set the Player IO sizes correctly for this type of Entity
+  m_data_len    = sizeof( player_sonar_data_t );
+  m_command_len = 0; // no commands for sonar device
+  m_config_len  = 1;
+  m_reply_len  = 1;
+  
+  m_player.code = PLAYER_SONAR_CODE; // from player.h
+}
+
+bool CPlayerEntity::
+SonarGetData( int* num_samples, double ranges[] )
+{
+  player_sonar_data_t data;
+  
+  if( GetData( &data, sizeof(data)) != sizeof(data) )
+    return false;
+  
+  SonarDataUnpack( &data, num_samples, ranges );
+  return true;
+}
+
+bool CPlayerEntity::
+SonarPutData( int num_samples, double ranges[] )
+{  
+  player_sonar_data_t data;
+  SonarDataPack( &data, num_samples, ranges );
+  return( PutData( &data, sizeof(data)) == sizeof(data) );
+}
+
+// set the Player IO sizes correctly for a Position interface
+void CPlayerEntity::
+PositionInit( void )
+{
+  this->m_data_len = sizeof( player_position_data_t );
+  this->m_command_len = sizeof( player_position_cmd_t );
+  this->m_config_len = 1;
+  this->m_reply_len = 1;
+  
+  this->m_player.code = PLAYER_POSITION_CODE;
+}
+
+bool CPlayerEntity::
+PositionPutData( double xpos, double ypos, double yaw,
+		 double xspeed, double yspeed, double yawspeed,
+		 bool stall )
+{
+  player_position_data_t data;
+  PositionDataPack( &data, xpos, ypos, yaw,
+		    xspeed, yspeed, yawspeed, int(stall) );
+
+    return( (PutData( &data, sizeof(data)) == sizeof(data)) );
+};
+
+// returns true iff successful
+bool CPlayerEntity::
+PositionGetData( double* xpos, double* ypos, double* yaw,
+		 double* xspeed, double* yspeed, double* yawspeed,
+		 bool* stall )
+{
+  // fetch the  latest data from the buffer
+  player_position_data_t data;
+  if (GetData(&data, sizeof(data)) != sizeof(data))
+    return false;
+    
+  PositionDataUnpack( &data, xpos, ypos, yaw, 
+		      xspeed, yspeed, yawspeed, (int*)stall); 
+  
+  return true;
+};
+
+
+// returns true iff successful
+bool CPlayerEntity::
+PositionGetCommand( double* xpos, double* ypos, double* yaw,
+		    double* xspeed, double* yspeed, double* yawspeed )
+{
+  // fetch the  latest data from the buffer
+  player_position_cmd_t command;
+  if (GetCommand(&command, sizeof(command)) != sizeof(command))
+    return false;
+  
+  PositionCmdUnpack( &command, xpos, ypos, yaw, xspeed, yspeed, yawspeed );
+  return true;
+};
+
 #ifdef INCLUDE_RTK2
 
 // Initialise the rtk gui
@@ -796,4 +878,6 @@ void CPlayerEntity::RtkStartup()
 
 
 #endif
+
+
 

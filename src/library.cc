@@ -24,7 +24,7 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.8 2002-11-14 03:56:00 rtv Exp $
+ * CVS info: $Id: library.cc,v 1.9 2002-11-19 04:27:18 rtv Exp $
  */
 
 #include "library.hh"
@@ -48,8 +48,6 @@
 #include "models/truthdevice.hh"
 #include "models/visiondevice.hh"
 //#include "models/bpsdevice.hh"
-//#include "models/descartesdevice.hh"
-//#include "models/positiondevice.hh"
 
 typedef CreatorFunctionPtr CFP;
 
@@ -62,6 +60,7 @@ libitem_t library_items[] = {
   { "bitmap", "black", (CFP)CBitmap::Creator},
   { "laser", "blue", (CFP)CLaserDevice::Creator},
   { "position", "red", (CFP)COmniPositionDevice::Creator},
+  { "omniposition", "red", (CFP)COmniPositionDevice::Creator},
   { "sonar", "green", (CFP)CSonarDevice::Creator},
   { "box", "yellow", (CFP)CBox::Creator},
   { "gps", "gray", (CFP)CGpsDevice::Creator},
@@ -71,7 +70,6 @@ libitem_t library_items[] = {
   { "lbd", "gray", (CFP)CFiducialFinder::Creator},
   { "fiducialfinder", "gray", (CFP)CFiducialFinder::Creator},
   { "mote", "orange", (CFP)CMoteDevice::Creator},
-  { "omniposition", "red", (CFP)COmniPositionDevice::Creator},
   { "power", "wheat", (CFP)CPowerDevice::Creator},
   { "ptz", "magenta", (CFP)CPtzDevice::Creator},
   { "puck", "green", (CFP)CPuck::Creator},

@@ -21,17 +21,22 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: playerdevice.hh,v 1.10 2002-11-01 19:12:29 rtv Exp $
+ * CVS info: $Id: playerdevice.hh,v 1.11 2002-11-19 04:27:18 rtv Exp $
  */
 
 #ifndef PLAYERENTITY_HH
 #define PLAYERENTITY_HH
 
 #include "entity.hh"
+#include <playerpacket.h> // provices packing/unpacking functions for
+ // Player message structures
 
 #if HAVE_STDINT_H
 #include <stdint.h>
 #endif
+
+// mode mode for position device
+typedef enum{ VELOCITY_MODE, POSITION_MODE } stage_move_mode_t;
 
 // (a little hacky - might engineer out of this one day - rtv)
 class CPlayerEntity;
@@ -196,6 +201,35 @@ public: virtual void FamilyUnsubscribe();
 
   private: char device_filename[256];
 
+  // interface conversion functions - change network-safe Player
+  // packets into individual variables of sensible types and units
+  
+  
+public:
+  /* THESE FUNCTIONS USE libplayerpacket TO PACK & UNPACK THE BUFFERS */
+  /* EVENTUALLY EVERYTHING SHOULD WORK THIS WAY and the interfaces
+     will become separate objects, i.e. not descended from CEntity, so
+     that devices can support more than one interface.  This code is
+     not particularly in the C++ idiom. New Stage code will probably
+     be more C flavored as time goes on - rtv.  */
+
+  /* SONAR INTERFACE */
+  void SonarInit();
+  bool SonarGetData( int* num_samples, double ranges[] );
+  bool SonarPutData( int num_samples, double ranges[] );
+  bool SonarGetConfig( player_sonar_geom_t* geom, bool* power_on );
+
+  /* POSITION INTERFACE */
+  void PositionInit();
+  bool PositionPutData( double xpos, double ypos, double yaw,
+			double xspeed, double yspeed, double yawspeed,
+			bool stall );
+  bool PositionGetData( double* xpos, double* ypos, double* yaw,
+			double* xspeed, double* yspeed, double* yawspeed,
+			bool* stall );  
+  bool PositionGetCommand( double* xpos, double* ypos, double* yaw,
+			   double* xspeed, double* yspeed, double* yawspeed );
+  
 #ifdef INCLUDE_RTK2
   // Initialise the rtk gui
   protected: virtual void RtkStartup();
