@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacon.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.9 $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  This object acts a both a simple laser reflector and a more complex
@@ -144,8 +144,8 @@ void CLaserBeacon::Update( double sim_time )
 
     // Dont update anything if we are not subscribed
     //
-    if(!Subscribed())
-      return;
+    //if(!Subscribed())
+    //return;
     
     // See if its time to recalculate beacons
     //

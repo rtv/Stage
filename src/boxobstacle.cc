@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
 //  $Author: vaughan $
-//  $Revision: 1.7 $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -120,9 +120,14 @@ bool CBoxObstacle::Save(int &argc, char **argv)
 void CBoxObstacle::Update( double simtime )
 {
   //cout << "UPDATE BOX" << endl;
-  if( Subscribed() > 0 ) // i.e. our truth has been poked
-  {
+  //if( Subscribed() > 0 ) // i.e. our truth has been poked
+  //{
     ASSERT(m_world);
+
+    if( simtime - m_last_update < m_interval )
+      return;
+    
+    m_last_update = simtime;
 
     // Undraw our old representation
     //
@@ -145,7 +150,6 @@ void CBoxObstacle::Update( double simtime )
                           m_size_x, m_size_y, layer_laser, 1);
     m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
                           m_size_x, m_size_y, layer_vision, m_channel+1);
-  }
 }
 
 #ifdef INCLUDE_RTK

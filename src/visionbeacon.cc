@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.9 $
+//  $Author: vaughan $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -144,8 +144,8 @@ void CVisionBeacon::Update( double sim_time )
     ASSERT(m_world != NULL);
 
   
-    if(!Subscribed()) // will be true if our truth has been poked
-     return;
+    //if(!Subscribed()) // will be true if our truth has been poked
+    //return;
     
     ASSERT(m_world != NULL);
     
