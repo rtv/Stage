@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/models/gripperdevice.cc,v $
-//  $Author: rtv $
-//  $Revision: 1.2 $
+//  $Author: gerkey $
+//  $Revision: 1.2.4.1 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -323,7 +323,8 @@ void CGripperDevice::DropObject()
   // drop the last one we picked up
   double x_offset = (this->size_x*2.0);
   m_puck_count--;
-  m_pucks[m_puck_count]->SetParent( (CEntity*)NULL );
+  //m_pucks[m_puck_count]->SetParent( (CEntity*)NULL );
+  m_pucks[m_puck_count]->SetParent( m_world->GetRoot() );
   m_pucks[m_puck_count]->SetDirty(1);
   m_pucks[m_puck_count]->SetGlobalPose(px+x_offset*cos(pth),
                                        py+x_offset*sin(pth),
