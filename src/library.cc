@@ -24,7 +24,7 @@
  * add your device to the static table below.
  *
  * Author: Richard Vaughan Date: 27 Oct 2002 (this header added) 
- * CVS info: $Id: library.cc,v 1.7.2.1.2.2 2004-11-11 00:35:53 gerkey Exp $
+ * CVS info: $Id: library.cc,v 1.7.2.1.2.3 2004-11-11 19:21:04 gerkey Exp $
  */
 
 #include "library.hh"
@@ -32,7 +32,7 @@
 #include "models/bitmap.hh"
 #include "models/box.hh"
 #include "models/bumperdevice.hh"
-#include "models/broadcastdevice.hh"
+//#include "models/broadcastdevice.hh"
 #include "models/gripperdevice.hh"
 //#include "models/idardevice.hh"
 //#include "models/idarturretdevice.hh"
@@ -75,7 +75,7 @@ libitem_t library_items[] = {
   { "truth", "purple", (CFP)CTruthDevice::Creator},
   { "vision", "gray", (CFP)CVisionDevice::Creator},
   { "blobfinder", "gray", (CFP)CVisionDevice::Creator},
-  { "broadcast", "brown", (CFP)CBroadcastDevice::Creator},
+//  { "broadcast", "brown", (CFP)CBroadcastDevice::Creator},
   { "bumper", "LightBlue", (CFP)CBumperDevice::Creator},
   // { "bps", BpsType, (CFP)CBpsDevice::Creator},
   //{ "descartes", "DarkBlue", (CFP)CDescartesDevice::Creator},

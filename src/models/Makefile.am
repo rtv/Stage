@@ -14,8 +14,6 @@ libstgmodels_a_SOURCES = \
                    bitmap.hh \
                    box.cc \
                    box.hh \
-                   broadcastdevice.cc \
-                   broadcastdevice.hh \
                    bumperdevice.cc \
                    bumperdevice.hh \
                    fiducialfinderdevice.cc \
@@ -50,3 +48,5 @@ libstgmodels_a_SOURCES = \
 # idardevice.hh
 # idarturretdevice.cc
 # idarturretdevice.hh
+# broadcastdevice.cc
+# broadcastdevice.hh
