@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 // Usage:
 //  (empty)
@@ -61,10 +61,6 @@ bool CWorld::Load(const char *filename)
     PRINT_MSG1("loading world file [%s]", filename);
 #endif
    
-    // Keep this file name: we will need it again when we save.
-    //
-    // won't work for m4 files...
-    strcpy(m_filename, filename);
 
     FILE *file = NULL;
     
@@ -95,6 +91,11 @@ bool CWorld::Load(const char *filename)
                (char*)bare_filename);
         return false;
       }
+     
+      // Keep this file name: we will need it again when we save.
+      //
+      // 
+      strcpy(m_filename, bare_filename);
     }
     else
     {
@@ -104,6 +105,10 @@ bool CWorld::Load(const char *filename)
         printf("unable to open world file %s; ignoring\n", (char*) filename);
         return false;
       }
+      // Keep this file name: we will need it again when we save.
+      //
+      // 
+      strcpy(m_filename, filename);
     }
 
     int linecount = 0;
