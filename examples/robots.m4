@@ -29,3 +29,19 @@ create position_device pose $1 $2 $3 port $4 shape circle
   create sonar_device port $4
 }
 ')
+
+#  args are (<x>,<y>,<th>,<port>)
+define(`lasergpsrobot',`
+# Robot Expansion
+#   The following code was expanded from the macro call:
+#        $0($*)
+
+create position_device pose $1 $2 $3 port $4 shape circle
+{
+  create player_device
+  create laser_device
+  create gps_device
+}
+')
+
+

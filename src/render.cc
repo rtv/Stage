@@ -75,7 +75,10 @@ void CXGui::RenderObject( xstruth_t &truth )
 	RenderGps( &truth, extended ); break;
 
       default: cout << "XS: unknown object type " 
-		    << truth.id.type << endl;
+		    << truth.stage_type << endl;
+
+      PrintMetricTruthVerbose( 0, truth );
+      break;
       }
 
     SetDrawMode( GXcopy );    

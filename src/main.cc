@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/main.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.18 $
+//  $Author: vaughan $
+//  $Revision: 1.19 $
 //
 // Usage:
 //  (empty)
@@ -81,8 +81,6 @@ bool parse_cmdline(int argc, char **argv)
 
   for( int a=1; a<argc-1; a++ )
     {
-      //puts( argv[a] );
-
       if( strcmp( argv[a], "-l" ) == 0 )
 	{
 	  g_log_output = true;

@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.29 2001-09-27 00:02:29 gerkey Exp $
+ * $Id: xs.cc,v 1.30 2001-09-27 00:19:16 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -309,11 +309,7 @@ static void* TruthWriter( void* )
 
             writecnt += thiswritecnt;
           }
-	}
-      
-      //pthread_mutex_unlock( &outgoing_mutex );	  
-      
-      usleep( 1000 ); // sleep for just a little bit
+	}      
     }
 }
 
@@ -1894,9 +1890,9 @@ void CXGui::TogglePlayerClient( xstruth_t* ent )
 	      if( sibling.id.port == ent->id.port && 
 		  (strcmp( sibling.hostname, ent->hostname ) == 0) ) 
 		{
-		  printf( "XS: finding proxy for %s (%d:%d:%d)\n", 
-			  ent->hostname, sibling.id.port, 
-			  sibling.id.type, sibling.id.index );
+		  //printf( "XS: finding proxy for %s (%d:%d:%d)\n", 
+		  //  ent->hostname, sibling.id.port, 
+		  //  sibling.id.type, sibling.id.index );
 		    
 		  switch( sibling.id.type )
 		    {

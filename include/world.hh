@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: vaughan $
-//  $Revision: 1.29 $
+//  $Revision: 1.30 $
 //
 // Usage:
 //  (empty)
@@ -106,7 +106,8 @@ private:
   
   void ListenForTruthConnections( void );
   void SetupTruthServer( void );
-  
+  void DestroyConnection( int con );
+
   void TruthRead();
   void TruthWrite();
   void InputTruth( stage_truth_t &truth );

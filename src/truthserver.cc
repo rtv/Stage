@@ -60,7 +60,19 @@ void CWorld::PrintTruth( stage_truth_t &truth )
   fflush( stdout );
 }
 
-
+void CWorld::DestroyConnection( int con )
+{
+  close( m_truth_connections[con].fd );
+  
+  m_truth_connection_count--;
+  
+  // shift the rest of the array 1 place left
+  for( int p=con; p<m_truth_connection_count; p++ )
+    memcpy( &(m_truth_connections[p]), 
+	    &(m_truth_connections[p+1]),
+	    sizeof( struct pollfd ) );
+}
+  
 void CWorld::TruthRead( void )
 {
   int readable = 1;
@@ -102,16 +114,8 @@ void CWorld::TruthRead( void )
 #ifdef VERBOSE
 		      printf( "Stage: truth connection broken (socket %d)\n", connfd );
 #endif	  
-		      close( connfd );
-		      
-		      // this fd seems to be closed
-		      m_truth_connection_count--;
-		      
-		      // shift the rest of the array 1 place left
-		      for( int p=t; p<m_truth_connection_count; p++ )
-			memcpy( &(m_truth_connections[p]), 
-				&(m_truth_connections[p+1]),
-				sizeof( struct pollfd ) );
+
+		      DestroyConnection( t ); 
 		      
 		      return; // give up for this cycle
 		      // we'll try again in a few milliseconds
@@ -212,20 +216,26 @@ void CWorld::TruthWrite( void )
 	      // we don't want this echoed back to us
 	      truth.echo_request = false;
 	      // send the packet to the connected client
-	      int writecnt = 0;
+	      unsigned int  writecnt = 0;
 	      int thiswritecnt;
               while(writecnt < sizeof(truth))
               {
                 thiswritecnt = write(connfd, ((char*)&truth)+writecnt, 
                                      sizeof(truth)-writecnt);
-                // check for error on write
-                assert(thiswritecnt >= 0);
+                
+		// check for error on write
+                if( thiswritecnt == -1 )
+		{
+		  // the fd is no good. give up on this connection
+		  DestroyConnection(t);
+		  break; 
+		}
 
                 writecnt += thiswritecnt;
               }
 		  
 	      // we really should have written the whole packet
-	      assert( writecnt == (int)sizeof(truth) );
+	      //assert( writecnt == (int)sizeof(truth) );
 	    }
 	}
     }
