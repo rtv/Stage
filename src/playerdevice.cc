@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.7 $
+//  $Revision: 1.2.2.8 $
 //
 // Usage:
 //  (empty)
@@ -24,7 +24,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_TRACE 1
+#define ENABLE_TRACE 0
 
 #include "world.hh"
 #include "playerdevice.hh"
@@ -81,7 +81,7 @@ bool CPlayerDevice::Startup(RtkCfgFile *cfg)
     TRACE4("creating player device at addr: %p %p %p %p", m_info, m_data_buffer,
          m_command_buffer, m_config_buffer);
     
-    /* *** TESTING -- this doesnt work right now
+    /* *** TODO -- this doesnt work right now
     // Mark this device as available
     //
     m_world->LockShmem();

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.9 $
+//  $Revision: 1.4.2.10 $
 //
 // Usage:
 //  (empty)
@@ -24,12 +24,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
+#define ENABLE_TRACE 0
 
-#define ENABLE_TRACE 1
 #include <sys/time.h>
 #include "world.hh"
 #include "offsets.h"
-
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -185,24 +184,6 @@ void CWorld::Update()
     m_update_rate = (1 - a) * m_update_rate + a * (1 / timestep);
     
     CObject::Update();
-
-    /* *** REMOVE
-    struct timeval tv;
-
-    gettimeofday( &tv, NULL );
-    timeNow = tv.tv_sec + (tv.tv_usec/MILLION);
-    timeStep = (timeNow - timeThen); // real time
-    //timeStep = 0.01; // step time;   
-    //cout << timeStep << endl;
-    timeThen = timeNow;
-
-    // use a simple cludge to fix stutters caused by machine load or I/O
-    if( timeStep > 0.1 ) 
-	{
-        TRACE2("MAX TIMESTEP EXCEEDED %f > %f", (double) timeStep, (double) 0.1);
-        timeStep = 0.1;
-	}
-    */
 
     /* *** HACK -- should reinstate this somewhere ahoward
        if( !runDown ) runStart = timeNow;
