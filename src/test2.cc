@@ -505,6 +505,26 @@ int main( int argc, char* argv[] )
   else
     PRINT_ERR( "no such model" );
 
+  mod = sc_get_model( client, world_name, "r1" );
+  if( mod )
+    {
+      sc_model_subscribe( client, mod, STG_PROP_RANGERDATA, 0.1 );
+      sc_model_subscribe( client, mod, STG_PROP_LASERDATA, 0.1 );
+      sc_model_subscribe( client, mod, STG_PROP_POSE, 1.0 );
+    }
+  else
+    PRINT_ERR( "no such model" );
+
+  mod = sc_get_model( client, world_name, "r2" );
+  if( mod )
+    {
+      sc_model_subscribe( client, mod, STG_PROP_RANGERDATA, 0.1 );
+      sc_model_subscribe( client, mod, STG_PROP_LASERDATA, 0.1 );
+      sc_model_subscribe( client, mod, STG_PROP_POSE, 1.0 );
+    }
+  else
+    PRINT_ERR( "no such model" );
+
   mod = sc_get_model( client, "Player world", "budgie" );
   if( mod )
     {
