@@ -1,4 +1,7 @@
-// $Id: pioneermobiledevice.cc,v 1.8 2000-12-04 05:19:44 vaughan Exp $	
+// $Id: pioneermobiledevice.cc,v 1.9 2000-12-04 18:04:01 ahoward Exp $
+
+//#define ENABLE_TRACE 1
+
 #include <math.h>
 
 #include "world.h"
@@ -161,17 +164,15 @@ void CPioneerMobileDevice::ComposeData()
   // the odometry model was kind of deliberately disabled - the code 
   // wasn't "wrong". talk to me! - RTV
 
-  // Compute odometric pose
-  //
-  double px = xodom * 1000.0;// output in mm
-  double py = yodom * 1000.0;// output in mm
-  double pth = aodom;
-  
-  // normalized odo heading
-  float odoHeading = fmod(pth + TWOPI, TWOPI );
+    // Compute odometric pose
+    // Convert to a bottom-left coord system
+    //
+    double px = xodom * 1000.0;// output in mm
+    double py = -yodom * 1000.0;// output in mm
+    double pth = TWOPI - fmod(aodom + TWOPI, TWOPI);
     
-  // normalized compass heading
-  float comHeading = fmod( m_robot->a + M_PI/2.0 + TWOPI, TWOPI ); 
+    // normalized compass heading
+    float comHeading = fmod( m_robot->a + M_PI/2.0 + TWOPI, TWOPI ); 
   
     // Construct the data packet
     // Basically just changes byte orders and some units
