@@ -1,0 +1,23 @@
+
+# Desc: 1 robot with player, laser, sonar and gps
+# CVS: $Id: test.world,v 1.1 2004-07-02 01:38:27 rtv Exp $
+
+#
+
+# load definitions approximating ActivMedia's robots
+include "pioneer.inc"
+
+# load a background set of obstacles from a bitmap file
+bitmap "bitmaps/autolab.png"
+
+# the resolution of Stage's raytrace model in meters
+resolution 0.02 
+
+gui.boundary 1
+
+interval_sim 100  # milliseconds per update step
+interval_real 100 # real-time milliseconds per update step
+
+pioneer2dx( name "r0" pose [9.846 6.641 7102.763] color "red" )
+pioneer2dx( name "r1" pose [1.328 11.223 -20.084] color "green")
+pioneer2dx( name "r2" pose [1.419 11.927 -71.250] color "blue" )
