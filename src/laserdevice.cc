@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.5 $
+//  $Revision: 1.6 $
 //
 // Usage:
 //  (empty)
@@ -37,16 +37,15 @@
 CLaserDevice::CLaserDevice(void *buffer, size_t data_len, size_t command_len, size_t config_len)
         : CDevice(buffer, data_len, command_len, config_len)
 {
-  //m_update_interval = 0.05; // fast!
-  m_update_interval = 0.2; // RTV - speed to match the real laser
-  m_last_update = 0;
+    m_update_interval = 0.2; // RTV - speed to match the real laser
+    m_last_update = 0;
 
-  m_min_segment = 0;
-  m_max_segment = 361;
-  m_intensity = false;
+    m_min_segment = 0;
+    m_max_segment = 361;
+    m_intensity = false;
   
-  m_samples = 361;
-  m_max_range = 8.0; // meters - this could be dynamic one day
+    m_samples = 361;
+    m_max_range = 8.0; // meters - this could be dynamic one day
                      // but this matches the default laser setup.
 }
 
