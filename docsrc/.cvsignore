@@ -4,3 +4,5 @@ stage.dvi
 stage.toc
 stage.ps
 stage.pdf
+stage.bbl
+stage.blg
