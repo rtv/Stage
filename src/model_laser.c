@@ -11,30 +11,39 @@ extern rtk_fig_t* fig_debug;
 #define TIMING 0
 #define LASER_FILLED 1
 
-void model_laser_init( model_t* mod )
-{     
-  // configure the laser to sensible defaults  
-  stg_laser_config_t lcfg;
-  memset(&lcfg,0,sizeof(lcfg));
-  lcfg.range_min= 0.0;
-  lcfg.range_max = 8.0;
-  lcfg.samples = 180;
-  lcfg.fov = M_PI;
-  
-  model_set_prop_generic( mod, STG_PROP_LASERCONFIG, 
-			  &lcfg, sizeof(lcfg) );
-  
-  // start off with a full set of zeroed data
-  stg_laser_sample_t* scan = calloc( sizeof(stg_laser_sample_t), lcfg.samples );
-  model_set_prop_generic( mod, STG_PROP_LASERDATA, 
-			  scan, sizeof(stg_laser_sample_t) * lcfg.samples );
-  
-  mod->laser_return = LaserVisible;
-}
+/* void model_laser_init( model_t* mod ) */
+/* {      */
+/*   PRINT_WARN( "laser init" ); */
 
+/*   // configure the laser to sensible defaults   */
+/*   stg_laser_config_t lcfg; */
+/*   memset(&lcfg,0,sizeof(lcfg)); */
+/*   lcfg.range_min= 0.0; */
+/*   lcfg.range_max = 8.0; */
+/*   lcfg.samples = 180; */
+/*   lcfg.fov = M_PI; */
+  
+/*   model_set_prop_generic( mod, STG_PROP_LASERCONFIG,  */
+/* 			  &lcfg, sizeof(lcfg) ); */
+  
+/*   // start off with a full set of zeroed data */
+/*   stg_laser_sample_t* scan = calloc( sizeof(stg_laser_sample_t), lcfg.samples ); */
+/*   model_set_prop_generic( mod, STG_PROP_LASERDATA,  */
+/* 			  scan, sizeof(stg_laser_sample_t) * lcfg.samples ); */
+/*   free(scan); */
+/* } */
+
+
+void model_laser_shutdown( model_t* mod )
+{
+  // remove the data
+  model_remove_prop_generic( mod, STG_PROP_LASERDATA );
+}
 
 void model_laser_update( model_t* mod )
 {   
+  PRINT_WARN( "laser update" );
+
   PRINT_DEBUG1( "[%lu] updating lasers", mod->world->sim_time );
   
   stg_laser_config_t* cfg = (stg_laser_config_t*)
@@ -127,6 +136,8 @@ void model_laser_update( model_t* mod )
 
 void model_laser_render( model_t* mod )
 {
+  PRINT_WARN( "laser render" );
+
   gui_window_t* win = mod->world->win;
 
   rtk_fig_t* fig = gui_model_figs(mod)->laser_data;  
@@ -141,9 +152,21 @@ void model_laser_render( model_t* mod )
       stg_laser_config_t* cfg = (stg_laser_config_t*)
 	model_get_prop_data_generic( mod, STG_PROP_LASERCONFIG );
       
+      if( cfg == NULL )
+	{
+	  PRINT_WARN( "no laser config available" );
+	  return;
+	}
+
       stg_laser_sample_t* samples = (stg_laser_sample_t*)
 	model_get_prop_data_generic( mod, STG_PROP_LASERDATA );
       
+      if( samples == NULL )
+	{
+	  PRINT_WARN( "no laser data available" );
+	  return;
+	}
+
       double sample_incr = cfg->fov / cfg->samples;
       double bearing = cfg->geom.pose.a - cfg->fov/2.0;
       stg_laser_sample_t* sample = NULL;
@@ -173,6 +196,8 @@ void model_laser_render( model_t* mod )
 
 void model_laser_config_render( model_t* mod )
 { 
+  PRINT_WARN( "laser config render" );
+
   gui_window_t* win = mod->world->win;
   rtk_fig_t* fig = gui_model_figs(mod)->laser_cfg;  
   rtk_fig_clear(fig);
@@ -240,56 +265,3 @@ void model_laser_config_render( model_t* mod )
 }
 
 
-
-void model_fiducial_render( model_t* mod )
-{ 
-  char text[32];
-
-  gui_window_t* win = mod->world->win;  
-  
-  rtk_fig_t* fig = gui_model_figs(mod)->fiducial_data;  
-  if( fig ) rtk_fig_clear( fig ); 
-  
-  if( win->show_fiducialdata && mod->subs[STG_PROP_FIDUCIALDATA] )
-    {      
-      rtk_fig_color_rgb32( fig, stg_lookup_color( STG_FIDUCIAL_COLOR ) );
-      
-      stg_pose_t pose;
-      model_global_pose( mod, &pose );  
-      rtk_fig_origin( fig, pose.x, pose.y, pose.a ); 
-      
-      stg_property_t* prop = model_get_prop_generic( mod, STG_PROP_FIDUCIALDATA );
-      
-      if( prop )
-	{
-	  int bcount = prop->len / sizeof(stg_fiducial_t);
-	  
-	  stg_fiducial_t* fids = (stg_fiducial_t*)prop->data;
-	  
-	  int b;
-	  for( b=0; b < bcount; b++ )
-	    {
-	      double pa = fids[b].bearing;
-	      double px = fids[b].range * cos(pa); 
-	      double py = fids[b].range * sin(pa);
-	      
-	      rtk_fig_line( fig, 0, 0, px, py );	
-	      
-	      // TODO: use the configuration info to determine beacon size
-	      // for now we use these canned values
-	      double wx = fids[b].geom.x;
-	      double wy = fids[b].geom.y;
-	      double wa = fids[b].geom.a;
-	      
-	      rtk_fig_rectangle(fig, px, py, wa, wx, wy, 0);
-	      rtk_fig_arrow(fig, px, py, wa, wy, 0.10);
-	      
-	      if( fids[b].id > 0 )
-		{
-		  snprintf(text, sizeof(text), "  %d", fids[b].id);
-		  rtk_fig_text(fig, px, py, pa, text);
-		}
-	    }  
-	}
-    }
-}

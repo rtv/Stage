@@ -43,8 +43,18 @@ model_t* model_create(  world_t* world,
   // models store data in here, indexed by property id
   mod->props = g_hash_table_new_full( g_int_hash, g_int_equal, NULL, prop_free );
   
-  mod->size.x = 0.4;
-  mod->size.y = 0.4;
+  
+  mod->laser_return = LaserVisible;
+  // a sensible default fiducial return value is the model's id
+  mod->fiducial_return = mod->id;
+  
+
+
+  mod->geom.pose.x = 0;
+  mod->geom.pose.y = 0;
+  mod->geom.pose.a = 0;
+  mod->geom.size.x = 0.4;
+  mod->geom.size.y = 0.4;
   
   mod->obstacle_return = 1;
 
@@ -74,8 +84,8 @@ model_t* model_create(  world_t* world,
   
   // fit the rectangle inside the model's size
   stg_normalize_lines( lines, 4 );
-  stg_scale_lines( lines, 4, mod->size.x, mod->size.y );
-  stg_translate_lines( lines, 4, -mod->size.x/2.0, -mod->size.y/2.0 );
+  stg_scale_lines( lines, 4, mod->geom.size.x, mod->geom.size.y );
+  stg_translate_lines( lines, 4, -mod->geom.size.x/2.0, -mod->geom.size.y/2.0 );
   
   // stash the lines
   mod->lines = g_array_new( FALSE, TRUE, sizeof(stg_line_t) );  
@@ -149,6 +159,7 @@ void model_global_pose( model_t* mod, stg_pose_t* pose )
   //pose_sum( pose, &glob, &mod->pose );
 
   memcpy( pose, &mod->pose, sizeof(stg_pose_t) ); 
+  pose->a = NORMALIZE( pose->a );
 }
 
 // should one day do all this with affine transforms for neatness
@@ -164,11 +175,14 @@ void model_local_to_global( model_t* mod, stg_pose_t* pose )
 
 void model_global_rect( model_t* mod, stg_rotrect_t* glob, stg_rotrect_t* loc )
 {
+  double w = mod->geom.size.x;
+  double h = mod->geom.size.y;
+
   // scale first
-  glob->x = ((loc->x + loc->w/2.0) * mod->size.x) - mod->size.x/2.0;
-  glob->y = ((loc->y + loc->h/2.0) * mod->size.y) - mod->size.y/2.0;
-  glob->w = loc->w * mod->size.x;
-  glob->h = loc->h * mod->size.y;
+  glob->x = ((loc->x + loc->w/2.0) * w) - w/2.0;
+  glob->y = ((loc->y + loc->h/2.0) * h) - h/2.0;
+  glob->w = loc->w * w;
+  glob->h = loc->h * h;
   glob->a = loc->a;
   
   // now transform into local coords
@@ -251,7 +265,7 @@ void model_subscribe( model_t* mod, stg_id_t pid )
   if( mod->subs[pid] == 1 )
     {
       if( library[pid].startup ) library[pid].startup(mod);  
-      if( library[pid].render)   library[pid].render(mod);  
+      //if( library[pid].render)   library[pid].render(mod);  
     }
   
   gui_model_render( mod );
@@ -283,17 +297,13 @@ int model_get_prop( model_t* mod, stg_id_t pid, void** data, size_t* len )
       *data = &mod->pose;
       *len = sizeof(mod->pose);
       break;
-    case STG_PROP_SIZE:
-      *data = &mod->size;
-      *len = sizeof(mod->size);
+    case STG_PROP_GEOM:
+      *data = &mod->geom;
+      *len = sizeof(mod->geom);
       break;
     case STG_PROP_VELOCITY:
       *data = &mod->velocity;
       *len = sizeof(mod->velocity);
-      break;
-    case STG_PROP_ORIGIN:
-      *data = &mod->local_pose;
-      *len = sizeof(mod->local_pose);
       break;
     case STG_PROP_COLOR:
       *data = &mod->color;
@@ -372,6 +382,11 @@ void model_set_prop_generic( model_t* mod, stg_id_t propid, void* data, size_t l
 }
 
 
+void model_remove_prop_generic( model_t* mod, stg_id_t propid )
+{
+  g_hash_table_remove( mod->props, &propid );
+}
+
 stg_property_t* model_get_prop_generic( model_t* mod, stg_id_t propid )
 {
   //printf( "getting %p %d:%d(%s)\n", 
@@ -432,17 +447,6 @@ int model_set_prop( model_t* mod,
 		       (int)len, (int)sizeof(mod->pose) );
       break;
       
-    case STG_PROP_ORIGIN:
-      if( len == sizeof(mod->local_pose) )
-	{
-	  model_map( mod, 0 );
-	  memcpy( &mod->local_pose, data, len );
-	  model_map( mod, 1 );
-	}
-      else PRINT_WARN2( "ignoring bad origin data (%d/%d bytes)", 
-		       (int)len, (int)sizeof(mod->local_pose) );
-      break;
-      
     case STG_PROP_VELOCITY:
       if( len == sizeof(mod->velocity) )
 	memcpy( &mod->velocity, data, len );
@@ -450,21 +454,22 @@ int model_set_prop( model_t* mod,
 		       (int)len, (int)sizeof(mod->velocity) );
       break;
       
-    case STG_PROP_SIZE:
-      if( len == sizeof(mod->size) )
+    case STG_PROP_GEOM:
+      if( len == sizeof(mod->geom) )
 	{
 	  model_map( mod, 0 );
-	  memcpy( &mod->size, data, len );
+	  memcpy( &mod->geom, data, len );
 	  
 	  // force the body lines to fit inside this new rectangle
 	  stg_normalize_lines( (stg_line_t*)mod->lines->data, mod->lines->len );
-	  stg_scale_lines( (stg_line_t*)mod->lines->data, mod->lines->len, mod->size.x, mod->size.y );
+	  stg_scale_lines( (stg_line_t*)mod->lines->data, mod->lines->len, 
+			   mod->geom.size.x, mod->geom.size.y );
 	  stg_translate_lines( (stg_line_t*)mod->lines->data, mod->lines->len,
-			       -mod->size.x/2.0, -mod->size.y/2.0 );
+			       -mod->geom.size.x/2.0, -mod->geom.size.y/2.0 );
 	  model_map( mod, 1 );
 	}
       else PRINT_WARN2( "ignoring bad size data (%d/%d bytes)", 
-		       (int)len, (int)sizeof(mod->size) );
+		       (int)len, (int)sizeof(mod->geom) );
       break;
       
     case STG_PROP_COLOR:

@@ -12,11 +12,14 @@ typedef struct _model
   char* token;
     
   stg_pose_t pose;
-  //stg_pose_t origin;
 
   stg_pose_t local_pose; // local offset from our pose
 
-  stg_size_t size;
+  //stg_size_t size;
+  //stg_pose_t origin;
+
+  stg_geom_t geom; // origin and size in one
+
   stg_color_t color;
   stg_velocity_t velocity;
   

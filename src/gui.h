@@ -28,6 +28,7 @@
 #define STG_LASER_CFG_COLOR "light steel blue"
 #define STG_WALL_COLOR "dark blue"
 #define STG_FIDUCIAL_COLOR "lime green"
+#define STG_FIDUCIAL_CFG_COLOR "green"
 #define STG_RANGER_COLOR "gray90" 
 #define STG_RANGER_TRANSDUCER_COLOR "orange"
 #define STG_DEBUG_COLOR "green"

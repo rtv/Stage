@@ -96,14 +96,17 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
   stg_token_t* token = stg_token_create( "root", STG_T_NUM, 99 );
   stg_model_t* root = stg_world_createmodel( world, NULL, 0, token );
       
-  stg_size_t sz;
-  sz.x = wf.ReadTupleLength(section, "size", 0, 10.0 );
-  sz.y = wf.ReadTupleLength(section, "size", 1, 10.0 );
-  stg_model_prop_with_data( root, STG_PROP_SIZE, &sz, sizeof(sz) );
+  stg_geom_t geom;
+  geom.pose.x = wf.ReadTupleLength(section, "origin", 0, 0.0 );
+  geom.pose.y = wf.ReadTupleLength(section, "origin", 1, 0.0 );
+  geom.pose.a = wf.ReadTupleLength(section, "origin", 2, 0.0 );
+  geom.size.x = wf.ReadTupleLength(section, "size", 0, 10.0 );
+  geom.size.y = wf.ReadTupleLength(section, "size", 1, 10.0 );
+  stg_model_prop_with_data( root, STG_PROP_GEOM, &geom, sizeof(geom) );
       
   stg_pose_t pose;
-  pose.x = sz.x/2.0;
-  pose.y = sz.y/2.0;
+  pose.x = geom.size.x/2.0;
+  pose.y = geom.size.y/2.0;
   pose.a = 0.0;
   stg_model_prop_with_data( root, STG_PROP_POSE, &pose, sizeof(pose) );
       
@@ -125,8 +128,8 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       int num_lines = 4 * num_rects;
       stg_line_t* lines = stg_rects_to_lines( rects, num_rects );
       stg_normalize_lines( lines, num_lines );
-      stg_scale_lines( lines, num_lines, sz.x, sz.y );
-      stg_translate_lines( lines, num_lines, -sz.x/2.0, -sz.y/2.0 );
+      stg_scale_lines( lines, num_lines, geom.size.x, geom.size.y );
+      stg_translate_lines( lines, num_lines, -geom.size.x/2.0, -geom.size.y/2.0 );
 	  
       stg_model_prop_with_data( root, STG_PROP_LINES, 
 				lines, num_lines * sizeof(stg_line_t ));
@@ -160,10 +163,13 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       pose.a = wf.ReadTupleAngle(section, "pose", 2, 0);      
       stg_model_prop_with_data( mod, STG_PROP_POSE, &pose, sizeof(pose) );
       
-      stg_size_t sz;
-      sz.x = wf.ReadTupleLength(section, "size", 0, 0.4 );
-      sz.y = wf.ReadTupleLength(section, "size", 1, 0.4 );
-      stg_model_prop_with_data( mod, STG_PROP_SIZE, &sz, sizeof(sz) );
+      stg_geom_t geom;
+      geom.pose.x = wf.ReadTupleLength(section, "origin", 0, 0.0 );
+      geom.pose.y = wf.ReadTupleLength(section, "origin", 1, 0.0 );
+      geom.pose.a = wf.ReadTupleLength(section, "origin", 2, 0.0 );
+      geom.size.x = wf.ReadTupleLength(section, "size", 0, 10.0 );
+      geom.size.y = wf.ReadTupleLength(section, "size", 1, 10.0 );
+      stg_model_prop_with_data( mod, STG_PROP_GEOM, &geom, sizeof(geom) );
       
       stg_bool_t nose;
       nose = wf.ReadInt( section, "nose", 0 );
@@ -179,20 +185,40 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       
       stg_laser_config_t lconf;
       memset( &lconf, 0, sizeof(lconf) );
-      lconf.geom.pose.x = wf.ReadTupleLength(section, "laser_geom", 0, 0);
+      lconf.geom.pose.x = wf.ReadTupleLength(section, "laser_geom", 0, -9999.0 );
       lconf.geom.pose.y = wf.ReadTupleLength(section, "laser_geom", 1, 0);
       lconf.geom.pose.a = wf.ReadTupleAngle(section, "laser_geom", 2, 0);
       lconf.geom.size.x = wf.ReadTupleLength(section, "laser_geom", 3, 0);
       lconf.geom.size.y = wf.ReadTupleLength(section, "laser_geom", 4, 0);
-      //stg_model_prop_with_data( mod, STG_PROP_LASERGEOM, &lgeom,sizeof(lgeom));
-
       lconf.range_min = wf.ReadTupleLength(section, "laser", 0, 0);
-      lconf.range_max = wf.ReadTupleLength(section, "laser", 1, 8);
-      lconf.fov = wf.ReadTupleAngle(section, "laser", 2, 180);
-      lconf.samples = (int)wf.ReadTupleFloat(section, "laser", 3, 180);
-      
-      stg_model_prop_with_data( mod, STG_PROP_LASERCONFIG, &lconf,sizeof(lconf));
+      lconf.range_max = wf.ReadTupleLength(section, "laser", 1, 0);
+      lconf.fov = wf.ReadTupleAngle(section, "laser", 2, 0);
+      lconf.samples = (int)wf.ReadTupleFloat(section, "laser", 3, 0);
+
+      if( lconf.geom.pose.x != -9999.0 )
+	stg_model_prop_with_data( mod, STG_PROP_LASERCONFIG, &lconf,sizeof(lconf));
   
+      
+      stg_blobfinder_config_t bcfg;
+      memset( &bcfg, 0, sizeof(bcfg) );
+      bcfg.channel_count = (int)wf.ReadTupleFloat(section, "blobfinder", 0, -1 );
+      bcfg.scan_width = (int)wf.ReadTupleFloat(section, "blobfinder", 1, -1 );
+      bcfg.scan_height = (int)wf.ReadTupleFloat(section, "blobfinder", 2, -1 );
+      bcfg.range_max = wf.ReadTupleLength(section, "blobfinder", 3, -1 );
+      bcfg.pan = wf.ReadTupleAngle(section, "blobfinder", 4, -1 );
+      bcfg.tilt = wf.ReadTupleAngle(section, "blobfinder", 5, -1 );
+      bcfg.zoom =  wf.ReadTupleAngle(section, "blobfinder", 6, -1 );
+      
+      if( bcfg.channel_count > STG_BLOBFINDER_CHANNELS_MAX )
+	bcfg.channel_count = STG_BLOBFINDER_CHANNELS_MAX;
+      
+      for( int ch = 0; ch<bcfg.channel_count; ch++ )
+	bcfg.channels[ch] = 
+	  stg_lookup_color( wf.ReadTupleString(section, "blobchannels", ch, "red" )); 
+      
+      if( bcfg.channel_count != -1 )
+	stg_model_prop_with_data( mod, STG_PROP_BLOBCONFIG, &bcfg,sizeof(bcfg));
+
       const char* colorstr = wf.ReadString( section, "color", "red" );
       if( colorstr )
 	{
@@ -212,8 +238,8 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
 	  int num_lines = 4 * num_rects;
 	  stg_line_t* lines = stg_rects_to_lines( rects, num_rects );
 	  stg_normalize_lines( lines, num_lines );
-	  stg_scale_lines( lines, num_lines, sz.x, sz.y );
-	  stg_translate_lines( lines, num_lines, -sz.x/2.0, -sz.y/2.0 );
+	  stg_scale_lines( lines, num_lines, geom.size.x, geom.size.y );
+	  stg_translate_lines( lines, num_lines, -geom.size.x/2.0, -geom.size.y/2.0 );
 	  
 	  stg_model_prop_with_data( mod, STG_PROP_LINES, 
 				    lines, num_lines * sizeof(stg_line_t ));
@@ -292,8 +318,15 @@ stg_world_t* stg_client_worldfile_load( stg_client_t* client,
       vel.y = wf.ReadTupleLength(section, "velocity", 1, 0);
       vel.a = wf.ReadTupleAngle(section, "velocity", 2, 0);      
       stg_model_prop_with_data( mod, STG_PROP_VELOCITY, &vel, sizeof(vel) );
-
       
+      stg_fiducial_config_t fcfg;
+      fcfg.min_range = wf.ReadTupleLength(section, "fiducial", 0, -9999.0 );
+      fcfg.max_range_anon = wf.ReadTupleLength(section, "fiducial", 1, 0);
+      fcfg.max_range_id = wf.ReadTupleLength(section, "fiducial", 2, 0);
+      fcfg.fov = wf.ReadTupleAngle(section, "fiducial", 3, 0);
+
+      if( fcfg.min_range != -9999.0 )
+	stg_model_prop_with_data( mod, STG_PROP_FIDUCIALCONFIG, &fcfg, sizeof(fcfg) );
     }
 
   return world;

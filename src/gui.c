@@ -373,7 +373,7 @@ void gui_model_grid( model_t* model )
   if( win->show_grid && model->grid )
     gmod->grid = gui_grid_create( win->canvas, gmod->top, 
 				  0, 0, 0, 
-				  model->size.x, model->size.y, 1.0, 0 );
+				  model->geom.size.x, model->geom.size.y, 1.0, 0 );
 }
   
 void gui_model_create( model_t* model )
@@ -405,8 +405,8 @@ void gui_model_create( model_t* model )
 
   gmod->blob_data = rtk_fig_create( win->canvas, parent_fig, STG_LAYER_DATA);
   gmod->blob_cfg = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_GEOM);
-  gmod->fiducial_data = rtk_fig_create( win->canvas, parent_fig, STG_LAYER_DATA);
-  gmod->fiducial_cfg = rtk_fig_create( win->canvas, parent_fig, STG_LAYER_GEOM);
+  gmod->fiducial_data = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_DATA);
+  gmod->fiducial_cfg = rtk_fig_create( win->canvas, gmod->top, STG_LAYER_GEOM);
   
   gmod->grid = NULL;
   
@@ -510,7 +510,7 @@ void gui_model_geom( model_t* mod )
       
       if( mod->boundary )
 	rtk_fig_rectangle( fig, localx, localy, locala, 
-			   mod->size.x, mod->size.y, 0 ); 
+			   mod->geom.size.x, mod->geom.size.y, 0 ); 
       
       // draw the origin and the offset arrow
       double orgx = 0.05;
@@ -536,7 +536,10 @@ void gui_model_nose( model_t* mod )
       rtk_fig_color_rgb32( fig, mod->color );
       
       // draw a line from the center to the front of the model
-      rtk_fig_line( fig, mod->local_pose.x, mod->local_pose.y, mod->size.x/2, 0 );
+      rtk_fig_line( fig, 
+		    mod->local_pose.x, 
+		    mod->local_pose.y, 
+		    mod->geom.size.x/2, 0 );
     }
 }
 
@@ -570,10 +573,9 @@ void gui_model_update( model_t* mod, stg_prop_type_t prop )
     {
     case 0: // for these we basically redraw everything
     case STG_PROP_BOUNDARY:      
-    case STG_PROP_SIZE:
+    case STG_PROP_GEOM:
     case STG_PROP_COLOR:
     case STG_PROP_NOSE:
-    case STG_PROP_ORIGIN: // could this one be faster?
     case STG_PROP_MOVEMASK:
     case STG_PROP_RANGERCONFIG:
     case STG_PROP_GRID:
@@ -607,7 +609,6 @@ void gui_model_update( model_t* mod, stg_prop_type_t prop )
     case STG_PROP_INTERVAL:
     case STG_PROP_MATRIXRENDER:
     case STG_PROP_BLOBCONFIG:
-    case STG_PROP_FIDUCIALCONFIG:
       break;
 
     default:

@@ -28,7 +28,7 @@
  * Author: Richard Vaughan vaughan@sfu.ca 
  * Date: 1 June 2003
  *
- * CVS: $Id: stage.h,v 1.55 2004-06-13 07:27:55 rtv Exp $
+ * CVS: $Id: stage.h,v 1.56 2004-06-14 02:52:50 rtv Exp $
  */
 
 #include <stdlib.h>
@@ -84,7 +84,7 @@ typedef enum
     STG_PROP_TIME, // double - time since startup in seconds
     STG_PROP_CIRCLES,
     STG_PROP_COLOR,
-    STG_PROP_GEOM,
+    STG_PROP_GEOM, 
     STG_PROP_NAME, // ?
     STG_PROP_PARENT, 
     STG_PROP_PLAYERID,
@@ -97,10 +97,8 @@ typedef enum
     STG_PROP_INTERVAL,
     STG_PROP_RECTS,
     STG_PROP_LINES,
-    STG_PROP_SIZE,
     STG_PROP_VELOCITY, 
     STG_PROP_LASERRETURN,
-    STG_PROP_ORIGIN,
     STG_PROP_OBSTACLERETURN,
     STG_PROP_VISIONRETURN,
     STG_PROP_SONARRETURN, 
@@ -114,9 +112,6 @@ typedef enum
     STG_PROP_BLOBDATA,
     STG_PROP_LASERDATA,
     STG_PROP_LASERCONFIG,
-    //STG_PROP_LASERGEOM,
-    //STG_PROP_NEIGHBORS,
-    //STG_PROP_NEIGHBORBOUNDS, // range bounds of neighbor sensor
     STG_PROP_BLINKENLIGHT,  // light blinking rate
     STG_PROP_NOSE,
     STG_PROP_GRID,
@@ -125,6 +120,11 @@ typedef enum
     STG_PROP_MOVEMASK,
     STG_PROP_BOUNDARY,        // if non-zero, add a bounding rectangle
     STG_PROP_MATRIXRENDER, // if non-zero, render in the matrix
+    //STG_PROP_SIZE,
+    //STG_PROP_ORIGIN,
+    //STG_PROP_LASERGEOM,
+    //STG_PROP_NEIGHBORS,
+    //STG_PROP_NEIGHBORBOUNDS, // range bounds of neighbor sensor
     STG_PROP_COUNT // this must be the last entry
 } stg_prop_type_t;
 

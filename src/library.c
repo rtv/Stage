@@ -7,7 +7,7 @@ void model_ranger_init( model_t* mod );
 void model_ranger_update( model_t* mod );
 void model_ranger_render( model_t* mod );
 
-void model_laser_init( model_t* mod );
+void model_laser_shutdown( model_t* mod );
 void model_laser_update( model_t* mod );
 void model_laser_render( model_t* mod );
 void model_laser_config_render( model_t* mod );
@@ -21,8 +21,10 @@ void model_blobfinder_render( model_t* mod );
 void model_blobfinder_config_render( model_t* mod );
 
 void model_fiducial_init( model_t* mod );
+void model_fiducial_shutdown( model_t* mod );
 void model_fiducial_update( model_t* mod );
 void model_fiducial_render( model_t* mod );
+void model_fiducial_config_render( model_t* mod );
 
 libitem_t items[] = 
   {
@@ -37,7 +39,7 @@ libitem_t items[] =
     
     { STG_PROP_BLOBDATA, 
       "blob",
-      model_blobfinder_init, 
+      NULL,
       model_blobfinder_startup, 
       model_blobfinder_shutdown, 
       model_blobfinder_update, 
@@ -46,7 +48,7 @@ libitem_t items[] =
 
     { STG_PROP_BLOBCONFIG, 
       "blobconfig",
-      model_blobfinder_init, // same as above
+      NULL,
       NULL,
       NULL,
       NULL,
@@ -55,16 +57,16 @@ libitem_t items[] =
     
     { STG_PROP_LASERDATA, 
       "laser",
-      model_laser_init, 
       NULL, 
-      NULL, 
+      NULL,
+      model_laser_shutdown, 
       model_laser_update,
       model_laser_render
     },
     
     { STG_PROP_LASERCONFIG, 
       "laserconfig",
-      model_laser_init, // same as above
+      NULL,
       NULL,
       NULL,
       NULL,
@@ -73,13 +75,22 @@ libitem_t items[] =
 
     { STG_PROP_FIDUCIALDATA, 
       "fiducial",
-      model_fiducial_init, 
+      NULL,
       NULL, 
-      NULL, 
+      model_fiducial_shutdown,
       model_fiducial_update,
       model_fiducial_render
     },
+
     
+    { STG_PROP_FIDUCIALCONFIG, 
+      "fiducialconfig",
+      NULL,
+      NULL,
+      NULL, 
+      NULL,
+      model_fiducial_config_render
+    },
     
     { 0,NULL,NULL,NULL,NULL,NULL}
   };

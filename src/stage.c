@@ -35,7 +35,6 @@ const char* stg_property_string( stg_id_t id )
     case STG_PROP_ENERGY: return "energy"; break;
     case STG_PROP_NAME: return "name"; break;
     case STG_PROP_OBSTACLERETURN: return "obstacle_return";break;
-    case STG_PROP_ORIGIN: return "origin"; break;
     case STG_PROP_PARENT: return "parent"; break;
     case STG_PROP_PLAYERID: return "player_id"; break;
     case STG_PROP_POSE: return "pose"; break;
@@ -45,7 +44,6 @@ const char* stg_property_string( stg_id_t id )
     case STG_PROP_RANGEBOUNDS: return "rangebounds";break;
     case STG_PROP_RECTS: return "rects"; break; 
     case STG_PROP_LINES: return "lines"; break;
-    case STG_PROP_SIZE: return "size"; break;
     case STG_PROP_SONARRETURN: return "sonar_return"; break;
     case STG_PROP_VELOCITY: return "velocity"; break;
     case STG_PROP_VISIONRETURN: return "vision_return"; break;
@@ -71,6 +69,8 @@ const char* stg_property_string( stg_id_t id )
     default:
       break;
 
+      //case STG_PROP_SIZE: return "size"; break;
+      //case STG_PROP_ORIGIN: return "origin"; break;
       //case STG_PROP_LASERGEOM: return "lasergeom";break;
       //case STG_PROP_NEIGHBORRETURN: return "neighbor_return"; break;
       //case STG_PROP_NEIGHBORBOUNDS: return "neighbor_bounds"; break;

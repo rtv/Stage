@@ -1138,9 +1138,10 @@ void stg_client_handle_message( stg_client_t* cli, stg_msg_t* msg )
 		stg_property_string(prop->prop),
 		(int)prop->datalen,
 		(int)msg->payload_len );
-#endif	
 
 	puts("");
+#endif	
+
 
 	
 	// don't bother stashing a time
