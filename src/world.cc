@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.106 2002-06-11 06:58:17 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.107 2002-07-04 01:06:02 rtv Exp $
  */
 
 //#undef DEBUG
@@ -34,8 +34,6 @@
 #include <sys/wait.h>
 #include <signal.h>
 #include <math.h>
-#include <fstream.h>
-#include <iostream.h>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <semaphore.h>
@@ -46,6 +44,9 @@
 #include <stdio.h>
 #include <libgen.h>  // for dirname
 #include <netdb.h>
+
+#include <fstream>
+#include <iostream>
 
 bool usage = false;
 
@@ -105,7 +106,7 @@ CWorld::CWorld( int argc, char** argv )
   m_entity_alloc = 0;
   m_entity_count = 0;
 
-  //rtp_player = NULL;
+  rtp_player = NULL;
 
   m_log_output = false; // enable with -l <filename>
   m_console_output = false; // enable with -o
@@ -299,16 +300,17 @@ bool CWorld::ParseCmdLine(int argc, char **argv)
     }
 
     // ENABLE RTP - sensor data is sent in rtp format
-    // if( (strcmp( argv[a], "-r" ) == 0 ) || 
-    // ( strcmp( argv[a], "--rtp" ) == 0 ))
-    //  	{
-    //  	  rtp_player = new CRTPPlayer( argv[a+1] );
-      
-    //  	  printf( "World rtp player @ %p\n", rtp_player );
-      
-    //  	  printf( "[RTP %s]", argv[a+1] );
-    //  	  a++;
-    //  	}
+    if( (strcmp( argv[a], "-r" ) == 0 ) || 
+	( strcmp( argv[a], "--rtp" ) == 0 ))
+      {
+	assert( rtp_player = new CRTPPlayer( argv[a+1] ) );
+	
+	//printf( "World rtp player @ %p\n", rtp_player );
+	  
+      	  printf( "[RTP %s]", argv[a+1] );
+      	  a++;
+	  
+      }
     // ENABLE IDAR packets to be sent to XS
     //if( strcmp( argv[a], "-i" ) == 0 )
     //{
@@ -458,7 +460,7 @@ void CWorld::Update(void)
       // if this host manages this entity
       if( m_entity[i]->m_local )
         m_entity[i]->Update( m_sim_time ); // update the device model
-	  
+        
 #ifdef INCLUDE_RTK2
       // update the GUI, whether we manage this device or not
       if (this->enable_gui)
@@ -775,7 +777,8 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   double gridx, gridy;
   double minor, major;
   bool showgrid;
-  
+  bool subscribedonly;
+
   if (worldfile != NULL)
   {
     int section = worldfile->LookupEntity("gui");
@@ -815,6 +818,9 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
     major = worldfile->ReadTupleLength(section, "grid", 1, 1.0);
     showgrid = worldfile->ReadInt(section, "showgrid", true);
     
+    // toggle display of subscribed or all device data
+    subscribedonly = worldfile->ReadInt(section, "showsubscribedonly", true);
+
     gridx = ceil(gridx / major) * major;
     gridy = ceil(gridy / major) * major;
   }
@@ -851,6 +857,9 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
     major = 1.0;
     showgrid = true;
 
+    // default
+    subscribedonly = true;
+
     gridx = ceil(gridx / major) * major;
     gridy = ceil(gridy / major) * major;
   }
@@ -876,8 +885,15 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   // create the grid menu item
   this->grid_item = rtk_menuitem_create(this->view_menu, "Grid", 1);
 
+  // create the subscribed only menu item
+  this->subscribedonly_item = rtk_menuitem_create(this->view_menu, 
+					      "Subscribe to all", 1);
+
   // Set the initial view menu state
   rtk_menuitem_check(this->grid_item, showgrid);
+
+  // Set the initial view menu state
+  rtk_menuitem_check(this->grid_item, subscribedonly);
 
   // Create the view/device sub menu
   this->device_data_menu = rtk_menu_create_sub(this->view_menu, "Device data");
@@ -1006,6 +1022,28 @@ void CWorld::RtkUpdate()
   else
     rtk_fig_show(this->fig_grid, 0);
 
+  // enable/disable subscriptions to show sensor data
+  static bool lasttime = rtk_menuitem_ischecked(this->subscribedonly_item);
+  bool thistime = rtk_menuitem_ischecked(this->subscribedonly_item);
+
+  // if the menu item changed
+  if( thistime != lasttime )
+    {
+      if( thistime )  // change the subscription counts of any player-capable ent
+	{
+	  for (int i = 0; i < m_entity_count; i++)
+	    if( m_entity[i]->m_player.port > 0 ) m_entity[i]->Subscribe();
+	}
+      else
+	{
+	  for (int i = 0; i < m_entity_count; i++)
+	    if( m_entity[i]->m_player.port > 0 ) m_entity[i]->Unsubscribe();
+	}
+      // remember this state
+      lasttime = thistime;
+    }
+      
+  
 }
 #endif
 

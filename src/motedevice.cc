@@ -8,7 +8,14 @@
 
 double m_graph_update_interval = 0.1;
 
-slist<CMoteDevice*> m_mote_list;
+class CMoteDevice;
+
+typedef std::list<CMoteDevice*> MotePtrList;
+typedef MotePtrList::iterator MotePtrListIterator;
+
+MotePtrList m_mote_list;
+
+
 #undef DEBUG
 #undef VERBOSE
 //#define DEBUG
@@ -43,7 +50,7 @@ CMoteDevice::CMoteDevice(CWorld *world, CEntity *parent )
   m_last_graph_update = 0.0;
 
   /* add the mote to the graph  */
-  for(slist<CMoteDevice*>::iterator i = m_mote_list.begin(); 
+  for( MotePtrListIterator i = m_mote_list.begin(); 
       i != m_mote_list.end(); i++){
     UpdateAdjList(*i, this);
   }
@@ -98,7 +105,7 @@ void CMoteDevice::Update( double sim_time )
     if(GetCommand(&m_data, sizeof(player_mote_data_t)) == 
        sizeof(player_mote_data_t)){
       /* copy the messege to the adjacent nodes msg queues*/
-      for(slist<CMoteDevice*>::iterator it=adj.begin();it != adj.end();it++){
+      for(MotePtrListIterator it=adj.begin();it != adj.end();it++){
 #ifdef DEBUG
 	char dbg[32];
 	memcpy(dbg, m_data.buf, 32);
@@ -184,9 +191,9 @@ void UpdateAdjList(CMoteDevice* n, CMoteDevice* x)
 /* update adjacency list for each node in G */
 void UpdateGraph(void)
 {
-  for(slist<CMoteDevice*>::iterator i = m_mote_list.begin(); 
+  for( MotePtrListIterator i = m_mote_list.begin(); 
       i != m_mote_list.end(); i++){
-    for(slist<CMoteDevice*>::iterator j = i;
+    for( MotePtrListIterator j = i;
 	j != m_mote_list.end(); j++){
       if(*i != *j){
 	UpdateAdjList(*i, *j);
@@ -210,7 +217,7 @@ void CMoteDevice::OnUiUpdate(RtkUiDrawData *data)
   }
     
   if(data->draw_layer("connectivity", false) && Subscribed()) {
-    for( slist<CMoteDevice*>::iterator ptr = adj.begin(); 
+    for( MotePtrListIterator ptr = adj.begin(); 
 	 ptr != adj.end(); ptr++){
 
     

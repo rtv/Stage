@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.44 2002-06-11 06:58:17 rtv Exp $
+ * CVS: $Id: main.cc,v 1.45 2002-07-04 01:06:02 rtv Exp $
  */
 
 #include <unistd.h>
@@ -65,6 +65,7 @@ void PrintUsage( void )
 	 " -v <float>\tSet the simulated time increment per cycle [0.1sec].\n"
 	 " -u <float>\tSet the desired real time per cycle [0.1 sec].\n"
 	 " -f \t\tRun as fast as possible; don't try to match real time\n"
+	 " -r <IP:port>\tSend sensor data to this address in RTP format\n"
 	 " -l <filename>\tLog some timing and throughput statistics into <filename>.<incremental suffix>\n"
 	 //" -r <IP:port>\tSend sensor data to this address in RTP format\n"
 	 //#ifdef HRL_HEADERS

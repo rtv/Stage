@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.58 2002-06-11 00:10:43 inspectorg Exp $
+ * CVS info: $Id: world.hh,v 1.59 2002-07-04 01:06:02 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -43,6 +43,8 @@
 #include "matrix.hh"
 #include "worldfile.hh"
 
+#include "rtp.h"
+
 #if INCLUDE_RTK2
 #include "rtk.h"
 #define MAX_DEVICE_MENU_ITEMS 32
@@ -58,6 +60,8 @@ class CWorld
   
   // Destructor
   virtual ~CWorld();
+  
+public: CRTPPlayer* rtp_player;
   
   // the main world-model data structure
   public: CMatrix *matrix;
@@ -333,6 +337,7 @@ class CWorld
   // The view menu
   public: rtk_menu_t *view_menu;
   private: rtk_menuitem_t *grid_item;
+  private: rtk_menuitem_t *subscribedonly_item;
 
   // The view/device menu
 public: rtk_menu_t *device_data_menu;

@@ -4,8 +4,6 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <iomanip.h>
-#include <iostream.h>
 #include <math.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -14,13 +12,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strstream.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
+
+#include <sstream>
+#include <iomanip>
+#include <iostream>
+
+using namespace std;
 
 #define DEBUG
 #define VERBOSE

@@ -26,9 +26,9 @@ CRTPPlayer::CRTPPlayer( char* address )
   strcpy( ipstr, address ); 
   strcpy( portstr, colon + 1 );
 
-  printf( "address: %s\n", address );
-   printf( "IPSTR: %s\n", ipstr );
-  printf( "PORTSTR: %s\n", portstr );
+  //printf( "address: %s\n", address );
+  // printf( "IPSTR: %s\n", ipstr );
+  //printf( "PORTSTR: %s\n", portstr );
 
   struct in_addr ip;
   inet_aton( ipstr, &ip );
@@ -36,7 +36,8 @@ CRTPPlayer::CRTPPlayer( char* address )
   int port = atoi( portstr );
   
   
-  printf( "RTPPlayer(char*) created for %s:%d", inet_ntoa(ip), port);
+  //printf( "RTPPlayer(char*) created for %s:%d", inet_ntoa(ip), port);
+  //printf( "[RTP %s:%d]", inet_ntoa(ip), port);
 
   // have to byteswap here
   //ip.s_addr = ntohl( ip.s_addr );
@@ -67,10 +68,10 @@ CRTPPlayer::CRTPPlayer( char* address )
       dest.sin_addr.s_addr = ip.s_addr;//htonl(ip);
       dest.sin_port = htons(port);
 
-      printf( "RTPPlayer(int,int) created for %s:%d", 
-	      inet_ntoa(dest.sin_addr), ntohs(dest.sin_port));
+      //printf( "RTPPlayer(int,int) created for %s:%d", 
+      //      inet_ntoa(dest.sin_addr), ntohs(dest.sin_port));
 
-  printf( "RTPPlayer constructor this %p\n", this );
+      //printf( "RTPPlayer constructor this %p\n", this );
 }
 
 CRTPPlayer::CRTPPlayer( uint32_t ip, uint16_t port )
@@ -98,16 +99,16 @@ CRTPPlayer::CRTPPlayer( uint32_t ip, uint16_t port )
       dest.sin_addr.s_addr = htonl(ip);
       dest.sin_port = htons(port);
 
-      printf( "RTPPlayer(int,int) created for %s:%d", 
-	      inet_ntoa(dest.sin_addr), ntohs(dest.sin_port));
+      //printf( "RTPPlayer(int,int) created for %s:%d", 
+      //      inet_ntoa(dest.sin_addr), ntohs(dest.sin_port));
 
-  printf( "RTPPlayer constructor this %p\n", this );
+      //printf( "RTPPlayer constructor this %p\n", this );
   
  }
 
 void CRTPPlayer::SendData( uint8_t datatype, void *data, int len, uint32_t timestamp )
 {
-  printf( "RTPPlayer send data this %p\n", this );
+  //printf( "RTPPlayer send data this %p\n", this );
 
   // we just change the necessary parts of the header then send the packet
   hdr.ts = htonl(timestamp);
@@ -121,12 +122,12 @@ void CRTPPlayer::SendData( uint8_t datatype, void *data, int len, uint32_t times
   memcpy( buf, &hdr, sizeof( rtp_hdr_t ) );
   memcpy( buf + sizeof(rtp_hdr_t), data, len );
   
-  printf( "RTPPlayer sending %d:%d (%d) bytes to  %s:%d\n",
-	  sizeof( rtp_hdr_t ), 
-	  len, 
-	  buflen,
-	  inet_ntoa(dest.sin_addr), 
-	  ntohs(dest.sin_port) ); 
+  //printf( "RTPPlayer sending %d:%d (%d) bytes to  %s:%d\n",
+  //  sizeof( rtp_hdr_t ), 
+  //  len, 
+  //  buflen,
+  //  inet_ntoa(dest.sin_addr), 
+  //  ntohs(dest.sin_port) ); 
 	  
   sendto( sockfd, buf, buflen, 0, (sockaddr*)&dest, sizeof(dest) );
 };

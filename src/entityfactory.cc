@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.29 $
+//  $Author: rtv $
+//  $Revision: 1.30 $
 //
 // Usage:
 //  (empty)
@@ -67,30 +67,34 @@ char* CWorld::StringFromType( StageType t )
 {
   switch( t )
   {
-    case NullType: return "None"; 
-    case WallType: return "wall"; break;
-    case PlayerType: return "player"; 
-    case MiscType: return "misc"; 
-    case PositionType: return "position"; 
-    case SonarType: return "sonar"; 
-    case LaserTurretType: return "laser"; 
-    case VisionType: return "vision"; 
-    case PtzType: return "ptz"; 
-    case BoxType: return "box"; 
-    case LaserBeaconType: return "laserbeacon"; 
-    case LBDType: return "lbd"; 
-      //REMOVE case VisionBeaconType: return "vision_beacon"; 
-    case GripperType: return "gripper"; 
-    case AudioType: return "audio"; 
-    case BroadcastType: return "broadcast"; 
-    case SpeechType: return "speech"; 
-    case TruthType: return "truth"; 
-    case GpsType: return "gps"; 
-    case PuckType: return "puck"; 
-    case OccupancyType: return "occupancy"; 
-    case IDARType: return "idar";
-    case DescartesType: return "descartes";
-    case BpsType: return "bps";
+  case NullType: return "None"; 
+  case WallType: return "wall"; break;
+  case PlayerType: return "player"; 
+  case MiscType: return "misc"; 
+  case PositionType: return "position"; 
+  case SonarType: return "sonar"; 
+  case LaserTurretType: return "laser"; 
+  case VisionType: return "vision"; 
+  case PtzType: return "ptz"; 
+  case BoxType: return "box"; 
+  case LaserBeaconType: return "laserbeacon"; 
+  case LBDType: return "lbd"; 
+  case GripperType: return "gripper"; 
+  case AudioType: return "audio"; 
+  case BroadcastType: return "broadcast"; 
+  case SpeechType: return "speech"; 
+  case TruthType: return "truth"; 
+  case GpsType: return "gps"; 
+  case PuckType: return "puck"; 
+  case OccupancyType: return "occupancy"; 
+  case IDARType: return "idar";
+  case DescartesType: return "descartes";
+  case BpsType: return "bps";
+  case MoteType: return "mote";
+  case OmniPositionType: return "omnipos";
+    //DEVICE REMOVED
+  case VisionBeaconType: break; //return "vision_beacon"; 
+  case NUMBER_OF_STAGE_TYPES: break;
   }	 
   return( "unknown" );
 }
@@ -127,8 +131,6 @@ CEntity* CWorld::CreateEntity( StageType type, CEntity *parent)
       return new CLaserBeacon(this, parent);
     case LBDType:
       return new CLBDDevice(this, (CLaserDevice*)parent );
-      //REMOVE case VisionBeaconType:
-      //return new CVisionBeacon(this, parent);
     case GripperType:
       return new CGripperDevice(this, parent);
     case GpsType:
@@ -145,11 +147,14 @@ CEntity* CWorld::CreateEntity( StageType type, CEntity *parent)
       return new CTruthDevice(this, parent );
     case BpsType:
       return new CBpsDevice(this, parent);
+    case VisionBeaconType:
+       break; // DEVICE REMOVED // return new CVisionBeacon(this, parent);
     default:
       PRINT_WARN1("unknown type %d", type);
-      return(NULL);
-  }
-
+    }
+  
+  //REMOVE case VisionBeaconType:
+  //return new CVisionBeacon(this, parent);
   // case AudioType:
   // case SpeechType:
   //VBDType // Vision Beacon Detector?
@@ -157,6 +162,8 @@ CEntity* CWorld::CreateEntity( StageType type, CEntity *parent)
   //case DescartesType, // HRL's customized Descartes robot platform
   //case TruthType:
   //case OccupancyType:
+
+  return(NULL);
 }
 
 //////////////////////////////////////////////////////////////////////////

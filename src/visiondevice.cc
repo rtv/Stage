@@ -21,11 +21,12 @@
  * Desc: Device to simulate the ACTS vision system.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 28 Nov 2000
- * CVS info: $Id: visiondevice.cc,v 1.33 2002-06-11 01:54:08 inspectorg Exp $
+ * CVS info: $Id: visiondevice.cc,v 1.34 2002-07-04 01:06:02 rtv Exp $
  */
 
 #include <math.h>
-#include <iostream.h>
+
+#include <iostream>
 
 #include "world.hh"
 #include "visiondevice.hh"

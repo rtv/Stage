@@ -21,13 +21,12 @@
  * Desc: This class implements the server, or main, instance of Stage.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 6 Jun 2002
- * CVS info: $Id: server.cc,v 1.20 2002-06-11 06:48:15 rtv Exp $
+ * CVS info: $Id: server.cc,v 1.21 2002-07-04 01:06:02 rtv Exp $
  */
 
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <iomanip.h>
 #include <math.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -37,7 +36,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strstream.h>
 #include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -47,6 +45,12 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+
+//using namespace std;
 //#define DEBUG
 //#define VERBOSE
 
@@ -453,9 +457,9 @@ bool CStageServer::SetupConnectionServer( void )
   if( bind(m_pose_listen.fd, (SA *) &servaddr, sizeof(servaddr) )  < 0 )
   {
     perror("CStageServer::SetupConnectionServer()");
-    cout << "Port " << m_port 
+    std::cout << "Port " << m_port 
          << " is in use. Quitting (but try again in a few seconds)." 
-         <<endl;
+         << std::endl;
     exit( -1 );
   }
   

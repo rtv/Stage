@@ -21,32 +21,32 @@
  * Desc: Player device; doesnt do much anymore.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: playerdevice.cc,v 1.31 2002-06-09 00:33:02 inspectorg Exp $
+ * CVS info: $Id: playerdevice.cc,v 1.32 2002-07-04 01:06:02 rtv Exp $
  */
 
 #include <errno.h>
 #include <fcntl.h>
-#include <iomanip.h>
-#include <iostream.h>
 #include <math.h>
 #include <netinet/in.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strstream.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <iomanip.h>
 #include <sys/mman.h>
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
+
+#include <sstream>
+#include <iomanip>
+#include <iostream>
 
 #include <stage.h>
 #include "world.hh"

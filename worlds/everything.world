@@ -1,33 +1,12 @@
 
-# Desc: Test world file containing examples of everything.
+# Desc: Test world file containing examples of pretty much every entity, 
+#       showing how to include some pre-defined objects
 # Author: Andrew Howard, Richard Vaughan
 # Date: 4 Jun 2002
-# CVS: $Id: everything.world,v 1.1 2002-06-11 07:03:58 gerkey Exp $
+# CVS: $Id: everything.world,v 1.2 2002-07-04 01:06:02 rtv Exp $
 
-include "pioneer.inc"
-
-define visionbeacon box 
-(
-  shape "circle" 
-  size [0.2 0.2] 
-  color "red"
-)
-
-define usc_robot position
-(
-  truth () 
-  p2dx_sonar () 
-  misc () 
-  bps () 
-  gps ()  
-  broadcast ()
-  gripper ( pose [.20 0 0] consume "true" )
-  laser 
-  (
-    lbd () 
-    ptz ( lens "wide" vision())
-  )
-)
+include "usc_pioneer.inc"
+include "objects.inc"
 
 environment
 (
@@ -37,28 +16,28 @@ environment
 
 gui
 (
-  size [578.000 541.000]
-  origin [8.292 7.867]
-  scale 0.031
+  size [810.000 753.000]
+  origin [8.188 7.438]
+  scale 0.021
   grid [0.2 1]
   showgrid 1
 )
 
-usc_robot (name "robot1" port 6665 pose [4.481 1.559 0])
-usc_robot (name "robot2" port 6666 pose [5.278 3.221 0.000])
+usc_pioneer(color "red" name "robot1" port 6665 pose [3.195 1.237 51.586 ])
+usc_pioneer(color "green" name "robot2" port 6666 pose [3.984 7.859 -2.915 ])
+usc_pioneer(color "blue" name "robot3" port 6667 pose [7.950 1.381 89.451])
 
 laserbeacon( pose [6.420 3.600 216.861] id 5 )
 laserbeacon( pose [3.040 4.260 -88.274] id 7 )
 
-visionbeacon( pose [6.010 1.442 0.000] color "green" )
-visionbeacon( pose [6.012 1.006 0.000] color "blue" )
-visionbeacon( pose [6.022 1.862 0.000] color "red" )
+visionbeacon( pose [3.679 1.813 0.000] color "green" )
+visionbeacon( pose [3.949 1.542 0.000] color "blue" )
+visionbeacon( pose [3.331 1.952 0.000] color "red" )
 
-puck( pose [8.910 1.712 0.000] color "red" )
-puck( pose [8.072 1.306 0.000] color "red" )
-puck( pose [8.862 1.412 0.000] color "red" )
-puck( pose [8.172 1.562 0.000] color "red" )
-puck( pose [8.682 2.042 0.000] color "red" )
-puck( pose [8.922 2.102 0.000] color "red" )
-puck( pose [8.382 1.682 0.000] color "red" )
-puck( pose [7.962 1.982 0.000] color "red" )
+red_puck( pose [5.596 7.866 0.000] )
+red_puck( pose [4.612 7.890 0.000] )
+red_puck( pose [4.809 7.586 0.000] )
+red_puck( pose [4.845 8.190 0.000] )
+red_puck( pose [5.229 8.580 0.000] )
+red_puck( pose [5.205 7.252 0.000] )
+red_puck( pose [5.198 7.841 0.000] )

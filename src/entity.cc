@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.68 2002-06-11 03:31:18 inspectorg Exp $
+ * CVS info: $Id: entity.cc,v 1.69 2002-07-04 01:06:02 rtv Exp $
  */
 
 #include <math.h>
@@ -30,7 +30,6 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <iostream.h>
 #include <values.h>  // for MAXFLOAT
 #include <sys/mman.h>
 #include <sys/types.h>
@@ -38,6 +37,9 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/file.h>
+
+#include <iostream>
+
 
 //#define DEBUG
 //#define VERBOSE
@@ -504,14 +506,16 @@ void CEntity::MapEx(double px, double py, double pth, bool render)
   double sy = this->size_y;
 
   switch (this->shape)
-  {
+    {
     case ShapeRect:
       m_world->SetRectangle(qx, qy, qth, sx, sy, this, render);
       break;
     case ShapeCircle:
       m_world->SetCircle(qx, qy, sx / 2, this, render);
       break;
-  }
+    case ShapeNone:
+      break;
+    }
 }
 
 
@@ -555,6 +559,8 @@ CEntity *CEntity::TestCollision(double px, double py, double pth)
       }
       return NULL;
     }
+  case ShapeNone:
+    break;
   }
   return NULL;
 }
@@ -603,6 +609,8 @@ CEntity *CEntity::TestCollision(double px, double py, double pth,
       }
       return NULL;
     }
+  case ShapeNone: // handle the null case
+      break;
   }
   return NULL;
 
@@ -772,7 +780,6 @@ void CEntity::AnnounceDataViaRTP( void* data, size_t len )
       break;
     }
   }
-  assert( header.id != 0 );
   
   header.x = x;
   header.y = y;
@@ -788,11 +795,11 @@ void CEntity::AnnounceDataViaRTP( void* data, size_t len )
   //printf( "sending %d degrees\n", header.th );
 
   // timestamp is in milliseconds
-  /*
+  
   uint32_t ms = 
     m_info_io->data_timestamp_sec * 1000 + 
     m_info_io->data_timestamp_usec / 1000;
-    */
+   
   
   header.len = len;
   
@@ -802,11 +809,11 @@ void CEntity::AnnounceDataViaRTP( void* data, size_t len )
   memcpy( buf, &header, sizeof(header) );
   memcpy( buf+sizeof(header), data, len );
   
-  printf( "CEntity sending %d:%d (%d) bytes\n",
-          sizeof( device_hdr_t ), 
-          len, buflen );
+  //printf( "CEntity sending %d:%d (%d) bytes\n",
+  //      sizeof( device_hdr_t ), 
+  //      len, buflen );
   
-  //m_world->rtp_player->SendData( 0, buf, buflen, ms );
+  m_world->rtp_player->SendData( 0, buf, buflen, ms );
   
   delete[] buf;
 }
@@ -905,6 +912,9 @@ size_t CEntity::PutData( void* data, size_t len )
   // tell the server to export this data to anyone that needs it
   this->SetDirty( PropData, 1 );
     
+  if( m_world->rtp_player )
+    this->AnnounceDataViaRTP( data, len );
+
   // copy the data into the mmapped data buffer.
   // also set the timestamp and available fields for the data
   return PutIOData( (void*)m_data_io, m_data_len,
@@ -1010,6 +1020,8 @@ int CEntity::Subscribed()
 //// subscribe to the device (used by other devices that depend on this one)
 void CEntity::Subscribe() 
 {
+  //puts( "SUB" );
+
   Lock();
   m_info_io->subscribed++;
   Unlock();
@@ -1019,6 +1031,8 @@ void CEntity::Subscribe()
 // unsubscribe from the device (used by other devices that depend on this one)
 void CEntity::Unsubscribe()
 { 
+  //puts( "UNSUB" );
+
   Lock();
   m_info_io->subscribed--;
   Unlock();
@@ -1413,14 +1427,16 @@ void CEntity::RtkStartup()
   
   switch (this->shape)
   {
-    case ShapeRect:
-      rtk_fig_rectangle(this->fig, qx, qy, 0, sx, sy, false);
-      break;
-    case ShapeCircle:
-      rtk_fig_ellipse(this->fig, qx, qy, 0, sx, sx, false);
-      break;
+  case ShapeRect:
+    rtk_fig_rectangle(this->fig, qx, qy, 0, sx, sy, false);
+    break;
+  case ShapeCircle:
+    rtk_fig_ellipse(this->fig, qx, qy, 0, sx, sx, false);
+    break;
+  case ShapeNone: // no shape
+    break;
   }
-
+  
   // Create the label
   // By default, the label is not shown
   this->fig_label = rtk_fig_create(m_world->canvas, this->fig, 51);

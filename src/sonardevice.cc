@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.28 2002-06-11 06:06:29 inspectorg Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.29 2002-07-04 01:06:02 rtv Exp $
  */
 
 #include <math.h>
@@ -255,12 +255,16 @@ void CSonarDevice::RtkUpdate()
         
 	// convert from integer mm to double m
         double range = (double)ntohs(data.ranges[s]) / 1000.0;
-	
-        double x1 = ox;
-        double y1 = oy;
-        double x2 = x1 + range * cos(oth); 
-        double y2 = y1 + range * sin(oth);       
-        rtk_fig_line(this->scan_fig, x1, y1, x2, y2 );
+
+	//if( range < max_range )
+	  {
+	    double x1 = ox;
+	    double y1 = oy;
+	    double x2 = x1 + range * cos(oth); 
+	    double y2 = y1 + range * sin(oth);       
+	    
+	    rtk_fig_line(this->scan_fig, x1, y1, x2, y2 );
+	  }
       }
     }
     else

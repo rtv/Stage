@@ -1,6 +1,8 @@
 
 # Desc: 1 robot with player, laser, sonar and gps
-# CVS: $Id: simple.world,v 1.1 2002-06-11 07:03:58 gerkey Exp $
+# CVS: $Id: simple.world,v 1.2 2002-07-04 01:06:02 rtv Exp $
+
+include "pioneer.inc"
 
 environment
 (
@@ -14,7 +16,7 @@ position
   port 6665 
   pose [1.0 1.0 0.0] 
   player()
-  sonar()
+  p2dx_sonar()
   laser()
 ) 
 

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
-//  $Author: inspectorg $
-//  $Revision: 1.15 $
+//  $Author: rtv $
+//  $Revision: 1.16 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -35,6 +35,8 @@ CFixedObstacle::CFixedObstacle(CWorld *world, CEntity *parent)
   vision_return = true;
   laser_return = LaserVisible;
   sonar_return = true;
+  //laser_return = LaserTransparent;
+  //sonar_return = false;
   obstacle_return = true;
   puck_return = false; // we trade velocities with pucks
   idar_return = IDARReflect;

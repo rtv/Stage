@@ -1,11 +1,11 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.cc,v 1.12 2002-06-04 06:35:07 rtv Exp $
+ * $Id: matrix.cc,v 1.13 2002-07-04 01:06:02 rtv Exp $
  ************************************************************************/
 
 #include <math.h>
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+#include <fstream>
 
 //#if INCLUDE_ZLIB
 //#include <zlib.h>
@@ -63,7 +63,7 @@ CMatrix::~CMatrix(void)
 // useful debug function allows plotting the world externally
 void CMatrix::dump( void )
 {
-  ofstream out( "world.dump" );
+  std::ofstream out( "world.dump" );
   
   for( int y=0; y<height; y++ )
   {
@@ -76,7 +76,7 @@ void CMatrix::dump( void )
       if( *ent )
 	    {   
 	      out << x << ' ' << y;
-	      out << ' ' << (int)*ent << endl;
+	      out << ' ' << (int)*ent << std::endl;
 	    }
     }
   }
@@ -249,7 +249,6 @@ void CMatrix::draw_line(int x1,int y1,int x2,int y2, CEntity* ent, bool add)
 
 void CMatrix::clear( void )
 {
-  //cout << "Clear: " << data << ',' << ent << ',' << width*height << endl;
   memset(this->data,0,width*height*sizeof(CEntity**));
   memset(this->used_slots,0,width*height*sizeof(this->used_slots[0])); 
 }

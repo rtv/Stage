@@ -2,7 +2,7 @@
 #define MOTEDEVICE_HH 
 
 #include "entity.hh"
-#include <slist.h>
+#include <list>
 
 /* useful macros */
 /* change to cm (or hundredths of whatever units were in) */
@@ -59,7 +59,7 @@ class CMoteDevice : public CEntity
     private: uint8_t q_size;
   
     /* list of neighbors stuff */
-    public: slist<CMoteDevice*> adj;
+    public: std::list<CMoteDevice*> adj;
 
     /* graph stuff */
     protected: char color;
