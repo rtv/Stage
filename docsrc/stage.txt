@@ -1,10 +1,10 @@
 /* Stage plugin documentation file - parsed by Doxygen for the user
  * manual 
- * $Id: stage.txt,v 1.2 2004-10-19 07:11:35 rtv Exp $
+ * $Id: stage.txt,v 1.3 2004-11-10 08:19:34 rtv Exp $
 */
 
 /**
-@mainpage Stage (libstageplugin)
+@mainpage Stage - a robot simulator plugin for Player
 
 Stage is a robot simulator that works with the Player robot server. It
 provides a virtual world populated by mobile robots and sensors, along
@@ -78,7 +78,7 @@ Noise Hypothesis", Adaptive Behavior XX XX
 [5] Stuart Wilson "Knowledge Growth in an Artificial Animal", XX XXX XX
 
 <hr>
-Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: stage.txt,v 1.2 2004-10-19 07:11:35 rtv Exp $
+Richard Vaughan <tt>(vaughan@sfu.ca)</tt> \$Id: stage.txt,v 1.3 2004-11-10 08:19:34 rtv Exp $
 
 </small>
 

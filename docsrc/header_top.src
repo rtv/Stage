@@ -2,7 +2,7 @@
    "http://www.w3.org/TR/html4/strict.dtd">
 
 <html>
-<!-- $Id: header_top.src,v 1.2 2004-10-19 07:11:35 rtv Exp $ -->
+<!-- $Id: header_top.src,v 1.3 2004-11-10 08:19:34 rtv Exp $ -->
 
 <HEAD>
 
@@ -115,8 +115,10 @@ Stage User Manual v2.0
 
 <div id="sidebar"> 
 
-<h2 align=center><div class=stage>Stage</div>User Guide<br>v2.0</h2>
 
+<h2 align=center><div class=stage>Stage</div>User Guide<br>v2.0</h2>
+<!-- <p align=center><img src="../notext_ps_logo.jpg" alt="P/S logo"></p> -->
+<p align=center><img src="../stage_snip.tiff" alt="P/S logo"></p>
 
 <div class="box">
 <div class=title>Manual</div>
