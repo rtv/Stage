@@ -1,6 +1,6 @@
 dnl -----------------------------------------------------------------------
 dnl Stage Autoconf script
-dnl $Id: configure.in,v 1.46 2003-08-19 22:17:25 rtv Exp $
+dnl $Id: configure.in,v 1.47 2003-08-21 00:41:08 rtv Exp $
 dnl -----------------------------------------------------------------------
 
 dnl Process this file with autoconf to produce a configure script.
@@ -68,6 +68,10 @@ AC_CHECK_LIB(m, isinf)
 dnl build mplementations of these in libreplace.a if these are 
 dnl missing
 AC_REPLACE_FUNCS(poll dirname scandir)
+
+dnl add prefix to the pkg-config path in case RTK was installed there
+dnl and the  user didn't add it manually
+export PKG_CONFIG_PATH=$prefix/lib/pkgconfig:$PKG_CONFIG_PATH
 
 PKG_CHECK_MODULES(RTK, librtk2 >= 2.2,
 AC_DEFINE(INCLUDE_RTK2,1,[building RTK GUI]),
