@@ -1,0 +1,24 @@
+
+set environment_file  = SAL2.pnm
+set pixels_per_meter =  20
+
+create bitmap pose 0 0 0 file SAL2.pnm ppm 20
+# create bit_obstacle file SAL2.pnm ppm 20
+
+create box_obstacle pose 10 10 45 size 1 0.5
+create box_obstacle pose 10 10 45 size 2 0.5
+
+create usc_pioneer pose 5 5 0 name atom port 6665
+{
+    create laser_beacon pose -0.25 0 0
+}
+
+create usc_pioneer pose 6 5 0 name comet port 6666
+
+create box_obstacle pose 0 0 0 size 2 1 
+{
+    create box_obstacle pose 0.5 1 0 size 1 1 
+}
+
+
+
