@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.105 2002-06-11 06:50:23 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.106 2002-06-11 06:58:17 rtv Exp $
  */
 
 //#undef DEBUG
@@ -107,8 +107,8 @@ CWorld::CWorld( int argc, char** argv )
 
   //rtp_player = NULL;
 
-  m_log_output = false;
-  m_console_output = true;
+  m_log_output = false; // enable with -l <filename>
+  m_console_output = false; // enable with -o
     
   // real time mode by default
   // if real_timestep is zero, we run as fast as possible
@@ -276,9 +276,9 @@ bool CWorld::ParseCmdLine(int argc, char **argv)
     }
       
     // DISABLE console output
-    if( strcmp( argv[a], "-q" ) == 0 )
+    if( strcmp( argv[a], "-o" ) == 0 )
     {
-      m_console_output = false;
+      m_console_output = true;
       printf( "[Quiet]" );
     }
       
@@ -655,10 +655,11 @@ void CWorld::Output( double loop_duration, double sleep_duration )
     bytes = 0;
   }
 
-  ConsoleOutput( freq, loop_duration, sleep_duration, 
-               avg_loop_duration, avg_sleep_duration,
-               bytes_in, bytes_out, bandw );
-
+  if( m_console_output )
+    ConsoleOutput( freq, loop_duration, sleep_duration, 
+		   avg_loop_duration, avg_sleep_duration,
+		   bytes_in, bytes_out, bandw );
+  
   
   if( m_log_output ) 
     LogOutput( freq, loop_duration, sleep_duration, 

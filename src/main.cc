@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.43 2002-06-11 06:48:15 rtv Exp $
+ * CVS: $Id: main.cc,v 1.44 2002-06-11 06:58:17 rtv Exp $
  */
 
 #include <unistd.h>
@@ -61,7 +61,7 @@ void PrintUsage( void )
 	 " -cl\t\tRun as a client to a Stage server on localhost\n"
 	 " -g\t\tDo not start the X11 GUI\n"
 	 " -n \t\tDo not start Player\n"
-	 " -q\t\tDisable console status output\n"
+	 " -o\t\tEnable console status output\n"
 	 " -v <float>\tSet the simulated time increment per cycle [0.1sec].\n"
 	 " -u <float>\tSet the desired real time per cycle [0.1 sec].\n"
 	 " -f \t\tRun as fast as possible; don't try to match real time\n"
