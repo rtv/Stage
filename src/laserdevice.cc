@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.11.2.25 $
+//  $Revision: 1.11.2.26 $
 //
 // Usage:
 //  (empty)
@@ -24,10 +24,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-#define ENABLE_RTK_TRACE 1
-
 #include <stage.h>
-#include <math.h> // RTV - RH-7.0 compiler needs explicit declarations
+#include <math.h>
 #include "world.hh"
 #include "laserdevice.hh"
 
@@ -52,7 +50,7 @@ CLaserDevice::CLaserDevice(CWorld *world, CEntity *parent, CPlayerServer* server
     m_scan_min = DTOR(-90);
     m_scan_max = DTOR(+90);
     m_scan_count = 361;
-    m_intensity = false;
+    m_intensity = true;
   
     m_max_range = 8.0;
 
@@ -79,7 +77,7 @@ void CLaserDevice::Update()
 {
     ASSERT(m_server != NULL);
     ASSERT(m_world != NULL);
-
+    
     // Undraw ourselves from the world
     //
     Map(false);
@@ -105,6 +103,17 @@ void CLaserDevice::Update()
             GenerateScanData(&data);
             PutData(&data, sizeof(data));
         }
+    }
+    else
+    {
+        // If not subscribed,
+        // reset configuration to default.
+        //
+        m_scan_res = DTOR(0.50);
+        m_scan_min = DTOR(-90);
+        m_scan_max = DTOR(+90);
+        m_scan_count = 361;
+        m_intensity = true;
     }
 
     // Redraw outselves in the world
@@ -184,6 +193,14 @@ bool CLaserDevice::GenerateScanData(player_laser_data_t *data)
     double dr = 1.0 / m_world->ppm;
     double max_range = m_max_range;
 
+    // See how many scan readings to interpolate.
+    // To save time generating laser scans, we can
+    // generate a scan with lower resolution and interpolate
+    // the intermediate values.
+    // We will interpolate <skip> out of <skip+1> readings.
+    //
+    int skip = (int) (m_world->m_laser_res / m_scan_res - 0.5);
+
 #ifdef INCLUDE_RTK
     // Initialise gui data
     //
@@ -207,7 +224,7 @@ bool CLaserDevice::GenerateScanData(player_laser_data_t *data)
         
     // Do each scan
     //
-    for (int s = 0; s < m_scan_count; s++)
+    for (int s = 0; s < m_scan_count;)
     {
         int intensity = 0;
         double range = 0;
@@ -259,7 +276,12 @@ bool CLaserDevice::GenerateScanData(player_laser_data_t *data)
         
         // Set the range
         //
-        data->ranges[s] = htons(v);
+        data->ranges[s++] = htons(v);
+
+        // Skip some values to save time
+        //
+        for (int i = 0; i < skip && s < m_scan_count; i++)
+            data->ranges[s++] = htons(v);
 
 #ifdef INCLUDE_RTK
         // Update the gui data

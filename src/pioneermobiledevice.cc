@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/pioneermobiledevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.9.2.21 $
+//  $Revision: 1.9.2.22 $
 //
 // Usage:
 //  (empty)
@@ -76,7 +76,11 @@ CPioneerMobileDevice::CPioneerMobileDevice(CWorld *world, CEntity *parent, CPlay
 //
 void CPioneerMobileDevice::Update()
 {
-    //RTK_TRACE0("updating CPioneerMobileDevice");
+    // If the device is not subscribed,
+    // reset to default settings.
+    //
+    if (!IsSubscribed())
+        m_odo_px = m_odo_py = m_odo_pth = 0;
     
     // Get the latest command
     //

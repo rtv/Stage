@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world_load.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -130,6 +130,8 @@ bool CWorld::Load(const char *filename)
                 strcpy(m_env_file, argv[3]);
             else if (strcmp(argv[1], "pixels_per_meter") == 0)
                 ppm = atof(argv[3]);
+            else if (strcmp(argv[1], "laser_res") == 0)
+                m_laser_res = DTOR(atof(argv[3]));
             else
                 printf("line %d : variable %s is not defined\n",
                        (int) linecount, (char*) argv[1]);  

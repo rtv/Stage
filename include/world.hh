@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.23 $
+//  $Revision: 1.1.2.24 $
 //
 // Usage:
 //  (empty)
@@ -252,6 +252,15 @@ class CWorld
     //
     private: Nimage *m_vision_img;
 
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Configuration variables
+
+    // Resolution at which to generate laser data
+    //
+    public: double m_laser_res;
+    
+    
     ///////////////////////////////////////////////////////
     // old stuff here -- ahoward
     // some of these are no longer used.

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.32 $
+//  $Revision: 1.4.2.33 $
 //
 // Usage:
 //  (empty)
@@ -62,6 +62,10 @@ CWorld::CWorld()
     //
     m_start_time = m_sim_time = 0;
 
+    // Initialise configuration variables
+    //
+    m_laser_res = 0;
+    
     memset(m_env_file, 0, sizeof(m_env_file));
 }
 
@@ -116,7 +120,7 @@ bool CWorld::Startup()
     //
     m_update_ratio = 1;
     m_update_rate = 0;
-
+    
     // Initialise the message router
     //
 #ifdef INCLUDE_RTK
