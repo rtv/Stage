@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.common,v 1.30 2001-12-31 17:21:26 inspectorg Exp $ 
+# $Id: Makefile.common,v 1.31 2002-01-25 23:21:03 rtv Exp $ 
 #
 
 # INSTALL PLAYER BEFORE BUILDING STAGE!
@@ -7,8 +7,6 @@
 ##############################################################################
 # CONFIGURATION
 
-#HRL = /home/vaughan/LINPHERO/pr_c++/com/hrl/pr
-#HRL_HEADERS = -I$(HRL)/pherobot -I$(HRL)/abstractrobot
 
 ##############################################################################
 # VERSIONS
@@ -23,27 +21,15 @@ VERSION = 1.2
 # set the absolute path of your Player installation or source tree
 
 # define which version of Player you will use to build from
-# this line will use the same version number as stage, which is a good guess
-# PLAYERVERSION = $(VERSION)
-
-PLAYERVERSION = $(VERSION)
+# this is often the same as stage's version number:
+PLAYER_VERSION = $(VERSION)
 
 # this is Player's default location - probably a good guess:
-# PLAYER_DIR = /usr/local/player-$(PLAYERVERSION)
-# this is good if you have a symlink to your current version:
-# PLAYER_DIR = /usr/local/player
-# You can also specify the PLAYER_BASE from the make command line, eg:
-# make -e PLAYER_BASE=~/playerstage/player
+PLAYER_BASE = $(HOME)/player
 
-PLAYER_BASE = /usr/local/player
-PLAYER_DIR = $(PLAYER_BASE)-$(PLAYERVERSION)
+PLAYER_DIR = $(PLAYER_BASE)-$(PLAYER_VERSION)
 PLAYER_INC=$(PLAYER_DIR)/include
 PLAYER_LIB=$(PLAYER_DIR)/lib
-
-# Richard - do not use these : you fuck everyone else up.
-# Use this: make -e PLAYER_BASE=~/$HOME/PS/player <whatever>
-#PLAYER_BASE = $(HOME)/PS/player
-#PLAYER_DIR = $(PLAYER_BASE)
 
 ##############################################################################
 # Color datbase configuration (required)
@@ -61,7 +47,7 @@ COLOR_DATABASE = /usr/X11R6/lib/X11/rgb.txt
 # You can also specify the INSTALL_BASE from the make command line, eg:
 # make install -e INSTALL_BASE=~/playerstage/stage
 
-INSTALL_BASE = /usr/local/stage
+INSTALL_BASE = $(HOME)/stage
 INSTALL_DIR = $(INSTALL_BASE)-$(VERSION)
 
 # Rtk configuration files will be installed here
@@ -95,9 +81,16 @@ ZLIB_LIBS = -lz
 #     compat-libstdc++-6.2-2.9.0.14
 #     compat-egcs-6.2-1.1.2.14
 CC = g++
+
 #CC = i386-glibc21-linux-g++
 # need this in order to link properly with X
 #OLDLIBS = -L/usr/i386-glibc21-linux/lib
+
+
+## CONFIGURATION FOR HRL PROPRIETARY CODE ###################################
+
+#HRL = $(HOME)/LINPHERO/pr_c++/com/hrl/pr
+#HRL_HEADERS = -I$(HRL)/pherobot -I$(HRL)/abstractrobot
 
 ####################### DO NOT CHANGE BELOW HERE #############################
 PLAYER_INC = $(PLAYER_DIR)/include
@@ -110,6 +103,7 @@ LINKER = $(CC)
 MAKEDEP = makedepend
 CP = cp
 RM = rm
+
 
 
 
