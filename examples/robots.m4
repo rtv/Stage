@@ -15,6 +15,7 @@ create position_device pose $1 $2 $3 port $4 shape circle
     create vision_device port $4
   }
   create gripper_device pose 0.20 0 0 port $4
+  create gps_device pose 0 0 0 port $4
 }
 ')
 

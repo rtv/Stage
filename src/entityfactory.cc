@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/entityfactory.cc,v $
 //  $Author: gerkey $
-//  $Revision: 1.7 $
+//  $Revision: 1.8 $
 //
 // Usage:
 //  (empty)
@@ -39,6 +39,7 @@
 #include "sonardevice.hh"
 #include "ptzdevice.hh"
 #include "visiondevice.hh"
+#include "gpsdevice.hh"
 
 /////////////////////////////////////////////////////////////////////////
 // Create an object given a type
@@ -59,6 +60,11 @@ CEntity* CreateObject(const char *type, CWorld *world, CEntity *parent)
     //
     if (strcmp(type, "movable_object") == 0)
         return new CPuck(world, parent);
+    
+    // Create a GPS receiver
+    //
+    if (strcmp(type, "gps_device") == 0)
+        return new CGpsDevice(world, parent,NULL);
     
     // Create gripper
     //
