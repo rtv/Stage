@@ -21,7 +21,7 @@
  * Desc: Program Entry point
  * Author: Andrew Howard
  * Date: 12 Mar 2001
- * CVS: $Id: main.cc,v 1.46 2002-07-05 23:32:02 rtv Exp $
+ * CVS: $Id: main.cc,v 1.47 2002-07-09 03:31:56 rtv Exp $
  */
 
 #include <unistd.h>
@@ -171,7 +171,5 @@ int main(int argc, char **argv)
   // clean up and exit
   StageQuit();
 }
-
-
 
 

@@ -1,6 +1,6 @@
 // ==================================================================
 // Filename:	raytrace.cc
-// $Id: raytrace.cc,v 1.8 2002-02-09 03:37:47 rtv Exp $
+// $Id: raytrace.cc,v 1.9 2002-07-09 03:31:56 rtv Exp $
 // RTV
 // ==================================================================
 
@@ -87,7 +87,7 @@ inline CEntity** CLineIterator::RayTrace( double &px, double &py, double pth,
   //printf( "Ray from %.2f,%.2f angle: %.2f remaining_range %.2f\n", 
   //  px, py, RTOD(pth), remaining_range );
   
-  // hops along each axis
+  // hops along each axis 1 cell at a time
   double cospth = cos( pth );
   double sinpth = sin( pth );
   

@@ -21,7 +21,7 @@
  * Desc: Base class for every moveable entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.70 2002-07-05 23:32:02 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.71 2002-07-09 03:31:56 rtv Exp $
  */
 
 #include <math.h>
@@ -1478,55 +1478,64 @@ void CEntity::RtkShutdown()
 // Update the rtk gui
 void CEntity::RtkUpdate()
 {
-  // We need to handle mouse dragging by the user.
-  // We can only move top-level entitys.
-  // Do the test here, since some entitys (eg pucks) may
-  // change their parents.
-  if (m_parent_entity != NULL)
-    rtk_fig_movemask(this->fig, 0);
-  else
-    rtk_fig_movemask(this->fig, this->movemask);
-
-  // Make sure the entity and the figure have the same pose.
-  // Either update the pose of the entity in the world,
-  // or update the pose of the figure in the GUI.
-  
-  // we'll test the GUI first, because user moves take precedence over
-  // simulation moves
-
-  double gx, gy, gth;
-  rtk_fig_get_origin(this->fig, &gx, &gy, &gth);
-  
-  // if the GUI has moved the figure, we move the entity to match
-  if( gx != this->guix || gy != this->guiy || gth != this->guia )
+  // if we're not looking at this device, hide it 
+  if( !m_world->ShowDeviceBody( this->stage_type) )
     {
-      this->guix = gx;
-      this->guiy = gy;
-      this->guia = gth;
-      
-      SetGlobalPose(gx, gy, gth);
+      rtk_fig_show(this->fig, false);
     }
-  else // if we've moved the entity, move the figure to match
-    { 
-      GetGlobalPose(gx, gy, gth);
+  else // we need to show and update this figure
+    {
+      //rtk_fig_show( this->fig, true );
+
+      // We need to handle mouse dragging by the user.
+      // We can only move top-level entitys.
+      // Do the test here, since some entitys (eg pucks) may
+      // change their parents.
+      if (m_parent_entity != NULL)
+	rtk_fig_movemask(this->fig, 0);
+      else
+	rtk_fig_movemask(this->fig, this->movemask);
       
+      // Make sure the entity and the figure have the same pose.
+      // Either update the pose of the entity in the world,
+      // or update the pose of the figure in the GUI.
+      
+      // we'll test the GUI first, because user moves take precedence over
+      // simulation moves
+      
+      double gx, gy, gth;
+      rtk_fig_get_origin(this->fig, &gx, &gy, &gth);
+      
+      // if the GUI has moved the figure, we move the entity to match
       if( gx != this->guix || gy != this->guiy || gth != this->guia )
 	{
 	  this->guix = gx;
 	  this->guiy = gy;
 	  this->guia = gth;
 	  
-	  rtk_fig_origin(this->fig, gx, gy, gth);
+	  SetGlobalPose(gx, gy, gth);
 	}
+      else // if we've moved the entity, move the figure to match
+	{ 
+	  GetGlobalPose(gx, gy, gth);
+	  
+	  if( gx != this->guix || gy != this->guiy || gth != this->guia )
+	    {
+	      this->guix = gx;
+	      this->guiy = gy;
+	      this->guia = gth;
+	      
+	      rtk_fig_origin(this->fig, gx, gy, gth);
+	    }
+	}
+      
+      // Show the figure's label if it is selected
+      if (rtk_fig_mouse_over(this->fig))
+	rtk_fig_show(this->fig_label, true);
+      else
+	rtk_fig_show(this->fig_label, false);    
     }
-
-  // Show the figure's label if it is selected
-  if (rtk_fig_mouse_over(this->fig))
-    rtk_fig_show(this->fig_label, true);
-  else
-    rtk_fig_show(this->fig_label, false);    
 }
-
 #endif
 
 

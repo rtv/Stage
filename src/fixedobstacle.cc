@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/fixedobstacle.cc,v $
 //  $Author: rtv $
-//  $Revision: 1.16 $
+//  $Revision: 1.17 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -123,11 +123,65 @@ bool CFixedObstacle::Load(CWorldFile *worldfile, int section)
 }
 
 
+bool ColorInRectangle( Nimage* image, uint8_t color, int x1, int y1, int x2, int y2 )
+{
+  // look in the rectangle for a pixel this color
+  for( int p=x1; p<x2; p++ )
+    for( int q=y1; q<y2; q++ )
+      if( image->get_pixel( p, q ) == color ) return true; // found one!
+ 
+  // we didn't find a pixel that color
+  return false;
+}
+
+
+long int rects = 0;
+
+void CFixedObstacle::BuildQuadTree( uint8_t color, int x1, int y1, int x2, int y2 )
+{
+  //printf( "QT: %d  %d,%d %d,%d\n", color, x1,y1,x2,y2 );
+  
+  if( ColorInRectangle( this->image, color, x1, y1, x2, y2 ) )
+    {
+      int width = x2-x1;
+      int height = y2-y1;
+
+      // split the rectangle along its longest axis
+      if( width > height )
+	{
+	  if( width <= 1 ) return;
+
+	  int xsplit = x1 + (x2-x1)/2;
+	  BuildQuadTree( color, x1, y1, xsplit, y2 );
+	  BuildQuadTree( color, xsplit, y1, x2, y2 );	  
+	}
+      else
+	{
+	  if( height <=1 ) return;
+
+	  int ysplit = y1 + (y2-y1)/2;
+	  BuildQuadTree( color, x1, y1, x2, ysplit );
+	  BuildQuadTree( color, x1, ysplit, x2, y2 );	  	  
+	}
+    }
+  else     // add this rect to the figure
+    {
+      double width = (double)(x2-x1) * this->scale;
+      double height =  (double)(y2-y1) * this->scale;
+      double px = (double)x1 * this->scale + width/2.0;
+      double py = (double)(this->image->height - y1) * this->scale - height/2.0;
+
+      //printf( "rect: %.2f,%.2f  %.2f,%.2f\n", px, py, width, height );
+      
+      // create a rectangle 
+      rtk_fig_rectangle( this->fig, px, py, 0.0, width, height, false);
+     	
+      rects++;
+    }
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // Initialise object
-// Create a new wall object from the pnm file
-// If we cant find it under the given name,
-// we look for a zipped version.
 bool CFixedObstacle::Startup()
 {
   if (!CEntity::Startup())
@@ -140,48 +194,115 @@ bool CFixedObstacle::Startup()
   this->GetGlobalPose(ox, oy, oth);
   double sx = this->scale;
   double sy = this->scale;
-  for (int y = 0; y < this->image->height; y++)
-  {
-    for (int x = 0; x < this->image->width; x++)
-    {
-      if (this->image->get_pixel(x, y) == 0)
-        continue;
-      double lx = x * sx;
-      double ly = (this->image->height - y) * sy;
-      double px = ox + lx * cos(oth) - ly * sin(oth);
-      double py = oy + lx * sin(oth) + ly * cos(oth);
-      if (px < this->crop_ax || px > this->crop_bx)
-        continue;
-      if (py < this->crop_ay || py > this->crop_by)
-        continue;
-      m_world->SetRectangle(px, py, oth, sx, sy, this, true);
-    }
-  }
 
+  // Draw the image into the matrix (and GUI if compiled in) 
+
+  // RTV - this box-drawing algorithm compresses hospital.world from
+  // 104,000+ pixels to 5,757 rectangles. it's not perfect but pretty
+  // darn good with bitmaps featuring lots of horizontal and vertical
+  // lines - such as most worlds. Also combined matrix & gui
+  // rendering loops.  hospital.pnm.gz now loads more than twice as
+  // fast and redraws waaaaaay faster. yay!
+
+  // use this to count the number of rectangles drawn
+  // we optionally print it out below
+  // long int rects = 0;
+
+#if 0
+  
 #ifdef INCLUDE_RTK2
-  // Draw the image into the GUI
+  
   rtk_fig_clear(this->fig);
   rtk_fig_layer(this->fig, -48);
-  rtk_fig_color_rgb32(this->fig, this->color);
-  for (int y = 0; y < this->image->height; y++)
-  {
-    for (int x = 0; x < this->image->width; x++)
-    {
-      if (this->image->get_pixel(x, y) == 0)
-        continue;
-      double px = x * sx;
-      double py = (this->image->height - y) * sy;
-      if (px < this->crop_ax || px > this->crop_bx)
-        continue;
-      if (py < this->crop_ay || py > this->crop_by)
-        continue;
-      rtk_fig_rectangle(this->fig, px, py, oth, sx, sy, true);
-    }
-  }
+  rtk_fig_color_rgb32(this->fig, this->color );
+  
 #endif
+  
+  for (int y = 0; y < this->image->height; y++)
+    {
+      for (int x = 0; x < this->image->width; x++)
+	{
+	  if (this->image->get_pixel(x, y) == 0)
+	    continue;
+	 
+ 	  // a rectangle starts from this point
+	  int startx = x;
+	  int starty = this->image->height - y;
+	  int height = this->image->height; // assume full height for starters
+	  
+	  // grow the width - scan along the line until we hit an empty pixel
+	  for( x;  this->image->get_pixel( x, y ) > 0; x++ )
+	    {
+	      // handle horizontal cropping
+	      double ppx = x * sx; 
+	      if (ppx < this->crop_ax || ppx > this->crop_bx)
+		continue;
+	      
+	      // look down to see how large a rectangle below we can make
+	      int yy  = y;
+	      while( (this->image->get_pixel( x, yy ) > 0 ) && (yy < this->image->height) )
+		{ 
+		  // handle vertical cropping
+		  double ppy = (this->image->height - yy) * sy;
+		  if (ppy < this->crop_ay || ppy > this->crop_by)
+		    continue;
+		  
+		  yy++; 
+		} 
+	      
+	      // now yy is the depth of a line of non-zero pixels downward
+	      // we store the smallest depth - that'll be the height of the rectangle
+	      if( yy-y < height ) height = yy-y; // shrink the height to fit
+	    } 
+
+	  int width = x - startx;
+
+	  // delete the pixels we have used in this rect
+	  this->image->fast_fill_rect( startx, y, width, height, 0 );
+
+	  double px = (startx + (width/2.0) + 0.5 ) * sx;
+	  double py = (starty - (height/2.0) - 0.5 ) * sy;
+	  double pw = width * sx;
+	  double ph = height * sy;
+
+	  // create a matrix rectangle
+	  m_world->SetRectangle( px, py, oth, pw, ph, this, true);
+
+#ifdef INCLUDE_RTK2
+	  // create a figure  rectangle 
+	  rtk_fig_rectangle(this->fig, px, py, oth, pw, ph, true ); 
+#endif
+			    
+	  rects++;
+	}
+    }
+
+#endif
+  
+  //printf( "rects = %ld\n", rects );
+  
+
+  //#ifdef INCLUDE_RTK2
+  
+  // rtv - render the image quad-tree encoded. didn't work as well as i thought it might!
+  // thought i'd keep the quad-tree code for a while in case it's useful elswhere
+
+  //    //rtk_fig_clear(this->fig);
+  //    rtk_fig_layer(this->fig, -48);
+  //    rtk_fig_color_rgb32(this->fig, RGB(0,0,255) );
+  
+  //    // start with the entire image rectangle
+  //    int x1 = 0, x2 = this->image->width; 
+  //    int y1 = 0, y2 = this->image->height; 
+  
+  //    // recursive call builds a quad tree of rectangles matching the image
+  //    BuildQuadTree( 0, x1, y1, x2, y2 );
+  
+  //    printf( "rects = %ld\n", rects );
+  
+  //  #endif
 
   // new: don't delete the image so we can download it to clients - rtv
-
   return true;
 }
 

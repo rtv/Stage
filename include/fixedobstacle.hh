@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/fixedobstacle.hh,v $
 //  $Author: rtv $
-//  $Revision: 1.3 $
+//  $Revision: 1.4 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -45,6 +45,8 @@ class CFixedObstacle : public CEntity
 
   // The image representing the environment
   public: Nimage *image;
+
+  void BuildQuadTree( uint8_t color, int x1, int y1, int x2, int y2 );
 };
 
 #endif

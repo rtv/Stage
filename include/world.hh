@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.59 2002-07-04 01:06:02 rtv Exp $
+ * CVS info: $Id: world.hh,v 1.60 2002-07-09 03:31:56 rtv Exp $
  */
 
 #ifndef WORLD_HH
@@ -337,16 +337,29 @@ public: CRTPPlayer* rtp_player;
   // The view menu
   public: rtk_menu_t *view_menu;
   private: rtk_menuitem_t *grid_item;
+  private: rtk_menuitem_t *walls_item;
+
+  // The action menu
+  public: rtk_menu_t* action_menu;
   private: rtk_menuitem_t *subscribedonly_item;
+  
 
   // The view/device menu
-public: rtk_menu_t *device_data_menu;
+public: rtk_menu_t *device_menu;
 private: rtk_menuitem_t *device_menu_items[ NUMBER_OF_STAGE_TYPES ];
+
+  // the view/data menu
+public: rtk_menu_t *data_menu;
+private: rtk_menuitem_t *data_menu_items[ NUMBER_OF_STAGE_TYPES ];
   
   // devices check this to see if they should display their data
 public: bool ShowDeviceData( StageType devtype )
-  { return( rtk_menuitem_ischecked( device_menu_items[ devtype ]) ); } 
+  { return( rtk_menuitem_ischecked( data_menu_items[ devtype ]) ); } 
   
+public: bool ShowDeviceBody( StageType devtype )
+  { return( rtk_menuitem_ischecked( device_menu_items[ devtype ]) ); } 
+
+
   // Number of exported images
   private: int export_count;
 #endif
