@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.cc,v 1.134 2002-11-01 19:12:31 rtv Exp $
+ * CVS info: $Id: world.cc,v 1.135 2002-11-02 08:24:58 inspectorg Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -417,29 +417,29 @@ void CWorld::Update(void)
   
   //while( !quit )
     
-      // if the sim isn't running, we pause briefly and return
-      if( !m_enable )
+  // if the sim isn't running, we pause briefly and return
+  if( !m_enable )
 	{
 	  usleep( 100000 );
 	  return;
 	}
 
-      // is it time to stop?
-      if(m_stoptime && m_sim_time >= m_stoptime)
+  // is it time to stop?
+  if(m_stoptime && m_sim_time >= m_stoptime)
 	{   
 	  //system("kill `cat stage.pid`");
 	  quit = true;
 	  return;
 	}
       
-      // otherwise we're running - calculate new world state
+  // otherwise we're running - calculate new world state
       
-      // let the entities do anything they want to do between clock increments
-      root->Sync(); 
+  // let the entities do anything they want to do between clock increments
+  root->Sync(); 
       
-      // if the timer has gone off recently or we're in fast mode
-      // we increment the clock and do the time-based updates
-      if( g_timer_events > 0 || m_real_timestep == 0 )
+  // if the timer has gone off recently or we're in fast mode
+  // we increment the clock and do the time-based updates
+  if( g_timer_events > 0 || m_real_timestep == 0 )
 	{          
 	  // set the current time and
 	  // update the entities managed by this host at this time 
@@ -457,16 +457,16 @@ void CWorld::Update(void)
 
 	}
       
-      Output(); // perform console and log output
+  Output(); // perform console and log output
       
-      // if there's nothing pending and we're not in fast mode, we let go
-      // of the processor (on linux gives us around a 10ms cycle time)
-      if( g_timer_events < 1 && m_real_timestep > 0.0 ) 
-	usleep( 0 );
+  // if there's nothing pending and we're not in fast mode, we let go
+  // of the processor (on linux gives us around a 10ms cycle time)
+  if( g_timer_events < 1 && m_real_timestep > 0.0 ) 
+    usleep( 0 );
       
-      // dump the contents of the matrix to a file for debugging
-      //world->matrix->dump();
-      //getchar();	
+  // dump the contents of the matrix to a file for debugging
+  //world->matrix->dump();
+  //getchar();	
 }
 
 

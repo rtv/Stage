@@ -21,7 +21,7 @@
  * Desc: The RTK gui implementation
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: rtkgui.cc,v 1.8 2002-11-02 02:36:11 inspectorg Exp $
+ * CVS info: $Id: rtkgui.cc,v 1.9 2002-11-02 08:24:58 inspectorg Exp $
  */
 
 
@@ -274,6 +274,8 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   }
   
   this->app = rtk_app_create();
+  this->rtk_update_time = 0;
+  this->rtk_update_rate = 10;
   
   this->canvas = rtk_canvas_create(this->app);
   rtk_canvas_size(this->canvas, sx, sy);
@@ -292,8 +294,8 @@ bool CWorld::RtkLoad(CWorldFile *worldfile)
   this->stills_series = 0;
   this->stills_count = 0;
 
-  this->movie_fps5_menuitem = rtk_menuitem_create(this->movie_menu, "5 fps", 1);
-  this->movie_fps10_menuitem = rtk_menuitem_create(this->movie_menu, "10 fps", 1);
+  this->movie_x1_menuitem = rtk_menuitem_create(this->movie_menu, "Speed x1", 1);
+  this->movie_x2_menuitem = rtk_menuitem_create(this->movie_menu, "Speed x2", 1);
   this->movie_count = 0;
 
   // Create the view menu
@@ -383,8 +385,6 @@ bool CWorld::RtkSave(CWorldFile *worldfile)
 // Start the GUI
 bool CWorld::RtkStartup()
 {
-  PRINT_DEBUG( "** STARTUP GUI **" );
-
   // these must exist already
   assert( this->app );
   assert( this->app->canvas );
@@ -394,14 +394,7 @@ bool CWorld::RtkStartup()
   
   // this rtkstarts all entities
   root->RtkStartup();
-  
-  // Display everything
-  for( rtk_canvas_t *canvas=app->canvas; canvas!=NULL; canvas=canvas->next)
-    gtk_widget_show_all(canvas->frame);
-  
-  for (rtk_table_t *table = app->table; table != NULL; table = table->next)
-    gtk_widget_show_all(table->frame);
-  
+    
   return true;
 }
 
@@ -421,14 +414,19 @@ void CWorld::RtkShutdown()
 // Update the GUI
 void CWorld::RtkUpdate()
 {
+  // Process events
+  rtk_app_main_loop(this->app);
+
+  // Run the gui at a fixed rate (in simulator time).
+  if (this->m_sim_time < this->rtk_update_time + 1 / this->rtk_update_rate)
+    return;
+  this->rtk_update_time = this->m_sim_time - fmod(this->m_sim_time, 1 / this->rtk_update_rate);
+  
   // Process menus
   RtkMenuHandling();      
   
   // Update the object tree
   root->RtkUpdate();
-
-  // Process events
-  rtk_app_main_loop(this->app);
 
   // Render the canvas
   rtk_canvas_render(this->canvas);
@@ -442,10 +440,6 @@ void CWorld::RtkMenuHandling()
 {
   char filename[128];
       
-  // right now we have to check the state of all the menu items each
-  // time around the loop. this is pretty unsatisfactory - callbacks
-  // would be much better
-
   // See if we need to quit the program
   if (rtk_menuitem_isactivated(this->exit_menuitem))
     ::quit = 1;
@@ -494,40 +488,40 @@ void CWorld::RtkMenuHandling()
     rtk_canvas_export_image(this->canvas, filename, RTK_IMAGE_FORMAT_PPM);
   }
 
-  // Start/stop movie (5 fps)
-  if (rtk_menuitem_isactivated(this->movie_fps5_menuitem))
+  // Start/stop movie (x1)
+  if (rtk_menuitem_isactivated(this->movie_x1_menuitem))
   {
-    if (rtk_menuitem_ischecked(this->movie_fps5_menuitem))
+    if (rtk_menuitem_ischecked(this->movie_x1_menuitem))
     {
       snprintf(filename, sizeof(filename), "stage-%03d.mpg", this->movie_count++);
-      rtk_canvas_movie_start(this->canvas, filename, 5);
-      rtk_menuitem_enable(this->movie_fps10_menuitem, 0);
+      rtk_canvas_movie_start(this->canvas, filename, (int) (this->rtk_update_rate));
+      rtk_menuitem_enable(this->movie_x2_menuitem, 0);
     }
     else
     {
       rtk_canvas_movie_stop(this->canvas);
-      rtk_menuitem_enable(this->movie_fps10_menuitem, 1);
+      rtk_menuitem_enable(this->movie_x2_menuitem, 1);
     }
   }
-  if (rtk_menuitem_ischecked(this->movie_fps5_menuitem))
+  if (rtk_menuitem_ischecked(this->movie_x1_menuitem))
     rtk_canvas_movie_frame(this->canvas);
 
-  // Start/stop movie (10 fps)
-  if (rtk_menuitem_isactivated(this->movie_fps10_menuitem))
+  // Start/stop movie (x2)
+  if (rtk_menuitem_isactivated(this->movie_x2_menuitem))
   {
-    if (rtk_menuitem_ischecked(this->movie_fps10_menuitem))
+    if (rtk_menuitem_ischecked(this->movie_x2_menuitem))
     {
       snprintf(filename, sizeof(filename), "stage-%03d.mpg", this->movie_count++);
-      rtk_canvas_movie_start(this->canvas, "test.mpg", 10);
-      rtk_menuitem_enable(this->movie_fps5_menuitem, 0);
+      rtk_canvas_movie_start(this->canvas, "test.mpg", (int) (this->rtk_update_rate * 2));
+      rtk_menuitem_enable(this->movie_x1_menuitem, 0);
     }
     else
     {
       rtk_canvas_movie_stop(this->canvas);
-      rtk_menuitem_enable(this->movie_fps5_menuitem, 1);
+      rtk_menuitem_enable(this->movie_x1_menuitem, 1);
     }
   }
-  if (rtk_menuitem_ischecked(this->movie_fps10_menuitem))
+  if (rtk_menuitem_ischecked(this->movie_x2_menuitem))
     rtk_canvas_movie_frame(this->canvas);
 
   

@@ -21,7 +21,7 @@
  * Desc: top level class that contains everything
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: world.hh,v 1.17 2002-11-02 02:00:52 inspectorg Exp $
+ * CVS info: $Id: world.hh,v 1.18 2002-11-02 08:24:58 inspectorg Exp $
  */
 
 #ifndef WORLD_HH
@@ -318,6 +318,12 @@ public: int GetStopTime( void ){ return m_stoptime; };
   public: rtk_app_t *app;
   public: rtk_canvas_t *canvas;
 
+  // Timing info for the gui.
+  // [rtk_update_rate] is the update rate (Hz).
+  // [rtk_update_time] is the last time the gui was update (simulation time).
+  private: double rtk_update_rate;
+  private: double rtk_update_time;
+
   // Figure for the grid
   private: rtk_fig_t *fig_grid;
   
@@ -332,14 +338,13 @@ public: int GetStopTime( void ){ return m_stoptime; };
   private: rtk_menuitem_t *stills_ppm_menuitem;
 
   // Export stills info
-  private: int stills_format;
   private: int stills_series;
   private: int stills_count;
 
   // The movie menu
   private: rtk_menu_t *movie_menu;
-  private: rtk_menuitem_t *movie_fps5_menuitem;
-  private: rtk_menuitem_t *movie_fps10_menuitem;
+  private: rtk_menuitem_t *movie_x1_menuitem;
+  private: rtk_menuitem_t *movie_x2_menuitem;
 
   // Export movie info
   private: int movie_count;
