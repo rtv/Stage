@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.55 2002-07-23 16:07:55 rtv Exp $
+ * CVS info: $Id: entity.hh,v 1.56 2002-07-29 17:25:33 rtv Exp $
  */
 
 #ifndef ENTITY_HH
@@ -353,7 +353,7 @@ class CEntity
   //private int player_subs;
 
   // this gets called a LOT, so we inline it.
-   public: inline int Subscribed();
+   public: int Subscribed();
 
   // subscribe to / unsubscribe from the device
   // these are used when one device (e.g., lbd) depends on another (e.g.,
