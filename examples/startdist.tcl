@@ -2,7 +2,7 @@
 
 package require Tclx
 
-set USAGE "start.tcl \[-n\] <username> <worldfile> <bitmap>"
+set USAGE "start.tcl \[-n\] <username> <worldfile>"
 
 set idx 0
 set send 1
@@ -29,7 +29,7 @@ proc killplayers {} {
   }
   exit
 }
-signal trap SIGINT killplayers
+#signal trap SIGINT killplayers
 
 set dirname "/tmp/distributed_stage.$username"
 
@@ -55,11 +55,12 @@ while {![eof $fd]} {
 puts "Found the following hosts: $hosts\n"
 puts "Using the bitmap: $bitmap\n"
 
+set playerstageroot "$env(HOME)/PS"
 if {$send} {
-  set playerbinary "/home/vaughan/PS/player/src/player"
-  set stagebinary "/home/vaughan/PS/stage/src/stage_objs/stage"
-  set xsbinary "/home/vaughan/PS/stage/src/xs"
-  set managerbinary "/home/vaughan/PS/stage/src/manager"
+  set playerbinary "${playerstageroot}/player/src/player"
+  set stagebinary "${playerstageroot}/stage/src/stage_objs/stage"
+  set xsbinary "${playerstageroot}/stage/src/xs"
+  set managerbinary "${playerstageroot}/stage/src/manager"
   
   exec cp $playerbinary .
   exec cp $stagebinary .
