@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.5.2.7 $
+//  $Revision: 1.5.2.8 $
 //
 // Usage:
 //  (empty)
@@ -45,7 +45,7 @@ CSonarDevice::CSonarDevice(CWorld *world, CObject *parent, CPlayerRobot* robot)
     lastUpdate = 0;
 
     m_sonar_count = SONARSAMPLES;
-    m_min_range = 0.30;
+    m_min_range = 0.20;
     m_max_range = 8.0;
     
     // Initialise the sonar poses
@@ -71,9 +71,9 @@ void CSonarDevice::Update()
         return;
 
     // if its time to recalculate vision
-    if( m_robot->m_world->timeNow - lastUpdate <= updateInterval )
+    if( m_world->timeNow - lastUpdate <= updateInterval )
         return;
-    lastUpdate = m_robot->m_world->timeNow;
+    lastUpdate = m_world->timeNow;
 
     // Initialise gui data
     //

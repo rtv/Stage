@@ -8,7 +8,7 @@
 //	General image class, includes data storage, and 
 //	display of image. Also uses stuff for live capture
 //
-// $Id: image.h,v 1.2 2000-12-01 22:08:18 vaughan Exp $
+// $Id: image.h,v 1.2.2.1 2000-12-08 08:19:49 ahoward Exp $
 // RTV
 // ==================================================================
 
@@ -54,7 +54,7 @@ public:
 	Nimage(unsigned char* array, int w,int h);
 	Nimage(int w,int h);
 	Nimage(Nimage*);
-	Nimage(char* fname);
+	Nimage(const char* fname);
 
 	inline	int	get_width(void)		{return width;}
 	inline	int	get_height(void)	{return height;}

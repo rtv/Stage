@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/playerdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.2.2.6 $
+//  $Revision: 1.2.2.7 $
 //
 // Usage:
 //  (empty)
@@ -197,6 +197,10 @@ size_t CPlayerDevice::GetConfig(void *data, size_t len)
     // Copy the command
     //
     memcpy(data, m_config_buffer, len);
+
+    // Reset the config len to indicate that we have consumed this message
+    //
+    m_info->config_len = 0;
     
     m_robot->UnlockShmem();
     return len;

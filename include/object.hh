@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/object.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.6 $
+//  $Revision: 1.1.2.7 $
 //
 // Usage:
 //  (empty)
@@ -119,9 +119,8 @@ class CObject
     public: char m_id[64];
 
     // Pointer to world
-    // *** HACK -- get rid of the device class, then make this protected
     //
-    public: CWorld *m_world;
+    protected: CWorld *m_world;
     
     // Pointer to parent object
     //
@@ -145,6 +144,10 @@ class CObject
     private: CObject *m_child[64];
     
 #ifdef INCLUDE_RTK
+
+    // UI property message handler
+    //
+    public: virtual void OnUiProperty(RtkUiPropertyData* pData);
     
     // Process GUI update messages
     //

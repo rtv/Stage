@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/object.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.6 $
+//  $Revision: 1.1.2.7 $
 //
 // Usage:
 //  (empty)
@@ -41,12 +41,14 @@ CObject::CObject(CWorld *world, CObject *parent)
     m_parent = parent;
     m_child_count = 0;
 
+    m_id[0] = 0;
+    
     m_lx = m_ly = m_lth = 0;
     m_gx = m_gy = m_gth = 0;
     m_global_dirty = true;
 
 #ifdef INCLUDE_RTK
-    m_draggable = false;
+    m_draggable = false; 
     m_mouse_radius = 0;
     m_mouse_ready = false;
     m_dragging = false;
@@ -159,14 +161,14 @@ bool CObject::CreateChildren(RtkCfgFile *cfg)
         
         // Create the object
         //
-        MSG2("making object %s of type %s", CSTR(id), CSTR(type));
+        printf("making object %s of type %s\n", CSTR(id), CSTR(type));
         CObject *object = ::CreateObject(CSTR(type), m_world, this);
         if (object == NULL)
             continue;
-
-        // *** WARNING -- no overflow check!
+ 
         // Set the object's id
         //
+        ASSERT(sizeof(object->m_id) > strlen(CSTR(id)));
         strcpy(object->m_id, CSTR(id));
 
         // Add into the object list
@@ -320,6 +322,19 @@ void CObject::GetGlobalPose(double &px, double &py, double &pth)
 
 #ifdef INCLUDE_RTK
 
+
+///////////////////////////////////////////////////////////////////////////
+// UI property message handler
+//
+void CObject::OnUiProperty(RtkUiPropertyData* pData)
+{
+    // Get children to process message
+    //
+    for (int i = 0; i < m_child_count; i++)
+        m_child[i]->OnUiProperty(pData);
+}
+
+
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
 //
@@ -329,15 +344,18 @@ void CObject::OnUiUpdate(RtkUiDrawData *pData)
 
     // Draw a marker to show we are being dragged
     //
-    if (pData->DrawLayer("focus", true, 0))
+    if (pData->DrawLayer("focus", true))
     {
         if (m_mouse_ready)
             pData->SetColor(RTK_RGB(128, 128, 255));
         if (m_dragging)
             pData->SetColor(RTK_RGB(0, 0, 255));
         if (m_mouse_ready)
+        {
             pData->Ellipse(m_gx - m_mouse_radius, m_gy - m_mouse_radius,
                            m_gx + m_mouse_radius, m_gy + m_mouse_radius);
+            pData->DrawText(m_gx + m_mouse_radius, m_gy + m_mouse_radius, m_id);
+        }
     }
 
     pData->EndSection();

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.5 $
+//  $Revision: 1.1.2.6 $
 //
 // Usage:
 //  (empty)
@@ -54,7 +54,7 @@ enum EWorldLayer
 //
 class CWorld : public CObject
 {
-        // Default constructor
+    // Default constructor
     //
     public: CWorld();
 
@@ -76,7 +76,7 @@ class CWorld : public CObject
     
     // Initialise the world grids
     //
-    private: bool StartupGrids();
+    private: bool InitGrids(const char *env_file);
   
     // Get a cell from the world grid
     //
@@ -112,15 +112,15 @@ class CWorld : public CObject
 
     public:
     int width, height, depth; 
-    int paused;
-
-    char posFile[64];
-    char bgFile[64];
     float ppm;
 
     double timeStep, timeNow, timeThen, timeBegan;
 
 #ifdef INCLUDE_RTK
+
+    // UI property message handler
+    //
+    public: virtual void OnUiProperty(RtkUiPropertyData* pData);
 
     // Process GUI update messages
     //

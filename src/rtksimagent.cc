@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/rtksimagent.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.4 $
+//  $Revision: 1.1.2.5 $
 //
 // Usage:
 //  (empty)
@@ -201,6 +201,9 @@ void RtkSimAgent::OnUiMouse(RtkUiMouseData* pData)
 //
 void RtkSimAgent::OnUiProperty(RtkUiPropertyData* pData)
 {
+    pData->BeginSection("default", "world");
+    m_pWorld->OnUiProperty(pData);
+    pData->EndSection();
 }
 
 

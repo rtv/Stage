@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.7 $
+//  $Revision: 1.4.2.8 $
 //
 // Usage:
 //  (empty)
@@ -44,12 +44,6 @@ CWorld::CWorld()
     // Set our id
     //
     strcpy(m_id, "world");
-
-    // initialize the filenames
-    bgFile[0] = 0;
-    posFile[0] = 0;
-  
-    paused = false;
   
     // seed the random number generator
     srand48( time(NULL) );
@@ -64,7 +58,7 @@ CWorld::CWorld()
     // start the internal clock
     struct timeval tv;
     gettimeofday( &tv, NULL );
-    timeNow = timeBegan = tv.tv_sec + (tv.tv_usec/MILLION);
+    timeNow = timeThen = timeBegan = tv.tv_sec + (tv.tv_usec/MILLION);
 }
 
 
@@ -97,20 +91,26 @@ bool CWorld::Startup(RtkCfgFile *cfg)
     // Load useful settings from config file
     //
     cfg->BeginSection("world");
-
     ppm = cfg->ReadInt("pixels_per_meter", 25, "");
-    strcpy(bgFile, CSTR(cfg->ReadString("environment_file", "", "")));
-    strcpy(posFile, CSTR(cfg->ReadString("position_file", "", "")));
-    
+    RtkString env_file = cfg->ReadString("environment_file", "", "");
+    RtkString pos_file = cfg->ReadString("position_file", "", "");
     cfg->EndSection();
 
-    // report the files we're using
-    cout << "[" << bgFile << "][" << posFile << "]" << endl;
+    // Display the files we are reading
+    //
+    printf("[%s] [%s]\n", CSTR(env_file), CSTR(pos_file));
     
     // Initialise the world grids
     //
-    if (!StartupGrids())
+    if (!InitGrids(CSTR(env_file)))
         return false;
+
+    // Read robot positions from file
+    //
+    /* *** TODO
+    if (!ReadPos(pos_file))
+        return false;
+    */ 
 
     return true;
 }
@@ -133,7 +133,7 @@ void CWorld::Update()
     CObject::Update();
     
     struct timeval tv;
-      
+
     gettimeofday( &tv, NULL );
     timeNow = tv.tv_sec + (tv.tv_usec/MILLION);
     timeStep = (timeNow - timeThen); // real time
@@ -159,12 +159,12 @@ void CWorld::Update()
 ///////////////////////////////////////////////////////////////////////////
 // Initialise the world grids
 //
-bool CWorld::StartupGrids()
+bool CWorld::InitGrids(const char *env_file)
 {
     TRACE0("initialising grids");
 
     // create a new background image from the pnm file
-    m_bimg = new Nimage( bgFile );
+    m_bimg = new Nimage( env_file );
     //cout << "ok." << endl;
 
     width = m_bimg->width;
@@ -309,6 +309,23 @@ void CWorld::SetRectangle(double px, double py, double pth,
 }
 
 #ifdef INCLUDE_RTK
+
+
+///////////////////////////////////////////////////////////////////////////
+// UI property message handler
+//
+void CWorld::OnUiProperty(RtkUiPropertyData* pData)
+{
+    CObject::OnUiProperty(pData);
+
+    // *** WARNING -- no overflow checks in this function
+    
+    char value[64];
+    
+    sprintf(value, "%7.3f", (double) timeNow - timeBegan);
+    pData->AddItemText("Simulation time (s)", value, "");
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
