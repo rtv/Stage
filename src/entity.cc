@@ -21,7 +21,7 @@
  * Desc: Base class for every entity.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 7 Dec 2000
- * CVS info: $Id: entity.cc,v 1.96 2002-11-11 03:09:46 rtv Exp $
+ * CVS info: $Id: entity.cc,v 1.97 2002-12-03 18:22:31 inspectorg Exp $
  */
 #if HAVE_CONFIG_H
   #include <config.h>
@@ -45,7 +45,6 @@
 
 #include <iostream>
 
-
 //#define DEBUG
 //#define VERBOSE
 //#undef DEBUG
@@ -59,16 +58,6 @@
 #include "gui.hh"
 #include "library.hh"
 
-#ifdef INCLUDE_RTK2
-// CALLBACK FUNCTION WRAPPERS ////////////////////////////////////////////
-// called by rtk to tweak Stage devices
-
-void CEntity::staticSetGlobalPose( void* ent, double x, double y, double th )
-{
-  ((CEntity*)ent)->SetGlobalPose( x, y, th );
-}
-
-#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // main constructor
@@ -209,17 +198,17 @@ void CEntity::GetBoundingBox( double &xmin, double &ymin,
   // find the smallest values and we're done
   //xmin = xmax = x[0];
   for( int c=0; c<4; c++ )
-    {
-      if( x[c] < xmin ) xmin = x[c];
-      if( x[c] > xmax ) xmax = x[c];
-    }
+  {
+    if( x[c] < xmin ) xmin = x[c];
+    if( x[c] > xmax ) xmax = x[c];
+  }
 
   //ymin = ymax = y[0];
   for( int c=0; c<4; c++ )
-    {
-      if( y[c] < ymin ) ymin = y[c];
-      if( y[c] > ymax ) ymax = y[c];
-    } 
+  {
+    if( y[c] < ymin ) ymin = y[c];
+    if( y[c] > ymax ) ymax = y[c];
+  } 
 
   //printf( "before children: %.2f %.2f %.2f %.2f\n",
   //  xmin, ymin, xmax, ymax );
@@ -1131,11 +1120,9 @@ void CEntity::RtkStartup()
 
   assert( this->fig );
 
-  this->fig->thing = (void*)this;
-  this->fig->origin_callback = staticSetGlobalPose;
-  this->fig->select_callback = NULL;
-  this->fig->unselect_callback = NULL;
-
+  // Set the mouse handler
+  this->fig->userdata = this;
+  rtk_fig_add_mouse_handler(this->fig, StaticRtkOnMouse);
 
   // add this device to the world's device menu 
   this->m_world->AddToDeviceMenu( this, true); 
@@ -1207,7 +1194,8 @@ void CEntity::RtkStartup()
       
     // attach the label to the main figure
     // rtk will draw the label when the mouse goes over the figure
-    this->fig->mouseover_fig = fig_label;
+    // TODO: FIX
+    //this->fig->mouseover_fig = fig_label;
       
     // we can be moved only if we are on the root node
     if (m_parent_entity != this->m_world->GetRoot() )
@@ -1252,5 +1240,41 @@ void CEntity::RtkUpdate()
     rtk_fig_show( this->fig, true );
   }
 }
+
+
+///////////////////////////////////////////////////////////////////////////
+// Process mouse events
+void CEntity::RtkOnMouse(rtk_fig_t *fig, int event, int mode)
+{
+  double px, py, pth;
+
+  switch (event)
+  {
+    case RTK_EVENT_PRESS:
+    case RTK_EVENT_MOTION:
+    case RTK_EVENT_RELEASE:
+      rtk_fig_get_origin(fig, &px, &py, &pth);
+      this->SetGlobalPose(px, py, pth);
+      break;
+
+    default:
+      break;
+  }
+
+  return;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// Process mouse events (static callback)
+void CEntity::StaticRtkOnMouse(rtk_fig_t *fig, int event, int mode)
+{
+  CEntity *entity;
+  entity = (CEntity*) fig->userdata;
+  entity->RtkOnMouse(fig, event, mode);
+  return;
+}
+
+
 #endif
 

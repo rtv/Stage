@@ -21,7 +21,7 @@
  * Desc: Simulates a sonar ring.
  * Author: Andrew Howard, Richard Vaughan
  * Date: 28 Nov 2000
- * CVS info: $Id: sonardevice.cc,v 1.4 2002-11-19 04:27:19 rtv Exp $
+ * CVS info: $Id: sonardevice.cc,v 1.5 2002-12-03 18:22:33 inspectorg Exp $
  */
 
 #include <math.h>
@@ -157,7 +157,7 @@ void CSonarDevice::Update( double sim_time )
 // Process configuration requests.
 void CSonarDevice::UpdateConfig()
 {
-  int s, len;
+  int len;
   void* client;
   char buffer[PLAYER_MAX_REQREP_SIZE];
   player_sonar_geom_t geom;
@@ -173,14 +173,14 @@ void CSonarDevice::UpdateConfig()
     {
       case PLAYER_SONAR_POWER_REQ:
         // we got a sonar power config
-	// set the new power status
-	this->power_on = ((player_sonar_power_config_t*)buffer)->value;
+        // set the new power status
+        this->power_on = ((player_sonar_power_config_t*)buffer)->value;
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK);
         break;
 
       case PLAYER_SONAR_GET_GEOM_REQ:
         // Return the sonar geometry
-	SonarGeomPack( &geom, this->sonar_count, this->sonars );
+        SonarGeomPack( &geom, this->sonar_count, this->sonars );
         PutReply(client, PLAYER_MSGTYPE_RESP_ACK, NULL, &geom, sizeof(geom));
         break;
 

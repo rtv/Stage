@@ -2,11 +2,11 @@
 # Desc: Device definitions for typical USC robot configurations
 # Author: Richard Vaughan, Andrew Howard
 # Date: 3 July 2002
-# CVS: $Id: usc_pioneer.inc,v 1.9 2002-11-14 03:56:01 rtv Exp $
+# CVS: $Id: usc_pioneer.inc,v 1.10 2002-12-03 18:22:33 inspectorg Exp $
 
 # use the ActivMedia Pioneer definitions
 #
-include "../worlds/pioneer.inc"
+include "pioneer.inc"
 
 define usc_pioneer pioneer2dx
 (

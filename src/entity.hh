@@ -21,7 +21,7 @@
  * Desc: Base class for movable entities.
  * Author: Richard Vaughan, Andrew Howard
  * Date: 04 Dec 2000
- * CVS info: $Id: entity.hh,v 1.13 2002-11-12 06:42:04 gerkey Exp $
+ * CVS info: $Id: entity.hh,v 1.14 2002-12-03 18:22:32 inspectorg Exp $
  */
 
 #ifndef _ENTITY_HH
@@ -304,6 +304,12 @@ public: virtual void FamilyUnsubscribe();
   // Update the rtk gui
   public: virtual void RtkUpdate();
 
+  // Process mouse events
+  public: virtual void RtkOnMouse(rtk_fig_t *fig, int event, int mode);
+  
+  // Process mouse events (static callback)
+  protected: static void StaticRtkOnMouse(rtk_fig_t *fig, int event, int mode);
+  
   // Default figure handle
   public: rtk_fig_t *fig, *fig_label;
 
@@ -311,9 +317,11 @@ public: virtual void FamilyUnsubscribe();
   protected: int movemask;
 
   // callbacks - we ask the rtk figures call these when things happen to 'em.
+  /* TODO: fix
   static void staticSetGlobalPose( void* ent, double x, double y, double th );
   static void staticSelect( void* ent );
   static void staticUnselect( void* ent );
+  */
 #endif
   
   // calls the GUI hook to startup this object, then recusively calls
