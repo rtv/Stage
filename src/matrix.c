@@ -1,6 +1,6 @@
 /*************************************************************************
  * RTV
- * $Id: matrix.c,v 1.14 2005-02-08 04:26:49 rtv Exp $
+ * $Id: matrix.c,v 1.15 2005-03-09 21:52:49 rtv Exp $
  ************************************************************************/
 
 #include <stdlib.h>
@@ -102,8 +102,8 @@ GPtrArray* stg_table_cell( GHashTable* table, glong x, glong y)
   stg_matrix_coord_t coord;
   coord.x = x;
   coord.y = y;
-  
-  //printf( "table %p fetching [%d][%d]\n", table, x, y );
+ 
+  //printf( "table %p fetching [%ld][%ld]\n", table, x, y );
   return g_hash_table_lookup( table, &coord );
 }
 
@@ -124,25 +124,29 @@ GPtrArray* stg_matrix_table_add_cell( GHashTable* table, glong x, glong y )
 // get the array of pointers in cell y*width+x, specified in meters
 GPtrArray* stg_matrix_cell_get( stg_matrix_t* matrix, double x, double y)
 {
+  //printf( "fetching [%ld][%ld]\n", 
+  //  (glong)floor(x * matrix->ppm), 
+  //  (glong)floor(y * matrix->ppm) );
+  
   return stg_table_cell( matrix->table, 
-			 (glong)floor(x * matrix->ppm), 
-			 (glong)floor(y * matrix->ppm) );  
+			 (glong)(x * matrix->ppm), 
+			 (glong)(y * matrix->ppm) );  
 }
 
 // get the array of pointers in cell y*width+x, specified in meters
 GPtrArray* stg_matrix_bigcell_get( stg_matrix_t* matrix, double x, double y)
 {
   return stg_table_cell( matrix->bigtable, 
-			 (glong)floor(x * matrix->bigppm), 
-			 (glong)floor(y * matrix->bigppm) );  
+			 (glong)(x * matrix->bigppm), 
+			 (glong)(y * matrix->bigppm) );  
 }
 
 // get the array of pointers in cell y*width+x, specified in meters
 GPtrArray* stg_matrix_medcell_get( stg_matrix_t* matrix, double x, double y)
 {
   return stg_table_cell( matrix->medtable, 
-			 (glong)floor(x * matrix->medppm), 
-			 (glong)floor(y * matrix->medppm) );  
+			 (glong)(x * matrix->medppm), 
+			 (glong)(y * matrix->medppm) );  
 }
 
 
@@ -155,8 +159,8 @@ void stg_matrix_cell_append(  stg_matrix_t* matrix,
   // if the cell is empty we create a new ptr array for it
   if( cell == NULL )
     cell = stg_matrix_table_add_cell( matrix->table, 
-				      (glong)floor(x*matrix->ppm),
-				      (glong)floor(y*matrix->ppm) );
+				      (glong)(x*matrix->ppm),
+				      (glong)(y*matrix->ppm) );
   else // make sure we're only in the cell once 
     g_ptr_array_remove_fast( cell, object );
   
@@ -168,8 +172,8 @@ void stg_matrix_cell_append(  stg_matrix_t* matrix,
   // if the cell is empty we create a new ptr array for it
   if( medcell == NULL )
     medcell = stg_matrix_table_add_cell( matrix->medtable, 
-					 (glong)floor(x*matrix->medppm),
-					 (glong)floor(y*matrix->medppm) );
+					 (glong)(x*matrix->medppm),
+					 (glong)(y*matrix->medppm) );
   else // make sure we're only in the cell once 
     g_ptr_array_remove_fast( medcell, object );
   
@@ -180,8 +184,8 @@ void stg_matrix_cell_append(  stg_matrix_t* matrix,
   
   if( bigcell == NULL )
     bigcell = stg_matrix_table_add_cell( matrix->bigtable, 
-					 (glong)floor(x*matrix->bigppm), 
-					 (glong)floor(y*matrix->bigppm) );
+					 (glong)(x*matrix->bigppm), 
+					 (glong)(y*matrix->bigppm) );
   else // make sure we're only in the cell once 
     g_ptr_array_remove_fast( bigcell, object );
   
@@ -213,8 +217,8 @@ void stg_matrix_cell_remove( stg_matrix_t* matrix,
       if( cell->len == 0 )
 	{
 	  stg_matrix_coord_t coord;
-	  coord.x = (glong)floor(x*matrix->ppm);
-	  coord.y = (glong)floor(y*matrix->ppm);
+	  coord.x = (glong)(x*matrix->ppm);
+	  coord.y = (glong)(y*matrix->ppm);
 	  
 	  g_hash_table_remove( matrix->table, &coord );
 	  //GPtrArray* p = stg_matrix_cell( matrix, x, y );
@@ -250,7 +254,11 @@ void stg_matrix_line( stg_matrix_t* matrix,
   
   double xincr = cosa * 1.0 / matrix->ppm;
   double yincr = sina * 1.0 / matrix->ppm;
-  
+
+  // hack - try to avoid the gappy lines
+  xincr *= 0.99;
+  yincr *= 0.99;
+
   double xx = 0;
   double yy = 0;
   
@@ -271,7 +279,10 @@ void stg_matrix_line( stg_matrix_t* matrix,
 	}
       
       xx += xincr;
-      yy += yincr;      
+      yy += yincr;
+
+
+      //printf( "line cell: %.3f %.3f\n", finalx, finaly );
     }
 }
 

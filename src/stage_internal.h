@@ -330,6 +330,7 @@ extern "C" {
   {
     glong x; // address a very large space of cells
     glong y;
+    //double x, y;
   } stg_matrix_coord_t;
 
 
