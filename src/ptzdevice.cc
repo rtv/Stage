@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/ptzdevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.12 $
+//  $Revision: 1.4.2.13 $
 //
 // Usage:
 //  (empty)
@@ -98,19 +98,18 @@ void CPtzDevice::Update()
 
     // Get the command string
     //
-    //RTK_TRACE0("getting command");
-    short command[3];
-    if (GetCommand(command, sizeof(command)) != sizeof(command))
+    player_ptz_cmd_t cmd;
+    if (GetCommand(&cmd, sizeof(cmd)) != sizeof(cmd))
     {
-        //RTK_TRACE0("command buffer has incorrect length -- ignored");
+        PRINT_MSG("command buffer has incorrect length -- ignored");
         return;
     }
 
     // Parse the command string
     //
-    double pan = (short) ntohs(command[0]);
-    double tilt = (short) ntohs(command[1]);
-    double zoom = (unsigned short) ntohs(command[2]);
+    double pan = (short) ntohs(cmd.pan);
+    double tilt = (short) ntohs(cmd.tilt);
+    double zoom = (unsigned short) ntohs(cmd.zoom);
 
     // Threshold
     //
@@ -133,17 +132,14 @@ void CPtzDevice::Update()
 
     // Construct the return data buffer
     //
-    short data[3];
-    data[0] = htons((short) m_pan);
-    data[1] = htons((short) m_tilt);
-    data[2] = htons((unsigned short) m_zoom);
-
-    //RTK_TRACE3("ptz %d %d %d", (int) m_pan, (int) m_tilt, (int) m_zoom);
+    player_ptz_data_t data;
+    data.pan = htons((short) m_pan);
+    data.tilt = htons((short) m_tilt);
+    data.zoom = htons((unsigned short) m_zoom);
 
     // Pass back the data
     //
-    //RTK_TRACE0("returning data");
-    PutData(data, sizeof(data));
+    PutData(&data, sizeof(data));
 }
 
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.14 $
+//  $Revision: 1.4.2.15 $
 //
 // Usage:
 //  (empty)
@@ -23,8 +23,6 @@
 //  (empty)
 //
 ///////////////////////////////////////////////////////////////////////////
-
-#define ENABLE_RTK_TRACE 0
 
 #include <math.h>
 #include "world.hh"
@@ -53,8 +51,8 @@ CVisionDevice::CVisionDevice(CWorld *world, CObject *parent, CPlayerRobot* robot
     m_update_interval = 0.1;
     m_last_update = 0;
 
-    cameraImageWidth = 160 / 2;
-    cameraImageHeight = 120 / 2;
+    cameraImageWidth = 160;
+    cameraImageHeight = 120;
 
     m_scan_width = 160;
 
@@ -67,9 +65,9 @@ CVisionDevice::CVisionDevice(CWorld *world, CObject *parent, CPlayerRobot* robot
     numBlobs = 0;
     memset( blobs, 0, MAXBLOBS * sizeof( ColorBlob ) );
 
-    #ifdef INCLUDE_RTK
-        m_hit_count = 0;
-    #endif
+#ifdef INCLUDE_RTK
+    m_hit_count = 0;
+#endif
 }
 
 
@@ -137,14 +135,19 @@ void CVisionDevice::UpdateScan()
 
     // Compute fov, range, etc
     //
-    double dth = M_PI / m_scan_width;
+    double dth = m_zoom / m_scan_width;
     double dr = 1.0 / m_world->ppm;
+
+    // Ignore obstacles closer than this range
+    // (so we dont see ourself as a obstacle)
+    //
+    double min_range = 0.20;
 
     // Initialise gui data
     //
-    #ifdef INCLUDE_RTK
-        m_hit_count = 0;
-    #endif
+#ifdef INCLUDE_RTK
+    m_hit_count = 0;
+#endif
 
     // Make sure the data buffer is big enough
     //
@@ -166,38 +169,64 @@ void CVisionDevice::UpdateScan()
         double dy = dr * sin(pth);
 
         double range;
-        int color = 0;
+        int channel = 0;
         
         // Look along scan line for beacons
         // Could make this an int again for a slight speed-up.
         //
         for (range = 0; range < m_max_range; range += dr)
-        {
-            // Look in the laser layer for obstacles
+        {            
+            // Look in the vision layer for beacons.
+            // Also look at the two cells to the right and above
+            // so we dont sneak through gaps.
             //
-            uint8_t cell = m_world->GetCell(px, py, layer_vision);
+            uint8_t cell = 0;
+            cell = m_world->GetCell(px, py, layer_vision);
+            if (cell == 0)
+                cell = m_world->GetCell(px + dr, py, layer_vision);
+            if (cell == 0)
+                cell = m_world->GetCell(px, py + dr, layer_vision);
+
             if (cell != 0)
             {
-                color = cell;
+                channel = cell;
                 break;
             }
+            
+            // Look in the laser layer for obstacles.
+            // Also look at the two cells to the right and above
+            // so we dont sneak through gaps.
+            //
+            if (range > min_range)
+            {
+                if (m_world->GetCell(px, py, layer_laser) > 0)
+                    break;
+                if (m_world->GetCell(px + dr, py, layer_laser) > 0)
+                    break;
+                if (m_world->GetCell(px, py + dr, layer_laser) > 0)
+                    break;
+            }
+            
             px += dx;
             py += dy;
         }
 
         // Set the channel
         //
-        m_scan_channel[s] = color;
+        m_scan_channel[s] = channel;
         m_scan_range[s] = range;
         
         // Update the gui data
         //
-        #ifdef INCLUDE_RTK
+#ifdef INCLUDE_RTK
+        if (channel > 0)
+        {
             m_hit[m_hit_count][0] = px;
             m_hit[m_hit_count][1] = py;
-            m_hit[m_hit_count][2] = color;
+            m_hit[m_hit_count][2] = channel;
             m_hit_count++;
-        #endif
+        }
+#endif
     }   
 }
 
@@ -240,7 +269,12 @@ size_t CVisionDevice::UpdateACTS()
             blobtop = cameraImageHeight/2 - (int)(startyangle/yRadsPerPixel);
             blobbottom = cameraImageHeight/2 -(int)(endyangle/yRadsPerPixel);
             int yCenterOfBlob = blobtop +  ((blobbottom - blobtop )/2);
-	      
+
+            if (blobtop < 0)
+                blobtop = 0;
+            if (blobbottom > cameraImageHeight - 1)
+                blobbottom = cameraImageHeight - 1;
+            
 	    // useful debug - keep
             //cout << "Robot " << (int)color-1
             //   << " sees " << (int)blobcol-1
@@ -251,13 +285,13 @@ size_t CVisionDevice::UpdateACTS()
             // fill in an arrau entry for this blob
             //
             blobs[numBlobs].channel = blobcol-1;
-            blobs[numBlobs].x = xCenterOfBlob * 2;
-            blobs[numBlobs].y = yCenterOfBlob * 2;
-            blobs[numBlobs].left = blobleft * 2;
-            blobs[numBlobs].top = blobtop * 2;
-            blobs[numBlobs].right = blobright * 2;
-            blobs[numBlobs].bottom = blobbottom * 2;
-            blobs[numBlobs].area = (blobtop - blobbottom) * (blobleft-blobright) * 4;
+            blobs[numBlobs].x = xCenterOfBlob;
+            blobs[numBlobs].y = yCenterOfBlob;
+            blobs[numBlobs].left = blobleft;
+            blobs[numBlobs].top = blobtop;
+            blobs[numBlobs].right = blobright;
+            blobs[numBlobs].bottom = blobbottom;
+            blobs[numBlobs].area = (blobtop - blobbottom) * (blobleft-blobright);
 	      
             numBlobs++;
 	    }
@@ -378,41 +412,41 @@ size_t CVisionDevice::UpdateACTS()
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI update messages
 //
-void CVisionDevice::OnUiUpdate(RtkUiDrawData *pData)
+void CVisionDevice::OnUiUpdate(RtkUiDrawData *data)
 {
     // Draw our children
     //
-    CObject::OnUiUpdate(pData);
+    CObject::OnUiUpdate(data);
     
     // Draw ourself
     //
-    pData->begin_section("global", "vision");
+    data->begin_section("global", "vision");
 
-    if (pData->draw_layer("fov", true))
+    if (data->draw_layer("fov", true))
         if (IsSubscribed())
-            DrawFOV(pData);
+            DrawFOV(data);
     
-    if (pData->draw_layer("scan", true))
+    if (data->draw_layer("scan", true))
         if (IsSubscribed())
-            DrawScan(pData);
+            DrawScan(data);
     
-    pData->end_section();
+    data->end_section();
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Process GUI mouse messages
 //
-void CVisionDevice::OnUiMouse(RtkUiMouseData *pData)
+void CVisionDevice::OnUiMouse(RtkUiMouseData *data)
 {
-    CObject::OnUiMouse(pData);
+    CObject::OnUiMouse(data);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Draw the field of view
 //
-void CVisionDevice::DrawFOV(RtkUiDrawData *pData)
+void CVisionDevice::DrawFOV(RtkUiDrawData *data)
 {
     #define COLOR_FOV RGB(0, 192, 0)
     
@@ -427,33 +461,40 @@ void CVisionDevice::DrawFOV(RtkUiDrawData *pData)
     double bx = gx + m_max_range * cos(gth + m_pan + m_zoom / 2);
     double by = gy + m_max_range * sin(gth + m_pan + m_zoom / 2);
 
-    pData->set_color(COLOR_FOV);
-    pData->line(gx, gy, ax, ay);
-    pData->line(ax, ay, bx, by);
-    pData->line(bx, by, gx, gy);
+    data->set_color(COLOR_FOV);
+    data->line(gx, gy, ax, ay);
+    data->line(ax, ay, bx, by);
+    data->line(bx, by, gx, gy);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 // Draw the laser scan
 //
-void CVisionDevice::DrawScan(RtkUiDrawData *pData)
+void CVisionDevice::DrawScan(RtkUiDrawData *data)
 {    
     // Get global pose
     //
     double gx, gy, gth;
     GetGlobalPose(gx, gy, gth);
 
+    // *** Can we get colors from channels?
+    //
+    int color = RTK_RGB(0, 192, 0);
+    data->set_color(color);
+
+    double ox, oy;
+    
     for (int i = 0; i < m_hit_count; i++)
     {
         int channel = (int) m_hit[i][2];
         if (channel == 0)
             continue;
-        // *** HACK -- how to we get colors from channels?
-        //
-        int color = RTK_RGB(128, 128, 128);
-        pData->set_color(color);
-        pData->point(m_hit[i][0], m_hit[i][1]);
+
+        if (i > 0)
+            data->line(ox, oy, m_hit[i][0], m_hit[i][1]);
+        ox = m_hit[i][0];
+        oy = m_hit[i][1];
     }
 }
 

@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/usc_pioneer.hh,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.6 $
+//  $Revision: 1.1.2.7 $
 //
 // Usage:
 //  (empty)
@@ -31,7 +31,7 @@
 //
 #include "object.hh"
 
-// Forward declare object classes
+// Forward declare object classes so we dont need to include headers.
 //
 class CPlayerRobot;
 class CPioneerMobileDevice;
@@ -39,6 +39,8 @@ class CMiscDevice;
 class CSonarDevice;
 class CLaserDevice;
 class CLaserBeaconDevice;
+class CPtzDevice;
+class CVisionDevice;
 
 
 // Base class for all player devices
@@ -81,13 +83,15 @@ class CUscPioneer : public CObject
     private: CSonarDevice *m_sonar;
     private: CLaserDevice *m_laser;
     private: CLaserBeaconDevice *m_laser_beacon;
+    private: CPtzDevice *m_ptz;
+    private: CVisionDevice *m_vision;
 
     // Anonymous list of objects/devices
     //
     private: int m_child_count;
     private: CObject *m_child[64];
 
-    #ifdef INCLUDE_RTK
+#ifdef INCLUDE_RTK
     
     // Process GUI update messages
     //
@@ -101,7 +105,7 @@ class CUscPioneer : public CObject
     //
     public: virtual void OnUiProperty(RtkUiPropertyData *data);
 
-    #endif
+#endif
 };
 
 

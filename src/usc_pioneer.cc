@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/usc_pioneer.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.10 $
+//  $Revision: 1.1.2.11 $
 //
 // Usage:
 //  (empty)
@@ -32,6 +32,8 @@
 #include "sonardevice.hh"
 #include "laserdevice.hh"
 #include "laserbeacondevice.hh"
+#include "ptzdevice.hh"
+#include "visiondevice.hh"
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -46,7 +48,9 @@ CUscPioneer::CUscPioneer(CWorld *world, CObject *parent)
     m_sonar = new CSonarDevice(world, m_pioneer, m_player);
     m_laser = new CLaserDevice(world, m_pioneer, m_player);
     m_laser_beacon = new CLaserBeaconDevice(world, m_pioneer, m_player, m_laser);
-
+    m_ptz = new CPtzDevice(world, m_pioneer, m_player);
+    m_vision = new CVisionDevice(world, m_pioneer, m_player, m_ptz);
+    
     // Make the pioneer base the default parent of any would be children
     //
     m_default_object = m_pioneer;
@@ -60,11 +64,13 @@ CUscPioneer::CUscPioneer(CWorld *world, CObject *parent)
     m_child[m_child_count++] = m_sonar;    
     m_child[m_child_count++] = m_laser;
     m_child[m_child_count++] = m_laser_beacon;
+    m_child[m_child_count++] = m_ptz;
+    m_child[m_child_count++] = m_vision;
 
     // Set the default pose of some key devices
     //
     m_laser->SetPose(0.09, 0, 0);
-    
+    m_ptz->SetPose(0.09, 0, 0);
 }
 
 

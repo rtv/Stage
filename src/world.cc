@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.4.2.28 $
+//  $Revision: 1.4.2.29 $
 //
 // Usage:
 //  (empty)
@@ -731,6 +731,9 @@ void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
         case layer_laser:
             img = m_laser_img;
             break;
+        case layer_vision:
+            img = m_vision_img;
+            break;            
         default:
             return;
     }

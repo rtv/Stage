@@ -8,7 +8,7 @@
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visionbeacon.cc,v $
 //  $Author: ahoward $
-//  $Revision: 1.1.2.8 $
+//  $Revision: 1.1.2.9 $
 //
 // Usage:
 //  (empty)
@@ -65,7 +65,7 @@ bool CVisionBeacon::Load(int argc, char **argv)
         //
         if (strcmp(argv[i], "channel") == 0 && i + 1 < argc)
         {
-            m_channel = atoi(argv[i + 1]);
+            m_channel = atoi(argv[i + 1]) + 1;
             i += 2;
         }
   
@@ -99,7 +99,7 @@ bool CVisionBeacon::Save(int &argc, char **argv)
 
     // Save channel
     //
-    snprintf(z, sizeof(z), "%d", (int) m_channel);
+    snprintf(z, sizeof(z), "%d", (int) m_channel - 1);
     argv[argc++] = strdup("channel");
     argv[argc++] = strdup(z);
     
