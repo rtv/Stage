@@ -1,9 +1,8 @@
 #
-# $Id: Makefile.common,v 1.4 2001-08-13 23:19:52 gerkey Exp $ 
+# $Id: Makefile.common,v 1.5 2001-08-15 23:20:02 vaughan Exp $ 
 #
 
 # INSTALL PLAYER BEFORE BUILDING STAGE!
-# INSTALL PLAYER AND RTK BEFORE BUILDING RTKSTAGE!
 
 ##############################################################################
 # CONFIGURATION

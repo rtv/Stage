@@ -25,7 +25,8 @@ typedef struct
   
   int16_t channel; // ACTS color channel (-1 = no channel)
   uint32_t x, y; // mm, mm
-  uint16_t th, w, h; // degrees, mm, mm
+  uint16_t w, h; // mm, mm  
+  int16_t th; // degrees
   int16_t rotdx, rotdy; // offset the body's center of rotation; mm. 
 } __attribute ((packed)) stage_truth_t;
 

@@ -60,9 +60,33 @@ void CXGui::RenderObject( truth_t &truth )
 	//case PLAYER_TRUTH_CODE: RenderTruth(&truth,extended); break;  
 	//case PLAYER_OCCUPANCY_CODE: RenderOccupancy(&truth,extended); break; 
 
+    //HeadingStick( &truth );
+
+
     SetDrawMode( GXcopy );
     
   }
+
+void CXGui::HeadingStick( truth_t* exp )
+{
+  double len = 0.5;
+
+  double dx = len * cos( exp->th );
+  double dy = len * sin( exp->th );
+
+  DPoint d[2];
+
+  d[0].x = exp->x;
+  d[0].y = exp->y;
+
+  d[1].x = exp->x + dx;
+  d[1].y = exp->y + dy;
+
+
+  DrawLines( d, 2 );
+}
+
+
 
 void CXGui::RenderObjectLabel( truth_t* exp, char* str, int len )
 {

@@ -16,14 +16,14 @@ enable environment_server
 create laser_beacon pose 4.0 4.0 id 1
 create laser_beacon pose 3.0 4.0 id 2
 
-create vision_beacon pose 2.0 2.5 0.0 channel 0 
-create vision_beacon pose 3.0 2.5 0.0 channel 1
-create vision_beacon pose 4.0 2.5 0.0 channel 2 
+create puck pose 2.3 2.0 0 channel 0
+create puck pose 2.0 2.0 0 channel 0
+create puck pose 2.1 2.0 0 channel 0
+create puck pose 2.2 2.0 0 channel 0
 
-create puck pose 2.3 2.0 0 channel 3
-create puck pose 2.0 2.0 0 channel 3
-create puck pose 2.1 2.0 0 channel 3
-create puck pose 2.2 2.0 0 channel 3
+create vision_beacon pose 2.0 2.5 0.0 channel 1 
+create vision_beacon pose 3.0 2.5 0.0 channel 2
+create vision_beacon pose 4.0 2.5 0.0 channel 3 
 
 create box pose 3.0 3.0 0.0 size 0.8 0.5 channel 4
 

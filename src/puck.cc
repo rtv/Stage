@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/puck.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.13 $
+//  $Author: vaughan $
+//  $Revision: 1.14 $
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -123,6 +123,8 @@ bool CPuck::Startup()
 //
 void CPuck::Update( double sim_time )
 {
+  // RTV - took out the rendering in puck layer - it doesn't DO anything yet!
+
     static bool undrawn = false;
 
     ASSERT(m_world != NULL);
@@ -143,15 +145,15 @@ void CPuck::Update( double sim_time )
       {
         // Undraw our old representation
         //
-        m_world->SetCircle(m_map_px, m_map_py, 
-                           exp.width / 2.0, layer_puck, 0);
-        m_world->SetCircle(m_map_px, m_map_py, 
-                           exp.width / 2.0, layer_vision, 0);
-        
+        //m_world->SetCircle(m_map_px, m_map_py, 
+	//                     exp.width / 2.0, layer_puck, 0);
+	m_world->SetCircle(m_map_px, m_map_py, 
+			   exp.width / 2.0, layer_vision, 0);
+      
         // should be able to set this flag and avoid constant undraws,
         // but it doesn't seem to work for some reason; pucks get left in 
         // the both the vision and puck layers...
-        //undrawn = true;
+    ////undrawn = true;
       }
 
       return;
@@ -163,7 +165,7 @@ void CPuck::Update( double sim_time )
 
     // Undraw our old representation
     //
-    m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_puck, 0);
+    //m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_puck, 0);
     m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_vision, 0);
     
     // Grab our new global pose
@@ -172,8 +174,9 @@ void CPuck::Update( double sim_time )
     
     // Draw our new representation
     //
-    m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_puck, 1);
-    m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_vision, 1);
+    //m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, layer_puck, 1);
+    m_world->SetCircle(m_map_px, m_map_py, exp.width / 2.0, 
+		       layer_vision, m_channel+1 );
 }
 
 ///////////////////////////////////////////////////////////////////////////

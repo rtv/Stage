@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.22 $
+//  $Author: vaughan $
+//  $Revision: 1.23 $
 //
 // Usage:
 //  (empty)
@@ -304,7 +304,8 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
             uint8_t cell = 0;
             cell |= m_world->GetCell(px, py, layer_laser);
             cell |= m_world->GetCell(px + dr, py, layer_laser);
-            cell |= m_world->GetCell(px, py + dr, layer_laser);
+	    // 1x2 cells is enough to avoid slipping thru gaps -RTV
+            //cell |= m_world->GetCell(px, py + dr, layer_laser);
             if (cell != 0)
             {
                 // Check for reflections
@@ -318,8 +319,7 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
             py += dy;
         }
             
-        // set laser value, scaled to current ppm
-        // and converted to mm
+        // set laser value in mm
         //
         uint16_t v = (uint16_t) (1000.0 * range);
 

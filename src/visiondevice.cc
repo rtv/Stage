@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/visiondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.12 $
+//  $Author: vaughan $
+//  $Revision: 1.13 $
 //
 // Usage:
 //  (empty)
@@ -48,7 +48,8 @@ CVisionDevice::CVisionDevice(CWorld *world, CPtzDevice *parent)
   m_size_x = 0.9 * parent->m_size_x;
   m_size_y = 0.9 * parent->m_size_y;
 
-  m_interval = 0.1; // 10Hz
+  m_interval = 0.2; // 5Hz
+  //m_interval = 0.1; // 10Hz - the real cam is around this
 
   // ACTS must be associated with a physical camera
   // so parent must be a PTZ device
@@ -105,7 +106,7 @@ void CVisionDevice::Update( double sim_time )
     
     // Dont update anything if we are not subscribed
     //
-  if(!Subscribed())
+  if( Subscribed() < 1 )
     return;
   
   ASSERT(m_world != NULL);
@@ -206,8 +207,8 @@ void CVisionDevice::UpdateScan()
             cell = m_world->GetCell(px, py, layer_vision);
             if (cell == 0)
                 cell = m_world->GetCell(px + dr, py, layer_vision);
-            if (cell == 0)
-                cell = m_world->GetCell(px, py + dr, layer_vision);
+            //if (cell == 0)
+	    //  cell = m_world->GetCell(px, py + dr, layer_vision);
 
             if (cell != 0)
             {
@@ -225,8 +226,8 @@ void CVisionDevice::UpdateScan()
                     break;
                 if (m_world->GetCell(px + dr, py, layer_laser) > 0)
                     break;
-                if (m_world->GetCell(px, py + dr, layer_laser) > 0)
-                    break;
+                //if (m_world->GetCell(px, py + dr, layer_laser) > 0)
+		//  break;
             }
             
             px += dx;

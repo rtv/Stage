@@ -1,7 +1,7 @@
 /*************************************************************************
  * xgui.cc - all the graphics and X management
  * RTV
- * $Id: xs.cc,v 1.10 2001-08-14 03:15:26 vaughan Exp $
+ * $Id: xs.cc,v 1.11 2001-08-15 23:20:04 vaughan Exp $
  ************************************************************************/
 
 #include <X11/keysym.h> 
@@ -76,15 +76,15 @@ char* default_geometry = "400x400";
 char* default_zoom = "1.0";
 char* default_pan = "0x0";
 
-queue<stage_truth_t> incoming_queue;
-queue<stage_truth_t> outgoing_queue;
+std::queue<stage_truth_t> incoming_queue;
+std::queue<stage_truth_t> outgoing_queue;
 
 //pthread_mutex_t incoming_mutex;
 //pthread_mutex_t outgoing_mutex;
 
 // an associative array, indexed by player ID (neat!)
 //typedef map< CPlayerID, truth_t > TruthMap;
-typedef map< int, truth_t > TruthMap;
+typedef std::map< int, truth_t > TruthMap;
 TruthMap truth_map; 
 
 int truthfd = 0;
@@ -179,7 +179,7 @@ void PrintStageTruth( stage_truth_t &truth )
 
 void CXGui::PrintMetricTruth( int stage_id, truth_t &truth )
 {
-  printf( "%d:%s\t(%4d,%d,%d)\t(%4d,%d,%d)\t[%.2f,%.2f,%.2f]\t[%.2f,%.2f]\n",
+  printf( "%d:%s\t(%4d,%d,%d)\t(%4d,%d,%d)\t[%.2f,%.2f,%.2f]\t[%.2f,%.2f]\tACTS: %d\n",
 	  stage_id,
 	  StageNameOf( truth ),
 	  truth.id.port, 
@@ -189,14 +189,15 @@ void CXGui::PrintMetricTruth( int stage_id, truth_t &truth )
 	  truth.parent.type, 
 	  truth.parent.index,
 	  truth.x, truth.y, truth.th,
-	  truth.w, truth.h );
+	  truth.w, truth.h,
+	  truth.channel );
   
   fflush( stdout );
 }
 
 void CXGui::PrintMetricTruthVerbose( int stage_id, truth_t &truth )
 {
-  printf( "stage: %d:%s\tplayer: (%4d,%s:%d)\tparent(%4d,%s:%d)\tpose: [%.2f,%.2f,%.2f]\tsize: [%.2f,%.2f]\n", 
+  printf( "stage: %d:%s\tplayer: (%4d,%s:%d)\tparent(%4d,%s:%d)\tpose: [%.2f,%.2f,%.2f]\tsize: [%.2f,%.2f]\tACTS: %d\n", 
 	  stage_id,
 	  StageNameOf( truth ),
 	  truth.id.port, 
@@ -206,7 +207,8 @@ void CXGui::PrintMetricTruthVerbose( int stage_id, truth_t &truth )
 	  PlayerNameOf( truth.parent ), 
 	  truth.parent.index,
 	  truth.x, truth.y, truth.th,
-	  truth.w, truth.h );
+	  truth.w, truth.h,
+	  truth.channel );
   
   fflush( stdout );
 }
@@ -504,12 +506,12 @@ void  CXGui::SetupGeometry( char* geom )
 void  CXGui::SetupChannels( char* channels )
 {
   assert( channels );
-  if(!strlen(channels))
-    return;
-
+  assert( strlen(channels) > 0 );
+    
   XColor a, b;
   int c = 0;
   char* token = strtok( channels, " \t" );
+
   while( token )
     {
       if( !XAllocNamedColor( display, default_cmap, token, &a, &b ) )
@@ -540,7 +542,8 @@ void parse_args(int argc, char** argv)
       {
 	if(++i<argc)
 	  { 
-	    geometry = new char[ strlen( argv[i] ) ];
+	    geometry = new char[ strlen( argv[i] )+1 ];
+	    memset( geometry, 0, strlen(argv[i]) +1 );
 	    strncpy( geometry,argv[i], strlen( argv[i] ) );
 	    printf( "[geometry: %s]", geometry );
 	  }
@@ -554,7 +557,8 @@ void parse_args(int argc, char** argv)
       {
 	if(++i<argc)
 	  { 
-	    zoom = new char[ strlen( argv[i] ) ];
+	    zoom = new char[ strlen( argv[i] )+1 ];
+	    memset( zoom, 0, strlen(argv[i]) +1 );
 	    strncpy( zoom,argv[i], strlen( argv[i] ) );
 	    printf( "[zoom: %s]", zoom );
 	  }
@@ -568,7 +572,8 @@ void parse_args(int argc, char** argv)
       {
 	if(++i<argc)
 	  { 
-	    pan = new char[ strlen( argv[i] ) ];
+	    pan = new char[ strlen( argv[i] ) +1 ];
+	    memset( pan, 0, strlen(argv[i]) +1 );
 	    strncpy( pan,argv[i], strlen( argv[i] ) );
 	    printf( "[pan: %s]", pan );
 	  }
@@ -582,7 +587,8 @@ void parse_args(int argc, char** argv)
       {
 	if(++i<argc)
 	  { 
-	    channels = new char[ strlen( argv[i] ) ];
+	    channels = new char[ strlen( argv[i] ) + 1 ];
+	    memset( channels, 0, strlen(argv[i]) +1 );
 	    strncpy( channels,argv[i], strlen( argv[i] ) );
 	    printf( "[channels: %s]", channels );
 	  }
@@ -654,7 +660,7 @@ int main(int argc, char **argv)
   atexit( ExitFunc );
 
   // parse out the required port and host 
-  //parse_args(argc,argv); 
+  parse_args(argc,argv); 
 
   if((entp = gethostbyname( stage_host )) == NULL)
     {
@@ -728,7 +734,8 @@ void CXGui::HandleIncomingQueue( void )
       truth.y = (double)struth.y / 1000.0;
       truth.w = (double)struth.w / 1000.0;
       truth.h = (double)struth.h / 1000.0;
-      truth.th = NORMALIZE(DTOR( struth.th ));
+      //truth.th = NORMALIZE(DTOR( struth.th ));
+      truth.th = DTOR( struth.th );
 
       truth.rotdx = (double)(struth.rotdx / 1000.0);
       truth.rotdy = (double)(struth.rotdy / 1000.0);
@@ -820,7 +827,11 @@ CXGui::CXGui( int argc, char** argv, environment_t* anenv )
     SetupGeometry( geometry );
     
     if( !channels ) channels = XGetDefault( display, argv[0], "channels" );
-    if( !channels ) channels = default_channels;
+    if( !channels )
+      {
+	channels = new char[ strlen( default_channels ) ];
+	strcpy( channels, default_channels );
+      }
     SetupChannels( channels );
     
     if( !zoom ) zoom = XGetDefault( display, argv[0], "zoom" );
@@ -1143,11 +1154,7 @@ void CXGui::DrawLines( DPoint* dpts, int numPts )
   
   // and draw them
   XDrawLines( display, win, gc, xpts, numPts, CoordModeOrigin );
-   
-  
-  // try to sync the display to avoid flicker
-  //XSync( display, false );
-  
+     
   delete [] xpts; 
 }
 
@@ -1331,24 +1338,25 @@ void CXGui::DrawBox( double px, double py, double boxdelta )
 
 void CXGui::GetRect( double x, double y, double dx, double dy, 
 		     double rotateAngle, DPoint* pts )
-{ 
-  
-  
+{  
   double cosa = cos( rotateAngle );
   double sina = sin( rotateAngle );
-  double cxcosa = dx * cosa;
-  double cycosa = dy * cosa;
-  double cxsina = dx * sina;
-  double cysina = dy * sina;
+  double dxcosa = dx * cosa;
+  double dycosa = dy * cosa;
+  double dxsina = dx * sina;
+  double dysina = dy * sina;
   
-  pts[2].x = x + (-cxcosa + cysina);
-  pts[2].y = y + (-cxsina - cycosa);
-  pts[3].x = x + (+cxcosa + cysina);
-  pts[3].y = y + (+cxsina - cycosa);
-  pts[1].x = x + (-cxcosa - cysina);
-  pts[1].y = y + (-cxsina + cycosa);
-  pts[0].x = x + (+cxcosa - cysina);
-  pts[0].y = y + (+cxsina + cycosa);
+  pts[2].x = x -dxcosa + dysina;
+  pts[2].y = y -dxsina - dycosa;
+  pts[3].x = x +dxcosa + dysina;
+  pts[3].y = y +dxsina - dycosa;
+  pts[1].x = x -dxcosa - dysina;
+  pts[1].y = y -dxsina + dycosa;
+  pts[0].x = x +dxcosa - dysina;
+  pts[0].y = y +dxsina + dycosa;
+
+  //printf( "a: %.2f %.2f\n", rotateAngle, RTOD( rotateAngle ) );
+  //DrawCircle( pts[0].x, pts[0].y, 0.05 );
 }
 
 
@@ -1356,9 +1364,9 @@ void CXGui::HighlightObject( truth_t* exp,  bool undraw )
 {
   static double x = -1000.0, y = -1000.0, r = -1000.0, th = -1000.0;
   static char info[256];
-  
+  static DPoint heading_stick_pts[2];
+      
   // setup the GC 
-  XSetLineAttributes( display, gc, 0, LineOnOffDash, CapRound, JoinRound );
   SetForeground( white );
   SetDrawMode( GXxor );
   
@@ -1368,8 +1376,12 @@ void CXGui::HighlightObject( truth_t* exp,  bool undraw )
   // undraw the last stuff if there was any
   if( x != -1000.0 && y != -1000.0 && undraw )
     {
+      XSetLineAttributes( display, gc, 0, LineOnOffDash, CapRound, JoinRound );
       DrawCircle( x, y, r );
-      
+
+      XSetLineAttributes( display, gc, 0, LineSolid, CapRound, JoinRound );
+      DrawLines( heading_stick_pts, 2 );
+
       if( info[0] ) 	  
 	XDrawString( display,win,gc,
 		     infox, infoy, info, strlen(info) );
@@ -1382,8 +1394,25 @@ void CXGui::HighlightObject( truth_t* exp,  bool undraw )
       r = max( exp->w, exp->h) * 0.8; // a circle a little larger than the object's largest dimension
       th = exp->th;
       
+      XSetLineAttributes( display, gc, 0, LineOnOffDash, CapRound, JoinRound );
       DrawCircle( x,y, r ); // and highlight it
       
+      double dx1 = r * cos( exp->th );
+      double dy1 = r * sin( exp->th );
+      
+      double dx2 = r/2.0 * cos( exp->th );
+      double dy2 = r/2.0 * sin( exp->th );
+      
+      heading_stick_pts[0].x = x + dx1;
+      heading_stick_pts[0].y = y + dy1;
+      
+      heading_stick_pts[1].x = heading_stick_pts[0].x + dx2;
+      heading_stick_pts[1].y = heading_stick_pts[0].y + dy2;
+      
+      XSetLineAttributes( display, gc, 0, LineSolid, CapRound, JoinRound );
+      DrawLines( heading_stick_pts, 2 );
+   
+
       sprintf( info, "%s (%.2f,%.2f,%d)",
 	       StageNameOf(*exp),
 	       exp->x, exp->y, (int)RTOD( exp->th ) );
@@ -1414,7 +1443,6 @@ void CXGui::HighlightObject( truth_t* exp,  bool undraw )
   
   // reset the GC
   SetDrawMode( GXcopy );
-  XSetLineAttributes( display, gc, 0, LineSolid, CapRound, JoinRound );
 }
 
 void CXGui::ScaleBackground( void )

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserbeacondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.9 $
+//  $Author: vaughan $
+//  $Revision: 1.10 $
 //
 // Usage:
 //  (empty)
@@ -135,7 +135,7 @@ void CLBDDevice::Update( double sim_time )
     
     // Get the laser range data
     //
-    uint32_t time_sec, time_usec;
+    uint32_t time_sec=0, time_usec=0;
     player_laser_data_t laser;
     if (m_laser->GetData(&laser, sizeof(laser) ) == 0)
         return;

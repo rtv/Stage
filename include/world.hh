@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.13 $
+//  $Author: vaughan $
+//  $Revision: 1.14 $
 //
 // Usage:
 //  (empty)
@@ -47,10 +47,6 @@
 #include "rtk_ui.hh"
 #endif
 
-#if INCLUDE_XGUI
-#include "xgui.hh"
-#endif
-
 #define MAX_OBJECTS 2048
 
 // forward declaration
@@ -69,6 +65,7 @@ enum EWorldLayer
     layer_laser = 1,
     layer_vision = 2,
     layer_puck = 3,
+    //    layer_sonar = 4
 };
 
 // World class
@@ -436,8 +433,8 @@ public:
   // the truth server queues up any truth updates here, ready to be imported
   // in the main thread
 public:
-  queue<stage_truth_t> input_queue;
-  queue<stage_truth_t> output_queue; // likewise for outputs
+  std::queue<stage_truth_t> input_queue;
+  std::queue<stage_truth_t> output_queue; // likewise for outputs
 
 
 };

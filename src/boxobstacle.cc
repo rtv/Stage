@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/boxobstacle.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.6 $
+//  $Author: vaughan $
+//  $Revision: 1.7 $
 //
 // Usage:
 //  (empty)
@@ -120,7 +120,7 @@ bool CBoxObstacle::Save(int &argc, char **argv)
 void CBoxObstacle::Update( double simtime )
 {
   //cout << "UPDATE BOX" << endl;
-  if(Subscribed()) // i.e. our truth has been poked
+  if( Subscribed() > 0 ) // i.e. our truth has been poked
   {
     ASSERT(m_world);
 
@@ -130,6 +130,8 @@ void CBoxObstacle::Update( double simtime )
                           m_size_x, m_size_y, layer_obstacle, 0);
     m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
                           m_size_x, m_size_y, layer_laser, 0);
+    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+                          m_size_x, m_size_y, layer_vision, 0);
 
     // Update our global pose
     //
@@ -141,6 +143,8 @@ void CBoxObstacle::Update( double simtime )
                           m_size_x, m_size_y, layer_obstacle, 1);
     m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
                           m_size_x, m_size_y, layer_laser, 1);
+    m_world->SetRectangle(m_map_px, m_map_py, m_map_pth,
+                          m_size_x, m_size_y, layer_vision, m_channel+1);
   }
 }
 

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/positiondevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.4 $
+//  $Author: vaughan $
+//  $Revision: 1.5 $
 //
 // Usage:
 //  (empty)
@@ -48,7 +48,13 @@ CPositionDevice::CPositionDevice(CWorld *world, CEntity *parent )
   m_player_type = PLAYER_POSITION_CODE; // from player's messages.h
   
   m_stage_type = RectRobotType;
+
+  //m_render = layer_laser | layer_obstacle;
   
+  uint64_t foo = 1;
+  
+  foo ++;
+
   m_com_vr = m_com_vth = 0;
   m_map_px = m_map_py = m_map_pth = 0;
   

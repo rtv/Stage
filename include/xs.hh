@@ -1,7 +1,7 @@
 /*************************************************************************
  * win.h - all the X graphics stuff is here
  * RTV
- * $Id: xs.hh,v 1.3 2001-08-14 03:15:25 vaughan Exp $
+ * $Id: xs.hh,v 1.4 2001-08-15 23:20:02 vaughan Exp $
  ************************************************************************/
 
 #ifndef _WIN_H
@@ -102,6 +102,8 @@ public:
   void HandleXEvent( void );
   void Update( void );
   void MoveObject( truth_t *obj, double x, double y, double th );
+
+  void HeadingStick( truth_t* truth );
 
   void PrintCoords( void );
   char* StageNameOf( const truth_t& truth ); 
