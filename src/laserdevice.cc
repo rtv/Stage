@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/laserdevice.cc,v $
-//  $Author: vaughan $
-//  $Revision: 1.27 $
+//  $Author: ahoward $
+//  $Revision: 1.28 $
 //
 // Usage:
 //  (empty)
@@ -288,42 +288,42 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
     // Do each scan
     //
     for (int s = 0; s < m_scan_count;)
-      {
-	double ox = x;
-	double oy = y;
-	double oth = th;
+    {
+        double ox = x;
+        double oy = y;
+        double oth = th;
 	
-	double bearing = s * m_scan_res + m_scan_min;
+        double bearing = s * m_scan_res + m_scan_min;
 	
-	// Compute parameters of scan line
-	double pth = oth + bearing;
+        // Compute parameters of scan line
+        double pth = oth + bearing;
 	
-	double range = m_max_range;
+        double range = m_max_range;
 
-	CLineIterator lit( ox, oy, pth, m_max_range, 
-			   m_world->ppm, m_world->matrix, PointToBearingRange );
+        CLineIterator lit( ox, oy, pth, m_max_range, 
+                           m_world->ppm, m_world->matrix, PointToBearingRange );
 	
-	CEntity* ent;
+        CEntity* ent;
 
-	int intensity = LaserNothing;
+        int intensity = LaserNothing;
 	
-	while( (ent = lit.GetNextEntity()) ) 
-	  {
-	    if( ent->m_stage_type == LaserBeaconType )
-	      m_visible_beacons.push_front( (int)ent );
-	    
-	    if( ent != this && (intensity = ent->laser_return) ) 
-	      {
-		range = lit.GetRange();
-		break;
-	      }	
-	  }
+        while( (ent = lit.GetNextEntity()) ) 
+        {
+            if( ent->m_stage_type == LaserBeaconType )
+                m_visible_beacons.push_front( (int)ent );
+            
+            if( ent != this && (intensity = ent->laser_return) ) 
+            {
+                range = lit.GetRange();
+                break;
+            }	
+        }
 	
-	uint16_t v = (uint16_t)(1000.0 * range);
+        uint16_t v = (uint16_t)(1000.0 * range);
 	
-	// TODO: FIX THIS!
-	//if( intensity == LaserBright ) // ie. we hit something shiny
-	//v = v | (((uint16_t)1) << 13);
+        // TODO: FIX THIS!
+        //if( intensity == LaserBright ) // ie. we hit something shiny
+        //v = v | (((uint16_t)1) << 13);
 	
         // Set the range
         //
@@ -332,13 +332,13 @@ bool CLaserDevice::GenerateScanData( player_laser_data_t *data )
         // Skip some values to save time
         //
         for (int i = 0; i < skip && s < m_scan_count; i++)
-	  data->ranges[s++] = htons(v);
+            data->ranges[s++] = htons(v);
 	
 #ifdef INCLUDE_RTK
         // Update the gui data
         //
-        m_hit[m_hit_count][0] = px;
-        m_hit[m_hit_count][1] = py;
+        m_hit[m_hit_count][0] = ox + range * cos(pth);
+        m_hit[m_hit_count][1] = oy + range * sin(pth);
         m_hit_count++;
 #endif
       }

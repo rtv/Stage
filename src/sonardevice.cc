@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/sonardevice.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.11 $
+//  $Author: ahoward $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -109,15 +109,17 @@ void CSonarDevice::Update( double sim_time )
       double range = m_max_range;
       
       CLineIterator lit( ox, oy, oth, m_max_range, 
-			 m_world->ppm, m_world->matrix, PointToBearingRange );
+                         m_world->ppm, m_world->matrix, PointToBearingRange );
       CEntity* ent;
       
-      while( (ent = lit.GetNextEntity()) ) 
-	if( ent != this && ent != m_parent_object && ent->sonar_return ) 
-	  {
-	    range = lit.GetRange();
-	    break;
-	  }	
+      while( (ent = lit.GetNextEntity()) )
+      {
+          if( ent != this && ent != m_parent_object && ent->sonar_return ) 
+          {
+              range = lit.GetRange();
+              break;
+          }
+      }
       
       uint16_t v = (uint16_t)(1000.0 * range);
       
@@ -130,8 +132,8 @@ void CSonarDevice::Update( double sim_time )
 #ifdef INCLUDE_RTK
       m_hit[m_hit_count][0][0] = ox;
       m_hit[m_hit_count][0][1] = oy;
-      m_hit[m_hit_count][1][0] = px;
-      m_hit[m_hit_count][1][1] = py;
+      m_hit[m_hit_count][1][0] = ox + range * cos(oth);
+      m_hit[m_hit_count][1][1] = oy + range * sin(oth);
       m_hit_count++;
 #endif
       

@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/src/world.cc,v $
-//  $Author: gerkey $
-//  $Revision: 1.27 $
+//  $Author: ahoward $
+//  $Revision: 1.28 $
 //
 // Usage:
 //  (empty)
@@ -902,16 +902,19 @@ void CWorld::OnUiDraw(CWorld *world, RtkUiDrawData *data)
     data->begin_section("global", "debugging");
 
     if (data->draw_layer("obstacle", false))
-        world->draw_layer(data, layer_obstacle);
-        
-    if (data->draw_layer("laser", false))
-        world->draw_layer(data, layer_laser);
-
-    if (data->draw_layer("vision", false))
-        world->draw_layer(data, layer_vision);
+        world->DrawDebug(data, DBG_OBSTACLES);        
 
     if (data->draw_layer("puck", false))
-        world->draw_layer(data, layer_puck);
+        world->DrawDebug(data, DBG_PUCKS);
+
+    if (data->draw_layer("laser", false))
+        world->DrawDebug(data, DBG_LASER);
+
+    if (data->draw_layer("vision", false))
+        world->DrawDebug(data, DBG_VISION);
+
+    if (data->draw_layer("sonar", false))
+        world->DrawDebug(data, DBG_SONAR);
     
     data->end_section();
 
@@ -1020,45 +1023,40 @@ void CWorld::DrawBackground(RtkUiDrawData *data)
 ///////////////////////////////////////////////////////////////////////////
 // Draw the various layers
 //
-void CWorld::draw_layer(RtkUiDrawData *data, EWorldLayer layer)
+void CWorld::DrawDebug(RtkUiDrawData *data, int options)
 {
-    Nimage *img = NULL;
-
-    // This could be cleaned up by having an array of images
-    //
-    switch (layer)
-    {
-      //        case layer_obstacle:
-      //    img = m_obs_img;
-      //    break;
-      //case layer_laser:
-      //    img = m_laser_img;
-      //    break;
-        case layer_vision:
-            img = m_vision_img;
-            break;            
-        case layer_puck:
-            img = m_puck_img;
-            break;            
-        default:
-            return;
-    }
-
     data->set_color(RTK_RGB(0, 0, 255));
     
     // Loop through the image and draw points individually.
     // Yeah, it's slow, but only happens for debugging
     //
-    for (int y = 0; y < img->height; y++)
+    for (int y = 0; y < matrix->get_height(); y++)
     {
-        for (int x = 0; x < img->width; x++)
+        for (int x = 0; x < matrix->get_width(); x++)
         {
-            if (img->get_pixel(x, y) != 0)
+            CEntity **entity = matrix->get_cell(x, y);
+
+            for (int i = 0; entity[i] != NULL; i++)
             {
                 double px = (double) x / ppm;
                 double py = (double) y / ppm;
                 double s = 1.0 / ppm;
-                data->rectangle(px, py, px + s, py + s);
+
+                if (options == DBG_OBSTACLES)
+                    if (entity[i]->obstacle_return)
+                        data->rectangle(px, py, px + s, py + s);
+                if (options == DBG_PUCKS)
+                    if (entity[i]->puck_return)
+                        data->rectangle(px, py, px + s, py + s);
+                if (options == DBG_LASER)
+                    if (entity[i]->laser_return)
+                        data->rectangle(px, py, px + s, py + s);
+                if (options == DBG_VISION)
+                    if (entity[i]->channel_return)
+                        data->rectangle(px, py, px + s, py + s);
+                if (options == DBG_SONAR)
+                    if (entity[i]->sonar_return)
+                        data->rectangle(px, py, px + s, py + s);
             }
         }
     }

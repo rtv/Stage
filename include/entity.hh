@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/entity.hh,v $
-//  $Author: vaughan $
-//  $Revision: 1.11 $
+//  $Author: ahoward $
+//  $Revision: 1.12 $
 //
 // Usage:
 //  (empty)
@@ -55,15 +55,16 @@ class CEntity
     //
     public: CEntity(CWorld *world, CEntity *parent_object);
   
-  StageType m_stage_type; // distinct from the player types found in messages.h
+    StageType m_stage_type; // distinct from the player types found in messages.h
 
-  //uint32_t renderMask, senseMask;
+    //uint32_t renderMask, senseMask;
 
-  bool obstacle_return;
-  bool sonar_return;  
-  bool puck_return;
-  int laser_return;
-  int channel_return; // -1 is transparent, 0 is opaque, 1 is ACTS Ch.0, etc.
+    // Sensor return values
+    bool obstacle_return;
+    bool sonar_return;  
+    bool puck_return;
+    int laser_return;
+    int channel_return; // -1 is transparent, 0 is opaque, 1 is ACTS Ch.0, etc.
  
     // Destructor
     //

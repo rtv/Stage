@@ -7,8 +7,8 @@
 //
 // CVS info:
 //  $Source: /home/tcollett/stagecvs/playerstage-cvs/code/stage/include/world.hh,v $
-//  $Author: gerkey $
-//  $Revision: 1.17 $
+//  $Author: ahoward $
+//  $Revision: 1.18 $
 //
 // Usage:
 //  (empty)
@@ -281,13 +281,17 @@ public: static void OnUiButton(CWorld *world, RtkUiButtonData* data);
   //
 private: void DrawBackground(RtkUiDrawData *data);
 
-  // Draw the laser layer
+  // Draw the debugging info
   //
-private: void draw_layer(RtkUiDrawData *data, EWorldLayer layer);
+private: void DrawDebug(RtkUiDrawData *data, int options);
 
   // Move an object using the mouse
   //
 private: void MouseMove(RtkUiMouseData *data);
+
+  // Debugging options
+  //
+private: enum {DBG_OBSTACLES, DBG_PUCKS, DBG_LASER, DBG_SONAR, DBG_VISION};
     
   // RTK message router
   //
